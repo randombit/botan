@@ -76,17 +76,15 @@ u32bit karatsuba_size(u32bit z_size,
                       u32bit x_size, u32bit x_sw,
                       u32bit y_size, u32bit y_sw)
    {
-   if(x_sw > y_size || y_sw > x_size)
+   if(x_sw > x_size || x_sw > y_size || y_sw > x_size || y_sw > y_size)
       return 0;
+
    if(((x_size == x_sw) && (x_size % 2)) ||
       ((y_size == y_sw) && (y_size % 2)))
       return 0;
 
    u32bit start = (x_sw > y_sw) ? x_sw : y_sw;
    u32bit end = (x_size < y_size) ? x_size : y_size;
-
-   if(end < start)
-      return 0;
 
    if(start == end)
       {
@@ -125,16 +123,16 @@ void handle_small_mul(word z[], u32bit z_size,
    if(x_sw == 1)        bigint_linmul3(z, y, y_sw, x[0]);
    else if(y_sw == 1)   bigint_linmul3(z, x, x_sw, y[0]);
 
-   else if(x_sw <= 4 && y_sw <= 4 &&
-           x_size >= 4 && y_size >= 4 && z_size >= 8)
+   else if(x_sw <= 4 && x_size >= 4 &&
+           y_sw <= 4 && y_size >= 4 && z_size >= 8)
       bigint_comba_mul4(z, x, y);
 
-   else if(x_sw <= 6 && y_sw <= 6 &&
-           x_size >= 6 && y_size >= 6 && z_size >= 12)
+   else if(x_sw <= 6 && x_size >= 6 &&
+           y_sw <= 6 && y_size >= 6 && z_size >= 12)
       bigint_comba_mul6(z, x, y);
 
-   else if(x_sw <= 8 && y_sw <= 8 &&
-           x_size >= 8 && y_size >= 8 && z_size >= 16)
+   else if(x_sw <= 8 && x_size >= 8 &&
+           y_sw <= 8 && y_size >= 8 && z_size >= 16)
       bigint_comba_mul8(z, x, y);
 
    else
