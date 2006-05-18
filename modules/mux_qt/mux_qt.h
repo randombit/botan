@@ -1,5 +1,5 @@
 /*************************************************
-* Qt Thread Mutex Header File                    *
+* Qt Mutex Header File                           *
 * (C) 1999-2006 The Botan Project                *
 *************************************************/
 
@@ -13,17 +13,10 @@ namespace Botan {
 /*************************************************
 * Qt Mutex                                       *
 *************************************************/
-class Qt_Mutex : public Mutex
+class Qt_Mutex_Factory : public Mutex_Factory
    {
    public:
-      void lock();
-      void unlock();
-      Mutex* clone() const { return new Qt_Mutex; }
-
-      Qt_Mutex();
-      ~Qt_Mutex();
-   private:
-      struct mutex_wrapper* mutex;
+      Mutex* make();
    };
 
 }

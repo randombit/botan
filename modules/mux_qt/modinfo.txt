@@ -8,7 +8,6 @@ replace_file types.h
 
 uses_external_libs
 
-replace_file types.h
 add_file mux_qt.cpp
 add_file mux_qt.h
 

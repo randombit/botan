@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/mux_qt.h>
-#include <botan/exceptn.h>
 #include <qmutex.h>
 
 #if !defined(QT_THREAD_SUPPORT)
@@ -13,44 +12,29 @@
 
 namespace Botan {
 
+namespace {
+
 /*************************************************
-* Wrapper Type for Qt Thread Mutex               *
+* Qt Mutex                                       *
 *************************************************/
-struct mutex_wrapper
+class Qt_Mutex : public Mutex
    {
-   QMutex m;
+   public:
+      void lock() { mutex.lock(); }
+      void unlock() { mutex.unlock(); }
+   private:
+      QMutex mutex;
    };
 
-/*************************************************
-* Constructor                                    *
-*************************************************/
-Qt_Mutex::Qt_Mutex()
-   {
-   mutex = new mutex_wrapper;
-   }
+}
 
 /*************************************************
-* Destructor                                     *
+* Qt Mutex Factory                               *
 *************************************************/
-Qt_Mutex::~Qt_Mutex()
+Mutex* Qt_Mutex_Factory::make()
    {
-   delete mutex;
-   }
-
-/*************************************************
-* Lock the Mutex                                 *
-*************************************************/
-void Qt_Mutex::lock()
-   {
-   mutex->m.lock();
-   }
-
-/*************************************************
-* Unlock the Mutex                               *
-*************************************************/
-void Qt_Mutex::unlock()
-   {
-   mutex->m.unlock();
+   return new Qt_Mutex();
    }
 
 }
+
