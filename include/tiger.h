@@ -1,0 +1,38 @@
+/*************************************************
+* Tiger Header File                              *
+* (C) 1999-2006 The Botan Project                *
+*************************************************/
+
+#ifndef BOTAN_TIGER_H__
+#define BOTAN_TIGER_H__
+
+#include <botan/mdx_hash.h>
+
+namespace Botan {
+
+/*************************************************
+* Tiger                                          *
+*************************************************/
+class Tiger : public MDx_HashFunction
+   {
+   public:
+      void clear() throw();
+      std::string name() const;
+      HashFunction* clone() const { return new Tiger(OUTPUT_LENGTH); }
+      Tiger(u32bit = 24, u32bit = 3);
+   private:
+      void hash(const byte[]);
+      void copy_out(byte[]);
+
+      static void pass(u64bit&, u64bit&, u64bit&, u64bit[8], byte);
+      static void mix(u64bit[8]);
+      static void round(u64bit&, u64bit&, u64bit&, u64bit, byte);
+      static const u64bit SBOX1[256], SBOX2[256], SBOX3[256], SBOX4[256];
+      SecureBuffer<u64bit, 8> X;
+      SecureBuffer<u64bit, 3> digest;
+      const u32bit PASS;
+   };
+
+}
+
+#endif

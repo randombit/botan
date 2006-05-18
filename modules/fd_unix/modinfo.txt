@@ -1,0 +1,22 @@
+realname "Pipe Unix I/O support"
+
+define PIPE_UNIXFD_IO
+
+add_file fd_unix.h
+add_file fd_unix.cpp
+
+<os>
+aix
+beos
+cygwin
+darwin
+freebsd
+hpux
+irix
+linux
+netbsd
+openbsd
+qnx
+solaris
+tru64
+</os>

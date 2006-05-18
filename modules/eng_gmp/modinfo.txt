@@ -1,0 +1,19 @@
+realname "GMP Engine"
+
+uses_external_libs
+
+add_file eng_gmp.cpp
+add_file gmp_wrap.cpp
+add_file gmp_mem.cpp
+add_file gmp_powm.cpp
+
+add_file eng_gmp.h
+add_file gmp_wrap.h
+
+local_only gmp_wrap.h
+
+define ENGINE_GNU_MP
+
+<libs>
+all -> gmp
+</libs>

@@ -1,0 +1,21 @@
+realname "Memory Locking for Unix"
+
+replace_file mlock.cpp
+
+<os>
+aix
+darwin
+freebsd
+hpux
+irix
+linux
+netbsd
+openbsd
+qnx
+solaris
+tru64
+</os>
+
+<libs>
+tru64 -> rt
+</libs>

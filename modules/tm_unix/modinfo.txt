@@ -1,0 +1,22 @@
+realname "Unix Timer"
+
+define TIMER_UNIX
+
+add_file tm_unix.cpp
+add_file tm_unix.h
+
+<os>
+aix
+beos
+cygwin
+darwin
+freebsd
+hpux
+irix
+linux
+netbsd
+openbsd
+qnx
+solaris
+tru64
+</os>

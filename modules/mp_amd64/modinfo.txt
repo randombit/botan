@@ -1,0 +1,15 @@
+realname "MPI Assembler Backend for x86-64/AMD64 Systems"
+
+mp_bits 64
+
+replace_file mp_asm.h
+replace_file mp_asmi.h
+
+<arch>
+amd64
+</arch>
+
+<cc>
+gcc
+icc
+</cc>

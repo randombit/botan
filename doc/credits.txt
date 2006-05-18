@@ -1,0 +1,41 @@
+  This is the credits file of people that have contributed to Botan. It uses
+  the same format as the Linux credits file. Please keep it sorted by last
+  name.
+
+  The fields are:
+     N - name
+     E - email
+     W - web URL
+     P - PGP keyid/fingerprint
+     D - Description
+     S - Snail-mail
+----------
+
+N: Matthew Gregan
+D: Binary file I/O support, allocator fixes
+
+N: Hany Greiss
+D: Windows porting
+
+N: Matt Johnston
+D: Allocator fixes and optimizations, decompressor fixes
+                                                      
+N: Peter J. Jones
+E: pjones@pmade.org
+D: Bzip2 compression module
+S: Colorado, USA
+
+N: Justin Karneges
+D: The Qt-related modules
+
+N: Jack Lloyd
+E: lloyd@randombit.net
+W: http://www.randombit.net/
+P: 3F69 2E64 6D92 3BBE E7AE  9258 5C0F 96E8 4EC1 6D6B
+D: Original author
+S: Washington DC, USA
+
+N: Luca Piccarreta
+E: luca.piccarreta@gmail.com
+D: MS Windows mutex module, x86/amd64 assembler
+S: Italy

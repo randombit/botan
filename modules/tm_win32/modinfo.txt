@@ -1,0 +1,15 @@
+realname "Win32 Timer"
+
+define TIMER_WIN32
+
+add_file tm_win32.cpp
+add_file tm_win32.h
+
+<os>
+cygwin
+windows
+</os>
+
+<libs>
+windows -> user32
+</libs>

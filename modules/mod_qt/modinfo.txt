@@ -1,0 +1,19 @@
+realname "Support for Qt/QCA"
+
+define MUTEX_QT
+
+note "You'll probably have to add -I/-L flags to the Makefile to find Qt"
+
+replace_file types.h
+
+uses_external_libs
+
+replace_file types.h
+add_file mux_qt.cpp
+add_file mux_qt.h
+
+# I think we want to always use qt-mt, not qt -- not much point in supporting
+# mutexes in a single threaded application, after all.
+<libs>
+all -> qt-mt
+</libs>

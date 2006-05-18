@@ -1,0 +1,17 @@
+
+* 1.0.2, January 12, 2003
+ - Fixed an obscure SEGFAULT causing bug in Pipe
+ - Fixed an obscure but dangerous bug in SecureVector::swap
+
+* 1.0.1, September 14, 2002
+ - Fixed a minor bug in Randpool::random()
+ - Added some new aliases and typedefs for 1.1.x compatibility
+ - The 4096-bit RSA benchmark key was decimal instead of hex
+ - EMAC was returning an incorrect name
+
+* 1.0.0, August 26, 2002
+ - Octal I/O of BigInt is now supported
+ - Fixed portability problems in the es_egd module
+ - Generalized IV handling in the block cipher modes
+ - Added Karatsuba multiplication and k-ary exponentiation
+ - Fixed a problem in the multiplication routines

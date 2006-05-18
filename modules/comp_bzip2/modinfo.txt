@@ -1,0 +1,14 @@
+# This module was written by Peter J. Jones
+
+uses_external_libs
+
+realname "Bzip2 Compressor"
+
+define COMPRESSOR_BZIP2
+
+add_file bzip2.h
+add_file bzip2.cpp
+
+<libs>
+all -> bz2
+</libs>

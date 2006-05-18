@@ -1,0 +1,153 @@
+
+* 1.1.13, April 22, 2003
+ - Added OMAC
+ - Added EAX authenticated cipher mode
+ - Diffie-Hellman would not do blinding in some cases
+ - Optimized the OFB and CTR modes
+ - Corrected Skipjack's word ordering, as per NIST clarification
+ - Support for all subject/issuer attribute types required by RFC 3280
+ - The removeFromCRL CRL reason code is now handled correctly
+ - Increased the flexibility of the allocators
+ - Renamed Rijndael to AES, created aes.h, deleted rijndael.h
+ - Removed support for the 'no_timer' LibraryInitializer option
+ - Removed 'es_pthr' module, pending further testing
+ - Cleaned up get_ciph.cpp
+
+* 1.1.12, April 15, 2003
+ - Fixed a ASN.1 string encoding bug
+ - Fixed a pair of X509_DN encoding problems
+ - Base64_Decoder and Hex_Decoder can now validate input
+ - Removed support for the LibraryInitializer option 'egd_path'
+ - Added tests for DSA X.509 and PKCS #8 key formats
+ - Removed a long deprecated feature of DH_PrivateKey's constructor
+ - Updated the RPM .spec file
+ - Major documentation updates
+
+* 1.1.11, April 7, 2003
+ - Added PKCS #10 certificate requests
+ - Changed X509_Store searching interface to be more flexible
+ - Added a generic Certificate_Store interface
+ - Added a function for generating self-signed X.509 certs
+ - Cleanups and changes to X509_CA
+ - New examples for PKCS #10 and self-signed certificates
+ - Some documentation updates
+
+* 1.1.10, April 3, 2003
+ - X509_CA can now generate new X.509 CRLs
+ - Added blinding for RSA, RW, DH, and ElGamal to prevent timing attacks
+ - More certificate and CRL extensions/attributes are supported
+ - Better DN handling in X.509 certificates/CRLs
+ - Added a DataSink hierarchy (suggested by Jim Darby)
+ - Consolidated SecureAllocator and ManagedAllocator
+ - Many cleanups and generalizations
+ - Added a (slow) pthreads based EntropySource
+ - Fixed some threading bugs
+
+* 1.1.9, February 25, 2003
+ - Added support for using X.509v2 CRLs
+ - Fixed several bugs in the path validation algorithm
+ - Certificates can be verified for a particular usage
+ - Algorithm for comparing distinguished names now follows X.509
+ - Cleaned up the code for the es_beos, es_ftw, es_unix modules
+ - Documentation updates
+
+* 1.1.8, January 29, 2003
+ - Fixes for the certificate path validation algorithm in X509_Store
+ - Fixed a bug affecting X509_Certificate::is_ca_cert()
+ - Added a general configuration interface for policy issues
+ - Cleanups and API changes in the X.509 CA, cert, and store code
+ - Made various options available for X509_CA users
+ - Changed X509_Time's interface to work around time_t problems
+ - Fixed a theoretical weakness in Randpool's entropy mixing function
+ - Fixed problems compiling with GCC 2.95.3 and GCC 2.96
+ - Fixed a configure bug (reported by Jon Wilson) affecting MinGW
+
+* 1.1.7, January 12, 2003
+ - Fixed an obscure but dangerous bug in SecureVector::swap
+ - Consolidated SHA-384 and SHA-512 to save code space
+ - Added SSL3-MAC and SSL3-PRF
+ - Documentation updates, including a new tutorial
+
+* 1.1.6, December 10, 2002
+ - Initial support for X.509v3 certificates and CAs
+ - Major redesign/rewrite of the ASN.1 encoding/decoding code
+ - Added handling for DSA/NR signatures encoded as DER SEQUENCEs
+ - Documented the generic cipher lookup interface
+ - Added an (untested) entropy source for BeOS
+ - Various cleanups and bug fixes
+
+* 1.1.5, November 17, 2002
+ - Added the discrete logarithm integrated encryption system (DLIES)
+ - Various optimizations for BigInt
+ - Added support for assembler optimizations in modules
+ - Added BigInt x86 optimizations module (mpi_ia32)
+
+* 1.1.4, November 10, 2002
+ - Speedup of 15-30% for PK algorithms
+ - Implemented the PBES2 encryption scheme
+ - Fixed a potential bug in decoding RSA and RW private keys
+ - Changed the DL_Group class interface to handle different formats better
+ - Added support for PKCS #3 encoded DH parameters
+ - X9.42 DH parameters use a PEM label of 'X942 DH PARAMETERS'
+ - Added key pair consistency checking
+ - Fixed a compatibility problem with gcc 2.96 (pointed out by Hany Greiss)
+ - A botan-config script is generated at configure time
+ - Documentation updates
+
+* 1.1.3, November 3, 2002
+ - Added a generic public/private key loading interface
+ - Fixed a small encoding bug in RSA, RW, and DH
+ - Changed the PK encryption/decryption interface classes
+ - ECB supports using padding methods
+ - Added a function-based interface for library initialization
+ - Added support for RIPEMD-128 and Tiger PKCS#1 v1.5 signatures
+ - The cipher mode benchmarks now use 128-bit AES instead of DES
+ - Removed some obsolete typedefs
+ - Removed OpenCL support (opencl.h, the OPENCL_* macros, etc)
+ - Added tests for PKCS #8 encoding/decoding
+ - Added more tests for ECB and CBC
+
+* 1.1.2, October 21, 2002
+ - Support for PKCS #8 encoded RSA, DSA, and DH private keys
+ - Support for Diffie-Hellman X.509 public keys
+ - Major reorganization of how X.509 keys are handled
+ - Added PKCS #5 v2.0's PBES1 encryption scheme
+ - Added a generic cipher lookup interface
+ - Added the WiderWake4+1 stream cipher
+ - Added support for sync-able stream ciphers
+ - Added a 'paranoia level' option for the LibraryInitializer
+ - More security for RNG output meant for long term keys
+ - Added documentation for some of the new 1.1.x features
+ - CFB's feedback argument is now specified in bits
+ - Renamed CTR class to CTR_BE
+ - Updated the RSA and DSA examples to use X.509 and PKCS #8 key formats
+
+* 1.1.1, October 15, 2002
+ - Added the Korean hash function HAS-160
+ - Partial support for RSA and DSA X.509 public keys
+ - Added a mostly functional BER encoder/decoder
+ - Added support for nondeterministic MAC functions
+ - Initial support for PEM encoding/decoding
+ - Internal cleanups in the PK algorithms
+ - Several new convenience functions in Pipe
+ - Fixed two nasty bugs in Pipe
+ - Messed with the entropy sources for es_unix
+ - Discrete logarithm groups are checked for safety more closely now
+ - For compatibility with GnuPG, ElGamal now supports DSA-style groups
+
+* 1.1.0, September 14, 2002
+ - Added entropy estimation to the RNGs
+ - Improved the overall design of both Randpool and ANSI_X917_RNG
+ - Added a separate RNG for nonce generation
+ - Added window exponentiation support in power_mod
+ - Added a get_s2k function and the PKCS #5 S2K algorithms
+ - Added the TLSv1 PRF
+ - Replaced BlockCipherModeIV typedef with InitializationVector class
+ - Renamed PK_Key_Agreement_Scheme to PK_Key_Agreement
+ - Renamed SHA1 -> SHA_160 and SHA2_x -> SHA_x
+ - Added support for RIPEMD-160 PKCS#1 v1.5 signatures
+ - Changed the key agreement scheme interface
+ - Changed the S2K and KDF interfaces
+ - Better SCAN compatibility for HAVAL, Tiger, MISTY1, SEAL, RC5, SAFER-SK
+ - Added support for variable-pass Tiger
+ - Major speedup for Rabin-Williams key generation

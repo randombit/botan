@@ -1,0 +1,184 @@
+
+* 1.3.14, June 12, 2004
+ - Added support for AEP's AEP1000/AEP2000 crypto cards
+ - Added a Mutex module using Qt, from Justin Karneges
+ - Added support for engine loading in LibraryInitializer
+ - Tweaked SecureAllocator, giving 20% better performance under heavy load
+ - Added timer and memory locking modules for Win32 (tm_win32, ml_win32)
+ - Renamed PK_Engine to Engine_Core
+ - Improved the Karatsuba cutoff points
+ - Fixes for compiling with GCC 3.4 and Sun C++ 5.5
+ - Fixes for Linux/s390, OpenBSD, and Solaris
+ - Added support for Linux/s390x
+ - The configure script was totally broken for 'generic' OS
+ - Removed Montgomery reduction due to bugs
+ - Removed an unused header, pkcs8alg.h
+ - check --validate returns an error code if any tests failed
+ - Removed duplicate entry in Unix command list for es_unix
+ - Moved the Cert_Usage enumeration into X509_Store
+ - Added new timing methods for PK benchmarks, clock_gettime and RDTSC
+ - Fixed a few minor bugs in the configure script
+ - Removed some deprecated functions from x509cert.h and pkcs10.h
+ - Removed the 'minimal' module, has to be updated for Engine support
+ - Changed MP_WORD_BITS macro to BOTAN_MP_WORD_BITS to clean up namespace
+ - Documentation updates
+
+* 1.3.13, May 15, 2004
+ - Major fixes for Cygwin builds
+ - Minor MacOS X install fixes
+ - The configure script is a little better at picking the right modules
+ - Removed ml_unix from the 'unix' module set for Cygwin compatibility
+ - Fixed a stupid compile problem in pkcs10.h
+
+* 1.3.12, May 2, 2004
+ - Added ability to remove old entries from CRLs
+ - Swapped the first two arguments of X509_CA::update_crl()
+ - Added an < operator for MemoryRegion, so it can be used as a std::map key
+ - Changed X.509 searching by DNS name from substring to full string compares
+ - Renamed a few X509_Certificate and PKCS10_Request member functions
+ - Fixed a problem when decoding some PKCS #10 requests
+ - Hex_Decoder would not check inputs, reported by Vaclav Ovsik
+ - Changed default CRL expire time from 30 days to 7 days
+ - X509_CRL's default PEM header is now "X509 CRL", for OpenSSL compatibility
+ - Corrected errors in the API doc, fixes from Ken Perano
+ - More documentation about the Pipe/Filter code
+
+* 1.3.11, April 1, 2004
+ - Fixed two show-stopping bugs in PKCS10_Request
+ - Added some sanity checks in Pipe/Filter
+ - The DNS and URI entries would get swapped in subjectAlternativeNames
+ - MAC_Filter is now willing to not take a key at creation time
+ - Setting the expiration times of certs and CRLs is more flexible
+ - Fixed problems building on AIX with GCC
+ - Fixed some problems in the tutorial pointed out by Dominik Vogt
+ - Documentation updates
+
+* 1.3.10, March 27, 2004
+ - Added support for OpenPGP's ASCII armor format
+ - Cleaned up the RNG system; seeding is much more flexible
+ - Added simple autoconfiguration abilities to configure.pl
+ - Fixed a GCC 2.95.x compile problem
+ - Updated the example configuration file
+ - Documentation updates
+
+* 1.3.9, March 7, 2004
+ - Added an engine using OpenSSL (requires 0.9.7 or later)
+ - X509_Certificate would lose email addresses stored in the DN
+ - Fixed a missing initialization in a BigInt constructor
+ - Fixed several Visual C++ compile problems
+ - Fixed some BeOS build problems
+ - Fixed the WiderWake benchmark
+
+* 1.3.8, December 30, 2003
+ - Internal changes to PK algorithms to divide data and algorithms
+ - DSA/DH/NR/ElGamal constructors accept taking just the private key again
+ - ElGamal keys now support being imported/exported as ASN.1 objects
+ - Much more consistent and complete error checking in PK algorithms
+ - Support for arbitrary backends (engines) for PK operations
+ - Added Montgomery reductions
+ - Added an engine that uses GNU MP (requires 4.1 or later)
+ - Removed the obsolete mp_gmp module
+ - Moved several initialization/shutdown functions to init.h
+ - Major refactoring of the memory containers
+ - New non-locking container, MemoryVector
+ - Fixed 64-bit problems in BigInt::set_bit/clear_bit
+ - Renamed PK_Key::check_params() to check_key()
+ - Some incompatible changes to OctetString
+ - Added version checking macros in version.h
+ - Removed the fips140 module pending rewrite
+ - Added some functions and hooks to help GUIs
+ - Moved more shared code into MDx_HashFunction
+ - Added a policy hook for specifying the encoding of X.509 strings
+
+* 1.3.7, December 12, 2003
+ - Fixed a big security problem in es_unix
+ - Fixed several stability problems in es_unix
+ - Expanded the list of programs es_unix will try to use
+ - SecureAllocator now only preallocates blocks in special cases
+ - Added a special case in Global_RNG::seed for forcing a full poll
+ - Removed the FIPS 186 RNG added in 1.3.5 pending further testing
+ - Configure updates for PowerPC CPUs
+ - Removed the (never tested) VAX support
+ - Added support for S/390 Linux
+
+* 1.3.6, December 7, 2003
+ - Added a new module 'minimal', which disables most algorithms
+ - SecureAllocator allocates a few blocks at startup
+ - A few minor MPI cleanups
+ - RPM spec file cleanups and fixes
+
+* 1.3.5, November 30, 2003
+ - Major improvements in ASN.1 string handling
+ - Added partial support for ASN.1 UTF8 STRINGs and BMP STRINGs
+ - Added partial support for the X.509v3 certificate policies extension
+ - Centralized the handling of character set information
+ - Added FIPS 140-2 startup self tests
+ - Added a module (fips140) for doing extra FIPS 140-2 tests
+ - Added FIPS 186-2 RNG
+ - Improved ASN.1 BIT STRING handling
+ - Removed a memory leak in PKCS10_Request
+ - The encoding of DirectoryString now follows PKIX guidelines
+ - Fixed some of the character set dependencies
+ - Fixed a DER encoding error for tags greater than 30
+ - The BER decoder can now handle tags larger than 30
+ - Fixed tm_hard.cpp to recognize SPARC on more systems
+ - Workarounds for a GCC 2.95.x bug in x509find.cpp
+ - RPM changed to install into /usr instead of /usr/local
+ - Added support for QNX
+
+* 1.3.4, November 21, 2003
+ - Added a module that does certain MPI operations using GNU MP
+ - Added the X9.42 Diffie-Hellman PRF
+ - The Zlib and Bzip2 objects now use custom allocators
+ - Added member functions for directly hashing/MACing SecureVectors
+ - Minor optimizations to the MPI addition and subtraction algorithms
+ - Some cleanups in the low-level MPI code
+ - Created separate AES-{128,192,256} objects
+
+* 1.3.3, November 17, 2003
+ - The library can now be repeatedly initialized and shutdown without crashing
+ - Fixed an off-by-one error in the CTS code
+ - Fixed an error in the EMSA4 verification code
+ - Fixed a memory leak in mutex.cpp (pointed out by James Widener)
+ - Fixed a memory leak in Pthread_Mutex
+ - Fixed several memory leaks in the testing code
+ - Bulletproofed the EMSA/EME/KDF/MGF retrieval functions
+ - Minor cleanups in SecureAllocator
+ - Removed a needless mutex guarding the (stateless) global timer
+ - Fixed a piece of bash-specific code in botan-config
+ - X.509 objects report more information about decoding errors
+ - Cleaned up some of the exception handling
+ - Updated the example config file with new OIDSs
+ - Moved the build instructions into a separate document, building.tex
+
+* 1.3.2, November 13, 2003
+ - Fixed a bug preventing DSA signatures from verifying on X.509 objects
+ - Made the X509_Store search routines more efficient and flexible
+ - Added a function to X509_PublicKey to do easy public/private key matching
+ - Added support for decoding indefinite length BER data
+ - Changed Pipe's peek() to take an offset
+ - Removed Filter::set_owns in favor of the new incr_owns function
+ - Removed BigInt::zero() and BigInt::one()
+ - Renamed the PEM related options from base/pem_* to pem/*
+ - Added an option to specify the line width when encoding PEM
+ - Removed the "rng/safe_longterm" option; it's always on now
+ - Changed the cipher used for RNG super-encryption from ARC4 to WiderWake4+1
+ - Cleaned up the base64/hex encoders and decoders
+ - Added an ASN.1/BER decoder as an example
+ - AES had its internals marked 'public' in previous versions
+ - Changed the value of the ASN.1 NO_OBJECT enum
+ - Various new hacks in the configure script
+ - Removed the already nominal support for SunOS
+
+* 1.3.1, November 4, 2003
+ - Generalized a few pieces of the DER encoder
+ - PKCS8::load_key would fail if handed an unencrypted key
+ - Added a failsafe so PKCS #8 key decoding can't go into an infinite loop
+
+* 1.3.0, November 2, 2003
+ - Major redesign of the PKCS #8 private key import/export system
+ - Added a small amount of UI interface code for getting passphrases
+ - Added heuristics that tell if a key, cert, etc is stored as PEM or BER
+ - Removed CS-Cipher, SHARK, ThreeWay, MD5-MAC, and EMAC
+ - Removed certain deprecated constructors of RSA, DSA, DH, RW, NR
+ - Made PEM decoding more forgiving of extra text before the header

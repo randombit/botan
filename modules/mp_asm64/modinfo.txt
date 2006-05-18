@@ -1,0 +1,23 @@
+realname "MPI Assembler Backend for 64 bit Systems"
+
+mp_bits 64
+
+replace_file mp_asm.h
+
+# Disable amd64 since (nominally) the mp_amd64 module has that covered
+<arch>
+alpha
+# amd64
+ia64
+mips64
+ppc64
+sparc64
+</arch>
+
+# The inline asm only works with gcc, but it looks like (at least on
+# UltraSPARC), using 64-bit words and the sythensized multiply is a 5 to 25%
+# win, so it's probably worth using elsewhere.
+<cc>
+gcc
+sunwspro
+</cc>

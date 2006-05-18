@@ -1,0 +1,6 @@
+The following functions/classes/headers/macros/names are deprecated, and will
+be removed in a later release. If there is a suggested replacement API, it is
+mentioned here.
+
+Deprecated APIs / Classes
+----------------------------------------------------

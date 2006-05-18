@@ -1,0 +1,24 @@
+realname "Hardware Timer"
+
+define TIMER_HARDWARE
+
+add_file tm_hard.cpp
+add_file tm_hard.h
+
+<cc>
+gcc
+</cc>
+
+<arch>
+# RDTSC: Pentium and up
+i586
+i686
+athlon
+pentium4
+amd64
+
+ppc   # PPC timebase register
+ppc64 # PPC timebase register
+alpha # rpcc
+sparc64 # %tick register
+</arch>

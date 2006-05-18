@@ -1,0 +1,56 @@
+Here are some notes about various things I should/could/might do. If you're
+interested in working on something here (or something else!), drop me an email
+and we can coordinate efforts.
+
+* Algorithms / Related
+  - Algorithms: ECDSA, ECDH, ... ?
+
+* X.509 / PKCS / ASN.1
+  - X.509 code is in need of a major cleanup
+  - OCSP (RFC 2560)
+  - Attribute Certificates (RFC 3281)
+  - Support for Unicode (BMP STRING/UNIVERSAL STRING) strings in ASN1_String
+  - Support for Unicode/UTF-8 strings everywhere they may show up (certs, etc)
+
+* New Interfaces / Protocols
+  - SSL/TLS: Alpha release is available (http://ajisai.randombit.net)
+  - OpenPGP
+  - CMS: alpha1 is available as a separate download; currently stalled
+  - NIST's PKAPI: needs CMS
+
+* Modules
+  - EntropySources
+      z/OS, OS/400, VMS
+  - Compression: Zip, Gzip
+  - Dynamic Algorithm Loader
+     - Maybe, (maybe, maybe) integrate it with the stuff in algolist.cpp
+       so it can do automatic lookup. I'm rather skeptical of this approach
+       but it is a possibility.
+   - mp_asm64: z/Series
+   - HTTP certificate store access
+   - Engines
+      - VIA PadLock
+      - Broadcom BCM582x: Free Linux drivers are available, but I need a card
+                          to test against.
+      - CryptoSwift: Rainbow blew me off when I contacted them. I have a card,
+                     I just need drivers and API docs.
+      - Hifn: Sokretis sells them cheap, but drivers may be an issue.
+      - IBM 4758 / CCA
+      - HP / Atalla
+      - Intel Performance Primitives library
+      - PKCS #11
+      - Other suggestions welcome
+
+* Configure / Build System
+  - The build system doesn't handle GCC on Windows well
+  - Support for new OSes:
+     - z/OS
+     - OS/400
+     - VMS
+     - Hurd
+     - Plan 9
+  - Support more packaging systems
+     - Debian
+     - Solaris
+     - MacOS X [Fink?]
+     - Windows binary installer

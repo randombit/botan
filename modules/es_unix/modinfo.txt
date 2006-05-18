@@ -1,0 +1,25 @@
+realname "Generic Unix Entropy Source"
+
+define ENTROPY_SRC_UNIX
+
+add_file es_unix.cpp
+add_file unix_src.cpp
+add_file unix_cmd.cpp
+
+add_file es_unix.h
+add_file unix_cmd.h
+
+<os>
+aix
+beos
+cygwin
+darwin
+freebsd
+hpux
+irix
+linux
+netbsd
+qnx
+solaris
+tru64
+</os>

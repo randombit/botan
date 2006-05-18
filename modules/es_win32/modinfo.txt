@@ -1,0 +1,18 @@
+realname "MS Windows Entropy Source"
+
+# Probably not much of an issue anymore
+#note "This module will not run under NT4"
+
+define ENTROPY_SRC_WIN32
+
+add_file es_win32.h
+add_file es_win32.cpp
+
+<os>
+windows
+cygwin
+</os>
+
+<libs>
+windows -> user32
+</libs>

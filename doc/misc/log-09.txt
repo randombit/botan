@@ -1,0 +1,28 @@
+
+* 0.9.2, August 18, 2002
+ - DH_PrivateKey::public_value() was returning the wrong value
+ - Various BigInt optimizations
+ - The filters.h header now includes hex.h and base64.h
+ - Moved Counter mode to ctr.h
+ - Fixed a couple minor problems with VC++ 7
+ - Fixed problems with the RPM spec file
+
+* 0.9.1, August 10, 2002
+ - Grand rename from OpenCL to Botan
+ - Major optimizations for the PK algorithms
+ - Added ElGamal encryption
+ - Added Whirlpool
+ - Tweaked memory allocation parameters
+ - Improved the method of seeding the global RNG
+ - Moved pkcs1.h to eme_pkcs.h
+ - Added more test vectors for some algorithms
+ - Fixed error reporting in the BigInt tests
+ - Removed Default_Timer, it was pointless
+ - Added some new example applications
+ - Removed some old examples that weren't that interesting
+ - Documented the compression modules
+
+* 0.9.0, August 3, 2002
+ - EMSA4 supports variable salt size
+ - PK_* can take a string naming the encoding method to use
+ - Started writing some internals documentation

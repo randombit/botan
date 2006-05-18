@@ -1,0 +1,16 @@
+realname "Zlib Compressor"
+#realname "Zlib/Gzip Compressor"
+
+uses_external_libs
+
+define COMPRESSOR_ZLIB
+#define COMPRESSOR_GZIP
+
+add_file zlib.h
+add_file zlib.cpp
+#add_file gzip.h
+#add_file gzip.cpp
+
+<libs>
+all -> z
+</libs>

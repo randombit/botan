@@ -1,0 +1,24 @@
+realname "File Tree Walking Entropy Source"
+
+define ENTROPY_SRC_FTW
+
+add_file es_ftw.h
+add_file es_ftw.cpp
+
+<os>
+aix
+cygwin
+darwin
+freebsd
+hpux
+irix
+linux
+openbsd
+qnx
+solaris
+tru64
+
+# Doesn't build on 2.0.2/x86 due to libc/libstdc++ header issues; no
+# big deal since it has /dev/*random
+#netbsd
+</os>
