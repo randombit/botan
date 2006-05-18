@@ -43,8 +43,14 @@ namespace Botan {
         ASM("movl %%eax, 4*" INDEX " (%[z])")
 
 #define DO_8_TIMES(MACRO, ARG) \
-        MACRO(ARG, "0") MACRO(ARG, "1") MACRO(ARG, "2") MACRO(ARG, "3") \
-        MACRO(ARG, "4") MACRO(ARG, "5") MACRO(ARG, "6") MACRO(ARG, "7")
+        MACRO(ARG, "0") \
+        MACRO(ARG, "1") \
+        MACRO(ARG, "2") \
+        MACRO(ARG, "3") \
+        MACRO(ARG, "4") \
+        MACRO(ARG, "5") \
+        MACRO(ARG, "6") \
+        MACRO(ARG, "7")
 
 #define ADD_OR_SUBTRACT(CORE_CODE)     \
         ASM("rorl %[carry]")           \
