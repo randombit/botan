@@ -21,7 +21,7 @@ my $PROJECT_NAME_LC = lc $PROJECT_NAME;
 
 my $MAJOR_VERSION = 1;
 my $MINOR_VERSION = 5;
-my $PATCH_VERSION = 6;
+my $PATCH_VERSION = 7;
 
 # If 1, then we always copy include files, without attempting to make symlinks
 # or hardlinks. It seems that link("","") will succeed on Windows, but the
@@ -70,8 +70,7 @@ my %DOCS = (
    'botan.rc' => $DOC_DIR,
 
    'credits.txt' => $DOC_DIR,
-   'bugs.txt'    => $DOC_DIR,
-   'deprecated.txt' => $DOC_DIR,
+#   'deprecated.txt' => $DOC_DIR,
    'license.txt' => $DOC_DIR,
    'log.txt' => $DOC_DIR,
    'thanks.txt' => $DOC_DIR,
