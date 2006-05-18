@@ -126,6 +126,7 @@ fi
 /usr/share/doc/Botan-%{VERSION}/thanks.txt
 /usr/share/doc/Botan-%{VERSION}/credits.txt
 /usr/share/doc/Botan-%{VERSION}/pgpkeys.asc
+/usr/share/doc/Botan-%{VERSION}/info.txt
 /usr/lib/libbotan-%{MAJOR}.%{MINOR}.%{PATCH}.so
 
 %files devel
@@ -137,10 +138,8 @@ fi
 /usr/share/doc/Botan-%{VERSION}/tutorial.pdf
 /usr/share/doc/Botan-%{VERSION}/fips140.tex
 /usr/share/doc/Botan-%{VERSION}/fips140.pdf
-/usr/share/doc/Botan-%{VERSION}/deprecated.txt
 /usr/share/doc/Botan-%{VERSION}/todo.txt
 /usr/share/doc/Botan-%{VERSION}/bugs.txt
-/usr/share/doc/Botan-%{VERSION}/rngs.txt
 /usr/share/doc/Botan-%{VERSION}/botan.rc
 /usr/lib/libbotan.so
 /usr/lib/libbotan.a
