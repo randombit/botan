@@ -71,6 +71,7 @@ my %DOCS = (
 
    'credits.txt' => $DOC_DIR,
 #   'deprecated.txt' => $DOC_DIR,
+   'info.txt' => $DOC_DIR,
    'license.txt' => $DOC_DIR,
    'log.txt' => $DOC_DIR,
    'thanks.txt' => $DOC_DIR,
