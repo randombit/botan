@@ -13,6 +13,8 @@
 using namespace Botan;
 
 #include <iostream>
+#include <iterator>
+#include <algorithm>
 
 std::string to_hex(const SecureVector<byte>& bin)
    {
@@ -24,13 +26,19 @@ std::string to_hex(const SecureVector<byte>& bin)
       return "(none)";
    }
 
-void do_print(const std::string& what, const std::string& val)
+void do_print(const std::string& what, const std::string& vals)
+   //              const std::vector<std::string>& vals)
    {
-   if(val == "")
+   if(vals.size() == 0)
       return;
 
-   std::cout << "   " << what << ": " << val << std::endl;
+   std::cout << "   " << what << ": ";
+   std::cout << vals;
+   //std::copy(vals.begin(), vals.end(),
+   //          std::ostream_iterator<std::string>(std::cout, " "));
+   std::cout << "\n";
    }
+
 
 void do_subject(const X509_Certificate& cert, const std::string& what)
    {
@@ -103,20 +111,20 @@ int main(int argc, char* argv[])
             std::cout << "   CRL Sign\n";
          }
 
-      std::vector<OID> policies = cert.policies();
+      std::vector<std::string> policies = cert.policies();
       if(policies.size())
          {
          std::cout << "Policies: " << std::endl;
          for(u32bit j = 0; j != policies.size(); j++)
-            std::cout << "   " << OIDS::lookup(policies[j]) << std::endl;
+            std::cout << "   " << policies[j] << std::endl;
          }
 
-      std::vector<OID> ex_constraints = cert.ex_constraints();
+      std::vector<std::string> ex_constraints = cert.ex_constraints();
       if(ex_constraints.size())
          {
          std::cout << "Extended Constraints: " << std::endl;
          for(u32bit j = 0; j != ex_constraints.size(); j++)
-            std::cout << "   " << OIDS::lookup(ex_constraints[j]) << std::endl;
+            std::cout << "   " << ex_constraints[j] << std::endl;
          }
 
       std::cout << "Signature algorithm: " <<

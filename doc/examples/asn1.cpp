@@ -33,6 +33,8 @@
 /*******************************************************************/
 
 #include <botan/botan.h>
+#include <botan/bigint.h>
+#include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/asn1_obj.h>
 #include <botan/oids.h>
@@ -143,13 +145,13 @@ void decode(BER_Decoder& decoder, u32bit level)
       else if(type_tag == OBJECT_ID)
          {
          OID oid;
-         BER::decode(data, oid);
+         data.decode(oid);
          emit(type_name(type_tag), level, length, OIDS::lookup(oid));
          }
       else if(type_tag == INTEGER)
          {
          BigInt number;
-         BER::decode(data, number);
+         data.decode(number);
 
          SecureVector<byte> rep;
 
@@ -168,7 +170,7 @@ void decode(BER_Decoder& decoder, u32bit level)
       else if(type_tag == BOOLEAN)
          {
          bool boolean;
-         BER::decode(data, boolean);
+         data.decode(boolean);
          emit(type_name(type_tag),
               level, length, (boolean ? "true" : "false"));
          }
@@ -179,7 +181,7 @@ void decode(BER_Decoder& decoder, u32bit level)
       else if(type_tag == OCTET_STRING)
          {
          SecureVector<byte> bits;
-         BER::decode(data, bits, type_tag);
+         data.decode(bits, type_tag);
          bool not_text = false;
 
          for(u32bit j = 0; j != bits.size(); j++)
@@ -193,7 +195,7 @@ void decode(BER_Decoder& decoder, u32bit level)
       else if(type_tag == BIT_STRING)
          {
          SecureVector<byte> bits;
-         BER::decode(data, bits, type_tag);
+         data.decode(bits, type_tag);
 
          std::vector<bool> bit_set;
 
@@ -222,7 +224,7 @@ void decode(BER_Decoder& decoder, u32bit level)
               type_tag == BMP_STRING)
          {
          ASN1_String str;
-         BER::decode(data, str);
+         data.decode(str);
          if(UTF8_TERMINAL)
             emit(type_name(type_tag), level, length, iso2utf(str.iso_8859()));
          else
@@ -231,7 +233,7 @@ void decode(BER_Decoder& decoder, u32bit level)
       else if(type_tag == UTC_TIME || type_tag == GENERALIZED_TIME)
          {
          X509_Time time;
-         BER::decode(data, time);
+         data.decode(time);
          emit(type_name(type_tag), level, length, time.readable_string());
          }
       else
