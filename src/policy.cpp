@@ -227,7 +227,6 @@ void set_default_config(Library_State* state)
    state->set_option("conf", "x509/exts/key_usage", "critical");
    state->set_option("conf", "x509/exts/extended_key_usage", "yes");
    state->set_option("conf", "x509/exts/crl_number", "yes");
-
    }
 
 /*************************************************

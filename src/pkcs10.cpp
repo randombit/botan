@@ -4,7 +4,8 @@
 *************************************************/
 
 #include <botan/pkcs10.h>
-#include <botan/asn1_int.h>
+#include <botan/der_enc.h>
+#include <botan/ber_dec.h>
 #include <botan/parsing.h>
 #include <botan/x509stor.h>
 #include <botan/oids.h>
@@ -49,7 +50,7 @@ void PKCS10_Request::force_decode()
       throw Decoding_Error("Unknown version code in PKCS #10 request: " +
                            to_string(version));
 
-   BER::decode(cert_req_info, dn);
+   cert_req_info.decode(dn);
 
    BER_Object public_key = cert_req_info.get_next_object();
    if(public_key.type_tag != SEQUENCE || public_key.class_tag != CONSTRUCTED)
@@ -66,7 +67,7 @@ void PKCS10_Request::force_decode()
       while(attributes.more_items())
          {
          Attribute attr;
-         BER::decode(attributes, attr);
+         attributes.decode(attr);
          handle_attribute(attr);
          }
       attributes.verify_end();
@@ -96,23 +97,23 @@ void PKCS10_Request::handle_attribute(const Attribute& attr)
    if(attr.oid == OIDS::lookup("PKCS9.EmailAddress"))
       {
       ASN1_String email;
-      BER::decode(value, email);
+      value.decode(email);
       subject_alt.add_attribute("RFC822", email.value());
       }
    else if(attr.oid == OIDS::lookup("PKCS9.ChallengePassword"))
       {
       ASN1_String challenge_password;
-      BER::decode(value, challenge_password);
+      value.decode(challenge_password);
       challenge = challenge_password.value();
       }
    else if(attr.oid == OIDS::lookup("PKCS9.ExtensionRequest"))
       {
-      BER_Decoder sequence = BER::get_subsequence(value);
+      BER_Decoder sequence = value.start_cons(SEQUENCE);
 
       while(sequence.more_items())
          {
          Extension extn;
-         BER::decode(sequence, extn);
+         sequence.decode(extn);
          handle_v3_extension(extn);
          }
       sequence.verify_end();
@@ -130,23 +131,23 @@ void PKCS10_Request::handle_v3_extension(const Extension& extn)
       BER::decode(value, constraints_value);
    else if(extn.oid == OIDS::lookup("X509v3.ExtendedKeyUsage"))
       {
-      BER_Decoder key_usage = BER::get_subsequence(value);
+      BER_Decoder key_usage = value.start_cons(SEQUENCE);
       while(key_usage.more_items())
          {
          OID usage_oid;
-         BER::decode(key_usage, usage_oid);
+         key_usage.decode(usage_oid);
          ex_constraints_list.push_back(usage_oid);
          }
       }
    else if(extn.oid == OIDS::lookup("X509v3.BasicConstraints"))
       {
-      BER_Decoder constraints = BER::get_subsequence(value);
-      BER::decode_optional(constraints, is_ca, BOOLEAN, UNIVERSAL, false);
-      BER::decode_optional(constraints, max_path_len,
-                           INTEGER, UNIVERSAL, NO_CERT_PATH_LIMIT);
+      BER_Decoder constraints = value.start_cons(SEQUENCE);
+      constraints.decode_optional(is_ca, BOOLEAN, UNIVERSAL, false);
+      constraints.decode_optional(max_path_len, INTEGER, UNIVERSAL,
+                                  NO_CERT_PATH_LIMIT);
       }
    else if(extn.oid == OIDS::lookup("X509v3.SubjectAlternativeName"))
-      BER::decode(value, subject_alt);
+      value.decode(subject_alt);
    else
       return;
 

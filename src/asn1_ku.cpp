@@ -4,7 +4,8 @@
 *************************************************/
 
 #include <botan/asn1_obj.h>
-#include <botan/asn1_int.h>
+#include <botan/der_enc.h>
+#include <botan/ber_dec.h>
 #include <botan/bit_ops.h>
 
 namespace Botan {

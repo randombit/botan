@@ -19,6 +19,7 @@ class OID : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const;
+      void decode_from(class BER_Decoder&);
 
       bool is_empty() const { return id.size() == 0; }
       std::vector<u32bit> get_id() const { return id; }

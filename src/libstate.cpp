@@ -14,7 +14,11 @@ namespace Botan {
 /*************************************************
 * Botan's global state                           *
 *************************************************/
+namespace {
+
 Library_State* global_lib_state = 0;
+
+}
 
 Library_State& global_state()
    {

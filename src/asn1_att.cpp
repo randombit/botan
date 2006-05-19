@@ -4,6 +4,8 @@
 *************************************************/
 
 #include <botan/asn1_obj.h>
+#include <botan/der_enc.h>
+#include <botan/ber_dec.h>
 #include <botan/oids.h>
 
 namespace Botan {
@@ -30,33 +32,27 @@ Attribute::Attribute(const std::string& attr_oid,
 /*************************************************
 * DER encode a Attribute                         *
 *************************************************/
-void Attribute::encode_into(DER_Encoder& der) const
+void Attribute::encode_into(DER_Encoder& codec) const
    {
-   der.start_sequence()
+   codec.start_cons(SEQUENCE)
       .encode(oid)
-      .start_set()
-         .add_raw_octets(parameters)
-      .end_set()
-   .end_sequence();
+      .start_cons(SET)
+         .raw_bytes(parameters)
+      .end_cons()
+   .end_cons();
    }
-
-namespace BER {
 
 /*************************************************
 * Decode a BER encoded Attribute                 *
 *************************************************/
-void decode(BER_Decoder& source, Attribute& attr)
+void Attribute::decode_from(BER_Decoder& codec)
    {
-   BER_Decoder decoder = BER::get_subsequence(source);
-   BER::decode(decoder, attr.oid);
-
-   BER_Decoder attributes = BER::get_subset(decoder);
-   attr.parameters = attributes.get_remaining();
-   attributes.verify_end();
-
-   decoder.verify_end();
+   codec.start_cons(SEQUENCE)
+      .decode(oid)
+      .start_cons(SET)
+         .raw_bytes(parameters)
+      .end_cons()
+   .end_cons();
    }
-
-}
 
 }

@@ -6,6 +6,7 @@
 #include <botan/x509self.h>
 #include <botan/x509_ext.h>
 #include <botan/x509_ca.h>
+#include <botan/der_enc.h>
 #include <botan/conf.h>
 #include <botan/look_pk.h>
 #include <botan/oids.h>
@@ -140,53 +141,45 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
 
    DER_Encoder tbs_req;
 
-   tbs_req.start_sequence()
+   tbs_req.start_cons(SEQUENCE)
       .encode(PKCS10_VERSION)
       .encode(subject_dn)
-      .add_raw_octets(pub_key)
-      .start_explicit(ASN1_Tag(0));
+      .raw_bytes(pub_key)
+      .start_explicit(0);
 
    if(opts.challenge != "")
       {
       ASN1_String challenge(opts.challenge, DIRECTORY_STRING);
 
-#if 0
-      DER_Encoder attr_encoder;
-      attr_encoder.encode(challenge);
-      tbs_req.encode(
-         Attribute("PKCS9.ChallengePassword", attr_encoder.get_contents())
-         );
-#else
       tbs_req.encode(
          Attribute("PKCS9.ChallengePassword",
                    DER_Encoder().encode(challenge).get_contents()
             )
          );
-#endif
       }
 
    tbs_req.encode(
       Attribute("PKCS9.ExtensionRequest",
                 DER_Encoder()
-                   .start_sequence()
+                   .start_cons(SEQUENCE)
                       .encode(extensions)
-                   .end_sequence()
+                   .end_cons()
                .get_contents()
          )
       )
-      .end_explicit(ASN1_Tag(0))
-      .end_sequence();
+      .end_explicit()
+      .end_cons();
 
    MemoryVector<byte> tbs_bits = tbs_req.get_contents();
    MemoryVector<byte> sig = signer->sign_message(tbs_bits);
 
    DataSource_Memory source(
       DER_Encoder()
-         .start_sequence()
-            .add_raw_octets(tbs_bits)
+         .start_cons(SEQUENCE)
+            .raw_bytes(tbs_bits)
             .encode(sig_algo)
             .encode(sig, BIT_STRING)
-         .end_sequence()
+         .end_cons()
       .get_contents()
       );
 

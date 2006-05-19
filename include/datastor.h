@@ -34,13 +34,17 @@ class Data_Store
 
       bool operator==(const Data_Store&) const;
 
-      std::multimap<std::string, std::string> get(const Matcher&) const;
+      std::multimap<std::string, std::string>
+         search_with(const Matcher&) const;
+
       std::vector<std::string> get(const std::string&) const;
 
       std::string get1(const std::string&) const;
 
       MemoryVector<byte> get1_memvec(const std::string&) const;
       u32bit get1_u32bit(const std::string&, u32bit = 0) const;
+
+      bool has_value(const std::string&) const;
 
       void add(const std::multimap<std::string, std::string>&);
       void add(const std::string&, const std::string&);

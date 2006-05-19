@@ -4,11 +4,12 @@
 *************************************************/
 
 #include <botan/crl_ent.h>
+#include <botan/x509_ext.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+#include <botan/bigint.h>
 #include <botan/conf.h>
 #include <botan/oids.h>
-#include <botan/x509_crl.h>
 #include <botan/util.h>
 
 namespace Botan {
@@ -61,105 +62,67 @@ bool operator<(const CRL_Entry& a1, const CRL_Entry& a2)
    return (a1.time.cmp(a2.time) < 0);
    }
 
-namespace DER {
-
 /*************************************************
-* DER encode an CRL_Entry                        *
+* DER encode a CRL_Entry                         *
 *************************************************/
-void encode(DER_Encoder& der, const CRL_Entry& crl_ent)
+void CRL_Entry::encode_into(DER_Encoder& der) const
    {
-   der.start_sequence()
-      .encode(BigInt::decode(crl_ent.serial, crl_ent.serial.size()))
-      .encode(crl_ent.time)
-      .start_sequence();
+   Extensions extensions;
 
-   if(crl_ent.reason != UNSPECIFIED)
-      {
-#if 1
-      der.start_sequence()
-         .encode(OIDS::lookup("X509v3.ReasonCode"))
-         .encode(
-            DER_Encoder()
-               .encode((u32bit)crl_ent.reason, ENUMERATED, UNIVERSAL)
-            .get_contents(),
-            OCTET_STRING)
-         .end_sequence();
-#else
-      DER_Encoder v2_ext;
-      v2_ext.encode((u32bit)crl_ent.reason, ENUMERATED, UNIVERSAL);
-      der.encode(Extension("X509v3.ReasonCode", v2_ext.get_contents()));
-#endif
-      }
+   extensions.add(new Cert_Extension::CRL_ReasonCode(reason));
 
-   der.end_sequence()
-      .end_sequence();
+   der.start_cons(SEQUENCE)
+         .encode(BigInt::decode(serial, serial.size()))
+         .encode(time)
+         .encode(extensions)
+      .end_cons();
    }
-
-}
-
-namespace BER {
-
-namespace {
-
-/*************************************************
-* Decode a CRL entry extension                   *
-*************************************************/
-void handle_crl_entry_extension(CRL_Entry& crl_ent, const Extension& extn)
-   {
-   BER_Decoder value(extn.value);
-
-   if(extn.oid == OIDS::lookup("X509v3.ReasonCode"))
-      {
-      u32bit reason_code;
-      value.decode(reason_code, ENUMERATED, UNIVERSAL);
-      crl_ent.reason = CRL_Code(reason_code);
-      }
-   else
-      {
-      if(extn.critical)
-         {
-         std::string action = Config::get_string("x509/crl/unknown_critical");
-         if(action == "throw")
-            throw Decoding_Error("Unknown critical CRL entry extension " +
-                                 extn.oid.as_string());
-         else if(action != "ignore")
-            throw Invalid_Argument("Bad value of x509/crl/unknown_critical: "
-                                   + action);
-         }
-      return;
-      }
-
-   value.verify_end();
-   }
-
-}
 
 /*************************************************
 * Decode a BER encoded CRL_Entry                 *
 *************************************************/
-void decode(BER_Decoder& source, CRL_Entry& crl_ent)
+void CRL_Entry::decode_from(BER_Decoder& source)
    {
-   BigInt serial_number;
+   BigInt serial_number_bn;
 
-   BER_Decoder sequence = BER::get_subsequence(source);
-   sequence.decode(serial_number);
-   crl_ent.serial = BigInt::encode(serial_number);
-   BER::decode(sequence, crl_ent.time);
+   source.start_cons(SEQUENCE)
+      .decode(serial_number_bn)
+      .decode(time);
 
-   if(sequence.more_items())
+   if(source.more_items())
       {
-      BER_Decoder crl_entry_exts = BER::get_subsequence(sequence);
+      BER_Decoder crl_entry_exts = source.start_cons(SEQUENCE);
       while(crl_entry_exts.more_items())
          {
          Extension extn;
-         BER::decode(crl_entry_exts, extn);
-         handle_crl_entry_extension(crl_ent, extn);
+         crl_entry_exts.decode(extn);
+
+         BER_Decoder value(extn.value);
+
+         if(extn.oid == OIDS::lookup("X509v3.ReasonCode"))
+            {
+            u32bit reason_code;
+            value.decode(reason_code, ENUMERATED, UNIVERSAL);
+            reason = CRL_Code(reason_code);
+            }
+         else if(extn.critical)
+            {
+            std::string action =
+               Config::get_string("x509/crl/unknown_critical");
+
+            if(action == "throw")
+               throw Decoding_Error("Unknown critical CRL entry extn " +
+                                    extn.oid.as_string());
+            else if(action != "ignore")
+               throw Invalid_Argument("Bad setting x509/crl/unknown_critical: "
+                                      + action);
+            }
+         value.verify_end();
          }
+      source.end_cons();
       }
 
-   sequence.verify_end();
+   serial = BigInt::encode(serial_number_bn);
    }
-
-}
 
 }

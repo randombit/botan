@@ -194,30 +194,30 @@ SecureVector<byte> DL_Group::DER_encode(Format format) const
    if(format == ANSI_X9_57)
       {
       return DER_Encoder()
-         .start_sequence()
+         .start_cons(SEQUENCE)
             .encode(p)
             .encode(q)
             .encode(g)
-         .end_sequence()
+         .end_cons()
       .get_contents();
       }
    else if(format == ANSI_X9_42)
       {
       return DER_Encoder()
-         .start_sequence()
+         .start_cons(SEQUENCE)
             .encode(p)
             .encode(g)
             .encode(q)
-         .end_sequence()
+         .end_cons()
       .get_contents();
       }
    else if(format == PKCS_3)
       {
       return DER_Encoder()
-         .start_sequence()
+         .start_cons(SEQUENCE)
             .encode(p)
             .encode(g)
-         .end_sequence()
+         .end_cons()
       .get_contents();
       }
 
@@ -248,7 +248,7 @@ void DL_Group::BER_decode(DataSource& source, Format format)
    BigInt new_p, new_q, new_g;
 
    BER_Decoder decoder(source);
-   BER_Decoder ber = BER::get_subsequence(decoder);
+   BER_Decoder ber = decoder.start_cons(SEQUENCE);
 
    if(format == ANSI_X9_57)
       {

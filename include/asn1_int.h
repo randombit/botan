@@ -6,8 +6,9 @@
 #ifndef BOTAN_ASN1_H__
 #define BOTAN_ASN1_H__
 
-#include <botan/bigint.h>
+#include <botan/secmem.h>
 #include <botan/enums.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
@@ -18,7 +19,20 @@ class ASN1_Object
    {
    public:
       virtual void encode_into(class DER_Encoder&) const = 0;
+      virtual void decode_from(class BER_Decoder&) = 0;
       virtual ~ASN1_Object() {}
+   };
+
+/*************************************************
+* BER Encoded Object                             *
+*************************************************/
+class BER_Object
+   {
+   public:
+      void assert_is_a(ASN1_Tag, ASN1_Tag);
+
+      ASN1_Tag type_tag, class_tag;
+      SecureVector<byte> value;
    };
 
 /*************************************************
@@ -29,6 +43,7 @@ class DataSource;
 namespace ASN1 {
 
 SecureVector<byte> put_in_sequence(const MemoryRegion<byte>&);
+std::string to_string(const BER_Object&);
 bool maybe_BER(DataSource&);
 
 }

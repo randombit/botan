@@ -13,9 +13,12 @@ namespace Botan {
 /*************************************************
 * CRL Entry                                      *
 *************************************************/
-class CRL_Entry
+class CRL_Entry : public ASN1_Object
    {
    public:
+      void encode_into(class DER_Encoder&) const;
+      void decode_from(class BER_Decoder&);
+
       MemoryVector<byte> serial;
       X509_Time time;
       CRL_Code reason;
@@ -29,24 +32,6 @@ class CRL_Entry
 bool operator==(const CRL_Entry&, const CRL_Entry&);
 bool operator!=(const CRL_Entry&, const CRL_Entry&);
 bool operator<(const CRL_Entry&, const CRL_Entry&);
-
-/*************************************************
-* DER Encoding Functions                         *
-*************************************************/
-namespace DER {
-
-void encode(DER_Encoder&, const CRL_Entry&);
-
-}
-
-/*************************************************
-* BER Decoding Functions                         *
-*************************************************/
-namespace BER {
-
-void decode(BER_Decoder&, CRL_Entry&);
-
-}
 
 }
 

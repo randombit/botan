@@ -6,6 +6,8 @@
 #include <botan/x509_key.h>
 #include <botan/filters.h>
 #include <botan/asn1_obj.h>
+#include <botan/der_enc.h>
+#include <botan/ber_dec.h>
 #include <botan/pk_algs.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
@@ -47,11 +49,12 @@ namespace {
 void X509_extract_info(DataSource& source, AlgorithmIdentifier& alg_id,
                        MemoryVector<byte>& key)
    {
-   BER_Decoder decoder(source);
-   BER_Decoder sequence = BER::get_subsequence(decoder);
-   BER::decode(sequence, alg_id);
-   sequence.decode(key, BIT_STRING);
-   sequence.verify_end();
+   BER_Decoder(source)
+      .start_cons(SEQUENCE)
+         .decode(alg_id)
+         .decode(key, BIT_STRING)
+         .verify_end()
+      .end_cons();
    }
 
 }
@@ -63,12 +66,12 @@ void encode(const X509_PublicKey& key, Pipe& pipe, X509_Encoding encoding)
    {
    AlgorithmIdentifier alg_id(key.get_oid(), key.DER_encode_params());
 
-   MemoryVector<byte> der = 
+   MemoryVector<byte> der =
       DER_Encoder()
-         .start_sequence()
+         .start_cons(SEQUENCE)
             .encode(alg_id)
             .encode(key.DER_encode_pub(), BIT_STRING)
-         .end_sequence()
+         .end_cons()
       .get_contents();
 
    if(encoding == PEM)

@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/ber_dec.h>
-#include <botan/asn1_int.h>
+#include <botan/bigint.h>
 #include <botan/bit_ops.h>
 
 namespace Botan {
@@ -133,6 +133,15 @@ u32bit find_eoc(DataSource* ber)
 }
 
 /*************************************************
+* Check a type invariant on BER data             *
+*************************************************/
+void BER_Object::assert_is_a(ASN1_Tag type_tag, ASN1_Tag class_tag)
+   {
+   if(this->type_tag != type_tag || this->class_tag != class_tag)
+      throw BER_Decoding_Error("Tag mismatch when decoding");
+   }
+
+/*************************************************
 * Check if more objects are there                *
 *************************************************/
 bool BER_Decoder::more_items() const
@@ -145,32 +154,34 @@ bool BER_Decoder::more_items() const
 /*************************************************
 * Verify that no bytes remain in the source      *
 *************************************************/
-void BER_Decoder::verify_end() const
+BER_Decoder& BER_Decoder::verify_end()
    {
    if(!source->end_of_data() || (pushed.type_tag != NO_OBJECT))
       throw Invalid_State("BER_Decoder::verify_end called, but data remains");
+   return (*this);
    }
 
 /*************************************************
-* Return all the bytes remaining in the source   *
+* Save all the bytes remaining in the source     *
 *************************************************/
-SecureVector<byte> BER_Decoder::get_remaining()
+BER_Decoder& BER_Decoder::raw_bytes(MemoryRegion<byte>& out)
    {
-   SecureVector<byte> out;
+   out.destroy();
    byte buf;
    while(source->read_byte(buf))
       out.append(buf);
-   return out;
+   return (*this);
    }
 
 /*************************************************
 * Discard all the bytes remaining in the source  *
 *************************************************/
-void BER_Decoder::discard_remaining()
+BER_Decoder& BER_Decoder::discard_remaining()
    {
    byte buf;
    while(source->read_byte(buf))
       ;
+   return (*this);
    }
 
 /*************************************************
@@ -213,6 +224,30 @@ void BER_Decoder::push_back(const BER_Object& obj)
    }
 
 /*************************************************
+* Begin decoding a CONSTRUCTED type              *
+*************************************************/
+BER_Decoder BER_Decoder::start_cons(ASN1_Tag type_tag)
+   {
+   BER_Object obj = get_next_object();
+   obj.assert_is_a(type_tag, CONSTRUCTED);
+   BER_Decoder result(obj.value, obj.value.size());
+   result.parent = this;
+   return result;
+   }
+
+/*************************************************
+* Finish decoding a CONSTRUCTED type             *
+*************************************************/
+BER_Decoder& BER_Decoder::end_cons()
+   {
+   if(!parent)
+      throw Invalid_State("BER_Decoder::end_cons called with NULL parent");
+   if(!source->end_of_data())
+      throw Decoding_Error("BER_Decoder::end_cons called with data left");
+   return (*parent);
+   }
+
+/*************************************************
 * BER_Decoder Constructor                        *
 *************************************************/
 BER_Decoder::BER_Decoder(DataSource& src)
@@ -220,6 +255,7 @@ BER_Decoder::BER_Decoder(DataSource& src)
    source = &src;
    owns = false;
    pushed.type_tag = pushed.class_tag = NO_OBJECT;
+   parent = 0;
    }
 
 /*************************************************
@@ -230,6 +266,7 @@ BER_Decoder::BER_Decoder(const byte data[], u32bit length)
    source = new DataSource_Memory(data, length);
    owns = true;
    pushed.type_tag = pushed.class_tag = NO_OBJECT;
+   parent = 0;
    }
 
 /*************************************************
@@ -240,6 +277,7 @@ BER_Decoder::BER_Decoder(const MemoryRegion<byte>& data)
    source = new DataSource_Memory(data);
    owns = true;
    pushed.type_tag = pushed.class_tag = NO_OBJECT;
+   parent = 0;
    }
 
 /*************************************************
@@ -255,6 +293,7 @@ BER_Decoder::BER_Decoder(const BER_Decoder& other)
       owns = true;
       }
    pushed.type_tag = pushed.class_tag = NO_OBJECT;
+   parent = 0;
    }
 
 /*************************************************
@@ -265,6 +304,164 @@ BER_Decoder::~BER_Decoder()
    if(owns)
       delete source;
    source = 0;
+   }
+
+/*************************************************
+* Request for an object to decode itself         *
+*************************************************/
+BER_Decoder& BER_Decoder::decode(ASN1_Object& obj)
+   {
+   obj.decode_from(*this);
+   return (*this);
+   }
+
+/*************************************************
+* Decode a BER encoded NULL                      *
+*************************************************/
+BER_Decoder& BER_Decoder::decode_null()
+   {
+   BER_Object obj = get_next_object();
+   obj.assert_is_a(NULL_TAG, UNIVERSAL);
+   if(obj.value.size())
+      throw BER_Decoding_Error("NULL object had nonzero size");
+   return (*this);
+   }
+
+/*************************************************
+* Decode a BER encoded BOOLEAN                   *
+*************************************************/
+BER_Decoder& BER_Decoder::decode(bool& out)
+   {
+   return decode(out, BOOLEAN, UNIVERSAL);
+   }
+
+/*************************************************
+* Decode a small BER encoded INTEGER             *
+*************************************************/
+BER_Decoder& BER_Decoder::decode(u32bit& out)
+   {
+   return decode(out, INTEGER, UNIVERSAL);
+   }
+
+/*************************************************
+* Decode a BER encoded INTEGER                   *
+*************************************************/
+BER_Decoder& BER_Decoder::decode(BigInt& out)
+   {
+   return decode(out, INTEGER, UNIVERSAL);
+   }
+
+/*************************************************
+* Decode a BER encoded BOOLEAN                   *
+*************************************************/
+BER_Decoder& BER_Decoder::decode(bool& out,
+                                 ASN1_Tag type_tag, ASN1_Tag class_tag)
+   {
+   BER_Object obj = get_next_object();
+   obj.assert_is_a(type_tag, class_tag);
+
+   if(obj.value.size() != 1)
+      throw BER_Decoding_Error("BER boolean value had invalid size");
+
+   out = (obj.value[0]) ? true : false;
+   return (*this);
+   }
+
+/*************************************************
+* Decode a small BER encoded INTEGER             *
+*************************************************/
+BER_Decoder& BER_Decoder::decode(u32bit& out,
+                                 ASN1_Tag type_tag, ASN1_Tag class_tag)
+   {
+   BigInt integer;
+   decode(integer, type_tag, class_tag);
+   out = integer.to_u32bit();
+   return (*this);
+   }
+
+/*************************************************
+* Decode a BER encoded INTEGER                   *
+*************************************************/
+BER_Decoder& BER_Decoder::decode(BigInt& out,
+                                 ASN1_Tag type_tag, ASN1_Tag class_tag)
+   {
+   BER_Object obj = get_next_object();
+   obj.assert_is_a(type_tag, class_tag);
+
+   if(obj.value.is_empty())
+      out = 0;
+   else
+      {
+      const bool negative = (obj.value[0] & 0x80) ? true : false;
+
+      if(negative)
+         {
+         for(u32bit j = obj.value.size(); j > 0; --j)
+            if(obj.value[j-1]--)
+               break;
+         for(u32bit j = 0; j != obj.value.size(); ++j)
+            obj.value[j] = ~obj.value[j];
+         }
+
+      out = BigInt(obj.value, obj.value.size());
+
+      if(negative)
+         out.flip_sign();
+      }
+
+   return (*this);
+   }
+
+/*************************************************
+* BER decode a BIT STRING or OCTET STRING        *
+*************************************************/
+BER_Decoder& BER_Decoder::decode(MemoryRegion<byte>& out, ASN1_Tag real_type)
+   {
+   return decode(out, real_type, real_type, UNIVERSAL);
+   }
+
+/*************************************************
+* BER decode a BIT STRING or OCTET STRING        *
+*************************************************/
+BER_Decoder& BER_Decoder::decode(MemoryRegion<byte>& buffer,
+                                 ASN1_Tag real_type,
+                                 ASN1_Tag type_tag, ASN1_Tag class_tag)
+   {
+   if(real_type != OCTET_STRING && real_type != BIT_STRING)
+      throw BER_Bad_Tag("Bad tag for {BIT,OCTET} STRING", real_type);
+
+   BER_Object obj = get_next_object();
+   obj.assert_is_a(type_tag, class_tag);
+
+   if(real_type == OCTET_STRING)
+      buffer = obj.value;
+   else
+      {
+      if(obj.value[0] >= 8)
+         throw BER_Decoding_Error("Bad number of unused bits in BIT STRING");
+      buffer.set(obj.value + 1, obj.value.size() - 1);
+      }
+   return (*this);
+   }
+
+/*************************************************
+* Decode an OPTIONAL string type                 *
+*************************************************/
+BER_Decoder& BER_Decoder::decode_optional_string(MemoryRegion<byte>& out,
+                                                 ASN1_Tag real_type,
+                                                 u16bit type_no)
+   {
+   BER_Object obj = get_next_object();
+
+   ASN1_Tag type_tag = (ASN1_Tag)type_no;
+
+   out.clear();
+   push_back(obj);
+
+   if(obj.type_tag == type_tag && obj.class_tag == CONTEXT_SPECIFIC)
+      decode(out, real_type, type_tag, CONTEXT_SPECIFIC);
+
+   return (*this);
    }
 
 }

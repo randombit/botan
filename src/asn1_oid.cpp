@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/asn1_oid.h>
-#include <botan/asn1_int.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/bit_ops.h>
@@ -140,12 +139,10 @@ void OID::encode_into(DER_Encoder& der) const
    der.add_object(OBJECT_ID, UNIVERSAL, encoding);
    }
 
-namespace BER {
-
 /*************************************************
 * Decode a BER encoded OBJECT IDENTIFIER         *
 *************************************************/
-void decode(BER_Decoder& decoder, OID& oid)
+void OID::decode_from(BER_Decoder& decoder)
    {
    BER_Object obj = decoder.get_next_object();
    if(obj.type_tag != OBJECT_ID || obj.class_tag != UNIVERSAL)
@@ -154,9 +151,10 @@ void decode(BER_Decoder& decoder, OID& oid)
    if(obj.value.size() < 2)
       throw BER_Decoding_Error("OID encoding is too short");
 
-   oid.clear();
-   oid += (obj.value[0] / 40);
-   oid += (obj.value[0] % 40);
+
+   clear();
+   id.push_back(obj.value[0] / 40);
+   id.push_back(obj.value[0] % 40);
 
    u32bit j = 0;
    while(j != obj.value.size() - 1)
@@ -169,10 +167,8 @@ void decode(BER_Decoder& decoder, OID& oid)
          if(!(obj.value[j] & 0x80))
             break;
          }
-      oid += component;
+      id.push_back(component);
       }
    }
-
-}
 
 }

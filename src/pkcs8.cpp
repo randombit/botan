@@ -4,6 +4,8 @@
 *************************************************/
 
 #include <botan/pkcs8.h>
+#include <botan/der_enc.h>
+#include <botan/ber_dec.h>
 #include <botan/asn1_obj.h>
 #include <botan/pk_algs.h>
 #include <botan/conf.h>
@@ -28,8 +30,8 @@ SecureVector<byte> PKCS8_extract(DataSource& source,
 
    try {
       BER_Decoder decoder(source);
-      BER_Decoder sequence = BER::get_subsequence(decoder);
-      BER::decode(sequence, alg_id);
+      BER_Decoder sequence = decoder.start_cons(SEQUENCE);
+      sequence.decode(alg_id);
       sequence.decode(enc_pkcs8_key, OCTET_STRING);
       sequence.verify_end();
       }
@@ -107,16 +109,17 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
             }
 
          u32bit version;
-         BER_Decoder decoder(key);
-         BER_Decoder sequence = BER::get_subsequence(decoder);
-         sequence.decode(version);
+
+         BER_Decoder(key)
+            .start_cons(SEQUENCE)
+               .decode(version)
+               .decode(pk_alg_id)
+               .decode(key, OCTET_STRING)
+               .discard_remaining()
+            .end_cons();
+
          if(version != 0)
             throw Decoding_Error("PKCS #8: Unknown version number");
-
-         BER::decode(sequence, pk_alg_id);
-         sequence.decode(key, OCTET_STRING);
-         sequence.discard_remaining();
-         sequence.verify_end();
 
          break;
          }
@@ -144,11 +147,11 @@ void encode(const PKCS8_PrivateKey& key, Pipe& pipe, X509_Encoding encoding)
 
    SecureVector<byte> contents =
       DER_Encoder()
-         .start_sequence()
+         .start_cons(SEQUENCE)
             .encode(PKCS8_VERSION)
             .encode(alg_id)
             .encode(key.DER_encode_priv(), OCTET_STRING)
-         .end_sequence()
+         .end_cons()
       .get_contents();
 
    if(encoding == PEM)
@@ -177,12 +180,12 @@ void encrypt_key(const PKCS8_PrivateKey& key, Pipe& pipe,
    Pipe key_encrytor(pbe);
    key_encrytor.process_msg(raw_key);
 
-   SecureVector<byte> enc_key = 
+   SecureVector<byte> enc_key =
       DER_Encoder()
-         .start_sequence()
+         .start_cons(SEQUENCE)
             .encode(AlgorithmIdentifier(pbe->get_oid(), pbe->encode_params()))
             .encode(key_encrytor.read_all(), OCTET_STRING)
-         .end_sequence()
+         .end_cons()
       .get_contents();
 
    if(encoding == PEM)

@@ -4,7 +4,9 @@
 *************************************************/
 
 #include <botan/x509cert.h>
-#include <botan/asn1_int.h>
+#include <botan/x509_ext.h>
+#include <botan/der_enc.h>
+#include <botan/ber_dec.h>
 #include <botan/stl_util.h>
 #include <botan/parsing.h>
 #include <botan/bigint.h>
@@ -132,8 +134,9 @@ void X509_Certificate::force_decode()
    BER_Decoder tbs_cert(tbs_bits);
 
    u32bit version;
-   BER::decode_optional(tbs_cert, version, ASN1_Tag(0),
-                        ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
+   tbs_cert.decode_optional(version, ASN1_Tag(0),
+                            ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
+
    if(version > 2)
       throw Decoding_Error("Unknown X.509 cert version " + to_string(version));
    if(version < 2)
@@ -146,24 +149,25 @@ void X509_Certificate::force_decode()
    tbs_cert.decode(serial_bn);
 
    AlgorithmIdentifier sig_algo_inner;
-   BER::decode(tbs_cert, sig_algo_inner);
+   tbs_cert.decode(sig_algo_inner);
 
    if(sig_algo != sig_algo_inner)
       throw Decoding_Error("Algorithm identifier mismatch");
 
    X509_DN dn_issuer;
-   BER::decode(tbs_cert, dn_issuer);
+   tbs_cert.decode(dn_issuer);
    load_info(issuer, dn_issuer);
 
    X509_Time start, end;
 
-   BER_Decoder validity = BER::get_subsequence(tbs_cert);
-   BER::decode(validity, start);
-   BER::decode(validity, end);
-   validity.verify_end();
+   tbs_cert.start_cons(SEQUENCE)
+      .decode(start)
+      .decode(end)
+      .verify_end()
+   .end_cons();
 
    X509_DN dn_subject;
-   BER::decode(tbs_cert, dn_subject);
+   tbs_cert.decode(dn_subject);
    load_info(subject, dn_subject);
 
    BER_Object public_key = tbs_cert.get_next_object();
@@ -173,26 +177,24 @@ void X509_Certificate::force_decode()
 
    MemoryVector<byte> v2_issuer_key_id, v2_subject_key_id;
 
-   BER::decode_optional_string(tbs_cert, v2_issuer_key_id, BIT_STRING,
-                               ASN1_Tag(1), CONTEXT_SPECIFIC);
-   BER::decode_optional_string(tbs_cert, v2_subject_key_id, BIT_STRING,
-                               ASN1_Tag(2), CONTEXT_SPECIFIC);
+   tbs_cert.decode_optional_string(v2_issuer_key_id, BIT_STRING, 1);
+   tbs_cert.decode_optional_string(v2_subject_key_id, BIT_STRING, 2);
 
    BER_Object v3_exts_data = tbs_cert.get_next_object();
    if(v3_exts_data.type_tag == 3 &&
       v3_exts_data.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
       {
       BER_Decoder v3_exts_decoder(v3_exts_data.value);
-      BER_Decoder sequence = BER::get_subsequence(v3_exts_decoder);
+      BER_Decoder ext_data = v3_exts_decoder.start_cons(SEQUENCE);
+      v3_exts_decoder.verify_end();
 
-      while(sequence.more_items())
+      while(ext_data.more_items())
          {
          Extension extn;
-         BER::decode(sequence, extn);
+         ext_data.decode(extn);
          handle_v3_extension(extn);
          }
-      sequence.verify_end();
-      v3_exts_decoder.verify_end();
+      ext_data.end_cons();
       }
    else if(v3_exts_data.type_tag != NO_OBJECT)
       throw BER_Bad_Tag("Unknown tag in X.509 cert",
@@ -234,22 +236,24 @@ void X509_Certificate::handle_v3_extension(const Extension& extn)
       }
    else if(extn.oid == OIDS::lookup("X509v3.ExtendedKeyUsage"))
       {
-      BER_Decoder key_usage = BER::get_subsequence(value);
+      BER_Decoder key_usage = value.start_cons(SEQUENCE);
       while(key_usage.more_items())
          {
          OID usage_oid;
-         BER::decode(key_usage, usage_oid);
+         key_usage.decode(usage_oid);
          info.add("X509v3.ExtendedKeyUsage", usage_oid.as_string());
          }
       }
    else if(extn.oid == OIDS::lookup("X509v3.BasicConstraints"))
       {
       u32bit max_path_len = 0;
-      BER_Decoder basic_constraints = BER::get_subsequence(value);
-      BER::decode_optional(basic_constraints, is_ca,
-                           BOOLEAN, UNIVERSAL, false);
-      BER::decode_optional(basic_constraints, max_path_len,
-                           INTEGER, UNIVERSAL, NO_CERT_PATH_LIMIT);
+
+      value.start_cons(SEQUENCE)
+            .decode_optional(is_ca, BOOLEAN, UNIVERSAL, false)
+            .decode_optional(max_path_len, INTEGER, UNIVERSAL,
+                             NO_CERT_PATH_LIMIT)
+            .verify_end()
+         .end_cons();
 
       info.add("X509v3.BasicConstraints.is_ca", is_ca);
       info.add("X509v3.BasicConstraints.path_constraint", max_path_len);
@@ -263,32 +267,32 @@ void X509_Certificate::handle_v3_extension(const Extension& extn)
    else if(extn.oid == OIDS::lookup("X509v3.AuthorityKeyIdentifier"))
       {
       MemoryVector<byte> v3_issuer_key_id;
-      BER_Decoder key_id = BER::get_subsequence(value);
-      BER::decode_optional_string(key_id, v3_issuer_key_id, OCTET_STRING,
-                                  ASN1_Tag(0), CONTEXT_SPECIFIC);
+      BER_Decoder key_id = value.start_cons(SEQUENCE);
+      key_id.decode_optional_string(v3_issuer_key_id, OCTET_STRING, 0);
 
       info.add("X509v3.AuthorityKeyIdentifier", v3_issuer_key_id);
       }
    else if(extn.oid == OIDS::lookup("X509v3.SubjectAlternativeName"))
       {
       AlternativeName alt_name;
-      BER::decode(value, alt_name);
+      value.decode(alt_name);
       load_info(subject, alt_name);
       }
    else if(extn.oid == OIDS::lookup("X509v3.IssuerAlternativeName"))
       {
       AlternativeName alt_name;
-      BER::decode(value, alt_name);
+      value.decode(alt_name);
       load_info(issuer, alt_name);
       }
    else if(extn.oid == OIDS::lookup("X509v3.CertificatePolicies"))
       {
-      BER_Decoder ber_policies = BER::get_subsequence(value);
+
+      BER_Decoder ber_policies = value.start_cons(SEQUENCE);
       while(ber_policies.more_items())
          {
          OID oid;
-         BER_Decoder policy = BER::get_subsequence(ber_policies);
-         BER::decode(policy, oid);
+         BER_Decoder policy = ber_policies.start_cons(SEQUENCE);
+         policy.decode(oid);
 
          if(extn.critical && policy.more_items())
             throw Decoding_Error("X.509 v3 critical policy has qualifiers");

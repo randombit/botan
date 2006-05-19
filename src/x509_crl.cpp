@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/x509_crl.h>
+#include <botan/ber_dec.h>
 #include <botan/parsing.h>
 #include <botan/bigint.h>
 #include <botan/conf.h>
@@ -38,21 +39,21 @@ void X509_CRL::force_decode()
    {
    BER_Decoder tbs_crl(tbs_bits);
 
-   BER::decode_optional(tbs_crl, version, INTEGER, UNIVERSAL);
+   tbs_crl.decode_optional(version, INTEGER, UNIVERSAL);
 
    if(version != 0 && version != 1)
       throw X509_CRL_Error("Unknown X.509 CRL version " +
                            to_string(version+1));
 
    AlgorithmIdentifier sig_algo_inner;
-   BER::decode(tbs_crl, sig_algo_inner);
+   tbs_crl.decode(sig_algo_inner);
 
    if(sig_algo != sig_algo_inner)
       throw X509_CRL_Error("Algorithm identifier mismatch");
 
-   BER::decode(tbs_crl, issuer);
-   BER::decode(tbs_crl, start);
-   BER::decode(tbs_crl, end);
+   tbs_crl.decode(issuer);
+   tbs_crl.decode(start);
+   tbs_crl.decode(end);
 
    BER_Object next = tbs_crl.get_next_object();
 
@@ -63,7 +64,7 @@ void X509_CRL::force_decode()
       while(cert_list.more_items())
          {
          CRL_Entry entry;
-         BER::decode(cert_list, entry);
+         cert_list.decode(entry);
          revoked.push_back(entry);
          }
       next = tbs_crl.get_next_object();
@@ -73,12 +74,12 @@ void X509_CRL::force_decode()
       next.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
       {
       BER_Decoder crl_options(next.value);
-      BER_Decoder sequence = BER::get_subsequence(crl_options);
+      BER_Decoder sequence = crl_options.start_cons(SEQUENCE);
 
       while(sequence.more_items())
          {
          Extension extn;
-         BER::decode(sequence, extn);
+         sequence.decode(extn);
          handle_crl_extension(extn);
          }
       next = tbs_crl.get_next_object();
@@ -99,9 +100,8 @@ void X509_CRL::handle_crl_extension(const Extension& extn)
 
    if(extn.oid == OIDS::lookup("X509v3.AuthorityKeyIdentifier"))
       {
-      BER_Decoder key_id = BER::get_subsequence(value);
-      BER::decode_optional_string(key_id, issuer_key_id, OCTET_STRING,
-                                  ASN1_Tag(0), CONTEXT_SPECIFIC);
+      BER_Decoder key_id = value.start_cons(SEQUENCE);
+      key_id.decode_optional_string(issuer_key_id, OCTET_STRING, 0);
       }
    else if(extn.oid == OIDS::lookup("X509v3.CRLNumber"))
       value.decode(crl_count);

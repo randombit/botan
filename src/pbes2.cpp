@@ -4,6 +4,8 @@
 *************************************************/
 
 #include <botan/pbe_pkcs.h>
+#include <botan/der_enc.h>
+#include <botan/ber_dec.h>
 #include <botan/parsing.h>
 #include <botan/lookup.h>
 #include <botan/rng.h>
@@ -95,15 +97,15 @@ void PBE_PKCS5v20::new_params()
 MemoryVector<byte> PBE_PKCS5v20::encode_params() const
    {
    return DER_Encoder()
-      .start_sequence()
+      .start_cons(SEQUENCE)
       .encode(
          AlgorithmIdentifier("PKCS5.PBKDF2",
             DER_Encoder()
-               .start_sequence()
+               .start_cons(SEQUENCE)
                   .encode(salt, OCTET_STRING)
                   .encode(iterations)
                   .encode(key_length)
-               .end_sequence()
+               .end_cons()
             .get_contents()
             )
          )
@@ -114,7 +116,7 @@ MemoryVector<byte> PBE_PKCS5v20::encode_params() const
             .get_contents()
             )
          )
-      .end_sequence()
+      .end_cons()
       .get_contents();
    }
 
@@ -125,22 +127,24 @@ void PBE_PKCS5v20::decode_params(DataSource& source)
    {
    AlgorithmIdentifier kdf_algo, enc_algo;
 
-   BER_Decoder decoder(source);
-   BER_Decoder sequence = BER::get_subsequence(decoder);
-   BER::decode(sequence, kdf_algo);
-   BER::decode(sequence, enc_algo);
-   sequence.verify_end();
+   BER_Decoder(source)
+      .start_cons(SEQUENCE)
+         .decode(kdf_algo)
+         .decode(enc_algo)
+         .verify_end()
+      .end_cons();
 
    if(kdf_algo.oid == OIDS::lookup("PKCS5.PBKDF2"))
       {
       digest = "SHA-160";
-      BER_Decoder pbkdf2_params(kdf_algo.parameters);
-      BER_Decoder algo_params = BER::get_subsequence(pbkdf2_params);
-      algo_params.decode(salt, OCTET_STRING);
-      algo_params.decode(iterations);
-      BER::decode_optional(algo_params, key_length, INTEGER, UNIVERSAL);
 
-      algo_params.verify_end();
+      BER_Decoder(kdf_algo.parameters)
+         .start_cons(SEQUENCE)
+            .decode(salt, OCTET_STRING)
+            .decode(iterations)
+            .decode_optional(key_length, INTEGER, UNIVERSAL)
+            .verify_end()
+         .end_cons();
       }
    else
       throw Decoding_Error("PBE-PKCS5 v2.0: Unknown KDF algorithm " +
@@ -156,12 +160,7 @@ void PBE_PKCS5v20::decode_params(DataSource& source)
       throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " +
                            cipher);
 
-#if 0
-   BER_Decoder algo_params(enc_algo.parameters);
-   algo_params.decode(iv, OCTET_STRING);
-#else
    BER_Decoder(enc_algo.parameters).decode(iv, OCTET_STRING).verify_end();
-#endif
 
    if(key_length == 0)
       key_length = max_keylength_of(cipher_algo);

@@ -22,6 +22,8 @@ class X509_Object
       SecureVector<byte> signature() const;
       AlgorithmIdentifier signature_algorithm() const;
 
+      bool check_signature(class X509_PublicKey&) const;
+
       void encode(Pipe&, X509_Encoding = PEM) const;
       SecureVector<byte> BER_encode() const;
       std::string PEM_encode() const;

@@ -5,6 +5,7 @@
 
 #include <botan/asn1_int.h>
 #include <botan/der_enc.h>
+#include <botan/ber_dec.h>
 #include <botan/data_src.h>
 #include <botan/parsing.h>
 
@@ -30,11 +31,20 @@ namespace ASN1 {
 *************************************************/
 SecureVector<byte> put_in_sequence(const MemoryRegion<byte>& contents)
    {
-   DER_Encoder encoder;
-   encoder.start_sequence();
-   encoder.add_raw_octets(contents);
-   encoder.end_sequence();
-   return encoder.get_contents();
+   return DER_Encoder()
+      .start_cons(SEQUENCE)
+         .raw_bytes(contents)
+      .end_cons()
+   .get_contents();
+   }
+
+/*************************************************
+* Convert a BER object into a string object      *
+*************************************************/
+std::string to_string(const BER_Object& obj)
+   {
+   std::string str((const char*)obj.value.begin(), obj.value.size());
+   return str;
    }
 
 /*************************************************

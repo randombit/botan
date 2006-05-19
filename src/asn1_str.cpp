@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/asn1_obj.h>
-#include <botan/asn1_int.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/charset.h>
@@ -133,29 +132,12 @@ void ASN1_String::encode_into(DER_Encoder& encoder) const
    encoder.add_object(tagging(), UNIVERSAL, value);
    }
 
-namespace DER {
-
-/*************************************************
-* DER encode an ASN1_String                      *
-*************************************************/
-void encode(DER_Encoder& encoder, const ASN1_String& string,
-            ASN1_Tag type_tag, ASN1_Tag class_tag)
-   {
-   if(string.tagging() == UTF8_STRING)
-      encoder.add_object(type_tag, class_tag, iso2utf(string.iso_8859()));
-   else
-      encoder.add_object(type_tag, class_tag, string.iso_8859());
-   }
-
-}
-
-namespace BER {
-
 namespace {
 
 /*************************************************
 * Do any UTF-8/Unicode decoding needed           *
 *************************************************/
+// FIXME: inline this
 std::string convert_string(BER_Object obj, ASN1_Tag type)
    {
    if(type == BMP_STRING)
@@ -177,9 +159,9 @@ std::string convert_string(BER_Object obj, ASN1_Tag type)
       return iso2local(value);
       }
    else if(type == UTF8_STRING)
-      return iso2local(utf2iso(BER::to_string(obj)));
+      return iso2local(utf2iso(ASN1::to_string(obj)));
    else
-      return iso2local(BER::to_string(obj));
+      return iso2local(ASN1::to_string(obj));
    }
 
 }
@@ -187,25 +169,11 @@ std::string convert_string(BER_Object obj, ASN1_Tag type)
 /*************************************************
 * Decode a BER encoded ASN1_String               *
 *************************************************/
-void decode(BER_Decoder& source, ASN1_String& string,
-            ASN1_Tag expected_tag, ASN1_Tag real_tag)
+void ASN1_String::decode_from(BER_Decoder& source)
    {
    BER_Object obj = source.get_next_object();
-   if(obj.type_tag != expected_tag)
-      throw BER_Bad_Tag("Unexpected string tag", obj.type_tag);
-
-   string = ASN1_String(convert_string(obj, real_tag),  real_tag);
+   // FIXME, don't like this at all...
+   *this = ASN1_String(convert_string(obj, obj.type_tag), obj.type_tag);
    }
-
-/*************************************************
-* Decode a BER encoded ASN1_String               *
-*************************************************/
-void decode(BER_Decoder& source, ASN1_String& string)
-   {
-   BER_Object obj = source.get_next_object();
-   string = ASN1_String(convert_string(obj, obj.type_tag), obj.type_tag);
-   }
-
-}
 
 }

@@ -4,6 +4,8 @@
 *************************************************/
 
 #include <botan/asn1_obj.h>
+#include <botan/der_enc.h>
+#include <botan/ber_dec.h>
 #include <botan/parsing.h>
 #include <botan/stl_util.h>
 #include <botan/oids.h>
@@ -80,6 +82,19 @@ std::multimap<OID, std::string> X509_DN::get_attributes() const
    }
 
 /*************************************************
+* Get the contents of this X.500 Name            *
+*************************************************/
+std::multimap<std::string, std::string> X509_DN::contents() const
+   {
+   typedef std::multimap<OID, ASN1_String>::const_iterator rdn_iter;
+
+   std::multimap<std::string, std::string> retval;
+   for(rdn_iter j = dn_info.begin(); j != dn_info.end(); ++j)
+      multimap_insert(retval, OIDS::lookup(j->first), j->second.value());
+   return retval;
+   }
+
+/*************************************************
 * Get a single attribute type                    *
 *************************************************/
 std::vector<std::string> X509_DN::get_attribute(const std::string& attr) const
@@ -104,16 +119,18 @@ void X509_DN::do_decode(const MemoryRegion<byte>& bits)
 
    while(sequence.more_items())
       {
-      BER_Decoder rdn = BER::get_subset(sequence);
+      BER_Decoder rdn = sequence.start_cons(SET);
+
       while(rdn.more_items())
          {
          OID oid;
          ASN1_String str;
 
-         BER_Decoder ava = BER::get_subsequence(rdn);
-         BER::decode(ava, oid);
-         BER::decode(ava, str);
-         ava.verify_end();
+         rdn.start_cons(SEQUENCE)
+            .decode(oid)
+            .decode(str)
+            .verify_end()
+        .end_cons();
 
          add_attribute(oid, str.value());
          }
@@ -231,12 +248,12 @@ void do_ava(DER_Encoder& encoder,
 
    for(rdn_iter j = range.first; j != range.second; ++j)
       {
-      encoder.start_set()
-         .start_sequence()
+      encoder.start_cons(SET)
+         .start_cons(SEQUENCE)
             .encode(oid)
             .encode(ASN1_String(j->second, string_type))
-         .end_sequence()
-      .end_set();
+         .end_cons()
+      .end_cons();
       }
    }
 
@@ -249,10 +266,10 @@ void X509_DN::encode_into(DER_Encoder& der) const
    {
    std::multimap<OID, std::string> dn_info = get_attributes();
 
-   der.start_sequence();
+   der.start_cons(SEQUENCE);
 
    if(dn_bits.has_items())
-      der.add_raw_octets(dn_bits);
+      der.raw_bytes(dn_bits);
    else
       {
       do_ava(der, dn_info, PRINTABLE_STRING, "X520.Country", true);
@@ -264,22 +281,21 @@ void X509_DN::encode_into(DER_Encoder& der) const
       do_ava(der, dn_info, PRINTABLE_STRING, "X520.SerialNumber");
       }
 
-   der.end_sequence();
+   der.end_cons();
    }
-
-namespace BER {
 
 /*************************************************
 * Decode a BER encoded DistinguishedName         *
 *************************************************/
-void decode(BER_Decoder& source, X509_DN& dn)
+void X509_DN::decode_from(BER_Decoder& source)
    {
-   dn = X509_DN();
-   BER_Decoder sequence = BER::get_subsequence(source);
-   SecureVector<byte> bits = sequence.get_remaining();
-   dn.do_decode(bits);
-   }
+   dn_info.clear();
 
-}
+   source.start_cons(SEQUENCE)
+      .raw_bytes(dn_bits)
+   .end_cons();
+
+   do_decode(dn_bits);
+   }
 
 }

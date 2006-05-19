@@ -4,6 +4,11 @@
 *************************************************/
 
 #include <botan/x509_obj.h>
+#include <botan/x509_key.h>
+#include <botan/look_pk.h>
+#include <botan/oids.h>
+#include <botan/der_enc.h>
+#include <botan/ber_dec.h>
 #include <botan/parsing.h>
 #include <botan/pem.h>
 #include <algorithm>
@@ -64,13 +69,15 @@ void X509_Object::init(DataSource& in, const std::string& labels)
 *************************************************/
 void X509_Object::decode_info(DataSource& source)
    {
-   BER_Decoder ber(source);
-   BER_Decoder sequence = BER::get_subsequence(ber);
-   tbs_bits = BER::get_subsequence(sequence).get_remaining();
-
-   BER::decode(sequence, sig_algo);
-   sequence.decode(sig, BIT_STRING);
-   sequence.verify_end();
+   BER_Decoder(source)
+      .start_cons(SEQUENCE)
+         .start_cons(SEQUENCE)
+            .raw_bytes(tbs_bits)
+         .end_cons()
+         .decode(sig_algo)
+         .decode(sig, BIT_STRING)
+         .verify_end()
+      .end_cons();
    }
 
 /*************************************************
@@ -78,12 +85,14 @@ void X509_Object::decode_info(DataSource& source)
 *************************************************/
 void X509_Object::encode(Pipe& out, X509_Encoding encoding) const
    {
-   SecureVector<byte> der = 
-      DER_Encoder().start_sequence()
-         .add_raw_octets(tbs_data())
+   SecureVector<byte> der = DER_Encoder()
+      .start_cons(SEQUENCE)
+         .start_cons(SEQUENCE)
+            .raw_bytes(tbs_bits)
+         .end_cons()
          .encode(sig_algo)
          .encode(sig, BIT_STRING)
-      .end_sequence()
+      .end_cons()
    .get_contents();
 
    if(encoding == PEM)
@@ -138,6 +147,47 @@ SecureVector<byte> X509_Object::signature() const
 AlgorithmIdentifier X509_Object::signature_algorithm() const
    {
    return sig_algo;
+   }
+
+/*************************************************
+* Check the signature on an object               *
+*************************************************/
+bool X509_Object::check_signature(X509_PublicKey& pub_key) const
+   {
+   try {
+      std::vector<std::string> sig_info =
+         split_on(OIDS::lookup(sig_algo.oid), '/');
+
+      if(sig_info.size() != 2 || sig_info[0] != pub_key.algo_name())
+         return false;
+
+      std::string padding = sig_info[1];
+      Signature_Format format =
+         (pub_key.message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
+
+      std::auto_ptr<PK_Verifier> verifier;
+
+      if(dynamic_cast<PK_Verifying_with_MR_Key*>(&pub_key))
+         {
+         PK_Verifying_with_MR_Key& sig_key =
+            dynamic_cast<PK_Verifying_with_MR_Key&>(pub_key);
+         verifier.reset(get_pk_verifier(sig_key, padding, format));
+         }
+      else if(dynamic_cast<PK_Verifying_wo_MR_Key*>(&pub_key))
+         {
+         PK_Verifying_wo_MR_Key& sig_key =
+            dynamic_cast<PK_Verifying_wo_MR_Key&>(pub_key);
+         verifier.reset(get_pk_verifier(sig_key, padding, format));
+         }
+      else
+         return false;
+
+      return verifier->verify_message(tbs_data(), signature());
+      }
+   catch(...)
+      {
+      return false;
+      }
    }
 
 /*************************************************

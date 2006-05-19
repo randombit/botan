@@ -16,10 +16,10 @@ namespace Botan {
 MemoryVector<byte> IF_Scheme_PublicKey::DER_encode_pub() const
    {
    return DER_Encoder()
-      .start_sequence()
+      .start_cons(SEQUENCE)
          .encode(n)
          .encode(e)
-      .end_sequence()
+      .end_cons()
    .get_contents();
    }
 
@@ -36,12 +36,12 @@ MemoryVector<byte> IF_Scheme_PublicKey::DER_encode_params() const
 *************************************************/
 void IF_Scheme_PublicKey::BER_decode_pub(DataSource& source)
    {
-   BER_Decoder decoder(source);
-   BER_Decoder ber = BER::get_subsequence(decoder);
-
-   ber.decode(n)
-      .decode(e)
-      .verify_end();
+   BER_Decoder(source)
+      .start_cons(SEQUENCE)
+         .decode(n)
+         .decode(e)
+         .verify_end()
+      .end_cons();
 
    X509_load_hook();
    }
@@ -62,7 +62,7 @@ void IF_Scheme_PublicKey::BER_decode_params(DataSource& source)
 SecureVector<byte> IF_Scheme_PrivateKey::DER_encode_priv() const
    {
    return DER_Encoder()
-      .start_sequence()
+      .start_cons(SEQUENCE)
          .encode((u32bit)0)
          .encode(n)
          .encode(e)
@@ -72,7 +72,7 @@ SecureVector<byte> IF_Scheme_PrivateKey::DER_encode_priv() const
          .encode(d1)
          .encode(d2)
          .encode(c)
-      .end_sequence()
+      .end_cons()
    .get_contents();
    }
 
@@ -83,19 +83,18 @@ void IF_Scheme_PrivateKey::BER_decode_priv(DataSource& source)
    {
    u32bit version;
 
-   BER_Decoder decoder(source);
-   BER_Decoder ber = BER::get_subsequence(decoder);
-
-   ber.decode(version)
-      .decode(n)
-      .decode(e)
-      .decode(d)
-      .decode(p)
-      .decode(q)
-      .decode(d1)
-      .decode(d2)
-      .decode(c)
-      .verify_end();
+   BER_Decoder(source)
+      .start_cons(SEQUENCE)
+         .decode(version)
+         .decode(n)
+         .decode(e)
+         .decode(d)
+         .decode(p)
+         .decode(q)
+         .decode(d1)
+         .decode(d2)
+         .decode(c)
+      .end_cons();
 
    if(version != 0)
       throw Decoding_Error(algo_name() + ": Unknown PKCS #1 key version");

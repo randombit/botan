@@ -7,10 +7,9 @@
 #define BOTAN_ASN1_OBJ_H__
 
 #include <botan/asn1_int.h>
-#include <botan/der_enc.h>
-#include <botan/ber_dec.h>
-#include <map>
+#include <botan/asn1_oid.h>
 #include <vector>
+#include <map>
 
 namespace Botan {
 
@@ -20,12 +19,13 @@ namespace Botan {
 class AlgorithmIdentifier : public ASN1_Object
    {
    public:
-      void encode_into(DER_Encoder&) const;
+      void encode_into(class DER_Encoder&) const;
+      void decode_from(class BER_Decoder&);
 
       AlgorithmIdentifier() {}
       AlgorithmIdentifier(const OID&, const MemoryRegion<byte>&);
       AlgorithmIdentifier(const std::string&, const MemoryRegion<byte>&);
-   public:
+
       OID oid;
       SecureVector<byte> parameters;
    };
@@ -36,11 +36,12 @@ class AlgorithmIdentifier : public ASN1_Object
 class Extension : public ASN1_Object
    {
    public:
+      void encode_into(class DER_Encoder&) const;
+      void decode_from(class BER_Decoder&);
+
       bool critical;
       OID oid;
       SecureVector<byte> value;
-
-      void encode_into(DER_Encoder&) const;
 
       Extension() { critical = false; }
       Extension(const OID&, const MemoryRegion<byte>&);
@@ -53,7 +54,8 @@ class Extension : public ASN1_Object
 class Attribute : public ASN1_Object
    {
    public:
-      void encode_into(DER_Encoder&) const;
+      void encode_into(class DER_Encoder&) const;
+      void decode_from(class BER_Decoder&);
 
       OID oid;
       SecureVector<byte> parameters;
@@ -69,7 +71,8 @@ class Attribute : public ASN1_Object
 class X509_Time : public ASN1_Object
    {
    public:
-      void encode_into(DER_Encoder&) const;
+      void encode_into(class DER_Encoder&) const;
+      void decode_from(class BER_Decoder&);
 
       std::string as_string() const;
       std::string readable_string() const;
@@ -92,7 +95,8 @@ class X509_Time : public ASN1_Object
 class ASN1_String : public ASN1_Object
    {
    public:
-      void encode_into(DER_Encoder&) const;
+      void encode_into(class DER_Encoder&) const;
+      void decode_from(class BER_Decoder&);
 
       std::string value() const;
       std::string iso_8859() const;
@@ -112,10 +116,13 @@ class ASN1_String : public ASN1_Object
 class X509_DN : public ASN1_Object
    {
    public:
-      void encode_into(DER_Encoder&) const;
+      void encode_into(class DER_Encoder&) const;
+      void decode_from(class BER_Decoder&);
 
       std::multimap<OID, std::string> get_attributes() const;
       std::vector<std::string> get_attribute(const std::string&) const;
+
+      std::multimap<std::string, std::string> contents() const;
 
       void add_attribute(const std::string&, const std::string&);
       void add_attribute(const OID&, const std::string&);
@@ -139,7 +146,10 @@ class X509_DN : public ASN1_Object
 class AlternativeName : public ASN1_Object
    {
    public:
-      void encode_into(DER_Encoder&) const;
+      void encode_into(class DER_Encoder&) const;
+      void decode_from(class BER_Decoder&);
+
+      std::multimap<std::string, std::string> contents() const;
 
       void add_attribute(const std::string&, const std::string&);
       std::multimap<std::string, std::string> get_attributes() const;
@@ -171,38 +181,12 @@ bool operator==(const X509_DN&, const X509_DN&);
 bool operator!=(const X509_DN&, const X509_DN&);
 bool operator<(const X509_DN&, const X509_DN&);
 
+/*************************************************
+* Helper Functions                               *
+*************************************************/
 s32bit validity_check(const X509_Time&, const X509_Time&, u64bit);
 
 bool is_string_type(ASN1_Tag);
-
-/*************************************************
-* DER Encoding Functions                         *
-*************************************************/
-namespace DER {
-
-//void encode(DER_Encoder&, const Attribute&);
-//void encode(DER_Encoder&, const ASN1_String&);
-void encode(DER_Encoder&, const ASN1_String&,
-            ASN1_Tag, ASN1_Tag = CONTEXT_SPECIFIC);
-
-}
-
-/*************************************************
-* BER Decoding Functions                         *
-*************************************************/
-namespace BER {
-
-void decode(BER_Decoder&, AlgorithmIdentifier&);
-void decode(BER_Decoder&, Extension&);
-void decode(BER_Decoder&, Attribute&);
-void decode(BER_Decoder&, X509_Time&);
-void decode(BER_Decoder&, ASN1_String&);
-void decode(BER_Decoder&, ASN1_String&, ASN1_Tag, ASN1_Tag);
-void decode(BER_Decoder&, X509_DN&);
-void decode(BER_Decoder&, AlternativeName&);
-void decode(BER_Decoder&, Key_Constraints&);
-
-}
 
 }
 

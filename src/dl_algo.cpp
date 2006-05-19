@@ -15,9 +15,7 @@ namespace Botan {
 *************************************************/
 MemoryVector<byte> DL_Scheme_PublicKey::DER_encode_pub() const
    {
-   DER_Encoder der;
-   der.encode(y);
-   return der.get_contents();
+   return DER_Encoder().encode(y).get_contents();
    }
 
 /*************************************************
@@ -53,9 +51,7 @@ void DL_Scheme_PublicKey::BER_decode_params(DataSource& source)
 *************************************************/
 SecureVector<byte> DL_Scheme_PrivateKey::DER_encode_priv() const
    {
-   DER_Encoder der;
-   der.encode(x);
-   return der.get_contents();
+   return DER_Encoder().encode(x).get_contents();
    }
 
 /*************************************************

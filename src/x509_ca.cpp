@@ -6,6 +6,8 @@
 #include <botan/x509_ca.h>
 #include <botan/x509_ext.h>
 #include <botan/x509stor.h>
+#include <botan/der_enc.h>
+#include <botan/ber_dec.h>
 #include <botan/conf.h>
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
@@ -13,10 +15,28 @@
 #include <botan/oids.h>
 #include <botan/util.h>
 #include <algorithm>
+#include <typeinfo>
 #include <memory>
 #include <set>
 
 namespace Botan {
+
+namespace {
+
+// FIXME: move elsewhere
+MemoryVector<byte> make_signed(PK_Signer* signer,
+                               const AlgorithmIdentifier& sig_algo,
+                               const MemoryRegion<byte>& tbs_bits)
+   {
+   return DER_Encoder().start_cons(SEQUENCE)
+            .raw_bytes(tbs_bits)
+            .encode(sig_algo)
+            .encode(signer->sign_message(tbs_bits), BIT_STRING)
+         .end_cons()
+      .get_contents();
+   }
+
+}
 
 /*************************************************
 * Load the certificate and private key           *
@@ -28,8 +48,11 @@ X509_CA::X509_CA(const X509_Certificate& c,
    if(!dynamic_cast<const PK_Signing_Key*>(key_pointer))
       throw Invalid_Argument("X509_CA: " + key.algo_name() + " cannot sign");
 
+#if 0
+   // FIXME!
    if(!cert.is_CA_cert())
       throw Invalid_Argument("X509_CA: This certificate is not for a CA");
+#endif
 
    std::string padding;
    Signature_Format format;
@@ -93,11 +116,9 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
                                     Key_Constraints constraints,
                                     const std::vector<OID>& ex_constraints)
    {
-   const u32bit X509_CERT_VERSION = 2;
-   const u32bit SERIAL_BITS = 128;
-
    Extensions extensions;
 
+   // POLICY: which extensions
    extensions.add(new Cert_Extension::Subject_Key_ID(pub_key));
    extensions.add(new Cert_Extension::Authority_Key_ID(auth_key_id));
 
@@ -120,41 +141,35 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
                                            "issuer_alternative_name")
       );
 
-   MemoryVector<byte> tbs_bits = 
-      DER_Encoder().start_sequence()
-         .start_explicit(ASN1_Tag(0))
-            .encode(X509_CERT_VERSION)
-         .end_explicit(ASN1_Tag(0))
+   const u32bit X509_CERT_VERSION = 3;
+   const u32bit SERIAL_BITS = 128;
 
-         .encode(random_integer(SERIAL_BITS))
-         .encode(sig_algo)
-         .encode(issuer_dn)
+   DataSource_Memory source(make_signed(signer, sig_algo,
+         DER_Encoder().start_cons(SEQUENCE)
+            .start_explicit(0)
+               .encode(X509_CERT_VERSION-1)
+            .end_explicit()
 
-         .start_sequence()
-            .encode(not_before)
-            .encode(not_after)
-         .end_sequence()
-
-         .encode(subject_dn)
-         .add_raw_octets(pub_key)
-
-         .start_explicit(ASN1_Tag(3))
-            .start_sequence()
-               .encode(extensions)
-             .end_sequence()
-         .end_explicit(ASN1_Tag(3))
-      .end_sequence()
-   .get_contents();
-
-   DataSource_Memory source(
-      DER_Encoder()
-         .start_sequence()
-            .add_raw_octets(tbs_bits)
+            .encode(random_integer(SERIAL_BITS))
             .encode(sig_algo)
-            .encode(signer->sign_message(tbs_bits), BIT_STRING)
-         .end_sequence()
+            .encode(issuer_dn)
+
+            .start_cons(SEQUENCE)
+               .encode(not_before)
+               .encode(not_after)
+            .end_cons()
+
+            .encode(subject_dn)
+            .raw_bytes(pub_key)
+
+            .start_explicit(3)
+               .start_cons(SEQUENCE)
+                  .encode(extensions)
+                .end_cons()
+            .end_explicit()
+         .end_cons()
       .get_contents()
-      );
+   ));
 
    return X509_Certificate(source);
    }
@@ -215,7 +230,7 @@ X509_CRL X509_CA::update_crl(const X509_CRL& crl,
 X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
                            u32bit crl_number, u32bit next_update) const
    {
-   const u32bit X509_CRL_VERSION = 1;
+   const u32bit X509_CRL_VERSION = 2;
 
    if(next_update == 0)
       next_update = Config::get_time("x509/crl/next_update");
@@ -223,47 +238,31 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
    const u64bit current_time = system_time();
 
    Extensions extensions;
-   extensions.add(new Cert_Extension::Authority_Key_ID(cert.subject_key_id()));
+   extensions.add(
+      new Cert_Extension::Authority_Key_ID(cert.subject_key_id()));
    extensions.add(new Cert_Extension::CRL_Number(crl_number));
 
-   DER_Encoder tbs_crl;
-
-   tbs_crl
-      .start_sequence()
-         .encode(X509_CRL_VERSION)
-         .encode(ca_sig_algo)
-         .encode(cert.subject_dn())
-         .encode(X509_Time(current_time))
-         .encode(X509_Time(current_time + next_update));
-
-   if(revoked.size())
-      {
-      tbs_crl.start_sequence();
-      for(u32bit j = 0; j != revoked.size(); ++j)
-         DER::encode(tbs_crl, revoked[j]);
-      tbs_crl.end_sequence();
-      }
-
-   tbs_crl
-      .start_explicit(ASN1_Tag(0))
-         .start_sequence()
-            .encode(extensions)
-         .end_sequence()
-      .end_explicit(ASN1_Tag(0))
-   .end_sequence();
-
-   MemoryVector<byte> tbs_bits = tbs_crl.get_contents();
-   MemoryVector<byte> sig = signer->sign_message(tbs_bits);
-
-   DataSource_Memory source(
-      DER_Encoder()
-         .start_sequence()
-            .add_raw_octets(tbs_bits)
+   DataSource_Memory source(make_signed(signer, ca_sig_algo,
+         DER_Encoder().start_cons(SEQUENCE)
+            .encode(X509_CRL_VERSION-1)
             .encode(ca_sig_algo)
-            .encode(sig, BIT_STRING)
-         .end_sequence()
+            .encode(cert.issuer_dn())
+            .encode(X509_Time(current_time))
+            .encode(X509_Time(current_time + next_update))
+            .encode_if(revoked.size() > 0,
+                 DER_Encoder()
+                    .start_cons(SEQUENCE)
+                       .encode_list(revoked)
+                    .end_cons()
+               )
+            .start_explicit(0)
+               .start_cons(SEQUENCE)
+                  .encode(extensions)
+               .end_cons()
+            .end_explicit()
+         .end_cons()
       .get_contents()
-      );
+   ));
 
    return X509_CRL(source);
    }

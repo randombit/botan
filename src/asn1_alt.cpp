@@ -4,6 +4,9 @@
 *************************************************/
 
 #include <botan/asn1_obj.h>
+#include <botan/der_enc.h>
+#include <botan/ber_dec.h>
+#include <botan/oids.h>
 #include <botan/stl_util.h>
 #include <botan/charset.h>
 
@@ -67,6 +70,24 @@ std::multimap<OID, ASN1_String> AlternativeName::get_othernames() const
    }
 
 /*************************************************
+* Return all of the alternative names            *
+*************************************************/
+std::multimap<std::string, std::string> AlternativeName::contents() const
+   {
+   std::multimap<std::string, std::string> names;
+
+   typedef std::multimap<std::string, std::string>::const_iterator rdn_iter;
+   for(rdn_iter j = alt_info.begin(); j != alt_info.end(); ++j)
+      multimap_insert(names, j->first, j->second);
+
+   typedef std::multimap<OID, ASN1_String>::const_iterator on_iter;
+   for(on_iter j = othernames.begin(); j != othernames.end(); ++j)
+      multimap_insert(names, OIDS::lookup(j->first), j->second.value());
+
+   return names;
+   }
+
+/*************************************************
 * Return if this object has anything useful      *
 *************************************************/
 bool AlternativeName::has_items() const
@@ -89,7 +110,7 @@ void encode_entries(DER_Encoder& encoder,
    for(iter j = range.first; j != range.second; ++j)
       {
       ASN1_String asn1_string(j->second, IA5_STRING);
-      DER::encode(encoder, asn1_string, tagging, CONTEXT_SPECIFIC);
+      encoder.add_object(tagging, CONTEXT_SPECIFIC, asn1_string.iso_8859());
       }
    }
 
@@ -100,7 +121,7 @@ void encode_entries(DER_Encoder& encoder,
 *************************************************/
 void AlternativeName::encode_into(DER_Encoder& der) const
    {
-   der.start_sequence();
+   der.start_cons(SEQUENCE);
 
    encode_entries(der, alt_info, "RFC822", ASN1_Tag(1));
    encode_entries(der, alt_info, "DNS", ASN1_Tag(2));
@@ -109,25 +130,24 @@ void AlternativeName::encode_into(DER_Encoder& der) const
    std::multimap<OID, ASN1_String>::const_iterator i;
    for(i = othernames.begin(); i != othernames.end(); ++i)
       {
-      der.start_explicit(ASN1_Tag(0))
+      der.start_explicit(0)
          .encode(i->first)
-         .start_explicit(ASN1_Tag(0))
+         .start_explicit(0)
             .encode(i->second)
-         .end_explicit(ASN1_Tag(0))
-      .end_explicit(ASN1_Tag(0));
+         .end_explicit()
+      .end_explicit();
       }
 
-   der.end_sequence();
+   der.end_cons();
    }
-
-namespace BER {
 
 /*************************************************
 * Decode a BER encoded AlternativeName           *
 *************************************************/
-void decode(BER_Decoder& source, AlternativeName& alt_name)
+void AlternativeName::decode_from(BER_Decoder& source)
    {
-   BER_Decoder names = BER::get_subsequence(source);
+   BER_Decoder names = source.start_cons(SEQUENCE);
+
    while(names.more_items())
       {
       BER_Object obj = names.get_next_object();
@@ -142,7 +162,7 @@ void decode(BER_Decoder& source, AlternativeName& alt_name)
          BER_Decoder othername(obj.value);
 
          OID oid;
-         BER::decode(othername, oid);
+         othername.decode(oid);
          if(othername.more_items())
             {
             BER_Object othername_value_outer = othername.get_next_object();
@@ -162,21 +182,19 @@ void decode(BER_Decoder& source, AlternativeName& alt_name)
             ASN1_Tag value_type = value.type_tag;
 
             if(is_string_type(value_type) && value.class_tag == UNIVERSAL)
-               alt_name.add_othername(oid, BER::to_string(value), value_type);
+               add_othername(oid, ASN1::to_string(value), value_type);
             }
          }
       else if(tag == 1 || tag == 2 || tag == 6)
          {
-         const std::string value = iso2local(BER::to_string(obj));
+         const std::string value = iso2local(ASN1::to_string(obj));
 
-         if(tag == 1) alt_name.add_attribute("RFC822", value);
-         if(tag == 2) alt_name.add_attribute("DNS", value);
-         if(tag == 6) alt_name.add_attribute("URI", value);
+         if(tag == 1) add_attribute("RFC822", value);
+         if(tag == 2) add_attribute("DNS", value);
+         if(tag == 6) add_attribute("URI", value);
          }
 
       }
    }
-
-}
 
 }

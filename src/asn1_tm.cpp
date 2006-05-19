@@ -4,6 +4,8 @@
 *************************************************/
 
 #include <botan/asn1_obj.h>
+#include <botan/der_enc.h>
+#include <botan/ber_dec.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
 #include <botan/conf.h>
@@ -282,17 +284,14 @@ s32bit validity_check(const X509_Time& start, const X509_Time& end,
    return VALID_TIME;
    }
 
-namespace BER {
-
 /*************************************************
 * Decode a BER encoded X509_Time                 *
 *************************************************/
-void decode(BER_Decoder& source, X509_Time& time)
+void X509_Time::decode_from(BER_Decoder& source)
    {
    BER_Object ber_time = source.get_next_object();
-   time = X509_Time(iso2local(BER::to_string(ber_time)), ber_time.type_tag);
+   // FIXME - should have a set
+   *this = X509_Time(iso2local(ASN1::to_string(ber_time)), ber_time.type_tag);
    }
-
-}
 
 }

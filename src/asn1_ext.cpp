@@ -4,6 +4,8 @@
 *************************************************/
 
 #include <botan/asn1_obj.h>
+#include <botan/der_enc.h>
+#include <botan/ber_dec.h>
 #include <botan/oids.h>
 
 namespace Botan {
@@ -32,39 +34,25 @@ Extension::Extension(const std::string& extn_oid,
 /*************************************************
 * DER encode a Extension                         *
 *************************************************/
-void Extension::encode_into(DER_Encoder& der) const
+void Extension::encode_into(DER_Encoder& codec) const
    {
-   der.start_sequence();
-   der.encode(oid);
-   if(critical)
-      der.encode(true);
-   // der.encode_with_default(critical, false);
-   der.encode(value, OCTET_STRING);
-   der.end_sequence();
+   codec.start_cons(SEQUENCE)
+         .encode(oid)
+         .encode_optional(critical, false)
+         .encode(value, OCTET_STRING)
+      .end_cons();
    }
-
-namespace BER {
 
 /*************************************************
 * Decode a BER encoded Extension                 *
 *************************************************/
-void decode(BER_Decoder& ber, Extension& extn)
+void Extension::decode_from(BER_Decoder& codec)
    {
-#if 1
-   BER_Decoder extension = BER::get_subsequence(ber);
-   BER::decode(extension, extn.oid);
-   BER::decode_optional(extension, extn.critical, BOOLEAN, UNIVERSAL, false);
-   extension.decode(extn.value, OCTET_STRING);
-   extension.verify_end();
-#else
-   ber.start_subsequence()
-         .decode(extn.oid)
-         .decode_optional(extn.critical, BOOLEAN, UNIVERSAL, false)
-         .decode(extn.value, OCTET_STRING)
-      .end_subsequence();
-#endif
+   codec.start_cons(SEQUENCE)
+         .decode(oid)
+         .decode_optional(critical, BOOLEAN, UNIVERSAL, false)
+         .decode(value, OCTET_STRING)
+      .end_cons();
    }
-
-}
 
 }

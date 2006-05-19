@@ -20,13 +20,11 @@ namespace {
 *************************************************/
 MemoryVector<byte> encode_x942_int(u32bit n)
    {
-   byte n_buf[4];
+   byte n_buf[4] = { 0 };
    for(u32bit j = 0; j != 4; ++j)
       n_buf[j] = get_byte(j, n);
 
-   DER_Encoder encoder;
-   encoder.encode(n_buf, 4, OCTET_STRING);
-   return encoder.get_contents();
+   return DER_Encoder().encode(n_buf, 4, OCTET_STRING).get_contents();
    }
 
 }
@@ -46,28 +44,30 @@ SecureVector<byte> X942_PRF::derive(u32bit key_len,
 
    while(key.size() != key_len)
       {
-      DER_Encoder encoder;
-
-      encoder.start_sequence()
-         .start_sequence()
-            .encode(kek_algo)
-            .add_raw_octets(encode_x942_int(counter))
-         .end_sequence();
-
-      if(salt_len)
-         {
-         encoder.start_explicit(ASN1_Tag(0));
-         encoder.encode(salt, salt_len, OCTET_STRING);
-         encoder.end_explicit(ASN1_Tag(0));
-         }
-
-         encoder.start_explicit(ASN1_Tag(2))
-            .add_raw_octets(encode_x942_int(8 * key_len))
-         .end_explicit(ASN1_Tag(2))
-      .end_sequence();
-
       hash->update(secret, secret_len);
-      hash->update(encoder.get_contents());
+
+      hash->update(
+         DER_Encoder().start_cons(SEQUENCE)
+
+            .start_cons(SEQUENCE)
+               .encode(kek_algo)
+               .raw_bytes(encode_x942_int(counter))
+            .end_cons()
+
+            .encode_if(salt_len != 0,
+               DER_Encoder()
+                  .start_explicit(0)
+                     .encode(salt, salt_len, OCTET_STRING)
+                  .end_explicit()
+               )
+
+            .start_explicit(2)
+               .raw_bytes(encode_x942_int(8 * key_len))
+            .end_explicit()
+
+         .end_cons().get_contents()
+         );
+
       SecureVector<byte> digest = hash->final();
       key.append(digest, std::min(digest.size(), key_len - key.size()));
 

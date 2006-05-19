@@ -29,10 +29,18 @@ bool Data_Store::operator==(const Data_Store& other) const
    }
 
 /*************************************************
+* Check if this key has at least one value       *
+*************************************************/
+bool Data_Store::has_value(const std::string& key) const
+   {
+   return (contents.lower_bound(key) != contents.end());
+   }
+
+/*************************************************
 * Search based on an arbitrary predicate         *
 *************************************************/
 std::multimap<std::string, std::string>
-Data_Store::get(const Matcher& matcher) const
+Data_Store::search_with(const Matcher& matcher) const
    {
    std::multimap<std::string, std::string> out;
 
@@ -49,12 +57,13 @@ Data_Store::get(const Matcher& matcher) const
    }
 
 /*************************************************
-* Search based on an key equality                *
+* Search based on key equality                   *
 *************************************************/
 std::vector<std::string> Data_Store::get(const std::string& looking_for) const
    {
    std::vector<std::string> out;
 
+   // FIXME: use equal_range!!!!
    std::multimap<std::string, std::string>::const_iterator i;
    i = contents.begin();
    while(i != contents.end())
