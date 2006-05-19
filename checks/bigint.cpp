@@ -138,19 +138,13 @@ u32bit results(std::string op,
       std::cout << std::endl;
 
       std::cout << "ERROR: " << op1 << std::endl;
-#if 1 
-      std::cout << "a = " << a << std::endl;
-      std::cout << "b = " << b << std::endl;
-      std::cout << "c = " << c << std::endl;
-      std::cout << "d = " << d << std::endl;
-      std::cout << "e = " << e << std::endl;
-#else
+
       std::cout << "a = " << std::hex << a << std::endl;
       std::cout << "b = " << std::hex << b << std::endl;
       std::cout << "c = " << std::hex << c << std::endl;
       std::cout << "d = " << std::hex << d << std::endl;
       std::cout << "e = " << std::hex << e << std::endl;
-#endif
+
       if(d != e)
          {
          std::cout << "ERROR: " << op1 << " | " << op2
