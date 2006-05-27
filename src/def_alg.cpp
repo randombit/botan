@@ -110,7 +110,7 @@ BlockCipher*
 Default_Engine::find_block_cipher(const std::string& algo_spec) const
    {
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   if(name.size() == 0)
+   if(name.empty())
       return 0;
    const std::string algo_name = deref_alias(name[0]);
 
@@ -158,7 +158,7 @@ StreamCipher*
 Default_Engine::find_stream_cipher(const std::string& algo_spec) const
    {
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   if(name.size() == 0)
+   if(name.empty())
       return 0;
    const std::string algo_name = deref_alias(name[0]);
 
@@ -177,7 +177,7 @@ HashFunction*
 Default_Engine::find_hash(const std::string& algo_spec) const
    {
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   if(name.size() == 0)
+   if(name.empty())
       return 0;
    const std::string algo_name = deref_alias(name[0]);
 
@@ -215,7 +215,7 @@ MessageAuthenticationCode*
 Default_Engine::find_mac(const std::string& algo_spec) const
    {
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   if(name.size() == 0)
+   if(name.empty())
       return 0;
    const std::string algo_name = deref_alias(name[0]);
 
@@ -232,7 +232,7 @@ Default_Engine::find_mac(const std::string& algo_spec) const
 S2K* Default_Engine::find_s2k(const std::string& algo_spec) const
    {
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   if(name.size() == 0)
+   if(name.empty())
       return 0;
 
    const std::string algo_name = deref_alias(name[0]);
@@ -251,7 +251,7 @@ BlockCipherModePaddingMethod*
 Default_Engine::find_bc_pad(const std::string& algo_spec) const
    {
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   if(name.size() == 0)
+   if(name.empty())
       return 0;
 
    const std::string algo_name = deref_alias(name[0]);

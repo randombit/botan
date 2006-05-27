@@ -171,7 +171,7 @@ DER_Encoder& DER_Encoder::start_cons(ASN1_Tag type_tag,
 *************************************************/
 DER_Encoder& DER_Encoder::end_cons()
    {
-   if(subsequences.size() == 0)
+   if(subsequences.empty())
       throw Invalid_State("DER_Encoder::end_cons: No such sequence");
 
    SecureVector<byte> seq = subsequences[subsequences.size()-1].get_contents();
@@ -214,10 +214,11 @@ DER_Encoder& DER_Encoder::raw_bytes(const MemoryRegion<byte>& val)
 *************************************************/
 DER_Encoder& DER_Encoder::raw_bytes(const byte bytes[], u32bit length)
    {
-   if(subsequences.size() == 0)
-      contents.append(bytes, length);
-   else
+   if(subsequences.size())
       subsequences[subsequences.size()-1].add_bytes(bytes, length);
+   else
+      contents.append(bytes, length);
+
    return (*this);
    }
 
