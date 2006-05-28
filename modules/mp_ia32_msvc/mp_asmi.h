@@ -45,8 +45,8 @@ inline word word4_addcarry(word x[4], word carry)
    }
    }
 
-   /*************************************************
-* Four Word Block Addition, Two Argument         *
+/*************************************************
+* Eight Word Block Addition, Two Argument        *
 *************************************************/
 inline word word8_add2(word x[8], const word y[8], word carry)
    {
@@ -55,29 +55,38 @@ inline word word8_add2(word x[8], const word y[8], word carry)
        mov esi,[y]
        xor eax,eax
        sub eax,[carry] //force CF=1 iff *carry==1
+
        mov eax,[esi]        
        adc [edx],eax
+
        mov eax,[esi+4]      
        adc [edx+4],eax
+
        mov eax,[esi+8]
        adc [edx+8],eax
+
        mov eax,[esi+12]     
        adc [edx+12],eax
+
        mov eax,[esi+16]
        adc [edx+16],eax
+
        mov eax,[esi+20]     
        adc [edx+20],eax
+
        mov eax,[esi+24]     
        adc [edx+24],eax
+
        mov eax,[esi+28]     
        adc [edx+28],eax
+
        sbb eax,eax
        neg eax
    }
    }
 
 /*************************************************
-* Four Word Block Addition, Three Argument       *
+* Eight Word Block Addition, Three Argument      *
 *************************************************/
 inline word word8_add3(word z[8], const word x[8], const word y[8], word carry)
    {
@@ -87,35 +96,36 @@ inline word word8_add3(word z[8], const word x[8], const word y[8], word carry)
        mov ebx,[z]
        xor eax,eax
        sub eax,[carry] //force CF=1 iff *carry==1
-       mov eax,[edi]        
+
+       mov eax,[edi]
        adc eax,[esi]
        mov [ebx],eax
 
-       mov eax,[edi+4]      
+       mov eax,[edi+4] 
        adc eax,[esi+4]
        mov [ebx+4],eax
 
-       mov eax,[edi+8]      
+       mov eax,[edi+8] 
        adc eax,[esi+8]
        mov [ebx+8],eax
 
-       mov eax,[edi+12]     
+       mov eax,[edi+12]
        adc eax,[esi+12]
        mov [ebx+12],eax
 
-       mov eax,[edi+16]     
+       mov eax,[edi+16]
        adc eax,[esi+16]
        mov [ebx+16],eax
 
-       mov eax,[edi+20]     
+       mov eax,[edi+20]
        adc eax,[esi+20]
        mov [ebx+20],eax
 
-       mov eax,[edi+24]     
+       mov eax,[edi+24]
        adc eax,[esi+24]
        mov [ebx+24],eax
 
-       mov eax,[edi+28]     
+       mov eax,[edi+28]
        adc eax,[esi+28]
        mov [ebx+28],eax
 
@@ -137,7 +147,7 @@ inline word word_sub(word x, word y, word* carry)
    }
 
 /*************************************************
-* Four Word Block Subtraction, Two Argument      *
+* Eight Word Block Subtraction, Two Argument     *
 *************************************************/
 inline word word8_sub2(word x[8], const word y[8], word carry)
    {
@@ -146,28 +156,28 @@ inline word word8_sub2(word x[8], const word y[8], word carry)
        mov esi,[y]
        xor eax,eax
        sub eax,[carry] //force CF=1 iff *carry==1
-       mov eax,[edi]        
+       mov eax,[edi]   
        sbb eax,[esi]
        mov [edi],eax
-       mov eax,[edi+4]      
+       mov eax,[edi+4] 
        sbb eax,[esi+4]
        mov [edi+4],eax
-       mov eax,[edi+8]      
+       mov eax,[edi+8] 
        sbb eax,[esi+8]
        mov [edi+8],eax
-       mov eax,[edi+12]     
+       mov eax,[edi+12]
        sbb eax,[esi+12]
        mov [edi+12],eax
        mov eax,[edi+16]
        sbb eax,[esi+16]
        mov [edi+16],eax
-       mov eax,[edi+20]     
+       mov eax,[edi+20]
        sbb eax,[esi+20]
        mov [edi+20],eax
-       mov eax,[edi+24]     
+       mov eax,[edi+24]
        sbb eax,[esi+24]
        mov [edi+24],eax
-       mov eax,[edi+28]     
+       mov eax,[edi+28]
        sbb eax,[esi+28]
        mov [edi+28],eax
        sbb eax,eax
@@ -176,7 +186,7 @@ inline word word8_sub2(word x[8], const word y[8], word carry)
    }
 
 /*************************************************
-* Four Word Block Subtraction, Three Argument    *
+* Eight Word Block Subtraction, Three Argument   *
 *************************************************/
 __forceinline word word8_sub3(word z[8], const word x[8],
                               const word y[8], word carry)
@@ -194,22 +204,22 @@ __forceinline word word8_sub3(word z[8], const word x[8],
        mov eax,[edi+4]
        sbb eax,[esi+4]
        mov [ebx+4],eax
-       mov eax,[edi+8]      
+       mov eax,[edi+8] 
        sbb eax,[esi+8]
        mov [ebx+8],eax
-       mov eax,[edi+12]     
+       mov eax,[edi+12]
        sbb eax,[esi+12]
        mov [ebx+12],eax
-       mov eax,[edi+16]     
+       mov eax,[edi+16]
        sbb eax,[esi+16]
        mov [ebx+16],eax
-       mov eax,[edi+20]     
+       mov eax,[edi+20]
        sbb eax,[esi+20]
        mov [ebx+20],eax
-       mov eax,[edi+24]     
+       mov eax,[edi+24]
        sbb eax,[esi+24]
        mov [ebx+24],eax
-       mov eax,[edi+28]     
+       mov eax,[edi+28]
        sbb eax,[esi+28]
        mov [ebx+28],eax
        sbb eax,eax
@@ -218,40 +228,66 @@ __forceinline word word8_sub3(word z[8], const word x[8],
    }
 
 /*************************************************
-* Four Word Block Linear Multiplication          *
+* Eight Word Block Linear Multiplication         *
 *************************************************/
-inline word word4_linmul2(word x[4], word y, word carry)
+inline word word8_linmul2(word x[4], word y, word carry)
 {
    __asm
    {
        mov esi,[x]
+
        mov eax,[esi]        //load a
        mul [y]           //edx(hi):eax(lo)=a*b
        add eax,[carry]      //sum lo carry
        adc edx,0          //sum hi carry
        mov ecx,edx      //store carry
-       mov [esi],eax        //load a
+       mov [esi],eax        //store a
 
        mov eax,[esi+4]        //load a
        mul [y]           //edx(hi):eax(lo)=a*b
        add eax,ecx      //sum lo carry
        adc edx,0          //sum hi carry
        mov ecx,edx      //store carry
-       mov [esi+4],eax        //load a
+       mov [esi+4],eax        //store a
 
        mov eax,[esi+8]        //load a
        mul [y]           //edx(hi):eax(lo)=a*b
        add eax,ecx      //sum lo carry
        adc edx,0          //sum hi carry
        mov ecx,edx      //store carry
-       mov [esi+8],eax        //load a
+       mov [esi+8],eax        //store a
 
        mov eax,[esi+12]        //load a
        mul [y]           //edx(hi):eax(lo)=a*b
        add eax,ecx      //sum lo carry
        adc edx,0          //sum hi carry
-       mov [esi+12],eax        //load a
-       mov eax,edx      //store carry
+       mov [esi+12],eax        //store a
+
+       mov eax,[esi+16]        //load a
+       mul [y]           //edx(hi):eax(lo)=a*b
+       add eax,ecx      //sum lo carry
+       adc edx,0          //sum hi carry
+       mov [esi+16],eax        //store a
+
+       mov eax,[esi+20]        //load a
+       mul [y]           //edx(hi):eax(lo)=a*b
+       add eax,ecx      //sum lo carry
+       adc edx,0          //sum hi carry
+       mov [esi+20],eax        //store a
+
+       mov eax,[esi+24]        //load a
+       mul [y]           //edx(hi):eax(lo)=a*b
+       add eax,ecx      //sum lo carry
+       adc edx,0          //sum hi carry
+       mov [esi+24],eax        //store a
+
+       mov eax,[esi+28]        //load a
+       mul [y]           //edx(hi):eax(lo)=a*b
+       add eax,ecx      //sum lo carry
+       adc edx,0          //sum hi carry
+       mov [esi+28],eax        //store a
+
+       mov eax,edx      //store carry for return
    }
    }
 
