@@ -25,32 +25,11 @@ inline word word_add(word x, word y, word* carry)
    }
 
 /*************************************************
-* Four Word Block Addition, Two Argument         *
-*************************************************/
-inline word word4_addcarry(word x[4], word carry)
-   {
-      __asm {
-       mov edx,[x]
-       xor eax,eax
-       sub eax,[carry] //force CF=1 iff *carry==1
-       adc [edx],0
-       mov eax,[esi+4]      
-       adc [edx+4],0
-       mov eax,[esi+8]
-       adc [edx+8],0
-       mov eax,[esi+12]     
-       adc [edx+12],0
-       sbb eax,eax
-       neg eax
-   }
-   }
-
-/*************************************************
 * Eight Word Block Addition, Two Argument        *
 *************************************************/
 inline word word8_add2(word x[8], const word y[8], word carry)
    {
-      __asm {
+   __asm {
        mov edx,[x]
        mov esi,[y]
        xor eax,eax
@@ -90,7 +69,7 @@ inline word word8_add2(word x[8], const word y[8], word carry)
 *************************************************/
 inline word word8_add3(word z[8], const word x[8], const word y[8], word carry)
    {
-       __asm {
+   __asm {
        mov edi,[x]
        mov esi,[y]
        mov ebx,[z]
@@ -151,7 +130,7 @@ inline word word_sub(word x, word y, word* carry)
 *************************************************/
 inline word word8_sub2(word x[8], const word y[8], word carry)
    {
-    _asm {
+   __asm {
        mov edi,[x]
        mov esi,[y]
        xor eax,eax
@@ -191,8 +170,7 @@ inline word word8_sub2(word x[8], const word y[8], word carry)
 __forceinline word word8_sub3(word z[8], const word x[8],
                               const word y[8], word carry)
    {
-   __asm
-      {
+   __asm {
       mov edi,[x]
        mov esi,[y]
        xor eax,eax
@@ -231,10 +209,10 @@ __forceinline word word8_sub3(word z[8], const word x[8],
 * Eight Word Block Linear Multiplication         *
 *************************************************/
 inline word word8_linmul2(word x[4], word y, word carry)
-{
-   __asm
    {
-       mov esi,[x]
+   __asm
+      {
+      mov esi,[x]
 
        mov eax,[esi]        //load a
        mul [y]           //edx(hi):eax(lo)=a*b
