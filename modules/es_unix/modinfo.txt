@@ -14,7 +14,7 @@ aix
 beos
 cygwin
 darwin
-freebsd
+#freebsd
 hpux
 irix
 linux
