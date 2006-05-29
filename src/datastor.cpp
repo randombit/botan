@@ -88,7 +88,7 @@ std::string Data_Store::get1(const std::string& key) const
    if(vals.size() > 1)
       throw Invalid_State("Data_Store::get1: More than one value for " + key);
 
-   return vals.at(0);
+   return vals[0];
    }
 
 /*************************************************

@@ -83,7 +83,7 @@ BigInt Fixed_Window_Exponentiator::execute() const
 
       u32bit nibble = exp.get_substring(window_bits*(j-1), window_bits);
       if(nibble)
-         x = reducer.multiply(x, g.at(nibble-1));
+         x = reducer.multiply(x, g[nibble-1]);
       }
    return x;
    }

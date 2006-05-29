@@ -122,7 +122,7 @@ BigInt Montgomery_Exponentiator::execute() const
       u32bit nibble = exp.get_substring(window_bits*(j-1), window_bits);
       if(nibble)
          {
-         const BigInt& y = g.at(nibble-1);
+         const BigInt& y = g[nibble-1];
 
          z.clear();
          bigint_mul(z.begin(), z.size(), workspace,
