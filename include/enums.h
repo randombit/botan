@@ -12,6 +12,13 @@ namespace Botan {
 * ASN.1 Type and Class Tags                      *
 *************************************************/
 enum ASN1_Tag {
+   UNIVERSAL        = 0x00,
+   APPLICATION      = 0x40,
+   CONTEXT_SPECIFIC = 0x80,
+   PRIVATE          = 0xC0,
+
+   CONSTRUCTED      = 0x20,
+
    EOC              = 0x00,
    BOOLEAN          = 0x01,
    INTEGER          = 0x02,
@@ -33,13 +40,6 @@ enum ASN1_Tag {
 
    UTC_TIME         = 0x17,
    GENERALIZED_TIME = 0x18,
-
-   CONSTRUCTED      = 0x20,
-
-   UNIVERSAL        = 0x00,
-   APPLICATION      = 0x40,
-   CONTEXT_SPECIFIC = 0x80,
-   PRIVATE          = 0xC0,
 
    NO_OBJECT        = 0xFF00,
    DIRECTORY_STRING = 0xFF01
