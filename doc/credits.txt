@@ -19,14 +19,14 @@ D: Windows porting
 
 N: Matt Johnston
 D: Allocator fixes and optimizations, decompressor fixes
-                                                      
+
 N: Peter J. Jones
 E: pjones@pmade.org
 D: Bzip2 compression module
 S: Colorado, USA
 
 N: Justin Karneges
-D: The Qt-related modules
+D: The Qt-related modules, X.509 API design
 
 N: Jack Lloyd
 E: lloyd@randombit.net
