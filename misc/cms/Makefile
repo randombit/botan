@@ -7,3 +7,6 @@ libcms.a: $(OBJS)
 
 %.o: %.cpp
 	g++ -I. $(shell botan-config --cflags) -c $? -o $@
+
+clean:
+	rm -f *.o
