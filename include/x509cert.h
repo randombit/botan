@@ -25,8 +25,8 @@ class X509_Certificate : public X509_Object
 
       X509_DN issuer_dn() const;
       X509_DN subject_dn() const;
-      std::string subject_info(const std::string&) const;
-      std::string issuer_info(const std::string&) const;
+      std::vector<std::string> subject_info(const std::string&) const;
+      std::vector<std::string> issuer_info(const std::string&) const;
 
       std::string start_time() const;
       std::string end_time() const;
@@ -36,7 +36,7 @@ class X509_Certificate : public X509_Object
 
       MemoryVector<byte> authority_key_id() const;
       MemoryVector<byte> subject_key_id() const;
-      bool self_signed() const;
+      bool is_self_signed() const { return self_signed; }
       bool is_CA_cert() const;
 
       u32bit path_limit() const;
@@ -49,15 +49,13 @@ class X509_Certificate : public X509_Object
       X509_Certificate(DataSource&);
       X509_Certificate(const std::string&);
    private:
+      void force_decode();
       friend class X509_CA;
       X509_Certificate() {}
-      void force_decode();
-
       void handle_v3_extension(const Extension&);
 
-      Data_Store info;
-      std::multimap<std::string, std::string> subject, issuer;
-      bool is_ca;
+      Data_Store subject, issuer;
+      bool self_signed, is_ca;
    };
 
 /*************************************************

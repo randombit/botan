@@ -10,97 +10,38 @@
 #include <botan/stl_util.h>
 #include <botan/parsing.h>
 #include <botan/bigint.h>
-#include <botan/conf.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
 #include <algorithm>
-
-#include <assert.h>
 
 namespace Botan {
 
 namespace {
 
 /*************************************************
-* Get information from the DistinguishedName     *
-*************************************************/
-void load_info(std::multimap<std::string, std::string>& names,
-               const X509_DN& dn_info)
-   {
-   typedef std::multimap<OID, std::string>::const_iterator rdn_iter;
-   std::multimap<OID, std::string> attr = dn_info.get_attributes();
-
-   for(rdn_iter j = attr.begin(); j != attr.end(); ++j)
-      {
-      const std::string oid_name = OIDS::lookup(j->first);
-
-      if(oid_name == "PKCS9.EmailAddress")
-         multimap_insert(names, std::string("RFC822"), j->second);
-      else
-         multimap_insert(names, oid_name, j->second);
-      }
-   }
-
-/*************************************************
-* Get information from the alternative name      *
-*************************************************/
-void load_info(std::multimap<std::string, std::string>& names,
-               const AlternativeName& alt_info)
-   {
-   typedef std::multimap<std::string, std::string>::const_iterator rdn_iter;
-   std::multimap<std::string, std::string> attr = alt_info.get_attributes();
-
-   for(rdn_iter j = attr.begin(); j != attr.end(); ++j)
-      multimap_insert(names, j->first, j->second);
-
-   typedef std::multimap<OID, ASN1_String>::const_iterator on_iter;
-   std::multimap<OID, ASN1_String> othernames = alt_info.get_othernames();
-   for(on_iter j = othernames.begin(); j != othernames.end(); ++j)
-      multimap_insert(names, OIDS::lookup(j->first), j->second.value());
-   }
-
-/*************************************************
-* Get some information from names                *
-*************************************************/
-std::string get_info(const std::multimap<std::string, std::string>& names,
-                     const std::string& info)
-   {
-   typedef std::multimap<std::string, std::string>::const_iterator rdn_iter;
-
-   const std::string what = X509_DN::deref_info_field(info);
-   std::pair<rdn_iter, rdn_iter> range = names.equal_range(what);
-
-   std::vector<std::string> results;
-   for(rdn_iter j = range.first; j != range.second; ++j)
-      {
-      if(std::find(results.begin(), results.end(), j->second) == results.end())
-         results.push_back(j->second);
-      }
-
-   std::string value;
-   for(u32bit j = 0; j != results.size(); ++j)
-      value += results[j] + '/';
-   if(value.size())
-      value.erase(value.size() - 1, 1);
-   return value;
-   }
-
-/*************************************************
 * Create and populate a X509_DN                  *
 *************************************************/
-X509_DN create_dn(const std::multimap<std::string, std::string>& names)
+X509_DN create_dn(const Data_Store& info)
    {
+   class DN_Matcher : public Data_Store::Matcher
+      {
+      public:
+         bool operator()(const std::string& key, const std::string&) const
+            {
+            if(key.find("X520.") != std::string::npos)
+               return true;
+            return false;
+            }
+      };
+
+   std::multimap<std::string, std::string> names
+      = info.search_with(DN_Matcher());
+
    typedef std::multimap<std::string, std::string>::const_iterator rdn_iter;
 
    X509_DN new_dn;
    for(rdn_iter j = names.begin(); j != names.end(); ++j)
-      {
-      const std::string oid = j->first;
-      const std::string value = j->second;
-      if(!OIDS::have_oid(oid))
-         continue;
-      new_dn.add_attribute(oid, j->second);
-      }
+      new_dn.add_attribute(j->first, j->second);
    return new_dn;
    }
 
@@ -112,7 +53,7 @@ X509_DN create_dn(const std::multimap<std::string, std::string>& names)
 X509_Certificate::X509_Certificate(DataSource& in) :
    X509_Object(in, "CERTIFICATE/X509 CERTIFICATE")
    {
-   is_ca = false;
+   is_ca = self_signed = false;
    do_decode();
    }
 
@@ -122,7 +63,7 @@ X509_Certificate::X509_Certificate(DataSource& in) :
 X509_Certificate::X509_Certificate(const std::string& in) :
    X509_Object(in, "CERTIFICATE/X509 CERTIFICATE")
    {
-   is_ca = false;
+   is_ca = self_signed = false;
    do_decode();
    }
 
@@ -131,44 +72,34 @@ X509_Certificate::X509_Certificate(const std::string& in) :
 *************************************************/
 void X509_Certificate::force_decode()
    {
-   BER_Decoder tbs_cert(tbs_bits);
-
    u32bit version;
-   tbs_cert.decode_optional(version, ASN1_Tag(0),
-                            ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
-
-   if(version > 2)
-      throw Decoding_Error("Unknown X.509 cert version " + to_string(version));
-   if(version < 2)
-      {
-      is_ca = Config::get_bool("x509/v1_assume_ca");
-      info.add("X509v3.BasicConstraints.path_constraint", NO_CERT_PATH_LIMIT);
-      }
-
    BigInt serial_bn;
-   tbs_cert.decode(serial_bn);
-
    AlgorithmIdentifier sig_algo_inner;
-   tbs_cert.decode(sig_algo_inner);
-
-   if(sig_algo != sig_algo_inner)
-      throw Decoding_Error("Algorithm identifier mismatch");
-
-   X509_DN dn_issuer;
-   tbs_cert.decode(dn_issuer);
-   load_info(issuer, dn_issuer);
-
+   X509_DN dn_issuer, dn_subject;
    X509_Time start, end;
 
+   BER_Decoder tbs_cert(tbs_bits);
+   tbs_cert.decode_optional(version, ASN1_Tag(0),
+                            ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
+   tbs_cert.decode(serial_bn);
+   tbs_cert.decode(sig_algo_inner);
+   tbs_cert.decode(dn_issuer);
    tbs_cert.start_cons(SEQUENCE)
       .decode(start)
       .decode(end)
       .verify_end()
-   .end_cons();
+   .end_cons()
+   .decode(dn_subject);
 
-   X509_DN dn_subject;
-   tbs_cert.decode(dn_subject);
-   load_info(subject, dn_subject);
+   if(version > 2)
+      throw Decoding_Error("Unknown X.509 cert version " + to_string(version));
+   if(sig_algo != sig_algo_inner)
+      throw Decoding_Error("Algorithm identifier mismatch");
+
+   self_signed = (dn_subject == dn_issuer);
+
+   subject.add(dn_subject.contents());
+   issuer.add(dn_issuer.contents());
 
    BER_Object public_key = tbs_cert.get_next_object();
    if(public_key.type_tag != SEQUENCE || public_key.class_tag != CONSTRUCTED)
@@ -185,16 +116,24 @@ void X509_Certificate::force_decode()
       v3_exts_data.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
       {
       BER_Decoder v3_exts_decoder(v3_exts_data.value);
-      BER_Decoder ext_data = v3_exts_decoder.start_cons(SEQUENCE);
-      v3_exts_decoder.verify_end();
 
-      while(ext_data.more_items())
+#if 0
+      Extensions extensions;
+      v3_exts_decoder.decode(extensions);
+
+      extensions.contents(subject, issuer);
+#else
+      BER_Decoder sequence = v3_exts_decoder.start_cons(SEQUENCE);
+
+      while(sequence.more_items())
          {
          Extension extn;
-         ext_data.decode(extn);
+         sequence.decode(extn);
          handle_v3_extension(extn);
          }
-      ext_data.end_cons();
+      sequence.verify_end();
+#endif
+      v3_exts_decoder.verify_end();
       }
    else if(v3_exts_data.type_tag != NO_OBJECT)
       throw BER_Bad_Tag("Unknown tag in X.509 cert",
@@ -203,20 +142,26 @@ void X509_Certificate::force_decode()
    if(tbs_cert.more_items())
       throw Decoding_Error("TBSCertificate has more items that expected");
 
-   info.add("X509.Certificate.version", version);
-   info.add("X509.Certificate.serial", BigInt::encode(serial_bn));
-   info.add("X509.Certificate.start", start.readable_string());
-   info.add("X509.Certificate.end", end.readable_string());
+   subject.add("X509.Certificate.version", version);
+   subject.add("X509.Certificate.serial", BigInt::encode(serial_bn));
+   subject.add("X509.Certificate.start", start.readable_string());
+   subject.add("X509.Certificate.end", end.readable_string());
 
-   info.add("X509.Certificate.v2.issuer_key_id", v2_issuer_key_id);
-   info.add("X509.Certificate.v2.subject_key_id", v2_subject_key_id);
+   issuer.add("X509.Certificate.v2.key_id", v2_issuer_key_id);
+   subject.add("X509.Certificate.v2.key_id", v2_subject_key_id);
 
-   info.add("X509.Certificate.public_key",
-            PEM_Code::encode(
-               ASN1::put_in_sequence(public_key.value),
-               "PUBLIC KEY"
-               )
+   subject.add("X509.Certificate.public_key",
+               PEM_Code::encode(
+                  ASN1::put_in_sequence(public_key.value),
+                  "PUBLIC KEY"
+                  )
       );
+
+   if(!subject.has_value("X509v3.BasicConstraints.path_constraint"))
+      {
+      u32bit limit = (x509_version() < 3) ? NO_CERT_PATH_LIMIT : 0;
+      subject.add("X509v3.BasicConstraints.path_constraint", limit);
+      }
    }
 
 /*************************************************
@@ -232,7 +177,7 @@ void X509_Certificate::handle_v3_extension(const Extension& extn)
       BER::decode(value, constraints);
 
       if(constraints != NO_CONSTRAINTS)
-         info.add("X509v3.KeyUsage", constraints);
+         subject.add("X509v3.KeyUsage", constraints);
       }
    else if(extn.oid == OIDS::lookup("X509v3.ExtendedKeyUsage"))
       {
@@ -241,12 +186,13 @@ void X509_Certificate::handle_v3_extension(const Extension& extn)
          {
          OID usage_oid;
          key_usage.decode(usage_oid);
-         info.add("X509v3.ExtendedKeyUsage", usage_oid.as_string());
+         subject.add("X509v3.ExtendedKeyUsage", usage_oid.as_string());
          }
       }
    else if(extn.oid == OIDS::lookup("X509v3.BasicConstraints"))
       {
       u32bit max_path_len = 0;
+      is_ca = false;
 
       value.start_cons(SEQUENCE)
             .decode_optional(is_ca, BOOLEAN, UNIVERSAL, false)
@@ -255,14 +201,14 @@ void X509_Certificate::handle_v3_extension(const Extension& extn)
             .verify_end()
          .end_cons();
 
-      info.add("X509v3.BasicConstraints.is_ca", is_ca);
-      info.add("X509v3.BasicConstraints.path_constraint", max_path_len);
+      subject.add("X509v3.BasicConstraints.path_constraint",
+                  (is_ca ? max_path_len : 0));
       }
    else if(extn.oid == OIDS::lookup("X509v3.SubjectKeyIdentifier"))
       {
       MemoryVector<byte> v3_subject_key_id;
       value.decode(v3_subject_key_id, OCTET_STRING);
-      info.add("X509v3.SubjectKeyIdentifier", v3_subject_key_id);
+      subject.add("X509v3.SubjectKeyIdentifier", v3_subject_key_id);
       }
    else if(extn.oid == OIDS::lookup("X509v3.AuthorityKeyIdentifier"))
       {
@@ -270,23 +216,22 @@ void X509_Certificate::handle_v3_extension(const Extension& extn)
       BER_Decoder key_id = value.start_cons(SEQUENCE);
       key_id.decode_optional_string(v3_issuer_key_id, OCTET_STRING, 0);
 
-      info.add("X509v3.AuthorityKeyIdentifier", v3_issuer_key_id);
+      issuer.add("X509v3.AuthorityKeyIdentifier", v3_issuer_key_id);
       }
    else if(extn.oid == OIDS::lookup("X509v3.SubjectAlternativeName"))
       {
       AlternativeName alt_name;
       value.decode(alt_name);
-      load_info(subject, alt_name);
+      subject.add(alt_name.contents());
       }
    else if(extn.oid == OIDS::lookup("X509v3.IssuerAlternativeName"))
       {
       AlternativeName alt_name;
       value.decode(alt_name);
-      load_info(issuer, alt_name);
+      issuer.add(alt_name.contents());
       }
    else if(extn.oid == OIDS::lookup("X509v3.CertificatePolicies"))
       {
-
       BER_Decoder ber_policies = value.start_cons(SEQUENCE);
       while(ber_policies.more_items())
          {
@@ -297,7 +242,7 @@ void X509_Certificate::handle_v3_extension(const Extension& extn)
          if(extn.critical && policy.more_items())
             throw Decoding_Error("X.509 v3 critical policy has qualifiers");
 
-         info.add("X509v3.CertificatePolicies", oid.as_string());
+         subject.add("X509v3.CertificatePolicies", oid.as_string());
          }
       }
    else
@@ -316,7 +261,7 @@ void X509_Certificate::handle_v3_extension(const Extension& extn)
 *************************************************/
 u32bit X509_Certificate::x509_version() const
    {
-   return (info.get1_u32bit("X509.Certificate.version") + 1);
+   return (subject.get1_u32bit("X509.Certificate.version") + 1);
    }
 
 /*************************************************
@@ -324,7 +269,7 @@ u32bit X509_Certificate::x509_version() const
 *************************************************/
 std::string X509_Certificate::start_time() const
    {
-   return info.get1("X509.Certificate.start");
+   return subject.get1("X509.Certificate.start");
    }
 
 /*************************************************
@@ -332,23 +277,25 @@ std::string X509_Certificate::start_time() const
 *************************************************/
 std::string X509_Certificate::end_time() const
    {
-   return info.get1("X509.Certificate.end");
+   return subject.get1("X509.Certificate.end");
    }
 
 /*************************************************
 * Return information about the subject           *
 *************************************************/
-std::string X509_Certificate::subject_info(const std::string& info) const
+std::vector<std::string>
+X509_Certificate::subject_info(const std::string& what) const
    {
-   return get_info(subject, info);
+   return subject.get(X509_DN::deref_info_field(what));
    }
 
 /*************************************************
 * Return information about the issuer            *
 *************************************************/
-std::string X509_Certificate::issuer_info(const std::string& info) const
+std::vector<std::string>
+X509_Certificate::issuer_info(const std::string& what) const
    {
-   return get_info(issuer, info);
+   return issuer.get(X509_DN::deref_info_field(what));
    }
 
 /*************************************************
@@ -356,16 +303,8 @@ std::string X509_Certificate::issuer_info(const std::string& info) const
 *************************************************/
 X509_PublicKey* X509_Certificate::subject_public_key() const
    {
-   DataSource_Memory source(info.get1("X509.Certificate.public_key"));
+   DataSource_Memory source(subject.get1("X509.Certificate.public_key"));
    return X509::load_key(source);
-   }
-
-/*************************************************
-* Check if the certificate is self-signed        *
-*************************************************/
-bool X509_Certificate::self_signed() const
-   {
-   return (create_dn(issuer) == create_dn(subject));
    }
 
 /*************************************************
@@ -373,9 +312,9 @@ bool X509_Certificate::self_signed() const
 *************************************************/
 bool X509_Certificate::is_CA_cert() const
    {
-   if(!is_ca) return false;
-   if((constraints() & KEY_CERT_SIGN) ||
-      (constraints() == NO_CONSTRAINTS))
+   if(!is_ca)
+      return false;
+   if((constraints() & KEY_CERT_SIGN) || (constraints() == NO_CONSTRAINTS))
       return true;
    return false;
    }
@@ -385,7 +324,7 @@ bool X509_Certificate::is_CA_cert() const
 *************************************************/
 u32bit X509_Certificate::path_limit() const
    {
-   return info.get1_u32bit("X509v3.BasicConstraints.path_constraint");
+   return subject.get1_u32bit("X509v3.BasicConstraints.path_constraint");
    }
 
 /*************************************************
@@ -393,7 +332,7 @@ u32bit X509_Certificate::path_limit() const
 *************************************************/
 Key_Constraints X509_Certificate::constraints() const
    {
-   return Key_Constraints(info.get1_u32bit("X509v3.KeyUsage"));
+   return Key_Constraints(subject.get1_u32bit("X509v3.KeyUsage"));
    }
 
 /*************************************************
@@ -401,7 +340,7 @@ Key_Constraints X509_Certificate::constraints() const
 *************************************************/
 std::vector<std::string> X509_Certificate::ex_constraints() const
    {
-   return info.get("X509v3.ExtendedKeyUsage");
+   return subject.get("X509v3.ExtendedKeyUsage");
    }
 
 /*************************************************
@@ -409,7 +348,7 @@ std::vector<std::string> X509_Certificate::ex_constraints() const
 *************************************************/
 std::vector<std::string> X509_Certificate::policies() const
    {
-   return info.get("X509v3.CertificatePolicies");
+   return subject.get("X509v3.CertificatePolicies");
    }
 
 /*************************************************
@@ -417,7 +356,7 @@ std::vector<std::string> X509_Certificate::policies() const
 *************************************************/
 MemoryVector<byte> X509_Certificate::authority_key_id() const
    {
-   return info.get1_memvec("X509v3.AuthorityKeyIdentifier");
+   return issuer.get1_memvec("X509v3.AuthorityKeyIdentifier");
    }
 
 /*************************************************
@@ -425,7 +364,7 @@ MemoryVector<byte> X509_Certificate::authority_key_id() const
 *************************************************/
 MemoryVector<byte> X509_Certificate::subject_key_id() const
    {
-   return info.get1_memvec("X509v3.SubjectKeyIdentifier");
+   return subject.get1_memvec("X509v3.SubjectKeyIdentifier");
    }
 
 /*************************************************
@@ -433,7 +372,7 @@ MemoryVector<byte> X509_Certificate::subject_key_id() const
 *************************************************/
 MemoryVector<byte> X509_Certificate::serial_number() const
    {
-   return info.get1_memvec("X509.Certificate.serial");
+   return subject.get1_memvec("X509.Certificate.serial");
    }
 
 /*************************************************
@@ -455,13 +394,10 @@ X509_DN X509_Certificate::subject_dn() const
 /*************************************************
 * Compare two certificates for equality          *
 *************************************************/
-bool X509_Certificate::operator==(const X509_Certificate& cert) const
+bool X509_Certificate::operator==(const X509_Certificate& other) const
    {
-   if(sig != cert.sig || sig_algo != cert.sig_algo)
-      return false;
-   if(issuer != cert.issuer || subject != cert.subject)
-      return false;
-   return (info == cert.info);
+   return (sig == other.sig && sig_algo == other.sig_algo &&
+           issuer == other.issuer && subject == other.subject);
    }
 
 /*************************************************

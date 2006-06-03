@@ -26,19 +26,17 @@ std::string to_hex(const SecureVector<byte>& bin)
       return "(none)";
    }
 
-void do_print(const std::string& what, const std::string& vals)
-   //              const std::vector<std::string>& vals)
+void do_print(const std::string& what,
+              const std::vector<std::string>& vals)
    {
    if(vals.size() == 0)
       return;
 
    std::cout << "   " << what << ": ";
-   std::cout << vals;
-   //std::copy(vals.begin(), vals.end(),
-   //          std::ostream_iterator<std::string>(std::cout, " "));
+   std::copy(vals.begin(), vals.end(),
+             std::ostream_iterator<std::string>(std::cout, " "));
    std::cout << "\n";
    }
-
 
 void do_subject(const X509_Certificate& cert, const std::string& what)
    {

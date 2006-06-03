@@ -59,7 +59,12 @@ class DN_Check : public X509_Store::Search_Func
    public:
       bool match(const X509_Certificate& cert) const
          {
-         return compare(looking_for, cert.subject_info(dn_entry));
+         std::vector<std::string> info = cert.subject_info(dn_entry);
+
+         for(u32bit j = 0; j != info.size(); j++)
+            if(compare(info[j], looking_for))
+               return true;
+         return false;
          }
 
       DN_Check(const std::string& entry, const std::string& target,

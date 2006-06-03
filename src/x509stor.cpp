@@ -294,7 +294,7 @@ X509_Code X509_Store::construct_cert_chain(const X509_Certificate& end_cert,
 
       if(certs[parent].is_trusted())
          break;
-      if(parent_cert.self_signed())
+      if(parent_cert.is_self_signed())
          return CANNOT_ESTABLISH_TRUST;
 
       if(parent_cert.path_limit() < indexes.size() - 1)
@@ -481,7 +481,7 @@ void X509_Store::add_new_certstore(Certificate_Store* certstore)
 *************************************************/
 void X509_Store::add_cert(const X509_Certificate& cert, bool trusted)
    {
-   if(trusted && !cert.self_signed())
+   if(trusted && !cert.is_self_signed())
       throw Invalid_Argument("X509_Store: Trusted certs must be self-signed");
 
    if(find_cert(cert.subject_dn(), cert.subject_key_id()) == NO_CERT_FOUND)
