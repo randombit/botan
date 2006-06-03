@@ -5,6 +5,7 @@
 
 #include <botan/cms_dec.h>
 #include <botan/ber_dec.h>
+#include <botan/asn1_int.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
 
@@ -21,7 +22,7 @@ CMS_Decoder::CMS_Decoder(DataSource& in, const X509_Store& x509store,
 
    add_key(key);
 
-   if(BER::maybe_BER(in) && !PEM_Code::matches(in))
+   if(ASN1::maybe_BER(in) && !PEM_Code::matches(in))
       initial_read(in);
    else
       {
@@ -35,11 +36,18 @@ CMS_Decoder::CMS_Decoder(DataSource& in, const X509_Store& x509store,
 *************************************************/
 void CMS_Decoder::initial_read(DataSource& in)
    {
+   // FIXME...
+
+   /*
    BER_Decoder decoder(in);
-   BER_Decoder content_info = BER::get_subsequence(decoder);
-   BER::decode(content_info, next_type);
+   BER_Decoder content_info = decoder.start_cons(SEQUENCE);
+
+   content_info.decode(next_type);
+
+
    BER_Decoder content_type = BER::get_subsequence(content_info, ASN1_Tag(0));
    data = content_type.get_remaining();
+   */
 
    decode_layer();
    }
@@ -74,7 +82,7 @@ std::string CMS_Decoder::get_data() const
    {
    if(layer_type() != DATA)
       throw Invalid_State("CMS: Cannot retrieve data from non-DATA layer");
-   return std::string((const char*)data.ptr(), data.size());
+   return std::string((const char*)data.begin(), data.size());
    }
 
 /*************************************************
@@ -104,11 +112,12 @@ std::string CMS_Decoder::layer_info() const
 *************************************************/
 void CMS_Decoder::read_econtent(BER_Decoder& decoder)
    {
-   BER_Decoder econtent_info = BER::get_subsequence(decoder);
-   BER::decode(econtent_info, next_type);
+   BER_Decoder econtent_info = decoder.start_cons(SEQUENCE);
+   econtent_info.decode(next_type);
 
-   BER_Decoder econtent = BER::get_subsequence(econtent_info, ASN1_Tag(0));
-   BER::decode(econtent, data, OCTET_STRING);
+   // FIXME
+   //BER_Decoder econtent = BER::get_subsequence(econtent_info, ASN1_Tag(0));
+   //econtent.decode(data, OCTET_STRING);
    }
 
 }

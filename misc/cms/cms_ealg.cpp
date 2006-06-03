@@ -29,17 +29,17 @@ std::string choose_algo(const std::string& user_algo,
 /*************************************************
 * Encode a SignerIdentifier/RecipientIdentifier  *
 *************************************************/
-void encode_si(DER_Encoder& encoder, const X509_Certificate& cert,
+void encode_si(DER_Encoder& der, const X509_Certificate& cert,
                bool use_skid_encoding = false)
    {
-   if(cert.has_SKID() && use_skid_encoding)
-      DER::encode(encoder, cert.subject_key_id(), OCTET_STRING, ASN1_Tag(0));
+   if(cert.subject_key_id().size() && use_skid_encoding)
+      der.encode(cert.subject_key_id(), OCTET_STRING, ASN1_Tag(0));
    else
       {
-      encoder.start_sequence();
-        DER::encode(encoder, cert.issuer_dn());
-        DER::encode(encoder, cert.serial_number_bn());
-      encoder.end_sequence();
+      der.start_cons(SEQUENCE).
+         encode(cert.issuer_dn()).
+         encode(BigInt(cert.serial_number())).
+      end_cons();
       }
    }
 

@@ -41,11 +41,12 @@ void CMS_Encoder::compress(const std::string& algo)
    SecureVector<byte> compressed = pipe.read_all();
 
    DER_Encoder encoder;
-   encoder.start_sequence();
-     DER::encode(encoder, 0);
-     DER::encode(encoder, AlgorithmIdentifier("Compression." + algo, false));
-     encoder.add_raw_octets(make_econtent(compressed, type));
-   encoder.end_sequence();
+   encoder.start_cons(SEQUENCE).
+      encode((u32bit)0).
+      encode(AlgorithmIdentifier("Compression." + algo,
+                                 MemoryVector<byte>())).
+      raw_bytes(make_econtent(compressed, type)).
+   end_cons();
 
    add_layer("CMS.CompressedData", encoder);
    }
@@ -68,17 +69,20 @@ void CMS_Decoder::decompress(BER_Decoder& decoder)
    u32bit version;
    AlgorithmIdentifier comp_algo;
 
-   BER_Decoder comp_info = BER::get_subsequence(decoder);
-   BER::decode(comp_info, version);
+   BER_Decoder comp_info = decoder.start_cons(SEQUENCE);
+
+   comp_info.decode(version);
    if(version != 0)
       throw Decoding_Error("CMS: Unknown version for CompressedData");
-   BER::decode(comp_info, comp_algo);
+
+   comp_info.decode(comp_algo);
    read_econtent(comp_info);
-   comp_info.verify_end();
+   comp_info.end_cons();
 
    Filter* decompressor = 0;
 
    info = comp_algo.oid.as_string();
+
 #if HAVE_ZLIB
    if(comp_algo.oid == OIDS::lookup("Compression.Zlib"))
       {

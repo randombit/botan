@@ -37,12 +37,12 @@ SecureVector<byte> CMS_Encoder::get_contents()
    {
    DER_Encoder encoder;
 
-   encoder.start_sequence();
-     DER::encode(encoder, OIDS::lookup(type));
-     encoder.start_explicit(ASN1_Tag(0));
-       encoder.add_raw_octets(data);
-     encoder.end_explicit(ASN1_Tag(0));
-   encoder.end_sequence();
+   encoder.start_cons(SEQUENCE).
+      encode(OIDS::lookup(type)).
+      start_explicit(0).
+         raw_bytes(data).
+      end_explicit().
+   end_cons();
 
    data.clear();
 
@@ -72,16 +72,13 @@ std::string CMS_Encoder::PEM_contents()
 SecureVector<byte> CMS_Encoder::make_econtent(const SecureVector<byte>& data,
                                               const std::string& type)
    {
-   DER_Encoder encoder;
-
-   encoder.start_sequence();
-     DER::encode(encoder, OIDS::lookup(type));
-     encoder.start_explicit(ASN1_Tag(0));
-       DER::encode(encoder, data, OCTET_STRING);
-     encoder.end_explicit(ASN1_Tag(0));
-   encoder.end_sequence();
-
-   return encoder.get_contents();
+   return DER_Encoder().start_cons(SEQUENCE).
+      encode(OIDS::lookup(type)).
+      start_explicit(0).
+         encode(data, OCTET_STRING).
+      end_explicit().
+   end_cons().
+   get_contents();
    }
 
 }

@@ -8,6 +8,7 @@
 #include <botan/oids.h>
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
+#include <botan/bigint.h>
 #include <memory>
 
 namespace Botan {
@@ -41,8 +42,8 @@ std::vector<X509_Certificate> get_cert(BER_Decoder& signer_info,
       X509_DN issuer;
       BigInt serial;
       BER_Decoder iands(id.value);
-      BER::decode(iands, issuer);
-      BER::decode(iands, serial);
+      iands.decode(issuer);
+      iands.decode(serial);
 
       found = X509_Store_Search::by_iands(store, issuer,
                                           BigInt::encode(serial));
@@ -115,19 +116,19 @@ SecureVector<byte> decode_attributes(BER_Decoder& ber, const OID& type,
       while(attributes.more_items())
          {
          Attribute attr;
-         BER::decode(attributes, attr);
+         attributes.decode(attr);
          BER_Decoder attr_value(attr.parameters);
 
          if(attr.oid == OIDS::lookup("PKCS9.MessageDigest"))
             {
             got_digest = true;
-            BER::decode(attr_value, digest, OCTET_STRING);
+            attr_value.decode(digest, OCTET_STRING);
             }
          else if(attr.oid == OIDS::lookup("PKCS9.ContentType"))
             {
             got_content_type = true;
             OID inner_type;
-            BER::decode(attr_value, inner_type);
+            attr_value.decode(inner_type);
             if(inner_type != type)
                bad_attributes = true;
             }
@@ -171,14 +172,16 @@ void CMS_Decoder::decode_layer()
          AlgorithmIdentifier hash_algo;
          SecureVector<byte> digest;
 
-         BER_Decoder hash_info = BER::get_subsequence(decoder);
-         BER::decode(hash_info, version);
+         BER_Decoder hash_info = decoder.start_cons(SEQUENCE);
+
+         hash_info.decode(version);
          if(version != 0 && version != 2)
             throw Decoding_Error("CMS: Unknown version for DigestedData");
-         BER::decode(hash_info, hash_algo);
+
+         hash_info.decode(hash_algo);
          read_econtent(hash_info);
-         BER::decode(hash_info, digest, OCTET_STRING);
-         hash_info.verify_end();
+         hash_info.decode(digest, OCTET_STRING);
+         hash_info.end_cons();
 
          if(digest != hash_of(data, hash_algo, info))
             status = BAD;

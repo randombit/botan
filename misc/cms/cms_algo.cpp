@@ -49,7 +49,7 @@ SecureVector<byte> do_rfc3217_wrap(const std::string& cipher,
    InitializationVector fixed("4ADDA22C79E82105");
 
    Pipe pipe(get_cipher(cipher + "/CBC/NoPadding", kek, iv, ENCRYPTION),
-             new Flip_Bytes(iv.copy()),
+             new Flip_Bytes(iv.bits_of()),
              get_cipher(cipher + "/CBC/NoPadding", kek, fixed, ENCRYPTION));
    pipe.start_msg();
    pipe.write(input);
@@ -71,7 +71,7 @@ SecureVector<byte> CMS_Encoder::wrap_key(const std::string& cipher,
       {
       SymmetricKey cek_parity = cek;
       cek_parity.set_odd_parity();
-      return do_rfc3217_wrap(cipher, kek, cek_parity.copy());
+      return do_rfc3217_wrap(cipher, kek, cek_parity.bits_of());
       }
    else if(cipher == "RC2" || cipher == "CAST-128")
       {
@@ -80,9 +80,9 @@ SecureVector<byte> CMS_Encoder::wrap_key(const std::string& cipher,
 
       SecureVector<byte> lcekpad;
       lcekpad.append((byte)cek.length());
-      lcekpad.append(cek.copy());
+      lcekpad.append(cek.bits_of());
       while(lcekpad.size() % 8)
-         lcekpad.append(Global_RNG::random(Nonce));
+         lcekpad.append(Global_RNG::random());
       return do_rfc3217_wrap(cipher, kek, lcekpad);
       }
    else
@@ -100,20 +100,20 @@ SecureVector<byte> CMS_Encoder::encode_params(const std::string& cipher,
 
    if(cipher == "RC2")
       {
-      encoder.start_sequence();
-      DER::encode(encoder, RC2::EKB_code(8*key.length()));
-      DER::encode(encoder, iv.copy(), OCTET_STRING);
-      encoder.end_sequence();
+      encoder.start_cons(SEQUENCE).
+         encode((u32bit)RC2::EKB_code(8*key.length())).
+         encode(iv.bits_of(), OCTET_STRING).
+      end_cons();
       }
    else if(cipher == "CAST-128")
       {
-      encoder.start_sequence();
-      DER::encode(encoder, iv.copy(), OCTET_STRING);
-      DER::encode(encoder, 8*key.length());
-      encoder.end_sequence();
+      encoder.start_cons(SEQUENCE).
+         encode(iv.bits_of(), OCTET_STRING).
+         encode(8*key.length()).
+      end_cons();
       }
    else
-      DER::encode(encoder, iv.copy(), OCTET_STRING);
+      encoder.encode(iv.bits_of(), OCTET_STRING);
 
    return encoder.get_contents();
    }
