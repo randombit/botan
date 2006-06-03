@@ -1,0 +1,37 @@
+realname "Portland Group C++"
+
+binary_name "pgCC"
+
+compile_option "-c"
+output_to_option "-o"
+add_include_dir_option "-I"
+add_lib_dir_option "-L"
+add_lib_option "-l"
+
+lib_opt_flags "-fast -Minline"
+check_opt_flags "-fast"
+so_obj_flags "-fPIC"
+
+makefile_style unix
+
+<so_link_flags>
+linux   -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
+solaris -> "$(CXX) -G -fPIC -Wl,-h,$(SONAME)"
+</so_link_flags>
+
+<mach_opt>
+i586     -> "-tp p5"
+i686     -> "-tp p6"
+athlon   -> "-tp k7"
+pentium4 -> "-tp p6"
+ia32     -> "-tp px"
+</mach_opt>
+
+<arch>
+ia32
+</arch>
+
+<os>
+linux
+solaris
+</os>

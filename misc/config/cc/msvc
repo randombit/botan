@@ -1,0 +1,36 @@
+realname "Visual C++ 2000/2003"
+
+binary_name "cl /nologo"
+
+compile_option "/c"
+output_to_option "/Fo"
+add_include_dir_option "-I"
+add_lib_dir_option "-L"
+add_lib_option "-l"
+
+lib_opt_flags "/O2 /Ob2"
+check_opt_flags "/O2"
+debug_flags ""
+no_debug_flags ""
+lang_flags "/EHsc /GR /D_CONSOLE"
+warning_flags ""
+
+ar_command "link /lib"
+
+makefile_style nmake
+
+<mach_opt>
+i486     -> "/G4"
+i586     -> "/G5"
+i686     -> "/G6"
+athlon   -> "/G6"
+pentium4 -> "/G6"
+</mach_opt>
+
+<arch>
+ia32
+</arch>
+
+<os>
+windows
+</os>

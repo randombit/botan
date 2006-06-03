@@ -1,0 +1,20 @@
+# Defaults are for a Unix box, since that's what most of OS variants are. It
+# would be nice to have generic 'windows', 'beos', 'unix', etc targets to
+# handle defaults for those classes of OSes, though Unix is by far the most
+# varied/fragmented
+
+obj_suffix o
+so_suffix so
+static_suffix a
+
+ar_command "ar crs"
+ar_needs_ranlib no
+
+install_root /usr/local
+header_dir include
+lib_dir lib
+doc_dir share/doc
+
+install_user root
+install_group root
+install_cmd install -o OWNER -g GROUP -m MODE

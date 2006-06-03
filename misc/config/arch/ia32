@@ -1,0 +1,36 @@
+realname "IA-32"
+
+default_submodel i586
+
+<aliases>
+x86
+ix86
+80x86
+i86pc # for Solaris
+</aliases>
+
+<submodels>
+i386
+i486
+i586
+i686
+pentium4
+k6
+athlon
+</submodels>
+
+<submodel_aliases>
+pentium -> i586
+pentiumpro -> i686
+pentium_pro -> i686
+pentium2 -> i686
+pentium3 -> i686
+
+duron -> athlon
+athlon-xp -> athlon
+k7 -> athlon
+
+p2 -> i686
+p3 -> i686
+p4 -> pentium4
+</submodel_aliases>

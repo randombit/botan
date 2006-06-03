@@ -1,0 +1,27 @@
+Todo list:
+
+Clean out all of the crappy hacks that have crept into to the source tree, move
+them out into the appropriate file in the 'os' and 'cc' directories. I got rid
+of a lot of them in 1.4.[23], but some remain.
+
+Make cross-compiles easier
+
+
+CPUs
+----
+UltraSPARC III
+
+OSes
+----
+Hurd
+Plan9
+OS/2
+OS/400
+VMS
+MacOS pre-X
+
+Compilers
+---------
+IBM VisualAge C++ [uses NMAKE?]
+Metrowerks [uses NMAKE?]
+AIX CC

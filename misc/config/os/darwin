@@ -1,0 +1,27 @@
+realname "Darwin / MacOS X"
+
+os_type unix
+
+so_suffix dylib
+
+# It doesn't have the 's' option; you need to use needs ranlib
+ar_command "ar cr"
+ar_needs_ranlib yes
+
+install_group wheel
+
+doc_dir doc
+
+<supports_shared>
+all
+</supports_shared>
+
+<arch>
+ia32
+ppc
+ppc64 # g5!
+</arch>
+
+<aliases>
+macosx
+</aliases>

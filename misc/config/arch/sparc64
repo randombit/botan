@@ -1,0 +1,15 @@
+realname "SPARC64"
+
+default_submodel sparc64-ultra
+
+<submodels>
+sparc64-ultra
+sparc64-ultra2
+sparc64-ultra3
+</submodels>
+
+<submodel_aliases>
+ultrasparc -> sparc64-ultra
+ultrasparc2 -> sparc64-ultra2
+ultrasparc3 -> sparc64-ultra3
+</submodel_aliases>

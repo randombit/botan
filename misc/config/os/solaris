@@ -1,0 +1,19 @@
+realname "Solaris"
+
+os_type unix
+
+install_cmd install -u OWNER -g GROUP -m MODE
+
+<supports_shared>
+all
+</supports_shared>
+
+<arch>
+ia32
+sparc32
+sparc64
+</arch>
+
+<aliases>
+sunos
+</aliases>

@@ -1,0 +1,18 @@
+realname "FreeBSD"
+
+os_type unix
+
+install_group wheel
+
+<supports_shared>
+all
+</supports_shared>
+
+<arch>
+alpha
+amd64
+ia32
+ia64
+powerpc
+sparc64
+</arch>

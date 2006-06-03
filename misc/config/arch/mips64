@@ -1,0 +1,32 @@
+realname "MIPS64"
+
+default_submodel r4400
+
+<submodels>
+mips64-r4000
+mips64-r4100
+mips64-r4300
+mips64-r4400
+mips64-r4600
+mips64-r4560
+mips64-r5000
+mips64-r8000
+mips64-r10000
+</submodels>
+
+<submodel_aliases>
+r4k -> mips64-r4000
+r5k -> mips64-r5000
+r8k -> mips64-r8000
+r10k -> mips64-r10000
+
+r4000  -> mips64-r4000
+r4100  -> mips64-r4100
+r4300  -> mips64-r4300
+r4400  -> mips64-r4400
+r4600  -> mips64-r4600
+r4560  -> mips64-r4560
+r5000  -> mips64-r5000
+r8000  -> mips64-r8000
+r10000 -> mips64-r10000
+</submodel_aliases>

@@ -1,0 +1,7 @@
+realname "S/390 31-bit"
+
+default_submodel s390
+
+<submodels>
+s390
+</submodels>

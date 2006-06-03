@@ -1,0 +1,22 @@
+realname "ARM"
+
+default_submodel arm2
+
+<submodels>
+arm2
+arm3
+arm6
+arm7
+arm8
+arm9
+strongarm
+strongarm110
+strongarm1100
+xscale
+</submodels>
+
+<submodel_aliases>
+sa110 -> strongarm110
+sa1100 -> strongarm1100
+strongarm1110 -> strongarm1100
+</submodel_aliases>

@@ -1,0 +1,15 @@
+realname "Tru64"
+
+os_type unix
+
+<supports_shared>
+all
+</supports_shared>
+
+<arch>
+alpha
+</arch>
+
+<aliases>
+osf1
+</aliases>

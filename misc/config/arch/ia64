@@ -1,0 +1,12 @@
+realname "IA-64"
+
+default_submodel ia64
+
+<aliases>
+merced
+itanium
+</aliases>
+
+<submodels>
+ia64
+</submodels>

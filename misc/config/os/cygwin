@@ -1,0 +1,19 @@
+realname "Cygwin"
+
+os_type unix
+
+install_root c:\Botan
+doc_dir docs
+
+# Cygwin supports shared libs fine, but there are problems with making a Botan
+# shared library when libraries it depends on are static-only (such as libz).
+# So until I can figure out a work-around, it's disabled.
+<supports_shared>
+#all
+</supports_shared>
+
+<arch>
+ia32
+amd64 # in theory
+ia64  # in theory
+</arch>

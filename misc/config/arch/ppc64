@@ -1,0 +1,15 @@
+realname "PowerPC 64"
+
+default_submodel power4
+
+<submodel_aliases>
+g5 -> ppc970
+</submodel_aliases>
+
+<submodels>
+rs64a
+ppc970
+power3
+power4
+power5
+</submodels>

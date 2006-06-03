@@ -1,0 +1,23 @@
+realname "MIPS"
+
+default_submodel r3000
+
+<aliases>
+mips
+</aliases>
+
+<submodels>
+mip32-r3000
+mip32-r6000
+</submodels>
+
+<submodel_aliases>
+r3k -> mips32-r3000
+r6k -> mips32-r6000
+
+r3000 -> mips32-r3000
+r6000 -> mips32-r6000
+
+mipsbe -> mips3000 # For RPM
+mipsle -> mips3000 # For RPM
+</submodel_aliases>

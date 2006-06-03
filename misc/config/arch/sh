@@ -1,0 +1,11 @@
+realname "Hitachi SH"
+
+default_submodel sh1
+
+<submodels>
+sh1
+sh2
+sh3
+sh3e
+sh4
+</submodels>

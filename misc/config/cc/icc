@@ -1,0 +1,39 @@
+realname "Intel C++"
+
+binary_name "icc"
+
+compile_option "-c"
+output_to_option "-o"
+add_include_dir_option "-I"
+add_lib_dir_option "-L"
+add_lib_option "-l"
+
+lib_opt_flags "-O3 -ip -unroll"
+check_opt_flags "-O2"
+debug_flags "-g"
+no_debug_flags ""
+lang_flags ""
+warning_flags "-w1"
+so_obj_flags "-KPIC"
+
+makefile_style unix
+
+<mach_opt>
+i586     -> "-tpp5"
+i686     -> "-tpp6 -xiM"
+athlon   -> "-tpp6 -xiM"
+pentium4 -> "-tpp7 -xiMW"
+</mach_opt>
+
+<so_link_flags>
+default -> "$(CXX) -KPIC -shared"
+</so_link_flags>
+
+<arch>
+ia32
+ia64
+</arch>
+
+<os>
+linux
+</os>

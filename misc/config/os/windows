@@ -1,0 +1,20 @@
+realname "MS Windows"
+
+os_type windows
+
+obj_suffix obj
+so_suffix dll
+static_suffix lib
+
+install_root c:\Botan
+doc_dir docs
+
+<supports_shared>
+#all
+</supports_shared>
+
+<arch>
+ia32
+amd64 # in theory
+ia64  # in theory
+</arch>
