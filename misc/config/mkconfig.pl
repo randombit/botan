@@ -16,11 +16,7 @@ my $PATCH = 7;
 #############################################################################
 # Configuration options
 
-# For me
-my $OUTPUT_FILE = '../../../botan/configure.pl';
-
-# For everyone else
-#my $OUTPUT_FILE = 'configure.pl';
+my $OUTPUT_FILE = '../../configure.pl';
 
 my $MODULES_DIR = 'modules';
 my $CODE_DIR = 'code';
