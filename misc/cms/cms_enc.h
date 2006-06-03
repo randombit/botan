@@ -1,6 +1,6 @@
 /*************************************************
 * CMS Encoding Header File                       *
-* (C) 1999-2003 The Botan Project                *
+* (C) 1999-2006 The Botan Project                *
 *************************************************/
 
 #ifndef BOTAN_CMS_ENCODER_H__
