@@ -5,6 +5,7 @@
 
 #include <botan/cms_enc.h>
 #include <botan/der_enc.h>
+#include <botan/bigint.h>
 #include <botan/oids.h>
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
@@ -38,7 +39,7 @@ void encode_si(DER_Encoder& der, const X509_Certificate& cert,
       {
       der.start_cons(SEQUENCE).
          encode(cert.issuer_dn()).
-         encode(BigInt(cert.serial_number())).
+         encode(BigInt::decode(cert.serial_number())).
       end_cons();
       }
    }
@@ -63,16 +64,16 @@ SecureVector<byte> encode_attr(const SecureVector<byte>& data,
    SecureVector<byte> digest = hash_of(data, hash);
 
    DER_Encoder encoder;
-   DER::encode(encoder, OIDS::lookup(type));
+   encoder.encode(OIDS::lookup(type));
    Attribute content_type("PKCS9.ContentType", encoder.get_contents());
 
-   DER::encode(encoder, digest, OCTET_STRING);
+   encoder.encode(digest, OCTET_STRING);
    Attribute message_digest("PKCS9.MessageDigest", encoder.get_contents());
 
-   encoder.start_set();
-     DER::encode(encoder, content_type);
-     DER::encode(encoder, message_digest);
-   encoder.end_set();
+   encoder.start_cons(SET);
+   encoder.encode(content_type);
+   encoder.encode(message_digest);
+   encoder.end_cons();
 
    return encoder.get_contents();
    }
@@ -129,18 +130,18 @@ void CMS_Encoder::encrypt_ktri(const X509_Certificate& to,
    SymmetricKey cek = setup_key(cipher);
 
    DER_Encoder encoder;
-   encoder.start_sequence();
-     DER::encode(encoder, 0);
-     encoder.start_set();
-       encoder.start_sequence();
-         DER::encode(encoder, 0);
+   encoder.start_cons(SEQUENCE);
+   encoder.encode((u32bit)0);
+     encoder.start_cons(SET);
+       encoder.start_cons(SEQUENCE);
+       encoder.encode((u32bit)0);
          encode_si(encoder, to);
-         DER::encode(encoder, AlgorithmIdentifier(pk_algo + "/" + padding));
-         DER::encode(encoder, enc->encrypt(cek.copy()), OCTET_STRING);
-       encoder.end_sequence();
-     encoder.end_set();
-     encoder.add_raw_octets(do_encrypt(cek, cipher));
-   encoder.end_sequence();
+         encoder.encode(AlgorithmIdentifier(pk_algo + "/" + padding));
+         encoder.encode(enc->encrypt(cek.bits_of()), OCTET_STRING);
+       encoder.end_cons();
+     encoder.end_cons();
+     encoder.raw_bytes(do_encrypt(cek, cipher));
+   encoder.end_cons();
 
    add_layer("CMS.EnvelopedData", encoder);
    }
@@ -157,18 +158,18 @@ void CMS_Encoder::encrypt_kari(const X509_Certificate&,
    SymmetricKey cek = setup_key(cipher);
 
    DER_Encoder encoder;
-   encoder.start_sequence();
-     DER::encode(encoder, 2);
-     encoder.start_set();
+   encoder.start_cons(SEQUENCE);
+     encoder.encode(2);
+     encoder.start_cons(SET);
        encoder.start_sequence(ASN1_Tag(1));
-         DER::encode(encoder, 3);
+         encoder.encode(3);
          encode_si(encoder, to);
-         DER::encode(encoder, AlgorithmIdentifier(pk_algo + "/" + padding));
-         DER::encode(encoder, encrypted_cek, OCTET_STRING);
-       encoder.end_sequence(ASN1_Tag(1));
-     encoder.end_set();
-     encoder.add_raw_octets(do_encrypt(cek, cipher));
-   encoder.end_sequence();
+         encoder.encode(AlgorithmIdentifier(pk_algo + "/" + padding));
+         encoder.encode(encrypted_cek, OCTET_STRING);
+       encoder.end_cons(ASN1_Tag(1));
+     encoder.end_cons();
+     encoder.raw_bytes(do_encrypt(cek, cipher));
+   encoder.end_cons();
 
    add_layer("CMS.EnvelopedData", encoder);
 #endif
@@ -188,18 +189,18 @@ void CMS_Encoder::encrypt(const SymmetricKey& kek,
    SecureVector<byte> kek_id; // FIXME: ?
 
    DER_Encoder encoder;
-   encoder.start_sequence();
-     DER::encode(encoder, 2);
+   encoder.start_cons(SEQUENCE);
+     encoder.encode(2);
      encoder.start_sequence(ASN1_Tag(2));
-       DER::encode(encoder, 4);
-       encoder.start_sequence();
-         DER::encode(encoder, kek_id, OCTET_STRING);
-       encoder.end_sequence();
-       DER::encode(encoder, AlgorithmIdentifier("KeyWrap." + cipher, true));
-       DER::encode(encoder, wrap_key(cipher, cek, kek), OCTET_STRING);
-     encoder.end_sequence(ASN1_Tag(2));
-     encoder.add_raw_octets(do_encrypt(cek, cipher));
-   encoder.end_sequence();
+       encoder.encode(4);
+       encoder.start_cons(SEQUENCE);
+         encoder.encode(kek_id, OCTET_STRING);
+       encoder.end_cons();
+       encoder.encode(AlgorithmIdentifier("KeyWrap." + cipher, true));
+       encoder.encode(wrap_key(cipher, cek, kek), OCTET_STRING);
+     encoder.end_cons(ASN1_Tag(2));
+     encoder.raw_bytes(do_encrypt(cek, cipher));
+   encoder.end_cons();
 
    add_layer("CMS.EnvelopedData", encoder);
    }
@@ -216,10 +217,10 @@ void CMS_Encoder::encrypt(const std::string&,
    SymmetricKey cek = setup_key(key);
 
    DER_Encoder encoder;
-   encoder.start_sequence();
-     DER::encode(encoder, 0);
-     encoder.add_raw_octets(do_encrypt(cek, cipher));
-   encoder.end_sequence();
+   encoder.start_cons(SEQUENCE);
+     encoder.encode(0);
+     encoder.raw_bytes(do_encrypt(cek, cipher));
+   encoder.end_cons();
 
    add_layer("CMS.EnvelopedData", encoder);
    */
@@ -247,11 +248,11 @@ SecureVector<byte> CMS_Encoder::do_encrypt(const SymmetricKey& key,
    pipe.process_msg(data);
 
    DER_Encoder encoder;
-   encoder.start_sequence();
-     DER::encode(encoder, OIDS::lookup(type));
-     DER::encode(encoder, content_cipher);
-     DER::encode(encoder, pipe.read_all(), OCTET_STRING, ASN1_Tag(0));
-   encoder.end_sequence();
+   encoder.start_cons(SEQUENCE);
+     encoder.encode(OIDS::lookup(type));
+     encoder.encode(content_cipher);
+     encoder.encode(pipe.read_all(), OCTET_STRING, ASN1_Tag(0));
+   encoder.end_cons();
 
    return encoder.get_contents();
    }
@@ -286,30 +287,30 @@ void CMS_Encoder::sign(X509_Store& store, const PKCS8_PrivateKey& key)
    const u32bit CMS_VERSION = (type != "CMS.DataContent") ? 3 : SI_VERSION;
 
    DER_Encoder encoder;
-   encoder.start_sequence();
-     DER::encode(encoder, CMS_VERSION);
-     encoder.start_set();
-       DER::encode(encoder, AlgorithmIdentifier(hash, true));
-     encoder.end_set();
-     encoder.add_raw_octets(make_econtent(data, type));
+   encoder.start_cons(SEQUENCE);
+     encoder.encode(CMS_VERSION);
+     encoder.start_cons(SET);
+       encoder.encode(AlgorithmIdentifier(hash, true));
+     encoder.end_cons();
+     encoder.raw_bytes(make_econtent(data, type));
 
      encoder.start_set(ASN1_Tag(0));
      for(u32bit j = 0; j != chain.size(); j++)
-        encoder.add_raw_octets(chain[j].BER_encode());
-     encoder.add_raw_octets(cert.BER_encode());
-     encoder.end_set(ASN1_Tag(0));
+        encoder.raw_bytes(chain[j].BER_encode());
+     encoder.raw_bytes(cert.BER_encode());
+     encoder.end_cons(ASN1_Tag(0));
 
-     encoder.start_set();
-       encoder.start_sequence();
-         DER::encode(encoder, SI_VERSION);
+     encoder.start_cons(SET);
+       encoder.start_cons(SEQUENCE);
+         encoder.encode(SI_VERSION);
          encode_si(encoder, cert, ((SI_VERSION == 3) ? true : false));
-         DER::encode(encoder, AlgorithmIdentifier(hash, true));
-         encoder.add_raw_octets(signed_attr);
-         DER::encode(encoder, AlgorithmIdentifier(sig_algo, true));
-         DER::encode(encoder, signature, OCTET_STRING);
-       encoder.end_sequence();
-     encoder.end_set();
-   encoder.end_sequence();
+         encoder.encode(AlgorithmIdentifier(hash, true));
+         encoder.raw_bytes(signed_attr);
+         encoder.encode(AlgorithmIdentifier(sig_algo, true));
+         encoder.encode(signature, OCTET_STRING);
+       encoder.end_cons();
+     encoder.end_cons();
+   encoder.end_cons();
 
    add_layer("CMS.SignedData", encoder);
    }
@@ -326,12 +327,12 @@ void CMS_Encoder::digest(const std::string& user_hash)
    const u32bit VERSION = (type != "CMS.DataContent") ? 2 : 0;
 
    DER_Encoder encoder;
-   encoder.start_sequence();
-     DER::encode(encoder, VERSION);
-     DER::encode(encoder, AlgorithmIdentifier(hash, true));
-     encoder.add_raw_octets(make_econtent(data, type));
-     DER::encode(encoder, hash_of(data, hash), OCTET_STRING);
-   encoder.end_sequence();
+   encoder.start_cons(SEQUENCE);
+     encoder.encode(VERSION);
+     encoder.encode(AlgorithmIdentifier(hash, true));
+     encoder.raw_bytes(make_econtent(data, type));
+     encoder.encode(hash_of(data, hash), OCTET_STRING);
+   encoder.end_cons();
 
    add_layer("CMS.DigestedData", encoder);
    }
