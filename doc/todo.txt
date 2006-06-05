@@ -3,10 +3,11 @@ interested in working on something here (or something else!), drop me an email
 and we can coordinate efforts.
 
 * Algorithms / Related
-  - Algorithms: ECDSA, ECDH, ... ?
+  - ECDSA
+  - ECDH
 
 * X.509 / PKCS / ASN.1
-  - X.509 code is in need of a major cleanup
+  - X.509 code is in need of a major cleanup, both API and internal
   - OCSP (RFC 2560)
   - Attribute Certificates (RFC 3281)
   - Support for Unicode (BMP STRING/UNIVERSAL STRING) strings in ASN1_String
@@ -15,7 +16,7 @@ and we can coordinate efforts.
 * New Interfaces / Protocols
   - SSL/TLS: Alpha release is available (http://ajisai.randombit.net)
   - OpenPGP
-  - CMS: alpha1 is available as a separate download; currently stalled
+  - CMS: incomplete sources in misc/cms
   - NIST's PKAPI: needs CMS
 
 * Modules
