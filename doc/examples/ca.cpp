@@ -19,8 +19,6 @@ using namespace Botan;
 
 #include <iostream>
 
-#define DOUCH_BAG CESSATION_OF_OPERATION
-
 int main(int argc, char* argv[])
    {
    if(argc != 2)
@@ -50,11 +48,6 @@ int main(int argc, char* argv[])
 
       // send the new cert back to the requestor
       std::cout << new_cert.PEM_encode();
-
-      std::vector<CRL_Entry> revoked_certs;
-      revoked_certs.push_back(CRL_Entry(new_cert, DOUCH_BAG));
-      X509_CRL crl = ca.update_crl(ca.new_crl(), revoked_certs);
-      std::cout << crl.PEM_encode();
    }
    catch(std::exception& e)
       {
