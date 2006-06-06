@@ -79,17 +79,18 @@ void X509_Certificate::force_decode()
    X509_Time start, end;
 
    BER_Decoder tbs_cert(tbs_bits);
+
    tbs_cert.decode_optional(version, ASN1_Tag(0),
-                            ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
-   tbs_cert.decode(serial_bn);
-   tbs_cert.decode(sig_algo_inner);
-   tbs_cert.decode(dn_issuer);
-   tbs_cert.start_cons(SEQUENCE)
-      .decode(start)
-      .decode(end)
-      .verify_end()
-   .end_cons()
-   .decode(dn_subject);
+                            ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
+      .decode(serial_bn)
+      .decode(sig_algo_inner)
+      .decode(dn_issuer)
+      .start_cons(SEQUENCE)
+         .decode(start)
+         .decode(end)
+         .verify_end()
+      .end_cons()
+      .decode(dn_subject);
 
    if(version > 2)
       throw Decoding_Error("Unknown X.509 cert version " + to_string(version));
