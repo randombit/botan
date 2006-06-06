@@ -17,7 +17,7 @@ u32bit bigint_divcore(word q, word y1, word y2,
                       word x1, word x2, word x3)
    {
    word y0 = 0;
-   y2 = word_madd2(q, y2, 0, &y0);
+   y2 = word_madd2(q, y2, y0, &y0);
    y1 = word_madd2(q, y1, y0, &y0);
 
    if(y0 > x1) return 1;
@@ -81,7 +81,7 @@ word bigint_modop(word n1, word n0, word d)
    {
    word z = bigint_divop(n1, n0, d);
    word dummy = 0;
-   z = word_madd2(z, d, 0, &dummy);
+   z = word_madd2(z, d, dummy, &dummy);
    return (n0-z);
    }
 
