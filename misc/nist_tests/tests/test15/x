@@ -1,0 +1,14 @@
+Subject
+   Name: User1-CP.04.03
+   Organization: U.S. Government
+   Organizational Unit: DoD Testing
+   Country: US
+Issuer
+   Name: ca1 - CP.04.03  
+   Organization: U.S. Government
+   Organizational Unit: Dod Testing
+   Country: US
+Validity
+   Not before: 1998/1/1 12:01:00 UTC
+   Not after: 2048/1/1 12:01:00 UTC
+Signature algorithm: RSA/EMSA3(SHA-160)

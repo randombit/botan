@@ -1,0 +1,12 @@
+Known Failures/Problems
+
+Policy extensions are not implemented, so we skip tests #34-#53.
+
+Tests #75 and #76 are skipped as they make use of relatively obscure CRL
+extensions which are not supported.
+
+In addition, please note that some of the tests have their results altered from
+what the test result should be according to NIST's documentation. The changes
+are clearly marked (see x509test.cpp; search for "CHANGE OF TEST RESULT") and
+there are comments explaining why the results where changed. Currently, tests
+#19, #65, and #67 have had their results changed from the official results.
