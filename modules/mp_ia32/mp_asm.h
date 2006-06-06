@@ -17,16 +17,22 @@ namespace Botan {
 extern "C" {
 
 /*************************************************
+* Helper Macros for x86 Assembly                 *
+*************************************************/
+#define ASM(x) x "\n\t"
+
+/*************************************************
 * Word Multiply                                  *
 *************************************************/
 inline word word_madd2(word a, word b, word c, word* carry)
    {
    asm(
-      "mull %1\n\t"        // a (eax) * b (anywhere) -> edx:eax
-      "addl %5,%0\n\t"     // add c to low word (eax)
-      "adcl $0,%2"         // add carry from previous to high word (edx)
-      : "=a"(a), "=rm"(b), "=&d"(*carry)
-      : "0"(a), "1"(b), "g"(c) : "cc");
+      ASM("mull %[b]")
+      ASM("addl %[c],%[a]")
+      ASM("adcl $0,%[carry]")
+
+      : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*carry)
+      : "0"(a), "1"(b), [c]"g"(c) : "cc");
 
    return a;
    }
@@ -37,13 +43,16 @@ inline word word_madd2(word a, word b, word c, word* carry)
 inline word word_madd3(word a, word b, word c, word d, word* carry)
    {
    asm(
-      "mull %1\n\t"        // a (eax) * b (anywhere) -> edx:eax
-      "addl %5,%0\n\t"     // add c to low word (eax)
-      "adcl $0,%2\n\t"     // add carry from previous add to high word (edx)
-      "addl %6,%0\n\t"     // add d to low word (eax)
-      "adcl $0,%2"         // add carry from previous add to high word (edx)
-      : "=a"(a), "=rm"(b), "=&d"(*carry)
-      : "0"(a), "1"(b), "g"(c), "g"(d) : "cc");
+      ASM("mull %[b]")
+
+      ASM("addl %[c],%[a]")
+      ASM("adcl $0,%[carry]")
+
+      ASM("addl %[d],%[a]")
+      ASM("adcl $0,%[carry]")
+
+      : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*carry)
+      : "0"(a), "1"(b), [c]"g"(c), [d]"g"(d) : "cc");
 
    return a;
    }
@@ -54,12 +63,14 @@ inline word word_madd3(word a, word b, word c, word d, word* carry)
 inline void word3_muladd(word* w2, word* w1, word* w0, word x, word y)
    {
    asm(
-      "mull %[y]\n\t"      // a (eax) * b (anywhere) -> edx:eax
-      "addl %3,%[w0]\n\t"  // add c to low word (eax)
-      "adcl %4,%[w1]\n\t"  // add carry from previous add to high word (edx)
-      "adcl $0,%[w2]\n\t"  // add carry from previous add to high word (edx)
+      ASM("mull %[y]")
+
+      ASM("addl %[x],%[w0]")
+      ASM("adcl %[y],%[w1]")
+      ASM("adcl $0,%[w2]")
+
       : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
-      : "a"(x), [y]"d"(y), "0"(*w0), "1"(*w1), "2"(*w2)
+      : [x]"a"(x), [y]"d"(y), "0"(*w0), "1"(*w1), "2"(*w2)
       : "cc");
    }
 
@@ -69,17 +80,23 @@ inline void word3_muladd(word* w2, word* w1, word* w0, word x, word y)
 inline void word3_muladd_2(word* w2, word* w1, word* w0, word x, word y)
    {
    asm(
-      "mull %[y]\n\t"      // a (eax) * b (anywhere) -> edx:eax
-      "addl %3,%[w0]\n\t"  // add c to low word (eax)
-      "adcl %4,%[w1]\n\t"  // add carry from previous add to high word (edx)
-      "adcl $0,%[w2]\n\t"  // add carry from previous add to high word (edx)
-      "addl %3,%[w0]\n\t"  // add c to low word (eax)
-      "adcl %4,%[w1]\n\t"  // add carry from previous add to high word (edx)
-      "adcl $0,%[w2]\n\t"  // add carry from previous add to high word (edx)
+      ASM("mull %[y]")
+
+      ASM("addl %[x],%[w0]")
+      ASM("adcl %[y],%[w1]")
+      ASM("adcl $0,%[w2]")
+
+      ASM("addl %[x],%[w0]")
+      ASM("adcl %[y],%[w1]")
+      ASM("adcl $0,%[w2]")
+
       : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
-      : "a"(x), [y]"d"(y), "0"(*w0), "1"(*w1), "2"(*w2)
+      : [x]"a"(x), [y]"d"(y), "0"(*w0), "1"(*w1), "2"(*w2)
       : "cc");
    }
+
+// fixme
+#undef ASM
 
 }
 
