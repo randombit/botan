@@ -27,20 +27,20 @@ extern "C" {
 /*************************************************
 * Word Multiply/Add                              *
 *************************************************/
-inline word word_madd2(word a, word b, word* c)
+inline word word_madd2(word a, word b, word c, word* carry)
    {
-   dword z = (dword)a * b + *c;
-   *c = (word)(z >> BOTAN_MP_WORD_BITS);
+   dword z = (dword)a * b + c;
+   *carry = (word)(z >> BOTAN_MP_WORD_BITS);
    return (word)z;
    }
 
 /*************************************************
 * Word Multiply/Add                              *
 *************************************************/
-inline word word_madd3(word a, word b, word c, word *d)
+inline word word_madd3(word a, word b, word c, word d, word* carry)
    {
-   dword z = (dword)a * b + c + *d;
-   *d = (word)(z >> BOTAN_MP_WORD_BITS);
+   dword z = (dword)a * b + c + d;
+   *carry = (word)(z >> BOTAN_MP_WORD_BITS);
    return (word)z;
    }
 
@@ -49,11 +49,7 @@ inline word word_madd3(word a, word b, word c, word *d)
 *************************************************/
 inline void word3_muladd(word* w2, word* w1, word* w0, word a, word b)
    {
-   dword z = (dword)a * b + *w0;
-
-   b = (word)(z >> BOTAN_MP_WORD_BITS);
-   *w0 = (word)z;
-
+   *w0 = word_madd2(a, b, *w0, &b);
    *w1 += b;
    *w2 += (*w1 < b) ? 1 : 0;
    }
@@ -63,10 +59,7 @@ inline void word3_muladd(word* w2, word* w1, word* w0, word a, word b)
 *************************************************/
 inline void word3_muladd_2(word* w2, word* w1, word* w0, word a, word b)
    {
-   dword z = (dword)a * b;
-
-   b = (word)(z >> BOTAN_MP_WORD_BITS);
-   a = (word)z;
+   a = word_madd2(a, b, 0, &b);
 
    *w0 += a;
    *w1 += b + ((*w0 < a) ? 1 : 0);

@@ -148,7 +148,7 @@ void bigint_linmul2(word x[], u32bit x_size, word y)
       carry = word8_linmul2(x + j, y, carry);
 
    for(u32bit j = blocks; j != x_size; ++j)
-      x[j] = word_madd2(x[j], y, &carry);
+      x[j] = word_madd2(x[j], y, carry, &carry);
 
    x[x_size] = carry;
    }
@@ -166,7 +166,7 @@ void bigint_linmul3(word z[], const word x[], u32bit x_size, word y)
       carry = word8_linmul3(z + j, x + j, y, carry);
 
    for(u32bit j = blocks; j != x_size; ++j)
-      z[j] = word_madd2(x[j], y, &carry);
+      z[j] = word_madd2(x[j], y, carry, &carry);
 
    z[x_size] = carry;
    }
@@ -190,7 +190,7 @@ void bigint_simple_mul(word z[], const word x[], u32bit x_size,
          carry = word8_madd3(z + j + k, y + k, x_j, carry);
 
       for(u32bit k = blocks; k != y_size; ++k)
-         z[j+k] = word_madd3(x_j, y[k], z[j+k], &carry);
+         z[j+k] = word_madd3(x_j, y[k], z[j+k], carry, &carry);
 
       z[j+y_size] = carry;
       }
@@ -215,7 +215,7 @@ void montgomery_reduce(word z[], u32bit z_size,
          carry = word8_madd3(z_j + k, x + k, y, carry);
 
       for(u32bit k = blocks; k != x_size; ++k)
-         z_j[k] = word_madd3(x[k], y, z_j[k], &carry);
+         z_j[k] = word_madd3(x[k], y, z_j[k], carry, &carry);
 
       word carry2 = 0;
       z_j[x_size] = word_add(z_j[x_size], carry, &carry2);
