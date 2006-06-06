@@ -49,9 +49,9 @@ inline word word_madd3(word a, word b, word c, word d, word* carry)
 *************************************************/
 inline void word3_muladd(word* w2, word* w1, word* w0, word a, word b)
    {
-   *w0 = word_madd2(a, b, *w0, &a);
-   *w1 += a;
-   *w2 += (*w1 < a) ? 1 : 0;
+   *w0 = word_madd2(a, b, *w0, &b);
+   *w1 += b;
+   *w2 += (*w1 < b) ? 1 : 0;
    }
 
 /*************************************************
