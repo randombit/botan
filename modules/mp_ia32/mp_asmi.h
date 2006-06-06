@@ -13,7 +13,9 @@ namespace Botan {
 /*************************************************
 * Helper Macros for x86 Assembly                 *
 *************************************************/
-#define ASM(x) x "\n\t"
+#ifndef ASM
+  #define ASM(x) x "\n\t"
+#endif
 
 #define ADDSUB2_OP(OPERATION, INDEX)                    \
         ASM("movl 4*" INDEX "(%[y]), %[carry]")         \

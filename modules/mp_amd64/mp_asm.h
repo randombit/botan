@@ -95,9 +95,6 @@ inline void word3_muladd_2(word* w2, word* w1, word* w0, word x, word y)
       : "cc");
    }
 
-// fixme
-#undef ASM
-
 }
 
 }
