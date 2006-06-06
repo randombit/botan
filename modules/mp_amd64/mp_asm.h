@@ -17,16 +17,23 @@ namespace Botan {
 extern "C" {
 
 /*************************************************
+* Helper Macros for amd64 Assembly               *
+*************************************************/
+#define ASM(x) x "\n\t"
+
+/*************************************************
 * Word Multiply                                  *
 *************************************************/
 inline word word_madd2(word a, word b, word c, word* carry)
    {
    asm(
-      "mulq %1\n\t"        // a(in eax) * b(wherever) -> edx:eax
-      "addq %5,%0\n\t"     // add c to low word (eax)
-      "adcq $0,%2"         // add carry from previous to high word (edx)
-      : "=a"(a), "=rm"(b), "=&d"(*carry)
-      : "0"(a), "1"(b), "g"(c) : "cc");
+      ASM("mulq %[b]")
+      ASM("addq %[c],%[a]")
+      ASM("adcq $0,%[carry]")
+
+      : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*carry)
+      : "0"(a), "1"(b), [c]"g"(c) : "cc");
+
    return a;
    }
 
@@ -36,46 +43,60 @@ inline word word_madd2(word a, word b, word c, word* carry)
 inline word word_madd3(word a, word b, word c, word d, word* carry)
    {
    asm(
-      "mulq %1\n\t"        // a(in eax) * b(wherever) -> edx:eax
-      "addq %5,%0\n\t"     // add c to low word (eax)
-      "adcq $0,%2\n\t"     // add carry from previous to high word (edx)
-      "addq %6,%0\n\t"     // add d to low word (eax)
-      "adcq $0,%2"         // add carry from previous to high word (edx)
-      : "=a"(a), "=rm"(b), "=&d"(*carry)
-      : "0"(a), "1"(b), "g"(c), "g"(d) : "cc");
+      ASM("mulq %[b]")
+
+      ASM("addq %[c],%[a]")
+      ASM("adcq $0,%[carry]")
+
+      ASM("addq %[d],%[a]")
+      ASM("adcq $0,%[carry]")
+
+      : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*carry)
+      : "0"(a), "1"(b), [c]"g"(c), [d]"g"(d) : "cc");
+
    return a;
    }
 
 /*************************************************
 * Multiply-Add Accumulator                       *
 *************************************************/
-inline void word3_muladd(word* w2, word* w1, word* w0, word a, word b)
+inline void word3_muladd(word* w2, word* w1, word* w0, word x, word y)
    {
-   asm("mulq %[b]\n\t"        // a(in eax) * b(wherever) -> edx:eax
-       "addq %3,%[w0]\n\t"     // add c to low word (eax)
-       "adcq %4,%[w1]\n\t"     // add carry from previous to high word (edx)
-       "adcq $0,%[w2]\n\t"     // add carry from previous to high word (edx)
-       : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
-       : "a"(a), [b]"d"(b), "0"(*w0), "1"(*w1), "2"(*w2)
-       : "cc");
+   asm(
+      ASM("mulq %[y]")
+
+      ASM("addq %[x],%[w0]")
+      ASM("adcq %[y],%[w1]")
+      ASM("adcq $0,%[w2]")
+
+      : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
+      : [x]"a"(x), [y]"d"(y), "0"(*w0), "1"(*w1), "2"(*w2)
+      : "cc");
    }
 
 /*************************************************
 * Multiply-Add Accumulator                       *
 *************************************************/
-inline void word3_muladd_2(word* w2, word* w1, word* w0, word a, word b)
+inline void word3_muladd_2(word* w2, word* w1, word* w0, word x, word y)
    {
-   asm("mulq %[b]\n\t"        // a(in eax) * b(wherever) -> edx:eax
-       "addq %3,%[w0]\n\t"     // add c to low word (eax)
-       "adcq %4,%[w1]\n\t"     // add carry from previous to high word (edx)
-       "adcq $0,%[w2]\n\t"     // add carry from previous to high word (edx)
-       "addq %3,%[w0]\n\t"     // add c to low word (eax)
-       "adcq %4,%[w1]\n\t"     // add carry from previous to high word (edx)
-       "adcq $0,%[w2]\n\t"     // add carry from previous to high word (edx)
-       : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
-       : "a"(a), [b]"d"(b), "0"(*w0), "1"(*w1), "2"(*w2)
-       : "cc");
-      }
+   asm(
+      ASM("mulq %[y]")
+
+      ASM("addq %[x],%[w0]")
+      ASM("adcq %[y],%[w1]")
+      ASM("adcq $0,%[w2]")
+
+      ASM("addq %[x],%[w0]")
+      ASM("adcq %[y],%[w1]")
+      ASM("adcq $0,%[w2]")
+
+      : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
+      : [x]"a"(x), [y]"d"(y), "0"(*w0), "1"(*w1), "2"(*w2)
+      : "cc");
+   }
+
+// fixme
+#undef ASM
 
 }
 
