@@ -173,10 +173,10 @@ int validate()
    test_types();
    u32bit errors = 0;
    try {
-      errors += do_validation_tests(VALIDATION_FILE);
-      errors += do_validation_tests(EXPECTED_FAIL_FILE, false);
+   //errors += do_validation_tests(VALIDATION_FILE);
+   // errors += do_validation_tests(EXPECTED_FAIL_FILE, false);
       errors += do_bigint_tests(BIGINT_VALIDATION_FILE);
-      errors += do_pk_validation_tests(PK_VALIDATION_FILE);
+      // errors += do_pk_validation_tests(PK_VALIDATION_FILE);
       }
    catch(Botan::Exception& e)
       {
