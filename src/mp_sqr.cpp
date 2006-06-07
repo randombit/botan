@@ -114,7 +114,7 @@ void handle_small_sqr(word z[], u32bit z_size,
 void bigint_sqr(word z[], u32bit z_size, word workspace[],
                 const word x[], u32bit x_size, u32bit x_sw)
    {
-   if(x_size <= 8 || x_size <= 8)
+   if(x_size <= 8 || x_sw <= 8)
       {
       handle_small_sqr(z, z_size, x, x_size, x_sw);
       return;
