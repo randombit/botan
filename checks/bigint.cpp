@@ -16,6 +16,7 @@ using namespace Botan;
 u32bit check_add(const std::vector<std::string>&);
 u32bit check_sub(const std::vector<std::string>&);
 u32bit check_mul(const std::vector<std::string>&);
+u32bit check_sqr(const std::vector<std::string>&);
 u32bit check_div(const std::vector<std::string>&);
 u32bit check_mod(const std::vector<std::string>&);
 u32bit check_shr(const std::vector<std::string>&);
@@ -91,6 +92,8 @@ u32bit do_bigint_tests(const std::string& filename)
          new_errors = check_sub(substr);
       else if(algorithm.find("Multiplication") != std::string::npos)
          new_errors = check_mul(substr);
+      else if(algorithm.find("Square") != std::string::npos)
+         new_errors = check_sqr(substr);
       else if(algorithm.find("Division") != std::string::npos)
          new_errors = check_div(substr);
       else if(algorithm.find("Modulo") != std::string::npos)
@@ -141,6 +144,7 @@ u32bit results(std::string op,
 
       std::cout << "a = " << std::hex << a << std::endl;
       std::cout << "b = " << std::hex << b << std::endl;
+
       std::cout << "c = " << std::hex << c << std::endl;
       std::cout << "d = " << std::hex << d << std::endl;
       std::cout << "e = " << std::hex << e << std::endl;
@@ -216,6 +220,20 @@ u32bit check_mul(const std::vector<std::string>& args)
    e *= a;
 
    return results("*", a, b, c, d, e);
+   }
+
+u32bit check_sqr(const std::vector<std::string>& args)
+   {
+   BigInt a(args[0]);
+   BigInt b(args[1]);
+
+   a.grow_reg(16);
+   b.grow_reg(16);
+
+   BigInt c = square(a);
+   BigInt d = a * a;
+
+   return results("sqr", a, a, b, c, d);
    }
 
 u32bit check_div(const std::vector<std::string>& args)
