@@ -9,8 +9,6 @@
 #include <botan/parsing.h>
 #include <botan/util.h>
 
-#include <assert.h>
-
 namespace Botan {
 
 /*************************************************

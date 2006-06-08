@@ -20,9 +20,6 @@
   #error BOTAN_MP_WORD_BITS must be 8, 16, 32, or 64
 #endif
 
-#include <stdio.h>
-#include <assert.h>
-
 namespace Botan {
 
 extern "C" {
