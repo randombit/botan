@@ -88,32 +88,6 @@ inline word word_madd3(word a, word b, word c, word d, word* carry)
    return z1;
    }
 
-/*************************************************
-* Multiply-Add Accumulator                       *
-*************************************************/
-inline void word3_muladd(word* w2, word* w1, word* w0, word a, word b)
-   {
-   *w0 = word_madd2(a, b, *w0, &a);
-   *w1 += a;
-   *w2 += (*w1 < a) ? 1 : 0;
-   }
-
-/*************************************************
-* Multiply-Add Accumulator                       *
-*************************************************/
-inline void word3_muladd_2(word* w2, word* w1, word* w0, word a, word b)
-   {
-   a = word_madd2(a, b, 0, &b);
-
-   *w0 += a;
-   *w1 += b + ((*w0 < a) ? 1 : 0);
-   *w2 += (*w1 < b) ? 1 : 0;
-
-   *w0 += a;
-   *w1 += b + ((*w0 < a) ? 1 : 0);
-   *w2 += (*w1 < b) ? 1 : 0;
-   }
-
 }
 
 #endif
