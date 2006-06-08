@@ -177,6 +177,44 @@ inline word word8_madd3(word z[8], const word x[8], word y, word carry)
    return carry;
    }
 
+/*************************************************
+* Multiply-Add Accumulator                       *
+*************************************************/
+inline void word3_muladd(word* w2, word* w1, word* w0, word x, word y)
+   {
+   asm(
+      ASM("mull %[y]")
+
+      ASM("addl %[x],%[w0]")
+      ASM("adcl %[y],%[w1]")
+      ASM("adcl $0,%[w2]")
+
+      : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
+      : [x]"a"(x), [y]"d"(y), "0"(*w0), "1"(*w1), "2"(*w2)
+      : "cc");
+   }
+
+/*************************************************
+* Multiply-Add Accumulator                       *
+*************************************************/
+inline void word3_muladd_2(word* w2, word* w1, word* w0, word x, word y)
+   {
+   asm(
+      ASM("mull %[y]")
+
+      ASM("addl %[x],%[w0]")
+      ASM("adcl %[y],%[w1]")
+      ASM("adcl $0,%[w2]")
+
+      ASM("addl %[x],%[w0]")
+      ASM("adcl %[y],%[w1]")
+      ASM("adcl $0,%[w2]")
+
+      : [w0]"=r"(*w0), [w1]"=r"(*w1), [w2]"=r"(*w2)
+      : [x]"a"(x), [y]"d"(y), "0"(*w0), "1"(*w1), "2"(*w2)
+      : "cc");
+   }
+
 }
 
 #endif
