@@ -150,6 +150,34 @@ inline word word8_madd3(word z[8], const word x[8], word y, word carry)
    return carry;
    }
 
+/*************************************************
+* Multiply-Add Accumulator                       *
+*************************************************/
+inline void word3_muladd(word* w2, word* w1, word* w0, word a, word b)
+   {
+   *w0 = word_madd2(a, b, *w0, &b);
+   *w1 += b;
+   *w2 += (*w1 < b) ? 1 : 0;
+   }
+
+/*************************************************
+* Multiply-Add Accumulator                       *
+*************************************************/
+inline void word3_muladd_2(word* w2, word* w1, word* w0, word a, word b)
+   {
+   a = word_madd2(a, b, 0, &b);
+
+   word top = (b >> (BOTAN_MP_WORD_BITS-1));
+   b <<= 1;
+   b |= (a >> (BOTAN_MP_WORD_BITS-1));
+   a <<= 1;
+
+   word carry = 0;
+   *w0 = word_add(*w0, a, &carry);
+   *w1 = word_add(*w1, b, &carry);
+   *w2 = word_add(*w2, top, &carry);
+   }
+
 }
 
 }

@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/mp_core.h>
-#include <botan/mp_asm.h>
+#include <botan/mp_asmi.h>
 
 namespace Botan {
 
