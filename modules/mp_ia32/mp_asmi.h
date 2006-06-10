@@ -10,6 +10,8 @@
 
 namespace Botan {
 
+extern "C" {
+
 /*************************************************
 * Helper Macros for x86 Assembly                 *
 *************************************************/
@@ -17,42 +19,42 @@ namespace Botan {
   #define ASM(x) x "\n\t"
 #endif
 
-#define ADDSUB2_OP(OPERATION, INDEX)                    \
-        ASM("movl 4*" INDEX "(%[y]), %[carry]")         \
-        ASM(OPERATION " %[carry], 4*" INDEX "(%[x])")   \
+#define ADDSUB2_OP(OPERATION, INDEX)                     \
+        ASM("movl 4*" #INDEX "(%[y]), %[carry]")         \
+        ASM(OPERATION " %[carry], 4*" #INDEX "(%[x])")   \
 
-#define ADDSUB3_OP(OPERATION, INDEX)                    \
-        ASM("movl 4*" INDEX "(%[x]), %[carry]")         \
-        ASM(OPERATION " 4*" INDEX "(%[y]), %[carry]")   \
-        ASM("movl %[carry], 4*" INDEX "(%[z])")         \
+#define ADDSUB3_OP(OPERATION, INDEX)                     \
+        ASM("movl 4*" #INDEX "(%[x]), %[carry]")         \
+        ASM(OPERATION " 4*" #INDEX "(%[y]), %[carry]")   \
+        ASM("movl %[carry], 4*" #INDEX "(%[z])")         \
 
-#define LINMUL_OP(WRITE_TO, INDEX)                      \
-        ASM("movl 4*" INDEX "(%[x]),%%eax")             \
-        ASM("mull %[y]")                                \
-        ASM("addl %[carry],%%eax")                      \
-        ASM("adcl $0,%%edx")                            \
-        ASM("movl %%edx,%[carry]")                      \
-        ASM("movl %%eax, 4*" INDEX "(%[" WRITE_TO "])")
+#define LINMUL_OP(WRITE_TO, INDEX)                       \
+        ASM("movl 4*" #INDEX "(%[x]),%%eax")             \
+        ASM("mull %[y]")                                 \
+        ASM("addl %[carry],%%eax")                       \
+        ASM("adcl $0,%%edx")                             \
+        ASM("movl %%edx,%[carry]")                       \
+        ASM("movl %%eax, 4*" #INDEX "(%[" WRITE_TO "])")
 
-#define MULADD_OP(IGNORED, INDEX)                       \
-        ASM("movl 4*" INDEX "(%[x]),%%eax")             \
-        ASM("mull %[y]")                                \
-        ASM("addl %[carry],%%eax")                      \
-        ASM("adcl $0,%%edx")                            \
-        ASM("addl 4*" INDEX "(%[z]),%%eax")             \
-        ASM("adcl $0,%%edx")                            \
-        ASM("movl %%edx,%[carry]")                      \
-        ASM("movl %%eax, 4*" INDEX " (%[z])")
+#define MULADD_OP(IGNORED, INDEX)                        \
+        ASM("movl 4*" #INDEX "(%[x]),%%eax")             \
+        ASM("mull %[y]")                                 \
+        ASM("addl %[carry],%%eax")                       \
+        ASM("adcl $0,%%edx")                             \
+        ASM("addl 4*" #INDEX "(%[z]),%%eax")             \
+        ASM("adcl $0,%%edx")                             \
+        ASM("movl %%edx,%[carry]")                       \
+        ASM("movl %%eax, 4*" #INDEX " (%[z])")
 
 #define DO_8_TIMES(MACRO, ARG) \
-        MACRO(ARG, "0") \
-        MACRO(ARG, "1") \
-        MACRO(ARG, "2") \
-        MACRO(ARG, "3") \
-        MACRO(ARG, "4") \
-        MACRO(ARG, "5") \
-        MACRO(ARG, "6") \
-        MACRO(ARG, "7")
+        MACRO(ARG, 0) \
+        MACRO(ARG, 1) \
+        MACRO(ARG, 2) \
+        MACRO(ARG, 3) \
+        MACRO(ARG, 4) \
+        MACRO(ARG, 5) \
+        MACRO(ARG, 6) \
+        MACRO(ARG, 7)
 
 #define ADD_OR_SUBTRACT(CORE_CODE)     \
         ASM("rorl %[carry]")           \
@@ -214,6 +216,8 @@ inline void word3_muladd_2(word* w2, word* w1, word* w0, word x, word y)
       : [x]"a"(x), [y]"d"(y), "0"(*w0), "1"(*w1), "2"(*w2)
       : "cc");
    }
+
+}
 
 }
 
