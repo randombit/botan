@@ -44,8 +44,9 @@ Data_Store::search_with(const Matcher& matcher) const
    {
    std::multimap<std::string, std::string> out;
 
-   std::multimap<std::string, std::string>::const_iterator i;
-   i = contents.begin();
+   std::multimap<std::string, std::string>::const_iterator i =
+      contents.begin();
+
    while(i != contents.end())
       {
       if(matcher(i->first, i->second))
@@ -61,18 +62,13 @@ Data_Store::search_with(const Matcher& matcher) const
 *************************************************/
 std::vector<std::string> Data_Store::get(const std::string& looking_for) const
    {
+   typedef std::multimap<std::string, std::string>::const_iterator iter;
+
+   std::pair<iter, iter> range = contents.equal_range(looking_for);
+
    std::vector<std::string> out;
-
-   // FIXME: use equal_range!!!!
-   std::multimap<std::string, std::string>::const_iterator i;
-   i = contents.begin();
-   while(i != contents.end())
-      {
-      if(i->first == looking_for)
-         out.push_back(i->second);
-      ++i;
-      }
-
+   for(iter i = range.first; i != range.second; i++)
+      out.push_back(i->second);
    return out;
    }
 
