@@ -40,6 +40,42 @@ std::tm get_tm(u64bit timer)
 *************************************************/
 X509_Time::X509_Time(const std::string& time_str)
    {
+   set_to(time_str);
+   }
+
+/*************************************************
+* Create an X509_Time                            *
+*************************************************/
+X509_Time::X509_Time(u64bit timer)
+   {
+   std::tm time_info = get_tm(timer);
+
+   year   = time_info.tm_year + 1900;
+   month  = time_info.tm_mon + 1;
+   day    = time_info.tm_mday;
+   hour   = time_info.tm_hour;
+   minute = time_info.tm_min;
+   second = time_info.tm_sec;
+
+   if(year >= 2050)
+      tag = GENERALIZED_TIME;
+   else
+      tag = UTC_TIME;
+   }
+
+/*************************************************
+* Create an X509_Time                            *
+*************************************************/
+X509_Time::X509_Time(const std::string& t_spec, ASN1_Tag t) : tag(t)
+   {
+   set_to(t_spec, tag);
+   }
+
+/*************************************************
+* Set the time with a human readable string      *
+*************************************************/
+void X509_Time::set_to(const std::string& time_str)
+   {
    if(time_str == "")
       {
       year = month = day = hour = minute = second = 0;
@@ -83,29 +119,9 @@ X509_Time::X509_Time(const std::string& time_str)
    }
 
 /*************************************************
-* Create an X509_Time                            *
+* Set the time with an ISO time format string    *
 *************************************************/
-X509_Time::X509_Time(u64bit timer)
-   {
-   std::tm time_info = get_tm(timer);
-
-   year   = time_info.tm_year + 1900;
-   month  = time_info.tm_mon + 1;
-   day    = time_info.tm_mday;
-   hour   = time_info.tm_hour;
-   minute = time_info.tm_min;
-   second = time_info.tm_sec;
-
-   if(year >= 2050)
-      tag = GENERALIZED_TIME;
-   else
-      tag = UTC_TIME;
-   }
-
-/*************************************************
-* Create an X509_Time                            *
-*************************************************/
-X509_Time::X509_Time(const std::string& t_spec, ASN1_Tag t) : tag(t)
+void X509_Time::set_to(const std::string& t_spec, ASN1_Tag tag)
    {
    if(tag != GENERALIZED_TIME && tag != UTC_TIME)
       throw Invalid_Argument("X509_Time: Invalid tag " + to_string(tag));
@@ -290,8 +306,7 @@ s32bit validity_check(const X509_Time& start, const X509_Time& end,
 void X509_Time::decode_from(BER_Decoder& source)
    {
    BER_Object ber_time = source.get_next_object();
-   // FIXME - should have a set
-   *this = X509_Time(iso2local(ASN1::to_string(ber_time)), ber_time.type_tag);
+   set_to(iso2local(ASN1::to_string(ber_time)), ber_time.type_tag);
    }
 
 }

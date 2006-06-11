@@ -80,6 +80,9 @@ class X509_Time : public ASN1_Object
 
       s32bit cmp(const X509_Time&) const;
 
+      void set_to(const std::string&);
+      void set_to(const std::string&, ASN1_Tag);
+
       X509_Time(u64bit);
       X509_Time(const std::string& = "");
       X509_Time(const std::string&, ASN1_Tag);
