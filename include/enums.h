@@ -82,34 +82,6 @@ enum CRL_Code {
 };
 
 /*************************************************
-* X.509 Certificate Validation Result            *
-*************************************************/
-enum X509_Code {
-   VERIFIED,
-   UNKNOWN_X509_ERROR,
-   CANNOT_ESTABLISH_TRUST,
-   CERT_CHAIN_TOO_LONG,
-   SIGNATURE_ERROR,
-   POLICY_ERROR,
-   INVALID_USAGE,
-
-   CERT_FORMAT_ERROR,
-   CERT_ISSUER_NOT_FOUND,
-   CERT_NOT_YET_VALID,
-   CERT_HAS_EXPIRED,
-   CERT_IS_REVOKED,
-
-   CRL_FORMAT_ERROR,
-   CRL_ISSUER_NOT_FOUND,
-   CRL_NOT_YET_VALID,
-   CRL_HAS_EXPIRED,
-
-   CA_CERT_CANNOT_SIGN,
-   CA_CERT_NOT_FOR_CERT_ISSUER,
-   CA_CERT_NOT_FOR_CRL_ISSUER
-};
-
-/*************************************************
 * Various Other Enumerations                     *
 *************************************************/
 enum Decoder_Checking { NONE, IGNORE_WS, FULL_CHECK };
