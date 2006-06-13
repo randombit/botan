@@ -7,9 +7,22 @@
 #define BOTAN_CHARSET_H__
 
 #include <botan/types.h>
+#include <botan/enums.h>
 #include <string>
 
 namespace Botan {
+
+/*************************************************
+* Character Set Transcoder Object                *
+*************************************************/
+class Charset_Transcoder
+   {
+   public:
+      virtual std::string transcode(const std::string&,
+                                    Character_Set, Character_Set) const = 0;
+
+      virtual ~Charset_Transcoder() {}
+   };
 
 /*************************************************
 * Character Set Handling                         *

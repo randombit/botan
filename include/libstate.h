@@ -51,6 +51,10 @@ class Library_State
 
       class Mutex* get_mutex();
 
+      void set_transcoder(class Charset_Transcoder*);
+      std::string transcode(const std::string,
+                            Character_Set, Character_Set) const;
+
       Library_State(class Mutex_Factory*, class Timer*);
       ~Library_State();
    private:
@@ -68,6 +72,7 @@ class Library_State
       std::map<std::string, Allocator*> alloc_factory;
       mutable Allocator* cached_default_allocator;
 
+      class Charset_Transcoder* transcoder;
       RandomNumberGenerator* rng;
       std::vector<EntropySource*> entropy_sources;
       std::vector<class Engine*> engines;

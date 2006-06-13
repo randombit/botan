@@ -8,6 +8,7 @@
 #include <botan/engine.h>
 #include <botan/mutex.h>
 #include <botan/timers.h>
+#include <botan/charset.h>
 
 namespace Botan {
 
@@ -264,6 +265,29 @@ void Library_State::add_engine(Engine* engine)
    }
 
 /*************************************************
+* Set the character set transcoder object        *
+*************************************************/
+void Library_State::set_transcoder(class Charset_Transcoder* transcoder)
+   {
+   if(this->transcoder)
+      delete this->transcoder;
+   this->transcoder = transcoder;
+   }
+
+/*************************************************
+* Transcode a string from one charset to another *
+*************************************************/
+std::string Library_State::transcode(const std::string str,
+                                     Character_Set to,
+                                     Character_Set from) const
+   {
+   if(!transcoder)
+      throw Invalid_State("Library_State::transcode: No transcoder set");
+
+   return transcoder->transcode(str, to, from);
+   }
+
+/*************************************************
 * Library_State Constructor                      *
 *************************************************/
 Library_State::Library_State(Mutex_Factory* mutex_factory, Timer* timer)
@@ -275,6 +299,7 @@ Library_State::Library_State(Mutex_Factory* mutex_factory, Timer* timer)
 
    this->mutex_factory = mutex_factory;
    this->timer = timer;
+   this->transcoder = 0;
 
    locks["settings"] = get_mutex();
    locks["allocator"] = get_mutex();
@@ -307,6 +332,7 @@ Library_State::~Library_State()
       delete j->second;
       }
 
+   delete transcoder;
    delete mutex_factory;
    delete timer;
 
