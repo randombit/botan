@@ -12,6 +12,30 @@ namespace Botan {
 namespace {
 
 /*************************************************
+* Convert from UCS-2 to ISO 8859-1               *
+*************************************************/
+std::string ucs2_to_latin1(const std::string& ucs2)
+   {
+   if(ucs2.size() % 2 == 1)
+      throw Decoding_Error("UCS-2 string has an odd number of bytes");
+
+   std::string latin1;
+
+   for(u32bit j = 0; j != ucs2.size(); j += 2)
+      {
+      const byte c1 = ucs2[j];
+      const byte c2 = ucs2[j+1];
+
+      if(c1 != 0)
+         throw Decoding_Error("UCS-2 has non-Latin1 characters");
+
+      latin1 += (char)c2;
+      }
+
+   return latin1;
+   }
+
+/*************************************************
 * Convert from UTF-8 to ISO 8859-1               *
 *************************************************/
 std::string utf8_to_latin1(const std::string& utf8)
@@ -87,6 +111,8 @@ std::string Default_Charset_Transcoder::transcode(const std::string& str,
       return latin1_to_utf8(str);
    if(from == UTF8_CHARSET && to == LATIN1_CHARSET)
       return utf8_to_latin1(str);
+   if(from == UCS2_CHARSET && to == LATIN1_CHARSET)
+      return ucs2_to_latin1(str);
 
    throw Invalid_Argument("Unknown transcoding operation from " +
                           to_string(from) + " to " + to_string(to));
