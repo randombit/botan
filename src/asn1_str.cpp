@@ -141,35 +141,17 @@ namespace {
 // FIXME: inline this
 std::string convert_string(BER_Object obj, ASN1_Tag type)
    {
-   // FIMXE: add a UNC16_CHARSET transcoder op
+   Character_Set charset_is;
+
    if(type == BMP_STRING)
-      {
-      if(obj.value.size() % 2 == 1)
-         throw BER_Decoding_Error("BMP STRING has an odd number of bytes");
-
-      std::string value;
-      for(u32bit j = 0; j != obj.value.size(); j += 2)
-         {
-         const byte c1 = obj.value[j];
-         const byte c2 = obj.value[j+1];
-
-         if(c1 != 0)
-            throw BER_Decoding_Error("BMP STRING has non-Latin1 characters");
-
-         value += (char)c2;
-         }
-      return Charset::transcode(value, LATIN1_CHARSET, LOCAL_CHARSET);
-      }
+      charset_is = UCS2_CHARSET;
    else if(type == UTF8_STRING)
-      {
-      return Charset::transcode(ASN1::to_string(obj), UTF8_CHARSET,
-                                LOCAL_CHARSET);
-      }
+      charset_is = UTF8_CHARSET;
    else
-      {
-      return Charset::transcode(ASN1::to_string(obj),
-                                LATIN1_CHARSET, LOCAL_CHARSET);
-      }
+      charset_is = LATIN1_CHARSET;
+
+   return Charset::transcode(ASN1::to_string(obj),
+                             charset_is, LOCAL_CHARSET);
    }
 
 }
