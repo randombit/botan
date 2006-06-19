@@ -133,37 +133,25 @@ void ASN1_String::encode_into(DER_Encoder& encoder) const
    encoder.add_object(tagging(), UNIVERSAL, value);
    }
 
-namespace {
-
-/*************************************************
-* Do any UTF-8/Unicode decoding needed           *
-*************************************************/
-// FIXME: inline this
-std::string convert_string(BER_Object obj, ASN1_Tag type)
-   {
-   Character_Set charset_is;
-
-   if(type == BMP_STRING)
-      charset_is = UCS2_CHARSET;
-   else if(type == UTF8_STRING)
-      charset_is = UTF8_CHARSET;
-   else
-      charset_is = LATIN1_CHARSET;
-
-   return Charset::transcode(ASN1::to_string(obj),
-                             charset_is, LOCAL_CHARSET);
-   }
-
-}
-
 /*************************************************
 * Decode a BER encoded ASN1_String               *
 *************************************************/
 void ASN1_String::decode_from(BER_Decoder& source)
    {
    BER_Object obj = source.get_next_object();
-   // FIXME, don't like this at all...
-   *this = ASN1_String(convert_string(obj, obj.type_tag), obj.type_tag);
+
+   Character_Set charset_is;
+
+   if(obj.type_tag == BMP_STRING)
+      charset_is = UCS2_CHARSET;
+   else if(obj.type_tag == UTF8_STRING)
+      charset_is = UTF8_CHARSET;
+   else
+      charset_is = LATIN1_CHARSET;
+
+   *this = ASN1_String(
+      Charset::transcode(ASN1::to_string(obj), charset_is, LOCAL_CHARSET),
+      obj.type_tag);
    }
 
 }
