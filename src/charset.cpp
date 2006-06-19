@@ -6,9 +6,21 @@
 #include <botan/charset.h>
 #include <botan/hex.h>
 #include <botan/base64.h>
+#include <botan/libstate.h>
 #include <ctype.h>
 
 namespace Botan {
+
+namespace Charset {
+
+/*************************************************
+* Perform character set transcoding              *
+*************************************************/
+std::string transcode(const std::string& str,
+                      Character_Set to, Character_Set from)
+   {
+   return global_state().transcode(str, to, from);
+   }
 
 /*************************************************
 * Check if a character represents a digit        *
@@ -70,28 +82,14 @@ char digit2char(byte b)
    }
 
 /*************************************************
-* Return the lower-case representation           *
+* Case-insensitive character comparison          *
 *************************************************/
-char to_lower(char c)
+bool caseless_cmp(char a, char b)
    {
-   return tolower((unsigned char)c);
+   return (tolower((unsigned char)a) == tolower((unsigned char)b));
    }
 
-/*************************************************
-* Convert from local charset to ISO 8859-1       *
-*************************************************/
-std::string local2iso(const std::string& str)
-   {
-   return str;
-   }
-
-/*************************************************
-* Convert from ISO 8859-1 to local charset       *
-*************************************************/
-std::string iso2local(const std::string& str)
-   {
-   return str;
-   }
+}
 
 /*************************************************
 * Hex Encoder Lookup Tables                      *

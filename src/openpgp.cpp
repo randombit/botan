@@ -116,7 +116,7 @@ SecureVector<byte> decode(DataSource& source, std::string& label,
 
       end_of_headers = true;
       for(u32bit j = 0; j != this_header.length(); ++j)
-         if(!is_space(this_header[j]))
+         if(!Charset::is_space(this_header[j]))
             end_of_headers = false;
 
       if(!end_of_headers)

@@ -73,7 +73,8 @@ bool is_string_type(ASN1_Tag tag)
 *************************************************/
 ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : tag(t)
    {
-   iso_8859_str = local2iso(str);
+   iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
+
    if(tag == DIRECTORY_STRING)
       tag = choose_encoding(iso_8859_str);
 
@@ -93,7 +94,7 @@ ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : tag(t)
 *************************************************/
 ASN1_String::ASN1_String(const std::string& str)
    {
-   iso_8859_str = local2iso(str);
+   iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
    tag = choose_encoding(iso_8859_str);
    }
 
@@ -110,7 +111,7 @@ std::string ASN1_String::iso_8859() const
 *************************************************/
 std::string ASN1_String::value() const
    {
-   return iso2local(iso_8859_str);
+   return Charset::transcode(iso_8859_str, LATIN1_CHARSET, LOCAL_CHARSET);
    }
 
 /*************************************************
@@ -128,7 +129,7 @@ void ASN1_String::encode_into(DER_Encoder& encoder) const
    {
    std::string value = iso_8859();
    if(tagging() == UTF8_STRING)
-      value = iso2utf(value);
+      value = Charset::transcode(value, LATIN1_CHARSET, UTF8_CHARSET);
    encoder.add_object(tagging(), UNIVERSAL, value);
    }
 
@@ -140,6 +141,7 @@ namespace {
 // FIXME: inline this
 std::string convert_string(BER_Object obj, ASN1_Tag type)
    {
+   // FIMXE: add a UNC16_CHARSET transcoder op
    if(type == BMP_STRING)
       {
       if(obj.value.size() % 2 == 1)
@@ -156,12 +158,18 @@ std::string convert_string(BER_Object obj, ASN1_Tag type)
 
          value += (char)c2;
          }
-      return iso2local(value);
+      return Charset::transcode(value, LATIN1_CHARSET, LOCAL_CHARSET);
       }
    else if(type == UTF8_STRING)
-      return iso2local(utf2iso(ASN1::to_string(obj)));
+      {
+      return Charset::transcode(ASN1::to_string(obj), UTF8_CHARSET,
+                                LOCAL_CHARSET);
+      }
    else
-      return iso2local(ASN1::to_string(obj));
+      {
+      return Charset::transcode(ASN1::to_string(obj),
+                                LATIN1_CHARSET, LOCAL_CHARSET);
+      }
    }
 
 }

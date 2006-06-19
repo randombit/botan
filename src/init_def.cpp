@@ -12,6 +12,7 @@
 #include <botan/eng_def.h>
 #include <botan/fips140.h>
 #include <botan/x931_rng.h>
+#include <botan/def_char.h>
 
 namespace Botan {
 
@@ -106,6 +107,8 @@ void initialize(const std::string& arg_string)
          global_state().add_engine(engines[j]);
       }
    global_state().add_engine(new Default_Engine);
+
+   global_state().set_transcoder(new Default_Charset_Transcoder);
 
    global_state().set_prng(new ANSI_X931_RNG);
    std::vector<EntropySource*> sources = Modules::get_entropy_sources();

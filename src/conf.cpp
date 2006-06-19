@@ -60,7 +60,7 @@ u32bit get_time(const std::string& name)
 
    u32bit scale = 1;
 
-   if(is_digit(suffix))
+   if(Charset::is_digit(suffix))
       value += suffix;
    else if(suffix == 's')
       scale = 1;

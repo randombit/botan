@@ -13,7 +13,7 @@
 namespace Botan {
 
 /*************************************************
-* Character Set Transcoder Object                *
+* Character Set Transcoder Interface             *
 *************************************************/
 class Charset_Transcoder
    {
@@ -24,21 +24,21 @@ class Charset_Transcoder
       virtual ~Charset_Transcoder() {}
    };
 
+namespace Charset {
+
 /*************************************************
 * Character Set Handling                         *
 *************************************************/
+std::string transcode(const std::string&, Character_Set, Character_Set);
+
 bool is_digit(char);
 bool is_space(char);
-char to_lower(char);
+bool caseless_cmp(char, char);
 
 byte char2digit(char);
 char digit2char(byte);
 
-std::string local2iso(const std::string&);
-std::string iso2local(const std::string&);
-
-std::string utf2iso(const std::string&);
-std::string iso2utf(const std::string&);
+}
 
 }
 

@@ -20,7 +20,7 @@ u32bit to_u32bit(const std::string& number)
       {
       const u32bit OVERFLOW_MARK = 0xFFFFFFFF / 10;
 
-      byte digit = char2digit(*j);
+      byte digit = Charset::char2digit(*j);
 
       if((n > OVERFLOW_MARK) || (n == OVERFLOW_MARK && digit > 5))
          throw Decoding_Error("to_u32bit: Integer overflow");
@@ -41,7 +41,7 @@ std::string to_string(u64bit n, u32bit min_len)
       {
       while(n > 0)
          {
-         lenstr = digit2char(n % 10) + lenstr;
+         lenstr = Charset::digit2char(n % 10) + lenstr;
          n /= 10;
          }
       }
@@ -179,90 +179,35 @@ bool x500_name_cmp(const std::string& name1, const std::string& name2)
    std::string::const_iterator p1 = name1.begin();
    std::string::const_iterator p2 = name2.begin();
 
-   while((p1 != name1.end()) && is_space(*p1)) ++p1;
-   while((p2 != name2.end()) && is_space(*p2)) ++p2;
+   while((p1 != name1.end()) && Charset::is_space(*p1)) ++p1;
+   while((p2 != name2.end()) && Charset::is_space(*p2)) ++p2;
 
    while(p1 != name1.end() && p2 != name2.end())
       {
-      if(is_space(*p1))
+      if(Charset::is_space(*p1))
          {
-         if(!is_space(*p2))
+         if(!Charset::is_space(*p2))
             return false;
 
-         while((p1 != name1.end()) && is_space(*p1)) ++p1;
-         while((p2 != name2.end()) && is_space(*p2)) ++p2;
+         while((p1 != name1.end()) && Charset::is_space(*p1)) ++p1;
+         while((p2 != name2.end()) && Charset::is_space(*p2)) ++p2;
 
          if(p1 == name1.end() && p2 == name2.end())
             return true;
          }
 
-      if(to_lower(*p1) != to_lower(*p2))
+      if(!Charset::caseless_cmp(*p1, *p2))
          return false;
       ++p1;
       ++p2;
       }
 
-   while((p1 != name1.end()) && is_space(*p1)) ++p1;
-   while((p2 != name2.end()) && is_space(*p2)) ++p2;
+   while((p1 != name1.end()) && Charset::is_space(*p1)) ++p1;
+   while((p2 != name2.end()) && Charset::is_space(*p2)) ++p2;
 
    if((p1 != name1.end()) || (p2 != name2.end()))
       return false;
    return true;
-   }
-
-/*************************************************
-* Convert from UTF-8 to ISO 8859-1               *
-*************************************************/
-std::string utf2iso(const std::string& utf8)
-   {
-   std::string iso8859;
-
-   u32bit position = 0;
-   while(position != utf8.size())
-      {
-      const byte c1 = (byte)utf8[position++];
-
-      if(c1 <= 0x7F)
-         iso8859 += (char)c1;
-      else if(c1 >= 0xC0 && c1 <= 0xC7)
-         {
-         if(position == utf8.size())
-            throw Decoding_Error("UTF-8: sequence truncated");
-
-         const byte c2 = (byte)utf8[position++];
-         const byte iso_char = ((c1 & 0x07) << 6) | (c2 & 0x3F);
-
-         if(iso_char <= 0x7F)
-            throw Decoding_Error("UTF-8: sequence longer than needed");
-
-         iso8859 += (char)iso_char;
-         }
-      else
-         throw Decoding_Error("UTF-8: Unicode chars not in Latin1 used");
-      }
-
-   return iso8859;
-   }
-
-/*************************************************
-* Convert from ISO 8859-1 to UTF-8               *
-*************************************************/
-std::string iso2utf(const std::string& iso8859)
-   {
-   std::string utf8;
-   for(u32bit j = 0; j != iso8859.size(); ++j)
-      {
-      const byte c = (byte)iso8859[j];
-
-      if(c <= 0x7F)
-         utf8 += (char)c;
-      else
-         {
-         utf8 += (char)(0xC0 | (c >> 6));
-         utf8 += (char)(0x80 | (c & 0x3F));
-         }
-      }
-   return utf8;
    }
 
 /*************************************************

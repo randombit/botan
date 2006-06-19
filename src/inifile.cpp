@@ -34,7 +34,7 @@ std::string strip_whitespace(const std::string& line)
          return new_line;
       if(c == '\\' && !is_escaped) { is_escaped = true; continue; }
 
-      if(is_space(c) && !in_quote && !in_string && !is_escaped)
+      if(Charset::is_space(c) && !in_quote && !in_string && !is_escaped)
          continue;
 
       new_line += c;

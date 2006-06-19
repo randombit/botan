@@ -187,7 +187,9 @@ void AlternativeName::decode_from(BER_Decoder& source)
          }
       else if(tag == 1 || tag == 2 || tag == 6)
          {
-         const std::string value = iso2local(ASN1::to_string(obj));
+         const std::string value = Charset::transcode(ASN1::to_string(obj),
+                                                      LATIN1_CHARSET,
+                                                      LOCAL_CHARSET);
 
          if(tag == 1) add_attribute("RFC822", value);
          if(tag == 2) add_attribute("DNS", value);

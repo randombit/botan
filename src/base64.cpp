@@ -169,8 +169,12 @@ void Base64_Decoder::decode_and_send(const byte block[], u32bit length)
 *************************************************/
 void Base64_Decoder::handle_bad_char(byte c)
    {
-   if(checking == NONE) return;
-   if((checking == IGNORE_WS) && is_space(c)) return;
+   if(checking == NONE)
+      return;
+
+   if((checking == IGNORE_WS) && Charset::is_space(c))
+      return;
+
    throw Decoding_Error("Base64_Decoder: Invalid base64 character: " + c);
    }
 

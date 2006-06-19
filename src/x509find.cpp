@@ -20,21 +20,13 @@ namespace {
 typedef bool (*compare_fn)(const std::string&, const std::string&);
 
 /*************************************************
-* Predicate for caseless searching               *
-*************************************************/
-bool caseless_cmp(char a, char b)
-   {
-   return (to_lower(a) == to_lower(b));
-   }
-
-/*************************************************
 * Compare based on case-insensive substrings     *
 *************************************************/
 bool substring_match(const std::string& searching_for,
                      const std::string& found)
    {
    if(std::search(found.begin(), found.end(), searching_for.begin(),
-                  searching_for.end(), caseless_cmp) != found.end())
+                  searching_for.end(), Charset::caseless_cmp) != found.end())
       return true;
    return false;
    }
@@ -48,7 +40,7 @@ bool ignore_case(const std::string& searching_for, const std::string& found)
       return false;
 
    return std::equal(found.begin(), found.end(),
-                     searching_for.begin(), caseless_cmp);
+                     searching_for.begin(), Charset::caseless_cmp);
    }
 
 /*************************************************

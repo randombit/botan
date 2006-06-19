@@ -87,7 +87,7 @@ void X509_Time::set_to(const std::string& time_str)
 
    for(u32bit j = 0; j != time_str.size(); ++j)
       {
-      if(is_digit(time_str[j]))
+      if(Charset::is_digit(time_str[j]))
          current += time_str[j];
       else
          {
@@ -176,7 +176,9 @@ void X509_Time::encode_into(DER_Encoder& der) const
    {
    if(tag != GENERALIZED_TIME && tag != UTC_TIME)
       throw Invalid_Argument("X509_Time: Bad encoding tag");
-   der.add_object(tag, UNIVERSAL, local2iso(as_string()));
+   der.add_object(tag, UNIVERSAL,
+                  Charset::transcode(as_string(),
+                                     LOCAL_CHARSET, LATIN1_CHARSET));
    }
 
 /*************************************************
@@ -306,7 +308,9 @@ s32bit validity_check(const X509_Time& start, const X509_Time& end,
 void X509_Time::decode_from(BER_Decoder& source)
    {
    BER_Object ber_time = source.get_next_object();
-   set_to(iso2local(ASN1::to_string(ber_time)), ber_time.type_tag);
+   set_to(Charset::transcode(ASN1::to_string(ber_time),
+                             LATIN1_CHARSET, LOCAL_CHARSET),
+          ber_time.type_tag);
    }
 
 }

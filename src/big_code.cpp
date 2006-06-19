@@ -30,7 +30,7 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
       const u32bit output_size = n.encoded_size(Octal);
       for(u32bit j = 0; j != output_size; ++j)
          {
-         output[output_size - 1 - j] = digit2char(copy % 8);
+         output[output_size - 1 - j] = Charset::digit2char(copy % 8);
          copy /= 8;
          }
       }
@@ -43,7 +43,8 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
       for(u32bit j = 0; j != output_size; ++j)
          {
          divide(copy, 10, copy, remainder);
-         output[output_size - 1 - j] = digit2char(remainder.word_at(0));
+         output[output_size - 1 - j] =
+            Charset::digit2char(remainder.word_at(0));
          if(copy.is_zero())
             break;
          }
@@ -123,7 +124,7 @@ BigInt BigInt::decode(const byte buf[], u32bit length, Base base)
       const u32bit RADIX = ((base == Decimal) ? 10 : 8);
       for(u32bit j = 0; j != length; ++j)
          {
-         byte x = char2digit(buf[j]);
+         byte x = Charset::char2digit(buf[j]);
          if(x >= RADIX)
             {
             if(RADIX == 10)

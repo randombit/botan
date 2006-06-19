@@ -226,7 +226,9 @@ void decode(BER_Decoder& decoder, u32bit level)
          ASN1_String str;
          data.decode(str);
          if(UTF8_TERMINAL)
-            emit(type_name(type_tag), level, length, iso2utf(str.iso_8859()));
+            emit(type_name(type_tag), level, length,
+                 Charset::transcode(str.iso_8859(),
+                                    LATIN1_CHARSET, UTF8_CHARSET));
          else
             emit(type_name(type_tag), level, length, str.iso_8859());
          }

@@ -130,8 +130,12 @@ bool Hex_Decoder::is_valid(byte in)
 *************************************************/
 void Hex_Decoder::handle_bad_char(byte c)
    {
-   if(checking == NONE) return;
-   if((checking == IGNORE_WS) && is_space(c)) return;
+   if(checking == NONE)
+      return;
+
+   if((checking == IGNORE_WS) && Charset::is_space(c))
+      return;
+
    throw Decoding_Error("Hex_Decoder: Invalid hex character: " +
                         to_string(c));
    }
