@@ -53,7 +53,7 @@ class DN_Check : public X509_Store::Search_Func
          {
          std::vector<std::string> info = cert.subject_info(dn_entry);
 
-         for(u32bit j = 0; j != info.size(); j++)
+         for(u32bit j = 0; j != info.size(); ++j)
             if(compare(info[j], looking_for))
                return true;
          return false;

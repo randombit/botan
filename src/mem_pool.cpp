@@ -252,7 +252,7 @@ byte* Pooling_Allocator::allocate_blocks(u32bit n)
 
    do
       {
-      i++;
+      ++i;
       if(i == blocks.end())
          i = blocks.begin();
 

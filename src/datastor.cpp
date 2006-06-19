@@ -67,7 +67,7 @@ std::vector<std::string> Data_Store::get(const std::string& looking_for) const
    std::pair<iter, iter> range = contents.equal_range(looking_for);
 
    std::vector<std::string> out;
-   for(iter i = range.first; i != range.second; i++)
+   for(iter i = range.first; i != range.second; ++i)
       out.push_back(i->second);
    return out;
    }

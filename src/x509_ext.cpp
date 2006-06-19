@@ -59,7 +59,7 @@ OID Certificate_Extension::oid_of() const
 *************************************************/
 void Extensions::encode_into(DER_Encoder& to_object) const
    {
-   for(u32bit j = 0; j != extensions.size(); j++)
+   for(u32bit j = 0; j != extensions.size(); ++j)
       {
       const Certificate_Extension* ext = extensions[j];
 
@@ -351,7 +351,7 @@ void Extended_Key_Usage::decode_inner(const MemoryRegion<byte>& in)
 *************************************************/
 void Extended_Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
    {
-   for(u32bit j = 0; j != oids.size(); j++)
+   for(u32bit j = 0; j != oids.size(); ++j)
       subject.add("X509v3.ExtendedKeyUsage", oids[j].as_string());
    }
 
@@ -413,7 +413,7 @@ void Certificate_Policies::decode_inner(const MemoryRegion<byte>& in)
 *************************************************/
 void Certificate_Policies::contents_to(Data_Store& info, Data_Store&) const
    {
-   for(u32bit j = 0; j != oids.size(); j++)
+   for(u32bit j = 0; j != oids.size(); ++j)
       info.add("X509v3.ExtendedKeyUsage", oids[j].as_string());
    }
 
