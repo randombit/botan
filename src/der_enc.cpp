@@ -58,34 +58,6 @@ SecureVector<byte> encode_length(u32bit length)
    return encoded_length;
    }
 
-/*************************************************
-* A comparison functor for sorting SET objects   *
-*************************************************/
-class DER_Cmp
-   {
-   public:
-      bool operator()(const MemoryRegion<byte>&,
-                      const MemoryRegion<byte>&) const;
-   };
-
-/*************************************************
-* Compare two encodings, as specified by X.690   *
-*************************************************/
-bool DER_Cmp::operator()(const MemoryRegion<byte>& a,
-                         const MemoryRegion<byte>& b) const
-   {
-   // FIXME: use lexicographical_compare
-   if(a.size() < b.size()) return true;
-   if(a.size() > b.size()) return false;
-
-   for(u32bit j = 0; j != a.size(); ++j)
-      {
-      if(a[j] < b[j]) return true;
-      if(a[j] > b[j]) return false;
-      }
-   return false;
-   }
-
 }
 
 /*************************************************
@@ -99,7 +71,7 @@ SecureVector<byte> DER_Encoder::DER_Sequence::get_contents()
 
    if(type_tag == SET)
       {
-      std::sort(set_contents.begin(), set_contents.end(), DER_Cmp());
+      std::sort(set_contents.begin(), set_contents.end());
       for(u32bit j = 0; j != set_contents.size(); ++j)
          contents.append(set_contents[j]);
       set_contents.clear();
