@@ -92,7 +92,12 @@ enum Cipher_Dir { ENCRYPTION, DECRYPTION };
 
 enum Signature_Format { IEEE_1363, DER_SEQUENCE };
 
-enum Character_Set { LOCAL_CHARSET, UTF8_CHARSET, LATIN1_CHARSET };
+enum Character_Set {
+   LOCAL_CHARSET,
+   UCS2_CHARSET,
+   UTF8_CHARSET,
+   LATIN1_CHARSET
+};
 
 }
 
