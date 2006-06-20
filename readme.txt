@@ -1,4 +1,3 @@
-Botan: Version 1.5.7, May 28, 2006
 
 Please note that this is an experimental / development version of Botan.
 Don't be surprised by bugs. No, the documentation hasn't been updated
