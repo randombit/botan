@@ -1,0 +1,12 @@
+^build$
+^build/checks$
+^build/include$
+^build/include/botan$
+^build/lib$
+^build/lib/.*\.o$
+^build/checks/.*\.o$
+^build/include/botan/.*\.h$
+^build/config\.h$
+^check$
+^Makefile$
+^botan-config$
