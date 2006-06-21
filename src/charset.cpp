@@ -48,16 +48,19 @@ bool is_space(char c)
 *************************************************/
 byte char2digit(char c)
    {
-   if(c == '0') return 0;
-   if(c == '1') return 1;
-   if(c == '2') return 2;
-   if(c == '3') return 3;
-   if(c == '4') return 4;
-   if(c == '5') return 5;
-   if(c == '6') return 6;
-   if(c == '7') return 7;
-   if(c == '8') return 8;
-   if(c == '9') return 9;
+   switch(c)
+      {
+      case '0': return 0;
+      case '1': return 1;
+      case '2': return 2;
+      case '3': return 3;
+      case '4': return 4;
+      case '5': return 5;
+      case '6': return 6;
+      case '7': return 7;
+      case '8': return 8;
+      case '9': return 9;
+      }
 
    throw Invalid_Argument("char2digit: Input is not a digit character");
    }
@@ -67,16 +70,19 @@ byte char2digit(char c)
 *************************************************/
 char digit2char(byte b)
    {
-   if(b == 0) return '0';
-   if(b == 1) return '1';
-   if(b == 2) return '2';
-   if(b == 3) return '3';
-   if(b == 4) return '4';
-   if(b == 5) return '5';
-   if(b == 6) return '6';
-   if(b == 7) return '7';
-   if(b == 8) return '8';
-   if(b == 9) return '9';
+   switch(b)
+      {
+      case 0: return '0';
+      case 1: return '1';
+      case 2: return '2';
+      case 3: return '3';
+      case 4: return '4';
+      case 5: return '5';
+      case 6: return '6';
+      case 7: return '7';
+      case 8: return '8';
+      case 9: return '9';
+      }
 
    throw Invalid_Argument("digit2char: Input is not a digit");
    }
