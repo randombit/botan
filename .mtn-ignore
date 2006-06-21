@@ -1,3 +1,6 @@
+^check$
+^Makefile$
+^botan-config$
 ^build$
 ^build/checks$
 ^build/include$
@@ -7,6 +10,4 @@
 ^build/checks/.*\.o$
 ^build/include/botan/.*\.h$
 ^build/config\.h$
-^check$
-^Makefile$
-^botan-config$
+^misc/nist_tests/x509test$
