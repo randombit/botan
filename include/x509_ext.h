@@ -57,8 +57,17 @@ class Extensions : public ASN1_Object
       void add(Certificate_Extension* extn)
          { extensions.push_back(extn); }
 
+      Extensions& operator=(const Extensions& e)
+         { return copy_this(e); }
+
+      Extensions() {}
+      Extensions(const Extensions& e) : ASN1_Object() { copy_this(e); }
       ~Extensions();
    private:
+      Extensions& copy_this(const Extensions&);
+
+      static Certificate_Extension* make_extension(const OID&);
+
       std::vector<Certificate_Extension*> extensions;
    };
 
@@ -70,14 +79,14 @@ namespace Cert_Extension {
 class Basic_Constraints : public Certificate_Extension
    {
    public:
+      Basic_Constraints* copy() const
+         { return new Basic_Constraints(is_ca, path_limit); }
+
       Basic_Constraints(bool ca = false, u32bit limit = 0) :
          is_ca(ca), path_limit(limit) {}
 
       bool get_is_ca() const { return is_ca; }
       bool get_path_limit() const;
-
-      Basic_Constraints* copy() const
-         { return new Basic_Constraints(is_ca, path_limit); }
    private:
       std::string config_id() const { return "basic_constraints"; }
       std::string oid_name() const { return "X509v3.BasicConstraints"; }
@@ -96,11 +105,11 @@ class Basic_Constraints : public Certificate_Extension
 class Key_Usage : public Certificate_Extension
    {
    public:
+      Key_Usage* copy() const { return new Key_Usage(constraints); }
+
       Key_Usage(Key_Constraints c = NO_CONSTRAINTS) : constraints(c) {}
 
       Key_Constraints get_constraints() const { return constraints; }
-
-      Key_Usage* copy() const { return new Key_Usage(constraints); }
    private:
       std::string config_id() const { return "key_usage"; }
       std::string oid_name() const { return "X509v3.KeyUsage"; }
@@ -119,12 +128,12 @@ class Key_Usage : public Certificate_Extension
 class Subject_Key_ID : public Certificate_Extension
    {
    public:
+      Subject_Key_ID* copy() const { return new Subject_Key_ID(key_id); }
+
       Subject_Key_ID() {}
       Subject_Key_ID(const MemoryRegion<byte>&);
 
       MemoryVector<byte> get_key_id() const { return key_id; }
-
-      Subject_Key_ID* copy() const { return new Subject_Key_ID(key_id); }
    private:
       std::string config_id() const { return "subject_key_id"; }
       std::string oid_name() const { return "X509v3.SubjectKeyIdentifier"; }
@@ -143,12 +152,12 @@ class Subject_Key_ID : public Certificate_Extension
 class Authority_Key_ID : public Certificate_Extension
    {
    public:
+      Authority_Key_ID* copy() const { return new Authority_Key_ID(key_id); }
+
       Authority_Key_ID() {}
       Authority_Key_ID(const MemoryRegion<byte>& k) : key_id(k) {}
 
       MemoryVector<byte> get_key_id() const { return key_id; }
-
-      Authority_Key_ID* copy() const { return new Authority_Key_ID(key_id); }
    private:
       std::string config_id() const { return "authority_key_id"; }
       std::string oid_name() const { return "X509v3.AuthorityKeyIdentifier"; }
@@ -167,12 +176,12 @@ class Authority_Key_ID : public Certificate_Extension
 class Alternative_Name : public Certificate_Extension
    {
    public:
+      Alternative_Name* copy() const;
+
       Alternative_Name(const AlternativeName&,
                        const std::string&, const std::string&);
 
       AlternativeName get_alt_name() const { return alt_name; }
-
-      Alternative_Name* copy() const;
    private:
       std::string config_id() const { return config_name_str; }
       std::string oid_name() const { return oid_name_str; }
@@ -192,12 +201,12 @@ class Alternative_Name : public Certificate_Extension
 class Extended_Key_Usage : public Certificate_Extension
    {
    public:
+      Extended_Key_Usage* copy() const { return new Extended_Key_Usage(oids); }
+
       Extended_Key_Usage() {}
       Extended_Key_Usage(const std::vector<OID>& o) : oids(o) {}
 
       std::vector<OID> get_oids() const { return oids; }
-
-      Extended_Key_Usage* copy() const { return new Extended_Key_Usage(oids); }
    private:
       std::string config_id() const { return "extended_key_usage"; }
       std::string oid_name() const { return "X509v3.ExtendedKeyUsage"; }
@@ -216,6 +225,9 @@ class Extended_Key_Usage : public Certificate_Extension
 class Certificate_Policies : public Certificate_Extension
    {
    public:
+      Certificate_Policies* copy() const
+         { return new Certificate_Policies(oids); }
+
       Certificate_Policies() {}
       Certificate_Policies(const std::vector<OID>& o) : oids(o) {}
 
@@ -238,12 +250,12 @@ class Certificate_Policies : public Certificate_Extension
 class CRL_Number : public Certificate_Extension
    {
    public:
+      CRL_Number* copy() const;
+
       CRL_Number() : has_value(false), crl_number(0) {}
       CRL_Number(u32bit n) : has_value(true), crl_number(n) {}
 
       u32bit get_crl_number() const;
-
-      CRL_Number* copy() const;
    private:
       std::string config_id() const { return "crl_number"; }
       std::string oid_name() const { return "X509v3.CRLNumber"; }
@@ -263,11 +275,11 @@ class CRL_Number : public Certificate_Extension
 class CRL_ReasonCode : public Certificate_Extension
    {
    public:
+      CRL_ReasonCode* copy() const { return new CRL_ReasonCode(reason); }
+
       CRL_ReasonCode(CRL_Code r = UNSPECIFIED) : reason(r) {}
 
       CRL_Code get_reason() const { return reason; }
-
-      CRL_ReasonCode* copy() const { return new CRL_ReasonCode(reason); }
    private:
       std::string config_id() const { return "crl_reason"; }
       std::string oid_name() const { return "X509v3.ReasonCode"; }

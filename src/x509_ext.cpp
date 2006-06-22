@@ -15,37 +15,6 @@
 
 namespace Botan {
 
-namespace {
-
-/*************************************************
-* Create a new certificate extension object      *
-*************************************************/
-Certificate_Extension* make_extension(const OID& oid)
-   {
-   const std::string oid_name = OIDS::lookup(oid);
-
-   if(oid_name == "X509v3.KeyUsage")
-      return new Cert_Extension::Key_Usage();
-   else if(oid_name == "X509v3.BasicConstraints")
-      return new Cert_Extension::Basic_Constraints();
-   else if(oid_name == "X509v3.SubjectKeyIdentifier")
-      return new Cert_Extension::Subject_Key_ID();
-   else if(oid_name == "X509v3.AuthorityKeyIdentifier")
-      return new Cert_Extension::Authority_Key_ID();
-   else if(oid_name == "X509v3.ExtendedKeyUsage")
-      return new Cert_Extension::Extended_Key_Usage();
-   else if(oid_name == "X509v3.CRLNumber")
-      return new Cert_Extension::CRL_Number();
-   else if(oid_name == "X509v3.CertificatePolicies")
-      return 0;//return new Cert_Extension::Certificate_Policies();
-
-   //printf("No result for %s\n", oid_name.c_str());
-
-   return 0;
-   }
-
-}
-
 /*************************************************
 * Return the OID of this extension               *
 *************************************************/
@@ -116,12 +85,52 @@ void Extensions::decode_from(BER_Decoder& from_source)
    }
 
 /*************************************************
+* Copy another extensions list                   *
+*************************************************/
+Extensions& Extensions::copy_this(const Extensions& other)
+   {
+   for(u32bit j = 0; j != extensions.size(); ++j)
+      delete extensions[j];
+   extensions.clear();
+
+   for(u32bit j = 0; j != other.extensions.size(); ++j)
+      extensions.push_back(other.extensions[j]->copy());
+
+   return (*this);
+   }
+
+/*************************************************
 * Delete an Extensions list                      *
 *************************************************/
 Extensions::~Extensions()
    {
    for(u32bit j = 0; j != extensions.size(); ++j)
       delete extensions[j];
+   }
+
+/*************************************************
+* Create a new certificate extension object      *
+*************************************************/
+Certificate_Extension* Extensions::make_extension(const OID& oid)
+   {
+   const std::string oid_name = OIDS::lookup(oid);
+
+   if(oid_name == "X509v3.KeyUsage")
+      return new Cert_Extension::Key_Usage();
+   else if(oid_name == "X509v3.BasicConstraints")
+      return new Cert_Extension::Basic_Constraints();
+   else if(oid_name == "X509v3.SubjectKeyIdentifier")
+      return new Cert_Extension::Subject_Key_ID();
+   else if(oid_name == "X509v3.AuthorityKeyIdentifier")
+      return new Cert_Extension::Authority_Key_ID();
+   else if(oid_name == "X509v3.ExtendedKeyUsage")
+      return new Cert_Extension::Extended_Key_Usage();
+   else if(oid_name == "X509v3.CRLNumber")
+      return new Cert_Extension::CRL_Number();
+   else if(oid_name == "X509v3.CertificatePolicies")
+      return new Cert_Extension::Certificate_Policies();
+
+   return 0;
    }
 
 namespace Cert_Extension {
