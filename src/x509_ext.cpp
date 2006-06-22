@@ -127,6 +127,16 @@ Extensions::~Extensions()
 namespace Cert_Extension {
 
 /*************************************************
+* Checked accessor for the path_limit member     *
+*************************************************/
+bool Basic_Constraints::get_path_limit() const
+   {
+   if(!is_ca)
+      throw Invalid_State("Basic_Constraints::get_path_limit: Not a CA");
+   return path_limit;
+   }
+
+/*************************************************
 * Encode the extension                           *
 *************************************************/
 MemoryVector<byte> Basic_Constraints::encode_inner() const
@@ -288,6 +298,14 @@ void Authority_Key_ID::contents_to(Data_Store&, Data_Store& issuer) const
    }
 
 /*************************************************
+* Copy this extension                            *
+*************************************************/
+Alternative_Name* Alternative_Name::copy() const
+   {
+   return new Alternative_Name(alt_name, oid_name_str, config_name_str);
+   }
+
+/*************************************************
 * Encode the extension                           *
 *************************************************/
 MemoryVector<byte> Alternative_Name::encode_inner() const
@@ -415,6 +433,26 @@ void Certificate_Policies::contents_to(Data_Store& info, Data_Store&) const
    {
    for(u32bit j = 0; j != oids.size(); ++j)
       info.add("X509v3.ExtendedKeyUsage", oids[j].as_string());
+   }
+
+/*************************************************
+* Checked accessor for the crl_number member     *
+*************************************************/
+u32bit CRL_Number::get_crl_number() const
+   {
+   if(!has_value)
+      throw Invalid_State("CRL_Number::get_crl_number: Not set");
+   return crl_number;
+   }
+
+/*************************************************
+* Copy a CRL_Number extension                    *
+*************************************************/
+CRL_Number* CRL_Number::copy() const
+   {
+   if(!has_value)
+      throw Invalid_State("CRL_Number::copy: Not set");
+   return new CRL_Number(crl_number);
    }
 
 /*************************************************

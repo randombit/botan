@@ -26,6 +26,8 @@ class Certificate_Extension
       void make_critical() { critical = true; }
       bool is_critical() const { return critical; }
 
+      virtual Certificate_Extension* copy() const = 0;
+
       virtual void contents_to(Data_Store&, Data_Store&) const = 0;
       virtual std::string config_id() const = 0;
       virtual std::string oid_name() const = 0;
@@ -60,7 +62,6 @@ class Extensions : public ASN1_Object
       std::vector<Certificate_Extension*> extensions;
    };
 
-
 namespace Cert_Extension {
 
 /*************************************************
@@ -71,6 +72,12 @@ class Basic_Constraints : public Certificate_Extension
    public:
       Basic_Constraints(bool ca = false, u32bit limit = 0) :
          is_ca(ca), path_limit(limit) {}
+
+      bool get_is_ca() const { return is_ca; }
+      bool get_path_limit() const;
+
+      Basic_Constraints* copy() const
+         { return new Basic_Constraints(is_ca, path_limit); }
    private:
       std::string config_id() const { return "basic_constraints"; }
       std::string oid_name() const { return "X509v3.BasicConstraints"; }
@@ -90,6 +97,10 @@ class Key_Usage : public Certificate_Extension
    {
    public:
       Key_Usage(Key_Constraints c = NO_CONSTRAINTS) : constraints(c) {}
+
+      Key_Constraints get_constraints() const { return constraints; }
+
+      Key_Usage* copy() const { return new Key_Usage(constraints); }
    private:
       std::string config_id() const { return "key_usage"; }
       std::string oid_name() const { return "X509v3.KeyUsage"; }
@@ -110,6 +121,10 @@ class Subject_Key_ID : public Certificate_Extension
    public:
       Subject_Key_ID() {}
       Subject_Key_ID(const MemoryRegion<byte>&);
+
+      MemoryVector<byte> get_key_id() const { return key_id; }
+
+      Subject_Key_ID* copy() const { return new Subject_Key_ID(key_id); }
    private:
       std::string config_id() const { return "subject_key_id"; }
       std::string oid_name() const { return "X509v3.SubjectKeyIdentifier"; }
@@ -130,6 +145,10 @@ class Authority_Key_ID : public Certificate_Extension
    public:
       Authority_Key_ID() {}
       Authority_Key_ID(const MemoryRegion<byte>& k) : key_id(k) {}
+
+      MemoryVector<byte> get_key_id() const { return key_id; }
+
+      Authority_Key_ID* copy() const { return new Authority_Key_ID(key_id); }
    private:
       std::string config_id() const { return "authority_key_id"; }
       std::string oid_name() const { return "X509v3.AuthorityKeyIdentifier"; }
@@ -150,6 +169,10 @@ class Alternative_Name : public Certificate_Extension
    public:
       Alternative_Name(const AlternativeName&,
                        const std::string&, const std::string&);
+
+      AlternativeName get_alt_name() const { return alt_name; }
+
+      Alternative_Name* copy() const;
    private:
       std::string config_id() const { return config_name_str; }
       std::string oid_name() const { return oid_name_str; }
@@ -171,6 +194,10 @@ class Extended_Key_Usage : public Certificate_Extension
    public:
       Extended_Key_Usage() {}
       Extended_Key_Usage(const std::vector<OID>& o) : oids(o) {}
+
+      std::vector<OID> get_oids() const { return oids; }
+
+      Extended_Key_Usage* copy() const { return new Extended_Key_Usage(oids); }
    private:
       std::string config_id() const { return "extended_key_usage"; }
       std::string oid_name() const { return "X509v3.ExtendedKeyUsage"; }
@@ -191,6 +218,8 @@ class Certificate_Policies : public Certificate_Extension
    public:
       Certificate_Policies() {}
       Certificate_Policies(const std::vector<OID>& o) : oids(o) {}
+
+      std::vector<OID> get_oids() const { return oids; }
    private:
       std::string config_id() const { return "policy_info"; }
       std::string oid_name() const { return "X509v3.CertificatePolicies"; }
@@ -209,8 +238,12 @@ class Certificate_Policies : public Certificate_Extension
 class CRL_Number : public Certificate_Extension
    {
    public:
-      CRL_Number() : has_value(false) {}
+      CRL_Number() : has_value(false), crl_number(0) {}
       CRL_Number(u32bit n) : has_value(true), crl_number(n) {}
+
+      u32bit get_crl_number() const;
+
+      CRL_Number* copy() const;
    private:
       std::string config_id() const { return "crl_number"; }
       std::string oid_name() const { return "X509v3.CRLNumber"; }
@@ -231,6 +264,10 @@ class CRL_ReasonCode : public Certificate_Extension
    {
    public:
       CRL_ReasonCode(CRL_Code r = UNSPECIFIED) : reason(r) {}
+
+      CRL_Code get_reason() const { return reason; }
+
+      CRL_ReasonCode* copy() const { return new CRL_ReasonCode(reason); }
    private:
       std::string config_id() const { return "crl_reason"; }
       std::string oid_name() const { return "X509v3.ReasonCode"; }
