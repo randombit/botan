@@ -85,7 +85,7 @@ void X509_CRL::force_decode()
          throw Invalid_Argument("Bad value of x509/crl/unknown_critical: "
                                 + action);
 
-      Extensions extensions(false);
+      Extensions extensions(action == "throw");
 
       crl_options.decode(extensions).verify_end();
 
