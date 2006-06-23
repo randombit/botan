@@ -68,56 +68,6 @@ class DN_Check : public X509_Store::Search_Func
       const std::string looking_for;
    };
 
-/*************************************************
-* Search based on the key id                     *
-*************************************************/
-class KeyID_Match : public X509_Store::Search_Func
-   {
-   public:
-      bool match(const X509_Certificate& cert) const
-         {
-         std::auto_ptr<X509_PublicKey> key(cert.subject_public_key());
-         return (key->key_id() == key_id);
-         }
-      KeyID_Match(u64bit id) : key_id(id) {}
-   private:
-      u64bit key_id;
-   };
-
-/*************************************************
-* Search based on the issuer and serial number   *
-*************************************************/
-class IandS_Match : public X509_Store::Search_Func
-   {
-   public:
-      bool match(const X509_Certificate& cert) const
-         {
-         if(cert.serial_number() != serial)
-            return false;
-         return (cert.issuer_dn() == issuer);
-         }
-      IandS_Match(const X509_DN& i, const MemoryRegion<byte>& s) :
-         issuer(i), serial(s) {}
-   private:
-      X509_DN issuer;
-      MemoryVector<byte> serial;
-   };
-
-/*************************************************
-* Search based on the subject key id             *
-*************************************************/
-class SKID_Match : public X509_Store::Search_Func
-   {
-   public:
-      bool match(const X509_Certificate& cert) const
-         {
-         return (cert.subject_key_id() == skid);
-         }
-      SKID_Match(const MemoryRegion<byte>& s) : skid(s) {}
-   private:
-      MemoryVector<byte> skid;
-   };
-
 }
 
 /*************************************************
@@ -155,6 +105,20 @@ std::vector<X509_Certificate> by_dns(const X509_Store& store,
 *************************************************/
 std::vector<X509_Certificate> by_keyid(const X509_Store& store, u64bit key_id)
    {
+
+   class KeyID_Match : public X509_Store::Search_Func
+      {
+      public:
+         bool match(const X509_Certificate& cert) const
+            {
+            std::auto_ptr<X509_PublicKey> key(cert.subject_public_key());
+            return (key->key_id() == key_id);
+            }
+         KeyID_Match(u64bit id) : key_id(id) {}
+      private:
+         u64bit key_id;
+      };
+
    KeyID_Match search_params(key_id);
    return store.get_certs(search_params);
    }
@@ -166,6 +130,23 @@ std::vector<X509_Certificate> by_iands(const X509_Store& store,
                                        const X509_DN& issuer,
                                        const MemoryRegion<byte>& serial)
    {
+
+   class IandS_Match : public X509_Store::Search_Func
+      {
+      public:
+         bool match(const X509_Certificate& cert) const
+            {
+            if(cert.serial_number() != serial)
+               return false;
+            return (cert.issuer_dn() == issuer);
+            }
+         IandS_Match(const X509_DN& i, const MemoryRegion<byte>& s) :
+            issuer(i), serial(s) {}
+      private:
+         X509_DN issuer;
+         MemoryVector<byte> serial;
+      };
+
    IandS_Match search_params(issuer, serial);
    return store.get_certs(search_params);
    }
@@ -176,6 +157,19 @@ std::vector<X509_Certificate> by_iands(const X509_Store& store,
 std::vector<X509_Certificate> by_SKID(const X509_Store& store,
                                       const MemoryRegion<byte>& skid)
    {
+
+   class SKID_Match : public X509_Store::Search_Func
+      {
+      public:
+         bool match(const X509_Certificate& cert) const
+            {
+            return (cert.subject_key_id() == skid);
+            }
+         SKID_Match(const MemoryRegion<byte>& s) : skid(s) {}
+      private:
+         MemoryVector<byte> skid;
+      };
+
    SKID_Match search_params(skid);
    return store.get_certs(search_params);
    }

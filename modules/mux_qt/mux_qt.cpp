@@ -12,29 +12,21 @@
 
 namespace Botan {
 
-namespace {
-
-/*************************************************
-* Qt Mutex                                       *
-*************************************************/
-class Qt_Mutex : public Mutex
-   {
-   public:
-      void lock() { mutex.lock(); }
-      void unlock() { mutex.unlock(); }
-   private:
-      QMutex mutex;
-   };
-
-}
-
 /*************************************************
 * Qt Mutex Factory                               *
 *************************************************/
 Mutex* Qt_Mutex_Factory::make()
    {
+   class Qt_Mutex : public Mutex
+      {
+      public:
+         void lock() { mutex.lock(); }
+         void unlock() { mutex.unlock(); }
+      private:
+         QMutex mutex;
+      };
+
    return new Qt_Mutex();
    }
 
 }
-

@@ -11,62 +11,46 @@
 
 namespace Botan {
 
-namespace {
-
-/*************************************************
-* CSP Handle                                     *
-*************************************************/
-class CSP_Handle
-   {
-   public:
-      CSP_Handle(u64bit);
-      ~CSP_Handle();
-
-      void gen_random(byte[], u32bit) const;
-      bool is_valid() const { return valid; }
-
-      HCRYPTPROV get_handle() const { return handle; }
-   private:
-      HCRYPTPROV handle;
-      bool valid;
-   };
-
-/*************************************************
-* Call CryptGenRandom                            *
-*************************************************/
-void CSP_Handle::gen_random(byte out[], u32bit n) const
-   {
-   CryptGenRandom(handle, n, out);
-   }
-
-/*************************************************
-* Initialize a CSP Handle                        *
-*************************************************/
-CSP_Handle::CSP_Handle(u64bit capi_provider)
-   {
-   valid = false;
-   DWORD prov_type = (DWORD)capi_provider;
-
-   if(CryptAcquireContext(&handle, 0, 0, prov_type, CRYPT_VERIFYCONTEXT))
-      valid = true;
-   }
-
-/*************************************************
-* Destroy a CSP Handle                           *
-*************************************************/
-CSP_Handle::~CSP_Handle()
-   {
-   if(valid)
-      CryptReleaseContext(handle, 0);
-   }
-
-}
-
 /*************************************************
 * Gather Entropy from Win32 CAPI                 *
 *************************************************/
 u32bit Win32_CAPI_EntropySource::slow_poll(byte output[], u32bit length)
    {
+
+   class CSP_Handle
+      {
+      public:
+         CSP_Handle(u64bit capi_provider)
+            {
+            valid = false;
+            DWORD prov_type = (DWORD)capi_provider;
+
+            if(CryptAcquireContext(&handle, 0, 0,
+                                   prov_type, CRYPT_VERIFYCONTEXT))
+               valid = true;
+            }
+
+         ~CSP_Handle()
+            {
+            if(is_valid())
+               CryptReleaseContext(handle, 0);
+            }
+
+         void gen_random(byte out[], u32bit n) const
+            {
+            if(is_valid())
+               CryptGenRandom(handle, n, out);
+            }
+
+         bool is_valid() const { return valid; }
+
+         HCRYPTPROV get_handle() const { return handle; }
+      private:
+         HCRYPTPROV handle;
+         bool valid;
+      };
+
+
    if(length > 64)
       length = 64;
 

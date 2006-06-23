@@ -418,6 +418,9 @@ void Extended_Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
 
 namespace {
 
+/*************************************************
+* A policy specifier                             *
+*************************************************/
 class Policy_Information : public ASN1_Object
    {
    public:
@@ -429,6 +432,7 @@ class Policy_Information : public ASN1_Object
             .encode(oid)
             .end_cons();
          }
+
       void decode_from(BER_Decoder& codec)
          {
          codec.start_cons(SEQUENCE)

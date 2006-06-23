@@ -7,43 +7,6 @@
 
 namespace Botan {
 
-namespace {
-
-/*************************************************
-* Default Mutex                                  *
-*************************************************/
-class Default_Mutex : public Mutex
-   {
-   public:
-      void lock();
-      void unlock();
-      Default_Mutex() { locked = false; }
-   private:
-      bool locked;
-   };
-
-/*************************************************
-* Lock the mutex                                 *
-*************************************************/
-void Default_Mutex::lock()
-   {
-   if(locked)
-      throw Internal_Error("Default_Mutex::lock: Mutex is already locked");
-   locked = true;
-   }
-
-/*************************************************
-* Unlock the mutex                               *
-*************************************************/
-void Default_Mutex::unlock()
-   {
-   if(!locked)
-      throw Internal_Error("Default_Mutex::unlock: Mutex is already unlocked");
-   locked = false;
-   }
-
-}
-
 /*************************************************
 * Mutex_Holder Constructor                       *
 *************************************************/
@@ -67,6 +30,28 @@ Mutex_Holder::~Mutex_Holder()
 *************************************************/
 Mutex* Mutex_Factory::make()
    {
+   class Default_Mutex : public Mutex
+      {
+      public:
+         void lock()
+            {
+            if(locked)
+               throw Internal_Error("Default_Mutex::lock: Mutex is already locked");
+            locked = true;
+            }
+
+         void unlock()
+            {
+            if(!locked)
+               throw Internal_Error("Default_Mutex::unlock: Mutex is already unlocked");
+            locked = false;
+            }
+
+         Default_Mutex() { locked = false; }
+      private:
+         bool locked;
+      };
+
    return new Default_Mutex;
    }
 
