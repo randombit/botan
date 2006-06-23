@@ -144,8 +144,6 @@ Certificate_Extension* Extensions::make_extension(const OID& oid)
    else if(oid_name == "X509v3.CertificatePolicies")
       return new Cert_Extension::Certificate_Policies();
 
-   printf("%s\n", oid_name.c_str());
-
    return 0;
    }
 

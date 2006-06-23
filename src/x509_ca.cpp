@@ -195,8 +195,8 @@ X509_CRL X509_CA::update_crl(const X509_CRL& crl,
    std::set<SecureVector<byte> > removed_from_crl;
    for(u32bit j = 0; j != new_revoked.size(); ++j)
       {
-      if(new_revoked[j].reason == DELETE_CRL_ENTRY)
-         removed_from_crl.insert(new_revoked[j].serial);
+      if(new_revoked[j].reason_code() == DELETE_CRL_ENTRY)
+         removed_from_crl.insert(new_revoked[j].serial_number());
       else
          all_revoked.push_back(new_revoked[j]);
       }
@@ -204,7 +204,7 @@ X509_CRL X509_CA::update_crl(const X509_CRL& crl,
    for(u32bit j = 0; j != already_revoked.size(); ++j)
       {
       std::set<SecureVector<byte> >::const_iterator i;
-      i = removed_from_crl.find(already_revoked[j].serial);
+      i = removed_from_crl.find(already_revoked[j].serial_number());
 
       if(i == removed_from_crl.end())
          all_revoked.push_back(already_revoked[j]);

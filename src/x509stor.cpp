@@ -574,13 +574,13 @@ X509_Code X509_Store::add_crl(const X509_CRL& crl)
       {
       CRL_Data revoked_info;
       revoked_info.issuer = crl.issuer_dn();
-      revoked_info.serial = revoked_certs[j].serial;
+      revoked_info.serial = revoked_certs[j].serial_number();
       revoked_info.auth_key_id = crl.authority_key_id();
 
       std::vector<CRL_Data>::iterator p =
          std::find(revoked.begin(), revoked.end(), revoked_info);
 
-      if(revoked_certs[j].reason == REMOVE_FROM_CRL)
+      if(revoked_certs[j].reason_code() == REMOVE_FROM_CRL)
          {
          if(p == revoked.end()) continue;
          revoked.erase(p);

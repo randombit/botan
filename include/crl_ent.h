@@ -19,11 +19,17 @@ class CRL_Entry : public ASN1_Object
       void encode_into(class DER_Encoder&) const;
       void decode_from(class BER_Decoder&);
 
+      MemoryVector<byte> serial_number() const { return serial; }
+      X509_Time expire_time() const { return time; }
+      CRL_Code reason_code() const { return reason; }
+
+      CRL_Entry();
+      CRL_Entry(const X509_Certificate&, CRL_Code = UNSPECIFIED);
+
+   private:
       MemoryVector<byte> serial;
       X509_Time time;
       CRL_Code reason;
-      CRL_Entry();
-      CRL_Entry(const X509_Certificate&, CRL_Code = UNSPECIFIED);
    };
 
 /*************************************************
