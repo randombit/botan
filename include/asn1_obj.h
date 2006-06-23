@@ -31,24 +31,6 @@ class AlgorithmIdentifier : public ASN1_Object
    };
 
 /*************************************************
-* Extension                                      *
-*************************************************/
-class Extension : public ASN1_Object
-   {
-   public:
-      void encode_into(class DER_Encoder&) const;
-      void decode_from(class BER_Decoder&);
-
-      bool critical;
-      OID oid;
-      SecureVector<byte> value;
-
-      Extension() { critical = false; }
-      Extension(const OID&, const MemoryRegion<byte>&);
-      Extension(const std::string&, const MemoryRegion<byte>&);
-   };
-
-/*************************************************
 * Attribute                                      *
 *************************************************/
 class Attribute : public ASN1_Object
