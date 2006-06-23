@@ -33,17 +33,27 @@ Mutex* Mutex_Factory::make()
    class Default_Mutex : public Mutex
       {
       public:
+         class Mutex_State_Error : public Internal_Error
+            {
+            public:
+               Mutex_State_Error(const std::string& where)
+                  {
+                  set_msg("Default_Mutex::" + where + ": Mutex is already " +
+                          where + "ed");
+                  }
+            };
+
          void lock()
             {
             if(locked)
-               throw Internal_Error("Default_Mutex::lock: Mutex is already locked");
+               throw Mutex_State_Error("lock");
             locked = true;
             }
 
          void unlock()
             {
             if(!locked)
-               throw Internal_Error("Default_Mutex::unlock: Mutex is already unlocked");
+               throw Mutex_State_Error("unlock");
             locked = false;
             }
 
