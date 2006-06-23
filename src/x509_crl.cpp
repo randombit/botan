@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/x509_crl.h>
+#include <botan/x509_ext.h>
 #include <botan/ber_dec.h>
 #include <botan/parsing.h>
 #include <botan/bigint.h>
@@ -78,14 +79,18 @@ void X509_CRL::force_decode()
       next.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
       {
       BER_Decoder crl_options(next.value);
-      BER_Decoder sequence = crl_options.start_cons(SEQUENCE);
 
-      while(sequence.more_items())
-         {
-         Extension extn;
-         sequence.decode(extn);
-         handle_crl_extension(extn);
-         }
+      std::string action = Config::get_string("x509/crl/unknown_critical");
+      if(action != "throw" && action != "ignore")
+         throw Invalid_Argument("Bad value of x509/crl/unknown_critical: "
+                                + action);
+
+      Extensions extensions(false);
+
+      crl_options.decode(extensions).verify_end();
+
+      extensions.contents_to(info, info);
+
       next = tbs_crl.get_next_object();
       }
 
@@ -93,44 +98,6 @@ void X509_CRL::force_decode()
       throw X509_CRL_Error("Unknown tag in CRL");
 
    tbs_crl.verify_end();
-   }
-
-/*************************************************
-* Decode a CRL extension                         *
-*************************************************/
-void X509_CRL::handle_crl_extension(const Extension& extn)
-   {
-   BER_Decoder value(extn.value);
-
-   if(extn.oid == OIDS::lookup("X509v3.AuthorityKeyIdentifier"))
-      {
-      MemoryVector<byte> v3_issuer_key_id;
-      BER_Decoder key_id = value.start_cons(SEQUENCE);
-      key_id.decode_optional_string(v3_issuer_key_id, OCTET_STRING, 0);
-      info.add("X509v3.AuthorityKeyIdentifier", v3_issuer_key_id);
-      }
-   else if(extn.oid == OIDS::lookup("X509v3.CRLNumber"))
-      {
-      u32bit crl_count = 0;
-      value.decode(crl_count);
-      info.add("X509v3.CRLNumber", crl_count);
-      }
-   else
-      {
-      if(extn.critical)
-         {
-         std::string action = Config::get_string("x509/crl/unknown_critical");
-         if(action == "throw")
-            throw X509_CRL_Error("Unknown critical CRL extension " +
-                                 extn.oid.as_string());
-         else if(action != "ignore")
-            throw Invalid_Argument("Bad value of x509/crl/unknown_critical: "
-                                   + action);
-         }
-      return;
-      }
-
-   value.verify_end();
    }
 
 /*************************************************
@@ -162,7 +129,7 @@ MemoryVector<byte> X509_CRL::authority_key_id() const
 *************************************************/
 u32bit X509_CRL::crl_number() const
    {
-   return info.get1_memvec("X509v3.CRLNumber");
+   return info.get1_u32bit("X509v3.CRLNumber");
    }
 
 /*************************************************

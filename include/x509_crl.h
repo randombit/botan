@@ -38,8 +38,6 @@ class X509_CRL : public X509_Object
       X509_CRL(DataSource&);
       X509_CRL(const std::string&);
    private:
-      void handle_crl_extension(const Extension&);
-
       std::vector<CRL_Entry> revoked;
       Data_Store info;
    };
