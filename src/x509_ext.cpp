@@ -48,14 +48,6 @@ void Extensions::encode_into(DER_Encoder& to_object) const
 *************************************************/
 void Extensions::decode_from(BER_Decoder& from_source)
    {
-   decode_from(from_source, true);
-   }
-
-/*************************************************
-* Decode a list of Extensions                    *
-*************************************************/
-void Extensions::decode_from(BER_Decoder& from_source, bool throw_on_unknown)
-   {
    for(u32bit j = 0; j != extensions.size(); ++j)
       delete extensions[j];
    extensions.clear();
@@ -78,7 +70,7 @@ void Extensions::decode_from(BER_Decoder& from_source, bool throw_on_unknown)
 
       if(!ext)
          {
-         if(!critical || !throw_on_unknown)
+         if(!critical || !should_throw)
             continue;
 
          throw Decoding_Error("Encountered unknown X.509 extension marked "

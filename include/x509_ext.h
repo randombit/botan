@@ -51,7 +51,6 @@ class Extensions : public ASN1_Object
    public:
       void encode_into(class DER_Encoder&) const;
       void decode_from(class BER_Decoder&);
-      void decode_from(class BER_Decoder&, bool);
 
       void contents_to(Data_Store&, Data_Store&) const;
 
@@ -61,7 +60,7 @@ class Extensions : public ASN1_Object
       Extensions& operator=(const Extensions& e)
          { return copy_this(e); }
 
-      Extensions() {}
+      Extensions(bool st = true) : should_throw(st) {}
       Extensions(const Extensions& e) : ASN1_Object() { copy_this(e); }
       ~Extensions();
    private:
@@ -70,6 +69,7 @@ class Extensions : public ASN1_Object
       static Certificate_Extension* make_extension(const OID&);
 
       std::vector<Certificate_Extension*> extensions;
+      bool should_throw;
    };
 
 namespace Cert_Extension {
