@@ -91,35 +91,17 @@ void CRL_Entry::decode_from(BER_Decoder& source)
 
    if(source.more_items())
       {
-      BER_Decoder crl_entry_exts = source.start_cons(SEQUENCE);
-      while(crl_entry_exts.more_items())
-         {
-         Extension extn;
-         crl_entry_exts.decode(extn);
+      std::string action = Config::get_string("x509/crl/unknown_critical");
 
-         BER_Decoder value(extn.value);
+      if(action != "throw" && action != "ignore")
+         throw Invalid_Argument("Bad setting x509/crl/unknown_critical: "
+                                + action);
 
-         if(extn.oid == OIDS::lookup("X509v3.ReasonCode"))
-            {
-            u32bit reason_code;
-            value.decode(reason_code, ENUMERATED, UNIVERSAL);
-            reason = CRL_Code(reason_code);
-            }
-         else if(extn.critical)
-            {
-            std::string action =
-               Config::get_string("x509/crl/unknown_critical");
-
-            if(action == "throw")
-               throw Decoding_Error("Unknown critical CRL entry extn " +
-                                    extn.oid.as_string());
-            else if(action != "ignore")
-               throw Invalid_Argument("Bad setting x509/crl/unknown_critical: "
-                                      + action);
-            }
-         value.verify_end();
-         }
-      source.end_cons();
+      Extensions extensions(action == "throw");
+      source.decode(extensions);
+      Data_Store info;
+      extensions.contents_to(info, info);
+      reason = CRL_Code(info.get1_u32bit("X509v3.CRLReasonCode"));
       }
 
    serial = BigInt::encode(serial_number_bn);
