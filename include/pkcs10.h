@@ -37,7 +37,6 @@ class PKCS10_Request : public X509_Object
    private:
       void force_decode();
       void handle_attribute(const Attribute&);
-      void handle_v3_extension(const Extension&);
 
       Data_Store info;
    };

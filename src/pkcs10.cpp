@@ -108,67 +108,12 @@ void PKCS10_Request::handle_attribute(const Attribute& attr)
       }
    else if(attr.oid == OIDS::lookup("PKCS9.ExtensionRequest"))
       {
-      BER_Decoder sequence = value.start_cons(SEQUENCE);
-      while(sequence.more_items())
-         {
-         Extension extn;
-         sequence.decode(extn);
-         handle_v3_extension(extn);
-         }
-      sequence.verify_end();
+      Extensions extensions;
+      value.decode(extensions).verify_end();
+
+      Data_Store issuer_info;
+      extensions.contents_to(info, issuer_info);
       }
-   }
-
-/*************************************************
-* Decode a requested X.509v3 extension           *
-*************************************************/
-void PKCS10_Request::handle_v3_extension(const Extension& extn)
-   {
-   BER_Decoder value(extn.value);
-
-   if(extn.oid == OIDS::lookup("X509v3.KeyUsage"))
-      {
-      Key_Constraints constraints;
-      BER::decode(value, constraints);
-
-      if(constraints != NO_CONSTRAINTS)
-         info.add("X509v3.KeyUsage", constraints);
-      }
-   else if(extn.oid == OIDS::lookup("X509v3.ExtendedKeyUsage"))
-      {
-      BER_Decoder key_usage = value.start_cons(SEQUENCE);
-      while(key_usage.more_items())
-         {
-         OID usage_oid;
-         key_usage.decode(usage_oid);
-         info.add("X509v3.ExtendedKeyUsage", usage_oid.as_string());
-         }
-      }
-   else if(extn.oid == OIDS::lookup("X509v3.BasicConstraints"))
-      {
-      u32bit max_path_len = 0;
-      bool is_ca = false;
-
-      value.start_cons(SEQUENCE)
-            .decode_optional(is_ca, BOOLEAN, UNIVERSAL, false)
-            .decode_optional(max_path_len, INTEGER, UNIVERSAL,
-                             NO_CERT_PATH_LIMIT)
-            .verify_end()
-         .end_cons();
-
-      info.add("X509v3.BasicConstraints.is_ca", (is_ca ? 1 : 0));
-      info.add("X509v3.BasicConstraints.path_constraint", max_path_len);
-      }
-   else if(extn.oid == OIDS::lookup("X509v3.SubjectAlternativeName"))
-      {
-      AlternativeName alt_name;
-      value.decode(alt_name);
-      info.add(alt_name.contents());
-      }
-   else
-      return;
-
-   value.verify_end();
    }
 
 /*************************************************
