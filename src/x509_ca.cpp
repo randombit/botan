@@ -130,16 +130,10 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
       new Cert_Extension::Extended_Key_Usage(ex_constraints));
 
    extensions.add(
-      new Cert_Extension::Alternative_Name(subject_alt,
-                                           "X509v3.SubjectAlternativeName",
-                                           "subject_alternative_name")
-      );
+      new Cert_Extension::Subject_Alternative_Name(subject_alt));
 
    extensions.add(
-      new Cert_Extension::Alternative_Name(issuer_alt,
-                                           "X509v3.IssuerAlternativeName",
-                                           "issuer_alternative_name")
-      );
+      new Cert_Extension::Issuer_Alternative_Name(issuer_alt));
 
    const u32bit X509_CERT_VERSION = 3;
    const u32bit SERIAL_BITS = 128;

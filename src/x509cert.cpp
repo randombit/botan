@@ -53,7 +53,7 @@ X509_DN create_dn(const Data_Store& info)
 X509_Certificate::X509_Certificate(DataSource& in) :
    X509_Object(in, "CERTIFICATE/X509 CERTIFICATE")
    {
-   is_ca = self_signed = false;
+   self_signed = false;
    do_decode();
    }
 
@@ -63,7 +63,7 @@ X509_Certificate::X509_Certificate(DataSource& in) :
 X509_Certificate::X509_Certificate(const std::string& in) :
    X509_Object(in, "CERTIFICATE/X509 CERTIFICATE")
    {
-   is_ca = self_signed = false;
+   self_signed = false;
    do_decode();
    }
 
@@ -118,11 +118,11 @@ void X509_Certificate::force_decode()
       {
       BER_Decoder v3_exts_decoder(v3_exts_data.value);
 
-#if 0
+#if 1
       Extensions extensions;
       v3_exts_decoder.decode(extensions);
 
-      extensions.contents(subject, issuer);
+      extensions.contents_to(subject, issuer);
 #else
       BER_Decoder sequence = v3_exts_decoder.start_cons(SEQUENCE);
 
@@ -158,7 +158,8 @@ void X509_Certificate::force_decode()
                   )
       );
 
-   if(!subject.has_value("X509v3.BasicConstraints.path_constraint"))
+   if(is_CA_cert() &&
+      !subject.has_value("X509v3.BasicConstraints.path_constraint"))
       {
       u32bit limit = (x509_version() < 3) ? NO_CERT_PATH_LIMIT : 0;
       subject.add("X509v3.BasicConstraints.path_constraint", limit);
@@ -193,7 +194,7 @@ void X509_Certificate::handle_v3_extension(const Extension& extn)
    else if(extn.oid == OIDS::lookup("X509v3.BasicConstraints"))
       {
       u32bit max_path_len = 0;
-      is_ca = false;
+      bool is_ca = false;
 
       value.start_cons(SEQUENCE)
             .decode_optional(is_ca, BOOLEAN, UNIVERSAL, false)
@@ -202,8 +203,8 @@ void X509_Certificate::handle_v3_extension(const Extension& extn)
             .verify_end()
          .end_cons();
 
-      subject.add("X509v3.BasicConstraints.path_constraint",
-                  (is_ca ? max_path_len : 0));
+      subject.add("X509v3.BasicConstraints.is_ca", (is_ca ? 1 : 0));
+      subject.add("X509v3.BasicConstraints.path_constraint", max_path_len);
       }
    else if(extn.oid == OIDS::lookup("X509v3.SubjectKeyIdentifier"))
       {
@@ -313,7 +314,7 @@ X509_PublicKey* X509_Certificate::subject_public_key() const
 *************************************************/
 bool X509_Certificate::is_CA_cert() const
    {
-   if(!is_ca)
+   if(!subject.get1_u32bit("X509v3.BasicConstraints.is_ca"))
       return false;
    if((constraints() & KEY_CERT_SIGN) || (constraints() == NO_CONSTRAINTS))
       return true;
@@ -325,7 +326,7 @@ bool X509_Certificate::is_CA_cert() const
 *************************************************/
 u32bit X509_Certificate::path_limit() const
    {
-   return subject.get1_u32bit("X509v3.BasicConstraints.path_constraint");
+   return subject.get1_u32bit("X509v3.BasicConstraints.path_constraint", 0);
    }
 
 /*************************************************
@@ -333,7 +334,7 @@ u32bit X509_Certificate::path_limit() const
 *************************************************/
 Key_Constraints X509_Certificate::constraints() const
    {
-   return Key_Constraints(subject.get1_u32bit("X509v3.KeyUsage"));
+   return Key_Constraints(subject.get1_u32bit("X509v3.KeyUsage", NO_CONSTRAINTS));
    }
 
 /*************************************************
@@ -397,8 +398,10 @@ X509_DN X509_Certificate::subject_dn() const
 *************************************************/
 bool X509_Certificate::operator==(const X509_Certificate& other) const
    {
-   return (sig == other.sig && sig_algo == other.sig_algo &&
-           issuer == other.issuer && subject == other.subject);
+   return (sig == other.sig &&
+           sig_algo == other.sig_algo &&
+           issuer == other.issuer &&
+           subject == other.subject);
    }
 
 /*************************************************

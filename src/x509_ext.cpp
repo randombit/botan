@@ -85,6 +85,16 @@ void Extensions::decode_from(BER_Decoder& from_source)
    }
 
 /*************************************************
+* Write the extensions to an info store          *
+*************************************************/
+void Extensions::contents_to(Data_Store& subject_info,
+                             Data_Store& issuer_info) const
+   {
+   for(u32bit j = 0; j != extensions.size(); ++j)
+      extensions[j]->contents_to(subject_info, issuer_info);
+   }
+
+/*************************************************
 * Copy another extensions list                   *
 *************************************************/
 Extensions& Extensions::copy_this(const Extensions& other)
@@ -125,10 +135,16 @@ Certificate_Extension* Extensions::make_extension(const OID& oid)
       return new Cert_Extension::Authority_Key_ID();
    else if(oid_name == "X509v3.ExtendedKeyUsage")
       return new Cert_Extension::Extended_Key_Usage();
+   else if(oid_name == "X509v3.IssuerAlternativeName")
+      return new Cert_Extension::Issuer_Alternative_Name();
+   else if(oid_name == "X509v3.SubjectAlternativeName")
+      return new Cert_Extension::Subject_Alternative_Name();
    else if(oid_name == "X509v3.CRLNumber")
       return new Cert_Extension::CRL_Number();
    else if(oid_name == "X509v3.CertificatePolicies")
       return new Cert_Extension::Certificate_Policies();
+
+   printf("%s\n", oid_name.c_str());
 
    return 0;
    }
@@ -182,8 +198,8 @@ void Basic_Constraints::decode_inner(const MemoryRegion<byte>& in)
 *************************************************/
 void Basic_Constraints::contents_to(Data_Store& subject, Data_Store&) const
    {
-   subject.add("X509v3.BasicConstraints.path_constraint",
-               (is_ca ? path_limit : 0));
+   subject.add("X509v3.BasicConstraints.is_ca", (is_ca ? 1 : 0));
+   subject.add("X509v3.BasicConstraints.path_constraint", path_limit);
    }
 
 /*************************************************
@@ -293,8 +309,8 @@ MemoryVector<byte> Authority_Key_ID::encode_inner() const
 *************************************************/
 void Authority_Key_ID::decode_inner(const MemoryRegion<byte>& in)
    {
-   BER_Decoder ber(in);
-   // FIXME
+   BER_Decoder(in).start_cons(SEQUENCE).
+      decode_optional_string(key_id, OCTET_STRING, 0);
    }
 
 /*************************************************
@@ -304,14 +320,6 @@ void Authority_Key_ID::contents_to(Data_Store&, Data_Store& issuer) const
    {
    if(key_id.size())
       issuer.add("X509v3.AuthorityKeyIdentifier", key_id);
-   }
-
-/*************************************************
-* Copy this extension                            *
-*************************************************/
-Alternative_Name* Alternative_Name::copy() const
-   {
-   return new Alternative_Name(alt_name, oid_name_str, config_name_str);
    }
 
 /*************************************************
@@ -333,9 +341,16 @@ void Alternative_Name::decode_inner(const MemoryRegion<byte>& in)
 /*************************************************
 * Return a textual representation                *
 *************************************************/
-void Alternative_Name::contents_to(Data_Store& info, Data_Store&) const
+void Alternative_Name::contents_to(Data_Store& subject_info,
+                                   Data_Store& issuer_info) const
    {
-   info.add(alt_name.contents());
+   std::multimap<std::string, std::string> contents =
+      get_alt_name().contents();
+
+   if(oid_name_str == "subject_alternative_name")
+      subject_info.add(contents);
+   else
+      issuer_info.add(contents);
    }
 
 /*************************************************
@@ -348,6 +363,26 @@ Alternative_Name::Alternative_Name(const AlternativeName& alt_name,
    this->alt_name = alt_name;
    this->oid_name_str = oid_name_str;
    this->config_name_str = config_name_str;
+   }
+
+/*************************************************
+* Subject_Alternative_Name Constructor           *
+*************************************************/
+Subject_Alternative_Name::Subject_Alternative_Name(
+   const AlternativeName& name) :
+
+   Alternative_Name(name, "X509v3.SubjectAlternativeName",
+                    "subject_alternative_name")
+   {
+   }
+
+/*************************************************
+* Issuer_Alternative_Name Constructor           *
+*************************************************/
+Issuer_Alternative_Name::Issuer_Alternative_Name(const AlternativeName& name) :
+   Alternative_Name(name, "X509v3.IssuerAlternativeName",
+                    "issuer_alternative_name")
+   {
    }
 
 /*************************************************

@@ -134,10 +134,7 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
    extensions.add(
       new Cert_Extension::Extended_Key_Usage(opts.ex_constraints));
    extensions.add(
-      new Cert_Extension::Alternative_Name(subject_alt,
-                                           "X509v3.SubjectAlternativeName",
-                                           "subject_alternative_name")
-      );
+      new Cert_Extension::Subject_Alternative_Name(subject_alt));
 
    DER_Encoder tbs_req;
 

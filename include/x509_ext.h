@@ -52,8 +52,8 @@ class Extensions : public ASN1_Object
       void encode_into(class DER_Encoder&) const;
       void decode_from(class BER_Decoder&);
 
-      std::vector<Certificate_Extension*> get() const
-         { return extensions; }
+      void contents_to(Data_Store&, Data_Store&) const;
+
       void add(Certificate_Extension* extn)
          { extensions.push_back(extn); }
 
@@ -171,17 +171,18 @@ class Authority_Key_ID : public Certificate_Extension
    };
 
 /*************************************************
-* Alternative Name Extension                     *
+* Alternative Name Extension Base Class          *
 *************************************************/
 class Alternative_Name : public Certificate_Extension
    {
    public:
-      Alternative_Name* copy() const;
+      AlternativeName get_alt_name() const { return alt_name; }
 
+   protected:
       Alternative_Name(const AlternativeName&,
                        const std::string&, const std::string&);
 
-      AlternativeName get_alt_name() const { return alt_name; }
+      Alternative_Name(const std::string&, const std::string&);
    private:
       std::string config_id() const { return config_name_str; }
       std::string oid_name() const { return oid_name_str; }
@@ -193,6 +194,30 @@ class Alternative_Name : public Certificate_Extension
 
       std::string config_name_str, oid_name_str;
       AlternativeName alt_name;
+   };
+
+/*************************************************
+* Subject Alternative Name Extension             *
+*************************************************/
+class Subject_Alternative_Name : public Alternative_Name
+   {
+   public:
+      Subject_Alternative_Name* copy() const
+         { return new Subject_Alternative_Name(get_alt_name()); }
+
+      Subject_Alternative_Name(const AlternativeName& = AlternativeName());
+   };
+
+/*************************************************
+* Issuer Alternative Name Extension              *
+*************************************************/
+class Issuer_Alternative_Name : public Alternative_Name
+   {
+   public:
+      Issuer_Alternative_Name* copy() const
+         { return new Issuer_Alternative_Name(get_alt_name()); }
+
+      Issuer_Alternative_Name(const AlternativeName& = AlternativeName());
    };
 
 /*************************************************
