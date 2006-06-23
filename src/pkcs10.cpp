@@ -175,7 +175,7 @@ std::vector<OID> PKCS10_Request::ex_constraints() const
 
    std::vector<OID> result;
    for(u32bit j = 0; j != oids.size(); ++j)
-      result.push_back(OIDS::lookup(oids[j]));
+      result.push_back(OID(oids[j]));
    return result;
    }
 
