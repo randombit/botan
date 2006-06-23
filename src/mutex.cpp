@@ -36,11 +36,9 @@ Mutex* Mutex_Factory::make()
          class Mutex_State_Error : public Internal_Error
             {
             public:
-               Mutex_State_Error(const std::string& where)
-                  {
-                  set_msg("Default_Mutex::" + where + ": Mutex is already " +
-                          where + "ed");
-                  }
+               Mutex_State_Error(const std::string& where) :
+                  Internal_Error("Default_Mutex::" + where + ": " +
+                                 "Mutex is already " + where + "ed") {}
             };
 
          void lock()
