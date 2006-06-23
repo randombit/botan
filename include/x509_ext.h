@@ -51,6 +51,7 @@ class Extensions : public ASN1_Object
    public:
       void encode_into(class DER_Encoder&) const;
       void decode_from(class BER_Decoder&);
+      void decode_from(class BER_Decoder&, bool);
 
       void contents_to(Data_Store&, Data_Store&) const;
 
