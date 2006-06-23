@@ -52,10 +52,9 @@ class X509_Certificate : public X509_Object
       void force_decode();
       friend class X509_CA;
       X509_Certificate() {}
-      void handle_v3_extension(const Extension&);
 
       Data_Store subject, issuer;
-      bool self_signed, is_ca;
+      bool self_signed;
    };
 
 /*************************************************

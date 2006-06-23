@@ -116,25 +116,11 @@ void X509_Certificate::force_decode()
    if(v3_exts_data.type_tag == 3 &&
       v3_exts_data.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
       {
-      BER_Decoder v3_exts_decoder(v3_exts_data.value);
-
-#if 1
       Extensions extensions;
-      v3_exts_decoder.decode(extensions);
+
+      BER_Decoder(v3_exts_data.value).decode(extensions).verify_end();
 
       extensions.contents_to(subject, issuer);
-#else
-      BER_Decoder sequence = v3_exts_decoder.start_cons(SEQUENCE);
-
-      while(sequence.more_items())
-         {
-         Extension extn;
-         sequence.decode(extn);
-         handle_v3_extension(extn);
-         }
-      sequence.verify_end();
-#endif
-      v3_exts_decoder.verify_end();
       }
    else if(v3_exts_data.type_tag != NO_OBJECT)
       throw BER_Bad_Tag("Unknown tag in X.509 cert",
@@ -164,98 +150,6 @@ void X509_Certificate::force_decode()
       u32bit limit = (x509_version() < 3) ? NO_CERT_PATH_LIMIT : 0;
       subject.add("X509v3.BasicConstraints.path_constraint", limit);
       }
-   }
-
-/*************************************************
-* Decode a particular v3 extension               *
-*************************************************/
-void X509_Certificate::handle_v3_extension(const Extension& extn)
-   {
-   BER_Decoder value(extn.value);
-
-   if(extn.oid == OIDS::lookup("X509v3.KeyUsage"))
-      {
-      Key_Constraints constraints;
-      BER::decode(value, constraints);
-
-      if(constraints != NO_CONSTRAINTS)
-         subject.add("X509v3.KeyUsage", constraints);
-      }
-   else if(extn.oid == OIDS::lookup("X509v3.ExtendedKeyUsage"))
-      {
-      BER_Decoder key_usage = value.start_cons(SEQUENCE);
-      while(key_usage.more_items())
-         {
-         OID usage_oid;
-         key_usage.decode(usage_oid);
-         subject.add("X509v3.ExtendedKeyUsage", usage_oid.as_string());
-         }
-      }
-   else if(extn.oid == OIDS::lookup("X509v3.BasicConstraints"))
-      {
-      u32bit max_path_len = 0;
-      bool is_ca = false;
-
-      value.start_cons(SEQUENCE)
-            .decode_optional(is_ca, BOOLEAN, UNIVERSAL, false)
-            .decode_optional(max_path_len, INTEGER, UNIVERSAL,
-                             NO_CERT_PATH_LIMIT)
-            .verify_end()
-         .end_cons();
-
-      subject.add("X509v3.BasicConstraints.is_ca", (is_ca ? 1 : 0));
-      subject.add("X509v3.BasicConstraints.path_constraint", max_path_len);
-      }
-   else if(extn.oid == OIDS::lookup("X509v3.SubjectKeyIdentifier"))
-      {
-      MemoryVector<byte> v3_subject_key_id;
-      value.decode(v3_subject_key_id, OCTET_STRING);
-      subject.add("X509v3.SubjectKeyIdentifier", v3_subject_key_id);
-      }
-   else if(extn.oid == OIDS::lookup("X509v3.AuthorityKeyIdentifier"))
-      {
-      MemoryVector<byte> v3_issuer_key_id;
-      BER_Decoder key_id = value.start_cons(SEQUENCE);
-      key_id.decode_optional_string(v3_issuer_key_id, OCTET_STRING, 0);
-
-      issuer.add("X509v3.AuthorityKeyIdentifier", v3_issuer_key_id);
-      }
-   else if(extn.oid == OIDS::lookup("X509v3.SubjectAlternativeName"))
-      {
-      AlternativeName alt_name;
-      value.decode(alt_name);
-      subject.add(alt_name.contents());
-      }
-   else if(extn.oid == OIDS::lookup("X509v3.IssuerAlternativeName"))
-      {
-      AlternativeName alt_name;
-      value.decode(alt_name);
-      issuer.add(alt_name.contents());
-      }
-   else if(extn.oid == OIDS::lookup("X509v3.CertificatePolicies"))
-      {
-      BER_Decoder ber_policies = value.start_cons(SEQUENCE);
-      while(ber_policies.more_items())
-         {
-         OID oid;
-         BER_Decoder policy = ber_policies.start_cons(SEQUENCE);
-         policy.decode(oid);
-
-         if(extn.critical && policy.more_items())
-            throw Decoding_Error("X.509 v3 critical policy has qualifiers");
-
-         subject.add("X509v3.CertificatePolicies", oid.as_string());
-         }
-      }
-   else
-      {
-      if(extn.critical)
-         throw Decoding_Error("Unknown critical X.509 v3 extension: " +
-                              extn.oid.as_string());
-      return;
-      }
-
-   value.verify_end();
    }
 
 /*************************************************
@@ -400,6 +294,7 @@ bool X509_Certificate::operator==(const X509_Certificate& other) const
    {
    return (sig == other.sig &&
            sig_algo == other.sig_algo &&
+           self_signed == other.self_signed &&
            issuer == other.issuer &&
            subject == other.subject);
    }
