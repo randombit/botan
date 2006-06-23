@@ -8,7 +8,9 @@
 #include <botan/ber_dec.h>
 #include <botan/parsing.h>
 #include <botan/x509stor.h>
+#include <botan/x509_ext.h>
 #include <botan/oids.h>
+#include <botan/pem.h>
 
 namespace Botan {
 
@@ -18,10 +20,6 @@ namespace Botan {
 PKCS10_Request::PKCS10_Request(DataSource& in) :
    X509_Object(in, "CERTIFICATE REQUEST/NEW CERTIFICATE REQUEST")
    {
-   is_ca = false;
-   max_path_len = 0;
-   constraints_value = NO_CONSTRAINTS;
-
    do_decode();
    }
 
@@ -31,9 +29,6 @@ PKCS10_Request::PKCS10_Request(DataSource& in) :
 PKCS10_Request::PKCS10_Request(const std::string& in) :
    X509_Object(in, "CERTIFICATE REQUEST/NEW CERTIFICATE REQUEST")
    {
-   is_ca = false;
-   max_path_len = 0;
-
    do_decode();
    }
 
@@ -50,13 +45,22 @@ void PKCS10_Request::force_decode()
       throw Decoding_Error("Unknown version code in PKCS #10 request: " +
                            to_string(version));
 
-   cert_req_info.decode(dn);
+   X509_DN dn_subject;
+   cert_req_info.decode(dn_subject);
+
+   info.add(dn_subject.contents());
 
    BER_Object public_key = cert_req_info.get_next_object();
    if(public_key.type_tag != SEQUENCE || public_key.class_tag != CONSTRUCTED)
       throw BER_Bad_Tag("PKCS10_Request: Unexpected tag for public key",
                         public_key.type_tag, public_key.class_tag);
-   pub_key = ASN1::put_in_sequence(public_key.value);
+
+   info.add("X509.Certificate.public_key",
+            PEM_Code::encode(
+               ASN1::put_in_sequence(public_key.value),
+               "PUBLIC KEY"
+               )
+      );
 
    BER_Object attr_bits = cert_req_info.get_next_object();
 
@@ -78,10 +82,6 @@ void PKCS10_Request::force_decode()
 
    cert_req_info.verify_end();
 
-   std::vector<std::string> emails = dn.get_attribute("PKCS9.EmailAddress");
-   for(u32bit j = 0; j != emails.size(); ++j)
-      subject_alt.add_attribute("RFC822", emails[j]);
-
    X509_Code sig_check = X509_Store::check_sig(*this, subject_public_key());
    if(sig_check != VERIFIED)
       throw Decoding_Error("PKCS #10 request: Bad signature detected");
@@ -98,18 +98,17 @@ void PKCS10_Request::handle_attribute(const Attribute& attr)
       {
       ASN1_String email;
       value.decode(email);
-      subject_alt.add_attribute("RFC822", email.value());
+      info.add("RFC822", email.value());
       }
    else if(attr.oid == OIDS::lookup("PKCS9.ChallengePassword"))
       {
       ASN1_String challenge_password;
       value.decode(challenge_password);
-      challenge = challenge_password.value();
+      info.add("PKCS9.ChallengePassword", challenge_password.value());
       }
    else if(attr.oid == OIDS::lookup("PKCS9.ExtensionRequest"))
       {
       BER_Decoder sequence = value.start_cons(SEQUENCE);
-
       while(sequence.more_items())
          {
          Extension extn;
@@ -128,7 +127,13 @@ void PKCS10_Request::handle_v3_extension(const Extension& extn)
    BER_Decoder value(extn.value);
 
    if(extn.oid == OIDS::lookup("X509v3.KeyUsage"))
-      BER::decode(value, constraints_value);
+      {
+      Key_Constraints constraints;
+      BER::decode(value, constraints);
+
+      if(constraints != NO_CONSTRAINTS)
+         info.add("X509v3.KeyUsage", constraints);
+      }
    else if(extn.oid == OIDS::lookup("X509v3.ExtendedKeyUsage"))
       {
       BER_Decoder key_usage = value.start_cons(SEQUENCE);
@@ -136,18 +141,30 @@ void PKCS10_Request::handle_v3_extension(const Extension& extn)
          {
          OID usage_oid;
          key_usage.decode(usage_oid);
-         ex_constraints_list.push_back(usage_oid);
+         info.add("X509v3.ExtendedKeyUsage", usage_oid.as_string());
          }
       }
    else if(extn.oid == OIDS::lookup("X509v3.BasicConstraints"))
       {
-      BER_Decoder constraints = value.start_cons(SEQUENCE);
-      constraints.decode_optional(is_ca, BOOLEAN, UNIVERSAL, false);
-      constraints.decode_optional(max_path_len, INTEGER, UNIVERSAL,
-                                  NO_CERT_PATH_LIMIT);
+      u32bit max_path_len = 0;
+      bool is_ca = false;
+
+      value.start_cons(SEQUENCE)
+            .decode_optional(is_ca, BOOLEAN, UNIVERSAL, false)
+            .decode_optional(max_path_len, INTEGER, UNIVERSAL,
+                             NO_CERT_PATH_LIMIT)
+            .verify_end()
+         .end_cons();
+
+      info.add("X509v3.BasicConstraints.is_ca", (is_ca ? 1 : 0));
+      info.add("X509v3.BasicConstraints.path_constraint", max_path_len);
       }
    else if(extn.oid == OIDS::lookup("X509v3.SubjectAlternativeName"))
-      value.decode(subject_alt);
+      {
+      AlternativeName alt_name;
+      value.decode(alt_name);
+      info.add(alt_name.contents());
+      }
    else
       return;
 
@@ -155,19 +172,11 @@ void PKCS10_Request::handle_v3_extension(const Extension& extn)
    }
 
 /*************************************************
-* Return the public key of the requestor         *
+* Return the challenge password (if any)         *
 *************************************************/
-MemoryVector<byte> PKCS10_Request::raw_public_key() const
+std::string PKCS10_Request::challenge_password() const
    {
-   return pub_key;
-   }
-
-/*************************************************
-* Return the public key of the requestor         *
-*************************************************/
-X509_PublicKey* PKCS10_Request::subject_public_key() const
-   {
-   return X509::load_key(pub_key);
+   return info.get1("PKCS9.ChallengePassword");
    }
 
 /*************************************************
@@ -175,7 +184,25 @@ X509_PublicKey* PKCS10_Request::subject_public_key() const
 *************************************************/
 X509_DN PKCS10_Request::subject_dn() const
    {
-   return dn;
+   return create_dn(info);
+   }
+
+/*************************************************
+* Return the public key of the requestor         *
+*************************************************/
+MemoryVector<byte> PKCS10_Request::raw_public_key() const
+   {
+   DataSource_Memory source(info.get1("X509.Certificate.public_key"));
+   return PEM_Code::decode_check_label(source, "PUBLIC KEY");
+   }
+
+/*************************************************
+* Return the public key of the requestor         *
+*************************************************/
+X509_PublicKey* PKCS10_Request::subject_public_key() const
+   {
+   DataSource_Memory source(info.get1("X509.Certificate.public_key"));
+   return X509::load_key(source);
    }
 
 /*************************************************
@@ -183,15 +210,7 @@ X509_DN PKCS10_Request::subject_dn() const
 *************************************************/
 AlternativeName PKCS10_Request::subject_alt_name() const
    {
-   return subject_alt;
-   }
-
-/*************************************************
-* Return the challenge password (if any)         *
-*************************************************/
-std::string PKCS10_Request::challenge_password() const
-   {
-   return challenge;
+   return create_alt_name(info);
    }
 
 /*************************************************
@@ -199,7 +218,7 @@ std::string PKCS10_Request::challenge_password() const
 *************************************************/
 Key_Constraints PKCS10_Request::constraints() const
    {
-   return constraints_value;
+   return Key_Constraints(info.get1_u32bit("X509v3.KeyUsage", NO_CONSTRAINTS));
    }
 
 /*************************************************
@@ -207,7 +226,12 @@ Key_Constraints PKCS10_Request::constraints() const
 *************************************************/
 std::vector<OID> PKCS10_Request::ex_constraints() const
    {
-   return ex_constraints_list;
+   std::vector<std::string> oids = info.get("X509v3.ExtendedKeyUsage");
+
+   std::vector<OID> result;
+   for(u32bit j = 0; j != oids.size(); ++j)
+      result.push_back(OIDS::lookup(oids[j]));
+   return result;
    }
 
 /*************************************************
@@ -215,7 +239,7 @@ std::vector<OID> PKCS10_Request::ex_constraints() const
 *************************************************/
 bool PKCS10_Request::is_CA() const
    {
-   return is_ca;
+   return info.get1_u32bit("X509v3.BasicConstraints.is_ca");
    }
 
 /*************************************************
@@ -223,7 +247,7 @@ bool PKCS10_Request::is_CA() const
 *************************************************/
 u32bit PKCS10_Request::path_limit() const
    {
-   return max_path_len;
+   return info.get1_u32bit("X509v3.BasicConstraints.path_constraint", 0);
    }
 
 }
