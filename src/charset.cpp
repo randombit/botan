@@ -7,7 +7,7 @@
 #include <botan/hex.h>
 #include <botan/base64.h>
 #include <botan/libstate.h>
-#include <ctype.h>
+#include <cctype>
 
 namespace Botan {
 
@@ -92,7 +92,7 @@ char digit2char(byte b)
 *************************************************/
 bool caseless_cmp(char a, char b)
    {
-   return (tolower((unsigned char)a) == tolower((unsigned char)b));
+   return (std::tolower((unsigned char)a) == std::tolower((unsigned char)b));
    }
 
 }
