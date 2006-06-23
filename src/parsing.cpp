@@ -98,7 +98,7 @@ std::vector<std::string> parse_algorithm_name(const std::string& namex)
             elems.push_back(substring.substr(1));
          else
             elems.push_back(substring);
-         substring = "";
+         substring.clear();
          }
       else
          substring += c;
@@ -125,7 +125,7 @@ std::vector<std::string> split_on(const std::string& str, char delim)
          {
          if(substr != "")
             elems.push_back(substr);
-         substr = "";
+         substr.clear();
          }
       else
          substr += *j;
@@ -155,7 +155,7 @@ std::vector<u32bit> parse_asn1_oid(const std::string& oid)
          if(substring == "")
             throw Invalid_OID(oid);
          oid_elems.push_back(to_u32bit(substring));
-         substring = "";
+         substring.clear();
          }
       else
          substring += c;

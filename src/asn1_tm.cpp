@@ -93,7 +93,7 @@ void X509_Time::set_to(const std::string& time_str)
          {
          if(current != "")
             params.push_back(current);
-         current = "";
+         current.clear();
          }
       }
    if(current != "")
@@ -140,7 +140,7 @@ void X509_Time::set_to(const std::string& t_spec, ASN1_Tag tag)
    for(u32bit j = 0; j != YEAR_SIZE; ++j)
       current += t_spec[j];
    params.push_back(current);
-   current = "";
+   current.clear();
 
    for(u32bit j = YEAR_SIZE; j != t_spec.size() - 1; ++j)
       {
@@ -148,7 +148,7 @@ void X509_Time::set_to(const std::string& t_spec, ASN1_Tag tag)
       if(current.size() == 2)
          {
          params.push_back(current);
-         current = "";
+         current.clear();
          }
       }
 
