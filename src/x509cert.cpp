@@ -16,37 +16,6 @@
 
 namespace Botan {
 
-namespace {
-
-/*************************************************
-* Create and populate a X509_DN                  *
-*************************************************/
-X509_DN create_dn(const Data_Store& info)
-   {
-   class DN_Matcher : public Data_Store::Matcher
-      {
-      public:
-         bool operator()(const std::string& key, const std::string&) const
-            {
-            if(key.find("X520.") != std::string::npos)
-               return true;
-            return false;
-            }
-      };
-
-   std::multimap<std::string, std::string> names
-      = info.search_with(DN_Matcher());
-
-   typedef std::multimap<std::string, std::string>::const_iterator rdn_iter;
-
-   X509_DN new_dn;
-   for(rdn_iter j = names.begin(); j != names.end(); ++j)
-      new_dn.add_attribute(j->first, j->second);
-   return new_dn;
-   }
-
-}
-
 /*************************************************
 * X509_Certificate Constructor                   *
 *************************************************/
@@ -305,6 +274,62 @@ bool X509_Certificate::operator==(const X509_Certificate& other) const
 bool operator!=(const X509_Certificate& cert1, const X509_Certificate& cert2)
    {
    return !(cert1 == cert2);
+   }
+
+/*************************************************
+* Create and populate a X509_DN                  *
+*************************************************/
+X509_DN create_dn(const Data_Store& info)
+   {
+   class DN_Matcher : public Data_Store::Matcher
+      {
+      public:
+         bool operator()(const std::string& key, const std::string&) const
+            {
+            if(key.find("X520.") != std::string::npos)
+               return true;
+            return false;
+            }
+      };
+
+   std::multimap<std::string, std::string> names
+      = info.search_with(DN_Matcher());
+
+   X509_DN dn;
+
+   std::multimap<std::string, std::string>::iterator j;
+   for(j = names.begin(); j != names.end(); ++j)
+      dn.add_attribute(j->first, j->second);
+
+   return dn;
+   }
+
+/*************************************************
+* Create and populate an AlternativeName         *
+*************************************************/
+AlternativeName create_alt_name(const Data_Store& info)
+   {
+   class AltName_Matcher : public Data_Store::Matcher
+      {
+      public:
+         bool operator()(const std::string& key, const std::string&) const
+            {
+            if(key == "RFC882" || key == "DNS" || key == "URI")
+               return true;
+            return false;
+            }
+      };
+
+   std::multimap<std::string, std::string> names
+      = info.search_with(AltName_Matcher());
+
+   AlternativeName alt_name;
+
+   std::multimap<std::string, std::string>::iterator j;
+   for(j = names.begin(); j != names.end(); ++j)
+      alt_name.add_attribute(j->first, j->second);
+
+   return alt_name;
    }
 
 }
