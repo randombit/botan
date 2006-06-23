@@ -17,8 +17,6 @@ namespace Botan {
 *************************************************/
 X509_CRL::X509_CRL(DataSource& in) : X509_Object(in, "X509 CRL/CRL")
    {
-   version = crl_count = 0;
-
    do_decode();
    }
 
@@ -27,8 +25,6 @@ X509_CRL::X509_CRL(DataSource& in) : X509_Object(in, "X509 CRL/CRL")
 *************************************************/
 X509_CRL::X509_CRL(const std::string& in) : X509_Object(in, "CRL/X509 CRL")
    {
-   version = crl_count = 0;
-
    do_decode();
    }
 
@@ -39,6 +35,7 @@ void X509_CRL::force_decode()
    {
    BER_Decoder tbs_crl(tbs_bits);
 
+   u32bit version;
    tbs_crl.decode_optional(version, INTEGER, UNIVERSAL);
 
    if(version != 0 && version != 1)
@@ -51,9 +48,16 @@ void X509_CRL::force_decode()
    if(sig_algo != sig_algo_inner)
       throw X509_CRL_Error("Algorithm identifier mismatch");
 
-   tbs_crl.decode(issuer);
+   X509_DN dn_issuer;
+   X509_Time start, end;
+
+   tbs_crl.decode(dn_issuer);
    tbs_crl.decode(start);
    tbs_crl.decode(end);
+
+   info.add(dn_issuer.contents());
+   info.add("X509.CRL.start", start.readable_string());
+   info.add("X509.CRL.end", end.readable_string());
 
    BER_Object next = tbs_crl.get_next_object();
 
@@ -100,11 +104,17 @@ void X509_CRL::handle_crl_extension(const Extension& extn)
 
    if(extn.oid == OIDS::lookup("X509v3.AuthorityKeyIdentifier"))
       {
+      MemoryVector<byte> v3_issuer_key_id;
       BER_Decoder key_id = value.start_cons(SEQUENCE);
-      key_id.decode_optional_string(issuer_key_id, OCTET_STRING, 0);
+      key_id.decode_optional_string(v3_issuer_key_id, OCTET_STRING, 0);
+      info.add("X509v3.AuthorityKeyIdentifier", v3_issuer_key_id);
       }
    else if(extn.oid == OIDS::lookup("X509v3.CRLNumber"))
+      {
+      u32bit crl_count = 0;
       value.decode(crl_count);
+      info.add("X509v3.CRLNumber", crl_count);
+      }
    else
       {
       if(extn.critical)
@@ -136,7 +146,7 @@ std::vector<CRL_Entry> X509_CRL::get_revoked() const
 *************************************************/
 X509_DN X509_CRL::issuer_dn() const
    {
-   return issuer;
+   return create_dn(info);
    }
 
 /*************************************************
@@ -144,7 +154,7 @@ X509_DN X509_CRL::issuer_dn() const
 *************************************************/
 MemoryVector<byte> X509_CRL::authority_key_id() const
    {
-   return issuer_key_id;
+   return info.get1_memvec("X509v3.AuthorityKeyIdentifier");
    }
 
 /*************************************************
@@ -152,7 +162,7 @@ MemoryVector<byte> X509_CRL::authority_key_id() const
 *************************************************/
 u32bit X509_CRL::crl_number() const
    {
-   return crl_count;
+   return info.get1_memvec("X509v3.CRLNumber");
    }
 
 /*************************************************
@@ -160,7 +170,7 @@ u32bit X509_CRL::crl_number() const
 *************************************************/
 X509_Time X509_CRL::this_update() const
    {
-   return start;
+   return info.get1("X509.CRL.start");
    }
 
 /*************************************************
@@ -168,7 +178,7 @@ X509_Time X509_CRL::this_update() const
 *************************************************/
 X509_Time X509_CRL::next_update() const
    {
-   return end;
+   return info.get1("X509.CRL.end");
    }
 
 }

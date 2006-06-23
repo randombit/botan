@@ -39,11 +39,9 @@ class X509_CRL : public X509_Object
       X509_CRL(const std::string&);
    private:
       void handle_crl_extension(const Extension&);
+
       std::vector<CRL_Entry> revoked;
-      MemoryVector<byte> issuer_key_id;
-      X509_Time start, end;
-      X509_DN issuer;
-      u32bit version, crl_count;
+      Data_Store info;
    };
 
 }
