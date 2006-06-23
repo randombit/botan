@@ -197,7 +197,8 @@ u32bit X509_Certificate::path_limit() const
 *************************************************/
 Key_Constraints X509_Certificate::constraints() const
    {
-   return Key_Constraints(subject.get1_u32bit("X509v3.KeyUsage", NO_CONSTRAINTS));
+   return Key_Constraints(subject.get1_u32bit("X509v3.KeyUsage",
+                                              NO_CONSTRAINTS));
    }
 
 /*************************************************
