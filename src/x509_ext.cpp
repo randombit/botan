@@ -78,10 +78,10 @@ void Extensions::decode_from(BER_Decoder& from_source, bool throw_on_unknown)
 
       if(!ext)
          {
-         if(!critical)
+         if(!critical || !throw_on_unknown)
             continue;
 
-         throw Decoding_Error("Encountered unknown X.509 extension marked"
+         throw Decoding_Error("Encountered unknown X.509 extension marked "
                               "as critical; OID = " + oid.as_string());
          }
 
