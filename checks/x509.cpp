@@ -143,5 +143,7 @@ X509_Cert_Options req_opts2()
    opts.dns = "botan.randombit.net";
    opts.email = "testing@randombit.net";
 
+   opts.add_ex_constraint("PKIX.EmailProtection");
+
    return opts;
    }
