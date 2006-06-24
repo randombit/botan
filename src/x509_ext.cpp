@@ -308,8 +308,9 @@ MemoryVector<byte> Authority_Key_ID::encode_inner() const
 *************************************************/
 void Authority_Key_ID::decode_inner(const MemoryRegion<byte>& in)
    {
-   BER_Decoder(in).start_cons(SEQUENCE).
-      decode_optional_string(key_id, OCTET_STRING, 0);
+   BER_Decoder(in)
+      .start_cons(SEQUENCE)
+      .decode_optional_string(key_id, OCTET_STRING, 0);
    }
 
 /*************************************************
