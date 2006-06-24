@@ -4,8 +4,9 @@
 *************************************************/
 
 #include <botan/libstate.h>
-#include <botan/stl_util.h>
 #include <botan/engine.h>
+#include <botan/x509stat.h>
+#include <botan/stl_util.h>
 #include <botan/mutex.h>
 #include <botan/timers.h>
 #include <botan/charset.h>
@@ -78,7 +79,7 @@ Engine* Library_State::Engine_Iterator::next()
 /*************************************************
 * Get a new mutex object                         *
 *************************************************/
-Mutex* Library_State::get_mutex()
+Mutex* Library_State::get_mutex() const
    {
    return mutex_factory->make();
    }
@@ -295,6 +296,22 @@ std::string Library_State::transcode(const std::string str,
    }
 
 /*************************************************
+* Set the X509 global state class                *
+*************************************************/
+void Library_State::set_x509_state(X509_GlobalState* new_x509_state_obj)
+   {
+   x509_state_obj = new_x509_state_obj;
+   }
+
+/*************************************************
+* Set the X509 global state class                *
+*************************************************/
+X509_GlobalState& Library_State::x509_state() const
+   {
+   return (*x509_state_obj);
+   }
+
+/*************************************************
 * Library_State Constructor                      *
 *************************************************/
 Library_State::Library_State(Mutex_Factory* mutex_factory, Timer* timer)
@@ -314,6 +331,7 @@ Library_State::Library_State(Mutex_Factory* mutex_factory, Timer* timer)
    locks["engine"] = get_mutex();
    rng = 0;
    cached_default_allocator = 0;
+   x509_state_obj = 0;
 
    set_default_policy();
    }
@@ -325,6 +343,7 @@ Library_State::~Library_State()
    {
    cached_default_allocator = 0;
    delete rng;
+   delete x509_state_obj;
 
    for(u32bit j = 0; j != entropy_sources.size(); ++j)
       delete entropy_sources[j];
@@ -349,4 +368,3 @@ Library_State::~Library_State()
    }
 
 }
-n

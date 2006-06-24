@@ -48,11 +48,8 @@ X509_CA::X509_CA(const X509_Certificate& c,
    if(!dynamic_cast<const PK_Signing_Key*>(key_pointer))
       throw Invalid_Argument("X509_CA: " + key.algo_name() + " cannot sign");
 
-#if 0
-   // FIXME!
    if(!cert.is_CA_cert())
       throw Invalid_Argument("X509_CA: This certificate is not for a CA");
-#endif
 
    std::string padding;
    Signature_Format format;

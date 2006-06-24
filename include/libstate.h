@@ -49,7 +49,10 @@ class Library_State
 
       void add_engine(class Engine*);
 
-      class Mutex* get_mutex();
+      class Mutex* get_mutex() const;
+
+      void set_x509_state(class X509_GlobalState*);
+      class X509_GlobalState& x509_state() const;
 
       void set_transcoder(class Charset_Transcoder*);
       std::string transcode(const std::string,
@@ -66,6 +69,7 @@ class Library_State
 
       class Mutex_Factory* mutex_factory;
       class Timer* timer;
+      class X509_GlobalState* x509_state_obj;
 
       std::map<std::string, class Mutex*> locks;
       std::map<std::string, std::string> settings;
