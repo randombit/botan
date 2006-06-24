@@ -300,6 +300,7 @@ std::string Library_State::transcode(const std::string str,
 *************************************************/
 void Library_State::set_x509_state(X509_GlobalState* new_x509_state_obj)
    {
+   delete x509_state_obj;
    x509_state_obj = new_x509_state_obj;
    }
 
@@ -308,6 +309,9 @@ void Library_State::set_x509_state(X509_GlobalState* new_x509_state_obj)
 *************************************************/
 X509_GlobalState& Library_State::x509_state() const
    {
+   if(!x509_state_obj)
+      throw Invalid_State("Library_State::x509_state: No state set");
+
    return (*x509_state_obj);
    }
 
@@ -331,7 +335,7 @@ Library_State::Library_State(Mutex_Factory* mutex_factory, Timer* timer)
    locks["engine"] = get_mutex();
    rng = 0;
    cached_default_allocator = 0;
-   x509_state_obj = 0;
+   x509_state_obj = new X509_GlobalState();
 
    set_default_policy();
    }
