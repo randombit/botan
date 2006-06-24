@@ -34,6 +34,13 @@ void set_global_state(Library_State* new_state)
    global_lib_state = new_state;
    }
 
+Library_State* swap_global_state(Library_State* new_state)
+   {
+   Library_State* old_state = global_lib_state;
+   global_lib_state = new_state;
+   return old_state;
+   }
+
 namespace {
 
 /*************************************************
@@ -342,3 +349,4 @@ Library_State::~Library_State()
    }
 
 }
+n
