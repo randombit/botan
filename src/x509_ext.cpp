@@ -4,9 +4,11 @@
 *************************************************/
 
 #include <botan/x509_ext.h>
+#include <botan/x509cert.h>
+#include <botan/x509stat.h>
+#include <botan/libstate.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/x509cert.h>
 #include <botan/lookup.h>
 #include <botan/oids.h>
 #include <botan/conf.h>
@@ -67,7 +69,8 @@ void Extensions::decode_from(BER_Decoder& from_source)
             .verify_end()
          .end_cons();
 
-      Certificate_Extension* ext = make_extension(oid);
+      Certificate_Extension* ext =
+         global_state().x509_state().get_extension(oid);
 
       if(!ext)
          {
@@ -117,35 +120,6 @@ Extensions::~Extensions()
    {
    for(u32bit j = 0; j != extensions.size(); ++j)
       delete extensions[j];
-   }
-
-/*************************************************
-* Create a new certificate extension object      *
-*************************************************/
-Certificate_Extension* Extensions::make_extension(const OID& oid)
-   {
-   const std::string oid_name = OIDS::lookup(oid);
-
-   if(oid_name == "X509v3.KeyUsage")
-      return new Cert_Extension::Key_Usage();
-   else if(oid_name == "X509v3.BasicConstraints")
-      return new Cert_Extension::Basic_Constraints();
-   else if(oid_name == "X509v3.SubjectKeyIdentifier")
-      return new Cert_Extension::Subject_Key_ID();
-   else if(oid_name == "X509v3.AuthorityKeyIdentifier")
-      return new Cert_Extension::Authority_Key_ID();
-   else if(oid_name == "X509v3.ExtendedKeyUsage")
-      return new Cert_Extension::Extended_Key_Usage();
-   else if(oid_name == "X509v3.IssuerAlternativeName")
-      return new Cert_Extension::Issuer_Alternative_Name();
-   else if(oid_name == "X509v3.SubjectAlternativeName")
-      return new Cert_Extension::Subject_Alternative_Name();
-   else if(oid_name == "X509v3.CRLNumber")
-      return new Cert_Extension::CRL_Number();
-   else if(oid_name == "X509v3.CertificatePolicies")
-      return new Cert_Extension::Certificate_Policies();
-
-   return 0;
    }
 
 namespace Cert_Extension {

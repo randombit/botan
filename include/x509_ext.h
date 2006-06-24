@@ -65,9 +65,6 @@ class Extensions : public ASN1_Object
       ~Extensions();
    private:
       Extensions& copy_this(const Extensions&);
-
-      static Certificate_Extension* make_extension(const OID&);
-
       std::vector<Certificate_Extension*> extensions;
       bool should_throw;
    };
