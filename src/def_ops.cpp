@@ -163,7 +163,7 @@ class Default_NR_Op : public NR_Operation
       const BigInt x, y;
       const DL_Group group;
       Fixed_Base_Power_Mod powermod_g_p, powermod_y_p;
-      Modular_Reducer reducer_p, reducer_q;
+      Modular_Reducer mod_p, mod_q;
    };
 
 /*************************************************
@@ -174,8 +174,8 @@ Default_NR_Op::Default_NR_Op(const DL_Group& grp, const BigInt& y1,
    {
    powermod_g_p = Fixed_Base_Power_Mod(group.get_g(), group.get_p());
    powermod_y_p = Fixed_Base_Power_Mod(y, group.get_p());
-   reducer_p = Modular_Reducer(group.get_p());
-   reducer_q = Modular_Reducer(group.get_q());
+   mod_p = Modular_Reducer(group.get_p());
+   mod_q = Modular_Reducer(group.get_q());
    }
 
 /*************************************************
@@ -194,8 +194,8 @@ SecureVector<byte> Default_NR_Op::verify(const byte in[], u32bit length) const
    if(c.is_zero() || c >= q || d >= q)
       throw Invalid_Argument("Default_NR_Op::verify: Invalid signature");
 
-   BigInt i = reducer_p.multiply(powermod_g_p(d), powermod_y_p(c));
-   return BigInt::encode(reducer_q.reduce(c - i));
+   BigInt i = mod_p.multiply(powermod_g_p(d), powermod_y_p(c));
+   return BigInt::encode(mod_q.reduce(c - i));
    }
 
 /*************************************************
@@ -214,10 +214,10 @@ SecureVector<byte> Default_NR_Op::sign(const byte in[], u32bit length,
    if(f >= q)
       throw Invalid_Argument("Default_NR_Op::sign: Input is out of range");
 
-   BigInt c = reducer_q.reduce(powermod_g_p(k) + f);
+   BigInt c = mod_q.reduce(powermod_g_p(k) + f);
    if(c.is_zero())
       throw Internal_Error("Default_NR_Op::sign: c was zero");
-   BigInt d = reducer_q.reduce(k - x * c);
+   BigInt d = mod_q.reduce(k - x * c);
 
    SecureVector<byte> output(2*q.bytes());
    c.binary_encode(output + (output.size() / 2 - c.bytes()));
@@ -241,7 +241,7 @@ class Default_ELG_Op : public ELG_Operation
       const BigInt p;
       Fixed_Base_Power_Mod powermod_g_p, powermod_y_p;
       Fixed_Exponent_Power_Mod powermod_x_p;
-      Modular_Reducer reducer_p;
+      Modular_Reducer mod_p;
    };
 
 /*************************************************
@@ -252,7 +252,7 @@ Default_ELG_Op::Default_ELG_Op(const DL_Group& group, const BigInt& y,
    {
    powermod_g_p = Fixed_Base_Power_Mod(group.get_g(), p);
    powermod_y_p = Fixed_Base_Power_Mod(y, p);
-   reducer_p = Modular_Reducer(p);
+   mod_p = Modular_Reducer(p);
 
    if(x != 0)
       powermod_x_p = Fixed_Exponent_Power_Mod(x, p);
@@ -269,7 +269,7 @@ SecureVector<byte> Default_ELG_Op::encrypt(const byte in[], u32bit length,
       throw Invalid_Argument("Default_ELG_Op::encrypt: Input is too large");
 
    BigInt a = powermod_g_p(k);
-   BigInt b = reducer_p.multiply(m, powermod_y_p(k));
+   BigInt b = mod_p.multiply(m, powermod_y_p(k));
 
    SecureVector<byte> output(2*p.bytes());
    a.binary_encode(output + (p.bytes() - a.bytes()));
@@ -285,7 +285,7 @@ BigInt Default_ELG_Op::decrypt(const BigInt& a, const BigInt& b) const
    if(a >= p || b >= p)
       throw Invalid_Argument("Default_ELG_Op: Invalid message");
 
-   return reducer_p.multiply(b, inverse_mod(powermod_x_p(a), p));
+   return mod_p.multiply(b, inverse_mod(powermod_x_p(a), p));
    }
 
 /*************************************************
