@@ -20,6 +20,8 @@ class Allocator
       virtual void* allocate(u32bit) = 0;
       virtual void deallocate(void*, u32bit) = 0;
 
+      virtual std::string type() const = 0;
+
       virtual void init() {}
       virtual void destroy() {}
 

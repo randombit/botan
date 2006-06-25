@@ -31,7 +31,7 @@ class Library_State
       friend class Engine_Iterator;
 
       Allocator* get_allocator(const std::string& = "") const;
-      void add_allocator(const std::string&, Allocator*);
+      void add_allocator(Allocator*);
 
       void set_prng(RandomNumberGenerator*);
       void randomize(byte[], u32bit);

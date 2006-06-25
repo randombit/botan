@@ -8,7 +8,6 @@
 
 #include <vector>
 #include <string>
-#include <map>
 
 namespace Botan {
 
@@ -30,7 +29,7 @@ class Mutex_Factory* get_mutex_factory();
 class Timer* get_timer();
 std::vector<EntropySource*> get_entropy_sources();
 std::vector<Engine*> get_engines();
-std::map<std::string, Allocator*> get_allocators();
+std::vector<Allocator*> get_allocators();
 
 }
 

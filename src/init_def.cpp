@@ -86,15 +86,15 @@ void initialize(const std::string& arg_string)
    set_global_state(new Library_State(mutex_factory,
                                       Modules::get_timer()));
 
-   global_state().add_allocator("malloc", new Malloc_Allocator);
-   global_state().add_allocator("locking", new Locking_Allocator);
+   global_state().add_allocator(new Malloc_Allocator);
+   global_state().add_allocator(new Locking_Allocator);
 
    if(arg_set(args, "secure_memory"))
       {
-      std::map<std::string, Allocator*> allocators = Modules::get_allocators();
-      for(std::map<std::string, Allocator*>::iterator i = allocators.begin();
-          i != allocators.end(); ++i)
-         global_state().add_allocator(i->first, i->second);
+      std::vector<Allocator*> allocators = Modules::get_allocators();
+
+      for(u32bit j = 0; j != allocators.size(); ++j)
+         global_state().add_allocator(allocators[j]);
       }
 
    if(arg_set(args, "config") && args["config"] != "")

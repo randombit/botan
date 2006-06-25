@@ -109,12 +109,12 @@ Timer* get_timer()
 /*************************************************
 * Find any usable allocators                     *
 *************************************************/
-std::map<std::string, Allocator*> get_allocators()
+std::vector<Allocator*> get_allocators()
    {
-   std::map<std::string, Allocator*> allocators;
+   std::vector<Allocator*> allocators;
 
 #if defined(BOTAN_EXT_ALLOC_MMAP)
-   allocators["mmap"] = new MemoryMapping_Allocator;
+   allocators.push_back(new MemoryMapping_Allocator);
 #endif
 
    return allocators;
