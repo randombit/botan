@@ -129,7 +129,7 @@ void Library_State::add_allocator(const std::string& type,
 *************************************************/
 u64bit Library_State::system_clock() const
    {
-   return timer->clock();
+   return (timer) ? timer->clock() : 0;
    }
 
 /*************************************************
@@ -309,7 +309,7 @@ void Library_State::set_x509_state(X509_GlobalState* new_x509_state_obj)
 X509_GlobalState& Library_State::x509_state() const
    {
    if(!x509_state_obj)
-      throw Invalid_State("Library_State::x509_state: No state set");
+      x509_state_obj = new X509_GlobalState();
 
    return (*x509_state_obj);
    }
@@ -334,7 +334,7 @@ Library_State::Library_State(Mutex_Factory* mutex_factory, Timer* timer)
    locks["engine"] = get_mutex();
    rng = 0;
    cached_default_allocator = 0;
-   x509_state_obj = new X509_GlobalState();
+   x509_state_obj = 0;
 
    set_default_policy();
    }
@@ -344,16 +344,17 @@ Library_State::Library_State(Mutex_Factory* mutex_factory, Timer* timer)
 *************************************************/
 Library_State::~Library_State()
    {
-   cached_default_allocator = 0;
-   delete rng;
    delete x509_state_obj;
-
+   delete transcoder;
    for(u32bit j = 0; j != entropy_sources.size(); ++j)
       delete entropy_sources[j];
+
+   delete rng;
 
    for(u32bit j = 0; j != engines.size(); ++j)
       delete engines[j];
 
+   cached_default_allocator = 0;
    for(std::map<std::string, Allocator*>::iterator j = alloc_factory.begin();
        j != alloc_factory.end(); ++j)
       {
@@ -361,7 +362,6 @@ Library_State::~Library_State()
       delete j->second;
       }
 
-   delete transcoder;
    delete mutex_factory;
    delete timer;
 
