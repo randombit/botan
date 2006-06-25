@@ -40,7 +40,7 @@ class Library_State
       void add_entropy(EntropySource&, bool);
       u32bit seed_prng(bool, u32bit);
 
-      void set_timer(Timer*);
+      void set_timer(class Timer*);
       u64bit system_clock() const;
 
       void set_option(const std::string&, const std::string&,
@@ -59,7 +59,7 @@ class Library_State
       std::string transcode(const std::string,
                             Character_Set, Character_Set) const;
 
-      Library_State(class Mutex_Factory*, class Timer*);
+      Library_State(class Mutex_Factory*);
       ~Library_State();
    private:
       Library_State(const Library_State&) {}
