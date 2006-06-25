@@ -73,6 +73,7 @@ class AEP_DSA_Op : public DSA_Operation
    private:
       const BigInt x, y;
       const DL_Group group;
+      Modular_Reducer mod_p, mod_q;
    };
 
 /*************************************************
@@ -81,6 +82,8 @@ class AEP_DSA_Op : public DSA_Operation
 AEP_DSA_Op::AEP_DSA_Op(const DL_Group& grp, const BigInt& y1,
                        const BigInt& x1) : x(x1), y(y1), group(grp)
    {
+   mod_p = Modular_Reducer(group.get_p());
+   mod_q = Modular_Reducer(group.get_q());
    }
 
 /*************************************************
@@ -104,8 +107,8 @@ bool AEP_DSA_Op::verify(const byte msg[], u32bit msg_len,
       return false;
 
    s = inverse_mod(s, q);
-   s = mul_mod(AEP_Engine::pow_mod(g, mul_mod(s, i, q), p),
-               AEP_Engine::pow_mod(y, mul_mod(s, r, q), p), p);
+   s = mod_p.multiply(AEP_Engine::pow_mod(g, mod_q.multiply(s, i), p),
+                      AEP_Engine::pow_mod(y, mod_q.multiply(s, r), p));
 
    return (s % q == r);
    }
@@ -125,7 +128,7 @@ SecureVector<byte> AEP_DSA_Op::sign(const byte in[], u32bit length,
    BigInt i(in, length);
 
    BigInt r = AEP_Engine::pow_mod(g, k, p) % q;
-   BigInt s = mul_mod(inverse_mod(k, q), mul_add(x, r, i), q);
+   BigInt s = mod_q.multiply(inverse_mod(k, q), mul_add(x, r, i));
    if(r.is_zero() || s.is_zero())
       throw Internal_Error("AEP_DSA_Op::sign: r or s was zero");
 
@@ -150,6 +153,7 @@ class AEP_NR_Op : public NR_Operation
    private:
       const BigInt x, y;
       const DL_Group group;
+      Modular_Reducer mod_p;
    };
 
 /*************************************************
@@ -158,6 +162,7 @@ class AEP_NR_Op : public NR_Operation
 AEP_NR_Op::AEP_NR_Op(const DL_Group& grp, const BigInt& y1,
                      const BigInt& x1) : x(x1), y(y1), group(grp)
    {
+   mod_p = Modular_Reducer(group.get_p());
    }
 
 /*************************************************
@@ -178,8 +183,8 @@ SecureVector<byte> AEP_NR_Op::verify(const byte in[], u32bit length) const
    if(c.is_zero() || c >= q || d >= q)
       throw Invalid_Argument("AEP_NR_Op::verify: Invalid signature");
 
-   BigInt i = mul_mod(AEP_Engine::pow_mod(g, d, p),
-                      AEP_Engine::pow_mod(y, c, p), p);
+   BigInt i = mod_p.multiply(AEP_Engine::pow_mod(g, d, p),
+                             AEP_Engine::pow_mod(y, c, p));
    return BigInt::encode((c - i) % q);
    }
 
@@ -227,6 +232,7 @@ class AEP_ELG_Op : public ELG_Operation
    private:
       const BigInt x, y;
       const DL_Group group;
+      Modular_Reducer mod_p;
    };
 
 /*************************************************
@@ -235,6 +241,7 @@ class AEP_ELG_Op : public ELG_Operation
 AEP_ELG_Op::AEP_ELG_Op(const DL_Group& grp, const BigInt& y1,
                        const BigInt& x1) : x(x1), y(y1), group(grp)
    {
+   mod_p = Modular_Reducer(group.get_p());
    }
 
 /*************************************************
@@ -251,7 +258,7 @@ SecureVector<byte> AEP_ELG_Op::encrypt(const byte in[], u32bit length,
       throw Invalid_Argument("AEP_ELG_Op::encrypt: Input is too large");
 
    BigInt a = AEP_Engine::pow_mod(g, k, p);
-   BigInt b = mul_mod(m, AEP_Engine::pow_mod(y, k, p), p);
+   BigInt b = mod_p.multiply(m, AEP_Engine::pow_mod(y, k, p));
 
    SecureVector<byte> output(2*p.bytes());
    a.binary_encode(output + (p.bytes() - a.bytes()));
@@ -272,7 +279,7 @@ BigInt AEP_ELG_Op::decrypt(const BigInt& a, const BigInt& b) const
    if(a >= p || b >= p)
       throw Invalid_Argument("AEP_ELG_Op: Invalid message");
 
-   return mul_mod(b, inverse_mod(AEP_Engine::pow_mod(a, x, p), p), p);
+   return mod_p.multiply(b, inverse_mod(AEP_Engine::pow_mod(a, x, p), p));
    }
 
 /*************************************************
