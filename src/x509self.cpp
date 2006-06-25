@@ -97,12 +97,21 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    else
       constraints = find_constraints(key, opts.constraints);
 
+   Extensions extensions;
+
+   extensions.add(new Cert_Extension::Subject_Key_ID(pub_key));
+   extensions.add(new Cert_Extension::Key_Usage(constraints));
+   extensions.add(
+      new Cert_Extension::Extended_Key_Usage(opts.ex_constraints));
+   extensions.add(
+      new Cert_Extension::Subject_Alternative_Name(subject_alt));
+   extensions.add(
+      new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit));
+
    return X509_CA::make_cert(signer.get(), sig_algo, pub_key,
-                             MemoryVector<byte>(), opts.start, opts.end,
+                             opts.start, opts.end,
                              subject_dn, subject_dn,
-                             opts.is_CA, opts.path_limit,
-                             subject_alt, subject_alt,
-                             constraints, opts.ex_constraints);
+                             extensions);
    }
 
 /*************************************************
