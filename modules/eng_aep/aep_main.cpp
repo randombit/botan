@@ -164,7 +164,6 @@ AEP_Engine::AEP_Engine()
          AEP_Connection conn;
          daemon_is_up = true;
          }
-
    }
    catch(AEP_Exception&) {}
    }
