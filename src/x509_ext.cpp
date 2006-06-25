@@ -35,11 +35,15 @@ void Extensions::encode_into(DER_Encoder& to_object) const
       {
       const Certificate_Extension* ext = extensions[j];
 
-      if(ext->should_encode())
+      bool is_critical = false;
+
+      bool should_encode = ext->should_encode();
+
+      if(should_encode)
          {
          to_object.start_cons(SEQUENCE)
                .encode(ext->oid_of())
-               .encode_optional(ext->is_critical(), false)
+               .encode_optional(is_critical, false)
                .encode(ext->encode_inner(), OCTET_STRING)
             .end_cons();
          }

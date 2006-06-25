@@ -20,11 +20,7 @@ namespace Botan {
 class Certificate_Extension
    {
    public:
-      void maybe_add(class DER_Encoder&) const;
-
       OID oid_of() const;
-      void make_critical() { critical = true; }
-      bool is_critical() const { return critical; }
 
       virtual Certificate_Extension* copy() const = 0;
 
@@ -32,15 +28,12 @@ class Certificate_Extension
       virtual std::string config_id() const = 0;
       virtual std::string oid_name() const = 0;
 
-      Certificate_Extension() { critical = false; }
       virtual ~Certificate_Extension() {}
    protected:
       friend class Extensions;
       virtual bool should_encode() const { return true; }
       virtual MemoryVector<byte> encode_inner() const = 0;
       virtual void decode_inner(const MemoryRegion<byte>&) = 0;
-   private:
-      bool critical;
    };
 
 /*************************************************
