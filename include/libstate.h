@@ -52,7 +52,7 @@ class Library_State
       class Mutex* get_mutex() const;
 
       void set_x509_state(class X509_GlobalState*);
-      class X509_GlobalState& x509_state() const;
+      class X509_GlobalState& x509_state();
 
       void set_transcoder(class Charset_Transcoder*);
       std::string transcode(const std::string,

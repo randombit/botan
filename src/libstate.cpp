@@ -306,7 +306,7 @@ void Library_State::set_x509_state(X509_GlobalState* new_x509_state_obj)
 /*************************************************
 * Set the X509 global state class                *
 *************************************************/
-X509_GlobalState& Library_State::x509_state() const
+X509_GlobalState& Library_State::x509_state()
    {
    if(!x509_state_obj)
       x509_state_obj = new X509_GlobalState();
