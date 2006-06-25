@@ -38,6 +38,12 @@ class X509_CA
                                         Key_Constraints,
                                         const std::vector<OID>&);
 
+      static X509_Certificate make_cert(PK_Signer*, const AlgorithmIdentifier&,
+                                        const MemoryRegion<byte>&,
+                                        const X509_Time&, const X509_Time&,
+                                        const X509_DN&, const X509_DN&,
+                                        const class Extensions&);
+
       X509_CA(const X509_Certificate&, const PKCS8_PrivateKey&);
       ~X509_CA();
    private:

@@ -132,6 +132,24 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
    extensions.add(
       new Cert_Extension::Issuer_Alternative_Name(issuer_alt));
 
+   return make_cert(signer, sig_algo, pub_key,
+                    not_before, not_after,
+                    issuer_dn, subject_dn,
+                    extensions);
+   }
+
+/*************************************************
+* Create a new certificate                       *
+*************************************************/
+X509_Certificate X509_CA::make_cert(PK_Signer* signer,
+                                    const AlgorithmIdentifier& sig_algo,
+                                    const MemoryRegion<byte>& pub_key,
+                                    const X509_Time& not_before,
+                                    const X509_Time& not_after,
+                                    const X509_DN& issuer_dn,
+                                    const X509_DN& subject_dn,
+                                    const Extensions& extensions)
+   {
    const u32bit X509_CERT_VERSION = 3;
    const u32bit SERIAL_BITS = 128;
 
