@@ -89,52 +89,30 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
    X509_Time not_before(current_time);
    X509_Time not_after(current_time + expire_time);
 
-   return make_cert(signer, ca_sig_algo, req.raw_public_key(),
-                    cert.subject_key_id(), not_before, not_after,
-                    cert.subject_dn(), req.subject_dn(),
-                    req.is_CA(), req.path_limit(), req.subject_alt_name(),
-                    AlternativeName(), constraints, req.ex_constraints());
-   }
-
-/*************************************************
-* Create a new certificate                       *
-*************************************************/
-X509_Certificate X509_CA::make_cert(PK_Signer* signer,
-                                    const AlgorithmIdentifier& sig_algo,
-                                    const MemoryRegion<byte>& pub_key,
-                                    const MemoryRegion<byte>& auth_key_id,
-                                    const X509_Time& not_before,
-                                    const X509_Time& not_after,
-                                    const X509_DN& issuer_dn,
-                                    const X509_DN& subject_dn,
-                                    bool is_CA, u32bit path_limit,
-                                    const AlternativeName& subject_alt,
-                                    const AlternativeName& issuer_alt,
-                                    Key_Constraints constraints,
-                                    const std::vector<OID>& ex_constraints)
-   {
    Extensions extensions;
 
    // POLICY: which extensions
-   extensions.add(new Cert_Extension::Subject_Key_ID(pub_key));
-   extensions.add(new Cert_Extension::Authority_Key_ID(auth_key_id));
+   extensions.add(new Cert_Extension::Subject_Key_ID(req.raw_public_key()));
+   extensions.add(new Cert_Extension::Authority_Key_ID(cert.subject_key_id()));
 
    extensions.add(
-      new Cert_Extension::Basic_Constraints(is_CA, path_limit));
+      new Cert_Extension::Basic_Constraints(req.is_CA(), req.path_limit()));
 
-   extensions.add(new Cert_Extension::Key_Usage(constraints));
+   extensions.add(new Cert_Extension::Key_Usage(req.constraints()));
    extensions.add(
-      new Cert_Extension::Extended_Key_Usage(ex_constraints));
+      new Cert_Extension::Extended_Key_Usage(req.ex_constraints()));
 
    extensions.add(
-      new Cert_Extension::Subject_Alternative_Name(subject_alt));
+      new Cert_Extension::Subject_Alternative_Name(req.subject_alt_name()));
 
+   /*
    extensions.add(
       new Cert_Extension::Issuer_Alternative_Name(issuer_alt));
+   */
 
-   return make_cert(signer, sig_algo, pub_key,
+   return make_cert(signer, ca_sig_algo, req.raw_public_key(),
                     not_before, not_after,
-                    issuer_dn, subject_dn,
+                    cert.subject_dn(), req.subject_dn(),
                     extensions);
    }
 

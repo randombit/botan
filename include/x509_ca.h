@@ -30,16 +30,6 @@ class X509_CA
 
       static X509_Certificate make_cert(PK_Signer*, const AlgorithmIdentifier&,
                                         const MemoryRegion<byte>&,
-                                        const MemoryRegion<byte>&,
-                                        const X509_Time&, const X509_Time&,
-                                        const X509_DN&, const X509_DN&,
-                                        bool, u32bit, const AlternativeName&,
-                                        const AlternativeName&,
-                                        Key_Constraints,
-                                        const std::vector<OID>&);
-
-      static X509_Certificate make_cert(PK_Signer*, const AlgorithmIdentifier&,
-                                        const MemoryRegion<byte>&,
                                         const X509_Time&, const X509_Time&,
                                         const X509_DN&, const X509_DN&,
                                         const class Extensions&);
