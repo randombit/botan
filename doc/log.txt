@@ -1,4 +1,11 @@
 
+* 1.5.9, 
+ - Fixed bitrot in the AEP engine
+ - Fix support for marking certificate/CRL extensions as critical
+ - Significant cleanups in the library state / initialization code
+ - Add support for global named mutexes throughout the library
+ - Change how certificates are created to be more flexible and general
+
 * 1.5.8, June 23, 2006
  - Many internal cleanups to the X.509 cert/CRL code
  - Allow for application code to support new X.509 extensions
