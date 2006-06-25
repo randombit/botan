@@ -25,7 +25,10 @@ Library_State* global_lib_state = 0;
 Library_State& global_state()
    {
    if(!global_lib_state)
-      throw Invalid_State("Library was not intialized correctly");
+      {
+      abort();
+      throw Invalid_State("Library was not initialized correctly");
+      }
    return (*global_lib_state);
    }
 
@@ -40,32 +43,6 @@ Library_State* swap_global_state(Library_State* new_state)
    global_lib_state = new_state;
    return old_state;
    }
-
-namespace {
-
-/*************************************************
-* Named Mutex Holder                             *
-*************************************************/
-class Named_Mutex_Holder
-   {
-   public:
-      Named_Mutex_Holder(const std::map<std::string, Mutex*>& mutexes,
-                         const std::string& name)
-         {
-         mux = search_map<std::string, Mutex*>(mutexes, name, 0);
-
-         if(!mux)
-            throw Invalid_Argument("Named_Mutex_Holder: mutex not found");
-
-         mux->lock();
-         }
-
-      ~Named_Mutex_Holder() { mux->unlock(); }
-   private:
-      Mutex* mux;
-   };
-
-}
 
 /*************************************************
 * Increment the Engine iterator                  *
@@ -84,11 +61,22 @@ Mutex* Library_State::get_mutex() const
    }
 
 /*************************************************
+* Get a persistent named mutex object            *
+*************************************************/
+Mutex* Library_State::get_named_mutex(const std::string& name)
+   {
+   Mutex* mux = search_map<std::string, Mutex*>(locks, name, 0);
+   if(mux)
+      return mux;
+   return (locks[name] = get_mutex());
+   }
+
+/*************************************************
 * Get an allocator by its name                   *
 *************************************************/
 Allocator* Library_State::get_allocator(const std::string& type) const
    {
-   Named_Mutex_Holder lock(locks, "allocator");
+   Named_Mutex_Holder lock("allocator");
 
    if(type != "")
       return search_map<std::string, Allocator*>(alloc_factory, type, 0);
@@ -97,7 +85,7 @@ Allocator* Library_State::get_allocator(const std::string& type) const
       {
       const std::string key_name = "conf/base/default_allocator";
 
-      Named_Mutex_Holder lock(locks, "settings");
+      Named_Mutex_Holder lock("settings");
       std::string chosen = search_map(settings, key_name);
 
       if(chosen == "")
@@ -115,7 +103,7 @@ Allocator* Library_State::get_allocator(const std::string& type) const
 *************************************************/
 void Library_State::add_allocator(Allocator* allocator)
    {
-   Named_Mutex_Holder lock(locks, "allocator");
+   Named_Mutex_Holder lock("allocator");
 
    allocator->init();
 
@@ -151,7 +139,7 @@ u64bit Library_State::system_clock() const
 *************************************************/
 void Library_State::set_prng(RandomNumberGenerator* new_rng)
    {
-   Named_Mutex_Holder lock(locks, "rng");
+   Named_Mutex_Holder lock("rng");
 
    delete rng;
    rng = new_rng;
@@ -162,7 +150,7 @@ void Library_State::set_prng(RandomNumberGenerator* new_rng)
 *************************************************/
 void Library_State::randomize(byte out[], u32bit length)
    {
-   Named_Mutex_Holder lock(locks, "rng");
+   Named_Mutex_Holder lock("rng");
 
    rng->randomize(out, length);
    }
@@ -172,7 +160,7 @@ void Library_State::randomize(byte out[], u32bit length)
 *************************************************/
 void Library_State::add_entropy_source(EntropySource* src, bool last_in_list)
    {
-   Named_Mutex_Holder lock(locks, "rng");
+   Named_Mutex_Holder lock("rng");
 
    if(last_in_list)
       entropy_sources.push_back(src);
@@ -185,7 +173,7 @@ void Library_State::add_entropy_source(EntropySource* src, bool last_in_list)
 *************************************************/
 void Library_State::add_entropy(const byte in[], u32bit length)
    {
-   Named_Mutex_Holder lock(locks, "rng");
+   Named_Mutex_Holder lock("rng");
 
    rng->add_entropy(in, length);
    }
@@ -195,7 +183,7 @@ void Library_State::add_entropy(const byte in[], u32bit length)
 *************************************************/
 void Library_State::add_entropy(EntropySource& source, bool slow_poll)
    {
-   Named_Mutex_Holder lock(locks, "rng");
+   Named_Mutex_Holder lock("rng");
 
    rng->add_entropy(source, slow_poll);
    }
@@ -205,7 +193,7 @@ void Library_State::add_entropy(EntropySource& source, bool slow_poll)
 *************************************************/
 u32bit Library_State::seed_prng(bool slow_poll, u32bit bits_to_get)
    {
-   Named_Mutex_Holder lock(locks, "rng");
+   Named_Mutex_Holder lock("rng");
 
    u32bit bits = 0;
    for(u32bit j = 0; j != entropy_sources.size(); ++j)
@@ -227,7 +215,7 @@ void Library_State::set_option(const std::string& section,
                                const std::string& value,
                                bool overwrite)
    {
-   Named_Mutex_Holder lock(locks, "settings");
+   Named_Mutex_Holder lock("settings");
 
    std::map<std::string, std::string>::const_iterator i = settings.find(name);
 
@@ -247,7 +235,7 @@ void Library_State::set_option(const std::string& section,
 std::string Library_State::get_option(const std::string& section,
                                       const std::string& name) const
    {
-   Named_Mutex_Holder lock(locks, "settings");
+   Named_Mutex_Holder lock("settings");
 
    return search_map<std::string, std::string>(settings,
                                                section + "/" + name, "");
@@ -259,7 +247,7 @@ std::string Library_State::get_option(const std::string& section,
 bool Library_State::option_set(const std::string& section,
                                const std::string& name) const
    {
-   Named_Mutex_Holder lock(locks, "settings");
+   Named_Mutex_Holder lock("settings");
 
    return search_map(settings, section + "/" + name, false, true);
    }
@@ -269,7 +257,7 @@ bool Library_State::option_set(const std::string& section,
 *************************************************/
 Engine* Library_State::get_engine_n(u32bit n) const
    {
-   Named_Mutex_Holder lock(locks, "engine");
+   Named_Mutex_Holder lock("engine");
 
    if(n >= engines.size())
       return 0;
@@ -281,7 +269,7 @@ Engine* Library_State::get_engine_n(u32bit n) const
 *************************************************/
 void Library_State::add_engine(Engine* engine)
    {
-   Named_Mutex_Holder lock(locks, "engine");
+   Named_Mutex_Holder lock("engine");
    engines.push_back(engine);
    }
 
@@ -347,8 +335,6 @@ Library_State::Library_State(Mutex_Factory* mutex_factory)
    rng = 0;
    cached_default_allocator = 0;
    x509_state_obj = 0;
-
-   set_default_policy();
    }
 
 /*************************************************

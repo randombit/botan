@@ -51,6 +51,8 @@ void initialize(const std::string& arg_string)
 
    set_global_state(new Library_State(mutex_factory));
 
+   global_state().set_default_policy();
+
    global_state().set_timer(modules.timer());
 
    std::vector<Allocator*> allocators = modules.allocators();

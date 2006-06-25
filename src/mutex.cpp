@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/mutex.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -23,6 +24,23 @@ Mutex_Holder::Mutex_Holder(Mutex* m) : mux(m)
 Mutex_Holder::~Mutex_Holder()
    {
    mux->unlock();
+   }
+
+/*************************************************
+* Named_Mutex_Holder Constructor                 *
+*************************************************/
+Named_Mutex_Holder::Named_Mutex_Holder(const std::string& name) :
+   mutex_name(name)
+   {
+   global_state().get_named_mutex(mutex_name)->lock();
+   }
+
+/*************************************************
+* Named_Mutex_Holder Destructor                  *
+*************************************************/
+Named_Mutex_Holder::~Named_Mutex_Holder()
+   {
+   global_state().get_named_mutex(mutex_name)->unlock();
    }
 
 /*************************************************

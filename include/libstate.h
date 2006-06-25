@@ -51,6 +51,7 @@ class Library_State
       void add_engine(class Engine*);
 
       class Mutex* get_mutex() const;
+      class Mutex* get_named_mutex(const std::string&);
 
       void set_x509_state(class X509_GlobalState*);
       class X509_GlobalState& x509_state();
@@ -58,6 +59,7 @@ class Library_State
       void set_transcoder(class Charset_Transcoder*);
       std::string transcode(const std::string,
                             Character_Set, Character_Set) const;
+      void set_default_policy();
 
       Library_State(class Mutex_Factory*);
       ~Library_State();
@@ -66,7 +68,6 @@ class Library_State
       Library_State& operator=(const Library_State&) { return (*this); }
 
       class Engine* get_engine_n(u32bit) const;
-      void set_default_policy();
 
       class Mutex_Factory* mutex_factory;
       class Timer* timer;

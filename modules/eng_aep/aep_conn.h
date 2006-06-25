@@ -28,7 +28,6 @@ class AEP_Connection
 
       static const u32bit MAX_CACHED_CONNECTIONS = 8;
       static std::vector<Connection_Info> pool;
-      static Mutex* guard;
 
       u32bit this_connection;
    };

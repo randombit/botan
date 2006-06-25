@@ -22,6 +22,16 @@ class Mutex
    };
 
 /*************************************************
+* Mutex Factory                                  *
+*************************************************/
+class Mutex_Factory
+   {
+   public:
+      virtual Mutex* make();
+      virtual ~Mutex_Factory() {}
+   };
+
+/*************************************************
 * Mutex Holding Class                            *
 *************************************************/
 class Mutex_Holder
@@ -34,13 +44,15 @@ class Mutex_Holder
    };
 
 /*************************************************
-* Mutex Factory                                  *
+* Named Mutex Holder                             *
 *************************************************/
-class Mutex_Factory
+class Named_Mutex_Holder
    {
    public:
-      virtual Mutex* make();
-      virtual ~Mutex_Factory() {}
+      Named_Mutex_Holder(const std::string&);
+      ~Named_Mutex_Holder();
+   private:
+      const std::string mutex_name;
    };
 
 }

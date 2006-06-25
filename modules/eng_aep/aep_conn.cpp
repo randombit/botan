@@ -14,20 +14,19 @@ namespace Botan {
 * Persistent connection pool                     *
 *************************************************/
 std::vector<AEP_Connection::Connection_Info> AEP_Connection::pool;
-Mutex* AEP_Connection::guard = 0;
 
 /*************************************************
 * Close all currently open connections           *
 *************************************************/
 void AEP_Connection::close_all_connections()
    {
-   guard->lock();
+   Mutex* mutex = global_state().get_named_mutex("aep");
+
+   mutex->lock();
    for(u32bit j = 0; j != pool.size(); j++)
       AEP::AEP_CloseConnection(pool[j].id);
    pool.clear();
-   guard->unlock();
-   delete guard;
-   guard = 0;
+   mutex->unlock();
    }
 
 /*************************************************
@@ -35,11 +34,7 @@ void AEP_Connection::close_all_connections()
 *************************************************/
 AEP_Connection::AEP_Connection()
    {
-   // FIXME: race condition
-   if(!guard)
-      guard = global_state().get_mutex();
-
-   Mutex_Holder lock(guard);
+   Named_Mutex_Holder lock("aep");
 
    this_connection = 0;
 
@@ -73,7 +68,7 @@ AEP_Connection::AEP_Connection()
 *************************************************/
 AEP_Connection::~AEP_Connection()
    {
-   Mutex_Holder lock(guard);
+   Named_Mutex_Holder lock("aep");
 
    for(u32bit j = 0; j != pool.size(); j++)
       {
