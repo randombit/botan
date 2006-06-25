@@ -131,8 +131,11 @@ void Library_State::add_allocator(Allocator* allocator)
 *************************************************/
 void Library_State::set_timer(Timer* new_timer)
    {
-   delete timer;
-   timer = new_timer;
+   if(new_timer)
+      {
+      delete timer;
+      timer = new_timer;
+      }
    }
 
 /*************************************************
