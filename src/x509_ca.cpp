@@ -21,23 +21,6 @@
 
 namespace Botan {
 
-namespace {
-
-// FIXME: move elsewhere
-MemoryVector<byte> make_signed(PK_Signer* signer,
-                               const AlgorithmIdentifier& sig_algo,
-                               const MemoryRegion<byte>& tbs_bits)
-   {
-   return DER_Encoder().start_cons(SEQUENCE)
-            .raw_bytes(tbs_bits)
-            .encode(sig_algo)
-            .encode(signer->sign_message(tbs_bits), BIT_STRING)
-         .end_cons()
-      .get_contents();
-   }
-
-}
-
 /*************************************************
 * Load the certificate and private key           *
 *************************************************/
@@ -92,8 +75,9 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
    Extensions extensions;
 
    // POLICY: which extensions
-   extensions.add(new Cert_Extension::Subject_Key_ID(req.raw_public_key()));
    extensions.add(new Cert_Extension::Authority_Key_ID(cert.subject_key_id()));
+
+   extensions.add(new Cert_Extension::Subject_Key_ID(req.raw_public_key()));
 
    extensions.add(
       new Cert_Extension::Basic_Constraints(req.is_CA(), req.path_limit()));
@@ -131,7 +115,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
    const u32bit X509_CERT_VERSION = 3;
    const u32bit SERIAL_BITS = 128;
 
-   DataSource_Memory source(make_signed(signer, sig_algo,
+   DataSource_Memory source(X509_Object::make_signed(signer, sig_algo,
          DER_Encoder().start_cons(SEQUENCE)
             .start_explicit(0)
                .encode(X509_CERT_VERSION-1)
@@ -229,7 +213,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
       new Cert_Extension::Authority_Key_ID(cert.subject_key_id()));
    extensions.add(new Cert_Extension::CRL_Number(crl_number));
 
-   DataSource_Memory source(make_signed(signer, ca_sig_algo,
+   DataSource_Memory source(X509_Object::make_signed(signer, ca_sig_algo,
          DER_Encoder().start_cons(SEQUENCE)
             .encode(X509_CRL_VERSION-1)
             .encode(ca_sig_algo)
