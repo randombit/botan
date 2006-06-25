@@ -176,17 +176,8 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
       .end_explicit()
       .end_cons();
 
-   MemoryVector<byte> tbs_bits = tbs_req.get_contents();
-   MemoryVector<byte> sig = signer->sign_message(tbs_bits);
-
    DataSource_Memory source(
-      DER_Encoder()
-         .start_cons(SEQUENCE)
-            .raw_bytes(tbs_bits)
-            .encode(sig_algo)
-            .encode(sig, BIT_STRING)
-         .end_cons()
-      .get_contents()
+      X509_Object::make_signed(signer, sig_algo, tbs_req.get_contents())
       );
 
    return PKCS10_Request(source);
