@@ -35,9 +35,21 @@ void Extensions::encode_into(DER_Encoder& to_object) const
       {
       const Certificate_Extension* ext = extensions[j];
 
-      bool is_critical = false;
+      std::string setting;
 
-      bool should_encode = ext->should_encode();
+      if(ext->config_id() != "")
+         setting = Config::get_string("x509/exts/" + ext->config_id());
+
+      if(setting == "")
+         setting = "yes";
+
+      if(setting != "yes" && setting != "no" && setting != "critical")
+         throw Invalid_Argument("X509_CA:: Invalid value for option "
+                                "x509/exts/" + ext->config_id() + " of " +
+                                setting);
+
+      bool is_critical = (setting == "critical");
+      bool should_encode = ext->should_encode() && (setting != "no");
 
       if(should_encode)
          {
