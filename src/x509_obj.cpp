@@ -192,6 +192,22 @@ bool X509_Object::check_signature(X509_PublicKey& pub_key) const
    }
 
 /*************************************************
+* Apply the X.509 SIGNED macro                   *
+*************************************************/
+MemoryVector<byte> X509_Object::make_signed(PK_Signer* signer,
+                                            const AlgorithmIdentifier& algo,
+                                            const MemoryRegion<byte>& tbs_bits)
+   {
+   return DER_Encoder()
+      .start_cons(SEQUENCE)
+         .raw_bytes(tbs_bits)
+         .encode(algo)
+         .encode(signer->sign_message(tbs_bits), BIT_STRING)
+      .end_cons()
+   .get_contents();
+   }
+
+/*************************************************
 * Try to decode the actual information           *
 *************************************************/
 void X509_Object::do_decode()

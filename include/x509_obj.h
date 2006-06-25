@@ -22,6 +22,10 @@ class X509_Object
       SecureVector<byte> signature() const;
       AlgorithmIdentifier signature_algorithm() const;
 
+      static MemoryVector<byte> make_signed(class PK_Signer*,
+                                            const AlgorithmIdentifier&,
+                                            const MemoryRegion<byte>&);
+
       bool check_signature(class X509_PublicKey&) const;
 
       void encode(Pipe&, X509_Encoding = PEM) const;
