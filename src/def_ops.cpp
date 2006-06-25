@@ -83,7 +83,7 @@ class Default_DSA_Op : public DSA_Operation
       const BigInt x, y;
       const DL_Group group;
       Fixed_Base_Power_Mod powermod_g_p, powermod_y_p;
-      Modular_Reducer reduce_p, reduce_q;
+      Modular_Reducer mod_p, mod_q;
    };
 
 /*************************************************
@@ -94,8 +94,8 @@ Default_DSA_Op::Default_DSA_Op(const DL_Group& grp, const BigInt& y1,
    {
    powermod_g_p = Fixed_Base_Power_Mod(group.get_g(), group.get_p());
    powermod_y_p = Fixed_Base_Power_Mod(y, group.get_p());
-   reduce_p = Modular_Reducer(group.get_p());
-   reduce_q = Modular_Reducer(group.get_q());
+   mod_p = Modular_Reducer(group.get_p());
+   mod_q = Modular_Reducer(group.get_q());
    }
 
 /*************************************************
@@ -117,10 +117,10 @@ bool Default_DSA_Op::verify(const byte msg[], u32bit msg_len,
       return false;
 
    s = inverse_mod(s, q);
-   s = reduce_p.multiply(powermod_g_p(reduce_q.multiply(s, i)),
-                         powermod_y_p(reduce_q.multiply(s, r)));
+   s = mod_p.multiply(powermod_g_p(mod_q.multiply(s, i)),
+                      powermod_y_p(mod_q.multiply(s, r)));
 
-   return (reduce_q.reduce(s) == r);
+   return (mod_q.reduce(s) == r);
    }
 
 /*************************************************
@@ -135,8 +135,8 @@ SecureVector<byte> Default_DSA_Op::sign(const byte in[], u32bit length,
    const BigInt& q = group.get_q();
    BigInt i(in, length);
 
-   BigInt r = reduce_q.reduce(powermod_g_p(k));
-   BigInt s = reduce_q.multiply(inverse_mod(k, q), mul_add(x, r, i));
+   BigInt r = mod_q.reduce(powermod_g_p(k));
+   BigInt s = mod_q.multiply(inverse_mod(k, q), mul_add(x, r, i));
 
    if(r.is_zero() || s.is_zero())
       throw Internal_Error("Default_DSA_Op::sign: r or s was zero");
