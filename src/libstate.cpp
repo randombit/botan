@@ -127,6 +127,15 @@ void Library_State::add_allocator(Allocator* allocator)
    }
 
 /*************************************************
+* Set the high resolution clock implementation   *
+*************************************************/
+void Library_State::set_timer(Timer* new_timer)
+   {
+   delete timer;
+   timer = new_timer;
+   }
+
+/*************************************************
 * Read a high resolution clock                   *
 *************************************************/
 u64bit Library_State::system_clock() const
@@ -319,15 +328,13 @@ X509_GlobalState& Library_State::x509_state()
 /*************************************************
 * Library_State Constructor                      *
 *************************************************/
-Library_State::Library_State(Mutex_Factory* mutex_factory, Timer* timer)
+Library_State::Library_State(Mutex_Factory* mutex_factory)
    {
    if(!mutex_factory)
       mutex_factory = new Mutex_Factory;
-   if(!timer)
-      timer = new Timer;
 
    this->mutex_factory = mutex_factory;
-   this->timer = timer;
+   this->timer = new Timer();
    this->transcoder = 0;
 
    locks["settings"] = get_mutex();
@@ -352,6 +359,7 @@ Library_State::~Library_State()
       delete entropy_sources[j];
 
    delete rng;
+   delete timer;
 
    for(u32bit j = 0; j != engines.size(); ++j)
       delete engines[j];
@@ -364,12 +372,11 @@ Library_State::~Library_State()
       delete j->second;
       }
 
-   delete mutex_factory;
-   delete timer;
-
    for(std::map<std::string, Mutex*>::iterator j = locks.begin();
        j != locks.end(); ++j)
       delete j->second;
+
+   delete mutex_factory;
    }
 
 }

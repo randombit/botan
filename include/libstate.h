@@ -40,6 +40,7 @@ class Library_State
       void add_entropy(EntropySource&, bool);
       u32bit seed_prng(bool, u32bit);
 
+      void set_timer(Timer*);
       u64bit system_clock() const;
 
       void set_option(const std::string&, const std::string&,
