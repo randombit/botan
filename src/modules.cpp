@@ -4,6 +4,9 @@
 *************************************************/
 
 #include <botan/modules.h>
+#include <botan/libstate.h>
+#include <botan/defalloc.h>
+#include <botan/eng_def.h>
 #include <botan/es_file.h>
 
 #if defined(BOTAN_EXT_MUTEX_PTHREAD)
@@ -70,12 +73,52 @@
 
 namespace Botan {
 
+/*************************************************
+* Default No-Op Implementation                   *
+*************************************************/
+class Mutex_Factory* Modules::mutex_factory() const
+   {
+   return 0;
+   }
+
+/*************************************************
+* Default No-Op Implementation                   *
+*************************************************/
+class Timer* Modules::timer() const
+   {
+   return 0;
+   }
+
+/*************************************************
+* Default No-Op Implementation                   *
+*************************************************/
+std::vector<Allocator*> Modules::allocators() const
+   {
+   return std::vector<Allocator*>();
+   }
+
+/*************************************************
+* Default No-Op Implementation                   *
+*************************************************/
+std::vector<EntropySource*> Modules::entropy_sources() const
+   {
+   return std::vector<EntropySource*>();
+   }
+
+/*************************************************
+* Default No-Op Implementation                   *
+*************************************************/
+std::vector<Engine*> Modules::engines() const
+   {
+   return std::vector<Engine*>();
+   }
+
 namespace Modules {
 
 /*************************************************
-* Register a mutex type, if possible             *
+* Return a mutex factory, if available           *
 *************************************************/
-Mutex_Factory* get_mutex_factory()
+Mutex_Factory* Builtin_Modules::mutex_factory() const
    {
 #if defined(BOTAN_EXT_MUTEX_PTHREAD)
    return new Pthread_Mutex_Factory;
@@ -83,15 +126,15 @@ Mutex_Factory* get_mutex_factory()
    return new Win32_Mutex_Factory;
 #elif defined(BOTAN_EXT_MUTEX_QT)
    return new Qt_Mutex_Factory;
-#endif
-
+#else
    return 0;
+#endif
    }
 
 /*************************************************
 * Find a high resolution timer, if possible      *
 *************************************************/
-Timer* get_timer()
+Timer* Builtin_Modules::timer() const
    {
 #if defined(BOTAN_EXT_TIMER_HARDWARE)
    return new Hardware_Timer;
@@ -101,15 +144,15 @@ Timer* get_timer()
    return new Unix_Timer;
 #elif defined(BOTAN_EXT_TIMER_WIN32)
    return new Win32_Timer;
-#endif
-
+#else
    return 0;
+#endif
    }
 
 /*************************************************
 * Find any usable allocators                     *
 *************************************************/
-std::vector<Allocator*> get_allocators()
+std::vector<Allocator*> Builtin_Modules::allocators() const
    {
    std::vector<Allocator*> allocators;
 
@@ -117,13 +160,16 @@ std::vector<Allocator*> get_allocators()
    allocators.push_back(new MemoryMapping_Allocator);
 #endif
 
+   allocators.push_back(new Locking_Allocator);
+   allocators.push_back(new Malloc_Allocator);
+
    return allocators;
    }
 
 /*************************************************
 * Register any usable entropy sources            *
 *************************************************/
-std::vector<EntropySource*> get_entropy_sources()
+std::vector<EntropySource*> Builtin_Modules::entropy_sources() const
    {
    std::vector<EntropySource*> sources;
 
@@ -163,7 +209,7 @@ std::vector<EntropySource*> get_entropy_sources()
 /*************************************************
 * Find any usable engines                        *
 *************************************************/
-std::vector<Engine*> get_engines()
+std::vector<Engine*> Builtin_Modules::engines() const
    {
    std::vector<Engine*> engines;
 
@@ -178,6 +224,8 @@ std::vector<Engine*> get_engines()
 #if defined(BOTAN_EXT_ENGINE_OPENSSL)
    engines.push_back(new OpenSSL_Engine);
 #endif
+
+   engines.push_back(new Default_Engine);
 
    return engines;
    }

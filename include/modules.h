@@ -6,32 +6,42 @@
 #ifndef BOTAN_MODULE_FACTORIES_H__
 #define BOTAN_MODULE_FACTORIES_H__
 
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace Botan {
 
 /*************************************************
-* Forward Declarations                           *
+* Module Builder Interface                       *
 *************************************************/
-class Mutex_Factory;
-class Timer;
-class EntropySource;
-class Engine;
-class Allocator;
+class Modules
+   {
+   public:
+      void load(class Library_State&) const;
 
-namespace Modules {
+      virtual class Mutex_Factory* mutex_factory() const;
+      virtual class Timer* timer() const;
+
+      virtual std::vector<class Allocator*> allocators() const;
+      virtual std::vector<class EntropySource*> entropy_sources() const;
+      virtual std::vector<class Engine*> engines() const;
+
+      virtual ~Modules() {}
+   };
 
 /*************************************************
-* Get the module objects                         *
+* Built In Modules                               *
 *************************************************/
-class Mutex_Factory* get_mutex_factory();
-class Timer* get_timer();
-std::vector<EntropySource*> get_entropy_sources();
-std::vector<Engine*> get_engines();
-std::vector<Allocator*> get_allocators();
+class Builtin_Modules : public Modules
+   {
+   public:
+      class Mutex_Factory* mutex_factory() const;
+      class Timer* timer() const;
 
-}
+      std::vector<class Allocator*> allocators() const;
+      std::vector<class EntropySource*> entropy_sources() const;
+      std::vector<class Engine*> engines() const;
+   };
 
 }
 

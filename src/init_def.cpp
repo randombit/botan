@@ -7,9 +7,7 @@
 #include <botan/libstate.h>
 #include <botan/modules.h>
 #include <botan/conf.h>
-#include <botan/parsing.h>
 #include <botan/defalloc.h>
-#include <botan/eng_def.h>
 #include <botan/fips140.h>
 #include <botan/x931_rng.h>
 #include <botan/def_char.h>
@@ -34,90 +32,48 @@ LibraryInitializer::~LibraryInitializer()
 
 namespace Init {
 
-namespace {
-
-/*************************************************
-* Parse the options string                       *
-*************************************************/
-std::map<std::string, std::string> parse_args(const std::string& arg_string)
-   {
-   std::map<std::string, std::string> arg_map;
-   std::vector<std::string> args = split_on(arg_string, ' ');
-   for(u32bit j = 0; j != args.size(); ++j)
-      {
-      if(args[j].find('=') == std::string::npos)
-         arg_map[args[j]] = "";
-      else
-         {
-         std::vector<std::string> name_and_value = split_on(args[j], '=');
-         arg_map[name_and_value[0]] = name_and_value[1];
-         }
-      }
-
-   return arg_map;
-   }
-
-/*************************************************
-* Check if an option is set in the argument      *
-*************************************************/
-bool arg_set(const std::map<std::string, std::string>& args,
-             const std::string& option)
-   {
-   return (args.find(option) != args.end());
-   }
-
-}
-
 /*************************************************
 * Library Initialization                         *
 *************************************************/
 void initialize(const std::string& arg_string)
    {
-   std::map<std::string, std::string> args = parse_args(arg_string);
+   InitializerOptions args(arg_string);
+   Builtin_Modules modules;
 
    Mutex_Factory* mutex_factory = 0;
-   if(arg_set(args, "thread_safe"))
+
+   if(args.thread_safe())
       {
-      mutex_factory = Modules::get_mutex_factory();
+      mutex_factory = modules.mutex_factory();
       if(!mutex_factory)
          throw Exception("LibraryInitializer: thread safety impossible");
       }
 
-   set_global_state(new Library_State(mutex_factory,
-                                      Modules::get_timer()));
+   set_global_state(new Library_State(mutex_factory));
 
-   global_state().add_allocator(new Malloc_Allocator);
-   global_state().add_allocator(new Locking_Allocator);
+   global_state().set_timer(modules.timer());
 
-   if(arg_set(args, "secure_memory"))
-      {
-      std::vector<Allocator*> allocators = Modules::get_allocators();
+   std::vector<Allocator*> allocators = modules.allocators();
+   for(u32bit j = 0; j != allocators.size(); ++j)
+      global_state().add_allocator(allocators[j]);
 
-      for(u32bit j = 0; j != allocators.size(); ++j)
-         global_state().add_allocator(allocators[j]);
-      }
+   if(args.config_file() != "")
+      Config::load(args.config_file(), global_state());
 
-   if(arg_set(args, "config") && args["config"] != "")
-      Config::load(args["config"], global_state());
-
-   if(arg_set(args, "use_engines"))
-      {
-      std::vector<Engine*> engines = Modules::get_engines();
-      for(u32bit j = 0; j != engines.size(); ++j)
-         global_state().add_engine(engines[j]);
-      }
-   global_state().add_engine(new Default_Engine);
+   std::vector<Engine*> engines = modules.engines();
+   for(u32bit j = 0; j != engines.size(); ++j)
+      global_state().add_engine(engines[j]);
 
    global_state().set_transcoder(new Default_Charset_Transcoder);
 
    global_state().set_prng(new ANSI_X931_RNG);
-   std::vector<EntropySource*> sources = Modules::get_entropy_sources();
+   std::vector<EntropySource*> sources = modules.entropy_sources();
    for(u32bit j = 0; j != sources.size(); ++j)
       global_state().add_entropy_source(sources[j], true);
 
    const u32bit min_entropy = Config::get_u32bit("rng/min_entropy");
 
-   if(min_entropy != 0 && !arg_set(args, "no_rng_seed"))
+   if(min_entropy != 0 && args.seed_rng())
       {
       u32bit total_bits = 0;
       for(u32bit j = 0; j != 4; ++j)
