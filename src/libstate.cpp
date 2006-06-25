@@ -31,8 +31,7 @@ Library_State& global_state()
 
 void set_global_state(Library_State* new_state)
    {
-   delete global_lib_state;
-   global_lib_state = new_state;
+   delete swap_global_state(new_state);
    }
 
 Library_State* swap_global_state(Library_State* new_state)
