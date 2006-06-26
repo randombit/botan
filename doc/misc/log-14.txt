@@ -1,5 +1,5 @@
 
-* 1.4.12, January 15, 2005
+* 1.4.12, January 15, 2006
  - Fixed an off-by-one memory read in MISTY1::key()
  - Fixed a nasty memory leak in Output_Buffers::retire()
  - Changed maximum HMAC keylength to 1024 bits
