@@ -177,7 +177,8 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
       .end_cons();
 
    DataSource_Memory source(
-      X509_Object::make_signed(signer, sig_algo, tbs_req.get_contents())
+      X509_Object::make_signed(signer.get(), sig_algo,
+                               tbs_req.get_contents())
       );
 
    return PKCS10_Request(source);
