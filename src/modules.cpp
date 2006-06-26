@@ -74,48 +74,6 @@
 namespace Botan {
 
 /*************************************************
-* Default No-Op Implementation                   *
-*************************************************/
-class Mutex_Factory* Modules::mutex_factory() const
-   {
-   return 0;
-   }
-
-/*************************************************
-* Default No-Op Implementation                   *
-*************************************************/
-class Timer* Modules::timer() const
-   {
-   return 0;
-   }
-
-/*************************************************
-* Default No-Op Implementation                   *
-*************************************************/
-std::vector<Allocator*> Modules::allocators() const
-   {
-   return std::vector<Allocator*>();
-   }
-
-/*************************************************
-* Default No-Op Implementation                   *
-*************************************************/
-std::vector<EntropySource*> Modules::entropy_sources() const
-   {
-   return std::vector<EntropySource*>();
-   }
-
-/*************************************************
-* Default No-Op Implementation                   *
-*************************************************/
-std::vector<Engine*> Modules::engines() const
-   {
-   return std::vector<Engine*>();
-   }
-
-namespace Modules {
-
-/*************************************************
 * Return a mutex factory, if available           *
 *************************************************/
 Mutex_Factory* Builtin_Modules::mutex_factory() const
@@ -150,86 +108,78 @@ Timer* Builtin_Modules::timer() const
    }
 
 /*************************************************
-* Find any usable allocators                     *
+* Set any usable allocators                      *
 *************************************************/
-std::vector<Allocator*> Builtin_Modules::allocators() const
+void Builtin_Modules::set_allocators(Library_State& state,
+                                     bool secure_mem) const
    {
-   std::vector<Allocator*> allocators;
+   state.add_allocator(new Malloc_Allocator, !secure_mem);
+
+   state.add_allocator(new Locking_Allocator, secure_mem);
 
 #if defined(BOTAN_EXT_ALLOC_MMAP)
-   allocators.push_back(new MemoryMapping_Allocator);
+   state.add_allocator(new MemoryMapping_Allocator, secure_mem);
 #endif
-
-   allocators.push_back(new Locking_Allocator);
-   allocators.push_back(new Malloc_Allocator);
-
-   return allocators;
    }
 
 /*************************************************
 * Register any usable entropy sources            *
 *************************************************/
-std::vector<EntropySource*> Builtin_Modules::entropy_sources() const
+void Builtin_Modules::set_entropy_sources(Library_State& state) const
    {
-   std::vector<EntropySource*> sources;
-
-   sources.push_back(new File_EntropySource);
+   state.add_entropy_source(new File_EntropySource);
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_AEP)
-   sources.push_back(new AEP_EntropySource);
+   state.add_entropy_source(new AEP_EntropySource);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_EGD)
-   sources.push_back(new EGD_EntropySource);
+   state.add_entropy_source(new EGD_EntropySource);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_CAPI)
-   sources.push_back(new Win32_CAPI_EntropySource);
+   state.add_entropy_source(new Win32_CAPI_EntropySource);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_WIN32)
-   sources.push_back(new Win32_EntropySource);
+   state.add_entropy_source(new Win32_EntropySource);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_UNIX)
-   sources.push_back(new Unix_EntropySource);
+   state.add_entropy_source(new Unix_EntropySource);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_BEOS)
-   sources.push_back(new BeOS_EntropySource);
+   state.add_entropy_source(new BeOS_EntropySource);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_FTW)
-   sources.push_back(new FTW_EntropySource);
+   state.add_entropy_source(new FTW_EntropySource);
 #endif
-
-   return sources;
    }
 
 /*************************************************
 * Find any usable engines                        *
 *************************************************/
-std::vector<Engine*> Builtin_Modules::engines() const
+void Builtin_Modules::set_engines(Library_State& state,
+                                  bool use_engines) const
    {
-   std::vector<Engine*> engines;
-
+   if(use_engines)
+      {
 #if defined(BOTAN_EXT_ENGINE_AEP)
-   engines.push_back(new AEP_Engine);
+      state.add_engine(new AEP_Engine);
 #endif
 
 #if defined(BOTAN_EXT_ENGINE_GNU_MP)
-   engines.push_back(new GMP_Engine);
+      state.add_engine(new GMP_Engine);
 #endif
 
 #if defined(BOTAN_EXT_ENGINE_OPENSSL)
-   engines.push_back(new OpenSSL_Engine);
+      state.add_engine(new OpenSSL_Engine);
 #endif
+      }
 
-   engines.push_back(new Default_Engine);
-
-   return engines;
+   state.add_engine(new Default_Engine);
    }
-
-}
 
 }

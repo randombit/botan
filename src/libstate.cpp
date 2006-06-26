@@ -101,7 +101,8 @@ Allocator* Library_State::get_allocator(const std::string& type) const
 /*************************************************
 * Create a new name to object mapping            *
 *************************************************/
-void Library_State::add_allocator(Allocator* allocator)
+void Library_State::add_allocator(Allocator* allocator,
+                                  bool set_as_default)
    {
    Named_Mutex_Holder lock("allocator");
 
@@ -112,6 +113,9 @@ void Library_State::add_allocator(Allocator* allocator)
       delete alloc_factory[type];
 
    alloc_factory[type] = allocator;
+
+   if(set_as_default)
+      set_option("conf", "base/default_allocator", type);
    }
 
 /*************************************************

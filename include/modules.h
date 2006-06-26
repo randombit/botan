@@ -6,9 +6,6 @@
 #ifndef BOTAN_MODULE_FACTORIES_H__
 #define BOTAN_MODULE_FACTORIES_H__
 
-#include <string>
-#include <vector>
-
 namespace Botan {
 
 /*************************************************
@@ -19,12 +16,12 @@ class Modules
    public:
       void load(class Library_State&) const;
 
-      virtual class Mutex_Factory* mutex_factory() const;
-      virtual class Timer* timer() const;
+      virtual class Mutex_Factory* mutex_factory() const { return 0; }
+      virtual class Timer* timer() const { return 0; }
 
-      virtual std::vector<class Allocator*> allocators() const;
-      virtual std::vector<class EntropySource*> entropy_sources() const;
-      virtual std::vector<class Engine*> engines() const;
+      virtual void set_allocators(class Library_State&, bool) const {}
+      virtual void set_entropy_sources(class Library_State&) const {}
+      virtual void set_engines(class Library_State&, bool) const {}
 
       virtual ~Modules() {}
    };
@@ -38,9 +35,9 @@ class Builtin_Modules : public Modules
       class Mutex_Factory* mutex_factory() const;
       class Timer* timer() const;
 
-      std::vector<class Allocator*> allocators() const;
-      std::vector<class EntropySource*> entropy_sources() const;
-      std::vector<class Engine*> engines() const;
+      void set_allocators(class Library_State&, bool) const;
+      void set_entropy_sources(class Library_State&) const;
+      void set_engines(class Library_State&, bool) const;
    };
 
 }

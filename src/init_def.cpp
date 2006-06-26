@@ -50,28 +50,20 @@ void initialize(const std::string& arg_string)
       }
 
    set_global_state(new Library_State(mutex_factory));
-
    global_state().set_default_policy();
 
    global_state().set_timer(modules.timer());
 
-   std::vector<Allocator*> allocators = modules.allocators();
-   for(u32bit j = 0; j != allocators.size(); ++j)
-      global_state().add_allocator(allocators[j]);
+   modules.set_allocators(global_state(), false);
 
    if(args.config_file() != "")
       Config::load(args.config_file(), global_state());
 
-   std::vector<Engine*> engines = modules.engines();
-   for(u32bit j = 0; j != engines.size(); ++j)
-      global_state().add_engine(engines[j]);
+   modules.set_engines(global_state(), args.use_engines());
 
    global_state().set_transcoder(new Default_Charset_Transcoder);
-
    global_state().set_prng(new ANSI_X931_RNG);
-   std::vector<EntropySource*> sources = modules.entropy_sources();
-   for(u32bit j = 0; j != sources.size(); ++j)
-      global_state().add_entropy_source(sources[j], true);
+   modules.set_entropy_sources(global_state());
 
    const u32bit min_entropy = Config::get_u32bit("rng/min_entropy");
 
