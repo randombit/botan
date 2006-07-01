@@ -103,83 +103,106 @@ Timer* Builtin_Modules::timer() const
 #elif defined(BOTAN_EXT_TIMER_WIN32)
    return new Win32_Timer;
 #else
-   return 0;
+   return new Timer;
 #endif
    }
 
 /*************************************************
-* Set any usable allocators                      *
+* Find any usable allocators                     *
 *************************************************/
-void Builtin_Modules::set_allocators(Library_State& state,
-                                     bool secure_mem) const
+std::vector<Allocator*> Builtin_Modules::allocators() const
    {
-   state.add_allocator(new Malloc_Allocator, !secure_mem);
-
-   state.add_allocator(new Locking_Allocator, secure_mem);
+   std::vector<Allocator*> allocators;
 
 #if defined(BOTAN_EXT_ALLOC_MMAP)
-   state.add_allocator(new MemoryMapping_Allocator, secure_mem);
+   allocators.push_back(new MemoryMapping_Allocator);
 #endif
+
+   allocators.push_back(new Locking_Allocator);
+   allocators.push_back(new Malloc_Allocator);
+
+   return allocators;
+   }
+
+/*************************************************
+* Return the default allocator                   *
+*************************************************/
+std::string Builtin_Modules::default_allocator() const
+   {
+   if(should_lock)
+      {
+#if defined(BOTAN_EXT_ALLOC_MMAP)
+      return "mmap";
+#else
+      return "locking";
+#endif
+      }
+   else
+      return "malloc";
    }
 
 /*************************************************
 * Register any usable entropy sources            *
 *************************************************/
-void Builtin_Modules::set_entropy_sources(Library_State& state) const
+std::vector<EntropySource*> Builtin_Modules::entropy_sources() const
    {
-   state.add_entropy_source(new File_EntropySource);
+   std::vector<EntropySource*> sources;
+
+   sources.push_back(new File_EntropySource);
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_AEP)
-   state.add_entropy_source(new AEP_EntropySource);
+   sources.push_back(new AEP_EntropySource);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_EGD)
-   state.add_entropy_source(new EGD_EntropySource);
+   sources.push_back(new EGD_EntropySource);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_CAPI)
-   state.add_entropy_source(new Win32_CAPI_EntropySource);
+   sources.push_back(new Win32_CAPI_EntropySource);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_WIN32)
-   state.add_entropy_source(new Win32_EntropySource);
+   sources.push_back(new Win32_EntropySource);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_UNIX)
-   state.add_entropy_source(new Unix_EntropySource);
+   sources.push_back(new Unix_EntropySource);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_BEOS)
-   state.add_entropy_source(new BeOS_EntropySource);
+   sources.push_back(new BeOS_EntropySource);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_FTW)
-   state.add_entropy_source(new FTW_EntropySource);
+   sources.push_back(new FTW_EntropySource);
 #endif
+
+   return sources;
    }
 
 /*************************************************
 * Find any usable engines                        *
 *************************************************/
-void Builtin_Modules::set_engines(Library_State& state,
-                                  bool use_engines) const
+std::vector<Engine*> Builtin_Modules::engines() const
    {
-   if(use_engines)
-      {
+   std::vector<Engine*> engines;
+
 #if defined(BOTAN_EXT_ENGINE_AEP)
-      state.add_engine(new AEP_Engine);
+   engines.push_back(new AEP_Engine);
 #endif
 
 #if defined(BOTAN_EXT_ENGINE_GNU_MP)
-      state.add_engine(new GMP_Engine);
+   engines.push_back(new GMP_Engine);
 #endif
 
 #if defined(BOTAN_EXT_ENGINE_OPENSSL)
-      state.add_engine(new OpenSSL_Engine);
+   engines.push_back(new OpenSSL_Engine);
 #endif
-      }
 
-   state.add_engine(new Default_Engine);
+   engines.push_back(new Default_Engine);
+
+   return engines;
    }
 
 }

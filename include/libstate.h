@@ -35,10 +35,12 @@ class Library_State
 
       void set_prng(RandomNumberGenerator*);
       void randomize(byte[], u32bit);
-      void add_entropy_source(EntropySource*, bool = false);
+      void add_entropy_source(EntropySource*, bool = true);
       void add_entropy(const byte[], u32bit);
       void add_entropy(EntropySource&, bool);
       u32bit seed_prng(bool, u32bit);
+
+      void load(class Modules&);
 
       void set_timer(class Timer*);
       u64bit system_clock() const;

@@ -6,7 +6,7 @@
 #include <botan/init.h>
 #include <botan/libstate.h>
 #include <botan/modules.h>
-#include <botan/conf.h>
+#include <botan/config.h>
 #include <botan/defalloc.h>
 #include <botan/fips140.h>
 #include <botan/x931_rng.h>
@@ -38,7 +38,7 @@ namespace Init {
 void initialize(const std::string& arg_string)
    {
    InitializerOptions args(arg_string);
-   Builtin_Modules modules;
+   Builtin_Modules modules(false);
 
    Mutex_Factory* mutex_factory = 0;
 
@@ -52,18 +52,13 @@ void initialize(const std::string& arg_string)
    set_global_state(new Library_State(mutex_factory));
    global_state().set_default_policy();
 
-   global_state().set_timer(modules.timer());
-
-   modules.set_allocators(global_state(), false);
+   global_state().load(modules);
 
    if(args.config_file() != "")
       Config::load(args.config_file(), global_state());
 
-   modules.set_engines(global_state(), args.use_engines());
-
    global_state().set_transcoder(new Default_Charset_Transcoder);
    global_state().set_prng(new ANSI_X931_RNG);
-   modules.set_entropy_sources(global_state());
 
    const u32bit min_entropy = Config::get_u32bit("rng/min_entropy");
 

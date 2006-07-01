@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/libstate.h>
+#include <botan/modules.h>
 #include <botan/engine.h>
 #include <botan/x509stat.h>
 #include <botan/stl_util.h>
@@ -318,6 +319,28 @@ X509_GlobalState& Library_State::x509_state()
       x509_state_obj = new X509_GlobalState();
 
    return (*x509_state_obj);
+   }
+
+/*************************************************
+* Load modules                                   *
+*************************************************/
+void Library_State::load(Modules& modules)
+   {
+   set_timer(modules.timer());
+
+   std::vector<Allocator*> allocators = modules.allocators();
+
+   for(u32bit j = 0; j != allocators.size(); j++)
+      add_allocator(allocators[j],
+                    allocators[j]->type() == modules.default_allocator());
+
+   std::vector<Engine*> engines = modules.engines();
+   for(u32bit j = 0; j != engines.size(); ++j)
+      add_engine(engines[j]);
+
+   std::vector<EntropySource*> sources = modules.entropy_sources();
+   for(u32bit j = 0; j != sources.size(); ++j)
+      add_entropy_source(sources[j]);
    }
 
 /*************************************************
