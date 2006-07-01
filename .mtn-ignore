@@ -9,5 +9,5 @@
 ^build/lib/.*\.o$
 ^build/checks/.*\.o$
 ^build/include/botan/.*\.h$
-^build/config\.h$
+^build/build\.h$
 ^misc/nist_tests/x509test$
