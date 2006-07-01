@@ -11,7 +11,7 @@
 #include <botan/ber_dec.h>
 #include <botan/lookup.h>
 #include <botan/oids.h>
-#include <botan/conf.h>
+#include <botan/config.h>
 #include <botan/bit_ops.h>
 #include <algorithm>
 #include <memory>

@@ -8,7 +8,7 @@
 #include <botan/pubkey.h>
 #include <botan/look_pk.h>
 #include <botan/oids.h>
-#include <botan/conf.h>
+#include <botan/config.h>
 #include <botan/util.h>
 #include <algorithm>
 #include <memory>
