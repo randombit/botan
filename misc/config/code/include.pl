@@ -29,12 +29,12 @@ sub print_config_h
 
    print CONFIG_H <<END_OF_CONFIG_H;
 /*************************************************
-* Configuration Header File                      *
+* Build Config Header File                       *
 * (C) 1999-2006 The Botan Project                *
 *************************************************/
 
-#ifndef BOTAN_CONFIG_H__
-#define BOTAN_CONFIG_H__
+#ifndef BOTAN_BUILD_CONFIG_H__
+#define BOTAN_BUILD_CONFIG_H__
 
 #define BOTAN_VERSION_MAJOR $major
 #define BOTAN_VERSION_MINOR $minor

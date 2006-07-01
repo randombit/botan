@@ -16,7 +16,7 @@ my $BUILD_DIR_CHECKS = 'checks';
 my $MAKE_FILE = 'Makefile';
 my $BUILD_INCLUDE_DIR = 'build/include';
 
-my $CONFIG_HEADER = 'config.h';
+my $CONFIG_HEADER = 'build.h';
 
 my $CPP_INCLUDE_DIR_DIRNAME = $PROJECT_NAME_LC;
 
