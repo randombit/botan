@@ -5,7 +5,7 @@
 
 #include <botan/es_capi.h>
 #include <botan/parsing.h>
-#include <botan/conf.h>
+#include <botan/config.h>
 #include <windows.h>
 #include <wincrypt.h>
 

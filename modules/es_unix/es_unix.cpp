@@ -6,7 +6,7 @@
 #include <botan/es_unix.h>
 #include <botan/unix_cmd.h>
 #include <botan/parsing.h>
-#include <botan/conf.h>
+#include <botan/config.h>
 #include <algorithm>
 
 namespace Botan {

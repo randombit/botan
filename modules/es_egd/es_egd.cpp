@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/es_egd.h>
-#include <botan/conf.h>
+#include <botan/config.h>
 #include <botan/bit_ops.h>
 #include <botan/parsing.h>
 #include <cstring>
