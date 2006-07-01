@@ -20,6 +20,8 @@ namespace Botan {
 class Config
    {
    public:
+      void load_defaults();
+
       std::string get(const std::string&, const std::string&) const;
       bool is_set(const std::string&, const std::string&) const;
       void set(const std::string&, const std::string&,
@@ -37,8 +39,8 @@ class Config
 
       static void choose_sig_format(const std::string&, std::string&,
                                     Signature_Format&);
-
    private:
+
       std::map<std::string, std::string> settings;
    };
 

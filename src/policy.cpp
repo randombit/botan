@@ -3,7 +3,6 @@
 * (C) 1999-2006 The Botan Project                *
 *************************************************/
 
-#include <botan/libstate.h>
 #include <botan/config.h>
 
 namespace Botan {
@@ -363,12 +362,12 @@ void set_default_dl_groups(Config& config)
 /*************************************************
 * Set the default policy                         *
 *************************************************/
-void Library_State::set_default_policy()
+void Config::load_defaults()
    {
-   set_default_config(config());
-   set_default_aliases(config());
-   set_default_oids(config());
-   set_default_dl_groups(config());
+   set_default_config(*this);
+   set_default_aliases(*this);
+   set_default_oids(*this);
+   set_default_dl_groups(*this);
    }
 
 }

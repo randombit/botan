@@ -58,7 +58,6 @@ class Library_State
       void set_transcoder(class Charset_Transcoder*);
       std::string transcode(const std::string,
                             Character_Set, Character_Set) const;
-      void set_default_policy();
 
       Library_State(class Mutex_Factory*);
       ~Library_State();

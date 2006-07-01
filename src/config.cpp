@@ -78,7 +78,7 @@ std::string Config::deref_alias(const std::string& key) const
 *************************************************/
 std::string Config::option(const std::string& key) const
    {
-   return get("option", key);
+   return get("conf", key);
    }
 
 /*************************************************
