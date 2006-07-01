@@ -41,7 +41,7 @@ my $BUILD_DIR_CHECKS = 'checks';
 my $MAKE_FILE = 'Makefile';
 my $BUILD_INCLUDE_DIR = 'build/include';
 
-my $CONFIG_HEADER = 'config.h';
+my $CONFIG_HEADER = 'build.h';
 
 my $CPP_INCLUDE_DIR_DIRNAME = $PROJECT_NAME_LC;
 
@@ -1249,12 +1249,12 @@ sub print_config_h
 
    print CONFIG_H <<END_OF_CONFIG_H;
 /*************************************************
-* Configuration Header File                      *
+* Build Config Header File                       *
 * (C) 1999-2006 The Botan Project                *
 *************************************************/
 
-#ifndef BOTAN_CONFIG_H__
-#define BOTAN_CONFIG_H__
+#ifndef BOTAN_BUILD_CONFIG_H__
+#define BOTAN_BUILD_CONFIG_H__
 
 #define BOTAN_VERSION_MAJOR $major
 #define BOTAN_VERSION_MINOR $minor
