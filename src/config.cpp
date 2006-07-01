@@ -8,50 +8,101 @@
 #include <botan/lookup.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
+#include <botan/stl_util.h>
+#include <botan/mutex.h>
 #include <string>
 
 namespace Botan {
 
-namespace Config {
-
 /*************************************************
-* Set an option                                  *
+* Get the global configuration object            *
 *************************************************/
-void set(const std::string& name, const std::string& value, bool overwrite)
+Config& global_config()
    {
-   global_state().set_option("conf", name, value, overwrite);
+   return global_state().config();
    }
 
 /*************************************************
-* Get the value of an option as a string         *
+* Get a configuration value                      *
 *************************************************/
-std::string get_string(const std::string& name)
+std::string Config::get(const std::string& section,
+                        const std::string& key) const
    {
-   return global_state().get_option("conf", name);
+   Named_Mutex_Holder lock("config");
+
+   return search_map<std::string, std::string>(settings,
+                                               section + "/" + key, "");
    }
 
 /*************************************************
-* Get the value as a list of strings             *
+* See if a particular option has been set        *
 *************************************************/
-std::vector<std::string> get_list(const std::string& name)
+bool Config::is_set(const std::string& section,
+                    const std::string& key) const
    {
-   return split_on(get_string(name), ':');
+   Named_Mutex_Holder lock("config");
+
+   return search_map(settings, section + "/" + key, false, true);
    }
 
 /*************************************************
-* Get the value as a u32bit                      *
+* Set a configuration value                      *
 *************************************************/
-u32bit get_u32bit(const std::string& name)
+void Config::set(const std::string& section, const std::string& key,
+                 const std::string& value, bool overwrite)
    {
-   return parse_expr(get_string(name));
+   Named_Mutex_Holder lock("config");
+
+   std::string full_key = section + "/" + key;
+
+   std::map<std::string, std::string>::const_iterator i =
+      settings.find(full_key);
+
+   if(overwrite || i == settings.end() || i->second == "")
+      settings[full_key] = value;
    }
 
 /*************************************************
-* Get the value as a time                        *
+* Dereference an alias to a fixed name           *
 *************************************************/
-u32bit get_time(const std::string& name)
+std::string Config::deref_alias(const std::string& key) const
    {
-   const std::string timespec = get_string(name);
+   std::string result = key;
+   while(is_set("alias", result))
+      result = get("alias", result);
+   return result;
+   }
+
+/*************************************************
+* Get an option value                            *
+*************************************************/
+std::string Config::option(const std::string& key) const
+   {
+   return get("option", key);
+   }
+
+/*************************************************
+* Get the config setting as a list of strings    *
+*************************************************/
+std::vector<std::string> Config::option_as_list(const std::string& key) const
+   {
+   return split_on(option(key), ':');
+   }
+
+/*************************************************
+* Get the config setting as a u32bit             *
+*************************************************/
+u32bit Config::option_as_u32bit(const std::string& key) const
+   {
+   return parse_expr(option(key));
+   }
+
+/*************************************************
+* Get the config setting as a time               *
+*************************************************/
+u32bit Config::option_as_time(const std::string& key) const
+   {
+   const std::string timespec = option(key);
    if(timespec == "")
       return 0;
 
@@ -73,23 +124,38 @@ u32bit get_time(const std::string& name)
    else if(suffix == 'y')
       scale = 365 * 24 * 60 * 60;
    else
-      throw Decoding_Error("Config::get_time: Unknown time value " + value);
+      throw Decoding_Error(
+         "Config::option_as_time: Unknown time value " + value
+         );
 
    return scale * to_u32bit(value);
    }
 
 /*************************************************
-* Get the value as a boolean                     *
+* Get the config setting as a boolean            *
 *************************************************/
-bool get_bool(const std::string& name)
+bool Config::option_as_bool(const std::string& key) const
    {
-   const std::string value = get_string(name);
+   const std::string value = option(key);
    if(value == "0" || value == "false")
       return false;
    if(value == "1" || value == "true")
       return true;
-   throw Decoding_Error("Config::get_bool: Unknown boolean value " + value);
+
+   throw Decoding_Error(
+      "Config::option_as_bool: Unknown boolean value " + value
+      );
    }
+
+/*************************************************
+* Dereference an alias                           *
+*************************************************/
+std::string deref_alias(const std::string& name)
+   {
+   return global_config().deref_alias(name);
+   }
+
+namespace ConfigXXX {
 
 /*************************************************
 * Choose the signature format for a PK algorithm *
@@ -109,9 +175,12 @@ void choose_sig_format(const std::string& algo_name, std::string& padding,
    {
    if(algo_name == "RSA")
       {
-      hash = deref_alias(get_string("x509/ca/rsa_hash"));
+      hash = global_state().config().option("x509/ca/rsa_hash");
+
       if(hash == "")
          throw Invalid_State("No value set for x509/ca/rsa_hash");
+
+      hash = global_state().config().deref_alias(hash);
 
       padding = "EMSA3(" + hash + ")";
       format = IEEE_1363;
@@ -127,27 +196,5 @@ void choose_sig_format(const std::string& algo_name, std::string& padding,
    }
 
 }
-
-/*************************************************
-* Add an alias for an algorithm                  *
-*************************************************/
-void add_alias(const std::string& alias, const std::string& official_name)
-   {
-   if(alias == "" || official_name == "")
-      return;
-
-   global_state().set_option("alias", alias, official_name);
-   }
-
-/*************************************************
-* Dereference an alias                           *
-*************************************************/
-std::string deref_alias(const std::string& name)
-   {
-   std::string result = name;
-   while(global_state().option_set("alias", result))
-      result = global_state().get_option("alias", result);
-   return result;
-   }
 
 }

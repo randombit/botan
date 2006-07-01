@@ -221,12 +221,13 @@ void RandomNumberGenerator::add_entropy(const byte random[], u32bit length)
 u32bit RandomNumberGenerator::add_entropy(EntropySource& source,
                                           bool slow_poll)
    {
-   u32bit poll_for = 0;
-
+   std::string poll_type;
    if(slow_poll)
-      poll_for = Config::get_u32bit("rng/slow_poll_request");
+      poll_type = "rng/slow_poll_request";
    else
-      poll_for = Config::get_u32bit("rng/fast_poll_request");
+      poll_type = "rng/fast_poll_request";
+
+   u32bit poll_for = global_config().option_as_u32bit(poll_type);
 
    SecureVector<byte> buffer(poll_for ? poll_for : 256);
 

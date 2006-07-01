@@ -14,7 +14,8 @@ namespace Botan {
 *************************************************/
 u32bit File_EntropySource::slow_poll(byte output[], u32bit length)
    {
-   std::vector<std::string> sources = Config::get_list("rng/es_files");
+   std::vector<std::string> sources =
+      global_config().option_as_list("rng/es_files");
 
    u32bit read = 0;
    for(u32bit j = 0; j != sources.size(); ++j)

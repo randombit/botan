@@ -22,7 +22,7 @@ u32bit choose_pref_size(u32bit provided)
    if(provided)
       return provided;
 
-   u32bit result = Config::get_u32bit("base/memory_chunk");
+   u32bit result = global_config().option_as_u32bit("base/memory_chunk");
    if(result)
       return result;
 

@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/libstate.h>
+#include <botan/config.h>
 
 namespace Botan {
 
@@ -12,229 +13,229 @@ namespace {
 /*************************************************
 * OID loading helper function                    *
 *************************************************/
-void add_oid(Library_State* state,
+void add_oid(Config& config,
              const std::string& oid_str,
              const std::string& name)
    {
-   if(!state->option_set("oid2str", oid_str))
-      state->set_option("oid2str", oid_str, name);
-   if(!state->option_set("str2oid", name))
-      state->set_option("str2oid", name, oid_str);
+   if(!config.is_set("oid2str", oid_str))
+      config.set("oid2str", oid_str, name);
+   if(!config.is_set("str2oid", name))
+      config.set("str2oid", name, oid_str);
    }
 
 /*************************************************
 * Load all of the default OIDs                   *
 *************************************************/
-void set_default_oids(Library_State* state)
+void set_default_oids(Config& config)
    {
-   add_oid(state, "1.2.840.113549.1.1.1", "RSA");
-   add_oid(state, "2.5.8.1.1", "RSA");
-   add_oid(state, "1.2.840.10040.4.1", "DSA");
-   add_oid(state, "1.2.840.10046.2.1", "DH");
-   add_oid(state, "1.3.6.1.4.1.3029.1.2.1", "ELG");
+   add_oid(config, "1.2.840.113549.1.1.1", "RSA");
+   add_oid(config, "2.5.8.1.1", "RSA");
+   add_oid(config, "1.2.840.10040.4.1", "DSA");
+   add_oid(config, "1.2.840.10046.2.1", "DH");
+   add_oid(config, "1.3.6.1.4.1.3029.1.2.1", "ELG");
 
-   add_oid(state, "1.3.14.3.2.7", "DES/CBC");
-   add_oid(state, "1.2.840.113549.3.7", "TripleDES/CBC");
-   add_oid(state, "1.2.840.113549.3.2", "RC2/CBC");
-   add_oid(state, "1.2.840.113533.7.66.10", "CAST-128/CBC");
-   add_oid(state, "2.16.840.1.101.3.4.1.2", "AES-128/CBC");
-   add_oid(state, "2.16.840.1.101.3.4.1.22", "AES-192/CBC");
-   add_oid(state, "2.16.840.1.101.3.4.1.42", "AES-256/CBC");
+   add_oid(config, "1.3.14.3.2.7", "DES/CBC");
+   add_oid(config, "1.2.840.113549.3.7", "TripleDES/CBC");
+   add_oid(config, "1.2.840.113549.3.2", "RC2/CBC");
+   add_oid(config, "1.2.840.113533.7.66.10", "CAST-128/CBC");
+   add_oid(config, "2.16.840.1.101.3.4.1.2", "AES-128/CBC");
+   add_oid(config, "2.16.840.1.101.3.4.1.22", "AES-192/CBC");
+   add_oid(config, "2.16.840.1.101.3.4.1.42", "AES-256/CBC");
 
-   add_oid(state, "1.2.840.113549.2.5", "MD5");
-   add_oid(state, "1.3.14.3.2.26", "SHA-160");
-   add_oid(state, "1.3.6.1.4.1.11591.12.2", "Tiger(24,3)");
+   add_oid(config, "1.2.840.113549.2.5", "MD5");
+   add_oid(config, "1.3.14.3.2.26", "SHA-160");
+   add_oid(config, "1.3.6.1.4.1.11591.12.2", "Tiger(24,3)");
 
-   add_oid(state, "1.2.840.113549.1.9.16.3.6", "KeyWrap.TripleDES");
-   add_oid(state, "1.2.840.113549.1.9.16.3.7", "KeyWrap.RC2");
-   add_oid(state, "1.2.840.113533.7.66.15", "KeyWrap.CAST-128");
-   add_oid(state, "2.16.840.1.101.3.4.1.5", "KeyWrap.AES-128");
-   add_oid(state, "2.16.840.1.101.3.4.1.25", "KeyWrap.AES-192");
-   add_oid(state, "2.16.840.1.101.3.4.1.45", "KeyWrap.AES-256");
+   add_oid(config, "1.2.840.113549.1.9.16.3.6", "KeyWrap.TripleDES");
+   add_oid(config, "1.2.840.113549.1.9.16.3.7", "KeyWrap.RC2");
+   add_oid(config, "1.2.840.113533.7.66.15", "KeyWrap.CAST-128");
+   add_oid(config, "2.16.840.1.101.3.4.1.5", "KeyWrap.AES-128");
+   add_oid(config, "2.16.840.1.101.3.4.1.25", "KeyWrap.AES-192");
+   add_oid(config, "2.16.840.1.101.3.4.1.45", "KeyWrap.AES-256");
 
-   add_oid(state, "1.2.840.113549.1.9.16.3.8", "Compression.Zlib");
+   add_oid(config, "1.2.840.113549.1.9.16.3.8", "Compression.Zlib");
 
-   add_oid(state, "1.2.840.113549.1.1.1", "RSA/EME-PKCS1-v1_5");
-   add_oid(state, "1.2.840.113549.1.1.2", "RSA/EMSA3(MD2)");
-   add_oid(state, "1.2.840.113549.1.1.4", "RSA/EMSA3(MD5)");
-   add_oid(state, "1.2.840.113549.1.1.5", "RSA/EMSA3(SHA-160)");
-   add_oid(state, "1.2.840.113549.1.1.11", "RSA/EMSA3(SHA-256)");
-   add_oid(state, "1.2.840.113549.1.1.12", "RSA/EMSA3(SHA-384)");
-   add_oid(state, "1.2.840.113549.1.1.13", "RSA/EMSA3(SHA-512)");
-   add_oid(state, "1.3.36.3.3.1.2", "RSA/EMSA3(RIPEMD-160)");
-   add_oid(state, "1.2.840.10040.4.3", "DSA/EMSA1(SHA-160)");
+   add_oid(config, "1.2.840.113549.1.1.1", "RSA/EME-PKCS1-v1_5");
+   add_oid(config, "1.2.840.113549.1.1.2", "RSA/EMSA3(MD2)");
+   add_oid(config, "1.2.840.113549.1.1.4", "RSA/EMSA3(MD5)");
+   add_oid(config, "1.2.840.113549.1.1.5", "RSA/EMSA3(SHA-160)");
+   add_oid(config, "1.2.840.113549.1.1.11", "RSA/EMSA3(SHA-256)");
+   add_oid(config, "1.2.840.113549.1.1.12", "RSA/EMSA3(SHA-384)");
+   add_oid(config, "1.2.840.113549.1.1.13", "RSA/EMSA3(SHA-512)");
+   add_oid(config, "1.3.36.3.3.1.2", "RSA/EMSA3(RIPEMD-160)");
+   add_oid(config, "1.2.840.10040.4.3", "DSA/EMSA1(SHA-160)");
 
-   add_oid(state, "2.5.4.3",  "X520.CommonName");
-   add_oid(state, "2.5.4.4",  "X520.Surname");
-   add_oid(state, "2.5.4.5",  "X520.SerialNumber");
-   add_oid(state, "2.5.4.6",  "X520.Country");
-   add_oid(state, "2.5.4.7",  "X520.Locality");
-   add_oid(state, "2.5.4.8",  "X520.State");
-   add_oid(state, "2.5.4.10", "X520.Organization");
-   add_oid(state, "2.5.4.11", "X520.OrganizationalUnit");
-   add_oid(state, "2.5.4.12", "X520.Title");
-   add_oid(state, "2.5.4.42", "X520.GivenName");
-   add_oid(state, "2.5.4.43", "X520.Initials");
-   add_oid(state, "2.5.4.44", "X520.GenerationalQualifier");
-   add_oid(state, "2.5.4.46", "X520.DNQualifier");
-   add_oid(state, "2.5.4.65", "X520.Pseudonym");
+   add_oid(config, "2.5.4.3",  "X520.CommonName");
+   add_oid(config, "2.5.4.4",  "X520.Surname");
+   add_oid(config, "2.5.4.5",  "X520.SerialNumber");
+   add_oid(config, "2.5.4.6",  "X520.Country");
+   add_oid(config, "2.5.4.7",  "X520.Locality");
+   add_oid(config, "2.5.4.8",  "X520.Config");
+   add_oid(config, "2.5.4.10", "X520.Organization");
+   add_oid(config, "2.5.4.11", "X520.OrganizationalUnit");
+   add_oid(config, "2.5.4.12", "X520.Title");
+   add_oid(config, "2.5.4.42", "X520.GivenName");
+   add_oid(config, "2.5.4.43", "X520.Initials");
+   add_oid(config, "2.5.4.44", "X520.GenerationalQualifier");
+   add_oid(config, "2.5.4.46", "X520.DNQualifier");
+   add_oid(config, "2.5.4.65", "X520.Pseudonym");
 
-   add_oid(state, "1.2.840.113549.1.5.12", "PKCS5.PBKDF2");
-   add_oid(state, "1.2.840.113549.1.5.1",  "PBE-PKCS5v15(MD2,DES/CBC)");
-   add_oid(state, "1.2.840.113549.1.5.4",  "PBE-PKCS5v15(MD2,RC2/CBC)");
-   add_oid(state, "1.2.840.113549.1.5.3",  "PBE-PKCS5v15(MD5,DES/CBC)");
-   add_oid(state, "1.2.840.113549.1.5.6",  "PBE-PKCS5v15(MD5,RC2/CBC)");
-   add_oid(state, "1.2.840.113549.1.5.10", "PBE-PKCS5v15(SHA-160,DES/CBC)");
-   add_oid(state, "1.2.840.113549.1.5.11", "PBE-PKCS5v15(SHA-160,RC2/CBC)");
-   add_oid(state, "1.2.840.113549.1.5.13", "PBE-PKCS5v20");
+   add_oid(config, "1.2.840.113549.1.5.12", "PKCS5.PBKDF2");
+   add_oid(config, "1.2.840.113549.1.5.1",  "PBE-PKCS5v15(MD2,DES/CBC)");
+   add_oid(config, "1.2.840.113549.1.5.4",  "PBE-PKCS5v15(MD2,RC2/CBC)");
+   add_oid(config, "1.2.840.113549.1.5.3",  "PBE-PKCS5v15(MD5,DES/CBC)");
+   add_oid(config, "1.2.840.113549.1.5.6",  "PBE-PKCS5v15(MD5,RC2/CBC)");
+   add_oid(config, "1.2.840.113549.1.5.10", "PBE-PKCS5v15(SHA-160,DES/CBC)");
+   add_oid(config, "1.2.840.113549.1.5.11", "PBE-PKCS5v15(SHA-160,RC2/CBC)");
+   add_oid(config, "1.2.840.113549.1.5.13", "PBE-PKCS5v20");
 
-   add_oid(state, "1.2.840.113549.1.9.1", "PKCS9.EmailAddress");
-   add_oid(state, "1.2.840.113549.1.9.2", "PKCS9.UnstructuredName");
-   add_oid(state, "1.2.840.113549.1.9.3", "PKCS9.ContentType");
-   add_oid(state, "1.2.840.113549.1.9.4", "PKCS9.MessageDigest");
-   add_oid(state, "1.2.840.113549.1.9.7", "PKCS9.ChallengePassword");
-   add_oid(state, "1.2.840.113549.1.9.14", "PKCS9.ExtensionRequest");
+   add_oid(config, "1.2.840.113549.1.9.1", "PKCS9.EmailAddress");
+   add_oid(config, "1.2.840.113549.1.9.2", "PKCS9.UnstructuredName");
+   add_oid(config, "1.2.840.113549.1.9.3", "PKCS9.ContentType");
+   add_oid(config, "1.2.840.113549.1.9.4", "PKCS9.MessageDigest");
+   add_oid(config, "1.2.840.113549.1.9.7", "PKCS9.ChallengePassword");
+   add_oid(config, "1.2.840.113549.1.9.14", "PKCS9.ExtensionRequest");
 
-   add_oid(state, "1.2.840.113549.1.7.1",      "CMS.DataContent");
-   add_oid(state, "1.2.840.113549.1.7.2",      "CMS.SignedData");
-   add_oid(state, "1.2.840.113549.1.7.3",      "CMS.EnvelopedData");
-   add_oid(state, "1.2.840.113549.1.7.5",      "CMS.DigestedData");
-   add_oid(state, "1.2.840.113549.1.7.6",      "CMS.EncryptedData");
-   add_oid(state, "1.2.840.113549.1.9.16.1.2", "CMS.AuthenticatedData");
-   add_oid(state, "1.2.840.113549.1.9.16.1.9", "CMS.CompressedData");
+   add_oid(config, "1.2.840.113549.1.7.1",      "CMS.DataContent");
+   add_oid(config, "1.2.840.113549.1.7.2",      "CMS.SignedData");
+   add_oid(config, "1.2.840.113549.1.7.3",      "CMS.EnvelopedData");
+   add_oid(config, "1.2.840.113549.1.7.5",      "CMS.DigestedData");
+   add_oid(config, "1.2.840.113549.1.7.6",      "CMS.EncryptedData");
+   add_oid(config, "1.2.840.113549.1.9.16.1.2", "CMS.AuthenticatedData");
+   add_oid(config, "1.2.840.113549.1.9.16.1.9", "CMS.CompressedData");
 
-   add_oid(state, "2.5.29.14", "X509v3.SubjectKeyIdentifier");
-   add_oid(state, "2.5.29.15", "X509v3.KeyUsage");
-   add_oid(state, "2.5.29.17", "X509v3.SubjectAlternativeName");
-   add_oid(state, "2.5.29.18", "X509v3.IssuerAlternativeName");
-   add_oid(state, "2.5.29.19", "X509v3.BasicConstraints");
-   add_oid(state, "2.5.29.20", "X509v3.CRLNumber");
-   add_oid(state, "2.5.29.21", "X509v3.ReasonCode");
-   add_oid(state, "2.5.29.23", "X509v3.HoldInstructionCode");
-   add_oid(state, "2.5.29.24", "X509v3.InvalidityDate");
-   add_oid(state, "2.5.29.32", "X509v3.CertificatePolicies");
-   add_oid(state, "2.5.29.35", "X509v3.AuthorityKeyIdentifier");
-   add_oid(state, "2.5.29.36", "X509v3.PolicyConstraints");
-   add_oid(state, "2.5.29.37", "X509v3.ExtendedKeyUsage");
+   add_oid(config, "2.5.29.14", "X509v3.SubjectKeyIdentifier");
+   add_oid(config, "2.5.29.15", "X509v3.KeyUsage");
+   add_oid(config, "2.5.29.17", "X509v3.SubjectAlternativeName");
+   add_oid(config, "2.5.29.18", "X509v3.IssuerAlternativeName");
+   add_oid(config, "2.5.29.19", "X509v3.BasicConstraints");
+   add_oid(config, "2.5.29.20", "X509v3.CRLNumber");
+   add_oid(config, "2.5.29.21", "X509v3.ReasonCode");
+   add_oid(config, "2.5.29.23", "X509v3.HoldInstructionCode");
+   add_oid(config, "2.5.29.24", "X509v3.InvalidityDate");
+   add_oid(config, "2.5.29.32", "X509v3.CertificatePolicies");
+   add_oid(config, "2.5.29.35", "X509v3.AuthorityKeyIdentifier");
+   add_oid(config, "2.5.29.36", "X509v3.PolicyConstraints");
+   add_oid(config, "2.5.29.37", "X509v3.ExtendedKeyUsage");
 
-   add_oid(state, "2.5.29.32.0", "X509v3.AnyPolicy");
+   add_oid(config, "2.5.29.32.0", "X509v3.AnyPolicy");
 
-   add_oid(state, "1.3.6.1.5.5.7.3.1", "PKIX.ServerAuth");
-   add_oid(state, "1.3.6.1.5.5.7.3.2", "PKIX.ClientAuth");
-   add_oid(state, "1.3.6.1.5.5.7.3.3", "PKIX.CodeSigning");
-   add_oid(state, "1.3.6.1.5.5.7.3.4", "PKIX.EmailProtection");
-   add_oid(state, "1.3.6.1.5.5.7.3.5", "PKIX.IPsecEndSystem");
-   add_oid(state, "1.3.6.1.5.5.7.3.6", "PKIX.IPsecTunnel");
-   add_oid(state, "1.3.6.1.5.5.7.3.7", "PKIX.IPsecUser");
-   add_oid(state, "1.3.6.1.5.5.7.3.8", "PKIX.TimeStamping");
-   add_oid(state, "1.3.6.1.5.5.7.3.9", "PKIX.OCSPSigning");
+   add_oid(config, "1.3.6.1.5.5.7.3.1", "PKIX.ServerAuth");
+   add_oid(config, "1.3.6.1.5.5.7.3.2", "PKIX.ClientAuth");
+   add_oid(config, "1.3.6.1.5.5.7.3.3", "PKIX.CodeSigning");
+   add_oid(config, "1.3.6.1.5.5.7.3.4", "PKIX.EmailProtection");
+   add_oid(config, "1.3.6.1.5.5.7.3.5", "PKIX.IPsecEndSystem");
+   add_oid(config, "1.3.6.1.5.5.7.3.6", "PKIX.IPsecTunnel");
+   add_oid(config, "1.3.6.1.5.5.7.3.7", "PKIX.IPsecUser");
+   add_oid(config, "1.3.6.1.5.5.7.3.8", "PKIX.TimeStamping");
+   add_oid(config, "1.3.6.1.5.5.7.3.9", "PKIX.OCSPSigning");
 
-   add_oid(state, "1.3.6.1.5.5.7.8.5", "PKIX.XMPPAddr");
+   add_oid(config, "1.3.6.1.5.5.7.8.5", "PKIX.XMPPAddr");
    }
 
 /*************************************************
 * Set the default algorithm aliases              *
 *************************************************/
-void set_default_aliases(Library_State* state)
+void set_default_aliases(Config& config)
    {
-   state->set_option("alias", "OpenPGP.Cipher.1",  "IDEA");
-   state->set_option("alias", "OpenPGP.Cipher.2",  "TripleDES");
-   state->set_option("alias", "OpenPGP.Cipher.3",  "CAST-128");
-   state->set_option("alias", "OpenPGP.Cipher.4",  "Blowfish");
-   state->set_option("alias", "OpenPGP.Cipher.5",  "SAFER-SK(13)");
-   state->set_option("alias", "OpenPGP.Cipher.7",  "AES-128");
-   state->set_option("alias", "OpenPGP.Cipher.8",  "AES-192");
-   state->set_option("alias", "OpenPGP.Cipher.9",  "AES-256");
-   state->set_option("alias", "OpenPGP.Cipher.10", "Twofish");
+   config.set("alias", "OpenPGP.Cipher.1",  "IDEA");
+   config.set("alias", "OpenPGP.Cipher.2",  "TripleDES");
+   config.set("alias", "OpenPGP.Cipher.3",  "CAST-128");
+   config.set("alias", "OpenPGP.Cipher.4",  "Blowfish");
+   config.set("alias", "OpenPGP.Cipher.5",  "SAFER-SK(13)");
+   config.set("alias", "OpenPGP.Cipher.7",  "AES-128");
+   config.set("alias", "OpenPGP.Cipher.8",  "AES-192");
+   config.set("alias", "OpenPGP.Cipher.9",  "AES-256");
+   config.set("alias", "OpenPGP.Cipher.10", "Twofish");
 
-   state->set_option("alias", "OpenPGP.Digest.1", "MD5");
-   state->set_option("alias", "OpenPGP.Digest.2", "SHA-1");
-   state->set_option("alias", "OpenPGP.Digest.3", "RIPEMD-160");
-   state->set_option("alias", "OpenPGP.Digest.5", "MD2");
-   state->set_option("alias", "OpenPGP.Digest.6", "Tiger(24,3)");
-   state->set_option("alias", "OpenPGP.Digest.7", "HAVAL(20,5)");
-   state->set_option("alias", "OpenPGP.Digest.8", "SHA-256");
+   config.set("alias", "OpenPGP.Digest.1", "MD5");
+   config.set("alias", "OpenPGP.Digest.2", "SHA-1");
+   config.set("alias", "OpenPGP.Digest.3", "RIPEMD-160");
+   config.set("alias", "OpenPGP.Digest.5", "MD2");
+   config.set("alias", "OpenPGP.Digest.6", "Tiger(24,3)");
+   config.set("alias", "OpenPGP.Digest.7", "HAVAL(20,5)");
+   config.set("alias", "OpenPGP.Digest.8", "SHA-256");
 
-   state->set_option("alias", "TLS.Digest.0",     "Parallel(MD5,SHA-160)");
+   config.set("alias", "TLS.Digest.0",     "Parallel(MD5,SHA-160)");
 
-   state->set_option("alias", "EME-PKCS1-v1_5",  "PKCS1v15");
-   state->set_option("alias", "OAEP-MGF1",       "EME1");
-   state->set_option("alias", "EME-OAEP",        "EME1");
-   state->set_option("alias", "X9.31",           "EMSA2");
-   state->set_option("alias", "EMSA-PKCS1-v1_5", "EMSA3");
-   state->set_option("alias", "PSS-MGF1",        "EMSA4");
-   state->set_option("alias", "EMSA-PSS",        "EMSA4");
+   config.set("alias", "EME-PKCS1-v1_5",  "PKCS1v15");
+   config.set("alias", "OAEP-MGF1",       "EME1");
+   config.set("alias", "EME-OAEP",        "EME1");
+   config.set("alias", "X9.31",           "EMSA2");
+   config.set("alias", "EMSA-PKCS1-v1_5", "EMSA3");
+   config.set("alias", "PSS-MGF1",        "EMSA4");
+   config.set("alias", "EMSA-PSS",        "EMSA4");
 
-   state->set_option("alias", "Rijndael", "AES");
-   state->set_option("alias", "3DES",     "TripleDES");
-   state->set_option("alias", "DES-EDE",  "TripleDES");
-   state->set_option("alias", "CAST5",    "CAST-128");
-   state->set_option("alias", "SHA1",     "SHA-160");
-   state->set_option("alias", "SHA-1",    "SHA-160");
-   state->set_option("alias", "SEAL",     "SEAL-3.0-BE");
-   state->set_option("alias", "MARK-4",   "ARC4(256)");
-   state->set_option("alias", "OMAC",     "CMAC");
+   config.set("alias", "Rijndael", "AES");
+   config.set("alias", "3DES",     "TripleDES");
+   config.set("alias", "DES-EDE",  "TripleDES");
+   config.set("alias", "CAST5",    "CAST-128");
+   config.set("alias", "SHA1",     "SHA-160");
+   config.set("alias", "SHA-1",    "SHA-160");
+   config.set("alias", "SEAL",     "SEAL-3.0-BE");
+   config.set("alias", "MARK-4",   "ARC4(256)");
+   config.set("alias", "OMAC",     "CMAC");
    }
 
 /*************************************************
 * Set the default configuration toggles          *
 *************************************************/
-void set_default_config(Library_State* state)
+void set_default_config(Config& config)
    {
-   state->set_option("conf", "base/memory_chunk", "64*1024");
-   state->set_option("conf", "base/pkcs8_tries", "3");
-   state->set_option("conf", "base/default_pbe",
+   config.set("conf", "base/memory_chunk", "64*1024");
+   config.set("conf", "base/pkcs8_tries", "3");
+   config.set("conf", "base/default_pbe",
                      "PBE-PKCS5v20(SHA-1,TripleDES/CBC)");
-   state->set_option("conf", "base/default_allocator", "malloc");
+   config.set("conf", "base/default_allocator", "malloc");
 
-   state->set_option("conf", "pk/blinder_size", "64");
-   state->set_option("conf", "pk/test/public", "basic");
-   state->set_option("conf", "pk/test/private", "basic");
-   state->set_option("conf", "pk/test/private_gen", "all");
+   config.set("conf", "pk/blinder_size", "64");
+   config.set("conf", "pk/test/public", "basic");
+   config.set("conf", "pk/test/private", "basic");
+   config.set("conf", "pk/test/private_gen", "all");
 
-   state->set_option("conf", "pem/search", "4*1024");
-   state->set_option("conf", "pem/forgive", "8");
-   state->set_option("conf", "pem/width", "64");
+   config.set("conf", "pem/search", "4*1024");
+   config.set("conf", "pem/forgive", "8");
+   config.set("conf", "pem/width", "64");
 
-   state->set_option("conf", "rng/min_entropy", "256", false);
-   state->set_option("conf", "rng/ms_capi_prov_type", "INTEL_SEC:RSA_FULL");
-   state->set_option("conf", "rng/unix_path", "/usr/ucb:/usr/etc:/etc");
-   state->set_option("conf", "rng/es_files", "/dev/urandom:/dev/random");
-   state->set_option("conf", "rng/egd_path",
+   config.set("conf", "rng/min_entropy", "256", false);
+   config.set("conf", "rng/ms_capi_prov_type", "INTEL_SEC:RSA_FULL");
+   config.set("conf", "rng/unix_path", "/usr/ucb:/usr/etc:/etc");
+   config.set("conf", "rng/es_files", "/dev/urandom:/dev/random");
+   config.set("conf", "rng/egd_path",
                      "/var/run/egd-pool:/dev/egd-pool");
-   state->set_option("conf", "rng/slow_poll_request", "256");
-   state->set_option("conf", "rng/fast_poll_request", "64");
+   config.set("conf", "rng/slow_poll_request", "256");
+   config.set("conf", "rng/fast_poll_request", "64");
 
-   state->set_option("conf", "x509/validity_slack", "24h");
-   state->set_option("conf", "x509/v1_assume_ca", "false");
-   state->set_option("conf", "x509/cache_verify_results", "30m");
+   config.set("conf", "x509/validity_slack", "24h");
+   config.set("conf", "x509/v1_assume_ca", "false");
+   config.set("conf", "x509/cache_verify_results", "30m");
 
-   state->set_option("conf", "x509/ca/allow_ca", "false");
-   state->set_option("conf", "x509/ca/basic_constraints", "always");
-   state->set_option("conf", "x509/ca/default_expire", "1y");
-   state->set_option("conf", "x509/ca/signing_offset", "30s");
-   state->set_option("conf", "x509/ca/rsa_hash", "SHA-1");
-   state->set_option("conf", "x509/ca/str_type", "latin1");
+   config.set("conf", "x509/ca/allow_ca", "false");
+   config.set("conf", "x509/ca/basic_constraints", "always");
+   config.set("conf", "x509/ca/default_expire", "1y");
+   config.set("conf", "x509/ca/signing_offset", "30s");
+   config.set("conf", "x509/ca/rsa_hash", "SHA-1");
+   config.set("conf", "x509/ca/str_type", "latin1");
 
-   state->set_option("conf", "x509/crl/unknown_critical", "ignore");
-   state->set_option("conf", "x509/crl/next_update", "7d");
+   config.set("conf", "x509/crl/unknown_critical", "ignore");
+   config.set("conf", "x509/crl/next_update", "7d");
 
-   state->set_option("conf", "x509/exts/basic_constraints", "critical");
-   state->set_option("conf", "x509/exts/subject_key_id", "yes");
-   state->set_option("conf", "x509/exts/authority_key_id", "yes");
-   state->set_option("conf", "x509/exts/subject_alternative_name", "yes");
-   state->set_option("conf", "x509/exts/issuer_alternative_name", "no");
-   state->set_option("conf", "x509/exts/key_usage", "critical");
-   state->set_option("conf", "x509/exts/extended_key_usage", "yes");
-   state->set_option("conf", "x509/exts/crl_number", "yes");
+   config.set("conf", "x509/exts/basic_constraints", "critical");
+   config.set("conf", "x509/exts/subject_key_id", "yes");
+   config.set("conf", "x509/exts/authority_key_id", "yes");
+   config.set("conf", "x509/exts/subject_alternative_name", "yes");
+   config.set("conf", "x509/exts/issuer_alternative_name", "no");
+   config.set("conf", "x509/exts/key_usage", "critical");
+   config.set("conf", "x509/exts/extended_key_usage", "yes");
+   config.set("conf", "x509/exts/crl_number", "yes");
    }
 
 /*************************************************
 * Set the built-in discrete log groups           *
 *************************************************/
-void set_default_dl_groups(Library_State* state)
+void set_default_dl_groups(Config& config)
    {
-   state->set_option("dl", "modp/ietf/768",
+   config.set("dl", "modp/ietf/768",
       "-----BEGIN X942 DH PARAMETERS-----"
       "MIHIAmEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxObIlFK"
       "CHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjo2IP//"
@@ -243,7 +244,7 @@ void set_default_dl_groups(Library_State* state)
       "HRsQf/////////8="
       "-----END X942 DH PARAMETERS-----");
 
-   state->set_option("dl", "modp/ietf/1024",
+   config.set("dl", "modp/ietf/1024",
       "-----BEGIN X942 DH PARAMETERS-----"
       "MIIBCgKBgQD//////////8kP2qIhaMI0xMZii4DcHNEpAk4IimfMdAILvqY7E5si"
       "UUoIeY40BN3vlRmzzTpDGzArCm3yXxQ3T+E1bW1RwkXkhbV2Yl5+xvRMQummN+1r"
@@ -253,7 +254,7 @@ void set_default_dl_groups(Library_State* state)
       "Nf2tRM/S10+SCL4lj/MklDMo9nMpwP//////////"
       "-----END X942 DH PARAMETERS-----");
 
-   state->set_option("dl", "modp/ietf/1536",
+   config.set("dl", "modp/ietf/1536",
       "-----BEGIN X942 DH PARAMETERS-----"
       "MIIBigKBwQD//////////8kP2qIhaMI0xMZii4DcHNEpAk4IimfMdAILvqY7E5si"
       "UUoIeY40BN3vlRmzzTpDGzArCm3yXxQ3T+E1bW1RwkXkhbV2Yl5+xvRMQummN+1r"
@@ -266,7 +267,7 @@ void set_default_dl_groups(Library_State* state)
       "NgRlEbmT//////////8="
       "-----END X942 DH PARAMETERS-----");
 
-   state->set_option("dl", "modp/ietf/2048",
+   config.set("dl", "modp/ietf/2048",
       "-----BEGIN X942 DH PARAMETERS-----"
       "MIICDAKCAQEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb"
       "IlFKCHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjft"
@@ -281,7 +282,7 @@ void set_default_dl_groups(Library_State* state)
       "2uKu+DemKWTvFeX7SqwLjBzKpL51SrVyiukTDEx9AogKuUctRVZVNH//////////"
       "-----END X942 DH PARAMETERS-----");
 
-   state->set_option("dl", "modp/ietf/3072",
+   config.set("dl", "modp/ietf/3072",
       "-----BEGIN X942 DH PARAMETERS-----"
       "MIIDDAKCAYEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb"
       "IlFKCHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjft"
@@ -302,7 +303,7 @@ void set_default_dl_groups(Library_State* state)
       "JcFokFSdaWV//////////w=="
       "-----END X942 DH PARAMETERS-----");
 
-   state->set_option("dl", "modp/ietf/4096",
+   config.set("dl", "modp/ietf/4096",
       "-----BEGIN X942 DH PARAMETERS-----"
       "MIIEDAKCAgEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb"
       "IlFKCHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjft"
@@ -328,7 +329,7 @@ void set_default_dl_groups(Library_State* state)
       "ydp1TEbH7uDDf9vuSFNgR6b6GuSaAxjM//////////8="
       "-----END X942 DH PARAMETERS-----");
 
-   state->set_option("dl", "dsa/jce/512",
+   config.set("dl", "dsa/jce/512",
       "-----BEGIN DSA PARAMETERS-----"
       "MIGdAkEA/KaCzo4Syrom78z3EQ5SbbB4sF7ey80etKII864WF64B81uRpH5t9jQT"
       "xeEu0ImbzRMqzVDZkVG9xD7nN1kuFwIVAJYu3cw2nLqOuyYO5rahJtk0bjjFAkEA"
@@ -336,7 +337,7 @@ void set_default_dl_groups(Library_State* state)
       "fM76DQqGvl3/3dDRFD3NdQ=="
       "-----END DSA PARAMETERS-----");
 
-   state->set_option("dl", "dsa/jce/768",
+   config.set("dl", "dsa/jce/768",
       "-----BEGIN DSA PARAMETERS-----"
       "MIHdAmEA6eZCWZ01XzfJf/01ZxILjiXJzUPpJ7OpZw++xdiQFBki0sOzrSSACTeZ"
       "hp0ehGqrSfqwrSbSzmoiIZ1HC859d31KIfvpwnC1f2BwAvPO+Dk2lM9F7jaIwRqM"
@@ -345,7 +346,7 @@ void set_default_dl_groups(Library_State* state)
       "CjBTjf9rP8ds+xMcnnlltYhYqwpDtVczWRKoqlR/lWg="
       "-----END DSA PARAMETERS-----");
 
-   state->set_option("dl", "dsa/jce/1024",
+   config.set("dl", "dsa/jce/1024",
       "-----BEGIN DSA PARAMETERS-----"
       "MIIBHgKBgQD9f1OBHXUSKVLfSpwu7OTn9hG3UjzvRADDHj+AtlEmaUVdQCJR+1k9"
       "jVj6v8X1ujD2y5tVbNeBO4AdNG/yZmC3a5lQpaSfn+gEexAiwk+7qdf+t8Yb+DtX"
@@ -364,10 +365,10 @@ void set_default_dl_groups(Library_State* state)
 *************************************************/
 void Library_State::set_default_policy()
    {
-   set_default_config(this);
-   set_default_aliases(this);
-   set_default_oids(this);
-   set_default_dl_groups(this);
+   set_default_config(config());
+   set_default_aliases(config());
+   set_default_oids(config());
+   set_default_dl_groups(config());
    }
 
 }

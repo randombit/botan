@@ -82,12 +82,14 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
    if(!is_encrypted)
       key = key_data;
 
-   const u32bit max_tries = Config::get_u32bit("base/pkcs8_tries");
+   const u32bit MAX_TRIES = 
+      global_config().option_as_u32bit("base/pkcs8_tries");
+
    u32bit tries = 0;
    while(true)
       {
       try {
-         if(max_tries && tries >= max_tries)
+         if(MAX_TRIES && tries >= MAX_TRIES)
             break;
 
          if(is_encrypted)
@@ -167,7 +169,7 @@ void encrypt_key(const PKCS8_PrivateKey& key, Pipe& pipe,
                  const std::string& pass, const std::string& pbe_algo,
                  X509_Encoding encoding)
    {
-   const std::string DEFAULT_PBE = Config::get_string("base/default_pbe");
+   const std::string DEFAULT_PBE = global_config().option("base/default_pbe");
 
    Pipe raw_key;
    raw_key.start_msg();

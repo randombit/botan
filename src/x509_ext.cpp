@@ -38,7 +38,7 @@ void Extensions::encode_into(DER_Encoder& to_object) const
       std::string setting;
 
       if(ext->config_id() != "")
-         setting = Config::get_string("x509/exts/" + ext->config_id());
+         setting = global_config().option("x509/exts/" + ext->config_id());
 
       if(setting == "")
          setting = "yes";

@@ -292,7 +292,9 @@ bool operator>=(const X509_Time& t1, const X509_Time& t2)
 s32bit validity_check(const X509_Time& start, const X509_Time& end,
                       u64bit current_time)
    {
-   const u32bit ALLOWABLE_SLIP = Config::get_time("x509/validity_slack");
+   const u32bit ALLOWABLE_SLIP =
+      global_config().option_as_time("x509/validity_slack");
+
    const s32bit NOT_YET_VALID = -1, VALID_TIME = 0, EXPIRED = 1;
 
    if(start.cmp(current_time + ALLOWABLE_SLIP) > 0)

@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/libstate.h>
+#include <botan/config.h>
 #include <botan/modules.h>
 #include <botan/engine.h>
 #include <botan/x509stat.h>
@@ -23,6 +24,9 @@ Library_State* global_lib_state = 0;
 
 }
 
+/*************************************************
+* Access the global state object                 *
+*************************************************/
 Library_State& global_state()
    {
    if(!global_lib_state)
@@ -33,11 +37,17 @@ Library_State& global_state()
    return (*global_lib_state);
    }
 
+/*************************************************
+* Set a new global state object                  *
+*************************************************/
 void set_global_state(Library_State* new_state)
    {
    delete swap_global_state(new_state);
    }
 
+/*************************************************
+* Swap two global state objects                  *
+*************************************************/
 Library_State* swap_global_state(Library_State* new_state)
    {
    Library_State* old_state = global_lib_state;
@@ -84,10 +94,7 @@ Allocator* Library_State::get_allocator(const std::string& type) const
 
    if(!cached_default_allocator)
       {
-      const std::string key_name = "conf/base/default_allocator";
-
-      Named_Mutex_Holder lock("settings");
-      std::string chosen = search_map(settings, key_name);
+      std::string chosen = config().option("base/default_allocator");
 
       if(chosen == "")
          chosen = "malloc";
@@ -116,7 +123,7 @@ void Library_State::add_allocator(Allocator* allocator,
    alloc_factory[type] = allocator;
 
    if(set_as_default)
-      set_option("conf", "base/default_allocator", type);
+      config().set("conf", "base/default_allocator", type);
    }
 
 /*************************************************
@@ -213,51 +220,6 @@ u32bit Library_State::seed_prng(bool slow_poll, u32bit bits_to_get)
    }
 
 /*************************************************
-* Set a named option                             *
-*************************************************/
-void Library_State::set_option(const std::string& section,
-                               const std::string& name,
-                               const std::string& value,
-                               bool overwrite)
-   {
-   Named_Mutex_Holder lock("settings");
-
-   std::map<std::string, std::string>::const_iterator i = settings.find(name);
-
-   if(overwrite || i == settings.end() || i->second == "")
-      {
-      const std::string full_name = section + "/" + name;
-      settings[full_name] = value;
-
-      if(full_name == "base/default_allocator")
-         cached_default_allocator = 0;
-      }
-   }
-
-/*************************************************
-* Get the value of the named option              *
-*************************************************/
-std::string Library_State::get_option(const std::string& section,
-                                      const std::string& name) const
-   {
-   Named_Mutex_Holder lock("settings");
-
-   return search_map<std::string, std::string>(settings,
-                                               section + "/" + name, "");
-   }
-
-/*************************************************
-* See if a particular option has been set        *
-*************************************************/
-bool Library_State::option_set(const std::string& section,
-                               const std::string& name) const
-   {
-   Named_Mutex_Holder lock("settings");
-
-   return search_map(settings, section + "/" + name, false, true);
-   }
-
-/*************************************************
 * Get an engine out of the list                  *
 *************************************************/
 Engine* Library_State::get_engine_n(u32bit n) const
@@ -311,7 +273,7 @@ void Library_State::set_x509_state(X509_GlobalState* new_x509_state_obj)
    }
 
 /*************************************************
-* Set the X509 global state class                *
+* Get the X509 global state class                *
 *************************************************/
 X509_GlobalState& Library_State::x509_state()
    {
@@ -319,6 +281,17 @@ X509_GlobalState& Library_State::x509_state()
       x509_state_obj = new X509_GlobalState();
 
    return (*x509_state_obj);
+   }
+
+/*************************************************
+* Set the configuration object                   *
+*************************************************/
+Config& Library_State::config() const
+   {
+   if(!config_obj)
+      throw Invalid_State("Library_State::config(): No config set");
+
+   return (*config_obj);
    }
 
 /*************************************************
@@ -354,6 +327,7 @@ Library_State::Library_State(Mutex_Factory* mutex_factory)
    this->mutex_factory = mutex_factory;
    this->timer = new Timer();
    this->transcoder = 0;
+   this->config_obj = new Config();
 
    locks["settings"] = get_mutex();
    locks["allocator"] = get_mutex();

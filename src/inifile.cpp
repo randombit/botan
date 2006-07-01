@@ -4,9 +4,9 @@
 *************************************************/
 
 #include <botan/config.h>
-#include <botan/libstate.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
+#include <botan/exceptn.h>
 #include <fstream>
 #include <map>
 
@@ -72,20 +72,10 @@ std::string interpolate(const std::string& value,
 
 }
 
-namespace Config {
-
 /*************************************************
 * Load a configuration file                      *
 *************************************************/
-void load(const std::string& fsname)
-   {
-   load(fsname, global_state());
-   }
-
-/*************************************************
-* Load a configuration file                      *
-*************************************************/
-void load(const std::string& fsname, Library_State& state)
+void Config::load_inifile(const std::string& fsname)
    {
    std::ifstream config(fsname.c_str());
 
@@ -135,16 +125,14 @@ void load(const std::string& fsname, Library_State& state)
 
       if(section == "oids")
          {
-         state.set_option("oid2str", name, value, false);
-         state.set_option("str2oid", value, name, false);
+         set("oid2str", name, value, false);
+         set("str2oid", value, name, false);
          }
       else if(section == "aliases")
-         state.set_option("alias", name, value);
+         set("alias", name, value);
       else
-         state.set_option("conf", section + '/' + name, value);
+         set("conf", section + '/' + name, value);
       }
    }
-
-}
 
 }

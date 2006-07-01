@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/modules.h>
-#include <botan/libstate.h>
 #include <botan/defalloc.h>
 #include <botan/eng_def.h>
 #include <botan/es_file.h>

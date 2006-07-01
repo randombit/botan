@@ -658,7 +658,9 @@ bool X509_Store::Cert_Info::is_verified() const
    if(result != VERIFIED && result != CERT_NOT_YET_VALID)
       return true;
 
-   const u32bit CACHE_TIME = Config::get_time("x509/cache_verify_results");
+   const u32bit CACHE_TIME =
+      global_config().option_as_time("x509/cache_verify_results");
+
    const u64bit current_time = system_time();
 
    if(current_time > last_checked + CACHE_TIME)

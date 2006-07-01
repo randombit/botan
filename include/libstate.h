@@ -45,10 +45,7 @@ class Library_State
       void set_timer(class Timer*);
       u64bit system_clock() const;
 
-      void set_option(const std::string&, const std::string&,
-                              const std::string&, bool = true);
-      std::string get_option(const std::string&, const std::string&) const;
-      bool option_set(const std::string&, const std::string&) const;
+      class Config& config() const;
 
       void add_engine(class Engine*);
 
@@ -73,10 +70,10 @@ class Library_State
 
       class Mutex_Factory* mutex_factory;
       class Timer* timer;
+      class Config* config_obj;
       class X509_GlobalState* x509_state_obj;
 
       std::map<std::string, class Mutex*> locks;
-      std::map<std::string, std::string> settings;
       std::map<std::string, Allocator*> alloc_factory;
       mutable Allocator* cached_default_allocator;
 

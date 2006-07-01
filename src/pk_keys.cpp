@@ -16,7 +16,7 @@ namespace {
 *************************************************/
 bool key_check_level(const std::string& type)
    {
-   const std::string setting = Config::get_string("pk/test/" + type);
+   const std::string setting = global_config().option("pk/test/" + type);
    if(setting == "basic")
       return false;
    return true;

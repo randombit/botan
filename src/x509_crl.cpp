@@ -80,7 +80,7 @@ void X509_CRL::force_decode()
       {
       BER_Decoder crl_options(next.value);
 
-      std::string action = Config::get_string("x509/crl/unknown_critical");
+      std::string action = global_config().option("x509/crl/unknown_critical");
       if(action != "throw" && action != "ignore")
          throw Invalid_Argument("Bad value of x509/crl/unknown_critical: "
                                 + action);

@@ -46,7 +46,8 @@ ASN1_Tag choose_encoding(const std::string& str)
    for(u32bit j = 0; j != str.size(); ++j)
       if(!IS_PRINTABLE[(byte)str[j]])
          {
-         const std::string type = Config::get_string("x509/ca/str_type");
+         const std::string type = global_config().option("x509/ca/str_type");
+
          if(type == "utf8")   return UTF8_STRING;
          if(type == "latin1") return T61_STRING;
          throw Invalid_Argument("Bad setting for x509/ca/str_type: " + type);

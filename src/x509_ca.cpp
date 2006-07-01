@@ -37,7 +37,7 @@ X509_CA::X509_CA(const X509_Certificate& c,
    std::string padding;
    Signature_Format format;
 
-   Config::choose_sig_format(key.algo_name(), padding, format);
+   ConfigXXX::choose_sig_format(key.algo_name(), padding, format);
 
    ca_sig_algo.oid = OIDS::lookup(key.algo_name() + "/" + padding);
    ca_sig_algo.parameters = key.DER_encode_params();
@@ -52,7 +52,7 @@ X509_CA::X509_CA(const X509_Certificate& c,
 X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
                                        u32bit expire_time) const
    {
-   if(req.is_CA() && !Config::get_bool("x509/ca/allow_ca"))
+   if(req.is_CA() && !global_config().option_as_bool("x509/ca/allow_ca"))
       throw Policy_Violation("X509_CA: Attempted to sign new CA certificate");
 
    Key_Constraints constraints;
@@ -65,7 +65,7 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
       }
 
    if(expire_time == 0)
-      expire_time = Config::get_time("x509/ca/default_expire");
+      expire_time = global_config().option_as_time("x509/ca/default_expire");
 
    const u64bit current_time = system_time();
 
@@ -204,7 +204,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
    const u32bit X509_CRL_VERSION = 2;
 
    if(next_update == 0)
-      next_update = Config::get_time("x509/crl/next_update");
+      next_update = global_config().option_as_time("x509/crl/next_update");
 
    const u64bit current_time = system_time();
 

@@ -80,7 +80,7 @@ void Unix_EntropySource::gather(u32bit target_amount)
 u32bit Unix_EntropySource::gather_from(const Unix_Program& prog)
    {
    const std::string BASE_PATH = "/bin:/sbin:/usr/bin:/usr/sbin";
-   const std::string EXTRA_PATH = Config::get_string("rng/unix_path");
+   const std::string EXTRA_PATH = global_config().option("rng/unix_path");
 
    std::string PATH = BASE_PATH;
    if(EXTRA_PATH != "")

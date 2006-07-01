@@ -55,12 +55,13 @@ void initialize(const std::string& arg_string)
    global_state().load(modules);
 
    if(args.config_file() != "")
-      Config::load(args.config_file(), global_state());
+      global_config().load_inifile(args.config_file());
 
    global_state().set_transcoder(new Default_Charset_Transcoder);
    global_state().set_prng(new ANSI_X931_RNG);
 
-   const u32bit min_entropy = Config::get_u32bit("rng/min_entropy");
+   const u32bit min_entropy =
+      global_config().option_as_u32bit("rng/min_entropy");
 
    if(min_entropy != 0 && args.seed_rng())
       {

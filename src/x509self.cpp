@@ -63,7 +63,7 @@ PK_Signer* choose_sig_format(const PKCS8_PrivateKey& key,
    {
    std::string padding;
    Signature_Format format;
-   Config::choose_sig_format(key.algo_name(), padding, format);
+   ConfigXXX::choose_sig_format(key.algo_name(), padding, format);
 
    sig_algo.oid = OIDS::lookup(key.algo_name() + "/" + padding);
    sig_algo.parameters = key.DER_encode_params();

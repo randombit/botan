@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/dl_group.h>
-#include <botan/libstate.h>
+#include <botan/config.h>
 #include <botan/parsing.h>
 #include <botan/numthry.h>
 #include <botan/der_enc.h>
@@ -28,7 +28,7 @@ DL_Group::DL_Group()
 *************************************************/
 DL_Group::DL_Group(const std::string& type)
    {
-   DataSource_Memory pem(global_state().get_option("dl", type));
+   DataSource_Memory pem(global_config().get("dl", type));
    PEM_decode(pem);
    }
 

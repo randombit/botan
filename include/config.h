@@ -10,32 +10,40 @@
 #include <botan/enums.h>
 #include <string>
 #include <vector>
+#include <map>
 
 namespace Botan {
 
-class Library_State;
+/*************************************************
+* Library Configuration Settings                 *
+*************************************************/
+class Config
+   {
+   public:
+      std::string get(const std::string&, const std::string&) const;
+      bool is_set(const std::string&, const std::string&) const;
+      void set(const std::string&, const std::string&,
+               const std::string&, bool = true);
 
-namespace Config {
+      u32bit option_as_u32bit(const std::string&) const;
+      u32bit option_as_time(const std::string&) const;
+      bool option_as_bool(const std::string&) const;
+      std::vector<std::string> option_as_list(const std::string&) const;
+
+      std::string deref_alias(const std::string&) const;
+      std::string option(const std::string&) const;
+
+      void load_inifile(const std::string&);
+   private:
+      std::map<std::string, std::string> settings;
+   };
 
 /*************************************************
-* Load a configuration file                      *
+* Hook for the global config                     *
 *************************************************/
-void load(const std::string&);
-void load(const std::string&, Library_State&);
+Config& global_config();
 
-/*************************************************
-* Set an option                                  *
-*************************************************/
-void set(const std::string&, const std::string&, bool = true);
-
-/*************************************************
-* Get the value of some option                   *
-*************************************************/
-std::vector<std::string> get_list(const std::string&);
-std::string              get_string(const std::string&);
-u32bit                   get_u32bit(const std::string&);
-u32bit                   get_time(const std::string&);
-bool                     get_bool(const std::string&);
+namespace ConfigXXX {
 
 /*************************************************
 * Choose the signature format for a PK algorithm *

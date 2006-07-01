@@ -17,7 +17,7 @@ namespace PEM_Code {
 *************************************************/
 std::string encode(const byte der[], u32bit length, const std::string& label)
    {
-   const u32bit PEM_WIDTH = Config::get_u32bit("pem/width");
+   const u32bit PEM_WIDTH = global_config().option_as_u32bit("pem/width");
 
    if(PEM_WIDTH < 50 || PEM_WIDTH > 76)
       throw Encoding_Error("PEM: Invalid line width " + to_string(PEM_WIDTH));
@@ -57,7 +57,8 @@ SecureVector<byte> decode_check_label(DataSource& source,
 *************************************************/
 SecureVector<byte> decode(DataSource& source, std::string& label)
    {
-   const u32bit RANDOM_CHAR_LIMIT = Config::get_u32bit("pem/forgive");
+   const u32bit RANDOM_CHAR_LIMIT =
+      global_config().option_as_u32bit("pem/forgive");
 
    const std::string PEM_HEADER1 = "-----BEGIN ";
    const std::string PEM_HEADER2 = "-----";
@@ -117,7 +118,9 @@ SecureVector<byte> decode(DataSource& source, std::string& label)
 *************************************************/
 bool matches(DataSource& source, const std::string& extra)
    {
-   const u32bit PEM_SEARCH_RANGE = Config::get_u32bit("pem/search");
+   const u32bit PEM_SEARCH_RANGE =
+      global_config().option_as_u32bit("pem/search");
+
    const std::string PEM_HEADER = "-----BEGIN " + extra;
 
    SecureVector<byte> search_buf(PEM_SEARCH_RANGE);
