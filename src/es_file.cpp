@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/es_file.h>
-#include <botan/conf.h>
+#include <botan/config.h>
 #include <fstream>
 
 namespace Botan {

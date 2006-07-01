@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/pem.h>
-#include <botan/conf.h>
+#include <botan/config.h>
 #include <botan/filters.h>
 #include <botan/parsing.h>
 

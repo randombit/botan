@@ -6,7 +6,7 @@
 #include <botan/pk_core.h>
 #include <botan/numthry.h>
 #include <botan/engine.h>
-#include <botan/conf.h>
+#include <botan/config.h>
 #include <algorithm>
 
 namespace Botan {
