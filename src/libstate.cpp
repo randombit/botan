@@ -300,6 +300,7 @@ Config& Library_State::config() const
 void Library_State::load(Modules& modules)
    {
    set_timer(modules.timer());
+   set_transcoder(modules.transcoder());
 
    std::vector<Allocator*> allocators = modules.allocators();
 

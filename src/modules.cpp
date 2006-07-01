@@ -5,6 +5,7 @@
 
 #include <botan/modules.h>
 #include <botan/defalloc.h>
+#include <botan/def_char.h>
 #include <botan/eng_def.h>
 #include <botan/es_file.h>
 
@@ -202,6 +203,14 @@ std::vector<Engine*> Builtin_Modules::engines() const
    engines.push_back(new Default_Engine);
 
    return engines;
+   }
+
+/*************************************************
+* Find the best transcoder option                *
+*************************************************/
+Charset_Transcoder* Builtin_Modules::transcoder() const
+   {
+   return new Default_Charset_Transcoder;
    }
 
 }

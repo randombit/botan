@@ -55,7 +55,6 @@ void initialize(const std::string& arg_string)
       global_config().load_inifile(args.config_file());
 
    global_state().load(modules);
-   global_state().set_transcoder(new Default_Charset_Transcoder);
    global_state().set_prng(new ANSI_X931_RNG);
 
    const u32bit min_entropy =
