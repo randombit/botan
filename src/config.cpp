@@ -3,7 +3,7 @@
 * (C) 1999-2006 The Botan Project                *
 *************************************************/
 
-#include <botan/conf.h>
+#include <botan/config.h>
 #include <botan/libstate.h>
 #include <botan/lookup.h>
 #include <botan/charset.h>

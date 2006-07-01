@@ -8,7 +8,7 @@
 #include <botan/ber_dec.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
-#include <botan/conf.h>
+#include <botan/config.h>
 #include <ctime>
 
 namespace Botan {
