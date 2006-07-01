@@ -8,7 +8,7 @@
 #include <botan/x509stor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/conf.h>
+#include <botan/config.h>
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
 #include <botan/numthry.h>

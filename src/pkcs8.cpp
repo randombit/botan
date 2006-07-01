@@ -8,7 +8,7 @@
 #include <botan/ber_dec.h>
 #include <botan/asn1_obj.h>
 #include <botan/pk_algs.h>
-#include <botan/conf.h>
+#include <botan/config.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
 #include <botan/pbe.h>

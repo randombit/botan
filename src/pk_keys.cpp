@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/pk_keys.h>
-#include <botan/conf.h>
+#include <botan/config.h>
 #include <botan/oids.h>
 
 namespace Botan {
