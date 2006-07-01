@@ -34,6 +34,10 @@ class Config
       std::string option(const std::string&) const;
 
       void load_inifile(const std::string&);
+
+      static void choose_sig_format(const std::string&, std::string&,
+                                    Signature_Format&);
+
    private:
       std::map<std::string, std::string> settings;
    };
@@ -42,17 +46,6 @@ class Config
 * Hook for the global config                     *
 *************************************************/
 Config& global_config();
-
-namespace ConfigXXX {
-
-/*************************************************
-* Choose the signature format for a PK algorithm *
-*************************************************/
-void choose_sig_format(const std::string&, std::string&, Signature_Format&);
-void choose_sig_format(const std::string&, std::string&, std::string&,
-                       Signature_Format&);
-
-}
 
 }
 

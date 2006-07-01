@@ -37,7 +37,7 @@ X509_CA::X509_CA(const X509_Certificate& c,
    std::string padding;
    Signature_Format format;
 
-   ConfigXXX::choose_sig_format(key.algo_name(), padding, format);
+   Config::choose_sig_format(key.algo_name(), padding, format);
 
    ca_sig_algo.oid = OIDS::lookup(key.algo_name() + "/" + padding);
    ca_sig_algo.parameters = key.DER_encode_params();

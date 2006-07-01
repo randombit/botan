@@ -148,34 +148,15 @@ bool Config::option_as_bool(const std::string& key) const
    }
 
 /*************************************************
-* Dereference an alias                           *
-*************************************************/
-std::string deref_alias(const std::string& name)
-   {
-   return global_config().deref_alias(name);
-   }
-
-namespace ConfigXXX {
-
-/*************************************************
 * Choose the signature format for a PK algorithm *
 *************************************************/
-void choose_sig_format(const std::string& algo_name, std::string& padding,
-                       Signature_Format& format)
-   {
-   std::string dummy;
-   choose_sig_format(algo_name, padding, dummy, format);
-   }
-
-/*************************************************
-* Choose the signature format for a PK algorithm *
-*************************************************/
-void choose_sig_format(const std::string& algo_name, std::string& padding,
-                       std::string& hash, Signature_Format& format)
+void Config::choose_sig_format(const std::string& algo_name,
+                               std::string& padding,
+                               Signature_Format& format)
    {
    if(algo_name == "RSA")
       {
-      hash = global_state().config().option("x509/ca/rsa_hash");
+      std::string hash = global_state().config().option("x509/ca/rsa_hash");
 
       if(hash == "")
          throw Invalid_State("No value set for x509/ca/rsa_hash");
@@ -187,7 +168,7 @@ void choose_sig_format(const std::string& algo_name, std::string& padding,
       }
    else if(algo_name == "DSA")
       {
-      hash = deref_alias("SHA-1");
+      std::string hash = global_state().config().deref_alias("SHA-1");
       padding = "EMSA1(" + hash + ")";
       format = DER_SEQUENCE;
       }
@@ -195,6 +176,12 @@ void choose_sig_format(const std::string& algo_name, std::string& padding,
       throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);
    }
 
-}
+/*************************************************
+* Dereference an alias                           *
+*************************************************/
+std::string deref_alias(const std::string& name)
+   {
+   return global_config().deref_alias(name);
+   }
 
 }
