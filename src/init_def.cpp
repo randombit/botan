@@ -65,22 +65,25 @@ void initialize(const std::string& arg_string)
 
    if(min_entropy != 0 && args.seed_rng())
       {
-      u32bit total_bits = 0;
+      u32bit bits_so_far = 0;
+
       for(u32bit j = 0; j != 4; ++j)
          {
-         total_bits += global_state().seed_prng(true,
-                                                min_entropy - total_bits);
-         if(total_bits >= min_entropy)
+         u32bit to_get = min_entropy - bits_so_far;
+
+         bits_so_far += global_state().seed_prng(true, to_get);
+
+         if(bits_so_far >= min_entropy)
             break;
          }
 
-      if(total_bits < min_entropy)
+      if(bits_so_far < min_entropy)
          throw PRNG_Unseeded("Unable to collect sufficient entropy");
       }
 
    if(!FIPS140::passes_self_tests())
       {
-      set_global_state(0);
+      deinitialize();
       throw Self_Test_Failure("FIPS-140 startup tests");
       }
    }
