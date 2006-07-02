@@ -8,8 +8,6 @@
 
 namespace Botan {
 
-namespace Init {
-
 /*************************************************
 * Check for an arbitrary boolean-valued option   *
 *************************************************/
@@ -70,7 +68,5 @@ InitializerOptions::InitializerOptions(const std::string& arg_string)
          }
       }
    }
-
-}
 
 }

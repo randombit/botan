@@ -11,8 +11,6 @@
 
 namespace Botan {
 
-namespace Init {
-
 /*************************************************
 * Options for initializing the library           *
 *************************************************/
@@ -31,22 +29,25 @@ class InitializerOptions
    };
 
 /*************************************************
-* Main Library Initialization/Shutdown Functions *
-*************************************************/
-void initialize(const std::string& = "");
-void deinitialize();
-
-}
-
-/*************************************************
 * Library Initialization/Shutdown Object         *
 *************************************************/
 class LibraryInitializer
    {
    public:
-      LibraryInitializer(const std::string& = "");
+      LibraryInitializer(const InitializerOptions&);
       ~LibraryInitializer();
    };
+
+namespace Init {
+
+/*************************************************
+* Main Library Initialization/Shutdown Functions *
+*************************************************/
+void initialize(const InitializerOptions&);
+void deinitialize();
+
+}
+
 
 }
 

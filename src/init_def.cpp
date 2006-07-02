@@ -17,9 +17,9 @@ namespace Botan {
 /*************************************************
 * Library Initialization                         *
 *************************************************/
-LibraryInitializer::LibraryInitializer(const std::string& arg_string)
+LibraryInitializer::LibraryInitializer(const InitializerOptions& args)
    {
-   Init::initialize(arg_string);
+   Init::initialize(args);
    }
 
 /*************************************************
@@ -35,9 +35,8 @@ namespace Init {
 /*************************************************
 * Library Initialization                         *
 *************************************************/
-void initialize(const std::string& arg_string)
+void initialize(const InitializerOptions& args)
    {
-   InitializerOptions args(arg_string);
    Builtin_Modules modules(false);
 
    Mutex_Factory* mutex_factory = 0;
