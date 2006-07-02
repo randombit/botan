@@ -51,6 +51,25 @@ inline R search_map(const std::map<K, V>& mapping, const K& key,
    }
 
 /*************************************************
+* Function adaptor for delete operation          *
+*************************************************/
+template<class T>
+class del_fun : public std::unary_function<T, void>
+   {
+   public:
+      void operator()(T* ptr) { delete ptr; }
+   };
+
+/*************************************************
+* Delete the second half of a pair of objects    *
+*************************************************/
+template<typename Pair>
+void delete2nd(Pair& pair)
+   {
+   delete pair.second;
+   }
+
+/*************************************************
 * Insert a key/value pair into a multimap        *
 *************************************************/
 template<typename K, typename V>

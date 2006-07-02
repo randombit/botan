@@ -12,6 +12,7 @@
 #include <botan/mutex.h>
 #include <botan/timers.h>
 #include <botan/charset.h>
+#include <algorithm>
 
 namespace Botan {
 
@@ -346,16 +347,15 @@ Library_State::~Library_State()
    {
    delete x509_state_obj;
    delete transcoder;
-   for(u32bit j = 0; j != entropy_sources.size(); ++j)
-      delete entropy_sources[j];
-
    delete rng;
    delete timer;
 
-   for(u32bit j = 0; j != engines.size(); ++j)
-      delete engines[j];
+   std::for_each(entropy_sources.begin(), entropy_sources.end(),
+                 del_fun<EntropySource>());
+   std::for_each(engines.begin(), engines.end(), del_fun<Engine>());
 
    cached_default_allocator = 0;
+
    for(std::map<std::string, Allocator*>::iterator j = alloc_factory.begin();
        j != alloc_factory.end(); ++j)
       {
@@ -363,9 +363,8 @@ Library_State::~Library_State()
       delete j->second;
       }
 
-   for(std::map<std::string, Mutex*>::iterator j = locks.begin();
-       j != locks.end(); ++j)
-      delete j->second;
+   std::for_each(locks.begin(), locks.end(),
+                 delete2nd<std::map<std::string, Mutex*>::value_type>);
 
    delete mutex_factory;
    }
