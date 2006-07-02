@@ -20,6 +20,7 @@ class InitializerOptions
       bool thread_safe() const;
       bool use_engines() const;
       bool seed_rng() const;
+      bool secure_memory() const;
       std::string config_file() const;
 
       InitializerOptions(const std::string&);

@@ -25,6 +25,14 @@ bool InitializerOptions::thread_safe() const
    }
 
 /*************************************************
+* Check if thread safety was requested           *
+*************************************************/
+bool InitializerOptions::secure_memory() const
+   {
+   return boolean_arg("secure_memory");
+   }
+
+/*************************************************
 * Check if using engines was requested           *
 *************************************************/
 bool InitializerOptions::use_engines() const

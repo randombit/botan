@@ -37,7 +37,7 @@ namespace Init {
 *************************************************/
 void initialize(const InitializerOptions& args)
    {
-   Builtin_Modules modules(false);
+   Builtin_Modules modules(args.secure_memory());
 
    Mutex_Factory* mutex_factory = 0;
 
