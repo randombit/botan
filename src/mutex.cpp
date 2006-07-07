@@ -46,7 +46,7 @@ Named_Mutex_Holder::~Named_Mutex_Holder()
 /*************************************************
 * Default Mutex Factory                          *
 *************************************************/
-Mutex* Mutex_Factory::make()
+Mutex* Default_Mutex_Factory::make()
    {
    class Default_Mutex : public Mutex
       {

@@ -41,7 +41,11 @@ void initialize(const InitializerOptions& args)
 
    set_global_state(
       new Library_State(
-         args.thread_safe() ? modules.mutex_factory() : new Mutex_Factory));
+         args.thread_safe() ?
+            modules.mutex_factory() :
+            new Default_Mutex_Factory
+         )
+      );
 
    global_state().config().load_defaults();
    if(args.config_file() != "")

@@ -27,8 +27,17 @@ class Mutex
 class Mutex_Factory
    {
    public:
-      virtual Mutex* make();
+      virtual Mutex* make() = 0;
       virtual ~Mutex_Factory() {}
+   };
+
+/*************************************************
+* Default Mutex Factory                          *
+*************************************************/
+class Default_Mutex_Factory : public Mutex_Factory
+   {
+   public:
+      Mutex* make();
    };
 
 /*************************************************
