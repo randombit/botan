@@ -39,16 +39,10 @@ void initialize(const InitializerOptions& args)
    {
    Builtin_Modules modules(args.secure_memory());
 
-   Mutex_Factory* mutex_factory = 0;
+   set_global_state(
+      new Library_State(
+         args.thread_safe() ? modules.mutex_factory() : new Mutex_Factory));
 
-   if(args.thread_safe())
-      {
-      mutex_factory = modules.mutex_factory();
-      if(!mutex_factory)
-         throw Exception("LibraryInitializer: thread safety impossible");
-      }
-
-   set_global_state(new Library_State(mutex_factory));
    global_state().config().load_defaults();
    if(args.config_file() != "")
       global_config().load_inifile(args.config_file());
