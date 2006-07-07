@@ -325,7 +325,6 @@ Library_State::Library_State(Mutex_Factory* mutex_factory)
    {
    if(!mutex_factory)
       throw Exception("Library_State: no mutex found");
-   mutex_factory = new Mutex_Factory;
 
    this->mutex_factory = mutex_factory;
    this->timer = new Timer();
