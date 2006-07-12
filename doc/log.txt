@@ -1,9 +1,13 @@
 
-* 1.5.9, 
+* 1.5.9, July 12, 2006
  - Fixed bitrot in the AEP engine
  - Fix support for marking certificate/CRL extensions as critical
  - Significant cleanups in the library state / initialization code
+ - LibraryInitializer takes an explicit InitializerOptions object
+ - Make Mutex_Factory an abstract class, add Default_Mutex_Factory
+ - Change configuration access to using global_state()
  - Add support for global named mutexes throughout the library
+ - Add some STL wrappers for the delete operator
  - Change how certificates are created to be more flexible and general
 
 * 1.5.8, June 23, 2006
