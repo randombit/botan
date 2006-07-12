@@ -35,6 +35,7 @@ class InitializerOptions
 class LibraryInitializer
    {
    public:
+      LibraryInitializer(const std::string& = "");
       LibraryInitializer(const InitializerOptions&);
       ~LibraryInitializer();
    };

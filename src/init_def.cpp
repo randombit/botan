@@ -17,6 +17,15 @@ namespace Botan {
 /*************************************************
 * Library Initialization                         *
 *************************************************/
+LibraryInitializer::LibraryInitializer(const std::string& arg_string)
+   {
+   InitializerOptions args(arg_string);
+   Init::initialize(args);
+   }
+
+/*************************************************
+* Library Initialization                         *
+*************************************************/
 LibraryInitializer::LibraryInitializer(const InitializerOptions& args)
    {
    Init::initialize(args);
