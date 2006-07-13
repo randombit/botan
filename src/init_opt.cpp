@@ -5,31 +5,52 @@
 
 #include <botan/init.h>
 #include <botan/parsing.h>
+#include <botan/stl_util.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
+
+namespace {
 
 /*************************************************
 * Check for an arbitrary boolean-valued option   *
 *************************************************/
-bool InitializerOptions::boolean_arg(const std::string& option_name) const
+bool boolean_arg(const std::map<std::string, std::string>& args,
+                 const std::string& key, bool not_found = false)
    {
-   return (args.find(option_name) != args.end());
+   std::map<std::string, std::string>::const_iterator i = args.find(key);
+   if(i == args.end())
+      return not_found;
+
+   std::string value = i->second;
+
+   if(value == "1" || value == "true" || value == "yes" || value == "on")
+      return true;
+   if(value == "0" || value == "false" || value == "no" || value == "off")
+      return false;
+   if(value == "default")
+      return not_found;
+
+   throw Invalid_Argument("InitializerOptions: Bad argument for boolean " +
+                          key + " of '" + value + "'");
    }
+
+}
 
 /*************************************************
 * Check if thread safety was requested           *
 *************************************************/
 bool InitializerOptions::thread_safe() const
    {
-   return boolean_arg("thread_safe");
+   return boolean_arg(args, "thread_safe");
    }
 
 /*************************************************
-* Check if thread safety was requested           *
+* Check if secure allocation was requested       *
 *************************************************/
 bool InitializerOptions::secure_memory() const
    {
-   return boolean_arg("secure_memory");
+   return boolean_arg(args, "secure_memory");
    }
 
 /*************************************************
@@ -37,15 +58,23 @@ bool InitializerOptions::secure_memory() const
 *************************************************/
 bool InitializerOptions::use_engines() const
    {
-   return boolean_arg("use_engines");
+   return boolean_arg(args, "use_engines");
    }
 
 /*************************************************
-* Check if RNG seeding should be disabled        *
+* Check if RNG seeding should be enabled         *
 *************************************************/
 bool InitializerOptions::seed_rng() const
    {
-   return !boolean_arg("no_rng_seed");
+   return boolean_arg(args, "seed_rng", true);
+   }
+
+/*************************************************
+* Check if FIPS mode was requested               *
+*************************************************/
+bool InitializerOptions::fips_mode() const
+   {
+   return boolean_arg(args, "fips140");
    }
 
 /*************************************************
@@ -53,9 +82,7 @@ bool InitializerOptions::seed_rng() const
 *************************************************/
 std::string InitializerOptions::config_file() const
    {
-   std::map<std::string, std::string>::const_iterator i =
-      args.find("config");
-
+   std::map<std::string, std::string>::const_iterator i = args.find("config");
    return (i != args.end()) ? i->second : "";
    }
 
@@ -64,11 +91,15 @@ std::string InitializerOptions::config_file() const
 *************************************************/
 InitializerOptions::InitializerOptions(const std::string& arg_string)
    {
-   std::vector<std::string> arg_list = split_on(arg_string, ' ');
+   const std::vector<std::string> arg_list = split_on(arg_string, ' ');
+
    for(u32bit j = 0; j != arg_list.size(); ++j)
       {
+      if(arg_list[j].size() == 0)
+         continue;
+
       if(arg_list[j].find('=') == std::string::npos)
-         args[arg_list[j]] = "";
+         args[arg_list[j]] = "true";
       else
          {
          std::vector<std::string> name_and_value = split_on(arg_list[j], '=');

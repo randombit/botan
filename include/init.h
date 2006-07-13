@@ -21,11 +21,12 @@ class InitializerOptions
       bool use_engines() const;
       bool seed_rng() const;
       bool secure_memory() const;
+      bool fips_mode() const;
+
       std::string config_file() const;
 
       InitializerOptions(const std::string&);
    private:
-      bool boolean_arg(const std::string&) const;
       std::map<std::string, std::string> args;
    };
 
