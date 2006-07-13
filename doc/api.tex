@@ -10,9 +10,9 @@
 \setlength{\oddsidemargin}{0in}
 \setlength{\evensidemargin}{0in}
 
-\title{\textbf{Botan API Reference (December 31, 2005)}}
+\title{\textbf{Botan API Reference}}
 \author{}
-\date{}
+\date{2006/07/13}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\manpage}[2]{\texttt{#1}(#2)}
@@ -54,20 +54,20 @@ form the basic interface for the library.
 
 \subsection{Basic Conventions}
 
-With a few exceptions declarations in the library are contained within the
-namespace \namespace{Botan}. Botan declares several typedef'ed types to help
-buffer it against changes in machine architecture. These types are used
-extensively in the interface, and thus it would be often be convenient to use
-them without the \namespace{Botan} prefix. You can, by \keyword{using} the
-namespace \namespace{Botan\_types} (this way you can use the type names without
-the namespace prefix, but the remainder of the library stays out of the global
-namespace). The included types are \type{byte} and \type{u32bit}, which are
-unsigned integer types.
+With a very small number of exceptions, declarations in the library are
+contained within the namespace \namespace{Botan}. Botan declares several
+typedef'ed types to help buffer it against changes in machine architecture.
+These types are used extensively in the interface, and thus it would be often
+be convenient to use them without the \namespace{Botan} prefix. You can do so
+by \keyword{using} the namespace \namespace{Botan\_types} (this way you can use
+the type names without the namespace prefix, but the remainder of the library
+stays out of the global namespace). The included types are \type{byte} and
+\type{u32bit}, which are unsigned integer types.
 
 The headers for Botan are usually available in the form
-\filename{botan/headername.h}. For brevity in this documentation, headers are
-always just called \filename{headername.h}, but they should be used as
-\filename{botan/headername.h} in your actual code.
+\filename{botan/headername.h}. For brevity in this documentation,
+headers are always just called \filename{headername.h}, but they
+should be used with the \filename{botan/} prefix in your actual code.
 
 \subsection{Targets}
 
@@ -77,11 +77,13 @@ few megabytes of memory. Generally, given the choice between optimizing for
 that where performance really matters (servers), people are using 64-bit
 machines. But performance on 32 bit systems is also quite good.
 
-Today smaller systems, such as handhelds, set-top boxes, and the bigger smart
-phones and smart cards, are also capable of using Botan. However, Botan uses a
-fairly large amount of code space (multiple megabytes), which could be
-prohibitive in some systems. Actual RAM usage is quite small, usually under
-64K, though C++ runtime overheads might cause more to be used.
+Today smaller systems, such as handhelds, set-top boxes, and the
+bigger smart phones and smart cards, are also capable of using
+Botan. However, Botan uses a fairly large amount of code space (up to
+several megabytes, depending upon the compiler and options used),
+which could be prohibitive in some systems. Actual RAM usage is quite
+small, usually under 64K, though C++ runtime overheads might require
+additional memory.
 
 Botan's design makes it quite easy to remove unused algorithms in such a way
 that applications do not need to be recompiled to work, even applications that
@@ -97,7 +99,7 @@ Botan may be the perfect choice for your application. Or it might be a
 terribly bad idea. This section is basically to make it clear what Botan is
 and is not.
 
-First, let's cover the major strengths. Botan:
+First, let's cover the major strengths:
 
 \begin{list}{$\cdot$}
   \item Support is (usually) quickly available on the project mailing lists.
@@ -139,11 +141,10 @@ And the major downsides and deficiencies are:
         going to be more pain than it's worth.
   \item
 
-  \item Botan doesn't support higher-level protocols and formats like SSL or
-        OpenPGP. These will eventually be available as separate packages. Of
-        course you can write it yourself (and I would be happy to help with
-        that in any way I can). Some work is beginning on TLS and CMS (S/MIME)
-        support, but it is a ways away still.
+  \item Botan doesn't directly support higher-level protocols and
+        formats like SSL or OpenPGP. SSH support is available from a
+        third-party, and there is an alpha-level SSL/TLS library
+        currently available.
 
   \item Doesn't support elliptic curve algorithms; ECDSA support is planned at
         some point, but demand seems quite low.
@@ -167,9 +168,10 @@ tables, finding out if there is a high resolution timer available to use, and
 similar such matters.
 
 The constructor of this object takes a string which specifies any options. If
-more than one is used, they should be separated by a space. The options are
-listed here by order of danger (\ie the caution you should have about using the
-option), with safest first.
+more than one is used, they should be separated by a space. Boolean arguments
+(all except for the ``config'' option) can take an argument of ``true'' or
+``false'' to explicitly turn them on or off. Simply giving the name of the
+option without any argument signifies that the option should be toggled on.
 
 \noindent
 \textbf{Option ``secure\_memory''}: Try to create a more secure allocator type
@@ -210,14 +212,11 @@ time, and that a number of changes will be necessary before such a validation
 can occur. Do not use this option.
 
 \noindent
-\textbf{Option ``no\_rng\_seed''}: Don't attempt to seed the global PRNGs at
-startup. This is primarily useful when you know that the built-in library
-entropy sources will not work, and you are providing you own entropy source(s)
-with \function{Global\_RNG::add\_es}. By default Botan will attempt to seed the
-PRNGs, and will throw an exception if it fails. This options disables both of
-these actions; call \function{Global\_RNG::add\_entropy} or
-\function{Global\_RNG::add\_es} to add entropy and/or an entropy source, then
-call \function{Global\_RNG::seed} to actually seed the RNG.
+\textbf{Option ``seed\_rng''}: Attempt to seed the global PRNGs at
+startup. This option is toggled on by default, and can be disabled by passing
+``seed\_rng=false''. This is primarily useful when you know that the built-in
+library entropy sources will not work, and you are providing you own entropy
+source(s) with \function{Global\_RNG::add\_es}().
 
 If you do not create a \type{LibraryInitializer} object, pretty much any Botan
 operation will fail, because it will be unable to do basic things like allocate
@@ -241,21 +240,22 @@ impossible and an interface using plain functions is the only option.
 
 There are a few things to watch out for to prevent problems when using Botan.
 
-First and primary of these is to \emph{never} allocate any kind of Botan object
-globally. The problem is that the constructor for such an object will be called
-before the \type{LibraryInitializer} is created, and the constructor will
-undoubtedly try to call an object which has not been initialized. If you're
-lucky your program will die with an uncaught exception. If you're less lucky,
-it will crash from a memory access error. And if you're really unlucky it
-\emph{won't} crash, and your program will be in an unknown (but very bad)
-state. Use a pointer to an object instead, and initialize it after creating
-your \type{LibraryInitializer}.
+Never allocate any kind of Botan object globally. The problem with doing this
+is that the constructor for such an object will be called before the library is
+initialized. Many Botan objects will, in their constructor, make one or more
+calls into the library global state object. Access to this object is checked,
+so an exception should be thrown (rather than a memory access violation or
+undetected uninitialized object access). A rough equivalent which will work is
+to keep a global pointer to the object, initializing it after creating your
+\type{LibraryInitializer}. Merely making the \type{LibraryInitializer} also
+global will probably not help, because C++ does not make very strong guarantees
+about the order that such objects will be created.
 
 The same rule applies for making sure the destructors of all your Botan objects
 are called before the \type{LibraryInitializer} is destroyed. This implies you
 can't have static variables that are Botan objects inside functions or classes
 (since in most C++ runtimes, these objects will be destroyed after main has
-returned). This is kind of inelegant, but rarely a real problem in practice.
+returned). This is inelegant, but seems to not cause many problems in practice.
 
 Never create a Botan memory object (\type{MemoryVector}, \type{SecureVector},
 \type{SecureBuffer}) with a type that is not a basic integer (\type{byte},
@@ -276,7 +276,9 @@ many such changes.
 Use a \function{try}/\function{catch} block inside your \function{main}
 function, and catch any \type{std::exception} throws. This is not strictly
 required, but if you don't, and Botan throws an exception, your application
-will die mysteriously and (probably) without any error message.
+will die mysteriously and (probably) without any error message. Some compilers
+provide a useful diagnostic for an uncaught exception, but others simply abort
+the process.
 
 \pagebreak
 
@@ -3668,10 +3670,10 @@ Another key, with fingerprint
 releases up to version 1.4.2. This key has been retired.
 
 \vskip 5pt \noindent
-Main email contact: \verb|lloyd@randombit.net|
+Web Site: \verb|http://botan.randombit.net|
 
 \vskip 5pt \noindent
-Web Site: \verb|http://botan.randombit.net|
+Mailing lists: \verb|http://www.randombit.net/mailman/|
 
 \pagebreak
 
