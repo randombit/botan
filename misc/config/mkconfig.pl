@@ -11,7 +11,7 @@ my $PROJECT_NAME = 'Botan';
 # Version numbers
 my $MAJOR = 1;
 my $MINOR = 5;
-my $PATCH = 9;
+my $PATCH = 10;
 
 #############################################################################
 # Configuration options
