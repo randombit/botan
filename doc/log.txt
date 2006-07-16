@@ -1,4 +1,9 @@
 
+* 1.5.10,
+ - Updates to the documentation
+ - Expand InitializerOptions' language to support on/off switches
+ - Add an example implementing Pollard's Rho algorithm
+
 * 1.5.9, July 12, 2006
  - Fixed bitrot in the AEP engine
  - Fix support for marking certificate/CRL extensions as critical
