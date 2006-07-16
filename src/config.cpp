@@ -63,6 +63,14 @@ void Config::set(const std::string& section, const std::string& key,
    }
 
 /*************************************************
+* Add an alias                                   *
+*************************************************/
+void Config::add_alias(const std::string& key, const std::string& value)
+   {
+   set("alias", key, value);
+   }
+
+/*************************************************
 * Dereference an alias to a fixed name           *
 *************************************************/
 std::string Config::deref_alias(const std::string& key) const

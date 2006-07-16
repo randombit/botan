@@ -32,7 +32,9 @@ class Config
       bool option_as_bool(const std::string&) const;
       std::vector<std::string> option_as_list(const std::string&) const;
 
+      void add_alias(const std::string&, const std::string&);
       std::string deref_alias(const std::string&) const;
+
       std::string option(const std::string&) const;
 
       void load_inifile(const std::string&);

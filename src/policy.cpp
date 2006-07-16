@@ -137,43 +137,43 @@ void set_default_oids(Config& config)
 *************************************************/
 void set_default_aliases(Config& config)
    {
-   config.set("alias", "OpenPGP.Cipher.1",  "IDEA");
-   config.set("alias", "OpenPGP.Cipher.2",  "TripleDES");
-   config.set("alias", "OpenPGP.Cipher.3",  "CAST-128");
-   config.set("alias", "OpenPGP.Cipher.4",  "Blowfish");
-   config.set("alias", "OpenPGP.Cipher.5",  "SAFER-SK(13)");
-   config.set("alias", "OpenPGP.Cipher.7",  "AES-128");
-   config.set("alias", "OpenPGP.Cipher.8",  "AES-192");
-   config.set("alias", "OpenPGP.Cipher.9",  "AES-256");
-   config.set("alias", "OpenPGP.Cipher.10", "Twofish");
+   config.add_alias("OpenPGP.Cipher.1",  "IDEA");
+   config.add_alias("OpenPGP.Cipher.2",  "TripleDES");
+   config.add_alias("OpenPGP.Cipher.3",  "CAST-128");
+   config.add_alias("OpenPGP.Cipher.4",  "Blowfish");
+   config.add_alias("OpenPGP.Cipher.5",  "SAFER-SK(13)");
+   config.add_alias("OpenPGP.Cipher.7",  "AES-128");
+   config.add_alias("OpenPGP.Cipher.8",  "AES-192");
+   config.add_alias("OpenPGP.Cipher.9",  "AES-256");
+   config.add_alias("OpenPGP.Cipher.10", "Twofish");
 
-   config.set("alias", "OpenPGP.Digest.1", "MD5");
-   config.set("alias", "OpenPGP.Digest.2", "SHA-1");
-   config.set("alias", "OpenPGP.Digest.3", "RIPEMD-160");
-   config.set("alias", "OpenPGP.Digest.5", "MD2");
-   config.set("alias", "OpenPGP.Digest.6", "Tiger(24,3)");
-   config.set("alias", "OpenPGP.Digest.7", "HAVAL(20,5)");
-   config.set("alias", "OpenPGP.Digest.8", "SHA-256");
+   config.add_alias("OpenPGP.Digest.1", "MD5");
+   config.add_alias("OpenPGP.Digest.2", "SHA-1");
+   config.add_alias("OpenPGP.Digest.3", "RIPEMD-160");
+   config.add_alias("OpenPGP.Digest.5", "MD2");
+   config.add_alias("OpenPGP.Digest.6", "Tiger(24,3)");
+   config.add_alias("OpenPGP.Digest.7", "HAVAL(20,5)");
+   config.add_alias("OpenPGP.Digest.8", "SHA-256");
 
-   config.set("alias", "TLS.Digest.0",     "Parallel(MD5,SHA-160)");
+   config.add_alias("TLS.Digest.0",     "Parallel(MD5,SHA-160)");
 
-   config.set("alias", "EME-PKCS1-v1_5",  "PKCS1v15");
-   config.set("alias", "OAEP-MGF1",       "EME1");
-   config.set("alias", "EME-OAEP",        "EME1");
-   config.set("alias", "X9.31",           "EMSA2");
-   config.set("alias", "EMSA-PKCS1-v1_5", "EMSA3");
-   config.set("alias", "PSS-MGF1",        "EMSA4");
-   config.set("alias", "EMSA-PSS",        "EMSA4");
+   config.add_alias("EME-PKCS1-v1_5",  "PKCS1v15");
+   config.add_alias("OAEP-MGF1",       "EME1");
+   config.add_alias("EME-OAEP",        "EME1");
+   config.add_alias("X9.31",           "EMSA2");
+   config.add_alias("EMSA-PKCS1-v1_5", "EMSA3");
+   config.add_alias("PSS-MGF1",        "EMSA4");
+   config.add_alias("EMSA-PSS",        "EMSA4");
 
-   config.set("alias", "Rijndael", "AES");
-   config.set("alias", "3DES",     "TripleDES");
-   config.set("alias", "DES-EDE",  "TripleDES");
-   config.set("alias", "CAST5",    "CAST-128");
-   config.set("alias", "SHA1",     "SHA-160");
-   config.set("alias", "SHA-1",    "SHA-160");
-   config.set("alias", "SEAL",     "SEAL-3.0-BE");
-   config.set("alias", "MARK-4",   "ARC4(256)");
-   config.set("alias", "OMAC",     "CMAC");
+   config.add_alias("Rijndael", "AES");
+   config.add_alias("3DES",     "TripleDES");
+   config.add_alias("DES-EDE",  "TripleDES");
+   config.add_alias("CAST5",    "CAST-128");
+   config.add_alias("SHA1",     "SHA-160");
+   config.add_alias("SHA-1",    "SHA-160");
+   config.add_alias("SEAL",     "SEAL-3.0-BE");
+   config.add_alias("MARK-4",   "ARC4(256)");
+   config.add_alias("OMAC",     "CMAC");
    }
 
 /*************************************************

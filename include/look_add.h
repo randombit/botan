@@ -22,11 +22,6 @@ void add_algorithm(MessageAuthenticationCode*);
 void add_algorithm(S2K*);
 void add_algorithm(BlockCipherModePaddingMethod*);
 
-/*************************************************
-* Add an alias for an algorithm                  *
-*************************************************/
-void add_alias(const std::string&, const std::string&);
-
 }
 
 #endif
