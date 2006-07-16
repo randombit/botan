@@ -7,8 +7,10 @@
 #include <botan/numthry.h>
 using namespace Botan;
 
+#include <algorithm>
 #include <iostream>
 
+// Pollard's Rho algorithm, as described in the MIT algorithms book
 BigInt rho(const BigInt& n)
    {
    BigInt x = random_integer(0, n-1);
@@ -97,8 +99,6 @@ int main(int argc, char* argv[])
       for(u32bit j = 0; j != factors.size(); j++)
          std::cout << factors[j] << " ";
       std::cout << "\n";
-      
-
       }
    catch(std::exception& e)
       {
