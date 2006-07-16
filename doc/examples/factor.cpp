@@ -41,42 +41,70 @@ BigInt rho(const BigInt& n)
    return 0;
    }
 
-void concat(std::vector<BigInt>& x, const std::vector<BigInt>& y)
-   {
-   for(u32bit j = 0; j != y.size(); j++)
-      x.push_back(y[j]);
-   }
-
-std::vector<BigInt> factorize(const BigInt& n)
+std::vector<BigInt> remove_small_factors(BigInt& n)
    {
    std::vector<BigInt> factors;
 
-   if(n <= 1) // no prime factors at all
-      return factors;
+   while(n.is_even())
+      {
+      factors.push_back(2);
+      n /= 2;
+      }
 
-   if(is_prime(n)) // just n itself
+   for(u32bit j = 0; j != PRIME_TABLE_SIZE; j++)
+      {
+      if(n < PRIMES[j])
+         break;
+
+      BigInt x = gcd(n, PRIMES[j]);
+
+      if(x != 1)
+         {
+         n /= x;
+
+         u32bit occurs = 0;
+         while(x != 1)
+            {
+            x /= PRIMES[j];
+            occurs++;
+            }
+
+         for(u32bit k = 0; k != occurs; k++)
+            factors.push_back(PRIMES[j]);
+         }
+      }
+
+   return factors;
+   }
+
+std::vector<BigInt> factorize(const BigInt& n_in)
+   {
+   BigInt n = n_in;
+   std::vector<BigInt> factors = remove_small_factors(n);
+
+   if(is_prime(n))
       {
       factors.push_back(n);
       return factors;
       }
 
-   if(n.is_even())
+   while(n != 1)
       {
-      factors.push_back(2);
-      concat(factors, factorize(n / 2));
-      return factors;
+      if(is_prime(n))
+         {
+         factors.push_back(n);
+         break;
+         }
+
+      BigInt a_factor = 0;
+      while(a_factor == 0)
+         a_factor = rho(n);
+
+      factors.push_back(a_factor);
+      n /= a_factor;
       }
-
-   BigInt factor = 0;
-   while(factor == 0)
-      factor = rho(n);
-
-   concat(factors, factorize(factor));
-   concat(factors, factorize(n / factor));
-
    return factors;
    }
-
 
 int main(int argc, char* argv[])
    {
@@ -91,8 +119,8 @@ int main(int argc, char* argv[])
       LibraryInitializer init;
 
       BigInt n(argv[1]);
-      std::vector<BigInt> factors = factorize(n);
 
+      std::vector<BigInt> factors = factorize(n);
       std::sort(factors.begin(), factors.end());
 
       std::cout << n << ": ";
