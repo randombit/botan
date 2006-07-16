@@ -3,13 +3,11 @@
 BOTAN_DIR = ../..
 
 CXX       = g++
-WARNINGS  = -ansi -W -Wall
-#CXX       = icc
-#WARNINGS  = -w1
+CFLAGS    = -O2 -ansi -W -Wall
 
 INCLUDES  = `$(BOTAN_DIR)/botan-config --cflags`
 LIBS      = `$(BOTAN_DIR)/botan-config --libs`
-FLAGS     = $(INCLUDES) $(WARNINGS) -I$(BOTAN_DIR)/build/include -L$(BOTAN_DIR)
+FLAGS     = $(INCLUDES) $(CFLAGS) -I$(BOTAN_DIR)/build/include -L$(BOTAN_DIR)
 
 X509_EX   = ca pkcs10 self_sig x509info asn1
 RSA_EX    = rsa_kgen rsa_enc rsa_dec
