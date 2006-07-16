@@ -28,14 +28,14 @@ BigInt rho(const BigInt& n)
       {
       i++;
 
+      if(i == 0) // overflow, bail out
+         break;
+
       x = mod_n.multiply((x + 1), x);
 
       d = gcd(y - x, n);
       if(d != 1 && d != n)
          return d;
-
-      if(i == 65536) // bail
-         break;
 
       if(i == k)
          {
