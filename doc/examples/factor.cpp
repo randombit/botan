@@ -67,10 +67,7 @@ std::vector<BigInt> factorize(const BigInt& n)
 
    BigInt factor = 0;
    while(factor == 0)
-      {
-      std::cout << "Trying to factorize " << n << "\n";
       factor = rho(n);
-      }
 
    concat(factors, factorize(factor));
    concat(factors, factorize(n / factor));
@@ -94,7 +91,9 @@ int main(int argc, char* argv[])
       BigInt n(argv[1]);
       std::vector<BigInt> factors = factorize(n);
 
-      std::cout << n << " = ";
+      std::sort(factors.begin(), factors.end());
+
+      std::cout << n << ": ";
       for(u32bit j = 0; j != factors.size(); j++)
          std::cout << factors[j] << " ";
       std::cout << "\n";
