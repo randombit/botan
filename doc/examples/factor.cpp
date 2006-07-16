@@ -29,11 +29,12 @@ BigInt rho(const BigInt& n)
       i++;
 
       x = mod_n.multiply((x + 1), x);
+
       d = gcd(y - x, n);
       if(d != 1 && d != n)
          return d;
 
-      if(i == 65536) // fail
+      if(i == 65536) // bail
          break;
 
       if(i == k)
@@ -84,7 +85,7 @@ std::vector<BigInt> remove_small_factors(BigInt& n)
 
 std::vector<BigInt> factorize(const BigInt& n_in)
    {
-   BigInt n = n_in;
+   BigInt n = n_in, a_factor = 0;
    std::vector<BigInt> factors = remove_small_factors(n);
 
    while(n != 1)
@@ -95,9 +96,9 @@ std::vector<BigInt> factorize(const BigInt& n_in)
          break;
          }
 
-      BigInt a_factor = 0;
-      while(a_factor == 0)
+      do
          a_factor = rho(n);
+      while(a_factor == 0);
 
       factors.push_back(a_factor);
       n /= a_factor;
