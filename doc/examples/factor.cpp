@@ -11,6 +11,10 @@ using namespace Botan;
 #include <iostream>
 
 // Pollard's Rho algorithm, as described in the MIT algorithms book
+
+// We use (x^2+x) mod n instead of (x*2-1) mod n as the random function,
+// it _seems_ to lead to faster factorization for the values I tried.
+
 BigInt rho(const BigInt& n)
    {
    BigInt x = random_integer(0, n-1);
@@ -24,13 +28,13 @@ BigInt rho(const BigInt& n)
       {
       i++;
 
-      if(i == 0) // fail
-         break;
-
-      x = mod_n.reduce(square(x) - 1);
+      x = mod_n.multiply((x + 1), x);
       d = gcd(y - x, n);
       if(d != 1 && d != n)
          return d;
+
+      if(i == 65536) // fail
+         break;
 
       if(i == k)
          {
