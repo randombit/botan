@@ -45,6 +45,7 @@ BigInt rho(const BigInt& n)
    return 0;
    }
 
+// Remove (and return) any small (< 2^16) factors
 std::vector<BigInt> remove_small_factors(BigInt& n)
    {
    std::vector<BigInt> factors;
@@ -85,12 +86,6 @@ std::vector<BigInt> factorize(const BigInt& n_in)
    {
    BigInt n = n_in;
    std::vector<BigInt> factors = remove_small_factors(n);
-
-   if(is_prime(n))
-      {
-      factors.push_back(n);
-      return factors;
-      }
 
    while(n != 1)
       {
