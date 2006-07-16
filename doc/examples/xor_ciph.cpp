@@ -15,35 +15,31 @@ class XOR_Cipher : public StreamCipher
    public:
       // what we want to call this cipher
       std::string name() const { return "XOR"; }
+
       // return a new object of this type
       StreamCipher* clone() const { return new XOR_Cipher; }
-      // StreamCipher() can take a number of args, which are:
-      //   min keylen, max keylen, keylength mod, iv size
-      //   In this case we just pass min keylen, which means the
-      //   only keysize we support is 1 byte, and don't use an IV.
-      XOR_Cipher() : StreamCipher(1) { mask = 0; }
+
+      XOR_Cipher() : StreamCipher(1, 32) { mask_pos = 0; }
    private:
       void cipher(const byte[], byte[], u32bit);
       void key(const byte[], u32bit);
-      byte mask;
+
+      SecureVector<byte> mask;
+      u32bit mask_pos;
    };
 
 void XOR_Cipher::cipher(const byte in[], byte out[], u32bit length)
    {
    for(u32bit j = 0; j != length; j++)
-      out[j] = in[j] ^ mask;
+      {
+      out[j] = in[j] ^ mask[mask_pos];
+      mask_pos = (mask_pos + 1) % mask.size();
+      }
    }
 
-void XOR_Cipher::key(const byte key[], u32bit)
+void XOR_Cipher::key(const byte key[], u32bit length)
    {
-   /* We know length == 1 because it is checked in set_key against the
-      constraints we passed to StreamCipher's constructor. In this case,
-      we said: "All keys are of length 1 byte and no other length".
-
-      An excercise for the reader would be to extend this to support
-      arbitrary length (for arbitrary in the range 1-32) keys.
-   */
-   mask = key[0];
+   mask.set(key, length);
    }
 
 #include <fstream>
@@ -55,15 +51,17 @@ void XOR_Cipher::key(const byte key[], u32bit)
 #include <botan/look_add.h>
 #include <botan/lookup.h>
 #include <botan/filters.h>
+#include <botan/config.h>
 
 int main()
    {
    LibraryInitializer init;
 
    add_algorithm(new XOR_Cipher); // make it available to use
-   add_alias("Vernam", "XOR");  // make Vernam an alias for XOR
+   global_config().add_alias("Vernam", "XOR"); // make Vernam an alias for XOR
 
-   SymmetricKey key("42"); // a key of length 1, value hex 42 == dec 66
+   // a hex key value
+   SymmetricKey key("010203040506070809101112AAFF");
 
    /*
     Since stream ciphers are typically additive, the encryption and
