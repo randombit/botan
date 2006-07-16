@@ -85,7 +85,7 @@ std::vector<BigInt> remove_small_factors(BigInt& n)
 
 std::vector<BigInt> factorize(const BigInt& n_in)
    {
-   BigInt n = n_in, a_factor = 0;
+   BigInt n = n_in;
    std::vector<BigInt> factors = remove_small_factors(n);
 
    while(n != 1)
@@ -96,11 +96,14 @@ std::vector<BigInt> factorize(const BigInt& n_in)
          break;
          }
 
-      do
+      BigInt a_factor = 0;
+      while(a_factor == 0)
          a_factor = rho(n);
-      while(a_factor == 0);
 
-      factors.push_back(a_factor);
+      std::vector<BigInt> rho_factored = factorize(a_factor);
+      for(u32bit j = 0; j != rho_factored.size(); j++)
+         factors.push_back(rho_factored[j]);
+
       n /= a_factor;
       }
    return factors;
