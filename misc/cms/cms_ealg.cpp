@@ -10,7 +10,7 @@
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
 #include <botan/pipe.h>
-#include <botan/conf.h>
+#include <botan/config.h>
 
 namespace Botan {
 
@@ -70,10 +70,10 @@ SecureVector<byte> encode_attr(const SecureVector<byte>& data,
    encoder.encode(digest, OCTET_STRING);
    Attribute message_digest("PKCS9.MessageDigest", encoder.get_contents());
 
-   encoder.start_cons(SET);
-   encoder.encode(content_type);
-   encoder.encode(message_digest);
-   encoder.end_cons();
+   encoder.start_cons(SET)
+      .encode(content_type)
+      .encode(message_digest)
+   .end_cons();
 
    return encoder.get_contents();
    }
@@ -91,7 +91,7 @@ void CMS_Encoder::encrypt(const X509_Certificate& to,
    std::auto_ptr<X509_PublicKey> key(to.subject_public_key());
    const std::string algo = key->algo_name();
 
-   Key_Constraints constraints = to.get_constraints();
+   Key_Constraints constraints = to.constraints();
 
    if(algo == "RSA")
       {
@@ -166,7 +166,7 @@ void CMS_Encoder::encrypt_kari(const X509_Certificate&,
          encode_si(encoder, to);
          encoder.encode(AlgorithmIdentifier(pk_algo + "/" + padding));
          encoder.encode(encrypted_cek, OCTET_STRING);
-       encoder.end_cons(ASN1_Tag(1));
+       encoder.end_cons();
      encoder.end_cons();
      encoder.raw_bytes(do_encrypt(cek, cipher));
    encoder.end_cons();
@@ -190,15 +190,15 @@ void CMS_Encoder::encrypt(const SymmetricKey& kek,
 
    DER_Encoder encoder;
    encoder.start_cons(SEQUENCE);
-     encoder.encode(2);
+   encoder.encode((u32bit)2);
      encoder.start_sequence(ASN1_Tag(2));
-       encoder.encode(4);
+       encoder.encode((u32bit)4);
        encoder.start_cons(SEQUENCE);
          encoder.encode(kek_id, OCTET_STRING);
        encoder.end_cons();
        encoder.encode(AlgorithmIdentifier("KeyWrap." + cipher, true));
        encoder.encode(wrap_key(cipher, cek, kek), OCTET_STRING);
-     encoder.end_cons(ASN1_Tag(2));
+     encoder.end_cons();
      encoder.raw_bytes(do_encrypt(cek, cipher));
    encoder.end_cons();
 
@@ -283,7 +283,7 @@ void CMS_Encoder::sign(X509_Store& store, const PKCS8_PrivateKey& key)
    SecureVector<byte> signature = signer->signature();
    signed_attr[0] = 0xA0;
 
-   const u32bit SI_VERSION = cert.has_SKID() ? 3 : 1;
+   const u32bit SI_VERSION = cert.subject_key_id().size() ? 3 : 1;
    const u32bit CMS_VERSION = (type != "CMS.DataContent") ? 3 : SI_VERSION;
 
    DER_Encoder encoder;
