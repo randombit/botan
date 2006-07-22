@@ -14,15 +14,47 @@ namespace Botan {
 * Create an AlgorithmIdentifier                  *
 *************************************************/
 AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
-                                         const MemoryRegion<byte>& param) :
-   oid(alg_id), parameters(param) { }
+                                         const MemoryRegion<byte>& param)
+   {
+   oid = alg_id;
+   parameters = param;
+   }
 
 /*************************************************
 * Create an AlgorithmIdentifier                  *
 *************************************************/
 AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
-                                         const MemoryRegion<byte>& param) :
-   oid(OIDS::lookup(alg_id)), parameters(param) { }
+                                         const MemoryRegion<byte>& param)
+   {
+   oid = OIDS::lookup(alg_id);
+   parameters = param;
+   }
+
+/*************************************************
+* Create an AlgorithmIdentifier                  *
+*************************************************/
+AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
+                                         Encoding_Option option)
+   {
+   const byte DER_NULL[] = { 0x05, 0x00 };
+
+   oid = alg_id;
+   if(option == USE_NULL_PARAM)
+      parameters.append(DER_NULL, sizeof(DER_NULL));
+   }
+
+/*************************************************
+* Create an AlgorithmIdentifier                  *
+*************************************************/
+AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
+                                         Encoding_Option option)
+   {
+   const byte DER_NULL[] = { 0x05, 0x00 };
+
+   oid = OIDS::lookup(alg_id);
+   if(option == USE_NULL_PARAM)
+      parameters.append(DER_NULL, sizeof(DER_NULL));
+   }
 
 /*************************************************
 * Compare two AlgorithmIdentifiers               *
