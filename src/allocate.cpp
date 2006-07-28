@@ -5,8 +5,6 @@
 
 #include <botan/allocate.h>
 #include <botan/libstate.h>
-#include <botan/mutex.h>
-#include <map>
 
 namespace Botan {
 
