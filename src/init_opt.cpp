@@ -78,6 +78,14 @@ bool InitializerOptions::fips_mode() const
    }
 
 /*************************************************
+* Check if startup self tests were requested     *
+*************************************************/
+bool InitializerOptions::self_test() const
+   {
+   return boolean_arg(args, "selftest", true);
+   }
+
+/*************************************************
 * Return the config file to load, if any         *
 *************************************************/
 std::string InitializerOptions::config_file() const

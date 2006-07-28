@@ -22,6 +22,7 @@ class InitializerOptions
       bool seed_rng() const;
       bool secure_memory() const;
       bool fips_mode() const;
+      bool self_test() const;
 
       std::string config_file() const;
 
