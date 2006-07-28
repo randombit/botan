@@ -213,4 +213,12 @@ Charset_Transcoder* Builtin_Modules::transcoder() const
    return new Default_Charset_Transcoder;
    }
 
+/*************************************************
+* Builtin_Modules Constructor                    *
+*************************************************/
+Builtin_Modules::Builtin_Modules(const InitializerOptions& args) :
+   should_lock(args.secure_memory())
+   {
+   }
+
 }

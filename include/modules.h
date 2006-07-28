@@ -6,6 +6,7 @@
 #ifndef BOTAN_MODULE_FACTORIES_H__
 #define BOTAN_MODULE_FACTORIES_H__
 
+#include <botan/init.h>
 #include <string>
 #include <vector>
 
@@ -46,7 +47,7 @@ class Builtin_Modules : public Modules
       std::vector<class EntropySource*> entropy_sources() const;
       std::vector<class Engine*> engines() const;
 
-      Builtin_Modules(bool sl) : should_lock(sl) {}
+      Builtin_Modules(const InitializerOptions&);
    private:
       const bool should_lock;
    };
