@@ -16,7 +16,6 @@ namespace FIPS140 {
 * FIPS 140-2 Self Tests                          *
 *************************************************/
 bool passes_self_tests();
-bool good_edc(const std::string&, const std::string&);
 
 }
 

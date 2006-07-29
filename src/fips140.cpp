@@ -155,24 +155,6 @@ bool passes_self_tests()
   return true;
   }
 
-/*************************************************
-* Check a SHA-1 EDC                              *
-*************************************************/
-bool good_edc(const std::string& filename, const std::string& edc)
-   {
-   if(filename == "" || edc == "")
-      return false;
-
-   Pipe pipe1(new Hash_Filter("SHA-1"));
-   Pipe pipe2(new Hex_Decoder);
-
-   DataSource_Stream in(filename, true);
-   pipe1.process_msg(in);
-   pipe2.process_msg(edc);
-
-   return (pipe1.read_all() == pipe2.read_all());
-   }
-
 }
 
 }
