@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/x509_ca.h>
-#include <botan/x509_ext.h>
 #include <botan/x509stor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
@@ -64,25 +63,15 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
       constraints = X509::find_constraints(*key, req.constraints());
       }
 
-   if(expire_time == 0)
-      expire_time = global_config().option_as_time("x509/ca/default_expire");
-
-   const u64bit current_time = system_time();
-
-   X509_Time not_before(current_time);
-   X509_Time not_after(current_time + expire_time);
-
    Extensions extensions;
 
-   // POLICY: which extensions
    extensions.add(new Cert_Extension::Authority_Key_ID(cert.subject_key_id()));
-
    extensions.add(new Cert_Extension::Subject_Key_ID(req.raw_public_key()));
 
    extensions.add(
       new Cert_Extension::Basic_Constraints(req.is_CA(), req.path_limit()));
 
-   extensions.add(new Cert_Extension::Key_Usage(req.constraints()));
+   extensions.add(new Cert_Extension::Key_Usage(constraints));
    extensions.add(
       new Cert_Extension::Extended_Key_Usage(req.ex_constraints()));
 
@@ -94,8 +83,14 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
       new Cert_Extension::Issuer_Alternative_Name(issuer_alt));
    */
 
+   if(expire_time == 0)
+      expire_time = global_config().option_as_time("x509/ca/default_expire");
+
+   const u64bit current_time = system_time();
+
    return make_cert(signer, ca_sig_algo, req.raw_public_key(),
-                    not_before, not_after,
+                    X509_Time(current_time),
+                    X509_Time(current_time + expire_time),
                     cert.subject_dn(), req.subject_dn(),
                     extensions);
    }

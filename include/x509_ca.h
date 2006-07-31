@@ -8,6 +8,7 @@
 
 #include <botan/x509cert.h>
 #include <botan/x509_crl.h>
+#include <botan/x509_ext.h>
 #include <botan/pkcs8.h>
 #include <botan/pkcs10.h>
 #include <botan/pubkey.h>
@@ -32,7 +33,7 @@ class X509_CA
                                         const MemoryRegion<byte>&,
                                         const X509_Time&, const X509_Time&,
                                         const X509_DN&, const X509_DN&,
-                                        const class Extensions&);
+                                        const Extensions&);
 
       X509_CA(const X509_Certificate&, const PKCS8_PrivateKey&);
       ~X509_CA();
