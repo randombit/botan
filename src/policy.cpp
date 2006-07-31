@@ -69,7 +69,7 @@ void set_default_oids(Config& config)
    add_oid(config, "2.5.4.5",  "X520.SerialNumber");
    add_oid(config, "2.5.4.6",  "X520.Country");
    add_oid(config, "2.5.4.7",  "X520.Locality");
-   add_oid(config, "2.5.4.8",  "X520.Config");
+   add_oid(config, "2.5.4.8",  "X520.State");
    add_oid(config, "2.5.4.10", "X520.Organization");
    add_oid(config, "2.5.4.11", "X520.OrganizationalUnit");
    add_oid(config, "2.5.4.12", "X520.Title");
