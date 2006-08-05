@@ -21,9 +21,6 @@ class SHA_160 : public MDx_HashFunction
       HashFunction* clone() const { return new SHA_160; }
       SHA_160() : MDx_HashFunction(20, 64, true, true) { clear(); }
    private:
-      friend class Gamma;
-      friend class FIPS_186_RNG;
-
       void hash(const byte[]);
       void copy_out(byte[]);
 
