@@ -47,7 +47,7 @@ class Library_State
 
       class Config& config() const;
 
-      void add_engine(class Engine*);
+      void add_engine(class Engine*, bool);
 
       class Mutex* get_mutex() const;
       class Mutex* get_named_mutex(const std::string&);
