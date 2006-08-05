@@ -188,17 +188,20 @@ std::vector<Engine*> Builtin_Modules::engines() const
    {
    std::vector<Engine*> engines;
 
+   if(use_engines)
+      {
 #if defined(BOTAN_EXT_ENGINE_AEP)
-   engines.push_back(new AEP_Engine);
+      engines.push_back(new AEP_Engine);
 #endif
 
 #if defined(BOTAN_EXT_ENGINE_GNU_MP)
-   engines.push_back(new GMP_Engine);
+      engines.push_back(new GMP_Engine);
 #endif
 
 #if defined(BOTAN_EXT_ENGINE_OPENSSL)
-   engines.push_back(new OpenSSL_Engine);
+      engines.push_back(new OpenSSL_Engine);
 #endif
+      }
 
    engines.push_back(new Default_Engine);
 
@@ -217,7 +220,8 @@ Charset_Transcoder* Builtin_Modules::transcoder() const
 * Builtin_Modules Constructor                    *
 *************************************************/
 Builtin_Modules::Builtin_Modules(const InitializerOptions& args) :
-   should_lock(args.secure_memory())
+   should_lock(args.secure_memory()),
+   use_engines(args.use_engines())
    {
    }
 

@@ -49,7 +49,7 @@ class Builtin_Modules : public Modules
 
       Builtin_Modules(const InitializerOptions&);
    private:
-      const bool should_lock;
+      const bool should_lock, use_engines;
    };
 
 }
