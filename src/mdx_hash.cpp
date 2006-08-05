@@ -37,21 +37,29 @@ void MDx_HashFunction::clear() throw()
 void MDx_HashFunction::add_data(const byte input[], u32bit length)
    {
    count += length;
-   buffer.copy(position, input, length);
-   if(position + length >= HASH_BLOCK_SIZE)
+
+   if(position)
       {
-      hash(buffer.begin());
-      input += (HASH_BLOCK_SIZE - position);
-      length -= (HASH_BLOCK_SIZE - position);
-      while(length >= HASH_BLOCK_SIZE)
+      buffer.copy(position, input, length);
+
+      if(position + length >= HASH_BLOCK_SIZE)
          {
-         hash(input);
-         input += HASH_BLOCK_SIZE;
-         length -= HASH_BLOCK_SIZE;
+         hash(buffer.begin());
+         input += (HASH_BLOCK_SIZE - position);
+         length -= (HASH_BLOCK_SIZE - position);
+         position = 0;
          }
-      buffer.copy(input, length);
-      position = 0;
       }
+
+   while(length >= HASH_BLOCK_SIZE)
+      {
+      hash(input);
+      input += HASH_BLOCK_SIZE;
+      length -= HASH_BLOCK_SIZE;
+      }
+
+   buffer.copy(position, input, length);
+
    position += length;
    }
 
