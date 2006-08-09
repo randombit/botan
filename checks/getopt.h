@@ -1,4 +1,7 @@
 
+#ifndef BOTAN_CHECK_GETOPT_H__
+#define BOTAN_CHECK_GETOPT_H__
+
 #include <string>
 #include <vector>
 #include <map>
@@ -36,3 +39,5 @@ class OptionParser
       std::map<std::string, std::string> options;
       std::vector<std::string> leftover;
    };
+
+#endif
