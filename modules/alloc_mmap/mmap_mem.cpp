@@ -46,31 +46,52 @@ class MemoryMapping_Failed : public Exception
 *************************************************/
 void* MemoryMapping_Allocator::alloc_block(u32bit n)
    {
-   const std::string path = "/tmp/botan_XXXXXX";
+   class TemporaryFile
+      {
+      public:
+         int get_fd() const { return fd; }
+         const std::string path() const { return filepath; }
 
-   char* filepath = new char[path.length() + 1];
-   std::strcpy(filepath, path.c_str());
+         TemporaryFile(const std::string& base)
+            {
+            const std::string path = base + "XXXXXX";
 
-   mode_t old_umask = umask(077);
-   int fd = mkstemp(filepath);
-   umask(old_umask);
+            filepath = new char[path.length() + 1];
+            std::strcpy(filepath, path.c_str());
 
-   if(fd == -1)
+            mode_t old_umask = umask(077);
+            fd = mkstemp(filepath);
+            umask(old_umask);
+            }
+
+         ~TemporaryFile()
+            {
+            delete[] filepath;
+            if(fd != -1 && close(fd) == -1)
+               throw MemoryMapping_Failed("Could not close file");
+            }
+      private:
+         int fd;
+         char* filepath;
+      };
+
+   TemporaryFile file("/tmp/botan_");
+
+   if(file.get_fd() == -1)
       throw MemoryMapping_Failed("Could not create file");
-   if(unlink(filepath))
-      throw MemoryMapping_Failed("Could not unlink file " +
-                                 std::string(filepath));
 
-   delete[] filepath;
+   if(unlink(file.path().c_str()))
+      throw MemoryMapping_Failed("Could not unlink file " + file.path());
 
-   lseek(fd, n-1, SEEK_SET);
-   if(write(fd, "\0", 1) != 1)
+   lseek(file.get_fd(), n-1, SEEK_SET);
+   if(write(file.get_fd(), "\0", 1) != 1)
       throw MemoryMapping_Failed("Could not write to file");
-   void* ptr = mmap(0, n, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+
+   void* ptr = mmap(0, n, PROT_READ | PROT_WRITE, MAP_SHARED,
+                    file.get_fd(), 0);
+
    if(ptr == (void*)MAP_FAILED)
       throw MemoryMapping_Failed("Could not map file");
-   if(close(fd))
-      throw MemoryMapping_Failed("Could not close file");
 
    return ptr;
    }
