@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <exception>
+#include <limits>
 
 #include <botan/botan.h>
 #include <botan/mp_types.h>
@@ -19,19 +20,6 @@ using namespace Botan_types;
 
 #include "getopt.h"
 
-/* Not on by default as many compilers (including egcs and gcc 2.95.x)
- * do not have the C++ <limits> header.
- *
- * At *some* point all OSes will have a reasonably recent GCC, but right now
- * GCC 2.95.x is the most recent compiler for a number of systems, including
- * OpenBSD, QNX, and BeOS.
- *
- */
-//#define TEST_TYPES
-
-#if defined(TEST_TYPES)
-   #include <limits>
-#endif
 
 const std::string VALIDATION_FILE = "checks/validate.dat";
 const std::string BIGINT_VALIDATION_FILE = "checks/mp_valid.dat";
@@ -188,9 +176,8 @@ int validate()
    return 0;
    }
 
-#if defined(TEST_TYPES)
 template<typename T>
-bool test(const char* type, u32bit digits, bool is_signed)
+bool test(const char* type, int digits, bool is_signed)
    {
    bool passed = true;
    if(std::numeric_limits<T>::is_specialized == false)
@@ -220,20 +207,17 @@ bool test(const char* type, u32bit digits, bool is_signed)
       }
    return passed;
    }
-#endif
 
 void test_types()
    {
    bool passed = true;
 
-#if defined(TEST_TYPES)
-   passed = passed && test<byte  >("byte",    8, false);
-   passed = passed && test<u16bit>("u16bit", 16, false);
-   passed = passed && test<u32bit>("u32bit", 32, false);
-   passed = passed && test<u64bit>("u64bit", 64, false);
-   passed = passed && test<s32bit>("s32bit", 31,  true);
+   passed = passed && test<Botan::byte  >("byte",    8, false);
+   passed = passed && test<Botan::u16bit>("u16bit", 16, false);
+   passed = passed && test<Botan::u32bit>("u32bit", 32, false);
+   passed = passed && test<Botan::u64bit>("u64bit", 64, false);
+   passed = passed && test<Botan::s32bit>("s32bit", 31,  true);
    passed = passed && test<Botan::word>("word", 0, false);
-#endif
 
    if(!passed)
       {
