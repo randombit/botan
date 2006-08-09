@@ -1,8 +1,7 @@
 // common code for the validation and benchmark code
-// this file is in the public domain
 
-#ifndef BOTANCHECK_COMMON_H__
-#define BOTANCHECK_COMMON_H__
+#ifndef BOTAN_CHECK_COMMON_H__
+#define BOTAN_CHECK_COMMON_H__
 
 #include <vector>
 #include <string>

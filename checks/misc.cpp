@@ -1,4 +1,3 @@
-/* public domain */
 #include <iostream>
 #include <vector>
 #include <string>

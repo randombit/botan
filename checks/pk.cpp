@@ -1,4 +1,3 @@
-/* This file is in the public domain */
 #include <iostream>
 #include <fstream>
 #include <string>

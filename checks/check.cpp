@@ -1,7 +1,5 @@
 /*
  * Test Driver for Botan
- *
- * This file is in the public domain
  */
 
 #include <vector>
@@ -19,7 +17,6 @@
 using namespace Botan_types;
 
 #include "getopt.h"
-
 
 const std::string VALIDATION_FILE = "checks/validate.dat";
 const std::string BIGINT_VALIDATION_FILE = "checks/mp_valid.dat";

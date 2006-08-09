@@ -1,4 +1,3 @@
-// this file is public domain
 
 #include <botan/botan.h>
 #include <string>

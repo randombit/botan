@@ -4,8 +4,6 @@
 # functions, MACs, KDFs, S2K algorithms, encoders/decoders, and block cipher
 # modes (CBC, CTS, CFB, OFB, CTR, and EAX)
 
-# All of the validation files (checks/*.dat) are public domain
-
 # MARKER: Block Ciphers
 
 # Block cipher format is plaintext:ciphertext:key

@@ -1,4 +1,3 @@
-/* This file is in the public domain */
 
 /*
   We don't use the standard issue ECB filter, because we also want to check

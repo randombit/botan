@@ -1,4 +1,3 @@
-/* This file is in the public domain */
 #include <botan/x509self.h>
 #include <botan/x509stor.h>
 #include <botan/x509_ca.h>

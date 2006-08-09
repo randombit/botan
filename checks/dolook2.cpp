@@ -1,5 +1,3 @@
-/* This file is in the public domain */
-
 #include <vector>
 #include <string>
 #include <cstdlib>

@@ -1,6 +1,5 @@
 /*
   Validation routines
-  This file is in the public domain
 */
 
 #include <iostream>
