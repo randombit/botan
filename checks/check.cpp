@@ -15,10 +15,9 @@
 #include <botan/botan.h>
 #include <botan/mp_types.h>
 
-/* Flag to use engine(s) for PK operations, if available */
-#define USE_ENGINES 0
-
 using namespace Botan_types;
+
+#include "getopt.h"
 
 /* Not on by default as many compilers (including egcs and gcc 2.95.x)
  * do not have the C++ <limits> header.
@@ -43,88 +42,72 @@ void benchmark(const std::string&, bool html, double seconds);
 void bench_pk(const std::string&, bool html, double seconds);
 u32bit bench_algo(const std::string&);
 int validate();
-void print_help(double);
+void print_help();
 
 int main(int argc, char* argv[])
    {
-   try {
+   try
+      {
+      if(argc <= 1)
+         { print_help(); return 1; }
 
-#if 0
-      // Make sure we can repeatedly init/shutdown without problems
-      for(u32bit j = 0; j != 3; j++)
-         {
-         Botan::Init::initialize();
-         Botan::Init::deinitialize();
-         }
-#endif
+      OptionParser opts("help|html|init=|validate|"
+                        "benchmark|bench-type=|bench-algo=|seconds=");
+      opts.parse(argv);
 
-      std::string init_flags = "";
-      if(USE_ENGINES)
-         init_flags += " use_engines";
+      if(opts.is_set("help"))
+         { print_help(); return 1; }
 
-      Botan::LibraryInitializer init(init_flags);
-      bool html = false; // default to text output
+      std::string init_flags = (opts.is_set("init") ? opts.value("init") : "");
+
+      Botan::InitializerOptions init_options(init_flags);
+      Botan::LibraryInitializer init(init_options);
+
+      if(opts.is_set("validate"))
+         return validate();
+
       double seconds = 1.5;
 
-      std::vector<std::string> args;
-      for(int j = 1; j != argc; j++)
-         args.push_back(argv[j]);
-
-      if(!args.size()) { print_help(seconds); return 2; }
-
-      for(u32bit j = 0; j != args.size(); j++)
+      if(opts.is_set("seconds"))
          {
-         if(args[j] == "--help") { print_help(seconds); return 1; }
-         if(args[j] == "--html") html = true;
-         if(args[j] == "--bench-algo")
+         seconds = std::atof(opts.value("seconds").c_str());
+         if((seconds < 0.1 || seconds > 30) && seconds != 0)
             {
-            if(j != args.size() - 1)
-               {
-               u32bit found = bench_algo(args[j+1]);
-               if(!found) // maybe it's a PK algorithm
-                  bench_pk(args[j+1], false, seconds);
-               }
-            else
-               {
-               std::cout << "Option --bench-algo needs an argument\n";
-               return 2;
-               }
-            }
-         if(args[j] == "--seconds")
-            {
-            if(j != args.size() - 1) // another arg remains
-               {
-               seconds = std::atof(args[j+1].c_str());
-               // sanity check; we allow zero for testing porpoises
-               if((seconds < 0.1 || seconds > 30) && seconds != 0)
-                  {
-                  std::cout << "Invalid argument to --seconds\n";
-                  return 2;
-                  }
-               }
-            else
-               {
-               std::cout << "Option --seconds needs an argument\n";
-               return 2;
-               }
+            std::cout << "Invalid argument to --seconds\n";
+            return 2;
             }
          }
 
-      for(u32bit j = 0; j != args.size(); j++)
+      if(opts.is_set("bench-algo"))
          {
-         if(args[j] == "--validate")     return validate();
-         if(args[j] == "--benchmark")    benchmark("All", html, seconds);
-         if(args[j] == "--bench-all")    benchmark("All", html, seconds);
-         if(args[j] == "--bench-block")
+         const std::string alg = opts.value("bench-algo");
+         u32bit found = bench_algo(alg);
+         if(!found) // maybe it's a PK algorithm
+            bench_pk(alg, false, seconds);
+         }
+
+      const bool html = opts.is_set("html");
+
+      if(opts.is_set("benchmark"))
+         benchmark("All", html, seconds);
+      else if(opts.is_set("bench-type"))
+         {
+         const std::string type = opts.value("bench-type");
+
+         if(type == "all")
+            benchmark("All", html, seconds);
+         else if(type == "block")
             benchmark("Block Cipher", html, seconds);
-         if(args[j] == "--bench-mode")
-            benchmark("Cipher Mode", html, seconds);
-         if(args[j] == "--bench-stream")
+         else if(type == "stream")
             benchmark("Stream Cipher", html, seconds);
-         if(args[j] == "--bench-hash")   benchmark("Hash", html, seconds);
-         if(args[j] == "--bench-mac")    benchmark("MAC", html, seconds);
-         if(args[j] == "--bench-rng")    benchmark("RNG", html, seconds);
-         if(args[j] == "--bench-pk")     bench_pk("All", html, seconds);
+         else if(type == "hash")
+            benchmark("Hash", html, seconds);
+         else if(type == "mac")
+            benchmark("MAC", html, seconds);
+         else if(type == "rng")
+            benchmark("RNG", html, seconds);
+         else if(type == "pk")
+            bench_pk("All", html, seconds);
          }
       }
    catch(Botan::Exception& e)
@@ -147,17 +130,16 @@ int main(int argc, char* argv[])
    return 0;
    }
 
-void print_help(double seconds)
+void print_help()
    {
    std::cout << Botan::version_string() << " test driver" << std::endl
       << "Usage:\n"
       << "  --validate: Check test vectors\n"
       << "  --benchmark: Benchmark everything\n"
-      << "  --bench-{block,mode,stream,hash,mac,rng,pk}:\n"
+      << "  --bench-type={block,mode,stream,hash,mac,rng,pk}:\n"
       << "         Benchmark only algorithms of a particular type\n"
       << "  --html: Produce HTML output for benchmarks\n"
-      << "  --seconds n: Benchmark for n seconds (default is "
-      <<       seconds << ")\n"
+      << "  --seconds=n: Benchmark for n seconds\n"
       << "  --help: Print this message\n";
    }
 
