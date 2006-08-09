@@ -46,54 +46,59 @@ namespace Init {
 *************************************************/
 void initialize(const InitializerOptions& args)
    {
-   Builtin_Modules modules(args);
-
-   set_global_state(
-      new Library_State(
-         args.thread_safe() ?
-            modules.mutex_factory() :
-            new Default_Mutex_Factory
-         )
-      );
-
-   global_state().config().load_defaults();
-   if(args.config_file() != "")
-      global_config().load_inifile(args.config_file());
-
-   global_state().load(modules);
-   global_state().set_prng(new ANSI_X931_RNG);
-
-   if(args.seed_rng())
+   try
       {
-      const u32bit min_entropy =
-         global_config().option_as_u32bit("rng/min_entropy");
+      Builtin_Modules modules(args);
 
-      if(min_entropy != 0)
+      set_global_state(
+         new Library_State(
+            args.thread_safe() ?
+               modules.mutex_factory() :
+               new Default_Mutex_Factory
+            )
+         );
+
+      global_state().config().load_defaults();
+      if(args.config_file() != "")
+         global_config().load_inifile(args.config_file());
+
+      global_state().load(modules);
+      global_state().set_prng(new ANSI_X931_RNG);
+
+      if(args.seed_rng())
          {
-         u32bit bits_so_far = 0;
+         const u32bit min_entropy =
+            global_config().option_as_u32bit("rng/min_entropy");
 
-         for(u32bit j = 0; j != 4; ++j)
+         if(min_entropy != 0)
             {
-            u32bit to_get = min_entropy - bits_so_far;
+            u32bit bits_so_far = 0;
 
-            bits_so_far += global_state().seed_prng(true, to_get);
+            for(u32bit j = 0; j != 4; ++j)
+               {
+               u32bit to_get = min_entropy - bits_so_far;
 
-            if(bits_so_far >= min_entropy)
-               break;
+               bits_so_far += global_state().seed_prng(true, to_get);
+
+               if(bits_so_far >= min_entropy)
+                  break;
+               }
+
+            if(bits_so_far < min_entropy)
+               throw PRNG_Unseeded("Unable to collect sufficient entropy");
             }
+         }
 
-         if(bits_so_far < min_entropy)
-            throw PRNG_Unseeded("Unable to collect sufficient entropy");
+      if(args.fips_mode() || args.self_test())
+         {
+         if(!FIPS140::passes_self_tests())
+            throw Self_Test_Failure("FIPS-140 startup tests");
          }
       }
-
-   if(args.fips_mode() || args.self_test())
+   catch(std::exception)
       {
-      if(!FIPS140::passes_self_tests())
-         {
-         deinitialize();
-         throw Self_Test_Failure("FIPS-140 startup tests");
-         }
+      deinitialize();
+      throw;
       }
    }
 
