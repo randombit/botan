@@ -353,6 +353,7 @@ Library_State::~Library_State()
    delete transcoder;
    delete rng;
    delete timer;
+   delete config_obj;
 
    std::for_each(entropy_sources.begin(), entropy_sources.end(),
                  del_fun<EntropySource>());
