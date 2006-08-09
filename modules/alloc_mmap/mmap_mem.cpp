@@ -27,6 +27,20 @@
 
 namespace Botan {
 
+namespace {
+
+/*************************************************
+* MemoryMapping_Allocator Exception              *
+*************************************************/
+class MemoryMapping_Failed : public Exception
+   {
+   public:
+      MemoryMapping_Failed(const std::string& msg) :
+         Exception("MemoryMapping_Allocator: " + msg) {}
+   };
+
+}
+
 /*************************************************
 * Memory Map a File into Memory                  *
 *************************************************/
@@ -42,20 +56,21 @@ void* MemoryMapping_Allocator::alloc_block(u32bit n)
    umask(old_umask);
 
    if(fd == -1)
-      throw Exception("MemoryMapping_Allocator: Could not create file");
+      throw MemoryMapping_Failed("Could not create file");
    if(unlink(filepath))
-      throw Exception("MemoryMapping_Allocator: Could not unlink file " +
-                      std::string(filepath));
+      throw MemoryMapping_Failed("Could not unlink file " +
+                                 std::string(filepath));
+
    delete[] filepath;
 
    lseek(fd, n-1, SEEK_SET);
    if(write(fd, "\0", 1) != 1)
-      throw Exception("MemoryMapping_Allocator: Could not write to file");
+      throw MemoryMapping_Failed("Could not write to file");
    void* ptr = mmap(0, n, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
    if(ptr == (void*)MAP_FAILED)
-      throw Exception("MemoryMapping_Allocator: Could not map file");
+      throw MemoryMapping_Failed("Could not map file");
    if(close(fd))
-      throw Exception("MemoryMapping_Allocator: Could not close file");
+      throw MemoryMapping_Failed("Could not close file");
 
    return ptr;
    }
@@ -75,14 +90,14 @@ void MemoryMapping_Allocator::dealloc_block(void* ptr, u32bit n)
       {
       std::memset(ptr, PATTERNS[j % sizeof(PATTERNS)], n);
       if(msync(ptr, n, MS_SYNC))
-         throw Exception("MemoryMapping_Allocator: Sync operation failed");
+         throw MemoryMapping_Failed("Sync operation failed");
       }
    std::memset(ptr, 0, n);
    if(msync(ptr, n, MS_SYNC))
-      throw Exception("MemoryMapping_Allocator: Sync operation failed");
+      throw MemoryMapping_Failed("Sync operation failed");
 
    if(munmap(ptr, n))
-      throw Exception("MemoryMapping_Allocator: Could not unmap file");
+      throw MemoryMapping_Failed("Could not unmap file");
    }
 
 }
