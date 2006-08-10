@@ -130,9 +130,9 @@ void CAST_128::key_schedule(u32bit K[16], u32bit X[4])
       {
       public:
          byte operator()(u32bit i) { return (X[i/4] >> (8*(3 - (i%4)))); }
-         ByteReader(u32bit* x) : X(x) {}
+         ByteReader(const u32bit* x) : X(x) {}
       private:
-         u32bit* X;
+         const u32bit* X;
       };
 
    SecureBuffer<u32bit, 4> Z;
