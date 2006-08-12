@@ -16,7 +16,7 @@ sha160_core:
         movl    $0, %esi  # loop counter
 
         .p2align 4,,7
-.LOAD_INPUT_LOOP:  
+.LOAD_INPUT_LOOP:
         movl    0(%ebp), %eax
         bswapl  %eax
 
@@ -33,16 +33,15 @@ sha160_core:
         movl    %ecx, 8(%edi,%esi,4)
 
         movl    %edx, 12(%edi,%esi,4)
-   
+
         addl    $4, %esi
         addl    $16, %ebp
         cmpl    $16, %esi
         jne     .LOAD_INPUT_LOOP
 
      leal    64(%edi), %ebp
-    
+
         .p2align 4,,7
-       // here esi == 16
 .EXPANSION_LOOP:
         addl $4, %esi
 
@@ -65,7 +64,7 @@ sha160_core:
         xorl -56(%ebp), %ebx
         xorl -60(%ebp), %ecx
         xorl -64(%ebp), %edx
-   
+
         roll $1, %edx
 
         roll $1, %ecx
@@ -81,10 +80,8 @@ sha160_core:
 
         addl $16, %ebp
         cmpl $80, %esi
-        jne .EXPANSION_LOOP
+    jne .EXPANSION_LOOP
 
-   // here: edi = W
-   
    movl 20(%esp), %ebp
    movl 0(%ebp), %eax
    movl 4(%ebp), %ebx
@@ -139,7 +136,7 @@ sha160_core:
 
 #define F4(A, B, C, D, E, TEMP, MSG) \
    F2_OR_F4(A, B, C, D, E, TEMP, MSG, MAGIC4)
-      
+
 #define F_BLOCK(F, MSG) \
     F(%eax, %ebx, %ecx, %edx, %esi, %ebp, (MSG+0)) \
     F(%esi, %eax, %ebx, %ecx, %edx, %ebp, (MSG+1)) \
@@ -173,7 +170,7 @@ sha160_core:
    addl %ecx, 8(%ebp)
    addl %edx, 12(%ebp)
    addl %esi, 16(%ebp)
-   
+
         popl    %ebx
         popl    %esi
         popl    %edi
