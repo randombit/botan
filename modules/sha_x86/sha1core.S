@@ -18,11 +18,18 @@ sha160_core:
         .p2align 4,,7
 .LOAD_INPUT_LOOP:  
         movl    0(%ecx), %eax
-        addl    $4, %ecx
         incl    %esi
 
         bswapl  %eax
         movl    %eax, -4(%edi,%esi,4)
+
+        movl    4(%ecx), %eax
+        addl    $8, %ecx
+        incl    %esi
+
+        bswapl  %eax
+        movl    %eax, -4(%edi,%esi,4)
+
         cmpl    $16, %esi
         jne     .LOAD_INPUT_LOOP
 
@@ -31,42 +38,42 @@ sha160_core:
         .p2align 4,,7
        // here esi == 16
 .EXPANSION_LOOP:
-        xorl        %eax,  %eax
-        movl     -4(%ebp), %ebx
-        movl     -8(%ebp), %ecx
-        movl    -12(%ebp), %edx
-
-        xorl    -20(%ebp), %eax
-        xorl    -24(%ebp), %ebx
-        xorl    -28(%ebp), %ecx
-        xorl    -32(%ebp), %edx
-
-        xorl    -44(%ebp), %eax
-        xorl    -48(%ebp), %ebx
-        xorl    -52(%ebp), %ecx
-        xorl    -56(%ebp), %edx
-
-        xorl    -52(%ebp), %eax
-        xorl    -56(%ebp), %ebx
-        xorl    -60(%ebp), %ecx
-        xorl    -64(%ebp), %edx
-   
-        roll    $1, %edx
-        movl    %edx, (%ebp)
-   
-        roll    $1, %ecx
-        movl    %ecx, 4(%ebp)
-   
-        roll    $1, %ebx
-        movl    %ebx, 8(%ebp)
- 
-        xorl    %edx, %eax
-        roll    $1, %eax
-        movl    %eax, 12(%ebp)
-
-        addl    $16, %ebp
         addl $4, %esi
-        cmpl    $80, %esi
+
+        xorl     %eax,  %eax
+        movl  -4(%ebp), %ebx
+        movl  -8(%ebp), %ecx
+        movl -12(%ebp), %edx
+
+        xorl -20(%ebp), %eax
+        xorl -24(%ebp), %ebx
+        xorl -28(%ebp), %ecx
+        xorl -32(%ebp), %edx
+
+        xorl -44(%ebp), %eax
+        xorl -48(%ebp), %ebx
+        xorl -52(%ebp), %ecx
+        xorl -52(%ebp), %eax
+
+        xorl -56(%ebp), %edx
+        xorl -56(%ebp), %ebx
+        xorl -60(%ebp), %ecx
+        xorl -64(%ebp), %edx
+   
+        roll $1, %edx
+        roll $1, %ecx
+        roll $1, %ebx
+
+        xorl %edx, %eax
+        roll $1, %eax
+
+        movl %edx, (%ebp)
+        movl %ecx, 4(%ebp)
+        movl %ebx, 8(%ebp)
+        movl %eax, 12(%ebp)
+
+        addl $16, %ebp
+        cmpl $80, %esi
         jne .EXPANSION_LOOP
 
    // here: edi = W
