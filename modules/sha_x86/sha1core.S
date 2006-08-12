@@ -26,20 +26,48 @@ sha160_core:
         cmpl    $16, %esi
         jne     .LOAD_INPUT_LOOP
 
-     leal    64(%edi), %edx
+     leal    64(%edi), %ebp
     
         .p2align 4,,7
        // here esi == 16
 .EXPANSION_LOOP:
-        movl    -32(%edx), %eax
-        xorl    -12(%edx), %eax
-        xorl    -56(%edx), %eax
-        xorl    -64(%edx), %eax
-        incl    %esi
+        movl    -12(%ebp), %eax
+        xorl    -32(%ebp), %eax
+        xorl    -56(%ebp), %eax
+        xorl    -64(%ebp), %eax
         roll    $1, %eax
 
-        movl    %eax, (%edx)
-        addl    $4, %edx
+        movl    %eax, (%ebp)
+   
+        movl    -8(%ebp), %ebx
+        xorl    -28(%ebp), %ebx
+        xorl    -52(%ebp), %ebx
+        xorl    -60(%ebp), %ebx
+        roll    $1, %ebx
+
+        movl    %ebx, 4(%ebp)
+   
+        movl    -4(%ebp), %ecx
+        xorl    -24(%ebp), %ecx
+        xorl    -48(%ebp), %ecx
+        xorl    -56(%ebp), %ecx
+        roll    $1, %ecx
+
+        movl    %ecx, 8(%ebp)
+   
+        movl    (%ebp), %eax
+        xorl    -20(%ebp), %eax
+        xorl    -44(%ebp), %eax
+        xorl    -52(%ebp), %eax
+        roll    $1, %eax
+
+        movl    %eax, 12(%ebp)
+
+   
+        addl    $16, %ebp
+
+        addl $4, %esi
+   
         cmpl    $80, %esi
         jne .EXPANSION_LOOP
 
