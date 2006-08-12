@@ -17,19 +17,25 @@ sha160_core:
 
         .p2align 4,,7
 .LOAD_INPUT_LOOP:  
-        movl    0(%ecx), %eax
-        incl    %esi
 
+        movl    0(%ecx), %eax
         bswapl  %eax
-        movl    %eax, -4(%edi,%esi,4)
+        movl    %eax, 0(%edi,%esi,4)
 
         movl    4(%ecx), %eax
-        addl    $8, %ecx
-        incl    %esi
-
         bswapl  %eax
-        movl    %eax, -4(%edi,%esi,4)
+        movl    %eax, 4(%edi,%esi,4)
 
+        movl    8(%ecx), %eax
+        bswapl  %eax
+        movl    %eax, 8(%edi,%esi,4)
+
+        movl    12(%ecx), %eax
+        bswapl  %eax
+        movl    %eax, 12(%edi,%esi,4)
+   
+        addl    $4, %esi
+        addl    $16, %ecx
         cmpl    $16, %esi
         jne     .LOAD_INPUT_LOOP
 
