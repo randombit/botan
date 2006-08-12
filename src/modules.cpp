@@ -8,6 +8,7 @@
 #include <botan/def_char.h>
 #include <botan/eng_def.h>
 #include <botan/es_file.h>
+#include <botan/timers.h>
 
 #if defined(BOTAN_EXT_MUTEX_PTHREAD)
   #include <botan/mux_pthr.h>
