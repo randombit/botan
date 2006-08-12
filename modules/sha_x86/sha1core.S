@@ -52,91 +52,74 @@ sha160_core:
    movl 12(%ebp), %edx
    movl 16(%ebp), %esi
 
-#define MAGIC1 $0x5A827999
-#define MAGIC2 $0x6ED9EBA1
-#define MAGIC3 $0x8F1BBCDC
-#define MAGIC4 $0xCA62C1D6
-   
-#define FUNC1(B, C, D, TEMP)   \
-   movl C, TEMP                 ; \
-   xorl D, TEMP                 ; \
-   andl B, TEMP                 ; \
-   xorl D, TEMP
-
-#define FUNC2(B, C, D, TEMP)   \
-   movl B, TEMP                 ; \
-   xorl C, TEMP                 ; \
-   xorl D, TEMP  
-
-#define FUNC3(B, C, D, TEMP)   \
-   movl B, TEMP                 ; \
-   orl  C, TEMP                 ; \
-   andl D, TEMP                 ; \
-   movl B, (%edi)               ; \
-   andl C, (%edi)               ; \
-   orl  (%edi), TEMP           
-   
-#define FUNC4(B, C, D, TEMP)   \
-   movl B, TEMP                 ; \
-   xorl C, TEMP                 ; \
-   xorl D, TEMP  
-
-#define F(A, B, C, D, E, TEMP, MAGIC, FUNC) \
-   addl (%edi), E               ; \
-   FUNC(B, C, D, TEMP)          ; \
-   addl $4, %edi                ; \
-   addl TEMP, E                 ; \
-   addl MAGIC, E                ; \
-   roll $5, A                   ; \
-   addl A, E                    ; \
-   rorl $5, A                   ; \
-   roll $30, B                  ; 
+#define MAGIC1 0x5A827999
+#define MAGIC2 0x6ED9EBA1
+#define MAGIC3 0x8F1BBCDC
+#define MAGIC4 0xCA62C1D6
 
 #define F1(A, B, C, D, E, TEMP) \
-   F(A, B, C, D, E, TEMP, MAGIC1, FUNC1)
+   addl (%edi), E               ; \
+   addl $4, %edi                ; \
+   movl C, TEMP                 ; \
+   roll $5, A                   ; \
+   xorl D, TEMP                 ; \
+   addl A, E                    ; \
+   andl B, TEMP                 ; \
+   rorl $2, B                   ; \
+   xorl D, TEMP                 ; \
+   leal MAGIC1(E,TEMP,1), E     ; \
+   rorl $5, A                   ;
 
-#define F2(A, B, C, D, E, TEMP) \
-   F(A, B, C, D, E, TEMP, MAGIC2, FUNC2)
+#define F2_OR_F4(A, B, C, D, E, TEMP, MAGIC) \
+   addl (%edi), E               ; \
+   addl $4, %edi                ; \
+   movl B, TEMP                 ; \
+   roll $5, A                   ; \
+   xorl D, TEMP                 ; \
+   addl A, E                    ; \
+   xorl C, TEMP                 ; \
+   rorl $2, B                   ; \
+   leal MAGIC(E,TEMP,1), E      ; \
+   rorl $5, A                   ;
 
 #define F3(A, B, C, D, E, TEMP) \
-   F(A, B, C, D, E, TEMP, MAGIC3, FUNC3)
+   addl (%edi), E               ; \
+   movl B, TEMP                 ; \
+   roll $5, A                   ; \
+   orl  C, TEMP                 ; \
+   movl B, (%edi)               ; \
+   andl D, TEMP                 ; \
+   andl C, (%edi)               ; \
+   orl  (%edi), TEMP            ; \
+   addl $4, %edi                ; \
+   addl A, E                    ; \
+   leal MAGIC3(E,TEMP,1), E     ; \
+   rorl $2, B                   ; \
+   rorl $5, A                   ;
+
+#define F2(A, B, C, D, E, TEMP) \
+   F2_OR_F4(A, B, C, D, E, TEMP, MAGIC2)
 
 #define F4(A, B, C, D, E, TEMP) \
-   F(A, B, C, D, E, TEMP, MAGIC4, FUNC4)
-   
+   F2_OR_F4(A, B, C, D, E, TEMP, MAGIC4)
+      
 #define F_BLOCK(F) \
     F(%eax, %ebx, %ecx, %edx, %esi, %ebp) \
     F(%esi, %eax, %ebx, %ecx, %edx, %ebp) \
     F(%edx, %esi, %eax, %ebx, %ecx, %ebp) \
     F(%ecx, %edx, %esi, %eax, %ebx, %ebp) \
     F(%ebx, %ecx, %edx, %esi, %eax, %ebp)
-/*
-    F1(%eax, %ebx, %ecx, %edx, %esi, %ebp)
-    F1(%esi, %eax, %ebx, %ecx, %edx, %ebp)
-    F1(%edx, %esi, %eax, %ebx, %ecx, %ebp)
-    F1(%ecx, %edx, %esi, %eax, %ebx, %ebp)
-    F1(%ebx, %ecx, %edx, %esi, %eax, %ebp)
-*/
 
-   F_BLOCK(F1)
-   F_BLOCK(F1)
-   F_BLOCK(F1)
-   F_BLOCK(F1)
+#define ROUND(F) \
+   F_BLOCK(F) \
+   F_BLOCK(F) \
+   F_BLOCK(F) \
+   F_BLOCK(F)
 
-   F_BLOCK(F2)
-   F_BLOCK(F2)
-   F_BLOCK(F2)
-   F_BLOCK(F2)
-
-   F_BLOCK(F3)
-   F_BLOCK(F3)
-   F_BLOCK(F3)
-   F_BLOCK(F3)
-
-   F_BLOCK(F4)
-   F_BLOCK(F4)
-   F_BLOCK(F4)
-   F_BLOCK(F4)
+   ROUND(F1)
+   ROUND(F2)
+   ROUND(F3)
+   ROUND(F4)
 
    movl 20(%esp), %ebp
    addl %eax, 0(%ebp)
