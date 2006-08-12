@@ -33,21 +33,17 @@ int main(int argc, char* argv[])
    {
    try
       {
-      if(argc <= 1)
-         { print_help(); return 1; }
-
       OptionParser opts("help|html|init=|validate|"
                         "benchmark|bench-type=|bench-algo=|seconds=");
       opts.parse(argv);
-
-      if(opts.is_set("help"))
-         { print_help(); return 1; }
 
       std::string init_flags = (opts.is_set("init") ? opts.value("init") : "");
 
       Botan::InitializerOptions init_options(init_flags);
       Botan::LibraryInitializer init(init_options);
 
+      if(opts.is_set("help") || argc <= 1)
+         { print_help(); return 1; }
       if(opts.is_set("validate"))
          return validate();
 
