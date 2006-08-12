@@ -5,11 +5,13 @@
 .global sha160_core
    .type   sha160_core, @function
 sha160_core:
+        pushl   %ebp
         pushl   %edi
         pushl   %esi
-   
-        movl    16(%esp), %ecx   # byte input[64]
-        movl    20(%esp), %edi   # u32bit W[80]
+        pushl   %ebx
+
+        movl    24(%esp), %ecx   # byte input[64]
+        movl    28(%esp), %edi   # u32bit W[80]
 
         movl    $0, %esi  # loop counter
 
@@ -24,23 +26,24 @@ sha160_core:
         cmpl    $16, %esi
         jne     .LOAD_INPUT_LOOP
 
-
-        leal    64(%edi), %edx
-        movl    $16, %ecx
-       
+     leal    64(%edi), %edx
+    
        // here esi == 16
 .EXPANSION_LOOP:
         movl    -32(%edx), %eax
         xorl    -12(%edx), %eax
-        incl    %ecx
         xorl    -56(%edx), %eax
         xorl    -64(%edx), %eax
-        rorl    $31, %eax
+        incl    %esi
+        roll    $1, %eax
+
         movl    %eax, (%edx)
         addl    $4, %edx
-        cmpl    $80, %ecx
+        cmpl    $80, %esi
         jne .EXPANSION_LOOP
-   
+
+        popl    %ebx
         popl    %esi
         popl    %edi
+        popl    %ebp
         ret
