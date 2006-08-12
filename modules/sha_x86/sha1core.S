@@ -53,6 +53,7 @@ sha160_core:
    movl 16(%ebp), %esi
 
 #define MAGIC1 $0x5A827999
+#define MAGIC2 $0x6ED9EBA1
 
 #define FUNC1(B, C, D, TEMP)   \
    movl C, TEMP                 ; \
@@ -65,9 +66,10 @@ sha160_core:
    xorl C, TEMP                 ; \
    xorl D, TEMP  
 
-#define F(A, B, C, D, E, TEMP, MSG, MAGIC, FUNC) \
+#define F(A, B, C, D, E, TEMP, MAGIC, FUNC) \
    FUNC(B, C, D, TEMP)          ; \
-   addl MSG, E                  ; \
+   addl 0(%edi), E            ; \
+   addl $4, %edi                ; \
    addl TEMP, E                 ; \
    addl MAGIC, E                ; \
    roll $5, A                   ; \
@@ -75,30 +77,35 @@ sha160_core:
    rorl $5, A                   ; \
    roll $30, B
 
-    F(%eax, %ebx, %ecx, %edx, %esi, %ebp,  0(%edi), MAGIC1, FUNC1)
-    F(%esi, %eax, %ebx, %ecx, %edx, %ebp,  4(%edi), MAGIC1, FUNC1)
-    F(%edx, %esi, %eax, %ebx, %ecx, %ebp,  8(%edi), MAGIC1, FUNC1)
-    F(%ecx, %edx, %esi, %eax, %ebx, %ebp, 12(%edi), MAGIC1, FUNC1)
-    F(%ebx, %ecx, %edx, %esi, %eax, %ebp, 16(%edi), MAGIC1, FUNC1)
+#define F1(A, B, C, D, E, TEMP) \
+   F(A, B, C, D, E, TEMP, MAGIC1, FUNC1)
 
-    F(%eax, %ebx, %ecx, %edx, %esi, %ebp, 20(%edi), MAGIC1, FUNC1)
-    F(%esi, %eax, %ebx, %ecx, %edx, %ebp, 24(%edi), MAGIC1, FUNC1)
-    F(%edx, %esi, %eax, %ebx, %ecx, %ebp, 28(%edi), MAGIC1, FUNC1)
-    F(%ecx, %edx, %esi, %eax, %ebx, %ebp, 32(%edi), MAGIC1, FUNC1)
-    F(%ebx, %ecx, %edx, %esi, %eax, %ebp, 36(%edi), MAGIC1, FUNC1)
+#define F2(A, B, C, D, E, TEMP) \
+   F(A, B, C, D, E, TEMP, MAGIC2, FUNC2)
 
-    F(%eax, %ebx, %ecx, %edx, %esi, %ebp, 40(%edi), MAGIC1, FUNC1)
-    F(%esi, %eax, %ebx, %ecx, %edx, %ebp, 44(%edi), MAGIC1, FUNC1)
-    F(%edx, %esi, %eax, %ebx, %ecx, %ebp, 48(%edi), MAGIC1, FUNC1)
-    F(%ecx, %edx, %esi, %eax, %ebx, %ebp, 52(%edi), MAGIC1, FUNC1)
-    F(%ebx, %ecx, %edx, %esi, %eax, %ebp, 56(%edi), MAGIC1, FUNC1)
+#define F_BLOCK(F) \
+    F(%eax, %ebx, %ecx, %edx, %esi, %ebp) ; \
+    F(%esi, %eax, %ebx, %ecx, %edx, %ebp)  ; \
+    F(%edx, %esi, %eax, %ebx, %ecx, %ebp)  ; \
+    F(%ecx, %edx, %esi, %eax, %ebx, %ebp)  ; \
+    F(%ebx, %ecx, %edx, %esi, %eax, %ebp)
+/*
+    F1(%eax, %ebx, %ecx, %edx, %esi, %ebp)
+    F1(%esi, %eax, %ebx, %ecx, %edx, %ebp)
+    F1(%edx, %esi, %eax, %ebx, %ecx, %ebp)
+    F1(%ecx, %edx, %esi, %eax, %ebx, %ebp)
+    F1(%ebx, %ecx, %edx, %esi, %eax, %ebp)
+*/
+   F_BLOCK(F1)
+   F_BLOCK(F1)
+   F_BLOCK(F1)
+   F_BLOCK(F1)
 
-    F(%eax, %ebx, %ecx, %edx, %esi, %ebp, 60(%edi), MAGIC1, FUNC1)
-    F(%esi, %eax, %ebx, %ecx, %edx, %ebp, 64(%edi), MAGIC1, FUNC1)
-    F(%edx, %esi, %eax, %ebx, %ecx, %ebp, 68(%edi), MAGIC1, FUNC1)
-    F(%ecx, %edx, %esi, %eax, %ebx, %ebp, 72(%edi), MAGIC1, FUNC1)
-    F(%ebx, %ecx, %edx, %esi, %eax, %ebp, 76(%edi), MAGIC1, FUNC1)
- 
+   F_BLOCK(F2)
+   F_BLOCK(F2)
+   F_BLOCK(F2)
+   F_BLOCK(F2)
+
    movl 20(%esp), %ebp
    movl %eax, 0(%ebp)
    movl %ebx, 4(%ebp)

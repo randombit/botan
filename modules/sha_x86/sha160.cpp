@@ -77,20 +77,14 @@ void SHA_160::hash(const byte input[])
 #endif
 
    /*
-   F1(A,B,C,D,E,W[ 0]); F1(E,A,B,C,D,W[ 1]);   F1(D,E,A,B,C,W[ 2]);
-   F1(C,D,E,A,B,W[ 3]);   F1(B,C,D,E,A,W[ 4]);
-
-
-   F1(A,B,C,D,E,W[ 5]);
+   F1(A,B,C,D,E,W[ 0]);   F1(E,A,B,C,D,W[ 1]);   F1(D,E,A,B,C,W[ 2]);
+   F1(C,D,E,A,B,W[ 3]);   F1(B,C,D,E,A,W[ 4]);   F1(A,B,C,D,E,W[ 5]);
    F1(E,A,B,C,D,W[ 6]);   F1(D,E,A,B,C,W[ 7]);   F1(C,D,E,A,B,W[ 8]);
-   F1(B,C,D,E,A,W[ 9]);
-
-   F1(A,B,C,D,E,W[10]);   F1(E,A,B,C,D,W[11]);
+   F1(B,C,D,E,A,W[ 9]);   F1(A,B,C,D,E,W[10]);   F1(E,A,B,C,D,W[11]);
    F1(D,E,A,B,C,W[12]);   F1(C,D,E,A,B,W[13]);   F1(B,C,D,E,A,W[14]);
-
    F1(A,B,C,D,E,W[15]);   F1(E,A,B,C,D,W[16]);   F1(D,E,A,B,C,W[17]);
    F1(C,D,E,A,B,W[18]);   F1(B,C,D,E,A,W[19]);
-   */
+
 
    F2(A,B,C,D,E,W[20]);   F2(E,A,B,C,D,W[21]);   F2(D,E,A,B,C,W[22]);
    F2(C,D,E,A,B,W[23]);   F2(B,C,D,E,A,W[24]);   F2(A,B,C,D,E,W[25]);
@@ -99,6 +93,7 @@ void SHA_160::hash(const byte input[])
    F2(D,E,A,B,C,W[32]);   F2(C,D,E,A,B,W[33]);   F2(B,C,D,E,A,W[34]);
    F2(A,B,C,D,E,W[35]);   F2(E,A,B,C,D,W[36]);   F2(D,E,A,B,C,W[37]);
    F2(C,D,E,A,B,W[38]);   F2(B,C,D,E,A,W[39]);
+   */
 
    F3(A,B,C,D,E,W[40]);   F3(E,A,B,C,D,W[41]);   F3(D,E,A,B,C,W[42]);
    F3(C,D,E,A,B,W[43]);   F3(B,C,D,E,A,W[44]);   F3(A,B,C,D,E,W[45]);
