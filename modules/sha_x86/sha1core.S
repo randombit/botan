@@ -57,9 +57,8 @@ sha160_core:
 #define MAGIC3 0x8F1BBCDC
 #define MAGIC4 0xCA62C1D6
 
-#define F1(A, B, C, D, E, TEMP) \
-   addl (%edi), E               ; \
-   addl $4, %edi                ; \
+#define F1(A, B, C, D, E, TEMP, MSG) \
+   addl 4*MSG(%edi), E          ; \
    movl C, TEMP                 ; \
    roll $5, A                   ; \
    xorl D, TEMP                 ; \
@@ -70,9 +69,8 @@ sha160_core:
    leal MAGIC1(E,TEMP,1), E     ; \
    rorl $5, A                   ;
 
-#define F2_OR_F4(A, B, C, D, E, TEMP, MAGIC) \
-   addl (%edi), E               ; \
-   addl $4, %edi                ; \
+#define F2_OR_F4(A, B, C, D, E, TEMP, MSG, MAGIC) \
+   addl 4*MSG(%edi), E          ; \
    movl B, TEMP                 ; \
    roll $5, A                   ; \
    xorl D, TEMP                 ; \
@@ -82,8 +80,8 @@ sha160_core:
    leal MAGIC(E,TEMP,1), E      ; \
    rorl $5, A                   ;
 
-#define F3(A, B, C, D, E, TEMP) \
-   addl (%edi), E               ; \
+#define F3(A, B, C, D, E, TEMP, MSG) \
+   addl 4*MSG(%edi), E          ; \
    movl B, TEMP                 ; \
    roll $5, A                   ; \
    orl  C, TEMP                 ; \
@@ -91,35 +89,43 @@ sha160_core:
    andl D, TEMP                 ; \
    andl C, (%edi)               ; \
    orl  (%edi), TEMP            ; \
-   addl $4, %edi                ; \
    addl A, E                    ; \
    leal MAGIC3(E,TEMP,1), E     ; \
    rorl $2, B                   ; \
    rorl $5, A                   ;
 
-#define F2(A, B, C, D, E, TEMP) \
-   F2_OR_F4(A, B, C, D, E, TEMP, MAGIC2)
+#define F2(A, B, C, D, E, TEMP, MSG) \
+   F2_OR_F4(A, B, C, D, E, TEMP, MSG, MAGIC2)
 
-#define F4(A, B, C, D, E, TEMP) \
-   F2_OR_F4(A, B, C, D, E, TEMP, MAGIC4)
+#define F4(A, B, C, D, E, TEMP, MSG) \
+   F2_OR_F4(A, B, C, D, E, TEMP, MSG, MAGIC4)
       
-#define F_BLOCK(F) \
-    F(%eax, %ebx, %ecx, %edx, %esi, %ebp) \
-    F(%esi, %eax, %ebx, %ecx, %edx, %ebp) \
-    F(%edx, %esi, %eax, %ebx, %ecx, %ebp) \
-    F(%ecx, %edx, %esi, %eax, %ebx, %ebp) \
-    F(%ebx, %ecx, %edx, %esi, %eax, %ebp)
+#define F_BLOCK(F, MSG) \
+    F(%eax, %ebx, %ecx, %edx, %esi, %ebp, (MSG+0)) \
+    F(%esi, %eax, %ebx, %ecx, %edx, %ebp, (MSG+1)) \
+    F(%edx, %esi, %eax, %ebx, %ecx, %ebp, (MSG+2)) \
+    F(%ecx, %edx, %esi, %eax, %ebx, %ebp, (MSG+3)) \
+    F(%ebx, %ecx, %edx, %esi, %eax, %ebp, (MSG+4))
 
-#define ROUND(F) \
-   F_BLOCK(F) \
-   F_BLOCK(F) \
-   F_BLOCK(F) \
-   F_BLOCK(F)
+   F_BLOCK(F1, 0)
+   F_BLOCK(F1, 5)
+   F_BLOCK(F1, 10)
+   F_BLOCK(F1, 15)
 
-   ROUND(F1)
-   ROUND(F2)
-   ROUND(F3)
-   ROUND(F4)
+   F_BLOCK(F2, 20)
+   F_BLOCK(F2, 25)
+   F_BLOCK(F2, 30)
+   F_BLOCK(F2, 35)
+
+   F_BLOCK(F3, 40)
+   F_BLOCK(F3, 45)
+   F_BLOCK(F3, 50)
+   F_BLOCK(F3, 55)
+
+   F_BLOCK(F4, 60)
+   F_BLOCK(F4, 65)
+   F_BLOCK(F4, 70)
+   F_BLOCK(F4, 75)
 
    movl 20(%esp), %ebp
    addl %eax, 0(%ebp)
