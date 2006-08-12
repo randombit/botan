@@ -1,0 +1,12 @@
+realname "SHA-1 Assembler Backend for x86 Systems"
+
+replace_file sha160.cpp
+add_file sha1core.S
+
+<arch>
+ia32
+</arch>
+
+<cc>
+gcc
+</cc>
