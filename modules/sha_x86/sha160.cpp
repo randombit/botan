@@ -8,46 +8,6 @@
 
 namespace Botan {
 
-namespace {
-
-/*************************************************
-* SHA-160 F1 Function                            *
-*************************************************/
-inline void F1(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
-   {
-   E += (D ^ (B & (C ^ D))) + msg + 0x5A827999 + rotate_left(A, 5);
-   B  = rotate_left(B, 30);
-   }
-
-/*************************************************
-* SHA-160 F2 Function                            *
-*************************************************/
-inline void F2(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
-   {
-   E += (B ^ C ^ D) + msg + 0x6ED9EBA1 + rotate_left(A, 5);
-   B  = rotate_left(B, 30);
-   }
-
-/*************************************************
-* SHA-160 F3 Function                            *
-*************************************************/
-inline void F3(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
-   {
-   E += ((B & C) | ((B | C) & D)) + msg + 0x8F1BBCDC + rotate_left(A, 5);
-   B  = rotate_left(B, 30);
-   }
-
-/*************************************************
-* SHA-160 F4 Function                            *
-*************************************************/
-inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
-   {
-   E += (B ^ C ^ D) + msg + 0xCA62C1D6 + rotate_left(A, 5);
-   B  = rotate_left(B, 30);
-   }
-
-}
-
 extern "C" void sha160_core(u32bit[5], const byte[64], u32bit[80]);
 
 /*************************************************
