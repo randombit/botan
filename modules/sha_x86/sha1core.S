@@ -31,44 +31,41 @@ sha160_core:
         .p2align 4,,7
        // here esi == 16
 .EXPANSION_LOOP:
+        xorl    %eax, %eax
+        movl    -4(%ebp), %ebx
+        movl    -8(%ebp), %ecx
         movl    -12(%ebp), %edx
-        xorl    -32(%ebp), %edx
-        xorl    -56(%ebp), %edx
-        xorl    -64(%ebp), %edx
-        roll    $1, %edx
 
+        xorl    -20(%ebp), %eax
+        xorl    -24(%ebp), %ebx
+        xorl    -28(%ebp), %ecx
+        xorl    -32(%ebp), %edx
+
+        xorl    -44(%ebp), %eax
+        xorl    -48(%ebp), %ebx
+        xorl    -52(%ebp), %ecx
+        xorl    -56(%ebp), %edx
+
+        xorl    -52(%ebp), %eax
+        xorl    -56(%ebp), %ebx
+        xorl    -60(%ebp), %ecx
+        xorl    -64(%ebp), %edx
+   
+        roll    $1, %edx
         movl    %edx, (%ebp)
    
-        movl    -8(%ebp), %ecx
-        xorl    -28(%ebp), %ecx
-        xorl    -52(%ebp), %ecx
-        xorl    -60(%ebp), %ecx
         roll    $1, %ecx
-
         movl    %ecx, 4(%ebp)
    
-        movl    -4(%ebp), %ebx
-        xorl    -24(%ebp), %ebx
-        xorl    -48(%ebp), %ebx
-        xorl    -56(%ebp), %ebx
         roll    $1, %ebx
-
         movl    %ebx, 8(%ebp)
  
-        xorl    %eax, %eax
-        xorl    -20(%ebp), %eax
-        xorl    -44(%ebp), %eax
-        xorl    -52(%ebp), %eax
         xorl    (%ebp), %eax
         roll    $1, %eax
-
         movl    %eax, 12(%ebp)
 
-   
         addl    $16, %ebp
-
         addl $4, %esi
-   
         cmpl    $80, %esi
         jne .EXPANSION_LOOP
 
