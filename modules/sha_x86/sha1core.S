@@ -10,32 +10,32 @@ sha160_core:
         pushl   %esi
         pushl   %ebx
 
-        movl    24(%esp), %ecx   # byte input[64]
+        movl    24(%esp), %ebp   # byte input[64]
         movl    28(%esp), %edi   # u32bit W[80]
 
         movl    $0, %esi  # loop counter
 
         .p2align 4,,7
 .LOAD_INPUT_LOOP:  
-
-        movl    0(%ecx), %eax
+        movl    0(%ebp), %eax
         bswapl  %eax
+
+        movl    4(%ebp), %ebx
+        bswapl  %ebx
         movl    %eax, 0(%edi,%esi,4)
 
-        movl    4(%ecx), %eax
-        bswapl  %eax
-        movl    %eax, 4(%edi,%esi,4)
+        movl    8(%ebp), %ecx
+        bswapl  %ecx
+        movl    %ebx, 4(%edi,%esi,4)
 
-        movl    8(%ecx), %eax
-        bswapl  %eax
-        movl    %eax, 8(%edi,%esi,4)
+        movl    12(%ebp), %edx
+        bswapl  %edx
+        movl    %ecx, 8(%edi,%esi,4)
 
-        movl    12(%ecx), %eax
-        bswapl  %eax
-        movl    %eax, 12(%edi,%esi,4)
+        movl    %edx, 12(%edi,%esi,4)
    
         addl    $4, %esi
-        addl    $16, %ecx
+        addl    $16, %ebp
         cmpl    $16, %esi
         jne     .LOAD_INPUT_LOOP
 
@@ -67,15 +67,16 @@ sha160_core:
         xorl -64(%ebp), %edx
    
         roll $1, %edx
+
         roll $1, %ecx
+        movl %edx, (%ebp)
+
         roll $1, %ebx
+        movl %ecx, 4(%ebp)
 
         xorl %edx, %eax
-        roll $1, %eax
-
-        movl %edx, (%ebp)
-        movl %ecx, 4(%ebp)
         movl %ebx, 8(%ebp)
+        roll $1, %eax
         movl %eax, 12(%ebp)
 
         addl $16, %ebp
