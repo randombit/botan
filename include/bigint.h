@@ -104,7 +104,6 @@ class BigInt
       BigInt(Sign, u32bit);
       BigInt(NumberType, u32bit);
    private:
-      friend void divide(const BigInt&, const BigInt&, BigInt&, BigInt&);
       void grow_to(u32bit) const;
       SecureVector<word> reg;
       Sign signedness;
