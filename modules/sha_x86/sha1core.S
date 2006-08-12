@@ -31,9 +31,9 @@ sha160_core:
         .p2align 4,,7
        // here esi == 16
 .EXPANSION_LOOP:
-        xorl    %eax, %eax
-        movl    -4(%ebp), %ebx
-        movl    -8(%ebp), %ecx
+        xorl        %eax,  %eax
+        movl     -4(%ebp), %ebx
+        movl     -8(%ebp), %ecx
         movl    -12(%ebp), %edx
 
         xorl    -20(%ebp), %eax
@@ -60,7 +60,7 @@ sha160_core:
         roll    $1, %ebx
         movl    %ebx, 8(%ebp)
  
-        xorl    (%ebp), %eax
+        xorl    %edx, %eax
         roll    $1, %eax
         movl    %eax, 12(%ebp)
 
