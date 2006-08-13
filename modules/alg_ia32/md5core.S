@@ -75,11 +75,12 @@ LOOP_UNTIL(ESI, IMM(16), .LOAD_INPUT)
    ADD(A, B)                        ;
 
 #define II(A, B, C, D, MSG, S, MAGIC) \
-   ADD(A, ARRAY4(EDI, MSG))         ; \
+   ASSIGN(T2, ARRAY4(EDI, MSG))     ; \
    ASSIGN(T1, D)                    ; \
    NOT(T1)                          ; \
    OR(T1, B)                        ; \
    XOR(T1, C)                       ; \
+   ADD(A, T2)                       ; \
    ADD3_IMM(A, T1, MAGIC)           ; \
    ROTL_IMM(A, S)                   ; \
    ADD(A, B)                        ;
