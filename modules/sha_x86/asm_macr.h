@@ -41,10 +41,12 @@ func_name:
 
 #define PUSH(REG) pushl REG
 #define POP(REG) popl REG
-#define ASSIGN(TO, FROM) movl FROM, TO
+
 #define ARRAY(REG, NUM) 4*NUM(REG)
 #define ARRAY_INDIRECT(BASE, OFFSET, NUM) 4*NUM(BASE,OFFSET,4)
 #define ARG(NUM) 4*PUSHED + ARRAY(ESP, NUM)
+
+#define ASSIGN(TO, FROM) movl FROM, TO
 
 #define ADD(TO, FROM) addl FROM, TO
 #define ADD_IMM(TO, NUM) addl IMM(NUM), TO
@@ -59,6 +61,5 @@ func_name:
 #define ROTL_IMM(REG, NUM) roll IMM(NUM), REG
 #define ROTR_IMM(REG, NUM) rorl IMM(NUM), REG
 #define BSWAP(REG) bswapl REG
-
 
 #endif
