@@ -39,10 +39,12 @@ func_name:
 #define PUSH(REG) pushl REG
 #define POP(REG) popl REG
 #define MOV(FROM, TO) movl FROM, TO
-
+#define ASSIGN(TO, FROM) movl FROM, TO
 
 #define ADD(FROM, TO) addl FROM, TO
 #define ADD2(FROM, NUM, TO) leal NUM(FROM), TO
+
+#define ADD_IMM(REG, NUM) addl IMM(NUM), REG
 
 #define XOR(FROM, TO) xorl FROM, TO
 #define AND(FROM, TO) andl FROM, TO
