@@ -102,7 +102,7 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    AND(TEMP, B)                 ; \
    ROTR_IMM(B, 2)               ; \
    XOR(TEMP, D)                 ; \
-   leal MAGIC1(E,TEMP,1), E     ; \
+   ADD3_IMM(E, TEMP, MAGIC1)    ; \
    ROTR_IMM(A, 5)               ; 
    
 #define F2_OR_F4(A, B, C, D, E, TEMP, MSG, MAGIC) \
@@ -113,7 +113,7 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    ADD(E, A)                    ; \
    XOR(TEMP, C)                 ; \
    ROTR_IMM(B, 2)               ; \
-   leal MAGIC(E,TEMP,1), E      ; \
+   ADD3_IMM(E, TEMP, MAGIC)     ; \
    ROTR_IMM(A, 5)               ; 
 
 #define F3(A, B, C, D, E, TEMP, MSG) \
@@ -126,7 +126,7 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    AND(ARRAY(EDI, MSG), C)      ; \
    OR(TEMP, ARRAY(EDI, MSG))    ; \
    ADD(E, A)                    ; \
-   leal MAGIC3(E,TEMP,1), E     ; \
+   ADD3_IMM(E, TEMP, MAGIC3)    ; \
    ROTR_IMM(B, 2)               ; \
    ROTR_IMM(A, 5)               ; 
 

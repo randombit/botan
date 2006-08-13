@@ -48,6 +48,7 @@ func_name:
 #define ADD(TO, FROM) addl FROM, TO
 #define ADD_IMM(TO, NUM) addl IMM(NUM), TO
 #define ADD2_IMM(TO, FROM, NUM) leal NUM(FROM), TO
+#define ADD3_IMM(TO, FROM, NUM) leal NUM(TO,FROM,1), TO
 
 #define XOR(TO, FROM) xorl FROM, TO
 #define AND(TO, FROM) andl FROM, TO
