@@ -41,47 +41,47 @@ LOOP_UNTIL(ESI, IMM(16), .LOAD_INPUT)
 
 #define T1 ESI
 #define T2 EBP
-   
+
 #define FF(A, B, C, D, MSG, S, MAGIC) \
-   ASSIGN(T2, ARRAY4(EDI, MSG))     ; \
-   ASSIGN(T1, C)                    ; \
-   XOR(T1, D)                       ; \
-   AND(T1, B)                       ; \
-   XOR(T1, D)                       ; \
-   ADD(A, T2)                       ; \
+   ASSIGN(T1, ARRAY4(EDI, MSG))     ; \
+   ASSIGN(T2, C)                    ; \
+   XOR(T2, D)                       ; \
+   AND(T2, B)                       ; \
+   XOR(T2, D)                       ; \
    ADD3_IMM(A, T1, MAGIC)           ; \
+   ADD(A, T2)                       ; \
    ROTL_IMM(A, S)                   ; \
    ADD(A, B)                        ;
 
 #define GG(A, B, C, D, MSG, S, MAGIC) \
-   ASSIGN(T2, ARRAY4(EDI, MSG))     ; \
-   ASSIGN(T1, B)                    ; \
-   XOR(T1, C)                       ; \
-   AND(T1, D)                       ; \
-   XOR(T1, C)                       ; \
-   ADD(A, T2)                       ; \
+   ASSIGN(T1, ARRAY4(EDI, MSG))     ; \
+   ASSIGN(T2, B)                    ; \
+   XOR(T2, C)                       ; \
+   AND(T2, D)                       ; \
+   XOR(T2, C)                       ; \
    ADD3_IMM(A, T1, MAGIC)           ; \
+   ADD(A, T2)                       ; \
    ROTL_IMM(A, S)                   ; \
    ADD(A, B)                        ;
 
 #define HH(A, B, C, D, MSG, S, MAGIC) \
-   ASSIGN(T2, ARRAY4(EDI, MSG))     ; \
-   ASSIGN(T1, B)                    ; \
-   XOR(T1, C)                       ; \
-   XOR(T1, D)                       ; \
-   ADD(A, T2)                       ; \
+   ASSIGN(T1, ARRAY4(EDI, MSG))     ; \
+   ASSIGN(T2, B)                    ; \
+   XOR(T2, C)                       ; \
+   XOR(T2, D)                       ; \
    ADD3_IMM(A, T1, MAGIC)           ; \
+   ADD(A, T2)                       ; \
    ROTL_IMM(A, S)                   ; \
    ADD(A, B)                        ;
 
 #define II(A, B, C, D, MSG, S, MAGIC) \
-   ASSIGN(T2, ARRAY4(EDI, MSG))     ; \
-   ASSIGN(T1, D)                    ; \
-   NOT(T1)                          ; \
-   OR(T1, B)                        ; \
-   XOR(T1, C)                       ; \
-   ADD(A, T2)                       ; \
+   ASSIGN(T1, ARRAY4(EDI, MSG))     ; \
+   ASSIGN(T2, D)                    ; \
+   NOT(T2)                          ; \
+   OR(T2, B)                        ; \
+   XOR(T2, C)                       ; \
    ADD3_IMM(A, T1, MAGIC)           ; \
+   ADD(A, T2)                       ; \
    ROTL_IMM(A, S)                   ; \
    ADD(A, B)                        ;
 
