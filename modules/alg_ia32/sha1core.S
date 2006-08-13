@@ -141,14 +141,6 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    F(ECX, EDX, ESI, EAX, EBX, EBP, (MSG+3)) \
    F(EBX, ECX, EDX, ESI, EAX, EBP, (MSG+4))
 
-   #if 0
-   F2(EAX, EBX, ECX, EDX, ESI, EBP, 0)
-   F2(ESI, EAX, EBX, ECX, EDX, EBP, 1)
-   F2(EDX, ESI, EAX, EBX, ECX, EBP, 2)
-   F2(ECX, EDX, ESI, EAX, EBX, EBP, 3)
-   F2(EBX, ECX, EDX, ESI, EAX, EBP, 4)
-   #endif
-   
    F_BLOCK(F1, 0)
    F_BLOCK(F1, 5)
    F_BLOCK(F1, 10)
