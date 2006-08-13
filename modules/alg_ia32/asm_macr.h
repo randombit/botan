@@ -20,13 +20,13 @@
    .type    func_name,@function; \
 func_name:
 
-#define LOOP_UNTIL(REG, NUM, LABEL) \
-   cmpl NUM, REG; \
-   jne LABEL##_LOOP
-
 #define START_LOOP(LABEL) \
    ALIGN; \
    LABEL##_LOOP:
+
+#define LOOP_UNTIL(REG, NUM, LABEL) \
+   cmpl NUM, REG; \
+   jne LABEL##_LOOP
 
 #define EAX %eax
 #define EBX %ebx
@@ -42,14 +42,17 @@ func_name:
 #define PUSH(REG) pushl REG
 #define POP(REG) popl REG
 
-#define ARRAY(REG, NUM) 4*NUM(REG)
-#define ARRAY_INDIRECT(BASE, OFFSET, NUM) 4*NUM(BASE,OFFSET,4)
-#define ARG(NUM) 4*PUSHED + ARRAY(ESP, NUM)
+#define ARRAY1(REG, NUM) NUM(REG)
+#define ARRAY4(REG, NUM) 4*NUM(REG)
+#define ARRAY4_INDIRECT(BASE, OFFSET, NUM) 4*NUM(BASE,OFFSET,4)
+#define ARG(NUM) 4*PUSHED + ARRAY4(ESP, NUM)
 
 #define ASSIGN(TO, FROM) movl FROM, TO
+#define ASSIGN_BYTE(TO, FROM) movzbl FROM, TO
 
 #define ADD(TO, FROM) addl FROM, TO
 #define ADD_IMM(TO, NUM) addl IMM(NUM), TO
+#define SUB_IMM(TO, NUM) subl IMM(NUM), TO
 #define ADD2_IMM(TO, FROM, NUM) leal NUM(FROM), TO
 #define ADD3_IMM(TO, FROM, NUM) leal NUM(TO,FROM,1), TO
 
