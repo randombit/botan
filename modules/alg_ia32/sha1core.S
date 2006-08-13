@@ -100,7 +100,7 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    ADD(E, A)                    ; \
    ADD3_IMM(E, T, MAGIC1)       ; \
    ROTR_IMM(A, 5)               ;
-   
+
 #define F2_OR_F4(A, B, C, D, E, T, MSG, MAGIC) \
    ROTL_IMM(A, 5)               ; \
    ADD(E, ARRAY4(EDI, MSG))     ; \
