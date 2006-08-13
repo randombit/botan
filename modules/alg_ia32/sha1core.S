@@ -92,44 +92,48 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
 #define T1 EDI
 #define T2 EBP
 
-#define MSG(N) ARRAY4(EDI, N)
-
-#define F1(A, B, C, D, E, N)       \
-   ROTL_IMM(A, 5)                ; \
-   ADD(E, MSG(N))                ; \
-   ASSIGN(T2, C)                 ; \
-   XOR(T2, D)                    ; \
-   AND(T2, B)                    ; \
-   XOR(T2, D)                    ; \
-   ROTR_IMM(B, 2)                ; \
-   ADD3_IMM(E, A, MAGIC1)        ; \
-   ADD(E, T2)                    ; \
-   ROTR_IMM(A, 5)                ;
+#define F1(A, B, C, D, E, N)          \
+   ROTL_IMM(A, 5)                   ; \
+   ASSIGN(T2, C)                    ; \
+   XOR(T2, D)                       ; \
+   AND(T2, B)                       ; \
+   XOR(T2, D)                       ; \
+   ADD(E, T1)                       ; \
+   ROTR_IMM(B, 2)                   ; \
+   ADD3_IMM(E, A, MAGIC1)           ; \
+   ADD(E, T2)                       ; \
+   ASSIGN(T1, ARG(3))               ; \
+   ASSIGN(T1, ARRAY4(T1, (N+1)))    ; \
+   ROTR_IMM(A, 5)                   ;
 
 #define F2_4(A, B, C, D, E, N, MAGIC) \
    ROTL_IMM(A, 5)                   ; \
-   ADD(E, MSG(N))                   ; \
+   ADD(E, T1)                       ; \
    ASSIGN(T2, D)                    ; \
    XOR(T2, C)                       ; \
    XOR(T2, B)                       ; \
    ROTR_IMM(B, 2)                   ; \
    ADD3_IMM(E, A, MAGIC)            ; \
    ADD(E, T2)                       ; \
+   ASSIGN(T1, ARG(3))               ; \
+   ASSIGN(T1, ARRAY4(T1, (N+1)))    ; \
    ROTR_IMM(A, 5)                   ;
 
-#define F3(A, B, C, D, E, N)       \
-   ROTL_IMM(A, 5)                ; \
-   ADD(E, MSG(N))                ; \
-   ASSIGN(T2, B)                 ; \
-   OR(T2, C)                     ; \
-   AND(T2, D)                    ; \
-   ASSIGN(MSG(N), B)             ; \
-   AND(MSG(N), C)                ; \
-   OR(T2, MSG(N))                ; \
-   ROTR_IMM(B, 2)                ; \
-   ADD3_IMM(E, A, MAGIC3)        ; \
-   ADD(E, T2)                    ; \
-   ROTR_IMM(A, 5)                ;
+#define F3(A, B, C, D, E, N)          \
+   ROTL_IMM(A, 5)                   ; \
+   ADD(E, T1)                       ; \
+   ASSIGN(T2, B)                    ; \
+   OR(T2, C)                        ; \
+   AND(T2, D)                       ; \
+   ASSIGN(T1, B)                    ; \
+   AND(T1, C)                       ; \
+   OR(T2, T1)                       ; \
+   ROTR_IMM(B, 2)                   ; \
+   ADD3_IMM(E, A, MAGIC3)           ; \
+   ADD(E, T2)                       ; \
+   ASSIGN(T1, ARG(3))               ; \
+   ASSIGN(T1, ARRAY4(T1, (N+1)))    ; \
+   ROTR_IMM(A, 5)                   ;
 
 #define F2(A, B, C, D, E, MSG) \
    F2_4(A, B, C, D, E, MSG, MAGIC2)
@@ -137,33 +141,108 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
 #define F4(A, B, C, D, E, MSG) \
    F2_4(A, B, C, D, E, MSG, MAGIC4)
 
-#define F_BLOCK(F, MSG) \
-   F(EAX, EBX, ECX, EDX, ESI, (MSG+0)) \
-   F(ESI, EAX, EBX, ECX, EDX, (MSG+1)) \
-   F(EDX, ESI, EAX, EBX, ECX, (MSG+2)) \
-   F(ECX, EDX, ESI, EAX, EBX, (MSG+3)) \
-   F(EBX, ECX, EDX, ESI, EAX, (MSG+4))
+   ASSIGN(T1, ARG(3))
+   ASSIGN(T1, ARRAY4(T1, 0))
 
-   F_BLOCK(F1, 0)
-   F_BLOCK(F1, 5)
-   F_BLOCK(F1, 10)
-   F_BLOCK(F1, 15)
+   /* First Round */
+   F1(EAX, EBX, ECX, EDX, ESI,  0)
+   F1(ESI, EAX, EBX, ECX, EDX,  1)
+   F1(EDX, ESI, EAX, EBX, ECX,  2)
+   F1(ECX, EDX, ESI, EAX, EBX,  3)
+   F1(EBX, ECX, EDX, ESI, EAX,  4)
 
-   ASSIGN(EDI, ARG(3))
-   F_BLOCK(F2, 20)
-   F_BLOCK(F2, 25)
-   F_BLOCK(F2, 30)
-   F_BLOCK(F2, 35)
+   F1(EAX, EBX, ECX, EDX, ESI,  5)
+   F1(ESI, EAX, EBX, ECX, EDX,  6)
+   F1(EDX, ESI, EAX, EBX, ECX,  7)
+   F1(ECX, EDX, ESI, EAX, EBX,  8)
+   F1(EBX, ECX, EDX, ESI, EAX,  9)
 
-   F_BLOCK(F3, 40)
-   F_BLOCK(F3, 45)
-   F_BLOCK(F3, 50)
-   F_BLOCK(F3, 55)
+   F1(EAX, EBX, ECX, EDX, ESI, 10)
+   F1(ESI, EAX, EBX, ECX, EDX, 11)
+   F1(EDX, ESI, EAX, EBX, ECX, 12)
+   F1(ECX, EDX, ESI, EAX, EBX, 13)
+   F1(EBX, ECX, EDX, ESI, EAX, 14)
 
-   F_BLOCK(F4, 60)
-   F_BLOCK(F4, 65)
-   F_BLOCK(F4, 70)
-   F_BLOCK(F4, 75)
+   F1(EAX, EBX, ECX, EDX, ESI, 15)
+   F1(ESI, EAX, EBX, ECX, EDX, 16)
+   F1(EDX, ESI, EAX, EBX, ECX, 17)
+   F1(ECX, EDX, ESI, EAX, EBX, 18)
+   F1(EBX, ECX, EDX, ESI, EAX, 19)
+
+   /* Second Round */
+   F2(EAX, EBX, ECX, EDX, ESI, 20)
+   F2(ESI, EAX, EBX, ECX, EDX, 21)
+   F2(EDX, ESI, EAX, EBX, ECX, 22)
+   F2(ECX, EDX, ESI, EAX, EBX, 23)
+   F2(EBX, ECX, EDX, ESI, EAX, 24)
+
+   F2(EAX, EBX, ECX, EDX, ESI, 25)
+   F2(ESI, EAX, EBX, ECX, EDX, 26)
+   F2(EDX, ESI, EAX, EBX, ECX, 27)
+   F2(ECX, EDX, ESI, EAX, EBX, 28)
+   F2(EBX, ECX, EDX, ESI, EAX, 29)
+
+   F2(EAX, EBX, ECX, EDX, ESI, 30)
+   F2(ESI, EAX, EBX, ECX, EDX, 31)
+   F2(EDX, ESI, EAX, EBX, ECX, 32)
+   F2(ECX, EDX, ESI, EAX, EBX, 33)
+   F2(EBX, ECX, EDX, ESI, EAX, 34)
+
+   F2(EAX, EBX, ECX, EDX, ESI, 35)
+   F2(ESI, EAX, EBX, ECX, EDX, 36)
+   F2(EDX, ESI, EAX, EBX, ECX, 37)
+   F2(ECX, EDX, ESI, EAX, EBX, 38)
+   F2(EBX, ECX, EDX, ESI, EAX, 39)
+
+   /* Third Round */
+   F3(EAX, EBX, ECX, EDX, ESI, 40)
+   F3(ESI, EAX, EBX, ECX, EDX, 41)
+   F3(EDX, ESI, EAX, EBX, ECX, 42)
+   F3(ECX, EDX, ESI, EAX, EBX, 43)
+   F3(EBX, ECX, EDX, ESI, EAX, 44)
+
+   F3(EAX, EBX, ECX, EDX, ESI, 45)
+   F3(ESI, EAX, EBX, ECX, EDX, 46)
+   F3(EDX, ESI, EAX, EBX, ECX, 47)
+   F3(ECX, EDX, ESI, EAX, EBX, 48)
+   F3(EBX, ECX, EDX, ESI, EAX, 49)
+
+   F3(EAX, EBX, ECX, EDX, ESI, 50)
+   F3(ESI, EAX, EBX, ECX, EDX, 51)
+   F3(EDX, ESI, EAX, EBX, ECX, 52)
+   F3(ECX, EDX, ESI, EAX, EBX, 53)
+   F3(EBX, ECX, EDX, ESI, EAX, 54)
+
+   F3(EAX, EBX, ECX, EDX, ESI, 55)
+   F3(ESI, EAX, EBX, ECX, EDX, 56)
+   F3(EDX, ESI, EAX, EBX, ECX, 57)
+   F3(ECX, EDX, ESI, EAX, EBX, 58)
+   F3(EBX, ECX, EDX, ESI, EAX, 59)
+
+   /* Fourth Round */
+   F4(EAX, EBX, ECX, EDX, ESI, 60)
+   F4(ESI, EAX, EBX, ECX, EDX, 61)
+   F4(EDX, ESI, EAX, EBX, ECX, 62)
+   F4(ECX, EDX, ESI, EAX, EBX, 63)
+   F4(EBX, ECX, EDX, ESI, EAX, 64)
+
+   F4(EAX, EBX, ECX, EDX, ESI, 65)
+   F4(ESI, EAX, EBX, ECX, EDX, 66)
+   F4(EDX, ESI, EAX, EBX, ECX, 67)
+   F4(ECX, EDX, ESI, EAX, EBX, 68)
+   F4(EBX, ECX, EDX, ESI, EAX, 69)
+
+   F4(EAX, EBX, ECX, EDX, ESI, 70)
+   F4(ESI, EAX, EBX, ECX, EDX, 71)
+   F4(EDX, ESI, EAX, EBX, ECX, 72)
+   F4(ECX, EDX, ESI, EAX, EBX, 73)
+   F4(EBX, ECX, EDX, ESI, EAX, 74)
+
+   F4(EAX, EBX, ECX, EDX, ESI, 75)
+   F4(ESI, EAX, EBX, ECX, EDX, 76)
+   F4(EDX, ESI, EAX, EBX, ECX, 77)
+   F4(ECX, EDX, ESI, EAX, EBX, 78)
+   F4(EBX, ECX, EDX, ESI, EAX, 0)
 
    ASSIGN(EBP, ARG(1))
    ADD(ARRAY4(EBP, 0), EAX)
