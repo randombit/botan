@@ -112,6 +112,7 @@ void SHA_160::copy_out(byte output[])
 void SHA_160::clear() throw()
    {
    MDx_HashFunction::clear();
+   W.clear();
    digest[0] = 0x67452301;
    digest[1] = 0xEFCDAB89;
    digest[2] = 0x98BADCFE;
