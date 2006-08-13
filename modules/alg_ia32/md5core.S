@@ -40,32 +40,36 @@ LOOP_UNTIL(ESI, IMM(16), .LOAD_INPUT)
    ASSIGN(EDX, ARRAY4(EBP, 3))
 
 #define T1 ESI
+#define T2 EBP
    
 #define FF(A, B, C, D, MSG, S, MAGIC) \
-   ADD(A, ARRAY4(EDI, MSG))         ; \
+   ASSIGN(T2, ARRAY4(EDI, MSG))     ; \
    ASSIGN(T1, C)                    ; \
    XOR(T1, D)                       ; \
    AND(T1, B)                       ; \
    XOR(T1, D)                       ; \
+   ADD(A, T2)                       ; \
    ADD3_IMM(A, T1, MAGIC)           ; \
    ROTL_IMM(A, S)                   ; \
    ADD(A, B)                        ;
 
 #define GG(A, B, C, D, MSG, S, MAGIC) \
-   ADD(A, ARRAY4(EDI, MSG))         ; \
+   ASSIGN(T2, ARRAY4(EDI, MSG))     ; \
    ASSIGN(T1, B)                    ; \
    XOR(T1, C)                       ; \
    AND(T1, D)                       ; \
    XOR(T1, C)                       ; \
+   ADD(A, T2)                       ; \
    ADD3_IMM(A, T1, MAGIC)           ; \
    ROTL_IMM(A, S)                   ; \
    ADD(A, B)                        ;
 
 #define HH(A, B, C, D, MSG, S, MAGIC) \
-   ADD(A, ARRAY4(EDI, MSG))         ; \
+   ASSIGN(T2, ARRAY4(EDI, MSG))     ; \
    ASSIGN(T1, B)                    ; \
    XOR(T1, C)                       ; \
    XOR(T1, D)                       ; \
+   ADD(A, T2)                       ; \
    ADD3_IMM(A, T1, MAGIC)           ; \
    ROTL_IMM(A, S)                   ; \
    ADD(A, B)                        ;
