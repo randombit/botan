@@ -22,7 +22,11 @@ func_name:
 
 #define LOOP_UNTIL(REG, NUM, LABEL) \
    cmpl NUM, REG; \
-   jne LABEL
+   jne LABEL##_LOOP
+
+#define START_LOOP(LABEL) \
+   ALIGN; \
+   LABEL##_LOOP:
 
 #define EAX %eax
 #define EBX %ebx
@@ -37,6 +41,9 @@ func_name:
 
 
 #define ADD(FROM, TO) addl FROM, TO
+#define XOR(FROM, TO) xorl FROM, TO
+#define ROTL(NUM, REG) roll NUM, REG
+
 
 #define ARRAY(REG, NUM) 4*NUM(REG)
 

@@ -20,8 +20,7 @@ FUNCTION(sha160_core)
 
    ZEROIZE(ESI)
 
-   ALIGN
-.LOAD_INPUT_LOOP:
+START_LOOP(.LOAD_INPUT)
    ADD(IMM(4), ESI)
 
    MOV(ARRAY(EBP, 0), EAX)
@@ -40,52 +39,47 @@ FUNCTION(sha160_core)
         movl   EBX, -12(EDI,ESI,4)
         movl   ECX, -8(EDI,ESI,4)
         movl   EDX, -4(EDI,ESI,4)
-
-   LOOP_UNTIL(ESI, IMM(16), .LOAD_INPUT_LOOP)
+LOOP_UNTIL(ESI, IMM(16), .LOAD_INPUT)
 
         leal    64(EDI), EBP
 
-        ALIGN
-.EXPANSION_LOOP:
+START_LOOP(.EXPANSION)
    ADD(IMM(4), ESI)
 
    ZEROIZE(EAX)
-       
-        movl  -4(EBP), EBX
-        movl  -8(EBP), ECX
-        movl -12(EBP), EDX
 
-        xorl -20(EBP), EAX
-        xorl -24(EBP), EBX
-        xorl -28(EBP), ECX
-        xorl -32(EBP), EDX
+   MOV(ARRAY(EBP, -1), EBX)
+   MOV(ARRAY(EBP, -2), ECX)
+   MOV(ARRAY(EBP, -3), EDX)
 
-        xorl -44(EBP), EAX
-        xorl -48(EBP), EBX
-        xorl -52(EBP), ECX
-        xorl -56(EBP), EDX
+   XOR(ARRAY(EBP, -5), EAX)
+   XOR(ARRAY(EBP, -6), EBX)
+   XOR(ARRAY(EBP, -7), ECX)
+   XOR(ARRAY(EBP, -8), EDX)
 
-        xorl -52(EBP), EAX
-        xorl -56(EBP), EBX
-        xorl -60(EBP), ECX
-        xorl -64(EBP), EDX
+   XOR(ARRAY(EBP, -11), EAX)
+   XOR(ARRAY(EBP, -12), EBX)
+   XOR(ARRAY(EBP, -13), ECX)
+   XOR(ARRAY(EBP, -14), EDX)
 
-        roll $1, EDX
+   XOR(ARRAY(EBP, -13), EAX)
+   XOR(ARRAY(EBP, -14), EBX)
+   XOR(ARRAY(EBP, -15), ECX)
+   XOR(ARRAY(EBP, -16), EDX)
 
-        roll $1, ECX
-        movl EDX, (EBP)
+   ROTL(IMM(1), EDX)
+   ROTL(IMM(1), ECX)
+   ROTL(IMM(1), EBX)
+   XOR(EDX, EAX)
+   ROTL(IMM(1), EAX)
 
-        roll $1, EBX
-        movl ECX, 4(EBP)
+   MOV(EDX, ARRAY(EBP, 0))
+   MOV(ECX, ARRAY(EBP, 1))
+   MOV(EBX, ARRAY(EBP, 2))
+   MOV(EAX, ARRAY(EBP, 3))
 
-        xorl EDX, EAX
-        movl EBX, 8(EBP)
-        roll $1, EAX
-        movl EAX, 12(EBP)
-
-        addl $16, EBP
-        cmpl $80, ESI
-   LOOP_UNTIL(ESI, IMM(80), .EXPANSION_LOOP)
+   ADD(IMM(16), EBP)
+LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
 
    movl 20(%esp), EBP
    movl 0(EBP), EAX
