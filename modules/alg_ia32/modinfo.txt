@@ -1,8 +1,11 @@
 realname "Algorithm x86 Assembler"
 
 replace_file sha160.cpp
+replace_file aes.cpp
+
 add_file asm_macr.h
 add_file sha1core.S
+add_file aes_core.S
 
 <arch>
 ia32
