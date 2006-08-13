@@ -99,19 +99,19 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    AND(T2, B)                    ; \
    XOR(T2, D)                    ; \
    ROTR_IMM(B, 2)                ; \
-   ADD(E, A)                     ; \
-   ADD3_IMM(E, T2, MAGIC1)       ; \
+   ADD3_IMM(E, A, MAGIC1)        ; \
+   ADD(E, T2)                    ; \
    ROTR_IMM(A, 5)                ;
 
-#define F2_OR_F4(A, B, C, D, E, MSG, MAGIC) \
+#define F2_4(A, B, C, D, E, MSG, MAGIC) \
    ROTL_IMM(A, 5)                   ; \
    ADD(E, ARRAY4(EDI, MSG))         ; \
    ASSIGN(T2, D)                    ; \
    XOR(T2, C)                       ; \
    XOR(T2, B)                       ; \
    ROTR_IMM(B, 2)                   ; \
-   ADD(E, A)                        ; \
-   ADD3_IMM(E, T2, MAGIC)           ; \
+   ADD3_IMM(E, A, MAGIC)            ; \
+   ADD(E, T2)                       ; \
    ROTR_IMM(A, 5)                   ;
 
 #define F3(A, B, C, D, E, MSG)     \
@@ -124,15 +124,15 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    AND(ARRAY4(EDI, MSG), C)      ; \
    OR(T2, ARRAY4(EDI, MSG))      ; \
    ROTR_IMM(B, 2)                ; \
-   ADD(E, A)                     ; \
-   ADD3_IMM(E, T2, MAGIC3)       ; \
+   ADD3_IMM(E, A, MAGIC3)        ; \
+   ADD(E, T2)                    ; \
    ROTR_IMM(A, 5)                ;
 
 #define F2(A, B, C, D, E, MSG) \
-   F2_OR_F4(A, B, C, D, E, MSG, MAGIC2)
+   F2_4(A, B, C, D, E, MSG, MAGIC2)
 
 #define F4(A, B, C, D, E, MSG) \
-   F2_OR_F4(A, B, C, D, E, MSG, MAGIC4)
+   F2_4(A, B, C, D, E, MSG, MAGIC4)
 
 #define F_BLOCK(F, MSG) \
    F(EAX, EBX, ECX, EDX, ESI, (MSG+0)) \
