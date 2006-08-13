@@ -92,6 +92,7 @@ func_name:
 #define XOR(TO, FROM) xorl FROM, TO
 #define AND(TO, FROM) andl FROM, TO
 #define OR(TO, FROM) orl FROM, TO
+#define NOT(REG) notl REG
 #define ZEROIZE(REG) XOR(REG, REG)
 
 #define ROTL_IMM(REG, NUM) roll IMM(NUM), REG
