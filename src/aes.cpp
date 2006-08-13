@@ -13,6 +13,11 @@ namespace Botan {
 *************************************************/
 void AES::enc(const byte in[], byte out[]) const
    {
+   const u32bit* TE0 = TE;
+   const u32bit* TE1 = TE + 256;
+   const u32bit* TE2 = TE + 512;
+   const u32bit* TE3 = TE + 768;
+
    u32bit T0, T1, T2, T3, B0, B1, B2, B3;
    B0 = TE0[in[ 0] ^ ME[ 0]] ^ TE1[in[ 5] ^ ME[ 5]] ^
         TE2[in[10] ^ ME[10]] ^ TE3[in[15] ^ ME[15]] ^ EK[0];
@@ -64,6 +69,11 @@ void AES::enc(const byte in[], byte out[]) const
 *************************************************/
 void AES::dec(const byte in[], byte out[]) const
    {
+   const u32bit* TD0 = TD;
+   const u32bit* TD1 = TD + 256;
+   const u32bit* TD2 = TD + 512;
+   const u32bit* TD3 = TD + 768;
+
    u32bit T0, T1, T2, T3, B0, B1, B2, B3;
    B0 = TD0[in[ 0] ^ MD[ 0]] ^ TD1[in[13] ^ MD[13]] ^
         TD2[in[10] ^ MD[10]] ^ TD3[in[ 7] ^ MD[ 7]] ^ DK[0];
@@ -144,6 +154,11 @@ void AES::key(const byte key[], u32bit length)
       XDK[j+2] = XEK[4*ROUNDS-j+2];
       XDK[j+3] = XEK[4*ROUNDS-j+3];
       }
+
+   const u32bit* TD0 = TD;
+   const u32bit* TD1 = TD + 256;
+   const u32bit* TD2 = TD + 512;
+   const u32bit* TD3 = TD + 768;
    for(u32bit j = 4; j != length + 24; ++j)
       XDK[j] = TD0[SE[get_byte(0, XDK[j])]] ^ TD1[SE[get_byte(1, XDK[j])]] ^
                TD2[SE[get_byte(2, XDK[j])]] ^ TD3[SE[get_byte(3, XDK[j])]];

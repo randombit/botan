@@ -27,8 +27,7 @@ class AES : public BlockCipher
       void key(const byte[], u32bit);
       static u32bit S(u32bit);
       static const byte SE[256], SD[256];
-      static const u32bit TE0[256], TE1[256], TE2[256], TE3[256],
-                          TD0[256], TD1[256], TD2[256], TD3[256];
+      static const u32bit TE[1024], TD[1024];
       SecureBuffer<u32bit, 52> EK, DK;
       SecureBuffer<byte, 32> ME, MD;
       u32bit ROUNDS;
