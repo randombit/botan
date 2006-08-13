@@ -5,7 +5,6 @@
 
 #include <botan/aes.h>
 #include <botan/bit_ops.h>
-#include <botan/parsing.h>
 
 namespace Botan {
 
@@ -177,7 +176,7 @@ u32bit AES::S(u32bit input)
 AES::AES(u32bit key_size) : BlockCipher(16, key_size)
    {
    if(key_size != 16 && key_size != 24 && key_size != 32)
-      throw Invalid_Argument("AES: Bad key size " + to_string(key_size));
+      throw Invalid_Key_Length(name(), key_size);
    ROUNDS = (key_size / 4) + 6;
    }
 
