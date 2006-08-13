@@ -36,7 +36,6 @@ START_LOOP(.LOAD_INPUT)
    ASSIGN(ARRAY4_INDIRECT(EDI,ESI,-3), EBX)
    ASSIGN(ARRAY4_INDIRECT(EDI,ESI,-2), ECX)
    ASSIGN(ARRAY4_INDIRECT(EDI,ESI,-1), EDX)
-
 LOOP_UNTIL(ESI, IMM(16), .LOAD_INPUT)
 
    ADD2_IMM(EBP, EDI, 64)
@@ -45,7 +44,6 @@ START_LOOP(.EXPANSION)
    ADD_IMM(ESI, 4)
 
    ZEROIZE(EAX)
-
    ASSIGN(EBX, ARRAY4(EBP, -1))
    ASSIGN(ECX, ARRAY4(EBP, -2))
    ASSIGN(EDX, ARRAY4(EBP, -3))
@@ -119,8 +117,8 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    ADD(E, ARRAY4(EDI, MSG))     ; \
    ASSIGN(T, B)                 ; \
    OR(T, C)                     ; \
-   ASSIGN(ARRAY4(EDI, MSG), B)  ; \
    AND(T, D)                    ; \
+   ASSIGN(ARRAY4(EDI, MSG), B)  ; \
    AND(ARRAY4(EDI, MSG), C)     ; \
    OR(T, ARRAY4(EDI, MSG))      ; \
    ROTR_IMM(B, 2)               ; \
