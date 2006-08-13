@@ -99,39 +99,39 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    AND(T2, B)                       ; \
    XOR(T2, D)                       ; \
    ADD(E, T1)                       ; \
+   ASSIGN(T1, ARG(3))               ; \
    ROTR_IMM(B, 2)                   ; \
    ADD3_IMM(E, A, MAGIC1)           ; \
    ADD(E, T2)                       ; \
-   ASSIGN(T1, ARG(3))               ; \
    ASSIGN(T1, ARRAY4(T1, (N+1)))    ; \
    ROTR_IMM(A, 5)                   ;
 
 #define F2_4(A, B, C, D, E, N, MAGIC) \
    ROTL_IMM(A, 5)                   ; \
-   ADD(E, T1)                       ; \
    ASSIGN(T2, D)                    ; \
    XOR(T2, C)                       ; \
    XOR(T2, B)                       ; \
+   ADD(E, T1)                       ; \
+   ASSIGN(T1, ARG(3))               ; \
    ROTR_IMM(B, 2)                   ; \
    ADD3_IMM(E, A, MAGIC)            ; \
    ADD(E, T2)                       ; \
-   ASSIGN(T1, ARG(3))               ; \
    ASSIGN(T1, ARRAY4(T1, (N+1)))    ; \
    ROTR_IMM(A, 5)                   ;
 
 #define F3(A, B, C, D, E, N)          \
    ROTL_IMM(A, 5)                   ; \
-   ADD(E, T1)                       ; \
    ASSIGN(T2, B)                    ; \
    OR(T2, C)                        ; \
    AND(T2, D)                       ; \
+   ADD(E, T1)                       ; \
    ASSIGN(T1, B)                    ; \
    AND(T1, C)                       ; \
    OR(T2, T1)                       ; \
+   ASSIGN(T1, ARG(3))               ; \
    ROTR_IMM(B, 2)                   ; \
    ADD3_IMM(E, A, MAGIC3)           ; \
    ADD(E, T2)                       ; \
-   ASSIGN(T1, ARG(3))               ; \
    ASSIGN(T1, ARRAY4(T1, (N+1)))    ; \
    ROTR_IMM(A, 5)                   ;
 
