@@ -99,7 +99,7 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    ROTL_IMM(A, 5)               ; \
    XOR(TEMP, D)                 ; \
    ADD(E, A)                    ; \
-   AND(B, TEMP)                 ; \
+   AND(TEMP, B)                 ; \
    ROTR_IMM(B, 2)               ; \
    XOR(TEMP, D)                 ; \
    leal MAGIC1(E,TEMP,1), E     ; \
@@ -120,11 +120,11 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    ADD(E, ARRAY(EDI, MSG))      ; \
    ASSIGN(TEMP, B)              ; \
    ROTL_IMM(A, 5)               ; \
-   OR(C, TEMP)                  ; \
+   OR(TEMP, C)                  ; \
    ASSIGN(ARRAY(EDI, MSG), B)   ; \
-   AND(D, TEMP)                 ; \
-   AND(C, ARRAY(EDI, MSG))      ; \
-   OR(ARRAY(EDI, MSG), TEMP)    ; \
+   AND(TEMP, D)                 ; \
+   AND(ARRAY(EDI, MSG), C)      ; \
+   OR(TEMP, ARRAY(EDI, MSG))    ; \
    ADD(E, A)                    ; \
    leal MAGIC3(E,TEMP,1), E     ; \
    ROTR_IMM(B, 2)               ; \
@@ -137,11 +137,11 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    F2_OR_F4(A, B, C, D, E, TEMP, MSG, MAGIC4)
 
 #define F_BLOCK(F, MSG) \
-    F(EAX, EBX, ECX, EDX, ESI, EBP, (MSG+0)) \
-    F(ESI, EAX, EBX, ECX, EDX, EBP, (MSG+1)) \
-    F(EDX, ESI, EAX, EBX, ECX, EBP, (MSG+2)) \
-    F(ECX, EDX, ESI, EAX, EBX, EBP, (MSG+3)) \
-    F(EBX, ECX, EDX, ESI, EAX, EBP, (MSG+4))
+   F(EAX, EBX, ECX, EDX, ESI, EBP, (MSG+0)) \
+   F(ESI, EAX, EBX, ECX, EDX, EBP, (MSG+1)) \
+   F(EDX, ESI, EAX, EBX, ECX, EBP, (MSG+2)) \
+   F(ECX, EDX, ESI, EAX, EBX, EBP, (MSG+3)) \
+   F(EBX, ECX, EDX, ESI, EAX, EBP, (MSG+4))
 
    F_BLOCK(F1, 0)
    F_BLOCK(F1, 5)

@@ -50,9 +50,8 @@ func_name:
 #define ADD2_IMM(TO, FROM, NUM) leal NUM(FROM), TO
 
 #define XOR(TO, FROM) xorl FROM, TO
-
-#define AND(FROM, TO) andl FROM, TO
-#define OR(FROM, TO) orl FROM, TO
+#define AND(TO, FROM) andl FROM, TO
+#define OR(TO, FROM) orl FROM, TO
 #define ZEROIZE(REG) XOR(REG, REG)
 
 #define ROTL_IMM(REG, NUM) roll IMM(NUM), REG
