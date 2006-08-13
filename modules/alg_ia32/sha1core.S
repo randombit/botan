@@ -7,11 +7,8 @@
 
 START_LISTING(sha1core.S)
 
-FUNCTION(sha160_core)
-   PUSH(EBP)
-   PUSH(EDI)
-   PUSH(ESI)
-   PUSH(EBX)
+START_FUNCTION(sha160_core)
+   SPILL_REGS()
 
 #define PUSHED 4
 
@@ -103,19 +100,19 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    XOR(T, D)                    ; \
    ROTR_IMM(B, 2)               ; \
    ADD(E, A)                    ; \
-   ROTR_IMM(A, 5)               ; \
-   ADD3_IMM(E, T, MAGIC1)       ;
+   ADD3_IMM(E, T, MAGIC1)       ; \
+   ROTR_IMM(A, 5)               ;
    
 #define F2_OR_F4(A, B, C, D, E, T, MSG, MAGIC) \
    ROTL_IMM(A, 5)               ; \
    ADD(E, ARRAY4(EDI, MSG))     ; \
-   ASSIGN(T, B)                 ; \
-   XOR(T, D)                    ; \
+   ASSIGN(T, D)                 ; \
    XOR(T, C)                    ; \
+   XOR(T, B)                    ; \
    ROTR_IMM(B, 2)               ; \
    ADD(E, A)                    ; \
-   ROTR_IMM(A, 5)               ; \
-   ADD3_IMM(E, T, MAGIC)        ;
+   ADD3_IMM(E, T, MAGIC)        ; \
+   ROTR_IMM(A, 5)               ;
 
 #define F3(A, B, C, D, E, T, MSG) \
    ROTL_IMM(A, 5)               ; \
@@ -128,8 +125,8 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    OR(T, ARRAY4(EDI, MSG))      ; \
    ROTR_IMM(B, 2)               ; \
    ADD(E, A)                    ; \
-   ROTR_IMM(A, 5)               ; \
-   ADD3_IMM(E, T, MAGIC3)       ;
+   ADD3_IMM(E, T, MAGIC3)       ; \
+   ROTR_IMM(A, 5)               ;
 
 #define F2(A, B, C, D, E, T, MSG) \
    F2_OR_F4(A, B, C, D, E, T, MSG, MAGIC2)
@@ -144,6 +141,14 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    F(ECX, EDX, ESI, EAX, EBX, EBP, (MSG+3)) \
    F(EBX, ECX, EDX, ESI, EAX, EBP, (MSG+4))
 
+   #if 0
+   F2(EAX, EBX, ECX, EDX, ESI, EBP, 0)
+   F2(ESI, EAX, EBX, ECX, EDX, EBP, 1)
+   F2(EDX, ESI, EAX, EBX, ECX, EBP, 2)
+   F2(ECX, EDX, ESI, EAX, EBX, EBP, 3)
+   F2(EBX, ECX, EDX, ESI, EAX, EBP, 4)
+   #endif
+   
    F_BLOCK(F1, 0)
    F_BLOCK(F1, 5)
    F_BLOCK(F1, 10)
@@ -171,8 +176,5 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    ADD(ARRAY4(EBP, 3), EDX)
    ADD(ARRAY4(EBP, 4), ESI)
 
-   POP(EBX)
-   POP(ESI)
-   POP(EDI)
-   POP(EBP)
-   ret
+   RESTORE_REGS()
+END_FUNCTION(sha160_core)

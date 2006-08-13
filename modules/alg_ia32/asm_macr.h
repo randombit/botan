@@ -6,6 +6,9 @@
 #ifndef BOTAN_EXT_ASM_MACROS_H__
 #define BOTAN_EXT_ASM_MACROS_H__
 
+/*************************************************
+* General/Global Macros                          *
+*************************************************/
 #define ALIGN .p2align 4,,15
 
 #define START_LISTING(FILENAME) \
@@ -13,13 +16,22 @@
    .text;                       \
    .p2align 4,,15;
 
-#define FUNCTION(func_name)      \
-   .align   8;                   \
-   ALIGN;                        \
-   .global  func_name;           \
-   .type    func_name,@function; \
+/*************************************************
+* Function Definitions                           *
+*************************************************/
+#define START_FUNCTION(func_name) \
+   .align   8;                    \
+   ALIGN;                         \
+   .global  func_name;            \
+   .type    func_name,@function;  \
 func_name:
 
+#define END_FUNCTION(func_name) \
+   ret
+
+/*************************************************
+* Loop Control                                   *
+*************************************************/
 #define START_LOOP(LABEL) \
    ALIGN; \
    LABEL##_LOOP:
@@ -28,6 +40,9 @@ func_name:
    cmpl NUM, REG; \
    jne LABEL##_LOOP
 
+/*************************************************
+* Register Names                                 *
+*************************************************/
 #define EAX %eax
 #define EBX %ebx
 #define ECX %ecx
@@ -37,11 +52,9 @@ func_name:
 #define ESI %esi
 #define ESP %esp
 
-#define IMM(VAL) $VAL
-
-#define PUSH(REG) pushl REG
-#define POP(REG) popl REG
-
+/*************************************************
+* Memory Access Operations                       *
+*************************************************/
 #define ARRAY1(REG, NUM) NUM(REG)
 #define ARRAY4(REG, NUM) 4*NUM(REG)
 #define ARRAY4_INDIRECT(BASE, OFFSET, NUM) 4*NUM(BASE,OFFSET,4)
@@ -49,6 +62,26 @@ func_name:
 
 #define ASSIGN(TO, FROM) movl FROM, TO
 #define ASSIGN_BYTE(TO, FROM) movzbl FROM, TO
+
+#define PUSH(REG) pushl REG
+#define POP(REG) popl REG
+
+#define SPILL_REGS() \
+   PUSH(EBP) ; \
+   PUSH(EDI) ; \
+   PUSH(ESI) ; \
+   PUSH(EBX)
+
+#define RESTORE_REGS() \
+   POP(EBX) ;  \
+   POP(ESI) ;  \
+   POP(EDI) ;  \
+   POP(EBP)
+
+/*************************************************
+* ALU Operations                                 *
+*************************************************/
+#define IMM(VAL) $VAL
 
 #define ADD(TO, FROM) addl FROM, TO
 #define ADD_IMM(TO, NUM) addl IMM(NUM), TO
