@@ -45,8 +45,8 @@ func_name:
 #define ARRAY(REG, NUM) 4*NUM(REG)
 #define ARG(NUM) 4*PUSHED + ARRAY(ESP, NUM)
 
-#define ADD(FROM, TO) addl FROM, TO
-#define ADD_IMM(REG, NUM) addl IMM(NUM), REG 
+#define ADD(TO, FROM) addl FROM, TO
+#define ADD_IMM(TO, NUM) addl IMM(NUM), TO
 #define ADD2_IMM(TO, FROM, NUM) leal NUM(FROM), TO
 
 #define XOR(FROM, TO) xorl FROM, TO
