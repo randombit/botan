@@ -20,6 +20,10 @@
    .type    func_name,@function; \
 func_name:
 
+#define LOOP_UNTIL(REG, NUM, LABEL) \
+   cmpl NUM, REG; \
+   jne LABEL
+
 #define EAX %eax
 #define EBX %ebx
 #define ECX %ecx
@@ -33,6 +37,10 @@ func_name:
 
 
 #define ADD(FROM, TO) addl FROM, TO
+
+#define ARRAY(REG, NUM) 4*NUM(REG)
+
+#define BSWAP(REG) bswapl REG
 
 #define IMM(VAL) $VAL
 

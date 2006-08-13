@@ -24,31 +24,33 @@ FUNCTION(sha160_core)
 .LOAD_INPUT_LOOP:
    ADD(IMM(4), ESI)
 
-        movl    0(EBP), EAX
-        movl    4(EBP), EBX
-        movl    8(EBP), ECX
-        bswapl EAX
-        movl   12(EBP), EDX
-        bswapl EBX
-        addl $16, EBP
-        bswapl ECX
-        bswapl EDX
+   MOV(ARRAY(EBP, 0), EAX)
+   MOV(ARRAY(EBP, 1), EBX)
+   MOV(ARRAY(EBP, 2), ECX)
+   MOV(ARRAY(EBP, 3), EDX)
+
+   ADD(IMM(16), EBP)
+
+   BSWAP(EAX)
+   BSWAP(EBX)
+   BSWAP(ECX)
+   BSWAP(EDX)
 
         movl   EAX, -16(EDI,ESI,4)
         movl   EBX, -12(EDI,ESI,4)
         movl   ECX, -8(EDI,ESI,4)
         movl   EDX, -4(EDI,ESI,4)
 
-        cmpl $16, ESI
-        jne .LOAD_INPUT_LOOP
+   LOOP_UNTIL(ESI, IMM(16), .LOAD_INPUT_LOOP)
 
         leal    64(EDI), EBP
 
         ALIGN
 .EXPANSION_LOOP:
-        addl $4, ESI
+   ADD(IMM(4), ESI)
 
-        ZEROIZE(EAX)
+   ZEROIZE(EAX)
+       
         movl  -4(EBP), EBX
         movl  -8(EBP), ECX
         movl -12(EBP), EDX
@@ -83,7 +85,7 @@ FUNCTION(sha160_core)
 
         addl $16, EBP
         cmpl $80, ESI
-    jne .EXPANSION_LOOP
+   LOOP_UNTIL(ESI, IMM(80), .EXPANSION_LOOP)
 
    movl 20(%esp), EBP
    movl 0(EBP), EAX
