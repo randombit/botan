@@ -81,12 +81,12 @@ START_LOOP(.EXPANSION)
    ADD(IMM(16), EBP)
 LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
 
-   movl 20(%esp), EBP
-   movl 0(EBP), EAX
-   movl 4(EBP), EBX
-   movl 8(EBP), ECX
-   movl 12(EBP), EDX
-   movl 16(EBP), ESI
+   MOV(ARG(1), EBP)
+   MOV(ARRAY(EBP, 0), EAX)
+   MOV(ARRAY(EBP, 1), EBX)
+   MOV(ARRAY(EBP, 2), ECX)
+   MOV(ARRAY(EBP, 3), EDX)
+   MOV(ARRAY(EBP, 4), ESI)
 
 #define MAGIC1 0x5A827999
 #define MAGIC2 0x6ED9EBA1
@@ -163,15 +163,15 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    F_BLOCK(F4, 70)
    F_BLOCK(F4, 75)
 
-   movl 20(%esp), EBP
-   addl EAX, 0(EBP)
-   addl EBX, 4(EBP)
-   addl ECX, 8(EBP)
-   addl EDX, 12(EBP)
-   addl ESI, 16(EBP)
+   MOV(ARG(1), EBP)
+   ADD(EAX, ARRAY(EBP, 0))
+   ADD(EBX, ARRAY(EBP, 1))
+   ADD(ECX, ARRAY(EBP, 2))
+   ADD(EDX, ARRAY(EBP, 3))
+   ADD(ESI, ARRAY(EBP, 4))
 
-        popl    EBX
-        popl    ESI
-        popl    EDI
-        popl    EBP
-        ret
+   POP(EBX)
+   POP(ESI)
+   POP(EDI)
+   POP(EBP)
+   ret

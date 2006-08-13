@@ -37,6 +37,7 @@ func_name:
 #define ESI %esi
 
 #define PUSH(REG) pushl REG
+#define POP(REG) popl REG
 #define MOV(FROM, TO) movl FROM, TO
 
 
