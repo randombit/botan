@@ -52,25 +52,25 @@ START_LOOP(.EXPANSION)
    ASSIGN(ECX, ARRAY(EBP, -2))
    ASSIGN(EDX, ARRAY(EBP, -3))
 
-   XOR(ARRAY(EBP, -5), EAX)
-   XOR(ARRAY(EBP, -6), EBX)
-   XOR(ARRAY(EBP, -7), ECX)
-   XOR(ARRAY(EBP, -8), EDX)
+   XOR(EAX, ARRAY(EBP, -5))
+   XOR(EBX, ARRAY(EBP, -6))
+   XOR(ECX, ARRAY(EBP, -7))
+   XOR(EDX, ARRAY(EBP, -8))
 
-   XOR(ARRAY(EBP, -11), EAX)
-   XOR(ARRAY(EBP, -12), EBX)
-   XOR(ARRAY(EBP, -13), ECX)
-   XOR(ARRAY(EBP, -14), EDX)
+   XOR(EAX, ARRAY(EBP, -11))
+   XOR(EBX, ARRAY(EBP, -12))
+   XOR(ECX, ARRAY(EBP, -13))
+   XOR(EDX, ARRAY(EBP, -14))
 
-   XOR(ARRAY(EBP, -13), EAX)
-   XOR(ARRAY(EBP, -14), EBX)
-   XOR(ARRAY(EBP, -15), ECX)
-   XOR(ARRAY(EBP, -16), EDX)
+   XOR(EAX, ARRAY(EBP, -13))
+   XOR(EBX, ARRAY(EBP, -14))
+   XOR(ECX, ARRAY(EBP, -15))
+   XOR(EDX, ARRAY(EBP, -16))
 
    ROTL_IMM(EDX, 1)
    ROTL_IMM(ECX, 1)
    ROTL_IMM(EBX, 1)
-   XOR(EDX, EAX)
+   XOR(EAX, EDX)
    ROTL_IMM(EAX, 1)
 
    ASSIGN(ARRAY(EBP, 0), EDX)
@@ -97,11 +97,11 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    ADD(E, ARRAY(EDI, MSG))      ; \
    ASSIGN(TEMP, C)              ; \
    ROTL_IMM(A, 5)               ; \
-   XOR(D, TEMP)                 ; \
+   XOR(TEMP, D)                 ; \
    ADD(E, A)                    ; \
    AND(B, TEMP)                 ; \
    ROTR_IMM(B, 2)               ; \
-   XOR(D, TEMP)                 ; \
+   XOR(TEMP, D)                 ; \
    leal MAGIC1(E,TEMP,1), E     ; \
    ROTR_IMM(A, 5)               ; 
    
@@ -109,9 +109,9 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    ADD(E, ARRAY(EDI, MSG))      ; \
    ASSIGN(TEMP, B)              ; \
    ROTL_IMM(A, 5)               ; \
-   XOR(D, TEMP)                 ; \
+   XOR(TEMP, D)                 ; \
    ADD(E, A)                    ; \
-   XOR(C, TEMP)                 ; \
+   XOR(TEMP, C)                 ; \
    ROTR_IMM(B, 2)               ; \
    leal MAGIC(E,TEMP,1), E      ; \
    ROTR_IMM(A, 5)               ; 
