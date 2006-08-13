@@ -41,7 +41,7 @@ START_LOOP(.LOAD_INPUT)
         movl   EDX, -4(EDI,ESI,4)
 LOOP_UNTIL(ESI, IMM(16), .LOAD_INPUT)
 
-        leal    64(EDI), EBP
+   ADD2(EDI, 64, EBP)
 
 START_LOOP(.EXPANSION)
    ADD(IMM(4), ESI)
@@ -94,41 +94,41 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
 #define MAGIC4 0xCA62C1D6
 
 #define F1(A, B, C, D, E, TEMP, MSG) \
-   addl 4*MSG(EDI), E          ; \
-   movl C, TEMP                 ; \
-   roll $5, A                   ; \
-   xorl D, TEMP                 ; \
-   addl A, E                    ; \
-   andl B, TEMP                 ; \
-   rorl $2, B                   ; \
-   xorl D, TEMP                 ; \
+   ADD(ARRAY(EDI, MSG), E)      ; \
+   MOV(C, TEMP)                 ; \
+   ROTL(IMM(5), A)              ; \
+   XOR(D, TEMP)                 ; \
+   ADD(A, E)                    ; \
+   AND(B, TEMP)                 ; \
+   ROTR(IMM(2), B)              ; \
+   XOR(D, TEMP)                 ; \
    leal MAGIC1(E,TEMP,1), E     ; \
-   rorl $5, A                   ;
-
+   ROTR(IMM(5), A)              ; 
+   
 #define F2_OR_F4(A, B, C, D, E, TEMP, MSG, MAGIC) \
-   addl 4*MSG(EDI), E          ; \
-   movl B, TEMP                 ; \
-   roll $5, A                   ; \
-   xorl D, TEMP                 ; \
-   addl A, E                    ; \
-   xorl C, TEMP                 ; \
-   rorl $2, B                   ; \
+   ADD(ARRAY(EDI, MSG), E)      ; \
+   MOV(B, TEMP)                 ; \
+   ROTL(IMM(5), A)              ; \
+   XOR(D, TEMP)                 ; \
+   ADD(A, E)                    ; \
+   XOR(C, TEMP)                 ; \
+   ROTR(IMM(2), B)              ; \
    leal MAGIC(E,TEMP,1), E      ; \
-   rorl $5, A                   ;
+   ROTR(IMM(5), A)              ; 
 
 #define F3(A, B, C, D, E, TEMP, MSG) \
-   addl 4*MSG(EDI), E          ; \
-   movl B, TEMP                 ; \
-   roll $5, A                   ; \
-   orl  C, TEMP                 ; \
-   movl B, 4*MSG(EDI)          ; \
-   andl D, TEMP                 ; \
-   andl C, 4*MSG(EDI)          ; \
-   orl  4*MSG(EDI), TEMP       ; \
-   addl A, E                    ; \
+   ADD(ARRAY(EDI, MSG), E)      ; \
+   MOV(B, TEMP)                 ; \
+   ROTL(IMM(5), A)              ; \
+   OR(C, TEMP)                  ; \
+   MOV(B, ARRAY(EDI, MSG))      ; \
+   AND(D, TEMP)                 ; \
+   AND(C, ARRAY(EDI, MSG))      ; \
+   OR(ARRAY(EDI, MSG), TEMP)    ; \
+   ADD(A, E)                    ; \
    leal MAGIC3(E,TEMP,1), E     ; \
-   rorl $2, B                   ; \
-   rorl $5, A                   ;
+   ROTR(IMM(2), B)              ; \
+   ROTR(IMM(5), A)              ; 
 
 #define F2(A, B, C, D, E, TEMP, MSG) \
    F2_OR_F4(A, B, C, D, E, TEMP, MSG, MAGIC2)

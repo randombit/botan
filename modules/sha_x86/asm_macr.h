@@ -42,8 +42,13 @@ func_name:
 
 
 #define ADD(FROM, TO) addl FROM, TO
+#define ADD2(FROM, NUM, TO) leal NUM(FROM), TO
+
 #define XOR(FROM, TO) xorl FROM, TO
+#define AND(FROM, TO) andl FROM, TO
+#define OR(FROM, TO) orl FROM, TO
 #define ROTL(NUM, REG) roll NUM, REG
+#define ROTR(NUM, REG) rorl NUM, REG
 
 
 #define ARRAY(REG, NUM) 4*NUM(REG)
