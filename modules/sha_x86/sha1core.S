@@ -94,41 +94,41 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
 #define MAGIC4 0xCA62C1D6
 
 #define F1(A, B, C, D, E, TEMP, MSG) \
+   ROTL_IMM(A, 5)               ; \
    ADD(E, ARRAY(EDI, MSG))      ; \
    ASSIGN(TEMP, C)              ; \
-   ROTL_IMM(A, 5)               ; \
    XOR(TEMP, D)                 ; \
-   ADD(E, A)                    ; \
    AND(TEMP, B)                 ; \
-   ROTR_IMM(B, 2)               ; \
    XOR(TEMP, D)                 ; \
-   ADD3_IMM(E, TEMP, MAGIC1)    ; \
-   ROTR_IMM(A, 5)               ; 
+   ROTR_IMM(B, 2)               ; \
+   ADD(E, A)                    ; \
+   ROTR_IMM(A, 5)               ; \
+   ADD3_IMM(E, TEMP, MAGIC1)    ;
    
 #define F2_OR_F4(A, B, C, D, E, TEMP, MSG, MAGIC) \
+   ROTL_IMM(A, 5)               ; \
    ADD(E, ARRAY(EDI, MSG))      ; \
    ASSIGN(TEMP, B)              ; \
-   ROTL_IMM(A, 5)               ; \
    XOR(TEMP, D)                 ; \
-   ADD(E, A)                    ; \
    XOR(TEMP, C)                 ; \
    ROTR_IMM(B, 2)               ; \
-   ADD3_IMM(E, TEMP, MAGIC)     ; \
-   ROTR_IMM(A, 5)               ; 
+   ADD(E, A)                    ; \
+   ROTR_IMM(A, 5)               ; \
+   ADD3_IMM(E, TEMP, MAGIC)     ;
 
 #define F3(A, B, C, D, E, TEMP, MSG) \
+   ROTL_IMM(A, 5)               ; \
    ADD(E, ARRAY(EDI, MSG))      ; \
    ASSIGN(TEMP, B)              ; \
-   ROTL_IMM(A, 5)               ; \
    OR(TEMP, C)                  ; \
    ASSIGN(ARRAY(EDI, MSG), B)   ; \
    AND(TEMP, D)                 ; \
    AND(ARRAY(EDI, MSG), C)      ; \
    OR(TEMP, ARRAY(EDI, MSG))    ; \
-   ADD(E, A)                    ; \
-   ADD3_IMM(E, TEMP, MAGIC3)    ; \
    ROTR_IMM(B, 2)               ; \
-   ROTR_IMM(A, 5)               ; 
+   ADD(E, A)                    ; \
+   ROTR_IMM(A, 5)               ; \
+   ADD3_IMM(E, TEMP, MAGIC3)    ;
 
 #define F2(A, B, C, D, E, TEMP, MSG) \
    F2_OR_F4(A, B, C, D, E, TEMP, MSG, MAGIC2)
