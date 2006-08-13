@@ -89,11 +89,14 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
 #define MAGIC3 0x8F1BBCDC
 #define MAGIC4 0xCA62C1D6
 
+#define T1 EDI
 #define T2 EBP
 
-#define F1(A, B, C, D, E, MSG)     \
+#define MSG(N) ARRAY4(EDI, N)
+
+#define F1(A, B, C, D, E, N)       \
    ROTL_IMM(A, 5)                ; \
-   ADD(E, ARRAY4(EDI, MSG))      ; \
+   ADD(E, MSG(N))                ; \
    ASSIGN(T2, C)                 ; \
    XOR(T2, D)                    ; \
    AND(T2, B)                    ; \
@@ -103,9 +106,9 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    ADD(E, T2)                    ; \
    ROTR_IMM(A, 5)                ;
 
-#define F2_4(A, B, C, D, E, MSG, MAGIC) \
+#define F2_4(A, B, C, D, E, N, MAGIC) \
    ROTL_IMM(A, 5)                   ; \
-   ADD(E, ARRAY4(EDI, MSG))         ; \
+   ADD(E, MSG(N))                   ; \
    ASSIGN(T2, D)                    ; \
    XOR(T2, C)                       ; \
    XOR(T2, B)                       ; \
@@ -114,15 +117,15 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    ADD(E, T2)                       ; \
    ROTR_IMM(A, 5)                   ;
 
-#define F3(A, B, C, D, E, MSG)     \
+#define F3(A, B, C, D, E, N)       \
    ROTL_IMM(A, 5)                ; \
-   ADD(E, ARRAY4(EDI, MSG))      ; \
+   ADD(E, MSG(N))                ; \
    ASSIGN(T2, B)                 ; \
    OR(T2, C)                     ; \
    AND(T2, D)                    ; \
-   ASSIGN(ARRAY4(EDI, MSG), B)   ; \
-   AND(ARRAY4(EDI, MSG), C)      ; \
-   OR(T2, ARRAY4(EDI, MSG))      ; \
+   ASSIGN(MSG(N), B)             ; \
+   AND(MSG(N), C)                ; \
+   OR(T2, MSG(N))                ; \
    ROTR_IMM(B, 2)                ; \
    ADD3_IMM(E, A, MAGIC3)        ; \
    ADD(E, T2)                    ; \
@@ -146,6 +149,7 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    F_BLOCK(F1, 10)
    F_BLOCK(F1, 15)
 
+   ASSIGN(EDI, ARG(3))
    F_BLOCK(F2, 20)
    F_BLOCK(F2, 25)
    F_BLOCK(F2, 30)
