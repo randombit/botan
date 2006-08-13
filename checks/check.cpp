@@ -25,7 +25,7 @@ const std::string EXPECTED_FAIL_FILE = "checks/fail.dat";
 
 void benchmark(const std::string&, bool html, double seconds);
 void bench_pk(const std::string&, bool html, double seconds);
-u32bit bench_algo(const std::string&);
+u32bit bench_algo(const std::string&, double);
 int validate();
 void print_help();
 
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
       if(opts.is_set("bench-algo"))
          {
          const std::string alg = opts.value("bench-algo");
-         u32bit found = bench_algo(alg);
+         u32bit found = bench_algo(alg, seconds);
          if(!found) // maybe it's a PK algorithm
             bench_pk(alg, false, seconds);
          }

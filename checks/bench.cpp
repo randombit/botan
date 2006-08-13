@@ -149,7 +149,7 @@ void benchmark(const std::string& what, bool html, double seconds)
       }
    }
 
-u32bit bench_algo(const std::string& name)
+u32bit bench_algo(const std::string& name, double seconds)
    {
    try {
       std::vector<algorithm> algos = get_algos();
@@ -158,7 +158,7 @@ u32bit bench_algo(const std::string& name)
          {
          if(algos[j].name == name)
             {
-            bench(algos[j].name, algos[j].filtername, false, 3.0,
+            bench(algos[j].name, algos[j].filtername, false, seconds,
                   algos[j].keylen, algos[j].ivlen);
             return 1;
             }
