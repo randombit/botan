@@ -23,10 +23,10 @@ FUNCTION(sha160_core)
 START_LOOP(.LOAD_INPUT)
    ADD_IMM(ESI, 4)
 
-   ASSIGN(EAX, ARRAY(EBP, 0))
-   ASSIGN(EBX, ARRAY(EBP, 1))
-   ASSIGN(ECX, ARRAY(EBP, 2))
-   ASSIGN(EDX, ARRAY(EBP, 3))
+   ASSIGN(EAX, ARRAY4(EBP, 0))
+   ASSIGN(EBX, ARRAY4(EBP, 1))
+   ASSIGN(ECX, ARRAY4(EBP, 2))
+   ASSIGN(EDX, ARRAY4(EBP, 3))
 
    ADD_IMM(EBP, 16)
 
@@ -35,10 +35,10 @@ START_LOOP(.LOAD_INPUT)
    BSWAP(ECX)
    BSWAP(EDX)
 
-   ASSIGN(ARRAY_INDIRECT(EDI,ESI,-4), EAX)
-   ASSIGN(ARRAY_INDIRECT(EDI,ESI,-3), EBX)
-   ASSIGN(ARRAY_INDIRECT(EDI,ESI,-2), ECX)
-   ASSIGN(ARRAY_INDIRECT(EDI,ESI,-1), EDX)
+   ASSIGN(ARRAY4_INDIRECT(EDI,ESI,-4), EAX)
+   ASSIGN(ARRAY4_INDIRECT(EDI,ESI,-3), EBX)
+   ASSIGN(ARRAY4_INDIRECT(EDI,ESI,-2), ECX)
+   ASSIGN(ARRAY4_INDIRECT(EDI,ESI,-1), EDX)
 
 LOOP_UNTIL(ESI, IMM(16), .LOAD_INPUT)
 
@@ -49,24 +49,24 @@ START_LOOP(.EXPANSION)
 
    ZEROIZE(EAX)
 
-   ASSIGN(EBX, ARRAY(EBP, -1))
-   ASSIGN(ECX, ARRAY(EBP, -2))
-   ASSIGN(EDX, ARRAY(EBP, -3))
+   ASSIGN(EBX, ARRAY4(EBP, -1))
+   ASSIGN(ECX, ARRAY4(EBP, -2))
+   ASSIGN(EDX, ARRAY4(EBP, -3))
 
-   XOR(EAX, ARRAY(EBP, -5))
-   XOR(EBX, ARRAY(EBP, -6))
-   XOR(ECX, ARRAY(EBP, -7))
-   XOR(EDX, ARRAY(EBP, -8))
+   XOR(EAX, ARRAY4(EBP, -5))
+   XOR(EBX, ARRAY4(EBP, -6))
+   XOR(ECX, ARRAY4(EBP, -7))
+   XOR(EDX, ARRAY4(EBP, -8))
 
-   XOR(EAX, ARRAY(EBP, -11))
-   XOR(EBX, ARRAY(EBP, -12))
-   XOR(ECX, ARRAY(EBP, -13))
-   XOR(EDX, ARRAY(EBP, -14))
+   XOR(EAX, ARRAY4(EBP, -11))
+   XOR(EBX, ARRAY4(EBP, -12))
+   XOR(ECX, ARRAY4(EBP, -13))
+   XOR(EDX, ARRAY4(EBP, -14))
 
-   XOR(EAX, ARRAY(EBP, -13))
-   XOR(EBX, ARRAY(EBP, -14))
-   XOR(ECX, ARRAY(EBP, -15))
-   XOR(EDX, ARRAY(EBP, -16))
+   XOR(EAX, ARRAY4(EBP, -13))
+   XOR(EBX, ARRAY4(EBP, -14))
+   XOR(ECX, ARRAY4(EBP, -15))
+   XOR(EDX, ARRAY4(EBP, -16))
 
    ROTL_IMM(EDX, 1)
    ROTL_IMM(ECX, 1)
@@ -74,68 +74,68 @@ START_LOOP(.EXPANSION)
    XOR(EAX, EDX)
    ROTL_IMM(EAX, 1)
 
-   ASSIGN(ARRAY(EBP, 0), EDX)
-   ASSIGN(ARRAY(EBP, 1), ECX)
-   ASSIGN(ARRAY(EBP, 2), EBX)
-   ASSIGN(ARRAY(EBP, 3), EAX)
+   ASSIGN(ARRAY4(EBP, 0), EDX)
+   ASSIGN(ARRAY4(EBP, 1), ECX)
+   ASSIGN(ARRAY4(EBP, 2), EBX)
+   ASSIGN(ARRAY4(EBP, 3), EAX)
 
    ADD_IMM(EBP, 16)
 LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
 
    ASSIGN(EBP, ARG(1))
-   ASSIGN(EAX, ARRAY(EBP, 0))
-   ASSIGN(EBX, ARRAY(EBP, 1))
-   ASSIGN(ECX, ARRAY(EBP, 2))
-   ASSIGN(EDX, ARRAY(EBP, 3))
-   ASSIGN(ESI, ARRAY(EBP, 4))
+   ASSIGN(EAX, ARRAY4(EBP, 0))
+   ASSIGN(EBX, ARRAY4(EBP, 1))
+   ASSIGN(ECX, ARRAY4(EBP, 2))
+   ASSIGN(EDX, ARRAY4(EBP, 3))
+   ASSIGN(ESI, ARRAY4(EBP, 4))
 
 #define MAGIC1 0x5A827999
 #define MAGIC2 0x6ED9EBA1
 #define MAGIC3 0x8F1BBCDC
 #define MAGIC4 0xCA62C1D6
 
-#define F1(A, B, C, D, E, TEMP, MSG) \
+#define F1(A, B, C, D, E, T, MSG) \
    ROTL_IMM(A, 5)               ; \
-   ADD(E, ARRAY(EDI, MSG))      ; \
-   ASSIGN(TEMP, C)              ; \
-   XOR(TEMP, D)                 ; \
-   AND(TEMP, B)                 ; \
-   XOR(TEMP, D)                 ; \
+   ADD(E, ARRAY4(EDI, MSG))     ; \
+   ASSIGN(T, C)                 ; \
+   XOR(T, D)                    ; \
+   AND(T, B)                    ; \
+   XOR(T, D)                    ; \
    ROTR_IMM(B, 2)               ; \
    ADD(E, A)                    ; \
    ROTR_IMM(A, 5)               ; \
-   ADD3_IMM(E, TEMP, MAGIC1)    ;
+   ADD3_IMM(E, T, MAGIC1)       ;
    
-#define F2_OR_F4(A, B, C, D, E, TEMP, MSG, MAGIC) \
+#define F2_OR_F4(A, B, C, D, E, T, MSG, MAGIC) \
    ROTL_IMM(A, 5)               ; \
-   ADD(E, ARRAY(EDI, MSG))      ; \
-   ASSIGN(TEMP, B)              ; \
-   XOR(TEMP, D)                 ; \
-   XOR(TEMP, C)                 ; \
+   ADD(E, ARRAY4(EDI, MSG))     ; \
+   ASSIGN(T, B)                 ; \
+   XOR(T, D)                    ; \
+   XOR(T, C)                    ; \
    ROTR_IMM(B, 2)               ; \
    ADD(E, A)                    ; \
    ROTR_IMM(A, 5)               ; \
-   ADD3_IMM(E, TEMP, MAGIC)     ;
+   ADD3_IMM(E, T, MAGIC)        ;
 
-#define F3(A, B, C, D, E, TEMP, MSG) \
+#define F3(A, B, C, D, E, T, MSG) \
    ROTL_IMM(A, 5)               ; \
-   ADD(E, ARRAY(EDI, MSG))      ; \
-   ASSIGN(TEMP, B)              ; \
-   OR(TEMP, C)                  ; \
-   ASSIGN(ARRAY(EDI, MSG), B)   ; \
-   AND(TEMP, D)                 ; \
-   AND(ARRAY(EDI, MSG), C)      ; \
-   OR(TEMP, ARRAY(EDI, MSG))    ; \
+   ADD(E, ARRAY4(EDI, MSG))     ; \
+   ASSIGN(T, B)                 ; \
+   OR(T, C)                     ; \
+   ASSIGN(ARRAY4(EDI, MSG), B)  ; \
+   AND(T, D)                    ; \
+   AND(ARRAY4(EDI, MSG), C)     ; \
+   OR(T, ARRAY4(EDI, MSG))      ; \
    ROTR_IMM(B, 2)               ; \
    ADD(E, A)                    ; \
    ROTR_IMM(A, 5)               ; \
-   ADD3_IMM(E, TEMP, MAGIC3)    ;
+   ADD3_IMM(E, T, MAGIC3)       ;
 
-#define F2(A, B, C, D, E, TEMP, MSG) \
-   F2_OR_F4(A, B, C, D, E, TEMP, MSG, MAGIC2)
+#define F2(A, B, C, D, E, T, MSG) \
+   F2_OR_F4(A, B, C, D, E, T, MSG, MAGIC2)
 
-#define F4(A, B, C, D, E, TEMP, MSG) \
-   F2_OR_F4(A, B, C, D, E, TEMP, MSG, MAGIC4)
+#define F4(A, B, C, D, E, T, MSG) \
+   F2_OR_F4(A, B, C, D, E, T, MSG, MAGIC4)
 
 #define F_BLOCK(F, MSG) \
    F(EAX, EBX, ECX, EDX, ESI, EBP, (MSG+0)) \
@@ -165,11 +165,11 @@ LOOP_UNTIL(ESI, IMM(80), .EXPANSION)
    F_BLOCK(F4, 75)
 
    ASSIGN(EBP, ARG(1))
-   ADD(ARRAY(EBP, 0), EAX)
-   ADD(ARRAY(EBP, 1), EBX)
-   ADD(ARRAY(EBP, 2), ECX)
-   ADD(ARRAY(EBP, 3), EDX)
-   ADD(ARRAY(EBP, 4), ESI)
+   ADD(ARRAY4(EBP, 0), EAX)
+   ADD(ARRAY4(EBP, 1), EBX)
+   ADD(ARRAY4(EBP, 2), ECX)
+   ADD(ARRAY4(EBP, 3), EDX)
+   ADD(ARRAY4(EBP, 4), ESI)
 
    POP(EBX)
    POP(ESI)
