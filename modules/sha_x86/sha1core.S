@@ -1,93 +1,96 @@
-   .file "sha1core.S"
-   .text
-   .p2align 4,,15
+/*************************************************
+* SHA-160 Source File                            *
+* (C) 1999-2006 The Botan Project                *
+*************************************************/
 
-.global sha160_core
-   .type   sha160_core, @function
-sha160_core:
-        pushl   %ebp
-        pushl   %edi
-        pushl   %esi
-        pushl   %ebx
+#include <botan/asm_macr.h>
 
-        movl    24(%esp), %ebp   # byte input[64]
-        movl    28(%esp), %edi   # u32bit W[80]
+START_LISTING(sha1core.S)
 
-        movl    $0, %esi  # loop counter
+FUNCTION(sha160_core)
+   PUSH(EBP)
+   PUSH(EDI)
+   PUSH(ESI)
+   PUSH(EBX)
 
-        .p2align 4,,7
+#define PUSHED 4
+
+   MOV(ARG(2), EBP)
+   MOV(ARG(3), EDI)
+
+   ZEROIZE(ESI)
+
+   ALIGN
 .LOAD_INPUT_LOOP:
-        movl    0(%ebp), %eax
-        bswapl %eax
+   ADD(IMM(4), ESI)
 
-        movl    4(%ebp), %ebx
-        bswapl %ebx
-        movl   %eax, 0(%edi,%esi,4)
+        movl    0(EBP), EAX
+        movl    4(EBP), EBX
+        movl    8(EBP), ECX
+        bswapl EAX
+        movl   12(EBP), EDX
+        bswapl EBX
+        addl $16, EBP
+        bswapl ECX
+        bswapl EDX
 
-        movl    8(%ebp), %ecx
-        bswapl %ecx
-        movl   %ebx, 4(%edi,%esi,4)
+        movl   EAX, -16(EDI,ESI,4)
+        movl   EBX, -12(EDI,ESI,4)
+        movl   ECX, -8(EDI,ESI,4)
+        movl   EDX, -4(EDI,ESI,4)
 
-        movl   12(%ebp), %edx
-        bswapl %edx
-        movl   %ecx, 8(%edi,%esi,4)
+        cmpl $16, ESI
+        jne .LOAD_INPUT_LOOP
 
-        movl   %edx, 12(%edi,%esi,4)
+        leal    64(EDI), EBP
 
-        addl  $4, %esi
-        addl $16, %ebp
-        cmpl $16, %esi
-     jne        .LOAD_INPUT_LOOP
-
-        leal    64(%edi), %ebp
-
-        .p2align 4,,7
+        ALIGN
 .EXPANSION_LOOP:
-        addl $4, %esi
+        addl $4, ESI
 
-        xorl     %eax,  %eax
-        movl  -4(%ebp), %ebx
-        movl  -8(%ebp), %ecx
-        movl -12(%ebp), %edx
+        ZEROIZE(EAX)
+        movl  -4(EBP), EBX
+        movl  -8(EBP), ECX
+        movl -12(EBP), EDX
 
-        xorl -20(%ebp), %eax
-        xorl -24(%ebp), %ebx
-        xorl -28(%ebp), %ecx
-        xorl -32(%ebp), %edx
+        xorl -20(EBP), EAX
+        xorl -24(EBP), EBX
+        xorl -28(EBP), ECX
+        xorl -32(EBP), EDX
 
-        xorl -44(%ebp), %eax
-        xorl -48(%ebp), %ebx
-        xorl -52(%ebp), %ecx
-        xorl -52(%ebp), %eax
+        xorl -44(EBP), EAX
+        xorl -48(EBP), EBX
+        xorl -52(EBP), ECX
+        xorl -56(EBP), EDX
 
-        xorl -56(%ebp), %edx
-        xorl -56(%ebp), %ebx
-        xorl -60(%ebp), %ecx
-        xorl -64(%ebp), %edx
+        xorl -52(EBP), EAX
+        xorl -56(EBP), EBX
+        xorl -60(EBP), ECX
+        xorl -64(EBP), EDX
 
-        roll $1, %edx
+        roll $1, EDX
 
-        roll $1, %ecx
-        movl %edx, (%ebp)
+        roll $1, ECX
+        movl EDX, (EBP)
 
-        roll $1, %ebx
-        movl %ecx, 4(%ebp)
+        roll $1, EBX
+        movl ECX, 4(EBP)
 
-        xorl %edx, %eax
-        movl %ebx, 8(%ebp)
-        roll $1, %eax
-        movl %eax, 12(%ebp)
+        xorl EDX, EAX
+        movl EBX, 8(EBP)
+        roll $1, EAX
+        movl EAX, 12(EBP)
 
-        addl $16, %ebp
-        cmpl $80, %esi
+        addl $16, EBP
+        cmpl $80, ESI
     jne .EXPANSION_LOOP
 
-   movl 20(%esp), %ebp
-   movl 0(%ebp), %eax
-   movl 4(%ebp), %ebx
-   movl 8(%ebp), %ecx
-   movl 12(%ebp), %edx
-   movl 16(%ebp), %esi
+   movl 20(%esp), EBP
+   movl 0(EBP), EAX
+   movl 4(EBP), EBX
+   movl 8(EBP), ECX
+   movl 12(EBP), EDX
+   movl 16(EBP), ESI
 
 #define MAGIC1 0x5A827999
 #define MAGIC2 0x6ED9EBA1
@@ -95,7 +98,7 @@ sha160_core:
 #define MAGIC4 0xCA62C1D6
 
 #define F1(A, B, C, D, E, TEMP, MSG) \
-   addl 4*MSG(%edi), E          ; \
+   addl 4*MSG(EDI), E          ; \
    movl C, TEMP                 ; \
    roll $5, A                   ; \
    xorl D, TEMP                 ; \
@@ -107,7 +110,7 @@ sha160_core:
    rorl $5, A                   ;
 
 #define F2_OR_F4(A, B, C, D, E, TEMP, MSG, MAGIC) \
-   addl 4*MSG(%edi), E          ; \
+   addl 4*MSG(EDI), E          ; \
    movl B, TEMP                 ; \
    roll $5, A                   ; \
    xorl D, TEMP                 ; \
@@ -118,14 +121,14 @@ sha160_core:
    rorl $5, A                   ;
 
 #define F3(A, B, C, D, E, TEMP, MSG) \
-   addl 4*MSG(%edi), E          ; \
+   addl 4*MSG(EDI), E          ; \
    movl B, TEMP                 ; \
    roll $5, A                   ; \
    orl  C, TEMP                 ; \
-   movl B, (%edi)               ; \
+   movl B, 4*MSG(EDI)          ; \
    andl D, TEMP                 ; \
-   andl C, (%edi)               ; \
-   orl  (%edi), TEMP            ; \
+   andl C, 4*MSG(EDI)          ; \
+   orl  4*MSG(EDI), TEMP       ; \
    addl A, E                    ; \
    leal MAGIC3(E,TEMP,1), E     ; \
    rorl $2, B                   ; \
@@ -138,11 +141,11 @@ sha160_core:
    F2_OR_F4(A, B, C, D, E, TEMP, MSG, MAGIC4)
 
 #define F_BLOCK(F, MSG) \
-    F(%eax, %ebx, %ecx, %edx, %esi, %ebp, (MSG+0)) \
-    F(%esi, %eax, %ebx, %ecx, %edx, %ebp, (MSG+1)) \
-    F(%edx, %esi, %eax, %ebx, %ecx, %ebp, (MSG+2)) \
-    F(%ecx, %edx, %esi, %eax, %ebx, %ebp, (MSG+3)) \
-    F(%ebx, %ecx, %edx, %esi, %eax, %ebp, (MSG+4))
+    F(EAX, EBX, ECX, EDX, ESI, EBP, (MSG+0)) \
+    F(ESI, EAX, EBX, ECX, EDX, EBP, (MSG+1)) \
+    F(EDX, ESI, EAX, EBX, ECX, EBP, (MSG+2)) \
+    F(ECX, EDX, ESI, EAX, EBX, EBP, (MSG+3)) \
+    F(EBX, ECX, EDX, ESI, EAX, EBP, (MSG+4))
 
    F_BLOCK(F1, 0)
    F_BLOCK(F1, 5)
@@ -164,15 +167,15 @@ sha160_core:
    F_BLOCK(F4, 70)
    F_BLOCK(F4, 75)
 
-   movl 20(%esp), %ebp
-   addl %eax, 0(%ebp)
-   addl %ebx, 4(%ebp)
-   addl %ecx, 8(%ebp)
-   addl %edx, 12(%ebp)
-   addl %esi, 16(%ebp)
+   movl 20(%esp), EBP
+   addl EAX, 0(EBP)
+   addl EBX, 4(EBP)
+   addl ECX, 8(EBP)
+   addl EDX, 12(EBP)
+   addl ESI, 16(EBP)
 
-        popl    %ebx
-        popl    %esi
-        popl    %edi
-        popl    %ebp
+        popl    EBX
+        popl    ESI
+        popl    EDI
+        popl    EBP
         ret
