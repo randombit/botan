@@ -33,11 +33,15 @@ func_name:
 * Loop Control                                   *
 *************************************************/
 #define START_LOOP(LABEL) \
-   ALIGN; \
+   ALIGN;                 \
    LABEL##_LOOP:
 
+#define LOOP_UNTIL_EQ(REG, NUM, LABEL) \
+   cmpl IMM(NUM), REG;                 \
+   jne LABEL##_LOOP
+
 #define LOOP_UNTIL(REG, NUM, LABEL) \
-   cmpl NUM, REG; \
+   cmpl NUM, REG;                   \
    jne LABEL##_LOOP
 
 /*************************************************
@@ -88,6 +92,8 @@ func_name:
 #define SUB_IMM(TO, NUM) subl IMM(NUM), TO
 #define ADD2_IMM(TO, FROM, NUM) leal NUM(FROM), TO
 #define ADD3_IMM(TO, FROM, NUM) leal NUM(TO,FROM,1), TO
+
+#define CLEAR_CARRY() clc
 
 #define SHL_IMM(REG, SHIFT) shll IMM(SHIFT), REG
 #define SHR_IMM(REG, SHIFT) shrl IMM(SHIFT), REG
