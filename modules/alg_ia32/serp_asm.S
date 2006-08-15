@@ -443,7 +443,6 @@ START_LISTING(serp_asm.S)
 *************************************************/
 START_FUNCTION(serpent_encrypt)
    SPILL_REGS()
-
 #define PUSHED 4
 
    ASSIGN(EBP, ARG(1)) /* input block */
@@ -507,6 +506,7 @@ START_FUNCTION(serpent_encrypt)
    ASSIGN(ARRAY4(EBP, 3), EDX)
 
    RESTORE_REGS()
+#undef PUSHED
 END_FUNCTION(serpent_encrypt)
 
 /*************************************************
@@ -514,6 +514,7 @@ END_FUNCTION(serpent_encrypt)
 *************************************************/
 START_FUNCTION(serpent_decrypt)
    SPILL_REGS()
+#define PUSHED 4
 
    ASSIGN(EBP, ARG(1)) /* input block */
    ASSIGN(EDI, ARG(3)) /* round keys */
@@ -576,6 +577,7 @@ START_FUNCTION(serpent_decrypt)
    ASSIGN(ARRAY4(EBP, 3), EDX)
 
    RESTORE_REGS()
+#undef PUSHED
 END_FUNCTION(serpent_decrypt)
 
 /*************************************************
@@ -583,21 +585,25 @@ END_FUNCTION(serpent_decrypt)
 *************************************************/
 START_FUNCTION(serpent_key_schedule)
    SPILL_REGS()
+#define PUSHED 4
 
    ASSIGN(EDI, ARG(1)) /* round keys */
    ASSIGN(ESI, IMM(8))
    ADD_IMM(EDI, 32)
 
 START_LOOP(.EXPANSION)
+   ASSIGN(EAX, ARRAY4(EDI, -1))
+   ASSIGN(EBX, ARRAY4(EDI, -3))
+   ASSIGN(ECX, ARRAY4(EDI, -5))
+   ASSIGN(EDX, ARRAY4(EDI, -8))
 
-   ASSIGN(EAX, ESI)
-   SUB_IMM(EAX, 8)
-
-   XOR(EAX, ARRAY4(EDI, -1))
-   XOR(EAX, ARRAY4(EDI, -3))
-   XOR(EAX, ARRAY4(EDI, -5))
-   XOR(EAX, ARRAY4(EDI, -8))
-   XOR(EAX, IMM(0x9E3779B9))
+   ASSIGN(EBP, ESI)
+   SUB_IMM(EBP, 8)
+   XOR(EBP, IMM(0x9E3779B9))
+   XOR(EAX, EBX)
+   XOR(ECX, EDX)
+   XOR(EAX, EBP)
+   XOR(EAX, ECX)
 
    ROTL_IMM(EAX, 11)
 
@@ -606,7 +612,6 @@ START_LOOP(.EXPANSION)
    ADD_IMM(EDI, 4)
    ADD_IMM(ESI, 1)
 LOOP_UNTIL(ESI, IMM(140), .EXPANSION)
-
 
    ASSIGN(EDI, ARG(1)) /* round keys */
 
@@ -660,5 +665,6 @@ LOOP_UNTIL(ESI, IMM(140), .EXPANSION)
    LOAD_AND_SBOX(32, SBOX_E4)
 
    RESTORE_REGS()
+#undef PUSHED
 END_FUNCTION(serpent_key_schedule)
 

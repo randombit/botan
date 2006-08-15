@@ -43,7 +43,6 @@ void Serpent::key(const byte key[], u32bit length)
    W[length / 4] |= u32bit(1) << ((length%4)*8);
 
    serpent_key_schedule(W);
-
    round_key.copy(W + 8, 132);
    }
 
