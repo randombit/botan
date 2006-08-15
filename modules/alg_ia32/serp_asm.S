@@ -438,6 +438,9 @@ START_LISTING(serp_asm.S)
    XOR(C, ARRAY4(EDI, (4*N+2)))  ; \
    XOR(D, ARRAY4(EDI, (4*N+3)))  ; \
 
+/*************************************************
+* Serpent Encryption                             *
+*************************************************/
 START_FUNCTION(serpent_encrypt)
    SPILL_REGS()
 
@@ -506,6 +509,9 @@ START_FUNCTION(serpent_encrypt)
    RESTORE_REGS()
 END_FUNCTION(serpent_encrypt)
 
+/*************************************************
+* Serpent Decryption                             *
+*************************************************/
 START_FUNCTION(serpent_decrypt)
    SPILL_REGS()
 
@@ -571,4 +577,88 @@ START_FUNCTION(serpent_decrypt)
 
    RESTORE_REGS()
 END_FUNCTION(serpent_decrypt)
+
+/*************************************************
+* Serpent Key Schedule                           *
+*************************************************/
+START_FUNCTION(serpent_key_schedule)
+   SPILL_REGS()
+
+   ASSIGN(EDI, ARG(1)) /* round keys */
+   ASSIGN(ESI, IMM(8))
+   ADD_IMM(EDI, 32)
+
+START_LOOP(.EXPANSION)
+
+   ASSIGN(EAX, ESI)
+   SUB_IMM(EAX, 8)
+
+   XOR(EAX, ARRAY4(EDI, -1))
+   XOR(EAX, ARRAY4(EDI, -3))
+   XOR(EAX, ARRAY4(EDI, -5))
+   XOR(EAX, ARRAY4(EDI, -8))
+   XOR(EAX, IMM(0x9E3779B9))
+
+   ROTL_IMM(EAX, 11)
+
+   ASSIGN(ARRAY4(EDI, 0), EAX)
+
+   ADD_IMM(EDI, 4)
+   ADD_IMM(ESI, 1)
+LOOP_UNTIL(ESI, IMM(140), .EXPANSION)
+
+
+   ASSIGN(EDI, ARG(1)) /* round keys */
+
+#define LOAD_AND_SBOX(MSG, SBOX)          \
+   ASSIGN(EAX, ARRAY4(EDI, (4*MSG+ 8))) ; \
+   ASSIGN(EBX, ARRAY4(EDI, (4*MSG+ 9))) ; \
+   ASSIGN(ECX, ARRAY4(EDI, (4*MSG+10))) ; \
+   ASSIGN(EDX, ARRAY4(EDI, (4*MSG+11))) ; \
+   SBOX(EAX, EBX, ECX, EDX, EBP)        ; \
+   ASSIGN(ARRAY4(EDI, (4*MSG+ 8)), EAX) ; \
+   ASSIGN(ARRAY4(EDI, (4*MSG+ 9)), EBX) ; \
+   ASSIGN(ARRAY4(EDI, (4*MSG+10)), ECX) ; \
+   ASSIGN(ARRAY4(EDI, (4*MSG+11)), EDX)
+
+   LOAD_AND_SBOX( 0, SBOX_E4)
+   LOAD_AND_SBOX( 1, SBOX_E3)
+   LOAD_AND_SBOX( 2, SBOX_E2)
+   LOAD_AND_SBOX( 3, SBOX_E1)
+
+   LOAD_AND_SBOX( 4, SBOX_E8)
+   LOAD_AND_SBOX( 5, SBOX_E7)
+   LOAD_AND_SBOX( 6, SBOX_E6)
+   LOAD_AND_SBOX( 7, SBOX_E5)
+   LOAD_AND_SBOX( 8, SBOX_E4)
+   LOAD_AND_SBOX( 9, SBOX_E3)
+   LOAD_AND_SBOX(10, SBOX_E2)
+   LOAD_AND_SBOX(11, SBOX_E1)
+
+   LOAD_AND_SBOX(12, SBOX_E8)
+   LOAD_AND_SBOX(13, SBOX_E7)
+   LOAD_AND_SBOX(14, SBOX_E6)
+   LOAD_AND_SBOX(15, SBOX_E5)
+   LOAD_AND_SBOX(16, SBOX_E4)
+   LOAD_AND_SBOX(17, SBOX_E3)
+   LOAD_AND_SBOX(18, SBOX_E2)
+   LOAD_AND_SBOX(19, SBOX_E1)
+
+   LOAD_AND_SBOX(20, SBOX_E8)
+   LOAD_AND_SBOX(21, SBOX_E7)
+   LOAD_AND_SBOX(22, SBOX_E6)
+   LOAD_AND_SBOX(23, SBOX_E5)
+   LOAD_AND_SBOX(24, SBOX_E4)
+   LOAD_AND_SBOX(25, SBOX_E3)
+   LOAD_AND_SBOX(26, SBOX_E2)
+   LOAD_AND_SBOX(27, SBOX_E1)
+
+   LOAD_AND_SBOX(28, SBOX_E8)
+   LOAD_AND_SBOX(29, SBOX_E7)
+   LOAD_AND_SBOX(30, SBOX_E6)
+   LOAD_AND_SBOX(31, SBOX_E5)
+   LOAD_AND_SBOX(32, SBOX_E4)
+
+   RESTORE_REGS()
+END_FUNCTION(serpent_key_schedule)
 

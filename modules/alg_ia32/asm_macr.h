@@ -55,10 +55,10 @@ func_name:
 /*************************************************
 * Memory Access Operations                       *
 *************************************************/
-#define ARRAY1(REG, NUM) NUM(REG)
-#define ARRAY4(REG, NUM) 4*NUM(REG)
-#define ARRAY4_INDIRECT(BASE, OFFSET, NUM) 4*NUM(BASE,OFFSET,4)
-#define ARG(NUM) 4*PUSHED + ARRAY4(ESP, NUM)
+#define ARRAY1(REG, NUM) (NUM)(REG)
+#define ARRAY4(REG, NUM) 4*(NUM)(REG)
+#define ARRAY4_INDIRECT(BASE, OFFSET, NUM) 4*(NUM)(BASE,OFFSET,4)
+#define ARG(NUM) 4*(PUSHED) + ARRAY4(ESP, NUM)
 
 #define ASSIGN(TO, FROM) movl FROM, TO
 #define ASSIGN_BYTE(TO, FROM) movzbl FROM, TO
