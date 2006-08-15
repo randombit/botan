@@ -4,6 +4,7 @@ replace_file md4.cpp
 replace_file md5.cpp
 replace_file sha160.cpp
 replace_file serpent.cpp
+replace_file serpent.h
 
 add_file asm_macr.h
 

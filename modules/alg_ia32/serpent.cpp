@@ -105,127 +105,10 @@ inline void SBoxE8(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T4; B1 = T3; B2 = T1; B3 = T0;
    }
 
-/*************************************************
-* Serpent Decryption S-Box 1                     *
-*************************************************/
-inline void SBoxD1(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
-   {
-   u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
-   T2 = ~T2; T4  = T1; T1 |= T0; T4 = ~T4; T1 ^= T2; T2 |= T4; T1 ^= T3;
-   T0 ^= T4; T2 ^= T0; T0 &= T3; T4 ^= T0; T0 |= T1; T0 ^= T2; T3 ^= T4;
-   T2 ^= T1; T3 ^= T0; T3 ^= T1; T2 &= T3; T4 ^= T2;
-   B0 = T0; B1 = T4; B2 = T1; B3 = T3;
-   }
-
-/*************************************************
-* Serpent Decryption S-Box 2                     *
-*************************************************/
-inline void SBoxD2(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
-   {
-   u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
-   T4  = T1; T1 ^= T3; T3 &= T1; T4 ^= T2; T3 ^= T0; T0 |= T1; T2 ^= T3;
-   T0 ^= T4; T0 |= T2; T1 ^= T3; T0 ^= T1; T1 |= T3; T1 ^= T0; T4 = ~T4;
-   T4 ^= T1; T1 |= T0; T1 ^= T0; T1 |= T4; T3 ^= T1;
-   B0 = T4; B1 = T0; B2 = T3; B3 = T2;
-   }
-
-/*************************************************
-* Serpent Decryption S-Box 3                     *
-*************************************************/
-inline void SBoxD3(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
-   {
-   u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
-   T2 ^= T3; T3 ^= T0; T4  = T3; T3 &= T2; T3 ^= T1; T1 |= T2; T1 ^= T4;
-   T4 &= T3; T2 ^= T3; T4 &= T0; T4 ^= T2; T2 &= T1; T2 |= T0; T3 = ~T3;
-   T2 ^= T3; T0 ^= T3; T0 &= T1; T3 ^= T4; T3 ^= T0;
-   B0 = T1; B1 = T4; B2 = T2; B3 = T3;
-   }
-
-/*************************************************
-* Serpent Decryption S-Box 4                     *
-*************************************************/
-inline void SBoxD4(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
-   {
-   u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
-   T4  = T2; T2 ^= T1; T0 ^= T2; T4 &= T2; T4 ^= T0; T0 &= T1; T1 ^= T3;
-   T3 |= T4; T2 ^= T3; T0 ^= T3; T1 ^= T4; T3 &= T2; T3 ^= T1; T1 ^= T0;
-   T1 |= T2; T0 ^= T3; T1 ^= T4; T0 ^= T1;
-   B0 = T2; B1 = T1; B2 = T3; B3 = T0;
-   }
-
-/*************************************************
-* Serpent Decryption S-Box 5                     *
-*************************************************/
-inline void SBoxD5(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
-   {
-   u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
-   T4  = T2; T2 &= T3; T2 ^= T1; T1 |= T3; T1 &= T0; T4 ^= T2; T4 ^= T1;
-   T1 &= T2; T0 = ~T0; T3 ^= T4; T1 ^= T3; T3 &= T0; T3 ^= T2; T0 ^= T1;
-   T2 &= T0; T3 ^= T0; T2 ^= T4; T2 |= T3; T3 ^= T0; T2 ^= T1;
-   B0 = T0; B1 = T3; B2 = T2; B3 = T4;
-   }
-
-/*************************************************
-* Serpent Decryption S-Box 6                     *
-*************************************************/
-inline void SBoxD6(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
-   {
-   u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
-   T1 = ~T1; T4  = T3; T2 ^= T1; T3 |= T0; T3 ^= T2; T2 |= T1; T2 &= T0;
-   T4 ^= T3; T2 ^= T4; T4 |= T0; T4 ^= T1; T1 &= T2; T1 ^= T3; T4 ^= T2;
-   T3 &= T4; T4 ^= T1; T3 ^= T4; T4 = ~T4; T3 ^= T0;
-   B0 = T1; B1 = T4; B2 = T3; B3 = T2;
-   }
-
-/*************************************************
-* Serpent Decryption S-Box 7                     *
-*************************************************/
-inline void SBoxD7(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
-   {
-   u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
-   T0 ^= T2; T4  = T2; T2 &= T0; T4 ^= T3; T2 = ~T2; T3 ^= T1; T2 ^= T3;
-   T4 |= T0; T0 ^= T2; T3 ^= T4; T4 ^= T1; T1 &= T3; T1 ^= T0; T0 ^= T3;
-   T0 |= T2; T3 ^= T1; T4 ^= T0;
-   B0 = T1; B1 = T2; B2 = T4; B3 = T3;
-   }
-
-/*************************************************
-* Serpent Decryption S-Box 8                     *
-*************************************************/
-inline void SBoxD8(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
-   {
-   u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
-   T4  = T2; T2 ^= T0; T0 &= T3; T4 |= T3; T2 = ~T2; T3 ^= T1; T1 |= T0;
-   T0 ^= T2; T2 &= T4; T3 &= T4; T1 ^= T2; T2 ^= T0; T0 |= T2; T4 ^= T1;
-   T0 ^= T3; T3 ^= T4; T4 |= T0; T3 ^= T2; T4 ^= T2;
-   B0 = T3; B1 = T0; B2 = T1; B3 = T4;
-   }
-
-/*************************************************
-* Serpent's Inverse Linear Transformation        *
-*************************************************/
-inline void i_transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
-   {
-   B2  = rotate_right(B2, 22);  B0  = rotate_right(B0, 5);
-   B2 ^= B3 ^ (B1 << 7);        B0 ^= B1 ^ B3;
-   B3  = rotate_right(B3, 7);   B1  = rotate_right(B1, 1);
-   B3 ^= B2 ^ (B0 << 3);        B1 ^= B0 ^ B2;
-   B2  = rotate_right(B2, 3);   B0  = rotate_right(B0, 13);
-   }
-
 }
 
-/*************************************************
-* XOR a key block with a data block              *
-*************************************************/
-inline void Serpent::key_xor(u32bit round, u32bit& B0, u32bit& B1,
-                                           u32bit& B2, u32bit& B3) const
-   {
-   B0 ^= round_key[4*round  ]; B1 ^= round_key[4*round+1];
-   B2 ^= round_key[4*round+2]; B3 ^= round_key[4*round+3];
-   }
-
 extern "C" void serpent_encrypt(const byte[16], byte[16], const u32bit[132]);
+extern "C" void serpent_decrypt(const byte[16], byte[16], const u32bit[132]);
 
 /*************************************************
 * Serpent Encryption                             *
@@ -240,50 +123,7 @@ void Serpent::enc(const byte in[], byte out[]) const
 *************************************************/
 void Serpent::dec(const byte in[], byte out[]) const
    {
-   u32bit B0 = make_u32bit(in[ 3], in[ 2], in[ 1], in[ 0]),
-          B1 = make_u32bit(in[ 7], in[ 6], in[ 5], in[ 4]),
-          B2 = make_u32bit(in[11], in[10], in[ 9], in[ 8]),
-          B3 = make_u32bit(in[15], in[14], in[13], in[12]);
-   key_xor(32,B0,B1,B2,B3);  SBoxD8(B0,B1,B2,B3); key_xor(31,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor(30,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor(29,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD5(B0,B1,B2,B3); key_xor(28,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD4(B0,B1,B2,B3); key_xor(27,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor(26,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor(25,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor(24,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD8(B0,B1,B2,B3); key_xor(23,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor(22,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor(21,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD5(B0,B1,B2,B3); key_xor(20,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD4(B0,B1,B2,B3); key_xor(19,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor(18,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor(17,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor(16,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD8(B0,B1,B2,B3); key_xor(15,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor(14,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor(13,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD5(B0,B1,B2,B3); key_xor(12,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD4(B0,B1,B2,B3); key_xor(11,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor(10,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor( 9,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor( 8,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD8(B0,B1,B2,B3); key_xor( 7,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor( 6,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor( 5,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD5(B0,B1,B2,B3); key_xor( 4,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD4(B0,B1,B2,B3); key_xor( 3,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor( 2,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor( 1,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor( 0,B0,B1,B2,B3);
-   out[ 0] = get_byte(3, B0); out[ 1] = get_byte(2, B0);
-   out[ 2] = get_byte(1, B0); out[ 3] = get_byte(0, B0);
-   out[ 4] = get_byte(3, B1); out[ 5] = get_byte(2, B1);
-   out[ 6] = get_byte(1, B1); out[ 7] = get_byte(0, B1);
-   out[ 8] = get_byte(3, B2); out[ 9] = get_byte(2, B2);
-   out[10] = get_byte(1, B2); out[11] = get_byte(0, B2);
-   out[12] = get_byte(3, B3); out[13] = get_byte(2, B3);
-   out[14] = get_byte(1, B3); out[15] = get_byte(0, B3);
+   serpent_decrypt(in, out, round_key);
    }
 
 /*************************************************
