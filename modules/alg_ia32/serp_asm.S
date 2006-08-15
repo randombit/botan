@@ -99,7 +99,7 @@ START_LISTING(serp_asm.S)
    ASSIGN(A, B)                  ; \
    ASSIGN(B, C)                  ; \
    ASSIGN(C, D)                  ; \
-   ASSIGN(D, T)                  ; \
+   ASSIGN(D, T)                  ;
 
 #define SBOX_E5(A, B, C, D, T)     \
    XOR(B, D)                     ; \
@@ -149,7 +149,7 @@ START_LISTING(serp_asm.S)
    ASSIGN(C, A)                  ; \
    ASSIGN(A, B)                  ; \
    ASSIGN(B, D)                  ; \
-   ASSIGN(D, T)                  ; \
+   ASSIGN(D, T)                  ;
 
 #define SBOX_E7(A, B, C, D, T)     \
    NOT(C)                        ; \
@@ -317,7 +317,7 @@ START_LISTING(serp_asm.S)
    XOR(D, A)                     ; \
    XOR(C, B)                     ; \
    ASSIGN(B, D)                  ; \
-   ASSIGN(D, T)                  ; \
+   ASSIGN(D, T)                  ;
 
 #define SBOX_D6(A, B, C, D, T)     \
    NOT(B)                        ; \
@@ -343,7 +343,7 @@ START_LISTING(serp_asm.S)
    ASSIGN(B, T)                  ; \
    ASSIGN(T, D)                  ; \
    ASSIGN(D, C)                  ; \
-   ASSIGN(C, T)                  ; \
+   ASSIGN(C, T)                  ;
 
 #define SBOX_D7(A, B, C, D, T)     \
    XOR(A, C)                     ; \
@@ -365,7 +365,7 @@ START_LISTING(serp_asm.S)
    XOR(T, A)                     ; \
    ASSIGN(A, B)                  ; \
    ASSIGN(B, C)                  ; \
-   ASSIGN(C, T)                  ; \
+   ASSIGN(C, T)                  ;
 
 #define SBOX_D8(A, B, C, D, T)     \
    ASSIGN(T, C)                  ; \
@@ -390,7 +390,7 @@ START_LISTING(serp_asm.S)
    ASSIGN(C, B)                  ; \
    ASSIGN(B, A)                  ; \
    ASSIGN(A, D)                  ; \
-   ASSIGN(D, T)                  ; \
+   ASSIGN(D, T)                  ;
 
 #define TRANSFORM(A, B, C, D, T)   \
    ROTL_IMM(A, 13)               ; \
@@ -430,13 +430,13 @@ START_LISTING(serp_asm.S)
    XOR(B, A)                     ; \
    XOR(D, T)                     ; \
    ROTR_IMM(C, 3)                ; \
-   ROTR_IMM(A, 13)               ; \
+   ROTR_IMM(A, 13)               ;
 
 #define KEY_XOR(A, B, C, D, N)     \
    XOR(A, ARRAY4(EDI, (4*N  )))  ; \
    XOR(B, ARRAY4(EDI, (4*N+1)))  ; \
    XOR(C, ARRAY4(EDI, (4*N+2)))  ; \
-   XOR(D, ARRAY4(EDI, (4*N+3)))  ; \
+   XOR(D, ARRAY4(EDI, (4*N+3)))  ;
 
 /*************************************************
 * Serpent Encryption                             *
