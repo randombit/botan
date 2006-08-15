@@ -395,8 +395,7 @@ START_LISTING(serp_asm.S)
 #define TRANSFORM(A, B, C, D, T)   \
    ROTL_IMM(A, 13)               ; \
    ROTL_IMM(C, 3)                ; \
-   ASSIGN(T, A)                  ; \
-   SHL_IMM(T, 3)                 ; \
+   SHL2_3(T, A)                  ; \
    XOR(B, A)                     ; \
    XOR(D, C)                     ; \
    XOR(B, C)                     ; \
@@ -423,8 +422,7 @@ START_LISTING(serp_asm.S)
    XOR(C, T)                     ; \
    ROTR_IMM(D, 7)                ; \
    ROTR_IMM(B, 1)                ; \
-   ASSIGN(T, A)                  ; \
-   SHL_IMM(T, 3)                 ; \
+   SHL2_3(T, A)                  ; \
    XOR(B, C)                     ; \
    XOR(D, C)                     ; \
    XOR(B, A)                     ; \
