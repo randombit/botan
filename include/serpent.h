@@ -25,7 +25,6 @@ class Serpent : public BlockCipher
       void dec(const byte[], byte[]) const;
       void key(const byte[], u32bit);
 
-      void key_xor(u32bit, u32bit&, u32bit&, u32bit&, u32bit&) const;
       SecureBuffer<u32bit, 132> round_key;
    };
 

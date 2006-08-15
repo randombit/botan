@@ -231,12 +231,11 @@ inline void i_transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
 /*************************************************
 * XOR a key block with a data block              *
 *************************************************/
-inline void Serpent::key_xor(u32bit round, u32bit& B0, u32bit& B1,
-                                           u32bit& B2, u32bit& B3) const
-   {
-   B0 ^= round_key[4*round  ]; B1 ^= round_key[4*round+1];
-   B2 ^= round_key[4*round+2]; B3 ^= round_key[4*round+3];
-   }
+#define key_xor(round, B0, B1, B2, B3) \
+   B0 ^= round_key[4*round  ]; \
+   B1 ^= round_key[4*round+1]; \
+   B2 ^= round_key[4*round+2]; \
+   B3 ^= round_key[4*round+3];
 
 /*************************************************
 * Serpent Encryption                             *
