@@ -395,19 +395,19 @@ START_LISTING(serp_asm.S)
 #define TRANSFORM(A, B, C, D, T)   \
    ROTL_IMM(A, 13)               ; \
    ROTL_IMM(C, 3)                ; \
-   XOR(B, A)                     ; \
-   XOR(B, C)                     ; \
-   XOR(D, C)                     ; \
    ASSIGN(T, A)                  ; \
    SHL_IMM(T, 3)                 ; \
+   XOR(B, A)                     ; \
+   XOR(D, C)                     ; \
+   XOR(B, C)                     ; \
    XOR(D, T)                     ; \
    ROTL_IMM(B, 1)                ; \
    ROTL_IMM(D, 7)                ; \
-   XOR(A, B)                     ; \
-   XOR(A, D)                     ; \
-   XOR(C, D)                     ; \
    ASSIGN(T, B)                  ; \
    SHL_IMM(T, 7)                 ; \
+   XOR(A, B)                     ; \
+   XOR(C, D)                     ; \
+   XOR(A, D)                     ; \
    XOR(C, T)                     ; \
    ROTL_IMM(A, 5)                ; \
    ROTL_IMM(C, 22)               ;
@@ -417,18 +417,18 @@ START_LISTING(serp_asm.S)
    ROTR_IMM(A, 5)                ; \
    ASSIGN(T, B)                  ; \
    SHL_IMM(T, 7)                 ; \
-   XOR(C, D)                     ; \
-   XOR(C, T)                     ; \
    XOR(A, B)                     ; \
+   XOR(C, D)                     ; \
    XOR(A, D)                     ; \
+   XOR(C, T)                     ; \
    ROTR_IMM(D, 7)                ; \
    ROTR_IMM(B, 1)                ; \
    ASSIGN(T, A)                  ; \
    SHL_IMM(T, 3)                 ; \
-   XOR(D, T)                     ; \
-   XOR(D, C)                     ; \
    XOR(B, C)                     ; \
+   XOR(D, C)                     ; \
    XOR(B, A)                     ; \
+   XOR(D, T)                     ; \
    ROTR_IMM(C, 3)                ; \
    ROTR_IMM(A, 13)               ; \
 
