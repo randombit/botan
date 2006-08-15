@@ -21,7 +21,7 @@ my $PROJECT_NAME_LC = lc $PROJECT_NAME;
 
 my $MAJOR_VERSION = 1;
 my $MINOR_VERSION = 5;
-my $PATCH_VERSION = 10;
+my $PATCH_VERSION = 11;
 
 # If 1, then we always copy include files, without attempting to make symlinks
 # or hardlinks. It seems that link("","") will succeed on Windows, but the
