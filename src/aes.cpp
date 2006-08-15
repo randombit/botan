@@ -155,13 +155,11 @@ void AES::key(const byte key[], u32bit length)
       XDK[j+3] = XEK[4*ROUNDS-j+3];
       }
 
-   const u32bit* TD0 = TD;
-   const u32bit* TD1 = TD + 256;
-   const u32bit* TD2 = TD + 512;
-   const u32bit* TD3 = TD + 768;
    for(u32bit j = 4; j != length + 24; ++j)
-      XDK[j] = TD0[SE[get_byte(0, XDK[j])]] ^ TD1[SE[get_byte(1, XDK[j])]] ^
-               TD2[SE[get_byte(2, XDK[j])]] ^ TD3[SE[get_byte(3, XDK[j])]];
+      XDK[j] = TD[SE[get_byte(0, XDK[j])] +   0] ^
+               TD[SE[get_byte(1, XDK[j])] + 256] ^
+               TD[SE[get_byte(2, XDK[j])] + 512] ^
+               TD[SE[get_byte(3, XDK[j])] + 768];
 
    for(u32bit j = 0; j != 4; ++j)
       for(u32bit k = 0; k != 4; ++k)
