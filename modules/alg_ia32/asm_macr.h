@@ -89,6 +89,9 @@ func_name:
 #define ADD2_IMM(TO, FROM, NUM) leal NUM(FROM), TO
 #define ADD3_IMM(TO, FROM, NUM) leal NUM(TO,FROM,1), TO
 
+#define SHL_IMM(REG, SHIFT) shll IMM(SHIFT), REG
+#define SHR_IMM(REG, SHIFT) shrl IMM(SHIFT), REG
+
 #define XOR(TO, FROM) xorl FROM, TO
 #define AND(TO, FROM) andl FROM, TO
 #define OR(TO, FROM) orl FROM, TO

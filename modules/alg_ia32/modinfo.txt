@@ -3,12 +3,14 @@ realname "Algorithm x86 Assembler"
 replace_file md4.cpp
 replace_file md5.cpp
 replace_file sha160.cpp
+replace_file serpent.cpp
 
 add_file asm_macr.h
 
 add_file md4core.S
 add_file md5core.S
 add_file sha1core.S
+add_file serp_asm.S
 
 <arch>
 ia32
