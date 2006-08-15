@@ -271,7 +271,6 @@ START_LISTING(serp_asm.S)
    ASSIGN(A, B)                  ; \
    ASSIGN(B, T)                  ;
 
-   //busted
 #define SBOX_D4(A, B, C, D, T)     \
    ASSIGN(T, C)                  ; \
    XOR(C, B)                     ; \
@@ -439,34 +438,10 @@ START_LISTING(serp_asm.S)
    XOR(C, ARRAY4(EDI, (4*N+2)))  ; \
    XOR(D, ARRAY4(EDI, (4*N+3)))  ; \
 
-START_FUNCTION(serp_sbox)
-   SPILL_REGS()
-
-#define PUSHED 4
-
-   ASSIGN(EBP, ARG(1)) /* input block */
-
-   ASSIGN(EAX, ARRAY4(EBP, 0))
-   ASSIGN(EBX, ARRAY4(EBP, 1))
-   ASSIGN(ECX, ARRAY4(EBP, 2))
-   ASSIGN(EDX, ARRAY4(EBP, 3))
-
-   SBOX_D4(EAX, EBX, ECX, EDX, EBP)
-
-   ASSIGN(EBP, ARG(1)) /* output block */
-   ASSIGN(ARRAY4(EBP, 0), EAX)
-   ASSIGN(ARRAY4(EBP, 1), EBX)
-   ASSIGN(ARRAY4(EBP, 2), ECX)
-   ASSIGN(ARRAY4(EBP, 3), EDX)
-
-   RESTORE_REGS()
-END_FUNCTION(serp_sbox)
-
-
 START_FUNCTION(serpent_encrypt)
    SPILL_REGS()
 
-//#define PUSHED 4
+#define PUSHED 4
 
    ASSIGN(EBP, ARG(1)) /* input block */
    ASSIGN(EDI, ARG(3)) /* round keys */
