@@ -91,6 +91,7 @@ func_name:
 
 #define SHL_IMM(REG, SHIFT) shll IMM(SHIFT), REG
 #define SHR_IMM(REG, SHIFT) shrl IMM(SHIFT), REG
+#define SHL2_3(TO, FROM) leal 0(,FROM,8), TO
 
 #define XOR(TO, FROM) xorl FROM, TO
 #define AND(TO, FROM) andl FROM, TO
