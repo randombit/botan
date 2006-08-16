@@ -12,6 +12,18 @@ namespace Botan {
 namespace {
 
 /*************************************************
+* Montgomery Reduction                           *
+*************************************************/
+void montgomery_reduce(word z[], u32bit z_size,
+                       const word x[], u32bit x_size, word u)
+   {
+   bigint_monty_redc(z, z_size, x, x_size, u);
+
+   if(bigint_cmp(z + x_size, x_size + 1, x, x_size) >= 0)
+      bigint_sub2(z + x_size, x_size + 1, x, x_size);
+   }
+
+/*************************************************
 * Try to choose a good window size               *
 *************************************************/
 u32bit choose_window_bits(u32bit exp_bits, u32bit,

@@ -199,7 +199,7 @@ void bigint_simple_mul(word z[], const word x[], u32bit x_size,
 /*************************************************
 * Montgomery Reduction Algorithm                 *
 *************************************************/
-void montgomery_reduce(word z[], u32bit z_size,
+void bigint_monty_redc(word z[], u32bit z_size,
                        const word x[], u32bit x_size, word u)
    {
    for(u32bit j = 0; j != x_size; ++j)
@@ -227,9 +227,6 @@ void montgomery_reduce(word z[], u32bit z_size,
          carry = !z_j[k];
          }
       }
-
-   if(bigint_cmp(z + x_size, x_size + 1, x, x_size) >= 0)
-      bigint_sub2(z + x_size, x_size + 1, x, x_size);
    }
 
 }
