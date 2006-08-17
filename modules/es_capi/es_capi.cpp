@@ -74,7 +74,7 @@ Win32_CAPI_EntropySource::Win32_CAPI_EntropySource(const std::string& provs)
    std::vector<std::string> capi_provs;
 
    if(provs == "")
-      capi_provs = Config::get_list("rng/ms_capi_prov_type");
+      capi_provs = global_config().option_as_list("rng/ms_capi_prov_type");
    else
       capi_provs = split_on(provs, ':');
 
