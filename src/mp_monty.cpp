@@ -32,9 +32,9 @@ void bigint_monty_redc(word z[], u32bit z_size,
       for(u32bit k = blocks; k != x_size; ++k)
          z_j[k] = word_madd3(x[k], y, z_j[k], carry, &carry);
 
-      word carry2 = 0;
-      z_j[x_size] = word_add(z_j[x_size], carry, &carry2);
-      carry = carry2;
+      word z_sum = z_j[x_size] + carry;
+      carry = (z_sum < z_j[x_size]);
+      z_j[x_size] = z_sum;
 
       for(u32bit k = x_size + 1; carry && k != z_size - j; ++k)
          {
