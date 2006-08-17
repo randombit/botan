@@ -14,13 +14,19 @@ namespace {
 /*************************************************
 * Montgomery Reduction                           *
 *************************************************/
-void montgomery_reduce(word z[], u32bit z_size,
-                       const word x[], u32bit x_size, word u)
+inline void montgomery_reduce(BigInt& out, MemoryRegion<word>& z_buf,
+                              const BigInt& x_bn, u32bit x_size, word u)
    {
+   const word* x = x_bn.data();
+   word* z = z_buf.begin();
+   u32bit z_size = z_buf.size();
+
    bigint_monty_redc(z, z_size, x, x_size, u);
 
    if(bigint_cmp(z + x_size, x_size + 1, x, x_size) >= 0)
       bigint_sub2(z + x_size, x_size + 1, x, x_size);
+
+   out.get_reg().set(z + x_size, x_size + 1);
    }
 
 /*************************************************
@@ -83,9 +89,7 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
               g[0].data(), g[0].size(), g[0].sig_words(),
               R2.data(), R2.size(), R2.sig_words());
 
-   montgomery_reduce(z.begin(), z.size(), modulus.data(), mod_words,
-                     mod_prime);
-   g[0].get_reg().set(z + mod_words, mod_words + 1);
+   montgomery_reduce(g[0], z, modulus, mod_words, mod_prime);
 
    const BigInt& x = g[0];
    const u32bit x_sig = x.sig_words();
@@ -100,10 +104,7 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
                  x.data(), x.size(), x_sig,
                  y.data(), y.size(), y_sig);
 
-      montgomery_reduce(z.begin(), z.size(), modulus.data(), mod_words,
-                        mod_prime);
-
-      g[j].get_reg().set(z + mod_words, mod_words + 1);
+      montgomery_reduce(g[j], z, modulus, mod_words, mod_prime);
       }
    }
 
@@ -126,9 +127,7 @@ BigInt Montgomery_Exponentiator::execute() const
          bigint_sqr(z.begin(), z.size(), workspace,
                     x.data(), x.size(), x.sig_words());
 
-         montgomery_reduce(z.begin(), z.size(), modulus.data(), mod_words,
-                           mod_prime);
-         x.get_reg().set(z + mod_words, mod_words + 1);
+         montgomery_reduce(x, z, modulus, mod_words, mod_prime);
          }
 
       u32bit nibble = exp.get_substring(window_bits*(j-1), window_bits);
@@ -141,18 +140,14 @@ BigInt Montgomery_Exponentiator::execute() const
                     x.data(), x.size(), x.sig_words(),
                     y.data(), y.size(), y.sig_words());
 
-         montgomery_reduce(z.begin(), z.size(), modulus.data(), mod_words,
-                           mod_prime);
-         x.get_reg().set(z + mod_words, mod_words + 1);
+         montgomery_reduce(x, z, modulus, mod_words, mod_prime);
          }
       }
 
    z.clear();
    z.copy(x.data(), x.size());
 
-   montgomery_reduce(z.begin(), z.size(), modulus.data(), mod_words,
-                     mod_prime);
-   x.get_reg().set(z + mod_words, mod_words + 1);
+   montgomery_reduce(x, z, modulus, mod_words, mod_prime);
    return x;
    }
 
