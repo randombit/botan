@@ -12,24 +12,6 @@ namespace Botan {
 namespace {
 
 /*************************************************
-* Montgomery Reduction                           *
-*************************************************/
-inline void montgomery_reduce(BigInt& out, MemoryRegion<word>& z_buf,
-                              const BigInt& x_bn, u32bit x_size, word u)
-   {
-   const word* x = x_bn.data();
-   word* z = z_buf.begin();
-   u32bit z_size = z_buf.size();
-
-   bigint_monty_redc(z, z_size, x, x_size, u);
-
-   if(bigint_cmp(z + x_size, x_size + 1, x, x_size) >= 0)
-      bigint_sub2(z + x_size, x_size + 1, x, x_size);
-
-   out.get_reg().set(z + x_size, x_size + 1);
-   }
-
-/*************************************************
 * Try to choose a good window size               *
 *************************************************/
 u32bit choose_window_bits(u32bit exp_bits, u32bit,
@@ -59,6 +41,24 @@ u32bit choose_window_bits(u32bit exp_bits, u32bit,
       ++window_bits;
 
    return window_bits;
+   }
+
+/*************************************************
+* Montgomery Reduction                           *
+*************************************************/
+inline void montgomery_reduce(BigInt& out, MemoryRegion<word>& z_buf,
+                              const BigInt& x_bn, u32bit x_size, word u)
+   {
+   const word* x = x_bn.data();
+   word* z = z_buf.begin();
+   u32bit z_size = z_buf.size();
+
+   bigint_monty_redc(z, z_size, x, x_size, u);
+
+   if(bigint_cmp(z + x_size, x_size + 1, x, x_size) >= 0)
+      bigint_sub2(z + x_size, x_size + 1, x, x_size);
+
+   out.get_reg().set(z + x_size, x_size + 1);
    }
 
 }
