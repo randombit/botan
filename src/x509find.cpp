@@ -105,7 +105,6 @@ std::vector<X509_Certificate> by_dns(const X509_Store& store,
 *************************************************/
 std::vector<X509_Certificate> by_keyid(const X509_Store& store, u64bit key_id)
    {
-
    class KeyID_Match : public X509_Store::Search_Func
       {
       public:
@@ -130,7 +129,6 @@ std::vector<X509_Certificate> by_iands(const X509_Store& store,
                                        const X509_DN& issuer,
                                        const MemoryRegion<byte>& serial)
    {
-
    class IandS_Match : public X509_Store::Search_Func
       {
       public:
@@ -157,7 +155,6 @@ std::vector<X509_Certificate> by_iands(const X509_Store& store,
 std::vector<X509_Certificate> by_SKID(const X509_Store& store,
                                       const MemoryRegion<byte>& skid)
    {
-
    class SKID_Match : public X509_Store::Search_Func
       {
       public:
