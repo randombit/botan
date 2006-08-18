@@ -4,6 +4,7 @@ replace_file md4.cpp
 replace_file md5.cpp
 replace_file sha160.cpp
 replace_file serpent.cpp
+replace_file mp_monty.cpp
 
 add_file asm_macr.h
 
@@ -11,6 +12,7 @@ add_file md4core.S
 add_file md5core.S
 add_file sha1core.S
 add_file serp_asm.S
+add_file mp_muladd.S
 
 <arch>
 ia32

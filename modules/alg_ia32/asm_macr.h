@@ -40,9 +40,20 @@ func_name:
    cmpl IMM(NUM), REG;                 \
    jne LABEL##_LOOP
 
-#define LOOP_UNTIL(REG, NUM, LABEL) \
-   cmpl NUM, REG;                   \
-   jne LABEL##_LOOP
+#define LOOP_UNTIL_LT(REG, NUM, LABEL) \
+   cmpl IMM(NUM), REG;                 \
+   jge LABEL##_LOOP
+
+/*************************************************
+ Conditional Jumps                              *
+*************************************************/
+#define JUMP_IF_ZERO(REG, LABEL) \
+   cmpl IMM(0), REG;             \
+   jz LABEL
+
+#define JUMP_IF_LT(REG, NUM, LABEL) \
+   cmpl IMM(NUM), REG;              \
+   jl LABEL
 
 /*************************************************
 * Register Names                                 *
@@ -89,9 +100,11 @@ func_name:
 
 #define ADD(TO, FROM) addl FROM, TO
 #define ADD_IMM(TO, NUM) addl IMM(NUM), TO
+#define ADD_W_CARRY(TO1, TO2, FROM) addl FROM, TO1; adcl IMM(0), TO2;
 #define SUB_IMM(TO, NUM) subl IMM(NUM), TO
 #define ADD2_IMM(TO, FROM, NUM) leal NUM(FROM), TO
 #define ADD3_IMM(TO, FROM, NUM) leal NUM(TO,FROM,1), TO
+#define MUL(REG) mull REG
 
 #define CLEAR_CARRY() clc
 
