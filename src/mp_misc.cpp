@@ -56,21 +56,23 @@ s32bit bigint_cmp(const word x[], u32bit x_size,
 *************************************************/
 word bigint_divop(word n1, word n0, word d)
    {
-   word high = n1 % d;
-   word quotient = 0;
+   word high = n1 % d, quotient = 0;
+
    for(u32bit j = 0; j != MP_WORD_BITS; ++j)
       {
-      const word mask = (word)1 << (MP_WORD_BITS-1-j);
-      const bool high_top_bit = (high & MP_WORD_TOP_BIT) ? true : false;
+      const bool high_top_bit = (high & MP_WORD_TOP_BIT);
 
-      high = (high << 1) | ((n0 & mask) >> (MP_WORD_BITS-1-j));
+      high <<= 1;
+      high |= (n0 >> MP_WORD_BITS-1-j) & 1;
+      quotient <<= 1;
 
       if(high_top_bit || high >= d)
          {
          high -= d;
-         quotient |= mask;
+         quotient |= 1;
          }
       }
+
    return quotient;
    }
 
