@@ -82,7 +82,7 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
    if(!is_encrypted)
       key = key_data;
 
-   const u32bit MAX_TRIES = 
+   const u32bit MAX_TRIES =
       global_config().option_as_u32bit("base/pkcs8_tries");
 
    u32bit tries = 0;
