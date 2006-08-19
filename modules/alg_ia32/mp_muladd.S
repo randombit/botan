@@ -1,23 +1,12 @@
+/*************************************************
+* Multiply/Add Algorithm Source File             *
+* (C) 1999-2006 The Botan Project                *
+*************************************************/
 
 #include <botan/asm_macr.h>
 
 START_LISTING(mp_muladd.S)
 
-/*
-word bigint_mul_add_words(word z[], const word x[], u32bit x_size, word y)
-   {
-   word carry = 0;
-
-   for(u32bit j = 0; j != x_size; ++j)
-      {
-      u64bit zx = (u64bit)x[j] * y + z[j] + carry;
-      z[j] = (word)zx;
-      carry = (word)(zx >> BOTAN_MP_WORD_BITS);
-      }
-
-   return carry;
-   }
-*/
 START_FUNCTION(bigint_mul_add_words)
    SPILL_REGS()
 #define PUSHED 4
@@ -39,6 +28,7 @@ START_FUNCTION(bigint_mul_add_words)
    JUMP_IF_ZERO(ESI, .MUL_ADD_DONE)
    JUMP_IF_LT(ESI, 8, .MULADD1_LOOP)
 
+   ALIGN
 START_LOOP(.MULADD8)
    MULADD_OP(0)
    MULADD_OP(1)
@@ -56,6 +46,7 @@ LOOP_UNTIL_LT(ESI, 8, .MULADD8)
 
    JUMP_IF_ZERO(ESI, .MUL_ADD_DONE)
 
+   ALIGN
 START_LOOP(.MULADD1)
    MULADD_OP(0)
 
