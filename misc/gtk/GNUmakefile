@@ -20,5 +20,5 @@ $(APP): $(OBJS)
 %.o: %.cpp $(HEADERS)
 	$(CC) $(FLAGS) -c $<
 
-clean: 
+clean:
 	rm -f $(APP) $(OBJS)

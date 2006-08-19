@@ -289,7 +289,7 @@ static void gen_key()
       the progress bar. That's because the amount of time between pulses
       from the library is rather irregular, so the progress bar looks jerky.
    */
-   Botan::UI::set_pulse(gtk_pulse); 
+   Botan::UI::set_pulse(gtk_pulse);
 
    /* Not generally recommended, since it's slow and there's not much point.
       However, *because* it's slow, we'll want to put up a progress bar or

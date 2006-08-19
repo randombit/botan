@@ -203,7 +203,7 @@ sub print_arch_defines {
                     $ARCH{$_} = $arch;
                 }
             }
-            
+
             # Read in a list of submodel aliases and add them to SUBMODEL_ALIAS
             if(/^<submodel_aliases>$/) {
                 while(1) {
@@ -379,7 +379,7 @@ sub print_cc_defines {
             $CC_DEBUG_FLAGS{$cc} = $1 if(/^debug_flags \"(.*)\"/);
             $CC_NO_DEBUG_FLAGS{$cc} = $1 if(/^no_debug_flags \"(.*)\"/);
             $MAKEFILE_STYLE{$cc} = $1 if(/^makefile_style (.*)/);
-                
+
             # Read in a list of supported CPU types
             if(/^<arch>$/) {
                 while(1) {
