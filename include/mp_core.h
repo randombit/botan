@@ -44,8 +44,6 @@ word bigint_mul_add_words(word[], const word[], u32bit, word);
 
 void bigint_linmul2(word[], u32bit, word);
 void bigint_linmul3(word[], const word[], u32bit, word);
-
-void bigint_simple_mul(word[], const word[], u32bit, const word[], u32bit);
 void bigint_linmul_add(word[], u32bit, const word[], u32bit, word);
 
 /*************************************************

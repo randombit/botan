@@ -11,6 +11,17 @@ namespace Botan {
 namespace {
 
 /*************************************************
+* Simple O(N^2) Squaring                         *
+*************************************************/
+void bigint_simple_sqr(word z[], const word x[], u32bit x_size)
+   {
+   clear_mem(z, 2*x_size);
+
+   for(u32bit j = 0; j != x_size; ++j)
+      z[j+x_size] = bigint_mul_add_words(z + j, x, x_size, x[j]);
+   }
+
+/*************************************************
 * Karatsuba Squaring Operation                   *
 *************************************************/
 void karatsuba_sqr(word z[], const word x[], u32bit N, word workspace[])
@@ -22,7 +33,7 @@ void karatsuba_sqr(word z[], const word x[], u32bit N, word workspace[])
    else if(N == 8)
       bigint_comba_sqr8(z, x);
    else if(N < KARATSUBA_SQR_LOWER_SIZE || N % 2)
-      bigint_simple_mul(z, x, N, x, N);
+      bigint_simple_sqr(z, x, N);
    else
       {
       const u32bit N2 = N / 2;
@@ -103,7 +114,7 @@ void handle_small_sqr(word z[], u32bit z_size,
    else if(x_sw <= 8 && x_size >= 8 && z_size >= 16)
       bigint_comba_sqr8(z, x);
    else
-      bigint_simple_mul(z, x, x_sw, x, x_sw);
+      bigint_simple_sqr(z, x, x_sw);
    }
 
 }
@@ -128,7 +139,7 @@ void bigint_sqr(word z[], u32bit z_size, word workspace[],
       karatsuba_sqr(z, x, N, workspace);
       }
    else
-      bigint_simple_mul(z, x, x_sw, x, x_sw);
+      bigint_simple_sqr(z, x, x_sw);
    }
 
 }
