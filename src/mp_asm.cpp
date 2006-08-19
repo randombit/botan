@@ -177,23 +177,39 @@ void bigint_linmul3(word z[], const word x[], u32bit x_size, word y)
 void bigint_simple_mul(word z[], const word x[], u32bit x_size,
                                  const word y[], u32bit y_size)
    {
-   const u32bit blocks = y_size - (y_size % 8);
-
    clear_mem(z, x_size + y_size);
 
    for(u32bit j = 0; j != x_size; ++j)
+      z[j+y_size] = bigint_mul_add_words(z + j, y, y_size, x[j]);
+   }
+
+/*************************************************
+* Montgomery Reduction Algorithm                 *
+*************************************************/
+void bigint_monty_redc(word z[], u32bit z_size,
+                       const word x[], u32bit x_size, word u)
+   {
+   for(u32bit j = 0; j != x_size; ++j)
       {
-      const word x_j = x[j];
-      word carry = 0;
+      word* z_j = z + j;
 
-      for(u32bit k = 0; k != blocks; k += 8)
-         carry = word8_madd3(z + j + k, y + k, x_j, carry);
+      const word y = z_j[0] * u;
 
-      for(u32bit k = blocks; k != y_size; ++k)
-         z[j+k] = word_madd3(x_j, y[k], z[j+k], carry, &carry);
+      word carry = bigint_mul_add_words(z_j, x, x_size, y);
 
-      z[j+y_size] = carry;
+      word z_sum = z_j[x_size] + carry;
+      carry = (z_sum < z_j[x_size]);
+      z_j[x_size] = z_sum;
+
+      for(u32bit k = x_size + 1; carry && k != z_size - j; ++k)
+         {
+         ++z_j[k];
+         carry = !z_j[k];
+         }
       }
+
+   if(bigint_cmp(z + x_size, x_size + 1, x, x_size) >= 0)
+      bigint_sub2(z + x_size, x_size + 1, x, x_size);
    }
 
 }

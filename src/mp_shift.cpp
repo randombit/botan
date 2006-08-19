@@ -45,10 +45,13 @@ void bigint_shr1(word x[], u32bit x_size, u32bit word_shift, u32bit bit_shift)
       return;
       }
 
-   for(u32bit j = 0; j != x_size - word_shift; ++j)
-      x[j] = x[j + word_shift];
-   for(u32bit j = x_size - word_shift; j != x_size; ++j)
-      x[j] = 0;
+   if(word_shift)
+      {
+      for(u32bit j = 0; j != x_size - word_shift; ++j)
+         x[j] = x[j + word_shift];
+      for(u32bit j = x_size - word_shift; j != x_size; ++j)
+         x[j] = 0;
+      }
 
    if(bit_shift)
       {

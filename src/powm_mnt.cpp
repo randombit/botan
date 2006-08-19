@@ -55,9 +55,6 @@ inline void montgomery_reduce(BigInt& out, MemoryRegion<word>& z_buf,
 
    bigint_monty_redc(z, z_size, x, x_size, u);
 
-   if(bigint_cmp(z + x_size, x_size + 1, x, x_size) >= 0)
-      bigint_sub2(z + x_size, x_size + 1, x, x_size);
-
    out.get_reg().set(z + x_size, x_size + 1);
    }
 

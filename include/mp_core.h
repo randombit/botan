@@ -40,6 +40,8 @@ void bigint_shr2(word[], const word[], u32bit, u32bit, u32bit);
 /*************************************************
 * Multiplication and Squaring Operations         *
 *************************************************/
+word bigint_mul_add_words(word[], const word[], u32bit, word);
+
 void bigint_linmul2(word[], u32bit, word);
 void bigint_linmul3(word[], const word[], u32bit, word);
 
