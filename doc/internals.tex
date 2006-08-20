@@ -50,43 +50,59 @@ have time.
 
 \section{Filter}
 
-Filter is one of the core abstractions of the library. It represents
+\type{Filter} is one of the core abstractions of the library. It is
+used to represent any sort of transformation. Nearly all
+\type{Filter}s are linear; they take input from a single source and
+send their output (if any) to another single \type{Filter}. The one
+exception is \type{Fanout\_Filter}, which uses friend access to
+\type{Filter} in order to allow for multiple \type{Filter}s to attach
+to its output. This special access is used by the Chain and Fork
+filters; Chain encapsulates one or more \type{Filter}s into a single
+Filter, and Fork sends its input to a set of several \type{Filter}
+objects.
+
+The majority of the relations between filters is maintained by the
+\type{Pipe} object which ``owns'' the \type{Filter}s.
 
 \section{Pipe}
 
-Pipe is, conceptually, a tree structure of Filter objects. There is a
-single unique top, and an arbitrary number of leaves (which are
-SecureQueue objects).  SecureQueue is a simple Filter that buffers its
-input.
+\type{Pipe} is, conceptually, a tree structure of \type{Filter}
+objects. There is a single unique top, and an arbitrary number of
+leaves (which are \type{SecureQueue} objects). \type{SecureQueue} is a
+simple \type{Filter} that buffers its input.
 
 Writing into the pipe writes into the top of the tree. The filter at
-the top of the tree writes its output into the next Filter, and so on
-until eventually data trickles down into the bottommost Filters, where
-the data is stored for later retrieval.
+the top of the tree writes its output into the next \type{Filter}, and
+so on until eventually data trickles down into the bottommost
+\type{Filter}s, where the data is stored for later retrieval.
 
-When a new message is started, Pipe searches through the tree of
-Filters and finds places where the \arg{next} field of the Filter is
-NULL. This implies that it was the lowest layer of the Filter tree
-that the user added. It then adds SecureQueue objects onto these
-Filters. These queues are also stored in a \type{std::vector} called
-\arg{messages}. This is how the Pipe knows how to read from them later
-without doing a tree traversal every time.
+When a new message is started, \type{Pipe} searches through the tree
+of \type{Filter}s and finds places where the \arg{next} field of the
+\type{Filter} is NULL. This implies that it was the lowest layer of
+the \type{Filter} tree that the user added. It then adds
+\type{SecureQueue} objects onto these \type{Filter}s. These queues are
+also stored in an deque; this is so \type{Pipe} can read from them
+later without doing a tree traversal each time.
 
-Pipe will, if asked, destroy the existing tree structure, in order to
-create a new one. However, the queue objects are not deleted, because
-Pipe might need to read from them later.
+\type{Pipe} will, if asked, destroy the existing tree structure, in
+order to create a new one. However, the queue objects are not deleted,
+because \type{Pipe} might be asked to read from them later (while
+\type{Pipe} could delete all the messages in this case, the principle
+of least astonishment suggested keeping them).
 
-An optimization in future versions will involve deleting empty queues
-that we ``know'' can't be written to, and then replace their field in
-\arg{messages} with NULL. On reading, Pipe will know that this means
-that the queue is empty, and act as if such a queue was really
-there. This is relatively minor, because in recent versions an empty
-queue only takes up a few dozen bytes (previous to 0.8.4 or so, an
-empty queue still took up 4 kilobytes of memory).
+What I wrote about \type{Pipe} keeing the queues in a deque is a
+lie. Sort of. It keeps them in an object called
+\type{Output\_Buffers}, which keeps them in a
+deque. \type{Output\_Buffers} is intended to abstract away how message
+queues are stored from \type{Pipe}. After a queue has been added to
+the output buffers object, \type{Pipe} keeps no references to it
+whatsoever; all access is mediated by the \type{Output\_Buffers}.
+This allows queues which have been read to be deleted, rather than
+leaving empty queue objects all over the place.
 
 \section{Library Initialization}
 
-A lot of messy corner cases.
+WRITEME
 
 \section{Lookup Mechanism}
 
