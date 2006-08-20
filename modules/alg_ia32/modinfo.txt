@@ -1,5 +1,7 @@
 realname "Algorithm x86 Assembler"
 
+mp_bits 32
+
 replace_file md4.cpp
 replace_file md5.cpp
 replace_file sha160.cpp
