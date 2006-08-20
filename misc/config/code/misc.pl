@@ -165,13 +165,14 @@ sub find_mp_bits
     my(@modules_list) = @_;
     my $mp_bits = 32; # default, good for most systems
     my $seen_mp_module = 0;
+
     foreach my $modname (@modules_list)
     {
         my %modinfo = %{ $MODULES{$modname} };
         if($modinfo{'mp_bits'})
         {
-            die "(error): More than one MPI module was loaded\n"
-                if($seen_mp_module);
+            die "(error): Inconsistent mp_bits requests from modules\n"
+                if($seen_mp_module && $modinfo{'mp_bits'} != $mp_bits);
 
             $seen_mp_module = 1;
             $mp_bits = $modinfo{'mp_bits'};
