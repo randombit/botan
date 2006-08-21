@@ -39,11 +39,12 @@ LOOP_UNTIL_EQ(ESI, 16, .LOAD_INPUT)
    ASSIGN(ECX, ARRAY4(EBP, 2))
    ASSIGN(EDX, ARRAY4(EBP, 3))
 
+#define MSG EDI
 #define T1 ESI
 #define T2 EBP
 
-#define FF(A, B, C, D, MSG, S)        \
-   ASSIGN(T1, ARRAY4(EDI, MSG))     ; \
+#define FF(A, B, C, D, N, S)          \
+   ASSIGN(T1, ARRAY4(MSG, N))       ; \
    ASSIGN(T2, C)                    ; \
    XOR(T2, D)                       ; \
    AND(T2, B)                       ; \
@@ -52,8 +53,8 @@ LOOP_UNTIL_EQ(ESI, 16, .LOAD_INPUT)
    ADD(A, T2)                       ; \
    ROTL_IMM(A, S)                   ;
 
-#define GG(A, B, C, D, MSG, S) \
-   ASSIGN(T1, ARRAY4(EDI, MSG))     ; \
+#define GG(A, B, C, D, N, S)          \
+   ASSIGN(T1, ARRAY4(MSG, N))       ; \
    ASSIGN(T2, B)                    ; \
    OR(T2, C)                        ; \
    AND(T2, D)                       ; \
@@ -64,8 +65,8 @@ LOOP_UNTIL_EQ(ESI, 16, .LOAD_INPUT)
    ADD(A, T2)                       ; \
    ROTL_IMM(A, S)                   ;
 
-#define HH(A, B, C, D, MSG, S) \
-   ASSIGN(T1, ARRAY4(EDI, MSG))     ; \
+#define HH(A, B, C, D, N, S)          \
+   ASSIGN(T1, ARRAY4(MSG, N))       ; \
    ASSIGN(T2, B)                    ; \
    XOR(T2, C)                       ; \
    XOR(T2, D)                       ; \
