@@ -13,7 +13,7 @@
  - Placing the same Filter in multiple Pipes triggers an exception
  - The configure script accepts --docdir and --libdir
  - Merged doc/rngs.txt into the main API document
- - Thanks to Joel Low for a several bugreports on early tarballs of 1.4.11
+ - Thanks to Joel Low for several bugreports on early tarballs of 1.4.11
 
 * 1.4.10, December 18, 2005
  - Added an implementation of KASUMI, the block cipher used in 3G phones
