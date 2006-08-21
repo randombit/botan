@@ -8,7 +8,7 @@
 
 namespace Botan {
 
-extern "C" void sha160_core(u32bit[5], const byte[64], u32bit[84]);
+extern "C" void sha160_core(u32bit[5], const byte[64], u32bit[81]);
 
 /*************************************************
 * SHA-160 Compression Function                   *
@@ -44,7 +44,7 @@ void SHA_160::clear() throw()
 /*************************************************
 * SHA_160 Constructor                            *
 *************************************************/
-SHA_160::SHA_160() : MDx_HashFunction(20, 64, true, true), W(84)
+SHA_160::SHA_160() : MDx_HashFunction(20, 64, true, true), W(81)
    {
    clear();
    }
