@@ -19,13 +19,13 @@ class SHA_160 : public MDx_HashFunction
       void clear() throw();
       std::string name() const { return "SHA-160"; }
       HashFunction* clone() const { return new SHA_160; }
-      SHA_160() : MDx_HashFunction(20, 64, true, true) { clear(); }
+      SHA_160();
    private:
       void hash(const byte[]);
       void copy_out(byte[]);
 
       SecureBuffer<u32bit, 5> digest;
-      SecureBuffer<u32bit, 80> W;
+      SecureVector<u32bit> W;
    };
 
 }
