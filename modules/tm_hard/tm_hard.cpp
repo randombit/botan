@@ -15,10 +15,6 @@ u64bit Hardware_Timer::clock() const
    {
    u64bit rtc = 0;
 
-#if !defined(__GNUC__)
-   #error "This module uses GCC-style inline asm"
-#endif
-
 #if defined(BOTAN_TARGET_ARCH_IS_IA32) || defined(BOTAN_TARGET_ARCH_IS_AMD64)
    u32bit rtc_low = 0, rtc_high = 0;
    asm volatile("rdtsc" : "=d" (rtc_high), "=a" (rtc_low));
