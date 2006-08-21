@@ -92,41 +92,41 @@ LOOP_UNTIL_EQ(ESI, 80, .EXPANSION)
 #define MSG EBP
 
 #define F1(A, B, C, D, E, F, N)       \
-   ROTL_IMM(A, 5)                   ; \
-   ASSIGN(F, C)                     ; \
-   XOR(F, D)                        ; \
-   AND(F, B)                        ; \
-   XOR(F, D)                        ; \
-   ROTR_IMM(B, 2)                   ; \
-   ADD3_IMM(E, A, MAGIC1)           ; \
-   ROTR_IMM(A, 5)                   ; \
+   ASSIGN(F, A)                     ; \
+   ROTL_IMM(F, 5)                   ; \
    ADD(F, E)                        ; \
-   ADD(F, ARRAY4(MSG, N))           ;
+   ASSIGN(E, C)                     ; \
+   XOR(E, D)                        ; \
+   ADD(F, ARRAY4(MSG, N))           ; \
+   AND(E, B)                        ; \
+   XOR(E, D)                        ; \
+   ROTR_IMM(B, 2)                   ; \
+   ADD3_IMM(F, E, MAGIC1)           ;
 
 #define F2_4(A, B, C, D, E, F, N, MAGIC) \
-   ROTL_IMM(A, 5)                   ; \
-   ASSIGN(F, D)                     ; \
-   XOR(F, C)                        ; \
-   XOR(F, B)                        ; \
-   ROTR_IMM(B, 2)                   ; \
-   ADD3_IMM(E, A, MAGIC)            ; \
-   ROTR_IMM(A, 5)                   ; \
+   ASSIGN(F, A)                     ; \
+   ROTL_IMM(F, 5)                   ; \
    ADD(F, E)                        ; \
+   ASSIGN(E, B)                     ; \
    ADD(F, ARRAY4(MSG, N))           ; \
+   XOR(E, C)                        ; \
+   ROTR_IMM(B, 2)                   ; \
+   XOR(E, D)                        ; \
+   ADD3_IMM(F, E, MAGIC)            ; \
 
 #define F3(A, B, C, D, E, F, N)       \
-   ROTL_IMM(A, 5)                   ; \
-   ASSIGN(MSG, B)                   ; \
    ASSIGN(F, B)                     ; \
-   AND(MSG, C)                      ; \
    OR(F, C)                         ; \
    AND(F, D)                        ; \
+   ASSIGN(MSG, B)                   ; \
+   ROTR_IMM(B, 2)                   ; \
+   AND(MSG, C)                      ; \
    OR(F, MSG)                       ; \
    ASSIGN(MSG, ARG(3))              ; \
-   ROTR_IMM(B, 2)                   ; \
-   ADD3_IMM(E, A, MAGIC3)           ; \
-   ROTR_IMM(A, 5)                   ; \
    ADD(F, E)                        ; \
+   ASSIGN(E, A)                     ; \
+   ROTL_IMM(E, 5)                   ; \
+   ADD3_IMM(F, E, MAGIC3)           ; \
    ADD(F, ARRAY4(MSG, N))           ; \
 
 #define F2(A, B, C, D, E, F, MSG) \
@@ -223,12 +223,12 @@ LOOP_UNTIL_EQ(ESI, 80, .EXPANSION)
    F4(EAX, EBX, ECX, EDX, ESI, EDI, 78)
    F4(EDI, EAX, EBX, ECX, EDX, ESI, 79)
 
-   ASSIGN(EBP, ARG(1))
-   ADD(ARRAY4(EBP, 0), ESI)
-   ADD(ARRAY4(EBP, 1), EDI)
-   ADD(ARRAY4(EBP, 2), EAX)
-   ADD(ARRAY4(EBP, 3), EBX)
-   ADD(ARRAY4(EBP, 4), ECX)
+   ASSIGN(EDX, ARG(1))
+   ADD(ARRAY4(EDX, 0), ESI)
+   ADD(ARRAY4(EDX, 1), EDI)
+   ADD(ARRAY4(EDX, 2), EAX)
+   ADD(ARRAY4(EDX, 3), EBX)
+   ADD(ARRAY4(EDX, 4), ECX)
 
    RESTORE_REGS()
 END_FUNCTION(sha160_core)
