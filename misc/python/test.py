@@ -26,6 +26,12 @@ def main():
     print cert.issuer_info("X520.OrganizationalUnit")
     print cert.policies()
     print cert.ex_constraints()
+    print cert.subject_key_id()
+
+    cert2 = botan.X509_Certificate("cert.crt")
+    cert3 = botan.X509_Certificate("cert.pem")
+    cert4 = botan.X509_Certificate("cert2.crt")
+    print cert2 == cert4
 
 if __name__ == "__main__":
     sys.exit(main())
