@@ -3,64 +3,49 @@
 * (C) 2005-2006 Jack Lloyd <lloyd@randombit.net> *
 *************************************************/
 
-#include <boost/python.hpp>
-using namespace boost::python;
-
 #include <botan/oids.h>
 #include <botan/x509_key.h>
 #include <botan/x509cert.h>
 using namespace Botan;
 
+#include <boost/python.hpp>
+namespace python = boost::python;
+
 template<typename C>
-list vector_to_list(const C& in)
+python::list vector_to_list(const C& in)
    {
-   list out;
+   python::list out;
    typename C::const_iterator i = in.begin();
    while(i != in.end()) { out.append(*i); ++i; }
    return out;
    }
 
-template<typename C>
-std::vector<std::string> oid_lookup(const C& in)
-   {
-   std::vector<std::string> out;
-   typename C::const_iterator i = in.begin();
-   while(i != in.end())
-      {
-      OID oid(*i);
-      std::string string_rep = OIDS::lookup(oid);
-
-      out.push_back(OIDS::lookup(oid));
-      ++i;
-      }
-   return out;
-   }
-
-list get_subject_info(const X509_Certificate* cert,
+python::list get_subject_info(const X509_Certificate* cert,
                       const std::string& type)
    {
    return vector_to_list(cert->subject_info(type));
    }
 
-list get_issuer_info(const X509_Certificate* cert,
+python::list get_issuer_info(const X509_Certificate* cert,
                      const std::string& type)
    {
    return vector_to_list(cert->issuer_info(type));
    }
 
-list get_policies(const X509_Certificate* cert)
+python::list get_policies(const X509_Certificate* cert)
    {
    return vector_to_list(cert->policies());
    }
 
-list get_ex_constraints(const X509_Certificate* cert)
+python::list get_ex_constraints(const X509_Certificate* cert)
    {
-   return vector_to_list(oid_lookup(cert->ex_constraints()));
+   return vector_to_list(cert->ex_constraints());
    }
 
 void export_x509()
    {
-   class_<X509_Certificate>("X509_Certificate", init<std::string>())
+   python::class_<X509_Certificate>
+      ("X509_Certificate", python::init<std::string>())
       .add_property("version", &X509_Certificate::x509_version)
       .add_property("is_CA", &X509_Certificate::is_CA_cert)
       .add_property("self_signed", &X509_Certificate::is_self_signed)
