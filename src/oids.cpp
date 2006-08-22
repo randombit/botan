@@ -28,7 +28,10 @@ void add_oid(const OID& oid, const std::string& name)
 *************************************************/
 std::string lookup(const OID& oid)
    {
-   return global_config().get("oid2str", oid.as_string());
+   std::string name = global_config().get("oid2str", oid.as_string());
+   if(name == "")
+      return oid.as_string();
+   return name;
    }
 
 /*************************************************
@@ -36,7 +39,10 @@ std::string lookup(const OID& oid)
 *************************************************/
 OID lookup(const std::string& name)
    {
-   return OID(global_config().get("str2oid", name));
+   std::string value = global_config().get("str2oid", name);
+   if(value == "")
+      return OID(name);
+   return OID(value);
    }
 
 /*************************************************
