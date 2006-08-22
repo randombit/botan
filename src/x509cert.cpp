@@ -16,6 +16,26 @@
 
 namespace Botan {
 
+namespace {
+
+/*************************************************
+* Lookup each OID in the vector                  *
+*************************************************/
+std::vector<std::string> lookup_oids(const std::vector<std::string>& in)
+   {
+   std::vector<std::string> out;
+
+   std::vector<std::string>::const_iterator i = in.begin();
+   while(i != in.end())
+      {
+      out.push_back(OIDS::lookup(OID(*i)));
+      ++i;
+      }
+   return out;
+   }
+
+}
+
 /*************************************************
 * X509_Certificate Constructor                   *
 *************************************************/
@@ -206,7 +226,7 @@ Key_Constraints X509_Certificate::constraints() const
 *************************************************/
 std::vector<std::string> X509_Certificate::ex_constraints() const
    {
-   return subject.get("X509v3.ExtendedKeyUsage");
+   return lookup_oids(subject.get("X509v3.ExtendedKeyUsage"));
    }
 
 /*************************************************
@@ -214,7 +234,7 @@ std::vector<std::string> X509_Certificate::ex_constraints() const
 *************************************************/
 std::vector<std::string> X509_Certificate::policies() const
    {
-   return subject.get("X509v3.CertificatePolicies");
+   return lookup_oids(subject.get("X509v3.CertificatePolicies"));
    }
 
 /*************************************************
