@@ -156,7 +156,8 @@ std::string X509_DN::deref_info_field(const std::string& info)
    if(info == "SerialNumber")                 return "X520.SerialNumber";
    if(info == "Country")                      return "X520.Country";
    if(info == "Organization")                 return "X520.Organization";
-   if(info == "Organizational Unit")          return "X520.OrganizationalUnit";
+   if(info == "Organizational Unit" || info == "OrgUnit")
+      return "X520.OrganizationalUnit";
    if(info == "Locality")                     return "X520.Locality";
    if(info == "State" || info == "Province")  return "X520.State";
    if(info == "Email")                        return "RFC822";
