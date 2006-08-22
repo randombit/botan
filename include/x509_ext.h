@@ -3,8 +3,8 @@
 * (C) 1999-2006 The Botan Project                *
 *************************************************/
 
-#ifndef BOTAN_X509_EXTENSIONS__
-#define BOTAN_X509_EXTENSIONS__
+#ifndef BOTAN_X509_EXTENSIONS_H__
+#define BOTAN_X509_EXTENSIONS_H__
 
 #include <botan/asn1_int.h>
 #include <botan/asn1_oid.h>
