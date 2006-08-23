@@ -10,47 +10,21 @@ using namespace boost::python;
 #include <botan/lookup.h>
 using namespace Botan;
 
-class Python_Filter : public Fanout_Filter, public wrapper<Fanout_Filter>
+Filter* make_filter1(const std::string& name)
    {
-   public:
-      virtual void write(const byte in[], u32bit len)
-         {
-         this->get_override("write")(in, len);
-         }
-      virtual void start_msg()
-         {
-         if(override start_msg = this->get_override("start_msg"))
-            start_msg();
-         Filter::start_msg();
-         }
-      virtual void end_msg()
-         {
-         if(override end_msg = this->get_override("end_msg"))
-            end_msg();
-         Filter::end_msg();
-         }
-
-      Python_Filter(Filter* f)
-         {
-         if(f) { attach(f); incr_owns(); }
-         }
-   };
-
-Python_Filter* make_filter1(const std::string& name)
-   {
-   printf("Trying to make filter of type %s\n", name.c_str());
-
    if(have_hash(name))
-      return new Python_Filter(new Hash_Filter(name));
-   if(name == "Hex_Encoder")
-      return new Python_Filter(new Hex_Encoder);
+      return new Hash_Filter(name);
+   else if(name == "Hex_Encoder")
+      return new Hex_Encoder;
+   else if(name == "Hex_Decoder")
+      return new Hex_Decoder;
 
-   return 0;
+   throw Invalid_Argument("Filter " + name + " not found");
    }
 
 // FIXME: add new wrapper for Keyed_Filter here
-Python_Filter* make_filter2(const std::string& name,
-                            const SymmetricKey& key)
+Filter* make_filter2(const std::string& name,
+                     const SymmetricKey& key)
    {
    printf("Trying to make a filter of type %s (key %s)\n", name.c_str(),
           key.as_string().c_str());
@@ -59,7 +33,8 @@ Python_Filter* make_filter2(const std::string& name,
 
 void export_filters()
    {
-   class_<Python_Filter, boost::noncopyable>("Filter", no_init)
+   class_<Filter, std::auto_ptr<Filter>, boost::noncopyable>
+      ("Filter", no_init)
       .def("write", &Filter::write)
       .def("start_msg", &Filter::start_msg)
       .def("end_msg", &Filter::end_msg);
@@ -70,18 +45,34 @@ void export_filters()
        return_value_policy<manage_new_object>());
    }
 
+void append_filter(Pipe& pipe, std::auto_ptr<Filter> filter)
+   {
+   pipe.append(filter.get());
+   filter.release();
+   }
+
+void prepend_filter(Pipe& pipe, std::auto_ptr<Filter> filter)
+   {
+   pipe.prepend(filter.get());
+   filter.release();
+   }
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(rallas_ovls, read_all_as_string, 0, 1)
 
 void export_pipe()
    {
    void (Pipe::*pipe_write_str)(const std::string&) = &Pipe::write;
 
-   class_<Pipe, boost::noncopyable>("Pipe")
-      .def(init<optional<Python_Filter*, Python_Filter*, Python_Filter*> >())
+   class_<Pipe, boost::noncopyable>("PipeObj")
+      .def(init<>())
       .def_readonly("LAST_MESSAGE", &Pipe::LAST_MESSAGE)
       .def_readonly("DEFAULT_MESSAGE", &Pipe::DEFAULT_MESSAGE)
       .add_property("default_msg", &Pipe::default_msg, &Pipe::set_default_msg)
-      .def("msg_count", &Pipe::message_count)
+      .add_property("msg_count", &Pipe::message_count)
+      .def("append", append_filter)
+      .def("prepend", prepend_filter)
+      .def("reset", &Pipe::reset)
+      .def("pop", &Pipe::pop)
       .def("end_of_data", &Pipe::end_of_data)
       .def("start_msg", &Pipe::start_msg)
       .def("end_msg", &Pipe::end_msg)
