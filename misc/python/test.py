@@ -2,36 +2,23 @@
 
 import sys, botan
 
-def do_hash(input):
-    pipe = botan.Pipe(botan.Filter("MD5"), botan.Filter("Hex_Encoder"))
-
-    print pipe
-    pipe.start_msg()
-    pipe.write(input)
-    pipe.end_msg()
-
-    return pipe.read_all()
+class FindDOD(botan.X509_Store.Search_Func):
+    def match(self, cert):
+        return ("PythonCA" in cert.subject_info("Name"))
 
 def main():
     cert = botan.X509_Certificate("cert.pem")
-    print cert.self_signed
-    print cert.is_CA
-    print cert.version
-    print cert.pathlimit
-    print cert.start_time()
-    print cert.end_time()
-    print cert.subject_info("Name")
-    print cert.subject_info("X520.OrganizationalUnit")
-    print cert.issuer_info("Name")
-    print cert.issuer_info("X520.OrganizationalUnit")
-    print cert.policies()
-    print cert.ex_constraints()
-    print cert.subject_key_id()
 
-    cert2 = botan.X509_Certificate("cert.crt")
-    cert3 = botan.X509_Certificate("cert.pem")
-    cert4 = botan.X509_Certificate("cert2.crt")
-    print cert2 == cert4
+    stor = botan.X509_Store()
+    stor.add_cert(botan.X509_Certificate("cert.pem"), True)
+    stor.add_cert(botan.X509_Certificate("cert2.pem"))
+    stor.add_cert(botan.X509_Certificate("cert.crt"))
+    matcher = FindDOD()
+    certs = stor.get_certs(matcher)
+
+    for cert in certs:
+        print cert.subject_info("Email")
+        print cert.subject_key_id()
 
 if __name__ == "__main__":
     sys.exit(main())
