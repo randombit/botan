@@ -13,7 +13,7 @@ def Filter(name, key = None, iv = None, dir = None):
         return make_filter(name)
 
 def Pipe(*filters):
-    pipe = PipeObj();
+    pipe = PipeObj()
     for filter in filters:
         if filter:
             pipe.append(filter)
