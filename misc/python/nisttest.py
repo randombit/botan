@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys, re, os, botan
+import sys, os, botan
 from os.path import join;
 
 class TestResult(Exception):
@@ -9,7 +9,7 @@ class TestResult(Exception):
     def __str__(self):
         return repr(self.result).replace('botan._botan.verify_result.', '')
 
-def throw_unless_ok(r):
+def raise_unless_ok(r):
     if r != botan.verify_result.verified:
         raise TestResult(r)
 
@@ -21,10 +21,10 @@ def validate(ca_certs, certs, crls, ee_certs):
             store.add_cert(botan.X509_Certificate(cert), cert in ca_certs)
 
     for crl in crls:
-        throw_unless_ok(store.add_crl(botan.X509_CRL(crl)))
+        raise_unless_ok(store.add_crl(botan.X509_CRL(crl)))
 
     for ee in ee_certs:
-        throw_unless_ok(store.validate(botan.X509_Certificate(ee)))
+        raise_unless_ok(store.validate(botan.X509_Certificate(ee)))
 
     raise TestResult(botan.verify_result.verified)
 
