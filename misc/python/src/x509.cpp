@@ -13,14 +13,27 @@ using namespace Botan;
 #include <boost/python.hpp>
 namespace python = boost::python;
 
-template<typename C>
-python::list vector_to_list(const C& in)
+template<typename T>
+class vector_to_list
    {
-   python::list out;
-   typename C::const_iterator i = in.begin();
-   while(i != in.end()) { out.append(*i); ++i; }
-   return out;
-   }
+   public:
+      static PyObject* convert(const std::vector<T>& in)
+         {
+         python::list out;
+         typename std::vector<T>::const_iterator i = in.begin();
+         while(i != in.end())
+            {
+            out.append(*i);
+            ++i;
+            }
+         return python::incref(out.ptr());
+         }
+
+      vector_to_list()
+         {
+         python::to_python_converter<std::vector<T>, vector_to_list<T> >();
+         }
+   };
 
 python::str hex_encode(const MemoryRegion<byte>& in)
    {
@@ -39,33 +52,24 @@ python::str get_subject_keyid(const X509_Certificate* cert)
    return hex_encode(cert->subject_key_id());
    }
 
-python::list get_subject_info(const X509_Certificate* cert,
-                              const std::string& type)
+class X509_Store_Search_Wrap : public X509_Store::Search_Func,
+                               public python::wrapper<X509_Store::Search_Func>
    {
-   return vector_to_list(cert->subject_info(type));
-   }
-
-python::list get_issuer_info(const X509_Certificate* cert,
-                             const std::string& type)
-   {
-   return vector_to_list(cert->issuer_info(type));
-   }
-
-python::list get_policies(const X509_Certificate* cert)
-   {
-   return vector_to_list(cert->policies());
-   }
-
-python::list get_ex_constraints(const X509_Certificate* cert)
-   {
-   return vector_to_list(cert->ex_constraints());
-   }
+   public:
+      bool match(const X509_Certificate& cert) const
+         {
+         return this->get_override("match")(cert);
+         }
+   };
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(add_cert_ols, add_cert, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(validate_cert_ols, validate_cert, 1, 2)
 
 void export_x509()
    {
+   vector_to_list<std::string>();
+   vector_to_list<X509_Certificate>();
+
    python::class_<X509_Certificate>
       ("X509_Certificate", python::init<std::string>())
       .def(python::self == python::self)
@@ -77,10 +81,10 @@ void export_x509()
       .add_property("as_pem", &X509_Object::PEM_encode)
       .def("start_time", &X509_Certificate::start_time)
       .def("end_time", &X509_Certificate::end_time)
-      .def("subject_info", get_subject_info)
-      .def("issuer_info", get_issuer_info)
-      .def("ex_constraints", get_ex_constraints)
-      .def("policies", get_policies)
+      .def("subject_info", &X509_Certificate::subject_info)
+      .def("issuer_info", &X509_Certificate::issuer_info)
+      .def("ex_constraints", &X509_Certificate::ex_constraints)
+      .def("policies", &X509_Certificate::policies)
       .def("subject_key_id", get_subject_keyid)
       .def("authority_key_id", get_auth_keyid);
 
@@ -114,7 +118,15 @@ void export_x509()
       .value("timestamping", X509_Store::TIME_STAMPING)
       .value("crl_signing", X509_Store::CRL_SIGNING);
 
-   python::class_<X509_Store>("X509_Store")
-      .def("add_cert", &X509_Store::add_cert, add_cert_ols())
-      .def("validate", &X509_Store::validate_cert, validate_cert_ols());
+      {
+      python::scope in_class = 
+         python::class_<X509_Store>("X509_Store")
+         .def("add_cert", &X509_Store::add_cert, add_cert_ols())
+         .def("validate", &X509_Store::validate_cert, validate_cert_ols())
+         .def("get_certs", &X509_Store::get_certs); 
+
+      python::class_<X509_Store_Search_Wrap, boost::noncopyable>
+              ("Search_Func")
+         .def("match", python::pure_virtual(&X509_Store::Search_Func::match));
+      }
    }
