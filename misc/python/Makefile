@@ -16,13 +16,13 @@ WRAP_OBJS = $(patsubst src/%.cpp,build/%.o,$(WRAP_SRC))
 
 all: botan/_botan.so
 
-build/%.o: src/%.cpp dirs
+build/%.o: src/%.cpp
 	$(CXX) $(SHARED_CFLAGS) $(WRAPPER_CFLAGS) -c $< -o $@
 
 botan/_botan.so: $(WRAP_OBJS) 
 	$(CXX) -shared -o $@ $(shell botan-config --libs) -L$(PYTHON_ROOT) $(WRAP_OBJS) -Lbuild/ -lboost_python -Wl,-rpath-link,. -Wl,-soname,$@
 
-dirs:
+dirs: build/ botan/
 	mkdir -p build botan
 
 clean:
