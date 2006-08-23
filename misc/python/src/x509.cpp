@@ -35,22 +35,23 @@ class vector_to_list
          }
    };
 
-python::str hex_encode(const MemoryRegion<byte>& in)
+template<typename T>
+class memvec_to_hexstr
    {
-   Pipe pipe(new Hex_Encoder);
-   pipe.process_msg(in);
-   return python::str(pipe.read_all_as_string());
-   }
+   public:
+      static PyObject* convert(const T& in)
+         {
+         Pipe pipe(new Hex_Encoder);
+         pipe.process_msg(in);
+         std::string result = pipe.read_all_as_string();
+         return python::incref(python::str(result).ptr());
+         }
 
-python::str get_auth_keyid(const X509_Certificate* cert)
-   {
-   return hex_encode(cert->authority_key_id());
-   }
-
-python::str get_subject_keyid(const X509_Certificate* cert)
-   {
-   return hex_encode(cert->subject_key_id());
-   }
+      memvec_to_hexstr()
+         {
+         python::to_python_converter<T, memvec_to_hexstr<T> >();
+         }
+   };
 
 class X509_Store_Search_Wrap : public X509_Store::Search_Func,
                                public python::wrapper<X509_Store::Search_Func>
@@ -69,6 +70,7 @@ void export_x509()
    {
    vector_to_list<std::string>();
    vector_to_list<X509_Certificate>();
+   memvec_to_hexstr<MemoryVector<byte> >();
 
    python::class_<X509_Certificate>
       ("X509_Certificate", python::init<std::string>())
@@ -85,8 +87,8 @@ void export_x509()
       .def("issuer_info", &X509_Certificate::issuer_info)
       .def("ex_constraints", &X509_Certificate::ex_constraints)
       .def("policies", &X509_Certificate::policies)
-      .def("subject_key_id", get_subject_keyid)
-      .def("authority_key_id", get_auth_keyid);
+      .def("subject_key_id", &X509_Certificate::subject_key_id)
+      .def("authority_key_id", &X509_Certificate::authority_key_id);
 
    python::enum_<X509_Code>("verify_result")
       .value("verified", VERIFIED)
