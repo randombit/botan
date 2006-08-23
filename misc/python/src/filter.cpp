@@ -10,6 +10,13 @@ using namespace boost::python;
 #include <botan/lookup.h>
 using namespace Botan;
 
+Filter* return_or_raise(Filter* f, const std::string& name)
+   {
+   if(f)
+      return f;
+   throw Invalid_Argument("Filter " + name + " not found");
+   }
+
 Filter* make_filter1(const std::string& name)
    {
    if(have_hash(name))
@@ -24,17 +31,24 @@ Filter* make_filter1(const std::string& name)
 
 // FIXME: add new wrapper for Keyed_Filter here
 Filter* make_filter2(const std::string& name,
-                     const SymmetricKey& key)
+                     const SymmetricKey& key,
+                     Cipher_Dir direction)
    {
-   printf("Trying to make a filter of type %s (key %s)\n", name.c_str(),
-          key.as_string().c_str());
-   return 0;
+   return return_or_raise(get_cipher(name, key, direction), name);
+   }
+
+Filter* make_filter3(const std::string& name,
+                     const SymmetricKey& key,
+                     const InitializationVector& iv,
+                     Cipher_Dir direction)
+   {
+   return return_or_raise(get_cipher(name, key, iv, direction), name);
    }
 
 void export_filters()
    {
    class_<Filter, std::auto_ptr<Filter>, boost::noncopyable>
-      ("Filter", no_init)
+      ("FilterObj", no_init)
       .def("write", &Filter::write)
       .def("start_msg", &Filter::start_msg)
       .def("end_msg", &Filter::end_msg);
@@ -42,6 +56,8 @@ void export_filters()
    def("make_filter", make_filter1,
        return_value_policy<manage_new_object>());
    def("make_filter", make_filter2,
+       return_value_policy<manage_new_object>());
+   def("make_filter", make_filter3,
        return_value_policy<manage_new_object>());
    }
 

@@ -34,6 +34,10 @@ BOOST_PYTHON_MODULE(_botan)
       .def(python::init< python::optional<std::string> >())
       .def(python::init< u32bit >());
 
+   python::enum_<Cipher_Dir>("cipher_dir")
+      .value("encryption", ENCRYPTION)
+      .value("decryption", DECRYPTION);
+
    export_filters();
    export_pipe();
    export_x509();
