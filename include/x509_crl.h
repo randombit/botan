@@ -33,11 +33,10 @@ class X509_CRL : public X509_Object
       X509_Time this_update() const;
       X509_Time next_update() const;
 
-      void force_decode();
-
       X509_CRL(DataSource&);
       X509_CRL(const std::string&);
    private:
+      void force_decode();
       std::vector<CRL_Entry> revoked;
       Data_Store info;
    };
