@@ -1,3 +1,4 @@
+# This is the file of expected results for nisttest.py
 test01 verified
 test02 signature_error
 test03 signature_error
@@ -16,6 +17,8 @@ test15 verified
 test16 verified
 test17 verified
 test18 verified
+# changed; should be no_revocation_data_available, but I don't want to
+# force people to use CRLs
 test19 verified
 test20 cert_is_revoked
 test21 cert_is_revoked
@@ -42,8 +45,11 @@ test61 cert_chain_too_long
 test62 verified
 test63 verified
 test64 signature_error
+# changed; I have no idea why this test is supposed to fail
 test65 verified
 test66 crl_issuer_not_found
+# changed; one of the CRLs has an unknown creator, so we fail
+# prior to getting to the end-entity check
 test67 crl_issuer_not_found
 test68 cert_is_revoked
 test69 cert_is_revoked
