@@ -337,10 +337,13 @@ void Alternative_Name::contents_to(Data_Store& subject_info,
    std::multimap<std::string, std::string> contents =
       get_alt_name().contents();
 
-   if(oid_name_str == "subject_alternative_name")
+   if(oid_name_str == "X509v3.SubjectAlternativeName")
       subject_info.add(contents);
-   else
+   else if(oid_name_str == "X509v3.IssuerAlternativeName")
       issuer_info.add(contents);
+   else
+      throw Internal_Error("In Alternative_Name, unknown type " +
+                           oid_name_str);
    }
 
 /*************************************************
