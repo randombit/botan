@@ -70,16 +70,21 @@ void export_filters()
        return_value_policy<manage_new_object>());
    }
 
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(rallas_ovls, read_all_as_string, 0, 1)
+
 void export_pipe()
    {
-   void (Pipe::*pipe_write1)(const std::string&) = &Pipe::write;
-   void (Pipe::*pipe_write2)(const byte[], u32bit) = &Pipe::write;
+   void (Pipe::*pipe_write_str)(const std::string&) = &Pipe::write;
 
    class_<Pipe, boost::noncopyable>("Pipe")
-      .def(init< Python_Filter*, optional<Python_Filter*> >())
+      .def(init<optional<Python_Filter*, Python_Filter*, Python_Filter*> >())
+      .def_readonly("LAST_MESSAGE", &Pipe::LAST_MESSAGE)
+      .def_readonly("DEFAULT_MESSAGE", &Pipe::DEFAULT_MESSAGE)
+      .add_property("default_msg", &Pipe::default_msg, &Pipe::set_default_msg)
+      .def("msg_count", &Pipe::message_count)
+      .def("end_of_data", &Pipe::end_of_data)
       .def("start_msg", &Pipe::start_msg)
       .def("end_msg", &Pipe::end_msg)
-      .def("write", pipe_write1)
-      .def("write", pipe_write2)
-      .def("read_all", &Pipe::read_all_as_string);
+      .def("write", pipe_write_str)
+      .def("read_all_as_string", &Pipe::read_all_as_string, rallas_ovls());
    }
