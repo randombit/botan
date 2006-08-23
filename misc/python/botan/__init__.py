@@ -2,6 +2,12 @@ from _botan import *
 
 init = LibraryInitializer()
 
+class SymmetricKey(OctetString):
+    pass
+
+class InitializationVector(OctetString):
+    pass
+
 def Filter(name, key = None, iv = None, dir = None):
     if key != None and iv != None and dir != None:
         return make_filter(name, key, iv, dir)

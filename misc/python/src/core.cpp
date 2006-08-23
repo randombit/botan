@@ -20,18 +20,9 @@ BOOST_PYTHON_MODULE(_botan)
 
    python::class_<OctetString>("OctetString")
       .def(python::init< python::optional<std::string> >())
-      .def("as_string", &OctetString::as_string)
-      .def("length", &OctetString::length)
-      .def(python::self ^= python::self);
-
-   python::class_<SymmetricKey, python::bases<OctetString> >("SymmetricKey")
-      .def(python::init< python::optional<std::string> >())
-      .def(python::init< u32bit >());
-
-   python::class_<InitializationVector, python::bases<OctetString> >
-      ("InitializationVector")
-      .def(python::init< python::optional<std::string> >())
-      .def(python::init< u32bit >());
+      .def(python::init< u32bit >())
+      .def("__str__", &OctetString::as_string)
+      .add_property("length", &OctetString::length);
 
    python::enum_<Cipher_Dir>("cipher_dir")
       .value("encryption", ENCRYPTION)

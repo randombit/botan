@@ -2,22 +2,15 @@
 
 import sys, botan
 
-class PyFilter(botan.FilterObj):
-    def start_msg(self):
-        print "PyFilter start_msg"
-        self.send_str('initial')
-
-    def end_msg(self):
-        print "PyFilter end_msg"
-
-    def write(self, data):
-        print "PyFilter write called with", data
-        self.send_str(data.replace('h', 'r'))
-
 def encrypt(input):
-    filter = PyFilter()
+    cipher_key = botan.SymmetricKey("AABB")
+    print cipher_key.length
+    cipher_key = botan.SymmetricKey("AABBCCDD")
+    print cipher_key.length
+
+    cipher = botan.Filter("ARC4", key = cipher_key)
     
-    pipe = botan.Pipe(filter)
+    pipe = botan.Pipe(cipher, botan.Filter("Hex_Encoder"))
 
     pipe.start_msg()
     pipe.write(input)
@@ -30,7 +23,7 @@ def encrypt(input):
 def decrypt(input):
     pipe = botan.Pipe(botan.Filter("Hex_Decoder"),
                       botan.Filter("ARC4",
-                                   key = botan.SymmetricKey("AABB")))
+                                   key = botan.SymmetricKey("AABBCCDD")))
 
     pipe.process_msg(input)
     return pipe.read_all()
@@ -38,7 +31,7 @@ def decrypt(input):
 def main():
     ciphertext = encrypt("hi chappy")
     print ciphertext
-    #print decrypt(ciphertext)
+    print decrypt(ciphertext)
 
 if __name__ == "__main__":
     sys.exit(main())
