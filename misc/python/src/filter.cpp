@@ -91,6 +91,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(rallas_ovls, read_all_as_string, 0, 1)
 void export_pipe()
    {
    void (Pipe::*pipe_write_str)(const std::string&) = &Pipe::write;
+   void (Pipe::*pipe_process_str)(const std::string&) = &Pipe::process_msg;
 
    class_<Pipe, boost::noncopyable>("PipeObj")
       .def(init<>())
@@ -106,5 +107,6 @@ void export_pipe()
       .def("start_msg", &Pipe::start_msg)
       .def("end_msg", &Pipe::end_msg)
       .def("write", pipe_write_str)
-      .def("read_all_as_string", &Pipe::read_all_as_string, rallas_ovls());
+      .def("process_msg", pipe_process_str)
+      .def("read_all", &Pipe::read_all_as_string, rallas_ovls());
    }

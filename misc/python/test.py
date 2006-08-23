@@ -11,19 +11,15 @@ def encrypt(input):
     pipe.write(input)
     pipe.end_msg()
 
-    return pipe.read_all_as_string()
+    return pipe.read_all()
 
 def decrypt(input):
     pipe = botan.Pipe(botan.Filter("Hex_Decoder"),
-
                       botan.Filter("ARC4",
                                    key = botan.SymmetricKey("AABB")))
 
-    pipe.start_msg()
-    pipe.write(input)
-    pipe.end_msg()
-
-    return pipe.read_all_as_string()
+    pipe.process_msg(input)
+    return pipe.read_all()
 
 def main():
     ciphertext = encrypt("hi chappy")
