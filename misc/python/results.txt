@@ -1,5 +1,5 @@
 test01 verified
-test02 verified
+test02 signature_error
 test03 signature_error
 test04 verified
 test05 cert_not_yet_valid
