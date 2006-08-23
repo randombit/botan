@@ -1,5 +1,6 @@
 from _botan import *
 
+# Initialize the library when the module is imported
 init = LibraryInitializer()
 
 class SymmetricKey(OctetString):
@@ -24,6 +25,3 @@ def Pipe(*filters):
         if filter:
             pipe.append(filter)
     return pipe
-
-#def Filter(name, key):
-#    return make_filter(name, key)
