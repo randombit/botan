@@ -29,15 +29,26 @@ Filter* make_filter1(const std::string& name)
    throw Invalid_Argument("Filter " + name + " not found");
    }
 
-// FIXME: add new wrapper for Keyed_Filter here
 Filter* make_filter2(const std::string& name,
+                     const SymmetricKey& key)
+   {
+   if(have_mac(name))
+      return new MAC_Filter(name, key);
+   else if(have_stream_cipher(name))
+      return new StreamCipher_Filter(name, key);
+
+   throw Invalid_Argument("Filter " + name + " not found");
+   }
+
+// FIXME: add new wrapper for Keyed_Filter here
+Filter* make_filter3(const std::string& name,
                      const SymmetricKey& key,
                      Cipher_Dir direction)
    {
    return return_or_raise(get_cipher(name, key, direction), name);
    }
 
-Filter* make_filter3(const std::string& name,
+Filter* make_filter4(const std::string& name,
                      const SymmetricKey& key,
                      const InitializationVector& iv,
                      Cipher_Dir direction)
@@ -58,6 +69,8 @@ void export_filters()
    def("make_filter", make_filter2,
        return_value_policy<manage_new_object>());
    def("make_filter", make_filter3,
+       return_value_policy<manage_new_object>());
+   def("make_filter", make_filter4,
        return_value_policy<manage_new_object>());
    }
 
