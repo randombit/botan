@@ -1,19 +1,39 @@
 /*************************************************
 * Boost.Python module definition                 *
-* (C) 2005-2006 Jack Lloyd <lloyd@randombit.net> *
+* (C) 1999-2006 The Botan Project                *
 *************************************************/
 
-#include <boost/python.hpp>
-using namespace boost::python;
+#include <botan/init.h>
+#include <botan/symkey.h>
+using namespace Botan;
 
-extern void export_basic_types();
+#include <boost/python.hpp>
+namespace python = boost::python;
+
 extern void export_filters();
 extern void export_pipe();
 extern void export_x509();
 
 BOOST_PYTHON_MODULE(_botan)
    {
-   export_basic_types();
+   python::class_<LibraryInitializer>("LibraryInitializer")
+      .def(python::init< python::optional<std::string> >());
+
+   python::class_<OctetString>("OctetString")
+      .def(python::init< python::optional<std::string> >())
+      .def("as_string", &OctetString::as_string)
+      .def("length", &OctetString::length)
+      .def(python::self ^= python::self);
+
+   python::class_<SymmetricKey, python::bases<OctetString> >("SymmetricKey")
+      .def(python::init< python::optional<std::string> >())
+      .def(python::init< u32bit >());
+
+   python::class_<InitializationVector, python::bases<OctetString> >
+      ("InitializationVector")
+      .def(python::init< python::optional<std::string> >())
+      .def(python::init< u32bit >());
+
    export_filters();
    export_pipe();
    export_x509();
