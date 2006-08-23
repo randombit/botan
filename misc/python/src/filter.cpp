@@ -1,6 +1,6 @@
 /*************************************************
-* Wrappers for Botan Filters                     *
-* (C) 2005-2006 Jack Lloyd <lloyd@randombit.net> *
+* Boost.Python module definition                 *
+* (C) 1999-2006 The Botan Project                *
 *************************************************/
 
 #include <boost/python.hpp>
@@ -9,6 +9,46 @@ using namespace boost::python;
 #include <botan/pipe.h>
 #include <botan/lookup.h>
 using namespace Botan;
+
+class StringFilter : public Filter
+   {
+   public:
+      virtual void write_str(const std::string&) = 0;
+      void write(const byte data[], u32bit length)
+         {
+         write_str(std::string((const char*)data, length));
+         }
+
+      void send_str(const std::string& str)
+         {
+         send((const byte*)str.data(), str.length());
+         }
+   };
+
+class FilterWrapper : public StringFilter, public wrapper<StringFilter>
+   {
+   public:
+      void start_msg()
+         {
+         if(override start_msg = this->get_override("start_msg"))
+            start_msg();
+         }
+
+      void end_msg()
+         {
+         if(override end_msg = this->get_override("end_msg"))
+            end_msg();
+         }
+
+      void default_start_msg() {}
+      void default_end_msg() {}
+
+      virtual void write_str(const std::string& str)
+         {
+         this->get_override("write")(str);
+         }
+
+   };
 
 Filter* return_or_raise(Filter* filter, const std::string& name)
    {
@@ -65,6 +105,12 @@ void append_filter(Pipe& pipe, std::auto_ptr<Filter> filter)
    filter.release();
    }
 
+void append_pyfilter(Pipe& pipe, std::auto_ptr<FilterWrapper> filter)
+   {
+   pipe.append(filter.get());
+   filter.release();
+   }
+
 void prepend_filter(Pipe& pipe, std::auto_ptr<Filter> filter)
    {
    pipe.prepend(filter.get());
@@ -87,6 +133,15 @@ void export_filters()
    def("make_filter", make_filter4,
        return_value_policy<manage_new_object>());
 
+   // This might not work - Pipe will delete the filter, but Python
+   // might have allocated the space with malloc() or who-knows-what -> bad
+   class_<FilterWrapper, std::auto_ptr<FilterWrapper>, boost::noncopyable>
+      ("FilterObj")
+      .def("write", pure_virtual(&StringFilter::write_str))
+      .def("send_str", &StringFilter::send_str)
+      .def("start_msg", &Filter::start_msg, &FilterWrapper::default_start_msg)
+      .def("end_msg", &Filter::end_msg, &FilterWrapper::default_end_msg);
+
    void (Pipe::*pipe_write_str)(const std::string&) = &Pipe::write;
    void (Pipe::*pipe_process_str)(const std::string&) = &Pipe::process_msg;
 
@@ -97,6 +152,7 @@ void export_filters()
       .add_property("default_msg", &Pipe::default_msg, &Pipe::set_default_msg)
       .add_property("msg_count", &Pipe::message_count)
       .def("append", append_filter)
+      .def("append", append_pyfilter)
       .def("prepend", prepend_filter)
       .def("reset", &Pipe::reset)
       .def("pop", &Pipe::pop)
