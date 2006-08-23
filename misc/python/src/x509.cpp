@@ -116,8 +116,8 @@ void export_x509()
       .value("tls_server", X509_Store::TLS_SERVER)
       .value("tls_client", X509_Store::TLS_CLIENT)
       .value("code_signing", X509_Store::CODE_SIGNING)
-      .value("email", X509_Store::EMAIL_PROTECTION)
-      .value("timestamping", X509_Store::TIME_STAMPING)
+      .value("email_protection", X509_Store::EMAIL_PROTECTION)
+      .value("time_stamping", X509_Store::TIME_STAMPING)
       .value("crl_signing", X509_Store::CRL_SIGNING);
 
       {
