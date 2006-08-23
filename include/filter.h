@@ -25,7 +25,7 @@ class Filter
       void finish_msg();
       virtual ~Filter() {}
    protected:
-      virtual void send(const byte[], u32bit);
+      void send(const byte[], u32bit);
       void send(byte input) { send(&input, 1); }
       void send(const MemoryRegion<byte>& in) { send(in.begin(), in.size()); }
       Filter();
