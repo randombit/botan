@@ -7,6 +7,7 @@
 #include <botan/pipe.h>
 #include <botan/filters.h>
 #include <botan/x509cert.h>
+#include <botan/x509_crl.h>
 #include <botan/x509stor.h>
 using namespace Botan;
 
@@ -90,6 +91,10 @@ void export_x509()
       .def("subject_key_id", &X509_Certificate::subject_key_id)
       .def("authority_key_id", &X509_Certificate::authority_key_id);
 
+   python::class_<X509_CRL>
+      ("X509_CRL", python::init<std::string>())
+      .add_property("as_pem", &X509_Object::PEM_encode);
+
    python::enum_<X509_Code>("verify_result")
       .value("verified", VERIFIED)
       .value("unknown_x509_error", UNKNOWN_X509_ERROR)
@@ -125,7 +130,8 @@ void export_x509()
          python::class_<X509_Store>("X509_Store")
          .def("add_cert", &X509_Store::add_cert, add_cert_ols())
          .def("validate", &X509_Store::validate_cert, validate_cert_ols())
-         .def("get_certs", &X509_Store::get_certs); 
+         .def("get_certs", &X509_Store::get_certs)
+         .def("add_crl", &X509_Store::add_crl);
 
       python::class_<X509_Store_Search_Wrap, boost::noncopyable>
               ("Search_Func")
