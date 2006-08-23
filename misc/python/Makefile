@@ -12,19 +12,19 @@ SHARED_CFLAGS = $(LANG_FLAGS) $(OPT_FLAGS) $(PYTHON_INC)
 BOOST_CFLAGS = $(PYTHON_DEF) $(SHARED_CFLAGS)
 
 WRAP_SRC = $(wildcard src/*)
-WRAP_OBJS = $(patsubst src/%.cpp,%.o,$(WRAP_SRC))
+WRAP_OBJS = $(patsubst src/%.cpp,build/%.o,$(WRAP_SRC))
 
 all: botan/_botan.so
 
-%.o: src/%.cpp
+build/%.o: src/%.cpp dirs
 	$(CXX) $(SHARED_CFLAGS) $(WRAPPER_CFLAGS) -c $< -o $@
 
-botan/_botan.so: $(WRAP_OBJS) build/libboost_python.so
+botan/_botan.so: $(WRAP_OBJS) 
 	$(CXX) -shared -o $@ $(shell botan-config --libs) -L$(PYTHON_ROOT) $(WRAP_OBJS) -Lbuild/ -lboost_python -Wl,-rpath-link,. -Wl,-soname,$@
 
 dirs:
-	mkdir -p build build/boost build/botan botan
+	mkdir -p build botan
 
 clean:
-	rm -rf build/
+	rm -rf build
 	rm -f botan/*.so botan/*.pyc
