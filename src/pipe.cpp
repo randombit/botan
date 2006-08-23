@@ -281,4 +281,10 @@ u32bit Pipe::message_count() const
    return outputs->message_count();
    }
 
+/*************************************************
+* Static Member Variables                        *
+*************************************************/
+const u32bit Pipe::LAST_MESSAGE    = 0xFFFFFFFE;
+const u32bit Pipe::DEFAULT_MESSAGE = 0xFFFFFFFF;
+
 }
