@@ -11,7 +11,6 @@ using namespace Botan;
 namespace python = boost::python;
 
 extern void export_filters();
-extern void export_pipe();
 extern void export_x509();
 
 BOOST_PYTHON_MODULE(_botan)
@@ -39,6 +38,5 @@ BOOST_PYTHON_MODULE(_botan)
       .value("decryption", DECRYPTION);
 
    export_filters();
-   export_pipe();
    export_x509();
    }

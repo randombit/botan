@@ -10,34 +10,37 @@ using namespace boost::python;
 #include <botan/lookup.h>
 using namespace Botan;
 
-Filter* return_or_raise(Filter* f, const std::string& name)
+Filter* return_or_raise(Filter* filter, const std::string& name)
    {
-   if(f)
-      return f;
-   throw Invalid_Argument("Filter " + name + " not found");
+   if(filter)
+      return filter;
+   throw Invalid_Argument("Filter " + name + " could not be found");
    }
 
 Filter* make_filter1(const std::string& name)
    {
-   if(have_hash(name))
-      return new Hash_Filter(name);
-   else if(name == "Hex_Encoder")
-      return new Hex_Encoder;
-   else if(name == "Hex_Decoder")
-      return new Hex_Decoder;
+   Filter* filter = 0;
 
-   throw Invalid_Argument("Filter " + name + " not found");
+   if(have_hash(name))               filter = new Hash_Filter(name);
+   else if(name == "Hex_Encoder")    filter = new Hex_Encoder;
+   else if(name == "Hex_Decoder")    filter = new Hex_Decoder;
+   else if(name == "Base64_Encoder") filter = new Base64_Encoder;
+   else if(name == "Base64_Decoder") filter = new Base64_Decoder;
+
+   return return_or_raise(filter, name);
    }
 
 Filter* make_filter2(const std::string& name,
                      const SymmetricKey& key)
    {
-   if(have_mac(name))
-      return new MAC_Filter(name, key);
-   else if(have_stream_cipher(name))
-      return new StreamCipher_Filter(name, key);
+   Filter* filter = 0;
 
-   throw Invalid_Argument("Filter " + name + " not found");
+   if(have_mac(name))
+      filter = new MAC_Filter(name, key);
+   else if(have_stream_cipher(name))
+      filter = new StreamCipher_Filter(name, key);
+
+   return return_or_raise(filter, name);
    }
 
 // FIXME: add new wrapper for Keyed_Filter here
@@ -56,21 +59,6 @@ Filter* make_filter4(const std::string& name,
    return return_or_raise(get_cipher(name, key, iv, direction), name);
    }
 
-void export_filters()
-   {
-   class_<Filter, std::auto_ptr<Filter>, boost::noncopyable>
-      ("__Internal_FilterObj", no_init);
-
-   def("make_filter", make_filter1,
-       return_value_policy<manage_new_object>());
-   def("make_filter", make_filter2,
-       return_value_policy<manage_new_object>());
-   def("make_filter", make_filter3,
-       return_value_policy<manage_new_object>());
-   def("make_filter", make_filter4,
-       return_value_policy<manage_new_object>());
-   }
-
 void append_filter(Pipe& pipe, std::auto_ptr<Filter> filter)
    {
    pipe.append(filter.get());
@@ -85,8 +73,20 @@ void prepend_filter(Pipe& pipe, std::auto_ptr<Filter> filter)
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(rallas_ovls, read_all_as_string, 0, 1)
 
-void export_pipe()
+void export_filters()
    {
+   class_<Filter, std::auto_ptr<Filter>, boost::noncopyable>
+      ("__Internal_FilterObj", no_init);
+
+   def("make_filter", make_filter1,
+       return_value_policy<manage_new_object>());
+   def("make_filter", make_filter2,
+       return_value_policy<manage_new_object>());
+   def("make_filter", make_filter3,
+       return_value_policy<manage_new_object>());
+   def("make_filter", make_filter4,
+       return_value_policy<manage_new_object>());
+
    void (Pipe::*pipe_write_str)(const std::string&) = &Pipe::write;
    void (Pipe::*pipe_process_str)(const std::string&) = &Pipe::process_msg;
 
