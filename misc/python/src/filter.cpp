@@ -59,10 +59,7 @@ Filter* make_filter4(const std::string& name,
 void export_filters()
    {
    class_<Filter, std::auto_ptr<Filter>, boost::noncopyable>
-      ("FilterObj", no_init)
-      .def("write", &Filter::write)
-      .def("start_msg", &Filter::start_msg)
-      .def("end_msg", &Filter::end_msg);
+      ("__Internal_FilterObj", no_init);
 
    def("make_filter", make_filter1,
        return_value_policy<manage_new_object>());
