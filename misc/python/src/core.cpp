@@ -10,6 +10,8 @@ using namespace Botan;
 namespace python = boost::python;
 
 extern void export_block_ciphers();
+extern void export_hash_functions();
+extern void export_macs();
 extern void export_filters();
 extern void export_pk();
 extern void export_x509();
@@ -30,6 +32,8 @@ BOOST_PYTHON_MODULE(_botan)
       .value("decryption", DECRYPTION);
 
    export_block_ciphers();
+   export_hash_functions();
+   export_macs();
    export_filters();
    export_pk();
    export_x509();
