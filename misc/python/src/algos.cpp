@@ -29,8 +29,6 @@ std::string process(const std::string& in, BlockCipher* cipher,
 class Py_BlockCipher
    {
    public:
-      BlockCipher* object() { return cipher; }
-
       u32bit block_size() const { return cipher->BLOCK_SIZE; }
       u32bit keylength_min() const { return cipher->MINIMUM_KEYLENGTH; }
       u32bit keylength_max() const { return cipher->MAXIMUM_KEYLENGTH; }
@@ -67,8 +65,6 @@ class Py_BlockCipher
 class Py_StreamCipher
    {
    public:
-      StreamCipher* object() { return cipher; }
-
       u32bit keylength_min() const { return cipher->MINIMUM_KEYLENGTH; }
       u32bit keylength_max() const { return cipher->MAXIMUM_KEYLENGTH; }
       u32bit keylength_mod() const { return cipher->KEYLENGTH_MULTIPLE; }
@@ -101,8 +97,6 @@ class Py_StreamCipher
 class Py_HashFunction
    {
    public:
-      HashFunction* object() { return hash; }
-
       u32bit output_length() const { return hash->OUTPUT_LENGTH; }
       std::string name() const { return hash->name(); }
       void clear() throw() { hash->clear(); }
@@ -127,8 +121,6 @@ class Py_HashFunction
 class Py_MAC
    {
    public:
-      MessageAuthenticationCode* object() { return mac; }
-
       u32bit output_length() const { return mac->OUTPUT_LENGTH; }
       u32bit keylength_min() const { return mac->MINIMUM_KEYLENGTH; }
       u32bit keylength_max() const { return mac->MAXIMUM_KEYLENGTH; }
