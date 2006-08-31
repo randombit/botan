@@ -39,6 +39,9 @@ class Py_BlockCipher
          return cipher->valid_keylength(kl);
          }
 
+      std::string name() const { return cipher->name(); }
+      void clear() throw() { cipher->clear(); }
+
       std::string encrypt(const std::string& in) const
          {
          return process(in, cipher, &BlockCipher::encrypt);
@@ -48,19 +51,13 @@ class Py_BlockCipher
          return process(in, cipher, &BlockCipher::decrypt);
          }
 
-      void set_key(const OctetString& key)
-         {
-         cipher->set_key(key);
-         }
+      void set_key(const OctetString& key) { cipher->set_key(key); }
 
       Py_BlockCipher(const std::string& name)
          {
          cipher = get_block_cipher(name);
          }
-      ~Py_BlockCipher()
-         {
-         delete cipher;
-         }
+      ~Py_BlockCipher() { delete cipher; }
    private:
       BlockCipher* cipher;
    };
@@ -72,6 +69,8 @@ void export_block_ciphers()
       .add_property("keylength_min", &Py_BlockCipher::keylength_min)
       .add_property("keylength_max", &Py_BlockCipher::keylength_max)
       .add_property("keylength_mod", &Py_BlockCipher::keylength_mod)
+      .add_property("name", &Py_BlockCipher::name)
+      .def("clear", &Py_BlockCipher::clear)
       .def("valid_keylength", &Py_BlockCipher::valid_keylength)
       .def("set_key", &Py_BlockCipher::set_key)
       .def("encrypt", &Py_BlockCipher::encrypt)
