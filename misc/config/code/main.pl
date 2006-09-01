@@ -7,6 +7,7 @@ my $module_set = '';
 my $dumb_gcc = 0;
 my $autoconfig = 1;
 my $user_set_root = '';
+my $build_dir = '';
 my @using_mods;
 my ($doc_dir, $lib_dir);
 
@@ -26,6 +27,7 @@ GetOptions('debug' => sub { $debug = 1; },
            'prefix=s' => \$user_set_root,
            'docdir=s' => \$doc_dir,
            'libdir=s' => \$lib_dir,
+           'build-dir=s' => \$build_dir,
            'help' => sub { help(); }
            );
 
@@ -44,6 +46,12 @@ else { help(); }
 
 my ($cc,$os,$submodel) = split(/-/,$cc_os_cpu_set,3);
 if(!defined($cc) or !defined($os) or !defined($submodel)) { help(); }
+
+if($build_dir ne '')
+{
+    $BUILD_DIR = $build_dir;
+    $BUILD_INCLUDE_DIR = $build_dir . '/include';
+}
 
 ##################################################
 # Some special hacks                             #
