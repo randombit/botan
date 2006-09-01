@@ -61,6 +61,12 @@ END_OF_CONFIG_H
    }
 
    print CONFIG_H $defines;
+
+   if($local_config ne '')
+   {
+       print CONFIG_H "\n#include \"${local_config}\"\n";
+   }
+
    print CONFIG_H "\n#endif\n";
 
    close CONFIG_H;

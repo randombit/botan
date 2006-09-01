@@ -8,6 +8,7 @@ my $dumb_gcc = 0;
 my $autoconfig = 1;
 my $user_set_root = '';
 my $build_dir = '';
+my $local_config = '';
 my @using_mods;
 my ($doc_dir, $lib_dir);
 
@@ -28,6 +29,7 @@ GetOptions('debug' => sub { $debug = 1; },
            'docdir=s' => \$doc_dir,
            'libdir=s' => \$lib_dir,
            'build-dir=s' => \$build_dir,
+           'local-config=s' => \$local_config,
            'help' => sub { help(); }
            );
 
