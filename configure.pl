@@ -1,13 +1,5 @@
 #!/usr/bin/perl -w
 
-# Warning: This file is machine-generated; any changes will be lost. Instead,
-# change mkconfig.pl and the system description files. If you find a bug in
-# this program (such as generation of incorrect options), please mail
-# lloyd@randombit.net with details.
-
-# This file is in the public domain.
-
-# It actually runs on a lot of 5.005 installs, but not all...
 require 5.006;
 
 use strict;
@@ -15,9 +7,6 @@ use DirHandle;
 use Getopt::Long;
 use File::Spec;
 use File::Copy;
-
-my $PROJECT_NAME    = 'Botan';
-my $PROJECT_NAME_LC = lc $PROJECT_NAME;
 
 my $MAJOR_VERSION = 1;
 my $MINOR_VERSION = 5;
@@ -43,7 +32,7 @@ my $BUILD_INCLUDE_DIR = 'build/include';
 
 my $CONFIG_HEADER = 'build.h';
 
-my $CPP_INCLUDE_DIR_DIRNAME = $PROJECT_NAME_LC;
+my $CPP_INCLUDE_DIR_DIRNAME = 'botan';
 
 # Available module sets
 my %MODULE_SETS = (
@@ -77,733 +66,59 @@ my %DOCS = (
    'thanks.txt' => $DOC_DIR,
    'todo.txt' => $DOC_DIR
    );
-my %ARCH = (
-   '68020'          => 'm68k',
-   '68030'          => 'm68k',
-   '68040'          => 'm68k',
-   '68060'          => 'm68k',
-   'alpha'          => 'alpha',
-   'alpha-ev4'      => 'alpha',
-   'alpha-ev5'      => 'alpha',
-   'alpha-ev56'     => 'alpha',
-   'alpha-ev6'      => 'alpha',
-   'alpha-ev67'     => 'alpha',
-   'alpha-ev68'     => 'alpha',
-   'alpha-ev7'      => 'alpha',
-   'alpha-pca56'    => 'alpha',
-   'amd64'          => 'amd64',
-   'arm'            => 'arm',
-   'arm2'           => 'arm',
-   'arm3'           => 'arm',
-   'arm6'           => 'arm',
-   'arm7'           => 'arm',
-   'arm8'           => 'arm',
-   'arm9'           => 'arm',
-   'athlon'         => 'ia32',
-   'athlon64'       => 'amd64',
-   'em64t'          => 'amd64',
-   'hppa'           => 'hppa',
-   'hppa1.0'        => 'hppa',
-   'hppa1.1'        => 'hppa',
-   'hppa2.0'        => 'hppa',
-   'i386'           => 'ia32',
-   'i486'           => 'ia32',
-   'i586'           => 'ia32',
-   'i686'           => 'ia32',
-   'ia32'           => 'ia32',
-   'ia64'           => 'ia64',
-   'k6'             => 'ia32',
-   'm68k'           => 'm68k',
-   'mip32-r3000'    => 'mips32',
-   'mip32-r6000'    => 'mips32',
-   'mips32'         => 'mips32',
-   'mips64'         => 'mips64',
-   'mips64-r10000'  => 'mips64',
-   'mips64-r4000'   => 'mips64',
-   'mips64-r4100'   => 'mips64',
-   'mips64-r4300'   => 'mips64',
-   'mips64-r4400'   => 'mips64',
-   'mips64-r4560'   => 'mips64',
-   'mips64-r4600'   => 'mips64',
-   'mips64-r5000'   => 'mips64',
-   'mips64-r8000'   => 'mips64',
-   'opteron'        => 'amd64',
-   'pentium4'       => 'ia32',
-   'power3'         => 'ppc64',
-   'power4'         => 'ppc64',
-   'power5'         => 'ppc64',
-   'ppc'            => 'ppc',
-   'ppc601'         => 'ppc',
-   'ppc603'         => 'ppc',
-   'ppc604'         => 'ppc',
-   'ppc64'          => 'ppc64',
-   'ppc740'         => 'ppc',
-   'ppc7400'        => 'ppc',
-   'ppc7450'        => 'ppc',
-   'ppc750'         => 'ppc',
-   'ppc970'         => 'ppc64',
-   'rs64a'          => 'ppc64',
-   's390'           => 's390',
-   's390x'          => 's390x',
-   'sh'             => 'sh',
-   'sh1'            => 'sh',
-   'sh2'            => 'sh',
-   'sh3'            => 'sh',
-   'sh3e'           => 'sh',
-   'sh4'            => 'sh',
-   'sparc32'        => 'sparc32',
-   'sparc32-v7'     => 'sparc32',
-   'sparc32-v8'     => 'sparc32',
-   'sparc32-v9'     => 'sparc32',
-   'sparc64'        => 'sparc64',
-   'sparc64-ultra'  => 'sparc64',
-   'sparc64-ultra2' => 'sparc64',
-   'sparc64-ultra3' => 'sparc64',
-   'strongarm'      => 'arm',
-   'strongarm110'   => 'arm',
-   'strongarm1100'  => 'arm',
-   'xscale'         => 'arm',
-);
+my %REALNAME = ();
 
-my %ARCH_ALIAS = (
-   '680x0'          => 'm68k',
-   '68k'            => 'm68k',
-   '80x86'          => 'ia32',
-   'alphaaxp'       => 'alpha',
-   'athlon64'       => 'amd64',
-   'axp'            => 'alpha',
-   'hp-pa'          => 'hppa',
-   'hp-pa-risc'     => 'hppa',
-   'hp-parisc'      => 'hppa',
-   'i86pc'          => 'ia32',
-   'itanium'        => 'ia64',
-   'ix86'           => 'ia32',
-   'merced'         => 'ia64',
-   'mips'           => 'mips32',
-   'opteron'        => 'amd64',
-   'pa-risc'        => 'hppa',
-   'parisc'         => 'hppa',
-   'powerpc'        => 'ppc',
-   'sparc'          => 'sparc32',
-   'x86'            => 'ia32',
-   'x86-64'         => 'amd64',
-   'x86_64'         => 'amd64',
-);
+my $ARCH_DIR = 'misc/config/arch';
+my $OS_DIR = 'misc/config/os';
+my $CC_DIR = 'misc/config/cc';
 
-my %DEFAULT_SUBMODEL = (
-   'alpha'          => 'alpha-ev5',
-   'amd64'          => 'amd64',
-   'arm'            => 'arm2',
-   'hppa'           => 'hppa1.1',
-   'ia32'           => 'i586',
-   'ia64'           => 'ia64',
-   'm68k'           => '68040',
-   'mips32'         => 'r3000',
-   'mips64'         => 'r4400',
-   'ppc'            => 'ppc740',
-   'ppc64'          => 'power4',
-   's390'           => 's390',
-   's390x'          => 's390x',
-   'sh'             => 'sh1',
-   'sparc32'        => 'sparc32-v8',
-   'sparc64'        => 'sparc64-ultra',
-);
+my ($ARCH,$ARCH_ALIAS,$DEFAULT_SUBMODEL,$SUBMODEL_ALIAS) =
+    arch_defines($ARCH_DIR,\%REALNAME);
 
-my %SUBMODEL_ALIAS = (
-   'alphaev4'       => 'alpha-ev4',
-   'alphaev5'       => 'alpha-ev5',
-   'alphaev56'      => 'alpha-ev56',
-   'alphaev6'       => 'alpha-ev6',
-   'alphaev67'      => 'alpha-ev67',
-   'alphaev68'      => 'alpha-ev68',
-   'alphaev7'       => 'alpha-ev7',
-   'alphapca56'     => 'alpha-pca56',
-   'athlon-xp'      => 'athlon',
-   'cypress'        => 'sparc32-v7',
-   'duron'          => 'athlon',
-   'g3'             => 'ppc740',
-   'g4'             => 'ppc7450',
-   'g5'             => 'ppc970',
-   'hypersparc'     => 'sparc32-v8',
-   'k7'             => 'athlon',
-   'microsparc'     => 'sparc32-v8',
-   'mipsbe'         => 'mips3000',
-   'mipsle'         => 'mips3000',
-   'p2'             => 'i686',
-   'p3'             => 'i686',
-   'p4'             => 'pentium4',
-   'pentium'        => 'i586',
-   'pentium2'       => 'i686',
-   'pentium3'       => 'i686',
-   'pentium_pro'    => 'i686',
-   'pentiumpro'     => 'i686',
-   'r10000'         => 'mips64-r10000',
-   'r10k'           => 'mips64-r10000',
-   'r3000'          => 'mips32-r3000',
-   'r3k'            => 'mips32-r3000',
-   'r4000'          => 'mips64-r4000',
-   'r4100'          => 'mips64-r4100',
-   'r4300'          => 'mips64-r4300',
-   'r4400'          => 'mips64-r4400',
-   'r4560'          => 'mips64-r4560',
-   'r4600'          => 'mips64-r4600',
-   'r4k'            => 'mips64-r4000',
-   'r5000'          => 'mips64-r5000',
-   'r5k'            => 'mips64-r5000',
-   'r6000'          => 'mips32-r6000',
-   'r6k'            => 'mips32-r6000',
-   'r8000'          => 'mips64-r8000',
-   'r8k'            => 'mips64-r8000',
-   'sa110'          => 'strongarm110',
-   'sa1100'         => 'strongarm1100',
-   'sparc-v7'       => 'sparc32-v7',
-   'sparc-v8'       => 'sparc32-v8',
-   'sparc-v9'       => 'sparc32-v9',
-   'sparclite'      => 'sparc32-v8',
-   'sparcv7'        => 'sparc32-v7',
-   'sparcv8'        => 'sparc32-v8',
-   'sparcv9'        => 'sparc32-v9',
-   'strongarm1110'  => 'strongarm1100',
-   'supersparc'     => 'sparc32-v8',
-   'ultrasparc'     => 'sparc64-ultra',
-   'ultrasparc2'    => 'sparc64-ultra2',
-   'ultrasparc3'    => 'sparc64-ultra3',
-);
+my ($OS_SUPPORTS_ARCH,$OS_SUPPORTS_SHARED,$OS_TYPE,$OS_OBJ_SUFFIX,
+    $OS_SHARED_SUFFIX,$OS_STATIC_SUFFIX,$OS_AR_COMMAND,
+    $OS_AR_NEEDS_RANLIB,$OS_ALIAS,$INSTALL_INFO) =
+    os_defines($OS_DIR,\%REALNAME);
 
-my %OS_SUPPORTS_ARCH = (
-   'aix'        => [ 'ia64', 'ppc', 'ppc64', ],
-   'beos'       => [ 'ia32', 'ppc', ],
-   'cygwin'     => [ 'amd64', 'ia32', 'ia64', ],
-   'darwin'     => [ 'ia32', 'ppc', 'ppc64', ],
-   'freebsd'    => [ 'alpha', 'amd64', 'ia32', 'ia64', 'powerpc', 'sparc64', 
-                     ],
-   'hpux'       => [ 'hppa', 'ia64', ],
-   'irix'       => [ 'mips32', 'mips64', ],
-   'linux'      => [ 'alpha', 'amd64', 'arm', 'hppa', 'ia32', 'ia64', 'm68k', 
-                     'mips32', 'mips64', 'ppc', 'ppc64', 's390', 's390x', 'sh', 
-                     'sparc32', 'sparc64', ],
-   'netbsd'     => [ 'alpha', 'amd64', 'arm', 'hppa', 'ia32', 'ia64', 'm68k', 
-                     'mips32', 'mips64', 'ppc', 'sparc32', ],
-   'openbsd'    => [ 'alpha', 'ia32', 'm68k', 'mips32', 'ppc', 'sparc32', 'sparc64', 
-                     ],
-   'qnx'        => [ 'arm', 'ia32', 'mips32', 'ppc', 'sh', ],
-   'solaris'    => [ 'ia32', 'sparc32', 'sparc64', ],
-   'tru64'      => [ 'alpha', ],
-   'windows'    => [ 'amd64', 'ia32', 'ia64', ],
-);
+my ($CC_BINARY_NAME, $CC_LIB_OPT_FLAGS, $CC_CHECK_OPT_FLAGS,
+    $CC_WARN_FLAGS, $CC_LANG_FLAGS, $CC_SO_OBJ_FLAGS,
+    $CC_SO_LINK_FLAGS, $CC_DEBUG_FLAGS, $CC_NO_DEBUG_FLAGS,
+    $CC_MACH_OPT_FLAGS, $CC_MACH_OPT_FLAGS_RE, $CC_ABI_FLAGS,
+    $CC_SUPPORTS_OS, $CC_SUPPORTS_ARCH, $CC_AR_COMMAND,
+    $MAKEFILE_STYLE) = cc_defines($CC_DIR,\%REALNAME);
 
-my %OS_SUPPORTS_SHARED = (
-   'aix'        => [ 'all', ],
-   'beos'       => [ 'all', ],
-   'darwin'     => [ 'all', ],
-   'freebsd'    => [ 'all', ],
-   'hpux'       => [ 'all', ],
-   'irix'       => [ 'all', ],
-   'linux'      => [ 'all', ],
-   'netbsd'     => [ 'all', ],
-   'openbsd'    => [ 'all', ],
-   'qnx'        => [ 'all', ],
-   'solaris'    => [ 'all', ],
-   'tru64'      => [ 'all', ],
-);
+my %ARCH = %$ARCH;
+my %ARCH_ALIAS = %$ARCH_ALIAS;
+my %DEFAULT_SUBMODEL = %$DEFAULT_SUBMODEL;
+my %SUBMODEL_ALIAS = %$SUBMODEL_ALIAS;
 
-my %OS_TYPE = (
-   'aix'            => 'unix',
-   'beos'           => 'beos',
-   'cygwin'         => 'unix',
-   'darwin'         => 'unix',
-   'freebsd'        => 'unix',
-   'hpux'           => 'unix',
-   'irix'           => 'unix',
-   'linux'          => 'unix',
-   'netbsd'         => 'unix',
-   'openbsd'        => 'unix',
-   'qnx'            => 'unix',
-   'solaris'        => 'unix',
-   'tru64'          => 'unix',
-   'windows'        => 'windows',
-);
+my %OS_SUPPORTS_ARCH = %$OS_SUPPORTS_ARCH;
+my %OS_SUPPORTS_SHARED = %$OS_SUPPORTS_SHARED;
+my %OS_TYPE = %$OS_TYPE;
+my %OS_OBJ_SUFFIX = %$OS_OBJ_SUFFIX;
+my %OS_SHARED_SUFFIX = %$OS_SHARED_SUFFIX;
+my %OS_STATIC_SUFFIX = %$OS_STATIC_SUFFIX;
+my %OS_AR_COMMAND = %$OS_AR_COMMAND;
+my %OS_AR_NEEDS_RANLIB = %$OS_AR_NEEDS_RANLIB;
+my %OS_ALIAS = %$OS_ALIAS;
+my %INSTALL_INFO = %$INSTALL_INFO;
 
-my %OS_OBJ_SUFFIX = (
-   'defaults'       => 'o',
-   'windows'        => 'obj',
-);
-
-my %OS_SHARED_SUFFIX = (
-   'darwin'         => 'dylib',
-   'defaults'       => 'so',
-   'hpux'           => 'sl',
-   'windows'        => 'dll',
-);
-
-my %OS_STATIC_SUFFIX = (
-   'defaults'       => 'a',
-   'windows'        => 'lib',
-);
-
-my %OS_AR_COMMAND = (
-   'darwin'         => 'ar cr',
-   'defaults'       => 'ar crs',
-);
-
-my %OS_AR_NEEDS_RANLIB = (
-   'darwin'         => '1',
-   'defaults'       => '0',
-);
-
-my %OS_ALIAS = (
-   'haiku'          => 'beos',
-   'hp-ux'          => 'hpux',
-   'macosx'         => 'darwin',
-   'osf1'           => 'tru64',
-   'sunos'          => 'solaris',
-);
-
-my %INSTALL_INFO = (
-   'beos'       => {
-      'docs'       => 'documentation',
-      'headers'    => '../develop/headers',
-      'libs'       => 'system/lib',
-      'root'       => '/boot/beos',
-      },
-   'cygwin'     => {
-      'docs'       => 'docs',
-      'root'       => 'c:\Botan',
-      },
-   'darwin'     => {
-      'docs'       => 'doc',
-      'group'      => 'wheel',
-      },
-   'defaults'   => {
-      'command'    => 'install -o OWNER -g GROUP -m MODE',
-      'docs'       => 'share/doc',
-      'group'      => 'root',
-      'headers'    => 'include',
-      'libs'       => 'lib',
-      'root'       => '/usr/local',
-      'user'       => 'root',
-      },
-   'freebsd'    => {
-      'group'      => 'wheel',
-      },
-   'netbsd'     => {
-      'group'      => 'wheel',
-      },
-   'openbsd'    => {
-      'group'      => 'wheel',
-      },
-   'solaris'    => {
-      'command'    => 'install -u OWNER -g GROUP -m MODE',
-      },
-   'windows'    => {
-      'docs'       => 'docs',
-      'root'       => 'c:\Botan',
-      },
-);
-
-my %CC_SUPPORTS_OS = (
-   'bcc'        => [ 'windows', ],
-   'compaq'     => [ 'linux', 'tru64', ],
-   'ekopath'    => [ 'linux', ],
-   'gcc'        => [ 'aix', 'beos', 'cygwin', 'darwin', 'freebsd', 'hpux', 'irix', 
-                     'linux', 'netbsd', 'openbsd', 'qnx', 'solaris', 'tru64', 
-                     'windows', ],
-   'hpcc'       => [ 'hpux', ],
-   'icc'        => [ 'linux', ],
-   'kai'        => [ 'hpux', 'irix', 'linux', 'solaris', 'tru64', ],
-   'mipspro'    => [ 'irix', ],
-   'msvc'       => [ 'windows', ],
-   'pgi'        => [ 'linux', 'solaris', ],
-   'sgipro64'   => [ 'linux', ],
-   'sunwspro'   => [ 'solaris', ],
-);
-
-my %CC_SUPPORTS_ARCH = (
-   'bcc'        => [ 'ia32', ],
-   'compaq'     => [ 'alpha', ],
-   'ekopath'    => [ 'amd64', 'ia32', ],
-   'gcc'        => [ 'alpha', 'amd64', 'arm', 'hppa', 'ia32', 'ia64', 'm68k', 
-                     'mips32', 'mips64', 'ppc', 'ppc64', 's390', 's390x', 'sh', 
-                     'sparc32', 'sparc64', ],
-   'hpcc'       => [ 'hppa', ],
-   'icc'        => [ 'ia32', 'ia64', ],
-   'kai'        => [ 'alpha', 'hppa', 'ia32', 'mips32', 'mips64', 'sparc32', 
-                     'sparc64', ],
-   'mipspro'    => [ 'mips32', 'mips64', ],
-   'msvc'       => [ 'ia32', ],
-   'pgi'        => [ 'ia32', ],
-   'sgipro64'   => [ 'ia64', ],
-   'sunwspro'   => [ 'ia32', 'sparc32', 'sparc64', ],
-);
-
-my %CC_BINARY_NAME = (
-   'bcc'            => 'bcc32',
-   'compaq'         => 'cxx',
-   'ekopath'        => 'pathCC',
-   'gcc'            => 'g++',
-   'hpcc'           => 'aCC',
-   'icc'            => 'icc',
-   'kai'            => 'KCC',
-   'mipspro'        => 'CC',
-   'msvc'           => 'cl /nologo',
-   'pgi'            => 'pgCC',
-   'sgipro64'       => 'sgiCC',
-   'sunwspro'       => 'CC',
-);
-
-my %CC_LIB_OPT_FLAGS = (
-   'bcc'            => '-O2',
-   'compaq'         => '-O2',
-   'ekopath'        => '-O3 -OPT:Ofast:alias=disjoint',
-   'gcc'            => '-O2 -finline-functions',
-   'hpcc'           => '+O2',
-   'icc'            => '-O3 -ip -unroll',
-   'kai'            => '+K3 --inline_auto_space_time=65 --abstract_pointer',
-   'mipspro'        => '-O3 -OPT:alias=TYPED',
-   'msvc'           => '/O2 /Ob2',
-   'pgi'            => '-fast -Minline',
-   'sgipro64'       => '-O3 -OPT:alias=TYPED',
-   'sunwspro'       => '-xO2',
-);
-
-my %CC_CHECK_OPT_FLAGS = (
-   'bcc'            => '-O2',
-   'compaq'         => '-O2',
-   'ekopath'        => '-O2',
-   'gcc'            => '-O2',
-   'hpcc'           => '+O2',
-   'icc'            => '-O2',
-   'kai'            => '+K3',
-   'mipspro'        => '-O3 -OPT:alias=TYPED',
-   'msvc'           => '/O2',
-   'pgi'            => '-fast',
-   'sgipro64'       => '-O3 -OPT:alias=TYPED',
-   'sunwspro'       => '-xO2',
-);
-
-my %CC_WARN_FLAGS = (
-   'bcc'            => '-w',
-   'compaq'         => '',
-   'ekopath'        => '-W -Wall',
-   'gcc'            => '-W -Wall',
-   'hpcc'           => '',
-   'icc'            => '-w1',
-   'kai'            => '',
-   'mipspro'        => '',
-   'msvc'           => '',
-   'pgi'            => '',
-   'sgipro64'       => '-Wall -W',
-   'sunwspro'       => '+w',
-);
-
-my %CC_LANG_FLAGS = (
-   'bcc'            => '',
-   'compaq'         => '-std ansi -D__USE_STD_IOSTREAM',
-   'ekopath'        => '-D_REENTRANT -ansi -Wno-long-long',
-   'gcc'            => '-D_REENTRANT -ansi -Wno-long-long',
-   'hpcc'           => '-AA -ext +eh -z',
-   'icc'            => '',
-   'kai'            => '-D__KAI_STRICT',
-   'mipspro'        => '-ansi -LANG:ansi-for-init-scope=ON',
-   'msvc'           => '/EHsc /GR /D_CONSOLE',
-   'pgi'            => '',
-   'sgipro64'       => '-ansi -LANG:ansi-for-init-scope=ON',
-   'sunwspro'       => '+p -D__EXTENSIONS__',
-);
-
-my %CC_DEBUG_FLAGS = (
-   'bcc'            => '',
-   'compaq'         => '-g',
-   'ekopath'        => '-g',
-   'gcc'            => '-g',
-   'hpcc'           => '-g',
-   'icc'            => '-g',
-   'kai'            => '-g',
-   'mipspro'        => '-g3',
-   'msvc'           => '',
-   'pgi'            => '',
-   'sgipro64'       => '-g3',
-   'sunwspro'       => '-g',
-);
-
-my %CC_NO_DEBUG_FLAGS = (
-   'bcc'            => '',
-   'compaq'         => '',
-   'ekopath'        => '',
-   'gcc'            => '',
-   'hpcc'           => '',
-   'icc'            => '',
-   'kai'            => '',
-   'mipspro'        => '',
-   'msvc'           => '',
-   'pgi'            => '',
-   'sgipro64'       => '',
-   'sunwspro'       => '',
-);
-
-my %CC_MACHINE_OPT_FLAGS = (
-   'bcc'        => {
-      'athlon'     => '/G6',
-      'i486'       => '/G4',
-      'i586'       => '/G5',
-      'i686'       => '/G6',
-      'pentium4'   => '/G6',
-      },
-   'compaq'     => {
-      'alpha'      => '-arch=SUBMODEL',
-      },
-   'ekopath'    => {
-      'amd64'      => '-mcpu=athlon64',
-      'athlon'     => '-mcpu=athlon',
-      'athlon64'   => '-mcpu=athlon64',
-      'em64t'      => '-mcpu=em64t',
-      'i386'       => '-mcpu=anyx86',
-      'opteron'    => '-mcpu=opteron',
-      'pentium4'   => '-mcpu=pentium4',
-      },
-   'gcc'        => {
-      'alpha'      => '-mcpu=SUBMODEL',
-      'alpha-ev67' => '-mcpu=ev6',
-      'alpha-ev68' => '-mcpu=ev6',
-      'alpha-ev7'  => '-mcpu=ev6',
-      'amd64'      => '',
-      'arm'        => '-mcpu=SUBMODEL',
-      'hppa'       => '-march=SUBMODEL',
-      'i386'       => '-mcpu=i686',
-      'ia32'       => '-march=SUBMODEL',
-      'm68k'       => '-mSUBMODEL',
-      'mips32'     => '-mips1 -mcpu=SUBMODEL',
-      'mips64'     => '-mips3 -mcpu=SUBMODEL',
-      'ppc'        => '-mcpu=SUBMODEL',
-      'ppc601'     => '-mpowerpc -mcpu=601',
-      'ppc64'      => '-mcpu=SUBMODEL',
-      'r10000'     => '-mips4',
-      'sh'         => '-mSUBMODEL',
-      'sparc32'    => '-mcpu=SUBMODEL -Wa,-xarch=v8plus',
-      'sparc64'    => '-mcpu=v9 -mtune=ultrasparc',
-      'sparc64-ultra3' => '-mcpu=v9 -mtune=ultrasparc3',
-      },
-   'icc'        => {
-      'athlon'     => '-tpp6 -xiM',
-      'i586'       => '-tpp5',
-      'i686'       => '-tpp6 -xiM',
-      'pentium4'   => '-tpp7 -xiMW',
-      },
-   'mipspro'    => {
-      'mips32'     => '-mips1',
-      'mips64'     => '-mips3',
-      'mips64-r10000' => '-mips4 -r10000',
-      'mips64-r5000' => '-mips4 -r5000',
-      'mips64-r8000' => '-mips4 -r8000',
-      },
-   'msvc'       => {
-      'athlon'     => '/G6',
-      'i486'       => '/G4',
-      'i586'       => '/G5',
-      'i686'       => '/G6',
-      'pentium4'   => '/G6',
-      },
-   'pgi'        => {
-      'athlon'     => '-tp k7',
-      'i586'       => '-tp p5',
-      'i686'       => '-tp p6',
-      'ia32'       => '-tp px',
-      'pentium4'   => '-tp p6',
-      },
-   'sunwspro'   => {
-      'i386'       => '-xtarget=486',
-      'i486'       => '-xtarget=486',
-      'i586'       => '-xtarget=pentium',
-      'i686'       => '-xtarget=pentium_pro',
-      'k6'         => '-xtarget=pentium',
-      'pentium4'   => '-xtarget=pentium_pro',
-      'sparc32'    => '-xchip=ultra -xarch=SUBMODEL',
-      'sparc32-v9' => '-xchip=ultra -xarch=v8',
-      'sparc64'    => '-xchip=SUBMODEL',
-      },
-);
-
-my %CC_MACHINE_OPT_FLAGS_RE = (
-   'compaq'     => {
-      'alpha'      => 'alpha-',
-      },
-   'gcc'        => {
-      'alpha'      => 'alpha-',
-      'hppa'       => 'hppa',
-      'mips32'     => 'mips32-',
-      'mips64'     => 'mips64-',
-      'ppc'        => 'ppc',
-      'ppc64'      => 'ppc',
-      'sh'         => 'sh',
-      'sparc32'    => 'sparc32-',
-      },
-   'sunwspro'   => {
-      'sparc32'    => 'sparc32-',
-      'sparc64'    => 'sparc64-',
-      },
-);
-
-my %CC_SO_OBJ_FLAGS = (
-   'bcc'            => '',
-   'compaq'         => '',
-   'ekopath'        => '-fPIC',
-   'gcc'            => '-fPIC',
-   'hpcc'           => '+Z',
-   'icc'            => '-KPIC',
-   'kai'            => '',
-   'mipspro'        => '-KPIC',
-   'msvc'           => '',
-   'pgi'            => '-fPIC',
-   'sgipro64'       => '-KPIC',
-   'sunwspro'       => '-KPIC',
-);
-
-my %CC_ABI_FLAGS = (
-   'gcc'        => {
-      'amd64'      => '-m64',
-      'freebsd'    => '-pthread',
-      'mips32'     => '-mabi=n32',
-      'mips64'     => '-mabi=64',
-      'netbsd'     => '-pthread',
-      'openbsd'    => '-pthread',
-      'ppc64'      => '-m64',
-      'qnx'        => '-fexceptions',
-      's390'       => '-m31',
-      's390x'      => '-m64',
-      'sparc32'    => '-m32 -mno-app-regs',
-      'sparc64'    => '-m64 -mno-app-regs',
-      },
-   'hpcc'       => {
-      'hppa1.0'    => '+DAportable',
-      'hppa1.1'    => '+DA1.1',
-      'hppa2.0'    => '+DA2.0W',
-      },
-   'kai'        => {
-      'all'        => '--one_per',
-      },
-   'mipspro'    => {
-      'mips32'     => '-n32',
-      'mips64'     => '-64',
-      },
-   'sunwspro'   => {
-      'sparc64'    => '-xarch=v9',
-      },
-);
-
-my %CC_SO_LINK_FLAGS = (
-   'compaq'     => {
-      'default'    => '$(CXX) -shared -soname $(SONAME)',
-      },
-   'ekopath'    => {
-      'default'    => '$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)',
-      },
-   'gcc'        => {
-      'aix'        => '$(CXX) -shared -fPIC',
-      'beos'       => 'ld -shared -h $(SONAME)',
-      'darwin'     => '$(CXX) -dynamiclib -fPIC -install_name $(SONAME)',
-      'default'    => '$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)',
-      'hpux'       => '$(CXX) -shared -fPIC -Wl,+h,$(SONAME)',
-      'solaris'    => '$(CXX) -shared -fPIC -Wl,-h,$(SONAME)',
-      },
-   'hpcc'       => {
-      'default'    => '$(CXX) +Z -b -Wl,+h,$(SONAME)',
-      },
-   'icc'        => {
-      'default'    => '$(CXX) -KPIC -shared',
-      },
-   'kai'        => {
-      'default'    => '$(CXX) --soname $(SONAME)',
-      },
-   'mipspro'    => {
-      'default'    => '$(CXX) -shared -Wl,-soname,$(SONAME)',
-      },
-   'pgi'        => {
-      'linux'      => '$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)',
-      'solaris'    => '$(CXX) -G -fPIC -Wl,-h,$(SONAME)',
-      },
-   'sgipro64'   => {
-      'default'    => '$(CXX) -shared -Wl,-soname,$(SONAME)',
-      },
-   'sunwspro'   => {
-      'default'    => '$(CXX) -G -h$(SONAME)',
-      },
-);
-
-my %CC_AR_COMMAND = (
-   'bcc'            => 'tlib /C /P256',
-   'compaq'         => '',
-   'ekopath'        => '',
-   'gcc'            => '',
-   'hpcc'           => '',
-   'icc'            => '',
-   'kai'            => 'KCC -o',
-   'mipspro'        => '',
-   'msvc'           => 'link /lib',
-   'pgi'            => '',
-   'sgipro64'       => '',
-   'sunwspro'       => '',
-);
-
-my %MAKEFILE_STYLE = (
-   'bcc'            => 'nmake',
-   'compaq'         => 'unix',
-   'ekopath'        => 'unix',
-   'gcc'            => 'unix',
-   'hpcc'           => 'unix',
-   'icc'            => 'unix',
-   'kai'            => 'unix',
-   'mipspro'        => 'unix',
-   'msvc'           => 'nmake',
-   'pgi'            => 'unix',
-   'sgipro64'       => 'unix',
-   'sunwspro'       => 'unix',
-);
-
-my %REALNAME = (
-   'aix'            => 'AIX',
-   'alpha'          => 'DEC Alpha',
-   'amd64'          => 'AMD64',
-   'arm'            => 'ARM',
-   'bcc'            => 'Borland C++',
-   'beos'           => 'BeOS',
-   'compaq'         => 'Compaq C++',
-   'cygwin'         => 'Cygwin',
-   'darwin'         => 'Darwin / MacOS X',
-   'ekopath'        => 'PathScale EKOPath C++',
-   'freebsd'        => 'FreeBSD',
-   'gcc'            => 'GNU C++',
-   'hpcc'           => 'HP-UX C++',
-   'hppa'           => 'HP-PA',
-   'hpux'           => 'HP-UX',
-   'ia32'           => 'IA-32',
-   'ia64'           => 'IA-64',
-   'icc'            => 'Intel C++',
-   'irix'           => 'IRIX',
-   'kai'            => 'KAI C++',
-   'linux'          => 'Linux',
-   'm68k'           => 'Motorola 680x0',
-   'mips32'         => 'MIPS',
-   'mips64'         => 'MIPS64',
-   'mipspro'        => 'SGI MIPSPro C++',
-   'msvc'           => 'Visual C++ 2000/2003',
-   'netbsd'         => 'NetBSD',
-   'openbsd'        => 'OpenBSD',
-   'pgi'            => 'Portland Group C++',
-   'ppc'            => 'PowerPC',
-   'ppc64'          => 'PowerPC 64',
-   'qnx'            => 'QNX',
-   's390'           => 'S/390 31-bit',
-   's390x'          => 'S/390 64-bit',
-   'sgipro64'       => 'SGI Pro64',
-   'sh'             => 'Hitachi SH',
-   'solaris'        => 'Solaris',
-   'sparc32'        => 'SPARC',
-   'sparc64'        => 'SPARC64',
-   'sunwspro'       => 'Sun Workshop Pro C++',
-   'tru64'          => 'Tru64',
-   'windows'        => 'MS Windows',
-);
-
+my %CC_BINARY_NAME = %$CC_BINARY_NAME;
+my %CC_LIB_OPT_FLAGS = %$CC_LIB_OPT_FLAGS;
+my %CC_CHECK_OPT_FLAGS = %$CC_CHECK_OPT_FLAGS;
+my %CC_WARN_FLAGS = %$CC_WARN_FLAGS;
+my %CC_LANG_FLAGS = %$CC_LANG_FLAGS;
+my %CC_SO_OBJ_FLAGS = %$CC_SO_OBJ_FLAGS;
+my %CC_SO_LINK_FLAGS = %$CC_SO_LINK_FLAGS;
+my %CC_DEBUG_FLAGS = %$CC_DEBUG_FLAGS;
+my %CC_NO_DEBUG_FLAGS = %$CC_NO_DEBUG_FLAGS;
+my %CC_MACHINE_OPT_FLAGS = %$CC_MACH_OPT_FLAGS;
+my %CC_MACHINE_OPT_FLAGS_RE = %$CC_MACH_OPT_FLAGS_RE;
+my %CC_ABI_FLAGS = %$CC_ABI_FLAGS;
+my %CC_SUPPORTS_OS = %$CC_SUPPORTS_OS;
+my %CC_SUPPORTS_ARCH = %$CC_SUPPORTS_ARCH;
+my %CC_AR_COMMAND = %$CC_AR_COMMAND;
+my %MAKEFILE_STYLE = %$MAKEFILE_STYLE;
 # if($#ARGV < 0) { help(); }
 
 my $debug = 0;
@@ -813,6 +128,8 @@ my $module_set = '';
 my $dumb_gcc = 0;
 my $autoconfig = 1;
 my $user_set_root = '';
+my $build_dir = '';
+my $local_config = '';
 my @using_mods;
 my ($doc_dir, $lib_dir);
 
@@ -832,6 +149,8 @@ GetOptions('debug' => sub { $debug = 1; },
            'prefix=s' => \$user_set_root,
            'docdir=s' => \$doc_dir,
            'libdir=s' => \$lib_dir,
+           'build-dir=s' => \$build_dir,
+           'local-config=s' => \$local_config,
            'help' => sub { help(); }
            );
 
@@ -850,6 +169,12 @@ else { help(); }
 
 my ($cc,$os,$submodel) = split(/-/,$cc_os_cpu_set,3);
 if(!defined($cc) or !defined($os) or !defined($submodel)) { help(); }
+
+if($build_dir ne '')
+{
+    $BUILD_DIR = $build_dir;
+    $BUILD_INCLUDE_DIR = $build_dir . '/include';
+}
 
 ##################################################
 # Some special hacks                             #
@@ -1282,6 +607,15 @@ END_OF_CONFIG_H
    }
 
    print CONFIG_H $defines;
+
+   if($local_config ne '')
+   {
+       open LOCAL_CONFIG, "<$local_config" or die
+           "Couldn't read $local_config ($!)\n";
+       print CONFIG_H "\n";
+       while(<LOCAL_CONFIG>) { print CONFIG_H; }
+   }
+
    print CONFIG_H "\n#endif\n";
 
    close CONFIG_H;
@@ -1548,7 +882,6 @@ Options:
   --debug: tune compiler flags for debugging; inferior code can result
   --disable-shared: disable building shared libararies
   --noauto: Disable autoconfiguration
-  --dumb-gcc: change makefile flags to support GCC 2.95.x, 3.[34].x, or 4.0.x
   --make-style=STYLE: override the guess as to what type of makefile to use
   --modules=MODS: add module(s) MODS to the library.
   --module-set=SET: add a pre-specified set of modules (unix|win32|beos)
@@ -2565,4 +1898,291 @@ END_OF_FILE
 
     close PKGCONFIG;
     chmod 0755, 'botan-config';
+}
+
+sub arch_defines {
+    my(undef, $REALNAME) = @_;
+    my $dir = new DirHandle $_[0];
+    if(!defined $dir) {
+        die "Couldn't open directory $_[0] ($!)";
+    }
+
+    my(%SUBMODEL_ALIAS,%DEFAULT_SUBMODEL,%ARCH,%ARCH_ALIAS);
+
+    while(defined($_ = $dir->read)) {
+        next if($_ eq '.' or $_ eq '..');
+        my $arch = $_;
+        my $filename = catfile($_[0], $arch);
+        open ARCHFILE, "<$filename" or die "Couldn't open $filename, ($!)";
+
+        $ARCH{$arch} = $arch;
+        while(<ARCHFILE>) {
+            $_ = process($_);
+            next unless $_;
+
+            $$REALNAME{$arch} = $1 if(/^realname \"(.*)\"/);
+            $DEFAULT_SUBMODEL{$arch} = $1 if(/^default_submodel (.*)$/);
+
+            # Read in a list of aliases and add them to ARCH_ALIAS
+            if(/^<aliases>$/) {
+                while(1) {
+                    $_ = process($_ = <ARCHFILE>);
+                    next unless $_;
+                    last if(m@^</aliases>$@);
+                    $ARCH_ALIAS{$_} = $arch;
+                }
+            }
+            # Read in a list of submodels and add them to ARCH
+            if(/^<submodels>$/) {
+                while(1) {
+                    $_ = process($_ = <ARCHFILE>);
+                    next unless $_;
+                    last if(m@^</submodels>$@);
+                    $ARCH{$_} = $arch;
+                }
+            }
+
+            # Read in a list of submodel aliases and add them to SUBMODEL_ALIAS
+            if(/^<submodel_aliases>$/) {
+                while(1) {
+                    $_ = process($_ = <ARCHFILE>);
+                    next unless $_;
+                    last if(m@^</submodel_aliases>$@);
+                    m/^(\S*) -> (\S*)$/;
+                    $SUBMODEL_ALIAS{$1} = $2;
+                }
+            }
+        }
+    }
+    undef $dir;
+
+    return (\%ARCH,\%ARCH_ALIAS,\%DEFAULT_SUBMODEL,\%SUBMODEL_ALIAS);
+}
+
+sub os_defines {
+    my(undef, $REALNAME) = @_;
+    my $dir = new DirHandle $_[0];
+    if(!defined $dir) {
+        die "Couldn't open directory $_[0] ($!)";
+    }
+
+    my(%OS_SUPPORTS_ARCH,
+       %OS_SUPPORTS_SHARED,
+       %OS_TYPE,
+       %INSTALL_INFO,
+       %OS_OBJ_SUFFIX,
+       %OS_SHARED_SUFFIX,
+       %OS_STATIC_SUFFIX,
+       %OS_AR_COMMAND,
+       %OS_AR_NEEDS_RANLIB,
+       %OS_ALIAS);
+
+    while(defined($_ = $dir->read)) {
+        next if($_ eq '.' or $_ eq '..');
+        my $os = $_;
+
+        my $filename = catfile($_[0], $os);
+        open OSFILE, "<$filename" or die "Couldn't open $filename, ($!)";
+        $OS_SHARED_SUFFIX{$os} = '';
+        $OS_AR_COMMAND{$os} = '';
+
+        # Default values
+        while(<OSFILE>) {
+            $_ = process($_);
+            next unless $_;
+
+            $$REALNAME{$os} = $1 if(/^realname \"(.*)\"/);
+            $OS_TYPE{$os} = $1 if(/^os_type (.*)/);
+            $OS_AR_COMMAND{$os} = $1 if(/^ar_command \"(.*)\"/);
+            $OS_AR_NEEDS_RANLIB{$os} = 1 if(/^ar_needs_ranlib yes$/);
+            $OS_AR_NEEDS_RANLIB{$os} = 0 if(/^ar_needs_ranlib no$/);
+            $OS_OBJ_SUFFIX{$os} = $1 if(/^obj_suffix (.*)/);
+            $OS_SHARED_SUFFIX{$os} = $1 if(/^so_suffix (.*)/);
+            $OS_STATIC_SUFFIX{$os} = $1 if(/^static_suffix (.*)/);
+
+            $INSTALL_INFO{$os}{'root'} = $1 if(/^install_root (.*)/);
+            $INSTALL_INFO{$os}{'headers'} = $1 if(/^header_dir (.*)/);
+            $INSTALL_INFO{$os}{'libs'} = $1 if(/^lib_dir (.*)/);
+            $INSTALL_INFO{$os}{'docs'} = $1 if(/^doc_dir (.*)/);
+            $INSTALL_INFO{$os}{'user'} = $1 if(/^install_user (.*)/);
+            $INSTALL_INFO{$os}{'group'} = $1 if(/^install_group (.*)/);
+            $INSTALL_INFO{$os}{'command'} = $1
+                if(/^install_cmd (.*)/);
+
+
+            if(/^<aliases>$/) {
+                while(1) {
+                    $_ = process($_ = <OSFILE>);
+                    next unless $_;
+                    last if(m@^</aliases>$@);
+                    $OS_ALIAS{$_} = $os;
+                }
+            }
+            if(/^<supports_shared>$/) {
+                while(1) {
+                    $_ = process($_ = <OSFILE>);
+                    next unless $_;
+                    last if(m@^</supports_shared>$@);
+                    push @{$OS_SUPPORTS_SHARED{$os}}, $_;
+                }
+            }
+
+            # Read in a list of architectures and add them to OS_SUPPORTS_ARCH
+            if(/^<arch>$/) {
+                while(1) {
+                    $_ = process($_ = <OSFILE>);
+                    next unless $_;
+                    last if(m@^</arch>$@);
+                    push @{$OS_SUPPORTS_ARCH{$os}}, $_;
+                }
+            }
+        }
+    }
+    undef $dir;
+
+    return (\%OS_SUPPORTS_ARCH,\%OS_SUPPORTS_SHARED,\%OS_TYPE,\%OS_OBJ_SUFFIX,
+            \%OS_SHARED_SUFFIX,\%OS_STATIC_SUFFIX,\%OS_AR_COMMAND,
+            \%OS_AR_NEEDS_RANLIB,\%OS_ALIAS,\%INSTALL_INFO);
+
+}
+
+#############################################################################
+sub cc_defines {
+    my(undef, $REALNAME) = @_;
+    my $dir = new DirHandle $_[0];
+    if(!defined $dir) {
+        die "Couldn't open directory $_[0] ($!)";
+    }
+
+    # Hashes 'o plenty here
+    my(%CC_BINARY_NAME,
+       %CC_LIB_OPT_FLAGS,
+       %CC_CHECK_OPT_FLAGS,
+       %CC_WARN_FLAGS,
+       %CC_LANG_FLAGS,
+       %CC_SO_OBJ_FLAGS,
+       %CC_SO_LINK_FLAGS,
+       %CC_DEBUG_FLAGS,
+       %CC_NO_DEBUG_FLAGS,
+       %CC_MACH_OPT_FLAGS,
+       %CC_MACH_OPT_FLAGS_RE,
+       %CC_ABI_FLAGS,
+       %CC_SUPPORTS_OS,
+       %CC_SUPPORTS_ARCH,
+       %CC_AR_COMMAND,
+       %MAKEFILE_STYLE);
+
+    while(defined($_ = $dir->read)) {
+        next if($_ eq '.' or $_ eq '..');
+        my $cc = $_;
+        my $filename = catfile($_[0], $cc);
+        open CCFILE, "<$filename" or die "Couldn't open $filename, ($!)";
+
+        # Default to empty values, so they don't have to be explicitly set
+        $CC_LIB_OPT_FLAGS{$cc} =
+            $CC_CHECK_OPT_FLAGS{$cc} =
+            $CC_LANG_FLAGS{$cc} =
+            $CC_WARN_FLAGS{$cc} =
+            $CC_SO_OBJ_FLAGS{$cc} =
+            $CC_DEBUG_FLAGS{$cc} =
+            $CC_AR_COMMAND{$cc} =
+            $CC_NO_DEBUG_FLAGS{$cc} = '';
+
+        while(<CCFILE>) {
+            $_ = process($_);
+            next unless $_;
+
+            $$REALNAME{$cc} = $1 if(/^realname \"(.*)\"/);
+            $CC_BINARY_NAME{$cc} = $1 if(/^binary_name \"(.*)\"/);
+
+            $CC_LIB_OPT_FLAGS{$cc} = $1 if(/^lib_opt_flags \"(.*)\"/);
+
+            $CC_CHECK_OPT_FLAGS{$cc} = $1
+                if(/^check_opt_flags \"(.*)\"/);
+
+            $CC_AR_COMMAND{$cc} = $1 if(/^ar_command \"(.*)\"/);
+            $CC_LANG_FLAGS{$cc} = $1 if(/^lang_flags \"(.*)\"/);
+            $CC_WARN_FLAGS{$cc} = $1 if(/^warning_flags \"(.*)\"/);
+            $CC_SO_OBJ_FLAGS{$cc} = $1 if(/^so_obj_flags \"(.*)\"/);
+            $CC_DEBUG_FLAGS{$cc} = $1 if(/^debug_flags \"(.*)\"/);
+            $CC_NO_DEBUG_FLAGS{$cc} = $1 if(/^no_debug_flags \"(.*)\"/);
+            $MAKEFILE_STYLE{$cc} = $1 if(/^makefile_style (.*)/);
+
+            # Read in a list of supported CPU types
+            if(/^<arch>$/) {
+                while(1) {
+                    $_ = process($_ = <CCFILE>);
+                    next unless $_;
+                    last if(m@^</arch>$@);
+                    push @{$CC_SUPPORTS_ARCH{$cc}}, $_;
+                }
+            }
+
+            # Read in a list of supported OSes
+            if(/^<os>$/) {
+                while(1) {
+                    $_ = process($_ = <CCFILE>);
+                    next unless $_;
+                    last if(m@^</os>$@);
+                    push @{$CC_SUPPORTS_OS{$cc}}, $_;
+                }
+            }
+
+            # Read in a list of machine optimization flags
+            if(/^<mach_opt>$/) {
+                while(1) {
+                    $_ = process($_ = <CCFILE>);
+                    next unless $_;
+                    last if(m@^</mach_opt>$@);
+                    m/^(\S*) -> \"(.*)\" ?(.*)?$/;
+                    $CC_MACH_OPT_FLAGS{$cc}{$1} = $2;
+                    if($3 ne '') {
+                        $CC_MACH_OPT_FLAGS_RE{$cc}{$1} = $3;
+                    }
+                }
+            }
+
+            # Some systems need certain flags passed for linking as well
+            # (usually these change the ABI somehow). We just append this
+            # value to the CXX variable, so it's used for all ops.
+            if(/^<mach_abi_linking>$/) {
+                while(1) {
+                    $_ = process($_ = <CCFILE>);
+                    next unless $_;
+                    last if(m@^</mach_abi_linking>$@);
+                    m/^(\S*) -> \"(.*)\"$/;
+                    $CC_ABI_FLAGS{$cc}{$1} = $2;
+                }
+            }
+
+            # Read in a list of flags to created a shared lib (and set soname)
+            if(/^<so_link_flags>$/) {
+                while(1) {
+                    $_ = process($_ = <CCFILE>);
+                    next unless $_;
+                    last if(m@^</so_link_flags>$@);
+                    m/^(\S*) -> \"(.*)\"$/;
+                    $CC_SO_LINK_FLAGS{$cc}{$1} = $2;
+                }
+            }
+        }
+    }
+    undef $dir;
+
+    return \(%CC_BINARY_NAME,
+       %CC_LIB_OPT_FLAGS,
+       %CC_CHECK_OPT_FLAGS,
+       %CC_WARN_FLAGS,
+       %CC_LANG_FLAGS,
+       %CC_SO_OBJ_FLAGS,
+       %CC_SO_LINK_FLAGS,
+       %CC_DEBUG_FLAGS,
+       %CC_NO_DEBUG_FLAGS,
+       %CC_MACH_OPT_FLAGS,
+       %CC_MACH_OPT_FLAGS_RE,
+       %CC_ABI_FLAGS,
+       %CC_SUPPORTS_OS,
+       %CC_SUPPORTS_ARCH,
+       %CC_AR_COMMAND,
+       %MAKEFILE_STYLE);
 }
