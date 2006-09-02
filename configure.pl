@@ -71,53 +71,30 @@ my %DOCS = (
    );
 
 my %REALNAME = ();
-my ($ARCH,$ARCH_ALIAS,$DEFAULT_SUBMODEL,$SUBMODEL_ALIAS) =
-    arch_defines($ARCH_DIR,\%REALNAME);
 
-my ($OS_SUPPORTS_ARCH,$OS_SUPPORTS_SHARED,$OS_TYPE,$OS_OBJ_SUFFIX,
-    $OS_SHARED_SUFFIX,$OS_STATIC_SUFFIX,$OS_AR_COMMAND,
-    $OS_AR_NEEDS_RANLIB,$OS_ALIAS,$INSTALL_INFO) =
-    os_defines($OS_DIR,\%REALNAME);
+my(%SUBMODEL_ALIAS,%DEFAULT_SUBMODEL,%ARCH,%ARCH_ALIAS);
 
-my ($CC_BINARY_NAME, $CC_LIB_OPT_FLAGS, $CC_CHECK_OPT_FLAGS,
-    $CC_WARN_FLAGS, $CC_LANG_FLAGS, $CC_SO_OBJ_FLAGS,
-    $CC_SO_LINK_FLAGS, $CC_DEBUG_FLAGS, $CC_NO_DEBUG_FLAGS,
-    $CC_MACH_OPT_FLAGS, $CC_MACH_OPT_FLAGS_RE, $CC_ABI_FLAGS,
-    $CC_SUPPORTS_OS, $CC_SUPPORTS_ARCH, $CC_AR_COMMAND,
-    $MAKEFILE_STYLE) = cc_defines($CC_DIR,\%REALNAME);
+my(%OS_SUPPORTS_ARCH, %OS_SUPPORTS_SHARED, %OS_TYPE,
+   %INSTALL_INFO, %OS_OBJ_SUFFIX, %OS_SHARED_SUFFIX,
+   %OS_STATIC_SUFFIX, %OS_AR_COMMAND, %OS_AR_NEEDS_RANLIB,
+   %OS_ALIAS);
 
-my %ARCH = %$ARCH;
-my %ARCH_ALIAS = %$ARCH_ALIAS;
-my %DEFAULT_SUBMODEL = %$DEFAULT_SUBMODEL;
-my %SUBMODEL_ALIAS = %$SUBMODEL_ALIAS;
-
-my %OS_SUPPORTS_ARCH = %$OS_SUPPORTS_ARCH;
-my %OS_SUPPORTS_SHARED = %$OS_SUPPORTS_SHARED;
-my %OS_TYPE = %$OS_TYPE;
-my %OS_OBJ_SUFFIX = %$OS_OBJ_SUFFIX;
-my %OS_SHARED_SUFFIX = %$OS_SHARED_SUFFIX;
-my %OS_STATIC_SUFFIX = %$OS_STATIC_SUFFIX;
-my %OS_AR_COMMAND = %$OS_AR_COMMAND;
-my %OS_AR_NEEDS_RANLIB = %$OS_AR_NEEDS_RANLIB;
-my %OS_ALIAS = %$OS_ALIAS;
-my %INSTALL_INFO = %$INSTALL_INFO;
-
-my %CC_BINARY_NAME = %$CC_BINARY_NAME;
-my %CC_LIB_OPT_FLAGS = %$CC_LIB_OPT_FLAGS;
-my %CC_CHECK_OPT_FLAGS = %$CC_CHECK_OPT_FLAGS;
-my %CC_WARN_FLAGS = %$CC_WARN_FLAGS;
-my %CC_LANG_FLAGS = %$CC_LANG_FLAGS;
-my %CC_SO_OBJ_FLAGS = %$CC_SO_OBJ_FLAGS;
-my %CC_SO_LINK_FLAGS = %$CC_SO_LINK_FLAGS;
-my %CC_DEBUG_FLAGS = %$CC_DEBUG_FLAGS;
-my %CC_NO_DEBUG_FLAGS = %$CC_NO_DEBUG_FLAGS;
-my %CC_MACHINE_OPT_FLAGS = %$CC_MACH_OPT_FLAGS;
-my %CC_MACHINE_OPT_FLAGS_RE = %$CC_MACH_OPT_FLAGS_RE;
-my %CC_ABI_FLAGS = %$CC_ABI_FLAGS;
-my %CC_SUPPORTS_OS = %$CC_SUPPORTS_OS;
-my %CC_SUPPORTS_ARCH = %$CC_SUPPORTS_ARCH;
-my %CC_AR_COMMAND = %$CC_AR_COMMAND;
-my %MAKEFILE_STYLE = %$MAKEFILE_STYLE;
+my(%CC_BINARY_NAME,
+   %CC_LIB_OPT_FLAGS,
+   %CC_CHECK_OPT_FLAGS,
+   %CC_WARN_FLAGS,
+   %CC_LANG_FLAGS,
+   %CC_SO_OBJ_FLAGS,
+   %CC_SO_LINK_FLAGS,
+   %CC_DEBUG_FLAGS,
+   %CC_NO_DEBUG_FLAGS,
+   %CC_MACHINE_OPT_FLAGS,
+   %CC_MACHINE_OPT_FLAGS_RE,
+   %CC_ABI_FLAGS,
+   %CC_SUPPORTS_OS,
+   %CC_SUPPORTS_ARCH,
+   %CC_AR_COMMAND,
+   %MAKEFILE_STYLE);
 
 my %MODULES;
 
@@ -138,6 +115,10 @@ my (%lib_src, %check_src, %include);
 
 sub main() {
     %MODULES = get_modules_list($MOD_DIR);
+
+    set_arch_defines($ARCH_DIR);
+    set_os_defines($OS_DIR);
+    set_cc_defines($CC_DIR);
 
     GetOptions('debug' => sub { $debug = 1; },
                'disable-shared' => sub { $no_shared = 1; },
@@ -1866,14 +1847,11 @@ END_OF_FILE
     chmod 0755, 'botan-config';
 }
 
-sub arch_defines {
-    my(undef, $REALNAME) = @_;
+sub set_arch_defines {
     my $dir = new DirHandle $_[0];
     if(!defined $dir) {
         die "Couldn't open directory $_[0] ($!)";
     }
-
-    my(%SUBMODEL_ALIAS,%DEFAULT_SUBMODEL,%ARCH,%ARCH_ALIAS);
 
     while(defined($_ = $dir->read)) {
         next if($_ eq '.' or $_ eq '..');
@@ -1886,7 +1864,7 @@ sub arch_defines {
             $_ = process($_);
             next unless $_;
 
-            $$REALNAME{$arch} = $1 if(/^realname \"(.*)\"/);
+            $REALNAME{$arch} = $1 if(/^realname \"(.*)\"/);
             $DEFAULT_SUBMODEL{$arch} = $1 if(/^default_submodel (.*)$/);
 
             # Read in a list of aliases and add them to ARCH_ALIAS
@@ -1921,27 +1899,13 @@ sub arch_defines {
         }
     }
     undef $dir;
-
-    return \(%ARCH,%ARCH_ALIAS,%DEFAULT_SUBMODEL,%SUBMODEL_ALIAS);
 }
 
-sub os_defines {
-    my(undef, $REALNAME) = @_;
+sub set_os_defines {
     my $dir = new DirHandle $_[0];
     if(!defined $dir) {
         die "Couldn't open directory $_[0] ($!)";
     }
-
-    my(%OS_SUPPORTS_ARCH,
-       %OS_SUPPORTS_SHARED,
-       %OS_TYPE,
-       %INSTALL_INFO,
-       %OS_OBJ_SUFFIX,
-       %OS_SHARED_SUFFIX,
-       %OS_STATIC_SUFFIX,
-       %OS_AR_COMMAND,
-       %OS_AR_NEEDS_RANLIB,
-       %OS_ALIAS);
 
     while(defined($_ = $dir->read)) {
         next if($_ eq '.' or $_ eq '..');
@@ -1957,7 +1921,7 @@ sub os_defines {
             $_ = process($_);
             next unless $_;
 
-            $$REALNAME{$os} = $1 if(/^realname \"(.*)\"/);
+            $REALNAME{$os} = $1 if(/^realname \"(.*)\"/);
             $OS_TYPE{$os} = $1 if(/^os_type (.*)/);
             $OS_AR_COMMAND{$os} = $1 if(/^ar_command \"(.*)\"/);
             $OS_AR_NEEDS_RANLIB{$os} = 1 if(/^ar_needs_ranlib yes$/);
@@ -2005,37 +1969,14 @@ sub os_defines {
         }
     }
     undef $dir;
-
-    return \(%OS_SUPPORTS_ARCH,%OS_SUPPORTS_SHARED,%OS_TYPE,%OS_OBJ_SUFFIX,
-            %OS_SHARED_SUFFIX,%OS_STATIC_SUFFIX,%OS_AR_COMMAND,
-            %OS_AR_NEEDS_RANLIB,%OS_ALIAS,%INSTALL_INFO);
 }
 
 #############################################################################
-sub cc_defines {
-    my(undef, $REALNAME) = @_;
+sub set_cc_defines {
     my $dir = new DirHandle $_[0];
     if(!defined $dir) {
         die "Couldn't open directory $_[0] ($!)";
     }
-
-    # Hashes 'o plenty here
-    my(%CC_BINARY_NAME,
-       %CC_LIB_OPT_FLAGS,
-       %CC_CHECK_OPT_FLAGS,
-       %CC_WARN_FLAGS,
-       %CC_LANG_FLAGS,
-       %CC_SO_OBJ_FLAGS,
-       %CC_SO_LINK_FLAGS,
-       %CC_DEBUG_FLAGS,
-       %CC_NO_DEBUG_FLAGS,
-       %CC_MACH_OPT_FLAGS,
-       %CC_MACH_OPT_FLAGS_RE,
-       %CC_ABI_FLAGS,
-       %CC_SUPPORTS_OS,
-       %CC_SUPPORTS_ARCH,
-       %CC_AR_COMMAND,
-       %MAKEFILE_STYLE);
 
     while(defined($_ = $dir->read)) {
         next if($_ eq '.' or $_ eq '..');
@@ -2057,7 +1998,7 @@ sub cc_defines {
             $_ = process($_);
             next unless $_;
 
-            $$REALNAME{$cc} = $1 if(/^realname \"(.*)\"/);
+            $REALNAME{$cc} = $1 if(/^realname \"(.*)\"/);
             $CC_BINARY_NAME{$cc} = $1 if(/^binary_name \"(.*)\"/);
 
             $CC_LIB_OPT_FLAGS{$cc} = $1 if(/^lib_opt_flags \"(.*)\"/);
@@ -2100,9 +2041,9 @@ sub cc_defines {
                     next unless $_;
                     last if(m@^</mach_opt>$@);
                     m/^(\S*) -> \"(.*)\" ?(.*)?$/;
-                    $CC_MACH_OPT_FLAGS{$cc}{$1} = $2;
+                    $CC_MACHINE_OPT_FLAGS{$cc}{$1} = $2;
                     if($3 ne '') {
-                        $CC_MACH_OPT_FLAGS_RE{$cc}{$1} = $3;
+                        $CC_MACHINE_OPT_FLAGS_RE{$cc}{$1} = $3;
                     }
                 }
             }
@@ -2133,21 +2074,4 @@ sub cc_defines {
         }
     }
     undef $dir;
-
-    return \(%CC_BINARY_NAME,
-       %CC_LIB_OPT_FLAGS,
-       %CC_CHECK_OPT_FLAGS,
-       %CC_WARN_FLAGS,
-       %CC_LANG_FLAGS,
-       %CC_SO_OBJ_FLAGS,
-       %CC_SO_LINK_FLAGS,
-       %CC_DEBUG_FLAGS,
-       %CC_NO_DEBUG_FLAGS,
-       %CC_MACH_OPT_FLAGS,
-       %CC_MACH_OPT_FLAGS_RE,
-       %CC_ABI_FLAGS,
-       %CC_SUPPORTS_OS,
-       %CC_SUPPORTS_ARCH,
-       %CC_AR_COMMAND,
-       %MAKEFILE_STYLE);
 }
