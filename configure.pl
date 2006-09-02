@@ -18,7 +18,6 @@ my $PATCH_VERSION = 11;
 # This is automatically forced if $^O is 'dos', 'MSWin32', or 'cygwin'
 my $FORCE_COPY = 0;
 
-# A whole buncha filenames
 my $INCLUDE_DIR = 'include';
 my $SRC_DIR = 'src';
 my $MOD_DIR = 'modules';
@@ -38,7 +37,6 @@ my $CONFIG_HEADER = 'build.h';
 
 my $CPP_INCLUDE_DIR_DIRNAME = 'botan';
 
-# Available module sets
 my %MODULE_SETS = (
    'unix' => [ 'alloc_mmap', 'es_egd', 'es_ftw', 'es_unix', 'fd_unix',
                'tm_unix' ],
@@ -46,7 +44,6 @@ my %MODULE_SETS = (
    'win32' => ['es_capi', 'es_win32', 'mux_win32', 'tm_win32' ],
 );
 
-# Documentation list
 my %DOCS = (
    'readme.txt' => undef, # undef = file is in top level directory
 
@@ -99,7 +96,6 @@ my(%CC_BINARY_NAME,
 my %MODULES;
 
 my $user_set_root = '';
-my $local_config = '';
 my ($doc_dir, $lib_dir);
 my (%ignored_src, %ignored_include, %added_src, %added_include);
 my ($CPP_INCLUDE_DIR, $BUILD_LIB_DIR, $BUILD_CHECK_DIR);
@@ -119,6 +115,7 @@ sub main() {
     my $dumb_gcc = 0;
     my $module_set = '';
     my $no_shared = 0;
+    my $local_config = '';
     my @using_mods;
 
     GetOptions('debug' => sub { $debug = 1; },
@@ -241,8 +238,7 @@ sub main() {
     {
         foreach (guess_mods($cc,$os,$arch,$submodel))
         {
-            # Print a notice, unless it was enabled explicitly or
-            # via module set
+            # Print a notice, unless it was enabled explicitly (or in a set)
             my $picked_by_user = 0;
             foreach my $x (@using_mods) { $picked_by_user = 1 if($_ eq $x); }
 
@@ -492,6 +488,7 @@ sub find_mp_bits
     }
     return $mp_bits;
 }
+
 sub print_config_h
    {
    my ($major, $minor, $patch, $config_h, $local_config, $os, $arch, $cpu,
@@ -568,6 +565,7 @@ END_OF_CONFIG_H
 
    close CONFIG_H;
    }
+
 sub check_for_conflicts {
    my @mods = @_;
    my (%ignored, %added, %replaced, %defines);
@@ -597,6 +595,7 @@ sub conflicts {
        }
     return $item;
 }
+
 sub get_modules_list
    {
    my $MOD_DIR = $_[0];
@@ -815,6 +814,7 @@ sub replace_file {
    ignore_file($modname, $file);
    add_file($modname, $file);
 }
+
 sub help
    {
    print <<ENDOFHELP;
@@ -1042,8 +1042,6 @@ sub guess_mods
 
     foreach my $mod (sort keys %MODULES)
     {
-        next if($mod eq 'minimal'); # Never enabled by default
-
         my %modinfo = %{ $MODULES{$mod} };
 
         # If it uses external libs, the user has to request it specifically
@@ -1282,11 +1280,12 @@ sub generate_makefile {
 # Print a header for a makefile                  #
 ##################################################
 sub print_header {
-    my ($fh, $comment, $string) = @_;
-    print $fh $comment x 50, "\n",
-             "$comment $string", ' 'x(47-length($string)), "$comment\n",
-              $comment x 50, "\n";
+    my ($fh, $string) = @_;
+    print $fh '#' x 50, "\n",
+             "# $string", ' 'x(47-length($string)), "#\n",
+              '#' x 50, "\n";
 }
+
 ##################################################
 # Print a Unix style makefile                    #
 ##################################################
@@ -1305,7 +1304,6 @@ sub print_unix_makefile {
    # Some constants                                 #
    ##################################################
    my $__TAB__ = "\t";
-   my $COMMENT_CHAR = '#';
 
    ##################################################
    # Convert the references to hashes               #
@@ -1383,7 +1381,7 @@ sub print_unix_makefile {
 
 ##################### / COMMON CODE (PARTIALLY) ######################
 
-   print_header($makefile, $COMMENT_CHAR, 'Compiler Options');
+   print_header($makefile, 'Compiler Options');
    print $makefile <<END_OF_MAKEFILE_HEADER;
 CXX           = $cc
 LIB_OPT       = $lib_opt
@@ -1397,7 +1395,7 @@ LINK_TO       = $link_to
 
 END_OF_MAKEFILE_HEADER
 
-   print_header($makefile, $COMMENT_CHAR, 'Version Numbers');
+   print_header($makefile, 'Version Numbers');
    print $makefile <<END_OF_VERSIONS;
 MAJOR         = $MAJOR_VERSION
 MINOR         = $MINOR_VERSION
@@ -1407,7 +1405,7 @@ VERSION       = \$(MAJOR).\$(MINOR).\$(PATCH)
 
 END_OF_VERSIONS
 
-   print_header($makefile, $COMMENT_CHAR, 'Installation Settings');
+   print_header($makefile, 'Installation Settings');
    print $makefile <<END_OF_INSTALL_SETTINGS;
 INSTALLROOT   = $install_root
 
@@ -1425,7 +1423,7 @@ CONFIG_SCRIPT = botan-config
 
 END_OF_INSTALL_SETTINGS
 
-   print_header($makefile, $COMMENT_CHAR, 'Aliases for Common Programs');
+   print_header($makefile, 'Aliases for Common Programs');
    print $makefile <<END_OF_COMMAND_ALIASES;
 AR               = $ar_command
 CD               = \@cd
@@ -1441,7 +1439,7 @@ RM_R             = \@rm -rf
 
 END_OF_COMMAND_ALIASES
 
-   print_header($makefile, $COMMENT_CHAR, 'File Lists');
+   print_header($makefile, 'File Lists');
    print $makefile <<END_OF_FILE_LISTS;
 CHECK         = check
 
@@ -1474,7 +1472,7 @@ END_OF_SHARED_LIB_DECL
    }
 
    print $makefile "all: \$(LIBRARIES)\n\n";
-   print_header($makefile, $COMMENT_CHAR, 'Build Commands');
+   print_header($makefile, 'Build Commands');
 
    sub print_build_cmds {
       my ($fh, $dir, $flags, $obj_suffix, %files) = @_;
@@ -1495,7 +1493,7 @@ END_OF_SHARED_LIB_DECL
    print_build_cmds($makefile, $BUILD_CHECK_DIR,
                     '$(CHECK_FLAGS)', $obj_suffix, %check);
 
-   print_header($makefile, $COMMENT_CHAR, 'Link Commands');
+   print_header($makefile, 'Link Commands');
 
    print $makefile <<END_OF_LINK_COMMANDS;
 \$(CHECK): \$(LIBRARIES) \$(CHECKOBJS)
@@ -1519,7 +1517,7 @@ END_OF_SO_LINK_COMMAND
     }
 
 
-   print_header($makefile, $COMMENT_CHAR, 'Fake Targets');
+   print_header($makefile, 'Fake Targets');
 
    print $makefile ".PHONY = clean distclean install static";
    if($make_shared) { print $makefile " shared"; }
@@ -1589,7 +1587,6 @@ sub print_nmake_makefile {
    # Some constants                                 #
    ##################################################
    my $__TAB__ = "\t";
-   my $COMMENT_CHAR = '#';
 
    ##################################################
    # Convert the references to hashes               #
@@ -1632,7 +1629,7 @@ sub print_nmake_makefile {
 
 ##################### / COMMON CODE (PARTIALLY) ######################
 
-   print_header($makefile, $COMMENT_CHAR, 'Compiler Options');
+   print_header($makefile, 'Compiler Options');
    print $makefile <<END_OF_MAKEFILE_HEADER;
 CXX           = $cc
 LIB_OPT       = $lib_opt
@@ -1646,7 +1643,7 @@ LINK_TO       = $link_to
 
 END_OF_MAKEFILE_HEADER
 
-   print_header($makefile, $COMMENT_CHAR, 'Version Numbers');
+   print_header($makefile, 'Version Numbers');
    print $makefile <<END_OF_VERSIONS;
 MAJOR         = $MAJOR_VERSION
 MINOR         = $MINOR_VERSION
@@ -1656,7 +1653,7 @@ VERSION       = \$(MAJOR).\$(MINOR).\$(PATCH)
 
 END_OF_VERSIONS
 
-   print_header($makefile, $COMMENT_CHAR, 'Installation Settings');
+   print_header($makefile, 'Installation Settings');
    print $makefile <<END_OF_INSTALL_SETTINGS;
 INSTALLROOT   = $install_root
 
@@ -1666,7 +1663,7 @@ DOCDIR        = \$(INSTALLROOT)\\$doc_dir
 
 END_OF_INSTALL_SETTINGS
 
-   print_header($makefile, $COMMENT_CHAR, 'Aliases for Common Programs');
+   print_header($makefile, 'Aliases for Common Programs');
    print $makefile <<END_OF_COMMAND_ALIASES;
 AR            = $ar_command
 CD            = \@cd
@@ -1680,7 +1677,7 @@ RMDIR         = \@rmdir
 
 END_OF_COMMAND_ALIASES
 
-   print_header($makefile, $COMMENT_CHAR, 'File Lists');
+   print_header($makefile, 'File Lists');
    print $makefile <<END_OF_FILE_LISTS;
 LIB_FLAGS     = $lib_flags
 CHECK_FLAGS   = \$(CHECK_OPT) \$(LANG_FLAGS) \$(WARN_FLAGS)
@@ -1703,7 +1700,7 @@ STATIC_LIB    = \$(LIBNAME).$static_lib_suffix
 END_OF_FILE_LISTS
 
    print $makefile "all: \$(LIBRARIES)\n\n";
-   print_header($makefile, $COMMENT_CHAR, 'Build Commands');
+   print_header($makefile, 'Build Commands');
 
    sub print_build_cmds_nmake {
       my ($fh, $dir, $flags, $obj_suffix, %files) = @_;
@@ -1722,7 +1719,7 @@ END_OF_FILE_LISTS
    print_build_cmds_nmake($makefile, $BUILD_CHECK_DIR,
                           '$(CHECK_FLAGS)', $obj_suffix, %check);
 
-   print_header($makefile, $COMMENT_CHAR, 'Link Commands');
+   print_header($makefile, 'Link Commands');
 
    print $makefile <<END_OF_LINK_COMMANDS;
 \$(CHECK): \$(LIBRARIES) \$(CHECKOBJS)
@@ -1734,10 +1731,10 @@ END_OF_LINK_COMMANDS
 
    print $makefile "\n";
 
-   print_header($makefile, $COMMENT_CHAR, 'Misc Targets');
+   print_header($makefile, 'Misc Targets');
    print $makefile "static: \$(STATIC_LIB)\n\n";
 
-   print_header($makefile, $COMMENT_CHAR, 'Fake Targets');
+   print_header($makefile, 'Fake Targets');
    print $makefile <<END_OF_FAKE_TARGETS;
 clean:
 $__TAB__\$(RM) $BUILD_LIB_DIR\\* $BUILD_CHECK_DIR\\*
@@ -1750,7 +1747,7 @@ $__TAB__\$(RMDIR) $BUILD_LIB_DIR $BUILD_CHECK_DIR $BUILD_INCLUDE_DIR $BUILD_DIR
 $__TAB__\$(RM) $MAKE_FILE
 END_OF_FAKE_TARGETS
 
-   print_header($makefile, $COMMENT_CHAR, 'Install Commands');
+   print_header($makefile, 'Install Commands');
 
    print $makefile <<END_OF_INSTALL_SCRIPTS;
 install: \$(LIBRARIES)
@@ -1972,7 +1969,6 @@ sub set_os_defines {
     undef $dir;
 }
 
-#############################################################################
 sub set_cc_defines {
     my $dir = new DirHandle $_[0];
     if(!defined $dir) {
