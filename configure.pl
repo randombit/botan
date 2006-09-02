@@ -30,6 +30,10 @@ my $BUILD_DIR_CHECKS = 'checks';
 my $MAKE_FILE = 'Makefile';
 my $BUILD_INCLUDE_DIR = 'build/include';
 
+my $ARCH_DIR = 'misc/config/arch';
+my $OS_DIR = 'misc/config/os';
+my $CC_DIR = 'misc/config/cc';
+
 my $CONFIG_HEADER = 'build.h';
 
 my $CPP_INCLUDE_DIR_DIRNAME = 'botan';
@@ -59,19 +63,14 @@ my %DOCS = (
    'botan.rc' => $DOC_DIR,
 
    'credits.txt' => $DOC_DIR,
-#   'deprecated.txt' => $DOC_DIR,
    'info.txt' => $DOC_DIR,
    'license.txt' => $DOC_DIR,
    'log.txt' => $DOC_DIR,
    'thanks.txt' => $DOC_DIR,
    'todo.txt' => $DOC_DIR
    );
+
 my %REALNAME = ();
-
-my $ARCH_DIR = 'misc/config/arch';
-my $OS_DIR = 'misc/config/os';
-my $CC_DIR = 'misc/config/cc';
-
 my ($ARCH,$ARCH_ALIAS,$DEFAULT_SUBMODEL,$SUBMODEL_ALIAS) =
     arch_defines($ARCH_DIR,\%REALNAME);
 
@@ -119,7 +118,6 @@ my %CC_SUPPORTS_OS = %$CC_SUPPORTS_OS;
 my %CC_SUPPORTS_ARCH = %$CC_SUPPORTS_ARCH;
 my %CC_AR_COMMAND = %$CC_AR_COMMAND;
 my %MAKEFILE_STYLE = %$MAKEFILE_STYLE;
-# if($#ARGV < 0) { help(); }
 
 my $debug = 0;
 my $no_shared = 0;
@@ -179,10 +177,6 @@ if($build_dir ne '')
 ##################################################
 # Some special hacks                             #
 ##################################################
-#warn "(warning): OpenBSD's GCC 2.95.3 is often buggy with -O2\n" .
-#     "         :    Run 'make check' before installing!\n"
-#    if($os eq 'openbsd' && $cc eq 'gcc');
-
 if($cc eq 'gcc' && $dumb_gcc != 1)
 {
     my $gcc_version = '';
@@ -1956,7 +1950,7 @@ sub arch_defines {
     }
     undef $dir;
 
-    return (\%ARCH,\%ARCH_ALIAS,\%DEFAULT_SUBMODEL,\%SUBMODEL_ALIAS);
+    return \(%ARCH,%ARCH_ALIAS,%DEFAULT_SUBMODEL,%SUBMODEL_ALIAS);
 }
 
 sub os_defines {
@@ -2040,10 +2034,9 @@ sub os_defines {
     }
     undef $dir;
 
-    return (\%OS_SUPPORTS_ARCH,\%OS_SUPPORTS_SHARED,\%OS_TYPE,\%OS_OBJ_SUFFIX,
-            \%OS_SHARED_SUFFIX,\%OS_STATIC_SUFFIX,\%OS_AR_COMMAND,
-            \%OS_AR_NEEDS_RANLIB,\%OS_ALIAS,\%INSTALL_INFO);
-
+    return \(%OS_SUPPORTS_ARCH,%OS_SUPPORTS_SHARED,%OS_TYPE,%OS_OBJ_SUFFIX,
+            %OS_SHARED_SUFFIX,%OS_STATIC_SUFFIX,%OS_AR_COMMAND,
+            %OS_AR_NEEDS_RANLIB,%OS_ALIAS,%INSTALL_INFO);
 }
 
 #############################################################################
