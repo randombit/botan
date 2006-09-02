@@ -1,11 +1,18 @@
 Todo list:
 
+Use some sort of templating system to generate the various Makefiles,
+botan-config, and so forth.
+
+Get rid of mkconfig.pl; simply read the system info files when the
+user runs configure.
+
 Clean out all of the crappy hacks that have crept into to the source tree, move
 them out into the appropriate file in the 'os' and 'cc' directories. I got rid
 of a lot of them in 1.4.[23], but some remain.
 
 Make cross-compiles easier
 
+Rewrite in Python
 
 CPUs
 ----
