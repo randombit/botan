@@ -21,14 +21,12 @@ START_FUNCTION(bigint_mul_add_words)
    ASSIGN(EAX, ARRAY4(EBX, N))           ; \
    MUL(EBP)                              ; \
    ADD_W_CARRY(EAX, EDX, EDI)            ; \
-   ADD_W_CARRY(EAX, EDX, ARRAY4(ECX, N)) ; \
-   ASSIGN(ARRAY4(ECX, N), EAX)           ; \
-   ASSIGN(EDI, EDX)                      ;
+   ASSIGN(EDI, EDX)                      ; \
+   ADD_W_CARRY(ARRAY4(ECX, N), EDI, EAX) ;
 
    JUMP_IF_ZERO(ESI, .MUL_ADD_DONE)
    JUMP_IF_LT(ESI, 8, .MULADD1_LOOP)
 
-   ALIGN
 START_LOOP(.MULADD8)
    MULADD_OP(0)
    MULADD_OP(1)
@@ -46,7 +44,6 @@ LOOP_UNTIL_LT(ESI, 8, .MULADD8)
 
    JUMP_IF_ZERO(ESI, .MUL_ADD_DONE)
 
-   ALIGN
 START_LOOP(.MULADD1)
    MULADD_OP(0)
 
