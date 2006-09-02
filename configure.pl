@@ -98,16 +98,8 @@ my(%CC_BINARY_NAME,
 
 my %MODULES;
 
-my $debug = 0;
-my $no_shared = 0;
-my $make_style = '';
-my $module_set = '';
-my $dumb_gcc = 0;
-my $autoconfig = 1;
 my $user_set_root = '';
-my $build_dir = '';
 my $local_config = '';
-my @using_mods;
 my ($doc_dir, $lib_dir);
 my (%ignored_src, %ignored_include, %added_src, %added_include);
 my ($CPP_INCLUDE_DIR, $BUILD_LIB_DIR, $BUILD_CHECK_DIR);
@@ -119,6 +111,15 @@ sub main() {
     set_arch_defines($ARCH_DIR);
     set_os_defines($OS_DIR);
     set_cc_defines($CC_DIR);
+
+    my $debug = 0;
+    my $autoconfig = 1;
+    my $make_style = '';
+    my $build_dir = '';
+    my $dumb_gcc = 0;
+    my $module_set = '';
+    my $no_shared = 0;
+    my @using_mods;
 
     GetOptions('debug' => sub { $debug = 1; },
                'disable-shared' => sub { $no_shared = 1; },
