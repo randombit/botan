@@ -5,9 +5,6 @@ use DirHandle;
 use File::Spec::Functions;
 
 ############################################################################
-my $PROJECT_NAME = 'Botan';
-
-############################################################################
 # Version numbers
 my $MAJOR = 1;
 my $MINOR = 5;
@@ -18,7 +15,6 @@ my $PATCH = 11;
 
 my $OUTPUT_FILE = '../../configure.pl';
 
-my $MODULES_DIR = 'modules';
 my $CODE_DIR = 'code';
 my $ARCH_DIR = 'arch';
 my $OS_DIR = 'os';
@@ -38,9 +34,6 @@ write_code($CODE_DIR, 'header.pl');
 sub q { my($s) = @_; $s =~ s/^: {0,3}//gm; $s; }
 
 print OUTPUT &q(<<ENDOFCONFIG);
-
-my \$PROJECT_NAME    = '$PROJECT_NAME';
-my \$PROJECT_NAME_LC = lc \$PROJECT_NAME;
 
 my \$MAJOR_VERSION = $MAJOR;
 my \$MINOR_VERSION = $MINOR;

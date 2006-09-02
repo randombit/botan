@@ -18,7 +18,7 @@ my $BUILD_INCLUDE_DIR = 'build/include';
 
 my $CONFIG_HEADER = 'build.h';
 
-my $CPP_INCLUDE_DIR_DIRNAME = $PROJECT_NAME_LC;
+my $CPP_INCLUDE_DIR_DIRNAME = 'botan';
 
 # Available module sets
 my %MODULE_SETS = (

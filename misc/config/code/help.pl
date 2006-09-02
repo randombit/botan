@@ -13,7 +13,6 @@ Options:
   --debug: tune compiler flags for debugging; inferior code can result
   --disable-shared: disable building shared libararies
   --noauto: Disable autoconfiguration
-  --dumb-gcc: change makefile flags to support GCC 2.95.x, 3.[34].x, or 4.0.x
   --make-style=STYLE: override the guess as to what type of makefile to use
   --modules=MODS: add module(s) MODS to the library.
   --module-set=SET: add a pre-specified set of modules (unix|win32|beos)
