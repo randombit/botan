@@ -64,7 +64,10 @@ END_OF_CONFIG_H
 
    if($local_config ne '')
    {
-       print CONFIG_H "\n#include \"${local_config}\"\n";
+       open LOCAL_CONFIG, "<$local_config" or die
+           "Couldn't read $local_config ($!)\n";
+       print CONFIG_H "\n";
+       while(<LOCAL_CONFIG>) { print CONFIG_H; }
    }
 
    print CONFIG_H "\n#endif\n";
