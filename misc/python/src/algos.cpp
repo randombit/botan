@@ -41,30 +41,6 @@ class Py_StreamCipher
       StreamCipher* cipher;
    };
 
-class Py_HashFunction
-   {
-   public:
-      u32bit output_length() const { return hash->OUTPUT_LENGTH; }
-      std::string name() const { return hash->name(); }
-      void clear() throw() { hash->clear(); }
-
-      void update(const std::string& in) { hash->update(in); }
-
-      std::string final()
-         {
-         SecureVector<byte> result = hash->final();
-         return std::string((const char*)result.begin(), result.size());
-         }
-
-      Py_HashFunction(const std::string& name)
-         {
-         hash = get_hash(name);
-         }
-      ~Py_HashFunction() { delete hash; }
-   private:
-      HashFunction* hash;
-   };
-
 class Py_MAC
    {
    public:
@@ -99,11 +75,13 @@ class Py_MAC
       MessageAuthenticationCode* mac;
    };
 
-void export_block_ciphers();
+extern void export_block_ciphers();
+extern void export_hash_functions();
 
 void export_basic_algos()
    {
    export_block_ciphers();
+   export_hash_functions();
 
    python::class_<Py_StreamCipher>("StreamCipher", python::init<std::string>())
       .add_property("keylength_min", &Py_StreamCipher::keylength_min)
@@ -114,13 +92,6 @@ void export_basic_algos()
       .def("valid_keylength", &Py_StreamCipher::valid_keylength)
       .def("set_key", &Py_StreamCipher::set_key)
       .def("crypt", &Py_StreamCipher::crypt);
-
-   python::class_<Py_HashFunction>("HashFunction", python::init<std::string>())
-      .add_property("output_length", &Py_HashFunction::output_length)
-      .add_property("name", &Py_HashFunction::name)
-      .def("clear", &Py_HashFunction::clear)
-      .def("update", &Py_HashFunction::update)
-      .def("final", &Py_HashFunction::final);
 
    python::class_<Py_MAC>("MAC", python::init<std::string>())
       .add_property("output_length", &Py_MAC::output_length)

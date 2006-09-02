@@ -6,17 +6,7 @@
 #include <botan/botan.h>
 using namespace Botan;
 
-#include <boost/python.hpp>
-namespace python = boost::python;
-
-class Bad_Size : public Exception
-   {
-   public:
-      Bad_Size(const std::string& name, u32bit got, u32bit expected) :
-         Exception("Bad size encountered in " + name + "; got " +
-                   to_string(got) + " bytes, expected " + to_string(expected))
-         {}
-   };
+#include "common.h"
 
 class Py_BlockCipher : public BlockCipher
    {
@@ -27,22 +17,16 @@ class Py_BlockCipher : public BlockCipher
 
       void enc(const byte in[], byte out[]) const
          {
-         std::string out_str = enc_str(
-            std::string((const char*)in, BLOCK_SIZE)
-            );
-         if(out_str.size() != BLOCK_SIZE)
-            throw Bad_Size(name(), out_str.size(), BLOCK_SIZE);
-         std::memcpy(out, out_str.data(), BLOCK_SIZE);
+         string2binary(
+            enc_str(make_string(in, BLOCK_SIZE)),
+            out, BLOCK_SIZE);
          }
 
       void dec(const byte in[], byte out[]) const
          {
-         std::string out_str = dec_str(
-            std::string((const char*)in, BLOCK_SIZE)
-            );
-         if(out_str.size() != BLOCK_SIZE)
-            throw Bad_Size(name(), out_str.size(), BLOCK_SIZE);
-         std::memcpy(out, out_str.data(), BLOCK_SIZE);
+         string2binary(
+            dec_str(make_string(in, BLOCK_SIZE)),
+            out, BLOCK_SIZE);
          }
 
       void key(const byte key[], u32bit len)
@@ -59,29 +43,21 @@ class Py_BlockCipher : public BlockCipher
 std::string encrypt_string(BlockCipher* cipher, const std::string& in)
    {
    if(in.size() != cipher->BLOCK_SIZE)
-      throw Bad_Size(cipher->name(), in.size(), cipher->BLOCK_SIZE);
+      throw Bad_Size(in.size(), cipher->BLOCK_SIZE);
 
    SecureVector<byte> out(cipher->BLOCK_SIZE);
    cipher->encrypt((const byte*)in.data(), out);
-   return std::string((const char*)out.begin(), out.size());
+   return make_string(out);
    }
 
 std::string decrypt_string(BlockCipher* cipher, const std::string& in)
    {
    if(in.size() != cipher->BLOCK_SIZE)
-      throw Bad_Size(cipher->name(), in.size(), cipher->BLOCK_SIZE);
+      throw Bad_Size(in.size(), cipher->BLOCK_SIZE);
 
    SecureVector<byte> out(cipher->BLOCK_SIZE);
    cipher->decrypt((const byte*)in.data(), out);
-   return std::string((const char*)out.begin(), out.size());
-   }
-
-template<typename T>
-python::object get_owner(T* me)
-   {
-   return python::object(
-      python::handle<>(
-         python::borrowed(python::detail::wrapper_base_::get_owner(*me))));
+   return make_string(out);
    }
 
 class Wrapped_Block_Cipher : public BlockCipher
