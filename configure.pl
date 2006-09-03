@@ -310,10 +310,9 @@ sub process {
 sub check_for_file {
    my ($file,$mod) = @_;
 
-   unless( -e $file ) { die
-     "(error): Module $mod requires that file $file exist. This error\n",
-     "should never occur; please contact the maintainers with details.\n";
-   }
+   die "(error): Module $mod requires that file $file exist. This error\n",
+       "should never occur; please contact the maintainers with details.\n"
+       unless(-e $file);
 }
 
 sub using_libs {
@@ -389,15 +388,15 @@ sub copy_files {
    my $updir = File::Spec->updir();
 
    foreach (keys %{ $mainline }) {
-       my $include = File::Spec->catfile($updir, $updir, $updir,
-                                         'include', $_);
-
-      portable_symlink($include, $include_dir, $_);
+      portable_symlink(File::Spec->catfile($updir, $updir, $updir,
+                                           'include', $_),
+                       $include_dir, $_);
    }
+
    foreach (keys %{ $modules }) {
-      my $include = File::Spec->catfile($updir, $updir, $updir,
-                                        $$modules{$_}, $_);
-      portable_symlink($include, $include_dir, $_);
+      portable_symlink(File::Spec->catfile($updir, $updir, $updir,
+                                           $$modules{$_}, $_),
+                       $include_dir, $_);
    }
 }
 
@@ -440,10 +439,9 @@ sub mkdirs {
 }
 
 sub in_array {
-   my($array_ref, $target) = @_;
-   if(!defined($array_ref)) { return 0; }
-   my @array = @{ $array_ref };
-   foreach (@array) { if($_ eq $target) { return 1; } }
+   my($array, $target) = @_;
+   return 0 unless defined($array);
+   foreach (@$array) { return 1 if($_ eq $target); }
    return 0;
 }
 
@@ -596,49 +594,36 @@ sub get_modules_list
 sub get_module_info
    {
    my ($MODULE, $MOD_DIR) = @_;
-   my %HASH;
-   my $mod_dirname = File::Spec->catfile($MOD_DIR,$MODULE);
-   my $mod_dir = new DirHandle $mod_dirname;
-   if(!defined $mod_dir)
-      { die "(error): Couldn't open dir $mod_dirname ($!)\n"; }
+   my %modinfo;
 
-   my $mod_info_name = 'modinfo.txt';
-
-   my %MODFILES;
-   my $have_config_file = 0;
-   while(defined($_ = $mod_dir->read))
-      {
-      if($_ eq $mod_info_name) { $have_config_file = 1; }
-      else { $MODFILES{$_} = undef; }
-      }
+   my $desc_file = File::Spec->catfile($MOD_DIR,$MODULE, 'modinfo.txt');
    die "(error): Module $MODULE does not seem to have a description file\n"
-      unless $have_config_file;
+       unless(-e $desc_file);
 
-   my $desc_file = File::Spec->catfile($MOD_DIR,$MODULE,$mod_info_name);
    open MODFILE, "<$desc_file" or die
       "(error): Couldn't open file $desc_file, ($!)\n";
 
-   $HASH{'libs'} = {};
+   $modinfo{'libs'} = {};
 
-   $HASH{'add'} = {};
-   $HASH{'replace'} = {};
-   $HASH{'ignore'} = {};
+   $modinfo{'add'} = {};
+   $modinfo{'replace'} = {};
+   $modinfo{'ignore'} = {};
 
-   $HASH{'define'} = {};
-   $HASH{'define_base'} = {};
+   $modinfo{'define'} = {};
+   $modinfo{'define_base'} = {};
 
-   $HASH{'external_libs'} = 0;
+   $modinfo{'external_libs'} = 0;
 
    while(<MODFILE>)
    {
-       $HASH{'name'} = $1 if(/^realname \"(.*)\"/);
-       $HASH{'notes'} = $1 if(/^note \"(.*)\"/);
+       $modinfo{'name'} = $1 if(/^realname \"(.*)\"/);
+       $modinfo{'notes'} = $1 if(/^note \"(.*)\"/);
 
-       $HASH{'define'}{$1} = undef if(/^define (\w*)/);
-       $HASH{'define_base'}{$1} = undef if(/^define_base (\w*)/);
-       $HASH{'mp_bits'} = $1 if(/^mp_bits ([0-9]*)/);
+       $modinfo{'define'}{$1} = undef if(/^define (\w*)/);
+       $modinfo{'define_base'}{$1} = undef if(/^define_base (\w*)/);
+       $modinfo{'mp_bits'} = $1 if(/^mp_bits ([0-9]*)/);
 
-       $HASH{'external_libs'} = 1 if(/^uses_external_libs/);
+       $modinfo{'external_libs'} = 1 if(/^uses_external_libs/);
 
        if(/^require_version /)
        {
@@ -652,9 +637,9 @@ sub get_module_info
 
                if($needed_version > $have_version) {
                    warn "Module $MODULE requires Botan version $version\n";
-                   %HASH = ();
+                   %modinfo = ();
                    close MODFILE;
-                   return %HASH;
+                   return %modinfo;
                }
            }
            else
@@ -669,7 +654,7 @@ sub get_module_info
                $_ = process($_ = <MODFILE>);
                next unless $_;
                last if (m@^</arch>$@);
-               $HASH{'arch'}{$_} = undef;
+               $modinfo{'arch'}{$_} = undef;
            }
        }
 
@@ -679,7 +664,7 @@ sub get_module_info
                $_ = process($_ = <MODFILE>);
                next unless $_;
                last if (m@^</os>$@);
-               $HASH{'os'}{$_} = undef;
+               $modinfo{'os'}{$_} = undef;
            }
        }
 
@@ -688,7 +673,7 @@ sub get_module_info
                $_ = process($_ = <MODFILE>);
                next unless $_;
                last if (m@^</add>$@);
-               $HASH{'add'}{$_} = undef;
+               $modinfo{'add'}{$_} = undef;
            }
        }
 
@@ -697,7 +682,7 @@ sub get_module_info
                $_ = process($_ = <MODFILE>);
                next unless $_;
                last if (m@^</ignore>$@);
-               $HASH{'ignore'}{$_} = undef;
+               $modinfo{'ignore'}{$_} = undef;
            }
        }
 
@@ -706,7 +691,7 @@ sub get_module_info
                $_ = process($_ = <MODFILE>);
                next unless $_;
                last if (m@^</replace>$@);
-               $HASH{'replace'}{$_} = undef;
+               $modinfo{'replace'}{$_} = undef;
            }
        }
 
@@ -717,7 +702,7 @@ sub get_module_info
               next unless $_;
               last if (m@^</libs>$@);
               m/^([\w!,]*) -> ([\w,-]*)$/;
-              $HASH{'libs'}{$1} = $2;
+              $modinfo{'libs'}{$1} = $2;
           }
       }
 
@@ -727,13 +712,13 @@ sub get_module_info
                $_ = process($_ = <MODFILE>);
                next unless $_;
                last if (m@^</cc>$@);
-               $HASH{'cc'}{$_} = undef;
+               $modinfo{'cc'}{$_} = undef;
            }
        }
    }
 
    close MODFILE;
-   return %HASH;
+   return %modinfo;
    }
 
 sub load_module {
@@ -824,16 +809,17 @@ Usage: $0 [options] CC-OS-CPU
 See doc/building.pdf for more information about this program.
 
 Options:
-  --prefix=/path: Set the installation path
-  --libdir=/path: Install library files in \${prefix}/\${libdir}
-  --docdir=/path: Install documentation in \${prefix}/\${docdir}
+  --prefix=PATH: Set the installation path
+  --libdir=PATH: Install library files in \${prefix}/\${libdir}
+  --docdir=PATH: Install documentation in \${prefix}/\${docdir}
+
+  --modules=MODS: add module(s) MODS to the library.
+  --module-set=SET: add a pre-specified set of modules (unix|win32|beos)
 
   --debug: tune compiler flags for debugging; inferior code can result
   --disable-shared: disable building shared libararies
   --noauto: Disable autoconfiguration
   --make-style=STYLE: override the guess as to what type of makefile to use
-  --modules=MODS: add module(s) MODS to the library.
-  --module-set=SET: add a pre-specified set of modules (unix|win32|beos)
 
 You may use 'generic' for OS or CPU (useful if your OS or CPU isn't listed).
 
@@ -1455,7 +1441,6 @@ $__TAB__\$(LN) \$(SHARED_LIB) \$(SYMLINK)
 
 END_OF_SO_LINK_COMMAND
     }
-
 
    print_header($makefile, 'Fake Targets');
 
