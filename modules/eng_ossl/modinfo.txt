@@ -2,17 +2,16 @@ realname "OpenSSL Engine"
 
 uses_external_libs
 
-add_file eng_ossl.cpp
-add_file bn_wrap.cpp
-add_file bn_powm.cpp
-add_file ossl_bc.cpp
-add_file ossl_rc4.cpp
-add_file ossl_md.cpp
-
-add_file eng_ossl.h
-add_file bn_wrap.h
-
-local_only bn_wrap.h
+<add>
+eng_ossl.cpp
+bn_wrap.cpp
+bn_powm.cpp
+ossl_bc.cpp
+ossl_rc4.cpp
+ossl_md.cpp
+eng_ossl.h
+bn_wrap.h
+</add>
 
 define ENGINE_OPENSSL
 

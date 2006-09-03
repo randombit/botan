@@ -2,8 +2,10 @@ realname "Pthread Mutex"
 
 define MUTEX_PTHREAD
 
-add_file mux_pthr.cpp
-add_file mux_pthr.h
+<add>
+mux_pthr.cpp
+mux_pthr.h
+</add>
 
 <libs>
 all!qnx,freebsd,openbsd,netbsd -> pthread

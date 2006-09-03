@@ -2,12 +2,13 @@ realname "Generic Unix Entropy Source"
 
 define ENTROPY_SRC_UNIX
 
-add_file es_unix.cpp
-add_file unix_src.cpp
-add_file unix_cmd.cpp
-
-add_file es_unix.h
-add_file unix_cmd.h
+<add>
+es_unix.cpp
+unix_src.cpp
+unix_cmd.cpp
+es_unix.h
+unix_cmd.h
+</add>
 
 <os>
 aix

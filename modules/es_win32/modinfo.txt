@@ -5,8 +5,10 @@ realname "MS Windows Entropy Source"
 
 define ENTROPY_SRC_WIN32
 
-add_file es_win32.h
-add_file es_win32.cpp
+<add>
+es_win32.h
+es_win32.cpp
+</add>
 
 <os>
 windows

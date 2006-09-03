@@ -2,8 +2,10 @@ realname "File Tree Walking Entropy Source"
 
 define ENTROPY_SRC_FTW
 
-add_file es_ftw.h
-add_file es_ftw.cpp
+<add>
+es_ftw.h
+es_ftw.cpp
+</add>
 
 <os>
 aix

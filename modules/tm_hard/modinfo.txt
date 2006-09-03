@@ -2,8 +2,10 @@ realname "Hardware Timer"
 
 define TIMER_HARDWARE
 
-add_file tm_hard.cpp
-add_file tm_hard.h
+<add>
+tm_hard.cpp
+tm_hard.h
+</add>
 
 <cc>
 gcc

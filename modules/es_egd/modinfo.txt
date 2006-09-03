@@ -2,8 +2,10 @@ realname "EGD Entropy Source"
 
 define ENTROPY_SRC_EGD
 
-add_file es_egd.h
-add_file es_egd.cpp
+<add>
+es_egd.h
+es_egd.cpp
+</add>
 
 <libs>
 solaris -> socket

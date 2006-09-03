@@ -2,8 +2,10 @@ realname "POSIX Timer"
 
 define TIMER_POSIX
 
-add_file tm_posix.cpp
-add_file tm_posix.h
+<add>
+tm_posix.cpp
+tm_posix.h
+</add>
 
 <libs>
 linux -> rt

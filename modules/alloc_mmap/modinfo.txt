@@ -2,8 +2,10 @@ realname "Disk Based Allocation System"
 
 define ALLOC_MMAP
 
-add_file mmap_mem.cpp
-add_file mmap_mem.h
+<add>
+mmap_mem.cpp
+mmap_mem.h
+</add>
 
 <os>
 linux

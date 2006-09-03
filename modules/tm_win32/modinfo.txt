@@ -2,8 +2,10 @@ realname "Win32 Timer"
 
 define TIMER_WIN32
 
-add_file tm_win32.cpp
-add_file tm_win32.h
+<add>
+tm_win32.cpp
+tm_win32.h
+</add>
 
 <os>
 cygwin

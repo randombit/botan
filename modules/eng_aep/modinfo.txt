@@ -2,17 +2,15 @@ realname "AEP Engine"
 
 uses_external_libs
 
-add_file eng_aep.cpp
-add_file aep_main.cpp
-add_file aep_conn.cpp
-
-add_file eng_aep.h
-add_file es_aep.h
-add_file hw_aep.h
-add_file aep_conn.h
-
-local_only aep_conn.h
-local_only hw_aep.h
+<add>
+eng_aep.cpp
+aep_main.cpp
+aep_conn.cpp
+eng_aep.h
+es_aep.h
+hw_aep.h
+aep_conn.h
+</add>
 
 define ENGINE_AEP
 define ENTROPY_SRC_AEP

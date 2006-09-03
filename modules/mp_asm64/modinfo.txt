@@ -2,7 +2,9 @@ realname "MPI Assembler Backend for 64 bit Systems"
 
 mp_bits 64
 
-replace_file mp_asm.h
+<replace>
+mp_asm.h
+</replace>
 
 # Disable amd64 since (nominally) the mp_amd64 module has that covered
 <arch>

@@ -6,8 +6,10 @@ realname "Bzip2 Compressor"
 
 define COMPRESSOR_BZIP2
 
-add_file bzip2.h
-add_file bzip2.cpp
+<add>
+bzip2.h
+bzip2.cpp
+</add>
 
 <libs>
 all -> bz2

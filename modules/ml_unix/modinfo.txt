@@ -1,6 +1,8 @@
 realname "Memory Locking for Unix"
 
-replace_file mlock.cpp
+<replace>
+mlock.cpp
+</replace>
 
 <os>
 aix

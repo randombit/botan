@@ -2,19 +2,25 @@ realname "Algorithm x86 Assembler"
 
 mp_bits 32
 
-replace_file md4.cpp
-replace_file md5.cpp
-replace_file sha160.cpp
-replace_file serpent.cpp
-ignore_file mp_muladd.cpp
+<replace>
+md4.cpp
+md5.cpp
+sha160.cpp
+serpent.cpp
+</replace>
 
-add_file asm_macr.h
+<ignore>
+mp_muladd.cpp
+</ignore>
 
-add_file md4core.S
-add_file md5core.S
-add_file sha1core.S
-add_file serp_asm.S
-add_file mp_muladd.S
+<add>
+asm_macr.h
+md4core.S
+md5core.S
+sha1core.S
+serp_asm.S
+mp_muladd.S
+</add>
 
 <arch>
 ia32

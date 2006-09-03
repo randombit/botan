@@ -2,8 +2,10 @@ realname "Pipe Unix I/O support"
 
 define PIPE_UNIXFD_IO
 
-add_file fd_unix.h
-add_file fd_unix.cpp
+<add>
+fd_unix.h
+fd_unix.cpp
+</add>
 
 <os>
 aix

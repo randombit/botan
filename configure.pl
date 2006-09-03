@@ -621,7 +621,6 @@ sub get_module_info
    $HASH{'libs'} = {};
 
    $HASH{'add'} = {};
-   $HASH{'local_only'} = {};
    $HASH{'replace'} = {};
    $HASH{'ignore'} = {};
 
@@ -634,10 +633,6 @@ sub get_module_info
    {
        $HASH{'name'} = $1 if(/^realname \"(.*)\"/);
        $HASH{'notes'} = $1 if(/^note \"(.*)\"/);
-       $HASH{'add'}{$1} = undef if(/^add_file ([\.\w]*)/);
-       $HASH{'local_only'}{$1} = undef if(/^local_only ([\.\w]*)/);
-       $HASH{'replace'}{$1} = undef if(/^replace_file ([\.\w]*)/);
-       $HASH{'ignore'}{$1} = undef if(/^ignore_file ([\.\w]*)/);
 
        $HASH{'define'}{$1} = undef if(/^define (\w*)/);
        $HASH{'define_base'}{$1} = undef if(/^define_base (\w*)/);
@@ -685,6 +680,33 @@ sub get_module_info
                next unless $_;
                last if (m@^</os>$@);
                $HASH{'os'}{$_} = undef;
+           }
+       }
+
+       if(/^<add>$/) {
+           while(1) {
+               $_ = process($_ = <MODFILE>);
+               next unless $_;
+               last if (m@^</add>$@);
+               $HASH{'add'}{$_} = undef;
+           }
+       }
+
+       if(/^<ignore>$/) {
+           while(1) {
+               $_ = process($_ = <MODFILE>);
+               next unless $_;
+               last if (m@^</ignore>$@);
+               $HASH{'ignore'}{$_} = undef;
+           }
+       }
+
+       if(/^<replace>$/) {
+           while(1) {
+               $_ = process($_ = <MODFILE>);
+               next unless $_;
+               last if (m@^</replace>$@);
+               $HASH{'replace'}{$_} = undef;
            }
        }
 
@@ -1221,9 +1243,6 @@ sub generate_makefile {
    close MAKEFILE;
 }
 
-##################################################
-# Print a header for a makefile                  #
-##################################################
 sub print_header {
     my ($fh, $string) = @_;
     print $fh '#' x 50, "\n",
@@ -1243,20 +1262,11 @@ sub print_unix_makefile {
        $install_root, $header_dir, $lib_dir, $doc_dir,
        $lib_list) = @_;
 
-   ##################################################
-   # Some constants                                 #
-   ##################################################
    my $__TAB__ = "\t";
 
-   ##################################################
-   # Make the library linking list                  #
-   ##################################################
    my $link_to = "-lm";
    foreach my $lib (@{ $lib_list }) { $link_to .= " -l" . $lib; }
 
-   ##################################################
-   # Generate a few variables                       #
-   ##################################################
    my $lib_flags   = '$(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS)';
 
    my $libs = '$(STATIC_LIB)';
@@ -1512,14 +1522,8 @@ sub print_nmake_makefile {
        $install_root, $header_dir, $lib_dir, $doc_dir,
        $lib_list) = @_;
 
-   ##################################################
-   # Some constants                                 #
-   ##################################################
    my $__TAB__ = "\t";
 
-   ##################################################
-   # Make the library linking list                  #
-   ##################################################
    my $link_to = '';
    foreach my $lib (@{ $lib_list })
    {
@@ -1528,9 +1532,6 @@ sub print_nmake_makefile {
        else               { $link_to .= ' ' . $lib_full; }
    }
 
-   ##################################################
-   # Generate a few variables                       #
-   ##################################################
    my $lib_flags   = '$(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS)';
 
    my $libs = '$(STATIC_LIB)';
