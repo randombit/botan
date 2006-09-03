@@ -466,22 +466,6 @@ sub print_config_h {
 
     chomp($patch);
 
-    my $defines = '';
-    foreach (sort @$defines_base) {
-        next if not defined $_ or not $_;
-        $defines .= "#define BOTAN_$_\n";
-    }
-    $defines .= "\n" if(scalar @$defines_base);
-
-    foreach (sort @$defines_ext) {
-        next if not defined $_ or not $_;
-        $defines .= "#define BOTAN_EXT_$_\n";
-    }
-
-    chomp($defines);
-
-    if($defines) { $defines = "\n" . $defines . "\n"; }
-
     open CONFIG_H, ">$config_h" or
         die "Couldn't write $config_h ($!)\n";
 
@@ -505,33 +489,43 @@ sub print_config_h {
 #define BOTAN_KARAT_SQR_THRESHOLD 12
 END_OF_CONFIG_H
 
-   if($arch ne 'generic')
-   {
-       $arch = uc $arch;
-       print CONFIG_H "\n#define BOTAN_TARGET_ARCH_IS_$arch\n";
+    if($arch ne 'generic') {
+        $arch = uc $arch;
+        print CONFIG_H "\n#define BOTAN_TARGET_ARCH_IS_$arch\n";
 
-       if($arch ne $cpu)
-       {
-           $cpu = uc $cpu;
-           $cpu =~ s/-/_/g;
-           print CONFIG_H "#define BOTAN_TARGET_CPU_IS_$cpu\n";
-       }
-   }
+        if($arch ne $cpu) {
+            $cpu = uc $cpu;
+            $cpu =~ s/-/_/g;
+            print CONFIG_H "#define BOTAN_TARGET_CPU_IS_$cpu\n";
+        }
+    }
 
-   print CONFIG_H $defines;
+    my $defines = '';
 
-   if($local_config ne '')
-   {
-       open LOCAL_CONFIG, "<$local_config" or die
-           "Couldn't read $local_config ($!)\n";
-       print CONFIG_H "\n";
-       while(<LOCAL_CONFIG>) { print CONFIG_H; }
-   }
+    foreach (sort @$defines_base) {
+        next if not defined $_ or not $_;
+        $defines .= "#define BOTAN_$_\n";
+    }
+    $defines .= "\n" if(scalar @$defines_base);
 
-   print CONFIG_H "\n#endif\n";
+    foreach (sort @$defines_ext) {
+        next if not defined $_ or not $_;
+        $defines .= "#define BOTAN_EXT_$_\n";
+    }
 
-   close CONFIG_H;
-   }
+    print CONFIG_H "\n", $defines if($defines);
+
+    if($local_config ne '') {
+        open LOCAL_CONFIG, "<$local_config" or die
+            "Couldn't read $local_config ($!)\n";
+        print CONFIG_H "\n";
+        while(<LOCAL_CONFIG>) { print CONFIG_H; }
+    }
+
+    print CONFIG_H "\n#endif\n";
+
+    close CONFIG_H;
+}
 
 sub check_for_conflicts {
 
@@ -802,17 +796,19 @@ Usage: $0 [options] CC-OS-CPU
 See doc/building.pdf for more information about this program.
 
 Options:
-  --prefix=PATH: Set the installation path
-  --libdir=PATH: Install library files in \${prefix}/\${libdir}
-  --docdir=PATH: Install documentation in \${prefix}/\${docdir}
+  --prefix=PATH:       set the base installation directory
+  --libdir=PATH:       install library files in \${prefix}/\${libdir}
+  --docdir=PATH:       install documentation in \${prefix}/\${docdir}
+  --build-dir=DIR:     setup the build in DIR
+  --local-config=FILE: include the contents of FILE into build.h
 
-  --modules=MODS: add module(s) MODS to the library.
-  --module-set=SET: add a pre-specified set of modules (unix|win32|beos)
+  --modules=MODS:      add module(s) MODS to the library.
+  --module-set=SET:    add a pre-specified set of modules (unix|win32|beos)
 
-  --debug: tune compiler flags for debugging; inferior code can result
-  --disable-shared: disable building shared libararies
-  --noauto: Disable autoconfiguration
-  --make-style=STYLE: override the guess as to what type of makefile to use
+  --debug:             set compiler flags for debugging
+  --disable-shared:    disable building shared libararies
+  --noauto:            disable autoconfiguration
+  --make-style=STYLE:  override the guess as to what type of makefile to use
 
 You may use 'generic' for OS or CPU (useful if your OS or CPU isn't listed).
 
@@ -1008,14 +1004,12 @@ sub guess_triple
     }
 }
 
-sub guess_mods
-{
+sub guess_mods {
     my ($cc, $os, $arch, $submodel) = @_;
 
     my @usable_modules;
 
-    foreach my $mod (sort keys %MODULES)
-    {
+    foreach my $mod (sort keys %MODULES) {
         my %modinfo = %{ $MODULES{$mod} };
 
         # If it uses external libs, the user has to request it specifically
@@ -1023,8 +1017,10 @@ sub guess_mods
 
         my @cc_list = ();
         if($modinfo{'cc'}) { @cc_list = keys %{ $modinfo{'cc'} }; }
+
         my @os_list = ();
         if($modinfo{'os'}) { @os_list = keys %{ $modinfo{'os'} }; }
+
         my @arch_list = ();
         if($modinfo{'arch'}) { @arch_list = keys %{ $modinfo{'arch'} }; }
 
@@ -1818,7 +1814,6 @@ sub set_os_defines {
             $INSTALL_INFO{$os}{'group'} = $1 if(/^install_group (.*)/);
             $INSTALL_INFO{$os}{'command'} = $1
                 if(/^install_cmd (.*)/);
-
 
             if(/^<aliases>$/) {
                 while(1) {
