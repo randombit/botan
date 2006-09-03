@@ -67,39 +67,23 @@ my %DOCS = (
    'todo.txt' => $DOC_DIR
    );
 
-my %REALNAME = ();
+my (%REALNAME,%MODULES);
 
-my(%SUBMODEL_ALIAS,%DEFAULT_SUBMODEL,%ARCH,%ARCH_ALIAS);
-
-my(%OS_SUPPORTS_ARCH, %OS_SUPPORTS_SHARED, %OS_TYPE,
-   %INSTALL_INFO, %OS_OBJ_SUFFIX, %OS_SHARED_SUFFIX,
-   %OS_STATIC_SUFFIX, %OS_AR_COMMAND, %OS_AR_NEEDS_RANLIB,
-   %OS_ALIAS);
-
-my(%CC_BINARY_NAME,
-   %CC_LIB_OPT_FLAGS,
-   %CC_CHECK_OPT_FLAGS,
-   %CC_WARN_FLAGS,
-   %CC_LANG_FLAGS,
-   %CC_SO_OBJ_FLAGS,
-   %CC_SO_LINK_FLAGS,
-   %CC_DEBUG_FLAGS,
-   %CC_NO_DEBUG_FLAGS,
-   %CC_MACHINE_OPT_FLAGS,
-   %CC_MACHINE_OPT_FLAGS_RE,
-   %CC_ABI_FLAGS,
-   %CC_SUPPORTS_OS,
-   %CC_SUPPORTS_ARCH,
-   %CC_AR_COMMAND,
-   %MAKEFILE_STYLE);
-
-my %MODULES;
+my(%SUBMODEL_ALIAS, %DEFAULT_SUBMODEL, %ARCH, %ARCH_ALIAS,
+   %OS_SUPPORTS_ARCH, %OS_SUPPORTS_SHARED, %OS_TYPE, %INSTALL_INFO,
+   %OS_OBJ_SUFFIX, %OS_SHARED_SUFFIX, %OS_STATIC_SUFFIX,
+   %OS_AR_COMMAND, %OS_AR_NEEDS_RANLIB, %OS_ALIAS, %CC_BINARY_NAME,
+   %CC_LIB_OPT_FLAGS, %CC_CHECK_OPT_FLAGS, %CC_WARN_FLAGS,
+   %CC_LANG_FLAGS, %CC_SO_OBJ_FLAGS, %CC_SO_LINK_FLAGS,
+   %CC_DEBUG_FLAGS, %CC_NO_DEBUG_FLAGS, %CC_MACHINE_OPT_FLAGS,
+   %CC_MACHINE_OPT_FLAGS_RE, %CC_ABI_FLAGS, %CC_SUPPORTS_OS,
+   %CC_SUPPORTS_ARCH, %CC_AR_COMMAND, %MAKEFILE_STYLE);
 
 my $user_set_root = '';
 my ($doc_dir, $lib_dir);
-my (%ignored_src, %ignored_include, %added_src, %added_include);
+my (%ignored_src, %ignored_include, %added_src, %added_include,
+    %lib_src, %check_src, %include);
 my ($CPP_INCLUDE_DIR, $BUILD_LIB_DIR, $BUILD_CHECK_DIR);
-my (%lib_src, %check_src, %include);
 
 sub main() {
     %MODULES = get_modules_list($MOD_DIR);
@@ -108,14 +92,11 @@ sub main() {
     set_os_defines($OS_DIR);
     set_cc_defines($CC_DIR);
 
-    my $debug = 0;
+    my ($debug, $dumb_gcc, $no_shared) = (0, 0, 0);
+    my ($make_style, $build_dir, $module_set, $local_config) =
+        ('', '', '', '');
+
     my $autoconfig = 1;
-    my $make_style = '';
-    my $build_dir = '';
-    my $dumb_gcc = 0;
-    my $module_set = '';
-    my $no_shared = 0;
-    my $local_config = '';
     my @using_mods;
 
     GetOptions('debug' => sub { $debug = 1; },
@@ -358,9 +339,8 @@ sub using_libs {
    }
 
 sub defines {
-   my @using = @_;
    my @defarray;
-   foreach (@using) {
+   foreach (@_) {
        foreach my $define (sort keys %{ $MODULES{$_}{'define'} }) {
            push @defarray , $define;
        }
@@ -369,9 +349,8 @@ sub defines {
    }
 
 sub defines_base {
-   my @using = @_;
    my @defarray;
-   foreach (@using) {
+   foreach (@_) {
        foreach my $define (sort keys %{ $MODULES{$_}{'define_base'} }) {
            push @defarray , $define;
        }
@@ -1111,6 +1090,7 @@ sub os_install_info {
 
     return $doc_dir if($what eq 'docs' && $doc_dir);
     return $lib_dir if($what eq 'libs' && $lib_dir);
+    return $user_set_root if($what eq 'root' && $user_set_root);
 
     return $INSTALL_INFO{$os}{$what}
        if(defined($INSTALL_INFO{$os}) &&
@@ -1118,9 +1098,7 @@ sub os_install_info {
 
     return $INSTALL_INFO{'defaults'}{$what};
 }
-##################################################
-# Generate compiler options and print makefile   #
-##################################################
+
 sub generate_makefile {
    my($make_style, $cc, $os, $submodel, $arch,
       $debug, $no_shared, $dumb_gcc,
@@ -1129,24 +1107,15 @@ sub generate_makefile {
 
    my %all_lib_srcs = (%{ $lib_src }, %{ $added_src });
 
-   ##################################################
-   # Set language options                           #
-   ##################################################
    my $lang_flags = $CC_LANG_FLAGS{$cc};
    $lang_flags = "$lang_flags -fpermissive" if($dumb_gcc);
 
-   ##################################################
-   # Set basic optimization options                 #
-   ##################################################
    my $lib_opt_flags = $CC_LIB_OPT_FLAGS{$cc};
    if(!$debug and ($CC_NO_DEBUG_FLAGS{$cc}))
       { $lib_opt_flags .= ' '.$CC_NO_DEBUG_FLAGS{$cc}; }
    if($debug and ($CC_DEBUG_FLAGS{$cc}))
       { $lib_opt_flags .= ' '.$CC_DEBUG_FLAGS{$cc}; }
 
-   ##################################################
-   # Set machine dependent optimization options     #
-   ##################################################
    my $mach_opt_flags = '';
    if(defined($CC_MACHINE_OPT_FLAGS{$cc}{$submodel}))
       { $mach_opt_flags = $CC_MACHINE_OPT_FLAGS{$cc}{$submodel}; }
@@ -1159,9 +1128,6 @@ sub generate_makefile {
       $mach_opt_flags =~ s/SUBMODEL/$processed_modelname/g;
    }
 
-   ##################################################
-   # Figure out static library creation method      #
-   ##################################################
    # This is a default that works on most Unix and Unix-like systems
    my $ar_command = "ar crs";
    my $ar_needs_ranlib = 0; # almost no systems need it anymore
@@ -1175,9 +1141,6 @@ sub generate_makefile {
        $ar_needs_ranlib = 1 if(os_ar_needs_ranlib($os));
    }
 
-   ##################################################
-   # Set shared object options                      #
-   ##################################################
    my $so_link_flags = '';
    my $so_obj_flags = $CC_SO_OBJ_FLAGS{$cc};
 
@@ -1194,14 +1157,8 @@ sub generate_makefile {
    $make_shared = 1
        if(($so_obj_flags or $so_link_flags) and $OS_SUPPORTS_SHARED{$os});
 
-   ##################################################
-   # Set check code compilation flags               #
-   ##################################################
    my $check_opt_flags = $CC_CHECK_OPT_FLAGS{$cc};
 
-   ##################################################
-   # Set misc ABI options                           #
-   ##################################################
    my $ccopts = '';
 
    $ccopts .= ' '.$CC_ABI_FLAGS{$cc}{$arch}
@@ -1212,19 +1169,8 @@ sub generate_makefile {
    $ccopts .= ' '.$CC_ABI_FLAGS{$cc}{'all'}
       if(defined($CC_ABI_FLAGS{$cc}{'all'}));
 
-   ##################################################
-   # Where to install?                              #
-   ##################################################
    my $install_root = os_install_info($os, 'root');
-   my $header_dir   = os_install_info($os, 'headers');
-   my $lib_dir      = os_install_info($os, 'libs');
-   my $doc_dir      = os_install_info($os, 'docs');
 
-   if($user_set_root ne '') { $install_root = $user_set_root; }
-
-   ##################################################
-   # Open the makefile                              #
-   ##################################################
    open MAKEFILE, ">$MAKE_FILE"
       or die "Couldn't write $MAKE_FILE ($!)\n";
 
@@ -1239,7 +1185,6 @@ sub generate_makefile {
    my $obj_suffix = os_obj_suffix($os);
    my $static_suffix = os_static_suffix($os);
 
-   # Man that's a lot of arguments. :)
    my @arguments = (\*MAKEFILE,
                     $os,
                     $cc_bin . $ccopts,
@@ -1261,9 +1206,9 @@ sub generate_makefile {
                     $all_includes,
                     \%DOCS,
                     $install_root,
-                    $header_dir,
-                    $lib_dir,
-                    $doc_dir,
+                    os_install_info($os, 'headers'),
+                    os_install_info($os, 'libs'),
+                    os_install_info($os, 'docs'),
                     \@libs_used);
 
    if($make_style eq 'unix') { print_unix_makefile(@arguments); }
@@ -1290,13 +1235,11 @@ sub print_header {
 # Print a Unix style makefile                    #
 ##################################################
 sub print_unix_makefile {
-   my ($makefile, $os, $cc,
-       $lib_opt, $check_opt, $mach_opt,
-       $lang_flags, $warn_flags,
-       $make_shared, $so_obj, $so_link,
+   my ($makefile, $os, $cc, $lib_opt, $check_opt, $mach_opt,
+       $lang_flags, $warn_flags, $make_shared, $so_obj, $so_link,
        $obj_suffix, $so_suffix, $static_lib_suffix,
        $ar_command, $use_ranlib,
-       $src_hash, $check_hash, $include_hash, $docs,
+       $src, $check, $include_r, $docs,
        $install_root, $header_dir, $lib_dir, $doc_dir,
        $lib_list) = @_;
 
@@ -1306,23 +1249,10 @@ sub print_unix_makefile {
    my $__TAB__ = "\t";
 
    ##################################################
-   # Convert the references to hashes               #
-   ##################################################
-   my %src = %{ $src_hash };
-   my %includes = %{ $include_hash };
-
-   my %check = %{ $check_hash };
-
-   my %docs = %{ $docs };
-
-   ##################################################
    # Make the library linking list                  #
    ##################################################
    my $link_to = "-lm";
-   foreach my $lib (@{ $lib_list })
-   {
-       $link_to .= " -l" . $lib;
-   }
+   foreach my $lib (@{ $lib_list }) { $link_to .= " -l" . $lib; }
 
    ##################################################
    # Generate a few variables                       #
@@ -1370,14 +1300,14 @@ sub print_unix_makefile {
       return $list;
    }
 
-   my $includes = file_list(16, undef, undef, undef, %includes);
+   my $includes = file_list(16, undef, undef, undef, %$include_r);
 
    my $lib_obj = file_list(16, $BUILD_LIB_DIR, '(\.cpp$|\.s$|\.S$)',
-                           '.'.$obj_suffix, %src, %added_src);
+                           '.'.$obj_suffix, %$src, %added_src);
    my $check_obj = file_list(16, $BUILD_CHECK_DIR, '.cpp', '.'.$obj_suffix,
-                             %check);
+                             %$check);
 
-   my $doc_list = file_list(16, undef, undef, undef, %docs);
+   my $doc_list = file_list(16, undef, undef, undef, %$docs);
 
 ##################### / COMMON CODE (PARTIALLY) ######################
 
@@ -1488,10 +1418,10 @@ END_OF_SHARED_LIB_DECL
    }
 
    print_build_cmds($makefile, $BUILD_LIB_DIR,
-                    '$(LIB_FLAGS)', $obj_suffix, %src, %added_src);
+                    '$(LIB_FLAGS)', $obj_suffix, %$src, %added_src);
 
    print_build_cmds($makefile, $BUILD_CHECK_DIR,
-                    '$(CHECK_FLAGS)', $obj_suffix, %check);
+                    '$(CHECK_FLAGS)', $obj_suffix, %$check);
 
    print_header($makefile, 'Link Commands');
 
@@ -1564,6 +1494,7 @@ END_OF_SYMLINKS
    else { print $makefile "\n"; }
 
 }
+
 ##################################################
 # Print a NMAKE-style makefile                   #
 ##################################################
@@ -1574,12 +1505,10 @@ sub print_nmake_makefile {
        undef, # $make_shared
        undef, # $so_obj
        undef, # $so_link
-       $obj_suffix,
-       $so_suffix,
+       $obj_suffix, $so_suffix,
        $static_lib_suffix,
-       $ar_command,
-       undef, # $use_ranlib
-       $src_hash, $check_hash, $include_hash, $docs,
+       $ar_command, undef, # $use_ranlib
+       $src, $check, $include_r, $docs,
        $install_root, $header_dir, $lib_dir, $doc_dir,
        $lib_list) = @_;
 
@@ -1587,16 +1516,6 @@ sub print_nmake_makefile {
    # Some constants                                 #
    ##################################################
    my $__TAB__ = "\t";
-
-   ##################################################
-   # Convert the references to hashes               #
-   ##################################################
-   my %src = %{ $src_hash };
-   my %includes = %{ $include_hash };
-
-   my %check = %{ $check_hash };
-
-   my %docs = %{ $docs };
 
    ##################################################
    # Make the library linking list                  #
@@ -1618,14 +1537,14 @@ sub print_nmake_makefile {
 
 ##################### COMMON CODE (PARTIALLY) ######################
 
-   my $includes = file_list(16, undef, undef, undef, %includes);
+   my $includes = file_list(16, undef, undef, undef, %$include_r);
 
    my $lib_obj = file_list(16, $BUILD_LIB_DIR, '.cpp', '.'.$obj_suffix,
-                           %src, %added_src);
+                           %$src, %added_src);
    my $check_obj = file_list(16, $BUILD_CHECK_DIR, '.cpp', '.'.$obj_suffix,
-                             %check);
+                             %$check);
 
-   my $doc_list = file_list(16, undef, undef, undef, %docs);
+   my $doc_list = file_list(16, undef, undef, undef, %$docs);
 
 ##################### / COMMON CODE (PARTIALLY) ######################
 
@@ -1714,10 +1633,10 @@ END_OF_FILE_LISTS
    }
 
    print_build_cmds_nmake($makefile, $BUILD_LIB_DIR,
-                          '$(LIB_FLAGS)', $obj_suffix, %src, %added_src);
+                          '$(LIB_FLAGS)', $obj_suffix, %$src, %added_src);
 
    print_build_cmds_nmake($makefile, $BUILD_CHECK_DIR,
-                          '$(CHECK_FLAGS)', $obj_suffix, %check);
+                          '$(CHECK_FLAGS)', $obj_suffix, %$check);
 
    print_header($makefile, 'Link Commands');
 
@@ -1755,7 +1674,6 @@ $__TAB__\$(ECHO) "Install command not done"
 END_OF_INSTALL_SCRIPTS
 
     print $makefile "\n";
-
 }
 
 sub print_pkg_config
@@ -1767,8 +1685,6 @@ sub print_pkg_config
     my $install_root = os_install_info($os, 'root');
     my $header_dir   = os_install_info($os, 'headers');
     my $lib_dir      = os_install_info($os, 'libs');
-
-   if($user_set_root ne '') { $install_root = $user_set_root; }
 
     my $link_to = "-lm";
     foreach my $lib (@libs)
@@ -1982,14 +1898,10 @@ sub set_cc_defines {
         open CCFILE, "<$filename" or die "Couldn't open $filename, ($!)";
 
         # Default to empty values, so they don't have to be explicitly set
-        $CC_LIB_OPT_FLAGS{$cc} =
-            $CC_CHECK_OPT_FLAGS{$cc} =
-            $CC_LANG_FLAGS{$cc} =
-            $CC_WARN_FLAGS{$cc} =
-            $CC_SO_OBJ_FLAGS{$cc} =
-            $CC_DEBUG_FLAGS{$cc} =
-            $CC_AR_COMMAND{$cc} =
-            $CC_NO_DEBUG_FLAGS{$cc} = '';
+        $CC_LIB_OPT_FLAGS{$cc} = $CC_CHECK_OPT_FLAGS{$cc} =
+            $CC_LANG_FLAGS{$cc} = $CC_WARN_FLAGS{$cc} =
+            $CC_SO_OBJ_FLAGS{$cc} = $CC_DEBUG_FLAGS{$cc} =
+            $CC_AR_COMMAND{$cc} = $CC_NO_DEBUG_FLAGS{$cc} = '';
 
         while(<CCFILE>) {
             $_ = process($_);
