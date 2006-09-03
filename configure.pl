@@ -385,37 +385,34 @@ sub portable_symlink {
 sub copy_files {
    my ($include_dir, $mainline, $modules) = @_;
 
-   my $updir = File::Spec->updir();
+   my $link_up = sub {
+       my ($dir, $file) = @_;
+       my $updir = File::Spec->updir();
+       portable_symlink(File::Spec->catfile($updir, $updir, $updir,
+                                            $dir, $file),
+                        $include_dir, $file);
+   };
 
-   foreach (keys %{ $mainline }) {
-      portable_symlink(File::Spec->catfile($updir, $updir, $updir,
-                                           'include', $_),
-                       $include_dir, $_);
-   }
-
-   foreach (keys %{ $modules }) {
-      portable_symlink(File::Spec->catfile($updir, $updir, $updir,
-                                           $$modules{$_}, $_),
-                       $include_dir, $_);
-   }
+   foreach (keys %$mainline) { &$link_up('include', $_); }
+   foreach (keys %$modules) { &$link_up($$modules{$_}, $_); }
 }
 
 sub list_dir {
-  my ($dir, $ignore) = @_;
-  opendir DIR, $dir or die "Couldn't open directory $dir ($!)\n";
-  my @list = grep { !/^\./ } readdir DIR;
+    my ($dir, $ignore) = @_;
+    opendir DIR, $dir or die "Couldn't open directory $dir ($!)\n";
+    my @list = grep { !/^\./ } readdir DIR;
 
-  if($dir eq $CHECK_DIR) {
-      @list = grep { !/\.dat$/ } grep { !/^keys$/ } grep { !/\.h$/ } @list;
-  }
+    if($dir eq $CHECK_DIR) {
+        @list = grep { !/\.dat$/ } grep { !/^keys$/ } grep { !/\.h$/ } @list;
+    }
 
-  # If $ignore is set, pull everything in @list that's in $ignore out of it
-  if(defined($ignore)) {
-     @list = grep { !exists($$ignore{$_}) } @list;
-  }
-  close DIR;
-  my %list = map { $_ => $dir } @list;
-  return %list;
+    # If $ignore is set, pull everything in @list that's in $ignore out of it
+    if(defined($ignore)) {
+        @list = grep { !exists($$ignore{$_}) } @list;
+    }
+    close DIR;
+    my %list = map { $_ => $dir } @list;
+    return %list;
 }
 
 sub clean_out_dirs {
@@ -430,32 +427,29 @@ sub clean_out_dirs {
 }
 
 sub mkdirs {
-   my (@dirs) = @_;
-   foreach my $dir (@dirs) {
-      next if( -e $dir and -d $dir ); # skip it if it's already there
-      mkdir($dir, 0777) or
-         die "(error): Could not create directory $dir ($!)\n";
-   }
+    my (@dirs) = @_;
+    foreach my $dir (@dirs) {
+        next if( -e $dir and -d $dir ); # skip it if it's already there
+        mkdir($dir, 0777) or
+            die "(error): Could not create directory $dir ($!)\n";
+    }
 }
 
 sub in_array {
-   my($array, $target) = @_;
-   return 0 unless defined($array);
-   foreach (@$array) { return 1 if($_ eq $target); }
-   return 0;
+    my($array, $target) = @_;
+    return 0 unless defined($array);
+    foreach (@$array) { return 1 if($_ eq $target); }
+    return 0;
 }
 
-sub find_mp_bits
-{
+sub find_mp_bits {
     my(@modules_list) = @_;
     my $mp_bits = 32; # default, good for most systems
     my $seen_mp_module = 0;
 
-    foreach my $modname (@modules_list)
-    {
+    foreach my $modname (@modules_list) {
         my %modinfo = %{ $MODULES{$modname} };
-        if($modinfo{'mp_bits'})
-        {
+        if($modinfo{'mp_bits'}) {
             die "(error): Inconsistent mp_bits requests from modules\n"
                 if($seen_mp_module && $modinfo{'mp_bits'} != $mp_bits);
 
@@ -466,36 +460,32 @@ sub find_mp_bits
     return $mp_bits;
 }
 
-sub print_config_h
-   {
-   my ($major, $minor, $patch, $config_h, $local_config, $os, $arch, $cpu,
-       $mp_bits, $defines_ref, $defines_base_ref) = @_;
+sub print_config_h {
+    my ($major, $minor, $patch, $config_h, $local_config, $os, $arch, $cpu,
+        $mp_bits, $defines_ext, $defines_base) = @_;
 
-   my @defines = @{ $defines_ref };
-   my @defines_base = @{ $defines_base_ref };
+    chomp($patch);
 
-   chomp($patch);
+    my $defines = '';
+    foreach (sort @$defines_base) {
+        next if not defined $_ or not $_;
+        $defines .= "#define BOTAN_$_\n";
+    }
+    $defines .= "\n" if(scalar @$defines_base);
 
-   my $defines = '';
-   foreach (sort @defines_base) {
-       next if not defined $_ or not $_;
-       $defines .= "#define BOTAN_$_\n";
-   }
-   if(scalar @defines_base) { $defines .= "\n"; }
+    foreach (sort @$defines_ext) {
+        next if not defined $_ or not $_;
+        $defines .= "#define BOTAN_EXT_$_\n";
+    }
 
-   foreach (sort @defines) {
-       next if not defined $_ or not $_;
-       $defines .= "#define BOTAN_EXT_$_\n";
-   }
+    chomp($defines);
 
-   chomp($defines);
+    if($defines) { $defines = "\n" . $defines . "\n"; }
 
-   if($defines) { $defines = "\n" . $defines . "\n"; }
+    open CONFIG_H, ">$config_h" or
+        die "Couldn't write $config_h ($!)\n";
 
-   open CONFIG_H, ">$config_h" or
-      die "Couldn't write $config_h ($!)\n";
-
-   print CONFIG_H <<END_OF_CONFIG_H;
+    print CONFIG_H <<END_OF_CONFIG_H;
 /*************************************************
 * Build Config Header File                       *
 * (C) 1999-2006 The Botan Project                *
@@ -544,59 +534,56 @@ END_OF_CONFIG_H
    }
 
 sub check_for_conflicts {
-   my @mods = @_;
-   my (%ignored, %added, %replaced, %defines);
-   foreach my $mod (@mods) {
 
-       sub check_hash {
-           my ($mod, $do_what, $hashref) = @_;
-           foreach (keys %{ $MODULES{$mod}{$do_what} }) {
-               ${$hashref}{conflicts($mod, $_, $do_what, $hashref)} = $mod;
-           }
-       }
+    sub conflicts {
+        my ($mod, $item, $do_what, $hashref) = @_;
+        return if(!defined($item));
 
-      check_hash($mod, 'define', \%defines);
-      check_hash($mod, 'replace', \%replaced);
-      check_hash($mod, 'add', \%added);
-      check_hash($mod, 'ignore', \%ignored);
-   }
+        if(defined($$hashref{$item})) {
+            my $other_mod = $$hashref{$item};
+            die "(error): Both $mod and $other_mod $do_what $item\n";
+        }
+        return $item;
+    }
+
+    my @mods = @_;
+    my (%ignored, %added, %replaced, %defines);
+    foreach my $mod (@mods) {
+        sub check_hash {
+            my ($mod, $do_what, $hashref) = @_;
+            foreach (keys %{ $MODULES{$mod}{$do_what} }) {
+                $$hashref{conflicts($mod, $_, $do_what, $hashref)} = $mod;
+            }
+        }
+
+        check_hash($mod, 'define', \%defines);
+        check_hash($mod, 'replace', \%replaced);
+        check_hash($mod, 'add', \%added);
+        check_hash($mod, 'ignore', \%ignored);
+    }
 }
 
-sub conflicts {
-    my ($mod, $item, $do_what, $hashref) = @_;
-    return if(!defined($item));
+sub get_modules_list {
+    my $MOD_DIR = $_[0];
+    my $dir = new DirHandle $MOD_DIR;
+    if(!defined $dir) { return (); }
 
-    if(defined($$hashref{$item})) {
-       my $other_mod = $$hashref{$item};
-       die "(error): Both $mod and $other_mod $do_what $item\n";
-       }
-    return $item;
+    my %MODULES;
+
+    while(defined($_ = $dir->read)) {
+        next if($_ eq '.' or $_ eq '..');
+        my $MODULE = $_;
+        my %modinfo = get_module_info($MODULE, $MOD_DIR);
+        foreach (keys %modinfo) { $MODULES{$MODULE}{$_} = $modinfo{$_}; }
+    }
+    return %MODULES;
 }
 
-sub get_modules_list
-   {
-   my $MOD_DIR = $_[0];
-   my $dir = new DirHandle $MOD_DIR;
-   if(!defined $dir) { return (); }
-
-   my %MODULES;
-
-   while(defined($_ = $dir->read))
-      {
-      next if($_ eq '.' or $_ eq '..');
-      my $MODULE = $_;
-      my %modinfo = get_module_info($MODULE, $MOD_DIR);
-      foreach (keys %modinfo) { $MODULES{$MODULE}{$_} = $modinfo{$_}; }
-      }
-   return %MODULES;
-   }
-
-sub get_module_info
-   {
+sub get_module_info {
    my ($MODULE, $MOD_DIR) = @_;
    my %modinfo;
 
-   my $desc_file = File::Spec->catfile($MOD_DIR,$MODULE, 'modinfo.txt');
+   my $desc_file = File::Spec->catfile($MOD_DIR, $MODULE, 'modinfo.txt');
    die "(error): Module $MODULE does not seem to have a description file\n"
        unless(-e $desc_file);
 
@@ -752,12 +739,11 @@ sub load_module {
 }
 
 sub handle_files {
-   my($modname, $hash_scalar, $func) = @_;
-   return unless defined($hash_scalar);
-   my %hash = %{ $hash_scalar };
-   foreach (sort keys %hash) {
-      if(defined($hash{$_})) { &$func($modname, $_, $hash{$_}); }
-      else                   { &$func($modname, $_); }
+   my($modname, $hash, $func) = @_;
+   return unless defined($hash);
+   foreach (sort keys %$hash) {
+      if(defined($$hash{$_})) { &$func($modname, $_, $$hash{$_}); }
+      else                    { &$func($modname, $_); }
     }
 }
 
@@ -777,19 +763,26 @@ sub full_path {
 sub add_file {
     my ($modname,$file) = @_;
     check_for_file(full_path($file, $modname), $modname);
-    if($file =~ /\.cpp$/ or $file =~ /\.s$/ or $file =~ /\.S$/)
-    { $added_src{$file} = File::Spec->catdir($MOD_DIR, $modname); }
-    elsif($file =~ /\.h$/)
-    { $added_include{$file} = File::Spec->catdir($MOD_DIR, $modname); }
+
+    if($file =~ /\.cpp$/ or $file =~ /\.s$/ or $file =~ /\.S$/) {
+        $added_src{$file} = File::Spec->catdir($MOD_DIR, $modname);
+    }
+    elsif($file =~ /\.h$/) {
+        $added_include{$file} = File::Spec->catdir($MOD_DIR, $modname);
+    }
     else { die "Not sure where to put $file\n"; }
 }
 
 sub ignore_file {
    my ($modname,$file) = @_;
    check_for_file(full_path($file), $modname);
-   if($file =~ /\.cpp$/ or $file =~ /\.s$/ or $file =~ /\.S$/)
-      { $ignored_src{$file} = 1; }
-   elsif($file =~ /\.h$/) { $ignored_include{$file} = 1; }
+
+   if($file =~ /\.cpp$/ or $file =~ /\.s$/ or $file =~ /\.S$/) {
+       $ignored_src{$file} = 1;
+   }
+   elsif($file =~ /\.h$/) {
+       $ignored_include{$file} = 1;
+   }
    else { die "Not sure where to put $file\n"; }
 }
 
@@ -855,7 +848,7 @@ sub which
     foreach my $path (@paths)
     {
         my $file_path = File::Spec->catfile($path, $file);
-        return $file_path if(guess_check_for_file($file_path));
+        return $file_path if(-e $file_path and -r $file_path);
     }
     return '';
 }
@@ -927,10 +920,11 @@ sub guess_triple
 
         # If we have /proc/cpuinfo, try to get nice specific information about
         # what kind of CPU we're running on.
-        if(guess_check_for_file('/proc/cpuinfo'))
+        if(-e '/proc/cpuinfo' and -r '/proc/cpuinfo')
         {
-            open CPUINFO, '/proc/cpuinfo' or die
-                "Hey, guess_check_for_file said /proc/cpuinfo was readable!\n";
+            open CPUINFO, '/proc/cpuinfo' or
+                die "Couldn't read /proc/cpuinfo ($!)\n";
+
             my $cpuinfo = join('', <CPUINFO>);
             close CPUINFO;
 
@@ -1014,13 +1008,6 @@ sub guess_triple
     }
 }
 
-sub guess_check_for_file
-{
-    my $file = $_[0];
-    return 1 if(-f $file and -r $file);
-    return 0;
-}
-
 sub guess_mods
 {
     my ($cc, $os, $arch, $submodel) = @_;
@@ -1054,43 +1041,36 @@ sub guess_mods
 }
 
 sub os_info_for {
-    my ($os,$hashref) = @_;
-
-    my %hash = %{ $hashref };
+    my ($os,$hash) = @_;
 
     die "Internal error: os_info_for called with undef hash\n"
-        unless %hash;
+        unless $hash;
 
     die "Internal error: os_info_for called with an os of defaults\n"
         if($os eq 'defaults');
 
-    return $hash{$os} if(defined($hash{$os}) && $hash{$os} ne '');
-    return $hash{'defaults'};
+    return ($$hash{$os}) if(defined($$hash{$os}) && $$hash{$os} ne '');
+    return $$hash{'defaults'};
 }
 
 sub os_static_suffix {
-    my $os = $_[0];
-    return os_info_for($os, \%OS_STATIC_SUFFIX);
+    return os_info_for(shift, \%OS_STATIC_SUFFIX);
 }
 
 sub os_shared_suffix {
-    my $os = $_[0];
-    return os_info_for($os, \%OS_SHARED_SUFFIX);
+    return os_info_for(shift, \%OS_SHARED_SUFFIX);
 }
 
 sub os_obj_suffix {
-    my $os = $_[0];
-    return os_info_for($os, \%OS_OBJ_SUFFIX);
+    return os_info_for(shift, \%OS_OBJ_SUFFIX);
 }
 
 sub os_ar_command {
-    my $os = $_[0];
-    return os_info_for($os, \%OS_AR_COMMAND);
+    return os_info_for(shift, \%OS_AR_COMMAND);
 }
 
 sub os_ar_needs_ranlib {
-    my $os = $_[0];
-    return os_info_for($os, \%OS_AR_NEEDS_RANLIB);
+    return os_info_for(shift, \%OS_AR_NEEDS_RANLIB);
 }
 
 sub os_install_info {
@@ -1251,7 +1231,7 @@ sub print_unix_makefile {
    my $__TAB__ = "\t";
 
    my $link_to = "-lm";
-   foreach my $lib (@{ $lib_list }) { $link_to .= " -l" . $lib; }
+   foreach my $lib (@$lib_list) { $link_to .= " -l" . $lib; }
 
    my $lib_flags   = '$(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS)';
 
@@ -1510,7 +1490,7 @@ sub print_nmake_makefile {
    my $__TAB__ = "\t";
 
    my $link_to = '';
-   foreach my $lib (@{ $lib_list })
+   foreach my $lib (@$lib_list)
    {
        my $lib_full = $lib . "." . $static_lib_suffix;
        if($link_to eq '') { $link_to .= $lib_full; }
