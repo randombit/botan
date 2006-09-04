@@ -75,8 +75,7 @@ my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS,
    %CC_SO_OBJ_FLAGS, %CC_SO_LINK_FLAGS,
    %CC_DEBUG_FLAGS, %CC_NO_DEBUG_FLAGS,
    %CC_MACHINE_OPT_FLAGS, %CC_MACHINE_OPT_FLAGS_RE,
-   %CC_ABI_FLAGS, %CC_SUPPORTS_OS,
-   %CC_SUPPORTS_ARCH, %MAKEFILE_STYLE);
+   %CC_ABI_FLAGS, %MAKEFILE_STYLE);
 
 my $user_set_root = '';
 my ($doc_dir, $lib_dir);
@@ -243,10 +242,10 @@ sub main() {
 
     die "(error): ", realname($cc), " doesn't run on $arch ($submodel)\n"
         unless($arch eq 'generic' or
-               (in_array($arch, $CC_SUPPORTS_ARCH{$cc})));
+               (in_array($arch, $COMPILER{$cc}{'arch'})));
 
     die "(error): ", realname($cc), " doesn't run on ", realname($os), "\n"
-        unless($os eq 'generic' or (in_array($os, $CC_SUPPORTS_OS{$cc})));
+        unless($os eq 'generic' or (in_array($os, $COMPILER{$cc}{'os'})));
 
     check_for_conflicts(@using_mods);
     foreach (@using_mods) {
@@ -1009,22 +1008,24 @@ sub generate_makefile {
 
    my %all_lib_srcs = (%{ $lib_src }, %{ $added_src });
 
+   my %ccinfo = %{$COMPILER{$cc}};
+
    my $lang_flags = '';
-   if($COMPILER{$cc}{'lang_flags'}) {
-       $lang_flags = $COMPILER{$cc}{'lang_flags'};
+   if($ccinfo{'lang_flags'}) {
+       $lang_flags = $ccinfo{'lang_flags'};
    }
 
    $lang_flags = "$lang_flags -fpermissive" if($dumb_gcc);
 
    my $warnings = '';
-   if($COMPILER{$cc}{'warning_flags'}) {
-       $warnings = $COMPILER{$cc}{'warning_flags'};
+   if($ccinfo{'warning_flags'}) {
+       $warnings = $ccinfo{'warning_flags'};
    }
 
    my $lib_opt_flags = '';
 
-   if($COMPILER{$cc}{'lib_opt_flags'}) {
-       $lib_opt_flags .= $COMPILER{$cc}{'lib_opt_flags'};
+   if($ccinfo{'lib_opt_flags'}) {
+       $lib_opt_flags .= $ccinfo{'lib_opt_flags'};
    }
    if(!$debug and ($CC_NO_DEBUG_FLAGS{$cc}))
       { $lib_opt_flags .= ' '.$CC_NO_DEBUG_FLAGS{$cc}; }
@@ -1039,8 +1040,8 @@ sub generate_makefile {
 
    # See if there are any over-riding methods. We presume if CC is creating
    # the static libs, it knows how to create the index itself.
-   if($COMPILER{$cc}{'ar_command'}) {
-       $ar_command = $COMPILER{$cc}{'ar_command'};
+   if($ccinfo{'ar_command'}) {
+       $ar_command = $ccinfo{'ar_command'};
    }
    elsif(os_ar_command($os))
    {
@@ -1065,8 +1066,8 @@ sub generate_makefile {
        if(($so_obj_flags or $so_link_flags) and $OS_SUPPORTS_SHARED{$os});
 
    my $check_opt_flags = '';
-   if($COMPILER{$cc}{'check_opt_flags'}) {
-       $check_opt_flags = $COMPILER{$cc}{'check_opt_flags'};
+   if($ccinfo{'check_opt_flags'}) {
+       $check_opt_flags = $ccinfo{'check_opt_flags'};
    }
 
    my $ccopts = '';
@@ -1087,7 +1088,7 @@ sub generate_makefile {
    ##################################################
    # Ready, set, print!                             #
    ##################################################
-   my $cc_bin = $COMPILER{$cc}{'binary_name'};
+   my $cc_bin = $ccinfo{'binary_name'};
 
    # Hack for 10.1, 10.2+ is fixed. Don't have a 10.0.x machine anymore
    if($os eq "darwin" and $cc eq "gcc") { $cc_bin = "c++"; }
@@ -1941,9 +1942,6 @@ sub set_cc_defines {
         $CC_DEBUG_FLAGS{$cc} = $info{'debug_flags'};
         $CC_NO_DEBUG_FLAGS{$cc} = $info{'no_debug_flags'};
         $MAKEFILE_STYLE{$cc} = $info{'makefile_style'};
-
-        @{$CC_SUPPORTS_ARCH{$cc}} = @{$info{'arch'}};
-        @{$CC_SUPPORTS_OS{$cc}} = @{$info{'os'}};
 
         %{$CC_ABI_FLAGS{$cc}} = %{$info{'mach_abi_linking'}}
            if(defined($info{'mach_abi_linking'}));
