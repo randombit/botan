@@ -72,8 +72,7 @@ my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS,
    %OS_SUPPORTS_SHARED, %OS_TYPE, %INSTALL_INFO,
    %OS_OBJ_SUFFIX, %OS_SHARED_SUFFIX, %OS_STATIC_SUFFIX,
    %OS_AR_COMMAND, %OS_AR_NEEDS_RANLIB, %OS_ALIAS,
-   %CC_LIB_OPT_FLAGS, %CC_CHECK_OPT_FLAGS, %CC_WARN_FLAGS,
-   %CC_LANG_FLAGS, %CC_SO_OBJ_FLAGS, %CC_SO_LINK_FLAGS,
+   %CC_SO_OBJ_FLAGS, %CC_SO_LINK_FLAGS,
    %CC_DEBUG_FLAGS, %CC_NO_DEBUG_FLAGS,
    %CC_MACHINE_OPT_FLAGS, %CC_MACHINE_OPT_FLAGS_RE,
    %CC_ABI_FLAGS, %CC_SUPPORTS_OS,
@@ -1010,8 +1009,17 @@ sub generate_makefile {
 
    my %all_lib_srcs = (%{ $lib_src }, %{ $added_src });
 
-   my $lang_flags = $CC_LANG_FLAGS{$cc};
+   my $lang_flags = '';
+   if($COMPILER{$cc}{'lang_flags'}) {
+       $lang_flags = $COMPILER{$cc}{'lang_flags'};
+   }
+
    $lang_flags = "$lang_flags -fpermissive" if($dumb_gcc);
+
+   my $warnings = '';
+   if($COMPILER{$cc}{'warning_flags'}) {
+       $warnings = $COMPILER{$cc}{'warning_flags'};
+   }
 
    my $lib_opt_flags = '';
 
@@ -1057,8 +1065,8 @@ sub generate_makefile {
        if(($so_obj_flags or $so_link_flags) and $OS_SUPPORTS_SHARED{$os});
 
    my $check_opt_flags = '';
-   if($CC_CHECK_OPT_FLAGS{$cc}) {
-       $check_opt_flags = $CC_CHECK_OPT_FLAGS{$cc};
+   if($COMPILER{$cc}{'check_opt_flags'}) {
+       $check_opt_flags = $COMPILER{$cc}{'check_opt_flags'};
    }
 
    my $ccopts = '';
@@ -1094,7 +1102,7 @@ sub generate_makefile {
                     $check_opt_flags,
                     $mach_opt_flags,
                     $lang_flags,
-                    $CC_WARN_FLAGS{$cc},
+                    $warnings,
                     $make_shared,
                     $so_obj_flags,
                     $so_link_flags,
@@ -1929,10 +1937,6 @@ sub set_cc_defines {
 
         %{$COMPILER{$cc}} = %info;
 
-        $CC_LIB_OPT_FLAGS{$cc} = $info{'lib_opt_flags'};
-        $CC_CHECK_OPT_FLAGS{$cc} = $info{'check_opt_flags'};
-        $CC_LANG_FLAGS{$cc} = $info{'lang_flags'};
-        $CC_WARN_FLAGS{$cc} = $info{'warning_flags'};
         $CC_SO_OBJ_FLAGS{$cc} = $info{'so_obj_flags'};
         $CC_DEBUG_FLAGS{$cc} = $info{'debug_flags'};
         $CC_NO_DEBUG_FLAGS{$cc} = $info{'no_debug_flags'};
