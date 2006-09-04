@@ -74,8 +74,9 @@ my(%SUBMODEL_ALIAS, %DEFAULT_SUBMODEL, %ARCH, %ARCH_ALIAS,
    %OS_AR_COMMAND, %OS_AR_NEEDS_RANLIB, %OS_ALIAS, %CC_BINARY_NAME,
    %CC_LIB_OPT_FLAGS, %CC_CHECK_OPT_FLAGS, %CC_WARN_FLAGS,
    %CC_LANG_FLAGS, %CC_SO_OBJ_FLAGS, %CC_SO_LINK_FLAGS,
-   %CC_DEBUG_FLAGS, %CC_NO_DEBUG_FLAGS, %CC_MACHINE_OPT_FLAGS,
-   %CC_MACHINE_OPT_FLAGS_RE, %CC_ABI_FLAGS, %CC_SUPPORTS_OS,
+   %CC_DEBUG_FLAGS, %CC_NO_DEBUG_FLAGS,
+   %CC_MACHINE_OPT_FLAGS, %CC_MACHINE_OPT_FLAGS_RE,
+   %CC_ABI_FLAGS, %CC_SUPPORTS_OS,
    %CC_SUPPORTS_ARCH, %CC_AR_COMMAND, %MAKEFILE_STYLE);
 
 my $user_set_root = '';
@@ -1088,6 +1089,28 @@ sub os_install_info {
     return $INSTALL_INFO{'defaults'}{$what};
 }
 
+sub mach_opt {
+    my ($cc, $arch, $submodel) = @_;
+
+    if(defined($CC_MACHINE_OPT_FLAGS{$cc}{$submodel}))
+    {
+        return $CC_MACHINE_OPT_FLAGS{$cc}{$submodel};
+    }
+    elsif(defined($CC_MACHINE_OPT_FLAGS{$cc}{$arch})) {
+        my $mach_opt_flags = $CC_MACHINE_OPT_FLAGS{$cc}{$arch};
+        my $processed_modelname = $submodel;
+
+        my $remove = $CC_MACHINE_OPT_FLAGS_RE{$cc}{$arch};
+
+        if(defined($remove) and $remove ne '') {
+            $processed_modelname =~ s/$remove//;
+        }
+        $mach_opt_flags =~ s/SUBMODEL/$processed_modelname/g;
+        return $mach_opt_flags;
+    }
+    return '';
+}
+
 sub generate_makefile {
    my($make_style, $cc, $os, $submodel, $arch,
       $debug, $no_shared, $dumb_gcc,
@@ -1105,17 +1128,7 @@ sub generate_makefile {
    if($debug and ($CC_DEBUG_FLAGS{$cc}))
       { $lib_opt_flags .= ' '.$CC_DEBUG_FLAGS{$cc}; }
 
-   my $mach_opt_flags = '';
-   if(defined($CC_MACHINE_OPT_FLAGS{$cc}{$submodel}))
-      { $mach_opt_flags = $CC_MACHINE_OPT_FLAGS{$cc}{$submodel}; }
-   elsif(defined($CC_MACHINE_OPT_FLAGS{$cc}{$arch})) {
-      $mach_opt_flags = $CC_MACHINE_OPT_FLAGS{$cc}{$arch};
-      my $processed_modelname = $submodel;
-      if(defined($CC_MACHINE_OPT_FLAGS_RE{$cc}{$arch}))
-         { $processed_modelname =~
-              s/$CC_MACHINE_OPT_FLAGS_RE{$cc}{$arch}//; }
-      $mach_opt_flags =~ s/SUBMODEL/$processed_modelname/g;
-   }
+   my $mach_opt_flags = mach_opt($cc, $arch, $submodel);
 
    # This is a default that works on most Unix and Unix-like systems
    my $ar_command = "ar crs";
@@ -1875,9 +1888,7 @@ sub set_cc_defines {
                     last if(m@^</mach_opt>$@);
                     m/^(\S*) -> \"(.*)\" ?(.*)?$/;
                     $CC_MACHINE_OPT_FLAGS{$cc}{$1} = $2;
-                    if($3 ne '') {
-                        $CC_MACHINE_OPT_FLAGS_RE{$cc}{$1} = $3;
-                    }
+                    $CC_MACHINE_OPT_FLAGS_RE{$cc}{$1} = $3;
                 }
             }
 
