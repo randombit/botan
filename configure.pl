@@ -1709,19 +1709,12 @@ sub get_module_info {
            }
        }
 
-       sub set_undef {
-           my ($hashref,$key) = @_;
-
-           return sub {
-               my ($arg) = @_;
-               if(!defined($$hashref{$key})) { $$hashref{$key} = {}; }
-               $$hashref{$key}{$arg} = undef;
-           }
-       }
-
        sub read_and_set_undef {
            my ($line,$reader,$hash,$key) = @_;
-           read_hash($line, $reader, $key, set_undef($hash, $key));
+
+           my @lst;
+           read_hash($line, $reader, $key, list_push(\@lst));
+           foreach my $elem (@lst) { $$hash{$key}{$elem} = undef;  }
        }
 
        read_and_set_undef($_, $reader, \%info, 'arch');
