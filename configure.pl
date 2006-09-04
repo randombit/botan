@@ -1742,40 +1742,28 @@ END_OF_FILE
 }
 
 sub read_hash {
-    my ($line, $reader, $marker, $set_to, $hash) = @_;
+    my ($line, $reader, $marker, $func) = @_;
 
     if($line =~ m@^<$marker>$@) {
         while(1) {
             $line = &$reader();
             last if($line =~ m@^</$marker>$@);
-            $$hash{$line} = $set_to;
+            &$func($line);
         }
     }
 }
 
-sub read_mapping {
-    my ($line, $reader, $marker, $hash) = @_;
-
-    if($line =~ m@^<$marker>$@) {
-        while(1) {
-            $line = &$reader();
-            last if($line =~ m@^</$marker>$@);
-            $line =~ m/^(\S*) -> (\S*)$/;
-            $$hash{$1} = $2;
-        }
-    }
+sub list_push {
+    my $listref = $_[0];
+    return sub { push @$listref, $_[0]; }
 }
 
-sub read_mapping_quoted {
-    my ($line, $reader, $marker, $hash) = @_;
-
-    if($line =~ m@^<$marker>$@) {
-        while(1) {
-            $line = &$reader();
-            last if($line =~ m@^</$marker>$@);
-            $line =~ m/^(\S*) -> \"(.*)\"$/;
-            $$hash{$1} = $2;
-        }
+sub quoted_mapping {
+    my $hashref = $_[0];
+    return sub {
+        my $line = $_[0];
+        $line =~ m/^(\S*) -> \"(.*)\"$/;
+        $$hashref{$1} = $2;
     }
 }
 
@@ -1791,9 +1779,17 @@ sub set_arch_defines {
             $REALNAME{$arch} = $1 if(/^realname \"(.*)\"/);
             $DEFAULT_SUBMODEL{$arch} = $1 if(/^default_submodel (.*)$/);
 
-            read_hash($_, $reader, 'aliases', $arch, \%ARCH_ALIAS);
-            read_hash($_, $reader, 'submodels', $arch, \%ARCH);
-            read_mapping($_, $reader, 'submodel_aliases', \%SUBMODEL_ALIAS);
+            read_hash($_, $reader, 'aliases',
+                      sub { $ARCH_ALIAS{$_[0]} = $arch; });
+            read_hash($_, $reader, 'submodels',
+                      sub { $ARCH{$_[0]} = $arch; });
+
+            read_hash($_, $reader, 'submodel_aliases',
+                      sub {
+                          my $line = $_[0];
+                          $line =~ m/^(\S*) -> (\S*)$/;
+                          $SUBMODEL_ALIAS{$1} = $2;
+                      });
         }
     }
 }
@@ -1827,24 +1823,14 @@ sub set_os_defines {
             $INSTALL_INFO{$os}{'command'} = $1
                 if(/^install_cmd (.*)/);
 
-            read_hash($_, $reader, 'aliases', $os, \%OS_ALIAS);
+            read_hash($_, $reader, 'aliases',
+                      sub { $OS_ALIAS{$_[0]} = $os; });
 
-            if(/^<supports_shared>$/) {
-                while(1) {
-                    $_ = &$reader();
-                    last if(m@^</supports_shared>$@);
-                    push @{$OS_SUPPORTS_SHARED{$os}}, $_;
-                }
-            }
+            read_hash($_, $reader, 'supports_shared',
+                      list_push(\@{$OS_SUPPORTS_SHARED{$os}}));
 
-            # Read in a list of architectures and add them to OS_SUPPORTS_ARCH
-            if(/^<arch>$/) {
-                while(1) {
-                    $_ = &$reader();
-                    last if(m@^</arch>$@);
-                    push @{$OS_SUPPORTS_ARCH{$os}}, $_;
-                }
-            }
+            read_hash($_, $reader, 'arch',
+                      list_push(\@{$OS_SUPPORTS_ARCH{$os}}));
         }
     }
 }
@@ -1879,40 +1865,24 @@ sub set_cc_defines {
             $CC_NO_DEBUG_FLAGS{$cc} = $1 if(/^no_debug_flags \"(.*)\"/);
             $MAKEFILE_STYLE{$cc} = $1 if(/^makefile_style (.*)/);
 
-            # Read in a list of supported CPU types
-            if(/^<arch>$/) {
-                while(1) {
-                    $_ = &$reader();
-                    last if(m@^</arch>$@);
-                    push @{$CC_SUPPORTS_ARCH{$cc}}, $_;
-                }
-            }
+            read_hash($_, $reader, 'arch',
+                      list_push(\@{$CC_SUPPORTS_ARCH{$cc}}));
+            read_hash($_, $reader, 'os',
+                      list_push(\@{$CC_SUPPORTS_OS{$cc}}));
 
-            # Read in a list of supported OSes
-            if(/^<os>$/) {
-                while(1) {
-                    $_ = &$reader();
-                    last if(m@^</os>$@);
-                    push @{$CC_SUPPORTS_OS{$cc}}, $_;
-                }
-            }
+            read_hash($_, $reader, 'mach_opt',
+                      sub {
+                          my $line = $_[0];
+                          $line =~ m/^(\S*) -> \"(.*)\" ?(.*)?$/;
+                          $CC_MACHINE_OPT_FLAGS{$cc}{$1} = $2;
+                          $CC_MACHINE_OPT_FLAGS_RE{$cc}{$1} = $3;
+                      });
 
-            # Read in a list of machine optimization flags
-            if(/^<mach_opt>$/) {
-                while(1) {
-                    $_ = &$reader();
-                    last if(m@^</mach_opt>$@);
-                    m/^(\S*) -> \"(.*)\" ?(.*)?$/;
-                    $CC_MACHINE_OPT_FLAGS{$cc}{$1} = $2;
-                    $CC_MACHINE_OPT_FLAGS_RE{$cc}{$1} = $3;
-                }
-            }
+            read_hash($_, $reader, 'mach_abi_linking',
+                      quoted_mapping(\%{$CC_ABI_FLAGS{$cc}}));
 
-            read_mapping_quoted($_, $reader, 'mach_abi_linking',
-                                \%{$CC_ABI_FLAGS{$cc}});
-
-            read_mapping_quoted($_, $reader, 'so_link_flags',
-                                \%{$CC_SO_LINK_FLAGS{$cc}});
+            read_hash($_, $reader, 'so_link_flags',
+                      quoted_mapping(\%{$CC_SO_LINK_FLAGS{$cc}}));
         }
     }
 }
