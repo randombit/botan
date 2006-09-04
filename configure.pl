@@ -66,11 +66,9 @@ my %DOCS = (
    'todo.txt' => $DOC_DIR
    );
 
-my (%REALNAME,%MODULES);
+my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
 
-my (%CPU,%OPERATING_SYSTEM,%COMPILER);
-
-my(%SUBMODEL_ALIAS, %DEFAULT_SUBMODEL, %ARCH, %ARCH_ALIAS,
+my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS,
    %OS_SUPPORTS_ARCH, %OS_SUPPORTS_SHARED, %OS_TYPE, %INSTALL_INFO,
    %OS_OBJ_SUFFIX, %OS_SHARED_SUFFIX, %OS_STATIC_SUFFIX,
    %OS_AR_COMMAND, %OS_AR_NEEDS_RANLIB, %OS_ALIAS, %CC_BINARY_NAME,
@@ -203,7 +201,7 @@ sub main() {
         $submodel = $CPU{$arch}{'default_submodel'};
 
         warn "(note): Using $submodel as default type for family ",
-             $REALNAME{$arch},"\n" if($submodel ne $arch);
+             realname($arch),"\n" if($submodel ne $arch);
     }
 
     $make_style = $MAKEFILE_STYLE{$cc} unless($make_style);
@@ -240,15 +238,15 @@ sub main() {
             unless(exists($MODULES{$_}));
     }
 
-    die "(error): $REALNAME{$os} doesn't run on $arch ($submodel)\n"
+    die "(error): ", realname($os), " doesn't run on $arch ($submodel)\n"
         unless($arch eq 'generic' or $os eq 'generic' or
                in_array($OS_SUPPORTS_ARCH{$os}, $arch));
 
-    die "(error): $REALNAME{$cc} doesn't run on $arch ($submodel)\n"
+    die "(error): ", realname($cc), " doesn't run on $arch ($submodel)\n"
         unless($arch eq 'generic' or
                (in_array($CC_SUPPORTS_ARCH{$cc}, $arch)));
 
-    die "(error): $REALNAME{$cc} doesn't run on $REALNAME{$os}\n"
+    die "(error): ", realname($cc), " doesn't run on ", realname($os), "\n"
         unless($os eq 'generic' or (in_array($CC_SUPPORTS_OS{$cc}, $os)));
 
     check_for_conflicts(@using_mods);
@@ -583,22 +581,35 @@ sub dir_list {
     return @listing;
 }
 
+sub realname {
+    my $arg = $_[0];
+
+    return $COMPILER{$arg}{'realname'} if defined $COMPILER{$arg};
+    return $OPERATING_SYSTEM{$arg}{'realname'}
+       if defined $OPERATING_SYSTEM{$arg};
+    return $CPU{$arg}{'realname'} if defined $CPU{$arg};
+
+    return $arg;
+}
+
 sub load_module {
    my ($modname,$cc,$os,$arch,$sub,%module) = @_;
 
    # Check to see if everything is OK WRT system requirements
    if(defined($module{'os'}) and !exists($module{'os'}{$os}) and
-         $os ne 'generic')
-       { die "(error): Module '$modname' does not run on $REALNAME{$os}\n"; }
+         $os ne 'generic') {
+       die "(error): Module '$modname' does not run on ", realname($os), "\n";
+   }
 
    if(defined($module{'arch'}) and $arch ne 'generic' and
       !exists($module{'arch'}{$arch}) and !exists($module{'arch'}{$sub}))
-       { die "(error): Module '$modname' does not run on ".
-              "$REALNAME{$arch}/$sub\n"; }
+       { die "(error): Module '$modname' does not run on " ,
+              realname($arch), "/$sub\n"; }
 
    if(defined($module{'cc'}) and !exists($module{'cc'}{$cc}))
        {
-       die "(error): Module '$modname' does not work with $REALNAME{$cc}\n";
+       die "(error): Module '$modname' does not work with ",
+           realname($cc), "\n";
        }
 
    handle_files($modname, $module{'replace'}, \&replace_file);
@@ -1842,8 +1853,6 @@ sub set_arch_defines {
         %{$CPU{$arch}} = %info;
 
         $ARCH{$arch} = $info{'name'};
-        $REALNAME{$arch} = $info{'realname'};
-        $DEFAULT_SUBMODEL{$arch} = $info{'default_submodel'};
 
         foreach my $alias (@{$info{'aliases'}}) {
             $ARCH_ALIAS{$alias} = $arch;
@@ -1870,7 +1879,6 @@ sub set_os_defines {
 
         %{$OPERATING_SYSTEM{$os}} = %info;
 
-        $REALNAME{$os} = $info{'realname'};
         $OS_TYPE{$os} = $info{'os_type'};
         $OS_AR_COMMAND{$os} = $info{'ar_command'};
         $OS_OBJ_SUFFIX{$os} = $info{'obj_suffix'};
@@ -1907,7 +1915,6 @@ sub set_cc_defines {
 
         %{$COMPILER{$cc}} = %info;
 
-        $REALNAME{$cc} = $info{'realname'};
         $CC_BINARY_NAME{$cc} = $info{'binary_name'};
         $CC_LIB_OPT_FLAGS{$cc} = $info{'lib_opt_flags'};
         $CC_CHECK_OPT_FLAGS{$cc} = $info{'check_opt_flags'};
