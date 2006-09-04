@@ -1681,7 +1681,7 @@ sub set_if_any {
 
 sub get_module_info {
    my ($MODULE, $MOD_DIR) = @_;
-   my %modinfo;
+   my %info;
 
    my $desc_file = File::Spec->catfile($MOD_DIR, $MODULE, 'modinfo.txt');
    die "(error): Module $MODULE does not seem to have a description file\n"
@@ -1689,26 +1689,26 @@ sub get_module_info {
 
    my $reader = make_reader($desc_file);
 
-   $modinfo{'libs'} = {};
+   $info{'libs'} = {};
 
-   $modinfo{'add'} = {};
-   $modinfo{'replace'} = {};
-   $modinfo{'ignore'} = {};
+   $info{'add'} = {};
+   $info{'replace'} = {};
+   $info{'ignore'} = {};
 
-   $modinfo{'define'} = {};
-   $modinfo{'define_base'} = {};
+   $info{'define'} = {};
+   $info{'define_base'} = {};
 
-   $modinfo{'external_libs'} = 0;
+   $info{'external_libs'} = 0;
 
    while($_ = &$reader()) {
-       set_if_quoted($_, 'realname', \$modinfo{'name'});
-       set_if_quoted($_, 'note', \$modinfo{'notes'});
+       set_if_quoted($_, 'realname', \$info{'name'});
+       set_if_quoted($_, 'note', \$info{'notes'});
 
-       $modinfo{'define'}{$1} = undef if(/^define (\w*)/);
-       $modinfo{'define_base'}{$1} = undef if(/^define_base (\w*)/);
-       $modinfo{'mp_bits'} = $1 if(/^mp_bits ([0-9]*)/);
+       $info{'define'}{$1} = undef if(/^define (\w*)/);
+       $info{'define_base'}{$1} = undef if(/^define_base (\w*)/);
+       $info{'mp_bits'} = $1 if(/^mp_bits ([0-9]*)/);
 
-       $modinfo{'external_libs'} = 1 if(/^uses_external_libs/);
+       $info{'external_libs'} = 1 if(/^uses_external_libs/);
 
        if(/^require_version /) {
            if(/^require_version (\d+)\.(\d+)\.(\d+)$/) {
@@ -1728,23 +1728,23 @@ sub get_module_info {
            }
        }
 
-       read_hash($_, $reader, 'arch', set_undef(\%modinfo, 'arch'));
-       read_hash($_, $reader, 'os', set_undef(\%modinfo, 'os'));
-       read_hash($_, $reader, 'cc', set_undef(\%modinfo, 'cc'));
+       read_hash($_, $reader, 'arch', set_undef(\%info, 'arch'));
+       read_hash($_, $reader, 'os', set_undef(\%info, 'os'));
+       read_hash($_, $reader, 'cc', set_undef(\%info, 'cc'));
 
-       read_hash($_, $reader, 'add', set_undef(\%modinfo, 'add'));
-       read_hash($_, $reader, 'ignore', set_undef(\%modinfo, 'ignore'));
-       read_hash($_, $reader, 'replace', set_undef(\%modinfo, 'replace'));
+       read_hash($_, $reader, 'add', set_undef(\%info, 'add'));
+       read_hash($_, $reader, 'ignore', set_undef(\%info, 'ignore'));
+       read_hash($_, $reader, 'replace', set_undef(\%info, 'replace'));
 
        read_hash($_, $reader, 'libs',
                  sub {
                      my $line = $_[0];
                      $line =~ m/^([\w!,]*) -> ([\w,-]*)$/;
-                     $modinfo{'libs'}{$1} = $2;
+                     $info{'libs'}{$1} = $2;
                  });
    }
 
-   return %modinfo;
+   return %info;
 }
 
 sub get_arch_info {
