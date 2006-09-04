@@ -77,7 +77,7 @@ my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS,
    %CC_DEBUG_FLAGS, %CC_NO_DEBUG_FLAGS,
    %CC_MACHINE_OPT_FLAGS, %CC_MACHINE_OPT_FLAGS_RE,
    %CC_ABI_FLAGS, %CC_SUPPORTS_OS,
-   %CC_SUPPORTS_ARCH, %CC_AR_COMMAND, %MAKEFILE_STYLE);
+   %CC_SUPPORTS_ARCH, %MAKEFILE_STYLE);
 
 my $user_set_root = '';
 my ($doc_dir, $lib_dir);
@@ -1027,7 +1027,9 @@ sub generate_makefile {
 
    # See if there are any over-riding methods. We presume if CC is creating
    # the static libs, it knows how to create the index itself.
-   if($CC_AR_COMMAND{$cc}) { $ar_command = $CC_AR_COMMAND{$cc}; }
+   if($COMPILER{$cc}{'ar_command'}) {
+       $ar_command = $COMPILER{$cc}{'ar_command'};
+   }
    elsif(os_ar_command($os))
    {
        $ar_command = os_ar_command($os);
@@ -1192,6 +1194,9 @@ sub print_unix_makefile {
                              %$check);
 
    my $doc_list = file_list(16, undef, undef, undef, %$docs);
+
+   $lang_flags = '' if not defined($lang_flags);
+   $warn_flags = '' if not defined($warn_flags);
 
 ##################### / COMMON CODE (PARTIALLY) ######################
 
@@ -1421,6 +1426,9 @@ sub print_nmake_makefile {
    my $doc_list = file_list(16, undef, undef, undef, %$docs);
 
 ##################### / COMMON CODE (PARTIALLY) ######################
+
+   $warn_flags = '' unless defined($warn_flags);
+   $lang_flags = '' unless defined($lang_flags);
 
    print_header($makefile, 'Compiler Options');
    print $makefile <<END_OF_MAKEFILE_HEADER;
@@ -1916,7 +1924,6 @@ sub set_cc_defines {
 
         $CC_LIB_OPT_FLAGS{$cc} = $info{'lib_opt_flags'};
         $CC_CHECK_OPT_FLAGS{$cc} = $info{'check_opt_flags'};
-        $CC_AR_COMMAND{$cc} = $info{'ar_command'};
         $CC_LANG_FLAGS{$cc} = $info{'lang_flags'};
         $CC_WARN_FLAGS{$cc} = $info{'warning_flags'};
         $CC_SO_OBJ_FLAGS{$cc} = $info{'so_obj_flags'};
