@@ -590,124 +590,6 @@ sub get_modules_list {
     return %MODULES;
 }
 
-sub get_module_info {
-   my ($MODULE, $MOD_DIR) = @_;
-   my %modinfo;
-
-   my $desc_file = File::Spec->catfile($MOD_DIR, $MODULE, 'modinfo.txt');
-   die "(error): Module $MODULE does not seem to have a description file\n"
-       unless(-e $desc_file);
-
-   my $reader = make_reader($desc_file);
-
-   $modinfo{'libs'} = {};
-
-   $modinfo{'add'} = {};
-   $modinfo{'replace'} = {};
-   $modinfo{'ignore'} = {};
-
-   $modinfo{'define'} = {};
-   $modinfo{'define_base'} = {};
-
-   $modinfo{'external_libs'} = 0;
-
-   while($_ = &$reader())
-   {
-       $modinfo{'name'} = $1 if(/^realname \"(.*)\"/);
-       $modinfo{'notes'} = $1 if(/^note \"(.*)\"/);
-
-       $modinfo{'define'}{$1} = undef if(/^define (\w*)/);
-       $modinfo{'define_base'}{$1} = undef if(/^define_base (\w*)/);
-       $modinfo{'mp_bits'} = $1 if(/^mp_bits ([0-9]*)/);
-
-       $modinfo{'external_libs'} = 1 if(/^uses_external_libs/);
-
-       if(/^require_version /)
-       {
-           if(/^require_version (\d+)\.(\d+)\.(\d+)$/)
-           {
-               my $version = "$1.$2.$3";
-               my $needed_version = 100*$1 + 10*$2 + $3;
-
-               my $have_version =
-                   100*$MAJOR_VERSION + 10*$MINOR_VERSION + $PATCH_VERSION;
-
-               if($needed_version > $have_version) {
-                   warn "Module $MODULE requires Botan version $version\n";
-                   return ();
-               }
-           }
-           else
-           {
-               warn "In module $MODULE, bad version code in require_version\n";
-           }
-       }
-
-       # Read in a list of supported CPU types (archs and/or submodels)
-       if(/^<arch>$/) {
-           while(1) {
-               $_ = &$reader();
-               last if (m@^</arch>$@);
-               $modinfo{'arch'}{$_} = undef;
-           }
-       }
-
-       # Read in a list of supported OSes
-       if(/^<os>$/) {
-           while(1) {
-               $_ = &$reader();
-               last if (m@^</os>$@);
-               $modinfo{'os'}{$_} = undef;
-           }
-       }
-
-       if(/^<add>$/) {
-           while(1) {
-               $_ = &$reader();
-               last if (m@^</add>$@);
-               $modinfo{'add'}{$_} = undef;
-           }
-       }
-
-       if(/^<ignore>$/) {
-           while(1) {
-               $_ = &$reader();
-               last if (m@^</ignore>$@);
-               $modinfo{'ignore'}{$_} = undef;
-           }
-       }
-
-       if(/^<replace>$/) {
-           while(1) {
-               $_ = &$reader();
-               last if (m@^</replace>$@);
-               $modinfo{'replace'}{$_} = undef;
-           }
-       }
-
-      # Read in a set of os->extra library mappings
-      if(/^<libs>$/) {
-          while(1) {
-              $_ = &$reader();
-              last if (m@^</libs>$@);
-              m/^([\w!,]*) -> ([\w,-]*)$/;
-              $modinfo{'libs'}{$1} = $2;
-          }
-      }
-
-       # Read in a list of supported compilers
-       if(/^<cc>$/) {
-           while(1) {
-               $_ = &$reader();
-               last if (m@^</cc>$@);
-               $modinfo{'cc'}{$_} = undef;
-           }
-       }
-   }
-
-   return %modinfo;
-   }
-
 sub load_module {
    my ($modname,$cc,$os,$arch,$sub,%module) = @_;
 
@@ -1758,6 +1640,11 @@ sub list_push {
     return sub { push @$listref, $_[0]; }
 }
 
+sub set_undef {
+    my ($hashref,$key) = $_[0];
+    return sub { $$hashref{$key}{$_[0]} = undef; }
+}
+
 sub quoted_mapping {
     my $hashref = $_[0];
     return sub {
@@ -1765,6 +1652,85 @@ sub quoted_mapping {
         $line =~ m/^(\S*) -> \"(.*)\"$/;
         $$hashref{$1} = $2;
     }
+}
+
+sub get_module_info {
+   my ($MODULE, $MOD_DIR) = @_;
+   my %modinfo;
+
+   my $desc_file = File::Spec->catfile($MOD_DIR, $MODULE, 'modinfo.txt');
+   die "(error): Module $MODULE does not seem to have a description file\n"
+       unless(-e $desc_file);
+
+   my $reader = make_reader($desc_file);
+
+   $modinfo{'libs'} = {};
+
+   $modinfo{'add'} = {};
+   $modinfo{'replace'} = {};
+   $modinfo{'ignore'} = {};
+
+   $modinfo{'define'} = {};
+   $modinfo{'define_base'} = {};
+
+   $modinfo{'external_libs'} = 0;
+
+   while($_ = &$reader()) {
+       $modinfo{'name'} = $1 if(/^realname \"(.*)\"/);
+       $modinfo{'notes'} = $1 if(/^note \"(.*)\"/);
+
+       $modinfo{'define'}{$1} = undef if(/^define (\w*)/);
+       $modinfo{'define_base'}{$1} = undef if(/^define_base (\w*)/);
+       $modinfo{'mp_bits'} = $1 if(/^mp_bits ([0-9]*)/);
+
+       $modinfo{'external_libs'} = 1 if(/^uses_external_libs/);
+
+       if(/^require_version /) {
+           if(/^require_version (\d+)\.(\d+)\.(\d+)$/) {
+               my $version = "$1.$2.$3";
+               my $needed_version = 100*$1 + 10*$2 + $3;
+
+               my $have_version =
+                   100*$MAJOR_VERSION + 10*$MINOR_VERSION + $PATCH_VERSION;
+
+               if($needed_version > $have_version) {
+                   warn "Module $MODULE requires Botan version $version\n";
+                   return ();
+               }
+           }
+           else {
+               warn "In module $MODULE, bad version code in require_version\n";
+           }
+       }
+
+       #read_hash($_, $reader, 'arch', set_undef(\%modinfo, 'arch'));
+       read_hash($_, $reader, 'arch',
+                 sub { $modinfo{'arch'}{$_[0]} = undef; });
+
+       read_hash($_, $reader, 'os',
+                 sub { $modinfo{'os'}{$_[0]} = undef; });
+
+       read_hash($_, $reader, 'cc',
+                 sub { $modinfo{'cc'}{$_[0]} = undef; });
+
+       read_hash($_, $reader, 'add',
+                 sub { $modinfo{'add'}{$_[0]} = undef; });
+
+       read_hash($_, $reader, 'ignore',
+                 sub { $modinfo{'ignore'}{$_[0]} = undef; });
+
+       read_hash($_, $reader, 'replace',
+                 sub { $modinfo{'replace'}{$_[0]} = undef; });
+
+       read_hash($_, $reader, 'libs',
+                 sub {
+                     my $line = $_[0];
+                     $line =~ m/^([\w!,]*) -> ([\w,-]*)$/;
+                     $modinfo{'libs'}{$1} = $2;
+                 });
+   }
+
+   return %modinfo;
 }
 
 sub set_arch_defines {
