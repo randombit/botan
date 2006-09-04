@@ -303,8 +303,7 @@ sub make_reader {
 
     return sub {
         my $line = '';
-        while(1)
-        {
+        while(1) {
             my $line = <FILE>;
             last unless defined($line);
 
@@ -1758,7 +1757,6 @@ sub get_os_info {
 
     my %info;
     $info{'name'} = $name;
-    $info{'needs_ranlib'} = 0;
 
     while($_ = &$reader()) {
         set_if_any(\&set_if_quoted, $_, \%info, 'realname:ar_command');
@@ -1766,10 +1764,7 @@ sub get_os_info {
         set_if_any(\&set_if, $_, \%info,
                    'os_type:obj_suffix:so_suffix:static_suffix:' .
                    'install_root:header_dir:lib_dir:doc_dir:' .
-                   'install_user:install_group:install_cmd');
-
-        $info{'needs_ranlib'} = 1 if(/^ar_needs_ranlib yes$/);
-        $info{'needs_ranlib'} = 0 if(/^ar_needs_ranlib no$/);
+                   'install_user:install_group:install_cmd:ar_needs_ranlib');
 
         read_hash($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
         read_hash($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
@@ -1863,7 +1858,11 @@ sub set_os_defines {
         $OS_OBJ_SUFFIX{$os} = $info{'obj_suffix'};
         $OS_SHARED_SUFFIX{$os} = $info{'so_suffix'};
         $OS_STATIC_SUFFIX{$os} = $info{'static_suffix'};
-        $OS_AR_NEEDS_RANLIB{$os} = $info{'needs_ranlib'};
+
+        if(defined($info{'ar_needs_ranlib'})) {
+            $OS_AR_NEEDS_RANLIB{$os} =
+                ($info{'ar_needs_ranlib'} eq 'yes') ? 1 : 0;
+        }
 
         $INSTALL_INFO{$os}{'root'} = $info{'install_root'};
         $INSTALL_INFO{$os}{'headers'} = $info{'header_dir'};
