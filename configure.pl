@@ -1636,13 +1636,18 @@ sub read_hash {
 }
 
 sub list_push {
-    my $listref = $_[0];
+    my ($listref) = @_;
     return sub { push @$listref, $_[0]; }
 }
 
 sub set_undef {
-    my ($hashref,$key) = $_[0];
-    return sub { $$hashref{$key}{$_[0]} = undef; }
+    my ($hashref,$key) = @_;
+
+    return sub {
+        my ($arg) = @_;
+        if(!defined($$hashref{$key})) { $$hashref{$key} = {}; }
+        $$hashref{$key}{$arg} = undef;
+    }
 }
 
 sub quoted_mapping {
@@ -1652,6 +1657,16 @@ sub quoted_mapping {
         $line =~ m/^(\S*) -> \"(.*)\"$/;
         $$hashref{$1} = $2;
     }
+}
+
+sub set_if_quoted {
+    my ($line, $what, $var) = @_;
+    $$var = $1 if($line =~ /^$what \"(.*)\"/);
+}
+
+sub set_if {
+    my ($line, $what, $var) = @_;
+    $$var = $1 if($line =~ /^$what (.*)/);
 }
 
 sub get_module_info {
@@ -1676,8 +1691,8 @@ sub get_module_info {
    $modinfo{'external_libs'} = 0;
 
    while($_ = &$reader()) {
-       $modinfo{'name'} = $1 if(/^realname \"(.*)\"/);
-       $modinfo{'notes'} = $1 if(/^note \"(.*)\"/);
+       set_if_quoted($_, 'realname', \$modinfo{'name'});
+       set_if_quoted($_, 'note', \$modinfo{'notes'});
 
        $modinfo{'define'}{$1} = undef if(/^define (\w*)/);
        $modinfo{'define_base'}{$1} = undef if(/^define_base (\w*)/);
@@ -1703,24 +1718,13 @@ sub get_module_info {
            }
        }
 
-       #read_hash($_, $reader, 'arch', set_undef(\%modinfo, 'arch'));
-       read_hash($_, $reader, 'arch',
-                 sub { $modinfo{'arch'}{$_[0]} = undef; });
+       read_hash($_, $reader, 'arch', set_undef(\%modinfo, 'arch'));
+       read_hash($_, $reader, 'os', set_undef(\%modinfo, 'os'));
+       read_hash($_, $reader, 'cc', set_undef(\%modinfo, 'cc'));
 
-       read_hash($_, $reader, 'os',
-                 sub { $modinfo{'os'}{$_[0]} = undef; });
-
-       read_hash($_, $reader, 'cc',
-                 sub { $modinfo{'cc'}{$_[0]} = undef; });
-
-       read_hash($_, $reader, 'add',
-                 sub { $modinfo{'add'}{$_[0]} = undef; });
-
-       read_hash($_, $reader, 'ignore',
-                 sub { $modinfo{'ignore'}{$_[0]} = undef; });
-
-       read_hash($_, $reader, 'replace',
-                 sub { $modinfo{'replace'}{$_[0]} = undef; });
+       read_hash($_, $reader, 'add', set_undef(\%modinfo, 'add'));
+       read_hash($_, $reader, 'ignore', set_undef(\%modinfo, 'ignore'));
+       read_hash($_, $reader, 'replace', set_undef(\%modinfo, 'replace'));
 
        read_hash($_, $reader, 'libs',
                  sub {
@@ -1741,9 +1745,8 @@ sub set_arch_defines {
 
         $ARCH{$arch} = $arch;
         while($_ = &$reader()) {
-
-            $REALNAME{$arch} = $1 if(/^realname \"(.*)\"/);
-            $DEFAULT_SUBMODEL{$arch} = $1 if(/^default_submodel (.*)$/);
+            set_if_quoted($_, 'realname', \$REALNAME{$arch});
+            set_if($_, 'default_submodel', \$DEFAULT_SUBMODEL{$arch});
 
             read_hash($_, $reader, 'aliases',
                       sub { $ARCH_ALIAS{$_[0]} = $arch; });
@@ -1771,23 +1774,24 @@ sub set_os_defines {
 
         # Default values
         while($_ = &$reader()) {
-            $REALNAME{$os} = $1 if(/^realname \"(.*)\"/);
-            $OS_TYPE{$os} = $1 if(/^os_type (.*)/);
-            $OS_AR_COMMAND{$os} = $1 if(/^ar_command \"(.*)\"/);
+            set_if_quoted($_, 'realname', \$REALNAME{$os});
+            set_if($_, 'os_type', \$OS_TYPE{$os});
+            set_if_quoted($_, 'ar_command', \$OS_AR_COMMAND{$os});
+
+            set_if($_, 'obj_suffix', \$OS_OBJ_SUFFIX{$os});
+            set_if($_, 'so_suffix', \$OS_SHARED_SUFFIX{$os});
+            set_if($_, 'static_suffix', \$OS_STATIC_SUFFIX{$os});
+
             $OS_AR_NEEDS_RANLIB{$os} = 1 if(/^ar_needs_ranlib yes$/);
             $OS_AR_NEEDS_RANLIB{$os} = 0 if(/^ar_needs_ranlib no$/);
-            $OS_OBJ_SUFFIX{$os} = $1 if(/^obj_suffix (.*)/);
-            $OS_SHARED_SUFFIX{$os} = $1 if(/^so_suffix (.*)/);
-            $OS_STATIC_SUFFIX{$os} = $1 if(/^static_suffix (.*)/);
 
-            $INSTALL_INFO{$os}{'root'} = $1 if(/^install_root (.*)/);
-            $INSTALL_INFO{$os}{'headers'} = $1 if(/^header_dir (.*)/);
-            $INSTALL_INFO{$os}{'libs'} = $1 if(/^lib_dir (.*)/);
-            $INSTALL_INFO{$os}{'docs'} = $1 if(/^doc_dir (.*)/);
-            $INSTALL_INFO{$os}{'user'} = $1 if(/^install_user (.*)/);
-            $INSTALL_INFO{$os}{'group'} = $1 if(/^install_group (.*)/);
-            $INSTALL_INFO{$os}{'command'} = $1
-                if(/^install_cmd (.*)/);
+            set_if($_, 'install_root', \$INSTALL_INFO{$os}{'root'});
+            set_if($_, 'header_dir', \$INSTALL_INFO{$os}{'headers'});
+            set_if($_, 'lib_dir', \$INSTALL_INFO{$os}{'libs'});
+            set_if($_, 'doc_dir', \$INSTALL_INFO{$os}{'docs'});
+            set_if($_, 'install_user', \$INSTALL_INFO{$os}{'user'});
+            set_if($_, 'install_group', \$INSTALL_INFO{$os}{'group'});
+            set_if($_, 'install_cmd', \$INSTALL_INFO{$os}{'command'});
 
             read_hash($_, $reader, 'aliases',
                       sub { $OS_ALIAS{$_[0]} = $os; });
@@ -1814,22 +1818,17 @@ sub set_cc_defines {
             $CC_AR_COMMAND{$cc} = $CC_NO_DEBUG_FLAGS{$cc} = '';
 
         while($_ = &$reader()) {
-
-            $REALNAME{$cc} = $1 if(/^realname \"(.*)\"/);
-            $CC_BINARY_NAME{$cc} = $1 if(/^binary_name \"(.*)\"/);
-
-            $CC_LIB_OPT_FLAGS{$cc} = $1 if(/^lib_opt_flags \"(.*)\"/);
-
-            $CC_CHECK_OPT_FLAGS{$cc} = $1
-                if(/^check_opt_flags \"(.*)\"/);
-
-            $CC_AR_COMMAND{$cc} = $1 if(/^ar_command \"(.*)\"/);
-            $CC_LANG_FLAGS{$cc} = $1 if(/^lang_flags \"(.*)\"/);
-            $CC_WARN_FLAGS{$cc} = $1 if(/^warning_flags \"(.*)\"/);
-            $CC_SO_OBJ_FLAGS{$cc} = $1 if(/^so_obj_flags \"(.*)\"/);
-            $CC_DEBUG_FLAGS{$cc} = $1 if(/^debug_flags \"(.*)\"/);
-            $CC_NO_DEBUG_FLAGS{$cc} = $1 if(/^no_debug_flags \"(.*)\"/);
-            $MAKEFILE_STYLE{$cc} = $1 if(/^makefile_style (.*)/);
+            set_if_quoted($_, 'realname', \$REALNAME{$cc});
+            set_if_quoted($_, 'binary_name', \$CC_BINARY_NAME{$cc});
+            set_if_quoted($_, 'lib_opt_flags', \$CC_LIB_OPT_FLAGS{$cc});
+            set_if_quoted($_, 'check_opt_flags', \$CC_CHECK_OPT_FLAGS{$cc});
+            set_if_quoted($_, 'ar_command', \$CC_AR_COMMAND{$cc});
+            set_if_quoted($_, 'lang_flags', \$CC_LANG_FLAGS{$cc});
+            set_if_quoted($_, 'warning_flags', \$CC_WARN_FLAGS{$cc});
+            set_if_quoted($_, 'so_obj_flags', \$CC_SO_OBJ_FLAGS{$cc});
+            set_if_quoted($_, 'debug_flags', \$CC_DEBUG_FLAGS{$cc});
+            set_if_quoted($_, 'no_debug_flags', \$CC_NO_DEBUG_FLAGS{$cc});
+            set_if($_, 'makefile_style', \$MAKEFILE_STYLE{$cc});
 
             read_hash($_, $reader, 'arch',
                       list_push(\@{$CC_SUPPORTS_ARCH{$cc}}));
