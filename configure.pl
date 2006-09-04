@@ -71,7 +71,7 @@ my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
 my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS,
    %OS_SUPPORTS_SHARED, %OS_TYPE, %INSTALL_INFO,
    %OS_OBJ_SUFFIX, %OS_SHARED_SUFFIX, %OS_STATIC_SUFFIX,
-   %OS_AR_COMMAND, %OS_AR_NEEDS_RANLIB, %OS_ALIAS, %CC_BINARY_NAME,
+   %OS_AR_COMMAND, %OS_AR_NEEDS_RANLIB, %OS_ALIAS,
    %CC_LIB_OPT_FLAGS, %CC_CHECK_OPT_FLAGS, %CC_WARN_FLAGS,
    %CC_LANG_FLAGS, %CC_SO_OBJ_FLAGS, %CC_SO_LINK_FLAGS,
    %CC_DEBUG_FLAGS, %CC_NO_DEBUG_FLAGS,
@@ -174,7 +174,7 @@ sub main() {
     $os = $OS_ALIAS{$os} if(defined $OS_ALIAS{$os});
 
     die "(error): Compiler $cc isn't known\n"
-        unless defined($CC_BINARY_NAME{$cc});
+        unless defined($COMPILER{$cc});
 
     die "(error): OS $os isn't known\n" unless
         ($os eq 'generic' or defined($OPERATING_SYSTEM{$os}));
@@ -863,7 +863,7 @@ sub guess_triple
         my $cc = '';
         foreach (@CCS)
         {
-            my $bin_name = $CC_BINARY_NAME{$_};
+            my $bin_name = $COMPILER{$_}{'binary_name'};
             $cc = $_ if(which($bin_name) ne '');
             last if($cc ne '');
         }
@@ -1070,7 +1070,7 @@ sub generate_makefile {
    ##################################################
    # Ready, set, print!                             #
    ##################################################
-   my $cc_bin = $CC_BINARY_NAME{$cc};
+   my $cc_bin = $COMPILER{$cc}{'binary_name'};
 
    # Hack for 10.1, 10.2+ is fixed. Don't have a 10.0.x machine anymore
    if($os eq "darwin" and $cc eq "gcc") { $cc_bin = "c++"; }
@@ -1914,7 +1914,6 @@ sub set_cc_defines {
 
         %{$COMPILER{$cc}} = %info;
 
-        $CC_BINARY_NAME{$cc} = $info{'binary_name'};
         $CC_LIB_OPT_FLAGS{$cc} = $info{'lib_opt_flags'};
         $CC_CHECK_OPT_FLAGS{$cc} = $info{'check_opt_flags'};
         $CC_AR_COMMAND{$cc} = $info{'ar_command'};
