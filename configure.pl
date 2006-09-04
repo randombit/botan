@@ -1854,11 +1854,29 @@ sub set_os_defines {
     }
 }
 
+sub get_cc_info {
+    my ($name,$file) = @_;
+    my $reader = make_reader($file);
+
+    my %info;
+    $info{'name'} = $name;
+
+    while($_ = &$reader()) {
+        set_if_any(\&set_if_quoted, $_, \%info,
+                   'realname:binary_name:lib_opt_flags:check_opt_flags:' .
+                   'lang_flags:warning_flags:so_obj_flags:ar_command:' .
+                   'debug_flags:no_debug_flags');
+
+        set_if($_, 'makefile_style', \$info{'makefile_style'});
+    }
+    return %info;
+}
+
 sub set_cc_defines {
     my $dir = $_[0];
 
     foreach my $cc (dir_list($dir)) {
-        my $reader = make_reader(File::Spec->catfile($dir, $cc));
+        my %info = get_cc_info($cc, File::Spec->catfile($dir, $cc));
 
         # Default to empty values, so they don't have to be explicitly set
         $CC_LIB_OPT_FLAGS{$cc} = $CC_CHECK_OPT_FLAGS{$cc} =
@@ -1866,6 +1884,7 @@ sub set_cc_defines {
             $CC_SO_OBJ_FLAGS{$cc} = $CC_DEBUG_FLAGS{$cc} =
             $CC_AR_COMMAND{$cc} = $CC_NO_DEBUG_FLAGS{$cc} = '';
 
+        my $reader = make_reader(File::Spec->catfile($dir, $cc));
         while($_ = &$reader()) {
             set_if_quoted($_, 'realname', \$REALNAME{$cc});
             set_if_quoted($_, 'binary_name', \$CC_BINARY_NAME{$cc});
