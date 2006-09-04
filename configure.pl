@@ -68,6 +68,8 @@ my %DOCS = (
 
 my (%REALNAME,%MODULES);
 
+my (%CPU,%OPERATING_SYSTEM,%COMPILER);
+
 my(%SUBMODEL_ALIAS, %DEFAULT_SUBMODEL, %ARCH, %ARCH_ALIAS,
    %OS_SUPPORTS_ARCH, %OS_SUPPORTS_SHARED, %OS_TYPE, %INSTALL_INFO,
    %OS_OBJ_SUFFIX, %OS_SHARED_SUFFIX, %OS_STATIC_SUFFIX,
@@ -198,10 +200,10 @@ sub main() {
 
     # If we got a generic family name as the model type
     if($submodel eq $arch and $submodel ne 'generic') {
-        $submodel = $DEFAULT_SUBMODEL{$arch};
+        $submodel = $CPU{$arch}{'default_submodel'};
 
         warn "(note): Using $submodel as default type for family ",
-        $REALNAME{$arch},"\n" if($submodel ne $arch);
+             $REALNAME{$arch},"\n" if($submodel ne $arch);
     }
 
     $make_style = $MAKEFILE_STYLE{$cc} unless($make_style);
@@ -298,6 +300,9 @@ exit;
 
 sub make_reader {
     my $filename = $_[0];
+
+    die "make_reader(): Arg was undef" if not defined $filename;
+
     open FILE, "<$filename" or
         die "(error): Couldn't read $filename ($!)\n";
 
@@ -578,17 +583,6 @@ sub dir_list {
     return @listing;
 }
 
-sub get_modules_list {
-    my %MODULES;
-    foreach my $mod (dir_list($_[0])) {
-        my %modinfo = get_module_info($mod, $MOD_DIR);
-        foreach (keys %modinfo) {
-            $MODULES{$mod}{$_} = $modinfo{$_};
-        }
-    }
-    return %MODULES;
-}
-
 sub load_module {
    my ($modname,$cc,$os,$arch,$sub,%module) = @_;
 
@@ -704,23 +698,28 @@ supported but not listed. Choosing a specific submodel will usually result in
 code that will not run on earlier versions of that architecture.
 
 ENDOFHELP
-   print_listing('CC', %CC_BINARY_NAME);
-   print_listing('OS', %OS_SUPPORTS_ARCH);
-   print_listing('CPU', %DEFAULT_SUBMODEL);
-   if(%MODULES) { print_listing('MODULES', %MODULES); }
+   print_listing('CC', \%COMPILER);
+   print_listing('OS', \%OPERATING_SYSTEM);
+   print_listing('CPU', \%CPU);
+   print_listing('MODULES', \%MODULES) if(%MODULES);
    exit;
    }
 
 sub print_listing
    {
-   my ($header, %hash) = @_;
+   my ($header, $hash) = @_;
    print "$header: ";
    my $len = length "$header: ";
-   foreach(sort(keys %hash)) {
-       if($len > 71) { print "\n   "; $len = 3; }
-       print "$_ ";
-       $len += length "$_ ";
+
+   foreach my $name (sort keys %$hash) {
+       if($len > 71) {
+           print "\n   ";
+           $len = 3;
+       }
+       print "$name ";
+       $len += length "$name ";
    }
+
    print "\n";
    }
 
@@ -1659,10 +1658,25 @@ sub set_if_any {
     }
 }
 
-sub get_module_info {
-   my ($name, $dir) = @_;
+sub get_modules_list {
+    my ($dir) = @_;
 
-   my $reader = make_reader(File::Spec->catfile($dir, $name, 'modinfo.txt'));
+    my %MODULES;
+    foreach my $mod (dir_list($dir)) {
+        my $modfile = File::Spec->catfile($dir, $mod, 'modinfo.txt');
+        my %modinfo = get_module_info($mod, $modfile);
+
+        foreach (keys %modinfo) {
+            $MODULES{$mod}{$_} = $modinfo{$_};
+        }
+    }
+    return %MODULES;
+}
+
+sub get_module_info {
+   my ($name, $file) = @_;
+
+   my $reader = make_reader($file);
 
    my %info;
    $info{'libs'} = {};
@@ -1825,6 +1839,8 @@ sub set_arch_defines {
     foreach my $arch (dir_list($dir)) {
         my %info = get_arch_info($arch, File::Spec->catfile($dir, $arch));
 
+        %{$CPU{$arch}} = %info;
+
         $ARCH{$arch} = $info{'name'};
         $REALNAME{$arch} = $info{'realname'};
         $DEFAULT_SUBMODEL{$arch} = $info{'default_submodel'};
@@ -1851,6 +1867,8 @@ sub set_os_defines {
 
     foreach my $os (dir_list($dir)) {
         my %info = get_os_info($os, File::Spec->catfile($dir, $os));
+
+        %{$OPERATING_SYSTEM{$os}} = %info;
 
         $REALNAME{$os} = $info{'realname'};
         $OS_TYPE{$os} = $info{'os_type'};
@@ -1886,6 +1904,8 @@ sub set_cc_defines {
 
     foreach my $cc (dir_list($dir)) {
         my %info = get_cc_info($cc, File::Spec->catfile($dir, $cc));
+
+        %{$COMPILER{$cc}} = %info;
 
         $REALNAME{$cc} = $info{'realname'};
         $CC_BINARY_NAME{$cc} = $info{'binary_name'};
