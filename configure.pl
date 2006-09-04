@@ -1741,9 +1741,49 @@ END_OF_FILE
     chmod 0755, 'botan-config';
 }
 
+sub read_hash {
+    my ($line, $reader, $marker, $set_to, $hash) = @_;
+
+    if($line =~ m@^<$marker>$@) {
+        while(1) {
+            $line = &$reader();
+            last if($line =~ m@^</$marker>$@);
+            $$hash{$line} = $set_to;
+        }
+    }
+}
+
+sub read_mapping {
+    my ($line, $reader, $marker, $hash) = @_;
+
+    if($line =~ m@^<$marker>$@) {
+        while(1) {
+            $line = &$reader();
+            last if($line =~ m@^</$marker>$@);
+            $line =~ m/^(\S*) -> (\S*)$/;
+            $$hash{$1} = $2;
+        }
+    }
+}
+
+sub read_mapping_quoted {
+    my ($line, $reader, $marker, $hash) = @_;
+
+    if($line =~ m@^<$marker>$@) {
+        while(1) {
+            $line = &$reader();
+            last if($line =~ m@^</$marker>$@);
+            $line =~ m/^(\S*) -> \"(.*)\"$/;
+            $$hash{$1} = $2;
+        }
+    }
+}
+
 sub set_arch_defines {
-    foreach my $arch (dir_list($_[0])) {
-        my $reader = make_reader(File::Spec->catfile($_[0], $arch));
+    my $dir = $_[0];
+
+    foreach my $arch (dir_list($dir)) {
+        my $reader = make_reader(File::Spec->catfile($dir, $arch));
 
         $ARCH{$arch} = $arch;
         while($_ = &$reader()) {
@@ -1751,39 +1791,18 @@ sub set_arch_defines {
             $REALNAME{$arch} = $1 if(/^realname \"(.*)\"/);
             $DEFAULT_SUBMODEL{$arch} = $1 if(/^default_submodel (.*)$/);
 
-            # Read in a list of aliases and add them to ARCH_ALIAS
-            if(/^<aliases>$/) {
-                while(1) {
-                    $_ = &$reader();
-                    last if(m@^</aliases>$@);
-                    $ARCH_ALIAS{$_} = $arch;
-                }
-            }
-            # Read in a list of submodels and add them to ARCH
-            if(/^<submodels>$/) {
-                while(1) {
-                    $_ = &$reader();
-                    last if(m@^</submodels>$@);
-                    $ARCH{$_} = $arch;
-                }
-            }
-
-            # Read in a list of submodel aliases and add them to SUBMODEL_ALIAS
-            if(/^<submodel_aliases>$/) {
-                while(1) {
-                    $_ = &$reader();
-                    last if(m@^</submodel_aliases>$@);
-                    m/^(\S*) -> (\S*)$/;
-                    $SUBMODEL_ALIAS{$1} = $2;
-                }
-            }
+            read_hash($_, $reader, 'aliases', $arch, \%ARCH_ALIAS);
+            read_hash($_, $reader, 'submodels', $arch, \%ARCH);
+            read_mapping($_, $reader, 'submodel_aliases', \%SUBMODEL_ALIAS);
         }
     }
 }
 
 sub set_os_defines {
-    foreach my $os (dir_list($_[0])) {
-        my $reader = make_reader(File::Spec->catfile($_[0], $os));
+    my $dir = $_[0];
+
+    foreach my $os (dir_list($dir)) {
+        my $reader = make_reader(File::Spec->catfile($dir, $os));
 
         $OS_SHARED_SUFFIX{$os} = '';
         $OS_AR_COMMAND{$os} = '';
@@ -1808,13 +1827,8 @@ sub set_os_defines {
             $INSTALL_INFO{$os}{'command'} = $1
                 if(/^install_cmd (.*)/);
 
-            if(/^<aliases>$/) {
-                while(1) {
-                    $_ = &$reader();
-                    last if(m@^</aliases>$@);
-                    $OS_ALIAS{$_} = $os;
-                }
-            }
+            read_hash($_, $reader, 'aliases', $os, \%OS_ALIAS);
+
             if(/^<supports_shared>$/) {
                 while(1) {
                     $_ = &$reader();
@@ -1836,8 +1850,10 @@ sub set_os_defines {
 }
 
 sub set_cc_defines {
-    foreach my $cc (dir_list($_[0])) {
-        my $reader = make_reader(File::Spec->catfile($_[0], $cc));
+    my $dir = $_[0];
+
+    foreach my $cc (dir_list($dir)) {
+        my $reader = make_reader(File::Spec->catfile($dir, $cc));
 
         # Default to empty values, so they don't have to be explicitly set
         $CC_LIB_OPT_FLAGS{$cc} = $CC_CHECK_OPT_FLAGS{$cc} =
@@ -1892,27 +1908,11 @@ sub set_cc_defines {
                 }
             }
 
-            # Some systems need certain flags passed for linking as well
-            # (usually these change the ABI somehow). We just append this
-            # value to the CXX variable, so it's used for all ops.
-            if(/^<mach_abi_linking>$/) {
-                while(1) {
-                    $_ = &$reader();
-                    last if(m@^</mach_abi_linking>$@);
-                    m/^(\S*) -> \"(.*)\"$/;
-                    $CC_ABI_FLAGS{$cc}{$1} = $2;
-                }
-            }
+            read_mapping_quoted($_, $reader, 'mach_abi_linking',
+                                \%{$CC_ABI_FLAGS{$cc}});
 
-            # Read in a list of flags to created a shared lib (and set soname)
-            if(/^<so_link_flags>$/) {
-                while(1) {
-                    $_ = &$reader();
-                    last if(m@^</so_link_flags>$@);
-                    m/^(\S*) -> \"(.*)\"$/;
-                    $CC_SO_LINK_FLAGS{$cc}{$1} = $2;
-                }
-            }
+            read_mapping_quoted($_, $reader, 'so_link_flags',
+                                \%{$CC_SO_LINK_FLAGS{$cc}});
         }
     }
 }
