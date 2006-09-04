@@ -938,11 +938,11 @@ sub os_info_for {
 
     my $result = $osinfo{$what};
     if(!defined($result) or $result eq '') {
-        print "Using defaults for $what\n";
+        #print "Using defaults for $what\n";
         $result = $OPERATING_SYSTEM{'defaults'}{$what};
     }
     
-    print "$os $what -> $result\n";
+    #print "$os $what -> $result\n";
     return $result;
 }
 
@@ -983,6 +983,8 @@ sub os_install_info {
 sub mach_opt {
     my ($cc, $arch, $submodel) = @_;
 
+    #my %ccinfo = %{$COMPILER{$cc}};
+
     if(defined($CC_MACHINE_OPT_FLAGS{$cc}{$submodel}))
     {
         return $CC_MACHINE_OPT_FLAGS{$cc}{$submodel};
@@ -1002,6 +1004,21 @@ sub mach_opt {
     return '';
 }
 
+sub append_if {
+    my($var,$addme,$cond) = @_;
+    die unless defined $var;
+
+    if($cond and $addme ne '') {
+        $$var .= ' ' unless($$var eq '');
+        $$var .= $addme;
+    }
+}
+
+sub append_ifdef {
+    my($var,$addme) = @_;
+    append_if($var, $addme, defined($addme));
+}
+
 sub generate_makefile {
    my($make_style, $cc, $os, $submodel, $arch,
       $debug, $no_shared, $dumb_gcc,
@@ -1013,28 +1030,16 @@ sub generate_makefile {
    my %ccinfo = %{$COMPILER{$cc}};
 
    my $lang_flags = '';
-   if($ccinfo{'lang_flags'}) {
-       $lang_flags = $ccinfo{'lang_flags'};
-   }
-
-   $lang_flags = "$lang_flags -fpermissive" if($dumb_gcc);
+   append_ifdef(\$lang_flags, $ccinfo{'lang_flags'});
+   append_if(\$lang_flags, "-fpermissive", $dumb_gcc);
 
    my $warnings = '';
-   if($ccinfo{'warning_flags'}) {
-       $warnings = $ccinfo{'warning_flags'};
-   }
+   append_ifdef(\$warnings, $ccinfo{'warning_flags'});
 
    my $lib_opt_flags = '';
-
-   if($ccinfo{'lib_opt_flags'}) {
-       $lib_opt_flags .= $ccinfo{'lib_opt_flags'};
-   }
-   if(!$debug and $ccinfo{'no_debug_flags'}) {
-       $lib_opt_flags .= ' ' . $ccinfo{'no_debug_flags'};
-   }
-   if($debug and $ccinfo{'debug_flags'}) {
-       $lib_opt_flags .= ' ' . $ccinfo{'debug_flags'};
-   }
+   append_ifdef(\$lib_opt_flags, $ccinfo{'lib_opt_flags'});
+   append_ifdef(\$lib_opt_flags, $ccinfo{'debug_flags'}) if($debug);
+   append_ifdef(\$lib_opt_flags, $ccinfo{'no_debug_flags'}) if(!$debug);
 
    my $mach_opt_flags = mach_opt($cc, $arch, $submodel);
 
@@ -1073,16 +1078,15 @@ sub generate_makefile {
        if(($so_obj_flags or $so_link_flags) and $OS_SUPPORTS_SHARED{$os});
 
    my $check_opt_flags = '';
-   if($ccinfo{'check_opt_flags'}) {
-       $check_opt_flags = $ccinfo{'check_opt_flags'};
-   }
+   append_ifdef(\$check_opt_flags, $ccinfo{'check_opt_flags'});
 
    my $ccopts = '';
 
    $ccopts .= ' '.$CC_ABI_FLAGS{$cc}{$arch}
       if(defined($CC_ABI_FLAGS{$cc}{$arch}));
 
-   $ccopts .= ' '.$CC_ABI_FLAGS{$cc}{$os} if(defined($CC_ABI_FLAGS{$cc}{$os}));
+   $ccopts .= ' '.$CC_ABI_FLAGS{$cc}{$os}
+      if(defined($CC_ABI_FLAGS{$cc}{$os}));
 
    $ccopts .= ' '.$CC_ABI_FLAGS{$cc}{'all'}
       if(defined($CC_ABI_FLAGS{$cc}{'all'}));
