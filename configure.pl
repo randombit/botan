@@ -1643,25 +1643,6 @@ sub list_push {
     return sub { push @$listref, $_[0]; }
 }
 
-sub set_undef {
-    my ($hashref,$key) = @_;
-
-    return sub {
-        my ($arg) = @_;
-        if(!defined($$hashref{$key})) { $$hashref{$key} = {}; }
-        $$hashref{$key}{$arg} = undef;
-    }
-}
-
-sub quoted_mapping {
-    my $hashref = $_[0];
-    return sub {
-        my $line = $_[0];
-        $line =~ m/^(\S*) -> \"(.*)\"$/;
-        $$hashref{$1} = $2;
-    }
-}
-
 sub set_if {
     my ($line, $what, $var) = @_;
     $$var = $1 if($line =~ /^$what (.*)/);
@@ -1680,11 +1661,11 @@ sub set_if_any {
 }
 
 sub get_module_info {
-   my ($MODULE, $MOD_DIR) = @_;
+   my ($name, $dir) = @_;
    my %info;
 
-   my $desc_file = File::Spec->catfile($MOD_DIR, $MODULE, 'modinfo.txt');
-   die "(error): Module $MODULE does not seem to have a description file\n"
+   my $desc_file = File::Spec->catfile($dir, $name, 'modinfo.txt');
+   die "(error): Module $name does not seem to have a description file\n"
        unless(-e $desc_file);
 
    my $reader = make_reader($desc_file);
@@ -1719,22 +1700,36 @@ sub get_module_info {
                    100*$MAJOR_VERSION + 10*$MINOR_VERSION + $PATCH_VERSION;
 
                if($needed_version > $have_version) {
-                   warn "Module $MODULE requires Botan version $version\n";
+                   warn "Module $name requires Botan version $version\n";
                    return ();
                }
            }
            else {
-               warn "In module $MODULE, bad version code in require_version\n";
+               warn "In module $name, bad version code in require_version\n";
            }
        }
 
-       read_hash($_, $reader, 'arch', set_undef(\%info, 'arch'));
-       read_hash($_, $reader, 'os', set_undef(\%info, 'os'));
-       read_hash($_, $reader, 'cc', set_undef(\%info, 'cc'));
+       sub set_undef {
+           my ($hashref,$key) = @_;
 
-       read_hash($_, $reader, 'add', set_undef(\%info, 'add'));
-       read_hash($_, $reader, 'ignore', set_undef(\%info, 'ignore'));
-       read_hash($_, $reader, 'replace', set_undef(\%info, 'replace'));
+           return sub {
+               my ($arg) = @_;
+               if(!defined($$hashref{$key})) { $$hashref{$key} = {}; }
+               $$hashref{$key}{$arg} = undef;
+           }
+       }
+
+       sub read_and_set_undef {
+           my ($line,$reader,$hash,$key) = @_;
+           read_hash($line, $reader, $key, set_undef($hash, $key));
+       }
+
+       read_and_set_undef($_, $reader, \%info, 'arch');
+       read_and_set_undef($_, $reader, \%info, 'cc');
+       read_and_set_undef($_, $reader, \%info, 'os');
+       read_and_set_undef($_, $reader, \%info, 'add');
+       read_and_set_undef($_, $reader, \%info, 'replace');
+       read_and_set_undef($_, $reader, \%info, 'ignore');
 
        read_hash($_, $reader, 'libs',
                  sub {
@@ -1771,33 +1766,6 @@ sub get_arch_info {
     return %info;
 }
 
-sub set_arch_defines {
-    my $dir = $_[0];
-
-    foreach my $arch (dir_list($dir)) {
-        my %info = get_arch_info($arch, File::Spec->catfile($dir, $arch));
-
-        $ARCH{$arch} = $info{'name'};
-        $REALNAME{$arch} = $info{'realname'};
-        $DEFAULT_SUBMODEL{$arch} = $info{'default_submodel'};
-
-        foreach my $alias (@{$info{'aliases'}}) {
-            $ARCH_ALIAS{$alias} = $arch;
-        }
-
-        foreach my $submodel (@{$info{'submodels'}}) {
-            $ARCH{$submodel} = $arch;
-        }
-
-        if(defined($info{'submodel_aliases'})) {
-            my %submodel_aliases = %{$info{'submodel_aliases'}};
-            foreach my $sm_alias (keys %submodel_aliases) {
-                $SUBMODEL_ALIAS{$sm_alias} = $submodel_aliases{$sm_alias};
-            }
-        }
-    }
-}
-
 sub get_os_info {
     my ($name,$file) = @_;
     my $reader = make_reader($file);
@@ -1824,6 +1792,77 @@ sub get_os_info {
                   list_push(\@{$info{'supports_shared'}}));
     }
     return %info;
+}
+
+sub get_cc_info {
+    my ($name,$file) = @_;
+    my $reader = make_reader($file);
+
+    my %info;
+    $info{'name'} = $name;
+
+    while($_ = &$reader()) {
+        set_if_any(\&set_if_quoted, $_, \%info,
+                   'realname:binary_name:lib_opt_flags:check_opt_flags:' .
+                   'lang_flags:warning_flags:so_obj_flags:ar_command:' .
+                   'debug_flags:no_debug_flags');
+
+        set_if($_, 'makefile_style', \$info{'makefile_style'});
+
+        read_hash($_, $reader, 'os', list_push(\@{$info{'os'}}));
+        read_hash($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
+
+        sub quoted_mapping {
+            my $hashref = $_[0];
+            return sub {
+                my $line = $_[0];
+                $line =~ m/^(\S*) -> \"(.*)\"$/;
+                $$hashref{$1} = $2;
+            }
+        }
+
+        read_hash($_, $reader, 'mach_abi_linking',
+                  quoted_mapping(\%{$info{'mach_abi_linking'}}));
+        read_hash($_, $reader, 'so_link_flags',
+                  quoted_mapping(\%{$info{'so_link_flags'}}));
+
+        read_hash($_, $reader, 'mach_opt',
+                  sub {
+                      my $line = $_[0];
+                      $line =~ m/^(\S*) -> \"(.*)\" ?(.*)?$/;
+                      $info{'mach_opt_flags'}{$1} = $2;
+                      $info{'mach_opt_re'}{$1} = $3;
+                  });
+
+    }
+    return %info;
+}
+
+sub set_arch_defines {
+    my $dir = $_[0];
+
+    foreach my $arch (dir_list($dir)) {
+        my %info = get_arch_info($arch, File::Spec->catfile($dir, $arch));
+
+        $ARCH{$arch} = $info{'name'};
+        $REALNAME{$arch} = $info{'realname'};
+        $DEFAULT_SUBMODEL{$arch} = $info{'default_submodel'};
+
+        foreach my $alias (@{$info{'aliases'}}) {
+            $ARCH_ALIAS{$alias} = $arch;
+        }
+
+        foreach my $submodel (@{$info{'submodels'}}) {
+            $ARCH{$submodel} = $arch;
+        }
+
+        if(defined($info{'submodel_aliases'})) {
+            my %submodel_aliases = %{$info{'submodel_aliases'}};
+            foreach my $sm_alias (keys %submodel_aliases) {
+                $SUBMODEL_ALIAS{$sm_alias} = $submodel_aliases{$sm_alias};
+            }
+        }
+    }
 }
 
 sub set_os_defines {
@@ -1855,41 +1894,6 @@ sub set_os_defines {
         @{$OS_SUPPORTS_SHARED{$os}} = @{$info{'supports_shared'}};
         @{$OS_SUPPORTS_ARCH{$os}} = @{$info{'arch'}};
     }
-}
-
-sub get_cc_info {
-    my ($name,$file) = @_;
-    my $reader = make_reader($file);
-
-    my %info;
-    $info{'name'} = $name;
-
-    while($_ = &$reader()) {
-        set_if_any(\&set_if_quoted, $_, \%info,
-                   'realname:binary_name:lib_opt_flags:check_opt_flags:' .
-                   'lang_flags:warning_flags:so_obj_flags:ar_command:' .
-                   'debug_flags:no_debug_flags');
-
-        set_if($_, 'makefile_style', \$info{'makefile_style'});
-
-        read_hash($_, $reader, 'os', list_push(\@{$info{'os'}}));
-        read_hash($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
-
-        read_hash($_, $reader, 'mach_abi_linking',
-                  quoted_mapping(\%{$info{'mach_abi_linking'}}));
-        read_hash($_, $reader, 'so_link_flags',
-                  quoted_mapping(\%{$info{'so_link_flags'}}));
-
-        read_hash($_, $reader, 'mach_opt',
-                  sub {
-                      my $line = $_[0];
-                      $line =~ m/^(\S*) -> \"(.*)\" ?(.*)?$/;
-                      $info{'mach_opt_flags'}{$1} = $2;
-                      $info{'mach_opt_re'}{$1} = $3;
-                  });
-
-    }
-    return %info;
 }
 
 sub set_cc_defines {
