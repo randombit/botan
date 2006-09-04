@@ -3,7 +3,6 @@
 require 5.006;
 
 use strict;
-use DirHandle;
 use Getopt::Long;
 use File::Spec;
 use File::Copy;
@@ -300,6 +299,7 @@ sub make_reader {
     my $filename = $_[0];
     open FILE, "<$filename" or
         die "Couldn't read from $filename ($!)\n";
+
     return sub {
         my $line = '';
         while(1)
@@ -316,7 +316,6 @@ sub make_reader {
             return $line if $line ne '';
         }
         close FILE;
-        return undef;                
         return undef;
     }
 }
@@ -571,18 +570,21 @@ sub check_for_conflicts {
     }
 }
 
+sub dir_list {
+    my ($dir) = @_;
+    opendir(DIR, $dir) or die "Couldn't read directory $dir ($!)\n";
+    my @listing = grep { $_ ne '.' and $_ ne '..' } readdir DIR;
+    closedir DIR;
+    return @listing;
+}
+
 sub get_modules_list {
-    my $MOD_DIR = $_[0];
-    my $dir = new DirHandle $MOD_DIR;
-    if(!defined $dir) { return (); }
-
     my %MODULES;
-
-    while(defined($_ = $dir->read)) {
-        next if($_ eq '.' or $_ eq '..');
-        my $MODULE = $_;
-        my %modinfo = get_module_info($MODULE, $MOD_DIR);
-        foreach (keys %modinfo) { $MODULES{$MODULE}{$_} = $modinfo{$_}; }
+    foreach my $mod (dir_list($_[0])) {
+        my %modinfo = get_module_info($mod, $MOD_DIR);
+        foreach (keys %modinfo) {
+            $MODULES{$mod}{$_} = $modinfo{$_};
+        }
     }
     return %MODULES;
 }
@@ -1727,15 +1729,7 @@ END_OF_FILE
 }
 
 sub set_arch_defines {
-    my $dir = new DirHandle $_[0];
-    if(!defined $dir) {
-        die "Couldn't open directory $_[0] ($!)";
-    }
-
-    while(defined($_ = $dir->read)) {
-        next if($_ eq '.' or $_ eq '..');
-        my $arch = $_;
-
+    foreach my $arch (dir_list($_[0])) {
         my $reader = make_reader(File::Spec->catfile($_[0], $arch));
 
         $ARCH{$arch} = $arch;
@@ -1772,19 +1766,10 @@ sub set_arch_defines {
             }
         }
     }
-    undef $dir;
 }
 
 sub set_os_defines {
-    my $dir = new DirHandle $_[0];
-    if(!defined $dir) {
-        die "Couldn't open directory $_[0] ($!)";
-    }
-
-    while(defined($_ = $dir->read)) {
-        next if($_ eq '.' or $_ eq '..');
-        my $os = $_;
-
+    foreach my $os (dir_list($_[0])) {
         my $reader = make_reader(File::Spec->catfile($_[0], $os));
 
         $OS_SHARED_SUFFIX{$os} = '';
@@ -1835,19 +1820,10 @@ sub set_os_defines {
             }
         }
     }
-    undef $dir;
 }
 
 sub set_cc_defines {
-    my $dir = new DirHandle $_[0];
-    if(!defined $dir) {
-        die "Couldn't open directory $_[0] ($!)";
-    }
-
-    while(defined($_ = $dir->read)) {
-        next if($_ eq '.' or $_ eq '..');
-        my $cc = $_;
-
+    foreach my $cc (dir_list($_[0])) {
         my $reader = make_reader(File::Spec->catfile($_[0], $cc));
 
         # Default to empty values, so they don't have to be explicitly set
@@ -1928,5 +1904,4 @@ sub set_cc_defines {
             }
         }
     }
-    undef $dir;
 }
