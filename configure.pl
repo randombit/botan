@@ -1871,6 +1871,23 @@ sub get_cc_info {
                    'debug_flags:no_debug_flags');
 
         set_if($_, 'makefile_style', \$info{'makefile_style'});
+
+        read_hash($_, $reader, 'os', list_push(\@{$info{'os'}}));
+        read_hash($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
+
+        read_hash($_, $reader, 'mach_abi_linking',
+                  quoted_mapping(\%{$info{'mach_abi_linking'}}));
+        read_hash($_, $reader, 'so_link_flags',
+                  quoted_mapping(\%{$info{'so_link_flags'}}));
+
+        read_hash($_, $reader, 'mach_opt',
+                  sub {
+                      my $line = $_[0];
+                      $line =~ m/^(\S*) -> \"(.*)\" ?(.*)?$/;
+                      $info{'mach_opt_flags'}{$1} = $2;
+                      $info{'mach_opt_re'}{$1} = $3;
+                  });
+
     }
     return %info;
 }
@@ -1893,26 +1910,17 @@ sub set_cc_defines {
         $CC_NO_DEBUG_FLAGS{$cc} = $info{'no_debug_flags'};
         $MAKEFILE_STYLE{$cc} = $info{'makefile_style'};
 
-        my $reader = make_reader(File::Spec->catfile($dir, $cc));
-        while($_ = &$reader()) {
-            read_hash($_, $reader, 'arch',
-                      list_push(\@{$CC_SUPPORTS_ARCH{$cc}}));
-            read_hash($_, $reader, 'os',
-                      list_push(\@{$CC_SUPPORTS_OS{$cc}}));
+        @{$CC_SUPPORTS_ARCH{$cc}} = @{$info{'arch'}};
+        @{$CC_SUPPORTS_OS{$cc}} = @{$info{'os'}};
 
-            read_hash($_, $reader, 'mach_opt',
-                      sub {
-                          my $line = $_[0];
-                          $line =~ m/^(\S*) -> \"(.*)\" ?(.*)?$/;
-                          $CC_MACHINE_OPT_FLAGS{$cc}{$1} = $2;
-                          $CC_MACHINE_OPT_FLAGS_RE{$cc}{$1} = $3;
-                      });
+        %{$CC_ABI_FLAGS{$cc}} = %{$info{'mach_abi_linking'}}
+           if(defined($info{'mach_abi_linking'}));
+        %{$CC_SO_LINK_FLAGS{$cc}} = %{$info{'so_link_flags'}}
+           if(defined($info{'so_link_flags'}));
 
-            read_hash($_, $reader, 'mach_abi_linking',
-                      quoted_mapping(\%{$CC_ABI_FLAGS{$cc}}));
-
-            read_hash($_, $reader, 'so_link_flags',
-                      quoted_mapping(\%{$CC_SO_LINK_FLAGS{$cc}}));
-        }
+        %{$CC_MACHINE_OPT_FLAGS{$cc}} = %{$info{'mach_opt_flags'}}
+           if(defined($info{'mach_opt_flags'}));
+        %{$CC_MACHINE_OPT_FLAGS_RE{$cc}} = %{$info{'mach_opt_re'}}
+           if(defined($info{'mach_opt_re'}));
     }
 }
