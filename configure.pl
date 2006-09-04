@@ -69,7 +69,7 @@ my %DOCS = (
 my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
 
 my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS,
-   %OS_SUPPORTS_ARCH, %OS_SUPPORTS_SHARED, %OS_TYPE, %INSTALL_INFO,
+   %OS_SUPPORTS_SHARED, %OS_TYPE, %INSTALL_INFO,
    %OS_OBJ_SUFFIX, %OS_SHARED_SUFFIX, %OS_STATIC_SUFFIX,
    %OS_AR_COMMAND, %OS_AR_NEEDS_RANLIB, %OS_ALIAS, %CC_BINARY_NAME,
    %CC_LIB_OPT_FLAGS, %CC_CHECK_OPT_FLAGS, %CC_WARN_FLAGS,
@@ -240,7 +240,7 @@ sub main() {
 
     die "(error): ", realname($os), " doesn't run on $arch ($submodel)\n"
         unless($arch eq 'generic' or $os eq 'generic' or
-               in_array($arch, $OS_SUPPORTS_ARCH{$os}));
+               in_array($arch, $OPERATING_SYSTEM{$os}{'arch'}));
 
     die "(error): ", realname($cc), " doesn't run on $arch ($submodel)\n"
         unless($arch eq 'generic' or
@@ -1903,7 +1903,6 @@ sub set_os_defines {
         }
 
         @{$OS_SUPPORTS_SHARED{$os}} = @{$info{'supports_shared'}};
-        @{$OS_SUPPORTS_ARCH{$os}} = @{$info{'arch'}};
     }
 }
 
