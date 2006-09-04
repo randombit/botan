@@ -1150,6 +1150,9 @@ sub print_unix_makefile {
    $install_cmd_exec =~ s/MODE/\$(EXEC_MODE)/;
    $install_cmd_data =~ s/MODE/\$(DATA_MODE)/;
 
+   $warn_flags = '' unless defined($warn_flags);
+   $so_obj = '' unless defined($so_obj);
+
 ##################### COMMON CODE (PARTIALLY) ######################
    sub file_list {
       my ($spaces, $put_in, $from, $to, %files) = @_;
@@ -1878,26 +1881,20 @@ sub set_cc_defines {
     foreach my $cc (dir_list($dir)) {
         my %info = get_cc_info($cc, File::Spec->catfile($dir, $cc));
 
-        # Default to empty values, so they don't have to be explicitly set
-        $CC_LIB_OPT_FLAGS{$cc} = $CC_CHECK_OPT_FLAGS{$cc} =
-            $CC_LANG_FLAGS{$cc} = $CC_WARN_FLAGS{$cc} =
-            $CC_SO_OBJ_FLAGS{$cc} = $CC_DEBUG_FLAGS{$cc} =
-            $CC_AR_COMMAND{$cc} = $CC_NO_DEBUG_FLAGS{$cc} = '';
+        $REALNAME{$cc} = $info{'realname'};
+        $CC_BINARY_NAME{$cc} = $info{'binary_name'};
+        $CC_LIB_OPT_FLAGS{$cc} = $info{'lib_opt_flags'};
+        $CC_CHECK_OPT_FLAGS{$cc} = $info{'check_opt_flags'};
+        $CC_AR_COMMAND{$cc} = $info{'ar_command'};
+        $CC_LANG_FLAGS{$cc} = $info{'lang_flags'};
+        $CC_WARN_FLAGS{$cc} = $info{'warning_flags'};
+        $CC_SO_OBJ_FLAGS{$cc} = $info{'so_obj_flags'};
+        $CC_DEBUG_FLAGS{$cc} = $info{'debug_flags'};
+        $CC_NO_DEBUG_FLAGS{$cc} = $info{'no_debug_flags'};
+        $MAKEFILE_STYLE{$cc} = $info{'makefile_style'};
 
         my $reader = make_reader(File::Spec->catfile($dir, $cc));
         while($_ = &$reader()) {
-            set_if_quoted($_, 'realname', \$REALNAME{$cc});
-            set_if_quoted($_, 'binary_name', \$CC_BINARY_NAME{$cc});
-            set_if_quoted($_, 'lib_opt_flags', \$CC_LIB_OPT_FLAGS{$cc});
-            set_if_quoted($_, 'check_opt_flags', \$CC_CHECK_OPT_FLAGS{$cc});
-            set_if_quoted($_, 'ar_command', \$CC_AR_COMMAND{$cc});
-            set_if_quoted($_, 'lang_flags', \$CC_LANG_FLAGS{$cc});
-            set_if_quoted($_, 'warning_flags', \$CC_WARN_FLAGS{$cc});
-            set_if_quoted($_, 'so_obj_flags', \$CC_SO_OBJ_FLAGS{$cc});
-            set_if_quoted($_, 'debug_flags', \$CC_DEBUG_FLAGS{$cc});
-            set_if_quoted($_, 'no_debug_flags', \$CC_NO_DEBUG_FLAGS{$cc});
-            set_if($_, 'makefile_style', \$MAKEFILE_STYLE{$cc});
-
             read_hash($_, $reader, 'arch',
                       list_push(\@{$CC_SUPPORTS_ARCH{$cc}}));
             read_hash($_, $reader, 'os',
