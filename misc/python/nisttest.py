@@ -27,13 +27,13 @@ def run_test(files, rootdir, testname, expected):
     end_entity = [x for x in certs if x.find("End Cert") != -1]
     ca_certs = [x for x in certs if x.find("Trust Anchor") != -1]
 
-    print "Running", testname, "...",
+    print "%s..." % testname,
 
     result = validate(ca_certs, certs, crls, end_entity)
     result = repr(result).replace('botan._botan.verify_result.', '')
     
     if result != expected:
-        print "FAILED: got", result, "expected", expected
+        print "FAILED: got %s, expected %s" % (result, expected)
     else:
         print "passed"
 
@@ -55,7 +55,7 @@ def main():
             if thistest in results:
                 run_test(files, root, thistest, results[thistest])
             else:
-                print "Skipping", thistest, "- no expected result set"
+                print "%s... skipping - no expected result set" % thistest
         
 if __name__ == "__main__":
     sys.exit(main())
