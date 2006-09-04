@@ -25,13 +25,11 @@ using namespace Botan;
 
 int main(int argc, char* argv[])
    {
-   if(argc != 2)
+   if(argc != 1 && argc != 2)
       {
-      std::cout << "Usage: " << argv[0] << " passphrase" << std::endl;
+      std::cout << "Usage: " << argv[0] << " [passphrase]" << std::endl;
       return 1;
       }
-
-   std::string passphrase(argv[1]);
 
    std::ofstream priv("dsapriv.pem");
    std::ofstream pub("dsapub.pem");
@@ -47,7 +45,10 @@ int main(int argc, char* argv[])
       DSA_PrivateKey key(DL_Group("dsa/jce/1024"));
 
       pub << X509::PEM_encode(key);
-      priv << PKCS8::PEM_encode(key, passphrase);
+      if(argc == 1)
+         priv << PKCS8::PEM_encode(key);
+      else
+         priv << PKCS8::PEM_encode(key, argv[1]);
    }
    catch(std::exception& e)
       {

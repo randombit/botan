@@ -18,9 +18,10 @@ using namespace Botan;
 
 int main(int argc, char* argv[])
    {
-   if(argc != 3)
+   if(argc != 2 && argc != 3)
       {
-      std::cout << "Usage: " << argv[0] << " bitsize passphrase" << std::endl;
+      std::cout << "Usage: " << argv[0] << " bitsize [passphrase]"
+                << std::endl;
       return 1;
       }
 
@@ -31,8 +32,6 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   std::string passphrase(argv[2]);
-
    std::ofstream pub("rsapub.pem");
    std::ofstream priv("rsapriv.pem");
    if(!priv || !pub)
@@ -41,12 +40,17 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   try {
+   try
+      {
       LibraryInitializer init;
       RSA_PrivateKey key(bits);
       pub << X509::PEM_encode(key);
-      priv << PKCS8::PEM_encode(key, passphrase);
-   }
+
+      if(argc == 2)
+         priv << PKCS8::PEM_encode(key);
+      else
+         priv << PKCS8::PEM_encode(key, argv[2]);
+      }
    catch(std::exception& e)
       {
       std::cout << "Exception caught: " << e.what() << std::endl;
