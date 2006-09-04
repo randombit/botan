@@ -177,7 +177,7 @@ sub main() {
         unless defined($CC_BINARY_NAME{$cc});
 
     die "(error): OS $os isn't known\n" unless
-        (defined($OS_SUPPORTS_ARCH{$os}) or $os eq 'generic');
+        ($os eq 'generic' or defined($OPERATING_SYSTEM{$os}));
 
     # Get the canonical submodel name (like r8k -> r8000)
     $submodel = $SUBMODEL_ALIAS{$submodel}
@@ -240,14 +240,14 @@ sub main() {
 
     die "(error): ", realname($os), " doesn't run on $arch ($submodel)\n"
         unless($arch eq 'generic' or $os eq 'generic' or
-               in_array($OS_SUPPORTS_ARCH{$os}, $arch));
+               in_array($arch, $OS_SUPPORTS_ARCH{$os}));
 
     die "(error): ", realname($cc), " doesn't run on $arch ($submodel)\n"
         unless($arch eq 'generic' or
-               (in_array($CC_SUPPORTS_ARCH{$cc}, $arch)));
+               (in_array($arch, $CC_SUPPORTS_ARCH{$cc})));
 
     die "(error): ", realname($cc), " doesn't run on ", realname($os), "\n"
-        unless($os eq 'generic' or (in_array($CC_SUPPORTS_OS{$cc}, $os)));
+        unless($os eq 'generic' or (in_array($os, $CC_SUPPORTS_OS{$cc})));
 
     check_for_conflicts(@using_mods);
     foreach (@using_mods) {
@@ -452,7 +452,7 @@ sub mkdirs {
 }
 
 sub in_array {
-    my($array, $target) = @_;
+    my($target, $array) = @_;
     return 0 unless defined($array);
     foreach (@$array) { return 1 if($_ eq $target); }
     return 0;
@@ -921,12 +921,12 @@ sub guess_mods {
         my @arch_list = ();
         if($modinfo{'arch'}) { @arch_list = keys %{ $modinfo{'arch'} }; }
 
-        next if(scalar @cc_list > 0 && !in_array(\@cc_list, $cc));
-        next if(scalar @os_list > 0 && !in_array(\@os_list, $os));
+        next if(scalar @cc_list > 0 && !in_array($cc, \@cc_list));
+        next if(scalar @os_list > 0 && !in_array($os, \@os_list));
 
         next if(scalar @arch_list > 0 &&
-                !in_array(\@arch_list, $arch) &&
-                !in_array(\@arch_list, $submodel));
+                !in_array($arch, \@arch_list) &&
+                !in_array($submodel, \@arch_list));
 
         push @usable_modules, $mod;
     }
@@ -1037,8 +1037,8 @@ sub generate_makefile {
    my $so_link_flags = '';
    my $so_obj_flags = $CC_SO_OBJ_FLAGS{$cc};
 
-   if($no_shared or (!in_array($OS_SUPPORTS_SHARED{$os}, 'all') and
-                     !in_array($OS_SUPPORTS_SHARED{$os}, $arch)))
+   if($no_shared or (!in_array('all', $OS_SUPPORTS_SHARED{$os}) and
+                     !in_array($arch, $OS_SUPPORTS_SHARED{$os})))
       { $so_obj_flags = ''; }
 
   elsif(defined($CC_SO_LINK_FLAGS{$cc}{$os}))
