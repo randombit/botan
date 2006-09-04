@@ -1013,7 +1013,11 @@ sub generate_makefile {
    my $lang_flags = $CC_LANG_FLAGS{$cc};
    $lang_flags = "$lang_flags -fpermissive" if($dumb_gcc);
 
-   my $lib_opt_flags = $CC_LIB_OPT_FLAGS{$cc};
+   my $lib_opt_flags = '';
+
+   if($COMPILER{$cc}{'lib_opt_flags'}) {
+       $lib_opt_flags .= $COMPILER{$cc}{'lib_opt_flags'};
+   }
    if(!$debug and ($CC_NO_DEBUG_FLAGS{$cc}))
       { $lib_opt_flags .= ' '.$CC_NO_DEBUG_FLAGS{$cc}; }
    if($debug and ($CC_DEBUG_FLAGS{$cc}))
@@ -1052,7 +1056,10 @@ sub generate_makefile {
    $make_shared = 1
        if(($so_obj_flags or $so_link_flags) and $OS_SUPPORTS_SHARED{$os});
 
-   my $check_opt_flags = $CC_CHECK_OPT_FLAGS{$cc};
+   my $check_opt_flags = '';
+   if($CC_CHECK_OPT_FLAGS{$cc}) {
+       $check_opt_flags = $CC_CHECK_OPT_FLAGS{$cc};
+   }
 
    my $ccopts = '';
 
