@@ -1659,14 +1659,21 @@ sub quoted_mapping {
     }
 }
 
+sub set_if {
+    my ($line, $what, $var) = @_;
+    $$var = $1 if($line =~ /^$what (.*)/);
+}
+
 sub set_if_quoted {
     my ($line, $what, $var) = @_;
     $$var = $1 if($line =~ /^$what \"(.*)\"/);
 }
 
-sub set_if {
-    my ($line, $what, $var) = @_;
-    $$var = $1 if($line =~ /^$what (.*)/);
+sub set_if_any {
+    my ($func, $line, $hash, $any_of) = @_;
+    foreach my $found (split(/:/, $any_of)) {
+        &$func($line, $found, \$hash->{$found});
+    }
 }
 
 sub get_module_info {
@@ -1764,27 +1771,22 @@ sub set_arch_defines {
 }
 
 sub get_os_info {
-    my ($reader,$name) = @_;
+    my ($file,$name) = @_;
+
+    my $reader = make_reader($file);
+
     my %info;
 
     $info{'name'} = $name;
     $info{'needs_ranlib'} = 0;
 
     while($_ = &$reader()) {
-        set_if_quoted($_, 'realname', \$info{'realname'});
-        set_if_quoted($_, 'ar_command', \$info{'ar_command'});
+        set_if_any(\&set_if_quoted, $_, \%info, 'realname:ar_command');
 
-        set_if($_, 'os_type', \$info{'os_type'});
-        set_if($_, 'obj_suffix', \$info{'obj_suffix'});
-        set_if($_, 'so_suffix', \$info{'so_suffix'});
-        set_if($_, 'static_suffix', \$info{'static_suffix'});
-        set_if($_, 'install_root', \$info{'install_root'});
-        set_if($_, 'header_dir', \$info{'header_dir'});
-        set_if($_, 'lib_dir', \$info{'lib_dir'});
-        set_if($_, 'doc_dir', \$info{'doc_dir'});
-        set_if($_, 'install_user', \$info{'install_user'});
-        set_if($_, 'install_group', \$info{'install_group'});
-        set_if($_, 'install_cmd', \$info{'install_cmd'});
+        set_if_any(\&set_if, $_, \%info,
+                   'os_type:obj_suffix:so_suffix:static_suffix:' .
+                   'install_root:header_dir:lib_dir:doc_dir:' .
+                   'install_user:install_group:install_cmd');
 
         $info{'needs_ranlib'} = 1 if(/^ar_needs_ranlib yes$/);
         $info{'needs_ranlib'} = 0 if(/^ar_needs_ranlib no$/);
@@ -1802,8 +1804,7 @@ sub set_os_defines {
     my $dir = $_[0];
 
     foreach my $os (dir_list($dir)) {
-        my %info = get_os_info(make_reader(File::Spec->catfile($dir, $os)),
-                               $os);
+        my %info = get_os_info(File::Spec->catfile($dir, $os), $os);
 
         $REALNAME{$os} = $info{'realname'};
         $OS_TYPE{$os} = $info{'os_type'};
@@ -1813,39 +1814,20 @@ sub set_os_defines {
         $OS_STATIC_SUFFIX{$os} = $info{'static_suffix'};
         $OS_AR_NEEDS_RANLIB{$os} = $info{'needs_ranlib'};
 
-        #$INSTALL_INFO{$os}{'root'} = $info{'install_root'};
+        $INSTALL_INFO{$os}{'root'} = $info{'install_root'};
+        $INSTALL_INFO{$os}{'headers'} = $info{'header_dir'};
+        $INSTALL_INFO{$os}{'libs'} = $info{'lib_dir'};
+        $INSTALL_INFO{$os}{'docs'} = $info{'doc_dir'};
+        $INSTALL_INFO{$os}{'user'} = $info{'install_user'};
+        $INSTALL_INFO{$os}{'group'} = $info{'install_group'};
+        $INSTALL_INFO{$os}{'command'} = $info{'install_cmd'};
 
-        my $reader = make_reader(File::Spec->catfile($dir, $os));
-
-        while($_ = &$reader()) {
-            #set_if_quoted($_, 'realname', \$REALNAME{$os});
-            #set_if($_, 'os_type', \$OS_TYPE{$os});
-            #set_if_quoted($_, 'ar_command', \$OS_AR_COMMAND{$os});
-
-            #set_if($_, 'obj_suffix', \$OS_OBJ_SUFFIX{$os});
-            #set_if($_, 'so_suffix', \$OS_SHARED_SUFFIX{$os});
-            #set_if($_, 'static_suffix', \$OS_STATIC_SUFFIX{$os});
-
-            #$OS_AR_NEEDS_RANLIB{$os} = 1 if(/^ar_needs_ranlib yes$/);
-            #$OS_AR_NEEDS_RANLIB{$os} = 0 if(/^ar_needs_ranlib no$/);
-
-            set_if($_, 'install_root', \$INSTALL_INFO{$os}{'root'});
-            set_if($_, 'header_dir', \$INSTALL_INFO{$os}{'headers'});
-            set_if($_, 'lib_dir', \$INSTALL_INFO{$os}{'libs'});
-            set_if($_, 'doc_dir', \$INSTALL_INFO{$os}{'docs'});
-            set_if($_, 'install_user', \$INSTALL_INFO{$os}{'user'});
-            set_if($_, 'install_group', \$INSTALL_INFO{$os}{'group'});
-            set_if($_, 'install_cmd', \$INSTALL_INFO{$os}{'command'});
-
-            read_hash($_, $reader, 'aliases',
-                      sub { $OS_ALIAS{$_[0]} = $os; });
-
-            read_hash($_, $reader, 'supports_shared',
-                      list_push(\@{$OS_SUPPORTS_SHARED{$os}}));
-
-            read_hash($_, $reader, 'arch',
-                      list_push(\@{$OS_SUPPORTS_ARCH{$os}}));
+        foreach my $alias (@{$info{'aliases'}}) {
+            $OS_ALIAS{$alias} = $os;
         }
+
+        @{$OS_SUPPORTS_SHARED{$os}} = @{$info{'supports_shared'}};
+        @{$OS_SUPPORTS_ARCH{$os}} = @{$info{'arch'}};
     }
 }
 
