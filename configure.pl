@@ -73,9 +73,7 @@ my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS,
    %OS_OBJ_SUFFIX, %OS_SHARED_SUFFIX, %OS_STATIC_SUFFIX,
    %OS_AR_COMMAND, %OS_AR_NEEDS_RANLIB, %OS_ALIAS,
    %CC_SO_OBJ_FLAGS, %CC_SO_LINK_FLAGS,
-   %CC_DEBUG_FLAGS, %CC_NO_DEBUG_FLAGS,
-   %CC_MACHINE_OPT_FLAGS, %CC_MACHINE_OPT_FLAGS_RE,
-   %CC_ABI_FLAGS, %MAKEFILE_STYLE);
+   %CC_MACHINE_OPT_FLAGS, %CC_MACHINE_OPT_FLAGS_RE, %CC_ABI_FLAGS);
 
 my $user_set_root = '';
 my ($doc_dir, $lib_dir);
@@ -202,7 +200,7 @@ sub main() {
              realname($arch),"\n" if($submodel ne $arch);
     }
 
-    $make_style = $MAKEFILE_STYLE{$cc} unless($make_style);
+    $make_style = $COMPILER{$cc}{'makefile_style'} unless($make_style);
 
     die "(error): Module set $module_set isn't known\n"
         if($module_set && !defined($MODULE_SETS{$module_set}));
@@ -1027,10 +1025,12 @@ sub generate_makefile {
    if($ccinfo{'lib_opt_flags'}) {
        $lib_opt_flags .= $ccinfo{'lib_opt_flags'};
    }
-   if(!$debug and ($CC_NO_DEBUG_FLAGS{$cc}))
-      { $lib_opt_flags .= ' '.$CC_NO_DEBUG_FLAGS{$cc}; }
-   if($debug and ($CC_DEBUG_FLAGS{$cc}))
-      { $lib_opt_flags .= ' '.$CC_DEBUG_FLAGS{$cc}; }
+   if(!$debug and $ccinfo{'no_debug_flags'}) {
+       $lib_opt_flags .= ' ' . $ccinfo{'no_debug_flags'};
+   }
+   if($debug and $ccinfo{'debug_flags'}) {
+       $lib_opt_flags .= ' ' . $ccinfo{'debug_flags'};
+   }
 
    my $mach_opt_flags = mach_opt($cc, $arch, $submodel);
 
@@ -1939,9 +1939,6 @@ sub set_cc_defines {
         %{$COMPILER{$cc}} = %info;
 
         $CC_SO_OBJ_FLAGS{$cc} = $info{'so_obj_flags'};
-        $CC_DEBUG_FLAGS{$cc} = $info{'debug_flags'};
-        $CC_NO_DEBUG_FLAGS{$cc} = $info{'no_debug_flags'};
-        $MAKEFILE_STYLE{$cc} = $info{'makefile_style'};
 
         %{$CC_ABI_FLAGS{$cc}} = %{$info{'mach_abi_linking'}}
            if(defined($info{'mach_abi_linking'}));
