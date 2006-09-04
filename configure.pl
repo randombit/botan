@@ -69,10 +69,9 @@ my %DOCS = (
 my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
 
 my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS,
-   %OS_SUPPORTS_SHARED, %OS_TYPE, %INSTALL_INFO,
-   %OS_OBJ_SUFFIX, %OS_SHARED_SUFFIX, %OS_STATIC_SUFFIX,
-   %OS_AR_COMMAND, %OS_AR_NEEDS_RANLIB, %OS_ALIAS,
-   %CC_SO_OBJ_FLAGS, %CC_SO_LINK_FLAGS,
+   %OS_ALIAS, %OS_SUPPORTS_SHARED, %INSTALL_INFO,
+
+   %CC_SO_LINK_FLAGS,
    %CC_MACHINE_OPT_FLAGS, %CC_MACHINE_OPT_FLAGS_RE, %CC_ABI_FLAGS);
 
 my $user_set_root = '';
@@ -798,7 +797,7 @@ sub guess_triple
         # Cygwin's uname -s is cygwin_<windows version>
         $os = 'cygwin' if($os =~ /^cygwin/);
 
-        if(!defined $OS_TYPE{$os} && !defined $OS_ALIAS{$os})
+        if(!defined $OPERATING_SYSTEM{$os} && !defined $OS_ALIAS{$os})
         {
             print "Unknown uname -s output: $os, falling back to 'generic'\n";
             $os = 'generic';
@@ -930,36 +929,41 @@ sub guess_mods {
 }
 
 sub os_info_for {
-    my ($os,$hash) = @_;
-
-    die "Internal error: os_info_for called with undef hash\n"
-        unless $hash;
+    my ($os,$what) = @_;
 
     die "Internal error: os_info_for called with an os of defaults\n"
         if($os eq 'defaults');
 
-    return ($$hash{$os}) if(defined($$hash{$os}) && $$hash{$os} ne '');
-    return $$hash{'defaults'};
+    my %osinfo = %{$OPERATING_SYSTEM{$os}};
+
+    my $result = $osinfo{$what};
+    if(!defined($result) or $result eq '') {
+        print "Using defaults for $what\n";
+        $result = $OPERATING_SYSTEM{'defaults'}{$what};
+    }
+    
+    print "$os $what -> $result\n";
+    return $result;
 }
 
 sub os_static_suffix {
-    return os_info_for(shift, \%OS_STATIC_SUFFIX);
+    return os_info_for(shift, 'static_suffix');
 }
 
 sub os_shared_suffix {
-    return os_info_for(shift, \%OS_SHARED_SUFFIX);
+    return os_info_for(shift, 'so_suffix');
 }
 
 sub os_obj_suffix {
-    return os_info_for(shift, \%OS_OBJ_SUFFIX);
+    return os_info_for(shift, 'obj_suffix');
 }
 
 sub os_ar_command {
-    return os_info_for(shift, \%OS_AR_COMMAND);
+    return os_info_for(shift, 'ar_command');
 }
 
 sub os_ar_needs_ranlib {
-    return os_info_for(shift, \%OS_AR_NEEDS_RANLIB);
+    return (os_info_for(shift, 'ar_needs_ranlib') eq 'yes');
 }
 
 sub os_install_info {
@@ -1050,7 +1054,10 @@ sub generate_makefile {
    }
 
    my $so_link_flags = '';
-   my $so_obj_flags = $CC_SO_OBJ_FLAGS{$cc};
+   my $so_obj_flags = '';
+   if($ccinfo{'so_obj_flags'}) {
+       $so_obj_flags = $ccinfo{'so_obj_flags'};
+   }
 
    if($no_shared or (!in_array('all', $OS_SUPPORTS_SHARED{$os}) and
                      !in_array($arch, $OS_SUPPORTS_SHARED{$os})))
@@ -1903,17 +1910,6 @@ sub set_os_defines {
 
         %{$OPERATING_SYSTEM{$os}} = %info;
 
-        $OS_TYPE{$os} = $info{'os_type'};
-        $OS_AR_COMMAND{$os} = $info{'ar_command'};
-        $OS_OBJ_SUFFIX{$os} = $info{'obj_suffix'};
-        $OS_SHARED_SUFFIX{$os} = $info{'so_suffix'};
-        $OS_STATIC_SUFFIX{$os} = $info{'static_suffix'};
-
-        if(defined($info{'ar_needs_ranlib'})) {
-            $OS_AR_NEEDS_RANLIB{$os} =
-                ($info{'ar_needs_ranlib'} eq 'yes') ? 1 : 0;
-        }
-
         $INSTALL_INFO{$os}{'root'} = $info{'install_root'};
         $INSTALL_INFO{$os}{'headers'} = $info{'header_dir'};
         $INSTALL_INFO{$os}{'libs'} = $info{'lib_dir'};
@@ -1937,8 +1933,6 @@ sub set_cc_defines {
         my %info = get_cc_info($cc, File::Spec->catfile($dir, $cc));
 
         %{$COMPILER{$cc}} = %info;
-
-        $CC_SO_OBJ_FLAGS{$cc} = $info{'so_obj_flags'};
 
         %{$CC_ABI_FLAGS{$cc}} = %{$info{'mach_abi_linking'}}
            if(defined($info{'mach_abi_linking'}));
