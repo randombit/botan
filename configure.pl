@@ -1744,39 +1744,62 @@ sub get_module_info {
    return %modinfo;
 }
 
+sub get_arch_info {
+    my ($name,$file) = @_;
+    my $reader = make_reader($file);
+
+    my %info;
+    $info{'name'} = $name;
+
+    while($_ = &$reader()) {
+        set_if_quoted($_, 'realname', \$info{'realname'});
+        set_if($_, 'default_submodel', \$info{'default_submodel'});
+
+        read_hash($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
+        read_hash($_, $reader, 'submodels', list_push(\@{$info{'submodels'}}));
+
+        read_hash($_, $reader, 'submodel_aliases',
+                  sub {
+                      my $line = $_[0];
+                      $line =~ m/^(\S*) -> (\S*)$/;
+                      $info{'submodel_aliases'}{$1} = $2;
+                  });
+    }
+    return %info;
+}
+
 sub set_arch_defines {
     my $dir = $_[0];
 
     foreach my $arch (dir_list($dir)) {
-        my $reader = make_reader(File::Spec->catfile($dir, $arch));
+        my %info = get_arch_info($arch, File::Spec->catfile($dir, $arch));
 
-        $ARCH{$arch} = $arch;
-        while($_ = &$reader()) {
-            set_if_quoted($_, 'realname', \$REALNAME{$arch});
-            set_if($_, 'default_submodel', \$DEFAULT_SUBMODEL{$arch});
+        $ARCH{$arch} = $info{'name'};
+        $REALNAME{$arch} = $info{'realname'};
+        $DEFAULT_SUBMODEL{$arch} = $info{'default_submodel'};
 
-            read_hash($_, $reader, 'aliases',
-                      sub { $ARCH_ALIAS{$_[0]} = $arch; });
-            read_hash($_, $reader, 'submodels',
-                      sub { $ARCH{$_[0]} = $arch; });
+        foreach my $alias (@{$info{'aliases'}}) {
+            $ARCH_ALIAS{$alias} = $arch;
+        }
 
-            read_hash($_, $reader, 'submodel_aliases',
-                      sub {
-                          my $line = $_[0];
-                          $line =~ m/^(\S*) -> (\S*)$/;
-                          $SUBMODEL_ALIAS{$1} = $2;
-                      });
+        foreach my $submodel (@{$info{'submodels'}}) {
+            $ARCH{$submodel} = $arch;
+        }
+
+        if(defined($info{'submodel_aliases'})) {
+            my %submodel_aliases = %{$info{'submodel_aliases'}};
+            foreach my $sm_alias (keys %submodel_aliases) {
+                $SUBMODEL_ALIAS{$sm_alias} = $submodel_aliases{$sm_alias};
+            }
         }
     }
 }
 
 sub get_os_info {
-    my ($file,$name) = @_;
-
+    my ($name,$file) = @_;
     my $reader = make_reader($file);
 
     my %info;
-
     $info{'name'} = $name;
     $info{'needs_ranlib'} = 0;
 
@@ -1804,7 +1827,7 @@ sub set_os_defines {
     my $dir = $_[0];
 
     foreach my $os (dir_list($dir)) {
-        my %info = get_os_info(File::Spec->catfile($dir, $os), $os);
+        my %info = get_os_info($os, File::Spec->catfile($dir, $os));
 
         $REALNAME{$os} = $info{'realname'};
         $OS_TYPE{$os} = $info{'os_type'};
