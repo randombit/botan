@@ -1763,27 +1763,71 @@ sub set_arch_defines {
     }
 }
 
+sub get_os_info {
+    my ($reader,$name) = @_;
+    my %info;
+
+    $info{'name'} = $name;
+    $info{'needs_ranlib'} = 0;
+
+    while($_ = &$reader()) {
+        set_if_quoted($_, 'realname', \$info{'realname'});
+        set_if_quoted($_, 'ar_command', \$info{'ar_command'});
+
+        set_if($_, 'os_type', \$info{'os_type'});
+        set_if($_, 'obj_suffix', \$info{'obj_suffix'});
+        set_if($_, 'so_suffix', \$info{'so_suffix'});
+        set_if($_, 'static_suffix', \$info{'static_suffix'});
+        set_if($_, 'install_root', \$info{'install_root'});
+        set_if($_, 'header_dir', \$info{'header_dir'});
+        set_if($_, 'lib_dir', \$info{'lib_dir'});
+        set_if($_, 'doc_dir', \$info{'doc_dir'});
+        set_if($_, 'install_user', \$info{'install_user'});
+        set_if($_, 'install_group', \$info{'install_group'});
+        set_if($_, 'install_cmd', \$info{'install_cmd'});
+
+        $info{'needs_ranlib'} = 1 if(/^ar_needs_ranlib yes$/);
+        $info{'needs_ranlib'} = 0 if(/^ar_needs_ranlib no$/);
+
+        read_hash($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
+        read_hash($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
+
+        read_hash($_, $reader, 'supports_shared',
+                  list_push(\@{$info{'supports_shared'}}));
+    }
+    return %info;
+}
+
 sub set_os_defines {
     my $dir = $_[0];
 
     foreach my $os (dir_list($dir)) {
+        my %info = get_os_info(make_reader(File::Spec->catfile($dir, $os)),
+                               $os);
+
+        $REALNAME{$os} = $info{'realname'};
+        $OS_TYPE{$os} = $info{'os_type'};
+        $OS_AR_COMMAND{$os} = $info{'ar_command'};
+        $OS_OBJ_SUFFIX{$os} = $info{'obj_suffix'};
+        $OS_SHARED_SUFFIX{$os} = $info{'so_suffix'};
+        $OS_STATIC_SUFFIX{$os} = $info{'static_suffix'};
+        $OS_AR_NEEDS_RANLIB{$os} = $info{'needs_ranlib'};
+
+        #$INSTALL_INFO{$os}{'root'} = $info{'install_root'};
+
         my $reader = make_reader(File::Spec->catfile($dir, $os));
 
-        $OS_SHARED_SUFFIX{$os} = '';
-        $OS_AR_COMMAND{$os} = '';
-
-        # Default values
         while($_ = &$reader()) {
-            set_if_quoted($_, 'realname', \$REALNAME{$os});
-            set_if($_, 'os_type', \$OS_TYPE{$os});
-            set_if_quoted($_, 'ar_command', \$OS_AR_COMMAND{$os});
+            #set_if_quoted($_, 'realname', \$REALNAME{$os});
+            #set_if($_, 'os_type', \$OS_TYPE{$os});
+            #set_if_quoted($_, 'ar_command', \$OS_AR_COMMAND{$os});
 
-            set_if($_, 'obj_suffix', \$OS_OBJ_SUFFIX{$os});
-            set_if($_, 'so_suffix', \$OS_SHARED_SUFFIX{$os});
-            set_if($_, 'static_suffix', \$OS_STATIC_SUFFIX{$os});
+            #set_if($_, 'obj_suffix', \$OS_OBJ_SUFFIX{$os});
+            #set_if($_, 'so_suffix', \$OS_SHARED_SUFFIX{$os});
+            #set_if($_, 'static_suffix', \$OS_STATIC_SUFFIX{$os});
 
-            $OS_AR_NEEDS_RANLIB{$os} = 1 if(/^ar_needs_ranlib yes$/);
-            $OS_AR_NEEDS_RANLIB{$os} = 0 if(/^ar_needs_ranlib no$/);
+            #$OS_AR_NEEDS_RANLIB{$os} = 1 if(/^ar_needs_ranlib yes$/);
+            #$OS_AR_NEEDS_RANLIB{$os} = 0 if(/^ar_needs_ranlib no$/);
 
             set_if($_, 'install_root', \$INSTALL_INFO{$os}{'root'});
             set_if($_, 'header_dir', \$INSTALL_INFO{$os}{'headers'});
