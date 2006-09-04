@@ -299,7 +299,7 @@ exit;
 sub make_reader {
     my $filename = $_[0];
     open FILE, "<$filename" or
-        die "Couldn't read from $filename ($!)\n";
+        die "(error): Couldn't read $filename ($!)\n";
 
     return sub {
         my $line = '';
@@ -612,10 +612,10 @@ sub load_module {
    handle_files($modname, $module{'ignore'},  \&ignore_file);
    handle_files($modname, $module{'add'},     \&add_file);
 
-   if(defined($module{'notes'}))
+   if(defined($module{'note'}))
    {
-       my $realname = $module{'name'};
-       my $note = $module{'notes'};
+       my $realname = $module{'realname'};
+       my $note = $module{'note'};
        print STDERR "(note): $modname (\"$realname\"): $note\n";
    }
 }
@@ -1662,34 +1662,48 @@ sub set_if_any {
 
 sub get_module_info {
    my ($name, $dir) = @_;
+
+   my $reader = make_reader(File::Spec->catfile($dir, $name, 'modinfo.txt'));
+
    my %info;
-
-   my $desc_file = File::Spec->catfile($dir, $name, 'modinfo.txt');
-   die "(error): Module $name does not seem to have a description file\n"
-       unless(-e $desc_file);
-
-   my $reader = make_reader($desc_file);
-
    $info{'libs'} = {};
-
    $info{'add'} = {};
    $info{'replace'} = {};
    $info{'ignore'} = {};
-
    $info{'define'} = {};
    $info{'define_base'} = {};
 
    $info{'external_libs'} = 0;
 
    while($_ = &$reader()) {
-       set_if_quoted($_, 'realname', \$info{'name'});
-       set_if_quoted($_, 'note', \$info{'notes'});
+       set_if_any(\&set_if_quoted, $_, \%info, 'realname:note');
 
        $info{'define'}{$1} = undef if(/^define (\w*)/);
        $info{'define_base'}{$1} = undef if(/^define_base (\w*)/);
        $info{'mp_bits'} = $1 if(/^mp_bits ([0-9]*)/);
 
        $info{'external_libs'} = 1 if(/^uses_external_libs/);
+
+       sub read_and_set_undef {
+           my ($line,$reader,$hash,$key) = @_;
+           my @lst;
+           read_hash($line, $reader, $key, list_push(\@lst));
+           foreach my $elem (@lst) { $$hash{$key}{$elem} = undef;  }
+       }
+
+       read_and_set_undef($_, $reader, \%info, 'arch');
+       read_and_set_undef($_, $reader, \%info, 'cc');
+       read_and_set_undef($_, $reader, \%info, 'os');
+       read_and_set_undef($_, $reader, \%info, 'add');
+       read_and_set_undef($_, $reader, \%info, 'replace');
+       read_and_set_undef($_, $reader, \%info, 'ignore');
+
+       read_hash($_, $reader, 'libs',
+                 sub {
+                     my $line = $_[0];
+                     $line =~ m/^([\w!,]*) -> ([\w,-]*)$/;
+                     $info{'libs'}{$1} = $2;
+                 });
 
        if(/^require_version /) {
            if(/^require_version (\d+)\.(\d+)\.(\d+)$/) {
@@ -1709,27 +1723,6 @@ sub get_module_info {
            }
        }
 
-       sub read_and_set_undef {
-           my ($line,$reader,$hash,$key) = @_;
-
-           my @lst;
-           read_hash($line, $reader, $key, list_push(\@lst));
-           foreach my $elem (@lst) { $$hash{$key}{$elem} = undef;  }
-       }
-
-       read_and_set_undef($_, $reader, \%info, 'arch');
-       read_and_set_undef($_, $reader, \%info, 'cc');
-       read_and_set_undef($_, $reader, \%info, 'os');
-       read_and_set_undef($_, $reader, \%info, 'add');
-       read_and_set_undef($_, $reader, \%info, 'replace');
-       read_and_set_undef($_, $reader, \%info, 'ignore');
-
-       read_hash($_, $reader, 'libs',
-                 sub {
-                     my $line = $_[0];
-                     $line =~ m/^([\w!,]*) -> ([\w,-]*)$/;
-                     $info{'libs'}{$1} = $2;
-                 });
    }
 
    return %info;
