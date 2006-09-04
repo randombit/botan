@@ -296,15 +296,29 @@ sub main() {
 main();
 exit;
 
-sub process {
-   my $l = $_[0];
-   chomp($l);
-   $l =~ s/#.*//;
-   $l =~ s/^\s*//;
-   $l =~ s/\s*$//;
-   $l =~ s/\s\s*/ /;
-   $l =~ s/\t/ /;
-   $l;
+sub make_reader {
+    my $filename = $_[0];
+    open FILE, "<$filename" or
+        die "Couldn't read from $filename ($!)\n";
+    return sub {
+        my $line = '';
+        while(1)
+        {
+            my $line = <FILE>;
+            last unless defined($line);
+
+            chomp($line);
+            $line =~ s/#.*//;
+            $line =~ s/^\s*//;
+            $line =~ s/\s*$//;
+            $line =~ s/\s\s*/ /;
+            $line =~ s/\t/ /;
+            return $line if $line ne '';
+        }
+        close FILE;
+        return undef;                
+        return undef;
+    }
 }
 
 sub check_for_file {
@@ -581,8 +595,7 @@ sub get_module_info {
    die "(error): Module $MODULE does not seem to have a description file\n"
        unless(-e $desc_file);
 
-   open MODFILE, "<$desc_file" or die
-      "(error): Couldn't open file $desc_file, ($!)\n";
+   my $reader = make_reader($desc_file);
 
    $modinfo{'libs'} = {};
 
@@ -595,7 +608,7 @@ sub get_module_info {
 
    $modinfo{'external_libs'} = 0;
 
-   while(<MODFILE>)
+   while($_ = &$reader())
    {
        $modinfo{'name'} = $1 if(/^realname \"(.*)\"/);
        $modinfo{'notes'} = $1 if(/^note \"(.*)\"/);
@@ -608,7 +621,7 @@ sub get_module_info {
 
        if(/^require_version /)
        {
-           if(/^require_version (\d)\.(\d)\.(\d)$/)
+           if(/^require_version (\d+)\.(\d+)\.(\d+)$/)
            {
                my $version = "$1.$2.$3";
                my $needed_version = 100*$1 + 10*$2 + $3;
@@ -618,9 +631,7 @@ sub get_module_info {
 
                if($needed_version > $have_version) {
                    warn "Module $MODULE requires Botan version $version\n";
-                   %modinfo = ();
-                   close MODFILE;
-                   return %modinfo;
+                   return ();
                }
            }
            else
@@ -632,8 +643,7 @@ sub get_module_info {
        # Read in a list of supported CPU types (archs and/or submodels)
        if(/^<arch>$/) {
            while(1) {
-               $_ = process($_ = <MODFILE>);
-               next unless $_;
+               $_ = &$reader();
                last if (m@^</arch>$@);
                $modinfo{'arch'}{$_} = undef;
            }
@@ -642,8 +652,7 @@ sub get_module_info {
        # Read in a list of supported OSes
        if(/^<os>$/) {
            while(1) {
-               $_ = process($_ = <MODFILE>);
-               next unless $_;
+               $_ = &$reader();
                last if (m@^</os>$@);
                $modinfo{'os'}{$_} = undef;
            }
@@ -651,8 +660,7 @@ sub get_module_info {
 
        if(/^<add>$/) {
            while(1) {
-               $_ = process($_ = <MODFILE>);
-               next unless $_;
+               $_ = &$reader();
                last if (m@^</add>$@);
                $modinfo{'add'}{$_} = undef;
            }
@@ -660,8 +668,7 @@ sub get_module_info {
 
        if(/^<ignore>$/) {
            while(1) {
-               $_ = process($_ = <MODFILE>);
-               next unless $_;
+               $_ = &$reader();
                last if (m@^</ignore>$@);
                $modinfo{'ignore'}{$_} = undef;
            }
@@ -669,8 +676,7 @@ sub get_module_info {
 
        if(/^<replace>$/) {
            while(1) {
-               $_ = process($_ = <MODFILE>);
-               next unless $_;
+               $_ = &$reader();
                last if (m@^</replace>$@);
                $modinfo{'replace'}{$_} = undef;
            }
@@ -679,8 +685,7 @@ sub get_module_info {
       # Read in a set of os->extra library mappings
       if(/^<libs>$/) {
           while(1) {
-              $_ = process($_ = <MODFILE>);
-              next unless $_;
+              $_ = &$reader();
               last if (m@^</libs>$@);
               m/^([\w!,]*) -> ([\w,-]*)$/;
               $modinfo{'libs'}{$1} = $2;
@@ -690,15 +695,13 @@ sub get_module_info {
        # Read in a list of supported compilers
        if(/^<cc>$/) {
            while(1) {
-               $_ = process($_ = <MODFILE>);
-               next unless $_;
+               $_ = &$reader();
                last if (m@^</cc>$@);
                $modinfo{'cc'}{$_} = undef;
            }
        }
    }
 
-   close MODFILE;
    return %modinfo;
    }
 
@@ -1732,13 +1735,11 @@ sub set_arch_defines {
     while(defined($_ = $dir->read)) {
         next if($_ eq '.' or $_ eq '..');
         my $arch = $_;
-        my $filename = File::Spec->catfile($_[0], $arch);
-        open ARCHFILE, "<$filename" or die "Couldn't open $filename, ($!)";
+
+        my $reader = make_reader(File::Spec->catfile($_[0], $arch));
 
         $ARCH{$arch} = $arch;
-        while(<ARCHFILE>) {
-            $_ = process($_);
-            next unless $_;
+        while($_ = &$reader()) {
 
             $REALNAME{$arch} = $1 if(/^realname \"(.*)\"/);
             $DEFAULT_SUBMODEL{$arch} = $1 if(/^default_submodel (.*)$/);
@@ -1746,8 +1747,7 @@ sub set_arch_defines {
             # Read in a list of aliases and add them to ARCH_ALIAS
             if(/^<aliases>$/) {
                 while(1) {
-                    $_ = process($_ = <ARCHFILE>);
-                    next unless $_;
+                    $_ = &$reader();
                     last if(m@^</aliases>$@);
                     $ARCH_ALIAS{$_} = $arch;
                 }
@@ -1755,8 +1755,7 @@ sub set_arch_defines {
             # Read in a list of submodels and add them to ARCH
             if(/^<submodels>$/) {
                 while(1) {
-                    $_ = process($_ = <ARCHFILE>);
-                    next unless $_;
+                    $_ = &$reader();
                     last if(m@^</submodels>$@);
                     $ARCH{$_} = $arch;
                 }
@@ -1765,8 +1764,7 @@ sub set_arch_defines {
             # Read in a list of submodel aliases and add them to SUBMODEL_ALIAS
             if(/^<submodel_aliases>$/) {
                 while(1) {
-                    $_ = process($_ = <ARCHFILE>);
-                    next unless $_;
+                    $_ = &$reader();
                     last if(m@^</submodel_aliases>$@);
                     m/^(\S*) -> (\S*)$/;
                     $SUBMODEL_ALIAS{$1} = $2;
@@ -1787,16 +1785,13 @@ sub set_os_defines {
         next if($_ eq '.' or $_ eq '..');
         my $os = $_;
 
-        my $filename = File::Spec->catfile($_[0], $os);
-        open OSFILE, "<$filename" or die "Couldn't open $filename, ($!)";
+        my $reader = make_reader(File::Spec->catfile($_[0], $os));
+
         $OS_SHARED_SUFFIX{$os} = '';
         $OS_AR_COMMAND{$os} = '';
 
         # Default values
-        while(<OSFILE>) {
-            $_ = process($_);
-            next unless $_;
-
+        while($_ = &$reader()) {
             $REALNAME{$os} = $1 if(/^realname \"(.*)\"/);
             $OS_TYPE{$os} = $1 if(/^os_type (.*)/);
             $OS_AR_COMMAND{$os} = $1 if(/^ar_command \"(.*)\"/);
@@ -1817,16 +1812,14 @@ sub set_os_defines {
 
             if(/^<aliases>$/) {
                 while(1) {
-                    $_ = process($_ = <OSFILE>);
-                    next unless $_;
+                    $_ = &$reader();
                     last if(m@^</aliases>$@);
                     $OS_ALIAS{$_} = $os;
                 }
             }
             if(/^<supports_shared>$/) {
                 while(1) {
-                    $_ = process($_ = <OSFILE>);
-                    next unless $_;
+                    $_ = &$reader();
                     last if(m@^</supports_shared>$@);
                     push @{$OS_SUPPORTS_SHARED{$os}}, $_;
                 }
@@ -1835,8 +1828,7 @@ sub set_os_defines {
             # Read in a list of architectures and add them to OS_SUPPORTS_ARCH
             if(/^<arch>$/) {
                 while(1) {
-                    $_ = process($_ = <OSFILE>);
-                    next unless $_;
+                    $_ = &$reader();
                     last if(m@^</arch>$@);
                     push @{$OS_SUPPORTS_ARCH{$os}}, $_;
                 }
@@ -1855,8 +1847,8 @@ sub set_cc_defines {
     while(defined($_ = $dir->read)) {
         next if($_ eq '.' or $_ eq '..');
         my $cc = $_;
-        my $filename = File::Spec->catfile($_[0], $cc);
-        open CCFILE, "<$filename" or die "Couldn't open $filename, ($!)";
+
+        my $reader = make_reader(File::Spec->catfile($_[0], $cc));
 
         # Default to empty values, so they don't have to be explicitly set
         $CC_LIB_OPT_FLAGS{$cc} = $CC_CHECK_OPT_FLAGS{$cc} =
@@ -1864,9 +1856,7 @@ sub set_cc_defines {
             $CC_SO_OBJ_FLAGS{$cc} = $CC_DEBUG_FLAGS{$cc} =
             $CC_AR_COMMAND{$cc} = $CC_NO_DEBUG_FLAGS{$cc} = '';
 
-        while(<CCFILE>) {
-            $_ = process($_);
-            next unless $_;
+        while($_ = &$reader()) {
 
             $REALNAME{$cc} = $1 if(/^realname \"(.*)\"/);
             $CC_BINARY_NAME{$cc} = $1 if(/^binary_name \"(.*)\"/);
@@ -1887,8 +1877,7 @@ sub set_cc_defines {
             # Read in a list of supported CPU types
             if(/^<arch>$/) {
                 while(1) {
-                    $_ = process($_ = <CCFILE>);
-                    next unless $_;
+                    $_ = &$reader();
                     last if(m@^</arch>$@);
                     push @{$CC_SUPPORTS_ARCH{$cc}}, $_;
                 }
@@ -1897,8 +1886,7 @@ sub set_cc_defines {
             # Read in a list of supported OSes
             if(/^<os>$/) {
                 while(1) {
-                    $_ = process($_ = <CCFILE>);
-                    next unless $_;
+                    $_ = &$reader();
                     last if(m@^</os>$@);
                     push @{$CC_SUPPORTS_OS{$cc}}, $_;
                 }
@@ -1907,8 +1895,7 @@ sub set_cc_defines {
             # Read in a list of machine optimization flags
             if(/^<mach_opt>$/) {
                 while(1) {
-                    $_ = process($_ = <CCFILE>);
-                    next unless $_;
+                    $_ = &$reader();
                     last if(m@^</mach_opt>$@);
                     m/^(\S*) -> \"(.*)\" ?(.*)?$/;
                     $CC_MACHINE_OPT_FLAGS{$cc}{$1} = $2;
@@ -1923,8 +1910,7 @@ sub set_cc_defines {
             # value to the CXX variable, so it's used for all ops.
             if(/^<mach_abi_linking>$/) {
                 while(1) {
-                    $_ = process($_ = <CCFILE>);
-                    next unless $_;
+                    $_ = &$reader();
                     last if(m@^</mach_abi_linking>$@);
                     m/^(\S*) -> \"(.*)\"$/;
                     $CC_ABI_FLAGS{$cc}{$1} = $2;
@@ -1934,8 +1920,7 @@ sub set_cc_defines {
             # Read in a list of flags to created a shared lib (and set soname)
             if(/^<so_link_flags>$/) {
                 while(1) {
-                    $_ = process($_ = <CCFILE>);
-                    next unless $_;
+                    $_ = &$reader();
                     last if(m@^</so_link_flags>$@);
                     m/^(\S*) -> \"(.*)\"$/;
                     $CC_SO_LINK_FLAGS{$cc}{$1} = $2;
