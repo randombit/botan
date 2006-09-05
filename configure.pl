@@ -68,7 +68,7 @@ my %DOCS = (
 
 my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
 
-my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS, %OS_ALIAS);
+my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS);
 
 my ($CPP_INCLUDE_DIR, $BUILD_LIB_DIR, $BUILD_CHECK_DIR);
 
@@ -76,7 +76,7 @@ my ($user_set_root, $doc_dir, $lib_dir) = ('', '', '');
 my (%ignored_src, %ignored_include, %added_src, %added_include,
     %lib_src, %check_src, %include);
 
-sub main() {
+sub main {
     %MODULES = get_modules_list($MOD_DIR);
 
     set_arch_defines($ARCH_DIR);
@@ -162,7 +162,7 @@ sub main() {
         }
     }
 
-    $os = $OS_ALIAS{$os} if(defined $OS_ALIAS{$os});
+    $os = os_alias($os);
 
     die "(error): Compiler $cc isn't known\n"
         unless defined($COMPILER{$cc});
@@ -286,6 +286,18 @@ sub main() {
 # Run stuff, quit
 main();
 exit;
+
+sub os_alias {
+    my $name = $_[0];
+
+    foreach my $os (keys %OPERATING_SYSTEM) {
+        foreach my $alias (@{$OPERATING_SYSTEM{$os}{'aliases'}}) {
+            return $os if($alias eq $name);
+        }
+    }
+
+    return $name;
+}
 
 sub make_reader {
     my $filename = $_[0];
@@ -792,7 +804,7 @@ sub guess_triple
 
         # Cygwin's uname -s is cygwin_<windows version>
         $os = 'cygwin' if($os =~ /^cygwin/);
-        $os = $OS_ALIAS{$os} if(defined($OS_ALIAS{$os}));
+        $os = os_alias($os);
 
         if(!defined $OPERATING_SYSTEM{$os})
         {
@@ -1916,10 +1928,6 @@ sub set_os_defines {
         my %info = get_os_info($os, File::Spec->catfile($dir, $os));
 
         %{$allinfo{$os}} = %info;
-
-        foreach my $alias (@{$info{'aliases'}}) {
-            $OS_ALIAS{$alias} = $os;
-        }
     }
     %OPERATING_SYSTEM = %allinfo;
 }
