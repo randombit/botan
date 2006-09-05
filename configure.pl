@@ -68,8 +68,7 @@ my %DOCS = (
 
 my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
 
-my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS, %OS_ALIAS,
-   %CC_SO_LINK_FLAGS, %CC_ABI_FLAGS);
+my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS, %OS_ALIAS);
 
 my ($CPP_INCLUDE_DIR, $BUILD_LIB_DIR, $BUILD_CHECK_DIR);
 
@@ -1013,7 +1012,7 @@ sub append_if {
     die unless defined $var;
 
     if($cond and $addme ne '') {
-        $$var .= ' ' unless($$var eq '');
+        $$var .= ' ' unless($$var eq '' or $$var =~ / $/);
         $$var .= $addme;
     }
 }
@@ -1062,11 +1061,13 @@ sub generate_makefile {
        $ar_needs_ranlib = 1 if(os_ar_needs_ranlib($os));
    }
 
-   my $so_link_flags = '';
    my $so_obj_flags = '';
-   if($ccinfo{'so_obj_flags'}) {
-       $so_obj_flags = $ccinfo{'so_obj_flags'};
-   }
+   append_ifdef(\$so_obj_flags, $ccinfo{'so_obj_flags'});
+
+   my $so_link_flags = '';
+   append_ifdef(\$so_link_flags, $ccinfo{'so_link_flags'}{$os});
+   append_ifdef(\$so_link_flags, $ccinfo{'so_link_flags'}{'default'})
+       if($so_link_flags eq '');
 
    my $supports_shared = 0;
    if(in_array('all', $OPERATING_SYSTEM{$os}{'supports_shared'}) or
@@ -1075,12 +1076,7 @@ sub generate_makefile {
    }
 
    if($no_shared or !$supports_shared)
-      { $so_obj_flags = ''; }
-
-  elsif(defined($CC_SO_LINK_FLAGS{$cc}{$os}))
-      { $so_link_flags = $CC_SO_LINK_FLAGS{$cc}{$os}; }
-   elsif(defined($CC_SO_LINK_FLAGS{$cc}{'default'}))
-      { $so_link_flags = $CC_SO_LINK_FLAGS{$cc}{'default'}; }
+      { $so_obj_flags = $so_link_flags = ''; }
 
    my $make_shared = 0;
    $make_shared = 1
@@ -1090,15 +1086,10 @@ sub generate_makefile {
    append_ifdef(\$check_opt_flags, $ccinfo{'check_opt_flags'});
 
    my $ccopts = '';
-
-   $ccopts .= ' '.$CC_ABI_FLAGS{$cc}{$arch}
-      if(defined($CC_ABI_FLAGS{$cc}{$arch}));
-
-   $ccopts .= ' '.$CC_ABI_FLAGS{$cc}{$os}
-      if(defined($CC_ABI_FLAGS{$cc}{$os}));
-
-   $ccopts .= ' '.$CC_ABI_FLAGS{$cc}{'all'}
-      if(defined($CC_ABI_FLAGS{$cc}{'all'}));
+   append_ifdef(\$ccopts, $ccinfo{'mach_abi_linking'}{$arch});
+   append_ifdef(\$ccopts, $ccinfo{'mach_abi_linking'}{$os});
+   append_ifdef(\$ccopts, $ccinfo{'mach_abi_linking'}{'all'});
+   $ccopts = ' ' . $ccopts if($ccopts ne '');
 
    my $install_root = os_install_info($os, 'install_root');
 
@@ -1941,11 +1932,6 @@ sub set_cc_defines {
         my %info = get_cc_info($cc, File::Spec->catfile($dir, $cc));
 
         %{$allinfo{$cc}} = %info;
-
-        %{$CC_ABI_FLAGS{$cc}} = %{$info{'mach_abi_linking'}}
-           if(defined($info{'mach_abi_linking'}));
-        %{$CC_SO_LINK_FLAGS{$cc}} = %{$info{'so_link_flags'}}
-           if(defined($info{'so_link_flags'}));
     }
     %COMPILER = %allinfo;
 }
