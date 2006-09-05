@@ -6,6 +6,7 @@ use strict;
 use Getopt::Long;
 use File::Spec;
 use File::Copy;
+use Data::Dumper;
 
 my $MAJOR_VERSION = 1;
 my $MINOR_VERSION = 5;
@@ -68,8 +69,6 @@ my %DOCS = (
 
 my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
 
-my %MODULES_OLD;
-
 # This is build configuration stuff, should all go into %BUILD
 my ($CPP_INCLUDE_DIR, $BUILD_LIB_DIR, $BUILD_CHECK_DIR);
 my ($user_set_root, $doc_dir, $lib_dir) = ('', '', '');
@@ -81,8 +80,6 @@ sub main {
     %OPERATING_SYSTEM = read_info_files($OS_DIR, \&get_os_info);
     %COMPILER = read_info_files($CC_DIR, \&get_cc_info);
     %MODULES = read_module_files($MOD_DIR);
-
-    %MODULES_OLD = get_modules_list($MOD_DIR);
 
     my ($debug, $dumb_gcc, $no_shared) = (0, 0, 0);
     my ($make_style, $build_dir, $module_set, $local_config) =
@@ -356,7 +353,7 @@ sub os_alias {
 sub make_reader {
     my $filename = $_[0];
 
-    die "make_reader(): Arg was undef" if not defined $filename;
+    error("make_reader(): Arg was undef") if not defined $filename;
 
     open FILE, "<$filename" or
         error("Couldn't read $filename ($!)");
@@ -532,7 +529,7 @@ sub print_config_h {
         $mp_bits, $defines_ext) = @_;
 
     open CONFIG_H, ">$config_h" or
-        die "Couldn't write $config_h ($!)\n";
+        error("Couldn't write $config_h ($!)");
 
     print CONFIG_H <<END_OF_CONFIG_H;
 /*************************************************
@@ -601,10 +598,11 @@ sub check_for_conflicts {
 
     my @mods = @_;
     my (%ignored, %added, %replaced, %defines);
+
     foreach my $mod (@mods) {
         sub check_hash {
             my ($mod, $do_what, $hashref) = @_;
-            foreach (keys %{ $MODULES_OLD{$mod}{$do_what} }) {
+            foreach (@{ $MODULES{$mod}{$do_what} }) {
                 $$hashref{conflicts($mod, $_, $do_what, $hashref)} = $mod;
             }
         }
@@ -636,50 +634,45 @@ sub realname {
 
 sub load_module {
    my ($modname,$cc,$os,$arch,$sub) = @_;
-
    my %module = %{$MODULES{$modname}};
-   my %module_old = %{$MODULES_OLD{$modname}};
-
    $modname = $module{'name'};
 
    sub works_on {
-       my ($what, %hash) = @_;
-       return 0 if(%hash and !exists($hash{$what}));
-       return 1;
+       my ($what, @lst) = @_;
+       return 1 if not @lst; # empty list -> no restrictions
+       return in_array($what, \@lst);
    }
 
    # Check to see if everything is OK WRT system requirements
    if($os ne 'generic') {
-       unless(works_on($os, %{$module_old{'os'}})) {
+       unless(works_on($os, @{$module{'os'}})) {
            error("Module '$modname' does not run on ", realname($os));
        }
    }
 
    if($arch ne 'generic') {
-       unless(works_on($arch, %{$module_old{'arch'}}) or
-              works_on($sub, %{$module_old{'arch'}})) {
+       unless(works_on($arch, @{$module{'arch'}}) or
+              works_on($sub, @{$module{'arch'}})) {
 
-           error("Module '$modname' does not run on ",
-                 realname($arch), "/$sub");
+           error("Module '$modname' does not run on $arch/$sub");
        }
    }
 
-   unless(works_on($cc, %{$module_old{'cc'}})) {
+   unless(works_on($cc, @{$module{'cc'}})) {
        error("Module '$modname' does not work with ", realname($cc));
    }
 
    sub handle_files {
-       my($modname, $hash, $func) = @_;
-       return unless defined($hash);
-       foreach (sort keys %$hash) {
-           if(defined($$hash{$_})) { &$func($modname, $_, $$hash{$_}); }
-           else                    { &$func($modname, $_); }
+       my($modname, $lst, $func) = @_;
+       return unless defined($lst);
+       foreach (sort @$lst) {
+           &$func($modname, $_);
        }
    }
 
-   handle_files($modname, $module_old{'replace'}, \&replace_file);
-   handle_files($modname, $module_old{'ignore'},  \&ignore_file);
-   handle_files($modname, $module_old{'add'},     \&add_file);
+   handle_files($modname, $module{'replace'}, \&replace_file);
+   handle_files($modname, $module{'ignore'},  \&ignore_file);
+   handle_files($modname, $module{'add'},     \&add_file);
 
    if(defined($module{'note'})) {
        my $realname = $module{'realname'};
@@ -690,14 +683,20 @@ sub load_module {
 
 sub full_path {
    my ($file,$modname) = @_;
-   if(defined($modname))
-      { return File::Spec->catfile ($MOD_DIR, $modname, $file); }
+
+   if(defined($modname)) {
+       return File::Spec->catfile ($MOD_DIR, $modname, $file);
+   }
    else {
-      if($file =~ /\.h$/)
-         { return File::Spec->catfile ($INCLUDE_DIR, $file); }
-      elsif($file =~ /\.cpp$/ or $file =~ /\.s$/ or $file =~ /\.S$/)
-         { return File::Spec->catfile ($SRC_DIR, $file); }
-      else { die "(internal error): Not sure where to put $file\n"; }
+       if($file =~ /\.h$/) {
+           return File::Spec->catfile ($INCLUDE_DIR, $file);
+       }
+       elsif($file =~ /\.cpp$/ or $file =~ /\.s$/ or $file =~ /\.S$/) {
+           return File::Spec->catfile ($SRC_DIR, $file);
+       }
+       else {
+           error("Not sure where to put $file");
+       }
    }
 }
 
@@ -711,20 +710,20 @@ sub add_file {
     elsif($file =~ /\.h$/) {
         $added_include{$file} = File::Spec->catdir($MOD_DIR, $modname);
     }
-    else { die "Not sure where to put $file\n"; }
+    else { error("Not sure where to put $file"); }
 }
 
 sub ignore_file {
-   my ($modname,$file) = @_;
-   check_for_file(full_path($file), $modname);
+    my ($modname,$file) = @_;
+    check_for_file(full_path($file), $modname);
 
-   if($file =~ /\.cpp$/ or $file =~ /\.s$/ or $file =~ /\.S$/) {
-       $ignored_src{$file} = 1;
-   }
-   elsif($file =~ /\.h$/) {
-       $ignored_include{$file} = 1;
-   }
-   else { die "Not sure where to put $file\n"; }
+    if($file =~ /\.cpp$/ or $file =~ /\.s$/ or $file =~ /\.S$/) {
+        $ignored_src{$file} = 1;
+    }
+    elsif($file =~ /\.h$/) {
+        $ignored_include{$file} = 1;
+    }
+    else { error("Not sure where to put $file"); }
 }
 
 # This works because ignore file always runs on files in the main source tree,
@@ -820,26 +819,6 @@ sub os_info_for {
     return $result;
 }
 
-sub os_static_suffix {
-    return os_info_for(shift, 'static_suffix');
-}
-
-sub os_shared_suffix {
-    return os_info_for(shift, 'so_suffix');
-}
-
-sub os_obj_suffix {
-    return os_info_for(shift, 'obj_suffix');
-}
-
-sub os_ar_command {
-    return os_info_for(shift, 'ar_command');
-}
-
-sub os_ar_needs_ranlib {
-    return (os_info_for(shift, 'ar_needs_ranlib') eq 'yes');
-}
-
 sub os_install_info {
     my ($os,$what) = @_;
 
@@ -905,6 +884,26 @@ sub generate_makefile {
       $debug, $no_shared, $dumb_gcc,
       $lib_src, $check_src, $all_includes,
       $added_src, @libs_used) = @_;
+
+   sub os_static_suffix {
+       return os_info_for(shift, 'static_suffix');
+   }
+
+   sub os_shared_suffix {
+       return os_info_for(shift, 'so_suffix');
+   }
+
+   sub os_obj_suffix {
+       return os_info_for(shift, 'obj_suffix');
+   }
+
+   sub os_ar_command {
+       return os_info_for(shift, 'ar_command');
+   }
+
+   sub os_ar_needs_ranlib {
+       return (os_info_for(shift, 'ar_needs_ranlib') eq 'yes');
+   }
 
    my %all_lib_srcs = (%{ $lib_src }, %{ $added_src });
 
@@ -1580,37 +1579,6 @@ sub set_if_any {
     foreach my $found (split(/:/, $any_of)) {
         &$func($line, $found, \$hash->{$found});
     }
-}
-
-sub get_modules_list {
-    my ($dir) = @_;
-
-    my %allinfo;
-    foreach my $mod (dir_list($dir)) {
-        my $modfile = File::Spec->catfile($dir, $mod, 'modinfo.txt');
-
-        my %info = get_module_info($mod, $modfile);
-        next if not %info;
-
-        my %modinfo;
-
-        $modinfo{'realname'} = $info{'realname'};
-        $modinfo{'note'} = $info{'note'};
-        $modinfo{'external_libs'} = $info{'external_libs'};
-        $modinfo{'mp_bits'} = $info{'mp_bits'};
-
-        %{$modinfo{'libs'}} = %{$info{'libs'}};
-
-        foreach (@{$info{'arch'}}) { $modinfo{'arch'}{$_} = undef; }
-        foreach (@{$info{'cc'}}) { $modinfo{'cc'}{$_} = undef; }
-        foreach (@{$info{'os'}}) { $modinfo{'os'}{$_} = undef; }
-        foreach (@{$info{'add'}}) { $modinfo{'add'}{$_} = undef; }
-        foreach (@{$info{'replace'}}) { $modinfo{'replace'}{$_} = undef; }
-        foreach (@{$info{'ignore'}}) { $modinfo{'ignore'}{$_} = undef; }
-
-        %{$allinfo{$mod}} = %modinfo;
-    }
-    return %allinfo;
 }
 
 sub read_info_files {
