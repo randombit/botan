@@ -68,6 +68,9 @@ my %DOCS = (
 
 my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
 
+my %MODULES_OLD;
+
+# This is build configuration stuff, should all go into %BUILD
 my ($CPP_INCLUDE_DIR, $BUILD_LIB_DIR, $BUILD_CHECK_DIR);
 my ($user_set_root, $doc_dir, $lib_dir) = ('', '', '');
 my (%ignored_src, %ignored_include, %added_src, %added_include,
@@ -77,7 +80,9 @@ sub main {
     %CPU = read_info_files($ARCH_DIR, \&get_arch_info);
     %OPERATING_SYSTEM = read_info_files($OS_DIR, \&get_os_info);
     %COMPILER = read_info_files($CC_DIR, \&get_cc_info);
-    %MODULES = get_modules_list($MOD_DIR);
+    %MODULES = read_module_files($MOD_DIR);
+
+    %MODULES_OLD = get_modules_list($MOD_DIR);
 
     my ($debug, $dumb_gcc, $no_shared) = (0, 0, 0);
     my ($make_style, $build_dir, $module_set, $local_config) =
@@ -214,7 +219,7 @@ sub main {
 
     check_for_conflicts(@using_mods);
     foreach (@using_mods) {
-        load_module($_, $cc, $os, $arch, $submodel, %{ $MODULES{$_} });
+        load_module($_, $cc, $os, $arch, $submodel, %{ $MODULES_OLD{$_} });
     }
 
     print_pkg_config($os, $MAJOR_VERSION, $MINOR_VERSION, $PATCH_VERSION,
@@ -395,7 +400,7 @@ sub using_libs {
 sub defines {
    my @defarray;
    foreach (@_) {
-       foreach my $define (sort keys %{ $MODULES{$_}{'define'} }) {
+       foreach my $define (keys %{ $MODULES_OLD{$_}{'define'} }) {
            push @defarray , $define;
        }
    }
@@ -584,7 +589,7 @@ sub check_for_conflicts {
     foreach my $mod (@mods) {
         sub check_hash {
             my ($mod, $do_what, $hashref) = @_;
-            foreach (keys %{ $MODULES{$mod}{$do_what} }) {
+            foreach (keys %{ $MODULES_OLD{$mod}{$do_what} }) {
                 $$hashref{conflicts($mod, $_, $do_what, $hashref)} = $mod;
             }
         }
@@ -703,8 +708,9 @@ sub replace_file {
    add_file($modname, $file);
 }
 
-sub help
-   {
+sub help {
+    my $sets = join("|", sort keys %MODULE_SETS);
+
    print <<ENDOFHELP;
 Usage: $0 [options] CC-OS-CPU
 
@@ -718,7 +724,7 @@ Options:
   --local-config=FILE: include the contents of FILE into build.h
 
   --modules=MODS:      add module(s) MODS to the library.
-  --module-set=SET:    add a pre-specified set of modules (unix|win32|beos)
+  --module-set=SET:    add a pre-specified set of modules ($sets)
 
   --debug:             set compiler flags for debugging
   --disable-shared:    disable building shared libararies
@@ -735,7 +741,7 @@ ENDOFHELP
    print_listing('CC', \%COMPILER);
    print_listing('OS', \%OPERATING_SYSTEM);
    print_listing('CPU', \%CPU);
-   print_listing('MODULES', \%MODULES) if(%MODULES);
+   print_listing('Modules', \%MODULES) if(%MODULES);
    exit;
    }
 
@@ -1598,6 +1604,18 @@ sub read_info_files {
     return %allinfo;
 }
 
+sub read_module_files {
+    my ($moddir) = @_;
+
+    my %allinfo;
+    foreach my $dir (dir_list($moddir)) {
+        my $modfile = File::Spec->catfile($moddir, $dir, 'modinfo.txt');
+        %{$allinfo{$dir}} = get_module_info($dir, $modfile);
+    }
+
+    return %allinfo;
+}
+
 sub get_module_info {
    my ($name, $file) = @_;
    my $reader = make_reader($file);
@@ -1931,18 +1949,13 @@ sub guess_mods {
         # If it uses external libs, the user has to request it specifically
         next if($modinfo{'external_libs'});
 
-        my @cc_list = ();
-        if($modinfo{'cc'}) { @cc_list = keys %{ $modinfo{'cc'} }; }
-
-        my @os_list = ();
-        if($modinfo{'os'}) { @os_list = keys %{ $modinfo{'os'} }; }
-
-        my @arch_list = ();
-        if($modinfo{'arch'}) { @arch_list = keys %{ $modinfo{'arch'} }; }
-
+        my @cc_list = @{ $modinfo{'cc'} };
         next if(scalar @cc_list > 0 && !in_array($cc, \@cc_list));
+
+        my @os_list = @{ $modinfo{'os'} };
         next if(scalar @os_list > 0 && !in_array($os, \@os_list));
 
+        my @arch_list = @{ $modinfo{'arch'} };
         next if(scalar @arch_list > 0 &&
                 !in_array($arch, \@arch_list) &&
                 !in_array($submodel, \@arch_list));
