@@ -68,10 +68,8 @@ my %DOCS = (
 
 my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
 
-my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS);
-
+my (%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS);
 my ($CPP_INCLUDE_DIR, $BUILD_LIB_DIR, $BUILD_CHECK_DIR);
-
 my ($user_set_root, $doc_dir, $lib_dir) = ('', '', '');
 my (%ignored_src, %ignored_include, %added_src, %added_include,
     %lib_src, %check_src, %include);
@@ -79,9 +77,29 @@ my (%ignored_src, %ignored_include, %added_src, %added_include,
 sub main {
     %MODULES = get_modules_list($MOD_DIR);
 
-    set_arch_defines($ARCH_DIR);
+    %CPU = read_info_files($ARCH_DIR, \&get_arch_info);
     %OPERATING_SYSTEM = read_info_files($OS_DIR, \&get_os_info);
     %COMPILER = read_info_files($CC_DIR, \&get_cc_info);
+
+    foreach my $arch (keys %CPU) {
+        my %info = %{$CPU{$arch}};
+
+        foreach my $alias (@{$info{'aliases'}}) {
+            $ARCH_ALIAS{$alias} = $arch;
+        }
+
+        $ARCH{$arch} = $info{'name'};
+        foreach my $submodel (@{$info{'submodels'}}) {
+            $ARCH{$submodel} = $info{'name'};
+        }
+
+        if(defined($info{'submodel_aliases'})) {
+            my %submodel_aliases = %{$info{'submodel_aliases'}};
+            foreach my $sm_alias (keys %submodel_aliases) {
+                $SUBMODEL_ALIAS{$sm_alias} = $submodel_aliases{$sm_alias};
+            }
+        }
+    }
 
     my ($debug, $dumb_gcc, $no_shared) = (0, 0, 0);
     my ($make_style, $build_dir, $module_set, $local_config) =
@@ -1901,28 +1919,4 @@ sub get_cc_info {
 
     }
     return %info;
-}
-
-sub set_arch_defines {
-    %CPU = read_info_files($_[0], \&get_arch_info);
-
-    foreach my $arch (keys %CPU) {
-        my %info = %{$CPU{$arch}};
-
-        foreach my $alias (@{$info{'aliases'}}) {
-            $ARCH_ALIAS{$alias} = $arch;
-        }
-
-        $ARCH{$arch} = $info{'name'};
-        foreach my $submodel (@{$info{'submodels'}}) {
-            $ARCH{$submodel} = $info{'name'};
-        }
-
-        if(defined($info{'submodel_aliases'})) {
-            my %submodel_aliases = %{$info{'submodel_aliases'}};
-            foreach my $sm_alias (keys %submodel_aliases) {
-                $SUBMODEL_ALIAS{$sm_alias} = $submodel_aliases{$sm_alias};
-            }
-        }
-    }
 }
