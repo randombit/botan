@@ -74,11 +74,10 @@ my (%ignored_src, %ignored_include, %added_src, %added_include,
     %lib_src, %check_src, %include);
 
 sub main {
-    %MODULES = get_modules_list($MOD_DIR);
-
     %CPU = read_info_files($ARCH_DIR, \&get_arch_info);
     %OPERATING_SYSTEM = read_info_files($OS_DIR, \&get_os_info);
     %COMPILER = read_info_files($CC_DIR, \&get_cc_info);
+    %MODULES = get_modules_list($MOD_DIR);
 
     my ($debug, $dumb_gcc, $no_shared) = (0, 0, 0);
     my ($make_style, $build_dir, $module_set, $local_config) =
@@ -240,8 +239,7 @@ sub main {
 
     print_config_h($MAJOR_VERSION, $MINOR_VERSION, $PATCH_VERSION,
                    $config_h, $local_config, $os, $arch, $submodel,
-                   find_mp_bits(@using_mods), defines(@using_mods),
-                   defines_base(@using_mods));
+                   find_mp_bits(@using_mods), defines(@using_mods));
 
     $added_include{$CONFIG_HEADER} = $BUILD_DIR;
 
@@ -404,16 +402,6 @@ sub defines {
    return \@defarray;
    }
 
-sub defines_base {
-   my @defarray;
-   foreach (@_) {
-       foreach my $define (sort keys %{ $MODULES{$_}{'define_base'} }) {
-           push @defarray , $define;
-       }
-   }
-   return \@defarray;
-   }
-
 # Any other alternatives here?
 sub portable_symlink {
    my ($from, $to_dir, $to_fname) = @_;
@@ -519,7 +507,7 @@ sub find_mp_bits {
 
 sub print_config_h {
     my ($major, $minor, $patch, $config_h, $local_config, $os, $arch, $cpu,
-        $mp_bits, $defines_ext, $defines_base) = @_;
+        $mp_bits, $defines_ext) = @_;
 
     chomp($patch);
 
@@ -558,12 +546,6 @@ END_OF_CONFIG_H
     }
 
     my $defines = '';
-
-    foreach (sort @$defines_base) {
-        next if not defined $_ or not $_;
-        $defines .= "#define BOTAN_$_\n";
-    }
-    $defines .= "\n" if(scalar @$defines_base);
 
     foreach (sort @$defines_ext) {
         next if not defined $_ or not $_;
@@ -1605,7 +1587,6 @@ sub get_module_info {
    $info{'replace'} = {};
    $info{'ignore'} = {};
    $info{'define'} = {};
-   $info{'define_base'} = {};
 
    $info{'external_libs'} = 0;
 
@@ -1613,7 +1594,6 @@ sub get_module_info {
        set_if_any(\&set_if_quoted, $_, \%info, 'realname:note');
 
        $info{'define'}{$1} = undef if(/^define (\w*)/);
-       $info{'define_base'}{$1} = undef if(/^define_base (\w*)/);
        $info{'mp_bits'} = $1 if(/^mp_bits ([0-9]*)/);
 
        $info{'external_libs'} = 1 if(/^uses_external_libs/);
