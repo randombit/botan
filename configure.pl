@@ -68,8 +68,7 @@ my %DOCS = (
 
 my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
 
-my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS,
-   %OS_ALIAS, %OS_SUPPORTS_SHARED,
+my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS, %OS_ALIAS,
    %CC_SO_LINK_FLAGS, %CC_ABI_FLAGS);
 
 my ($CPP_INCLUDE_DIR, $BUILD_LIB_DIR, $BUILD_CHECK_DIR);
@@ -1069,8 +1068,13 @@ sub generate_makefile {
        $so_obj_flags = $ccinfo{'so_obj_flags'};
    }
 
-   if($no_shared or (!in_array('all', $OS_SUPPORTS_SHARED{$os}) and
-                     !in_array($arch, $OS_SUPPORTS_SHARED{$os})))
+   my $supports_shared = 0;
+   if(in_array('all', $OPERATING_SYSTEM{$os}{'supports_shared'}) or
+      in_array($arch, $OPERATING_SYSTEM{$os}{'supports_shared'})) {
+       $supports_shared = 1;
+   }
+
+   if($no_shared or !$supports_shared)
       { $so_obj_flags = ''; }
 
   elsif(defined($CC_SO_LINK_FLAGS{$cc}{$os}))
@@ -1080,7 +1084,7 @@ sub generate_makefile {
 
    my $make_shared = 0;
    $make_shared = 1
-       if(($so_obj_flags or $so_link_flags) and $OS_SUPPORTS_SHARED{$os});
+    if(($so_obj_flags or $so_link_flags) and $supports_shared);
 
    my $check_opt_flags = '';
    append_ifdef(\$check_opt_flags, $ccinfo{'check_opt_flags'});
@@ -1922,8 +1926,6 @@ sub set_os_defines {
         foreach my $alias (@{$info{'aliases'}}) {
             $OS_ALIAS{$alias} = $os;
         }
-
-        @{$OS_SUPPORTS_SHARED{$os}} = @{$info{'supports_shared'}};
     }
 }
 
