@@ -80,8 +80,8 @@ sub main {
     %MODULES = get_modules_list($MOD_DIR);
 
     set_arch_defines($ARCH_DIR);
-    set_os_defines($OS_DIR);
-    set_cc_defines($CC_DIR);
+    %OPERATING_SYSTEM = read_info_files($OS_DIR, \&get_os_info);
+    %COMPILER = read_info_files($CC_DIR, \&get_cc_info);
 
     my ($debug, $dumb_gcc, $no_shared) = (0, 0, 0);
     my ($make_style, $build_dir, $module_set, $local_config) =
@@ -1731,6 +1731,18 @@ sub get_modules_list {
     return %MODULES;
 }
 
+sub read_info_files {
+    my ($dir,$func) = @_;
+
+    my %allinfo;
+
+    foreach my $os (dir_list($dir)) {
+        my %info = &$func($os, File::Spec->catfile($dir, $os));
+        %{$allinfo{$os}} = %info;
+    }
+    return %allinfo;
+}
+
 sub get_module_info {
    my ($name, $file) = @_;
 
@@ -1918,28 +1930,4 @@ sub set_arch_defines {
         }
     }
     %CPU = %allinfo;
-}
-
-sub set_os_defines {
-    my $dir = $_[0];
-    my %allinfo;
-
-    foreach my $os (dir_list($dir)) {
-        my %info = get_os_info($os, File::Spec->catfile($dir, $os));
-
-        %{$allinfo{$os}} = %info;
-    }
-    %OPERATING_SYSTEM = %allinfo;
-}
-
-sub set_cc_defines {
-    my $dir = $_[0];
-    my %allinfo;
-
-    foreach my $cc (dir_list($dir)) {
-        my %info = get_cc_info($cc, File::Spec->catfile($dir, $cc));
-
-        %{$allinfo{$cc}} = %info;
-    }
-    %COMPILER = %allinfo;
 }
