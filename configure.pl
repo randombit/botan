@@ -1904,22 +1904,18 @@ sub get_cc_info {
 }
 
 sub set_arch_defines {
-    my $dir = $_[0];
-    my %allinfo;
+    %CPU = read_info_files($_[0], \&get_arch_info);
 
-    foreach my $arch (dir_list($dir)) {
-        my %info = get_arch_info($arch, File::Spec->catfile($dir, $arch));
-
-        %{$allinfo{$arch}} = %info;
-
-        $ARCH{$arch} = $info{'name'};
+    foreach my $arch (keys %CPU) {
+        my %info = %{$CPU{$arch}};
 
         foreach my $alias (@{$info{'aliases'}}) {
             $ARCH_ALIAS{$alias} = $arch;
         }
 
+        $ARCH{$arch} = $info{'name'};
         foreach my $submodel (@{$info{'submodels'}}) {
-            $ARCH{$submodel} = $arch;
+            $ARCH{$submodel} = $info{'name'};
         }
 
         if(defined($info{'submodel_aliases'})) {
@@ -1929,5 +1925,4 @@ sub set_arch_defines {
             }
         }
     }
-    %CPU = %allinfo;
 }
