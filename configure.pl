@@ -969,9 +969,9 @@ sub os_ar_needs_ranlib {
 sub os_install_info {
     my ($os,$what) = @_;
 
-    return $doc_dir if($what eq 'docs' && $doc_dir);
-    return $lib_dir if($what eq 'libs' && $lib_dir);
-    return $user_set_root if($what eq 'root' && $user_set_root);
+    return $doc_dir if($what eq 'doc_dir' && $doc_dir);
+    return $lib_dir if($what eq 'lib_dir' && $lib_dir);
+    return $user_set_root if($what eq 'install_root' && $user_set_root);
 
     return $INSTALL_INFO{$os}{$what}
        if(defined($INSTALL_INFO{$os}) &&
@@ -1091,7 +1091,7 @@ sub generate_makefile {
    $ccopts .= ' '.$CC_ABI_FLAGS{$cc}{'all'}
       if(defined($CC_ABI_FLAGS{$cc}{'all'}));
 
-   my $install_root = os_install_info($os, 'root');
+   my $install_root = os_install_info($os, 'install_root');
 
    open MAKEFILE, ">$MAKE_FILE"
       or die "Couldn't write $MAKE_FILE ($!)\n";
@@ -1128,9 +1128,9 @@ sub generate_makefile {
                     $all_includes,
                     \%DOCS,
                     $install_root,
-                    os_install_info($os, 'headers'),
-                    os_install_info($os, 'libs'),
-                    os_install_info($os, 'docs'),
+                    os_install_info($os, 'header_dir'),
+                    os_install_info($os, 'lib_dir'),
+                    os_install_info($os, 'doc_dir'),
                     \@libs_used);
 
    if($make_style eq 'unix') { print_unix_makefile(@arguments); }
@@ -1173,11 +1173,11 @@ sub print_unix_makefile {
    if($make_shared) { $lib_flags .= ' $(SO_OBJ_FLAGS)';
                       $libs .= ' $(SHARED_LIB)'; }
 
-   my $install_user = os_install_info($os, 'user');
-   my $install_group = os_install_info($os, 'group');
+   my $install_user = os_install_info($os, 'install_user');
+   my $install_group = os_install_info($os, 'install_group');
 
-   my $install_cmd_exec = os_install_info($os, 'command');
-   my $install_cmd_data = os_install_info($os, 'command');
+   my $install_cmd_exec = os_install_info($os, 'install_cmd');
+   my $install_cmd_data = os_install_info($os, 'install_cmd');
 
    $install_cmd_exec =~ s/OWNER/\$(OWNER)/;
    $install_cmd_data =~ s/OWNER/\$(OWNER)/;
@@ -1591,9 +1591,9 @@ sub print_pkg_config
 
     return if($os eq 'generic' or $os eq 'windows');
 
-    my $install_root = os_install_info($os, 'root');
-    my $header_dir   = os_install_info($os, 'headers');
-    my $lib_dir      = os_install_info($os, 'libs');
+    my $install_root = os_install_info($os, 'install_root');
+    my $header_dir   = os_install_info($os, 'header_dir');
+    my $lib_dir      = os_install_info($os, 'lib_dir');
 
     my $link_to = "-lm";
     foreach my $lib (@libs)
@@ -1914,13 +1914,13 @@ sub set_os_defines {
 
         %{$OPERATING_SYSTEM{$os}} = %info;
 
-        $INSTALL_INFO{$os}{'root'} = $info{'install_root'};
-        $INSTALL_INFO{$os}{'headers'} = $info{'header_dir'};
-        $INSTALL_INFO{$os}{'libs'} = $info{'lib_dir'};
-        $INSTALL_INFO{$os}{'docs'} = $info{'doc_dir'};
-        $INSTALL_INFO{$os}{'user'} = $info{'install_user'};
-        $INSTALL_INFO{$os}{'group'} = $info{'install_group'};
-        $INSTALL_INFO{$os}{'command'} = $info{'install_cmd'};
+        $INSTALL_INFO{$os}{'install_root'} = $info{'install_root'};
+        $INSTALL_INFO{$os}{'header_dir'} = $info{'header_dir'};
+        $INSTALL_INFO{$os}{'lib_dir'} = $info{'lib_dir'};
+        $INSTALL_INFO{$os}{'doc_dir'} = $info{'doc_dir'};
+        $INSTALL_INFO{$os}{'install_user'} = $info{'install_user'};
+        $INSTALL_INFO{$os}{'install_group'} = $info{'install_group'};
+        $INSTALL_INFO{$os}{'install_cmd'} = $info{'install_cmd'};
 
         foreach my $alias (@{$info{'aliases'}}) {
             $OS_ALIAS{$alias} = $os;
