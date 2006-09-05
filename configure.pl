@@ -1890,11 +1890,12 @@ sub get_cc_info {
 
 sub set_arch_defines {
     my $dir = $_[0];
+    my %allinfo;
 
     foreach my $arch (dir_list($dir)) {
         my %info = get_arch_info($arch, File::Spec->catfile($dir, $arch));
 
-        %{$CPU{$arch}} = %info;
+        %{$allinfo{$arch}} = %info;
 
         $ARCH{$arch} = $info{'name'};
 
@@ -1913,33 +1914,38 @@ sub set_arch_defines {
             }
         }
     }
+    %CPU = %allinfo;
 }
 
 sub set_os_defines {
     my $dir = $_[0];
+    my %allinfo;
 
     foreach my $os (dir_list($dir)) {
         my %info = get_os_info($os, File::Spec->catfile($dir, $os));
 
-        %{$OPERATING_SYSTEM{$os}} = %info;
+        %{$allinfo{$os}} = %info;
 
         foreach my $alias (@{$info{'aliases'}}) {
             $OS_ALIAS{$alias} = $os;
         }
     }
+    %OPERATING_SYSTEM = %allinfo;
 }
 
 sub set_cc_defines {
     my $dir = $_[0];
+    my %allinfo;
 
     foreach my $cc (dir_list($dir)) {
         my %info = get_cc_info($cc, File::Spec->catfile($dir, $cc));
 
-        %{$COMPILER{$cc}} = %info;
+        %{$allinfo{$cc}} = %info;
 
         %{$CC_ABI_FLAGS{$cc}} = %{$info{'mach_abi_linking'}}
            if(defined($info{'mach_abi_linking'}));
         %{$CC_SO_LINK_FLAGS{$cc}} = %{$info{'so_link_flags'}}
            if(defined($info{'so_link_flags'}));
     }
+    %COMPILER = %allinfo;
 }
