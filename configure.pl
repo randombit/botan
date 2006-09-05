@@ -1552,65 +1552,74 @@ sub set_if_any {
 sub get_modules_list {
     my ($dir) = @_;
 
-    my %MODULES;
+    my %allinfo;
     foreach my $mod (dir_list($dir)) {
         my $modfile = File::Spec->catfile($dir, $mod, 'modinfo.txt');
-        my %modinfo = get_module_info($mod, $modfile);
+
+        my %info = get_module_info($mod, $modfile);
+        next if not %info;
+
+        my %modinfo;
+
+        $modinfo{'realname'} = $info{'realname'};
+        $modinfo{'note'} = $info{'note'};
+        $modinfo{'external_libs'} = $info{'external_libs'};
+        $modinfo{'mp_bits'} = $info{'mp_bits'};
+
+        %{$modinfo{'libs'}} = %{$info{'libs'}};
+
+        if($info{'define'}) {
+            $modinfo{'define'}{$info{'define'}} = undef;
+        }
+
+        foreach (@{$info{'arch'}}) { $modinfo{'arch'}{$_} = undef; }
+        foreach (@{$info{'cc'}}) { $modinfo{'cc'}{$_} = undef; }
+        foreach (@{$info{'os'}}) { $modinfo{'os'}{$_} = undef; }
+        foreach (@{$info{'add'}}) { $modinfo{'add'}{$_} = undef; }
+        foreach (@{$info{'replace'}}) { $modinfo{'replace'}{$_} = undef; }
+        foreach (@{$info{'ignore'}}) { $modinfo{'ignore'}{$_} = undef; }
 
         foreach (keys %modinfo) {
-            $MODULES{$mod}{$_} = $modinfo{$_};
+            $allinfo{$mod}{$_} = $modinfo{$_};
         }
     }
-    return %MODULES;
+    return %allinfo;
 }
 
 sub read_info_files {
     my ($dir,$func) = @_;
 
     my %allinfo;
-
-    foreach my $os (dir_list($dir)) {
-        my %info = &$func($os, File::Spec->catfile($dir, $os));
-        %{$allinfo{$os}} = %info;
+    foreach my $file (dir_list($dir)) {
+        %{$allinfo{$file}} = 
+            &$func($file, File::Spec->catfile($dir, $file));
     }
+
     return %allinfo;
 }
 
 sub get_module_info {
    my ($name, $file) = @_;
-
    my $reader = make_reader($file);
 
    my %info;
-   $info{'libs'} = {};
-   $info{'add'} = {};
-   $info{'replace'} = {};
-   $info{'ignore'} = {};
-   $info{'define'} = {};
-
+   $info{'name'} = $name;
    $info{'external_libs'} = 0;
+   $info{'libs'} = {};
 
    while($_ = &$reader()) {
        set_if_any(\&set_if_quoted, $_, \%info, 'realname:note');
 
-       $info{'define'}{$1} = undef if(/^define (\w*)/);
-       $info{'mp_bits'} = $1 if(/^mp_bits ([0-9]*)/);
+       set_if_any(\&set_if, $_, \%info, 'define:mp_bits');
 
        $info{'external_libs'} = 1 if(/^uses_external_libs/);
 
-       sub read_and_set_undef {
-           my ($line,$reader,$hash,$key) = @_;
-           my @lst;
-           read_hash($line, $reader, $key, list_push(\@lst));
-           foreach my $elem (@lst) { $$hash{$key}{$elem} = undef;  }
-       }
-
-       read_and_set_undef($_, $reader, \%info, 'arch');
-       read_and_set_undef($_, $reader, \%info, 'cc');
-       read_and_set_undef($_, $reader, \%info, 'os');
-       read_and_set_undef($_, $reader, \%info, 'add');
-       read_and_set_undef($_, $reader, \%info, 'replace');
-       read_and_set_undef($_, $reader, \%info, 'ignore');
+       read_hash($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
+       read_hash($_, $reader, 'cc', list_push(\@{$info{'cc'}}));
+       read_hash($_, $reader, 'os', list_push(\@{$info{'os'}}));
+       read_hash($_, $reader, 'add', list_push(\@{$info{'add'}}));
+       read_hash($_, $reader, 'replace', list_push(\@{$info{'replace'}}));
+       read_hash($_, $reader, 'ignore', list_push(\@{$info{'ignore'}}));
 
        read_hash($_, $reader, 'libs',
                  sub {
@@ -1628,15 +1637,14 @@ sub get_module_info {
                    100*$MAJOR_VERSION + 10*$MINOR_VERSION + $PATCH_VERSION;
 
                if($needed_version > $have_version) {
-                   warn "Module $name requires Botan version $version\n";
+                   warn "(warning): Module $name needs v$version; disabling\n";
                    return ();
                }
            }
            else {
-               warn "In module $name, bad version code in require_version\n";
+               die "(error): In module $name, bad version requirement '$_'\n";
            }
        }
-
    }
 
    return %info;
