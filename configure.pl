@@ -69,9 +69,7 @@ my %DOCS = (
 my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
 
 my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS,
-   %OS_ALIAS, %OS_SUPPORTS_SHARED, %INSTALL_INFO,
-
-   %CC_SO_LINK_FLAGS,
+   %OS_ALIAS, %OS_SUPPORTS_SHARED, %CC_SO_LINK_FLAGS,
    %CC_MACHINE_OPT_FLAGS, %CC_MACHINE_OPT_FLAGS_RE, %CC_ABI_FLAGS);
 
 my $user_set_root = '';
@@ -973,11 +971,13 @@ sub os_install_info {
     return $lib_dir if($what eq 'lib_dir' && $lib_dir);
     return $user_set_root if($what eq 'install_root' && $user_set_root);
 
-    return $INSTALL_INFO{$os}{$what}
-       if(defined($INSTALL_INFO{$os}) &&
-          defined($INSTALL_INFO{$os}{$what}));
+    my $result = $OPERATING_SYSTEM{$os}{$what};
 
-    return $INSTALL_INFO{'defaults'}{$what};
+    if(defined($result) and $result ne '') {
+        return $result;
+    }
+
+    return $OPERATING_SYSTEM{'defaults'}{$what};
 }
 
 sub mach_opt {
@@ -1913,14 +1913,6 @@ sub set_os_defines {
         my %info = get_os_info($os, File::Spec->catfile($dir, $os));
 
         %{$OPERATING_SYSTEM{$os}} = %info;
-
-        $INSTALL_INFO{$os}{'install_root'} = $info{'install_root'};
-        $INSTALL_INFO{$os}{'header_dir'} = $info{'header_dir'};
-        $INSTALL_INFO{$os}{'lib_dir'} = $info{'lib_dir'};
-        $INSTALL_INFO{$os}{'doc_dir'} = $info{'doc_dir'};
-        $INSTALL_INFO{$os}{'install_user'} = $info{'install_user'};
-        $INSTALL_INFO{$os}{'install_group'} = $info{'install_group'};
-        $INSTALL_INFO{$os}{'install_cmd'} = $info{'install_cmd'};
 
         foreach my $alias (@{$info{'aliases'}}) {
             $OS_ALIAS{$alias} = $os;
