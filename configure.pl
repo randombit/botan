@@ -69,14 +69,14 @@ my %DOCS = (
 my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
 
 my(%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS,
-   %OS_ALIAS, %OS_SUPPORTS_SHARED, %CC_SO_LINK_FLAGS,
-   %CC_MACHINE_OPT_FLAGS, %CC_MACHINE_OPT_FLAGS_RE, %CC_ABI_FLAGS);
+   %OS_ALIAS, %OS_SUPPORTS_SHARED,
+   %CC_SO_LINK_FLAGS, %CC_ABI_FLAGS);
 
-my $user_set_root = '';
-my ($doc_dir, $lib_dir);
+my ($CPP_INCLUDE_DIR, $BUILD_LIB_DIR, $BUILD_CHECK_DIR);
+
+my ($user_set_root, $doc_dir, $lib_dir) = ('', '', '');
 my (%ignored_src, %ignored_include, %added_src, %added_include,
     %lib_src, %check_src, %include);
-my ($CPP_INCLUDE_DIR, $BUILD_LIB_DIR, $BUILD_CHECK_DIR);
 
 sub main() {
     %MODULES = get_modules_list($MOD_DIR);
@@ -794,14 +794,14 @@ sub guess_triple
 
         # Cygwin's uname -s is cygwin_<windows version>
         $os = 'cygwin' if($os =~ /^cygwin/);
+        $os = $OS_ALIAS{$os} if(defined($OS_ALIAS{$os}));
 
-        if(!defined $OPERATING_SYSTEM{$os} && !defined $OS_ALIAS{$os})
+        if(!defined $OPERATING_SYSTEM{$os})
         {
             print "Unknown uname -s output: $os, falling back to 'generic'\n";
             $os = 'generic';
         }
 
-        $os = $OS_ALIAS{$os} if(defined($OS_ALIAS{$os}));
         my $cpu = '';
 
         # If we have /proc/cpuinfo, try to get nice specific information about
@@ -983,21 +983,26 @@ sub os_install_info {
 sub mach_opt {
     my ($cc, $arch, $submodel) = @_;
 
-    #my %ccinfo = %{$COMPILER{$cc}};
+    my %ccinfo = %{$COMPILER{$cc}};
 
-    if(defined($CC_MACHINE_OPT_FLAGS{$cc}{$submodel}))
+    # Nothing we can do in that case
+    return '' unless defined($ccinfo{'mach_opt_flags'});
+
+    if(defined($ccinfo{'mach_opt_flags'}{$submodel}))
     {
-        return $CC_MACHINE_OPT_FLAGS{$cc}{$submodel};
+        return $ccinfo{'mach_opt_flags'}{$submodel};
     }
-    elsif(defined($CC_MACHINE_OPT_FLAGS{$cc}{$arch})) {
-        my $mach_opt_flags = $CC_MACHINE_OPT_FLAGS{$cc}{$arch};
+    elsif(defined($ccinfo{'mach_opt_flags'}{$arch})) {
+        my $mach_opt_flags = $ccinfo{'mach_opt_flags'}{$arch};
         my $processed_modelname = $submodel;
 
-        my $remove = $CC_MACHINE_OPT_FLAGS_RE{$cc}{$arch};
-
-        if(defined($remove) and $remove ne '') {
-            $processed_modelname =~ s/$remove//;
+        my $remove = '';
+        if(defined($ccinfo{'mach_opt_re'}) and
+           defined($ccinfo{'mach_opt_re'}{$arch})) {
+            $remove = $ccinfo{'mach_opt_re'}{$arch};
         }
+
+        $processed_modelname =~ s/$remove//;
         $mach_opt_flags =~ s/SUBMODEL/$processed_modelname/g;
         return $mach_opt_flags;
     }
@@ -1934,10 +1939,5 @@ sub set_cc_defines {
            if(defined($info{'mach_abi_linking'}));
         %{$CC_SO_LINK_FLAGS{$cc}} = %{$info{'so_link_flags'}}
            if(defined($info{'so_link_flags'}));
-
-        %{$CC_MACHINE_OPT_FLAGS{$cc}} = %{$info{'mach_opt_flags'}}
-           if(defined($info{'mach_opt_flags'}));
-        %{$CC_MACHINE_OPT_FLAGS_RE{$cc}} = %{$info{'mach_opt_re'}}
-           if(defined($info{'mach_opt_re'}));
     }
 }
