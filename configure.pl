@@ -152,8 +152,7 @@ sub main {
            ($gcc_version =~ /2\.95\.[0-4]/) ||
            ($gcc_version eq '' && $^O eq 'cygwin'))
         {
-            warn "(note): Enabling -fpermissive to work around " .
-                 "possible GCC issues\n";
+            warning("Enabling -fpermissive to work around possible GCC bug");
             $dumb_gcc = 1;
         }
         if($gcc_version =~ /2\.95\.[0-4]/)
@@ -163,29 +162,29 @@ sub main {
         }
     }
 
-    die "(error): Compiler $cc isn't known\n" unless defined($COMPILER{$cc});
+    error("Compiler $cc isn't known") unless defined($COMPILER{$cc});
 
     $os = os_alias($os);
-    die "(error): OS $os isn't known\n" unless
+    error("OS $os isn't known") unless
         ($os eq 'generic' or defined($OPERATING_SYSTEM{$os}));
 
     my $arch = undef;
     ($arch, $submodel) = figure_out_arch($submodel);
 
-    die "(error): ", realname($os), " doesn't run on $arch ($submodel)\n"
+    error(realname($os), " doesn't run on $arch ($submodel)")
         unless($arch eq 'generic' or $os eq 'generic' or
                in_array($arch, $OPERATING_SYSTEM{$os}{'arch'}));
 
-    die "(error): ", realname($cc), " doesn't run on $arch ($submodel)\n"
+    error(realname($cc), " doesn't run on $arch ($submodel)")
         unless($arch eq 'generic' or
                (in_array($arch, $COMPILER{$cc}{'arch'})));
 
-    die "(error): ", realname($cc), " doesn't run on ", realname($os), "\n"
+    error(realname($cc), " doesn't run on ", realname($os))
         unless($os eq 'generic' or (in_array($os, $COMPILER{$cc}{'os'})));
 
     $make_style = $COMPILER{$cc}{'makefile_style'} unless($make_style);
 
-    die "(error): Module set $module_set isn't known\n"
+    error("Module set $module_set isn't known")
         if($module_set && !defined($MODULE_SETS{$module_set}));
 
     if($module_set) {
@@ -213,13 +212,13 @@ sub main {
     @using_mods = sort keys %uniqed_mods;
 
     foreach (@using_mods) {
-        die "(error): Module $_ isn't known (try --help)\n"
+        error("Module $_ isn't known (try --help)")
             unless(exists($MODULES{$_}));
     }
 
     check_for_conflicts(@using_mods);
-    foreach (@using_mods) {
-        load_module($_, $cc, $os, $arch, $submodel, %{ $MODULES_OLD{$_} });
+    foreach my $mod (@using_mods) {
+        load_module($mod, $cc, $os, $arch, $submodel);
     }
 
     print_pkg_config($os, $MAJOR_VERSION, $MINOR_VERSION, $PATCH_VERSION,
@@ -262,6 +261,20 @@ sub main {
 # Run stuff, quit
 main();
 exit;
+
+sub error {
+    my $str = '(error): ';
+    foreach(@_) { $str .= $_; }
+    $str .= "\n";
+    die $str;
+}
+
+sub warning {
+    my $str = '(note): ';
+    foreach(@_) { $str .= $_; }
+    $str .= "\n";
+    warn $str;
+}
 
 sub figure_out_arch {
     my ($name) = @_;
@@ -314,13 +327,13 @@ sub figure_out_arch {
         $arch = find_arch($submodel);
     }
 
-    die "(error): Arch $name isn't known\n" unless defined $arch;
+    error("Arch $name isn't known") unless defined $arch;
 
     if($submodel eq $arch) {
         $submodel = $CPU{$arch}{'default_submodel'};
 
-        warn "(note): Using $submodel as default type for family ",
-             realname($arch),"\n" if($submodel ne $arch);
+        warning("Using $submodel as default type for family ", realname($arch))
+           if($submodel ne $arch);
     }
 
     die unless defined($arch) and defined($submodel);
@@ -346,7 +359,7 @@ sub make_reader {
     die "make_reader(): Arg was undef" if not defined $filename;
 
     open FILE, "<$filename" or
-        die "(error): Couldn't read $filename ($!)\n";
+        error("Couldn't read $filename ($!)");
 
     return sub {
         my $line = '';
@@ -370,8 +383,8 @@ sub make_reader {
 sub check_for_file {
    my ($file,$mod) = @_;
 
-   die "(error): Module $mod requires that file $file exist. This error\n",
-       "should never occur; please contact the maintainers with details.\n"
+   error("Module $mod requires that file $file exist. This error\n",
+       "should never occur; please contact the maintainers with details.")
        unless(-e $file);
 }
 
@@ -482,7 +495,7 @@ sub mkdirs {
     foreach my $dir (@dirs) {
         next if( -e $dir and -d $dir ); # skip it if it's already there
         mkdir($dir, 0777) or
-            die "(error): Could not create directory $dir ($!)\n";
+            error("Could not create directory $dir ($!)");
     }
 }
 
@@ -503,8 +516,8 @@ sub find_mp_bits {
         my %modinfo = %{ $MODULES{$modname} };
         if($modinfo{'mp_bits'}) {
             if(defined($seen_mp_module) and $modinfo{'mp_bits'} != $mp_bits) {
-                die "(error): Inconsistent mp_bits requests from modules ",
-                    $seen_mp_module, " and ", $modname, "\n";
+                error("Inconsistent mp_bits requests from modules ",
+                      $seen_mp_module, " and ", $modname);
             }
 
             $seen_mp_module = $modname;
@@ -581,7 +594,7 @@ sub check_for_conflicts {
 
         if(defined($$hashref{$item})) {
             my $other_mod = $$hashref{$item};
-            die "(error): Both $mod and $other_mod $do_what $item\n";
+            error("Both $mod and $other_mod $do_what $item");
         }
         return $item;
     }
@@ -596,7 +609,6 @@ sub check_for_conflicts {
             }
         }
 
-        check_hash($mod, 'define', \%defines);
         check_hash($mod, 'replace', \%replaced);
         check_hash($mod, 'add', \%added);
         check_hash($mod, 'ignore', \%ignored);
@@ -623,24 +635,38 @@ sub realname {
 }
 
 sub load_module {
-   my ($modname,$cc,$os,$arch,$sub,%module) = @_;
+   my ($modname,$cc,$os,$arch,$sub) = @_;
 
-   # Check to see if everything is OK WRT system requirements
-   if(defined($module{'os'}) and !exists($module{'os'}{$os}) and
-         $os ne 'generic') {
-       die "(error): Module '$modname' does not run on ", realname($os), "\n";
+   my %module = %{$MODULES{$modname}};
+   my %module_old = %{$MODULES_OLD{$modname}};
+
+   $modname = $module{'name'};
+
+   sub works_on {
+       my ($what, %hash) = @_;
+       return 0 if(%hash and !exists($hash{$what}));
+       return 1;
    }
 
-   if(defined($module{'arch'}) and $arch ne 'generic' and
-      !exists($module{'arch'}{$arch}) and !exists($module{'arch'}{$sub}))
-       { die "(error): Module '$modname' does not run on " ,
-              realname($arch), "/$sub\n"; }
-
-   if(defined($module{'cc'}) and !exists($module{'cc'}{$cc}))
-       {
-       die "(error): Module '$modname' does not work with ",
-           realname($cc), "\n";
+   # Check to see if everything is OK WRT system requirements
+   if($os ne 'generic') {
+       unless(works_on($os, %{$module_old{'os'}})) {
+           error("Module '$modname' does not run on ", realname($os));
        }
+   }
+
+   if($arch ne 'generic') {
+       unless(works_on($arch, %{$module_old{'arch'}}) or
+              works_on($sub, %{$module_old{'arch'}})) {
+
+           error("Module '$modname' does not run on ",
+                 realname($arch), "/$sub");
+       }
+   }
+
+   unless(works_on($cc, %{$module_old{'cc'}})) {
+       error("Module '$modname' does not work with ", realname($cc));
+   }
 
    sub handle_files {
        my($modname, $hash, $func) = @_;
@@ -651,12 +677,11 @@ sub load_module {
        }
    }
 
-   handle_files($modname, $module{'replace'}, \&replace_file);
-   handle_files($modname, $module{'ignore'},  \&ignore_file);
-   handle_files($modname, $module{'add'},     \&add_file);
+   handle_files($modname, $module_old{'replace'}, \&replace_file);
+   handle_files($modname, $module_old{'ignore'},  \&ignore_file);
+   handle_files($modname, $module_old{'add'},     \&add_file);
 
-   if(defined($module{'note'}))
-   {
+   if(defined($module{'note'})) {
        my $realname = $module{'realname'};
        my $note = $module{'note'};
        print STDERR "(note): $modname (\"$realname\"): $note\n";
@@ -989,8 +1014,8 @@ sub generate_makefile {
    if($make_style eq 'unix') { print_unix_makefile(@arguments); }
    elsif($make_style eq 'nmake') { print_nmake_makefile(@arguments); }
    else {
-      die "(error): This configure script does not know how to make ",
-          "a makefile for makefile style \"$make_style\"\n";
+      error("This configure script does not know how to make ",
+            "a makefile for makefile style \"$make_style\"");
    }
 
    close MAKEFILE;
@@ -1576,10 +1601,6 @@ sub get_modules_list {
 
         %{$modinfo{'libs'}} = %{$info{'libs'}};
 
-        if($info{'define'}) {
-            $modinfo{'define'}{$info{'define'}} = undef;
-        }
-
         foreach (@{$info{'arch'}}) { $modinfo{'arch'}{$_} = undef; }
         foreach (@{$info{'cc'}}) { $modinfo{'cc'}{$_} = undef; }
         foreach (@{$info{'os'}}) { $modinfo{'os'}{$_} = undef; }
@@ -1587,9 +1608,7 @@ sub get_modules_list {
         foreach (@{$info{'replace'}}) { $modinfo{'replace'}{$_} = undef; }
         foreach (@{$info{'ignore'}}) { $modinfo{'ignore'}{$_} = undef; }
 
-        foreach (keys %modinfo) {
-            $allinfo{$mod}{$_} = $modinfo{$_};
-        }
+        %{$allinfo{$mod}} = %modinfo;
     }
     return %allinfo;
 }
@@ -1657,12 +1676,12 @@ sub get_module_info {
                    100*$MAJOR_VERSION + 10*$MINOR_VERSION + $PATCH_VERSION;
 
                if($needed_version > $have_version) {
-                   warn "(warning): Module $name needs v$version; disabling\n";
+                   warning("Module $name needs v$version; disabling");
                    return ();
                }
            }
            else {
-               die "(error): In module $name, bad version requirement '$_'\n";
+               error("In module $name, bad version requirement '$_'");
            }
        }
    }
@@ -1908,10 +1927,11 @@ sub guess_triple
         }
 
         if($cc eq '') {
-           warn "Can't find a usable C++ compiler, is your PATH right?\n";
-           warn "You might need to run with explicit compiler/system flags;\n";
-           warn "   run '$0 --help' for more information\n";
-           exit 1;
+            my $msg =
+                "Can't find a usable C++ compiler, is your PATH right?\n" .
+                "You might need to run with explicit compiler/system flags;\n" .
+                "   run '$0 --help' for more information\n";
+            error($msg);
         }
 
         return "$cc-$os-$cpu";
