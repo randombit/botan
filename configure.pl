@@ -399,13 +399,14 @@ sub using_libs {
 
 sub defines {
    my @defarray;
-   foreach (@_) {
-       foreach my $define (keys %{ $MODULES_OLD{$_}{'define'} }) {
-           push @defarray , $define;
-       }
+   foreach my $mod (@_) {
+       my $defs = $MODULES{$mod}{'define'};
+       next unless $defs;
+
+       push @defarray, split(/,/, $defs);
    }
    return \@defarray;
-   }
+}
 
 # Any other alternatives here?
 sub portable_symlink {
@@ -495,15 +496,18 @@ sub in_array {
 sub find_mp_bits {
     my(@modules_list) = @_;
     my $mp_bits = 32; # default, good for most systems
-    my $seen_mp_module = 0;
+
+    my $seen_mp_module = undef;
 
     foreach my $modname (@modules_list) {
         my %modinfo = %{ $MODULES{$modname} };
         if($modinfo{'mp_bits'}) {
-            die "(error): Inconsistent mp_bits requests from modules\n"
-                if($seen_mp_module && $modinfo{'mp_bits'} != $mp_bits);
+            if(defined($seen_mp_module) and $modinfo{'mp_bits'} != $mp_bits) {
+                die "(error): Inconsistent mp_bits requests from modules ",
+                    $seen_mp_module, " and ", $modname, "\n";
+            }
 
-            $seen_mp_module = 1;
+            $seen_mp_module = $modname;
             $mp_bits = $modinfo{'mp_bits'};
         }
     }
@@ -513,8 +517,6 @@ sub find_mp_bits {
 sub print_config_h {
     my ($major, $minor, $patch, $config_h, $local_config, $os, $arch, $cpu,
         $mp_bits, $defines_ext) = @_;
-
-    chomp($patch);
 
     open CONFIG_H, ">$config_h" or
         die "Couldn't write $config_h ($!)\n";
@@ -640,6 +642,15 @@ sub load_module {
            realname($cc), "\n";
        }
 
+   sub handle_files {
+       my($modname, $hash, $func) = @_;
+       return unless defined($hash);
+       foreach (sort keys %$hash) {
+           if(defined($$hash{$_})) { &$func($modname, $_, $$hash{$_}); }
+           else                    { &$func($modname, $_); }
+       }
+   }
+
    handle_files($modname, $module{'replace'}, \&replace_file);
    handle_files($modname, $module{'ignore'},  \&ignore_file);
    handle_files($modname, $module{'add'},     \&add_file);
@@ -650,15 +661,6 @@ sub load_module {
        my $note = $module{'note'};
        print STDERR "(note): $modname (\"$realname\"): $note\n";
    }
-}
-
-sub handle_files {
-   my($modname, $hash, $func) = @_;
-   return unless defined($hash);
-   foreach (sort keys %$hash) {
-      if(defined($$hash{$_})) { &$func($modname, $_, $$hash{$_}); }
-      else                    { &$func($modname, $_); }
-    }
 }
 
 sub full_path {
