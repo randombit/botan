@@ -68,7 +68,6 @@ my %DOCS = (
 
 my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
 
-my (%SUBMODEL_ALIAS, %ARCH, %ARCH_ALIAS);
 my ($CPP_INCLUDE_DIR, $BUILD_LIB_DIR, $BUILD_CHECK_DIR);
 my ($user_set_root, $doc_dir, $lib_dir) = ('', '', '');
 my (%ignored_src, %ignored_include, %added_src, %added_include,
@@ -80,26 +79,6 @@ sub main {
     %CPU = read_info_files($ARCH_DIR, \&get_arch_info);
     %OPERATING_SYSTEM = read_info_files($OS_DIR, \&get_os_info);
     %COMPILER = read_info_files($CC_DIR, \&get_cc_info);
-
-    foreach my $arch (keys %CPU) {
-        my %info = %{$CPU{$arch}};
-
-        foreach my $alias (@{$info{'aliases'}}) {
-            $ARCH_ALIAS{$alias} = $arch;
-        }
-
-        $ARCH{$arch} = $info{'name'};
-        foreach my $submodel (@{$info{'submodels'}}) {
-            $ARCH{$submodel} = $info{'name'};
-        }
-
-        if(defined($info{'submodel_aliases'})) {
-            my %submodel_aliases = %{$info{'submodel_aliases'}};
-            foreach my $sm_alias (keys %submodel_aliases) {
-                $SUBMODEL_ALIAS{$sm_alias} = $submodel_aliases{$sm_alias};
-            }
-        }
-    }
 
     my ($debug, $dumb_gcc, $no_shared) = (0, 0, 0);
     my ($make_style, $build_dir, $module_set, $local_config) =
@@ -180,38 +159,25 @@ sub main {
         }
     }
 
+    die "(error): Compiler $cc isn't known\n" unless defined($COMPILER{$cc});
+
     $os = os_alias($os);
-
-    die "(error): Compiler $cc isn't known\n"
-        unless defined($COMPILER{$cc});
-
     die "(error): OS $os isn't known\n" unless
         ($os eq 'generic' or defined($OPERATING_SYSTEM{$os}));
 
-    # Get the canonical submodel name (like r8k -> r8000)
-    $submodel = $SUBMODEL_ALIAS{$submodel}
-       if(defined($SUBMODEL_ALIAS{$submodel}));
-
     my $arch = undef;
-    # Convert an arch alias to it's real name (like axp -> alpha)
-    if(defined($ARCH_ALIAS{$submodel})) {
-        $arch = $ARCH_ALIAS{$submodel};
-        $submodel = $arch;
-    }
-    # If it's a regular submodel type, figure out what arch it is
-    elsif(defined($ARCH{$submodel})) {
-        $arch = $ARCH{$submodel};
-    }
-    elsif($submodel eq 'generic') { $arch = 'generic'; }
-    else { die "(error): Arch $submodel isn't known\n"; }
+    ($arch, $submodel) = figure_out_arch($submodel);
 
-    # If we got a generic family name as the model type
-    if($submodel eq $arch and $submodel ne 'generic') {
-        $submodel = $CPU{$arch}{'default_submodel'};
+    die "(error): ", realname($os), " doesn't run on $arch ($submodel)\n"
+        unless($arch eq 'generic' or $os eq 'generic' or
+               in_array($arch, $OPERATING_SYSTEM{$os}{'arch'}));
 
-        warn "(note): Using $submodel as default type for family ",
-             realname($arch),"\n" if($submodel ne $arch);
-    }
+    die "(error): ", realname($cc), " doesn't run on $arch ($submodel)\n"
+        unless($arch eq 'generic' or
+               (in_array($arch, $COMPILER{$cc}{'arch'})));
+
+    die "(error): ", realname($cc), " doesn't run on ", realname($os), "\n"
+        unless($os eq 'generic' or (in_array($os, $COMPILER{$cc}{'os'})));
 
     $make_style = $COMPILER{$cc}{'makefile_style'} unless($make_style);
 
@@ -247,16 +213,6 @@ sub main {
             unless(exists($MODULES{$_}));
     }
 
-    die "(error): ", realname($os), " doesn't run on $arch ($submodel)\n"
-        unless($arch eq 'generic' or $os eq 'generic' or
-               in_array($arch, $OPERATING_SYSTEM{$os}{'arch'}));
-
-    die "(error): ", realname($cc), " doesn't run on $arch ($submodel)\n"
-        unless($arch eq 'generic' or
-               (in_array($arch, $COMPILER{$cc}{'arch'})));
-
-    die "(error): ", realname($cc), " doesn't run on ", realname($os), "\n"
-        unless($os eq 'generic' or (in_array($os, $COMPILER{$cc}{'os'})));
 
     check_for_conflicts(@using_mods);
     foreach (@using_mods) {
@@ -304,6 +260,71 @@ sub main {
 # Run stuff, quit
 main();
 exit;
+
+sub figure_out_arch {
+    my ($name) = @_;
+    return ('generic', 'generic') if($name eq 'generic');
+
+    sub submodel_alias {
+        my ($name) = @_;
+
+        foreach my $arch (keys %CPU) {
+            next unless defined $CPU{$arch}{'submodel_aliases'};
+            my %sm_aliases = %{$CPU{$arch}{'submodel_aliases'}};
+
+            foreach my $alias (keys %sm_aliases) {
+                my $official = $sm_aliases{$alias};
+                return $official if($alias eq $name);
+            }
+        }
+        return $name;
+    }
+
+    sub arch_alias {
+        my $name = $_[0];
+
+        foreach my $arch (keys %CPU) {
+            foreach my $alias (@{$CPU{$arch}{'aliases'}}) {
+                return $arch if($alias eq $name);
+            }
+        }
+        return undef;
+    }
+
+    sub find_arch {
+        my $name = $_[0];
+
+        foreach my $arch (keys %CPU) {
+            my %info = %{$CPU{$arch}};
+
+            return $arch if ($name eq $arch);
+
+            foreach my $submodel (@{$info{'submodels'}}) {
+                return $arch if ($name eq $submodel);
+            }
+        }
+    }
+
+    my $submodel = submodel_alias($name);
+    my $arch = arch_alias($name);
+
+    if(not defined($arch) and $submodel ne '') {
+        $arch = find_arch($submodel);
+    }
+
+    die "(error): Arch $name isn't known\n" unless defined $arch;
+
+    if($submodel eq $arch) {
+        $submodel = $CPU{$arch}{'default_submodel'};
+
+        warn "(note): Using $submodel as default type for family ",
+             realname($arch),"\n" if($submodel ne $arch);
+    }
+
+    die unless defined($arch) and defined($submodel);
+
+    return ($arch,$submodel);
+}
 
 sub os_alias {
     my $name = $_[0];
@@ -849,6 +870,29 @@ sub guess_triple
         # cases it can be more specific (useful) than `uname -m`
         if($cpu eq '') # no guess so far
         {
+            my (%SUBMODEL_ALIAS, %ARCH_ALIAS, %ARCH);
+
+            foreach my $arch (keys %CPU) {
+                my %info = %{$CPU{$arch}};
+
+                $ARCH{$arch} = $info{'name'};
+                foreach my $submodel (@{$info{'submodels'}}) {
+                    $ARCH{$submodel} = $info{'name'};
+                }
+
+                foreach my $alias (@{$info{'aliases'}}) {
+                    $ARCH_ALIAS{$alias} = $arch;
+                }
+
+                if(defined($info{'submodel_aliases'})) {
+                    my %submodel_aliases = %{$info{'submodel_aliases'}};
+                    foreach my $sm_alias (keys %submodel_aliases) {
+                        $SUBMODEL_ALIAS{$sm_alias} =
+                            $submodel_aliases{$sm_alias};
+                    }
+                }
+            }
+
             my $uname_p = `uname -p 2>/dev/null`;
             chomp $uname_p;
             $cpu = guess_cpu_from_this($uname_p);
