@@ -6,7 +6,6 @@ use strict;
 use Getopt::Long;
 use File::Spec;
 use File::Copy;
-use Data::Dumper;
 
 my $MAJOR_VERSION = 1;
 my $MINOR_VERSION = 5;
@@ -74,6 +73,10 @@ my ($CPP_INCLUDE_DIR, $BUILD_LIB_DIR, $BUILD_CHECK_DIR);
 my ($user_set_root, $doc_dir, $lib_dir) = ('', '', '');
 my (%ignored_src, %ignored_include, %added_src, %added_include,
     %lib_src, %check_src, %include);
+
+# Run stuff, quit
+main();
+exit;
 
 sub main {
     %CPU = read_info_files($ARCH_DIR, \&get_arch_info);
@@ -254,10 +257,6 @@ sub main {
                       \%lib_src, \%check_src, \%all_includes,
                       \%added_src, using_libs($os, @using_mods));
 }
-
-# Run stuff, quit
-main();
-exit;
 
 sub error {
     my $str = '(error): ';
@@ -460,8 +459,8 @@ sub copy_files {
 
 sub list_dir {
     my ($dir, $ignore) = @_;
-    opendir DIR, $dir or die "Couldn't open directory $dir ($!)\n";
-    my @list = grep { !/^\./ } readdir DIR;
+
+    my @list = dir_list($dir);
 
     if($dir eq $CHECK_DIR) {
         @list = grep { !/\.dat$/ } grep { !/^keys$/ } grep { !/\.h$/ } @list;
@@ -471,7 +470,6 @@ sub list_dir {
     if(defined($ignore)) {
         @list = grep { !exists($$ignore{$_}) } @list;
     }
-    close DIR;
     my %list = map { $_ => $dir } @list;
     return %list;
 }
