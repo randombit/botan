@@ -28,16 +28,14 @@ class DL_Scheme_PublicKey : public virtual X509_PublicKey
       const BigInt& group_p() const { return group.get_p(); }
       const BigInt& group_q() const { return group.get_q(); }
       const BigInt& group_g() const { return group.get_g(); }
+      virtual DL_Group::Format group_format() const = 0;
 
       BigInt y;
       DL_Group group;
    private:
-      MemoryVector<byte> DER_encode_pub() const;
-      MemoryVector<byte> DER_encode_params() const;
-      void BER_decode_pub(DataSource&);
-      void BER_decode_params(DataSource&);
+      X509_Encoder* x509_encoder() const;
+      X509_Decoder* x509_decoder();
 
-      virtual DL_Group::Format group_format() const = 0;
       virtual void X509_load_hook() {}
    };
 
@@ -58,6 +56,8 @@ class DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
    private:
       SecureVector<byte> DER_encode_priv() const;
       void BER_decode_priv(DataSource&);
+      MemoryVector<byte> DER_encode_params() const;
+      void BER_decode_params(DataSource&);
 
       virtual void PKCS8_load_hook() {}
    };

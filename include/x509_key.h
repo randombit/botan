@@ -8,8 +8,31 @@
 
 #include <botan/pipe.h>
 #include <botan/pk_keys.h>
+#include <botan/alg_id.h>
 
 namespace Botan {
+
+/*************************************************
+* X.509 Public Key Encoder                       *
+*************************************************/
+class X509_Encoder
+   {
+   public:
+      virtual AlgorithmIdentifier alg_id() const = 0;
+      virtual MemoryVector<byte> key_bits() const = 0;
+      virtual ~X509_Encoder() {}
+   };
+
+/*************************************************
+* X.509 Public Key Decoder                       *
+*************************************************/
+class X509_Decoder
+   {
+   public:
+      virtual void alg_id(const AlgorithmIdentifier&) = 0;
+      virtual void key_bits(const MemoryRegion<byte>&) = 0;
+      virtual ~X509_Decoder() {}
+   };
 
 /*************************************************
 * X.509 Public Key                               *
@@ -18,10 +41,9 @@ class X509_PublicKey : public virtual PK_Key
    {
    public:
       u64bit key_id() const;
-      virtual MemoryVector<byte> DER_encode_pub() const = 0;
-      virtual MemoryVector<byte> DER_encode_params() const = 0;
-      virtual void BER_decode_pub(DataSource&) = 0;
-      virtual void BER_decode_params(DataSource&) = 0;
+
+      virtual X509_Encoder* x509_encoder() const = 0;
+      virtual X509_Decoder* x509_decoder() = 0;
       virtual ~X509_PublicKey() {}
    };
 

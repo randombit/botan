@@ -19,6 +19,8 @@ class PKCS8_PrivateKey : public virtual X509_PublicKey
    public:
       virtual SecureVector<byte> DER_encode_priv() const = 0;
       virtual void BER_decode_priv(DataSource&) = 0;
+      virtual MemoryVector<byte> DER_encode_params() const = 0;
+      virtual void BER_decode_params(DataSource&) = 0;
       virtual ~PKCS8_PrivateKey() {}
    };
 

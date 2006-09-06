@@ -11,45 +11,85 @@
 namespace Botan {
 
 /*************************************************
-* Return the X.509 public key encoding           *
+* Return the X.509 public key encoder            *
 *************************************************/
-MemoryVector<byte> IF_Scheme_PublicKey::DER_encode_pub() const
+X509_Encoder* IF_Scheme_PublicKey::x509_encoder() const
    {
-   return DER_Encoder()
-      .start_cons(SEQUENCE)
-         .encode(n)
-         .encode(e)
-      .end_cons()
-   .get_contents();
+   class IF_Algo_Encoder : public X509_Encoder
+      {
+      public:
+         AlgorithmIdentifier alg_id() const
+            {
+            return AlgorithmIdentifier(oid,
+                                       AlgorithmIdentifier::USE_NULL_PARAM);
+            }
+
+         MemoryVector<byte> key_bits() const
+            {
+            return DER_Encoder()
+               .start_cons(SEQUENCE)
+                  .encode(n)
+                  .encode(e)
+               .end_cons()
+            .get_contents();
+            }
+
+         IF_Algo_Encoder(const OID& oid, const BigInt& n, const BigInt& e)
+            {
+            this->oid = oid;
+            this->n = n;
+            this->e = e;
+            }
+      private:
+         OID oid;
+         BigInt n, e;
+      };
+
+   return new IF_Algo_Encoder(get_oid(), n, e);
+   }
+
+/*************************************************
+* Return the X.509 public key decoder            *
+*************************************************/
+X509_Decoder* IF_Scheme_PublicKey::x509_decoder()
+   {
+   class IF_Algo_Decoder : public X509_Decoder
+      {
+      public:
+         void alg_id(const AlgorithmIdentifier&) {}
+
+         void key_bits(const MemoryRegion<byte>& bits)
+            {
+            BER_Decoder(bits)
+               .start_cons(SEQUENCE)
+               .decode(key->n)
+               .decode(key->e)
+               .verify_end()
+               .end_cons();
+
+            key->X509_load_hook();
+            }
+
+         IF_Algo_Decoder(IF_Scheme_PublicKey* k) : key(k) {}
+      private:
+         IF_Scheme_PublicKey* key;
+      };
+
+   return new IF_Algo_Decoder(this);
    }
 
 /*************************************************
 * Return the X.509 parameters encoding           *
 *************************************************/
-MemoryVector<byte> IF_Scheme_PublicKey::DER_encode_params() const
+MemoryVector<byte> IF_Scheme_PrivateKey::DER_encode_params() const
    {
    return DER_Encoder().encode_null().get_contents();
    }
 
 /*************************************************
-* Decode X.509 public key encoding               *
-*************************************************/
-void IF_Scheme_PublicKey::BER_decode_pub(DataSource& source)
-   {
-   BER_Decoder(source)
-      .start_cons(SEQUENCE)
-         .decode(n)
-         .decode(e)
-         .verify_end()
-      .end_cons();
-
-   X509_load_hook();
-   }
-
-/*************************************************
 * Decode X.509 algorithm parameters              *
 *************************************************/
-void IF_Scheme_PublicKey::BER_decode_params(DataSource& source)
+void IF_Scheme_PrivateKey::BER_decode_params(DataSource& source)
    {
    byte dummy = 0;
    while(!source.end_of_data())

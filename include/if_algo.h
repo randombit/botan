@@ -31,10 +31,8 @@ class IF_Scheme_PublicKey : public virtual X509_PublicKey
       BigInt n, e;
       IF_Core core;
    private:
-      MemoryVector<byte> DER_encode_pub() const;
-      MemoryVector<byte> DER_encode_params() const;
-      void BER_decode_params(DataSource&);
-      void BER_decode_pub(DataSource&);
+      X509_Encoder* x509_encoder() const;
+      X509_Decoder* x509_decoder();
    };
 
 /*************************************************
@@ -57,6 +55,8 @@ class IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
    private:
       SecureVector<byte> DER_encode_priv() const;
       void BER_decode_priv(DataSource&);
+      MemoryVector<byte> DER_encode_params() const;
+      void BER_decode_params(DataSource&);
    };
 
 }

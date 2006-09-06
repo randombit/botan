@@ -11,37 +11,82 @@
 namespace Botan {
 
 /*************************************************
-* Return the X.509 public key encoding           *
+* Return the X.509 public key encoder            *
 *************************************************/
-MemoryVector<byte> DL_Scheme_PublicKey::DER_encode_pub() const
+X509_Encoder* DL_Scheme_PublicKey::x509_encoder() const
    {
-   return DER_Encoder().encode(y).get_contents();
+   class DL_Algo_Encoder : public X509_Encoder
+      {
+      public:
+         AlgorithmIdentifier alg_id() const
+            {
+            return AlgorithmIdentifier(oid, group.DER_encode(group_format));
+            }
+
+         MemoryVector<byte> key_bits() const
+            {
+            return DER_Encoder().encode(y).get_contents();
+            }
+
+         DL_Algo_Encoder(const OID& oid, const BigInt& y,
+                         const DL_Group& group,
+                         const DL_Group::Format group_format)
+            {
+            this->oid = oid;
+            this->y = y;
+            this->group = group;
+            this->group_format = group_format;
+            }
+      private:
+         OID oid;
+         BigInt y;
+         DL_Group group;
+         DL_Group::Format group_format;
+      };
+
+   return new DL_Algo_Encoder(get_oid(), y, group, group_format());
+   }
+
+/*************************************************
+* Return the X.509 public key decoder            *
+*************************************************/
+X509_Decoder* DL_Scheme_PublicKey::x509_decoder()
+   {
+   class DL_Algo_Decoder : public X509_Decoder
+      {
+      public:
+         void alg_id(const AlgorithmIdentifier& alg_id)
+            {
+            DataSource_Memory source(alg_id.parameters);
+            key->group.BER_decode(source, key->group_format());
+            }
+
+         void key_bits(const MemoryRegion<byte>& bits)
+            {
+            BER_Decoder(bits).decode(key->y);
+            key->X509_load_hook();
+            }
+
+         DL_Algo_Decoder(DL_Scheme_PublicKey* k) : key(k) {}
+      private:
+         DL_Scheme_PublicKey* key;
+      };
+
+   return new DL_Algo_Decoder(this);
    }
 
 /*************************************************
 * Return the X.509 parameters encoding           *
 *************************************************/
-MemoryVector<byte> DL_Scheme_PublicKey::DER_encode_params() const
+MemoryVector<byte> DL_Scheme_PrivateKey::DER_encode_params() const
    {
    return group.DER_encode(group_format());
    }
 
 /*************************************************
-* Decode X.509 public key encoding               *
-*************************************************/
-void DL_Scheme_PublicKey::BER_decode_pub(DataSource& source)
-   {
-   BER_Decoder(source).decode(y);
-
-   if(y < 2 || y >= group_p())
-      throw Invalid_Argument(algo_name() + ": Invalid public key");
-   X509_load_hook();
-   }
-
-/*************************************************
 * Decode X.509 algorithm parameters              *
 *************************************************/
-void DL_Scheme_PublicKey::BER_decode_params(DataSource& source)
+void DL_Scheme_PrivateKey::BER_decode_params(DataSource& source)
    {
    group.BER_decode(source, group_format());
    }
