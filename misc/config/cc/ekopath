@@ -34,9 +34,6 @@ pentium4 -> "-mcpu=pentium4"
 amd64    -> "-mcpu=athlon64"
 </mach_opt>
 
-#<mach_abi_linking>
-#</mach_abi_linking>
-
 <os>
 linux
 </os>
