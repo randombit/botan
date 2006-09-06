@@ -54,11 +54,8 @@ class DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
    protected:
       BigInt x;
    private:
-      SecureVector<byte> DER_encode_priv() const;
-      void BER_decode_priv(DataSource&);
-      MemoryVector<byte> DER_encode_params() const;
-      void BER_decode_params(DataSource&);
-
+      PKCS8_Encoder* pkcs8_encoder() const;
+      PKCS8_Decoder* pkcs8_decoder();
       virtual void PKCS8_load_hook() {}
    };
 

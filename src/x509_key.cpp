@@ -20,12 +20,11 @@ namespace Botan {
 *************************************************/
 u64bit X509_PublicKey::key_id() const
    {
-   Pipe pipe(new Hash_Filter("SHA-1", 8));
-
    std::auto_ptr<X509_Encoder> encoder(x509_encoder());
    if(!encoder.get())
       throw Internal_Error("X509_PublicKey:key_id: No encoder found");
 
+   Pipe pipe(new Hash_Filter("SHA-1", 8));
    pipe.start_msg();
    pipe.write(algo_name());
    pipe.write(encoder->alg_id().parameters);

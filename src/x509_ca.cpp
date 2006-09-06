@@ -251,7 +251,13 @@ PK_Signer* choose_sig_format(const PKCS8_PrivateKey& key,
    Config::choose_sig_format(key.algo_name(), padding, format);
 
    sig_algo.oid = OIDS::lookup(key.algo_name() + "/" + padding);
-   sig_algo.parameters = key.DER_encode_params();
+
+   std::auto_ptr<X509_Encoder> encoding(key.x509_encoder());
+   if(!encoding.get())
+      throw Encoding_Error("Key " + key.algo_name() + " does not support "
+                           "X.509 encoding");
+
+   sig_algo.parameters = encoding->alg_id().parameters;
 
    const PK_Signing_Key& sig_key = dynamic_cast<const PK_Signing_Key&>(key);
 

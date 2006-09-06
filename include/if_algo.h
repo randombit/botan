@@ -53,10 +53,8 @@ class IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
       virtual void PKCS8_load_hook();
       BigInt d, p, q, d1, d2, c;
    private:
-      SecureVector<byte> DER_encode_priv() const;
-      void BER_decode_priv(DataSource&);
-      MemoryVector<byte> DER_encode_params() const;
-      void BER_decode_params(DataSource&);
+      PKCS8_Encoder* pkcs8_encoder() const;
+      PKCS8_Decoder* pkcs8_decoder();
    };
 
 }

@@ -12,15 +12,35 @@
 namespace Botan {
 
 /*************************************************
+* PKCS #8 Private Key Encoder                    *
+*************************************************/
+class PKCS8_Encoder
+   {
+   public:
+      virtual AlgorithmIdentifier alg_id() const = 0;
+      virtual MemoryVector<byte> key_bits() const = 0;
+      virtual ~PKCS8_Encoder() {}
+   };
+
+/*************************************************
+* PKCS #8 Private Key Decoder                    *
+*************************************************/
+class PKCS8_Decoder
+   {
+   public:
+      virtual void alg_id(const AlgorithmIdentifier&) = 0;
+      virtual void key_bits(const MemoryRegion<byte>&) = 0;
+      virtual ~PKCS8_Decoder() {}
+   };
+
+/*************************************************
 * PKCS #8 Private Key                            *
 *************************************************/
 class PKCS8_PrivateKey : public virtual X509_PublicKey
    {
    public:
-      virtual SecureVector<byte> DER_encode_priv() const = 0;
-      virtual void BER_decode_priv(DataSource&) = 0;
-      virtual MemoryVector<byte> DER_encode_params() const = 0;
-      virtual void BER_decode_params(DataSource&) = 0;
+      virtual PKCS8_Encoder* pkcs8_encoder() const = 0;
+      virtual PKCS8_Decoder* pkcs8_decoder() = 0;
       virtual ~PKCS8_PrivateKey() {}
    };
 

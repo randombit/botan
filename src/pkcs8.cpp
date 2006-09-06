@@ -143,16 +143,18 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
 *************************************************/
 void encode(const PKCS8_PrivateKey& key, Pipe& pipe, X509_Encoding encoding)
    {
-   const u32bit PKCS8_VERSION = 0;
+   std::auto_ptr<PKCS8_Encoder> encoder(key.pkcs8_encoder());
+   if(!encoder.get())
+      throw Encoding_Error("PKCS8::encode: Key does not support encoding");
 
-   AlgorithmIdentifier alg_id(key.get_oid(), key.DER_encode_params());
+   const u32bit PKCS8_VERSION = 0;
 
    SecureVector<byte> contents =
       DER_Encoder()
          .start_cons(SEQUENCE)
             .encode(PKCS8_VERSION)
-            .encode(alg_id)
-            .encode(key.DER_encode_priv(), OCTET_STRING)
+            .encode(encoder->alg_id())
+            .encode(encoder->key_bits(), OCTET_STRING)
          .end_cons()
       .get_contents();
 
@@ -230,7 +232,6 @@ std::string PEM_encode(const PKCS8_PrivateKey& key, const std::string& pass,
 PKCS8_PrivateKey* load_key(DataSource& source, const User_Interface& ui)
    {
    AlgorithmIdentifier alg_id;
-
    SecureVector<byte> pkcs8_key = PKCS8_decode(source, ui, alg_id);
 
    const std::string alg_name = OIDS::lookup(alg_id.oid);
@@ -244,12 +245,12 @@ PKCS8_PrivateKey* load_key(DataSource& source, const User_Interface& ui)
       throw PKCS8_Exception("Unknown PK algorithm/OID: " + alg_name + ", " +
                            alg_id.oid.as_string());
 
-   Pipe output;
-   output.process_msg(alg_id.parameters);
-   output.process_msg(pkcs8_key);
-   key->BER_decode_params(output);
-   output.set_default_msg(1);
-   key->BER_decode_priv(output);
+   std::auto_ptr<PKCS8_Decoder> decoder(key->pkcs8_decoder());
+   if(!decoder.get())
+      throw Decoding_Error("Key does not support PKCS #8 decoding");
+
+   decoder->alg_id(alg_id);
+   decoder->key_bits(pkcs8_key);
 
    return key.release();
    }
