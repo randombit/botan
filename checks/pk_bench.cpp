@@ -436,7 +436,7 @@ void bench_kas(PK_Key_Agreement* kas, const std::string& algo_name,
 *************************************************/
 RSA_PrivateKey* load_rsa_key(const std::string& file)
    {
-   PKCS8_PrivateKey* key = PKCS8::load_key(file);
+   Private_Key* key = PKCS8::load_key(file);
 
    RSA_PrivateKey* rsakey = dynamic_cast<RSA_PrivateKey*>(key);
 

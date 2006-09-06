@@ -346,7 +346,7 @@ u32bit validate_rsa_enc_pkcs8(const std::string& algo,
                                 decoding method we use */
 
    DataSource_Memory keysource((const byte*)str[0].c_str(), str[0].length());
-   PKCS8_PrivateKey* privkey = PKCS8::load_key(keysource, pass);
+   Private_Key* privkey = PKCS8::load_key(keysource, pass);
 
    RSA_PrivateKey* rsapriv = dynamic_cast<RSA_PrivateKey*>(privkey);
    if(!rsapriv)
@@ -466,7 +466,7 @@ u32bit validate_rsa_ver_x509(const std::string& algo,
 
    DataSource_Memory keysource((const byte*)str[0].c_str(), str[0].length());
 
-   X509_PublicKey* key = X509::load_key(keysource);
+   Public_Key* key = X509::load_key(keysource);
 
    RSA_PublicKey* rsakey = dynamic_cast<RSA_PublicKey*>(key);
 
@@ -550,7 +550,7 @@ u32bit validate_dsa_sig(const std::string& algo,
                                 decoding method we use */
 
    DataSource_Memory keysource((const byte*)str[0].c_str(), str[0].length());
-   PKCS8_PrivateKey* privkey = PKCS8::load_key(keysource, pass);
+   Private_Key* privkey = PKCS8::load_key(keysource, pass);
 
    DSA_PrivateKey* dsapriv = dynamic_cast<DSA_PrivateKey*>(privkey);
    if(!dsapriv)
@@ -577,7 +577,7 @@ u32bit validate_dsa_ver(const std::string& algo,
       throw Exception("Invalid input from pk_valid.dat");
 
    DataSource_Memory keysource((const byte*)str[0].c_str(), str[0].length());
-   X509_PublicKey* key = X509::load_key(keysource);
+   Public_Key* key = X509::load_key(keysource);
 
    DSA_PublicKey* dsakey = dynamic_cast<DSA_PublicKey*>(key);
 

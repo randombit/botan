@@ -15,11 +15,11 @@ X509_Cert_Options ca_opts();
 X509_Cert_Options req_opts1();
 X509_Cert_Options req_opts2();
 
-u64bit key_id(const X509_PublicKey* key)
+u64bit key_id(const Public_Key* key)
    {
    std::auto_ptr<X509_Encoder> encoder(key->x509_encoder());
    if(!encoder.get())
-      throw Internal_Error("X509_PublicKey:key_id: No encoder found");
+      throw Internal_Error("Public_Key:key_id: No encoder found");
 
    Pipe pipe(new Hash_Filter("SHA-1", 8));
    pipe.start_msg();
@@ -31,7 +31,7 @@ u64bit key_id(const X509_PublicKey* key)
    SecureVector<byte> output = pipe.read_all();
 
    if(output.size() != 8)
-      throw Internal_Error("X509_PublicKey::key_id: Incorrect output size");
+      throw Internal_Error("Public_Key::key_id: Incorrect output size");
 
    u64bit id = 0;
    for(u32bit j = 0; j != 8; ++j)
@@ -39,14 +39,14 @@ u64bit key_id(const X509_PublicKey* key)
    return id;
    }
 
-u32bit check_against_copy(const PKCS8_PrivateKey& orig)
+u32bit check_against_copy(const Private_Key& orig)
    {
-   PKCS8_PrivateKey* copy_priv = PKCS8::copy_key(orig);
-   X509_PublicKey* copy_pub = X509::copy_key(orig);
+   Private_Key* copy_priv = PKCS8::copy_key(orig);
+   Public_Key* copy_pub = X509::copy_key(orig);
 
    const std::string passphrase= "I need work! -Mr. T"; // Me too...
    DataSource_Memory enc_source(PKCS8::PEM_encode(orig, passphrase));
-   PKCS8_PrivateKey* copy_priv_enc = PKCS8::load_key(enc_source, passphrase);
+   Private_Key* copy_priv_enc = PKCS8::load_key(enc_source, passphrase);
 
    u64bit orig_id = key_id(&orig);
    u64bit pub_id = key_id(copy_pub);
