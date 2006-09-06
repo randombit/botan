@@ -22,6 +22,15 @@ namespace Botan {
 class Engine
    {
    public:
+      template<typename T>
+      class Algorithm_Cache
+         {
+         public:
+            virtual T* get(const std::string&) const = 0;
+            virtual void add(T* algo) const = 0;
+            virtual ~Algorithm_Cache() {}
+         };
+
       virtual IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,
                                   const BigInt&, const BigInt&, const BigInt&,
                                   const BigInt&, const BigInt&) const;
@@ -64,12 +73,24 @@ class Engine
       virtual class BlockCipherModePaddingMethod*
          find_bc_pad(const std::string&) const;
 
-      Algorithm* get_algo(const std::string&, const std::string&) const;
-      void add_algo(const std::string&, Algorithm*) const;
+      template<typename T>
+      T* lookup_algo(const Algorithm_Cache<T>* cache,
+                     const std::string& name,
+                     const Engine* engine,
+                     T* (Engine::*find)(const std::string& name) const) const
+         {
+         T* algo = cache->get(name);
+         if(!algo)
+            cache->add(algo = (engine->*find)(name));
+         return algo;
+         }
 
-      typedef std::pair<Mutex*, std::map<std::string, Algorithm*> >
-         mutex_map_pair;
-      mutable std::map<std::string, mutex_map_pair> mappings;
+      Algorithm_Cache<BlockCipher>* cache_of_bc;
+      Algorithm_Cache<StreamCipher>* cache_of_sc;
+      Algorithm_Cache<HashFunction>* cache_of_hf;
+      Algorithm_Cache<MessageAuthenticationCode>* cache_of_mac;
+      Algorithm_Cache<BlockCipherModePaddingMethod>* cache_of_bc_pad;
+      Algorithm_Cache<S2K>* cache_of_s2k;
    };
 
 namespace Engine_Core {

@@ -10,6 +10,58 @@
 
 namespace Botan {
 
+namespace {
+
+/*************************************************
+* Algorithm Cache                                *
+*************************************************/
+template<typename T>
+class Algorithm_Cache_Impl : public Engine::Algorithm_Cache<T>
+   {
+   public:
+      T* get(const std::string& name) const
+         {
+         Mutex_Holder lock(mutex);
+         return search_map(mappings, name);
+         }
+
+      void add(T* algo) const
+         {
+         if(!algo)
+            return;
+
+         Mutex_Holder lock(mutex);
+
+         const std::string algo_name = algo->name();
+         if(mappings.find(algo_name) != mappings.end())
+            delete mappings[algo_name];
+         mappings[algo_name] = algo;
+         }
+
+      Algorithm_Cache_Impl()
+         {
+         mutex = global_state().get_mutex();
+         }
+
+      ~Algorithm_Cache_Impl()
+         {
+         typename std::map<std::string, T*>::iterator i
+            = mappings.begin();
+         while(i != mappings.end())
+            {
+            delete i->second;
+            ++i;
+            }
+         delete mutex;
+         }
+   private:
+      Mutex* mutex;
+      mutable std::map<std::string, T*> mappings;
+   };
+
+
+}
+
 /*************************************************
 * Basic No-Op Engine Implementation              *
 *************************************************/
@@ -65,49 +117,12 @@ Modular_Exponentiator* Engine::mod_exp(const BigInt&,
    }
 
 /*************************************************
-* Get an algorithm out of the table              *
-*************************************************/
-Algorithm* Engine::get_algo(const std::string& type,
-                            const std::string& name) const
-   {
-   Mutex_Holder lock(mappings[type].first);
-   return search_map(mappings[type].second, name);
-   }
-
-/*************************************************
-* Add an algorithm to the appropriate table      *
-*************************************************/
-void Engine::add_algo(const std::string& type, Algorithm* algo) const
-   {
-   if(!algo)
-      return;
-
-   Mutex_Holder lock(mappings[type].first);
-
-   std::map<std::string, Algorithm*>& map = mappings[type].second;
-
-   const std::string algo_name = algo->name();
-
-   if(map.find(algo_name) != map.end())
-      delete map[algo_name];
-   map[algo_name] = algo;
-   }
-
-/*************************************************
 * Acquire a BlockCipher                          *
 *************************************************/
 const BlockCipher* Engine::block_cipher(const std::string& name) const
    {
-   const std::string real_name = deref_alias(name);
-
-   Algorithm* got = get_algo("block_cipher", real_name);
-
-   if(got)
-      return dynamic_cast<BlockCipher*>(got);
-
-   BlockCipher* to_return = find_block_cipher(real_name);
-   add_algorithm(to_return);
-   return to_return;
+   return lookup_algo(cache_of_bc, deref_alias(name),
+                      this, &Engine::find_block_cipher);
    }
 
 /*************************************************
@@ -115,16 +130,8 @@ const BlockCipher* Engine::block_cipher(const std::string& name) const
 *************************************************/
 const StreamCipher* Engine::stream_cipher(const std::string& name) const
    {
-   const std::string real_name = deref_alias(name);
-
-   Algorithm* got = get_algo("stream_cipher", real_name);
-
-   if(got)
-      return dynamic_cast<StreamCipher*>(got);
-
-   StreamCipher* to_return = find_stream_cipher(real_name);
-   add_algorithm(to_return);
-   return to_return;
+   return lookup_algo(cache_of_sc, deref_alias(name),
+                      this, &Engine::find_stream_cipher);
    }
 
 /*************************************************
@@ -132,16 +139,8 @@ const StreamCipher* Engine::stream_cipher(const std::string& name) const
 *************************************************/
 const HashFunction* Engine::hash(const std::string& name) const
    {
-   const std::string real_name = deref_alias(name);
-
-   Algorithm* got = get_algo("hash_func", real_name);
-
-   if(got)
-      return dynamic_cast<HashFunction*>(got);
-
-   HashFunction* to_return = find_hash(real_name);
-   add_algorithm(to_return);
-   return to_return;
+   return lookup_algo(cache_of_hf, deref_alias(name),
+                      this, &Engine::find_hash);
    }
 
 /*************************************************
@@ -149,16 +148,8 @@ const HashFunction* Engine::hash(const std::string& name) const
 *************************************************/
 const MessageAuthenticationCode* Engine::mac(const std::string& name) const
    {
-   const std::string real_name = deref_alias(name);
-
-   Algorithm* got = get_algo("mac_func", real_name);
-
-   if(got)
-      return dynamic_cast<MessageAuthenticationCode*>(got);
-
-   MessageAuthenticationCode* to_return = find_mac(real_name);
-   add_algorithm(to_return);
-   return to_return;
+   return lookup_algo(cache_of_mac, deref_alias(name),
+                      this, &Engine::find_mac);
    }
 
 /*************************************************
@@ -166,16 +157,8 @@ const MessageAuthenticationCode* Engine::mac(const std::string& name) const
 *************************************************/
 const S2K* Engine::s2k(const std::string& name) const
    {
-   const std::string real_name = deref_alias(name);
-
-   Algorithm* got = get_algo("s2k_func", real_name);
-
-   if(got)
-      return dynamic_cast<S2K*>(got);
-
-   S2K* to_return = find_s2k(real_name);
-   add_algorithm(to_return);
-   return to_return;
+   return lookup_algo(cache_of_s2k, deref_alias(name),
+                      this, &Engine::find_s2k);
    }
 
 /*************************************************
@@ -184,18 +167,8 @@ const S2K* Engine::s2k(const std::string& name) const
 const BlockCipherModePaddingMethod*
 Engine::bc_pad(const std::string& name) const
    {
-   const std::string real_name = deref_alias(name);
-
-   Algorithm* got = get_algo("bc_pad", real_name);
-
-   if(got)
-      return dynamic_cast<BlockCipherModePaddingMethod*>(got);
-
-   BlockCipherModePaddingMethod* to_return =
-      find_bc_pad(real_name);
-
-   add_algorithm(to_return);
-   return to_return;
+   return lookup_algo(cache_of_bc_pad, deref_alias(name),
+                      this, &Engine::find_bc_pad);
    }
 
 /*************************************************
@@ -203,7 +176,7 @@ Engine::bc_pad(const std::string& name) const
 *************************************************/
 void Engine::add_algorithm(BlockCipher* algo) const
    {
-   add_algo("block_cipher", algo);
+   cache_of_bc->add(algo);
    }
 
 /*************************************************
@@ -211,7 +184,7 @@ void Engine::add_algorithm(BlockCipher* algo) const
 *************************************************/
 void Engine::add_algorithm(StreamCipher* algo) const
    {
-   add_algo("stream_cipher", algo);
+   cache_of_sc->add(algo);
    }
 
 /*************************************************
@@ -219,7 +192,7 @@ void Engine::add_algorithm(StreamCipher* algo) const
 *************************************************/
 void Engine::add_algorithm(HashFunction* algo) const
    {
-   add_algo("hash_func", algo);
+   cache_of_hf->add(algo);
    }
 
 /*************************************************
@@ -227,7 +200,7 @@ void Engine::add_algorithm(HashFunction* algo) const
 *************************************************/
 void Engine::add_algorithm(MessageAuthenticationCode* algo) const
    {
-   add_algo("mac_func", algo);
+   cache_of_mac->add(algo);
    }
 
 /*************************************************
@@ -235,7 +208,7 @@ void Engine::add_algorithm(MessageAuthenticationCode* algo) const
 *************************************************/
 void Engine::add_algorithm(S2K* algo) const
    {
-   add_algo("s2k_func", algo);
+   cache_of_s2k->add(algo);
    }
 
 /*************************************************
@@ -243,7 +216,7 @@ void Engine::add_algorithm(S2K* algo) const
 *************************************************/
 void Engine::add_algorithm(BlockCipherModePaddingMethod* algo) const
    {
-   add_algo("bc_pad", algo);
+   cache_of_bc_pad->add(algo);
    }
 
 /*************************************************
@@ -251,17 +224,13 @@ void Engine::add_algorithm(BlockCipherModePaddingMethod* algo) const
 *************************************************/
 Engine::Engine()
    {
-   const std::string TYPES[] = {
-      "block_cipher", "stream_cipher", "hash_func", "mac_func",
-      "s2k_func", "bc_pad", ""
-   };
-
-   for(u32bit j = 0; TYPES[j] != ""; ++j)
-      {
-      mappings[TYPES[j]] =
-         std::make_pair(global_state().get_mutex(),
-                        std::map<std::string, Algorithm*>());
-      }
+   cache_of_bc = new Algorithm_Cache_Impl<BlockCipher>();
+   cache_of_sc = new Algorithm_Cache_Impl<StreamCipher>();
+   cache_of_hf = new Algorithm_Cache_Impl<HashFunction>();
+   cache_of_mac = new Algorithm_Cache_Impl<MessageAuthenticationCode>();
+   cache_of_s2k = new Algorithm_Cache_Impl<S2K>();
+   cache_of_bc_pad =
+      new Algorithm_Cache_Impl<BlockCipherModePaddingMethod>();
    }
 
 /*************************************************
@@ -269,21 +238,12 @@ Engine::Engine()
 *************************************************/
 Engine::~Engine()
    {
-   std::map<std::string, mutex_map_pair>::iterator i = mappings.begin();
-   while(i != mappings.end())
-      {
-      delete i->second.first;
-
-      std::map<std::string, Algorithm*>::iterator j =
-         i->second.second.begin();
-      while(j != i->second.second.end())
-         {
-         delete j->second;
-         ++j;
-         }
-
-      ++i;
-      }
+   delete cache_of_bc;
+   delete cache_of_sc;
+   delete cache_of_hf;
+   delete cache_of_mac;
+   delete cache_of_s2k;
+   delete cache_of_bc_pad;
    }
 
 /*************************************************
