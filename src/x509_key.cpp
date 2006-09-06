@@ -30,8 +30,6 @@ u64bit X509_PublicKey::key_id() const
    pipe.write(algo_name());
    pipe.write(encoder->alg_id().parameters);
    pipe.write(encoder->key_bits());
-   //pipe.write(DER_encode_pub());
-   //pipe.write(DER_encode_params());
    pipe.end_msg();
 
    SecureVector<byte> output = pipe.read_all();
@@ -44,58 +42,6 @@ u64bit X509_PublicKey::key_id() const
       id = (id << 8) | output[j];
    return id;
    }
-
-/*************************************************
-* Return an encoder for this key                 *
-*************************************************/
-/*
-X509_Encoder* X509_PublicKey::x509_encoder() const
-   {
-   class X509_Default_Encoder : public X509_Encoder
-      {
-      public:
-         AlgorithmIdentifier alg_id() const { return id; }
-         MemoryVector<byte> key_bits() const { return bits; }
-
-         X509_Default_Encoder(const X509_PublicKey* key)
-            {
-            id = AlgorithmIdentifier(key->get_oid(), key->DER_encode_params());
-            bits = key->DER_encode_pub();
-            }
-      private:
-         AlgorithmIdentifier id;
-         MemoryVector<byte> bits;
-      };
-
-   return new X509_Default_Encoder(this);
-   }
-*/
-
-/*
-X509_Decoder* X509_PublicKey::x509_decoder()
-   {
-   class X509_Default_Decoder : public X509_Decoder
-      {
-      public:
-         void alg_id(const AlgorithmIdentifier& alg_id)
-            {
-            DataSource_Memory params(alg_id.parameters);
-            key->BER_decode_params(params);
-            }
-         void key_bits(const MemoryRegion<byte>& bits)
-            {
-            DataSource_Memory key_bits(bits);
-            key->BER_decode_pub(key_bits);
-            }
-
-         X509_Default_Decoder(X509_PublicKey* k) : key(k) {}
-      private:
-         X509_PublicKey* key;
-      };
-
-   return new X509_Default_Decoder(this);
-   }
-*/
 
 namespace X509 {
 
