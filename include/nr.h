@@ -51,7 +51,7 @@ class NR_PrivateKey : public NR_PublicKey,
       NR_PrivateKey(const DL_Group&, const BigInt&, const BigInt& = 0);
    private:
       friend PKCS8_PrivateKey* get_private_key(const std::string&);
-      void PKCS8_load_hook();
+      void PKCS8_load_hook(bool = false);
       NR_PrivateKey() {}
    };
 

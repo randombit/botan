@@ -18,6 +18,8 @@ class DH_PublicKey : public virtual DL_Scheme_PublicKey
    {
    public:
       MemoryVector<byte> public_value() const;
+      u32bit max_input_bits() const;
+
       DH_PublicKey(const DL_Group&, const BigInt&);
    protected:
       std::string algo_name() const { return "DH"; }
@@ -46,7 +48,7 @@ class DH_PrivateKey : public DH_PublicKey,
       DH_PrivateKey(const DL_Group&, const BigInt&, const BigInt& = 0);
    private:
       friend PKCS8_PrivateKey* get_private_key(const std::string&);
-      void PKCS8_load_hook();
+      void PKCS8_load_hook(bool = false);
       DH_PrivateKey() {}
 
       DH_Core core;

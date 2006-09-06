@@ -50,7 +50,7 @@ class IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
 
       virtual ~IF_Scheme_PrivateKey() {}
    protected:
-      virtual void PKCS8_load_hook();
+      virtual void PKCS8_load_hook(bool = false);
       BigInt d, p, q, d1, d2, c;
    private:
       PKCS8_Encoder* pkcs8_encoder() const;

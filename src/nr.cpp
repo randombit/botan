@@ -25,7 +25,7 @@ NR_PublicKey::NR_PublicKey(const DL_Group& grp, const BigInt& y1)
 void NR_PublicKey::X509_load_hook()
    {
    core = NR_Core(group, y);
-   check_loaded_public();
+   load_check();
    }
 
 /*************************************************
@@ -60,8 +60,7 @@ NR_PrivateKey::NR_PrivateKey(const DL_Group& grp)
    group = grp;
    x = random_integer(2, group_q() - 1);
 
-   PKCS8_load_hook();
-   check_generated_private();
+   PKCS8_load_hook(true);
    }
 
 /*************************************************
@@ -75,17 +74,21 @@ NR_PrivateKey::NR_PrivateKey(const DL_Group& grp, const BigInt& x1,
    x = x1;
 
    PKCS8_load_hook();
-   check_loaded_private();
    }
 
 /*************************************************
 * Algorithm Specific PKCS #8 Initialization Code *
 *************************************************/
-void NR_PrivateKey::PKCS8_load_hook()
+void NR_PrivateKey::PKCS8_load_hook(bool generated)
    {
    if(y == 0)
       y = power_mod(group_g(), x, group_p());
    core = NR_Core(group, y, x);
+
+   if(generated)
+      gen_check();
+   else
+      load_check();
    }
 
 /*************************************************

@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * DL Public Key                                  *
 *************************************************/
-class DL_Scheme_PublicKey : public virtual X509_PublicKey
+class DL_Scheme_PublicKey : public virtual Public_Key
    {
    public:
       bool check_key(bool) const;
@@ -43,7 +43,7 @@ class DL_Scheme_PublicKey : public virtual X509_PublicKey
 * DL Private Key                                 *
 *************************************************/
 class DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
-                             public virtual PKCS8_PrivateKey
+                             public virtual Private_Key
    {
    public:
       bool check_key(bool) const;
@@ -56,7 +56,7 @@ class DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
    private:
       PKCS8_Encoder* pkcs8_encoder() const;
       PKCS8_Decoder* pkcs8_decoder();
-      virtual void PKCS8_load_hook() {}
+      virtual void PKCS8_load_hook(bool = false) {}
    };
 
 }

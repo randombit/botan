@@ -1,3 +1,5 @@
+
+#include <botan/filters.h>
 #include <botan/x509self.h>
 #include <botan/x509stor.h>
 #include <botan/x509_ca.h>
@@ -7,10 +9,35 @@
 using namespace Botan;
 
 #include <iostream>
+#include <memory>
 
 X509_Cert_Options ca_opts();
 X509_Cert_Options req_opts1();
 X509_Cert_Options req_opts2();
+
+u64bit key_id(const X509_PublicKey* key)
+   {
+   std::auto_ptr<X509_Encoder> encoder(key->x509_encoder());
+   if(!encoder.get())
+      throw Internal_Error("X509_PublicKey:key_id: No encoder found");
+
+   Pipe pipe(new Hash_Filter("SHA-1", 8));
+   pipe.start_msg();
+   pipe.write(key->algo_name());
+   pipe.write(encoder->alg_id().parameters);
+   pipe.write(encoder->key_bits());
+   pipe.end_msg();
+
+   SecureVector<byte> output = pipe.read_all();
+
+   if(output.size() != 8)
+      throw Internal_Error("X509_PublicKey::key_id: Incorrect output size");
+
+   u64bit id = 0;
+   for(u32bit j = 0; j != 8; ++j)
+      id = (id << 8) | output[j];
+   return id;
+   }
 
 u32bit check_against_copy(const PKCS8_PrivateKey& orig)
    {
@@ -21,10 +48,10 @@ u32bit check_against_copy(const PKCS8_PrivateKey& orig)
    DataSource_Memory enc_source(PKCS8::PEM_encode(orig, passphrase));
    PKCS8_PrivateKey* copy_priv_enc = PKCS8::load_key(enc_source, passphrase);
 
-   u64bit orig_id = orig.key_id();
-   u64bit pub_id = copy_pub->key_id();
-   u64bit priv_id = copy_priv->key_id();
-   u64bit priv_enc_id = copy_priv_enc->key_id();
+   u64bit orig_id = key_id(&orig);
+   u64bit pub_id = key_id(copy_pub);
+   u64bit priv_id = key_id(copy_priv);
+   u64bit priv_enc_id = key_id(copy_priv_enc);
 
    delete copy_pub;
    delete copy_priv;
@@ -32,7 +59,7 @@ u32bit check_against_copy(const PKCS8_PrivateKey& orig)
 
    if(orig_id != pub_id || orig_id != priv_id || orig_id != priv_enc_id)
       {
-      printf("FAILED!!\n");
+      std::cout << "Failed copy check\n";
       return 1;
       }
    return 0;

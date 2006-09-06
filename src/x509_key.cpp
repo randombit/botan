@@ -15,33 +15,6 @@
 
 namespace Botan {
 
-/*************************************************
-* Compute the key id                             *
-*************************************************/
-u64bit X509_PublicKey::key_id() const
-   {
-   std::auto_ptr<X509_Encoder> encoder(x509_encoder());
-   if(!encoder.get())
-      throw Internal_Error("X509_PublicKey:key_id: No encoder found");
-
-   Pipe pipe(new Hash_Filter("SHA-1", 8));
-   pipe.start_msg();
-   pipe.write(algo_name());
-   pipe.write(encoder->alg_id().parameters);
-   pipe.write(encoder->key_bits());
-   pipe.end_msg();
-
-   SecureVector<byte> output = pipe.read_all();
-
-   if(output.size() != 8)
-      throw Internal_Error("X509_PublicKey::key_id: Incorrect output size");
-
-   u64bit id = 0;
-   for(u32bit j = 0; j != 8; ++j)
-      id = (id << 8) | output[j];
-   return id;
-   }
-
 namespace X509 {
 
 /*************************************************

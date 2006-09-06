@@ -34,17 +34,6 @@ class PKCS8_Decoder
    };
 
 /*************************************************
-* PKCS #8 Private Key                            *
-*************************************************/
-class PKCS8_PrivateKey : public virtual X509_PublicKey
-   {
-   public:
-      virtual PKCS8_Encoder* pkcs8_encoder() const = 0;
-      virtual PKCS8_Decoder* pkcs8_decoder() = 0;
-      virtual ~PKCS8_PrivateKey() {}
-   };
-
-/*************************************************
 * PKCS #8 General Exception                      *
 *************************************************/
 struct PKCS8_Exception : public Decoding_Error

@@ -26,7 +26,7 @@ class X509_Object
                                             const AlgorithmIdentifier&,
                                             const MemoryRegion<byte>&);
 
-      bool check_signature(class X509_PublicKey&) const;
+      bool check_signature(class Public_Key&) const;
 
       void encode(Pipe&, X509_Encoding = PEM) const;
       SecureVector<byte> BER_encode() const;

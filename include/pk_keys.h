@@ -12,29 +12,44 @@
 namespace Botan {
 
 /*************************************************
-* Generic PK Key                                 *
+* Public Key Base Class                          *
 *************************************************/
-class PK_Key
+class Public_Key
    {
    public:
       virtual std::string algo_name() const = 0;
-
       virtual OID get_oid() const;
-      virtual u32bit max_input_bits() const { return 0; }
+
       virtual bool check_key(bool) const { return true; }
       virtual u32bit message_parts() const { return 1; }
       virtual u32bit message_part_size() const { return 0; }
-      virtual ~PK_Key() {}
+      virtual u32bit max_input_bits() const = 0;
+
+      virtual class X509_Encoder* x509_encoder() const { return 0; }
+      virtual class X509_Decoder* x509_decoder() { return 0; }
+
+      virtual ~Public_Key() {}
    protected:
-      void check_loaded_public() const;
-      void check_loaded_private() const;
-      void check_generated_private() const;
+      virtual void load_check() const;
+   };
+
+/*************************************************
+* Private Key Base Class                         *
+*************************************************/
+class Private_Key : public virtual Public_Key
+   {
+   public:
+      virtual class PKCS8_Encoder* pkcs8_encoder() const { return 0; }
+      virtual class PKCS8_Decoder* pkcs8_decoder() { return 0; }
+   protected:
+      void load_check() const;
+      void gen_check() const;
    };
 
 /*************************************************
 * PK Encrypting Key                              *
 *************************************************/
-class PK_Encrypting_Key : public virtual PK_Key
+class PK_Encrypting_Key : public virtual Public_Key
    {
    public:
       virtual SecureVector<byte> encrypt(const byte[], u32bit) const = 0;
@@ -44,7 +59,7 @@ class PK_Encrypting_Key : public virtual PK_Key
 /*************************************************
 * PK Decrypting Key                              *
 *************************************************/
-class PK_Decrypting_Key : public virtual PK_Key
+class PK_Decrypting_Key : public virtual Private_Key
    {
    public:
       virtual SecureVector<byte> decrypt(const byte[], u32bit) const = 0;
@@ -54,7 +69,7 @@ class PK_Decrypting_Key : public virtual PK_Key
 /*************************************************
 * PK Signing Key                                 *
 *************************************************/
-class PK_Signing_Key : public virtual PK_Key
+class PK_Signing_Key : public virtual Private_Key
    {
    public:
       virtual SecureVector<byte> sign(const byte[], u32bit) const = 0;
@@ -64,7 +79,7 @@ class PK_Signing_Key : public virtual PK_Key
 /*************************************************
 * PK Verifying Key, Message Recovery Version     *
 *************************************************/
-class PK_Verifying_with_MR_Key : public virtual PK_Key
+class PK_Verifying_with_MR_Key : public virtual Public_Key
    {
    public:
       virtual SecureVector<byte> verify(const byte[], u32bit) const = 0;
@@ -74,7 +89,7 @@ class PK_Verifying_with_MR_Key : public virtual PK_Key
 /*************************************************
 * PK Verifying Key, No Message Recovery Version  *
 *************************************************/
-class PK_Verifying_wo_MR_Key : public virtual PK_Key
+class PK_Verifying_wo_MR_Key : public virtual Public_Key
    {
    public:
       virtual bool verify(const byte[], u32bit,
@@ -85,7 +100,7 @@ class PK_Verifying_wo_MR_Key : public virtual PK_Key
 /*************************************************
 * PK Secret Value Derivation Key                 *
 *************************************************/
-class PK_Key_Agreement_Key : public virtual PK_Key
+class PK_Key_Agreement_Key : public virtual Private_Key
    {
    public:
       virtual SecureVector<byte> derive_key(const byte[], u32bit) const = 0;
@@ -93,7 +108,12 @@ class PK_Key_Agreement_Key : public virtual PK_Key
       virtual ~PK_Key_Agreement_Key() {}
    };
 
+/*************************************************
+* Typedefs                                       *
+*************************************************/
 typedef PK_Key_Agreement_Key PK_KA_Key;
+typedef Public_Key X509_PublicKey;
+typedef Private_Key PKCS8_PrivateKey;
 
 }
 

@@ -159,13 +159,13 @@ PKCS8_Decoder* IF_Scheme_PrivateKey::pkcs8_decoder()
 void IF_Scheme_PublicKey::X509_load_hook()
    {
    core = IF_Core(e, n);
-   check_loaded_public();
+   load_check();
    }
 
 /*************************************************
 * Algorithm Specific PKCS #8 Initialization Code *
 *************************************************/
-void IF_Scheme_PrivateKey::PKCS8_load_hook()
+void IF_Scheme_PrivateKey::PKCS8_load_hook(bool generated)
    {
    if(n == 0)  n = p * q;
    if(d1 == 0) d1 = d % (p - 1);
@@ -173,6 +173,11 @@ void IF_Scheme_PrivateKey::PKCS8_load_hook()
    if(c == 0)  c = inverse_mod(q, p);
 
    core = IF_Core(e, n, d, p, q, d1, d2, c);
+
+   if(generated)
+      gen_check();
+   else
+      load_check();
    }
 
 /*************************************************

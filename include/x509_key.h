@@ -34,19 +34,6 @@ class X509_Decoder
       virtual ~X509_Decoder() {}
    };
 
-/*************************************************
-* X.509 Public Key                               *
-*************************************************/
-class X509_PublicKey : public virtual PK_Key
-   {
-   public:
-      u64bit key_id() const;
-
-      virtual X509_Encoder* x509_encoder() const = 0;
-      virtual X509_Decoder* x509_decoder() = 0;
-      virtual ~X509_PublicKey() {}
-   };
-
 namespace X509 {
 
 /*************************************************

@@ -65,8 +65,7 @@ RW_PrivateKey::RW_PrivateKey(u32bit bits, u32bit exp)
    q = random_prime(bits - p.bits(), e / 2, ((p % 8 == 3) ? 7 : 3), 8);
    d = inverse_mod(e, lcm(p - 1, q - 1) >> 1);
 
-   PKCS8_load_hook();
-   check_generated_private();
+   PKCS8_load_hook(true);
 
    if(n.bits() != bits)
       throw Self_Test_Failure(algo_name() + " private key generation failed");
@@ -89,7 +88,6 @@ RW_PrivateKey::RW_PrivateKey(const BigInt& prime1, const BigInt& prime2,
       d = inverse_mod(e, lcm(p - 1, q - 1) >> 1);
 
    PKCS8_load_hook();
-   check_loaded_private();
    }
 
 /*************************************************

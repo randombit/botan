@@ -137,7 +137,6 @@ namespace X509_Store_Search {
 std::vector<X509_Certificate> by_email(const X509_Store&, const std::string&);
 std::vector<X509_Certificate> by_name(const X509_Store&, const std::string&);
 std::vector<X509_Certificate> by_dns(const X509_Store&, const std::string&);
-std::vector<X509_Certificate> by_keyid(const X509_Store&, u64bit);
 std::vector<X509_Certificate> by_iands(const X509_Store&, const X509_DN&,
                                        const MemoryRegion<byte>&);
 std::vector<X509_Certificate> by_SKID(const X509_Store&,

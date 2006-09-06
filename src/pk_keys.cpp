@@ -27,7 +27,7 @@ bool key_check_level(const std::string& type)
 /*************************************************
 * Default OID access                             *
 *************************************************/
-OID PK_Key::get_oid() const
+OID Public_Key::get_oid() const
    {
    try {
       return OIDS::lookup(algo_name());
@@ -41,7 +41,7 @@ OID PK_Key::get_oid() const
 /*************************************************
 * Run checks on a loaded public key              *
 *************************************************/
-void PK_Key::check_loaded_public() const
+void Public_Key::load_check() const
    {
    if(!check_key(key_check_level("public")))
       throw Invalid_Argument(algo_name() + ": Invalid public key");
@@ -50,7 +50,7 @@ void PK_Key::check_loaded_public() const
 /*************************************************
 * Run checks on a loaded private key             *
 *************************************************/
-void PK_Key::check_loaded_private() const
+void Private_Key::load_check() const
    {
    if(!check_key(key_check_level("private")))
       throw Invalid_Argument(algo_name() + ": Invalid private key");
@@ -59,7 +59,7 @@ void PK_Key::check_loaded_private() const
 /*************************************************
 * Run checks on a generated private key          *
 *************************************************/
-void PK_Key::check_generated_private() const
+void Private_Key::gen_check() const
    {
    if(!check_key(key_check_level("private_gen")))
       throw Self_Test_Failure(algo_name() + " private key generation failed");

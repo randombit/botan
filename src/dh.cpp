@@ -24,7 +24,15 @@ DH_PublicKey::DH_PublicKey(const DL_Group& grp, const BigInt& y1)
 *************************************************/
 void DH_PublicKey::X509_load_hook()
    {
-   check_loaded_public();
+   load_check();
+   }
+
+/*************************************************
+* Return the maximum input size in bits          *
+*************************************************/
+u32bit DH_PublicKey::max_input_bits() const
+   {
+   return group_p().bits();
    }
 
 /*************************************************
@@ -45,8 +53,7 @@ DH_PrivateKey::DH_PrivateKey(const DL_Group& grp)
    const BigInt& p = group_p();
    x = random_integer(2 * dl_work_factor(p.bits()));
 
-   PKCS8_load_hook();
-   check_generated_private();
+   PKCS8_load_hook(true);
    }
 
 /*************************************************
@@ -60,17 +67,21 @@ DH_PrivateKey::DH_PrivateKey(const DL_Group& grp, const BigInt& x1,
    x = x1;
 
    PKCS8_load_hook();
-   check_loaded_private();
    }
 
 /*************************************************
 * Algorithm Specific PKCS #8 Initialization Code *
 *************************************************/
-void DH_PrivateKey::PKCS8_load_hook()
+void DH_PrivateKey::PKCS8_load_hook(bool generated)
    {
    if(y == 0)
       y = power_mod(group_g(), x, group_p());
    core = DH_Core(group, x);
+
+   if(generated)
+      gen_check();
+   else
+      load_check();
    }
 
 /*************************************************

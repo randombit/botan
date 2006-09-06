@@ -26,7 +26,7 @@ ElGamal_PublicKey::ElGamal_PublicKey(const DL_Group& grp, const BigInt& y1)
 void ElGamal_PublicKey::X509_load_hook()
    {
    core = ELG_Core(group, y);
-   check_loaded_public();
+   load_check();
    }
 
 /*************************************************
@@ -56,8 +56,7 @@ ElGamal_PrivateKey::ElGamal_PrivateKey(const DL_Group& grp)
 
    x = random_integer(2 * dl_work_factor(group_p().bits()));
 
-   PKCS8_load_hook();
-   check_generated_private();
+   PKCS8_load_hook(true);
    }
 
 /*************************************************
@@ -71,17 +70,21 @@ ElGamal_PrivateKey::ElGamal_PrivateKey(const DL_Group& grp, const BigInt& x1,
    x = x1;
 
    PKCS8_load_hook();
-   check_loaded_private();
    }
 
 /*************************************************
 * Algorithm Specific PKCS #8 Initialization Code *
 *************************************************/
-void ElGamal_PrivateKey::PKCS8_load_hook()
+void ElGamal_PrivateKey::PKCS8_load_hook(bool generated)
    {
    if(y == 0)
       y = power_mod(group_g(), x, group_p());
    core = ELG_Core(group, y, x);
+
+   if(generated)
+      gen_check();
+   else
+      load_check();
    }
 
 /*************************************************

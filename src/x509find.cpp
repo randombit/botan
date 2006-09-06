@@ -101,28 +101,6 @@ std::vector<X509_Certificate> by_dns(const X509_Store& store,
    }
 
 /*************************************************
-* Search for a certificate by key id             *
-*************************************************/
-std::vector<X509_Certificate> by_keyid(const X509_Store& store, u64bit key_id)
-   {
-   class KeyID_Match : public X509_Store::Search_Func
-      {
-      public:
-         bool match(const X509_Certificate& cert) const
-            {
-            std::auto_ptr<X509_PublicKey> key(cert.subject_public_key());
-            return (key->key_id() == key_id);
-            }
-         KeyID_Match(u64bit id) : key_id(id) {}
-      private:
-         u64bit key_id;
-      };
-
-   KeyID_Match search_params(key_id);
-   return store.get_certs(search_params);
-   }
-
-/*************************************************
 * Search for a certificate by issuer/serial      *
 *************************************************/
 std::vector<X509_Certificate> by_iands(const X509_Store& store,
