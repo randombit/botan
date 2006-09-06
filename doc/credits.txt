@@ -6,9 +6,9 @@
      N - name
      E - email
      W - web URL
-     P - PGP keyid/fingerprint
-     D - Description
-     S - Snail-mail
+     P - PGP fingerprint
+     D - description
+     S - meatspace location
 ----------
 
 N: Matthew Gregan
