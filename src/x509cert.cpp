@@ -186,7 +186,7 @@ X509_Certificate::issuer_info(const std::string& what) const
 /*************************************************
 * Return the public key in this certificate      *
 *************************************************/
-X509_PublicKey* X509_Certificate::subject_public_key() const
+Public_Key* X509_Certificate::subject_public_key() const
    {
    DataSource_Memory source(subject.get1("X509.Certificate.public_key"));
    return X509::load_key(source);

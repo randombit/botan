@@ -19,7 +19,7 @@ namespace Botan {
 class PKCS10_Request : public X509_Object
    {
    public:
-      X509_PublicKey* subject_public_key() const;
+      Public_Key* subject_public_key() const;
 
       MemoryVector<byte> raw_public_key() const;
       X509_DN subject_dn() const;

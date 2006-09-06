@@ -28,7 +28,7 @@ class DSA_PublicKey : public PK_Verifying_wo_MR_Key,
 
       DSA_Core core;
    private:
-      friend X509_PublicKey* get_public_key(const std::string&);
+      friend Public_Key* get_public_key(const std::string&);
       DL_Group::Format group_format() const { return DL_Group::ANSI_X9_57; }
       u32bit message_parts() const { return 2; }
       u32bit message_part_size() const;
@@ -50,7 +50,7 @@ class DSA_PrivateKey : public DSA_PublicKey,
       DSA_PrivateKey(const DL_Group&);
       DSA_PrivateKey(const DL_Group&, const BigInt&, const BigInt& = 0);
    private:
-      friend PKCS8_PrivateKey* get_private_key(const std::string&);
+      friend Private_Key* get_private_key(const std::string&);
       void PKCS8_load_hook(bool = false);
       DSA_PrivateKey() {}
    };

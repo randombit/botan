@@ -354,9 +354,9 @@ X509_Code X509_Store::check_sig(const Cert_Info& cert_info,
 /*************************************************
 * Check a CA's signature                         *
 *************************************************/
-X509_Code X509_Store::check_sig(const X509_Object& object, X509_PublicKey* key)
+X509_Code X509_Store::check_sig(const X509_Object& object, Public_Key* key)
    {
-   std::auto_ptr<X509_PublicKey> pub_key(key);
+   std::auto_ptr<Public_Key> pub_key(key);
    std::auto_ptr<PK_Verifier> verifier;
 
    try {

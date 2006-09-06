@@ -24,9 +24,9 @@ namespace Botan {
 * Load the certificate and private key           *
 *************************************************/
 X509_CA::X509_CA(const X509_Certificate& c,
-                 const PKCS8_PrivateKey& key) : cert(c)
+                 const Private_Key& key) : cert(c)
    {
-   const PKCS8_PrivateKey* key_pointer = &key;
+   const Private_Key* key_pointer = &key;
    if(!dynamic_cast<const PK_Signing_Key*>(key_pointer))
       throw Invalid_Argument("X509_CA: " + key.algo_name() + " cannot sign");
 
@@ -50,7 +50,7 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
       constraints = Key_Constraints(KEY_CERT_SIGN | CRL_SIGN);
    else
       {
-      std::auto_ptr<X509_PublicKey> key(req.subject_public_key());
+      std::auto_ptr<Public_Key> key(req.subject_public_key());
       constraints = X509::find_constraints(*key, req.constraints());
       }
 
@@ -243,7 +243,7 @@ X509_CA::~X509_CA()
 /*************************************************
 * Choose a signing format for the key            *
 *************************************************/
-PK_Signer* choose_sig_format(const PKCS8_PrivateKey& key,
+PK_Signer* choose_sig_format(const Private_Key& key,
                              AlgorithmIdentifier& sig_algo)
    {
    std::string padding;

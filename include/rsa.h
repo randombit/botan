@@ -27,7 +27,7 @@ class RSA_PublicKey : public PK_Encrypting_Key,
       std::string algo_name() const { return "RSA"; }
       RSA_PublicKey() {}
    private:
-      friend X509_PublicKey* get_public_key(const std::string&);
+      friend Public_Key* get_public_key(const std::string&);
    };
 
 /*************************************************
@@ -48,7 +48,7 @@ class RSA_PrivateKey : public RSA_PublicKey,
                      const BigInt& = 0, const BigInt& = 0);
       RSA_PrivateKey(u32bit, u32bit = 65537);
    private:
-      friend PKCS8_PrivateKey* get_private_key(const std::string&);
+      friend Private_Key* get_private_key(const std::string&);
       BigInt private_op(const byte[], u32bit) const;
       RSA_PrivateKey() {}
    };

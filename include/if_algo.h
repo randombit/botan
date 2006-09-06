@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * IF Public Key                                  *
 *************************************************/
-class IF_Scheme_PublicKey : public virtual X509_PublicKey
+class IF_Scheme_PublicKey : public virtual Public_Key
    {
    public:
       bool check_key(bool) const;
@@ -39,7 +39,7 @@ class IF_Scheme_PublicKey : public virtual X509_PublicKey
 * IF Private Key                                 *
 *************************************************/
 class IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
-                             public virtual PKCS8_PrivateKey
+                             public virtual Private_Key
    {
    public:
       bool check_key(bool) const;

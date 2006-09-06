@@ -29,7 +29,7 @@ class ElGamal_PublicKey : public PK_Encrypting_Key,
 
       ELG_Core core;
    private:
-      friend X509_PublicKey* get_public_key(const std::string&);
+      friend Public_Key* get_public_key(const std::string&);
       DL_Group::Format group_format() const { return DL_Group::ANSI_X9_42; }
       void X509_load_hook();
    };
@@ -49,7 +49,7 @@ class ElGamal_PrivateKey : public ElGamal_PublicKey,
       ElGamal_PrivateKey(const DL_Group&);
       ElGamal_PrivateKey(const DL_Group&, const BigInt&, const BigInt& = 0);
    private:
-      friend PKCS8_PrivateKey* get_private_key(const std::string&);
+      friend Private_Key* get_private_key(const std::string&);
       void PKCS8_load_hook(bool = false);
       ElGamal_PrivateKey() {}
    };

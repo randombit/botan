@@ -35,7 +35,7 @@ class X509_CA
                                         const X509_DN&, const X509_DN&,
                                         const Extensions&);
 
-      X509_CA(const X509_Certificate&, const PKCS8_PrivateKey&);
+      X509_CA(const X509_Certificate&, const Private_Key&);
       ~X509_CA();
    private:
       X509_CA(const X509_CA&) {}
@@ -51,7 +51,7 @@ class X509_CA
 /*************************************************
 * Choose a signing format for the key            *
 *************************************************/
-PK_Signer* choose_sig_format(const PKCS8_PrivateKey&, AlgorithmIdentifier&);
+PK_Signer* choose_sig_format(const Private_Key&, AlgorithmIdentifier&);
 
 
 }

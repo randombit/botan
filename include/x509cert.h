@@ -21,7 +21,7 @@ static const u32bit NO_CERT_PATH_LIMIT = 0xFFFFFFF0;
 class X509_Certificate : public X509_Object
    {
    public:
-      X509_PublicKey* subject_public_key() const;
+      Public_Key* subject_public_key() const;
 
       X509_DN issuer_dn() const;
       X509_DN subject_dn() const;

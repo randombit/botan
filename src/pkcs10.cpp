@@ -144,7 +144,7 @@ MemoryVector<byte> PKCS10_Request::raw_public_key() const
 /*************************************************
 * Return the public key of the requestor         *
 *************************************************/
-X509_PublicKey* PKCS10_Request::subject_public_key() const
+Public_Key* PKCS10_Request::subject_public_key() const
    {
    DataSource_Memory source(info.get1("X509.Certificate.public_key"));
    return X509::load_key(source);

@@ -153,7 +153,7 @@ AlgorithmIdentifier X509_Object::signature_algorithm() const
 /*************************************************
 * Check the signature on an object               *
 *************************************************/
-bool X509_Object::check_signature(X509_PublicKey& pub_key) const
+bool X509_Object::check_signature(Public_Key& pub_key) const
    {
    try {
       std::vector<std::string> sig_info =

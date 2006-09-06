@@ -39,16 +39,16 @@ namespace X509 {
 /*************************************************
 * X.509 Public Key Encoding/Decoding             *
 *************************************************/
-void encode(const X509_PublicKey&, Pipe&, X509_Encoding = PEM);
-std::string PEM_encode(const X509_PublicKey&);
+void encode(const Public_Key&, Pipe&, X509_Encoding = PEM);
+std::string PEM_encode(const Public_Key&);
 
-X509_PublicKey* load_key(DataSource&);
-X509_PublicKey* load_key(const std::string&);
-X509_PublicKey* load_key(const MemoryRegion<byte>&);
+Public_Key* load_key(DataSource&);
+Public_Key* load_key(const std::string&);
+Public_Key* load_key(const MemoryRegion<byte>&);
 
-X509_PublicKey* copy_key(const X509_PublicKey&);
+Public_Key* copy_key(const Public_Key&);
 
-Key_Constraints find_constraints(const X509_PublicKey&, Key_Constraints);
+Key_Constraints find_constraints(const Public_Key&, Key_Constraints);
 
 }
 

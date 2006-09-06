@@ -141,7 +141,7 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
 /*************************************************
 * DER or PEM encode a PKCS #8 private key        *
 *************************************************/
-void encode(const PKCS8_PrivateKey& key, Pipe& pipe, X509_Encoding encoding)
+void encode(const Private_Key& key, Pipe& pipe, X509_Encoding encoding)
    {
    std::auto_ptr<PKCS8_Encoder> encoder(key.pkcs8_encoder());
    if(!encoder.get())
@@ -167,7 +167,7 @@ void encode(const PKCS8_PrivateKey& key, Pipe& pipe, X509_Encoding encoding)
 /*************************************************
 * Encode and encrypt a PKCS #8 private key       *
 *************************************************/
-void encrypt_key(const PKCS8_PrivateKey& key, Pipe& pipe,
+void encrypt_key(const Private_Key& key, Pipe& pipe,
                  const std::string& pass, const std::string& pbe_algo,
                  X509_Encoding encoding)
    {
@@ -201,7 +201,7 @@ void encrypt_key(const PKCS8_PrivateKey& key, Pipe& pipe,
 /*************************************************
 * PEM encode a PKCS #8 private key               *
 *************************************************/
-std::string PEM_encode(const PKCS8_PrivateKey& key)
+std::string PEM_encode(const Private_Key& key)
    {
    Pipe pem;
    pem.start_msg();
@@ -213,7 +213,7 @@ std::string PEM_encode(const PKCS8_PrivateKey& key)
 /*************************************************
 * Encrypt and PEM encode a PKCS #8 private key   *
 *************************************************/
-std::string PEM_encode(const PKCS8_PrivateKey& key, const std::string& pass,
+std::string PEM_encode(const Private_Key& key, const std::string& pass,
                        const std::string& pbe_algo)
    {
    if(pass == "")
@@ -229,7 +229,7 @@ std::string PEM_encode(const PKCS8_PrivateKey& key, const std::string& pass,
 /*************************************************
 * Extract a private key and return it            *
 *************************************************/
-PKCS8_PrivateKey* load_key(DataSource& source, const User_Interface& ui)
+Private_Key* load_key(DataSource& source, const User_Interface& ui)
    {
    AlgorithmIdentifier alg_id;
    SecureVector<byte> pkcs8_key = PKCS8_decode(source, ui, alg_id);
@@ -239,7 +239,7 @@ PKCS8_PrivateKey* load_key(DataSource& source, const User_Interface& ui)
       throw PKCS8_Exception("Unknown algorithm OID: " +
                             alg_id.oid.as_string());
 
-   std::auto_ptr<PKCS8_PrivateKey> key(get_private_key(alg_name));
+   std::auto_ptr<Private_Key> key(get_private_key(alg_name));
 
    if(!key.get())
       throw PKCS8_Exception("Unknown PK algorithm/OID: " + alg_name + ", " +
@@ -258,7 +258,7 @@ PKCS8_PrivateKey* load_key(DataSource& source, const User_Interface& ui)
 /*************************************************
 * Extract a private key and return it            *
 *************************************************/
-PKCS8_PrivateKey* load_key(const std::string& fsname, const User_Interface& ui)
+Private_Key* load_key(const std::string& fsname, const User_Interface& ui)
    {
    DataSource_Stream source(fsname, true);
    return PKCS8::load_key(source, ui);
@@ -267,7 +267,7 @@ PKCS8_PrivateKey* load_key(const std::string& fsname, const User_Interface& ui)
 /*************************************************
 * Extract a private key and return it            *
 *************************************************/
-PKCS8_PrivateKey* load_key(DataSource& source, const std::string& pass)
+Private_Key* load_key(DataSource& source, const std::string& pass)
    {
    return PKCS8::load_key(source, User_Interface(pass));
    }
@@ -275,7 +275,7 @@ PKCS8_PrivateKey* load_key(DataSource& source, const std::string& pass)
 /*************************************************
 * Extract a private key and return it            *
 *************************************************/
-PKCS8_PrivateKey* load_key(const std::string& fsname, const std::string& pass)
+Private_Key* load_key(const std::string& fsname, const std::string& pass)
    {
    return PKCS8::load_key(fsname, User_Interface(pass));
    }
@@ -283,7 +283,7 @@ PKCS8_PrivateKey* load_key(const std::string& fsname, const std::string& pass)
 /*************************************************
 * Make a copy of this private key                *
 *************************************************/
-PKCS8_PrivateKey* copy_key(const PKCS8_PrivateKey& key)
+Private_Key* copy_key(const Private_Key& key)
    {
    Pipe bits;
 

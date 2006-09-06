@@ -25,7 +25,7 @@ class RW_PublicKey : public PK_Verifying_with_MR_Key,
       std::string algo_name() const { return "RW"; }
       RW_PublicKey() {}
    private:
-      friend X509_PublicKey* get_public_key(const std::string&);
+      friend Public_Key* get_public_key(const std::string&);
    };
 
 /*************************************************
@@ -44,7 +44,7 @@ class RW_PrivateKey : public RW_PublicKey,
                     const BigInt& = 0, const BigInt& = 0);
       RW_PrivateKey(u32bit, u32bit = 2);
    private:
-      friend PKCS8_PrivateKey* get_private_key(const std::string&);
+      friend Private_Key* get_private_key(const std::string&);
       RW_PrivateKey() {}
    };
 

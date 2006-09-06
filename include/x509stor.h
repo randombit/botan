@@ -76,7 +76,7 @@ class X509_Store
 
       void add_new_certstore(Certificate_Store*);
 
-      static X509_Code check_sig(const X509_Object&, X509_PublicKey*);
+      static X509_Code check_sig(const X509_Object&, Public_Key*);
 
       X509_Store();
       X509_Store(const X509_Store&);

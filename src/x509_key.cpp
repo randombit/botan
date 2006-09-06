@@ -20,7 +20,7 @@ namespace X509 {
 /*************************************************
 * DER or PEM encode a X.509 public key           *
 *************************************************/
-void encode(const X509_PublicKey& key, Pipe& pipe, X509_Encoding encoding)
+void encode(const Public_Key& key, Pipe& pipe, X509_Encoding encoding)
    {
    std::auto_ptr<X509_Encoder> encoder(key.x509_encoder());
    if(!encoder.get())
@@ -43,7 +43,7 @@ void encode(const X509_PublicKey& key, Pipe& pipe, X509_Encoding encoding)
 /*************************************************
 * PEM encode a X.509 public key                  *
 *************************************************/
-std::string PEM_encode(const X509_PublicKey& key)
+std::string PEM_encode(const Public_Key& key)
    {
    Pipe pem;
    pem.start_msg();
@@ -55,7 +55,7 @@ std::string PEM_encode(const X509_PublicKey& key)
 /*************************************************
 * Extract a public key and return it             *
 *************************************************/
-X509_PublicKey* load_key(DataSource& source)
+Public_Key* load_key(DataSource& source)
    {
    try {
       AlgorithmIdentifier alg_id;
@@ -92,7 +92,7 @@ X509_PublicKey* load_key(DataSource& source)
          throw Decoding_Error("Unknown algorithm OID: " +
                               alg_id.oid.as_string());
 
-      std::auto_ptr<X509_PublicKey> key_obj(get_public_key(alg_name));
+      std::auto_ptr<Public_Key> key_obj(get_public_key(alg_name));
       if(!key_obj.get())
          throw Decoding_Error("Unknown PK algorithm/OID: " + alg_name + ", " +
                               alg_id.oid.as_string());
@@ -115,7 +115,7 @@ X509_PublicKey* load_key(DataSource& source)
 /*************************************************
 * Extract a public key and return it             *
 *************************************************/
-X509_PublicKey* load_key(const std::string& fsname)
+Public_Key* load_key(const std::string& fsname)
    {
    DataSource_Stream source(fsname, true);
    return X509::load_key(source);
@@ -124,7 +124,7 @@ X509_PublicKey* load_key(const std::string& fsname)
 /*************************************************
 * Extract a public key and return it             *
 *************************************************/
-X509_PublicKey* load_key(const MemoryRegion<byte>& mem)
+Public_Key* load_key(const MemoryRegion<byte>& mem)
    {
    DataSource_Memory source(mem);
    return X509::load_key(source);
@@ -133,7 +133,7 @@ X509_PublicKey* load_key(const MemoryRegion<byte>& mem)
 /*************************************************
 * Make a copy of this public key                 *
 *************************************************/
-X509_PublicKey* copy_key(const X509_PublicKey& key)
+Public_Key* copy_key(const Public_Key& key)
    {
    Pipe bits;
    bits.start_msg();
@@ -146,10 +146,10 @@ X509_PublicKey* copy_key(const X509_PublicKey& key)
 /*************************************************
 * Find the allowable key constraints             *
 *************************************************/
-Key_Constraints find_constraints(const X509_PublicKey& pub_key,
+Key_Constraints find_constraints(const Public_Key& pub_key,
                                  Key_Constraints limits)
    {
-   const X509_PublicKey* key = &pub_key;
+   const Public_Key* key = &pub_key;
    u32bit constraints = 0;
 
    if(dynamic_cast<const PK_Encrypting_Key*>(key))

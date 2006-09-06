@@ -16,7 +16,7 @@ namespace Botan {
 /*************************************************
 * Get an PK public key object                    *
 *************************************************/
-X509_PublicKey* get_public_key(const std::string& alg_name)
+Public_Key* get_public_key(const std::string& alg_name)
    {
    if(alg_name == "RSA")      return new RSA_PublicKey;
    else if(alg_name == "DSA") return new DSA_PublicKey;
@@ -31,7 +31,7 @@ X509_PublicKey* get_public_key(const std::string& alg_name)
 /*************************************************
 * Get an PK private key object                   *
 *************************************************/
-PKCS8_PrivateKey* get_private_key(const std::string& alg_name)
+Private_Key* get_private_key(const std::string& alg_name)
    {
    if(alg_name == "RSA")      return new RSA_PrivateKey;
    else if(alg_name == "DSA") return new DSA_PrivateKey;

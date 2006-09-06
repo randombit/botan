@@ -47,21 +47,21 @@ namespace PKCS8 {
 /*************************************************
 * PKCS #8 Private Key Encoding/Decoding          *
 *************************************************/
-void encode(const PKCS8_PrivateKey&, Pipe&, X509_Encoding = PEM);
-void encrypt_key(const PKCS8_PrivateKey&, Pipe&, const std::string&,
+void encode(const Private_Key&, Pipe&, X509_Encoding = PEM);
+void encrypt_key(const Private_Key&, Pipe&, const std::string&,
                  const std::string& = "", X509_Encoding = PEM);
 
-std::string PEM_encode(const PKCS8_PrivateKey&);
-std::string PEM_encode(const PKCS8_PrivateKey&, const std::string&,
+std::string PEM_encode(const Private_Key&);
+std::string PEM_encode(const Private_Key&, const std::string&,
                        const std::string& = "");
 
-PKCS8_PrivateKey* load_key(DataSource&, const User_Interface&);
-PKCS8_PrivateKey* load_key(DataSource&, const std::string& = "");
+Private_Key* load_key(DataSource&, const User_Interface&);
+Private_Key* load_key(DataSource&, const std::string& = "");
 
-PKCS8_PrivateKey* load_key(const std::string&, const User_Interface&);
-PKCS8_PrivateKey* load_key(const std::string&, const std::string& = "");
+Private_Key* load_key(const std::string&, const User_Interface&);
+Private_Key* load_key(const std::string&, const std::string& = "");
 
-PKCS8_PrivateKey* copy_key(const PKCS8_PrivateKey&);
+Private_Key* copy_key(const Private_Key&);
 
 }
 
