@@ -17,27 +17,15 @@ namespace Botan {
 static const u32bit DEFAULT_BUFFERSIZE = BOTAN_DEFAULT_BUFFER_SIZE;
 
 /*************************************************
-* Algorithm                                      *
-*************************************************/
-class Algorithm
-   {
-   public:
-      virtual void clear() throw() {};
-      virtual std::string name() const = 0;
-      virtual ~Algorithm() {}
-      Algorithm() {}
-   private:
-      Algorithm(const Algorithm&) {}
-      Algorithm& operator=(const Algorithm&) { return (*this); }
-   };
-
-/*************************************************
 * Symmetric Algorithm                            *
 *************************************************/
-class SymmetricAlgorithm : public virtual Algorithm
+class SymmetricAlgorithm
    {
    public:
       const u32bit MAXIMUM_KEYLENGTH, MINIMUM_KEYLENGTH, KEYLENGTH_MULTIPLE;
+
+      virtual std::string name() const = 0;
+
       void set_key(const SymmetricKey&) throw(Invalid_Key_Length);
       void set_key(const byte[], u32bit) throw(Invalid_Key_Length);
       bool valid_keylength(u32bit) const;
@@ -54,11 +42,15 @@ class BlockCipher : public SymmetricAlgorithm
    {
    public:
       const u32bit BLOCK_SIZE;
+
       void encrypt(const byte in[], byte out[]) const { enc(in, out); }
       void decrypt(const byte in[], byte out[]) const { dec(in, out); }
       void encrypt(byte block[]) const { enc(block, block); }
       void decrypt(byte block[]) const { dec(block, block); }
+
       virtual BlockCipher* clone() const = 0;
+      virtual void clear() throw() {};
+
       BlockCipher(u32bit, u32bit, u32bit = 0, u32bit = 1);
       virtual ~BlockCipher() {}
    private:
@@ -82,6 +74,8 @@ class StreamCipher : public SymmetricAlgorithm
       virtual void seek(u32bit);
 
       virtual StreamCipher* clone() const = 0;
+      virtual void clear() throw() {};
+
       StreamCipher(u32bit, u32bit = 0, u32bit = 1, u32bit = 0);
       virtual ~StreamCipher() {}
    private:
@@ -91,7 +85,7 @@ class StreamCipher : public SymmetricAlgorithm
 /*************************************************
 * Buffered Computation                           *
 *************************************************/
-class BufferedComputation : public virtual Algorithm
+class BufferedComputation
    {
    public:
       const u32bit OUTPUT_LENGTH;
@@ -118,7 +112,11 @@ class HashFunction : public BufferedComputation
    {
    public:
       const u32bit HASH_BLOCK_SIZE;
+
       virtual HashFunction* clone() const = 0;
+      virtual std::string name() const = 0;
+      virtual void clear() throw() {};
+
       HashFunction(u32bit, u32bit = 0);
       virtual ~HashFunction() {}
    };
@@ -130,9 +128,12 @@ class MessageAuthenticationCode : public BufferedComputation,
                                   public SymmetricAlgorithm
    {
    public:
-      virtual std::string name() const = 0;
-      virtual MessageAuthenticationCode* clone() const = 0;
       virtual bool verify_mac(const byte[], u32bit);
+
+      virtual MessageAuthenticationCode* clone() const = 0;
+      virtual std::string name() const = 0;
+      virtual void clear() throw() {};
+
       MessageAuthenticationCode(u32bit, u32bit, u32bit = 0, u32bit = 1);
       virtual ~MessageAuthenticationCode() {}
    };
@@ -151,13 +152,16 @@ class EntropySource
 /*************************************************
 * Random Number Generator                        *
 *************************************************/
-class RandomNumberGenerator : public Algorithm
+class RandomNumberGenerator
    {
    public:
       virtual void randomize(byte[], u32bit) throw(PRNG_Unseeded) = 0;
       virtual bool is_seeded() const { return true; }
+      virtual void clear() throw() {};
+
       void add_entropy(const byte[], u32bit);
       u32bit add_entropy(EntropySource&, bool = true);
+
       virtual ~RandomNumberGenerator() {}
    private:
       virtual void add_randomness(const byte[], u32bit) = 0;

@@ -13,10 +13,12 @@ namespace Botan {
 /*************************************************
 * S2K Interface                                  *
 *************************************************/
-class S2K : public Algorithm
+class S2K
    {
    public:
       virtual S2K* clone() const = 0;
+      virtual std::string name() const = 0;
+      virtual void clear() {}
 
       OctetString derive_key(u32bit, const std::string&) const;
 
