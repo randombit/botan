@@ -3,7 +3,7 @@
 * (C) 1999-2006 The Botan Project                *
 *************************************************/
 
-#include <botan/asn1_obj.h>
+#include <botan/alg_id.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/oids.h>
