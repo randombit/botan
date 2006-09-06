@@ -234,10 +234,10 @@ sub main {
 
     %include = list_dir($INCLUDE_DIR, \%ignored_include);
 
-    mkdirs(($BUILD_DIR,
+    mkdirs($BUILD_DIR,
             $BUILD_INCLUDE_DIR, $CPP_INCLUDE_DIR,
-            $BUILD_LIB_DIR, $BUILD_CHECK_DIR));
-    clean_out_dirs(($CPP_INCLUDE_DIR));
+            $BUILD_LIB_DIR, $BUILD_CHECK_DIR);
+    clean_out_dirs($CPP_INCLUDE_DIR);
 
     my $config_h = File::Spec->catfile($BUILD_DIR, $CONFIG_HEADER);
 
