@@ -83,15 +83,16 @@ class PK_Verifier
 
       void set_input_format(Signature_Format);
 
-      PK_Verifier(const PK_Key&, const std::string&);
-      virtual ~PK_Verifier() { delete emsa; }
+      PK_Verifier(const std::string&);
+      virtual ~PK_Verifier();
    protected:
       virtual bool validate_signature(const MemoryRegion<byte>&,
                                       const byte[], u32bit) = 0;
+      virtual u32bit key_message_parts() const = 0;
+      virtual u32bit key_message_part_size() const = 0;
+
       Signature_Format sig_format;
       EMSA* emsa;
-   private:
-      const PK_Key& key;
    };
 
 /*************************************************
@@ -149,6 +150,9 @@ class PK_Verifier_with_MR : public PK_Verifier
       PK_Verifier_with_MR(const PK_Verifying_with_MR_Key&, const std::string&);
    private:
       bool validate_signature(const MemoryRegion<byte>&, const byte[], u32bit);
+      u32bit key_message_parts() const { return key.message_parts(); }
+      u32bit key_message_part_size() const { return key.message_part_size(); }
+
       const PK_Verifying_with_MR_Key& key;
    };
 
@@ -161,6 +165,9 @@ class PK_Verifier_wo_MR : public PK_Verifier
       PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key&, const std::string&);
    private:
       bool validate_signature(const MemoryRegion<byte>&, const byte[], u32bit);
+      u32bit key_message_parts() const { return key.message_parts(); }
+      u32bit key_message_part_size() const { return key.message_part_size(); }
+
       const PK_Verifying_wo_MR_Key& key;
    };
 

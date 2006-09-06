@@ -211,10 +211,18 @@ SecureVector<byte> PK_Signer::signature()
 /*************************************************
 * PK_Verifier Constructor                        *
 *************************************************/
-PK_Verifier::PK_Verifier(const PK_Key& k, const std::string& emsa_name) :
-   emsa(get_emsa(emsa_name)), key(k)
+PK_Verifier::PK_Verifier(const std::string& emsa_name)
    {
+   emsa = get_emsa(emsa_name);
    sig_format = IEEE_1363;
+   }
+
+/*************************************************
+* PK_Verifier Destructor                         *
+*************************************************/
+PK_Verifier::~PK_Verifier()
+   {
+   delete emsa;
    }
 
 /*************************************************
@@ -222,7 +230,7 @@ PK_Verifier::PK_Verifier(const PK_Key& k, const std::string& emsa_name) :
 *************************************************/
 void PK_Verifier::set_input_format(Signature_Format format)
    {
-   if(key.message_parts() == 1 && format != IEEE_1363)
+   if(key_message_parts() == 1 && format != IEEE_1363)
       throw Invalid_State("PK_Verifier: This algorithm always uses IEEE 1363");
    sig_format = format;
    }
@@ -298,10 +306,10 @@ bool PK_Verifier::check_signature(const byte sig[], u32bit length)
             BigInt sig_part;
             ber_sig.decode(sig_part);
             real_sig.append(BigInt::encode_1363(sig_part,
-                                                key.message_part_size()));
+                                                key_message_part_size()));
             ++count;
             }
-         if(count != key.message_parts())
+         if(count != key_message_parts())
             throw Decoding_Error("PK_Verifier: signature size invalid");
 
          return validate_signature(emsa->raw_data(),
@@ -320,7 +328,7 @@ bool PK_Verifier::check_signature(const byte sig[], u32bit length)
 *************************************************/
 PK_Verifier_with_MR::PK_Verifier_with_MR(const PK_Verifying_with_MR_Key& k,
                                          const std::string& emsa_name) :
-   PK_Verifier(k, emsa_name), key(k)
+   PK_Verifier(emsa_name), key(k)
    {
    }
 
@@ -339,7 +347,7 @@ bool PK_Verifier_with_MR::validate_signature(const MemoryRegion<byte>& msg,
 *************************************************/
 PK_Verifier_wo_MR::PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key& k,
                                      const std::string& emsa_name) :
-   PK_Verifier(k, emsa_name), key(k)
+   PK_Verifier(emsa_name), key(k)
    {
    }
 
