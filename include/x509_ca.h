@@ -48,6 +48,12 @@ class X509_CA
       PK_Signer* signer;
    };
 
+/*************************************************
+* Choose a signing format for the key            *
+*************************************************/
+PK_Signer* choose_sig_format(const PKCS8_PrivateKey&, AlgorithmIdentifier&);
+
+
 }
 
 #endif

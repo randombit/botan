@@ -55,24 +55,6 @@ void load_info(const X509_Cert_Options& opts, X509_DN& subject_dn,
                              opts.xmpp, UTF8_STRING);
    }
 
-/*************************************************
-* Choose a signing format for the key            *
-*************************************************/
-PK_Signer* choose_sig_format(const PKCS8_PrivateKey& key,
-                             AlgorithmIdentifier& sig_algo)
-   {
-   std::string padding;
-   Signature_Format format;
-   Config::choose_sig_format(key.algo_name(), padding, format);
-
-   sig_algo.oid = OIDS::lookup(key.algo_name() + "/" + padding);
-   sig_algo.parameters = key.DER_encode_params();
-
-   const PK_Signing_Key& sig_key = dynamic_cast<const PK_Signing_Key&>(key);
-
-   return get_pk_signer(sig_key, padding, format);
-   }
-
 }
 
 namespace X509 {
