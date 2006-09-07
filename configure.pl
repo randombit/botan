@@ -522,65 +522,6 @@ sub find_mp_bits {
     return $mp_bits;
 }
 
-sub print_config_h {
-    my ($major, $minor, $patch, $config_h, $local_config, $os, $arch, $cpu,
-        $mp_bits, $defines_ext) = @_;
-
-    open CONFIG_H, ">$config_h" or
-        error("Couldn't write $config_h ($!)");
-
-    print CONFIG_H <<END_OF_CONFIG_H;
-/*************************************************
-* Build Config Header File                       *
-* (C) 1999-2006 The Botan Project                *
-*************************************************/
-
-#ifndef BOTAN_BUILD_CONFIG_H__
-#define BOTAN_BUILD_CONFIG_H__
-
-#define BOTAN_VERSION_MAJOR $major
-#define BOTAN_VERSION_MINOR $minor
-#define BOTAN_VERSION_PATCH $patch
-
-#define BOTAN_MP_WORD_BITS $mp_bits
-#define BOTAN_DEFAULT_BUFFER_SIZE 4096
-
-#define BOTAN_KARAT_MUL_THRESHOLD 12
-#define BOTAN_KARAT_SQR_THRESHOLD 12
-END_OF_CONFIG_H
-
-    if($arch ne 'generic') {
-        $arch = uc $arch;
-        print CONFIG_H "\n#define BOTAN_TARGET_ARCH_IS_$arch\n";
-
-        if($arch ne $cpu) {
-            $cpu = uc $cpu;
-            $cpu =~ s/-/_/g;
-            print CONFIG_H "#define BOTAN_TARGET_CPU_IS_$cpu\n";
-        }
-    }
-
-    my $defines = '';
-
-    foreach (sort @$defines_ext) {
-        next if not defined $_ or not $_;
-        $defines .= "#define BOTAN_EXT_$_\n";
-    }
-
-    print CONFIG_H "\n", $defines if($defines);
-
-    if($local_config ne '') {
-        open LOCAL_CONFIG, "<$local_config" or die
-            "Couldn't read $local_config ($!)\n";
-        print CONFIG_H "\n";
-        while(<LOCAL_CONFIG>) { print CONFIG_H; }
-    }
-
-    print CONFIG_H "\n#endif\n";
-
-    close CONFIG_H;
-}
-
 sub check_for_conflicts {
 
     sub conflicts {
@@ -762,29 +703,29 @@ supported but not listed. Choosing a specific submodel will usually result in
 code that will not run on earlier versions of that architecture.
 
 ENDOFHELP
+
+   sub print_listing {
+       my ($header, $hash) = @_;
+       print "$header: ";
+       my $len = length "$header: ";
+
+       foreach my $name (sort keys %$hash) {
+           if($len > 71) {
+               print "\n   ";
+               $len = 3;
+           }
+           print "$name ";
+           $len += length "$name ";
+       }
+
+       print "\n";
+   }
+
    print_listing('CC', \%COMPILER);
    print_listing('OS', \%OPERATING_SYSTEM);
    print_listing('CPU', \%CPU);
    print_listing('Modules', \%MODULES) if(%MODULES);
    exit;
-   }
-
-sub print_listing
-   {
-   my ($header, $hash) = @_;
-   print "$header: ";
-   my $len = length "$header: ";
-
-   foreach my $name (sort keys %$hash) {
-       if($len > 71) {
-           print "\n   ";
-           $len = 3;
-       }
-       print "$name ";
-       $len += length "$name ";
-   }
-
-   print "\n";
    }
 
 sub which
@@ -875,6 +816,558 @@ sub append_if {
 sub append_ifdef {
     my($var,$addme) = @_;
     append_if($var, $addme, defined($addme));
+}
+
+sub read_hash {
+    my ($line, $reader, $marker, $func) = @_;
+
+    if($line =~ m@^<$marker>$@) {
+        while(1) {
+            $line = &$reader();
+            last if($line =~ m@^</$marker>$@);
+            &$func($line);
+        }
+    }
+}
+
+sub list_push {
+    my ($listref) = @_;
+    return sub { push @$listref, $_[0]; }
+}
+
+sub set_if {
+    my ($line, $what, $var) = @_;
+    $$var = $1 if($line =~ /^$what (.*)/);
+}
+
+sub set_if_quoted {
+    my ($line, $what, $var) = @_;
+    $$var = $1 if($line =~ /^$what \"(.*)\"/);
+}
+
+sub set_if_any {
+    my ($func, $line, $hash, $any_of) = @_;
+    foreach my $found (split(/:/, $any_of)) {
+        &$func($line, $found, \$hash->{$found});
+    }
+}
+
+sub read_info_files {
+    my ($dir,$func) = @_;
+
+    my %allinfo;
+    foreach my $file (dir_list($dir)) {
+        %{$allinfo{$file}} = 
+            &$func($file, File::Spec->catfile($dir, $file));
+    }
+
+    return %allinfo;
+}
+
+sub read_module_files {
+    my ($moddir) = @_;
+
+    my %allinfo;
+    foreach my $dir (dir_list($moddir)) {
+        my $modfile = File::Spec->catfile($moddir, $dir, 'modinfo.txt');
+        %{$allinfo{$dir}} = get_module_info($dir, $modfile);
+    }
+
+    return %allinfo;
+}
+
+sub get_module_info {
+   my ($name, $file) = @_;
+   my $reader = make_reader($file);
+
+   my %info;
+   $info{'name'} = $name;
+   $info{'external_libs'} = 0;
+   $info{'libs'} = {};
+
+   while($_ = &$reader()) {
+       set_if_any(\&set_if_quoted, $_, \%info, 'realname:note');
+
+       set_if_any(\&set_if, $_, \%info, 'define:mp_bits');
+
+       $info{'external_libs'} = 1 if(/^uses_external_libs/);
+
+       read_hash($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
+       read_hash($_, $reader, 'cc', list_push(\@{$info{'cc'}}));
+       read_hash($_, $reader, 'os', list_push(\@{$info{'os'}}));
+       read_hash($_, $reader, 'add', list_push(\@{$info{'add'}}));
+       read_hash($_, $reader, 'replace', list_push(\@{$info{'replace'}}));
+       read_hash($_, $reader, 'ignore', list_push(\@{$info{'ignore'}}));
+
+       read_hash($_, $reader, 'libs',
+                 sub {
+                     my $line = $_[0];
+                     $line =~ m/^([\w!,]*) -> ([\w,-]*)$/;
+                     $info{'libs'}{$1} = $2;
+                 });
+
+       if(/^require_version /) {
+           if(/^require_version (\d+)\.(\d+)\.(\d+)$/) {
+               my $version = "$1.$2.$3";
+               my $needed_version = 100*$1 + 10*$2 + $3;
+
+               my $have_version =
+                   100*$MAJOR_VERSION + 10*$MINOR_VERSION + $PATCH_VERSION;
+
+               if($needed_version > $have_version) {
+                   warning("Module $name needs v$version; disabling");
+                   return ();
+               }
+           }
+           else {
+               error("In module $name, bad version requirement '$_'");
+           }
+       }
+   }
+
+   return %info;
+}
+
+sub get_arch_info {
+    my ($name,$file) = @_;
+    my $reader = make_reader($file);
+
+    my %info;
+    $info{'name'} = $name;
+
+    while($_ = &$reader()) {
+        set_if_any(\&set_if_quoted, $_, \%info, 'realname');
+        set_if_any(\&set_if, $_, \%info, 'default_submodel');
+
+        read_hash($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
+        read_hash($_, $reader, 'submodels', list_push(\@{$info{'submodels'}}));
+
+        read_hash($_, $reader, 'submodel_aliases',
+                  sub {
+                      my $line = $_[0];
+                      $line =~ m/^(\S*) -> (\S*)$/;
+                      $info{'submodel_aliases'}{$1} = $2;
+                  });
+    }
+    return %info;
+}
+
+sub get_os_info {
+    my ($name,$file) = @_;
+    my $reader = make_reader($file);
+
+    my %info;
+    $info{'name'} = $name;
+
+    while($_ = &$reader()) {
+        set_if_any(\&set_if_quoted, $_, \%info, 'realname:ar_command');
+
+        set_if_any(\&set_if, $_, \%info,
+                   'os_type:obj_suffix:so_suffix:static_suffix:' .
+                   'install_root:header_dir:lib_dir:doc_dir:' .
+                   'install_user:install_group:install_cmd:ar_needs_ranlib');
+
+        read_hash($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
+        read_hash($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
+
+        read_hash($_, $reader, 'supports_shared',
+                  list_push(\@{$info{'supports_shared'}}));
+    }
+    return %info;
+}
+
+sub get_cc_info {
+    my ($name,$file) = @_;
+    my $reader = make_reader($file);
+
+    my %info;
+    $info{'name'} = $name;
+
+    while($_ = &$reader()) {
+        set_if_any(\&set_if_quoted, $_, \%info,
+                   'realname:binary_name:lib_opt_flags:check_opt_flags:' .
+                   'lang_flags:warning_flags:so_obj_flags:ar_command:' .
+                   'debug_flags:no_debug_flags');
+
+        set_if_any(\&set_if, $_, \%info, 'makefile_style');
+
+        read_hash($_, $reader, 'os', list_push(\@{$info{'os'}}));
+        read_hash($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
+
+        sub quoted_mapping {
+            my $hashref = $_[0];
+            return sub {
+                my $line = $_[0];
+                $line =~ m/^(\S*) -> \"(.*)\"$/;
+                $$hashref{$1} = $2;
+            }
+        }
+
+        read_hash($_, $reader, 'mach_abi_linking',
+                  quoted_mapping(\%{$info{'mach_abi_linking'}}));
+        read_hash($_, $reader, 'so_link_flags',
+                  quoted_mapping(\%{$info{'so_link_flags'}}));
+
+        read_hash($_, $reader, 'mach_opt',
+                  sub {
+                      my $line = $_[0];
+                      $line =~ m/^(\S*) -> \"(.*)\" ?(.*)?$/;
+                      $info{'mach_opt_flags'}{$1} = $2;
+                      $info{'mach_opt_re'}{$1} = $3;
+                  });
+
+    }
+    return %info;
+}
+
+sub guess_cpu_from_this
+{
+    my $cpuinfo = lc $_[0];
+    my $cpu = '';
+
+    $cpu = 'athlon' if($cpuinfo =~ /athlon/);
+    $cpu = 'pentium4' if($cpuinfo =~ /pentium 4/);
+    $cpu = 'pentium4' if($cpuinfo =~ /pentium\(r\) 4/);
+    $cpu = 'pentium3' if($cpuinfo =~ /pentium iii/);
+    $cpu = 'pentium2' if($cpuinfo =~ /pentium ii/);
+    $cpu = 'pentium3' if($cpuinfo =~ /pentium 3/);
+    $cpu = 'pentium2' if($cpuinfo =~ /pentium 2/);
+
+    # The 32-bit SPARC stuff is impossible to match to arch type easily, and
+    # anyway the uname stuff will pick up that it's a SPARC so it doesn't
+    # matter. If it's an Ultra, assume a 32-bit userspace, no 64-bit code
+    # possible; that's the most common setup right now anyway
+    $cpu = 'sparc32-v9' if($cpuinfo =~ /ultrasparc/);
+
+    # 64-bit PowerPC
+    $cpu = 'rs64a' if($cpuinfo =~ /rs64-/);
+    $cpu = 'power3' if($cpuinfo =~ /power3/);
+    $cpu = 'power4' if($cpuinfo =~ /power4/);
+    $cpu = 'power5' if($cpuinfo =~ /power5/);
+    $cpu = 'ppc970' if($cpuinfo =~ /ppc970/);
+
+    # Ooh, an Alpha. Try to figure out what kind
+    if($cpuinfo =~ /alpha/)
+    {
+        $cpu = 'alpha-ev4' if($cpuinfo =~ /ev4/);
+        $cpu = 'alpha-ev5' if($cpuinfo =~ /ev5/);
+        $cpu = 'alpha-ev56' if($cpuinfo =~ /ev56/);
+        $cpu = 'alpha-pca56' if($cpuinfo =~ /pca56/);
+        $cpu = 'alpha-ev6' if($cpuinfo =~ /ev6/);
+        $cpu = 'alpha-ev67' if($cpuinfo =~ /ev67/);
+        $cpu = 'alpha-ev68' if($cpuinfo =~ /ev68/);
+        $cpu = 'alpha-ev7' if($cpuinfo =~ /ev7/);
+    }
+
+    return $cpu;
+}
+
+# Do some WAGing and see if we can figure out what system we are. Think about
+# this as a really moronic config.guess
+sub guess_triple
+{
+    # /bin/sh, good bet we're on something Unix-y (at least it'll have uname)
+    if(-f '/bin/sh')
+    {
+        my $os = lc `uname -s 2>/dev/null`; chomp $os;
+
+        # Let the crappy hacks commence!
+
+        # Cygwin's uname -s is cygwin_<windows version>
+        $os = 'cygwin' if($os =~ /^cygwin/);
+        $os = os_alias($os);
+
+        if(!defined $OPERATING_SYSTEM{$os})
+        {
+            print "Unknown uname -s output: $os, falling back to 'generic'\n";
+            $os = 'generic';
+        }
+
+        my $cpu = '';
+
+        # If we have /proc/cpuinfo, try to get nice specific information about
+        # what kind of CPU we're running on.
+        if(-e '/proc/cpuinfo' and -r '/proc/cpuinfo')
+        {
+            open CPUINFO, '/proc/cpuinfo' or
+                die "Couldn't read /proc/cpuinfo ($!)\n";
+
+            my $cpuinfo = join('', <CPUINFO>);
+            close CPUINFO;
+
+            $cpu = guess_cpu_from_this($cpuinfo);
+        }
+
+        # `umame -p` is sometimes something stupid like unknown, but in some
+        # cases it can be more specific (useful) than `uname -m`
+        if($cpu eq '') # no guess so far
+        {
+            my (%SUBMODEL_ALIAS, %ARCH_ALIAS, %ARCH);
+
+            foreach my $arch (keys %CPU) {
+                my %info = %{$CPU{$arch}};
+
+                $ARCH{$arch} = $info{'name'};
+                foreach my $submodel (@{$info{'submodels'}}) {
+                    $ARCH{$submodel} = $info{'name'};
+                }
+
+                foreach my $alias (@{$info{'aliases'}}) {
+                    $ARCH_ALIAS{$alias} = $arch;
+                }
+
+                if(defined($info{'submodel_aliases'})) {
+                    my %submodel_aliases = %{$info{'submodel_aliases'}};
+                    foreach my $sm_alias (keys %submodel_aliases) {
+                        $SUBMODEL_ALIAS{$sm_alias} =
+                            $submodel_aliases{$sm_alias};
+                    }
+                }
+            }
+
+            my $uname_p = `uname -p 2>/dev/null`;
+            chomp $uname_p;
+            $cpu = guess_cpu_from_this($uname_p);
+
+            # If guess_cpu_from_this didn't figure it out, try it plain
+            if($cpu eq '') { $cpu = lc $uname_p; }
+
+            if(!defined $ARCH{$cpu} && !defined $SUBMODEL_ALIAS{$cpu} &&
+               !defined $ARCH_ALIAS{$cpu})
+            {
+                # Nope, couldn't figure out uname -p
+                $cpu = lc `uname -m 2>/dev/null`;
+                chomp $cpu;
+
+                if(!defined $ARCH{$cpu} && !defined $SUBMODEL_ALIAS{$cpu} &&
+                   !defined $ARCH_ALIAS{$cpu})
+                {
+                    $cpu = 'generic';
+                }
+            }
+        }
+
+        my @CCS = ('gcc', 'icc', 'compaq', 'kai'); # Skips several, oh well...
+
+        # First try the CC enviornmental variable, if it's set
+        if(defined($ENV{CC}))
+        {
+            my @new_CCS = ($ENV{CC});
+            foreach my $cc (@CCS) { push @new_CCS, $cc; }
+            @CCS = @new_CCS;
+        }
+
+        my $cc = '';
+        foreach (@CCS)
+        {
+            my $bin_name = $COMPILER{$_}{'binary_name'};
+            $cc = $_ if(which($bin_name) ne '');
+            last if($cc ne '');
+        }
+
+        if($cc eq '') {
+            my $msg =
+                "Can't find a usable C++ compiler, is your PATH right?\n" .
+                "You might need to run with explicit compiler/system flags;\n" .
+                "   run '$0 --help' for more information\n";
+            error($msg);
+        }
+
+        return "$cc-$os-$cpu";
+    }
+    elsif($^O eq 'MSWin32' or $^O eq 'dos')
+    {
+        my $os = 'windows'; # obviously
+
+        # Suggestions on this? The Win32 'shell' env is not so hot. We could
+        # try using cpuinfo, except that will crash hard on NT/Alpha (like what
+        # we're doing now won't!). In my defense of choosing i686:
+        #   a) There are maybe a few hundred Alpha/MIPS boxes running NT4 today
+        #   b) Anyone running Windows on < Pentium Pro deserves to lose.
+        my $cpu = 'i686';
+
+        # No /bin/sh, so not cygwin. Assume VC++; again, this could be much
+        # smarter
+        my $cc = 'msvc';
+        return "$cc-$os-$cpu";
+    }
+    else
+    {
+        print "Sorry, you don't seem to be on Unix or Windows;\n" .
+            "   autoconfig failed (try running me with --help)\n";
+        exit 1;
+    }
+}
+
+sub guess_mods {
+    my ($cc, $os, $arch, $submodel) = @_;
+
+    my @usable_modules;
+
+    foreach my $mod (sort keys %MODULES) {
+        my %modinfo = %{ $MODULES{$mod} };
+
+        # If it uses external libs, the user has to request it specifically
+        next if($modinfo{'external_libs'});
+
+        my @cc_list = @{ $modinfo{'cc'} };
+        next if(scalar @cc_list > 0 && !in_array($cc, \@cc_list));
+
+        my @os_list = @{ $modinfo{'os'} };
+        next if(scalar @os_list > 0 && !in_array($os, \@os_list));
+
+        my @arch_list = @{ $modinfo{'arch'} };
+        next if(scalar @arch_list > 0 &&
+                !in_array($arch, \@arch_list) &&
+                !in_array($submodel, \@arch_list));
+
+        push @usable_modules, $mod;
+    }
+    return @usable_modules;
+}
+
+sub print_config_h {
+    my ($major, $minor, $patch, $config_h, $local_config, $os, $arch, $cpu,
+        $mp_bits, $defines_ext) = @_;
+
+    open CONFIG_H, ">$config_h" or
+        error("Couldn't write $config_h ($!)");
+
+    print CONFIG_H <<END_OF_CONFIG_H;
+/*************************************************
+* Build Config Header File                       *
+* (C) 1999-2006 The Botan Project                *
+*************************************************/
+
+#ifndef BOTAN_BUILD_CONFIG_H__
+#define BOTAN_BUILD_CONFIG_H__
+
+#define BOTAN_VERSION_MAJOR $major
+#define BOTAN_VERSION_MINOR $minor
+#define BOTAN_VERSION_PATCH $patch
+
+#define BOTAN_MP_WORD_BITS $mp_bits
+#define BOTAN_DEFAULT_BUFFER_SIZE 4096
+
+#define BOTAN_KARAT_MUL_THRESHOLD 12
+#define BOTAN_KARAT_SQR_THRESHOLD 12
+END_OF_CONFIG_H
+
+    if($arch ne 'generic') {
+        $arch = uc $arch;
+        print CONFIG_H "\n#define BOTAN_TARGET_ARCH_IS_$arch\n";
+
+        if($arch ne $cpu) {
+            $cpu = uc $cpu;
+            $cpu =~ s/-/_/g;
+            print CONFIG_H "#define BOTAN_TARGET_CPU_IS_$cpu\n";
+        }
+    }
+
+    my $defines = '';
+
+    foreach (sort @$defines_ext) {
+        next if not defined $_ or not $_;
+        $defines .= "#define BOTAN_EXT_$_\n";
+    }
+
+    print CONFIG_H "\n", $defines if($defines);
+
+    if($local_config ne '') {
+        open LOCAL_CONFIG, "<$local_config" or die
+            "Couldn't read $local_config ($!)\n";
+        print CONFIG_H "\n";
+        while(<LOCAL_CONFIG>) { print CONFIG_H; }
+    }
+
+    print CONFIG_H "\n#endif\n";
+
+    close CONFIG_H;
+}
+
+sub print_pkg_config
+{
+    my ($os, $major,$minor,$patch,@libs) = @_;
+
+    return if($os eq 'generic' or $os eq 'windows');
+
+    my $install_root = os_install_info($os, 'install_root');
+    my $header_dir   = os_install_info($os, 'header_dir');
+    my $lib_dir      = os_install_info($os, 'lib_dir');
+
+    my $link_to = "-lm";
+    foreach my $lib (@libs)
+    {
+        $link_to .= " -l" . $lib;
+    }
+
+    my $VERSION = $major . "." . $minor . "." . $patch;
+
+    open PKGCONFIG, ">botan-config" or
+        die "Couldn't write to botan-config ($!)";
+
+    print PKGCONFIG <<END_OF_FILE;
+#!/bin/sh
+
+guess_prefix=\`dirname \\\`dirname \$0\\\`\`
+install_prefix=$install_root
+prefix=
+includedir=$header_dir
+libdir=$lib_dir
+
+usage()
+{
+    echo "botan-config [--prefix[=DIR]] [--version] [--libs] [--cflags]"
+    exit 1
+}
+
+if test \$# -eq 0; then
+    usage
+fi
+
+if test \`echo \$guess_prefix | cut -c 1\` = "/"; then
+   prefix=\$guess_prefix
+else
+   prefix=\$install_prefix
+fi
+
+while test \$# -gt 0; do
+    case "\$1" in
+    -*=*) optarg=`echo "\$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+    *) optarg= ;;
+    esac
+    case "\$1" in
+    --prefix=*)
+        prefix=\$optarg
+        ;;
+    --prefix)
+        echo \$prefix
+        ;;
+    --version)
+        echo $VERSION
+        exit 0
+        ;;
+    --cflags)
+        if [ \$prefix != "/usr" -a \$prefix != "/usr/local" ]
+        then
+           echo -I\$prefix/\$includedir
+        fi
+        ;;
+    --libs)
+        echo -L\$prefix/\$libdir $link_to -lbotan
+        ;;
+    *)
+        usage
+        ;;
+    esac
+    shift
+done
+
+exit 0
+END_OF_FILE
+
+    close PKGCONFIG;
+    chmod 0755, 'botan-config';
 }
 
 sub generate_makefile {
@@ -1460,495 +1953,3 @@ END_OF_INSTALL_SCRIPTS
     print $makefile "\n";
 }
 
-sub print_pkg_config
-{
-    my ($os, $major,$minor,$patch,@libs) = @_;
-
-    return if($os eq 'generic' or $os eq 'windows');
-
-    my $install_root = os_install_info($os, 'install_root');
-    my $header_dir   = os_install_info($os, 'header_dir');
-    my $lib_dir      = os_install_info($os, 'lib_dir');
-
-    my $link_to = "-lm";
-    foreach my $lib (@libs)
-    {
-        $link_to .= " -l" . $lib;
-    }
-
-    my $VERSION = $major . "." . $minor . "." . $patch;
-
-    open PKGCONFIG, ">botan-config" or
-        die "Couldn't write to botan-config ($!)";
-
-    print PKGCONFIG <<END_OF_FILE;
-#!/bin/sh
-
-guess_prefix=\`dirname \\\`dirname \$0\\\`\`
-install_prefix=$install_root
-prefix=
-includedir=$header_dir
-libdir=$lib_dir
-
-usage()
-{
-    echo "botan-config [--prefix[=DIR]] [--version] [--libs] [--cflags]"
-    exit 1
-}
-
-if test \$# -eq 0; then
-    usage
-fi
-
-if test \`echo \$guess_prefix | cut -c 1\` = "/"; then
-   prefix=\$guess_prefix
-else
-   prefix=\$install_prefix
-fi
-
-while test \$# -gt 0; do
-    case "\$1" in
-    -*=*) optarg=`echo "\$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
-    *) optarg= ;;
-    esac
-    case "\$1" in
-    --prefix=*)
-        prefix=\$optarg
-        ;;
-    --prefix)
-        echo \$prefix
-        ;;
-    --version)
-        echo $VERSION
-        exit 0
-        ;;
-    --cflags)
-        if [ \$prefix != "/usr" -a \$prefix != "/usr/local" ]
-        then
-           echo -I\$prefix/\$includedir
-        fi
-        ;;
-    --libs)
-        echo -L\$prefix/\$libdir $link_to -lbotan
-        ;;
-    *)
-        usage
-        ;;
-    esac
-    shift
-done
-
-exit 0
-END_OF_FILE
-
-    close PKGCONFIG;
-    chmod 0755, 'botan-config';
-}
-
-sub read_hash {
-    my ($line, $reader, $marker, $func) = @_;
-
-    if($line =~ m@^<$marker>$@) {
-        while(1) {
-            $line = &$reader();
-            last if($line =~ m@^</$marker>$@);
-            &$func($line);
-        }
-    }
-}
-
-sub list_push {
-    my ($listref) = @_;
-    return sub { push @$listref, $_[0]; }
-}
-
-sub set_if {
-    my ($line, $what, $var) = @_;
-    $$var = $1 if($line =~ /^$what (.*)/);
-}
-
-sub set_if_quoted {
-    my ($line, $what, $var) = @_;
-    $$var = $1 if($line =~ /^$what \"(.*)\"/);
-}
-
-sub set_if_any {
-    my ($func, $line, $hash, $any_of) = @_;
-    foreach my $found (split(/:/, $any_of)) {
-        &$func($line, $found, \$hash->{$found});
-    }
-}
-
-sub read_info_files {
-    my ($dir,$func) = @_;
-
-    my %allinfo;
-    foreach my $file (dir_list($dir)) {
-        %{$allinfo{$file}} = 
-            &$func($file, File::Spec->catfile($dir, $file));
-    }
-
-    return %allinfo;
-}
-
-sub read_module_files {
-    my ($moddir) = @_;
-
-    my %allinfo;
-    foreach my $dir (dir_list($moddir)) {
-        my $modfile = File::Spec->catfile($moddir, $dir, 'modinfo.txt');
-        %{$allinfo{$dir}} = get_module_info($dir, $modfile);
-    }
-
-    return %allinfo;
-}
-
-sub get_module_info {
-   my ($name, $file) = @_;
-   my $reader = make_reader($file);
-
-   my %info;
-   $info{'name'} = $name;
-   $info{'external_libs'} = 0;
-   $info{'libs'} = {};
-
-   while($_ = &$reader()) {
-       set_if_any(\&set_if_quoted, $_, \%info, 'realname:note');
-
-       set_if_any(\&set_if, $_, \%info, 'define:mp_bits');
-
-       $info{'external_libs'} = 1 if(/^uses_external_libs/);
-
-       read_hash($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
-       read_hash($_, $reader, 'cc', list_push(\@{$info{'cc'}}));
-       read_hash($_, $reader, 'os', list_push(\@{$info{'os'}}));
-       read_hash($_, $reader, 'add', list_push(\@{$info{'add'}}));
-       read_hash($_, $reader, 'replace', list_push(\@{$info{'replace'}}));
-       read_hash($_, $reader, 'ignore', list_push(\@{$info{'ignore'}}));
-
-       read_hash($_, $reader, 'libs',
-                 sub {
-                     my $line = $_[0];
-                     $line =~ m/^([\w!,]*) -> ([\w,-]*)$/;
-                     $info{'libs'}{$1} = $2;
-                 });
-
-       if(/^require_version /) {
-           if(/^require_version (\d+)\.(\d+)\.(\d+)$/) {
-               my $version = "$1.$2.$3";
-               my $needed_version = 100*$1 + 10*$2 + $3;
-
-               my $have_version =
-                   100*$MAJOR_VERSION + 10*$MINOR_VERSION + $PATCH_VERSION;
-
-               if($needed_version > $have_version) {
-                   warning("Module $name needs v$version; disabling");
-                   return ();
-               }
-           }
-           else {
-               error("In module $name, bad version requirement '$_'");
-           }
-       }
-   }
-
-   return %info;
-}
-
-sub get_arch_info {
-    my ($name,$file) = @_;
-    my $reader = make_reader($file);
-
-    my %info;
-    $info{'name'} = $name;
-
-    while($_ = &$reader()) {
-        set_if_any(\&set_if_quoted, $_, \%info, 'realname');
-        set_if_any(\&set_if, $_, \%info, 'default_submodel');
-
-        read_hash($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
-        read_hash($_, $reader, 'submodels', list_push(\@{$info{'submodels'}}));
-
-        read_hash($_, $reader, 'submodel_aliases',
-                  sub {
-                      my $line = $_[0];
-                      $line =~ m/^(\S*) -> (\S*)$/;
-                      $info{'submodel_aliases'}{$1} = $2;
-                  });
-    }
-    return %info;
-}
-
-sub get_os_info {
-    my ($name,$file) = @_;
-    my $reader = make_reader($file);
-
-    my %info;
-    $info{'name'} = $name;
-
-    while($_ = &$reader()) {
-        set_if_any(\&set_if_quoted, $_, \%info, 'realname:ar_command');
-
-        set_if_any(\&set_if, $_, \%info,
-                   'os_type:obj_suffix:so_suffix:static_suffix:' .
-                   'install_root:header_dir:lib_dir:doc_dir:' .
-                   'install_user:install_group:install_cmd:ar_needs_ranlib');
-
-        read_hash($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
-        read_hash($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
-
-        read_hash($_, $reader, 'supports_shared',
-                  list_push(\@{$info{'supports_shared'}}));
-    }
-    return %info;
-}
-
-sub get_cc_info {
-    my ($name,$file) = @_;
-    my $reader = make_reader($file);
-
-    my %info;
-    $info{'name'} = $name;
-
-    while($_ = &$reader()) {
-        set_if_any(\&set_if_quoted, $_, \%info,
-                   'realname:binary_name:lib_opt_flags:check_opt_flags:' .
-                   'lang_flags:warning_flags:so_obj_flags:ar_command:' .
-                   'debug_flags:no_debug_flags');
-
-        set_if_any(\&set_if, $_, \%info, 'makefile_style');
-
-        read_hash($_, $reader, 'os', list_push(\@{$info{'os'}}));
-        read_hash($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
-
-        sub quoted_mapping {
-            my $hashref = $_[0];
-            return sub {
-                my $line = $_[0];
-                $line =~ m/^(\S*) -> \"(.*)\"$/;
-                $$hashref{$1} = $2;
-            }
-        }
-
-        read_hash($_, $reader, 'mach_abi_linking',
-                  quoted_mapping(\%{$info{'mach_abi_linking'}}));
-        read_hash($_, $reader, 'so_link_flags',
-                  quoted_mapping(\%{$info{'so_link_flags'}}));
-
-        read_hash($_, $reader, 'mach_opt',
-                  sub {
-                      my $line = $_[0];
-                      $line =~ m/^(\S*) -> \"(.*)\" ?(.*)?$/;
-                      $info{'mach_opt_flags'}{$1} = $2;
-                      $info{'mach_opt_re'}{$1} = $3;
-                  });
-
-    }
-    return %info;
-}
-
-sub guess_cpu_from_this
-{
-    my $cpuinfo = lc $_[0];
-    my $cpu = '';
-
-    $cpu = 'athlon' if($cpuinfo =~ /athlon/);
-    $cpu = 'pentium4' if($cpuinfo =~ /pentium 4/);
-    $cpu = 'pentium4' if($cpuinfo =~ /pentium\(r\) 4/);
-    $cpu = 'pentium3' if($cpuinfo =~ /pentium iii/);
-    $cpu = 'pentium2' if($cpuinfo =~ /pentium ii/);
-    $cpu = 'pentium3' if($cpuinfo =~ /pentium 3/);
-    $cpu = 'pentium2' if($cpuinfo =~ /pentium 2/);
-
-    # The 32-bit SPARC stuff is impossible to match to arch type easily, and
-    # anyway the uname stuff will pick up that it's a SPARC so it doesn't
-    # matter. If it's an Ultra, assume a 32-bit userspace, no 64-bit code
-    # possible; that's the most common setup right now anyway
-    $cpu = 'sparc32-v9' if($cpuinfo =~ /ultrasparc/);
-
-    # 64-bit PowerPC
-    $cpu = 'rs64a' if($cpuinfo =~ /rs64-/);
-    $cpu = 'power3' if($cpuinfo =~ /power3/);
-    $cpu = 'power4' if($cpuinfo =~ /power4/);
-    $cpu = 'power5' if($cpuinfo =~ /power5/);
-    $cpu = 'ppc970' if($cpuinfo =~ /ppc970/);
-
-    # Ooh, an Alpha. Try to figure out what kind
-    if($cpuinfo =~ /alpha/)
-    {
-        $cpu = 'alpha-ev4' if($cpuinfo =~ /ev4/);
-        $cpu = 'alpha-ev5' if($cpuinfo =~ /ev5/);
-        $cpu = 'alpha-ev56' if($cpuinfo =~ /ev56/);
-        $cpu = 'alpha-pca56' if($cpuinfo =~ /pca56/);
-        $cpu = 'alpha-ev6' if($cpuinfo =~ /ev6/);
-        $cpu = 'alpha-ev67' if($cpuinfo =~ /ev67/);
-        $cpu = 'alpha-ev68' if($cpuinfo =~ /ev68/);
-        $cpu = 'alpha-ev7' if($cpuinfo =~ /ev7/);
-    }
-
-    return $cpu;
-}
-
-# Do some WAGing and see if we can figure out what system we are. Think about
-# this as a really moronic config.guess
-sub guess_triple
-{
-    # /bin/sh, good bet we're on something Unix-y (at least it'll have uname)
-    if(-f '/bin/sh')
-    {
-        my $os = lc `uname -s 2>/dev/null`; chomp $os;
-
-        # Let the crappy hacks commence!
-
-        # Cygwin's uname -s is cygwin_<windows version>
-        $os = 'cygwin' if($os =~ /^cygwin/);
-        $os = os_alias($os);
-
-        if(!defined $OPERATING_SYSTEM{$os})
-        {
-            print "Unknown uname -s output: $os, falling back to 'generic'\n";
-            $os = 'generic';
-        }
-
-        my $cpu = '';
-
-        # If we have /proc/cpuinfo, try to get nice specific information about
-        # what kind of CPU we're running on.
-        if(-e '/proc/cpuinfo' and -r '/proc/cpuinfo')
-        {
-            open CPUINFO, '/proc/cpuinfo' or
-                die "Couldn't read /proc/cpuinfo ($!)\n";
-
-            my $cpuinfo = join('', <CPUINFO>);
-            close CPUINFO;
-
-            $cpu = guess_cpu_from_this($cpuinfo);
-        }
-
-        # `umame -p` is sometimes something stupid like unknown, but in some
-        # cases it can be more specific (useful) than `uname -m`
-        if($cpu eq '') # no guess so far
-        {
-            my (%SUBMODEL_ALIAS, %ARCH_ALIAS, %ARCH);
-
-            foreach my $arch (keys %CPU) {
-                my %info = %{$CPU{$arch}};
-
-                $ARCH{$arch} = $info{'name'};
-                foreach my $submodel (@{$info{'submodels'}}) {
-                    $ARCH{$submodel} = $info{'name'};
-                }
-
-                foreach my $alias (@{$info{'aliases'}}) {
-                    $ARCH_ALIAS{$alias} = $arch;
-                }
-
-                if(defined($info{'submodel_aliases'})) {
-                    my %submodel_aliases = %{$info{'submodel_aliases'}};
-                    foreach my $sm_alias (keys %submodel_aliases) {
-                        $SUBMODEL_ALIAS{$sm_alias} =
-                            $submodel_aliases{$sm_alias};
-                    }
-                }
-            }
-
-            my $uname_p = `uname -p 2>/dev/null`;
-            chomp $uname_p;
-            $cpu = guess_cpu_from_this($uname_p);
-
-            # If guess_cpu_from_this didn't figure it out, try it plain
-            if($cpu eq '') { $cpu = lc $uname_p; }
-
-            if(!defined $ARCH{$cpu} && !defined $SUBMODEL_ALIAS{$cpu} &&
-               !defined $ARCH_ALIAS{$cpu})
-            {
-                # Nope, couldn't figure out uname -p
-                $cpu = lc `uname -m 2>/dev/null`;
-                chomp $cpu;
-
-                if(!defined $ARCH{$cpu} && !defined $SUBMODEL_ALIAS{$cpu} &&
-                   !defined $ARCH_ALIAS{$cpu})
-                {
-                    $cpu = 'generic';
-                }
-            }
-        }
-
-        my @CCS = ('gcc', 'icc', 'compaq', 'kai'); # Skips several, oh well...
-
-        # First try the CC enviornmental variable, if it's set
-        if(defined($ENV{CC}))
-        {
-            my @new_CCS = ($ENV{CC});
-            foreach my $cc (@CCS) { push @new_CCS, $cc; }
-            @CCS = @new_CCS;
-        }
-
-        my $cc = '';
-        foreach (@CCS)
-        {
-            my $bin_name = $COMPILER{$_}{'binary_name'};
-            $cc = $_ if(which($bin_name) ne '');
-            last if($cc ne '');
-        }
-
-        if($cc eq '') {
-            my $msg =
-                "Can't find a usable C++ compiler, is your PATH right?\n" .
-                "You might need to run with explicit compiler/system flags;\n" .
-                "   run '$0 --help' for more information\n";
-            error($msg);
-        }
-
-        return "$cc-$os-$cpu";
-    }
-    elsif($^O eq 'MSWin32' or $^O eq 'dos')
-    {
-        my $os = 'windows'; # obviously
-
-        # Suggestions on this? The Win32 'shell' env is not so hot. We could
-        # try using cpuinfo, except that will crash hard on NT/Alpha (like what
-        # we're doing now won't!). In my defense of choosing i686:
-        #   a) There are maybe a few hundred Alpha/MIPS boxes running NT4 today
-        #   b) Anyone running Windows on < Pentium Pro deserves to lose.
-        my $cpu = 'i686';
-
-        # No /bin/sh, so not cygwin. Assume VC++; again, this could be much
-        # smarter
-        my $cc = 'msvc';
-        return "$cc-$os-$cpu";
-    }
-    else
-    {
-        print "Sorry, you don't seem to be on Unix or Windows;\n" .
-            "   autoconfig failed (try running me with --help)\n";
-        exit 1;
-    }
-}
-
-sub guess_mods {
-    my ($cc, $os, $arch, $submodel) = @_;
-
-    my @usable_modules;
-
-    foreach my $mod (sort keys %MODULES) {
-        my %modinfo = %{ $MODULES{$mod} };
-
-        # If it uses external libs, the user has to request it specifically
-        next if($modinfo{'external_libs'});
-
-        my @cc_list = @{ $modinfo{'cc'} };
-        next if(scalar @cc_list > 0 && !in_array($cc, \@cc_list));
-
-        my @os_list = @{ $modinfo{'os'} };
-        next if(scalar @os_list > 0 && !in_array($os, \@os_list));
-
-        my @arch_list = @{ $modinfo{'arch'} };
-        next if(scalar @arch_list > 0 &&
-                !in_array($arch, \@arch_list) &&
-                !in_array($submodel, \@arch_list));
-
-        push @usable_modules, $mod;
-    }
-    return @usable_modules;
-}
