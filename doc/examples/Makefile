@@ -14,7 +14,7 @@ RSA_EX    = rsa_kgen rsa_enc rsa_dec
 DSA_EX    = dsa_kgen dsa_sign dsa_ver
 DH_EX     = dh
 HASH_EX   = hash hash_fd hasher hasher2 stack
-MISC_EX   = factor base base64 bzip encrypt decrypt fips140 xor_ciph
+MISC_EX   = factor base base64 bzip encrypt decrypt xor_ciph
 
 PROGS     = $(X509_EX) $(RSA_EX) $(DSA_EX) $(DH_EX) $(HASH_EX) $(MISC_EX)
 
@@ -66,10 +66,6 @@ dsa_ver: dsa_ver.cpp
 	@$(STRIP) $@
 
 encrypt: encrypt.cpp
-	$(CXX) $(FLAGS) $? $(LIBS) -o $@
-	@$(STRIP) $@
-
-fips140: fips140.cpp
 	$(CXX) $(FLAGS) $? $(LIBS) -o $@
 	@$(STRIP) $@
 
