@@ -17,16 +17,16 @@ namespace Botan {
 class DH_PublicKey : public virtual DL_Scheme_PublicKey
    {
    public:
+      std::string algo_name() const { return "DH"; }
+
       MemoryVector<byte> public_value() const;
       u32bit max_input_bits() const;
 
-      DH_PublicKey(const DL_Group&, const BigInt&);
-   protected:
-      std::string algo_name() const { return "DH"; }
-      DH_PublicKey() {}
-   private:
-      friend Public_Key* get_public_key(const std::string&);
       DL_Group::Format group_format() const { return DL_Group::ANSI_X9_42; }
+
+      DH_PublicKey() {}
+      DH_PublicKey(const DL_Group&, const BigInt&);
+   private:
       void X509_load_hook();
    };
 
@@ -44,13 +44,11 @@ class DH_PrivateKey : public DH_PublicKey,
 
       MemoryVector<byte> public_value() const;
 
+      DH_PrivateKey() {}
       DH_PrivateKey(const DL_Group&);
       DH_PrivateKey(const DL_Group&, const BigInt&, const BigInt& = 0);
    private:
-      friend Private_Key* get_private_key(const std::string&);
       void PKCS8_load_hook(bool = false);
-      DH_PrivateKey() {}
-
       DH_Core core;
    };
 

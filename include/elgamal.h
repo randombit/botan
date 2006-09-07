@@ -19,18 +19,18 @@ class ElGamal_PublicKey : public PK_Encrypting_Key,
                           public virtual DL_Scheme_PublicKey
    {
    public:
+      std::string algo_name() const { return "ElGamal"; }
+
       SecureVector<byte> encrypt(const byte[], u32bit) const;
       u32bit max_input_bits() const;
 
+      DL_Group::Format group_format() const { return DL_Group::ANSI_X9_42; }
+
+      ElGamal_PublicKey() {}
       ElGamal_PublicKey(const DL_Group&, const BigInt&);
    protected:
-      std::string algo_name() const { return "ElGamal"; }
-      ElGamal_PublicKey() {}
-
       ELG_Core core;
    private:
-      friend Public_Key* get_public_key(const std::string&);
-      DL_Group::Format group_format() const { return DL_Group::ANSI_X9_42; }
       void X509_load_hook();
    };
 
@@ -46,12 +46,11 @@ class ElGamal_PrivateKey : public ElGamal_PublicKey,
 
       bool check_key(bool) const;
 
+      ElGamal_PrivateKey() {}
       ElGamal_PrivateKey(const DL_Group&);
       ElGamal_PrivateKey(const DL_Group&, const BigInt&, const BigInt& = 0);
    private:
-      friend Private_Key* get_private_key(const std::string&);
       void PKCS8_load_hook(bool = false);
-      ElGamal_PrivateKey() {}
    };
 
 }

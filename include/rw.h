@@ -17,15 +17,14 @@ class RW_PublicKey : public PK_Verifying_with_MR_Key,
                      public virtual IF_Scheme_PublicKey
    {
    public:
+      std::string algo_name() const { return "RW"; }
+
       SecureVector<byte> verify(const byte[], u32bit) const;
 
+      RW_PublicKey() {}
       RW_PublicKey(const BigInt&, const BigInt&);
    protected:
       BigInt public_op(const BigInt&) const;
-      std::string algo_name() const { return "RW"; }
-      RW_PublicKey() {}
-   private:
-      friend Public_Key* get_public_key(const std::string&);
    };
 
 /*************************************************
@@ -40,12 +39,10 @@ class RW_PrivateKey : public RW_PublicKey,
 
       bool check_key(bool) const;
 
+      RW_PrivateKey() {}
       RW_PrivateKey(const BigInt&, const BigInt&, const BigInt&,
                     const BigInt& = 0, const BigInt& = 0);
       RW_PrivateKey(u32bit, u32bit = 2);
-   private:
-      friend Private_Key* get_private_key(const std::string&);
-      RW_PrivateKey() {}
    };
 
 }
