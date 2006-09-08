@@ -844,6 +844,7 @@ sub process_template {
 
     open OUT, ">$out" or croak("Couldn't write $out ($!)");
     print OUT $contents;
+    close OUT;
 }
 
 ##################################################
@@ -1560,8 +1561,6 @@ sub generate_makefile {
            'link_to' => libs('', '.'.$$config{'static_suffix'},
                              @{$$config{'mod_libs'}}),
        });
-
-       process_template($$config{'makefile'}, 'Makefile', $config);
    }
 
    trace("mapped type '$make_style' to template '$template'");
@@ -1627,7 +1626,7 @@ sub build_cmds {
     die unless defined($inc) and defined($from) and defined($to);
 
     my $bld_line =
-        "\t\$(CXX) $inc$inc_dir $flags $from \$? $to \$@";
+        "\t\$(CXX) $inc$inc_dir $flags $from\$? $to\$@";
 
     foreach (sort keys %$files) {
         my $src_file = File::Spec->catfile($$files{$_}, $_);
