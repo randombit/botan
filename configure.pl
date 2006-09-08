@@ -61,7 +61,6 @@ my %DOCS = (
 # Data                                           #
 ##################################################
 my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
-my (%ignored_src, %ignored_include, %added_src, %added_include);
 
 ##################################################
 # Run main() and Quit                            #
@@ -252,22 +251,21 @@ sub main {
 
         'check_src'     => { list_dir($CHECK_DIR) },
         });
-    $$config{'defines'} = defines($config);
 
     check_for_conflicts(@using_mods);
     foreach my $mod (@using_mods) {
         load_module($MODULES{$mod}, $config);
     }
 
-    my %check_src = list_dir($CHECK_DIR, undef);
+    add_to($config, {
+        'defines' => defines($config),
 
-    my %include = list_dir($INCLUDE_DIR, \%ignored_include);
-
-    my $CPP_INCLUDE_DIR =
-        File::Spec->catdir($$config{'build_include'}, 'botan');
+        'build_include_botan' =>
+            File::Spec->catdir($$config{'build_include'}, 'botan')
+        });
 
     mkdirs($$config{'build'},
-           $$config{'build_include'}, $CPP_INCLUDE_DIR,
+           $$config{'build_include'}, $$config{'build_include_botan'},
            $$config{'build_lib'}, $$config{'build_check'});
 
     print_pkg_config($config);
@@ -275,14 +273,12 @@ sub main {
     process_template('misc/config/buildh.in',
                      File::Spec->catfile($$config{'build'}, 'build.h'),
                      $config);
-    $added_include{'build.h'} = $$config{'build'};
+    $$config{'includes'}{'build.h'} = $$config{'build'};
 
-    clean_out_dirs($CPP_INCLUDE_DIR);
+    clean_out_dir($$config{'build_include_botan'});
+    copy_files($$config{'build_include_botan'}, $$config{'includes'});
 
-    copy_files($CPP_INCLUDE_DIR, \%include, \%added_include);
-    my %all_includes = list_dir($CPP_INCLUDE_DIR);
-
-    generate_makefile($config, \%all_includes);
+    generate_makefile($config);
 }
 
 ##################################################
@@ -490,7 +486,11 @@ sub os_install_info {
 }
 
 sub mach_opt {
-    my ($cc, $arch, $submodel) = @_;
+    my ($config) = @_;
+
+    my $cc = $$config{'compiler'};
+    my $submodel = $$config{'submodel'};
+    my $arch = $$config{'arch'};
 
     my %ccinfo = %{$COMPILER{$cc}};
 
@@ -555,7 +555,7 @@ sub libs {
 # Path and file manipulation utilities           #
 ##################################################
 sub copy_files {
-   my ($include_dir, $mainline, $modules) = @_;
+   my ($include_dir, $files) = @_;
 
    my $link_up = sub {
        my ($dir, $file) = @_;
@@ -565,8 +565,9 @@ sub copy_files {
                         $include_dir, $file);
    };
 
-   foreach (keys %$mainline) { &$link_up('include', $_); }
-   foreach (keys %$modules) { &$link_up($$modules{$_}, $_); }
+   foreach my $file (keys %$files) {
+       &$link_up($$files{$file}, $file);
+   }
 }
 
 sub list_dir {
@@ -594,15 +595,14 @@ sub dir_list {
     return @listing;
 }
 
-sub clean_out_dirs {
-   my (@dirs) = @_;
-   foreach my $dir (@dirs) {
-      my %files = list_dir($dir);
-      foreach my $file (keys %files) {
-         my $path = File::Spec->catfile($dir, $file);
-         unlink $path or die "Could not unlink $path ($!)\n";
-      }
-   }
+sub clean_out_dir {
+    my $dir = $_[0];
+
+    my %files = list_dir($dir);
+    foreach my $file (keys %files) {
+        my $path = File::Spec->catfile($dir, $file);
+        unlink $path or die "Could not unlink $path ($!)\n";
+    }
 }
 
 sub mkdirs {
@@ -823,11 +823,9 @@ sub add_file {
     my $mod_dir = File::Spec->catdir($MOD_DIR, $modname);
 
     if($file =~ /\.cpp$/ or $file =~ /\.S$/) {
-        $added_src{$file} = $mod_dir;
         $$config{'sources'}{$file} = $mod_dir;
     }
     elsif($file =~ /\.h$/) {
-        $added_include{$file} = $mod_dir;
         $$config{'includes'}{$file} = $mod_dir;
     }
     else {
@@ -840,11 +838,9 @@ sub ignore_file {
     check_for_file(full_path($file), $modname);
 
     if($file =~ /\.cpp$/ or $file =~ /\.S$/) {
-        $ignored_src{$file} = 1;
         delete $$config{'sources'}{$file};
     }
     elsif($file =~ /\.h$/) {
-        $ignored_include{$file} = 1;
         delete $$config{'includes'}{$file};
     }
     else { error("Not sure where to put $file"); }
@@ -1447,13 +1443,8 @@ sub print_pkg_config {
 #                                                #
 ##################################################
 sub generate_makefile {
-   my($config,
-      $all_includes) = @_;
+   my ($config) = @_;
 
-   my $cc = $$config{'compiler'};
-   my $os = $$config{'os'};
-   my $submodel = $$config{'submodel'};
-   my $arch = $$config{'arch'};
    my $debug = $$config{'debug'};
 
    sub os_ar_command {
@@ -1464,6 +1455,7 @@ sub generate_makefile {
        return (os_info_for(shift, 'ar_needs_ranlib') eq 'yes');
    }
 
+   my $cc = $$config{'compiler'};
    my %ccinfo = %{$COMPILER{$cc}};
 
    my $lang_flags = '';
@@ -1478,7 +1470,7 @@ sub generate_makefile {
    append_ifdef(\$lib_opt_flags, $ccinfo{'debug_flags'}) if($debug);
    append_ifdef(\$lib_opt_flags, $ccinfo{'no_debug_flags'}) if(!$debug);
 
-   my $mach_opt_flags = mach_opt($cc, $arch, $submodel);
+   my $mach_opt_flags = mach_opt($config);
 
    # This is a default that works on most Unix and Unix-like systems
    my $ar_command = "ar crs";
@@ -1486,6 +1478,9 @@ sub generate_makefile {
 
    # See if there are any over-riding methods. We presume if CC is creating
    # the static libs, it knows how to create the index itself.
+
+   my $os = $$config{'os'};
+
    if($ccinfo{'ar_command'}) {
        $ar_command = $ccinfo{'ar_command'};
    }
@@ -1504,6 +1499,7 @@ sub generate_makefile {
        if($so_link_flags eq '');
 
    my $supports_shared = 0;
+   my $arch = $$config{'arch'};
    if(in_array('all', $OPERATING_SYSTEM{$os}{'supports_shared'}) or
       in_array($arch, $OPERATING_SYSTEM{$os}{'supports_shared'})) {
        $supports_shared = 1;
@@ -1531,7 +1527,12 @@ sub generate_makefile {
    $cc_bin = "c++" if($os eq "darwin" and $cc eq "gcc");
 
    my $docs = file_list(16, undef, undef, undef, %DOCS);
-   my $includes = file_list(16, undef, undef, undef, %$all_includes);
+
+   my %all_includes =
+       map { $_ => $$config{'build_include_botan'} }
+         keys %{$$config{'includes'}};
+
+   my $includes = file_list(16, undef, undef, undef, %all_includes);
 
    add_to($config, {
        'shared'          => ($make_shared ? 'yes' : 'no'),
@@ -1557,12 +1558,10 @@ sub generate_makefile {
 
    my $make_style = $$config{'make_style'};
    if($make_style eq 'unix') {
-       if($make_shared) {
-           $$config{'makefile'} = 'misc/config/makefile/unix_shr.in'
-       }
-       else {
-           $$config{'makefile'} = 'misc/config/makefile/unix.in';
-       }
+       $$config{'makefile'} = 'misc/config/makefile/unix.in';
+
+       $$config{'makefile'} = 'misc/config/makefile/unix_shr.in'
+           if($make_shared);
 
        print_unix_makefile($config);
    }
@@ -1658,9 +1657,9 @@ sub print_unix_makefile {
 
    my $build_lib = $$config{'build_lib'};
    my $lib_obj = file_list(16, $build_lib, '(\.cpp$|\.S$)',
-                           ".$obj_suffix", %$src, %added_src);
+                           ".$obj_suffix", %$src);
    my $lib_build_cmds = build_cmds($config, $build_lib, '$(LIB_FLAGS)',
-                                   %$src, %added_src);
+                                   %$src);
 
    my $build_check = $$config{'build_check'};
    my $check_obj = file_list(16, $build_check, '.cpp', ".$obj_suffix",
@@ -1713,10 +1712,9 @@ sub print_nmake_makefile {
    my $build_lib = $$config{'build_lib'};
    my $build_check = $$config{'build_check'};
 
-   my $lib_obj = file_list(16, $build_lib, '.cpp', ".$obj_suffix",
-                           %$src, %added_src);
+   my $lib_obj = file_list(16, $build_lib, '.cpp', ".$obj_suffix", %$src);
    my $lib_build_cmds = build_cmds($config, $build_lib, '$(LIB_FLAGS)',
-                                   %$src, %added_src);
+                                   %$src);
 
    my $check_obj = file_list(16, $build_check, '.cpp', ".$obj_suffix",
                              %$check);
