@@ -25,7 +25,6 @@ my $DOC_DIR = 'doc';
 my $BUILD_DIR = 'build';
 my $BUILD_DIR_LIB = 'lib';
 my $BUILD_DIR_CHECKS = 'checks';
-my $MAKE_FILE = 'Makefile';
 my $BUILD_INCLUDE_DIR = 'build/include';
 
 my $ARCH_DIR = 'misc/config/arch';
@@ -1432,9 +1431,6 @@ sub generate_makefile {
 
    my $install_root = os_install_info($os, 'install_root');
 
-   open MAKEFILE, ">$MAKE_FILE"
-      or die "Couldn't write $MAKE_FILE ($!)\n";
-
    ##################################################
    # Ready, set, print!                             #
    ##################################################
@@ -1446,8 +1442,7 @@ sub generate_makefile {
    my $obj_suffix = os_obj_suffix($os);
    my $static_suffix = os_static_suffix($os);
 
-   my @arguments = (\*MAKEFILE,
-                    $os,
+   my @arguments = ($os,
                     $cc_bin . $ccopts,
                     $lib_opt_flags,
                     $check_opt_flags,
@@ -1478,15 +1473,34 @@ sub generate_makefile {
       error("This configure script does not know how to make ",
             "a makefile for makefile style \"$make_style\"");
    }
+}
 
-   close MAKEFILE;
+sub file_list {
+    my ($spaces, $put_in, $from, $to, %files) = @_;
+    my $len = $spaces;
+    my $list;
+    foreach (sort keys %files) {
+        my $file = $_;
+        my $dir = $put_in;
+        if(!defined($dir)) { $dir = $files{$_}; }
+        if($len > 60)
+        { $list .= "\\\n" . ' 'x$spaces; $len = $spaces; }
+        if(defined($from) and defined($to)) { $file =~ s/$from/$to/; }
+        if(defined($dir))
+        { $list .= File::Spec->catfile ($dir, $file) . ' ';
+          $len += length($file) + length($dir); }
+        else
+        { $list .= $file . ' ';
+          $len += length($file); }
+    }
+    return $list;
 }
 
 ##################################################
 # Print a Unix style makefile                    #
 ##################################################
 sub print_unix_makefile {
-   my ($makefile, $os, $cc, $lib_opt, $check_opt, $mach_opt,
+   my ($os, $cc, $lib_opt, $check_opt, $mach_opt,
        $lang_flags, $warn_flags, $make_shared, $so_obj, $so_link,
        $obj_suffix, $so_suffix, $static_lib_suffix,
        $ar_command, $use_ranlib,
@@ -1516,27 +1530,6 @@ sub print_unix_makefile {
    $so_obj = '' unless defined($so_obj);
 
 ##################### COMMON CODE (PARTIALLY) ######################
-   sub file_list {
-      my ($spaces, $put_in, $from, $to, %files) = @_;
-      my $len = $spaces;
-      my $list;
-      foreach (sort keys %files) {
-         my $file = $_;
-         my $dir = $put_in;
-         if(!defined($dir)) { $dir = $files{$_}; }
-         if($len > 60)
-            { $list .= "\\\n" . ' 'x$spaces; $len = $spaces; }
-         if(defined($from) and defined($to)) { $file =~ s/$from/$to/; }
-         if(defined($dir))
-            { $list .= File::Spec->catfile ($dir, $file) . ' ';
-              $len += length($file) + length($dir); }
-         else
-            { $list .= $file . ' ';
-              $len += length($file); }
-      }
-      return $list;
-   }
-
    my $includes = file_list(16, undef, undef, undef, %$include_r);
 
    my $lib_obj = file_list(16, $BUILD_LIB_DIR, '(\.cpp$|\.s$|\.S$)',
@@ -1615,7 +1608,7 @@ sub print_unix_makefile {
 # Print a NMAKE-style makefile                   #
 ##################################################
 sub print_nmake_makefile {
-   my ($makefile, $os, $cc,
+   my ($os, $cc,
        $lib_opt, $check_opt, $mach_opt,
        $lang_flags, $warn_flags,
        undef, # $make_shared
@@ -1681,7 +1674,7 @@ sub print_nmake_makefile {
 
    my $template = 'misc/config/makefile/nmake.in';
 
-   process_template($template, 'Makefile.test',
+   process_template($template, 'Makefile',
                     { 'cc' => $cc,
                       'lib_opt' => $lib_opt,
                       'check_opt' => $check_opt,
@@ -1714,4 +1707,3 @@ sub print_nmake_makefile {
                       'so_suffix' => $so_suffix,
                       'build' => $BUILD_DIR });
 }
-
