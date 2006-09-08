@@ -17,4 +17,5 @@ doc_dir share/doc
 
 install_user root
 install_group root
-install_cmd install -o OWNER -g GROUP -m MODE
+install_cmd_data install -o OWNER -g GROUP -m 644
+install_cmd_exec install -o OWNER -g GROUP -m 755

@@ -30,8 +30,6 @@ DOCDIR        = $(INSTALLROOT)/@{var:docdir}/Botan-$(VERSION)
 
 OWNER         = @{var:install_user}
 GROUP         = @{var:install_group}
-DATA_MODE     = 644
-EXEC_MODE     = 755
 
 CONFIG_SCRIPT = botan-config
 

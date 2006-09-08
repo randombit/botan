@@ -2,7 +2,8 @@ realname "Solaris"
 
 os_type unix
 
-install_cmd install -u OWNER -g GROUP -m MODE
+install_cmd_data install -u OWNER -g GROUP -m 644
+install_cmd_exec install -u OWNER -g GROUP -m 755
 
 <supports_shared>
 all

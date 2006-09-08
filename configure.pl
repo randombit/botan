@@ -436,6 +436,8 @@ sub os_info_for {
         $result = $OPERATING_SYSTEM{'defaults'}{$what};
     }
 
+    error("os_info_for: No info for $what on $os") unless defined $result;
+
     return $result;
 }
 
@@ -1038,7 +1040,8 @@ sub get_os_info {
         set_if_any(\&set_if, $_, \%info,
                    'os_type:obj_suffix:so_suffix:static_suffix:' .
                    'install_root:header_dir:lib_dir:doc_dir:' .
-                   'install_user:install_group:install_cmd:ar_needs_ranlib');
+                   'install_user:install_group:ar_needs_ranlib:' .
+                   'install_cmd_data:install_cmd_exec');
 
         read_hash($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
         read_hash($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
@@ -1367,7 +1370,7 @@ sub print_pkg_config {
     return if($$config{'os'} eq 'generic' or
               $$config{'os'} eq 'windows');
 
-    $$config{'link_to'} = libs('-l', '', 'm', @{$$config{'extra_libs'}});
+    $$config{'link_to'} = libs('-l', '', 'm', @{$$config{'mod_libs'}});
 
     process_template(File::Spec->catfile('misc', 'config', 'botan-config.in'),
                      'botan-config', $config);
@@ -1489,6 +1492,11 @@ sub generate_makefile {
        'so_suffix'       => os_info_for($os, 'so_suffix'),
        'obj_suffix'      => os_info_for($os, 'obj_suffix'),
 
+       'install_cmd_exec' => os_install_info($os, 'install_cmd_exec'),
+       'install_cmd_data' => os_install_info($os, 'install_cmd_data'),
+       'install_user' => os_install_info($os, 'install_user'),
+       'install_group' => os_install_info($os, 'install_group'),
+
        'doc_files'       => $docs,
        'include_files'   => $includes
        });
@@ -1515,24 +1523,40 @@ sub generate_makefile {
        });
 
    my $template_dir = File::Spec->catdir('misc', 'config', 'makefile');
+   my $template = undef;
 
    my $make_style = $$config{'make_style'};
-   if($make_style eq 'unix') {
-       $$config{'makefile'} = File::Spec->catfile($template_dir, 'unix.in');
 
-       $$config{'makefile'} = File::Spec->catfile($template_dir, 'unix_shr.in')
+   if($make_style eq 'unix') {
+       $template = File::Spec->catfile($template_dir, 'unix.in');
+
+       $template = File::Spec->catfile($template_dir, 'unix_shr.in')
            if($make_shared);
 
-       print_unix_makefile($config);
+       $$config{'install_cmd_exec'} =~ s/(OWNER|GROUP)/\$($1)/g;
+       $$config{'install_cmd_data'} =~ s/(OWNER|GROUP)/\$($1)/g;
+
+       add_to($config, {
+           'link_to' => libs('-l', '', 'm', @{$$config{'mod_libs'}}),
+       });
    }
    elsif($make_style eq 'nmake') {
-       $$config{'makefile'} = File::Spec->catfile($template_dir, 'nmake.in');
-       print_nmake_makefile($config);
+       $template = File::Spec->catfile($template_dir, 'nmake.in');
+
+       add_to($config, {
+           'shared' => 'no',
+           'link_to' => libs('', '.'.$$config{'static_suffix'},
+                             @{$$config{'mod_libs'}}),
+       });
+
+       process_template($$config{'makefile'}, 'Makefile', $config);
    }
-   else {
-      error("This configure script does not know how to make ",
-            "a makefile for makefile style \"$make_style\"");
-   }
+
+   error("This configure script does not know how to make ",
+         "a makefile for makefile style \"$make_style\"")
+       unless(defined($template));
+
+   process_template($template, 'Makefile', $config);
 }
 
 ##################################################
@@ -1608,53 +1632,4 @@ sub build_cmds {
     chomp($output);
     chomp($output);
     return $output;
-}
-
-##################################################
-# Print a Unix style makefile                    #
-##################################################
-sub print_unix_makefile {
-   my ($config) = @_;
-
-   my $os = $$config{'os'};
-   my $install_cmd_exec = os_install_info($os, 'install_cmd');
-   $install_cmd_exec =~ s/OWNER/\$(OWNER)/;
-   $install_cmd_exec =~ s/GROUP/\$(GROUP)/;
-   $install_cmd_exec =~ s/MODE/\$(EXEC_MODE)/;
-
-   my $install_cmd_data = os_install_info($os, 'install_cmd');
-   $install_cmd_data =~ s/OWNER/\$(OWNER)/;
-   $install_cmd_data =~ s/GROUP/\$(GROUP)/;
-   $install_cmd_data =~ s/MODE/\$(DATA_MODE)/;
-
-   unshift @{$$config{'mod_libs'}}, "m";
-
-   add_to($config, {
-       'link_to' => libs('-l', '', @{$$config{'mod_libs'}}),
-       'install_user' => os_install_info($os, 'install_user'),
-       'install_group' => os_install_info($os, 'install_group'),
-       'install_cmd_exec' => $install_cmd_exec,
-       'install_cmd_data' => $install_cmd_data,
-       });
-
-   process_template($$config{'makefile'}, 'Makefile', $config);
-}
-
-##################################################
-# Print a NMAKE-style makefile                   #
-##################################################
-sub print_nmake_makefile {
-   my ($config) = @_;
-
-   my $static_lib_suffix = $$config{'static_suffix'};
-   add_to($config, {
-       'shared' => 'no',
-       'link_to' => libs('', ".$static_lib_suffix", @{$$config{'mod_libs'}}),
-       'install_user' => '',
-       'install_group' => '',
-       'install_cmd_exec' => '',
-       'install_cmd_data' => '',
-       });
-
-   process_template($$config{'makefile'}, 'Makefile', $config);
 }
