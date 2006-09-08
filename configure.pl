@@ -93,25 +93,27 @@ sub main {
     if(!defined($cc) or !defined($os) or !defined($submodel)) { help(); }
 
     # hacks
+
+    if($cc eq 'gcc' and $os eq 'darwin') {
+        $COMPILER{'gcc'}{'binary_name'} = 'c++';
+    }
+
     if($cc eq 'gcc' && $dumb_gcc != 1)
     {
-        my $gcc_version = '';
+        my $binary = $COMPILER{$cc}{'binary_name'};
 
-        # Stupid Apple. At least they fixed it after 10.2
-        if($os eq 'darwin') { $gcc_version = `c++ -v 2>&1`; }
-        else { $gcc_version = `g++ -v 2>&1`; }
+        my $gcc_version = `$binary -v 2>&1`;
 
         $gcc_version = '' if not defined $gcc_version;
 
-        # GCC 2.95.x and 3.[34] are busted in handling long long in
-        # C++. The third check is because on Cygwin (at least for me)
-        # $gcc_version doesn't get the output from g++, not sure
-        # what's up with that. If it's Cygwin and we didn't get
-        # output, assume it's a buggy GCC. There is no reduction in
-        # code quality, etc, so even if we're wrong it's no big deal.
+        # Some versions of GCC are a little buggy dealing with long
+        # long in C++. The last check is because on Cygwin (at least
+        # for me) $gcc_version doesn't get the output, maybe something
+        # to do with the stderr redirection? If it's Cygwin and we
+        # didn't get output, assume it's a buggy GCC. There is no
+        # reduction in code quality so even if we're wrong it's OK.
 
-        if(($gcc_version =~ /4\.[01]/) ||
-           ($gcc_version =~ /3\.[34]/) ||
+        if(($gcc_version =~ /4\.[01]/) || ($gcc_version =~ /3\.[34]/) ||
            ($gcc_version =~ /2\.95\.[0-4]/) ||
            ($gcc_version eq '' && $^O eq 'cygwin'))
         {
@@ -124,24 +126,24 @@ sub main {
         }
     }
 
-    error("Compiler $cc isn't known") unless defined($COMPILER{$cc});
+    croak("Compiler $cc isn't known") unless defined($COMPILER{$cc});
 
     $os = os_alias($os);
-    error("OS $os isn't known") unless
+    croak("OS $os isn't known") unless
         ($os eq 'generic' or defined($OPERATING_SYSTEM{$os}));
 
     my $arch = undef;
     ($arch, $submodel) = figure_out_arch($submodel);
 
-    error(realname($os), " doesn't run on $arch ($submodel)")
+    croak(realname($os), " doesn't run on $arch ($submodel)")
         unless($arch eq 'generic' or $os eq 'generic' or
                in_array($arch, $OPERATING_SYSTEM{$os}{'arch'}));
 
-    error(realname($cc), " doesn't run on $arch ($submodel)")
+    croak(realname($cc), " doesn't run on $arch ($submodel)")
         unless($arch eq 'generic' or
                (in_array($arch, $COMPILER{$cc}{'arch'})));
 
-    error(realname($cc), " doesn't run on ", realname($os))
+    croak(realname($cc), " doesn't run on ", realname($os))
         unless($os eq 'generic' or (in_array($os, $COMPILER{$cc}{'os'})));
 
     my %MODULE_SETS =
@@ -152,7 +154,7 @@ sub main {
          'win32' => ['es_capi', 'es_win32', 'mux_win32', 'tm_win32' ],
          );
 
-    error("Module set $module_set isn't known")
+    croak("Module set $module_set isn't known")
         if($module_set && !defined($MODULE_SETS{$module_set}));
 
     if($module_set) {
@@ -177,7 +179,7 @@ sub main {
     @using_mods = sort keys %uniqed_mods;
 
     foreach (@using_mods) {
-        error("Module $_ isn't known (try --help)")
+        croak("Module $_ isn't known (try --help)")
             unless(exists($MODULES{$_}));
     }
 
@@ -252,7 +254,7 @@ sub main {
 ##################################################
 # Diagnostics                                    #
 ##################################################
-sub error {
+sub croak {
     my $str = '(error): ';
     foreach(@_) { $str .= $_; }
     $str .= "\n";
@@ -267,16 +269,17 @@ sub warning {
 }
 
 sub trace {
-    my $tracing = 1;
-    return unless $tracing;
+    return unless 0;
 
     my (undef, undef, $line1) = caller(0);
     my (undef, undef, $line2, $func1) = caller(1);
     my (undef, undef, undef, $func2) = caller(2);
 
-    my ($sec,$min) = localtime;
+    $func1 =~ s/main:://;
+    $func2 =~ s/main:://;
 
-    my $str = "(trace func1:$line1 | $func2:$line2): $min:$sec";
+    #my $str = "(trace): $func2:$line2 -> $func1:$line1: ";
+    my $str = "(trace) [$func1:$line1] ";
     foreach(@_) { $str .= $_; }
     $str .= "\n";
     warn $str;
@@ -343,6 +346,7 @@ ENDOFHELP
 ##################################################
 sub figure_out_arch {
     my ($name) = @_;
+
     return ('generic', 'generic') if($name eq 'generic');
 
     my $submodel_alias = sub {
@@ -388,7 +392,8 @@ sub figure_out_arch {
     };
 
     my $arch = &$find_arch($name);
-    error("Arch type $name isn't known") unless defined $arch;
+    croak("Arch type $name isn't known") unless defined $arch;
+    trace("mapped name '$name' to arch '$arch'");
 
     my %archinfo = %{ $CPU{$arch} };
 
@@ -401,7 +406,9 @@ sub figure_out_arch {
            if($submodel ne $arch);
     }
 
-    error("Couldn't figure out arch type of $name")
+    trace("mapped name '$name' to submodel '$submodel'");
+
+    croak("Couldn't figure out arch type of $name")
         unless defined($arch) and defined($submodel);
 
     return ($arch,$submodel);
@@ -412,7 +419,10 @@ sub os_alias {
 
     foreach my $os (keys %OPERATING_SYSTEM) {
         foreach my $alias (@{$OPERATING_SYSTEM{$os}{'aliases'}}) {
-            return $os if($alias eq $name);
+            if($alias eq $name) {
+                trace("os_alias($name) -> $os");
+                return $os;
+                }
         }
     }
 
@@ -422,7 +432,7 @@ sub os_alias {
 sub os_info_for {
     my ($os,$what) = @_;
 
-    die "Internal error: os_info_for called with an os of defaults\n"
+    croak("os_info_for called with an os of defaults (internal problem)")
         if($os eq 'defaults');
 
     my $result = '';
@@ -436,7 +446,7 @@ sub os_info_for {
         $result = $OPERATING_SYSTEM{'defaults'}{$what};
     }
 
-    error("os_info_for: No info for $what on $os") unless defined $result;
+    croak("os_info_for: No info for $what on $os") unless defined $result;
 
     return $result;
 }
@@ -538,7 +548,7 @@ sub copy_files {
 
 sub dir_list {
     my ($dir) = @_;
-    opendir(DIR, $dir) or die "Couldn't read directory $dir ($!)\n";
+    opendir(DIR, $dir) or croak("Couldn't read directory $dir ($!)");
 
     my @listing = grep { $_ ne File::Spec->curdir() and
                          $_ ne File::Spec->updir() } readdir DIR;
@@ -552,7 +562,7 @@ sub clean_out_dir {
 
     foreach my $file (dir_list($dir)) {
         my $path = File::Spec->catfile($dir, $file);
-        unlink $path or die "Could not unlink $path ($!)\n";
+        unlink $path or croak("Could not unlink $path ($!)");
     }
 }
 
@@ -561,7 +571,7 @@ sub mkdirs {
     foreach my $dir (@dirs) {
         next if( -e $dir and -d $dir ); # skip it if it's already there
         mkdir($dir, 0777) or
-            error("Could not create directory $dir ($!)");
+            croak("Could not create directory $dir ($!)");
     }
 }
 
@@ -635,7 +645,7 @@ sub find_mp_bits {
         my %modinfo = %{ $MODULES{$modname} };
         if($modinfo{'mp_bits'}) {
             if(defined($seen_mp_module) and $modinfo{'mp_bits'} != $mp_bits) {
-                error("Inconsistent mp_bits requests from modules ",
+                croak("Inconsistent mp_bits requests from modules ",
                       $seen_mp_module, " and ", $modname);
             }
 
@@ -679,7 +689,7 @@ sub load_module {
     my $os = $$config{'os'};
     if($os ne 'generic') {
         unless(&$works_on($os, @{$module{'os'}})) {
-            error("Module '$modname' does not run on ", realname($os));
+            croak("Module '$modname' does not run on ", realname($os));
         }
     }
 
@@ -689,13 +699,13 @@ sub load_module {
         unless(&$works_on($arch, @{$module{'arch'}}) or
                &$works_on($sub, @{$module{'arch'}})) {
 
-            error("Module '$modname' does not run on $arch/$sub");
+            croak("Module '$modname' does not run on $arch/$sub");
         }
     }
 
     my $cc = $$config{'compiler'};
     unless(&$works_on($cc, @{$module{'cc'}})) {
-        error("Module '$modname' does not work with ", realname($cc));
+        croak("Module '$modname' does not work with ", realname($cc));
     }
 
     sub handle_files {
@@ -727,19 +737,19 @@ sub add_file {
     my $mod_dir = File::Spec->catdir('modules', $modname);
 
     if($file =~ /\.cpp$/ or $file =~ /\.S$/) {
-        error("File $file already added from ", $$config{'sources'}{$file})
+        croak("File $file already added from ", $$config{'sources'}{$file})
             if(defined($$config{'sources'}{$file}));
 
         $$config{'sources'}{$file} = $mod_dir;
     }
     elsif($file =~ /\.h$/) {
-        error("File $file already added from ", $$config{'includes'}{$file})
+        croak("File $file already added from ", $$config{'includes'}{$file})
             if(defined($$config{'includes'}{$file}));
 
         $$config{'includes'}{$file} = $mod_dir;
     }
     else {
-        error("Not sure where to put $file");
+        croak("Not sure where to put $file");
     }
 }
 
@@ -749,7 +759,7 @@ sub ignore_file {
 
     if($file =~ /\.cpp$/ or $file =~ /\.S$/) {
         if(defined ($$config{'sources'}{$file})) {
-            error("$modname - File $file modified from ",
+            croak("$modname - File $file modified from ",
                   $$config{'sources'}{$file})
                 if($$config{'sources'}{$file} ne 'src');
 
@@ -758,14 +768,14 @@ sub ignore_file {
     }
     elsif($file =~ /\.h$/) {
         if(defined ($$config{'includes'}{$file})) {
-            error("$modname - File $file modified from ",
+            croak("$modname - File $file modified from ",
                   $$config{'includes'}{$file})
                 if($$config{'includes'}{$file} ne 'include');
 
             delete $$config{'includes'}{$file};
         }
     }
-    else { error("Not sure where to put $file"); }
+    else { croak("Not sure where to put $file"); }
 }
 
 # This works because ignore file always runs on files in the main source tree,
@@ -791,12 +801,12 @@ sub check_for_file {
        return File::Spec->catfile('src', $file)
            if($file =~ /\.cpp$/ or $file =~ /\.S$/);
 
-       error("Not sure where to put $file");
+       croak("Not sure where to put $file");
    };
 
    $file = &$full_path($file, $added_from);
 
-   error("Module $modname requires that file $file exist. This error\n      ",
+   croak("Module $modname requires that file $file exist. This error\n      ",
        "should never occur; please contact the maintainers with details.")
        unless(-e $file);
 }
@@ -807,11 +817,14 @@ sub check_for_file {
 sub process_template {
     my ($in, $out, $config) = @_;
 
+    trace("process_template($in) -> $out");
+
     my $contents = slurp_file($in);
 
     foreach my $name (keys %$config) {
         my $val = $$config{$name};
-        die unless defined $val;
+
+        croak("Undefined variable $name in $in") unless defined $val;
 
         $contents =~ s/@\{var:$name\}/$val/g;
 
@@ -826,32 +839,17 @@ sub process_template {
 
     if($contents =~ /@\{var:(.*)\}/ or
        $contents =~ /@\{if:(.*) /) {
-        error("Unbound variable '$1' in $in");
+        croak("Unbound variable '$1' in $in");
     }
 
-    open OUT, ">$out" or error("Couldn't write $out ($!)");
+    open OUT, ">$out" or croak("Couldn't write $out ($!)");
     print OUT $contents;
 }
 
 ##################################################
 #                                                #
 ##################################################
-sub append_if {
-    my($var,$addme,$cond) = @_;
-    die unless defined $var;
-
-    if($cond and $addme ne '') {
-        $$var .= ' ' unless($$var eq '' or $$var =~ / $/);
-        $$var .= $addme;
-    }
-}
-
-sub append_ifdef {
-    my($var,$addme) = @_;
-    append_if($var, $addme, defined($addme));
-}
-
-sub read_hash {
+sub read_list {
     my ($line, $reader, $marker, $func) = @_;
 
     if($line =~ m@^<$marker>$@) {
@@ -891,10 +889,10 @@ sub set_if_any {
 sub make_reader {
     my $filename = $_[0];
 
-    error("make_reader(): Arg was undef") if not defined $filename;
+    croak("make_reader(): Arg was undef") if not defined $filename;
 
     open FILE, "<$filename" or
-        error("Couldn't read $filename ($!)");
+        croak("Couldn't read $filename ($!)");
 
     return sub {
         my $line = '';
@@ -923,8 +921,10 @@ sub read_info_files {
 
     my %allinfo;
     foreach my $file (dir_list($dir)) {
-        %{$allinfo{$file}} =
-            &$func($file, File::Spec->catfile($dir, $file));
+        my $fullpath = File::Spec->catfile($dir, $file);
+
+        #trace("reading $fullpath");
+        %{$allinfo{$file}} = &$func($file, $fullpath);
     }
 
     return %allinfo;
@@ -936,6 +936,8 @@ sub read_module_files {
     my %allinfo;
     foreach my $dir (dir_list($moddir)) {
         my $modfile = File::Spec->catfile($moddir, $dir, 'modinfo.txt');
+
+        #trace("reading $modfile");
         %{$allinfo{$dir}} = get_module_info($dir, $modfile);
     }
 
@@ -961,14 +963,14 @@ sub get_module_info {
 
        $info{'external_libs'} = 1 if(/^uses_external_libs/);
 
-       read_hash($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
-       read_hash($_, $reader, 'cc', list_push(\@{$info{'cc'}}));
-       read_hash($_, $reader, 'os', list_push(\@{$info{'os'}}));
-       read_hash($_, $reader, 'add', list_push(\@{$info{'add'}}));
-       read_hash($_, $reader, 'replace', list_push(\@{$info{'replace'}}));
-       read_hash($_, $reader, 'ignore', list_push(\@{$info{'ignore'}}));
+       read_list($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
+       read_list($_, $reader, 'cc', list_push(\@{$info{'cc'}}));
+       read_list($_, $reader, 'os', list_push(\@{$info{'os'}}));
+       read_list($_, $reader, 'add', list_push(\@{$info{'add'}}));
+       read_list($_, $reader, 'replace', list_push(\@{$info{'replace'}}));
+       read_list($_, $reader, 'ignore', list_push(\@{$info{'ignore'}}));
 
-       read_hash($_, $reader, 'libs',
+       read_list($_, $reader, 'libs',
                  sub {
                      my $line = $_[0];
                      $line =~ m/^([\w!,]*) -> ([\w,-]*)$/;
@@ -989,7 +991,7 @@ sub get_module_info {
                }
            }
            else {
-               error("In module $name, bad version requirement '$_'");
+               croak("In module $name, bad version requirement '$_'");
            }
        }
    }
@@ -1011,10 +1013,10 @@ sub get_arch_info {
         set_if_any(\&set_if_quoted, $_, \%info, 'realname');
         set_if_any(\&set_if, $_, \%info, 'default_submodel');
 
-        read_hash($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
-        read_hash($_, $reader, 'submodels', list_push(\@{$info{'submodels'}}));
+        read_list($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
+        read_list($_, $reader, 'submodels', list_push(\@{$info{'submodels'}}));
 
-        read_hash($_, $reader, 'submodel_aliases',
+        read_list($_, $reader, 'submodel_aliases',
                   sub {
                       my $line = $_[0];
                       $line =~ m/^(\S*) -> (\S*)$/;
@@ -1043,10 +1045,10 @@ sub get_os_info {
                    'install_user:install_group:ar_needs_ranlib:' .
                    'install_cmd_data:install_cmd_exec');
 
-        read_hash($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
-        read_hash($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
+        read_list($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
+        read_list($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
 
-        read_hash($_, $reader, 'supports_shared',
+        read_list($_, $reader, 'supports_shared',
                   list_push(\@{$info{'supports_shared'}}));
     }
     return %info;
@@ -1073,8 +1075,8 @@ sub get_cc_info {
 
         set_if_any(\&set_if, $_, \%info, 'makefile_style');
 
-        read_hash($_, $reader, 'os', list_push(\@{$info{'os'}}));
-        read_hash($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
+        read_list($_, $reader, 'os', list_push(\@{$info{'os'}}));
+        read_list($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
 
         sub quoted_mapping {
             my $hashref = $_[0];
@@ -1085,12 +1087,12 @@ sub get_cc_info {
             }
         }
 
-        read_hash($_, $reader, 'mach_abi_linking',
+        read_list($_, $reader, 'mach_abi_linking',
                   quoted_mapping(\%{$info{'mach_abi_linking'}}));
-        read_hash($_, $reader, 'so_link_flags',
+        read_list($_, $reader, 'so_link_flags',
                   quoted_mapping(\%{$info{'so_link_flags'}}));
 
-        read_hash($_, $reader, 'mach_opt',
+        read_list($_, $reader, 'mach_opt',
                   sub {
                       my $line = $_[0];
                       $line =~ m/^(\S*) -> \"(.*)\" ?(.*)?$/;
@@ -1258,7 +1260,7 @@ sub guess_triple
                "Can't find a usable C++ compiler, is your PATH right?\n" .
                "You might need to run with explicit compiler/system flags;\n" .
                "   run '$0 --help' for more information\n";
-            error($msg);
+            croak($msg);
         }
 
         return "$cc-$os-$cpu";
@@ -1281,7 +1283,7 @@ sub guess_triple
     }
     else
     {
-        error("Autoconfiguration failed (try --help)");
+        croak("Autoconfiguration failed (try --help)");
     }
 }
 
@@ -1349,10 +1351,10 @@ sub slurp_file {
     my $file = $_[0];
     return '' if(!defined($file) or $file eq '');
 
-    error("'$file': No such file") unless(-e $file);
-    error("'$file': Not a regular file") unless(-f $file);
+    croak("'$file': No such file") unless(-e $file);
+    croak("'$file': Not a regular file") unless(-f $file);
 
-    open FILE, "<$file" or error("Couldn't read $file ($!)");
+    open FILE, "<$file" or croak("Couldn't read $file ($!)");
 
     my $output = '';
     while(<FILE>) { $output .= $_; }
@@ -1383,10 +1385,16 @@ sub print_pkg_config {
 ##################################################
 #                                                #
 ##################################################
+sub empty_if_nil {
+    my $val = $_[0];
+    return $val if defined($val);
+    return '';
+}
+
 sub generate_makefile {
    my ($config) = @_;
 
-   my $debug = $$config{'debug'};
+   trace('entering');
 
    sub os_ar_command {
        return os_info_for(shift, 'ar_command');
@@ -1396,6 +1404,22 @@ sub generate_makefile {
        return (os_info_for(shift, 'ar_needs_ranlib') eq 'yes');
    }
 
+   sub append_if {
+       my($var,$addme,$cond) = @_;
+       die unless defined $var;
+
+       if($cond and $addme ne '') {
+           $$var .= ' ' unless($$var eq '' or $$var =~ / $/);
+           $$var .= $addme;
+       }
+   }
+
+   sub append_ifdef {
+       my($var,$addme) = @_;
+       append_if($var, $addme, defined($addme));
+   }
+
+
    my $cc = $$config{'compiler'};
    my %ccinfo = %{$COMPILER{$cc}};
 
@@ -1403,15 +1427,12 @@ sub generate_makefile {
    append_ifdef(\$lang_flags, $ccinfo{'lang_flags'});
    append_if(\$lang_flags, "-fpermissive", $$config{'gcc_bug'});
 
-   my $warnings = '';
-   append_ifdef(\$warnings, $ccinfo{'warning_flags'});
+   my $debug = $$config{'debug'};
 
    my $lib_opt_flags = '';
    append_ifdef(\$lib_opt_flags, $ccinfo{'lib_opt_flags'});
    append_ifdef(\$lib_opt_flags, $ccinfo{'debug_flags'}) if($debug);
    append_ifdef(\$lib_opt_flags, $ccinfo{'no_debug_flags'}) if(!$debug);
-
-   my $mach_opt_flags = mach_opt($config);
 
    # This is a default that works on most Unix and Unix-like systems
    my $ar_command = "ar crs";
@@ -1431,30 +1452,30 @@ sub generate_makefile {
        $ar_needs_ranlib = 1 if(os_ar_needs_ranlib($os));
    }
 
-   my $so_obj_flags = '';
-   append_ifdef(\$so_obj_flags, $ccinfo{'so_obj_flags'});
-
-   my $so_link_flags = '';
-   append_ifdef(\$so_link_flags, $ccinfo{'so_link_flags'}{$os});
-   append_ifdef(\$so_link_flags, $ccinfo{'so_link_flags'}{'default'})
-       if($so_link_flags eq '');
-
-   my $supports_shared = 0;
    my $arch = $$config{'arch'};
-   if(in_array('all', $OPERATING_SYSTEM{$os}{'supports_shared'}) or
-      in_array($arch, $OPERATING_SYSTEM{$os}{'supports_shared'})) {
-       $supports_shared = 1;
+
+   if($$config{'shared'} eq 'yes' and
+      (in_array('all', $OPERATING_SYSTEM{$os}{'supports_shared'}) or
+       in_array($arch, $OPERATING_SYSTEM{$os}{'supports_shared'}))) {
+
+       $$config{'so_obj_flags'} = empty_if_nil($ccinfo{'so_obj_flags'});
+       $$config{'so_link'} = empty_if_nil($ccinfo{'so_link_flags'}{$os});
+
+       $$config{'so_link'} = empty_if_nil($ccinfo{'so_link_flags'}{'default'})
+           if($$config{'so_link'} eq '');
+
+       if($$config{'so_obj_flags'} eq '' and $$config{'so_link'} eq '') {
+           $$config{'shared'} = 'no';
+
+           warning("$cc has no shared object flags set for $os;\n",
+                   "        disabling creation of shared objects");
+       }
    }
-
-   if($$config{'shared'} eq 'no' or !$supports_shared)
-      { $so_obj_flags = $so_link_flags = ''; }
-
-   my $make_shared = 0;
-   $make_shared = 1
-    if(($so_obj_flags or $so_link_flags) and $supports_shared);
-
-   my $check_opt_flags = '';
-   append_ifdef(\$check_opt_flags, $ccinfo{'check_opt_flags'});
+   else {
+       $$config{'shared'} = 'no';
+       $$config{'so_obj_flags'} = '';
+       $$config{'so_link'} = '';
+   }
 
    my $ccopts = '';
    append_ifdef(\$ccopts, $ccinfo{'mach_abi_linking'}{$arch});
@@ -1462,29 +1483,13 @@ sub generate_makefile {
    append_ifdef(\$ccopts, $ccinfo{'mach_abi_linking'}{'all'});
    $ccopts = ' ' . $ccopts if($ccopts ne '');
 
-   my $cc_bin = $ccinfo{'binary_name'};
-
-   # Hack for 10.1, 10.2+ is fixed. Don't have a 10.0.x machine anymore
-   $cc_bin = "c++" if($os eq "darwin" and $cc eq "gcc");
-
-   my $docs = file_list(undef, undef, undef, map { $_ => 'doc' } @DOCS);
-   $docs .= 'readme.txt';
-
-   my $includes = file_list(undef, undef, undef,
-                            map { $_ => $$config{'build_include_botan'} }
-                               keys %{$$config{'includes'}});
-
    add_to($config, {
-       'shared'          => ($make_shared ? 'yes' : 'no'),
-
-       'cc'              => $cc_bin . $ccopts,
+       'cc'              => $ccinfo{'binary_name'} . $ccopts,
        'lib_opt'         => $lib_opt_flags,
-       'check_opt'       => $check_opt_flags,
-       'mach_opt'        => $mach_opt_flags,
+       'check_opt'       => empty_if_nil($ccinfo{'check_opt_flags'}),
+       'mach_opt'        => mach_opt($config),
        'lang_flags'      => $lang_flags,
-       'warn_flags'      => $warnings,
-       'so_obj_flags'    => $so_obj_flags,
-       'so_link'         => $so_link_flags,
+       'warn_flags'      => empty_if_nil($ccinfo{'warning_flags'}),
 
        'ar_command'      => $ar_command,
        'ranlib_command'  => ($ar_needs_ranlib ? 'ranlib' : 'true'),
@@ -1496,10 +1501,14 @@ sub generate_makefile {
        'install_cmd_data' => os_install_info($os, 'install_cmd_data'),
        'install_user' => os_install_info($os, 'install_user'),
        'install_group' => os_install_info($os, 'install_group'),
-
-       'doc_files'       => $docs,
-       'include_files'   => $includes
        });
+
+   my $docs = file_list(undef, undef, undef, map { $_ => 'doc' } @DOCS);
+   $docs .= 'readme.txt';
+
+   my $includes = file_list(undef, undef, undef,
+                            map { $_ => $$config{'build_include_botan'} }
+                               keys %{$$config{'includes'}});
 
    my $lib_objs = file_list($$config{'build_lib'}, '(\.cpp$|\.S$)',
                             '.' . $$config{'obj_suffix'},
@@ -1519,7 +1528,10 @@ sub generate_makefile {
        'lib_objs' => $lib_objs,
        'check_objs' => $check_objs,
        'lib_build_cmds' => $lib_build_cmds,
-       'check_build_cmds' => $check_build_cmds
+       'check_build_cmds' => $check_build_cmds,
+
+       'doc_files'       => $docs,
+       'include_files'   => $includes
        });
 
    my $template_dir = File::Spec->catdir('misc', 'config', 'makefile');
@@ -1531,7 +1543,7 @@ sub generate_makefile {
        $template = File::Spec->catfile($template_dir, 'unix.in');
 
        $template = File::Spec->catfile($template_dir, 'unix_shr.in')
-           if($make_shared);
+           if($$config{'shared'} eq 'yes');
 
        $$config{'install_cmd_exec'} =~ s/(OWNER|GROUP)/\$($1)/g;
        $$config{'install_cmd_data'} =~ s/(OWNER|GROUP)/\$($1)/g;
@@ -1552,7 +1564,9 @@ sub generate_makefile {
        process_template($$config{'makefile'}, 'Makefile', $config);
    }
 
-   error("This configure script does not know how to make ",
+   trace("mapped type '$make_style' to template '$template'");
+
+   croak("This configure script does not know how to make ",
          "a makefile for makefile style \"$make_style\"")
        unless(defined($template));
 
@@ -1598,15 +1612,10 @@ sub file_list {
 sub build_cmds {
     my ($config, $dir, $flags, $files) = @_;
 
-    die unless $dir;
-    die unless $flags;
-
     my $output = '';
 
     my $cc = $$config{'compiler'};
     my $obj_suffix = $$config{'obj_suffix'};
-
-    die unless $obj_suffix;
 
     my $inc = $COMPILER{$cc}{'add_include_dir_option'};
     my $from = $COMPILER{$cc}{'compile_option'};
