@@ -1602,6 +1602,8 @@ sub build_cmds {
 
         $output .= "$obj_file: $src_file\n$bld_line\n\n";
     }
+    chomp($output);
+    chomp($output);
     return $output;
 }
 
@@ -1630,9 +1632,6 @@ sub print_unix_makefile {
                              %$check);
    my $check_build_cmds = build_cmds($config, $build_check, '$(CHECK_FLAGS)',
                                      %$check);
-
-   chomp($lib_build_cmds);
-   chomp($check_build_cmds);
 
    my $install_cmd_exec = os_install_info($os, 'install_cmd');
    $install_cmd_exec =~ s/OWNER/\$(OWNER)/;
