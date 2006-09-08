@@ -99,8 +99,7 @@ sub main {
     GetOptions('debug' => sub { $debug = 1; },
                'disable-shared' => sub { $shared = 'no'; },
                'noauto' => sub { $autoconfig = 0 },
-               'gcc295x' => sub { $dumb_gcc = 1; },
-               'dumb-gcc' => sub { $dumb_gcc = 1; },
+               'dumb-gcc|gcc295x' => sub { $dumb_gcc = 1; },
                'make-style=s' => \$make_style,
                'modules=s' => \@using_mods,
                'module-set=s' => \$module_set,
@@ -228,6 +227,7 @@ sub main {
         'submodel'      => $submodel,
 
         'make_style'    => $make_style,
+        'gcc_bug'       => $dumb_gcc,
 
         'prefix'        =>
             ($prefix ne '') ? $prefix : os_install_info($os, 'install_root'),
@@ -243,7 +243,14 @@ sub main {
         'build_include' => File::Spec->catdir($$config{'build'}, 'include'),
 
         'modules'       => [ @using_mods ],
-        'mp_bits'       => find_mp_bits(@using_mods)
+        'mp_bits'       => find_mp_bits(@using_mods),
+        'mod_libs'      => [ using_libs($os, @using_mods) ],
+
+        'sources'       => { map { $_ => $SRC_DIR } dir_list($SRC_DIR) },
+        'includes'      =>
+           { map { $_ => $INCLUDE_DIR } dir_list($INCLUDE_DIR) },
+
+        'check_src'     => { list_dir($CHECK_DIR) },
         });
     $$config{'defines'} = defines($config);
 
@@ -252,7 +259,6 @@ sub main {
         load_module($MODULES{$mod}, $config);
     }
 
-    my %lib_src = list_dir($SRC_DIR, \%ignored_src);
     my %check_src = list_dir($CHECK_DIR, undef);
 
     my %include = list_dir($INCLUDE_DIR, \%ignored_include);
@@ -276,9 +282,7 @@ sub main {
     copy_files($CPP_INCLUDE_DIR, \%include, \%added_include);
     my %all_includes = list_dir($CPP_INCLUDE_DIR);
 
-    generate_makefile($config, $dumb_gcc,
-                      \%lib_src, \%check_src, \%all_includes,
-                      \%added_src, using_libs($os, @using_mods));
+    generate_makefile($config, \%all_includes);
 }
 
 ##################################################
@@ -293,6 +297,22 @@ sub error {
 
 sub warning {
     my $str = '(note): ';
+    foreach(@_) { $str .= $_; }
+    $str .= "\n";
+    warn $str;
+}
+
+sub trace {
+    my $tracing = 1;
+    return unless $tracing;
+
+    my (undef, undef, $line1) = caller(0);
+    my (undef, undef, $line2, $func1) = caller(1);
+    my (undef, undef, undef, $func2) = caller(2);
+
+    my ($sec,$min) = localtime;
+
+    my $str = "(trace func1:$line1 | $func2:$line2): $min:$sec";
     foreach(@_) { $str .= $_; }
     $str .= "\n";
     warn $str;
@@ -453,7 +473,7 @@ sub os_info_for {
     if(!defined($result) or $result eq '') {
         $result = $OPERATING_SYSTEM{'defaults'}{$what};
     }
-    
+
     return $result;
 }
 
@@ -753,16 +773,16 @@ sub load_module {
     }
 
     sub handle_files {
-        my($modname, $lst, $func) = @_;
+        my($modname, $config, $lst, $func) = @_;
         return unless defined($lst);
         foreach (sort @$lst) {
-            &$func($modname, $_);
+            &$func($modname, $config, $_);
         }
     }
 
-    handle_files($modname, $module{'replace'}, \&replace_file);
-    handle_files($modname, $module{'ignore'},  \&ignore_file);
-    handle_files($modname, $module{'add'},     \&add_file);
+    handle_files($modname, $config, $module{'replace'}, \&replace_file);
+    handle_files($modname, $config, $module{'ignore'},  \&ignore_file);
+    handle_files($modname, $config, $module{'add'},     \&add_file);
 
     if(defined($module{'note'})) {
         my $realname = $module{'realname'};
@@ -797,27 +817,35 @@ sub full_path {
 #                                                #
 ##################################################
 sub add_file {
-    my ($modname,$file) = @_;
+    my ($modname, $config, $file) = @_;
     check_for_file(full_path($file, $modname), $modname);
 
+    my $mod_dir = File::Spec->catdir($MOD_DIR, $modname);
+
     if($file =~ /\.cpp$/ or $file =~ /\.S$/) {
-        $added_src{$file} = File::Spec->catdir($MOD_DIR, $modname);
+        $added_src{$file} = $mod_dir;
+        $$config{'sources'}{$file} = $mod_dir;
     }
     elsif($file =~ /\.h$/) {
-        $added_include{$file} = File::Spec->catdir($MOD_DIR, $modname);
+        $added_include{$file} = $mod_dir;
+        $$config{'includes'}{$file} = $mod_dir;
     }
-    else { error("Not sure where to put $file"); }
+    else {
+        error("Not sure where to put $file");
+    }
 }
 
 sub ignore_file {
-    my ($modname,$file) = @_;
+    my ($modname, $config, $file) = @_;
     check_for_file(full_path($file), $modname);
 
     if($file =~ /\.cpp$/ or $file =~ /\.S$/) {
         $ignored_src{$file} = 1;
+        delete $$config{'sources'}{$file};
     }
     elsif($file =~ /\.h$/) {
         $ignored_include{$file} = 1;
+        delete $$config{'includes'}{$file};
     }
     else { error("Not sure where to put $file"); }
 }
@@ -825,9 +853,9 @@ sub ignore_file {
 # This works because ignore file always runs on files in the main source tree,
 # and add always works on the file in the modules directory.
 sub replace_file {
-   my ($modname,$file) = @_;
-   ignore_file($modname, $file);
-   add_file($modname, $file);
+   my ($modname, $config, $file) = @_;
+   ignore_file($modname, $config, $file);
+   add_file($modname, $config, $file);
 }
 
 sub check_for_file {
@@ -842,39 +870,32 @@ sub check_for_file {
 #                                                #
 ##################################################
 sub process_template {
-    my ($in, $out, $vars) = @_;
+    my ($in, $out, $config) = @_;
 
-    open IN, "<$in" or error("Couldn't read $in ($!)");
-    open OUT, ">$out" or error("Couldn't write $out ($!)");
+    my $contents = slurp_file($in);
 
-    my $lineno = 0;
-    while(my $line = <IN>) {
-        $lineno++;
+    foreach my $name (keys %$config) {
+        my $val = $$config{$name};
+        die unless defined $val;
 
-        foreach my $name (keys %$vars)
-        {
-            my $val = $$vars{$name};
-            $line =~ s/@\{var:$name\}/$val/g;
+        $contents =~ s/@\{var:$name\}/$val/g;
 
-            die unless defined $val;
-
-            unless($val eq 'no' or $val eq 'false') {
-                $line =~ s/\@\{if:$name (.*)\}/$1/g;
-                $line =~ s/\@\{if:$name (.*) (.*)\}/$1/g;
-            } else {
-                $line =~ s/\@\{if:$name (.*)\}//g;
-                $line =~ s/\@\{if:$name (.*) (.*)\}/$2/g;
-            }
+        unless($val eq 'no' or $val eq 'false') {
+            $contents =~ s/\@\{if:$name (.*)\}/$1/g;
+            $contents =~ s/\@\{if:$name (.*) (.*)\}/$1/g;
+        } else {
+            $contents =~ s/\@\{if:$name (.*)\}//g;
+            $contents =~ s/\@\{if:$name (.*) (.*)\}/$2/g;
         }
-
-        if($line =~ /@\{var:(.*)\}/) {
-            error("Unbound variable '$1' at $in:$lineno");
-        }
-
-        print OUT $line;
     }
-    close IN;
-    close OUT;
+
+    if($contents =~ /@\{var:(.*)\}/ or
+       $contents =~ /@\{if:(.*) /) {
+        error("Unbound variable '$1' in $in");
+    }
+
+    open OUT, ">$out" or error("Couldn't write $out ($!)");
+    print OUT $contents;
 }
 
 ##################################################
@@ -967,7 +988,7 @@ sub read_info_files {
 
     my %allinfo;
     foreach my $file (dir_list($dir)) {
-        %{$allinfo{$file}} = 
+        %{$allinfo{$file}} =
             &$func($file, File::Spec->catfile($dir, $file));
     }
 
@@ -1427,15 +1448,12 @@ sub print_pkg_config {
 ##################################################
 sub generate_makefile {
    my($config,
-      $dumb_gcc,
-      $lib_src, $check_src, $all_includes,
-      $added_src, @libs_used) = @_;
+      $all_includes) = @_;
 
    my $cc = $$config{'compiler'};
    my $os = $$config{'os'};
    my $submodel = $$config{'submodel'};
    my $arch = $$config{'arch'};
-   my $make_style = $$config{'make_style'};
    my $debug = $$config{'debug'};
 
    sub os_ar_command {
@@ -1446,13 +1464,11 @@ sub generate_makefile {
        return (os_info_for(shift, 'ar_needs_ranlib') eq 'yes');
    }
 
-   my %all_lib_srcs = (%{ $lib_src }, %{ $added_src });
-
    my %ccinfo = %{$COMPILER{$cc}};
 
    my $lang_flags = '';
    append_ifdef(\$lang_flags, $ccinfo{'lang_flags'});
-   append_if(\$lang_flags, "-fpermissive", $dumb_gcc);
+   append_if(\$lang_flags, "-fpermissive", $$config{'gcc_bug'});
 
    my $warnings = '';
    append_ifdef(\$warnings, $ccinfo{'warning_flags'});
@@ -1518,32 +1534,28 @@ sub generate_makefile {
    my $includes = file_list(16, undef, undef, undef, %$all_includes);
 
    add_to($config, {
-       'shared' => ($make_shared ? 'yes' : 'no'),
+       'shared'          => ($make_shared ? 'yes' : 'no'),
 
-       'cc' => $cc_bin . $ccopts,
-       'lib_opt' => $lib_opt_flags,
-       'check_opt' => $check_opt_flags,
-       'mach_opt' => $mach_opt_flags,
-       'lang_flags' => $lang_flags,
-       'warn_flags' => $warnings,
-       'so_obj_flags' => $so_obj_flags,
-       'so_link' => $so_link_flags,
+       'cc'              => $cc_bin . $ccopts,
+       'lib_opt'         => $lib_opt_flags,
+       'check_opt'       => $check_opt_flags,
+       'mach_opt'        => $mach_opt_flags,
+       'lang_flags'      => $lang_flags,
+       'warn_flags'      => $warnings,
+       'so_obj_flags'    => $so_obj_flags,
+       'so_link'         => $so_link_flags,
 
-       'ar_command' => $ar_command,
-       'static_suffix' => os_info_for($os, 'static_suffix'),
-       'so_suffix' => os_info_for($os, 'so_suffix'),
-       'obj_suffix' => os_info_for($os, 'obj_suffix'),
+       'ar_command'      => $ar_command,
+       'ar_needs_ranlib' => $ar_needs_ranlib,
+       'static_suffix'   => os_info_for($os, 'static_suffix'),
+       'so_suffix'       => os_info_for($os, 'so_suffix'),
+       'obj_suffix'      => os_info_for($os, 'obj_suffix'),
 
-       'doc_files' => $docs,
-       'include_files' => $includes
+       'doc_files'       => $docs,
+       'include_files'   => $includes
        });
 
-   my @arguments = ($config,
-                    $ar_needs_ranlib,
-                    \%all_lib_srcs,
-                    $check_src,
-                    \@libs_used);
-
+   my $make_style = $$config{'make_style'};
    if($make_style eq 'unix') {
        if($make_shared) {
            $$config{'makefile'} = 'misc/config/makefile/unix_shr.in'
@@ -1552,11 +1564,11 @@ sub generate_makefile {
            $$config{'makefile'} = 'misc/config/makefile/unix.in';
        }
 
-       print_unix_makefile(@arguments);
+       print_unix_makefile($config);
    }
    elsif($make_style eq 'nmake') {
        $$config{'makefile'} = 'misc/config/makefile/nmake.in';
-       print_nmake_makefile(@arguments);
+       print_nmake_makefile($config);
    }
    else {
       error("This configure script does not know how to make ",
@@ -1634,12 +1646,15 @@ sub build_cmds {
 # Print a Unix style makefile                    #
 ##################################################
 sub print_unix_makefile {
-   my ($config, $use_ranlib, $src, $check, $lib_list) = @_;
+   my ($config) = @_;
+
+   die "fixme: ar_needs_ranlib is ignored" if $$config{'ar_needs_ranlib'};
+
+   my $src = $$config{'sources'};
+   my $check = $$config{'check_src'};
 
    my $os = $$config{'os'};
    my $obj_suffix = $$config{'obj_suffix'};
-
-   die "fixme; use_ranlib is ignored" if $use_ranlib;
 
    my $build_lib = $$config{'build_lib'};
    my $lib_obj = file_list(16, $build_lib, '(\.cpp$|\.S$)',
@@ -1666,10 +1681,10 @@ sub print_unix_makefile {
    $install_cmd_data =~ s/GROUP/\$(GROUP)/;
    $install_cmd_data =~ s/MODE/\$(DATA_MODE)/;
 
-   unshift @$lib_list, "m";
+   unshift @{$$config{'mod_libs'}}, "m";
 
    add_to($config, {
-       'link_to' => libs('-l', '', @$lib_list),
+       'link_to' => libs('-l', '', @{$$config{'mod_libs'}}),
        'install_user' => os_install_info($os, 'install_user'),
        'install_group' => os_install_info($os, 'install_group'),
        'install_cmd_exec' => $install_cmd_exec,
@@ -1687,9 +1702,10 @@ sub print_unix_makefile {
 # Print a NMAKE-style makefile                   #
 ##################################################
 sub print_nmake_makefile {
-   my ($config,
-       undef, # $use_ranlib
-       $src, $check, $lib_list) = @_;
+   my ($config) = @_;
+
+   my $src = $$config{'sources'};
+   my $check = $$config{'check_src'};
 
    my $obj_suffix = $$config{'obj_suffix'};
    my $static_lib_suffix = $$config{'static_suffix'};
@@ -1709,7 +1725,7 @@ sub print_nmake_makefile {
 
    add_to($config, {
        'shared' => 'no',
-       'link_to' => libs('', ".$static_lib_suffix", @$lib_list),
+       'link_to' => libs('', ".$static_lib_suffix", @{$$config{'mod_libs'}}),
        'install_user' => '',
        'install_group' => '',
        'install_cmd_exec' => '',
