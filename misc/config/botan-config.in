@@ -1,0 +1,57 @@
+#!/bin/sh
+
+guess_prefix=`dirname \`dirname $0\``
+install_prefix=@{var:prefix}
+prefix=
+includedir=@{var:includedir}
+libdir=@{var:libdir}
+
+usage()
+{
+    echo "botan-config [--prefix[=DIR]] [--version] [--libs] [--cflags]"
+    exit 1
+}
+
+if test $# -eq 0; then
+    usage
+fi
+
+if test `echo $guess_prefix | cut -c 1` = "/"; then
+   prefix=$guess_prefix
+else
+   prefix=$install_prefix
+fi
+
+while test $# -gt 0; do
+    case "$1" in
+    -*=*) optarg=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+    *) optarg= ;;
+    esac
+    case "$1" in
+    --prefix=*)
+        prefix=$optarg
+        ;;
+    --prefix)
+        echo $prefix
+        ;;
+    --version)
+        echo @{var:version}
+        exit 0
+        ;;
+    --cflags)
+        if [ $prefix != "/usr" -a $prefix != "/usr/local" ]
+        then
+           echo -I$prefix/$includedir
+        fi
+        ;;
+    --libs)
+        echo -L$prefix/$libdir @{var:libs} -lbotan
+        ;;
+    *)
+        usage
+        ;;
+    esac
+    shift
+done
+
+exit 0

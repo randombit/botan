@@ -1167,9 +1167,9 @@ sub guess_triple
 
         if($cc eq '') {
             my $msg =
-                "Can't find a usable C++ compiler, is your PATH right?\n" .
-                "You might need to run with explicit compiler/system flags;\n" .
-                "   run '$0 --help' for more information\n";
+               "Can't find a usable C++ compiler, is your PATH right?\n" .
+               "You might need to run with explicit compiler/system flags;\n" .
+               "   run '$0 --help' for more information\n";
             error($msg);
         }
 
@@ -1285,6 +1285,38 @@ END_OF_CONFIG_H
     close CONFIG_H;
 }
 
+sub process_template {
+    my ($in, $out, $vars) = @_;
+
+    open IN, "<$in" or die "Couldn't read $in ($!)\n";
+    open OUT, ">$out" or die "Couldn't write $out ($!)\n";
+
+    my $lineno = 0;
+    while(my $line = <IN>) {
+        $lineno++;
+
+        foreach my $name (keys %$vars)
+        {
+            my $val = $$vars{$name};
+            $line =~ s/@\{var:$name\}/$val/g;
+
+            unless($val eq 'no' or $val eq 'false') {
+                $line =~ s/\@\{if:$name (.*) (.*)\}/$1/g;
+            } else {
+                $line =~ s/\@\{if:$name (.*) (.*)\}/$2/g;
+            }
+        }
+
+        if($line =~ /@\{var:(.*)\}/) {
+            die "Unbound variable '$1' at $in:$lineno\n";
+        }
+
+        print OUT $line;
+    }
+    close IN;
+    close OUT;
+}
+
 sub print_pkg_config
 {
     my ($os, $major,$minor,$patch,@libs) = @_;
@@ -1303,70 +1335,13 @@ sub print_pkg_config
 
     my $VERSION = $major . "." . $minor . "." . $patch;
 
-    open PKGCONFIG, ">botan-config" or
-        die "Couldn't write to botan-config ($!)";
+    process_template('misc/config/botan-config.in', 'botan-config',
+                     { 'version' => $VERSION,
+                       'prefix' => $install_root,
+                       'includedir' => $header_dir,
+                       'libdir' => $lib_dir,
+                       'libs' => $link_to });
 
-    print PKGCONFIG <<END_OF_FILE;
-#!/bin/sh
-
-guess_prefix=\`dirname \\\`dirname \$0\\\`\`
-install_prefix=$install_root
-prefix=
-includedir=$header_dir
-libdir=$lib_dir
-
-usage()
-{
-    echo "botan-config [--prefix[=DIR]] [--version] [--libs] [--cflags]"
-    exit 1
-}
-
-if test \$# -eq 0; then
-    usage
-fi
-
-if test \`echo \$guess_prefix | cut -c 1\` = "/"; then
-   prefix=\$guess_prefix
-else
-   prefix=\$install_prefix
-fi
-
-while test \$# -gt 0; do
-    case "\$1" in
-    -*=*) optarg=`echo "\$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
-    *) optarg= ;;
-    esac
-    case "\$1" in
-    --prefix=*)
-        prefix=\$optarg
-        ;;
-    --prefix)
-        echo \$prefix
-        ;;
-    --version)
-        echo $VERSION
-        exit 0
-        ;;
-    --cflags)
-        if [ \$prefix != "/usr" -a \$prefix != "/usr/local" ]
-        then
-           echo -I\$prefix/\$includedir
-        fi
-        ;;
-    --libs)
-        echo -L\$prefix/\$libdir $link_to -lbotan
-        ;;
-    *)
-        usage
-        ;;
-    esac
-    shift
-done
-
-exit 0
-END_OF_FILE
-
-    close PKGCONFIG;
     chmod 0755, 'botan-config';
 }
 
