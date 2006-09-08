@@ -6,6 +6,7 @@ use strict;
 use Getopt::Long;
 use File::Spec;
 use File::Copy;
+use Data::Dumper; # for testing only
 
 my $MAJOR_VERSION = 1;
 my $MINOR_VERSION = 5;
@@ -1429,46 +1430,61 @@ sub generate_makefile {
    append_ifdef(\$ccopts, $ccinfo{'mach_abi_linking'}{'all'});
    $ccopts = ' ' . $ccopts if($ccopts ne '');
 
-   my $install_root = os_install_info($os, 'install_root');
-
-   ##################################################
-   # Ready, set, print!                             #
-   ##################################################
    my $cc_bin = $ccinfo{'binary_name'};
 
    # Hack for 10.1, 10.2+ is fixed. Don't have a 10.0.x machine anymore
-   if($os eq "darwin" and $cc eq "gcc") { $cc_bin = "c++"; }
+   $cc_bin = "c++" if($os eq "darwin" and $cc eq "gcc");
 
-   my $obj_suffix = os_obj_suffix($os);
-   my $static_suffix = os_static_suffix($os);
+   my $docs = file_list(16, undef, undef, undef, %DOCS);
+   my $includes = file_list(16, undef, undef, undef, %$all_includes);
 
-   my @arguments = ($os,
-                    $cc_bin . $ccopts,
-                    $lib_opt_flags,
-                    $check_opt_flags,
-                    $mach_opt_flags,
-                    $lang_flags,
-                    $warnings,
+   my %CONFIG = (
+                 'version_major' => $MAJOR_VERSION,
+                 'version_minor' => $MINOR_VERSION,
+                 'version_patch' => $PATCH_VERSION,
+                 'build' => $BUILD_DIR,
+
+                 'shared' => ($make_shared ? 'yes' : 'no'),
+
+                 'cc' => $cc_bin . $ccopts,
+                 'lib_opt' => $lib_opt_flags,
+                 'check_opt' => $check_opt_flags,
+                 'mach_opt' => $mach_opt_flags,
+                 'lang_flags' => $lang_flags,
+                 'warn_flags' => $warnings,
+                 'so_obj_flags' => $so_obj_flags,
+                 'so_link' => $so_link_flags,
+
+                 'ar_command' => $ar_command,
+                 'static_suffix' => os_static_suffix($os),
+                 'so_suffix' => os_shared_suffix($os),
+
+                 'prefix' => os_install_info($os, 'install_root'),
+                 'libdir' => os_install_info($os, 'lib_dir'),
+                 'includedir' => os_install_info($os, 'header_dir'),
+                 'docdir' => os_install_info($os, 'doc_dir'),
+
+                 'doc_files' => $docs,
+                 'include_files' => $includes,
+                 );
+
+   my @arguments = (\%CONFIG,
+                    $os,
                     $make_shared,
-                    $so_obj_flags,
-                    $so_link_flags,
-                    $obj_suffix,
+                    os_obj_suffix($os),
                     os_shared_suffix($os),
-                    $static_suffix,
-                    $ar_command,
+                    os_static_suffix($os),
                     $ar_needs_ranlib,
                     \%all_lib_srcs,
                     $check_src,
-                    $all_includes,
-                    \%DOCS,
-                    $install_root,
-                    os_install_info($os, 'header_dir'),
-                    os_install_info($os, 'lib_dir'),
-                    os_install_info($os, 'doc_dir'),
                     \@libs_used);
 
-   if($make_style eq 'unix') { print_unix_makefile(@arguments); }
-   elsif($make_style eq 'nmake') { print_nmake_makefile(@arguments); }
+   if($make_style eq 'unix') {
+       print_unix_makefile(@arguments);
+   }
+   elsif($make_style eq 'nmake') {
+       print_nmake_makefile(@arguments);
+   }
    else {
       error("This configure script does not know how to make ",
             "a makefile for makefile style \"$make_style\"");
@@ -1496,55 +1512,26 @@ sub file_list {
     return $list;
 }
 
+sub write_makefile {
+    my ($makefile, $template, $config) = @_;
+
+    process_template($template, $makefile, $config);
+}
+
 ##################################################
 # Print a Unix style makefile                    #
 ##################################################
 sub print_unix_makefile {
-   my ($os, $cc, $lib_opt, $check_opt, $mach_opt,
-       $lang_flags, $warn_flags, $make_shared, $so_obj, $so_link,
+   my ($config_ref, $os,
+       $make_shared,
        $obj_suffix, $so_suffix, $static_lib_suffix,
-       $ar_command, $use_ranlib,
-       $src, $check, $include_r, $docs,
-       $install_root, $header_dir, $lib_dir, $doc_dir,
-       $lib_list) = @_;
+       $use_ranlib,
+       $src, $check, $lib_list) = @_;
 
    my $link_to = "-lm";
    foreach my $lib (@$lib_list) { $link_to .= " -l" . $lib; }
 
-   my $install_user = os_install_info($os, 'install_user');
-   my $install_group = os_install_info($os, 'install_group');
-
-   my $install_cmd_exec = os_install_info($os, 'install_cmd');
-   my $install_cmd_data = os_install_info($os, 'install_cmd');
-
-   $install_cmd_exec =~ s/OWNER/\$(OWNER)/;
-   $install_cmd_data =~ s/OWNER/\$(OWNER)/;
-
-   $install_cmd_exec =~ s/GROUP/\$(GROUP)/;
-   $install_cmd_data =~ s/GROUP/\$(GROUP)/;
-
-   $install_cmd_exec =~ s/MODE/\$(EXEC_MODE)/;
-   $install_cmd_data =~ s/MODE/\$(DATA_MODE)/;
-
-   $warn_flags = '' unless defined($warn_flags);
-   $so_obj = '' unless defined($so_obj);
-
-##################### COMMON CODE (PARTIALLY) ######################
-   my $includes = file_list(16, undef, undef, undef, %$include_r);
-
-   my $lib_obj = file_list(16, $BUILD_LIB_DIR, '(\.cpp$|\.s$|\.S$)',
-                           '.'.$obj_suffix, %$src, %added_src);
-   my $check_obj = file_list(16, $BUILD_CHECK_DIR, '.cpp', '.'.$obj_suffix,
-                             %$check);
-
-   my $doc_list = file_list(16, undef, undef, undef, %$docs);
-
-   $lang_flags = '' if not defined($lang_flags);
-   $warn_flags = '' if not defined($warn_flags);
-
-##################### / COMMON CODE (PARTIALLY) ######################
-
-   sub build_cmds {
+   sub build_cmds_unix {
       my ($dir, $flags, $obj_suffix, %files) = @_;
       my $output = '';
 
@@ -1560,66 +1547,55 @@ sub print_unix_makefile {
       return $output;
    }
 
-   my $lib_build_cmds = build_cmds($BUILD_LIB_DIR, '$(LIB_FLAGS)',
-                                   $obj_suffix, %$src, %added_src);
-   my $check_build_cmds = build_cmds($BUILD_CHECK_DIR, '$(CHECK_FLAGS)',
-                                     $obj_suffix, %$check);
+   my $lib_obj = file_list(16, $BUILD_LIB_DIR, '(\.cpp$|\.s$|\.S$)',
+                           '.'.$obj_suffix, %$src, %added_src);
+   my $check_obj = file_list(16, $BUILD_CHECK_DIR, '.cpp', '.'.$obj_suffix,
+                             %$check);
+
+   my $lib_build_cmds = build_cmds_unix($BUILD_LIB_DIR, '$(LIB_FLAGS)',
+                                        $obj_suffix, %$src, %added_src);
+   my $check_build_cmds = build_cmds_unix($BUILD_CHECK_DIR, '$(CHECK_FLAGS)',
+                                          $obj_suffix, %$check);
 
    chomp($lib_build_cmds);
    chomp($check_build_cmds);
 
+   my $install_cmd_exec = os_install_info($os, 'install_cmd');
+   $install_cmd_exec =~ s/OWNER/\$(OWNER)/;
+   $install_cmd_exec =~ s/GROUP/\$(GROUP)/;
+   $install_cmd_exec =~ s/MODE/\$(EXEC_MODE)/;
+
+   my $install_cmd_data = os_install_info($os, 'install_cmd');
+   $install_cmd_data =~ s/OWNER/\$(OWNER)/;
+   $install_cmd_data =~ s/GROUP/\$(GROUP)/;
+   $install_cmd_data =~ s/MODE/\$(DATA_MODE)/;
+
+   my %CONFIG = %{$config_ref};
+   $CONFIG{'link_to'} = $link_to;
+   $CONFIG{'install_user'} = os_install_info($os, 'install_user'),
+   $CONFIG{'install_group'} = os_install_info($os, 'install_group'),
+   $CONFIG{'install_cmd_exec'} = $install_cmd_exec;
+   $CONFIG{'install_cmd_data'} = $install_cmd_data;
+   $CONFIG{'lib_objs'} = $lib_obj;
+   $CONFIG{'check_objs'} = $check_obj;
+   $CONFIG{'lib_build_cmds'} = $lib_build_cmds;
+   $CONFIG{'check_build_cmds'} = $check_build_cmds;
+
    my $template = 'misc/config/makefile/unix.in';
    $template = 'misc/config/makefile/unix_shr.in' if($make_shared);
 
-   process_template($template, 'Makefile',
-                    { 'cc' => $cc,
-                      'lib_opt' => $lib_opt,
-                      'check_opt' => $check_opt,
-                      'mach_opt' => $mach_opt,
-                      'lang_flags' => $lang_flags,
-                      'warn_flags' => $warn_flags,
-                      'so_obj_flags' => $so_obj,
-                      'so_link' => $so_link,
-                      'link_to' => $link_to,
-                      'shared' => ($make_shared ? 'yes' : 'no'),
-                      'version_major' => $MAJOR_VERSION,
-                      'version_minor' => $MINOR_VERSION,
-                      'version_patch' => $PATCH_VERSION,
-                      'prefix' => $install_root,
-                      'libdir' => $lib_dir,
-                      'includedir' => $header_dir,
-                      'docdir' => $doc_dir,
-                      'install_user' => $install_user,
-                      'install_group' => $install_group,
-                      'ar_command' => $ar_command,
-                      'install_cmd_exec' => $install_cmd_exec,
-                      'install_cmd_data' => $install_cmd_data,
-                      'doc_files' => $doc_list,
-                      'include_files' => $includes,
-                      'lib_objs' => $lib_obj,
-                      'check_objs' => $check_obj,
-                      'lib_build_cmds' => $lib_build_cmds,
-                      'check_build_cmds' => $check_build_cmds,
-                      'so_suffix' => $so_suffix,
-                      'build' => $BUILD_DIR });
+   write_makefile('Makefile', $template, \%CONFIG);
 }
 
 ##################################################
 # Print a NMAKE-style makefile                   #
 ##################################################
 sub print_nmake_makefile {
-   my ($os, $cc,
-       $lib_opt, $check_opt, $mach_opt,
-       $lang_flags, $warn_flags,
+   my ($config_ref, $os,
        undef, # $make_shared
-       undef, # $so_obj
-       undef, # $so_link
-       $obj_suffix, $so_suffix,
-       $static_lib_suffix,
-       $ar_command, undef, # $use_ranlib
-       $src, $check, $include_r, $docs,
-       $install_root, $header_dir, $lib_dir, $doc_dir,
-       $lib_list) = @_;
+       $obj_suffix, $so_suffix, $static_lib_suffix,
+       undef, # $use_ranlib
+       $src, $check, $lib_list) = @_;
 
    my $link_to = '';
    foreach my $lib (@$lib_list)
@@ -1628,19 +1604,6 @@ sub print_nmake_makefile {
        if($link_to eq '') { $link_to .= $lib_full; }
        else               { $link_to .= ' ' . $lib_full; }
    }
-
-##################### COMMON CODE (PARTIALLY) ######################
-
-   my $includes = file_list(16, undef, undef, undef, %$include_r);
-
-   my $lib_obj = file_list(16, $BUILD_LIB_DIR, '.cpp', '.'.$obj_suffix,
-                           %$src, %added_src);
-   my $check_obj = file_list(16, $BUILD_CHECK_DIR, '.cpp', '.'.$obj_suffix,
-                             %$check);
-
-   my $doc_list = file_list(16, undef, undef, undef, %$docs);
-
-##################### / COMMON CODE (PARTIALLY) ######################
 
    sub build_cmds_nmake {
       my ($dir, $flags, $obj_suffix, %files) = @_;
@@ -1656,15 +1619,10 @@ sub print_nmake_makefile {
       return $output;
    }
 
-   $warn_flags = '' unless defined($warn_flags);
-   $lang_flags = '' unless defined($lang_flags);
-   my $so_obj = '';
-   my $so_link = '';
-   my $make_shared = 0;
-   my $install_user = '';
-   my $install_group = '';
-   my $install_cmd_exec = '';
-   my $install_cmd_data = '';
+   my $lib_obj = file_list(16, $BUILD_LIB_DIR, '.cpp', '.'.$obj_suffix,
+                           %$src, %added_src);
+   my $check_obj = file_list(16, $BUILD_CHECK_DIR, '.cpp', '.'.$obj_suffix,
+                             %$check);
 
    my $lib_build_cmds = build_cmds_nmake($BUILD_LIB_DIR, '$(LIB_FLAGS)',
                                          $obj_suffix, %$src, %added_src);
@@ -1672,38 +1630,17 @@ sub print_nmake_makefile {
    my $check_build_cmds = build_cmds_nmake($BUILD_CHECK_DIR, '$(CHECK_FLAGS)',
                                            $obj_suffix, %$check);
 
-   my $template = 'misc/config/makefile/nmake.in';
+   my %CONFIG = %{$config_ref};
+   $CONFIG{'shared'} = 'no';
+   $CONFIG{'link_to'} = $link_to;
+   $CONFIG{'install_user'} = '';
+   $CONFIG{'install_group'} = '';
+   $CONFIG{'install_cmd_exec'} = '';
+   $CONFIG{'install_cmd_data'} = '';
+   $CONFIG{'lib_objs'} = $lib_obj;
+   $CONFIG{'check_objs'} = $check_obj;
+   $CONFIG{'lib_build_cmds'} = $lib_build_cmds;
+   $CONFIG{'check_build_cmds'} = $check_build_cmds;
 
-   process_template($template, 'Makefile',
-                    { 'cc' => $cc,
-                      'lib_opt' => $lib_opt,
-                      'check_opt' => $check_opt,
-                      'mach_opt' => $mach_opt,
-                      'lang_flags' => $lang_flags,
-                      'warn_flags' => $warn_flags,
-                      'so_obj_flags' => $so_obj,
-                      'so_link' => $so_link,
-                      'link_to' => $link_to,
-                      'shared' => ($make_shared ? 'yes' : 'no'),
-                      'version_major' => $MAJOR_VERSION,
-                      'version_minor' => $MINOR_VERSION,
-                      'version_patch' => $PATCH_VERSION,
-                      'prefix' => $install_root,
-                      'libdir' => $lib_dir,
-                      'includedir' => $header_dir,
-                      'docdir' => $doc_dir,
-                      'install_user' => $install_user,
-                      'install_group' => $install_group,
-                      'ar_command' => $ar_command,
-                      'install_cmd_exec' => $install_cmd_exec,
-                      'install_cmd_data' => $install_cmd_data,
-                      'doc_files' => $doc_list,
-                      'include_files' => $includes,
-                      'lib_objs' => $lib_obj,
-                      'check_objs' => $check_obj,
-                      'lib_build_cmds' => $lib_build_cmds,
-                      'check_build_cmds' => $check_build_cmds,
-                      'static_suffix' => $static_lib_suffix,
-                      'so_suffix' => $so_suffix,
-                      'build' => $BUILD_DIR });
+   write_makefile('Makefile', 'misc/config/makefile/nmake.in', \%CONFIG);
 }
