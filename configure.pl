@@ -61,10 +61,6 @@ my %DOCS = (
 # Data                                           #
 ##################################################
 my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
-
-# This is build configuration stuff, should all go into %CONFIG
-my ($user_set_root, $doc_dir, $lib_dir) = ('', '', '');
-
 my (%ignored_src, %ignored_include, %added_src, %added_include);
 
 ##################################################
@@ -91,6 +87,7 @@ sub main {
         'version'       => "$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION"
         });
 
+    my ($prefix, $doc_dir, $lib_dir) = ('', '', '');
     my $shared = 'yes';
     my ($debug, $dumb_gcc) = (0, 0);
     my $build_dir = 'build';
@@ -107,7 +104,7 @@ sub main {
                'make-style=s' => \$make_style,
                'modules=s' => \@using_mods,
                'module-set=s' => \$module_set,
-               'prefix=s' => \$user_set_root,
+               'prefix=s' => \$prefix,
                'docdir=s' => \$doc_dir,
                'libdir=s' => \$lib_dir,
                'build-dir=s' => \$build_dir,
@@ -118,11 +115,8 @@ sub main {
     add_to($config, {
         'debug'         => $debug,
         'shared'        => $shared,
-
         'build'         => $build_dir,
-
-        'modules'       => [ @using_mods ],
-        'mp_bits'       => find_mp_bits(@using_mods)
+        'local_config'  => slurp_file($local_config),
         });
 
     if($^O eq 'MSWin32' or $^O eq 'dos' or $^O eq 'cygwin') {
@@ -227,11 +221,6 @@ sub main {
             unless(exists($MODULES{$_}));
     }
 
-    check_for_conflicts(@using_mods);
-    foreach my $mod (@using_mods) {
-        load_module($mod, $cc, $os, $arch, $submodel);
-    }
-
     add_to($config, {
         'compiler'      => $cc,
         'os'            => $os,
@@ -240,17 +229,28 @@ sub main {
 
         'make_style'    => $make_style,
 
-        'local_config'  => slurp_file($local_config),
-        'prefix'        => os_install_info($os, 'install_root'),
-        'libdir'        => os_install_info($os, 'lib_dir'),
+        'prefix'        =>
+            ($prefix ne '') ? $prefix : os_install_info($os, 'install_root'),
+        'libdir'        =>
+            ($lib_dir ne '') ? $lib_dir : os_install_info($os, 'lib_dir'),
+        'docdir'        =>
+            ($doc_dir ne '') ? $doc_dir : os_install_info($os, 'doc_dir'),
+
         'includedir'    => os_install_info($os, 'header_dir'),
-        'docdir'        => os_install_info($os, 'doc_dir'),
 
         'build_lib'     => File::Spec->catdir($$config{'build'}, 'lib'),
         'build_check'   => File::Spec->catdir($$config{'build'}, 'checks'),
-        'build_include' => File::Spec->catdir($$config{'build'}, 'include')
+        'build_include' => File::Spec->catdir($$config{'build'}, 'include'),
+
+        'modules'       => [ @using_mods ],
+        'mp_bits'       => find_mp_bits(@using_mods)
         });
     $$config{'defines'} = defines($config);
+
+    check_for_conflicts(@using_mods);
+    foreach my $mod (@using_mods) {
+        load_module($mod, $cc, $os, $arch, $submodel);
+    }
 
     print_pkg_config($config);
 
@@ -460,10 +460,6 @@ sub os_info_for {
 
 sub os_install_info {
     my ($os,$what) = @_;
-
-    return $doc_dir if($what eq 'doc_dir' && $doc_dir);
-    return $lib_dir if($what eq 'lib_dir' && $lib_dir);
-    return $user_set_root if($what eq 'install_root' && $user_set_root);
 
     my $result = $OPERATING_SYSTEM{$os}{$what};
 
@@ -1391,6 +1387,9 @@ sub slurp_file {
     my $file = $_[0];
     return '' if(!defined($file) or $file eq '');
 
+    error("'$file': No such file") unless(-e $file);
+    error("'$file': Not a regular file") unless(-f $file);
+
     open FILE, "<$file" or error("Couldn't read $file ($!)");
 
     my $output = '';
@@ -1409,8 +1408,7 @@ sub print_pkg_config {
     return if($$config{'os'} eq 'generic' or
               $$config{'os'} eq 'windows');
 
-    $$config{'link_to'} =
-        libs('-l', '', 'm', @{$$config{'extra_libs'}});
+    $$config{'link_to'} = libs('-l', '', 'm', @{$$config{'extra_libs'}});
 
     process_template('misc/config/botan-config.in',
                      'botan-config', $config);
@@ -1541,16 +1539,23 @@ sub generate_makefile {
        });
 
    my @arguments = ($config,
-                    $make_shared,
                     $ar_needs_ranlib,
                     \%all_lib_srcs,
                     $check_src,
                     \@libs_used);
 
    if($make_style eq 'unix') {
+       if($make_shared) {
+           $$config{'makefile'} = 'misc/config/makefile/unix_shr.in'
+       }
+       else {
+           $$config{'makefile'} = 'misc/config/makefile/unix.in';
+       }
+
        print_unix_makefile(@arguments);
    }
    elsif($make_style eq 'nmake') {
+       $$config{'makefile'} = 'misc/config/makefile/nmake.in';
        print_nmake_makefile(@arguments);
    }
    else {
@@ -1629,7 +1634,7 @@ sub build_cmds {
 # Print a Unix style makefile                    #
 ##################################################
 sub print_unix_makefile {
-   my ($config, $make_shared, $use_ranlib, $src, $check, $lib_list) = @_;
+   my ($config, $use_ranlib, $src, $check, $lib_list) = @_;
 
    my $os = $$config{'os'};
    my $obj_suffix = $$config{'obj_suffix'};
@@ -1675,10 +1680,7 @@ sub print_unix_makefile {
        'check_build_cmds' => $check_build_cmds
        });
 
-   my $template = 'misc/config/makefile/unix.in';
-   $template = 'misc/config/makefile/unix_shr.in' if($make_shared);
-
-   process_template($template, 'Makefile', $config);
+   process_template($$config{'makefile'}, 'Makefile', $config);
 }
 
 ##################################################
@@ -1686,7 +1688,6 @@ sub print_unix_makefile {
 ##################################################
 sub print_nmake_makefile {
    my ($config,
-       undef, # $make_shared
        undef, # $use_ranlib
        $src, $check, $lib_list) = @_;
 
@@ -1719,7 +1720,5 @@ sub print_nmake_makefile {
        'check_build_cmds' => $check_build_cmds
        });
 
-   my $template = 'misc/config/makefile/nmake.in';
-
-   process_template($template, 'Makefile', $config);
+   process_template($$config{'makefile'}, 'Makefile', $config);
 }
