@@ -277,29 +277,22 @@ sub figure_out_arch {
     return ('generic', 'generic') if($name eq 'generic');
 
     sub submodel_alias {
-        my ($name) = @_;
+        my ($name,$info) = @_;
 
-        foreach my $arch (keys %CPU) {
-            next unless defined $CPU{$arch}{'submodel_aliases'};
-            my %sm_aliases = %{$CPU{$arch}{'submodel_aliases'}};
+        my %info = %{$info};
 
-            foreach my $alias (keys %sm_aliases) {
-                my $official = $sm_aliases{$alias};
-                return $official if($alias eq $name);
-            }
+        foreach my $submodel (@{$info{'submodels'}}) {
+            return $submodel if ($name eq $submodel);
         }
-        return $name;
-    }
 
-    sub arch_alias {
-        my $name = $_[0];
+        return '' unless defined $info{'submodel_aliases'};
+        my %sm_aliases = %{$info{'submodel_aliases'}};
 
-        foreach my $arch (keys %CPU) {
-            foreach my $alias (@{$CPU{$arch}{'aliases'}}) {
-                return $arch if($alias eq $name);
-            }
+        foreach my $alias (keys %sm_aliases) {
+            my $official = $sm_aliases{$alias};
+            return $official if($alias eq $name);
         }
-        return undef;
+        return '';
     }
 
     sub find_arch {
@@ -310,29 +303,37 @@ sub figure_out_arch {
 
             return $arch if ($name eq $arch);
 
+            foreach my $alias (@{$info{'aliases'}}) {
+                return $arch if ($name eq $alias);
+            }
+
             foreach my $submodel (@{$info{'submodels'}}) {
                 return $arch if ($name eq $submodel);
             }
+
+            foreach my $submodel (keys %{$info{'submodel_aliases'}}) {
+                return $arch if ($name eq $submodel);
+            }
         }
+        return undef;
     }
 
-    my $submodel = submodel_alias($name);
-    my $arch = arch_alias($name);
+    my $arch = find_arch($name);
+    error("Arch type $name isn't known") unless defined $arch;
 
-    if(not defined($arch) and $submodel ne '') {
-        $arch = find_arch($submodel);
-    }
+    my %archinfo = %{ $CPU{$arch} };
 
-    error("Arch $name isn't known") unless defined $arch;
+    my $submodel = submodel_alias($name, \%archinfo);
 
-    if($submodel eq $arch) {
-        $submodel = $CPU{$arch}{'default_submodel'};
+    if($submodel eq '') {
+        $submodel = $archinfo{'default_submodel'};
 
         warning("Using $submodel as default type for family ", realname($arch))
            if($submodel ne $arch);
     }
 
-    die unless defined($arch) and defined($submodel);
+    error("Couldn't figure out arch type of $name")
+        unless defined($arch) and defined($submodel);
 
     return ($arch,$submodel);
 }
@@ -744,9 +745,13 @@ sub os_info_for {
     die "Internal error: os_info_for called with an os of defaults\n"
         if($os eq 'defaults');
 
-    my %osinfo = %{$OPERATING_SYSTEM{$os}};
+    my $result = '';
 
-    my $result = $osinfo{$what};
+    if(defined($OPERATING_SYSTEM{$os})) {
+        my %osinfo = %{$OPERATING_SYSTEM{$os}};
+        $result = $osinfo{$what};
+    }
+
     if(!defined($result) or $result eq '') {
         #print "Using defaults for $what\n";
         $result = $OPERATING_SYSTEM{'defaults'}{$what};
