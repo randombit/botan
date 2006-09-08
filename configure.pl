@@ -1477,13 +1477,6 @@ sub generate_makefile {
    close MAKEFILE;
 }
 
-sub print_header {
-    my ($fh, $string) = @_;
-    print $fh '#' x 50, "\n",
-             "# $string", ' 'x(47-length($string)), "#\n",
-              '#' x 50, "\n";
-}
-
 ##################################################
 # Print a Unix style makefile                    #
 ##################################################
