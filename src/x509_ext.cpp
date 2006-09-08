@@ -143,7 +143,7 @@ namespace Cert_Extension {
 /*************************************************
 * Checked accessor for the path_limit member     *
 *************************************************/
-bool Basic_Constraints::get_path_limit() const
+u32bit Basic_Constraints::get_path_limit() const
    {
    if(!is_ca)
       throw Invalid_State("Basic_Constraints::get_path_limit: Not a CA");

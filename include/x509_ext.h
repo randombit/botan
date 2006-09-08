@@ -77,7 +77,7 @@ class Basic_Constraints : public Certificate_Extension
          is_ca(ca), path_limit(limit) {}
 
       bool get_is_ca() const { return is_ca; }
-      bool get_path_limit() const;
+      u32bit get_path_limit() const;
    private:
       std::string config_id() const { return "basic_constraints"; }
       std::string oid_name() const { return "X509v3.BasicConstraints"; }
