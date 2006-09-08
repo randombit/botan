@@ -1630,8 +1630,6 @@ sub print_nmake_makefile {
        $install_root, $header_dir, $lib_dir, $doc_dir,
        $lib_list) = @_;
 
-   my $__TAB__ = "\t";
-
    my $link_to = '';
    foreach my $lib (@$lib_list)
    {
@@ -1639,10 +1637,6 @@ sub print_nmake_makefile {
        if($link_to eq '') { $link_to .= $lib_full; }
        else               { $link_to .= ' ' . $lib_full; }
    }
-
-   my $lib_flags   = '$(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS)';
-
-   my $libs = '$(STATIC_LIB)';
 
 ##################### COMMON CODE (PARTIALLY) ######################
 
@@ -1657,134 +1651,69 @@ sub print_nmake_makefile {
 
 ##################### / COMMON CODE (PARTIALLY) ######################
 
-   $warn_flags = '' unless defined($warn_flags);
-   $lang_flags = '' unless defined($lang_flags);
+   sub build_cmds_nmake {
+      my ($dir, $flags, $obj_suffix, %files) = @_;
 
-   print_header($makefile, 'Compiler Options');
-   print $makefile <<END_OF_MAKEFILE_HEADER;
-CXX           = $cc
-LIB_OPT       = $lib_opt
-CHECK_OPT     = $check_opt
-MACH_OPT      = $mach_opt
-LANG_FLAGS    = $lang_flags
-WARN_FLAGS    = $warn_flags
-SO_OBJ_FLAGS  =
-SO_LINK_FLAGS =
-LINK_TO       = $link_to
-
-END_OF_MAKEFILE_HEADER
-
-   print_header($makefile, 'Version Numbers');
-   print $makefile <<END_OF_VERSIONS;
-MAJOR         = $MAJOR_VERSION
-MINOR         = $MINOR_VERSION
-PATCH         = $PATCH_VERSION
-
-VERSION       = \$(MAJOR).\$(MINOR).\$(PATCH)
-
-END_OF_VERSIONS
-
-   print_header($makefile, 'Installation Settings');
-   print $makefile <<END_OF_INSTALL_SETTINGS;
-INSTALLROOT   = $install_root
-
-LIBDIR        = \$(INSTALLROOT)\\$lib_dir
-HEADERDIR     = \$(INSTALLROOT)\\$header_dir\\botan
-DOCDIR        = \$(INSTALLROOT)\\$doc_dir
-
-END_OF_INSTALL_SETTINGS
-
-   print_header($makefile, 'Aliases for Common Programs');
-   print $makefile <<END_OF_COMMAND_ALIASES;
-AR            = $ar_command
-CD            = \@cd
-ECHO          = \@echo
-INSTALL       = copy
-INSTALL_CMD   = \$(INSTALL)
-MKDIR         = \@md
-MKDIR_INSTALL = \@md
-RM            = \@del /Q
-RMDIR         = \@rmdir
-
-END_OF_COMMAND_ALIASES
-
-   print_header($makefile, 'File Lists');
-   print $makefile <<END_OF_FILE_LISTS;
-LIB_FLAGS     = $lib_flags
-CHECK_FLAGS   = \$(CHECK_OPT) \$(LANG_FLAGS) \$(WARN_FLAGS)
-
-CHECK         = check
-
-DOCS          = $doc_list
-
-HEADERS       = $includes
-
-LIBOBJS       = $lib_obj
-
-CHECKOBJS     = $check_obj
-
-LIBRARIES     = $libs
-
-LIBNAME       = libbotan
-STATIC_LIB    = \$(LIBNAME).$static_lib_suffix
-
-END_OF_FILE_LISTS
-
-   print $makefile "all: \$(LIBRARIES)\n\n";
-   print_header($makefile, 'Build Commands');
-
-   sub print_build_cmds_nmake {
-      my ($fh, $dir, $flags, $obj_suffix, %files) = @_;
+      my $output = '';
       foreach (sort keys %files) {
          my $src_file = File::Spec->catfile ($files{$_}, $_);
          my $obj_file = File::Spec->catfile ($dir, $_);
          $obj_file =~ s/.cpp/.$obj_suffix/;
-         print $fh "$obj_file: $src_file\n",
-            "\t\$(CXX) -I$BUILD_INCLUDE_DIR $flags /c \$? /Fo\$@\n\n";
+         $output .= "$obj_file: $src_file\n" .
+            "\t\$(CXX) /I$BUILD_INCLUDE_DIR $flags /c \$? /Fo\$@\n\n";
       }
+      return $output;
    }
 
-   print_build_cmds_nmake($makefile, $BUILD_LIB_DIR,
-                          '$(LIB_FLAGS)', $obj_suffix, %$src, %added_src);
+   $warn_flags = '' unless defined($warn_flags);
+   $lang_flags = '' unless defined($lang_flags);
+   my $so_obj = '';
+   my $so_link = '';
+   my $make_shared = 0;
+   my $install_user = '';
+   my $install_group = '';
+   my $install_cmd_exec = '';
+   my $install_cmd_data = '';
 
-   print_build_cmds_nmake($makefile, $BUILD_CHECK_DIR,
-                          '$(CHECK_FLAGS)', $obj_suffix, %$check);
+   my $lib_build_cmds = build_cmds_nmake($BUILD_LIB_DIR, '$(LIB_FLAGS)',
+                                         $obj_suffix, %$src, %added_src);
 
-   print_header($makefile, 'Link Commands');
+   my $check_build_cmds = build_cmds_nmake($BUILD_CHECK_DIR, '$(CHECK_FLAGS)',
+                                           $obj_suffix, %$check);
 
-   print $makefile <<END_OF_LINK_COMMANDS;
-\$(CHECK): \$(LIBRARIES) \$(CHECKOBJS)
-${__TAB__}LINK /OUT:\$@.exe \$(CHECKOBJS) \$(STATIC_LIB) \$(LINK_TO)
+   my $template = 'misc/config/makefile/nmake.in';
 
-\$(STATIC_LIB): \$(LIBOBJS)
-$__TAB__\$(AR) /OUT:\$@ /NAME:BOTAN-\$(VERSION) \$(LIBOBJS)
-END_OF_LINK_COMMANDS
-
-   print $makefile "\n";
-
-   print_header($makefile, 'Misc Targets');
-   print $makefile "static: \$(STATIC_LIB)\n\n";
-
-   print_header($makefile, 'Fake Targets');
-   print $makefile <<END_OF_FAKE_TARGETS;
-clean:
-$__TAB__\$(RM) $BUILD_LIB_DIR\\* $BUILD_CHECK_DIR\\*
-$__TAB__\$(RM) \$(LIBRARIES) \$(CHECK)
-
-distclean: clean
-$__TAB__\$(RM) $CPP_INCLUDE_DIR\\*
-$__TAB__\$(RMDIR) $CPP_INCLUDE_DIR
-$__TAB__\$(RMDIR) $BUILD_LIB_DIR $BUILD_CHECK_DIR $BUILD_INCLUDE_DIR $BUILD_DIR
-$__TAB__\$(RM) $MAKE_FILE
-END_OF_FAKE_TARGETS
-
-   print_header($makefile, 'Install Commands');
-
-   print $makefile <<END_OF_INSTALL_SCRIPTS;
-install: \$(LIBRARIES)
-$__TAB__\$(ECHO) "Install command not done"
-END_OF_INSTALL_SCRIPTS
-
-    print $makefile "\n";
+   process_template($template, 'Makefile.test',
+                    { 'cc' => $cc,
+                      'lib_opt' => $lib_opt,
+                      'check_opt' => $check_opt,
+                      'mach_opt' => $mach_opt,
+                      'lang_flags' => $lang_flags,
+                      'warn_flags' => $warn_flags,
+                      'so_obj_flags' => $so_obj,
+                      'so_link' => $so_link,
+                      'link_to' => $link_to,
+                      'shared' => ($make_shared ? 'yes' : 'no'),
+                      'version_major' => $MAJOR_VERSION,
+                      'version_minor' => $MINOR_VERSION,
+                      'version_patch' => $PATCH_VERSION,
+                      'prefix' => $install_root,
+                      'libdir' => $lib_dir,
+                      'includedir' => $header_dir,
+                      'docdir' => $doc_dir,
+                      'install_user' => $install_user,
+                      'install_group' => $install_group,
+                      'ar_command' => $ar_command,
+                      'install_cmd_exec' => $install_cmd_exec,
+                      'install_cmd_data' => $install_cmd_data,
+                      'doc_files' => $doc_list,
+                      'include_files' => $includes,
+                      'lib_objs' => $lib_obj,
+                      'check_objs' => $check_obj,
+                      'lib_build_cmds' => $lib_build_cmds,
+                      'check_build_cmds' => $check_build_cmds,
+                      'static_suffix' => $static_lib_suffix,
+                      'so_suffix' => $so_suffix,
+                      'build' => $BUILD_DIR });
 }
 
