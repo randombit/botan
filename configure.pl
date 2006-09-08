@@ -387,23 +387,21 @@ sub check_for_file {
 sub using_libs {
    my ($os,@using) = @_;
    my %libs;
+
    foreach my $mod (@using) {
       my %MOD_LIBS = %{ $MODULES{$mod}{'libs'} };
-      foreach my $mod_os (keys %MOD_LIBS)
-         {
-             next if($mod_os =~ /^all!$os$/);
-             next if($mod_os =~ /^all!$os,/);
-             next if($mod_os =~ /^all!.*,${os}$/);
-             next if($mod_os =~ /^all!.*,$os,.*/);
-             next unless($mod_os eq $os or ($mod_os =~ /^all.*/));
-             my @liblist = split(/,/, $MOD_LIBS{$mod_os});
-             foreach my $lib (@liblist) { $libs{$lib} = 1; }
-         }
-   }
+      foreach my $mod_os (keys %MOD_LIBS) {
+          next if($mod_os =~ /^all!$os$/);
+          next if($mod_os =~ /^all!$os,/);
+          next if($mod_os =~ /^all!.*,${os}$/);
+          next if($mod_os =~ /^all!.*,$os,.*/);
+          next unless($mod_os eq $os or ($mod_os =~ /^all.*/));
+          my @liblist = split(/,/, $MOD_LIBS{$mod_os});
+          foreach my $lib (@liblist) { $libs{$lib} = 1; }
+          }
+      }
 
-   my @libarray;
-   foreach (sort keys %libs) { push @libarray , $_; }
-   return @libarray;
+   return sort keys %libs;
    }
 
 sub defines {
@@ -1323,8 +1321,8 @@ sub print_pkg_config
 
     return if($os eq 'generic' or $os eq 'windows');
 
-    my $link_to = "-lm";
-    foreach my $lib (@libs) { $link_to .= " -l" . $lib; }
+    unshift @libs, "m";
+    my $link_to = "-l" . join(" -l", @libs);
 
     process_template('misc/config/botan-config.in', 'botan-config',
                      { 'version' => "${major}.${minor}.${patch}",
