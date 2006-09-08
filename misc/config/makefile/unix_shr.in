@@ -48,7 +48,7 @@ INSTALL_CMD_DATA = @{var:install_cmd_data}
 LN               = ln -fs
 MKDIR            = @mkdir
 MKDIR_INSTALL    = @umask 022; mkdir -p -m $(EXEC_MODE)
-RANLIB           = @ranlib
+RANLIB           = @{var:ranlib_command}
 RM               = @rm -f
 RM_R             = @rm -rf
 
@@ -96,6 +96,7 @@ $(CHECK): $(LIBRARIES) $(CHECKOBJS)
 $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)
 	$(AR) $(STATIC_LIB) $(LIBOBJS)
+	$(RANLIB) $(STATIC_LIB)
 
 $(SHARED_LIB): $(LIBOBJS)
 	$(SO_LINK_CMD) $(LINK_TO) $(LIBOBJS) -o $(SHARED_LIB)

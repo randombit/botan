@@ -478,15 +478,13 @@ sub os_install_info {
 sub mach_opt {
     my ($config) = @_;
 
-    my $cc = $$config{'compiler'};
-    my $submodel = $$config{'submodel'};
-    my $arch = $$config{'arch'};
-
-    my %ccinfo = %{$COMPILER{$cc}};
+    my %ccinfo = %{$COMPILER{$$config{'compiler'}}};
 
     # Nothing we can do in that case
     return '' unless defined($ccinfo{'mach_opt_flags'});
 
+    my $submodel = $$config{'submodel'};
+    my $arch = $$config{'arch'};
     if(defined($ccinfo{'mach_opt_flags'}{$submodel}))
     {
         return $ccinfo{'mach_opt_flags'}{$submodel};
@@ -1509,7 +1507,7 @@ sub generate_makefile {
        'so_link'         => $so_link_flags,
 
        'ar_command'      => $ar_command,
-       'ar_needs_ranlib' => $ar_needs_ranlib,
+       'ranlib_command'  => ($ar_needs_ranlib ? 'ranlib' : 'true'),
        'static_suffix'   => os_info_for($os, 'static_suffix'),
        'so_suffix'       => os_info_for($os, 'so_suffix'),
        'obj_suffix'      => os_info_for($os, 'obj_suffix'),
@@ -1612,8 +1610,6 @@ sub build_cmds {
 ##################################################
 sub print_unix_makefile {
    my ($config) = @_;
-
-   die "fixme: ar_needs_ranlib is ignored" if $$config{'ar_needs_ranlib'};
 
    my $src = $$config{'sources'};
    my $check = $$config{'check_src'};
