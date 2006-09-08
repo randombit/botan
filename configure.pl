@@ -629,7 +629,7 @@ sub full_path {
        if($file =~ /\.h$/) {
            return File::Spec->catfile ($INCLUDE_DIR, $file);
        }
-       elsif($file =~ /\.cpp$/ or $file =~ /\.s$/ or $file =~ /\.S$/) {
+       elsif($file =~ /\.cpp$/ or $file =~ /\.S$/) {
            return File::Spec->catfile ($SRC_DIR, $file);
        }
        else {
@@ -642,7 +642,7 @@ sub add_file {
     my ($modname,$file) = @_;
     check_for_file(full_path($file, $modname), $modname);
 
-    if($file =~ /\.cpp$/ or $file =~ /\.s$/ or $file =~ /\.S$/) {
+    if($file =~ /\.cpp$/ or $file =~ /\.S$/) {
         $added_src{$file} = File::Spec->catdir($MOD_DIR, $modname);
     }
     elsif($file =~ /\.h$/) {
@@ -655,7 +655,7 @@ sub ignore_file {
     my ($modname,$file) = @_;
     check_for_file(full_path($file), $modname);
 
-    if($file =~ /\.cpp$/ or $file =~ /\.s$/ or $file =~ /\.S$/) {
+    if($file =~ /\.cpp$/ or $file =~ /\.S$/) {
         $ignored_src{$file} = 1;
     }
     elsif($file =~ /\.h$/) {
@@ -1538,7 +1538,6 @@ sub print_unix_makefile {
          my $src_file = File::Spec->catfile ($files{$_}, $_);
          my $obj_file = File::Spec->catfile ($dir, $_);
          $obj_file =~ s/\.cpp$/.$obj_suffix/;
-         $obj_file =~ s/\.s$/.$obj_suffix/;
          $obj_file =~ s/\.S$/.$obj_suffix/;
          $output .= "$obj_file: $src_file\n" .
             "\t\$(CXX) -I$BUILD_INCLUDE_DIR $flags -c \$? -o \$@\n\n";
@@ -1546,7 +1545,7 @@ sub print_unix_makefile {
       return $output;
    }
 
-   my $lib_obj = file_list(16, $BUILD_LIB_DIR, '(\.cpp$|\.s$|\.S$)',
+   my $lib_obj = file_list(16, $BUILD_LIB_DIR, '(\.cpp$|\.S$)',
                            '.'.$obj_suffix, %$src, %added_src);
    my $check_obj = file_list(16, $BUILD_CHECK_DIR, '.cpp', '.'.$obj_suffix,
                              %$check);
