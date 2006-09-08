@@ -1,6 +1,6 @@
 realname "IA-64"
 
-default_submodel ia64
+default_submodel itanium1
 
 <aliases>
 merced
@@ -8,5 +8,7 @@ itanium
 </aliases>
 
 <submodels>
-ia64
+itanium1
+itanium2
+mckinley
 </submodels>

@@ -52,6 +52,7 @@ alpha     -> "-mcpu=SUBMODEL" alpha-
 amd64     -> ""
 arm       -> "-mcpu=SUBMODEL"
 ia32      -> "-march=SUBMODEL"
+ia64      -> "-mtune=SUBMODEL"
 hppa      -> "-march=SUBMODEL" hppa
 m68k      -> "-mSUBMODEL"
 sh        -> "-mSUBMODEL" sh
