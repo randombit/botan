@@ -1323,23 +1323,14 @@ sub print_pkg_config
 
     return if($os eq 'generic' or $os eq 'windows');
 
-    my $install_root = os_install_info($os, 'install_root');
-    my $header_dir   = os_install_info($os, 'header_dir');
-    my $lib_dir      = os_install_info($os, 'lib_dir');
-
     my $link_to = "-lm";
-    foreach my $lib (@libs)
-    {
-        $link_to .= " -l" . $lib;
-    }
-
-    my $VERSION = $major . "." . $minor . "." . $patch;
+    foreach my $lib (@libs) { $link_to .= " -l" . $lib; }
 
     process_template('misc/config/botan-config.in', 'botan-config',
-                     { 'version' => $VERSION,
-                       'prefix' => $install_root,
-                       'includedir' => $header_dir,
-                       'libdir' => $lib_dir,
+                     { 'version' => "${major}.${minor}.${patch}",
+                       'prefix' => os_install_info($os, 'install_root'),
+                       'includedir' => os_install_info($os, 'header_dir'),
+                       'libdir' =>  os_install_info($os, 'lib_dir'),
                        'libs' => $link_to });
 
     chmod 0755, 'botan-config';
