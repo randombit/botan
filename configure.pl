@@ -12,40 +12,16 @@ my $MAJOR_VERSION = 1;
 my $MINOR_VERSION = 5;
 my $PATCH_VERSION = 11;
 
-my %MODULE_SETS = (
-   'unix' => [ 'alloc_mmap', 'es_egd', 'es_ftw', 'es_unix', 'fd_unix',
-               'tm_unix' ],
-   'beos' => [ 'es_beos', 'es_unix', 'fd_unix', 'tm_unix' ],
-   'win32' => ['es_capi', 'es_win32', 'mux_win32', 'tm_win32' ],
-);
-
-my %DOCS = (
-   'readme.txt' => undef, # undef = file is in top level directory
-
-   'pgpkeys.asc' => 'doc',
-
-   'api.pdf' => 'doc',
-   'tutorial.pdf' => 'doc',
-   'fips140.pdf' => 'doc',
-
-   'api.tex' => 'doc',
-   'tutorial.tex' => 'doc',
-   'fips140.tex' => 'doc',
-
-   'botan.rc' => 'doc',
-
-   'credits.txt' => 'doc',
-   'info.txt' => 'doc',
-   'license.txt' => 'doc',
-   'log.txt' => 'doc',
-   'thanks.txt' => 'doc',
-   'todo.txt' => 'doc'
-   );
-
 ##################################################
 # Data                                           #
 ##################################################
 my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
+
+my @DOCS = (
+   'api.pdf', 'tutorial.pdf', 'fips140.pdf',
+   'api.tex', 'tutorial.tex', 'fips140.tex',
+   'credits.txt', 'info.txt', 'license.txt', 'log.txt',
+   'thanks.txt', 'todo.txt', 'botan.rc', 'pgpkeys.asc');
 
 ##################################################
 # Run main() and Quit                            #
@@ -170,6 +146,14 @@ sub main {
         unless($os eq 'generic' or (in_array($os, $COMPILER{$cc}{'os'})));
 
     $make_style = $COMPILER{$cc}{'makefile_style'} unless($make_style);
+
+    my %MODULE_SETS =
+        (
+         'unix' => [ 'alloc_mmap', 'es_egd', 'es_ftw', 'es_unix', 'fd_unix',
+                     'tm_unix' ],
+         'beos' => [ 'es_beos', 'es_unix', 'fd_unix', 'tm_unix' ],
+         'win32' => ['es_capi', 'es_win32', 'mux_win32', 'tm_win32' ],
+         );
 
     error("Module set $module_set isn't known")
         if($module_set && !defined($MODULE_SETS{$module_set}));
@@ -308,8 +292,6 @@ sub trace {
 # Display Help                                   #
 ##################################################
 sub help {
-    my $sets = join("|", sort keys %MODULE_SETS);
-
    print <<ENDOFHELP;
 Usage: $0 [options] CC-OS-CPU
 
@@ -323,7 +305,7 @@ Options:
   --local-config=FILE: include the contents of FILE into build.h
 
   --modules=MODS:      add module(s) MODS to the library.
-  --module-set=SET:    add a pre-specified set of modules ($sets)
+  --module-set=SET:    add a pre-specified set of modules (unix|win32|beos)
 
   --debug:             set compiler flags for debugging
   --disable-shared:    disable building shared libararies
@@ -1486,13 +1468,12 @@ sub generate_makefile {
    # Hack for 10.1, 10.2+ is fixed. Don't have a 10.0.x machine anymore
    $cc_bin = "c++" if($os eq "darwin" and $cc eq "gcc");
 
-   my $docs = file_list(16, undef, undef, undef, %DOCS);
+   my $docs = file_list(undef, undef, undef, map { $_ => 'doc' } @DOCS);
+   $docs .= 'readme.txt';
 
-   my %all_includes =
-       map { $_ => $$config{'build_include_botan'} }
-         keys %{$$config{'includes'}};
-
-   my $includes = file_list(16, undef, undef, undef, %all_includes);
+   my $includes = file_list(undef, undef, undef,
+                            map { $_ => $$config{'build_include_botan'} }
+                               keys %{$$config{'includes'}});
 
    add_to($config, {
        'shared'          => ($make_shared ? 'yes' : 'no'),
@@ -1541,16 +1522,14 @@ sub generate_makefile {
 #                                                #
 ##################################################
 sub file_list {
-    my ($spaces, $put_in, $from, $to, %files) = @_;
-    my $len = $spaces;
+    my ($put_in, $from, $to, %files) = @_;
+    my $spaces = 16;
 
     my $list = '';
 
+    my $len = $spaces;
     foreach (sort keys %files) {
         my $file = $_;
-        my $dir = $put_in;
-
-        if(!defined($dir)) { $dir = $files{$_}; }
 
         if($len > 60) {
             $list .= "\\\n" . ' 'x$spaces;
@@ -1558,6 +1537,9 @@ sub file_list {
         }
 
         $file =~ s/$from/$to/ if(defined($from) and defined($to));
+
+        my $dir = $files{$_};
+        $dir = $put_in if defined $put_in;
 
         if(defined($dir)) {
             $list .= File::Spec->catfile ($dir, $file) . ' ';
@@ -1614,21 +1596,21 @@ sub print_unix_makefile {
    my $src = $$config{'sources'};
    my $check = $$config{'check_src'};
 
-   my $os = $$config{'os'};
    my $obj_suffix = $$config{'obj_suffix'};
 
    my $build_lib = $$config{'build_lib'};
-   my $lib_obj = file_list(16, $build_lib, '(\.cpp$|\.S$)',
+   my $lib_obj = file_list($build_lib, '(\.cpp$|\.S$)',
                            ".$obj_suffix", %$src);
    my $lib_build_cmds = build_cmds($config, $build_lib, '$(LIB_FLAGS)',
                                    %$src);
 
    my $build_check = $$config{'build_check'};
-   my $check_obj = file_list(16, $build_check, '.cpp', ".$obj_suffix",
+   my $check_obj = file_list($build_check, '.cpp', ".$obj_suffix",
                              %$check);
    my $check_build_cmds = build_cmds($config, $build_check, '$(CHECK_FLAGS)',
                                      %$check);
 
+   my $os = $$config{'os'};
    my $install_cmd_exec = os_install_info($os, 'install_cmd');
    $install_cmd_exec =~ s/OWNER/\$(OWNER)/;
    $install_cmd_exec =~ s/GROUP/\$(GROUP)/;
@@ -1671,11 +1653,11 @@ sub print_nmake_makefile {
    my $build_lib = $$config{'build_lib'};
    my $build_check = $$config{'build_check'};
 
-   my $lib_obj = file_list(16, $build_lib, '.cpp', ".$obj_suffix", %$src);
+   my $lib_obj = file_list($build_lib, '.cpp', ".$obj_suffix", %$src);
    my $lib_build_cmds = build_cmds($config, $build_lib, '$(LIB_FLAGS)',
                                    %$src);
 
-   my $check_obj = file_list(16, $build_check, '.cpp', ".$obj_suffix",
+   my $check_obj = file_list($build_check, '.cpp', ".$obj_suffix",
                              %$check);
    my $check_build_cmds = build_cmds($config, $build_check, '$(CHECK_FLAGS)',
                                      %$check);
