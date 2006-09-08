@@ -6,7 +6,6 @@ use strict;
 use Getopt::Long;
 use File::Spec;
 use File::Copy;
-use Data::Dumper; # for testing only
 
 my $MAJOR_VERSION = 1;
 my $MINOR_VERSION = 5;
@@ -543,7 +542,10 @@ sub copy_files {
 sub dir_list {
     my ($dir) = @_;
     opendir(DIR, $dir) or die "Couldn't read directory $dir ($!)\n";
-    my @listing = grep { $_ ne '.' and $_ ne '..' } readdir DIR;
+
+    my @listing = grep { $_ ne File::Spec->curdir() and
+                         $_ ne File::Spec->updir() } readdir DIR;
+
     closedir DIR;
     return @listing;
 }
@@ -580,14 +582,17 @@ sub portable_symlink {
    chdir $to_dir or die "Can't chdir to $to_dir ($!)\n";
 
    if($can_symlink) {
-     symlink $from, $to_fname or die "Can't symlink $from to $to_fname ($!)"; }
+       symlink $from, $to_fname or die "Can't symlink $from to $to_fname ($!)";
+   }
    elsif($can_link) {
-     link $from, $to_fname    or die "Can't link $from to $to_fname ($!)"; }
+       link $from, $to_fname    or die "Can't link $from to $to_fname ($!)";
+   }
    else {
-     copy ($from, $to_fname)  or die "Can't copy $from to $to_fname ($!)"; }
+       copy ($from, $to_fname)  or die "Can't copy $from to $to_fname ($!)";
+   }
 
    my $go_up = File::Spec->splitdir($to_dir);
-   for(my $j = 0; $j != $go_up; $j++)
+   for(my $j = 0; $j != $go_up; $j++) # return to where we were
    {
        chdir File::Spec->updir();
    }
