@@ -18,3 +18,7 @@ ia32
 amd64 # in theory
 ia64  # in theory
 </arch>
+
+<aliases>
+win32
+</aliases>
