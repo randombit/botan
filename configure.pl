@@ -144,8 +144,6 @@ sub main {
     error(realname($cc), " doesn't run on ", realname($os))
         unless($os eq 'generic' or (in_array($os, $COMPILER{$cc}{'os'})));
 
-    $make_style = $COMPILER{$cc}{'makefile_style'} unless($make_style);
-
     my %MODULE_SETS =
         (
          'unix' => [ 'alloc_mmap', 'es_egd', 'es_ftw', 'es_unix', 'fd_unix',
@@ -165,20 +163,17 @@ sub main {
 
     if($autoconfig)
     {
-        foreach (guess_mods($cc,$os,$arch,$submodel))
+        foreach my $mod (guess_mods($cc,$os,$arch,$submodel))
         {
-            # Print a notice, unless it was enabled explicitly (or in a set)
-            my $picked_by_user = 0;
-            foreach my $x (@using_mods) { $picked_by_user = 1 if($_ eq $x); }
+            print "  (autoconfig): Enabling module $mod\n"
+                unless(in_array($mod, \@using_mods));
 
-            print "  (autoconfig): Enabling module $_\n" if(!$picked_by_user);
-            push @using_mods, $_;
+            push @using_mods, $mod;
         }
     }
 
     # Uniqify @using_mods
-    my %uniqed_mods;
-    foreach my $mod (@using_mods) { $uniqed_mods{$mod} = 0; }
+    my %uniqed_mods = map { $_ => undef } @using_mods;
     @using_mods = sort keys %uniqed_mods;
 
     foreach (@using_mods) {
@@ -191,6 +186,8 @@ sub main {
         @list = grep { !/\.dat$/ } grep { !/^keys$/ } grep { !/\.h$/ } @list;
         return map { $_ => 'checks' } @list;
     };
+
+    $make_style = $COMPILER{$cc}{'makefile_style'} unless($make_style);
 
     add_to($config, {
         'compiler'      => $cc,
@@ -216,9 +213,7 @@ sub main {
         'mod_libs'      => [ using_libs($os, @using_mods) ],
 
         'sources'       => { map { $_ => 'src' } dir_list('src') },
-        'includes'      =>
-           { map { $_ => 'include' } dir_list('include') },
-
+        'includes'      => { map { $_ => 'include' } dir_list('include') },
         'check_src'     => { &$list_checks() }
         });
 
@@ -1112,6 +1107,9 @@ sub guess_cpu_from_this
     my $cpuinfo = lc $_[0];
     my $cpu = '';
 
+    $cpu = 'amd64' if($cpuinfo =~ /athlon64/);
+    $cpu = 'amd64' if($cpuinfo =~ /opteron/);
+
     $cpu = 'athlon' if($cpuinfo =~ /athlon/);
     $cpu = 'pentium4' if($cpuinfo =~ /pentium 4/);
     $cpu = 'pentium4' if($cpuinfo =~ /pentium\(r\) 4/);
@@ -1166,7 +1164,7 @@ sub guess_triple
 
         if(!defined $OPERATING_SYSTEM{$os})
         {
-            print "Unknown uname -s output: $os, falling back to 'generic'\n";
+            warning("Unknown uname -s output: $os, falling back to 'generic'");
             $os = 'generic';
         }
 
@@ -1189,6 +1187,13 @@ sub guess_triple
         # cases it can be more specific (useful) than `uname -m`
         if($cpu eq '') # no guess so far
         {
+            my $uname_p = `uname -p 2>/dev/null`;
+            chomp $uname_p;
+            $cpu = guess_cpu_from_this($uname_p);
+
+            # If guess_cpu_from_this didn't figure it out, try it plain
+            if($cpu eq '') { $cpu = lc $uname_p; }
+
             my (%SUBMODEL_ALIAS, %ARCH_ALIAS, %ARCH);
 
             foreach my $arch (keys %CPU) {
@@ -1211,13 +1216,6 @@ sub guess_triple
                     }
                 }
             }
-
-            my $uname_p = `uname -p 2>/dev/null`;
-            chomp $uname_p;
-            $cpu = guess_cpu_from_this($uname_p);
-
-            # If guess_cpu_from_this didn't figure it out, try it plain
-            if($cpu eq '') { $cpu = lc $uname_p; }
 
             if(!defined $ARCH{$cpu} && !defined $SUBMODEL_ALIAS{$cpu} &&
                !defined $ARCH_ALIAS{$cpu})
@@ -1280,9 +1278,7 @@ sub guess_triple
     }
     else
     {
-        print "Sorry, you don't seem to be on Unix or Windows;\n" .
-            "   autoconfig failed (try running me with --help)\n";
-        exit 1;
+        error("Autoconfiguration failed (try --help)");
     }
 }
 
