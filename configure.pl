@@ -228,12 +228,9 @@ sub main {
         'make_style'    => $make_style,
         'gcc_bug'       => $dumb_gcc,
 
-        'prefix'        =>
-            ($prefix ne '') ? $prefix : os_install_info($os, 'install_root'),
-        'libdir'        =>
-            ($lib_dir ne '') ? $lib_dir : os_install_info($os, 'lib_dir'),
-        'docdir'        =>
-            ($doc_dir ne '') ? $doc_dir : os_install_info($os, 'doc_dir'),
+        'prefix'        => os_install_info($os, 'install_root'),
+        'libdir'        => os_install_info($os, 'lib_dir'),
+        'docdir'        => os_install_info($os, 'doc_dir'),
 
         'includedir'    => os_install_info($os, 'header_dir'),
 
@@ -252,7 +249,10 @@ sub main {
         'check_src'     => { list_dir($CHECK_DIR) },
         });
 
-    check_for_conflicts(@using_mods);
+    $$config{'prefix'} = $prefix if($prefix ne '');
+    $$config{'libdir'} = $lib_dir if($lib_dir ne '');
+    $$config{'docdir'} = $doc_dir if($doc_dir ne '');
+
     foreach my $mod (@using_mods) {
         load_module($MODULES{$mod}, $config);
     }
@@ -693,36 +693,6 @@ sub find_mp_bits {
 ##################################################
 #                                                #
 ##################################################
-sub check_for_conflicts {
-
-    sub conflicts {
-        my ($mod, $item, $do_what, $hashref) = @_;
-        return if(!defined($item));
-
-        if(defined($$hashref{$item})) {
-            my $other_mod = $$hashref{$item};
-            error("Both $mod and $other_mod $do_what $item");
-        }
-        return $item;
-    }
-
-    my @mods = @_;
-    my (%ignored, %added, %replaced, %defines);
-
-    foreach my $mod (@mods) {
-        sub check_hash {
-            my ($mod, $do_what, $hashref) = @_;
-            foreach (@{ $MODULES{$mod}{$do_what} }) {
-                $$hashref{conflicts($mod, $_, $do_what, $hashref)} = $mod;
-            }
-        }
-
-        check_hash($mod, 'replace', \%replaced);
-        check_hash($mod, 'add', \%added);
-        check_hash($mod, 'ignore', \%ignored);
-    }
-}
-
 sub realname {
     my $arg = $_[0];
 
@@ -823,9 +793,15 @@ sub add_file {
     my $mod_dir = File::Spec->catdir($MOD_DIR, $modname);
 
     if($file =~ /\.cpp$/ or $file =~ /\.S$/) {
+        error("File $file already added from ", $$config{'sources'}{$file})
+            if(defined($$config{'sources'}{$file}));
+
         $$config{'sources'}{$file} = $mod_dir;
     }
     elsif($file =~ /\.h$/) {
+        error("File $file already added from ", $$config{'includes'}{$file})
+            if(defined($$config{'includes'}{$file}));
+
         $$config{'includes'}{$file} = $mod_dir;
     }
     else {
@@ -838,10 +814,22 @@ sub ignore_file {
     check_for_file(full_path($file), $modname);
 
     if($file =~ /\.cpp$/ or $file =~ /\.S$/) {
-        delete $$config{'sources'}{$file};
+        if(defined ($$config{'sources'}{$file})) {
+            error("$modname - File $file modified from ",
+                  $$config{'sources'}{$file})
+                if($$config{'sources'}{$file} ne 'src');
+
+            delete $$config{'sources'}{$file};
+        }
     }
     elsif($file =~ /\.h$/) {
-        delete $$config{'includes'}{$file};
+        if(defined ($$config{'includes'}{$file})) {
+            error("$modname - File $file modified from ",
+                  $$config{'includes'}{$file})
+                if($$config{'includes'}{$file} ne 'include');
+
+            delete $$config{'includes'}{$file};
+        }
     }
     else { error("Not sure where to put $file"); }
 }
@@ -857,7 +845,7 @@ sub replace_file {
 sub check_for_file {
    my ($file,$mod) = @_;
 
-   error("Module $mod requires that file $file exist. This error\n",
+   error("Module $mod requires that file $file exist. This error\n         ",
        "should never occur; please contact the maintainers with details.")
        unless(-e $file);
 }
