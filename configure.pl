@@ -34,8 +34,6 @@ my $CC_DIR = 'misc/config/cc';
 
 my $CONFIG_HEADER = 'build.h';
 
-my $CPP_INCLUDE_DIR_DIRNAME = 'botan';
-
 my %MODULE_SETS = (
    'unix' => [ 'alloc_mmap', 'es_egd', 'es_ftw', 'es_unix', 'fd_unix',
                'tm_unix' ],
@@ -66,15 +64,20 @@ my %DOCS = (
    'todo.txt' => $DOC_DIR
    );
 
+##################################################
+# Data                                           #
+##################################################
 my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
 
-# This is build configuration stuff, should all go into %BUILD
-my ($CPP_INCLUDE_DIR, $BUILD_LIB_DIR, $BUILD_CHECK_DIR);
+# This is build configuration stuff, should all go into %CONFIG
 my ($user_set_root, $doc_dir, $lib_dir) = ('', '', '');
+
 my (%ignored_src, %ignored_include, %added_src, %added_include,
     %lib_src, %check_src, %include);
 
-# Run stuff, quit
+##################################################
+# Run main() and Quit                            #
+##################################################
 main();
 exit;
 
@@ -160,8 +163,7 @@ sub main {
         }
         if($gcc_version =~ /2\.95\.[0-4]/)
         {
-            print "(note): GCC 2.95.x issues a lot of warnings for \n" .
-                "    Botan; either ignore the warnings or upgrade to 3.x\n";
+            warning("GCC 2.95.x issues many spurious warnings during build");
         }
     }
 
@@ -227,10 +229,10 @@ sub main {
     print_pkg_config($os, $MAJOR_VERSION, $MINOR_VERSION, $PATCH_VERSION,
                      using_libs($os, @using_mods));
 
-    $CPP_INCLUDE_DIR =
-        File::Spec->catdir($BUILD_INCLUDE_DIR, $CPP_INCLUDE_DIR_DIRNAME);
-    $BUILD_LIB_DIR = File::Spec->catdir($BUILD_DIR, $BUILD_DIR_LIB);
-    $BUILD_CHECK_DIR = File::Spec->catdir($BUILD_DIR, $BUILD_DIR_CHECKS);
+    my $CPP_INCLUDE_DIR =
+        File::Spec->catdir($BUILD_INCLUDE_DIR, 'botan');
+    my $BUILD_LIB_DIR = File::Spec->catdir($BUILD_DIR, $BUILD_DIR_LIB);
+    my $BUILD_CHECK_DIR = File::Spec->catdir($BUILD_DIR, $BUILD_DIR_CHECKS);
 
     %lib_src = list_dir($SRC_DIR, \%ignored_src);
     %check_src = list_dir($CHECK_DIR, undef);
@@ -254,8 +256,23 @@ sub main {
 
     my %all_includes = list_dir($CPP_INCLUDE_DIR);
 
-    generate_makefile($make_style,
-                      $cc, $os, $submodel, $arch,
+    my %CONFIG;
+
+    add_to(\%CONFIG, {
+        'compiler'      => $cc,
+        'os'            => $os,
+
+        'version_major' => $MAJOR_VERSION,
+        'version_minor' => $MINOR_VERSION,
+        'version_patch' => $PATCH_VERSION,
+
+        'build'       => $BUILD_DIR,
+        'build_lib'   => $BUILD_LIB_DIR,
+        'build_check' => $BUILD_CHECK_DIR
+        });
+
+    generate_makefile(\%CONFIG, $make_style,
+                      $submodel, $arch,
                       $debug, $no_shared, $dumb_gcc,
                       \%lib_src, \%check_src, \%all_includes,
                       \%added_src, using_libs($os, @using_mods));
@@ -431,11 +448,9 @@ sub os_info_for {
     }
 
     if(!defined($result) or $result eq '') {
-        #print "Using defaults for $what\n";
         $result = $OPERATING_SYSTEM{'defaults'}{$what};
     }
     
-    #print "$os $what -> $result\n";
     return $result;
 }
 
@@ -635,6 +650,14 @@ sub in_array {
     return 0;
 }
 
+sub add_to {
+    my ($to,$from) = @_;
+
+    foreach my $key (keys %$from) {
+        $$to{$key} = $$from{$key};
+    }
+}
+
 ##################################################
 #                                                #
 ##################################################
@@ -751,7 +774,7 @@ sub load_module {
    if(defined($module{'note'})) {
        my $realname = $module{'realname'};
        my $note = $module{'note'};
-       print STDERR "(note): $modname (\"$realname\"): $note\n";
+       warning("$modname (\"$realname\"): $note\n");
    }
 }
 
@@ -1423,10 +1446,14 @@ sub print_pkg_config {
 #                                                #
 ##################################################
 sub generate_makefile {
-   my($make_style, $cc, $os, $submodel, $arch,
+   my($config,
+      $make_style, $submodel, $arch,
       $debug, $no_shared, $dumb_gcc,
       $lib_src, $check_src, $all_includes,
       $added_src, @libs_used) = @_;
+
+   my $cc = $$config{'compiler'};
+   my $os = $$config{'os'};
 
    sub os_static_suffix {
        return os_info_for(shift, 'static_suffix');
@@ -1511,41 +1538,34 @@ sub generate_makefile {
    my $docs = file_list(16, undef, undef, undef, %DOCS);
    my $includes = file_list(16, undef, undef, undef, %$all_includes);
 
-   my %CONFIG = (
-                 'version_major' => $MAJOR_VERSION,
-                 'version_minor' => $MINOR_VERSION,
-                 'version_patch' => $PATCH_VERSION,
-                 'build' => $BUILD_DIR,
+   add_to($config, {
+       'shared' => ($make_shared ? 'yes' : 'no'),
 
-                 'shared' => ($make_shared ? 'yes' : 'no'),
+       'cc' => $cc_bin . $ccopts,
+       'lib_opt' => $lib_opt_flags,
+       'check_opt' => $check_opt_flags,
+       'mach_opt' => $mach_opt_flags,
+       'lang_flags' => $lang_flags,
+       'warn_flags' => $warnings,
+       'so_obj_flags' => $so_obj_flags,
+       'so_link' => $so_link_flags,
 
-                 'cc' => $cc_bin . $ccopts,
-                 'lib_opt' => $lib_opt_flags,
-                 'check_opt' => $check_opt_flags,
-                 'mach_opt' => $mach_opt_flags,
-                 'lang_flags' => $lang_flags,
-                 'warn_flags' => $warnings,
-                 'so_obj_flags' => $so_obj_flags,
-                 'so_link' => $so_link_flags,
+       'ar_command' => $ar_command,
+       'static_suffix' => os_static_suffix($os),
+       'so_suffix' => os_info_for($os, 'so_suffix'),
+       'obj_suffix' => os_info_for($os, 'obj_suffix'),
 
-                 'ar_command' => $ar_command,
-                 'static_suffix' => os_static_suffix($os),
-                 'so_suffix' => os_info_for($os, 'so_suffix'),
+       'prefix' => os_install_info($os, 'install_root'),
+       'libdir' => os_install_info($os, 'lib_dir'),
+       'includedir' => os_install_info($os, 'header_dir'),
+       'docdir' => os_install_info($os, 'doc_dir'),
 
-                 'prefix' => os_install_info($os, 'install_root'),
-                 'libdir' => os_install_info($os, 'lib_dir'),
-                 'includedir' => os_install_info($os, 'header_dir'),
-                 'docdir' => os_install_info($os, 'doc_dir'),
+       'doc_files' => $docs,
+       'include_files' => $includes
+       });
 
-                 'doc_files' => $docs,
-                 'include_files' => $includes,
-                 );
-
-   my @arguments = (\%CONFIG,
-                    $os, $cc,
+   my @arguments = ($config,
                     $make_shared,
-                    os_info_for($os, 'obj_suffix'),
-                    os_static_suffix($os),
                     $ar_needs_ranlib,
                     \%all_lib_srcs,
                     $check_src,
@@ -1628,21 +1648,25 @@ sub build_cmds {
 # Print a Unix style makefile                    #
 ##################################################
 sub print_unix_makefile {
-   my ($config_ref, $os, $cc,
-       $make_shared, $obj_suffix, $static_lib_suffix, $use_ranlib,
-       $src, $check, $lib_list) = @_;
+   my ($config,
+       $make_shared, $use_ranlib, $src, $check, $lib_list) = @_;
 
-   unshift @$lib_list, "m";
-   my $link_to = libs('-l', '', @$lib_list);
+   my $cc = $$config{'compiler'};
+   my $os = $$config{'os'};
+   my $obj_suffix = $$config{'obj_suffix'};
 
-   my $lib_obj = file_list(16, $BUILD_LIB_DIR, '(\.cpp$|\.S$)',
-                           '.'.$obj_suffix, %$src, %added_src);
-   my $check_obj = file_list(16, $BUILD_CHECK_DIR, '.cpp', '.'.$obj_suffix,
-                             %$check);
+   die "fixme; use_ranlib is ignored" if $use_ranlib;
 
-   my $lib_build_cmds = build_cmds($BUILD_LIB_DIR, '$(LIB_FLAGS)',
+   my $build_lib = $$config{'build_lib'};
+   my $lib_obj = file_list(16, $build_lib, '(\.cpp$|\.S$)',
+                           ".$obj_suffix", %$src, %added_src);
+   my $lib_build_cmds = build_cmds($build_lib, '$(LIB_FLAGS)',
                                    $obj_suffix, $cc, %$src, %added_src);
-   my $check_build_cmds = build_cmds($BUILD_CHECK_DIR, '$(CHECK_FLAGS)',
+
+   my $build_check = $$config{'build_check'};
+   my $check_obj = file_list(16, $build_check, '.cpp', ".$obj_suffix",
+                             %$check);
+   my $check_build_cmds = build_cmds($build_check, '$(CHECK_FLAGS)',
                                      $obj_suffix, $cc, %$check);
 
    chomp($lib_build_cmds);
@@ -1658,59 +1682,68 @@ sub print_unix_makefile {
    $install_cmd_data =~ s/GROUP/\$(GROUP)/;
    $install_cmd_data =~ s/MODE/\$(DATA_MODE)/;
 
-   my %CONFIG = %{$config_ref};
-   $CONFIG{'link_to'} = $link_to;
-   $CONFIG{'install_user'} = os_install_info($os, 'install_user'),
-   $CONFIG{'install_group'} = os_install_info($os, 'install_group'),
-   $CONFIG{'install_cmd_exec'} = $install_cmd_exec;
-   $CONFIG{'install_cmd_data'} = $install_cmd_data;
-   $CONFIG{'lib_objs'} = $lib_obj;
-   $CONFIG{'check_objs'} = $check_obj;
-   $CONFIG{'lib_build_cmds'} = $lib_build_cmds;
-   $CONFIG{'check_build_cmds'} = $check_build_cmds;
+   unshift @$lib_list, "m";
+
+   add_to($config, {
+       'link_to' => libs('-l', '', @$lib_list),
+       'install_user' => os_install_info($os, 'install_user'),
+       'install_group' => os_install_info($os, 'install_group'),
+       'install_cmd_exec' => $install_cmd_exec,
+       'install_cmd_data' => $install_cmd_data,
+       'lib_objs' => $lib_obj,
+       'check_objs' => $check_obj,
+       'lib_build_cmds' => $lib_build_cmds,
+       'check_build_cmds' => $check_build_cmds
+       });
 
    my $template = 'misc/config/makefile/unix.in';
    $template = 'misc/config/makefile/unix_shr.in' if($make_shared);
 
-   process_template($template, 'Makefile', \%CONFIG);
+   process_template($template, 'Makefile', $config);
 }
 
 ##################################################
 # Print a NMAKE-style makefile                   #
 ##################################################
 sub print_nmake_makefile {
-   my ($config_ref, $os, $cc,
+   my ($config,
        undef, # $make_shared
-       $obj_suffix, $static_lib_suffix,
        undef, # $use_ranlib
        $src, $check, $lib_list) = @_;
 
-   my $link_to = libs('', ".$static_lib_suffix", @$lib_list);
+   my $obj_suffix = $$config{'obj_suffix'};
+   my $static_lib_suffix = $$config{'static_suffix'};
 
-   my $lib_obj = file_list(16, $BUILD_LIB_DIR, '.cpp', '.'.$obj_suffix,
+   my $cc = $$config{'compiler'};
+   my $os = $$config{'os'};
+
+   my $build_lib = $$config{'build_lib'};
+   my $build_check = $$config{'build_check'};
+
+   my $lib_obj = file_list(16, $build_lib, '.cpp', ".$obj_suffix",
                            %$src, %added_src);
-   my $check_obj = file_list(16, $BUILD_CHECK_DIR, '.cpp', '.'.$obj_suffix,
-                             %$check);
-
-   my $lib_build_cmds = build_cmds($BUILD_LIB_DIR, '$(LIB_FLAGS)',
+   my $lib_build_cmds = build_cmds($build_lib, '$(LIB_FLAGS)',
                                    $obj_suffix, $cc, %$src, %added_src);
 
-   my $check_build_cmds = build_cmds($BUILD_CHECK_DIR, '$(CHECK_FLAGS)',
+   my $check_obj = file_list(16, $build_check, '.cpp', ".$obj_suffix",
+                             %$check);
+   my $check_build_cmds = build_cmds($build_check, '$(CHECK_FLAGS)',
                                      $obj_suffix, $cc, %$check);
 
-   my %CONFIG = %{$config_ref};
-   $CONFIG{'shared'} = 'no';
-   $CONFIG{'link_to'} = $link_to;
-   $CONFIG{'install_user'} = '';
-   $CONFIG{'install_group'} = '';
-   $CONFIG{'install_cmd_exec'} = '';
-   $CONFIG{'install_cmd_data'} = '';
-   $CONFIG{'lib_objs'} = $lib_obj;
-   $CONFIG{'check_objs'} = $check_obj;
-   $CONFIG{'lib_build_cmds'} = $lib_build_cmds;
-   $CONFIG{'check_build_cmds'} = $check_build_cmds;
+   add_to($config, {
+       'shared' => 'no',
+       'link_to' => libs('', ".$static_lib_suffix", @$lib_list),
+       'install_user' => '',
+       'install_group' => '',
+       'install_cmd_exec' => '',
+       'install_cmd_data' => '',
+       'lib_objs' => $lib_obj,
+       'check_objs' => $check_obj,
+       'lib_build_cmds' => $lib_build_cmds,
+       'check_build_cmds' => $check_build_cmds
+       });
 
    my $template = 'misc/config/makefile/nmake.in';
 
-   process_template($template, 'Makefile', \%CONFIG);
+   process_template($template, 'Makefile', $config);
 }
