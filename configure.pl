@@ -249,15 +249,8 @@ sub main {
 
     check_for_conflicts(@using_mods);
     foreach my $mod (@using_mods) {
-        load_module($mod, $cc, $os, $arch, $submodel);
+        load_module($MODULES{$mod}, $config);
     }
-
-    print_pkg_config($config);
-
-    process_template('misc/config/buildh.in',
-                     File::Spec->catfile($$config{'build'}, 'build.h'),
-                     $config);
-    $added_include{'build.h'} = $$config{'build'};
 
     my %lib_src = list_dir($SRC_DIR, \%ignored_src);
     my %check_src = list_dir($CHECK_DIR, undef);
@@ -271,10 +264,16 @@ sub main {
            $$config{'build_include'}, $CPP_INCLUDE_DIR,
            $$config{'build_lib'}, $$config{'build_check'});
 
+    print_pkg_config($config);
+
+    process_template('misc/config/buildh.in',
+                     File::Spec->catfile($$config{'build'}, 'build.h'),
+                     $config);
+    $added_include{'build.h'} = $$config{'build'};
+
     clean_out_dirs($CPP_INCLUDE_DIR);
 
     copy_files($CPP_INCLUDE_DIR, \%include, \%added_include);
-
     my %all_includes = list_dir($CPP_INCLUDE_DIR);
 
     generate_makefile($config, $dumb_gcc,
@@ -333,7 +332,7 @@ code that will not run on earlier versions of that architecture.
 
 ENDOFHELP
 
-   sub print_listing {
+   my $print_listing = sub {
        my ($header, $hash) = @_;
        print "$header: ";
        my $len = length "$header: ";
@@ -348,12 +347,12 @@ ENDOFHELP
        }
 
        print "\n";
-   }
+   };
 
-   print_listing('CC', \%COMPILER);
-   print_listing('OS', \%OPERATING_SYSTEM);
-   print_listing('CPU', \%CPU);
-   print_listing('Modules', \%MODULES) if(%MODULES);
+   &$print_listing('CC', \%COMPILER);
+   &$print_listing('OS', \%OPERATING_SYSTEM);
+   &$print_listing('CPU', \%CPU);
+   &$print_listing('Modules', \%MODULES) if(%MODULES);
    exit;
    }
 
@@ -364,7 +363,7 @@ sub figure_out_arch {
     my ($name) = @_;
     return ('generic', 'generic') if($name eq 'generic');
 
-    sub submodel_alias {
+    my $submodel_alias = sub {
         my ($name,$info) = @_;
 
         my %info = %{$info};
@@ -381,9 +380,9 @@ sub figure_out_arch {
             return $official if($alias eq $name);
         }
         return '';
-    }
+    };
 
-    sub find_arch {
+    my $find_arch = sub {
         my $name = $_[0];
 
         foreach my $arch (keys %CPU) {
@@ -404,14 +403,14 @@ sub figure_out_arch {
             }
         }
         return undef;
-    }
+    };
 
-    my $arch = find_arch($name);
+    my $arch = &$find_arch($name);
     error("Arch type $name isn't known") unless defined $arch;
 
     my %archinfo = %{ $CPU{$arch} };
 
-    my $submodel = submodel_alias($name, \%archinfo);
+    my $submodel = &$submodel_alias($name, \%archinfo);
 
     if($submodel eq '') {
         $submodel = $archinfo{'default_submodel'};
@@ -719,52 +718,57 @@ sub realname {
 #                                                #
 ##################################################
 sub load_module {
-   my ($modname,$cc,$os,$arch,$sub) = @_;
-   my %module = %{$MODULES{$modname}};
-   $modname = $module{'name'};
+    my ($module_ref, $config) = @_;
 
-   sub works_on {
-       my ($what, @lst) = @_;
-       return 1 if not @lst; # empty list -> no restrictions
-       return in_array($what, \@lst);
-   }
+    my %module = %{$module_ref};
+    my $modname = $module{'name'};
 
-   # Check to see if everything is OK WRT system requirements
-   if($os ne 'generic') {
-       unless(works_on($os, @{$module{'os'}})) {
-           error("Module '$modname' does not run on ", realname($os));
-       }
-   }
+    my $works_on = sub {
+        my ($what, @lst) = @_;
+        return 1 if not @lst; # empty list -> no restrictions
+        return in_array($what, \@lst);
+    };
 
-   if($arch ne 'generic') {
-       unless(works_on($arch, @{$module{'arch'}}) or
-              works_on($sub, @{$module{'arch'}})) {
+    # Check to see if everything is OK WRT system requirements
+    my $os = $$config{'os'};
+    if($os ne 'generic') {
+        unless(&$works_on($os, @{$module{'os'}})) {
+            error("Module '$modname' does not run on ", realname($os));
+        }
+    }
 
-           error("Module '$modname' does not run on $arch/$sub");
-       }
-   }
+    my $arch = $$config{'arch'};
+    if($arch ne 'generic') {
+        my $sub = $$config{'submodel'};
+        unless(&$works_on($arch, @{$module{'arch'}}) or
+               &$works_on($sub, @{$module{'arch'}})) {
 
-   unless(works_on($cc, @{$module{'cc'}})) {
-       error("Module '$modname' does not work with ", realname($cc));
-   }
+            error("Module '$modname' does not run on $arch/$sub");
+        }
+    }
 
-   sub handle_files {
-       my($modname, $lst, $func) = @_;
-       return unless defined($lst);
-       foreach (sort @$lst) {
-           &$func($modname, $_);
-       }
-   }
+    my $cc = $$config{'compiler'};
+    unless(&$works_on($cc, @{$module{'cc'}})) {
+        error("Module '$modname' does not work with ", realname($cc));
+    }
 
-   handle_files($modname, $module{'replace'}, \&replace_file);
-   handle_files($modname, $module{'ignore'},  \&ignore_file);
-   handle_files($modname, $module{'add'},     \&add_file);
+    sub handle_files {
+        my($modname, $lst, $func) = @_;
+        return unless defined($lst);
+        foreach (sort @$lst) {
+            &$func($modname, $_);
+        }
+    }
 
-   if(defined($module{'note'})) {
-       my $realname = $module{'realname'};
-       my $note = $module{'note'};
-       warning("$modname (\"$realname\"): $note\n");
-   }
+    handle_files($modname, $module{'replace'}, \&replace_file);
+    handle_files($modname, $module{'ignore'},  \&ignore_file);
+    handle_files($modname, $module{'add'},     \&add_file);
+
+    if(defined($module{'note'})) {
+        my $realname = $module{'realname'};
+        my $note = $module{'note'};
+        warning("$modname (\"$realname\"): $note\n");
+    }
 }
 
 ##################################################
@@ -1434,10 +1438,6 @@ sub generate_makefile {
    my $make_style = $$config{'make_style'};
    my $debug = $$config{'debug'};
 
-   sub os_static_suffix {
-       return os_info_for(shift, 'static_suffix');
-   }
-
    sub os_ar_command {
        return os_info_for(shift, 'ar_command');
    }
@@ -1530,7 +1530,7 @@ sub generate_makefile {
        'so_link' => $so_link_flags,
 
        'ar_command' => $ar_command,
-       'static_suffix' => os_static_suffix($os),
+       'static_suffix' => os_info_for($os, 'static_suffix'),
        'so_suffix' => os_info_for($os, 'so_suffix'),
        'obj_suffix' => os_info_for($os, 'obj_suffix'),
 
