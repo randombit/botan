@@ -718,31 +718,9 @@ sub load_module {
 ##################################################
 #                                                #
 ##################################################
-sub full_path {
-   my ($file,$modname) = @_;
-
-   if(defined($modname)) {
-       return File::Spec->catfile ('modules', $modname, $file);
-   }
-   else {
-       if($file =~ /\.h$/) {
-           return File::Spec->catfile ('include', $file);
-       }
-       elsif($file =~ /\.cpp$/ or $file =~ /\.S$/) {
-           return File::Spec->catfile ('src', $file);
-       }
-       else {
-           error("Not sure where to put $file");
-       }
-   }
-}
-
-##################################################
-#                                                #
-##################################################
 sub add_file {
     my ($modname, $config, $file) = @_;
-    check_for_file(full_path($file, $modname), $modname);
+    check_for_file($file, $modname, $modname);
 
     my $mod_dir = File::Spec->catdir('modules', $modname);
 
@@ -765,7 +743,7 @@ sub add_file {
 
 sub ignore_file {
     my ($modname, $config, $file) = @_;
-    check_for_file(full_path($file), $modname);
+    check_for_file($file, undef, $modname);
 
     if($file =~ /\.cpp$/ or $file =~ /\.S$/) {
         if(defined ($$config{'sources'}{$file})) {
@@ -797,9 +775,26 @@ sub replace_file {
 }
 
 sub check_for_file {
-   my ($file,$mod) = @_;
+   my ($file, $added_from, $modname) = @_;
 
-   error("Module $mod requires that file $file exist. This error\n         ",
+   my $full_path = sub {
+       my ($file,$modname) = @_;
+
+       return File::Spec->catfile('modules', $modname, $file)
+           if(defined($modname));
+
+       return File::Spec->catfile('include', $file)
+           if($file =~ /\.h$/);
+
+       return File::Spec->catfile('src', $file)
+           if($file =~ /\.cpp$/ or $file =~ /\.S$/);
+
+       error("Not sure where to put $file");
+   };
+
+   $file = &$full_path($file, $added_from);
+
+   error("Module $modname requires that file $file exist. This error\n      ",
        "should never occur; please contact the maintainers with details.")
        unless(-e $file);
 }
@@ -1497,6 +1492,27 @@ sub generate_makefile {
        'include_files'   => $includes
        });
 
+   my $lib_objs = file_list($$config{'build_lib'}, '(\.cpp$|\.S$)',
+                            '.' . $$config{'obj_suffix'},
+                            %{$$config{'sources'}});
+
+   my $check_objs = file_list($$config{'build_check'}, '.cpp',
+                              '.' . $$config{'obj_suffix'},
+                              %{$$config{'check_src'}}),
+
+   my $lib_build_cmds = build_cmds($config, $$config{'build_lib'},
+                                   '$(LIB_FLAGS)', $$config{'sources'});
+
+   my $check_build_cmds = build_cmds($config, $$config{'build_check'},
+                                     '$(CHECK_FLAGS)', $$config{'check_src'});
+
+   add_to($config, {
+       'lib_objs' => $lib_objs,
+       'check_objs' => $check_objs,
+       'lib_build_cmds' => $lib_build_cmds,
+       'check_build_cmds' => $check_build_cmds
+       });
+
    my $template_dir = File::Spec->catdir('misc', 'config', 'makefile');
 
    my $make_style = $$config{'make_style'};
@@ -1555,11 +1571,17 @@ sub file_list {
 }
 
 sub build_cmds {
-    my ($config, $dir, $flags, %files) = @_;
+    my ($config, $dir, $flags, $files) = @_;
+
+    die unless $dir;
+    die unless $flags;
+
     my $output = '';
 
     my $cc = $$config{'compiler'};
     my $obj_suffix = $$config{'obj_suffix'};
+
+    die unless $obj_suffix;
 
     my $inc = $COMPILER{$cc}{'add_include_dir_option'};
     my $from = $COMPILER{$cc}{'compile_option'};
@@ -1573,8 +1595,8 @@ sub build_cmds {
     my $bld_line =
         "\t\$(CXX) $inc$inc_dir $flags $from \$? $to \$@";
 
-    foreach (sort keys %files) {
-        my $src_file = File::Spec->catfile($files{$_}, $_);
+    foreach (sort keys %$files) {
+        my $src_file = File::Spec->catfile($$files{$_}, $_);
         my $obj_file = File::Spec->catfile($dir, $_);
 
         $obj_file =~ s/\.cpp$/.$obj_suffix/;
@@ -1592,23 +1614,6 @@ sub build_cmds {
 ##################################################
 sub print_unix_makefile {
    my ($config) = @_;
-
-   my $src = $$config{'sources'};
-   my $check = $$config{'check_src'};
-
-   my $obj_suffix = $$config{'obj_suffix'};
-
-   my $build_lib = $$config{'build_lib'};
-   my $lib_obj = file_list($build_lib, '(\.cpp$|\.S$)',
-                           ".$obj_suffix", %$src);
-   my $lib_build_cmds = build_cmds($config, $build_lib, '$(LIB_FLAGS)',
-                                   %$src);
-
-   my $build_check = $$config{'build_check'};
-   my $check_obj = file_list($build_check, '.cpp', ".$obj_suffix",
-                             %$check);
-   my $check_build_cmds = build_cmds($config, $build_check, '$(CHECK_FLAGS)',
-                                     %$check);
 
    my $os = $$config{'os'};
    my $install_cmd_exec = os_install_info($os, 'install_cmd');
@@ -1629,10 +1634,6 @@ sub print_unix_makefile {
        'install_group' => os_install_info($os, 'install_group'),
        'install_cmd_exec' => $install_cmd_exec,
        'install_cmd_data' => $install_cmd_data,
-       'lib_objs' => $lib_obj,
-       'check_objs' => $check_obj,
-       'lib_build_cmds' => $lib_build_cmds,
-       'check_build_cmds' => $check_build_cmds
        });
 
    process_template($$config{'makefile'}, 'Makefile', $config);
@@ -1644,24 +1645,7 @@ sub print_unix_makefile {
 sub print_nmake_makefile {
    my ($config) = @_;
 
-   my $src = $$config{'sources'};
-   my $check = $$config{'check_src'};
-
-   my $obj_suffix = $$config{'obj_suffix'};
    my $static_lib_suffix = $$config{'static_suffix'};
-
-   my $build_lib = $$config{'build_lib'};
-   my $build_check = $$config{'build_check'};
-
-   my $lib_obj = file_list($build_lib, '.cpp', ".$obj_suffix", %$src);
-   my $lib_build_cmds = build_cmds($config, $build_lib, '$(LIB_FLAGS)',
-                                   %$src);
-
-   my $check_obj = file_list($build_check, '.cpp', ".$obj_suffix",
-                             %$check);
-   my $check_build_cmds = build_cmds($config, $build_check, '$(CHECK_FLAGS)',
-                                     %$check);
-
    add_to($config, {
        'shared' => 'no',
        'link_to' => libs('', ".$static_lib_suffix", @{$$config{'mod_libs'}}),
@@ -1669,10 +1653,6 @@ sub print_nmake_makefile {
        'install_group' => '',
        'install_cmd_exec' => '',
        'install_cmd_data' => '',
-       'lib_objs' => $lib_obj,
-       'check_objs' => $check_obj,
-       'lib_build_cmds' => $lib_build_cmds,
-       'check_build_cmds' => $check_build_cmds
        });
 
    process_template($$config{'makefile'}, 'Makefile', $config);
