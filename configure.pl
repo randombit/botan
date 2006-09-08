@@ -22,17 +22,10 @@ my $INCLUDE_DIR = 'include';
 my $SRC_DIR = 'src';
 my $MOD_DIR = 'modules';
 my $CHECK_DIR = 'checks';
-my $DOC_DIR = 'doc';
-my $BUILD_DIR = 'build';
-my $BUILD_DIR_LIB = 'lib';
-my $BUILD_DIR_CHECKS = 'checks';
-my $BUILD_INCLUDE_DIR = 'build/include';
 
 my $ARCH_DIR = 'misc/config/arch';
 my $OS_DIR = 'misc/config/os';
 my $CC_DIR = 'misc/config/cc';
-
-my $CONFIG_HEADER = 'build.h';
 
 my %MODULE_SETS = (
    'unix' => [ 'alloc_mmap', 'es_egd', 'es_ftw', 'es_unix', 'fd_unix',
@@ -44,24 +37,24 @@ my %MODULE_SETS = (
 my %DOCS = (
    'readme.txt' => undef, # undef = file is in top level directory
 
-   'pgpkeys.asc' => $DOC_DIR,
+   'pgpkeys.asc' => 'doc',
 
-   'api.pdf' => $DOC_DIR,
-   'tutorial.pdf' => $DOC_DIR,
-   'fips140.pdf' => $DOC_DIR,
+   'api.pdf' => 'doc',
+   'tutorial.pdf' => 'doc',
+   'fips140.pdf' => 'doc',
 
-   'api.tex' => $DOC_DIR,
-   'tutorial.tex' => $DOC_DIR,
-   'fips140.tex' => $DOC_DIR,
+   'api.tex' => 'doc',
+   'tutorial.tex' => 'doc',
+   'fips140.tex' => 'doc',
 
-   'botan.rc' => $DOC_DIR,
+   'botan.rc' => 'doc',
 
-   'credits.txt' => $DOC_DIR,
-   'info.txt' => $DOC_DIR,
-   'license.txt' => $DOC_DIR,
-   'log.txt' => $DOC_DIR,
-   'thanks.txt' => $DOC_DIR,
-   'todo.txt' => $DOC_DIR
+   'credits.txt' => 'doc',
+   'info.txt' => 'doc',
+   'license.txt' => 'doc',
+   'log.txt' => 'doc',
+   'thanks.txt' => 'doc',
+   'todo.txt' => 'doc'
    );
 
 ##################################################
@@ -72,8 +65,7 @@ my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
 # This is build configuration stuff, should all go into %CONFIG
 my ($user_set_root, $doc_dir, $lib_dir) = ('', '', '');
 
-my (%ignored_src, %ignored_include, %added_src, %added_include,
-    %lib_src, %check_src, %include);
+my (%ignored_src, %ignored_include, %added_src, %added_include);
 
 ##################################################
 # Run main() and Quit                            #
@@ -90,15 +82,25 @@ sub main {
     %COMPILER = read_info_files($CC_DIR, \&get_cc_info);
     %MODULES = read_module_files($MOD_DIR);
 
-    my ($debug, $dumb_gcc, $no_shared) = (0, 0, 0);
-    my ($make_style, $build_dir, $module_set, $local_config) =
-        ('', '', '', '');
+    my $config = {};
+
+    add_to($config, {
+        'version_major' => $MAJOR_VERSION,
+        'version_minor' => $MINOR_VERSION,
+        'version_patch' => $PATCH_VERSION,
+        'version'       => "$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION"
+        });
+
+    my $shared = 'yes';
+    my ($debug, $dumb_gcc) = (0, 0);
+    my $build_dir = 'build';
+    my ($make_style, $module_set, $local_config) = ('', '', '');
 
     my $autoconfig = 1;
     my @using_mods;
 
     GetOptions('debug' => sub { $debug = 1; },
-               'disable-shared' => sub { $no_shared = 1; },
+               'disable-shared' => sub { $shared = 'no'; },
                'noauto' => sub { $autoconfig = 0 },
                'gcc295x' => sub { $dumb_gcc = 1; },
                'dumb-gcc' => sub { $dumb_gcc = 1; },
@@ -112,6 +114,16 @@ sub main {
                'local-config=s' => \$local_config,
                'help' => sub { help(); }
                );
+
+    add_to($config, {
+        'debug'         => $debug,
+        'shared'        => $shared,
+
+        'build'         => $build_dir,
+
+        'modules'       => [ @using_mods ],
+        'mp_bits'       => find_mp_bits(@using_mods)
+        });
 
     if($^O eq 'MSWin32' or $^O eq 'dos' or $^O eq 'cygwin') {
         print "Disabling use of symlink()/link() due to Win FS limitations\n";
@@ -128,12 +140,6 @@ sub main {
 
     my ($cc,$os,$submodel) = split(/-/,$cc_os_cpu_set,3);
     if(!defined($cc) or !defined($os) or !defined($submodel)) { help(); }
-
-    if($build_dir ne '')
-    {
-        $BUILD_DIR = $build_dir;
-        $BUILD_INCLUDE_DIR = $build_dir . '/include';
-    }
 
     # hacks
     if($cc eq 'gcc' && $dumb_gcc != 1)
@@ -226,54 +232,52 @@ sub main {
         load_module($mod, $cc, $os, $arch, $submodel);
     }
 
-    print_pkg_config($os, $MAJOR_VERSION, $MINOR_VERSION, $PATCH_VERSION,
-                     using_libs($os, @using_mods));
+    add_to($config, {
+        'compiler'      => $cc,
+        'os'            => $os,
+        'arch'          => $arch,
+        'submodel'      => $submodel,
+
+        'make_style'    => $make_style,
+
+        'local_config'  => slurp_file($local_config),
+        'prefix'        => os_install_info($os, 'install_root'),
+        'libdir'        => os_install_info($os, 'lib_dir'),
+        'includedir'    => os_install_info($os, 'header_dir'),
+        'docdir'        => os_install_info($os, 'doc_dir'),
+
+        'build_lib'     => File::Spec->catdir($$config{'build'}, 'lib'),
+        'build_check'   => File::Spec->catdir($$config{'build'}, 'checks'),
+        'build_include' => File::Spec->catdir($$config{'build'}, 'include')
+        });
+    $$config{'defines'} = defines($config);
+
+    print_pkg_config($config);
+
+    process_template('misc/config/buildh.in',
+                     File::Spec->catfile($$config{'build'}, 'build.h'),
+                     $config);
+    $added_include{'build.h'} = $$config{'build'};
+
+    my %lib_src = list_dir($SRC_DIR, \%ignored_src);
+    my %check_src = list_dir($CHECK_DIR, undef);
+
+    my %include = list_dir($INCLUDE_DIR, \%ignored_include);
 
     my $CPP_INCLUDE_DIR =
-        File::Spec->catdir($BUILD_INCLUDE_DIR, 'botan');
-    my $BUILD_LIB_DIR = File::Spec->catdir($BUILD_DIR, $BUILD_DIR_LIB);
-    my $BUILD_CHECK_DIR = File::Spec->catdir($BUILD_DIR, $BUILD_DIR_CHECKS);
+        File::Spec->catdir($$config{'build_include'}, 'botan');
 
-    %lib_src = list_dir($SRC_DIR, \%ignored_src);
-    %check_src = list_dir($CHECK_DIR, undef);
+    mkdirs($$config{'build'},
+           $$config{'build_include'}, $CPP_INCLUDE_DIR,
+           $$config{'build_lib'}, $$config{'build_check'});
 
-    %include = list_dir($INCLUDE_DIR, \%ignored_include);
-
-    mkdirs($BUILD_DIR,
-            $BUILD_INCLUDE_DIR, $CPP_INCLUDE_DIR,
-            $BUILD_LIB_DIR, $BUILD_CHECK_DIR);
     clean_out_dirs($CPP_INCLUDE_DIR);
-
-    my $config_h = File::Spec->catfile($BUILD_DIR, $CONFIG_HEADER);
-
-    print_config_h($MAJOR_VERSION, $MINOR_VERSION, $PATCH_VERSION,
-                   $config_h, $local_config, $os, $arch, $submodel,
-                   find_mp_bits(@using_mods), defines(@using_mods));
-
-    $added_include{$CONFIG_HEADER} = $BUILD_DIR;
 
     copy_files($CPP_INCLUDE_DIR, \%include, \%added_include);
 
     my %all_includes = list_dir($CPP_INCLUDE_DIR);
 
-    my %CONFIG;
-
-    add_to(\%CONFIG, {
-        'compiler'      => $cc,
-        'os'            => $os,
-
-        'version_major' => $MAJOR_VERSION,
-        'version_minor' => $MINOR_VERSION,
-        'version_patch' => $PATCH_VERSION,
-
-        'build'       => $BUILD_DIR,
-        'build_lib'   => $BUILD_LIB_DIR,
-        'build_check' => $BUILD_CHECK_DIR
-        });
-
-    generate_makefile(\%CONFIG, $make_style,
-                      $submodel, $arch,
-                      $debug, $no_shared, $dumb_gcc,
+    generate_makefile($config, $dumb_gcc,
                       \%lib_src, \%check_src, \%all_includes,
                       \%added_src, using_libs($os, @using_mods));
 }
@@ -530,17 +534,6 @@ sub libs {
         $output .= $prefix . $lib . $suffix;
     }
     return $output;
-}
-
-sub defines {
-   my @defarray;
-   foreach my $mod (@_) {
-       my $defs = $MODULES{$mod}{'define'};
-       next unless $defs;
-
-       push @defarray, split(/,/, $defs);
-   }
-   return \@defarray;
 }
 
 ##################################################
@@ -851,8 +844,8 @@ sub check_for_file {
 sub process_template {
     my ($in, $out, $vars) = @_;
 
-    open IN, "<$in" or die "Couldn't read $in ($!)\n";
-    open OUT, ">$out" or die "Couldn't write $out ($!)\n";
+    open IN, "<$in" or error("Couldn't read $in ($!)");
+    open OUT, ">$out" or error("Couldn't write $out ($!)");
 
     my $lineno = 0;
     while(my $line = <IN>) {
@@ -862,6 +855,8 @@ sub process_template {
         {
             my $val = $$vars{$name};
             $line =~ s/@\{var:$name\}/$val/g;
+
+            die unless defined $val;
 
             unless($val eq 'no' or $val eq 'false') {
                 $line =~ s/\@\{if:$name (.*)\}/$1/g;
@@ -873,7 +868,7 @@ sub process_template {
         }
 
         if($line =~ /@\{var:(.*)\}/) {
-            die "Unbound variable '$1' at $in:$lineno\n";
+            error("Unbound variable '$1' at $in:$lineno");
         }
 
         print OUT $line;
@@ -1359,85 +1354,68 @@ sub guess_mods {
     return @usable_modules;
 }
 
-##################################################
-#                                                #
-##################################################
-sub print_config_h {
-    my ($major, $minor, $patch, $config_h, $local_config, $os, $arch, $cpu,
-        $mp_bits, $defines_ext) = @_;
-
-    open CONFIG_H, ">$config_h" or
-        error("Couldn't write $config_h ($!)");
-
-    print CONFIG_H <<END_OF_CONFIG_H;
-/*************************************************
-* Build Config Header File                       *
-* (C) 1999-2006 The Botan Project                *
-*************************************************/
-
-#ifndef BOTAN_BUILD_CONFIG_H__
-#define BOTAN_BUILD_CONFIG_H__
-
-#define BOTAN_VERSION_MAJOR $major
-#define BOTAN_VERSION_MINOR $minor
-#define BOTAN_VERSION_PATCH $patch
-
-#define BOTAN_MP_WORD_BITS $mp_bits
-#define BOTAN_DEFAULT_BUFFER_SIZE 4096
-
-#define BOTAN_KARAT_MUL_THRESHOLD 12
-#define BOTAN_KARAT_SQR_THRESHOLD 12
-END_OF_CONFIG_H
-
-    if($arch ne 'generic') {
-        $arch = uc $arch;
-        print CONFIG_H "\n#define BOTAN_TARGET_ARCH_IS_$arch\n";
-
-        if($arch ne $cpu) {
-            $cpu = uc $cpu;
-            $cpu =~ s/-/_/g;
-            print CONFIG_H "#define BOTAN_TARGET_CPU_IS_$cpu\n";
-        }
-    }
+sub defines {
+    my ($config) = @_;
 
     my $defines = '';
 
-    foreach (sort @$defines_ext) {
+    my $arch = $$config{'arch'};
+    if($arch ne 'generic') {
+        $arch = uc $arch;
+        $defines .= "#define BOTAN_TARGET_ARCH_IS_$arch\n";
+
+        my $submodel = $$config{'submodel'};
+        if($arch ne $submodel) {
+            $submodel = uc $submodel;
+            $submodel =~ s/-/_/g;
+            $defines .= "#define BOTAN_TARGET_CPU_IS_$submodel\n";
+        }
+    }
+
+    my @defarray;
+    foreach my $mod (@{$$config{'modules'}}) {
+        my $defs = $MODULES{$mod}{'define'};
+        next unless $defs;
+
+        push @defarray, split(/,/, $defs);
+    }
+    foreach (sort @defarray) {
         next if not defined $_ or not $_;
         $defines .= "#define BOTAN_EXT_$_\n";
     }
+    chomp($defines);
+    return $defines;
+}
 
-    print CONFIG_H "\n", $defines if($defines);
+sub slurp_file {
+    my $file = $_[0];
+    return '' if(!defined($file) or $file eq '');
 
-    if($local_config ne '') {
-        open LOCAL_CONFIG, "<$local_config" or die
-            "Couldn't read $local_config ($!)\n";
-        print CONFIG_H "\n";
-        while(<LOCAL_CONFIG>) { print CONFIG_H; }
-    }
+    open FILE, "<$file" or error("Couldn't read $file ($!)");
 
-    print CONFIG_H "\n#endif\n";
+    my $output = '';
+    while(<FILE>) { $output .= $_; }
+    close FILE;
 
-    close CONFIG_H;
+    return $output;
 }
 
 ##################################################
 #                                                #
 ##################################################
 sub print_pkg_config {
-    my ($os, $major,$minor,$patch,@libs) = @_;
+    my ($config) = @_;
 
-    return if($os eq 'generic' or $os eq 'windows');
+    return if($$config{'os'} eq 'generic' or
+              $$config{'os'} eq 'windows');
 
-    unshift @libs, "m";
-    my $link_to = libs('-l', '', @libs);
+    $$config{'link_to'} =
+        libs('-l', '', 'm', @{$$config{'extra_libs'}});
 
-    process_template('misc/config/botan-config.in', 'botan-config',
-                     { 'version' => "${major}.${minor}.${patch}",
-                       'prefix' => os_install_info($os, 'install_root'),
-                       'includedir' => os_install_info($os, 'header_dir'),
-                       'libdir' =>  os_install_info($os, 'lib_dir'),
-                       'libs' => $link_to });
+    process_template('misc/config/botan-config.in',
+                     'botan-config', $config);
+
+    delete $$config{'link_to'};
 
     chmod 0755, 'botan-config';
 }
@@ -1447,13 +1425,16 @@ sub print_pkg_config {
 ##################################################
 sub generate_makefile {
    my($config,
-      $make_style, $submodel, $arch,
-      $debug, $no_shared, $dumb_gcc,
+      $dumb_gcc,
       $lib_src, $check_src, $all_includes,
       $added_src, @libs_used) = @_;
 
    my $cc = $$config{'compiler'};
    my $os = $$config{'os'};
+   my $submodel = $$config{'submodel'};
+   my $arch = $$config{'arch'};
+   my $make_style = $$config{'make_style'};
+   my $debug = $$config{'debug'};
 
    sub os_static_suffix {
        return os_info_for(shift, 'static_suffix');
@@ -1514,7 +1495,7 @@ sub generate_makefile {
        $supports_shared = 1;
    }
 
-   if($no_shared or !$supports_shared)
+   if($$config{'shared'} eq 'no' or !$supports_shared)
       { $so_obj_flags = $so_link_flags = ''; }
 
    my $make_shared = 0;
@@ -1554,11 +1535,6 @@ sub generate_makefile {
        'static_suffix' => os_static_suffix($os),
        'so_suffix' => os_info_for($os, 'so_suffix'),
        'obj_suffix' => os_info_for($os, 'obj_suffix'),
-
-       'prefix' => os_install_info($os, 'install_root'),
-       'libdir' => os_install_info($os, 'lib_dir'),
-       'includedir' => os_install_info($os, 'header_dir'),
-       'docdir' => os_install_info($os, 'doc_dir'),
 
        'doc_files' => $docs,
        'include_files' => $includes
@@ -1619,18 +1595,23 @@ sub file_list {
 }
 
 sub build_cmds {
-    my ($dir, $flags, $obj_suffix, $cc, %files) = @_;
+    my ($config, $dir, $flags, %files) = @_;
     my $output = '';
+
+    my $cc = $$config{'compiler'};
+    my $obj_suffix = $$config{'obj_suffix'};
 
     my $inc = $COMPILER{$cc}{'add_include_dir_option'};
     my $from = $COMPILER{$cc}{'compile_option'};
     my $to = $COMPILER{$cc}{'output_to_option'};
 
+    my $inc_dir = $$config{'build_include'};
+
     # Probably replace by defaults to -I -c -o
     die unless defined($inc) and defined($from) and defined($to);
 
     my $bld_line =
-        "\t\$(CXX) $inc$BUILD_INCLUDE_DIR $flags $from \$? $to \$@";
+        "\t\$(CXX) $inc$inc_dir $flags $from \$? $to \$@";
 
     foreach (sort keys %files) {
         my $src_file = File::Spec->catfile($files{$_}, $_);
@@ -1648,10 +1629,8 @@ sub build_cmds {
 # Print a Unix style makefile                    #
 ##################################################
 sub print_unix_makefile {
-   my ($config,
-       $make_shared, $use_ranlib, $src, $check, $lib_list) = @_;
+   my ($config, $make_shared, $use_ranlib, $src, $check, $lib_list) = @_;
 
-   my $cc = $$config{'compiler'};
    my $os = $$config{'os'};
    my $obj_suffix = $$config{'obj_suffix'};
 
@@ -1660,14 +1639,14 @@ sub print_unix_makefile {
    my $build_lib = $$config{'build_lib'};
    my $lib_obj = file_list(16, $build_lib, '(\.cpp$|\.S$)',
                            ".$obj_suffix", %$src, %added_src);
-   my $lib_build_cmds = build_cmds($build_lib, '$(LIB_FLAGS)',
-                                   $obj_suffix, $cc, %$src, %added_src);
+   my $lib_build_cmds = build_cmds($config, $build_lib, '$(LIB_FLAGS)',
+                                   %$src, %added_src);
 
    my $build_check = $$config{'build_check'};
    my $check_obj = file_list(16, $build_check, '.cpp', ".$obj_suffix",
                              %$check);
-   my $check_build_cmds = build_cmds($build_check, '$(CHECK_FLAGS)',
-                                     $obj_suffix, $cc, %$check);
+   my $check_build_cmds = build_cmds($config, $build_check, '$(CHECK_FLAGS)',
+                                     %$check);
 
    chomp($lib_build_cmds);
    chomp($check_build_cmds);
@@ -1714,21 +1693,18 @@ sub print_nmake_makefile {
    my $obj_suffix = $$config{'obj_suffix'};
    my $static_lib_suffix = $$config{'static_suffix'};
 
-   my $cc = $$config{'compiler'};
-   my $os = $$config{'os'};
-
    my $build_lib = $$config{'build_lib'};
    my $build_check = $$config{'build_check'};
 
    my $lib_obj = file_list(16, $build_lib, '.cpp', ".$obj_suffix",
                            %$src, %added_src);
-   my $lib_build_cmds = build_cmds($build_lib, '$(LIB_FLAGS)',
-                                   $obj_suffix, $cc, %$src, %added_src);
+   my $lib_build_cmds = build_cmds($config, $build_lib, '$(LIB_FLAGS)',
+                                   %$src, %added_src);
 
    my $check_obj = file_list(16, $build_check, '.cpp', ".$obj_suffix",
                              %$check);
-   my $check_build_cmds = build_cmds($build_check, '$(CHECK_FLAGS)',
-                                     $obj_suffix, $cc, %$check);
+   my $check_build_cmds = build_cmds($config, $build_check, '$(CHECK_FLAGS)',
+                                     %$check);
 
    add_to($config, {
        'shared' => 'no',
