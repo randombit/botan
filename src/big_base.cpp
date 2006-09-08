@@ -182,7 +182,7 @@ u32bit BigInt::get_substring(u32bit offset, u32bit length) const
    u64bit mask = (1 << length) - 1;
    u32bit shift = (offset % 8);
 
-   return ((piece >> shift) & mask);
+   return static_cast<u32bit>((piece >> shift) & mask);
    }
 
 /*************************************************

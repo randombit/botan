@@ -60,7 +60,7 @@ word bigint_divop(word n1, word n0, word d)
 
    for(u32bit j = 0; j != MP_WORD_BITS; ++j)
       {
-      const bool high_top_bit = (high & MP_WORD_TOP_BIT);
+      word high_top_bit = (high & MP_WORD_TOP_BIT);
 
       high <<= 1;
       high |= (n0 >> MP_WORD_BITS-1-j) & 1;

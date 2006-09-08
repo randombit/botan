@@ -30,16 +30,6 @@ Certificate_Extension* X509_GlobalState::get_extension(const OID& oid) const
    }
 
 /*************************************************
-* Destroy this global state object               *
-*************************************************/
-X509_GlobalState::~X509_GlobalState()
-   {
-   for(u32bit j = 0; j != prototypes.size(); ++j)
-      delete prototypes[j];
-   prototypes.clear();
-   }
-
-/*************************************************
 * Set up a new global state for X.509            *
 *************************************************/
 X509_GlobalState::X509_GlobalState()
@@ -65,6 +55,18 @@ X509_GlobalState::X509_GlobalState()
    CREATE_PROTOTYPE("X509v3.SubjectAlternativeName", Subject_Alternative_Name);
    CREATE_PROTOTYPE("X509v3.CRLNumber", CRL_Number);
    CREATE_PROTOTYPE("X509v3.CertificatePolicies", Certificate_Policies);
+
+#undef CREATE_PROTOTYPE
+   }
+
+/*************************************************
+* Destroy this global state object               *
+*************************************************/
+X509_GlobalState::~X509_GlobalState()
+   {
+   for(u32bit j = 0; j != prototypes.size(); ++j)
+      delete prototypes[j];
+   prototypes.clear();
    }
 
 }

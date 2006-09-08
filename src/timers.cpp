@@ -15,7 +15,7 @@ namespace Botan {
 *************************************************/
 u64bit system_time()
    {
-   return std::time(0);
+   return static_cast<u64bit>(std::time(0));
    }
 
 u64bit system_clock()
