@@ -12,21 +12,6 @@ my $MAJOR_VERSION = 1;
 my $MINOR_VERSION = 5;
 my $PATCH_VERSION = 11;
 
-# If 1, then we always copy include files, without attempting to make symlinks
-# or hardlinks. It seems that link("","") will succeed on Windows, but the
-# actual operation will fail (FAT32 doesn't support any kind of links).
-# This is automatically forced if $^O is 'dos', 'MSWin32', or 'cygwin'
-my $FORCE_COPY = 0;
-
-my $INCLUDE_DIR = 'include';
-my $SRC_DIR = 'src';
-my $MOD_DIR = 'modules';
-my $CHECK_DIR = 'checks';
-
-my $ARCH_DIR = 'misc/config/arch';
-my $OS_DIR = 'misc/config/os';
-my $CC_DIR = 'misc/config/cc';
-
 my %MODULE_SETS = (
    'unix' => [ 'alloc_mmap', 'es_egd', 'es_ftw', 'es_unix', 'fd_unix',
                'tm_unix' ],
@@ -72,10 +57,14 @@ exit;
 # Main Driver                                    #
 ##################################################
 sub main {
+    my $ARCH_DIR = File::Spec->catdir('misc', 'config', 'arch');
+    my $OS_DIR = File::Spec->catdir('misc', 'config', 'os');
+    my $CC_DIR = File::Spec->catdir('misc', 'config', 'cc');
+
     %CPU = read_info_files($ARCH_DIR, \&get_arch_info);
     %OPERATING_SYSTEM = read_info_files($OS_DIR, \&get_os_info);
     %COMPILER = read_info_files($CC_DIR, \&get_cc_info);
-    %MODULES = read_module_files($MOD_DIR);
+    %MODULES = read_module_files('modules');
 
     my $config = {};
 
@@ -116,11 +105,6 @@ sub main {
         'build'         => $build_dir,
         'local_config'  => slurp_file($local_config),
         });
-
-    if($^O eq 'MSWin32' or $^O eq 'dos' or $^O eq 'cygwin') {
-        print "Disabling use of symlink()/link() due to Win FS limitations\n";
-        $FORCE_COPY = 1;
-    }
 
     my $cc_os_cpu_set = '';
     if($#ARGV == 0) { $cc_os_cpu_set = $ARGV[0]; }
@@ -219,6 +203,12 @@ sub main {
             unless(exists($MODULES{$_}));
     }
 
+    my $list_checks = sub {
+        my @list = dir_list('checks');
+        @list = grep { !/\.dat$/ } grep { !/^keys$/ } grep { !/\.h$/ } @list;
+        return map { $_ => 'checks' } @list;
+    };
+
     add_to($config, {
         'compiler'      => $cc,
         'os'            => $os,
@@ -242,11 +232,11 @@ sub main {
         'mp_bits'       => find_mp_bits(@using_mods),
         'mod_libs'      => [ using_libs($os, @using_mods) ],
 
-        'sources'       => { map { $_ => $SRC_DIR } dir_list($SRC_DIR) },
+        'sources'       => { map { $_ => 'src' } dir_list('src') },
         'includes'      =>
-           { map { $_ => $INCLUDE_DIR } dir_list($INCLUDE_DIR) },
+           { map { $_ => 'include' } dir_list('include') },
 
-        'check_src'     => { list_dir($CHECK_DIR) },
+        'check_src'     => { &$list_checks() }
         });
 
     $$config{'prefix'} = $prefix if($prefix ne '');
@@ -270,7 +260,7 @@ sub main {
 
     print_pkg_config($config);
 
-    process_template('misc/config/buildh.in',
+    process_template(File::Spec->catfile('misc', 'config', 'buildh.in'),
                      File::Spec->catfile($$config{'build'}, 'build.h'),
                      $config);
     $$config{'includes'}{'build.h'} = $$config{'build'};
@@ -570,23 +560,6 @@ sub copy_files {
    }
 }
 
-sub list_dir {
-    my ($dir, $ignore) = @_;
-
-    my @list = dir_list($dir);
-
-    if($dir eq $CHECK_DIR) {
-        @list = grep { !/\.dat$/ } grep { !/^keys$/ } grep { !/\.h$/ } @list;
-    }
-
-    # If $ignore is set, pull everything in @list that's in $ignore out of it
-    if(defined($ignore)) {
-        @list = grep { !exists($$ignore{$_}) } @list;
-    }
-    my %list = map { $_ => $dir } @list;
-    return %list;
-}
-
 sub dir_list {
     my ($dir) = @_;
     opendir(DIR, $dir) or die "Couldn't read directory $dir ($!)\n";
@@ -598,8 +571,7 @@ sub dir_list {
 sub clean_out_dir {
     my $dir = $_[0];
 
-    my %files = list_dir($dir);
-    foreach my $file (keys %files) {
+    foreach my $file (dir_list($dir)) {
         my $path = File::Spec->catfile($dir, $file);
         unlink $path or die "Could not unlink $path ($!)\n";
     }
@@ -617,11 +589,13 @@ sub mkdirs {
 sub portable_symlink {
    my ($from, $to_dir, $to_fname) = @_;
 
-   # Any other alternatives here?
-   my $can_symlink = eval { symlink("",""); 1 };
-   my $can_link = eval { link("",""); 1 };
+   my $can_symlink = 0;
+   my $can_link = 0;
 
-   if($FORCE_COPY) { $can_symlink = 0; $can_link = 0; }
+   unless($^O eq 'MSWin32' or $^O eq 'dos' or $^O eq 'cygwin') {
+       $can_symlink = eval { symlink("",""); 1 };
+       $can_link = eval { link("",""); 1 };
+   }
 
    chdir $to_dir or die "Can't chdir to $to_dir ($!)\n";
 
@@ -768,14 +742,14 @@ sub full_path {
    my ($file,$modname) = @_;
 
    if(defined($modname)) {
-       return File::Spec->catfile ($MOD_DIR, $modname, $file);
+       return File::Spec->catfile ('modules', $modname, $file);
    }
    else {
        if($file =~ /\.h$/) {
-           return File::Spec->catfile ($INCLUDE_DIR, $file);
+           return File::Spec->catfile ('include', $file);
        }
        elsif($file =~ /\.cpp$/ or $file =~ /\.S$/) {
-           return File::Spec->catfile ($SRC_DIR, $file);
+           return File::Spec->catfile ('src', $file);
        }
        else {
            error("Not sure where to put $file");
@@ -790,7 +764,7 @@ sub add_file {
     my ($modname, $config, $file) = @_;
     check_for_file(full_path($file, $modname), $modname);
 
-    my $mod_dir = File::Spec->catdir($MOD_DIR, $modname);
+    my $mod_dir = File::Spec->catdir('modules', $modname);
 
     if($file =~ /\.cpp$/ or $file =~ /\.S$/) {
         error("File $file already added from ", $$config{'sources'}{$file})
@@ -1419,7 +1393,7 @@ sub print_pkg_config {
 
     $$config{'link_to'} = libs('-l', '', 'm', @{$$config{'extra_libs'}});
 
-    process_template('misc/config/botan-config.in',
+    process_template(File::Spec->catfile('misc', 'config', 'botan-config.in'),
                      'botan-config', $config);
 
     delete $$config{'link_to'};
@@ -1544,17 +1518,19 @@ sub generate_makefile {
        'include_files'   => $includes
        });
 
+   my $template_dir = File::Spec->catdir('misc', 'config', 'makefile');
+
    my $make_style = $$config{'make_style'};
    if($make_style eq 'unix') {
-       $$config{'makefile'} = 'misc/config/makefile/unix.in';
+       $$config{'makefile'} = File::Spec->catfile($template_dir, 'unix.in');
 
-       $$config{'makefile'} = 'misc/config/makefile/unix_shr.in'
+       $$config{'makefile'} = File::Spec->catfile($template_dir, 'unix_shr.in')
            if($make_shared);
 
        print_unix_makefile($config);
    }
    elsif($make_style eq 'nmake') {
-       $$config{'makefile'} = 'misc/config/makefile/nmake.in';
+       $$config{'makefile'} = File::Spec->catfile($template_dir, 'nmake.in');
        print_nmake_makefile($config);
    }
    else {
