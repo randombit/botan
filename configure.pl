@@ -1322,8 +1322,7 @@ sub process_template {
     close OUT;
 }
 
-sub print_pkg_config
-{
+sub print_pkg_config {
     my ($os, $major,$minor,$patch,@libs) = @_;
 
     return if($os eq 'generic' or $os eq 'windows');
@@ -1349,14 +1348,6 @@ sub generate_makefile {
 
    sub os_static_suffix {
        return os_info_for(shift, 'static_suffix');
-   }
-
-   sub os_shared_suffix {
-       return os_info_for(shift, 'so_suffix');
-   }
-
-   sub os_obj_suffix {
-       return os_info_for(shift, 'obj_suffix');
    }
 
    sub os_ar_command {
@@ -1457,7 +1448,7 @@ sub generate_makefile {
 
                  'ar_command' => $ar_command,
                  'static_suffix' => os_static_suffix($os),
-                 'so_suffix' => os_shared_suffix($os),
+                 'so_suffix' => os_info_for(shift, 'so_suffix'),
 
                  'prefix' => os_install_info($os, 'install_root'),
                  'libdir' => os_install_info($os, 'lib_dir'),
@@ -1471,8 +1462,7 @@ sub generate_makefile {
    my @arguments = (\%CONFIG,
                     $os,
                     $make_shared,
-                    os_obj_suffix($os),
-                    os_shared_suffix($os),
+                    os_info_for(shift, 'obj_suffix'),
                     os_static_suffix($os),
                     $ar_needs_ranlib,
                     \%all_lib_srcs,
@@ -1494,21 +1484,32 @@ sub generate_makefile {
 sub file_list {
     my ($spaces, $put_in, $from, $to, %files) = @_;
     my $len = $spaces;
-    my $list;
+
+    my $list = '';
+
     foreach (sort keys %files) {
         my $file = $_;
         my $dir = $put_in;
+
         if(!defined($dir)) { $dir = $files{$_}; }
-        if($len > 60)
-        { $list .= "\\\n" . ' 'x$spaces; $len = $spaces; }
-        if(defined($from) and defined($to)) { $file =~ s/$from/$to/; }
-        if(defined($dir))
-        { $list .= File::Spec->catfile ($dir, $file) . ' ';
-          $len += length($file) + length($dir); }
-        else
-        { $list .= $file . ' ';
-          $len += length($file); }
+
+        if($len > 60) {
+            $list .= "\\\n" . ' 'x$spaces;
+            $len = $spaces;
+        }
+
+        $file =~ s/$from/$to/ if(defined($from) and defined($to));
+
+        if(defined($dir)) {
+            $list .= File::Spec->catfile ($dir, $file) . ' ';
+            $len += length($file) + length($dir);
+        }
+        else {
+            $list .= $file . ' ';
+            $len += length($file);
+        }
     }
+
     return $list;
 }
 
@@ -1523,9 +1524,7 @@ sub write_makefile {
 ##################################################
 sub print_unix_makefile {
    my ($config_ref, $os,
-       $make_shared,
-       $obj_suffix, $so_suffix, $static_lib_suffix,
-       $use_ranlib,
+       $make_shared, $obj_suffix, $static_lib_suffix, $use_ranlib,
        $src, $check, $lib_list) = @_;
 
    my $link_to = "-lm";
@@ -1593,7 +1592,7 @@ sub print_unix_makefile {
 sub print_nmake_makefile {
    my ($config_ref, $os,
        undef, # $make_shared
-       $obj_suffix, $so_suffix, $static_lib_suffix,
+       $obj_suffix, $static_lib_suffix,
        undef, # $use_ranlib
        $src, $check, $lib_list) = @_;
 
