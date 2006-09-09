@@ -32,6 +32,8 @@ my %MODULE_SETS =
      'win32' => ['es_capi', 'es_win32', 'mux_win32', 'tm_win32' ],
      );
 
+my $TRACING = 0;
+
 ##################################################
 # Run main() and Quit                            #
 ##################################################
@@ -82,12 +84,6 @@ sub main {
 
     my @modules = choose_modules($config, $module_list);
 
-    my $list_checks_dir = sub {
-        my @list = dir_list('checks');
-        @list = grep { !/\.dat$/ } grep { !/^keys$/ } grep { !/\.h$/ } @list;
-        return map { $_ => 'checks' } @list;
-    };
-
     add_to($config, {
         'includedir'    => os_info_for($os, 'header_dir'),
 
@@ -100,13 +96,16 @@ sub main {
         'mp_bits'       => find_mp_bits(@modules),
         'mod_libs'      => [ using_libs($os, @modules) ],
 
-        'sources'       => { map { $_ => 'src' } dir_list('src') },
-        'includes'      => { map { $_ => 'include' } dir_list('include') },
-        'check_src'     => { &$list_checks_dir() }
+        'sources'       => { map_to('src', dir_list('src')) },
+        'includes'      => { map_to('include', dir_list('include')) },
+        'check_src'     => { map_to('checks',
+                                    grep { $_ ne 'keys' and !m@\.(dat|h)$@ }
+                                    dir_list('checks'))
+            }
         });
 
     foreach my $mod (@modules) {
-        load_module($MODULES{$mod}, $config);
+        load_module($config, $MODULES{$mod});
     }
 
     add_to($config, {
@@ -164,7 +163,7 @@ sub emit_help {
 }
 
 sub trace {
-    return unless 0;
+    return unless $TRACING;
 
     my (undef, undef, $line1) = caller(0);
     my (undef, undef, $line2, $func1) = caller(1);
@@ -345,7 +344,7 @@ sub choose_target {
 sub choose_modules {
     my ($config, $mod_str) = @_;
 
-    my @modules = grep {/./} split(/,/, $mod_str);
+    my @modules = grep { $_ ne '' } split(/,/, $mod_str);
 
     if($$config{'autoconfig'})
     {
@@ -359,7 +358,7 @@ sub choose_modules {
     }
 
     # Uniqify @modules
-    my %uniqed_mods = map { $_ => undef } @modules;
+    my %uniqed_mods = map_to(undef, @modules);
     @modules = sort keys %uniqed_mods;
 
     foreach (@modules) {
@@ -714,6 +713,12 @@ sub which
     return '';
 }
 
+# Return a hash mapping every var in a list to a constant value
+sub map_to {
+    my $var = shift;
+    return map { $_ => $var } @_;
+}
+
 sub in_array {
     my($target, $array) = @_;
     return 0 unless defined($array);
@@ -775,7 +780,7 @@ sub realname {
 #                                                #
 ##################################################
 sub load_module {
-    my ($module_ref, $config) = @_;
+    my ($config, $module_ref) = @_;
 
     my %module = %{$module_ref};
     my $modname = $module{'name'};
@@ -1464,12 +1469,12 @@ sub generate_makefile {
        'install_group' => os_info_for($os, 'install_group'),
        });
 
-   my $docs = file_list(undef, undef, undef, map { $_ => 'doc' } @DOCS);
+   my $docs = file_list(undef, undef, undef, map_to('doc', @DOCS));
    $docs .= 'readme.txt';
 
    my $includes = file_list(undef, undef, undef,
-                            map { $_ => $$config{'build_include_botan'} }
-                               keys %{$$config{'includes'}});
+                            map_to($$config{'build_include_botan'},
+                                   keys %{$$config{'includes'}}));
 
    my $lib_objs = file_list($$config{'build_lib'}, '(\.cpp$|\.S$)',
                             '.' . $$config{'obj_suffix'},
