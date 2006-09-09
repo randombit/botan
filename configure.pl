@@ -91,6 +91,8 @@ sub main {
         'build_check'   => File::Spec->catdir($$config{'build-dir'}, 'checks'),
         'build_include' =>
             File::Spec->catdir($$config{'build-dir'}, 'include'),
+        'build_include_botan' =>
+            File::Spec->catdir($$config{'build-dir'}, 'include', 'botan'),
 
         'modules'       => [ @modules ],
         'mp_bits'       => find_mp_bits(@modules),
@@ -104,16 +106,7 @@ sub main {
             }
         });
 
-    foreach my $mod (@modules) {
-        load_module($config, $MODULES{$mod});
-    }
-
-    add_to($config, {
-        'defines' => defines($config),
-
-        'build_include_botan' =>
-            File::Spec->catdir($$config{'build_include'}, 'botan')
-        });
+    load_modules($config);
 
     mkdirs($$config{'build-dir'},
            $$config{'build_include'}, $$config{'build_include_botan'},
@@ -172,7 +165,7 @@ sub trace {
     $func1 =~ s/main:://;
     $func2 =~ s/main:://;
 
-    warn with_diagnostic('trace', "at $func1:$line1 -\n", @_);
+    warn with_diagnostic('trace', "at $func1:$line1 - ", @_);
 }
 
 ##################################################
@@ -530,10 +523,10 @@ sub my_compiler {
     my ($config) = @_;
     my $cc = $$config{'compiler'};
 
-    croak('my_compiler called, but no compiler set')
+    croak('my_compiler called, but no compiler set in config')
         unless defined $cc and $cc ne '';
 
-    croak('unknown compiler $cc')
+    croak("unknown compiler $cc")
         unless defined $COMPILER{$cc};
 
     return %{$COMPILER{$cc}};
@@ -545,7 +538,7 @@ sub mach_opt {
     my %ccinfo = my_compiler($config);
 
     # Nothing we can do in that case
-    return '' unless defined($ccinfo{'mach_opt_flags'});
+    return '' unless $ccinfo{'mach_opt_flags'};
 
     my $submodel = $$config{'submodel'};
     my $arch = $$config{'arch'};
@@ -644,6 +637,8 @@ sub copy_include_files {
 
     my $include_dir = $$config{'build_include_botan'};
 
+    trace('Copying to ', $include_dir);
+
     foreach my $file (dir_list($include_dir)) {
         my $path = File::Spec->catfile($include_dir, $file);
         unlink $path or croak("Could not unlink $path ($!)");
@@ -666,7 +661,7 @@ sub copy_include_files {
 
 sub dir_list {
     my ($dir) = @_;
-    opendir(DIR, $dir) or croak("Couldn't read directory $dir ($!)");
+    opendir(DIR, $dir) or croak("Couldn't read directory '$dir' ($!)");
 
     my @listing = grep { $_ ne File::Spec->curdir() and
                          $_ ne File::Spec->updir() } readdir DIR;
@@ -779,11 +774,53 @@ sub realname {
 ##################################################
 #                                                #
 ##################################################
-sub load_module {
-    my ($config, $module_ref) = @_;
+sub load_modules {
+    my ($config) = @_;
 
-    my %module = %{$module_ref};
-    my $modname = $module{'name'};
+    my @modules = @{$$config{'modules'}};
+
+    foreach my $mod (@modules) {
+        load_module($config, $mod);
+    }
+
+    my $gen_defines = sub {
+        my $defines = '';
+
+        my $arch = $$config{'arch'};
+        if($arch ne 'generic') {
+            $arch = uc $arch;
+            $defines .= "#define BOTAN_TARGET_ARCH_IS_$arch\n";
+
+            my $submodel = $$config{'submodel'};
+            if($arch ne $submodel) {
+                $submodel = uc $submodel;
+                $submodel =~ s/-/_/g;
+                $defines .= "#define BOTAN_TARGET_CPU_IS_$submodel\n";
+            }
+        }
+
+        my @defarray;
+        foreach my $mod (@modules) {
+            my $defs = $MODULES{$mod}{'define'};
+            next unless $defs;
+
+            push @defarray, split(/,/, $defs);
+        }
+        foreach (sort @defarray) {
+            die unless(defined $_ and $_ ne '');
+            $defines .= "#define BOTAN_EXT_$_\n";
+        }
+        chomp($defines);
+        return $defines;
+    };
+
+    $$config{'defines'} = &$gen_defines();
+}
+
+sub load_module {
+    my ($config, $modname) = @_;
+
+    my %module = %{$MODULES{$modname}};
 
     my $works_on = sub {
         my ($what, @lst) = @_;
@@ -810,17 +847,19 @@ sub load_module {
     croak("Module '$modname' does not work with $cc")
         unless(&$works_on($cc, @{$module{'cc'}}));
 
-    sub handle_files {
-        my($modname, $config, $lst, $func) = @_;
+    my $handle_files = sub {
+        my($lst, $func) = @_;
         return unless defined($lst);
+
         foreach (sort @$lst) {
             &$func($modname, $config, $_);
         }
-    }
+    };
 
-    handle_files($modname, $config, $module{'replace'}, \&replace_file);
-    handle_files($modname, $config, $module{'ignore'},  \&ignore_file);
-    handle_files($modname, $config, $module{'add'},     \&add_file);
+    &$handle_files($module{'ignore'},  \&ignore_file);
+    &$handle_files($module{'add'},     \&add_file);
+    &$handle_files($module{'replace'},
+                   sub { ignore_file(@_); add_file(@_); });
 
     if(defined($module{'note'})) {
         my $realname = $module{'realname'};
@@ -880,14 +919,6 @@ sub ignore_file {
     &$do_ignore_file(file_type($file));
 }
 
-# This works because ignore file always runs on files in the main source tree,
-# and add always works on the file in the modules directory.
-sub replace_file {
-   my ($modname, $config, $file) = @_;
-   ignore_file($modname, $config, $file);
-   add_file($modname, $config, $file);
-}
-
 sub check_for_file {
    my ($file, $added_from, $modname) = @_;
 
@@ -914,7 +945,7 @@ sub check_for_file {
 sub process_template {
     my ($in, $out, $config) = @_;
 
-    trace("process_template($in) -> $out");
+    trace("$in -> $out");
 
     my $contents = slurp_file($in);
 
@@ -1231,39 +1262,6 @@ sub guess_mods {
     return @usable_modules;
 }
 
-sub defines {
-    my ($config) = @_;
-
-    my $defines = '';
-
-    my $arch = $$config{'arch'};
-    if($arch ne 'generic') {
-        $arch = uc $arch;
-        $defines .= "#define BOTAN_TARGET_ARCH_IS_$arch\n";
-
-        my $submodel = $$config{'submodel'};
-        if($arch ne $submodel) {
-            $submodel = uc $submodel;
-            $submodel =~ s/-/_/g;
-            $defines .= "#define BOTAN_TARGET_CPU_IS_$submodel\n";
-        }
-    }
-
-    my @defarray;
-    foreach my $mod (@{$$config{'modules'}}) {
-        my $defs = $MODULES{$mod}{'define'};
-        next unless $defs;
-
-        push @defarray, split(/,/, $defs);
-    }
-    foreach (sort @defarray) {
-        next unless(defined $_ and $_ ne '');
-        $defines .= "#define BOTAN_EXT_$_\n";
-    }
-    chomp($defines);
-    return $defines;
-}
-
 ##################################################
 #                                                #
 ##################################################
@@ -1531,7 +1529,7 @@ sub generate_makefile {
    croak("Don't know about makefile format '$make_style'")
        unless defined $template;
 
-   trace("mapped type '$make_style' to template '$template'");
+   trace("'$make_style' -> '$template'");
 
    process_template($template, 'Makefile', $config);
 }
@@ -1544,9 +1542,6 @@ sub guess_cpu_from_this
     my $cpuinfo = lc $_[0];
     my $cpu = '';
 
-    $cpu = 'amd64' if($cpuinfo =~ /athlon64/);
-    $cpu = 'amd64' if($cpuinfo =~ /opteron/);
-
     $cpu = 'athlon' if($cpuinfo =~ /athlon/);
     $cpu = 'pentium4' if($cpuinfo =~ /pentium 4/);
     $cpu = 'pentium4' if($cpuinfo =~ /pentium\(r\) 4/);
@@ -1554,6 +1549,9 @@ sub guess_cpu_from_this
     $cpu = 'pentium2' if($cpuinfo =~ /pentium ii/);
     $cpu = 'pentium3' if($cpuinfo =~ /pentium 3/);
     $cpu = 'pentium2' if($cpuinfo =~ /pentium 2/);
+
+    $cpu = 'amd64' if($cpuinfo =~ /athlon64/);
+    $cpu = 'amd64' if($cpuinfo =~ /opteron/);
 
     # The 32-bit SPARC stuff is impossible to match to arch type easily, and
     # anyway the uname stuff will pick up that it's a SPARC so it doesn't
@@ -1581,6 +1579,7 @@ sub guess_cpu_from_this
         $cpu = 'alpha-ev7' if($cpuinfo =~ /ev7/);
     }
 
+    trace('guessing ', $cpu) if($cpu);
     return $cpu;
 }
 
@@ -1609,15 +1608,11 @@ sub guess_triple
 
         # If we have /proc/cpuinfo, try to get nice specific information about
         # what kind of CPU we're running on.
-        if(-e '/proc/cpuinfo' and -r '/proc/cpuinfo')
+        my $cpuinfo = '/proc/cpuinfo';
+
+        if(-e $cpuinfo and -r $cpuinfo)
         {
-            open CPUINFO, '/proc/cpuinfo' or
-                croak("Couldn't read /proc/cpuinfo ($!)");
-
-            my $cpuinfo = join('', <CPUINFO>);
-            close CPUINFO;
-
-            $cpu = guess_cpu_from_this($cpuinfo);
+            $cpu = guess_cpu_from_this(slurp_file($cpuinfo));
         }
 
         # `umame -p` is sometimes something stupid like unknown, but in some
