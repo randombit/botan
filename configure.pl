@@ -158,6 +158,11 @@ sub autoconfig {
     print with_diagnostic('autoconfig', @_);
 }
 
+sub emit_help {
+    print join('', @_);
+    exit;
+}
+
 sub trace {
     return unless 0;
 
@@ -174,7 +179,7 @@ sub trace {
 ##################################################
 # Display Help and Quit                          #
 ##################################################
-sub help {
+sub display_help {
    my $sets = join('|', sort keys %MODULE_SETS);
 
    my $helptxt = <<ENDOFHELP;
@@ -208,6 +213,9 @@ ENDOFHELP
 
    my $listing = sub {
        my ($header, @list) = @_;
+
+       return '' if (@list == 0);
+
        my ($output, $len) = ('', 0);
 
        my $append = sub {
@@ -229,27 +237,27 @@ ENDOFHELP
        return $output . "\n";
    };
 
-   $helptxt .= &$listing('CC', keys %COMPILER);
-   $helptxt .= &$listing('OS', keys %OPERATING_SYSTEM);
-   $helptxt .= &$listing('CPU', keys %CPU);
-   $helptxt .= &$listing('Modules', keys %MODULES) if(%MODULES);
-
-   print $helptxt;
-   exit;
-   }
+    emit_help($helptxt,
+              &$listing('CC', keys %COMPILER),
+              &$listing('OS', keys %OPERATING_SYSTEM),
+              &$listing('CPU', keys %CPU),
+              &$listing('Modules', keys %MODULES));
+}
 
 ##################################################
 # Display Further Information about Modules      #
 ##################################################
 sub display_module_info {
+
+    my $info = '';
     foreach my $mod (sort keys %MODULES) {
         my $modinfo = $MODULES{$mod};
         my $fullname = $$modinfo{'realname'};
 
         while(length($mod) < 10) { $mod .= ' '; }
-        print "$mod - $fullname\n";
+        $info .= "$mod - $fullname\n";
     }
-    exit;
+    emit_help($info);
 }
 
 ##################################################
@@ -265,7 +273,8 @@ sub choose_target {
 
     my ($cc,$os,$submodel) = split(/-/,$target,3);
 
-    help() unless(defined($cc) and defined($os) and defined($submodel));
+    display_help()
+        unless(defined($cc) and defined($os) and defined($submodel));
 
     croak("Compiler $cc isn't known (try --help)")
         unless defined($COMPILER{$cc});
@@ -366,16 +375,15 @@ sub get_options {
     my $save_option = sub {
         my ($opt, $val) = @_;
         $opt =~ s/-/_/g;
-        print "$opt -> $val\n";
         $$config{$opt} = $val;
     };
 
     my $module_set = '';
     my @modules;
     exit 1 unless GetOptions(
-               'help' => sub { help(); },
+               'help' => sub { display_help(); },
                'module-info' => sub { display_module_info(); },
-               'version' => sub { print "Botan $VERSION_STRING\n"; exit; },
+               'version' => sub { emit_help("Botan $VERSION_STRING\n") },
 
                'prefix=s' => sub { &$save_option(@_); },
                'docdir=s' => sub { &$save_option(@_); },
@@ -406,7 +414,7 @@ sub get_options {
 
     return ('', $mod_str) if($#ARGV == -1);
     return ($ARGV[0], $mod_str) if($#ARGV == 0);
-    help();
+    display_help();
 }
 
 ##################################################

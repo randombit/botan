@@ -1,4 +1,4 @@
-realname "Support for Qt/QCA"
+realname "Qt Mutex"
 
 define MUTEX_QT
 

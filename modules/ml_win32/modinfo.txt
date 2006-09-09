@@ -1,4 +1,4 @@
-realname "Memory Locking for Windows"
+realname "Memory Locking for Win32"
 
 <replace>
 mlock.cpp

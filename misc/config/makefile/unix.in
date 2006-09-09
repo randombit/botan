@@ -43,7 +43,7 @@ INSTALL_CMD_EXEC = @{var:install_cmd_exec}
 INSTALL_CMD_DATA = @{var:install_cmd_data}
 LN               = ln -fs
 MKDIR            = @mkdir
-MKDIR_INSTALL    = @umask 022; mkdir -p -m $(EXEC_MODE)
+MKDIR_INSTALL    = @umask 022; mkdir -p -m 755
 RANLIB           = @{var:ranlib_command}
 RM               = @rm -f
 RM_R             = @rm -rf
@@ -97,11 +97,11 @@ $(STATIC_LIB): $(LIBOBJS)
 static: $(STATIC_LIB)
 
 clean:
-	$(RM_R) @{var:build}/lib/* @{var:build}/checks/*
+	$(RM_R) @{var:build-dir}/lib/* @{var:build-dir}/checks/*
 	$(RM) $(LIBRARIES) $(SYMLINK) $(CHECK)
 
 distclean: clean
-	$(RM_R) @{var:build}
+	$(RM_R) @{var:build-dir}
 	$(RM) Makefile $(CONFIG_SCRIPT)
 
 install: $(LIBRARIES)

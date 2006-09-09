@@ -1,4 +1,4 @@
-realname "Pipe Unix I/O support"
+realname "Unix I/O support for Pipe"
 
 define PIPE_UNIXFD_IO
 
