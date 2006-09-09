@@ -867,20 +867,16 @@ sub list_push {
     return sub { push @$listref, $_[0]; }
 }
 
-sub set_if {
-    my ($line, $what, $var) = @_;
-    $$var = $1 if($line =~ /^$what (.*)/);
-}
+sub match_any_of {
+    my ($line, $hash, $quoted, $any_of) = @_;
 
-sub set_if_quoted {
-    my ($line, $what, $var) = @_;
-    $$var = $1 if($line =~ /^$what \"(.*)\"/);
-}
+    $quoted = ($quoted eq 'quoted') ? 1 : 0;
 
-sub set_if_any {
-    my ($func, $line, $hash, $any_of) = @_;
-    foreach my $found (split(/:/, $any_of)) {
-        &$func($line, $found, \$hash->{$found});
+    my @match_these = split(/:/, $any_of);
+
+    foreach my $what (split(/:/, $any_of)) {
+        $$hash{$what} = $1 if(not $quoted and $line =~ /^$what (.*)/);
+        $$hash{$what} = $1 if($quoted and $line =~ /^$what \"(.*)\"/);
     }
 }
 
@@ -958,9 +954,8 @@ sub get_module_info {
    $info{'libs'} = {};
 
    while($_ = &$reader()) {
-       set_if_any(\&set_if_quoted, $_, \%info, 'realname:note');
-
-       set_if_any(\&set_if, $_, \%info, 'define:mp_bits');
+       match_any_of($_, \%info, 'quoted', 'realname:note');
+       match_any_of($_, \%info, 'unquoted', 'define:mp_bits');
 
        $info{'external_libs'} = 1 if(/^uses_external_libs/);
 
@@ -1011,8 +1006,8 @@ sub get_arch_info {
     $info{'name'} = $name;
 
     while($_ = &$reader()) {
-        set_if_any(\&set_if_quoted, $_, \%info, 'realname');
-        set_if_any(\&set_if, $_, \%info, 'default_submodel');
+        match_any_of($_, \%info, 'quoted', 'realname');
+        match_any_of($_, \%info, 'unquoted', 'default_submodel');
 
         read_list($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
         read_list($_, $reader, 'submodels', list_push(\@{$info{'submodels'}}));
@@ -1038,9 +1033,9 @@ sub get_os_info {
     $info{'name'} = $name;
 
     while($_ = &$reader()) {
-        set_if_any(\&set_if_quoted, $_, \%info, 'realname:ar_command');
+        match_any_of($_, \%info, 'quoted', 'realname:ar_command');
 
-        set_if_any(\&set_if, $_, \%info,
+        match_any_of($_, \%info, 'unquoted',
                    'os_type:obj_suffix:so_suffix:static_suffix:' .
                    'install_root:header_dir:lib_dir:doc_dir:' .
                    'install_user:install_group:ar_needs_ranlib:' .
@@ -1066,7 +1061,7 @@ sub get_cc_info {
     $info{'name'} = $name;
 
     while($_ = &$reader()) {
-        set_if_any(\&set_if_quoted, $_, \%info,
+        match_any_of($_, \%info, 'quoted',
                    'realname:binary_name:' .
                    'compile_option:output_to_option:add_include_dir_option:' .
                    'add_lib_dir_option:add_lib_option:' .
@@ -1074,7 +1069,7 @@ sub get_cc_info {
                    'lang_flags:warning_flags:so_obj_flags:ar_command:' .
                    'debug_flags:no_debug_flags');
 
-        set_if_any(\&set_if, $_, \%info, 'makefile_style');
+        match_any_of($_, \%info, 'unquoted', 'makefile_style');
 
         read_list($_, $reader, 'os', list_push(\@{$info{'os'}}));
         read_list($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
@@ -1401,10 +1396,6 @@ sub generate_makefile {
        return os_info_for(shift, 'ar_command');
    }
 
-   sub os_ar_needs_ranlib {
-       return (os_info_for(shift, 'ar_needs_ranlib') eq 'yes');
-   }
-
    sub append_if {
        my($var,$addme,$cond) = @_;
        die unless defined $var;
@@ -1436,8 +1427,8 @@ sub generate_makefile {
    append_ifdef(\$lib_opt_flags, $ccinfo{'no_debug_flags'}) if(!$debug);
 
    # This is a default that works on most Unix and Unix-like systems
-   my $ar_command = "ar crs";
-   my $ar_needs_ranlib = 0; # almost no systems need it anymore
+   my $ar_command = 'ar crs';
+   my $ranlib_command = 'true'; # almost no systems need it anymore
 
    # See if there are any over-riding methods. We presume if CC is creating
    # the static libs, it knows how to create the index itself.
@@ -1450,10 +1441,17 @@ sub generate_makefile {
    elsif(os_ar_command($os))
    {
        $ar_command = os_ar_command($os);
-       $ar_needs_ranlib = 1 if(os_ar_needs_ranlib($os));
+       $ranlib_command = 'ranlib'
+           if(os_info_for($os, 'ar_needs_ranlib') eq 'yes');
    }
 
    my $arch = $$config{'arch'};
+
+   my $abi_opts = '';
+   append_ifdef(\$abi_opts, $ccinfo{'mach_abi_linking'}{$arch});
+   append_ifdef(\$abi_opts, $ccinfo{'mach_abi_linking'}{$os});
+   append_ifdef(\$abi_opts, $ccinfo{'mach_abi_linking'}{'all'});
+   $abi_opts = ' ' . $abi_opts if($abi_opts ne '');
 
    if($$config{'shared'} eq 'yes' and
       (in_array('all', $OPERATING_SYSTEM{$os}{'supports_shared'}) or
@@ -1478,14 +1476,8 @@ sub generate_makefile {
        $$config{'so_link'} = '';
    }
 
-   my $ccopts = '';
-   append_ifdef(\$ccopts, $ccinfo{'mach_abi_linking'}{$arch});
-   append_ifdef(\$ccopts, $ccinfo{'mach_abi_linking'}{$os});
-   append_ifdef(\$ccopts, $ccinfo{'mach_abi_linking'}{'all'});
-   $ccopts = ' ' . $ccopts if($ccopts ne '');
-
    add_to($config, {
-       'cc'              => $ccinfo{'binary_name'} . $ccopts,
+       'cc'              => $ccinfo{'binary_name'} . $abi_opts,
        'lib_opt'         => $lib_opt_flags,
        'check_opt'       => empty_if_nil($ccinfo{'check_opt_flags'}),
        'mach_opt'        => mach_opt($config),
@@ -1493,7 +1485,7 @@ sub generate_makefile {
        'warn_flags'      => empty_if_nil($ccinfo{'warning_flags'}),
 
        'ar_command'      => $ar_command,
-       'ranlib_command'  => ($ar_needs_ranlib ? 'ranlib' : 'true'),
+       'ranlib_command'  => $ranlib_command,
        'static_suffix'   => os_info_for($os, 'static_suffix'),
        'so_suffix'       => os_info_for($os, 'so_suffix'),
        'obj_suffix'      => os_info_for($os, 'obj_suffix'),
@@ -1540,6 +1532,7 @@ sub generate_makefile {
 
    my $make_style = $$config{'make_style'};
 
+
    if($make_style eq 'unix') {
        $template = File::Spec->catfile($template_dir, 'unix.in');
 
@@ -1563,11 +1556,11 @@ sub generate_makefile {
        });
    }
 
-   trace("mapped type '$make_style' to template '$template'");
-
    croak("This configure script does not know how to make ",
          "a makefile for makefile style \"$make_style\"")
        unless(defined($template));
+
+   trace("mapped type '$make_style' to template '$template'");
 
    process_template($template, 'Makefile', $config);
 }
@@ -1625,8 +1618,7 @@ sub build_cmds {
     # Probably replace by defaults to -I -c -o
     die unless defined($inc) and defined($from) and defined($to);
 
-    my $bld_line =
-        "\t\$(CXX) $inc$inc_dir $flags $from\$? $to\$@";
+    my $bld_line = "\t\$(CXX) $inc$inc_dir $flags $from\$? $to\$@";
 
     foreach (sort keys %$files) {
         my $src_file = File::Spec->catfile($$files{$_}, $_);
