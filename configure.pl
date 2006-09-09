@@ -90,7 +90,29 @@ sub main {
     else { help(); }
 
     my ($cc,$os,$submodel) = split(/-/,$cc_os_cpu_set,3);
-    if(!defined($cc) or !defined($os) or !defined($submodel)) { help(); }
+
+    help() unless(defined($cc) and defined($os) and defined($submodel));
+
+    croak("Compiler $cc isn't known (try --help)")
+        unless defined($COMPILER{$cc});
+
+    $os = os_alias($os);
+    croak("OS $os isn't known (try --help)") unless
+        ($os eq 'generic' or defined($OPERATING_SYSTEM{$os}));
+
+    my $arch = undef;
+    ($arch, $submodel) = figure_out_arch($submodel);
+
+    croak(realname($os), " doesn't run on $arch ($submodel)")
+        unless($arch eq 'generic' or $os eq 'generic' or
+               in_array($arch, $OPERATING_SYSTEM{$os}{'arch'}));
+
+    croak(realname($cc), " doesn't run on $arch ($submodel)")
+        unless($arch eq 'generic' or
+               (in_array($arch, $COMPILER{$cc}{'arch'})));
+
+    croak(realname($cc), " doesn't run on ", realname($os))
+        unless($os eq 'generic' or (in_array($os, $COMPILER{$cc}{'os'})));
 
     # hacks
 
@@ -125,26 +147,6 @@ sub main {
             warning("GCC 2.95.x issues many spurious warnings during build");
         }
     }
-
-    croak("Compiler $cc isn't known") unless defined($COMPILER{$cc});
-
-    $os = os_alias($os);
-    croak("OS $os isn't known") unless
-        ($os eq 'generic' or defined($OPERATING_SYSTEM{$os}));
-
-    my $arch = undef;
-    ($arch, $submodel) = figure_out_arch($submodel);
-
-    croak(realname($os), " doesn't run on $arch ($submodel)")
-        unless($arch eq 'generic' or $os eq 'generic' or
-               in_array($arch, $OPERATING_SYSTEM{$os}{'arch'}));
-
-    croak(realname($cc), " doesn't run on $arch ($submodel)")
-        unless($arch eq 'generic' or
-               (in_array($arch, $COMPILER{$cc}{'arch'})));
-
-    croak(realname($cc), " doesn't run on ", realname($os))
-        unless($os eq 'generic' or (in_array($os, $COMPILER{$cc}{'os'})));
 
     my %MODULE_SETS =
         (
@@ -392,7 +394,7 @@ sub figure_out_arch {
     };
 
     my $arch = &$find_arch($name);
-    croak("Arch type $name isn't known") unless defined $arch;
+    croak("Arch type $name isn't known (try --help)") unless defined $arch;
     trace("mapped name '$name' to arch '$arch'");
 
     my %archinfo = %{ $CPU{$arch} };
