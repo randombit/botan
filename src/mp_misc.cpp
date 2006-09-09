@@ -63,7 +63,7 @@ word bigint_divop(word n1, word n0, word d)
       word high_top_bit = (high & MP_WORD_TOP_BIT);
 
       high <<= 1;
-      high |= (n0 >> MP_WORD_BITS-1-j) & 1;
+      high |= (n0 >> (MP_WORD_BITS-1-j)) & 1;
       quotient <<= 1;
 
       if(high_top_bit || high >= d)
