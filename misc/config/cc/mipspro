@@ -2,8 +2,8 @@ realname "SGI MIPSPro C++"
 
 binary_name "CC"
 
-compile_option "-c"
-output_to_option "-o"
+compile_option "-c "
+output_to_option "-o "
 add_include_dir_option "-I"
 add_lib_dir_option "-L"
 add_lib_option "-l"
