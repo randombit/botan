@@ -3,21 +3,13 @@
 * (C) 1999-2006 The Botan Project                *
 *************************************************/
 
-#include <botan/x509stor.h>
+#include <botan/x509find.h>
 #include <botan/charset.h>
 #include <algorithm>
-#include <memory>
 
 namespace Botan {
 
-namespace X509_Store_Search {
-
 namespace {
-
-/*************************************************
-* Comparison Function Pointer                    *
-*************************************************/
-typedef bool (*compare_fn)(const std::string&, const std::string&);
 
 /*************************************************
 * Compare based on case-insensive substrings     *
@@ -43,112 +35,75 @@ bool ignore_case(const std::string& searching_for, const std::string& found)
                      searching_for.begin(), Charset::caseless_cmp);
    }
 
+}
+
 /*************************************************
 * Search based on the contents of a DN entry     *
 *************************************************/
-class DN_Check : public X509_Store::Search_Func
+bool DN_Check::match(const X509_Certificate& cert) const
    {
-   public:
-      bool match(const X509_Certificate& cert) const
-         {
-         std::vector<std::string> info = cert.subject_info(dn_entry);
+   std::vector<std::string> info = cert.subject_info(dn_entry);
 
-         for(u32bit j = 0; j != info.size(); ++j)
-            if(compare(info[j], looking_for))
-               return true;
-         return false;
-         }
-
-      DN_Check(const std::string& entry, const std::string& target,
-               compare_fn func) :
-         compare(func), dn_entry(entry), looking_for(target) {}
-   private:
-      compare_fn compare;
-      const std::string dn_entry;
-      const std::string looking_for;
-   };
-
-}
-
-/*************************************************
-* Search for a certificate by email address      *
-*************************************************/
-std::vector<X509_Certificate> by_email(const X509_Store& store,
-                                       const std::string& email)
-   {
-   DN_Check search_params("RFC822", email, ignore_case);
-   return store.get_certs(search_params);
+   for(u32bit j = 0; j != info.size(); ++j)
+      if(compare(info[j], looking_for))
+         return true;
+   return false;
    }
 
 /*************************************************
-* Search for a certificate by CommonName         *
+* DN_Check Constructor                           *
 *************************************************/
-std::vector<X509_Certificate> by_name(const X509_Store& store,
-                                      const std::string& name)
+DN_Check::DN_Check(const std::string& dn_entry, const std::string& looking_for,
+                   compare_fn func)
    {
-   DN_Check search_params("CommonName", name, substring_match);
-   return store.get_certs(search_params);
+   this->dn_entry = dn_entry;
+   this->looking_for = looking_for;
+   compare = func;
    }
 
 /*************************************************
-* Search for a certificate by DNS name           *
+* DN_Check Constructor                           *
 *************************************************/
-std::vector<X509_Certificate> by_dns(const X509_Store& store,
-                                     const std::string& dns)
+DN_Check::DN_Check(const std::string& dn_entry, const std::string& looking_for,
+                   Search_Type method)
    {
-   DN_Check search_params("DNS", dns, ignore_case);
-   return store.get_certs(search_params);
+   this->dn_entry = dn_entry;
+   this->looking_for = looking_for;
+
+   if(method == SUBSTRING_MATCHING)
+      compare = &substring_match;
+   else if(method == IGNORE_CASE)
+      compare = &ignore_case;
+   else
+      throw Invalid_Argument("Unknown method argument to DN_Check()");
    }
 
 /*************************************************
-* Search for a certificate by issuer/serial      *
+* Match by issuer and serial number              *
 *************************************************/
-std::vector<X509_Certificate> by_iands(const X509_Store& store,
-                                       const X509_DN& issuer,
-                                       const MemoryRegion<byte>& serial)
+bool IandS_Match::match(const X509_Certificate& cert) const
    {
-   class IandS_Match : public X509_Store::Search_Func
-      {
-      public:
-         bool match(const X509_Certificate& cert) const
-            {
-            if(cert.serial_number() != serial)
-               return false;
-            return (cert.issuer_dn() == issuer);
-            }
-         IandS_Match(const X509_DN& i, const MemoryRegion<byte>& s) :
-            issuer(i), serial(s) {}
-      private:
-         X509_DN issuer;
-         MemoryVector<byte> serial;
-      };
-
-   IandS_Match search_params(issuer, serial);
-   return store.get_certs(search_params);
+   if(cert.serial_number() != serial)
+      return false;
+   return (cert.issuer_dn() == issuer);
    }
 
 /*************************************************
-* Search for a certificate by subject keyid      *
+* IandS_Match Constructor                        *
 *************************************************/
-std::vector<X509_Certificate> by_SKID(const X509_Store& store,
-                                      const MemoryRegion<byte>& skid)
+IandS_Match::IandS_Match(const X509_DN& issuer,
+                         const MemoryRegion<byte>& serial)
    {
-   class SKID_Match : public X509_Store::Search_Func
-      {
-      public:
-         bool match(const X509_Certificate& cert) const
-            {
-            return (cert.subject_key_id() == skid);
-            }
-         SKID_Match(const MemoryRegion<byte>& s) : skid(s) {}
-      private:
-         MemoryVector<byte> skid;
-      };
-
-   SKID_Match search_params(skid);
-   return store.get_certs(search_params);
+   this->issuer = issuer;
+   this->serial = serial;
    }
 
-}
+/*************************************************
+* Match by subject key identifier                *
+*************************************************/
+bool SKID_Match::match(const X509_Certificate& cert) const
+   {
+   return (cert.subject_key_id() == skid);
+   }
 
 }

@@ -129,21 +129,6 @@ class X509_Store
       mutable bool revoked_info_valid;
    };
 
-namespace X509_Store_Search {
-
-/*************************************************
-* Methods to search through a X509_Store         *
-*************************************************/
-std::vector<X509_Certificate> by_email(const X509_Store&, const std::string&);
-std::vector<X509_Certificate> by_name(const X509_Store&, const std::string&);
-std::vector<X509_Certificate> by_dns(const X509_Store&, const std::string&);
-std::vector<X509_Certificate> by_iands(const X509_Store&, const X509_DN&,
-                                       const MemoryRegion<byte>&);
-std::vector<X509_Certificate> by_SKID(const X509_Store&,
-                                      const MemoryRegion<byte>&);
-
-}
-
 }
 
 #endif
