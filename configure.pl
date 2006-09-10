@@ -861,11 +861,8 @@ sub load_module {
     &$handle_files($module{'replace'},
                    sub { ignore_file(@_); add_file(@_); });
 
-    if(defined($module{'note'})) {
-        my $realname = $module{'realname'};
-        my $note = $module{'note'};
-        warning("$modname (\"$realname\"): $note\n");
-    }
+    warning($modname, ': ', $module{'note'})
+        if(defined($module{'note'}));
 }
 
 ##################################################
