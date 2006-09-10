@@ -335,14 +335,22 @@ AlternativeName create_alt_name(const Data_Store& info)
       public:
          bool operator()(const std::string& key, const std::string&) const
             {
-            if(key == "RFC882" || key == "DNS" || key == "URI")
-               return true;
+            for(u32bit j = 0; j != matches.size(); j++)
+               if(key.compare(matches[j]) == 0)
+                  return true;
             return false;
             }
+
+         AltName_Matcher(const std::string& match_any_of)
+            {
+            matches = split_on(match_any_of, '/');
+            }
+      private:
+         std::vector<std::string> matches;
       };
 
    std::multimap<std::string, std::string> names
-      = info.search_with(AltName_Matcher());
+      = info.search_with(AltName_Matcher("RFC882/DNS/URI"));
 
    AlternativeName alt_name;
 

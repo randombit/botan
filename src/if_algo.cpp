@@ -139,8 +139,7 @@ PKCS8_Decoder* IF_Scheme_PrivateKey::pkcs8_decoder()
                .end_cons();
 
             if(version != 0)
-               throw Decoding_Error(key->algo_name() +
-                                    ": Unknown PKCS #1 key version");
+               throw Decoding_Error("Unknown PKCS #1 key format version");
 
             key->PKCS8_load_hook();
             }

@@ -53,6 +53,14 @@ bool have_oid(const std::string& name)
    return global_config().is_set("str2oid", name);
    }
 
+/*************************************************
+* Check to see if an OID exists in the table     *
+*************************************************/
+bool name_of(const OID& oid, const std::string& name)
+   {
+   return (oid == lookup(name));
+   }
+
 }
 
 }

@@ -18,19 +18,16 @@ namespace OIDS {
 void add_oid(const OID&, const std::string&);
 
 /*************************************************
-* Do an OID to string lookup                     *
-*************************************************/
-std::string lookup(const OID&);
-
-/*************************************************
-* Do a string to OID lookup                      *
-*************************************************/
-OID lookup(const std::string&);
-
-/*************************************************
 * See if an OID exists in the internal table     *
 *************************************************/
 bool have_oid(const std::string&);
+
+/*************************************************
+* Perform OID<->string mappings                  *
+*************************************************/
+std::string lookup(const OID&);
+OID lookup(const std::string&);
+bool name_of(const OID&, const std::string&);
 
 }
 
