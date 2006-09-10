@@ -74,7 +74,7 @@ all: $(LIBRARIES)
 # Link Commands                                  #
 ##################################################
 $(CHECK): $(LIBRARIES) $(CHECKOBJS)
-	LINK /OUT:$@.exe $(CHECKOBJS) $(STATIC_LIB) $(LINK_TO)
+	link /OUT:$@.exe $(CHECKOBJS) $(STATIC_LIB) $(LINK_TO)
 
 $(STATIC_LIB): $(LIBOBJS)
 	$(AR) /OUT:$@ /NAME:BOTAN-$(VERSION) $(LIBOBJS)
