@@ -17,13 +17,11 @@
 
 namespace Botan {
 
-namespace {
-
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-Keyed_Filter* do_get_cipher(const std::string& algo_spec,
-                            Cipher_Dir direction)
+Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
+                                         Cipher_Dir direction)
    {
    std::vector<std::string> algo_parts = split_on(algo_spec, '/');
    if(algo_parts.empty())
@@ -69,8 +67,10 @@ Keyed_Filter* do_get_cipher(const std::string& algo_spec,
       else if((mode != "CBC" && mode != "ECB") && padding != "NoPadding")
          throw Invalid_Algorithm_Name(algo_spec);
 
-      if(mode == "OFB")         return new OFB(cipher);
-      else if(mode == "CTR-BE") return new CTR_BE(cipher);
+      if(mode == "OFB")
+         return new OFB(cipher);
+      else if(mode == "CTR-BE")
+         return new CTR_BE(cipher);
       else if(mode == "ECB" || mode == "CBC" || mode == "CTS" ||
               mode == "CFB" || mode == "EAX")
          {
@@ -118,17 +118,6 @@ Keyed_Filter* do_get_cipher(const std::string& algo_spec,
       }
 
    return 0;
-   }
-
-}
-
-/*************************************************
-* Get a cipher object                            *
-*************************************************/
-Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
-                                         Cipher_Dir direction)
-   {
-   return do_get_cipher(algo_spec, direction);
    }
 
 }
