@@ -244,16 +244,16 @@ byte* Pooling_Allocator::allocate_blocks(u32bit n)
 
    do
       {
-      ++i;
-      if(i == blocks.end())
-         i = blocks.begin();
-
       byte* mem = i->alloc(n);
       if(mem)
          {
          last_used = i;
          return mem;
          }
+
+      ++i;
+      if(i == blocks.end())
+         i = blocks.begin();
       }
    while(i != last_used);
 
