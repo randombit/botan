@@ -17,6 +17,8 @@ namespace Botan {
 class Allocator
    {
    public:
+      static Allocator* get(bool);
+
       virtual void* allocate(u32bit) = 0;
       virtual void deallocate(void*, u32bit) = 0;
 
@@ -31,7 +33,6 @@ class Allocator
 /*************************************************
 * Get an allocator                               *
 *************************************************/
-Allocator* get_allocator(const std::string& = "");
 
 }
 

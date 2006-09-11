@@ -75,8 +75,8 @@ class MemoryRegion
          set(copy.buf, copy.used);
          }
 
-      void init(bool lock, u32bit size = 0)
-         { alloc = get_allocator(lock ? "" : "malloc"); create(size); }
+      void init(bool locking, u32bit size = 0)
+         { alloc = Allocator::get(locking); create(size); }
    private:
       T* allocate(u32bit n) const { return (T*)alloc->allocate(sizeof(T)*n); }
       void deallocate(T* p, u32bit n) const

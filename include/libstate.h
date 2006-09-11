@@ -31,7 +31,8 @@ class Library_State
       friend class Engine_Iterator;
 
       Allocator* get_allocator(const std::string& = "") const;
-      void add_allocator(Allocator*, bool = false);
+      void add_allocator(Allocator*);
+      void set_default_allocator(const std::string&) const;
 
       void set_prng(RandomNumberGenerator*);
       void randomize(byte[], u32bit);
@@ -78,6 +79,7 @@ class Library_State
 
       class Charset_Transcoder* transcoder;
       RandomNumberGenerator* rng;
+      std::vector<Allocator*> allocators;
       std::vector<EntropySource*> entropy_sources;
       std::vector<class Engine*> engines;
    };

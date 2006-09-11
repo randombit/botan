@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/defalloc.h>
+#include <botan/libstate.h>
 #include <botan/util.h>
 #include <cstdlib>
 #include <cstring>
@@ -76,6 +77,22 @@ void* Locking_Allocator::alloc_block(u32bit n)
 void Locking_Allocator::dealloc_block(void* ptr, u32bit n)
    {
    do_free(ptr, n, true);
+   }
+
+/*************************************************
+* Get an allocator                               *
+*************************************************/
+Allocator* Allocator::get(bool locking)
+   {
+   std::string type = "";
+   if(!locking)
+      type = "malloc";
+
+   Allocator* alloc = global_state().get_allocator(type);
+   if(alloc)
+      return alloc;
+
+   throw Exception("Couldn't find an allocator to use in get_allocator");
    }
 
 }
