@@ -3,14 +3,10 @@ realname "AMD64"
 default_submodel amd64
 
 <aliases>
+k8
 x86-64
 x86_64 # for RPM
 athlon64
 opteron
-</aliases>
-
-<submodels>
-athlon64
 em64t
-opteron
-</submodels>
+</aliases>
