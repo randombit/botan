@@ -242,14 +242,10 @@ Engine* Library_State::get_engine_n(u32bit n) const
 /*************************************************
 * Add a new engine to the list                   *
 *************************************************/
-void Library_State::add_engine(Engine* engine, bool in_front)
+void Library_State::add_engine(Engine* engine)
    {
    Named_Mutex_Holder lock("engine");
-
-   if(in_front)
-      engines.insert(engines.begin(), engine);
-   else
-      engines.push_back(engine);
+   engines.insert(engines.begin(), engine);
    }
 
 /*************************************************
@@ -320,9 +316,12 @@ void Library_State::load(Modules& modules)
 
    set_default_allocator(modules.default_allocator());
 
-   std::vector<Engine*> engines = modules.engines();
-   for(u32bit j = 0; j != engines.size(); ++j)
-      add_engine(engines[j], false);
+   std::vector<Engine*> mod_engines = modules.engines();
+   for(u32bit j = 0; j != mod_engines.size(); ++j)
+      {
+      Named_Mutex_Holder lock("engine");
+      engines.push_back(mod_engines[j]);
+      }
 
    std::vector<EntropySource*> sources = modules.entropy_sources();
    for(u32bit j = 0; j != sources.size(); ++j)
