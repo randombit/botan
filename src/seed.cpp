@@ -36,12 +36,15 @@ void SEED::enc(const byte in[], byte out[]) const
       T0 = B2 ^ K[2*j];
       T1 = G(T0 ^ B3 ^ K[2*j+1]);
       T0 = G(T1 + T0);
-      B1 ^= (T1 = G(T1 + T0));
+      T1 = G(T1 + T0);
+      B1 ^= T1;
+      B0 ^= T0 + T1;
 
-      T0 = (B0 ^= T0 + T1) ^ K[2*j+2];
+      T0 = B0 ^ K[2*j+2];
       T1 = G(T0 ^ B1 ^ K[2*j+3]);
       T0 = G(T1 + T0);
-      B3 ^= (T1 = G(T1 + T0));
+      T1 = G(T1 + T0);
+      B3 ^= T1;
       B2 ^= T0 + T1;
       }
 
@@ -74,12 +77,15 @@ void SEED::dec(const byte in[], byte out[]) const
       T0 = B2 ^ K[30-2*j];
       T1 = G(T0 ^ B3 ^ K[31-2*j]);
       T0 = G(T1 + T0);
-      B1 ^= (T1 = G(T1 + T0));
+      T1 = G(T1 + T0);
+      B1 ^= T1;
+      B0 ^= T0 + T1;
 
-      T0 = (B0 ^= T0 + T1) ^ K[28-2*j];
+      T0 = B0 ^ K[28-2*j];
       T1 = G(T0 ^ B1 ^ K[29-2*j]);
       T0 = G(T1 + T0);
-      B3 ^= (T1 = G(T1 + T0));
+      T1 = G(T1 + T0);
+      B3 ^= T1;
       B2 ^= T0 + T1;
       }
 
