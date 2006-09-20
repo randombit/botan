@@ -23,7 +23,6 @@ class Pooling_Allocator : public Allocator
       void* allocate(u32bit);
       void deallocate(void*, u32bit);
 
-      void init();
       void destroy();
 
       Pooling_Allocator(u32bit, bool);

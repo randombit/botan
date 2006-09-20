@@ -148,16 +148,6 @@ Pooling_Allocator::~Pooling_Allocator()
    }
 
 /*************************************************
-* Allocate some initial buffers                  *
-*************************************************/
-void Pooling_Allocator::init()
-   {
-   Mutex_Holder lock(mutex);
-
-   get_more_core(PREF_SIZE);
-   }
-
-/*************************************************
 * Free all remaining memory                      *
 *************************************************/
 void Pooling_Allocator::destroy()
