@@ -17,39 +17,37 @@ namespace Botan {
 /*************************************************
 * Library Initialization                         *
 *************************************************/
-LibraryInitializer::LibraryInitializer(const std::string& arg_string)
+void LibraryInitializer::initialize(const std::string& arg_string)
    {
    InitializerOptions args(arg_string);
-   Init::initialize(args);
+   initialize(args);
    }
 
 /*************************************************
 * Library Initialization                         *
 *************************************************/
-LibraryInitializer::LibraryInitializer(const InitializerOptions& args)
-   {
-   Init::initialize(args);
-   }
-
-/*************************************************
-* Library Shutdown                               *
-*************************************************/
-LibraryInitializer::~LibraryInitializer()
-   {
-   Init::deinitialize();
-   }
-
-namespace Init {
-
-/*************************************************
-* Library Initialization                         *
-*************************************************/
-void initialize(const InitializerOptions& args)
+void LibraryInitializer::initialize(const InitializerOptions& args)
    {
    try
       {
       Builtin_Modules modules(args);
+      initialize(args, modules);
+      }
+   catch(...)
+      {
+      deinitialize();
+      throw;
+      }
+   }
 
+/*************************************************
+* Library Initialization                         *
+*************************************************/
+void LibraryInitializer::initialize(const InitializerOptions& args,
+                                    Modules& modules)
+   {
+   try
+      {
       set_global_state(
          new Library_State(
             args.thread_safe() ?
@@ -95,7 +93,7 @@ void initialize(const InitializerOptions& args)
             throw Self_Test_Failure("FIPS-140 startup tests");
          }
       }
-   catch(std::exception)
+   catch(...)
       {
       deinitialize();
       throw;
@@ -105,11 +103,9 @@ void initialize(const InitializerOptions& args)
 /*************************************************
 * Library Shutdown                               *
 *************************************************/
-void deinitialize()
+void LibraryInitializer::deinitialize()
    {
    set_global_state(0);
    }
-
-}
 
 }

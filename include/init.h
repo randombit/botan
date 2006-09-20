@@ -37,21 +37,15 @@ class InitializerOptions
 class LibraryInitializer
    {
    public:
-      LibraryInitializer(const std::string& = "");
-      LibraryInitializer(const InitializerOptions&);
-      ~LibraryInitializer();
+      static void initialize(const std::string& = "");
+      static void initialize(const InitializerOptions&);
+      static void initialize(const InitializerOptions&, class Modules&);
+      static void deinitialize();
+
+      LibraryInitializer(const std::string& args = "") { initialize(args); }
+      LibraryInitializer(const InitializerOptions& args) { initialize(args); }
+      ~LibraryInitializer() { deinitialize(); }
    };
-
-namespace Init {
-
-/*************************************************
-* Main Library Initialization/Shutdown Functions *
-*************************************************/
-void initialize(const InitializerOptions&);
-void deinitialize();
-
-}
-
 
 }
 
