@@ -34,8 +34,10 @@ class Library_State
       void add_allocator(Allocator*);
       void set_default_allocator(const std::string&) const;
 
-      void set_prng(RandomNumberGenerator*);
+      bool rng_is_seeded() const { return rng->is_seeded(); }
       void randomize(byte[], u32bit);
+
+      void set_prng(RandomNumberGenerator*);
       void add_entropy_source(EntropySource*, bool = true);
       void add_entropy(const byte[], u32bit);
       void add_entropy(EntropySource&, bool);
