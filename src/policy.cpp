@@ -196,7 +196,6 @@ void set_default_config(Config& config)
    config.set("conf", "pem/forgive", "8");
    config.set("conf", "pem/width", "64");
 
-   config.set("conf", "rng/min_entropy", "256", false);
    config.set("conf", "rng/ms_capi_prov_type", "INTEL_SEC:RSA_FULL");
    config.set("conf", "rng/unix_path", "/usr/ucb:/usr/etc:/etc");
    config.set("conf", "rng/es_files", "/dev/urandom:/dev/random");

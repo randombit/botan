@@ -65,26 +65,15 @@ void LibraryInitializer::initialize(const InitializerOptions& args,
 
       if(args.seed_rng())
          {
-         const u32bit min_entropy =
-            global_config().option_as_u32bit("rng/min_entropy");
-
-         if(min_entropy != 0)
+         for(u32bit j = 0; j != 4; ++j)
             {
-            u32bit bits_so_far = 0;
-
-            for(u32bit j = 0; j != 4; ++j)
-               {
-               u32bit to_get = min_entropy - bits_so_far;
-
-               bits_so_far += global_state().seed_prng(true, to_get);
-
-               if(bits_so_far >= min_entropy)
-                  break;
-               }
-
-            if(bits_so_far < min_entropy)
-               throw PRNG_Unseeded("Unable to collect sufficient entropy");
+            global_state().seed_prng(true, 384);
+            if(global_state().rng_is_seeded())
+               break;
             }
+
+         if(!global_state().rng_is_seeded())
+            throw PRNG_Unseeded("Unable to collect sufficient entropy");
          }
 
       if(args.fips_mode() || args.self_test())
