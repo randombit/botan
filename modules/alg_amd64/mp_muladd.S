@@ -8,11 +8,15 @@
 START_LISTING(mp_muladd.S)
 
 START_FUNCTION(bigint_mul_add_words)
+
 #define LOOP_CTR %r11d
 #define X_ARR %rsi
 #define Z_ARR %rdi
 #define Y %rcx
 #define CARRY %r8
+#define Z_WORD %r9
+#define MUL_LO %rax
+#define MUL_HI %rdx
 
    ZEROIZE(CARRY)
 
@@ -21,14 +25,16 @@ START_FUNCTION(bigint_mul_add_words)
    JUMP_IF_ZERO(LOOP_CTR, .DONE)
    JUMP_IF_LT(LOOP_CTR, 8, .MULADD1_LOOP)
 
-#define MULADD_OP(N)                \
-   ASSIGN(%rax, ARRAY8(X_ARR, N)) ; \
-   ASSIGN(%r9,  ARRAY8(Z_ARR, N)) ; \
-   MUL(Y)                         ; \
-   ADD_W_CARRY(%rax, %rdx, CARRY) ; \
-   ADD_W_CARRY(%rax, %rdx, %r9)   ; \
-   ASSIGN(CARRY, %rdx)            ; \
-   ASSIGN(ARRAY8(Z_ARR, N), %rax)
+#define MULADD_OP(N)                  \
+   ASSIGN(MUL_LO, ARRAY8(X_ARR, N)) ; \
+   ASSIGN(Z_WORD, ARRAY8(Z_ARR, N)) ; \
+   MUL(Y)                           ; \
+   ADD(Z_WORD, CARRY)               ; \
+   ASSIGN(CARRY, MUL_HI)            ; \
+   ADD_LAST_CARRY(CARRY)            ; \
+   ADD(Z_WORD, MUL_LO)              ; \
+   ADD_LAST_CARRY(CARRY)            ; \
+   ASSIGN(ARRAY8(Z_ARR, N), Z_WORD)
 
 START_LOOP(.MULADD8)
    MULADD_OP(0)
@@ -56,5 +62,5 @@ START_LOOP(.MULADD1)
 LOOP_UNTIL_EQ(LOOP_CTR, 0, .MULADD1)
 
 .DONE:
-   ASSIGN(%rax, CARRY)
+   RETURN_VALUE_IS(CARRY)
 END_FUNCTION(bigint_mul_add_words)

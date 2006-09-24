@@ -67,6 +67,7 @@ func_name:
 #define IMM(VAL) $VAL
 
 #define ADD(TO, FROM) addq FROM, TO
+#define ADD_LAST_CARRY(REG) adcq IMM(0), REG
 #define ADD_IMM(TO, NUM) ADD(TO, IMM(NUM))
 #define ADD_W_CARRY(TO1, TO2, FROM) addq FROM, TO1; adcq IMM(0), TO2;
 #define SUB_IMM(TO, NUM) sub IMM(NUM), TO
@@ -77,5 +78,7 @@ func_name:
 #define OR(TO, FROM) orq FROM, TO
 #define NOT(REG) notq REG
 #define ZEROIZE(REG) XOR(REG, REG)
+
+#define RETURN_VALUE_IS(V) ASSIGN(%rax, V)
 
 #endif
