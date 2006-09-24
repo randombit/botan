@@ -1,0 +1,34 @@
+realname "Algorithm x86-64 Assembler"
+
+mp_bits 64
+
+<replace>
+#sha160.cpp
+</replace>
+
+<ignore>
+mp_muladd.cpp
+</ignore>
+
+<add>
+asm_macr.h
+mp_muladd.S
+#sha1core.S
+</add>
+
+<arch>
+amd64
+</arch>
+
+<cc>
+gcc
+</cc>
+
+# ELF systems
+<os>
+linux
+freebsd
+netbsd
+openbsd
+solaris
+</os>
