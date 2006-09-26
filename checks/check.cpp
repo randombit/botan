@@ -61,10 +61,16 @@ int main(int argc, char* argv[])
 
       if(opts.is_set("bench-algo"))
          {
-         const std::string alg = opts.value("bench-algo");
-         u32bit found = bench_algo(alg, seconds);
-         if(!found) // maybe it's a PK algorithm
-            bench_pk(alg, false, seconds);
+         std::vector<std::string> algs =
+            Botan::split_on(opts.value("bench-algo"), ',');
+
+         for(u32bit j = 0; j != algs.size(); j++)
+            {
+            const std::string alg = algs[j];
+            u32bit found = bench_algo(alg, seconds);
+            if(!found) // maybe it's a PK algorithm
+               bench_pk(alg, false, seconds);
+            }
          }
 
       const bool html = opts.is_set("html");
