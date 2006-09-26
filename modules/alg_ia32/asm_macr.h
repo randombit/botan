@@ -99,14 +99,12 @@ func_name:
 #define IMM(VAL) $VAL
 
 #define ADD(TO, FROM) addl FROM, TO
-#define ADD_IMM(TO, NUM) addl IMM(NUM), TO
+#define ADD_IMM(TO, NUM) ADD(TO, IMM(NUM))
 #define ADD_W_CARRY(TO1, TO2, FROM) addl FROM, TO1; adcl IMM(0), TO2;
 #define SUB_IMM(TO, NUM) subl IMM(NUM), TO
 #define ADD2_IMM(TO, FROM, NUM) leal NUM(FROM), TO
 #define ADD3_IMM(TO, FROM, NUM) leal NUM(TO,FROM,1), TO
 #define MUL(REG) mull REG
-
-#define CLEAR_CARRY() clc
 
 #define SHL_IMM(REG, SHIFT) shll IMM(SHIFT), REG
 #define SHR_IMM(REG, SHIFT) shrl IMM(SHIFT), REG
