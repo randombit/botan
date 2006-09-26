@@ -16,7 +16,7 @@ using namespace Botan;
 #define USE_RDTSC         0
 
 /* If using USE_RDTSC, set to your CPU's Mhz */
-#define CPU_MHZ 1333
+#define CPU_MHZ 1866
 
 #if USE_CLOCK
 
