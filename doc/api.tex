@@ -71,11 +71,13 @@ should be used with the \filename{botan/} prefix in your actual code.
 
 \subsection{Targets}
 
-Botan's primary targets (system-wise) are 32 and 64-bit systems with at least a
-few megabytes of memory. Generally, given the choice between optimizing for
-32-bit systems and 64-bit systems, Botan chooses 64-bits, simply on the theory
-that where performance really matters (servers), people are using 64-bit
-machines. But performance on 32 bit systems is also quite good.
+Botan's primary targets (system-wise) are 32 and 64-bit systems with
+at least a few megabytes of memory. Generally, given the choice
+between optimizing for 32-bit systems and 64-bit systems, Botan
+chooses 64-bits, simply on the theory that where performance really
+matters (servers), people are using 64-bit machines. And also because
+two of the three machines owned by the primary developer have 64-bit
+CPUs. But performance on 32 bit systems is also quite good.
 
 Today smaller systems, such as handhelds, set-top boxes, and the
 bigger smart phones and smart cards, are also capable of using
@@ -159,13 +161,20 @@ And the major downsides and deficiencies are:
 
 \section{Initializing the Library}
 
-The library needs to have various things done to it in order for it to work
-correctly. To make sure this is done properly, you should create a
-\type{LibraryInitializer} object at the start of your main() function, before
-you start using any part of Botan. The initializer does things like
-initializing the memory allocation system, setting up the algorithm lookup
-tables, finding out if there is a high resolution timer available to use, and
-similar such matters.
+The library needs to have various things done to it in order for it to
+work correctly. To make sure this is done properly, you should create
+a \type{LibraryInitializer} object at the start of your main()
+function, before you start using any part of Botan. The initializer
+does things like initializing the memory allocation system, setting up
+the algorithm lookup tables, finding out if there is a high resolution
+timer available to use, and similar such matters. With no arguments,
+the library is initialized with various default settings. So 99\% of
+the time, all you need is
+
+\texttt{Botan::LibraryInitializer init;}
+
+at the start of your \texttt{main}. If you're not doing anything
+exotic, then you can safely skip the rest of this section.
 
 The constructor takes an instance of another object, called
 \type{InitializerOptions}, which specifies the settings of various
@@ -174,7 +183,6 @@ string, which the \type{InitializerOptions} constructor will parse. An
 empty string signifies using defaults; any options not specifically
 mentioned in the initialization string also assume the compiled in
 default.
-
 If more than one option is used, they should be separated by a
 space. Boolean arguments (all except for the ``config'' option) can
 take an argument of ``true'' (or ``yes'') or ``false'' (or ``no'') to
@@ -287,8 +295,7 @@ Never create a Botan memory object (\type{MemoryVector}, \type{SecureVector},
 of the library, are creating any memory buffer object that's not a
 \type{SecureVector<byte>} or maybe a \type{MemoryVector<byte>}, you're probably
 doing something wrong (I suppose there may be exceptions to this rule, but not
-many). This is mostly a stylistic point, with an eye toward compatibility with
-future versions.
+many).
 
 Don't include headers you don't have to. Past experience with Botan has shown
 that headers get renamed fairly regularly as internal design changes are made,
@@ -297,12 +304,14 @@ the lookup interface defined in \filename{lookup.h} and \filename{look\_pk.h}
 will save you a great deal of pain in this regard, as it insulates you against
 many such changes.
 
-Use a \function{try}/\function{catch} block inside your \function{main}
-function, and catch any \type{std::exception} throws. This is not strictly
-required, but if you don't, and Botan throws an exception, your application
-will die mysteriously and (probably) without any error message. Some compilers
-provide a useful diagnostic for an uncaught exception, but others simply abort
-the process.
+Use a \function{try}/\function{catch} block inside your
+\function{main} function, and catch any \type{std::exception}
+throws. This is not strictly required, but if you don't, and Botan
+throws an exception, your application will die mysteriously and
+(probably) without any error message. Some compilers provide a useful
+diagnostic for an uncaught exception, but others simply abort the
+process, leaving your (or worse, a user of your application) wondering
+what went wrong.
 
 \pagebreak
 
@@ -418,7 +427,7 @@ screen to dumping core.
 \subsection{Block Ciphers}
 
 Block ciphers implement the interface \type{BlockCipher}, found in
-\filename{base.h}.
+\filename{base.h}, as well as the \type{SymmetricAlgorithm} interface.
 
 \noindent
 \type{void} \function{encrypt}(\type{const byte} \arg{in}[BLOCK\_SIZE],
@@ -427,16 +436,25 @@ Block ciphers implement the interface \type{BlockCipher}, found in
 \noindent
 \type{void} \function{encrypt}(\type{byte} \arg{block}[BLOCK\_SIZE]) const
 
-These functions apply the block cipher transformation to \arg{in} and place the
-result in \arg{out}, or encrypts \arg{block} in place (\arg{in} may be the same
-as \arg{out}). BLOCK\_SIZE is a constant member of each class, which specifies
-how much data a block cipher can process at one time. Note that BLOCK\_SIZE is
-not a static class member, like the old BLOCKSIZE was.
+These functions apply the block cipher transformation to \arg{in} and
+place the result in \arg{out}, or encrypts \arg{block} in place
+(\arg{in} may be the same as \arg{out}). BLOCK\_SIZE is a constant
+member of each class, which specifies how much data a block cipher can
+process at one time. Note that BLOCK\_SIZE is not a static class
+member, meaning you can (given a \type{BlockCipher*} named
+\arg{cipher}), call \verb|cipher->BLOCK_SIZE| to get the block size of
+that particular object. \type{BlockCipher}s have similar functions
+\function{decrypt}, which perform the inverse operation.
 
-\type{BlockCipher}s have similar functions \function{decrypt}, which perform
-the inverse operation.
+\begin{verbatim}
+AES_128 cipher;
+SymmetricKey key(cipher.MAXIMUM_KEYLENGTH); // randomly created
+cipher.set_key(key);
 
-Block ciphers implement the \type{SymmetricAlgorithm} interface.
+byte in[16] = { /* secrets */ };
+byte out[16];
+cipher.encrypt(in, out);
+\end{verbatim}
 
 \subsection{Stream Ciphers}
 
