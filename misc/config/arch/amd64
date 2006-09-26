@@ -9,4 +9,5 @@ x86_64 # for RPM
 athlon64
 opteron
 em64t
+core2duo
 </aliases>
