@@ -32,12 +32,9 @@ solaris -> "$(CXX) -shared -fPIC -Wl,-h,$(SONAME)"
 beos    -> "ld -shared -h $(SONAME)"
 </so_link_flags>
 
-# Using -momit-leaf-frame-pointer would be a huge win (on x86 anyway, why isn't
-# it implemented elsewhere?), but it was added in 3.0 and the current mandate
-# is to continue to support 2.95.x, so we don't use it (yet).
 <mach_opt>
 # Specializations first (they don't need to be, just clearer)
-i386           -> "-mcpu=i686"
+i386           -> "-mcpu=i686 -momit-leaf-frame-pointer"
 r10000         -> "-mips4"
 alpha-ev67     -> "-mcpu=ev6" # FIXME: GCC 3.1 and on has -march=ev67
 alpha-ev68     -> "-mcpu=ev6"
@@ -49,9 +46,9 @@ sparc64-ultra3 -> "-mcpu=v9 -mtune=ultrasparc3"
 # Anything after the quotes is what should be *removed* from the submodel name
 # before it's put into SUBMODEL.
 alpha     -> "-mcpu=SUBMODEL" alpha-
-amd64     -> ""
+amd64     -> "-momit-leaf-frame-pointer"
 arm       -> "-mcpu=SUBMODEL"
-ia32      -> "-march=SUBMODEL"
+ia32      -> "-march=SUBMODEL -momit-leaf-frame-pointer"
 ia64      -> "-mtune=SUBMODEL"
 hppa      -> "-march=SUBMODEL" hppa
 m68k      -> "-mSUBMODEL"
