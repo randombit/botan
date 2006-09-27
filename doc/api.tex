@@ -167,11 +167,19 @@ initializing the memory allocation system, setting up the algorithm lookup
 tables, finding out if there is a high resolution timer available to use, and
 similar such matters.
 
-The constructor of this object takes a string which specifies any options. If
-more than one is used, they should be separated by a space. Boolean arguments
-(all except for the ``config'' option) can take an argument of ``true'' or
-``false'' to explicitly turn them on or off. Simply giving the name of the
-option without any argument signifies that the option should be toggled on.
+The constructor takes an instance of another object, called
+\type{InitializerOptions}, which specifies the settings of various
+options. Normally you can ignore this and simply pass a human readable
+string, which the \type{InitializerOptions} constructor will parse. An
+empty string signifies using defaults; any options not specifically
+mentioned in the initialization string also assume the compiled in
+default.
+
+If more than one option is used, they should be separated by a
+space. Boolean arguments (all except for the ``config'' option) can
+take an argument of ``true'' (or ``yes'') or ``false'' (or ``no'') to
+explicitly turn them on or off. Simply giving the name of the option
+without any argument signifies that the option should be toggled on.
 
 \noindent
 \textbf{Option ``secure\_memory''}: Try to create a more secure allocator type
@@ -212,27 +220,43 @@ time, and that a number of changes will be necessary before such a validation
 can occur. Do not use this option.
 
 \noindent
+\textbf{Option ``fips140''}: This option, in theory, toggles Botan into FIPS
+140 mode. Please note that Botan \emph{has not} been FIPS 140 validated at this
+time, and that a number of changes will be necessary before such a validation
+can occur. Do not use this option.
+
+\noindent
+\textbf{Option ``selftest''}: Run some basic self tests during
+startup.  Specifically this runs a set of tests for DES, TripleDES,
+AES, CMAC(AES), SHA-1, HMAC(SHA-1), SHA-256, and HMAC(SHA-256).
+
+This option, in theory, toggles Botan into FIPS
+140 mode. Please note that Botan \emph{has not} been FIPS 140 validated at this
+time, and that a number of changes will be necessary before such a validation
+can occur. Do not use this option.
+
+\noindent
 \textbf{Option ``seed\_rng''}: Attempt to seed the global PRNGs at
 startup. This option is toggled on by default, and can be disabled by passing
 ``seed\_rng=false''. This is primarily useful when you know that the built-in
 library entropy sources will not work, and you are providing you own entropy
-source(s) with \function{Global\_RNG::add\_es}().
+source(s) later on.
 
-If you do not create a \type{LibraryInitializer} object, pretty much any Botan
-operation will fail, because it will be unable to do basic things like allocate
-memory or get random bits. Note too, that you should be careful to only create
-one such object.
+If you do not create a \type{LibraryInitializer} object, pretty much
+any Botan operation will fail, because it will be unable to do basic
+things like allocate memory or get random bits. Note too, that you
+should be careful to only create one such object.
 
-If you wish, you can use a function-based interface to initialize Botan. The
-functions are called \function{initialize} and \function{deinitialize}, and are
-in the \namespace{Init} namespace. In fact, the \type{LibraryInitializer}
-implementation simply calls these functions. The \function{initialize} function
-takes a \type{std::string}, just like \type{LibraryInitializer}'s constructor.
-If you choose to use this interface, you should be very careful to make sure
-that \function{deinitialize} is always called, even in the case of exceptions,
-premature exit or abort, and so on. For this reason using
-\type{LibraryInitializer} is preferred, but there are cases where using it is
-impossible and an interface using plain functions is the only option.
+It is not strictly necessary to create a \type{LibraryInitializer};
+the actual code performing the initialization and shutdown are in
+static member functions of \type{LibraryInitializer}, called
+\function{initialize} and \function{deinitialize}. If you choose to
+use this interface, you should be very careful to make sure that
+\function{deinitialize} is always called, even in the case of
+exceptions, premature exit or abort, and so on. For this reason using
+\type{LibraryInitializer} is preferred, but there are cases where
+using it is impossible and an interface using plain functions is the
+only option.
 
 \pagebreak
 
