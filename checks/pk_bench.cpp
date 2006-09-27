@@ -252,24 +252,39 @@ void bench_pk(const std::string& algo, bool html, double seconds)
 
    }
 
-void print_result(bool, u32bit runs, u64bit clocks_used,
+void print_result(bool html, u32bit runs, u64bit clocks_used,
                   const std::string& algo_name, const std::string& op)
    {
-   std::cout << algo_name << ": ";
-
    double seconds = (double)clocks_used / get_ticks();
-   std::cout.setf(std::ios::fixed, std::ios::floatfield);
-   std::cout.precision(2);
+   double mseconds_per_run = 1000 * (seconds / runs);
+   double runs_per_sec = runs / seconds;
+
+
+   if(html)
+      {
+      std::cout << "   <TR><TH>" << algo_name << " (" << op << ") <TH>";
 
 #if PRINT_MS_PER_OP
-   // print milliseconds / op
-   double mseconds_per_run = 1000 * (seconds / runs);
-   std::cout << mseconds_per_run << " ms / " << op << std::endl;
+      std::cout << mseconds_per_run;
 #else
-   // print ops / second
-   double runs_per_sec = runs / seconds;
-   std::cout << runs_per_sec << " ops / second (" << op << ")" << std::endl;
+      std::cout << runs_per_sec;
 #endif
+
+      std::cout << std::endl;
+      }
+   else
+      {
+      std::cout << algo_name << ": ";
+
+      std::cout.setf(std::ios::fixed, std::ios::floatfield);
+      std::cout.precision(2);
+
+#if PRINT_MS_PER_OP
+      std::cout << mseconds_per_run << " ms / " << op << std::endl;
+#else
+      std::cout << runs_per_sec << " ops / second (" << op << ")" << std::endl;
+#endif
+      }
    }
 
 void bench_enc(PK_Encryptor* enc, const std::string& algo_name,

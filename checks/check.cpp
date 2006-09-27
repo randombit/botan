@@ -59,6 +59,8 @@ int main(int argc, char* argv[])
             }
          }
 
+      const bool html = opts.is_set("html");
+
       if(opts.is_set("bench-algo"))
          {
          std::vector<std::string> algs =
@@ -69,11 +71,9 @@ int main(int argc, char* argv[])
             const std::string alg = algs[j];
             u32bit found = bench_algo(alg, seconds);
             if(!found) // maybe it's a PK algorithm
-               bench_pk(alg, false, seconds);
+               bench_pk(alg, html, seconds);
             }
          }
-
-      const bool html = opts.is_set("html");
 
       if(opts.is_set("benchmark"))
          benchmark("All", html, seconds);
