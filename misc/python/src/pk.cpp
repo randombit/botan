@@ -12,38 +12,70 @@ using namespace Botan;
 #include <boost/python.hpp>
 namespace python = boost::python;
 
-std::string DER_encode_str(const X509_PublicKey* key)
+std::string encode_pub(const Public_Key* key,
+                       const std::string& type)
    {
-   Pipe pipe;
-   X509::encode(*key, pipe, RAW_BER);
-   return pipe.read_all_as_string();
+   if(type == "DER")
+      {
+      Pipe pipe;
+      pipe.start_msg();
+      X509::encode(*key, pipe, RAW_BER);
+      pipe.end_msg();
+      return pipe.read_all_as_string();
+      }
+   else if(type == "PEM")
+      return X509::PEM_encode(*key);
+   else
+      throw Encoding_Error("Unknown key encoding method " + type);
    }
 
-std::string get_oid_str(const X509_PublicKey* key)
+std::string encode_priv(const Private_Key* key,
+                        const std::string& type)
    {
-   try
+   if(type == "DER")
       {
-      return key->get_oid().as_string();
+      Pipe pipe;
+      PKCS8::encode(*key, pipe, RAW_BER);
+      return pipe.read_all_as_string();
       }
-   catch(Lookup_Error)
-      {
-      return "";
-      }
+   else if(type == "PEM")
+      return PKCS8::PEM_encode(*key);
+   else
+      throw Encoding_Error("Unknown key encoding method " + type);
    }
 
-X509_PublicKey* load_key_str(const std::string& file)
+Private_Key* load_priv(const std::string& file, const std::string& pass)
+   {
+   return PKCS8::load_key(file, pass);
+   }
+
+Public_Key* load_public(const std::string& file)
    {
    return X509::load_key(file);
    }
 
 void export_pk()
    {
-   python::class_<X509_PublicKey, boost::noncopyable>
-      ("X509_PublicKey", python::no_init)
-      .def("__init__", python::make_constructor(load_key_str))
-      .add_property("algo", &X509_PublicKey::algo_name)
-      .add_property("max_input_bits", &X509_PublicKey::max_input_bits)
-      .add_property("oid", &get_oid_str)
-      .def("__str__", &X509::PEM_encode)
-      .def("der_encode", &DER_encode_str);
+   python::class_<Public_Key, boost::noncopyable>
+      ("Public_Key", python::no_init)
+      .add_property("name", &Public_Key::algo_name)
+      .add_property("max_input_bits", &Public_Key::max_input_bits)
+      .def("public_key", encode_pub);
+
+   python::class_<Private_Key, python::bases<Public_Key>, boost::noncopyable>
+      ("Private_Key", python::no_init)
+      .def("private_key", encode_priv);
+
+   python::def("private_key", load_priv,
+               python::return_value_policy<python::manage_new_object>());
+   python::def("public_key", load_public,
+               python::return_value_policy<python::manage_new_object>());
+
+   python::class_<RSA_PublicKey, python::bases<Public_Key> >
+      ("RSA_PublicKey", python::no_init);
+   python::class_<DSA_PublicKey, python::bases<Public_Key> >
+      ("DSA_PublicKey", python::no_init);
+
+   python::class_<RSA_PrivateKey, python::bases<RSA_PublicKey, Private_Key> >
+      ("RSA_PrivateKey", python::init<u32bit>());
    }
