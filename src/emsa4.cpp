@@ -36,9 +36,9 @@ SecureVector<byte> EMSA4::encoding_of(const MemoryRegion<byte>& msg,
    const u32bit HASH_SIZE = hash->OUTPUT_LENGTH;
 
    if(msg.size() != HASH_SIZE)
-      throw Invalid_Argument("EMSA4::encoding_of: Bad input length");
+      throw Encoding_Error("EMSA4::encoding_of: Bad input length");
    if(output_bits < 8*HASH_SIZE + 8*SALT_SIZE + 9)
-      throw Invalid_Argument("EMSA4::encoding_of: Output length is too small");
+      throw Encoding_Error("EMSA4::encoding_of: Output length is too small");
 
    const u32bit output_length = (output_bits + 7) / 8;
 

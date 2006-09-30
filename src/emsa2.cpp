@@ -34,9 +34,9 @@ SecureVector<byte> EMSA2::encoding_of(const MemoryRegion<byte>& msg,
    u32bit output_length = (output_bits + 1) / 8;
 
    if(msg.size() != hash->OUTPUT_LENGTH)
-      throw Invalid_Argument("EMSA2::encoding_of: Bad input length");
+      throw Encoding_Error("EMSA2::encoding_of: Bad input length");
    if(output_length < hash->OUTPUT_LENGTH + 4)
-      throw Invalid_Argument("EMSA2::encoding_of: Output length is too small");
+      throw Encoding_Error("EMSA2::encoding_of: Output length is too small");
 
    bool empty = true;
    for(u32bit j = 0; j != hash->OUTPUT_LENGTH; ++j)
@@ -62,7 +62,7 @@ EMSA2::EMSA2(const std::string& hash_name)
    {
    hash_id = ieee1363_hash_id(hash_name);
    if(hash_id == 0)
-      throw Invalid_Argument("EMSA2 cannot be used with " + hash->name());
+      throw Encoding_Error("EMSA2 cannot be used with " + hash->name());
    hash = get_hash(hash_name);
    empty_hash = hash->final();
    }

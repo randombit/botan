@@ -32,11 +32,11 @@ SecureVector<byte> EMSA3::encoding_of(const MemoryRegion<byte>& msg,
                                       u32bit output_bits)
    {
    if(msg.size() != hash->OUTPUT_LENGTH)
-      throw Invalid_Argument("EMSA3::encoding_of: Bad input length");
+      throw Encoding_Error("EMSA3::encoding_of: Bad input length");
 
    u32bit output_length = output_bits / 8;
    if(output_length < hash_id.size() + hash->OUTPUT_LENGTH + 10)
-      throw Invalid_Argument("EMSA3::pad: Output length is too small");
+      throw Encoding_Error("EMSA3::pad: Output length is too small");
 
    SecureVector<byte> T(output_length);
    const u32bit P_LENGTH = output_length - hash->OUTPUT_LENGTH -

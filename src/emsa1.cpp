@@ -31,7 +31,7 @@ SecureVector<byte> EMSA1::encoding_of(const MemoryRegion<byte>& msg,
                                       u32bit output_bits)
    {
    if(msg.size() != hash->OUTPUT_LENGTH)
-      throw Invalid_Argument("EMSA1::encoding_of: Invalid size for input");
+      throw Encoding_Error("EMSA1::encoding_of: Invalid size for input");
    if(8*msg.size() <= output_bits)
       return msg;
 
