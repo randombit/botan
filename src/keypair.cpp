@@ -17,6 +17,9 @@ namespace KeyPair {
 *************************************************/
 void check_key(PK_Encryptor* encryptor, PK_Decryptor* decryptor)
    {
+   if(encryptor->maximum_input_size() == 0)
+      return;
+
    std::auto_ptr<PK_Encryptor> enc(encryptor);
    std::auto_ptr<PK_Decryptor> dec(decryptor);
 
