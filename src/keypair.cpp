@@ -46,7 +46,15 @@ void check_key(PK_Signer* signer, PK_Verifier* verifier)
    SecureVector<byte> message(16);
    Global_RNG::randomize(message, message.size());
 
-   SecureVector<byte> signature = sig->sign_message(message);
+   SecureVector<byte> signature;
+
+   try {
+      signature = sig->sign_message(message);
+   }
+   catch(Encoding_Error)
+      {
+      return;
+      }
 
    if(!ver->verify_message(message, signature))
       throw Self_Test_Failure("Signature key pair consistency failure");
