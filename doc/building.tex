@@ -33,13 +33,13 @@
 
 \section{Introduction}
 
-This document describes how to build Botan on Unix/POSIX and MS Windows
-systems. The POSIX oriented descriptions should apply to most common Unix
-systems today (including MacOS X), along with POSIX-ish systems like BeOS, QNX,
-and Plan 9.  Currently, systems other than Windows and POSIX (for example, VMS,
-MacOS 9, and OS/390) are not supported by the build system, primarily due to
-lack of access. Please contact the maintainer if you would like to build Botan
-on such a system.
+This document describes how to build Botan on Unix/POSIX and MS
+Windows systems. The POSIX oriented descriptions should apply to most
+common Unix systems (including MacOS X), along with POSIX-ish systems
+like BeOS, QNX, and Plan 9. Currently, systems other than Windows and
+POSIX (such as VMS, MacOS 9, OS/390, OS/400, ...) are not supported by
+the build system, primarily due to lack of access. Please contact the
+maintainer if you would like to build Botan on such a system.
 
 \section{For the Impatient}
 
@@ -49,19 +49,26 @@ $ make
 $ make install
 \end{verbatim}
 
-Or \verb|nmake|, if you're compiling on Windows with Visual C++. The
-autoconfiguaration abilities of \filename{configure.pl} were only recently
+Or using \verb|nmake|, if you're compiling on Windows with Visual
+C++. On platforms that do not understand the '\#!' convention for
+beginning script files, or that have Perl installed in an unusual
+spot, you might need to prefix the \texttt{configure.pl} command with
+\texttt{perl} or \texttt{/path/to/perl}.
+
+The autoconfiguaration abilities of \filename{configure.pl} were only recently
 added, so they may break if you run it on something unusual. In addition, you
 are certain to get more features, and possibly better optimization, by
 explicitly specifying how you want to library configured. How to do this is
-detailed below.
+detailed below. Also, if you don't want to use the default compiler (typically
+either GNU C++ or Visual C++, depending on the platform), you will need to
+specify one.
 
 \section{Building the Library}
 
 The first step is to run \filename{configure.pl}, which is a Perl script that
 creates various directories, config files, and a Makefile for building
 everything. It is run as \verb|./configure.pl CC-OS-CPU <extra args>|. The
-script requires at least Perl 5.005, and preferably 5.6 or higher.
+script requires at least Perl 5.6; any later version should also work.
 
 The tuple CC-OS-CPU specifies what system Botan is being built for, in terms of
 the C++ compiler, the operating system, and the CPU model. For example, to use
@@ -71,25 +78,25 @@ GNU C++ on a FreeBSD box that has an Alpha EV6 CPU, one would use
 and \verb|CPU| that \filename{configure.pl} supports, run it with the
 ``\verb|--help|'' option.
 
-You can put basically anything reasonable for CPU: the script knows about a
-large number of different architectures, their sub-models, and common aliases
-for them. The script does not display all the possibilities in it's help
-message because there are simply too many entries (if you're curious about what
-exactly is available, you can look at the \verb|%ARCH|, \verb|%ARCH_ALIAS|, and
-\verb|%SUBMODEL_ALIAS| hashes at the start of the script). You should only
-select the 64-bit version of a CPU (like ``sparc64'' or ``mips64'') if your
-operating system knows how to handle 64-bit object code -- a 32-bit kernel on a
-64-bit CPU will generally not like 64-bit code. For example,
-gcc-solaris-sparc64 will not work unless you're running a 64-bit Solaris kernel
-(for 32-bit Solaris running on an UltraSPARC system, you want
-gcc-solaris-sparc32-v9). You may or may not have to install 64-bit versions of
-libc and related system libraries as well.
+You can put basically anything reasonable for CPU: the script knows
+about a large number of different architectures, their sub-models, and
+common aliases for them. The script does not display all the
+possibilities in its help message because there are simply too many
+entries. You should only select the 64-bit version of a CPU (such as
+``sparc64'' or ``mips64'') if your operating system knows how to
+handle 64-bit object code -- a 32-bit kernel on a 64-bit CPU will
+generally not like 64-bit code. For example, gcc-solaris-sparc64 will
+not work unless you're running a 64-bit Solaris kernel (for 32-bit
+Solaris running on an UltraSPARC system, you want
+gcc-solaris-sparc32-v9). You may or may not have to install 64-bit
+versions of libc and related system libraries as well.
 
-The script also knows about the various extension modules available. You can
-enable one or more with the option ``\verb|--modules=MOD|'', where \verb|MOD|
-is some name that identifies the extension (or a comma separated list of
-them). Modules provide additional capabilities which require the use of non
-portable APIs.
+The script also knows about the various extension modules
+available. You can enable one or more with the option
+``\verb|--modules=MOD|'', where \verb|MOD| is some name that
+identifies the extension (or a comma separated list of them). Modules
+provide additional capabilities which require the use of APIs not
+provided by ISO C/C++.
 
 Not all OSes or CPUs have specific support in \filename{configure.pl}. If the
 CPU architecture of your system isn't supported by \filename{configure.pl}, use
@@ -97,22 +104,22 @@ CPU architecture of your system isn't supported by \filename{configure.pl}, use
 flags. Similarly, setting OS to 'generic' disables things which depend greatly
 on OS support (specifically, shared libraries).
 
-However, it's impossible to guess which options to give to a system compiler.
-Thus, if you want to compile Botan with a compiler which
-\filename{configure.pl} does not support, the script will have to be updated.
-Preferably, mail the man pages (or similar documentation) for the C and C++
-compilers and the system linker to the author, or download the Botan-config
-package from the Botan web site, and do it yourself. Modifying
-\filename{configure.pl} on it's own is useless aside from one-off hacks,
-because the script is auto-generated by \emph{another} Perl script, which reads
-a little mini-language that tells it all about the systems in question.
+However, it's impossible to guess which options to give to a system
+compiler.  Thus, if you want to compile Botan with a compiler which
+\filename{configure.pl} does not support, you will need to tell it how
+that compiler works. This is done by adding a new file in the
+directory \filename{misc/config/cc}; the existing files should put you
+in the right direction.
 
-The script tries to guess what kind of makefile to generate, and it almost
-always guesses correctly (basically, Visual C++ uses NMAKE with Windows
-commands, and everything else uses POSIX make with POSIX commands). Just in
-case, you can override it with \verb|--make-style=somestyle|. The styles Botan
-currently knows about are 'unix' (normal Unix makefiles), and 'nmake', the make
-variant commonly used by Windows compilers.
+The script tries to guess what kind of makefile to generate, and it
+almost always guesses correctly (basically, Visual C++ uses NMAKE with
+Windows commands, and everything else uses Unix make with POSIX
+commands). Just in case, you can override it with
+\verb|--make-style=somestyle|. The styles Botan currently knows about
+are 'unix' (normal Unix makefiles), and 'nmake', the make variant
+commonly used by Windows compilers. To add a new variant (eg, a build
+script for VMS), you will need to create a new template file in
+\filename{misc/config/makefile}.
 
 \pagebreak
 
@@ -206,15 +213,15 @@ more extensions are available. All of them begin with \verb|BOTAN_EXT_|. For
 example, if \verb|BOTAN_EXT_COMPRESSOR_BZIP2| is defined, then an application
 using Botan can include \filename{<botan/bzip2.h>} and use the Bzip2 filters.
 
-\macro{BOTAN\_MP\_WORD\_BITS}: This macro controls the size of the words used
-for calculations with the MPI implementation in Botan. You can choose 8, 16,
-32, or 64, with 32 being the default.  You can use 8, 16, or 32 bit words on
-any CPU, but the value should be set to the same size as the CPU's registers
-for best performance. You can only use 64-bit words if the \module{mp\_asm64}
-module is used; this offers vastly improved performance of public key
-algorithms on certain 64-bit CPUs - this is set by default if the module is
-used. Unless you are building for a 8 or 16-bit CPU, probably this isn't worth
-messing with.
+\macro{BOTAN\_MP\_WORD\_BITS}: This macro controls the size of the
+words used for calculations with the MPI implementation in Botan. You
+can choose 8, 16, 32, or 64, with 32 being the default. You can use 8,
+16, or 32 bit words on any CPU, but the value should be set to the
+same size as the CPU's registers for best performance. You can only
+use 64-bit words if an assembly module (such as \module{mp\_ia32} or
+\module{mp\_asm64}) is used. If the appropriate module is available,
+64 bits are used, otherwise this is set to 32. Unless you are building
+for a 8 or 16-bit CPU, this isn't worth messing with.
 
 \macro{BOTAN\_VECTOR\_OVER\_ALLOCATE}: The memory container
 \type{SecureVector} will over-allocate requests by this amount (in
@@ -232,16 +239,25 @@ your machine. The default should be fine for most, if not all, purposes.
 compressing. The default is 255, which means 'Unknown'. You can look in RFC
 1952 for the full list; the most common are Windows (0) and Unix (3). There is
 also a Macintosh (7), but it probably makes more sense to use the Unix code on
-OS X. This is only used if the \texttt{comp\_zlib} module (which includes a
-gzip compressor) is built.
+OS X.
+
+\pagebreak
+
+\subsection{Multiple Builds}
+
+It may be useful to run multiple builds 
+
+\subsection{Local Configuration}
+
+
 
 \pagebreak
 
 \section{Modules}
 
-There are a fairly large number of modules included with Botan. Some of these
-are extremely useful, while others are only necessary in very unusual
-circumstances. The modules included with this release are:
+There are a fairly large number of modules included with Botan. Some
+of these are extremely useful, while others are only necessary in very
+unusual circumstances. The modules included with this release are:
 
 \newcommand{\mod}[2]{\textbf{#1}: #2}
 
