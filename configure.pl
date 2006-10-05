@@ -22,7 +22,7 @@ my @DOCS = (
    'api.pdf', 'tutorial.pdf', 'fips140.pdf',
    'api.tex', 'tutorial.tex', 'fips140.tex',
    'credits.txt', 'info.txt', 'license.txt', 'log.txt',
-   'thanks.txt', 'todo.txt', 'botan.rc', 'pgpkeys.asc');
+   'thanks.txt', 'todo.txt', 'pgpkeys.asc');
 
 my %MODULE_SETS =
     (
@@ -44,12 +44,22 @@ exit;
 # Main Driver                                    #
 ##################################################
 sub main {
-    %CPU = read_info_files('arch', \&get_arch_info);
-    %OPERATING_SYSTEM = read_info_files('os', \&get_os_info);
-    %COMPILER = read_info_files('cc', \&get_cc_info);
-    %MODULES = read_module_files('modules');
-
     my $config = {};
+
+    my $base_dir = where_am_i();
+
+    $$config{'base-dir'} = $base_dir;
+    $$config{'config-dir'} = File::Spec->catdir($base_dir, 'misc', 'config');
+    $$config{'mods-dir'} = File::Spec->catdir($base_dir, 'modules');
+    $$config{'src-dir'} = File::Spec->catdir($base_dir, 'src');
+    $$config{'include-dir'} = File::Spec->catdir($base_dir, 'include');
+    $$config{'checks-dir'} = File::Spec->catdir($base_dir, 'checks');
+    $$config{'doc-dir'} = File::Spec->catdir($base_dir, 'doc');
+
+    %CPU = read_info_files($config, 'arch', \&get_arch_info);
+    %OPERATING_SYSTEM = read_info_files($config, 'os', \&get_os_info);
+    %COMPILER = read_info_files($config, 'cc', \&get_cc_info);
+    %MODULES = read_module_files($config);
 
     add_to($config, {
         'version_major' => $MAJOR_VERSION,
@@ -98,11 +108,17 @@ sub main {
         'mp_bits'       => find_mp_bits(@modules),
         'mod_libs'      => [ using_libs($os, @modules) ],
 
-        'sources'       => { map_to('src', dir_list('src')) },
-        'includes'      => { map_to('include', dir_list('include')) },
-        'check_src'     => { map_to('checks',
-                                    grep { $_ ne 'keys' and !m@\.(dat|h)$@ }
-                                    dir_list('checks'))
+        'sources'       => {
+            map_to($$config{'src-dir'}, dir_list($$config{'src-dir'}))
+            },
+
+        'includes'      => {
+            map_to($$config{'include-dir'}, dir_list($$config{'include-dir'}))
+            },
+
+        'check_src'     => {
+            map_to($$config{'checks-dir'}, grep { $_ ne 'keys' and !m@\.(dat|h)$@ }
+                   dir_list($$config{'checks-dir'}))
             }
         });
 
@@ -114,7 +130,7 @@ sub main {
 
     write_pkg_config($config);
 
-    process_template(File::Spec->catfile('misc', 'config', 'buildh.in'),
+    process_template(File::Spec->catfile($$config{'config-dir'}, 'buildh.in'),
                      File::Spec->catfile($$config{'build-dir'}, 'build.h'),
                      $config);
     $$config{'includes'}{'build.h'} = $$config{'build-dir'};
@@ -122,6 +138,12 @@ sub main {
     copy_include_files($config);
 
     generate_makefile($config);
+}
+
+sub where_am_i {
+    my ($volume,$dir,$file) = File::Spec->splitpath($0);
+    my $src_dir = File::Spec->catpath($volume, $dir, '');
+    return $src_dir;
 }
 
 ##################################################
@@ -869,10 +891,12 @@ sub load_module {
 #                                                #
 ##################################################
 sub file_type {
-    my ($file) = @_;
+    my ($config, $file) = @_;
 
-    return ('sources', 'src') if($file =~ /\.cpp$/ or $file =~ /\.S$/);
-    return ('includes', 'include') if($file =~ /\.h$/);
+    return ('sources', $$config{'src-dir'})
+        if($file =~ /\.cpp$/ or $file =~ /\.S$/);
+    return ('includes', $$config{'include-dir'})
+        if($file =~ /\.h$/);
 
     croak('file_type() - don\'t know what sort of file ', $file, ' is');
 }
@@ -880,9 +904,9 @@ sub file_type {
 sub add_file {
     my ($modname, $config, $file) = @_;
 
-    check_for_file($file, $modname, $modname);
+    check_for_file($config, $file, $modname, $modname);
 
-    my $mod_dir = File::Spec->catdir('modules', $modname);
+    my $mod_dir = File::Spec->catdir($$config{'mods-dir'}, $modname);
 
     my $do_add_file = sub {
         my ($type) = @_;
@@ -893,12 +917,12 @@ sub add_file {
         $$config{$type}{$file} = $mod_dir;
     };
 
-    &$do_add_file(file_type($file));
+    &$do_add_file(file_type($config, $file));
 }
 
 sub ignore_file {
     my ($modname, $config, $file) = @_;
-    check_for_file($file, undef, $modname);
+    check_for_file($config, $file, undef, $modname);
 
     my $do_ignore_file = sub {
         my ($type, $ok_if_from) = @_;
@@ -913,19 +937,19 @@ sub ignore_file {
         }
     };
 
-    &$do_ignore_file(file_type($file));
+    &$do_ignore_file(file_type($config, $file));
 }
 
 sub check_for_file {
-   my ($file, $added_from, $modname) = @_;
+   my ($config, $file, $added_from, $modname) = @_;
 
    my $full_path = sub {
        my ($file,$modname) = @_;
 
-       return File::Spec->catfile('modules', $modname, $file)
+       return File::Spec->catfile($$config{'mods-dir'}, $modname, $file)
            if(defined($modname));
 
-       my @typeinfo = file_type($file);
+       my @typeinfo = file_type($config, $file);
        return File::Spec->catfile($typeinfo[1], $file);
    };
 
@@ -1039,15 +1063,15 @@ sub make_reader {
 #                                                #
 ##################################################
 sub read_info_files {
-    my ($dir, $func) = @_;
+    my ($config, $dir, $func) = @_;
 
-    $dir = File::Spec->catdir('misc', 'config', $dir);
+    $dir = File::Spec->catdir($$config{'config-dir'}, $dir);
 
     my %allinfo;
     foreach my $file (dir_list($dir)) {
         my $fullpath = File::Spec->catfile($dir, $file);
 
-        #trace("reading $fullpath");
+        trace("reading $fullpath");
         %{$allinfo{$file}} = &$func($file, $fullpath);
     }
 
@@ -1055,13 +1079,15 @@ sub read_info_files {
 }
 
 sub read_module_files {
-    my ($moddir) = @_;
+    my ($config) = @_;
+
+    my $mod_dir = $$config{'mods-dir'};
 
     my %allinfo;
-    foreach my $dir (dir_list($moddir)) {
-        my $modfile = File::Spec->catfile($moddir, $dir, 'modinfo.txt');
+    foreach my $dir (dir_list($mod_dir)) {
+        my $modfile = File::Spec->catfile($mod_dir, $dir, 'modinfo.txt');
 
-        #trace("reading $modfile");
+        trace("reading $modfile");
         %{$allinfo{$dir}} = get_module_info($dir, $modfile);
     }
 
@@ -1270,8 +1296,9 @@ sub write_pkg_config {
 
     $$config{'link_to'} = libs('-l', '', 'm', @{$$config{'mod_libs'}});
 
-    process_template(File::Spec->catfile('misc', 'config', 'botan-config.in'),
-                     'botan-config', $config);
+    process_template(
+       File::Spec->catfile($$config{'config-dir'}, 'botan-config.in'),
+       'botan-config', $config);
     chmod 0755, 'botan-config';
 
     delete $$config{'link_to'};
@@ -1464,8 +1491,9 @@ sub generate_makefile {
        'install_group' => os_info_for($os, 'install_group'),
        });
 
-   my $docs = file_list(undef, undef, undef, map_to('doc', @DOCS));
-   $docs .= 'readme.txt';
+   my $docs = file_list(undef, undef, undef,
+                        map_to($$config{'doc-dir'}, @DOCS));
+   $docs .= File::Spec->catfile($$config{'base-dir'}, 'readme.txt');
 
    my $includes = file_list(undef, undef, undef,
                             map_to($$config{'build_include_botan'},
@@ -1495,7 +1523,7 @@ sub generate_makefile {
        'include_files'   => $includes
        });
 
-   my $template_dir = File::Spec->catdir('misc', 'config', 'makefile');
+   my $template_dir = File::Spec->catdir($$config{'config-dir'}, 'makefile');
    my $template = undef;
 
    my $make_style = $$config{'make_style'};
