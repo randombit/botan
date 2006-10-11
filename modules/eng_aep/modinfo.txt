@@ -12,8 +12,7 @@ hw_aep.h
 aep_conn.h
 </add>
 
-define ENGINE_AEP
-define ENTROPY_SRC_AEP
+define ENGINE_AEP,ENTROPY_SRC_AEP
 
 <libs>
 all -> aep
