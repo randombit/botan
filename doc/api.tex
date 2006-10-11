@@ -12,7 +12,7 @@
 
 \title{\textbf{Botan API Reference}}
 \author{}
-\date{2006/09/26}
+\date{2006/10/11}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\manpage}[2]{\texttt{#1}(#2)}
@@ -24,6 +24,8 @@
 \newcommand{\type}[1]{\texttt{#1}}
 \renewcommand{\arg}[1]{\textsl{#1}}
 \newcommand{\namespace}[1]{\texttt{#1}}
+
+\newcommand{\url}[1]{\texttt{#1}}
 
 \newcommand{\ie}[0]{\emph{i.e.}}
 \newcommand{\eg}[0]{\emph{e.g.}}
@@ -3011,18 +3013,20 @@ contents when their destructors are called, and b) have easy plugins for
 various memory locking functions, such as the \function{mlock}(2) call on many
 Unix systems.
 
-Two of the allocation method used (``malloc'' and ``mmap'') don't require any
-extra privileges on Unix, but locking memory does. At startup, each allocator
-type will attempt to allocate a few blocks (typically totaling 128k), so if you
-want, you can run your application \texttt{setuid} \texttt{root}, and then drop
-privileges immediately after creating your \type{LibraryInitializer}. If you
-end up using more than what's been allocated, some of your sensitive data might
-end up being swappable, but that beats running as \texttt{root} all the
-time. BTW, I would note that, at least on Linux, you can use a kernel module to
-give your process extra privileges (such as the ability to call
-\function{mlock}) without being root. For example, check out my Capability
-Override LSM (\texttt{http://www.randombit.net/projects/cap\_over/}), which
-makes this pretty easy to do.
+Two of the allocation method used (``malloc'' and ``mmap'') don't
+require any extra privileges on Unix, but locking memory does. At
+startup, each allocator type will attempt to allocate a few blocks
+(typically totaling 128k), so if you want, you can run your
+application \texttt{setuid} \texttt{root}, and then drop privileges
+immediately after creating your \type{LibraryInitializer}. If you end
+up using more than what's been allocated, some of your sensitive data
+might end up being swappable, but that beats running as \texttt{root}
+all the time. BTW, I would note that, at least on Linux, you can use a
+kernel module to give your process extra privileges (such as the
+ability to call \function{mlock}) without being root. For example,
+check out my Capability Override LSM
+(\url{http://www.randombit.net/projects/cap\_over/}), which makes this
+pretty easy to do.
 
 These classes should also be used within your own code for storing sensitive
 data. They are only meant for primitive data types (int, long, etc): if you
@@ -3334,16 +3338,13 @@ a \type{BarrettReducer} ahead of time. If the exponent or base is a constant,
 use the classes in \filename{mod\_exp.h}. This stuff is all handled for you by
 the normal high-level interfaces, of course.
 
-\subsection{A Warning}
-
-Don't ever even consider using the low-level MPI functions (those that begin
-with \texttt{bigint\_}). These are completely internal to the library, and make
-arbitrarily strange and undocumented assumptions about their inputs, and don't
-check to see if they are actually true, on the assumption that only the library
-itself calls them, and that the library knows what the assumptions are. The
-interfaces for these functions can change completely without notice. These
-functions aren't visible without effort on your part specifically to that end,
-so you will get no sympathy if you decide to use any of them.
+Never use the low-level MPI functions (those that begin with
+\texttt{bigint\_}). These are completely internal to the library, and
+may make arbitrarily strange and undocumented assumptions about their
+inputs, and don't check to see if they are actually true, on the
+assumption that only the library itself calls them, and that the
+library knows what the assumptions are. The interfaces for these
+functions can change completely without notice.
 
 \pagebreak
 
@@ -3417,20 +3418,22 @@ added to Botan, the application will start using it automagically.
 
 \section{Writing Modules}
 
-It's a lot simpler to write modules for Botan that it is to write code in the
-core library, for several reasons. First, a module can rely on external
-libraries and services beyond the base ISO C++ libraries, and also machine
-dependent features (assembler, anyone?). Also, the code can be added at
-configuration time on the user's end with very little effort (\ie the code can
-be distributed separately and without depending on patching anything).
+It's a lot simpler to write modules for Botan that it is to write code
+in the core library, for several reasons. First, a module can rely on
+external libraries and services beyond the base ISO C++ libraries, and
+also machine dependent features. Also, the code can be added at
+configuration time on the user's end with very little effort (\ie the
+code can be distributed separately, and included by the user without
+needing to patch any existing source files).
 
-Creating a module is quite simple. First, there must be a subdirectory in the
-\filename{modules} directory for it. The name of the module is the same as the
-name of this directory. Inside this directory, there needs to be a file, with
-exactly the same name as the directory (that's so the configuration script
-knows where to look). This file contains directives it uses to specify what
-this module does, what systems it runs on, and so on. Comments start with a
-\verb|#| character and continue to end of line.
+Each module lives in a subdirectory of the \filename{modules}
+directory, which exists at the top-level of the Botan source tree. The
+``short name'' of the module is the same as the name of this
+directory. The only required file in this directory is
+\filename{modinfo.txt}, which contains directives that specify what a
+particular module does, what systems it runs on, and so on. Comments
+in \filename{modinfo.txt} start with a \verb|#| character and continue
+to end of line.
 
 Recognized directives include:
 
@@ -3444,17 +3447,18 @@ Recognized directives include:
    is \texttt{<name>}.}
 
 \directive{note <note>}{Add a note that will be seen by the end-user at
-configure time.}
+configure time if the module is included into the library.}
 
-\directive{require\_version <version>}{Require at configure time that the
-version of Botan in use be at least \texttt{<version>}. If not, the module will
-be ignored. Note that this directive is ignored prior to 1.4.3.}
+\directive{require\_version <version>}{Require at configure time that
+the version of Botan in use be at least \texttt{<version>}.}
 
-\directive{define <macro>}{Define \macro{BOTAN\_EXT\_<macro>} in
-   \filename{config.h}. This may only be used if the module creates
-   user-visible changes. There is a set of conventions that should be followed
-   in deciding what to call this macro (where xxx denotes some descriptive and
-   distinguishing characteristic of the thing implemented, such as
+\directive{define <macro>[,<macro>[,...]]}{Cause the macro
+   \macro{BOTAN\_EXT\_<macro>} (for each instance of \macro{<macro>}
+   in the directive) to be defined in \filename{build.h}. This should
+   only be used if the module creates user-visible changes. There is a
+   set of conventions that should be followed in deciding what to call
+   this macro (where xxx denotes some descriptive and distinguishing
+   characteristic of the thing implemented, such as
    \macro{ALLOC\_MLOCK} or \macro{MUTEX\_PTHREAD}):
 
 \begin{itemize}
@@ -3467,29 +3471,27 @@ be ignored. Note that this directive is ignored prior to 1.4.3.}
 \end{itemize}
 }
 
-\directive{<lib> / </lib>}{This specifies any extra libraries to be linked in.
-It is a mapping from OS to library name, for example \texttt{linux -> rt},
-which means that on Linux librt should be linked in. You can also use ``all''
-to force the library to be linked in on all systems.}
+\directive{<libs> / </libs>}{This specifies any extra libraries to be
+linked in.  It is a mapping from OS to library name, for example
+\texttt{linux -> rt}, which means that on Linux librt should be linked
+in. You can also use ``all'' to force the library to be linked in on
+all systems.}
 
-\directive{add\_file <file>}{Tell the configuration script to add the file
-   given into the source tree. This file must exist in the module directory.}
+\directive{<add> / </add>}{Tell the configuration script to add the
+   files named between these two tags into the source tree. All these
+   files must exist in the current module directory.}
 
-\directive{ignore\_file <file>}{Tell the configuration script to ignore the
-   file given in the main source tree.}
+\directive{<ignore> / </ignore>}{Tell the configuration script to
+   ignore the files named in the main source tree. This is useful, for
+   example, when replacing a C++ implementation with a pure assembly
+   version.}
 
-\directive{replace\_file <file>}{Tell the configuration script to ignore the
-   file given in the main source tree, and instead use the one in the module's
-   directory.}
+\directive{<replace> / </replace>}{Tell the configuration script to
+   ignore the file given in the main source tree, and instead use the
+   one in the module's directory.}
 
-\directive{local\_only <file>}{Mark this header file as being for the build
-   only; it will not be installed. This is useful for headers used internally
-   that are not exposed to the client.}
-
-\vskip 10pt
-\noindent
-Additionally, the module file can contain blocks, delimited by
-the following pairs:
+Additionally, the module file can contain blocks, delimited by the
+following pairs:
 
 \texttt{<os> / </os>}, \texttt{<arch> / </arch>}, \texttt{<cc> / </cc>}
 
@@ -3497,10 +3499,6 @@ the following pairs:
 For example, putting ``alpha'' and ``ia64'' in a \texttt{<arch>} block will
 make the configuration script only allow the module to be compiled on those
 architectures. Not having a block means any value is acceptable.
-
-\section{Writing BigInt assembly modules}
-
-Write me...
 
 \pagebreak
 
@@ -3579,28 +3577,30 @@ be more secure than the ones listed, but the algorithms listed here are
 
 \section{Algorithms Listing}
 
-Botan includes a very sizable number of cryptographic algorithms. In nearly all
-cases, you never need to know the header file or type name to use
-them. However, you do need to know what string (or strings) are used to
-identify that algorithm. Generally, these names conform to those set out by
-SCAN (Standard Cryptographic Algorithm Naming), which is a document which
-specifies how strings are mapped onto algorithm objects, which is useful for a
-wide variety of crypto APIs (SCAN is oriented towards Java, but Botan and
-several other non-Java libraries also make at least some use of it). For full
-details, read the SCAN document, which can be found at
-\textbf{http://www.users.zetnet.co.uk/hopwood/crypto/scan/}
+Botan includes a very sizable number of cryptographic algorithms. In
+nearly all cases, you never need to know the header file or type name
+to use them. However, you do need to know what string (or strings) are
+used to identify that algorithm. Generally, these names conform to
+those set out by SCAN (Standard Cryptographic Algorithm Naming), which
+is a document which specifies how strings are mapped onto algorithm
+objects, which is useful for a wide variety of crypto APIs (SCAN is
+oriented towards Java, but Botan and several other non-Java libraries
+also make at least some use of it). For full details, read the SCAN
+document, which can be found at
+\url{http://www.users.zetnet.co.uk/hopwood/crypto/scan/}
 
-Many of these algorithms can take options (such as the number of rounds in a
-block cipher, the output size of a hash function, etc). These are shown in the
-following list; all of them default to reasonable values (unless otherwise
-marked). There are algorithm-specific limits on most of them. When you see
-something like ``HASH'' or ``BLOCK'', that means you should insert the name of
-some algorithm of that type. There are no defaults for those options.
+Many of these algorithms can take options (such as the number of
+rounds in a block cipher, the output size of a hash function,
+etc). These are shown in the following list; all of them default to
+reasonable values (unless otherwise marked). There are
+algorithm-specific limits on most of them. When you see something like
+``HASH'' or ``BLOCK'', that means you should insert the name of some
+algorithm of that type. There are no defaults for those options.
 
-A few very obscure algorithms are skipped; if you need one of them, you'll know
-it, and you can look in the appropriate header to see what that classes'
-\function{name} function returns (the names tend to match that in SCAN, if it's
-defined there).
+A few very obscure algorithms are skipped; if you need one of them,
+you'll know it, and you can look in the appropriate header to see what
+that classes' \function{name} function returns (the names tend to
+match that in SCAN, if it's defined there).
 
 \begin{list}{$\cdot$}
   \item ROUNDS: The number of rounds in a block cipher.
@@ -3612,10 +3612,11 @@ defined there).
 
 \vskip .05in
 \noindent
-\textbf{Block Ciphers:} ``AES'', ``Blowfish'', ``CAST-128'', ``CAST-256'',
-``DES'', ``DESX'', ``TripleDES'', ``GOST'', ``IDEA'', ``MARS'',
-``MISTY1(ROUNDS)'', ``RC2'', ``RC5(ROUNDS)'', ``RC6'', ``SAFER-SK(ROUNDS)'',
-``SEED'', ``Serpent'', ``Skipjack'', ``SQUARE'', ``TEA'', ``Twofish'', ``XTEA''
+\textbf{Block Ciphers:} ``AES'', ``Blowfish'', ``CAST-128'',
+``CAST-256'', ``DES'', ``DESX'', ``TripleDES'', ``GOST'', ``IDEA'',
+``MARS'', ``MISTY1(ROUNDS)'', ``RC2'', ``RC5(ROUNDS)'', ``RC6'',
+``SAFER-SK(ROUNDS)'', ``SEED'', ``Serpent'', ``Skipjack'', ``Square'',
+``TEA'', ``Twofish'', ``XTEA''
 
 \noindent
 \textbf{Stream Ciphers:} ``ARC4'', ``MARK4'', ``Turing'', ``WiderWake4+1-BE''
@@ -3630,16 +3631,7 @@ defined there).
 
 \pagebreak
 
-\section{More Information}
-
-\subsection{Support}
-
-Questions or problems you have with Botan can be directed to the development
-mailing list (currently called \texttt{opencl-devel}). Joining this list is
-highly recommended if you're going to be using Botan, since often advance
-notice of upcoming changes is sent there. ``Philosophical'' bug reports,
-announcements of programs using Botan, and basically anything else having to do
-with Botan are also welcome.
+\section{Support and Further Information}
 
 \subsection{Compatibility}
 
@@ -3670,12 +3662,12 @@ not encumbered by patents. If you have any concerns about the patent status of
 any algorithm you are considering using in an application, please discuss it
 with your attorney.
 
-\subsection{Further Reading and Information}
+\subsection{Recommended Reading}
 
-It's a very good idea if you have some knowledge of cryptography prior to
-trying to use this stuff. You really should read one or more of these books
-before seriously using the library (note that the Handbook of Applied
-Cryptography is available online, and I highly recommend you read it):
+It's a very good idea if you have some knowledge of cryptography prior
+to trying to use this stuff. You really should read one or more of
+these books before seriously using the library (note that the Handbook
+of Applied Cryptography is available for free online):
 
 \setlength{\parskip}{5pt}
 
@@ -3698,7 +3690,17 @@ Once you've got the basics down, these are good things to at least take a look
 at: IEEE 1363 and 1363a, SCAN, NESSIE, PKCS \#1 v2.1, the security related FIPS
 documents, and the CFRG RFCs.
 
-\pagebreak
+\subsection{Support}
+
+Questions or problems you have with Botan can be directed to the
+development mailing list. Joining this list is highly recommended if
+you're going to be using Botan, since often advance notice of upcoming
+changes is sent there. ``Philosophical'' bug reports, announcements of
+programs using Botan, and basically anything else having to do with
+Botan are also welcome.
+
+The lists can be found at
+\url{http://www.randombit.net/mailman/listinfo/}.
 
 \subsection{Contact Information}
 
@@ -3707,25 +3709,20 @@ A PGP key with a fingerprint of
 Botan releases. This key can be found in the file \filename{doc/pgpkeys.asc};
 PGP keys for the developers are also stored there.
 
-Another key, with fingerprint
-\verb|33E3 9768 1D13 E7B4 1A01 BBCE A63F 2CBD FA02 FBCC|, was used for signing
-releases up to version 1.4.2. This key has been retired.
+\vskip 5pt \noindent
+Web Site: \url{http://botan.randombit.net}
 
 \vskip 5pt \noindent
-Web Site: \verb|http://botan.randombit.net|
+Mailing lists: \url{http://www.randombit.net/mailman/}
 
-\vskip 5pt \noindent
-Mailing lists: \verb|http://www.randombit.net/mailman/|
-
-\pagebreak
-
-\section{License}
+\subsection{License}
 
 Copyright \copyright  2000-2006, The Botan Project
 
-This work is licensed under the Creative Commons Attribution-ShareAlike 2.5
-License. To view a copy of this license, visit
-http://creativecommons.org/licenses/by-sa/2.5/ or send a letter to Creative
-Commons, 543 Howard Street, 5th Floor, San Francisco, California, 94105, USA.
+This work is licensed under the Creative Commons
+Attribution-ShareAlike 2.5 License. To view a copy of this license,
+visit \url{http://creativecommons.org/licenses/by-sa/2.5/} or send a
+letter to Creative Commons, 543 Howard Street, 5th Floor, San
+Francisco, California, 94105, USA.
 
 \end{document}
