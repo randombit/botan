@@ -117,8 +117,9 @@ sub main {
             },
 
         'check_src'     => {
-            map_to($$config{'checks-dir'}, grep { $_ ne 'keys' and !m@\.(dat|h)$@ }
-                   dir_list($$config{'checks-dir'}))
+            map_to($$config{'checks-dir'},
+                   grep { $_ ne 'keys' and !m@\.(dat|h)$@ }
+                      dir_list($$config{'checks-dir'}))
             }
         });
 
@@ -548,8 +549,7 @@ sub my_compiler {
     croak('my_compiler called, but no compiler set in config')
         unless defined $cc and $cc ne '';
 
-    croak("unknown compiler $cc")
-        unless defined $COMPILER{$cc};
+    croak("unknown compiler $cc") unless defined $COMPILER{$cc};
 
     return %{$COMPILER{$cc}};
 }
@@ -1575,6 +1575,8 @@ sub guess_cpu_from_this
     $cpu = 'pentium3' if($cpuinfo =~ /pentium 3/);
     $cpu = 'pentium2' if($cpuinfo =~ /pentium 2/);
 
+    $cpu = 'core2duo' if($cpuinfo =~ /intel\(r\) core\(tm\)2/);
+
     $cpu = 'amd64' if($cpuinfo =~ /athlon64/);
     $cpu = 'amd64' if($cpuinfo =~ /opteron/);
 
@@ -1651,38 +1653,38 @@ sub guess_triple
             # If guess_cpu_from_this didn't figure it out, try it plain
             if($cpu eq '') { $cpu = lc $uname_p; }
 
-            my (%SUBMODEL_ALIAS, %ARCH_ALIAS, %ARCH);
+            sub known_arch {
+                my ($name) = @_;
 
-            foreach my $arch (keys %CPU) {
-                my %info = %{$CPU{$arch}};
+                foreach my $arch (keys %CPU) {
+                    my %info = %{$CPU{$arch}};
 
-                $ARCH{$arch} = $info{'name'};
-                foreach my $submodel (@{$info{'submodels'}}) {
-                    $ARCH{$submodel} = $info{'name'};
-                }
+                    return 1 if $name eq $info{'name'};
+                    foreach my $submodel (@{$info{'submodels'}}) {
+                        return 1 if $name eq $submodel;
+                    }
 
-                foreach my $alias (@{$info{'aliases'}}) {
-                    $ARCH_ALIAS{$alias} = $arch;
-                }
+                    foreach my $alias (@{$info{'aliases'}}) {
+                        return 1 if $name eq $alias;
+                    }
 
-                if(defined($info{'submodel_aliases'})) {
-                    my %submodel_aliases = %{$info{'submodel_aliases'}};
-                    foreach my $sm_alias (keys %submodel_aliases) {
-                        $SUBMODEL_ALIAS{$sm_alias} =
-                            $submodel_aliases{$sm_alias};
+                    if(defined($info{'submodel_aliases'})) {
+                        my %submodel_aliases = %{$info{'submodel_aliases'}};
+                        foreach my $sm_alias (keys %submodel_aliases) {
+                            return 1 if $name eq $sm_alias;
+                        }
                     }
                 }
+                return 0;
             }
 
-            if(!defined $ARCH{$cpu} && !defined $SUBMODEL_ALIAS{$cpu} &&
-               !defined $ARCH_ALIAS{$cpu})
+            if(!known_arch($cpu))
             {
                 # Nope, couldn't figure out uname -p
                 $cpu = lc `uname -m 2>/dev/null`;
                 chomp $cpu;
 
-                if(!defined $ARCH{$cpu} && !defined $SUBMODEL_ALIAS{$cpu} &&
-                   !defined $ARCH_ALIAS{$cpu})
+                if(!known_arch($cpu))
                 {
                     $cpu = 'generic';
                 }
