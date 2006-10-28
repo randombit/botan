@@ -1,4 +1,12 @@
 
+* 1.5.12, October 27, 2006
+ - Cleanups in the initialization routines
+ - Add some x86-64 assembly for multiply-add
+ - Fix problems generating very small (below 384 bit) RSA keys
+ - Support out of tree builds
+ - Bring some of the documentation up to date
+ - More improvements to the Python bindings
+
 * 1.5.11, September 10, 2006
  - Removed the Algorithm base class
  - Various cleanups in the public key inheritance hierarchy
