@@ -30,5 +30,4 @@ linux
 freebsd
 netbsd
 openbsd
-solaris
 </os>
