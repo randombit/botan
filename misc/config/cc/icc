@@ -30,6 +30,7 @@ default -> "$(CXX) -KPIC -shared"
 </so_link_flags>
 
 <arch>
+amd64
 ia32
 ia64
 </arch>
