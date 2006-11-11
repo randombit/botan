@@ -144,7 +144,8 @@ sub main {
 sub where_am_i {
     my ($volume,$dir,$file) = File::Spec->splitpath($0);
     my $src_dir = File::Spec->catpath($volume, $dir, '');
-    return $src_dir;
+    return $src_dir if $src_dir;
+    return File::Spec->curdir();
 }
 
 ##################################################
