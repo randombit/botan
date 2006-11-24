@@ -13,6 +13,8 @@ check_opt_flags "-O2"
 lang_flags "-D_REENTRANT -ansi -Wno-long-long"
 warning_flags "-W -Wall"
 
+ar_command "pathCC -ar -o"
+
 so_obj_flags "-fPIC"
 debug_flags "-g"
 
@@ -23,14 +25,14 @@ default -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
 </so_link_flags>
 
 <mach_opt>
-i386     -> "-mcpu=anyx86"
 athlon   -> "-mcpu=athlon"
-opteron  -> "-mcpu=opteron"
-em64t    -> "-mcpu=em64t"
-athlon64 -> "-mcpu=athlon64"
 pentium4 -> "-mcpu=pentium4"
 
-# Reasonable default
+opteron  -> "-mcpu=opteron"
+em64t    -> "-mcpu=em64t"
+core2duo -> "-mcpu=core"
+
+ia32     -> "-mcpu=anyx86"
 amd64    -> "-mcpu=athlon64"
 </mach_opt>
 
