@@ -28,6 +28,7 @@ ia32
 
 <cc>
 gcc
+icc
 </cc>
 
 # ELF systems
