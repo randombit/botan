@@ -111,7 +111,7 @@ SecureVector<byte> generate_dsa_primes(BigInt& p, BigInt& q, u32bit pbits)
 BigInt random_prime(u32bit bits, const BigInt& coprime,
                     u32bit equiv, u32bit modulo)
    {
-   if(bits <= 48)
+   if(bits < 48)
       throw Invalid_Argument("random_prime: Can't make a prime of " +
                              to_string(bits) + " bits");
 
