@@ -103,11 +103,13 @@ void export_pk()
       .def("__init__",
            python::make_constructor(get_pk_encryptor,
                                     python::with_custodian_and_ward_postcall<0, 1>()))
-      .def("max_input", &PK_Encryptor::maximum_input_size).
-      def("encrypt", encrypt_string);
+      .def("max_input", &PK_Encryptor::maximum_input_size)
+      .def("encrypt", encrypt_string);
 
+   /*
    python::class_<PK_Decryptor, boost::noncopyable>
       ("PK_Decryptor", python::no_init)
       .def("__init__", python::make_constructor(get_pk_decryptor))
       .def("decrypt", decrypt_string);
+   */
    }
