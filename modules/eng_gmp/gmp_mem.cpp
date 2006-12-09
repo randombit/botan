@@ -52,7 +52,7 @@ void GMP_Engine::set_memory_hooks()
    {
    if(gmp_alloc == 0)
       {
-      gmp_alloc = get_allocator();
+      gmp_alloc = Allocator::get(true);
       mp_set_memory_functions(gmp_malloc, gmp_realloc, gmp_free);
       }
    }

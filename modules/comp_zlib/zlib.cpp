@@ -21,7 +21,7 @@ class Zlib_Alloc_Info
       std::map<void*, u32bit> current_allocs;
       Allocator* alloc;
 
-      Zlib_Alloc_Info() { alloc = get_allocator(); }
+      Zlib_Alloc_Info() { alloc = Allocator::get(false); }
    };
 
 /*************************************************

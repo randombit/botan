@@ -22,7 +22,7 @@ class Bzip_Alloc_Info
       std::map<void*, u32bit> current_allocs;
       Allocator* alloc;
 
-      Bzip_Alloc_Info() { alloc = get_allocator(); }
+      Bzip_Alloc_Info() { alloc = Allocator::get(false); }
    };
 
 /*************************************************
