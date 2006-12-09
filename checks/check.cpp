@@ -27,7 +27,6 @@ void benchmark(const std::string&, bool html, double seconds);
 void bench_pk(const std::string&, bool html, double seconds);
 u32bit bench_algo(const std::string&, double);
 int validate();
-void print_help();
 
 int main(int argc, char* argv[])
    {
@@ -37,13 +36,23 @@ int main(int argc, char* argv[])
                         "benchmark|bench-type=|bench-algo=|seconds=");
       opts.parse(argv);
 
-      std::string init_flags = (opts.is_set("init") ? opts.value("init") : "");
-
-      Botan::InitializerOptions init_options(init_flags);
+      Botan::InitializerOptions init_options(opts.value_if_set("init"));
       Botan::LibraryInitializer init(init_options);
 
       if(opts.is_set("help") || argc <= 1)
-         { print_help(); return 1; }
+         {
+         std::cerr << Botan::version_string() << " test driver\n"
+                   << "Options:\n"
+                   << "  --validate: Check test vectors\n"
+                   << "  --benchmark: Benchmark everything\n"
+                   << "  --bench-type={block,mode,stream,hash,mac,rng,pk}:\n"
+                   << "         Benchmark only algorithms of a particular type\n"
+                   << "  --html: Produce HTML output for benchmarks\n"
+                   << "  --seconds=n: Benchmark for n seconds\n"
+                   << "  --help: Print this message\n";
+         return 1;
+         }
+
       if(opts.is_set("validate"))
          return validate();
 
@@ -115,19 +124,6 @@ int main(int argc, char* argv[])
       }
 
    return 0;
-   }
-
-void print_help()
-   {
-   std::cout << Botan::version_string() << " test driver" << std::endl
-      << "Usage:\n"
-      << "  --validate: Check test vectors\n"
-      << "  --benchmark: Benchmark everything\n"
-      << "  --bench-type={block,mode,stream,hash,mac,rng,pk}:\n"
-      << "         Benchmark only algorithms of a particular type\n"
-      << "  --html: Produce HTML output for benchmarks\n"
-      << "  --seconds=n: Benchmark for n seconds\n"
-      << "  --help: Print this message\n";
    }
 
 int validate()
