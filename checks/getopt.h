@@ -11,7 +11,9 @@ class OptionParser
    public:
       std::vector<std::string> leftovers() const { return leftover; }
       bool is_set(const std::string&) const;
+
       std::string value(const std::string&) const;
+      std::string value_if_set(const std::string&) const;
 
       void parse(char*[]);
       OptionParser(const std::string&);

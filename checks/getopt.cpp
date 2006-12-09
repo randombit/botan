@@ -12,7 +12,8 @@ OptionParser::OptionParser(const std::string& opt_string)
       flags.push_back(OptionFlag(opts[j]));
    }
 
-OptionParser::OptionFlag OptionParser::find_option(const std::string& name) const
+OptionParser::OptionFlag
+OptionParser::find_option(const std::string& name) const
    {
    for(size_t j = 0; j != flags.size(); j++)
       if(flags[j].name() == name)
@@ -31,6 +32,11 @@ std::string OptionParser::value(const std::string& key) const
    if(i == options.end())
       throw Botan::Exception("Option " + key + " not found");
    return i->second;
+   }
+
+std::string OptionParser::value_if_set(const std::string& key) const
+   {
+   return is_set(key) ? value(key) : "";
    }
 
 void OptionParser::parse(char* argv[])
