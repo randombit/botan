@@ -111,7 +111,7 @@
 * 1.5.2, January 15, 2006
  - Fixed an off-by-one memory read in MISTY1::key()
  - Fixed a nasty memory leak in Output_Buffers::retire()
- - Reimplemented the memory allocator for scratch
+ - Reimplemented the memory allocator from scratch
  - Improved memory caching in Montgomery exponentiation
  - Optimizations for multiple precision addition and subtraction
  - Fixed a build problem in the hardware timer module on 64-bit PowerPC
