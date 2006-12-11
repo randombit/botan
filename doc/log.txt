@@ -1,4 +1,8 @@
 
+* 1.5.13, December 10, 2006
+ - Compilation fixes for the bzip2, zlib, and GNU MP modules
+ - Better support for Intel C++ and EKOpath C++ on x86-64
+
 * 1.5.12, October 27, 2006
  - Cleanups in the initialization routines
  - Add some x86-64 assembly for multiply-add
