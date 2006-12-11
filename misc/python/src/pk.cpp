@@ -98,6 +98,7 @@ void export_pk()
    python::class_<RSA_PrivateKey, python::bases<RSA_PublicKey, PK_Decrypting_Key> >
       ("RSA_PrivateKey", python::init<u32bit>());
 
+   /*
    python::class_<PK_Encryptor, boost::noncopyable>
       ("PK_Encryptor", python::no_init)
       .def("__init__",
@@ -105,6 +106,7 @@ void export_pk()
                                     python::with_custodian_and_ward_postcall<0, 1>()))
       .def("max_input", &PK_Encryptor::maximum_input_size)
       .def("encrypt", encrypt_string);
+   */
 
    /*
    python::class_<PK_Decryptor, boost::noncopyable>
