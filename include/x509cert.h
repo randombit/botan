@@ -9,11 +9,10 @@
 #include <botan/x509_obj.h>
 #include <botan/x509_key.h>
 #include <botan/datastor.h>
+#include <botan/enums.h>
 #include <map>
 
 namespace Botan {
-
-static const u32bit NO_CERT_PATH_LIMIT = 0xFFFFFFF0;
 
 /*************************************************
 * X.509 Certificate                              *

@@ -99,6 +99,8 @@ enum Character_Set {
    LATIN1_CHARSET
 };
 
+static const u32bit NO_CERT_PATH_LIMIT = 0xFFFFFFF0;
+
 }
 
 #endif
