@@ -24,8 +24,8 @@ def validate(ca_certs, certs, crls, ee_certs):
 def run_test(files, rootdir, testname, expected):
     crls = [join(rootdir,x) for x in files if x.endswith(".crl")]
     certs = [join(rootdir,x) for x in files if x.endswith(".crt")]
-    end_entity = [x for x in certs if x.find("End Cert") != -1]
-    ca_certs = [x for x in certs if x.find("Trust Anchor") != -1]
+    end_entity = [x for x in certs if x.find("end.crt") != -1]
+    ca_certs = [x for x in certs if x.find("root.crt") != -1]
 
     print "%s..." % testname,
 
