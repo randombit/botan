@@ -6,7 +6,7 @@
 
   The major points of interest (assuming what you care about is how to use
   Botan from a GUI, and not looking at my terrible GTK code) are gtk_ui.cpp
-  and, in this file, gtk_pulse(), gen_key(), and get_key():
+  and, in this file, GTK_Pulse, gen_key(), and get_key():
 
      gtk_ui.cpp and get_key() show how to get a passphrase from a user for
      decrypting (well, in theory, anything), but in this case, PKCS #8 private
@@ -15,7 +15,7 @@
      double duty, for getting passphrases for encryption as well (in
      do_save_key).
 
-     gen_key() and gtk_pulse() show how to do an activity meter while doing a
+     gen_key() and GTK_Pulse show how to do an activity meter while doing a
      long-term operation inside Botan. Since, typically, the only operations
      which take a long time and can't be broken up into smaller parts are prime
      generation/testing, that is currently where the pulse hooks are
@@ -31,15 +31,12 @@
 #include <memory>
 
 #include <botan/botan.h>
+#include <botan/libstate.h>
 #include <botan/look_pk.h>
 #include <botan/filters.h>
 #include <botan/dsa.h>
 // we don't have a 'using namespace' here, so it's easy to grep for code that
 // is actually dealing with the library (rather than messing around with GTK).
-
-#if BOTAN_VERSION_CODE < BOTAN_VERSION_CODE_FOR(1,4,4)
-  #error "You need a more recent version of Botan (at least 1.4.4)"
-#endif
 
 #include <gtk/gtk.h>
 #include "gtk_ui.h"
@@ -225,12 +222,19 @@ static void sign_buffer()
 /*************************************************
 * GTK+ pulse callback                            *
 *************************************************/
-static void gtk_pulse(Botan::UI::Pulse_Type, void*)
+class GTK_Pulse : public Botan::Library_State::UI
    {
-   /* We need this to flush the udpates, otherwise GTK+ will wait until we're
-      done with the computation before doing any updates (generally the right
-      thing, but not with a progress bar).
+   public:
+      void pulse(Botan::Pulse_Type);
+   };
+
+void GTK_Pulse::pulse(Botan::Pulse_Type)
+   {
+   /* We need this to flush the updates, otherwise GTK+ will wait until we're
+   done with the computation before doing any updates (generally the right
+   thing, but not with a progress bar).
    */
+
    while(gtk_events_pending())
       gtk_main_iteration();
    }
@@ -289,7 +293,7 @@ static void gen_key()
       the progress bar. That's because the amount of time between pulses
       from the library is rather irregular, so the progress bar looks jerky.
    */
-   Botan::UI::set_pulse(gtk_pulse);
+   Botan::global_state().set_ui(new GTK_Pulse);
 
    /* Not generally recommended, since it's slow and there's not much point.
       However, *because* it's slow, we'll want to put up a progress bar or
@@ -300,7 +304,7 @@ static void gen_key()
    key = new Botan::DSA_PrivateKey(group);
 
    gtk_timeout_remove(timer_id);
-   Botan::UI::set_pulse(0); // unset the pulse function
+   Botan::global_state().set_ui(0); // unset the pulse function
 
    gtk_widget_destroy(dialog);
 
