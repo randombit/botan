@@ -1,4 +1,4 @@
-realname "Visual C++ 2000/2003"
+realname "Visual C++"
 
 binary_name "cl /nologo"
 
@@ -18,14 +18,6 @@ warning_flags ""
 ar_command "link /lib"
 
 makefile_style nmake
-
-<mach_opt>
-i486     -> "/G4"
-i586     -> "/G5"
-i686     -> "/G6"
-athlon   -> "/G6"
-pentium4 -> "/G6"
-</mach_opt>
 
 <arch>
 ia32
