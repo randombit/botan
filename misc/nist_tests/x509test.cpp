@@ -60,14 +60,14 @@ int main()
       for(size_t k = 0; k != all_files.size(); k++)
          {
          const std::string current = all_files[k];
-         if(current.find("Intermediate Certificate") != std::string::npos)
+         if(current.find("int") != std::string::npos &&
+            current.find(".crt") != std::string::npos)
             certs.push_back(test_dir + current);
-         else if(current.find("Trust Anchor CP") != std::string::npos)
+         else if(current.find("root.crt") != std::string::npos)
             root_cert = test_dir + current;
-         else if(current.find("End Certificate") != std::string::npos &&
-                 current.find(".crtx") == std::string::npos)
+         else if(current.find("end.crt") != std::string::npos)
             to_verify = test_dir + current;
-         else if(current.find("CRL") != std::string::npos)
+         else if(current.find(".crl") != std::string::npos)
             crls.push_back(test_dir + current);
          }
 
