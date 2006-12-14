@@ -4,11 +4,11 @@
 *************************************************/
 
 #include <botan/numthry.h>
+#include <botan/libstate.h>
 #include <botan/lookup.h>
 #include <botan/bit_ops.h>
 #include <botan/parsing.h>
 #include <botan/rng.h>
-#include <botan/ui.h>
 #include <algorithm>
 #include <memory>
 
@@ -55,7 +55,7 @@ bool generate_dsa_primes(BigInt& p, BigInt& q, const byte const_seed[],
    q.binary_decode(qhash, qhash.size());
    if(!is_prime(q))
       return false;
-   UI::pulse(UI::PRIME_FOUND);
+   global_state().pulse(PRIME_FOUND);
 
    u32bit n = (pbits-1) / 160, b = (pbits-1) % 160;
    SecureVector<byte> W(20 * (n+1));
@@ -67,7 +67,7 @@ bool generate_dsa_primes(BigInt& p, BigInt& q, const byte const_seed[],
 
    for(u32bit j = 0; j != 4096 - counter_start; ++j)
       {
-      UI::pulse(UI::PRIME_SEARCHING);
+      global_state().pulse(PRIME_SEARCHING);
 
       for(u32bit k = 0; k != n + 1; ++k)
          {
@@ -82,7 +82,7 @@ bool generate_dsa_primes(BigInt& p, BigInt& q, const byte const_seed[],
 
       if(p.bits() == pbits && is_prime(p))
          {
-         UI::pulse(UI::PRIME_FOUND);
+         global_state().pulse(PRIME_FOUND);
          return true;
          }
       }
@@ -99,7 +99,7 @@ SecureVector<byte> generate_dsa_primes(BigInt& p, BigInt& q, u32bit pbits)
    while(true)
       {
       Global_RNG::randomize(seed, seed.size());
-      UI::pulse(UI::PRIME_SEARCHING);
+      global_state().pulse(PRIME_SEARCHING);
       if(generate_dsa_primes(p, q, seed, seed.size(), pbits))
          return seed;
       }
@@ -124,7 +124,7 @@ BigInt random_prime(u32bit bits, const BigInt& coprime,
 
    while(true)
       {
-      UI::pulse(UI::PRIME_SEARCHING);
+      global_state().pulse(PRIME_SEARCHING);
 
       BigInt p = random_integer(bits);
       p.set_bit(bits - 2);
@@ -139,7 +139,7 @@ BigInt random_prime(u32bit bits, const BigInt& coprime,
       for(u32bit j = 0; j != sieve.size(); ++j)
          {
          sieve[j] = p % PRIMES[j];
-         UI::pulse(UI::PRIME_SIEVING);
+         global_state().pulse(PRIME_SIEVING);
          }
 
       u32bit counter = 0;
@@ -148,7 +148,7 @@ BigInt random_prime(u32bit bits, const BigInt& coprime,
          if(counter == 4096 || p.bits() > bits)
             break;
 
-         UI::pulse(UI::PRIME_SEARCHING);
+         global_state().pulse(PRIME_SEARCHING);
 
          bool passes_sieve = true;
          ++counter;
@@ -157,17 +157,17 @@ BigInt random_prime(u32bit bits, const BigInt& coprime,
          for(u32bit j = 0; j != sieve.size(); ++j)
             {
             sieve[j] = (sieve[j] + modulo) % PRIMES[j];
-            UI::pulse(UI::PRIME_SIEVING);
+            global_state().pulse(PRIME_SIEVING);
             if(sieve[j] == 0)
                passes_sieve = false;
             }
 
          if(!passes_sieve || gcd(p - 1, coprime) != 1)
             continue;
-         UI::pulse(UI::PRIME_PASSED_SIEVE);
+         global_state().pulse(PRIME_PASSED_SIEVE);
          if(passes_mr_tests(p))
             {
-            UI::pulse(UI::PRIME_FOUND);
+            global_state().pulse(PRIME_FOUND);
             return p;
             }
          }

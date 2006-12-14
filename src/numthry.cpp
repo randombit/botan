@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/numthry.h>
-#include <botan/ui.h>
+#include <botan/libstate.h>
 #include <algorithm>
 
 namespace Botan {
@@ -284,7 +284,7 @@ bool MillerRabin_Test::passes_test(const BigInt& a)
    if(a < 2 || a >= n_minus_1)
       throw Invalid_Argument("Bad size for nonce in Miller-Rabin test");
 
-   UI::pulse(UI::PRIME_TESTING);
+   global_state().pulse(PRIME_TESTING);
 
    BigInt y = pow_mod(a);
    if(y == 1 || y == n_minus_1)
@@ -292,7 +292,7 @@ bool MillerRabin_Test::passes_test(const BigInt& a)
 
    for(u32bit j = 1; j != s; ++j)
       {
-      UI::pulse(UI::PRIME_TESTING);
+      global_state().pulse(PRIME_TESTING);
       y = reducer.square(y);
 
       if(y == 1)

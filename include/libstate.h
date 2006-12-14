@@ -8,6 +8,7 @@
 
 #include <botan/base.h>
 #include <botan/enums.h>
+#include <botan/ui.h>
 #include <string>
 #include <vector>
 #include <map>
@@ -30,6 +31,13 @@ class Library_State
             u32bit n;
          };
       friend class Engine_Iterator;
+
+      class UI
+         {
+         public:
+            virtual void pulse(Pulse_Type) {}
+            virtual ~UI() {}
+         };
 
       Allocator* get_allocator(const std::string& = "") const;
       void add_allocator(Allocator*);
@@ -59,6 +67,9 @@ class Library_State
       void set_x509_state(class X509_GlobalState*);
       class X509_GlobalState& x509_state();
 
+      void pulse(Pulse_Type) const;
+      void set_ui(UI*);
+
       void set_transcoder(class Charset_Transcoder*);
       std::string transcode(const std::string,
                             Character_Set, Character_Set) const;
@@ -80,6 +91,7 @@ class Library_State
       std::map<std::string, Allocator*> alloc_factory;
       mutable Allocator* cached_default_allocator;
 
+      UI* ui;
       class Charset_Transcoder* transcoder;
       RandomNumberGenerator* rng;
       std::vector<Allocator*> allocators;

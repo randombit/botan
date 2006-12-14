@@ -28,36 +28,6 @@ class User_Interface
       mutable bool first_try;
    };
 
-namespace UI {
-
-/*************************************************
-* Pulse Function                                 *
-*************************************************/
-enum Pulse_Type {
-   GENERAL_PULSE,
-
-   PIPE_WRITE,
-
-   PRIME_SEARCHING,
-   PRIME_SIEVING,
-   PRIME_PASSED_SIEVE,
-   PRIME_TESTING,
-   PRIME_FOUND
-};
-typedef void (*pulse_func)(Pulse_Type, void*);
-
-/*************************************************
-* Set the UI pulse function                      *
-*************************************************/
-void set_pulse(pulse_func, void* = 0);
-
-/*************************************************
-* Call the UI pulse function                     *
-*************************************************/
-void pulse(Pulse_Type = GENERAL_PULSE);
-
-}
-
 }
 
 #endif

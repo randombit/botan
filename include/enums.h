@@ -99,6 +99,21 @@ enum Character_Set {
    LATIN1_CHARSET
 };
 
+/*************************************************
+* Pulse Function                                 *
+*************************************************/
+enum Pulse_Type {
+   GENERAL_PULSE,
+
+   PIPE_WRITE,
+
+   PRIME_SEARCHING,
+   PRIME_SIEVING,
+   PRIME_PASSED_SIEVE,
+   PRIME_TESTING,
+   PRIME_FOUND
+};
+
 static const u32bit NO_CERT_PATH_LIMIT = 0xFFFFFFF0;
 
 }
