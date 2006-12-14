@@ -181,51 +181,51 @@ void set_default_aliases(Config& config)
 *************************************************/
 void set_default_config(Config& config)
    {
-   config.set("conf", "base/memory_chunk", "64*1024");
-   config.set("conf", "base/pkcs8_tries", "3");
-   config.set("conf", "base/default_pbe",
+   config.set_option("base/memory_chunk", "64*1024");
+   config.set_option("base/pkcs8_tries", "3");
+   config.set_option("base/default_pbe",
                      "PBE-PKCS5v20(SHA-1,TripleDES/CBC)");
-   config.set("conf", "base/default_allocator", "malloc");
+   config.set_option("base/default_allocator", "malloc");
 
-   config.set("conf", "pk/blinder_size", "64");
-   config.set("conf", "pk/test/public", "basic");
-   config.set("conf", "pk/test/private", "basic");
-   config.set("conf", "pk/test/private_gen", "all");
+   config.set_option("pk/blinder_size", "64");
+   config.set_option("pk/test/public", "basic");
+   config.set_option("pk/test/private", "basic");
+   config.set_option("pk/test/private_gen", "all");
 
-   config.set("conf", "pem/search", "4*1024");
-   config.set("conf", "pem/forgive", "8");
-   config.set("conf", "pem/width", "64");
+   config.set_option("pem/search", "4*1024");
+   config.set_option("pem/forgive", "8");
+   config.set_option("pem/width", "64");
 
-   config.set("conf", "rng/ms_capi_prov_type", "INTEL_SEC:RSA_FULL");
-   config.set("conf", "rng/unix_path", "/usr/ucb:/usr/etc:/etc");
-   config.set("conf", "rng/es_files", "/dev/urandom:/dev/random");
-   config.set("conf", "rng/egd_path",
+   config.set_option("rng/ms_capi_prov_type", "INTEL_SEC:RSA_FULL");
+   config.set_option("rng/unix_path", "/usr/ucb:/usr/etc:/etc");
+   config.set_option("rng/es_files", "/dev/urandom:/dev/random");
+   config.set_option("rng/egd_path",
                      "/var/run/egd-pool:/dev/egd-pool");
-   config.set("conf", "rng/slow_poll_request", "256");
-   config.set("conf", "rng/fast_poll_request", "64");
+   config.set_option("rng/slow_poll_request", "256");
+   config.set_option("rng/fast_poll_request", "64");
 
-   config.set("conf", "x509/validity_slack", "24h");
-   config.set("conf", "x509/v1_assume_ca", "false");
-   config.set("conf", "x509/cache_verify_results", "30m");
+   config.set_option("x509/validity_slack", "24h");
+   config.set_option("x509/v1_assume_ca", "false");
+   config.set_option("x509/cache_verify_results", "30m");
 
-   config.set("conf", "x509/ca/allow_ca", "false");
-   config.set("conf", "x509/ca/basic_constraints", "always");
-   config.set("conf", "x509/ca/default_expire", "1y");
-   config.set("conf", "x509/ca/signing_offset", "30s");
-   config.set("conf", "x509/ca/rsa_hash", "SHA-1");
-   config.set("conf", "x509/ca/str_type", "latin1");
+   config.set_option("x509/ca/allow_ca", "false");
+   config.set_option("x509/ca/basic_constraints", "always");
+   config.set_option("x509/ca/default_expire", "1y");
+   config.set_option("x509/ca/signing_offset", "30s");
+   config.set_option("x509/ca/rsa_hash", "SHA-1");
+   config.set_option("x509/ca/str_type", "latin1");
 
-   config.set("conf", "x509/crl/unknown_critical", "ignore");
-   config.set("conf", "x509/crl/next_update", "7d");
+   config.set_option("x509/crl/unknown_critical", "ignore");
+   config.set_option("x509/crl/next_update", "7d");
 
-   config.set("conf", "x509/exts/basic_constraints", "critical");
-   config.set("conf", "x509/exts/subject_key_id", "yes");
-   config.set("conf", "x509/exts/authority_key_id", "yes");
-   config.set("conf", "x509/exts/subject_alternative_name", "yes");
-   config.set("conf", "x509/exts/issuer_alternative_name", "no");
-   config.set("conf", "x509/exts/key_usage", "critical");
-   config.set("conf", "x509/exts/extended_key_usage", "yes");
-   config.set("conf", "x509/exts/crl_number", "yes");
+   config.set_option("x509/exts/basic_constraints", "critical");
+   config.set_option("x509/exts/subject_key_id", "yes");
+   config.set_option("x509/exts/authority_key_id", "yes");
+   config.set_option("x509/exts/subject_alternative_name", "yes");
+   config.set_option("x509/exts/issuer_alternative_name", "no");
+   config.set_option("x509/exts/key_usage", "critical");
+   config.set_option("x509/exts/extended_key_usage", "yes");
+   config.set_option("x509/exts/crl_number", "yes");
    }
 
 /*************************************************
