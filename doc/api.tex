@@ -12,7 +12,7 @@
 
 \title{\textbf{Botan API Reference}}
 \author{}
-\date{2006/10/11}
+\date{2006/12/14}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\manpage}[2]{\texttt{#1}(#2)}
@@ -2493,17 +2493,24 @@ If you call a function in the library that turns out to take a long time (such
 as generating a 4096-bit prime), your pretty GUI will block up while the
 library does something, because the event loop is not being run. Not only does
 this look bad, it prevents the user from doing something else while the library
-works. The way around this is to register a pulse function, using
-\function{UI::set\_pulse}(\type{pulse\_func} \arg{f}, \type{void*} \arg{opaque}
-= 0). During long running operations, the library will call
-\arg{f}(\type{Pulse\_Type} \arg{type}, \arg{opaque}), where the \type{enum}
-\arg{type} provides mildly useful information about the operation in progress
-(for a full list of the defined \type{Pulse\_Type} values, see
-\filename{ui.h}). The type code allows you do simple feedback such as that
-GnuPG does during key generation (printing various characters as the prime
-generation process proceeds, such as '-' for prime test failed, '+' for prime
-test worked, and so on). The optional \arg{opaque} value allows you to pass
-data back to your pulse function without making it a global variable.
+works. The way around this is to register a pulse function.
+
+By creating a class that inherits from \type{Library\_State::UI} and
+passing it to \function{global\_function}().\function{set\_ui}, you
+can cause a pulse to be sent to your object occasionally (generally
+when performing long running operations like prime generation;
+eventually this will be extended for all operations that might take
+longer than a few milliseconds).
+
+You can recieve a pulse by implementing the member function
+\function{pulse}(\type{Pulse\_Type}) within your UI class.  The
+\type{Pulse\_Type} enum provides mildly useful information about the
+operation in progress (for a full list of the defined
+\type{Pulse\_Type} values, see \filename{enums.h}). The type code
+allows you do simple feedback such as that GnuPG does during key
+generation (printing various characters as the prime generation
+process proceeds, such as '-' for prime test failed, '+' for prime
+test worked, and so on).
 
 Generally the thing to do inside the pulse function is to run the GUI's event
 loop, for example with GTK+:
@@ -2580,31 +2587,30 @@ provided, the scale defaults to seconds.
 
 \subsection{Setting and Getting Options}
 
-The header \filename{botan/conf.h} has the interface for setting policy
-options. All of the functions are declared inside of the \namespace{Config}
-namespace; there is 1 for setting options, and 4 for getting the values of
-them.
+The header \filename{botan/config.h} has the interface for setting
+policy options. All the actual configuration options are stored in a
+global object (of type \type{Config}); you can get a reference to this
+object by calling \function{global\_config}.
 
-To add (or set) an option, call \function{add}(\type{std::string} \arg{option},
-\type{std::string} \arg{value}), which sets the value of \arg{option} to
-\arg{value}.
+To add (or set) an option, call
+\function{global\_config}().\function{set\_option} (\type{std::string}
+\arg{name}, \type{std::string} \arg{value})
 
-There are 5 functions to retrieve the values of options, one for each of the
-types:
+To get the value of an option, there are number of member 
 
-\type{std::string} \function{get\_string}(\type{std::string} \arg{option})
+\type{std::string} \function{option}(\type{std::string} \arg{option})
 
-\type{std::vector<std::string>} \function{get\_list}(\type{std::string}
+\type{std::vector<std::string>} \function{option\_as\_list}(\type{std::string}
 \arg{option})
 
-\type{u32bit} \function{get\_u32bit}(\type{std::string} \arg{option})
+\type{u32bit} \function{option\_as\_u32bit}(\type{std::string} \arg{option})
 
-\type{u32bit} \function{get\_time}(\type{std::string} \arg{option})
+\type{u32bit} \function{option\_as\_time}(\type{std::string} \arg{option})
 
-\type{bool} \function{get\_bool}(\type{std::string} \arg{option})
+\type{bool} \function{option\_as\_bool}(\type{std::string} \arg{option})
 
-The only one that might be confusing is \function{get\_time}, which returns the
-time in seconds.
+The only one that might be confusing is \function{option\_as\_time},
+which returns the time in seconds.
 
 As to defaults: strings default to the empty string, lists to an empty list,
 integers default to 0, times default to no time (0 seconds), and booleans will
