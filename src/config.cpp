@@ -82,6 +82,14 @@ std::string Config::deref_alias(const std::string& key) const
    }
 
 /*************************************************
+* Set/Add an option                              *
+*************************************************/
+void Config::set_option(const std::string key, const std::string& value)
+   {
+   set("conf", key, value);
+   }
+
+/*************************************************
 * Get an option value                            *
 *************************************************/
 std::string Config::option(const std::string& key) const
