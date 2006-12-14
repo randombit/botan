@@ -92,6 +92,7 @@ clean:
 	$(RM) $(LIBRARIES) $(CHECK)
 
 distclean: clean
+	$(RM) @{var:build-dir}\build.h
 	$(RM) @{var:build-dir}\include\botan\*
 	$(RMDIR) @{var:build-dir}\include\botan @{var:build-dir}\include
 	$(RMDIR) @{var:build-dir}\lib @{var:build-dir}\checks
