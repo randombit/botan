@@ -7,6 +7,7 @@
 #define BOTAN_LIB_STATE_H__
 
 #include <botan/base.h>
+#include <botan/enums.h>
 #include <string>
 #include <vector>
 #include <map>

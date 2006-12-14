@@ -7,6 +7,7 @@
 #define BOTAN_BASE64_H__
 
 #include <botan/filter.h>
+#include <botan/enums.h>
 
 namespace Botan {
 

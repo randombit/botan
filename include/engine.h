@@ -11,6 +11,7 @@
 #include <botan/pk_ops.h>
 #include <botan/pow_mod.h>
 #include <botan/basefilt.h>
+#include <botan/enums.h>
 #include <utility>
 #include <map>
 
