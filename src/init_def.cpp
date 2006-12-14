@@ -28,16 +28,8 @@ void LibraryInitializer::initialize(const std::string& arg_string)
 *************************************************/
 void LibraryInitializer::initialize(const InitializerOptions& args)
    {
-   try
-      {
-      Builtin_Modules modules(args);
-      initialize(args, modules);
-      }
-   catch(...)
-      {
-      deinitialize();
-      throw;
-      }
+   Builtin_Modules modules(args);
+   initialize(args, modules);
    }
 
 /*************************************************
