@@ -15,8 +15,8 @@
 ##################################################
 # Hardware restrictions on various modules       #
 ##################################################
-%define USE_TM_HARD i586 i686 athlon x86_64 alpha sparcv9 sparc64
-%define USE_MP64    alpha ppc64 ia64 x86_64
+%define USE_TM_HARD i586 i686 athlon x86_64 ppc ppc64 alpha sparcv9 sparc64
+%define MP64_ARCH    alpha ppc64 ia64 sparc64
 
 ##################################################
 # Module settings                                #
@@ -30,6 +30,14 @@
 
 %ifarch %{USE_MP64}
   %{expand: %%define EXTRA_MODS %{EXTRA_MODS},mp_asm64}
+%endif
+
+%ifarch x86
+  %{expand: %%define EXTRA_MODS %{EXTRA_MODS},mp_ia32,alg_ia32}
+%endif
+
+%ifarch x86_64
+  %{expand: %%define EXTRA_MODS %{EXTRA_MODS},mp_amd64,alg_amd64}
 %endif
 
 %if %{ONLY_BASE_MODS}
@@ -63,18 +71,18 @@ BuildRequires: zlib-devel, bzip2-devel >= 1.0.2, gmp-devel >= 4.1
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 
 %description
-Botan is a C++ library which provides support for many common cryptographic
-operations, including encryption, authentication, and X.509v3 certificates and
-CRLs. A wide variety of algorithms is supported, including RSA, DSA, DES, AES,
-MD5, and SHA-1.
+Botan is a C++ library which provides support for many common
+cryptographic operations, including encryption, authentication, and
+X.509v3 certificates and CRLs. A wide variety of algorithms is
+supported, including RSA, DSA, DES, AES, MD5, and SHA-1.
 
 %package devel
 Summary: Development files for Botan
 Group: Development/Libraries
 Requires: Botan = %{VERSION}
 %description devel
-This package contains the header files and libraries needed to develop programs
-that use the Botan library.
+This package contains the header files and libraries needed to develop
+programs that use the Botan library.
 
 ##################################################
 # Main Logic                                     #
@@ -136,11 +144,7 @@ fi
 /usr/share/doc/Botan-%{VERSION}/api.pdf
 /usr/share/doc/Botan-%{VERSION}/tutorial.tex
 /usr/share/doc/Botan-%{VERSION}/tutorial.pdf
-/usr/share/doc/Botan-%{VERSION}/fips140.tex
-/usr/share/doc/Botan-%{VERSION}/fips140.pdf
 /usr/share/doc/Botan-%{VERSION}/todo.txt
-/usr/share/doc/Botan-%{VERSION}/bugs.txt
-/usr/share/doc/Botan-%{VERSION}/botan.rc
 /usr/lib/libbotan.so
 /usr/lib/libbotan.a
 /usr/include/botan/
