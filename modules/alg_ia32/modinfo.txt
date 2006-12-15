@@ -10,7 +10,7 @@ serpent.cpp
 </replace>
 
 <ignore>
-mp_muladd.cpp
+mp_mulop.cpp
 </ignore>
 
 <add>
@@ -19,7 +19,7 @@ md4core.S
 md5core.S
 sha1core.S
 serp_asm.S
-mp_muladd.S
+mp_mulop.S
 </add>
 
 <arch>
