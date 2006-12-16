@@ -1,8 +1,9 @@
 
-This is the first release candidate for Botan 1.6.0. Please test with
-your applications and report problems. Note that some APIs have
-changed, in some cases dramatically. However most code that works
-against Botan 1.4.x should work with minimal or no modifications.
+This is Botan 1.6.0, the first stable release of the new Botan
+API. This release is mostly compatible with Botan 1.4.x, and many
+applications written against 1.4.x will work against 1.6.0 without any
+modifications. However some applications, particularly ones doing
+complex processing, will require changes to match the new API.
 
 You can file bugs at http://www.randombit.net/bugzilla
 
