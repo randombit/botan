@@ -1,10 +1,10 @@
 
-This is the first release candidate for Botan 1.6.0. Please test with
-your applications and report problems. Note that some APIs have
-changed, in some cases dramatically. However most code that works
-against Botan 1.4.x should work with minimal or no modifications.
-
-You can file bugs at http://www.randombit.net/bugzilla
+Please note that this is an experimental / development version of
+Botan.  Don't be surprised by bugs. No, the documentation hasn't been
+updated (yet). Feedback and critical analysis is highly
+appreciated. If this sounds scary, it's recommened you use the latest
+stable release (either 1.4.x or, preferably, 1.6.x). You can file bugs
+at http://www.randombit.net/bugzilla
 
 Jack
 (lloyd@randombit.net)
