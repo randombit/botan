@@ -1,0 +1,148 @@
+
+* 1.5.13, December 10, 2006
+ - Compilation fixes for the bzip2, zlib, and GNU MP modules
+ - Better support for Intel C++ and EKOpath C++ on x86-64
+
+* 1.5.12, October 27, 2006
+ - Cleanups in the initialization routines
+ - Add some x86-64 assembly for multiply-add
+ - Fix problems generating very small (below 384 bit) RSA keys
+ - Support out of tree builds
+ - Bring some of the documentation up to date
+ - More improvements to the Python bindings
+
+* 1.5.11, September 10, 2006
+ - Removed the Algorithm base class
+ - Various cleanups in the public key inheritance hierarchy
+ - Major overhaul of the configure/build setup
+ - Added x86 assembler implementations of Serpent and low-level MPI code
+ - Optimizations for the SHA-1 x86 assembler
+ - Various improvements to the Python wrappers
+ - Work around a Visual Studio compiler bug
+
+* 1.5.10, August 13, 2006
+ - Add x86 assembler versions of MD4, MD5, and SHA-1
+ - Expand InitializerOptions' language to support on/off switches
+ - Fix definition of OID 2.5.4.8; was accidentally changed in 1.5.9
+ - Fix possible resource leaks in the mmap allocator
+ - Slightly optimized buffering in MDx_HashFunction
+ - Initialization failures are dealt with somewhat better
+ - Add an example implementing Pollard's Rho algorithm
+ - Better option handling in the test/benchmark tool
+ - Expand the xor_ciph example to support longer keys
+ - Some updates to the documentation
+
+* 1.5.9, July 12, 2006
+ - Fixed bitrot in the AEP engine
+ - Fix support for marking certificate/CRL extensions as critical
+ - Significant cleanups in the library state / initialization code
+ - LibraryInitializer takes an explicit InitializerOptions object
+ - Make Mutex_Factory an abstract class, add Default_Mutex_Factory
+ - Change configuration access to using global_state()
+ - Add support for global named mutexes throughout the library
+ - Add some STL wrappers for the delete operator
+ - Change how certificates are created to be more flexible and general
+
+* 1.5.8, June 23, 2006
+ - Many internal cleanups to the X.509 cert/CRL code
+ - Allow for application code to support new X.509 extensions
+ - Change the return type of X509_Certificate::{subject,issuer}_info
+ - Allow for alternate character set handling mechanisms
+ - Fix a bug that was slowing squaring performance somewhat
+ - Fix a very hard to hit overflow bug in the C version of word3_muladd
+ - Minor cleanups to the assembler modules
+ - Disable es_unix module on FreeBSD due to build problem on FreeBSD 6.1
+ - Support for GCC 2.95.x has been dropped in this release
+
+* 1.5.7, May 28, 2006
+ - Further, major changes to the BER/DER coding system
+ - Updated the Qt mutex module to use Mutex_Factory
+ - Moved the library global state object into an anonymous namespace
+ - Drop the Visual C++ x86 assembly module due to bugs
+
+* 1.5.6, March 1, 2006
+ - The low-level DER/BER coding system was redesigned and rewritten
+ - Portions of the certificate code were cleaned up internally
+ - Use macros to substantially clean up the GCC assembly code
+ - Added 32-bit x86 assembly for Visual C++ (by Luca Piccarreta)
+ - Avoid a couple of spurious warnings under Visual C++
+ - Some slight cleanups in X509_PublicKey::key_id
+
+* 1.5.5, February 4, 2006
+ - Fixed a potential infinite loop in the memory pool code (Matt Johnston)
+ - Made Pooling_Allocator::Memory_Block an actual class of sorts
+ - Some small optimizations to the division and modulo computations
+ - Cleaned up the implementation of some of the BigInt operators
+ - Reduced use of dynamic memory allocation in low-level BigInt functions
+ - A few simplifications in the Randpool mixing function
+ - Removed power(), as it was not particularly useful (or fast)
+ - Fixed some annoying bugs in the benchmark code
+ - Added a real credits file
+
+* 1.5.4, January 29, 2006
+ - Integrated x86 and amd64 assembly code, contributed by Luca Piccarreta
+ - Fixed a memory access off-by-one in the Karatsuba code
+ - Changed Pooling_Allocator's free list search to a log(N) algorithm
+ - Merged ModularReducer with its only subclass, Barrett_Reducer
+ - Fixed sign-handling bugs in some of the division and modulo code
+ - Renamed the module description files to modinfo.txt
+ - Further cleanups in the initialization code
+ - Removed BigInt::add and BigInt::sub
+ - Merged all the division-related functions into just divide()
+ - Modified the <mp_asmi.h> functions to allow for better optimizations
+ - Made the number of bits polled from an EntropySource user configurable
+ - Avoid including <algorithm> in <botan/secmem.h>
+ - Fixed some build problems with Sun Forte
+ - Removed some dead code from bigint_modop
+ - Fix the definition of same_mem
+
+* 1.5.3, January 24, 2006
+ - Many optimizations in the low-level multiple precision integer code
+ - Added hooks for assembly implementations of the MPI code
+ - Support for the X.509 issuer alternative name extension in new certs
+ - Fixed a bug in the decompression modules; found and patched by Matt Johnston
+ - New Windows mutex module (mux_win32), by Luca Piccarreta
+ - Changed the Windows timer module to use QueryPerformanceCounter
+ - mem_pool.cpp was using std::set iterators instead of std::multiset ones
+ - Fixed a bug in X509_CA preventing users from disabling particular extensions
+ - Fixed the mp_asm64 module, which was entirely broken in 1.5.2
+ - Fixed some module build problems on FreeBSD and Tru64
+
+* 1.5.2, January 15, 2006
+ - Fixed an off-by-one memory read in MISTY1::key()
+ - Fixed a nasty memory leak in Output_Buffers::retire()
+ - Reimplemented the memory allocator from scratch
+ - Improved memory caching in Montgomery exponentiation
+ - Optimizations for multiple precision addition and subtraction
+ - Fixed a build problem in the hardware timer module on 64-bit PowerPC
+ - Changed default Karatsuba cutoff to 12 words (was 14)
+ - Removed MemoryRegion::bits(), which was unused and incorrect
+ - Changed maximum HMAC keylength to 1024 bits
+ - Various minor Makefile and build system changes
+ - Avoid using std::min in <secmem.h> to bypass Windows libc macro pollution
+ - Switched checks/clock.cpp back to using clock() by default
+ - Enabled the symmetric algorithm tests, which were accidentally off in 1.5.1
+ - Removed the Default_Mutex's unused clone() member function
+
+* 1.5.1, January 8, 2006
+ - Implemented Montgomery exponentiation
+ - Implemented generalized Karatsuba multiplication and squaring
+ - Implemented Comba squaring for 4, 6, and 8 word inputs
+ - Added new Modular_Exponentiator and Power_Mod classes
+ - Removed FixedBase_Exp and FixedExponent_Exp
+ - Fixed a performance regression in get_allocator introduced in 1.5.0
+ - Engines can now offer S2K algorithms and block cipher padding methods
+ - Merged the remaining global 'algolist' code into Default_Engine
+ - The low-level MPI code is linked as C again
+ - Replaced BigInt's get_nibble with the more general get_substring
+ - Some documentation updates
+
+* 1.5.0, January 1, 2006
+ - Moved all global/shared library state into a single object
+ - Mutex objects are created through mutex factories instead of a global
+ - Removed ::get_mutex(), ::initialize_mutex(), and Mutex::clone()
+ - Removed the RNG_Quality enum entirely
+ - There is now only a single global-use PRNG
+ - Removed the no_aliases and no_oids options for LibraryInitializer
+ - Removed the deprecated algorithms SEAL, ISAAC, and HAVAL
+ - Change es_ftw to use unbuffered I/O
