@@ -293,7 +293,7 @@ BER_Decoder::BER_Decoder(const BER_Decoder& other)
       owns = true;
       }
    pushed.type_tag = pushed.class_tag = NO_OBJECT;
-   parent = 0;
+   parent = other.parent;
    }
 
 /*************************************************
