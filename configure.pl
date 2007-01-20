@@ -1492,8 +1492,13 @@ sub generate_makefile {
        'install_group' => os_info_for($os, 'install_group'),
        });
 
+   my $is_in_doc_dir =
+       sub { -e File::Spec->catfile($$config{'doc-dir'}, $_[0]) };
+
    my $docs = file_list(undef, undef, undef,
-                        map_to($$config{'doc-dir'}, @DOCS));
+                        map_to($$config{'doc-dir'},
+                               grep { &$is_in_doc_dir($_); } @DOCS));
+
    $docs .= File::Spec->catfile($$config{'base-dir'}, 'readme.txt');
 
    my $includes = file_list(undef, undef, undef,
