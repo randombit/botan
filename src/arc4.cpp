@@ -95,7 +95,7 @@ void ARC4::clear() throw()
 /*************************************************
 * ARC4 Constructor                               *
 *************************************************/
-ARC4::ARC4(u32bit s) : StreamCipher(1, 32), SKIP(s)
+ARC4::ARC4(u32bit s) : StreamCipher(1, 256), SKIP(s)
    {
    clear();
    }
