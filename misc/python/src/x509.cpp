@@ -1,6 +1,6 @@
 /*************************************************
 * Boost.Python module definition                 *
-* (C) 1999-2006 The Botan Project                *
+* (C) 1999-2007 The Botan Project                *
 *************************************************/
 
 #include <botan/oids.h>
