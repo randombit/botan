@@ -21,13 +21,14 @@ class Base64_Encoder : public Filter
 
       void write(const byte[], u32bit);
       void end_msg();
-      Base64_Encoder(bool = false, u32bit = 72);
+      Base64_Encoder(bool = false, u32bit = 72, bool = false);
    private:
       void encode_and_send(const byte[], u32bit);
       void do_output(const byte[], u32bit);
       static const byte BIN_TO_BASE64[64];
 
       const u32bit line_length;
+      const bool trailing_newline;
       SecureVector<byte> in, out;
       u32bit position, counter;
    };
