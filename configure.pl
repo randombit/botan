@@ -8,8 +8,8 @@ use File::Spec;
 use File::Copy;
 
 my $MAJOR_VERSION = 1;
-my $MINOR_VERSION = 6;
-my $PATCH_VERSION = 1;
+my $MINOR_VERSION = 7;
+my $PATCH_VERSION = 0;
 
 my $VERSION_STRING = "$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION";
 
