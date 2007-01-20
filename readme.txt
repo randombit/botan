@@ -1,10 +1,10 @@
 
-This is Botan 1.6.1.
-
-Botan 1.6 is mostly compatible with Botan 1.4, and many applications
-written against 1.4 will work against 1.6 without any modifications.
-However some applications, particularly ones doing complex processing,
-will require changes to match the new API.
+Please note that this is an experimental / development version of
+Botan.  Don't be surprised by bugs. No, the documentation hasn't been
+updated (yet). Feedback and critical analysis is highly
+appreciated. If this sounds scary, it's recommened you use the latest
+stable release (either 1.4.x or, preferably, 1.6.x). You can file bugs
+at http://www.randombit.net/bugzilla
 
 You can file bugs at http://www.randombit.net/bugzilla
 

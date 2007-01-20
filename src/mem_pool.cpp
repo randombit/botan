@@ -270,7 +270,8 @@ void Pooling_Allocator::get_more_core(u32bit in_bytes)
       }
 
    std::sort(blocks.begin(), blocks.end());
-   last_used = std::lower_bound(blocks.begin(), blocks.end(), ptr);
+   last_used = std::lower_bound(blocks.begin(), blocks.end(),
+                                Memory_Block(ptr));
    }
 
 }
