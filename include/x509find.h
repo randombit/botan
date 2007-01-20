@@ -1,6 +1,6 @@
 /*************************************************
 * X.509 Certificate Store Searching Header File  *
-* (C) 1999-2006 The Botan Project                *
+* (C) 1999-2007 The Botan Project                *
 *************************************************/
 
 #ifndef BOTAN_X509_CERT_STORE_SEARCH_H__

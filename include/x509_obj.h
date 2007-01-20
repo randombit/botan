@@ -1,6 +1,6 @@
 /*************************************************
 * X.509 SIGNED Object Header File                *
-* (C) 1999-2006 The Botan Project                *
+* (C) 1999-2007 The Botan Project                *
 *************************************************/
 
 #ifndef BOTAN_X509_OBJECT_H__

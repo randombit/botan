@@ -1,6 +1,6 @@
 /*************************************************
 * SAFER-SK Source File                           *
-* (C) 1999-2006 The Botan Project                *
+* (C) 1999-2007 The Botan Project                *
 *************************************************/
 
 #include <botan/safer_sk.h>

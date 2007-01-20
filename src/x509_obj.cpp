@@ -1,6 +1,6 @@
 /*************************************************
 * X.509 SIGNED Object Source File                *
-* (C) 1999-2006 The Botan Project                *
+* (C) 1999-2007 The Botan Project                *
 *************************************************/
 
 #include <botan/x509_obj.h>

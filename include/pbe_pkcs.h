@@ -1,6 +1,6 @@
 /*************************************************
 * PKCS PBE Header File                           *
-* (C) 1999-2006 The Botan Project                *
+* (C) 1999-2007 The Botan Project                *
 *************************************************/
 
 #ifndef BOTAN_PBE_PKCS_H__
