@@ -24,23 +24,17 @@ namespace {
 * Get info from an EncryptedPrivateKeyInfo       *
 *************************************************/
 SecureVector<byte> PKCS8_extract(DataSource& source,
-                                 AlgorithmIdentifier& alg_id)
+                                 AlgorithmIdentifier& pbe_alg_id)
    {
-   SecureVector<byte> enc_pkcs8_key;
+   SecureVector<byte> key_data;
 
-   try {
-      BER_Decoder decoder(source);
-      BER_Decoder sequence = decoder.start_cons(SEQUENCE);
-      sequence.decode(alg_id);
-      sequence.decode(enc_pkcs8_key, OCTET_STRING);
-      sequence.verify_end();
-      }
-   catch(Decoding_Error)
-      {
-      throw PKCS8_Exception("Private key decoding failed");
-      }
+   BER_Decoder(source)
+      .start_cons(SEQUENCE)
+         .decode(pbe_alg_id)
+         .decode(key_data, OCTET_STRING)
+      .verify_end();
 
-   return enc_pkcs8_key;
+   return key_data;
    }
 
 /*************************************************
