@@ -50,13 +50,11 @@ void X509_CRL::force_decode()
       throw X509_CRL_Error("Algorithm identifier mismatch");
 
    X509_DN dn_issuer;
-   X509_Time start, end;
-
    tbs_crl.decode(dn_issuer);
-   tbs_crl.decode(start);
-   tbs_crl.decode(end);
-
    info.add(dn_issuer.contents());
+
+   X509_Time start, end;
+   tbs_crl.decode(start).decode(end);
    info.add("X509.CRL.start", start.readable_string());
    info.add("X509.CRL.end", end.readable_string());
 
