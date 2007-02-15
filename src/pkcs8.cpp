@@ -29,11 +29,10 @@ SecureVector<byte> PKCS8_extract(DataSource& source,
    SecureVector<byte> enc_pkcs8_key;
 
    try {
-      BER_Decoder decoder(source);
-      BER_Decoder sequence = decoder.start_cons(SEQUENCE);
-      sequence.decode(alg_id);
-      sequence.decode(enc_pkcs8_key, OCTET_STRING);
-      sequence.verify_end();
+      BER_Decoder(source).start_cons(SEQUENCE)
+         .decode(alg_id)
+         .decode(enc_pkcs8_key, OCTET_STRING)
+      .verify_end();
       }
    catch(Decoding_Error)
       {
