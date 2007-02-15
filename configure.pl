@@ -1583,7 +1583,8 @@ sub guess_cpu_from_this
 
     $cpu = 'core2duo' if($cpuinfo =~ /intel\(r\) core\(tm\)2/);
 
-    $cpu = 'amd64' if($cpuinfo =~ /athlon64/);
+    $cpu = 'athlon64' if($cpuinfo =~ /athlon64/);
+    $cpu = 'athlon64' if($cpuinfo =~ /athlon\(tm\) 64/);
     $cpu = 'amd64' if($cpuinfo =~ /opteron/);
 
     # The 32-bit SPARC stuff is impossible to match to arch type easily, and
