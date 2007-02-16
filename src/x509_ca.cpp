@@ -15,6 +15,7 @@
 #include <botan/util.h>
 #include <algorithm>
 #include <typeinfo>
+#include <iterator>
 #include <memory>
 #include <set>
 
