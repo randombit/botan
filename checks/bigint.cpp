@@ -5,6 +5,7 @@
 #include <cstdlib>
 
 #include <botan/bigint.h>
+#include <botan/exceptn.h>
 #include <botan/numthry.h>
 #include <botan/rng.h>
 using namespace Botan;
@@ -30,10 +31,7 @@ u32bit do_bigint_tests(const std::string& filename)
    std::ifstream test_data(filename.c_str());
 
    if(!test_data)
-       {
-       std::cout << "Couldn't open test file " << filename << std::endl;
-       std::exit(1);
-       }
+      throw Botan::Stream_IO_Error("Couldn't open test file " + filename);
 
    u32bit errors = 0, alg_count = 0;
    std::string algorithm;
@@ -43,10 +41,8 @@ u32bit do_bigint_tests(const std::string& filename)
    while(!test_data.eof())
       {
       if(test_data.bad() || test_data.fail())
-         {
-         std::cout << "File I/O error." << std::endl;
-         std::exit(1);
-         }
+         throw Botan::Stream_IO_Error("File I/O error reading from " +
+                                      filename);
 
       std::string line;
       std::getline(test_data, line);

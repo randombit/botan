@@ -52,11 +52,8 @@ class Fixed_Output_RNG : public RandomNumberGenerator
          {
          if(position < output.size())
             return output[position++];
-         std::cout << "Fixed_Output_RNG: Ran out of bits" << std::endl;
-         std::exit(1);
-         // Annoying: some compilers warn if a return is here (unreachable
-         // code), others warn if it's not (no return from function).
-         /* return 0; */
+
+         throw Botan::Invalid_State("Fixed_Output_RNG: out of bits");
          }
       void randomize(byte out[], u32bit len) throw()
          {
@@ -101,10 +98,7 @@ u32bit do_pk_validation_tests(const std::string& filename)
    std::ifstream test_data(filename.c_str());
 
    if(!test_data)
-       {
-       std::cout << "Couldn't open test file " << filename << std::endl;
-       std::exit(1);
-       }
+      throw Botan::Stream_IO_Error("Couldn't open test file " + filename);
 
    u32bit errors = 0, alg_count = 0;
    std::string algorithm, print_algorithm;
@@ -112,10 +106,8 @@ u32bit do_pk_validation_tests(const std::string& filename)
    while(!test_data.eof())
       {
       if(test_data.bad() || test_data.fail())
-         {
-         std::cout << "File I/O error." << std::endl;
-         std::exit(1);
-         }
+         throw Botan::Stream_IO_Error("File I/O error reading from " +
+                                      filename);
 
       std::string line;
       std::getline(test_data, line);
