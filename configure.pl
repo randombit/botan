@@ -1585,7 +1585,7 @@ sub guess_cpu_from_this
 
     $cpu = 'athlon64' if($cpuinfo =~ /athlon64/);
     $cpu = 'athlon64' if($cpuinfo =~ /athlon\(tm\) 64/);
-    $cpu = 'amd64' if($cpuinfo =~ /opteron/);
+    $cpu = 'opteron' if($cpuinfo =~ /opteron/);
 
     # The 32-bit SPARC stuff is impossible to match to arch type easily, and
     # anyway the uname stuff will pick up that it's a SPARC so it doesn't

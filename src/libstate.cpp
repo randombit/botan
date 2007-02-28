@@ -31,10 +31,7 @@ Library_State* global_lib_state = 0;
 Library_State& global_state()
    {
    if(!global_lib_state)
-      {
-      abort();
       throw Invalid_State("Library was not initialized correctly");
-      }
    return (*global_lib_state);
    }
 
