@@ -79,7 +79,7 @@ ppc64   -> "-m64"
 openbsd -> "-pthread"
 freebsd -> "-pthread"
 netbsd  -> "-pthread"
-qnx     -> "-fexceptions"
+qnx     -> "-fexceptions -D_QNX_SOURCE"
 </mach_abi_linking>
 
 <os>
