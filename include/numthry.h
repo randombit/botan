@@ -58,10 +58,6 @@ BigInt random_integer(const BigInt&, const BigInt&);
 BigInt random_prime(u32bit, const BigInt& = 1, u32bit = 1, u32bit = 2);
 BigInt random_safe_prime(u32bit);
 
-SecureVector<byte> generate_dsa_primes(BigInt&, BigInt&, u32bit);
-bool generate_dsa_primes(BigInt&, BigInt&, const byte[], u32bit, u32bit,
-                         u32bit = 0);
-
 /*************************************************
 * Prime Numbers                                  *
 *************************************************/

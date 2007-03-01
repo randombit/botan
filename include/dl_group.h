@@ -31,8 +31,6 @@ class DL_Group
       void BER_decode(DataSource&, Format);
       void PEM_decode(DataSource&);
 
-      static BigInt make_dsa_generator(const BigInt&, const BigInt&);
-
       DL_Group();
       DL_Group(const std::string&);
       DL_Group(u32bit, PrimeType = Strong);
@@ -40,6 +38,11 @@ class DL_Group
       DL_Group(const BigInt&, const BigInt&);
       DL_Group(const BigInt&, const BigInt&, const BigInt&);
    private:
+      static BigInt make_dsa_generator(const BigInt&, const BigInt&);
+      static SecureVector<byte> generate_dsa_primes(BigInt&, BigInt&, u32bit);
+      static bool generate_dsa_primes(BigInt&, BigInt&, const byte[], u32bit,
+                                      u32bit, u32bit = 0);
+
       void init_check() const;
       void initialize(const BigInt&, const BigInt&, const BigInt&);
       bool initialized;
