@@ -86,6 +86,7 @@ class BigInt
 
       void binary_encode(byte[]) const;
       void binary_decode(const byte[], u32bit);
+      void binary_decode(const MemoryRegion<byte>&);
       u32bit encoded_size(Base = Binary) const;
 
       static SecureVector<byte> encode(const BigInt&, Base = Binary);

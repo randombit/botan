@@ -375,4 +375,12 @@ void BigInt::binary_decode(const byte buf[], u32bit length)
       reg[length / WORD_BYTES] = (reg[length / WORD_BYTES] << 8) | buf[j];
    }
 
+/*************************************************
+* Set this number to the value in buf            *
+*************************************************/
+void BigInt::binary_decode(const MemoryRegion<byte>& buf)
+   {
+   binary_decode(buf, buf.size());
+   }
+
 }
