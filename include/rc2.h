@@ -26,10 +26,7 @@ class RC2 : public BlockCipher
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
       void key(const byte[], u32bit);
-      void mash(u16bit&, u16bit&, u16bit&, u16bit&) const;
-      void rmash(u16bit&, u16bit&, u16bit&, u16bit&) const;
-      void mix(u16bit&, u16bit&, u16bit&, u16bit&, u32bit) const;
-      void rmix(u16bit&, u16bit&, u16bit&, u16bit&, u32bit) const;
+
       SecureBuffer<u16bit, 64> K;
    };
 
