@@ -78,8 +78,8 @@ class BigInt
       SecureVector<word>& get_reg() { return reg; }
       void grow_reg(u32bit) const;
 
-      word& operator[](u32bit index) { return reg[index]; }
-      word operator[](u32bit index) const { return reg[index]; }
+      word& operator[](u32bit);
+      word operator[](u32bit) const;
       void clear() { reg.clear(); }
 
       void randomize(u32bit = 0);
