@@ -326,7 +326,7 @@ void Library_State::load(Modules& modules)
    set_transcoder(modules.transcoder());
 
    std::vector<Allocator*> mod_allocs = modules.allocators();
-   for(u32bit j = 0; j != mod_allocs.size(); j++)
+   for(u32bit j = 0; j != mod_allocs.size(); ++j)
       add_allocator(mod_allocs[j]);
 
    set_default_allocator(modules.default_allocator());
@@ -384,7 +384,7 @@ Library_State::~Library_State()
 
    cached_default_allocator = 0;
 
-   for(u32bit j = 0; j != allocators.size(); j++)
+   for(u32bit j = 0; j != allocators.size(); ++j)
       {
       allocators[j]->destroy();
       delete allocators[j];

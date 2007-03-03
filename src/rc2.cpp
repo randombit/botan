@@ -16,7 +16,7 @@ void RC2::enc(const byte in[], byte out[]) const
    u16bit R0 = make_u16bit(in[1], in[0]), R1 = make_u16bit(in[3], in[2]),
           R2 = make_u16bit(in[5], in[4]), R3 = make_u16bit(in[7], in[6]);
 
-   for(u32bit j = 0; j != 16; j++)
+   for(u32bit j = 0; j != 16; ++j)
       {
       R0 += (R1 & ~R3) + (R2 & R3) + K[4*j];
       R0 = rotate_left(R0, 1);
@@ -53,7 +53,7 @@ void RC2::dec(const byte in[], byte out[]) const
    u16bit R0 = make_u16bit(in[1], in[0]), R1 = make_u16bit(in[3], in[2]),
           R2 = make_u16bit(in[5], in[4]), R3 = make_u16bit(in[7], in[6]);
 
-   for(u32bit j = 0; j != 16; j++)
+   for(u32bit j = 0; j != 16; ++j)
       {
       R3 = rotate_right(R3, 5);
       R3 -= (R0 & ~R2) + (R1 & R2) + K[63 - (4*j + 0)];

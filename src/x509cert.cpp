@@ -335,7 +335,7 @@ AlternativeName create_alt_name(const Data_Store& info)
       public:
          bool operator()(const std::string& key, const std::string&) const
             {
-            for(u32bit j = 0; j != matches.size(); j++)
+            for(u32bit j = 0; j != matches.size(); ++j)
                if(key.compare(matches[j]) == 0)
                   return true;
             return false;
