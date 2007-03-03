@@ -33,15 +33,16 @@ class DL_Group
 
       DL_Group();
       DL_Group(const std::string&);
-      DL_Group(u32bit, PrimeType = Strong);
+      DL_Group(PrimeType, u32bit, u32bit = 0);
       DL_Group(const MemoryRegion<byte>&, u32bit = 1024, u32bit = 0);
       DL_Group(const BigInt&, const BigInt&);
       DL_Group(const BigInt&, const BigInt&, const BigInt&);
    private:
       static BigInt make_dsa_generator(const BigInt&, const BigInt&);
-      static SecureVector<byte> generate_dsa_primes(BigInt&, BigInt&, u32bit);
-      static bool generate_dsa_primes(BigInt&, BigInt&, const byte[], u32bit,
-                                      u32bit, u32bit = 0);
+      static SecureVector<byte> generate_dsa_primes(BigInt&, BigInt&,
+                                                    u32bit, u32bit);
+      static bool generate_dsa_primes(BigInt&, BigInt&, u32bit, u32bit,
+                                      const MemoryRegion<byte>&);
 
       void init_check() const;
       void initialize(const BigInt&, const BigInt&, const BigInt&);

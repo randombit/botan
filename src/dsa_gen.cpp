@@ -27,57 +27,71 @@ void increment(SecureVector<byte>& seed)
          break;
    }
 
+/*************************************************
+* Check if this size is allowed by FIPS 186-3    *
+*************************************************/
+bool fips186_3_valid_size(u32bit pbits, u32bit qbits)
+   {
+   if(pbits == 1024 && qbits == 160)
+      return true;
+   if(pbits == 2048 && qbits == 256)
+      return true;
+   if(pbits == 3072 && qbits == 256)
+      return true;
+   return false;
+   }
+
 }
 
 /*************************************************
 * Attempt DSA prime generation with given seed   *
 *************************************************/
 bool DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
-                                   const byte const_seed[], u32bit seed_len,
-                                   u32bit pbits, u32bit counter_start)
+                                   u32bit pbits, u32bit qbits,
+                                   const MemoryRegion<byte>& seed_c)
    {
-   if(seed_len < 20)
-      throw Invalid_Argument("DSA prime generation needs a seed "
-                             "at least 160 bits long");
-   if((pbits % 64 != 0) || (pbits > 1024) || (pbits < 512))
-      throw Invalid_Argument("DSA prime generation algorithm does not support "
-                             "prime size " + to_string(pbits));
+   if(!fips186_3_valid_size(pbits, qbits))
+      throw Invalid_Argument(
+         "FIPS 186-3 does not allow DSA domain parameters of " +
+         to_string(pbits) + "/" + to_string(qbits) + " bits long");
 
-   std::auto_ptr<HashFunction> sha1(get_hash("SHA-1"));
+   if(seed_c.size() * 8 < qbits)
+      throw Invalid_Argument(
+         "Generating a DSA parameter set with a " + to_string(qbits) +
+         "long q requires a seed at least as many bits long");
 
-   SecureVector<byte> seed(const_seed, seed_len);
+   std::auto_ptr<HashFunction> hash(get_hash("SHA-" + to_string(qbits)));
 
-   SecureVector<byte> qhash = sha1->process(seed);
-   increment(seed);
-   SecureVector<byte> qhash2 = sha1->process(seed);
-   xor_buf(qhash, qhash2, qhash.size());
+   const u32bit HASH_SIZE = hash->OUTPUT_LENGTH;
 
-   qhash[0] |= 0x80;
-   qhash[19] |= 0x01;
-   q.binary_decode(qhash, qhash.size());
+   SecureVector<byte> seed = seed_c;
+
+   q.binary_decode(hash->process(seed));
+   q.set_bit(qbits-1);
+   q.set_bit(0);
+
    if(!is_prime(q))
       return false;
+
    global_state().pulse(PRIME_FOUND);
 
-   u32bit n = (pbits-1) / 160, b = (pbits-1) % 160;
-   SecureVector<byte> W(20 * (n+1));
+   const u32bit n = (pbits-1) / (HASH_SIZE * 8), b = (pbits-1) % (HASH_SIZE * 8);
+
    BigInt X;
+   SecureVector<byte> V(HASH_SIZE * (n+1));
 
-   for(u32bit j = 0; j != counter_start; ++j)
-      for(u32bit k = 0; k != n + 1; ++k)
-         increment(seed);
-
-   for(u32bit j = 0; j != 4096 - counter_start; ++j)
+   for(u32bit j = 0; j != 4096; ++j)
       {
       global_state().pulse(PRIME_SEARCHING);
 
-      for(u32bit k = 0; k != n + 1; ++k)
+      for(u32bit k = 0; k <= n; ++k)
          {
          increment(seed);
-         sha1->update(seed);
-         sha1->final(W + 20 * (n-k));
+         hash->update(seed);
+         hash->final(V + HASH_SIZE * (n-k));
          }
-      X.binary_decode(W + (20 - 1 - b/8), W.size() - (20 - 1 - b/8));
+
+      X.binary_decode(V + (HASH_SIZE - 1 - b/8), V.size() - (HASH_SIZE - 1 - b/8));
       X.set_bit(pbits-1);
 
       p = X - (X % (2*q) - 1);
@@ -95,15 +109,16 @@ bool DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
 * Generate DSA Primes                            *
 *************************************************/
 SecureVector<byte> DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
-                                                 u32bit pbits)
+                                                 u32bit pbits, u32bit qbits)
    {
-   SecureVector<byte> seed(20);
+   SecureVector<byte> seed(qbits/8);
 
    while(true)
       {
       Global_RNG::randomize(seed, seed.size());
       global_state().pulse(PRIME_SEARCHING);
-      if(generate_dsa_primes(p, q, seed, seed.size(), pbits, 0))
+
+      if(generate_dsa_primes(p, q, pbits, qbits, seed))
          return seed;
       }
    }
