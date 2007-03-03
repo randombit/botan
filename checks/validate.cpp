@@ -9,6 +9,7 @@
 #include <cstdlib>
 
 #include <botan/filters.h>
+#include <botan/exceptn.h>
 #include <botan/rng.h>
 using namespace Botan_types;
 
@@ -51,10 +52,7 @@ u32bit do_validation_tests(const std::string& filename, bool should_pass)
    bool first_mark = true;
 
    if(!test_data)
-       {
-       std::cout << "Couldn't open test file " << filename << std::endl;
-       std::exit(1);
-       }
+      throw Botan::Stream_IO_Error("Couldn't open test file " + filename);
 
    u32bit errors = 0, alg_count = 0;
    std::string algorithm;
@@ -66,10 +64,8 @@ u32bit do_validation_tests(const std::string& filename, bool should_pass)
    while(!test_data.eof())
       {
       if(test_data.bad() || test_data.fail())
-         {
-         std::cout << "File I/O error." << std::endl;
-         std::exit(1);
-         }
+         throw Botan::Stream_IO_Error("File I/O error reading from " +
+                                      filename);
 
       std::string line;
       std::getline(test_data, line);
@@ -271,10 +267,7 @@ bool failed_test(const std::string& algo,
             OK = false;
 
       if(!OK)
-         {
-         std::cout << "Peek testing failed!" << std::endl;
-         std::exit(1);
-         }
+         throw Botan::Self_Test_Failure("Peek testing failed in validate.cpp");
       }
 
    if(output == expected && !exp_pass)
