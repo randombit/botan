@@ -31,7 +31,7 @@ DOCDIR        = $(INSTALLROOT)/@{var:docdir}/Botan-$(VERSION)
 OWNER         = @{var:install_user}
 GROUP         = @{var:install_group}
 
-CONFIG_SCRIPT = botan-config
+CONFIG_SCRIPT = @{var:botan_config}
 
 ##################################################
 # Aliases for Common Programs                    #
@@ -51,7 +51,7 @@ RM_R             = @rm -rf
 ##################################################
 # File Lists                                     #
 ##################################################
-CHECK         = check
+CHECK         = @{var:check_prefix}check
 
 DOCS          = @{var:doc_files}
 
@@ -66,7 +66,7 @@ CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
 
 LIBRARIES     = $(STATIC_LIB)
 
-LIBNAME       = libbotan
+LIBNAME       = @{var:lib_prefix}libbotan
 STATIC_LIB    = $(LIBNAME).a
 
 all: $(LIBRARIES)

@@ -79,8 +79,21 @@ sub main {
     &$default_value_is('autoconfig', 1);
     &$default_value_is('debug', 0);
     &$default_value_is('shared', 'yes');
-    &$default_value_is('build-dir', 'build');
     &$default_value_is('local_config', '');
+
+    if(defined($$config{'build-dir'})) {
+        $$config{'botan-config'} = File::Spec->catfile($$config{'build-dir'}, 'botan-config');
+        $$config{'makefile'} = File::Spec->catfile($$config{'build-dir'}, 'Makefile');
+        $$config{'check_prefix'} = $$config{'build-dir'};
+        $$config{'lib_prefix'} = $$config{'build-dir'};
+    }
+    else { # defaults
+        $$config{'build-dir'} = 'build';
+        $$config{'botan-config'} = 'botan-config';
+        $$config{'makefile'} = 'Makefile';
+        $$config{'check_prefix'} = '';
+        $$config{'lib_prefix'} = '';
+    }
 
     choose_target($config, $target);
 
@@ -404,7 +417,7 @@ sub get_options {
                'prefix=s' => sub { &$save_option(@_); },
                'docdir=s' => sub { &$save_option(@_); },
                'libdir=s' => sub { &$save_option(@_); },
-               'build-dir=s' => sub { &$save_option('build', $_[0]); },
+               'build-dir=s' => sub { $$config{'build-dir'} = $_[1]; },
                'local-config=s' =>
                   sub { &$save_option('local_config', slurp_file($_[1])); },
 
@@ -1297,10 +1310,12 @@ sub write_pkg_config {
 
     $$config{'link_to'} = libs('-l', '', 'm', @{$$config{'mod_libs'}});
 
+    my $botan_config = $$config{'botan-config'};
+
     process_template(
        File::Spec->catfile($$config{'config-dir'}, 'botan-config.in'),
-       'botan-config', $config);
-    chmod 0755, 'botan-config';
+                     $botan_config, $config);
+    chmod 0755, $botan_config;
 
     delete $$config{'link_to'};
 }
@@ -1562,7 +1577,7 @@ sub generate_makefile {
 
    trace("'$make_style' -> '$template'");
 
-   process_template($template, 'Makefile', $config);
+   process_template($template, $$config{'makefile'}, $config);
 }
 
 ##################################################

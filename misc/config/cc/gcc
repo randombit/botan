@@ -34,7 +34,7 @@ beos    -> "ld -shared -h $(SONAME)"
 
 <mach_opt>
 # Specializations first (they don't need to be, just clearer)
-i386           -> "-mcpu=i686 -momit-leaf-frame-pointer"
+i386           -> "-mtune=i686 -momit-leaf-frame-pointer"
 r10000         -> "-mips4"
 alpha-ev67     -> "-mcpu=ev6" # FIXME: GCC 3.1 and on has -march=ev67
 alpha-ev68     -> "-mcpu=ev6"
