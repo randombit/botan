@@ -31,7 +31,7 @@ DOCDIR        = $(INSTALLROOT)/@{var:docdir}/Botan-$(VERSION)
 OWNER         = @{var:install_user}
 GROUP         = @{var:install_group}
 
-CONFIG_SCRIPT = @{var:botan_config}
+CONFIG_SCRIPT = @{var:botan-config}
 
 ##################################################
 # Aliases for Common Programs                    #
