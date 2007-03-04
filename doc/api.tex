@@ -976,8 +976,21 @@ for your filters, depending on what you have in mind.
 \pagebreak
 \section{Public Key Cryptography}
 
-Public key algorithms were added in Botan 0.8.0. The major base classes can be
-found in \filename{pubkey.h}.
+Let's create an RSA private key:
+
+\begin{verbatim}
+   RSA_PrivateKey priv_rsa(1024 /* bits */);
+\end{verbatim}
+
+We can easily turn this into a public key, which we can then send to
+someone:
+ 
+\begin{verbatim}
+   RSA_PublicKey pub_rsa = priv_rsa;
+\end{verbatim}
+
+
+
 
 \subsection{Creating PK Algorithm Key Objects}
 
@@ -2164,39 +2177,6 @@ A MAC has the \type{SymmetricAlgorithm} interface in addition to the
 \type{BufferedComputation} interface.
 
 \pagebreak
-\section{CMS}
-
-The Cryptographic Message Syntax (CMS) is an IETF standardized format for
-message encryption and signatures. It is based on PKCS \#7, but has been
-extended to allow compression, authentication, and password based encryption.
-Some simple uses of CMS will inter-operate with PKCS \#7 implementations, but
-most uses will cause incompatibilities.
-
-CMS is based on the idea of layering. At the lowest level is a data type (the
-actual message), which is encapsulated in another layer, for example one that
-provides encryption or adds a signature. This layer can in turn be encapsulated
-in another layer, and so on as often as you like.
-
-\emph{Note that CMS is not available in the current distribution. You can
-download an alpha version separately from the website.}
-
-\subsection{Encoding}
-
-The CMS encoder included in Botan does not allow you to use the full range of
-options available; for example, when signing, you can only sign with one key at
-a time (this particular restriction may be changed in later versions). However,
-you can do repeated signature operations, signing the previously signed
-data. Semantically, this is not quite the same (since the second and later
-signatures sign the signatures that came before it, as well as the data), but
-practically speaking it's the same thing.
-
-WRITEME
-
-\subsection{Decoding}
-
-WRITEME
-
-\pagebreak
 \section{Random Number Generators}
 
 The random number generators provided in Botan are meant for creating keys,
@@ -2866,6 +2846,288 @@ some_thing = 1.2.3              # some OID
 another_thing = some_thing.4.5  # another_thing = 1.2.3.4.5
 \end{verbatim}
 
+
+\pagebreak
+\section{Botan's Modules}
+
+Botan comes with a variety of modules which can be compiled into the system.
+These will not be available on all installations of the library, but you can
+check for their availability based on whether or not certain macros are
+defined.
+
+\subsection{Pipe I/O for Unix File Descriptors}
+
+This is a fairly minor feature, but it comes in handy sometimes. In all
+installations of the library, Botan's \type{Pipe} object overloads the
+\keyword{<<} and \keyword{>>} operators for C++ iostream objects, which is
+usually more than sufficient for doing I/O.
+
+However, there are cases where the iostream hierarchy does not map well to
+local 'file types', so there is also the ability to do I/O directly with Unix
+file descriptors. This is most useful when you want to read from or write to
+something like a TCP or Unix-domain socket, or a pipe, since for simple file
+access it's usually easier to just use C++'s file streams.
+
+If \macro{BOTAN\_EXT\_PIPE\_UNIXFD\_IO} is defined, then you can use the
+overloaded I/O operators with Unix file descriptors. For an example of this,
+check out the \filename{hash\_fd} example, included in the Botan distribution.
+
+\subsection{Entropy Sources}
+
+All of these are used by the \function{Global\_RNG::seed} function if they are
+available. Since this function is called by the \type{LibraryInitializer} class
+when it is created, it is fairly rare that you will need to deal with any of
+these classes directly. Even in the case of a long-running server that needs to
+renew its entropy poll, it is easier to simply call
+\function{Global\_RNG::seed} (see the section entitled ``The Global PRNG'' for
+more details).
+
+\noindent
+\type{EGD\_EntropySource}: Query an EGD socket. If the macro
+\macro{BOTAN\_EXT\_ENTROPY\_SRC\_EGD} is defined, it can be found in
+\filename{es\_egd.h}. The constructor takes a \type{std::vector<std::string>}
+that specifies the paths to look for an EGD socket.
+
+\noindent
+\type{Unix\_EntropySource}: This entropy source executes programs common on
+Unix systems (such as \filename{uptime}, \filename{vmstat}, and \filename{df})
+and adds it to a buffer. It's quite slow due to process overhead, and (roughly)
+1 bit of real entropy is in each byte that is output. It is declared in
+\filename{es\_unix.h}, if \macro{BOTAN\_EXT\_ENTROPY\_SRC\_UNIX} is
+defined. If you don't have \filename{/dev/urandom} \emph{or} EGD, this is
+probably the thing to use. For a long-running process on Unix, keep on object
+of this type around and run fast polls ever few minutes.
+
+\noindent
+\type{FTW\_EntropySource}: Walk through a filesystem (the root to start
+searching is passed as a string to the constructor), reading files. This tends
+to only be useful on things like \filename{/proc} which have a great deal of
+variability over time, and even then there is only a small amount of entropy
+gathered: about 1 bit of entropy for every 16 bits of output (and many hundreds
+of bits are read in order to get that 16 bits). It is declared in
+\filename{es\_ftw.h}, if \macro{BOTAN\_EXT\_ENTROPY\_SRC\_FTW} is defined. Only
+use this as a last resort. I don't really trust it, and neither should you.
+
+\noindent
+\type{Win32\_CAPI\_EntropySource}: This routines gathers entropy from a Win32
+CAPI module. It takes an optional \type{std::string} which will specify what
+type of CAPI provider to use. Generally the CAPI RNG is always the same
+software-based PRNG, but there are a few which may use a hardware RNG. By
+default it will use the first provider listed in the option
+``rng/ms\_capi\_prov\_type'' which is available on the machine (currently the
+providers ``RSA\_FULL'', ``INTEL\_SEC'', ``FORTEZZA'', and ``RNG'' are
+recognized).
+
+\noindent
+\type{BeOS\_EntropySource}: Query system statistics using various BeOS-specific
+APIs.
+
+\noindent
+\type{Pthread\_EntropySource}: Attempt to gather entropy based on jitter
+between a number of threads competing for a single mutex. This entropy source
+is \emph{very} slow, and highly questionable in terms of security. However, it
+provides a worst-case fallback on systems which don't have Unix-like features,
+but do support POSIX threads. This module is currently unavailable due to
+problems on some systems.
+
+\subsection{Compressors}
+
+There are two compression algorithms supported by Botan, Zlib and Bzip2 (Gzip
+and Zip encoding will be supported in future releases). Only lossless
+compression algorithms are currently supported by Botan, because they tend to
+be the most useful for cryptography. However, it is very reasonable to consider
+supporting something like GSM speech encoding (which is lossy), for use in
+encrypted voice applications.
+
+You should always compress \emph{before} you encrypt, because encryption seeks
+to hide the redundancy that compression is supposed to try to find and remove.
+
+\subsubsection{Bzip2}
+
+To test for Bzip2, check to see if \macro{BOTAN\_EXT\_COMPRESSOR\_BZIP2} is
+defined. If so, you can include \filename{bzip2.h}, which will declare a pair
+of \type{Filter} objects: \type{Bzip2\_Compression} and
+\type{Bzip2\_Decompression}.
+
+You should be prepared to take an exception when using the decompressing
+filter, for if the input is not valid Bzip2 data, that is what you will
+receive. You can specify the desired level of compression to
+\type{Bzip2\_Compression}'s constructor as an integer between 1 and 9, 1
+meaning worst compression, and 9 meaning the best. The default is to use 9,
+since small values take the same amount of time, just use a little less memory.
+
+The Bzip2 module was contributed by Peter J. Jones.
+
+\subsubsection{Zlib}
+
+Zlib compression works pretty much like Bzip2 compression. The only differences
+in this case are that the macro is \macro{BOTAN\_EXT\_COMPRESSOR\_ZLIB}, the
+header you need to include is called \filename{botan/zlib.h} (remember that you
+shouldn't just \verb|#include <zlib.h>|, or you'll get the regular zlib API,
+which is not what you want). The Botan classes for Zlib
+compression/decompression are called \type{Zlib\_Compression} and
+\type{Zlib\_Decompression}.
+
+Like Bzip2, a \type{Zlib\_Decompression} object will throw an exception if
+invalid (in the sense of not being in the Zlib format) data is passed into it.
+
+In the case of zlib's algorithm, a worse compression level will be faster than
+a very high compression ratio. For this reason, the Zlib compressor will
+default to using a compression level of 6. This tends to give a good trade off
+in terms of time spent to compression achieved. There are several factors you
+need to consider in order to decide if you should use a higher compression
+level:
+
+\begin{list}{$\cdot$}
+  \item Better security: the less redundancy in the source text, the harder it
+        is to attack your ciphertext. This is not too much of a concern,
+        because with decent algorithms using sufficiently long keys, it doesn't
+        really matter \emph{that} much (but it certainly can't hurt).
+  \item
+
+  \item Decreasing returns. Some simple experiments by the author showed
+        minimal decreases in the size between level 6 and level 9 compression
+        with large (1 to 3 megabyte) files. There was some difference, but it
+        wasn't that much.
+
+  \item CPU time. Level 9 zlib compression is often two to four times as slow
+        as level 6 compression. This can make a substantial difference in the
+        overall runtime of a program.
+\end{list}
+
+While the zlib compression library uses the same compression algorithm as the
+gzip and zip programs, the format is different. The zlib format is defined in
+RFC 1950.
+
+\subsubsection{Data Sources}
+
+A \type{DataSource} is a simple abstraction for a thing that stores bytes. This
+type is used fairly heavily in the areas of the API related to ASN.1
+encoding/decoding. The following types are \type{DataSource}s: \type{Pipe},
+\type{SecureQueue}, and a couple of special purpose ones:
+\type{DataSource\_Memory} and \type{DataSource\_Stream}.
+
+You can create a \type{DataSource\_Memory} with an array of bytes and a length
+field. The object will make a copy of the data, so you don't have to worry
+about keeping that memory allocated. This is mostly for internal use, but if it
+comes in handy, feel free to use it.
+
+A \type{DataSource\_Stream} is probably more useful than the memory based
+one. It's constructors take either a \type{std::istream} or a
+\type{std::string}. If it's a stream, the data source will use the
+\type{istream} to satisfy read requests (this is particularly useful to use
+with \type{std::cin}). If the string version is used, it will attempt to open
+up a file with that name and read from it.
+
+\subsubsection{Data Sinks}
+
+A \type{DataSink} (in \filename{data\_snk.h}) is a \type{Filter} which takes
+arbitrary amounts of input, and produces no output. Generally, this means it's
+doing something with the data outside the realm of what
+\type{Filter}/\type{Pipe} can handle, for example, writing it to a file (which
+is what the \type{DataSink\_Stream} does). There is no need for
+\type{DataSink}s which write to a \type{std::string} or memory buffer, because
+\type{Pipe} can handle that by itself.
+
+Here's a quick example of using a \type{DataSink}, which encrypts
+\filename{in.txt} and sends the output to \filename{out.txt}. There is
+no explicit output operation; the writing of \filename{out.txt} is
+implicit.
+
+\begin{verbatim}
+   DataSource_Stream in("in.txt");
+   Pipe pipe(new CBC_Encryption("Blowfish", "PKCS7", key, iv),
+             new DataSink_Stream("out.txt"));
+   pipe.process_msg(in);
+\end{verbatim}
+
+A real advantage of this is that even if ``in.txt'' is large, only as
+much memory is needed for internal I/O buffers will actually be used.
+
+\subsection{Writing Modules}
+
+It's a lot simpler to write modules for Botan that it is to write code
+in the core library, for several reasons. First, a module can rely on
+external libraries and services beyond the base ISO C++ libraries, and
+also machine dependent features. Also, the code can be added at
+configuration time on the user's end with very little effort (\ie the
+code can be distributed separately, and included by the user without
+needing to patch any existing source files).
+
+Each module lives in a subdirectory of the \filename{modules}
+directory, which exists at the top-level of the Botan source tree. The
+``short name'' of the module is the same as the name of this
+directory. The only required file in this directory is
+\filename{modinfo.txt}, which contains directives that specify what a
+particular module does, what systems it runs on, and so on. Comments
+in \filename{modinfo.txt} start with a \verb|#| character and continue
+to end of line.
+
+Recognized directives include:
+
+\newcommand{\directive}[2]{
+   \vskip 4pt
+   \noindent
+   \texttt{#1}: #2
+}
+
+\directive{realname <name>}{Specify that the 'real world' name of this module
+   is \texttt{<name>}.}
+
+\directive{note <note>}{Add a note that will be seen by the end-user at
+configure time if the module is included into the library.}
+
+\directive{require\_version <version>}{Require at configure time that
+the version of Botan in use be at least \texttt{<version>}.}
+
+\directive{define <macro>[,<macro>[,...]]}{Cause the macro
+   \macro{BOTAN\_EXT\_<macro>} (for each instance of \macro{<macro>}
+   in the directive) to be defined in \filename{build.h}. This should
+   only be used if the module creates user-visible changes. There is a
+   set of conventions that should be followed in deciding what to call
+   this macro (where xxx denotes some descriptive and distinguishing
+   characteristic of the thing implemented, such as
+   \macro{ALLOC\_MLOCK} or \macro{MUTEX\_PTHREAD}):
+
+\begin{itemize}
+\item Allocator: \macro{ALLOC\_xxx}
+\item Compressors: \macro{COMPRESSOR\_xxx}
+\item EntropySource: \macro{ENTROPY\_SRC\_xxx}
+\item Engines: \macro{ENGINE\_xxx}
+\item Mutex: \macro{MUTEX\_xxx}
+\item Timer: \macro{TIMER\_xxx}
+\end{itemize}
+}
+
+\directive{<libs> / </libs>}{This specifies any extra libraries to be
+linked in.  It is a mapping from OS to library name, for example
+\texttt{linux -> rt}, which means that on Linux librt should be linked
+in. You can also use ``all'' to force the library to be linked in on
+all systems.}
+
+\directive{<add> / </add>}{Tell the configuration script to add the
+   files named between these two tags into the source tree. All these
+   files must exist in the current module directory.}
+
+\directive{<ignore> / </ignore>}{Tell the configuration script to
+   ignore the files named in the main source tree. This is useful, for
+   example, when replacing a C++ implementation with a pure assembly
+   version.}
+
+\directive{<replace> / </replace>}{Tell the configuration script to
+   ignore the file given in the main source tree, and instead use the
+   one in the module's directory.}
+
+Additionally, the module file can contain blocks, delimited by the
+following pairs:
+
+\texttt{<os> / </os>}, \texttt{<arch> / </arch>}, \texttt{<cc> / </cc>}
+
+\noindent
+For example, putting ``alpha'' and ``ia64'' in a \texttt{<arch>} block will
+make the configuration script only allow the module to be compiled on those
+architectures. Not having a block means any value is acceptable.
+
 \pagebreak
 \section{Miscellaneous}
 
@@ -3094,205 +3356,7 @@ example, if the \texttt{timer\_unix} module is available, one could call
 return of the \function{gettimeofday} function call. This is done automatically
 by the \type{LibraryInitializer} object.
 
-\pagebreak
-\section{Botan's Modules}
-
-Botan comes with a variety of modules which can be compiled into the system.
-These will not be available on all installations of the library, but you can
-check for their availability based on whether or not certain macros are
-defined.
-
-\subsection{Pipe I/O for Unix File Descriptors}
-
-This is a fairly minor feature, but it comes in handy sometimes. In all
-installations of the library, Botan's \type{Pipe} object overloads the
-\keyword{<<} and \keyword{>>} operators for C++ iostream objects, which is
-usually more than sufficient for doing I/O.
-
-However, there are cases where the iostream hierarchy does not map well to
-local 'file types', so there is also the ability to do I/O directly with Unix
-file descriptors. This is most useful when you want to read from or write to
-something like a TCP or Unix-domain socket, or a pipe, since for simple file
-access it's usually easier to just use C++'s file streams.
-
-If \macro{BOTAN\_EXT\_PIPE\_UNIXFD\_IO} is defined, then you can use the
-overloaded I/O operators with Unix file descriptors. For an example of this,
-check out the \filename{hash\_fd} example, included in the Botan distribution.
-
-\subsection{Entropy Sources}
-
-All of these are used by the \function{Global\_RNG::seed} function if they are
-available. Since this function is called by the \type{LibraryInitializer} class
-when it is created, it is fairly rare that you will need to deal with any of
-these classes directly. Even in the case of a long-running server that needs to
-renew its entropy poll, it is easier to simply call
-\function{Global\_RNG::seed} (see the section entitled ``The Global PRNG'' for
-more details).
-
-\noindent
-\type{EGD\_EntropySource}: Query an EGD socket. If the macro
-\macro{BOTAN\_EXT\_ENTROPY\_SRC\_EGD} is defined, it can be found in
-\filename{es\_egd.h}. The constructor takes a \type{std::vector<std::string>}
-that specifies the paths to look for an EGD socket.
-
-\noindent
-\type{Unix\_EntropySource}: This entropy source executes programs common on
-Unix systems (such as \filename{uptime}, \filename{vmstat}, and \filename{df})
-and adds it to a buffer. It's quite slow due to process overhead, and (roughly)
-1 bit of real entropy is in each byte that is output. It is declared in
-\filename{es\_unix.h}, if \macro{BOTAN\_EXT\_ENTROPY\_SRC\_UNIX} is
-defined. If you don't have \filename{/dev/urandom} \emph{or} EGD, this is
-probably the thing to use. For a long-running process on Unix, keep on object
-of this type around and run fast polls ever few minutes.
-
-\noindent
-\type{FTW\_EntropySource}: Walk through a filesystem (the root to start
-searching is passed as a string to the constructor), reading files. This tends
-to only be useful on things like \filename{/proc} which have a great deal of
-variability over time, and even then there is only a small amount of entropy
-gathered: about 1 bit of entropy for every 16 bits of output (and many hundreds
-of bits are read in order to get that 16 bits). It is declared in
-\filename{es\_ftw.h}, if \macro{BOTAN\_EXT\_ENTROPY\_SRC\_FTW} is defined. Only
-use this as a last resort. I don't really trust it, and neither should you.
-
-\noindent
-\type{Win32\_CAPI\_EntropySource}: This routines gathers entropy from a Win32
-CAPI module. It takes an optional \type{std::string} which will specify what
-type of CAPI provider to use. Generally the CAPI RNG is always the same
-software-based PRNG, but there are a few which may use a hardware RNG. By
-default it will use the first provider listed in the option
-``rng/ms\_capi\_prov\_type'' which is available on the machine (currently the
-providers ``RSA\_FULL'', ``INTEL\_SEC'', ``FORTEZZA'', and ``RNG'' are
-recognized).
-
-\noindent
-\type{BeOS\_EntropySource}: Query system statistics using various BeOS-specific
-APIs.
-
-\noindent
-\type{Pthread\_EntropySource}: Attempt to gather entropy based on jitter
-between a number of threads competing for a single mutex. This entropy source
-is \emph{very} slow, and highly questionable in terms of security. However, it
-provides a worst-case fallback on systems which don't have Unix-like features,
-but do support POSIX threads. This module is currently unavailable due to
-problems on some systems.
-
-\subsection{Compressors}
-
-There are two compression algorithms supported by Botan, Zlib and Bzip2 (Gzip
-and Zip encoding will be supported in future releases). Only lossless
-compression algorithms are currently supported by Botan, because they tend to
-be the most useful for cryptography. However, it is very reasonable to consider
-supporting something like GSM speech encoding (which is lossy), for use in
-encrypted voice applications.
-
-You should always compress \emph{before} you encrypt, because encryption seeks
-to hide the redundancy that compression is supposed to try to find and remove.
-
-\subsubsection{Bzip2}
-
-To test for Bzip2, check to see if \macro{BOTAN\_EXT\_COMPRESSOR\_BZIP2} is
-defined. If so, you can include \filename{bzip2.h}, which will declare a pair
-of \type{Filter} objects: \type{Bzip2\_Compression} and
-\type{Bzip2\_Decompression}.
-
-You should be prepared to take an exception when using the decompressing
-filter, for if the input is not valid Bzip2 data, that is what you will
-receive. You can specify the desired level of compression to
-\type{Bzip2\_Compression}'s constructor as an integer between 1 and 9, 1
-meaning worst compression, and 9 meaning the best. The default is to use 9,
-since small values take the same amount of time, just use a little less memory.
-
-The Bzip2 module was contributed by Peter J. Jones.
-
-\subsubsection{Zlib}
-
-Zlib compression works pretty much like Bzip2 compression. The only differences
-in this case are that the macro is \macro{BOTAN\_EXT\_COMPRESSOR\_ZLIB}, the
-header you need to include is called \filename{botan/zlib.h} (remember that you
-shouldn't just \verb|#include <zlib.h>|, or you'll get the regular zlib API,
-which is not what you want). The Botan classes for Zlib
-compression/decompression are called \type{Zlib\_Compression} and
-\type{Zlib\_Decompression}.
-
-Like Bzip2, a \type{Zlib\_Decompression} object will throw an exception if
-invalid (in the sense of not being in the Zlib format) data is passed into it.
-
-In the case of zlib's algorithm, a worse compression level will be faster than
-a very high compression ratio. For this reason, the Zlib compressor will
-default to using a compression level of 6. This tends to give a good trade off
-in terms of time spent to compression achieved. There are several factors you
-need to consider in order to decide if you should use a higher compression
-level:
-
-\begin{list}{$\cdot$}
-  \item Better security: the less redundancy in the source text, the harder it
-        is to attack your ciphertext. This is not too much of a concern,
-        because with decent algorithms using sufficiently long keys, it doesn't
-        really matter \emph{that} much (but it certainly can't hurt).
-  \item
-
-  \item Decreasing returns. Some simple experiments by the author showed
-        minimal decreases in the size between level 6 and level 9 compression
-        with large (1 to 3 megabyte) files. There was some difference, but it
-        wasn't that much.
-
-  \item CPU time. Level 9 zlib compression is often two to four times as slow
-        as level 6 compression. This can make a substantial difference in the
-        overall runtime of a program.
-\end{list}
-
-While the zlib compression library uses the same compression algorithm as the
-gzip and zip programs, the format is different. The zlib format is defined in
-RFC 1950.
-
-\subsubsection{Data Sources}
-
-A \type{DataSource} is a simple abstraction for a thing that stores bytes. This
-type is used fairly heavily in the areas of the API related to ASN.1
-encoding/decoding. The following types are \type{DataSource}s: \type{Pipe},
-\type{SecureQueue}, and a couple of special purpose ones:
-\type{DataSource\_Memory} and \type{DataSource\_Stream}.
-
-You can create a \type{DataSource\_Memory} with an array of bytes and a length
-field. The object will make a copy of the data, so you don't have to worry
-about keeping that memory allocated. This is mostly for internal use, but if it
-comes in handy, feel free to use it.
-
-A \type{DataSource\_Stream} is probably more useful than the memory based
-one. It's constructors take either a \type{std::istream} or a
-\type{std::string}. If it's a stream, the data source will use the
-\type{istream} to satisfy read requests (this is particularly useful to use
-with \type{std::cin}). If the string version is used, it will attempt to open
-up a file with that name and read from it.
-
-\subsubsection{Data Sinks}
-
-A \type{DataSink} (in \filename{data\_snk.h}) is a \type{Filter} which takes
-arbitrary amounts of input, and produces no output. Generally, this means it's
-doing something with the data outside the realm of what
-\type{Filter}/\type{Pipe} can handle, for example, writing it to a file (which
-is what the \type{DataSink\_Stream} does). There is no need for
-\type{DataSink}s which write to a \type{std::string} or memory buffer, because
-\type{Pipe} can handle that by itself.
-
-Here's a quick example of using a \type{DataSink}, which encrypts
-\filename{in.txt} and sends the output to \filename{out.txt}. There is
-no explicit output operation; the writing of \filename{out.txt} is
-implicit.
-
-\begin{verbatim}
-   DataSource_Stream in("in.txt");
-   Pipe pipe(new CBC_Encryption("Blowfish", "PKCS7", key, iv),
-             new DataSink_Stream("out.txt"));
-   pipe.process_msg(in);
-\end{verbatim}
-
-A real advantage of this is that even if ``in.txt'' is large, only as
-much memory is needed for internal I/O buffers will actually be used.
-
-\pagebreak
-\section{BigInt}
+\subsection{BigInt}
 
 \type{BigInt} is Botan's implementation of a multiple-precision
 integer. Thanks to C++'s operator overloading features, using \type{BigInt} is
@@ -3361,7 +3425,7 @@ GCD algorithm.
 primality test with fixed bases. For higher assurance, use
 \function{verify\_prime}, which uses more rounds and randomized 48-bit bases.
 
-\subsection{Efficiency Hints}
+\subsubsection{Efficiency Hints}
 
 If you can, always use expressions of the form \verb|a += b| over
 \verb|a = a + b|. The difference can be \emph{very} substantial, because the
@@ -3382,7 +3446,132 @@ library knows what the assumptions are. The interfaces for these
 functions can change completely without notice.
 
 \pagebreak
-\section{Removing Algorithms}
+\section{Algorithms}
+
+\subsection{Recommended Algorithms}
+
+This section is by no means the last word on selecting which algorithms to use.
+However, Botan includes a sometimes bewildering array of possible algorithms,
+and unless you're familiar with the latest developments in the field, it can be
+hard to know what is secure and what is not. The following attributes of the
+algorithms were evaluated when making this list: security, standardization,
+patent status, support by other implementations, and efficiency (in roughly
+that order).
+
+It is intended as a set of simple guidelines for developers, and nothing more.
+It's entirely possible that there are algorithms in Botan that will turn out to
+be more secure than the ones listed, but the algorithms listed here are
+(currently) thought to be safe.
+
+\begin{list}{$\cdot$}
+  \item Block ciphers: TripleDES or AES in CBC mode with ``PKCS7'' padding.
+  \item
+
+  \item Stream Ciphers: Use any of the recommended block ciphers in CTR mode.
+
+  \item Hash functions: SHA-1, SHA-256, SHA-512
+
+  \item MACs: HMAC with any recommended hash function
+
+  \item Public Key Encryption: RSA with ``EME1(SHA-1)''
+
+  \item Public Key Signatures: RSA with EMSA4 and any recommended hash, or DSA
+     with ``EMSA1(SHA-1)''
+
+  \item Key Agreement: Diffie-Hellman, with ``KDF2(SHA-1)''
+\end{list}
+
+\subsection{Compliance with Standards}
+
+Botan is/should be compatible with many cryptographic standards, including the
+following:
+
+\newcommand{\standard}[2]{
+   \vskip 4pt
+   * #1: \textbf{#2}
+}
+
+\standard{RSA}{PKCS \#1 v2.1, ANSI X9.31}
+
+\standard{DSA}{ANSI X9.30, FIPS 186-2}
+
+\standard{Diffie-Hellman}{ANSI X9.42, PKCS \#3}
+
+\standard{Certificates}{ITU X.509, RFC 3280/3281 (PKIX), PKCS \#9 v2.0,
+PKCS \#10}
+
+\standard{Private Key Formats}{PKCS \#5 v2.0, PKCS \#8}
+
+\standard{DES/DES-EDE}{FIPS 46-3, ANSI X3.92, ANSI X3.106}
+
+\standard{SHA-1}{FIPS 180-2}
+
+\standard{HMAC}{ANSI X9.71, FIPS 198}
+
+\standard{ANSI X9.19 MAC}{ANSI X9.9, ANSI X9.19}
+
+\vskip 8pt
+\noindent
+There is also support for the very general standards of \textbf{IEEE 1363-2000}
+and \textbf{1363a}. Most of the contents of such are included in the standards
+mentioned above, in various forms (usually with extra restrictions which 1363
+does not impose).
+
+\subsection{Algorithms Listing}
+
+Botan includes a very sizable number of cryptographic algorithms. In
+nearly all cases, you never need to know the header file or type name
+to use them. However, you do need to know what string (or strings) are
+used to identify that algorithm. Generally, these names conform to
+those set out by SCAN (Standard Cryptographic Algorithm Naming), which
+is a document which specifies how strings are mapped onto algorithm
+objects, which is useful for a wide variety of crypto APIs (SCAN is
+oriented towards Java, but Botan and several other non-Java libraries
+also make at least some use of it). For full details, read the SCAN
+document, which can be found at
+\url{http://www.users.zetnet.co.uk/hopwood/crypto/scan/}
+
+Many of these algorithms can take options (such as the number of
+rounds in a block cipher, the output size of a hash function,
+etc). These are shown in the following list; all of them default to
+reasonable values (unless otherwise marked). There are
+algorithm-specific limits on most of them. When you see something like
+``HASH'' or ``BLOCK'', that means you should insert the name of some
+algorithm of that type. There are no defaults for those options.
+
+A few very obscure algorithms are skipped; if you need one of them,
+you'll know it, and you can look in the appropriate header to see what
+that classes' \function{name} function returns (the names tend to
+match that in SCAN, if it's defined there).
+
+\begin{list}{$\cdot$}
+  \item ROUNDS: The number of rounds in a block cipher.
+  \item
+  \item OUTSZ: The output size of a hash function or MAC
+  \item PASS: The number of passes in a hash function (more passes generally
+               means more security).
+\end{list}
+
+\vskip .05in
+\noindent
+\textbf{Block Ciphers:} ``AES'', ``Blowfish'', ``CAST-128'',
+``CAST-256'', ``DES'', ``DESX'', ``TripleDES'', ``GOST'', ``IDEA'',
+``MARS'', ``MISTY1(ROUNDS)'', ``RC2'', ``RC5(ROUNDS)'', ``RC6'',
+``SAFER-SK(ROUNDS)'', ``SEED'', ``Serpent'', ``Skipjack'', ``Square'',
+``TEA'', ``Twofish'', ``XTEA''
+
+\noindent
+\textbf{Stream Ciphers:} ``ARC4'', ``MARK4'', ``Turing'', ``WiderWake4+1-BE''
+
+\noindent
+\textbf{Hash Functions:} ``FORK-256'', ``HAS-160'', ``MD2'', ``MD4'', ``MD5'',
+``RIPEMD-128'', ``RIPEMD-160'', ``SHA-160'', ``SHA-256'', ``SHA-384'',
+``SHA-512'', ``Tiger(OUTSZ,PASS)'', ``Whirlpool''
+
+\noindent
+\textbf{MACs:} ``HMAC(HASH)'', ``CMAC(BLOCK)'', ``X9.19-MAC''
+
+\subsection{Removing Algorithms}
 
 You may well want to remove some of Botan's algorithms in order to fit it into
 a memory-constrained system, where you're counting the kilobytes. For the most
@@ -3448,220 +3637,6 @@ advantage of an algorithm which is not currently part of Botan. If it's not
 available, one can simply fall back on another algorithm, and when/if it is
 added to Botan, the application will start using it automagically.
 
-\pagebreak
-\section{Writing Modules}
-
-It's a lot simpler to write modules for Botan that it is to write code
-in the core library, for several reasons. First, a module can rely on
-external libraries and services beyond the base ISO C++ libraries, and
-also machine dependent features. Also, the code can be added at
-configuration time on the user's end with very little effort (\ie the
-code can be distributed separately, and included by the user without
-needing to patch any existing source files).
-
-Each module lives in a subdirectory of the \filename{modules}
-directory, which exists at the top-level of the Botan source tree. The
-``short name'' of the module is the same as the name of this
-directory. The only required file in this directory is
-\filename{modinfo.txt}, which contains directives that specify what a
-particular module does, what systems it runs on, and so on. Comments
-in \filename{modinfo.txt} start with a \verb|#| character and continue
-to end of line.
-
-Recognized directives include:
-
-\newcommand{\directive}[2]{
-   \vskip 4pt
-   \noindent
-   \texttt{#1}: #2
-}
-
-\directive{realname <name>}{Specify that the 'real world' name of this module
-   is \texttt{<name>}.}
-
-\directive{note <note>}{Add a note that will be seen by the end-user at
-configure time if the module is included into the library.}
-
-\directive{require\_version <version>}{Require at configure time that
-the version of Botan in use be at least \texttt{<version>}.}
-
-\directive{define <macro>[,<macro>[,...]]}{Cause the macro
-   \macro{BOTAN\_EXT\_<macro>} (for each instance of \macro{<macro>}
-   in the directive) to be defined in \filename{build.h}. This should
-   only be used if the module creates user-visible changes. There is a
-   set of conventions that should be followed in deciding what to call
-   this macro (where xxx denotes some descriptive and distinguishing
-   characteristic of the thing implemented, such as
-   \macro{ALLOC\_MLOCK} or \macro{MUTEX\_PTHREAD}):
-
-\begin{itemize}
-\item Allocator: \macro{ALLOC\_xxx}
-\item Compressors: \macro{COMPRESSOR\_xxx}
-\item EntropySource: \macro{ENTROPY\_SRC\_xxx}
-\item Engines: \macro{ENGINE\_xxx}
-\item Mutex: \macro{MUTEX\_xxx}
-\item Timer: \macro{TIMER\_xxx}
-\end{itemize}
-}
-
-\directive{<libs> / </libs>}{This specifies any extra libraries to be
-linked in.  It is a mapping from OS to library name, for example
-\texttt{linux -> rt}, which means that on Linux librt should be linked
-in. You can also use ``all'' to force the library to be linked in on
-all systems.}
-
-\directive{<add> / </add>}{Tell the configuration script to add the
-   files named between these two tags into the source tree. All these
-   files must exist in the current module directory.}
-
-\directive{<ignore> / </ignore>}{Tell the configuration script to
-   ignore the files named in the main source tree. This is useful, for
-   example, when replacing a C++ implementation with a pure assembly
-   version.}
-
-\directive{<replace> / </replace>}{Tell the configuration script to
-   ignore the file given in the main source tree, and instead use the
-   one in the module's directory.}
-
-Additionally, the module file can contain blocks, delimited by the
-following pairs:
-
-\texttt{<os> / </os>}, \texttt{<arch> / </arch>}, \texttt{<cc> / </cc>}
-
-\noindent
-For example, putting ``alpha'' and ``ia64'' in a \texttt{<arch>} block will
-make the configuration script only allow the module to be compiled on those
-architectures. Not having a block means any value is acceptable.
-
-\pagebreak
-\section{Compliance with Standards}
-
-Botan is/should be compatible with many cryptographic standards, including the
-following:
-
-\newcommand{\standard}[2]{
-   \vskip 4pt
-   * #1: \textbf{#2}
-}
-
-\standard{RSA}{PKCS \#1 v2.1, ANSI X9.31}
-
-\standard{DSA}{ANSI X9.30, FIPS 186-2}
-
-\standard{Diffie-Hellman}{ANSI X9.42, PKCS \#3}
-
-\standard{Certificates}{ITU X.509, RFC 3280/3281 (PKIX), PKCS \#9 v2.0,
-PKCS \#10}
-
-\standard{Private Key Formats}{PKCS \#5 v2.0, PKCS \#8}
-
-\standard{DES/DES-EDE}{FIPS 46-3, ANSI X3.92, ANSI X3.106}
-
-\standard{SHA-1}{FIPS 180-2}
-
-\standard{HMAC}{ANSI X9.71, FIPS 198}
-
-\standard{ANSI X9.19 MAC}{ANSI X9.9, ANSI X9.19}
-
-\vskip 8pt
-\noindent
-There is also support for the very general standards of \textbf{IEEE 1363-2000}
-and \textbf{1363a}. Most of the contents of such are included in the standards
-mentioned above, in various forms (usually with extra restrictions which 1363
-does not impose).
-
-\pagebreak
-\section{Recommended Algorithms}
-
-This section is by no means the last word on selecting which algorithms to use.
-However, Botan includes a sometimes bewildering array of possible algorithms,
-and unless you're familiar with the latest developments in the field, it can be
-hard to know what is secure and what is not. The following attributes of the
-algorithms were evaluated when making this list: security, standardization,
-patent status, support by other implementations, and efficiency (in roughly
-that order).
-
-It is intended as a set of simple guidelines for developers, and nothing more.
-It's entirely possible that there are algorithms in Botan that will turn out to
-be more secure than the ones listed, but the algorithms listed here are
-(currently) thought to be safe.
-
-\begin{list}{$\cdot$}
-  \item Block ciphers: TripleDES or AES in CBC mode with ``PKCS7'' padding.
-  \item
-
-  \item Stream Ciphers: Use any of the recommended block ciphers in CTR mode.
-
-  \item Hash functions: SHA-1, SHA-256, SHA-512
-
-  \item MACs: HMAC with any recommended hash function
-
-  \item Public Key Encryption: RSA with ``EME1(SHA-1)''
-
-  \item Public Key Signatures: RSA with EMSA4 and any recommended hash, or DSA
-     with ``EMSA1(SHA-1)''
-
-  \item Key Agreement: Diffie-Hellman, with ``KDF2(SHA-1)''
-\end{list}
-
-\pagebreak
-\section{Algorithms Listing}
-
-Botan includes a very sizable number of cryptographic algorithms. In
-nearly all cases, you never need to know the header file or type name
-to use them. However, you do need to know what string (or strings) are
-used to identify that algorithm. Generally, these names conform to
-those set out by SCAN (Standard Cryptographic Algorithm Naming), which
-is a document which specifies how strings are mapped onto algorithm
-objects, which is useful for a wide variety of crypto APIs (SCAN is
-oriented towards Java, but Botan and several other non-Java libraries
-also make at least some use of it). For full details, read the SCAN
-document, which can be found at
-\url{http://www.users.zetnet.co.uk/hopwood/crypto/scan/}
-
-Many of these algorithms can take options (such as the number of
-rounds in a block cipher, the output size of a hash function,
-etc). These are shown in the following list; all of them default to
-reasonable values (unless otherwise marked). There are
-algorithm-specific limits on most of them. When you see something like
-``HASH'' or ``BLOCK'', that means you should insert the name of some
-algorithm of that type. There are no defaults for those options.
-
-A few very obscure algorithms are skipped; if you need one of them,
-you'll know it, and you can look in the appropriate header to see what
-that classes' \function{name} function returns (the names tend to
-match that in SCAN, if it's defined there).
-
-\begin{list}{$\cdot$}
-  \item ROUNDS: The number of rounds in a block cipher.
-  \item
-  \item OUTSZ: The output size of a hash function or MAC
-  \item PASS: The number of passes in a hash function (more passes generally
-               means more security).
-\end{list}
-
-\vskip .05in
-\noindent
-\textbf{Block Ciphers:} ``AES'', ``Blowfish'', ``CAST-128'',
-``CAST-256'', ``DES'', ``DESX'', ``TripleDES'', ``GOST'', ``IDEA'',
-``MARS'', ``MISTY1(ROUNDS)'', ``RC2'', ``RC5(ROUNDS)'', ``RC6'',
-``SAFER-SK(ROUNDS)'', ``SEED'', ``Serpent'', ``Skipjack'', ``Square'',
-``TEA'', ``Twofish'', ``XTEA''
-
-\noindent
-\textbf{Stream Ciphers:} ``ARC4'', ``MARK4'', ``Turing'', ``WiderWake4+1-BE''
-
-\noindent
-\textbf{Hash Functions:} ``FORK-256'', ``HAS-160'', ``MD2'', ``MD4'', ``MD5'',
-``RIPEMD-128'', ``RIPEMD-160'', ``SHA-160'', ``SHA-256'', ``SHA-384'',
-``SHA-512'', ``Tiger(OUTSZ,PASS)'', ``Whirlpool''
-
-\noindent
-\textbf{MACs:} ``HMAC(HASH)'', ``CMAC(BLOCK)'', ``X9.19-MAC''
-
-\pagebreak
-\section{Support and Further Information}
-
 \subsection{Compatibility}
 
 Generally, cryptographic algorithms are well standardized, and thus
@@ -3678,6 +3653,9 @@ sample boxes, which leads to issues of endian conventions, etc.
 If you wish maximum portability between different implementations of an
 algorithm, it's best to stick to strongly defined and well standardized
 algorithms, TripleDES, AES, HMAC, and SHA-1 all being good examples.
+
+\pagebreak
+\section{Support and Further Information}
 
 \subsection{Patents}
 
