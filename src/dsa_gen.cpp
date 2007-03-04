@@ -18,23 +18,13 @@ namespace Botan {
 namespace {
 
 /*************************************************
-* Increment the seed by one                      *
-*************************************************/
-void increment(SecureVector<byte>& seed)
-   {
-   for(u32bit j = seed.size(); j > 0; --j)
-      if(++seed[j-1])
-         break;
-   }
-
-/*************************************************
 * Check if this size is allowed by FIPS 186-3    *
 *************************************************/
 bool fips186_3_valid_size(u32bit pbits, u32bit qbits)
    {
    if(pbits == 1024 && qbits == 160)
       return true;
-   if(pbits == 2048 && qbits == 256)
+   if(pbits == 2048 && (qbits == 224 || qbits == 256))
       return true;
    if(pbits == 3072 && qbits == 256)
       return true;
@@ -55,6 +45,10 @@ bool DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
          "FIPS 186-3 does not allow DSA domain parameters of " +
          to_string(pbits) + "/" + to_string(qbits) + " bits long");
 
+   if(qbits == 224)
+      throw Invalid_Argument(
+         "DSA parameter generation with a q of 224 bits not supported");
+
    if(seed_c.size() * 8 < qbits)
       throw Invalid_Argument(
          "Generating a DSA parameter set with a " + to_string(qbits) +
@@ -64,7 +58,26 @@ bool DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
 
    const u32bit HASH_SIZE = hash->OUTPUT_LENGTH;
 
-   SecureVector<byte> seed = seed_c;
+   class Seed
+      {
+      public:
+         Seed(const MemoryRegion<byte>& s) : seed(s) {}
+
+         operator MemoryRegion<byte>& () { return seed; }
+
+         Seed& operator++()
+            {
+            for(u32bit j = seed.size(); j > 0; --j)
+               if(++seed[j-1])
+                  break;
+            return (*this);
+            }
+      private:
+         SecureVector<byte> seed;
+         
+      };
+
+   Seed seed(seed_c);
 
    q.binary_decode(hash->process(seed));
    q.set_bit(qbits-1);
@@ -75,7 +88,8 @@ bool DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
 
    global_state().pulse(PRIME_FOUND);
 
-   const u32bit n = (pbits-1) / (HASH_SIZE * 8), b = (pbits-1) % (HASH_SIZE * 8);
+   const u32bit n = (pbits-1) / (HASH_SIZE * 8),
+                b = (pbits-1) % (HASH_SIZE * 8);
 
    BigInt X;
    SecureVector<byte> V(HASH_SIZE * (n+1));
@@ -86,12 +100,13 @@ bool DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
 
       for(u32bit k = 0; k <= n; ++k)
          {
-         increment(seed);
+         ++seed;
          hash->update(seed);
          hash->final(V + HASH_SIZE * (n-k));
          }
 
-      X.binary_decode(V + (HASH_SIZE - 1 - b/8), V.size() - (HASH_SIZE - 1 - b/8));
+      X.binary_decode(V + (HASH_SIZE - 1 - b/8),
+                      V.size() - (HASH_SIZE - 1 - b/8));
       X.set_bit(pbits-1);
 
       p = X - (X % (2*q) - 1);
