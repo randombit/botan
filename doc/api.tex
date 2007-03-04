@@ -12,7 +12,7 @@
 
 \title{\textbf{Botan API Reference}}
 \author{}
-\date{2006/12/14}
+\date{2007/03/03}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\manpage}[2]{\texttt{#1}(#2)}
@@ -37,8 +37,8 @@
 \tableofcontents
 
 \parskip=5pt
-\pagebreak
 
+\pagebreak
 \section{Introduction}
 
 Botan is a C++ library which attempts to provide the most common cryptographic
@@ -46,56 +46,34 @@ algorithms and operations in an easy to use and portable package. Currently it
 runs on a wide variety of systems, using numerous different compilers and on
 many different CPU architectures.
 
-The base library is written in ISO C++, so it can be ported with minimal fuss,
-but Botan also supports a modules system, which allows system dependent code
-to be compiled into the library for use by application code.
-
-While you are reading this, you may want to refer to the header files
-\filename{base.h} and \filename{pipe.h}. These files contain the classes that
-form the basic interface for the library.
-
-\subsection{Basic Conventions}
-
-With a very small number of exceptions, declarations in the library are
-contained within the namespace \namespace{Botan}. Botan declares several
-typedef'ed types to help buffer it against changes in machine architecture.
-These types are used extensively in the interface, and thus it would be often
-be convenient to use them without the \namespace{Botan} prefix. You can do so
-by \keyword{using} the namespace \namespace{Botan\_types} (this way you can use
-the type names without the namespace prefix, but the remainder of the library
-stays out of the global namespace). The included types are \type{byte} and
-\type{u32bit}, which are unsigned integer types.
-
-The headers for Botan are usually available in the form
-\filename{botan/headername.h}. For brevity in this documentation,
-headers are always just called \filename{headername.h}, but they
-should be used with the \filename{botan/} prefix in your actual code.
+The base library is written in ISO C++, so it can be ported with
+minimal fuss, but Botan also supports a modules system. This system
+exposes system dependent code to the library through portable
+interfaces, extending the set of services available to users.
 
 \subsection{Targets}
 
 Botan's primary targets (system-wise) are 32 and 64-bit systems with
 at least a few megabytes of memory. Generally, given the choice
-between optimizing for 32-bit systems and 64-bit systems, Botan
-chooses 64-bits, simply on the theory that where performance really
-matters (servers), people are using 64-bit machines. And also because
-two of the three machines owned by the primary developer have 64-bit
-CPUs. But performance on 32 bit systems is also quite good.
+between optimizing for 32-bit systems and 64-bit systems, Botan is
+written to prefer 64-bit, simply on the theory that where performance
+is a real concern, modern 64-bit processors are the obvious
+choice. And also because two of the three machines owned by the
+primary developer have 64-bit CPUs. But performance on 32 bit systems
+is also quite good.
 
 Today smaller systems, such as handhelds, set-top boxes, and the
 bigger smart phones and smart cards, are also capable of using
 Botan. However, Botan uses a fairly large amount of code space (up to
 several megabytes, depending upon the compiler and options used),
-which could be prohibitive in some systems. Actual RAM usage is quite
-small, usually under 64K, though C++ runtime overheads might require
-additional memory.
+which could be prohibitive in some systems. Usage of RAM is fairly
+modest, usually under 64K.
 
 Botan's design makes it quite easy to remove unused algorithms in such a way
 that applications do not need to be recompiled to work, even applications that
 use the algorithms in question. They can simply ask Botan if the algorithm
 exists, and if Botan says yes, ask the library to give them such an object for
 that algorithm.
-
-\pagebreak
 
 \subsection{Why Botan?}
 
@@ -160,18 +138,42 @@ And the major downsides and deficiencies are:
 \end{list}
 
 \pagebreak
+\section{Getting Started}
 
-\section{Initializing the Library}
+\subsection{Basic Conventions}
 
-The library needs to have various things done to it in order for it to
-work correctly. To make sure this is done properly, you should create
-a \type{LibraryInitializer} object at the start of your main()
-function, before you start using any part of Botan. The initializer
-does things like initializing the memory allocation system, setting up
-the algorithm lookup tables, finding out if there is a high resolution
-timer available to use, and similar such matters. With no arguments,
-the library is initialized with various default settings. So 99\% of
-the time, all you need is
+With a very small number of exceptions, declarations in the library
+are contained within the namespace \namespace{Botan}. Botan declares
+several typedef'ed types to help buffer it against changes in machine
+architecture.  These types are used extensively in the interface, and
+thus it would be often be convenient to use them without the
+\namespace{Botan} prefix. You can do so by \keyword{using} the
+namespace \namespace{Botan\_types} (this way you can use the type
+names without the namespace prefix, but the remainder of the library
+stays out of the global namespace). The included types are \type{byte}
+and \type{u32bit}, which are unsigned integer types.
+
+The headers for Botan are usually available in the form
+\filename{botan/headername.h}. For brevity in this documentation,
+headers are always just called \filename{headername.h}, but they
+should be used with the \filename{botan/} prefix in your actual code.
+
+\subsection{Initializing the Library}
+
+There are a set of core services which the library needs access to
+while it is performing requests. To ensure these are set up, you must
+create a \type{LibraryInitializer} object (using called 'init' in
+Botan example code; 'botan\_library' or 'botan\_init' make more sense
+in real code) prior to making any calls to Botan. This object's
+lifetime must exceed that of all other Botan objects your application
+creates; for this reason the best place to create the
+\type{LibraryInitializer} is at the start of your \function{main}
+function, since this guarantees that it will be created first and
+destroyed last. The initializer does things like initializing the
+memory allocation system, setting up the algorithm lookup tables,
+finding out if there is a high resolution timer available to use, and
+similar such matters. With no arguments, the library is initialized
+with various default settings. So 99\% of the time, all you need is
 
 \texttt{Botan::LibraryInitializer init;}
 
@@ -191,24 +193,9 @@ take an argument of ``true'' (or ``yes'') or ``false'' (or ``no'') to
 explicitly turn them on or off. Simply giving the name of the option
 without any argument signifies that the option should be toggled on.
 
-\noindent
-\textbf{Option ``secure\_memory''}: Try to create a more secure allocator type
--- one that either locks allocated memory into RAM, or that memory maps a disk
-file that it erases after use. If both are available, it will prefer the memory
-mapping mechanism, because locking memory requires privileges on many systems.
+\newcommand{\option}[1]{\noindent \textbf{Option ``#1''}}
 
-On systems that don't (currently) have any specialized allocators, like
-MS Windows, this option is ignored.
-
-\noindent
-\textbf{Option ``config=/path/to/configfile''}: Process the specified
-configuration file. Configuration files can specify things like the various
-options, new aliases, and new OIDs for algorithms. An example can be found in
-\filename{doc/botan.rc}. Currently only one config= argument will be processed,
-the rest will be ignored.
-
-\noindent
-\textbf{Option ``thread\_safe''}: The library should use mutexes for guarding
+\option{thread\_safe}: The library should use mutexes for guarding
 access to shared resources, such as the memory allocation system. If you pass
 the ``thread\_safe'' option, and the initializer can't find a useful mutex
 module, it will throw an exception. Botan seems to work in threaded programs,
@@ -216,37 +203,38 @@ but it hasn't been tested thoroughly, and problems may remain. Note that Botan
 is not thread safe at the object level; any objects shared between threads need
 explicit locking.
 
-\noindent
-\textbf{Option ``use\_engines''}: Use any available ``engine'' modules to speed
+\option{secure\_memory}: Try to create a more secure allocator type --
+one that either locks allocated memory into RAM, or that memory maps a
+disk file that it erases after use. If both are available, it will
+prefer the memory mapping mechanism, because locking memory requires
+privileges on many systems.
+
+On systems that don't (currently) have any specialized allocators, like
+MS Windows, this option is ignored.
+
+\option{config=/path/to/configfile}: Process the specified
+configuration file. Configuration files can specify things like the
+various options, new aliases, and new OIDs for algorithms. An example
+can be found in \filename{doc/botan.rc}. Currently only one config=
+argument will be processed, the rest will be ignored.
+
+\option{use\_engines}: Use any available ``engine'' modules to speed
 up processing. Currently Botan has support for engines based on the
 AEP1000/AEP2000 crypto hardware cards, GNU MP, and OpenSSL's BN
-library. Further support for crypto acceleration hardware will be added in
-future releases.
+library. Further support for crypto acceleration hardware will be
+added in future releases.
 
-\noindent
-\textbf{Option ``fips140''}: This option, in theory, toggles Botan into FIPS
-140 mode. Please note that Botan \emph{has not} been FIPS 140 validated at this
-time, and that a number of changes will be necessary before such a validation
-can occur. Do not use this option.
+\option{fips140}: This option, in theory, toggles Botan into FIPS 140
+mode. Please note that Botan \emph{has not} been FIPS 140 validated at
+this time, and that a number of changes will be necessary before such
+a validation could occur. Do not use this option.
 
-\noindent
-\textbf{Option ``fips140''}: This option, in theory, toggles Botan into FIPS
-140 mode. Please note that Botan \emph{has not} been FIPS 140 validated at this
-time, and that a number of changes will be necessary before such a validation
-can occur. Do not use this option.
+\option{selftest}: Run some basic self tests during startup.
+Specifically this runs a set of tests for DES, TripleDES, AES,
+CMAC(AES), SHA-1, HMAC(SHA-1), SHA-256, and HMAC(SHA-256). This option
+is enabled by default.
 
-\noindent
-\textbf{Option ``selftest''}: Run some basic self tests during
-startup.  Specifically this runs a set of tests for DES, TripleDES,
-AES, CMAC(AES), SHA-1, HMAC(SHA-1), SHA-256, and HMAC(SHA-256).
-
-This option, in theory, toggles Botan into FIPS
-140 mode. Please note that Botan \emph{has not} been FIPS 140 validated at this
-time, and that a number of changes will be necessary before such a validation
-can occur. Do not use this option.
-
-\noindent
-\textbf{Option ``seed\_rng''}: Attempt to seed the global PRNGs at
+\option{seed\_rng}: Attempt to seed the global PRNGs at
 startup. This option is toggled on by default, and can be disabled by passing
 ``seed\_rng=false''. This is primarily useful when you know that the built-in
 library entropy sources will not work, and you are providing you own entropy
@@ -260,17 +248,11 @@ should be careful to only create one such object.
 It is not strictly necessary to create a \type{LibraryInitializer};
 the actual code performing the initialization and shutdown are in
 static member functions of \type{LibraryInitializer}, called
-\function{initialize} and \function{deinitialize}. If you choose to
-use this interface, you should be very careful to make sure that
-\function{deinitialize} is always called, even in the case of
-exceptions, premature exit or abort, and so on. For this reason using
-\type{LibraryInitializer} is preferred, but there are cases where
-using it is impossible and an interface using plain functions is the
-only option.
+\function{initialize} and \function{deinitialize}. A
+\type{LibraryInitializer} merely provides a convenient RAII wrapper
+for the operations (and thus for the internal library state as well).
 
-\pagebreak
-
-\section{Gotchas}
+\subsection{Gotchas}
 
 There are a few things to watch out for to prevent problems when using Botan.
 
@@ -291,251 +273,707 @@ can't have static variables that are Botan objects inside functions or classes
 (since in most C++ runtimes, these objects will be destroyed after main has
 returned). This is inelegant, but seems to not cause many problems in practice.
 
-Never create a Botan memory object (\type{MemoryVector}, \type{SecureVector},
-\type{SecureBuffer}) with a type that is not a basic integer (\type{byte},
-\type{u16bit}, \type{u32bit}, \type{u64bit}). More strongly, if you, as a user
-of the library, are creating any memory buffer object that's not a
-\type{SecureVector<byte>} or maybe a \type{MemoryVector<byte>}, you're probably
-doing something wrong (I suppose there may be exceptions to this rule, but not
-many).
+Botan's memory object classes (\type{MemoryVector},
+\type{SecureVector}, \type{SecureBuffer}) are extremely primitive, and
+do not meet the requirements for an STL container object. After Botan
+starts adopting C++0x features, they will be replaced by typedefs of
+\type{std::vector} with a custom allocator.
 
-Don't include headers you don't have to. Past experience with Botan has shown
-that headers get renamed fairly regularly as internal design changes are made,
-but this need not affect you, if you follow the ``proper procedures''. Using
-the lookup interface defined in \filename{lookup.h} and \filename{look\_pk.h}
-will save you a great deal of pain in this regard, as it insulates you against
-many such changes.
+Prefer using the factory methods to creating objects directly on the
+stack. This helps insulate your code against changes in the
+implementation, and using a late binding allows your code to access
+faster implementations (hardware or faster software) that might be
+detected as available at runtime.
 
 Use a \function{try}/\function{catch} block inside your
-\function{main} function, and catch any \type{std::exception}
-throws. This is not strictly required, but if you don't, and Botan
-throws an exception, your application will die mysteriously and
-(probably) without any error message. Some compilers provide a useful
-diagnostic for an uncaught exception, but others simply abort the
-process, leaving your (or worse, a user of your application) wondering
-what went wrong.
+\function{main} function, and catch any \type{std::exception} throws
+(remember to catch by reference, as \type{std::exception}'s
+\function{what} method is polymorphic). This is not strictly required,
+but if you don't, and Botan throws an exception, the runtime will call
+\function{std::terminate}, which usually calls \function{abort} or
+something like it, leaving you (or worse, a user of your application)
+wondering what went wrong.
 
-\pagebreak
+\subsection{Information Flow: Pipes and Filters}
 
-\section{The Basic Interface}
+Many common uses of cryptography involve processing one or more
+streams of data (be it from sockets, files, or a hardware device).
+Botan provides services which make setting up data flows through
+various operations, such as compression, encryption, and base64
+encoding. Each of these operations is implemented in what are called
+\emph{filters} in Botan. A set of filters are created and placed into
+a \emph{pipe}, and information ``flows'' through the pipe until it
+reaches the end, where the output is collected for retrieval. If
+you're familiar with the Unix shell environment, this design will
+sound quite familiar.
 
-Botan has two different interfaces. The one documented in this section is meant
-more for implementing higher-level types (see the section on filters, later in
-this manual) than for use by applications. Using it safely requires a solid
-knowledge of encryption techniques and best practices, so unless you know, for
-example, what CBC mode and nonces are, and why PKCS \#1 padding is important,
-you should avoid this interface in favor of something working at a higher level
-(such as the CMS interface).
-
-\subsection{Basic Algorithm Abilities}
-
-There are a small handful of functions implemented by most of Botan's
-algorithm objects. Among these are:
-
-\noindent
-\type{std::string} \function{name}():
-
-Returns a human-readable string of the name of this algorithm. Examples of
-names returned are ``Blowfish'' and ``HMAC(MD5)''. You can turn names back into
-algorithm objects using the functions in \filename{lookup.h}.
-
-\noindent
-\type{void} \function{clear}():
-
-Clear out the algorithm's internal state. A block cipher object will ``forget''
-its key, a hash function will ``forget'' any data put into it, etc. Basically,
-the object will look exactly as it did when you initially allocated it.
-
-\noindent
-\function{clone}():
-
-This function is central to Botan's name-based interface. The \function{clone}
-has many different return types, such as \type{BlockCipher*} and
-\type{HashFunction*}, depending on what kind of object it is called on. Note
-that unlike Java's clone, this returns a new object in a ``pristine'' state;
-that is, operations done on the initial object before calling \function{clone}
-do not affect the initial state of the new clone.
-
-Cloned objects can (and should) be deallocated with the C++ \texttt{delete}
-operator.
-
-\subsection{Keys and IVs}
-
-Both symmetric keys and initialization values can simply be considered byte (or
-octet) strings. These are represented by the classes \type{SymmetricKey} and
-\type{InitializationVector}, which are subclasses of \type{OctetString}.
-
-Since often it's hard to distinguish between a key and IV, many things (such as
-key derivation mechanisms) return \type{OctetString} instead of
-\type{SymmetricKey} to allow its use as a key or an IV.
-
-\noindent
-\function{OctetString}(\type{u32bit} \arg{length}):
-
-This constructor creates a new random key of size \arg{length}.
-
-\noindent
-\function{OctetString}(\type{std::string} \arg{str}):
-
-The argument \arg{str} is assumed to be a hex string; it is converted to binary
-and stored. Whitespace is ignored.
-
-\noindent
-\function{OctetString}(\type{const byte} \arg{input}[], \type{u32bit}
-\arg{length}):
-
-This constructor simply copies its input.
-
-\subsection{Symmetrically Keyed Algorithms}
-
-Block ciphers, stream ciphers, and MACs all handle keys in pretty much the same
-way. To make this similarity explicit, all algorithms of those types are
-derived from the \type{SymmetricAlgorithm} base class. This type has three
-functions:
-
-\noindent
-\type{void} \function{set\_key}(\type{const byte} \arg{key}[], \type{u32bit}
-\arg{length}):
-
-Most algorithms only accept keys of certain lengths. If you attempt to call
-\function{set\_key} with a key length that is not supported, the exception
-\type{Invalid\_Key\_Length} will be thrown. There is also another version of
-\function{set\_key} that takes a \type{SymmetricKey} as an argument.
-
-\noindent
-\type{bool} \function{valid\_keylength}(\type{u32bit} \arg{length}) const:
-
-This function returns true if a key of the given length will be accepted by
-the cipher.
-
-There are also three constant data members of every \type{SymmetricAlgorithm}
-object, which specify exactly what limits there are on keys which that object
-can accept:
-
-MAXIMUM\_KEYLENGTH: The maximum length of a key. Usually, this is at most 32
-(256 bits), even if the algorithm actually supports more. In a few rare cases
-larger keys will be supported.
-
-MINIMUM\_KEYLENGTH: The minimum length of a key. This is at least 1.
-
-KEYLENGTH\_MULTIPLE: The length of the key must be a multiple of this value.
-
-In all cases, \function{set\_key} must be called on an object before any data
-processing (encryption, decryption, etc) is done by that object. If this is not
-done, the results are undefined -- that is to say, Botan reserves the right in
-this situation to do anything from printing a nasty, insulting message on the
-screen to dumping core.
-
-\subsection{Block Ciphers}
-
-Block ciphers implement the interface \type{BlockCipher}, found in
-\filename{base.h}, as well as the \type{SymmetricAlgorithm} interface.
-
-\noindent
-\type{void} \function{encrypt}(\type{const byte} \arg{in}[BLOCK\_SIZE],
-                               \type{byte} \arg{out}[BLOCK\_SIZE]) const
-
-\noindent
-\type{void} \function{encrypt}(\type{byte} \arg{block}[BLOCK\_SIZE]) const
-
-These functions apply the block cipher transformation to \arg{in} and
-place the result in \arg{out}, or encrypts \arg{block} in place
-(\arg{in} may be the same as \arg{out}). BLOCK\_SIZE is a constant
-member of each class, which specifies how much data a block cipher can
-process at one time. Note that BLOCK\_SIZE is not a static class
-member, meaning you can (given a \type{BlockCipher*} named
-\arg{cipher}), call \verb|cipher->BLOCK_SIZE| to get the block size of
-that particular object. \type{BlockCipher}s have similar functions
-\function{decrypt}, which perform the inverse operation.
+Here is an example which uses a pipe to base64 encode some strings:
 
 \begin{verbatim}
-AES_128 cipher;
-SymmetricKey key(cipher.MAXIMUM_KEYLENGTH); // randomly created
-cipher.set_key(key);
+  Pipe pipe(new Base64_Encoder); // pipe owns the pointer
+  pipe.start_msg();
+  pipe.write(``message 1''); 
+  pipe.end_msg(); // flushes buffers, increments message number
 
-byte in[16] = { /* secrets */ };
-byte out[16];
-cipher.encrypt(in, out);
+  // process_msg(x) is start_msg() && write(x) && end_msg()
+  pipe.process_msg(``message2'');
+
+  std::string m1 = pipe.read_all_as_string(0); // ``message1''
+  std::string m2 = pipe.read_all_as_string(1); // ``message2''
 \end{verbatim}
 
-\subsection{Stream Ciphers}
+Bytestreams in the pipe are grouped into messages; blocks of data that
+are processed in an identical fashion (\ie, with the same sequence of
+\type{Filter}s). Messages are delimited by calls to
+\function{start\_msg} and \function{end\_msg}. Each message in a pipe
+has its own number, which increments starting from zero.
 
-Stream ciphers are somewhat different from block ciphers, in that encrypting
-data results in changing the internal state of the cipher. Also, you may
-encrypt any length of data in one go (in byte amounts).
+There are two different ways to make use of messages. One is to send
+several messages through a \type{Pipe} without changing the \type{Pipe}'s
+configuration, so you end up with a sequence of messages; one use of this would
+be to send a sequence of identically encrypted UDP packets, for example (note
+that the \emph{data} need not be identical; it is just that each is encrypted,
+encoded, signed, etc in an identical fashion). Another is to change the filters
+that are used in the \type{Pipe} between each message, by adding or removing
+\type{Filter}s; functions that let you do this are documented in the Pipe API
+section.
+
+Most operations in Botan have a corresponding filter for use in Pipe.
+Here's code that encrypts a string with AES-128 in CBC mode:
+
+\begin{verbatim}
+  SymmetricKey key(16); // a random 128-bit key
+  InitializationVector iv(16); // a random 128-bit IV
+
+  // Notice the algorithm we want is specified by a string
+  Pipe pipe(get_cipher(``AES-128/CBC'', key, iv, ENCRYPTION));
+
+  pipe.process_msg(``secrets'');
+  pipe.process_msg(``more secrets'');
+
+  MemoryVector<byte> c1 = pipe.read_all(0);
+
+  byte c2[4096] = { 0 };
+  u32bit got_out = pipe.read(c2, sizeof(c2), 1);
+  // use c2[0...got_out]
+\end{verbatim}
+
+\type{Pipe} also has convenience methods for dealing with
+\type{std::iostream}s. Here is an example of those, using
+the \type{Bzip\_Compression} filter (included as a module;
+if you have bzlib available, check \filename{building.pdf}
+for how to enable it) to compress a file:
+
+\begin{verbatim}
+  std::ifstream in(``data.bin'', std::ios::binary)
+  std::ofstream out(``data.bin.bz2'', std::ios::binary)
+
+  Pipe pipe(new Bzip_Compression);
+
+  pipe.start_msg();
+  in >> pipe;
+  pipe.end_msg();
+  out << pipe;
+\end{verbatim}
+
+However there is a hitch to the code above; the complete contents of
+the compressed data will be held in memory until the entire message
+has been compressed, at which time the statement \verb|out << pipe| is
+executed, and the data is freed as it is read from the pipe and
+written to the file. But if the file is very large, we might not have
+enough physical memory (or even enough virtual memory!) for that to be
+practical. So instead of storing the compressed data in the pipe for
+reading it out later, we divert it directly to the file:
+
+\begin{verbatim}
+  std::ifstream in(``data.bin'', std::ios::binary)
+  std::ofstream out(``data.bin.bz2'', std::ios::binary)
+
+  Pipe pipe(new Bzip_Compression, new DataSink_Stream(out));
+
+  pipe.start_msg();
+  in >> pipe;
+  pipe.end_msg();
+\end{verbatim}
+
+This is the first code we've seen so far that uses more than one
+filter in a pipe. The output of the compressor is sent to the
+\type{DataSink\_Stream}. Anything written to a \type{DataSink\_Stream}
+is written to a file; the filter produces no output. As soon as the
+compression algorithm finishes up a block of data, it will send it along,
+at which point it will immediately be written to disk; if you were to
+call \verb|pipe.read_all()| after \verb|pipe.end_msg()|, you'd get an
+empty vector out.
+
+Here's an example using two computational filters:
+
+\begin{verbatim}
+   SymmetricKey key(32);
+   InitializationVector iv(16); // or use: block_size_of("AES")
+   Pipe encryptor(get_cipher("AES/CBC/PKCS7", key, iv, ENCRYPTION),
+                  new Base64_Encoder);
+   encryptor.start_msg();
+   file >> encryptor;
+   encryptor.end_msg(); // flush buffers, complete computations
+   std::cout << encryptor;
+\end{verbatim}
+
+\subsection{Fork}
+
+It's fairly common that you might receive some data and want to perform more
+than one operation on it (\ie, encrypt it with DES and calculate the MD5 hash
+of the plaintext at the same time). That's where \type{Fork} comes
+in. \type{Fork} is a filter that takes input and passes it on to \emph{one or
+more} \type{Filter}s which are attached to it. \type{Fork} changes the nature
+of the pipe system completely. Instead of being a linked list, it becomes a
+tree.
+
+Each \type{Filter} in the fork is given its own output buffer, and
+thus its own message. For example, if you had previously written two
+messages into a \type{Pipe}, then you start a new one with a
+\type{Fork} which has three paths of \type{Filter}'s inside it, you
+add three new messages to the \type{Pipe}. The data you put into the
+\type{Pipe} is duplicated and sent into each set of \type{Filter}s,
+and the eventual output is placed into a dedicated message slot in the
+\type{Pipe}.
+
+Messages in the \type{Pipe} are allocated in a depth-first manner. This is only
+interesting if you are using more than one \type{Fork} in a single \type{Pipe}.
+As an example, consider the following:
+
+\begin{verbatim}
+   Pipe pipe(new Fork(
+                new Fork(
+                   new Base64_Encoder,
+                   new Fork(
+                      NULL,
+                      new Base64_Encoder
+                      )
+                   ),
+                new Hex_Encoder
+                )
+      );
+\end{verbatim}
+
+In this case, message 0 will be the output of the first \type{Base64\_Encoder},
+message 1 will be a copy of the input (see below for how \type{Fork} interprets
+NULL pointers), message 2 will be the output of the second
+\type{Base64\_Encoder}, and message 3 will be the output of the
+\type{Hex\_Encoder}. As you can see, this results in message numbers being
+allocated in a top to bottom fashion, when looked at on the screen. However,
+note that there could be potential for bugs if this is not anticipated. For
+example, if your code is passed a \type{Filter}, and you assume it is a
+``normal'' one which only uses one message, your message offsets would be
+wrong, leading to some confusion during output.
+
+If Fork's first argument is a null pointer, but a later argument is
+not, then Fork will feed a copy of its input directly through. Here's
+a case where that is useful:
+
+\begin{verbatim}
+   // have std::string ciphertext, auth_code, key, iv, mac_key;
+
+   Pipe pipe(new Base64_Decoder, get_cipher(``AES-128'', key, iv, DECRYPTION),
+             new Fork(
+                0
+                new MAC_Filter(``HMAC(SHA-1)'', mac_key)
+             )
+      );
+
+   pipe.process_msg(ciphertext);
+   std::string plaintext = pipe.read_all_as_string(0);
+   SecureVector<byte> mac = pipe.read_all(1);
+
+   if(mac != auth_code)
+      error();
+\end{verbatim}
+
+Here we wanted to not only decrypt the message, but send the decrypted
+text through an additional computation, in order to compute the
+authentication code.
+
+Any \type{Filter}s which are attached to the \type{Pipe} after the
+\type{Fork} are implicitly attached onto the first branch created by
+the fork. For example, let's say you created this \type{Pipe}:
+
+\begin{verbatim}
+Pipe pipe(new Fork(new Hash_Filter("MD5"), new Hash_Filter("SHA-1")),
+          new Hex_Encoder);
+\end{verbatim}
+
+And then called \function{start\_msg}, inserted some data, then
+\function{end\_msg}. Then \arg{pipe} would contain two messages. The
+first one (message number 0) would contain the MD5 sum of the input in
+hex encoded form, and the other would contain the SHA-1 sum of the
+input in raw binary. However, it's much better to use a \type{Chain}
+instead.
+
+\subsubsection{Chain}
+
+A \type{Chain} filter creates a chain of \type{Filter}s and
+encapsulates them inside a single filter (itself). This allows a
+sequence of filters to become a single filter, to be passed into or
+out of a function, or to a \type{Fork} constructor.
+
+You can call \type{Chain}'s constructor with up to 4 \type{Filter*}s
+(they will be added in order), or with an array of \type{Filter*}s and
+a \type{u32bit} which tells \type{Chain} how many \type{Filter*}s are
+in the array (again, they will be attached in order). Here's the
+example from the last section, using chain instead of relying on the
+obscure rule that version used.
+
+\begin{verbatim}
+  Pipe pipe(new Fork(
+                new Chain(new Hash_Filter("MD5"), new Hex_Encoder),
+                new Hash_Filter("SHA-1")
+                )
+           );
+\end{verbatim}
+
+\subsection{The Pipe API}
+
+\subsubsection{Initializing Pipe}
+
+By default, \type{Pipe} will do nothing at all; any input placed into
+the \type{Pipe} will be read back unchanged. Obviously, this has
+limited utility, and presumably you want to use one or more
+\type{Filter}s to somehow process the data. First, you can choose a
+set of \type{Filter}s to initialize the \type{Pipe} with via the
+constructor. You can pass it either a set of up to 4 \type{Filter*}s,
+or a pre-defined array and a length:
+
+\begin{verbatim}
+   Pipe pipe1(new Filter1(/*args*/), new Filter2(/*args*/),
+              new Filter3(/*args*/), new Filter4(/*args*/));
+   Pipe pipe2(new Filter1(/*args*/), new Filter2(/*args*/));
+
+   Filter* filters[5] = {
+     new Filter1(/*args*/), new Filter2(/*args*/), new Filter3(/*args*/),
+     new Filter4(/*args*/), new Filter5(/*args*/) /* more if desired... */
+   };
+   Pipe pipe3(filters, 5);
+\end{verbatim}
+
+This is by far the most common way to initialize a \type{Pipe}. However,
+occasionally a more flexible initialization strategy is necessary; this is
+supported by 4 member functions: \function{prepend}(\type{Filter*}),
+\function{append}(\type{Filter*}), \function{pop}(), and \function{reset}().
+These functions may only be used while the \type{Pipe} in question is not in
+use; that is, either before calling \function{start\_msg}, or after
+\function{end\_msg} has been called (and no new calls to \function{start\_msg}
+have been made yet).
+
+The function \function{reset}() simply removes all the \type{Filter}s which the
+\type{Pipe} is currently using~--~it is reset to an initialize, ``empty''
+state.  Any data which is being retained by the \type{Pipe} is retained after a
+\function{reset}(), and \function{reset}() does not affect the message numbers
+(discussed later).
+
+Calling \function{prepend} and \function{append} will either prepend or append
+the passed \type{Filter} object to the list of transformations. For example, if
+you \function{prepend} a \type{Filter} implementing encryption, and the
+\type{Pipe} already had a \type{Filter} which hex encoded the input, then the
+next set of input would be first encrypted, then hex encoded. Alternately, if
+you called \function{append}, then the input would be first be hex encoded, and
+then encrypted (which is not terribly useful in this particular example).
+
+Finally, calling \function{pop}() will remove the first transformation of the
+\type{Pipe}. Say we had called \function{prepend} to put an encryption
+\type{Filter} into a \type{Pipe}; calling \function{pop}() would remove this
+\type{Filter} and return the \type{Pipe} to it's state before we called
+\function{prepend}.
+
+\subsubsection{Giving Data to a Pipe}
+
+Input to a \type{Pipe} is delimited into messages, which can be read from
+independently (\ie, you can read 5 bytes from one message, and then all of
+another message, without either read affecting any other messages). The
+messages are delimited by calls to \function{start\_msg} and
+\function{end\_msg}. In between these two calls, you can write data into a
+\type{Pipe}, and it will be processed by the \type{Filter}(s) that it
+contains. Writes at any other time are invalid, and will result in an
+exception.
+
+As to writing, you can call any of the functions called \function{write}(),
+which can take any of: a \type{byte[]}/\type{u32bit} pair, a
+\type{SecureVector<byte>}, a \type{std::string}, a \type{DataSource\&}, or a
+single \type{byte}.
+
+Sometimes, you may want to do only a single write per message. In this case,
+you can use the \function{process\_msg} series of functions, which start a
+message, write their argument into the \type{Pipe}, and then end the
+message. In this case you would not make any explicit calls to
+\function{start\_msg}/\function{end\_msg}. The version of \function{write}
+which takes a single \type{byte} is not supported by \function{process\_msg},
+but all the other variants are.
+
+\type{Pipe} can also be used with the \verb|>>| operator, and will accept a
+\type{std::istream}, (or on Unix systems with the \verb|fd_unix| module), a
+Unix file descriptor. In either case, the entire contents of the file will be
+read into the \type{Pipe}.
+
+\subsubsection{Getting Output from a Pipe}
+
+Retrieving the processed data from a \type{Pipe} is a bit more complicated, for
+various reasons. In particular, because \type{Pipe} will separate each message
+into a separate buffer, you have to be able to retrieve data from each message
+independently. Each of \type{Pipe}'s read functions has a final parameter which
+specifies what message to read from (as a 32-bit integer). If this parameter is
+set to \type{Pipe::DEFAULT\_MESSAGE}, it will read the current default message
+(\type{DEFAULT\_MESSAGE} is also the default value of this parameter). The
+parameter will not be mentioned in further discussion of the reading API, but
+it is always there (unless otherwise noted).
+
+Reading is done with a variety of functions. The most basic are \type{u32bit}
+\function{read}(\type{byte} \arg{out}[], \type{u32bit} \arg{len}) and
+\type{u32bit} \function{read}(\type{byte\&} \arg{out}). Each reads into
+\arg{out} (either up to \arg{len} bytes, or a single byte for the one taking a
+\type{byte\&}), and returns the total number of bytes read. There is a variant
+of these functions, all named \function{peek}, which performs the same
+operations, but does not remove the bytes from the message (reading is a
+destructive operation with a \type{Pipe}).
+
+There are also the functions \type{SecureVector<byte>} \function{read\_all}(),
+and \type{std::string} \function{read\_all\_as\_string}(), which return the
+entire contents of the message, either as a memory buffer, or a
+\type{std::string} (which is generally only useful is the \type{Pipe} has
+encoded the message into a text string, such as when a \type{Base64\_Encoder}
+is used).
+
+To determine how many bytes are left in a message, call \type{u32bit}
+\function{remaining}() (which can also take an optional message
+number). Finally, there are some functions for managing the default message
+number: \type{u32bit} \function{default\_msg}() will return the current default
+message, \type{u32bit} \function{message\_count}() will return the total number
+of messages (0...\function{message\_count}()-1), and
+\function{set\_default\_msg}(\type{u32bit} \arg{msgno}) will set a new default
+message number (which must be a valid message number for that \type{Pipe}). The
+ability to set the default message number is particularly important in the case
+of using the file output operations (\verb|<<| with a \type{std::ostream} or
+Unix file descriptor), because there is no way to specify it explicitly when
+using the output operator.
+
+\subsection{A Filter Example}
+
+Here is some code which takes one or more filenames in \arg{argv} and
+calculates the result of several hash functions for each file. The complete
+program can be found as \filename{hasher.cpp} in the Botan distribution. For
+brevity, most error checking has been removed.
+
+\begin{verbatim}
+   string name[3] = { "MD5", "SHA-1", "RIPEMD-160" };
+   Botan::Filter* hash[3] = {
+      new Botan::Chain(new Botan::Hash_Filter(name[0]),
+                        new Botan::Hex_Encoder),
+      new Botan::Chain(new Botan::Hash_Filter(name[1]),
+                        new Botan::Hex_Encoder),
+      new Botan::Chain(new Botan::Hash_Filter(name[2]),
+                        new Botan::Hex_Encoder) };
+
+   Botan::Pipe pipe(new Botan::Fork(hash, COUNT));
+
+   for(u32bit j = 1; argv[j] != 0; j++)
+      {
+      ifstream file(argv[j]);
+      pipe.start_msg();
+      file >> pipe;
+      pipe.end_msg();
+      file.close();
+      for(u32bit k = 0; k != 3; k++)
+         {
+         pipe.set_default_msg(3*(j-1)+k);
+         cout << name[k] << "(" << argv[j] << ") = " << pipe << endl;
+         }
+      }
+\end{verbatim}
+
+
+\subsection{Filter Catalog}
+
+This section contains descriptions of every \type{Filter} included in
+the portable sections of Botan. \type{Filter}s provided by modules
+are documented elsewhere.
+
+\subsubsection{Keyed Filters}
+
+A few sections ago, it was mentioned that \type{Pipe} can process multiple
+messages, treating each of them exactly the same. Well, that was a bit of a
+lie. There are some algorithms (in particular, block ciphers not in ECB mode,
+and all stream ciphers) that change their state as data is put through them.
+
+Naturally, you might well want to reset the keys or (in the case of block
+cipher modes) IVs used by such filters, so multiple messages can be processed
+using completely different keys, or new IVs, or new keys and IVs, or whatever.
+And in fact, even for a MAC or an ECB block cipher, you might well want to
+change the key used from message to message.
+
+Enter \type{Keyed\_Filter}. It's a base class of any filter that is keyed:
+block cipher modes, stream ciphers, MACs, whatever. It has two functions,
+\function{set\_key} and \function{set\_iv}. Calling \function{set\_key} will,
+naturally, set (or reset) the key used by the algorithm. Setting the IV only
+makes sense in certain algorithms -- a call to \function{set\_iv} on an object
+that doesn't support IVs will be ignored. You \emph{must} call
+\function{set\_key} before calling \function{set\_iv}: while not all
+\type{Keyed\_Filter} objects require this, you should assume it is required
+anytime you are using a \type{Keyed\_Filter}.
+
+Here's a example:
+
+\begin{verbatim}
+   Keyed_Filter *cast, *hmac;
+   Pipe pipe(new Base64_Decoder,
+             // Note the assignments to the cast and hmac variables
+             cast = new CBC_Decryption("CAST-128", "PKCS7", cast_key, iv),
+             new Fork(
+                0, // Read the section 'Fork' to understand this
+                new Chain(
+                   hmac = new MAC_Filter("HMAC(SHA-1)", mac_key, 12),
+                   new Base64_Encoder
+                   )
+                )
+      );
+   pipe.start_msg();
+   [use pipe for a while, decrypt some stuff, derive new keys and IVs]
+   pipe.end_msg();
+
+   cast->set_key(cast_key2);
+   cast->set_iv(iv2);
+   hmac->set_key(mac_key2);
+
+   pipe.start_msg();
+   [use pipe for some other things]
+   pipe.end_msg();
+\end{verbatim}
+
+There are some requirements to using \type{Keyed\_Filter} which you must
+follow. If you call \function{set\_key} or \function{set\_iv} on a filter which
+is owned by a \type{Pipe}, you must do so while the \type{Pipe} is
+``unlocked''. This refers to the times when no messages are being processed by
+\type{Pipe} -- either before \type{Pipe}'s \function{start\_msg} is called, or
+after \function{end\_msg} is called (and no new call to \function{start\_msg}
+has happened yet). Doing otherwise will result in undefined behavior, probably
+silently getting invalid output.
+
+And remember: if you're resetting both values, reset the key \emph{first}.
+
+\subsubsection{Cipher Filters}
+
+Getting ahold of a \type{Filter} implementing a cipher is very easy. Simply
+make sure you're including the header \filename{lookup.h}, and call
+\function{get\_cipher}. Generally you will pass the return value directly into
+a \type{Pipe}. There are actually a couple different functions, which do pretty
+much the same thing:
+
+\function{get\_cipher}(\type{std::string} \arg{cipher\_spec},
+                       \type{SymmetricKey} \arg{key},
+                       \type{InitializationVector} \arg{iv},
+                       \type{Cipher\_Dir} \arg{dir});
+
+\function{get\_cipher}(\type{std::string} \arg{cipher\_spec},
+                       \type{SymmetricKey} \arg{key},
+                       \type{Cipher\_Dir} \arg{dir});
+
+The version that doesn't take an IV is useful for things that don't use them,
+like block ciphers in ECB mode, or most stream ciphers. If you specify a
+\arg{cipher\_spec} that does want a IV, and you use the version that doesn't
+take one, an exception will be thrown. The \arg{dir} argument can be either
+\type{ENCRYPTION} or \type{DECRYPTION}. In a few cases, like most (but not all)
+stream ciphers, these are equivalent, but even then it provides a way of
+showing the ``intent'' of the operation to readers of your code.
+
+The \arg{cipher\_spec} is a string that specifies what cipher is to be
+used. The general syntax for \arg{cipher\_spec} is ``STREAM\_CIPHER'',
+``BLOCK\_CIPHER/MODE'', or ``BLOCK\_CIPHER/MODE/PADDING''. In the case of
+stream ciphers, no mode is necessary, so just the name is sufficient. A block
+cipher requires a mode of some sort, which can be ``ECB'', ``CBC'', ``CFB(n)'',
+``OFB'', ``CTR-BE'', or ``EAX(n)''. The argument to CFB mode is how many bits
+of feedback should be used. If you just use ``CFB'' with no argument, it will
+default to using a feedback equal to the block size of the cipher. EAX mode
+also takes an optional bit argument, which tells EAX how large a tag size to
+use~--~generally this is the size of the block size of the cipher, which is the
+default if you don't specify any argument.
+
+In the case of the ECB and CBC modes, a padding method can also be
+specified. If it is not supplied, ECB defaults to not padding, and CBC defaults
+to using PKCS \#5/\#7 compatible padding. The padding methods currently
+available are ``NoPadding'', ``PKCS7'', ``OneAndZeros'', and ``CTS''. CTS
+padding is currently only available for CBC mode, but the others can also be
+used in ECB mode.
+
+Some example \arg{cipher\_spec} arguments are: ``DES/CFB(32)'',
+``TripleDES/OFB'', ``Blowfish/CBC/CTS'', ``SAFER-SK(10)/CBC/OneAndZeros'',
+``AES/EAX'', ``ARC4''
+
+``CTR-BE'' refers to counter mode where the counter is incremented as if it
+were a big-endian encoded integer. This is compatible with most other
+implementations, but it is possible some will use the incompatible little
+endian convention. This version would be denoted as ``CTR-LE'' if it were
+supported.
+
+``EAX'' is a new cipher mode designed by Wagner, Rogaway, and Bellare. It is an
+authenticated cipher mode (that is, no separate authentication is needed), has
+provable security, and is free from patent entanglements. It runs about half as
+fast as most of the other cipher modes (like CBC, OFB, or CTR), which is not
+bad considering you don't need to use an authentication code.
+
+\subsubsection{Hashes and MACs}
+
+Hash functions and MACs don't need anything special when it comes to
+filters. Both just take their input and produce no output until
+\function{end\_msg()} is called, at which time they complete the hash or MAC
+and send that as output.
+
+These \type{Filter}s take a string naming the type to be used. If for some
+reason you name something that doesn't exist, an exception will be thrown.
 
 \noindent
-\type{void} \function{encrypt}(\type{const byte} \arg{in}[], \type{byte}
-\arg{out}[], \type{u32bit} \arg{length})
+\function{Hash\_Filter}(\type{std::string} \arg{hash},
+                        \type{u32bit} \arg{outlength}):
+
+This type hashes it's input with \arg{hash}. When \function{end\_msg} is called
+on the owning \type{Pipe}, the hash is completed and the digest is sent on to
+the next thing in the pipe. The argument \arg{outlength} specifies how much of
+the output of the hash will be passed along to the next filter when
+\function{end\_msg} is called. By default, it will pass the entire hash.
+
+Examples of names for \function{Hash\_Filter} are ``SHA-1'' and ``Whirlpool''.
 
 \noindent
-\type{void} \function{encrypt}(\type{byte} \arg{data}[], \type{u32bit}
+\function{MAC\_Filter}(\type{std::string} \arg{mac},
+                       \type{const SymmetricKey\&} \arg{key},
+                       \type{u32bit} \arg{outlength}):
+
+The constructor for a \type{MAC\_Filter} takes a key, used in calculating the
+MAC, and a length parameter, which has semantics exactly the same as the one
+passed to \type{Hash\_Filter}s constructor.
+
+Examples for \arg{mac} are ``HMAC(SHA-1)'', ``MD5-MAC'', and the exceptionally
+long, strange, and probably useless name
+``CMAC(Lion(Tiger(20,3),MARK-4,1024))''.
+
+\subsubsection{PK Filters}
+
+There are four classes in this category, \type{PK\_Encryptor\_Filter},
+\type{PK\_Decryptor\_Filter}, \type{PK\_Signer\_Filter}, and
+\type{PK\_Verifier\_Filter}. Each takes a pointer to an object of the
+appropriate type (\type{PK\_Encryptor}, \type{PK\_Decryptor}, etc) which is
+deleted by the destructor. These classes are found in \filename{pk\_filts.h}.
+
+Three of these, for encryption, decryption, and signing are pretty much
+identical conceptually. Each of them buffers it's input until the end of the
+message is marked with a call to the \function{end\_msg} function. Then they
+encrypt, decrypt, or sign their input and send the output (the ciphertext, the
+plaintext, or the signature) into the next filter.
+
+Signature verification works a little differently, because it needs to know
+what the signature is in order to check it. You can either pass this in along
+with the constructor, or call the function \function{set\_signature} -- with
+this second method, you need to keep a pointer to the filter around so you can
+send it this command. In either case, after \function{end\_msg} is called, it
+will try to verify the signature (if the signature has not been set by either
+method, an exception will be thrown here). It will then send a single byte onto
+the next filter -- a 1 or a 0, which specifies whether the signature verified
+or not (respectively).
+
+For more information about PK algorithms (including creating the appropriate
+objects to pass to the constructors), read the section ``Public Key
+Cryptography'' in this manual.
+
+\subsubsection{Encoders}
+
+Often you want your data to be in some form of text (for sending over channels
+which aren't 8-bit clean, printing it, etc). The filters \type{Hex\_Encoder}
+and \type{Base64\_Encoder} will convert arbitrary binary data into hex or
+base64 formats. Not surprisingly, you can use \type{Hex\_Decoder} and
+\type{Base64\_Decoder} to convert it back into it's original form.
+
+Both of the encoders can take a few options about how the data should be
+formatted (all of which have defaults). The first is a \type{bool} which simply
+says if the encoder should insert line breaks. This defaults to
+false. Line breaks don't matter either way to the decoder, but it makes the
+output a bit more appealing to the human eye, and a few transport mechanisms
+(notably some email systems) limit the maximum line length.
+
+The second encoder option is an integer specifying how long such lines will be
+(obviously this will be ignored if line-breaking isn't being used). The default
+tends to be in the range of 60-80 characters, but is not specified exactly. If
+you want a specific value, set it. Otherwise the default should be fine.
+
+Lastly, \type{Hex\_Encoder} takes an argument of type \type{Case}, which can be
+\type{Uppercase} or \type{Lowercase} (default is \type{Uppercase}). This
+specifies what case the characters A-F should be output as. The base64 encoder
+has no such option, because it uses both upper and lower case letters for it's
+output.
+
+The decoders both take a single option, which tells it how the object should
+behave in the case of invalid input. The enum (called \type{Decoder\_Checking})
+can take on any of three values: \type{NONE}, \type{IGNORE\_WS}, and
+\type{FULL\_CHECK}. With \type{NONE} (the default, for compatibility with
+previous releases), invalid input (for example, a ``z'' character in supposedly
+hex input) will simply be ignored. With \type{IGNORE\_WS}, whitespace will be
+ignored by the decoder, but receiving other non-valid data will raise an
+exception. Finally, \type{FULL\_CHECK} will raise an exception for \emph{any}
+characters not in the encoded character set, including whitespace.
+
+You can find the declarations for these types in \filename{hex.h} and
+\filename{base64.h}.
+
+\subsection{Rolling Your Own}
+
+The system of filters and pipes was designed in an attempt to make it
+as simple as possible to write new \type{Filter} objects. There are
+essentially four functions that need to be implemented by an object
+deriving from \type{Filter}:
+
+\noindent
+\type{void} \function{write}(\type{byte} \arg{input}[], \type{u32bit}
 \arg{length}):
 
-These functions encrypt the arbitrary length (well, less than 4 gigabyte long)
-string \arg{in} and place it into \arg{out}, or encrypts it in place in
-\arg{data}. The \function{decrypt} functions look just like
-\function{encrypt}.
-
-Stream ciphers implement the \type{SymmetricAlgorithm} interface.
-
-Some stream ciphers support random access to any point in their cipher
-stream. For such ciphers, calling \type{void} \function{seek}(\type{u32bit}
-\arg{byte}) will change the cipher's state so that it as if the cipher had been
-keyed as normal, then encrypted \arg{byte} -- 1 bytes of data (so the next byte
-in the cipher stream is byte number \arg{byte}).
-
-\subsection{Hash Functions / Message Authentication Codes}
-
-Hash functions take their input without producing any output, only producing
-anything when all input has already taken place. MACs are very similar, but are
-additionally keyed. Both of these are derived from the base class
-\type{BufferedComputation}, which has the following functions.
+The \function{write} function is what is called when a filter receives input
+for it to process. The filter is \emph{not} required to process it right away;
+many filters buffer their input before producing any output. A filter will
+usually have \function{write} called many times during it's lifetime.
 
 \noindent
-\type{void} \function{update}(\type{const byte} \arg{input}[], \type{u32bit}
-\arg{length})
+\type{void} \function{send}(\type{byte} \arg{output}[], \type{u32bit}
+\arg{length}):
+
+Eventually, a filter will want to produce some output to send along to the next
+filter in the pipeline. It does so by calling \function{send} with whatever it
+wants to send along to the next filter. There is also a version of
+\function{send} taking a single byte argument, as a convenience.
 
 \noindent
-\type{void} \function{update}(\type{byte} \arg{input})
+\type{void} \function{start\_msg()}:
+
+This function is optional. Implement it if your \type{Filter} would like to do
+some processing or setup at the start of each message (for an example, see the
+Zlib compression module).
 
 \noindent
-\type{void} \function{update}(\type{const std::string \&} \arg{input})
+\type{void} \function{end\_msg()}:
 
-Updates the hash/mac calculation with \arg{input}.
+Implementing the \function{end\_msg} function is optional. It is called when it
+has been requested that filters finish up their computations. Note that they
+must \emph{not} deallocate their resources; this should be done by their
+destructor. They should simply finish up with whatever computation they have
+been working on (for example, a compressing filter would flush the compressor
+and \function{send} the final block), and empty any buffers in preparation for
+processing a fresh new set of input. It is essentially the inverse of
+\function{start\_msg}.
 
-\noindent
-\type{void} \function{final}(\type{byte} \arg{out}[OUTPUT\_LENGTH])
+Additionally, if necessary, filters can define a constructor that takes any
+needed arguments, and a destructor to deal with deallocating memory, closing
+files, etc.
 
-\noindent
-\type{SecureVector<byte>} \function{final}():
+There is also a \type{BufferingFilter} class (in \filename{buf\_filt.h}) which
+will take a message and split it up into an initial block which can be of any
+size (including zero), a sequence of fixed sized blocks of any non-zero size,
+and last (possibly zero-sized) final block. This might make a useful base class
+for your filters, depending on what you have in mind.
 
-Complete the hash/MAC calculation and place the result into \arg{out}.
-OUTPUT\_LENGTH is a public constant in each object that gives the length of the
-hash in bytes. After you call \function{final}, the hash function is reset to
-its initial state, so it may be reused immediately.
-
-The second method of using final is to call it with no arguments at all, as
-shown in the second prototype. It will return the hash/mac value in a memory
-buffer, which will have size OUTPUT\_LENGTH.
-
-There are also a pair of functions called \function{process}. They are
-essentially a combination of a single \function{update}, and \function{final}.
-Both versions return the final value, rather than placing it an array. Calling
-\function{process} with a single byte value isn't available, mostly because it
-would rarely be useful.
-
-A MAC can be viewed (in most cases) as simply a keyed hash function, so classes
-which are derived from \type{MessageAuthenticationCode} have \function{update}
-and \function{final} classes just like a \type{HashFunction} (and like a
-\type{HashFunction}, after \function{final} is called, it can be used to make a
-new MAC right away; the key is kept around).
-
-A MAC has the \type{SymmetricAlgorithm} interface in addition to the
-\type{BufferedComputation} interface.
 
 \pagebreak
-
 \section{Public Key Cryptography}
 
 Public key algorithms were added in Botan 0.8.0. The major base classes can be
@@ -849,8 +1287,6 @@ to the appropriate type and pass it to a higher-level class. For example:
    SecureVector<byte> cipher = enc->encrypt(some_message, size_of_message);
 \end{verbatim}
 
-\pagebreak
-
 \subsubsection{Private Keys}
 
 There are two different options for private key import/export. The first is a
@@ -977,665 +1413,6 @@ it is possible that a future version will use a format which is different from
 the current one (\ie, a newly standardized format).
 
 \pagebreak
-
-\section{Filters and Pipes}
-
-\subsection{Basic Filter Usage}
-
-Up until this point, using Botan would be very tedious; to do anything you
-would have to bother with putting data into arrays, doing whatever you want
-with it, and then sending it someplace. The filter metaphor (defining a series
-of operations which take some amount of input, process it, then send it along
-to the next filter) works very well in this situation. If you've ever used a
-Unix system, the usage of filters in Botan should be very intuitive (and even
-if you haven't, don't worry, it's pretty easy). For instance, here is how you
-encrypt a file with AES in CBC mode with PKCS\#7 padding, then encode it with
-Base64 and send it to standard output (we assume that \verb|file| is an open
-\type{istream}):
-
-\begin{verbatim}
-   SymmetricKey key(32);
-   InitializationVector iv(16); // or use: block_size_of("AES")
-   Pipe encryptor(get_cipher("AES/CBC/PKCS7", key, iv, ENCRYPTION),
-                  new Base64_Encoder);
-   encryptor.start_msg();
-   file >> encryptor;
-   encryptor.end_msg(); // flush buffers, complete computations
-   std::cout << encryptor;
-\end{verbatim}
-
-\type{Pipe} works in conjunction with the \type{Filter} class (for example, the
-\type{CBC\_Encryption} and \type{Base64\_Encoder} types used above are
-\type{Filter}s), but you never have to deal with them directly; \type{Pipe}
-handles all the required housekeeping. \type{Pipe} is fully documented in the
-section titled ``The Pipe API'', which appears later in this section.
-
-A useful ability of \type{Pipe} is to split up the work up into what are called
-``messages''. Messages are blocks of data that are processed in an identical
-fashion (\ie, with the same sequence of \type{Filter}s). Messages are delimited
-by the \function{start\_msg} and \function{end\_msg} functions, as shown
-above. There are two different ways to make use of messages. One is to send
-several messages through a \type{Pipe} without changing the \type{Pipe}'s
-configuration, so you end up with a sequence of messages; one use of this would
-be to send a sequence of identically encrypted UDP packets, for example (note
-that the \emph{data} need not be identical; it is just that each is encrypted,
-encoded, signed, etc in an identical fashion). Another is to change the filters
-that are used in the \type{Pipe} between each message, by adding or removing
-\type{Filter}s; functions that let you do this are documented in the Pipe API
-section. Pipe's full interface definition can be found in \filename{pipe.h}
-
-\subsubsection{Fork}
-
-It's fairly common that you might receive some data and want to perform more
-than one operation on it (\ie, encrypt it with DES and calculate the MD5 hash
-of the plaintext at the same time). That's where \type{Fork} comes
-in. \type{Fork} is a filter that takes input and passes it on to \emph{one or
-more} \type{Filter}s which are attached to it. \type{Fork} changes the nature
-of the pipe system completely. Instead of being a linked list, it becomes a
-tree.
-
-Before messages were added to Botan, using \type{Fork} was significantly more
-complicated, requiring you to keep pointers to \type{Fork} objects you
-allocated and sending control information to them when you wanted to read your
-output. Now, however, things are much simpler. Each \type{Filter} in the fork
-is given its own output buffer, and thus its own message. For example, if you
-have previously written two messages into a \type{Pipe}, then you start a new
-one with a \type{Fork} which has three paths of \type{Filter}'s inside it, you
-add three new messages to the \type{Pipe}. The data you put into the
-\type{Pipe} is duplicated and sent into each set of \type{Filter}s, and the
-eventual output is placed into a dedicated message slot in the \type{Pipe}.
-
-Messages in the \type{Pipe} are allocated in a depth-first manner. This is only
-interesting if you are using more than one \type{Fork} in a single \type{Pipe}.
-As an example, consider the following:
-
-\begin{verbatim}
-   Pipe pipe(new Fork(
-                new Fork(
-                   new Base64_Encoder,
-                   new Fork(
-                      NULL,
-                      new Base64_Encoder
-                      )
-                   ),
-                new Hex_Encoder
-                )
-      );
-\end{verbatim}
-
-In this case, message 0 will be the output of the first \type{Base64\_Encoder},
-message 1 will be a copy of the input (see below for how \type{Fork} interprets
-NULL pointers), message 2 will be the output of the second
-\type{Base64\_Encoder}, and message 3 will be the output of the
-\type{Hex\_Encoder}. As you can see, this results in message numbers being
-allocated in a top to bottom fashion, when looked at on the screen. However,
-note that there could be potential for bugs if this is not anticipated. For
-example, if your code is passed a \type{Filter}, and you assume it is a
-``normal'' one which only uses one message, your message offsets would be
-wrong, leading to some confusion during output.
-
-An alternate method (which is \emph{not} used) would be to give the first
-message to the first \type{Base64\_Encoder}, the second to the
-\type{Hex\_Encoder}, and then the last two messages to the two \type{Filter}s
-in the innermost \type{Fork}.
-
-The \filename{hasher} and \filename{hasher2} examples show two different ways
-of using \type{Pipe} and \type{Fork}.
-
-There is a very useful trick that you can do with \type{Fork}. Let's say you
-had some data that had been encrypted with a block cipher, and then hex
-encoded. In addition, a hex encoded MAC of the plaintext had been calculated
-and included with the message. You not only want to decrypt the data, you want
-to verify the MAC. So the first two filters in the pipe will decode the hex,
-and decrypt the raw ciphertext. But now, how are you going to both a) get the
-plaintext, and b) calculate the MAC of the plaintext? This is actually very
-simple, if a bit obscure.
-
-What you have to do is, after the filters that do the initial decoding, create
-a \type{Fork}. For the first argument, pass a null pointer. The fork object
-will understand that this means that you don't want to do any more processing
-on that line of the fork; you just want the data that was placed in. And then
-in the second argument you would pass in a \type{MAC\_Filter} so you could
-compute a MAC of the plaintext. An alternative is to define a simple
-passthrough/null \type{Filter}, which just calls \function{send} whenever
-\arg{write} is called. This is (in the author's opinion) pointless, but there
-is nothing stopping you from doing so if desired.
-
-For an example of this technique, look at the \filename{rsa\_dec} example in
-\filename{doc/examples/}.
-
-Any \type{Filter}s which are attached to the \type{Pipe} after the \type{Fork}
-are implicitly attached onto the first branch created by the fork. For example,
-let's say you created this \type{Pipe}:
-
-\begin{verbatim}
-Pipe pipe(new Fork(new Hash_Filter("MD5"), new Hash_Filter("SHA-1")),
-          new Hex_Encoder);
-\end{verbatim}
-
-And then called \function{start\_msg}, inserted some data, then
-\function{end\_msg}. Then \arg{pipe} would contain two messages. The first one
-(message number 0) would contain the MD5 sum of the input in hex encoded form,
-and the other would contain the SHA-1 sum of the input in raw binary.
-
-\subsubsection{Chain}
-
-\type{Chain} is about as simple as it gets. \type{Chain} creates a chain of
-\type{Filter}s and encapsulates them inside a single filter (itself). This is
-primarily useful for passing a sequence of filters into something which is
-expecting only a single \type{Filter} (most notably, \type{Fork}). You can call
-\type{Chain}'s constructor with up to 4 \type{Filter*}s (they will be added in
-order), or with an array of \type{Filter*}s and a \type{u32bit} which tells
-\type{Chain} how many \type{Filter*}s are in the array (again, they will be
-attached in order). See the section ``A Filter Example'' for an example of
-using \type{Chain}.
-
-\subsubsection{Data Sources}
-
-A \type{DataSource} is a simple abstraction for a thing that stores bytes. This
-type is used fairly heavily in the areas of the API related to ASN.1
-encoding/decoding. The following types are \type{DataSource}s: \type{Pipe},
-\type{SecureQueue}, and a couple of special purpose ones:
-\type{DataSource\_Memory} and \type{DataSource\_Stream}.
-
-You can create a \type{DataSource\_Memory} with an array of bytes and a length
-field. The object will make a copy of the data, so you don't have to worry
-about keeping that memory allocated. This is mostly for internal use, but if it
-comes in handy, feel free to use it.
-
-A \type{DataSource\_Stream} is probably more useful than the memory based
-one. It's constructors take either a \type{std::istream} or a
-\type{std::string}. If it's a stream, the data source will use the
-\type{istream} to satisfy read requests (this is particularly useful to use
-with \type{std::cin}). If the string version is used, it will attempt to open
-up a file with that name and read from it.
-
-\subsubsection{Data Sinks}
-
-A \type{DataSink} (in \filename{data\_snk.h}) is a \type{Filter} which takes
-arbitrary amounts of input, and produces no output. Generally, this means it's
-doing something with the data outside the realm of what
-\type{Filter}/\type{Pipe} can handle, for example, writing it to a file (which
-is what the \type{DataSink\_Stream} does). There is no need for
-\type{DataSink}s which write to a \type{std::string} or memory buffer, because
-\type{Pipe} can handle that by itself.
-
-Here's a quick example of using a \type{DataSink}, which encrypts
-\filename{in.txt} and sends the output to \filename{out.txt}. There is
-no explicit output operation; the writing of \filename{out.txt} is
-implicit.
-
-\begin{verbatim}
-   DataSource_Stream in("in.txt");
-   Pipe pipe(new CBC_Encryption("Blowfish", "PKCS7", key, iv),
-             new DataSink_Stream("out.txt"));
-   pipe.process_msg(in);
-\end{verbatim}
-
-A real advantage of this is that even if ``in.txt'' is large (say, 1
-gigabyte), only as much memory is needed for internal I/O buffers will actually
-be used. A naive use of \type{Pipe} would, in that case, use up about 1
-gigabyte of memory, by storing the full encrypted version of the file in
-memory, and then writing it all out at once.
-
-\subsection{The Pipe API}
-
-Using \type{Pipe} is supposed to be pretty easy (especially in the common,
-simple cases). The usage is generally as follows: Initialize a \type{Pipe} with
-the filters you want to use, write some data into it, and then read some
-processed data out.
-
-\subsubsection{Initializing Pipe}
-
-By default, \type{Pipe} will do nothing at all; any input placed into the
-\type{Pipe} will be read back unchanged. Obviously, this has limited utility,
-and presumably you want to use one or more \type{Filter}s to somehow process
-the data. First, you can choose a set of \type{Filter}s to initialize the
-\type{Pipe} with via the constructor. Namely, you can pass it either a set of
-up to 4 \type{Filter*}s, or a pre-defined array and a length:
-
-\begin{verbatim}
-   Pipe pipe1(new Filter1(/*args*/), new Filter2(/*args*/),
-              new Filter3(/*args*/), new Filter4(/*args*/));
-   Pipe pipe2(new Filter1(/*args*/), new Filter2(/*args*/));
-
-   Filter* filters[5] = {
-     new Filter1(/*args*/), new Filter2(/*args*/), new Filter3(/*args*/),
-     new Filter4(/*args*/), new Filter5(/*args*/) /* more if desired... */
-   };
-   Pipe pipe3(filters, 5);
-\end{verbatim}
-
-This is by far the most common way to initialize a \type{Pipe}. However,
-occasionally a more flexible initialization strategy is necessary; this is
-supported by 4 member functions: \function{prepend}(\type{Filter*}),
-\function{append}(\type{Filter*}), \function{pop}(), and \function{reset}().
-These functions may only be used while the \type{Pipe} in question is not in
-use; that is, either before calling \function{start\_msg}, or after
-\function{end\_msg} has been called (and no new calls to \function{start\_msg}
-have been made yet).
-
-The function \function{reset}() simply removes all the \type{Filter}s which the
-\type{Pipe} is currently using~--~it is reset to an initialize, ``empty''
-state.  Any data which is being retained by the \type{Pipe} is retained after a
-\function{reset}(), and \function{reset}() does not affect the message numbers
-(discussed later).
-
-Calling \function{prepend} and \function{append} will either prepend or append
-the passed \type{Filter} object to the list of transformations. For example, if
-you \function{prepend} a \type{Filter} implementing encryption, and the
-\type{Pipe} already had a \type{Filter} which hex encoded the input, then the
-next set of input would be first encrypted, then hex encoded. Alternately, if
-you called \function{append}, then the input would be first be hex encoded, and
-then encrypted (which is not terribly useful in this particular example).
-
-Finally, calling \function{pop}() will remove the first transformation of the
-\type{Pipe}. Say we had called \function{prepend} to put an encryption
-\type{Filter} into a \type{Pipe}; calling \function{pop}() would remove this
-\type{Filter} and return the \type{Pipe} to it's state before we called
-\function{prepend}.
-
-\subsubsection{Giving Data to a Pipe}
-
-Input to a \type{Pipe} is delimited into messages, which can be read from
-independently (\ie, you can read 5 bytes from one message, and then all of
-another message, without either read affecting any other messages). The
-messages are delimited by calls to \function{start\_msg} and
-\function{end\_msg}. In between these two calls, you can write data into a
-\type{Pipe}, and it will be processed by the \type{Filter}(s) that it
-contains. Writes at any other time are invalid, and will result in an
-exception.
-
-As to writing, you can call any of the functions called \function{write}(),
-which can take any of: a \type{byte[]}/\type{u32bit} pair, a
-\type{SecureVector<byte>}, a \type{std::string}, a \type{DataSource\&}, or a
-single \type{byte}.
-
-Sometimes, you may want to do only a single write per message. In this case,
-you can use the \function{process\_msg} series of functions, which start a
-message, write their argument into the \type{Pipe}, and then end the
-message. In this case you would not make any explicit calls to
-\function{start\_msg}/\function{end\_msg}. The version of \function{write}
-which takes a single \type{byte} is not supported by \function{process\_msg},
-but all the other variants are.
-
-\type{Pipe} can also be used with the \verb|>>| operator, and will accept a
-\type{std::istream}, (or on Unix systems with the \verb|fd_unix| module), a
-Unix file descriptor. In either case, the entire contents of the file will be
-read into the \type{Pipe}.
-
-\subsubsection{Getting Output from a Pipe}
-
-Retrieving the processed data from a \type{Pipe} is a bit more complicated, for
-various reasons. In particular, because \type{Pipe} will separate each message
-into a separate buffer, you have to be able to retrieve data from each message
-independently. Each of \type{Pipe}'s read functions has a final parameter which
-specifies what message to read from (as a 32-bit integer). If this parameter is
-set to \type{Pipe::DEFAULT\_MESSAGE}, it will read the current default message
-(\type{DEFAULT\_MESSAGE} is also the default value of this parameter). The
-parameter will not be mentioned in further discussion of the reading API, but
-it is always there (unless otherwise noted).
-
-Reading is done with a variety of functions. The most basic are \type{u32bit}
-\function{read}(\type{byte} \arg{out}[], \type{u32bit} \arg{len}) and
-\type{u32bit} \function{read}(\type{byte\&} \arg{out}). Each reads into
-\arg{out} (either up to \arg{len} bytes, or a single byte for the one taking a
-\type{byte\&}), and returns the total number of bytes read. There is a variant
-of these functions, all named \function{peek}, which performs the same
-operations, but does not remove the bytes from the message (reading is a
-destructive operation with a \type{Pipe}).
-
-There are also the functions \type{SecureVector<byte>} \function{read\_all}(),
-and \type{std::string} \function{read\_all\_as\_string}(), which return the
-entire contents of the message, either as a memory buffer, or a
-\type{std::string} (which is generally only useful is the \type{Pipe} has
-encoded the message into a text string, such as when a \type{Base64\_Encoder}
-is used).
-
-To determine how many bytes are left in a message, call \type{u32bit}
-\function{remaining}() (which can also take an optional message
-number). Finally, there are some functions for managing the default message
-number: \type{u32bit} \function{default\_msg}() will return the current default
-message, \type{u32bit} \function{message\_count}() will return the total number
-of messages (0...\function{message\_count}()-1), and
-\function{set\_default\_msg}(\type{u32bit} \arg{msgno}) will set a new default
-message number (which must be a valid message number for that \type{Pipe}). The
-ability to set the default message number is particularly important in the case
-of using the file output operations (\verb|<<| with a \type{std::ostream} or
-Unix file descriptor), because there is no way to specify it explicitly when
-using the output operator.
-
-\pagebreak
-
-\subsection{A Filter Example}
-
-Here is some code which takes one or more filenames in \arg{argv} and
-calculates the result of several hash functions for each file. The complete
-program can be found as \filename{hasher.cpp} in the Botan distribution. For
-brevity, most error checking has been removed.
-
-\begin{verbatim}
-   string name[3] = { "MD5", "SHA-1", "RIPEMD-160" };
-   Botan::Filter* hash[3] = {
-      new Botan::Chain(new Botan::Hash_Filter(name[0]),
-                        new Botan::Hex_Encoder),
-      new Botan::Chain(new Botan::Hash_Filter(name[1]),
-                        new Botan::Hex_Encoder),
-      new Botan::Chain(new Botan::Hash_Filter(name[2]),
-                        new Botan::Hex_Encoder) };
-
-   Botan::Pipe pipe(new Botan::Fork(hash, COUNT));
-
-   for(u32bit j = 1; argv[j] != 0; j++)
-      {
-      ifstream file(argv[j]);
-      pipe.start_msg();
-      file >> pipe;
-      pipe.end_msg();
-      file.close();
-      for(u32bit k = 0; k != 3; k++)
-         {
-         pipe.set_default_msg(3*(j-1)+k);
-         cout << name[k] << "(" << argv[j] << ") = " << pipe << endl;
-         }
-      }
-\end{verbatim}
-
-\pagebreak
-
-\subsection{Rolling Your Own}
-
-Well, now that you know how filters work in Botan, you might want to write
-your own. Lucky for you, all of the hard work is done by the \type{Filter} base
-class, leaving you to handle the details of what your filter is supposed to
-do. Remember that if you get confused about any of this, you can always look at
-the implementation of Botan's filters to see exactly how everything works.
-
-There are basically only four functions that a filter need worry about:
-
-\noindent
-\type{void} \function{write}(\type{byte} \arg{input}[], \type{u32bit}
-\arg{length}):
-
-The \function{write} function is what is called when a filter receives input
-for it to process. The filter is \emph{not} required to process it right away;
-many filters buffer their input before producing any output. A filter will
-usually have \function{write} called many times during it's lifetime.
-
-\noindent
-\type{void} \function{send}(\type{byte} \arg{output}[], \type{u32bit}
-\arg{length}):
-
-Eventually, a filter will want to produce some output to send along to the next
-filter in the pipeline. It does so by calling \function{send} with whatever it
-wants to send along to the next filter. There is also a version of
-\function{send} taking a single byte argument, as a convenience.
-
-\noindent
-\type{void} \function{start\_msg()}:
-
-This function is optional. Implement it if your \type{Filter} would like to do
-some processing or setup at the start of each message (for an example, see the
-Zlib compression module).
-
-\noindent
-\type{void} \function{end\_msg()}:
-
-Implementing the \function{end\_msg} function is optional. It is called when it
-has been requested that filters finish up their computations. Note that they
-must \emph{not} deallocate their resources; this should be done by their
-destructor. They should simply finish up with whatever computation they have
-been working on (for example, a compressing filter would flush the compressor
-and \function{send} the final block), and empty any buffers in preparation for
-processing a fresh new set of input. It is essentially the inverse of
-\function{start\_msg}.
-
-Additionally, if necessary, filters can define a constructor that takes any
-needed arguments, and a destructor to deal with deallocating memory, closing
-files, etc.
-
-There is also a \type{BufferingFilter} class (in \filename{buf\_filt.h}) which
-will take a message and split it up into an initial block which can be of any
-size (including zero), a sequence of fixed sized blocks of any non-zero size,
-and last (possibly zero-sized) final block. This might make a useful base class
-for your filters, depending on what you have in mind.
-
-\pagebreak
-
-\subsection{Filter Catalog}
-
-This section contains descriptions of every \type{Filter} included in Botan.
-Note that modules which provide \type{Filter}s are documented elsewhere --
-these \type{Filter}s are available on any installation of Botan.
-
-\subsubsection{Keyed Filters}
-
-A few sections ago, it was mentioned that \type{Pipe} can process multiple
-messages, treating each of them exactly the same. Well, that was a bit of a
-lie. There are some algorithms (in particular, block ciphers not in ECB mode,
-and all stream ciphers) that change their state as data is put through them.
-
-Naturally, you might well want to reset the keys or (in the case of block
-cipher modes) IVs used by such filters, so multiple messages can be processed
-using completely different keys, or new IVs, or new keys and IVs, or whatever.
-And in fact, even for a MAC or an ECB block cipher, you might well want to
-change the key used from message to message.
-
-Enter \type{Keyed\_Filter}. It's a base class of any filter that is keyed:
-block cipher modes, stream ciphers, MACs, whatever. It has two functions,
-\function{set\_key} and \function{set\_iv}. Calling \function{set\_key} will,
-naturally, set (or reset) the key used by the algorithm. Setting the IV only
-makes sense in certain algorithms -- a call to \function{set\_iv} on an object
-that doesn't support IVs will be ignored. You \emph{must} call
-\function{set\_key} before calling \function{set\_iv}: while not all
-\type{Keyed\_Filter} objects require this, you should assume it is required
-anytime you are using a \type{Keyed\_Filter}.
-
-Here's a example:
-
-\begin{verbatim}
-   Keyed_Filter *cast, *hmac;
-   Pipe pipe(new Base64_Decoder,
-             // Note the assignments to the cast and hmac variables
-             cast = new CBC_Decryption("CAST-128", "PKCS7", cast_key, iv),
-             new Fork(
-                0, // Read the section 'Fork' to understand this
-                new Chain(
-                   hmac = new MAC_Filter("HMAC(SHA-1)", mac_key, 12),
-                   new Base64_Encoder
-                   )
-                )
-      );
-   pipe.start_msg();
-   [use pipe for a while, decrypt some stuff, derive new keys and IVs]
-   pipe.end_msg();
-
-   cast->set_key(cast_key2);
-   cast->set_iv(iv2);
-   hmac->set_key(mac_key2);
-
-   pipe.start_msg();
-   [use pipe for some other things]
-   pipe.end_msg();
-\end{verbatim}
-
-There are some requirements to using \type{Keyed\_Filter} which you must
-follow. If you call \function{set\_key} or \function{set\_iv} on a filter which
-is owned by a \type{Pipe}, you must do so while the \type{Pipe} is
-``unlocked''. This refers to the times when no messages are being processed by
-\type{Pipe} -- either before \type{Pipe}'s \function{start\_msg} is called, or
-after \function{end\_msg} is called (and no new call to \function{start\_msg}
-has happened yet). Doing otherwise will result in undefined behavior, probably
-silently getting invalid output.
-
-And remember: if you're resetting both values, reset the key \emph{first}.
-
-\pagebreak
-
-\subsubsection{Cipher Filters}
-
-Getting ahold of a \type{Filter} implementing a cipher is very easy. Simply
-make sure you're including the header \filename{lookup.h}, and call
-\function{get\_cipher}. Generally you will pass the return value directly into
-a \type{Pipe}. There are actually a couple different functions, which do pretty
-much the same thing:
-
-\function{get\_cipher}(\type{std::string} \arg{cipher\_spec},
-                       \type{SymmetricKey} \arg{key},
-                       \type{InitializationVector} \arg{iv},
-                       \type{Cipher\_Dir} \arg{dir});
-
-\function{get\_cipher}(\type{std::string} \arg{cipher\_spec},
-                       \type{SymmetricKey} \arg{key},
-                       \type{Cipher\_Dir} \arg{dir});
-
-The version that doesn't take an IV is useful for things that don't use them,
-like block ciphers in ECB mode, or most stream ciphers. If you specify a
-\arg{cipher\_spec} that does want a IV, and you use the version that doesn't
-take one, an exception will be thrown. The \arg{dir} argument can be either
-\type{ENCRYPTION} or \type{DECRYPTION}. In a few cases, like most (but not all)
-stream ciphers, these are equivalent, but even then it provides a way of
-showing the ``intent'' of the operation to readers of your code.
-
-The \arg{cipher\_spec} is a string that specifies what cipher is to be
-used. The general syntax for \arg{cipher\_spec} is ``STREAM\_CIPHER'',
-``BLOCK\_CIPHER/MODE'', or ``BLOCK\_CIPHER/MODE/PADDING''. In the case of
-stream ciphers, no mode is necessary, so just the name is sufficient. A block
-cipher requires a mode of some sort, which can be ``ECB'', ``CBC'', ``CFB(n)'',
-``OFB'', ``CTR-BE'', or ``EAX(n)''. The argument to CFB mode is how many bits
-of feedback should be used. If you just use ``CFB'' with no argument, it will
-default to using a feedback equal to the block size of the cipher. EAX mode
-also takes an optional bit argument, which tells EAX how large a tag size to
-use~--~generally this is the size of the block size of the cipher, which is the
-default if you don't specify any argument.
-
-In the case of the ECB and CBC modes, a padding method can also be
-specified. If it is not supplied, ECB defaults to not padding, and CBC defaults
-to using PKCS \#5/\#7 compatible padding. The padding methods currently
-available are ``NoPadding'', ``PKCS7'', ``OneAndZeros'', and ``CTS''. CTS
-padding is currently only available for CBC mode, but the others can also be
-used in ECB mode.
-
-Some example \arg{cipher\_spec} arguments are: ``DES/CFB(32)'',
-``TripleDES/OFB'', ``Blowfish/CBC/CTS'', ``SAFER-SK(10)/CBC/OneAndZeros'',
-``AES/EAX'', ``ARC4''
-
-``CTR-BE'' refers to counter mode where the counter is incremented as if it
-were a big-endian encoded integer. This is compatible with most other
-implementations, but it is possible some will use the incompatible little
-endian convention. This version would be denoted as ``CTR-LE'' if it were
-supported.
-
-``EAX'' is a new cipher mode designed by Wagner, Rogaway, and Bellare. It is an
-authenticated cipher mode (that is, no separate authentication is needed), has
-provable security, and is free from patent entanglements. It runs about half as
-fast as most of the other cipher modes (like CBC, OFB, or CTR), which is not
-bad considering you don't need to use an authentication code.
-
-\subsubsection{Hashes and MACs}
-
-Hash functions and MACs don't need anything special when it comes to
-filters. Both just take their input and produce no output until
-\function{end\_msg()} is called, at which time they complete the hash or MAC
-and send that as output.
-
-These \type{Filter}s take a string naming the type to be used. If for some
-reason you name something that doesn't exist, an exception will be thrown.
-
-\noindent
-\function{Hash\_Filter}(\type{std::string} \arg{hash},
-                        \type{u32bit} \arg{outlength}):
-
-This type hashes it's input with \arg{hash}. When \function{end\_msg} is called
-on the owning \type{Pipe}, the hash is completed and the digest is sent on to
-the next thing in the pipe. The argument \arg{outlength} specifies how much of
-the output of the hash will be passed along to the next filter when
-\function{end\_msg} is called. By default, it will pass the entire hash.
-
-Examples of names for \function{Hash\_Filter} are ``SHA-1'' and ``Whirlpool''.
-
-\noindent
-\function{MAC\_Filter}(\type{std::string} \arg{mac},
-                       \type{const SymmetricKey\&} \arg{key},
-                       \type{u32bit} \arg{outlength}):
-
-The constructor for a \type{MAC\_Filter} takes a key, used in calculating the
-MAC, and a length parameter, which has semantics exactly the same as the one
-passed to \type{Hash\_Filter}s constructor.
-
-Examples for \arg{mac} are ``HMAC(SHA-1)'', ``MD5-MAC'', and the exceptionally
-long, strange, and probably useless name
-``CMAC(Lion(Tiger(20,3),MARK-4,1024))''.
-
-\subsubsection{PK Filters}
-
-There are four classes in this category, \type{PK\_Encryptor\_Filter},
-\type{PK\_Decryptor\_Filter}, \type{PK\_Signer\_Filter}, and
-\type{PK\_Verifier\_Filter}. Each takes a pointer to an object of the
-appropriate type (\type{PK\_Encryptor}, \type{PK\_Decryptor}, etc) which is
-deleted by the destructor. These classes are found in \filename{pk\_filts.h}.
-
-Three of these, for encryption, decryption, and signing are pretty much
-identical conceptually. Each of them buffers it's input until the end of the
-message is marked with a call to the \function{end\_msg} function. Then they
-encrypt, decrypt, or sign their input and send the output (the ciphertext, the
-plaintext, or the signature) into the next filter.
-
-Signature verification works a little differently, because it needs to know
-what the signature is in order to check it. You can either pass this in along
-with the constructor, or call the function \function{set\_signature} -- with
-this second method, you need to keep a pointer to the filter around so you can
-send it this command. In either case, after \function{end\_msg} is called, it
-will try to verify the signature (if the signature has not been set by either
-method, an exception will be thrown here). It will then send a single byte onto
-the next filter -- a 1 or a 0, which specifies whether the signature verified
-or not (respectively).
-
-For more information about PK algorithms (including creating the appropriate
-objects to pass to the constructors), read the section ``Public Key
-Cryptography'' in this manual.
-
-\subsubsection{Encoders}
-
-Often you want your data to be in some form of text (for sending over channels
-which aren't 8-bit clean, printing it, etc). The filters \type{Hex\_Encoder}
-and \type{Base64\_Encoder} will convert arbitrary binary data into hex or
-base64 formats. Not surprisingly, you can use \type{Hex\_Decoder} and
-\type{Base64\_Decoder} to convert it back into it's original form.
-
-Both of the encoders can take a few options about how the data should be
-formatted (all of which have defaults). The first is a \type{bool} which simply
-says if the encoder should insert line breaks. This defaults to
-false. Line breaks don't matter either way to the decoder, but it makes the
-output a bit more appealing to the human eye, and a few transport mechanisms
-(notably some email systems) limit the maximum line length.
-
-The second encoder option is an integer specifying how long such lines will be
-(obviously this will be ignored if line-breaking isn't being used). The default
-tends to be in the range of 60-80 characters, but is not specified exactly. If
-you want a specific value, set it. Otherwise the default should be fine.
-
-Lastly, \type{Hex\_Encoder} takes an argument of type \type{Case}, which can be
-\type{Uppercase} or \type{Lowercase} (default is \type{Uppercase}). This
-specifies what case the characters A-F should be output as. The base64 encoder
-has no such option, because it uses both upper and lower case letters for it's
-output.
-
-The decoders both take a single option, which tells it how the object should
-behave in the case of invalid input. The enum (called \type{Decoder\_Checking})
-can take on any of three values: \type{NONE}, \type{IGNORE\_WS}, and
-\type{FULL\_CHECK}. With \type{NONE} (the default, for compatibility with
-previous releases), invalid input (for example, a ``z'' character in supposedly
-hex input) will simply be ignored. With \type{IGNORE\_WS}, whitespace will be
-ignored by the decoder, but receiving other non-valid data will raise an
-exception. Finally, \type{FULL\_CHECK} will raise an exception for \emph{any}
-characters not in the encoded character set, including whitespace.
-
-You can find the declarations for these types in \filename{hex.h} and
-\filename{base64.h}.
-
-\pagebreak
-
 \section{Certificate Handling}
 
 A certificate is essentially a binding between some identifying information of
@@ -1783,8 +1560,6 @@ could not be processed due to some problem (which could range from the issuing
 certificate not being found, to the CRL having some format problem). For more
 about the \type{X509\_Store} API, read the section later in this chapter.
 
-\pagebreak
-
 \subsection{Reading Certificates}
 
 \type{X509\_Certificate} has two constructors, each of which takes a source of
@@ -1845,8 +1620,6 @@ You can output a set of certificates by calling \function{PEM\_encode}, which
 will return a \type{std::string} containing each of the certificates in the
 store, PEM encoded and concatenated. This simple format can easily be read by
 both Botan and other libraries/applications.
-
-\pagebreak
 
 \subsubsection{Searching for Certificates}
 
@@ -1918,8 +1691,6 @@ it, by calling the \type{X509\_Store} member function
 
 The argument, \arg{new\_store}, will be deleted by \type{X509\_Store}'s
 destructor, so make sure to allocate it with \function{new}.
-
-\pagebreak
 
 \subsubsection{Verifying Certificates}
 
@@ -2075,8 +1846,6 @@ if a revoked certificate has expired 'normally', there is no reason to continue
 to explicitly revoke it, since clients will reject the cert as expired in any
 case.
 
-\pagebreak
-
 \subsubsection{Self-Signed Certificates}
 
 Generating a new self-signed certificate can often be useful, for example when
@@ -2177,7 +1946,224 @@ for use with S/MIME), ``PKIX.IPsecUser'', ``PKIX.IPsecTunnel'',
 added to the list to include in the certificate.
 
 \pagebreak
+\section{The Low-Level Interface}
 
+Botan has two different interfaces. The one documented in this section is meant
+more for implementing higher-level types (see the section on filters, later in
+this manual) than for use by applications. Using it safely requires a solid
+knowledge of encryption techniques and best practices, so unless you know, for
+example, what CBC mode and nonces are, and why PKCS \#1 padding is important,
+you should avoid this interface in favor of something working at a higher level
+(such as the CMS interface).
+
+\subsection{Basic Algorithm Abilities}
+
+There are a small handful of functions implemented by most of Botan's
+algorithm objects. Among these are:
+
+\noindent
+\type{std::string} \function{name}():
+
+Returns a human-readable string of the name of this algorithm. Examples of
+names returned are ``Blowfish'' and ``HMAC(MD5)''. You can turn names back into
+algorithm objects using the functions in \filename{lookup.h}.
+
+\noindent
+\type{void} \function{clear}():
+
+Clear out the algorithm's internal state. A block cipher object will ``forget''
+its key, a hash function will ``forget'' any data put into it, etc. Basically,
+the object will look exactly as it did when you initially allocated it.
+
+\noindent
+\function{clone}():
+
+This function is central to Botan's name-based interface. The \function{clone}
+has many different return types, such as \type{BlockCipher*} and
+\type{HashFunction*}, depending on what kind of object it is called on. Note
+that unlike Java's clone, this returns a new object in a ``pristine'' state;
+that is, operations done on the initial object before calling \function{clone}
+do not affect the initial state of the new clone.
+
+Cloned objects can (and should) be deallocated with the C++ \texttt{delete}
+operator.
+
+\subsection{Keys and IVs}
+
+Both symmetric keys and initialization values can simply be considered byte (or
+octet) strings. These are represented by the classes \type{SymmetricKey} and
+\type{InitializationVector}, which are subclasses of \type{OctetString}.
+
+Since often it's hard to distinguish between a key and IV, many things (such as
+key derivation mechanisms) return \type{OctetString} instead of
+\type{SymmetricKey} to allow its use as a key or an IV.
+
+\noindent
+\function{OctetString}(\type{u32bit} \arg{length}):
+
+This constructor creates a new random key of size \arg{length}.
+
+\noindent
+\function{OctetString}(\type{std::string} \arg{str}):
+
+The argument \arg{str} is assumed to be a hex string; it is converted to binary
+and stored. Whitespace is ignored.
+
+\noindent
+\function{OctetString}(\type{const byte} \arg{input}[], \type{u32bit}
+\arg{length}):
+
+This constructor simply copies its input.
+
+\subsection{Symmetrically Keyed Algorithms}
+
+Block ciphers, stream ciphers, and MACs all handle keys in pretty much the same
+way. To make this similarity explicit, all algorithms of those types are
+derived from the \type{SymmetricAlgorithm} base class. This type has three
+functions:
+
+\noindent
+\type{void} \function{set\_key}(\type{const byte} \arg{key}[], \type{u32bit}
+\arg{length}):
+
+Most algorithms only accept keys of certain lengths. If you attempt to call
+\function{set\_key} with a key length that is not supported, the exception
+\type{Invalid\_Key\_Length} will be thrown. There is also another version of
+\function{set\_key} that takes a \type{SymmetricKey} as an argument.
+
+\noindent
+\type{bool} \function{valid\_keylength}(\type{u32bit} \arg{length}) const:
+
+This function returns true if a key of the given length will be accepted by
+the cipher.
+
+There are also three constant data members of every \type{SymmetricAlgorithm}
+object, which specify exactly what limits there are on keys which that object
+can accept:
+
+MAXIMUM\_KEYLENGTH: The maximum length of a key. Usually, this is at most 32
+(256 bits), even if the algorithm actually supports more. In a few rare cases
+larger keys will be supported.
+
+MINIMUM\_KEYLENGTH: The minimum length of a key. This is at least 1.
+
+KEYLENGTH\_MULTIPLE: The length of the key must be a multiple of this value.
+
+In all cases, \function{set\_key} must be called on an object before any data
+processing (encryption, decryption, etc) is done by that object. If this is not
+done, the results are undefined -- that is to say, Botan reserves the right in
+this situation to do anything from printing a nasty, insulting message on the
+screen to dumping core.
+
+\subsection{Block Ciphers}
+
+Block ciphers implement the interface \type{BlockCipher}, found in
+\filename{base.h}, as well as the \type{SymmetricAlgorithm} interface.
+
+\noindent
+\type{void} \function{encrypt}(\type{const byte} \arg{in}[BLOCK\_SIZE],
+                               \type{byte} \arg{out}[BLOCK\_SIZE]) const
+
+\noindent
+\type{void} \function{encrypt}(\type{byte} \arg{block}[BLOCK\_SIZE]) const
+
+These functions apply the block cipher transformation to \arg{in} and
+place the result in \arg{out}, or encrypts \arg{block} in place
+(\arg{in} may be the same as \arg{out}). BLOCK\_SIZE is a constant
+member of each class, which specifies how much data a block cipher can
+process at one time. Note that BLOCK\_SIZE is not a static class
+member, meaning you can (given a \type{BlockCipher*} named
+\arg{cipher}), call \verb|cipher->BLOCK_SIZE| to get the block size of
+that particular object. \type{BlockCipher}s have similar functions
+\function{decrypt}, which perform the inverse operation.
+
+\begin{verbatim}
+AES_128 cipher;
+SymmetricKey key(cipher.MAXIMUM_KEYLENGTH); // randomly created
+cipher.set_key(key);
+
+byte in[16] = { /* secrets */ };
+byte out[16];
+cipher.encrypt(in, out);
+\end{verbatim}
+
+\subsection{Stream Ciphers}
+
+Stream ciphers are somewhat different from block ciphers, in that encrypting
+data results in changing the internal state of the cipher. Also, you may
+encrypt any length of data in one go (in byte amounts).
+
+\noindent
+\type{void} \function{encrypt}(\type{const byte} \arg{in}[], \type{byte}
+\arg{out}[], \type{u32bit} \arg{length})
+
+\noindent
+\type{void} \function{encrypt}(\type{byte} \arg{data}[], \type{u32bit}
+\arg{length}):
+
+These functions encrypt the arbitrary length (well, less than 4 gigabyte long)
+string \arg{in} and place it into \arg{out}, or encrypts it in place in
+\arg{data}. The \function{decrypt} functions look just like
+\function{encrypt}.
+
+Stream ciphers implement the \type{SymmetricAlgorithm} interface.
+
+Some stream ciphers support random access to any point in their cipher
+stream. For such ciphers, calling \type{void} \function{seek}(\type{u32bit}
+\arg{byte}) will change the cipher's state so that it as if the cipher had been
+keyed as normal, then encrypted \arg{byte} -- 1 bytes of data (so the next byte
+in the cipher stream is byte number \arg{byte}).
+
+\subsection{Hash Functions / Message Authentication Codes}
+
+Hash functions take their input without producing any output, only producing
+anything when all input has already taken place. MACs are very similar, but are
+additionally keyed. Both of these are derived from the base class
+\type{BufferedComputation}, which has the following functions.
+
+\noindent
+\type{void} \function{update}(\type{const byte} \arg{input}[], \type{u32bit}
+\arg{length})
+
+\noindent
+\type{void} \function{update}(\type{byte} \arg{input})
+
+\noindent
+\type{void} \function{update}(\type{const std::string \&} \arg{input})
+
+Updates the hash/mac calculation with \arg{input}.
+
+\noindent
+\type{void} \function{final}(\type{byte} \arg{out}[OUTPUT\_LENGTH])
+
+\noindent
+\type{SecureVector<byte>} \function{final}():
+
+Complete the hash/MAC calculation and place the result into \arg{out}.
+OUTPUT\_LENGTH is a public constant in each object that gives the length of the
+hash in bytes. After you call \function{final}, the hash function is reset to
+its initial state, so it may be reused immediately.
+
+The second method of using final is to call it with no arguments at all, as
+shown in the second prototype. It will return the hash/mac value in a memory
+buffer, which will have size OUTPUT\_LENGTH.
+
+There are also a pair of functions called \function{process}. They are
+essentially a combination of a single \function{update}, and \function{final}.
+Both versions return the final value, rather than placing it an array. Calling
+\function{process} with a single byte value isn't available, mostly because it
+would rarely be useful.
+
+A MAC can be viewed (in most cases) as simply a keyed hash function, so classes
+which are derived from \type{MessageAuthenticationCode} have \function{update}
+and \function{final} classes just like a \type{HashFunction} (and like a
+\type{HashFunction}, after \function{final} is called, it can be used to make a
+new MAC right away; the key is kept around).
+
+A MAC has the \type{SymmetricAlgorithm} interface in addition to the
+\type{BufferedComputation} interface.
+
+\pagebreak
 \section{CMS}
 
 The Cryptographic Message Syntax (CMS) is an IETF standardized format for
@@ -2211,7 +2197,6 @@ WRITEME
 WRITEME
 
 \pagebreak
-
 \section{Random Number Generators}
 
 The random number generators provided in Botan are meant for creating keys,
@@ -2251,8 +2236,6 @@ On Windows and Unix systems, the available entropy source modules can provide
 more than enough entropy to seed the PRNGs sufficiently. However, if these
 entropy sources aren't compiled into the library, the application will have to
 handle seeding on its own.
-
-\pagebreak
 
 \subsection{The Global PRNG}
 
@@ -2426,7 +2409,6 @@ only used by an application after it has been hashed by the
 you do will be wasteful of both CPU cycles and possibly entropy.
 
 \pagebreak
-
 \section{User Interfaces}
 
 Botan has recently changed some infrastructure to better accommodate more
@@ -2532,7 +2514,6 @@ the pulse function is called often enough (which is should), simply running the
 event loop and letting the timer function do the updates will work fine.
 
 \pagebreak
-
 \section{Policy Configuration}
 
 While Botan is performing operations on behalf on an application, there are
@@ -2596,7 +2577,9 @@ To add (or set) an option, call
 \function{global\_config}().\function{set\_option} (\type{std::string}
 \arg{name}, \type{std::string} \arg{value})
 
-To get the value of an option, there are number of member 
+To get the value of an option, there are number of member functions
+which provide access, converting the underlying storage unit
+(currently strings) into an appropriate base type:
 
 \type{std::string} \function{option}(\type{std::string} \arg{option})
 
@@ -2609,8 +2592,14 @@ To get the value of an option, there are number of member
 
 \type{bool} \function{option\_as\_bool}(\type{std::string} \arg{option})
 
-The only one that might be confusing is \function{option\_as\_time},
-which returns the time in seconds.
+Simply calling \function{option} returns a \type{std::string}, which
+is the underlying storage unit. If you're not sure what kind of value
+might be in the type, or you want to support a type coercion that
+Botan isn't supporting, you'll want to use this. Botan supports
+various simple coercions, which take the underlying string as the
+input. Taking the option as a list simply splits it on the ':'
+character (with no escaping of any kind, eg ``abc\\:def'' splits into
+``abc\\'' and ``def'')
 
 As to defaults: strings default to the empty string, lists to an empty list,
 integers default to 0, times default to no time (0 seconds), and booleans will
@@ -2779,8 +2768,6 @@ in the United States.
          and much less commonly used.
 \end{list}
 
-\pagebreak
-
 \subsection{Configuration Files}
 
 Botan has a number of options, which can be configured by calling the
@@ -2880,7 +2867,6 @@ another_thing = some_thing.4.5  # another_thing = 1.2.3.4.5
 \end{verbatim}
 
 \pagebreak
-
 \section{Miscellaneous}
 
 This section has documentation for anything that just didn't fit into any of
@@ -3109,7 +3095,6 @@ return of the \function{gettimeofday} function call. This is done automatically
 by the \type{LibraryInitializer} object.
 
 \pagebreak
-
 \section{Botan's Modules}
 
 Botan comes with a variety of modules which can be compiled into the system.
@@ -3261,8 +3246,52 @@ While the zlib compression library uses the same compression algorithm as the
 gzip and zip programs, the format is different. The zlib format is defined in
 RFC 1950.
 
-\pagebreak
+\subsubsection{Data Sources}
 
+A \type{DataSource} is a simple abstraction for a thing that stores bytes. This
+type is used fairly heavily in the areas of the API related to ASN.1
+encoding/decoding. The following types are \type{DataSource}s: \type{Pipe},
+\type{SecureQueue}, and a couple of special purpose ones:
+\type{DataSource\_Memory} and \type{DataSource\_Stream}.
+
+You can create a \type{DataSource\_Memory} with an array of bytes and a length
+field. The object will make a copy of the data, so you don't have to worry
+about keeping that memory allocated. This is mostly for internal use, but if it
+comes in handy, feel free to use it.
+
+A \type{DataSource\_Stream} is probably more useful than the memory based
+one. It's constructors take either a \type{std::istream} or a
+\type{std::string}. If it's a stream, the data source will use the
+\type{istream} to satisfy read requests (this is particularly useful to use
+with \type{std::cin}). If the string version is used, it will attempt to open
+up a file with that name and read from it.
+
+\subsubsection{Data Sinks}
+
+A \type{DataSink} (in \filename{data\_snk.h}) is a \type{Filter} which takes
+arbitrary amounts of input, and produces no output. Generally, this means it's
+doing something with the data outside the realm of what
+\type{Filter}/\type{Pipe} can handle, for example, writing it to a file (which
+is what the \type{DataSink\_Stream} does). There is no need for
+\type{DataSink}s which write to a \type{std::string} or memory buffer, because
+\type{Pipe} can handle that by itself.
+
+Here's a quick example of using a \type{DataSink}, which encrypts
+\filename{in.txt} and sends the output to \filename{out.txt}. There is
+no explicit output operation; the writing of \filename{out.txt} is
+implicit.
+
+\begin{verbatim}
+   DataSource_Stream in("in.txt");
+   Pipe pipe(new CBC_Encryption("Blowfish", "PKCS7", key, iv),
+             new DataSink_Stream("out.txt"));
+   pipe.process_msg(in);
+\end{verbatim}
+
+A real advantage of this is that even if ``in.txt'' is large, only as
+much memory is needed for internal I/O buffers will actually be used.
+
+\pagebreak
 \section{BigInt}
 
 \type{BigInt} is Botan's implementation of a multiple-precision
@@ -3353,7 +3382,6 @@ library knows what the assumptions are. The interfaces for these
 functions can change completely without notice.
 
 \pagebreak
-
 \section{Removing Algorithms}
 
 You may well want to remove some of Botan's algorithms in order to fit it into
@@ -3421,7 +3449,6 @@ available, one can simply fall back on another algorithm, and when/if it is
 added to Botan, the application will start using it automagically.
 
 \pagebreak
-
 \section{Writing Modules}
 
 It's a lot simpler to write modules for Botan that it is to write code
@@ -3507,7 +3534,6 @@ make the configuration script only allow the module to be compiled on those
 architectures. Not having a block means any value is acceptable.
 
 \pagebreak
-
 \section{Compliance with Standards}
 
 Botan is/should be compatible with many cryptographic standards, including the
@@ -3545,7 +3571,6 @@ mentioned above, in various forms (usually with extra restrictions which 1363
 does not impose).
 
 \pagebreak
-
 \section{Recommended Algorithms}
 
 This section is by no means the last word on selecting which algorithms to use.
@@ -3580,7 +3605,6 @@ be more secure than the ones listed, but the algorithms listed here are
 \end{list}
 
 \pagebreak
-
 \section{Algorithms Listing}
 
 Botan includes a very sizable number of cryptographic algorithms. In
@@ -3636,7 +3660,6 @@ match that in SCAN, if it's defined there).
 \textbf{MACs:} ``HMAC(HASH)'', ``CMAC(BLOCK)'', ``X9.19-MAC''
 
 \pagebreak
-
 \section{Support and Further Information}
 
 \subsection{Compatibility}
