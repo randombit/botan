@@ -183,11 +183,12 @@ This includes a pair of entropy sources for use on Windows; at some point in
 the future it will also add support for high-resolution timers, mutexes for
 thread safety, and other useful things.
 
-For Win95 pre OSR2, the \verb|es_capi| module will not work, because CryptoAPI
-didn't exist. All versions of NT4 lack the ToolHelp32 interface, which is how
-\verb|es_win32| does it's slow polls, so a version of the library built with
-that module will not load under NT4. Later systems (98/ME/2000/XP) support both
-methods, so this shouldn't be much of an issue.
+For Win95 pre OSR2, the \verb|es_capi| module will not work, because
+CryptoAPI didn't exist. All versions of NT4 lack the ToolHelp32
+interface, which is how \verb|es_win32| does its slow polls, so a
+version of the library built with that module will not load under
+NT4. Later systems (98/ME/2000/XP) support both methods, so this
+shouldn't be much of an issue.
 
 Unfortunately, there currently isn't an install script usable on
 Windows. Basically all you have to do is copy the newly created
@@ -241,15 +242,19 @@ compressing. The default is 255, which means 'Unknown'. You can look in RFC
 also a Macintosh (7), but it probably makes more sense to use the Unix code on
 OS X.
 
-\pagebreak
-
 \subsection{Multiple Builds}
 
-It may be useful to run multiple builds 
+It may be useful to run multiple builds with different
+configurations. Specify \verb|--build-dir=<dir>| to set up a build
+environment in a different directory.
 
 \subsection{Local Configuration}
 
-
+You may want to do something peculiar with the configuration; to
+support this there is a flag to \filename{configure.pl} called
+\texttt{--local-config=<file>}. The contents of the file are inserted into
+\filename{build/build.h} which is (indirectly) included into every
+Botan header and source file.
 
 \pagebreak
 
@@ -351,45 +356,48 @@ unusual circumstances. The modules included with this release are:
 \subsection{Unix}
 
 Botan usually links in several different system libraries (such as
-\texttt{librt} and \texttt{libz}), depending on which modules are configured at
-compile time. In many environments, particularly ones using static libraries,
-an application has to link against the same libraries as Botan for the linking
-step to succeed. But how does it figure out what libraries it \emph{is} linked
-against?
+\texttt{librt} and \texttt{libz}), depending on which modules are
+configured at compile time. In many environments, particularly ones
+using static libraries, an application has to link against the same
+libraries as Botan for the linking step to succeed. But how does it
+figure out what libraries it \emph{is} linked against?
 
-The answer is to ask the \filename{botan-config} script. This basically solves
-the same problem all the other \filename{*-config} scripts solve, and in
-basically the same manner. At some point in the future, a transition to
-\filename{pkg-config} will be made (as it's less work, and has more features),
-but right now it doesn't exist on most Unix systems, while a plain Bourne shell
-script will run fine on anything.
+The answer is to ask the \filename{botan-config} script. This
+basically solves the same problem all the other \filename{*-config}
+scripts solve, and in basically the same manner. At some point in the
+future, a transition to \filename{pkg-config} will be made (as it's
+less work, and has more features), but right now it doesn't exist on
+most Unix systems, while a plain Bourne shell script will run fine on
+anything.
 
 There are 4 options:
 
-\texttt{--prefix[=DIR]}: If no argument, print the prefix where Botan is
-installed (such as \filename{/opt} or \filename{/usr/local}). If an argument is
-specified, other options given with the same command will execute as if Botan
-as actually installed at \filename{DIR} and not where it really is; or at least
-where \filename{botan-config} thinks it really is. I should mention that it
+\texttt{--prefix[=DIR]}: If no argument, print the prefix where Botan
+is installed (such as \filename{/opt} or \filename{/usr/local}). If an
+argument is specified, other options given with the same command will
+execute as if Botan as actually installed at \filename{DIR} and not
+where it really is; or at least where \filename{botan-config} thinks
+it really is. I should mention that it
 
 \texttt{--version}: Print the Botan version number.
 
-\texttt{--cflags}: Print options that should be passed to the compiler whenever
-a C++ file is compiled. Typically this is used for setting include paths.
+\texttt{--cflags}: Print options that should be passed to the compiler
+whenever a C++ file is compiled. Typically this is used for setting
+include paths.
 
 \texttt{--libs}: Print options for which libraries to link to (this includes
 \texttt{-lbotan}).
 
-Your \filename{Makefile} can run \filename{botan-config} and get the options
-necessary for getting your application to compile and link, regardless of
-whatever crazy libraries Botan might be linked against.
+Your \filename{Makefile} can run \filename{botan-config} and get the
+options necessary for getting your application to compile and link,
+regardless of whatever crazy libraries Botan might be linked against.
 
 \subsection{MS Windows}
 
-No special help exists for building applications on Windows. However, given
-that typically Windows software is distributed as binaries, this is less of a
-problem - only the developer needs to worry about it. As long as they can
-remember where they installed Botan, they just have to set the appropriate
-flags in their Makefile/project file.
+No special help exists for building applications on Windows. However,
+given that typically Windows software is distributed as binaries, this
+is less of a problem - only the developer needs to worry about it. As
+long as they can remember where they installed Botan, they just have
+to set the appropriate flags in their Makefile/project file.
 
 \end{document}
