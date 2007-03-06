@@ -328,6 +328,11 @@ are processed in an identical fashion (\ie, with the same sequence of
 \function{start\_msg} and \function{end\_msg}. Each message in a pipe
 has its own number, which increments starting from zero.
 
+As you can see, the \type{Base64\_Encoder} was allocated using
+\keyword{new}; but where was it deallocated? When a filter object is
+passed to a \type{Pipe}, the pipe takes ownership of the object, and
+will deallocate it when it is no longer needed.
+
 There are two different ways to make use of messages. One is to send
 several messages through a \type{Pipe} without changing the \type{Pipe}'s
 configuration, so you end up with a sequence of messages; one use of this would
@@ -420,7 +425,7 @@ Here's an example using two computational filters:
 
 \subsection{Fork}
 
-It's fairly common that you might receive some data and want to perform more
+It is fairly common that you might receive some data and want to perform more
 than one operation on it (\ie, encrypt it with DES and calculate the MD5 hash
 of the plaintext at the same time). That's where \type{Fork} comes
 in. \type{Fork} is a filter that takes input and passes it on to \emph{one or
@@ -563,25 +568,28 @@ use; that is, either before calling \function{start\_msg}, or after
 \function{end\_msg} has been called (and no new calls to \function{start\_msg}
 have been made yet).
 
-The function \function{reset}() simply removes all the \type{Filter}s which the
-\type{Pipe} is currently using~--~it is reset to an initialize, ``empty''
-state.  Any data which is being retained by the \type{Pipe} is retained after a
-\function{reset}(), and \function{reset}() does not affect the message numbers
-(discussed later).
+The function \function{reset}() simply removes all the \type{Filter}s
+which the \type{Pipe} is currently using~--~it is reset to an
+initialize, ``empty'' state.  Any data which is being retained by the
+\type{Pipe} is retained after a \function{reset}(), and
+\function{reset}() does not affect the message numbers (discussed
+later).
 
-Calling \function{prepend} and \function{append} will either prepend or append
-the passed \type{Filter} object to the list of transformations. For example, if
-you \function{prepend} a \type{Filter} implementing encryption, and the
-\type{Pipe} already had a \type{Filter} which hex encoded the input, then the
-next set of input would be first encrypted, then hex encoded. Alternately, if
-you called \function{append}, then the input would be first be hex encoded, and
-then encrypted (which is not terribly useful in this particular example).
+Calling \function{prepend} and \function{append} will either prepend
+or append the passed \type{Filter} object to the list of
+transformations. For example, if you \function{prepend} a
+\type{Filter} implementing encryption, and the \type{Pipe} already had
+a \type{Filter} which hex encoded the input, then the next set of
+input would be first encrypted, then hex encoded. Alternately, if you
+called \function{append}, then the input would be first be hex
+encoded, and then encrypted (which is not terribly useful in this
+particular example).
 
-Finally, calling \function{pop}() will remove the first transformation of the
-\type{Pipe}. Say we had called \function{prepend} to put an encryption
-\type{Filter} into a \type{Pipe}; calling \function{pop}() would remove this
-\type{Filter} and return the \type{Pipe} to it's state before we called
-\function{prepend}.
+Finally, calling \function{pop}() will remove the first transformation
+of the \type{Pipe}. Say we had called \function{prepend} to put an
+encryption \type{Filter} into a \type{Pipe}; calling \function{pop}()
+would remove this \type{Filter} and return the \type{Pipe} to its
+state before we called \function{prepend}.
 
 \subsubsection{Giving Data to a Pipe}
 
@@ -707,15 +715,16 @@ using completely different keys, or new IVs, or new keys and IVs, or whatever.
 And in fact, even for a MAC or an ECB block cipher, you might well want to
 change the key used from message to message.
 
-Enter \type{Keyed\_Filter}. It's a base class of any filter that is keyed:
-block cipher modes, stream ciphers, MACs, whatever. It has two functions,
-\function{set\_key} and \function{set\_iv}. Calling \function{set\_key} will,
-naturally, set (or reset) the key used by the algorithm. Setting the IV only
-makes sense in certain algorithms -- a call to \function{set\_iv} on an object
-that doesn't support IVs will be ignored. You \emph{must} call
+Enter \type{Keyed\_Filter}, which acts as an abstract interface for
+any filter that is uses keys: block cipher modes, stream ciphers,
+MACs, and so on. It has two functions, \function{set\_key} and
+\function{set\_iv}. Calling \function{set\_key} will, naturally, set
+(or reset) the key used by the algorithm. Setting the IV only makes
+sense in certain algorithms -- a call to \function{set\_iv} on an
+object that doesn't support IVs will be ignored. You \emph{must} call
 \function{set\_key} before calling \function{set\_iv}: while not all
-\type{Keyed\_Filter} objects require this, you should assume it is required
-anytime you are using a \type{Keyed\_Filter}.
+\type{Keyed\_Filter} objects require this, you should assume it is
+required anytime you are using a \type{Keyed\_Filter}.
 
 Here's a example:
 
@@ -830,7 +839,7 @@ reason you name something that doesn't exist, an exception will be thrown.
 \function{Hash\_Filter}(\type{std::string} \arg{hash},
                         \type{u32bit} \arg{outlength}):
 
-This type hashes it's input with \arg{hash}. When \function{end\_msg} is called
+This type hashes its input with \arg{hash}. When \function{end\_msg} is called
 on the owning \type{Pipe}, the hash is completed and the digest is sent on to
 the next thing in the pipe. The argument \arg{outlength} specifies how much of
 the output of the hash will be passed along to the next filter when
@@ -847,8 +856,8 @@ The constructor for a \type{MAC\_Filter} takes a key, used in calculating the
 MAC, and a length parameter, which has semantics exactly the same as the one
 passed to \type{Hash\_Filter}s constructor.
 
-Examples for \arg{mac} are ``HMAC(SHA-1)'', ``MD5-MAC'', and the exceptionally
-long, strange, and probably useless name
+Examples for \arg{mac} are ``HMAC(SHA-1)'', ``CMAC(AES-128)'', and the
+exceptionally long, strange, and probably useless name
 ``CMAC(Lion(Tiger(20,3),MARK-4,1024))''.
 
 \subsubsection{PK Filters}
@@ -860,7 +869,7 @@ appropriate type (\type{PK\_Encryptor}, \type{PK\_Decryptor}, etc) which is
 deleted by the destructor. These classes are found in \filename{pk\_filts.h}.
 
 Three of these, for encryption, decryption, and signing are pretty much
-identical conceptually. Each of them buffers it's input until the end of the
+identical conceptually. Each of them buffers its input until the end of the
 message is marked with a call to the \function{end\_msg} function. Then they
 encrypt, decrypt, or sign their input and send the output (the ciphertext, the
 plaintext, or the signature) into the next filter.
@@ -885,7 +894,7 @@ Often you want your data to be in some form of text (for sending over channels
 which aren't 8-bit clean, printing it, etc). The filters \type{Hex\_Encoder}
 and \type{Base64\_Encoder} will convert arbitrary binary data into hex or
 base64 formats. Not surprisingly, you can use \type{Hex\_Decoder} and
-\type{Base64\_Decoder} to convert it back into it's original form.
+\type{Base64\_Decoder} to convert it back into its original form.
 
 Both of the encoders can take a few options about how the data should be
 formatted (all of which have defaults). The first is a \type{bool} which simply
@@ -902,7 +911,7 @@ you want a specific value, set it. Otherwise the default should be fine.
 Lastly, \type{Hex\_Encoder} takes an argument of type \type{Case}, which can be
 \type{Uppercase} or \type{Lowercase} (default is \type{Uppercase}). This
 specifies what case the characters A-F should be output as. The base64 encoder
-has no such option, because it uses both upper and lower case letters for it's
+has no such option, because it uses both upper and lower case letters for its
 output.
 
 The decoders both take a single option, which tells it how the object should
@@ -932,7 +941,7 @@ deriving from \type{Filter}:
 The \function{write} function is what is called when a filter receives input
 for it to process. The filter is \emph{not} required to process it right away;
 many filters buffer their input before producing any output. A filter will
-usually have \function{write} called many times during it's lifetime.
+usually have \function{write} called many times during its lifetime.
 
 \noindent
 \type{void} \function{send}(\type{byte} \arg{output}[], \type{u32bit}
@@ -1259,35 +1268,39 @@ namespace X509 {
 }
 \end{verbatim}
 
-Basically, \function{X509::encode} will take an \type{X509\_PublicKey} (as of
-now, that's any RSA, DSA, or Diffie-Hellman key) and encodes it using
-\arg{enc}, which can be either \type{PEM} or \type{RAW\_BER}. Using \type{PEM}
-is \emph{highly} recommended for many reasons, including compatibility with
-other software, for transmission over 8-bit unclean channels, because it can be
-identified by a human without special tools, and because it sometimes allows
-more sane behavior of tools that process the data. It will place the encoding
-into \arg{out}. Remember that if you have just created the \type{Pipe} that you
-are passing to \function{X509::encode}, you need to call \function{start\_msg}
-first. Particularly with public keys, about 99\% of the time you just want to
-PEM encode the key and then write it to a file or something. In this case, it's
-probably easier to use \function{X509::PEM\_encode}. This function will simply
-return the PEM encoding of the key as a \type{std::string}.
+Basically, \function{X509::encode} will take an \type{X509\_PublicKey}
+(as of now, that's any RSA, DSA, or Diffie-Hellman key) and encodes it
+using \arg{enc}, which can be either \type{PEM} or
+\type{RAW\_BER}. Using \type{PEM} is \emph{highly} recommended for
+many reasons, including compatibility with other software, for
+transmission over 8-bit unclean channels, because it can be identified
+by a human without special tools, and because it sometimes allows more
+sane behavior of tools that process the data. It will place the
+encoding into \arg{out}. Remember that if you have just created the
+\type{Pipe} that you are passing to \function{X509::encode}, you need
+to call \function{start\_msg} first. Particularly with public keys,
+about 99\% of the time you just want to PEM encode the key and then
+write it to a file or something. In this case, it's probably easier to
+use \function{X509::PEM\_encode}. This function will simply return the
+PEM encoding of the key as a \type{std::string}.
 
-For loading a public key, the preferred method is one of the variants of
-\function{load\_key}. This function will return a newly allocated key based on
-the data from whatever source it is using (assuming, of course, the source is
-in fact storing a representation of a public key). The encoding used (PEM or
-BER) need not be specified; the format will be detected automatically. The key
-is allocated with \function{new}, and should be released with \function{delete}
-when you are done with it. The first takes a generic \type{DataSource} which
-you have to allocate~--~the others are simple wrapper functions that take
-either a filename or a memory buffer.
+For loading a public key, the preferred method is one of the variants
+of \function{load\_key}. This function will return a newly allocated
+key based on the data from whatever source it is using (assuming, of
+course, the source is in fact storing a representation of a public
+key). The encoding used (PEM or BER) need not be specified; the format
+will be detected automatically. The key is allocated with
+\function{new}, and should be released with \function{delete} when you
+are done with it. The first takes a generic \type{DataSource} which
+you have to allocate~--~the others are simple wrapper functions that
+take either a filename or a memory buffer.
 
-So what can you do with the return value of \function{load\_key}? On its own, a
-\type{X509\_PublicKey} isn't particularly useful; you can't encrypt messages or
-verify signatures, or much else. But, using \function{dynamic\_cast}, you can
-figure out what kind of operations the key supports. Then, you can cast the key
-to the appropriate type and pass it to a higher-level class. For example:
+So what can you do with the return value of \function{load\_key}? On
+its own, a \type{X509\_PublicKey} isn't particularly useful; you can't
+encrypt messages or verify signatures, or much else. But, using
+\function{dynamic\_cast}, you can figure out what kind of operations
+the key supports. Then, you can cast the key to the appropriate type
+and pass it to a higher-level class. For example:
 
 \begin{verbatim}
    /* Might be RSA, might be ElGamal, might be ... */
@@ -1482,7 +1495,7 @@ non-ASCII characters are needed for most names. The UTF-8 and UCS-2 string
 types \emph{are} accepted (in fact, UTF-8 is used when encoding much of the
 time), but if any of the characters included in the string are not in ISO
 8859-1 (\ie 0 \ldots 255), an exception will get thrown. Currently the
-\type{ASN1\_String} type holds it's data as ISO 8859-1 internally (regardless
+\type{ASN1\_String} type holds its data as ISO 8859-1 internally (regardless
 of local character set); this would have to be changed to hold UCS-2 or UCS-4
 in order to support Unicode (also, many interfaces in the X.509 code would have
 to accept or return a \type{std::wstring} instead of a \type{std::string}).
@@ -1541,7 +1554,7 @@ pretty familiar with X.509 in order to understand what this is talking about.
 
 \subsubsection{Revocation Lists}
 
-It will occasionally happen that a certificate must be revoked before it's
+It will occasionally happen that a certificate must be revoked before its
 expiration date. Examples of this happening include the private key being
 compromised, or the user to which it has been assigned leaving an
 organization. Certificate revocation lists are an answer to this problem
@@ -1791,7 +1804,7 @@ Return values for \function{validate\_cert} (and \function{add\_crl}) include:
 
 Setting up a CA for X.509 certificates is actually probably the easiest thing
 to do related to X.509. A CA is represented by the type \type{X509\_CA}, which
-can be found in \filename{x509\_ca.h}. A CA always needs it's own certificate,
+can be found in \filename{x509\_ca.h}. A CA always needs its own certificate,
 which can either be a self-signed certificate (see below on how to create one)
 or one issued by another CA (see the section on PKCS \#10 requests). Creating
 a CA object is done by the following constructor:
@@ -3013,7 +3026,7 @@ about keeping that memory allocated. This is mostly for internal use, but if it
 comes in handy, feel free to use it.
 
 A \type{DataSource\_Stream} is probably more useful than the memory based
-one. It's constructors take either a \type{std::istream} or a
+one. Its constructors take either a \type{std::istream} or a
 \type{std::string}. If it's a stream, the data source will use the
 \type{istream} to satisfy read requests (this is particularly useful to use
 with \type{std::cin}). If the string version is used, it will attempt to open
@@ -3305,7 +3318,7 @@ long the array is (for example: \verb|SecureBuffer<byte, 8> key;|).
 
 \type{SecureVector} is a variable length array. Its size can be increased or
 decreased as need be, and it has a wide variety of functions useful for copying
-data into it's buffer. Like \type{SecureBuffer}, it implements \function{clear}
+data into its buffer. Like \type{SecureBuffer}, it implements \function{clear}
 and \function{size}.
 
 \subsection{Allocators}
