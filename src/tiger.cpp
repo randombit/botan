@@ -48,14 +48,61 @@ void Tiger::copy_out(byte output[])
 *************************************************/
 void Tiger::pass(u64bit& A, u64bit& B, u64bit& C, u64bit X[8], byte mul)
    {
-   round(A, B, C, X[0], mul);
-   round(B, C, A, X[1], mul);
-   round(C, A, B, X[2], mul);
-   round(A, B, C, X[3], mul);
-   round(B, C, A, X[4], mul);
-   round(C, A, B, X[5], mul);
-   round(A, B, C, X[6], mul);
-   round(B, C, A, X[7], mul);
+   C ^= X[0];
+   A -= SBOX1[get_byte(7, C)] ^ SBOX2[get_byte(5, C)] ^
+        SBOX3[get_byte(3, C)] ^ SBOX4[get_byte(1, C)];
+   B += SBOX1[get_byte(0, C)] ^ SBOX2[get_byte(2, C)] ^
+        SBOX3[get_byte(4, C)] ^ SBOX4[get_byte(6, C)];
+   B *= mul;
+
+   A ^= X[1];
+   B -= SBOX1[get_byte(7, A)] ^ SBOX2[get_byte(5, A)] ^
+        SBOX3[get_byte(3, A)] ^ SBOX4[get_byte(1, A)];
+   C += SBOX1[get_byte(0, A)] ^ SBOX2[get_byte(2, A)] ^
+        SBOX3[get_byte(4, A)] ^ SBOX4[get_byte(6, A)];
+   C *= mul;
+
+   B ^= X[2];
+   C -= SBOX1[get_byte(7, B)] ^ SBOX2[get_byte(5, B)] ^
+        SBOX3[get_byte(3, B)] ^ SBOX4[get_byte(1, B)];
+   A += SBOX1[get_byte(0, B)] ^ SBOX2[get_byte(2, B)] ^
+        SBOX3[get_byte(4, B)] ^ SBOX4[get_byte(6, B)];
+   A *= mul;
+
+   C ^= X[3];
+   A -= SBOX1[get_byte(7, C)] ^ SBOX2[get_byte(5, C)] ^
+        SBOX3[get_byte(3, C)] ^ SBOX4[get_byte(1, C)];
+   B += SBOX1[get_byte(0, C)] ^ SBOX2[get_byte(2, C)] ^
+        SBOX3[get_byte(4, C)] ^ SBOX4[get_byte(6, C)];
+   B *= mul;
+
+   A ^= X[4];
+   B -= SBOX1[get_byte(7, A)] ^ SBOX2[get_byte(5, A)] ^
+        SBOX3[get_byte(3, A)] ^ SBOX4[get_byte(1, A)];
+   C += SBOX1[get_byte(0, A)] ^ SBOX2[get_byte(2, A)] ^
+        SBOX3[get_byte(4, A)] ^ SBOX4[get_byte(6, A)];
+   C *= mul;
+
+   B ^= X[5];
+   C -= SBOX1[get_byte(7, B)] ^ SBOX2[get_byte(5, B)] ^
+        SBOX3[get_byte(3, B)] ^ SBOX4[get_byte(1, B)];
+   A += SBOX1[get_byte(0, B)] ^ SBOX2[get_byte(2, B)] ^
+        SBOX3[get_byte(4, B)] ^ SBOX4[get_byte(6, B)];
+   A *= mul;
+
+   C ^= X[6];
+   A -= SBOX1[get_byte(7, C)] ^ SBOX2[get_byte(5, C)] ^
+        SBOX3[get_byte(3, C)] ^ SBOX4[get_byte(1, C)];
+   B += SBOX1[get_byte(0, C)] ^ SBOX2[get_byte(2, C)] ^
+        SBOX3[get_byte(4, C)] ^ SBOX4[get_byte(6, C)];
+   B *= mul;
+
+   A ^= X[7];
+   B -= SBOX1[get_byte(7, A)] ^ SBOX2[get_byte(5, A)] ^
+        SBOX3[get_byte(3, A)] ^ SBOX4[get_byte(1, A)];
+   C += SBOX1[get_byte(0, A)] ^ SBOX2[get_byte(2, A)] ^
+        SBOX3[get_byte(4, A)] ^ SBOX4[get_byte(6, A)];
+   C *= mul;
    }
 
 /*************************************************
@@ -69,19 +116,6 @@ void Tiger::mix(u64bit X[8])
    X[0] += X[7]; X[1] -= X[0] ^ ((~X[7]) << 19); X[2] ^= X[1];
    X[3] += X[2]; X[4] -= X[3] ^ ((~X[2]) >> 23); X[5] ^= X[4];
    X[6] += X[5]; X[7] -= X[6] ^ 0x0123456789ABCDEF;
-   }
-
-/*************************************************
-* Tiger Round                                    *
-*************************************************/
-void Tiger::round(u64bit& A, u64bit& B, u64bit& C, u64bit msg, byte mul)
-   {
-   C ^= msg;
-   A -= SBOX1[get_byte(7, C)] ^ SBOX2[get_byte(5, C)] ^
-        SBOX3[get_byte(3, C)] ^ SBOX4[get_byte(1, C)];
-   B += SBOX1[get_byte(0, C)] ^ SBOX2[get_byte(2, C)] ^
-        SBOX3[get_byte(4, C)] ^ SBOX4[get_byte(6, C)];
-   B *= mul;
    }
 
 /*************************************************
