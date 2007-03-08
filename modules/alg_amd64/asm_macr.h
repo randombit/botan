@@ -44,7 +44,7 @@ func_name:
    jge LABEL##_LOOP
 
 /*************************************************
- Conditional Jumps                              *
+* Conditional Jumps                              *
 *************************************************/
 #define JUMP_IF_ZERO(REG, LABEL) \
    cmp IMM(0), REG;              \
@@ -53,6 +53,44 @@ func_name:
 #define JUMP_IF_LT(REG, NUM, LABEL) \
    cmp IMM(NUM), REG;               \
    jl LABEL
+
+/*************************************************
+* Register Names                                 *
+*************************************************/
+#define R0  %rax
+#define R1  %rbx
+#define R2  %rcx
+#define R3  %rdx
+#define R4  %rsp
+#define R5  %rbp
+#define R6  %rsi
+#define R7  %rdi
+#define R8  %r8
+#define R9  %r9
+#define R10 %r10
+#define R11 %r11
+#define R12 %r12
+#define R13 %r13
+#define R14 %r14
+#define R15 %r15
+#define R16 %r16
+
+#define ARG_1 R7
+#define ARG_2 R6
+#define ARG_3 R3
+#define ARG_4 R2
+#define ARG_5 R8
+#define ARG_6 R9 
+
+#define TEMP_1 R10
+#define TEMP_2 R11
+#define TEMP_3 ARG_6
+#define TEMP_4 ARG_5
+#define TEMP_5 ARG_4
+#define TEMP_6 ARG_3
+#define TEMP_7 ARG_2
+#define TEMP_8 ARG_1
+#define TEMP_9 R0
 
 /*************************************************
 * Memory Access Operations                       *
