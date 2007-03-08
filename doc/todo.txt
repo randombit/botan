@@ -1,57 +1,140 @@
-Here are some notes about various things I should/could/might do. If you're
-interested in working on something here (or something else!), drop me an email
-and we can coordinate efforts.
 
-* Algorithms / Related
-  - ECDSA
-  - ECDH
+There are many areas where Botan is deficient. This file documents
+some of the more interesting ones. If you're thinking about working on
+something within Botan, one of these areas might be a good place to
+start. Questions or comments can go to the development mailing list.
 
-* X.509 / PKCS / ASN.1
-  - X.509 code is in need of a major cleanup, both API and internal
-  - OCSP (RFC 2560)
-  - Attribute Certificates (RFC 3281)
-  - Support for Unicode (BMP STRING/UNIVERSAL STRING) strings in ASN1_String
-  - Support for Unicode/UTF-8 strings everywhere they may show up (certs, etc)
+Build System / Porting
+--------------------
+The new configure script is fairly flexible in terms of build systems
+(though there do remain a few pieces of code tied to the idea of
+make-style syntax). No doubt many users would appreciate having Botan
+well-integrated into their build environment, so patches to
+configure.pl (and new template files for misc/config/makefile/) to add
+support for generating files for Visual Studio or other IDEs, Scons,
+CMake, or even autotools (somewhat difficult, though it would be
+highly desirable) would be most useful.
 
-* New Interfaces / Protocols
-  - SSL/TLS: Alpha release is available (http://ajisai.randombit.net)
-  - OpenPGP
-  - CMS: incomplete sources in misc/cms
-  - NIST's PKAPI: needs CMS
+Testing the configure/build/install steps on as many platforms and
+compilers as possible is a huge win for us. Builds on some platforms,
+like the Motorola 680x0 and Hitachi SH machines, IBM's AIX on any CPU
+type, and the Haiku operating system (a BeOS R5 clone) - have *never*
+been attempted; the support is based entirely on documentation and
+conjecture, and is very unlikely to work. Support for several
+operating systems is completely nonexistent - this class includes VMS,
+vxWorks, eCos, MINIX, GNU/Hurd, L4, and Coyotos. Others, like IRIX,
+HP-UX, QNX, and Tru64, are tested only a few times a year.
 
-* Modules
-  - EntropySources
-      z/OS, OS/400, VMS
-  - Compression: Zip, Gzip
-  - Dynamic Algorithm Loader
-     - Maybe, (maybe, maybe) integrate it with the stuff in algolist.cpp
-       so it can do automatic lookup. I'm rather skeptical of this approach
-       but it is a possibility.
-   - mp_asm64: z/Series
-   - HTTP certificate store access
-   - Engines
-      - VIA PadLock
-      - Broadcom BCM582x: Free Linux drivers are available, but I need a card
-                          to test against.
-      - CryptoSwift: Rainbow blew me off when I contacted them. I have a card,
-                     I just need drivers and API docs.
-      - Hifn: Sokretis sells them cheap, but drivers may be an issue.
-      - IBM 4758 / CCA
-      - HP / Atalla
-      - Intel Performance Primitives library
-      - PKCS #11
-      - Other suggestions welcome
+Setting up a buildbot system would be ideal, if access to enough
+machines can be arranged (for the x86 and amd64 operating systems, a
+single machine running Xen or VMware could suffice). Even one-shot
+tests with the latest sources on a variety of machines would be
+incredibly useful.
 
-* Configure / Build System
-  - The build system doesn't handle GCC on Windows well
-  - Support for new OSes:
-     - z/OS
-     - OS/400
-     - VMS
-     - Hurd
-     - Plan 9
-  - Support more packaging systems
-     - Debian
-     - Solaris
-     - MacOS X [Fink?]
-     - Windows binary installer
+A nice but not essential feature for configure.pl would be adding the
+ability to generate any needed or requested package-building scripts,
+with support for systems like rpm, portage, dpkg, commercial Unix
+package systems, and Windows installer systems.
+
+Modules to allow use of platform-specific features within Botan can
+make life significantly better for users on that platform. Generic
+Unix/POSIX support is more or less complete, but there are countless
+vendor extensions that might be used in Botan in interesting and
+useful ways. Windows has the basics (two entropy source modules, and
+modules giving access to mutexes and high resolution timers), but
+there are probably a number of interesting extensions one could write,
+like making Botan's objects callable by DCOM. Other systems probably
+have all kinds of interesting system and library calls we can use.
+
+Self-test / Benchmark System
+--------------------
+The code is not terrible, but it is significantly sloppier than the
+library code it is testing. Reporting should be generalized and
+encapsulated, so it can easily be extended to produce tests results as
+text to the terminal, or HTML with full details, or as an email, or
+any of a number of useful formats (which would provide a varying
+amount of information about what was tested and what went wrong).
+Bonus points for writing a general system that takes in an arbitrary
+'template' file and outputs the filled out report.
+
+Much of the code operates at a very low level of abstraction; this has
+caused it to be difficult to add tests that vary much from the simple
+known answer tests used for the ciphers and hashes.
+
+There are significant codepaths that have no tests written for them,
+particularly in the X.509 certificate processing code.
+
+The benchmark code should also have its output formats generalized; it
+would be pretty great to have a benchmark run produce a detailed
+report as HTML and some gnuplot datasets to generate the images
+included from the HTML file.
+
+Documentation
+--------------------
+This could occupy someone for months. Perhaps even a majority of the
+API is undocumented, and while these are the less important pieces (or
+at least pieces meant mostly for internal library use), it would be
+great to have at least a brief description of each of them, along with
+a pointer to the appropriate headers. Text written in either a
+tutorial style or as a straight API breakdown could easily be
+integrated.
+
+There are many obvious example programs which have yet to be written,
+including encrypting a file with a shared passphrase, and securely
+salting and hashing a password for storage. Check the mailing list
+archives for ideas.
+
+ECC
+--------------------
+For a long time, interest in ECC has been minimal, but there are
+rumblings indicating user desire for this is starting to become really
+active. We don't need anything obscure - ECDSA and ECDH using GF(p)
+gets us 90% of what users are needing right now.
+
+Public Key Engines
+--------------------
+In addition to the fairly low level BigInt optimizations that remain
+to be done, Botan provides a plugin system that allows different
+implementations of entire algorithms (RSA, DSA, etc) to be included,
+which can then be used in a completely transparent manner by
+application code. As of this writing one hardware public key
+accelerator (AEP's SureWare Runner cards) and two software backends
+(GNU MP and OpenSSL's BN library) are supported. There are many others
+out there, including Apple's AltiVec library, Intel's Performance
+Primitives library, OpenBSD's /dev/crypto, and hardware units like the
+Broadcom BCM582x and Hi/fn 6500.
+
+BigInt
+--------------------
+The portable BigInt routines are fairly good, and as of 1.6 we're
+using reasonably good algorithms. But well written assembly can often
+speed up public key operations by 50% or more. There currently exists
+some limited x86 and x86-64 assembly, but implementations for other
+architectures (such as Cell's SPU units, PowerPC, SPARCv9, MIPS, and
+ARM) could really help, as could further work on the x86 code
+(including making use of SSE instructions and VIA's Montgomery
+multiplication instruction).
+
+It is very likely that many of the core algorithms (in src/mp_*) could
+be optimized at the C level by anyone has some knowledge or interest
+in algorithms.
+
+Compression Modules
+--------------------
+Botan currently supports the bzip2 and zlib compression
+formats. Support for gzip and (less importantly) zip would likely be
+appreciated by many users. There are also other interesting algorithms
+such as LZO (supposedly very fast, which might make it useful in
+custom network protocols), and LZW (a compression algorithm patented
+by nCipher; they sell hardware implementations).
+
+X.509 Attribute Certificates
+--------------------
+Most of the low-level processing code needed, like support for the
+ASN.1 SIGNED macro and the DER/BER codec, have already been written
+and used sufficiently to be well tested and relatively easy to work
+with. However it involves a lot of careful coding and design work to
+deal with the semantic issues and provide a good interface to the
+user; at this point I don't have the slightest idea what a useful API
+for attribute certificates would be like. RFC 3281 and its references
+have most of the information you'll need.
