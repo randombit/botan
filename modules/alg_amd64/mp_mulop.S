@@ -9,18 +9,20 @@ START_LISTING(mp_muladd.S)
 
 START_FUNCTION(bigint_mul_add_words)
 
-#define LOOP_CTR %r11d
-#define X_ARR %rsi
-#define Z_ARR %rdi
-#define Y %rcx
-#define CARRY %r8
-#define Z_WORD %r9
-#define MUL_LO %rax
-#define MUL_HI %rdx
+#define Z_ARR    ARG_1
+#define X_ARR    ARG_2
+#define X_SIZE   %edx
+#define Y        ARG_4
+
+#define CARRY    TEMP_1
+#define Z_WORD   TEMP_2
+#define LOOP_CTR %r9d
+#define MUL_LO   %rax
+#define MUL_HI   %rdx
 
    ZEROIZE(CARRY)
 
-   ASSIGN(LOOP_CTR, %edx)
+   ASSIGN(LOOP_CTR, X_SIZE)
 
    JUMP_IF_ZERO(LOOP_CTR, .DONE)
    JUMP_IF_LT(LOOP_CTR, 8, .MULADD1_LOOP)
