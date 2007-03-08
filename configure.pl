@@ -842,6 +842,9 @@ sub load_modules {
 
             push @defarray, split(/,/, $defs);
         }
+
+        $defines .= "\n" if(@defarray);
+
         foreach (sort @defarray) {
             die unless(defined $_ and $_ ne '');
             $defines .= "#define BOTAN_EXT_$_\n";
