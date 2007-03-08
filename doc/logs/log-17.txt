@@ -1,0 +1,6 @@
+
+* 1.7.0, May 19, 2007
+ - DSA parameter generation now follows FIPS 186-3
+ - Documentation updates
+ - Somewhat better support for out of tree builds
+ - Minor optimizations for RC2 and Tiger
