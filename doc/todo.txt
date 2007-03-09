@@ -23,7 +23,8 @@ been attempted; the support is based entirely on documentation and
 conjecture, and is very unlikely to work. Support for several
 operating systems is completely nonexistent - this class includes VMS,
 vxWorks, eCos, MINIX, GNU/Hurd, L4, and Coyotos. Others, like IRIX,
-HP-UX, QNX, and Tru64, are tested only a few times a year.
+HP-UX, QNX, and Tru64, are tested only a few times a year. Similarly,
+many commercial compilers are only tested occasionally.
 
 Setting up a buildbot system would be ideal, if access to enough
 machines can be arranged (for the x86 and amd64 operating systems, a
@@ -88,8 +89,8 @@ ECC
 --------------------
 For a long time, interest in ECC has been minimal, but there are
 rumblings indicating user desire for this is starting to become really
-active. We don't need anything obscure - ECDSA and ECDH using GF(p)
-gets us 90% of what users are needing right now.
+active. We don't need anything obscure - ECDSA and ECDH using NIST's
+approved GF(p) curves gets us 90% of what users are wanting right now.
 
 Public Key Engines
 --------------------
