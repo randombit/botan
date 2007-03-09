@@ -195,14 +195,12 @@ sub emit_help {
 sub trace {
     return unless $TRACING;
 
-    my (undef, undef, $line1) = caller(0);
-    my (undef, undef, $line2, $func1) = caller(1);
-    my (undef, undef, undef, $func2) = caller(2);
+    my (undef, undef, $line) = caller(0);
+    my (undef, undef, undef, $func) = caller(1);
 
-    $func1 =~ s/main:://;
-    $func2 =~ s/main:://;
+    $func =~ s/main:://;
 
-    warn with_diagnostic('trace', "at $func1:$line1 - ", @_);
+    warn with_diagnostic('trace', "at $func:$line - ", @_);
 }
 
 ##################################################
@@ -426,8 +424,10 @@ sub get_options {
                'modules=s' => \@modules,
                'module-set=s' => \$module_set,
 
+               'trace' => sub { $TRACING = 1; },
                'debug' => sub { &$save_option($_[0], 1); },
                'disable-shared' => sub { $$config{'shared'} = 'no'; },
+
                'noauto' => sub { $$config{'autoconfig'} = 0; },
                'dumb-gcc|gcc295x' => sub { $$config{'gcc_bug'} = 1; }
                );
