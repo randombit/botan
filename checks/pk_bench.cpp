@@ -159,13 +159,15 @@ void bench_pk(const std::string& algo, bool html, double seconds)
       {
       #define DO_DSA(NUM_STR, GROUP)              \
          {                                        \
-         DSA_PrivateKey dsa(DL_Group(GROUP));     \
+         DSA_PrivateKey dsa(GROUP);               \
          bench_dsa(dsa, NUM_STR, seconds, html);  \
          }
 
-      DO_DSA("512",  "dsa/jce/512");
-      DO_DSA("768",  "dsa/jce/768");
-      DO_DSA("1024", "dsa/jce/1024");
+      DO_DSA("512",  DL_Group("dsa/jce/512"));
+      DO_DSA("768",  DL_Group("dsa/jce/768"));
+      DO_DSA("1024", DL_Group("dsa/jce/1024"));
+      //DO_DSA("2048", DL_Group(DL_Group::DSA_Kosherizer, 2048, 256));
+      //DO_DSA("3072", DL_Group(DL_Group::DSA_Kosherizer, 3072, 256));
       #undef DO_DSA
       }
    if(algo == "All" || algo == "DH")
