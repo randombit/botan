@@ -37,5 +37,5 @@ S: Washington DC, USA
 
 N: Luca Piccarreta
 E: luca.piccarreta@gmail.com
-D: MS Windows mutex module, x86/amd64 assembler
+D: x86/amd64 assembler, BigInt optimizations, Win32 mutex
 S: Italy
