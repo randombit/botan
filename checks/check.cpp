@@ -41,7 +41,8 @@ int main(int argc, char* argv[])
 
       if(opts.is_set("help") || argc <= 1)
          {
-         std::cerr << Botan::version_string() << " test driver\n"
+         std::cerr << "Test driver for "
+                   << Botan::version_string() << "\n"
                    << "Options:\n"
                    << "  --validate: Check test vectors\n"
                    << "  --benchmark: Benchmark everything\n"
@@ -49,6 +50,7 @@ int main(int argc, char* argv[])
                    << "         Benchmark only algorithms of a particular type\n"
                    << "  --html: Produce HTML output for benchmarks\n"
                    << "  --seconds=n: Benchmark for n seconds\n"
+                   << "  --init=<str>: Pass <str> to the library\n"
                    << "  --help: Print this message\n";
          return 1;
          }
