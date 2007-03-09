@@ -14,7 +14,7 @@ RSA_EX    = rsa_kgen rsa_enc rsa_dec
 DSA_EX    = dsa_kgen dsa_sign dsa_ver
 DH_EX     = dh
 HASH_EX   = hash hash_fd hasher hasher2 stack
-MISC_EX   = factor base base64 bzip encrypt decrypt xor_ciph
+MISC_EX   = factor base base64 bzip encrypt decrypt xor_ciph passhash
 
 PROGS     = $(X509_EX) $(RSA_EX) $(DSA_EX) $(DH_EX) $(HASH_EX) $(MISC_EX)
 
@@ -90,6 +90,10 @@ hasher2: hasher2.cpp
 	@$(STRIP) $@
 
 pkcs10: pkcs10.cpp
+	$(CXX) $(FLAGS) $? $(LIBS) -o $@
+	@$(STRIP) $@
+
+passhash: passhash.cpp
 	$(CXX) $(FLAGS) $? $(LIBS) -o $@
 	@$(STRIP) $@
 
