@@ -1,6 +1,8 @@
 
 * 1.7.0, May 19, 2007
  - DSA parameter generation now follows FIPS 186-3
- - Documentation updates
+ - Added OIDs for Rabin-Williams and Nyberg-Rueppel
  - Somewhat better support for out of tree builds
  - Minor optimizations for RC2 and Tiger
+ - Documentation updates
+ - Update the todo list
