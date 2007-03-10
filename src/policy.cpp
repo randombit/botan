@@ -32,6 +32,8 @@ void set_default_oids(Config& config)
    add_oid(config, "1.2.840.10040.4.1", "DSA");
    add_oid(config, "1.2.840.10046.2.1", "DH");
    add_oid(config, "1.3.6.1.4.1.3029.1.2.1", "ELG");
+   add_oid(config, "1.3.6.1.4.1.25258.1.1", "RW");
+   add_oid(config, "1.3.6.1.4.1.25258.1.2", "NR");
 
    add_oid(config, "1.3.14.3.2.7", "DES/CBC");
    add_oid(config, "1.2.840.113549.3.7", "TripleDES/CBC");
@@ -63,6 +65,27 @@ void set_default_oids(Config& config)
    add_oid(config, "1.2.840.113549.1.1.13", "RSA/EMSA3(SHA-512)");
    add_oid(config, "1.3.36.3.3.1.2", "RSA/EMSA3(RIPEMD-160)");
    add_oid(config, "1.2.840.10040.4.3", "DSA/EMSA1(SHA-160)");
+
+   add_oid(config, "1.3.6.1.4.1.25258.2.1.1.1", "RW/EMSA2(RIPEMD-160)");
+   add_oid(config, "1.3.6.1.4.1.25258.2.1.1.2", "RW/EMSA2(SHA-160)");
+   add_oid(config, "1.3.6.1.4.1.25258.2.1.1.3", "RW/EMSA2(SHA-224)");
+   add_oid(config, "1.3.6.1.4.1.25258.2.1.1.4", "RW/EMSA2(SHA-256)");
+   add_oid(config, "1.3.6.1.4.1.25258.2.1.1.5", "RW/EMSA2(SHA-384)");
+   add_oid(config, "1.3.6.1.4.1.25258.2.1.1.6", "RW/EMSA2(SHA-512)");
+
+   add_oid(config, "1.3.6.1.4.1.25258.2.1.2.1", "RW/EMSA4(RIPEMD-160)");
+   add_oid(config, "1.3.6.1.4.1.25258.2.1.2.2", "RW/EMSA4(SHA-160)");
+   add_oid(config, "1.3.6.1.4.1.25258.2.1.2.3", "RW/EMSA4(SHA-224)");
+   add_oid(config, "1.3.6.1.4.1.25258.2.1.2.4", "RW/EMSA4(SHA-256)");
+   add_oid(config, "1.3.6.1.4.1.25258.2.1.2.5", "RW/EMSA4(SHA-384)");
+   add_oid(config, "1.3.6.1.4.1.25258.2.1.2.6", "RW/EMSA4(SHA-512)");
+
+   add_oid(config, "1.3.6.1.4.1.25258.2.2.1.1", "NR/EMSA2(RIPEMD-160)");
+   add_oid(config, "1.3.6.1.4.1.25258.2.2.1.2", "NR/EMSA2(SHA-160)");
+   add_oid(config, "1.3.6.1.4.1.25258.2.2.1.3", "NR/EMSA2(SHA-224)");
+   add_oid(config, "1.3.6.1.4.1.25258.2.2.1.4", "NR/EMSA2(SHA-256)");
+   add_oid(config, "1.3.6.1.4.1.25258.2.2.1.5", "NR/EMSA2(SHA-384)");
+   add_oid(config, "1.3.6.1.4.1.25258.2.2.1.6", "NR/EMSA2(SHA-512)");
 
    add_oid(config, "2.5.4.3",  "X520.CommonName");
    add_oid(config, "2.5.4.4",  "X520.Surname");
