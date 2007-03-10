@@ -146,7 +146,12 @@ void decode(BER_Decoder& decoder, u32bit level)
          {
          OID oid;
          data.decode(oid);
-         emit(type_name(type_tag), level, length, OIDS::lookup(oid));
+
+         std::string out = OIDS::lookup(oid);
+         if(out != oid.as_string())
+            out += " [" + oid.as_string() + "]";
+
+         emit(type_name(type_tag), level, length, out);
          }
       else if(type_tag == INTEGER)
          {
