@@ -74,7 +74,6 @@ bool DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
             }
       private:
          SecureVector<byte> seed;
-         
       };
 
    Seed seed(seed_c);

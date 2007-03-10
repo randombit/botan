@@ -80,7 +80,7 @@ func_name:
 #define ARG_3 R3
 #define ARG_4 R2
 #define ARG_5 R8
-#define ARG_6 R9 
+#define ARG_6 R9
 
 #define TEMP_1 R10
 #define TEMP_2 R11
