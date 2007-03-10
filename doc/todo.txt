@@ -11,9 +11,9 @@ The new configure script is fairly flexible in terms of build systems
 make-style syntax). No doubt many users would appreciate having Botan
 well-integrated into their build environment, so patches to
 configure.pl (and new template files for misc/config/makefile/) to add
-support for generating files for Visual Studio or other IDEs, Scons,
-CMake, or even autotools (somewhat difficult, though it would be
-highly desirable) would be most useful.
+support for other build systems. The most requested by far is Visual
+Studio project files; others that might be of interest would be
+autotools, Scons, CMake, and jam/bjam.
 
 Testing the configure/build/install steps on as many platforms and
 compilers as possible is a huge win for us. Builds on some platforms,
