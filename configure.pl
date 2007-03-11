@@ -911,7 +911,7 @@ sub file_type {
     my ($config, $file) = @_;
 
     return ('sources', $$config{'src-dir'})
-        if($file =~ /\.cpp$/ or $file =~ /\.S$/);
+        if($file =~ /\.cpp$/ or $file =~ /\.c$/ or $file =~ /\.S$/);
     return ('includes', $$config{'include-dir'})
         if($file =~ /\.h$/);
 
@@ -1385,6 +1385,7 @@ sub build_cmds {
         my $obj_file = File::Spec->catfile($dir, $_);
 
         $obj_file =~ s/\.cpp$/.$obj_suffix/;
+        $obj_file =~ s/\.c$/.$obj_suffix/;
         $obj_file =~ s/\.S$/.$obj_suffix/;
 
         $output .= "$obj_file: $src_file\n$bld_line\n\n";
@@ -1523,7 +1524,7 @@ sub generate_makefile {
                             map_to($$config{'build_include_botan'},
                                    keys %{$$config{'includes'}}));
 
-   my $lib_objs = file_list($$config{'build_lib'}, '(\.cpp$|\.S$)',
+   my $lib_objs = file_list($$config{'build_lib'}, '(\.cpp$|\.c$|\.S$)',
                             '.' . $$config{'obj_suffix'},
                             %{$$config{'sources'}});
 
