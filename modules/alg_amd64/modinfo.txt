@@ -2,13 +2,17 @@ realname "Algorithm x86-64 Assembler"
 
 mp_bits 64
 
+load_on: asm_ok
+
 <ignore>
 mp_mulop.cpp
+sha160.cpp
 </ignore>
 
 <add>
 asm_macr.h
 mp_mulop.S
+sha1core.S
 </add>
 
 <arch>

@@ -2,6 +2,8 @@ realname "Win32 CryptoAPI Entropy Source"
 
 define ENTROPY_SRC_CAPI
 
+load_on: auto
+
 <add>
 es_capi.h
 es_capi.cpp

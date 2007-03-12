@@ -1,10 +1,10 @@
 # This module was written by Peter J. Jones
 
-uses_external_libs
-
 realname "Bzip2 Compressor"
 
 define COMPRESSOR_BZIP2
+
+load_on: request
 
 <add>
 bzip2.h

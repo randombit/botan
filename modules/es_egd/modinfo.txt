@@ -2,6 +2,8 @@ realname "EGD Entropy Source"
 
 define ENTROPY_SRC_EGD
 
+load_on: auto
+
 <add>
 es_egd.h
 es_egd.cpp

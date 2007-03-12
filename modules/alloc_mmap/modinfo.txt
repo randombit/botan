@@ -2,6 +2,8 @@ realname "Disk Based Allocation System"
 
 define ALLOC_MMAP
 
+load_on: auto
+
 <add>
 mmap_mem.cpp
 mmap_mem.h

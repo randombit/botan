@@ -2,6 +2,8 @@ realname "MPI Assembler Backend for 64 bit Systems"
 
 mp_bits 64
 
+load_on: asm_ok
+
 <replace>
 mp_asm.h
 </replace>

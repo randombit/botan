@@ -2,6 +2,8 @@ realname "Win32 Timer"
 
 define TIMER_WIN32
 
+load_on: auto
+
 <add>
 tm_win32.cpp
 tm_win32.h

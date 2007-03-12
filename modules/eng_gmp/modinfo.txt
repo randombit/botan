@@ -1,6 +1,8 @@
 realname "GMP Engine"
 
-uses_external_libs
+define ENGINE_GNU_MP
+
+load_on: request
 
 <add>
 eng_gmp.cpp
@@ -10,8 +12,6 @@ gmp_powm.cpp
 eng_gmp.h
 gmp_wrap.h
 </add>
-
-define ENGINE_GNU_MP
 
 <libs>
 all -> gmp

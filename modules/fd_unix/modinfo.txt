@@ -2,6 +2,8 @@ realname "Unix I/O support for Pipe"
 
 define PIPE_UNIXFD_IO
 
+load_on: auto
+
 <add>
 fd_unix.h
 fd_unix.cpp

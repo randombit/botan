@@ -2,6 +2,8 @@ realname "Unix Timer"
 
 define TIMER_UNIX
 
+load_on: auto
+
 <add>
 tm_unix.cpp
 tm_unix.h

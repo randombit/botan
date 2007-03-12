@@ -2,6 +2,8 @@ realname "Pthread Mutex"
 
 define MUTEX_PTHREAD
 
+load_on: auto
+
 <add>
 mux_pthr.cpp
 mux_pthr.h

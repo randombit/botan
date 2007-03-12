@@ -1,5 +1,7 @@
 realname "Memory Locking for Win32"
 
+load_on: auto
+
 <replace>
 mlock.cpp
 </replace>

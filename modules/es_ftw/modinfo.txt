@@ -2,6 +2,8 @@ realname "File Tree Walking Entropy Source"
 
 define ENTROPY_SRC_FTW
 
+load_on: auto
+
 <add>
 es_ftw.h
 es_ftw.cpp

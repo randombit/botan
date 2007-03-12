@@ -5,6 +5,8 @@ realname "Win32 Entropy Source"
 
 define ENTROPY_SRC_WIN32
 
+load_on: auto
+
 <add>
 es_win32.h
 es_win32.cpp

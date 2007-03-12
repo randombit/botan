@@ -1,6 +1,8 @@
 realname "OpenSSL Engine"
 
-uses_external_libs
+define ENGINE_OPENSSL
+
+load_on: request
 
 <add>
 eng_ossl.cpp
@@ -12,8 +14,6 @@ ossl_md.cpp
 eng_ossl.h
 bn_wrap.h
 </add>
-
-define ENGINE_OPENSSL
 
 <libs>
 all -> crypto

@@ -2,6 +2,8 @@ realname "BeOS Entropy Source"
 
 define ENTROPY_SRC_BEOS
 
+load_on: auto
+
 <add>
 es_beos.h
 es_beos.cpp

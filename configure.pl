@@ -1120,14 +1120,14 @@ sub get_module_info {
 
    my %info;
    $info{'name'} = $name;
-   $info{'external_libs'} = 0;
+   $info{'load_on'} = 'requeste'; # default unless specified
    $info{'libs'} = {};
 
    while($_ = &$reader()) {
        match_any_of($_, \%info, 'quoted', 'realname:note');
        match_any_of($_, \%info, 'unquoted', 'define:mp_bits');
 
-       $info{'external_libs'} = 1 if(/^uses_external_libs/);
+       $info{'load_on'} = $1 if(/^load_on: (.*)$/);
 
        read_list($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
        read_list($_, $reader, 'cc', list_push(\@{$info{'cc'}}));
@@ -1278,13 +1278,15 @@ sub guess_mods {
     my $arch = $$config{'arch'};
     my $submodel = $$config{'submodel'};
 
+    my $asm_ok = ($$config{'debug'} == 0);
+
     my @usable_modules;
 
     foreach my $mod (sort keys %MODULES) {
         my %modinfo = %{ $MODULES{$mod} };
 
-        # If it uses external libs, the user has to request it specifically
-        next if($modinfo{'external_libs'});
+        next if($modinfo{'load_on'} eq 'request');
+        next if(!$asm_ok and $modinfo{'load_on'} eq 'asm_ok');
 
         my @cc_list = @{ $modinfo{'cc'} };
         next if(scalar @cc_list > 0 && !in_array($cc, \@cc_list));
