@@ -6,6 +6,7 @@ start. Questions or comments can go to the development mailing list.
 
 Build System / Porting
 --------------------
+
 The new configure script is fairly flexible in terms of build systems
 (though there do remain a few pieces of code tied to the idea of
 make-style syntax). No doubt many users would appreciate having Botan
@@ -49,6 +50,7 @@ have all kinds of interesting system and library calls we can use.
 
 Self-test / Benchmark System
 --------------------
+
 The code is not terrible, but it is significantly sloppier than the
 library code it is testing. Reporting should be generalized and
 encapsulated, so it can easily be extended to produce tests results as
@@ -72,6 +74,7 @@ included from the HTML file.
 
 Documentation
 --------------------
+
 This could occupy someone for months. Perhaps even a majority of the
 API is undocumented, and while these are the less important pieces (or
 at least pieces meant mostly for internal library use), it would be
@@ -87,6 +90,7 @@ archives for ideas.
 
 ECC
 --------------------
+
 For a long time, interest in ECC has been minimal, but there are
 rumblings indicating user desire for this is starting to become really
 active. We don't need anything obscure - ECDSA and ECDH using NIST's
@@ -94,6 +98,7 @@ approved GF(p) curves gets us 90% of what users are wanting right now.
 
 Public Key Engines
 --------------------
+
 In addition to the fairly low level BigInt optimizations that remain
 to be done, Botan provides a plugin system that allows different
 implementations of entire algorithms (RSA, DSA, etc) to be included,
@@ -101,12 +106,13 @@ which can then be used in a completely transparent manner by
 application code. As of this writing one hardware public key
 accelerator (AEP's SureWare Runner cards) and two software backends
 (GNU MP and OpenSSL's BN library) are supported. There are many others
-out there, including Apple's AltiVec library, Intel's Performance
-Primitives library, OpenBSD's /dev/crypto, and hardware units like the
-Broadcom BCM582x and Hi/fn 6500.
+out there, including Apple's vBigNum AltiVec library, Intel's
+Performance Primitives library, OpenBSD's /dev/crypto, and hardware
+units like the Broadcom BCM582x and Hi/fn 6500.
 
 BigInt
 --------------------
+
 The portable BigInt routines are fairly good, and as of 1.6 we're
 using reasonably good algorithms. But well written assembly can often
 speed up public key operations by 50% or more. There currently exists
@@ -114,7 +120,9 @@ some limited x86 and x86-64 assembly, but implementations for other
 architectures (such as Cell's SPU units, PowerPC, SPARCv9, MIPS, and
 ARM) could really help, as could further work on the x86 code
 (including making use of SSE instructions and VIA's Montgomery
-multiplication instruction).
+multiplication instruction). The key routines for good performance are
+bigint_monty_redc and bigint_mul_add_words; together they make up
+30-60% of the runtime of most public key algorithms.
 
 It is very likely that many of the core algorithms (in src/mp_*) could
 be optimized at the C level by anyone has some knowledge or interest
@@ -122,6 +130,7 @@ in algorithms.
 
 Compression Modules
 --------------------
+
 Botan currently supports the bzip2 and zlib compression
 formats. Support for gzip and (less importantly) zip would likely be
 appreciated by many users. There are also other interesting algorithms
@@ -131,6 +140,7 @@ by nCipher; they sell hardware implementations).
 
 X.509 Attribute Certificates
 --------------------
+
 Most of the low-level processing code needed, like support for the
 ASN.1 SIGNED macro and the DER/BER codec, have already been written
 and used sufficiently to be well tested and relatively easy to work
