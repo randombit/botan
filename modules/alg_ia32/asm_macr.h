@@ -16,6 +16,10 @@
    .text;                       \
    .p2align 4,,15;
 
+#ifdef __ELF__
+.section .note.GNU-stack,"",%progbits
+#endif
+
 /*************************************************
 * Function Definitions                           *
 *************************************************/
