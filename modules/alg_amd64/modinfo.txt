@@ -4,9 +4,12 @@ mp_bits 64
 
 load_on: asm_ok
 
+<replace>
+sha160.cpp
+</replace>
+
 <ignore>
 mp_mulop.cpp
-sha160.cpp
 </ignore>
 
 <add>

@@ -96,6 +96,7 @@ func_name:
 * Memory Access Operations                       *
 *************************************************/
 #define ARRAY8(REG, NUM) 8*(NUM)(REG)
+#define ARRAY4(REG, NUM) 4*(NUM)(REG)
 
 #define ASSIGN(TO, FROM) mov FROM, TO
 
@@ -104,19 +105,23 @@ func_name:
 *************************************************/
 #define IMM(VAL) $VAL
 
-#define ADD(TO, FROM) addq FROM, TO
-#define ADD_LAST_CARRY(REG) adcq IMM(0), REG
+#define ADD(TO, FROM) add FROM, TO
+#define ADD_LAST_CARRY(REG) adc IMM(0), REG
 #define ADD_IMM(TO, NUM) ADD(TO, IMM(NUM))
-#define ADD_W_CARRY(TO1, TO2, FROM) addq FROM, TO1; adcq IMM(0), TO2;
+#define ADD_W_CARRY(TO1, TO2, FROM) add FROM, TO1; adc IMM(0), TO2;
 #define SUB_IMM(TO, NUM) sub IMM(NUM), TO
-#define MUL(REG) mulq REG
+#define MUL(REG) mul REG
 
-#define XOR(TO, FROM) xorq FROM, TO
-#define AND(TO, FROM) andq FROM, TO
-#define OR(TO, FROM) orq FROM, TO
-#define NOT(REG) notq REG
+#define XOR(TO, FROM) xor FROM, TO
+#define AND(TO, FROM) and FROM, TO
+#define OR(TO, FROM) or FROM, TO
+#define NOT(REG) not REG
 #define ZEROIZE(REG) XOR(REG, REG)
 
 #define RETURN_VALUE_IS(V) ASSIGN(%rax, V)
+
+#define ROTL_IMM(REG, NUM) rol IMM(NUM), REG
+#define ROTR_IMM(REG, NUM) ror IMM(NUM), REG
+#define ADD3_IMM(TO, FROM, NUM) lea NUM(TO,FROM,1), TO
 
 #endif
