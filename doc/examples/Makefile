@@ -9,14 +9,10 @@ INCLUDES  = `$(BOTAN_DIR)/botan-config --cflags`
 LIBS      = `$(BOTAN_DIR)/botan-config --libs`
 FLAGS     = $(INCLUDES) $(CFLAGS) -I$(BOTAN_DIR)/build/include -L$(BOTAN_DIR)
 
-X509_EX   = ca pkcs10 self_sig x509info asn1
-RSA_EX    = rsa_kgen rsa_enc rsa_dec
-DSA_EX    = dsa_kgen dsa_sign dsa_ver
-DH_EX     = dh
-HASH_EX   = hash hash_fd hasher hasher2 stack
-MISC_EX   = factor base base64 bzip encrypt decrypt xor_ciph passhash
-
-PROGS     = $(X509_EX) $(RSA_EX) $(DSA_EX) $(DH_EX) $(HASH_EX) $(MISC_EX)
+PROGS = asn1 base base64 bzip ca decrypt dh dsa_kgen dsa_sign dsa_ver	\
+	encrypt factor hash hash_fd hasher hasher2 \
+	passhash pkcs10 rsa_dec rsa_enc rsa_kgen self_sig stack		\
+	x509info xor_ciph
 
 STRIP     = true
 
@@ -89,11 +85,19 @@ hasher2: hasher2.cpp
 	$(CXX) $(FLAGS) $? $(LIBS) -o $@
 	@$(STRIP) $@
 
-pkcs10: pkcs10.cpp
+pass_dec: pass_dec.cpp
+	$(CXX) $(FLAGS) $? $(LIBS) -o $@
+	@$(STRIP) $@
+
+pass_enc: pass_enc.cpp
 	$(CXX) $(FLAGS) $? $(LIBS) -o $@
 	@$(STRIP) $@
 
 passhash: passhash.cpp
+	$(CXX) $(FLAGS) $? $(LIBS) -o $@
+	@$(STRIP) $@
+
+pkcs10: pkcs10.cpp
 	$(CXX) $(FLAGS) $? $(LIBS) -o $@
 	@$(STRIP) $@
 
