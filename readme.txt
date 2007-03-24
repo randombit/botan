@@ -1,5 +1,5 @@
 
-This is Botan 1.6.1.
+This is Botan 1.6.2
 
 Botan 1.6 is mostly compatible with Botan 1.4, and many applications
 written against 1.4 will work against 1.6 without any modifications.
