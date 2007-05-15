@@ -38,12 +38,18 @@ void HMAC::key(const byte key[], u32bit length)
    std::fill(i_key.begin(), i_key.end(), 0x36);
    std::fill(o_key.begin(), o_key.end(), 0x5C);
 
-   SecureVector<byte> hmac_key(key, length);
-   if(hmac_key.size() > hash->HASH_BLOCK_SIZE)
-      hmac_key = hash->process(hmac_key);
+   if(length > hash->HASH_BLOCK_SIZE)
+      {
+      SecureVector<byte> hmac_key = hash->process(key, length);
+      xor_buf(i_key, hmac_key, hmac_key.size());
+      xor_buf(o_key, hmac_key, hmac_key.size());
+      }
+   else
+      {
+      xor_buf(i_key, key, length);
+      xor_buf(o_key, key, length);
+      }
 
-   xor_buf(i_key, hmac_key, hmac_key.size());
-   xor_buf(o_key, hmac_key, hmac_key.size());
    hash->update(i_key);
    }
 
