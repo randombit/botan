@@ -4,6 +4,8 @@ realname "SPARC"
 # (especially BigInt). Also, it's fairly rare nowadays, so we default to V8.
 default_submodel sparc32-v8
 
+endian big
+
 <aliases>
 sparc
 </aliases>
