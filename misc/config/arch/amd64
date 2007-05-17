@@ -2,6 +2,8 @@ realname "AMD64"
 
 default_submodel amd64
 
+endian little
+
 <aliases>
 x86-64
 x86_64 # for RPM

@@ -823,7 +823,11 @@ sub load_modules {
         my $defines = '';
 
         my $arch = $$config{'arch'};
+
         if($arch ne 'generic') {
+            my %cpu_info = %{$CPU{$arch}};
+            my $endian = $cpu_info{'endian'};
+
             $arch = uc $arch;
             $defines .= "#define BOTAN_TARGET_ARCH_IS_$arch\n";
 
@@ -832,6 +836,11 @@ sub load_modules {
                 $submodel = uc $submodel;
                 $submodel =~ s/-/_/g;
                 $defines .= "#define BOTAN_TARGET_CPU_IS_$submodel\n";
+            }
+
+            if(defined($endian)) {
+                $endian = uc $endian;
+                $defines .= "#define BOTAN_TARGET_CPU_IS_${endian}_ENDIAN\n";
             }
         }
 
@@ -1178,6 +1187,7 @@ sub get_arch_info {
     while($_ = &$reader()) {
         match_any_of($_, \%info, 'quoted', 'realname');
         match_any_of($_, \%info, 'unquoted', 'default_submodel');
+        match_any_of($_, \%info, 'unquoted', 'endian');
 
         read_list($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
         read_list($_, $reader, 'submodels', list_push(\@{$info{'submodels'}}));
