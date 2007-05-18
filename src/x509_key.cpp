@@ -153,7 +153,7 @@ Key_Constraints find_constraints(const Public_Key& pub_key,
    u32bit constraints = 0;
 
    if(dynamic_cast<const PK_Encrypting_Key*>(key))
-      constraints |= KEY_ENCIPHERMENT;
+      constraints |= KEY_ENCIPHERMENT | DATA_ENCIPHERMENT;
 
    if(dynamic_cast<const PK_Key_Agreement_Key*>(key))
       constraints |= KEY_AGREEMENT;
