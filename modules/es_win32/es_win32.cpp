@@ -100,6 +100,10 @@ void Win32_EntropySource::do_fast_poll()
    add_bytes(&point, sizeof(point));
    GetCaretPos(&point);
    add_bytes(&point, sizeof(point));
+
+   LARGE_INTEGER perf_counter;
+   QueryPerformanceCounter(&perf_counter);
+   add_bytes(&perf_counter, sizeof(perf_counter));
    }
 
 }
