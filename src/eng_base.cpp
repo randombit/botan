@@ -45,8 +45,8 @@ class Algorithm_Cache_Impl : public Engine::Algorithm_Cache<T>
 
       ~Algorithm_Cache_Impl()
          {
-         typename std::map<std::string, T*>::iterator i
-            = mappings.begin();
+         typename std::map<std::string, T*>::iterator i = mappings.begin();
+
          while(i != mappings.end())
             {
             delete i->second;

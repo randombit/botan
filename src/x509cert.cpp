@@ -313,8 +313,8 @@ X509_DN create_dn(const Data_Store& info)
             }
       };
 
-   std::multimap<std::string, std::string> names
-      = info.search_with(DN_Matcher());
+   std::multimap<std::string, std::string> names =
+      info.search_with(DN_Matcher());
 
    X509_DN dn;
 
@@ -349,8 +349,8 @@ AlternativeName create_alt_name(const Data_Store& info)
          std::vector<std::string> matches;
       };
 
-   std::multimap<std::string, std::string> names
-      = info.search_with(AltName_Matcher("RFC822/DNS/URI"));
+   std::multimap<std::string, std::string> names =
+      info.search_with(AltName_Matcher("RFC822/DNS/URI"));
 
    AlternativeName alt_name;
 
