@@ -47,9 +47,8 @@ inline u64bit sigma(u64bit X, u32bit rot1, u32bit rot2, u32bit shift)
 void SHA_64_BASE::hash(const byte input[])
    {
    for(u32bit j = 0; j != 16; ++j)
-      W[j] = make_u64bit(input[8*j  ], input[8*j+1], input[8*j+2],
-                         input[8*j+3], input[8*j+4], input[8*j+5],
-                         input[8*j+6], input[8*j+7]);
+      W[j] = load_be<u64bit>(input, j);
+
    for(u32bit j = 16; j != 80; ++j)
       W[j] = sigma(W[j- 2], 19, 61,  6) + W[j- 7] +
              sigma(W[j-15],  1,  8,  7) + W[j-16];
@@ -149,8 +148,8 @@ void SHA_64_BASE::hash(const byte input[])
 *************************************************/
 void SHA_64_BASE::copy_out(byte output[])
    {
-   for(u32bit j = 0; j != OUTPUT_LENGTH; ++j)
-      output[j] = get_byte(j % 8, digest[j/8]);
+   for(u32bit j = 0; j != OUTPUT_LENGTH; j += 8)
+      store_be(digest[j/8], output + j);
    }
 
 /*************************************************
