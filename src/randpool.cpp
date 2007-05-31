@@ -9,6 +9,8 @@
 #include <botan/util.h>
 #include <algorithm>
 
+#include <assert.h>
+
 namespace Botan {
 
 namespace {
@@ -63,8 +65,7 @@ void Randpool::update_buffer()
    for(u32bit j = 0; j != counter.size(); ++j)
       if(++counter[j])
          break;
-   for(u32bit j = 0; j != 8; ++j)
-      counter[j+4] = get_byte(j, timestamp);
+   store_be(timestamp, counter + 4);
 
    SecureVector<byte> mac_val = randpool_prf(mac, GEN_OUTPUT,
                                              counter, counter.size());

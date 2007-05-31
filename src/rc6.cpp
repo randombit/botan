@@ -14,10 +14,10 @@ namespace Botan {
 *************************************************/
 void RC6::enc(const byte in[], byte out[]) const
    {
-   u32bit A = make_u32bit(in[ 3], in[ 2], in[ 1], in[ 0]),
-          B = make_u32bit(in[ 7], in[ 6], in[ 5], in[ 4]),
-          C = make_u32bit(in[11], in[10], in[ 9], in[ 8]),
-          D = make_u32bit(in[15], in[14], in[13], in[12]);
+   u32bit A = load_le<u32bit>(in, 0);
+   u32bit B = load_le<u32bit>(in, 1);
+   u32bit C = load_le<u32bit>(in, 2);
+   u32bit D = load_le<u32bit>(in, 3);
 
    B += S[0]; D += S[1];
 
@@ -48,14 +48,7 @@ void RC6::enc(const byte in[], byte out[]) const
 
    A += S[42]; C += S[43];
 
-   out[ 0] = get_byte(3, A); out[ 1] = get_byte(2, A);
-   out[ 2] = get_byte(1, A); out[ 3] = get_byte(0, A);
-   out[ 4] = get_byte(3, B); out[ 5] = get_byte(2, B);
-   out[ 6] = get_byte(1, B); out[ 7] = get_byte(0, B);
-   out[ 8] = get_byte(3, C); out[ 9] = get_byte(2, C);
-   out[10] = get_byte(1, C); out[11] = get_byte(0, C);
-   out[12] = get_byte(3, D); out[13] = get_byte(2, D);
-   out[14] = get_byte(1, D); out[15] = get_byte(0, D);
+   store_le(out, A, B, C, D);
    }
 
 /*************************************************
@@ -63,10 +56,10 @@ void RC6::enc(const byte in[], byte out[]) const
 *************************************************/
 void RC6::dec(const byte in[], byte out[]) const
    {
-   u32bit A = make_u32bit(in[ 3], in[ 2], in[ 1], in[ 0]),
-          B = make_u32bit(in[ 7], in[ 6], in[ 5], in[ 4]),
-          C = make_u32bit(in[11], in[10], in[ 9], in[ 8]),
-          D = make_u32bit(in[15], in[14], in[13], in[12]);
+   u32bit A = load_le<u32bit>(in, 0);
+   u32bit B = load_le<u32bit>(in, 1);
+   u32bit C = load_le<u32bit>(in, 2);
+   u32bit D = load_le<u32bit>(in, 3);
 
    C -= S[43]; A -= S[42];
 
@@ -97,14 +90,7 @@ void RC6::dec(const byte in[], byte out[]) const
 
    D -= S[1]; B -= S[0];
 
-   out[ 0] = get_byte(3, A); out[ 1] = get_byte(2, A);
-   out[ 2] = get_byte(1, A); out[ 3] = get_byte(0, A);
-   out[ 4] = get_byte(3, B); out[ 5] = get_byte(2, B);
-   out[ 6] = get_byte(1, B); out[ 7] = get_byte(0, B);
-   out[ 8] = get_byte(3, C); out[ 9] = get_byte(2, C);
-   out[10] = get_byte(1, C); out[11] = get_byte(0, C);
-   out[12] = get_byte(3, D); out[13] = get_byte(2, D);
-   out[14] = get_byte(1, D); out[15] = get_byte(0, D);
+   store_le(out, A, B, C, D);
    }
 
 /*************************************************

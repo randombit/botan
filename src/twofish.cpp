@@ -13,12 +13,10 @@ namespace Botan {
 *************************************************/
 void Twofish::enc(const byte in[], byte out[]) const
    {
-   u32bit A = make_u32bit(in[ 3], in[ 2], in[ 1], in[ 0]),
-          B = make_u32bit(in[ 7], in[ 6], in[ 5], in[ 4]),
-          C = make_u32bit(in[11], in[10], in[ 9], in[ 8]),
-          D = make_u32bit(in[15], in[14], in[13], in[12]);
-
-   A ^= round_key[0]; B ^= round_key[1]; C ^= round_key[2]; D ^= round_key[3];
+   u32bit A = load_le<u32bit>(in, 0) ^ round_key[0];
+   u32bit B = load_le<u32bit>(in, 1) ^ round_key[1];
+   u32bit C = load_le<u32bit>(in, 2) ^ round_key[2];
+   u32bit D = load_le<u32bit>(in, 3) ^ round_key[3];
 
    for(u32bit j = 0; j != 16; j += 2)
       {
@@ -47,16 +45,12 @@ void Twofish::enc(const byte in[], byte out[]) const
       B = rotate_left(B, 1) ^ Y;
       }
 
-   C ^= round_key[4]; D ^= round_key[5]; A ^= round_key[6]; B ^= round_key[7];
+   C ^= round_key[4];
+   D ^= round_key[5];
+   A ^= round_key[6];
+   B ^= round_key[7];
 
-   out[ 0] = get_byte(3, C); out[ 1] = get_byte(2, C);
-   out[ 2] = get_byte(1, C); out[ 3] = get_byte(0, C);
-   out[ 4] = get_byte(3, D); out[ 5] = get_byte(2, D);
-   out[ 6] = get_byte(1, D); out[ 7] = get_byte(0, D);
-   out[ 8] = get_byte(3, A); out[ 9] = get_byte(2, A);
-   out[10] = get_byte(1, A); out[11] = get_byte(0, A);
-   out[12] = get_byte(3, B); out[13] = get_byte(2, B);
-   out[14] = get_byte(1, B); out[15] = get_byte(0, B);
+   store_le(out, C, D, A, B);
    }
 
 /*************************************************
@@ -64,12 +58,10 @@ void Twofish::enc(const byte in[], byte out[]) const
 *************************************************/
 void Twofish::dec(const byte in[], byte out[]) const
    {
-   u32bit A = make_u32bit(in[ 3], in[ 2], in[ 1], in[ 0]),
-          B = make_u32bit(in[ 7], in[ 6], in[ 5], in[ 4]),
-          C = make_u32bit(in[11], in[10], in[ 9], in[ 8]),
-          D = make_u32bit(in[15], in[14], in[13], in[12]);
-
-   A ^= round_key[4]; B ^= round_key[5]; C ^= round_key[6]; D ^= round_key[7];
+   u32bit A = load_le<u32bit>(in, 0) ^ round_key[4];
+   u32bit B = load_le<u32bit>(in, 1) ^ round_key[5];
+   u32bit C = load_le<u32bit>(in, 2) ^ round_key[6];
+   u32bit D = load_le<u32bit>(in, 3) ^ round_key[7];
 
    for(u32bit j = 0; j != 16; j += 2)
       {
@@ -100,14 +92,7 @@ void Twofish::dec(const byte in[], byte out[]) const
 
    C ^= round_key[0]; D ^= round_key[1]; A ^= round_key[2]; B ^= round_key[3];
 
-   out[ 0] = get_byte(3, C); out[ 1] = get_byte(2, C);
-   out[ 2] = get_byte(1, C); out[ 3] = get_byte(0, C);
-   out[ 4] = get_byte(3, D); out[ 5] = get_byte(2, D);
-   out[ 6] = get_byte(1, D); out[ 7] = get_byte(0, D);
-   out[ 8] = get_byte(3, A); out[ 9] = get_byte(2, A);
-   out[10] = get_byte(1, A); out[11] = get_byte(0, A);
-   out[12] = get_byte(3, B); out[13] = get_byte(2, B);
-   out[14] = get_byte(1, B); out[15] = get_byte(0, B);
+   store_le(out, C, D, A, B);
    }
 
 /*************************************************

@@ -47,8 +47,8 @@ inline void R3(u32bit& L, u32bit R, u32bit MK, u32bit RK)
 *************************************************/
 void CAST_128::enc(const byte in[], byte out[]) const
    {
-   u32bit L = make_u32bit(in[0], in[1], in[2], in[3]),
-          R = make_u32bit(in[4], in[5], in[6], in[7]);
+   u32bit L = load_be<u32bit>(in, 0);
+   u32bit R = load_be<u32bit>(in, 1);
 
    R1(L, R, MK[ 0], RK[ 0]);
    R2(R, L, MK[ 1], RK[ 1]);
@@ -67,10 +67,7 @@ void CAST_128::enc(const byte in[], byte out[]) const
    R3(L, R, MK[14], RK[14]);
    R1(R, L, MK[15], RK[15]);
 
-   out[0] = get_byte(0, R); out[1] = get_byte(1, R);
-   out[2] = get_byte(2, R); out[3] = get_byte(3, R);
-   out[4] = get_byte(0, L); out[5] = get_byte(1, L);
-   out[6] = get_byte(2, L); out[7] = get_byte(3, L);
+   store_be(out, R, L);
    }
 
 /*************************************************
@@ -78,8 +75,8 @@ void CAST_128::enc(const byte in[], byte out[]) const
 *************************************************/
 void CAST_128::dec(const byte in[], byte out[]) const
    {
-   u32bit L = make_u32bit(in[0], in[1], in[2], in[3]),
-          R = make_u32bit(in[4], in[5], in[6], in[7]);
+   u32bit L = load_be<u32bit>(in, 0);
+   u32bit R = load_be<u32bit>(in, 1);
 
    R1(L, R, MK[15], RK[15]);
    R3(R, L, MK[14], RK[14]);
@@ -98,10 +95,7 @@ void CAST_128::dec(const byte in[], byte out[]) const
    R2(L, R, MK[ 1], RK[ 1]);
    R1(R, L, MK[ 0], RK[ 0]);
 
-   out[0] = get_byte(0, R); out[1] = get_byte(1, R);
-   out[2] = get_byte(2, R); out[3] = get_byte(3, R);
-   out[4] = get_byte(0, L); out[5] = get_byte(1, L);
-   out[6] = get_byte(2, L); out[7] = get_byte(3, L);
+   store_be(out, R, L);
    }
 
 /*************************************************

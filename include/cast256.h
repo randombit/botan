@@ -24,11 +24,10 @@ class CAST_256 : public BlockCipher
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
       void key(const byte[], u32bit);
-      void round1(u32bit&, u32bit, u32bit, u32bit) const;
-      void round2(u32bit&, u32bit, u32bit, u32bit) const;
-      void round3(u32bit&, u32bit, u32bit, u32bit) const;
+
       static const u32bit KEY_MASK[192];
       static const byte   KEY_ROT[32];
+
       SecureBuffer<u32bit, 48> MK;
       SecureBuffer<byte, 48> RK;
    };

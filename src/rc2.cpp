@@ -13,8 +13,10 @@ namespace Botan {
 *************************************************/
 void RC2::enc(const byte in[], byte out[]) const
    {
-   u16bit R0 = make_u16bit(in[1], in[0]), R1 = make_u16bit(in[3], in[2]),
-          R2 = make_u16bit(in[5], in[4]), R3 = make_u16bit(in[7], in[6]);
+   u16bit R0 = load_le<u16bit>(in, 0);
+   u16bit R1 = load_le<u16bit>(in, 1);
+   u16bit R2 = load_le<u16bit>(in, 2);
+   u16bit R3 = load_le<u16bit>(in, 3);
 
    for(u32bit j = 0; j != 16; ++j)
       {
@@ -39,10 +41,7 @@ void RC2::enc(const byte in[], byte out[]) const
          }
       }
 
-   out[0] = get_byte(1, R0); out[1] = get_byte(0, R0);
-   out[2] = get_byte(1, R1); out[3] = get_byte(0, R1);
-   out[4] = get_byte(1, R2); out[5] = get_byte(0, R2);
-   out[6] = get_byte(1, R3); out[7] = get_byte(0, R3);
+   store_le(out, R0, R1, R2, R3);
    }
 
 /*************************************************
@@ -50,8 +49,10 @@ void RC2::enc(const byte in[], byte out[]) const
 *************************************************/
 void RC2::dec(const byte in[], byte out[]) const
    {
-   u16bit R0 = make_u16bit(in[1], in[0]), R1 = make_u16bit(in[3], in[2]),
-          R2 = make_u16bit(in[5], in[4]), R3 = make_u16bit(in[7], in[6]);
+   u16bit R0 = load_le<u16bit>(in, 0);
+   u16bit R1 = load_le<u16bit>(in, 1);
+   u16bit R2 = load_le<u16bit>(in, 2);
+   u16bit R3 = load_le<u16bit>(in, 3);
 
    for(u32bit j = 0; j != 16; ++j)
       {
@@ -76,10 +77,7 @@ void RC2::dec(const byte in[], byte out[]) const
          }
       }
 
-   out[0] = get_byte(1, R0); out[1] = get_byte(0, R0);
-   out[2] = get_byte(1, R1); out[3] = get_byte(0, R1);
-   out[4] = get_byte(1, R2); out[5] = get_byte(0, R2);
-   out[6] = get_byte(1, R3); out[7] = get_byte(0, R3);
+   store_le(out, R0, R1, R2, R3);
    }
 
 /*************************************************
@@ -121,7 +119,7 @@ void RC2::key(const byte key[], u32bit length)
       L[j] = TABLE[L[j+1] ^ L[j+length]];
 
    for(u32bit j = 0; j != 64; ++j)
-      K[j] = make_u16bit(L[2*j+1], L[2*j]);
+      K[j] = load_le<u16bit>(L, j);
    }
 
 /*************************************************

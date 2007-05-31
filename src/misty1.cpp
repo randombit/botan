@@ -30,8 +30,10 @@ u16bit FI(u16bit input, u16bit key7, u16bit key9)
 *************************************************/
 void MISTY1::enc(const byte in[], byte out[]) const
    {
-   u16bit B0 = make_u16bit(in[0], in[1]), B1 = make_u16bit(in[2], in[3]),
-          B2 = make_u16bit(in[4], in[5]), B3 = make_u16bit(in[6], in[7]);
+   u16bit B0 = load_be<u16bit>(in, 0);
+   u16bit B1 = load_be<u16bit>(in, 1);
+   u16bit B2 = load_be<u16bit>(in, 2);
+   u16bit B3 = load_be<u16bit>(in, 3);
 
    for(u32bit j = 0; j != 12; j += 3)
       {
@@ -64,10 +66,7 @@ void MISTY1::enc(const byte in[], byte out[]) const
    B3 ^= B2 & EK[98];
    B2 ^= B3 | EK[99];
 
-   out[0] = get_byte(0, B2); out[1] = get_byte(1, B2);
-   out[2] = get_byte(0, B3); out[3] = get_byte(1, B3);
-   out[4] = get_byte(0, B0); out[5] = get_byte(1, B0);
-   out[6] = get_byte(0, B1); out[7] = get_byte(1, B1);
+   store_be(out, B2, B3, B0, B1);
    }
 
 /*************************************************
@@ -75,8 +74,10 @@ void MISTY1::enc(const byte in[], byte out[]) const
 *************************************************/
 void MISTY1::dec(const byte in[], byte out[]) const
    {
-   u16bit B0 = make_u16bit(in[4], in[5]), B1 = make_u16bit(in[6], in[7]),
-          B2 = make_u16bit(in[0], in[1]), B3 = make_u16bit(in[2], in[3]);
+   u16bit B0 = load_be<u16bit>(in, 2);
+   u16bit B1 = load_be<u16bit>(in, 3);
+   u16bit B2 = load_be<u16bit>(in, 0);
+   u16bit B3 = load_be<u16bit>(in, 1);
 
    for(u32bit j = 0; j != 12; j += 3)
       {
@@ -109,10 +110,7 @@ void MISTY1::dec(const byte in[], byte out[]) const
    B0 ^= B1 | DK[98];
    B1 ^= B0 & DK[99];
 
-   out[0] = get_byte(0, B0); out[1] = get_byte(1, B0);
-   out[2] = get_byte(0, B1); out[3] = get_byte(1, B1);
-   out[4] = get_byte(0, B2); out[5] = get_byte(1, B2);
-   out[6] = get_byte(0, B3); out[7] = get_byte(1, B3);
+   store_be(out, B0, B1, B2, B3);
    }
 
 /*************************************************
@@ -122,7 +120,8 @@ void MISTY1::key(const byte key[], u32bit length)
    {
    SecureBuffer<u16bit, 32> KS;
    for(u32bit j = 0; j != length / 2; ++j)
-      KS[j] = make_u16bit(key[2*j], key[2*j+1]);
+      KS[j] = load_be<u16bit>(key, j);
+
    for(u32bit j = 0; j != 8; ++j)
       {
       KS[j+ 8] = FI(KS[j], KS[(j+1) % 8] >> 9, KS[(j+1) % 8] & 0x1FF);

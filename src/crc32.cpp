@@ -93,8 +93,7 @@ void CRC32::add_data(const byte input[], u32bit length)
 void CRC32::final_result(byte output[])
    {
    crc ^= 0xFFFFFFFF;
-   for(u32bit j = 0; j != 4; ++j)
-      output[j] = get_byte(j, crc);
+   store_be(crc, output);
    clear();
    }
 

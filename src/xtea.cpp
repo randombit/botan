@@ -14,17 +14,15 @@ namespace Botan {
 *************************************************/
 void XTEA::enc(const byte in[], byte out[]) const
    {
-   u32bit left  = make_u32bit(in[0], in[1], in[2], in[3]),
-          right = make_u32bit(in[4], in[5], in[6], in[7]);
+   u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
+
    for(u32bit j = 0; j != 32; ++j)
       {
-      left  += (((right << 4) ^ (right >> 5)) + right) ^ EK[2*j];
-      right += (((left  << 4) ^ (left  >> 5)) +  left) ^ EK[2*j+1];
+      L += (((R << 4) ^ (R >> 5)) + R) ^ EK[2*j];
+      R += (((L << 4) ^ (L >> 5)) + L) ^ EK[2*j+1];
       }
-   out[0] = get_byte(0, left);  out[1] = get_byte(1, left);
-   out[2] = get_byte(2, left);  out[3] = get_byte(3, left);
-   out[4] = get_byte(0, right); out[5] = get_byte(1, right);
-   out[6] = get_byte(2, right); out[7] = get_byte(3, right);
+
+   store_be(out, L, R);
    }
 
 /*************************************************
@@ -32,17 +30,15 @@ void XTEA::enc(const byte in[], byte out[]) const
 *************************************************/
 void XTEA::dec(const byte in[], byte out[]) const
    {
-   u32bit left  = make_u32bit(in[0], in[1], in[2], in[3]),
-          right = make_u32bit(in[4], in[5], in[6], in[7]);
+   u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
+
    for(u32bit j = 32; j > 0; --j)
       {
-      right -= (((left  << 4) ^ (left  >> 5)) +  left) ^ EK[2*j - 1];
-      left  -= (((right << 4) ^ (right >> 5)) + right) ^ EK[2*j - 2];
+      R -= (((L << 4) ^ (L >> 5)) + L) ^ EK[2*j - 1];
+      L -= (((R << 4) ^ (R >> 5)) + R) ^ EK[2*j - 2];
       }
-   out[0] = get_byte(0, left);  out[1] = get_byte(1, left);
-   out[2] = get_byte(2, left);  out[3] = get_byte(3, left);
-   out[4] = get_byte(0, right); out[5] = get_byte(1, right);
-   out[6] = get_byte(2, right); out[7] = get_byte(3, right);
+
+   store_be(out, L, R);
    }
 
 /*************************************************
@@ -73,7 +69,8 @@ void XTEA::key(const byte key[], u32bit)
 
    SecureBuffer<u32bit, 4> UK;
    for(u32bit j = 0; j != 4; ++j)
-      UK[j] = make_u32bit(key[4*j], key[4*j+1], key[4*j+2], key[4*j+3]);
+      UK[j] = load_be<u32bit>(key, j);
+
    for(u32bit j = 0; j != 64; ++j)
       EK[j] = DELTAS[j] + UK[KEY_INDEX[j]];
    }

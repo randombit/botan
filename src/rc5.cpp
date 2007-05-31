@@ -15,8 +15,8 @@ namespace Botan {
 *************************************************/
 void RC5::enc(const byte in[], byte out[]) const
    {
-   u32bit A = make_u32bit(in[3], in[2], in[1], in[0]),
-          B = make_u32bit(in[7], in[6], in[5], in[4]);
+   u32bit A = load_le<u32bit>(in, 0), B = load_le<u32bit>(in, 1);
+
    A += S[0]; B += S[1];
    for(u32bit j = 0; j != ROUNDS; j += 4)
       {
@@ -29,10 +29,8 @@ void RC5::enc(const byte in[], byte out[]) const
       A = rotate_left(A ^ B, B % 32) + S[2*j+8];
       B = rotate_left(B ^ A, A % 32) + S[2*j+9];
       }
-   out[0] = get_byte(3, A); out[1] = get_byte(2, A);
-   out[2] = get_byte(1, A); out[3] = get_byte(0, A);
-   out[4] = get_byte(3, B); out[5] = get_byte(2, B);
-   out[6] = get_byte(1, B); out[7] = get_byte(0, B);
+
+   store_le(out, A, B);
    }
 
 /*************************************************
@@ -40,8 +38,8 @@ void RC5::enc(const byte in[], byte out[]) const
 *************************************************/
 void RC5::dec(const byte in[], byte out[]) const
    {
-   u32bit A = make_u32bit(in[3], in[2], in[1], in[0]),
-          B = make_u32bit(in[7], in[6], in[5], in[4]);
+   u32bit A = load_le<u32bit>(in, 0), B = load_le<u32bit>(in, 1);
+
    for(u32bit j = ROUNDS; j != 0; j -= 4)
       {
       B = rotate_right(B - S[2*j+1], A % 32) ^ A;
@@ -54,10 +52,8 @@ void RC5::dec(const byte in[], byte out[]) const
       A = rotate_right(A - S[2*j-6], B % 32) ^ B;
       }
    B -= S[1]; A -= S[0];
-   out[0] = get_byte(3, A); out[1] = get_byte(2, A);
-   out[2] = get_byte(1, A); out[3] = get_byte(0, A);
-   out[4] = get_byte(3, B); out[5] = get_byte(2, B);
-   out[6] = get_byte(1, B); out[7] = get_byte(0, B);
+
+   store_le(out, A, B);
    }
 
 /*************************************************

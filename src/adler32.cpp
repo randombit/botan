@@ -65,10 +65,7 @@ void Adler32::add_data(const byte input[], u32bit length)
 *************************************************/
 void Adler32::final_result(byte output[])
    {
-   output[0] = get_byte(2, S2);
-   output[1] = get_byte(3, S2);
-   output[2] = get_byte(2, S1);
-   output[3] = get_byte(3, S1);
+   store_be(output, S2, S1);
    clear();
    }
 

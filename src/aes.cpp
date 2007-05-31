@@ -134,7 +134,8 @@ void AES::key(const byte key[], u32bit length)
 
    const u32bit X = length / 4;
    for(u32bit j = 0; j != X; ++j)
-      XEK[j] = make_u32bit(key[4*j], key[4*j+1], key[4*j+2], key[4*j+3]);
+      XEK[j] = load_be<u32bit>(key, j);
+
    for(u32bit j = X; j < 4*(ROUNDS+1); j += X)
       {
       XEK[j] = XEK[j-X] ^ S(rotate_left(XEK[j-1], 8)) ^ RC[(j-X)/X];

@@ -49,10 +49,10 @@ u32bit gen_mask(u32bit input)
 *************************************************/
 void MARS::enc(const byte in[], byte out[]) const
    {
-   u32bit A = make_u32bit(in[ 3], in[ 2], in[ 1], in[ 0]) + EK[0],
-          B = make_u32bit(in[ 7], in[ 6], in[ 5], in[ 4]) + EK[1],
-          C = make_u32bit(in[11], in[10], in[ 9], in[ 8]) + EK[2],
-          D = make_u32bit(in[15], in[14], in[13], in[12]) + EK[3];
+   u32bit A = load_le<u32bit>(in, 0) + EK[0];
+   u32bit B = load_le<u32bit>(in, 1) + EK[1];
+   u32bit C = load_le<u32bit>(in, 2) + EK[2];
+   u32bit D = load_le<u32bit>(in, 3) + EK[3];
 
    forward_mix(A, B, C, D);
 
@@ -78,14 +78,7 @@ void MARS::enc(const byte in[], byte out[]) const
 
    A -= EK[36]; B -= EK[37]; C -= EK[38]; D -= EK[39];
 
-   out[ 0] = get_byte(3, A); out[ 1] = get_byte(2, A);
-   out[ 2] = get_byte(1, A); out[ 3] = get_byte(0, A);
-   out[ 4] = get_byte(3, B); out[ 5] = get_byte(2, B);
-   out[ 6] = get_byte(1, B); out[ 7] = get_byte(0, B);
-   out[ 8] = get_byte(3, C); out[ 9] = get_byte(2, C);
-   out[10] = get_byte(1, C); out[11] = get_byte(0, C);
-   out[12] = get_byte(3, D); out[13] = get_byte(2, D);
-   out[14] = get_byte(1, D); out[15] = get_byte(0, D);
+   store_le(out, A, B, C, D);
    }
 
 /*************************************************
@@ -93,10 +86,10 @@ void MARS::enc(const byte in[], byte out[]) const
 *************************************************/
 void MARS::dec(const byte in[], byte out[]) const
    {
-   u32bit D = make_u32bit(in[ 3], in[ 2], in[ 1], in[ 0]) + EK[36],
-          C = make_u32bit(in[ 7], in[ 6], in[ 5], in[ 4]) + EK[37],
-          B = make_u32bit(in[11], in[10], in[ 9], in[ 8]) + EK[38],
-          A = make_u32bit(in[15], in[14], in[13], in[12]) + EK[39];
+   u32bit A = load_le<u32bit>(in, 3) + EK[39];
+   u32bit B = load_le<u32bit>(in, 2) + EK[38];
+   u32bit C = load_le<u32bit>(in, 1) + EK[37];
+   u32bit D = load_le<u32bit>(in, 0) + EK[36];
 
    forward_mix(A, B, C, D);
 
@@ -122,14 +115,7 @@ void MARS::dec(const byte in[], byte out[]) const
 
    A -= EK[3]; B -= EK[2]; C -= EK[1]; D -= EK[0];
 
-   out[ 0] = get_byte(3, D); out[ 1] = get_byte(2, D);
-   out[ 2] = get_byte(1, D); out[ 3] = get_byte(0, D);
-   out[ 4] = get_byte(3, C); out[ 5] = get_byte(2, C);
-   out[ 6] = get_byte(1, C); out[ 7] = get_byte(0, C);
-   out[ 8] = get_byte(3, B); out[ 9] = get_byte(2, B);
-   out[10] = get_byte(1, B); out[11] = get_byte(0, B);
-   out[12] = get_byte(3, A); out[13] = get_byte(2, A);
-   out[14] = get_byte(1, A); out[15] = get_byte(0, A);
+   store_le(out, D, C, B, A);
    }
 
 /*************************************************
@@ -230,7 +216,7 @@ void MARS::key(const byte key[], u32bit length)
    {
    SecureBuffer<u32bit, 15> T;
    for(u32bit j = 0; j != length / 4; ++j)
-      T[j] = make_u32bit(key[4*j+3], key[4*j+2], key[4*j+1], key[4*j]);
+      T[j] = load_le<u32bit>(key, j);
    T[length / 4] = length / 4;
 
    for(u32bit j = 0; j != 4; ++j)

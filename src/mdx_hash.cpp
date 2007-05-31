@@ -90,11 +90,13 @@ void MDx_HashFunction::write_count(byte out[])
    {
    if(COUNT_SIZE < 8)
       throw Invalid_State("MDx_HashFunction::write_count: COUNT_SIZE < 8");
-   for(u32bit j = 0; j != 8; ++j)
-      {
-      const u32bit choose = (BIG_BYTE_ENDIAN ? (j % 8) : (7 - (j % 8)));
-      out[j+COUNT_SIZE-8] = get_byte(choose, 8 * count);
-      }
+
+   const u64bit bit_count = count * 8;
+
+   if(BIG_BYTE_ENDIAN)
+      store_be(bit_count, out + COUNT_SIZE - 8);
+   else
+      store_le(bit_count, out + COUNT_SIZE - 8);
    }
 
 }

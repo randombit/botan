@@ -21,9 +21,7 @@ namespace {
 MemoryVector<byte> encode_x942_int(u32bit n)
    {
    byte n_buf[4] = { 0 };
-   for(u32bit j = 0; j != 4; ++j)
-      n_buf[j] = get_byte(j, n);
-
+   store_be(n, n_buf);
    return DER_Encoder().encode(n_buf, 4, OCTET_STRING).get_contents();
    }
 

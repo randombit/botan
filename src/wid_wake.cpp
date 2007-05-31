@@ -30,15 +30,15 @@ void WiderWake_41_BE::cipher(const byte in[], byte out[], u32bit length)
 *************************************************/
 void WiderWake_41_BE::generate(u32bit length)
    {
-   u32bit R0 = state[0], R1 = state[1], R2 = state[2],
-          R3 = state[3], R4 = state[4];
+   u32bit R0 = state[0], R1 = state[1],
+          R2 = state[2], R3 = state[3],
+          R4 = state[4];
 
    for(u32bit j = 0; j != length; j += 8)
       {
       u32bit R0a;
 
-      buffer[j+0] = get_byte(0, R3); buffer[j+1] = get_byte(1, R3);
-      buffer[j+2] = get_byte(2, R3); buffer[j+3] = get_byte(3, R3);
+      store_be(R3, buffer + j);
 
       R0a = R4 + R3; R3 += R2; R2 += R1; R1 += R0;
       R0a = (R0a >> 8) ^ T[(R0a & 0xFF)];
@@ -47,8 +47,7 @@ void WiderWake_41_BE::generate(u32bit length)
       R3  = (R3  >> 8) ^ T[(R3  & 0xFF)];
       R4 = R0; R0 = R0a;
 
-      buffer[j+4] = get_byte(0, R3); buffer[j+5] = get_byte(1, R3);
-      buffer[j+6] = get_byte(2, R3); buffer[j+7] = get_byte(3, R3);
+      store_be(R3, buffer + j + 4);
 
       R0a = R4 + R3; R3 += R2; R2 += R1; R1 += R0;
       R0a = (R0a >> 8) ^ T[(R0a & 0xFF)];
@@ -57,7 +56,13 @@ void WiderWake_41_BE::generate(u32bit length)
       R3  = (R3  >> 8) ^ T[(R3  & 0xFF)];
       R4 = R0; R0 = R0a;
       }
-   state[0] = R0; state[1] = R1; state[2] = R2; state[3] = R3; state[4] = R4;
+
+   state[0] = R0;
+   state[1] = R1;
+   state[2] = R2;
+   state[3] = R3;
+   state[4] = R4;
+
    position = 0;
    }
 
@@ -67,7 +72,7 @@ void WiderWake_41_BE::generate(u32bit length)
 void WiderWake_41_BE::key(const byte key[], u32bit)
    {
    for(u32bit j = 0; j != 4; ++j)
-      t_key[j] = make_u32bit(key[4*j], key[4*j+1], key[4*j+2], key[4*j+3]);
+      t_key[j] = load_be<u32bit>(key, j);
 
    static const u32bit MAGIC[8] = {
       0x726A8F3B, 0xE69A3B5C, 0xD3C71FE5, 0xAB3C73D2,
@@ -116,9 +121,9 @@ void WiderWake_41_BE::resync(const byte iv[], u32bit length)
 
    for(u32bit j = 0; j != 4; ++j)
       state[j] = t_key[j];
-   state[4] = make_u32bit(iv[0], iv[1], iv[2], iv[3]);
+   state[4] = load_be<u32bit>(iv, 0);
    state[0] ^= state[4];
-   state[2] ^= make_u32bit(iv[4], iv[5], iv[6], iv[7]);
+   state[2] ^= load_be<u32bit>(iv, 1);
 
    generate(8*4);
    generate(buffer.size());

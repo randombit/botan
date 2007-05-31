@@ -8,15 +8,50 @@
 
 namespace Botan {
 
+namespace {
+
+/*************************************************
+* CAST-256 Round Type 1                          *
+*************************************************/
+void round1(u32bit& out, u32bit in, u32bit mask, u32bit rot)
+   {
+   u32bit temp = rotate_left(mask + in, rot);
+   out  ^= (CAST_SBOX1[get_byte(0, temp)] ^ CAST_SBOX2[get_byte(1, temp)]) -
+            CAST_SBOX3[get_byte(2, temp)] + CAST_SBOX4[get_byte(3, temp)];
+   }
+
+/*************************************************
+* CAST-256 Round Type 2                          *
+*************************************************/
+void round2(u32bit& out, u32bit in, u32bit mask, u32bit rot)
+   {
+   u32bit temp = rotate_left(mask ^ in, rot);
+   out  ^= (CAST_SBOX1[get_byte(0, temp)]  - CAST_SBOX2[get_byte(1, temp)] +
+            CAST_SBOX3[get_byte(2, temp)]) ^ CAST_SBOX4[get_byte(3, temp)];
+   }
+
+/*************************************************
+* CAST-256 Round Type 3                          *
+*************************************************/
+void round3(u32bit& out, u32bit in, u32bit mask, u32bit rot)
+   {
+   u32bit temp = rotate_left(mask - in, rot);
+   out  ^= ((CAST_SBOX1[get_byte(0, temp)]  + CAST_SBOX2[get_byte(1, temp)]) ^
+             CAST_SBOX3[get_byte(2, temp)]) - CAST_SBOX4[get_byte(3, temp)];
+   }
+
+}
+
 /*************************************************
 * CAST-256 Encryption                            *
 *************************************************/
 void CAST_256::enc(const byte in[], byte out[]) const
    {
-   u32bit A = make_u32bit(in[ 0], in[ 1], in[ 2], in[ 3]),
-          B = make_u32bit(in[ 4], in[ 5], in[ 6], in[ 7]),
-          C = make_u32bit(in[ 8], in[ 9], in[10], in[11]),
-          D = make_u32bit(in[12], in[13], in[14], in[15]);
+   u32bit A = load_be<u32bit>(in, 0);
+   u32bit B = load_be<u32bit>(in, 1);
+   u32bit C = load_be<u32bit>(in, 2);
+   u32bit D = load_be<u32bit>(in, 3);
+
    round1(C, D, MK[ 0], RK[ 0]); round2(B, C, MK[ 1], RK[ 1]);
    round3(A, B, MK[ 2], RK[ 2]); round1(D, A, MK[ 3], RK[ 3]);
    round1(C, D, MK[ 4], RK[ 4]); round2(B, C, MK[ 5], RK[ 5]);
@@ -41,14 +76,8 @@ void CAST_256::enc(const byte in[], byte out[]) const
    round2(B, C, MK[41], RK[41]); round1(C, D, MK[40], RK[40]);
    round1(D, A, MK[47], RK[47]); round3(A, B, MK[46], RK[46]);
    round2(B, C, MK[45], RK[45]); round1(C, D, MK[44], RK[44]);
-   out[ 0] = get_byte(0, A); out[ 1] = get_byte(1, A);
-   out[ 2] = get_byte(2, A); out[ 3] = get_byte(3, A);
-   out[ 4] = get_byte(0, B); out[ 5] = get_byte(1, B);
-   out[ 6] = get_byte(2, B); out[ 7] = get_byte(3, B);
-   out[ 8] = get_byte(0, C); out[ 9] = get_byte(1, C);
-   out[10] = get_byte(2, C); out[11] = get_byte(3, C);
-   out[12] = get_byte(0, D); out[13] = get_byte(1, D);
-   out[14] = get_byte(2, D); out[15] = get_byte(3, D);
+
+   store_be(out, A, B, C, D);
    }
 
 /*************************************************
@@ -56,10 +85,11 @@ void CAST_256::enc(const byte in[], byte out[]) const
 *************************************************/
 void CAST_256::dec(const byte in[], byte out[]) const
    {
-   u32bit A = make_u32bit(in[ 0], in[ 1], in[ 2], in[ 3]),
-          B = make_u32bit(in[ 4], in[ 5], in[ 6], in[ 7]),
-          C = make_u32bit(in[ 8], in[ 9], in[10], in[11]),
-          D = make_u32bit(in[12], in[13], in[14], in[15]);
+   u32bit A = load_be<u32bit>(in, 0);
+   u32bit B = load_be<u32bit>(in, 1);
+   u32bit C = load_be<u32bit>(in, 2);
+   u32bit D = load_be<u32bit>(in, 3);
+
    round1(C, D, MK[44], RK[44]); round2(B, C, MK[45], RK[45]);
    round3(A, B, MK[46], RK[46]); round1(D, A, MK[47], RK[47]);
    round1(C, D, MK[40], RK[40]); round2(B, C, MK[41], RK[41]);
@@ -84,44 +114,8 @@ void CAST_256::dec(const byte in[], byte out[]) const
    round2(B, C, MK[ 5], RK[ 5]); round1(C, D, MK[ 4], RK[ 4]);
    round1(D, A, MK[ 3], RK[ 3]); round3(A, B, MK[ 2], RK[ 2]);
    round2(B, C, MK[ 1], RK[ 1]); round1(C, D, MK[ 0], RK[ 0]);
-   out[ 0] = get_byte(0, A); out[ 1] = get_byte(1, A);
-   out[ 2] = get_byte(2, A); out[ 3] = get_byte(3, A);
-   out[ 4] = get_byte(0, B); out[ 5] = get_byte(1, B);
-   out[ 6] = get_byte(2, B); out[ 7] = get_byte(3, B);
-   out[ 8] = get_byte(0, C); out[ 9] = get_byte(1, C);
-   out[10] = get_byte(2, C); out[11] = get_byte(3, C);
-   out[12] = get_byte(0, D); out[13] = get_byte(1, D);
-   out[14] = get_byte(2, D); out[15] = get_byte(3, D);
-   }
 
-/*************************************************
-* CAST-256 Round Type 1                          *
-*************************************************/
-void CAST_256::round1(u32bit& out, u32bit in, u32bit mask, u32bit rot) const
-   {
-   u32bit temp = rotate_left(mask + in, rot);
-   out  ^= (CAST_SBOX1[get_byte(0, temp)] ^ CAST_SBOX2[get_byte(1, temp)]) -
-            CAST_SBOX3[get_byte(2, temp)] + CAST_SBOX4[get_byte(3, temp)];
-   }
-
-/*************************************************
-* CAST-256 Round Type 2                          *
-*************************************************/
-void CAST_256::round2(u32bit& out, u32bit in, u32bit mask, u32bit rot) const
-   {
-   u32bit temp = rotate_left(mask ^ in, rot);
-   out  ^= (CAST_SBOX1[get_byte(0, temp)]  - CAST_SBOX2[get_byte(1, temp)] +
-            CAST_SBOX3[get_byte(2, temp)]) ^ CAST_SBOX4[get_byte(3, temp)];
-   }
-
-/*************************************************
-* CAST-256 Round Type 3                          *
-*************************************************/
-void CAST_256::round3(u32bit& out, u32bit in, u32bit mask, u32bit rot) const
-   {
-   u32bit temp = rotate_left(mask - in, rot);
-   out  ^= ((CAST_SBOX1[get_byte(0, temp)]  + CAST_SBOX2[get_byte(1, temp)]) ^
-             CAST_SBOX3[get_byte(2, temp)]) - CAST_SBOX4[get_byte(3, temp)];
+   store_be(out, A, B, C, D);
    }
 
 /*************************************************

@@ -47,7 +47,7 @@ inline void F1(u32bit A, u32bit B, u32bit C, u32bit& D,
 void SHA_256::hash(const byte input[])
    {
    for(u32bit j = 0; j != 16; ++j)
-      W[j] = make_u32bit(input[4*j], input[4*j+1], input[4*j+2], input[4*j+3]);
+      W[j] = load_be<u32bit>(input, j);
    for(u32bit j = 16; j != 64; ++j)
       W[j] = sigma(W[j- 2], 17, 19, 10) + W[j- 7] +
              sigma(W[j-15],  7, 18,  3) + W[j-16];
@@ -99,8 +99,8 @@ void SHA_256::hash(const byte input[])
 *************************************************/
 void SHA_256::copy_out(byte output[])
    {
-   for(u32bit j = 0; j != OUTPUT_LENGTH; ++j)
-      output[j] = get_byte(j % 4, digest[j/4]);
+   for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
+      store_be(digest[j/4], output + j);
    }
 
 /*************************************************

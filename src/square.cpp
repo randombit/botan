@@ -117,7 +117,7 @@ void Square::key(const byte key[], u32bit)
    {
    SecureBuffer<u32bit, 36> XEK, XDK;
    for(u32bit j = 0; j != 4; ++j)
-      XEK[j] = make_u32bit(key[4*j], key[4*j+1], key[4*j+2], key[4*j+3]);
+      XEK[j] = load_be<u32bit>(key, j);
    for(u32bit j = 0; j != 8; ++j)
       {
       XEK[4*j+4] = XEK[4*j  ] ^ rotate_left(XEK[4*j+3], 8) ^ (0x01000000 << j);
@@ -149,27 +149,25 @@ void Square::transform(u32bit round_key[4])
       { 0x03, 0x02, 0x01, 0x01 },
       { 0x01, 0x03, 0x02, 0x01 },
       { 0x01, 0x01, 0x03, 0x02 } };
-   SecureBuffer<byte, 4> A[4], B[4];
+
    for(u32bit j = 0; j != 4; ++j)
-      for(u32bit k = 0; k != 4; ++k)
-         A[j][k] = get_byte(k, round_key[j]);
-   for(u32bit j = 0; j != 4; ++j)
+      {
+      SecureBuffer<byte, 4> A, B;
+
+      store_be(round_key[j], A);
+
       for(u32bit k = 0; k != 4; ++k)
          for(u32bit l = 0; l != 4; ++l)
-            B[j][k] ^= mul(A[j][l], G[l][k]);
-   for(u32bit j = 0; j != 4; ++j)
-      round_key[j] = make_u32bit(B[j][0], B[j][1], B[j][2], B[j][3]);
-   }
+            {
+            const byte a = A[l];
+            const byte b = G[l][k];
 
-/*************************************************
-* Multiply in GF(2^8)                            *
-*************************************************/
-byte Square::mul(byte a, byte b)
-   {
-   if(a && b)
-      return ALog[(Log[a] + Log[b]) % 255];
-   else
-      return 0;
+            if(a && b)
+               B[k] ^= ALog[(Log[a] + Log[b]) % 255];
+            }
+
+      round_key[j] = load_be<u32bit>(B.begin(), 0);
+      }
    }
 
 /*************************************************

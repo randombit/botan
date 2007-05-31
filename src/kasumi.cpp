@@ -33,8 +33,10 @@ u16bit FI(u16bit I, u16bit K)
 *************************************************/
 void KASUMI::enc(const byte in[], byte out[]) const
    {
-   u16bit B0 = make_u16bit(in[0], in[1]), B1 = make_u16bit(in[2], in[3]),
-          B2 = make_u16bit(in[4], in[5]), B3 = make_u16bit(in[6], in[7]);
+   u16bit B0 = load_be<u16bit>(in, 0);
+   u16bit B1 = load_be<u16bit>(in, 1);
+   u16bit B2 = load_be<u16bit>(in, 2);
+   u16bit B3 = load_be<u16bit>(in, 3);
 
    for(u32bit j = 0; j != 8; j += 2)
       {
@@ -61,10 +63,7 @@ void KASUMI::enc(const byte in[], byte out[]) const
       B1 ^= R;
       }
 
-   out[0] = get_byte(0, B0); out[1] = get_byte(1, B0);
-   out[2] = get_byte(0, B1); out[3] = get_byte(1, B1);
-   out[4] = get_byte(0, B2); out[5] = get_byte(1, B2);
-   out[6] = get_byte(0, B3); out[7] = get_byte(1, B3);
+   store_be(out, B0, B1, B2, B3);
    }
 
 /*************************************************
@@ -72,8 +71,10 @@ void KASUMI::enc(const byte in[], byte out[]) const
 *************************************************/
 void KASUMI::dec(const byte in[], byte out[]) const
    {
-   u16bit B0 = make_u16bit(in[0], in[1]), B1 = make_u16bit(in[2], in[3]),
-          B2 = make_u16bit(in[4], in[5]), B3 = make_u16bit(in[6], in[7]);
+   u16bit B0 = load_be<u16bit>(in, 0);
+   u16bit B1 = load_be<u16bit>(in, 1);
+   u16bit B2 = load_be<u16bit>(in, 2);
+   u16bit B3 = load_be<u16bit>(in, 3);
 
    for(u32bit j = 0; j != 8; j += 2)
       {
@@ -102,10 +103,7 @@ void KASUMI::dec(const byte in[], byte out[]) const
       B3 ^= R;
       }
 
-   out[0] = get_byte(0, B0); out[1] = get_byte(1, B0);
-   out[2] = get_byte(0, B1); out[3] = get_byte(1, B1);
-   out[4] = get_byte(0, B2); out[5] = get_byte(1, B2);
-   out[6] = get_byte(0, B3); out[7] = get_byte(1, B3);
+   store_be(out, B0, B1, B2, B3);
    }
 
 /*************************************************
@@ -119,7 +117,7 @@ void KASUMI::key(const byte key[], u32bit)
    SecureBuffer<u16bit, 16> K;
    for(u32bit j = 0; j != 8; ++j)
       {
-      K[j] = make_u16bit(key[2*j], key[2*j+1]);
+      K[j] = load_be<u16bit>(key, j);
       K[j+8] = K[j] ^ RC[j];
       }
 

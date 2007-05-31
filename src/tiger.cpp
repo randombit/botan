@@ -15,9 +15,8 @@ namespace Botan {
 void Tiger::hash(const byte input[])
    {
    for(u32bit j = 0; j != 8; ++j)
-      X[j] = make_u64bit(input[8*j+7], input[8*j+6], input[8*j+5],
-                         input[8*j+4], input[8*j+3], input[8*j+2],
-                         input[8*j+1], input[8*j]);
+      X[j] = load_le<u64bit>(input, j);
+
    u64bit A = digest[0], B = digest[1], C = digest[2];
 
    pass(A, B, C, X, 5); mix(X);

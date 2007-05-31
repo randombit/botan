@@ -13,8 +13,8 @@ namespace Botan {
 *************************************************/
 void Blowfish::enc(const byte in[], byte out[]) const
    {
-   u32bit L = make_u32bit(in[0], in[1], in[2], in[3]),
-          R = make_u32bit(in[4], in[5], in[6], in[7]);
+   u32bit L = load_be<u32bit>(in, 0);
+   u32bit R = load_be<u32bit>(in, 1);
 
    for(u32bit j = 0; j != 16; j += 2)
       {
@@ -29,10 +29,7 @@ void Blowfish::enc(const byte in[], byte out[]) const
 
    L ^= P[16]; R ^= P[17];
 
-   out[0] = get_byte(0, R); out[1] = get_byte(1, R);
-   out[2] = get_byte(2, R); out[3] = get_byte(3, R);
-   out[4] = get_byte(0, L); out[5] = get_byte(1, L);
-   out[6] = get_byte(2, L); out[7] = get_byte(3, L);
+   store_be(out, R, L);
    }
 
 /*************************************************
@@ -40,8 +37,8 @@ void Blowfish::enc(const byte in[], byte out[]) const
 *************************************************/
 void Blowfish::dec(const byte in[], byte out[]) const
    {
-   u32bit L = make_u32bit(in[0], in[1], in[2], in[3]),
-          R = make_u32bit(in[4], in[5], in[6], in[7]);
+   u32bit L = load_be<u32bit>(in, 0);
+   u32bit R = load_be<u32bit>(in, 1);
 
    for(u32bit j = 17; j != 1; j -= 2)
       {
@@ -56,10 +53,7 @@ void Blowfish::dec(const byte in[], byte out[]) const
 
    L ^= P[1]; R ^= P[0];
 
-   out[0] = get_byte(0, R); out[1] = get_byte(1, R);
-   out[2] = get_byte(2, R); out[3] = get_byte(3, R);
-   out[4] = get_byte(0, L); out[5] = get_byte(1, L);
-   out[6] = get_byte(2, L); out[7] = get_byte(3, L);
+   store_be(out, R, L);
    }
 
 /*************************************************
@@ -68,9 +62,11 @@ void Blowfish::dec(const byte in[], byte out[]) const
 void Blowfish::key(const byte key[], u32bit length)
    {
    clear();
+
    for(u32bit j = 0, k = 0; j != 18; ++j, k += 4)
       P[j] ^= make_u32bit(key[(k  ) % length], key[(k+1) % length],
-                             key[(k+2) % length], key[(k+3) % length]);
+                          key[(k+2) % length], key[(k+3) % length]);
+
    u32bit L = 0, R = 0;
    generate_sbox(P,  18,  L, R);
    generate_sbox(S1, 256, L, R);

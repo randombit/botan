@@ -13,8 +13,10 @@ namespace Botan {
 *************************************************/
 void Skipjack::enc(const byte in[], byte out[]) const
    {
-   u16bit W1 = make_u16bit(in[7], in[6]), W2 = make_u16bit(in[5], in[4]),
-          W3 = make_u16bit(in[3], in[2]), W4 = make_u16bit(in[1], in[0]);
+   u16bit W1 = load_le<u16bit>(in, 3);
+   u16bit W2 = load_le<u16bit>(in, 2);
+   u16bit W3 = load_le<u16bit>(in, 1);
+   u16bit W4 = load_le<u16bit>(in, 0);
 
    step_A(W1,W4, 1); step_A(W4,W3, 2); step_A(W3,W2, 3); step_A(W2,W1, 4);
    step_A(W1,W4, 5); step_A(W4,W3, 6); step_A(W3,W2, 7); step_A(W2,W1, 8);
@@ -28,10 +30,7 @@ void Skipjack::enc(const byte in[], byte out[]) const
    step_B(W1,W2,25); step_B(W4,W1,26); step_B(W3,W4,27); step_B(W2,W3,28);
    step_B(W1,W2,29); step_B(W4,W1,30); step_B(W3,W4,31); step_B(W2,W3,32);
 
-   out[0] = get_byte(1, W4); out[1] = get_byte(0, W4);
-   out[2] = get_byte(1, W3); out[3] = get_byte(0, W3);
-   out[4] = get_byte(1, W2); out[5] = get_byte(0, W2);
-   out[6] = get_byte(1, W1); out[7] = get_byte(0, W1);
+   store_le(out, W4, W3, W2, W1);
    }
 
 /*************************************************
@@ -39,8 +38,10 @@ void Skipjack::enc(const byte in[], byte out[]) const
 *************************************************/
 void Skipjack::dec(const byte in[], byte out[]) const
    {
-   u16bit W1 = make_u16bit(in[7], in[6]), W2 = make_u16bit(in[5], in[4]),
-          W3 = make_u16bit(in[3], in[2]), W4 = make_u16bit(in[1], in[0]);
+   u16bit W1 = load_le<u16bit>(in, 3);
+   u16bit W2 = load_le<u16bit>(in, 2);
+   u16bit W3 = load_le<u16bit>(in, 1);
+   u16bit W4 = load_le<u16bit>(in, 0);
 
    step_Bi(W2,W3,32); step_Bi(W3,W4,31); step_Bi(W4,W1,30); step_Bi(W1,W2,29);
    step_Bi(W2,W3,28); step_Bi(W3,W4,27); step_Bi(W4,W1,26); step_Bi(W1,W2,25);
@@ -54,10 +55,7 @@ void Skipjack::dec(const byte in[], byte out[]) const
    step_Ai(W1,W2, 8); step_Ai(W2,W3, 7); step_Ai(W3,W4, 6); step_Ai(W4,W1, 5);
    step_Ai(W1,W2, 4); step_Ai(W2,W3, 3); step_Ai(W3,W4, 2); step_Ai(W4,W1, 1);
 
-   out[0] = get_byte(1, W4); out[1] = get_byte(0, W4);
-   out[2] = get_byte(1, W3); out[3] = get_byte(0, W3);
-   out[4] = get_byte(1, W2); out[5] = get_byte(0, W2);
-   out[6] = get_byte(1, W1); out[7] = get_byte(0, W1);
+   store_le(out, W4, W3, W2, W1);
    }
 
 /*************************************************

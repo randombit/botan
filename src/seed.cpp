@@ -22,10 +22,10 @@ u32bit SEED::G_FUNC::operator()(u32bit X) const
 *************************************************/
 void SEED::enc(const byte in[], byte out[]) const
    {
-   u32bit B0 = make_u32bit(in[ 0], in[ 1], in[ 2], in[ 3]),
-          B1 = make_u32bit(in[ 4], in[ 5], in[ 6], in[ 7]),
-          B2 = make_u32bit(in[ 8], in[ 9], in[10], in[11]),
-          B3 = make_u32bit(in[12], in[13], in[14], in[15]);
+   u32bit B0 = load_be<u32bit>(in, 0);
+   u32bit B1 = load_be<u32bit>(in, 1);
+   u32bit B2 = load_be<u32bit>(in, 2);
+   u32bit B3 = load_be<u32bit>(in, 3);
 
    G_FUNC G;
 
@@ -48,14 +48,7 @@ void SEED::enc(const byte in[], byte out[]) const
       B2 ^= T0 + T1;
       }
 
-   out[ 0] = get_byte(0, B2); out[ 1] = get_byte(1, B2);
-   out[ 2] = get_byte(2, B2); out[ 3] = get_byte(3, B2);
-   out[ 4] = get_byte(0, B3); out[ 5] = get_byte(1, B3);
-   out[ 6] = get_byte(2, B3); out[ 7] = get_byte(3, B3);
-   out[ 8] = get_byte(0, B0); out[ 9] = get_byte(1, B0);
-   out[10] = get_byte(2, B0); out[11] = get_byte(3, B0);
-   out[12] = get_byte(0, B1); out[13] = get_byte(1, B1);
-   out[14] = get_byte(2, B1); out[15] = get_byte(3, B1);
+   store_be(out, B2, B3, B0, B1);
    }
 
 /*************************************************
@@ -63,10 +56,10 @@ void SEED::enc(const byte in[], byte out[]) const
 *************************************************/
 void SEED::dec(const byte in[], byte out[]) const
    {
-   u32bit B0 = make_u32bit(in[ 0], in[ 1], in[ 2], in[ 3]),
-          B1 = make_u32bit(in[ 4], in[ 5], in[ 6], in[ 7]),
-          B2 = make_u32bit(in[ 8], in[ 9], in[10], in[11]),
-          B3 = make_u32bit(in[12], in[13], in[14], in[15]);
+   u32bit B0 = load_be<u32bit>(in, 0);
+   u32bit B1 = load_be<u32bit>(in, 1);
+   u32bit B2 = load_be<u32bit>(in, 2);
+   u32bit B3 = load_be<u32bit>(in, 3);
 
    G_FUNC G;
 
@@ -89,14 +82,7 @@ void SEED::dec(const byte in[], byte out[]) const
       B2 ^= T0 + T1;
       }
 
-   out[ 0] = get_byte(0, B2); out[ 1] = get_byte(1, B2);
-   out[ 2] = get_byte(2, B2); out[ 3] = get_byte(3, B2);
-   out[ 4] = get_byte(0, B3); out[ 5] = get_byte(1, B3);
-   out[ 6] = get_byte(2, B3); out[ 7] = get_byte(3, B3);
-   out[ 8] = get_byte(0, B0); out[ 9] = get_byte(1, B0);
-   out[10] = get_byte(2, B0); out[11] = get_byte(3, B0);
-   out[12] = get_byte(0, B1); out[13] = get_byte(1, B1);
-   out[14] = get_byte(2, B1); out[15] = get_byte(3, B1);
+   store_be(out, B2, B3, B0, B1);
    }
 
 /*************************************************
@@ -114,7 +100,7 @@ void SEED::key(const byte key[], u32bit)
    SecureBuffer<u32bit, 4> WK;
 
    for(u32bit j = 0; j != 4; ++j)
-      WK[j] = make_u32bit(key[4*j], key[4*j+1], key[4*j+2], key[4*j+3]);
+      WK[j] = load_be<u32bit>(key, j);
 
    G_FUNC G;
 

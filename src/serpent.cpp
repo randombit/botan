@@ -242,10 +242,11 @@ inline void i_transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
 *************************************************/
 void Serpent::enc(const byte in[], byte out[]) const
    {
-   u32bit B0 = make_u32bit(in[ 3], in[ 2], in[ 1], in[ 0]),
-          B1 = make_u32bit(in[ 7], in[ 6], in[ 5], in[ 4]),
-          B2 = make_u32bit(in[11], in[10], in[ 9], in[ 8]),
-          B3 = make_u32bit(in[15], in[14], in[13], in[12]);
+   u32bit B0 = load_le<u32bit>(in, 0);
+   u32bit B1 = load_le<u32bit>(in, 1);
+   u32bit B2 = load_le<u32bit>(in, 2);
+   u32bit B3 = load_le<u32bit>(in, 3);
+
    key_xor( 0,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor( 1,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor( 2,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
@@ -278,14 +279,8 @@ void Serpent::enc(const byte in[], byte out[]) const
    key_xor(29,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor(30,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor(31,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); key_xor(32,B0,B1,B2,B3);
-   out[ 0] = get_byte(3, B0); out[ 1] = get_byte(2, B0);
-   out[ 2] = get_byte(1, B0); out[ 3] = get_byte(0, B0);
-   out[ 4] = get_byte(3, B1); out[ 5] = get_byte(2, B1);
-   out[ 6] = get_byte(1, B1); out[ 7] = get_byte(0, B1);
-   out[ 8] = get_byte(3, B2); out[ 9] = get_byte(2, B2);
-   out[10] = get_byte(1, B2); out[11] = get_byte(0, B2);
-   out[12] = get_byte(3, B3); out[13] = get_byte(2, B3);
-   out[14] = get_byte(1, B3); out[15] = get_byte(0, B3);
+
+   store_le(out, B0, B1, B2, B3);
    }
 
 /*************************************************
@@ -293,10 +288,11 @@ void Serpent::enc(const byte in[], byte out[]) const
 *************************************************/
 void Serpent::dec(const byte in[], byte out[]) const
    {
-   u32bit B0 = make_u32bit(in[ 3], in[ 2], in[ 1], in[ 0]),
-          B1 = make_u32bit(in[ 7], in[ 6], in[ 5], in[ 4]),
-          B2 = make_u32bit(in[11], in[10], in[ 9], in[ 8]),
-          B3 = make_u32bit(in[15], in[14], in[13], in[12]);
+   u32bit B0 = load_le<u32bit>(in, 0);
+   u32bit B1 = load_le<u32bit>(in, 1);
+   u32bit B2 = load_le<u32bit>(in, 2);
+   u32bit B3 = load_le<u32bit>(in, 3);
+
    key_xor(32,B0,B1,B2,B3);  SBoxD8(B0,B1,B2,B3); key_xor(31,B0,B1,B2,B3);
    i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor(30,B0,B1,B2,B3);
    i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor(29,B0,B1,B2,B3);
@@ -329,14 +325,8 @@ void Serpent::dec(const byte in[], byte out[]) const
    i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor( 2,B0,B1,B2,B3);
    i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor( 1,B0,B1,B2,B3);
    i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor( 0,B0,B1,B2,B3);
-   out[ 0] = get_byte(3, B0); out[ 1] = get_byte(2, B0);
-   out[ 2] = get_byte(1, B0); out[ 3] = get_byte(0, B0);
-   out[ 4] = get_byte(3, B1); out[ 5] = get_byte(2, B1);
-   out[ 6] = get_byte(1, B1); out[ 7] = get_byte(0, B1);
-   out[ 8] = get_byte(3, B2); out[ 9] = get_byte(2, B2);
-   out[10] = get_byte(1, B2); out[11] = get_byte(0, B2);
-   out[12] = get_byte(3, B3); out[13] = get_byte(2, B3);
-   out[14] = get_byte(1, B3); out[15] = get_byte(0, B3);
+
+   store_le(out, B0, B1, B2, B3);
    }
 
 /*************************************************
@@ -348,7 +338,8 @@ void Serpent::key(const byte key[], u32bit length)
 
    SecureBuffer<u32bit, 140> W;
    for(u32bit j = 0; j != length / 4; ++j)
-      W[j] = make_u32bit(key[4*j+3], key[4*j+2], key[4*j+1], key[4*j]);
+      W[j] = load_le<u32bit>(key, j);
+
    W[length / 4] |= u32bit(1) << ((length%4)*8);
    for(u32bit j = 8; j != 140; ++j)
       W[j] = rotate_left(W[j-8] ^ W[j-5] ^ W[j-3] ^ W[j-1] ^ PHI ^ (j-8), 11);
