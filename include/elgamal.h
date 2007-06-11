@@ -8,7 +8,6 @@
 
 #include <botan/dl_algo.h>
 #include <botan/pk_core.h>
-#include <botan/blinding.h>
 
 namespace Botan {
 
