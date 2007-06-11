@@ -142,7 +142,7 @@ void X509_DN::do_decode(const MemoryRegion<byte>& bits)
 /*************************************************
 * Return the BER encoded data, if any            *
 *************************************************/
-SecureVector<byte> X509_DN::get_bits() const
+MemoryVector<byte> X509_DN::get_bits() const
    {
    return dn_bits;
    }

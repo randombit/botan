@@ -24,7 +24,7 @@ class Attribute : public ASN1_Object
       void decode_from(class BER_Decoder&);
 
       OID oid;
-      SecureVector<byte> parameters;
+      MemoryVector<byte> parameters;
 
       Attribute() {}
       Attribute(const OID&, const MemoryRegion<byte>&);
@@ -99,14 +99,14 @@ class X509_DN : public ASN1_Object
       static std::string deref_info_field(const std::string&);
 
       void do_decode(const MemoryRegion<byte>&);
-      SecureVector<byte> get_bits() const;
+      MemoryVector<byte> get_bits() const;
 
       X509_DN();
       X509_DN(const std::multimap<OID, std::string>&);
       X509_DN(const std::multimap<std::string, std::string>&);
    private:
       std::multimap<OID, ASN1_String> dn_info;
-      SecureVector<byte> dn_bits;
+      MemoryVector<byte> dn_bits;
    };
 
 /*************************************************
