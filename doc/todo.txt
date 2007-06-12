@@ -72,6 +72,13 @@ would be pretty great to have a benchmark run produce a detailed
 report as HTML and some gnuplot datasets to generate the images
 included from the HTML file.
 
+New Memory Allocator
+--------------------
+
+The current pool allocator is servicable but it can be very wasteful
+of memory and could easily be several times faster. Someone who is
+interested in algorithms might enjoy working on this.
+
 Documentation
 --------------------
 
