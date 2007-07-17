@@ -25,17 +25,19 @@ class Algorithm_Cache_Impl : public Engine::Algorithm_Cache<T>
          return search_map(mappings, name);
          }
 
-      void add(T* algo) const
+      void add(T* algo, const std::string& index_name = "") const
          {
          if(!algo)
             return;
 
          Mutex_Holder lock(mutex);
 
-         const std::string algo_name = algo->name();
-         if(mappings.find(algo_name) != mappings.end())
-            delete mappings[algo_name];
-         mappings[algo_name] = algo;
+         const std::string name =
+            (index_name != "" ? index_name : algo->name());
+
+         if(mappings.find(name) != mappings.end())
+            delete mappings[name];
+         mappings[name] = algo;
          }
 
       Algorithm_Cache_Impl()
@@ -58,7 +60,6 @@ class Algorithm_Cache_Impl : public Engine::Algorithm_Cache<T>
       Mutex* mutex;
       mutable std::map<std::string, T*> mappings;
    };
-
 
 }
 
