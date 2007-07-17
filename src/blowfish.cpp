@@ -105,10 +105,10 @@ void Blowfish::generate_sbox(u32bit Box[], u32bit size,
 void Blowfish::clear() throw()
    {
    P.copy(PBOX, 18);
-   S1.copy(SBOX1, 256);
-   S2.copy(SBOX2, 256);
-   S3.copy(SBOX3, 256);
-   S4.copy(SBOX4, 256);
+   S1.copy(SBOX +   0, 256);
+   S2.copy(SBOX + 256, 256);
+   S3.copy(SBOX + 512, 256);
+   S4.copy(SBOX + 768, 256);
    }
 
 }

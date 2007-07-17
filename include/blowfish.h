@@ -26,8 +26,7 @@ class Blowfish : public BlockCipher
       void key(const byte[], u32bit);
       void generate_sbox(u32bit[], u32bit, u32bit&, u32bit&) const;
 
-      static const u32bit PBOX[18], SBOX1[256], SBOX2[256],
-                                    SBOX3[256], SBOX4[256];
+      static const u32bit PBOX[18], SBOX[1024];
 
       SecureBuffer<u32bit, 256> S1, S2, S3, S4;
       SecureBuffer<u32bit, 18> P;
