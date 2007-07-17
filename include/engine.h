@@ -28,7 +28,7 @@ class Engine
          {
          public:
             virtual T* get(const std::string&) const = 0;
-            virtual void add(T* algo) const = 0;
+            virtual void add(T* algo, const std::string& = "") const = 0;
             virtual ~Algorithm_Cache() {}
          };
 
@@ -75,14 +75,18 @@ class Engine
          find_bc_pad(const std::string&) const;
 
       template<typename T>
-      T* lookup_algo(const Algorithm_Cache<T>* cache,
-                     const std::string& name,
-                     const Engine* engine,
-                     T* (Engine::*find)(const std::string& name) const) const
+      const T* lookup_algo(const Algorithm_Cache<T>* cache,
+                           const std::string& name,
+                           const Engine* engine,
+                           T* (Engine::*find)(const std::string&) const) const
          {
          T* algo = cache->get(name);
          if(!algo)
-            cache->add(algo = (engine->*find)(name));
+            {
+            algo = (engine->*find)(name);
+            if(algo)
+               cache->add(algo, name);
+            }
          return algo;
          }
 
