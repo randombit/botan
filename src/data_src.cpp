@@ -93,7 +93,7 @@ DataSource_Memory::DataSource_Memory(const MemoryRegion<byte>& in)
 *************************************************/
 DataSource_Memory::DataSource_Memory(const std::string& in)
    {
-   source.set((const byte*)in.c_str(), in.length());
+   source.set((const byte*)in.data(), in.length());
    offset = 0;
    }
 

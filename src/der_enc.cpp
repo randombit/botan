@@ -373,7 +373,7 @@ DER_Encoder& DER_Encoder::add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
 DER_Encoder& DER_Encoder::add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
                                      const std::string& rep_str)
    {
-   const byte* rep = (const byte*)rep_str.c_str();
+   const byte* rep = (const byte*)rep_str.data();
    const u32bit rep_len = rep_str.size();
    return add_object(type_tag, class_tag, rep, rep_len);
    }

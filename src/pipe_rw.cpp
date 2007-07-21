@@ -48,7 +48,7 @@ void Pipe::write(const MemoryRegion<byte>& input)
 *************************************************/
 void Pipe::write(const std::string& str)
    {
-   write((const byte*)str.c_str(), str.size());
+   write((const byte*)str.data(), str.size());
    }
 
 /*************************************************

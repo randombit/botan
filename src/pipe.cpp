@@ -130,7 +130,7 @@ void Pipe::process_msg(const MemoryRegion<byte>& input)
 *************************************************/
 void Pipe::process_msg(const std::string& input)
    {
-   process_msg((const byte*)input.c_str(), input.length());
+   process_msg((const byte*)input.data(), input.length());
    }
 
 /*************************************************

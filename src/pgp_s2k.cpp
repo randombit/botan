@@ -44,7 +44,7 @@ OctetString OpenPGP_S2K::derive(u32bit key_len, const std::string& passphrase,
          {
          hash->update(salt_buf, salt_size);
          left -= salt_size;
-         hash->update((const byte*)passphrase.c_str(), left);
+         hash->update((const byte*)passphrase.data(), left);
          }
 
       hash_buf = hash->final();
