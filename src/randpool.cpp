@@ -29,7 +29,7 @@ SecureVector<byte> randpool_prf(MessageAuthenticationCode* mac,
                                 RANDPOOL_PRF_TAG tag,
                                 const byte in[], u32bit length)
    {
-   mac->update((byte)tag);
+   mac->update(static_cast<byte>(tag));
    mac->update(in, length);
    return mac->final();
    }

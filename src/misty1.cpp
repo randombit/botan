@@ -20,7 +20,7 @@ u16bit FI(u16bit input, u16bit key7, u16bit key9)
    D9 = MISTY1_SBOX_S9[D9] ^ D7;
    D7 = (MISTY1_SBOX_S7[D7] ^ key7 ^ D9) & 0x7F;
    D9 = MISTY1_SBOX_S9[D9 ^ key9] ^ D7;
-   return (u16bit)((D7 << 9) | D9);
+   return static_cast<u16bit>((D7 << 9) | D9);
    }
 
 }

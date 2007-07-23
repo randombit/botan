@@ -14,26 +14,38 @@ namespace Botan {
 * Byte Extraction Function                       *
 *************************************************/
 template<typename T> inline byte get_byte(u32bit byte_num, T input)
-   { return (byte)(input >> ((sizeof(T)-1-(byte_num&(sizeof(T)-1))) << 3)); }
+   {
+   return (input >> ((sizeof(T)-1-(byte_num&(sizeof(T)-1))) << 3));
+   }
 
 /*************************************************
 * Byte to Word Conversions                       *
 *************************************************/
-inline u16bit make_u16bit(byte input0, byte input1)
-   { return (u16bit)(((u16bit)input0 << 8) | input1); }
-
-inline u32bit make_u32bit(byte input0, byte input1, byte input2, byte input3)
-   { return (u32bit)(((u32bit)input0 << 24) | ((u32bit)input1 << 16) |
-                     ((u32bit)input2 <<  8) | input3); }
-
-inline u64bit make_u64bit(byte input0, byte input1, byte input2, byte input3,
-                          byte input4, byte input5, byte input6, byte input7)
+inline u16bit make_u16bit(byte i0, byte i1)
    {
-   return (u64bit)(((u64bit)input0 << 56) | ((u64bit)input1 << 48) |
-                   ((u64bit)input2 << 40) | ((u64bit)input3 << 32) |
-                   ((u64bit)input4 << 24) | ((u64bit)input5 << 16) |
-                   ((u64bit)input6 <<  8) | input7);
+   return ((static_cast<u16bit>(i0) << 8) | i1);
    }
+
+inline u32bit make_u32bit(byte i0, byte i1, byte i2, byte i3)
+   {
+   return ((static_cast<u32bit>(i0) << 24) |
+           (static_cast<u32bit>(i1) << 16) |
+           (static_cast<u32bit>(i2) <<  8) |
+           (static_cast<u32bit>(i3)));
+   }
+
+inline u64bit make_u64bit(byte i0, byte i1, byte i2, byte i3,
+                          byte i4, byte i5, byte i6, byte i7)
+    {
+   return ((static_cast<u64bit>(i0) << 56) |
+           (static_cast<u64bit>(i1) << 48) |
+           (static_cast<u64bit>(i2) << 40) |
+           (static_cast<u64bit>(i3) << 32) |
+           (static_cast<u64bit>(i4) << 24) |
+           (static_cast<u64bit>(i5) << 16) |
+           (static_cast<u64bit>(i6) <<  8) |
+           (static_cast<u64bit>(i7)));
+    }
 
 /*************************************************
 * Endian-Specific Word Loading Operations        *

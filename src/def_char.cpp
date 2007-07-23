@@ -29,7 +29,7 @@ std::string ucs2_to_latin1(const std::string& ucs2)
       if(c1 != 0)
          throw Decoding_Error("UCS-2 has non-Latin1 characters");
 
-      latin1 += (char)c2;
+      latin1 += static_cast<char>(c2);
       }
 
    return latin1;
@@ -45,22 +45,22 @@ std::string utf8_to_latin1(const std::string& utf8)
    u32bit position = 0;
    while(position != utf8.size())
       {
-      const byte c1 = (byte)utf8[position++];
+      const byte c1 = static_cast<byte>(utf8[position++]);
 
       if(c1 <= 0x7F)
-         iso8859 += (char)c1;
+         iso8859 += static_cast<char>(c1);
       else if(c1 >= 0xC0 && c1 <= 0xC7)
          {
          if(position == utf8.size())
             throw Decoding_Error("UTF-8: sequence truncated");
 
-         const byte c2 = (byte)utf8[position++];
+         const byte c2 = static_cast<byte>(utf8[position++]);
          const byte iso_char = ((c1 & 0x07) << 6) | (c2 & 0x3F);
 
          if(iso_char <= 0x7F)
             throw Decoding_Error("UTF-8: sequence longer than needed");
 
-         iso8859 += (char)iso_char;
+         iso8859 += static_cast<char>(iso_char);
          }
       else
          throw Decoding_Error("UTF-8: Unicode chars not in Latin1 used");
@@ -77,14 +77,14 @@ std::string latin1_to_utf8(const std::string& iso8859)
    std::string utf8;
    for(u32bit j = 0; j != iso8859.size(); ++j)
       {
-      const byte c = (byte)iso8859[j];
+      const byte c = static_cast<byte>(iso8859[j]);
 
       if(c <= 0x7F)
-         utf8 += (char)c;
+         utf8 += static_cast<char>(c);
       else
          {
-         utf8 += (char)(0xC0 | (c >> 6));
-         utf8 += (char)(0x80 | (c & 0x3F));
+         utf8 += static_cast<char>((0xC0 | (c >> 6)));
+         utf8 += static_cast<char>((0x80 | (c & 0x3F)));
          }
       }
    return utf8;

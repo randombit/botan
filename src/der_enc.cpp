@@ -25,7 +25,7 @@ SecureVector<byte> encode_tag(ASN1_Tag type_tag, ASN1_Tag class_tag)
 
    SecureVector<byte> encoded_tag;
    if(type_tag <= 30)
-      encoded_tag.append((byte)(type_tag | class_tag));
+      encoded_tag.append(static_cast<byte>(type_tag | class_tag));
    else
       {
       u32bit blocks = high_bit(type_tag) + 6;
@@ -47,11 +47,11 @@ SecureVector<byte> encode_length(u32bit length)
    {
    SecureVector<byte> encoded_length;
    if(length <= 127)
-      encoded_length.append((byte)length);
+      encoded_length.append(static_cast<byte>(length));
    else
       {
       const u32bit top_byte = significant_bytes(length);
-      encoded_length.append((byte)(0x80 | top_byte));
+      encoded_length.append(static_cast<byte>(0x80 | top_byte));
       for(u32bit j = 4-top_byte; j != 4; ++j)
          encoded_length.append(get_byte(j, length));
       }
@@ -157,7 +157,7 @@ DER_Encoder& DER_Encoder::end_cons()
 *************************************************/
 DER_Encoder& DER_Encoder::start_explicit(u16bit type_no)
    {
-   ASN1_Tag type_tag = (ASN1_Tag)type_no;
+   ASN1_Tag type_tag = static_cast<ASN1_Tag>(type_no);
 
    if(type_tag == SET)
       throw Internal_Error("DER_Encoder.start_explicit(SET); cannot perform");
@@ -373,7 +373,7 @@ DER_Encoder& DER_Encoder::add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
 DER_Encoder& DER_Encoder::add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
                                      const std::string& rep_str)
    {
-   const byte* rep = (const byte*)rep_str.data();
+   const byte* rep = reinterpret_cast<const byte*>(rep_str.data());
    const u32bit rep_len = rep_str.size();
    return add_object(type_tag, class_tag, rep, rep_len);
    }

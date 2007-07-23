@@ -147,9 +147,9 @@ bool Base64_Decoder::is_valid(byte in)
 *************************************************/
 void Base64_Decoder::decode(const byte in[4], byte out[3])
    {
-   out[0] = (byte)((BASE64_TO_BIN[in[0]] << 2) | (BASE64_TO_BIN[in[1]] >> 4));
-   out[1] = (byte)((BASE64_TO_BIN[in[1]] << 4) | (BASE64_TO_BIN[in[2]] >> 2));
-   out[2] = (byte)((BASE64_TO_BIN[in[2]] << 6) | (BASE64_TO_BIN[in[3]]));
+   out[0] = ((BASE64_TO_BIN[in[0]] << 2) | (BASE64_TO_BIN[in[1]] >> 4));
+   out[1] = ((BASE64_TO_BIN[in[1]] << 4) | (BASE64_TO_BIN[in[2]] >> 2));
+   out[2] = ((BASE64_TO_BIN[in[2]] << 6) | (BASE64_TO_BIN[in[3]]));
    }
 
 /*************************************************
@@ -176,7 +176,8 @@ void Base64_Decoder::handle_bad_char(byte c)
       return;
 
    throw Decoding_Error(
-      std::string("Base64_Decoder: Invalid base64 character '") + (char)c + "'"
+      std::string("Base64_Decoder: Invalid base64 character '") +
+      static_cast<char>(c) + "'"
       );
    }
 

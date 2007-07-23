@@ -525,7 +525,7 @@ void CRL_Number::contents_to(Data_Store& info, Data_Store&) const
 MemoryVector<byte> CRL_ReasonCode::encode_inner() const
    {
    return DER_Encoder()
-      .encode((u32bit)reason, ENUMERATED, UNIVERSAL)
+      .encode(static_cast<u32bit>(reason), ENUMERATED, UNIVERSAL)
    .get_contents();
    }
 
@@ -536,7 +536,7 @@ void CRL_ReasonCode::decode_inner(const MemoryRegion<byte>& in)
    {
    u32bit reason_code = 0;
    BER_Decoder(in).decode(reason_code, ENUMERATED, UNIVERSAL);
-   reason = (CRL_Code)reason_code;
+   reason = static_cast<CRL_Code>(reason_code);
    }
 
 /*************************************************

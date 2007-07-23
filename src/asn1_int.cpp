@@ -43,8 +43,8 @@ SecureVector<byte> put_in_sequence(const MemoryRegion<byte>& contents)
 *************************************************/
 std::string to_string(const BER_Object& obj)
    {
-   std::string str((const char*)obj.value.begin(), obj.value.size());
-   return str;
+   return std::string(reinterpret_cast<const char*>(obj.value.begin()),
+                      obj.value.size());
    }
 
 /*************************************************

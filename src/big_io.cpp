@@ -29,7 +29,8 @@ std::ostream& operator<<(std::ostream& stream, const BigInt& n)
       u32bit skip = 0;
       while(buffer[skip] == '0' && skip < buffer.size())
          ++skip;
-      stream.write((const char*)buffer.begin() + skip, buffer.size() - skip);
+      stream.write(reinterpret_cast<const char*>(buffer.begin()) + skip,
+                   buffer.size() - skip);
       }
    if(!stream.good())
       throw Stream_IO_Error("BigInt output operator has failed");

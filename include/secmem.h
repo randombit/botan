@@ -78,7 +78,11 @@ class MemoryRegion
       void init(bool locking, u32bit size = 0)
          { alloc = Allocator::get(locking); create(size); }
    private:
-      T* allocate(u32bit n) const { return (T*)alloc->allocate(sizeof(T)*n); }
+      T* allocate(u32bit n) const
+         {
+         return static_cast<T*>(alloc->allocate(sizeof(T)*n));
+         }
+
       void deallocate(T* p, u32bit n) const
          { alloc->deallocate(p, sizeof(T)*n); }
 

@@ -93,7 +93,7 @@ DataSource_Memory::DataSource_Memory(const MemoryRegion<byte>& in)
 *************************************************/
 DataSource_Memory::DataSource_Memory(const std::string& in)
    {
-   source.set((const byte*)in.data(), in.length());
+   source.set(reinterpret_cast<const byte*>(in.data()), in.length());
    offset = 0;
    }
 
@@ -102,13 +102,13 @@ DataSource_Memory::DataSource_Memory(const std::string& in)
 *************************************************/
 u32bit DataSource_Stream::read(byte out[], u32bit length)
    {
-   source->read((char*)out, length);
+   source->read(reinterpret_cast<char*>(out), length);
    if(source->bad())
       throw Stream_IO_Error("DataSource_Stream::read: Source failure");
 
    u32bit got = source->gcount();
    total_read += got;
-   return (u32bit)got;
+   return got;
    }
 
 /*************************************************
@@ -124,7 +124,7 @@ u32bit DataSource_Stream::peek(byte out[], u32bit length, u32bit offset) const
    if(offset)
       {
       SecureVector<byte> buf(offset);
-      source->read((char*)buf.begin(), buf.size());
+      source->read(reinterpret_cast<char*>(buf.begin()), buf.size());
       if(source->bad())
          throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
       got = source->gcount();
@@ -132,7 +132,7 @@ u32bit DataSource_Stream::peek(byte out[], u32bit length, u32bit offset) const
 
    if(got == offset)
       {
-      source->read((char*)out, length);
+      source->read(reinterpret_cast<char*>(out), length);
       if(source->bad())
          throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
       got = source->gcount();

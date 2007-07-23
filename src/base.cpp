@@ -150,7 +150,7 @@ void BufferedComputation::update(const MemoryRegion<byte>& in)
 *************************************************/
 void BufferedComputation::update(const std::string& str)
    {
-   update((const byte*)str.data(), str.size());
+   update(reinterpret_cast<const byte*>(str.data()), str.size());
    }
 
 /*************************************************

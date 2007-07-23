@@ -88,7 +88,7 @@ SecureVector<byte> decode(DataSource& source, std::string& label)
          throw Decoding_Error("PEM: Malformed PEM header");
 
       if(position == 0)
-         label += (char)b;
+         label += static_cast<char>(b);
       }
 
    Pipe base64(new Base64_Decoder);

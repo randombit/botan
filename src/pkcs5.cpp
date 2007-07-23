@@ -72,7 +72,10 @@ OctetString PKCS5_PBKDF2::derive(u32bit key_len,
       throw Invalid_Argument("PKCS#5 PBKDF2: Empty passphrase is invalid");
 
    HMAC hmac(hash_name);
-   hmac.set_key((const byte*)passphrase.data(), passphrase.length());
+
+   hmac.set_key(reinterpret_cast<const byte*>(passphrase.data()),
+                passphrase.length());
+
    SecureVector<byte> key(key_len);
 
    byte* T = key.begin();

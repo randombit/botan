@@ -378,7 +378,8 @@ SymmetricKey PK_Key_Agreement::derive_key(u32bit key_len,
                                           const std::string& params) const
    {
    return derive_key(key_len, in, in_len,
-                     (const byte*)params.data(), params.length());
+                     reinterpret_cast<const byte*>(params.data()),
+                     params.length());
    }
 
 /*************************************************

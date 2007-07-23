@@ -45,8 +45,8 @@ void DES::IP(u32bit& L, u32bit& R)
               (IPTAB1[get_byte(2, L)] << 2) | (IPTAB1[get_byte(3, L)] << 3) |
               (IPTAB1[get_byte(0, R)] << 4) | (IPTAB1[get_byte(1, R)] << 5) |
               (IPTAB1[get_byte(2, R)] << 6) | (IPTAB2[get_byte(3, R)]     );
-   L = (u32bit)((T >> 32) & 0xFFFFFFFF);
-   R = (u32bit)((T      ) & 0xFFFFFFFF);
+   L = static_cast<u32bit>(T >> 32);
+   R = static_cast<u32bit>(T);
    }
 
 /*************************************************
@@ -58,8 +58,8 @@ void DES::FP(u32bit& L, u32bit& R)
               (FPTAB1[get_byte(2, L)] << 1) | (FPTAB2[get_byte(3, L)] << 1) |
               (FPTAB1[get_byte(0, R)] << 4) | (FPTAB1[get_byte(1, R)] << 2) |
               (FPTAB1[get_byte(2, R)]     ) | (FPTAB2[get_byte(3, R)]     );
-   L = (u32bit)((T >> 32) & 0xFFFFFFFF);
-   R = (u32bit)((T      ) & 0xFFFFFFFF);
+   L = static_cast<u32bit>(T >> 32);
+   R = static_cast<u32bit>(T);
    }
 
 /*************************************************

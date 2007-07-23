@@ -145,7 +145,7 @@ void Hex_Decoder::handle_bad_char(byte c)
 *************************************************/
 byte Hex_Decoder::decode(const byte hex[2])
    {
-   return (byte)((HEX_TO_BIN[hex[0]] << 4) | HEX_TO_BIN[hex[1]]);
+   return ((HEX_TO_BIN[hex[0]] << 4) | HEX_TO_BIN[hex[1]]);
    }
 
 /*************************************************

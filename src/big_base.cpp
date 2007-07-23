@@ -25,7 +25,7 @@ BigInt::BigInt(u64bit n)
 
    reg.create(4*limbs_needed);
    for(u32bit j = 0; j != limbs_needed; ++j)
-      reg[j] = (word)((n >> (j*MP_WORD_BITS)) & MP_WORD_MASK);
+      reg[j] = ((n >> (j*MP_WORD_BITS)) & MP_WORD_MASK);
    }
 
 /*************************************************
@@ -73,7 +73,7 @@ BigInt::BigInt(const std::string& str)
    else if(str.length() > markers + 1 && str[markers] == '0')
       { markers += 1; base = Octal; }
 
-   *this = decode((const byte*)str.data() + markers,
+   *this = decode(reinterpret_cast<const byte*>(str.data()) + markers,
                   str.length() - markers, base);
 
    if(negative) set_sign(Negative);
@@ -191,7 +191,7 @@ u32bit BigInt::get_substring(u32bit offset, u32bit length) const
 void BigInt::set_bit(u32bit n)
    {
    const u32bit which = n / MP_WORD_BITS;
-   const word mask = (word)1 << (n % MP_WORD_BITS);
+   const word mask = static_cast<word>(1) << (n % MP_WORD_BITS);
    if(which >= size()) grow_to(which + 1);
    reg[which] |= mask;
    }
@@ -202,7 +202,7 @@ void BigInt::set_bit(u32bit n)
 void BigInt::clear_bit(u32bit n)
    {
    const u32bit which = n / MP_WORD_BITS;
-   const word mask = (word)1 << (n % MP_WORD_BITS);
+   const word mask = static_cast<word>(1) << (n % MP_WORD_BITS);
    if(which < size())
       reg[which] &= ~mask;
    }
@@ -216,7 +216,7 @@ void BigInt::mask_bits(u32bit n)
    if(n >= bits()) return;
 
    const u32bit top_word = n / MP_WORD_BITS;
-   const word mask = ((word)1 << (n % MP_WORD_BITS)) - 1;
+   const word mask = (static_cast<word>(1) << (n % MP_WORD_BITS)) - 1;
 
    if(top_word < size())
       for(u32bit j = top_word + 1; j != size(); ++j)
@@ -283,7 +283,7 @@ u32bit BigInt::encoded_size(Base base) const
    else if(base == Octal)
       return ((bits() + 2) / 3);
    else if(base == Decimal)
-      return (u32bit)((bits() * LOG_2_BASE_10) + 1);
+      return static_cast<u32bit>((bits() * LOG_2_BASE_10) + 1);
    else
       throw Invalid_Argument("Unknown base for BigInt encoding");
    }

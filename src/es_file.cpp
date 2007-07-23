@@ -22,7 +22,7 @@ u32bit File_EntropySource::slow_poll(byte output[], u32bit length)
       {
       std::ifstream random_source(sources[j].c_str(), std::ios::binary);
       if(!random_source) continue;
-      random_source.read((char*)output + read, length);
+      random_source.read(reinterpret_cast<char*>(output) + read, length);
       read += random_source.gcount();
       length -= random_source.gcount();
       if(length == 0)

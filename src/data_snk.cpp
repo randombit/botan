@@ -13,7 +13,7 @@ namespace Botan {
 *************************************************/
 void DataSink_Stream::write(const byte out[], u32bit length)
    {
-   sink->write((const char*)out, length);
+   sink->write(reinterpret_cast<const char*>(out), length);
    if(!sink->good())
       throw Stream_IO_Error("DataSink_Stream: Failure writing to " + fsname);
    }

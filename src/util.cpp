@@ -40,10 +40,12 @@ u32bit dl_work_factor(u32bit n_bits)
 
    const double log_x = n_bits / 1.44;
 
-   u32bit estimate = (u32bit)(2.76 * std::pow(log_x, 1.0/3.0) *
-                                     std::pow(std::log(log_x), 2.0/3.0));
+   const double strength =
+      2.76 * std::pow(log_x, 1.0/3.0) * std::pow(std::log(log_x), 2.0/3.0);
 
-   return std::max(estimate, MIN_ESTIMATE);
+   if(strength > MIN_ESTIMATE)
+      return static_cast<u32bit>(strength);
+   return MIN_ESTIMATE;
    }
 
 /*************************************************

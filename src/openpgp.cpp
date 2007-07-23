@@ -97,7 +97,7 @@ SecureVector<byte> decode(DataSource& source, std::string& label,
          throw Decoding_Error("PGP: Malformed PGP header");
 
       if(position == 0)
-         label += (char)b;
+         label += static_cast<char>(b);
       }
 
    headers.clear();
@@ -111,7 +111,7 @@ SecureVector<byte> decode(DataSource& source, std::string& label,
          if(!source.read_byte(b))
             throw Decoding_Error("PGP: Bad armor header");
          if(b != '\n')
-            this_header += (char)b;
+            this_header += static_cast<char>(b);
          }
 
       end_of_headers = true;
@@ -160,7 +160,7 @@ SecureVector<byte> decode(DataSource& source, std::string& label,
             if(!source.read_byte(b))
                throw Decoding_Error("PGP: Bad CRC tail");
             if(b != '\n')
-               crc += (char)b;
+               crc += static_cast<char>(b);
             }
          }
       else if(b == '\n')

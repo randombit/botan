@@ -48,7 +48,7 @@ bool Pooling_Allocator::Memory_Block::contains(void* ptr,
                                                u32bit length) const throw()
    {
    return ((buffer <= ptr) &&
-           (buffer_end >= (byte*)ptr + length * BLOCK_SIZE));
+           (buffer_end >= static_cast<byte*>(ptr) + length * BLOCK_SIZE));
    }
 
 /*************************************************
@@ -70,7 +70,7 @@ byte* Pooling_Allocator::Memory_Block::alloc(u32bit n) throw()
          }
       }
 
-   bitmap_type mask = ((bitmap_type)1 << n) - 1;
+   bitmap_type mask = (static_cast<bitmap_type>(1) << n) - 1;
    u32bit offset = 0;
 
    while(bitmap & mask)
@@ -96,16 +96,16 @@ byte* Pooling_Allocator::Memory_Block::alloc(u32bit n) throw()
 *************************************************/
 void Pooling_Allocator::Memory_Block::free(void* ptr, u32bit blocks) throw()
    {
-   clear_mem((byte*)ptr, blocks * BLOCK_SIZE);
+   clear_mem(static_cast<byte*>(ptr), blocks * BLOCK_SIZE);
 
-   const u32bit offset = ((byte*)ptr - buffer) / BLOCK_SIZE;
+   const u32bit offset = (static_cast<byte*>(ptr) - buffer) / BLOCK_SIZE;
 
    if(offset == 0 && blocks == BITMAP_SIZE)
       bitmap = ~bitmap;
    else
       {
       for(u32bit j = 0; j != blocks; ++j)
-         bitmap &= ~((bitmap_type)1 << (j+offset));
+         bitmap &= ~(static_cast<bitmap_type>(1) << (j+offset));
       }
    }
 

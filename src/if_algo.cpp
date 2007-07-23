@@ -90,7 +90,7 @@ PKCS8_Encoder* IF_Scheme_PrivateKey::pkcs8_encoder() const
             {
             return DER_Encoder()
                .start_cons(SEQUENCE)
-                  .encode((u32bit)0)
+                  .encode(static_cast<u32bit>(0))
                   .encode(key->n)
                   .encode(key->e)
                   .encode(key->d)
