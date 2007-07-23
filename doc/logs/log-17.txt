@@ -1,4 +1,12 @@
 
+* 1.7.1, July 23, 2007
+ - Fix a race condition in the algorithm object cache
+ - HMAC key schedule optimization
+ - The build header sets a macro defining endianness, if known
+ - New word load/store abstraction allowing further optimization
+ - Modify most of the library to avoid use the C-style casts
+ - Use higher resolution timers in symmetric benchmarks
+
 * 1.7.0, May 19, 2007
  - DSA parameter generation now follows FIPS 186-3
  - Added OIDs for Rabin-Williams and Nyberg-Rueppel
