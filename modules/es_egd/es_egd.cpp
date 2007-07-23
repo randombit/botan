@@ -61,7 +61,7 @@ u32bit EGD_EntropySource::do_poll(byte output[], u32bit length,
 
    byte buffer[2];
    buffer[0] = 1;
-   buffer[1] = (byte)length;
+   buffer[1] = static_cast<byte>(length);
 
    if(write(fd, buffer, 2) != 2) { close(fd); return 0; }
    if(read(fd, buffer, 1) != 1)  { close(fd); return 0; }

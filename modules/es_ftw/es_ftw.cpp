@@ -97,7 +97,7 @@ void FTW_EntropySource::gather_from_file(const std::string& filename)
       return;
 
    SecureVector<byte> read_buf(1024);
-   ssize_t got = ::read(fd, (byte*)read_buf.begin(), read_buf.size());
+   ssize_t got = ::read(fd, read_buf.begin(), read_buf.size());
    close(fd);
 
    if(got > 0)

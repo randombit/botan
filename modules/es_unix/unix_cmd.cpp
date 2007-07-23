@@ -86,7 +86,7 @@ u32bit DataSource_Command::read(byte buf[], u32bit length)
       return 0;
       }
 
-   return (u32bit)got;
+   return static_cast<u32bit>(got);
    }
 
 /*************************************************

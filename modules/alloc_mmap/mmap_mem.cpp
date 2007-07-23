@@ -90,7 +90,7 @@ void* MemoryMapping_Allocator::alloc_block(u32bit n)
    void* ptr = mmap(0, n, PROT_READ | PROT_WRITE, MAP_SHARED,
                     file.get_fd(), 0);
 
-   if(ptr == (void*)MAP_FAILED)
+   if(ptr == static_cast<void*>(MAP_FAILED))
       throw MemoryMapping_Failed("Could not map file");
 
    return ptr;
