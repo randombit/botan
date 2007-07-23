@@ -1,7 +1,6 @@
 
 #include <iostream>
 #include <iomanip>
-#include <ctime>
 #include <cmath>
 #include <string>
 #include <exception>
@@ -9,6 +8,7 @@
 #include <botan/rng.h>
 #include <botan/filters.h>
 using namespace Botan_types;
+using Botan::u64bit;
 
 #include "common.h"
 
@@ -34,17 +34,18 @@ double bench_filter(std::string name, Botan::Filter* filter,
    Botan::Global_RNG::randomize(buf, BUFFERSIZE);
 
    u32bit iterations = 0;
-   std::clock_t start = std::clock(), clocks_used = 0;
+   u64bit start = get_clock(), clocks_used = 0;
+   u64bit go_up_to = (u64bit)(seconds * get_ticks());
 
-   while(clocks_used < seconds * CLOCKS_PER_SEC)
+   while(clocks_used < go_up_to)
       {
       iterations++;
       pipe.write(buf, BUFFERSIZE);
-      clocks_used = std::clock() - start;
+      clocks_used = get_clock() - start;
       }
 
    double bytes_per_sec = ((double)iterations * BUFFERSIZE) /
-                          ((double)clocks_used / CLOCKS_PER_SEC);
+                          ((double)clocks_used / get_ticks());
    double mbytes_per_sec = bytes_per_sec / (1024.0 * 1024.0);
 
    std::cout.setf(std::ios::fixed, std::ios::floatfield);
