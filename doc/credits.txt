@@ -19,7 +19,7 @@ D: Windows porting
 
 N: Yves Jerschow
 E: Yves.Jerschow@uni-duesseldorf.de
-D: Optimizations for memory load/store, HMAC
+D: Optimizations for memory load/store and HMAC
 S: Germany
 
 N: Matt Johnston
