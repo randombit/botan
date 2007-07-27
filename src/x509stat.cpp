@@ -41,8 +41,8 @@ X509_GlobalState::X509_GlobalState()
          {                                                   \
          Certificate_Extension* make(const OID& oid)         \
             {                                                \
-            if(OIDS::name_of(oid, NAME))                     \
-               return new Cert_Extension::TYPE();            \
+            if(Botan::OIDS::name_of(oid, NAME))              \
+               return new Botan::Cert_Extension::TYPE();     \
             return 0;                                        \
             }                                                \
          };                                                  \
