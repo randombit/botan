@@ -2370,12 +2370,13 @@ supply).
 using AES-256 instead of 3DES as the block cipher. This PRNG implementation has
 been checked against official X9.31 test vectors.
 
-Internally, the PRNG holds a pointer to another PRNG (typically Randpool). This
-internal PRNG generates the key and seed used by the X9.31 algorithm, as well
-as the date/time vectors. Each time an X9.31 PRNG object recieves entropy, it
-simply passes it along to the PRNG it is holdin, and then pulls out some random
-bits to generate a new key and seed. This PRNG considers itself seeded as soon
-as the internal PRNG is seeded.
+Internally, the PRNG holds a pointer to another PRNG (typically
+Randpool). This internal PRNG generates the key and seed used by the
+X9.31 algorithm, as well as the date/time vectors. Each time an X9.31
+PRNG object recieves entropy, it simply passes it along to the PRNG it
+is holding, and then pulls out some random bits to generate a new key
+and seed. This PRNG considers itself seeded as soon as the internal
+PRNG is seeded.
 
 As of version 1.4.7, the X9.31 PRNG is by default used for all random number
 generation.
