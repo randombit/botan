@@ -18,6 +18,7 @@ all
 
 <arch>
 ia32
+amd64
 ppc
 ppc64 # g5!
 </arch>
