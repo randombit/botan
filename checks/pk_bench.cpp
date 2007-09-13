@@ -1,21 +1,13 @@
 #include <botan/dsa.h>
 #include <botan/rsa.h>
 #include <botan/dh.h>
+#include <botan/nr.h>
+#include <botan/rw.h>
+#include <botan/elgamal.h>
+
 #include <botan/pkcs8.h>
 #include <botan/look_pk.h>
 #include <botan/rng.h>
-
-#if !defined(BOTAN_NO_NR)
-  #include <botan/nr.h>
-#endif
-
-#if !defined(BOTAN_NO_RW)
-  #include <botan/rw.h>
-#endif
-
-#if !defined(BOTAN_NO_ELG)
-  #include <botan/elgamal.h>
-#endif
 
 using namespace Botan;
 
@@ -30,9 +22,7 @@ using namespace Botan;
 #define PRINT_MS_PER_OP 0 /* If 0, print ops / second */
 
 RSA_PrivateKey* load_rsa_key(const std::string&);
-#if !defined(BOTAN_NO_RW)
 RW_PrivateKey  load_rw_key(const std::string&);
-#endif
 
 static BigInt to_bigint(const std::string& h)
    {
@@ -73,7 +63,6 @@ void bench_dh(DH_PrivateKey& key, const std::string keybits,
              "DH-" + keybits, seconds, html);
    }
 
-#if !defined(BOTAN_NO_RW)
 void bench_rw(RW_PrivateKey& key, const std::string keybits,
               double seconds, bool html)
    {
@@ -83,9 +72,7 @@ void bench_rw(RW_PrivateKey& key, const std::string keybits,
    bench_sig(get_pk_signer(key, "EMSA2(SHA-1)"),
              "RW-" + keybits, seconds, html);
    }
-#endif
 
-#if !defined(BOTAN_NO_NR)
 void bench_nr(NR_PrivateKey& key, const std::string keybits,
               double seconds, bool html)
    {
@@ -95,9 +82,7 @@ void bench_nr(NR_PrivateKey& key, const std::string keybits,
    bench_sig(get_pk_signer(key, "EMSA1(SHA-1)"),
              "NR-" + keybits, seconds, html);
    }
-#endif
 
-#if !defined(BOTAN_NO_ELG)
 void bench_elg(ElGamal_PrivateKey& key, const std::string keybits,
                double seconds, bool html)
    {
@@ -107,7 +92,6 @@ void bench_elg(ElGamal_PrivateKey& key, const std::string keybits,
              get_pk_decryptor(key, "Raw"),
              "ELG-" + keybits, seconds, html);
    }
-#endif
 
 void bench_pk(const std::string& algo, bool html, double seconds)
    {
@@ -186,7 +170,7 @@ void bench_pk(const std::string& algo, bool html, double seconds)
       DO_DH("4096", "modp/ietf/4096");
       #undef DO_DH
       }
-#if !defined(BOTAN_NO_ELG)
+
    if(algo == "All" || algo == "ELG" || algo == "ElGamal")
       {
       #define DO_ELG(NUM_STR, GROUP)                  \
@@ -202,9 +186,7 @@ void bench_pk(const std::string& algo, bool html, double seconds)
       DO_ELG("4096", "modp/ietf/4096");
       #undef DO_ELG
       }
-#endif
 
-#if !defined(BOTAN_NO_NR)
    if(algo == "All" || algo == "NR")
       {
       #define DO_NR(NUM_STR, GROUP)             \
@@ -218,9 +200,7 @@ void bench_pk(const std::string& algo, bool html, double seconds)
       DO_NR("1024", "dsa/jce/1024");
       #undef DO_NR
       }
-#endif
 
-#if !defined(BOTAN_NO_RW)
    if(algo == "All" || algo == "RW")
       {
       #define DO_RW(NUM_STR, FILENAME)             \
@@ -233,7 +213,6 @@ void bench_pk(const std::string& algo, bool html, double seconds)
       DO_RW("1024", "checks/keys/rw1024.key")
       #undef DO_RW
       }
-#endif
    }
    catch(Botan::Exception& e)
       {
@@ -461,7 +440,6 @@ RSA_PrivateKey* load_rsa_key(const std::string& file)
    return rsakey;
    }
 
-#if !defined(BOTAN_NO_RW)
 RW_PrivateKey load_rw_key(const std::string& file)
    {
    std::ifstream keyfile(file.c_str());
@@ -478,4 +456,3 @@ RW_PrivateKey load_rw_key(const std::string& file)
 
    return key;
    }
-#endif
