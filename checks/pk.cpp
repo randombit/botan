@@ -11,21 +11,10 @@
 #include <botan/dsa.h>
 #include <botan/dh.h>
 
-#if !defined(BOTAN_NO_NR)
-  #include <botan/nr.h>
-#endif
-
-#if !defined(BOTAN_NO_RW)
-  #include <botan/rw.h>
-#endif
-
-#if !defined(BOTAN_NO_ELG)
-  #include <botan/elgamal.h>
-#endif
-
-#if !defined(BOTAN_NO_DLIES)
-  #include <botan/dlies.h>
-#endif
+#include <botan/nr.h>
+#include <botan/rw.h>
+#include <botan/elgamal.h>
+#include <botan/dlies.h>
 
 #include <botan/filters.h>
 #include <botan/look_pk.h>
@@ -380,9 +369,6 @@ u32bit validate_rsa_enc(const std::string& algo,
 u32bit validate_elg_enc(const std::string& algo,
                         const std::vector<std::string>& str)
    {
-#if defined(BOTAN_NO_ELG)
-   return 0;
-#else
    if(str.size() != 6 && str.size() != 7)
       throw Exception("Invalid input from pk_valid.dat");
 
@@ -405,7 +391,6 @@ u32bit validate_elg_enc(const std::string& algo,
                           decode_hex(str[4]), failure);
 
    return (failure ? 1 : 0);
-#endif
    }
 
 u32bit validate_rsa_sig(const std::string& algo,
@@ -483,9 +468,6 @@ u32bit validate_rsa_ver_x509(const std::string& algo,
 u32bit validate_rw_ver(const std::string& algo,
                        const std::vector<std::string>& str)
    {
-#if defined(BOTAN_NO_RW)
-   return 0;
-#else
    if(str.size() != 5)
       throw Exception("Invalid input from pk_valid.dat");
 
@@ -503,15 +485,11 @@ u32bit validate_rw_ver(const std::string& algo,
    delete v;
 
    return (passed ? 0 : 1);
-#endif
    }
 
 u32bit validate_rw_sig(const std::string& algo,
                        const std::vector<std::string>& str)
    {
-#if defined(BOTAN_NO_RW)
-   return 0;
-#else
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
@@ -527,7 +505,6 @@ u32bit validate_rw_sig(const std::string& algo,
    bool failure = false;
    validate_signature(v, s, algo, str[3], str[4], str[5], failure);
    return (failure ? 1 : 0);
-#endif
    }
 
 u32bit validate_dsa_sig(const std::string& algo,
@@ -594,9 +571,6 @@ u32bit validate_dsa_ver(const std::string& algo,
 u32bit validate_nr_sig(const std::string& algo,
                        const std::vector<std::string>& str)
    {
-#if defined(BOTAN_NO_NR)
-   return 0;
-#else
    if(str.size() != 8)
       throw Exception("Invalid input from pk_valid.dat");
 
@@ -612,7 +586,6 @@ u32bit validate_nr_sig(const std::string& algo,
    bool failure = false;
    validate_signature(v, s, algo, str[5], str[6], str[7], failure);
    return (failure ? 1 : 0);
-#endif
    }
 
 u32bit validate_dh(const std::string& algo,
@@ -643,9 +616,6 @@ u32bit validate_dh(const std::string& algo,
 u32bit validate_dlies(const std::string& algo,
                       const std::vector<std::string>& str)
    {
-#if defined(BOTAN_NO_DLIES)
-   return 0;
-#else
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
@@ -673,7 +643,6 @@ u32bit validate_dlies(const std::string& algo,
    bool failure = false;
    validate_encryption(e, d, algo, str[4], empty, str[5], failure);
    return (failure ? 1 : 0);
-#endif
    }
 
 void do_pk_keygen_tests()
@@ -710,9 +679,7 @@ void do_pk_keygen_tests()
    }
 
    IF_SIG_KEY(RSA_PrivateKey, 512);
-#if !defined(BOTAN_NO_RW)
    IF_SIG_KEY(RW_PrivateKey, 512);
-#endif
 
    DL_SIG_KEY(DSA_PrivateKey, "dsa/jce/512");
    DL_SIG_KEY(DSA_PrivateKey, "dsa/jce/768");
@@ -722,17 +689,13 @@ void do_pk_keygen_tests()
    DL_KEY(DH_PrivateKey, "modp/ietf/2048");
    DL_KEY(DH_PrivateKey, "dsa/jce/1024");
 
-#if !defined(BOTAN_NO_NR)
    DL_SIG_KEY(NR_PrivateKey, "dsa/jce/512");
    DL_SIG_KEY(NR_PrivateKey, "dsa/jce/768");
    DL_SIG_KEY(NR_PrivateKey, "dsa/jce/1024");
-#endif
 
-#if !defined(BOTAN_NO_ELG)
    DL_ENC_KEY(ElGamal_PrivateKey, "modp/ietf/768");
    DL_ENC_KEY(ElGamal_PrivateKey, "modp/ietf/1024");
    DL_ENC_KEY(ElGamal_PrivateKey, "dsa/jce/1024");
-#endif
 
    std::cout << std::endl;
    }
