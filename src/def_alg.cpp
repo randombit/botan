@@ -52,6 +52,7 @@
 #include <botan/whrlpool.h>
 #include <botan/par_hash.h>
 
+#include <botan/cbc_mac.h>
 #include <botan/cmac.h>
 #include <botan/hmac.h>
 #include <botan/x919_mac.h>
@@ -219,6 +220,7 @@ Default_Engine::find_mac(const std::string& algo_spec) const
       return 0;
    const std::string algo_name = deref_alias(name[0]);
 
+   HANDLE_TYPE_ONE_STRING("CBC-MAC", CBC_MAC);
    HANDLE_TYPE_ONE_STRING("CMAC", CMAC);
    HANDLE_TYPE_ONE_STRING("HMAC", HMAC);
    HANDLE_TYPE_NO_ARGS("X9.19-MAC", ANSI_X919_MAC);
