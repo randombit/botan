@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
       if(opts.is_set("seconds"))
          {
          seconds = std::atof(opts.value("seconds").c_str());
-         if((seconds < 0.1 || seconds > 30) && seconds != 0)
+         if(seconds && (seconds < 0.1 || seconds > (5 * 60)))
             {
             std::cout << "Invalid argument to --seconds\n";
             return 2;
