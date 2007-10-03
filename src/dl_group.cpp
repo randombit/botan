@@ -28,7 +28,12 @@ DL_Group::DL_Group()
 *************************************************/
 DL_Group::DL_Group(const std::string& type)
    {
-   DataSource_Memory pem(global_config().get("dl", type));
+   std::string grp_contents = global_config().get("dl", type);
+
+   if(grp_contents == "")
+      throw Invalid_Argument("DL_Group: Unknown group " + type);
+
+   DataSource_Memory pem(grp_contents);
    PEM_decode(pem);
    }
 
