@@ -57,8 +57,6 @@ int main(int argc, char* argv[])
       }
 
    try {
-      LibraryInitializer init;
-
       X509_Certificate cert(argv[1]);
 
       std::cout << "Version: " << cert.x509_version() << std::endl;

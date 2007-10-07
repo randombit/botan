@@ -28,8 +28,6 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   LibraryInitializer init;
-
    std::string CA_flag = argv[2];
    bool do_CA = false;
 

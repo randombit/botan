@@ -65,9 +65,6 @@ int main(int argc, char* argv[])
       }
 
    try {
-
-      LibraryInitializer init;
-
       std::auto_ptr<X509_PublicKey> key(X509::load_key(argv[1]));
       RSA_PublicKey* rsakey = dynamic_cast<RSA_PublicKey*>(key.get());
       if(!rsakey)

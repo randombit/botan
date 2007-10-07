@@ -18,8 +18,6 @@ int main(int argc, char* argv[])
 
    try
       {
-      LibraryInitializer init;
-
       if(argc == 2)
          std::cout << "H('" << argv[1] << "') = " << password_hash(argv[1]) << '\n';
       else

@@ -22,8 +22,6 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   Botan::LibraryInitializer init;
-
    std::string hash = argv[1];
    /* a couple of special cases, kind of a crock */
    if(hash == "sha1") hash = "SHA-1";

@@ -109,51 +109,49 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   try {
-
-   LibraryInitializer init;
-
-   if(!have_block_cipher(algo))
+   try
       {
-      std::cout << "Don't know about the block cipher \"" << algo << "\"\n";
-      return 1;
-      }
+      if(!have_block_cipher(algo))
+         {
+         std::cout << "Don't know about the block cipher \"" << algo << "\"\n";
+         return 1;
+         }
 
-   const u32bit key_len = max_keylength_of(algo);
-   const u32bit iv_len = block_size_of(algo);
+      const u32bit key_len = max_keylength_of(algo);
+      const u32bit iv_len = block_size_of(algo);
 
-   std::auto_ptr<S2K> s2k(get_s2k("PBKDF2(SHA-1)"));
-   s2k->set_iterations(8192);
-   s2k->new_random_salt(8);
+      std::auto_ptr<S2K> s2k(get_s2k("PBKDF2(SHA-1)"));
+      s2k->set_iterations(8192);
+      s2k->new_random_salt(8);
 
-   SymmetricKey bc_key = s2k->derive_key(key_len, "BLK" + passphrase);
-   InitializationVector iv = s2k->derive_key(iv_len, "IVL" + passphrase);
-   SymmetricKey mac_key = s2k->derive_key(16, "MAC" + passphrase);
+      SymmetricKey bc_key = s2k->derive_key(key_len, "BLK" + passphrase);
+      InitializationVector iv = s2k->derive_key(iv_len, "IVL" + passphrase);
+      SymmetricKey mac_key = s2k->derive_key(16, "MAC" + passphrase);
 
-   // Just to be all fancy we even write a (simple) header.
-   out << "-------- ENCRYPTED FILE --------" << std::endl;
-   out << algo << std::endl;
-   out << b64_encode(s2k->current_salt()) << std::endl;
+      // Just to be all fancy we even write a (simple) header.
+      out << "-------- ENCRYPTED FILE --------" << std::endl;
+      out << algo << std::endl;
+      out << b64_encode(s2k->current_salt()) << std::endl;
 
-   Pipe pipe(new Fork(
-                new Chain(new MAC_Filter("HMAC(SHA-1)", mac_key),
-                          new Base64_Encoder
-                   ),
-                new Chain(new Zlib_Compression,
-                          get_cipher(algo + "/CBC", bc_key, iv, ENCRYPTION),
-                          new Base64_Encoder(true)
+      Pipe pipe(new Fork(
+                   new Chain(new MAC_Filter("HMAC(SHA-1)", mac_key),
+                             new Base64_Encoder
+                      ),
+                   new Chain(new Zlib_Compression,
+                             get_cipher(algo + "/CBC", bc_key, iv, ENCRYPTION),
+                             new Base64_Encoder(true)
+                      )
                    )
-                )
-      );
+         );
 
-   pipe.start_msg();
-   in >> pipe;
-   pipe.end_msg();
+      pipe.start_msg();
+      in >> pipe;
+      pipe.end_msg();
 
-   out << pipe.read_all_as_string(0) << std::endl;
-   out << pipe.read_all_as_string(1);
+      out << pipe.read_all_as_string(0) << std::endl;
+      out << pipe.read_all_as_string(1);
 
-   }
+      }
    catch(Algorithm_Not_Found)
       {
       std::cout << "Don't know about the block cipher \"" << algo << "\"\n";

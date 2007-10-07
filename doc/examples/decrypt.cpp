@@ -80,9 +80,6 @@ int main(int argc, char* argv[])
    std::string algo;
 
    try {
-
-      LibraryInitializer init;
-
       std::string header, salt_str, mac_str;
       std::getline(in, header);
       std::getline(in, algo);

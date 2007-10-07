@@ -55,8 +55,6 @@ void XOR_Cipher::key(const byte key[], u32bit length)
 
 int main()
    {
-   LibraryInitializer init;
-
    add_algorithm(new XOR_Cipher); // make it available to use
    global_config().add_alias("Vernam", "XOR"); // make Vernam an alias for XOR
 

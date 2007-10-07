@@ -28,8 +28,6 @@ int main(int argc, char* argv[])
       }
 
    try {
-      LibraryInitializer init;
-
       // set up our CA
       X509_Certificate ca_cert("cacert.pem");
       std::auto_ptr<PKCS8_PrivateKey> privkey(

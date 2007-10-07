@@ -26,8 +26,6 @@ int main(int argc, char* argv[])
       }
 
    try {
-      LibraryInitializer init;
-
       RSA_PrivateKey priv_key(1024);
       // If you want a DSA key instead of RSA, comment out the above line and
       // uncomment this one:
