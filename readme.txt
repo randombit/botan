@@ -1,4 +1,4 @@
-Botan 1.7.1
+Botan 1.7.2 (prerelease)
 
 Please note that this is an experimental / development version of
 Botan.  Don't be surprised by bugs. No, the documentation hasn't been
