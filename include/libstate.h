@@ -22,6 +22,15 @@ namespace Botan {
 class Library_State
    {
    public:
+      Library_State();
+      ~Library_State();
+
+      void initialize(const InitializerOptions&, Modules&);
+
+      void load(Modules&);
+
+      void add_engine(class Engine*);
+
       class Engine_Iterator
          {
          public:
@@ -58,8 +67,6 @@ class Library_State
 
       class Config& config() const;
 
-      void add_engine(class Engine*);
-
       class Mutex* get_mutex() const;
       class Mutex* get_named_mutex(const std::string&);
 
@@ -72,9 +79,6 @@ class Library_State
       void set_transcoder(class Charset_Transcoder*);
       std::string transcode(const std::string,
                             Character_Set, Character_Set) const;
-
-      Library_State(const InitializerOptions&, Modules&);
-      ~Library_State();
    private:
       Library_State(const Library_State&) {}
       Library_State& operator=(const Library_State&) { return (*this); }

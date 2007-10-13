@@ -311,7 +311,6 @@ Config& Library_State::config() const
    {
    if(!config_obj)
       {
-      printf("Lazy creation of the global config\n");
       config_obj = new Config();
       config_obj->load_defaults();
       }
@@ -320,15 +319,22 @@ Config& Library_State::config() const
    }
 
 /*************************************************
-* Library_State Constructor                      *
+* Load a set of modules                          *
 *************************************************/
-Library_State::Library_State(const InitializerOptions& args,
-                             Modules& modules)
+void Library_State::initialize(const InitializerOptions& args,
+                               Modules& modules)
    {
+   if(mutex_factory)
+      throw Invalid_State("Library_State has already been initialized");
+
    if(args.thread_safe())
       mutex_factory = modules.mutex_factory();
    else
       mutex_factory = new Default_Mutex_Factory;
+
+   cached_default_allocator = 0;
+   x509_state_obj = 0;
+   ui = 0;
 
    timer = modules.timer();
    transcoder = modules.transcoder();
@@ -340,10 +346,6 @@ Library_State::Library_State(const InitializerOptions& args,
    locks["allocator"] = get_mutex();
    locks["rng"] = get_mutex();
    locks["engine"] = get_mutex();
-   rng = 0;
-   cached_default_allocator = 0;
-   x509_state_obj = 0;
-   ui = 0;
 
    std::vector<Allocator*> mod_allocs = modules.allocators();
    for(u32bit j = 0; j != mod_allocs.size(); ++j)
@@ -376,6 +378,24 @@ Library_State::Library_State(const InitializerOptions& args,
       if(!rng_is_seeded())
          throw PRNG_Unseeded("Unable to collect sufficient entropy");
       }
+   }
+
+/*************************************************
+* Library_State Constructor                      *
+*************************************************/
+Library_State::Library_State()
+   {
+   mutex_factory = 0;
+
+   timer = 0;
+   config_obj = 0;
+   x509_state_obj = 0;
+
+   ui = 0;
+   transcoder = 0;
+   rng = 0;
+   cached_default_allocator = 0;
+   ui = 0;
    }
 
 /*************************************************

@@ -18,7 +18,9 @@ void LibraryInitializer::initialize(const InitializerOptions& args,
    {
    try
       {
-      set_global_state(new Library_State(args, modules));
+      set_global_state(new Library_State);
+
+      global_state().initialize(args, modules);
 
       if(args.fips_mode() || args.self_test())
          {
