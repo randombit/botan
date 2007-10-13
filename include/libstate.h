@@ -8,6 +8,7 @@
 
 #include <botan/base.h>
 #include <botan/enums.h>
+#include <botan/init.h>
 #include <botan/ui.h>
 #include <string>
 #include <vector>
@@ -52,8 +53,6 @@ class Library_State
       void add_entropy(EntropySource&, bool);
       u32bit seed_prng(bool, u32bit);
 
-      void load(class Modules&);
-
       void set_timer(class Timer*);
       u64bit system_clock() const;
 
@@ -74,7 +73,7 @@ class Library_State
       std::string transcode(const std::string,
                             Character_Set, Character_Set) const;
 
-      Library_State(class Mutex_Factory*);
+      Library_State(const InitializerOptions&, Modules&);
       ~Library_State();
    private:
       Library_State(const Library_State&) {}
@@ -84,7 +83,7 @@ class Library_State
 
       class Mutex_Factory* mutex_factory;
       class Timer* timer;
-      class Config* config_obj;
+      mutable class Config* config_obj;
       class X509_GlobalState* x509_state_obj;
 
       std::map<std::string, class Mutex*> locks;

@@ -12,6 +12,7 @@
 #include <botan/mutex.h>
 #include <botan/timers.h>
 #include <botan/charset.h>
+#include <botan/x931_rng.h>
 #include <algorithm>
 
 namespace Botan {
@@ -136,11 +137,8 @@ void Library_State::set_default_allocator(const std::string& type) const
 *************************************************/
 void Library_State::set_timer(Timer* new_timer)
    {
-   if(new_timer)
-      {
-      delete timer;
-      timer = new_timer;
-      }
+   delete timer;
+   timer = new_timer;
    }
 
 /*************************************************
@@ -312,18 +310,40 @@ void Library_State::pulse(Pulse_Type pulse_type) const
 Config& Library_State::config() const
    {
    if(!config_obj)
-      throw Invalid_State("Library_State::config(): No config set");
+      {
+      printf("Lazy creation of the global config\n");
+      config_obj = new Config();
+      config_obj->load_defaults();
+      }
 
    return (*config_obj);
    }
 
 /*************************************************
-* Load modules                                   *
+* Library_State Constructor                      *
 *************************************************/
-void Library_State::load(Modules& modules)
+Library_State::Library_State(const InitializerOptions& args,
+                             Modules& modules)
    {
-   set_timer(modules.timer());
-   set_transcoder(modules.transcoder());
+   if(args.thread_safe())
+      mutex_factory = modules.mutex_factory();
+   else
+      mutex_factory = new Default_Mutex_Factory;
+
+   timer = modules.timer();
+   transcoder = modules.transcoder();
+
+   if(args.config_file() != "")
+      config().load_inifile(args.config_file());
+
+   locks["settings"] = get_mutex();
+   locks["allocator"] = get_mutex();
+   locks["rng"] = get_mutex();
+   locks["engine"] = get_mutex();
+   rng = 0;
+   cached_default_allocator = 0;
+   x509_state_obj = 0;
+   ui = 0;
 
    std::vector<Allocator*> mod_allocs = modules.allocators();
    for(u32bit j = 0; j != mod_allocs.size(); ++j)
@@ -341,29 +361,21 @@ void Library_State::load(Modules& modules)
    std::vector<EntropySource*> sources = modules.entropy_sources();
    for(u32bit j = 0; j != sources.size(); ++j)
       add_entropy_source(sources[j]);
-   }
 
-/*************************************************
-* Library_State Constructor                      *
-*************************************************/
-Library_State::Library_State(Mutex_Factory* mutex_factory)
-   {
-   if(!mutex_factory)
-      throw Exception("Library_State: no mutex found");
+   set_prng(new ANSI_X931_RNG);
 
-   this->mutex_factory = mutex_factory;
-   this->timer = new Timer();
-   this->transcoder = 0;
-   this->config_obj = new Config();
+   if(args.seed_rng())
+      {
+      for(u32bit j = 0; j != 4; ++j)
+         {
+         seed_prng(true, 384);
+         if(rng_is_seeded())
+            break;
+         }
 
-   locks["settings"] = get_mutex();
-   locks["allocator"] = get_mutex();
-   locks["rng"] = get_mutex();
-   locks["engine"] = get_mutex();
-   rng = 0;
-   cached_default_allocator = 0;
-   x509_state_obj = 0;
-   ui = 0;
+      if(!rng_is_seeded())
+         throw PRNG_Unseeded("Unable to collect sufficient entropy");
+      }
    }
 
 /*************************************************
