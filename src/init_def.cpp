@@ -6,7 +6,6 @@
 #include <botan/init.h>
 #include <botan/libstate.h>
 #include <botan/modules.h>
-#include <botan/fips140.h>
 
 namespace Botan {
 
@@ -21,12 +20,6 @@ void LibraryInitializer::initialize(const InitializerOptions& args,
       set_global_state(new Library_State);
 
       global_state().initialize(args, modules);
-
-      if(args.fips_mode() || args.self_test())
-         {
-         if(!FIPS140::passes_self_tests())
-            throw Self_Test_Failure("FIPS-140 startup tests");
-         }
       }
    catch(...)
       {
