@@ -90,7 +90,10 @@ void Twofish::dec(const byte in[], byte out[]) const
       B = rotate_right(B ^ Y, 1);
       }
 
-   C ^= round_key[0]; D ^= round_key[1]; A ^= round_key[2]; B ^= round_key[3];
+   C ^= round_key[0];
+   D ^= round_key[1];
+   A ^= round_key[2];
+   B ^= round_key[3];
 
    store_le(out, C, D, A, B);
    }
