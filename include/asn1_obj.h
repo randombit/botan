@@ -129,7 +129,7 @@ class AlternativeName : public ASN1_Object
       bool has_items() const;
 
       AlternativeName(const std::string& = "", const std::string& = "",
-                      const std::string& = "");
+                      const std::string& = "", const std::string& = "");
    private:
       std::multimap<std::string, std::string> alt_info;
       std::multimap<OID, ASN1_String> othernames;

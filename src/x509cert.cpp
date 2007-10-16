@@ -350,7 +350,7 @@ AlternativeName create_alt_name(const Data_Store& info)
       };
 
    std::multimap<std::string, std::string> names =
-      info.search_with(AltName_Matcher("RFC822/DNS/URI"));
+      info.search_with(AltName_Matcher("RFC822/DNS/URI/IP"));
 
    AlternativeName alt_name;
 
