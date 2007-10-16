@@ -27,6 +27,12 @@ u32bit parse_expr(const std::string&);
 std::string to_string(u64bit, u32bit = 0);
 u32bit to_u32bit(const std::string&);
 
+/*************************************************
+* String/Network Address Conversions             *
+*************************************************/
+u32bit string_to_ipv4(const std::string&);
+std::string ipv4_to_string(u32bit);
+
 }
 
 #endif
