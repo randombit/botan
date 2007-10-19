@@ -263,7 +263,7 @@ bool failed_test(const std::string& algo,
       bool OK = true;
 
       for(u32bit j = offset; j != offset+length; j++)
-         if((byte)output[j] != peekbuf[j-offset])
+         if(static_cast<byte>(output[j]) != peekbuf[j-offset])
             OK = false;
 
       if(!OK)

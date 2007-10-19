@@ -56,7 +56,7 @@ u32bit EGD_EntropySource::do_poll(byte output[], u32bit length,
    if(fd == -1) return 0;
 
    int len = sizeof(addr.sun_family) + std::strlen(addr.sun_path) + 1;
-   if(connect(fd, (struct sockaddr*)&addr, len))
+   if(connect(fd, reinterpret_cast<struct sockaddr*>(&addr), len))
       { close(fd); return 0; }
 
    byte buffer[2];

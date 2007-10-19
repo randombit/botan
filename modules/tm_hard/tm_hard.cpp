@@ -18,11 +18,11 @@ u64bit Hardware_Timer::clock() const
 #if defined(BOTAN_TARGET_ARCH_IS_IA32) || defined(BOTAN_TARGET_ARCH_IS_AMD64)
    u32bit rtc_low = 0, rtc_high = 0;
    asm volatile("rdtsc" : "=d" (rtc_high), "=a" (rtc_low));
-   rtc = ((u64bit)rtc_high << 32) | rtc_low;
+   rtc = (static_cast<u64bit>(rtc_high) << 32) | rtc_low;
 #elif defined(BOTAN_TARGET_ARCH_IS_PPC) || defined(BOTAN_TARGET_ARCH_IS_PPC64)
    u32bit rtc_low = 0, rtc_high = 0;
    asm volatile("mftbu %0; mftb %1" : "=r" (rtc_high), "=r" (rtc_low));
-   rtc = ((u64bit)rtc_high << 32) | rtc_low;
+   rtc = (static_cast<u64bit>(rtc_high) << 32) | rtc_low;
 #elif defined(BOTAN_TARGET_ARCH_IS_ALPHA)
    asm volatile("rpcc %0" : "=r" (rtc));
 #elif defined(BOTAN_TARGET_ARCH_IS_SPARC64)
