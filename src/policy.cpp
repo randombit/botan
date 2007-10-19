@@ -228,7 +228,7 @@ void set_default_config(Config& config)
    config.set_option("pem/width", "64");
 
    config.set_option("rng/ms_capi_prov_type", "INTEL_SEC:RSA_FULL");
-   config.set_option("rng/unix_path", "/usr/ucb:/usr/etc:/etc");
+   config.set_option("rng/unix_path", "/bin:/sbin:/usr/bin:/usr/sbin");
    config.set_option("rng/es_files", "/dev/urandom:/dev/random");
    config.set_option("rng/egd_path",
                      "/var/run/egd-pool:/dev/egd-pool");

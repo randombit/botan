@@ -86,12 +86,7 @@ void Unix_EntropySource::do_slow_poll()
    const u32bit TRY_TO_GET = 16 * 1024;
    const u32bit MINIMAL_WORKING = 32;
 
-   const std::string BASE_PATH = "/bin:/sbin:/usr/bin:/usr/sbin";
-   const std::string EXTRA_PATH = global_config().option("rng/unix_path");
-
-   std::string PATH = BASE_PATH;
-   if(EXTRA_PATH != "")
-      PATH += ':' + EXTRA_PATH;
+   const std::string PATH = global_config().option("rng/unix_path");
 
    u32bit got = 0;
    for(u32bit j = 0; j != sources.size(); j++)
