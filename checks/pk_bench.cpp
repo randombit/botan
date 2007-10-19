@@ -161,7 +161,8 @@ void bench_pk(const std::string& algo, bool html, double seconds)
          const std::string len_str = to_string(keylen[j]);
          const std::string file = "checks/keys/rw" + len_str + ".pem";
 
-         RW_PrivateKey* key = dynamic_cast<RW_PrivateKey*>(PKCS8::load_key(file));
+         RW_PrivateKey* key =
+            dynamic_cast<RW_PrivateKey*>(PKCS8::load_key(file));
 
          bench_ver(get_pk_signer(*key, "EMSA2(SHA-1)"),
                    get_pk_verifier(*key, "EMSA2(SHA-1)"),
@@ -201,9 +202,9 @@ void print_result(bool html, u32bit runs, u64bit clocks_used,
       std::cout.precision(2);
 
       if(PRINT_MS_PER_OP)
-         std::cout << mseconds_per_run << " ms / " << op << std::endl;
+         std::cout << mseconds_per_run << " ms / " << op << "\n";
       else
-         std::cout << runs_per_sec << " ops / second (" << op << ")" << std::endl;
+         std::cout << runs_per_sec << " ops / second (" << op << ")\n";
       }
    }
 
