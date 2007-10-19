@@ -838,10 +838,21 @@ sub load_modules {
                 $defines .= "#define BOTAN_TARGET_CPU_IS_$submodel\n";
             }
 
+            my $unaligned_ok = 0;
+
             if(defined($endian)) {
                 $endian = uc $endian;
                 $defines .= "#define BOTAN_TARGET_CPU_IS_${endian}_ENDIAN\n";
+
+                if(defined($cpu_info{'unaligned'})
+                   and $cpu_info{'unaligned'} eq 'ok')
+                {
+                    $unaligned_ok = 1;
+                }
             }
+
+            $defines .=
+                "#define BOTAN_TARGET_UNALIGNED_LOADSTOR_OK $unaligned_ok\n";
         }
 
         my @defarray;
@@ -1186,8 +1197,8 @@ sub get_arch_info {
 
     while($_ = &$reader()) {
         match_any_of($_, \%info, 'quoted', 'realname');
-        match_any_of($_, \%info, 'unquoted', 'default_submodel');
-        match_any_of($_, \%info, 'unquoted', 'endian');
+        match_any_of($_, \%info, 'unquoted',
+                     'default_submodel:endian:unaligned');
 
         read_list($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
         read_list($_, $reader, 'submodels', list_push(\@{$info{'submodels'}}));
