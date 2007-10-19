@@ -9,6 +9,7 @@
 #include <botan/config.h>
 #include <algorithm>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <sys/resource.h>
 #include <unistd.h>
 
@@ -46,6 +47,16 @@ void Unix_EntropySource::add_sources(const Unix_Program srcs[], u32bit count)
 *************************************************/
 void Unix_EntropySource::do_fast_poll()
    {
+   const char* STAT_TARGETS[] = { "/", "/tmp", ".", "..", 0 };
+
+   for(u32bit j = 0; STAT_TARGETS[j]; j++)
+      {
+      struct stat statbuf;
+      clear_mem(&statbuf, 1);
+      stat(STAT_TARGETS[j], &statbuf);
+      add_bytes(&statbuf, sizeof(statbuf));
+      }
+
    add_bytes(getpid());
    add_bytes(getppid());
 
@@ -90,7 +101,7 @@ void Unix_EntropySource::do_slow_poll()
       DataSource_Command pipe(sources[j].name_and_args, PATH);
       SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
 
-      uint32_t got_from_src = 0;
+      u32bit got_from_src = 0;
 
       while(!pipe.end_of_data())
          {
