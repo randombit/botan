@@ -3,6 +3,7 @@ realname "AMD64"
 default_submodel amd64
 
 endian little
+unaligned ok
 
 <aliases>
 x86-64

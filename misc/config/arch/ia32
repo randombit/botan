@@ -3,6 +3,7 @@ realname "IA-32"
 default_submodel i586
 
 endian little
+unaligned ok
 
 <aliases>
 x86
