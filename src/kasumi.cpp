@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/kasumi.h>
+#include <botan/loadstor.h>
 #include <botan/bit_ops.h>
 
 namespace Botan {

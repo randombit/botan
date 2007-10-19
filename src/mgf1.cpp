@@ -5,6 +5,7 @@
 
 #include <botan/mgf1.h>
 #include <botan/lookup.h>
+#include <botan/loadstor.h>
 #include <botan/bit_ops.h>
 #include <algorithm>
 #include <memory>

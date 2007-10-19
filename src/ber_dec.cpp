@@ -5,7 +5,7 @@
 
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
-#include <botan/bit_ops.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 

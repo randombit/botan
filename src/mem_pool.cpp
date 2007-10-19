@@ -6,7 +6,6 @@
 #include <botan/mem_pool.h>
 #include <botan/libstate.h>
 #include <botan/config.h>
-#include <botan/bit_ops.h>
 #include <botan/util.h>
 #include <algorithm>
 

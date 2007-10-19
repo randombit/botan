@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/reducer.h>
-#include <botan/bit_ops.h>
 #include <botan/numthry.h>
 #include <botan/mp_core.h>
 

@@ -6,7 +6,7 @@
 #include <botan/parsing.h>
 #include <botan/exceptn.h>
 #include <botan/charset.h>
-#include <botan/bit_ops.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 

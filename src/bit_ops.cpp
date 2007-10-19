@@ -3,12 +3,12 @@
 * (C) 1999-2007 The Botan Project                *
 *************************************************/
 
-#include <botan/bit_ops.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 
 /*************************************************
-* XOR arrays together                            *
+* Array XOR                                      *
 *************************************************/
 void xor_buf(byte data[], const byte mask[], u32bit length)
    {
@@ -24,6 +24,9 @@ void xor_buf(byte data[], const byte mask[], u32bit length)
       data[j] ^= mask[j];
    }
 
+/*************************************************
+* Array XOR                                      *
+*************************************************/
 void xor_buf(byte out[], const byte in[], const byte mask[], u32bit length)
    {
    while(length >= 8)

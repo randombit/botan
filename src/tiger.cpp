@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/tiger.h>
-#include <botan/bit_ops.h>
+#include <botan/loadstor.h>
 #include <botan/parsing.h>
 
 namespace Botan {

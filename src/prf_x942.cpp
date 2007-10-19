@@ -7,7 +7,7 @@
 #include <botan/der_enc.h>
 #include <botan/oids.h>
 #include <botan/lookup.h>
-#include <botan/bit_ops.h>
+#include <botan/loadstor.h>
 #include <algorithm>
 #include <memory>
 
