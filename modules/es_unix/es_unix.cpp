@@ -8,6 +8,9 @@
 #include <botan/parsing.h>
 #include <botan/config.h>
 #include <algorithm>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <unistd.h>
 
 namespace Botan {
 
@@ -43,7 +46,25 @@ void Unix_EntropySource::add_sources(const Unix_Program srcs[], u32bit count)
 *************************************************/
 void Unix_EntropySource::do_fast_poll()
    {
-   gather(2*1024);
+   add_bytes(getpid());
+   add_bytes(getppid());
+
+   add_bytes(getuid());
+   add_bytes(getgid());
+   add_bytes(geteuid());
+   add_bytes(getegid());
+
+   add_bytes(getpgrp());
+   add_bytes(getsid(0));
+
+   struct rusage usage;
+
+   clear_mem(&usage, 1);
+   getrusage(RUSAGE_SELF, &usage);
+   add_bytes(&usage, sizeof(usage));
+
+   getrusage(RUSAGE_CHILDREN, &usage);
+   add_bytes(&usage, sizeof(usage));
    }
 
 /*************************************************
@@ -51,34 +72,9 @@ void Unix_EntropySource::do_fast_poll()
 *************************************************/
 void Unix_EntropySource::do_slow_poll()
    {
-   gather(16*1024);
-   }
-
-/*************************************************
-* Gather Entropy From Several Unix_Programs      *
-*************************************************/
-void Unix_EntropySource::gather(u32bit target_amount)
-   {
+   const u32bit TRY_TO_GET = 16 * 1024;
    const u32bit MINIMAL_WORKING = 32;
 
-   u32bit got = 0;
-   for(u32bit j = 0; j != sources.size(); j++)
-      {
-      add_timestamp();
-
-      got += gather_from(sources[j]);
-      sources[j].working = (got >= MINIMAL_WORKING) ? true : false;
-
-      if(got >= target_amount)
-         break;
-      }
-   }
-
-/*************************************************
-* Gather entropy from a Unix program             *
-*************************************************/
-u32bit Unix_EntropySource::gather_from(const Unix_Program& prog)
-   {
    const std::string BASE_PATH = "/bin:/sbin:/usr/bin:/usr/sbin";
    const std::string EXTRA_PATH = global_config().option("rng/unix_path");
 
@@ -86,21 +82,29 @@ u32bit Unix_EntropySource::gather_from(const Unix_Program& prog)
    if(EXTRA_PATH != "")
       PATH += ':' + EXTRA_PATH;
 
-   DataSource_Command pipe(prog.name_and_args, PATH);
-   if(pipe.end_of_data())
-      return 0;
-
    u32bit got = 0;
-   SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
-
-   while(!pipe.end_of_data())
+   for(u32bit j = 0; j != sources.size(); j++)
       {
-      u32bit this_loop = pipe.read(buffer, buffer.size());
-      add_bytes(buffer, this_loop);
-      got += this_loop;
-      }
+      add_timestamp();
 
-   return got;
+      DataSource_Command pipe(sources[j].name_and_args, PATH);
+      SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
+
+      uint32_t got_from_src = 0;
+
+      while(!pipe.end_of_data())
+         {
+         u32bit this_loop = pipe.read(buffer, buffer.size());
+         add_bytes(buffer, this_loop);
+         got_from_src += this_loop;
+         }
+
+      sources[j].working = (got_from_src >= MINIMAL_WORKING) ? true : false;
+      got += got_from_src;
+
+      if(got >= TRY_TO_GET)
+         break;
+      }
    }
 
 }
