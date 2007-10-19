@@ -36,6 +36,7 @@ u32bit Buffered_EntropySource::fast_poll(byte out[], u32bit length)
 u32bit Buffered_EntropySource::slow_poll(byte out[], u32bit length)
    {
    do_slow_poll();
+   done_slow_poll = true;
    return copy_out(out, length, buffer.size());
    }
 
@@ -53,6 +54,7 @@ void Buffered_EntropySource::do_fast_poll()
 void Buffered_EntropySource::add_bytes(const void* entropy_ptr, u32bit length)
    {
    const byte* bytes = static_cast<const byte*>(entropy_ptr);
+
    while(length)
       {
       u32bit copied = std::min(length, buffer.size() - write_pos);
