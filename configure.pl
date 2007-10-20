@@ -98,7 +98,7 @@ sub main {
     choose_target($config, $target);
 
     my $os = $$config{'os'};
-    my $cc = $$config{'compiler'};
+    my $cc = $$config{'cc'};
 
     &$default_value_is('prefix', os_info_for($os, 'install_root'));
     &$default_value_is('libdir', os_info_for($os, 'lib_dir'));
@@ -362,7 +362,7 @@ sub choose_target {
     }
 
     add_to($config, {
-        'compiler'      => $cc,
+        'cc'            => $cc,
         'os'            => $os,
         'arch'          => $arch,
         'submodel'      => $submodel,
@@ -558,7 +558,7 @@ sub os_info_for {
 
 sub my_compiler {
     my ($config) = @_;
-    my $cc = $$config{'compiler'};
+    my $cc = $$config{'cc'};
 
     croak('my_compiler called, but no compiler set in config')
         unless defined $cc and $cc ne '';
@@ -901,7 +901,7 @@ sub load_module {
         unless(&$works_on($arch, @{$module{'arch'}}) or
                &$works_on($sub, @{$module{'arch'}}));
 
-    my $cc = $$config{'compiler'};
+    my $cc = $$config{'cc'};
 
     croak("Module '$modname' does not work with $cc")
         unless(&$works_on($cc, @{$module{'cc'}}));
@@ -1294,7 +1294,7 @@ sub get_cc_info {
 sub guess_mods {
     my ($config) = @_;
 
-    my $cc = $$config{'compiler'};
+    my $cc = $$config{'cc'};
     my $os = $$config{'os'};
     my $arch = $$config{'arch'};
     my $submodel = $$config{'submodel'};
@@ -1504,7 +1504,7 @@ sub generate_makefile {
        if($$config{'so_obj_flags'} eq '' and $$config{'so_link'} eq '') {
            $$config{'shared'} = 'no';
 
-           warning($$config{'compiler'}, ' has no shared object flags set ',
+           warning($$config{'cc'}, ' has no shared object flags set ',
                    "for $os; disabling shared");
        }
    }
