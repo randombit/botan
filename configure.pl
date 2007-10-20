@@ -98,7 +98,7 @@ sub main {
     choose_target($config, $target);
 
     my $os = $$config{'os'};
-    my $cc = $$config{'cc'};
+    my $cc = $$config{'compiler'};
 
     &$default_value_is('prefix', os_info_for($os, 'install_root'));
     &$default_value_is('libdir', os_info_for($os, 'lib_dir'));
@@ -362,7 +362,7 @@ sub choose_target {
     }
 
     add_to($config, {
-        'cc'            => $cc,
+        'compiler'      => $cc,
         'os'            => $os,
         'arch'          => $arch,
         'submodel'      => $submodel,
@@ -558,7 +558,7 @@ sub os_info_for {
 
 sub my_compiler {
     my ($config) = @_;
-    my $cc = $$config{'cc'};
+    my $cc = $$config{'compiler'};
 
     croak('my_compiler called, but no compiler set in config')
         unless defined $cc and $cc ne '';
@@ -901,7 +901,7 @@ sub load_module {
         unless(&$works_on($arch, @{$module{'arch'}}) or
                &$works_on($sub, @{$module{'arch'}}));
 
-    my $cc = $$config{'cc'};
+    my $cc = $$config{'compiler'};
 
     croak("Module '$modname' does not work with $cc")
         unless(&$works_on($cc, @{$module{'cc'}}));
@@ -1294,7 +1294,7 @@ sub get_cc_info {
 sub guess_mods {
     my ($config) = @_;
 
-    my $cc = $$config{'cc'};
+    my $cc = $$config{'compiler'};
     my $os = $$config{'os'};
     my $arch = $$config{'arch'};
     my $submodel = $$config{'submodel'};
@@ -1504,7 +1504,7 @@ sub generate_makefile {
        if($$config{'so_obj_flags'} eq '' and $$config{'so_link'} eq '') {
            $$config{'shared'} = 'no';
 
-           warning($$config{'cc'}, ' has no shared object flags set ',
+           warning($$config{'compiler'}, ' has no shared object flags set ',
                    "for $os; disabling shared");
        }
    }
@@ -1661,131 +1661,125 @@ sub guess_cpu_from_this
 
 # Do some WAGing and see if we can figure out what system we are. Think about
 # this as a really moronic config.guess
+sub guess_compiler
+{
+    my @CCS = ('gcc', 'msvc', 'icc', 'compaq', 'kai'); # Skips several, oh well...
+
+    # First try the CC enviornmental variable, if it's set
+    if(defined($ENV{CC}))
+    {
+        my @new_CCS = ($ENV{CC});
+        foreach my $cc (@CCS) { push @new_CCS, $cc; }
+        @CCS = @new_CCS;
+    }
+
+    foreach (@CCS)
+    {
+        my $bin_name = $COMPILER{$_}{'binary_name'};
+        return $_ if(which($bin_name) ne '');
+    }
+
+    croak(
+        "Can't find a usable C++ compiler, is your PATH right?\n" .
+        "You might need to run with explicit compiler/system flags;\n" .
+          "   run '$0 --help' for more information\n");
+}
+
+sub guess_os
+{
+    return 'aix'     if($^O eq 'aix');
+    return 'beos'    if($^O eq 'beos');
+    return 'cygwin'  if($^O eq 'cygwin');
+    return 'darwin'  if($^O eq 'darwin');
+    return 'freebsd' if($^O eq 'freebsd');
+    return 'hpux'    if($^O eq 'hpux');
+    return 'irix'    if($^O eq 'irix');
+    return 'linux'   if($^O eq 'linux');
+    return 'openbsd' if($^O eq 'openbsd');
+    return 'solaris' if($^O eq 'solaris');
+    return 'windows' if($^O eq 'MSWin32');
+    return 'windows' if($^O eq 'dos');
+
+    trace("Can't guess os from $^O");
+
+    my $os = lc `uname -s 2>/dev/null`; chomp $os;
+
+    # Cygwin's uname -s is cygwin_<windows version>
+    $os = 'cygwin' if($os =~ /^cygwin/);
+    $os = os_alias($os);
+
+    return $os if defined($OPERATING_SYSTEM{$os});
+
+    warning("Unknown OS ('$^O', '$os'), falling back to generic code");
+    return 'generic';
+}
+
+sub guess_cpu
+{
+    # If we have /proc/cpuinfo, try to get nice specific information about
+    # what kind of CPU we're running on.
+    my $cpuinfo = '/proc/cpuinfo';
+
+    if(-e $cpuinfo and -r $cpuinfo)
+    {
+        my $cpu = guess_cpu_from_this(slurp_file($cpuinfo));
+        return $cpu if $cpu;
+    }
+
+    # `umame -p` is sometimes something stupid like unknown, but in some
+    # cases it can be more specific (useful) than `uname -m`
+    my $uname_p = `uname -p 2>/dev/null`;
+    chomp $uname_p;
+    my $cpu = guess_cpu_from_this($uname_p);
+
+    # If guess_cpu_from_this didn't figure it out, try it as is
+    if($cpu eq '') { $cpu = lc $uname_p; }
+
+    sub known_arch {
+        my ($name) = @_;
+
+        foreach my $arch (keys %CPU) {
+            my %info = %{$CPU{$arch}};
+
+            return 1 if $name eq $info{'name'};
+            foreach my $submodel (@{$info{'submodels'}}) {
+                return 1 if $name eq $submodel;
+            }
+
+            foreach my $alias (@{$info{'aliases'}}) {
+                return 1 if $name eq $alias;
+            }
+
+            if(defined($info{'submodel_aliases'})) {
+                my %submodel_aliases = %{$info{'submodel_aliases'}};
+                foreach my $sm_alias (keys %submodel_aliases) {
+                    return 1 if $name eq $sm_alias;
+                }
+            }
+        }
+        return 0;
+ }
+
+    if(!known_arch($cpu))
+    {
+        # Nope, couldn't figure out uname -p
+        $cpu = lc `uname -m 2>/dev/null`;
+        chomp $cpu;
+
+        if(!known_arch($cpu))
+        {
+            $cpu = 'generic';
+        }
+    }
+
+    return $cpu;
+}
+
 sub guess_triple
 {
-    # /bin/sh, good bet we're on something Unix-y (at least it'll have uname)
-    if(-f '/bin/sh')
-    {
-        my $os = lc `uname -s 2>/dev/null`; chomp $os;
+    my $os = guess_os();
+    my $cc = guess_compiler();
+    my $cpu = guess_cpu();
 
-        # Let the crappy hacks commence!
-
-        # Cygwin's uname -s is cygwin_<windows version>
-        $os = 'cygwin' if($os =~ /^cygwin/);
-        $os = os_alias($os);
-
-        if(!defined $OPERATING_SYSTEM{$os})
-        {
-            warning("Unknown uname -s output: $os, falling back to 'generic'");
-            $os = 'generic';
-        }
-
-        my $cpu = '';
-
-        # If we have /proc/cpuinfo, try to get nice specific information about
-        # what kind of CPU we're running on.
-        my $cpuinfo = '/proc/cpuinfo';
-
-        if(-e $cpuinfo and -r $cpuinfo)
-        {
-            $cpu = guess_cpu_from_this(slurp_file($cpuinfo));
-        }
-
-        # `umame -p` is sometimes something stupid like unknown, but in some
-        # cases it can be more specific (useful) than `uname -m`
-        if($cpu eq '') # no guess so far
-        {
-            my $uname_p = `uname -p 2>/dev/null`;
-            chomp $uname_p;
-            $cpu = guess_cpu_from_this($uname_p);
-
-            # If guess_cpu_from_this didn't figure it out, try it plain
-            if($cpu eq '') { $cpu = lc $uname_p; }
-
-            sub known_arch {
-                my ($name) = @_;
-
-                foreach my $arch (keys %CPU) {
-                    my %info = %{$CPU{$arch}};
-
-                    return 1 if $name eq $info{'name'};
-                    foreach my $submodel (@{$info{'submodels'}}) {
-                        return 1 if $name eq $submodel;
-                    }
-
-                    foreach my $alias (@{$info{'aliases'}}) {
-                        return 1 if $name eq $alias;
-                    }
-
-                    if(defined($info{'submodel_aliases'})) {
-                        my %submodel_aliases = %{$info{'submodel_aliases'}};
-                        foreach my $sm_alias (keys %submodel_aliases) {
-                            return 1 if $name eq $sm_alias;
-                        }
-                    }
-                }
-                return 0;
-            }
-
-            if(!known_arch($cpu))
-            {
-                # Nope, couldn't figure out uname -p
-                $cpu = lc `uname -m 2>/dev/null`;
-                chomp $cpu;
-
-                if(!known_arch($cpu))
-                {
-                    $cpu = 'generic';
-                }
-            }
-        }
-
-        my @CCS = ('gcc', 'icc', 'compaq', 'kai'); # Skips several, oh well...
-
-        # First try the CC enviornmental variable, if it's set
-        if(defined($ENV{CC}))
-        {
-            my @new_CCS = ($ENV{CC});
-            foreach my $cc (@CCS) { push @new_CCS, $cc; }
-            @CCS = @new_CCS;
-        }
-
-        my $cc = '';
-        foreach (@CCS)
-        {
-            my $bin_name = $COMPILER{$_}{'binary_name'};
-            $cc = $_ if(which($bin_name) ne '');
-            last if($cc ne '');
-        }
-
-        if($cc eq '') {
-            my $msg =
-               "Can't find a usable C++ compiler, is your PATH right?\n" .
-               "You might need to run with explicit compiler/system flags;\n" .
-               "   run '$0 --help' for more information\n";
-            croak($msg);
-        }
-
-        return "$cc-$os-$cpu";
-    }
-    elsif($^O eq 'MSWin32' or $^O eq 'dos')
-    {
-        my $os = 'windows'; # obviously
-
-        # Suggestions on this? The Win32 'shell' env is not so hot. We could
-        # try using cpuinfo, except that will crash hard on NT/Alpha (like what
-        # we're doing now won't!). In my defense of choosing i686:
-        #   a) There are maybe a few hundred Alpha/MIPS boxes running NT4 today
-        #   b) Anyone running Windows on < Pentium Pro deserves to lose.
-        my $cpu = 'i686';
-
-        # No /bin/sh, so not cygwin. Assume VC++; again, this could be much
-        # smarter
-        my $cc = 'msvc';
-        return "$cc-$os-$cpu";
-    }
-    else
-    {
-        croak('Autoconfiguration failed (try --help)');
-    }
+    return "$cc-$os-$cpu";
 }
