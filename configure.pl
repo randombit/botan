@@ -210,7 +210,7 @@ sub display_help {
    my $sets = join('|', sort keys %MODULE_SETS);
 
    my $helptxt = <<ENDOFHELP;
-Usage: $0 [options] CC-OS-CPU
+Usage: $0 [options]
 
 See doc/building.pdf for more information about this program.
 
@@ -220,6 +220,10 @@ Options:
   --docdir=PATH:       install documentation in \${prefix}/\${docdir}
   --build-dir=DIR:     setup the build in DIR
   --local-config=FILE: include the contents of FILE into build.h
+
+  --cc=COMPILER:       specify what compiler to use
+  --os=OS:             specify what operating system
+  --cpu=ARCH:          specify CPU type
 
   --modules=MODS:      add module(s) MODS to the library.
   --module-set=SET:    add a pre-specified set of modules ($sets)
@@ -291,17 +295,18 @@ sub display_module_info {
 # 
 ##################################################
 sub choose_target {
-    my ($config, $target) = @_;
+    my ($config) = @_;
 
-    if($target eq '' and $$config{'autoconfig'}) {
-        $target = guess_triple();
-        autoconfig("Guessing your system config is $target");
-    }
+    my $cc = $$config{'compiler'};
+    my $os = $$config{'os'};
+    my $cpu = $$config{'cpu'};
 
-    my ($cc,$os,$submodel) = split(/-/,$target,3);
+    $cc = guess_compiler() if not defined($cc);
+    $os = guess_os() if not defined($os);
+    $cpu = guess_cpu() if not defined($cpu);
 
     display_help()
-        unless(defined($cc) and defined($os) and defined($submodel));
+        unless(defined($cc) and defined($os) and defined($cpu));
 
     croak("Compiler $cc isn't known (try --help)")
         unless defined($COMPILER{$cc});
@@ -312,8 +317,7 @@ sub choose_target {
     croak("OS $os isn't known (try --help)") unless
         ($os eq 'generic' or defined($OPERATING_SYSTEM{$os}));
 
-    my $arch = undef;
-    ($arch, $submodel) = figure_out_arch($submodel);
+    my ($arch, $submodel) = figure_out_arch($cpu);
 
     croak(realname($os), " doesn't run on $arch ($submodel)")
         unless($arch eq 'generic' or $os eq 'generic' or
@@ -411,6 +415,10 @@ sub get_options {
                'help' => sub { display_help(); },
                'module-info' => sub { display_module_info(); },
                'version' => sub { emit_help("Botan $VERSION_STRING\n") },
+
+               'cc=s' => sub { &$save_option('compiler', $_[1]) },
+               'os=s' => sub { &$save_option(@_) },
+               'cpu=s' => sub { &$save_option(@_) },
 
                'prefix=s' => sub { &$save_option(@_); },
                'docdir=s' => sub { &$save_option(@_); },
@@ -1676,6 +1684,7 @@ sub guess_compiler
     foreach (@CCS)
     {
         my $bin_name = $COMPILER{$_}{'binary_name'};
+        autoconfig("Guessing your compiler is $_");
         return $_ if(which($bin_name) ne '');
     }
 
@@ -1690,7 +1699,10 @@ sub guess_os
      sub recognize_os
      {
          my $os = os_alias($_[0]);
-         return $os if defined($OPERATING_SYSTEM{$os});
+         if(defined($OPERATING_SYSTEM{$os})) {
+             autoconfig("Guessing your operating system is $os");
+             return $os;
+         }
          return undef;
      }
 
@@ -1721,7 +1733,10 @@ sub guess_cpu
     if(-e $cpuinfo and -r $cpuinfo)
     {
         my $cpu = guess_cpu_from_this(slurp_file($cpuinfo));
-        return $cpu if $cpu;
+        if($cpu) {
+            autoconfig("Guessing (based on $cpuinfo) that your CPU is a $cpu");
+            return $cpu;
+        }
     }
 
     # `umame -p` is sometimes something stupid like unknown, but in some
@@ -1770,14 +1785,6 @@ sub guess_cpu
         }
     }
 
+    autoconfig("Guessing (based on uname -p) your CPU is a $cpu");
     return $cpu;
-}
-
-sub guess_triple
-{
-    my $os = guess_os();
-    my $cc = guess_compiler();
-    my $cpu = guess_cpu();
-
-    return "$cc-$os-$cpu";
 }
