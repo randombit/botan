@@ -254,7 +254,7 @@ Usage for $0 (Botan $VERSION_STRING)
   --build-dir=DIR:     setup the build in DIR
   --local-config=FILE: include the contents of FILE into build.h
   --debug:             set compiler flags for debugging
-  --disable-shared:    disable building shared libararies
+  --no-shared:         don't build shared libararies
   --make-style=STYLE:  override the guess as to what type of makefile to use
 
   To change what modules to use:
@@ -440,7 +440,7 @@ sub get_options {
 
                'trace' => sub { $TRACING = 1; },
                'debug' => sub { &$save_option($_[0], 1); },
-               'disable-shared' => sub { $$config{'shared'} = 'no'; },
+               'no-shared' => sub { $$config{'shared'} = 'no'; },
 
                'noauto' => sub { $$config{'autoconfig'} = 0; },
                'dumb-gcc|gcc295x' => sub { $$config{'gcc_bug'} = 1; }
