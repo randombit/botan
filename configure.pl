@@ -95,7 +95,7 @@ sub main {
         $$config{'lib_prefix'} = '';
     }
 
-    choose_target($config, $target);
+    choose_target($config);
 
     my $os = $$config{'os'};
     my $cc = $$config{'compiler'};
@@ -180,7 +180,7 @@ sub croak {
 }
 
 sub warning {
-    warn with_diagnostic('note', @_);
+    warn with_diagnostic('warning', @_);
 }
 
 sub autoconfig {
@@ -241,7 +241,8 @@ sub display_help {
    my $cpus = &$listing(keys %CPU);
 
    my $helptxt = <<ENDOFHELP;
-Usage for $0 (Botan $VERSION_STRING)
+
+Usage for $0 (Botan $VERSION_STRING):
 
   To change where the library is installed:
 
@@ -347,27 +348,24 @@ sub choose_target {
 
             $gcc_version = '' if not defined $gcc_version;
 
-            # Some versions of GCC are a little buggy dealing with
-            # long long in C++. The last check is because on Cygwin
-            # (at least for me) gcc_version doesn't get the output,
-            # maybe something to do with the stderr redirection? If
-            # it's Cygwin and we didn't get output, assume it's a
-            # buggy GCC. There is no reduction in code quality so even
-            # if we're wrong it's OK.
+            my $has_ll_bug = 0;
+            $has_ll_bug = 1 if($gcc_version =~ /4\.[0123]/);
+            $has_ll_bug = 1 if($gcc_version =~ /3\.[34]/);
+            $has_ll_bug = 1 if($gcc_version =~ /2\.25\.[0-4]/);
+            $has_ll_bug = 1 if($gcc_version eq '');
 
-            if(($gcc_version =~ /4\.[01]/) || ($gcc_version =~ /3\.[34]/) ||
-               ($gcc_version =~ /2\.95\.[0-4]/) ||
-               ($gcc_version eq '' && $^O eq 'cygwin'))
+            $has_ll_bug = 0 if($arch eq 'alpha' or $arch =~ /.*64$/);
+
+            if($has_ll_bug)
             {
                 warning('Enabling -fpermissive to work around ',
                         'possible GCC bug');
 
                 $$config{'gcc_bug'} = 1;
             }
-            if($gcc_version =~ /2\.95\.[0-4]/)
-            {
-                warning('GCC 2.95.x issues many spurious warnings');
-            }
+
+            warning('GCC 2.95.x issues many spurious warnings')
+                if($gcc_version =~ /2\.95\.[0-4]/);
         }
     }
 
@@ -455,8 +453,9 @@ sub get_options {
 
     my $mod_str = join(',', @modules);
 
-    return ('', $mod_str) if($#ARGV == -1);
-    return ($ARGV[0], $mod_str) if($#ARGV == 0);
+    return $mod_str if($#ARGV == -1);
+
+    warning("Unknown options $ARGV[0]");
     display_help();
 }
 
