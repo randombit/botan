@@ -1,6 +1,6 @@
 realname "Intel C++"
 
-binary_name "icc"
+binary_name "icpc"
 
 compile_option "-c "
 output_to_option "-o "
@@ -14,7 +14,7 @@ debug_flags "-g"
 no_debug_flags ""
 lang_flags ""
 warning_flags "-w1"
-so_obj_flags "-KPIC"
+so_obj_flags "-fPIC"
 
 makefile_style unix
 
