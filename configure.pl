@@ -1687,30 +1687,28 @@ sub guess_compiler
 
 sub guess_os
 {
-    return 'aix'     if($^O eq 'aix');
-    return 'beos'    if($^O eq 'beos');
-    return 'cygwin'  if($^O eq 'cygwin');
-    return 'darwin'  if($^O eq 'darwin');
-    return 'freebsd' if($^O eq 'freebsd');
-    return 'hpux'    if($^O eq 'hpux');
-    return 'irix'    if($^O eq 'irix');
-    return 'linux'   if($^O eq 'linux');
-    return 'openbsd' if($^O eq 'openbsd');
-    return 'solaris' if($^O eq 'solaris');
-    return 'windows' if($^O eq 'MSWin32');
-    return 'windows' if($^O eq 'dos');
+     sub recognize_os
+     {
+         my $os = os_alias($_[0]);
+         return $os if defined($OPERATING_SYSTEM{$os});
+         return undef;
+     }
+
+    my $guess = recognize_os($^O);
+    return $guess if $guess;
 
     trace("Can't guess os from $^O");
 
-    my $os = lc `uname -s 2>/dev/null`; chomp $os;
+    my $uname = `uname -s 2>/dev/null`;
+    chomp $uname;
+    $uname = lc $uname;
 
-    # Cygwin's uname -s is cygwin_<windows version>
-    $os = 'cygwin' if($os =~ /^cygwin/);
-    $os = os_alias($os);
+    $guess = recognize_os($uname);
+    return $guess if $guess;
 
-    return $os if defined($OPERATING_SYSTEM{$os});
+    trace("Can't guess os from $uname");
 
-    warning("Unknown OS ('$^O', '$os'), falling back to generic code");
+    warning("Unknown OS ('$^O', '$uname'), falling back to generic code");
     return 'generic';
 }
 
