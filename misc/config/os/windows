@@ -27,4 +27,5 @@ ia64  # in theory
 
 <aliases>
 win32
+mswin32
 </aliases>
