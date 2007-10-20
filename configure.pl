@@ -209,41 +209,9 @@ sub trace {
 sub display_help {
    my $sets = join('|', sort keys %MODULE_SETS);
 
-   my $helptxt = <<ENDOFHELP;
-Usage: $0 [options]
-
-See doc/building.pdf for more information about this program.
-
-Options:
-  --prefix=PATH:       set the base installation directory
-  --libdir=PATH:       install library files in \${prefix}/\${libdir}
-  --docdir=PATH:       install documentation in \${prefix}/\${docdir}
-  --build-dir=DIR:     setup the build in DIR
-  --local-config=FILE: include the contents of FILE into build.h
-
-  --cc=COMPILER:       specify what compiler to use
-  --os=OS:             specify what operating system
-  --cpu=ARCH:          specify CPU type
-
-  --modules=MODS:      add module(s) MODS to the library.
-  --module-set=SET:    add a pre-specified set of modules ($sets)
-  --module-info:       display some information about known modules
-
-  --debug:             set compiler flags for debugging
-  --disable-shared:    disable building shared libararies
-  --noauto:            disable autoconfiguration
-  --make-style=STYLE:  override the guess as to what type of makefile to use
-
-You may use 'generic' for OS or CPU (useful if your OS or CPU isn't listed).
-
-CPU can be a generic family name or a specific model name. Common aliases are
-supported but not listed. Choosing a specific submodel will usually result in
-code that will not run on earlier versions of that architecture.
-
-ENDOFHELP
 
    my $listing = sub {
-       my ($header, @list) = @_;
+       my (@list) = @_;
 
        return '' if (@list == 0);
 
@@ -255,24 +223,62 @@ ENDOFHELP
           $len += length $to_append;
        };
 
-       &$append($header . ': ');
-
        foreach my $name (sort @list) {
            next if $name eq 'defaults';
            if($len > 71) {
-               $output .= "\n   ";
+               $output .= "\n        ";
                $len = 3;
            }
            &$append($name . ' ');
        }
-       return $output . "\n";
+       chop $output;
+       return $output;
    };
 
-    emit_help($helptxt,
-              &$listing('CC', keys %COMPILER),
-              &$listing('OS', keys %OPERATING_SYSTEM),
-              &$listing('CPU', keys %CPU),
-              &$listing('Modules', keys %MODULES));
+   my $modules = &$listing(keys %MODULES);
+   my $compilers = &$listing(keys %COMPILER);
+   my $oses =  &$listing(keys %OPERATING_SYSTEM);
+   my $cpus = &$listing(keys %CPU);
+
+   my $helptxt = <<ENDOFHELP;
+Usage for $0 (Botan $VERSION_STRING)
+
+  To change where the library is installed:
+
+  --prefix=PATH:       set the base installation directory
+  --libdir=PATH:       install library files in \${prefix}/\${libdir}
+  --docdir=PATH:       install documentation in \${prefix}/\${docdir}
+
+  To change build options:
+
+  --build-dir=DIR:     setup the build in DIR
+  --local-config=FILE: include the contents of FILE into build.h
+  --debug:             set compiler flags for debugging
+  --disable-shared:    disable building shared libararies
+  --make-style=STYLE:  override the guess as to what type of makefile to use
+
+  To change what modules to use:
+
+  --modules=
+       [$modules]
+
+  --module-set=[$sets]: Add a prespecified group of modules
+
+  --module-info:       display more information about modules
+  --noauto:            don't enable any modules unless specifically named
+
+  Normally $0 will guess the right compiler, OS, and CPU.
+  To override it:
+
+  --cc=[$compilers]
+  --os=[$oses generic]
+  --cpu=[$cpus generic]
+
+See doc/building.pdf for more information about this program.
+
+ENDOFHELP
+
+    emit_help($helptxt);
 }
 
 ##################################################
