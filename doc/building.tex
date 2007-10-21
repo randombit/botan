@@ -55,41 +55,27 @@ beginning script files, or that have Perl installed in an unusual
 spot, you might need to prefix the \texttt{configure.pl} command with
 \texttt{perl} or \texttt{/path/to/perl}.
 
-The autoconfiguaration abilities of \filename{configure.pl} were only recently
-added, so they may break if you run it on something unusual. In addition, you
-are certain to get more features, and possibly better optimization, by
-explicitly specifying how you want to library configured. How to do this is
-detailed below. Also, if you don't want to use the default compiler (typically
-either GNU C++ or Visual C++, depending on the platform), you will need to
-specify one.
-
 \section{Building the Library}
 
-The first step is to run \filename{configure.pl}, which is a Perl script that
-creates various directories, config files, and a Makefile for building
-everything. It is run as \verb|./configure.pl CC-OS-CPU <extra args>|. The
-script requires at least Perl 5.6; any later version should also work.
+The first step is to run \filename{configure.pl}, which is a Perl
+script that creates various directories, config files, and a Makefile
+for building everything. The script requires at least Perl 5.6; any
+later version should also work.
 
-The tuple CC-OS-CPU specifies what system Botan is being built for, in terms of
-the C++ compiler, the operating system, and the CPU model. For example, to use
-GNU C++ on a FreeBSD box that has an Alpha EV6 CPU, one would use
-``gcc-freebsd-alphaev6'', and for Visual C++ on Windows with a Pentium II,
-``msvc-windows-pentium2''. To get the list of values for \verb|CC|, \verb|OS|,
-and \verb|CPU| that \filename{configure.pl} supports, run it with the
-``\verb|--help|'' option.
+The script will attempt to guess what kind of system you are trying
+to compile for (and will print messages telling you what it guessed).
+You can override this process by passing the options \verb|--cc|,
+\verb|--os|, and \verb|--arch| -- acceptable values are printed if
+you run \verb|configure.pl| with \verb|--help|.
 
-You can put basically anything reasonable for CPU: the script knows
-about a large number of different architectures, their sub-models, and
-common aliases for them. The script does not display all the
-possibilities in its help message because there are simply too many
-entries. You should only select the 64-bit version of a CPU (such as
-``sparc64'' or ``mips64'') if your operating system knows how to
+You can pass basically anything reasonable with \verb|--cpu|: the
+script knows about a large number of different architectures, their
+sub-models, and common aliases for them. The script does not display
+all the possibilities in its help message because there are simply too
+many entries. You should only select the 64-bit version of a CPU (such
+as ``sparc64'' or ``mips64'') if your operating system knows how to
 handle 64-bit object code -- a 32-bit kernel on a 64-bit CPU will
-generally not like 64-bit code. For example, gcc-solaris-sparc64 will
-not work unless you're running a 64-bit Solaris kernel (for 32-bit
-Solaris running on an UltraSPARC system, you want
-gcc-solaris-sparc32-v9). You may or may not have to install 64-bit
-versions of libc and related system libraries as well.
+generally not like 64-bit code.
 
 The script also knows about the various extension modules
 available. You can enable one or more with the option
@@ -128,12 +114,15 @@ script for VMS), you will need to create a new template file in
 The basic build procedure on Unix and Unix-like systems is:
 
 \begin{verbatim}
-   $ ./configure.pl CC-OS-CPU --module-set=[unix|beos] --modules=<other mods>
+   $ ./configure.pl --module-set=[unix|beos] --modules=<other mods>
    $ make
    # You may need to set your LD_LIBRARY_PATH or equivalent for ./check to run
    $ make check # optional, but a good idea
    $ make install
 \end{verbatim}
+
+This will probably default to using GCC, depending on what can be
+found within your PATH.
 
 The 'unix' module set should work on most POSIX/Unix systems out there
 (including MacOS X), while the 'beos' module is specific to BeOS. While the two
@@ -142,9 +131,9 @@ particular, BeOS doesn't have a working \function{mmap} function), and BeOS has
 a few extras just for it. The library will pick a default module set for you
 based on the value of OS, so there is rarely a reason to specify that.
 
-The \verb|make install| target has a default directory in which it will install
-Botan (on everything that's a real Unix, it's \verb|/usr/local|). You can
-override this by using the \texttt{--prefix} argument to
+The \verb|make install| target has a default directory in which it
+will install Botan (typically \verb|/usr/local|). You can override
+this by using the \texttt{--prefix} argument to
 \filename{configure.pl}, like so:
 
 \verb|./configure.pl --prefix=/opt <other arguments>|
@@ -173,15 +162,16 @@ The situation is not much different here. We'll assume you're using Visual C++
 have a copy of Perl installed, and have both Perl and Visual C++ in your path.
 
 \begin{verbatim}
-   > perl configure.pl msvc-windows-<CPU> --module-set=win32
+   > perl configure.pl --cc=msvc --os=windows [--cpu=CPU] --module-set=win32
    > nmake
    > nmake check # optional, but recommended
 \end{verbatim}
 
-By default, the configure script will include the 'win32' module set for you.
-This includes a pair of entropy sources for use on Windows; at some point in
-the future it will also add support for high-resolution timers, mutexes for
-thread safety, and other useful things.
+The configure script will include the 'win32' module set by default if
+you pass \verb|--os=windows|. This module set includes a pair of
+entropy sources for use on Windows; at some point in the future it
+will also add support for high-resolution timers, mutexes for thread
+safety, and other useful things.
 
 For Win95 pre OSR2, the \verb|es_capi| module will not work, because
 CryptoAPI didn't exist. All versions of NT4 lack the ToolHelp32
