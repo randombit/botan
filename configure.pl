@@ -282,6 +282,13 @@ Usage for $0 (Botan $VERSION_STRING):
   --os=[$oses generic]
   --cpu=[$cpus generic]
 
+  --endian=[little big none]
+  --unaligned-mem=[yes no]
+
+  For more information about support CPUs, use --arch-info:
+
+  --arch-info=[$cpus]
+
 See doc/building.pdf for more information about this program.
 
 ENDOFHELP
@@ -292,7 +299,7 @@ ENDOFHELP
 ##################################################
 # Display Further Information about Modules      #
 ##################################################
-sub display_module_info {
+sub module_info {
 
     my $info = '';
     foreach my $mod (sort keys %MODULES) {
@@ -302,7 +309,8 @@ sub display_module_info {
         while(length($mod) < 10) { $mod .= ' '; }
         $info .= "$mod - $fullname\n";
     }
-    emit_help($info);
+
+    return $info;
 }
 
 ##################################################
@@ -315,9 +323,9 @@ sub choose_target {
     my $os = $$config{'os'};
     my $cpu = $$config{'cpu'};
 
+    $cpu = guess_cpu() if not defined($cpu);
     $cc = guess_compiler() if not defined($cc);
     $os = guess_os() if not defined($os);
-    $cpu = guess_cpu() if not defined($cpu);
 
     display_help()
         unless(defined($cc) and defined($os) and defined($cpu));
@@ -415,11 +423,48 @@ sub get_options {
 
     $$config{'verbose'} = 1;
 
+    sub arch_info {
+        my $arg = $_[0];
+
+        my $arch = find_arch($arg);
+
+        unless(defined($arch) and defined($CPU{$arch})) {
+            warning("Unknown arch name '$arg' passed to --arch-info (try --help)");
+            return '';
+        }
+
+        my %info = %{ $CPU{$arch} };
+
+        my $out = "Information for $arg ($arch)\n--------\n";
+
+        if(@{$info{'aliases'}}) {
+            $out .= 'Aliases: ' . join(' ', @{$info{'aliases'}}) . "\n";
+        }
+
+        if(@{$info{'submodels'}}) {
+            $out .= 'Submodels: ' . join(' ', @{$info{'submodels'}}) . "\n";
+        }
+
+        foreach my $k (keys %{$info{'submodel_aliases'}}) {
+            $out .= "Alias '$k' -> '" . $info{'submodel_aliases'}{$k} . "'\n";
+        }
+
+        if(defined($info{'endian'})) {
+            $out .= 'Default endian: ' . $info{'endian'} . "\n";
+        }
+
+        if(defined($info{'unaligned'})) {
+            $out .= 'Unaligned memory access: ' . $info{'unaligned'} . "\n";
+        }
+
+        return $out;
+    }
+
     my $module_set = '';
     my @modules;
     exit 1 unless GetOptions(
                'help' => sub { display_help(); },
-               'module-info' => sub { display_module_info(); },
+               'module-info' => sub { emit_help(module_info()); },
                'version' => sub { emit_help("Botan $VERSION_STRING\n") },
 
                'quiet' => sub { $$config{'verbose'} = 0; },
@@ -427,6 +472,10 @@ sub get_options {
                'cc=s' => sub { &$save_option('compiler', $_[1]) },
                'os=s' => sub { &$save_option(@_) },
                'cpu=s' => sub { &$save_option(@_) },
+               'endian=s' => sub { &$save_option(@_); },
+               'unaligned-mem=s' => sub { &$save_option(@_); },
+
+               'arch-info=s' => sub { emit_help(arch_info($_[1])); },
 
                'prefix=s' => sub { &$save_option(@_); },
                'docdir=s' => sub { &$save_option(@_); },
@@ -466,6 +515,29 @@ sub get_options {
 ##################################################
 # Functions to search the info tables            #
 ##################################################
+sub find_arch {
+    my $name = $_[0];
+
+    foreach my $arch (keys %CPU) {
+        my %info = %{$CPU{$arch}};
+
+        return $arch if($name eq $arch);
+
+        foreach my $alias (@{$info{'aliases'}}) {
+            return $arch if($name eq $alias);
+        }
+
+        foreach my $submodel (@{$info{'submodels'}}) {
+            return $arch if($name eq $submodel);
+        }
+
+        foreach my $submodel (keys %{$info{'submodel_aliases'}}) {
+            return $arch if($name eq $submodel);
+        }
+    }
+    return undef;
+};
+
 sub figure_out_arch {
     my ($name) = @_;
 
@@ -490,30 +562,7 @@ sub figure_out_arch {
         return '';
     };
 
-    my $find_arch = sub {
-        my $name = $_[0];
-
-        foreach my $arch (keys %CPU) {
-            my %info = %{$CPU{$arch}};
-
-            return $arch if($name eq $arch);
-
-            foreach my $alias (@{$info{'aliases'}}) {
-                return $arch if($name eq $alias);
-            }
-
-            foreach my $submodel (@{$info{'submodels'}}) {
-                return $arch if($name eq $submodel);
-            }
-
-            foreach my $submodel (keys %{$info{'submodel_aliases'}}) {
-                return $arch if($name eq $submodel);
-            }
-        }
-        return undef;
-    };
-
-    my $arch = &$find_arch($name);
+    my $arch = find_arch($name);
     croak("Arch type $name isn't known (try --help)") unless defined $arch;
     trace("mapped name '$name' to arch '$arch'");
 
@@ -524,7 +573,7 @@ sub figure_out_arch {
     if($submodel eq '') {
         $submodel = $archinfo{'default_submodel'};
 
-        warning("Using $submodel as default type for family ", realname($arch))
+        autoconfig("Using $submodel as default type for family ", realname($arch))
            if($submodel ne $arch);
     }
 
@@ -849,8 +898,15 @@ sub load_modules {
             my %cpu_info = %{$CPU{$arch}};
             my $endian = $cpu_info{'endian'};
 
-            $arch = uc $arch;
-            $defines .= "#define BOTAN_TARGET_ARCH_IS_$arch\n";
+            if(defined($$config{'endian'})) {
+                $endian = $$config{'endian'};
+                $endian = undef unless($endian eq 'little' || $endian eq 'big');
+            }
+            elsif(defined($endian)) {
+                autoconfig("Since arch is $arch, assuming $endian endian mode");
+            }
+
+            $defines .= "#define BOTAN_TARGET_ARCH_IS_" . (uc $arch) . "\n";
 
             my $submodel = $$config{'submodel'};
             if($arch ne $submodel) {
@@ -865,9 +921,25 @@ sub load_modules {
                 $endian = uc $endian;
                 $defines .= "#define BOTAN_TARGET_CPU_IS_${endian}_ENDIAN\n";
 
-                if(defined($cpu_info{'unaligned'})
-                   and $cpu_info{'unaligned'} eq 'ok')
+                if(defined($$config{'unaligned_mem'})) {
+                    my $spec = $$config{'unaligned_mem'};
+
+                    if($spec eq 'yes') {
+                        $unaligned_ok = 1;
+                    }
+                    elsif($spec eq 'no') {
+                        $unaligned_ok = 0;
+                    }
+                    else {
+                        warning("Unknown arg to --unaligned-mem '$spec', will ignore");
+                        $unaligned_ok = 0;
+                    }
+                }
+                elsif(defined($cpu_info{'unaligned'}) and
+                      $cpu_info{'unaligned'} eq 'ok')
                 {
+                    autoconfig("Since arch is $arch, " .
+                               "assuming unaligned memory access is OK");
                     $unaligned_ok = 1;
                 }
             }
