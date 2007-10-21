@@ -380,6 +380,8 @@ sub choose_target {
 sub choose_modules {
     my ($config, $mod_str) = @_;
 
+    $mod_str = '' unless defined $mod_str;
+
     my @modules = grep { $_ ne '' } split(/,/, $mod_str);
 
     if($$config{'autoconfig'})
