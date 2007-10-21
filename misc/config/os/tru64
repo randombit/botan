@@ -6,10 +6,6 @@ os_type unix
 all
 </supports_shared>
 
-<arch>
-alpha
-</arch>
-
 <aliases>
 osf1
 </aliases>

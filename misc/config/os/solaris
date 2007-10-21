@@ -9,12 +9,6 @@ install_cmd_exec install -u OWNER -g GROUP -m 755
 all
 </supports_shared>
 
-<arch>
-ia32
-sparc32
-sparc64
-</arch>
-
 <aliases>
 sunos
 </aliases>

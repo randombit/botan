@@ -35,12 +35,3 @@ core2duo -> "-mcpu=core"
 ia32     -> "-mcpu=anyx86"
 amd64    -> "-mcpu=athlon64"
 </mach_opt>
-
-<os>
-linux
-</os>
-
-<arch>
-ia32
-amd64
-</arch>

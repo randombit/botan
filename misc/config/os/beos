@@ -11,11 +11,6 @@ doc_dir documentation
 all
 </supports_shared>
 
-<arch>
-ia32
-ppc
-</arch>
-
 <aliases>
 haiku
 </aliases>

@@ -24,12 +24,3 @@ default -> "$(CXX) -shared -soname $(SONAME)"
 <mach_opt>
 alpha -> "-arch=SUBMODEL" alpha-
 </mach_opt>
-
-<arch>
-alpha
-</arch>
-
-<os>
-tru64
-linux
-</os>

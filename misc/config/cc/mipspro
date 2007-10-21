@@ -37,12 +37,3 @@ mips64-r10000 -> "-mips4 -r10000"
 mips32 -> "-n32"
 mips64 -> "-64"
 </mach_abi_linking>
-
-<arch>
-mips32
-mips64
-</arch>
-
-<os>
-irix
-</os>

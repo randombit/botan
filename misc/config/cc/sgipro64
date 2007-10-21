@@ -25,11 +25,3 @@ default -> "$(CXX) -shared -Wl,-soname,$(SONAME)"
 <mach_opt>
 
 </mach_opt>
-
-<arch>
-ia64
-</arch>
-
-<os>
-linux
-</os>

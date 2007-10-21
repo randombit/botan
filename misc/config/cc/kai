@@ -25,22 +25,3 @@ default -> "$(CXX) --soname $(SONAME)"
 <mach_abi_linking>
 all -> "--one_per"
 </mach_abi_linking>
-
-<arch>
-alpha
-hppa
-ia32
-mips32
-mips64
-sparc32
-sparc64
-</arch>
-
-<os>
-hpux
-irix
-linux
-solaris
-tru64
-</os>
-

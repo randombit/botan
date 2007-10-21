@@ -22,19 +22,9 @@ makefile_style unix
 i686     -> "-march=pentium3"
 athlon   -> "-march=pentium3"
 pentium4 -> "-march=pentium4"
-"core2duo" -> "-march=sse3"
+core2duo -> "-march=sse3"
 </mach_opt>
 
 <so_link_flags>
 default -> "$(CXX) -fPIC -shared"
 </so_link_flags>
-
-<arch>
-amd64
-ia32
-ia64
-</arch>
-
-<os>
-linux
-</os>

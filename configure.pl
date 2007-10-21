@@ -326,17 +326,6 @@ sub choose_target {
 
     my ($arch, $submodel) = figure_out_arch($cpu);
 
-    croak(realname($os), " doesn't run on $arch ($submodel)")
-        unless($arch eq 'generic' or $os eq 'generic' or
-               in_array($arch, $OPERATING_SYSTEM{$os}{'arch'}));
-
-    croak(realname($cc), " doesn't run on $arch ($submodel)")
-        unless($arch eq 'generic' or
-               (in_array($arch, $ccinfo{'arch'})));
-
-    croak(realname($cc), " doesn't run on ", realname($os))
-        unless($os eq 'generic' or (in_array($os, $ccinfo{'os'})));
-
     # hacks
     if($cc eq 'gcc') {
         $ccinfo{'binary_name'} = 'c++' if($os eq 'darwin');
@@ -368,6 +357,8 @@ sub choose_target {
                 if($gcc_version =~ /2\.95\.[0-4]/);
         }
     }
+
+    autoconfig("$cc $os $arch $submodel");
 
     add_to($config, {
         'compiler'      => $cc,
@@ -1248,7 +1239,6 @@ sub get_os_info {
                    'install_cmd_data:install_cmd_exec');
 
         read_list($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
-        read_list($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
 
         read_list($_, $reader, 'supports_shared',
                   list_push(\@{$info{'supports_shared'}}));
@@ -1276,9 +1266,6 @@ sub get_cc_info {
                    'debug_flags:no_debug_flags');
 
         match_any_of($_, \%info, 'unquoted', 'makefile_style');
-
-        read_list($_, $reader, 'os', list_push(\@{$info{'os'}}));
-        read_list($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
 
         sub quoted_mapping {
             my $hashref = $_[0];

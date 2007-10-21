@@ -26,12 +26,3 @@ athlon   -> "-tp k7"
 pentium4 -> "-tp p6"
 ia32     -> "-tp px"
 </mach_opt>
-
-<arch>
-ia32
-</arch>
-
-<os>
-linux
-solaris
-</os>

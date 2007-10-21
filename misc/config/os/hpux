@@ -8,11 +8,6 @@ so_suffix sl
 all
 </supports_shared>
 
-<arch>
-hppa
-ia64
-</arch>
-
 <aliases>
 hp-ux
 </aliases>
