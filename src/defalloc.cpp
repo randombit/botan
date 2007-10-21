@@ -50,7 +50,7 @@ void do_free(void* ptr, u32bit n, bool do_lock)
 /*************************************************
 * Malloc_Allocator's Allocation                  *
 *************************************************/
-void* Malloc_Allocator::alloc_block(u32bit n)
+void* Malloc_Allocator::allocate(u32bit n)
    {
    return do_malloc(n, false);
    }
@@ -58,7 +58,7 @@ void* Malloc_Allocator::alloc_block(u32bit n)
 /*************************************************
 * Malloc_Allocator's Deallocation                *
 *************************************************/
-void Malloc_Allocator::dealloc_block(void* ptr, u32bit n)
+void Malloc_Allocator::deallocate(void* ptr, u32bit n)
    {
    do_free(ptr, n, false);
    }
