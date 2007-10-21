@@ -82,8 +82,10 @@ sub main {
     &$default_value_is('local_config', '');
 
     if(defined($$config{'build-dir'})) {
-        $$config{'botan-config'} = File::Spec->catfile($$config{'build-dir'}, 'botan-config');
-        $$config{'makefile'} = File::Spec->catfile($$config{'build-dir'}, 'Makefile');
+        $$config{'botan-config'} =
+            File::Spec->catfile($$config{'build-dir'}, 'botan-config');
+        $$config{'makefile'} =
+            File::Spec->catfile($$config{'build-dir'}, 'Makefile');
         $$config{'check_prefix'} = $$config{'build-dir'};
         $$config{'lib_prefix'} = $$config{'build-dir'};
     }
@@ -358,7 +360,7 @@ sub choose_target {
         }
     }
 
-    autoconfig("$cc $os $arch $submodel");
+    trace("using $cc $os $arch $submodel");
 
     add_to($config, {
         'compiler'      => $cc,
@@ -1308,19 +1310,35 @@ sub guess_mods {
     foreach my $mod (sort keys %MODULES) {
         my %modinfo = %{ $MODULES{$mod} };
 
-        next if($modinfo{'load_on'} eq 'request');
-        next if(!$asm_ok and $modinfo{'load_on'} eq 'asm_ok');
+        if($modinfo{'load_on'} eq 'request') {
+            autoconfig("Won't use module $mod - by request only");
+            next;
+        }
+        if(!$asm_ok and $modinfo{'load_on'} eq 'asm_ok') {
+            autoconfig("Won't use module $mod - uses assembly, using --debug");
+            next;
+        }
 
         my @cc_list = @{ $modinfo{'cc'} };
-        next if(scalar @cc_list > 0 && !in_array($cc, \@cc_list));
+        if(scalar @cc_list > 0 && !in_array($cc, \@cc_list)) {
+            autoconfig("Won't use module $mod - not compatbile with $cc");
+            next;
+        }
 
         my @os_list = @{ $modinfo{'os'} };
-        next if(scalar @os_list > 0 && !in_array($os, \@os_list));
+        if(scalar @os_list > 0 && !in_array($os, \@os_list)) {
+            autoconfig("Won't use module $mod - not compatible with $os");
+            next;
+        }
 
         my @arch_list = @{ $modinfo{'arch'} };
-        next if(scalar @arch_list > 0 &&
-                !in_array($arch, \@arch_list) &&
-                !in_array($submodel, \@arch_list));
+        if(scalar @arch_list > 0 &&
+           !in_array($arch, \@arch_list) &&
+           !in_array($submodel, \@arch_list)) {
+            autoconfig("Won't use module $mod - " .
+                       "doesn't run on $arch/$submodel");
+            next;
+        }
 
         push @usable_modules, $mod;
     }
@@ -1665,7 +1683,7 @@ sub guess_cpu_from_this
 # this as a really moronic config.guess
 sub guess_compiler
 {
-    my @CCS = ('gcc', 'msvc', 'icc', 'compaq', 'kai'); # Skips several, oh well...
+    my @CCS = ('gcc', 'msvc', 'icc', 'compaq', 'kai');
 
     # First try the CC enviornmental variable, if it's set
     if(defined($ENV{CC}))
@@ -1678,7 +1696,7 @@ sub guess_compiler
     foreach (@CCS)
     {
         my $bin_name = $COMPILER{$_}{'binary_name'};
-        autoconfig("Guessing your compiler is $_");
+        autoconfig("Guessing you want to use $_ as the compiler");
         return $_ if(which($bin_name) ne '');
     }
 
