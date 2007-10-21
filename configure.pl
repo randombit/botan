@@ -37,6 +37,8 @@ my $TRACING = 0;
 ##################################################
 # Run main() and Quit                            #
 ##################################################
+my $config = {};
+
 main();
 exit;
 
@@ -44,8 +46,6 @@ exit;
 # Main Driver                                    #
 ##################################################
 sub main {
-    my $config = {};
-
     my $base_dir = where_am_i();
 
     $$config{'base-dir'} = $base_dir;
@@ -140,9 +140,11 @@ sub main {
 
     load_modules($config);
 
-    mkdirs($$config{'build-dir'},
-           $$config{'build_include'}, $$config{'build_include_botan'},
-           $$config{'build_lib'}, $$config{'build_check'});
+    my @dirs = mkdirs($$config{'build-dir'},
+                      $$config{'build_include'}, $$config{'build_include_botan'},
+                      $$config{'build_lib'}, $$config{'build_check'});
+
+    #autoconfig('Created ' . join(' ', @dirs)) if @dirs;
 
     write_pkg_config($config);
 
@@ -186,7 +188,8 @@ sub warning {
 }
 
 sub autoconfig {
-    print with_diagnostic('autoconfig', @_);
+    print with_diagnostic('autoconfig', @_)
+        if($$config{'verbose'});
 }
 
 sub emit_help {
@@ -245,6 +248,8 @@ sub display_help {
    my $helptxt = <<ENDOFHELP;
 
 Usage for $0 (Botan $VERSION_STRING):
+
+  --quiet              display only warnings and errors
 
   To change where the library is installed:
 
@@ -408,12 +413,16 @@ sub get_options {
         $$config{$opt} = $val;
     };
 
+    $$config{'verbose'} = 1;
+
     my $module_set = '';
     my @modules;
     exit 1 unless GetOptions(
                'help' => sub { display_help(); },
                'module-info' => sub { display_module_info(); },
                'version' => sub { emit_help("Botan $VERSION_STRING\n") },
+
+               'quiet' => sub { $$config{'verbose'} = 0; },
 
                'cc=s' => sub { &$save_option('compiler', $_[1]) },
                'os=s' => sub { &$save_option(@_) },
@@ -716,11 +725,15 @@ sub dir_list {
 
 sub mkdirs {
     my (@dirs) = @_;
+
+    my @created;
     foreach my $dir (@dirs) {
         next if( -e $dir and -d $dir ); # skip it if it's already there
         mkdir($dir, 0777) or
             croak("Could not create directory $dir ($!)");
+        push @created, $dir;
     }
+    return @created;
 }
 
 sub slurp_file {
@@ -1626,6 +1639,8 @@ sub generate_makefile {
    trace("'$make_style' -> '$template'");
 
    process_template($template, $$config{'makefile'}, $config);
+
+   #autoconfig('Created ' . $$config{'makefile'});
 }
 
 ##################################################
