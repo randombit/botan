@@ -11,7 +11,7 @@ add_lib_option "-l"
 lib_opt_flags "-O3 -ip -unroll"
 check_opt_flags "-O2"
 debug_flags "-g"
-no_debug_flags ""
+no_debug_flags "-fomit-frame-pointer"
 lang_flags ""
 warning_flags "-w1"
 so_obj_flags "-fPIC"
@@ -19,14 +19,14 @@ so_obj_flags "-fPIC"
 makefile_style unix
 
 <mach_opt>
-i586     -> "-tpp5"
-i686     -> "-tpp6 -xiM"
-athlon   -> "-tpp6 -xiM"
-pentium4 -> "-tpp7 -xiMW"
+i686     -> "-march=pentium3"
+athlon   -> "-march=pentium3"
+pentium4 -> "-march=pentium4"
+"core2duo" -> "-march=sse3"
 </mach_opt>
 
 <so_link_flags>
-default -> "$(CXX) -KPIC -shared"
+default -> "$(CXX) -fPIC -shared"
 </so_link_flags>
 
 <arch>
