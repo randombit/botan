@@ -11,3 +11,4 @@
 ^build/include/botan/.*\.h$
 ^build/build\.h$
 ^misc/nist_tests/x509test$
+^doc/examples/.*\.pem$
