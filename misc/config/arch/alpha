@@ -1,6 +1,7 @@
 realname "DEC Alpha"
 
 default_submodel alpha-ev5
+endian little
 
 <aliases>
 axp
