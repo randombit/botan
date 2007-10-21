@@ -68,7 +68,7 @@ sub main {
         'version'       => $VERSION_STRING,
         });
 
-    my ($target, $module_list) = get_options($config);
+    my $module_list = get_options($config);
 
     my $default_value_is = sub {
         my ($var, $val) = @_;
@@ -379,7 +379,7 @@ sub choose_modules {
 
     if($$config{'autoconfig'})
     {
-        foreach my $mod (guess_mods($config)) {
+        foreach my $mod (guess_mods($config, @modules)) {
 
             autoconfig("Enabling module $mod")
                 unless in_array($mod, \@modules);
@@ -1296,7 +1296,7 @@ sub get_cc_info {
 }
 
 sub guess_mods {
-    my ($config) = @_;
+    my ($config, @modules) = @_;
 
     my $cc = $$config{'compiler'};
     my $os = $$config{'os'};
@@ -1311,7 +1311,8 @@ sub guess_mods {
         my %modinfo = %{ $MODULES{$mod} };
 
         if($modinfo{'load_on'} eq 'request') {
-            autoconfig("Won't use module $mod - by request only");
+            autoconfig("Won't use module $mod - by request only")
+                unless in_array($mod, \@modules);
             next;
         }
         if(!$asm_ok and $modinfo{'load_on'} eq 'asm_ok') {
