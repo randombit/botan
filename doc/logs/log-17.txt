@@ -1,5 +1,10 @@
 
-* 1.7.2, Oct 13, 2007
+* 1.7.3, November 4, 2007
+ - New invocation syntax for configure.pl
+ - Support for IPv4 addresses in a subject alternative name
+ - New generic Unix entropy source (es_unix) fast poll
+
+* 1.7.2, October 13, 2007
  - Initialize the global library state lazily
  - Add plain CBC-MAC for backwards compatability with old systems
  - Clean up some of the self test code
