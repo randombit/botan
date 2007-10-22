@@ -2,7 +2,7 @@ realname "Hardware Timer"
 
 define TIMER_HARDWARE
 
-load_on: asm_ok
+load_on asm_ok
 
 <add>
 tm_hard.cpp

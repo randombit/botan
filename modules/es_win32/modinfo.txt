@@ -4,8 +4,9 @@ realname "Win32 Entropy Source"
 #note "This module will not run under NT4"
 
 define ENTROPY_SRC_WIN32
+modset win32
 
-load_on: auto
+load_on auto
 
 <add>
 es_win32.h

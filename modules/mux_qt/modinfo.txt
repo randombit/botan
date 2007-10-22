@@ -4,7 +4,7 @@ define MUTEX_QT
 
 note "You'll probably have to add -I/-L flags to the Makefile to find Qt"
 
-load_on: request
+load_on request
 
 <add>
 mux_qt.cpp

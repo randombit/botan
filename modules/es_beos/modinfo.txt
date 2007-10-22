@@ -1,8 +1,9 @@
 realname "BeOS Entropy Source"
 
 define ENTROPY_SRC_BEOS
+modset beos
 
-load_on: auto
+load_on auto
 
 <add>
 es_beos.h

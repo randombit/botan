@@ -1,6 +1,6 @@
 realname "Memory Locking for Unix"
 
-load_on: auto
+load_on auto
 
 <replace>
 mlock.cpp

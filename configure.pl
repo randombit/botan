@@ -24,14 +24,6 @@ my @DOCS = (
    'credits.txt', 'info.txt', 'license.txt', 'log.txt',
    'thanks.txt', 'todo.txt', 'pgpkeys.asc');
 
-my %MODULE_SETS =
-    (
-     'unix' => [ 'alloc_mmap', 'es_egd', 'es_ftw', 'es_unix', 'fd_unix',
-                 'tm_unix' ],
-     'beos' => [ 'es_beos', 'es_unix', 'fd_unix', 'tm_unix' ],
-     'win32' => ['es_capi', 'es_win32', 'mux_win32', 'tm_win32' ],
-     );
-
 my $TRACING = 0;
 
 ##################################################
@@ -68,7 +60,7 @@ sub main {
         'version'       => $VERSION_STRING,
         });
 
-    my $module_list = get_options($config);
+    get_options($config);
 
     my $default_value_is = sub {
         my ($var, $val) = @_;
@@ -107,7 +99,7 @@ sub main {
     &$default_value_is('docdir', os_info_for($os, 'doc_dir'));
     &$default_value_is('make_style', $COMPILER{$cc}{'makefile_style'});
 
-    my @modules = choose_modules($config, $module_list);
+    autoload_modules($config) if($$config{'autoconfig'});
 
     add_to($config, {
         'includedir'    => os_info_for($os, 'header_dir'),
@@ -119,9 +111,8 @@ sub main {
         'build_include_botan' =>
             File::Spec->catdir($$config{'build-dir'}, 'include', 'botan'),
 
-        'modules'       => [ @modules ],
-        'mp_bits'       => find_mp_bits(@modules),
-        'mod_libs'      => [ using_libs($os, @modules) ],
+        'mp_bits'       => find_mp_bits(sort keys %{$$config{'modules'}}),
+        'mod_libs'      => [ using_libs($os, sort keys %{$$config{'modules'}}) ],
 
         'sources'       => {
             map_to($$config{'src-dir'}, dir_list($$config{'src-dir'}))
@@ -212,44 +203,60 @@ sub trace {
 # Display Help and Quit                          #
 ##################################################
 sub display_help {
-   my $sets = join('|', sort keys %MODULE_SETS);
+    sub module_sets {
+        my %modsets;
+        for my $name (sort keys %MODULES) {
+            my %info = %{$MODULES{$name}};
+            next unless (defined($info{'modset'}));
 
+            for my $s (split(/,/, $info{'modset'})) {
+                $modsets{$s} = undef;
+            }
+        }
 
-   my $listing = sub {
-       my (@list) = @_;
+        return sort keys %modsets;
+    }
 
-       return '' if (@list == 0);
+    my $sets = join(' ', module_sets());
 
-       my ($output, $len) = ('', 0);
+    my $listing = sub {
+        my (@list) = @_;
 
-       my $append = sub {
-          my ($to_append) = @_;
-          $output .= $to_append;
-          $len += length $to_append;
-       };
+        return '' if (@list == 0);
 
-       foreach my $name (sort @list) {
-           next if $name eq 'defaults';
-           if($len > 71) {
-               $output .= "\n        ";
-               $len = 3;
-           }
-           &$append($name . ' ');
-       }
-       chop $output;
-       return $output;
-   };
+        my ($output, $len) = ('', 0);
 
-   my $modules = &$listing(keys %MODULES);
-   my $compilers = &$listing(keys %COMPILER);
-   my $oses =  &$listing(keys %OPERATING_SYSTEM);
-   my $cpus = &$listing(keys %CPU);
+        my $append = sub {
+            my ($to_append) = @_;
+            $output .= $to_append;
+            $len += length $to_append;
+        };
 
-   my $helptxt = <<ENDOFHELP;
+        foreach my $name (sort @list) {
+            next if $name eq 'defaults';
+            if($len > 71) {
+                $output .= "\n        ";
+                $len = 3;
+            }
+            &$append($name . ' ');
+        }
+        chop $output;
+        return $output;
+    };
+
+    my $modules = &$listing(keys %MODULES);
+    my $compilers = &$listing(keys %COMPILER);
+    my $oses =  &$listing(keys %OPERATING_SYSTEM);
+    my $cpus = &$listing(keys %CPU);
+
+    my $helptxt = <<ENDOFHELP;
 
 Usage for $0 (Botan $VERSION_STRING):
 
+  --help               display this help
+  --version            display the version of Botan
   --quiet              display only warnings and errors
+  --trace              enable tracing
 
   To change where the library is installed:
 
@@ -261,6 +268,7 @@ Usage for $0 (Botan $VERSION_STRING):
 
   --build-dir=DIR:     setup the build in DIR
   --local-config=FILE: include the contents of FILE into build.h
+
   --debug:             set compiler flags for debugging
   --no-shared:         don't build shared libararies
   --make-style=STYLE:  override the guess as to what type of makefile to use
@@ -383,33 +391,59 @@ sub choose_target {
     });
 }
 
-sub choose_modules {
-    my ($config, $mod_str) = @_;
+# Add modules that we think would work (unless autoconfig is off)
+# to $$config{'modules'}
+sub autoload_modules {
+    my ($config) = @_;
 
-    $mod_str = '' unless defined $mod_str;
+    my $cc = $$config{'compiler'};
+    my $os = $$config{'os'};
+    my $arch = $$config{'arch'};
+    my $submodel = $$config{'submodel'};
 
-    my @modules = grep { $_ ne '' } split(/,/, $mod_str);
+    my $asm_ok = $$config{'asm_ok'};
 
-    if($$config{'autoconfig'})
-    {
-        foreach my $mod (guess_mods($config, @modules)) {
+    foreach my $mod (sort keys %MODULES) {
+        my %modinfo = %{ $MODULES{$mod} };
 
-            autoconfig("Enabling module $mod")
-                unless in_array($mod, \@modules);
-
-            push @modules, $mod;
+        if(defined($$config{'modules'}{$mod})) {
+            autoconfig("Module $mod - loading by user request");
+            next;
         }
-    }
 
-    # Uniqify @modules
-    my %uniqed_mods = map_to(undef, @modules);
-    @modules = sort keys %uniqed_mods;
+        if($modinfo{'load_on'} eq 'request') {
+            autoconfig("Module $mod - won't use, loaded by request only");
+            next;
+        }
+        if(!$asm_ok and $modinfo{'load_on'} eq 'asm_ok') {
+            autoconfig("Module $mod - won't use; avoiding due to use of --no-asm");
+            next;
+        }
 
-    foreach (@modules) {
-        croak("Module '$_' isn't known (try --help)")
-            unless defined $MODULES{$_};
+        my @cc_list = @{ $modinfo{'cc'} };
+        if(scalar @cc_list > 0 && !in_array($cc, \@cc_list)) {
+            autoconfig("Module $mod - won't use, not compatbile with CC $cc");
+            next;
+        }
+
+        my @os_list = @{ $modinfo{'os'} };
+        if(scalar @os_list > 0 && !in_array($os, \@os_list)) {
+            autoconfig("Module $mod - won't use, not compatible with OS $os");
+            next;
+        }
+
+        my @arch_list = @{ $modinfo{'arch'} };
+        if(scalar @arch_list > 0 &&
+           !in_array($arch, \@arch_list) &&
+           !in_array($submodel, \@arch_list)) {
+            autoconfig("Module $mod - won't use, " .
+                       "doesn't run on CPU $arch/$submodel");
+            next;
+        }
+
+        autoconfig("Module $mod - autoloading");
+        $$config{'modules'}{$mod} = 1;
     }
-    return @modules;
 }
 
 sub get_options {
@@ -422,6 +456,8 @@ sub get_options {
     };
 
     $$config{'verbose'} = 1;
+    $$config{'asm_ok'} = 1;
+    $$config{'modules'} = {};
 
     sub arch_info {
         my $arg = $_[0];
@@ -460,8 +496,32 @@ sub get_options {
         return $out;
     }
 
-    my $module_set = '';
-    my @modules;
+    sub add_modules {
+        my ($config,$mods) = @_;
+
+        foreach my $mod (split(/,/, $mods)) {
+            $$config{'modules'}{$mod} = 1;
+        }
+    }
+
+    sub add_module_sets {
+        my ($config,$sets) = @_;
+
+        foreach my $set (split(/,/, $sets)) {
+            for my $name (sort keys %MODULES) {
+                my %info = %{$MODULES{$name}};
+
+                next unless (defined($info{'modset'}));
+
+                for my $s (split(/,/, $info{'modset'})) {
+                    if($s eq $set) {
+                        $$config{'modules'}{$name} = 1;
+                    }
+                }
+            }
+        }
+    }
+
     exit 1 unless GetOptions(
                'help' => sub { display_help(); },
                'module-info' => sub { emit_help(module_info()); },
@@ -486,30 +546,22 @@ sub get_options {
 
                'make-style=s' => sub { &$save_option(@_); },
 
-               'modules=s' => \@modules,
-               'module-set=s' => \$module_set,
+               'module=s' => sub { add_modules($config, $_[1]); },
+               'modules=s' => sub { add_modules($config, $_[1]); },
+               'module-set=s' => sub { add_module_sets($config, $_[1]); },
+               'module-sets=s' => sub { add_module_sets($config, $_[1]); },
 
                'trace' => sub { $TRACING = 1; },
                'debug' => sub { &$save_option($_[0], 1); },
                'no-shared' => sub { $$config{'shared'} = 'no'; },
+               'no-asm' => sub { $$config{'asm_ok'} = 0; },
 
                'noauto' => sub { $$config{'autoconfig'} = 0; },
                'dumb-gcc|gcc295x' => sub { $$config{'gcc_bug'} = 1; }
                );
 
-    croak("Module set $module_set isn't known (try --help)")
-        if($module_set && !defined($MODULE_SETS{$module_set}));
-
-    if($module_set) {
-        foreach (@{ $MODULE_SETS{$module_set} }) { push @modules,$_; }
-    }
-
-    my $mod_str = join(',', @modules);
-
-    return $mod_str if($#ARGV == -1);
-
-    warning("Unknown options $ARGV[0]");
-    display_help();
+    # All arguments should now be consumed
+    croak("Unknown option $ARGV[0] (try --help)") unless($#ARGV == -1);
 }
 
 ##################################################
@@ -602,6 +654,8 @@ sub os_alias {
 
 sub os_info_for {
     my ($os,$what) = @_;
+
+    die unless defined($os);
 
     croak('os_info_for called with an os of defaults (internal problem)')
         if($os eq 'defaults');
@@ -883,9 +937,7 @@ sub realname {
 sub load_modules {
     my ($config) = @_;
 
-    my @modules = @{$$config{'modules'}};
-
-    foreach my $mod (@modules) {
+    foreach my $mod (sort keys %{$$config{'modules'}}) {
         load_module($config, $mod);
     }
 
@@ -949,7 +1001,7 @@ sub load_modules {
         }
 
         my @defarray;
-        foreach my $mod (@modules) {
+        foreach my $mod (sort keys %{$$config{'modules'}}) {
             my $defs = $MODULES{$mod}{'define'};
             next unless $defs;
 
@@ -1227,20 +1279,19 @@ sub read_module_files {
 ##################################################
 #                                                #
 ##################################################
+
 sub get_module_info {
    my ($name, $file) = @_;
    my $reader = make_reader($file);
 
    my %info;
    $info{'name'} = $name;
-   $info{'load_on'} = 'requeste'; # default unless specified
+   $info{'load_on'} = 'request'; # default unless specified
    $info{'libs'} = {};
 
    while($_ = &$reader()) {
        match_any_of($_, \%info, 'quoted', 'realname:note');
-       match_any_of($_, \%info, 'unquoted', 'define:mp_bits');
-
-       $info{'load_on'} = $1 if(/^load_on: (.*)$/);
+       match_any_of($_, \%info, 'unquoted', 'define:mp_bits:modset:load_on');
 
        read_list($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
        read_list($_, $reader, 'cc', list_push(\@{$info{'cc'}}));
@@ -1378,57 +1429,6 @@ sub get_cc_info {
 
     }
     return %info;
-}
-
-sub guess_mods {
-    my ($config, @modules) = @_;
-
-    my $cc = $$config{'compiler'};
-    my $os = $$config{'os'};
-    my $arch = $$config{'arch'};
-    my $submodel = $$config{'submodel'};
-
-    my $asm_ok = ($$config{'debug'} == 0);
-
-    my @usable_modules;
-
-    foreach my $mod (sort keys %MODULES) {
-        my %modinfo = %{ $MODULES{$mod} };
-
-        if($modinfo{'load_on'} eq 'request') {
-            autoconfig("Won't use module $mod - by request only")
-                unless in_array($mod, \@modules);
-            next;
-        }
-        if(!$asm_ok and $modinfo{'load_on'} eq 'asm_ok') {
-            autoconfig("Won't use module $mod - uses assembly, using --debug");
-            next;
-        }
-
-        my @cc_list = @{ $modinfo{'cc'} };
-        if(scalar @cc_list > 0 && !in_array($cc, \@cc_list)) {
-            autoconfig("Won't use module $mod - not compatbile with $cc");
-            next;
-        }
-
-        my @os_list = @{ $modinfo{'os'} };
-        if(scalar @os_list > 0 && !in_array($os, \@os_list)) {
-            autoconfig("Won't use module $mod - not compatible with $os");
-            next;
-        }
-
-        my @arch_list = @{ $modinfo{'arch'} };
-        if(scalar @arch_list > 0 &&
-           !in_array($arch, \@arch_list) &&
-           !in_array($submodel, \@arch_list)) {
-            autoconfig("Won't use module $mod - " .
-                       "doesn't run on $arch/$submodel");
-            next;
-        }
-
-        push @usable_modules, $mod;
-    }
-    return @usable_modules;
 }
 
 ##################################################
