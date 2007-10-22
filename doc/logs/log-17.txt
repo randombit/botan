@@ -1,8 +1,12 @@
 
 * 1.7.3, November 4, 2007
- - New invocation syntax for configure.pl
+ - New invocation syntax for configure.pl with several new options
  - Support for IPv4 addresses in a subject alternative name
- - New generic Unix entropy source (es_unix) fast poll
+ - New fast poll for the generic Unix entropy source (es_unix)
+ - The malloc allocator does not inherit from Pooling_Allocator anymore
+ - The dirs that es_unix will search in are now fully user-configurable
+ - Truncate X9.42 PRF output rather than allow counter overflow
+ - PowerPC is assumed to be big-endian
 
 * 1.7.2, October 13, 2007
  - Initialize the global library state lazily
