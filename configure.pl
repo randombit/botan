@@ -420,9 +420,12 @@ sub autoload_modules {
             next;
         }
 
-        my @cc_list = @{ $modinfo{'cc'} };
-        if(scalar @cc_list > 0 && !in_array($cc, \@cc_list)) {
-            autoconfig("Module $mod - won't use, not compatbile with CC $cc");
+        my @arch_list = @{ $modinfo{'arch'} };
+        if(scalar @arch_list > 0 &&
+           !in_array($arch, \@arch_list) &&
+           !in_array($submodel, \@arch_list)) {
+            autoconfig("Module $mod - won't use, " .
+                       "doesn't run on CPU $arch/$submodel");
             next;
         }
 
@@ -432,12 +435,9 @@ sub autoload_modules {
             next;
         }
 
-        my @arch_list = @{ $modinfo{'arch'} };
-        if(scalar @arch_list > 0 &&
-           !in_array($arch, \@arch_list) &&
-           !in_array($submodel, \@arch_list)) {
-            autoconfig("Module $mod - won't use, " .
-                       "doesn't run on CPU $arch/$submodel");
+        my @cc_list = @{ $modinfo{'cc'} };
+        if(scalar @cc_list > 0 && !in_array($cc, \@cc_list)) {
+            autoconfig("Module $mod - won't use, not compatbile with CC $cc");
             next;
         }
 
