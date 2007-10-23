@@ -20,8 +20,6 @@ class Malloc_Allocator : public Allocator
       void deallocate(void*, u32bit);
 
       std::string type() const { return "malloc"; }
-
-      Malloc_Allocator();
    };
 
 /*************************************************
