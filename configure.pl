@@ -234,9 +234,9 @@ sub display_help {
 
         foreach my $name (sort @list) {
             next if $name eq 'defaults';
-            if($len > 71) {
+            if($len > 65) {
                 $output .= "\n        ";
-                $len = 3;
+                $len = 8;
             }
             &$append($name . ' ');
         }
@@ -270,6 +270,7 @@ Usage for $0 (Botan $VERSION_STRING):
   --local-config=FILE: include the contents of FILE into build.h
 
   --debug:             set compiler flags for debugging
+  --no-asm:            disable all modules that contain assembly code
   --no-shared:         don't build shared libararies
   --make-style=STYLE:  override the guess as to what type of makefile to use
 
@@ -278,7 +279,8 @@ Usage for $0 (Botan $VERSION_STRING):
   --modules=
        [$modules]
 
-  --module-set=[$sets]: Add a prespecified group of modules
+  To add a set of modules:
+  --module-set=[$sets]
 
   --module-info:       display more information about modules
   --noauto:            don't enable any modules unless specifically named
@@ -411,15 +413,6 @@ sub autoload_modules {
             next;
         }
 
-        if($modinfo{'load_on'} eq 'request') {
-            autoconfig("Module $mod - won't use, loaded by request only");
-            next;
-        }
-        if(!$asm_ok and $modinfo{'load_on'} eq 'asm_ok') {
-            autoconfig("Module $mod - won't use; avoiding due to use of --no-asm");
-            next;
-        }
-
         my @arch_list = @{ $modinfo{'arch'} };
         if(scalar @arch_list > 0 &&
            !in_array($arch, \@arch_list) &&
@@ -438,6 +431,16 @@ sub autoload_modules {
         my @cc_list = @{ $modinfo{'cc'} };
         if(scalar @cc_list > 0 && !in_array($cc, \@cc_list)) {
             autoconfig("Module $mod - won't use, not compatbile with CC $cc");
+            next;
+        }
+
+        if(!$asm_ok and $modinfo{'load_on'} eq 'asm_ok') {
+            autoconfig("Module $mod - won't use; avoiding due to use of --no-asm");
+            next;
+        }
+
+        if($modinfo{'load_on'} eq 'request') {
+            autoconfig("Module $mod - won't use, loaded by request only");
             next;
         }
 
