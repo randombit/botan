@@ -50,8 +50,7 @@ void IDEA::enc(const byte in[], byte out[]) const
       X3 = mul(X3, EK[6*j+4]);
 
       u16bit T1 = X2;
-      X2 = static_cast<u16bit>((X2 ^ X4) + X3);
-      X2 = mul(X2, EK[6*j+5]);
+      X2 = mul((X2 ^ X4) + X3, EK[6*j+5]);
       X3 += X2;
 
       X1 ^= X2;
@@ -90,8 +89,7 @@ void IDEA::dec(const byte in[], byte out[]) const
       X3 = mul(X3, DK[6*j+4]);
 
       u16bit T1 = X2;
-      X2 = static_cast<u16bit>((X2 ^ X4) + X3);
-      X2 = mul(X2, DK[6*j+5]);
+      X2 = mul((X2 ^ X4) + X3, DK[6*j+5]);
       X3 += X2;
 
       X1 ^= X2;
@@ -100,10 +98,10 @@ void IDEA::dec(const byte in[], byte out[]) const
       X3 ^= T1;
       }
 
-   X1 = mul(X1, DK[48]);
+   X1  = mul(X1, DK[48]);
    X2 += DK[50];
    X3 += DK[49];
-   X4 = mul(X4, DK[51]);
+   X4  = mul(X4, DK[51]);
 
    store_be(out, X1, X3, X2, X4);
    }
@@ -121,16 +119,18 @@ u16bit IDEA::mul_inv(u16bit x)
 
    while(y != 1)
       {
-      u16bit q = static_cast<u16bit>(x / y);
+      u16bit q = x / y;
       x %= y;
-      t1 += static_cast<u16bit>(q * t0);
+      t1 += q * t0;
+
       if(x == 1)
          return t1;
-      q = static_cast<u16bit>(y / x);
+
+      q = y / x;
       y %= x;
-      t0 += static_cast<u16bit>(q * t1);
+      t0 += q * t1;
       }
-   return static_cast<u16bit>(1 - t0);
+   return (1 - t0);
    }
 
 /*************************************************
