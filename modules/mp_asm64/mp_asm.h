@@ -12,14 +12,7 @@
    #error The mp_asm64 module requires that BOTAN_MP_WORD_BITS == 64
 #endif
 
-#if defined(BOTAN_TARGET_ARCH_IS_AMD64)
-
-#define BOTAN_WORD_MUL(a,b,z1,z0) do {       \
-   asm("mulq %3" : "=d" (z0), "=a" (z1) :    \
-       "a" (a), "rm" (b) : "cc");            \
-} while(0);
-
-#elif defined(BOTAN_TARGET_ARCH_IS_ALPHA)
+#if defined(BOTAN_TARGET_ARCH_IS_ALPHA)
 
 #define BOTAN_WORD_MUL(a,b,z1,z0) do {                   \
    asm("umulh %1,%2,%0" : "=r" (z0) : "r" (a), "r" (b)); \

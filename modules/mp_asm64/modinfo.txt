@@ -8,10 +8,8 @@ load_on asm_ok
 mp_asm.h
 </replace>
 
-# Disable amd64 since (nominally) the mp_amd64 module has that covered
 <arch>
 alpha
-# amd64
 ia64
 mips64
 ppc64
