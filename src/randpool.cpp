@@ -10,8 +10,6 @@
 #include <botan/util.h>
 #include <algorithm>
 
-#include <assert.h>
-
 namespace Botan {
 
 namespace {
