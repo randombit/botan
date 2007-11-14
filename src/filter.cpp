@@ -37,7 +37,7 @@ void Filter::send(const byte input[], u32bit length)
          nothing_attached = false;
          }
    if(nothing_attached)
-      write_queue.append(input, length);
+      write_queue.push_back(input, length);
    else if(write_queue.has_items())
       write_queue.destroy();
    }

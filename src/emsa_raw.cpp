@@ -12,7 +12,7 @@ namespace Botan {
 *************************************************/
 void EMSA_Raw::update(const byte input[], u32bit length)
    {
-   message.append(input, length);
+   message.push_back(input, length);
    }
 
 /*************************************************

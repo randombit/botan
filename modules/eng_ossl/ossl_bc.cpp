@@ -113,7 +113,7 @@ void EVP_BlockCipher::key(const byte key[], u32bit length)
    SecureVector<byte> full_key(key, length);
 
    if(cipher_name == "TripleDES" && length == 16)
-      full_key.append(key, 8);
+      full_key.push_back(key, 8);
    else
       if(EVP_CIPHER_CTX_set_key_length(&encrypt, length) == 0 ||
          EVP_CIPHER_CTX_set_key_length(&decrypt, length) == 0)

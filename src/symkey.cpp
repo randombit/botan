@@ -29,7 +29,7 @@ void OctetString::change(const std::string& hex_string)
    SecureVector<byte> hex;
    for(u32bit j = 0; j != hex_string.length(); ++j)
       if(Hex_Decoder::is_valid(hex_string[j]))
-         hex.append(hex_string[j]);
+         hex.push_back(hex_string[j]);
 
    if(hex.size() % 2 != 0)
       throw Invalid_Argument("OctetString: hex string must encode full bytes");

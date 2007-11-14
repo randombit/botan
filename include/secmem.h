@@ -52,10 +52,11 @@ class MemoryRegion
       void set(const T in[], u32bit n)    { create(n); copy(in, n); }
       void set(const MemoryRegion<T>& in) { set(in.begin(), in.size()); }
 
-      void append(const T data[], u32bit n)
+      void push_back(T x) { push_back(&x, 1); }
+      void push_back(const T data[], u32bit n)
          { grow_to(size()+n); copy(size() - n, data, n); }
-      void append(T x) { append(&x, 1); }
-      void append(const MemoryRegion<T>& x) { append(x.begin(), x.size()); }
+      void push_back(const MemoryRegion<T>& x)
+         { push_back(x.begin(), x.size()); }
 
       void clear() { clear_mem(buf, allocated); }
       void destroy() { create(0); }
@@ -172,7 +173,7 @@ class MemoryVector : public MemoryRegion<T>
       MemoryVector(const MemoryRegion<T>& in)
          { MemoryRegion<T>::init(false); set(in); }
       MemoryVector(const MemoryRegion<T>& in1, const MemoryRegion<T>& in2)
-         { MemoryRegion<T>::init(false); set(in1); append(in2); }
+         { MemoryRegion<T>::init(false); set(in1); push_back(in2); }
    };
 
 /*************************************************
@@ -191,7 +192,7 @@ class SecureVector : public MemoryRegion<T>
       SecureVector(const MemoryRegion<T>& in)
          { MemoryRegion<T>::init(true); set(in); }
       SecureVector(const MemoryRegion<T>& in1, const MemoryRegion<T>& in2)
-         { MemoryRegion<T>::init(true); set(in1); append(in2); }
+         { MemoryRegion<T>::init(true); set(in1); push_back(in2); }
    };
 
 /*************************************************

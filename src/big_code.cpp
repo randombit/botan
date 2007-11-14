@@ -104,7 +104,7 @@ BigInt BigInt::decode(const byte buf[], u32bit length, Base base)
       SecureVector<byte> hex;
       for(u32bit j = 0; j != length; ++j)
          if(Hex_Decoder::is_valid(buf[j]))
-            hex.append(buf[j]);
+            hex.push_back(buf[j]);
 
       u32bit offset = (hex.size() % 2);
       SecureVector<byte> binary(hex.size() / 2 + offset);
