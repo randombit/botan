@@ -340,9 +340,6 @@ void Library_State::initialize(const InitializerOptions& args,
    timer = modules.timer();
    transcoder = modules.transcoder();
 
-   if(args.config_file() != "")
-      config().load_inifile(args.config_file());
-
    locks["settings"] = get_mutex();
    locks["allocator"] = get_mutex();
    locks["rng"] = get_mutex();

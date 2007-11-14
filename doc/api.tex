@@ -212,12 +212,6 @@ privileges on many systems.
 On systems that don't (currently) have any specialized allocators, like
 MS Windows, this option is ignored.
 
-\option{config=/path/to/configfile}: Process the specified
-configuration file. Configuration files can specify things like the
-various options, new aliases, and new OIDs for algorithms. An example
-can be found in \filename{doc/botan.rc}. Currently only one config=
-argument will be processed, the rest will be ignored.
-
 \option{use\_engines}: Use any available ``engine'' modules to speed
 up processing. Currently Botan has support for engines based on the
 AEP1000/AEP2000 crypto hardware cards, GNU MP, and OpenSSL's BN
@@ -2761,105 +2755,6 @@ in the United States.
    \item ``extended\_key\_usage'': Similar to ``key\_usage'', but more general
          and much less commonly used.
 \end{list}
-
-\subsection{Configuration Files}
-
-Botan has a number of options, which can be configured by calling the
-appropriate functions, documented earlier in this section. But this is somewhat
-inconvenient for the users of applications which use Botan. So Botan also
-supports reading options from a file which looks rather like Windows .INI files
-or OpenSSL configurations. You can find an example config (which simply matches
-the compiled-in defaults) in \filename{doc/botan.rc}
-
-Each set of options is part of a 'section', for example, ``base'', ``rng'', or
-``x509''. These names are essentially arbitrary, and are (in theory) chosen on
-the basis of what the options pertain to. To set the option
-``x509/ca/default\_expire'' (which tells \type{X509\_CA} how long newly minted
-X.509 certificates should be valid for), you could use either of the following
-methods:
-
-\begin{verbatim}
-[x509/ca] # section is x509/ca
-default_expire = 1y # x509/ca + default_expire -> x509/ca/default_expire
-
-# same as above
-[x509] # section is x509
-# other x509/ options in here...
-ca/default_expire = 1y # x509 + ca/default_expire -> x509/ca/default_expire
-\end{verbatim}
-
-There are also two special sections, ``oids'' and ``aliases''. The aliases
-section is easier to understand, and probably more useful for the average user.
-By adding a new line in an alias section, \verb|alias = officialname|, you can
-create a new way to reference a particular algorithm (in those cases when you
-ask for an algorithm object with a string specifying its type). For example, if
-the line \verb|MyAlgo = Blowfish| was included in an aliases section, then one
-could do this:
-
-\begin{verbatim}
-Pipe pipe(get_cipher(``MyAlgo/CBC/PKCS7'', key, iv, ENCRYPTION));
-\end{verbatim}
-
-and get a Blowfish CBC encryptor. Initially this was implemented due to the
-number of algorithms with multiple names (such as ``SHA1'', ``SHA-1'', and
-``SHA-160''), but might also be useful in other, more interesting, contexts.
-
-The OIDs section gives a mapping between ASN.1 OIDs and the algorithm or object
-it represents, in the form \verb|name = oid|, where oid is the usual
-decimal-dotted representation. For readability and easy of extension in
-configuration files, a simple variable interpolation scheme is also
-available. Consider the following:
-
-\begin{verbatim}
-[oids]
-ISO_MEMBER = 1.2
-US_BODY = ISO_MEMBER.840 # US_BODY = 1.2.840
-RSA_DSI = US_BODY.113549 # RSA_DSI = 1.2.840.113549
-\end{verbatim}
-
-This only works when the variable name is at the start of the string; since the
-primary reason for its inclusion is for with OIDs, this is acceptable. In some
-cases, adding a new OID in is sufficient for code to work with new algorithms
-(though not always). For example, by setting the proper OIDs, you can make it
-possible to import, export, create, and process X.509 certificates that use
-Rabin-Williams.
-
-\subsubsection{Syntax}
-
-Each line is either a comment, blank, a section name, or a name/value pair
-separated by a '='. Comments start with the '\#' character and continue to the
-end of line. The reader allows escaping, so if you wanted to include an actual
-\# sign you could use \verb|\#|, or include it in a string ('\#' or ``\#''). A
-section name is specified by \verb|[somename]|; a section name must have at
-least one character, and a section must appear before any name/value pairs. A
-name must be alphanumeric, but a value can contain spaces or other strange
-things (you must either enclose the argument in quotes or escape each space
-with a backslash). An example showing some of the trickier parts of how input
-is interpreted follows (but the reader is cautioned that relying on this
-behavior is not a good idea):
-
-\begin{verbatim}
-[examples]
-foo1 = a b c                  # stored as abc (not quoted, ws removed)
-foo2 = 'a b c'                # stored as a b c (quoted, keep ws)
-foo3 = "a b c"                # stored as a b c (quoted, keep ws)
-tricky = "Jack \"I like pie\" Lloyd" # stored as Jack "I like pie" Lloyd
-simpler = "Jack 'I like pie' Lloyd"  # no escapes needed
-
-hashmark = "#"         # set to a hash
-hashmark2 = \#         # also set to a hash
-
-[oids]
-RW = 1.2.3.4.5.6 # Now RW keys can be imported/exported!
-NR = 1.2.3.4.5.7 # Now NR can be imported/exported too.
-  # Note these OIDs are *not* allocated for RW/NR, in fact I have no idea who
-  # owns that section of the OID space, but it's certainly not me. Someone will
-  # have to allocate OIDs for RW/NR before this is 'legal'
-
-some_thing = 1.2.3              # some OID
-another_thing = some_thing.4.5  # another_thing = 1.2.3.4.5
-\end{verbatim}
-
 
 \pagebreak
 \section{Botan's Modules}
