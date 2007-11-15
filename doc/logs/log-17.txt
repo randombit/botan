@@ -6,7 +6,6 @@
  - The malloc allocator does not inherit from Pooling_Allocator anymore
  - The dirs that es_unix will search in are now fully user-configurable
  - Truncate X9.42 PRF output rather than allow counter overflow
- - MemoryRegion::append renamed to push_back for better STL compatability
  - PowerPC is now assumed to be big-endian
 
 * 1.7.2, October 13, 2007

@@ -12,7 +12,7 @@ namespace Botan {
 *************************************************/
 void PK_Encryptor_Filter::write(const byte input[], u32bit length)
    {
-   buffer.push_back(input, length);
+   buffer.append(input, length);
    }
 
 /*************************************************
@@ -29,7 +29,7 @@ void PK_Encryptor_Filter::end_msg()
 *************************************************/
 void PK_Decryptor_Filter::write(const byte input[], u32bit length)
    {
-   buffer.push_back(input, length);
+   buffer.append(input, length);
    }
 
 /*************************************************

@@ -62,7 +62,7 @@ class KDF_Filter : public Filter
    {
    public:
       void write(const byte in[], u32bit len)
-         { secret.push_back(in, len); }
+         { secret.append(in, len); }
       void end_msg()
          {
          SymmetricKey x = kdf->derive_key(outlen,
