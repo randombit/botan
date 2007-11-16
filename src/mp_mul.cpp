@@ -95,8 +95,8 @@ u32bit karatsuba_size(u32bit z_size,
       ((y_size == y_sw) && (y_size % 2)))
       return 0;
 
-   u32bit start = (x_sw > y_sw) ? x_sw : y_sw;
-   u32bit end = (x_size < y_size) ? x_size : y_size;
+   const u32bit start = (x_sw > y_sw) ? x_sw : y_sw;
+   const u32bit end = (x_size < y_size) ? x_size : y_size;
 
    if(start == end)
       {
