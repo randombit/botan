@@ -48,6 +48,10 @@
   #include <botan/es_aep.h>
 #endif
 
+#if defined(BOTAN_EXT_ENTROPY_SRC_DEVICE)
+  #include <botan/es_dev.h>
+#endif
+
 #if defined(BOTAN_EXT_ENTROPY_SRC_EGD)
   #include <botan/es_egd.h>
 #endif
@@ -157,6 +161,10 @@ std::vector<EntropySource*> Builtin_Modules::entropy_sources() const
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_EGD)
    sources.push_back(new EGD_EntropySource);
+#endif
+
+#if defined(BOTAN_EXT_ENTROPY_SRC_DEVICE)
+   sources.push_back(new Device_EntropySource);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_CAPI)
