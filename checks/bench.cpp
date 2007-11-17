@@ -35,7 +35,7 @@ double bench_filter(std::string name, Botan::Filter* filter,
 
    u32bit iterations = 0;
    u64bit start = get_clock(), clocks_used = 0;
-   u64bit go_up_to = (u64bit)(seconds * get_ticks());
+   u64bit go_up_to = static_cast<u64bit>(seconds * get_ticks());
 
    while(clocks_used < go_up_to)
       {
@@ -44,8 +44,8 @@ double bench_filter(std::string name, Botan::Filter* filter,
       clocks_used = get_clock() - start;
       }
 
-   double bytes_per_sec = ((double)iterations * BUFFERSIZE) /
-                          ((double)clocks_used / get_ticks());
+   double bytes_per_sec = (static_cast<double>(iterations) * BUFFERSIZE) /
+                          (static_cast<double>(clocks_used) / get_ticks());
    double mbytes_per_sec = bytes_per_sec / (1024.0 * 1024.0);
 
    std::cout.setf(std::ios::fixed, std::ios::floatfield);
@@ -121,7 +121,7 @@ void benchmark(const std::string& what, bool html, double seconds)
       if(html)
          std::cout << "</TABLE>\n\n";
 
-      double average = std::exp(sum / (double)how_many);
+      double average = std::exp(sum / static_cast<double>(how_many));
 
       if(what == "All" && html)
          std::cout << "\n<P>Overall speed average: " << average

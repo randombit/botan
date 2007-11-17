@@ -178,10 +178,9 @@ void bench_pk(const std::string& algo, bool html, double seconds)
 void print_result(bool html, u32bit runs, u64bit clocks_used,
                   const std::string& algo_name, const std::string& op)
    {
-   double seconds = (double)clocks_used / get_ticks();
+   double seconds = static_cast<double>(clocks_used) / get_ticks();
    double mseconds_per_run = 1000 * (seconds / runs);
    double runs_per_sec = runs / seconds;
-
 
    if(html)
       {
