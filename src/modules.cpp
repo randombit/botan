@@ -7,7 +7,6 @@
 #include <botan/defalloc.h>
 #include <botan/def_char.h>
 #include <botan/eng_def.h>
-#include <botan/es_file.h>
 #include <botan/timers.h>
 
 #if defined(BOTAN_EXT_MUTEX_PTHREAD)
@@ -152,8 +151,6 @@ std::string Builtin_Modules::default_allocator() const
 std::vector<EntropySource*> Builtin_Modules::entropy_sources() const
    {
    std::vector<EntropySource*> sources;
-
-   sources.push_back(new File_EntropySource);
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_AEP)
    sources.push_back(new AEP_EntropySource);
