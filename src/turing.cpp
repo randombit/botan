@@ -170,7 +170,7 @@ void Turing::generate()
    }
 
 /*************************************************
-*
+* Turing's byte mixing step                      *
 *************************************************/
 u32bit Turing::fixedS(u32bit W)
    {
