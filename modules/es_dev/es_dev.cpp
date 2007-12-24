@@ -24,7 +24,7 @@ class Device_Reader
       typedef int fd_type;
 
       Device_Reader(fd_type device_fd) : fd(device_fd) {}
-      ~Device_Reader() { close(fd); }
+      ~Device_Reader() { ::close(fd); }
       u32bit get(byte out[], u32bit length);
 
       static fd_type open(const std::string& pathname);
@@ -49,7 +49,7 @@ u32bit Device_Reader::get(byte out[], u32bit length)
    FD_ZERO(&read_set);
    FD_SET(fd, &read_set);
 
-   struct timeval timeout;
+   struct ::timeval timeout;
    timeout.tv_sec = 0;
    timeout.tv_usec = READ_WAIT_MS * 1000;
 

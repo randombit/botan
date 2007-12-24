@@ -41,7 +41,7 @@ void do_exec(const std::vector<std::string>& arg_list,
       {
       const std::string full_path = paths[j] + "/" + arg_list[0];
       const char* fsname = full_path.c_str();
-      execl(fsname, fsname, arg1, arg2, arg3, arg4, 0);
+      ::execl(fsname, fsname, arg1, arg2, arg3, arg4, 0);
       }
    }
 
@@ -69,12 +69,12 @@ u32bit DataSource_Command::read(byte buf[], u32bit length)
    FD_ZERO(&set);
    FD_SET(pipe->fd, &set);
 
-   struct timeval tv;
+   struct ::timeval tv;
    tv.tv_sec = 0;
    tv.tv_usec = MAX_BLOCK_USECS;
 
    ssize_t got = 0;
-   if(select(pipe->fd + 1, &set, 0, 0, &tv) == 1)
+   if(::select(pipe->fd + 1, &set, 0, 0, &tv) == 1)
       {
       if(FD_ISSET(pipe->fd, &set))
          got = ::read(pipe->fd, buf, length);
@@ -136,7 +136,7 @@ void DataSource_Command::create_pipe(const std::string& path)
    for(u32bit j = 0; j != paths.size(); j++)
       {
       const std::string full_path = paths[j] + "/" + arg_list[0];
-      if(access(full_path.c_str(), X_OK) == 0)
+      if(::access(full_path.c_str(), X_OK) == 0)
          {
          found_something = true;
          break;
@@ -149,31 +149,31 @@ void DataSource_Command::create_pipe(const std::string& path)
    if(::pipe(pipe_fd) != 0)
       return;
 
-   pid_t pid = fork();
+   pid_t pid = ::fork();
 
    if(pid == -1)
       {
-      close(pipe_fd[0]);
-      close(pipe_fd[1]);
+      ::close(pipe_fd[0]);
+      ::close(pipe_fd[1]);
       }
    else if(pid > 0)
       {
       pipe = new pipe_wrapper;
       pipe->fd = pipe_fd[0];
       pipe->pid = pid;
-      close(pipe_fd[1]);
+      ::close(pipe_fd[1]);
       }
    else
       {
       if(dup2(pipe_fd[1], STDOUT_FILENO) == -1)
-         exit(127);
+         ::exit(127);
       if(close(pipe_fd[0]) != 0 || close(pipe_fd[1]) != 0)
-         exit(127);
+         ::exit(127);
       if(close(STDERR_FILENO) != 0)
-         exit(127);
+         ::exit(127);
 
       do_exec(arg_list, paths);
-      exit(127);
+      ::exit(127);
       }
    }
 
@@ -190,23 +190,23 @@ void DataSource_Command::shutdown_pipe()
          {
          kill(pipe->pid, SIGTERM);
 
-         struct timeval tv;
+         struct ::timeval tv;
          tv.tv_sec = 0;
          tv.tv_usec = KILL_WAIT;
          select(0, 0, 0, 0, &tv);
 
-         reaped = waitpid(pipe->pid, 0, WNOHANG);
+         reaped = ::waitpid(pipe->pid, 0, WNOHANG);
 
          if(reaped == 0)
             {
-            kill(pipe->pid, SIGKILL);
+            ::kill(pipe->pid, SIGKILL);
             do
-               reaped = waitpid(pipe->pid, 0, 0);
+               reaped = ::waitpid(pipe->pid, 0, 0);
             while(reaped == -1);
             }
          }
 
-      close(pipe->fd);
+      ::close(pipe->fd);
       delete pipe;
       pipe = 0;
       }

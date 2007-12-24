@@ -51,30 +51,30 @@ void Unix_EntropySource::do_fast_poll()
 
    for(u32bit j = 0; STAT_TARGETS[j]; j++)
       {
-      struct stat statbuf;
+      struct ::stat statbuf;
       clear_mem(&statbuf, 1);
-      stat(STAT_TARGETS[j], &statbuf);
+      ::stat(STAT_TARGETS[j], &statbuf);
       add_bytes(&statbuf, sizeof(statbuf));
       }
 
-   add_bytes(getpid());
-   add_bytes(getppid());
+   add_bytes(::getpid());
+   add_bytes(::getppid());
 
-   add_bytes(getuid());
-   add_bytes(getgid());
-   add_bytes(geteuid());
-   add_bytes(getegid());
+   add_bytes(::getuid());
+   add_bytes(::getgid());
+   add_bytes(::geteuid());
+   add_bytes(::getegid());
 
-   add_bytes(getpgrp());
-   add_bytes(getsid(0));
+   add_bytes(::getpgrp());
+   add_bytes(::getsid(0));
 
-   struct rusage usage;
+   struct ::rusage usage;
 
    clear_mem(&usage, 1);
-   getrusage(RUSAGE_SELF, &usage);
+   ::getrusage(RUSAGE_SELF, &usage);
    add_bytes(&usage, sizeof(usage));
 
-   getrusage(RUSAGE_CHILDREN, &usage);
+   ::getrusage(RUSAGE_CHILDREN, &usage);
    add_bytes(&usage, sizeof(usage));
    }
 

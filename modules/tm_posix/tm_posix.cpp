@@ -23,8 +23,8 @@ namespace Botan {
 *************************************************/
 u64bit POSIX_Timer::clock() const
    {
-   struct timespec tv;
-   clock_gettime(CLOCK_REALTIME, &tv);
+   struct ::timespec tv;
+   ::clock_gettime(CLOCK_REALTIME, &tv);
    return combine_timers(tv.tv_sec, tv.tv_nsec, 1000000000);
    }
 

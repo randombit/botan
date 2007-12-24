@@ -14,8 +14,8 @@ namespace Botan {
 *************************************************/
 u64bit Unix_Timer::clock() const
    {
-   struct timeval tv;
-   gettimeofday(&tv, 0);
+   struct ::timeval tv;
+   ::gettimeofday(&tv, 0);
    return combine_timers(tv.tv_sec, tv.tv_usec, 1000000);
    }
 
