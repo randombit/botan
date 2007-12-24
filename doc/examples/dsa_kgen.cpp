@@ -40,8 +40,6 @@ int main(int argc, char* argv[])
       }
 
    try {
-      LibraryInitializer init;
-
       DSA_PrivateKey key(DL_Group("dsa/jce/1024"));
 
       pub << X509::PEM_encode(key);

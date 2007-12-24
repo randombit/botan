@@ -13,14 +13,13 @@ namespace Botan {
 /*************************************************
 * Malloc Allocator                              *
 *************************************************/
-class Malloc_Allocator : public Pooling_Allocator
+class Malloc_Allocator : public Allocator
    {
    public:
-      Malloc_Allocator() : Pooling_Allocator(64*1024, false) {}
+      void* allocate(u32bit);
+      void deallocate(void*, u32bit);
+
       std::string type() const { return "malloc"; }
-   private:
-      void* alloc_block(u32bit);
-      void dealloc_block(void*, u32bit);
    };
 
 /*************************************************

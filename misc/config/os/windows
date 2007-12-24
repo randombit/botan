@@ -19,12 +19,7 @@ install_group <nil>
 #all
 </supports_shared>
 
-<arch>
-ia32
-amd64 # in theory
-ia64  # in theory
-</arch>
-
 <aliases>
 win32
+mswin32
 </aliases>

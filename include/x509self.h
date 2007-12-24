@@ -26,7 +26,7 @@ class X509_Cert_Options
       std::string state;
       std::string serial_number;
 
-      std::string email, uri, dns, xmpp;
+      std::string email, uri, dns, ip, xmpp;
 
       std::string challenge;
 

@@ -59,15 +59,15 @@ void* MemoryMapping_Allocator::alloc_block(u32bit n)
             filepath = new char[path.length() + 1];
             std::strcpy(filepath, path.c_str());
 
-            mode_t old_umask = umask(077);
-            fd = mkstemp(filepath);
-            umask(old_umask);
+            mode_t old_umask = ::umask(077);
+            fd = ::mkstemp(filepath);
+            ::umask(old_umask);
             }
 
          ~TemporaryFile()
             {
             delete[] filepath;
-            if(fd != -1 && close(fd) == -1)
+            if(fd != -1 && ::close(fd) == -1)
                throw MemoryMapping_Failed("Could not close file");
             }
       private:
@@ -80,15 +80,15 @@ void* MemoryMapping_Allocator::alloc_block(u32bit n)
    if(file.get_fd() == -1)
       throw MemoryMapping_Failed("Could not create file");
 
-   if(unlink(file.path().c_str()))
-      throw MemoryMapping_Failed("Could not unlink file " + file.path());
+   if(::unlink(file.path().c_str()))
+      throw MemoryMapping_Failed("Could not unlink file '" + file.path() + "'");
 
-   lseek(file.get_fd(), n-1, SEEK_SET);
-   if(write(file.get_fd(), "\0", 1) != 1)
+   ::lseek(file.get_fd(), n-1, SEEK_SET);
+   if(::write(file.get_fd(), "\0", 1) != 1)
       throw MemoryMapping_Failed("Could not write to file");
 
-   void* ptr = mmap(0, n, PROT_READ | PROT_WRITE, MAP_SHARED,
-                    file.get_fd(), 0);
+   void* ptr = ::mmap(0, n, PROT_READ | PROT_WRITE, MAP_SHARED,
+                      file.get_fd(), 0);
 
    if(ptr == static_cast<void*>(MAP_FAILED))
       throw MemoryMapping_Failed("Could not map file");
@@ -101,23 +101,21 @@ void* MemoryMapping_Allocator::alloc_block(u32bit n)
 *************************************************/
 void MemoryMapping_Allocator::dealloc_block(void* ptr, u32bit n)
    {
-   if(ptr == 0) return;
+   if(ptr == 0)
+      return;
 
-   const u32bit OVERWRITE_PASSES = 12;
    const byte PATTERNS[] = { 0x00, 0xFF, 0xAA, 0x55, 0x73, 0x8C, 0x5F, 0xA0,
-                             0x6E, 0x91, 0x30, 0xCF, 0xD3, 0x2C, 0xAC, 0x53 };
+                             0x6E, 0x91, 0x30, 0xCF, 0xD3, 0x2C, 0xAC, 0x00 };
 
-   for(u32bit j = 0; j != OVERWRITE_PASSES; j++)
+   for(u32bit j = 0; j != sizeof(PATTERNS); j++)
       {
-      std::memset(ptr, PATTERNS[j % sizeof(PATTERNS)], n);
-      if(msync(ptr, n, MS_SYNC))
+      std::memset(ptr, PATTERNS[j], n);
+
+      if(::msync(ptr, n, MS_SYNC))
          throw MemoryMapping_Failed("Sync operation failed");
       }
-   std::memset(ptr, 0, n);
-   if(msync(ptr, n, MS_SYNC))
-      throw MemoryMapping_Failed("Sync operation failed");
 
-   if(munmap(ptr, n))
+   if(::munmap(ptr, n))
       throw MemoryMapping_Failed("Could not unmap file");
    }
 

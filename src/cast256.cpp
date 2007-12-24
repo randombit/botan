@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/cast256.h>
+#include <botan/loadstor.h>
 #include <botan/bit_ops.h>
 
 namespace Botan {

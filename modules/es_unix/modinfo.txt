@@ -1,8 +1,9 @@
 realname "Generic Unix Entropy Source"
 
 define ENTROPY_SRC_UNIX
+modset unix,beos
 
-load_on: auto
+load_on auto
 
 <add>
 es_unix.cpp

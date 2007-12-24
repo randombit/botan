@@ -5,11 +5,10 @@
 
 #include <botan/randpool.h>
 #include <botan/lookup.h>
+#include <botan/loadstor.h>
 #include <botan/bit_ops.h>
 #include <botan/util.h>
 #include <algorithm>
-
-#include <assert.h>
 
 namespace Botan {
 

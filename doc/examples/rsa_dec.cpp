@@ -32,9 +32,6 @@ int main(int argc, char* argv[])
       }
 
    try {
-
-      LibraryInitializer init;
-
       std::auto_ptr<PKCS8_PrivateKey> key(PKCS8::load_key(argv[1], argv[3]));
       RSA_PrivateKey* rsakey = dynamic_cast<RSA_PrivateKey*>(key.get());
       if(!rsakey)

@@ -7,7 +7,7 @@
 #include <botan/der_enc.h>
 #include <botan/oids.h>
 #include <botan/lookup.h>
-#include <botan/bit_ops.h>
+#include <botan/loadstor.h>
 #include <algorithm>
 #include <memory>
 
@@ -40,7 +40,7 @@ SecureVector<byte> X942_PRF::derive(u32bit key_len,
    SecureVector<byte> key;
    u32bit counter = 1;
 
-   while(key.size() != key_len)
+   while(key.size() != key_len && counter)
       {
       hash->update(secret, secret_len);
 

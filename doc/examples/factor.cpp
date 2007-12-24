@@ -119,8 +119,6 @@ int main(int argc, char* argv[])
 
    try
       {
-      LibraryInitializer init;
-
       BigInt n(argv[1]);
 
       std::vector<BigInt> factors = factorize(n);

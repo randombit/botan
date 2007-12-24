@@ -21,29 +21,35 @@ using namespace Botan;
 
 int main(int argc, char* argv[])
    {
-   if(argc != 2)
+   if(argc != 5)
       {
-      std::cout << "Usage: " << argv[0] << " passphrase" << std::endl;
+      std::cout << "Usage: " << argv[0] << " <passphrase> "
+                << "<ca cert> <ca key> <pkcs10>" << std::endl;
       return 1;
       }
 
-   try {
-      LibraryInitializer init;
+   try
+      {
+      const std::string arg_passphrase = argv[1];
+      const std::string arg_ca_cert = argv[2];
+      const std::string arg_ca_key = argv[3];
+      const std::string arg_req_file = argv[4];
 
-      // set up our CA
-      X509_Certificate ca_cert("cacert.pem");
+      X509_Certificate ca_cert(arg_ca_cert);
+
       std::auto_ptr<PKCS8_PrivateKey> privkey(
-         PKCS8::load_key("caprivate.pem", argv[1])
+         PKCS8::load_key(arg_ca_key, arg_passphrase)
          );
+
       X509_CA ca(ca_cert, *privkey);
 
       // got a request
-      PKCS10_Request req("req.pem");
+      PKCS10_Request req(arg_req_file);
 
-      // presumably attempt to verify the req for sanity/accuracy here, but
-      // as Verisign, etc have shown, that's not a must. :)
+      // you would insert checks here, and perhaps modify the request
+      // (this example should be extended to show how)
 
-      // now sign it
+      // now sign the request
       X509_Certificate new_cert = ca.sign_request(req);
 
       // send the new cert back to the requestor

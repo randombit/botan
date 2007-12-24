@@ -4,10 +4,8 @@
 *************************************************/
 
 #include <botan/bigint.h>
-#include <botan/numthry.h>
 #include <botan/mp_core.h>
 #include <botan/bit_ops.h>
-#include <botan/util.h>
 #include <algorithm>
 
 namespace Botan {

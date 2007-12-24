@@ -7,7 +7,6 @@
 #define BOTAN_BIT_OPS_H__
 
 #include <botan/types.h>
-#include <botan/loadstor.h>
 
 namespace Botan {
 
@@ -25,13 +24,20 @@ template<typename T> inline T rotate_right(T input, u32bit rot)
    }
 
 /*************************************************
-* XOR Functions                                  *
+* Byteswap                                       *
+*************************************************/
+u16bit reverse_bytes(u16bit);
+u32bit reverse_bytes(u32bit);
+u64bit reverse_bytes(u64bit);
+
+/*************************************************
+* Array XOR                                      *
 *************************************************/
 void xor_buf(byte[], const byte[], u32bit);
 void xor_buf(byte[], const byte[], const byte[], u32bit);
 
 /*************************************************
-* Misc Utility Functions                         *
+* Simple Bit Manipulation                        *
 *************************************************/
 bool power_of_2(u64bit);
 u32bit high_bit(u64bit);

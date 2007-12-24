@@ -7,13 +7,3 @@ install_group wheel
 <supports_shared>
 all
 </supports_shared>
-
-<arch>
-alpha
-ia32
-m68k
-mips32
-ppc
-sparc32
-sparc64
-</arch>

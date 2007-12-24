@@ -4,11 +4,12 @@
 *************************************************/
 
 #include <botan/bit_ops.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 
 /*************************************************
-* XOR arrays together                            *
+* Array XOR                                      *
 *************************************************/
 void xor_buf(byte data[], const byte mask[], u32bit length)
    {
@@ -24,6 +25,9 @@ void xor_buf(byte data[], const byte mask[], u32bit length)
       data[j] ^= mask[j];
    }
 
+/*************************************************
+* Array XOR                                      *
+*************************************************/
 void xor_buf(byte out[], const byte in[], const byte mask[], u32bit length)
    {
    while(length >= 8)
@@ -36,6 +40,35 @@ void xor_buf(byte out[], const byte in[], const byte mask[], u32bit length)
       }
    for(u32bit j = 0; j != length; ++j)
       out[j] = in[j] ^ mask[j];
+   }
+
+/*************************************************
+* Reverse bytes                                   *
+*************************************************/
+u16bit reverse_bytes(u16bit input)
+   {
+   return rotate_left(input, 8);
+   }
+
+/*************************************************
+* Reverse bytes                                   *
+*************************************************/
+u32bit reverse_bytes(u32bit input)
+   {
+   input = ((input & 0xFF00FF00) >> 8) | ((input & 0x00FF00FF) << 8);
+   return rotate_left(input, 16);
+   }
+
+/*************************************************
+* Reverse bytes                                   *
+*************************************************/
+u64bit reverse_bytes(u64bit input)
+   {
+   input = ((input & 0xFF00FF00FF00FF00) >>  8) |
+           ((input & 0x00FF00FF00FF00FF) <<  8);
+   input = ((input & 0xFFFF0000FFFF0000) >> 16) |
+           ((input & 0x0000FFFF0000FFFF) << 16);
+   return rotate_left(input, 32);
    }
 
 /*************************************************

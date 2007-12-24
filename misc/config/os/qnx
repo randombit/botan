@@ -5,11 +5,3 @@ os_type unix
 <supports_shared>
 all
 </supports_shared>
-
-<arch>
-arm
-ia32
-mips32
-ppc
-sh
-</arch>

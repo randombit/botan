@@ -28,7 +28,7 @@ using namespace Botan;
 
 static BigInt to_bigint(const std::string& h)
    {
-   return BigInt::decode((const byte*)h.data(),
+   return BigInt::decode(reinterpret_cast<const byte*>(h.data()),
                          h.length(), BigInt::Hexadecimal);
    }
 
@@ -326,7 +326,9 @@ u32bit validate_rsa_enc_pkcs8(const std::string& algo,
    strip_newlines(pass); /* it will have a newline thanks to the messy
                                 decoding method we use */
 
-   DataSource_Memory keysource((const byte*)str[0].c_str(), str[0].length());
+   DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
+                               str[0].length());
+
    Private_Key* privkey = PKCS8::load_key(keysource, pass);
 
    RSA_PrivateKey* rsapriv = dynamic_cast<RSA_PrivateKey*>(privkey);
@@ -441,7 +443,8 @@ u32bit validate_rsa_ver_x509(const std::string& algo,
    if(str.size() != 5) /* is actually 3, parse() adds extra empty ones */
       throw Exception("Invalid input from pk_valid.dat");
 
-   DataSource_Memory keysource((const byte*)str[0].c_str(), str[0].length());
+   DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
+                               str[0].length());
 
    Public_Key* key = X509::load_key(keysource);
 
@@ -518,7 +521,9 @@ u32bit validate_dsa_sig(const std::string& algo,
    strip_newlines(pass); /* it will have a newline thanks to the messy
                                 decoding method we use */
 
-   DataSource_Memory keysource((const byte*)str[0].c_str(), str[0].length());
+   DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
+                               str[0].length());
+
    Private_Key* privkey = PKCS8::load_key(keysource, pass);
 
    DSA_PrivateKey* dsapriv = dynamic_cast<DSA_PrivateKey*>(privkey);
@@ -545,7 +550,9 @@ u32bit validate_dsa_ver(const std::string& algo,
    if(str.size() != 5) /* is actually 3, parse() adds extra empty ones */
       throw Exception("Invalid input from pk_valid.dat");
 
-   DataSource_Memory keysource((const byte*)str[0].c_str(), str[0].length());
+   DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
+                               str[0].length());
+
    Public_Key* key = X509::load_key(keysource);
 
    DSA_PublicKey* dsakey = dynamic_cast<DSA_PublicKey*>(key);

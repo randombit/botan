@@ -56,32 +56,32 @@ void FTW_EntropySource::gather_from_dir(const std::string& dirname)
    if(dirname == "" || files_read >= max_read)
       return;
 
-   DIR* dir = opendir(dirname.c_str());
+   DIR* dir = ::opendir(dirname.c_str());
    if(dir == 0)
       return;
 
    std::vector<std::string> subdirs;
 
-   dirent* entry = readdir(dir);
+   dirent* entry = ::readdir(dir);
    while(entry && (files_read < max_read))
       {
       if((std::strcmp(entry->d_name, ".") == 0) ||
          (std::strcmp(entry->d_name, "..") == 0))
-         { entry = readdir(dir); continue; }
+         { entry = ::readdir(dir); continue; }
 
       const std::string filename = dirname + '/' + entry->d_name;
 
-      struct stat stat_buf;
-      if(lstat(filename.c_str(), &stat_buf) == -1)
-         { entry = readdir(dir); continue; }
+      struct ::stat stat_buf;
+      if(::lstat(filename.c_str(), &stat_buf) == -1)
+         { entry = ::readdir(dir); continue; }
 
       if(S_ISREG(stat_buf.st_mode))
          gather_from_file(filename);
       else if(S_ISDIR(stat_buf.st_mode))
          subdirs.push_back(filename);
-      entry = readdir(dir);
+      entry = ::readdir(dir);
       }
-   closedir(dir);
+   ::closedir(dir);
 
    for(u32bit j = 0; j != subdirs.size(); j++)
       gather_from_dir(subdirs[j]);
@@ -98,7 +98,7 @@ void FTW_EntropySource::gather_from_file(const std::string& filename)
 
    SecureVector<byte> read_buf(1024);
    ssize_t got = ::read(fd, read_buf.begin(), read_buf.size());
-   close(fd);
+   ::close(fd);
 
    if(got > 0)
       {

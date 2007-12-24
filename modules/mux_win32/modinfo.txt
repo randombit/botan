@@ -1,8 +1,9 @@
 realname "Win32 Mutex"
 
 define MUTEX_WIN32
+modset win32
 
-load_on: auto
+load_on auto
 
 <add>
 mux_win32.cpp

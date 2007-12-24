@@ -2,7 +2,7 @@ realname "Algorithm x86-64 Assembler"
 
 mp_bits 64
 
-load_on: asm_ok
+load_on asm_ok
 
 <replace>
 sha160.cpp

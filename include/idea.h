@@ -24,7 +24,6 @@ class IDEA : public BlockCipher
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
       void key(const byte[], u32bit);
-      static u16bit mul_inv(u16bit);
       SecureBuffer<u16bit, 52> EK, DK;
    };
 

@@ -20,8 +20,6 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   Botan::LibraryInitializer init;
-
    const int COUNT = 3;
    std::string name[COUNT] = { "MD5", "SHA-1", "RIPEMD-160" };
 

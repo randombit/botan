@@ -20,6 +20,7 @@ D: Windows porting
 N: Yves Jerschow
 E: Yves.Jerschow@uni-duesseldorf.de
 D: Optimizations for memory load/store and HMAC
+D: Support for IPv4 addresses in X.509 alternative names
 S: Germany
 
 N: Matt Johnston
@@ -42,5 +43,5 @@ S: New York NY, USA
 
 N: Luca Piccarreta
 E: luca.piccarreta@gmail.com
-D: x86/amd64 assembler, BigInt optimizations, Win32 mutex
+D: x86/amd64 assembler, BigInt optimizations, Win32 mutex module
 S: Italy

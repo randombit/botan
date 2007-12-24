@@ -19,7 +19,7 @@ class S2K_Filter : public Filter
    {
    public:
       void write(const byte in[], u32bit len)
-         { passphrase += std::string((const char*)in, len); }
+         { passphrase += std::string(reinterpret_cast<const char*>(in), len); }
       void end_msg()
          {
          s2k->change_salt(salt, salt.size());

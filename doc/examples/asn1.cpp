@@ -58,8 +58,6 @@ int main(int argc, char* argv[])
       }
 
    try {
-      LibraryInitializer init;
-
       DataSource_Stream in(argv[1]);
 
       if(!PEM_Code::matches(in))

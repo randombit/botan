@@ -2,7 +2,7 @@ realname "AEP Engine"
 
 define ENGINE_AEP,ENTROPY_SRC_AEP
 
-load_on: request
+load_on request
 
 <add>
 eng_aep.cpp

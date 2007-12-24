@@ -84,5 +84,8 @@ std::vector<algorithm> get_algos()
    algos.push_back(algorithm("RNG", "Randpool"));
    algos.push_back(algorithm("RNG", "X9.31-RNG"));
 
+   algos.push_back(algorithm("Codec", "Base64_Encode"));
+   algos.push_back(algorithm("Codec", "Base64_Decode"));
+
    return algos;
    }

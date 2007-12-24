@@ -33,29 +33,28 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   Botan::LibraryInitializer init;
-
-   try {
-   Botan::Pipe pipe(new Botan::Hash_Filter(argv[1]),
-                    new Botan::Hex_Encoder);
-
-   int skipped = 0;
-   for(int j = 2; argv[j] != 0; j++)
+   try
       {
-      int file = open(argv[j], O_RDONLY);
-      if(file == -1)
+      Botan::Pipe pipe(new Botan::Hash_Filter(argv[1]),
+                       new Botan::Hex_Encoder);
+
+      int skipped = 0;
+      for(int j = 2; argv[j] != 0; j++)
          {
-         std::cout << "ERROR: could not open " << argv[j] << std::endl;
-         skipped++;
-         continue;
+         int file = open(argv[j], O_RDONLY);
+         if(file == -1)
+            {
+            std::cout << "ERROR: could not open " << argv[j] << std::endl;
+            skipped++;
+            continue;
+            }
+         pipe.start_msg();
+         file >> pipe;
+         pipe.end_msg();
+         close(file);
+         pipe.set_default_msg(j-2-skipped);
+         std::cout << pipe << "  " << argv[j] << std::endl;
          }
-      pipe.start_msg();
-      file >> pipe;
-      pipe.end_msg();
-      close(file);
-      pipe.set_default_msg(j-2-skipped);
-      std::cout << pipe << "  " << argv[j] << std::endl;
-      }
    }
    catch(Botan::Algorithm_Not_Found)
       {

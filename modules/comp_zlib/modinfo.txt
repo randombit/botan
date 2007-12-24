@@ -4,7 +4,8 @@ realname "Zlib Compressor"
 define COMPRESSOR_ZLIB
 #define COMPRESSOR_ZLIB,COMPRESSOR_GZIP
 
-load_on: request
+load_on request
+modset compression
 
 <add>
 zlib.h

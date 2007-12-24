@@ -12,6 +12,8 @@
 #include <botan/mutex.h>
 #include <botan/timers.h>
 #include <botan/charset.h>
+#include <botan/x931_rng.h>
+#include <botan/fips140.h>
 #include <algorithm>
 
 namespace Botan {
@@ -31,7 +33,7 @@ Library_State* global_lib_state = 0;
 Library_State& global_state()
    {
    if(!global_lib_state)
-      throw Invalid_State("Library was not initialized correctly");
+      LibraryInitializer::initialize();
    return (*global_lib_state);
    }
 
@@ -136,11 +138,8 @@ void Library_State::set_default_allocator(const std::string& type) const
 *************************************************/
 void Library_State::set_timer(Timer* new_timer)
    {
-   if(new_timer)
-      {
-      delete timer;
-      timer = new_timer;
-      }
+   delete timer;
+   timer = new_timer;
    }
 
 /*************************************************
@@ -312,18 +311,39 @@ void Library_State::pulse(Pulse_Type pulse_type) const
 Config& Library_State::config() const
    {
    if(!config_obj)
-      throw Invalid_State("Library_State::config(): No config set");
+      {
+      config_obj = new Config();
+      config_obj->load_defaults();
+      }
 
    return (*config_obj);
    }
 
 /*************************************************
-* Load modules                                   *
+* Load a set of modules                          *
 *************************************************/
-void Library_State::load(Modules& modules)
+void Library_State::initialize(const InitializerOptions& args,
+                               Modules& modules)
    {
-   set_timer(modules.timer());
-   set_transcoder(modules.transcoder());
+   if(mutex_factory)
+      throw Invalid_State("Library_State has already been initialized");
+
+   if(args.thread_safe())
+      mutex_factory = modules.mutex_factory();
+   else
+      mutex_factory = new Default_Mutex_Factory;
+
+   cached_default_allocator = 0;
+   x509_state_obj = 0;
+   ui = 0;
+
+   timer = modules.timer();
+   transcoder = modules.transcoder();
+
+   locks["settings"] = get_mutex();
+   locks["allocator"] = get_mutex();
+   locks["rng"] = get_mutex();
+   locks["engine"] = get_mutex();
 
    std::vector<Allocator*> mod_allocs = modules.allocators();
    for(u32bit j = 0; j != mod_allocs.size(); ++j)
@@ -341,28 +361,44 @@ void Library_State::load(Modules& modules)
    std::vector<EntropySource*> sources = modules.entropy_sources();
    for(u32bit j = 0; j != sources.size(); ++j)
       add_entropy_source(sources[j]);
+
+   set_prng(new ANSI_X931_RNG);
+
+   if(args.seed_rng())
+      {
+      for(u32bit j = 0; j != 4; ++j)
+         {
+         seed_prng(true, 384);
+         if(rng_is_seeded())
+            break;
+         }
+
+      if(!rng_is_seeded())
+         throw PRNG_Unseeded("Unable to collect sufficient entropy");
+      }
+
+   if(args.fips_mode() || args.self_test())
+      {
+      if(!FIPS140::passes_self_tests())
+         throw Self_Test_Failure("FIPS-140 startup tests");
+      }
    }
 
 /*************************************************
 * Library_State Constructor                      *
 *************************************************/
-Library_State::Library_State(Mutex_Factory* mutex_factory)
+Library_State::Library_State()
    {
-   if(!mutex_factory)
-      throw Exception("Library_State: no mutex found");
+   mutex_factory = 0;
 
-   this->mutex_factory = mutex_factory;
-   this->timer = new Timer();
-   this->transcoder = 0;
-   this->config_obj = new Config();
+   timer = 0;
+   config_obj = 0;
+   x509_state_obj = 0;
 
-   locks["settings"] = get_mutex();
-   locks["allocator"] = get_mutex();
-   locks["rng"] = get_mutex();
-   locks["engine"] = get_mutex();
+   ui = 0;
+   transcoder = 0;
    rng = 0;
    cached_default_allocator = 0;
-   x509_state_obj = 0;
    ui = 0;
    }
 

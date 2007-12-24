@@ -2,7 +2,7 @@ realname "GMP Engine"
 
 define ENGINE_GNU_MP
 
-load_on: request
+load_on request
 
 <add>
 eng_gmp.cpp

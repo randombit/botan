@@ -7,7 +7,6 @@
 #include <botan/numthry.h>
 #include <botan/libstate.h>
 #include <botan/lookup.h>
-#include <botan/bit_ops.h>
 #include <botan/parsing.h>
 #include <botan/rng.h>
 #include <algorithm>

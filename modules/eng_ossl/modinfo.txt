@@ -2,7 +2,7 @@ realname "OpenSSL Engine"
 
 define ENGINE_OPENSSL
 
-load_on: request
+load_on request
 
 <add>
 eng_ossl.cpp

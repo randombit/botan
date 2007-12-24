@@ -2,7 +2,7 @@ realname "POSIX Timer"
 
 define TIMER_POSIX
 
-load_on: auto
+load_on auto
 
 <add>
 tm_posix.cpp

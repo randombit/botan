@@ -18,10 +18,9 @@ int main(int argc, char* argv[])
 
    try
       {
-      LibraryInitializer init;
-
       if(argc == 2)
-         std::cout << "H('" << argv[1] << "') = " << password_hash(argv[1]) << '\n';
+         std::cout << "H('" << argv[1] << "') = "
+                   << password_hash(argv[1]) << '\n';
       else
          {
          bool ok = password_hash_ok(argv[1], argv[2]);
@@ -73,4 +72,3 @@ bool password_hash_ok(const std::string& pass, const std::string& hash)
 
    return same_mem(cmp.begin(), hash_bin.begin() + 6, 12);
    }
-

@@ -2,7 +2,8 @@ realname "Unix Timer"
 
 define TIMER_UNIX
 
-load_on: auto
+load_on auto
+modset unix,beos
 
 <add>
 tm_unix.cpp

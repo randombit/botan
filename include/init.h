@@ -24,8 +24,6 @@ class InitializerOptions
       bool fips_mode() const;
       bool self_test() const;
 
-      std::string config_file() const;
-
       InitializerOptions(const std::string&);
    private:
       std::map<std::string, std::string> args;

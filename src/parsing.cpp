@@ -6,6 +6,7 @@
 #include <botan/parsing.h>
 #include <botan/exceptn.h>
 #include <botan/charset.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 
@@ -29,7 +30,6 @@ u32bit to_u32bit(const std::string& number)
       }
    return n;
    }
-
 
 /*************************************************
 * Convert an integer into a string               *
@@ -236,6 +236,48 @@ u32bit parse_expr(const std::string& expr)
       }
    else
       return to_u32bit(expr);
+   }
+
+/*************************************************
+* Convert a decimal-dotted string to binary IP   *
+*************************************************/
+u32bit string_to_ipv4(const std::string& str)
+   {
+   std::vector<std::string> parts = split_on(str, '.');
+
+   if(parts.size() != 4)
+      throw Decoding_Error("Invalid IP string " + str);
+
+   u32bit ip = 0;
+
+   for(size_t j = 0; j != parts.size(); j++)
+      {
+      u32bit octet = to_u32bit(parts[j]);
+
+      if(octet > 255)
+         throw Decoding_Error("Invalid IP string " + str);
+
+      ip = (ip << 8) | (octet & 0xFF);
+      }
+
+   return ip;
+   }
+
+/*************************************************
+* Convert an IP address to decimal-dotted string *
+*************************************************/
+std::string ipv4_to_string(u32bit ip)
+   {
+   std::string str;
+
+   for(size_t j = 0; j != sizeof(ip); j++)
+      {
+      if(j)
+         str += ".";
+      str += to_string(get_byte(j, ip));
+      }
+
+   return str;
    }
 
 }

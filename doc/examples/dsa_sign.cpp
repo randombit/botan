@@ -48,8 +48,6 @@ int main(int argc, char* argv[])
          return 1;
          }
 
-      LibraryInitializer init;
-
       std::auto_ptr<PKCS8_PrivateKey> key(
          PKCS8::load_key(argv[1], passphrase)
          );

@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/md5.h>
-#include <botan/bit_ops.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 

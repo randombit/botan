@@ -86,15 +86,6 @@ bool InitializerOptions::self_test() const
    }
 
 /*************************************************
-* Return the config file to load, if any         *
-*************************************************/
-std::string InitializerOptions::config_file() const
-   {
-   std::map<std::string, std::string>::const_iterator i = args.find("config");
-   return (i != args.end()) ? i->second : "";
-   }
-
-/*************************************************
 * Setup an InitializerOptions                    *
 *************************************************/
 InitializerOptions::InitializerOptions(const std::string& arg_string)

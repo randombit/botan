@@ -16,19 +16,9 @@ using namespace Botan;
 #include <iostream>
 #include <fstream>
 #include <string>
-
-#define DEBUG 0
+#include <memory>
 
 #define PRINT_MS_PER_OP 0 /* If 0, print ops / second */
-
-RSA_PrivateKey* load_rsa_key(const std::string&);
-RW_PrivateKey  load_rw_key(const std::string&);
-
-static BigInt to_bigint(const std::string& h)
-   {
-   return BigInt::decode((const byte*)h.data(),
-                         h.length(), BigInt::Hexadecimal);
-   }
 
 void bench_enc(PK_Encryptor*, const std::string&, double, bool);
 void bench_dec(PK_Encryptor*, PK_Decryptor*, const std::string&, double, bool);
@@ -36,68 +26,11 @@ void bench_sig(PK_Signer*, const std::string&, double, bool);
 void bench_ver(PK_Signer*, PK_Verifier*, const std::string&, double, bool);
 void bench_kas(PK_Key_Agreement*, const std::string&, double, bool);
 
-void bench_rsa(RSA_PrivateKey& key, const std::string keybits,
-               double seconds, bool html)
-   {
-   bench_enc(get_pk_encryptor(key, "Raw"),
-             "RSA-" + keybits, seconds, html);
-   bench_dec(get_pk_encryptor(key, "Raw"),
-             get_pk_decryptor(key, "Raw"),
-             "RSA-" + keybits, seconds, html);
-   }
-
-void bench_dsa(DSA_PrivateKey& key, const std::string keybits,
-               double seconds, bool html)
-   {
-   bench_ver(get_pk_signer(key, "EMSA1(SHA-1)"),
-             get_pk_verifier(key, "EMSA1(SHA-1)"),
-             "DSA-" + keybits, seconds, html);
-   bench_sig(get_pk_signer(key, "EMSA1(SHA-1)"),
-             "DSA-" + keybits, seconds, html);
-   }
-
-void bench_dh(DH_PrivateKey& key, const std::string keybits,
-              double seconds, bool html)
-   {
-   bench_kas(get_pk_kas(key, "Raw"),
-             "DH-" + keybits, seconds, html);
-   }
-
-void bench_rw(RW_PrivateKey& key, const std::string keybits,
-              double seconds, bool html)
-   {
-   bench_ver(get_pk_signer(key, "EMSA2(SHA-1)"),
-             get_pk_verifier(key, "EMSA2(SHA-1)"),
-             "RW-" + keybits, seconds, html);
-   bench_sig(get_pk_signer(key, "EMSA2(SHA-1)"),
-             "RW-" + keybits, seconds, html);
-   }
-
-void bench_nr(NR_PrivateKey& key, const std::string keybits,
-              double seconds, bool html)
-   {
-   bench_ver(get_pk_signer(key, "EMSA1(SHA-1)"),
-             get_pk_verifier(key, "EMSA1(SHA-1)"),
-             "NR-" + keybits, seconds, html);
-   bench_sig(get_pk_signer(key, "EMSA1(SHA-1)"),
-             "NR-" + keybits, seconds, html);
-   }
-
-void bench_elg(ElGamal_PrivateKey& key, const std::string keybits,
-               double seconds, bool html)
-   {
-   bench_enc(get_pk_encryptor(key, "Raw"),
-             "ELG-" + keybits, seconds, html);
-   bench_dec(get_pk_encryptor(key, "Raw"),
-             get_pk_decryptor(key, "Raw"),
-             "ELG-" + keybits, seconds, html);
-   }
-
 void bench_pk(const std::string& algo, bool html, double seconds)
    {
    /*
      There is some strangeness going on here. It looks like algorithms
-     at the end take some kind of pentalty. For example, running the RW tests
+     at the end take some kind of penalty. For example, running the RW tests
      first got a result of:
          RW-1024: 148.14 ms / private operation
      but running them last output:
@@ -124,122 +57,129 @@ void bench_pk(const std::string& algo, bool html, double seconds)
 
    if(algo == "All" || algo == "RSA")
       {
-      #define DO_RSA(NUM_STR, FILENAME)                \
-         {                                             \
-         RSA_PrivateKey* rsa = load_rsa_key(FILENAME); \
-         bench_rsa(*rsa, NUM_STR, seconds, html);      \
-         delete rsa;                                   \
-         }
+      const u32bit keylen[] = { 512, 1024, 1536, 2048, 3072, 4096, 0 };
 
-      DO_RSA("512", "checks/keys/rsa512.key")
-      DO_RSA("1024", "checks/keys/rsa1024.key")
-      DO_RSA("1536", "checks/keys/rsa1536.key")
-      DO_RSA("2048", "checks/keys/rsa2048.key")
-      DO_RSA("3072", "checks/keys/rsa3072.key")
-      DO_RSA("4096", "checks/keys/rsa4096.key")
-      #undef DO_RSA
+      for(size_t j = 0; keylen[j]; j++)
+         {
+         const std::string len_str = to_string(keylen[j]);
+         const std::string file = "checks/keys/rsa" + len_str + ".pem";
+
+         std::auto_ptr<RSA_PrivateKey> key(
+            dynamic_cast<RSA_PrivateKey*>(PKCS8::load_key(file))
+            );
+
+         if(key.get() == 0)
+            throw Invalid_Argument(file + " doesn't have an RSA key in it!");
+
+         bench_enc(get_pk_encryptor(*key, "Raw"),
+                   "RSA-" + len_str, seconds, html);
+
+         bench_dec(get_pk_encryptor(*key, "Raw"),
+                   get_pk_decryptor(*key, "Raw"),
+                   "RSA-" + len_str, seconds, html);
+         }
       }
+
    if(algo == "All" || algo == "DSA")
       {
-      #define DO_DSA(NUM_STR, GROUP)              \
-         {                                        \
-         DSA_PrivateKey dsa(GROUP);               \
-         bench_dsa(dsa, NUM_STR, seconds, html);  \
-         }
+      const u32bit keylen[] = { 512, 768, 1024, 0 };
 
-      DO_DSA("512",  DL_Group("dsa/jce/512"));
-      DO_DSA("768",  DL_Group("dsa/jce/768"));
-      DO_DSA("1024", DL_Group("dsa/jce/1024"));
-      //DO_DSA("2048", DL_Group(DL_Group::DSA_Kosherizer, 2048, 256));
-      //DO_DSA("3072", DL_Group(DL_Group::DSA_Kosherizer, 3072, 256));
-      #undef DO_DSA
+      for(size_t j = 0; keylen[j]; j++)
+         {
+         const std::string len_str = to_string(keylen[j]);
+
+         DSA_PrivateKey key("dsa/jce/" + len_str);
+
+         bench_ver(get_pk_signer(key, "EMSA1(SHA-1)"),
+                   get_pk_verifier(key, "EMSA1(SHA-1)"),
+                   "DSA-" + len_str, seconds, html);
+
+         bench_sig(get_pk_signer(key, "EMSA1(SHA-1)"),
+                   "DSA-" + len_str, seconds, html);
+         }
       }
+
    if(algo == "All" || algo == "DH")
       {
-      #define DO_DH(NUM_STR, GROUP)             \
-         {                                      \
-         DH_PrivateKey dh(DL_Group(GROUP)); \
-         bench_dh(dh, NUM_STR, seconds, html);  \
-         }
+      const u32bit keylen[] = { 768, 1024, 1536, 2048, 3072, 4096, 0 };
 
-      DO_DH("768", "modp/ietf/768");
-      DO_DH("1024", "modp/ietf/1024");
-      DO_DH("1536", "modp/ietf/1536");
-      DO_DH("2048", "modp/ietf/2048");
-      DO_DH("3072", "modp/ietf/3072");
-      DO_DH("4096", "modp/ietf/4096");
-      #undef DO_DH
+      for(size_t j = 0; keylen[j]; j++)
+         {
+         const std::string len_str = to_string(keylen[j]);
+
+         DH_PrivateKey key("modp/ietf/" + len_str);
+
+         bench_kas(get_pk_kas(key, "Raw"), "DH-" + len_str, seconds, html);
+         }
       }
 
    if(algo == "All" || algo == "ELG" || algo == "ElGamal")
       {
-      #define DO_ELG(NUM_STR, GROUP)                  \
-         {                                            \
-         ElGamal_PrivateKey elg(DL_Group(GROUP)); \
-         bench_elg(elg, NUM_STR, seconds, html);      \
+      const u32bit keylen[] = { 768, 1024, 1536, 2048, 3072, 4096, 0 };
+
+      for(size_t j = 0; keylen[j]; j++)
+         {
+         const std::string len_str = to_string(keylen[j]);
+
+         ElGamal_PrivateKey key("modp/ietf/" + len_str);
+
+         bench_enc(get_pk_encryptor(key, "Raw"),
+                   "ELG-" + len_str, seconds, html);
+
+         bench_dec(get_pk_encryptor(key, "Raw"),
+                   get_pk_decryptor(key, "Raw"),
+                   "ELG-" + len_str, seconds, html);
          }
-      DO_ELG("768", "modp/ietf/768");
-      DO_ELG("1024", "modp/ietf/1024");
-      DO_ELG("1536", "modp/ietf/1536");
-      DO_ELG("2048", "modp/ietf/2048");
-      DO_ELG("3072", "modp/ietf/3072");
-      DO_ELG("4096", "modp/ietf/4096");
-      #undef DO_ELG
       }
 
    if(algo == "All" || algo == "NR")
       {
-      #define DO_NR(NUM_STR, GROUP)             \
-         {                                      \
-         NR_PrivateKey nr(DL_Group(GROUP)); \
-         bench_nr(nr, NUM_STR, seconds, html);  \
-         }
+      const u32bit keylen[] = { 512, 768, 1024, 0 };
 
-      DO_NR("512",  "dsa/jce/512");
-      DO_NR("768",  "dsa/jce/768");
-      DO_NR("1024", "dsa/jce/1024");
-      #undef DO_NR
+      for(size_t j = 0; keylen[j]; j++)
+         {
+         const std::string len_str = to_string(keylen[j]);
+
+         NR_PrivateKey key("dsa/jce/" + len_str);
+
+         bench_ver(get_pk_signer(key, "EMSA1(SHA-1)"),
+                   get_pk_verifier(key, "EMSA1(SHA-1)"),
+                   "NR-" + len_str, seconds, html);
+
+         bench_sig(get_pk_signer(key, "EMSA1(SHA-1)"),
+                   "NR-" + len_str, seconds, html);
+         }
       }
 
    if(algo == "All" || algo == "RW")
       {
-      #define DO_RW(NUM_STR, FILENAME)             \
-         {                                         \
-         RW_PrivateKey rw = load_rw_key(FILENAME); \
-         bench_rw(rw, NUM_STR, seconds, html);     \
+      const u32bit keylen[] = { 512, 1024, 0 };
+
+      for(size_t j = 0; keylen[j]; j++)
+         {
+         const std::string len_str = to_string(keylen[j]);
+         const std::string file = "checks/keys/rw" + len_str + ".pem";
+
+         RW_PrivateKey* key =
+            dynamic_cast<RW_PrivateKey*>(PKCS8::load_key(file));
+
+         bench_ver(get_pk_signer(*key, "EMSA2(SHA-1)"),
+                   get_pk_verifier(*key, "EMSA2(SHA-1)"),
+                   "RW-" + len_str, seconds, html);
+         bench_sig(get_pk_signer(*key, "EMSA2(SHA-1)"),
+                   "RW-" + len_str, seconds, html);
+
+         delete key;
          }
-
-      DO_RW("512",  "checks/keys/rw512.key")
-      DO_RW("1024", "checks/keys/rw1024.key")
-      #undef DO_RW
       }
-   }
-   catch(Botan::Exception& e)
-      {
-      std::cout << "Exception caught: " << e.what() << std::endl;
-      return;
-      }
-   catch(std::exception& e)
-      {
-      std::cout << "Standard library exception caught: "
-                << e.what() << std::endl;
-      return;
-      }
-   catch(...)
-      {
-      std::cout << "Unknown exception caught." << std::endl;
-      return;
-      }
-
    }
 
 void print_result(bool html, u32bit runs, u64bit clocks_used,
                   const std::string& algo_name, const std::string& op)
    {
-   double seconds = (double)clocks_used / get_ticks();
+   double seconds = static_cast<double>(clocks_used) / get_ticks();
    double mseconds_per_run = 1000 * (seconds / runs);
    double runs_per_sec = runs / seconds;
-
 
    if(html)
       {
@@ -260,9 +200,9 @@ void print_result(bool html, u32bit runs, u64bit clocks_used,
       std::cout.precision(2);
 
       if(PRINT_MS_PER_OP)
-         std::cout << mseconds_per_run << " ms / " << op << std::endl;
+         std::cout << mseconds_per_run << " ms / " << op << "\n";
       else
-         std::cout << runs_per_sec << " ops / second (" << op << ")" << std::endl;
+         std::cout << runs_per_sec << " ops / second (" << op << ")\n";
       }
    }
 
@@ -423,36 +363,4 @@ void bench_kas(PK_Key_Agreement* kas, const std::string& algo_name,
    delete kas;
 
    print_result(html, runs, clocks_used, algo_name, "key agreement");
-   }
-
-/*************************************************
-* Key loading procedures                         *
-*************************************************/
-RSA_PrivateKey* load_rsa_key(const std::string& file)
-   {
-   Private_Key* key = PKCS8::load_key(file);
-
-   RSA_PrivateKey* rsakey = dynamic_cast<RSA_PrivateKey*>(key);
-
-   if(rsakey == 0)
-      throw Invalid_Argument(file + " doesn't have an RSA key in it!");
-
-   return rsakey;
-   }
-
-RW_PrivateKey load_rw_key(const std::string& file)
-   {
-   std::ifstream keyfile(file.c_str());
-   if(!keyfile)
-      throw Exception("Couldn't open the RW key file " + file);
-
-   std::string e, p, q;
-
-   std::getline(keyfile, e);
-   std::getline(keyfile, p);
-   std::getline(keyfile, q);
-
-   RW_PrivateKey key(to_bigint(p), to_bigint(q), to_bigint(e));
-
-   return key;
    }

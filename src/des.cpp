@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/des.h>
+#include <botan/loadstor.h>
 #include <botan/bit_ops.h>
 
 namespace Botan {

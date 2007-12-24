@@ -42,7 +42,6 @@ int main(int argc, char* argv[])
 
    try
       {
-      LibraryInitializer init;
       RSA_PrivateKey key(bits);
       pub << X509::PEM_encode(key);
 

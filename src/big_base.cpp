@@ -5,7 +5,7 @@
 
 #include <botan/bigint.h>
 #include <botan/mp_core.h>
-#include <botan/bit_ops.h>
+#include <botan/loadstor.h>
 #include <botan/parsing.h>
 #include <botan/util.h>
 

@@ -9,6 +9,8 @@
 #include <botan/oids.h>
 #include <botan/stl_util.h>
 #include <botan/charset.h>
+#include <botan/parsing.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 
@@ -17,11 +19,13 @@ namespace Botan {
 *************************************************/
 AlternativeName::AlternativeName(const std::string& email_addr,
                                  const std::string& uri,
-                                 const std::string& dns)
+                                 const std::string& dns,
+                                 const std::string& ip)
    {
    add_attribute("RFC822", email_addr);
    add_attribute("DNS", dns);
    add_attribute("URI", uri);
+   add_attribute("IP", ip);
    }
 
 /*************************************************
@@ -109,8 +113,18 @@ void encode_entries(DER_Encoder& encoder,
    std::pair<iter, iter> range = attr.equal_range(type);
    for(iter j = range.first; j != range.second; ++j)
       {
-      ASN1_String asn1_string(j->second, IA5_STRING);
-      encoder.add_object(tagging, CONTEXT_SPECIFIC, asn1_string.iso_8859());
+      if(type == "RFC822" || type == "DNS" || type == "URI")
+         {
+         ASN1_String asn1_string(j->second, IA5_STRING);
+         encoder.add_object(tagging, CONTEXT_SPECIFIC, asn1_string.iso_8859());
+         }
+      else if(type == "IP")
+         {
+         u32bit ip = string_to_ipv4(j->second);
+         byte ip_buf[4] = { 0 };
+         store_be(ip, ip_buf);
+         encoder.add_object(tagging, CONTEXT_SPECIFIC, ip_buf, 4);
+         }
       }
    }
 
@@ -126,6 +140,7 @@ void AlternativeName::encode_into(DER_Encoder& der) const
    encode_entries(der, alt_info, "RFC822", ASN1_Tag(1));
    encode_entries(der, alt_info, "DNS", ASN1_Tag(2));
    encode_entries(der, alt_info, "URI", ASN1_Tag(6));
+   encode_entries(der, alt_info, "IP", ASN1_Tag(7));
 
    std::multimap<OID, ASN1_String>::const_iterator i;
    for(i = othernames.begin(); i != othernames.end(); ++i)
@@ -194,6 +209,14 @@ void AlternativeName::decode_from(BER_Decoder& source)
          if(tag == 1) add_attribute("RFC822", value);
          if(tag == 2) add_attribute("DNS", value);
          if(tag == 6) add_attribute("URI", value);
+         }
+      else if(tag == 7)
+         {
+         if(obj.value.size() == 4)
+            {
+            u32bit ip = load_be<u32bit>(obj.value.begin(), 0);
+            add_attribute("IP", ipv4_to_string(ip));
+            }
          }
 
       }

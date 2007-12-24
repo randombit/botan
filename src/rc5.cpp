@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/rc5.h>
+#include <botan/loadstor.h>
 #include <botan/bit_ops.h>
 #include <botan/parsing.h>
 #include <algorithm>

@@ -57,8 +57,6 @@ int main(int argc, char* argv[])
       }
 
    try {
-      LibraryInitializer init;
-
       X509_Certificate cert(argv[1]);
 
       std::cout << "Version: " << cert.x509_version() << std::endl;
@@ -71,6 +69,9 @@ int main(int argc, char* argv[])
       do_subject(cert, "Locality");
       do_subject(cert, "State");
       do_subject(cert, "Country");
+      do_subject(cert, "IP");
+      do_subject(cert, "DNS");
+      do_subject(cert, "URI");
       do_subject(cert, "PKIX.XMPPAddr");
 
       std::cout << "Issuer" << std::endl;
@@ -81,6 +82,9 @@ int main(int argc, char* argv[])
       do_issuer(cert, "Locality");
       do_issuer(cert, "State");
       do_issuer(cert, "Country");
+      do_issuer(cert, "IP");
+      do_issuer(cert, "DNS");
+      do_issuer(cert, "URI");
 
       std::cout << "Validity" << std::endl;
 

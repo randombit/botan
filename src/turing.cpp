@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/turing.h>
+#include <botan/loadstor.h>
 #include <botan/bit_ops.h>
 
 namespace Botan {
@@ -169,7 +170,7 @@ void Turing::generate()
    }
 
 /*************************************************
-*
+* Turing's byte mixing step                      *
 *************************************************/
 u32bit Turing::fixedS(u32bit W)
    {

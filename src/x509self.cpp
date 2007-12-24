@@ -50,7 +50,7 @@ void load_info(const X509_Cert_Options& opts, X509_DN& subject_dn,
    subject_dn.add_attribute("X520.Organization", opts.organization);
    subject_dn.add_attribute("X520.OrganizationalUnit", opts.org_unit);
    subject_dn.add_attribute("X520.SerialNumber", opts.serial_number);
-   subject_alt = AlternativeName(opts.email, opts.uri, opts.dns);
+   subject_alt = AlternativeName(opts.email, opts.uri, opts.dns, opts.ip);
    subject_alt.add_othername(OIDS::lookup("PKIX.XMPPAddr"),
                              opts.xmpp, UTF8_STRING);
    }

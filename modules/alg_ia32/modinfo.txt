@@ -2,7 +2,7 @@ realname "Algorithm x86 Assembler"
 
 mp_bits 32
 
-load_on: asm_ok
+load_on asm_ok
 
 <replace>
 md4.cpp

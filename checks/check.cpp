@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
                    << "  --validate: Check test vectors\n"
                    << "  --benchmark: Benchmark everything\n"
                    << "  --bench-type={block,mode,stream,hash,mac,rng,pk}:\n"
-                   << "         Benchmark only algorithms of a particular type\n"
+                   << "       Benchmark only algorithms of a particular type\n"
                    << "  --html: Produce HTML output for benchmarks\n"
                    << "  --seconds=n: Benchmark for n seconds\n"
                    << "  --init=<str>: Pass <str> to the library\n"
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
       if(opts.is_set("seconds"))
          {
          seconds = std::atof(opts.value("seconds").c_str());
-         if((seconds < 0.1 || seconds > 30) && seconds != 0)
+         if(seconds && (seconds < 0.1 || seconds > (5 * 60)))
             {
             std::cout << "Invalid argument to --seconds\n";
             return 2;

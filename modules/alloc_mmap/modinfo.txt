@@ -1,8 +1,9 @@
 realname "Disk Based Allocation System"
 
 define ALLOC_MMAP
+modset unix
 
-load_on: auto
+load_on auto
 
 <add>
 mmap_mem.cpp

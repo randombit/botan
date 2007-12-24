@@ -5,9 +5,3 @@ os_type unix
 <supports_shared>
 all
 </supports_shared>
-
-<arch>
-mips32
-mips64
-</arch>
-

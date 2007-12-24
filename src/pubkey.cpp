@@ -4,12 +4,12 @@
 *************************************************/
 
 #include <botan/pubkey.h>
+#include <botan/lookup.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/parsing.h>
 #include <botan/bit_ops.h>
-#include <botan/lookup.h>
 #include <memory>
 
 namespace Botan {

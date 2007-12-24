@@ -8,6 +8,7 @@
 
 #include <botan/base.h>
 #include <botan/enums.h>
+#include <botan/init.h>
 #include <botan/ui.h>
 #include <string>
 #include <vector>
@@ -21,6 +22,15 @@ namespace Botan {
 class Library_State
    {
    public:
+      Library_State();
+      ~Library_State();
+
+      void initialize(const InitializerOptions&, Modules&);
+
+      void load(Modules&);
+
+      void add_engine(class Engine*);
+
       class Engine_Iterator
          {
          public:
@@ -52,14 +62,10 @@ class Library_State
       void add_entropy(EntropySource&, bool);
       u32bit seed_prng(bool, u32bit);
 
-      void load(class Modules&);
-
       void set_timer(class Timer*);
       u64bit system_clock() const;
 
       class Config& config() const;
-
-      void add_engine(class Engine*);
 
       class Mutex* get_mutex() const;
       class Mutex* get_named_mutex(const std::string&);
@@ -73,9 +79,6 @@ class Library_State
       void set_transcoder(class Charset_Transcoder*);
       std::string transcode(const std::string,
                             Character_Set, Character_Set) const;
-
-      Library_State(class Mutex_Factory*);
-      ~Library_State();
    private:
       Library_State(const Library_State&) {}
       Library_State& operator=(const Library_State&) { return (*this); }
@@ -84,7 +87,7 @@ class Library_State
 
       class Mutex_Factory* mutex_factory;
       class Timer* timer;
-      class Config* config_obj;
+      mutable class Config* config_obj;
       class X509_GlobalState* x509_state_obj;
 
       std::map<std::string, class Mutex*> locks;

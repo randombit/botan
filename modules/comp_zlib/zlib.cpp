@@ -97,12 +97,12 @@ void Zlib_Compression::start_msg()
 *************************************************/
 void Zlib_Compression::write(const byte input[], u32bit length)
    {
-   zlib->stream.next_in = (Bytef*)input;
+   zlib->stream.next_in = static_cast<Bytef*>(input);
    zlib->stream.avail_in = length;
 
    while(zlib->stream.avail_in != 0)
       {
-      zlib->stream.next_out = (Bytef*)buffer.begin();
+      zlib->stream.next_out = static_cast<Bytef*>(buffer.begin());
       zlib->stream.avail_out = buffer.size();
       deflate(&(zlib->stream), Z_NO_FLUSH);
       send(buffer.begin(), buffer.size() - zlib->stream.avail_out);
@@ -120,7 +120,7 @@ void Zlib_Compression::end_msg()
    int rc = Z_OK;
    while(rc != Z_STREAM_END)
       {
-      zlib->stream.next_out = (Bytef*)buffer.begin();
+      zlib->stream.next_out = static_cast<Bytef*>(buffer.begin());
       zlib->stream.avail_out = buffer.size();
       rc = deflate(&(zlib->stream), Z_FINISH);
       send(buffer.begin(), buffer.size() - zlib->stream.avail_out);
@@ -138,7 +138,7 @@ void Zlib_Compression::flush()
 
    while(true)
       {
-      zlib->stream.next_out = (Bytef*)buffer.begin();
+      zlib->stream.next_out = static_cast<Bytef*>(buffer.begin());
       zlib->stream.avail_out = buffer.size();
       deflate(&(zlib->stream), Z_FULL_FLUSH);
       send(buffer.begin(), buffer.size() - zlib->stream.avail_out);
@@ -188,12 +188,12 @@ void Zlib_Decompression::write(const byte input[], u32bit length)
    {
    if(length) no_writes = false;
 
-   zlib->stream.next_in = (Bytef*)input;
+   zlib->stream.next_in = static_cast<Bytef*>(input;
    zlib->stream.avail_in = length;
 
    while(zlib->stream.avail_in != 0)
       {
-      zlib->stream.next_out = (Bytef*)buffer.begin();
+      zlib->stream.next_out = static_cast<Bytef*>(buffer.begin();
       zlib->stream.avail_out = buffer.size();
 
       int rc = inflate(&(zlib->stream), Z_SYNC_FLUSH);
@@ -213,7 +213,7 @@ void Zlib_Decompression::write(const byte input[], u32bit length)
          {
          u32bit read_from_block = length - zlib->stream.avail_in;
          start_msg();
-         zlib->stream.next_in = (Bytef*)input + read_from_block;
+         zlib->stream.next_in = static_cast<Bytef*>(input + read_from_block;
          zlib->stream.avail_in = length - read_from_block;
          input += read_from_block;
          length -= read_from_block;
@@ -233,7 +233,7 @@ void Zlib_Decompression::end_msg()
    int rc = Z_OK;
    while(rc != Z_STREAM_END)
       {
-      zlib->stream.next_out = (Bytef*)buffer.begin();
+      zlib->stream.next_out = static_cast<Bytef*>(buffer.begin();
       zlib->stream.avail_out = buffer.size();
       rc = inflate(&(zlib->stream), Z_SYNC_FLUSH);
       if(rc != Z_OK && rc != Z_STREAM_END)

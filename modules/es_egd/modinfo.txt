@@ -2,7 +2,8 @@ realname "EGD Entropy Source"
 
 define ENTROPY_SRC_EGD
 
-load_on: auto
+load_on auto
+modset unix
 
 <add>
 es_egd.h

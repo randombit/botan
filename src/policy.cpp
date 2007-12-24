@@ -44,8 +44,13 @@ void set_default_oids(Config& config)
    add_oid(config, "2.16.840.1.101.3.4.1.42", "AES-256/CBC");
 
    add_oid(config, "1.2.840.113549.2.5", "MD5");
-   add_oid(config, "1.3.14.3.2.26", "SHA-160");
    add_oid(config, "1.3.6.1.4.1.11591.12.2", "Tiger(24,3)");
+
+   add_oid(config, "1.3.14.3.2.26", "SHA-160");
+   add_oid(config, "2.16.840.1.101.3.4.2.4", "SHA-224");
+   add_oid(config, "2.16.840.1.101.3.4.2.1", "SHA-256");
+   add_oid(config, "2.16.840.1.101.3.4.2.2", "SHA-384");
+   add_oid(config, "2.16.840.1.101.3.4.2.3", "SHA-512");
 
    add_oid(config, "1.2.840.113549.1.9.16.3.6", "KeyWrap.TripleDES");
    add_oid(config, "1.2.840.113549.1.9.16.3.7", "KeyWrap.RC2");
@@ -64,7 +69,10 @@ void set_default_oids(Config& config)
    add_oid(config, "1.2.840.113549.1.1.12", "RSA/EMSA3(SHA-384)");
    add_oid(config, "1.2.840.113549.1.1.13", "RSA/EMSA3(SHA-512)");
    add_oid(config, "1.3.36.3.3.1.2", "RSA/EMSA3(RIPEMD-160)");
+
    add_oid(config, "1.2.840.10040.4.3", "DSA/EMSA1(SHA-160)");
+   add_oid(config, "2.16.840.1.101.3.4.3.1", "DSA/EMSA1(SHA-224)");
+   add_oid(config, "2.16.840.1.101.3.4.3.2", "DSA/EMSA1(SHA-256)");
 
    add_oid(config, "1.3.6.1.4.1.25258.2.1.1.1", "RW/EMSA2(RIPEMD-160)");
    add_oid(config, "1.3.6.1.4.1.25258.2.1.1.2", "RW/EMSA2(SHA-160)");
@@ -220,8 +228,8 @@ void set_default_config(Config& config)
    config.set_option("pem/width", "64");
 
    config.set_option("rng/ms_capi_prov_type", "INTEL_SEC:RSA_FULL");
-   config.set_option("rng/unix_path", "/usr/ucb:/usr/etc:/etc");
-   config.set_option("rng/es_files", "/dev/urandom:/dev/random");
+   config.set_option("rng/unix_path", "/bin:/sbin:/usr/bin:/usr/sbin");
+   config.set_option("rng/es_files", "/dev/random:/dev/srandom:/dev/urandom");
    config.set_option("rng/egd_path",
                      "/var/run/egd-pool:/dev/egd-pool");
    config.set_option("rng/slow_poll_request", "256");

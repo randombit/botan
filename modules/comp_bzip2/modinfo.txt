@@ -3,8 +3,9 @@
 realname "Bzip2 Compressor"
 
 define COMPRESSOR_BZIP2
+modset compression
 
-load_on: request
+load_on request
 
 <add>
 bzip2.h

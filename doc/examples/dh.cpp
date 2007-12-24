@@ -14,8 +14,6 @@ using namespace Botan;
 int main()
    {
    try {
-      LibraryInitializer init;
-
       // Alice creates a DH key and sends (the public part) to Bob
       DH_PrivateKey private_a(DL_Group("modp/ietf/1024"));
       DH_PublicKey public_a = private_a; // Bob gets this
