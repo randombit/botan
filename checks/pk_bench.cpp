@@ -4,6 +4,7 @@
 #include <botan/nr.h>
 #include <botan/rw.h>
 #include <botan/elgamal.h>
+#include <botan/parsing.h>
 
 #include <botan/pkcs8.h>
 #include <botan/look_pk.h>
@@ -53,8 +54,6 @@ void bench_pk(const std::string& algo, bool html, double seconds)
      ad-hoc format (the RW algorithm has no assigned OID that I know of, so
      there is no way to encode a RW key into a PKCS #8 structure).
    */
-   try {
-
    if(algo == "All" || algo == "RSA")
       {
       const u32bit keylen[] = { 512, 1024, 1536, 2048, 3072, 4096, 0 };
@@ -69,7 +68,7 @@ void bench_pk(const std::string& algo, bool html, double seconds)
             );
 
          if(key.get() == 0)
-            throw Invalid_Argument(file + " doesn't have an RSA key in it!");
+            throw Invalid_Argument("Failure reading RSA key from " + file);
 
          bench_enc(get_pk_encryptor(*key, "Raw"),
                    "RSA-" + len_str, seconds, html);
