@@ -253,18 +253,33 @@ sub display_help {
 
 Usage for $0 (Botan $VERSION_STRING):
 
-  --help               display this help
-  --version            display the version of Botan
-  --quiet              display only warnings and errors
-  --trace              enable tracing
+To set the compiler to use, or which OS or CPU to target, use:
 
-  To change where the library is installed:
+  --cc=[$compilers]
+  --os=[$oses generic]
+  --cpu=[$cpus generic]
+
+  --endian=[little big none]
+  --unaligned-mem=[yes no]
+
+To change what modules to use:
+
+  --modules=
+       [$modules]
+
+To add a set of modules:
+  --module-set=[$sets]
+
+  --module-info:       display more information about modules
+  --noauto:            don't enable any modules unless specifically named
+
+To change where the library is installed:
 
   --prefix=PATH:       set the base installation directory
   --libdir=PATH:       install library files in \${prefix}/\${libdir}
   --docdir=PATH:       install documentation in \${prefix}/\${docdir}
 
-  To change build options:
+To change build options:
 
   --build-dir=DIR:     setup the build in DIR
   --local-config=FILE: include the contents of FILE into build.h
@@ -274,30 +289,16 @@ Usage for $0 (Botan $VERSION_STRING):
   --no-shared:         don't build shared libararies
   --make-style=STYLE:  override the guess as to what type of makefile to use
 
-  To change what modules to use:
-
-  --modules=
-       [$modules]
-
-  To add a set of modules:
-  --module-set=[$sets]
-
-  --module-info:       display more information about modules
-  --noauto:            don't enable any modules unless specifically named
-
-  Normally $0 will guess the right compiler, OS, and CPU.
-  To override it:
-
-  --cc=[$compilers]
-  --os=[$oses generic]
-  --cpu=[$cpus generic]
-
-  --endian=[little big none]
-  --unaligned-mem=[yes no]
-
-  For more information about support CPUs, use --arch-info:
+For more information about supported CPUs, use --arch-info:
 
   --arch-info=[$cpus]
+
+For diagnostic output:
+
+  --help               display this help
+  --version            display the version of Botan
+  --quiet              display only warnings and errors
+  --trace              enable tracing
 
 See doc/building.pdf for more information about this program.
 
