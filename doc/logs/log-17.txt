@@ -1,10 +1,11 @@
 
-* 1.7.3, November 4, 2007
+* 1.7.3, January 23, 2008
  - New invocation syntax for configure.pl with several new options
  - Support for IPv4 addresses in a subject alternative name
  - New fast poll for the generic Unix entropy source (es_unix)
+ - The es_file entropy source has been replaced by the es_dev module
  - The malloc allocator does not inherit from Pooling_Allocator anymore
- - The dirs that es_unix will search in are now fully user-configurable
+ - The path that es_unix will search in are now fully user-configurable
  - Truncate X9.42 PRF output rather than allow counter overflow
  - PowerPC is now assumed to be big-endian
 
