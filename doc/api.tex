@@ -1941,11 +1941,11 @@ to use is to create (or request) a CA certificate, which can be done by calling
 the member function \function{CA\_key}. This should only be used when needed.
 
 Other constraints can be set by calling the member functions
-\function{add\_constraints} and \function{add\_ex\_constraints}. The first takes
-a \type{Key\_Constraints} value, and replaces any previously set value. If no
-value is set, then the certificate key is marked as being valid for any usage.
-You can set it to any of the following (for more than one usage, OR them
-together): \type{DIGITAL\_SIGNATURE}, \type{NON\_REPUDIATION},
+\function{add\_constraints} and \function{add\_ex\_constraints}. The first
+takes a \type{Key\_Constraints} value, and replaces any previously set
+value. If no value is set, then the certificate key is marked as being valid
+for any usage.  You can set it to any of the following (for more than one
+usage, OR them together): \type{DIGITAL\_SIGNATURE}, \type{NON\_REPUDIATION},
 \type{KEY\_ENCIPHERMENT}, \type{DATA\_ENCIPHERMENT}, \type{KEY\_AGREEMENT},
 \type{KEY\_CERT\_SIGN}, \type{CRL\_SIGN}, \type{ENCIPHER\_ONLY},
 \type{DECIPHER\_ONLY}. Many of these have quite special semantics, so you
@@ -2704,8 +2704,8 @@ for use by applications.
 
 Here, in a separate list, are the options which control which extension are
 included in a newly generated X.509v3 certificate, and if they should be marked
-as critical extensions or not. Each one begins with ``x509/exts/'' (\ie, what is
-referred to as ``basic\_constraints'' below is actually
+as critical extensions or not. Each one begins with ``x509/exts/'' (\ie, what
+is referred to as ``basic\_constraints'' below is actually
 ``x509/exts/basic\_constraints''), and can take on a value of ``yes'', ``no'',
 ``noncritical'', or ``critical''. A value of ``no'' means the extension is not
 included under any circumstances. A value of ``yes'' or ``noncritical'' (they
