@@ -71,7 +71,7 @@ void FTW_EntropySource::gather_from_dir(const std::string& dirname)
 
       const std::string filename = dirname + '/' + entry->d_name;
 
-      struct ::stat stat_buf;
+      struct stat stat_buf;
       if(::lstat(filename.c_str(), &stat_buf) == -1)
          { entry = ::readdir(dir); continue; }
 

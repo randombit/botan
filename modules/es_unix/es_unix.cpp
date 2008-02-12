@@ -51,7 +51,7 @@ void Unix_EntropySource::do_fast_poll()
 
    for(u32bit j = 0; STAT_TARGETS[j]; j++)
       {
-      struct ::stat statbuf;
+      struct stat statbuf;
       clear_mem(&statbuf, 1);
       ::stat(STAT_TARGETS[j], &statbuf);
       add_bytes(&statbuf, sizeof(statbuf));
