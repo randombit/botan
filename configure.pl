@@ -1031,7 +1031,8 @@ sub load_module {
     my %module = %{$MODULES{$modname}};
 
     my $works_on = sub {
-        my ($what, @lst) = @_;
+        my ($what, $lst_ref) = @_;
+        my @lst = @{$lst_ref};
         return 1 if not @lst; # empty list -> no restrictions
         return 1 if $what eq 'generic'; # trust the user
         return in_array($what, \@lst);
@@ -1041,19 +1042,19 @@ sub load_module {
     my $os = $$config{'os'};
 
     croak("Module '$modname' does not run on $os")
-        unless(&$works_on($os, @{$module{'os'}}));
+        unless(&$works_on($os, $module{'os'}));
 
     my $arch = $$config{'arch'};
     my $sub = $$config{'submodel'};
 
     croak("Module '$modname' does not run on $arch/$sub")
-        unless(&$works_on($arch, @{$module{'arch'}}) or
-               &$works_on($sub, @{$module{'arch'}}));
+        unless(&$works_on($arch, $module{'arch'}) or
+               &$works_on($sub, $module{'arch'}));
 
     my $cc = $$config{'compiler'};
 
     croak("Module '$modname' does not work with $cc")
-        unless(&$works_on($cc, @{$module{'cc'}}));
+        unless(&$works_on($cc, $module{'cc'}));
 
     my $handle_files = sub {
         my($lst, $func) = @_;
