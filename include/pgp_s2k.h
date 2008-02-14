@@ -1,6 +1,6 @@
 /*************************************************
 * OpenPGP S2K Header File                        *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2008 The Botan Project                *
 *************************************************/
 
 #ifndef BOTAN_OPENPGP_S2K_H__

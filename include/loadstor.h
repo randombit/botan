@@ -1,6 +1,6 @@
 /*************************************************
 * Load/Store Operators Header File               *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2008 The Botan Project                *
 *************************************************/
 
 #ifndef BOTAN_LOAD_STORE_H__

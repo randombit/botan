@@ -1,6 +1,6 @@
 /*************************************************
 * S-Box Tables for Tiger                         *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2008 The Botan Project                *
 *************************************************/
 
 #include <botan/tiger.h>
