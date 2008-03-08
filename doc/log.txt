@@ -1,4 +1,7 @@
 
+* 1.6.4, March 8, 2008
+ - Fix a compilation problem with Visual Studio C++ 2003
+
 * 1.6.3, July 23, 2007
  - Fix a race condition in the algorithm lookup cache
  - Fix problems building the memory pool on some versions of Visual C++
