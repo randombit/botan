@@ -24,11 +24,24 @@ template<typename T> inline T rotate_right(T input, u32bit rot)
    }
 
 /*************************************************
-* Byteswap                                       *
+* Byte Swapping Functions                        *
 *************************************************/
-u16bit reverse_bytes(u16bit);
-u32bit reverse_bytes(u32bit);
-u64bit reverse_bytes(u64bit);
+inline u16bit reverse_bytes(u16bit input)
+   {
+   return rotate_left(input, 8);
+   }
+
+inline u32bit reverse_bytes(u32bit input)
+   {
+   input = ((input & 0xFF00FF00) >> 8) | ((input & 0x00FF00FF) << 8);
+   return rotate_left(input, 16);
+   }
+
+inline u64bit reverse_bytes(u64bit input)
+   {
+   return rotate_left(static_cast<u32bit>(input      ), 16) |
+          rotate_left(static_cast<u32bit>(input >> 32), 16);
+   }
 
 /*************************************************
 * Array XOR                                      *

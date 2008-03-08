@@ -43,35 +43,6 @@ void xor_buf(byte out[], const byte in[], const byte mask[], u32bit length)
    }
 
 /*************************************************
-* Reverse bytes                                   *
-*************************************************/
-u16bit reverse_bytes(u16bit input)
-   {
-   return rotate_left(input, 8);
-   }
-
-/*************************************************
-* Reverse bytes                                   *
-*************************************************/
-u32bit reverse_bytes(u32bit input)
-   {
-   input = ((input & 0xFF00FF00) >> 8) | ((input & 0x00FF00FF) << 8);
-   return rotate_left(input, 16);
-   }
-
-/*************************************************
-* Reverse bytes                                   *
-*************************************************/
-u64bit reverse_bytes(u64bit input)
-   {
-   input = ((input & 0xFF00FF00FF00FF00) >>  8) |
-           ((input & 0x00FF00FF00FF00FF) <<  8);
-   input = ((input & 0xFFFF0000FFFF0000) >> 16) |
-           ((input & 0x0000FFFF0000FFFF) << 16);
-   return rotate_left(input, 32);
-   }
-
-/*************************************************
 * Return true iff arg is 2**n for some n > 0     *
 *************************************************/
 bool power_of_2(u64bit arg)
