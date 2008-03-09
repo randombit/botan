@@ -107,14 +107,14 @@ inline word word8_sub3(word z[8], const word x[8],
 *************************************************/
 inline word word8_linmul2(word x[4], word y, word carry)
    {
-   x[0] = word_madd2(x[0], y, carry, &carry);
-   x[1] = word_madd2(x[1], y, carry, &carry);
-   x[2] = word_madd2(x[2], y, carry, &carry);
-   x[3] = word_madd2(x[3], y, carry, &carry);
-   x[4] = word_madd2(x[4], y, carry, &carry);
-   x[5] = word_madd2(x[5], y, carry, &carry);
-   x[6] = word_madd2(x[6], y, carry, &carry);
-   x[7] = word_madd2(x[7], y, carry, &carry);
+   x[0] = word_madd2(x[0], y, &carry);
+   x[1] = word_madd2(x[1], y, &carry);
+   x[2] = word_madd2(x[2], y, &carry);
+   x[3] = word_madd2(x[3], y, &carry);
+   x[4] = word_madd2(x[4], y, &carry);
+   x[5] = word_madd2(x[5], y, &carry);
+   x[6] = word_madd2(x[6], y, &carry);
+   x[7] = word_madd2(x[7], y, &carry);
    return carry;
    }
 
@@ -123,14 +123,14 @@ inline word word8_linmul2(word x[4], word y, word carry)
 *************************************************/
 inline word word8_linmul3(word z[8], const word x[8], word y, word carry)
    {
-   z[0] = word_madd2(x[0], y, carry, &carry);
-   z[1] = word_madd2(x[1], y, carry, &carry);
-   z[2] = word_madd2(x[2], y, carry, &carry);
-   z[3] = word_madd2(x[3], y, carry, &carry);
-   z[4] = word_madd2(x[4], y, carry, &carry);
-   z[5] = word_madd2(x[5], y, carry, &carry);
-   z[6] = word_madd2(x[6], y, carry, &carry);
-   z[7] = word_madd2(x[7], y, carry, &carry);
+   z[0] = word_madd2(x[0], y, &carry);
+   z[1] = word_madd2(x[1], y, &carry);
+   z[2] = word_madd2(x[2], y, &carry);
+   z[3] = word_madd2(x[3], y, &carry);
+   z[4] = word_madd2(x[4], y, &carry);
+   z[5] = word_madd2(x[5], y, &carry);
+   z[6] = word_madd2(x[6], y, &carry);
+   z[7] = word_madd2(x[7], y, &carry);
    return carry;
    }
 
@@ -139,14 +139,14 @@ inline word word8_linmul3(word z[8], const word x[8], word y, word carry)
 *************************************************/
 inline word word8_madd3(word z[8], const word x[8], word y, word carry)
    {
-   z[0] = word_madd3(x[0], y, z[0], carry, &carry);
-   z[1] = word_madd3(x[1], y, z[1], carry, &carry);
-   z[2] = word_madd3(x[2], y, z[2], carry, &carry);
-   z[3] = word_madd3(x[3], y, z[3], carry, &carry);
-   z[4] = word_madd3(x[4], y, z[4], carry, &carry);
-   z[5] = word_madd3(x[5], y, z[5], carry, &carry);
-   z[6] = word_madd3(x[6], y, z[6], carry, &carry);
-   z[7] = word_madd3(x[7], y, z[7], carry, &carry);
+   z[0] = word_madd3(x[0], y, z[0], &carry);
+   z[1] = word_madd3(x[1], y, z[1], &carry);
+   z[2] = word_madd3(x[2], y, z[2], &carry);
+   z[3] = word_madd3(x[3], y, z[3], &carry);
+   z[4] = word_madd3(x[4], y, z[4], &carry);
+   z[5] = word_madd3(x[5], y, z[5], &carry);
+   z[6] = word_madd3(x[6], y, z[6], &carry);
+   z[7] = word_madd3(x[7], y, z[7], &carry);
    return carry;
    }
 
@@ -155,9 +155,10 @@ inline word word8_madd3(word z[8], const word x[8], word y, word carry)
 *************************************************/
 inline void word3_muladd(word* w2, word* w1, word* w0, word a, word b)
    {
-   *w0 = word_madd2(a, b, *w0, &b);
-   *w1 += b;
-   *w2 += (*w1 < b) ? 1 : 0;
+   word carry = *w0;
+   *w0 = word_madd2(a, b, &carry);
+   *w1 += carry;
+   *w2 += (*w1 < carry) ? 1 : 0;
    }
 
 /*************************************************
@@ -165,14 +166,16 @@ inline void word3_muladd(word* w2, word* w1, word* w0, word a, word b)
 *************************************************/
 inline void word3_muladd_2(word* w2, word* w1, word* w0, word a, word b)
    {
-   a = word_madd2(a, b, 0, &b);
+   word carry = 0;
+   a = word_madd2(a, b, &carry);
+   b = carry;
 
    word top = (b >> (BOTAN_MP_WORD_BITS-1));
    b <<= 1;
    b |= (a >> (BOTAN_MP_WORD_BITS-1));
    a <<= 1;
 
-   word carry = 0;
+   carry = 0;
    *w0 = word_add(*w0, a, &carry);
    *w1 = word_add(*w1, b, &carry);
    *w2 = word_add(*w2, top, &carry);

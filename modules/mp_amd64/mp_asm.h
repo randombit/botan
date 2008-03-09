@@ -24,15 +24,15 @@ extern "C" {
 /*************************************************
 * Word Multiply                                  *
 *************************************************/
-inline word word_madd2(word a, word b, word c, word* carry)
+inline word word_madd2(word a, word b, word* c)
    {
    asm(
       ASM("mulq %[b]")
       ASM("addq %[c],%[a]")
       ASM("adcq $0,%[carry]")
 
-      : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*carry)
-      : "0"(a), "1"(b), [c]"g"(c) : "cc");
+      : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*c)
+      : "0"(a), "1"(b), [c]"g"(*c) : "cc");
 
    return a;
    }
@@ -40,7 +40,7 @@ inline word word_madd2(word a, word b, word c, word* carry)
 /*************************************************
 * Word Multiply/Add                              *
 *************************************************/
-inline word word_madd3(word a, word b, word c, word d, word* carry)
+inline word word_madd3(word a, word b, word c, word* d)
    {
    asm(
       ASM("mulq %[b]")
@@ -51,8 +51,8 @@ inline word word_madd3(word a, word b, word c, word d, word* carry)
       ASM("addq %[d],%[a]")
       ASM("adcq $0,%[carry]")
 
-      : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*carry)
-      : "0"(a), "1"(b), [c]"g"(c), [d]"g"(d) : "cc");
+      : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*d)
+      : "0"(a), "1"(b), [c]"g"(c), [d]"g"(*d) : "cc");
 
    return a;
    }

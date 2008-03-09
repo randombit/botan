@@ -24,7 +24,7 @@ word bigint_mul_add_words(word z[], const word x[], u32bit x_size, word y)
       carry = word8_madd3(z + j, x + j, y, carry);
 
    for(u32bit j = blocks; j != x_size; ++j)
-      z[j] = word_madd3(x[j], y, z[j], carry, &carry);
+      z[j] = word_madd3(x[j], y, z[j], &carry);
 
    return carry;
    }

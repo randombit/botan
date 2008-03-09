@@ -27,20 +27,20 @@ extern "C" {
 /*************************************************
 * Word Multiply/Add                              *
 *************************************************/
-inline word word_madd2(word a, word b, word c, word* carry)
+inline word word_madd2(word a, word b, word* c)
    {
-   dword z = (dword)a * b + c;
-   *carry = (word)(z >> BOTAN_MP_WORD_BITS);
+   dword z = (dword)a * b + *c;
+   *c = (word)(z >> BOTAN_MP_WORD_BITS);
    return (word)z;
    }
 
 /*************************************************
 * Word Multiply/Add                              *
 *************************************************/
-inline word word_madd3(word a, word b, word c, word d, word* carry)
+inline word word_madd3(word a, word b, word c, word* d)
    {
-   dword z = (dword)a * b + c + d;
-   *carry = (word)(z >> BOTAN_MP_WORD_BITS);
+   dword z = (dword)a * b + c + *d;
+   *d = (word)(z >> BOTAN_MP_WORD_BITS);
    return (word)z;
    }
 
