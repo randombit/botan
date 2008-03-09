@@ -104,27 +104,27 @@ void Turing::generate()
    {
    for(u32bit j = 0; j != 17; ++j)
       {
-      const u32bit offset_0 = OFFSETS[16*j];
-      const u32bit offset_1 = OFFSETS[16*j+1];
-      const u32bit offset_2 = OFFSETS[16*j+2];
-      const u32bit offset_3 = OFFSETS[16*j+3];
-      const u32bit offset_4 = OFFSETS[16*j+4];
-      const u32bit offset_5 = OFFSETS[16*j+5];
-      const u32bit offset_6 = OFFSETS[16*j+6];
-      const u32bit offset_7 = OFFSETS[16*j+7];
-      const u32bit offset_8 = OFFSETS[16*j+8];
-      const u32bit offset_12 = OFFSETS[16*j+9];
-      const u32bit offset_14 = OFFSETS[16*j+10];
-      const u32bit offset_15 = OFFSETS[16*j+11];
-      const u32bit offset_16 = OFFSETS[16*j+12];
+      const u32bit idx_0 = OFFSETS[16*j];
+      const u32bit idx_1 = OFFSETS[16*j+1];
+      const u32bit idx_2 = OFFSETS[16*j+2];
+      const u32bit idx_3 = OFFSETS[16*j+3];
+      const u32bit idx_4 = OFFSETS[16*j+4];
+      const u32bit idx_5 = OFFSETS[16*j+5];
+      const u32bit idx_6 = OFFSETS[16*j+6];
+      const u32bit idx_7 = OFFSETS[16*j+7];
+      const u32bit idx_8 = OFFSETS[16*j+8];
+      const u32bit idx_12 = OFFSETS[16*j+9];
+      const u32bit idx_14 = OFFSETS[16*j+10];
+      const u32bit idx_15 = OFFSETS[16*j+11];
+      const u32bit idx_16 = OFFSETS[16*j+12];
 
-      R[offset_0] = mul(R[offset_0]) ^ R[offset_15] ^ R[offset_4];
+      R[idx_0] = mul(R[idx_0]) ^ R[idx_15] ^ R[idx_4];
 
-      u32bit A = R[offset_0];
-      u32bit B = R[offset_14];
-      u32bit C = R[offset_7];
-      u32bit D = R[offset_2];
-      u32bit E = R[offset_1];
+      u32bit A = R[idx_0];
+      u32bit B = R[idx_14];
+      u32bit C = R[idx_7];
+      u32bit D = R[idx_2];
+      u32bit E = R[idx_1];
 
       E += A + B + C + D;
       A += E; B += E; C += E; D += E;
@@ -143,18 +143,18 @@ void Turing::generate()
       E += A + B + C + D;
       A += E; B += E; C += E; D += E;
 
-      R[offset_1] = mul(R[offset_1]) ^ R[offset_16] ^ R[offset_5];
-      R[offset_2] = mul(R[offset_2]) ^ R[offset_0]  ^ R[offset_6];
-      R[offset_3] = mul(R[offset_3]) ^ R[offset_1]  ^ R[offset_7];
+      R[idx_1] = mul(R[idx_1]) ^ R[idx_16] ^ R[idx_5];
+      R[idx_2] = mul(R[idx_2]) ^ R[idx_0]  ^ R[idx_6];
+      R[idx_3] = mul(R[idx_3]) ^ R[idx_1]  ^ R[idx_7];
 
-      E += R[offset_4];
+      E += R[idx_4];
 
-      R[offset_4] = mul(R[offset_4]) ^ R[offset_2]  ^ R[offset_8];
+      R[idx_4] = mul(R[idx_4]) ^ R[idx_2]  ^ R[idx_8];
 
-      A += R[offset_1];
-      B += R[offset_16];
-      C += R[offset_12];
-      D += R[offset_5];
+      A += R[idx_1];
+      B += R[idx_16];
+      C += R[idx_12];
+      D += R[idx_5];
 
       for(u32bit k = 0; k != 4; ++k)
          {
