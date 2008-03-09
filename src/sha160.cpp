@@ -54,10 +54,21 @@ inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 *************************************************/
 void SHA_160::hash(const byte input[])
    {
-   for(u32bit j = 0; j != 16; ++j)
-      W[j] = load_be<u32bit>(input, j);
-   for(u32bit j = 16; j != 80; ++j)
-      W[j] = rotate_left((W[j-3] ^ W[j-8] ^ W[j-14] ^ W[j-16]), 1);
+   for(u32bit j = 0; j != 16; j += 4)
+      {
+      W[j  ] = load_be<u32bit>(input, j);
+      W[j+1] = load_be<u32bit>(input, j+1);
+      W[j+2] = load_be<u32bit>(input, j+2);
+      W[j+3] = load_be<u32bit>(input, j+3);
+      }
+
+   for(u32bit j = 16; j != 80; j += 4)
+      {
+      W[j  ] = rotate_left((W[j-3] ^ W[j-8] ^ W[j-14] ^ W[j-16]), 1);
+      W[j+1] = rotate_left((W[j-2] ^ W[j-7] ^ W[j-13] ^ W[j-15]), 1);
+      W[j+2] = rotate_left((W[j-1] ^ W[j-6] ^ W[j-12] ^ W[j-14]), 1);
+      W[j+3] = rotate_left((W[j  ] ^ W[j-5] ^ W[j-11] ^ W[j-13]), 1);
+      }
 
    u32bit A = digest[0], B = digest[1], C = digest[2],
           D = digest[3], E = digest[4];
