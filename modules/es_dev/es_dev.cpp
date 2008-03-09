@@ -24,7 +24,7 @@ class Device_Reader
       typedef int fd_type;
 
       Device_Reader(fd_type device_fd) : fd(device_fd) {}
-      ~Device_Reader() { ::close(fd); }
+      ~Device_Reader() { if(fd > 0) { ::close(fd); } }
       u32bit get(byte out[], u32bit length);
 
       static fd_type open(const std::string& pathname);
