@@ -24,8 +24,10 @@ class WiderWake_41_BE : public StreamCipher
       void cipher(const byte[], byte[], u32bit);
       void key(const byte[], u32bit);
       void resync(const byte[], u32bit);
+
       void generate(u32bit);
-      SecureBuffer<byte, 1024> buffer;
+
+      SecureBuffer<byte, DEFAULT_BUFFERSIZE> buffer;
       SecureBuffer<u32bit, 256> T;
       SecureBuffer<u32bit, 5> state;
       SecureBuffer<u32bit, 4> t_key;
