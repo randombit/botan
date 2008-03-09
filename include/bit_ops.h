@@ -39,8 +39,11 @@ inline u32bit reverse_bytes(u32bit input)
 
 inline u64bit reverse_bytes(u64bit input)
    {
-   return rotate_left(static_cast<u32bit>(input      ), 16) |
-          rotate_left(static_cast<u32bit>(input >> 32), 16);
+   u32bit hi = ((input >> 40) & 0x00FF00FF) | ((input >> 24) & 0xFF00FF00);
+   u32bit lo = ((input & 0xFF00FF00) >> 8) | ((input & 0x00FF00FF) << 8);
+   hi = (hi << 16) | (hi >> 16);
+   lo = (lo << 16) | (lo >> 16);
+   return (static_cast<u64bit>(lo) << 32) | hi;
    }
 
 /*************************************************
