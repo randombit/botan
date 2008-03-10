@@ -78,6 +78,6 @@ ppc64   -> "-m64"
 # This should probably be used on most/all targets, but the docs are incomplete
 openbsd -> "-pthread"
 freebsd -> "-pthread"
-netbsd  -> "-pthread"
+netbsd  -> "-pthread -D_NETBSD_SOURCE"
 qnx     -> "-fexceptions -D_QNX_SOURCE"
 </mach_abi_linking>
