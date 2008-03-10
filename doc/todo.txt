@@ -64,6 +64,10 @@ Much of the code operates at a very low level of abstraction; this has
 caused it to be difficult to add tests that vary much from the simple
 known answer tests used for the ciphers and hashes.
 
+All of the simple functions (rotate_left, get_byte, etc) should be
+tested (a failure in one of these causes many failures later, which
+are harder to diagnose).
+
 There are significant codepaths that have no tests written for them,
 particularly in the X.509 certificate processing code.
 
