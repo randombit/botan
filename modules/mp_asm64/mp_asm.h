@@ -53,31 +53,31 @@ namespace Botan {
 /*************************************************
 * Word Multiply/Add                              *
 *************************************************/
-inline word word_madd2(word a, word b, word c, word* carry)
+inline word word_madd2(word a, word b, word* c)
    {
    word z0 = 0, z1 = 0;
 
    BOTAN_WORD_MUL(a, b, z1, z0);
 
-   z1 += c; if(z1 < c) z0++;
+   z1 += *c; if(z1 < *c) z0++;
 
-   *carry = z0;
+   *c = z0;
    return z1;
    }
 
 /*************************************************
 * Word Multiply/Add                              *
 *************************************************/
-inline word word_madd3(word a, word b, word c, word d, word* carry)
+inline word word_madd3(word a, word b, word c, word* d)
    {
    word z0 = 0, z1 = 0;
 
    BOTAN_WORD_MUL(a, b, z1, z0);
 
    z1 += c; if(z1 < c) z0++;
-   z1 += d; if(z1 < d) z0++;
+   z1 += *d; if(z1 < *d) z0++;
 
-   *carry = z0;
+   *d = z0;
    return z1;
    }
 
