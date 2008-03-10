@@ -1,6 +1,6 @@
 /*************************************************
 * Tables for Turing                              *
-* (C) 1999-2008 The Botan Project                *
+* (C) 1999-2007 The Botan Project                *
 *************************************************/
 
 #include <botan/turing.h>

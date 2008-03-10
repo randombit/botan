@@ -1,6 +1,6 @@
 /*************************************************
 * MPI Multiply-Add Core Header File              *
-* (C) 1999-2008 The Botan Project                *
+* (C) 1999-2007 The Botan Project                *
 *************************************************/
 
 #ifndef BOTAN_MP_MADD_H__

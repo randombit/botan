@@ -1,6 +1,6 @@
 /*************************************************
 * ANSI X9.19 MAC Header File                     *
-* (C) 1999-2008 The Botan Project                *
+* (C) 1999-2007 The Botan Project                *
 *************************************************/
 
 #ifndef BOTAN_ANSI_X919_MAC_H__

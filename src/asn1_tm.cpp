@@ -1,6 +1,6 @@
 /*************************************************
 * X.509 Time Types Source File                   *
-* (C) 1999-2008 The Botan Project                *
+* (C) 1999-2007 The Botan Project                *
 *************************************************/
 
 #include <botan/asn1_obj.h>
