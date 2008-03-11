@@ -62,10 +62,13 @@ class DataSource_Stream : public DataSource
       bool end_of_data() const;
       std::string id() const;
 
+      DataSource_Stream(std::istream&, const std::string& id = "");
       DataSource_Stream(const std::string&, bool = false);
       ~DataSource_Stream();
    private:
-      const std::string fsname;
+      const std::string identifier;
+      const bool owner;
+
       std::istream* source;
       u32bit total_read;
    };
