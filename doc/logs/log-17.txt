@@ -1,4 +1,8 @@
 
+* 1.7.5
+ - Add a new constructor for DataSource_Stream taking an istream
+ - Use a typedef in Pipe to represent the message number
+
 * 1.7.4, March 10, 2008
  - Use unaligned memory read/writes on systems that allow it, for performance
  - Assembly for x86-64 for accessing the bswap instruction
