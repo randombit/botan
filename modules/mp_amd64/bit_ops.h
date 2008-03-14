@@ -61,7 +61,8 @@ inline void xor_buf(byte out[], const byte in[], u32bit length)
 /*************************************************
 * XOR Arrays                                     *
 *************************************************/
-inline void xor_buf(byte out[], const byte in[], const byte in2[], u32bit length)
+inline void xor_buf(byte out[], const byte in[],
+                    const byte in2[], u32bit length)
    {
    while(length >= 8)
       {
