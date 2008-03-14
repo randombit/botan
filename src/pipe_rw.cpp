@@ -12,7 +12,7 @@ namespace Botan {
 /*************************************************
 * Look up the canonical ID for a queue           *
 *************************************************/
-u32bit Pipe::get_message_no(const std::string& func_name, u32bit msg) const
+Pipe::message_id Pipe::get_message_no(const std::string& func_name, message_id msg) const
    {
    if(msg == DEFAULT_MESSAGE)
       msg = default_msg();
@@ -75,7 +75,7 @@ void Pipe::write(DataSource& source)
 /*************************************************
 * Read some data from the pipe                   *
 *************************************************/
-u32bit Pipe::read(byte output[], u32bit length, u32bit msg)
+u32bit Pipe::read(byte output[], u32bit length, message_id msg)
    {
    return outputs->read(output, length, get_message_no("read", msg));
    }
@@ -91,7 +91,7 @@ u32bit Pipe::read(byte output[], u32bit length)
 /*************************************************
 * Read a single byte from the pipe               *
 *************************************************/
-u32bit Pipe::read(byte& out, u32bit msg)
+u32bit Pipe::read(byte& out, message_id msg)
    {
    return read(&out, 1, msg);
    }
@@ -99,7 +99,7 @@ u32bit Pipe::read(byte& out, u32bit msg)
 /*************************************************
 * Return all data in the pipe                    *
 *************************************************/
-SecureVector<byte> Pipe::read_all(u32bit msg)
+SecureVector<byte> Pipe::read_all(message_id msg)
    {
    msg = ((msg != DEFAULT_MESSAGE) ? msg : default_msg());
    SecureVector<byte> buffer(remaining(msg));
@@ -110,7 +110,7 @@ SecureVector<byte> Pipe::read_all(u32bit msg)
 /*************************************************
 * Return all data in the pipe as a string        *
 *************************************************/
-std::string Pipe::read_all_as_string(u32bit msg)
+std::string Pipe::read_all_as_string(message_id msg)
    {
    msg = ((msg != DEFAULT_MESSAGE) ? msg : default_msg());
    SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
@@ -131,7 +131,7 @@ std::string Pipe::read_all_as_string(u32bit msg)
 /*************************************************
 * Find out how many bytes are ready to read      *
 *************************************************/
-u32bit Pipe::remaining(u32bit msg) const
+u32bit Pipe::remaining(message_id msg) const
    {
    return outputs->remaining(get_message_no("remaining", msg));
    }
@@ -140,7 +140,7 @@ u32bit Pipe::remaining(u32bit msg) const
 * Peek at some data in the pipe                  *
 *************************************************/
 u32bit Pipe::peek(byte output[], u32bit length,
-                  u32bit offset, u32bit msg) const
+                  u32bit offset, message_id msg) const
    {
    return outputs->peek(output, length, offset, get_message_no("peek", msg));
    }
@@ -156,7 +156,7 @@ u32bit Pipe::peek(byte output[], u32bit length, u32bit offset) const
 /*************************************************
 * Peek at a byte in the pipe                     *
 *************************************************/
-u32bit Pipe::peek(byte& out, u32bit offset, u32bit msg) const
+u32bit Pipe::peek(byte& out, u32bit offset, message_id msg) const
    {
    return peek(&out, 1, offset, msg);
    }

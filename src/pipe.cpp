@@ -100,7 +100,7 @@ bool Pipe::end_of_data() const
 /*************************************************
 * Set the default read message                   *
 *************************************************/
-void Pipe::set_default_msg(u32bit msg)
+void Pipe::set_default_msg(message_id msg)
    {
    if(msg >= message_count())
       throw Invalid_Argument("Pipe::set_default_msg: msg number is too high");
@@ -284,7 +284,7 @@ u32bit Pipe::message_count() const
 /*************************************************
 * Static Member Variables                        *
 *************************************************/
-const u32bit Pipe::LAST_MESSAGE    = 0xFFFFFFFE;
-const u32bit Pipe::DEFAULT_MESSAGE = 0xFFFFFFFF;
+const Pipe::message_id Pipe::LAST_MESSAGE    = static_cast<Pipe::message_id>(-2);
+const Pipe::message_id Pipe::DEFAULT_MESSAGE = static_cast<Pipe::message_id>(-1);
 
 }
