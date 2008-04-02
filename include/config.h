@@ -6,7 +6,7 @@
 #ifndef BOTAN_POLICY_CONF_H__
 #define BOTAN_POLICY_CONF_H__
 
-#include <botan/types.h>
+#include <botan/mutex.h>
 #include <botan/enums.h>
 #include <string>
 #include <vector>
@@ -20,6 +20,9 @@ namespace Botan {
 class Config
    {
    public:
+      Config();
+      ~Config();
+
       void load_defaults();
 
       std::string get(const std::string&, const std::string&) const;
@@ -43,7 +46,11 @@ class Config
       static void choose_sig_format(const std::string&, std::string&,
                                     Signature_Format&);
    private:
+      Config(const Config&) {}
+      Config& operator=(const Config&) { return (*this); }
+
       std::map<std::string, std::string> settings;
+      Mutex* mutex;
    };
 
 /*************************************************

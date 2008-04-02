@@ -68,7 +68,6 @@ class Library_State
       class Config& config() const;
 
       class Mutex* get_mutex() const;
-      class Mutex* get_named_mutex(const std::string&);
 
       void set_x509_state(class X509_GlobalState*);
       class X509_GlobalState& x509_state();
@@ -86,11 +85,14 @@ class Library_State
       class Engine* get_engine_n(u32bit) const;
 
       class Mutex_Factory* mutex_factory;
+      class Mutex* allocator_lock;
+      class Mutex* engine_lock;
+      class Mutex* rng_lock;
+
       class Timer* timer;
       mutable class Config* config_obj;
       class X509_GlobalState* x509_state_obj;
 
-      std::map<std::string, class Mutex*> locks;
       std::map<std::string, Allocator*> alloc_factory;
       mutable Allocator* cached_default_allocator;
 

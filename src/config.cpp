@@ -23,12 +23,36 @@ Config& global_config()
    }
 
 /*************************************************
+* Dereference an alias                           *
+*************************************************/
+std::string deref_alias(const std::string& name)
+   {
+   return global_state().config().deref_alias(name);
+   }
+
+/*************************************************
+* Get a configuration value                      *
+*************************************************/
+Config::Config()
+   {
+   mutex = global_state().get_mutex();
+   }
+
+/*************************************************
+* Get a configuration value                      *
+*************************************************/
+Config::~Config()
+   {
+   delete mutex;
+   }
+
+/*************************************************
 * Get a configuration value                      *
 *************************************************/
 std::string Config::get(const std::string& section,
                         const std::string& key) const
    {
-   Named_Mutex_Holder lock("config");
+   Mutex_Holder lock(mutex);
 
    return search_map<std::string, std::string>(settings,
                                                section + "/" + key, "");
@@ -40,7 +64,7 @@ std::string Config::get(const std::string& section,
 bool Config::is_set(const std::string& section,
                     const std::string& key) const
    {
-   Named_Mutex_Holder lock("config");
+   Mutex_Holder lock(mutex);
 
    return search_map(settings, section + "/" + key, false, true);
    }
@@ -51,7 +75,7 @@ bool Config::is_set(const std::string& section,
 void Config::set(const std::string& section, const std::string& key,
                  const std::string& value, bool overwrite)
    {
-   Named_Mutex_Holder lock("config");
+   Mutex_Holder lock(mutex);
 
    std::string full_key = section + "/" + key;
 
@@ -190,14 +214,6 @@ void Config::choose_sig_format(const std::string& algo_name,
       }
    else
       throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);
-   }
-
-/*************************************************
-* Dereference an alias                           *
-*************************************************/
-std::string deref_alias(const std::string& name)
-   {
-   return global_config().deref_alias(name);
    }
 
 }

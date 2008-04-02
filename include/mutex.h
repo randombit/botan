@@ -52,18 +52,6 @@ class Mutex_Holder
       Mutex* mux;
    };
 
-/*************************************************
-* Named Mutex Holder                             *
-*************************************************/
-class Named_Mutex_Holder
-   {
-   public:
-      Named_Mutex_Holder(const std::string&);
-      ~Named_Mutex_Holder();
-   private:
-      const std::string mutex_name;
-   };
-
 }
 
 #endif
