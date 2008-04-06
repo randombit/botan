@@ -8,8 +8,6 @@ so_suffix dylib
 ar_command "ar cr"
 ar_needs_ranlib yes
 
-install_group wheel
-
 doc_dir doc
 
 <supports_shared>

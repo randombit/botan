@@ -138,22 +138,12 @@ this by using the \texttt{--prefix} argument to
 
 \verb|./configure.pl --prefix=/opt <other arguments>|
 
-On Unix, the makefile has to decide who should own the files once they are
-installed. By default, it uses \texttt{root:root}, but on some systems (for
-example, MacOS X), there is no \texttt{root} group. Also, if you don't have
-root access on the system you will want them to be installed owned by something
-other than root (like yourself). You can override the defaults at install time
-by setting the \texttt{OWNER} and \texttt{GROUP} variables from the command
-line.
-
-\verb|make OWNER=lloyd GROUP=users install|
-
-On some systems shared libraries might not be immediately visible to the
-runtime linker. For example, on Linux you may have to edit
-\filename{/etc/ld.so.conf} and run \texttt{ldconfig} (as root) in order for new
-shared libraries to be picked up by the linker. An alternative is to set your
-\texttt{LD\_LIBRARY\_PATH} shell variable to include the directory that the
-Botan libraries were installed into.
+On some systems shared libraries might not be immediately visible to
+the runtime linker. For example, on Linux you may have to edit
+\filename{/etc/ld.so.conf} and run \texttt{ldconfig} (as root) in
+order for new shared libraries to be picked up by the linker. An
+alternative is to set your \texttt{LD\_LIBRARY\_PATH} shell variable
+to include the directory that the Botan libraries were installed into.
 
 \subsection{MS Windows}
 

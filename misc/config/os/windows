@@ -12,9 +12,6 @@ doc_dir docs
 install_cmd_data copy
 install_cmd_exec copy
 
-install_user <nil>
-install_group <nil>
-
 <supports_shared>
 #all
 </supports_shared>

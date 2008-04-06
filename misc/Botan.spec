@@ -99,7 +99,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %install
 ROOT="$RPM_BUILD_ROOT/usr"
-make OWNER=`id -u` GROUP=`id -g` INSTALLROOT="$ROOT" install
+make INSTALLROOT="$ROOT" install
 
 # Need this since we're installing shared libs...
 %post

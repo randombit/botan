@@ -15,7 +15,5 @@ header_dir include
 lib_dir lib
 doc_dir share/doc
 
-install_user root
-install_group root
-install_cmd_data install -o OWNER -g GROUP -m 644
-install_cmd_exec install -o OWNER -g GROUP -m 755
+install_cmd_data install -m 644
+install_cmd_exec install -m 755

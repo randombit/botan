@@ -28,9 +28,6 @@ LIBDIR        = $(INSTALLROOT)/@{var:libdir}
 HEADERDIR     = $(INSTALLROOT)/@{var:includedir}/botan
 DOCDIR        = $(INSTALLROOT)/@{var:docdir}/Botan-$(VERSION)
 
-OWNER         = @{var:install_user}
-GROUP         = @{var:install_group}
-
 CONFIG_SCRIPT = @{var:botan-config}
 
 ##################################################

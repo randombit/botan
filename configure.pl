@@ -1378,8 +1378,7 @@ sub get_os_info {
         match_any_of($_, \%info, 'unquoted',
                    'os_type:obj_suffix:so_suffix:static_suffix:' .
                    'install_root:header_dir:lib_dir:doc_dir:' .
-                   'install_user:install_group:ar_needs_ranlib:' .
-                   'install_cmd_data:install_cmd_exec');
+                   'ar_needs_ranlib:install_cmd_data:install_cmd_exec');
 
         read_list($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
 
@@ -1641,8 +1640,6 @@ sub generate_makefile {
 
        'install_cmd_exec' => os_info_for($os, 'install_cmd_exec'),
        'install_cmd_data' => os_info_for($os, 'install_cmd_data'),
-       'install_user' => os_info_for($os, 'install_user'),
-       'install_group' => os_info_for($os, 'install_group'),
        });
 
    my $is_in_doc_dir =
@@ -1692,9 +1689,6 @@ sub generate_makefile {
 
        $template = File::Spec->catfile($template_dir, 'unix_shr.in')
            if($$config{'shared'} eq 'yes');
-
-       $$config{'install_cmd_exec'} =~ s/(OWNER|GROUP)/\$($1)/g;
-       $$config{'install_cmd_data'} =~ s/(OWNER|GROUP)/\$($1)/g;
 
        add_to($config, {
            'link_to' => libs('-l', '', 'm', @{$$config{'mod_libs'}}),

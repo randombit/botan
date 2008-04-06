@@ -2,8 +2,6 @@ realname "NetBSD"
 
 os_type unix
 
-install_group wheel
-
 <supports_shared>
 all
 </supports_shared>
