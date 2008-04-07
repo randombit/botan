@@ -55,8 +55,6 @@ class Library_State
       void add_entropy(EntropySource&, bool);
       u32bit seed_prng(bool, u32bit);
 
-      u64bit system_clock() const;
-
       class Config& config() const;
 
       class Mutex* get_mutex() const;
@@ -78,7 +76,6 @@ class Library_State
       class Mutex* engine_lock;
       class Mutex* rng_lock;
 
-      class Timer* timer;
       mutable class Config* config_obj;
       class X509_GlobalState* x509_state_obj;
 

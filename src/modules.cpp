@@ -94,24 +94,6 @@ Mutex_Factory* Builtin_Modules::mutex_factory() const
    }
 
 /*************************************************
-* Find a high resolution timer, if possible      *
-*************************************************/
-Timer* Builtin_Modules::timer() const
-   {
-#if defined(BOTAN_EXT_TIMER_HARDWARE)
-   return new Hardware_Timer;
-#elif defined(BOTAN_EXT_TIMER_POSIX)
-   return new POSIX_Timer;
-#elif defined(BOTAN_EXT_TIMER_UNIX)
-   return new Unix_Timer;
-#elif defined(BOTAN_EXT_TIMER_WIN32)
-   return new Win32_Timer;
-#else
-   return new Timer;
-#endif
-   }
-
-/*************************************************
 * Find any usable allocators                     *
 *************************************************/
 std::vector<Allocator*> Builtin_Modules::allocators() const
@@ -151,6 +133,18 @@ std::string Builtin_Modules::default_allocator() const
 std::vector<EntropySource*> Builtin_Modules::entropy_sources() const
    {
    std::vector<EntropySource*> sources;
+
+#if defined(BOTAN_EXT_TIMER_HARDWARE)
+   sources.push_back(new Hardware_Timer);
+#elif defined(BOTAN_EXT_TIMER_POSIX)
+   sources.push_back(new POSIX_Timer);
+#elif defined(BOTAN_EXT_TIMER_UNIX)
+   sources.push_back(new Unix_Timer);
+#elif defined(BOTAN_EXT_TIMER_WIN32)
+   sources.push_back(new Win32_Timer);
+#else
+   sources.push_back(new Timer);
+#endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_AEP)
    sources.push_back(new AEP_EntropySource);

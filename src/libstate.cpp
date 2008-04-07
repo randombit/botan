@@ -10,7 +10,6 @@
 #include <botan/x509stat.h>
 #include <botan/stl_util.h>
 #include <botan/mutex.h>
-#include <botan/timers.h>
 #include <botan/charset.h>
 #include <botan/x931_rng.h>
 #include <botan/fips140.h>
@@ -120,14 +119,6 @@ void Library_State::set_default_allocator(const std::string& type) const
 
    config().set("conf", "base/default_allocator", type);
    cached_default_allocator = 0;
-   }
-
-/*************************************************
-* Read a high resolution clock                   *
-*************************************************/
-u64bit Library_State::system_clock() const
-   {
-   return (timer) ? timer->clock() : 0;
    }
 
 /*************************************************
@@ -302,7 +293,6 @@ void Library_State::initialize(const InitializerOptions& args,
    cached_default_allocator = 0;
    x509_state_obj = 0;
 
-   timer = modules.timer();
    transcoder = modules.transcoder();
 
    std::vector<Allocator*> mod_allocs = modules.allocators();
@@ -350,7 +340,6 @@ Library_State::Library_State()
 
    allocator_lock = engine_lock = rng_lock = 0;
 
-   timer = 0;
    config_obj = 0;
    x509_state_obj = 0;
 
@@ -367,7 +356,6 @@ Library_State::~Library_State()
    delete x509_state_obj;
    delete transcoder;
    delete rng;
-   delete timer;
    delete config_obj;
 
    std::for_each(entropy_sources.begin(), entropy_sources.end(),
