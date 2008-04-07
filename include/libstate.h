@@ -58,10 +58,6 @@ class Library_State
       class Config& config() const;
 
       class Mutex* get_mutex() const;
-
-      void set_x509_state(class X509_GlobalState*);
-      class X509_GlobalState& x509_state();
-
    private:
       Library_State(const Library_State&) {}
       Library_State& operator=(const Library_State&) { return (*this); }
@@ -74,7 +70,6 @@ class Library_State
       class Mutex* rng_lock;
 
       mutable class Config* config_obj;
-      class X509_GlobalState* x509_state_obj;
 
       std::map<std::string, Allocator*> alloc_factory;
       mutable Allocator* cached_default_allocator;

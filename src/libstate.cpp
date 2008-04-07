@@ -7,7 +7,6 @@
 #include <botan/config.h>
 #include <botan/modules.h>
 #include <botan/engine.h>
-#include <botan/x509stat.h>
 #include <botan/stl_util.h>
 #include <botan/mutex.h>
 #include <botan/charset.h>
@@ -216,26 +215,6 @@ void Library_State::add_engine(Engine* engine)
    }
 
 /*************************************************
-* Set the X509 global state class                *
-*************************************************/
-void Library_State::set_x509_state(X509_GlobalState* new_x509_state_obj)
-   {
-   delete x509_state_obj;
-   x509_state_obj = new_x509_state_obj;
-   }
-
-/*************************************************
-* Get the X509 global state class                *
-*************************************************/
-X509_GlobalState& Library_State::x509_state()
-   {
-   if(!x509_state_obj)
-      x509_state_obj = new X509_GlobalState();
-
-   return (*x509_state_obj);
-   }
-
-/*************************************************
 * Set the configuration object                   *
 *************************************************/
 Config& Library_State::config() const
@@ -268,7 +247,6 @@ void Library_State::initialize(const InitializerOptions& args,
    rng_lock = get_mutex();
 
    cached_default_allocator = 0;
-   x509_state_obj = 0;
 
    std::vector<Allocator*> mod_allocs = modules.allocators();
    for(u32bit j = 0; j != mod_allocs.size(); ++j)
@@ -316,7 +294,6 @@ Library_State::Library_State()
    allocator_lock = engine_lock = rng_lock = 0;
 
    config_obj = 0;
-   x509_state_obj = 0;
 
    rng = 0;
    cached_default_allocator = 0;
@@ -327,7 +304,6 @@ Library_State::Library_State()
 *************************************************/
 Library_State::~Library_State()
    {
-   delete x509_state_obj;
    delete rng;
    delete config_obj;
 

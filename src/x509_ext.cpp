@@ -4,8 +4,6 @@
 *************************************************/
 
 #include <botan/x509_ext.h>
-#include <botan/x509stat.h>
-#include <botan/libstate.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/lookup.h>
@@ -16,6 +14,28 @@
 #include <memory>
 
 namespace Botan {
+
+/*************************************************
+* List of X.509 Certificate Extensions           *
+*************************************************/
+Certificate_Extension* Extensions::get_extension(const OID& oid)
+   {
+#define X509_EXTENSION(NAME, TYPE) \
+   if(OIDS::name_of(oid, NAME))    \
+      return new Cert_Extension::TYPE();
+
+   X509_EXTENSION("X509v3.KeyUsage", Key_Usage);
+   X509_EXTENSION("X509v3.BasicConstraints", Basic_Constraints);
+   X509_EXTENSION("X509v3.SubjectKeyIdentifier", Subject_Key_ID);
+   X509_EXTENSION("X509v3.AuthorityKeyIdentifier", Authority_Key_ID);
+   X509_EXTENSION("X509v3.ExtendedKeyUsage", Extended_Key_Usage);
+   X509_EXTENSION("X509v3.IssuerAlternativeName", Issuer_Alternative_Name);
+   X509_EXTENSION("X509v3.SubjectAlternativeName", Subject_Alternative_Name);
+   X509_EXTENSION("X509v3.CRLNumber", CRL_Number);
+   X509_EXTENSION("X509v3.CertificatePolicies", Certificate_Policies);
+
+   return 0;
+   }
 
 /*************************************************
 * Extensions Copy Constructor                    *
@@ -107,8 +127,7 @@ void Extensions::decode_from(BER_Decoder& from_source)
             .verify_end()
          .end_cons();
 
-      Certificate_Extension* ext =
-         global_state().x509_state().get_extension(oid);
+      Certificate_Extension* ext = get_extension(oid);
 
       if(!ext)
          {
