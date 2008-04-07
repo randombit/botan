@@ -7,6 +7,5 @@
 #include <botan/config.h>
 #include <botan/init.h>
 #include <botan/lookup.h>
-#include <botan/rng.h>
 #include <botan/version.h>
 #include <botan/parsing.h>

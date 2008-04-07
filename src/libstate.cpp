@@ -142,6 +142,16 @@ void Library_State::randomize(byte out[], u32bit length)
    }
 
 /*************************************************
+* Get a byte from the global PRNG                *
+*************************************************/
+byte Library_State::random()
+   {
+   byte out;
+   rng->randomize(&out, 1);
+   return out;
+   }
+
+/*************************************************
 * Add a new entropy source to use                *
 *************************************************/
 void Library_State::add_entropy_source(EntropySource* src, bool last_in_list)

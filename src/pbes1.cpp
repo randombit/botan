@@ -8,7 +8,7 @@
 #include <botan/ber_dec.h>
 #include <botan/parsing.h>
 #include <botan/lookup.h>
-#include <botan/rng.h>
+#include <botan/libstate.h>
 #include <algorithm>
 #include <memory>
 
@@ -86,7 +86,7 @@ void PBE_PKCS5v15::new_params()
    {
    iterations = 2048;
    salt.create(8);
-   Global_RNG::randomize(salt, salt.size());
+   global_state().randomize(salt, salt.size());
    }
 
 /*************************************************

@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/eme.h>
-#include <botan/rng.h>
+#include <botan/libstate.h>
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
 #include <memory>
@@ -26,7 +26,7 @@ SecureVector<byte> EME1::pad(const byte in[], u32bit in_length,
 
    out.clear();
 
-   Global_RNG::randomize(out, HASH_LENGTH);
+   global_state().randomize(out, HASH_LENGTH);
 
    out.copy(HASH_LENGTH, Phash, Phash.size());
    out[out.size() - in_length - 1] = 0x01;

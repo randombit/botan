@@ -48,6 +48,7 @@ class Library_State
 
       bool rng_is_seeded() const { return rng->is_seeded(); }
       void randomize(byte[], u32bit);
+      byte random();
 
       void set_prng(RandomNumberGenerator*);
       void add_entropy_source(EntropySource*, bool = true);

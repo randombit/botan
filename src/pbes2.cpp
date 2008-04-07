@@ -8,7 +8,7 @@
 #include <botan/ber_dec.h>
 #include <botan/parsing.h>
 #include <botan/lookup.h>
-#include <botan/rng.h>
+#include <botan/libstate.h>
 #include <botan/asn1_obj.h>
 #include <botan/oids.h>
 #include <algorithm>
@@ -87,8 +87,8 @@ void PBE_PKCS5v20::new_params()
    key_length = max_keylength_of(cipher_algo);
    salt.create(8);
    iv.create(block_size_of(cipher_algo));
-   Global_RNG::randomize(salt, salt.size());
-   Global_RNG::randomize(iv, iv.size());
+   global_state().randomize(salt, salt.size());
+   global_state().randomize(iv, iv.size());
    }
 
 /*************************************************

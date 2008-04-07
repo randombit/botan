@@ -5,10 +5,9 @@
 
 #include <botan/dl_group.h>
 #include <botan/numthry.h>
-#include <botan/libstate.h>
 #include <botan/lookup.h>
 #include <botan/parsing.h>
-#include <botan/rng.h>
+#include <botan/libstate.h>
 #include <algorithm>
 #include <memory>
 
@@ -121,7 +120,7 @@ SecureVector<byte> DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
 
    while(true)
       {
-      Global_RNG::randomize(seed, seed.size());
+      global_state().randomize(seed, seed.size());
 
       if(generate_dsa_primes(p, q, pbits, qbits, seed))
          return seed;
