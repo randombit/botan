@@ -18,7 +18,7 @@ class Timer
    public:
       virtual u64bit clock() const;
       virtual ~Timer() {}
-   private:
+   protected:
       static u64bit combine_timers(u32bit, u32bit, u32bit);
    };
 
