@@ -29,8 +29,6 @@ BigInt random_prime(u32bit bits, const BigInt& coprime,
 
    while(true)
       {
-      global_state().pulse(PRIME_SEARCHING);
-
       BigInt p = random_integer(bits);
       p.set_bit(bits - 2);
       p.set_bit(0);
@@ -42,18 +40,13 @@ BigInt random_prime(u32bit bits, const BigInt& coprime,
       SecureVector<u32bit> sieve(sieve_size);
 
       for(u32bit j = 0; j != sieve.size(); ++j)
-         {
          sieve[j] = p % PRIMES[j];
-         global_state().pulse(PRIME_SIEVING);
-         }
 
       u32bit counter = 0;
       while(true)
          {
          if(counter == 4096 || p.bits() > bits)
             break;
-
-         global_state().pulse(PRIME_SEARCHING);
 
          bool passes_sieve = true;
          ++counter;
@@ -62,19 +55,14 @@ BigInt random_prime(u32bit bits, const BigInt& coprime,
          for(u32bit j = 0; j != sieve.size(); ++j)
             {
             sieve[j] = (sieve[j] + modulo) % PRIMES[j];
-            global_state().pulse(PRIME_SIEVING);
             if(sieve[j] == 0)
                passes_sieve = false;
             }
 
          if(!passes_sieve || gcd(p - 1, coprime) != 1)
             continue;
-         global_state().pulse(PRIME_PASSED_SIEVE);
          if(passes_mr_tests(p))
-            {
-            global_state().pulse(PRIME_FOUND);
             return p;
-            }
          }
       }
    }

@@ -277,24 +277,6 @@ X509_GlobalState& Library_State::x509_state()
    }
 
 /*************************************************
-* Set the UI object state                        *
-*************************************************/
-void Library_State::set_ui(UI* new_ui)
-   {
-   delete ui;
-   ui = new_ui;
-   }
-
-/*************************************************
-* Send a pulse to the UI object                  *
-*************************************************/
-void Library_State::pulse(Pulse_Type pulse_type) const
-   {
-   if(ui)
-      ui->pulse(pulse_type);
-   }
-
-/*************************************************
 * Set the configuration object                   *
 *************************************************/
 Config& Library_State::config() const
@@ -328,7 +310,6 @@ void Library_State::initialize(const InitializerOptions& args,
 
    cached_default_allocator = 0;
    x509_state_obj = 0;
-   ui = 0;
 
    timer = modules.timer();
    transcoder = modules.transcoder();
@@ -382,11 +363,9 @@ Library_State::Library_State()
    config_obj = 0;
    x509_state_obj = 0;
 
-   ui = 0;
    transcoder = 0;
    rng = 0;
    cached_default_allocator = 0;
-   ui = 0;
    }
 
 /*************************************************
@@ -399,7 +378,6 @@ Library_State::~Library_State()
    delete rng;
    delete timer;
    delete config_obj;
-   delete ui;
 
    std::for_each(entropy_sources.begin(), entropy_sources.end(),
                  del_fun<EntropySource>());
