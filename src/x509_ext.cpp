@@ -18,6 +18,29 @@
 namespace Botan {
 
 /*************************************************
+* Extensions Copy Constructor                    *
+*************************************************/
+Extensions::Extensions(const Extensions& extensions) : ASN1_Object()
+   {
+   *this = extensions;
+   }
+
+/*************************************************
+* Extensions Assignment Operator                 *
+*************************************************/
+Extensions& Extensions::operator=(const Extensions& other)
+   {
+   for(u32bit j = 0; j != extensions.size(); ++j)
+      delete extensions[j];
+   extensions.clear();
+
+   for(u32bit j = 0; j != other.extensions.size(); ++j)
+      extensions.push_back(other.extensions[j]->copy());
+
+   return (*this);
+   }
+
+/*************************************************
 * Return the OID of this extension               *
 *************************************************/
 OID Certificate_Extension::oid_of() const
@@ -111,21 +134,6 @@ void Extensions::contents_to(Data_Store& subject_info,
    {
    for(u32bit j = 0; j != extensions.size(); ++j)
       extensions[j]->contents_to(subject_info, issuer_info);
-   }
-
-/*************************************************
-* Copy another extensions list                   *
-*************************************************/
-Extensions& Extensions::copy_this(const Extensions& other)
-   {
-   for(u32bit j = 0; j != extensions.size(); ++j)
-      delete extensions[j];
-   extensions.clear();
-
-   for(u32bit j = 0; j != other.extensions.size(); ++j)
-      extensions.push_back(other.extensions[j]->copy());
-
-   return (*this);
    }
 
 /*************************************************
