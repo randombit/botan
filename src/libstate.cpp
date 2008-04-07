@@ -123,15 +123,6 @@ void Library_State::set_default_allocator(const std::string& type) const
    }
 
 /*************************************************
-* Set the high resolution clock implementation   *
-*************************************************/
-void Library_State::set_timer(Timer* new_timer)
-   {
-   delete timer;
-   timer = new_timer;
-   }
-
-/*************************************************
 * Read a high resolution clock                   *
 *************************************************/
 u64bit Library_State::system_clock() const

@@ -55,7 +55,6 @@ class Library_State
       void add_entropy(EntropySource&, bool);
       u32bit seed_prng(bool, u32bit);
 
-      void set_timer(class Timer*);
       u64bit system_clock() const;
 
       class Config& config() const;
