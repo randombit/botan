@@ -19,7 +19,6 @@ class Modules
    {
    public:
       virtual class Mutex_Factory* mutex_factory() const = 0;
-      virtual class Charset_Transcoder* transcoder() const = 0;
 
       virtual std::string default_allocator() const = 0;
 
@@ -37,7 +36,6 @@ class Builtin_Modules : public Modules
    {
    public:
       class Mutex_Factory* mutex_factory() const;
-      class Charset_Transcoder* transcoder() const;
 
       std::string default_allocator() const;
 

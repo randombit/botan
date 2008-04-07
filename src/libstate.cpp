@@ -216,29 +216,6 @@ void Library_State::add_engine(Engine* engine)
    }
 
 /*************************************************
-* Set the character set transcoder object        *
-*************************************************/
-void Library_State::set_transcoder(class Charset_Transcoder* transcoder)
-   {
-   if(this->transcoder)
-      delete this->transcoder;
-   this->transcoder = transcoder;
-   }
-
-/*************************************************
-* Transcode a string from one charset to another *
-*************************************************/
-std::string Library_State::transcode(const std::string str,
-                                     Character_Set to,
-                                     Character_Set from) const
-   {
-   if(!transcoder)
-      throw Invalid_State("Library_State::transcode: No transcoder set");
-
-   return transcoder->transcode(str, to, from);
-   }
-
-/*************************************************
 * Set the X509 global state class                *
 *************************************************/
 void Library_State::set_x509_state(X509_GlobalState* new_x509_state_obj)
@@ -293,8 +270,6 @@ void Library_State::initialize(const InitializerOptions& args,
    cached_default_allocator = 0;
    x509_state_obj = 0;
 
-   transcoder = modules.transcoder();
-
    std::vector<Allocator*> mod_allocs = modules.allocators();
    for(u32bit j = 0; j != mod_allocs.size(); ++j)
       add_allocator(mod_allocs[j]);
@@ -343,7 +318,6 @@ Library_State::Library_State()
    config_obj = 0;
    x509_state_obj = 0;
 
-   transcoder = 0;
    rng = 0;
    cached_default_allocator = 0;
    }
@@ -354,7 +328,6 @@ Library_State::Library_State()
 Library_State::~Library_State()
    {
    delete x509_state_obj;
-   delete transcoder;
    delete rng;
    delete config_obj;
 

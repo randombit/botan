@@ -62,9 +62,6 @@ class Library_State
       void set_x509_state(class X509_GlobalState*);
       class X509_GlobalState& x509_state();
 
-      void set_transcoder(class Charset_Transcoder*);
-      std::string transcode(const std::string,
-                            Character_Set, Character_Set) const;
    private:
       Library_State(const Library_State&) {}
       Library_State& operator=(const Library_State&) { return (*this); }
@@ -82,7 +79,6 @@ class Library_State
       std::map<std::string, Allocator*> alloc_factory;
       mutable Allocator* cached_default_allocator;
 
-      class Charset_Transcoder* transcoder;
       RandomNumberGenerator* rng;
       std::vector<Allocator*> allocators;
       std::vector<EntropySource*> entropy_sources;
