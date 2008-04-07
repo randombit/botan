@@ -50,14 +50,12 @@ class Extensions : public ASN1_Object
       void add(Certificate_Extension* extn)
          { extensions.push_back(extn); }
 
-      Extensions& operator=(const Extensions& e)
-         { return copy_this(e); }
+      Extensions& operator=(const Extensions&);
 
+      Extensions(const Extensions&);
       Extensions(bool st = true) : should_throw(st) {}
-      Extensions(const Extensions& e) : ASN1_Object() { copy_this(e); }
       ~Extensions();
    private:
-      Extensions& copy_this(const Extensions&);
       std::vector<Certificate_Extension*> extensions;
       bool should_throw;
    };
