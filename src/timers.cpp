@@ -5,7 +5,6 @@
 
 #include <botan/timers.h>
 #include <botan/libstate.h>
-#include <botan/util.h>
 #include <ctime>
 
 namespace Botan {
@@ -34,7 +33,7 @@ u64bit Timer::clock() const
 /*************************************************
 * Combine a two time values into a single one    *
 *************************************************/
-u64bit combine_timers(u32bit seconds, u32bit parts, u32bit parts_hz)
+u64bit Timer::combine_timers(u32bit seconds, u32bit parts, u32bit parts_hz)
    {
    const u64bit NANOSECONDS_UNITS = 1000000000;
    parts *= (NANOSECONDS_UNITS / parts_hz);

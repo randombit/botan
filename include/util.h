@@ -27,7 +27,6 @@ void unlock_mem(void*, u32bit);
 *************************************************/
 u32bit round_up(u32bit, u32bit);
 u32bit round_down(u32bit, u32bit);
-u64bit combine_timers(u32bit, u32bit, u32bit);
 
 /*************************************************
 * Work Factor Estimates                          *
