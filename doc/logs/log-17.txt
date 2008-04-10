@@ -1,6 +1,15 @@
 
 * 1.7.5
+
+ - Remove the Named_Mutex_Holder. Probably only used internally, it
+   was known to take up too much time for what it was doing, for a
+   very small gain in readability.
+
+ - New typedef Pipe::message_id
+
  - Add a new constructor for DataSource_Stream taking an istream
+
+ - Remove the Named_Mutex_Holder
  - Use a typedef in Pipe to represent the message number
 
 * 1.7.4, March 10, 2008
