@@ -122,14 +122,6 @@ std::string Config::option(const std::string& key) const
    }
 
 /*************************************************
-* Get the config setting as a list of strings    *
-*************************************************/
-std::vector<std::string> Config::option_as_list(const std::string& key) const
-   {
-   return split_on(option(key), ':');
-   }
-
-/*************************************************
 * Get the config setting as a u32bit             *
 *************************************************/
 u32bit Config::option_as_u32bit(const std::string& key) const
