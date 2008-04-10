@@ -5,7 +5,7 @@
 
 #include <botan/keypair.h>
 #include <botan/look_pk.h>
-#include <botan/rng.h>
+#include <botan/libstate.h>
 #include <memory>
 
 namespace Botan {
@@ -24,7 +24,7 @@ void check_key(PK_Encryptor* encryptor, PK_Decryptor* decryptor)
    std::auto_ptr<PK_Decryptor> dec(decryptor);
 
    SecureVector<byte> message(enc->maximum_input_size() - 1);
-   Global_RNG::randomize(message, message.size());
+   global_state().randomize(message, message.size());
 
    SecureVector<byte> ciphertext = enc->encrypt(message);
    if(ciphertext == message)
@@ -44,7 +44,7 @@ void check_key(PK_Signer* signer, PK_Verifier* verifier)
    std::auto_ptr<PK_Verifier> ver(verifier);
 
    SecureVector<byte> message(16);
-   Global_RNG::randomize(message, message.size());
+   global_state().randomize(message, message.size());
 
    SecureVector<byte> signature;
 
