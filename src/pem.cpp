@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/pem.h>
-#include <botan/config.h>
 #include <botan/filters.h>
 #include <botan/parsing.h>
 
@@ -15,17 +14,13 @@ namespace PEM_Code {
 /*************************************************
 * PEM encode BER/DER-encoded objects             *
 *************************************************/
-std::string encode(const byte der[], u32bit length, const std::string& label)
+std::string encode(const byte der[], u32bit length, const std::string& label,
+                   u32bit width)
    {
-   const u32bit PEM_WIDTH = global_config().option_as_u32bit("pem/width");
-
-   if(PEM_WIDTH < 50 || PEM_WIDTH > 76)
-      throw Encoding_Error("PEM: Invalid line width " + to_string(PEM_WIDTH));
-
    const std::string PEM_HEADER = "-----BEGIN " + label + "-----\n";
    const std::string PEM_TRAILER = "-----END " + label + "-----\n";
 
-   Pipe pipe(new Base64_Encoder(true, PEM_WIDTH));
+   Pipe pipe(new Base64_Encoder(true, width));
    pipe.process_msg(der, length);
    return (PEM_HEADER + pipe.read_all_as_string() + PEM_TRAILER);
    }
@@ -33,9 +28,10 @@ std::string encode(const byte der[], u32bit length, const std::string& label)
 /*************************************************
 * PEM encode BER/DER-encoded objects             *
 *************************************************/
-std::string encode(const MemoryRegion<byte>& data, const std::string& label)
+std::string encode(const MemoryRegion<byte>& data, const std::string& label,
+                   u32bit width)
    {
-   return encode(data, data.size(), label);
+   return encode(data, data.size(), label, width);
    }
 
 /*************************************************
@@ -57,8 +53,7 @@ SecureVector<byte> decode_check_label(DataSource& source,
 *************************************************/
 SecureVector<byte> decode(DataSource& source, std::string& label)
    {
-   const u32bit RANDOM_CHAR_LIMIT =
-      global_config().option_as_u32bit("pem/forgive");
+   const u32bit RANDOM_CHAR_LIMIT = 8;
 
    const std::string PEM_HEADER1 = "-----BEGIN ";
    const std::string PEM_HEADER2 = "-----";
@@ -116,14 +111,12 @@ SecureVector<byte> decode(DataSource& source, std::string& label)
 /*************************************************
 * Search for a PEM signature                     *
 *************************************************/
-bool matches(DataSource& source, const std::string& extra)
+bool matches(DataSource& source, const std::string& extra,
+             u32bit search_range)
    {
-   const u32bit PEM_SEARCH_RANGE =
-      global_config().option_as_u32bit("pem/search");
-
    const std::string PEM_HEADER = "-----BEGIN " + extra;
 
-   SecureVector<byte> search_buf(PEM_SEARCH_RANGE);
+   SecureVector<byte> search_buf(search_range);
    u32bit got = source.peek(search_buf, search_buf.size(), 0);
 
    if(got < PEM_HEADER.length())
