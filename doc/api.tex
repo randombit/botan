@@ -306,7 +306,7 @@ Here is an example which uses a pipe to base64 encode some strings:
 \begin{verbatim}
   Pipe pipe(new Base64_Encoder); // pipe owns the pointer
   pipe.start_msg();
-  pipe.write(``message 1''); 
+  pipe.write(``message 1'');
   pipe.end_msg(); // flushes buffers, increments message number
 
   // process_msg(x) is start_msg() && write(x) && end_msg()
@@ -987,7 +987,7 @@ Let's create an RSA private key:
 
 We can easily turn this into a public key, which we can then send to
 someone:
- 
+
 \begin{verbatim}
    RSA_PublicKey pub_rsa = priv_rsa;
 \end{verbatim}
@@ -3633,7 +3633,7 @@ Mailing lists: \url{http://www.randombit.net/mailman/}
 
 \subsection{License}
 
-Copyright \copyright  2000-2006, The Botan Project
+Copyright \copyright  2000-2006, Jack Lloyd
 
 This work is licensed under the Creative Commons
 Attribution-ShareAlike 2.5 License. To view a copy of this license,

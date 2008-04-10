@@ -1,6 +1,6 @@
 /*************************************************
 * Modular Exponentiation Header File             *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_DEFAULT_MODEXP_H__

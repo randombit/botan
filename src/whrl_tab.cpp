@@ -1,6 +1,6 @@
 /*************************************************
 * Diffusion Tables for Whirlpool                 *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/whrlpool.h>

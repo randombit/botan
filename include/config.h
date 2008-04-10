@@ -1,6 +1,6 @@
 /*************************************************
 * Configuration Handling Header File             *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_POLICY_CONF_H__

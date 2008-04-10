@@ -1,6 +1,6 @@
 /*************************************************
 * Buffered EntropySource Header File             *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_BUFFERED_ES_H__

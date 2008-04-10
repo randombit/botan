@@ -1,6 +1,7 @@
 /*************************************************
 * Lowest Level MPI Algorithms Source File        *
-* (C) 1999-2008 The Botan Project                *
+* (C) 1999-2008 Jack Lloyd                       *
+*     2006 Luca Piccarreta                       *
 *************************************************/
 
 #include <botan/mp_asm.h>

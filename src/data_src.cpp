@@ -1,6 +1,7 @@
 /*************************************************
 * DataSource Source File                         *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2007 Jack Lloyd                       *
+*     2005 Matthew Gregan                        *
 *************************************************/
 
 #include <botan/data_src.h>

@@ -1,6 +1,7 @@
 /*************************************************
 * Bzip Compressor Header File                    *
-* (C) 1999-2007 The Botan Project                *
+* (C) 2001 Peter J Jones                         *
+*     2001-2007 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_EXT_BZIP2_H__

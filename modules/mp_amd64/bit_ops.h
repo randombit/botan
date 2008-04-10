@@ -1,6 +1,6 @@
 /*************************************************
 * Bit/Word Operations Header File                *
-* (C) 1999-2008 The Botan Project                *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_BIT_OPS_H__

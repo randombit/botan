@@ -1,6 +1,8 @@
 /*************************************************
 * Bzip Compressor Source File                    *
-* (C) 1999-2007 The Botan Project                *
+* (C) 2001 Peter J Jones                         *
+*     2001-2007 Jack Lloyd                       *
+*     2006 Matt Johnston                         *
 *************************************************/
 
 #include <botan/bzip2.h>

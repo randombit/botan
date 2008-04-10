@@ -1,6 +1,7 @@
 /*************************************************
 * Win32 Mutex Header File                        *
-* (C) 1999-2007 The Botan Project                *
+* (C) 2006 Luca Piccarreta                       *
+*     2006-2007 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_EXT_MUTEX_WIN32_H__

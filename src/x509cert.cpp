@@ -1,6 +1,6 @@
 /*************************************************
 * X.509 Certificates Source File                 *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/x509cert.h>

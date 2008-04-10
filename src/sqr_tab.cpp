@@ -1,6 +1,6 @@
 /*************************************************
 * S-Box and Diffusion Tables for Square          *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/square.h>

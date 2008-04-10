@@ -1,10 +1,10 @@
 /*************************************************
 * Win32 Mutex Source File                        *
-* (C) 1999-2007 The Botan Project                *
+* (C) 2006 Luca Piccarreta                       *
+*     2006-2007 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/mux_win32.h>
-#include <botan/exceptn.h>
 #include <windows.h>
 
 namespace Botan {

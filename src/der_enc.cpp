@@ -1,6 +1,6 @@
 /*************************************************
 * DER Encoder Source File                        *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/der_enc.h>

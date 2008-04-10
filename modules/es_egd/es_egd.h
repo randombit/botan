@@ -1,6 +1,6 @@
 /*************************************************
 * EGD EntropySource Header File                  *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_EXT_ENTROPY_SRC_EGD_H__

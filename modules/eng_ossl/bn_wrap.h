@@ -1,6 +1,6 @@
 /*************************************************
 * OpenSSL BN Wrapper Header File                 *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_EXT_OPENSSL_BN_WRAP_H__

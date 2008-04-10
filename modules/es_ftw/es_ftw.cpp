@@ -1,6 +1,6 @@
 /*************************************************
 * FTW EntropySource Source File                  *
-* (C) 1999-2008 The Botan Project                *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/es_ftw.h>

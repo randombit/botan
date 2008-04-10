@@ -1,6 +1,7 @@
 /*************************************************
 * Qt Thread Mutex Source File                    *
-* (C) 1999-2007 The Botan Project                *
+* (C) 2004-2007 Justin Karneges                  *
+*     2004-2007 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/mux_qt.h>

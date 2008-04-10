@@ -1,6 +1,8 @@
 /*************************************************
 * Pooling Allocator Source File                  *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2007 Jack Lloyd                       *
+*     2005 Matthew Gregan                        *
+*     2005-2006 Matt Johnston                    *
 *************************************************/
 
 #include <botan/mem_pool.h>

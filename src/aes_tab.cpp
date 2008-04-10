@@ -1,6 +1,6 @@
 /*************************************************
 * S-Box and Diffusion Tables for AES             *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/aes.h>

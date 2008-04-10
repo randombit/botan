@@ -1,6 +1,6 @@
 /*************************************************
 * X.509 Certificate Extensions Header File       *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_X509_EXTENSIONS_H__

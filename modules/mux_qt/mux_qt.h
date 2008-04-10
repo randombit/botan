@@ -1,6 +1,7 @@
 /*************************************************
 * Qt Mutex Header File                           *
-* (C) 1999-2007 The Botan Project                *
+* (C) 2004-2007 Justin Karneges                  *
+*     2004-2007 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_EXT_MUTEX_QT_H__
