@@ -15,6 +15,7 @@
 
 #include <botan/botan.h>
 #include <botan/x509_ca.h>
+#include <botan/util.h>
 using namespace Botan;
 
 #include <iostream>
@@ -50,7 +51,10 @@ int main(int argc, char* argv[])
       // (this example should be extended to show how)
 
       // now sign the request
-      X509_Certificate new_cert = ca.sign_request(req);
+      X509_Time start_time(system_time());
+      X509_Time end_time(system_time() + 365 * 60 * 60 * 24);
+
+      X509_Certificate new_cert = ca.sign_request(req, start_time, end_time);
 
       // send the new cert back to the requestor
       std::cout << new_cert.PEM_encode();
