@@ -19,13 +19,14 @@ class Unix_EntropySource : public Buffered_EntropySource
    {
    public:
       void add_sources(const Unix_Program[], u32bit);
-      Unix_EntropySource();
+      Unix_EntropySource(const std::vector<std::string>& path);
    private:
       static void add_default_sources(std::vector<Unix_Program>&);
 
       void do_fast_poll();
       void do_slow_poll();
 
+      const std::vector<std::string> PATH;
       std::vector<Unix_Program> sources;
    };
 

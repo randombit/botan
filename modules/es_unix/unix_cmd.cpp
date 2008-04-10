@@ -128,10 +128,8 @@ std::string DataSource_Command::id() const
 /*************************************************
 * Create the pipe                                *
 *************************************************/
-void DataSource_Command::create_pipe(const std::string& path)
+void DataSource_Command::create_pipe(const std::vector<std::string>& paths)
    {
-   const std::vector<std::string> paths = split_on(path, ':');
-
    bool found_something = false;
    for(u32bit j = 0; j != paths.size(); j++)
       {
@@ -216,7 +214,7 @@ void DataSource_Command::shutdown_pipe()
 * DataSource_Command Constructor                 *
 *************************************************/
 DataSource_Command::DataSource_Command(const std::string& prog_and_args,
-                                       const std::string& path) :
+                                       const std::vector<std::string>& paths) :
    MAX_BLOCK_USECS(100000), KILL_WAIT(10000)
    {
    arg_list = split_on(prog_and_args, ' ');
@@ -227,7 +225,7 @@ DataSource_Command::DataSource_Command(const std::string& prog_and_args,
       throw Invalid_Argument("DataSource_Command: Too many args");
 
    pipe = 0;
-   create_pipe(path);
+   create_pipe(paths);
    }
 
 /*************************************************

@@ -95,16 +95,11 @@ int Device_Reader::open(const std::string& pathname)
 *************************************************/
 u32bit Device_EntropySource::slow_poll(byte output[], u32bit length)
    {
-   std::vector<std::string> sources =
-      global_config().option_as_list("rng/es_files");
-
    u32bit read = 0;
 
-   for(size_t j = 0; j != sources.size(); ++j)
+   for(size_t j = 0; j != fsnames.size(); ++j)
       {
-      const std::string source = sources[j];
-
-      Device_Reader reader(Device_Reader::open(source));
+      Device_Reader reader(Device_Reader::open(fsnames[j]));
 
       read += reader.get(output + read, length - read);
 

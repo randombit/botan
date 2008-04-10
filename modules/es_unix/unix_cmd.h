@@ -39,10 +39,11 @@ class DataSource_Command : public DataSource
 
       int fd() const;
 
-      DataSource_Command(const std::string&, const std::string&);
+      DataSource_Command(const std::string&,
+                         const std::vector<std::string>& paths);
       ~DataSource_Command();
    private:
-      void create_pipe(const std::string&);
+      void create_pipe(const std::vector<std::string>&);
       void shutdown_pipe();
 
       const u32bit MAX_BLOCK_USECS, KILL_WAIT;

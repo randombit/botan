@@ -19,10 +19,10 @@ class EGD_EntropySource : public EntropySource
    {
    public:
       u32bit slow_poll(byte[], u32bit);
-      EGD_EntropySource(const std::string& = "");
+      EGD_EntropySource(const std::vector<std::string>& p) : paths(p) {}
    private:
       u32bit do_poll(byte[], u32bit, const std::string&) const;
-      std::vector<std::string> paths;
+      const std::vector<std::string> paths;
    };
 
 }

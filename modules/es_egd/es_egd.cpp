@@ -21,21 +21,6 @@
 namespace Botan {
 
 /*************************************************
-* EGD_EntropySource Constructor                  *
-*************************************************/
-EGD_EntropySource::EGD_EntropySource(const std::string& egd_paths)
-   {
-   std::vector<std::string> path_list = split_on(egd_paths, ':');
-   std::vector<std::string> defaults =
-      global_config().option_as_list("rng/egd_path");
-
-   for(u32bit j = 0; j != path_list.size(); j++)
-      paths.push_back(path_list[j]);
-   for(u32bit j = 0; j != defaults.size(); j++)
-      paths.push_back(defaults[j]);
-   }
-
-/*************************************************
 * Gather Entropy from EGD                        *
 *************************************************/
 u32bit EGD_EntropySource::do_poll(byte output[], u32bit length,

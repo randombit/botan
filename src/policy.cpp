@@ -223,13 +223,6 @@ void set_default_config(Config& config)
    config.set_option("pk/test/private", "basic");
    config.set_option("pk/test/private_gen", "all");
 
-   config.set_option("rng/unix_path", "/bin:/sbin:/usr/bin:/usr/sbin");
-   config.set_option("rng/es_files", "/dev/random:/dev/srandom:/dev/urandom");
-   config.set_option("rng/egd_path",
-                     "/var/run/egd-pool:/dev/egd-pool");
-   config.set_option("rng/slow_poll_request", "256");
-   config.set_option("rng/fast_poll_request", "64");
-
    config.set_option("x509/validity_slack", "24h");
    config.set_option("x509/v1_assume_ca", "false");
    config.set_option("x509/cache_verify_results", "30m");

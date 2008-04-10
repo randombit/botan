@@ -28,7 +28,8 @@ bool Unix_Program_Cmp(const Unix_Program& a, const Unix_Program& b)
 /*************************************************
 * Unix_EntropySource Constructor                 *
 *************************************************/
-Unix_EntropySource::Unix_EntropySource()
+Unix_EntropySource::Unix_EntropySource(const std::vector<std::string>& path) :
+   PATH(path)
    {
    add_default_sources(sources);
    }
@@ -85,8 +86,6 @@ void Unix_EntropySource::do_slow_poll()
    {
    const u32bit TRY_TO_GET = 16 * 1024;
    const u32bit MINIMAL_WORKING = 32;
-
-   const std::string PATH = global_config().option("rng/unix_path");
 
    u32bit got = 0;
    for(u32bit j = 0; j != sources.size(); j++)
