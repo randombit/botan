@@ -172,22 +172,6 @@ u32bit Config::option_as_time(const std::string& key) const
    }
 
 /*************************************************
-* Get the config setting as a boolean            *
-*************************************************/
-bool Config::option_as_bool(const std::string& key) const
-   {
-   const std::string value = option(key);
-   if(value == "0" || value == "false")
-      return false;
-   if(value == "1" || value == "true")
-      return true;
-
-   throw Decoding_Error(
-      "Config::option_as_bool: Unknown boolean value " + value
-      );
-   }
-
-/*************************************************
 * Choose the signature format for a PK algorithm *
 *************************************************/
 void Config::choose_sig_format(const std::string& algo_name,
