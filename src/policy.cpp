@@ -241,8 +241,6 @@ void set_default_config(Config& config)
 
    config.set_option("x509/ca/allow_ca", "false");
    config.set_option("x509/ca/basic_constraints", "always");
-   config.set_option("x509/ca/default_expire", "1y");
-   config.set_option("x509/ca/signing_offset", "30s");
    config.set_option("x509/ca/rsa_hash", "SHA-1");
    config.set_option("x509/ca/str_type", "latin1");
 

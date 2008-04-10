@@ -47,7 +47,8 @@ class X509_Cert_Options
       void add_ex_constraint(const OID&);
       void add_ex_constraint(const std::string&);
 
-      X509_Cert_Options(const std::string& = "");
+      X509_Cert_Options(const std::string& = "",
+                        u32bit expire = 365 * 24 * 60 * 60);
    };
 
 namespace X509 {

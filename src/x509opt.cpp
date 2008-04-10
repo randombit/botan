@@ -77,21 +77,17 @@ void X509_Cert_Options::sanity_check() const
 /*************************************************
 * Initialize the certificate options             *
 *************************************************/
-X509_Cert_Options::X509_Cert_Options(const std::string& initial_opts)
+X509_Cert_Options::X509_Cert_Options(const std::string& initial_opts,
+                                     u32bit expiration_time_in_seconds)
    {
-   const u32bit DEFAULT_EXPIRE =
-      global_config().option_as_time("x509/ca/default_expire");
-   const u32bit OFFSET_FROM_NOW =
-      global_config().option_as_time("x509/ca/signing_offset");
-
    is_CA = false;
    path_limit = 0;
    constraints = NO_CONSTRAINTS;
 
-   const u64bit current_time = system_time();
+   const u32bit now = system_time();
 
-   start = X509_Time(current_time - OFFSET_FROM_NOW);
-   end = X509_Time(current_time - OFFSET_FROM_NOW + DEFAULT_EXPIRE);
+   start = X509_Time(now);
+   end = X509_Time(now + expiration_time_in_seconds);
 
    if(initial_opts == "")
       return;
