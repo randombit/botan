@@ -12,7 +12,8 @@ namespace Botan {
 /*************************************************
 * Look up the canonical ID for a queue           *
 *************************************************/
-Pipe::message_id Pipe::get_message_no(const std::string& func_name, message_id msg) const
+Pipe::message_id Pipe::get_message_no(const std::string& func_name,
+                                      message_id msg) const
    {
    if(msg == DEFAULT_MESSAGE)
       msg = default_msg();

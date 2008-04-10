@@ -158,12 +158,17 @@ std::vector<EntropySource*> Builtin_Modules::entropy_sources() const
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_EGD)
-   sources.push_back(new EGD_EntropySource(split_on("/var/run/egd-pool:/dev/egd-pool", ':')));
+   sources.push_back(
+      new EGD_EntropySource(split_on("/var/run/egd-pool:/dev/egd-pool", ':'))
+      );
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_DEVICE)
    sources.push_back(
-      new Device_EntropySource(split_on("/dev/random:/dev/srandom:/dev/urandom", ':')));
+      new Device_EntropySource(
+         split_on("/dev/random:/dev/srandom:/dev/urandom", ':')
+         )
+      );
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_CAPI)
@@ -175,7 +180,9 @@ std::vector<EntropySource*> Builtin_Modules::entropy_sources() const
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_UNIX)
-   sources.push_back(new Unix_EntropySource(split_on("/bin:/sbin:/usr/bin:/usr/sbin", ':')));
+   sources.push_back(
+      new Unix_EntropySource(split_on("/bin:/sbin:/usr/bin:/usr/sbin", ':'))
+      );
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_BEOS)
