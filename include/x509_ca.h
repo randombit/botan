@@ -1,6 +1,6 @@
 /*************************************************
 * X.509 Certificate Authority Header File        *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_X509_CA_H__
@@ -21,7 +21,9 @@ namespace Botan {
 class X509_CA
    {
    public:
-      X509_Certificate sign_request(const PKCS10_Request&, u32bit = 0) const;
+      X509_Certificate sign_request(const PKCS10_Request& req,
+                                    const X509_Time& not_before,
+                                    const X509_Time& not_after);
 
       X509_Certificate ca_certificate() const;
 

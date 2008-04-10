@@ -1,6 +1,6 @@
 /*************************************************
 * X.509 Certificate Authority Source File        *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/x509_ca.h>
@@ -41,11 +41,9 @@ X509_CA::X509_CA(const X509_Certificate& c,
 * Sign a PKCS #10 certificate request            *
 *************************************************/
 X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
-                                       u32bit expire_time) const
+                                       const X509_Time& not_before,
+                                       const X509_Time& not_after)
    {
-   if(req.is_CA() && !global_config().option_as_bool("x509/ca/allow_ca"))
-      throw Policy_Violation("X509_CA: Attempted to sign new CA certificate");
-
    Key_Constraints constraints;
    if(req.is_CA())
       constraints = Key_Constraints(KEY_CERT_SIGN | CRL_SIGN);
@@ -70,19 +68,8 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
    extensions.add(
       new Cert_Extension::Subject_Alternative_Name(req.subject_alt_name()));
 
-   /*
-   extensions.add(
-      new Cert_Extension::Issuer_Alternative_Name(issuer_alt));
-   */
-
-   if(expire_time == 0)
-      expire_time = global_config().option_as_time("x509/ca/default_expire");
-
-   const u64bit current_time = system_time();
-
    return make_cert(signer, ca_sig_algo, req.raw_public_key(),
-                    X509_Time(current_time),
-                    X509_Time(current_time + expire_time),
+                    not_before, not_after,
                     cert.subject_dn(), req.subject_dn(),
                     extensions);
    }

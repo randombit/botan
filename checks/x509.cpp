@@ -96,9 +96,14 @@ void do_x509_tests()
 
    /* Sign the requests to create the certs */
    std::cout << '.' << std::flush;
-   X509_Certificate user1_cert = ca.sign_request(user1_req);
+   X509_Certificate user1_cert =
+      ca.sign_request(user1_req, X509_Time("2008-01-01"),
+                                 X509_Time("2100-01-01"));
+
    std::cout << '.' << std::flush;
-   X509_Certificate user2_cert = ca.sign_request(user2_req);
+   X509_Certificate user2_cert = ca.sign_request(user2_req,
+                                                 X509_Time("2008-01-01"),
+                                                 X509_Time("2100-01-01"));
    std::cout << '.' << std::flush;
 
    X509_CRL crl1 = ca.new_crl();
