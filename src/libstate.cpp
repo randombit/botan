@@ -13,7 +13,7 @@
 #include <botan/timers.h>
 #include <botan/charset.h>
 #include <botan/x931_rng.h>
-#include <botan/fips140.h>
+#include <botan/selftest.h>
 #include <algorithm>
 
 namespace Botan {
@@ -364,8 +364,8 @@ void Library_State::initialize(const InitializerOptions& args,
 
    if(args.fips_mode() || args.self_test())
       {
-      if(!FIPS140::passes_self_tests())
-         throw Self_Test_Failure("FIPS-140 startup tests");
+      if(!passes_self_tests())
+         throw Self_Test_Failure("Initialization self-tests");
       }
    }
 
