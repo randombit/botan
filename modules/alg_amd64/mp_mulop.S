@@ -1,6 +1,6 @@
 /*************************************************
 * Multiply/Add Algorithm Source File             *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/asm_macr.h>
@@ -24,8 +24,8 @@ START_FUNCTION(bigint_mul_add_words)
 
    ASSIGN(LOOP_CTR, X_SIZE)
 
-   JUMP_IF_ZERO(LOOP_CTR, .DONE)
-   JUMP_IF_LT(LOOP_CTR, 8, .MULADD1_LOOP)
+   JUMP_IF_ZERO(LOOP_CTR, .L_MULADD_DONE)
+   JUMP_IF_LT(LOOP_CTR, 8, .LOOP_MULADD1)
 
 #define MULADD_OP(N)                  \
    ASSIGN(MUL_LO, ARRAY8(X_ARR, N)) ; \
@@ -38,7 +38,8 @@ START_FUNCTION(bigint_mul_add_words)
    ADD_LAST_CARRY(CARRY)            ; \
    ASSIGN(ARRAY8(Z_ARR, N), Z_WORD)
 
-START_LOOP(.MULADD8)
+ALIGN
+.LOOP_MULADD8:
    MULADD_OP(0)
    MULADD_OP(1)
    MULADD_OP(2)
@@ -51,18 +52,22 @@ START_LOOP(.MULADD8)
    SUB_IMM(LOOP_CTR, 8)
    ADD_IMM(Z_ARR, 64)
    ADD_IMM(X_ARR, 64)
-LOOP_UNTIL_LT(LOOP_CTR, 8, .MULADD8)
+   cmp IMM(8), LOOP_CTR
+   jge .LOOP_MULADD8
 
-   JUMP_IF_ZERO(LOOP_CTR, .DONE)
+   JUMP_IF_ZERO(LOOP_CTR, .L_MULADD_DONE)
 
-START_LOOP(.MULADD1)
+ALIGN
+.LOOP_MULADD1:
    MULADD_OP(0)
 
    SUB_IMM(LOOP_CTR, 1)
    ADD_IMM(Z_ARR, 8)
    ADD_IMM(X_ARR, 8)
-LOOP_UNTIL_EQ(LOOP_CTR, 0, .MULADD1)
 
-.DONE:
+   cmp IMM(0), LOOP_CTR
+   jne .LOOP_MULADD1
+
+.L_MULADD_DONE:
    RETURN_VALUE_IS(CARRY)
 END_FUNCTION(bigint_mul_add_words)

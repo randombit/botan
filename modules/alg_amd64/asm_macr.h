@@ -29,21 +29,6 @@ func_name:
    ret
 
 /*************************************************
-* Loop Control                                   *
-*************************************************/
-#define START_LOOP(LABEL) \
-   ALIGN;                 \
-   LABEL##_LOOP:
-
-#define LOOP_UNTIL_EQ(REG, NUM, LABEL) \
-   cmp IMM(NUM), REG;                  \
-   jne LABEL##_LOOP
-
-#define LOOP_UNTIL_LT(REG, NUM, LABEL) \
-   cmp IMM(NUM), REG;                  \
-   jge LABEL##_LOOP
-
-/*************************************************
 * Conditional Jumps                              *
 *************************************************/
 #define JUMP_IF_ZERO(REG, LABEL) \

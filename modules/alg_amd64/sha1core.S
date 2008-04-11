@@ -7,7 +7,7 @@
 
 START_LISTING(sha1core.S)
 
-START_FUNCTION(sha160_core)
+START_FUNCTION(botan_asm_sha160_core)
 
 #define DIGEST_ARR %rdi
 #define INPUT %rsi
@@ -22,7 +22,8 @@ START_FUNCTION(sha160_core)
 
    ZEROIZE(LOOP_CTR)
 
-START_LOOP(.LOAD_INPUT)
+ALIGN;
+.LOOP_LOAD_INPUT:
    addl $8, %eax
 
    movq ARRAY8(INPUT, 0), %r8
@@ -47,16 +48,20 @@ START_LOOP(.LOAD_INPUT)
 
    addq $32, W
    addq $32, INPUT
-LOOP_UNTIL_EQ(LOOP_CTR, 16, .LOAD_INPUT)
+
+   cmp IMM(16), LOOP_CTR
+   jne .LOOP_LOAD_INPUT
 
 /*
-   #define A %r8d
+#define A %r8d
 #define B %r9d
 #define C %r10d
 #define D %r11d
 #define E %ecx
 */
-START_LOOP(.EXPANSION)
+
+ALIGN;
+.LOOP_EXPANSION:
    addl $4, LOOP_CTR
 
    ZEROIZE(A)
@@ -91,7 +96,8 @@ START_LOOP(.EXPANSION)
    ASSIGN(ARRAY4(W, 3), A)
 
    addq $16, W
-LOOP_UNTIL_EQ(LOOP_CTR, 80, .EXPANSION)
+   cmp IMM(80), LOOP_CTR
+   jne .LOOP_EXPANSION
 
    subq $320, W
 
@@ -249,4 +255,4 @@ LOOP_UNTIL_EQ(LOOP_CTR, 80, .EXPANSION)
    ADD(ARRAY4(DIGEST_ARR, 3), B)
    ADD(ARRAY4(DIGEST_ARR, 4), C)
 
-END_FUNCTION(sha160_core)
+END_FUNCTION(botan_asm_sha160_core)
