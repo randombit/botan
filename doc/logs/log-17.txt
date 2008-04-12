@@ -1,15 +1,15 @@
 
-* 1.7.5
-
- - Remove the Named_Mutex_Holder. Probably only used internally, it
-   was known to take up too much time for what it was doing, for a
-   very small gain in readability.
-
- - New typedef Pipe::message_id to represent the Pipe message number.
-   This is currently still a u32bit, but at some point may become an
-   opaque type that can simply be passed back to the same Pipe.
-
- - Allow using a std::istream to initialize a DataSource_Stream object.
+* 1.7.5, April 13, 2008
+ - The API of X509_CA::sign_request was altered to avoid race conditions
+ - New type Pipe::message_id to represent the Pipe message number
+ - Remove the Named_Mutex_Holder for a small performance gain
+ - Removed several unused or rarely used functions from Config
+ - Ignore spaces inside of a decimal string in BigInt::decode
+ - Allow using a std::istream to initialize a DataSource_Stream object
+ - Fix compilation problem in zlib compression module
+ - The chunk sized used by Pooling_Allocator is now a compile time setting
+ - The size of random blinding factors is now a compile time setting
+ - The install target no longer tries to set a particular owner/group
 
 * 1.7.4, March 10, 2008
  - Use unaligned memory read/writes on systems that allow it, for performance
