@@ -124,6 +124,13 @@ BigInt BigInt::decode(const byte buf[], u32bit length, Base base)
       const u32bit RADIX = ((base == Decimal) ? 10 : 8);
       for(u32bit j = 0; j != length; ++j)
          {
+         if(Charset::is_space(buf[j]))
+            continue;
+
+         if(!Charset::is_digit(buf[j]))
+            throw Invalid_Argument("BigInt::decode: "
+                                   "Invalid character in decimal input");
+
          byte x = Charset::char2digit(buf[j]);
          if(x >= RADIX)
             {
