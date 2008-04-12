@@ -122,14 +122,6 @@ std::string Config::option(const std::string& key) const
    }
 
 /*************************************************
-* Get the config setting as a u32bit             *
-*************************************************/
-u32bit Config::option_as_u32bit(const std::string& key) const
-   {
-   return parse_expr(option(key));
-   }
-
-/*************************************************
 * Get the config setting as a time               *
 *************************************************/
 u32bit Config::option_as_time(const std::string& key) const

@@ -31,7 +31,6 @@ class Config
                const std::string&, bool = true);
 
       std::string option(const std::string&) const;
-      u32bit option_as_u32bit(const std::string&) const;
       u32bit option_as_time(const std::string&) const;
 
       void set_option(const std::string, const std::string&);
