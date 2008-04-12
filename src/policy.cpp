@@ -216,7 +216,6 @@ void set_default_config(Config& config)
                      "PBE-PKCS5v20(SHA-1,TripleDES/CBC)");
    config.set_option("base/default_allocator", "malloc");
 
-   config.set_option("pk/blinder_size", "64");
    config.set_option("pk/test/public", "basic");
    config.set_option("pk/test/private", "basic");
    config.set_option("pk/test/private_gen", "all");
