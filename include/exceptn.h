@@ -60,14 +60,6 @@ struct Invalid_IV_Length : public Invalid_Argument
    };
 
 /*************************************************
-* Invalid_Message_Number Exception               *
-*************************************************/
-struct Invalid_Message_Number : public Invalid_Argument
-   {
-   Invalid_Message_Number(const std::string&, u32bit);
-   };
-
-/*************************************************
 * Invalid_State Exception                        *
 *************************************************/
 struct Invalid_State : public Exception

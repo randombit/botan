@@ -11,7 +11,8 @@ namespace Botan {
 /*************************************************
 * Read data from a message                       *
 *************************************************/
-u32bit Output_Buffers::read(byte output[], u32bit length, u32bit msg)
+u32bit Output_Buffers::read(byte output[], u32bit length,
+                            Pipe::message_id msg)
    {
    SecureQueue* q = get(msg);
    if(q)
@@ -23,7 +24,8 @@ u32bit Output_Buffers::read(byte output[], u32bit length, u32bit msg)
 * Peek at data in a message                      *
 *************************************************/
 u32bit Output_Buffers::peek(byte output[], u32bit length,
-                            u32bit stream_offset, u32bit msg) const
+                            u32bit stream_offset,
+                            Pipe::message_id msg) const
    {
    SecureQueue* q = get(msg);
    if(q)
@@ -34,7 +36,7 @@ u32bit Output_Buffers::peek(byte output[], u32bit length,
 /*************************************************
 * Check available bytes in a message             *
 *************************************************/
-u32bit Output_Buffers::remaining(u32bit msg) const
+u32bit Output_Buffers::remaining(Pipe::message_id msg) const
    {
    SecureQueue* q = get(msg);
    if(q)
@@ -67,7 +69,7 @@ void Output_Buffers::retire()
          {
          delete buffers[0];
          buffers.pop_front();
-         ++offset;
+         offset = offset + Pipe::message_id(1);
          }
       else
          break;
@@ -77,7 +79,7 @@ void Output_Buffers::retire()
 /*************************************************
 * Get a particular output queue                  *
 *************************************************/
-SecureQueue* Output_Buffers::get(u32bit msg) const
+SecureQueue* Output_Buffers::get(Pipe::message_id msg) const
    {
    if(msg < offset)
       return 0;
@@ -90,9 +92,9 @@ SecureQueue* Output_Buffers::get(u32bit msg) const
 /*************************************************
 * Return the total number of messages            *
 *************************************************/
-u32bit Output_Buffers::message_count() const
+Pipe::message_id Output_Buffers::message_count() const
    {
-   return (buffers.size() + offset);
+   return (offset + buffers.size());
    }
 
 /*************************************************

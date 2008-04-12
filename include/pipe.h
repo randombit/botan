@@ -20,6 +20,12 @@ class Pipe : public DataSource
    public:
       typedef u32bit message_id;
 
+      class Invalid_Message_Number : public Invalid_Argument
+         {
+         public:
+            Invalid_Message_Number(const std::string&, message_id);
+         };
+
       static const message_id LAST_MESSAGE, DEFAULT_MESSAGE;
 
       void write(const byte[], u32bit);
@@ -48,7 +54,7 @@ class Pipe : public DataSource
 
       message_id default_msg() const { return default_read; }
       void set_default_msg(message_id);
-      u32bit message_count() const;
+      message_id message_count() const;
       bool end_of_data() const;
 
       void start_msg();

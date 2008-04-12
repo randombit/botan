@@ -34,16 +34,6 @@ Invalid_IV_Length::Invalid_IV_Length(const std::string& mode, u32bit bad_len)
    }
 
 /*************************************************
-* Constructor for Invalid_Message_Number         *
-*************************************************/
-Invalid_Message_Number::Invalid_Message_Number(const std::string& where,
-                                               u32bit message_no)
-   {
-   set_msg("Pipe::" + where + ": Invalid message number " +
-           to_string(message_no));
-   }
-
-/*************************************************
 * Constructor for Algorithm_Not_Found            *
 *************************************************/
 Algorithm_Not_Found::Algorithm_Not_Found(const std::string& name)

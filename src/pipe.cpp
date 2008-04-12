@@ -6,8 +6,19 @@
 #include <botan/pipe.h>
 #include <botan/out_buf.h>
 #include <botan/secqueue.h>
+#include <botan/parsing.h>
 
 namespace Botan {
+
+/*************************************************
+* Constructor for Invalid_Message_Number         *
+*************************************************/
+Pipe::Invalid_Message_Number::Invalid_Message_Number(const std::string& where,
+                                                     message_id msg)
+   {
+   set_msg("Pipe::" + where + ": Invalid message number " +
+           to_string(msg));
+   }
 
 namespace {
 
@@ -276,7 +287,7 @@ void Pipe::pop()
 /*************************************************
 * Return the number of messages in this Pipe     *
 *************************************************/
-u32bit Pipe::message_count() const
+Pipe::message_id Pipe::message_count() const
    {
    return outputs->message_count();
    }
@@ -284,7 +295,10 @@ u32bit Pipe::message_count() const
 /*************************************************
 * Static Member Variables                        *
 *************************************************/
-const Pipe::message_id Pipe::LAST_MESSAGE    = static_cast<Pipe::message_id>(-2);
-const Pipe::message_id Pipe::DEFAULT_MESSAGE = static_cast<Pipe::message_id>(-1);
+const Pipe::message_id Pipe::LAST_MESSAGE =
+   static_cast<Pipe::message_id>(-2);
+
+const Pipe::message_id Pipe::DEFAULT_MESSAGE =
+   static_cast<Pipe::message_id>(-1);
 
 }
