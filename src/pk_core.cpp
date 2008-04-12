@@ -178,9 +178,9 @@ ELG_Core::ELG_Core(const DL_Group& group, const BigInt& y, const BigInt& x)
    if(x != 0)
       {
       const BigInt& p = group.get_p();
-      p_bytes = group.get_p().bytes();
+      p_bytes = p.bytes();
 
-      BigInt k = random_integer(std::min(group.get_p().bits()-1, BLINDING_BITS));
+      BigInt k = random_integer(std::min(p.bits()-1, BLINDING_BITS));
       if(k != 0)
          blinder = Blinder(k, power_mod(k, x, p), p);
       }
