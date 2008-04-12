@@ -5,12 +5,11 @@
    was known to take up too much time for what it was doing, for a
    very small gain in readability.
 
- - New typedef Pipe::message_id
+ - New typedef Pipe::message_id to represent the Pipe message number.
+   This is currently still a u32bit, but at some point may become an
+   opaque type that can simply be passed back to the same Pipe.
 
- - Add a new constructor for DataSource_Stream taking an istream
-
- - Remove the Named_Mutex_Holder
- - Use a typedef in Pipe to represent the message number
+ - Allow using a std::istream to initialize a DataSource_Stream object.
 
 * 1.7.4, March 10, 2008
  - Use unaligned memory read/writes on systems that allow it, for performance
