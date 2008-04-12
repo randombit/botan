@@ -14,18 +14,7 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Return a new blinding factor                   *
-*************************************************/
-BigInt blinding_factor(u32bit modulus_size)
-   {
-   const u32bit BLINDING_BITS =
-      to_u32bit(global_config().option("pk/blinder_size"));
-
-   if(BLINDING_BITS == 0)
-      return 0;
-   return random_integer(std::min(modulus_size - 1, BLINDING_BITS));
-   }
+const u32bit BLINDING_BITS = BOTAN_PRIVATE_KEY_OP_BLINDING_BITS;
 
 }
 
@@ -40,7 +29,7 @@ IF_Core::IF_Core(const BigInt& e, const BigInt& n, const BigInt& d,
 
    if(d != 0)
       {
-      BigInt k = blinding_factor(n.bits());
+      BigInt k = random_integer(std::min(n.bits()-1, BLINDING_BITS));
       if(k != 0)
          blinder = Blinder(power_mod(k, e, n), inverse_mod(k, n), n);
       }
@@ -191,7 +180,7 @@ ELG_Core::ELG_Core(const DL_Group& group, const BigInt& y, const BigInt& x)
       const BigInt& p = group.get_p();
       p_bytes = group.get_p().bytes();
 
-      BigInt k = blinding_factor(p.bits());
+      BigInt k = random_integer(std::min(group.get_p().bits()-1, BLINDING_BITS));
       if(k != 0)
          blinder = Blinder(k, power_mod(k, x, p), p);
       }
@@ -253,7 +242,7 @@ DH_Core::DH_Core(const DL_Group& group, const BigInt& x)
    op = Engine_Core::dh_op(group, x);
 
    const BigInt& p = group.get_p();
-   BigInt k = blinding_factor(p.bits());
+   BigInt k = random_integer(std::min(p.bits()-1, BLINDING_BITS));
    if(k != 0)
       blinder = Blinder(k, power_mod(inverse_mod(k, p), x, p), p);
    }
