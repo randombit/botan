@@ -25,7 +25,7 @@ class Pooling_Allocator : public Allocator
 
       void destroy();
 
-      Pooling_Allocator(u32bit, bool);
+      Pooling_Allocator();
       ~Pooling_Allocator();
    private:
       void get_more_core(u32bit);
@@ -61,7 +61,7 @@ class Pooling_Allocator : public Allocator
             byte* buffer, *buffer_end;
          };
 
-      const u32bit PREF_SIZE;
+      static const u32bit PREF_SIZE = BOTAN_MEM_POOL_CHUNK_SIZE;
 
       std::vector<Memory_Block> blocks;
       std::vector<Memory_Block>::iterator last_used;

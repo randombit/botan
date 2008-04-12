@@ -28,7 +28,6 @@ class Malloc_Allocator : public Allocator
 class Locking_Allocator : public Pooling_Allocator
    {
    public:
-      Locking_Allocator() : Pooling_Allocator(64*1024, true) {}
       std::string type() const { return "locking"; }
    private:
       void* alloc_block(u32bit);

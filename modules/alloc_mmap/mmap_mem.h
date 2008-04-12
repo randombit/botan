@@ -16,7 +16,6 @@ namespace Botan {
 class MemoryMapping_Allocator : public Pooling_Allocator
    {
    public:
-      MemoryMapping_Allocator() : Pooling_Allocator(64*1024, false) {}
       std::string type() const { return "mmap"; }
    private:
       void* alloc_block(u32bit);

@@ -13,25 +13,6 @@
 
 namespace Botan {
 
-namespace {
-
-/*************************************************
-* Decide how much memory to allocate at once     *
-*************************************************/
-u32bit choose_pref_size(u32bit provided)
-   {
-   if(provided)
-      return provided;
-
-   u32bit result = global_config().option_as_u32bit("base/memory_chunk");
-   if(result)
-      return result;
-
-   return 16*1024;
-   }
-
-}
-
 /*************************************************
 * Memory_Block Constructor                       *
 *************************************************/
@@ -113,8 +94,7 @@ void Pooling_Allocator::Memory_Block::free(void* ptr, u32bit blocks) throw()
 /*************************************************
 * Pooling_Allocator Constructor                  *
 *************************************************/
-Pooling_Allocator::Pooling_Allocator(u32bit p_size, bool) :
-   PREF_SIZE(choose_pref_size(p_size))
+Pooling_Allocator::Pooling_Allocator()
    {
    mutex = global_state().get_mutex();
    last_used = blocks.begin();

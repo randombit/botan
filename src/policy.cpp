@@ -212,7 +212,6 @@ void set_default_aliases(Config& config)
 *************************************************/
 void set_default_config(Config& config)
    {
-   config.set_option("base/memory_chunk", "64*1024");
    config.set_option("base/pkcs8_tries", "3");
    config.set_option("base/default_pbe",
                      "PBE-PKCS5v20(SHA-1,TripleDES/CBC)");
