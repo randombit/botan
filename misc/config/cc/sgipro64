@@ -12,7 +12,7 @@ lib_opt_flags "-O3 -OPT:alias=TYPED"
 check_opt_flags "-O3 -OPT:alias=TYPED"
 debug_flags "-g3"
 no_debug_flags ""
-so_obj_flags "-KPIC"
+shared_flags "-KPIC"
 lang_flags "-ansi -LANG:ansi-for-init-scope=ON"
 warning_flags "-Wall -W"
 

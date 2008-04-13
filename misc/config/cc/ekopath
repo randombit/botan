@@ -15,7 +15,7 @@ warning_flags "-W -Wall"
 
 ar_command "pathCC -ar -o"
 
-so_obj_flags "-fPIC"
+shared_flags "-fPIC"
 debug_flags "-g"
 
 dll_import_flags ""

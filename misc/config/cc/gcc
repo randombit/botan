@@ -8,12 +8,12 @@ add_include_dir_option "-I"
 add_lib_dir_option "-L"
 add_lib_option "-l"
 
-lib_opt_flags "-O2 -finline-functions"
-check_opt_flags "-O2"
 lang_flags "-D_REENTRANT -ansi -Wno-long-long"
 warning_flags "-W -Wall"
 
-so_obj_flags "-fPIC"
+lib_opt_flags "-O0 -finline-functions"
+check_opt_flags "-O0"
+shared_flags "-fPIC"
 debug_flags "-g"
 
 dll_import_flags ""

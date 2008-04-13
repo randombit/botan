@@ -14,7 +14,7 @@ lib_opt_flags "-xO2"
 check_opt_flags "-xO2"
 debug_flags "-g"
 no_debug_flags ""
-so_obj_flags "-KPIC"
+shared_flags "-KPIC"
 warning_flags "+w"
 lang_flags "+p -D__EXTENSIONS__"
 

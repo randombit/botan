@@ -12,7 +12,7 @@ lib_opt_flags "-O3 -OPT:alias=TYPED"
 check_opt_flags "-O3 -OPT:alias=TYPED"
 debug_flags "-g3"
 no_debug_flags ""
-so_obj_flags "-KPIC"
+shared_flags "-KPIC"
 lang_flags "-ansi -LANG:ansi-for-init-scope=ON"
 # Disabled, because, while my code is fine, it warns about a lot of it's own
 # headers <g>

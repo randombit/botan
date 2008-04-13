@@ -10,7 +10,7 @@ add_lib_option "-l"
 
 lib_opt_flags "-fast -Minline"
 check_opt_flags "-fast"
-so_obj_flags "-fPIC"
+shared_flags "-fPIC"
 
 dll_import_flags ""
 dll_export_flags ""

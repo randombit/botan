@@ -14,7 +14,7 @@ debug_flags "-g"
 no_debug_flags "-fomit-frame-pointer"
 lang_flags ""
 warning_flags "-w1"
-so_obj_flags "-fPIC"
+shared_flags "-fPIC"
 
 dll_import_flags ""
 dll_export_flags ""
