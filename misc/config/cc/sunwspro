@@ -18,6 +18,9 @@ so_obj_flags "-KPIC"
 warning_flags "+w"
 lang_flags "+p -D__EXTENSIONS__"
 
+dll_import_flags ""
+dll_export_flags ""
+
 makefile_style unix
 
 <so_link_flags>

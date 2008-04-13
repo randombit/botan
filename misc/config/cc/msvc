@@ -8,13 +8,20 @@ add_include_dir_option "/I"
 add_lib_dir_option "-L"
 add_lib_option ""
 
-lib_opt_flags "/O2 /Ob2"
+lib_opt_flags "/O2"
 check_opt_flags "/O2"
 debug_flags "/Zi"
 no_debug_flags ""
 lang_flags "/EHsc /GR /D_CONSOLE"
 warning_flags ""
 
-ar_command "link /lib"
+dll_import_flags ""
+dll_export_flags "__declspec(dllexport)"
+
+ar_command "link"
 
 makefile_style nmake
+
+<so_link_flags>
+default -> "link /DLL"
+</so_link_flags>

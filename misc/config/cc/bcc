@@ -15,6 +15,9 @@ no_debug_flags ""
 lang_flags "-tWR -tWM -tWC
 warning_flags "-w"
 
+dll_import_flags ""
+dll_export_flags ""
+
 ar_command "tlib /C /P256"
 
 makefile_style nmake
