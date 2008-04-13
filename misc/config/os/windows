@@ -13,7 +13,7 @@ install_cmd_data copy
 install_cmd_exec copy
 
 <supports_shared>
-#all
+all
 </supports_shared>
 
 <aliases>
