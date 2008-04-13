@@ -1493,18 +1493,13 @@ sub write_pkg_config {
 ##################################################
 sub file_list {
     my ($put_in, $from, $to, %files) = @_;
-    my $spaces = 16;
 
     my $list = '';
 
-    my $len = $spaces;
+    my $spaces = 16;
+
     foreach (sort keys %files) {
         my $file = $_;
-
-        if($len > 60) {
-            $list .= "\\\n" . ' 'x$spaces;
-            $len = $spaces;
-        }
 
         $file =~ s/$from/$to/ if(defined($from) and defined($to));
 
@@ -1512,14 +1507,16 @@ sub file_list {
         $dir = $put_in if defined $put_in;
 
         if(defined($dir)) {
-            $list .= File::Spec->catfile ($dir, $file) . ' ';
-            $len += length($file) + length($dir);
+            $list .= File::Spec->catfile ($dir, $file);
         }
         else {
-            $list .= $file . ' ';
-            $len += length($file);
+            $list .= $file;
         }
+
+        $list .= " \\\n                ";
     }
+
+    $list =~ s/\\\n +$//; # remove trailing escape
 
     return $list;
 }
