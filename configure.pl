@@ -139,14 +139,14 @@ sub main {
 
     write_pkg_config($config);
 
+    generate_makefile($config);
+
     process_template(File::Spec->catfile($$config{'config-dir'}, 'buildh.in'),
                      File::Spec->catfile($$config{'build-dir'}, 'build.h'),
                      $config);
     $$config{'includes'}{'build.h'} = $$config{'build-dir'};
 
     copy_include_files($config);
-
-    generate_makefile($config);
 }
 
 sub where_am_i {
@@ -325,7 +325,7 @@ sub module_info {
 }
 
 ##################################################
-# 
+#
 ##################################################
 sub choose_target {
     my ($config) = @_;
@@ -1175,6 +1175,21 @@ sub process_template {
 
     if($contents =~ /@\{var:([a-z_]*)\}/ or
        $contents =~ /@\{if:(.*) /) {
+
+        sub summarize {
+            my ($n, $s) = @_;
+
+            $s =~ s/\n/\\n/; # escape newlines
+
+            return $s if(length($s) <= $n);
+
+            return substr($s, 0, 57) . '...';
+        }
+
+        foreach my $key (sort keys %$config) {
+            print with_diagnostic("debug", "In %config:", $key, " -> ", summarize(60, $$config{$key}));
+        }
+
         croak("Unbound variable '$1' in $in");
     }
 
@@ -1204,13 +1219,11 @@ sub list_push {
 }
 
 sub match_any_of {
-    my ($line, $hash, $quoted, $any_of) = @_;
+    my ($line, $hash, $quoted, @any_of) = @_;
 
     $quoted = ($quoted eq 'quoted') ? 1 : 0;
 
-    my @match_these = split(/:/, $any_of);
-
-    foreach my $what (split(/:/, $any_of)) {
+    foreach my $what (@any_of) {
         $$hash{$what} = $1 if(not $quoted and $line =~ /^$what (.*)/);
         $$hash{$what} = $1 if($quoted and $line =~ /^$what \"(.*)\"/);
     }
@@ -1295,8 +1308,8 @@ sub get_module_info {
    $info{'libs'} = {};
 
    while($_ = &$reader()) {
-       match_any_of($_, \%info, 'quoted', 'realname:note');
-       match_any_of($_, \%info, 'unquoted', 'define:mp_bits:modset:load_on');
+       match_any_of($_, \%info, 'quoted', 'realname', 'note');
+       match_any_of($_, \%info, 'unquoted', 'define', 'mp_bits', 'modset', 'load_on');
 
        read_list($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
        read_list($_, $reader, 'cc', list_push(\@{$info{'cc'}}));
@@ -1347,7 +1360,7 @@ sub get_arch_info {
     while($_ = &$reader()) {
         match_any_of($_, \%info, 'quoted', 'realname');
         match_any_of($_, \%info, 'unquoted',
-                     'default_submodel:endian:unaligned');
+                     'default_submodel', 'endian', 'unaligned');
 
         read_list($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
         read_list($_, $reader, 'submodels', list_push(\@{$info{'submodels'}}));
@@ -1373,12 +1386,19 @@ sub get_os_info {
     $info{'name'} = $name;
 
     while($_ = &$reader()) {
-        match_any_of($_, \%info, 'quoted', 'realname:ar_command');
+        match_any_of($_, \%info, 'quoted', 'realname', 'ar_command');
 
         match_any_of($_, \%info, 'unquoted',
-                   'os_type:obj_suffix:so_suffix:static_suffix:' .
-                   'install_root:header_dir:lib_dir:doc_dir:' .
-                   'ar_needs_ranlib:install_cmd_data:install_cmd_exec');
+                     'os_type',
+                     'obj_suffix',
+                     'so_suffix',
+                     'static_suffix',
+                     'install_root',
+                     'header_dir',
+                     'lib_dir', 'doc_dir',
+                     'ar_needs_ranlib',
+                     'install_cmd_data',
+                     'install_cmd_exec');
 
         read_list($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
 
@@ -1389,7 +1409,8 @@ sub get_os_info {
 }
 
 ##################################################
-#                                                #
+# Read a file from misc/config/cc and set the values from
+# there into a hash for later reference
 ##################################################
 sub get_cc_info {
     my ($name,$file) = @_;
@@ -1400,12 +1421,23 @@ sub get_cc_info {
 
     while($_ = &$reader()) {
         match_any_of($_, \%info, 'quoted',
-                   'realname:binary_name:' .
-                   'compile_option:output_to_option:add_include_dir_option:' .
-                   'add_lib_dir_option:add_lib_option:' .
-                   'lib_opt_flags:check_opt_flags:' .
-                   'lang_flags:warning_flags:so_obj_flags:ar_command:' .
-                   'debug_flags:no_debug_flags');
+                     'realname',
+                     'binary_name',
+                     'compile_option',
+                     'output_to_option',
+                     'add_include_dir_option',
+                     'add_lib_dir_option',
+                     'add_lib_option',
+                     'lib_opt_flags',
+                     'check_opt_flags',
+                     'dll_import_flags',
+                     'dll_export_flags',
+                     'lang_flags',
+                     'warning_flags',
+                     'so_obj_flags',
+                     'ar_command',
+                     'debug_flags',
+                     'no_debug_flags');
 
         match_any_of($_, \%info, 'unquoted', 'makefile_style');
 
@@ -1638,6 +1670,9 @@ sub generate_makefile {
        'so_suffix'       => os_info_for($os, 'so_suffix'),
        'obj_suffix'      => os_info_for($os, 'obj_suffix'),
 
+       'dll_export_flags' => $ccinfo{'dll_export_flags'},
+       'dll_import_flags' => $ccinfo{'dll_import_flags'},
+
        'install_cmd_exec' => os_info_for($os, 'install_cmd_exec'),
        'install_cmd_data' => os_info_for($os, 'install_cmd_data'),
        });
@@ -1783,7 +1818,7 @@ sub guess_compiler
     foreach (@CCS)
     {
         my $bin_name = $COMPILER{$_}{'binary_name'};
-        autoconfig("Guessing you want to use $_ as the compiler");
+        autoconfig("Guessing you want to use $_ as the compiler (use --cc to set)");
         return $_ if(which($bin_name) ne '');
     }
 
@@ -1799,7 +1834,7 @@ sub guess_os
      {
          my $os = os_alias($_[0]);
          if(defined($OPERATING_SYSTEM{$os})) {
-             autoconfig("Guessing your operating system is $os");
+             autoconfig("Guessing your operating system is $os (use --os to set)");
              return $os;
          }
          return undef;
@@ -1833,7 +1868,7 @@ sub guess_cpu
     {
         my $cpu = guess_cpu_from_this(slurp_file($cpuinfo));
         if($cpu) {
-            autoconfig("Guessing (based on $cpuinfo) that your CPU is a $cpu");
+            autoconfig("Guessing (based on $cpuinfo) that your CPU is a $cpu (use --arch to set)");
             return $cpu;
         }
     }
