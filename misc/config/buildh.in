@@ -14,6 +14,10 @@
 #define BOTAN_KARAT_MUL_THRESHOLD 12
 #define BOTAN_KARAT_SQR_THRESHOLD 12
 
+#ifndef BOTAN_DLL
+  #define BOTAN_DLL @{var:dll_export_flags}
+#endif
+
 @{var:defines}
 @{var:local_config}
 #endif
