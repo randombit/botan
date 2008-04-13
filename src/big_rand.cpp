@@ -6,7 +6,7 @@
 #include <botan/bigint.h>
 #include <botan/parsing.h>
 #include <botan/numthry.h>
-#include <botan/rng.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -36,7 +36,7 @@ void BigInt::randomize(u32bit bitsize)
    else
       {
       SecureVector<byte> array((bitsize + 7) / 8);
-      Global_RNG::randomize(array, array.size());
+      global_state().randomize(array, array.size());
       if(bitsize % 8)
          array[0] &= 0xFF >> (8 - (bitsize % 8));
       array[0] |= 0x80 >> ((bitsize % 8) ? (8 - bitsize % 8) : 0);

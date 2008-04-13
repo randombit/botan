@@ -284,15 +284,12 @@ bool MillerRabin_Test::passes_test(const BigInt& a)
    if(a < 2 || a >= n_minus_1)
       throw Invalid_Argument("Bad size for nonce in Miller-Rabin test");
 
-   global_state().pulse(PRIME_TESTING);
-
    BigInt y = pow_mod(a);
    if(y == 1 || y == n_minus_1)
       return true;
 
    for(u32bit j = 1; j != s; ++j)
       {
-      global_state().pulse(PRIME_TESTING);
       y = reducer.square(y);
 
       if(y == 1)

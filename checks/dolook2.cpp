@@ -8,7 +8,7 @@
 #include <botan/filters.h>
 #include <botan/randpool.h>
 #include <botan/x931_rng.h>
-#include <botan/rng.h>
+#include <botan/libstate.h>
 using namespace Botan;
 
 /* A weird little hack to fit S2K algorithms into the validation suite
@@ -49,7 +49,7 @@ class RNG_Filter : public Filter
       void write(const byte[], u32bit);
       RNG_Filter(RandomNumberGenerator* r) : rng(r), buffer(1024)
          {
-         Global_RNG::randomize(buffer, buffer.size());
+         global_state().randomize(buffer, buffer.size());
          rng->add_entropy(buffer, buffer.size());
          }
       ~RNG_Filter() { delete rng; }
