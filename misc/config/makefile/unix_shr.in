@@ -7,7 +7,7 @@ CHECK_OPT     = @{var:check_opt}
 MACH_OPT      = @{var:mach_opt}
 LANG_FLAGS    = @{var:lang_flags}
 WARN_FLAGS    = @{var:warn_flags}
-SO_OBJ_FLAGS  = @{var:so_obj_flags}
+SO_OBJ_FLAGS  = @{var:shared_flags}
 SO_LINK_CMD   = @{var:so_link}
 LINK_TO       = @{var:link_to}
 

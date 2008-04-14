@@ -1434,7 +1434,7 @@ sub get_cc_info {
                      'dll_export_flags',
                      'lang_flags',
                      'warning_flags',
-                     'so_obj_flags',
+                     'shared_flags',
                      'ar_command',
                      'debug_flags',
                      'no_debug_flags');
@@ -1493,18 +1493,13 @@ sub write_pkg_config {
 ##################################################
 sub file_list {
     my ($put_in, $from, $to, %files) = @_;
-    my $spaces = 16;
 
     my $list = '';
 
-    my $len = $spaces;
+    my $spaces = 16;
+
     foreach (sort keys %files) {
         my $file = $_;
-
-        if($len > 60) {
-            $list .= "\\\n" . ' 'x$spaces;
-            $len = $spaces;
-        }
 
         $file =~ s/$from/$to/ if(defined($from) and defined($to));
 
@@ -1512,14 +1507,16 @@ sub file_list {
         $dir = $put_in if defined $put_in;
 
         if(defined($dir)) {
-            $list .= File::Spec->catfile ($dir, $file) . ' ';
-            $len += length($file) + length($dir);
+            $list .= File::Spec->catfile ($dir, $file);
         }
         else {
-            $list .= $file . ' ';
-            $len += length($file);
+            $list .= $file;
         }
+
+        $list .= " \\\n                ";
     }
+
+    $list =~ s/\\\n +$//; # remove trailing escape
 
     return $list;
 }
@@ -1635,7 +1632,7 @@ sub generate_makefile {
       (in_array('all', $OPERATING_SYSTEM{$os}{'supports_shared'}) or
        in_array($arch, $OPERATING_SYSTEM{$os}{'supports_shared'}))) {
 
-       $$config{'so_obj_flags'} = &$empty_if_nil($ccinfo{'so_obj_flags'});
+       $$config{'shared_flags'} = &$empty_if_nil($ccinfo{'shared_flags'});
        $$config{'so_link'} = &$empty_if_nil($ccinfo{'so_link_flags'}{$os});
 
        if($$config{'so_link'} eq '') {
@@ -1643,7 +1640,7 @@ sub generate_makefile {
                &$empty_if_nil($ccinfo{'so_link_flags'}{'default'})
        }
 
-       if($$config{'so_obj_flags'} eq '' and $$config{'so_link'} eq '') {
+       if($$config{'shared_flags'} eq '' and $$config{'so_link'} eq '') {
            $$config{'shared'} = 'no';
 
            warning($$config{'compiler'}, ' has no shared object flags set ',
@@ -1652,7 +1649,7 @@ sub generate_makefile {
    }
    else {
        $$config{'shared'} = 'no';
-       $$config{'so_obj_flags'} = '';
+       $$config{'shared_flags'} = '';
        $$config{'so_link'} = '';
    }
 

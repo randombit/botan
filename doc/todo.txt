@@ -38,6 +38,12 @@ ability to generate any needed or requested package-building scripts,
 with support for systems like rpm, portage, dpkg, commercial Unix
 package systems, and Windows installer systems.
 
+Splitting the build into distinct static and shared targets (and
+static-debug and shared-debug) would make certain things much simpler,
+as well as being a performance advantage on many systems (in
+particular on x86, where losing %ebx for the PIC pointer is a huge
+loss)
+
 Modules to allow use of platform-specific features within Botan can
 make life significantly better for users on that platform. Generic
 Unix/POSIX support is more or less complete, but there are countless

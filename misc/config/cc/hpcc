@@ -14,7 +14,7 @@ debug_flags "-g"
 no_debug_flags ""
 lang_flags "-AA -ext +eh -z"
 warning_flags "" # +w
-so_obj_flags "+Z"
+shared_flags "+Z"
 
 dll_import_flags ""
 dll_export_flags ""
