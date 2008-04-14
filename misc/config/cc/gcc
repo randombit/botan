@@ -11,8 +11,8 @@ add_lib_option "-l"
 lang_flags "-D_REENTRANT -ansi -Wno-long-long"
 warning_flags "-W -Wall"
 
-lib_opt_flags "-O0 -finline-functions"
-check_opt_flags "-O0"
+lib_opt_flags "-O2 -finline-functions"
+check_opt_flags "-O2"
 shared_flags "-fPIC"
 debug_flags "-g"
 
