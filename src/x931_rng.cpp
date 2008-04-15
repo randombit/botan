@@ -29,10 +29,7 @@ void ANSI_X931_RNG::randomize(byte out[], u32bit length) throw(PRNG_Unseeded)
       position += copied;
 
       if(position == R.size())
-         {
          update_buffer();
-         position = 0;
-         }
       }
    }
 
@@ -53,6 +50,8 @@ void ANSI_X931_RNG::update_buffer()
 
    xor_buf(V, R, DT, BLOCK_SIZE);
    cipher->encrypt(V);
+
+   position = 0;
    }
 
 /*************************************************
