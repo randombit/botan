@@ -24,7 +24,6 @@ class Buffered_EntropySource : public EntropySource
 
       void add_bytes(const void*, u32bit);
       void add_bytes(u64bit);
-      void add_timestamp();
 
       virtual void do_slow_poll() = 0;
       virtual void do_fast_poll();

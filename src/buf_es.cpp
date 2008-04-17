@@ -74,14 +74,6 @@ void Buffered_EntropySource::add_bytes(u64bit entropy)
    }
 
 /*************************************************
-* Add entropy to the internal buffer             *
-*************************************************/
-void Buffered_EntropySource::add_timestamp()
-   {
-   add_bytes(system_clock());
-   }
-
-/*************************************************
 * Take entropy from the internal buffer          *
 *************************************************/
 u32bit Buffered_EntropySource::copy_out(byte out[], u32bit length,
