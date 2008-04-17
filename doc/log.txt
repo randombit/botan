@@ -1,4 +1,8 @@
 
+* 1.7.6
+ - Initial support for Windows DLLs
+ - Removed the AEP module, due to inability to test
+
 * 1.7.5, April 12, 2008
  - The API of X509_CA::sign_request was altered to avoid race conditions
  - New type Pipe::message_id to represent the Pipe message number
