@@ -156,7 +156,7 @@ class RandomNumberGenerator
    {
    public:
       virtual void randomize(byte[], u32bit) throw(PRNG_Unseeded) = 0;
-      virtual bool is_seeded() const { return true; }
+      virtual bool is_seeded() const = 0;
       virtual void clear() throw() {};
 
       void add_entropy(const byte[], u32bit);
