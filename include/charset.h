@@ -1,4 +1,4 @@
-/*************************************************
+n/*************************************************
 * Character Set Handling Header File             *
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
@@ -11,18 +11,6 @@
 #include <string>
 
 namespace Botan {
-
-/*************************************************
-* Character Set Transcoder Interface             *
-*************************************************/
-class BOTAN_DLL Charset_Transcoder
-   {
-   public:
-      virtual std::string transcode(const std::string&,
-                                    Character_Set, Character_Set) const = 0;
-
-      virtual ~Charset_Transcoder() {}
-   };
 
 namespace Charset {
 

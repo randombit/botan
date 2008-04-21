@@ -7,7 +7,7 @@
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
 #include <botan/bit_ops.h>
-#include <botan/rng.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -43,7 +43,7 @@ SecureVector<byte> EMSA4::encoding_of(const MemoryRegion<byte>& msg,
    const u32bit output_length = (output_bits + 7) / 8;
 
    SecureVector<byte> salt(SALT_SIZE);
-   Global_RNG::randomize(salt, SALT_SIZE);
+   global_state().randomize(salt, SALT_SIZE);
 
    for(u32bit j = 0; j != 8; ++j)
       hash->update(0);

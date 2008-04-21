@@ -11,10 +11,9 @@
 namespace Botan {
 
 /*************************************************
-* Timer Access Functions                         *
+* Time Access Functions                          *
 *************************************************/
 BOTAN_DLL u64bit system_time();
-BOTAN_DLL u64bit system_clock();
 
 /*************************************************
 * Memory Locking Functions                       *

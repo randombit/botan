@@ -19,8 +19,6 @@ class BOTAN_DLL Modules
    {
    public:
       virtual class Mutex_Factory* mutex_factory() const = 0;
-      virtual class Timer* timer() const = 0;
-      virtual class Charset_Transcoder* transcoder() const = 0;
 
       virtual std::string default_allocator() const = 0;
 
@@ -38,8 +36,6 @@ class BOTAN_DLL Builtin_Modules : public Modules
    {
    public:
       class Mutex_Factory* mutex_factory() const;
-      class Timer* timer() const;
-      class Charset_Transcoder* transcoder() const;
 
       std::string default_allocator() const;
 

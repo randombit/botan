@@ -7,7 +7,7 @@
 #include <botan/bit_ops.h>
 #include <botan/pipe.h>
 #include <botan/hex.h>
-#include <botan/rng.h>
+#include <botan/libstate.h>
 #include <algorithm>
 
 namespace Botan {
@@ -18,7 +18,7 @@ namespace Botan {
 void OctetString::change(u32bit length)
    {
    bits.create(length);
-   Global_RNG::randomize(bits, length);
+   global_state().randomize(bits, length);
    }
 
 /*************************************************
