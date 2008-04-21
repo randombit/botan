@@ -37,6 +37,8 @@ static BigInt to_bigint(const std::string& h)
 class Fixed_Output_RNG : public RandomNumberGenerator
    {
    public:
+      bool is_seeded() const { return true; }
+
       byte random()
          {
          if(position < output.size())
