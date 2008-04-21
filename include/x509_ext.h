@@ -56,6 +56,8 @@ class BOTAN_DLL Extensions : public ASN1_Object
       Extensions(bool st = true) : should_throw(st) {}
       ~Extensions();
    private:
+      static Certificate_Extension* get_extension(const OID&);
+
       std::vector<Certificate_Extension*> extensions;
       bool should_throw;
    };

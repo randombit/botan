@@ -21,7 +21,7 @@
 #include <botan/numthry.h>
 
 #include <botan/x931_rng.h>
-#include <botan/rng.h>
+#include <botan/libstate.h>
 using namespace Botan;
 
 #include "common.h"
@@ -196,7 +196,7 @@ u32bit do_pk_validation_tests(const std::string& filename)
 
    global_state().set_prng(new ANSI_X931_RNG);
    for(u32bit j = 0; j != 2; j++)
-      Global_RNG::seed(true, 384);
+      global_state().seed_prng(true, 384);
 
    do_pk_keygen_tests();
    do_x509_tests();
@@ -251,7 +251,7 @@ void validate_encryption(PK_Encryptor* e, PK_Decryptor* d,
 
    global_state().set_prng(new ANSI_X931_RNG);
    for(u32bit j = 0; j != 2; j++)
-      Global_RNG::seed(true, 384);
+      global_state().seed_prng(true, 384);
 
    validate_decryption(d, algo, out, message, failure);
    delete e;
@@ -292,7 +292,7 @@ void validate_signature(PK_Verifier* v, PK_Signer* s, const std::string& algo,
 
    global_state().set_prng(new ANSI_X931_RNG);
    for(u32bit j = 0; j != 2; j++)
-      Global_RNG::seed(true, 384);
+      global_state().seed_prng(true, 384);
 
    delete v;
    delete s;

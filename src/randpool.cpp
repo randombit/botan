@@ -59,7 +59,7 @@ void Randpool::randomize(byte out[], u32bit length) throw(PRNG_Unseeded)
 *************************************************/
 void Randpool::update_buffer()
    {
-   const u64bit timestamp = system_clock();
+   const u64bit timestamp = system_time();
 
    for(u32bit j = 0; j != counter.size(); ++j)
       if(++counter[j])

@@ -4,22 +4,17 @@
 *************************************************/
 
 #include <botan/timers.h>
-#include <botan/libstate.h>
+#include <botan/loadstor.h>
 #include <ctime>
 
 namespace Botan {
 
 /*************************************************
-* Timer Access Functions                         *
+* Get the system clock                           *
 *************************************************/
 u64bit system_time()
    {
    return static_cast<u64bit>(std::time(0));
-   }
-
-u64bit system_clock()
-   {
-   return global_state().system_clock();
    }
 
 /*************************************************
@@ -31,11 +26,24 @@ u64bit Timer::clock() const
    }
 
 /*************************************************
+* Read the clock and return the output           *
+*************************************************/
+u32bit Timer::slow_poll(byte out[], u32bit length)
+   {
+   const u64bit clock_value = this->clock();
+
+   for(u32bit j = 0; j != sizeof(clock_value); ++j)
+      out[j % length] ^= get_byte(j, clock_value);
+
+   return (length < 8) ? length : 8;
+   }
+
+/*************************************************
 * Combine a two time values into a single one    *
 *************************************************/
 u64bit Timer::combine_timers(u32bit seconds, u32bit parts, u32bit parts_hz)
    {
-   const u64bit NANOSECONDS_UNITS = 1000000000;
+   static const u64bit NANOSECONDS_UNITS = 1000000000;
    parts *= (NANOSECONDS_UNITS / parts_hz);
    return ((seconds * NANOSECONDS_UNITS) + parts);
    }

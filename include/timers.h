@@ -6,17 +6,19 @@
 #ifndef BOTAN_TIMERS_H__
 #define BOTAN_TIMERS_H__
 
-#include <botan/types.h>
+#include <botan/base.h>
 
 namespace Botan {
 
 /*************************************************
 * Timer Interface                                *
 *************************************************/
-class BOTAN_DLL Timer
+class Timer : public EntropySource
    {
    public:
       virtual u64bit clock() const;
+      u32bit slow_poll(byte[], u32bit);
+
       virtual ~Timer() {}
    protected:
       static u64bit combine_timers(u32bit, u32bit, u32bit);
