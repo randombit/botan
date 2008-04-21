@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * ECB                                            *
 *************************************************/
-class ECB : public BlockCipherMode
+class BOTAN_DLL ECB : public BlockCipherMode
    {
    protected:
       ECB(const std::string&, const std::string&);
@@ -27,7 +27,7 @@ class ECB : public BlockCipherMode
 /*************************************************
 * ECB Encryption                                 *
 *************************************************/
-class ECB_Encryption : public ECB
+class BOTAN_DLL ECB_Encryption : public ECB
    {
    public:
       ECB_Encryption(const std::string&, const std::string&);
@@ -41,7 +41,7 @@ class ECB_Encryption : public ECB
 /*************************************************
 * ECB Decryption                                 *
 *************************************************/
-class ECB_Decryption : public ECB
+class BOTAN_DLL ECB_Decryption : public ECB
    {
    public:
       ECB_Decryption(const std::string&, const std::string&);

@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Discrete Logarithm Group                       *
 *************************************************/
-class DL_Group
+class BOTAN_DLL DL_Group
    {
    public:
       const BigInt& get_p() const;

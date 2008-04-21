@@ -14,8 +14,8 @@ namespace Botan {
 /*************************************************
 * Get an PK key object                           *
 *************************************************/
-Public_Key*   get_public_key(const std::string&);
-Private_Key* get_private_key(const std::string&);
+BOTAN_DLL Public_Key*  get_public_key(const std::string&);
+BOTAN_DLL Private_Key* get_private_key(const std::string&);
 
 }
 

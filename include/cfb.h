@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * CFB Encryption                                 *
 *************************************************/
-class CFB_Encryption : public BlockCipherMode
+class BOTAN_DLL CFB_Encryption : public BlockCipherMode
    {
    public:
       CFB_Encryption(const std::string&, u32bit = 0);
@@ -28,7 +28,7 @@ class CFB_Encryption : public BlockCipherMode
 /*************************************************
 * CFB Decryption                                 *
 *************************************************/
-class CFB_Decryption : public BlockCipherMode
+class BOTAN_DLL CFB_Decryption : public BlockCipherMode
    {
    public:
       CFB_Decryption(const std::string&, u32bit = 0);

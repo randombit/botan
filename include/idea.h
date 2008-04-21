@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * IDEA                                           *
 *************************************************/
-class IDEA : public BlockCipher
+class BOTAN_DLL IDEA : public BlockCipher
    {
    public:
       void clear() throw() { EK.clear(); DK.clear(); }

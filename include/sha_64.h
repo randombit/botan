@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * SHA-{384,512} Base                             *
 *************************************************/
-class SHA_64_BASE : public MDx_HashFunction
+class BOTAN_DLL SHA_64_BASE : public MDx_HashFunction
    {
    protected:
       void clear() throw();
@@ -29,7 +29,7 @@ class SHA_64_BASE : public MDx_HashFunction
 /*************************************************
 * SHA-384                                        *
 *************************************************/
-class SHA_384 : public SHA_64_BASE
+class BOTAN_DLL SHA_384 : public SHA_64_BASE
    {
    public:
       void clear() throw();
@@ -41,7 +41,7 @@ class SHA_384 : public SHA_64_BASE
 /*************************************************
 * SHA-512                                        *
 *************************************************/
-class SHA_512 : public SHA_64_BASE
+class BOTAN_DLL SHA_512 : public SHA_64_BASE
    {
    public:
       void clear() throw();

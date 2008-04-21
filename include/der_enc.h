@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * General DER Encoding Object                    *
 *************************************************/
-class DER_Encoder
+class BOTAN_DLL DER_Encoder
    {
    public:
       SecureVector<byte> get_contents();

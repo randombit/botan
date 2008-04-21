@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * MD2                                            *
 *************************************************/
-class MD2 : public HashFunction
+class BOTAN_DLL MD2 : public HashFunction
    {
    public:
       void clear() throw();

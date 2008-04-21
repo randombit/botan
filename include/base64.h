@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Base64 Encoder                                 *
 *************************************************/
-class Base64_Encoder : public Filter
+class BOTAN_DLL Base64_Encoder : public Filter
    {
    public:
       static void encode(const byte[3], byte[4]);
@@ -36,7 +36,7 @@ class Base64_Encoder : public Filter
 /*************************************************
 * Base64 Decoder                                 *
 *************************************************/
-class Base64_Decoder : public Filter
+class BOTAN_DLL Base64_Decoder : public Filter
    {
    public:
       static void decode(const byte[4], byte[3]);

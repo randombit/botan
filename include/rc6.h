@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * RC6                                            *
 *************************************************/
-class RC6 : public BlockCipher
+class BOTAN_DLL RC6 : public BlockCipher
    {
    public:
       void clear() throw() { S.clear(); }

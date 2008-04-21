@@ -14,8 +14,8 @@ namespace Botan {
 /*************************************************
 * Return the values of various defined HashIDs   *
 *************************************************/
-MemoryVector<byte> pkcs_hash_id(const std::string&);
-byte ieee1363_hash_id(const std::string&);
+BOTAN_DLL MemoryVector<byte> pkcs_hash_id(const std::string&);
+BOTAN_DLL byte ieee1363_hash_id(const std::string&);
 
 }
 

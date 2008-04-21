@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * WiderWake4+1-BE                                *
 *************************************************/
-class WiderWake_41_BE : public StreamCipher
+class BOTAN_DLL WiderWake_41_BE : public StreamCipher
    {
    public:
       void clear() throw();

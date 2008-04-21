@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * SEED                                           *
 *************************************************/
-class SEED : public BlockCipher
+class BOTAN_DLL SEED : public BlockCipher
    {
    public:
       void clear() throw() { K.clear(); }

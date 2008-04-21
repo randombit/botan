@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * EAX Base Class                                 *
 *************************************************/
-class EAX_Base : public Keyed_Filter
+class BOTAN_DLL EAX_Base : public Keyed_Filter
    {
    public:
       void set_key(const SymmetricKey&);
@@ -39,7 +39,7 @@ class EAX_Base : public Keyed_Filter
 /*************************************************
 * EAX Encryption                                 *
 *************************************************/
-class EAX_Encryption : public EAX_Base
+class BOTAN_DLL EAX_Encryption : public EAX_Base
    {
    public:
       EAX_Encryption(const std::string&, u32bit = 0);
@@ -53,7 +53,7 @@ class EAX_Encryption : public EAX_Base
 /*************************************************
 * EAX Decryption                                 *
 *************************************************/
-class EAX_Decryption : public EAX_Base
+class BOTAN_DLL EAX_Decryption : public EAX_Base
    {
    public:
       EAX_Decryption(const std::string&, u32bit = 0);

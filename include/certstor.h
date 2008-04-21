@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Certificate Store Interface                    *
 *************************************************/
-class Certificate_Store
+class BOTAN_DLL Certificate_Store
    {
    public:
       virtual std::vector<X509_Certificate>

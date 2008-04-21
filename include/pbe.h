@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * Password Based Encryption                      *
 *************************************************/
-class PBE : public Filter
+class BOTAN_DLL PBE : public Filter
    {
    public:
       virtual void set_key(const std::string&) = 0;
@@ -28,8 +28,8 @@ class PBE : public Filter
 /*************************************************
 * Get a PBE object                               *
 *************************************************/
-PBE* get_pbe(const std::string&);
-PBE* get_pbe(const OID&, DataSource&);
+BOTAN_DLL PBE* get_pbe(const std::string&);
+BOTAN_DLL PBE* get_pbe(const OID&, DataSource&);
 
 }
 

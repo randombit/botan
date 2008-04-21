@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Lion                                           *
 *************************************************/
-class Lion : public BlockCipher
+class BOTAN_DLL Lion : public BlockCipher
    {
    public:
       void clear() throw();

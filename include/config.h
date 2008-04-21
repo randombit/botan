@@ -17,7 +17,7 @@ namespace Botan {
 /*************************************************
 * Library Configuration Settings                 *
 *************************************************/
-class Config
+class BOTAN_DLL Config
    {
    public:
       Config();
@@ -53,7 +53,7 @@ class Config
 /*************************************************
 * Hook for the global config                     *
 *************************************************/
-Config& global_config();
+BOTAN_DLL Config& global_config();
 
 }
 

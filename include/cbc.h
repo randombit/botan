@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * CBC Encryption                                 *
 *************************************************/
-class CBC_Encryption : public BlockCipherMode
+class BOTAN_DLL CBC_Encryption : public BlockCipherMode
    {
    public:
       CBC_Encryption(const std::string&, const std::string&);
@@ -30,7 +30,7 @@ class CBC_Encryption : public BlockCipherMode
 /*************************************************
 * CBC Decryption                                 *
 *************************************************/
-class CBC_Decryption : public BlockCipherMode
+class BOTAN_DLL CBC_Decryption : public BlockCipherMode
    {
    public:
       CBC_Decryption(const std::string&, const std::string&);

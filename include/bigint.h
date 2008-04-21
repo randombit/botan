@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * BigInt                                         *
 *************************************************/
-class BigInt
+class BOTAN_DLL BigInt
    {
    public:
       enum Base { Octal = 8, Decimal = 10, Hexadecimal = 16, Binary = 256 };
@@ -113,14 +113,14 @@ class BigInt
 /*************************************************
 * Arithmetic Operators                           *
 *************************************************/
-BigInt operator+(const BigInt&, const BigInt&);
-BigInt operator-(const BigInt&, const BigInt&);
-BigInt operator*(const BigInt&, const BigInt&);
-BigInt operator/(const BigInt&, const BigInt&);
-BigInt operator%(const BigInt&, const BigInt&);
-word   operator%(const BigInt&, word);
-BigInt operator<<(const BigInt&, u32bit);
-BigInt operator>>(const BigInt&, u32bit);
+BigInt BOTAN_DLL operator+(const BigInt&, const BigInt&);
+BigInt BOTAN_DLL operator-(const BigInt&, const BigInt&);
+BigInt BOTAN_DLL operator*(const BigInt&, const BigInt&);
+BigInt BOTAN_DLL operator/(const BigInt&, const BigInt&);
+BigInt BOTAN_DLL operator%(const BigInt&, const BigInt&);
+word   BOTAN_DLL operator%(const BigInt&, word);
+BigInt BOTAN_DLL operator<<(const BigInt&, u32bit);
+BigInt BOTAN_DLL operator>>(const BigInt&, u32bit);
 
 /*************************************************
 * Comparison Operators                           *
@@ -141,8 +141,8 @@ inline bool operator>(const BigInt& a, const BigInt& b)
 /*************************************************
 * I/O Operators                                  *
 *************************************************/
-std::ostream& operator<<(std::ostream&, const BigInt&);
-std::istream& operator>>(std::istream&, BigInt&);
+BOTAN_DLL std::ostream& operator<<(std::ostream&, const BigInt&);
+BOTAN_DLL std::istream& operator>>(std::istream&, BigInt&);
 
 }
 

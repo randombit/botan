@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Buffering Filter                               *
 *************************************************/
-class Buffering_Filter : public Filter
+class BOTAN_DLL Buffering_Filter : public Filter
    {
    public:
       void write(const byte[], u32bit);

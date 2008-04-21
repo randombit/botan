@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Generic DataSink Interface                     *
 *************************************************/
-class DataSink : public Filter
+class BOTAN_DLL DataSink : public Filter
    {
    public:
       bool attachable() { return false; }
@@ -28,7 +28,7 @@ class DataSink : public Filter
 /*************************************************
 * Stream-Based DataSink                          *
 *************************************************/
-class DataSink_Stream : public DataSink
+class BOTAN_DLL DataSink_Stream : public DataSink
    {
    public:
       void write(const byte[], u32bit);

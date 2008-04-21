@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * EMSA1                                          *
 *************************************************/
-class EMSA1 : public EMSA
+class BOTAN_DLL EMSA1 : public EMSA
    {
    public:
       EMSA1(const std::string&);
@@ -30,7 +30,7 @@ class EMSA1 : public EMSA
 /*************************************************
 * EMSA2                                          *
 *************************************************/
-class EMSA2 : public EMSA
+class BOTAN_DLL EMSA2 : public EMSA
    {
    public:
       EMSA2(const std::string&);
@@ -47,7 +47,7 @@ class EMSA2 : public EMSA
 /*************************************************
 * EMSA3                                          *
 *************************************************/
-class EMSA3 : public EMSA
+class BOTAN_DLL EMSA3 : public EMSA
    {
    public:
       EMSA3(const std::string&);
@@ -63,7 +63,7 @@ class EMSA3 : public EMSA
 /*************************************************
 * EMSA4                                          *
 *************************************************/
-class EMSA4 : public EMSA
+class BOTAN_DLL EMSA4 : public EMSA
    {
    public:
       EMSA4(const std::string&, const std::string&);
@@ -83,7 +83,7 @@ class EMSA4 : public EMSA
 /*************************************************
 * EMSA-Raw                                       *
 *************************************************/
-class EMSA_Raw : public EMSA
+class BOTAN_DLL EMSA_Raw : public EMSA
    {
    private:
       void update(const byte[], u32bit);

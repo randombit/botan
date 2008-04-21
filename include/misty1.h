@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * MISTY1                                         *
 *************************************************/
-class MISTY1 : public BlockCipher
+class BOTAN_DLL MISTY1 : public BlockCipher
    {
    public:
       void clear() throw() { EK.clear(); DK.clear(); }
@@ -25,7 +25,8 @@ class MISTY1 : public BlockCipher
       void dec(const byte[], byte[]) const;
       void key(const byte[], u32bit);
 
-      static const byte EK_ORDER[100], DK_ORDER[100];
+      static const byte EK_ORDER[100];
+      static const byte DK_ORDER[100];
       SecureBuffer<u16bit, 100> EK, DK;
    };
 

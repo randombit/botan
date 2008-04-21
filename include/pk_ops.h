@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * IF Operation                                   *
 *************************************************/
-class IF_Operation
+class BOTAN_DLL IF_Operation
    {
    public:
       virtual BigInt public_op(const BigInt&) const = 0;
@@ -26,7 +26,7 @@ class IF_Operation
 /*************************************************
 * DSA Operation                                  *
 *************************************************/
-class DSA_Operation
+class BOTAN_DLL DSA_Operation
    {
    public:
       virtual bool verify(const byte[], u32bit,
@@ -40,7 +40,7 @@ class DSA_Operation
 /*************************************************
 * NR Operation                                   *
 *************************************************/
-class NR_Operation
+class BOTAN_DLL NR_Operation
    {
    public:
       virtual SecureVector<byte> verify(const byte[], u32bit) const = 0;
@@ -53,7 +53,7 @@ class NR_Operation
 /*************************************************
 * ElGamal Operation                              *
 *************************************************/
-class ELG_Operation
+class BOTAN_DLL ELG_Operation
    {
    public:
       virtual SecureVector<byte> encrypt(const byte[], u32bit,
@@ -66,7 +66,7 @@ class ELG_Operation
 /*************************************************
 * DH Operation                                   *
 *************************************************/
-class DH_Operation
+class BOTAN_DLL DH_Operation
    {
    public:
       virtual BigInt agree(const BigInt&) const = 0;

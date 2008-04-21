@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * Generic X.509 SIGNED Object                    *
 *************************************************/
-class X509_Object
+class BOTAN_DLL X509_Object
    {
    public:
       SecureVector<byte> tbs_data() const;

@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * PKCS#5 v1.5 PBE                                *
 *************************************************/
-class PBE_PKCS5v15 : public PBE
+class BOTAN_DLL PBE_PKCS5v15 : public PBE
    {
    public:
       void write(const byte[], u32bit);
@@ -38,7 +38,7 @@ class PBE_PKCS5v15 : public PBE
 /*************************************************
 * PKCS#5 v2.0 PBE                                *
 *************************************************/
-class PBE_PKCS5v20 : public PBE
+class BOTAN_DLL PBE_PKCS5v20 : public PBE
    {
    public:
       void write(const byte[], u32bit);

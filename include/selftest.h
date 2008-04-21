@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Self Tests                                     *
 *************************************************/
-bool passes_self_tests();
+BOTAN_DLL bool passes_self_tests();
 
 }
 

@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Modular Reducer                                *
 *************************************************/
-class Modular_Reducer
+class BOTAN_DLL Modular_Reducer
    {
    public:
       BigInt multiply(const BigInt&, const BigInt&) const;

@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Blowfish                                       *
 *************************************************/
-class Blowfish : public BlockCipher
+class BOTAN_DLL Blowfish : public BlockCipher
    {
    public:
       void clear() throw();
@@ -26,7 +26,8 @@ class Blowfish : public BlockCipher
       void key(const byte[], u32bit);
       void generate_sbox(u32bit[], u32bit, u32bit&, u32bit&) const;
 
-      static const u32bit PBOX[18], SBOX[1024];
+      static const u32bit PBOX[18];
+      static const u32bit SBOX[1024];
 
       SecureBuffer<u32bit, 256> S1, S2, S3, S4;
       SecureBuffer<u32bit, 18> P;

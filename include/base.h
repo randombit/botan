@@ -19,7 +19,7 @@ static const u32bit DEFAULT_BUFFERSIZE = BOTAN_DEFAULT_BUFFER_SIZE;
 /*************************************************
 * Symmetric Algorithm                            *
 *************************************************/
-class SymmetricAlgorithm
+class BOTAN_DLL SymmetricAlgorithm
    {
    public:
       const u32bit MAXIMUM_KEYLENGTH, MINIMUM_KEYLENGTH, KEYLENGTH_MULTIPLE;
@@ -38,7 +38,7 @@ class SymmetricAlgorithm
 /*************************************************
 * Block Cipher                                   *
 *************************************************/
-class BlockCipher : public SymmetricAlgorithm
+class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
    {
    public:
       const u32bit BLOCK_SIZE;
@@ -61,7 +61,7 @@ class BlockCipher : public SymmetricAlgorithm
 /*************************************************
 * Stream Cipher                                  *
 *************************************************/
-class StreamCipher : public SymmetricAlgorithm
+class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
    {
    public:
       const u32bit IV_LENGTH;
@@ -85,7 +85,7 @@ class StreamCipher : public SymmetricAlgorithm
 /*************************************************
 * Buffered Computation                           *
 *************************************************/
-class BufferedComputation
+class BOTAN_DLL BufferedComputation
    {
    public:
       const u32bit OUTPUT_LENGTH;
@@ -108,7 +108,7 @@ class BufferedComputation
 /*************************************************
 * Hash Function                                  *
 *************************************************/
-class HashFunction : public BufferedComputation
+class BOTAN_DLL HashFunction : public BufferedComputation
    {
    public:
       const u32bit HASH_BLOCK_SIZE;
@@ -124,7 +124,7 @@ class HashFunction : public BufferedComputation
 /*************************************************
 * Message Authentication Code                    *
 *************************************************/
-class MessageAuthenticationCode : public BufferedComputation,
+class BOTAN_DLL MessageAuthenticationCode : public BufferedComputation,
                                   public SymmetricAlgorithm
    {
    public:
@@ -141,7 +141,7 @@ class MessageAuthenticationCode : public BufferedComputation,
 /*************************************************
 * Entropy Source                                 *
 *************************************************/
-class EntropySource
+class BOTAN_DLL EntropySource
    {
    public:
       virtual u32bit slow_poll(byte[], u32bit) = 0;
@@ -152,7 +152,7 @@ class EntropySource
 /*************************************************
 * Random Number Generator                        *
 *************************************************/
-class RandomNumberGenerator
+class BOTAN_DLL RandomNumberGenerator
    {
    public:
       virtual void randomize(byte[], u32bit) throw(PRNG_Unseeded) = 0;

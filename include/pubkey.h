@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * Public Key Encryptor                           *
 *************************************************/
-class PK_Encryptor
+class BOTAN_DLL PK_Encryptor
    {
    public:
       SecureVector<byte> encrypt(const byte[], u32bit) const;
@@ -29,7 +29,7 @@ class PK_Encryptor
 /*************************************************
 * Public Key Decryptor                           *
 *************************************************/
-class PK_Decryptor
+class BOTAN_DLL PK_Decryptor
    {
    public:
       SecureVector<byte> decrypt(const byte[], u32bit) const;
@@ -42,7 +42,7 @@ class PK_Decryptor
 /*************************************************
 * Public Key Signer                              *
 *************************************************/
-class PK_Signer
+class BOTAN_DLL PK_Signer
    {
    public:
       SecureVector<byte> sign_message(const byte[], u32bit);
@@ -67,7 +67,7 @@ class PK_Signer
 /*************************************************
 * Public Key Verifier                            *
 *************************************************/
-class PK_Verifier
+class BOTAN_DLL PK_Verifier
    {
    public:
       bool verify_message(const byte[], u32bit, const byte[], u32bit);
@@ -98,7 +98,7 @@ class PK_Verifier
 /*************************************************
 * Key Agreement                                  *
 *************************************************/
-class PK_Key_Agreement
+class BOTAN_DLL PK_Key_Agreement
    {
    public:
       SymmetricKey derive_key(u32bit, const byte[], u32bit,
@@ -115,7 +115,7 @@ class PK_Key_Agreement
 /*************************************************
 * Encryption with an MR algorithm and an EME     *
 *************************************************/
-class PK_Encryptor_MR_with_EME : public PK_Encryptor
+class BOTAN_DLL PK_Encryptor_MR_with_EME : public PK_Encryptor
    {
    public:
       u32bit maximum_input_size() const;
@@ -130,7 +130,7 @@ class PK_Encryptor_MR_with_EME : public PK_Encryptor
 /*************************************************
 * Decryption with an MR algorithm and an EME     *
 *************************************************/
-class PK_Decryptor_MR_with_EME : public PK_Decryptor
+class BOTAN_DLL PK_Decryptor_MR_with_EME : public PK_Decryptor
    {
    public:
       PK_Decryptor_MR_with_EME(const PK_Decrypting_Key&, const std::string&);
@@ -144,7 +144,7 @@ class PK_Decryptor_MR_with_EME : public PK_Decryptor
 /*************************************************
 * Public Key Verifier with Message Recovery      *
 *************************************************/
-class PK_Verifier_with_MR : public PK_Verifier
+class BOTAN_DLL PK_Verifier_with_MR : public PK_Verifier
    {
    public:
       PK_Verifier_with_MR(const PK_Verifying_with_MR_Key&, const std::string&);
@@ -159,7 +159,7 @@ class PK_Verifier_with_MR : public PK_Verifier
 /*************************************************
 * Public Key Verifier without Message Recovery   *
 *************************************************/
-class PK_Verifier_wo_MR : public PK_Verifier
+class BOTAN_DLL PK_Verifier_wo_MR : public PK_Verifier
    {
    public:
       PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key&, const std::string&);

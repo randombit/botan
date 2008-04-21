@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Rabin-Williams Public Key                      *
 *************************************************/
-class RW_PublicKey : public PK_Verifying_with_MR_Key,
+class BOTAN_DLL RW_PublicKey : public PK_Verifying_with_MR_Key,
                      public virtual IF_Scheme_PublicKey
    {
    public:
@@ -30,7 +30,7 @@ class RW_PublicKey : public PK_Verifying_with_MR_Key,
 /*************************************************
 * Rabin-Williams Private Key                     *
 *************************************************/
-class RW_PrivateKey : public RW_PublicKey,
+class BOTAN_DLL RW_PrivateKey : public RW_PublicKey,
                       public PK_Signing_Key,
                       public IF_Scheme_PrivateKey
    {

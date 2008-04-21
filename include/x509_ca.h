@@ -18,7 +18,7 @@ namespace Botan {
 /*************************************************
 * X.509 Certificate Authority                    *
 *************************************************/
-class X509_CA
+class BOTAN_DLL X509_CA
    {
    public:
       X509_Certificate sign_request(const PKCS10_Request& req,
@@ -53,7 +53,8 @@ class X509_CA
 /*************************************************
 * Choose a signing format for the key            *
 *************************************************/
-PK_Signer* choose_sig_format(const Private_Key&, AlgorithmIdentifier&);
+BOTAN_DLL PK_Signer* choose_sig_format(const Private_Key&,
+                                       AlgorithmIdentifier&);
 
 
 }

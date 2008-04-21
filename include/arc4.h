@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * ARC4                                           *
 *************************************************/
-class ARC4 : public StreamCipher
+class BOTAN_DLL ARC4 : public StreamCipher
    {
    public:
       void clear() throw();

@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * CAST-256                                       *
 *************************************************/
-class CAST_256 : public BlockCipher
+class BOTAN_DLL CAST_256 : public BlockCipher
    {
    public:
       void clear() throw() { MK.clear(); RK.clear(); }

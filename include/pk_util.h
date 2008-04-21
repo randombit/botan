@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Encoding Method for Encryption                 *
 *************************************************/
-class EME
+class BOTAN_DLL EME
    {
    public:
       virtual u32bit maximum_input_size(u32bit) const = 0;
@@ -31,7 +31,7 @@ class EME
 /*************************************************
 * Encoding Method for Signatures, Appendix       *
 *************************************************/
-class EMSA
+class BOTAN_DLL EMSA
    {
    public:
       virtual void update(const byte[], u32bit) = 0;
@@ -46,7 +46,7 @@ class EMSA
 /*************************************************
 * Key Derivation Function                        *
 *************************************************/
-class KDF
+class BOTAN_DLL KDF
    {
    public:
       SecureVector<byte> derive_key(u32bit, const MemoryRegion<byte>&,
@@ -70,7 +70,7 @@ class KDF
 /*************************************************
 * Mask Generation Function                       *
 *************************************************/
-class MGF
+class BOTAN_DLL MGF
    {
    public:
       virtual void mask(const byte[], u32bit, byte[], u32bit) const = 0;

@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * EME1                                           *
 *************************************************/
-class EME1 : public EME
+class BOTAN_DLL EME1 : public EME
    {
    public:
       u32bit maximum_input_size(u32bit) const;
@@ -31,7 +31,7 @@ class EME1 : public EME
 /*************************************************
 * EME_PKCS1v15                                   *
 *************************************************/
-class EME_PKCS1v15 : public EME
+class BOTAN_DLL EME_PKCS1v15 : public EME
    {
    public:
       u32bit maximum_input_size(u32bit) const;

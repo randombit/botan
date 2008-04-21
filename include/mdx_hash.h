@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * MDx Hash Function Base Class                   *
 *************************************************/
-class MDx_HashFunction : public HashFunction
+class BOTAN_DLL MDx_HashFunction : public HashFunction
    {
    public:
       MDx_HashFunction(u32bit, u32bit, bool, bool, u32bit = 8);

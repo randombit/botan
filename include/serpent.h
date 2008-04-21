@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Serpent                                        *
 *************************************************/
-class Serpent : public BlockCipher
+class BOTAN_DLL Serpent : public BlockCipher
    {
    public:
       void clear() throw() { round_key.clear(); }

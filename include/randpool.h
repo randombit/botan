@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Randpool                                       *
 *************************************************/
-class Randpool : public RandomNumberGenerator
+class BOTAN_DLL Randpool : public RandomNumberGenerator
    {
    public:
       void randomize(byte[], u32bit) throw(PRNG_Unseeded);

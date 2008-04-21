@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-class MARS : public BlockCipher
+class BOTAN_DLL MARS : public BlockCipher
    {
    public:
       void clear() throw() { EK.clear(); }

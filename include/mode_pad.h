@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Block Cipher Mode Padding Method               *
 *************************************************/
-class BlockCipherModePaddingMethod
+class BOTAN_DLL BlockCipherModePaddingMethod
    {
    public:
       virtual void pad(byte[], u32bit, u32bit) const = 0;
@@ -28,7 +28,7 @@ class BlockCipherModePaddingMethod
 /*************************************************
 * PKCS#7 Padding                                 *
 *************************************************/
-class PKCS7_Padding : public BlockCipherModePaddingMethod
+class BOTAN_DLL PKCS7_Padding : public BlockCipherModePaddingMethod
    {
    public:
       void pad(byte[], u32bit, u32bit) const;
@@ -40,7 +40,7 @@ class PKCS7_Padding : public BlockCipherModePaddingMethod
 /*************************************************
 * ANSI X9.23 Padding                             *
 *************************************************/
-class ANSI_X923_Padding : public BlockCipherModePaddingMethod
+class BOTAN_DLL ANSI_X923_Padding : public BlockCipherModePaddingMethod
    {
    public:
       void pad(byte[], u32bit, u32bit) const;
@@ -52,7 +52,7 @@ class ANSI_X923_Padding : public BlockCipherModePaddingMethod
 /*************************************************
 * One And Zeros Padding                          *
 *************************************************/
-class OneAndZeros_Padding : public BlockCipherModePaddingMethod
+class BOTAN_DLL OneAndZeros_Padding : public BlockCipherModePaddingMethod
    {
    public:
       void pad(byte[], u32bit, u32bit) const;
@@ -64,7 +64,7 @@ class OneAndZeros_Padding : public BlockCipherModePaddingMethod
 /*************************************************
 * Null Padding                                   *
 *************************************************/
-class Null_Padding : public BlockCipherModePaddingMethod
+class BOTAN_DLL Null_Padding : public BlockCipherModePaddingMethod
    {
    public:
       void pad(byte[], u32bit, u32bit) const { return; }

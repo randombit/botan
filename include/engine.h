@@ -20,11 +20,11 @@ namespace Botan {
 /*************************************************
 * Engine Base Class                              *
 *************************************************/
-class Engine
+class BOTAN_DLL Engine
    {
    public:
       template<typename T>
-      class Algorithm_Cache
+      class BOTAN_DLL Algorithm_Cache
          {
          public:
             virtual T* get(const std::string&) const = 0;

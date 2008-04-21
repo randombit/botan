@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Search based on the contents of a DN entry     *
 *************************************************/
-class DN_Check : public X509_Store::Search_Func
+class BOTAN_DLL DN_Check : public X509_Store::Search_Func
    {
    public:
       typedef bool (*compare_fn)(const std::string&, const std::string&);
@@ -31,7 +31,7 @@ class DN_Check : public X509_Store::Search_Func
 /*************************************************
 * Search for a certificate by issuer/serial      *
 *************************************************/
-class IandS_Match : public X509_Store::Search_Func
+class BOTAN_DLL IandS_Match : public X509_Store::Search_Func
    {
    public:
       bool match(const X509_Certificate& cert) const;
@@ -44,7 +44,7 @@ class IandS_Match : public X509_Store::Search_Func
 /*************************************************
 * Search for a certificate by subject keyid      *
 *************************************************/
-class SKID_Match : public X509_Store::Search_Func
+class BOTAN_DLL SKID_Match : public X509_Store::Search_Func
    {
    public:
       bool match(const X509_Certificate& cert) const;

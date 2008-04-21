@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * HMAC                                           *
 *************************************************/
-class HMAC : public MessageAuthenticationCode
+class BOTAN_DLL HMAC : public MessageAuthenticationCode
    {
    public:
       void clear() throw();

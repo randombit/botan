@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * X.509 CRL                                      *
 *************************************************/
-class X509_CRL : public X509_Object
+class BOTAN_DLL X509_CRL : public X509_Object
    {
    public:
       struct X509_CRL_Error : public Exception

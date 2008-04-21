@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Twofish                                        *
 *************************************************/
-class Twofish : public BlockCipher
+class BOTAN_DLL Twofish : public BlockCipher
    {
    public:
       void clear() throw();
@@ -27,9 +27,15 @@ class Twofish : public BlockCipher
 
       static void rs_mul(byte[4], byte, u32bit);
 
-      static const u32bit MDS0[256], MDS1[256], MDS2[256], MDS3[256];
-      static const byte Q0[256], Q1[256], RS[32];
-      static const byte EXP_TO_POLY[255], POLY_TO_EXP[255];
+      static const u32bit MDS0[256];
+      static const u32bit MDS1[256];
+      static const u32bit MDS2[256];
+      static const u32bit MDS3[256];
+      static const byte Q0[256];
+      static const byte Q1[256];
+      static const byte RS[32];
+      static const byte EXP_TO_POLY[255];
+      static const byte POLY_TO_EXP[255];
 
       SecureBuffer<u32bit, 256> SBox0, SBox1, SBox2, SBox3;
       SecureBuffer<u32bit, 40> round_key;

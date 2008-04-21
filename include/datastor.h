@@ -17,10 +17,10 @@ namespace Botan {
 /*************************************************
 * Data Store                                     *
 *************************************************/
-class Data_Store
+class BOTAN_DLL Data_Store
    {
    public:
-      class Matcher
+      class BOTAN_DLL Matcher
          {
          public:
             virtual bool operator()(const std::string&,

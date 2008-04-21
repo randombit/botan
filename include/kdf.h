@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * KDF1                                           *
 *************************************************/
-class KDF1 : public KDF
+class BOTAN_DLL KDF1 : public KDF
    {
    public:
       KDF1(const std::string&);
@@ -27,7 +27,7 @@ class KDF1 : public KDF
 /*************************************************
 * KDF2                                           *
 *************************************************/
-class KDF2 : public KDF
+class BOTAN_DLL KDF2 : public KDF
    {
    public:
 
@@ -41,7 +41,7 @@ class KDF2 : public KDF
 /*************************************************
 * X9.42 PRF                                      *
 *************************************************/
-class X942_PRF : public KDF
+class BOTAN_DLL X942_PRF : public KDF
    {
    public:
       X942_PRF(const std::string&);

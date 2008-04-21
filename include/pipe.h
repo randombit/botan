@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * Pipe                                           *
 *************************************************/
-class Pipe : public DataSource
+class BOTAN_DLL Pipe : public DataSource
    {
    public:
       typedef u32bit message_id;
@@ -26,7 +26,8 @@ class Pipe : public DataSource
             Invalid_Message_Number(const std::string&, message_id);
          };
 
-      static const message_id LAST_MESSAGE, DEFAULT_MESSAGE;
+      static const message_id LAST_MESSAGE;
+      static const message_id DEFAULT_MESSAGE;
 
       void write(const byte[], u32bit);
       void write(const MemoryRegion<byte>&);
@@ -87,8 +88,8 @@ class Pipe : public DataSource
 /*************************************************
 * I/O Operators for Pipe                         *
 *************************************************/
-std::ostream& operator<<(std::ostream&, Pipe&);
-std::istream& operator>>(std::istream&, Pipe&);
+BOTAN_DLL std::ostream& operator<<(std::ostream&, Pipe&);
+BOTAN_DLL std::istream& operator>>(std::istream&, Pipe&);
 
 }
 

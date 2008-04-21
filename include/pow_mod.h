@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Modular Exponentiator Interface                *
 *************************************************/
-class Modular_Exponentiator
+class BOTAN_DLL Modular_Exponentiator
    {
    public:
       virtual void set_base(const BigInt&) = 0;
@@ -26,7 +26,7 @@ class Modular_Exponentiator
 /*************************************************
 * Modular Exponentiator Proxy                    *
 *************************************************/
-class Power_Mod
+class BOTAN_DLL Power_Mod
    {
    public:
       enum Usage_Hints {
@@ -61,7 +61,7 @@ class Power_Mod
 /*************************************************
 * Fixed Exponent Modular Exponentiator Proxy     *
 *************************************************/
-class Fixed_Exponent_Power_Mod : public Power_Mod
+class BOTAN_DLL Fixed_Exponent_Power_Mod : public Power_Mod
    {
    public:
       BigInt operator()(const BigInt& b) const
@@ -75,7 +75,7 @@ class Fixed_Exponent_Power_Mod : public Power_Mod
 /*************************************************
 * Fixed Base Modular Exponentiator Proxy         *
 *************************************************/
-class Fixed_Base_Power_Mod : public Power_Mod
+class BOTAN_DLL Fixed_Base_Power_Mod : public Power_Mod
    {
    public:
       BigInt operator()(const BigInt& e) const

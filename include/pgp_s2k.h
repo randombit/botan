@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * OpenPGP S2K                                    *
 *************************************************/
-class OpenPGP_S2K : public S2K
+class BOTAN_DLL OpenPGP_S2K : public S2K
    {
    public:
       std::string name() const;

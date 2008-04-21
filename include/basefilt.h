@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Chain                                          *
 *************************************************/
-class Chain : public Fanout_Filter
+class BOTAN_DLL Chain : public Fanout_Filter
    {
    public:
       void write(const byte input[], u32bit length) { send(input, length); }
@@ -25,7 +25,7 @@ class Chain : public Fanout_Filter
 /*************************************************
 * Fork                                           *
 *************************************************/
-class Fork : public Fanout_Filter
+class BOTAN_DLL Fork : public Fanout_Filter
    {
    public:
       void write(const byte input[], u32bit length) { send(input, length); }
@@ -38,7 +38,7 @@ class Fork : public Fanout_Filter
 /*************************************************
 * Keyed Filter                                   *
 *************************************************/
-class Keyed_Filter : public Filter
+class BOTAN_DLL Keyed_Filter : public Filter
    {
    public:
       virtual void set_key(const SymmetricKey&);

@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * CAST-128                                       *
 *************************************************/
-class CAST_128 : public BlockCipher
+class BOTAN_DLL CAST_128 : public BlockCipher
    {
    public:
       void clear() throw() { MK.clear(); RK.clear(); }
@@ -27,7 +27,10 @@ class CAST_128 : public BlockCipher
 
       static void key_schedule(u32bit[16], u32bit[4]);
 
-      static const u32bit S5[256], S6[256], S7[256], S8[256];
+      static const u32bit S5[256];
+      static const u32bit S6[256];
+      static const u32bit S7[256];
+      static const u32bit S8[256];
 
       SecureBuffer<u32bit, 16> MK, RK;
    };

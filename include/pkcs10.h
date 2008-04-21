@@ -16,7 +16,7 @@ namespace Botan {
 /*************************************************
 * PKCS #10 Certificate Request                   *
 *************************************************/
-class PKCS10_Request : public X509_Object
+class BOTAN_DLL PKCS10_Request : public X509_Object
    {
    public:
       Public_Key* subject_public_key() const;

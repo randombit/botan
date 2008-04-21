@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * GOST                                           *
 *************************************************/
-class GOST : public BlockCipher
+class BOTAN_DLL GOST : public BlockCipher
    {
    public:
       void clear() throw() { EK.clear(); }
@@ -25,7 +25,10 @@ class GOST : public BlockCipher
       void dec(const byte[], byte[]) const;
       void key(const byte[], u32bit);
 
-      static const u32bit SBOX1[256], SBOX2[256], SBOX3[256], SBOX4[256];
+      static const u32bit SBOX1[256];
+      static const u32bit SBOX2[256];
+      static const u32bit SBOX3[256];
+      static const u32bit SBOX4[256];
 
       SecureBuffer<u32bit, 32> EK;
    };

@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * ANSI X9.19 MAC                                 *
 *************************************************/
-class ANSI_X919_MAC : public MessageAuthenticationCode
+class BOTAN_DLL ANSI_X919_MAC : public MessageAuthenticationCode
    {
    public:
       void clear() throw();

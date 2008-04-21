@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * OFB Mode                                       *
 *************************************************/
-class OFB : public BlockCipherMode
+class BOTAN_DLL OFB : public BlockCipherMode
    {
    public:
       OFB(const std::string&);

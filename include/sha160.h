@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * SHA-160                                        *
 *************************************************/
-class SHA_160 : public MDx_HashFunction
+class BOTAN_DLL SHA_160 : public MDx_HashFunction
    {
    public:
       void clear() throw();

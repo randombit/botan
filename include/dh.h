@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Diffie-Hellman Public Key                      *
 *************************************************/
-class DH_PublicKey : public virtual DL_Scheme_PublicKey
+class BOTAN_DLL DH_PublicKey : public virtual DL_Scheme_PublicKey
    {
    public:
       std::string algo_name() const { return "DH"; }
@@ -33,7 +33,7 @@ class DH_PublicKey : public virtual DL_Scheme_PublicKey
 /*************************************************
 * Diffie-Hellman Private Key                     *
 *************************************************/
-class DH_PrivateKey : public DH_PublicKey,
+class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
                       public PK_Key_Agreement_Key,
                       public virtual DL_Scheme_PrivateKey
    {

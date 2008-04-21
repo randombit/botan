@@ -18,7 +18,7 @@ namespace Botan {
 /*************************************************
 * Attribute                                      *
 *************************************************/
-class Attribute : public ASN1_Object
+class BOTAN_DLL Attribute : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const;
@@ -35,7 +35,7 @@ class Attribute : public ASN1_Object
 /*************************************************
 * X.509 Time                                     *
 *************************************************/
-class X509_Time : public ASN1_Object
+class BOTAN_DLL X509_Time : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const;
@@ -62,7 +62,7 @@ class X509_Time : public ASN1_Object
 /*************************************************
 * Simple String                                  *
 *************************************************/
-class ASN1_String : public ASN1_Object
+class BOTAN_DLL ASN1_String : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const;
@@ -83,7 +83,7 @@ class ASN1_String : public ASN1_Object
 /*************************************************
 * Distinguished Name                             *
 *************************************************/
-class X509_DN : public ASN1_Object
+class BOTAN_DLL X509_DN : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const;
@@ -113,7 +113,7 @@ class X509_DN : public ASN1_Object
 /*************************************************
 * Alternative Name                               *
 *************************************************/
-class AlternativeName : public ASN1_Object
+class BOTAN_DLL AlternativeName : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const;
@@ -139,24 +139,26 @@ class AlternativeName : public ASN1_Object
 /*************************************************
 * Comparison Operations                          *
 *************************************************/
-bool operator==(const AlgorithmIdentifier&, const AlgorithmIdentifier&);
-bool operator!=(const AlgorithmIdentifier&, const AlgorithmIdentifier&);
+bool BOTAN_DLL operator==(const AlgorithmIdentifier&,
+                          const AlgorithmIdentifier&);
+bool BOTAN_DLL operator!=(const AlgorithmIdentifier&,
+                          const AlgorithmIdentifier&);
 
-bool operator==(const X509_Time&, const X509_Time&);
-bool operator!=(const X509_Time&, const X509_Time&);
-bool operator<=(const X509_Time&, const X509_Time&);
-bool operator>=(const X509_Time&, const X509_Time&);
+bool BOTAN_DLL operator==(const X509_Time&, const X509_Time&);
+bool BOTAN_DLL operator!=(const X509_Time&, const X509_Time&);
+bool BOTAN_DLL operator<=(const X509_Time&, const X509_Time&);
+bool BOTAN_DLL operator>=(const X509_Time&, const X509_Time&);
 
-bool operator==(const X509_DN&, const X509_DN&);
-bool operator!=(const X509_DN&, const X509_DN&);
-bool operator<(const X509_DN&, const X509_DN&);
+bool BOTAN_DLL operator==(const X509_DN&, const X509_DN&);
+bool BOTAN_DLL operator!=(const X509_DN&, const X509_DN&);
+bool BOTAN_DLL operator<(const X509_DN&, const X509_DN&);
 
 /*************************************************
 * Helper Functions                               *
 *************************************************/
-s32bit validity_check(const X509_Time&, const X509_Time&, u64bit);
+s32bit BOTAN_DLL validity_check(const X509_Time&, const X509_Time&, u64bit);
 
-bool is_string_type(ASN1_Tag);
+bool BOTAN_DLL is_string_type(ASN1_Tag);
 
 }
 

@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Block Cipher Mode                              *
 *************************************************/
-class BlockCipherMode : public Keyed_Filter
+class BOTAN_DLL BlockCipherMode : public Keyed_Filter
    {
    public:
       std::string name() const;

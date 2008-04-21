@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * TEA                                            *
 *************************************************/
-class TEA : public BlockCipher
+class BOTAN_DLL TEA : public BlockCipher
    {
    public:
       void clear() throw() { K.clear(); }

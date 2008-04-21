@@ -43,10 +43,10 @@ enum X509_Code {
 /*************************************************
 * X.509 Certificate Store                        *
 *************************************************/
-class X509_Store
+class BOTAN_DLL X509_Store
    {
    public:
-      class Search_Func
+      class BOTAN_DLL Search_Func
          {
          public:
             virtual bool match(const X509_Certificate&) const = 0;
@@ -84,7 +84,7 @@ class X509_Store
    private:
       X509_Store& operator=(const X509_Store&) { return (*this); }
 
-      class Cert_Info
+      class BOTAN_DLL Cert_Info
          {
          public:
             bool is_verified() const;
@@ -101,7 +101,7 @@ class X509_Store
             mutable u64bit last_checked;
          };
 
-      class CRL_Data
+      class BOTAN_DLL CRL_Data
          {
          public:
             X509_DN issuer;

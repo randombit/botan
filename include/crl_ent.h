@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * CRL Entry                                      *
 *************************************************/
-class CRL_Entry : public ASN1_Object
+class BOTAN_DLL CRL_Entry : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const;
@@ -35,9 +35,9 @@ class CRL_Entry : public ASN1_Object
 /*************************************************
 * Comparison Operations                          *
 *************************************************/
-bool operator==(const CRL_Entry&, const CRL_Entry&);
-bool operator!=(const CRL_Entry&, const CRL_Entry&);
-bool operator<(const CRL_Entry&, const CRL_Entry&);
+BOTAN_DLL bool operator==(const CRL_Entry&, const CRL_Entry&);
+BOTAN_DLL bool operator!=(const CRL_Entry&, const CRL_Entry&);
+BOTAN_DLL bool operator<(const CRL_Entry&, const CRL_Entry&);
 
 }
 

@@ -15,15 +15,15 @@ namespace Botan {
 *************************************************/
 namespace Global_RNG {
 
-void randomize(byte[], u32bit);
-byte random();
+BOTAN_DLL void randomize(byte[], u32bit);
+BOTAN_DLL byte random();
 
-void add_entropy(const byte[], u32bit);
-void add_entropy(EntropySource&, bool = true);
+BOTAN_DLL void add_entropy(const byte[], u32bit);
+BOTAN_DLL void add_entropy(EntropySource&, bool = true);
 
-u32bit seed(bool = true, u32bit = 256);
+BOTAN_DLL u32bit seed(bool = true, u32bit = 256);
 
-void add_es(EntropySource*, bool = true);
+BOTAN_DLL void add_es(EntropySource*, bool = true);
 
 }
 

@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * Character Set Transcoder Interface             *
 *************************************************/
-class Charset_Transcoder
+class BOTAN_DLL Charset_Transcoder
    {
    public:
       virtual std::string transcode(const std::string&,

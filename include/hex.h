@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Hex Encoder                                    *
 *************************************************/
-class Hex_Encoder : public Filter
+class BOTAN_DLL Hex_Encoder : public Filter
    {
    public:
       enum Case { Uppercase, Lowercase };
@@ -39,7 +39,7 @@ class Hex_Encoder : public Filter
 /*************************************************
 * Hex Decoder                                    *
 *************************************************/
-class Hex_Decoder : public Filter
+class BOTAN_DLL Hex_Decoder : public Filter
    {
    public:
       static byte decode(const byte[2]);

@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Buffered EntropySource                         *
 *************************************************/
-class Buffered_EntropySource : public EntropySource
+class BOTAN_DLL Buffered_EntropySource : public EntropySource
    {
    public:
       u32bit slow_poll(byte[], u32bit);

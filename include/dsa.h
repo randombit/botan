@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * DSA Public Key                                 *
 *************************************************/
-class DSA_PublicKey : public PK_Verifying_wo_MR_Key,
+class BOTAN_DLL DSA_PublicKey : public PK_Verifying_wo_MR_Key,
                       public virtual DL_Scheme_PublicKey
    {
    public:
@@ -38,7 +38,7 @@ class DSA_PublicKey : public PK_Verifying_wo_MR_Key,
 /*************************************************
 * DSA Private Key                                *
 *************************************************/
-class DSA_PrivateKey : public DSA_PublicKey,
+class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
                        public PK_Signing_Key,
                        public virtual DL_Scheme_PrivateKey
    {

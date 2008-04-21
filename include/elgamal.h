@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * ElGamal Public Key                             *
 *************************************************/
-class ElGamal_PublicKey : public PK_Encrypting_Key,
+class BOTAN_DLL ElGamal_PublicKey : public PK_Encrypting_Key,
                           public virtual DL_Scheme_PublicKey
    {
    public:
@@ -36,7 +36,7 @@ class ElGamal_PublicKey : public PK_Encrypting_Key,
 /*************************************************
 * ElGamal Private Key                            *
 *************************************************/
-class ElGamal_PrivateKey : public ElGamal_PublicKey,
+class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
                            public PK_Decrypting_Key,
                            public virtual DL_Scheme_PrivateKey
    {

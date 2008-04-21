@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Luby-Rackoff                                   *
 *************************************************/
-class LubyRackoff : public BlockCipher
+class BOTAN_DLL LubyRackoff : public BlockCipher
    {
    public:
       void clear() throw();

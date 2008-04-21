@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * MD4                                            *
 *************************************************/
-class MD4 : public MDx_HashFunction
+class BOTAN_DLL MD4 : public MDx_HashFunction
    {
    public:
       void clear() throw();

@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * CRC24                                          *
 *************************************************/
-class CRC24 : public HashFunction
+class BOTAN_DLL CRC24 : public HashFunction
    {
    public:
       void clear() throw() { crc = 0xB704CE; }

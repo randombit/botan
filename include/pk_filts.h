@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * PK_Encryptor Filter                            *
 *************************************************/
-class PK_Encryptor_Filter : public Filter
+class BOTAN_DLL PK_Encryptor_Filter : public Filter
    {
    public:
       void write(const byte[], u32bit);
@@ -29,7 +29,7 @@ class PK_Encryptor_Filter : public Filter
 /*************************************************
 * PK_Decryptor Filter                            *
 *************************************************/
-class PK_Decryptor_Filter : public Filter
+class BOTAN_DLL PK_Decryptor_Filter : public Filter
    {
    public:
       void write(const byte[], u32bit);
@@ -44,7 +44,7 @@ class PK_Decryptor_Filter : public Filter
 /*************************************************
 * PK_Signer Filter                               *
 *************************************************/
-class PK_Signer_Filter : public Filter
+class BOTAN_DLL PK_Signer_Filter : public Filter
    {
    public:
       void write(const byte[], u32bit);
@@ -58,7 +58,7 @@ class PK_Signer_Filter : public Filter
 /*************************************************
 * PK_Verifier Filter                             *
 *************************************************/
-class PK_Verifier_Filter : public Filter
+class BOTAN_DLL PK_Verifier_Filter : public Filter
    {
    public:
       void write(const byte[], u32bit);

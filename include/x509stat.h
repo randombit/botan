@@ -10,7 +10,7 @@ namespace Botan {
 /*************************************************
 * Prototype for a Certificate Extension          *
 *************************************************/
-class Extension_Prototype
+class BOTAN_DLL Extension_Prototype
    {
    public:
       virtual class Certificate_Extension* make(const OID&) = 0;
@@ -20,7 +20,7 @@ class Extension_Prototype
 /*************************************************
 * X.509 Global State                             *
 *************************************************/
-class X509_GlobalState
+class BOTAN_DLL X509_GlobalState
    {
    public:
       void add(Extension_Prototype*);

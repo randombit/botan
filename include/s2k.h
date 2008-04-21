@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * S2K Interface                                  *
 *************************************************/
-class S2K
+class BOTAN_DLL S2K
    {
    public:
       virtual S2K* clone() const = 0;

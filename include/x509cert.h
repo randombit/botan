@@ -17,7 +17,7 @@ namespace Botan {
 /*************************************************
 * X.509 Certificate                              *
 *************************************************/
-class X509_Certificate : public X509_Object
+class BOTAN_DLL X509_Certificate : public X509_Object
    {
    public:
       Public_Key* subject_public_key() const;
@@ -59,13 +59,13 @@ class X509_Certificate : public X509_Object
 /*************************************************
 * X.509 Certificate Comparison                   *
 *************************************************/
-bool operator!=(const X509_Certificate&, const X509_Certificate&);
+BOTAN_DLL bool operator!=(const X509_Certificate&, const X509_Certificate&);
 
 /*************************************************
 * Data Store Extraction Operations               *
 *************************************************/
-X509_DN create_dn(const Data_Store&);
-AlternativeName create_alt_name(const Data_Store&);
+BOTAN_DLL X509_DN create_dn(const Data_Store&);
+BOTAN_DLL AlternativeName create_alt_name(const Data_Store&);
 
 }
 

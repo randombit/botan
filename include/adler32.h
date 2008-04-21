@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Adler32                                        *
 *************************************************/
-class Adler32 : public HashFunction
+class BOTAN_DLL Adler32 : public HashFunction
    {
    public:
       void clear() throw() { S1 = 1; S2 = 0; }

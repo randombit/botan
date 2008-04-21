@@ -15,8 +15,8 @@ namespace KeyPair {
 /*************************************************
 * Check key pair consistency                     *
 *************************************************/
-void check_key(PK_Encryptor*, PK_Decryptor*);
-void check_key(PK_Signer*, PK_Verifier*);
+BOTAN_DLL void check_key(PK_Encryptor*, PK_Decryptor*);
+BOTAN_DLL void check_key(PK_Signer*, PK_Verifier*);
 
 }
 

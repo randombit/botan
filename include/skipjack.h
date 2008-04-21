@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Skipjack                                       *
 *************************************************/
-class Skipjack : public BlockCipher
+class BOTAN_DLL Skipjack : public BlockCipher
    {
    public:
       void clear() throw();

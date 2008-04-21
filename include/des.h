@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * DES                                            *
 *************************************************/
-class DES : public BlockCipher
+class BOTAN_DLL DES : public BlockCipher
    {
    public:
       void clear() throw() { round_key.clear(); }
@@ -32,9 +32,19 @@ class DES : public BlockCipher
       static void IP(u32bit&, u32bit&);
       static void FP(u32bit&, u32bit&);
 
-      static const u32bit SPBOX1[256], SPBOX2[256], SPBOX3[256], SPBOX4[256],
-                          SPBOX5[256], SPBOX6[256], SPBOX7[256], SPBOX8[256];
-      static const u64bit IPTAB1[256], IPTAB2[256], FPTAB1[256], FPTAB2[256];
+      static const u32bit SPBOX1[256];
+      static const u32bit SPBOX2[256];
+      static const u32bit SPBOX3[256];
+      static const u32bit SPBOX4[256];
+      static const u32bit SPBOX5[256];
+      static const u32bit SPBOX6[256];
+      static const u32bit SPBOX7[256];
+      static const u32bit SPBOX8[256];
+
+      static const u64bit IPTAB1[256];
+      static const u64bit IPTAB2[256];
+      static const u64bit FPTAB1[256];
+      static const u64bit FPTAB2[256];
 
       SecureBuffer<u32bit, 32> round_key;
    };
@@ -42,7 +52,7 @@ class DES : public BlockCipher
 /*************************************************
 * Triple DES                                     *
 *************************************************/
-class TripleDES : public BlockCipher
+class BOTAN_DLL TripleDES : public BlockCipher
    {
    public:
       void clear() throw() { des1.clear(); des2.clear(); des3.clear(); }
@@ -59,7 +69,7 @@ class TripleDES : public BlockCipher
 /*************************************************
 * DESX                                           *
 *************************************************/
-class DESX : public BlockCipher
+class BOTAN_DLL DESX : public BlockCipher
    {
    public:
       void clear() throw() { des.clear(); K1.clear(); K2.clear(); }

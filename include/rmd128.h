@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * RIPEMD-128                                     *
 *************************************************/
-class RIPEMD_128 : public MDx_HashFunction
+class BOTAN_DLL RIPEMD_128 : public MDx_HashFunction
    {
    public:
       void clear() throw();

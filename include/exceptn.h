@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * Exception Base Class                           *
 *************************************************/
-class Exception : public std::exception
+class BOTAN_DLL Exception : public std::exception
    {
    public:
       const char* what() const throw() { return msg.c_str(); }
@@ -30,7 +30,7 @@ class Exception : public std::exception
 /*************************************************
 * Invalid_Argument Exception                     *
 *************************************************/
-struct Invalid_Argument : public Exception
+struct BOTAN_DLL Invalid_Argument : public Exception
    {
    Invalid_Argument(const std::string& err = "") : Exception(err) {}
    };
@@ -38,7 +38,7 @@ struct Invalid_Argument : public Exception
 /*************************************************
 * Invalid_Key_Length Exception                   *
 *************************************************/
-struct Invalid_Key_Length : public Invalid_Argument
+struct BOTAN_DLL Invalid_Key_Length : public Invalid_Argument
    {
    Invalid_Key_Length(const std::string&, u32bit);
    };
@@ -46,7 +46,7 @@ struct Invalid_Key_Length : public Invalid_Argument
 /*************************************************
 * Invalid_Block_Size Exception                   *
 *************************************************/
-struct Invalid_Block_Size : public Invalid_Argument
+struct BOTAN_DLL Invalid_Block_Size : public Invalid_Argument
    {
    Invalid_Block_Size(const std::string&, const std::string&);
    };
@@ -54,7 +54,7 @@ struct Invalid_Block_Size : public Invalid_Argument
 /*************************************************
 * Invalid_IV_Length Exception                    *
 *************************************************/
-struct Invalid_IV_Length : public Invalid_Argument
+struct BOTAN_DLL Invalid_IV_Length : public Invalid_Argument
    {
    Invalid_IV_Length(const std::string&, u32bit);
    };
@@ -62,7 +62,7 @@ struct Invalid_IV_Length : public Invalid_Argument
 /*************************************************
 * Invalid_State Exception                        *
 *************************************************/
-struct Invalid_State : public Exception
+struct BOTAN_DLL Invalid_State : public Exception
    {
    Invalid_State(const std::string& err) : Exception(err) {}
    };
@@ -70,7 +70,7 @@ struct Invalid_State : public Exception
 /*************************************************
 * PRNG_Unseeded Exception                        *
 *************************************************/
-struct PRNG_Unseeded : public Invalid_State
+struct BOTAN_DLL PRNG_Unseeded : public Invalid_State
    {
    PRNG_Unseeded(const std::string& algo) :
       Invalid_State("PRNG not seeded: " + algo) {}
@@ -79,7 +79,7 @@ struct PRNG_Unseeded : public Invalid_State
 /*************************************************
 * Policy_Violation Exception                     *
 *************************************************/
-struct Policy_Violation : public Invalid_State
+struct BOTAN_DLL Policy_Violation : public Invalid_State
    {
    Policy_Violation(const std::string& err) :
       Invalid_State("Policy violation: " + err) {}
@@ -88,7 +88,7 @@ struct Policy_Violation : public Invalid_State
 /*************************************************
 * Lookup_Error Exception                         *
 *************************************************/
-struct Lookup_Error : public Exception
+struct BOTAN_DLL Lookup_Error : public Exception
    {
    Lookup_Error(const std::string& err) : Exception(err) {}
    };
@@ -96,7 +96,7 @@ struct Lookup_Error : public Exception
 /*************************************************
 * Algorithm_Not_Found Exception                  *
 *************************************************/
-struct Algorithm_Not_Found : public Exception
+struct BOTAN_DLL Algorithm_Not_Found : public Exception
    {
    Algorithm_Not_Found(const std::string&);
    };
@@ -104,7 +104,7 @@ struct Algorithm_Not_Found : public Exception
 /*************************************************
 * Format_Error Exception                         *
 *************************************************/
-struct Format_Error : public Exception
+struct BOTAN_DLL Format_Error : public Exception
    {
    Format_Error(const std::string& err = "") : Exception(err) {}
    };
@@ -112,7 +112,7 @@ struct Format_Error : public Exception
 /*************************************************
 * Invalid_Algorithm_Name Exception               *
 *************************************************/
-struct Invalid_Algorithm_Name : public Format_Error
+struct BOTAN_DLL Invalid_Algorithm_Name : public Format_Error
    {
    Invalid_Algorithm_Name(const std::string&);
    };
@@ -120,7 +120,7 @@ struct Invalid_Algorithm_Name : public Format_Error
 /*************************************************
 * Encoding_Error Exception                       *
 *************************************************/
-struct Encoding_Error : public Format_Error
+struct BOTAN_DLL Encoding_Error : public Format_Error
    {
    Encoding_Error(const std::string& name) :
       Format_Error("Encoding error: " + name) {}
@@ -129,7 +129,7 @@ struct Encoding_Error : public Format_Error
 /*************************************************
 * Decoding_Error Exception                       *
 *************************************************/
-struct Decoding_Error : public Format_Error
+struct BOTAN_DLL Decoding_Error : public Format_Error
    {
    Decoding_Error(const std::string& name) :
       Format_Error("Decoding error: " + name) {}
@@ -138,7 +138,7 @@ struct Decoding_Error : public Format_Error
 /*************************************************
 * Invalid_OID Exception                          *
 *************************************************/
-struct Invalid_OID : public Decoding_Error
+struct BOTAN_DLL Invalid_OID : public Decoding_Error
    {
    Invalid_OID(const std::string& oid) :
       Decoding_Error("Invalid ASN.1 OID: " + oid) {}
@@ -147,7 +147,7 @@ struct Invalid_OID : public Decoding_Error
 /*************************************************
 * Stream_IO_Error Exception                      *
 *************************************************/
-struct Stream_IO_Error : public Exception
+struct BOTAN_DLL Stream_IO_Error : public Exception
    {
    Stream_IO_Error(const std::string& err) :
       Exception("I/O error: " + err) {}
@@ -156,7 +156,7 @@ struct Stream_IO_Error : public Exception
 /*************************************************
 * Configuration Error Exception                  *
 *************************************************/
-struct Config_Error : public Format_Error
+struct BOTAN_DLL Config_Error : public Format_Error
    {
    Config_Error(const std::string& err) :
       Format_Error("Config error: " + err) {}
@@ -166,7 +166,7 @@ struct Config_Error : public Format_Error
 /*************************************************
 * Integrity Failure Exception                    *
 *************************************************/
-struct Integrity_Failure : public Exception
+struct BOTAN_DLL Integrity_Failure : public Exception
    {
    Integrity_Failure(const std::string& err) :
       Exception("Integrity failure: " + err) {}
@@ -175,7 +175,7 @@ struct Integrity_Failure : public Exception
 /*************************************************
 * Internal_Error Exception                       *
 *************************************************/
-struct Internal_Error : public Exception
+struct BOTAN_DLL Internal_Error : public Exception
    {
    Internal_Error(const std::string& err) :
       Exception("Internal error: " + err) {}
@@ -184,7 +184,7 @@ struct Internal_Error : public Exception
 /*************************************************
 * Self Test Failure Exception                    *
 *************************************************/
-struct Self_Test_Failure : public Internal_Error
+struct BOTAN_DLL Self_Test_Failure : public Internal_Error
    {
    Self_Test_Failure(const std::string& err) :
       Internal_Error("Self test failed: " + err) {}
@@ -193,7 +193,7 @@ struct Self_Test_Failure : public Internal_Error
 /*************************************************
 * Memory Allocation Exception                    *
 *************************************************/
-struct Memory_Exhaustion : public Exception
+struct BOTAN_DLL Memory_Exhaustion : public Exception
    {
    Memory_Exhaustion() :
       Exception("Ran out of memory, allocation failed") {}

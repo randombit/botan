@@ -15,22 +15,22 @@ namespace Botan {
 /*************************************************
 * String Parsing Functions                       *
 *************************************************/
-std::vector<std::string> parse_algorithm_name(const std::string&);
-std::vector<std::string> split_on(const std::string&, char);
-std::vector<u32bit> parse_asn1_oid(const std::string&);
-bool x500_name_cmp(const std::string&, const std::string&);
+BOTAN_DLL std::vector<std::string> parse_algorithm_name(const std::string&);
+BOTAN_DLL std::vector<std::string> split_on(const std::string&, char);
+BOTAN_DLL std::vector<u32bit> parse_asn1_oid(const std::string&);
+BOTAN_DLL bool x500_name_cmp(const std::string&, const std::string&);
 
 /*************************************************
 * String/Integer Conversions                     *
 *************************************************/
-std::string to_string(u64bit, u32bit = 0);
-u32bit to_u32bit(const std::string&);
+BOTAN_DLL std::string to_string(u64bit, u32bit = 0);
+BOTAN_DLL u32bit to_u32bit(const std::string&);
 
 /*************************************************
 * String/Network Address Conversions             *
 *************************************************/
-u32bit string_to_ipv4(const std::string&);
-std::string ipv4_to_string(u32bit);
+BOTAN_DLL u32bit string_to_ipv4(const std::string&);
+BOTAN_DLL std::string ipv4_to_string(u32bit);
 
 }
 

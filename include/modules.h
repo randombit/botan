@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * Module Builder Interface                       *
 *************************************************/
-class Modules
+class BOTAN_DLL Modules
    {
    public:
       virtual class Mutex_Factory* mutex_factory() const = 0;
@@ -34,7 +34,7 @@ class Modules
 /*************************************************
 * Built In Modules                               *
 *************************************************/
-class Builtin_Modules : public Modules
+class BOTAN_DLL Builtin_Modules : public Modules
    {
    public:
       class Mutex_Factory* mutex_factory() const;

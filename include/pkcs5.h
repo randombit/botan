@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * PKCS #5 PBKDF1                                 *
 *************************************************/
-class PKCS5_PBKDF1 : public S2K
+class BOTAN_DLL PKCS5_PBKDF1 : public S2K
    {
    public:
       std::string name() const;
@@ -28,7 +28,7 @@ class PKCS5_PBKDF1 : public S2K
 /*************************************************
 * PKCS #5 PBKDF2                                 *
 *************************************************/
-class PKCS5_PBKDF2 : public S2K
+class BOTAN_DLL PKCS5_PBKDF2 : public S2K
    {
    public:
       std::string name() const;

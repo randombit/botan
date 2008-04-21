@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Malloc Allocator                              *
 *************************************************/
-class Malloc_Allocator : public Allocator
+class BOTAN_DLL Malloc_Allocator : public Allocator
    {
    public:
       void* allocate(u32bit);
@@ -25,7 +25,7 @@ class Malloc_Allocator : public Allocator
 /*************************************************
 * Locking Allocator                              *
 *************************************************/
-class Locking_Allocator : public Pooling_Allocator
+class BOTAN_DLL Locking_Allocator : public Pooling_Allocator
    {
    public:
       std::string type() const { return "locking"; }

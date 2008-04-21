@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Allocator Interface                            *
 *************************************************/
-class Allocator
+class BOTAN_DLL Allocator
    {
    public:
       static Allocator* get(bool);

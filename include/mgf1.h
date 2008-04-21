@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * MGF1                                           *
 *************************************************/
-class MGF1 : public MGF
+class BOTAN_DLL MGF1 : public MGF
    {
    public:
       void mask(const byte[], u32bit, byte[], u32bit) const;

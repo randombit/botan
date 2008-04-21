@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * BER Decoding Object                            *
 *************************************************/
-class BER_Decoder
+class BOTAN_DLL BER_Decoder
    {
    public:
       BER_Object get_next_object();
@@ -120,7 +120,7 @@ BER_Decoder& BER_Decoder::decode_list(std::vector<T>& vec, bool clear_it)
 *************************************************/
 namespace BER {
 
-void decode(BER_Decoder&, Key_Constraints&);
+void BOTAN_DLL decode(BER_Decoder&, Key_Constraints&);
 
 }
 

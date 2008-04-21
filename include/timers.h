@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Timer Interface                                *
 *************************************************/
-class Timer
+class BOTAN_DLL Timer
    {
    public:
       virtual u64bit clock() const;

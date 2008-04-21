@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * X.509 Public Key Encoder                       *
 *************************************************/
-class X509_Encoder
+class BOTAN_DLL X509_Encoder
    {
    public:
       virtual AlgorithmIdentifier alg_id() const = 0;
@@ -26,7 +26,7 @@ class X509_Encoder
 /*************************************************
 * X.509 Public Key Decoder                       *
 *************************************************/
-class X509_Decoder
+class BOTAN_DLL X509_Decoder
    {
    public:
       virtual void alg_id(const AlgorithmIdentifier&) = 0;
@@ -39,16 +39,16 @@ namespace X509 {
 /*************************************************
 * X.509 Public Key Encoding/Decoding             *
 *************************************************/
-void encode(const Public_Key&, Pipe&, X509_Encoding = PEM);
-std::string PEM_encode(const Public_Key&);
+BOTAN_DLL void encode(const Public_Key&, Pipe&, X509_Encoding = PEM);
+BOTAN_DLL std::string PEM_encode(const Public_Key&);
 
-Public_Key* load_key(DataSource&);
-Public_Key* load_key(const std::string&);
-Public_Key* load_key(const MemoryRegion<byte>&);
+BOTAN_DLL Public_Key* load_key(DataSource&);
+BOTAN_DLL Public_Key* load_key(const std::string&);
+BOTAN_DLL Public_Key* load_key(const MemoryRegion<byte>&);
 
-Public_Key* copy_key(const Public_Key&);
+BOTAN_DLL Public_Key* copy_key(const Public_Key&);
 
-Key_Constraints find_constraints(const Public_Key&, Key_Constraints);
+BOTAN_DLL Key_Constraints find_constraints(const Public_Key&, Key_Constraints);
 
 }
 

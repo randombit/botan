@@ -16,7 +16,7 @@ namespace Botan {
 /*************************************************
 * IF Core                                        *
 *************************************************/
-class IF_Core
+class BOTAN_DLL IF_Core
    {
    public:
       BigInt public_op(const BigInt&) const;
@@ -38,7 +38,7 @@ class IF_Core
 /*************************************************
 * DSA Core                                       *
 *************************************************/
-class DSA_Core
+class BOTAN_DLL DSA_Core
    {
    public:
       SecureVector<byte> sign(const byte[], u32bit, const BigInt&) const;
@@ -57,7 +57,7 @@ class DSA_Core
 /*************************************************
 * NR Core                                        *
 *************************************************/
-class NR_Core
+class BOTAN_DLL NR_Core
    {
    public:
       SecureVector<byte> sign(const byte[], u32bit, const BigInt&) const;
@@ -76,7 +76,7 @@ class NR_Core
 /*************************************************
 * ElGamal Core                                   *
 *************************************************/
-class ELG_Core
+class BOTAN_DLL ELG_Core
    {
    public:
       SecureVector<byte> encrypt(const byte[], u32bit, const BigInt&) const;
@@ -97,7 +97,7 @@ class ELG_Core
 /*************************************************
 * DH Core                                        *
 *************************************************/
-class DH_Core
+class BOTAN_DLL DH_Core
    {
    public:
       BigInt agree(const BigInt&) const;

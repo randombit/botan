@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Tiger                                          *
 *************************************************/
-class Tiger : public MDx_HashFunction
+class BOTAN_DLL Tiger : public MDx_HashFunction
    {
    public:
       void clear() throw();
@@ -27,7 +27,10 @@ class Tiger : public MDx_HashFunction
       static void pass(u64bit&, u64bit&, u64bit&, u64bit[8], byte);
       static void mix(u64bit[8]);
 
-      static const u64bit SBOX1[256], SBOX2[256], SBOX3[256], SBOX4[256];
+      static const u64bit SBOX1[256];
+      static const u64bit SBOX2[256];
+      static const u64bit SBOX3[256];
+      static const u64bit SBOX4[256];
 
       SecureBuffer<u64bit, 8> X;
       SecureBuffer<u64bit, 3> digest;

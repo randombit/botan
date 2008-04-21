@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * Basic ASN.1 Object Interface                   *
 *************************************************/
-class ASN1_Object
+class BOTAN_DLL ASN1_Object
    {
    public:
       virtual void encode_into(class DER_Encoder&) const = 0;
@@ -26,7 +26,7 @@ class ASN1_Object
 /*************************************************
 * BER Encoded Object                             *
 *************************************************/
-class BER_Object
+class BOTAN_DLL BER_Object
    {
    public:
       void assert_is_a(ASN1_Tag, ASN1_Tag);

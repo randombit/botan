@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * DLIES Encryption                               *
 *************************************************/
-class DLIES_Encryptor : public PK_Encryptor
+class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
    {
    public:
       DLIES_Encryptor(const PK_Key_Agreement_Key&,
@@ -33,7 +33,7 @@ class DLIES_Encryptor : public PK_Encryptor
 /*************************************************
 * DLIES Decryption                               *
 *************************************************/
-class DLIES_Decryptor : public PK_Decryptor
+class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor
    {
    public:
       DLIES_Decryptor(const PK_Key_Agreement_Key&,

@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Square                                         *
 *************************************************/
-class Square : public BlockCipher
+class BOTAN_DLL Square : public BlockCipher
    {
    public:
       void clear() throw();
@@ -27,9 +27,19 @@ class Square : public BlockCipher
 
       static void transform(u32bit[4]);
 
-      static const byte SE[256], SD[256], Log[256], ALog[255];
-      static const u32bit TE0[256], TE1[256], TE2[256], TE3[256],
-                          TD0[256], TD1[256], TD2[256], TD3[256];
+      static const byte SE[256];
+      static const byte SD[256];
+      static const byte Log[256];
+      static const byte ALog[255];
+
+      static const u32bit TE0[256];
+      static const u32bit TE1[256];
+      static const u32bit TE2[256];
+      static const u32bit TE3[256];
+      static const u32bit TD0[256];
+      static const u32bit TD1[256];
+      static const u32bit TD2[256];
+      static const u32bit TD3[256];
 
       SecureBuffer<u32bit, 28> EK, DK;
       SecureBuffer<byte, 32> ME, MD;

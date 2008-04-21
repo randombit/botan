@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * DL Public Key                                  *
 *************************************************/
-class DL_Scheme_PublicKey : public virtual Public_Key
+class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
    {
    public:
       bool check_key(bool) const;
@@ -39,7 +39,7 @@ class DL_Scheme_PublicKey : public virtual Public_Key
 /*************************************************
 * DL Private Key                                 *
 *************************************************/
-class DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
+class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
                              public virtual Private_Key
    {
    public:

@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * FORK-256                                       *
 *************************************************/
-class FORK_256 : public MDx_HashFunction
+class BOTAN_DLL FORK_256 : public MDx_HashFunction
    {
    public:
       void clear() throw();

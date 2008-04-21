@@ -17,7 +17,7 @@ namespace Botan {
 /*************************************************
 * X.509 Certificate Extension                    *
 *************************************************/
-class Certificate_Extension
+class BOTAN_DLL Certificate_Extension
    {
    public:
       OID oid_of() const;
@@ -39,7 +39,7 @@ class Certificate_Extension
 /*************************************************
 * X.509 Certificate Extension List               *
 *************************************************/
-class Extensions : public ASN1_Object
+class BOTAN_DLL Extensions : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const;
@@ -65,7 +65,7 @@ namespace Cert_Extension {
 /*************************************************
 * Basic Constraints Extension                    *
 *************************************************/
-class Basic_Constraints : public Certificate_Extension
+class BOTAN_DLL Basic_Constraints : public Certificate_Extension
    {
    public:
       Basic_Constraints* copy() const
@@ -91,7 +91,7 @@ class Basic_Constraints : public Certificate_Extension
 /*************************************************
 * Key Usage Constraints Extension                *
 *************************************************/
-class Key_Usage : public Certificate_Extension
+class BOTAN_DLL Key_Usage : public Certificate_Extension
    {
    public:
       Key_Usage* copy() const { return new Key_Usage(constraints); }
@@ -114,7 +114,7 @@ class Key_Usage : public Certificate_Extension
 /*************************************************
 * Subject Key Identifier Extension               *
 *************************************************/
-class Subject_Key_ID : public Certificate_Extension
+class BOTAN_DLL Subject_Key_ID : public Certificate_Extension
    {
    public:
       Subject_Key_ID* copy() const { return new Subject_Key_ID(key_id); }
@@ -138,7 +138,7 @@ class Subject_Key_ID : public Certificate_Extension
 /*************************************************
 * Authority Key Identifier Extension             *
 *************************************************/
-class Authority_Key_ID : public Certificate_Extension
+class BOTAN_DLL Authority_Key_ID : public Certificate_Extension
    {
    public:
       Authority_Key_ID* copy() const { return new Authority_Key_ID(key_id); }
@@ -162,7 +162,7 @@ class Authority_Key_ID : public Certificate_Extension
 /*************************************************
 * Alternative Name Extension Base Class          *
 *************************************************/
-class Alternative_Name : public Certificate_Extension
+class BOTAN_DLL Alternative_Name : public Certificate_Extension
    {
    public:
       AlternativeName get_alt_name() const { return alt_name; }
@@ -188,7 +188,7 @@ class Alternative_Name : public Certificate_Extension
 /*************************************************
 * Subject Alternative Name Extension             *
 *************************************************/
-class Subject_Alternative_Name : public Alternative_Name
+class BOTAN_DLL Subject_Alternative_Name : public Alternative_Name
    {
    public:
       Subject_Alternative_Name* copy() const
@@ -200,7 +200,7 @@ class Subject_Alternative_Name : public Alternative_Name
 /*************************************************
 * Issuer Alternative Name Extension              *
 *************************************************/
-class Issuer_Alternative_Name : public Alternative_Name
+class BOTAN_DLL Issuer_Alternative_Name : public Alternative_Name
    {
    public:
       Issuer_Alternative_Name* copy() const
@@ -212,7 +212,7 @@ class Issuer_Alternative_Name : public Alternative_Name
 /*************************************************
 * Extended Key Usage Extension                   *
 *************************************************/
-class Extended_Key_Usage : public Certificate_Extension
+class BOTAN_DLL Extended_Key_Usage : public Certificate_Extension
    {
    public:
       Extended_Key_Usage* copy() const { return new Extended_Key_Usage(oids); }
@@ -236,7 +236,7 @@ class Extended_Key_Usage : public Certificate_Extension
 /*************************************************
 * Certificate Policies Extension                 *
 *************************************************/
-class Certificate_Policies : public Certificate_Extension
+class BOTAN_DLL Certificate_Policies : public Certificate_Extension
    {
    public:
       Certificate_Policies* copy() const
@@ -261,7 +261,7 @@ class Certificate_Policies : public Certificate_Extension
 /*************************************************
 * CRL Number Extension                           *
 *************************************************/
-class CRL_Number : public Certificate_Extension
+class BOTAN_DLL CRL_Number : public Certificate_Extension
    {
    public:
       CRL_Number* copy() const;
@@ -286,7 +286,7 @@ class CRL_Number : public Certificate_Extension
 /*************************************************
 * CRL Entry Reason Code Extension                *
 *************************************************/
-class CRL_ReasonCode : public Certificate_Extension
+class BOTAN_DLL CRL_ReasonCode : public Certificate_Extension
    {
    public:
       CRL_ReasonCode* copy() const { return new CRL_ReasonCode(reason); }

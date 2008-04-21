@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * KASUMI                                         *
 *************************************************/
-class KASUMI : public BlockCipher
+class BOTAN_DLL KASUMI : public BlockCipher
    {
    public:
       void clear() throw() { EK.clear(); }

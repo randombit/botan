@@ -18,7 +18,7 @@ namespace Botan {
 /*************************************************
 * Stream Cipher Filter                           *
 *************************************************/
-class StreamCipher_Filter : public Keyed_Filter
+class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
    {
    public:
       void seek(u32bit position) { cipher->seek(position); }
@@ -38,7 +38,7 @@ class StreamCipher_Filter : public Keyed_Filter
 /*************************************************
 * Hash Filter                                    *
 *************************************************/
-class Hash_Filter : public Filter
+class BOTAN_DLL Hash_Filter : public Filter
    {
    public:
       void write(const byte input[], u32bit len) { hash->update(input, len); }
@@ -54,7 +54,7 @@ class Hash_Filter : public Filter
 /*************************************************
 * MessageAuthenticationCode Filter               *
 *************************************************/
-class MAC_Filter : public Keyed_Filter
+class BOTAN_DLL MAC_Filter : public Keyed_Filter
    {
    public:
       void write(const byte input[], u32bit len) { mac->update(input, len); }

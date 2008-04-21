@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * ANSI X9.31 RNG                                 *
 *************************************************/
-class ANSI_X931_RNG : public RandomNumberGenerator
+class BOTAN_DLL ANSI_X931_RNG : public RandomNumberGenerator
    {
    public:
       void randomize(byte[], u32bit) throw(PRNG_Unseeded);

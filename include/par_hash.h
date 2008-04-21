@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Parallel                                       *
 *************************************************/
-class Parallel : public HashFunction
+class BOTAN_DLL Parallel : public HashFunction
    {
    public:
       void clear() throw();

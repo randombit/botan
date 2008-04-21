@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Default Engine                                 *
 *************************************************/
-class Default_Engine : public Engine
+class BOTAN_DLL Default_Engine : public Engine
    {
    public:
       IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,

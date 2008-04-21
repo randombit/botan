@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * AES                                            *
 *************************************************/
-class AES : public BlockCipher
+class BOTAN_DLL AES : public BlockCipher
    {
    public:
       void clear() throw();
@@ -26,8 +26,11 @@ class AES : public BlockCipher
       void dec(const byte[], byte[]) const;
       void key(const byte[], u32bit);
       static u32bit S(u32bit);
-      static const byte SE[256], SD[256];
-      static const u32bit TE[1024], TD[1024];
+
+      static const byte SE[256];
+      static const byte SD[256];
+      static const u32bit TE[1024];
+      static const u32bit TD[1024];
       SecureBuffer<u32bit, 52> EK, DK;
       SecureBuffer<byte, 32> ME, MD;
       u32bit ROUNDS;
@@ -36,7 +39,7 @@ class AES : public BlockCipher
 /*************************************************
 * AES-128                                        *
 *************************************************/
-class AES_128 : public AES
+class BOTAN_DLL AES_128 : public AES
    {
    public:
       std::string name() const { return "AES-128"; }
@@ -47,7 +50,7 @@ class AES_128 : public AES
 /*************************************************
 * AES-192                                        *
 *************************************************/
-class AES_192 : public AES
+class BOTAN_DLL AES_192 : public AES
    {
    public:
       std::string name() const { return "AES-192"; }
@@ -58,7 +61,7 @@ class AES_192 : public AES
 /*************************************************
 * AES-256                                        *
 *************************************************/
-class AES_256 : public AES
+class BOTAN_DLL AES_256 : public AES
    {
    public:
       std::string name() const { return "AES-256"; }

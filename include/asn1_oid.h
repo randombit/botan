@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * ASN.1 Object Identifier                        *
 *************************************************/
-class OID : public ASN1_Object
+class BOTAN_DLL OID : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const;
@@ -37,13 +37,13 @@ class OID : public ASN1_Object
 /*************************************************
 * Append another component onto the OID          *
 *************************************************/
-OID operator+(const OID&, u32bit);
+OID BOTAN_DLL operator+(const OID&, u32bit);
 
 /*************************************************
 * Compare two OIDs                               *
 *************************************************/
-bool operator!=(const OID&, const OID&);
-bool operator<(const OID&, const OID&);
+bool BOTAN_DLL operator!=(const OID&, const OID&);
+bool BOTAN_DLL operator<(const OID&, const OID&);
 
 }
 

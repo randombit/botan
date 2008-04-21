@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Default Character Set Transcoder Object        *
 *************************************************/
-class Default_Charset_Transcoder : public Charset_Transcoder
+class BOTAN_DLL Default_Charset_Transcoder : public Charset_Transcoder
    {
    public:
       std::string transcode(const std::string&,

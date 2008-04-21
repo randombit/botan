@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Blinding Function Object                       *
 *************************************************/
-class Blinder
+class BOTAN_DLL Blinder
    {
    public:
       BigInt blind(const BigInt&) const;

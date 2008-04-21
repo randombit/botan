@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Public Key Base Class                          *
 *************************************************/
-class Public_Key
+class BOTAN_DLL Public_Key
    {
    public:
       virtual std::string algo_name() const = 0;
@@ -36,7 +36,7 @@ class Public_Key
 /*************************************************
 * Private Key Base Class                         *
 *************************************************/
-class Private_Key : public virtual Public_Key
+class BOTAN_DLL Private_Key : public virtual Public_Key
    {
    public:
       virtual class PKCS8_Encoder* pkcs8_encoder() const { return 0; }
@@ -49,7 +49,7 @@ class Private_Key : public virtual Public_Key
 /*************************************************
 * PK Encrypting Key                              *
 *************************************************/
-class PK_Encrypting_Key : public virtual Public_Key
+class BOTAN_DLL PK_Encrypting_Key : public virtual Public_Key
    {
    public:
       virtual SecureVector<byte> encrypt(const byte[], u32bit) const = 0;
@@ -59,7 +59,7 @@ class PK_Encrypting_Key : public virtual Public_Key
 /*************************************************
 * PK Decrypting Key                              *
 *************************************************/
-class PK_Decrypting_Key : public virtual Private_Key
+class BOTAN_DLL PK_Decrypting_Key : public virtual Private_Key
    {
    public:
       virtual SecureVector<byte> decrypt(const byte[], u32bit) const = 0;
@@ -69,7 +69,7 @@ class PK_Decrypting_Key : public virtual Private_Key
 /*************************************************
 * PK Signing Key                                 *
 *************************************************/
-class PK_Signing_Key : public virtual Private_Key
+class BOTAN_DLL PK_Signing_Key : public virtual Private_Key
    {
    public:
       virtual SecureVector<byte> sign(const byte[], u32bit) const = 0;
@@ -79,7 +79,7 @@ class PK_Signing_Key : public virtual Private_Key
 /*************************************************
 * PK Verifying Key, Message Recovery Version     *
 *************************************************/
-class PK_Verifying_with_MR_Key : public virtual Public_Key
+class BOTAN_DLL PK_Verifying_with_MR_Key : public virtual Public_Key
    {
    public:
       virtual SecureVector<byte> verify(const byte[], u32bit) const = 0;
@@ -89,7 +89,7 @@ class PK_Verifying_with_MR_Key : public virtual Public_Key
 /*************************************************
 * PK Verifying Key, No Message Recovery Version  *
 *************************************************/
-class PK_Verifying_wo_MR_Key : public virtual Public_Key
+class BOTAN_DLL PK_Verifying_wo_MR_Key : public virtual Public_Key
    {
    public:
       virtual bool verify(const byte[], u32bit,
@@ -100,7 +100,7 @@ class PK_Verifying_wo_MR_Key : public virtual Public_Key
 /*************************************************
 * PK Secret Value Derivation Key                 *
 *************************************************/
-class PK_Key_Agreement_Key : public virtual Private_Key
+class BOTAN_DLL PK_Key_Agreement_Key : public virtual Private_Key
    {
    public:
       virtual SecureVector<byte> derive_key(const byte[], u32bit) const = 0;

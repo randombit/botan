@@ -19,7 +19,7 @@ namespace Botan {
 /*************************************************
 * Global State Container Base                    *
 *************************************************/
-class Library_State
+class BOTAN_DLL Library_State
    {
    public:
       Library_State();
@@ -31,7 +31,7 @@ class Library_State
 
       void add_engine(class Engine*);
 
-      class Engine_Iterator
+      class BOTAN_DLL Engine_Iterator
          {
          public:
             class Engine* next();
@@ -42,7 +42,7 @@ class Library_State
          };
       friend class Engine_Iterator;
 
-      class UI
+      class BOTAN_DLL UI
          {
          public:
             virtual void pulse(Pulse_Type) {}
@@ -107,9 +107,9 @@ class Library_State
 /*************************************************
 * Global State                                   *
 *************************************************/
-Library_State& global_state();
-void set_global_state(Library_State*);
-Library_State* swap_global_state(Library_State*);
+BOTAN_DLL Library_State& global_state();
+BOTAN_DLL void set_global_state(Library_State*);
+BOTAN_DLL Library_State* swap_global_state(Library_State*);
 
 }
 

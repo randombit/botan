@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * RC2                                            *
 *************************************************/
-class RC2 : public BlockCipher
+class BOTAN_DLL RC2 : public BlockCipher
    {
    public:
       static byte EKB_code(u32bit);

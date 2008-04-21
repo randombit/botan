@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Whirlpool                                      *
 *************************************************/
-class Whirlpool : public MDx_HashFunction
+class BOTAN_DLL Whirlpool : public MDx_HashFunction
    {
    public:
       void clear() throw();
@@ -24,8 +24,14 @@ class Whirlpool : public MDx_HashFunction
       void hash(const byte[]);
       void copy_out(byte[]);
 
-      static const u64bit C0[256], C1[256], C2[256], C3[256],
-                          C4[256], C5[256], C6[256], C7[256];
+      static const u64bit C0[256];
+      static const u64bit C1[256];
+      static const u64bit C2[256];
+      static const u64bit C3[256];
+      static const u64bit C4[256];
+      static const u64bit C5[256];
+      static const u64bit C6[256];
+      static const u64bit C7[256];
       SecureBuffer<u64bit, 8> M, digest;
    };
 

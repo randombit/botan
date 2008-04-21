@@ -6,6 +6,7 @@
 #ifndef BOTAN_INIT_H__
 #define BOTAN_INIT_H__
 
+#include <botan/build.h>
 #include <string>
 #include <map>
 
@@ -14,7 +15,7 @@ namespace Botan {
 /*************************************************
 * Options for initializing the library           *
 *************************************************/
-class InitializerOptions
+class BOTAN_DLL InitializerOptions
    {
    public:
       bool thread_safe() const;
@@ -32,7 +33,7 @@ class InitializerOptions
 /*************************************************
 * Library Initialization/Shutdown Object         *
 *************************************************/
-class LibraryInitializer
+class BOTAN_DLL LibraryInitializer
    {
    public:
       static void initialize(const std::string& = "");

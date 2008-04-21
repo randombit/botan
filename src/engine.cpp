@@ -323,7 +323,8 @@ void add_algorithm(BlockCipherModePaddingMethod* algo)
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-Keyed_Filter* get_cipher(const std::string& algo_spec, Cipher_Dir direction)
+BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
+                                   Cipher_Dir direction)
    {
    Library_State::Engine_Iterator i(global_state());
 
@@ -340,8 +341,10 @@ Keyed_Filter* get_cipher(const std::string& algo_spec, Cipher_Dir direction)
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-Keyed_Filter* get_cipher(const std::string& algo_spec, const SymmetricKey& key,
-                         const InitializationVector& iv, Cipher_Dir direction)
+BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
+                                   const SymmetricKey& key,
+                                   const InitializationVector& iv,
+                                   Cipher_Dir direction)
    {
    Keyed_Filter* cipher = get_cipher(algo_spec, direction);
    cipher->set_key(key);
@@ -352,8 +355,9 @@ Keyed_Filter* get_cipher(const std::string& algo_spec, const SymmetricKey& key,
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-Keyed_Filter* get_cipher(const std::string& algo_spec, const SymmetricKey& key,
-                         Cipher_Dir direction)
+BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
+                                   const SymmetricKey& key,
+                                   Cipher_Dir direction)
    {
    return get_cipher(algo_spec, key, InitializationVector(), direction);
    }

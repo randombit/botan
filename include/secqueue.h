@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * SecureQueue                                    *
 *************************************************/
-class SecureQueue : public Fanout_Filter, public DataSource
+class BOTAN_DLL SecureQueue : public Fanout_Filter, public DataSource
    {
    public:
       void write(const byte[], u32bit);
