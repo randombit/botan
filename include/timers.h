@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Timer Interface                                *
 *************************************************/
-class Timer : public EntropySource
+class BOTAN_DLL Timer : public EntropySource
    {
    public:
       virtual u64bit clock() const;
