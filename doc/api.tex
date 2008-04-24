@@ -2457,50 +2457,6 @@ application. If you write a \type{UI} object for another windowing system
 in general (ideally under a permissive license such as public domain or
 MIT/BSD), feel free to send in a copy.
 
-\subsection{Pulses}
-
-If you call a function in the library that turns out to take a long time (such
-as generating a 4096-bit prime), your pretty GUI will block up while the
-library does something, because the event loop is not being run. Not only does
-this look bad, it prevents the user from doing something else while the library
-works. The way around this is to register a pulse function.
-
-By creating a class that inherits from \type{Library\_State::UI} and
-passing it to \function{global\_function}().\function{set\_ui}, you
-can cause a pulse to be sent to your object occasionally (generally
-when performing long running operations like prime generation;
-eventually this will be extended for all operations that might take
-longer than a few milliseconds).
-
-You can recieve a pulse by implementing the member function
-\function{pulse}(\type{Pulse\_Type}) within your UI class.  The
-\type{Pulse\_Type} enum provides mildly useful information about the
-operation in progress (for a full list of the defined
-\type{Pulse\_Type} values, see \filename{enums.h}). The type code
-allows you do simple feedback such as that GnuPG does during key
-generation (printing various characters as the prime generation
-process proceeds, such as '-' for prime test failed, '+' for prime
-test worked, and so on).
-
-Generally the thing to do inside the pulse function is to run the GUI's event
-loop, for example with GTK+:
-
-\begin{verbatim}
-   while(gtk_events_pending())
-      gtk_main_iteration();
-\end{verbatim}
-
-which will flush out the event queue and make your GUI seem nice and
-responsive. For a particularly long-running operation (one that takes more than
-a second or two), you will probably want to put up a progress bar. While you
-can update it directly from the pulse function, be warned that the pulse
-function is called at irregular intervals, so your progress bar's movement
-might seem choppy if you update it directly from the pulse. It may be a better
-move to instead set up a timer (preferably through the GUI framework) that runs
-every fixed timeslice, and updates the bar when the timer goes off. As long as
-the pulse function is called often enough (which is should), simply running the
-event loop and letting the timer function do the updates will work fine.
-
 \pagebreak
 \section{Policy Configuration}
 
