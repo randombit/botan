@@ -223,7 +223,7 @@ const BlockCipherModePaddingMethod* retrieve_bc_pad(const std::string& name)
 /*************************************************
 * Add a new block cipher                         *
 *************************************************/
-void add_algorithm(BlockCipher* algo)
+BOTAN_DLL void add_algorithm(BlockCipher* algo)
    {
    Library_State::Engine_Iterator i(global_state());
 
@@ -243,7 +243,7 @@ void add_algorithm(BlockCipher* algo)
 /*************************************************
 * Add a new stream cipher                        *
 *************************************************/
-void add_algorithm(StreamCipher* algo)
+BOTAN_DLL void add_algorithm(StreamCipher* algo)
    {
    Library_State::Engine_Iterator i(global_state());
 
@@ -263,7 +263,7 @@ void add_algorithm(StreamCipher* algo)
 /*************************************************
 * Add a new hash function                        *
 *************************************************/
-void add_algorithm(HashFunction* algo)
+BOTAN_DLL void add_algorithm(HashFunction* algo)
    {
    Library_State::Engine_Iterator i(global_state());
 
@@ -283,7 +283,7 @@ void add_algorithm(HashFunction* algo)
 /*************************************************
 * Add a new authentication code                  *
 *************************************************/
-void add_algorithm(MessageAuthenticationCode* algo)
+BOTAN_DLL void add_algorithm(MessageAuthenticationCode* algo)
    {
    Library_State::Engine_Iterator i(global_state());
 
@@ -303,7 +303,7 @@ void add_algorithm(MessageAuthenticationCode* algo)
 /*************************************************
 * Add a padding method to the lookup table       *
 *************************************************/
-void add_algorithm(BlockCipherModePaddingMethod* algo)
+BOTAN_DLL void add_algorithm(BlockCipherModePaddingMethod* algo)
    {
    Library_State::Engine_Iterator i(global_state());
 
