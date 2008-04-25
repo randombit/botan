@@ -66,7 +66,7 @@ BigInt BOTAN_DLL random_safe_prime(u32bit);
 const u32bit PRIME_TABLE_SIZE = 6541;
 const u32bit PRIME_PRODUCTS_TABLE_SIZE = 256;
 
-extern const u16bit PRIMES[];
+extern const u16bit BOTAN_DLL PRIMES[];
 extern const u64bit PRIME_PRODUCTS[];
 
 /*************************************************
