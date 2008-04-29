@@ -7,7 +7,7 @@
 #include <botan/bigint.h>
 #include <botan/exceptn.h>
 #include <botan/numthry.h>
-#include <botan/rng.h>
+#include <botan/libstate.h>
 using namespace Botan;
 
 #include "common.h"
@@ -264,7 +264,7 @@ u32bit check_mod(const std::vector<std::string>& args)
    /* Won't work for us, just pick one at random */
    while(b_word == 0)
       for(u32bit j = 0; j != 2*sizeof(word); j++)
-         b_word = (b_word << 4) ^ Global_RNG::random();
+         b_word = (b_word << 4) ^ global_state().random();
 
    b = b_word;
 

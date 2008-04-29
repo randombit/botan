@@ -7,10 +7,46 @@
 #define BOTAN_ASN1_H__
 
 #include <botan/secmem.h>
-#include <botan/enums.h>
 #include <botan/exceptn.h>
 
 namespace Botan {
+
+/*************************************************
+* ASN.1 Type and Class Tags                      *
+*************************************************/
+enum ASN1_Tag {
+   UNIVERSAL        = 0x00,
+   APPLICATION      = 0x40,
+   CONTEXT_SPECIFIC = 0x80,
+   PRIVATE          = 0xC0,
+
+   CONSTRUCTED      = 0x20,
+
+   EOC              = 0x00,
+   BOOLEAN          = 0x01,
+   INTEGER          = 0x02,
+   BIT_STRING       = 0x03,
+   OCTET_STRING     = 0x04,
+   NULL_TAG         = 0x05,
+   OBJECT_ID        = 0x06,
+   ENUMERATED       = 0x0A,
+   SEQUENCE         = 0x10,
+   SET              = 0x11,
+
+   UTF8_STRING      = 0x0C,
+   NUMERIC_STRING   = 0x12,
+   PRINTABLE_STRING = 0x13,
+   T61_STRING       = 0x14,
+   IA5_STRING       = 0x16,
+   VISIBLE_STRING   = 0x1A,
+   BMP_STRING       = 0x1E,
+
+   UTC_TIME         = 0x17,
+   GENERALIZED_TIME = 0x18,
+
+   NO_OBJECT        = 0xFF00,
+   DIRECTORY_STRING = 0xFF01
+};
 
 /*************************************************
 * Basic ASN.1 Object Interface                   *

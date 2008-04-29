@@ -90,8 +90,6 @@ void Unix_EntropySource::do_slow_poll()
    u32bit got = 0;
    for(u32bit j = 0; j != sources.size(); j++)
       {
-      add_timestamp();
-
       DataSource_Command pipe(sources[j].name_and_args, PATH);
       SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
 

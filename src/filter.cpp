@@ -25,8 +25,6 @@ Filter::Filter()
 *************************************************/
 void Filter::send(const byte input[], u32bit length)
    {
-   global_state().pulse(PIPE_WRITE);
-
    bool nothing_attached = true;
    for(u32bit j = 0; j != total_ports(); ++j)
       if(next[j])

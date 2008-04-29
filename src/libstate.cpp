@@ -7,10 +7,8 @@
 #include <botan/config.h>
 #include <botan/modules.h>
 #include <botan/engine.h>
-#include <botan/x509stat.h>
 #include <botan/stl_util.h>
 #include <botan/mutex.h>
-#include <botan/timers.h>
 #include <botan/charset.h>
 #include <botan/x931_rng.h>
 #include <botan/selftest.h>
@@ -123,23 +121,6 @@ void Library_State::set_default_allocator(const std::string& type) const
    }
 
 /*************************************************
-* Set the high resolution clock implementation   *
-*************************************************/
-void Library_State::set_timer(Timer* new_timer)
-   {
-   delete timer;
-   timer = new_timer;
-   }
-
-/*************************************************
-* Read a high resolution clock                   *
-*************************************************/
-u64bit Library_State::system_clock() const
-   {
-   return (timer) ? timer->clock() : 0;
-   }
-
-/*************************************************
 * Set the global PRNG                            *
 *************************************************/
 void Library_State::set_prng(RandomNumberGenerator* new_rng)
@@ -158,6 +139,16 @@ void Library_State::randomize(byte out[], u32bit length)
    Mutex_Holder lock(rng_lock);
 
    rng->randomize(out, length);
+   }
+
+/*************************************************
+* Get a byte from the global PRNG                *
+*************************************************/
+byte Library_State::random()
+   {
+   byte out;
+   rng->randomize(&out, 1);
+   return out;
    }
 
 /*************************************************
@@ -234,67 +225,6 @@ void Library_State::add_engine(Engine* engine)
    }
 
 /*************************************************
-* Set the character set transcoder object        *
-*************************************************/
-void Library_State::set_transcoder(class Charset_Transcoder* transcoder)
-   {
-   if(this->transcoder)
-      delete this->transcoder;
-   this->transcoder = transcoder;
-   }
-
-/*************************************************
-* Transcode a string from one charset to another *
-*************************************************/
-std::string Library_State::transcode(const std::string str,
-                                     Character_Set to,
-                                     Character_Set from) const
-   {
-   if(!transcoder)
-      throw Invalid_State("Library_State::transcode: No transcoder set");
-
-   return transcoder->transcode(str, to, from);
-   }
-
-/*************************************************
-* Set the X509 global state class                *
-*************************************************/
-void Library_State::set_x509_state(X509_GlobalState* new_x509_state_obj)
-   {
-   delete x509_state_obj;
-   x509_state_obj = new_x509_state_obj;
-   }
-
-/*************************************************
-* Get the X509 global state class                *
-*************************************************/
-X509_GlobalState& Library_State::x509_state()
-   {
-   if(!x509_state_obj)
-      x509_state_obj = new X509_GlobalState();
-
-   return (*x509_state_obj);
-   }
-
-/*************************************************
-* Set the UI object state                        *
-*************************************************/
-void Library_State::set_ui(UI* new_ui)
-   {
-   delete ui;
-   ui = new_ui;
-   }
-
-/*************************************************
-* Send a pulse to the UI object                  *
-*************************************************/
-void Library_State::pulse(Pulse_Type pulse_type) const
-   {
-   if(ui)
-      ui->pulse(pulse_type);
-   }
-
-/*************************************************
 * Set the configuration object                   *
 *************************************************/
 Config& Library_State::config() const
@@ -327,11 +257,6 @@ void Library_State::initialize(const InitializerOptions& args,
    rng_lock = get_mutex();
 
    cached_default_allocator = 0;
-   x509_state_obj = 0;
-   ui = 0;
-
-   timer = modules.timer();
-   transcoder = modules.transcoder();
 
    std::vector<Allocator*> mod_allocs = modules.allocators();
    for(u32bit j = 0; j != mod_allocs.size(); ++j)
@@ -378,15 +303,10 @@ Library_State::Library_State()
 
    allocator_lock = engine_lock = rng_lock = 0;
 
-   timer = 0;
    config_obj = 0;
-   x509_state_obj = 0;
 
-   ui = 0;
-   transcoder = 0;
    rng = 0;
    cached_default_allocator = 0;
-   ui = 0;
    }
 
 /*************************************************
@@ -394,12 +314,8 @@ Library_State::Library_State()
 *************************************************/
 Library_State::~Library_State()
    {
-   delete x509_state_obj;
-   delete transcoder;
    delete rng;
-   delete timer;
    delete config_obj;
-   delete ui;
 
    std::for_each(entropy_sources.begin(), entropy_sources.end(),
                  del_fun<EntropySource>());
