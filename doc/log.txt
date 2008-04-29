@@ -1,7 +1,11 @@
 
 * 1.7.6
- - Initial support for Windows DLLs
+ - Initial support for Windows DLLs, from Joel Low
+ - Timer objects are now treated as entropy sources
  - Removed the AEP module, due to inability to test
+ - Removed Global_RNG and rng.h
+ - Removed system_clock
+ - Removed Library_State::UI and the pulse callback logic
 
 * 1.7.5, 2008-04-12
  - The API of X509_CA::sign_request was altered to avoid race conditions
@@ -1076,3 +1080,4 @@
 
 * 0.7.0, 2001-03-01
  - First public release
+
