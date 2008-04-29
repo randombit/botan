@@ -126,6 +126,7 @@ class BOTAN_DLL X509_Store
       std::vector<Cert_Info> certs;
       std::vector<CRL_Data> revoked;
       std::vector<Certificate_Store*> stores;
+      u32bit time_slack;
       mutable bool revoked_info_valid;
    };
 

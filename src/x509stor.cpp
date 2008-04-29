@@ -21,16 +21,13 @@ namespace {
 * Do a validity check                            *
 *************************************************/
 s32bit validity_check(const X509_Time& start, const X509_Time& end,
-                      u64bit current_time)
+                      u64bit current_time, u32bit slack)
    {
-   const u32bit ALLOWABLE_SLIP =
-      global_config().option_as_time("x509/validity_slack");
-
    const s32bit NOT_YET_VALID = -1, VALID_TIME = 0, EXPIRED = 1;
 
-   if(start.cmp(current_time + ALLOWABLE_SLIP) > 0)
+   if(start.cmp(current_time + slack) > 0)
       return NOT_YET_VALID;
-   if(end.cmp(current_time - ALLOWABLE_SLIP) < 0)
+   if(end.cmp(current_time - slack) < 0)
       return EXPIRED;
    return VALID_TIME;
    }
@@ -174,18 +171,20 @@ bool X509_Store::CRL_Data::operator<(const X509_Store::CRL_Data& other) const
 X509_Store::X509_Store()
    {
    revoked_info_valid = true;
+   time_slack = global_config().option_as_time("x509/validity_slack");
    }
 
 /*************************************************
 * X509_Store Copy Constructor                    *
 *************************************************/
-X509_Store::X509_Store(const X509_Store& store)
+X509_Store::X509_Store(const X509_Store& other)
    {
-   certs = store.certs;
-   revoked = store.revoked;
-   revoked_info_valid = store.revoked_info_valid;
-   for(u32bit j = 0; j != store.stores.size(); ++j)
-      stores[j] = store.stores[j]->clone();
+   certs = other.certs;
+   revoked = other.revoked;
+   revoked_info_valid = other.revoked_info_valid;
+   for(u32bit j = 0; j != other.stores.size(); ++j)
+      stores[j] = other.stores[j]->clone();
+   time_slack = other.time_slack;
    }
 
 /*************************************************
@@ -213,7 +212,7 @@ X509_Code X509_Store::validate_cert(const X509_Certificate& cert,
    const u64bit current_time = system_time();
 
    s32bit time_check = validity_check(cert.start_time(), cert.end_time(),
-                                      current_time);
+                                      current_time, time_slack);
    if(time_check < 0)      return CERT_NOT_YET_VALID;
    else if(time_check > 0) return CERT_HAS_EXPIRED;
 
@@ -227,8 +226,12 @@ X509_Code X509_Store::validate_cert(const X509_Certificate& cert,
    for(u32bit j = 0; j != indexes.size() - 1; ++j)
       {
       const X509_Certificate& current_cert = certs[indexes[j]].cert;
+
       time_check = validity_check(current_cert.start_time(),
-                                  current_cert.end_time(), current_time);
+                                  current_cert.end_time(),
+                                  current_time,
+                                  time_slack);
+
       if(time_check < 0)      return CERT_NOT_YET_VALID;
       else if(time_check > 0) return CERT_HAS_EXPIRED;
 
@@ -557,7 +560,8 @@ void X509_Store::add_trusted_certs(DataSource& source)
 X509_Code X509_Store::add_crl(const X509_CRL& crl)
    {
    s32bit time_check = validity_check(crl.this_update(), crl.next_update(),
-                                      system_time());
+                                      system_time(), time_slack);
+
    if(time_check < 0)      return CRL_NOT_YET_VALID;
    else if(time_check > 0) return CRL_HAS_EXPIRED;
 
