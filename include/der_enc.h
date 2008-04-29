@@ -6,8 +6,7 @@
 #ifndef BOTAN_DER_ENCODER_H__
 #define BOTAN_DER_ENCODER_H__
 
-#include <botan/secmem.h>
-#include <botan/enums.h>
+#include <botan/asn1_int.h>
 #include <vector>
 
 namespace Botan {

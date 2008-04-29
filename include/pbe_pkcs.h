@@ -8,6 +8,7 @@
 
 #include <botan/pbe.h>
 #include <botan/pipe.h>
+#include <botan/enums.h>
 
 namespace Botan {
 

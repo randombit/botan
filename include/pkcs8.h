@@ -8,6 +8,7 @@
 
 #include <botan/x509_key.h>
 #include <botan/ui.h>
+#include <botan/enums.h>
 
 namespace Botan {
 

@@ -12,6 +12,8 @@
 
 namespace Botan {
 
+enum Signature_Format { IEEE_1363, DER_SEQUENCE };
+
 /*************************************************
 * Public Key Encryptor                           *
 *************************************************/

@@ -7,7 +7,6 @@
 #define BOTAN_POLICY_CONF_H__
 
 #include <botan/mutex.h>
-#include <botan/enums.h>
 #include <string>
 #include <vector>
 #include <map>
@@ -39,9 +38,6 @@ class BOTAN_DLL Config
       std::string deref_alias(const std::string&) const;
 
       void load_inifile(const std::string&);
-
-      static void choose_sig_format(const std::string&, std::string&,
-                                    Signature_Format&);
    private:
       Config(const Config&) {}
       Config& operator=(const Config&) { return (*this); }

@@ -11,6 +11,7 @@
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
 #include <botan/numthry.h>
+#include <botan/libstate.h>
 #include <botan/oids.h>
 #include <botan/util.h>
 #include <algorithm>
@@ -236,13 +237,35 @@ PK_Signer* choose_sig_format(const Private_Key& key,
    {
    std::string padding;
    Signature_Format format;
-   Config::choose_sig_format(key.algo_name(), padding, format);
 
-   sig_algo.oid = OIDS::lookup(key.algo_name() + "/" + padding);
+   const std::string algo_name = key.algo_name();
+
+   if(algo_name == "RSA")
+      {
+      std::string hash = global_config().option("x509/ca/rsa_hash");
+
+      if(hash == "")
+         throw Invalid_State("No value set for x509/ca/rsa_hash");
+
+      hash = global_config().deref_alias(hash);
+
+      padding = "EMSA3(" + hash + ")";
+      format = IEEE_1363;
+      }
+   else if(algo_name == "DSA")
+      {
+      std::string hash = global_config().deref_alias("SHA-1");
+      padding = "EMSA1(" + hash + ")";
+      format = DER_SEQUENCE;
+      }
+   else
+      throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);
+
+   sig_algo.oid = OIDS::lookup(algo_name + "/" + padding);
 
    std::auto_ptr<X509_Encoder> encoding(key.x509_encoder());
    if(!encoding.get())
-      throw Encoding_Error("Key " + key.algo_name() + " does not support "
+      throw Encoding_Error("Key " + algo_name + " does not support "
                            "X.509 encoding");
 
    sig_algo.parameters = encoding->alg_id().parameters;

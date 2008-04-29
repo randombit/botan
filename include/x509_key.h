@@ -9,6 +9,7 @@
 #include <botan/pipe.h>
 #include <botan/pk_keys.h>
 #include <botan/alg_id.h>
+#include <botan/enums.h>
 
 namespace Botan {
 

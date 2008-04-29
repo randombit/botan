@@ -155,33 +155,4 @@ u32bit Config::option_as_time(const std::string& key) const
    return scale * to_u32bit(value);
    }
 
-/*************************************************
-* Choose the signature format for a PK algorithm *
-*************************************************/
-void Config::choose_sig_format(const std::string& algo_name,
-                               std::string& padding,
-                               Signature_Format& format)
-   {
-   if(algo_name == "RSA")
-      {
-      std::string hash = global_state().config().option("x509/ca/rsa_hash");
-
-      if(hash == "")
-         throw Invalid_State("No value set for x509/ca/rsa_hash");
-
-      hash = global_state().config().deref_alias(hash);
-
-      padding = "EMSA3(" + hash + ")";
-      format = IEEE_1363;
-      }
-   else if(algo_name == "DSA")
-      {
-      std::string hash = global_state().config().deref_alias("SHA-1");
-      padding = "EMSA1(" + hash + ")";
-      format = DER_SEQUENCE;
-      }
-   else
-      throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);
-   }
-
 }

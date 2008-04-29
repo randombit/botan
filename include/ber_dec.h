@@ -8,6 +8,7 @@
 
 #include <botan/asn1_oid.h>
 #include <botan/data_src.h>
+#include <botan/enums.h>
 
 namespace Botan {
 
