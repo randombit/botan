@@ -1,6 +1,6 @@
 /*************************************************
 * Configuration Handling Header File             *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_POLICY_CONF_H__
@@ -8,7 +8,6 @@
 
 #include <botan/mutex.h>
 #include <string>
-#include <vector>
 #include <map>
 
 namespace Botan {
