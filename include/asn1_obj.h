@@ -156,8 +156,6 @@ bool BOTAN_DLL operator<(const X509_DN&, const X509_DN&);
 /*************************************************
 * Helper Functions                               *
 *************************************************/
-s32bit BOTAN_DLL validity_check(const X509_Time&, const X509_Time&, u64bit);
-
 bool BOTAN_DLL is_string_type(ASN1_Tag);
 
 }

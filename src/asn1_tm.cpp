@@ -8,7 +8,6 @@
 #include <botan/ber_dec.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
-#include <botan/config.h>
 #include <ctime>
 
 namespace Botan {
@@ -178,6 +177,17 @@ void X509_Time::encode_into(DER_Encoder& der) const
    }
 
 /*************************************************
+* Decode a BER encoded X509_Time                 *
+*************************************************/
+void X509_Time::decode_from(BER_Decoder& source)
+   {
+   BER_Object ber_time = source.get_next_object();
+   set_to(Charset::transcode(ASN1::to_string(ber_time),
+                             LATIN1_CHARSET, LOCAL_CHARSET),
+          ber_time.type_tag);
+   }
+
+/*************************************************
 * Return a string representation of the time     *
 *************************************************/
 std::string X509_Time::as_string() const
@@ -281,34 +291,5 @@ bool operator<=(const X509_Time& t1, const X509_Time& t2)
    { return (t1.cmp(t2) <= 0); }
 bool operator>=(const X509_Time& t1, const X509_Time& t2)
    { return (t1.cmp(t2) >= 0); }
-
-/*************************************************
-* Do a validity check                            *
-*************************************************/
-s32bit validity_check(const X509_Time& start, const X509_Time& end,
-                      u64bit current_time)
-   {
-   const u32bit ALLOWABLE_SLIP =
-      global_config().option_as_time("x509/validity_slack");
-
-   const s32bit NOT_YET_VALID = -1, VALID_TIME = 0, EXPIRED = 1;
-
-   if(start.cmp(current_time + ALLOWABLE_SLIP) > 0)
-      return NOT_YET_VALID;
-   if(end.cmp(current_time - ALLOWABLE_SLIP) < 0)
-      return EXPIRED;
-   return VALID_TIME;
-   }
-
-/*************************************************
-* Decode a BER encoded X509_Time                 *
-*************************************************/
-void X509_Time::decode_from(BER_Decoder& source)
-   {
-   BER_Object ber_time = source.get_next_object();
-   set_to(Charset::transcode(ASN1::to_string(ber_time),
-                             LATIN1_CHARSET, LOCAL_CHARSET),
-          ber_time.type_tag);
-   }
 
 }

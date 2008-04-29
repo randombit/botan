@@ -18,6 +18,24 @@ namespace Botan {
 namespace {
 
 /*************************************************
+* Do a validity check                            *
+*************************************************/
+s32bit validity_check(const X509_Time& start, const X509_Time& end,
+                      u64bit current_time)
+   {
+   const u32bit ALLOWABLE_SLIP =
+      global_config().option_as_time("x509/validity_slack");
+
+   const s32bit NOT_YET_VALID = -1, VALID_TIME = 0, EXPIRED = 1;
+
+   if(start.cmp(current_time + ALLOWABLE_SLIP) > 0)
+      return NOT_YET_VALID;
+   if(end.cmp(current_time - ALLOWABLE_SLIP) < 0)
+      return EXPIRED;
+   return VALID_TIME;
+   }
+
+/*************************************************
 * Compare the value of unique ID fields          *
 *************************************************/
 bool compare_ids(const MemoryVector<byte>& id1,
