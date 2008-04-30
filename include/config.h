@@ -35,8 +35,6 @@ class BOTAN_DLL Config
 
       void add_alias(const std::string&, const std::string&);
       std::string deref_alias(const std::string&) const;
-
-      void load_inifile(const std::string&);
    private:
       Config(const Config&) {}
       Config& operator=(const Config&) { return (*this); }
