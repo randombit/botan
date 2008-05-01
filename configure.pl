@@ -334,7 +334,7 @@ sub choose_target {
             # buggy GCC. There is no reduction in code quality so even
             # if we're wrong it's OK.
 
-            if(($gcc_version =~ /4\.[01]/) || ($gcc_version =~ /3\.[34]/) ||
+            if(($gcc_version =~ /4\.[0123]/) || ($gcc_version =~ /3\.[34]/) ||
                ($gcc_version =~ /2\.95\.[0-4]/) ||
                ($gcc_version eq '' && $^O eq 'cygwin'))
             {
