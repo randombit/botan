@@ -26,6 +26,8 @@ BOTAN_DLL bool x500_name_cmp(const std::string&, const std::string&);
 BOTAN_DLL std::string to_string(u64bit, u32bit = 0);
 BOTAN_DLL u32bit to_u32bit(const std::string&);
 
+BOTAN_DLL u32bit timespec_to_u32bit(const std::string& timespec);
+
 /*************************************************
 * String/Network Address Conversions             *
 *************************************************/

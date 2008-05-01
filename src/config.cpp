@@ -126,33 +126,7 @@ std::string Config::option(const std::string& key) const
 *************************************************/
 u32bit Config::option_as_time(const std::string& key) const
    {
-   const std::string timespec = option(key);
-   if(timespec == "")
-      return 0;
-
-   const char suffix = timespec[timespec.size()-1];
-   std::string value = timespec.substr(0, timespec.size()-1);
-
-   u32bit scale = 1;
-
-   if(Charset::is_digit(suffix))
-      value += suffix;
-   else if(suffix == 's')
-      scale = 1;
-   else if(suffix == 'm')
-      scale = 60;
-   else if(suffix == 'h')
-      scale = 60 * 60;
-   else if(suffix == 'd')
-      scale = 24 * 60 * 60;
-   else if(suffix == 'y')
-      scale = 365 * 24 * 60 * 60;
-   else
-      throw Decoding_Error(
-         "Config::option_as_time: Unknown time value " + value
-         );
-
-   return scale * to_u32bit(value);
+   return timespec_to_u32bit(option(key));
    }
 
 }
