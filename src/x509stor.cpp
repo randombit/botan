@@ -171,7 +171,12 @@ bool X509_Store::CRL_Data::operator<(const X509_Store::CRL_Data& other) const
 X509_Store::X509_Store()
    {
    revoked_info_valid = true;
-   time_slack = global_config().option_as_time("x509/validity_slack");
+
+   time_slack = timespec_to_u32bit(
+      global_config().option("x509/validity_slack"));
+
+   validation_cache_timeout = timespec_to_u32bit(
+      global_config().option("x509/cache_verify_results"));
    }
 
 /*************************************************
@@ -305,7 +310,7 @@ X509_Code X509_Store::construct_cert_chain(const X509_Certificate& end_cert,
          return CERT_ISSUER_NOT_FOUND;
       indexes.push_back(parent);
 
-      if(certs[parent].is_verified())
+      if(certs[parent].is_verified(validation_cache_timeout))
          if(certs[parent].verify_result() != VERIFIED)
             return certs[parent].verify_result();
 
@@ -334,7 +339,7 @@ X509_Code X509_Store::construct_cert_chain(const X509_Certificate& end_cert,
 
       const u32bit cert = indexes.back();
 
-      if(certs[cert].is_verified())
+      if(certs[cert].is_verified(validation_cache_timeout))
          {
          if(certs[cert].verify_result() != VERIFIED)
             throw Internal_Error("X509_Store::construct_cert_chain");
@@ -359,7 +364,7 @@ X509_Code X509_Store::construct_cert_chain(const X509_Certificate& end_cert,
 X509_Code X509_Store::check_sig(const Cert_Info& cert_info,
                                 const Cert_Info& ca_cert_info) const
    {
-   if(cert_info.is_verified())
+   if(cert_info.is_verified(validation_cache_timeout))
       return cert_info.verify_result();
 
    const X509_Certificate& cert    = cert_info.cert;
@@ -431,7 +436,8 @@ void X509_Store::recompute_revoked_info() const
 
    for(u32bit j = 0; j != certs.size(); ++j)
       {
-      if((certs[j].is_verified()) && (certs[j].verify_result() != VERIFIED))
+      if((certs[j].is_verified(validation_cache_timeout)) &&
+         (certs[j].verify_result() != VERIFIED))
          continue;
 
       if(is_revoked(certs[j].cert))
@@ -673,19 +679,16 @@ bool X509_Store::Cert_Info::is_trusted() const
 /*************************************************
 * Check if this certificate has been verified    *
 *************************************************/
-bool X509_Store::Cert_Info::is_verified() const
+bool X509_Store::Cert_Info::is_verified(u32bit timeout) const
    {
    if(!checked)
       return false;
    if(result != VERIFIED && result != CERT_NOT_YET_VALID)
       return true;
 
-   const u32bit CACHE_TIME =
-      global_config().option_as_time("x509/cache_verify_results");
-
    const u64bit current_time = system_time();
 
-   if(current_time > last_checked + CACHE_TIME)
+   if(current_time > last_checked + timeout)
       checked = false;
 
    return checked;

@@ -29,7 +29,6 @@ class BOTAN_DLL Config
                const std::string&, bool = true);
 
       std::string option(const std::string&) const;
-      u32bit option_as_time(const std::string&) const;
 
       void set_option(const std::string, const std::string&);
 

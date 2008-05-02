@@ -5,11 +5,8 @@
 
 #include <botan/config.h>
 #include <botan/libstate.h>
-#include <botan/lookup.h>
-#include <botan/charset.h>
-#include <botan/parsing.h>
-#include <botan/stl_util.h>
 #include <botan/mutex.h>
+#include <botan/stl_util.h>
 #include <string>
 
 namespace Botan {
@@ -119,14 +116,6 @@ void Config::set_option(const std::string key, const std::string& value)
 std::string Config::option(const std::string& key) const
    {
    return get("conf", key);
-   }
-
-/*************************************************
-* Get the config setting as a time               *
-*************************************************/
-u32bit Config::option_as_time(const std::string& key) const
-   {
-   return timespec_to_u32bit(option(key));
    }
 
 }

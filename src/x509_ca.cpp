@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/x509_ca.h>
+#include <botan/libstate.h>
 #include <botan/x509stor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
@@ -11,7 +12,7 @@
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
 #include <botan/numthry.h>
-#include <botan/libstate.h>
+#include <botan/parsing.h>
 #include <botan/oids.h>
 #include <botan/util.h>
 #include <algorithm>
@@ -179,8 +180,10 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
    const u32bit X509_CRL_VERSION = 2;
 
    if(next_update == 0)
-      next_update = global_config().option_as_time("x509/crl/next_update");
+      next_update = timespec_to_u32bit(
+         global_config().option("x509/crl/next_update"));
 
+   // Totally stupid: ties encoding logic to the return of std::time!!
    const u64bit current_time = system_time();
 
    Extensions extensions;
