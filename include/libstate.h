@@ -1,15 +1,13 @@
 /*************************************************
 * Library Internal/Global State Header File      *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_LIB_STATE_H__
 #define BOTAN_LIB_STATE_H__
 
 #include <botan/base.h>
-#include <botan/enums.h>
 #include <botan/init.h>
-#include <botan/ui.h>
 #include <string>
 #include <vector>
 #include <map>
@@ -66,18 +64,19 @@ class BOTAN_DLL Library_State
       class Engine* get_engine_n(u32bit) const;
 
       class Mutex_Factory* mutex_factory;
-      class Mutex* allocator_lock;
-      class Mutex* engine_lock;
-      class Mutex* rng_lock;
 
       mutable class Config* config_obj;
 
+      class Mutex* allocator_lock;
       std::map<std::string, Allocator*> alloc_factory;
       mutable Allocator* cached_default_allocator;
 
+      class Mutex* rng_lock;
       RandomNumberGenerator* rng;
       std::vector<Allocator*> allocators;
       std::vector<EntropySource*> entropy_sources;
+
+      class Mutex* engine_lock;
       std::vector<class Engine*> engines;
    };
 
