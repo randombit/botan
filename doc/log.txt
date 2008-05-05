@@ -30,6 +30,9 @@
  - Build fix for NetBSD systems
  - Prevent es_dev from being built except on Unix systems
 
+* 1.6.4, 2008-03-08
+ - Fix a compilation problem with Visual Studio C++ 2003
+
 * 1.7.3, 2008-01-23
  - New invocation syntax for configure.pl with several new options
  - Support for IPv4 addresses in a subject alternative name
