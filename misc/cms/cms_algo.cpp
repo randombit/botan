@@ -7,7 +7,7 @@
 #include <botan/der_enc.h>
 #include <botan/lookup.h>
 #include <botan/filters.h>
-#include <botan/rng.h>
+#include <botan/libstate.h>
 #include <botan/rc2.h>
 
 namespace Botan {
@@ -82,7 +82,7 @@ SecureVector<byte> CMS_Encoder::wrap_key(const std::string& cipher,
       lcekpad.append((byte)cek.length());
       lcekpad.append(cek.bits_of());
       while(lcekpad.size() % 8)
-         lcekpad.append(Global_RNG::random());
+         lcekpad.append(global_state().random());
       return do_rfc3217_wrap(cipher, kek, lcekpad);
       }
    else
