@@ -118,7 +118,16 @@ void decode(BER_Decoder& decoder, u32bit level)
 
             if((class_tag & APPLICATION) || (class_tag & CONTEXT_SPECIFIC) ||
                (class_tag & PRIVATE))
+               {
                name = "cons [" + to_string(type_tag) + "]";
+
+               if(class_tag & APPLICATION)
+                  name += " appl";
+               if(class_tag & CONTEXT_SPECIFIC)
+                  name += " context";
+               if(class_tag & PRIVATE)
+                  name += " private";
+               }
             else
                name = type_name(type_tag) + " (cons)";
 
