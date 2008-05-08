@@ -1,6 +1,6 @@
 /*************************************************
 * BER Decoder Source File                        *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/ber_dec.h>
@@ -226,10 +226,12 @@ void BER_Decoder::push_back(const BER_Object& obj)
 /*************************************************
 * Begin decoding a CONSTRUCTED type              *
 *************************************************/
-BER_Decoder BER_Decoder::start_cons(ASN1_Tag type_tag)
+BER_Decoder BER_Decoder::start_cons(ASN1_Tag type_tag,
+                                    ASN1_Tag class_tag)
    {
    BER_Object obj = get_next_object();
-   obj.assert_is_a(type_tag, CONSTRUCTED);
+   obj.assert_is_a(type_tag, ASN1_Tag(class_tag | CONSTRUCTED));
+
    BER_Decoder result(obj.value, obj.value.size());
    result.parent = this;
    return result;

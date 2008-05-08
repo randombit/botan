@@ -1,6 +1,6 @@
 /*************************************************
 * BER Decoder Header File                        *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_BER_DECODER_H__
@@ -25,7 +25,7 @@ class BOTAN_DLL BER_Decoder
       BER_Decoder& verify_end();
       BER_Decoder& discard_remaining();
 
-      BER_Decoder  start_cons(ASN1_Tag);
+      BER_Decoder  start_cons(ASN1_Tag, ASN1_Tag = UNIVERSAL);
       BER_Decoder& end_cons();
 
       BER_Decoder& raw_bytes(MemoryRegion<byte>&);
