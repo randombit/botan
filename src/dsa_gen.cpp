@@ -80,7 +80,7 @@ bool DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
    q.set_bit(qbits-1);
    q.set_bit(0);
 
-   if(!is_prime(q))
+   if(!is_prime(q, global_state().prng_reference()))
       return false;
 
    const u32bit n = (pbits-1) / (HASH_SIZE * 8),
@@ -104,7 +104,8 @@ bool DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
 
       p = X - (X % (2*q) - 1);
 
-      if(p.bits() == pbits && is_prime(p))
+      if(p.bits() == pbits &&
+         is_prime(p, global_state().prng_reference()))
          return true;
       }
    return false;
@@ -113,14 +114,15 @@ bool DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
 /*************************************************
 * Generate DSA Primes                            *
 *************************************************/
-SecureVector<byte> DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
+SecureVector<byte> DL_Group::generate_dsa_primes(RandomNumberGenerator& rng,
+                                                 BigInt& p, BigInt& q,
                                                  u32bit pbits, u32bit qbits)
    {
    SecureVector<byte> seed(qbits/8);
 
    while(true)
       {
-      global_state().randomize(seed, seed.size());
+      rng.randomize(seed, seed.size());
 
       if(generate_dsa_primes(p, q, pbits, qbits, seed))
          return seed;

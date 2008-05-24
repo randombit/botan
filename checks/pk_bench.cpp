@@ -87,7 +87,8 @@ void bench_pk(const std::string& algo, bool html, double seconds)
          {
          const std::string len_str = to_string(keylen[j]);
 
-         DSA_PrivateKey key("dsa/jce/" + len_str);
+         DSA_PrivateKey key("dsa/jce/" + len_str,
+                            global_state().prng_reference());
 
          bench_ver(get_pk_signer(key, "EMSA1(SHA-1)"),
                    get_pk_verifier(key, "EMSA1(SHA-1)"),
@@ -106,7 +107,8 @@ void bench_pk(const std::string& algo, bool html, double seconds)
          {
          const std::string len_str = to_string(keylen[j]);
 
-         DH_PrivateKey key("modp/ietf/" + len_str);
+         DH_PrivateKey key("modp/ietf/" + len_str,
+                           global_state().prng_reference());
 
          bench_kas(get_pk_kas(key, "Raw"), "DH-" + len_str, seconds, html);
          }
@@ -120,7 +122,8 @@ void bench_pk(const std::string& algo, bool html, double seconds)
          {
          const std::string len_str = to_string(keylen[j]);
 
-         ElGamal_PrivateKey key("modp/ietf/" + len_str);
+         ElGamal_PrivateKey key("modp/ietf/" + len_str,
+                                global_state().prng_reference());
 
          bench_enc(get_pk_encryptor(key, "Raw"),
                    "ELG-" + len_str, seconds, html);
@@ -139,7 +142,8 @@ void bench_pk(const std::string& algo, bool html, double seconds)
          {
          const std::string len_str = to_string(keylen[j]);
 
-         NR_PrivateKey key("dsa/jce/" + len_str);
+         NR_PrivateKey key("dsa/jce/" + len_str,
+                           global_state().prng_reference());
 
          bench_ver(get_pk_signer(key, "EMSA1(SHA-1)"),
                    get_pk_verifier(key, "EMSA1(SHA-1)"),

@@ -6,7 +6,6 @@
 #include <botan/bigint.h>
 #include <botan/parsing.h>
 #include <botan/numthry.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -16,9 +15,8 @@ namespace Botan {
 BigInt::BigInt(NumberType type, u32bit bits)
    {
    set_sign(Positive);
-   if(type == Random && bits)
-      randomize(bits);
-   else if(type == Power2)
+
+   if(type == Power2)
       set_bit(bits);
    else
       throw Invalid_Argument("BigInt(NumberType): Unknown type");
@@ -27,7 +25,8 @@ BigInt::BigInt(NumberType type, u32bit bits)
 /*************************************************
 * Randomize this number                          *
 *************************************************/
-void BigInt::randomize(u32bit bitsize)
+void BigInt::randomize(RandomNumberGenerator& rng,
+                       u32bit bitsize)
    {
    set_sign(Positive);
 
@@ -36,7 +35,7 @@ void BigInt::randomize(u32bit bitsize)
    else
       {
       SecureVector<byte> array((bitsize + 7) / 8);
-      global_state().randomize(array, array.size());
+      rng.randomize(array, array.size());
       if(bitsize % 8)
          array[0] &= 0xFF >> (8 - (bitsize % 8));
       array[0] |= 0x80 >> ((bitsize % 8) ? (8 - bitsize % 8) : 0);
@@ -47,30 +46,32 @@ void BigInt::randomize(u32bit bitsize)
 /*************************************************
 * Generate a random integer                      *
 *************************************************/
-BigInt random_integer(u32bit bits)
+BigInt random_integer(RandomNumberGenerator& rng,
+                      u32bit bits)
    {
    BigInt x;
-   x.randomize(bits);
+   x.randomize(rng, bits);
    return x;
    }
 
 /*************************************************
 * Generate a random integer within given range   *
 *************************************************/
-BigInt random_integer(const BigInt& min, const BigInt& max)
+BigInt random_integer(RandomNumberGenerator& rng,
+                      const BigInt& min, const BigInt& max)
    {
    BigInt range = max - min;
 
    if(range <= 0)
       throw Invalid_Argument("random_integer: invalid min/max values");
 
-   return (min + (random_integer(range.bits() + 2) % range));
+   return (min + (random_integer(rng, range.bits() + 2) % range));
    }
 
 /*************************************************
 * Generate a random safe prime                   *
 *************************************************/
-BigInt random_safe_prime(u32bit bits)
+BigInt random_safe_prime(RandomNumberGenerator& rng, u32bit bits)
    {
    if(bits <= 64)
       throw Invalid_Argument("random_safe_prime: Can't make a prime of " +
@@ -78,8 +79,8 @@ BigInt random_safe_prime(u32bit bits)
 
    BigInt p;
    do
-      p = (random_prime(bits - 1) << 1) + 1;
-   while(!is_prime(p));
+      p = (random_prime(rng, bits - 1) << 1) + 1;
+   while(!is_prime(p, rng));
    return p;
    }
 

@@ -7,6 +7,7 @@
 #include <botan/numthry.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -131,7 +132,7 @@ bool DL_Scheme_PublicKey::check_key(bool strong) const
    {
    if(y < 2 || y >= group_p())
       return false;
-   if(!group.verify_group(strong))
+   if(!group.verify_group(global_state().prng_reference(), strong))
       return false;
    return true;
    }
@@ -146,7 +147,7 @@ bool DL_Scheme_PrivateKey::check_key(bool strong) const
 
    if(y < 2 || y >= p || x < 2 || x >= p)
       return false;
-   if(!group.verify_group(strong))
+   if(!group.verify_group(global_state().prng_reference(), strong))
       return false;
 
    if(!strong)

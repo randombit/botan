@@ -5,7 +5,6 @@
 
 #include <botan/numthry.h>
 #include <botan/parsing.h>
-#include <botan/libstate.h>
 #include <algorithm>
 
 namespace Botan {
@@ -13,7 +12,8 @@ namespace Botan {
 /*************************************************
 * Generate a random prime                        *
 *************************************************/
-BigInt random_prime(u32bit bits, const BigInt& coprime,
+BigInt random_prime(RandomNumberGenerator& rng,
+                    u32bit bits, const BigInt& coprime,
                     u32bit equiv, u32bit modulo)
    {
    if(bits < 48)
@@ -29,7 +29,7 @@ BigInt random_prime(u32bit bits, const BigInt& coprime,
 
    while(true)
       {
-      BigInt p = random_integer(bits);
+      BigInt p = random_integer(rng, bits);
       p.set_bit(bits - 2);
       p.set_bit(0);
 
@@ -61,7 +61,7 @@ BigInt random_prime(u32bit bits, const BigInt& coprime,
 
          if(!passes_sieve || gcd(p - 1, coprime) != 1)
             continue;
-         if(passes_mr_tests(p))
+         if(passes_mr_tests(rng, p))
             return p;
          }
       }

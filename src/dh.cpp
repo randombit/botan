@@ -46,12 +46,13 @@ MemoryVector<byte> DH_PublicKey::public_value() const
 /*************************************************
 * Create a DH private key                        *
 *************************************************/
-DH_PrivateKey::DH_PrivateKey(const DL_Group& grp)
+DH_PrivateKey::DH_PrivateKey(const DL_Group& grp,
+                             RandomNumberGenerator& rng)
    {
    group = grp;
 
    const BigInt& p = group_p();
-   x = random_integer(2 * dl_work_factor(p.bits()));
+   x = random_integer(rng, 2 * dl_work_factor(p.bits()));
 
    PKCS8_load_hook(true);
    }

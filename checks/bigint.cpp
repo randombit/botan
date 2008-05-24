@@ -332,7 +332,8 @@ u32bit check_primetest(const std::vector<std::string>& args)
    BigInt n(args[0]);
    bool should_be_prime = (args[1] == "1");
 
-   bool is_prime = Botan::verify_prime(n);
+   bool is_prime = Botan::verify_prime(n,
+                                       global_state().prng_reference());
 
    if(is_prime != should_be_prime)
       {

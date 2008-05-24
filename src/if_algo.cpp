@@ -7,6 +7,7 @@
 #include <botan/numthry.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -202,7 +203,8 @@ bool IF_Scheme_PrivateKey::check_key(bool strong) const
 
    if(d1 != d % (p - 1) || d2 != d % (q - 1) || c != inverse_mod(q, p))
       return false;
-   if(!check_prime(p) || !check_prime(q))
+   if(!check_prime(p, global_state().prng_reference()) ||
+      !check_prime(q, global_state().prng_reference()))
       return false;
    return true;
    }

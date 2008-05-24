@@ -6,6 +6,7 @@
 #include <botan/nr.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -55,10 +56,11 @@ u32bit NR_PublicKey::message_part_size() const
 /*************************************************
 * Create a NR private key                        *
 *************************************************/
-NR_PrivateKey::NR_PrivateKey(const DL_Group& grp)
+NR_PrivateKey::NR_PrivateKey(const DL_Group& grp,
+                             RandomNumberGenerator& rng)
    {
    group = grp;
-   x = random_integer(2, group_q() - 1);
+   x = random_integer(rng, 2, group_q() - 1);
 
    PKCS8_load_hook(true);
    }
@@ -100,7 +102,7 @@ SecureVector<byte> NR_PrivateKey::sign(const byte in[], u32bit length) const
 
    BigInt k;
    do
-      k.randomize(q.bits());
+      k.randomize(global_state().prng_reference(), q.bits());
    while(k >= q);
 
    return core.sign(in, length, k);

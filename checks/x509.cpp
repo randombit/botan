@@ -6,6 +6,8 @@
 #include <botan/pkcs10.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
+
+#include <botan/libstate.h>
 using namespace Botan;
 
 #include <iostream>
@@ -71,7 +73,7 @@ void do_x509_tests()
 
    /* Create the CA's key and self-signed cert */
    std::cout << '.' << std::flush;
-   RSA_PrivateKey ca_key(1024);
+   RSA_PrivateKey ca_key(1024, global_state().prng_reference());
 
    std::cout << '.' << std::flush;
    X509_Certificate ca_cert = X509::create_self_signed_cert(ca_opts(), ca_key);
@@ -79,13 +81,15 @@ void do_x509_tests()
 
    /* Create user #1's key and cert request */
    std::cout << '.' << std::flush;
-   DSA_PrivateKey user1_key(DL_Group("dsa/jce/1024"));
+   DSA_PrivateKey user1_key(DL_Group("dsa/jce/1024"),
+                            global_state().prng_reference());
+
    std::cout << '.' << std::flush;
    PKCS10_Request user1_req = X509::create_cert_req(req_opts1(), user1_key);
 
    /* Create user #2's key and cert request */
    std::cout << '.' << std::flush;
-   RSA_PrivateKey user2_key(768);
+   RSA_PrivateKey user2_key(1024, global_state().prng_reference());
    std::cout << '.' << std::flush;
    PKCS10_Request user2_req = X509::create_cert_req(req_opts2(), user2_key);
 

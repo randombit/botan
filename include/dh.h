@@ -45,7 +45,7 @@ class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
       MemoryVector<byte> public_value() const;
 
       DH_PrivateKey() {}
-      DH_PrivateKey(const DL_Group&);
+      DH_PrivateKey(const DL_Group&, RandomNumberGenerator&);
       DH_PrivateKey(const DL_Group&, const BigInt&, const BigInt& = 0);
    private:
       void PKCS8_load_hook(bool = false);

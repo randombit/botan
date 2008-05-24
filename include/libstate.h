@@ -54,6 +54,8 @@ class BOTAN_DLL Library_State
       void add_entropy(EntropySource&, bool);
       u32bit seed_prng(bool, u32bit);
 
+      RandomNumberGenerator& prng_reference() { return (*rng); }
+
       class Config& config() const;
 
       class Mutex* get_mutex() const;

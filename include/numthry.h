@@ -6,6 +6,7 @@
 #ifndef BOTAN_NUMBTHRY_H__
 #define BOTAN_NUMBTHRY_H__
 
+#include <botan/base.h>
 #include <botan/bigint.h>
 #include <botan/reducer.h>
 #include <botan/pow_mod.h>
@@ -42,23 +43,31 @@ u32bit BOTAN_DLL low_zero_bits(const BigInt&);
 /*************************************************
 * Primality Testing                              *
 *************************************************/
-bool BOTAN_DLL check_prime(const BigInt&);
-bool BOTAN_DLL is_prime(const BigInt&);
-bool BOTAN_DLL verify_prime(const BigInt&);
+bool BOTAN_DLL check_prime(const BigInt&, RandomNumberGenerator&);
+bool BOTAN_DLL is_prime(const BigInt&, RandomNumberGenerator&);
+bool BOTAN_DLL verify_prime(const BigInt&, RandomNumberGenerator&);
 
 s32bit BOTAN_DLL simple_primality_tests(const BigInt&);
-bool BOTAN_DLL passes_mr_tests(const BigInt&, u32bit = 1);
-bool BOTAN_DLL run_primality_tests(const BigInt&, u32bit = 1);
+
+bool BOTAN_DLL passes_mr_tests(RandomNumberGenerator&,
+                               const BigInt&, u32bit = 1);
+
+bool BOTAN_DLL run_primality_tests(RandomNumberGenerator&,
+                                   const BigInt&, u32bit = 1);
 
 /*************************************************
 * Random Number Generation                       *
 *************************************************/
-BigInt BOTAN_DLL random_integer(u32bit);
-BigInt BOTAN_DLL random_integer(const BigInt&, const BigInt&);
-BigInt BOTAN_DLL random_prime(u32bit, const BigInt& = 1,
+BigInt BOTAN_DLL random_integer(RandomNumberGenerator&, u32bit);
+BigInt BOTAN_DLL random_integer(RandomNumberGenerator&,
+                                const BigInt&, const BigInt&);
+
+BigInt BOTAN_DLL random_prime(RandomNumberGenerator&,
+                              u32bit n, const BigInt& = 1,
                               u32bit = 1, u32bit = 2);
 
-BigInt BOTAN_DLL random_safe_prime(u32bit);
+BigInt BOTAN_DLL random_safe_prime(RandomNumberGenerator&,
+                                   u32bit);
 
 /*************************************************
 * Prime Numbers                                  *

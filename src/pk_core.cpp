@@ -8,6 +8,7 @@
 #include <botan/engine.h>
 #include <botan/config.h>
 #include <botan/parsing.h>
+#include <botan/libstate.h>
 #include <algorithm>
 
 namespace Botan {
@@ -29,7 +30,8 @@ IF_Core::IF_Core(const BigInt& e, const BigInt& n, const BigInt& d,
 
    if(d != 0)
       {
-      BigInt k = random_integer(std::min(n.bits()-1, BLINDING_BITS));
+      BigInt k = random_integer(global_state().prng_reference(),
+                                std::min(n.bits()-1, BLINDING_BITS));
       if(k != 0)
          blinder = Blinder(power_mod(k, e, n), inverse_mod(k, n), n);
       }
@@ -180,7 +182,8 @@ ELG_Core::ELG_Core(const DL_Group& group, const BigInt& y, const BigInt& x)
       const BigInt& p = group.get_p();
       p_bytes = p.bytes();
 
-      BigInt k = random_integer(std::min(p.bits()-1, BLINDING_BITS));
+      BigInt k = random_integer(global_state().prng_reference(),
+                                std::min(p.bits()-1, BLINDING_BITS));
       if(k != 0)
          blinder = Blinder(k, power_mod(k, x, p), p);
       }
@@ -242,7 +245,8 @@ DH_Core::DH_Core(const DL_Group& group, const BigInt& x)
    op = Engine_Core::dh_op(group, x);
 
    const BigInt& p = group.get_p();
-   BigInt k = random_integer(std::min(p.bits()-1, BLINDING_BITS));
+   BigInt k = random_integer(global_state().prng_reference(),
+                             std::min(p.bits()-1, BLINDING_BITS));
    if(k != 0)
       blinder = Blinder(k, power_mod(inverse_mod(k, p), x, p), p);
    }

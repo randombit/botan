@@ -51,7 +51,9 @@ SecureVector<byte> RSA_PublicKey::verify(const byte in[], u32bit len) const
 /*************************************************
 * Create a RSA private key                       *
 *************************************************/
-RSA_PrivateKey::RSA_PrivateKey(u32bit bits, u32bit exp)
+RSA_PrivateKey::RSA_PrivateKey(u32bit bits,
+                               RandomNumberGenerator& rng,
+                               u32bit exp)
    {
    if(bits < 1024)
       throw Invalid_Argument(algo_name() + ": Can't make a key that is only " +
@@ -60,8 +62,8 @@ RSA_PrivateKey::RSA_PrivateKey(u32bit bits, u32bit exp)
       throw Invalid_Argument(algo_name() + ": Invalid encryption exponent");
 
    e = exp;
-   p = random_prime((bits + 1) / 2, e);
-   q = random_prime(bits - p.bits(), e);
+   p = random_prime(rng, (bits + 1) / 2, e);
+   q = random_prime(rng, bits - p.bits(), e);
    d = inverse_mod(e, lcm(p - 1, q - 1));
 
    PKCS8_load_hook(true);

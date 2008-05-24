@@ -7,6 +7,7 @@
 #include <botan/numthry.h>
 #include <botan/keypair.h>
 #include <botan/util.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -35,7 +36,10 @@ void ElGamal_PublicKey::X509_load_hook()
 SecureVector<byte> ElGamal_PublicKey::encrypt(const byte in[],
                                               u32bit length) const
    {
-   BigInt k = random_integer(2 * dl_work_factor(group_p().bits()));
+   BigInt k = random_integer(
+      global_state().prng_reference(),
+      2 * dl_work_factor(group_p().bits()));
+
    return core.encrypt(in, length, k);
    }
 
@@ -50,11 +54,12 @@ u32bit ElGamal_PublicKey::max_input_bits() const
 /*************************************************
 * ElGamal_PrivateKey Constructor                 *
 *************************************************/
-ElGamal_PrivateKey::ElGamal_PrivateKey(const DL_Group& grp)
+ElGamal_PrivateKey::ElGamal_PrivateKey(const DL_Group& grp,
+                                       RandomNumberGenerator& rng)
    {
    group = grp;
 
-   x = random_integer(2 * dl_work_factor(group_p().bits()));
+   x = random_integer(rng, 2 * dl_work_factor(group_p().bits()));
 
    PKCS8_load_hook(true);
    }

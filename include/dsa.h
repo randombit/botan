@@ -48,7 +48,7 @@ class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
       bool check_key(bool) const;
 
       DSA_PrivateKey() {}
-      DSA_PrivateKey(const DL_Group&);
+      DSA_PrivateKey(const DL_Group&, RandomNumberGenerator& rng);
       DSA_PrivateKey(const DL_Group&, const BigInt&, const BigInt& = 0);
    private:
       void PKCS8_load_hook(bool = false);

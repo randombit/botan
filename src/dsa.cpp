@@ -1,11 +1,12 @@
 /*************************************************
 * DSA Source File                                *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/dsa.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -56,10 +57,11 @@ u32bit DSA_PublicKey::message_part_size() const
 /*************************************************
 * Create a DSA private key                       *
 *************************************************/
-DSA_PrivateKey::DSA_PrivateKey(const DL_Group& grp)
+DSA_PrivateKey::DSA_PrivateKey(const DL_Group& grp,
+                               RandomNumberGenerator& rng)
    {
    group = grp;
-   x = random_integer(2, group_q() - 1);
+   x = random_integer(rng, 2, group_q() - 1);
 
    PKCS8_load_hook(true);
    }
@@ -101,7 +103,7 @@ SecureVector<byte> DSA_PrivateKey::sign(const byte in[], u32bit length) const
 
    BigInt k;
    do
-      k.randomize(q.bits());
+      k.randomize(global_state().prng_reference(), q.bits());
    while(k >= q);
 
    return core.sign(in, length, k);

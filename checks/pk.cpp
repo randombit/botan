@@ -21,6 +21,7 @@
 #include <botan/numthry.h>
 
 #include <botan/x931_rng.h>
+#include <botan/randpool.h>
 #include <botan/libstate.h>
 using namespace Botan;
 
@@ -194,7 +195,7 @@ u32bit do_pk_validation_tests(const std::string& filename)
 
    std::cout << std::endl;
 
-   global_state().set_prng(new ANSI_X931_RNG);
+   global_state().set_prng(new ANSI_X931_RNG("AES-128", new Randpool));
    for(u32bit j = 0; j != 2; j++)
       global_state().seed_prng(true, 384);
 
@@ -249,7 +250,7 @@ void validate_encryption(PK_Encryptor* e, PK_Decryptor* d,
       failure = true;
       }
 
-   global_state().set_prng(new ANSI_X931_RNG);
+   global_state().set_prng(new ANSI_X931_RNG("AES-128", new Randpool));
    for(u32bit j = 0; j != 2; j++)
       global_state().seed_prng(true, 384);
 
@@ -290,7 +291,7 @@ void validate_signature(PK_Verifier* v, PK_Signer* s, const std::string& algo,
       failure = true;
       }
 
-   global_state().set_prng(new ANSI_X931_RNG);
+   global_state().set_prng(new ANSI_X931_RNG("AES-128", new Randpool));
    for(u32bit j = 0; j != 2; j++)
       global_state().seed_prng(true, 384);
 
@@ -661,34 +662,34 @@ void do_pk_keygen_tests()
    /* Putting each key in a block reduces memory pressure, speeds it up */
 #define IF_SIG_KEY(TYPE, BITS)     \
    {                               \
-   TYPE key(BITS);                 \
+   TYPE key(BITS, global_state().prng_reference());      \
    key.check_key(true);            \
    std::cout << '.' << std::flush; \
    }
 
 #define DL_SIG_KEY(TYPE, GROUP)    \
    {                               \
-   TYPE key(DL_Group(GROUP));  \
+   TYPE key(DL_Group(GROUP), global_state().prng_reference());   \
    key.check_key(true);            \
    std::cout << '.' << std::flush; \
    }
 
 #define DL_ENC_KEY(TYPE, GROUP)    \
    {                               \
-   TYPE key(DL_Group(GROUP));  \
+   TYPE key(DL_Group(GROUP), global_state().prng_reference());   \
    key.check_key(true);            \
    std::cout << '.' << std::flush; \
    }
 
 #define DL_KEY(TYPE, GROUP)        \
    {                               \
-   TYPE key(DL_Group(GROUP));  \
+   TYPE key(DL_Group(GROUP), global_state().prng_reference());   \
    key.check_key(true);            \
    std::cout << '.' << std::flush; \
    }
 
-   IF_SIG_KEY(RSA_PrivateKey, 512);
-   IF_SIG_KEY(RW_PrivateKey, 512);
+   IF_SIG_KEY(RSA_PrivateKey, 1024);
+   IF_SIG_KEY(RW_PrivateKey, 1024);
 
    DL_SIG_KEY(DSA_PrivateKey, "dsa/jce/512");
    DL_SIG_KEY(DSA_PrivateKey, "dsa/jce/768");

@@ -20,7 +20,7 @@ class BOTAN_DLL BigInt
    public:
       enum Base { Octal = 8, Decimal = 10, Hexadecimal = 16, Binary = 256 };
       enum Sign { Negative = 0, Positive = 1 };
-      enum NumberType { Random, Power2 };
+      enum NumberType { Power2 };
 
       struct DivideByZero : public Exception
          { DivideByZero() : Exception("BigInt divide by zero") {} };
@@ -82,7 +82,7 @@ class BOTAN_DLL BigInt
       word operator[](u32bit) const;
       void clear() { reg.clear(); }
 
-      void randomize(u32bit = 0);
+      void randomize(RandomNumberGenerator& rng, u32bit n);
 
       void binary_encode(byte[]) const;
       void binary_decode(const byte[], u32bit);

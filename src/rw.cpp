@@ -52,17 +52,19 @@ SecureVector<byte> RW_PublicKey::verify(const byte in[], u32bit len) const
 /*************************************************
 * Create a Rabin-Williams private key            *
 *************************************************/
-RW_PrivateKey::RW_PrivateKey(u32bit bits, u32bit exp)
+RW_PrivateKey::RW_PrivateKey(u32bit bits,
+                             RandomNumberGenerator& rng,
+                             u32bit exp)
    {
-   if(bits < 512)
+   if(bits < 1024)
       throw Invalid_Argument(algo_name() + ": Can't make a key that is only " +
                              to_string(bits) + " bits long");
    if(exp < 2 || exp % 2 == 1)
       throw Invalid_Argument(algo_name() + ": Invalid encryption exponent");
 
    e = exp;
-   p = random_prime((bits + 1) / 2, e / 2, 3, 4);
-   q = random_prime(bits - p.bits(), e / 2, ((p % 8 == 3) ? 7 : 3), 8);
+   p = random_prime(rng, (bits + 1) / 2, e / 2, 3, 4);
+   q = random_prime(rng, bits - p.bits(), e / 2, ((p % 8 == 3) ? 7 : 3), 8);
    d = inverse_mod(e, lcm(p - 1, q - 1) >> 1);
 
    PKCS8_load_hook(true);

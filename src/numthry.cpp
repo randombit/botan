@@ -209,41 +209,43 @@ s32bit simple_primality_tests(const BigInt& n)
 /*************************************************
 * Fast check of primality                        *
 *************************************************/
-bool check_prime(const BigInt& n)
+bool check_prime(const BigInt& n, RandomNumberGenerator& rng)
    {
-   return run_primality_tests(n, 0);
+   return run_primality_tests(rng, n, 0);
    }
 
 /*************************************************
 * Test for primality                             *
 *************************************************/
-bool is_prime(const BigInt& n)
+bool is_prime(const BigInt& n, RandomNumberGenerator& rng)
    {
-   return run_primality_tests(n, 1);
+   return run_primality_tests(rng, n, 1);
    }
 
 /*************************************************
 * Verify primality                               *
 *************************************************/
-bool verify_prime(const BigInt& n)
+bool verify_prime(const BigInt& n, RandomNumberGenerator& rng)
    {
-   return run_primality_tests(n, 2);
+   return run_primality_tests(rng, n, 2);
    }
 
 /*************************************************
 * Verify primality                               *
 *************************************************/
-bool run_primality_tests(const BigInt& n, u32bit level)
+bool run_primality_tests(RandomNumberGenerator& rng,
+                         const BigInt& n, u32bit level)
    {
    s32bit simple_tests = simple_primality_tests(n);
    if(simple_tests) return (simple_tests == 1) ? true : false;
-   return passes_mr_tests(n, level);
+   return passes_mr_tests(rng, n, level);
    }
 
 /*************************************************
 * Test for primaility using Miller-Rabin         *
 *************************************************/
-bool passes_mr_tests(const BigInt& n, u32bit level)
+bool passes_mr_tests(RandomNumberGenerator& rng,
+                     const BigInt& n, u32bit level)
    {
    const u32bit PREF_NONCE_BITS = 40;
 
@@ -267,7 +269,7 @@ bool passes_mr_tests(const BigInt& n, u32bit level)
    BigInt nonce;
    for(u32bit j = 0; j != tests; ++j)
       {
-      if(verify) nonce = random_integer(NONCE_BITS);
+      if(verify) nonce = random_integer(rng, NONCE_BITS);
       else       nonce = PRIMES[j];
 
       if(!mr.passes_test(nonce))

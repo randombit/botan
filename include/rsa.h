@@ -46,7 +46,7 @@ class BOTAN_DLL RSA_PrivateKey : public RSA_PublicKey,
       RSA_PrivateKey() {}
       RSA_PrivateKey(const BigInt&, const BigInt&, const BigInt&,
                      const BigInt& = 0, const BigInt& = 0);
-      RSA_PrivateKey(u32bit, u32bit = 65537);
+      RSA_PrivateKey(u32bit, RandomNumberGenerator&, u32bit = 65537);
    private:
       BigInt private_op(const byte[], u32bit) const;
    };

@@ -1,6 +1,6 @@
 /*************************************************
 * Discrete Logarithm Group Header File           *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_DL_PARAM_H__
@@ -24,7 +24,7 @@ class BOTAN_DLL DL_Group
       enum Format { ANSI_X9_42, ANSI_X9_57, PKCS_3 };
       enum PrimeType { Strong, Prime_Subgroup, DSA_Kosherizer };
 
-      bool verify_group(bool) const;
+      bool verify_group(RandomNumberGenerator& rng, bool) const;
 
       std::string PEM_encode(Format) const;
       SecureVector<byte> DER_encode(Format) const;
@@ -33,14 +33,18 @@ class BOTAN_DLL DL_Group
 
       DL_Group();
       DL_Group(const std::string&);
-      DL_Group(PrimeType, u32bit, u32bit = 0);
+      DL_Group(RandomNumberGenerator& rng, PrimeType, u32bit, u32bit = 0);
       DL_Group(const MemoryRegion<byte>&, u32bit = 1024, u32bit = 0);
       DL_Group(const BigInt&, const BigInt&);
       DL_Group(const BigInt&, const BigInt&, const BigInt&);
    private:
       static BigInt make_dsa_generator(const BigInt&, const BigInt&);
-      static SecureVector<byte> generate_dsa_primes(BigInt&, BigInt&,
-                                                    u32bit, u32bit);
+
+      static SecureVector<byte>
+         generate_dsa_primes(RandomNumberGenerator& rng,
+                             BigInt& p, BigInt& q,
+                             u32bit pbits, u32bit qbits);
+
       static bool generate_dsa_primes(BigInt&, BigInt&, u32bit, u32bit,
                                       const MemoryRegion<byte>&);
 
