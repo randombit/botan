@@ -1,4 +1,9 @@
 
+* 1.7.7,
+ - Remove many uses of the global PRNG object
+ - Remove both default arguments to ANSI_X931_RNG's constructor
+ - Remove the randomizing version of OctetString::change
+
 * 1.7.6, 2008-05-05
  - Initial support for Windows DLLs, from Joel Low
  - Reset the position pointer when a new block is generated in X9.32 PRNG
