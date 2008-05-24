@@ -18,7 +18,7 @@ namespace Botan {
 class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
    {
    public:
-      bool check_key(bool) const;
+      bool check_key(RandomNumberGenerator& rng, bool) const;
 
       const BigInt& get_n() const { return n; }
       const BigInt& get_e() const { return e; }
@@ -40,7 +40,7 @@ class BOTAN_DLL IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
                              public virtual Private_Key
    {
    public:
-      bool check_key(bool) const;
+      bool check_key(RandomNumberGenerator& rng, bool) const;
 
       const BigInt& get_p() const { return p; }
       const BigInt& get_q() const { return q; }

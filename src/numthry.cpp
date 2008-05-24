@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/numthry.h>
-#include <botan/libstate.h>
 #include <algorithm>
 
 namespace Botan {

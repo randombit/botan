@@ -13,6 +13,7 @@ This file is in the public domain
 #include <botan/x509self.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
+#include <botan/libstate.h>
 using namespace Botan;
 
 #include <iostream>
@@ -39,9 +40,9 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   try {
-      RSA_PrivateKey key(1024);
-      //DSA_PrivateKey key(DL_Group("dsa/jce/1024"));
+   try
+      {
+      RSA_PrivateKey key(1024, global_state().prng_reference());
 
       std::ofstream priv_key("private.pem");
       priv_key << PKCS8::PEM_encode(key, argv[1]);

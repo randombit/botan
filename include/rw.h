@@ -37,7 +37,7 @@ class BOTAN_DLL RW_PrivateKey : public RW_PublicKey,
    public:
       SecureVector<byte> sign(const byte[], u32bit) const;
 
-      bool check_key(bool) const;
+      bool check_key(RandomNumberGenerator& rng, bool) const;
 
       RW_PrivateKey() {}
       RW_PrivateKey(const BigInt&, const BigInt&, const BigInt&,

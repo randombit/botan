@@ -660,31 +660,31 @@ void do_pk_keygen_tests()
    std::cout << "Testing PK key generation: " << std::flush;
 
    /* Putting each key in a block reduces memory pressure, speeds it up */
-#define IF_SIG_KEY(TYPE, BITS)     \
-   {                               \
-   TYPE key(BITS, global_state().prng_reference());      \
-   key.check_key(true);            \
-   std::cout << '.' << std::flush; \
+#define IF_SIG_KEY(TYPE, BITS)                                      \
+   {                                                                \
+   TYPE key(BITS, global_state().prng_reference());                 \
+   key.check_key(global_state().prng_reference(), true);            \
+   std::cout << '.' << std::flush;                                  \
    }
 
 #define DL_SIG_KEY(TYPE, GROUP)    \
    {                               \
    TYPE key(DL_Group(GROUP), global_state().prng_reference());   \
-   key.check_key(true);            \
-   std::cout << '.' << std::flush; \
+   key.check_key(global_state().prng_reference(), true);         \
+   std::cout << '.' << std::flush;                               \
    }
 
 #define DL_ENC_KEY(TYPE, GROUP)    \
    {                               \
    TYPE key(DL_Group(GROUP), global_state().prng_reference());   \
-   key.check_key(true);            \
-   std::cout << '.' << std::flush; \
+   key.check_key(global_state().prng_reference(), true);         \
+   std::cout << '.' << std::flush;                               \
    }
 
 #define DL_KEY(TYPE, GROUP)        \
    {                               \
    TYPE key(DL_Group(GROUP), global_state().prng_reference());   \
-   key.check_key(true);            \
+   key.check_key(global_state().prng_reference(), true);         \
    std::cout << '.' << std::flush; \
    }
 

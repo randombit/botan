@@ -104,9 +104,9 @@ SecureVector<byte> ElGamal_PrivateKey::decrypt(const byte in[],
 /*************************************************
 * Check Private ElGamal Parameters               *
 *************************************************/
-bool ElGamal_PrivateKey::check_key(bool strong) const
+bool ElGamal_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    {
-   if(!DL_Scheme_PrivateKey::check_key(strong))
+   if(!DL_Scheme_PrivateKey::check_key(rng, strong))
       return false;
 
    if(!strong)

@@ -7,6 +7,7 @@
 */
 #include <botan/botan.h>
 #include <botan/dh.h>
+#include <botan/libstate.h>
 using namespace Botan;
 
 #include <iostream>
@@ -15,11 +16,13 @@ int main()
    {
    try {
       // Alice creates a DH key and sends (the public part) to Bob
-      DH_PrivateKey private_a(DL_Group("modp/ietf/1024"));
+      DH_PrivateKey private_a(DL_Group("modp/ietf/1024"),
+                              global_state().prng_reference());
       DH_PublicKey public_a = private_a; // Bob gets this
 
       // Bob creates a key with a matching group
-      DH_PrivateKey private_b(public_a.get_domain());
+      DH_PrivateKey private_b(public_a.get_domain(),
+                              global_state().prng_reference());
 
       // Bob sends the key back to Alice
       DH_PublicKey public_b = private_b; // Alice gets this

@@ -5,7 +5,6 @@
 
 #include <botan/filter.h>
 #include <botan/secqueue.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 

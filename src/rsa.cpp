@@ -125,9 +125,9 @@ SecureVector<byte> RSA_PrivateKey::sign(const byte in[], u32bit len) const
 /*************************************************
 * Check Private RSA Parameters                   *
 *************************************************/
-bool RSA_PrivateKey::check_key(bool strong) const
+bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    {
-   if(!IF_Scheme_PrivateKey::check_key(strong))
+   if(!IF_Scheme_PrivateKey::check_key(rng, strong))
       return false;
 
    if(!strong)

@@ -7,7 +7,6 @@
 #include <botan/numthry.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -183,7 +182,7 @@ void IF_Scheme_PrivateKey::PKCS8_load_hook(bool generated)
 /*************************************************
 * Check IF Scheme Public Parameters              *
 *************************************************/
-bool IF_Scheme_PublicKey::check_key(bool) const
+bool IF_Scheme_PublicKey::check_key(RandomNumberGenerator&, bool) const
    {
    if(n < 35 || n.is_even() || e < 2)
       return false;
@@ -193,7 +192,8 @@ bool IF_Scheme_PublicKey::check_key(bool) const
 /*************************************************
 * Check IF Scheme Private Parameters             *
 *************************************************/
-bool IF_Scheme_PrivateKey::check_key(bool strong) const
+bool IF_Scheme_PrivateKey::check_key(RandomNumberGenerator& rng,
+                                     bool strong) const
    {
    if(n < 35 || n.is_even() || e < 2 || d < 2 || p < 3 || q < 3 || p*q != n)
       return false;
@@ -203,8 +203,7 @@ bool IF_Scheme_PrivateKey::check_key(bool strong) const
 
    if(d1 != d % (p - 1) || d2 != d % (q - 1) || c != inverse_mod(q, p))
       return false;
-   if(!check_prime(p, global_state().prng_reference()) ||
-      !check_prime(q, global_state().prng_reference()))
+   if(!check_prime(p, rng) || !check_prime(q, rng))
       return false;
    return true;
    }

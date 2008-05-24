@@ -11,6 +11,7 @@ This file is in the public domain
 #include <botan/x509self.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
+#include <botan/libstate.h>
 using namespace Botan;
 
 #include <iostream>
@@ -25,8 +26,9 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   try {
-      RSA_PrivateKey priv_key(1024);
+   try
+      {
+      RSA_PrivateKey priv_key(1024, global_state().prng_reference());
       // If you want a DSA key instead of RSA, comment out the above line and
       // uncomment this one:
       //DSA_PrivateKey priv_key(DL_Group("dsa/jce/1024"));

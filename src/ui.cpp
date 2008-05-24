@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/ui.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 

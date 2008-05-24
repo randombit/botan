@@ -43,7 +43,7 @@ class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
    public:
       SecureVector<byte> decrypt(const byte[], u32bit) const;
 
-      bool check_key(bool) const;
+      bool check_key(RandomNumberGenerator& rng, bool) const;
 
       ElGamal_PrivateKey() {}
       ElGamal_PrivateKey(const DL_Group&, RandomNumberGenerator&);

@@ -7,7 +7,6 @@
 #include <botan/numthry.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -128,11 +127,12 @@ PKCS8_Decoder* DL_Scheme_PrivateKey::pkcs8_decoder()
 /*************************************************
 * Check Public DL Parameters                     *
 *************************************************/
-bool DL_Scheme_PublicKey::check_key(bool strong) const
+bool DL_Scheme_PublicKey::check_key(RandomNumberGenerator& rng,
+                                    bool strong) const
    {
    if(y < 2 || y >= group_p())
       return false;
-   if(!group.verify_group(global_state().prng_reference(), strong))
+   if(!group.verify_group(rng, strong))
       return false;
    return true;
    }
@@ -140,14 +140,15 @@ bool DL_Scheme_PublicKey::check_key(bool strong) const
 /*************************************************
 * Check DL Scheme Private Parameters             *
 *************************************************/
-bool DL_Scheme_PrivateKey::check_key(bool strong) const
+bool DL_Scheme_PrivateKey::check_key(RandomNumberGenerator& rng,
+                                     bool strong) const
    {
    const BigInt& p = group_p();
    const BigInt& g = group_g();
 
    if(y < 2 || y >= p || x < 2 || x >= p)
       return false;
-   if(!group.verify_group(global_state().prng_reference(), strong))
+   if(!group.verify_group(rng, strong))
       return false;
 
    if(!strong)

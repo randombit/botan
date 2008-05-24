@@ -115,9 +115,9 @@ SecureVector<byte> RW_PrivateKey::sign(const byte in[], u32bit len) const
 /*************************************************
 * Check Private Rabin-Williams Parameters        *
 *************************************************/
-bool RW_PrivateKey::check_key(bool strong) const
+bool RW_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    {
-   if(!IF_Scheme_PrivateKey::check_key(strong))
+   if(!IF_Scheme_PrivateKey::check_key(rng, strong))
       return false;
 
    if(!strong)

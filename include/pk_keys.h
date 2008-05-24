@@ -20,7 +20,9 @@ class BOTAN_DLL Public_Key
       virtual std::string algo_name() const = 0;
       virtual OID get_oid() const;
 
-      virtual bool check_key(bool) const { return true; }
+      virtual bool check_key(RandomNumberGenerator&, bool) const
+         { return true; }
+
       virtual u32bit message_parts() const { return 1; }
       virtual u32bit message_part_size() const { return 0; }
       virtual u32bit max_input_bits() const = 0;

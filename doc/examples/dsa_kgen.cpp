@@ -21,6 +21,7 @@ This file is in the public domain
 #include <string>
 #include <botan/botan.h>
 #include <botan/dsa.h>
+#include <botan/libstate.h>
 using namespace Botan;
 
 int main(int argc, char* argv[])
@@ -39,8 +40,10 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   try {
-      DSA_PrivateKey key(DL_Group("dsa/jce/1024"));
+   try
+      {
+      DSA_PrivateKey key(DL_Group("dsa/jce/1024"),
+                      global_state().prng_reference());
 
       pub << X509::PEM_encode(key);
       if(argc == 1)

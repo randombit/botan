@@ -5,6 +5,7 @@
 #include <botan/botan.h>
 #include <botan/reducer.h>
 #include <botan/numthry.h>
+#include <botan/libstate.h>
 using namespace Botan;
 
 #include <algorithm>
@@ -17,7 +18,7 @@ using namespace Botan;
 
 BigInt rho(const BigInt& n)
    {
-   BigInt x = random_integer(0, n-1);
+   BigInt x = random_integer(global_state().prng_reference(), 0, n-1);
    BigInt y = x;
    BigInt d = 0;
 
@@ -90,7 +91,7 @@ std::vector<BigInt> factorize(const BigInt& n_in)
 
    while(n != 1)
       {
-      if(is_prime(n))
+      if(is_prime(n, global_state().prng_reference()))
          {
          factors.push_back(n);
          break;

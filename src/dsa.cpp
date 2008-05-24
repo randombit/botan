@@ -112,9 +112,9 @@ SecureVector<byte> DSA_PrivateKey::sign(const byte in[], u32bit length) const
 /*************************************************
 * Check Private DSA Parameters                   *
 *************************************************/
-bool DSA_PrivateKey::check_key(bool strong) const
+bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    {
-   if(!DL_Scheme_PrivateKey::check_key(strong) || x >= group_q())
+   if(!DL_Scheme_PrivateKey::check_key(rng, strong) || x >= group_q())
       return false;
 
    if(!strong)

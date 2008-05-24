@@ -14,6 +14,7 @@ This file is in the public domain
 #include <string>
 #include <botan/botan.h>
 #include <botan/rsa.h>
+#include <botan/libstate.h>
 using namespace Botan;
 
 int main(int argc, char* argv[])
@@ -26,7 +27,7 @@ int main(int argc, char* argv[])
       }
 
    u32bit bits = std::atoi(argv[1]);
-   if(bits < 512 || bits > 4096)
+   if(bits < 1024 || bits > 4096)
       {
       std::cout << "Invalid argument for bitsize" << std::endl;
       return 1;
@@ -42,7 +43,7 @@ int main(int argc, char* argv[])
 
    try
       {
-      RSA_PrivateKey key(bits);
+      RSA_PrivateKey key(bits, global_state().prng_reference());
       pub << X509::PEM_encode(key);
 
       if(argc == 2)
