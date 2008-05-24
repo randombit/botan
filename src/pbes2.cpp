@@ -8,7 +8,6 @@
 #include <botan/ber_dec.h>
 #include <botan/parsing.h>
 #include <botan/lookup.h>
-#include <botan/libstate.h>
 #include <botan/asn1_obj.h>
 #include <botan/oids.h>
 #include <algorithm>
@@ -81,14 +80,16 @@ void PBE_PKCS5v20::set_key(const std::string& passphrase)
 /*************************************************
 * Create a new set of PBES2 parameters           *
 *************************************************/
-void PBE_PKCS5v20::new_params()
+void PBE_PKCS5v20::new_params(RandomNumberGenerator& rng)
    {
    iterations = 2048;
    key_length = max_keylength_of(cipher_algo);
+
    salt.create(8);
+   rng.randomize(salt, salt.size());
+
    iv.create(block_size_of(cipher_algo));
-   global_state().randomize(salt, salt.size());
-   global_state().randomize(iv, iv.size());
+   rng.randomize(iv, iv.size());
    }
 
 /*************************************************

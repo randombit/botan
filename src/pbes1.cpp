@@ -8,7 +8,6 @@
 #include <botan/ber_dec.h>
 #include <botan/parsing.h>
 #include <botan/lookup.h>
-#include <botan/libstate.h>
 #include <algorithm>
 #include <memory>
 
@@ -82,11 +81,11 @@ void PBE_PKCS5v15::set_key(const std::string& passphrase)
 /*************************************************
 * Create a new set of PBES1 parameters           *
 *************************************************/
-void PBE_PKCS5v15::new_params()
+void PBE_PKCS5v15::new_params(RandomNumberGenerator& rng)
    {
    iterations = 2048;
    salt.create(8);
-   global_state().randomize(salt, salt.size());
+   rng.randomize(salt, salt.size());
    }
 
 /*************************************************

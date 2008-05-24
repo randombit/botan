@@ -19,9 +19,11 @@ class BOTAN_DLL PBE : public Filter
    {
    public:
       virtual void set_key(const std::string&) = 0;
-      virtual void new_params() = 0;
+      virtual void new_params(RandomNumberGenerator& rng) = 0;
+
       virtual MemoryVector<byte> encode_params() const = 0;
       virtual void decode_params(DataSource&) = 0;
+
       virtual OID get_oid() const = 0;
    };
 

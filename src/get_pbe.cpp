@@ -7,6 +7,7 @@
 #include <botan/lookup.h>
 #include <botan/pbe_pkcs.h>
 #include <botan/parsing.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -35,7 +36,7 @@ PBE* get_pbe(const std::string& pbe_name)
    if(!pbe_obj)
       throw Algorithm_Not_Found(pbe_name);
 
-   pbe_obj->new_params();
+   pbe_obj->new_params(global_state().prng_reference());
 
    return pbe_obj;
    }
