@@ -126,8 +126,10 @@ bool RW_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    if((e * d) % (lcm(p - 1, q - 1) / 2) != 1)
       return false;
 
-   try {
-      KeyPair::check_key(get_pk_signer(*this, "EMSA2(SHA-1)"),
+   try
+      {
+      KeyPair::check_key(rng,
+                         get_pk_signer(*this, "EMSA2(SHA-1)"),
                          get_pk_verifier(*this, "EMSA2(SHA-1)")
          );
       }

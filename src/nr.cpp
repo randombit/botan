@@ -119,8 +119,10 @@ bool NR_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    if(!strong)
       return true;
 
-   try {
-      KeyPair::check_key(get_pk_signer(*this, "EMSA1(SHA-1)"),
+   try
+      {
+      KeyPair::check_key(rng,
+                         get_pk_signer(*this, "EMSA1(SHA-1)"),
                          get_pk_verifier(*this, "EMSA1(SHA-1)")
          );
       }

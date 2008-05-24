@@ -5,7 +5,6 @@
 
 #include <botan/keypair.h>
 #include <botan/look_pk.h>
-#include <botan/libstate.h>
 #include <memory>
 
 namespace Botan {
@@ -15,7 +14,8 @@ namespace KeyPair {
 /*************************************************
 * Check an encryption key pair for consistency   *
 *************************************************/
-void check_key(PK_Encryptor* encryptor, PK_Decryptor* decryptor)
+void check_key(RandomNumberGenerator& rng,
+               PK_Encryptor* encryptor, PK_Decryptor* decryptor)
    {
    if(encryptor->maximum_input_size() == 0)
       return;
@@ -24,7 +24,7 @@ void check_key(PK_Encryptor* encryptor, PK_Decryptor* decryptor)
    std::auto_ptr<PK_Decryptor> dec(decryptor);
 
    SecureVector<byte> message(enc->maximum_input_size() - 1);
-   global_state().randomize(message, message.size());
+   rng.randomize(message, message.size());
 
    SecureVector<byte> ciphertext = enc->encrypt(message);
    if(ciphertext == message)
@@ -38,13 +38,14 @@ void check_key(PK_Encryptor* encryptor, PK_Decryptor* decryptor)
 /*************************************************
 * Check a signature key pair for consistency     *
 *************************************************/
-void check_key(PK_Signer* signer, PK_Verifier* verifier)
+void check_key(RandomNumberGenerator& rng,
+               PK_Signer* signer, PK_Verifier* verifier)
    {
    std::auto_ptr<PK_Signer> sig(signer);
    std::auto_ptr<PK_Verifier> ver(verifier);
 
    SecureVector<byte> message(16);
-   global_state().randomize(message, message.size());
+   rng.randomize(message, message.size());
 
    SecureVector<byte> signature;
 

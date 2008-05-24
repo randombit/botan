@@ -112,8 +112,10 @@ bool ElGamal_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) cons
    if(!strong)
       return true;
 
-   try {
-      KeyPair::check_key(get_pk_encryptor(*this, "EME1(SHA-1)"),
+   try
+      {
+      KeyPair::check_key(rng,
+                         get_pk_encryptor(*this, "EME1(SHA-1)"),
                          get_pk_decryptor(*this, "EME1(SHA-1)")
          );
       }
