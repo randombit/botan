@@ -26,7 +26,7 @@ NR_PublicKey::NR_PublicKey(const DL_Group& grp, const BigInt& y1)
 void NR_PublicKey::X509_load_hook()
    {
    core = NR_Core(group, y);
-   load_check();
+   load_check(global_state().prng_reference());
    }
 
 /*************************************************
@@ -88,9 +88,9 @@ void NR_PrivateKey::PKCS8_load_hook(bool generated)
    core = NR_Core(group, y, x);
 
    if(generated)
-      gen_check();
+      gen_check(global_state().prng_reference());
    else
-      load_check();
+      load_check(global_state().prng_reference());
    }
 
 /*************************************************

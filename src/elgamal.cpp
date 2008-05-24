@@ -27,7 +27,7 @@ ElGamal_PublicKey::ElGamal_PublicKey(const DL_Group& grp, const BigInt& y1)
 void ElGamal_PublicKey::X509_load_hook()
    {
    core = ELG_Core(group, y);
-   load_check();
+   load_check(global_state().prng_reference());
    }
 
 /*************************************************
@@ -87,9 +87,9 @@ void ElGamal_PrivateKey::PKCS8_load_hook(bool generated)
    core = ELG_Core(group, y, x);
 
    if(generated)
-      gen_check();
+      gen_check(global_state().prng_reference());
    else
-      load_check();
+      load_check(global_state().prng_reference());
    }
 
 /*************************************************

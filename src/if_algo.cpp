@@ -7,6 +7,7 @@
 #include <botan/numthry.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -158,7 +159,7 @@ PKCS8_Decoder* IF_Scheme_PrivateKey::pkcs8_decoder()
 void IF_Scheme_PublicKey::X509_load_hook()
    {
    core = IF_Core(e, n);
-   load_check();
+   load_check(global_state().prng_reference());
    }
 
 /*************************************************
@@ -174,9 +175,9 @@ void IF_Scheme_PrivateKey::PKCS8_load_hook(bool generated)
    core = IF_Core(e, n, d, p, q, d1, d2, c);
 
    if(generated)
-      gen_check();
+      gen_check(global_state().prng_reference());
    else
-      load_check();
+      load_check(global_state().prng_reference());
    }
 
 /*************************************************

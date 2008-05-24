@@ -32,7 +32,7 @@ class BOTAN_DLL Public_Key
 
       virtual ~Public_Key() {}
    protected:
-      virtual void load_check() const;
+      virtual void load_check(RandomNumberGenerator&) const;
    };
 
 /*************************************************
@@ -44,8 +44,8 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
       virtual class PKCS8_Encoder* pkcs8_encoder() const { return 0; }
       virtual class PKCS8_Decoder* pkcs8_decoder() { return 0; }
    protected:
-      void load_check() const;
-      void gen_check() const;
+      void load_check(RandomNumberGenerator&) const;
+      void gen_check(RandomNumberGenerator&) const;
    };
 
 /*************************************************

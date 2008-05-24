@@ -26,7 +26,7 @@ DSA_PublicKey::DSA_PublicKey(const DL_Group& grp, const BigInt& y1)
 void DSA_PublicKey::X509_load_hook()
    {
    core = DSA_Core(group, y);
-   load_check();
+   load_check(global_state().prng_reference());
    }
 
 /*************************************************
@@ -89,9 +89,9 @@ void DSA_PrivateKey::PKCS8_load_hook(bool generated)
    core = DSA_Core(group, y, x);
 
    if(generated)
-      gen_check();
+      gen_check(global_state().prng_reference());
    else
-      load_check();
+      load_check(global_state().prng_reference());
    }
 
 /*************************************************

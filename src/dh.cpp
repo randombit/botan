@@ -5,6 +5,7 @@
 
 #include <botan/dh.h>
 #include <botan/numthry.h>
+#include <botan/libstate.h>
 #include <botan/util.h>
 
 namespace Botan {
@@ -24,7 +25,7 @@ DH_PublicKey::DH_PublicKey(const DL_Group& grp, const BigInt& y1)
 *************************************************/
 void DH_PublicKey::X509_load_hook()
    {
-   load_check();
+   load_check(global_state().prng_reference());
    }
 
 /*************************************************
@@ -80,9 +81,9 @@ void DH_PrivateKey::PKCS8_load_hook(bool generated)
    core = DH_Core(group, x);
 
    if(generated)
-      gen_check();
+      gen_check(global_state().prng_reference());
    else
-      load_check();
+      load_check(global_state().prng_reference());
    }
 
 /*************************************************

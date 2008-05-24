@@ -6,7 +6,6 @@
 #include <botan/pk_keys.h>
 #include <botan/config.h>
 #include <botan/oids.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -42,30 +41,27 @@ OID Public_Key::get_oid() const
 /*************************************************
 * Run checks on a loaded public key              *
 *************************************************/
-void Public_Key::load_check() const
+void Public_Key::load_check(RandomNumberGenerator& rng) const
    {
-   if(!check_key(global_state().prng_reference(),
-                 key_check_level("public")))
+   if(!check_key(rng, key_check_level("public")))
       throw Invalid_Argument(algo_name() + ": Invalid public key");
    }
 
 /*************************************************
 * Run checks on a loaded private key             *
 *************************************************/
-void Private_Key::load_check() const
+void Private_Key::load_check(RandomNumberGenerator& rng) const
    {
-   if(!check_key(global_state().prng_reference(),
-                 key_check_level("private")))
+   if(!check_key(rng, key_check_level("private")))
       throw Invalid_Argument(algo_name() + ": Invalid private key");
    }
 
 /*************************************************
 * Run checks on a generated private key          *
 *************************************************/
-void Private_Key::gen_check() const
+void Private_Key::gen_check(RandomNumberGenerator& rng) const
    {
-   if(!check_key(global_state().prng_reference(),
-                 key_check_level("private_gen")))
+   if(!check_key(rng, key_check_level("private_gen")))
       throw Self_Test_Failure(algo_name() + " private key generation failed");
    }
 
