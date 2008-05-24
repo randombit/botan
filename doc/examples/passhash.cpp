@@ -1,5 +1,6 @@
 #include <botan/botan.h>
 #include <botan/pkcs5.h>
+#include <botan/libstate.h>
 #include <iostream>
 
 using namespace Botan;
@@ -43,7 +44,7 @@ std::string password_hash(const std::string& pass)
    PKCS5_PBKDF2 kdf("SHA-1");
 
    kdf.set_iterations(10000);
-   kdf.new_random_salt(6); // 48 bits
+   kdf.new_random_salt(global_state().prng_reference(), 6); // 48 bits
 
    Pipe pipe(new Base64_Encoder);
    pipe.start_msg();
