@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/s2k.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -44,10 +43,11 @@ void S2K::change_salt(const MemoryRegion<byte>& new_salt)
 /*************************************************
 * Create a new random salt                       *
 *************************************************/
-void S2K::new_random_salt(u32bit length)
+void S2K::new_random_salt(RandomNumberGenerator& rng,
+                          u32bit length)
    {
    salt.create(length);
-   global_state().randomize(salt, length);
+   rng.randomize(salt, length);
    }
 
 }

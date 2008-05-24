@@ -25,7 +25,7 @@ class BOTAN_DLL S2K
       void set_iterations(u32bit);
       void change_salt(const byte[], u32bit);
       void change_salt(const MemoryRegion<byte>&);
-      void new_random_salt(u32bit);
+      void new_random_salt(RandomNumberGenerator& rng, u32bit);
 
       u32bit iterations() const { return iter; }
       SecureVector<byte> current_salt() const { return salt; }
