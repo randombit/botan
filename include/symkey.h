@@ -29,12 +29,11 @@ class BOTAN_DLL OctetString
 
       void set_odd_parity();
 
-      void change(u32bit);
       void change(const std::string&);
       void change(const byte[], u32bit);
       void change(const MemoryRegion<byte>& in) { bits = in; }
 
-      OctetString(u32bit len) { change(len); }
+      OctetString(u32bit len);
       OctetString(const std::string& str = "") { change(str); }
       OctetString(const byte in[], u32bit len) { change(in, len); }
       OctetString(const MemoryRegion<byte>& in) { change(in); }

@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * Create an OctetString from RNG output          *
 *************************************************/
-void OctetString::change(u32bit length)
+OctetString::OctetString(u32bit length)
    {
    bits.create(length);
    global_state().randomize(bits, length);
