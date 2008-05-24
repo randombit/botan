@@ -7,7 +7,6 @@
 #include <botan/numthry.h>
 #include <botan/lookup.h>
 #include <botan/parsing.h>
-#include <botan/libstate.h>
 #include <algorithm>
 #include <memory>
 
@@ -34,7 +33,8 @@ bool fips186_3_valid_size(u32bit pbits, u32bit qbits)
 /*************************************************
 * Attempt DSA prime generation with given seed   *
 *************************************************/
-bool DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
+bool DL_Group::generate_dsa_primes(RandomNumberGenerator& rng,
+                                   BigInt& p, BigInt& q,
                                    u32bit pbits, u32bit qbits,
                                    const MemoryRegion<byte>& seed_c)
    {
@@ -80,7 +80,7 @@ bool DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
    q.set_bit(qbits-1);
    q.set_bit(0);
 
-   if(!is_prime(q, global_state().prng_reference()))
+   if(!is_prime(q, rng))
       return false;
 
    const u32bit n = (pbits-1) / (HASH_SIZE * 8),
@@ -104,8 +104,7 @@ bool DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
 
       p = X - (X % (2*q) - 1);
 
-      if(p.bits() == pbits &&
-         is_prime(p, global_state().prng_reference()))
+      if(p.bits() == pbits && is_prime(p, rng))
          return true;
       }
    return false;
@@ -124,7 +123,7 @@ SecureVector<byte> DL_Group::generate_dsa_primes(RandomNumberGenerator& rng,
       {
       rng.randomize(seed, seed.size());
 
-      if(generate_dsa_primes(p, q, pbits, qbits, seed))
+      if(generate_dsa_primes(rng, p, q, pbits, qbits, seed))
          return seed;
       }
    }

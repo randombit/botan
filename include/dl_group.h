@@ -33,8 +33,11 @@ class BOTAN_DLL DL_Group
 
       DL_Group();
       DL_Group(const std::string&);
+
       DL_Group(RandomNumberGenerator& rng, PrimeType, u32bit, u32bit = 0);
-      DL_Group(const MemoryRegion<byte>&, u32bit = 1024, u32bit = 0);
+      DL_Group(RandomNumberGenerator& rng, const MemoryRegion<byte>&,
+               u32bit = 1024, u32bit = 0);
+
       DL_Group(const BigInt&, const BigInt&);
       DL_Group(const BigInt&, const BigInt&, const BigInt&);
    private:
@@ -45,7 +48,8 @@ class BOTAN_DLL DL_Group
                              BigInt& p, BigInt& q,
                              u32bit pbits, u32bit qbits);
 
-      static bool generate_dsa_primes(BigInt&, BigInt&, u32bit, u32bit,
+      static bool generate_dsa_primes(RandomNumberGenerator&,
+                                      BigInt&, BigInt&, u32bit, u32bit,
                                       const MemoryRegion<byte>&);
 
       void init_check() const;

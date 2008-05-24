@@ -84,9 +84,10 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
 /*************************************************
 * DL_Group Constructor                           *
 *************************************************/
-DL_Group::DL_Group(const MemoryRegion<byte>& seed, u32bit pbits, u32bit qbits)
+DL_Group::DL_Group(RandomNumberGenerator& rng,
+                   const MemoryRegion<byte>& seed, u32bit pbits, u32bit qbits)
    {
-   if(!generate_dsa_primes(p, q, pbits, qbits, seed))
+   if(!generate_dsa_primes(rng, p, q, pbits, qbits, seed))
       throw Invalid_Argument("DL_Group: The seed/counter given does not "
                              "generate a DSA group");
 
