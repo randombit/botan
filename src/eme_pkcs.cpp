@@ -12,7 +12,8 @@ namespace Botan {
 * PKCS1 Pad Operation                            *
 *************************************************/
 SecureVector<byte> EME_PKCS1v15::pad(const byte in[], u32bit inlen,
-                                     u32bit olen) const
+                                     u32bit olen,
+                                     RandomNumberGenerator&) const
    {
    olen /= 8;
 

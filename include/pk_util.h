@@ -17,14 +17,20 @@ class BOTAN_DLL EME
    {
    public:
       virtual u32bit maximum_input_size(u32bit) const = 0;
-      SecureVector<byte> encode(const byte[], u32bit, u32bit) const;
-      SecureVector<byte> encode(const MemoryRegion<byte>&, u32bit) const;
+
+      SecureVector<byte> encode(const byte[], u32bit, u32bit,
+                                RandomNumberGenerator&) const;
+      SecureVector<byte> encode(const MemoryRegion<byte>&, u32bit,
+                                RandomNumberGenerator&) const;
+
       SecureVector<byte> decode(const byte[], u32bit, u32bit) const;
       SecureVector<byte> decode(const MemoryRegion<byte>&, u32bit) const;
 
       virtual ~EME() {}
    private:
-      virtual SecureVector<byte> pad(const byte[], u32bit, u32bit) const = 0;
+      virtual SecureVector<byte> pad(const byte[], u32bit, u32bit,
+                                     RandomNumberGenerator&) const = 0;
+
       virtual SecureVector<byte> unpad(const byte[], u32bit, u32bit) const = 0;
    };
 

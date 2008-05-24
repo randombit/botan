@@ -11,18 +11,20 @@ namespace Botan {
 * Encode a message                               *
 *************************************************/
 SecureVector<byte> EME::encode(const byte msg[], u32bit msg_len,
-                               u32bit key_bits) const
+                               u32bit key_bits,
+                               RandomNumberGenerator& rng) const
    {
-   return pad(msg, msg_len, key_bits);
+   return pad(msg, msg_len, key_bits, rng);
    }
 
 /*************************************************
 * Encode a message                               *
 *************************************************/
 SecureVector<byte> EME::encode(const MemoryRegion<byte>& msg,
-                               u32bit key_bits) const
+                               u32bit key_bits,
+                               RandomNumberGenerator& rng) const
    {
-   return pad(msg, msg.size(), key_bits);
+   return pad(msg, msg.size(), key_bits, rng);
    }
 
 /*************************************************

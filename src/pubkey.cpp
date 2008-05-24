@@ -10,6 +10,7 @@
 #include <botan/bigint.h>
 #include <botan/parsing.h>
 #include <botan/bit_ops.h>
+#include <botan/libstate.h>
 #include <memory>
 
 namespace Botan {
@@ -62,8 +63,12 @@ SecureVector<byte> PK_Encryptor_MR_with_EME::enc(const byte msg[],
                                                  u32bit length) const
    {
    SecureVector<byte> message;
-   if(encoder) message = encoder->encode(msg, length, key.max_input_bits());
-   else        message.set(msg, length);
+   if(encoder)
+      message = encoder->encode(msg, length,
+                                key.max_input_bits(),
+                                global_state().prng_reference());
+   else
+      message.set(msg, length);
 
    if(8*(message.size() - 1) + high_bit(message[0]) > key.max_input_bits())
       throw Exception("PK_Encryptor_MR_with_EME: Input is too large");

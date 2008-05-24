@@ -4,9 +4,7 @@
 *************************************************/
 
 #include <botan/eme.h>
-#include <botan/libstate.h>
 #include <botan/lookup.h>
-#include <botan/look_pk.h>
 #include <memory>
 
 namespace Botan {
@@ -15,7 +13,8 @@ namespace Botan {
 * EME1 Pad Operation                             *
 *************************************************/
 SecureVector<byte> EME1::pad(const byte in[], u32bit in_length,
-                             u32bit key_length) const
+                             u32bit key_length,
+                             RandomNumberGenerator& rng) const
    {
    key_length /= 8;
 
@@ -26,7 +25,7 @@ SecureVector<byte> EME1::pad(const byte in[], u32bit in_length,
 
    out.clear();
 
-   global_state().randomize(out, HASH_LENGTH);
+   rng.randomize(out, HASH_LENGTH);
 
    out.copy(HASH_LENGTH, Phash, Phash.size());
    out[out.size() - in_length - 1] = 0x01;
