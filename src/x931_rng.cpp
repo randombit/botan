@@ -108,17 +108,16 @@ std::string ANSI_X931_RNG::name() const
 ANSI_X931_RNG::ANSI_X931_RNG(const std::string& cipher_name,
                              RandomNumberGenerator* prng_ptr)
    {
-   if(cipher_name == "")
-      cipher = get_block_cipher("AES-256");
-   else
-      cipher = get_block_cipher(cipher_name);
+   if(!prng_ptr)
+      throw Invalid_Argument("ANSI_X931_RNG constructor: NULL prng");
+
+   prng = prng_ptr;
+   cipher = get_block_cipher(cipher_name);
 
    const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
 
    V.create(BLOCK_SIZE);
    R.create(BLOCK_SIZE);
-
-   prng = (prng_ptr ? prng_ptr : new Randpool);
 
    position = 0;
    }
