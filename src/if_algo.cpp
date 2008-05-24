@@ -158,7 +158,7 @@ PKCS8_Decoder* IF_Scheme_PrivateKey::pkcs8_decoder()
 *************************************************/
 void IF_Scheme_PublicKey::X509_load_hook()
    {
-   core = IF_Core(e, n);
+   core = IF_Core(global_state().prng_reference(), e, n);
    load_check(global_state().prng_reference());
    }
 
@@ -172,7 +172,8 @@ void IF_Scheme_PrivateKey::PKCS8_load_hook(bool generated)
    if(d2 == 0) d2 = d % (q - 1);
    if(c == 0)  c = inverse_mod(q, p);
 
-   core = IF_Core(e, n, d, p, q, d1, d2, c);
+   core = IF_Core(global_state().prng_reference(),
+                  e, n, d, p, q, d1, d2, c);
 
    if(generated)
       gen_check(global_state().prng_reference());
