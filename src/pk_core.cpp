@@ -31,7 +31,8 @@ IF_Core::IF_Core(RandomNumberGenerator& rng,
 
    if(d != 0)
       {
-      BigInt k = random_integer(rng, std::min(n.bits()-1, BLINDING_BITS));
+      BigInt k(rng, std::min(n.bits()-1, BLINDING_BITS));
+
       if(k != 0)
          blinder = Blinder(power_mod(k, e, n), inverse_mod(k, n), n);
       }
@@ -182,8 +183,9 @@ ELG_Core::ELG_Core(const DL_Group& group, const BigInt& y, const BigInt& x)
       const BigInt& p = group.get_p();
       p_bytes = p.bytes();
 
-      BigInt k = random_integer(global_state().prng_reference(),
-                                std::min(p.bits()-1, BLINDING_BITS));
+      BigInt k(global_state().prng_reference(),
+               std::min(p.bits()-1, BLINDING_BITS));
+
       if(k != 0)
          blinder = Blinder(k, power_mod(k, x, p), p);
       }
@@ -245,8 +247,10 @@ DH_Core::DH_Core(const DL_Group& group, const BigInt& x)
    op = Engine_Core::dh_op(group, x);
 
    const BigInt& p = group.get_p();
-   BigInt k = random_integer(global_state().prng_reference(),
-                             std::min(p.bits()-1, BLINDING_BITS));
+
+   BigInt k(global_state().prng_reference(),
+            std::min(p.bits()-1, BLINDING_BITS));
+
    if(k != 0)
       blinder = Blinder(k, power_mod(inverse_mod(k, p), x, p), p);
    }

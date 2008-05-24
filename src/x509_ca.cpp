@@ -91,8 +91,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
    const u32bit X509_CERT_VERSION = 3;
    const u32bit SERIAL_BITS = 128;
 
-   BigInt serial_no = random_integer(global_state().prng_reference(),
-                                     SERIAL_BITS);
+   BigInt serial_no(global_state().prng_reference(), SERIAL_BITS);
 
    DataSource_Memory source(X509_Object::make_signed(signer, sig_algo,
          DER_Encoder().start_cons(SEQUENCE)

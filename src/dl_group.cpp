@@ -65,7 +65,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
          BigInt X;
          while(p.bits() != pbits || !is_prime(p, rng))
             {
-            X = random_integer(rng, pbits);
+            X.randomize(rng, pbits);
             p = X - (X % (2*q) - 1);
             }
          }

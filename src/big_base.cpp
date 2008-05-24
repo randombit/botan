@@ -90,6 +90,15 @@ BigInt::BigInt(const byte input[], u32bit length, Base base)
    }
 
 /*************************************************
+* Construct a BigInt from an encoded BigInt      *
+*************************************************/
+BigInt::BigInt(RandomNumberGenerator& rng, u32bit bits)
+   {
+   set_sign(Positive);
+   randomize(rng, bits);
+   }
+
+/*************************************************
 * Swap this BigInt with another                  *
 *************************************************/
 void BigInt::swap(BigInt& other)

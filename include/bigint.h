@@ -102,6 +102,7 @@ class BOTAN_DLL BigInt
       BigInt(const BigInt&);
       BigInt(const std::string&);
       BigInt(const byte[], u32bit, Base = Binary);
+      BigInt(RandomNumberGenerator& rng, u32bit bits);
       BigInt(Sign, u32bit);
       BigInt(NumberType, u32bit);
    private:

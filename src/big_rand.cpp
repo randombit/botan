@@ -44,17 +44,6 @@ void BigInt::randomize(RandomNumberGenerator& rng,
    }
 
 /*************************************************
-* Generate a random integer                      *
-*************************************************/
-BigInt random_integer(RandomNumberGenerator& rng,
-                      u32bit bits)
-   {
-   BigInt x;
-   x.randomize(rng, bits);
-   return x;
-   }
-
-/*************************************************
 * Generate a random integer within given range   *
 *************************************************/
 BigInt random_integer(RandomNumberGenerator& rng,
@@ -65,7 +54,7 @@ BigInt random_integer(RandomNumberGenerator& rng,
    if(range <= 0)
       throw Invalid_Argument("random_integer: invalid min/max values");
 
-   return (min + (random_integer(rng, range.bits() + 2) % range));
+   return (min + (BigInt(rng, range.bits() + 2) % range));
    }
 
 /*************************************************

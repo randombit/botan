@@ -268,7 +268,7 @@ bool passes_mr_tests(RandomNumberGenerator& rng,
    BigInt nonce;
    for(u32bit j = 0; j != tests; ++j)
       {
-      if(verify) nonce = random_integer(rng, NONCE_BITS);
+      if(verify) nonce.randomize(rng, NONCE_BITS);
       else       nonce = PRIMES[j];
 
       if(!mr.passes_test(nonce))

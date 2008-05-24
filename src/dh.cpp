@@ -53,7 +53,7 @@ DH_PrivateKey::DH_PrivateKey(const DL_Group& grp,
    group = grp;
 
    const BigInt& p = group_p();
-   x = random_integer(rng, 2 * dl_work_factor(p.bits()));
+   x.randomize(rng, 2 * dl_work_factor(p.bits()));
 
    PKCS8_load_hook(true);
    }

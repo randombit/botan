@@ -29,7 +29,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
 
    while(true)
       {
-      BigInt p = random_integer(rng, bits);
+      BigInt p(rng, bits);
       p.set_bit(bits - 2);
       p.set_bit(0);
 

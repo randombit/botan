@@ -58,7 +58,6 @@ bool BOTAN_DLL run_primality_tests(RandomNumberGenerator&,
 /*************************************************
 * Random Number Generation                       *
 *************************************************/
-BigInt BOTAN_DLL random_integer(RandomNumberGenerator&, u32bit);
 BigInt BOTAN_DLL random_integer(RandomNumberGenerator&,
                                 const BigInt&, const BigInt&);
 
