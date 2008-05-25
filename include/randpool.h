@@ -21,7 +21,7 @@ class BOTAN_DLL Randpool : public RandomNumberGenerator
       void clear() throw();
       std::string name() const;
 
-      Randpool();
+      Randpool(const std::string&, const std::string&);
       ~Randpool();
    private:
       void add_randomness(const byte[], u32bit);

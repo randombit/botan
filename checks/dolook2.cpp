@@ -113,9 +113,10 @@ void RNG_Filter::write(const byte[], u32bit length)
 Filter* lookup_rng(const std::string& algname)
    {
    if(algname == "X9.31-RNG")
-      return new RNG_Filter(new ANSI_X931_RNG("AES-256", new Randpool));
+      return new RNG_Filter(new ANSI_X931_RNG("AES-256",
+                                              new Randpool("AES-256", "HMAC(SHA-256)")));
    if(algname == "Randpool")
-      return new RNG_Filter(new Randpool);
+      return new RNG_Filter(new Randpool("AES-256", "HMAC(SHA-256)"));
    return 0;
    }
 

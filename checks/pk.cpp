@@ -195,7 +195,9 @@ u32bit do_pk_validation_tests(const std::string& filename)
 
    std::cout << std::endl;
 
-   global_state().set_prng(new ANSI_X931_RNG("AES-128", new Randpool));
+   global_state().set_prng(new ANSI_X931_RNG("AES-128",
+                                             new Randpool("AES-256",
+                                                          "HMAC(SHA-256)")));
    for(u32bit j = 0; j != 2; j++)
       global_state().seed_prng(true, 384);
 
@@ -250,7 +252,10 @@ void validate_encryption(PK_Encryptor* e, PK_Decryptor* d,
       failure = true;
       }
 
-   global_state().set_prng(new ANSI_X931_RNG("AES-128", new Randpool));
+   global_state().set_prng(new ANSI_X931_RNG("AES-128",
+                                             new Randpool("AES-256",
+                                                          "HMAC(SHA-256)")));
+
    for(u32bit j = 0; j != 2; j++)
       global_state().seed_prng(true, 384);
 
@@ -291,7 +296,9 @@ void validate_signature(PK_Verifier* v, PK_Signer* s, const std::string& algo,
       failure = true;
       }
 
-   global_state().set_prng(new ANSI_X931_RNG("AES-128", new Randpool));
+   global_state().set_prng(new ANSI_X931_RNG("AES-128",
+                                             new Randpool("AES-256",
+                                                          "HMAC(SHA-256)")));
    for(u32bit j = 0; j != 2; j++)
       global_state().seed_prng(true, 384);
 

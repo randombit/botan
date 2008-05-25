@@ -273,7 +273,8 @@ void Library_State::initialize(const InitializerOptions& args,
    for(u32bit j = 0; j != sources.size(); ++j)
       add_entropy_source(sources[j]);
 
-   set_prng(new ANSI_X931_RNG("AES-256", new Randpool));
+   set_prng(new ANSI_X931_RNG("AES-256",
+                              new Randpool("AES-256", "HMAC(SHA-256)")));
 
    if(args.seed_rng())
       {

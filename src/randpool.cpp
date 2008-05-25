@@ -147,13 +147,12 @@ std::string Randpool::name() const
 /*************************************************
 * Randpool Constructor                           *
 *************************************************/
-Randpool::Randpool() : ITERATIONS_BEFORE_RESEED(8), POOL_BLOCKS(32)
+Randpool::Randpool(const std::string& cipher_name,
+                   const std::string& mac_name) :
+   ITERATIONS_BEFORE_RESEED(8), POOL_BLOCKS(32)
    {
-   const std::string CIPHER_NAME = "AES-256";
-   const std::string MAC_NAME = "HMAC(SHA-256)";
-
-   cipher = get_block_cipher(CIPHER_NAME);
-   mac = get_mac(MAC_NAME);
+   cipher = get_block_cipher(cipher_name);
+   mac = get_mac(mac_name);
 
    const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
    const u32bit OUTPUT_LENGTH = mac->OUTPUT_LENGTH;
@@ -165,7 +164,7 @@ Randpool::Randpool() : ITERATIONS_BEFORE_RESEED(8), POOL_BLOCKS(32)
       delete cipher;
       delete mac;
       throw Internal_Error("Randpool: Invalid algorithm combination " +
-                           CIPHER_NAME + "/" + MAC_NAME);
+                           cipher_name + "/" + mac_name);
       }
 
    buffer.create(BLOCK_SIZE);
