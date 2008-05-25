@@ -15,15 +15,14 @@ namespace Botan {
 * ElGamal Public Key                             *
 *************************************************/
 class BOTAN_DLL ElGamal_PublicKey : public PK_Encrypting_Key,
-                          public virtual DL_Scheme_PublicKey
+                                    public virtual DL_Scheme_PublicKey
    {
    public:
       std::string algo_name() const { return "ElGamal"; }
+      DL_Group::Format group_format() const { return DL_Group::ANSI_X9_42; }
 
       SecureVector<byte> encrypt(const byte[], u32bit) const;
       u32bit max_input_bits() const;
-
-      DL_Group::Format group_format() const { return DL_Group::ANSI_X9_42; }
 
       ElGamal_PublicKey() {}
       ElGamal_PublicKey(const DL_Group&, const BigInt&);
@@ -37,8 +36,8 @@ class BOTAN_DLL ElGamal_PublicKey : public PK_Encrypting_Key,
 * ElGamal Private Key                            *
 *************************************************/
 class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
-                           public PK_Decrypting_Key,
-                           public virtual DL_Scheme_PrivateKey
+                                     public PK_Decrypting_Key,
+                                     public virtual DL_Scheme_PrivateKey
    {
    public:
       SecureVector<byte> decrypt(const byte[], u32bit) const;

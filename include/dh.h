@@ -34,8 +34,8 @@ class BOTAN_DLL DH_PublicKey : public virtual DL_Scheme_PublicKey
 * Diffie-Hellman Private Key                     *
 *************************************************/
 class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
-                      public PK_Key_Agreement_Key,
-                      public virtual DL_Scheme_PrivateKey
+                                public PK_Key_Agreement_Key,
+                                public virtual DL_Scheme_PrivateKey
    {
    public:
       SecureVector<byte> derive_key(const byte[], u32bit) const;
