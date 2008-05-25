@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/eme.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -13,7 +12,7 @@ namespace Botan {
 *************************************************/
 SecureVector<byte> EME_PKCS1v15::pad(const byte in[], u32bit inlen,
                                      u32bit olen,
-                                     RandomNumberGenerator&) const
+                                     RandomNumberGenerator& rng) const
    {
    olen /= 8;
 
@@ -27,7 +26,7 @@ SecureVector<byte> EME_PKCS1v15::pad(const byte in[], u32bit inlen,
    out[0] = 0x02;
    for(u32bit j = 1; j != olen - inlen - 1; ++j)
       while(out[j] == 0)
-         out[j] = global_state().random();
+         out[j] = rng.random();
    out.copy(olen - inlen, in, inlen);
 
    return out;
