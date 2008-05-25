@@ -7,7 +7,7 @@
 #define BOTAN_UTIL_H__
 
 #include <botan/types.h>
-
+#include <boost/type_traits.hpp>
 namespace Botan {
 
 /*************************************************
@@ -35,6 +35,19 @@ u64bit combine_timers(u32bit, u32bit, u32bit);
 u32bit entropy_estimate(const byte[], u32bit);
 u32bit dl_work_factor(u32bit);
 
+
+/************************************************
+* Pointer conversion                            *
+************************************************/
+
+template< typename T, typename S > T* pointer_cast( S* const& p )
+{
+return static_cast< typename ::boost::remove_cv< T >::type* >(
+     static_cast< void* >(
+       const_cast< typename ::boost::remove_cv< S >::type* >( p )
+     )
+   );
+}
 }
 
 #endif

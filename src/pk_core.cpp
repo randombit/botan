@@ -4,10 +4,15 @@
 *************************************************/
 
 #include <botan/pk_core.h>
-#include <botan/numthry.h>
+#include <botan/bigintfuncs.h>
 #include <botan/engine.h>
 #include <botan/config.h>
 #include <algorithm>
+#include <assert.h>
+
+
+
+using namespace Botan::math::ec;
 
 namespace Botan {
 
@@ -50,9 +55,9 @@ IF_Core::IF_Core(const BigInt& e, const BigInt& n, const BigInt& d,
 *************************************************/
 IF_Core::IF_Core(const IF_Core& core)
    {
-   op = 0;
-   if(core.op)
-      op = core.op->clone();
+   op.reset();
+   if(core.op.get())
+      op = std::tr1::shared_ptr<IF_Operation>(core.op->clone().release());
    blinder = core.blinder;
    }
 
@@ -61,9 +66,9 @@ IF_Core::IF_Core(const IF_Core& core)
 *************************************************/
 IF_Core& IF_Core::operator=(const IF_Core& core)
    {
-   delete op;
-   if(core.op)
-      op = core.op->clone();
+   op.reset();
+   if(core.op.get())
+      op = std::tr1::shared_ptr<IF_Operation>(core.op->clone().release());
    blinder = core.blinder;
    return (*this);
    }
@@ -87,24 +92,27 @@ BigInt IF_Core::private_op(const BigInt& i) const
 /*************************************************
 * DSA_Core Constructor                           *
 *************************************************/
+/*
 DSA_Core::DSA_Core(const DL_Group& group, const BigInt& y, const BigInt& x)
    {
    op = Engine_Core::dsa_op(group, y, x);
    }
-
+*/
 /*************************************************
 * DSA_Core Copy Constructor                      *
 *************************************************/
-DSA_Core::DSA_Core(const DSA_Core& core)
+/*
+ DSA_Core::DSA_Core(const DSA_Core& core)
    {
    op = 0;
    if(core.op)
       op = core.op->clone();
    }
-
+*/
 /*************************************************
 * DSA_Core Assignment Operator                   *
 *************************************************/
+/*
 DSA_Core& DSA_Core::operator=(const DSA_Core& core)
    {
    delete op;
@@ -112,46 +120,51 @@ DSA_Core& DSA_Core::operator=(const DSA_Core& core)
       op = core.op->clone();
    return (*this);
    }
-
+*/
 /*************************************************
 * DSA Verification Operation                     *
 *************************************************/
+/*
 bool DSA_Core::verify(const byte msg[], u32bit msg_length,
                       const byte sig[], u32bit sig_length) const
    {
    return op->verify(msg, msg_length, sig, sig_length);
    }
-
+*/
 /*************************************************
 * DSA Signature Operation                        *
 *************************************************/
+/*
 SecureVector<byte> DSA_Core::sign(const byte in[], u32bit length,
                                   const BigInt& k) const
    {
    return op->sign(in, length, k);
    }
-
+*/
 /*************************************************
 * NR_Core Constructor                            *
 *************************************************/
+/*
 NR_Core::NR_Core(const DL_Group& group, const BigInt& y, const BigInt& x)
    {
    op = Engine_Core::nr_op(group, y, x);
    }
-
+*/
 /*************************************************
 * NR_Core Copy Constructor                       *
 *************************************************/
+/*
 NR_Core::NR_Core(const NR_Core& core)
    {
    op = 0;
    if(core.op)
       op = core.op->clone();
    }
-
+*/
 /*************************************************
 * NR_Core Assignment Operator                    *
 *************************************************/
+/*
 NR_Core& NR_Core::operator=(const NR_Core& core)
    {
    delete op;
@@ -159,27 +172,30 @@ NR_Core& NR_Core::operator=(const NR_Core& core)
       op = core.op->clone();
    return (*this);
    }
-
+*/
 /*************************************************
 * NR Verification Operation                      *
 *************************************************/
+/*
 SecureVector<byte> NR_Core::verify(const byte in[], u32bit length) const
    {
    return op->verify(in, length);
    }
-
+*/
 /*************************************************
 * NR Signature Operation                         *
 *************************************************/
+/*
 SecureVector<byte> NR_Core::sign(const byte in[], u32bit length,
                                  const BigInt& k) const
    {
    return op->sign(in, length, k);
    }
-
+*/
 /*************************************************
 * ELG_Core Constructor                           *
 *************************************************/
+/*
 ELG_Core::ELG_Core(const DL_Group& group, const BigInt& y, const BigInt& x)
    {
    op = Engine_Core::elg_op(group, y, x);
@@ -195,10 +211,11 @@ ELG_Core::ELG_Core(const DL_Group& group, const BigInt& y, const BigInt& x)
          blinder = Blinder(k, power_mod(k, x, p), p);
       }
    }
-
+*/
 /*************************************************
 * ELG_Core Copy Constructor                      *
 *************************************************/
+/*
 ELG_Core::ELG_Core(const ELG_Core& core)
    {
    op = 0;
@@ -207,10 +224,11 @@ ELG_Core::ELG_Core(const ELG_Core& core)
    blinder = core.blinder;
    p_bytes = core.p_bytes;
    }
-
+*/
 /*************************************************
 * ELG_Core Assignment Operator                   *
 *************************************************/
+/*
 ELG_Core& ELG_Core::operator=(const ELG_Core& core)
    {
    delete op;
@@ -220,19 +238,21 @@ ELG_Core& ELG_Core::operator=(const ELG_Core& core)
    p_bytes = core.p_bytes;
    return (*this);
    }
-
+*/
 /*************************************************
 * ElGamal Encrypt Operation                      *
 *************************************************/
+/*
 SecureVector<byte> ELG_Core::encrypt(const byte in[], u32bit length,
                                      const BigInt& k) const
    {
    return op->encrypt(in, length, k);
    }
-
+*/
 /*************************************************
 * ElGamal Decrypt Operation                      *
 *************************************************/
+/*
 SecureVector<byte> ELG_Core::decrypt(const byte in[], u32bit length) const
    {
    if(length != 2*p_bytes)
@@ -243,7 +263,7 @@ SecureVector<byte> ELG_Core::decrypt(const byte in[], u32bit length) const
 
    return BigInt::encode(blinder.unblind(op->decrypt(blinder.blind(a), b)));
    }
-
+*/
 /*************************************************
 * DH_Core Constructor                            *
 *************************************************/
@@ -262,9 +282,9 @@ DH_Core::DH_Core(const DL_Group& group, const BigInt& x)
 *************************************************/
 DH_Core::DH_Core(const DH_Core& core)
    {
-   op = 0;
-   if(core.op)
-      op = core.op->clone();
+   op.reset();
+   if(core.op.get())
+       op = std::tr1::shared_ptr<DH_Operation>(core.op->clone().release());
    blinder = core.blinder;
    }
 
@@ -273,9 +293,9 @@ DH_Core::DH_Core(const DH_Core& core)
 *************************************************/
 DH_Core& DH_Core::operator=(const DH_Core& core)
    {
-   delete op;
-   if(core.op)
-      op = core.op->clone();
+   op.reset();
+   if(core.op.get())
+      op = std::tr1::shared_ptr<DH_Operation>(core.op->clone().release());
    blinder = core.blinder;
    return (*this);
    }
@@ -287,5 +307,98 @@ BigInt DH_Core::agree(const BigInt& i) const
    {
    return blinder.unblind(op->agree(blinder.blind(i)));
    }
+
+/*************************************************
+* ECKAEG Operation                               *
+*************************************************/
+/*************************************************
+* ECKAEG_Core Constructor                        *
+*************************************************/
+ECKAEG_Core::ECKAEG_Core(EC_Domain_Params const& dom_pars, BigInt const& priv_key, PointGFp const& pub_key)
+{
+    op = Engine_Core::eckaeg_op(dom_pars, priv_key, pub_key);
+}
+
+/*
+ECKAEG_Core::ECKAEG_Core(const DL_Group& group, const BigInt& x)
+   {
+   op = Engine_Core::eckaeg_op();
+
+   const BigInt& p = group.get_p();
+   BigInt k = blinding_factor(p.bits());
+   if(k != 0)
+      blinder = Blinder(k, power_mod(inverse_mod(k, p), x, p), p);
+   }
+*/
+/*************************************************
+* ECKAEG_Core Copy Constructor                   *
+*************************************************/
+ECKAEG_Core::ECKAEG_Core(const ECKAEG_Core& core)
+   {
+   op.reset();
+   if(core.op.get())
+       op = std::tr1::shared_ptr<ECKAEG_Operation>(core.op->clone().release());
+   blinder = core.blinder;
+   }
+
+/*************************************************
+* ECKAEG_Core Assignment Operator                *
+*************************************************/
+ECKAEG_Core& ECKAEG_Core::operator=(const ECKAEG_Core& core)
+   {
+   op.reset();
+   if(core.op.get())
+       {
+       op = std::tr1::shared_ptr<ECKAEG_Operation>(core.op->clone().release());
+       }
+   blinder = core.blinder;
+   return (*this);
+   }
+
+/*************************************************
+* ECKAEG Operation                               *
+*************************************************/
+SecureVector<byte> ECKAEG_Core::agree(const PointGFp& otherKey) const
+   {
+   assert(op.get());
+   return op->agree(otherKey);
+   }
+
+
+
+/*************************************************
+* ECDSA Operation                                *
+*************************************************/
+bool const ECDSA_Core::verify(const byte signature[], u32bit sig_len, const byte message[], u32bit mess_len) const
+{
+    assert(op.get());
+    return op->verify(signature, sig_len, message, mess_len);
+}
+SecureVector<byte> const ECDSA_Core::sign(const byte message[], u32bit mess_len) const
+{
+    assert(op.get());
+    return op->sign(message, mess_len);
+}
+ECDSA_Core& ECDSA_Core::operator=(const ECDSA_Core& core)
+{
+    op.reset();
+    if(core.op.get())
+    {
+    op = std::tr1::shared_ptr<ECDSA_Operation>(core.op->clone().release());
+    }
+    return (*this);
+}
+ECDSA_Core::ECDSA_Core(const ECDSA_Core& core)
+{
+    op.reset();
+    if(core.op.get())
+    {
+    op = std::tr1::shared_ptr<ECDSA_Operation>(core.op->clone().release());
+    }
+}
+ECDSA_Core::ECDSA_Core(EC_Domain_Params const& dom_pars, BigInt const& priv_key, PointGFp const& pub_key)
+{
+    op = Engine_Core::ecdsa_op(dom_pars, priv_key, pub_key);
+}
 
 }

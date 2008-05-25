@@ -47,9 +47,9 @@ void add_entropy(EntropySource& src, bool slow_poll)
 /*************************************************
 * Add an EntropySource to the RNG seed list      *
 *************************************************/
-void add_es(EntropySource* src, bool last)
+void add_es(SharedPtrConverter<EntropySource> src, bool last)
    {
-   global_state().add_entropy_source(src, last);
+   global_state().add_entropy_source(src.get_shared(), last);
    }
 
 /*************************************************

@@ -8,7 +8,7 @@
 #include <botan/bit_ops.h>
 #include <botan/hmac.h>
 #include <algorithm>
-#include <memory>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -23,7 +23,7 @@ OctetString PKCS5_PBKDF1::derive(u32bit key_len,
    if(iterations == 0)
       throw Invalid_Argument("PKCS#5 PBKDF1: Invalid iteration count");
 
-   std::auto_ptr<HashFunction> hash(get_hash(hash_name));
+   HashFunction::AutoHashFunctionPtr hash(get_hash(hash_name));
    if(key_len > hash->OUTPUT_LENGTH)
       throw Exception("PKCS#5 PBKDF1: Requested output length too long");
 
@@ -72,9 +72,8 @@ OctetString PKCS5_PBKDF2::derive(u32bit key_len,
       throw Invalid_Argument("PKCS#5 PBKDF2: Empty passphrase is invalid");
 
    HMAC hmac(hash_name);
-
    hmac.set_key(reinterpret_cast<const byte*>(passphrase.data()),
-                passphrase.length());
+                    passphrase.length());
 
    SecureVector<byte> key(key_len);
 

@@ -9,6 +9,8 @@
 #include <botan/secmem.h>
 #include <botan/enums.h>
 #include <botan/exceptn.h>
+#include <botan/pointers.h>
+#include <botan/freestore.h>
 
 namespace Botan {
 
@@ -44,7 +46,7 @@ namespace ASN1 {
 
 SecureVector<byte> put_in_sequence(const MemoryRegion<byte>&);
 std::string to_string(const BER_Object&);
-bool maybe_BER(DataSource&);
+bool maybe_BER(SharedPtrConverter<DataSource>);
 
 }
 

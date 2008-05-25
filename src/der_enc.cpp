@@ -5,10 +5,11 @@
 
 #include <botan/der_enc.h>
 #include <botan/asn1_int.h>
-#include <botan/bigint.h>
-#include <botan/bit_ops.h>
 #include <botan/parsing.h>
 #include <algorithm>
+#include <botan/bigint.h>
+#include <botan/bit_ops.h>
+
 
 namespace Botan {
 
@@ -25,7 +26,7 @@ SecureVector<byte> encode_tag(ASN1_Tag type_tag, ASN1_Tag class_tag)
 
    SecureVector<byte> encoded_tag;
    if(type_tag <= 30)
-      encoded_tag.append(static_cast<byte>(type_tag | class_tag));
+   	  encoded_tag.append(static_cast<byte>(type_tag | class_tag));
    else
       {
       u32bit blocks = high_bit(type_tag) + 6;

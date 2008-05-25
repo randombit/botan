@@ -4,11 +4,12 @@
 #include <iostream>
 #include <cstdlib>
 
-#include <botan/bigint.h>
+#include <botan/math/bigint.h>
 #include <botan/exceptn.h>
-#include <botan/numthry.h>
+#include <botan/math/bigintfuncs.h>
 #include <botan/rng.h>
 using namespace Botan;
+using namespace Botan::math;
 
 #include "common.h"
 
@@ -28,6 +29,7 @@ u32bit check_primetest(const std::vector<std::string>&);
 
 u32bit do_bigint_tests(const std::string& filename)
    {
+//   return 0;
    std::ifstream test_data(filename.c_str());
 
    if(!test_data)

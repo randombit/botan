@@ -10,10 +10,10 @@ namespace Botan {
 /*************************************************
 * Get a block cipher by name                     *
 *************************************************/
-BlockCipher* get_block_cipher(const std::string& name)
+std::auto_ptr<BlockCipher> get_block_cipher(const std::string& name)
    {
-   const BlockCipher* cipher = retrieve_block_cipher(name);
-   if(cipher)
+   std::tr1::shared_ptr<BlockCipher const> cipher = retrieve_block_cipher(name);
+   if(cipher.get())
       return cipher->clone();
    throw Algorithm_Not_Found(name);
    }
@@ -21,10 +21,10 @@ BlockCipher* get_block_cipher(const std::string& name)
 /*************************************************
 * Get a stream cipher by name                    *
 *************************************************/
-StreamCipher* get_stream_cipher(const std::string& name)
+std::auto_ptr<StreamCipher> get_stream_cipher(const std::string& name)
    {
-   const StreamCipher* cipher = retrieve_stream_cipher(name);
-   if(cipher)
+   std::tr1::shared_ptr<StreamCipher const> cipher = retrieve_stream_cipher(name);
+   if(cipher.get())
       return cipher->clone();
    throw Algorithm_Not_Found(name);
    }
@@ -32,10 +32,10 @@ StreamCipher* get_stream_cipher(const std::string& name)
 /*************************************************
 * Get a hash function by name                    *
 *************************************************/
-HashFunction* get_hash(const std::string& name)
+std::auto_ptr<HashFunction> get_hash(const std::string& name)
    {
-   const HashFunction* hash = retrieve_hash(name);
-   if(hash)
+   std::tr1::shared_ptr<HashFunction const> hash = retrieve_hash(name);
+   if(hash.get())
       return hash->clone();
    throw Algorithm_Not_Found(name);
    }
@@ -43,10 +43,10 @@ HashFunction* get_hash(const std::string& name)
 /*************************************************
 * Get a MAC by name                              *
 *************************************************/
-MessageAuthenticationCode* get_mac(const std::string& name)
+std::auto_ptr<MessageAuthenticationCode> get_mac(const std::string& name)
    {
-   const MessageAuthenticationCode* mac = retrieve_mac(name);
-   if(mac)
+   std::tr1::shared_ptr<MessageAuthenticationCode const> mac = retrieve_mac(name);
+   if(mac.get())
       return mac->clone();
    throw Algorithm_Not_Found(name);
    }
@@ -54,21 +54,20 @@ MessageAuthenticationCode* get_mac(const std::string& name)
 /*************************************************
 * Get a S2K algorithm by name                    *
 *************************************************/
-S2K* get_s2k(const std::string& name)
+std::auto_ptr<S2K> get_s2k(const std::string& name)
    {
-   const S2K* s2k = retrieve_s2k(name);
-   if(s2k)
+   std::tr1::shared_ptr<S2K const> s2k = retrieve_s2k(name);
+   if(s2k.get())
       return s2k->clone();
    throw Algorithm_Not_Found(name);
    }
-
 /*************************************************
 * Get a block cipher padding method by name      *
 *************************************************/
-const BlockCipherModePaddingMethod* get_bc_pad(const std::string& name)
+std::tr1::shared_ptr<BlockCipherModePaddingMethod const> get_bc_pad(const std::string& name)
    {
-   const BlockCipherModePaddingMethod* pad = retrieve_bc_pad(name);
-   if(pad)
+   std::tr1::shared_ptr<BlockCipherModePaddingMethod const> pad = retrieve_bc_pad(name);
+   if(pad.get())
       return pad;
    throw Algorithm_Not_Found(name);
    }
@@ -78,13 +77,13 @@ const BlockCipherModePaddingMethod* get_bc_pad(const std::string& name)
 *************************************************/
 bool have_algorithm(const std::string& name)
    {
-   if(retrieve_block_cipher(name))
+   if(retrieve_block_cipher(name).get())
       return true;
-   if(retrieve_stream_cipher(name))
+   if(retrieve_stream_cipher(name).get())
       return true;
-   if(retrieve_hash(name))
+   if(retrieve_hash(name).get())
       return true;
-   if(retrieve_mac(name))
+   if(retrieve_mac(name).get())
       return true;
    return false;
    }
@@ -94,7 +93,7 @@ bool have_algorithm(const std::string& name)
 *************************************************/
 bool have_block_cipher(const std::string& name)
    {
-   return (retrieve_block_cipher(name) != 0);
+   return (retrieve_block_cipher(name).get() != 0);
    }
 
 /*************************************************
@@ -102,7 +101,7 @@ bool have_block_cipher(const std::string& name)
 *************************************************/
 bool have_stream_cipher(const std::string& name)
    {
-   return (retrieve_stream_cipher(name) != 0);
+   return (retrieve_stream_cipher(name).get() != 0);
    }
 
 /*************************************************
@@ -110,7 +109,7 @@ bool have_stream_cipher(const std::string& name)
 *************************************************/
 bool have_hash(const std::string& name)
    {
-   return (retrieve_hash(name) != 0);
+   return (retrieve_hash(name).get() != 0);
    }
 
 /*************************************************
@@ -118,7 +117,7 @@ bool have_hash(const std::string& name)
 *************************************************/
 bool have_mac(const std::string& name)
    {
-   return (retrieve_mac(name) != 0);
+   return (retrieve_mac(name).get() != 0);
    }
 
 /*************************************************
@@ -126,12 +125,12 @@ bool have_mac(const std::string& name)
 *************************************************/
 u32bit block_size_of(const std::string& name)
    {
-   const BlockCipher* cipher = retrieve_block_cipher(name);
-   if(cipher)
+   std::tr1::shared_ptr<BlockCipher const> cipher = retrieve_block_cipher(name);
+   if(cipher.get())
       return cipher->BLOCK_SIZE;
 
-   const HashFunction* hash = retrieve_hash(name);
-   if(hash)
+   std::tr1::shared_ptr<HashFunction const> hash = retrieve_hash(name);
+   if(hash.get())
       return hash->HASH_BLOCK_SIZE;
 
    throw Algorithm_Not_Found(name);
@@ -142,12 +141,12 @@ u32bit block_size_of(const std::string& name)
 *************************************************/
 u32bit output_length_of(const std::string& name)
    {
-   const HashFunction* hash = retrieve_hash(name);
-   if(hash)
+   std::tr1::shared_ptr<HashFunction const> hash = retrieve_hash(name);
+   if(hash.get())
       return hash->OUTPUT_LENGTH;
 
-   const MessageAuthenticationCode* mac = retrieve_mac(name);
-   if(mac)
+   std::tr1::shared_ptr<MessageAuthenticationCode const> mac = retrieve_mac(name);
+   if(mac.get())
       return mac->OUTPUT_LENGTH;
 
    throw Algorithm_Not_Found(name);
@@ -158,16 +157,16 @@ u32bit output_length_of(const std::string& name)
 *************************************************/
 bool valid_keylength_for(u32bit key_len, const std::string& name)
    {
-   const BlockCipher* bc = retrieve_block_cipher(name);
-   if(bc)
+   std::tr1::shared_ptr<BlockCipher const> bc = retrieve_block_cipher(name);
+   if(bc.get())
       return bc->valid_keylength(key_len);
 
-   const StreamCipher* sc = retrieve_stream_cipher(name);
-   if(sc)
+   std::tr1::shared_ptr<StreamCipher const> sc = retrieve_stream_cipher(name);
+   if(sc.get())
       return sc->valid_keylength(key_len);
 
-   const MessageAuthenticationCode* mac = retrieve_mac(name);
-   if(mac)
+   std::tr1::shared_ptr<MessageAuthenticationCode const> mac = retrieve_mac(name);
+   if(mac.get())
       return mac->valid_keylength(key_len);
 
    throw Algorithm_Not_Found(name);
@@ -178,16 +177,16 @@ bool valid_keylength_for(u32bit key_len, const std::string& name)
 *************************************************/
 u32bit min_keylength_of(const std::string& name)
    {
-   const BlockCipher* bc = retrieve_block_cipher(name);
-   if(bc)
+   std::tr1::shared_ptr<BlockCipher const> bc = retrieve_block_cipher(name);
+   if(bc.get())
       return bc->MINIMUM_KEYLENGTH;
 
-   const StreamCipher* sc = retrieve_stream_cipher(name);
-   if(sc)
+   std::tr1::shared_ptr<StreamCipher const> sc = retrieve_stream_cipher(name);
+   if(sc.get())
       return sc->MINIMUM_KEYLENGTH;
 
-   const MessageAuthenticationCode* mac = retrieve_mac(name);
-   if(mac)
+   std::tr1::shared_ptr<MessageAuthenticationCode const> mac = retrieve_mac(name);
+   if(mac.get())
       return mac->MINIMUM_KEYLENGTH;
 
    throw Algorithm_Not_Found(name);
@@ -198,16 +197,16 @@ u32bit min_keylength_of(const std::string& name)
 *************************************************/
 u32bit max_keylength_of(const std::string& name)
    {
-   const BlockCipher* bc = retrieve_block_cipher(name);
-   if(bc)
+   std::tr1::shared_ptr<BlockCipher const> bc = retrieve_block_cipher(name);
+   if(bc.get())
       return bc->MAXIMUM_KEYLENGTH;
 
-   const StreamCipher* sc = retrieve_stream_cipher(name);
-   if(sc)
+   std::tr1::shared_ptr<StreamCipher const> sc = retrieve_stream_cipher(name);
+   if(sc.get())
       return sc->MAXIMUM_KEYLENGTH;
 
-   const MessageAuthenticationCode* mac = retrieve_mac(name);
-   if(mac)
+   std::tr1::shared_ptr<MessageAuthenticationCode const> mac = retrieve_mac(name);
+   if(mac.get())
       return mac->MAXIMUM_KEYLENGTH;
 
    throw Algorithm_Not_Found(name);
@@ -218,16 +217,16 @@ u32bit max_keylength_of(const std::string& name)
 *************************************************/
 u32bit keylength_multiple_of(const std::string& name)
    {
-   const BlockCipher* bc = retrieve_block_cipher(name);
-   if(bc)
+   std::tr1::shared_ptr<BlockCipher const> bc = retrieve_block_cipher(name);
+   if(bc.get())
       return bc->KEYLENGTH_MULTIPLE;
 
-   const StreamCipher* sc = retrieve_stream_cipher(name);
-   if(sc)
+   std::tr1::shared_ptr<StreamCipher const> sc = retrieve_stream_cipher(name);
+   if(sc.get())
       return sc->KEYLENGTH_MULTIPLE;
 
-   const MessageAuthenticationCode* mac = retrieve_mac(name);
-   if(mac)
+   std::tr1::shared_ptr<MessageAuthenticationCode const> mac = retrieve_mac(name);
+   if(mac.get())
       return mac->KEYLENGTH_MULTIPLE;
 
    throw Algorithm_Not_Found(name);

@@ -10,7 +10,7 @@
 #include <botan/lookup.h>
 #include <botan/rng.h>
 #include <algorithm>
-#include <memory>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -70,7 +70,7 @@ void PBE_PKCS5v15::flush_pipe(bool safe_to_skip)
 *************************************************/
 void PBE_PKCS5v15::set_key(const std::string& passphrase)
    {
-   std::auto_ptr<S2K> pbkdf(get_s2k("PBKDF1(" + digest + ")"));
+   std::tr1::shared_ptr<S2K> pbkdf(get_s2k("PBKDF1(" + digest + ")").release());
    pbkdf->set_iterations(iterations);
    pbkdf->change_salt(salt, salt.size());
    SymmetricKey key_and_iv = pbkdf->derive_key(16, passphrase);
@@ -105,9 +105,9 @@ MemoryVector<byte> PBE_PKCS5v15::encode_params() const
 /*************************************************
 * Decode PKCS#5 PBES1 parameters                 *
 *************************************************/
-void PBE_PKCS5v15::decode_params(DataSource& source)
+void PBE_PKCS5v15::decode_params(SharedPtrConverter<DataSource> source)
    {
-   BER_Decoder(source)
+   BER_Decoder(source.get_shared())
       .start_cons(SEQUENCE)
          .decode(salt, OCTET_STRING)
          .decode(iterations)
@@ -126,16 +126,20 @@ OID PBE_PKCS5v15::get_oid() const
    const OID base_pbes1_oid("1.2.840.113549.1.5");
    if(cipher == "DES/CBC" && digest == "MD2")
       return (base_pbes1_oid + 1);
+      /*
    else if(cipher == "DES/CBC" && digest == "MD5")
       return (base_pbes1_oid + 3);
+      */
    else if(cipher == "DES/CBC" && digest == "SHA-160")
       return (base_pbes1_oid + 10);
+      /*
    else if(cipher == "RC2/CBC" && digest == "MD2")
       return (base_pbes1_oid + 4);
    else if(cipher == "RC2/CBC" && digest == "MD5")
       return (base_pbes1_oid + 6);
    else if(cipher == "RC2/CBC" && digest == "SHA-160")
       return (base_pbes1_oid + 11);
+      */
    else
       throw Internal_Error("PBE-PKCS5 v1.5: get_oid() has run out of options");
    }

@@ -53,10 +53,10 @@ SecureVector<byte> EMSA3::encoding_of(const MemoryRegion<byte>& msg,
 /*************************************************
 * EMSA3 Constructor                              *
 *************************************************/
-EMSA3::EMSA3(const std::string& hash_name)
+EMSA3::EMSA3(const std::string& hash_name) :
+    hash(get_hash(hash_name).release())
    {
    hash_id = pkcs_hash_id(hash_name);
-   hash = get_hash(hash_name);
    }
 
 }

@@ -55,13 +55,13 @@ std::string PEM_encode(const Private_Key&);
 std::string PEM_encode(const Private_Key&, const std::string&,
                        const std::string& = "");
 
-Private_Key* load_key(DataSource&, const User_Interface&);
-Private_Key* load_key(DataSource&, const std::string& = "");
+std::auto_ptr<Private_Key> load_key(std::tr1::shared_ptr<DataSource>, const User_Interface&);
+std::auto_ptr<Private_Key> load_key(std::tr1::shared_ptr<DataSource>, const std::string& = "");
 
-Private_Key* load_key(const std::string&, const User_Interface&);
-Private_Key* load_key(const std::string&, const std::string& = "");
+std::auto_ptr<Private_Key> load_key(const std::string&, const User_Interface&);
+std::auto_ptr<Private_Key> load_key(const std::string&, const std::string& = "");
 
-Private_Key* copy_key(const Private_Key&);
+std::auto_ptr<Private_Key> copy_key(const Private_Key&);
 
 }
 

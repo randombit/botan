@@ -80,6 +80,11 @@ void bigint_mul(word[], u32bit, word[],
                 const word[], u32bit, u32bit,
                 const word[], u32bit, u32bit);
 
+/*void bigint_sec_mul(word z[], const word x[], u32bit x_size,
+                                 const word y[], u32bit y_size,
+                                 u32bit max_words
+                                 );*/
+
 void bigint_sqr(word[], u32bit, word[],
                 const word[], u32bit, u32bit);
 

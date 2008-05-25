@@ -18,6 +18,9 @@ namespace Botan {
 class Pipe : public DataSource
    {
    public:
+      typedef Filter::SharedFilterPtrConverter SharedFilterPtrConverter;
+      typedef Filter::SharedFilterPtr SharedFilterPtr;
+
       static const u32bit LAST_MESSAGE, DEFAULT_MESSAGE;
 
       void write(const byte[], u32bit);
@@ -52,26 +55,42 @@ class Pipe : public DataSource
       void start_msg();
       void end_msg();
 
-      void prepend(Filter*);
-      void append(Filter*);
+      void prepend(SharedFilterPtrConverter const&);
+      void append(SharedFilterPtrConverter const&);
       void pop();
       void reset();
 
-      Pipe(Filter* = 0, Filter* = 0, Filter* = 0, Filter* = 0);
-      Pipe(Filter*[], u32bit);
+      Pipe(SharedFilterPtrConverter const& = SharedFilterPtrConverter(),
+           SharedFilterPtrConverter const& = SharedFilterPtrConverter(),
+           SharedFilterPtrConverter const& = SharedFilterPtrConverter(),
+           SharedFilterPtrConverter const& = SharedFilterPtrConverter());
+      // Assumes that [begin, end) is a range of objects o for which
+      // SharedFilterPtrConverter(o) is valid.
+      // ConstIter has to be a bidirectional iterator type.
+      template<typename ConstIter>
+      Pipe(ConstIter const& begin, ConstIter const& end) 
+        : pipe(),
+          outputs(),
+          default_read(0),
+          inside_msg(false) {
+        this->init();
+        for(; begin != end; ++begin) {
+          this->append(*begin);
+        }
+      }
       ~Pipe();
    private:
       Pipe(const Pipe&) : DataSource() {}
       Pipe& operator=(const Pipe&) { return (*this); }
       void init();
-      void destruct(Filter*);
-      void find_endpoints(Filter*);
-      void clear_endpoints(Filter*);
+      void destruct(Filter::SharedFilterPtr &);
+      void find_endpoints(Filter::SharedFilterPtr const&);
+      void clear_endpoints(Filter::SharedFilterPtr const&);
 
       u32bit get_message_no(const std::string&, u32bit) const;
 
-      Filter* pipe;
-      class Output_Buffers* outputs;
+      SharedFilterPtr pipe;
+      std::tr1::shared_ptr<class Output_Buffers> outputs;
       u32bit default_read;
       bool inside_msg;
    };

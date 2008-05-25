@@ -4,9 +4,12 @@
 *************************************************/
 
 #include <botan/rsa.h>
-#include <botan/numthry.h>
+#include <botan/bigintfuncs.h>
 #include <botan/keypair.h>
 #include <botan/parsing.h>
+
+
+
 
 namespace Botan {
 

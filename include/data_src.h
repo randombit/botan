@@ -66,7 +66,7 @@ class DataSource_Stream : public DataSource
       ~DataSource_Stream();
    private:
       const std::string fsname;
-      std::istream* source;
+      std::tr1::shared_ptr<std::istream> source; 
       u32bit total_read;
    };
 

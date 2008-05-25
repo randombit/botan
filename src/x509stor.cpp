@@ -11,7 +11,7 @@
 #include <botan/config.h>
 #include <botan/util.h>
 #include <algorithm>
-#include <memory>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -167,7 +167,7 @@ X509_Store::X509_Store(const X509_Store& store)
    revoked = store.revoked;
    revoked_info_valid = store.revoked_info_valid;
    for(u32bit j = 0; j != store.stores.size(); ++j)
-      stores[j] = store.stores[j]->clone();
+      stores[j] = std::tr1::shared_ptr<Certificate_Store>(store.stores[j]->clone().release());
    }
 
 /*************************************************
@@ -175,8 +175,7 @@ X509_Store::X509_Store(const X509_Store& store)
 *************************************************/
 X509_Store::~X509_Store()
    {
-   for(u32bit j = 0; j != stores.size(); ++j)
-      delete stores[j];
+   stores.clear();
    }
 
 /*************************************************
@@ -354,16 +353,15 @@ X509_Code X509_Store::check_sig(const Cert_Info& cert_info,
 /*************************************************
 * Check a CA's signature                         *
 *************************************************/
-X509_Code X509_Store::check_sig(const X509_Object& object, Public_Key* key)
+X509_Code X509_Store::check_sig(const X509_Object& object, std::auto_ptr<Public_Key> key)
    {
-   std::auto_ptr<Public_Key> pub_key(key);
    std::auto_ptr<PK_Verifier> verifier;
 
    try {
       std::vector<std::string> sig_info =
          split_on(OIDS::lookup(object.signature_algorithm().oid), '/');
 
-      if(sig_info.size() != 2 || sig_info[0] != pub_key->algo_name())
+      if(sig_info.size() != 2 || sig_info[0] != key->algo_name())
          return SIGNATURE_ERROR;
 
       std::string padding = sig_info[1];
@@ -371,17 +369,17 @@ X509_Code X509_Store::check_sig(const X509_Object& object, Public_Key* key)
       if(key->message_parts() >= 2) format = DER_SEQUENCE;
       else                          format = IEEE_1363;
 
-      if(dynamic_cast<PK_Verifying_with_MR_Key*>(pub_key.get()))
+      if(dynamic_cast<PK_Verifying_with_MR_Key*>(key.get()))
          {
          PK_Verifying_with_MR_Key* sig_key =
-            dynamic_cast<PK_Verifying_with_MR_Key*>(pub_key.get());
-         verifier.reset(get_pk_verifier(*sig_key, padding, format));
+            dynamic_cast<PK_Verifying_with_MR_Key*>(key.get());
+         verifier.reset(get_pk_verifier(*sig_key, padding, format).release());
          }
-      else if(dynamic_cast<PK_Verifying_wo_MR_Key*>(pub_key.get()))
+      else if(dynamic_cast<PK_Verifying_wo_MR_Key*>(key.get()))
          {
          PK_Verifying_wo_MR_Key* sig_key =
-            dynamic_cast<PK_Verifying_wo_MR_Key*>(pub_key.get());
-         verifier.reset(get_pk_verifier(*sig_key, padding, format));
+            dynamic_cast<PK_Verifying_wo_MR_Key*>(key.get());
+         verifier.reset(get_pk_verifier(*sig_key, padding, format).release());
          }
       else
          return CA_CERT_CANNOT_SIGN;
@@ -471,9 +469,9 @@ X509_Store::get_cert_chain(const X509_Certificate& cert)
 /*************************************************
 * Add a certificate store to the list of stores  *
 *************************************************/
-void X509_Store::add_new_certstore(Certificate_Store* certstore)
+void X509_Store::add_new_certstore(SharedPtrConverter<Certificate_Store> certstore)
    {
-   stores.push_back(certstore);
+   stores.push_back(certstore.get_shared());
    }
 
 /*************************************************
@@ -504,12 +502,12 @@ void X509_Store::add_cert(const X509_Certificate& cert, bool trusted)
 /*************************************************
 * Add one or more certificates to the store      *
 *************************************************/
-void X509_Store::do_add_certs(DataSource& source, bool trusted)
+void X509_Store::do_add_certs(SharedPtrConverter<DataSource> source, bool trusted)
    {
-   while(!source.end_of_data())
+   while(!source.get_shared()->end_of_data())
       {
       try {
-         X509_Certificate cert(source);
+         X509_Certificate cert(source.get_shared());
          add_cert(cert, trusted);
          }
       catch(Decoding_Error) {}
@@ -520,17 +518,17 @@ void X509_Store::do_add_certs(DataSource& source, bool trusted)
 /*************************************************
 * Add one or more certificates to the store      *
 *************************************************/
-void X509_Store::add_certs(DataSource& source)
+void X509_Store::add_certs(SharedPtrConverter<DataSource> source)
    {
-   do_add_certs(source, false);
+   do_add_certs(source.get_shared(), false);
    }
 
 /*************************************************
 * Add one or more certificates to the store      *
 *************************************************/
-void X509_Store::add_trusted_certs(DataSource& source)
+void X509_Store::add_trusted_certs(SharedPtrConverter<DataSource> source)
    {
-   do_add_certs(source, true);
+   do_add_certs(source.get_shared(), true);
    }
 
 /*************************************************

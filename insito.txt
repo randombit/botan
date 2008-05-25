@@ -1,0 +1,53 @@
+This is a dump into Montone of a zip file sent to me on May 20 2008 by
+Falko Strenzke <strenzke@flexitrust.de>. That version removed a number
+of algorithms, and moved several files into other directories. All of
+these changes have been reverted for simplicity of merging. This
+initial commit is based against the same version they used (1.7.2)
+
+Here is some text from an email sent directly to me by Falko:
+
+Yesterday, we finished our project "InSiTo-Bib". The name is an
+abbreviation for "Innovative Sicherheitstoken - Bibliothek", which
+means "Innovative Security Tokens - Library". We made this library by
+order and account of the German Federal Office for Information
+Security i(BSI) (http://www.bsi.bund.de/).
+"We" are
+ - FlexSecure GmbH (http://www.flexsecure.de) and
+ - Technische Universit?t Darmstadt, especially the team of Prof. Buchmann
+   (http://www.cdc.informatik.tu-darmstadt.de/mitarbeiter/buchmann.html).
+
+Since we had to contribute to the project (i.e. by nature of the
+project we did not receive full payment for our efforts), we retain
+the full rights over the product.
+
+From the beginning, the idea was to release the library as open
+source. The way of "releasing" the library favored by the BSI would be
+to merge it again with Botan. Now you see where you come into
+play. Unless you strictly say "no" anyway, you surely need a lot of
+information in order you will be able to decide whether you want to
+integrate our product into Botan.
+
+(1) we changed almost all occurrences of "plain" pointers to smart
+pointers: std::auto_ptr and std::tr1::shared_ptr (where we use boost in
+case the plattform doesn't support tr1/memory).
+
+(2) we removed many algorithms the BSI did not want
+
+(3) we added algorithms. Basically, these are
+   - ECDSA and ECKAEG (which is essentially EC-DH) over GF(p)
+   - PRNGs: BBS and SHA1PRNG
+
+(3) we incorporated countermeasures against timing-attacks on ECDSA and ECKAEG
+
+(4) we created a tool for tests of the resistance against timings attacks against
+    the above EC-algorithms (not part of library)
+
+(5) we added support for Card-Verifiable-Certificates (CVC) according to EAC 1.1
+(http://www.befreite-dokumente.de/eingereichte-akten/tr-03110-eac-1.0/). These
+are used in the context of the european projects for machine readable travel
+documents
+(http://ec.europa.eu/justice_home/doc_centre/freetravel/documents/wai/doc_freetravel_documents_en.htm)
+
+(6) we changed the build system to CMake
+
+(7) our own unit tests use the boost.test framework

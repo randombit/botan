@@ -7,6 +7,7 @@
 #define BOTAN_RSA_H__
 
 #include <botan/if_algo.h>
+#include <botan/bigint.h>
 
 namespace Botan {
 

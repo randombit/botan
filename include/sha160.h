@@ -18,7 +18,7 @@ class SHA_160 : public MDx_HashFunction
    public:
       void clear() throw();
       std::string name() const { return "SHA-160"; }
-      HashFunction* clone() const { return new SHA_160; }
+      AutoHashFunctionPtr clone() const { return AutoHashFunctionPtr(new SHA_160); }
       SHA_160();
    private:
       void hash(const byte[]);

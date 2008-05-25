@@ -8,15 +8,18 @@
 
 #include <botan/asn1_oid.h>
 #include <botan/data_src.h>
+#include <botan/bigint.h>
+#include <botan/freestore.h>
 
-namespace Botan {
+namespace Botan
+  {
 
-/*************************************************
-* BER Decoding Object                            *
-*************************************************/
-class BER_Decoder
-   {
-   public:
+  /*************************************************
+  * BER Decoding Object                            *
+  *************************************************/
+  class BER_Decoder
+    {
+    public:
       BER_Object get_next_object();
       void push_back(const BER_Object&);
 
@@ -32,7 +35,7 @@ class BER_Decoder
       BER_Decoder& decode_null();
       BER_Decoder& decode(bool&);
       BER_Decoder& decode(u32bit&);
-      BER_Decoder& decode(class BigInt&);
+	  BER_Decoder& decode(class BigInt&);
       BER_Decoder& decode(MemoryRegion<byte>&, ASN1_Tag);
 
       BER_Decoder& decode(bool&, ASN1_Tag, ASN1_Tag = CONTEXT_SPECIFIC);
@@ -47,82 +50,95 @@ class BER_Decoder
       template<typename T>
       BER_Decoder& decode_optional(T&, ASN1_Tag, ASN1_Tag, const T& = T());
 
+      /**
+       * specialization for MemoryRegion\<byte\>
+       */
+      BER_Decoder& decode_optional(MemoryRegion<byte>& out,
+                                               ASN1_Tag real_type,
+              ASN1_Tag type_tag,
+              ASN1_Tag class_tag,
+              const MemoryRegion<byte>& default_value);
+
       template<typename T>
       BER_Decoder& decode_list(std::vector<T>&, bool = true);
 
       BER_Decoder& decode_optional_string(MemoryRegion<byte>&,
                                           ASN1_Tag, u16bit);
 
-      BER_Decoder(DataSource&);
+      BER_Decoder(const SharedPtrConverter<DataSource>&);
       BER_Decoder(const byte[], u32bit);
       BER_Decoder(const MemoryRegion<byte>&);
       BER_Decoder(const BER_Decoder&);
       ~BER_Decoder();
-   private:
-      BER_Decoder& operator=(const BER_Decoder&) { return (*this); }
+    private:
+      BER_Decoder& operator=(const BER_Decoder&)
+      {
+        return (*this);
+      }
 
-      BER_Decoder* parent;
-      DataSource* source;
+      BER_Decoder* parent; // objects are not created with new, so no smart_ptr necessary
+      std::tr1::shared_ptr<DataSource> source;
       BER_Object pushed;
       mutable bool owns;
-   };
+    };
 
-/*************************************************
-* Decode an OPTIONAL or DEFAULT element          *
-*************************************************/
-template<typename T>
-BER_Decoder& BER_Decoder::decode_optional(T& out,
-                                          ASN1_Tag type_tag,
-                                          ASN1_Tag class_tag,
-                                          const T& default_value)
-   {
-   BER_Object obj = get_next_object();
+  /*************************************************
+  * Decode an OPTIONAL or DEFAULT element          *
+  *************************************************/
+  template<typename T>
+  BER_Decoder& BER_Decoder::decode_optional(T& out,
+      ASN1_Tag type_tag,
+      ASN1_Tag class_tag,
+      const T& default_value)
+  {
+    BER_Object obj = get_next_object();
 
-   if(obj.type_tag == type_tag && obj.class_tag == class_tag)
+    if(obj.type_tag == type_tag && obj.class_tag == class_tag)
       {
-      if(class_tag & CONSTRUCTED)
-         BER_Decoder(obj.value).decode(out).verify_end();
-      else
-         {
-         push_back(obj);
-         decode(out, type_tag, class_tag);
-         }
+        if(class_tag & CONSTRUCTED)
+          BER_Decoder(obj.value).decode(out).verify_end();
+        else
+          {
+            push_back(obj);
+            decode(out, type_tag, class_tag);
+          }
       }
-   else
+    else
       {
-      out = default_value;
-      push_back(obj);
+        out = default_value;
+        push_back(obj);
       }
 
-   return (*this);
-   }
+    return (*this);
+  }
 
-/*************************************************
-* Decode a list of homogenously typed values     *
-*************************************************/
-template<typename T>
-BER_Decoder& BER_Decoder::decode_list(std::vector<T>& vec, bool clear_it)
-   {
-   if(clear_it)
+  /*************************************************
+  * Decode a list of homogenously typed values     *
+  *************************************************/
+  template<typename T>
+  BER_Decoder& BER_Decoder::decode_list(std::vector<T>& vec, bool clear_it)
+  {
+    if(clear_it)
       vec.clear();
 
-   while(more_items())
+    while(more_items())
       {
-      T value;
-      decode(value);
-      vec.push_back(value);
+        T value;
+        decode(value);
+        vec.push_back(value);
       }
-   return (*this);
-   }
+    return (*this);
+  }
 
-/*************************************************
-* BER Decoding Functions                         *
-*************************************************/
-namespace BER {
+  /*************************************************
+  * BER Decoding Functions                         *
+  *************************************************/
+  namespace BER
+    {
 
-void decode(BER_Decoder&, Key_Constraints&);
+    void decode(BER_Decoder&, Key_Constraints&);
 
-}
+  }
 
 }
 

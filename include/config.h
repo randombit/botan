@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <botan/ec_dompar.h>
 
 namespace Botan {
 
@@ -26,7 +27,10 @@ class Config
       bool is_set(const std::string&, const std::string&) const;
       void set(const std::string&, const std::string&,
                const std::string&, bool = true);
-
+        
+      EC_Domain_Params get_ec_dompar(const std::string& oid);
+	  void set_ec_dompar(const std::string& oid,  const std::vector<std::string>& dom_par);
+              
       std::string option(const std::string&) const;
       u32bit option_as_u32bit(const std::string&) const;
       u32bit option_as_time(const std::string&) const;
@@ -44,6 +48,7 @@ class Config
                                     Signature_Format&);
    private:
       std::map<std::string, std::string> settings;
+	  std::map<std::string, std::vector<std::string> > ec_domain_params;
    };
 
 /*************************************************

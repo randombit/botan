@@ -12,18 +12,18 @@ namespace Botan {
 /*************************************************
 * Add a new prototype                            *
 *************************************************/
-void X509_GlobalState::add(Extension_Prototype* proto)
+void X509_GlobalState::add(SharedPtrConverter<Extension_Prototype> proto)
    {
-   if(proto)
-      prototypes.push_back(proto);
+   if(proto.get_shared().get())
+      prototypes.push_back(proto.get_shared());
    }
 
 /*************************************************
 * Get an extension object                        *
 *************************************************/
-Certificate_Extension* X509_GlobalState::get_extension(const OID& oid) const
+std::tr1::shared_ptr<Certificate_Extension> X509_GlobalState::get_extension(const OID& oid) const
    {
-   Certificate_Extension* extension = 0;
+   std::tr1::shared_ptr<Certificate_Extension> extension;
    for(u32bit j = 0; j != prototypes.size() && !extension; ++j)
       extension = prototypes[j]->make(oid);
    return extension;
@@ -35,19 +35,19 @@ Certificate_Extension* X509_GlobalState::get_extension(const OID& oid) const
 X509_GlobalState::X509_GlobalState()
    {
 
-#define CREATE_PROTOTYPE(NAME, TYPE)                         \
-   do {                                                      \
-      struct TYPE ## _Prototype : public Extension_Prototype \
-         {                                                   \
-         Certificate_Extension* make(const OID& oid)         \
-            {                                                \
-            if(Botan::OIDS::name_of(oid, NAME))              \
-               return new Botan::Cert_Extension::TYPE();     \
-            return 0;                                        \
-            }                                                \
-         };                                                  \
-                                                             \
-      add(new TYPE ## _Prototype);                           \
+#define CREATE_PROTOTYPE(NAME, TYPE)                                                           \
+   do {                                                                                        \
+      struct TYPE ## _Prototype : public Extension_Prototype                                   \
+         {                                                                                     \
+         std::tr1::shared_ptr<Certificate_Extension> make(const OID& oid)                      \
+            {                                                                                  \
+            if(Botan::OIDS::name_of(oid, NAME))                                                       \
+               return std::tr1::shared_ptr<Certificate_Extension>(new Botan::Cert_Extension::TYPE()); \
+            return std::tr1::shared_ptr<Certificate_Extension>();                                \
+            }                                                                                  \
+         };                                                                                    \
+                                                                                               \
+      add(std::tr1::shared_ptr<Extension_Prototype>(dynamic_cast<Extension_Prototype*>(new TYPE ## _Prototype)));  \
    } while(0);
 
    CREATE_PROTOTYPE("X509v3.KeyUsage", Key_Usage);
@@ -68,8 +68,6 @@ X509_GlobalState::X509_GlobalState()
 *************************************************/
 X509_GlobalState::~X509_GlobalState()
    {
-   for(u32bit j = 0; j != prototypes.size(); ++j)
-      delete prototypes[j];
    prototypes.clear();
    }
 

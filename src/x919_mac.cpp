@@ -73,10 +73,9 @@ void ANSI_X919_MAC::clear() throw()
 /*************************************************
 * ANSI X9.19 MAC Constructor                     *
 *************************************************/
-ANSI_X919_MAC::ANSI_X919_MAC() : MessageAuthenticationCode(8, 8, 16, 8)
+ANSI_X919_MAC::ANSI_X919_MAC() : MessageAuthenticationCode(8, 8, 16, 8),
+   e(get_block_cipher("DES").release()), d(get_block_cipher("DES").release())
    {
-   e = get_block_cipher("DES");
-   d = get_block_cipher("DES");
    position = 0;
    }
 
@@ -85,8 +84,6 @@ ANSI_X919_MAC::ANSI_X919_MAC() : MessageAuthenticationCode(8, 8, 16, 8)
 *************************************************/
 ANSI_X919_MAC::~ANSI_X919_MAC()
    {
-   delete e;
-   delete d;
    }
 
 }

@@ -10,42 +10,37 @@ namespace Botan {
 /*************************************************
 * Chain Constructor                              *
 *************************************************/
-Chain::Chain(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
+Chain::Chain(SharedFilterPtrConverter const& f1c,
+             SharedFilterPtrConverter const& f2c,
+             SharedFilterPtrConverter const& f3c,
+             SharedFilterPtrConverter const& f4c) :
+   Fanout_Filter()
    {
+   SharedFilterPtr const& f1(f1c.get_shared());
    if(f1) { attach(f1); incr_owns(); }
+
+   SharedFilterPtr const& f2(f2c.get_shared());
    if(f2) { attach(f2); incr_owns(); }
+
+   SharedFilterPtr const& f3(f3c.get_shared());
    if(f3) { attach(f3); incr_owns(); }
+
+   SharedFilterPtr const& f4(f4c.get_shared());
    if(f4) { attach(f4); incr_owns(); }
    }
 
 /*************************************************
-* Chain Constructor                              *
-*************************************************/
-Chain::Chain(Filter* filters[], u32bit count)
-   {
-   for(u32bit j = 0; j != count; ++j)
-      if(filters[j])
-         {
-         attach(filters[j]);
-         incr_owns();
-         }
-   }
-
-/*************************************************
 * Fork Constructor                               *
 *************************************************/
-Fork::Fork(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
+Fork::Fork(SharedFilterPtrConverter const& f1c,
+           SharedFilterPtrConverter const& f2c,
+           SharedFilterPtrConverter const& f3c,
+           SharedFilterPtrConverter const& f4c) :
+   Fanout_Filter()
    {
    Filter* filters[4] = { f1, f2, f3, f4 };
-   set_next(filters, 4);
-   }
 
-/*************************************************
-* Fork Constructor                               *
-*************************************************/
-Fork::Fork(Filter* filters[], u32bit count)
-   {
-   set_next(filters, count);
+   set_next(filters, 4);
    }
 
 /*************************************************

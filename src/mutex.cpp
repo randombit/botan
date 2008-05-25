@@ -11,7 +11,7 @@ namespace Botan {
 /*************************************************
 * Mutex_Holder Constructor                       *
 *************************************************/
-Mutex_Holder::Mutex_Holder(Mutex* m) : mux(m)
+Mutex_Holder::Mutex_Holder(SharedPtrConverter<Mutex> m) : mux(m.get_shared())
    {
    if(!mux)
       throw Invalid_Argument("Mutex_Holder: Argument was NULL");
@@ -46,7 +46,7 @@ Named_Mutex_Holder::~Named_Mutex_Holder()
 /*************************************************
 * Default Mutex Factory                          *
 *************************************************/
-Mutex* Default_Mutex_Factory::make()
+std::auto_ptr<Mutex> Default_Mutex_Factory::make()
    {
    class Default_Mutex : public Mutex
       {
@@ -78,7 +78,7 @@ Mutex* Default_Mutex_Factory::make()
          bool locked;
       };
 
-   return new Default_Mutex;
+   return std::auto_ptr<Mutex>(new Default_Mutex);
    }
 
 }

@@ -21,9 +21,9 @@ void DataSink_Stream::write(const byte out[], u32bit length)
 /*************************************************
 * DataSink_Stream Constructor                    *
 *************************************************/
-DataSink_Stream::DataSink_Stream(std::ostream& stream) : fsname("std::ostream")
+DataSink_Stream::DataSink_Stream(const SharedPtrConverter<std::ostream>& stream) : fsname("std::ostream")
    {
-   sink = &stream;
+   sink = stream.get_shared();
    owns = false;
    }
 
@@ -34,9 +34,9 @@ DataSink_Stream::DataSink_Stream(const std::string& file,
                                  bool use_binary) : fsname(file)
    {
    if(use_binary)
-      sink = new std::ofstream(fsname.c_str(), std::ios::binary);
+      sink = std::tr1::shared_ptr<std::ostream>(new std::ofstream(fsname.c_str(), std::ios::binary));
    else
-      sink = new std::ofstream(fsname.c_str());
+      sink = std::tr1::shared_ptr<std::ostream>(new std::ofstream(fsname.c_str()));
 
    if(!sink->good())
       throw Stream_IO_Error("DataSink_Stream: Failure opening " + fsname);
@@ -48,9 +48,7 @@ DataSink_Stream::DataSink_Stream(const std::string& file,
 *************************************************/
 DataSink_Stream::~DataSink_Stream()
    {
-   if(owns)
-      delete sink;
-   sink = 0;
+    sink.reset();
    }
 
 }

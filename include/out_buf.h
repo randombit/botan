@@ -7,6 +7,7 @@
 #define BOTAN_OUTPUT_BUFFER_H__
 
 #include <botan/types.h>
+#include <botan/secqueue.h>
 #include <deque>
 
 namespace Botan {
@@ -21,7 +22,7 @@ class Output_Buffers
       u32bit peek(byte[], u32bit, u32bit, u32bit) const;
       u32bit remaining(u32bit) const;
 
-      void add(class SecureQueue*);
+      void add(SharedPtrConverter<class SecureQueue>);
       void retire();
 
       u32bit message_count() const;
@@ -29,9 +30,9 @@ class Output_Buffers
       Output_Buffers();
       ~Output_Buffers();
    private:
-      class SecureQueue* get(u32bit) const;
+	  std::tr1::shared_ptr<SecureQueue> get(u32bit) const;
 
-      std::deque<SecureQueue*> buffers;
+      std::deque<std::tr1::shared_ptr<SecureQueue> > buffers;
       u32bit offset;
    };
 

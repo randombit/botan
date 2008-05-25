@@ -25,7 +25,7 @@ class PBE_PKCS5v15 : public PBE
       void set_key(const std::string&);
       void new_params();
       MemoryVector<byte> encode_params() const;
-      void decode_params(DataSource&);
+      void decode_params(SharedPtrConverter<DataSource>);
       OID get_oid() const;
       void flush_pipe(bool);
       const Cipher_Dir direction;
@@ -44,13 +44,13 @@ class PBE_PKCS5v20 : public PBE
       void write(const byte[], u32bit);
       void start_msg();
       void end_msg();
-      PBE_PKCS5v20(DataSource&);
+      PBE_PKCS5v20(SharedPtrConverter<DataSource>);
       PBE_PKCS5v20(const std::string&, const std::string&);
    private:
       void set_key(const std::string&);
       void new_params();
       MemoryVector<byte> encode_params() const;
-      void decode_params(DataSource&);
+      void decode_params(SharedPtrConverter<DataSource>);
       OID get_oid() const;
       void flush_pipe(bool);
       bool known_cipher(const std::string&) const;

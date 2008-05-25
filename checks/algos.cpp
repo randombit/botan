@@ -12,13 +12,16 @@ std::vector<algorithm> get_algos()
    algos.push_back(algorithm("Block Cipher", "AES-128", "AES-128/ECB", 16));
    algos.push_back(algorithm("Block Cipher", "AES-192", "AES-192/ECB", 24));
    algos.push_back(algorithm("Block Cipher", "AES-256", "AES-256/ECB", 32));
+	/*
    algos.push_back(algorithm("Block Cipher", "Blowfish", "Blowfish/ECB", 32));
    algos.push_back(algorithm("Block Cipher", "CAST-128", "CAST-128/ECB", 16));
    algos.push_back(algorithm("Block Cipher", "CAST-256", "CAST-256/ECB", 32));
+	*/   
    algos.push_back(algorithm("Block Cipher", "DES", "DES/ECB", 8));
    algos.push_back(algorithm("Block Cipher", "DESX", "DESX/ECB", 24));
    algos.push_back(algorithm("Block Cipher", "TripleDES",
                              "TripleDES/ECB", 24));
+	/*                            
    algos.push_back(algorithm("Block Cipher", "GOST", "GOST/ECB", 32));
    algos.push_back(algorithm("Block Cipher", "IDEA", "IDEA/ECB", 16));
    algos.push_back(algorithm("Block Cipher", "KASUMI", "KASUMI/ECB", 16));
@@ -41,7 +44,7 @@ std::vector<algorithm> get_algos()
    algos.push_back(algorithm("Block Cipher", "TEA", "TEA/ECB", 16));
    algos.push_back(algorithm("Block Cipher", "Twofish", "Twofish/ECB", 32));
    algos.push_back(algorithm("Block Cipher", "XTEA", "XTEA/ECB", 16));
-
+	*/
    algos.push_back(algorithm("Cipher Mode", "AES-128/CBC/PKCS7", 16, 16));
    algos.push_back(algorithm("Cipher Mode", "AES-128/CBC/CTS", 16, 16));
    algos.push_back(algorithm("Cipher Mode", "AES-128/CFB(128)", 16, 16));
@@ -53,7 +56,7 @@ std::vector<algorithm> get_algos()
    algos.push_back(algorithm("Cipher Mode", "AES-128/CTR",
                              "AES-128/CTR-BE", 16, 16));
    algos.push_back(algorithm("Cipher Mode", "AES-128/EAX", 16, 16));
-
+	/*
    algos.push_back(algorithm("Stream Cipher", "ARC4", 16));
    algos.push_back(algorithm("Stream Cipher", "Turing", 32));
    algos.push_back(algorithm("Stream Cipher", "WiderWake4+1",
@@ -69,16 +72,20 @@ std::vector<algorithm> get_algos()
    algos.push_back(algorithm("Hash", "MD4"));
    algos.push_back(algorithm("Hash", "MD5"));
    algos.push_back(algorithm("Hash", "RIPEMD-128"));
+   */
    algos.push_back(algorithm("Hash", "RIPEMD-160"));
    algos.push_back(algorithm("Hash", "SHA-160"));
+   algos.push_back(algorithm("Hash", "SHA-224"));
    algos.push_back(algorithm("Hash", "SHA-256"));
    algos.push_back(algorithm("Hash", "SHA-384"));
    algos.push_back(algorithm("Hash", "SHA-512"));
+   /*
    algos.push_back(algorithm("Hash", "Tiger"));
    algos.push_back(algorithm("Hash", "Whirlpool"));
-
+	*/
    algos.push_back(algorithm("MAC", "CMAC(AES-128)", 16));
    algos.push_back(algorithm("MAC", "HMAC(SHA-1)", 16));
+
    algos.push_back(algorithm("MAC", "X9.19-MAC", 16));
 
    algos.push_back(algorithm("RNG", "Randpool"));

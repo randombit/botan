@@ -122,9 +122,9 @@ std::string CMAC::name() const
 /*************************************************
 * Return a clone of this object                  *
 *************************************************/
-MessageAuthenticationCode* CMAC::clone() const
+CMAC::AutoMACPtr CMAC::clone() const
    {
-   return new CMAC(e->name());
+   return CMAC::AutoMACPtr(new CMAC(e->name()));
    }
 
 /*************************************************
@@ -136,7 +136,7 @@ CMAC::CMAC(const std::string& bc_name) :
                              max_keylength_of(bc_name),
                              keylength_multiple_of(bc_name))
    {
-   e = get_block_cipher(bc_name);
+   e = std::tr1::shared_ptr<BlockCipher>(get_block_cipher(bc_name).release());
 
    if(e->BLOCK_SIZE == 16)     polynomial = 0x87;
    else if(e->BLOCK_SIZE == 8) polynomial = 0x1B;

@@ -33,11 +33,11 @@ class Py_StreamCipher
 
       Py_StreamCipher(const std::string& name)
          {
-         cipher = get_stream_cipher(name);
+         cipher = std::tr1::shared_ptr<StreamCipher>(get_stream_cipher(name).release());
          }
-      ~Py_StreamCipher() { delete cipher; }
+      ~Py_StreamCipher() {  }
    private:
-      StreamCipher* cipher;
+      std::tr1::shared_ptr<StreamCipher> cipher;
    };
 
 void export_stream_ciphers()

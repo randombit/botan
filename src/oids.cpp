@@ -6,69 +6,93 @@
 #include <botan/oids.h>
 #include <botan/config.h>
 
-namespace Botan {
+namespace Botan
+  {
 
-namespace OIDS {
+  namespace OIDS
+    {
 
-/*************************************************
-* Register an OID to string mapping              *
-*************************************************/
-void add_oid(const OID& oid, const std::string& name)
-   {
-   const std::string oid_str = oid.as_string();
+    /*************************************************
+    * Register an OID to string mapping              *
+    *************************************************/
+    void add_oid(const OID& oid, const std::string& name)
+    {
+      const std::string oid_str = oid.as_string();
 
-   if(!global_config().is_set("oid2str", oid_str))
-      global_config().set("oid2str", oid_str, name);
-   if(!global_config().is_set("str2oid", name))
-      global_config().set("str2oid", name, oid_str);
-   }
+      if(!global_config().is_set("oid2str", oid_str))
+        global_config().set("oid2str", oid_str, name);
+      if(!global_config().is_set("str2oid", name))
+        global_config().set("str2oid", name, oid_str);
+    }
 
-/*************************************************
-* Do an OID to string lookup                     *
-*************************************************/
-std::string lookup(const OID& oid)
-   {
-   std::string name = global_config().get("oid2str", oid.as_string());
-   if(name == "")
-      return oid.as_string();
-   return name;
-   }
+    /*************************************************
+    * Do an OID to string lookup                     *
+    *************************************************/
+    std::string lookup(const OID& oid)
+    {
+      std::string name = global_config().get("oid2str", oid.as_string());
+      if(name == "")
+        return oid.as_string();
+      return name;
+    }
 
-/*************************************************
-* Do a string to OID lookup                      *
-*************************************************/
-OID lookup(const std::string& name)
-   {
-   std::string value = global_config().get("str2oid", name);
-   if(value != "")
-      return OID(value);
+    /*************************************************
+    * Do a string to OID lookup                      *
+    *************************************************/
+    OID lookup_section(const std::string section, const std::string& name)
+    {
+      std::string value = global_config().get(section, name);
+      if(value != "")
+        return OID(value);
 
-   try
-      {
-      return OID(name);
-      }
-   catch(Exception)
-      {
-      throw Lookup_Error("No object identifier found for " + name);
-      }
-   }
+      try
+        {
+          return OID(name);
+        }
+      catch(Exception)
+        {
+          throw Lookup_Error("No object identifier found for " + name);
+        }
+    }
+    /*OID lookup(const std::string& name)
+    {
+    std::string value = global_config().get("str2oid", name);
+    if(value != "")
+       return OID(value);
 
-/*************************************************
-* Check to see if an OID exists in the table     *
-*************************************************/
-bool have_oid(const std::string& name)
-   {
-   return global_config().is_set("str2oid", name);
-   }
+    try
+       {
+       return OID(name);
+       }
+    catch(Exception)
+       {
+       throw Lookup_Error("No object identifier found for " + name);
+       }
+    }*/
+    OID lookup(const std::string& name)
+    {
+      return lookup_section("str2oid", name);
+    }
+    OID lookup_bsi(const std::string& name)
+    {
+      return lookup_section("str2oid_bsi", name);
+    }
+    /*************************************************
+    * Check to see if an OID exists in the table     *
+    *************************************************/
+    bool have_oid(const std::string& name)
+    {
+      return global_config().is_set("str2oid", name);
+    }
 
-/*************************************************
-* Check to see if an OID exists in the table     *
-*************************************************/
-bool name_of(const OID& oid, const std::string& name)
-   {
-   return (oid == lookup(name));
-   }
+    /*************************************************
+    * Check to see if an OID exists in the table     *
+    *************************************************/
+    bool name_of(const OID& oid, const std::string& name)
+    {
+      return (oid == lookup(name));
+    }
 
-}
+  }
 
 }

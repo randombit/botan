@@ -50,13 +50,13 @@ std::string to_string(const BER_Object& obj)
 /*************************************************
 * Do heuristic tests for BER data                *
 *************************************************/
-bool maybe_BER(DataSource& source)
+bool maybe_BER(SharedPtrConverter<DataSource> source)
    {
    byte first_byte;
-   if(!source.peek_byte(first_byte))
+   if(!source.get_shared()->peek_byte(first_byte))
       throw Stream_IO_Error("ASN1::maybe_BER: Source was empty");
 
-   if(first_byte == (SEQUENCE | CONSTRUCTED))
+   if((first_byte == (SEQUENCE | CONSTRUCTED)) || (first_byte == CV_Certificate) || first_byte == CVC_ADO)
       return true;
    return false;
    }

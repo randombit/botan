@@ -107,19 +107,20 @@ std::string ANSI_X931_RNG::name() const
 * ANSI X931 RNG Constructor                      *
 *************************************************/
 ANSI_X931_RNG::ANSI_X931_RNG(const std::string& cipher_name,
-                             RandomNumberGenerator* prng_ptr)
+		SharedPtrConverter<RandomNumberGenerator> prng_ptr)
    {
    if(cipher_name == "")
-      cipher = get_block_cipher("AES-256");
+      cipher = std::tr1::shared_ptr<BlockCipher>(get_block_cipher("AES-256").release());
    else
-      cipher = get_block_cipher(cipher_name);
+      cipher = std::tr1::shared_ptr<BlockCipher>(get_block_cipher(cipher_name).release());
 
    const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
 
    V.create(BLOCK_SIZE);
    R.create(BLOCK_SIZE);
 
-   prng = (prng_ptr ? prng_ptr : new Randpool);
+   std::tr1::shared_ptr<RandomNumberGenerator> prng_sptr = prng_ptr.get_shared();
+   prng = (prng_sptr.get() ? prng_sptr : std::tr1::shared_ptr<RandomNumberGenerator>(new Randpool));
 
    position = 0;
    }
@@ -129,8 +130,7 @@ ANSI_X931_RNG::ANSI_X931_RNG(const std::string& cipher_name,
 *************************************************/
 ANSI_X931_RNG::~ANSI_X931_RNG()
    {
-   delete cipher;
-   delete prng;
+
    }
 
 }

@@ -102,9 +102,10 @@ void SHA_160::hash(const byte input[])
 *************************************************/
 void SHA_160::copy_out(byte output[])
    {
-   for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
-      store_be(digest[j/4], output + j);
+    for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
+	   store_be(digest[j/4], output + j);
    }
+
 
 /*************************************************
 * Clear memory of sensitive data                 *

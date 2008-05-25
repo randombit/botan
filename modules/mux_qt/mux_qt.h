@@ -16,7 +16,7 @@ namespace Botan {
 class Qt_Mutex_Factory : public Mutex_Factory
    {
    public:
-      Mutex* make();
+      std::auto_ptr<Mutex> make();
    };
 
 }

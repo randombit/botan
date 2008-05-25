@@ -25,21 +25,21 @@ class ECB_Encryption_ErrorCheck : public Filter
          {
          const std::string HASH = "SHA-1";
 
-         cipher = get_block_cipher(cipher_name);
-         input_hash = get_hash(HASH);
-         decrypt_hash = get_hash(HASH);
+         cipher = BlockCipher::AutoBlockCipherPtr(get_block_cipher(cipher_name).release());
+         input_hash = HashFunction::AutoHashFunctionPtr(get_hash(HASH).release());
+         decrypt_hash = HashFunction::AutoHashFunctionPtr(get_hash(HASH).release());
          buffer.create(BLOCKSIZE);
          cipher->set_key(key);
          position = 0;
          }
       ~ECB_Encryption_ErrorCheck()
-         { delete cipher; delete input_hash; delete decrypt_hash; }
+         { }
    private:
       const u32bit BLOCKSIZE;
-      BlockCipher* cipher;
+      BlockCipher::AutoBlockCipherPtr cipher;
       SecureVector<byte> buffer;
       u32bit position;
-      HashFunction* input_hash, *decrypt_hash;
+      HashFunction::AutoHashFunctionPtr input_hash, decrypt_hash;
    };
 
 void ECB_Encryption_ErrorCheck::write(const byte input[], u32bit length)
@@ -84,11 +84,11 @@ void ECB_Encryption_ErrorCheck::end_msg()
       throw Exception("ECB: input was not in full blocks");
    }
 
-Filter* lookup_block(const std::string& algname, const std::string& key)
+Filter::AutoFilterPtr lookup_block(const std::string& algname, const std::string& key)
    {
-   Filter* cipher = 0;
+   Filter::AutoFilterPtr cipher;
    try {
-      cipher = new ECB_Encryption_ErrorCheck(algname, "NoPadding", key);
+      cipher = create_auto_ptr<ECB_Encryption_ErrorCheck>(algname, "NoPadding", key);
       }
    catch(Algorithm_Not_Found) {}
 

@@ -29,10 +29,10 @@ class StreamCipher_Filter : public Keyed_Filter
 
       StreamCipher_Filter(const std::string&);
       StreamCipher_Filter(const std::string&, const SymmetricKey&);
-      ~StreamCipher_Filter() { delete cipher; }
+      ~StreamCipher_Filter() {  }
    private:
       SecureVector<byte> buffer;
-      StreamCipher* cipher;
+      std::tr1::shared_ptr<StreamCipher> cipher;
    };
 
 /*************************************************
@@ -45,10 +45,10 @@ class Hash_Filter : public Filter
       void end_msg();
 
       Hash_Filter(const std::string&, u32bit = 0);
-      ~Hash_Filter() { delete hash; }
+      ~Hash_Filter() {  }
    private:
       const u32bit OUTPUT_LENGTH;
-      HashFunction* hash;
+      std::tr1::shared_ptr<HashFunction> hash;
    };
 
 /*************************************************
@@ -62,10 +62,10 @@ class MAC_Filter : public Keyed_Filter
 
       MAC_Filter(const std::string&, u32bit = 0);
       MAC_Filter(const std::string&, const SymmetricKey&, u32bit = 0);
-      ~MAC_Filter() { delete mac; }
+      ~MAC_Filter() {  }
    private:
       const u32bit OUTPUT_LENGTH;
-      MessageAuthenticationCode* mac;
+      std::tr1::shared_ptr<MessageAuthenticationCode> mac;
    };
 
 }

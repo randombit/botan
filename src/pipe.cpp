@@ -6,6 +6,7 @@
 #include <botan/pipe.h>
 #include <botan/out_buf.h>
 #include <botan/secqueue.h>
+#include <iostream>
 
 namespace Botan {
 
@@ -26,7 +27,14 @@ class Null_Filter : public Filter
 /*************************************************
 * Pipe Constructor                               *
 *************************************************/
-Pipe::Pipe(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
+Pipe::Pipe(SharedFilterPtrConverter const& f1,
+           SharedFilterPtrConverter const& f2,
+           SharedFilterPtrConverter const& f3,
+           SharedFilterPtrConverter const& f4)
+  : pipe(),
+    outputs(),
+    default_read(0),
+    inside_msg(false)
    {
    init();
    append(f1);
@@ -36,22 +44,11 @@ Pipe::Pipe(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
    }
 
 /*************************************************
-* Pipe Constructor                               *
-*************************************************/
-Pipe::Pipe(Filter* filter_array[], u32bit count)
-   {
-   init();
-   for(u32bit j = 0; j != count; ++j)
-      append(filter_array[j]);
-   }
-
-/*************************************************
 * Pipe Destructor                                *
 *************************************************/
 Pipe::~Pipe()
    {
    destruct(pipe);
-   delete outputs;
    }
 
 /*************************************************
@@ -59,10 +56,10 @@ Pipe::~Pipe()
 *************************************************/
 void Pipe::init()
    {
-   outputs = new Output_Buffers;
-   pipe = 0;
-   default_read = 0;
-   inside_msg = false;
+     outputs.reset(new Output_Buffers);
+     pipe.reset();
+     default_read = 0;
+     inside_msg = false;
    }
 
 /*************************************************
@@ -73,20 +70,21 @@ void Pipe::reset()
    if(inside_msg)
       throw Invalid_State("Pipe cannot be reset while it is processing");
    destruct(pipe);
-   pipe = 0;
    inside_msg = false;
    }
 
 /*************************************************
 * Destroy the Pipe                               *
 *************************************************/
-void Pipe::destruct(Filter* to_kill)
+void Pipe::destruct(Filter::SharedFilterPtr& to_kill)
    {
-   if(!to_kill || dynamic_cast<SecureQueue*>(to_kill))
+   if(!to_kill.get() || dynamic_cast<SecureQueue*>(to_kill.get()))
       return;
-   for(u32bit j = 0; j != to_kill->total_ports(); ++j)
+   for(u32bit j = 0; j != to_kill->total_ports(); ++j) {
       destruct(to_kill->next[j]);
-   delete to_kill;
+   }
+   to_kill->owned = false;
+   to_kill.reset();
    }
 
 /*************************************************
@@ -94,7 +92,7 @@ void Pipe::destruct(Filter* to_kill)
 *************************************************/
 bool Pipe::end_of_data() const
    {
-   return (remaining() == 0);
+   return (remaining() == 0); // remaining(u32bit = DEFAULT_MESSAGE)
    }
 
 /*************************************************
@@ -150,8 +148,8 @@ void Pipe::start_msg()
    {
    if(inside_msg)
       throw Invalid_State("Pipe::start_msg: Message was already started");
-   if(pipe == 0)
-      pipe = new Null_Filter;
+   if(!pipe.get())
+      pipe = create_shared_ptr<Null_Filter>();
    find_endpoints(pipe);
    pipe->new_msg();
    inside_msg = true;
@@ -166,10 +164,11 @@ void Pipe::end_msg()
       throw Invalid_State("Pipe::end_msg: Message was already ended");
    pipe->finish_msg();
    clear_endpoints(pipe);
-   if(dynamic_cast<Null_Filter*>(pipe))
+//   if(std::tr1::dynamic_pointer_cast<Null_Filter>(pipe))
+   if(dynamic_cast<Null_Filter*>(pipe.get()))
       {
-      delete pipe;
-      pipe = 0;
+      pipe->owned = false; // really necessary?
+      pipe.reset();
       }
    inside_msg = false;
 
@@ -179,14 +178,15 @@ void Pipe::end_msg()
 /*************************************************
 * Find the endpoints of the Pipe                 *
 *************************************************/
-void Pipe::find_endpoints(Filter* f)
+void Pipe::find_endpoints(const Filter::SharedFilterPtr& f)
    {
    for(u32bit j = 0; j != f->total_ports(); ++j)
-      if(f->next[j] && !dynamic_cast<SecureQueue*>(f->next[j]))
+     //if((f->next[j]).get() && !std::tr1::dynamic_pointer_cast<SecureQueue>(f->next[j]))
+     if((f->next[j]).get() && !dynamic_cast<SecureQueue*>((f->next[j]).get()))
          find_endpoints(f->next[j]);
       else
          {
-         SecureQueue* q = new SecureQueue;
+         std::tr1::shared_ptr<SecureQueue> q = create_shared_ptr<SecureQueue>();
          f->next[j] = q;
          outputs->add(q);
          }
@@ -195,13 +195,14 @@ void Pipe::find_endpoints(Filter* f)
 /*************************************************
 * Remove the SecureQueues attached to the Filter *
 *************************************************/
-void Pipe::clear_endpoints(Filter* f)
+void Pipe::clear_endpoints(const Filter::SharedFilterPtr& f)
    {
-   if(!f) return;
+   if(!f.get()) return;
    for(u32bit j = 0; j != f->total_ports(); ++j)
       {
-      if(f->next[j] && dynamic_cast<SecureQueue*>(f->next[j]))
-         f->next[j] = 0;
+      //if((f->next[j]).get() && std::tr1::dynamic_pointer_cast<SecureQueue>(f->next[j]))
+      if((f->next[j]).get() && dynamic_cast<SecureQueue*>((f->next[j]).get()))
+        f->next[j] = Filter::SharedFilterPtr();
       clear_endpoints(f->next[j]);
       }
    }
@@ -209,40 +210,44 @@ void Pipe::clear_endpoints(Filter* f)
 /*************************************************
 * Append a Filter to the Pipe                    *
 *************************************************/
-void Pipe::append(Filter* filter)
+void Pipe::append(SharedFilterPtrConverter const& filter_converter)
    {
+   SharedFilterPtr filter(filter_converter.get_shared());
    if(inside_msg)
       throw Invalid_State("Cannot append to a Pipe while it is processing");
-   if(!filter)
+   if(!filter.get())
       return;
-   if(dynamic_cast<SecureQueue*>(filter))
+   //if(std::tr1::dynamic_pointer_cast<SecureQueue>(filter))
+   if( dynamic_cast<SecureQueue*>(filter.get()))
       throw Invalid_Argument("Pipe::append: SecureQueue cannot be used");
    if(filter->owned)
       throw Invalid_Argument("Filters cannot be shared among multiple Pipes");
 
    filter->owned = true;
 
-   if(!pipe) pipe = filter;
+   if(!pipe.get()) pipe = filter;
    else      pipe->attach(filter);
    }
 
 /*************************************************
 * Prepend a Filter to the Pipe                   *
 *************************************************/
-void Pipe::prepend(Filter* filter)
+void Pipe::prepend(SharedFilterPtrConverter const& filter_converter)
    {
+   SharedFilterPtr filter(filter_converter.get_shared());
    if(inside_msg)
       throw Invalid_State("Cannot prepend to a Pipe while it is processing");
-   if(!filter)
+   if(!filter.get())
       return;
-   if(dynamic_cast<SecureQueue*>(filter))
+   //if(std::tr1::dynamic_pointer_cast<SecureQueue>(filter))
+   if( dynamic_cast<SecureQueue*>(filter.get()))
       throw Invalid_Argument("Pipe::prepend: SecureQueue cannot be used");
    if(filter->owned)
       throw Invalid_Argument("Filters cannot be shared among multiple Pipes");
 
    filter->owned = true;
 
-   if(pipe) filter->attach(pipe);
+   if(pipe.get()) filter->attach(pipe);
    pipe = filter;
    }
 
@@ -254,22 +259,22 @@ void Pipe::pop()
    if(inside_msg)
       throw Invalid_State("Cannot pop off a Pipe while it is processing");
 
-   if(!pipe)
+   if(!pipe.get())
       return;
 
    if(pipe->total_ports() > 1)
       throw Invalid_State("Cannot pop off a Filter with multiple ports");
 
-   Filter* f = pipe;
+   Filter::SharedFilterPtr f = pipe;
    u32bit owns = f->owns();
    pipe = pipe->next[0];
-   delete f;
+   f->owned = false; // really necessary?
 
    while(owns--)
       {
       f = pipe;
       pipe = pipe->next[0];
-      delete f;
+      f->owned = false; // really necessary?
       }
    }
 

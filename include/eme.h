@@ -7,6 +7,7 @@
 #define BOTAN_EME_H__
 
 #include <botan/pk_util.h>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -19,13 +20,13 @@ class EME1 : public EME
       u32bit maximum_input_size(u32bit) const;
 
       EME1(const std::string&, const std::string&, const std::string& = "");
-      ~EME1() { delete mgf; }
+      ~EME1() { }
    private:
       SecureVector<byte> pad(const byte[], u32bit, u32bit) const;
       SecureVector<byte> unpad(const byte[], u32bit, u32bit) const;
       const u32bit HASH_LENGTH;
       SecureVector<byte> Phash;
-      MGF* mgf;
+      std::tr1::shared_ptr<MGF> mgf;
    };
 
 /*************************************************

@@ -85,7 +85,7 @@ void OctetString::set_odd_parity()
 *************************************************/
 std::string OctetString::as_string() const
    {
-   Pipe pipe(new Hex_Encoder);
+   Pipe pipe(create_shared_ptr<Hex_Encoder>());
    pipe.process_msg(bits);
    return pipe.read_all_as_string();
    }

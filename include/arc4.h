@@ -18,7 +18,8 @@ class ARC4 : public StreamCipher
    public:
       void clear() throw();
       std::string name() const;
-      StreamCipher* clone() const { return new ARC4(SKIP); }
+      AutoStreamCipherPtr clone() const { return AutoStreamCipherPtr(new ARC4); }
+      stdStreamCipher* clone() const { return new ARC4(SKIP); }
       ARC4(u32bit = 0);
       ~ARC4() { clear(); }
    private:

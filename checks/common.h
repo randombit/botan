@@ -22,6 +22,7 @@ std::vector<algorithm> get_algos();
 
 void strip_comments(std::string& line);
 void strip_newlines(std::string& line);
+void strip_newlines_windows(std::string& line);
 void strip(std::string& line);
 std::vector<std::string> parse(const std::string& line);
 

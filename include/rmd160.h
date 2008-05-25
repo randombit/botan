@@ -18,7 +18,7 @@ class RIPEMD_160 : public MDx_HashFunction
    public:
       void clear() throw();
       std::string name() const { return "RIPEMD-160"; }
-      HashFunction* clone() const { return new RIPEMD_160; }
+      AutoHashFunctionPtr clone() const { return AutoHashFunctionPtr(new RIPEMD_160); }
       RIPEMD_160() : MDx_HashFunction(20, 64, false, true) { clear(); }
    private:
       void hash(const byte[]);

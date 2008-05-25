@@ -24,7 +24,7 @@ class CBC_Encryption : public BlockCipherMode
       std::string name() const;
       void write(const byte[], u32bit);
       void end_msg();
-      const BlockCipherModePaddingMethod* padder;
+      std::tr1::shared_ptr<BlockCipherModePaddingMethod const> padder;
    };
 
 /*************************************************
@@ -40,7 +40,7 @@ class CBC_Decryption : public BlockCipherMode
       std::string name() const;
       void write(const byte[], u32bit);
       void end_msg();
-      const BlockCipherModePaddingMethod* padder;
+      std::tr1::shared_ptr<BlockCipherModePaddingMethod const> padder;
       SecureVector<byte> temp;
    };
 

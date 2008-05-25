@@ -3,8 +3,10 @@
 * (C) 1999-2007 The Botan Project                *
 *************************************************/
 
-#include <botan/pow_mod.h>
 #include <botan/engine.h>
+#include <botan/pow_mod.h>
+
+
 
 namespace Botan {
 
@@ -13,7 +15,7 @@ namespace Botan {
 *************************************************/
 Power_Mod::Power_Mod(const BigInt& n, Usage_Hints hints)
    {
-   core = 0;
+   core.reset();
    set_modulus(n, hints);
    }
 
@@ -22,9 +24,9 @@ Power_Mod::Power_Mod(const BigInt& n, Usage_Hints hints)
 *************************************************/
 Power_Mod::Power_Mod(const Power_Mod& other)
    {
-   core = 0;
-   if(other.core)
-      core = other.core->copy();
+   core.reset();
+   if(other.core.get())
+      core = std::auto_ptr<Modular_Exponentiator>(other.core->copy());
    }
 
 /*************************************************
@@ -32,10 +34,9 @@ Power_Mod::Power_Mod(const Power_Mod& other)
 *************************************************/
 Power_Mod& Power_Mod::operator=(const Power_Mod& other)
    {
-   delete core;
-   core = 0;
-   if(other.core)
-      core = other.core->copy();
+   core.reset();
+   if(other.core.get())
+      core = std::auto_ptr<Modular_Exponentiator>(other.core->copy());
    return (*this);
    }
 
@@ -44,7 +45,6 @@ Power_Mod& Power_Mod::operator=(const Power_Mod& other)
 *************************************************/
 Power_Mod::~Power_Mod()
    {
-   delete core;
    }
 
 /*************************************************
@@ -52,8 +52,8 @@ Power_Mod::~Power_Mod()
 *************************************************/
 void Power_Mod::set_modulus(const BigInt& n, Usage_Hints hints) const
    {
-   delete core;
-   core = ((n == 0) ? 0 : Engine_Core::mod_exp(n, hints));
+   core.reset();
+   core = ((n == 0) ? std::auto_ptr<Modular_Exponentiator>() : Engine_Core::mod_exp(n, hints));
    }
 
 /*************************************************
@@ -64,7 +64,7 @@ void Power_Mod::set_base(const BigInt& b) const
    if(b.is_zero() || b.is_negative())
       throw Invalid_Argument("Power_Mod::set_base: arg must be > 0");
 
-   if(!core)
+   if(!core.get())
       throw Internal_Error("Power_Mod::set_base: core was NULL");
    core->set_base(b);
    }
@@ -77,7 +77,7 @@ void Power_Mod::set_exponent(const BigInt& e) const
    if(e.is_negative())
       throw Invalid_Argument("Power_Mod::set_exponent: arg must be > 0");
 
-   if(!core)
+   if(!core.get())
       throw Internal_Error("Power_Mod::set_exponent: core was NULL");
    core->set_exponent(e);
    }
@@ -87,7 +87,7 @@ void Power_Mod::set_exponent(const BigInt& e) const
 *************************************************/
 BigInt Power_Mod::execute() const
    {
-   if(!core)
+   if(!core.get())
       throw Internal_Error("Power_Mod::execute: core was NULL");
    return core->execute();
    }

@@ -10,6 +10,8 @@
 #include <botan/pkcs8.h>
 #include <botan/pk_core.h>
 
+#include <botan/bigint.h>
+
 namespace Botan {
 
 /*************************************************
@@ -25,8 +27,8 @@ class IF_Scheme_PublicKey : public virtual Public_Key
 
       u32bit max_input_bits() const { return (n.bits() - 1); }
 
-      X509_Encoder* x509_encoder() const;
-      X509_Decoder* x509_decoder();
+      std::auto_ptr<X509_Encoder> x509_encoder() const;
+      std::auto_ptr<X509_Decoder> x509_decoder();
    protected:
       virtual void X509_load_hook();
       BigInt n, e;
@@ -46,8 +48,8 @@ class IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
       const BigInt& get_q() const { return q; }
       const BigInt& get_d() const { return d; }
 
-      PKCS8_Encoder* pkcs8_encoder() const;
-      PKCS8_Decoder* pkcs8_decoder();
+      std::auto_ptr<PKCS8_Encoder> pkcs8_encoder() const;
+      std::auto_ptr<PKCS8_Decoder> pkcs8_decoder();
    protected:
       virtual void PKCS8_load_hook(bool = false);
       BigInt d, p, q, d1, d2, c;

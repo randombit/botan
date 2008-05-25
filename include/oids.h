@@ -27,6 +27,7 @@ bool have_oid(const std::string&);
 *************************************************/
 std::string lookup(const OID&);
 OID lookup(const std::string&);
+OID lookup_bsi(const std::string&);
 bool name_of(const OID&, const std::string&);
 
 }

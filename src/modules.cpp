@@ -77,53 +77,55 @@ namespace Botan {
 /*************************************************
 * Return a mutex factory, if available           *
 *************************************************/
-Mutex_Factory* Builtin_Modules::mutex_factory() const
+std::tr1::shared_ptr<Mutex_Factory> Builtin_Modules::mutex_factory() const
    {
 #if defined(BOTAN_EXT_MUTEX_PTHREAD)
-   return new Pthread_Mutex_Factory;
+   return std::tr1::shared_ptr<Mutex_Factory>(new Pthread_Mutex_Factory);
 #elif defined(BOTAN_EXT_MUTEX_WIN32)
-   return new Win32_Mutex_Factory;
+   return std::tr1::shared_ptr<Mutex_Factory>(new Win32_Mutex_Factory);
 #elif defined(BOTAN_EXT_MUTEX_QT)
-   return new Qt_Mutex_Factory;
+   return std::tr1::shared_ptr<Mutex_Factory>(new Qt_Mutex_Factory);
 #else
-   return 0;
+   return std::tr1::shared_ptr<Mutex_Factory>();
 #endif
    }
 
 /*************************************************
 * Find a high resolution timer, if possible      *
 *************************************************/
-Timer* Builtin_Modules::timer() const
+std::tr1::shared_ptr<Timer> Builtin_Modules::timer() const
    {
 #if defined(BOTAN_EXT_TIMER_HARDWARE)
-   return new Hardware_Timer;
+   return std::tr1::shared_ptr<Timer>(new Hardware_Timer);
 #elif defined(BOTAN_EXT_TIMER_POSIX)
-   return new POSIX_Timer;
+   return std::tr1::shared_ptr<Timer>(new POSIX_Timer);
 #elif defined(BOTAN_EXT_TIMER_UNIX)
-   return new Unix_Timer;
+   return std::tr1::shared_ptr<Timer>(new Unix_Timer);
 #elif defined(BOTAN_EXT_TIMER_WIN32)
-   return new Win32_Timer;
+   return std::tr1::shared_ptr<Timer>(new Win32_Timer);
 #else
-   return new Timer;
+   return std::tr1::shared_ptr<Timer>(new Timer);
 #endif
    }
 
 /*************************************************
 * Find any usable allocators                     *
 *************************************************/
-std::vector<Allocator*> Builtin_Modules::allocators() const
+std::vector<std::tr1::shared_ptr<Allocator> > Builtin_Modules::allocators() const
    {
-   std::vector<Allocator*> allocators;
+   std::vector<std::tr1::shared_ptr<Allocator> > allocators;
 
 #if defined(BOTAN_EXT_ALLOC_MMAP)
-   allocators.push_back(new MemoryMapping_Allocator);
+   allocators.push_back(std::tr1::shared_ptr<Allocator>(new MemoryMapping_Allocator));
 #endif
 
-   allocators.push_back(new Locking_Allocator);
-   allocators.push_back(new Malloc_Allocator);
+   allocators.push_back(std::tr1::shared_ptr<Allocator>(new Locking_Allocator));
+   allocators.push_back(std::tr1::shared_ptr<Allocator>(new Malloc_Allocator));
 
    return allocators;
    }
+
+
 
 /*************************************************
 * Return the default allocator                   *
@@ -145,38 +147,38 @@ std::string Builtin_Modules::default_allocator() const
 /*************************************************
 * Register any usable entropy sources            *
 *************************************************/
-std::vector<EntropySource*> Builtin_Modules::entropy_sources() const
+std::vector<std::tr1::shared_ptr<EntropySource> > Builtin_Modules::entropy_sources() const
    {
-   std::vector<EntropySource*> sources;
+   std::vector<std::tr1::shared_ptr<EntropySource> > sources;
 
-   sources.push_back(new File_EntropySource);
+   sources.push_back(std::tr1::shared_ptr<EntropySource>(new File_EntropySource));
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_AEP)
-   sources.push_back(new AEP_EntropySource);
+   sources.push_back(std::tr1::shared_ptr<EntropySource>(new AEP_EntropySource));
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_EGD)
-   sources.push_back(new EGD_EntropySource);
+   sources.push_back(std::tr1::shared_ptr<EntropySource>(new EGD_EntropySource));
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_CAPI)
-   sources.push_back(new Win32_CAPI_EntropySource);
+   sources.push_back(std::tr1::shared_ptr<EntropySource>(new Win32_CAPI_EntropySource));
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_WIN32)
-   sources.push_back(new Win32_EntropySource);
+   sources.push_back(std::tr1::shared_ptr<EntropySource>(new Win32_EntropySource));
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_UNIX)
-   sources.push_back(new Unix_EntropySource);
+   sources.push_back(std::tr1::shared_ptr<EntropySource>(new Unix_EntropySource));
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_BEOS)
-   sources.push_back(new BeOS_EntropySource);
+   sources.push_back(std::tr1::shared_ptr<EntropySource>(new BeOS_EntropySource));
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_FTW)
-   sources.push_back(new FTW_EntropySource);
+   sources.push_back(std::tr1::shared_ptr<EntropySource>(new FTW_EntropySource));
 #endif
 
    return sources;
@@ -185,26 +187,26 @@ std::vector<EntropySource*> Builtin_Modules::entropy_sources() const
 /*************************************************
 * Find any usable engines                        *
 *************************************************/
-std::vector<Engine*> Builtin_Modules::engines() const
+std::vector<std::tr1::shared_ptr<Engine> > Builtin_Modules::engines() const
    {
-   std::vector<Engine*> engines;
+   std::vector<std::tr1::shared_ptr<Engine> > engines;
 
    if(use_engines)
       {
 #if defined(BOTAN_EXT_ENGINE_AEP)
-      engines.push_back(new AEP_Engine);
+      engines.push_back(std::tr1::shared_ptr<Engine>(new AEP_Engine));
 #endif
 
 #if defined(BOTAN_EXT_ENGINE_GNU_MP)
-      engines.push_back(new GMP_Engine);
+      engines.push_back(std::tr1::shared_ptr<Engine>(new GMP_Engine));
 #endif
 
 #if defined(BOTAN_EXT_ENGINE_OPENSSL)
-      engines.push_back(new OpenSSL_Engine);
+      engines.push_back(std::tr1::shared_ptr<Engine>(new OpenSSL_Engine));
 #endif
       }
 
-   engines.push_back(new Default_Engine);
+   engines.push_back(std::tr1::shared_ptr<Engine>(new Default_Engine));
 
    return engines;
    }
@@ -212,9 +214,9 @@ std::vector<Engine*> Builtin_Modules::engines() const
 /*************************************************
 * Find the best transcoder option                *
 *************************************************/
-Charset_Transcoder* Builtin_Modules::transcoder() const
+std::tr1::shared_ptr<Charset_Transcoder> Builtin_Modules::transcoder() const
    {
-   return new Default_Charset_Transcoder;
+   return std::tr1::shared_ptr<Charset_Transcoder>(new Default_Charset_Transcoder);
    }
 
 /*************************************************

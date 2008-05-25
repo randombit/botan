@@ -12,7 +12,7 @@
 #include <limits>
 
 #include <botan/botan.h>
-#include <botan/mp_types.h>
+#include <botan/math/mp_types.h>
 
 using namespace Botan_types;
 

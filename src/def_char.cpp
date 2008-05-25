@@ -83,8 +83,8 @@ std::string latin1_to_utf8(const std::string& iso8859)
          utf8 += static_cast<char>(c);
       else
          {
-         utf8 += static_cast<char>((0xC0 | (c >> 6)));
-         utf8 += static_cast<char>((0x80 | (c & 0x3F)));
+         	utf8 += static_cast<char>((0xC0 | (c >> 6)));
+         	utf8 += static_cast<char>((0x80 | (c & 0x3F)));
          }
       }
    return utf8;

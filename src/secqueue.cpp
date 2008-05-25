@@ -5,6 +5,7 @@
 
 #include <botan/secqueue.h>
 #include <algorithm>
+#include <iostream>
 
 namespace Botan {
 
@@ -37,11 +38,11 @@ class SecureQueueNode
          return copied;
          }
       u32bit size() const { return (end - start); }
-      SecureQueueNode()  { next = 0; start = end = 0; }
-      ~SecureQueueNode() { next = 0; start = end = 0; }
+      SecureQueueNode() : next(std::tr1::shared_ptr<SecureQueueNode>()), start(0), end(0)  { }
+      ~SecureQueueNode() { start = end = 0; }
    private:
       friend class SecureQueue;
-      SecureQueueNode* next;
+      std::tr1::shared_ptr<SecureQueueNode> next;
       SecureBuffer<byte, DEFAULT_BUFFERSIZE> buffer;
       u32bit start, end;
    };
@@ -51,8 +52,9 @@ class SecureQueueNode
 *************************************************/
 SecureQueue::SecureQueue()
    {
-   set_next(0, 0);
-   head = tail = new SecureQueueNode;
+   std::vector<SharedFilterPtr> sharedFilterPtrVector(0);
+   set_next(sharedFilterPtrVector.begin(), sharedFilterPtrVector.end());
+   head = tail = std::tr1::shared_ptr<SecureQueueNode>(new SecureQueueNode);
    }
 
 /*************************************************
@@ -61,11 +63,12 @@ SecureQueue::SecureQueue()
 SecureQueue::SecureQueue(const SecureQueue& input) :
    Fanout_Filter(), DataSource()
    {
-   set_next(0, 0);
+   std::vector<SharedFilterPtr> sharedFilterPtrVector(0);
+   set_next(sharedFilterPtrVector.begin(), sharedFilterPtrVector.end());
 
-   head = tail = new SecureQueueNode;
-   SecureQueueNode* temp = input.head;
-   while(temp)
+   head = tail = std::tr1::shared_ptr<SecureQueueNode>(new SecureQueueNode);
+   std::tr1::shared_ptr<SecureQueueNode> temp = input.head;
+   while(temp.get())
       {
       write(temp->buffer + temp->start, temp->end - temp->start);
       temp = temp->next;
@@ -77,14 +80,12 @@ SecureQueue::SecureQueue(const SecureQueue& input) :
 *************************************************/
 void SecureQueue::destroy()
    {
-   SecureQueueNode* temp = head;
-   while(temp)
+   std::tr1::shared_ptr<SecureQueueNode> temp = head;
+   while(temp.get())
       {
-      SecureQueueNode* holder = temp->next;
-      delete temp;
-      temp = holder;
+      temp = temp->next;
       }
-   head = tail = 0;
+   head = tail = std::tr1::shared_ptr<SecureQueueNode>();
    }
 
 /*************************************************
@@ -93,9 +94,9 @@ void SecureQueue::destroy()
 SecureQueue& SecureQueue::operator=(const SecureQueue& input)
    {
    destroy();
-   head = tail = new SecureQueueNode;
-   SecureQueueNode* temp = input.head;
-   while(temp)
+   head = tail = std::tr1::shared_ptr<SecureQueueNode>(new SecureQueueNode);
+   std::tr1::shared_ptr<SecureQueueNode> temp = input.head;
+   while(temp.get())
       {
       write(temp->buffer + temp->start, temp->end - temp->start);
       temp = temp->next;
@@ -108,8 +109,8 @@ SecureQueue& SecureQueue::operator=(const SecureQueue& input)
 *************************************************/
 void SecureQueue::write(const byte input[], u32bit length)
    {
-   if(!head)
-      head = tail = new SecureQueueNode;
+   if(!head.get())
+      head = tail = std::tr1::shared_ptr<SecureQueueNode>(new SecureQueueNode);
    while(length)
       {
       const u32bit n = tail->write(input, length);
@@ -117,7 +118,7 @@ void SecureQueue::write(const byte input[], u32bit length)
       length -= n;
       if(length)
          {
-         tail->next = new SecureQueueNode;
+         tail->next = std::tr1::shared_ptr<SecureQueueNode>(new SecureQueueNode);
          tail = tail->next;
          }
       }
@@ -129,7 +130,7 @@ void SecureQueue::write(const byte input[], u32bit length)
 u32bit SecureQueue::read(byte output[], u32bit length)
    {
    u32bit got = 0;
-   while(length && head)
+   while(length && head.get())
       {
       const u32bit n = head->read(output, length);
       output += n;
@@ -137,8 +138,8 @@ u32bit SecureQueue::read(byte output[], u32bit length)
       length -= n;
       if(head->size() == 0)
          {
-         SecureQueueNode* holder = head->next;
-         delete head;
+         std::tr1::shared_ptr<SecureQueueNode> holder = head->next;
+         head.reset();
          head = holder;
          }
       }
@@ -150,9 +151,9 @@ u32bit SecureQueue::read(byte output[], u32bit length)
 *************************************************/
 u32bit SecureQueue::peek(byte output[], u32bit length, u32bit offset) const
    {
-   SecureQueueNode* current = head;
+   std::tr1::shared_ptr<SecureQueueNode> current = head;
 
-   while(offset && current)
+   while(offset && current.get())
       {
       if(offset >= current->size())
          {
@@ -164,7 +165,7 @@ u32bit SecureQueue::peek(byte output[], u32bit length, u32bit offset) const
       }
 
    u32bit got = 0;
-   while(length && current)
+   while(length && current.get())
       {
       const u32bit n = current->peek(output, length, offset);
       offset = 0;
@@ -181,10 +182,10 @@ u32bit SecureQueue::peek(byte output[], u32bit length, u32bit offset) const
 *************************************************/
 u32bit SecureQueue::size() const
    {
-   SecureQueueNode* current = head;
+   std::tr1::shared_ptr<SecureQueueNode> current = head;
    u32bit count = 0;
 
-   while(current)
+   while(current.get())
       {
       count += current->size();
       current = current->next;

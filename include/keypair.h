@@ -15,8 +15,8 @@ namespace KeyPair {
 /*************************************************
 * Check key pair consistency                     *
 *************************************************/
-void check_key(PK_Encryptor*, PK_Decryptor*);
-void check_key(PK_Signer*, PK_Verifier*);
+void check_key(std::auto_ptr<PK_Encryptor>, std::auto_ptr<PK_Decryptor>);
+void check_key(std::auto_ptr<PK_Signer>, std::auto_ptr<PK_Verifier>);
 
 }
 

@@ -7,16 +7,17 @@
 #include <botan/x509_ext.h>
 #include <botan/ber_dec.h>
 #include <botan/parsing.h>
-#include <botan/bigint.h>
 #include <botan/config.h>
 #include <botan/oids.h>
+#include <botan/bigint.h>
+
 
 namespace Botan {
 
 /*************************************************
 * Load a X.509 CRL                               *
 *************************************************/
-X509_CRL::X509_CRL(DataSource& in) : X509_Object(in, "X509 CRL/CRL")
+X509_CRL::X509_CRL(SharedPtrConverter<DataSource> in) : X509_Object(in.get_shared(), "X509 CRL/CRL")
    {
    do_decode();
    }

@@ -6,6 +6,8 @@
 #include <botan/pk_keys.h>
 #include <botan/config.h>
 #include <botan/oids.h>
+#include <botan/x509_key.h>
+#include <botan/pkcs8.h>
 
 namespace Botan {
 
@@ -23,6 +25,36 @@ bool key_check_level(const std::string& type)
    }
 
 }
+
+/*************************************************
+* Factories for Public Key x509 En-/Decoder      *
+*************************************************/
+
+std::auto_ptr<X509_Encoder> Public_Key::x509_encoder() const 
+   { 
+   return std::auto_ptr<X509_Encoder>(); 
+   }
+
+std::auto_ptr<X509_Decoder> Public_Key::x509_decoder() 
+   { 
+   return std::auto_ptr<X509_Decoder>(); 
+   }
+
+
+/*************************************************
+* Factories for Private Key PKCS8 En-/Decoder    *
+*************************************************/
+
+std::auto_ptr<PKCS8_Encoder> Private_Key::pkcs8_encoder() const 
+   { 
+   return std::auto_ptr<PKCS8_Encoder>(); 
+   }
+
+std::auto_ptr<PKCS8_Decoder> Private_Key::pkcs8_decoder() 
+   { 
+   return std::auto_ptr<PKCS8_Decoder>(); 
+   }
+
 
 /*************************************************
 * Default OID access                             *

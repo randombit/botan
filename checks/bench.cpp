@@ -7,6 +7,7 @@
 
 #include <botan/rng.h>
 #include <botan/filters.h>
+#include <botan/filter.h>
 using namespace Botan_types;
 using Botan::u64bit;
 
@@ -18,14 +19,20 @@ struct BitBucket : public Botan::Filter
    void write(const byte[], u32bit) {}
    };
 
-Botan::Filter* lookup(const std::string&,
+//Botan::Filter* lookup(const std::string&,
+//                      const std::vector<std::string>&,
+//                      const std::string& = "All");
+Botan::Filter::SharedFilterPtr lookup(const std::string&,
                       const std::vector<std::string>&,
                       const std::string& = "All");
 
-double bench_filter(std::string name, Botan::Filter* filter,
+
+//double bench_filter(std::string name, Botan::Filter* filter,
+ //                   bool html, double seconds)
+double bench_filter(std::string name, Botan::Filter::SharedFilterPtr filter,
                     bool html, double seconds)
    {
-   Botan::Pipe pipe(filter, new BitBucket);
+   Botan::Pipe pipe(filter, Botan::create_auto_ptr<BitBucket>());
    pipe.start_msg();
 
    static const u32bit BUFFERSIZE = 32*1024;
@@ -37,15 +44,14 @@ double bench_filter(std::string name, Botan::Filter* filter,
    u64bit start = get_clock(), clocks_used = 0;
    u64bit go_up_to = (u64bit)(seconds * get_ticks());
 
-   while(clocks_used < go_up_to)
-      {
+   while(clocks_used < go_up_to) {
       iterations++;
       pipe.write(buf, BUFFERSIZE);
       clocks_used = get_clock() - start;
       }
 
    double bytes_per_sec = ((double)iterations * BUFFERSIZE) /
-                          ((double)clocks_used / get_ticks());
+   						  ((double)clocks_used / get_ticks());
    double mbytes_per_sec = bytes_per_sec / (1024.0 * 1024.0);
 
    std::cout.setf(std::ios::fixed, std::ios::floatfield);
@@ -78,7 +84,8 @@ double bench(const std::string& name, const std::string& filtername, bool html,
    params.push_back(std::string(int(2*keylen), 'A'));
    params.push_back(std::string(int(2* ivlen), 'A'));
 
-   Botan::Filter* filter = lookup(filtername, params);
+ //  Botan::Filter* filter = (lookup(filtername, params)).get();
+Botan::Filter::SharedFilterPtr filter = lookup(filtername, params);
 
    if(filter)
       return bench_filter(name, filter, html, seconds);

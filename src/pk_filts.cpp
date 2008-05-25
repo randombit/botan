@@ -95,18 +95,18 @@ void PK_Verifier_Filter::set_signature(const MemoryRegion<byte>& sig)
 /*************************************************
 * PK_Verifier_Filter Constructor                 *
 *************************************************/
-PK_Verifier_Filter::PK_Verifier_Filter(PK_Verifier* v, const byte sig[],
+PK_Verifier_Filter::PK_Verifier_Filter(SharedPtrConverter<PK_Verifier> const& v, const byte sig[],
                                        u32bit length) :
-   verifier(v), signature(sig, length)
+   verifier(v.get_shared()), signature(sig, length)
    {
    }
 
 /*************************************************
 * PK_Verifier_Filter Constructor                 *
 *************************************************/
-PK_Verifier_Filter::PK_Verifier_Filter(PK_Verifier* v,
+PK_Verifier_Filter::PK_Verifier_Filter(SharedPtrConverter<PK_Verifier> const& v,
                                        const MemoryRegion<byte>& sig) :
-   verifier(v), signature(sig)
+   verifier(v.get_shared()), signature(sig)
    {
    }
 

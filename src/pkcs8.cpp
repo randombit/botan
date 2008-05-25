@@ -12,7 +12,7 @@
 #include <botan/oids.h>
 #include <botan/pem.h>
 #include <botan/pbe.h>
-#include <memory>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -23,12 +23,12 @@ namespace {
 /*************************************************
 * Get info from an EncryptedPrivateKeyInfo       *
 *************************************************/
-SecureVector<byte> PKCS8_extract(DataSource& source,
+SecureVector<byte> PKCS8_extract(SharedPtrConverter<DataSource> source,
                                  AlgorithmIdentifier& pbe_alg_id)
    {
    SecureVector<byte> key_data;
 
-   BER_Decoder(source)
+   BER_Decoder(source.get_shared())
       .start_cons(SEQUENCE)
          .decode(pbe_alg_id)
          .decode(key_data, OCTET_STRING)
@@ -41,7 +41,7 @@ SecureVector<byte> PKCS8_extract(DataSource& source,
 /*************************************************
 * PEM decode and/or decrypt a private key        *
 *************************************************/
-SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
+SecureVector<byte> PKCS8_decode(SharedPtrConverter<DataSource> source, const User_Interface& ui,
                                 AlgorithmIdentifier& pk_alg_id)
    {
    AlgorithmIdentifier pbe_alg_id;
@@ -49,17 +49,17 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
    bool is_encrypted = true;
 
    try {
-      if(ASN1::maybe_BER(source) && !PEM_Code::matches(source))
-         key_data = PKCS8_extract(source, pbe_alg_id);
+      if(ASN1::maybe_BER(source.get_shared()) && !PEM_Code::matches(source.get_shared()))
+         key_data = PKCS8_extract(source.get_shared(), pbe_alg_id);
       else
          {
          std::string label;
-         key_data = PEM_Code::decode(source, label);
+         key_data = PEM_Code::decode(source.get_shared(), label);
          if(label == "PRIVATE KEY")
             is_encrypted = false;
          else if(label == "ENCRYPTED PRIVATE KEY")
             {
-            DataSource_Memory key_source(key_data);
+            std::tr1::shared_ptr<DataSource> key_source(new DataSource_Memory(key_data));
             key_data = PKCS8_extract(key_source, pbe_alg_id);
             }
          else
@@ -89,12 +89,12 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
 
          if(is_encrypted)
             {
-            DataSource_Memory params(pbe_alg_id.parameters);
-            PBE* pbe = get_pbe(pbe_alg_id.oid, params);
+            std::tr1::shared_ptr<DataSource> params(new DataSource_Memory(pbe_alg_id.parameters));
+            std::tr1::shared_ptr<PBE> pbe = get_pbe(pbe_alg_id.oid, params);
 
             User_Interface::UI_Result result = User_Interface::OK;
             const std::string passphrase =
-               ui.get_passphrase("PKCS #8 private key", source.id(), result);
+               ui.get_passphrase("PKCS #8 private key", source.get_shared()->id(), result);
 
             if(result == User_Interface::CANCEL_ACTION)
                break;
@@ -173,7 +173,7 @@ void encrypt_key(const Private_Key& key, Pipe& pipe,
    encode(key, raw_key, RAW_BER);
    raw_key.end_msg();
 
-   PBE* pbe = get_pbe(((pbe_algo != "") ? pbe_algo : DEFAULT_PBE));
+   std::tr1::shared_ptr<PBE> pbe = get_pbe(((pbe_algo != "") ? pbe_algo : DEFAULT_PBE));
    pbe->set_key(pass);
 
    Pipe key_encrytor(pbe);
@@ -224,7 +224,7 @@ std::string PEM_encode(const Private_Key& key, const std::string& pass,
 /*************************************************
 * Extract a private key and return it            *
 *************************************************/
-Private_Key* load_key(DataSource& source, const User_Interface& ui)
+std::auto_ptr<Private_Key> load_key(std::tr1::shared_ptr<DataSource> source, const User_Interface& ui)
    {
    AlgorithmIdentifier alg_id;
    SecureVector<byte> pkcs8_key = PKCS8_decode(source, ui, alg_id);
@@ -247,22 +247,22 @@ Private_Key* load_key(DataSource& source, const User_Interface& ui)
    decoder->alg_id(alg_id);
    decoder->key_bits(pkcs8_key);
 
-   return key.release();
+   return key;
    }
 
 /*************************************************
 * Extract a private key and return it            *
 *************************************************/
-Private_Key* load_key(const std::string& fsname, const User_Interface& ui)
+std::auto_ptr<Private_Key> load_key(const std::string& fsname, const User_Interface& ui)
    {
-   DataSource_Stream source(fsname, true);
+   std::tr1::shared_ptr<DataSource> source(new DataSource_Stream(fsname, true));
    return PKCS8::load_key(source, ui);
    }
 
 /*************************************************
 * Extract a private key and return it            *
 *************************************************/
-Private_Key* load_key(DataSource& source, const std::string& pass)
+std::auto_ptr<Private_Key> load_key(std::tr1::shared_ptr<DataSource> source, const std::string& pass)
    {
    return PKCS8::load_key(source, User_Interface(pass));
    }
@@ -270,7 +270,7 @@ Private_Key* load_key(DataSource& source, const std::string& pass)
 /*************************************************
 * Extract a private key and return it            *
 *************************************************/
-Private_Key* load_key(const std::string& fsname, const std::string& pass)
+std::auto_ptr<Private_Key> load_key(const std::string& fsname, const std::string& pass)
    {
    return PKCS8::load_key(fsname, User_Interface(pass));
    }
@@ -278,7 +278,7 @@ Private_Key* load_key(const std::string& fsname, const std::string& pass)
 /*************************************************
 * Make a copy of this private key                *
 *************************************************/
-Private_Key* copy_key(const Private_Key& key)
+std::auto_ptr<Private_Key> copy_key(const Private_Key& key)
    {
    Pipe bits;
 
@@ -286,7 +286,7 @@ Private_Key* copy_key(const Private_Key& key)
    PKCS8::encode(key, bits);
    bits.end_msg();
 
-   DataSource_Memory source(bits.read_all());
+   std::tr1::shared_ptr<DataSource> source(new DataSource_Memory(bits.read_all()));
    return PKCS8::load_key(source);
    }
 

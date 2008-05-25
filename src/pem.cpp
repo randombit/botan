@@ -25,7 +25,7 @@ std::string encode(const byte der[], u32bit length, const std::string& label)
    const std::string PEM_HEADER = "-----BEGIN " + label + "-----\n";
    const std::string PEM_TRAILER = "-----END " + label + "-----\n";
 
-   Pipe pipe(new Base64_Encoder(true, PEM_WIDTH));
+   Pipe pipe(create_shared_ptr<Base64_Encoder>(true, PEM_WIDTH));
    pipe.process_msg(der, length);
    return (PEM_HEADER + pipe.read_all_as_string() + PEM_TRAILER);
    }
@@ -41,11 +41,11 @@ std::string encode(const MemoryRegion<byte>& data, const std::string& label)
 /*************************************************
 * Decode PEM down to raw BER/DER                 *
 *************************************************/
-SecureVector<byte> decode_check_label(DataSource& source,
+SecureVector<byte> decode_check_label(SharedPtrConverter<DataSource> source,
                                       const std::string& label_want)
    {
    std::string label_got;
-   SecureVector<byte> ber = decode(source, label_got);
+   SecureVector<byte> ber = decode(source.get_shared(), label_got);
    if(label_got != label_want)
       throw Decoding_Error("PEM: Label mismatch, wanted " + label_want +
                            ", got " + label_got);
@@ -55,7 +55,7 @@ SecureVector<byte> decode_check_label(DataSource& source,
 /*************************************************
 * Decode PEM down to raw BER/DER                 *
 *************************************************/
-SecureVector<byte> decode(DataSource& source, std::string& label)
+SecureVector<byte> decode(SharedPtrConverter<DataSource> source, std::string& label)
    {
    const u32bit RANDOM_CHAR_LIMIT =
       global_config().option_as_u32bit("pem/forgive");
@@ -67,7 +67,7 @@ SecureVector<byte> decode(DataSource& source, std::string& label)
    while(position != PEM_HEADER1.length())
       {
       byte b;
-      if(!source.read_byte(b))
+      if(!source.get_shared()->read_byte(b))
          throw Decoding_Error("PEM: No PEM header found");
       if(b == PEM_HEADER1[position])
          ++position;
@@ -80,7 +80,7 @@ SecureVector<byte> decode(DataSource& source, std::string& label)
    while(position != PEM_HEADER2.length())
       {
       byte b;
-      if(!source.read_byte(b))
+      if(!source.get_shared()->read_byte(b))
          throw Decoding_Error("PEM: No PEM header found");
       if(b == PEM_HEADER2[position])
          ++position;
@@ -91,7 +91,7 @@ SecureVector<byte> decode(DataSource& source, std::string& label)
          label += static_cast<char>(b);
       }
 
-   Pipe base64(new Base64_Decoder);
+   Pipe base64(create_shared_ptr<Base64_Decoder>());
    base64.start_msg();
 
    const std::string PEM_TRAILER = "-----END " + label + "-----";
@@ -99,7 +99,7 @@ SecureVector<byte> decode(DataSource& source, std::string& label)
    while(position != PEM_TRAILER.length())
       {
       byte b;
-      if(!source.read_byte(b))
+      if(!source.get_shared()->read_byte(b))
          throw Decoding_Error("PEM: No PEM trailer found");
       if(b == PEM_TRAILER[position])
          ++position;
@@ -116,7 +116,7 @@ SecureVector<byte> decode(DataSource& source, std::string& label)
 /*************************************************
 * Search for a PEM signature                     *
 *************************************************/
-bool matches(DataSource& source, const std::string& extra)
+bool matches(SharedPtrConverter<DataSource> source, const std::string& extra)
    {
    const u32bit PEM_SEARCH_RANGE =
       global_config().option_as_u32bit("pem/search");
@@ -124,7 +124,7 @@ bool matches(DataSource& source, const std::string& extra)
    const std::string PEM_HEADER = "-----BEGIN " + extra;
 
    SecureVector<byte> search_buf(PEM_SEARCH_RANGE);
-   u32bit got = source.peek(search_buf, search_buf.size(), 0);
+   u32bit got = source.get_shared()->peek(search_buf, search_buf.size(), 0);
 
    if(got < PEM_HEADER.length())
       return false;

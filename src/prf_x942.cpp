@@ -9,7 +9,7 @@
 #include <botan/lookup.h>
 #include <botan/bit_ops.h>
 #include <algorithm>
-#include <memory>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -34,7 +34,7 @@ SecureVector<byte> X942_PRF::derive(u32bit key_len,
                                     const byte secret[], u32bit secret_len,
                                     const byte salt[], u32bit salt_len) const
    {
-   std::auto_ptr<HashFunction> hash(get_hash("SHA-1"));
+   HashFunction::AutoHashFunctionPtr hash(get_hash("SHA-1"));
    const OID kek_algo(key_wrap_oid);
 
    SecureVector<byte> key;

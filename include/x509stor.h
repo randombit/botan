@@ -71,12 +71,12 @@ class X509_Store
 
       X509_Code add_crl(const X509_CRL&);
       void add_cert(const X509_Certificate&, bool = false);
-      void add_certs(DataSource&);
-      void add_trusted_certs(DataSource&);
+      void add_certs(SharedPtrConverter<DataSource>);
+      void add_trusted_certs(SharedPtrConverter<DataSource>);
 
-      void add_new_certstore(Certificate_Store*);
+      void add_new_certstore(SharedPtrConverter<Certificate_Store>);
 
-      static X509_Code check_sig(const X509_Object&, Public_Key*);
+      static X509_Code check_sig(const X509_Object&, std::auto_ptr<Public_Key>);
 
       X509_Store();
       X509_Store(const X509_Store&);
@@ -115,7 +115,7 @@ class X509_Store
       X509_Code check_sig(const Cert_Info&, const Cert_Info&) const;
       void recompute_revoked_info() const;
 
-      void do_add_certs(DataSource&, bool);
+      void do_add_certs(SharedPtrConverter<DataSource>, bool);
       X509_Code construct_cert_chain(const X509_Certificate&,
                                      std::vector<u32bit>&, bool = false);
 
@@ -125,7 +125,7 @@ class X509_Store
       static const u32bit NO_CERT_FOUND = 0xFFFFFFFF;
       std::vector<Cert_Info> certs;
       std::vector<CRL_Data> revoked;
-      std::vector<Certificate_Store*> stores;
+      std::vector<std::tr1::shared_ptr<Certificate_Store> > stores;
       mutable bool revoked_info_valid;
    };
 

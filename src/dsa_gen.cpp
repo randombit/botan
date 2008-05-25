@@ -4,14 +4,17 @@
 *************************************************/
 
 #include <botan/dl_group.h>
-#include <botan/numthry.h>
+#include <botan/bigintfuncs.h>
+#include <botan/bit_ops.h>
 #include <botan/libstate.h>
 #include <botan/lookup.h>
-#include <botan/bit_ops.h>
 #include <botan/parsing.h>
 #include <botan/rng.h>
 #include <algorithm>
-#include <memory>
+#include <botan/pointers.h>
+
+
+
 
 namespace Botan {
 
@@ -54,7 +57,7 @@ bool DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
          "Generating a DSA parameter set with a " + to_string(qbits) +
          "long q requires a seed at least as many bits long");
 
-   std::auto_ptr<HashFunction> hash(get_hash("SHA-" + to_string(qbits)));
+   std::tr1::shared_ptr<HashFunction> hash(get_hash("SHA-" + to_string(qbits)).release());
 
    const u32bit HASH_SIZE = hash->OUTPUT_LENGTH;
 
@@ -79,8 +82,8 @@ bool DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
    Seed seed(seed_c);
 
    q.binary_decode(hash->process(seed));
-   q.set_bit(qbits-1);
-   q.set_bit(0);
+   q.set_bit(qbits-1,true);
+   q.set_bit(0,true);
 
    if(!is_prime(q))
       return false;
@@ -106,7 +109,7 @@ bool DL_Group::generate_dsa_primes(BigInt& p, BigInt& q,
 
       X.binary_decode(V + (HASH_SIZE - 1 - b/8),
                       V.size() - (HASH_SIZE - 1 - b/8));
-      X.set_bit(pbits-1);
+      X.set_bit(pbits-1,true);
 
       p = X - (X % (2*q) - 1);
 

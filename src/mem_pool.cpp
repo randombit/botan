@@ -9,7 +9,7 @@
 #include <botan/bit_ops.h>
 #include <botan/util.h>
 #include <algorithm>
-
+#include <sstream>
 namespace Botan {
 
 namespace {
@@ -115,7 +115,7 @@ void Pooling_Allocator::Memory_Block::free(void* ptr, u32bit blocks) throw()
 Pooling_Allocator::Pooling_Allocator(u32bit p_size, bool) :
    PREF_SIZE(choose_pref_size(p_size))
    {
-   mutex = global_state().get_mutex();
+   mutex = std::tr1::shared_ptr<Mutex>(global_state().get_mutex().release());
    last_used = blocks.begin();
    }
 
@@ -124,7 +124,6 @@ Pooling_Allocator::Pooling_Allocator(u32bit p_size, bool) :
 *************************************************/
 Pooling_Allocator::~Pooling_Allocator()
    {
-   delete mutex;
    if(blocks.size())
       throw Invalid_State("Pooling_Allocator: Never released memory");
    }
@@ -182,6 +181,20 @@ void* Pooling_Allocator::allocate(u32bit n)
 *************************************************/
 void Pooling_Allocator::deallocate(void* ptr, u32bit n)
    {
+       if(blocks.empty())
+       {
+        // *this is probably already destroyed
+        // (an pooling allocator holding zero blocks cannot have
+        // any allocation anymore)
+        // If we don't return here, the "wrong allocator..."
+        // excpetion below will be thrown if a botan object
+        // with allocation in this allocator gets destroyed after
+        // the LibraryInitializer.
+        // This would happen for
+        //   - global smart pointers to such objects
+        //   - static objects inside functions.
+        return;
+       }
    const u32bit BITMAP_SIZE = Memory_Block::bitmap_size();
    const u32bit BLOCK_SIZE = Memory_Block::block_size();
 
@@ -200,8 +213,15 @@ void Pooling_Allocator::deallocate(void* ptr, u32bit n)
          std::lower_bound(blocks.begin(), blocks.end(), Memory_Block(ptr));
 
       if(i == blocks.end() || !i->contains(ptr, block_no))
-         throw Invalid_State("Pointer released to the wrong allocator");
-
+      {
+        std::string message("Pointer released to the wrong allocator, pointer value = ");
+         std::stringstream ss;
+        std::string str_is;
+        ss << std::hex << ptr;
+        ss >> str_is;
+        message.append(str_is);
+         throw Invalid_State(message);
+      }
       i->free(ptr, block_no);
       }
    }

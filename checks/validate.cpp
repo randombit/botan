@@ -36,15 +36,17 @@ u32bit random_word(u32bit max)
 #endif
    }
 
-Botan::Filter* lookup(const std::string&, const std::vector<std::string>&,
+Botan::Filter::SharedFilterPtr  lookup(const std::string&,const std::vector<std::string>&,
                       const std::string& = "All");
 
 bool failed_test(const std::string&, std::vector<std::string>, bool, bool,
                  const std::string&, std::string&);
 
 std::vector<std::string> parse(const std::string&);
+void strip_newlines_windows(std::string&);
 void strip(std::string&);
 Botan::SecureVector<byte> decode_hex(const std::string&);
+std::string hex_encode(const byte in[], u32bit len);
 
 u32bit do_validation_tests(const std::string& filename, bool should_pass)
    {
@@ -63,12 +65,17 @@ u32bit do_validation_tests(const std::string& filename, bool should_pass)
 
    while(!test_data.eof())
       {
+	   if (errors>0)
+	   {
+		   return errors;
+	   }
       if(test_data.bad() || test_data.fail())
          throw Botan::Stream_IO_Error("File I/O error reading from " +
                                       filename);
 
       std::string line;
       std::getline(test_data, line);
+      strip_newlines_windows(line);
 
       const std::string MARK = "# MARKER: ";
 
@@ -82,18 +89,18 @@ u32bit do_validation_tests(const std::string& filename, bool should_pass)
          section = line;
          section.replace(section.find(MARK), MARK.size(), "");
          if(should_pass)
-            std::cout << "Testing " << section << ": ";
+            std::cout << "[VALIDATE] Testing " << section << ": ";
          }
 
       strip(line);
       if(line.size() == 0) continue;
-
       // Do line continuation
       while(line[line.size()-1] == '\\' && !test_data.eof())
          {
          line.replace(line.size()-1, 1, "");
          std::string nextline;
          std::getline(test_data, nextline);
+         strip_newlines_windows(nextline);
          strip(nextline);
          if(nextline.size() == 0) continue;
          line += nextline;
@@ -113,9 +120,9 @@ u32bit do_validation_tests(const std::string& filename, bool should_pass)
 
 #if DEBUG
          if(should_pass)
-            std::cout << "Testing " << algorithm << "..." << std::endl;
+            std::cout << "[VALIDATE] Testing " << algorithm << "..." << std::endl;
          else
-            std::cout << "Testing (expecing failure) "
+            std::cout << "[VALIDATE] Testing (expecting failure) "
                       << algorithm << "..." << std::endl;
 #endif
          alg_count = 0;
@@ -140,14 +147,14 @@ u32bit do_validation_tests(const std::string& filename, bool should_pass)
 
       if(failed && should_pass)
          {
-         std::cout << "ERROR: \"" << algorithm << "\" failed test #"
+         std::cout << "[VALIDATE] ERROR: \"" << algorithm << "\" failed test #"
                    << alg_count << std::endl;
          errors++;
          }
 
       if(!failed && !should_pass)
          {
-         std::cout << "ERROR: \"" << algorithm << "\" passed test #"
+         std::cout << "[VALIDATE] ERROR: \"" << algorithm << "\" passed test #"
                    << alg_count << " (unexpected pass)" << std::endl;
          errors++;
          }
@@ -165,7 +172,7 @@ bool failed_test(const std::string& algo,
                  std::string& last_missing)
    {
 #if DEBUG
-   std::cout << "Testing: " << algo;
+   std::cout << "[VALIDATE] Testing: " << algo;
    if(!exp_pass)
       std::cout << " (expecting failure)";
    std::cout << std::endl;
@@ -177,22 +184,23 @@ bool failed_test(const std::string& algo,
 
    const std::string in = params[0];
    const std::string expected = params[1];
+   const std::string key = params[2];
 
    params.erase(params.begin());
    params.erase(params.begin());
 
    if(in.size() % 2 == 1)
       {
-      std::cout << "Can't have an odd sized hex string!" << std::endl;
+      std::cout << "[VALIDATE] Can't have an odd sized hex string!" << std::endl;
       return true;
       }
 
    Botan::Pipe pipe;
-
    try {
-      Botan::Filter* test = lookup(algo, params, section);
-      if(test == 0 && is_extension) return !exp_pass;
-      if(test == 0)
+     Botan::Filter::SharedFilterPtr test = lookup(algo, params, section);
+
+      if(test.get() == 0 && is_extension) return !exp_pass;
+      if(test.get() == 0)
          {
          if(algo != last_missing)
             {
@@ -202,10 +210,9 @@ bool failed_test(const std::string& algo,
             }
          return 0;
          }
-
       pipe.reset();
       pipe.append(test);
-      pipe.append(new Botan::Hex_Encoder);
+      pipe.append(Botan::create_shared_ptr<Botan::Hex_Encoder>());
 
       Botan::SecureVector<byte> data = decode_hex(in);
       const byte* data_ptr = data;
@@ -269,22 +276,23 @@ bool failed_test(const std::string& algo,
       if(!OK)
          throw Botan::Self_Test_Failure("Peek testing failed in validate.cpp");
       }
+//   std::cout << "alg: >" << algo << "<" << std::endl;
+//   std::cout << "output: >" << output << "<" << std::endl;
 
    if(output == expected && !exp_pass)
       {
-      std::cout << "FAILED: " << expected << " == " << std::endl
+      std::cout << "[VALIDATE] FAILED: " << expected << " == " << std::endl
                 << "        " << output << std::endl;
       return false;
       }
 
    if(output != expected && exp_pass)
       {
-      std::cout << "\nFAILED: " << expected << " != " << std::endl
-                << "        " << output << std::endl;
+      std::cout << "\n[VALIDATE] FAILED: " << in << " (input) => "<< expected << " (expected) != " << std::endl
+                << "        " << output << " (result) with " << key << " (key)"<< std::endl;
       return true;
       }
 
    if(output != expected && !exp_pass) return true;
-
    return false;
    }

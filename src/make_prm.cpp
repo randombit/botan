@@ -3,10 +3,13 @@
 * (C) 1999-2007 The Botan Project                *
 *************************************************/
 
-#include <botan/numthry.h>
+#include <botan/bigintfuncs.h>
 #include <botan/parsing.h>
 #include <botan/libstate.h>
 #include <algorithm>
+
+
+
 
 namespace Botan {
 
@@ -32,8 +35,8 @@ BigInt random_prime(u32bit bits, const BigInt& coprime,
       global_state().pulse(PRIME_SEARCHING);
 
       BigInt p = random_integer(bits);
-      p.set_bit(bits - 2);
-      p.set_bit(0);
+      p.set_bit(bits - 2,true);
+      p.set_bit(0,true);
 
       if(p % modulo != equiv)
          p += (modulo - p % modulo) + equiv;

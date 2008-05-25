@@ -79,9 +79,9 @@ std::string CBC_MAC::name() const
 /*************************************************
 * Return a clone of this object                  *
 *************************************************/
-MessageAuthenticationCode* CBC_MAC::clone() const
+CBC_MAC::AutoMACPtr CBC_MAC::clone() const
    {
-   return new CBC_MAC(e->name());
+   return CBC_MAC::AutoMACPtr(new CBC_MAC(e->name()));
    }
 
 /*************************************************
@@ -94,16 +94,18 @@ CBC_MAC::CBC_MAC(const std::string& cipher) :
                              keylength_multiple_of(cipher)),
    state(block_size_of(cipher))
    {
-   e = get_block_cipher(cipher);
+   e = std::tr1::shared_ptr<BlockCipher>(get_block_cipher(cipher).release());
    position = 0;
    }
 
 /*************************************************
 * CBC-MAC Destructor                             *
 *************************************************/
+/*
 CBC_MAC::~CBC_MAC()
    {
    delete e;
    }
+*/
 
 }

@@ -6,6 +6,11 @@
 #include <botan/fips140.h>
 #include <botan/lookup.h>
 
+#include <iostream>
+using std::cin;
+using std::cout;
+using std::endl;
+
 namespace Botan {
 
 namespace FIPS140 {
@@ -16,11 +21,11 @@ namespace {
 * Perform a Known Answer Test                    *
 *************************************************/
 void do_kat(const std::string& in, const std::string& out,
-            const std::string& algo_name, Filter* filter)
+            const std::string& algo_name, Filter::SharedFilterPtrConverter filter)
    {
    if(out.length())
       {
-      Pipe pipe(new Hex_Decoder, filter, new Hex_Encoder);
+      Pipe pipe(create_shared_ptr<Hex_Decoder>(), filter.get_shared(), create_shared_ptr<Hex_Encoder>());
       pipe.process_msg(in);
 
       if(out != pipe.read_all_as_string())
@@ -66,7 +71,7 @@ void hash_kat(const std::string& hash, const std::string& in,
    {
    if(!have_hash(hash))
       return;
-   do_kat(in, out, hash, new Hash_Filter(hash));
+   do_kat(in, out, hash, create_shared_ptr<Hash_Filter>(hash));
    }
 
 /*************************************************
@@ -77,7 +82,7 @@ void mac_kat(const std::string& mac, const std::string& in,
    {
    if(!have_mac(mac))
       return;
-   do_kat(in, out, mac, new MAC_Filter(mac, key));
+   do_kat(in, out, mac, create_shared_ptr<MAC_Filter>(mac, key));
    }
 
 }
@@ -121,7 +126,6 @@ bool passes_self_tests()
                 "7789508D16918F03F53C52DAC54ED825",
                 "3B3FD92EB72DAD20333449F8E83CFB4A"
                 "010C041999E03F36448624483E582D0E");
-
      hash_kat("SHA-1", "", "DA39A3EE5E6B4B0D3255BFEF95601890AFD80709");
      hash_kat("SHA-1", "616263", "A9993E364706816ABA3E25717850C26C9CD0D89D");
      hash_kat("SHA-1",
@@ -150,16 +154,16 @@ bool passes_self_tests()
              "BA0AA3F3D9AE3C1C7A3B1696A0B68CF7",
              "0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B"
              "0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B");
-
      mac_kat("X9.19-MAC",
              "31311C3931383237333634351C1C35383134333237361C1C3B3132333435"
              "36373839303132333435363D3939313231303030303F1C30303031323530"
              "301C393738363533343132343837363932331C", "C209CCB78EE1B606",
              "0123456789ABCDEFFEDCBA9876543210");
   }
-  catch(std::exception)
+  catch(std::exception &e)
      {
-     return false;
+      cout << e.what() << " (self-test exception)\n";
+      return false;
      }
 
   return true;

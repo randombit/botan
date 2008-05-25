@@ -16,7 +16,7 @@ namespace Botan {
 class S2K
    {
    public:
-      virtual S2K* clone() const = 0;
+      virtual std::auto_ptr<S2K> clone() const = 0;
       virtual std::string name() const = 0;
       virtual void clear() {}
 

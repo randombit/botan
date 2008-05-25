@@ -20,9 +20,11 @@ namespace Botan {
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
-                                         Cipher_Dir direction)
+Engine::Keyed_Filter_Ptr
+Default_Engine::get_cipher(const std::string& algo_spec,
+                           Cipher_Dir direction)
    {
+
    std::vector<std::string> algo_parts = split_on(algo_spec, '/');
    if(algo_parts.empty())
       throw Invalid_Algorithm_Name(algo_spec);
@@ -32,13 +34,13 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
    if(have_stream_cipher(cipher))
       {
       if(algo_parts.size() == 1)
-         return new StreamCipher_Filter(cipher);
-      return 0;
+        return create_shared_ptr<StreamCipher_Filter>(cipher);
+      return Engine::Keyed_Filter_Ptr();
       }
    else if(have_block_cipher(cipher))
       {
       if(algo_parts.size() != 2 && algo_parts.size() != 3)
-         return 0;
+         return Engine::Keyed_Filter_Ptr();
 
       std::string mode = algo_parts[1];
       u32bit bits = 0;
@@ -63,61 +65,61 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
          padding = (mode == "CBC") ? "PKCS7" : "NoPadding";
 
       if(mode == "ECB" && padding == "CTS")
-         return 0;
+         return Engine::Keyed_Filter_Ptr();
       else if((mode != "CBC" && mode != "ECB") && padding != "NoPadding")
          throw Invalid_Algorithm_Name(algo_spec);
 
       if(mode == "OFB")
-         return new OFB(cipher);
+        return create_shared_ptr<OFB>(cipher);
       else if(mode == "CTR-BE")
-         return new CTR_BE(cipher);
+        return create_shared_ptr<CTR_BE>(cipher);
       else if(mode == "ECB" || mode == "CBC" || mode == "CTS" ||
               mode == "CFB" || mode == "EAX")
          {
          if(mode == "ECB")
             {
             if(direction == ENCRYPTION)
-               return new ECB_Encryption(cipher, padding);
+               return create_shared_ptr<ECB_Encryption>(cipher, padding);
             else
-               return new ECB_Decryption(cipher, padding);
+               return create_shared_ptr<ECB_Decryption>(cipher, padding);
             }
          else if(mode == "CFB")
             {
             if(direction == ENCRYPTION)
-               return new CFB_Encryption(cipher, bits);
+               return create_shared_ptr<CFB_Encryption>(cipher, bits);
             else
-               return new CFB_Decryption(cipher, bits);
+               return create_shared_ptr<CFB_Decryption>(cipher, bits);
             }
          else if(mode == "CBC")
             {
             if(padding == "CTS")
                {
                if(direction == ENCRYPTION)
-                  return new CTS_Encryption(cipher);
+                  return create_shared_ptr<CTS_Encryption>(cipher);
                else
-                  return new CTS_Decryption(cipher);
+                  return create_shared_ptr<CTS_Decryption>(cipher);
                }
             if(direction == ENCRYPTION)
-               return new CBC_Encryption(cipher, padding);
+               return create_shared_ptr<CBC_Encryption>(cipher, padding);
             else
-               return new CBC_Decryption(cipher, padding);
+               return create_shared_ptr<CBC_Decryption>(cipher, padding);
             }
          else if(mode == "EAX")
             {
             if(direction == ENCRYPTION)
-               return new EAX_Encryption(cipher, bits);
+               return create_shared_ptr<EAX_Encryption>(cipher, bits);
             else
-               return new EAX_Decryption(cipher, bits);
+               return create_shared_ptr<EAX_Decryption>(cipher, bits);
             }
          else
             throw Internal_Error("get_mode: " + cipher + "/"
                                               + mode + "/" + padding);
          }
       else
-         return 0;
+         return Engine::Keyed_Filter_Ptr();
       }
 
-   return 0;
+   return Engine::Keyed_Filter_Ptr();
    }
 
 }

@@ -21,7 +21,11 @@ void* do_malloc(u32bit n, bool do_lock)
    void* ptr = std::malloc(n);
 
    if(!ptr)
-      return 0;
+   {
+       throw Memory_Exhaustion();
+       //  return 0;
+   }
+    
 
    if(do_lock)
       lock_mem(ptr, n);
@@ -82,13 +86,13 @@ void Locking_Allocator::dealloc_block(void* ptr, u32bit n)
 /*************************************************
 * Get an allocator                               *
 *************************************************/
-Allocator* Allocator::get(bool locking)
+std::tr1::shared_ptr<Allocator> Allocator::get(bool locking)
    {
    std::string type = "";
    if(!locking)
       type = "malloc";
 
-   Allocator* alloc = global_state().get_allocator(type);
+   std::tr1::shared_ptr<Allocator> alloc = global_state().get_allocator(type);
    if(alloc)
       return alloc;
 

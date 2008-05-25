@@ -6,7 +6,7 @@
 #include <botan/keypair.h>
 #include <botan/look_pk.h>
 #include <botan/rng.h>
-#include <memory>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -15,7 +15,7 @@ namespace KeyPair {
 /*************************************************
 * Check an encryption key pair for consistency   *
 *************************************************/
-void check_key(PK_Encryptor* encryptor, PK_Decryptor* decryptor)
+void check_key(std::auto_ptr<PK_Encryptor> encryptor, std::auto_ptr<PK_Decryptor> decryptor)
    {
    if(encryptor->maximum_input_size() == 0)
       return;
@@ -38,7 +38,7 @@ void check_key(PK_Encryptor* encryptor, PK_Decryptor* decryptor)
 /*************************************************
 * Check a signature key pair for consistency     *
 *************************************************/
-void check_key(PK_Signer* signer, PK_Verifier* verifier)
+void check_key(std::auto_ptr<PK_Signer> signer, std::auto_ptr<PK_Verifier> verifier)
    {
    std::auto_ptr<PK_Signer> sig(signer);
    std::auto_ptr<PK_Verifier> ver(verifier);

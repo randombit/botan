@@ -29,8 +29,8 @@ class Randpool : public RandomNumberGenerator
       void mix_pool();
 
       const u32bit ITERATIONS_BEFORE_RESEED, POOL_BLOCKS;
-      BlockCipher* cipher;
-      MessageAuthenticationCode* mac;
+      std::tr1::shared_ptr<BlockCipher> cipher;
+      std::tr1::shared_ptr<MessageAuthenticationCode> mac;
 
       SecureVector<byte> pool, buffer, counter;
       u32bit entropy;

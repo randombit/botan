@@ -4,7 +4,10 @@
 *************************************************/
 
 #include <botan/blinding.h>
-#include <botan/numthry.h>
+#include <botan/bigintfuncs.h>
+
+
+
 
 namespace Botan {
 

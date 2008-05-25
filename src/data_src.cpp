@@ -103,6 +103,7 @@ DataSource_Memory::DataSource_Memory(const std::string& in)
 u32bit DataSource_Stream::read(byte out[], u32bit length)
    {
    source->read(reinterpret_cast<char*>(out), length);
+   
    if(source->bad())
       throw Stream_IO_Error("DataSource_Stream::read: Source failure");
 
@@ -168,9 +169,9 @@ DataSource_Stream::DataSource_Stream(const std::string& file,
                                      bool use_binary) : fsname(file)
    {
    if(use_binary)
-      source = new std::ifstream(fsname.c_str(), std::ios::binary);
+      source = std::tr1::shared_ptr<std::istream>(new std::ifstream(fsname.c_str(), std::ios::binary));
    else
-      source = new std::ifstream(fsname.c_str());
+      source = std::tr1::shared_ptr<std::istream>(new std::ifstream(fsname.c_str()));
 
    if(!source->good())
       throw Stream_IO_Error("DataSource_Stream: Failure opening " + fsname);
@@ -182,7 +183,6 @@ DataSource_Stream::DataSource_Stream(const std::string& file,
 *************************************************/
 DataSource_Stream::~DataSource_Stream()
    {
-   delete source;
    }
 
 }

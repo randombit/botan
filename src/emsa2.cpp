@@ -63,7 +63,7 @@ EMSA2::EMSA2(const std::string& hash_name)
    hash_id = ieee1363_hash_id(hash_name);
    if(hash_id == 0)
       throw Encoding_Error("EMSA2 cannot be used with " + hash->name());
-   hash = get_hash(hash_name);
+   hash = std::tr1::shared_ptr<HashFunction>(get_hash(hash_name).release());
    empty_hash = hash->final();
    }
 

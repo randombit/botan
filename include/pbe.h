@@ -21,15 +21,15 @@ class PBE : public Filter
       virtual void set_key(const std::string&) = 0;
       virtual void new_params() = 0;
       virtual MemoryVector<byte> encode_params() const = 0;
-      virtual void decode_params(DataSource&) = 0;
+      virtual void decode_params(SharedPtrConverter<DataSource>) = 0;
       virtual OID get_oid() const = 0;
    };
 
 /*************************************************
 * Get a PBE object                               *
 *************************************************/
-PBE* get_pbe(const std::string&);
-PBE* get_pbe(const OID&, DataSource&);
+std::tr1::shared_ptr<PBE> get_pbe(const std::string&);
+std::tr1::shared_ptr<PBE> get_pbe(const OID&, SharedPtrConverter<DataSource>);
 
 }
 

@@ -10,7 +10,6 @@
 #include <botan/pkcs8.h>
 #include <botan/datastor.h>
 #include <vector>
-
 namespace Botan {
 
 /*************************************************
@@ -19,7 +18,7 @@ namespace Botan {
 class PKCS10_Request : public X509_Object
    {
    public:
-      Public_Key* subject_public_key() const;
+     std::auto_ptr<Public_Key> subject_public_key() const;
 
       MemoryVector<byte> raw_public_key() const;
       X509_DN subject_dn() const;
@@ -32,7 +31,7 @@ class PKCS10_Request : public X509_Object
 
       std::string challenge_password() const;
 
-      PKCS10_Request(DataSource&);
+      PKCS10_Request(SharedPtrConverter<DataSource>);
       PKCS10_Request(const std::string&);
    private:
       void force_decode();

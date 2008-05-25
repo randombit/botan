@@ -34,7 +34,7 @@ class SHA_384 : public SHA_64_BASE
    public:
       void clear() throw();
       std::string name() const { return "SHA-384"; }
-      HashFunction* clone() const { return new SHA_384; }
+      AutoHashFunctionPtr clone() const { return AutoHashFunctionPtr(new SHA_384); }
       SHA_384() : SHA_64_BASE(48) { clear(); }
    };
 
@@ -46,7 +46,7 @@ class SHA_512 : public SHA_64_BASE
    public:
       void clear() throw();
       std::string name() const { return "SHA-512"; }
-      HashFunction* clone() const { return new SHA_512; }
+      AutoHashFunctionPtr clone() const { return AutoHashFunctionPtr(new SHA_512); }
       SHA_512() : SHA_64_BASE(64) { clear(); }
    };
 

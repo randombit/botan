@@ -19,7 +19,7 @@ class ECB : public BlockCipherMode
    protected:
       ECB(const std::string&, const std::string&);
       std::string name() const;
-      const BlockCipherModePaddingMethod* padder;
+      std::tr1::shared_ptr<BlockCipherModePaddingMethod const> padder;
    private:
       bool valid_iv_size(u32bit) const;
    };

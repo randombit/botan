@@ -48,7 +48,7 @@ class DataSource_Command : public DataSource
       const u32bit MAX_BLOCK_USECS, KILL_WAIT;
 
       std::vector<std::string> arg_list;
-      struct pipe_wrapper* pipe;
+      std::tr1::shared_ptr<struct pipe_wrapper> pipe;
    };
 
 }

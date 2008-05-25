@@ -3,7 +3,10 @@
 * (C) 1999-2007 The Botan Project                *
 *************************************************/
 
-#include <botan/numthry.h>
+#include <botan/bigintfuncs.h>
+
+
+
 
 namespace Botan {
 

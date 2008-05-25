@@ -67,7 +67,7 @@ class Wrapped_Block_Cipher : public BlockCipher
       void dec(const byte in[], byte out[]) const { cipher->decrypt(in, out); }
       void key(const byte key[], u32bit len) { cipher->set_key(key, len); }
       std::string name() const { return cipher->name(); }
-      BlockCipher* clone() const { return cipher->clone(); }
+      AutoBlockCipherPtr clone() const { return cipher->clone(); }
 
       Wrapped_Block_Cipher(python::object py_obj, BlockCipher* c) :
          BlockCipher(c->BLOCK_SIZE, c->MINIMUM_KEYLENGTH,
@@ -75,19 +75,19 @@ class Wrapped_Block_Cipher : public BlockCipher
          obj(py_obj), cipher(c) {}
    private:
       python::object obj;
-      BlockCipher* cipher;
+      AutoBlockCipherPtr cipher;
    };
 
 class Py_BlockCipher_Wrapper : public Py_BlockCipher,
                                public python::wrapper<Py_BlockCipher>
    {
    public:
-      BlockCipher* clone() const
+      AutoBlockCipherPtr clone() const
          {
          python::object self = get_owner(this);
          python::object py_clone = self.attr("__class__")();
          BlockCipher* bc = python::extract<BlockCipher*>(py_clone);
-         return new Wrapped_Block_Cipher(py_clone, bc);
+         return AutoBlockCipherPtr(new Wrapped_Block_Cipher(py_clone, bc));
          }
 
       std::string name() const

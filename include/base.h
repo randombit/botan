@@ -8,6 +8,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/symkey.h>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -41,6 +42,8 @@ class SymmetricAlgorithm
 class BlockCipher : public SymmetricAlgorithm
    {
    public:
+      typedef std::auto_ptr<BlockCipher> AutoBlockCipherPtr;
+
       const u32bit BLOCK_SIZE;
 
       void encrypt(const byte in[], byte out[]) const { enc(in, out); }
@@ -48,7 +51,7 @@ class BlockCipher : public SymmetricAlgorithm
       void encrypt(byte block[]) const { enc(block, block); }
       void decrypt(byte block[]) const { dec(block, block); }
 
-      virtual BlockCipher* clone() const = 0;
+      virtual AutoBlockCipherPtr clone() const = 0;
       virtual void clear() throw() {};
 
       BlockCipher(u32bit, u32bit, u32bit = 0, u32bit = 1);
@@ -64,6 +67,8 @@ class BlockCipher : public SymmetricAlgorithm
 class StreamCipher : public SymmetricAlgorithm
    {
    public:
+      typedef std::auto_ptr<StreamCipher> AutoStreamCipherPtr;
+
       const u32bit IV_LENGTH;
       void encrypt(const byte i[], byte o[], u32bit len) { cipher(i, o, len); }
       void decrypt(const byte i[], byte o[], u32bit len) { cipher(i, o, len); }
@@ -73,7 +78,7 @@ class StreamCipher : public SymmetricAlgorithm
       virtual void resync(const byte[], u32bit);
       virtual void seek(u32bit);
 
-      virtual StreamCipher* clone() const = 0;
+      virtual AutoStreamCipherPtr clone() const = 0;
       virtual void clear() throw() {};
 
       StreamCipher(u32bit, u32bit = 0, u32bit = 1, u32bit = 0);
@@ -111,9 +116,12 @@ class BufferedComputation
 class HashFunction : public BufferedComputation
    {
    public:
+      typedef std::auto_ptr<HashFunction> AutoHashFunctionPtr;
+      typedef std::tr1::shared_ptr<HashFunction> SharedHashFunctionPtr;
+
       const u32bit HASH_BLOCK_SIZE;
 
-      virtual HashFunction* clone() const = 0;
+      virtual AutoHashFunctionPtr clone() const = 0;
       virtual std::string name() const = 0;
       virtual void clear() throw() {};
 
@@ -128,9 +136,11 @@ class MessageAuthenticationCode : public BufferedComputation,
                                   public SymmetricAlgorithm
    {
    public:
+      typedef std::auto_ptr<MessageAuthenticationCode> AutoMACPtr;
+
       virtual bool verify_mac(const byte[], u32bit);
 
-      virtual MessageAuthenticationCode* clone() const = 0;
+      virtual AutoMACPtr clone() const = 0;
       virtual std::string name() const = 0;
       virtual void clear() throw() {};
 

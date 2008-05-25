@@ -5,6 +5,7 @@
 
 #include <botan/mp_core.h>
 #include <botan/mem_ops.h>
+#include <botan/mp_asm.h>
 
 namespace Botan {
 

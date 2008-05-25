@@ -70,11 +70,13 @@ bool EMSA1::verify(const MemoryRegion<byte>& coded,
       if(our_coding.size() <= coded.size()) return false;
 
       u32bit offset = 0;
+      // 'remove' leading zeros...
       while(our_coding[offset] == 0 && offset < our_coding.size())
          ++offset;
+      // is it equal size now?...
       if(our_coding.size() - offset != coded.size())
          return false;
-
+      // is it bytewise equal?...
       for(u32bit j = 0; j != coded.size(); ++j)
          if(coded[j] != our_coding[j+offset])
             return false;
@@ -91,7 +93,7 @@ bool EMSA1::verify(const MemoryRegion<byte>& coded,
 * EMSA1 Constructor                              *
 *************************************************/
 EMSA1::EMSA1(const std::string& hash_name) :
-   hash(get_hash(hash_name))
+    hash((get_hash(hash_name)).release())
    {
    }
 

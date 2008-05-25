@@ -7,10 +7,11 @@
 #include <botan/x509_ext.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/bigint.h>
 #include <botan/config.h>
 #include <botan/oids.h>
 #include <botan/util.h>
+#include <botan/bigint.h>
+
 
 namespace Botan {
 
@@ -69,10 +70,11 @@ void CRL_Entry::encode_into(DER_Encoder& der) const
    {
    Extensions extensions;
 
-   extensions.add(new Cert_Extension::CRL_ReasonCode(reason));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::CRL_ReasonCode>(
+       new Cert_Extension::CRL_ReasonCode(reason)));
 
    der.start_cons(SEQUENCE)
-         .encode(BigInt::decode(serial, serial.size()))
+         .encode(math::BigInt::decode(serial, serial.size()))
          .encode(time)
          .encode(extensions)
       .end_cons();
@@ -105,7 +107,7 @@ void CRL_Entry::decode_from(BER_Decoder& source)
       reason = CRL_Code(info.get1_u32bit("X509v3.CRLReasonCode"));
       }
 
-   serial = BigInt::encode(serial_number_bn);
+   serial = math::BigInt::encode(serial_number_bn);
    }
 
 }

@@ -7,6 +7,7 @@
 #define BOTAN_EMSA_H__
 
 #include <botan/pk_util.h>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -17,15 +18,34 @@ class EMSA1 : public EMSA
    {
    public:
       EMSA1(const std::string&);
-      ~EMSA1() { delete hash; }
+      virtual ~EMSA1() {  }
    private:
-      void update(const byte[], u32bit);
-      SecureVector<byte> encoding_of(const MemoryRegion<byte>&, u32bit);
-      SecureVector<byte> raw_data();
-      bool verify(const MemoryRegion<byte>&, const MemoryRegion<byte>&,
+      virtual void update(const byte[], u32bit);
+      virtual SecureVector<byte> encoding_of(const MemoryRegion<byte>&, u32bit);
+      virtual SecureVector<byte> raw_data();
+      virtual bool verify(const MemoryRegion<byte>&, const MemoryRegion<byte>&,
                   u32bit) throw();
-      HashFunction* hash;
+    protected:
+      std::tr1::shared_ptr<HashFunction> hash;
    };
+
+/*************************************************
+* EMSA1 BSI variant                              *
+*************************************************/
+class EMSA1_BSI : public EMSA1
+   {
+   public:
+      EMSA1_BSI(const std::string&);
+      ~EMSA1_BSI() {  }
+   private:
+      /**
+      * Accepts only hash values which are less or equal than the maximum
+      * key length
+      */
+      SecureVector<byte> encoding_of(const MemoryRegion<byte>&, u32bit);
+   };
+
+
 
 /*************************************************
 * EMSA2                                          *
@@ -34,13 +54,13 @@ class EMSA2 : public EMSA
    {
    public:
       EMSA2(const std::string&);
-      ~EMSA2() { delete hash; }
+      ~EMSA2() { }
    private:
       void update(const byte[], u32bit);
       SecureVector<byte> encoding_of(const MemoryRegion<byte>&, u32bit);
       SecureVector<byte> raw_data();
       SecureVector<byte> empty_hash;
-      HashFunction* hash;
+      std::tr1::shared_ptr<HashFunction> hash;
       byte hash_id;
    };
 
@@ -51,12 +71,12 @@ class EMSA3 : public EMSA
    {
    public:
       EMSA3(const std::string&);
-      ~EMSA3() { delete hash; }
+      ~EMSA3() { }
    private:
       void update(const byte[], u32bit);
       SecureVector<byte> encoding_of(const MemoryRegion<byte>&, u32bit);
       SecureVector<byte> raw_data();
-      HashFunction* hash;
+      std::tr1::shared_ptr<HashFunction> hash;
       SecureVector<byte> hash_id;
    };
 
@@ -68,7 +88,7 @@ class EMSA4 : public EMSA
    public:
       EMSA4(const std::string&, const std::string&);
       EMSA4(const std::string&, const std::string&, u32bit);
-      ~EMSA4() { delete hash; delete mgf; }
+      ~EMSA4() {  }
    private:
       void update(const byte[], u32bit);
       SecureVector<byte> encoding_of(const MemoryRegion<byte>&, u32bit);
@@ -76,8 +96,8 @@ class EMSA4 : public EMSA
       bool verify(const MemoryRegion<byte>&, const MemoryRegion<byte>&,
                   u32bit) throw();
       const u32bit SALT_SIZE;
-      HashFunction* hash;
-      const MGF* mgf;
+      std::tr1::shared_ptr<HashFunction> hash;
+      std::tr1::shared_ptr<MGF const> mgf;
    };
 
 /*************************************************

@@ -57,11 +57,11 @@ class PK_Signer
       void set_output_format(Signature_Format);
 
       PK_Signer(const PK_Signing_Key&, const std::string&);
-      ~PK_Signer() { delete emsa; }
+      ~PK_Signer() { }
    private:
       const PK_Signing_Key& key;
       Signature_Format sig_format;
-      EMSA* emsa;
+      std::tr1::shared_ptr<EMSA> emsa;
    };
 
 /*************************************************
@@ -92,7 +92,7 @@ class PK_Verifier
       virtual u32bit key_message_part_size() const = 0;
 
       Signature_Format sig_format;
-      EMSA* emsa;
+      std::tr1::shared_ptr<EMSA> emsa;
    };
 
 /*************************************************
@@ -101,11 +101,10 @@ class PK_Verifier
 class PK_Key_Agreement
    {
    public:
-      SymmetricKey derive_key(u32bit, const byte[], u32bit,
+        SymmetricKey derive_key(u32bit, const Public_Key&,
                               const std::string& = "") const;
-      SymmetricKey derive_key(u32bit, const byte[], u32bit,
+      SymmetricKey derive_key(u32bit, const Public_Key&,
                                       const byte[], u32bit) const;
-
       PK_Key_Agreement(const PK_Key_Agreement_Key&, const std::string&);
    private:
       const PK_Key_Agreement_Key& key;
@@ -120,11 +119,11 @@ class PK_Encryptor_MR_with_EME : public PK_Encryptor
    public:
       u32bit maximum_input_size() const;
       PK_Encryptor_MR_with_EME(const PK_Encrypting_Key&, const std::string&);
-      ~PK_Encryptor_MR_with_EME() { delete encoder; }
+      ~PK_Encryptor_MR_with_EME() {  }
    private:
       SecureVector<byte> enc(const byte[], u32bit) const;
       const PK_Encrypting_Key& key;
-      const EME* encoder;
+      std::tr1::shared_ptr<EME const> encoder;
    };
 
 /*************************************************
@@ -134,11 +133,11 @@ class PK_Decryptor_MR_with_EME : public PK_Decryptor
    {
    public:
       PK_Decryptor_MR_with_EME(const PK_Decrypting_Key&, const std::string&);
-      ~PK_Decryptor_MR_with_EME() { delete encoder; }
+      ~PK_Decryptor_MR_with_EME() { }
    private:
       SecureVector<byte> dec(const byte[], u32bit) const;
       const PK_Decrypting_Key& key;
-      const EME* encoder;
+      std::tr1::shared_ptr<EME const> encoder;
    };
 
 /*************************************************

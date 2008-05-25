@@ -16,9 +16,9 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <stdlib.h>
 
 namespace Botan {
 
@@ -41,7 +41,7 @@ void do_exec(const std::vector<std::string>& arg_list,
       {
       const std::string full_path = paths[j] + "/" + arg_list[0];
       const char* fsname = full_path.c_str();
-      execl(fsname, fsname, arg1, arg2, arg3, arg4, 0);
+      execl(fsname, fsname, arg1, arg2, arg3, arg4, NULL);
       }
    }
 
@@ -158,7 +158,7 @@ void DataSource_Command::create_pipe(const std::string& path)
       }
    else if(pid > 0)
       {
-      pipe = new pipe_wrapper;
+      pipe = std::tr1::shared_ptr<pipe_wrapper>(new pipe_wrapper);
       pipe->fd = pipe_fd[0];
       pipe->pid = pid;
       close(pipe_fd[1]);
@@ -207,8 +207,7 @@ void DataSource_Command::shutdown_pipe()
          }
 
       close(pipe->fd);
-      delete pipe;
-      pipe = 0;
+      pipe.reset();
       }
    }
 
@@ -226,7 +225,6 @@ DataSource_Command::DataSource_Command(const std::string& prog_and_args,
    if(arg_list.size() > 5)
       throw Invalid_Argument("DataSource_Command: Too many args");
 
-   pipe = 0;
    create_pipe(path);
    }
 

@@ -20,7 +20,7 @@ namespace Botan {
 class X509_Certificate : public X509_Object
    {
    public:
-      Public_Key* subject_public_key() const;
+     std::auto_ptr<Public_Key> subject_public_key() const;
 
       X509_DN issuer_dn() const;
       X509_DN subject_dn() const;
@@ -45,7 +45,7 @@ class X509_Certificate : public X509_Object
 
       bool operator==(const X509_Certificate&) const;
 
-      X509_Certificate(DataSource&);
+      X509_Certificate(std::tr1::shared_ptr<DataSource>);
       X509_Certificate(const std::string&);
    private:
       void force_decode();

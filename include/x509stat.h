@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/asn1_oid.h>
+#include <botan/freestore.h>
 
 namespace Botan {
 
@@ -13,7 +14,7 @@ namespace Botan {
 class Extension_Prototype
    {
    public:
-      virtual class Certificate_Extension* make(const OID&) = 0;
+      virtual std::tr1::shared_ptr<class Certificate_Extension> make(const OID&) = 0;
       virtual ~Extension_Prototype() {}
    };
 
@@ -23,13 +24,13 @@ class Extension_Prototype
 class X509_GlobalState
    {
    public:
-      void add(Extension_Prototype*);
-      class Certificate_Extension* get_extension(const OID&) const;
+      void add(SharedPtrConverter<Extension_Prototype>);
+      std::tr1::shared_ptr<class Certificate_Extension> get_extension(const OID&) const;
 
       X509_GlobalState();
       ~X509_GlobalState();
    private:
-      std::vector<Extension_Prototype*> prototypes;
+      std::vector<std::tr1::shared_ptr<Extension_Prototype> > prototypes;
    };
 
 }

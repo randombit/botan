@@ -17,7 +17,7 @@ namespace {
 * EAX MAC-based PRF                              *
 *************************************************/
 SecureVector<byte> eax_prf(byte tag, u32bit BLOCK_SIZE,
-                           MessageAuthenticationCode* mac,
+		std::tr1::shared_ptr<MessageAuthenticationCode> mac,
                            const byte in[], u32bit length)
    {
    for(u32bit j = 0; j != BLOCK_SIZE - 1; ++j)
@@ -39,8 +39,8 @@ EAX_Base::EAX_Base(const std::string& cipher_name,
    {
    const std::string mac_name = "CMAC(" + cipher_name + ")";
 
-   cipher = get_block_cipher(cipher_name);
-   mac = get_mac(mac_name);
+   cipher = std::tr1::shared_ptr<BlockCipher>(get_block_cipher(cipher_name).release());
+   mac = std::tr1::shared_ptr<MessageAuthenticationCode>(get_mac(mac_name).release());
 
    if(tag_size % 8 != 0 || TAG_SIZE == 0 || TAG_SIZE > mac->OUTPUT_LENGTH)
       throw Invalid_Argument(name() + ": Bad tag size " + to_string(tag_size));

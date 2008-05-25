@@ -11,7 +11,7 @@
 #include <botan/pk_algs.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
-#include <memory>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -55,15 +55,15 @@ std::string PEM_encode(const Public_Key& key)
 /*************************************************
 * Extract a public key and return it             *
 *************************************************/
-Public_Key* load_key(DataSource& source)
+std::auto_ptr<Public_Key> load_key(SharedPtrConverter<DataSource> source)
    {
    try {
       AlgorithmIdentifier alg_id;
       MemoryVector<byte> key_bits;
 
-      if(ASN1::maybe_BER(source) && !PEM_Code::matches(source))
+      if(ASN1::maybe_BER(source.get_shared()) && !PEM_Code::matches(source.get_shared()))
          {
-         BER_Decoder(source)
+         BER_Decoder(source.get_shared())
             .start_cons(SEQUENCE)
             .decode(alg_id)
             .decode(key_bits, BIT_STRING)
@@ -72,9 +72,9 @@ Public_Key* load_key(DataSource& source)
          }
       else
          {
-         DataSource_Memory ber(
-            PEM_Code::decode_check_label(source, "PUBLIC KEY")
-            );
+           std::tr1::shared_ptr<DataSource> ber(new DataSource_Memory (
+            PEM_Code::decode_check_label(source.get_shared(), "PUBLIC KEY")
+            ));
 
          BER_Decoder(ber)
             .start_cons(SEQUENCE)
@@ -104,7 +104,7 @@ Public_Key* load_key(DataSource& source)
       decoder->alg_id(alg_id);
       decoder->key_bits(key_bits);
 
-      return key_obj.release();
+      return key_obj;
       }
    catch(Decoding_Error)
       {
@@ -115,31 +115,31 @@ Public_Key* load_key(DataSource& source)
 /*************************************************
 * Extract a public key and return it             *
 *************************************************/
-Public_Key* load_key(const std::string& fsname)
+std::auto_ptr<Public_Key> load_key(const std::string& fsname)
    {
-   DataSource_Stream source(fsname, true);
+   std::tr1::shared_ptr<DataSource> source(new DataSource_Stream (fsname, true));
    return X509::load_key(source);
    }
 
 /*************************************************
 * Extract a public key and return it             *
 *************************************************/
-Public_Key* load_key(const MemoryRegion<byte>& mem)
+std::auto_ptr<Public_Key> load_key(const MemoryRegion<byte>& mem)
    {
-   DataSource_Memory source(mem);
+   std::tr1::shared_ptr<DataSource> source(new DataSource_Memory(mem));
    return X509::load_key(source);
    }
 
 /*************************************************
 * Make a copy of this public key                 *
 *************************************************/
-Public_Key* copy_key(const Public_Key& key)
+std::auto_ptr<Public_Key> copy_key(const Public_Key& key)
    {
    Pipe bits;
    bits.start_msg();
    X509::encode(key, bits, RAW_BER);
    bits.end_msg();
-   DataSource_Memory source(bits.read_all());
+   std::tr1::shared_ptr<DataSource> source(new DataSource_Memory(bits.read_all()));
    return X509::load_key(source);
    }
 

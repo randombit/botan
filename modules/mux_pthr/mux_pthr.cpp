@@ -17,7 +17,7 @@ namespace Botan {
 /*************************************************
 * Pthread Mutex Factory                          *
 *************************************************/
-Mutex* Pthread_Mutex_Factory::make()
+std::auto_ptr<Mutex> Pthread_Mutex_Factory::make()
    {
 
    class Pthread_Mutex : public Mutex
@@ -50,7 +50,7 @@ Mutex* Pthread_Mutex_Factory::make()
          pthread_mutex_t mutex;
       };
 
-   return new Pthread_Mutex();
+   return std::auto_ptr<Mutex>(new Pthread_Mutex());
    }
 
 }

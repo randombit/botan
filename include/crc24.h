@@ -18,7 +18,7 @@ class CRC24 : public HashFunction
    public:
       void clear() throw() { crc = 0xB704CE; }
       std::string name() const { return "CRC24"; }
-      HashFunction* clone() const { return new CRC24; }
+      AutoHashFunctionPtr clone() const { return AutoHashFunctionPtr(new CRC24); }
       CRC24() : HashFunction(3) { clear(); }
       ~CRC24() { clear(); }
    private:

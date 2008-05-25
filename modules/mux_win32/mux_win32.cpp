@@ -12,7 +12,7 @@ namespace Botan {
 /*************************************************
 * Win32 Mutex Factory                            *
 *************************************************/
-Mutex* Win32_Mutex_Factory::make()
+std::auto_ptr<Mutex> Win32_Mutex_Factory::make()
    {
    class Win32_Mutex : public Mutex
       {
@@ -26,7 +26,7 @@ Mutex* Win32_Mutex_Factory::make()
          CRITICAL_SECTION mutex;
       };
 
-   return new Win32_Mutex();
+   return std::auto_ptr<Mutex>(new Win32_Mutex());
    }
 
 }

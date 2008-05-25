@@ -7,6 +7,7 @@
 #define BOTAN_PEM_H__
 
 #include <botan/data_src.h>
+#include <botan/freestore.h>
 
 namespace Botan {
 
@@ -18,9 +19,9 @@ namespace PEM_Code {
 std::string encode(const byte[], u32bit, const std::string&);
 std::string encode(const MemoryRegion<byte>&, const std::string&);
 
-SecureVector<byte> decode(DataSource&, std::string&);
-SecureVector<byte> decode_check_label(DataSource&, const std::string&);
-bool matches(DataSource&, const std::string& = "");
+SecureVector<byte> decode(SharedPtrConverter<DataSource>, std::string&);
+SecureVector<byte> decode_check_label(SharedPtrConverter<DataSource>, const std::string&);
+bool matches(SharedPtrConverter<DataSource>, const std::string& = "");
 
 }
 

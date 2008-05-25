@@ -4,16 +4,19 @@
 *************************************************/
 
 #include <botan/dl_algo.h>
-#include <botan/numthry.h>
+#include <botan/bigintfuncs.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+
+
+
 
 namespace Botan {
 
 /*************************************************
 * Return the X.509 public key encoder            *
 *************************************************/
-X509_Encoder* DL_Scheme_PublicKey::x509_encoder() const
+std::auto_ptr<X509_Encoder> DL_Scheme_PublicKey::x509_encoder() const
    {
    class DL_Scheme_Encoder : public X509_Encoder
       {
@@ -36,20 +39,20 @@ X509_Encoder* DL_Scheme_PublicKey::x509_encoder() const
          const DL_Scheme_PublicKey* key;
       };
 
-   return new DL_Scheme_Encoder(this);
+   return std::auto_ptr<X509_Encoder>(new DL_Scheme_Encoder(this));
    }
 
 /*************************************************
 * Return the X.509 public key decoder            *
 *************************************************/
-X509_Decoder* DL_Scheme_PublicKey::x509_decoder()
+std::auto_ptr<X509_Decoder> DL_Scheme_PublicKey::x509_decoder()
    {
    class DL_Scheme_Decoder : public X509_Decoder
       {
       public:
          void alg_id(const AlgorithmIdentifier& alg_id)
             {
-            DataSource_Memory source(alg_id.parameters);
+            std::tr1::shared_ptr<DataSource> source(new DataSource_Memory(alg_id.parameters));
             key->group.BER_decode(source, key->group_format());
             }
 
@@ -64,13 +67,13 @@ X509_Decoder* DL_Scheme_PublicKey::x509_decoder()
          DL_Scheme_PublicKey* key;
       };
 
-   return new DL_Scheme_Decoder(this);
+   return std::auto_ptr<X509_Decoder>(new DL_Scheme_Decoder(this));
    }
 
 /*************************************************
 * Return the PKCS #8 private key encoder         *
 *************************************************/
-PKCS8_Encoder* DL_Scheme_PrivateKey::pkcs8_encoder() const
+std::auto_ptr<PKCS8_Encoder> DL_Scheme_PrivateKey::pkcs8_encoder() const
    {
    class DL_Scheme_Encoder : public PKCS8_Encoder
       {
@@ -93,20 +96,20 @@ PKCS8_Encoder* DL_Scheme_PrivateKey::pkcs8_encoder() const
          const DL_Scheme_PrivateKey* key;
       };
 
-   return new DL_Scheme_Encoder(this);
+   return std::auto_ptr<PKCS8_Encoder>(new DL_Scheme_Encoder(this));
    }
 
 /*************************************************
 * Return the PKCS #8 private key decoder         *
 *************************************************/
-PKCS8_Decoder* DL_Scheme_PrivateKey::pkcs8_decoder()
+std::auto_ptr<PKCS8_Decoder> DL_Scheme_PrivateKey::pkcs8_decoder()
    {
    class DL_Scheme_Decoder : public PKCS8_Decoder
       {
       public:
          void alg_id(const AlgorithmIdentifier& alg_id)
             {
-            DataSource_Memory source(alg_id.parameters);
+            std::tr1::shared_ptr<DataSource> source(new DataSource_Memory(alg_id.parameters));
             key->group.BER_decode(source, key->group_format());
             }
 
@@ -121,7 +124,7 @@ PKCS8_Decoder* DL_Scheme_PrivateKey::pkcs8_decoder()
          DL_Scheme_PrivateKey* key;
       };
 
-   return new DL_Scheme_Decoder(this);
+   return std::auto_ptr<PKCS8_Decoder>(new DL_Scheme_Decoder(this));
    }
 
 /*************************************************

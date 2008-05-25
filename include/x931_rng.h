@@ -7,6 +7,7 @@
 #define BOTAN_ANSI_X931_RNG_H__
 
 #include <botan/base.h>
+#include <botan/freestore.h>
 
 namespace Botan {
 
@@ -21,14 +22,15 @@ class ANSI_X931_RNG : public RandomNumberGenerator
       void clear() throw();
       std::string name() const;
 
-      ANSI_X931_RNG(const std::string& = "", RandomNumberGenerator* = 0);
+      ANSI_X931_RNG(const std::string& = "",
+    		  SharedPtrConverter<RandomNumberGenerator> = SharedPtrConverter<RandomNumberGenerator>());
       ~ANSI_X931_RNG();
    private:
       void add_randomness(const byte[], u32bit);
       void update_buffer();
 
-      BlockCipher* cipher;
-      RandomNumberGenerator* prng;
+      std::tr1::shared_ptr<BlockCipher> cipher;
+      std::tr1::shared_ptr<RandomNumberGenerator> prng;
       SecureVector<byte> V, R;
       u32bit position;
    };

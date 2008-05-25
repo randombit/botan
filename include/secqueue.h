@@ -32,8 +32,8 @@ class SecureQueue : public Fanout_Filter, public DataSource
       ~SecureQueue() { destroy(); }
    private:
       void destroy();
-      class SecureQueueNode* head;
-      class SecureQueueNode* tail;
+      std::tr1::shared_ptr<class SecureQueueNode> head;
+      std::tr1::shared_ptr<class SecureQueueNode> tail;
    };
 
 }

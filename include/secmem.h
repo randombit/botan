@@ -8,7 +8,6 @@
 
 #include <botan/allocate.h>
 #include <botan/mem_ops.h>
-
 namespace Botan {
 
 /*************************************************
@@ -66,7 +65,7 @@ class MemoryRegion
 
       ~MemoryRegion() { deallocate(buf, allocated); }
    protected:
-      MemoryRegion() { buf = 0; alloc = 0; used = allocated = 0; }
+      MemoryRegion() { buf = 0; alloc = std::tr1::shared_ptr<Allocator>(); used = allocated = 0; }
       MemoryRegion(const MemoryRegion<T>& copy)
          {
          buf = 0;
@@ -79,9 +78,9 @@ class MemoryRegion
          { alloc = Allocator::get(locking); create(size); }
    private:
       T* allocate(u32bit n) const
-         {
-         return static_cast<T*>(alloc->allocate(sizeof(T)*n));
-         }
+      {
+      	return static_cast<T*>(alloc->allocate(sizeof(T)*n));
+      }
 
       void deallocate(T* p, u32bit n) const
          { alloc->deallocate(p, sizeof(T)*n); }
@@ -89,7 +88,7 @@ class MemoryRegion
       mutable T* buf;
       mutable u32bit used;
       mutable u32bit allocated;
-      mutable Allocator* alloc;
+      mutable std::tr1::shared_ptr<Allocator> alloc;
    };
 
 /*************************************************

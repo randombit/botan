@@ -9,6 +9,7 @@
 #include <botan/init.h>
 #include <string>
 #include <vector>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -18,15 +19,15 @@ namespace Botan {
 class Modules
    {
    public:
-      virtual class Mutex_Factory* mutex_factory() const = 0;
-      virtual class Timer* timer() const = 0;
-      virtual class Charset_Transcoder* transcoder() const = 0;
+      virtual std::tr1::shared_ptr<class Mutex_Factory> mutex_factory() const = 0;
+      virtual std::tr1::shared_ptr<class Timer> timer() const = 0;
+      virtual std::tr1::shared_ptr<class Charset_Transcoder> transcoder() const = 0;
 
       virtual std::string default_allocator() const = 0;
 
-      virtual std::vector<class Allocator*> allocators() const = 0;
-      virtual std::vector<class EntropySource*> entropy_sources() const = 0;
-      virtual std::vector<class Engine*> engines() const = 0;
+      virtual std::vector<std::tr1::shared_ptr<class Allocator> > allocators() const = 0;
+      virtual std::vector<std::tr1::shared_ptr<class EntropySource> > entropy_sources() const = 0;
+      virtual std::vector<std::tr1::shared_ptr<class Engine> > engines() const = 0;
 
       virtual ~Modules() {}
    };
@@ -37,15 +38,15 @@ class Modules
 class Builtin_Modules : public Modules
    {
    public:
-      class Mutex_Factory* mutex_factory() const;
-      class Timer* timer() const;
-      class Charset_Transcoder* transcoder() const;
+      class std::tr1::shared_ptr<Mutex_Factory> mutex_factory() const;
+      class std::tr1::shared_ptr<Timer> timer() const;
+      class std::tr1::shared_ptr<Charset_Transcoder> transcoder() const;
 
       std::string default_allocator() const;
 
-      std::vector<class Allocator*> allocators() const;
-      std::vector<class EntropySource*> entropy_sources() const;
-      std::vector<class Engine*> engines() const;
+      std::vector<std::tr1::shared_ptr<class Allocator> > allocators() const;
+      std::vector<std::tr1::shared_ptr<class EntropySource> > entropy_sources() const;
+      std::vector<std::tr1::shared_ptr<class Engine> > engines() const;
 
       Builtin_Modules(const InitializerOptions&);
    private:

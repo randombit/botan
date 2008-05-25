@@ -7,6 +7,9 @@
 #define BOTAN_MUTEX_H__
 
 #include <botan/exceptn.h>
+#include <botan/freestore.h>
+
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -27,7 +30,7 @@ class Mutex
 class Mutex_Factory
    {
    public:
-      virtual Mutex* make() = 0;
+      virtual std::auto_ptr<Mutex> make() = 0;
       virtual ~Mutex_Factory() {}
    };
 
@@ -37,7 +40,7 @@ class Mutex_Factory
 class Default_Mutex_Factory : public Mutex_Factory
    {
    public:
-      Mutex* make();
+     std::auto_ptr<Mutex> make();
    };
 
 /*************************************************
@@ -46,10 +49,10 @@ class Default_Mutex_Factory : public Mutex_Factory
 class Mutex_Holder
    {
    public:
-      Mutex_Holder(Mutex*);
+      Mutex_Holder(SharedPtrConverter<Mutex>);
       ~Mutex_Holder();
    private:
-      Mutex* mux;
+      std::tr1::shared_ptr<Mutex> mux;
    };
 
 /*************************************************

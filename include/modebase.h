@@ -7,6 +7,7 @@
 #define BOTAN_MODEBASE_H__
 
 #include <botan/basefilt.h>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -20,12 +21,12 @@ class BlockCipherMode : public Keyed_Filter
 
       BlockCipherMode(const std::string&, const std::string&,
                       u32bit, u32bit = 0, u32bit = 1);
-      virtual ~BlockCipherMode() { delete cipher; }
+      virtual ~BlockCipherMode() { }
    protected:
       void set_iv(const InitializationVector&);
       const u32bit BLOCK_SIZE, BUFFER_SIZE, IV_METHOD;
       const std::string mode_name;
-      BlockCipher* cipher;
+      std::tr1::shared_ptr<BlockCipher> cipher;
       SecureVector<byte> buffer, state;
       u32bit position;
    };

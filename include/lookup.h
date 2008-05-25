@@ -17,38 +17,43 @@ namespace Botan {
 /*************************************************
 * Retrieve an object from the lookup table       *
 *************************************************/
-const BlockCipher*                  retrieve_block_cipher(const std::string&);
-const StreamCipher*                 retrieve_stream_cipher(const std::string&);
-const HashFunction*                 retrieve_hash(const std::string&);
-const MessageAuthenticationCode*    retrieve_mac(const std::string&);
-const S2K*                          retrieve_s2k(const std::string&);
-const BlockCipherModePaddingMethod* retrieve_bc_pad(const std::string&);
+// NOTE: these functions return internally stored objects, so we use shared_ptr here
+std::tr1::shared_ptr<BlockCipher const>                  retrieve_block_cipher(const std::string&);
+std::tr1::shared_ptr<StreamCipher const>                 retrieve_stream_cipher(const std::string&);
+std::tr1::shared_ptr<HashFunction const>                 retrieve_hash(const std::string&);
+std::tr1::shared_ptr<MessageAuthenticationCode const>    retrieve_mac(const std::string&);
+std::tr1::shared_ptr<S2K const>                          retrieve_s2k(const std::string&);
+std::tr1::shared_ptr<BlockCipherModePaddingMethod const> retrieve_bc_pad(const std::string&);
 
 /*************************************************
 * Get an algorithm object                        *
 *************************************************/
-BlockCipher*                        get_block_cipher(const std::string&);
-StreamCipher*                       get_stream_cipher(const std::string&);
-HashFunction*                       get_hash(const std::string&);
-MessageAuthenticationCode*          get_mac(const std::string&);
-S2K*                                get_s2k(const std::string&);
-const BlockCipherModePaddingMethod* get_bc_pad(const std::string&);
+// NOTE: these functions create and return new objects, letting the caller assume ownership of them
+std::auto_ptr<BlockCipher>                               get_block_cipher(const std::string&);
+std::auto_ptr<StreamCipher>                              get_stream_cipher(const std::string&);
+std::auto_ptr<HashFunction>                              get_hash(const std::string&);
+std::auto_ptr<MessageAuthenticationCode>                 get_mac(const std::string&);
+std::auto_ptr<S2K>                                       get_s2k(const std::string&);
+// NOTE: BlockCipherModePaddingMethod is not cloned
+std::tr1::shared_ptr<BlockCipherModePaddingMethod const> get_bc_pad(const std::string&);
 
 /*************************************************
 * Get an EMSA/EME/KDF/MGF function               *
 *************************************************/
-EME*  get_eme(const std::string&);
-EMSA* get_emsa(const std::string&);
-MGF*  get_mgf(const std::string&);
-KDF*  get_kdf(const std::string&);
+// NOTE: these functions create and return new objects, letting the caller assume ownership of them
+std::auto_ptr<EME>  get_eme(const std::string&);
+std::auto_ptr<EMSA> get_emsa(const std::string&);
+std::auto_ptr<MGF>  get_mgf(const std::string&);
+std::auto_ptr<KDF>  get_kdf(const std::string&);
 
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-Keyed_Filter* get_cipher(const std::string&, const SymmetricKey&,
+// NOTE: these functions return internally stored objects, so we use shared_ptr here
+std::tr1::shared_ptr<Keyed_Filter> get_cipher(const std::string&, const SymmetricKey&,
                          const InitializationVector&, Cipher_Dir);
-Keyed_Filter* get_cipher(const std::string&, const SymmetricKey&, Cipher_Dir);
-Keyed_Filter* get_cipher(const std::string&, Cipher_Dir);
+std::tr1::shared_ptr<Keyed_Filter> get_cipher(const std::string&, const SymmetricKey&, Cipher_Dir);
+std::tr1::shared_ptr<Keyed_Filter> get_cipher(const std::string&, Cipher_Dir);
 
 /*************************************************
 * Check to see if an algorithm exists            *

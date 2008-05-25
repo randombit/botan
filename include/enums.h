@@ -42,7 +42,12 @@ enum ASN1_Tag {
    GENERALIZED_TIME = 0x18,
 
    NO_OBJECT        = 0xFF00,
-   DIRECTORY_STRING = 0xFF01
+   DIRECTORY_STRING = 0xFF01,
+
+   // CV Certificate Tags
+
+   CV_Certificate = 0x7F,
+   CVC_ADO = 0x67
 };
 
 /*************************************************
@@ -115,6 +120,24 @@ enum Pulse_Type {
 };
 
 static const u32bit NO_CERT_PATH_LIMIT = 0xFFFFFFF0;
+
+/*******************************
+* cvc CHAT values              *
+*******************************/
+enum CHAT_values{
+      CVCA = 0xC0,
+      DVCA_domestic = 0x80,
+      DVCA_foreign =  0x40,
+      IS   = 0x00,
+
+      IRIS = 0x02,
+      FINGERPRINT = 0x01
+};
+
+/**
+* The encoding types used by the key when encoded via an X509 or CVC encoder.
+*/
+        enum EC_dompar_enc { ENC_EXPLICIT = 0, ENC_IMPLICITCA = 1, ENC_OID = 2 };
 
 }
 

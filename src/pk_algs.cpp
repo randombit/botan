@@ -5,42 +5,33 @@
 
 #include <botan/pk_algs.h>
 #include <botan/rsa.h>
-#include <botan/dsa.h>
 #include <botan/dh.h>
-#include <botan/nr.h>
-#include <botan/rw.h>
-#include <botan/elgamal.h>
+#include <botan/ec.h>
 
 namespace Botan {
 
 /*************************************************
 * Get an PK public key object                    *
 *************************************************/
-Public_Key* get_public_key(const std::string& alg_name)
+std::auto_ptr<Public_Key> get_public_key(const std::string& alg_name)
    {
-   if(alg_name == "RSA")      return new RSA_PublicKey;
-   else if(alg_name == "DSA") return new DSA_PublicKey;
-   else if(alg_name == "DH")  return new DH_PublicKey;
-   else if(alg_name == "NR")  return new NR_PublicKey;
-   else if(alg_name == "RW")  return new RW_PublicKey;
-   else if(alg_name == "ELG") return new ElGamal_PublicKey;
+   if(alg_name == "RSA")      return std::auto_ptr<Public_Key>(new RSA_PublicKey);
+   else if(alg_name == "DH")  return std::auto_ptr<Public_Key>(new DH_PublicKey);
+   else if(alg_name == "ECDSA") return std::auto_ptr<Public_Key>(new ECDSA_PublicKey);
    else
-      return 0;
+      return std::auto_ptr<Public_Key>();
    }
 
 /*************************************************
 * Get an PK private key object                   *
 *************************************************/
-Private_Key* get_private_key(const std::string& alg_name)
+std::auto_ptr<Private_Key> get_private_key(const std::string& alg_name)
    {
-   if(alg_name == "RSA")      return new RSA_PrivateKey;
-   else if(alg_name == "DSA") return new DSA_PrivateKey;
-   else if(alg_name == "DH")  return new DH_PrivateKey;
-   else if(alg_name == "NR")  return new NR_PrivateKey;
-   else if(alg_name == "RW")  return new RW_PrivateKey;
-   else if(alg_name == "ELG") return new ElGamal_PrivateKey;
+   if(alg_name == "RSA")      return std::auto_ptr<Private_Key>(new RSA_PrivateKey);
+   else if(alg_name == "DH")  return std::auto_ptr<Private_Key>(new DH_PrivateKey);
+   else if(alg_name == "ECDSA") return std::auto_ptr<Private_Key>(new ECDSA_PrivateKey);
    else
-      return 0;
+      return std::auto_ptr<Private_Key>();
    }
 
 }

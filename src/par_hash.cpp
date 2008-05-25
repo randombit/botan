@@ -63,12 +63,12 @@ std::string Parallel::name() const
 /*************************************************
 * Return a clone of this object                  *
 *************************************************/
-HashFunction* Parallel::clone() const
+HashFunction::AutoHashFunctionPtr Parallel::clone() const
    {
    std::vector<std::string> names;
    for(u32bit j = 0; j != hashes.size(); ++j)
       names.push_back(hashes[j]->name());
-   return new Parallel(names);
+   return AutoHashFunctionPtr(new Parallel(names));
    }
 
 /*************************************************
@@ -87,7 +87,7 @@ Parallel::Parallel(const std::vector<std::string>& names) :
    HashFunction(sum_of_hash_lengths(names))
    {
    for(u32bit j = 0; j != names.size(); ++j)
-      hashes.push_back(get_hash(names[j]));
+      hashes.push_back(SharedHashFunctionPtr(get_hash(names[j]).release()));
    }
 
 /*************************************************
@@ -95,8 +95,5 @@ Parallel::Parallel(const std::vector<std::string>& names) :
 *************************************************/
 Parallel::~Parallel()
    {
-   for(u32bit j = 0; j != hashes.size(); ++j)
-      delete hashes[j];
    }
-
 }

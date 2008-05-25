@@ -17,8 +17,8 @@ namespace Botan {
 /*************************************************
 * PKCS10_Request Constructor                     *
 *************************************************/
-PKCS10_Request::PKCS10_Request(DataSource& in) :
-   X509_Object(in, "CERTIFICATE REQUEST/NEW CERTIFICATE REQUEST")
+PKCS10_Request::PKCS10_Request(SharedPtrConverter<DataSource> in) :
+   X509_Object(in.get_shared(), "CERTIFICATE REQUEST/NEW CERTIFICATE REQUEST")
    {
    do_decode();
    }
@@ -137,16 +137,16 @@ X509_DN PKCS10_Request::subject_dn() const
 *************************************************/
 MemoryVector<byte> PKCS10_Request::raw_public_key() const
    {
-   DataSource_Memory source(info.get1("X509.Certificate.public_key"));
+   std::tr1::shared_ptr<DataSource> source(new DataSource_Memory(info.get1("X509.Certificate.public_key")));
    return PEM_Code::decode_check_label(source, "PUBLIC KEY");
    }
 
 /*************************************************
 * Return the public key of the requestor         *
 *************************************************/
-Public_Key* PKCS10_Request::subject_public_key() const
+std::auto_ptr<Public_Key> PKCS10_Request::subject_public_key() const
    {
-   DataSource_Memory source(info.get1("X509.Certificate.public_key"));
+   std::tr1::shared_ptr<DataSource> source(new DataSource_Memory(info.get1("X509.Certificate.public_key")));
    return X509::load_key(source);
    }
 

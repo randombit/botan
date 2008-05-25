@@ -27,34 +27,33 @@ class S2K_Filter : public Filter
          SymmetricKey x = s2k->derive_key(outlen, passphrase);
          send(x.bits_of());
          }
-      S2K_Filter(S2K* algo, const SymmetricKey& s, u32bit o, u32bit i)
+      S2K_Filter(std::tr1::shared_ptr<S2K> algo, const SymmetricKey& s, u32bit o, u32bit i)
          {
          s2k = algo;
          outlen = o;
          iterations = i;
          salt = s.bits_of();
          }
-      ~S2K_Filter() { delete s2k; }
+      ~S2K_Filter() { }
    private:
       std::string passphrase;
-      S2K* s2k;
+      std::tr1::shared_ptr<S2K> s2k;
       SecureVector<byte> salt;
       u32bit outlen, iterations;
    };
-
 /* Not too useful generally; just dumps random bits for benchmarking */
 class RNG_Filter : public Filter
    {
    public:
       void write(const byte[], u32bit);
-      RNG_Filter(RandomNumberGenerator* r) : rng(r), buffer(1024)
+      RNG_Filter(std::tr1::shared_ptr<RandomNumberGenerator> r) : rng(r), buffer(1024)
          {
          Global_RNG::randomize(buffer, buffer.size());
          rng->add_entropy(buffer, buffer.size());
          }
-      ~RNG_Filter() { delete rng; }
+      ~RNG_Filter() { }
    private:
-      RandomNumberGenerator* rng;
+	  std::tr1::shared_ptr<RandomNumberGenerator> rng;
       SecureVector<byte> buffer;
    };
 
@@ -70,36 +69,35 @@ class KDF_Filter : public Filter
                                           salt, salt.size());
          send(x.bits_of(), x.length());
          }
-      KDF_Filter(KDF* algo, const SymmetricKey& s, u32bit o)
+      KDF_Filter(std::tr1::shared_ptr<KDF> algo, const SymmetricKey& s, u32bit o)
          {
          kdf = algo;
          outlen = o;
          salt = s.bits_of();
          }
-      ~KDF_Filter() { delete kdf; }
+      ~KDF_Filter() { }
    private:
       SecureVector<byte> secret;
       SecureVector<byte> salt;
-      KDF* kdf;
+      std::tr1::shared_ptr<KDF> kdf;
       u32bit outlen;
    };
 
-Filter* lookup_s2k(const std::string& algname,
+Filter::SharedFilterPtr lookup_s2k(const std::string& algname,
                    const std::vector<std::string>& params)
    {
-   S2K* s2k = 0;
+	std::tr1::shared_ptr<S2K> s2k;
 
    try {
-      s2k = get_s2k(algname);
+      s2k = std::tr1::shared_ptr<S2K>(get_s2k(algname).release());
       }
    catch(...) { }
 
    if(s2k)
-      return new S2K_Filter(s2k, params[0], to_u32bit(params[1]),
-                            to_u32bit(params[2]));
-   return 0;
+      return create_shared_ptr<S2K_Filter>(s2k, params[0], to_u32bit(params[1]),
+    		                               to_u32bit(params[2]));
+   return Filter::SharedFilterPtr();
    }
-
 void RNG_Filter::write(const byte[], u32bit length)
    {
    while(length)
@@ -110,25 +108,25 @@ void RNG_Filter::write(const byte[], u32bit length)
       }
    }
 
-Filter* lookup_rng(const std::string& algname)
+Filter::SharedFilterPtr lookup_rng(const std::string& algname)
    {
    if(algname == "X9.31-RNG")
-      return new RNG_Filter(new ANSI_X931_RNG);
+      return create_shared_ptr<RNG_Filter>(std::tr1::shared_ptr<ANSI_X931_RNG>(new ANSI_X931_RNG));
    if(algname == "Randpool")
-      return new RNG_Filter(new Randpool);
-   return 0;
+      return create_shared_ptr<RNG_Filter>(std::tr1::shared_ptr<Randpool>(new Randpool));
+   return Filter::SharedFilterPtr();
    }
 
-Filter* lookup_kdf(const std::string& algname, const std::string& salt,
+Filter::SharedFilterPtr lookup_kdf(const std::string& algname, const std::string& salt,
                    const std::string& params)
    {
-   KDF* kdf = 0;
+   std::tr1::shared_ptr<KDF> kdf;
    try {
-      kdf = get_kdf(algname);
+      kdf = std::tr1::shared_ptr<KDF>(get_kdf(algname).release());
       }
-   catch(...) { return 0; }
+   catch(...) { return Filter::SharedFilterPtr(); }
 
    if(kdf)
-      return new KDF_Filter(kdf, salt, to_u32bit(params));
-   return 0;
+      return create_shared_ptr<KDF_Filter>(kdf, salt, to_u32bit(params));
+   return Filter::SharedFilterPtr();
    }

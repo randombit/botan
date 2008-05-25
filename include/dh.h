@@ -25,7 +25,7 @@ class DH_PublicKey : public virtual DL_Scheme_PublicKey
       DL_Group::Format group_format() const { return DL_Group::ANSI_X9_42; }
 
       DH_PublicKey() {}
-      DH_PublicKey(const DL_Group&, const BigInt&);
+	  DH_PublicKey(const DL_Group&, const BigInt&);
    private:
       void X509_load_hook();
    };
@@ -38,12 +38,7 @@ class DH_PrivateKey : public DH_PublicKey,
                       public virtual DL_Scheme_PrivateKey
    {
    public:
-      SecureVector<byte> derive_key(const byte[], u32bit) const;
-      SecureVector<byte> derive_key(const DH_PublicKey&) const;
-      SecureVector<byte> derive_key(const BigInt&) const;
-
-      MemoryVector<byte> public_value() const;
-
+      SecureVector<byte> derive_key(const Public_Key&) const;
       DH_PrivateKey() {}
       DH_PrivateKey(const DL_Group&);
       DH_PrivateKey(const DL_Group&, const BigInt&, const BigInt& = 0);

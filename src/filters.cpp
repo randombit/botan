@@ -15,7 +15,7 @@ namespace Botan {
 StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name) :
    buffer(DEFAULT_BUFFERSIZE)
    {
-   base_ptr = cipher = get_stream_cipher(sc_name);
+   base_ptr = cipher = std::tr1::shared_ptr<StreamCipher>(get_stream_cipher(sc_name).release());
    }
 
 /*************************************************
@@ -25,7 +25,7 @@ StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name,
                                          const SymmetricKey& key) :
    buffer(DEFAULT_BUFFERSIZE)
    {
-   base_ptr = cipher = get_stream_cipher(sc_name);
+   base_ptr = cipher = std::tr1::shared_ptr<StreamCipher>(get_stream_cipher(sc_name).release());
    cipher->set_key(key);
    }
 
@@ -56,9 +56,8 @@ void StreamCipher_Filter::write(const byte input[], u32bit length)
 * Hash_Filter Constructor                        *
 *************************************************/
 Hash_Filter::Hash_Filter(const std::string& hash_name, u32bit len) :
-   OUTPUT_LENGTH(len)
+   OUTPUT_LENGTH(len), hash(get_hash(hash_name).release())
    {
-   hash = get_hash(hash_name);
    }
 
 /*************************************************
@@ -79,7 +78,7 @@ void Hash_Filter::end_msg()
 MAC_Filter::MAC_Filter(const std::string& mac_name, u32bit len) :
    OUTPUT_LENGTH(len)
    {
-   base_ptr = mac = get_mac(mac_name);
+   base_ptr = mac = std::tr1::shared_ptr<MessageAuthenticationCode>(get_mac(mac_name).release());;
    }
 
 /*************************************************
@@ -88,7 +87,7 @@ MAC_Filter::MAC_Filter(const std::string& mac_name, u32bit len) :
 MAC_Filter::MAC_Filter(const std::string& mac_name, const SymmetricKey& key,
                        u32bit len) : OUTPUT_LENGTH(len)
    {
-   base_ptr = mac = get_mac(mac_name);
+   base_ptr = mac = std::tr1::shared_ptr<MessageAuthenticationCode>(get_mac(mac_name).release());
    mac->set_key(key);
    }
 

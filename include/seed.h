@@ -18,7 +18,7 @@ class SEED : public BlockCipher
    public:
       void clear() throw() { K.clear(); }
       std::string name() const { return "SEED"; }
-      BlockCipher* clone() const { return new SEED; }
+      AutoBlockCipherPtr clone() const { return AutoBlockCipherPtr(new SEED); }
       SEED() : BlockCipher(16, 16) {}
    private:
       void enc(const byte[], byte[]) const;

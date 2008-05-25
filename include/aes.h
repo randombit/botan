@@ -18,7 +18,7 @@ class AES : public BlockCipher
    public:
       void clear() throw();
       std::string name() const { return "AES"; }
-      BlockCipher* clone() const { return new AES; }
+      AutoBlockCipherPtr clone() const { return AutoBlockCipherPtr(new AES); }
       AES() : BlockCipher(16, 16, 32, 8) { ROUNDS = 14; }
       AES(u32bit);
    private:
@@ -40,7 +40,7 @@ class AES_128 : public AES
    {
    public:
       std::string name() const { return "AES-128"; }
-      BlockCipher* clone() const { return new AES_128; }
+      AutoBlockCipherPtr clone() const { return AutoBlockCipherPtr(new AES_128); }
       AES_128() : AES(16) {}
    };
 
@@ -51,7 +51,7 @@ class AES_192 : public AES
    {
    public:
       std::string name() const { return "AES-192"; }
-      BlockCipher* clone() const { return new AES_192; }
+      AutoBlockCipherPtr clone() const { return AutoBlockCipherPtr(new AES_192); }
       AES_192() : AES(24) {}
    };
 
@@ -62,7 +62,7 @@ class AES_256 : public AES
    {
    public:
       std::string name() const { return "AES-256"; }
-      BlockCipher* clone() const { return new AES_256; }
+      AutoBlockCipherPtr clone() const { return AutoBlockCipherPtr(new AES_256); }
       AES_256() : AES(32) {}
    };
 

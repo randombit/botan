@@ -7,6 +7,7 @@
 #define BOTAN_GLOBAL_RNG_H__
 
 #include <botan/base.h>
+#include <botan/freestore.h>
 
 namespace Botan {
 
@@ -23,7 +24,7 @@ void add_entropy(EntropySource&, bool = true);
 
 u32bit seed(bool = true, u32bit = 256);
 
-void add_es(EntropySource*, bool = true);
+void add_es(SharedPtrConverter<EntropySource>, bool = true);
 
 }
 

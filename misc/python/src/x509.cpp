@@ -42,7 +42,7 @@ class memvec_to_hexstr
    public:
       static PyObject* convert(const T& in)
          {
-         Pipe pipe(new Hex_Encoder);
+         Pipe pipe(create_shared_ptr<Hex_Decoder>());
          pipe.process_msg(in);
          std::string result = pipe.read_all_as_string();
          return python::incref(python::str(result).ptr());

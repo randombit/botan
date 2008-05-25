@@ -19,10 +19,10 @@ class PK_Encryptor_Filter : public Filter
    public:
       void write(const byte[], u32bit);
       void end_msg();
-      PK_Encryptor_Filter(PK_Encryptor* c) : cipher(c) {}
-      ~PK_Encryptor_Filter() { delete cipher; }
+      PK_Encryptor_Filter(SharedPtrConverter<PK_Encryptor> const& c) : cipher(c.get_shared()) {}
+      ~PK_Encryptor_Filter() { }
    private:
-      PK_Encryptor* cipher;
+      std::tr1::shared_ptr<PK_Encryptor> cipher;
       SecureVector<byte> buffer;
    };
 
@@ -34,10 +34,10 @@ class PK_Decryptor_Filter : public Filter
    public:
       void write(const byte[], u32bit);
       void end_msg();
-      PK_Decryptor_Filter(PK_Decryptor* c) : cipher(c) {}
-      ~PK_Decryptor_Filter() { delete cipher; }
+      PK_Decryptor_Filter(SharedPtrConverter<PK_Decryptor> const& c) : cipher(c.get_shared()) {}
+      ~PK_Decryptor_Filter() { }
    private:
-      PK_Decryptor* cipher;
+     std::tr1::shared_ptr<PK_Decryptor> cipher;
       SecureVector<byte> buffer;
    };
 
@@ -49,10 +49,10 @@ class PK_Signer_Filter : public Filter
    public:
       void write(const byte[], u32bit);
       void end_msg();
-      PK_Signer_Filter(PK_Signer* s) : signer(s) {}
-      ~PK_Signer_Filter() { delete signer; }
+      PK_Signer_Filter(SharedPtrConverter<PK_Signer> const& s) : signer(s.get_shared()) {}
+      ~PK_Signer_Filter() { }
    private:
-      PK_Signer* signer;
+     std::tr1::shared_ptr<PK_Signer> signer;
    };
 
 /*************************************************
@@ -67,12 +67,12 @@ class PK_Verifier_Filter : public Filter
       void set_signature(const byte[], u32bit);
       void set_signature(const MemoryRegion<byte>&);
 
-      PK_Verifier_Filter(PK_Verifier* v) : verifier(v) {}
-      PK_Verifier_Filter(PK_Verifier*, const byte[], u32bit);
-      PK_Verifier_Filter(PK_Verifier*, const MemoryRegion<byte>&);
-      ~PK_Verifier_Filter() { delete verifier; }
+      PK_Verifier_Filter(SharedPtrConverter<PK_Verifier> const& v) : verifier(v.get_shared()) {}
+      PK_Verifier_Filter(SharedPtrConverter<PK_Verifier> const&, const byte[], u32bit);
+      PK_Verifier_Filter(SharedPtrConverter<PK_Verifier> const&, const MemoryRegion<byte>&);
+      ~PK_Verifier_Filter() {  }
    private:
-      PK_Verifier* verifier;
+      std::tr1::shared_ptr<PK_Verifier> verifier;
       SecureVector<byte> signature;
    };
 

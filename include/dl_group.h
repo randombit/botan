@@ -8,6 +8,7 @@
 
 #include <botan/bigint.h>
 #include <botan/data_src.h>
+#include <botan/freestore.h>
 
 namespace Botan {
 
@@ -17,7 +18,7 @@ namespace Botan {
 class DL_Group
    {
    public:
-      const BigInt& get_p() const;
+	  const BigInt& get_p() const;
       const BigInt& get_q() const;
       const BigInt& get_g() const;
 
@@ -28,8 +29,8 @@ class DL_Group
 
       std::string PEM_encode(Format) const;
       SecureVector<byte> DER_encode(Format) const;
-      void BER_decode(DataSource&, Format);
-      void PEM_decode(DataSource&);
+      void BER_decode(SharedPtrConverter<DataSource>, Format);
+      void PEM_decode(SharedPtrConverter<DataSource>);
 
       DL_Group();
       DL_Group(const std::string&);

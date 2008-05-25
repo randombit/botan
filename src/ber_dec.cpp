@@ -4,8 +4,9 @@
 *************************************************/
 
 #include <botan/ber_dec.h>
-#include <botan/bigint.h>
 #include <botan/bit_ops.h>
+#include <botan/bigint.h>
+
 
 namespace Botan {
 
@@ -14,7 +15,7 @@ namespace {
 /*************************************************
 * BER decode an ASN.1 type tag                   *
 *************************************************/
-u32bit decode_tag(DataSource* ber, ASN1_Tag& type_tag, ASN1_Tag& class_tag)
+u32bit decode_tag(const std::tr1::shared_ptr<DataSource>& ber, ASN1_Tag& type_tag, ASN1_Tag& class_tag)
    {
    byte b;
    if(!ber->read_byte(b))
@@ -51,12 +52,12 @@ u32bit decode_tag(DataSource* ber, ASN1_Tag& type_tag, ASN1_Tag& class_tag)
 /*************************************************
 * Find the EOC marker                            *
 *************************************************/
-u32bit find_eoc(DataSource*);
+u32bit find_eoc(const std::tr1::shared_ptr<DataSource>&);
 
 /*************************************************
 * BER decode an ASN.1 length field               *
 *************************************************/
-u32bit decode_length(DataSource* ber, u32bit& field_size)
+u32bit decode_length(const std::tr1::shared_ptr<DataSource>& ber, u32bit& field_size)
    {
    byte b;
    if(!ber->read_byte(b))
@@ -86,7 +87,7 @@ u32bit decode_length(DataSource* ber, u32bit& field_size)
 /*************************************************
 * BER decode an ASN.1 length field               *
 *************************************************/
-u32bit decode_length(DataSource* ber)
+u32bit decode_length(const std::tr1::shared_ptr<DataSource>& ber)
    {
    u32bit dummy;
    return decode_length(ber, dummy);
@@ -95,7 +96,7 @@ u32bit decode_length(DataSource* ber)
 /*************************************************
 * Find the EOC marker                            *
 *************************************************/
-u32bit find_eoc(DataSource* ber)
+u32bit find_eoc(const std::tr1::shared_ptr<DataSource>& ber)
    {
    SecureVector<byte> buffer(DEFAULT_BUFFERSIZE), data;
 
@@ -107,20 +108,20 @@ u32bit find_eoc(DataSource* ber)
       data.append(buffer, got);
       }
 
-   DataSource_Memory source(data);
+   std::tr1::shared_ptr<DataSource_Memory> source(new DataSource_Memory(data));
    data.destroy();
 
    u32bit length = 0;
    while(true)
       {
       ASN1_Tag type_tag, class_tag;
-      u32bit tag_size = decode_tag(&source, type_tag, class_tag);
+      u32bit tag_size = decode_tag(source, type_tag, class_tag);
       if(type_tag == NO_OBJECT)
          break;
 
       u32bit length_size = 0;
-      u32bit item_size = decode_length(&source, length_size);
-      source.discard_next(item_size);
+      u32bit item_size = decode_length(source, length_size);
+      source->discard_next(item_size);
 
       length += item_size + length_size + tag_size;
 
@@ -137,8 +138,8 @@ u32bit find_eoc(DataSource* ber)
 *************************************************/
 void BER_Object::assert_is_a(ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
-   if(this->type_tag != type_tag || this->class_tag != class_tag)
-      throw BER_Decoding_Error("Tag mismatch when decoding");
+       if(this->type_tag != type_tag || this->class_tag != class_tag)
+           throw BER_Decoding_Error("Tag mismatch when decoding");
    }
 
 /*************************************************
@@ -229,7 +230,14 @@ void BER_Decoder::push_back(const BER_Object& obj)
 BER_Decoder BER_Decoder::start_cons(ASN1_Tag type_tag)
    {
    BER_Object obj = get_next_object();
-   obj.assert_is_a(type_tag, CONSTRUCTED);
+   //obj.assert_is_a(type_tag, CONSTRUCTED); // this function call actually checks for
+                                            // (UNIVERSAL | CONSTRUCTED)
+   // BEGIN (replacement for above call)
+   if(obj.type_tag != type_tag || (obj.class_tag & CONSTRUCTED) != CONSTRUCTED)
+   {
+       throw BER_Decoding_Error("Tag mismatch when decoding");
+   }
+   // END (replacement)
    BER_Decoder result(obj.value, obj.value.size());
    result.parent = this;
    return result;
@@ -250,9 +258,9 @@ BER_Decoder& BER_Decoder::end_cons()
 /*************************************************
 * BER_Decoder Constructor                        *
 *************************************************/
-BER_Decoder::BER_Decoder(DataSource& src)
+BER_Decoder::BER_Decoder(SharedPtrConverter<DataSource> const& src)
    {
-   source = &src;
+   source = src.get_shared();
    owns = false;
    pushed.type_tag = pushed.class_tag = NO_OBJECT;
    parent = 0;
@@ -263,7 +271,7 @@ BER_Decoder::BER_Decoder(DataSource& src)
  *************************************************/
 BER_Decoder::BER_Decoder(const byte data[], u32bit length)
    {
-   source = new DataSource_Memory(data, length);
+   source = std::tr1::shared_ptr<DataSource_Memory>(new DataSource_Memory(data, length));
    owns = true;
    pushed.type_tag = pushed.class_tag = NO_OBJECT;
    parent = 0;
@@ -274,7 +282,7 @@ BER_Decoder::BER_Decoder(const byte data[], u32bit length)
 *************************************************/
 BER_Decoder::BER_Decoder(const MemoryRegion<byte>& data)
    {
-   source = new DataSource_Memory(data);
+   source = std::tr1::shared_ptr<DataSource_Memory>(new DataSource_Memory(data));
    owns = true;
    pushed.type_tag = pushed.class_tag = NO_OBJECT;
    parent = 0;
@@ -301,9 +309,7 @@ BER_Decoder::BER_Decoder(const BER_Decoder& other)
 *************************************************/
 BER_Decoder::~BER_Decoder()
    {
-   if(owns)
-      delete source;
-   source = 0;
+   source.reset();
    }
 
 /*************************************************
@@ -452,7 +458,6 @@ BER_Decoder& BER_Decoder::decode_optional_string(MemoryRegion<byte>& out,
                                                  u16bit type_no)
    {
    BER_Object obj = get_next_object();
-
    ASN1_Tag type_tag = static_cast<ASN1_Tag>(type_no);
 
    out.clear();
@@ -463,5 +468,37 @@ BER_Decoder& BER_Decoder::decode_optional_string(MemoryRegion<byte>& out,
 
    return (*this);
    }
+/********************************************
+* optional decoding for MemoryRegion<byte>  *
+* for primitive types only                  *
+********************************************/
+   BER_Decoder& BER_Decoder::decode_optional(MemoryRegion<byte>& out,
+                                             ASN1_Tag real_type,
+                                             ASN1_Tag type_tag,
+                                             ASN1_Tag class_tag,
+                                             const MemoryRegion<byte>& default_value)
+     {
+         BER_Object obj = get_next_object();
+         if(obj.type_tag == type_tag && obj.class_tag == class_tag)
+         {
+             if(class_tag & CONSTRUCTED)
+             {
+                 throw Decoding_Error("decode_optional(MemoryRegion<byte>&, ...) can not decode constructed types");
+             }
+             else
+             {
+                 push_back(obj);
+                 decode(out, real_type, type_tag, class_tag);
+             }
+         }
+         else
+         {
+             out = default_value;
+             push_back(obj);
+         }
+
+         return (*this);
+
+     }
 
 }

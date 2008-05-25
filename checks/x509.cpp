@@ -5,57 +5,78 @@
 #include <botan/x509_ca.h>
 #include <botan/pkcs10.h>
 #include <botan/rsa.h>
-#include <botan/dsa.h>
+//#include <botan/dsa.h>
 using namespace Botan;
 
 #include <iostream>
-#include <memory>
+#include<botan/tr1_mem_includer.h>
+//#include <tr1/memory>
 
 X509_Cert_Options ca_opts();
 X509_Cert_Options req_opts1();
 X509_Cert_Options req_opts2();
 
+u64bit key_id(std::auto_ptr<X509_Encoder>& encoder, std::string& algo_name)
+    {
+    if (!encoder.get())
+	throw Internal_Error("Public_Key:key_id: No encoder found");
+
+    Pipe pipe(Botan::create_shared_ptr<Hash_Filter>("SHA-1", 8));
+    pipe.start_msg();
+    pipe.write(algo_name);
+    pipe.write(encoder->alg_id().parameters);
+    pipe.write(encoder->key_bits());
+    pipe.end_msg();
+
+    SecureVector<byte> output = pipe.read_all();
+
+    if (output.size() != 8)
+	throw Internal_Error("Public_Key::key_id: Incorrect output size");
+
+    u64bit id = 0;
+    for (u32bit j = 0; j != 8; ++j)
+	id = (id << 8) | output[j];
+    return id;
+    }
+
+u64bit key_id(std::auto_ptr<Public_Key>& key)
+   {
+   std::auto_ptr<X509_Encoder> encoder(key->x509_encoder());
+   std::string algo_name = key->algo_name();
+     
+   return key_id(encoder, algo_name);
+   }
+
+u64bit key_id(std::auto_ptr<Private_Key>& key)
+   {
+   std::auto_ptr<X509_Encoder> encoder(key->x509_encoder());
+   std::string algo_name = key->algo_name();
+     
+   return key_id(encoder, algo_name);
+   }
+
 u64bit key_id(const Public_Key* key)
    {
    std::auto_ptr<X509_Encoder> encoder(key->x509_encoder());
-   if(!encoder.get())
-      throw Internal_Error("Public_Key:key_id: No encoder found");
-
-   Pipe pipe(new Hash_Filter("SHA-1", 8));
-   pipe.start_msg();
-   pipe.write(key->algo_name());
-   pipe.write(encoder->alg_id().parameters);
-   pipe.write(encoder->key_bits());
-   pipe.end_msg();
-
-   SecureVector<byte> output = pipe.read_all();
-
-   if(output.size() != 8)
-      throw Internal_Error("Public_Key::key_id: Incorrect output size");
-
-   u64bit id = 0;
-   for(u32bit j = 0; j != 8; ++j)
-      id = (id << 8) | output[j];
-   return id;
+   std::string algo_name = key->algo_name();
+   
+   return key_id(encoder, algo_name);
    }
+
 
 u32bit check_against_copy(const Private_Key& orig)
    {
-   Private_Key* copy_priv = PKCS8::copy_key(orig);
-   Public_Key* copy_pub = X509::copy_key(orig);
+   std::auto_ptr<Private_Key> copy_priv = PKCS8::copy_key(orig);
+   std::auto_ptr<Public_Key> copy_pub = X509::copy_key(orig);
 
    const std::string passphrase= "I need work! -Mr. T"; // Me too...
-   DataSource_Memory enc_source(PKCS8::PEM_encode(orig, passphrase));
-   Private_Key* copy_priv_enc = PKCS8::load_key(enc_source, passphrase);
+   std::tr1::shared_ptr<DataSource> enc_source(new DataSource_Memory(PKCS8::PEM_encode(orig, passphrase)));
+   std::auto_ptr<Private_Key> copy_priv_enc = PKCS8::load_key(enc_source, passphrase);
 
    u64bit orig_id = key_id(&orig);
    u64bit pub_id = key_id(copy_pub);
    u64bit priv_id = key_id(copy_priv);
    u64bit priv_enc_id = key_id(copy_priv_enc);
-
-   delete copy_pub;
-   delete copy_priv;
-   delete copy_priv_enc;
 
    if(orig_id != pub_id || orig_id != priv_id || orig_id != priv_enc_id)
       {
@@ -78,8 +99,14 @@ void do_x509_tests()
    std::cout << '.' << std::flush;
 
    /* Create user #1's key and cert request */
+	/*
    std::cout << '.' << std::flush;
    DSA_PrivateKey user1_key(DL_Group("dsa/jce/1024"));
+   std::cout << '.' << std::flush;
+   PKCS10_Request user1_req = X509::create_cert_req(req_opts1(), user1_key);
+	*/
+   std::cout << '.' << std::flush;
+   RSA_PrivateKey user1_key(768);
    std::cout << '.' << std::flush;
    PKCS10_Request user1_req = X509::create_cert_req(req_opts1(), user1_key);
 
@@ -100,6 +127,7 @@ void do_x509_tests()
    std::cout << '.' << std::flush;
    X509_Certificate user2_cert = ca.sign_request(user2_req);
    std::cout << '.' << std::flush;
+
 
    X509_CRL crl1 = ca.new_crl();
 

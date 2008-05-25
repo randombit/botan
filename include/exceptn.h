@@ -206,7 +206,25 @@ struct Memory_Exhaustion : public Exception
    Memory_Exhaustion() :
       Exception("Ran out of memory, allocation failed") {}
    };
-
+/*************************************************
+* No quadratic residue exception                 *
+* (for use in BigInt-functs->ressol())           *
+*************************************************/
+struct No_Quadratic_Residue : public Exception
+{
+    No_Quadratic_Residue() :
+            Exception("No quadratic residue") {}
+};
+struct Illegal_Point : public Exception
+{
+    Illegal_Point(const std::string& err = "")
+    : Exception(err) {}
+};
+struct Illegal_Transformation : public Exception
+{
+    Illegal_Transformation(const std::string& err = "Requested transformation is not possible")
+    : Exception(err) {}
+};
 }
 
 #endif

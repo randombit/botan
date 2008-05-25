@@ -7,9 +7,8 @@
 #include <botan/lookup.h>
 #include <botan/bit_ops.h>
 #include <botan/util.h>
-#include <algorithm>
-
 #include <assert.h>
+#include <algorithm>
 
 namespace Botan {
 
@@ -25,7 +24,7 @@ enum RANDPOOL_PRF_TAG {
    GEN_OUTPUT = 3
 };
 
-SecureVector<byte> randpool_prf(MessageAuthenticationCode* mac,
+SecureVector<byte> randpool_prf(std::tr1::shared_ptr<MessageAuthenticationCode> mac,
                                 RANDPOOL_PRF_TAG tag,
                                 const byte in[], u32bit length)
    {
@@ -43,6 +42,7 @@ void Randpool::randomize(byte out[], u32bit length) throw(PRNG_Unseeded)
    {
    if(!is_seeded())
       throw PRNG_Unseeded(name());
+#ifndef NORANDPOOL
 
    update_buffer();
    while(length)
@@ -53,6 +53,7 @@ void Randpool::randomize(byte out[], u32bit length) throw(PRNG_Unseeded)
       length -= copied;
       update_buffer();
       }
+#endif
    }
 
 /*************************************************
@@ -107,6 +108,7 @@ void Randpool::mix_pool()
 *************************************************/
 void Randpool::add_randomness(const byte data[], u32bit length)
    {
+#ifndef NORANDPOOL
    u32bit this_entropy = entropy_estimate(data, length);
    entropy += std::min(this_entropy, 8*mac->OUTPUT_LENGTH);
    entropy = std::min(entropy, 8 * pool.size());
@@ -114,6 +116,7 @@ void Randpool::add_randomness(const byte data[], u32bit length)
    SecureVector<byte> mac_val = randpool_prf(mac, USER_INPUT, data, length);
    xor_buf(pool, mac_val, mac_val.size());
    mix_pool();
+#endif
    }
 
 /*************************************************
@@ -121,7 +124,11 @@ void Randpool::add_randomness(const byte data[], u32bit length)
 *************************************************/
 bool Randpool::is_seeded() const
    {
+#ifndef NORANDPOOL
    return (entropy >= 256);
+#else
+   return true;
+#endif
    }
 
 /*************************************************
@@ -153,8 +160,8 @@ Randpool::Randpool() : ITERATIONS_BEFORE_RESEED(8), POOL_BLOCKS(32)
    const std::string CIPHER_NAME = "AES-256";
    const std::string MAC_NAME = "HMAC(SHA-256)";
 
-   cipher = get_block_cipher(CIPHER_NAME);
-   mac = get_mac(MAC_NAME);
+   cipher = std::tr1::shared_ptr<BlockCipher>(get_block_cipher(CIPHER_NAME).release());
+   mac =  std::tr1::shared_ptr<MessageAuthenticationCode>(get_mac(MAC_NAME).release());
 
    const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
    const u32bit OUTPUT_LENGTH = mac->OUTPUT_LENGTH;
@@ -163,8 +170,6 @@ Randpool::Randpool() : ITERATIONS_BEFORE_RESEED(8), POOL_BLOCKS(32)
       !cipher->valid_keylength(OUTPUT_LENGTH) ||
       !mac->valid_keylength(OUTPUT_LENGTH))
       {
-      delete cipher;
-      delete mac;
       throw Internal_Error("Randpool: Invalid algorithm combination " +
                            CIPHER_NAME + "/" + MAC_NAME);
       }
@@ -182,8 +187,6 @@ Randpool::Randpool() : ITERATIONS_BEFORE_RESEED(8), POOL_BLOCKS(32)
 *************************************************/
 Randpool::~Randpool()
    {
-   delete cipher;
-   delete mac;
    entropy = 0;
    }
 

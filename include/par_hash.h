@@ -19,13 +19,13 @@ class Parallel : public HashFunction
    public:
       void clear() throw();
       std::string name() const;
-      HashFunction* clone() const;
+      AutoHashFunctionPtr clone() const;
       Parallel(const std::vector<std::string>&);
       ~Parallel();
    private:
       void add_data(const byte[], u32bit);
       void final_result(byte[]);
-      std::vector<HashFunction*> hashes;
+      std::vector<SharedHashFunctionPtr> hashes;
    };
 
 }

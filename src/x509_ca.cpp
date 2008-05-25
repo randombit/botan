@@ -10,13 +10,13 @@
 #include <botan/config.h>
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
-#include <botan/numthry.h>
+#include <botan/bigintfuncs.h>
 #include <botan/oids.h>
 #include <botan/util.h>
 #include <algorithm>
 #include <typeinfo>
 #include <iterator>
-#include <memory>
+#include <botan/pointers.h>
 #include <set>
 
 namespace Botan {
@@ -57,18 +57,21 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
 
    Extensions extensions;
 
-   extensions.add(new Cert_Extension::Authority_Key_ID(cert.subject_key_id()));
-   extensions.add(new Cert_Extension::Subject_Key_ID(req.raw_public_key()));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::Authority_Key_ID>(
+       new Cert_Extension::Authority_Key_ID(cert.subject_key_id())));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::Subject_Key_ID>(
+       new Cert_Extension::Subject_Key_ID(req.raw_public_key())));
 
-   extensions.add(
-      new Cert_Extension::Basic_Constraints(req.is_CA(), req.path_limit()));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::Basic_Constraints>(
+      new Cert_Extension::Basic_Constraints(req.is_CA(), req.path_limit())));
 
-   extensions.add(new Cert_Extension::Key_Usage(constraints));
-   extensions.add(
-      new Cert_Extension::Extended_Key_Usage(req.ex_constraints()));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::Key_Usage>(
+       new Cert_Extension::Key_Usage(constraints)));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::Extended_Key_Usage>(
+      new Cert_Extension::Extended_Key_Usage(req.ex_constraints())));
 
-   extensions.add(
-      new Cert_Extension::Subject_Alternative_Name(req.subject_alt_name()));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::Subject_Alternative_Name>(
+      new Cert_Extension::Subject_Alternative_Name(req.subject_alt_name())));
 
    /*
    extensions.add(
@@ -90,7 +93,7 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
 /*************************************************
 * Create a new certificate                       *
 *************************************************/
-X509_Certificate X509_CA::make_cert(PK_Signer* signer,
+X509_Certificate X509_CA::make_cert(SharedPtrConverter<PK_Signer> signer,
                                     const AlgorithmIdentifier& sig_algo,
                                     const MemoryRegion<byte>& pub_key,
                                     const X509_Time& not_before,
@@ -102,7 +105,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
    const u32bit X509_CERT_VERSION = 3;
    const u32bit SERIAL_BITS = 128;
 
-   DataSource_Memory source(X509_Object::make_signed(signer, sig_algo,
+   std::tr1::shared_ptr<DataSource> source(new DataSource_Memory(X509_Object::make_signed(signer.get_shared(), sig_algo,
          DER_Encoder().start_cons(SEQUENCE)
             .start_explicit(0)
                .encode(X509_CERT_VERSION-1)
@@ -127,7 +130,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
             .end_explicit()
          .end_cons()
       .get_contents()
-   ));
+   )));
 
    return X509_Certificate(source);
    }
@@ -196,11 +199,12 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
    const u64bit current_time = system_time();
 
    Extensions extensions;
-   extensions.add(
-      new Cert_Extension::Authority_Key_ID(cert.subject_key_id()));
-   extensions.add(new Cert_Extension::CRL_Number(crl_number));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::Authority_Key_ID>(
+      new Cert_Extension::Authority_Key_ID(cert.subject_key_id())));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::CRL_Number>(
+       new Cert_Extension::CRL_Number(crl_number)));
 
-   DataSource_Memory source(X509_Object::make_signed(signer, ca_sig_algo,
+   std::tr1::shared_ptr<DataSource> source(new DataSource_Memory(X509_Object::make_signed(signer, ca_sig_algo,
          DER_Encoder().start_cons(SEQUENCE)
             .encode(X509_CRL_VERSION-1)
             .encode(ca_sig_algo)
@@ -220,7 +224,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
             .end_explicit()
          .end_cons()
       .get_contents()
-   ));
+   )));
 
    return X509_CRL(source);
    }
@@ -238,13 +242,12 @@ X509_Certificate X509_CA::ca_certificate() const
 *************************************************/
 X509_CA::~X509_CA()
    {
-   delete signer;
    }
 
 /*************************************************
 * Choose a signing format for the key            *
 *************************************************/
-PK_Signer* choose_sig_format(const Private_Key& key,
+std::tr1::shared_ptr<PK_Signer> choose_sig_format(const Private_Key& key,
                              AlgorithmIdentifier& sig_algo)
    {
    std::string padding;
@@ -258,11 +261,11 @@ PK_Signer* choose_sig_format(const Private_Key& key,
       throw Encoding_Error("Key " + key.algo_name() + " does not support "
                            "X.509 encoding");
 
-   sig_algo.parameters = encoding->alg_id().parameters;
+   sig_algo = AlgorithmIdentifier(sig_algo.oid, AlgorithmIdentifier::USE_NULL_PARAM);
 
    const PK_Signing_Key& sig_key = dynamic_cast<const PK_Signing_Key&>(key);
 
-   return get_pk_signer(sig_key, padding, format);
+   return std::tr1::shared_ptr<PK_Signer>(get_pk_signer(sig_key, padding, format).release());
    }
 
 }

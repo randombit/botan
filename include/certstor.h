@@ -27,7 +27,7 @@ class Certificate_Store
       virtual std::vector<X509_CRL>
          get_crls_for(const X509_Certificate&) const;
 
-      virtual Certificate_Store* clone() const = 0;
+      virtual std::auto_ptr<Certificate_Store> clone() const = 0;
 
       virtual ~Certificate_Store() {}
    };

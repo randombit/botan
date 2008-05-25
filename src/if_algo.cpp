@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/if_algo.h>
-#include <botan/numthry.h>
+#include <botan/bigintfuncs.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 
@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Return the X.509 public key encoder            *
 *************************************************/
-X509_Encoder* IF_Scheme_PublicKey::x509_encoder() const
+std::auto_ptr<X509_Encoder> IF_Scheme_PublicKey::x509_encoder() const
    {
    class IF_Scheme_Encoder : public X509_Encoder
       {
@@ -36,16 +36,16 @@ X509_Encoder* IF_Scheme_PublicKey::x509_encoder() const
 
          IF_Scheme_Encoder(const IF_Scheme_PublicKey* k) : key(k) {}
       private:
-         const IF_Scheme_PublicKey* key;
+      	const IF_Scheme_PublicKey* key;
       };
 
-   return new IF_Scheme_Encoder(this);
+   return std::auto_ptr<X509_Encoder>(new IF_Scheme_Encoder(this));
    }
 
 /*************************************************
 * Return the X.509 public key decoder            *
 *************************************************/
-X509_Decoder* IF_Scheme_PublicKey::x509_decoder()
+std::auto_ptr<X509_Decoder> IF_Scheme_PublicKey::x509_decoder()
    {
    class IF_Scheme_Decoder : public X509_Decoder
       {
@@ -66,16 +66,16 @@ X509_Decoder* IF_Scheme_PublicKey::x509_decoder()
 
          IF_Scheme_Decoder(IF_Scheme_PublicKey* k) : key(k) {}
       private:
-         IF_Scheme_PublicKey* key;
+        IF_Scheme_PublicKey* key;
       };
 
-   return new IF_Scheme_Decoder(this);
+   return std::auto_ptr<X509_Decoder>(new IF_Scheme_Decoder(this));
    }
 
 /*************************************************
 * Return the PKCS #8 public key encoder          *
 *************************************************/
-PKCS8_Encoder* IF_Scheme_PrivateKey::pkcs8_encoder() const
+std::auto_ptr<PKCS8_Encoder> IF_Scheme_PrivateKey::pkcs8_encoder() const
    {
    class IF_Scheme_Encoder : public PKCS8_Encoder
       {
@@ -105,16 +105,16 @@ PKCS8_Encoder* IF_Scheme_PrivateKey::pkcs8_encoder() const
 
          IF_Scheme_Encoder(const IF_Scheme_PrivateKey* k) : key(k) {}
       private:
-         const IF_Scheme_PrivateKey* key;
+      	const IF_Scheme_PrivateKey* key;
       };
 
-   return new IF_Scheme_Encoder(this);
+   return std::auto_ptr<PKCS8_Encoder>(new IF_Scheme_Encoder(this));
    }
 
 /*************************************************
 * Return the PKCS #8 public key decoder          *
 *************************************************/
-PKCS8_Decoder* IF_Scheme_PrivateKey::pkcs8_decoder()
+std::auto_ptr<PKCS8_Decoder> IF_Scheme_PrivateKey::pkcs8_decoder()
    {
    class IF_Scheme_Decoder : public PKCS8_Decoder
       {
@@ -146,10 +146,10 @@ PKCS8_Decoder* IF_Scheme_PrivateKey::pkcs8_decoder()
 
          IF_Scheme_Decoder(IF_Scheme_PrivateKey* k) : key(k) {}
       private:
-         IF_Scheme_PrivateKey* key;
+      	IF_Scheme_PrivateKey* key;
       };
 
-   return new IF_Scheme_Decoder(this);
+   return std::auto_ptr<PKCS8_Decoder>(new IF_Scheme_Decoder(this));
    }
 
 /*************************************************

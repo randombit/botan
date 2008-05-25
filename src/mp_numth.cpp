@@ -3,10 +3,13 @@
 * (C) 1999-2007 The Botan Project                *
 *************************************************/
 
-#include <botan/numthry.h>
+#include <botan/bigintfuncs.h>
 #include <botan/mp_core.h>
 #include <botan/util.h>
 #include <algorithm>
+
+
+
 
 namespace Botan {
 
@@ -65,5 +68,20 @@ BigInt sub_mul(const BigInt& a, const BigInt& b, const BigInt& c)
    r *= c;
    return r;
    }
+
+/*************************************************
+* xor Operation                    *
+*************************************************/
+BigInt exlusive_or(const BigInt& a, const BigInt& b)
+    {
+    int m = std::max(a.bits(),b.bits());
+    BigInt r = a;
+    for (int i=0;i<m;i++)
+        {
+        r.set_bit(i,(a.get_bit(i) && !b.get_bit(i)) || (!a.get_bit(i) && b.get_bit(i)));
+        }
+    return r;
+    }
+
 
 }

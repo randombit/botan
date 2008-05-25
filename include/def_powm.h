@@ -6,8 +6,8 @@
 #ifndef BOTAN_DEFAULT_MODEXP_H__
 #define BOTAN_DEFAULT_MODEXP_H__
 
-#include <botan/pow_mod.h>
-#include <botan/reducer.h>
+#include <botan/bigint/pow_mod.h>
+#include <botan/bigint/reducer.h>
 #include <vector>
 
 namespace Botan {
@@ -20,10 +20,10 @@ class Fixed_Window_Exponentiator : public Modular_Exponentiator
    public:
       void set_exponent(const BigInt&);
       void set_base(const BigInt&);
-      BigInt execute() const;
+	  BigInt execute() const;
 
-      Modular_Exponentiator* copy() const
-         { return new Fixed_Window_Exponentiator(*this); }
+      std::auto_ptr<Modular_Exponentiator> copy() const
+         { return std::auto_ptr<Modular_Exponentiator>(new Fixed_Window_Exponentiator(*this)); }
 
       Fixed_Window_Exponentiator(const BigInt&, Power_Mod::Usage_Hints);
    private:
@@ -44,8 +44,8 @@ class Montgomery_Exponentiator : public Modular_Exponentiator
       void set_base(const BigInt&);
       BigInt execute() const;
 
-      Modular_Exponentiator* copy() const
-         { return new Montgomery_Exponentiator(*this); }
+      std::auto_ptr<Modular_Exponentiator> copy() const
+         { return std::auto_ptr<Modular_Exponentiator>(new Montgomery_Exponentiator(*this)); }
 
       Montgomery_Exponentiator(const BigInt&, Power_Mod::Usage_Hints);
    private:

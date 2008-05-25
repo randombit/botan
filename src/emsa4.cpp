@@ -125,20 +125,18 @@ bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
 * EMSA4 Constructor                              *
 *************************************************/
 EMSA4::EMSA4(const std::string& hash_name, const std::string& mgf_name) :
-   SALT_SIZE(output_length_of(hash_name))
+   SALT_SIZE(output_length_of(hash_name)), hash(get_hash(hash_name).release()),
+   mgf(get_mgf(mgf_name + "(" + hash_name + ")").release())
    {
-   hash = get_hash(hash_name);
-   mgf = get_mgf(mgf_name + "(" + hash_name + ")");
    }
 
 /*************************************************
 * EMSA4 Constructor                              *
 *************************************************/
 EMSA4::EMSA4(const std::string& hash_name, const std::string& mgf_name,
-             u32bit salt_size) : SALT_SIZE(salt_size)
+             u32bit salt_size) : SALT_SIZE(salt_size), hash(get_hash(hash_name).release()),
+             mgf(get_mgf(mgf_name + "(" + hash_name + ")").release())
    {
-   hash = get_hash(hash_name);
-   mgf = get_mgf(mgf_name + "(" + hash_name + ")");
    }
 
 }

@@ -9,10 +9,11 @@
 #include <botan/ber_dec.h>
 #include <botan/stl_util.h>
 #include <botan/parsing.h>
-#include <botan/bigint.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
 #include <algorithm>
+#include <botan/bigint.h>
+
 
 namespace Botan {
 
@@ -39,7 +40,7 @@ std::vector<std::string> lookup_oids(const std::vector<std::string>& in)
 /*************************************************
 * X509_Certificate Constructor                   *
 *************************************************/
-X509_Certificate::X509_Certificate(DataSource& in) :
+X509_Certificate::X509_Certificate(std::tr1::shared_ptr<DataSource> in) :
    X509_Object(in, "CERTIFICATE/X509 CERTIFICATE")
    {
    self_signed = false;
@@ -116,7 +117,7 @@ void X509_Certificate::force_decode()
                         v3_exts_data.type_tag, v3_exts_data.class_tag);
 
    if(tbs_cert.more_items())
-      throw Decoding_Error("TBSCertificate has more items that expected");
+      throw Decoding_Error("TBSCertificate has more items than expected");
 
    subject.add("X509.Certificate.version", version);
    subject.add("X509.Certificate.serial", BigInt::encode(serial_bn));
@@ -186,9 +187,9 @@ X509_Certificate::issuer_info(const std::string& what) const
 /*************************************************
 * Return the public key in this certificate      *
 *************************************************/
-Public_Key* X509_Certificate::subject_public_key() const
+std::auto_ptr<Public_Key> X509_Certificate::subject_public_key() const
    {
-   DataSource_Memory source(subject.get1("X509.Certificate.public_key"));
+   std::tr1::shared_ptr<DataSource> source(new DataSource_Memory(subject.get1("X509.Certificate.public_key")));
    return X509::load_key(source);
    }
 
@@ -312,9 +313,8 @@ X509_DN create_dn(const Data_Store& info)
             return false;
             }
       };
-
    std::multimap<std::string, std::string> names =
-      info.search_with(DN_Matcher());
+        info.search_with(DN_Matcher());
 
    X509_DN dn;
 
@@ -350,7 +350,7 @@ AlternativeName create_alt_name(const Data_Store& info)
       };
 
    std::multimap<std::string, std::string> names =
-      info.search_with(AltName_Matcher("RFC822/DNS/URI"));
+   	    info.search_with(AltName_Matcher("RFC822/DNS/URI"));
 
    AlternativeName alt_name;
 

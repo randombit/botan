@@ -6,11 +6,12 @@
 #include <botan/pubkey.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/bigint.h>
 #include <botan/parsing.h>
-#include <botan/bit_ops.h>
 #include <botan/lookup.h>
-#include <memory>
+#include <botan/pointers.h>
+#include <botan/bigint.h>
+#include <botan/bit_ops.h>
+
 
 namespace Botan {
 
@@ -51,7 +52,7 @@ SecureVector<byte> PK_Decryptor::decrypt(const MemoryRegion<byte>& in) const
 *************************************************/
 PK_Encryptor_MR_with_EME::PK_Encryptor_MR_with_EME(const PK_Encrypting_Key& k,
                                                    const std::string& eme) :
-   key(k), encoder((eme == "Raw") ? 0 : get_eme(eme))
+   key(k), encoder((eme == "Raw") ? std::tr1::shared_ptr<EME>() : std::tr1::shared_ptr<EME>(get_eme(eme).release()))
    {
    }
 
@@ -87,7 +88,7 @@ u32bit PK_Encryptor_MR_with_EME::maximum_input_size() const
 *************************************************/
 PK_Decryptor_MR_with_EME::PK_Decryptor_MR_with_EME(const PK_Decrypting_Key& k,
                                                    const std::string& eme) :
-   key(k), encoder((eme == "Raw") ? 0 : get_eme(eme))
+   key(k), encoder((eme == "Raw") ? std::tr1::shared_ptr<EME>() : std::tr1::shared_ptr<EME>(get_eme(eme).release()))
    {
    }
 
@@ -118,7 +119,7 @@ SecureVector<byte> PK_Decryptor_MR_with_EME::dec(const byte msg[],
 * PK_Signer Constructor                          *
 *************************************************/
 PK_Signer::PK_Signer(const PK_Signing_Key& k, const std::string& emsa_name) :
-   key(k), emsa(get_emsa(emsa_name))
+   key(k), emsa(get_emsa(emsa_name).release())
    {
    sig_format = IEEE_1363;
    }
@@ -211,9 +212,8 @@ SecureVector<byte> PK_Signer::signature()
 /*************************************************
 * PK_Verifier Constructor                        *
 *************************************************/
-PK_Verifier::PK_Verifier(const std::string& emsa_name)
+PK_Verifier::PK_Verifier(const std::string& emsa_name) : emsa(get_emsa(emsa_name).release())
    {
-   emsa = get_emsa(emsa_name);
    sig_format = IEEE_1363;
    }
 
@@ -222,7 +222,6 @@ PK_Verifier::PK_Verifier(const std::string& emsa_name)
 *************************************************/
 PK_Verifier::~PK_Verifier()
    {
-   delete emsa;
    }
 
 /*************************************************
@@ -373,27 +372,27 @@ PK_Key_Agreement::PK_Key_Agreement(const PK_Key_Agreement_Key& k,
 /*************************************************
 * Perform Key Agreement Operation                *
 *************************************************/
-SymmetricKey PK_Key_Agreement::derive_key(u32bit key_len,
-                                          const byte in[], u32bit in_len,
-                                          const std::string& params) const
+SymmetricKey PK_Key_Agreement::derive_key(u32bit key_len, const Public_Key& pubkey,
+                              const std::string& params) const
    {
-   return derive_key(key_len, in, in_len,
-                     reinterpret_cast<const byte*>(params.data()),
-                     params.length());
+   return derive_key(key_len, pubkey,
+		   			reinterpret_cast<const byte*>(params.data()),
+                    params.length());
    }
 
 /*************************************************
 * Perform Key Agreement Operation                *
 *************************************************/
-SymmetricKey PK_Key_Agreement::derive_key(u32bit key_len, const byte in[],
-                                          u32bit in_len, const byte params[],
-                                          u32bit params_len) const
+SymmetricKey PK_Key_Agreement::derive_key(u32bit key_len, const Public_Key& pubkey,
+                                      const byte params[], u32bit params_len) const
    {
-   std::auto_ptr<KDF> kdf((kdf_name == "Raw") ? 0 : get_kdf(kdf_name));
-   OctetString z = key.derive_key(in, in_len);
+   std::tr1::shared_ptr<KDF> kdf((kdf_name == "Raw") ?  std::tr1::shared_ptr<KDF>()
+                                 : std::tr1::shared_ptr<KDF>(get_kdf(kdf_name).release()));
+   OctetString z = key.derive_key(pubkey);
 
-   if(kdf.get())
+   if(kdf.get()) {
       z = kdf->derive_key(key_len, z.bits_of(), params, params_len);
+   }
 
    return z;
    }

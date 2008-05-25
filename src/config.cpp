@@ -12,6 +12,11 @@
 #include <botan/mutex.h>
 #include <string>
 
+
+
+using namespace Botan::math::ec;
+using namespace Botan::math::gf;
+
 namespace Botan {
 
 /*************************************************
@@ -33,6 +38,7 @@ std::string Config::get(const std::string& section,
    return search_map<std::string, std::string>(settings,
                                                section + "/" + key, "");
    }
+
 
 /*************************************************
 * See if a particular option has been set        *
@@ -62,6 +68,35 @@ void Config::set(const std::string& section, const std::string& key,
       settings[full_key] = value;
    }
 
+void Config::set_ec_dompar(const std::string& oid, const std::vector<std::string>& dom_par)
+{
+    Named_Mutex_Holder lock("config");
+    ec_domain_params[oid] = dom_par;
+}
+EC_Domain_Params Config::get_ec_dompar(const std::string& oid)
+{
+    Named_Mutex_Holder lock("config");
+    if(!search_map(ec_domain_params, oid, false, true))
+    {
+        throw Lookup_Error("could not find requested domain parameter oid");
+    }
+	std::vector<std::string> dom_par =
+		search_map<std::string, std::vector<std::string> >(ec_domain_params,
+            oid);
+    BigInt p(dom_par[0]); // give as 0x...
+    gf::GFpElement a(p, BigInt(dom_par[1]));
+    gf::GFpElement b(p, BigInt(dom_par[2]));
+    Botan::Pipe pipe(Botan::create_shared_ptr<Botan::Hex_Decoder>());
+    pipe.process_msg(dom_par[3]);
+    ::Botan::SecureVector<byte> sv_g = pipe.read_all();
+    CurveGFp curve(a, b, p);
+    PointGFp G = OS2ECP ( sv_g, curve );
+    G.check_invariants();
+    BigInt order(dom_par[4]);
+    BigInt cofactor(dom_par[5]);
+    EC_Domain_Params result(curve, G, order, cofactor);
+     return result;
+}
 /*************************************************
 * Add an alias                                   *
 *************************************************/
@@ -182,11 +217,18 @@ void Config::choose_sig_format(const std::string& algo_name,
       padding = "EMSA3(" + hash + ")";
       format = IEEE_1363;
       }
-   else if(algo_name == "DSA")
+   else if(algo_name == "ECDSA")
       {
-      std::string hash = global_state().config().deref_alias("SHA-1");
-      padding = "EMSA1(" + hash + ")";
-      format = DER_SEQUENCE;
+
+          std::string hash = global_state().config().option("x509/ca/ecdsa_hash");
+
+      if(hash == "")
+      {
+         throw Invalid_State("No value set for x509/ca/ecdsa_hash");
+      }
+
+          padding = "EMSA1_BSI(" + hash + ")";
+          format = IEEE_1363;
       }
    else
       throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);

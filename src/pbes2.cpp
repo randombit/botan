@@ -12,7 +12,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/oids.h>
 #include <algorithm>
-#include <memory>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -72,7 +72,7 @@ void PBE_PKCS5v20::flush_pipe(bool safe_to_skip)
 *************************************************/
 void PBE_PKCS5v20::set_key(const std::string& passphrase)
    {
-   std::auto_ptr<S2K> pbkdf(get_s2k("PBKDF2(" + digest + ")"));
+   std::tr1::shared_ptr<S2K> pbkdf(get_s2k("PBKDF2(" + digest + ")").release());
    pbkdf->set_iterations(iterations);
    pbkdf->change_salt(salt, salt.size());
    key = pbkdf->derive_key(key_length, passphrase).bits_of();
@@ -123,11 +123,11 @@ MemoryVector<byte> PBE_PKCS5v20::encode_params() const
 /*************************************************
 * Decode PKCS#5 PBES2 parameters                 *
 *************************************************/
-void PBE_PKCS5v20::decode_params(DataSource& source)
+void PBE_PKCS5v20::decode_params(SharedPtrConverter<DataSource> source)
    {
    AlgorithmIdentifier kdf_algo, enc_algo;
 
-   BER_Decoder(source)
+   BER_Decoder(source.get_shared())
       .start_cons(SEQUENCE)
          .decode(kdf_algo)
          .decode(enc_algo)
@@ -218,9 +218,9 @@ PBE_PKCS5v20::PBE_PKCS5v20(const std::string& d_algo,
 /*************************************************
 * PKCS#5 v2.0 PBE Constructor                    *
 *************************************************/
-PBE_PKCS5v20::PBE_PKCS5v20(DataSource& params) : direction(DECRYPTION)
+PBE_PKCS5v20::PBE_PKCS5v20(SharedPtrConverter<DataSource> params) : direction(DECRYPTION)
    {
-   decode_params(params);
+   decode_params(params.get_shared());
    }
 
 }

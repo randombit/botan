@@ -4,8 +4,11 @@
 *************************************************/
 
 #include <botan/def_powm.h>
-#include <botan/numthry.h>
+#include <botan/bigintfuncs.h>
 #include <vector>
+
+
+
 
 namespace Botan {
 

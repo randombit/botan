@@ -13,7 +13,7 @@
 #include <botan/config.h>
 #include <botan/bit_ops.h>
 #include <algorithm>
-#include <memory>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -32,7 +32,7 @@ void Extensions::encode_into(DER_Encoder& to_object) const
    {
    for(u32bit j = 0; j != extensions.size(); ++j)
       {
-      const Certificate_Extension* ext = extensions[j];
+      std::tr1::shared_ptr<const Certificate_Extension> ext = extensions[j];
 
       std::string setting;
 
@@ -66,8 +66,6 @@ void Extensions::encode_into(DER_Encoder& to_object) const
 *************************************************/
 void Extensions::decode_from(BER_Decoder& from_source)
    {
-   for(u32bit j = 0; j != extensions.size(); ++j)
-      delete extensions[j];
    extensions.clear();
 
    BER_Decoder sequence = from_source.start_cons(SEQUENCE);
@@ -84,8 +82,8 @@ void Extensions::decode_from(BER_Decoder& from_source)
             .verify_end()
          .end_cons();
 
-      Certificate_Extension* ext =
-         global_state().x509_state().get_extension(oid);
+      std::tr1::shared_ptr<Certificate_Extension> ext =
+         global_state().x509_state()->get_extension(oid);
 
       if(!ext)
          {
@@ -118,12 +116,10 @@ void Extensions::contents_to(Data_Store& subject_info,
 *************************************************/
 Extensions& Extensions::copy_this(const Extensions& other)
    {
-   for(u32bit j = 0; j != extensions.size(); ++j)
-      delete extensions[j];
    extensions.clear();
 
    for(u32bit j = 0; j != other.extensions.size(); ++j)
-      extensions.push_back(other.extensions[j]->copy());
+      extensions.push_back(std::tr1::shared_ptr<Certificate_Extension>(other.extensions[j]->copy().release()));
 
    return (*this);
    }
@@ -133,8 +129,7 @@ Extensions& Extensions::copy_this(const Extensions& other)
 *************************************************/
 Extensions::~Extensions()
    {
-   for(u32bit j = 0; j != extensions.size(); ++j)
-      delete extensions[j];
+
    }
 
 namespace Cert_Extension {
@@ -276,7 +271,7 @@ void Subject_Key_ID::contents_to(Data_Store& subject, Data_Store&) const
 *************************************************/
 Subject_Key_ID::Subject_Key_ID(const MemoryRegion<byte>& pub_key)
    {
-   std::auto_ptr<HashFunction> hash(get_hash("SHA-1"));
+   HashFunction::AutoHashFunctionPtr hash(get_hash("SHA-1"));
    key_id = hash->process(pub_key);
    }
 
@@ -488,11 +483,11 @@ u32bit CRL_Number::get_crl_number() const
 /*************************************************
 * Copy a CRL_Number extension                    *
 *************************************************/
-CRL_Number* CRL_Number::copy() const
+std::auto_ptr<Certificate_Extension> CRL_Number::copy() const
    {
    if(!has_value)
       throw Invalid_State("CRL_Number::copy: Not set");
-   return new CRL_Number(crl_number);
+   return std::auto_ptr<Certificate_Extension>(new CRL_Number(crl_number));
    }
 
 /*************************************************
@@ -524,9 +519,9 @@ void CRL_Number::contents_to(Data_Store& info, Data_Store&) const
 *************************************************/
 MemoryVector<byte> CRL_ReasonCode::encode_inner() const
    {
-   return DER_Encoder()
-      .encode(static_cast<u32bit>(reason), ENUMERATED, UNIVERSAL)
-   .get_contents();
+	return DER_Encoder()
+		.encode(static_cast<u32bit>(reason), ENUMERATED, UNIVERSAL)
+		.get_contents();
    }
 
 /*************************************************

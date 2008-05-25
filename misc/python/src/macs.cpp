@@ -36,11 +36,11 @@ class Py_MAC
 
       Py_MAC(const std::string& name)
          {
-         mac = get_mac(name);
+         mac = std::tr1::shared_ptr<MessageAuthenticationCode>(get_mac(name).release());
          }
-      ~Py_MAC() { delete mac; }
+      ~Py_MAC() { }
    private:
-      MessageAuthenticationCode* mac;
+      std::tr1::shared_ptr<MessageAuthenticationCode> mac;
    };
 
 void export_macs()

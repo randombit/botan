@@ -37,6 +37,9 @@ class X509_Cert_Options
       Key_Constraints constraints;
       std::vector<OID> ex_constraints;
 
+        std::string hash_alg;
+        std::string encoding;
+
       void sanity_check() const;
 
       void CA_key(u32bit = 8);

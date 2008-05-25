@@ -11,7 +11,7 @@
 #include <botan/look_pk.h>
 #include <botan/oids.h>
 #include <botan/pipe.h>
-#include <memory>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -70,7 +70,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    AlternativeName subject_alt;
 
    MemoryVector<byte> pub_key = shared_setup(opts, key);
-   std::auto_ptr<PK_Signer> signer(choose_sig_format(key, sig_algo));
+   std::tr1::shared_ptr<PK_Signer> signer(choose_sig_format(key, sig_algo));
    load_info(opts, subject_dn, subject_alt);
 
    Key_Constraints constraints;
@@ -81,16 +81,16 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
 
    Extensions extensions;
 
-   extensions.add(new Cert_Extension::Subject_Key_ID(pub_key));
-   extensions.add(new Cert_Extension::Key_Usage(constraints));
-   extensions.add(
-      new Cert_Extension::Extended_Key_Usage(opts.ex_constraints));
-   extensions.add(
-      new Cert_Extension::Subject_Alternative_Name(subject_alt));
-   extensions.add(
-      new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::Subject_Key_ID>(new Cert_Extension::Subject_Key_ID(pub_key)));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::Key_Usage>(new Cert_Extension::Key_Usage(constraints)));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::Extended_Key_Usage>(
+      new Cert_Extension::Extended_Key_Usage(opts.ex_constraints)));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::Subject_Alternative_Name>(
+      new Cert_Extension::Subject_Alternative_Name(subject_alt)));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::Basic_Constraints>(
+      new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit)));
 
-   return X509_CA::make_cert(signer.get(), sig_algo, pub_key,
+   return X509_CA::make_cert(signer, sig_algo, pub_key,
                              opts.start, opts.end,
                              subject_dn, subject_dn,
                              extensions);
@@ -107,25 +107,25 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
    AlternativeName subject_alt;
 
    MemoryVector<byte> pub_key = shared_setup(opts, key);
-   std::auto_ptr<PK_Signer> signer(choose_sig_format(key, sig_algo));
+   std::tr1::shared_ptr<PK_Signer> signer(choose_sig_format(key, sig_algo));
    load_info(opts, subject_dn, subject_alt);
 
    const u32bit PKCS10_VERSION = 0;
 
    Extensions extensions;
 
-   extensions.add(
-      new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit));
-   extensions.add(
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::Basic_Constraints>(
+      new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit)));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::Key_Usage>(
       new Cert_Extension::Key_Usage(
          opts.is_CA ? Key_Constraints(KEY_CERT_SIGN | CRL_SIGN) :
                       find_constraints(key, opts.constraints)
          )
-      );
-   extensions.add(
-      new Cert_Extension::Extended_Key_Usage(opts.ex_constraints));
-   extensions.add(
-      new Cert_Extension::Subject_Alternative_Name(subject_alt));
+      ));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::Extended_Key_Usage>(
+      new Cert_Extension::Extended_Key_Usage(opts.ex_constraints)));
+   extensions.add(std::tr1::shared_ptr<Cert_Extension::Subject_Alternative_Name>(
+      new Cert_Extension::Subject_Alternative_Name(subject_alt)));
 
    DER_Encoder tbs_req;
 
@@ -158,10 +158,10 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
       .end_explicit()
       .end_cons();
 
-   DataSource_Memory source(
-      X509_Object::make_signed(signer.get(), sig_algo,
+   std::tr1::shared_ptr<DataSource> source(new DataSource_Memory(
+      X509_Object::make_signed(signer, sig_algo,
                                tbs_req.get_contents())
-      );
+      ));
 
    return PKCS10_Request(source);
    }

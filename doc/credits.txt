@@ -37,7 +37,7 @@ N: Jack Lloyd
 E: lloyd@randombit.net
 W: http://www.randombit.net/
 P: 3F69 2E64 6D92 3BBE E7AE  9258 5C0F 96E8 4EC1 6D6B
-D: Original author
+D: Original author, current maintainer
 S: New York NY, USA
 
 N: Luca Piccarreta

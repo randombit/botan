@@ -12,6 +12,19 @@
 namespace Botan {
 
 /*************************************************
+* Forward declarations                           *
+*************************************************/
+
+class X509_Encoder;    // defined in x509_key.h
+class X509_Decoder;    // defined in x509_key.h
+class EAC1_1_CVC_Encoder; // defined in cvc_key.h
+class EAC1_1_CVC_Decoder; // defined in cvc_key.h
+
+class PKCS8_Encoder;   // defined in pkcs8.h
+class PKCS8_Decoder;   // defined in pkcs8.h
+
+
+/*************************************************
 * Public Key Base Class                          *
 *************************************************/
 class Public_Key
@@ -25,8 +38,8 @@ class Public_Key
       virtual u32bit message_part_size() const { return 0; }
       virtual u32bit max_input_bits() const = 0;
 
-      virtual class X509_Encoder* x509_encoder() const { return 0; }
-      virtual class X509_Decoder* x509_decoder() { return 0; }
+      virtual std::auto_ptr<X509_Encoder> x509_encoder() const;
+      virtual std::auto_ptr<X509_Decoder> x509_decoder();
 
       virtual ~Public_Key() {}
    protected:
@@ -39,8 +52,8 @@ class Public_Key
 class Private_Key : public virtual Public_Key
    {
    public:
-      virtual class PKCS8_Encoder* pkcs8_encoder() const { return 0; }
-      virtual class PKCS8_Decoder* pkcs8_decoder() { return 0; }
+     virtual std::auto_ptr<PKCS8_Encoder> pkcs8_encoder() const;
+      virtual std::auto_ptr<PKCS8_Decoder> pkcs8_decoder();
    protected:
       void load_check() const;
       void gen_check() const;
@@ -103,8 +116,7 @@ class PK_Verifying_wo_MR_Key : public virtual Public_Key
 class PK_Key_Agreement_Key : public virtual Private_Key
    {
    public:
-      virtual SecureVector<byte> derive_key(const byte[], u32bit) const = 0;
-      virtual MemoryVector<byte> public_value() const = 0;
+      virtual SecureVector<byte> derive_key(Public_Key const&) const = 0;
       virtual ~PK_Key_Agreement_Key() {}
    };
 

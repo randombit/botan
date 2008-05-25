@@ -9,6 +9,8 @@
 #include <botan/secmem.h>
 #include <botan/enums.h>
 #include <vector>
+#include <botan/bigint.h>
+
 
 namespace Botan {
 

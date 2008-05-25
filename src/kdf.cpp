@@ -7,7 +7,7 @@
 #include <botan/lookup.h>
 #include <botan/bit_ops.h>
 #include <algorithm>
-#include <memory>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -19,8 +19,7 @@ SecureVector<byte> KDF::derive_key(u32bit key_len,
                                    const std::string& salt) const
    {
    return derive_key(key_len, secret, secret.size(),
-                     reinterpret_cast<const byte*>(salt.data()),
-                     salt.length());
+                     (const byte*)salt.c_str(), salt.length());
    }
 
 /*************************************************
@@ -53,8 +52,7 @@ SecureVector<byte> KDF::derive_key(u32bit key_len,
                                    const std::string& salt) const
    {
    return derive_key(key_len, secret, secret_len,
-                     reinterpret_cast<const byte*>(salt.data()),
-                     salt.length());
+                     (const byte*)salt.c_str(), salt.length());
    }
 
 /*************************************************
@@ -74,7 +72,7 @@ SecureVector<byte> KDF1::derive(u32bit,
                                 const byte secret[], u32bit secret_len,
                                 const byte P[], u32bit P_len) const
    {
-   std::auto_ptr<HashFunction> hash(get_hash(hash_name));
+	HashFunction::AutoHashFunctionPtr hash(get_hash(hash_name));
 
    hash->update(secret, secret_len);
    hash->update(P, P_len);
@@ -100,7 +98,7 @@ SecureVector<byte> KDF2::derive(u32bit out_len,
    SecureVector<byte> output;
    u32bit counter = 1;
 
-   std::auto_ptr<HashFunction> hash(get_hash(hash_name));
+   HashFunction::AutoHashFunctionPtr hash(get_hash(hash_name));
    while(out_len && counter)
       {
       hash->update(secret, secret_len);

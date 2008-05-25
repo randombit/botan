@@ -74,9 +74,9 @@ std::string HMAC::name() const
 /*************************************************
 * Return a clone of this object                  *
 *************************************************/
-MessageAuthenticationCode* HMAC::clone() const
+HMAC::AutoMACPtr HMAC::clone() const
    {
-   return new HMAC(hash->name());
+   return HMAC::AutoMACPtr(new HMAC(hash->name()));
    }
 
 /*************************************************
@@ -85,7 +85,7 @@ MessageAuthenticationCode* HMAC::clone() const
 HMAC::HMAC(const std::string& hash_name) :
    MessageAuthenticationCode(output_length_of(hash_name),
                              1, 2*block_size_of(hash_name)),
-   hash(get_hash(hash_name))
+   hash(get_hash(hash_name).release())
    {
    if(hash->HASH_BLOCK_SIZE == 0)
       throw Invalid_Argument("HMAC cannot be used with " + hash->name());

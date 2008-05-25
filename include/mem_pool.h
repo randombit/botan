@@ -66,7 +66,7 @@ class Pooling_Allocator : public Allocator
       std::vector<Memory_Block> blocks;
       std::vector<Memory_Block>::iterator last_used;
       std::vector<std::pair<void*, u32bit> > allocated;
-      Mutex* mutex;
+      std::tr1::shared_ptr<Mutex> mutex;
    };
 
 }

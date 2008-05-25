@@ -18,7 +18,7 @@ BlockCipherMode::BlockCipherMode(const std::string& cipher_name,
    BLOCK_SIZE(block_size_of(cipher_name)), BUFFER_SIZE(buf_mult * BLOCK_SIZE),
    IV_METHOD(iv_meth), mode_name(cipher_mode_name)
    {
-   base_ptr = cipher = get_block_cipher(cipher_name);
+   base_ptr = cipher = std::tr1::shared_ptr<BlockCipher>(get_block_cipher(cipher_name).release());
    buffer.create(BUFFER_SIZE);
    state.create(iv_size);
    position = 0;

@@ -16,10 +16,10 @@ namespace Botan {
 class Modular_Exponentiator
    {
    public:
-      virtual void set_base(const BigInt&) = 0;
+	   virtual void set_base(const BigInt&) = 0;
       virtual void set_exponent(const BigInt&) = 0;
       virtual BigInt execute() const = 0;
-      virtual Modular_Exponentiator* copy() const = 0;
+      virtual std::auto_ptr<Modular_Exponentiator> copy() const = 0; 
       virtual ~Modular_Exponentiator() {}
    };
 
@@ -54,7 +54,7 @@ class Power_Mod
       Power_Mod(const Power_Mod&);
       ~Power_Mod();
    private:
-      mutable Modular_Exponentiator* core;
+      mutable std::auto_ptr<Modular_Exponentiator> core;
       Usage_Hints hints;
    };
 

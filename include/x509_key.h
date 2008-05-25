@@ -42,11 +42,11 @@ namespace X509 {
 void encode(const Public_Key&, Pipe&, X509_Encoding = PEM);
 std::string PEM_encode(const Public_Key&);
 
-Public_Key* load_key(DataSource&);
-Public_Key* load_key(const std::string&);
-Public_Key* load_key(const MemoryRegion<byte>&);
+std::auto_ptr<Public_Key> load_key(SharedPtrConverter<DataSource>);
+std::auto_ptr<Public_Key> load_key(const std::string&);
+std::auto_ptr<Public_Key> load_key(const MemoryRegion<byte>&);
 
-Public_Key* copy_key(const Public_Key&);
+std::auto_ptr<Public_Key> copy_key(const Public_Key&);
 
 Key_Constraints find_constraints(const Public_Key&, Key_Constraints);
 

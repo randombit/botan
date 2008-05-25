@@ -8,6 +8,7 @@
 
 #include <botan/types.h>
 #include <string>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -17,7 +18,7 @@ namespace Botan {
 class Allocator
    {
    public:
-      static Allocator* get(bool);
+      static std::tr1::shared_ptr<Allocator> get(bool);
 
       virtual void* allocate(u32bit) = 0;
       virtual void deallocate(void*, u32bit) = 0;

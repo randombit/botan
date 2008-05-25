@@ -4,8 +4,11 @@
 *************************************************/
 
 #include <botan/dh.h>
-#include <botan/numthry.h>
+#include <botan/bigintfuncs.h>
 #include <botan/util.h>
+
+
+
 
 namespace Botan {
 
@@ -35,13 +38,6 @@ u32bit DH_PublicKey::max_input_bits() const
    return group_p().bits();
    }
 
-/*************************************************
-* Return the public value for key agreement      *
-*************************************************/
-MemoryVector<byte> DH_PublicKey::public_value() const
-   {
-   return BigInt::encode_1363(y, group_p().bytes());
-   }
 
 /*************************************************
 * Create a DH private key                        *
@@ -84,40 +80,29 @@ void DH_PrivateKey::PKCS8_load_hook(bool generated)
       load_check();
    }
 
-/*************************************************
-* Return the public value for key agreement      *
-*************************************************/
-MemoryVector<byte> DH_PrivateKey::public_value() const
-   {
-   return DH_PublicKey::public_value();
-   }
 
 /*************************************************
 * Derive a key                                   *
 *************************************************/
-SecureVector<byte> DH_PrivateKey::derive_key(const byte w[],
-                                             u32bit w_len) const
-   {
-   return derive_key(BigInt::decode(w, w_len));
-   }
-
-/*************************************************
-* Derive a key                                   *
-*************************************************/
-SecureVector<byte> DH_PrivateKey::derive_key(const DH_PublicKey& key) const
-   {
-   return derive_key(key.get_y());
-   }
-
-/*************************************************
-* Derive a key                                   *
-*************************************************/
-SecureVector<byte> DH_PrivateKey::derive_key(const BigInt& w) const
+SecureVector<byte> DH_PrivateKey::derive_key(const Public_Key& key) const
+{
+  const DH_PublicKey* p_dh_pk = dynamic_cast<const DH_PublicKey*>(&key);
+  if(!p_dh_pk)
+  {
+   throw Invalid_Argument("DH_PrivateKey::derive_key(): argument must be a DH_PublicKey");
+  }
+  const BigInt& p = group_p();
+  BigInt w = p_dh_pk->get_y();
+  if(w <= 1 || w >= p-1)
+      throw Invalid_Argument(algo_name() + "::derive_key: Invalid key input");
+   return BigInt::encode_1363(core.agree(w), p.bytes());
+}
+/*SecureVector<byte> DH_PrivateKey::derive_key(const BigInt& w) const
    {
    const BigInt& p = group_p();
    if(w <= 1 || w >= p-1)
       throw Invalid_Argument(algo_name() + "::derive_key: Invalid key input");
    return BigInt::encode_1363(core.agree(w), p.bytes());
    }
-
+*/
 }

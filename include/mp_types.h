@@ -22,8 +22,8 @@ namespace Botan {
   #error BOTAN_MP_WORD_BITS must be 8, 16, 32, or 64
 #endif
 
-const word MP_WORD_MASK = ~static_cast<word>(0);
-const word MP_WORD_TOP_BIT = static_cast<word>(1) << (8*sizeof(word) - 1);
+const word MP_WORD_MASK = ~static_cast<word>(0); 
+const word MP_WORD_TOP_BIT = static_cast<word>(1) << (8*sizeof(word) - 1); 
 const word MP_WORD_MAX = MP_WORD_MASK;
 
 }

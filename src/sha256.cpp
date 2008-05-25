@@ -44,7 +44,7 @@ inline void F1(u32bit A, u32bit B, u32bit C, u32bit& D,
 /*************************************************
 * SHA-256 Compression Function                   *
 *************************************************/
-void SHA_256::hash(const byte input[])
+void SHA_224256_BASE::hash(const byte input[])
    {
    for(u32bit j = 0; j != 16; ++j)
       W[j] = load_be<u32bit>(input, j);
@@ -97,19 +97,27 @@ void SHA_256::hash(const byte input[])
 /*************************************************
 * Copy out the digest                            *
 *************************************************/
-void SHA_256::copy_out(byte output[])
+void SHA_224256_BASE::copy_out(byte output[])
    {
-   for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
-      store_be(digest[j/4], output + j);
+   	for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
+   		store_be(digest[j/4], output + j);
+
    }
 
 /*************************************************
 * Clear memory of sensitive data                 *
 *************************************************/
-void SHA_256::clear() throw()
+void SHA_224256_BASE::clear() throw()
    {
    MDx_HashFunction::clear();
    W.clear();
+   }
+/*************************************************
+* Clear memory of sensitive data                 *
+*************************************************/
+void SHA_256::clear() throw()
+   {
+   SHA_224256_BASE::clear();
    digest[0] = 0x6A09E667;
    digest[1] = 0xBB67AE85;
    digest[2] = 0x3C6EF372;
@@ -119,5 +127,23 @@ void SHA_256::clear() throw()
    digest[6] = 0x1F83D9AB;
    digest[7] = 0x5BE0CD19;
    }
+
+/*************************************************
+* Clear memory of sensitive data                 *
+*************************************************/
+void SHA_224::clear() throw()
+   {
+   SHA_224256_BASE::clear();
+   digest[0] = 0xc1059ed8;
+   digest[1] = 0x367cd507;
+   digest[2] = 0x3070dd17;
+   digest[3] = 0xf70e5939;
+   digest[4] = 0xffc00b31;
+   digest[5] = 0x68581511;
+   digest[6] = 0x64f98fa7;
+   digest[7] = 0xbefa4fa4;
+   }
+
+
 
 }

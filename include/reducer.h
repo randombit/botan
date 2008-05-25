@@ -16,7 +16,7 @@ namespace Botan {
 class Modular_Reducer
    {
    public:
-      BigInt multiply(const BigInt&, const BigInt&) const;
+	  BigInt multiply(const BigInt&, const BigInt&) const;
       BigInt square(const BigInt&) const;
       BigInt reduce(const BigInt&) const;
 

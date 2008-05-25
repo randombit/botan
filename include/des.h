@@ -18,7 +18,7 @@ class DES : public BlockCipher
    public:
       void clear() throw() { round_key.clear(); }
       std::string name() const { return "DES"; }
-      BlockCipher* clone() const { return new DES; }
+      AutoBlockCipherPtr clone() const { return AutoBlockCipherPtr(new DES); }
       DES() : BlockCipher(8, 8) {}
    private:
       friend class TripleDES;
@@ -47,7 +47,7 @@ class TripleDES : public BlockCipher
    public:
       void clear() throw() { des1.clear(); des2.clear(); des3.clear(); }
       std::string name() const { return "TripleDES"; }
-      BlockCipher* clone() const { return new TripleDES; }
+      AutoBlockCipherPtr clone() const { return AutoBlockCipherPtr(new TripleDES); }
       TripleDES() : BlockCipher(8, 16, 24, 8) {}
    private:
       void enc(const byte[], byte[]) const;
@@ -64,7 +64,7 @@ class DESX : public BlockCipher
    public:
       void clear() throw() { des.clear(); K1.clear(); K2.clear(); }
       std::string name() const { return "DESX"; }
-      BlockCipher* clone() const { return new DESX; }
+      AutoBlockCipherPtr clone() const { return AutoBlockCipherPtr(new DESX); }
       DESX() : BlockCipher(8, 24) {}
    private:
       void enc(const byte[], byte[]) const;

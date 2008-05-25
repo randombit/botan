@@ -21,14 +21,14 @@ class DL_Scheme_PublicKey : public virtual Public_Key
       bool check_key(bool) const;
 
       const DL_Group& get_domain() const { return group; }
-      const BigInt& get_y() const { return y; }
+	  const BigInt& get_y() const { return y; }
       const BigInt& group_p() const { return group.get_p(); }
       const BigInt& group_q() const { return group.get_q(); }
       const BigInt& group_g() const { return group.get_g(); }
       virtual DL_Group::Format group_format() const = 0;
 
-      X509_Encoder* x509_encoder() const;
-      X509_Decoder* x509_decoder();
+      std::auto_ptr<X509_Encoder> x509_encoder() const;
+      std::auto_ptr<X509_Decoder> x509_decoder();
    protected:
       BigInt y;
       DL_Group group;
@@ -47,8 +47,8 @@ class DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
 
       const BigInt& get_x() const { return x; }
 
-      PKCS8_Encoder* pkcs8_encoder() const;
-      PKCS8_Decoder* pkcs8_decoder();
+      std::auto_ptr<PKCS8_Encoder> pkcs8_encoder() const;
+      std::auto_ptr<PKCS8_Decoder> pkcs8_decoder();
    protected:
       BigInt x;
    private:

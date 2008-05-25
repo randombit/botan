@@ -6,12 +6,15 @@
 #include <botan/dl_group.h>
 #include <botan/config.h>
 #include <botan/parsing.h>
-#include <botan/numthry.h>
+#include <botan/bigintfuncs.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/pipe.h>
 #include <botan/util.h>
 #include <botan/pem.h>
+
+
+
 
 namespace Botan {
 
@@ -29,11 +32,11 @@ DL_Group::DL_Group()
 DL_Group::DL_Group(const std::string& type)
    {
    std::string grp_contents = global_config().get("dl", type);
-
-   if(grp_contents == "")
+   if(grp_contents == "") {
       throw Invalid_Argument("DL_Group: Unknown group " + type);
+   }
+   std::tr1::shared_ptr<DataSource> pem(new DataSource_Memory(grp_contents));
 
-   DataSource_Memory pem(grp_contents);
    PEM_decode(pem);
    }
 
@@ -253,11 +256,11 @@ std::string DL_Group::PEM_encode(Format format) const
 /*************************************************
 * Decode BER encoded parameters                  *
 *************************************************/
-void DL_Group::BER_decode(DataSource& source, Format format)
+void DL_Group::BER_decode(SharedPtrConverter<DataSource> source, Format format)
    {
    BigInt new_p, new_q, new_g;
 
-   BER_Decoder decoder(source);
+   BER_Decoder decoder(source.get_shared());
    BER_Decoder ber = decoder.start_cons(SEQUENCE);
 
    if(format == ANSI_X9_57)
@@ -289,10 +292,10 @@ void DL_Group::BER_decode(DataSource& source, Format format)
 /*************************************************
 * Decode PEM encoded parameters                  *
 *************************************************/
-void DL_Group::PEM_decode(DataSource& source)
+void DL_Group::PEM_decode(SharedPtrConverter<DataSource> source)
    {
    std::string label;
-   DataSource_Memory ber(PEM_Code::decode(source, label));
+   std::tr1::shared_ptr<DataSource> ber(new DataSource_Memory(PEM_Code::decode(source.get_shared(), label)));
 
    if(label == "DH PARAMETERS")
       BER_decode(ber, PKCS_3);

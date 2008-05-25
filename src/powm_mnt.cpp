@@ -3,9 +3,12 @@
 * (C) 1999-2007 The Botan Project                *
 *************************************************/
 
-#include <botan/def_powm.h>
-#include <botan/numthry.h>
+#include <botan/bigintfuncs.h>
 #include <botan/mp_core.h>
+#include <botan/def_powm.h>
+
+
+
 
 namespace Botan {
 

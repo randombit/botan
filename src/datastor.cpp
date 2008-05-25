@@ -102,7 +102,7 @@ Data_Store::get1_memvec(const std::string& key) const
    if(vals.empty())
       return MemoryVector<byte>();
 
-   Pipe pipe(new Hex_Decoder(FULL_CHECK));
+   Pipe pipe(create_shared_ptr<Hex_Decoder>(FULL_CHECK));
    pipe.start_msg();
    if(vals.size())
       pipe.write(vals[0]);
@@ -148,7 +148,7 @@ void Data_Store::add(const std::string& key, u32bit val)
 *************************************************/
 void Data_Store::add(const std::string& key, const MemoryRegion<byte>& val)
    {
-   Pipe pipe(new Hex_Encoder);
+   Pipe pipe(create_shared_ptr<Hex_Encoder>());
    pipe.process_msg(val);
    add(key, pipe.read_all_as_string());
    }

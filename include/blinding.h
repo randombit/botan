@@ -7,7 +7,8 @@
 #define BOTAN_BLINDER_H__
 
 #include <botan/bigint.h>
-#include <botan/reducer.h>
+#include <botan/bigint/reducer.h>
+
 
 namespace Botan {
 
@@ -17,11 +18,29 @@ namespace Botan {
 class Blinder
    {
    public:
-      BigInt blind(const BigInt&) const;
-      BigInt unblind(const BigInt&) const;
+      /**
+       * blind a BigInt
+       * @param i the BigInt to blind
+       * @result a blinded BigInt
+       */
+	   BigInt blind(const BigInt& i) const;
+
+      /**
+       * unblind a BigInt
+       * @param i the BigInt to unblind
+       * @result the unblinded BigInt
+       */
+      BigInt unblind(const BigInt& i) const;
 
       Blinder() {}
-      Blinder(const BigInt&, const BigInt&, const BigInt&);
+
+      /**
+       * Blinder constructur
+       * @param e
+       * @param d
+       * @param n
+       */
+      Blinder(const BigInt& e, const BigInt& d, const BigInt& n);
    private:
       Modular_Reducer reducer;
       mutable BigInt e, d;

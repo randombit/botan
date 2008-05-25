@@ -12,6 +12,8 @@
 #include <botan/datastor.h>
 #include <botan/enums.h>
 
+#include <botan/pointers.h>
+
 namespace Botan {
 
 /*************************************************
@@ -22,7 +24,7 @@ class Certificate_Extension
    public:
       OID oid_of() const;
 
-      virtual Certificate_Extension* copy() const = 0;
+      virtual std::auto_ptr<Certificate_Extension> copy() const = 0;
 
       virtual void contents_to(Data_Store&, Data_Store&) const = 0;
       virtual std::string config_id() const = 0;
@@ -47,8 +49,8 @@ class Extensions : public ASN1_Object
 
       void contents_to(Data_Store&, Data_Store&) const;
 
-      void add(Certificate_Extension* extn)
-         { extensions.push_back(extn); }
+      void add(SharedPtrConverter<Certificate_Extension> extn)
+         { extensions.push_back(extn.get_shared()); }
 
       Extensions& operator=(const Extensions& e)
          { return copy_this(e); }
@@ -58,7 +60,7 @@ class Extensions : public ASN1_Object
       ~Extensions();
    private:
       Extensions& copy_this(const Extensions&);
-      std::vector<Certificate_Extension*> extensions;
+      std::vector<std::tr1::shared_ptr<Certificate_Extension> > extensions;
       bool should_throw;
    };
 
@@ -70,8 +72,8 @@ namespace Cert_Extension {
 class Basic_Constraints : public Certificate_Extension
    {
    public:
-      Basic_Constraints* copy() const
-         { return new Basic_Constraints(is_ca, path_limit); }
+      std::auto_ptr<Certificate_Extension> copy() const
+         { return std::auto_ptr<Certificate_Extension>(new Basic_Constraints(is_ca, path_limit)); }
 
       Basic_Constraints(bool ca = false, u32bit limit = 0) :
          is_ca(ca), path_limit(limit) {}
@@ -96,7 +98,8 @@ class Basic_Constraints : public Certificate_Extension
 class Key_Usage : public Certificate_Extension
    {
    public:
-      Key_Usage* copy() const { return new Key_Usage(constraints); }
+      std::auto_ptr<Certificate_Extension> copy() const
+         { return std::auto_ptr<Certificate_Extension>(new Key_Usage(constraints)); }
 
       Key_Usage(Key_Constraints c = NO_CONSTRAINTS) : constraints(c) {}
 
@@ -119,7 +122,8 @@ class Key_Usage : public Certificate_Extension
 class Subject_Key_ID : public Certificate_Extension
    {
    public:
-      Subject_Key_ID* copy() const { return new Subject_Key_ID(key_id); }
+      std::auto_ptr<Certificate_Extension> copy() const
+        { return std::auto_ptr<Certificate_Extension>(new Subject_Key_ID(key_id)); }
 
       Subject_Key_ID() {}
       Subject_Key_ID(const MemoryRegion<byte>&);
@@ -143,7 +147,8 @@ class Subject_Key_ID : public Certificate_Extension
 class Authority_Key_ID : public Certificate_Extension
    {
    public:
-      Authority_Key_ID* copy() const { return new Authority_Key_ID(key_id); }
+      std::auto_ptr<Certificate_Extension> copy() const
+              { return std::auto_ptr<Certificate_Extension>(new Authority_Key_ID(key_id)); }
 
       Authority_Key_ID() {}
       Authority_Key_ID(const MemoryRegion<byte>& k) : key_id(k) {}
@@ -193,8 +198,8 @@ class Alternative_Name : public Certificate_Extension
 class Subject_Alternative_Name : public Alternative_Name
    {
    public:
-      Subject_Alternative_Name* copy() const
-         { return new Subject_Alternative_Name(get_alt_name()); }
+      std::auto_ptr<Certificate_Extension> copy() const
+              { return std::auto_ptr<Certificate_Extension>(new Subject_Alternative_Name(get_alt_name())); }
 
       Subject_Alternative_Name(const AlternativeName& = AlternativeName());
    };
@@ -205,8 +210,8 @@ class Subject_Alternative_Name : public Alternative_Name
 class Issuer_Alternative_Name : public Alternative_Name
    {
    public:
-      Issuer_Alternative_Name* copy() const
-         { return new Issuer_Alternative_Name(get_alt_name()); }
+     std::auto_ptr<Certificate_Extension> copy() const
+              { return std::auto_ptr<Certificate_Extension>(new Issuer_Alternative_Name(get_alt_name())); }
 
       Issuer_Alternative_Name(const AlternativeName& = AlternativeName());
    };
@@ -217,7 +222,8 @@ class Issuer_Alternative_Name : public Alternative_Name
 class Extended_Key_Usage : public Certificate_Extension
    {
    public:
-      Extended_Key_Usage* copy() const { return new Extended_Key_Usage(oids); }
+     std::auto_ptr<Certificate_Extension> copy() const
+              { return std::auto_ptr<Certificate_Extension>(new Extended_Key_Usage(oids)); }
 
       Extended_Key_Usage() {}
       Extended_Key_Usage(const std::vector<OID>& o) : oids(o) {}
@@ -241,8 +247,8 @@ class Extended_Key_Usage : public Certificate_Extension
 class Certificate_Policies : public Certificate_Extension
    {
    public:
-      Certificate_Policies* copy() const
-         { return new Certificate_Policies(oids); }
+     std::auto_ptr<Certificate_Extension> copy() const
+              { return std::auto_ptr<Certificate_Extension>(new Certificate_Policies(oids)); }
 
       Certificate_Policies() {}
       Certificate_Policies(const std::vector<OID>& o) : oids(o) {}
@@ -266,7 +272,7 @@ class Certificate_Policies : public Certificate_Extension
 class CRL_Number : public Certificate_Extension
    {
    public:
-      CRL_Number* copy() const;
+      std::auto_ptr<Certificate_Extension> copy() const ;
 
       CRL_Number() : has_value(false), crl_number(0) {}
       CRL_Number(u32bit n) : has_value(true), crl_number(n) {}
@@ -291,7 +297,8 @@ class CRL_Number : public Certificate_Extension
 class CRL_ReasonCode : public Certificate_Extension
    {
    public:
-      CRL_ReasonCode* copy() const { return new CRL_ReasonCode(reason); }
+      std::auto_ptr<Certificate_Extension> copy() const
+              { return std::auto_ptr<Certificate_Extension>(new CRL_ReasonCode(reason)); }
 
       CRL_ReasonCode(CRL_Code r = UNSPECIFIED) : reason(r) {}
 

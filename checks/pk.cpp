@@ -3,27 +3,40 @@
 #include <string>
 #include <vector>
 #include <cstdlib>
-#include <memory>
+#include<botan/tr1_mem_includer.h>
+//#include <tr1/memory>
 
 #include <botan/botan.h>
 #include <botan/libstate.h>
 #include <botan/rsa.h>
-#include <botan/dsa.h>
+//#include <botan/dsa.h>
 #include <botan/dh.h>
 
-#include <botan/nr.h>
-#include <botan/rw.h>
-#include <botan/elgamal.h>
-#include <botan/dlies.h>
+/*
+#if !defined(BOTAN_NO_NR)
+  #include <botan/nr.h>
+#endif
 
+#if !defined(BOTAN_NO_RW)
+  #include <botan/rw.h>
+#endif
+
+#if !defined(BOTAN_NO_ELG)
+  #include <botan/elgamal.h>
+#endif
+
+#if !defined(BOTAN_NO_DLIES)
+  #include <botan/dlies.h>
+#endif
+*/
 #include <botan/filters.h>
 #include <botan/look_pk.h>
-#include <botan/numthry.h>
+#include <botan/math/bigintfuncs.h>
 
 #include <botan/x931_rng.h>
 #include <botan/rng.h>
 using namespace Botan;
-
+using namespace Botan::math;
 #include "common.h"
 
 static BigInt to_bigint(const std::string& h)
@@ -64,10 +77,10 @@ class Fixed_Output_RNG : public RandomNumberGenerator
 
 void do_pk_keygen_tests();
 extern void do_x509_tests();
-
+/*
 u32bit validate_dsa_sig(const std::string&, const std::vector<std::string>&);
 u32bit validate_dsa_ver(const std::string&, const std::vector<std::string>&);
-
+*/
 u32bit validate_rsa_enc(const std::string&, const std::vector<std::string>&);
 u32bit validate_rsa_enc_pkcs8(const std::string&,
                               const std::vector<std::string>&);
@@ -75,13 +88,16 @@ u32bit validate_rsa_sig(const std::string&, const std::vector<std::string>&);
 u32bit validate_rsa_ver(const std::string&, const std::vector<std::string>&);
 u32bit validate_rsa_ver_x509(const std::string&,
                              const std::vector<std::string>&);
+/*
 u32bit validate_rw_ver(const std::string&, const std::vector<std::string>&);
 u32bit validate_rw_sig(const std::string&, const std::vector<std::string>&);
 u32bit validate_nr_sig(const std::string&, const std::vector<std::string>&);
 u32bit validate_elg_enc(const std::string&, const std::vector<std::string>&);
+*/
 u32bit validate_dh(const std::string&, const std::vector<std::string>&);
+/*
 u32bit validate_dlies(const std::string&, const std::vector<std::string>&);
-
+*/
 u32bit do_pk_validation_tests(const std::string& filename)
    {
    std::ifstream test_data(filename.c_str());
@@ -101,6 +117,7 @@ u32bit do_pk_validation_tests(const std::string& filename)
       std::string line;
       std::getline(test_data, line);
 
+      strip_newlines_windows(line);
       strip_comments(line);
       if(line.size() == 0) continue;
 
@@ -110,6 +127,7 @@ u32bit do_pk_validation_tests(const std::string& filename)
          line.replace(line.size()-1, 1, "");
          std::string nextline;
          std::getline(test_data, nextline);
+         strip_newlines_windows(nextline);
          strip_comments(nextline);
          if(nextline.size() == 0) continue;
          line.push_back('\n');
@@ -120,6 +138,7 @@ u32bit do_pk_validation_tests(const std::string& filename)
          {
          std::string old_algo = print_algorithm;
          algorithm = line.substr(1, line.size() - 2);
+
          print_algorithm = algorithm;
          if(print_algorithm.find("_PKCS8") != std::string::npos)
             print_algorithm.replace(print_algorithm.find("_PKCS8"), 6, "");
@@ -150,34 +169,35 @@ u32bit do_pk_validation_tests(const std::string& filename)
 
       u32bit new_errors = 0;
 
-      if(algorithm.find("DSA/") != std::string::npos)
-         new_errors = validate_dsa_sig(algorithm, substr);
-      else if(algorithm.find("DSA_VA/") != std::string::npos)
-         new_errors = validate_dsa_ver(algorithm, substr);
+//      if(algorithm.find("DSA/") != std::string::npos)
+//         new_errors = validate_dsa_sig(algorithm, substr);
+//      else if(algorithm.find("DSA_VA/") != std::string::npos)
+//         new_errors = validate_dsa_ver(algorithm, substr);
 
-      else if(algorithm.find("RSAES_PKCS8/") != std::string::npos)
+//      else
+      if(algorithm.find("RSAES_PKCS8/") != std::string::npos)
          new_errors = validate_rsa_enc_pkcs8(algorithm, substr);
       else if(algorithm.find("RSAVA_X509/") != std::string::npos)
          new_errors = validate_rsa_ver_x509(algorithm, substr);
 
       else if(algorithm.find("RSAES/") != std::string::npos)
          new_errors = validate_rsa_enc(algorithm, substr);
-      else if(algorithm.find("RSASSA/") != std::string::npos)
-         new_errors = validate_rsa_sig(algorithm, substr);
-      else if(algorithm.find("RSAVA/") != std::string::npos)
-         new_errors = validate_rsa_ver(algorithm, substr);
-      else if(algorithm.find("RWVA/") != std::string::npos)
-         new_errors = validate_rw_ver(algorithm, substr);
-      else if(algorithm.find("RW/") != std::string::npos)
-         new_errors = validate_rw_sig(algorithm, substr);
-      else if(algorithm.find("NR/") != std::string::npos)
-         new_errors = validate_nr_sig(algorithm, substr);
-      else if(algorithm.find("ElGamal/") != std::string::npos)
-         new_errors = validate_elg_enc(algorithm, substr);
+//      else if(algorithm.find("RSASSA/") != std::string::npos)
+//         new_errors = validate_rsa_sig(algorithm, substr);
+//      else if(algorithm.find("RSAVA/") != std::string::npos)
+//         new_errors = validate_rsa_ver(algorithm, substr);
+//      else if(algorithm.find("RWVA/") != std::string::npos)
+//         new_errors = validate_rw_ver(algorithm, substr);
+//      else if(algorithm.find("RW/") != std::string::npos)
+//         new_errors = validate_rw_sig(algorithm, substr);
+//      else if(algorithm.find("NR/") != std::string::npos)
+//         new_errors = validate_nr_sig(algorithm, substr);
+//      else if(algorithm.find("ElGamal/") != std::string::npos)
+//         new_errors = validate_elg_enc(algorithm, substr);
       else if(algorithm.find("DH/") != std::string::npos)
          new_errors = validate_dh(algorithm, substr);
-      else if(algorithm.find("DLIES/") != std::string::npos)
-         new_errors = validate_dlies(algorithm, substr);
+//      else if(algorithm.find("DLIES/") != std::string::npos)
+//         new_errors = validate_dlies(algorithm, substr);
       else
          std::cout << "WARNING: Unknown PK algorithm "
                    << algorithm << std::endl;
@@ -205,7 +225,7 @@ u32bit do_pk_validation_tests(const std::string& filename)
 void dump_data(const SecureVector<byte>& out,
                const SecureVector<byte>& expected)
    {
-   Pipe pipe(new Hex_Encoder);
+   Pipe pipe(create_shared_ptr<Hex_Decoder>());
 
    pipe.process_msg(out);
    pipe.process_msg(expected);
@@ -213,7 +233,7 @@ void dump_data(const SecureVector<byte>& out,
    std::cout << "Exp: " << pipe.read_all_as_string(1) << std::endl;
    }
 
-void validate_decryption(PK_Decryptor* d, const std::string& algo,
+void validate_decryption(std::auto_ptr<PK_Decryptor> d, const std::string& algo,
                          const SecureVector<byte> ctext,
                          const SecureVector<byte> ptext,
                          bool& failure)
@@ -225,14 +245,14 @@ void validate_decryption(PK_Decryptor* d, const std::string& algo,
       dump_data(decrypted, ptext);
       failure = true;
       }
-   delete d;
    }
 
-void validate_encryption(PK_Encryptor* e, PK_Decryptor* d,
+void validate_encryption(std::auto_ptr<PK_Encryptor> e, std::auto_ptr<PK_Decryptor> d,
                          const std::string& algo, const std::string& input,
                          const std::string& random, const std::string& exp,
                          bool& failure)
    {
+   //std::cout << "input: " << input << std::endl;
    SecureVector<byte> message = decode_hex(input);
 
    global_state().set_prng(new Fixed_Output_RNG(decode_hex(random)));
@@ -252,10 +272,9 @@ void validate_encryption(PK_Encryptor* e, PK_Decryptor* d,
       Global_RNG::seed(true, 384);
 
    validate_decryption(d, algo, out, message, failure);
-   delete e;
    }
 
-void validate_signature(PK_Verifier* v, PK_Signer* s, const std::string& algo,
+void validate_signature(std::auto_ptr<PK_Verifier> v, std::auto_ptr<PK_Signer> s, const std::string& algo,
                         const std::string& input, const std::string& random,
                         const std::string& exp, bool& failure)
    {
@@ -291,19 +310,19 @@ void validate_signature(PK_Verifier* v, PK_Signer* s, const std::string& algo,
    global_state().set_prng(new ANSI_X931_RNG);
    for(u32bit j = 0; j != 2; j++)
       Global_RNG::seed(true, 384);
-
-   delete v;
-   delete s;
    }
 
-void validate_kas(PK_Key_Agreement* kas, const std::string& algo,
-                  const SecureVector<byte>& pubkey, const std::string& output,
+//void validate_kas(std::auto_ptr<PK_Key_Agreement> kas, const std::string& algo,
+//                  const SecureVector<byte>& pubkey, const std::string& output,
+//                  u32bit keylen, bool& failure)
+void validate_kas(std::auto_ptr<PK_Key_Agreement> kas, const std::string& algo,
+                  const Public_Key& pubkey, const std::string& output,
                   u32bit keylen, bool& failure)
    {
    SecureVector<byte> expected = decode_hex(output);
 
    SecureVector<byte> got = kas->derive_key(keylen,
-                                            pubkey, pubkey.size()).bits_of();
+                                            pubkey).bits_of();
 
    if(got != expected)
       {
@@ -311,25 +330,26 @@ void validate_kas(PK_Key_Agreement* kas, const std::string& algo,
       dump_data(got, expected);
       failure = true;
       }
-
-   delete kas;
    }
 
 u32bit validate_rsa_enc_pkcs8(const std::string& algo,
                               const std::vector<std::string>& str)
    {
    if(str.size() != 4 && str.size() != 5)
-      throw Exception("Invalid input from pk_valid.dat");
+   {
+	   std::cout << "size: " << str.size()<< "\n";
+	   throw Exception("Invalid input from pk_valid.dat: "+str[0]);
+   }
 
    std::string pass;
    if(str.size() == 5) pass = str[4];
    strip_newlines(pass); /* it will have a newline thanks to the messy
                                 decoding method we use */
 
-   DataSource_Memory keysource((const byte*)str[0].c_str(), str[0].length());
-   Private_Key* privkey = PKCS8::load_key(keysource, pass);
+   std::tr1::shared_ptr<DataSource> keysource(new DataSource_Memory((const byte*)str[0].c_str(), str[0].length()));
+   std::auto_ptr<Private_Key> privkey = PKCS8::load_key(keysource, pass);
 
-   RSA_PrivateKey* rsapriv = dynamic_cast<RSA_PrivateKey*>(privkey);
+   RSA_PrivateKey* rsapriv = dynamic_cast<RSA_PrivateKey*>(privkey.get());
    if(!rsapriv)
       throw Invalid_Argument("Bad key load for RSA key");
 
@@ -337,12 +357,11 @@ u32bit validate_rsa_enc_pkcs8(const std::string& algo,
 
    std::string eme = algo.substr(12, std::string::npos);
 
-   PK_Encryptor* e = get_pk_encryptor(*rsapub, eme);
-   PK_Decryptor* d = get_pk_decryptor(*rsapriv, eme);
+   std::auto_ptr<PK_Encryptor> e = get_pk_encryptor(*rsapub, eme);
+   std::auto_ptr<PK_Decryptor> d = get_pk_decryptor(*rsapriv, eme);
 
    bool failure = false;
    validate_encryption(e, d, algo, str[1], str[2], str[3], failure);
-   delete privkey;
    return (failure ? 1 : 0);
    }
 
@@ -350,7 +369,10 @@ u32bit validate_rsa_enc(const std::string& algo,
                         const std::vector<std::string>& str)
    {
    if(str.size() != 6)
-      throw Exception("Invalid input from pk_valid.dat");
+   {
+	   std::cout << "size: " << str.size()<< "\n";
+	   throw Exception("Invalid input from pk_valid.dat: "+str[1]);
+   }
 
    RSA_PrivateKey privkey(to_bigint(str[1]), to_bigint(str[2]),
                           to_bigint(str[0]));
@@ -358,17 +380,21 @@ u32bit validate_rsa_enc(const std::string& algo,
 
    std::string eme = algo.substr(6, std::string::npos);
 
-   PK_Encryptor* e = get_pk_encryptor(pubkey, eme);
-   PK_Decryptor* d = get_pk_decryptor(privkey, eme);
+   std::auto_ptr<PK_Encryptor> e = get_pk_encryptor(pubkey, eme);
+   std::auto_ptr<PK_Decryptor> d = get_pk_decryptor(privkey, eme);
 
    bool failure = false;
    validate_encryption(e, d, algo, str[3], str[4], str[5], failure);
    return (failure ? 1 : 0);
    }
 
+/*
 u32bit validate_elg_enc(const std::string& algo,
                         const std::vector<std::string>& str)
    {
+#if defined(BOTAN_NO_ELG)
+   return 0;
+#else
    if(str.size() != 6 && str.size() != 7)
       throw Exception("Invalid input from pk_valid.dat");
 
@@ -391,8 +417,9 @@ u32bit validate_elg_enc(const std::string& algo,
                           decode_hex(str[4]), failure);
 
    return (failure ? 1 : 0);
+#endif
    }
-
+*/
 u32bit validate_rsa_sig(const std::string& algo,
                         const std::vector<std::string>& str)
    {
@@ -405,8 +432,8 @@ u32bit validate_rsa_sig(const std::string& algo,
 
    std::string emsa = algo.substr(7, std::string::npos);
 
-   PK_Verifier* v = get_pk_verifier(pubkey, emsa);
-   PK_Signer* s = get_pk_signer(privkey, emsa);
+   std::auto_ptr<PK_Verifier> v = get_pk_verifier(pubkey, emsa);
+   std::auto_ptr<PK_Signer> s = get_pk_signer(privkey, emsa);
 
    bool failure = false;
    validate_signature(v, s, algo, str[3], str[4], str[5], failure);
@@ -423,14 +450,12 @@ u32bit validate_rsa_ver(const std::string& algo,
 
    std::string emsa = algo.substr(6, std::string::npos);
 
-   PK_Verifier* v = get_pk_verifier(key, emsa);
+   std::auto_ptr<PK_Verifier> v = get_pk_verifier(key, emsa);
 
    SecureVector<byte> msg = decode_hex(str[2]);
    SecureVector<byte> sig = decode_hex(str[3]);
 
    bool passed = v->verify_message(msg, msg.size(), sig, sig.size());
-
-   delete v;
 
    return (passed ? 0 : 1);
    }
@@ -441,33 +466,34 @@ u32bit validate_rsa_ver_x509(const std::string& algo,
    if(str.size() != 5) /* is actually 3, parse() adds extra empty ones */
       throw Exception("Invalid input from pk_valid.dat");
 
-   DataSource_Memory keysource((const byte*)str[0].c_str(), str[0].length());
+   std::tr1::shared_ptr<DataSource> keysource(new DataSource_Memory((const byte*)str[0].c_str(), str[0].length()));
 
-   Public_Key* key = X509::load_key(keysource);
+   std::auto_ptr<Public_Key> key = X509::load_key(keysource);
 
-   RSA_PublicKey* rsakey = dynamic_cast<RSA_PublicKey*>(key);
+   RSA_PublicKey* rsakey = dynamic_cast<RSA_PublicKey*>(key.get());
 
    if(!rsakey)
       throw Invalid_Argument("Bad key load for RSA public key");
 
    std::string emsa = algo.substr(11, std::string::npos);
 
-   PK_Verifier* v = get_pk_verifier(*rsakey, emsa);
+   std::auto_ptr<PK_Verifier> v = get_pk_verifier(*rsakey, emsa);
 
    SecureVector<byte> msg = decode_hex(str[1]);
    SecureVector<byte> sig = decode_hex(str[2]);
 
    bool passed = v->verify_message(msg, msg.size(), sig, sig.size());
 
-   delete v;
-   delete key;
-
    return (passed ? 0 : 1);
    }
 
+/*
 u32bit validate_rw_ver(const std::string& algo,
                        const std::vector<std::string>& str)
    {
+#if defined(BOTAN_NO_RW)
+   return 0;
+#else
    if(str.size() != 5)
       throw Exception("Invalid input from pk_valid.dat");
 
@@ -485,11 +511,15 @@ u32bit validate_rw_ver(const std::string& algo,
    delete v;
 
    return (passed ? 0 : 1);
+#endif
    }
 
 u32bit validate_rw_sig(const std::string& algo,
                        const std::vector<std::string>& str)
    {
+#if defined(BOTAN_NO_RW)
+   return 0;
+#else
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
@@ -505,6 +535,7 @@ u32bit validate_rw_sig(const std::string& algo,
    bool failure = false;
    validate_signature(v, s, algo, str[3], str[4], str[5], failure);
    return (failure ? 1 : 0);
+#endif
    }
 
 u32bit validate_dsa_sig(const std::string& algo,
@@ -515,8 +546,7 @@ u32bit validate_dsa_sig(const std::string& algo,
 
    std::string pass;
    if(str.size() == 5) pass = str[4];
-   strip_newlines(pass); /* it will have a newline thanks to the messy
-                                decoding method we use */
+   strip_newlines(pass); // it will have a newline thanks to the messy decoding method we use
 
    DataSource_Memory keysource((const byte*)str[0].c_str(), str[0].length());
    Private_Key* privkey = PKCS8::load_key(keysource, pass);
@@ -542,7 +572,7 @@ u32bit validate_dsa_sig(const std::string& algo,
 u32bit validate_dsa_ver(const std::string& algo,
                         const std::vector<std::string>& str)
    {
-   if(str.size() != 5) /* is actually 3, parse() adds extra empty ones */
+   if(str.size() != 5) // is actually 3, parse() adds extra empty ones
       throw Exception("Invalid input from pk_valid.dat");
 
    DataSource_Memory keysource((const byte*)str[0].c_str(), str[0].length());
@@ -567,10 +597,15 @@ u32bit validate_dsa_ver(const std::string& algo,
 
    return (passed ? 0 : 1);
    }
+*/
 
+/*
 u32bit validate_nr_sig(const std::string& algo,
                        const std::vector<std::string>& str)
    {
+#if defined(BOTAN_NO_NR)
+   return 0;
+#else
    if(str.size() != 8)
       throw Exception("Invalid input from pk_valid.dat");
 
@@ -586,8 +621,9 @@ u32bit validate_nr_sig(const std::string& algo,
    bool failure = false;
    validate_signature(v, s, algo, str[5], str[6], str[7], failure);
    return (failure ? 1 : 0);
+#endif
    }
-
+*/
 u32bit validate_dh(const std::string& algo,
                    const std::vector<std::string>& str)
    {
@@ -605,17 +641,22 @@ u32bit validate_dh(const std::string& algo,
    if(str.size() == 6)
       keylen = to_u32bit(str[5]);
 
-   PK_Key_Agreement* kas = get_pk_kas(mykey, kdf);
+   std::auto_ptr<PK_Key_Agreement> kas = get_pk_kas(mykey, kdf);
 
    bool failure = false;
-   validate_kas(kas, algo, otherkey.public_value(),
+//   validate_kas(kas, algo, otherkey.public_value(),
+//                str[4], keylen, failure);
+validate_kas(kas, algo, otherkey,
                 str[4], keylen, failure);
    return (failure ? 1 : 0);
    }
-
+/*
 u32bit validate_dlies(const std::string& algo,
                       const std::vector<std::string>& str)
    {
+#if defined(BOTAN_NO_DLIES)
+   return 0;
+#else
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
@@ -643,8 +684,9 @@ u32bit validate_dlies(const std::string& algo,
    bool failure = false;
    validate_encryption(e, d, algo, str[4], empty, str[5], failure);
    return (failure ? 1 : 0);
+#endif
    }
-
+*/
 void do_pk_keygen_tests()
    {
    std::cout << "Testing PK key generation: " << std::flush;
@@ -679,7 +721,10 @@ void do_pk_keygen_tests()
    }
 
    IF_SIG_KEY(RSA_PrivateKey, 512);
+/*
+#if !defined(BOTAN_NO_RW)
    IF_SIG_KEY(RW_PrivateKey, 512);
+#endif
 
    DL_SIG_KEY(DSA_PrivateKey, "dsa/jce/512");
    DL_SIG_KEY(DSA_PrivateKey, "dsa/jce/768");
@@ -689,13 +734,17 @@ void do_pk_keygen_tests()
    DL_KEY(DH_PrivateKey, "modp/ietf/2048");
    DL_KEY(DH_PrivateKey, "dsa/jce/1024");
 
+#if !defined(BOTAN_NO_NR)
    DL_SIG_KEY(NR_PrivateKey, "dsa/jce/512");
    DL_SIG_KEY(NR_PrivateKey, "dsa/jce/768");
    DL_SIG_KEY(NR_PrivateKey, "dsa/jce/1024");
+#endif
 
+#if !defined(BOTAN_NO_ELG)
    DL_ENC_KEY(ElGamal_PrivateKey, "modp/ietf/768");
    DL_ENC_KEY(ElGamal_PrivateKey, "modp/ietf/1024");
    DL_ENC_KEY(ElGamal_PrivateKey, "dsa/jce/1024");
-
+#endif
+*/
    std::cout << std::endl;
    }

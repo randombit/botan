@@ -35,14 +35,15 @@ class Wrapped_HashFunction : public HashFunction
       void final_result(byte out[]) { hash->final(out); }
 
       std::string name() const { return hash->name(); }
-      HashFunction* clone() const { return hash->clone(); }
+      AutoHashFunctionPtr clone() const { return hash->clone(); }
 
-      Wrapped_HashFunction(python::object py_obj, HashFunction* h) :
+      Wrapped_HashFunction(python::object py_obj,
+                           SharedHashFunctionPtrConverter const& hc) :
          HashFunction(h->OUTPUT_LENGTH, h->HASH_BLOCK_SIZE),
-         obj(py_obj), hash(h) {}
+         obj(py_obj), hash(hc.get_shared()) {}
    private:
       python::object obj;
-      HashFunction* hash;
+      SharedHashFunctionPtr hash;
    };
 
 class Py_HashFunction_Wrapper : public Py_HashFunction,

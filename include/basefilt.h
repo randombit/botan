@@ -16,10 +16,38 @@ namespace Botan {
 class Chain : public Fanout_Filter
    {
    public:
+     typedef Filter::SharedFilterPtrConverter SharedFilterPtrConverter;
+     typedef Filter::SharedFilterPtr SharedFilterPtr;
+
+   private:
+      template<typename ConstIter>
+      void init(ConstIter begin, ConstIter end)
+         {
+         for( ; begin != end; ++begin)
+            {
+            if(*begin)
+               {
+               this->attach(*begin);
+               this->incr_owns();
+               }
+            }
+         }
+
+   public:
       void write(const byte input[], u32bit length) { send(input, length); }
 
-      Chain(Filter* = 0, Filter* = 0, Filter* = 0, Filter* = 0);
-      Chain(Filter*[], u32bit);
+      Chain(SharedFilterPtrConverter const&,
+           SharedFilterPtrConverter const& = SharedFilterPtrConverter(),
+           SharedFilterPtrConverter const& = SharedFilterPtrConverter(),
+           SharedFilterPtrConverter const& = SharedFilterPtrConverter());
+
+      template<typename ConstIter>
+      Chain(ConstIter begin, ConstIter end)
+         : Fanout_Filter()
+         { 
+         this->init(begin, end); 
+         }
+
    };
 
 /*************************************************
@@ -31,8 +59,17 @@ class Fork : public Fanout_Filter
       void write(const byte input[], u32bit length) { send(input, length); }
       void set_port(u32bit n) { Fanout_Filter::set_port(n); }
 
-      Fork(Filter*, Filter*, Filter* = 0, Filter* = 0);
-      Fork(Filter*[], u32bit);
+      Fork(SharedFilterPtrConverter const& = SharedFilterPtrConverter(),
+           SharedFilterPtrConverter const& = SharedFilterPtrConverter(),
+           SharedFilterPtrConverter const& = SharedFilterPtrConverter(),
+           SharedFilterPtrConverter const& = SharedFilterPtrConverter());
+      template<typename ConstIter>
+      Fork(ConstIter begin, ConstIter end)
+         : Fanout_Filter()
+         { 
+         this->set_next(begin, end); 
+         }
+
    };
 
 /*************************************************
@@ -45,9 +82,9 @@ class Keyed_Filter : public Filter
       virtual void set_iv(const InitializationVector&) {}
       virtual bool valid_keylength(u32bit) const;
 
-      Keyed_Filter() { base_ptr = 0; }
+      Keyed_Filter() : base_ptr() { }
    protected:
-      SymmetricAlgorithm* base_ptr;
+	   std::tr1::shared_ptr<SymmetricAlgorithm> base_ptr;
    };
 
 }

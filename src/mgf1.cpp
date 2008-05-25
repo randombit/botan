@@ -7,7 +7,7 @@
 #include <botan/lookup.h>
 #include <botan/bit_ops.h>
 #include <algorithm>
-#include <memory>
+#include <botan/pointers.h>
 
 namespace Botan {
 
@@ -19,7 +19,7 @@ void MGF1::mask(const byte in[], u32bit in_len, byte out[],
    {
    u32bit counter = 0;
 
-   std::auto_ptr<HashFunction> hash(get_hash(hash_name));
+   HashFunction::AutoHashFunctionPtr  hash(get_hash(hash_name));
 
    while(out_len)
       {
