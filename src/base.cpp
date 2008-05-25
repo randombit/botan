@@ -207,6 +207,16 @@ u32bit EntropySource::fast_poll(byte buf[], u32bit len)
    }
 
 /*************************************************
+* Get a single random byte                       *
+*************************************************/
+byte RandomNumberGenerator::next_byte()
+   {
+   byte out;
+   this->randomize(&out, 1);
+   return out;
+   }
+
+/*************************************************
 * Add entropy to internal state                  *
 *************************************************/
 void RandomNumberGenerator::add_entropy(const byte random[], u32bit length)

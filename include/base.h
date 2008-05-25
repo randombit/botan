@@ -159,6 +159,8 @@ class BOTAN_DLL RandomNumberGenerator
       virtual bool is_seeded() const = 0;
       virtual void clear() throw() {};
 
+      byte next_byte();
+
       void add_entropy(const byte[], u32bit);
       u32bit add_entropy(EntropySource&, bool = true);
 
