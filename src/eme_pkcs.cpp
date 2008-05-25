@@ -26,7 +26,7 @@ SecureVector<byte> EME_PKCS1v15::pad(const byte in[], u32bit inlen,
    out[0] = 0x02;
    for(u32bit j = 1; j != olen - inlen - 1; ++j)
       while(out[j] == 0)
-         out[j] = rng.random();
+         out[j] = rng.next_byte();
    out.copy(olen - inlen, in, inlen);
 
    return out;
