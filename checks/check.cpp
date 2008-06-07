@@ -14,7 +14,7 @@
 #include <botan/botan.h>
 #include <botan/mp_types.h>
 
-using namespace Botan_types;
+using namespace Botan;
 
 #include "getopt.h"
 

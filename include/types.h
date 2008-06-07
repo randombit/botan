@@ -30,8 +30,8 @@ typedef signed int s32bit;
 
 namespace Botan_types {
 
-typedef Botan::byte byte;
-typedef Botan::u32bit u32bit;
+using Botan::byte;
+using Botan::u32bit;
 
 }
 
