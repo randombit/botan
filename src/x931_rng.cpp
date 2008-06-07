@@ -21,15 +21,15 @@ void ANSI_X931_RNG::randomize(byte out[], u32bit length) throw(PRNG_Unseeded)
 
    while(length)
       {
+      if(position == R.size())
+         update_buffer();
+
       const u32bit copied = std::min(length, R.size() - position);
 
       copy_mem(out, R + position, copied);
       out += copied;
       length -= copied;
       position += copied;
-
-      if(position == R.size())
-         update_buffer();
       }
    }
 
@@ -38,17 +38,15 @@ void ANSI_X931_RNG::randomize(byte out[], u32bit length) throw(PRNG_Unseeded)
 *************************************************/
 void ANSI_X931_RNG::update_buffer()
    {
-   const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
-
-   SecureVector<byte> DT(BLOCK_SIZE);
+   SecureVector<byte> DT(cipher->BLOCK_SIZE);
 
    prng->randomize(DT, DT.size());
    cipher->encrypt(DT);
 
-   xor_buf(R, V, DT, BLOCK_SIZE);
+   xor_buf(R, V, DT, cipher->BLOCK_SIZE);
    cipher->encrypt(R);
 
-   xor_buf(V, R, DT, BLOCK_SIZE);
+   xor_buf(V, R, DT, cipher->BLOCK_SIZE);
    cipher->encrypt(V);
 
    position = 0;
@@ -61,12 +59,14 @@ void ANSI_X931_RNG::add_randomness(const byte data[], u32bit length)
    {
    prng->add_entropy(data, length);
 
-   if(is_seeded())
+   if(prng->is_seeded())
       {
       SecureVector<byte> key(cipher->MAXIMUM_KEYLENGTH);
       prng->randomize(key, key.size());
       cipher->set_key(key, key.size());
 
+      if(V.size() != cipher->BLOCK_SIZE)
+         V.create(cipher->BLOCK_SIZE);
       prng->randomize(V, V.size());
 
       update_buffer();
@@ -78,7 +78,7 @@ void ANSI_X931_RNG::add_randomness(const byte data[], u32bit length)
 *************************************************/
 bool ANSI_X931_RNG::is_seeded() const
    {
-   return prng->is_seeded();
+   return V.has_items();
    }
 
 /*************************************************
@@ -114,11 +114,7 @@ ANSI_X931_RNG::ANSI_X931_RNG(const std::string& cipher_name,
    prng = prng_ptr;
    cipher = get_block_cipher(cipher_name);
 
-   const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
-
-   V.create(BLOCK_SIZE);
-   R.create(BLOCK_SIZE);
-
+   R.create(cipher->BLOCK_SIZE);
    position = 0;
    }
 
