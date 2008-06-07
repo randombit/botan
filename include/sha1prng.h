@@ -12,7 +12,7 @@
 namespace Botan {
 
 /*************************************************
-* SHA1PRNG (propriery                            *
+* SHA1PRNG                                       *
 *************************************************/
 class SHA1PRNG : public RandomNumberGenerator
    {
