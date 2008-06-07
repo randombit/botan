@@ -5,6 +5,13 @@
 
 #include <vector>
 #include <string>
+#include <deque>
+#include <stdexcept>
+
+#include <botan/secmem.h>
+
+using Botan::byte;
+using Botan::u32bit;
 
 struct algorithm
    {
@@ -30,5 +37,50 @@ Botan::SecureVector<byte> decode_hex(const std::string&);
 
 Botan::u64bit get_clock();
 Botan::u64bit get_ticks();
+
+class Fixed_Output_RNG : public Botan::RandomNumberGenerator
+   {
+   public:
+      bool is_seeded() const { return !buf.empty(); }
+
+      byte random()
+         {
+         if(buf.empty())
+            throw std::runtime_error("Out of bytes");
+
+         byte out = buf.front();
+         buf.pop_front();
+         return out;
+         }
+
+      void randomize(byte out[], u32bit len) throw()
+         {
+         for(u32bit j = 0; j != len; j++)
+            out[j] = random();
+         }
+
+      std::string name() const { return "Fixed_Output_RNG"; }
+
+      void clear() throw() {}
+
+      void add_randomness(const byte in[], u32bit len) throw()
+         {
+         buf.insert(buf.end(), in, in + len);
+         }
+
+      Fixed_Output_RNG(const Botan::SecureVector<byte>& x)
+         {
+         add_randomness(x.begin(), x.size());
+         }
+      Fixed_Output_RNG(const std::string& in)
+         {
+         Botan::SecureVector<byte> x = decode_hex(in);
+         add_randomness(x.begin(), x.size());
+         }
+
+      Fixed_Output_RNG() {}
+   private:
+      std::deque<byte> buf;
+   };
 
 #endif

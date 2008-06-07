@@ -81,8 +81,8 @@ std::vector<algorithm> get_algos()
    algos.push_back(algorithm("MAC", "HMAC(SHA-1)", 16));
    algos.push_back(algorithm("MAC", "X9.19-MAC", 16));
 
-   algos.push_back(algorithm("RNG", "Randpool"));
-   algos.push_back(algorithm("RNG", "X9.31-RNG"));
+   algos.push_back(algorithm("RNG", "Randpool", 4096));
+   algos.push_back(algorithm("RNG", "X9.31-RNG", 4096));
 
    algos.push_back(algorithm("Codec", "Base64_Encode"));
    algos.push_back(algorithm("Codec", "Base64_Decode"));

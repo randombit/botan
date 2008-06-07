@@ -11,7 +11,7 @@
 #include <botan/filters.h>
 #include <botan/exceptn.h>
 #include <botan/libstate.h>
-using namespace Botan_types;
+using namespace Botan;
 
 #define EXTRA_TESTS 0
 #define DEBUG 0

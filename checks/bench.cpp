@@ -7,7 +7,7 @@
 
 #include <botan/libstate.h>
 #include <botan/filters.h>
-using namespace Botan_types;
+using Botan::byte;
 using Botan::u64bit;
 
 #include "common.h"
@@ -75,7 +75,11 @@ double bench(const std::string& name, const std::string& filtername, bool html,
    {
    std::vector<std::string> params;
 
-   params.push_back(std::string(int(2*keylen), 'A'));
+   Botan::SecureVector<byte> key(keylen);
+   Botan::global_state().randomize(key, key.size());
+   params.push_back(hex_encode(key, key.size()));
+
+   //params.push_back(std::string(int(2*keylen), 'A'));
    params.push_back(std::string(int(2* ivlen), 'A'));
 
    Botan::Filter* filter = lookup(filtername, params);

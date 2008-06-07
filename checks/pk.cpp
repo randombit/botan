@@ -35,36 +35,6 @@ static BigInt to_bigint(const std::string& h)
 
 #define DEBUG 0
 
-class Fixed_Output_RNG : public RandomNumberGenerator
-   {
-   public:
-      bool is_seeded() const { return true; }
-
-      byte random()
-         {
-         if(position < output.size())
-            return output[position++];
-
-         throw Botan::Invalid_State("Fixed_Output_RNG: out of bits");
-         }
-      void randomize(byte out[], u32bit len) throw()
-         {
-         for(u32bit j = 0; j != len; j++)
-            out[j] = random();
-         }
-      std::string name() const { return "Fixed_Output_RNG"; }
-      void clear() throw() {}
-      void add_randomness(const byte[], u32bit) throw() {}
-      Fixed_Output_RNG(const SecureVector<byte>& x)
-         {
-         output = x;
-         position = 0;
-         }
-   private:
-      SecureVector<byte> output;
-      u32bit position;
-   };
-
 void do_pk_keygen_tests();
 extern void do_x509_tests();
 

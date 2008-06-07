@@ -9,7 +9,9 @@
 #include <botan/randpool.h>
 #include <botan/x931_rng.h>
 #include <botan/libstate.h>
+#include "common.h"
 using namespace Botan;
+
 
 /* A weird little hack to fit S2K algorithms into the validation suite
    You probably wouldn't ever want to actually use the S2K algorithms like
@@ -47,15 +49,11 @@ class RNG_Filter : public Filter
    {
    public:
       void write(const byte[], u32bit);
-      RNG_Filter(RandomNumberGenerator* r) : rng(r), buffer(1024)
-         {
-         global_state().randomize(buffer, buffer.size());
-         rng->add_entropy(buffer, buffer.size());
-         }
+
+      RNG_Filter(RandomNumberGenerator* r) : rng(r) {}
       ~RNG_Filter() { delete rng; }
    private:
       RandomNumberGenerator* rng;
-      SecureVector<byte> buffer;
    };
 
 class KDF_Filter : public Filter
@@ -102,21 +100,43 @@ Filter* lookup_s2k(const std::string& algname,
 
 void RNG_Filter::write(const byte[], u32bit length)
    {
-   while(length)
+   if(length)
       {
-      u32bit gen = std::min(buffer.size(), length);
-      rng->randomize(buffer, gen);
-      length -= gen;
+      SecureVector<byte> out(length);
+      rng->randomize(out, out.size());
+      send(out);
       }
    }
 
-Filter* lookup_rng(const std::string& algname)
+Filter* lookup_rng(const std::string& algname,
+                   const std::string& key)
    {
-   if(algname == "X9.31-RNG")
-      return new RNG_Filter(new ANSI_X931_RNG("AES-256",
-                                              new Randpool("AES-256", "HMAC(SHA-256)")));
-   if(algname == "Randpool")
-      return new RNG_Filter(new Randpool("AES-256", "HMAC(SHA-256)"));
+   RandomNumberGenerator* prng = 0;
+
+   if(algname == "X9.31-RNG(TripleDES)")
+      prng = new ANSI_X931_RNG("TripleDES", new Fixed_Output_RNG);
+   else if(algname == "X9.31-RNG(AES-128)")
+      prng = new ANSI_X931_RNG("AES-128", new Fixed_Output_RNG);
+   else if(algname == "X9.31-RNG(AES-192)")
+      prng = new ANSI_X931_RNG("AES-192", new Fixed_Output_RNG);
+   else if(algname == "X9.31-RNG(AES-256)")
+      prng = new ANSI_X931_RNG("AES-256", new Fixed_Output_RNG);
+
+   // these are used for benchmarking: AES-256/SHA-256 matches library
+   // defaults, so benchmark reflects real-world performance (maybe)
+   else if(algname == "Randpool")
+      prng = new Randpool("AES-256", "HMAC(SHA-256)");
+   else if(algname == "X9.31-RNG")
+      prng = new ANSI_X931_RNG("AES-256",
+                               new Randpool("AES-256", "HMAC(SHA-256)"));
+
+   if(prng)
+      {
+      SecureVector<byte> seed = decode_hex(key);
+      prng->add_entropy(seed.begin(), seed.size());
+      return new RNG_Filter(prng);
+      }
+
    return 0;
    }
 

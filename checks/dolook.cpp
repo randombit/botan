@@ -23,7 +23,7 @@ Filter* lookup_cipher(const std::string&, const std::string&,
                     const std::string&, bool);
 Filter* lookup_hash(const std::string&);
 Filter* lookup_mac(const std::string&, const std::string&);
-Filter* lookup_rng(const std::string&);
+Filter* lookup_rng(const std::string&, const std::string&);
 Filter* lookup_encoder(const std::string&);
 Filter* lookup_s2k(const std::string&, const std::vector<std::string>&);
 Filter* lookup_kdf(const std::string&, const std::string&,
@@ -51,7 +51,7 @@ Filter* lookup(const std::string& algname,
    filter = lookup_block(algname, key);
    if(filter) return filter;
 
-   filter = lookup_rng(algname);
+   filter = lookup_rng(algname, key);
    if(filter) return filter;
 
    filter = lookup_encoder(algname);
