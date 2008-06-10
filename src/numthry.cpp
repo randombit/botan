@@ -56,10 +56,12 @@ u32bit miller_rabin_test_iterations(u32bit bits, bool verify)
    for(u32bit j = 0; tests[j].bits; ++j)
       {
       if(bits <= tests[j].bits)
+         {
          if(verify)
             return tests[j].verify_iter;
          else
             return tests[j].check_iter;
+         }
       }
    return 2;
    }
