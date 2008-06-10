@@ -1,6 +1,6 @@
 
 * 1.7.7, ????-??-??
- - Add implementation of SHA1PRNG, contributed by FlexSecure GmBH
+ - Add implementation of SHA1PRNG, contributed by FlexSecure GmbH
  - Add a test suite for the ANSI X9.31 PRNG
  - Remove many uses of the global PRNG object
  - Remove both default arguments to ANSI_X931_RNG's constructor
