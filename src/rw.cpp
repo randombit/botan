@@ -95,7 +95,8 @@ RW_PrivateKey::RW_PrivateKey(const BigInt& prime1, const BigInt& prime2,
 /*************************************************
 * Rabin-Williams Signature Operation             *
 *************************************************/
-SecureVector<byte> RW_PrivateKey::sign(const byte in[], u32bit len) const
+SecureVector<byte> RW_PrivateKey::sign(const byte in[], u32bit len,
+                                       RandomNumberGenerator&) const
    {
    BigInt i(in, len);
    if(i >= n || i % 16 != 12)

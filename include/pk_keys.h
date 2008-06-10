@@ -54,7 +54,8 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
 class BOTAN_DLL PK_Encrypting_Key : public virtual Public_Key
    {
    public:
-      virtual SecureVector<byte> encrypt(const byte[], u32bit) const = 0;
+      virtual SecureVector<byte> encrypt(const byte[], u32bit,
+                                         RandomNumberGenerator&) const = 0;
       virtual ~PK_Encrypting_Key() {}
    };
 
@@ -74,7 +75,8 @@ class BOTAN_DLL PK_Decrypting_Key : public virtual Private_Key
 class BOTAN_DLL PK_Signing_Key : public virtual Private_Key
    {
    public:
-      virtual SecureVector<byte> sign(const byte[], u32bit) const = 0;
+      virtual SecureVector<byte> sign(const byte[], u32bit,
+                                      RandomNumberGenerator& rng) const = 0;
       virtual ~PK_Signing_Key() {}
    };
 

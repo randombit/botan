@@ -40,7 +40,7 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
 * DL Private Key                                 *
 *************************************************/
 class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
-                             public virtual Private_Key
+                                       public virtual Private_Key
    {
    public:
       bool check_key(RandomNumberGenerator& rng, bool) const;

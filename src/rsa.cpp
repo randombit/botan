@@ -33,7 +33,8 @@ BigInt RSA_PublicKey::public_op(const BigInt& i) const
 /*************************************************
 * RSA Encryption Function                        *
 *************************************************/
-SecureVector<byte> RSA_PublicKey::encrypt(const byte in[], u32bit len) const
+SecureVector<byte> RSA_PublicKey::encrypt(const byte in[], u32bit len,
+                                          RandomNumberGenerator&) const
    {
    BigInt i(in, len);
    return BigInt::encode_1363(public_op(i), n.bytes());
@@ -117,7 +118,8 @@ SecureVector<byte> RSA_PrivateKey::decrypt(const byte in[], u32bit len) const
 /*************************************************
 * RSA Signature Operation                        *
 *************************************************/
-SecureVector<byte> RSA_PrivateKey::sign(const byte in[], u32bit len) const
+SecureVector<byte> RSA_PrivateKey::sign(const byte in[], u32bit len,
+                                        RandomNumberGenerator&) const
    {
    return BigInt::encode_1363(private_op(in, len), n.bytes());
    }

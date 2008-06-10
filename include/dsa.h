@@ -43,7 +43,8 @@ class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
                                  public virtual DL_Scheme_PrivateKey
    {
    public:
-      SecureVector<byte> sign(const byte[], u32bit) const;
+      SecureVector<byte> sign(const byte[], u32bit,
+                              RandomNumberGenerator& rng) const;
 
       bool check_key(RandomNumberGenerator& rng, bool) const;
 

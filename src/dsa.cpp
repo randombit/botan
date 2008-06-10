@@ -97,13 +97,14 @@ void DSA_PrivateKey::PKCS8_load_hook(bool generated)
 /*************************************************
 * DSA Signature Operation                        *
 *************************************************/
-SecureVector<byte> DSA_PrivateKey::sign(const byte in[], u32bit length) const
+SecureVector<byte> DSA_PrivateKey::sign(const byte in[], u32bit length,
+                                        RandomNumberGenerator& rng) const
    {
    const BigInt& q = group_q();
 
    BigInt k;
    do
-      k.randomize(global_state().prng_reference(), q.bits());
+      k.randomize(rng, q.bits());
    while(k >= q);
 
    return core.sign(in, length, k);

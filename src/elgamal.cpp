@@ -33,12 +33,11 @@ void ElGamal_PublicKey::X509_load_hook()
 /*************************************************
 * ElGamal Encryption Function                    *
 *************************************************/
-SecureVector<byte> ElGamal_PublicKey::encrypt(const byte in[],
-                                              u32bit length) const
+SecureVector<byte>
+ElGamal_PublicKey::encrypt(const byte in[], u32bit length,
+                           RandomNumberGenerator& rng) const
    {
-   BigInt k(global_state().prng_reference(),
-            2 * dl_work_factor(group_p().bits()));
-
+   BigInt k(rng, 2 * dl_work_factor(group_p().bits()));
    return core.encrypt(in, length, k);
    }
 

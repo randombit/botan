@@ -96,13 +96,14 @@ void NR_PrivateKey::PKCS8_load_hook(bool generated)
 /*************************************************
 * Nyberg-Rueppel Signature Operation             *
 *************************************************/
-SecureVector<byte> NR_PrivateKey::sign(const byte in[], u32bit length) const
+SecureVector<byte> NR_PrivateKey::sign(const byte in[], u32bit length,
+                                       RandomNumberGenerator& rng) const
    {
    const BigInt& q = group_q();
 
    BigInt k;
    do
-      k.randomize(global_state().prng_reference(), q.bits());
+      k.randomize(rng, q.bits());
    while(k >= q);
 
    return core.sign(in, length, k);

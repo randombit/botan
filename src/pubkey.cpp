@@ -62,18 +62,18 @@ PK_Encryptor_MR_with_EME::PK_Encryptor_MR_with_EME(const PK_Encrypting_Key& k,
 SecureVector<byte> PK_Encryptor_MR_with_EME::enc(const byte msg[],
                                                  u32bit length) const
    {
+   RandomNumberGenerator& rng = global_state().prng_reference();
+
    SecureVector<byte> message;
    if(encoder)
-      message = encoder->encode(msg, length,
-                                key.max_input_bits(),
-                                global_state().prng_reference());
+      message = encoder->encode(msg, length, key.max_input_bits(), rng);
    else
       message.set(msg, length);
 
    if(8*(message.size() - 1) + high_bit(message[0]) > key.max_input_bits())
       throw Exception("PK_Encryptor_MR_with_EME: Input is too large");
 
-   return key.encrypt(message, message.size());
+   return key.encrypt(message, message.size(), rng);
    }
 
 /*************************************************
@@ -187,7 +187,8 @@ SecureVector<byte> PK_Signer::signature()
    {
    SecureVector<byte> encoded = emsa->encoding_of(emsa->raw_data(),
                                                   key.max_input_bits());
-   SecureVector<byte> plain_sig = key.sign(encoded, encoded.size());
+   SecureVector<byte> plain_sig = key.sign(encoded, encoded.size(),
+                                           global_state().prng_reference());
 
    if(key.message_parts() == 1 || sig_format == IEEE_1363)
       return plain_sig;
