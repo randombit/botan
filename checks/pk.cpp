@@ -19,10 +19,6 @@
 #include <botan/filters.h>
 #include <botan/look_pk.h>
 #include <botan/numthry.h>
-
-#include <botan/x931_rng.h>
-#include <botan/randpool.h>
-#include <botan/libstate.h>
 using namespace Botan;
 
 #include "common.h"
@@ -165,12 +161,6 @@ u32bit do_pk_validation_tests(const std::string& filename)
 
    std::cout << std::endl;
 
-   global_state().set_prng(new ANSI_X931_RNG("AES-128",
-                                             new Randpool("AES-256",
-                                                          "HMAC(SHA-256)")));
-   for(u32bit j = 0; j != 2; j++)
-      global_state().seed_prng(true, 384);
-
    do_pk_keygen_tests();
    do_x509_tests();
 
@@ -229,11 +219,11 @@ void validate_signature(PK_Verifier* v, PK_Signer* s, const std::string& algo,
                         const std::string& exp, bool& failure)
    {
    SecureVector<byte> message = decode_hex(input);
-   global_state().set_prng(new Fixed_Output_RNG(decode_hex(random)));
 
    SecureVector<byte> expected = decode_hex(exp);
 
-   SecureVector<byte> sig = s->sign_message(message, message.size());
+   Fixed_Output_RNG rng(decode_hex(random));
+   SecureVector<byte> sig = s->sign_message(message, message.size(), rng);
 
    if(sig != expected)
       {
@@ -256,12 +246,6 @@ void validate_signature(PK_Verifier* v, PK_Signer* s, const std::string& algo,
       std::cout << "FAILED (accepted bad sig): " << algo << std::endl;
       failure = true;
       }
-
-   global_state().set_prng(new ANSI_X931_RNG("AES-128",
-                                             new Randpool("AES-256",
-                                                          "HMAC(SHA-256)")));
-   for(u32bit j = 0; j != 2; j++)
-      global_state().seed_prng(true, 384);
 
    delete v;
    delete s;

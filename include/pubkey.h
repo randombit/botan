@@ -51,14 +51,16 @@ class BOTAN_DLL PK_Decryptor
 class BOTAN_DLL PK_Signer
    {
    public:
-      SecureVector<byte> sign_message(const byte[], u32bit);
-      SecureVector<byte> sign_message(const MemoryRegion<byte>&);
+      SecureVector<byte> sign_message(const byte[], u32bit,
+                                      RandomNumberGenerator&);
+      SecureVector<byte> sign_message(const MemoryRegion<byte>&,
+                                      RandomNumberGenerator&);
 
       void update(byte);
       void update(const byte[], u32bit);
       void update(const MemoryRegion<byte>&);
 
-      SecureVector<byte> signature();
+      SecureVector<byte> signature(RandomNumberGenerator&);
 
       void set_output_format(Signature_Format);
 

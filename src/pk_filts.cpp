@@ -56,7 +56,7 @@ void PK_Signer_Filter::write(const byte input[], u32bit length)
 *************************************************/
 void PK_Signer_Filter::end_msg()
    {
-   send(signer->signature());
+   send(signer->signature(global_state().prng_reference()));
    }
 
 /*************************************************

@@ -144,18 +144,20 @@ void PK_Signer::set_output_format(Signature_Format format)
 /*************************************************
 * Sign a message                                 *
 *************************************************/
-SecureVector<byte> PK_Signer::sign_message(const byte msg[], u32bit length)
+SecureVector<byte> PK_Signer::sign_message(const byte msg[], u32bit length,
+                                           RandomNumberGenerator& rng)
    {
    update(msg, length);
-   return signature();
+   return signature(rng);
    }
 
 /*************************************************
 * Sign a message                                 *
 *************************************************/
-SecureVector<byte> PK_Signer::sign_message(const MemoryRegion<byte>& msg)
+SecureVector<byte> PK_Signer::sign_message(const MemoryRegion<byte>& msg,
+                                           RandomNumberGenerator& rng)
    {
-   return sign_message(msg, msg.size());
+   return sign_message(msg, msg.size(), rng);
    }
 
 /*************************************************
@@ -185,10 +187,8 @@ void PK_Signer::update(const MemoryRegion<byte>& in)
 /*************************************************
 * Create a signature                             *
 *************************************************/
-SecureVector<byte> PK_Signer::signature()
+SecureVector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
    {
-   RandomNumberGenerator& rng = global_state().prng_reference();
-
    SecureVector<byte> encoded = emsa->encoding_of(emsa->raw_data(),
                                                   key.max_input_bits(),
                                                   rng);

@@ -9,6 +9,7 @@
 #include <botan/der_enc.h>
 #include <botan/config.h>
 #include <botan/look_pk.h>
+#include <botan/libstate.h>
 #include <botan/oids.h>
 #include <botan/pipe.h>
 #include <memory>
@@ -159,7 +160,9 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
       .end_cons();
 
    DataSource_Memory source(
-      X509_Object::make_signed(signer.get(), sig_algo,
+      X509_Object::make_signed(signer.get(),
+                               global_state().prng_reference(),
+                               sig_algo,
                                tbs_req.get_contents())
       );
 

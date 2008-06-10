@@ -49,9 +49,10 @@ void check_key(RandomNumberGenerator& rng,
 
    SecureVector<byte> signature;
 
-   try {
-      signature = sig->sign_message(message);
-   }
+   try
+      {
+      signature = sig->sign_message(message, rng);
+      }
    catch(Encoding_Error)
       {
       return;

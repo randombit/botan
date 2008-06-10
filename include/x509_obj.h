@@ -24,6 +24,7 @@ class BOTAN_DLL X509_Object
       AlgorithmIdentifier signature_algorithm() const;
 
       static MemoryVector<byte> make_signed(class PK_Signer*,
+                                            RandomNumberGenerator&,
                                             const AlgorithmIdentifier&,
                                             const MemoryRegion<byte>&);
 

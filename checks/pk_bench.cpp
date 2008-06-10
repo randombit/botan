@@ -295,7 +295,7 @@ void bench_sig(PK_Signer* sig, const std::string& algo_name,
       global_state().randomize(msg, MSG_SIZE);
       u64bit start = get_clock();
       sig->update(msg, MSG_SIZE);
-      sig->signature();
+      sig->signature(global_state().prng_reference());
       clocks_used += get_clock() - start;
       }
 
@@ -313,7 +313,7 @@ void bench_ver(PK_Signer* sig, PK_Verifier* ver,
    global_state().randomize(msg, MSG_SIZE);
 
    sig->update(msg, MSG_SIZE);
-   SecureVector<byte> signature = sig->signature();
+   SecureVector<byte> signature = sig->signature(global_state().prng_reference());
    u32bit runs = 0;
    u64bit clocks_used = 0;
 
@@ -325,7 +325,7 @@ void bench_ver(PK_Signer* sig, PK_Verifier* ver,
          {
          global_state().randomize(msg, MSG_SIZE);
          sig->update(msg, MSG_SIZE);
-         signature = sig->signature();
+         signature = sig->signature(global_state().prng_reference());
          }
 
       runs++;
