@@ -6,7 +6,7 @@
 #ifndef BOTAN_ENTROPY_SRC_DEVICE_H__
 #define BOTAN_ENTROPY_SRC_DEVICE_H__
 
-#include <botan/base.h>
+#include <botan/rng.h>
 #include <vector>
 
 namespace Botan {

@@ -6,7 +6,7 @@
 #ifndef BOTAN_EXT_ENTROPY_SRC_EGD_H__
 #define BOTAN_EXT_ENTROPY_SRC_EGD_H__
 
-#include <botan/base.h>
+#include <botan/rng.h>
 #include <string>
 #include <vector>
 

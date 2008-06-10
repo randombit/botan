@@ -6,7 +6,8 @@
 #ifndef BOTAN_S2K_H__
 #define BOTAN_S2K_H__
 
-#include <botan/base.h>
+#include <botan/symkey.h>
+#include <botan/rng.h>
 
 namespace Botan {
 

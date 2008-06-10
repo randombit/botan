@@ -7,6 +7,7 @@
 #define BOTAN_PUBKEY_UTIL_H__
 
 #include <botan/base.h>
+#include <botan/rng.h>
 
 namespace Botan {
 

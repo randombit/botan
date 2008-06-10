@@ -6,7 +6,7 @@
 #ifndef BOTAN_TIMERS_H__
 #define BOTAN_TIMERS_H__
 
-#include <botan/base.h>
+#include <botan/rng.h>
 
 namespace Botan {
 

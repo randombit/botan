@@ -9,6 +9,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/pipe.h>
 #include <botan/enums.h>
+#include <botan/rng.h>
 #include <vector>
 
 namespace Botan {

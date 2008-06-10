@@ -6,7 +6,8 @@
 #ifndef BOTAN_PK_KEYS_H__
 #define BOTAN_PK_KEYS_H__
 
-#include <botan/base.h>
+#include <botan/rng.h>
+#include <botan/secmem.h>
 #include <botan/asn1_oid.h>
 
 namespace Botan {

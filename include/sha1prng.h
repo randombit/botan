@@ -7,6 +7,7 @@
 #ifndef BOTAN_SHA1PRNG_H__
 #define BOTAN_SHA1PRNG_H__
 
+#include <botan/rng.h>
 #include <botan/base.h>
 
 namespace Botan {

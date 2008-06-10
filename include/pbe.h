@@ -9,6 +9,7 @@
 #include <botan/asn1_oid.h>
 #include <botan/data_src.h>
 #include <botan/filter.h>
+#include <botan/rng.h>
 
 namespace Botan {
 

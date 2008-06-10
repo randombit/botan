@@ -6,6 +6,7 @@
 #ifndef BOTAN_RANDPOOL_H__
 #define BOTAN_RANDPOOL_H__
 
+#include <botan/rng.h>
 #include <botan/base.h>
 
 namespace Botan {

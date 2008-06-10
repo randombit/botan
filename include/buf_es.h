@@ -6,7 +6,8 @@
 #ifndef BOTAN_BUFFERED_ES_H__
 #define BOTAN_BUFFERED_ES_H__
 
-#include <botan/base.h>
+#include <botan/rng.h>
+#include <botan/secmem.h>
 
 namespace Botan {
 

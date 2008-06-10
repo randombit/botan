@@ -6,7 +6,8 @@
 #ifndef BOTAN_BIGINT_H__
 #define BOTAN_BIGINT_H__
 
-#include <botan/base.h>
+#include <botan/rng.h>
+#include <botan/secmem.h>
 #include <botan/mp_types.h>
 #include <iosfwd>
 

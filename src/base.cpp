@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/base.h>
+#include <botan/rng.h>
 #include <botan/version.h>
 #include <botan/util.h>
 #include <botan/config.h>
