@@ -8,30 +8,11 @@
 
 namespace Botan {
 
-/*************************************************
-* EMSA1 Update Operation                         *
-*************************************************/
-void EMSA1::update(const byte input[], u32bit length)
-   {
-   hash->update(input, length);
-   }
+namespace {
 
-/*************************************************
-* Return the raw (unencoded) data                *
-*************************************************/
-SecureVector<byte> EMSA1::raw_data()
+SecureVector<byte> emsa1_encoding(const MemoryRegion<byte>& msg,
+                                  u32bit output_bits)
    {
-   return hash->final();
-   }
-
-/*************************************************
-* EMSA1 Encode Operation                         *
-*************************************************/
-SecureVector<byte> EMSA1::encoding_of(const MemoryRegion<byte>& msg,
-                                      u32bit output_bits)
-   {
-   if(msg.size() != hash->OUTPUT_LENGTH)
-      throw Encoding_Error("EMSA1::encoding_of: Invalid size for input");
    if(8*msg.size() <= output_bits)
       return msg;
 
@@ -56,6 +37,36 @@ SecureVector<byte> EMSA1::encoding_of(const MemoryRegion<byte>& msg,
    return digest;
    }
 
+}
+
+/*************************************************
+* EMSA1 Update Operation                         *
+*************************************************/
+void EMSA1::update(const byte input[], u32bit length)
+   {
+   hash->update(input, length);
+   }
+
+/*************************************************
+* Return the raw (unencoded) data                *
+*************************************************/
+SecureVector<byte> EMSA1::raw_data()
+   {
+   return hash->final();
+   }
+
+/*************************************************
+* EMSA1 Encode Operation                         *
+*************************************************/
+SecureVector<byte> EMSA1::encoding_of(const MemoryRegion<byte>& msg,
+                                      u32bit output_bits,
+                                      RandomNumberGenerator&)
+   {
+   if(msg.size() != hash->OUTPUT_LENGTH)
+      throw Encoding_Error("EMSA1::encoding_of: Invalid size for input");
+   return emsa1_encoding(msg, output_bits);
+   }
+
 /*************************************************
 * EMSA1 Decode/Verify Operation                  *
 *************************************************/
@@ -63,7 +74,10 @@ bool EMSA1::verify(const MemoryRegion<byte>& coded,
                    const MemoryRegion<byte>& raw, u32bit key_bits) throw()
    {
    try {
-      SecureVector<byte> our_coding = encoding_of(raw, key_bits);
+      if(raw.size() != hash->OUTPUT_LENGTH)
+         throw Encoding_Error("EMSA1::encoding_of: Invalid size for input");
+
+      SecureVector<byte> our_coding = emsa1_encoding(raw, key_bits);
 
       if(our_coding == coded) return true;
       if(our_coding[0] != 0) return false;

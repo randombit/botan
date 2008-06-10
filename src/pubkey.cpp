@@ -185,10 +185,13 @@ void PK_Signer::update(const MemoryRegion<byte>& in)
 *************************************************/
 SecureVector<byte> PK_Signer::signature()
    {
+   RandomNumberGenerator& rng = global_state().prng_reference();
+
    SecureVector<byte> encoded = emsa->encoding_of(emsa->raw_data(),
-                                                  key.max_input_bits());
-   SecureVector<byte> plain_sig = key.sign(encoded, encoded.size(),
-                                           global_state().prng_reference());
+                                                  key.max_input_bits(),
+                                                  rng);
+
+   SecureVector<byte> plain_sig = key.sign(encoded, encoded.size(), rng);
 
    if(key.message_parts() == 1 || sig_format == IEEE_1363)
       return plain_sig;
@@ -363,7 +366,11 @@ PK_Verifier_wo_MR::PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key& k,
 bool PK_Verifier_wo_MR::validate_signature(const MemoryRegion<byte>& msg,
                                            const byte sig[], u32bit sig_len)
    {
-   SecureVector<byte> encoded = emsa->encoding_of(msg, key.max_input_bits());
+   RandomNumberGenerator& rng = global_state().prng_reference();
+
+   SecureVector<byte> encoded =
+      emsa->encoding_of(msg, key.max_input_bits(), rng);
+
    return key.verify(encoded, encoded.size(), sig, sig_len);
    }
 

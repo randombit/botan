@@ -29,7 +29,8 @@ SecureVector<byte> EMSA_Raw::raw_data()
 * EMSA-Raw Encode Operation                      *
 *************************************************/
 SecureVector<byte> EMSA_Raw::encoding_of(const MemoryRegion<byte>& msg,
-                                         u32bit)
+                                         u32bit,
+                                         RandomNumberGenerator&)
    {
    return msg;
    }

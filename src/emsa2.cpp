@@ -29,7 +29,8 @@ SecureVector<byte> EMSA2::raw_data()
 * EMSA2 Encode Operation                         *
 *************************************************/
 SecureVector<byte> EMSA2::encoding_of(const MemoryRegion<byte>& msg,
-                                      u32bit output_bits)
+                                      u32bit output_bits,
+                                      RandomNumberGenerator&)
    {
    u32bit output_length = (output_bits + 1) / 8;
 

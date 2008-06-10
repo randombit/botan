@@ -29,7 +29,8 @@ SecureVector<byte> EMSA3::raw_data()
 * EMSA3 Encode Operation                         *
 *************************************************/
 SecureVector<byte> EMSA3::encoding_of(const MemoryRegion<byte>& msg,
-                                      u32bit output_bits)
+                                      u32bit output_bits,
+                                      RandomNumberGenerator&)
    {
    if(msg.size() != hash->OUTPUT_LENGTH)
       throw Encoding_Error("EMSA3::encoding_of: Bad input length");

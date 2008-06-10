@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/pk_util.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -53,7 +54,8 @@ bool EMSA::verify(const MemoryRegion<byte>& coded,
                   u32bit key_bits) throw()
    {
    try {
-      return (coded == encoding_of(raw, key_bits));
+      return (coded == encoding_of(raw, key_bits,
+                                   global_state().prng_reference()));
       }
    catch(Invalid_Argument)
       {
