@@ -5,7 +5,6 @@
 
 #include <botan/x931_rng.h>
 #include <botan/lookup.h>
-#include <botan/randpool.h>
 #include <botan/bit_ops.h>
 #include <algorithm>
 
