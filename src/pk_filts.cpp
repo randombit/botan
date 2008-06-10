@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/pk_filts.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -20,7 +21,8 @@ void PK_Encryptor_Filter::write(const byte input[], u32bit length)
 *************************************************/
 void PK_Encryptor_Filter::end_msg()
    {
-   send(cipher->encrypt(buffer, buffer.size()));
+   send(cipher->encrypt(buffer, buffer.size(),
+                        global_state().prng_reference()));
    buffer.destroy();
    }
 

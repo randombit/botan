@@ -209,25 +209,16 @@ void validate_encryption(PK_Encryptor* e, PK_Decryptor* d,
                          bool& failure)
    {
    SecureVector<byte> message = decode_hex(input);
-
-   global_state().set_prng(new Fixed_Output_RNG(decode_hex(random)));
-
    SecureVector<byte> expected = decode_hex(exp);
+   Fixed_Output_RNG rng(decode_hex(random));
 
-   SecureVector<byte> out = e->encrypt(message);
+   SecureVector<byte> out = e->encrypt(message, rng);
    if(out != expected)
       {
       std::cout << "FAILED (encrypt): " << algo << std::endl;
       dump_data(out, expected);
       failure = true;
       }
-
-   global_state().set_prng(new ANSI_X931_RNG("AES-128",
-                                             new Randpool("AES-256",
-                                                          "HMAC(SHA-256)")));
-
-   for(u32bit j = 0; j != 2; j++)
-      global_state().seed_prng(true, 384);
 
    validate_decryption(d, algo, out, message, failure);
    delete e;

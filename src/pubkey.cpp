@@ -18,17 +18,19 @@ namespace Botan {
 /*************************************************
 * Encrypt a message                              *
 *************************************************/
-SecureVector<byte> PK_Encryptor::encrypt(const byte in[], u32bit len) const
+SecureVector<byte> PK_Encryptor::encrypt(const byte in[], u32bit len,
+                                         RandomNumberGenerator& rng) const
    {
-   return enc(in, len);
+   return enc(in, len, rng);
    }
 
 /*************************************************
 * Encrypt a message                              *
 *************************************************/
-SecureVector<byte> PK_Encryptor::encrypt(const MemoryRegion<byte>& in) const
+SecureVector<byte> PK_Encryptor::encrypt(const MemoryRegion<byte>& in,
+                                         RandomNumberGenerator& rng) const
    {
-   return enc(in.begin(), in.size());
+   return enc(in.begin(), in.size(), rng);
    }
 
 /*************************************************
@@ -59,11 +61,11 @@ PK_Encryptor_MR_with_EME::PK_Encryptor_MR_with_EME(const PK_Encrypting_Key& k,
 /*************************************************
 * Encrypt a message                              *
 *************************************************/
-SecureVector<byte> PK_Encryptor_MR_with_EME::enc(const byte msg[],
-                                                 u32bit length) const
+SecureVector<byte>
+PK_Encryptor_MR_with_EME::enc(const byte msg[],
+                              u32bit length,
+                              RandomNumberGenerator& rng) const
    {
-   RandomNumberGenerator& rng = global_state().prng_reference();
-
    SecureVector<byte> message;
    if(encoder)
       message = encoder->encode(msg, length, key.max_input_bits(), rng);

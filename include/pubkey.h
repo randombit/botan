@@ -20,12 +20,16 @@ enum Signature_Format { IEEE_1363, DER_SEQUENCE };
 class BOTAN_DLL PK_Encryptor
    {
    public:
-      SecureVector<byte> encrypt(const byte[], u32bit) const;
-      SecureVector<byte> encrypt(const MemoryRegion<byte>&) const;
+      SecureVector<byte> encrypt(const byte[], u32bit,
+                                 RandomNumberGenerator&) const;
+      SecureVector<byte> encrypt(const MemoryRegion<byte>&,
+                                 RandomNumberGenerator&) const;
+
       virtual u32bit maximum_input_size() const = 0;
       virtual ~PK_Encryptor() {}
    private:
-      virtual SecureVector<byte> enc(const byte[], u32bit) const = 0;
+      virtual SecureVector<byte> enc(const byte[], u32bit,
+                                     RandomNumberGenerator&) const = 0;
    };
 
 /*************************************************
@@ -124,7 +128,9 @@ class BOTAN_DLL PK_Encryptor_MR_with_EME : public PK_Encryptor
       PK_Encryptor_MR_with_EME(const PK_Encrypting_Key&, const std::string&);
       ~PK_Encryptor_MR_with_EME() { delete encoder; }
    private:
-      SecureVector<byte> enc(const byte[], u32bit) const;
+      SecureVector<byte> enc(const byte[], u32bit,
+                             RandomNumberGenerator& rng) const;
+
       const PK_Encrypting_Key& key;
       const EME* encoder;
    };

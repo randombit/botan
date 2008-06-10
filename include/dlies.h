@@ -21,7 +21,8 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
                       const std::string& = "HMAC(SHA-160)", u32bit = 20);
       void set_other_key(const MemoryRegion<byte>&);
    private:
-      SecureVector<byte> enc(const byte[], u32bit) const;
+      SecureVector<byte> enc(const byte[], u32bit,
+                             RandomNumberGenerator&) const;
       u32bit maximum_input_size() const;
       const PK_Key_Agreement_Key& key;
       SecureVector<byte> other_key;

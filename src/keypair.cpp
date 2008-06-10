@@ -26,7 +26,7 @@ void check_key(RandomNumberGenerator& rng,
    SecureVector<byte> message(enc->maximum_input_size() - 1);
    rng.randomize(message, message.size());
 
-   SecureVector<byte> ciphertext = enc->encrypt(message);
+   SecureVector<byte> ciphertext = enc->encrypt(message, rng);
    if(ciphertext == message)
       throw Self_Test_Failure("Encryption key pair consistency failure");
 

@@ -226,7 +226,7 @@ void bench_enc(PK_Encryptor* enc, const std::string& algo_name,
       global_state().randomize(msg, MSG_SIZE);
 
       u64bit start = get_clock();
-      enc->encrypt(msg, MSG_SIZE);
+      enc->encrypt(msg, MSG_SIZE, global_state().prng_reference());
       clocks_used += get_clock() - start;
       }
 
@@ -247,7 +247,8 @@ void bench_dec(PK_Encryptor* enc, PK_Decryptor* dec,
    u32bit runs = 0;
    u64bit clocks_used = 0;
 
-   SecureVector<byte> encrypted_msg = enc->encrypt(msg, MSG_SIZE);
+   SecureVector<byte> encrypted_msg = enc->encrypt(msg, MSG_SIZE,
+                                                   global_state().prng_reference());
 
    const u64bit ticks = get_ticks();
    while(clocks_used < seconds * ticks)
@@ -256,7 +257,8 @@ void bench_dec(PK_Encryptor* enc, PK_Decryptor* dec,
 
       global_state().randomize(msg, MSG_SIZE);
       msg[0] |= 0x80; // make sure it works with "Raw" padding
-      encrypted_msg = enc->encrypt(msg, MSG_SIZE);
+      encrypted_msg = enc->encrypt(msg, MSG_SIZE,
+                                   global_state().prng_reference());
 
       u64bit start = get_clock();
       output = dec->decrypt(encrypted_msg);
