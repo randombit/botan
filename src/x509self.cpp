@@ -91,7 +91,9 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    extensions.add(
       new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit));
 
-   return X509_CA::make_cert(signer.get(), sig_algo, pub_key,
+   RandomNumberGenerator& rng = global_state().prng_reference();
+
+   return X509_CA::make_cert(signer.get(), rng, sig_algo, pub_key,
                              opts.start, opts.end,
                              subject_dn, subject_dn,
                              extensions);

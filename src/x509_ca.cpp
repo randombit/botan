@@ -43,6 +43,7 @@ X509_CA::X509_CA(const X509_Certificate& c,
 * Sign a PKCS #10 certificate request            *
 *************************************************/
 X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
+                                       RandomNumberGenerator& rng,
                                        const X509_Time& not_before,
                                        const X509_Time& not_after)
    {
@@ -70,7 +71,7 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
    extensions.add(
       new Cert_Extension::Subject_Alternative_Name(req.subject_alt_name()));
 
-   return make_cert(signer, ca_sig_algo, req.raw_public_key(),
+   return make_cert(signer, rng, ca_sig_algo, req.raw_public_key(),
                     not_before, not_after,
                     cert.subject_dn(), req.subject_dn(),
                     extensions);
@@ -80,6 +81,7 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
 * Create a new certificate                       *
 *************************************************/
 X509_Certificate X509_CA::make_cert(PK_Signer* signer,
+                                    RandomNumberGenerator& rng,
                                     const AlgorithmIdentifier& sig_algo,
                                     const MemoryRegion<byte>& pub_key,
                                     const X509_Time& not_before,
@@ -88,8 +90,6 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
                                     const X509_DN& subject_dn,
                                     const Extensions& extensions)
    {
-   RandomNumberGenerator& rng = global_state().prng_reference();
-
    const u32bit X509_CERT_VERSION = 3;
    const u32bit SERIAL_BITS = 128;
 

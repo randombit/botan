@@ -22,6 +22,7 @@ class BOTAN_DLL X509_CA
    {
    public:
       X509_Certificate sign_request(const PKCS10_Request& req,
+                                    RandomNumberGenerator& rng,
                                     const X509_Time& not_before,
                                     const X509_Time& not_after);
 
@@ -32,6 +33,7 @@ class BOTAN_DLL X509_CA
                           u32bit = 0) const;
 
       static X509_Certificate make_cert(PK_Signer*,
+                                        RandomNumberGenerator&,
                                         const AlgorithmIdentifier&,
                                         const MemoryRegion<byte>&,
                                         const X509_Time&, const X509_Time&,
