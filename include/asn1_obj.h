@@ -139,11 +139,6 @@ class BOTAN_DLL AlternativeName : public ASN1_Object
 /*************************************************
 * Comparison Operations                          *
 *************************************************/
-bool BOTAN_DLL operator==(const AlgorithmIdentifier&,
-                          const AlgorithmIdentifier&);
-bool BOTAN_DLL operator!=(const AlgorithmIdentifier&,
-                          const AlgorithmIdentifier&);
-
 bool BOTAN_DLL operator==(const X509_Time&, const X509_Time&);
 bool BOTAN_DLL operator!=(const X509_Time&, const X509_Time&);
 bool BOTAN_DLL operator<=(const X509_Time&, const X509_Time&);

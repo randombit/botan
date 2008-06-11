@@ -34,6 +34,14 @@ class BOTAN_DLL AlgorithmIdentifier : public ASN1_Object
       SecureVector<byte> parameters;
    };
 
+/*************************************************
+* Comparison Operations                          *
+*************************************************/
+bool BOTAN_DLL operator==(const AlgorithmIdentifier&,
+                          const AlgorithmIdentifier&);
+bool BOTAN_DLL operator!=(const AlgorithmIdentifier&,
+                          const AlgorithmIdentifier&);
+
 }
 
 #endif
