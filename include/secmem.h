@@ -67,16 +67,16 @@ class MemoryRegion
       ~MemoryRegion() { deallocate(buf, allocated); }
    protected:
       MemoryRegion() { buf = 0; alloc = 0; used = allocated = 0; }
-      MemoryRegion(const MemoryRegion<T>& copy)
+      MemoryRegion(const MemoryRegion<T>& other)
          {
          buf = 0;
          used = allocated = 0;
-         alloc = copy.alloc;
-         set(copy.buf, copy.used);
+         alloc = other.alloc;
+         set(other.buf, other.used);
          }
 
-      void init(bool locking, u32bit size = 0)
-         { alloc = Allocator::get(locking); create(size); }
+      void init(bool locking, u32bit length = 0)
+         { alloc = Allocator::get(locking); create(length); }
    private:
       T* allocate(u32bit n) const
          {
