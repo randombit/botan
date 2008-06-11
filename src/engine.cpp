@@ -5,6 +5,8 @@
 
 #include <botan/engine.h>
 #include <botan/libstate.h>
+#include <botan/lookup.h>
+#include <botan/look_add.h>
 #include <botan/eng_def.h>
 
 namespace Botan {

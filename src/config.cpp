@@ -7,6 +7,7 @@
 #include <botan/libstate.h>
 #include <botan/mutex.h>
 #include <botan/stl_util.h>
+#include <botan/lookup.h>
 #include <string>
 
 namespace Botan {
