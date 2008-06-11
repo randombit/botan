@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/x509_ca.h>
-#include <botan/libstate.h>
 #include <botan/x509stor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
@@ -129,10 +128,11 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
 /*************************************************
 * Create a new, empty CRL                        *
 *************************************************/
-X509_CRL X509_CA::new_crl(u32bit next_update) const
+X509_CRL X509_CA::new_crl(RandomNumberGenerator& rng,
+                          u32bit next_update) const
    {
    std::vector<CRL_Entry> empty;
-   return make_crl(empty, 1, next_update);
+   return make_crl(empty, 1, next_update, rng);
    }
 
 /*************************************************
@@ -140,6 +140,7 @@ X509_CRL X509_CA::new_crl(u32bit next_update) const
 *************************************************/
 X509_CRL X509_CA::update_crl(const X509_CRL& crl,
                              const std::vector<CRL_Entry>& new_revoked,
+                             RandomNumberGenerator& rng,
                              u32bit next_update) const
    {
    std::vector<CRL_Entry> already_revoked = crl.get_revoked();
@@ -173,14 +174,15 @@ X509_CRL X509_CA::update_crl(const X509_CRL& crl,
    std::unique_copy(all_revoked.begin(), all_revoked.end(),
                     std::back_inserter(cert_list));
 
-   return make_crl(cert_list, crl.crl_number() + 1, next_update);
+   return make_crl(cert_list, crl.crl_number() + 1, next_update, rng);
    }
 
 /*************************************************
 * Create a CRL                                   *
 *************************************************/
 X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
-                           u32bit crl_number, u32bit next_update) const
+                           u32bit crl_number, u32bit next_update,
+                           RandomNumberGenerator& rng) const
    {
    const u32bit X509_CRL_VERSION = 2;
 
@@ -195,8 +197,6 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
    extensions.add(
       new Cert_Extension::Authority_Key_ID(cert.subject_key_id()));
    extensions.add(new Cert_Extension::CRL_Number(crl_number));
-
-   RandomNumberGenerator& rng = global_state().prng_reference();
 
    DataSource_Memory source(X509_Object::make_signed(signer, rng, ca_sig_algo,
          DER_Encoder().start_cons(SEQUENCE)

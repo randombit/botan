@@ -117,7 +117,7 @@ void do_x509_tests()
                                                  X509_Time("2100-01-01"));
    std::cout << '.' << std::flush;
 
-   X509_CRL crl1 = ca.new_crl();
+   X509_CRL crl1 = ca.new_crl(rng);
 
    /* Verify the certs */
    X509_Store store;
@@ -137,7 +137,7 @@ void do_x509_tests()
    std::vector<CRL_Entry> revoked;
    revoked.push_back(user2_cert);
 
-   X509_CRL crl2 = ca.update_crl(crl1, revoked);
+   X509_CRL crl2 = ca.update_crl(crl1, revoked, rng);
 
    if(store.add_crl(crl2) != VERIFIED)
       std::cout << "\nFAILED: CRL #2 did not validate" << std::endl;

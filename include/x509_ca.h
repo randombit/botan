@@ -28,8 +28,10 @@ class BOTAN_DLL X509_CA
 
       X509_Certificate ca_certificate() const;
 
-      X509_CRL new_crl(u32bit = 0) const;
-      X509_CRL update_crl(const X509_CRL&, const std::vector<CRL_Entry>&,
+      X509_CRL new_crl(RandomNumberGenerator& rng, u32bit = 0) const;
+      X509_CRL update_crl(const X509_CRL&,
+                          const std::vector<CRL_Entry>&,
+                          RandomNumberGenerator& rng,
                           u32bit = 0) const;
 
       static X509_Certificate make_cert(PK_Signer*,
@@ -46,7 +48,8 @@ class BOTAN_DLL X509_CA
       X509_CA(const X509_CA&) {}
       X509_CA& operator=(const X509_CA&) { return (*this); }
 
-      X509_CRL make_crl(const std::vector<CRL_Entry>&, u32bit, u32bit) const;
+      X509_CRL make_crl(const std::vector<CRL_Entry>&,
+                        u32bit, u32bit, RandomNumberGenerator&) const;
 
       AlgorithmIdentifier ca_sig_algo;
       X509_Certificate cert;
