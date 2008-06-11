@@ -56,14 +56,17 @@ namespace X509 {
 /*************************************************
 * Create a self-signed X.509 certificate         *
 *************************************************/
-BOTAN_DLL X509_Certificate create_self_signed_cert(const X509_Cert_Options&,
-                                                        const Private_Key&);
+BOTAN_DLL X509_Certificate
+create_self_signed_cert(const X509_Cert_Options&,
+                        const Private_Key&,
+                        RandomNumberGenerator& rng);
 
 /*************************************************
 * Create a PKCS #10 certificate request          *
 *************************************************/
 BOTAN_DLL PKCS10_Request create_cert_req(const X509_Cert_Options&,
-                                              const Private_Key&);
+                                         const Private_Key&,
+                                         RandomNumberGenerator& rng);
 
 }
 

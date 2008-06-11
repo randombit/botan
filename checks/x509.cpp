@@ -78,7 +78,9 @@ void do_x509_tests()
    RSA_PrivateKey ca_key(1024, rng);
 
    std::cout << '.' << std::flush;
-   X509_Certificate ca_cert = X509::create_self_signed_cert(ca_opts(), ca_key);
+   X509_Certificate ca_cert = X509::create_self_signed_cert(ca_opts(),
+                                                            ca_key,
+                                                            rng);
    std::cout << '.' << std::flush;
 
    /* Create user #1's key and cert request */
@@ -86,13 +88,17 @@ void do_x509_tests()
    DSA_PrivateKey user1_key(DL_Group("dsa/jce/1024"), rng);
 
    std::cout << '.' << std::flush;
-   PKCS10_Request user1_req = X509::create_cert_req(req_opts1(), user1_key);
+   PKCS10_Request user1_req = X509::create_cert_req(req_opts1(),
+                                                    user1_key,
+                                                    rng);
 
    /* Create user #2's key and cert request */
    std::cout << '.' << std::flush;
    RSA_PrivateKey user2_key(1024, rng);
    std::cout << '.' << std::flush;
-   PKCS10_Request user2_req = X509::create_cert_req(req_opts2(), user2_key);
+   PKCS10_Request user2_req = X509::create_cert_req(req_opts2(),
+                                                    user2_key,
+                                                    rng);
 
    /* Create the CA object */
    std::cout << '.' << std::flush;

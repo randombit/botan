@@ -1,6 +1,6 @@
 /*************************************************
 * PKCS #10/Self Signed Cert Creation Source File *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/x509self.h>
@@ -9,7 +9,6 @@
 #include <botan/der_enc.h>
 #include <botan/config.h>
 #include <botan/look_pk.h>
-#include <botan/libstate.h>
 #include <botan/oids.h>
 #include <botan/pipe.h>
 #include <memory>
@@ -64,7 +63,8 @@ namespace X509 {
 * Create a new self-signed X.509 certificate     *
 *************************************************/
 X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
-                                         const Private_Key& key)
+                                         const Private_Key& key,
+                                         RandomNumberGenerator& rng)
    {
    AlgorithmIdentifier sig_algo;
    X509_DN subject_dn;
@@ -91,8 +91,6 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    extensions.add(
       new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit));
 
-   RandomNumberGenerator& rng = global_state().prng_reference();
-
    return X509_CA::make_cert(signer.get(), rng, sig_algo, pub_key,
                              opts.start, opts.end,
                              subject_dn, subject_dn,
@@ -103,7 +101,8 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
 * Create a PKCS #10 certificate request          *
 *************************************************/
 PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
-                               const Private_Key& key)
+                               const Private_Key& key,
+                               RandomNumberGenerator& rng)
    {
    AlgorithmIdentifier sig_algo;
    X509_DN subject_dn;
@@ -163,7 +162,7 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
 
    DataSource_Memory source(
       X509_Object::make_signed(signer.get(),
-                               global_state().prng_reference(),
+                               rng,
                                sig_algo,
                                tbs_req.get_contents())
       );
