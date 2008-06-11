@@ -225,7 +225,7 @@ const BlockCipherModePaddingMethod* retrieve_bc_pad(const std::string& name)
 /*************************************************
 * Add a new block cipher                         *
 *************************************************/
-BOTAN_DLL void add_algorithm(BlockCipher* algo)
+void add_algorithm(BlockCipher* algo)
    {
    Library_State::Engine_Iterator i(global_state());
 
@@ -245,7 +245,7 @@ BOTAN_DLL void add_algorithm(BlockCipher* algo)
 /*************************************************
 * Add a new stream cipher                        *
 *************************************************/
-BOTAN_DLL void add_algorithm(StreamCipher* algo)
+void add_algorithm(StreamCipher* algo)
    {
    Library_State::Engine_Iterator i(global_state());
 
@@ -265,7 +265,7 @@ BOTAN_DLL void add_algorithm(StreamCipher* algo)
 /*************************************************
 * Add a new hash function                        *
 *************************************************/
-BOTAN_DLL void add_algorithm(HashFunction* algo)
+void add_algorithm(HashFunction* algo)
    {
    Library_State::Engine_Iterator i(global_state());
 
@@ -285,7 +285,7 @@ BOTAN_DLL void add_algorithm(HashFunction* algo)
 /*************************************************
 * Add a new authentication code                  *
 *************************************************/
-BOTAN_DLL void add_algorithm(MessageAuthenticationCode* algo)
+void add_algorithm(MessageAuthenticationCode* algo)
    {
    Library_State::Engine_Iterator i(global_state());
 
@@ -305,7 +305,7 @@ BOTAN_DLL void add_algorithm(MessageAuthenticationCode* algo)
 /*************************************************
 * Add a padding method to the lookup table       *
 *************************************************/
-BOTAN_DLL void add_algorithm(BlockCipherModePaddingMethod* algo)
+void add_algorithm(BlockCipherModePaddingMethod* algo)
    {
    Library_State::Engine_Iterator i(global_state());
 
@@ -325,8 +325,8 @@ BOTAN_DLL void add_algorithm(BlockCipherModePaddingMethod* algo)
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
-                                   Cipher_Dir direction)
+Keyed_Filter* get_cipher(const std::string& algo_spec,
+                         Cipher_Dir direction)
    {
    Library_State::Engine_Iterator i(global_state());
 
@@ -343,10 +343,10 @@ BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
-                                   const SymmetricKey& key,
-                                   const InitializationVector& iv,
-                                   Cipher_Dir direction)
+Keyed_Filter* get_cipher(const std::string& algo_spec,
+                         const SymmetricKey& key,
+                         const InitializationVector& iv,
+                         Cipher_Dir direction)
    {
    Keyed_Filter* cipher = get_cipher(algo_spec, direction);
    cipher->set_key(key);
@@ -357,9 +357,9 @@ BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
-                                   const SymmetricKey& key,
-                                   Cipher_Dir direction)
+Keyed_Filter* get_cipher(const std::string& algo_spec,
+                         const SymmetricKey& key,
+                         Cipher_Dir direction)
    {
    return get_cipher(algo_spec, key, InitializationVector(), direction);
    }
