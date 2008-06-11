@@ -12,6 +12,7 @@ This file is in the public domain
 #include <string>
 #include <vector>
 #include <cstring>
+#include <cstdlib>
 #include <botan/botan.h>
 
 int main(int argc, char* argv[])

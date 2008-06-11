@@ -12,6 +12,8 @@ This file is in the public domain
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cstdlib>
+
 #include <botan/botan.h>
 #include <botan/rsa.h>
 #include <botan/libstate.h>

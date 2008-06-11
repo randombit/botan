@@ -11,6 +11,7 @@ This file is in the public domain
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <memory>
 
 #include <botan/botan.h>
 #include <botan/look_pk.h> // for get_kdf

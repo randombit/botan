@@ -16,6 +16,7 @@ using namespace Botan;
 
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 int main(int argc, char* argv[])
    {

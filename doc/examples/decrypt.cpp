@@ -14,6 +14,7 @@ This file is in the public domain
 #include <string>
 #include <vector>
 #include <cstring>
+#include <memory>
 
 #include <botan/botan.h>
 

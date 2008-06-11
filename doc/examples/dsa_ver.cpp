@@ -16,6 +16,7 @@ This file is in the public domain
 #include <fstream>
 #include <cstdlib>
 #include <string>
+#include <memory>
 
 #include <botan/botan.h>
 #include <botan/look_pk.h>
