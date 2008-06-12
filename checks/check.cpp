@@ -17,15 +17,14 @@
 using namespace Botan;
 
 #include "getopt.h"
+#include "bench.h"
+#include "validate.h"
 
 const std::string VALIDATION_FILE = "checks/validate.dat";
 const std::string BIGINT_VALIDATION_FILE = "checks/mp_valid.dat";
 const std::string PK_VALIDATION_FILE = "checks/pk_valid.dat";
 const std::string EXPECTED_FAIL_FILE = "checks/fail.dat";
 
-void benchmark(const std::string&, bool html, double seconds);
-void bench_pk(const std::string&, bool html, double seconds);
-u32bit bench_algo(const std::string&, double);
 int validate();
 
 int main(int argc, char* argv[])
@@ -131,9 +130,6 @@ int main(int argc, char* argv[])
 int validate()
    {
    void test_types();
-   u32bit do_validation_tests(const std::string&, bool = true);
-   u32bit do_bigint_tests(const std::string&);
-   u32bit do_pk_validation_tests(const std::string&);
 
    std::cout << "Beginning validation tests..." << std::endl;
 

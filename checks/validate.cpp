@@ -13,8 +13,12 @@
 #include <botan/libstate.h>
 using namespace Botan;
 
+#include "validate.h"
+
 #define EXTRA_TESTS 0
 #define DEBUG 0
+
+namespace {
 
 u32bit random_word(u32bit max)
    {
@@ -35,6 +39,8 @@ u32bit random_word(u32bit max)
    return ((r % max) + 1); // return between 1 and max inclusive
 #endif
    }
+
+}
 
 Botan::Filter* lookup(const std::string&, const std::vector<std::string>&,
                       const std::string& = "All");

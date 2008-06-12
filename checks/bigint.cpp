@@ -11,6 +11,7 @@
 using namespace Botan;
 
 #include "common.h"
+#include "validate.h"
 
 #define DEBUG 0
 
@@ -122,6 +123,8 @@ u32bit do_bigint_tests(const std::string& filename)
    return errors;
    }
 
+namespace {
+
 // c==expected, d==a op b, e==a op= b
 u32bit results(std::string op,
                const BigInt& a, const BigInt& b,
@@ -153,6 +156,8 @@ u32bit results(std::string op,
       return 1;
       }
    }
+
+}
 
 u32bit check_add(const std::vector<std::string>& args)
    {

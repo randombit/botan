@@ -10,13 +10,13 @@ using namespace Botan;
   benchmarks and such take forever.
 */
 
-#define USE_CLOCK         1
+#define USE_CLOCK         0
 #define USE_TIMES         0
 #define USE_POSIX_GETTIME 0
-#define USE_RDTSC         0
+#define USE_RDTSC         1
 
 /* If using USE_RDTSC, set to your CPU's Mhz */
-#define CPU_MHZ 1866
+#define CPU_MHZ 2400
 
 #if USE_CLOCK
 

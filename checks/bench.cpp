@@ -11,6 +11,7 @@ using Botan::byte;
 using Botan::u64bit;
 
 #include "common.h"
+#include "bench.h"
 
 /* Discard output to reduce overhead */
 struct BitBucket : public Botan::Filter
@@ -21,6 +22,8 @@ struct BitBucket : public Botan::Filter
 Botan::Filter* lookup(const std::string&,
                       const std::vector<std::string>&,
                       const std::string& = "All");
+
+namespace {
 
 double bench_filter(std::string name, Botan::Filter* filter,
                     bool html, double seconds)
@@ -88,6 +91,8 @@ double bench(const std::string& name, const std::string& filtername, bool html,
       return bench_filter(name, filter, html, seconds);
    return 0;
    }
+
+}
 
 void benchmark(const std::string& what, bool html, double seconds)
    {
