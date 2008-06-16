@@ -127,47 +127,8 @@ int main(int argc, char* argv[])
    return 0;
    }
 
-int validate()
-   {
-   void test_types();
 
-   std::cout << "Beginning validation tests..." << std::endl;
-
-   test_types();
-   u32bit errors = 0;
-   try {
-      errors += do_validation_tests(VALIDATION_FILE);
-      errors += do_validation_tests(EXPECTED_FAIL_FILE, false);
-      errors += do_bigint_tests(BIGINT_VALIDATION_FILE);
-      errors += do_pk_validation_tests(PK_VALIDATION_FILE);
-      }
-   catch(Botan::Exception& e)
-      {
-      std::cout << "Exception caught: " << e.what() << std::endl;
-      return 1;
-      }
-   catch(std::exception& e)
-      {
-      std::cout << "Standard library exception caught: "
-                << e.what() << std::endl;
-      return 1;
-      }
-   catch(...)
-      {
-      std::cout << "Unknown exception caught." << std::endl;
-      return 1;
-      }
-
-   if(errors)
-      {
-      std::cout << errors << " test"  << ((errors == 1) ? "" : "s")
-                << " failed." << std::endl;
-      return 1;
-      }
-
-   std::cout << "All tests passed!" << std::endl;
-   return 0;
-   }
+namespace {
 
 template<typename T>
 bool test(const char* type, int digits, bool is_signed)
@@ -218,4 +179,46 @@ void test_types()
                    "and recompile." << std::endl;
       std::exit(1);
       }
+   }
+
+}
+
+int validate()
+   {
+   std::cout << "Beginning validation tests..." << std::endl;
+
+   test_types();
+   u32bit errors = 0;
+   try {
+      errors += do_validation_tests(VALIDATION_FILE);
+      errors += do_validation_tests(EXPECTED_FAIL_FILE, false);
+      errors += do_bigint_tests(BIGINT_VALIDATION_FILE);
+      errors += do_pk_validation_tests(PK_VALIDATION_FILE);
+      }
+   catch(Botan::Exception& e)
+      {
+      std::cout << "Exception caught: " << e.what() << std::endl;
+      return 1;
+      }
+   catch(std::exception& e)
+      {
+      std::cout << "Standard library exception caught: "
+                << e.what() << std::endl;
+      return 1;
+      }
+   catch(...)
+      {
+      std::cout << "Unknown exception caught." << std::endl;
+      return 1;
+      }
+
+   if(errors)
+      {
+      std::cout << errors << " test"  << ((errors == 1) ? "" : "s")
+                << " failed." << std::endl;
+      return 1;
+      }
+
+   std::cout << "All tests passed!" << std::endl;
+   return 0;
    }
