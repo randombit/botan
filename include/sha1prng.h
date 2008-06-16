@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * SHA1PRNG                                       *
 *************************************************/
-class SHA1PRNG : public RandomNumberGenerator
+class BOTAN_DLL SHA1PRNG : public RandomNumberGenerator
    {
    public:
       void randomize(byte[], u32bit) throw(PRNG_Unseeded);
