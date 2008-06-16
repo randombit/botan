@@ -9,7 +9,6 @@
 #include <botan/pipe.h>
 #include <botan/basefilt.h>
 #include <botan/data_snk.h>
-#include <botan/pk_filts.h>
 #include <botan/base64.h>
 #include <botan/hex.h>
 
