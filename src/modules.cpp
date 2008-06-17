@@ -183,7 +183,7 @@ std::vector<EntropySource*> Builtin_Modules::entropy_sources() const
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_FTW)
-   sources.push_back(new FTW_EntropySource);
+   sources.push_back(new FTW_EntropySource("/proc"));
 #endif
 
    return sources;
