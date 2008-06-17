@@ -943,6 +943,16 @@ sub load_modules {
 
     foreach my $mod (sort keys %{$$config{'modules'}}) {
         load_module($config, $mod);
+
+        foreach my $req_mod (@{$MODULES{$mod}{'requires'}}) {
+            unless(defined($$config{'modules'}{$req_mod})) {
+                autoconfig("Module $req_mod - required by $mod");
+                $$config{'modules'}{$req_mod} = 1;
+                load_module($config, $req_mod);
+            }
+        }
+
+
     }
 
     my $gen_defines = sub {
@@ -1317,6 +1327,7 @@ sub get_module_info {
        read_list($_, $reader, 'add', list_push(\@{$info{'add'}}));
        read_list($_, $reader, 'replace', list_push(\@{$info{'replace'}}));
        read_list($_, $reader, 'ignore', list_push(\@{$info{'ignore'}}));
+       read_list($_, $reader, 'requires', list_push(\@{$info{'requires'}}));
 
        read_list($_, $reader, 'libs',
                  sub {
