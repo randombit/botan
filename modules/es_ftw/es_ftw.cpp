@@ -5,7 +5,6 @@
 
 #include <botan/es_ftw.h>
 #include <botan/util.h>
-#include <fstream>
 #include <cstring>
 #include <vector>
 
