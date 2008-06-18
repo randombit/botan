@@ -9,6 +9,8 @@
 #include <stdexcept>
 
 #include <botan/secmem.h>
+#include <botan/filter.h>
+#include <botan/rng.h>
 
 using Botan::byte;
 using Botan::u32bit;
@@ -37,6 +39,21 @@ Botan::SecureVector<byte> decode_hex(const std::string&);
 
 Botan::u64bit get_clock();
 Botan::u64bit get_ticks();
+
+Botan::Filter* lookup(const std::string& algname,
+                      const std::vector<std::string>& params,
+                      const std::string& section);
+
+Botan::Filter* lookup_block(const std::string&, const std::string&);
+Botan::Filter* lookup_cipher(const std::string&, const std::string&,
+                             const std::string&, bool);
+Botan::Filter* lookup_hash(const std::string&);
+Botan::Filter* lookup_mac(const std::string&, const std::string&);
+Botan::Filter* lookup_rng(const std::string&, const std::string&);
+Botan::Filter* lookup_encoder(const std::string&);
+Botan::Filter* lookup_s2k(const std::string&, const std::vector<std::string>&);
+Botan::Filter* lookup_kdf(const std::string&, const std::string&,
+                          const std::string&);
 
 class Fixed_Output_RNG : public Botan::RandomNumberGenerator
    {

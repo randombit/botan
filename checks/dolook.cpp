@@ -18,16 +18,7 @@
 
 using namespace Botan;
 
-Filter* lookup_block(const std::string&, const std::string&);
-Filter* lookup_cipher(const std::string&, const std::string&,
-                    const std::string&, bool);
-Filter* lookup_hash(const std::string&);
-Filter* lookup_mac(const std::string&, const std::string&);
-Filter* lookup_rng(const std::string&, const std::string&);
-Filter* lookup_encoder(const std::string&);
-Filter* lookup_s2k(const std::string&, const std::vector<std::string>&);
-Filter* lookup_kdf(const std::string&, const std::string&,
-                   const std::string&);
+#include "common.h"
 
 Filter* lookup(const std::string& algname,
                const std::vector<std::string>& params,

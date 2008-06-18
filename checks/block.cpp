@@ -13,6 +13,8 @@
 #include <botan/lookup.h>
 using namespace Botan;
 
+#include "common.h"
+
 class ECB_Encryption_ErrorCheck : public Filter
    {
    public:

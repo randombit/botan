@@ -6,6 +6,8 @@
 #include <botan/hex.h>
 using namespace Botan;
 
+#include "common.h"
+
 void strip_comments(std::string& line)
    {
    if(line.find('#') != std::string::npos)
