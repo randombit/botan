@@ -27,7 +27,7 @@ class BOTAN_DLL EntropySource
 class BOTAN_DLL RandomNumberGenerator
    {
    public:
-      virtual void randomize(byte[], u32bit) throw(PRNG_Unseeded) = 0;
+      virtual void randomize(byte[], u32bit) = 0;
       virtual bool is_seeded() const = 0;
       virtual void clear() throw() {};
 
