@@ -13,6 +13,8 @@ using namespace Botan;
 #include <iostream>
 #include <memory>
 
+#include "validate.h"
+
 X509_Cert_Options ca_opts();
 X509_Cert_Options req_opts1();
 X509_Cert_Options req_opts2();

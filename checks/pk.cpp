@@ -22,6 +22,7 @@
 using namespace Botan;
 
 #include "common.h"
+#include "validate.h"
 
 static BigInt to_bigint(const std::string& h)
    {
@@ -31,141 +32,7 @@ static BigInt to_bigint(const std::string& h)
 
 #define DEBUG 0
 
-void do_pk_keygen_tests();
-extern void do_x509_tests();
-
-u32bit validate_dsa_sig(const std::string&, const std::vector<std::string>&);
-u32bit validate_dsa_ver(const std::string&, const std::vector<std::string>&);
-
-u32bit validate_rsa_enc(const std::string&, const std::vector<std::string>&);
-u32bit validate_rsa_enc_pkcs8(const std::string&,
-                              const std::vector<std::string>&);
-u32bit validate_rsa_sig(const std::string&, const std::vector<std::string>&);
-u32bit validate_rsa_ver(const std::string&, const std::vector<std::string>&);
-u32bit validate_rsa_ver_x509(const std::string&,
-                             const std::vector<std::string>&);
-u32bit validate_rw_ver(const std::string&, const std::vector<std::string>&);
-u32bit validate_rw_sig(const std::string&, const std::vector<std::string>&);
-u32bit validate_nr_sig(const std::string&, const std::vector<std::string>&);
-u32bit validate_elg_enc(const std::string&, const std::vector<std::string>&);
-u32bit validate_dh(const std::string&, const std::vector<std::string>&);
-u32bit validate_dlies(const std::string&, const std::vector<std::string>&);
-
-u32bit do_pk_validation_tests(const std::string& filename)
-   {
-   std::ifstream test_data(filename.c_str());
-
-   if(!test_data)
-      throw Botan::Stream_IO_Error("Couldn't open test file " + filename);
-
-   u32bit errors = 0, alg_count = 0;
-   std::string algorithm, print_algorithm;
-
-   while(!test_data.eof())
-      {
-      if(test_data.bad() || test_data.fail())
-         throw Botan::Stream_IO_Error("File I/O error reading from " +
-                                      filename);
-
-      std::string line;
-      std::getline(test_data, line);
-
-      strip_comments(line);
-      if(line.size() == 0) continue;
-
-      // Do line continuation
-      while(line[line.size()-1] == '\\' && !test_data.eof())
-         {
-         line.replace(line.size()-1, 1, "");
-         std::string nextline;
-         std::getline(test_data, nextline);
-         strip_comments(nextline);
-         if(nextline.size() == 0) continue;
-         line.push_back('\n');
-         line += nextline;
-         }
-
-      if(line[0] == '[' && line[line.size() - 1] == ']')
-         {
-         std::string old_algo = print_algorithm;
-         algorithm = line.substr(1, line.size() - 2);
-         print_algorithm = algorithm;
-         if(print_algorithm.find("_PKCS8") != std::string::npos)
-            print_algorithm.replace(print_algorithm.find("_PKCS8"), 6, "");
-         if(print_algorithm.find("_X509") != std::string::npos)
-            print_algorithm.replace(print_algorithm.find("_X509"), 5, "");
-         if(print_algorithm.find("_VA") != std::string::npos)
-            print_algorithm.replace(print_algorithm.find("_VA"), 3, "");
-
-         if(old_algo != print_algorithm && old_algo != "")
-            {
-            std::cout << std::endl;
-            alg_count = 0;
-            }
-
-         if(old_algo != print_algorithm)
-            std::cout << "Testing " << print_algorithm << ": ";
-         continue;
-         }
-
-      std::cout << '.';
-      std::cout.flush();
-
-      std::vector<std::string> substr = parse(line);
-
-#if DEBUG
-      std::cout << "Testing: " << print_algorithm << std::endl;
-#endif
-
-      u32bit new_errors = 0;
-
-      if(algorithm.find("DSA/") != std::string::npos)
-         new_errors = validate_dsa_sig(algorithm, substr);
-      else if(algorithm.find("DSA_VA/") != std::string::npos)
-         new_errors = validate_dsa_ver(algorithm, substr);
-
-      else if(algorithm.find("RSAES_PKCS8/") != std::string::npos)
-         new_errors = validate_rsa_enc_pkcs8(algorithm, substr);
-      else if(algorithm.find("RSAVA_X509/") != std::string::npos)
-         new_errors = validate_rsa_ver_x509(algorithm, substr);
-
-      else if(algorithm.find("RSAES/") != std::string::npos)
-         new_errors = validate_rsa_enc(algorithm, substr);
-      else if(algorithm.find("RSASSA/") != std::string::npos)
-         new_errors = validate_rsa_sig(algorithm, substr);
-      else if(algorithm.find("RSAVA/") != std::string::npos)
-         new_errors = validate_rsa_ver(algorithm, substr);
-      else if(algorithm.find("RWVA/") != std::string::npos)
-         new_errors = validate_rw_ver(algorithm, substr);
-      else if(algorithm.find("RW/") != std::string::npos)
-         new_errors = validate_rw_sig(algorithm, substr);
-      else if(algorithm.find("NR/") != std::string::npos)
-         new_errors = validate_nr_sig(algorithm, substr);
-      else if(algorithm.find("ElGamal/") != std::string::npos)
-         new_errors = validate_elg_enc(algorithm, substr);
-      else if(algorithm.find("DH/") != std::string::npos)
-         new_errors = validate_dh(algorithm, substr);
-      else if(algorithm.find("DLIES/") != std::string::npos)
-         new_errors = validate_dlies(algorithm, substr);
-      else
-         std::cout << "WARNING: Unknown PK algorithm "
-                   << algorithm << std::endl;
-
-      alg_count++;
-      errors += new_errors;
-
-      if(new_errors)
-         std::cout << "ERROR: \"" << algorithm << "\" failed test #"
-                   << std::dec << alg_count << std::endl;
-      }
-
-   std::cout << std::endl;
-
-   do_pk_keygen_tests();
-   do_x509_tests();
-
-   return errors;
-   }
+namespace {
 
 void dump_data(const SecureVector<byte>& out,
                const SecureVector<byte>& expected)
@@ -661,3 +528,122 @@ void do_pk_keygen_tests()
 
    std::cout << std::endl;
    }
+
+}
+
+u32bit do_pk_validation_tests(const std::string& filename)
+   {
+   std::ifstream test_data(filename.c_str());
+
+   if(!test_data)
+      throw Botan::Stream_IO_Error("Couldn't open test file " + filename);
+
+   u32bit errors = 0, alg_count = 0;
+   std::string algorithm, print_algorithm;
+
+   while(!test_data.eof())
+      {
+      if(test_data.bad() || test_data.fail())
+         throw Botan::Stream_IO_Error("File I/O error reading from " +
+                                      filename);
+
+      std::string line;
+      std::getline(test_data, line);
+
+      strip_comments(line);
+      if(line.size() == 0) continue;
+
+      // Do line continuation
+      while(line[line.size()-1] == '\\' && !test_data.eof())
+         {
+         line.replace(line.size()-1, 1, "");
+         std::string nextline;
+         std::getline(test_data, nextline);
+         strip_comments(nextline);
+         if(nextline.size() == 0) continue;
+         line.push_back('\n');
+         line += nextline;
+         }
+
+      if(line[0] == '[' && line[line.size() - 1] == ']')
+         {
+         std::string old_algo = print_algorithm;
+         algorithm = line.substr(1, line.size() - 2);
+         print_algorithm = algorithm;
+         if(print_algorithm.find("_PKCS8") != std::string::npos)
+            print_algorithm.replace(print_algorithm.find("_PKCS8"), 6, "");
+         if(print_algorithm.find("_X509") != std::string::npos)
+            print_algorithm.replace(print_algorithm.find("_X509"), 5, "");
+         if(print_algorithm.find("_VA") != std::string::npos)
+            print_algorithm.replace(print_algorithm.find("_VA"), 3, "");
+
+         if(old_algo != print_algorithm && old_algo != "")
+            {
+            std::cout << std::endl;
+            alg_count = 0;
+            }
+
+         if(old_algo != print_algorithm)
+            std::cout << "Testing " << print_algorithm << ": ";
+         continue;
+         }
+
+      std::cout << '.';
+      std::cout.flush();
+
+      std::vector<std::string> substr = parse(line);
+
+#if DEBUG
+      std::cout << "Testing: " << print_algorithm << std::endl;
+#endif
+
+      u32bit new_errors = 0;
+
+      if(algorithm.find("DSA/") != std::string::npos)
+         new_errors = validate_dsa_sig(algorithm, substr);
+      else if(algorithm.find("DSA_VA/") != std::string::npos)
+         new_errors = validate_dsa_ver(algorithm, substr);
+
+      else if(algorithm.find("RSAES_PKCS8/") != std::string::npos)
+         new_errors = validate_rsa_enc_pkcs8(algorithm, substr);
+      else if(algorithm.find("RSAVA_X509/") != std::string::npos)
+         new_errors = validate_rsa_ver_x509(algorithm, substr);
+
+      else if(algorithm.find("RSAES/") != std::string::npos)
+         new_errors = validate_rsa_enc(algorithm, substr);
+      else if(algorithm.find("RSASSA/") != std::string::npos)
+         new_errors = validate_rsa_sig(algorithm, substr);
+      else if(algorithm.find("RSAVA/") != std::string::npos)
+         new_errors = validate_rsa_ver(algorithm, substr);
+      else if(algorithm.find("RWVA/") != std::string::npos)
+         new_errors = validate_rw_ver(algorithm, substr);
+      else if(algorithm.find("RW/") != std::string::npos)
+         new_errors = validate_rw_sig(algorithm, substr);
+      else if(algorithm.find("NR/") != std::string::npos)
+         new_errors = validate_nr_sig(algorithm, substr);
+      else if(algorithm.find("ElGamal/") != std::string::npos)
+         new_errors = validate_elg_enc(algorithm, substr);
+      else if(algorithm.find("DH/") != std::string::npos)
+         new_errors = validate_dh(algorithm, substr);
+      else if(algorithm.find("DLIES/") != std::string::npos)
+         new_errors = validate_dlies(algorithm, substr);
+      else
+         std::cout << "WARNING: Unknown PK algorithm "
+                   << algorithm << std::endl;
+
+      alg_count++;
+      errors += new_errors;
+
+      if(new_errors)
+         std::cout << "ERROR: \"" << algorithm << "\" failed test #"
+                   << std::dec << alg_count << std::endl;
+      }
+
+   std::cout << std::endl;
+
+   do_pk_keygen_tests();
+   do_x509_tests();
+
+   return errors;
+   }
+

@@ -13,6 +13,7 @@
 using namespace Botan;
 
 #include "common.h"
+#include "bench.h"
 
 #include <iostream>
 #include <fstream>
@@ -177,6 +178,8 @@ void bench_pk(const std::string& algo, bool html, double seconds)
       }
    }
 
+namespace {
+
 void print_result(bool html, u32bit runs, u64bit clocks_used,
                   const std::string& algo_name, const std::string& op)
    {
@@ -208,6 +211,8 @@ void print_result(bool html, u32bit runs, u64bit clocks_used,
          std::cout << runs_per_sec << " ops / second (" << op << ")\n";
       }
    }
+
+}
 
 void bench_enc(PK_Encryptor* enc, const std::string& algo_name,
                double seconds, bool html)
