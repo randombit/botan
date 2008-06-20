@@ -7,6 +7,7 @@
 #include <botan/numthry.h>
 #include <botan/keypair.h>
 #include <botan/parsing.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -17,7 +18,7 @@ RSA_PublicKey::RSA_PublicKey(const BigInt& mod, const BigInt& exp)
    {
    n = mod;
    e = exp;
-   X509_load_hook();
+   X509_load_hook(global_state().prng_reference());
    }
 
 /*************************************************
@@ -52,8 +53,7 @@ SecureVector<byte> RSA_PublicKey::verify(const byte in[], u32bit len) const
 /*************************************************
 * Create a RSA private key                       *
 *************************************************/
-RSA_PrivateKey::RSA_PrivateKey(u32bit bits,
-                               RandomNumberGenerator& rng,
+RSA_PrivateKey::RSA_PrivateKey(u32bit bits, RandomNumberGenerator& rng,
                                u32bit exp)
    {
    if(bits < 1024)
@@ -67,7 +67,7 @@ RSA_PrivateKey::RSA_PrivateKey(u32bit bits,
    q = random_prime(rng, bits - p.bits(), e);
    d = inverse_mod(e, lcm(p - 1, q - 1));
 
-   PKCS8_load_hook(true);
+   PKCS8_load_hook(rng, true);
 
    if(n.bits() != bits)
       throw Self_Test_Failure(algo_name() + " private key generation failed");
@@ -89,7 +89,7 @@ RSA_PrivateKey::RSA_PrivateKey(const BigInt& prime1, const BigInt& prime2,
    if(d == 0)
       d = inverse_mod(e, lcm(p - 1, q - 1));
 
-   PKCS8_load_hook();
+   PKCS8_load_hook(global_state().prng_reference());
    }
 
 /*************************************************

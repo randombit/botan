@@ -62,15 +62,17 @@ X509_Decoder* IF_Scheme_PublicKey::x509_decoder()
                .verify_end()
                .end_cons();
 
-            key->X509_load_hook();
+            key->X509_load_hook(rng);
             }
 
-         IF_Scheme_Decoder(IF_Scheme_PublicKey* k) : key(k) {}
+         IF_Scheme_Decoder(IF_Scheme_PublicKey* k, RandomNumberGenerator& r) :
+            key(k), rng(r) {}
       private:
          IF_Scheme_PublicKey* key;
+         RandomNumberGenerator& rng;
       };
 
-   return new IF_Scheme_Decoder(this);
+   return new IF_Scheme_Decoder(this, global_state().prng_reference());
    }
 
 /*************************************************
@@ -142,43 +144,45 @@ PKCS8_Decoder* IF_Scheme_PrivateKey::pkcs8_decoder()
             if(version != 0)
                throw Decoding_Error("Unknown PKCS #1 key format version");
 
-            key->PKCS8_load_hook();
+            key->PKCS8_load_hook(rng);
             }
 
-         IF_Scheme_Decoder(IF_Scheme_PrivateKey* k) : key(k) {}
+         IF_Scheme_Decoder(IF_Scheme_PrivateKey* k, RandomNumberGenerator& r) :
+            key(k), rng(r) {}
       private:
          IF_Scheme_PrivateKey* key;
+         RandomNumberGenerator& rng;
       };
 
-   return new IF_Scheme_Decoder(this);
+   return new IF_Scheme_Decoder(this, global_state().prng_reference());
    }
 
 /*************************************************
 * Algorithm Specific X.509 Initialization Code   *
 *************************************************/
-void IF_Scheme_PublicKey::X509_load_hook()
+void IF_Scheme_PublicKey::X509_load_hook(RandomNumberGenerator& rng)
    {
-   core = IF_Core(global_state().prng_reference(), e, n);
-   load_check(global_state().prng_reference());
+   core = IF_Core(rng, e, n);
+   load_check(rng);
    }
 
 /*************************************************
 * Algorithm Specific PKCS #8 Initialization Code *
 *************************************************/
-void IF_Scheme_PrivateKey::PKCS8_load_hook(bool generated)
+void IF_Scheme_PrivateKey::PKCS8_load_hook(RandomNumberGenerator& rng,
+                                           bool generated)
    {
    if(n == 0)  n = p * q;
    if(d1 == 0) d1 = d % (p - 1);
    if(d2 == 0) d2 = d % (q - 1);
    if(c == 0)  c = inverse_mod(q, p);
 
-   core = IF_Core(global_state().prng_reference(),
-                  e, n, d, p, q, d1, d2, c);
+   core = IF_Core(rng, e, n, d, p, q, d1, d2, c);
 
    if(generated)
-      gen_check(global_state().prng_reference());
+      gen_check(rng);
    else
-      load_check(global_state().prng_reference());
+      load_check(rng);
    }
 
 /*************************************************

@@ -28,7 +28,7 @@ class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
       X509_Encoder* x509_encoder() const;
       X509_Decoder* x509_decoder();
    protected:
-      virtual void X509_load_hook();
+      virtual void X509_load_hook(RandomNumberGenerator&);
       BigInt n, e;
       IF_Core core;
    };
@@ -49,7 +49,7 @@ class BOTAN_DLL IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
       PKCS8_Encoder* pkcs8_encoder() const;
       PKCS8_Decoder* pkcs8_decoder();
    protected:
-      virtual void PKCS8_load_hook(bool = false);
+      virtual void PKCS8_load_hook(RandomNumberGenerator&, bool = false);
       BigInt d, p, q, d1, d2, c;
    };
 
