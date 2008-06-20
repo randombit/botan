@@ -9,6 +9,7 @@
 #include <botan/dl_group.h>
 #include <botan/x509_key.h>
 #include <botan/pkcs8.h>
+#include <botan/rng.h>
 
 namespace Botan {
 
@@ -33,7 +34,7 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
       BigInt y;
       DL_Group group;
    private:
-      virtual void X509_load_hook() {}
+      virtual void X509_load_hook(RandomNumberGenerator&) {}
    };
 
 /*************************************************
@@ -52,7 +53,7 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
    protected:
       BigInt x;
    private:
-      virtual void PKCS8_load_hook(bool = false) {}
+      virtual void PKCS8_load_hook(RandomNumberGenerator&, bool = false) {}
    };
 
 }

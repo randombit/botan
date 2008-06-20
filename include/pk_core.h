@@ -88,7 +88,9 @@ class BOTAN_DLL ELG_Core
 
       ELG_Core() { op = 0; }
       ELG_Core(const ELG_Core&);
-      ELG_Core(const DL_Group&, const BigInt&, const BigInt& = 0);
+      ELG_Core(RandomNumberGenerator&, const DL_Group&,
+               const BigInt&, const BigInt& = 0);
+
       ~ELG_Core() { delete op; }
    private:
       ELG_Operation* op;
@@ -108,7 +110,8 @@ class BOTAN_DLL DH_Core
 
       DH_Core() { op = 0; }
       DH_Core(const DH_Core&);
-      DH_Core(const DL_Group&, const BigInt&);
+      DH_Core(RandomNumberGenerator& rng,
+              const DL_Group&, const BigInt&);
       ~DH_Core() { delete op; }
    private:
       DH_Operation* op;

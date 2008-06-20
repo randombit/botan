@@ -32,7 +32,7 @@ class BOTAN_DLL DSA_PublicKey : public PK_Verifying_wo_MR_Key,
    protected:
       DSA_Core core;
    private:
-      void X509_load_hook();
+      void X509_load_hook(RandomNumberGenerator&);
    };
 
 /*************************************************
@@ -52,7 +52,7 @@ class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
       DSA_PrivateKey(const DL_Group&, RandomNumberGenerator& rng);
       DSA_PrivateKey(const DL_Group&, const BigInt&, const BigInt& = 0);
    private:
-      void PKCS8_load_hook(bool = false);
+      void PKCS8_load_hook(RandomNumberGenerator& rng, bool = false);
    };
 
 }

@@ -8,7 +8,6 @@
 #include <botan/engine.h>
 #include <botan/config.h>
 #include <botan/parsing.h>
-#include <botan/libstate.h>
 #include <algorithm>
 
 namespace Botan {
@@ -173,7 +172,8 @@ SecureVector<byte> NR_Core::sign(const byte in[], u32bit length,
 /*************************************************
 * ELG_Core Constructor                           *
 *************************************************/
-ELG_Core::ELG_Core(const DL_Group& group, const BigInt& y, const BigInt& x)
+ELG_Core::ELG_Core(RandomNumberGenerator& rng,
+                   const DL_Group& group, const BigInt& y, const BigInt& x)
    {
    op = Engine_Core::elg_op(group, y, x);
 
@@ -183,8 +183,7 @@ ELG_Core::ELG_Core(const DL_Group& group, const BigInt& y, const BigInt& x)
       const BigInt& p = group.get_p();
       p_bytes = p.bytes();
 
-      BigInt k(global_state().prng_reference(),
-               std::min(p.bits()-1, BLINDING_BITS));
+      BigInt k(rng, std::min(p.bits()-1, BLINDING_BITS));
 
       if(k != 0)
          blinder = Blinder(k, power_mod(k, x, p), p);
@@ -242,14 +241,14 @@ SecureVector<byte> ELG_Core::decrypt(const byte in[], u32bit length) const
 /*************************************************
 * DH_Core Constructor                            *
 *************************************************/
-DH_Core::DH_Core(const DL_Group& group, const BigInt& x)
+DH_Core::DH_Core(RandomNumberGenerator& rng,
+                 const DL_Group& group, const BigInt& x)
    {
    op = Engine_Core::dh_op(group, x);
 
    const BigInt& p = group.get_p();
 
-   BigInt k(global_state().prng_reference(),
-            std::min(p.bits()-1, BLINDING_BITS));
+   BigInt k(rng, std::min(p.bits()-1, BLINDING_BITS));
 
    if(k != 0)
       blinder = Blinder(k, power_mod(inverse_mod(k, p), x, p), p);

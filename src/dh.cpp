@@ -17,15 +17,15 @@ DH_PublicKey::DH_PublicKey(const DL_Group& grp, const BigInt& y1)
    {
    group = grp;
    y = y1;
-   X509_load_hook();
+   X509_load_hook(global_state().prng_reference());
    }
 
 /*************************************************
 * Algorithm Specific X.509 Initialization Code   *
 *************************************************/
-void DH_PublicKey::X509_load_hook()
+void DH_PublicKey::X509_load_hook(RandomNumberGenerator& rng)
    {
-   load_check(global_state().prng_reference());
+   load_check(rng);
    }
 
 /*************************************************
@@ -55,7 +55,7 @@ DH_PrivateKey::DH_PrivateKey(const DL_Group& grp,
    const BigInt& p = group_p();
    x.randomize(rng, 2 * dl_work_factor(p.bits()));
 
-   PKCS8_load_hook(true);
+   PKCS8_load_hook(rng, true);
    }
 
 /*************************************************
@@ -68,22 +68,23 @@ DH_PrivateKey::DH_PrivateKey(const DL_Group& grp, const BigInt& x1,
    y = y1;
    x = x1;
 
-   PKCS8_load_hook();
+   PKCS8_load_hook(global_state().prng_reference());
    }
 
 /*************************************************
 * Algorithm Specific PKCS #8 Initialization Code *
 *************************************************/
-void DH_PrivateKey::PKCS8_load_hook(bool generated)
+void DH_PrivateKey::PKCS8_load_hook(RandomNumberGenerator& rng,
+                                    bool generated)
    {
    if(y == 0)
       y = power_mod(group_g(), x, group_p());
-   core = DH_Core(group, x);
+   core = DH_Core(rng, group, x);
 
    if(generated)
-      gen_check(global_state().prng_reference());
+      gen_check(rng);
    else
-      load_check(global_state().prng_reference());
+      load_check(rng);
    }
 
 /*************************************************

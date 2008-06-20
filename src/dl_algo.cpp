@@ -7,6 +7,7 @@
 #include <botan/numthry.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -56,7 +57,7 @@ X509_Decoder* DL_Scheme_PublicKey::x509_decoder()
          void key_bits(const MemoryRegion<byte>& bits)
             {
             BER_Decoder(bits).decode(key->y);
-            key->X509_load_hook();
+            key->X509_load_hook(global_state().prng_reference());
             }
 
          DL_Scheme_Decoder(DL_Scheme_PublicKey* k) : key(k) {}
@@ -113,7 +114,7 @@ PKCS8_Decoder* DL_Scheme_PrivateKey::pkcs8_decoder()
          void key_bits(const MemoryRegion<byte>& bits)
             {
             BER_Decoder(bits).decode(key->x);
-            key->PKCS8_load_hook();
+            key->PKCS8_load_hook(global_state().prng_reference());
             }
 
          DL_Scheme_Decoder(DL_Scheme_PrivateKey* k) : key(k) {}
