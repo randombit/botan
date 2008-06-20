@@ -427,9 +427,11 @@ u32bit validate_dh(const std::string& algo,
    if(str.size() != 5 && str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
+   RandomNumberGenerator& rng = global_state().prng_reference();
+
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]));
 
-   DH_PrivateKey mykey(domain, to_bigint(str[2]), 0);
+   DH_PrivateKey mykey(rng, domain, to_bigint(str[2]));
    DH_PublicKey otherkey(domain, to_bigint(str[3]));
 
    std::string kdf = algo.substr(3, std::string::npos);
@@ -452,10 +454,12 @@ u32bit validate_dlies(const std::string& algo,
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
+   RandomNumberGenerator& rng = global_state().prng_reference();
+
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]));
 
-   DH_PrivateKey from(domain, to_bigint(str[2]), 0);
-   DH_PrivateKey to(domain, to_bigint(str[3]), 0);
+   DH_PrivateKey from(rng, domain, to_bigint(str[2]));
+   DH_PrivateKey to(rng, domain, to_bigint(str[3]));
 
    const std::string opt_str = algo.substr(6, std::string::npos);
 
@@ -485,31 +489,33 @@ void do_pk_keygen_tests()
    /* Putting each key in a block reduces memory pressure, speeds it up */
 #define IF_SIG_KEY(TYPE, BITS)                                      \
    {                                                                \
-   TYPE key(BITS, global_state().prng_reference());                 \
-   key.check_key(global_state().prng_reference(), true);            \
+   TYPE key(BITS, rng);                 \
+   key.check_key(rng, true);            \
    std::cout << '.' << std::flush;                                  \
    }
 
 #define DL_SIG_KEY(TYPE, GROUP)    \
    {                               \
-   TYPE key(DL_Group(GROUP), global_state().prng_reference());   \
-   key.check_key(global_state().prng_reference(), true);         \
+   TYPE key(DL_Group(GROUP), rng);   \
+   key.check_key(rng, true);         \
    std::cout << '.' << std::flush;                               \
    }
 
 #define DL_ENC_KEY(TYPE, GROUP)    \
    {                               \
-   TYPE key(DL_Group(GROUP), global_state().prng_reference());   \
-   key.check_key(global_state().prng_reference(), true);         \
-   std::cout << '.' << std::flush;                               \
+   TYPE key(DL_Group(GROUP), rng);   \
+   key.check_key(rng, true);         \
+   std::cout << '.' << std::flush;   \
    }
 
 #define DL_KEY(TYPE, GROUP)        \
    {                               \
-   TYPE key(DL_Group(GROUP), global_state().prng_reference());   \
-   key.check_key(global_state().prng_reference(), true);         \
+   TYPE key(rng, DL_Group(GROUP));          \
+   key.check_key(rng, true);         \
    std::cout << '.' << std::flush; \
    }
+
+   RandomNumberGenerator& rng = global_state().prng_reference();
 
    IF_SIG_KEY(RSA_PrivateKey, 1024);
    IF_SIG_KEY(RW_PrivateKey, 1024);

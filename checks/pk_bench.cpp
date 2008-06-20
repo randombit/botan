@@ -108,8 +108,8 @@ void bench_pk(const std::string& algo, bool html, double seconds)
          {
          const std::string len_str = to_string(keylen[j]);
 
-         DH_PrivateKey key("modp/ietf/" + len_str,
-                           global_state().prng_reference());
+         DH_PrivateKey key(global_state().prng_reference(),
+                           "modp/ietf/" + len_str);
 
          bench_kas(get_pk_kas(key, "Raw"), "DH-" + len_str, seconds, html);
          }
