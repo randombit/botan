@@ -49,12 +49,19 @@ namespace PKCS8 {
 * PKCS #8 Private Key Encoding/Decoding          *
 *************************************************/
 BOTAN_DLL void encode(const Private_Key&, Pipe&, X509_Encoding = PEM);
-BOTAN_DLL void encrypt_key(const Private_Key&, Pipe&, const std::string&,
-                           const std::string& = "", X509_Encoding = PEM);
-
 BOTAN_DLL std::string PEM_encode(const Private_Key&);
-BOTAN_DLL std::string PEM_encode(const Private_Key&, const std::string&,
-                                      const std::string& = "");
+
+BOTAN_DLL void encrypt_key(const Private_Key&,
+                           Pipe&,
+                           RandomNumberGenerator&,
+                           const std::string&,
+                           const std::string& = "",
+                           X509_Encoding = PEM);
+
+BOTAN_DLL std::string PEM_encode(const Private_Key&,
+                                 RandomNumberGenerator&,
+                                 const std::string&,
+                                 const std::string& = "");
 
 BOTAN_DLL Private_Key* load_key(DataSource&, RandomNumberGenerator&,
                                 const User_Interface&);

@@ -12,7 +12,6 @@
 #include <botan/oids.h>
 #include <botan/pem.h>
 #include <botan/pbe.h>
-#include <botan/libstate.h>
 #include <memory>
 
 namespace Botan {
@@ -34,7 +33,6 @@ SecureVector<byte> PKCS8_extract(DataSource& source,
          .decode(pbe_alg_id)
          .decode(key_data, OCTET_STRING)
       .verify_end();
-
 
    return key_data;
    }
@@ -162,7 +160,9 @@ void encode(const Private_Key& key, Pipe& pipe, X509_Encoding encoding)
 /*************************************************
 * Encode and encrypt a PKCS #8 private key       *
 *************************************************/
-void encrypt_key(const Private_Key& key, Pipe& pipe,
+void encrypt_key(const Private_Key& key,
+                 Pipe& pipe,
+                 RandomNumberGenerator& rng,
                  const std::string& pass, const std::string& pbe_algo,
                  X509_Encoding encoding)
    {
@@ -174,7 +174,7 @@ void encrypt_key(const Private_Key& key, Pipe& pipe,
    raw_key.end_msg();
 
    PBE* pbe = get_pbe(((pbe_algo != "") ? pbe_algo : DEFAULT_PBE));
-   pbe->new_params(global_state().prng_reference());
+   pbe->new_params(rng);
    pbe->set_key(pass);
 
    Pipe key_encrytor(pbe);
@@ -209,7 +209,9 @@ std::string PEM_encode(const Private_Key& key)
 /*************************************************
 * Encrypt and PEM encode a PKCS #8 private key   *
 *************************************************/
-std::string PEM_encode(const Private_Key& key, const std::string& pass,
+std::string PEM_encode(const Private_Key& key,
+                       RandomNumberGenerator& rng,
+                       const std::string& pass,
                        const std::string& pbe_algo)
    {
    if(pass == "")
@@ -217,7 +219,7 @@ std::string PEM_encode(const Private_Key& key, const std::string& pass,
 
    Pipe pem;
    pem.start_msg();
-   encrypt_key(key, pem, pass, pbe_algo, PEM);
+   encrypt_key(key, pem, rng, pass, pbe_algo, PEM);
    pem.end_msg();
    return pem.read_all_as_string();
    }
