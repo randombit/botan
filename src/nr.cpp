@@ -56,26 +56,20 @@ u32bit NR_PublicKey::message_part_size() const
 /*************************************************
 * Create a NR private key                        *
 *************************************************/
-NR_PrivateKey::NR_PrivateKey(const DL_Group& grp,
-                             RandomNumberGenerator& rng)
+NR_PrivateKey::NR_PrivateKey(RandomNumberGenerator& rng,
+                             const DL_Group& grp,
+                             const BigInt& x_arg)
    {
    group = grp;
-   x = random_integer(rng, 2, group_q() - 1);
+   x = x_arg;
 
-   PKCS8_load_hook(rng, true);
-   }
-
-/*************************************************
-* NR_PrivateKey Constructor                      *
-*************************************************/
-NR_PrivateKey::NR_PrivateKey(const DL_Group& grp, const BigInt& x1,
-                             const BigInt& y1)
-   {
-   group = grp;
-   y = y1;
-   x = x1;
-
-   PKCS8_load_hook(global_state().prng_reference());
+   if(x == 0)
+      {
+      x = random_integer(rng, 2, group_q() - 1);
+      PKCS8_load_hook(rng, true);
+      }
+   else
+      PKCS8_load_hook(rng, false);
    }
 
 /*************************************************

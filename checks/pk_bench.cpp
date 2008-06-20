@@ -55,6 +55,8 @@ void bench_pk(const std::string& algo, bool html, double seconds)
      ad-hoc format (the RW algorithm has no assigned OID that I know of, so
      there is no way to encode a RW key into a PKCS #8 structure).
    */
+   RandomNumberGenerator& rng = global_state().prng_reference();
+
    if(algo == "All" || algo == "RSA")
       {
       const u32bit keylen[] = { 512, 1024, 1536, 2048, 3072, 4096, 0 };
@@ -65,7 +67,7 @@ void bench_pk(const std::string& algo, bool html, double seconds)
          const std::string file = "checks/keys/rsa" + len_str + ".pem";
 
          std::auto_ptr<RSA_PrivateKey> key(
-            dynamic_cast<RSA_PrivateKey*>(PKCS8::load_key(file, global_state().prng_reference()))
+            dynamic_cast<RSA_PrivateKey*>(PKCS8::load_key(file, rng))
             );
 
          if(key.get() == 0)
@@ -88,8 +90,7 @@ void bench_pk(const std::string& algo, bool html, double seconds)
          {
          const std::string len_str = to_string(keylen[j]);
 
-         DSA_PrivateKey key("dsa/jce/" + len_str,
-                            global_state().prng_reference());
+         DSA_PrivateKey key(rng, "dsa/jce/" + len_str);
 
          bench_ver(get_pk_signer(key, "EMSA1(SHA-1)"),
                    get_pk_verifier(key, "EMSA1(SHA-1)"),
@@ -108,7 +109,7 @@ void bench_pk(const std::string& algo, bool html, double seconds)
          {
          const std::string len_str = to_string(keylen[j]);
 
-         DH_PrivateKey key(global_state().prng_reference(),
+         DH_PrivateKey key(rng,
                            "modp/ietf/" + len_str);
 
          bench_kas(get_pk_kas(key, "Raw"), "DH-" + len_str, seconds, html);
@@ -123,8 +124,7 @@ void bench_pk(const std::string& algo, bool html, double seconds)
          {
          const std::string len_str = to_string(keylen[j]);
 
-         ElGamal_PrivateKey key("modp/ietf/" + len_str,
-                                global_state().prng_reference());
+         ElGamal_PrivateKey key(rng, "modp/ietf/" + len_str);
 
          bench_enc(get_pk_encryptor(key, "Raw"),
                    "ELG-" + len_str, seconds, html);
@@ -143,8 +143,7 @@ void bench_pk(const std::string& algo, bool html, double seconds)
          {
          const std::string len_str = to_string(keylen[j]);
 
-         NR_PrivateKey key("dsa/jce/" + len_str,
-                           global_state().prng_reference());
+         NR_PrivateKey key(rng, "dsa/jce/" + len_str);
 
          bench_ver(get_pk_signer(key, "EMSA1(SHA-1)"),
                    get_pk_verifier(key, "EMSA1(SHA-1)"),
@@ -165,7 +164,7 @@ void bench_pk(const std::string& algo, bool html, double seconds)
          const std::string file = "checks/keys/rw" + len_str + ".pem";
 
          RW_PrivateKey* key =
-            dynamic_cast<RW_PrivateKey*>(PKCS8::load_key(file, global_state().prng_reference()));
+            dynamic_cast<RW_PrivateKey*>(PKCS8::load_key(file, rng));
 
          bench_ver(get_pk_signer(*key, "EMSA2(SHA-1)"),
                    get_pk_verifier(*key, "EMSA2(SHA-1)"),

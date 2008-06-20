@@ -52,26 +52,20 @@ u32bit ElGamal_PublicKey::max_input_bits() const
 /*************************************************
 * ElGamal_PrivateKey Constructor                 *
 *************************************************/
-ElGamal_PrivateKey::ElGamal_PrivateKey(const DL_Group& grp,
-                                       RandomNumberGenerator& rng)
+ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng,
+                                       const DL_Group& grp,
+                                       const BigInt& x_arg)
    {
    group = grp;
-   x.randomize(rng, 2 * dl_work_factor(group_p().bits()));
+   x = x_arg;
 
-   PKCS8_load_hook(rng, true);
-   }
-
-/*************************************************
-* ElGamal_PrivateKey Constructor                 *
-*************************************************/
-ElGamal_PrivateKey::ElGamal_PrivateKey(const DL_Group& grp, const BigInt& x1,
-                                       const BigInt& y1)
-   {
-   group = grp;
-   y = y1;
-   x = x1;
-
-   PKCS8_load_hook(global_state().prng_reference());
+   if(x == 0)
+      {
+      x.randomize(rng, 2 * dl_work_factor(group_p().bits()));
+      PKCS8_load_hook(rng, true);
+      }
+   else
+      PKCS8_load_hook(rng, false);
    }
 
 /*************************************************

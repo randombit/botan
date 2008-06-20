@@ -198,8 +198,10 @@ u32bit validate_elg_enc(const std::string& algo,
    if(str.size() != 6 && str.size() != 7)
       throw Exception("Invalid input from pk_valid.dat");
 
+   RandomNumberGenerator& rng = global_state().prng_reference();
+
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]));
-   ElGamal_PrivateKey privkey(domain, to_bigint(str[2]), to_bigint(str[3]));
+   ElGamal_PrivateKey privkey(rng, domain, to_bigint(str[2]));
    ElGamal_PublicKey pubkey = privkey;
 
    std::string eme = algo.substr(8, std::string::npos);
@@ -407,8 +409,10 @@ u32bit validate_nr_sig(const std::string& algo,
    if(str.size() != 8)
       throw Exception("Invalid input from pk_valid.dat");
 
+   RandomNumberGenerator& rng = global_state().prng_reference();
+
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]), to_bigint(str[2]));
-   NR_PrivateKey privkey(domain, to_bigint(str[4]), to_bigint(str[3]));
+   NR_PrivateKey privkey(rng, domain, to_bigint(str[4]));
    NR_PublicKey pubkey = privkey;
 
    std::string emsa = algo.substr(3, std::string::npos);
@@ -496,14 +500,14 @@ void do_pk_keygen_tests()
 
 #define DL_SIG_KEY(TYPE, GROUP)    \
    {                               \
-   TYPE key(DL_Group(GROUP), rng);   \
+   TYPE key(rng, DL_Group(GROUP));    \
    key.check_key(rng, true);         \
    std::cout << '.' << std::flush;                               \
    }
 
 #define DL_ENC_KEY(TYPE, GROUP)    \
    {                               \
-   TYPE key(DL_Group(GROUP), rng);   \
+   TYPE key(rng, DL_Group(GROUP));   \
    key.check_key(rng, true);         \
    std::cout << '.' << std::flush;   \
    }

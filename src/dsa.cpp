@@ -57,26 +57,20 @@ u32bit DSA_PublicKey::message_part_size() const
 /*************************************************
 * Create a DSA private key                       *
 *************************************************/
-DSA_PrivateKey::DSA_PrivateKey(const DL_Group& grp,
-                               RandomNumberGenerator& rng)
+DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng,
+                               const DL_Group& grp,
+                               const BigInt& x_arg)
    {
    group = grp;
-   x = random_integer(rng, 2, group_q() - 1);
+   x = x_arg;
 
-   PKCS8_load_hook(rng, true);
-   }
-
-/*************************************************
-* DSA_PrivateKey Constructor                     *
-*************************************************/
-DSA_PrivateKey::DSA_PrivateKey(const DL_Group& grp, const BigInt& x1,
-                               const BigInt& y1)
-   {
-   group = grp;
-   y = y1;
-   x = x1;
-
-   PKCS8_load_hook(global_state().prng_reference());
+   if(x == 0)
+      {
+      x = random_integer(rng, 2, group_q() - 1);
+      PKCS8_load_hook(rng, true);
+      }
+   else
+      PKCS8_load_hook(rng, false);
    }
 
 /*************************************************
@@ -85,8 +79,7 @@ DSA_PrivateKey::DSA_PrivateKey(const DL_Group& grp, const BigInt& x1,
 void DSA_PrivateKey::PKCS8_load_hook(RandomNumberGenerator& rng,
                                      bool generated)
    {
-   if(y == 0)
-      y = power_mod(group_g(), x, group_p());
+   y = power_mod(group_g(), x, group_p());
    core = DSA_Core(group, y, x);
 
    if(generated)
