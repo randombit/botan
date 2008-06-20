@@ -43,7 +43,7 @@ X509_Encoder* DL_Scheme_PublicKey::x509_encoder() const
 /*************************************************
 * Return the X.509 public key decoder            *
 *************************************************/
-X509_Decoder* DL_Scheme_PublicKey::x509_decoder()
+X509_Decoder* DL_Scheme_PublicKey::x509_decoder(RandomNumberGenerator& rng)
    {
    class DL_Scheme_Decoder : public X509_Decoder
       {
@@ -68,7 +68,7 @@ X509_Decoder* DL_Scheme_PublicKey::x509_decoder()
          RandomNumberGenerator& rng;
       };
 
-   return new DL_Scheme_Decoder(this, global_state().prng_reference());
+   return new DL_Scheme_Decoder(this, rng);
    }
 
 /*************************************************
@@ -103,7 +103,7 @@ PKCS8_Encoder* DL_Scheme_PrivateKey::pkcs8_encoder() const
 /*************************************************
 * Return the PKCS #8 private key decoder         *
 *************************************************/
-PKCS8_Decoder* DL_Scheme_PrivateKey::pkcs8_decoder()
+PKCS8_Decoder* DL_Scheme_PrivateKey::pkcs8_decoder(RandomNumberGenerator& rng)
    {
    class DL_Scheme_Decoder : public PKCS8_Decoder
       {
@@ -120,15 +120,14 @@ PKCS8_Decoder* DL_Scheme_PrivateKey::pkcs8_decoder()
             key->PKCS8_load_hook(rng);
             }
 
-         DL_Scheme_Decoder(DL_Scheme_PrivateKey* k,
-                           RandomNumberGenerator& r) :
+         DL_Scheme_Decoder(DL_Scheme_PrivateKey* k, RandomNumberGenerator& r) :
             key(k), rng(r) {}
       private:
          DL_Scheme_PrivateKey* key;
          RandomNumberGenerator& rng;
       };
 
-   return new DL_Scheme_Decoder(this, global_state().prng_reference());
+   return new DL_Scheme_Decoder(this, rng);
    }
 
 /*************************************************

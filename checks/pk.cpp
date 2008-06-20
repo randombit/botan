@@ -151,7 +151,9 @@ u32bit validate_rsa_enc_pkcs8(const std::string& algo,
    DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
                                str[0].length());
 
-   Private_Key* privkey = PKCS8::load_key(keysource, pass);
+   Private_Key* privkey = PKCS8::load_key(keysource,
+                                          global_state().prng_reference(),
+                                          pass);
 
    RSA_PrivateKey* rsapriv = dynamic_cast<RSA_PrivateKey*>(privkey);
    if(!rsapriv)
@@ -346,7 +348,9 @@ u32bit validate_dsa_sig(const std::string& algo,
    DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
                                str[0].length());
 
-   Private_Key* privkey = PKCS8::load_key(keysource, pass);
+   Private_Key* privkey = PKCS8::load_key(keysource,
+                                          global_state().prng_reference(),
+                                          pass);
 
    DSA_PrivateKey* dsapriv = dynamic_cast<DSA_PrivateKey*>(privkey);
    if(!dsapriv)

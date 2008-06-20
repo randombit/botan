@@ -6,9 +6,9 @@
 #ifndef BOTAN_PK_KEYS_H__
 #define BOTAN_PK_KEYS_H__
 
-#include <botan/rng.h>
 #include <botan/secmem.h>
 #include <botan/asn1_oid.h>
+#include <botan/rng.h>
 
 namespace Botan {
 
@@ -28,8 +28,10 @@ class BOTAN_DLL Public_Key
       virtual u32bit message_part_size() const { return 0; }
       virtual u32bit max_input_bits() const = 0;
 
-      virtual class X509_Encoder* x509_encoder() const { return 0; }
-      virtual class X509_Decoder* x509_decoder() { return 0; }
+      virtual class X509_Encoder* x509_encoder() const
+         { return 0; }
+      virtual class X509_Decoder* x509_decoder(RandomNumberGenerator&)
+         { return 0; }
 
       virtual ~Public_Key() {}
    protected:
@@ -42,8 +44,10 @@ class BOTAN_DLL Public_Key
 class BOTAN_DLL Private_Key : public virtual Public_Key
    {
    public:
-      virtual class PKCS8_Encoder* pkcs8_encoder() const { return 0; }
-      virtual class PKCS8_Decoder* pkcs8_decoder() { return 0; }
+      virtual class PKCS8_Encoder* pkcs8_encoder() const
+         { return 0; }
+      virtual class PKCS8_Decoder* pkcs8_decoder(RandomNumberGenerator&)
+         { return 0; }
    protected:
       void load_check(RandomNumberGenerator&) const;
       void gen_check(RandomNumberGenerator&) const;

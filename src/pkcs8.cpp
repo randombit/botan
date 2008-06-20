@@ -12,6 +12,7 @@
 #include <botan/oids.h>
 #include <botan/pem.h>
 #include <botan/pbe.h>
+#include <botan/libstate.h>
 #include <memory>
 
 namespace Botan {
@@ -173,6 +174,7 @@ void encrypt_key(const Private_Key& key, Pipe& pipe,
    raw_key.end_msg();
 
    PBE* pbe = get_pbe(((pbe_algo != "") ? pbe_algo : DEFAULT_PBE));
+   pbe->new_params(global_state().prng_reference());
    pbe->set_key(pass);
 
    Pipe key_encrytor(pbe);
@@ -223,7 +225,9 @@ std::string PEM_encode(const Private_Key& key, const std::string& pass,
 /*************************************************
 * Extract a private key and return it            *
 *************************************************/
-Private_Key* load_key(DataSource& source, const User_Interface& ui)
+Private_Key* load_key(DataSource& source,
+                      RandomNumberGenerator& rng,
+                      const User_Interface& ui)
    {
    AlgorithmIdentifier alg_id;
    SecureVector<byte> pkcs8_key = PKCS8_decode(source, ui, alg_id);
@@ -239,7 +243,8 @@ Private_Key* load_key(DataSource& source, const User_Interface& ui)
       throw PKCS8_Exception("Unknown PK algorithm/OID: " + alg_name + ", " +
                            alg_id.oid.as_string());
 
-   std::auto_ptr<PKCS8_Decoder> decoder(key->pkcs8_decoder());
+   std::auto_ptr<PKCS8_Decoder> decoder(key->pkcs8_decoder(rng));
+
    if(!decoder.get())
       throw Decoding_Error("Key does not support PKCS #8 decoding");
 
@@ -252,32 +257,39 @@ Private_Key* load_key(DataSource& source, const User_Interface& ui)
 /*************************************************
 * Extract a private key and return it            *
 *************************************************/
-Private_Key* load_key(const std::string& fsname, const User_Interface& ui)
+Private_Key* load_key(const std::string& fsname,
+                      RandomNumberGenerator& rng,
+                      const User_Interface& ui)
    {
    DataSource_Stream source(fsname, true);
-   return PKCS8::load_key(source, ui);
+   return PKCS8::load_key(source, rng, ui);
    }
 
 /*************************************************
 * Extract a private key and return it            *
 *************************************************/
-Private_Key* load_key(DataSource& source, const std::string& pass)
+Private_Key* load_key(DataSource& source,
+                      RandomNumberGenerator& rng,
+                      const std::string& pass)
    {
-   return PKCS8::load_key(source, User_Interface(pass));
+   return PKCS8::load_key(source, rng, User_Interface(pass));
    }
 
 /*************************************************
 * Extract a private key and return it            *
 *************************************************/
-Private_Key* load_key(const std::string& fsname, const std::string& pass)
+Private_Key* load_key(const std::string& fsname,
+                      RandomNumberGenerator& rng,
+                      const std::string& pass)
    {
-   return PKCS8::load_key(fsname, User_Interface(pass));
+   return PKCS8::load_key(fsname, rng, User_Interface(pass));
    }
 
 /*************************************************
 * Make a copy of this private key                *
 *************************************************/
-Private_Key* copy_key(const Private_Key& key)
+Private_Key* copy_key(const Private_Key& key,
+                      RandomNumberGenerator& rng)
    {
    Pipe bits;
 
@@ -286,7 +298,7 @@ Private_Key* copy_key(const Private_Key& key)
    bits.end_msg();
 
    DataSource_Memory source(bits.read_all());
-   return PKCS8::load_key(source);
+   return PKCS8::load_key(source, rng);
    }
 
 }

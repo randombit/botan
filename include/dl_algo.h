@@ -29,7 +29,7 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
       virtual DL_Group::Format group_format() const = 0;
 
       X509_Encoder* x509_encoder() const;
-      X509_Decoder* x509_decoder();
+      X509_Decoder* x509_decoder(RandomNumberGenerator&);
    protected:
       BigInt y;
       DL_Group group;
@@ -49,7 +49,7 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
       const BigInt& get_x() const { return x; }
 
       PKCS8_Encoder* pkcs8_encoder() const;
-      PKCS8_Decoder* pkcs8_decoder();
+      PKCS8_Decoder* pkcs8_decoder(RandomNumberGenerator&);
    protected:
       BigInt x;
    private:

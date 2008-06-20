@@ -11,6 +11,7 @@
 #include <botan/pk_algs.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
+#include <botan/libstate.h>
 #include <memory>
 
 namespace Botan {
@@ -97,7 +98,9 @@ Public_Key* load_key(DataSource& source)
          throw Decoding_Error("Unknown PK algorithm/OID: " + alg_name + ", " +
                               alg_id.oid.as_string());
 
-      std::auto_ptr<X509_Decoder> decoder(key_obj->x509_decoder());
+      std::auto_ptr<X509_Decoder> decoder(
+         key_obj->x509_decoder(global_state().prng_reference()));
+
       if(!decoder.get())
          throw Decoding_Error("Key does not support X.509 decoding");
 

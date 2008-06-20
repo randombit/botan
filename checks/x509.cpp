@@ -47,12 +47,14 @@ u64bit key_id(const Public_Key* key)
 
 u32bit check_against_copy(const Private_Key& orig)
    {
-   Private_Key* copy_priv = PKCS8::copy_key(orig);
+   Private_Key* copy_priv = PKCS8::copy_key(orig, global_state().prng_reference());
    Public_Key* copy_pub = X509::copy_key(orig);
 
    const std::string passphrase= "I need work! -Mr. T"; // Me too...
    DataSource_Memory enc_source(PKCS8::PEM_encode(orig, passphrase));
-   Private_Key* copy_priv_enc = PKCS8::load_key(enc_source, passphrase);
+   Private_Key* copy_priv_enc = PKCS8::load_key(enc_source,
+                                                global_state().prng_reference(),
+                                                passphrase);
 
    u64bit orig_id = key_id(&orig);
    u64bit pub_id = key_id(copy_pub);

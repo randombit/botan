@@ -37,7 +37,7 @@ class BOTAN_DLL PKCS8_Decoder
 /*************************************************
 * PKCS #8 General Exception                      *
 *************************************************/
-struct PKCS8_Exception : public Decoding_Error
+struct BOTAN_DLL PKCS8_Exception : public Decoding_Error
    {
    PKCS8_Exception(const std::string& error) :
       Decoding_Error("PKCS #8: " + error) {}
@@ -50,19 +50,26 @@ namespace PKCS8 {
 *************************************************/
 BOTAN_DLL void encode(const Private_Key&, Pipe&, X509_Encoding = PEM);
 BOTAN_DLL void encrypt_key(const Private_Key&, Pipe&, const std::string&,
-                                const std::string& = "", X509_Encoding = PEM);
+                           const std::string& = "", X509_Encoding = PEM);
 
 BOTAN_DLL std::string PEM_encode(const Private_Key&);
 BOTAN_DLL std::string PEM_encode(const Private_Key&, const std::string&,
                                       const std::string& = "");
 
-BOTAN_DLL Private_Key* load_key(DataSource&, const User_Interface&);
-BOTAN_DLL Private_Key* load_key(DataSource&, const std::string& = "");
+BOTAN_DLL Private_Key* load_key(DataSource&, RandomNumberGenerator&,
+                                const User_Interface&);
+BOTAN_DLL Private_Key* load_key(DataSource&, RandomNumberGenerator&,
+                                const std::string& = "");
 
-BOTAN_DLL Private_Key* load_key(const std::string&, const User_Interface&);
-BOTAN_DLL Private_Key* load_key(const std::string&, const std::string& = "");
+BOTAN_DLL Private_Key* load_key(const std::string&,
+                                RandomNumberGenerator&,
+                                const User_Interface&);
+BOTAN_DLL Private_Key* load_key(const std::string&,
+                                RandomNumberGenerator&,
+                                const std::string& = "");
 
-BOTAN_DLL Private_Key* copy_key(const Private_Key&);
+BOTAN_DLL Private_Key* copy_key(const Private_Key&,
+                                RandomNumberGenerator& rng);
 
 }
 

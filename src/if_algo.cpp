@@ -46,7 +46,7 @@ X509_Encoder* IF_Scheme_PublicKey::x509_encoder() const
 /*************************************************
 * Return the X.509 public key decoder            *
 *************************************************/
-X509_Decoder* IF_Scheme_PublicKey::x509_decoder()
+X509_Decoder* IF_Scheme_PublicKey::x509_decoder(RandomNumberGenerator& rng)
    {
    class IF_Scheme_Decoder : public X509_Decoder
       {
@@ -72,7 +72,7 @@ X509_Decoder* IF_Scheme_PublicKey::x509_decoder()
          RandomNumberGenerator& rng;
       };
 
-   return new IF_Scheme_Decoder(this, global_state().prng_reference());
+   return new IF_Scheme_Decoder(this, rng);
    }
 
 /*************************************************
@@ -117,7 +117,7 @@ PKCS8_Encoder* IF_Scheme_PrivateKey::pkcs8_encoder() const
 /*************************************************
 * Return the PKCS #8 public key decoder          *
 *************************************************/
-PKCS8_Decoder* IF_Scheme_PrivateKey::pkcs8_decoder()
+PKCS8_Decoder* IF_Scheme_PrivateKey::pkcs8_decoder(RandomNumberGenerator& rng)
    {
    class IF_Scheme_Decoder : public PKCS8_Decoder
       {
@@ -154,7 +154,7 @@ PKCS8_Decoder* IF_Scheme_PrivateKey::pkcs8_decoder()
          RandomNumberGenerator& rng;
       };
 
-   return new IF_Scheme_Decoder(this, global_state().prng_reference());
+   return new IF_Scheme_Decoder(this, rng);
    }
 
 /*************************************************

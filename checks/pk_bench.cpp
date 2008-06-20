@@ -65,7 +65,7 @@ void bench_pk(const std::string& algo, bool html, double seconds)
          const std::string file = "checks/keys/rsa" + len_str + ".pem";
 
          std::auto_ptr<RSA_PrivateKey> key(
-            dynamic_cast<RSA_PrivateKey*>(PKCS8::load_key(file))
+            dynamic_cast<RSA_PrivateKey*>(PKCS8::load_key(file, global_state().prng_reference()))
             );
 
          if(key.get() == 0)
@@ -165,7 +165,7 @@ void bench_pk(const std::string& algo, bool html, double seconds)
          const std::string file = "checks/keys/rw" + len_str + ".pem";
 
          RW_PrivateKey* key =
-            dynamic_cast<RW_PrivateKey*>(PKCS8::load_key(file));
+            dynamic_cast<RW_PrivateKey*>(PKCS8::load_key(file, global_state().prng_reference()));
 
          bench_ver(get_pk_signer(*key, "EMSA2(SHA-1)"),
                    get_pk_verifier(*key, "EMSA2(SHA-1)"),
