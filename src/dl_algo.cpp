@@ -57,15 +57,18 @@ X509_Decoder* DL_Scheme_PublicKey::x509_decoder()
          void key_bits(const MemoryRegion<byte>& bits)
             {
             BER_Decoder(bits).decode(key->y);
-            key->X509_load_hook(global_state().prng_reference());
+            key->X509_load_hook(rng);
             }
 
-         DL_Scheme_Decoder(DL_Scheme_PublicKey* k) : key(k) {}
+         DL_Scheme_Decoder(DL_Scheme_PublicKey* k,
+                           RandomNumberGenerator& r) :
+            key(k), rng(r) {}
       private:
          DL_Scheme_PublicKey* key;
+         RandomNumberGenerator& rng;
       };
 
-   return new DL_Scheme_Decoder(this);
+   return new DL_Scheme_Decoder(this, global_state().prng_reference());
    }
 
 /*************************************************
@@ -114,15 +117,18 @@ PKCS8_Decoder* DL_Scheme_PrivateKey::pkcs8_decoder()
          void key_bits(const MemoryRegion<byte>& bits)
             {
             BER_Decoder(bits).decode(key->x);
-            key->PKCS8_load_hook(global_state().prng_reference());
+            key->PKCS8_load_hook(rng);
             }
 
-         DL_Scheme_Decoder(DL_Scheme_PrivateKey* k) : key(k) {}
+         DL_Scheme_Decoder(DL_Scheme_PrivateKey* k,
+                           RandomNumberGenerator& r) :
+            key(k), rng(r) {}
       private:
          DL_Scheme_PrivateKey* key;
+         RandomNumberGenerator& rng;
       };
 
-   return new DL_Scheme_Decoder(this);
+   return new DL_Scheme_Decoder(this, global_state().prng_reference());
    }
 
 /*************************************************
