@@ -31,20 +31,12 @@
   #include <botan/tm_win32.h>
 #endif
 
-#if defined(BOTAN_EXT_ENGINE_AEP)
-  #include <botan/eng_aep.h>
-#endif
-
 #if defined(BOTAN_EXT_ENGINE_GNU_MP)
   #include <botan/eng_gmp.h>
 #endif
 
 #if defined(BOTAN_EXT_ENGINE_OPENSSL)
   #include <botan/eng_ossl.h>
-#endif
-
-#if defined(BOTAN_EXT_ENTROPY_SRC_AEP)
-  #include <botan/es_aep.h>
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_DEVICE)
@@ -146,10 +138,6 @@ std::vector<EntropySource*> Builtin_Modules::entropy_sources() const
    sources.push_back(new Timer);
 #endif
 
-#if defined(BOTAN_EXT_ENTROPY_SRC_AEP)
-   sources.push_back(new AEP_EntropySource);
-#endif
-
 #if defined(BOTAN_EXT_ENTROPY_SRC_EGD)
    sources.push_back(
       new EGD_EntropySource(split_on("/var/run/egd-pool:/dev/egd-pool", ':'))
@@ -198,10 +186,6 @@ std::vector<Engine*> Builtin_Modules::engines() const
 
    if(use_engines)
       {
-#if defined(BOTAN_EXT_ENGINE_AEP)
-      engines.push_back(new AEP_Engine);
-#endif
-
 #if defined(BOTAN_EXT_ENGINE_GNU_MP)
       engines.push_back(new GMP_Engine);
 #endif
