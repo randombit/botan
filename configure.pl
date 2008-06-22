@@ -903,6 +903,8 @@ sub find_mp_bits {
     my $seen_mp_module = undef;
 
     foreach my $modname (@modules_list) {
+        die "Unknown module $modname\n" unless defined $MODULES{$modname};
+
         my %modinfo = %{ $MODULES{$modname} };
         if($modinfo{'mp_bits'}) {
             if(defined($seen_mp_module) and $modinfo{'mp_bits'} != $mp_bits) {
