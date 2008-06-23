@@ -17,11 +17,6 @@ D: Binary file I/O support, allocator fixes
 N: Hany Greiss
 D: Windows porting
 
-N: Manuel Hartl
-E: hartl@flexsecure.de
-W: http://www.flexsecure.de/
-D: SHA1PRNG
-
 N: Yves Jerschow
 E: Yves.Jerschow@uni-duesseldorf.de
 D: Optimizations for memory load/store and HMAC
