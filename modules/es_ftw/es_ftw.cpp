@@ -105,7 +105,7 @@ FTW_EntropySource::FTW_EntropySource(const std::string& p) : path(p)
 *************************************************/
 void FTW_EntropySource::do_fast_poll()
    {
-   poll(32);
+   poll(32*1024);
    }
 
 /*************************************************
@@ -113,7 +113,7 @@ void FTW_EntropySource::do_fast_poll()
 *************************************************/
 void FTW_EntropySource::do_slow_poll()
    {
-   poll(256);
+   poll(256*1024);
    }
 
 /*************************************************
@@ -122,8 +122,9 @@ void FTW_EntropySource::do_slow_poll()
 void FTW_EntropySource::poll(u32bit max_read)
    {
    Directory_Walker dir(path);
-   u32bit read_so_far = 0;
+   SecureVector<byte> read_buf(1024);
 
+   u32bit read_so_far = 0;
    while(read_so_far < max_read)
       {
       int fd = dir.next_fd();
@@ -131,7 +132,6 @@ void FTW_EntropySource::poll(u32bit max_read)
       if(fd == -1)
          break;
 
-      SecureVector<byte> read_buf(1024);
       ssize_t got = ::read(fd, read_buf.begin(), read_buf.size());
 
       if(got > 0)
