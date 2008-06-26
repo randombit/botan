@@ -105,7 +105,7 @@ FTW_EntropySource::FTW_EntropySource(const std::string& p) : path(p)
 *************************************************/
 void FTW_EntropySource::do_fast_poll()
    {
-   poll(32*1024);
+   poll(32);
    }
 
 /*************************************************
@@ -113,7 +113,7 @@ void FTW_EntropySource::do_fast_poll()
 *************************************************/
 void FTW_EntropySource::do_slow_poll()
    {
-   poll(256*1024);
+   poll(256);
    }
 
 /*************************************************
