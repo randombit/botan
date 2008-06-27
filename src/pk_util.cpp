@@ -1,10 +1,9 @@
 /*************************************************
 * PK Utility Classes Source File                 *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/pk_util.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -44,23 +43,6 @@ SecureVector<byte> EME::decode(const MemoryRegion<byte>& msg,
                                u32bit key_bits) const
    {
    return unpad(msg, msg.size(), key_bits);
-   }
-
-/*************************************************
-* Default signature decoding                     *
-*************************************************/
-bool EMSA::verify(const MemoryRegion<byte>& coded,
-                  const MemoryRegion<byte>& raw,
-                  u32bit key_bits) throw()
-   {
-   try {
-      return (coded == encoding_of(raw, key_bits,
-                                   global_state().prng_reference()));
-      }
-   catch(Invalid_Argument)
-      {
-      return false;
-      }
    }
 
 }

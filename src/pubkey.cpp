@@ -10,7 +10,6 @@
 #include <botan/bigint.h>
 #include <botan/parsing.h>
 #include <botan/bit_ops.h>
-#include <botan/libstate.h>
 #include <memory>
 
 namespace Botan {
@@ -368,7 +367,15 @@ PK_Verifier_wo_MR::PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key& k,
 bool PK_Verifier_wo_MR::validate_signature(const MemoryRegion<byte>& msg,
                                            const byte sig[], u32bit sig_len)
    {
-   RandomNumberGenerator& rng = global_state().prng_reference();
+   class Null_RNG : public RandomNumberGenerator
+      {
+      public:
+         void randomize(byte[], u32bit) { throw PRNG_Unseeded("Null_RNG"); }
+         bool is_seeded() const { return false; }
+         void add_randomness(const byte[], u32bit) {}
+      };
+
+   Null_RNG rng;
 
    SecureVector<byte> encoded =
       emsa->encoding_of(msg, key.max_input_bits(), rng);
