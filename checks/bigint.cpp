@@ -7,7 +7,6 @@
 #include <botan/bigint.h>
 #include <botan/exceptn.h>
 #include <botan/numthry.h>
-#include <botan/libstate.h>
 using namespace Botan;
 
 #include "common.h"
@@ -269,7 +268,7 @@ u32bit check_mod(const std::vector<std::string>& args)
    /* Won't work for us, just pick one at random */
    while(b_word == 0)
       for(u32bit j = 0; j != 2*sizeof(word); j++)
-         b_word = (b_word << 4) ^ global_state().random();
+         b_word = (b_word << 4) ^ global_rng().next_byte();
 
    b = b_word;
 
@@ -338,7 +337,7 @@ u32bit check_primetest(const std::vector<std::string>& args)
    bool should_be_prime = (args[1] == "1");
 
    bool is_prime = Botan::verify_prime(n,
-                                       global_state().prng_reference());
+                                       global_rng());
 
    if(is_prime != should_be_prime)
       {

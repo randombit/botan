@@ -5,7 +5,6 @@
 #include <string>
 #include <exception>
 
-#include <botan/libstate.h>
 #include <botan/filters.h>
 using Botan::byte;
 using Botan::u64bit;
@@ -34,7 +33,7 @@ double bench_filter(std::string name, Botan::Filter* filter,
    static const u32bit BUFFERSIZE = 32*1024;
    byte buf[BUFFERSIZE];
 
-   Botan::global_state().randomize(buf, BUFFERSIZE);
+   global_rng().randomize(buf, BUFFERSIZE);
 
    u32bit iterations = 0;
    u64bit start = get_clock(), clocks_used = 0;
@@ -79,7 +78,7 @@ double bench(const std::string& name, const std::string& filtername, bool html,
    std::vector<std::string> params;
 
    Botan::SecureVector<byte> key(keylen);
-   Botan::global_state().randomize(key, key.size());
+   global_rng().randomize(key, key.size());
    params.push_back(hex_encode(key, key.size()));
 
    //params.push_back(std::string(int(2*keylen), 'A'));

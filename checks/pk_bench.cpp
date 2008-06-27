@@ -8,7 +8,6 @@
 
 #include <botan/pkcs8.h>
 #include <botan/look_pk.h>
-#include <botan/libstate.h>
 
 using namespace Botan;
 
@@ -55,7 +54,7 @@ void bench_pk(const std::string& algo, bool html, double seconds)
      ad-hoc format (the RW algorithm has no assigned OID that I know of, so
      there is no way to encode a RW key into a PKCS #8 structure).
    */
-   RandomNumberGenerator& rng = global_state().prng_reference();
+   RandomNumberGenerator& rng = global_rng();
 
    if(algo == "All" || algo == "RSA")
       {
@@ -227,10 +226,10 @@ void bench_enc(PK_Encryptor* enc, const std::string& algo_name,
    while(clocks_used < seconds * ticks)
       {
       runs++;
-      global_state().randomize(msg, MSG_SIZE);
+      global_rng().randomize(msg, MSG_SIZE);
 
       u64bit start = get_clock();
-      enc->encrypt(msg, MSG_SIZE, global_state().prng_reference());
+      enc->encrypt(msg, MSG_SIZE, global_rng());
       clocks_used += get_clock() - start;
       }
 
@@ -245,24 +244,24 @@ void bench_dec(PK_Encryptor* enc, PK_Decryptor* dec,
    {
    static const u32bit MSG_SIZE = 16;
    byte msg[MSG_SIZE];
-   global_state().randomize(msg, MSG_SIZE);
+   global_rng().randomize(msg, MSG_SIZE);
    SecureVector<byte> output;
 
    u32bit runs = 0;
    u64bit clocks_used = 0;
 
    SecureVector<byte> encrypted_msg = enc->encrypt(msg, MSG_SIZE,
-                                                   global_state().prng_reference());
+                                                   global_rng());
 
    const u64bit ticks = get_ticks();
    while(clocks_used < seconds * ticks)
       {
       runs++;
 
-      global_state().randomize(msg, MSG_SIZE);
+      global_rng().randomize(msg, MSG_SIZE);
       msg[0] |= 0x80; // make sure it works with "Raw" padding
       encrypted_msg = enc->encrypt(msg, MSG_SIZE,
-                                   global_state().prng_reference());
+                                   global_rng());
 
       u64bit start = get_clock();
       output = dec->decrypt(encrypted_msg);
@@ -296,10 +295,10 @@ void bench_sig(PK_Signer* sig, const std::string& algo_name,
    while(clocks_used < seconds * ticks)
       {
       runs++;
-      global_state().randomize(msg, MSG_SIZE);
+      global_rng().randomize(msg, MSG_SIZE);
       u64bit start = get_clock();
       sig->update(msg, MSG_SIZE);
-      sig->signature(global_state().prng_reference());
+      sig->signature(global_rng());
       clocks_used += get_clock() - start;
       }
 
@@ -314,10 +313,10 @@ void bench_ver(PK_Signer* sig, PK_Verifier* ver,
    {
    static const u32bit MSG_SIZE = 16;
    byte msg[MSG_SIZE];
-   global_state().randomize(msg, MSG_SIZE);
+   global_rng().randomize(msg, MSG_SIZE);
 
    sig->update(msg, MSG_SIZE);
-   SecureVector<byte> signature = sig->signature(global_state().prng_reference());
+   SecureVector<byte> signature = sig->signature(global_rng());
    u32bit runs = 0;
    u64bit clocks_used = 0;
 
@@ -327,9 +326,9 @@ void bench_ver(PK_Signer* sig, PK_Verifier* ver,
       // feel free to tweak, but make sure this always runs when runs == 0
       if(runs % 100 == 0)
          {
-         global_state().randomize(msg, MSG_SIZE);
+         global_rng().randomize(msg, MSG_SIZE);
          sig->update(msg, MSG_SIZE);
-         signature = sig->signature(global_state().prng_reference());
+         signature = sig->signature(global_rng());
          }
 
       runs++;
@@ -362,7 +361,7 @@ void bench_kas(PK_Key_Agreement* kas, const std::string& algo_name,
    while(clocks_used < seconds * ticks)
       {
       runs++;
-      global_state().randomize(key, REMOTE_KEY_SIZE);
+      global_rng().randomize(key, REMOTE_KEY_SIZE);
 
       u64bit start = get_clock();
       kas->derive_key(0, key, REMOTE_KEY_SIZE);

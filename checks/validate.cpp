@@ -10,10 +10,10 @@
 
 #include <botan/filters.h>
 #include <botan/exceptn.h>
-#include <botan/libstate.h>
 using namespace Botan;
 
 #include "validate.h"
+#include "common.h"
 
 #define EXTRA_TESTS 0
 #define DEBUG 0
@@ -35,7 +35,7 @@ u32bit random_word(u32bit max)
    /* normal version */
    u32bit r = 0;
    for(u32bit j = 0; j != 4; j++)
-      r = (r << 8) | Botan::global_state().random();
+      r = (r << 8) | global_rng().next_byte();
    return ((r % max) + 1); // return between 1 and max inclusive
 #endif
    }

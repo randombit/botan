@@ -8,7 +8,6 @@
 #include <botan/filters.h>
 #include <botan/randpool.h>
 #include <botan/x931_rng.h>
-#include <botan/libstate.h>
 #include "common.h"
 using namespace Botan;
 

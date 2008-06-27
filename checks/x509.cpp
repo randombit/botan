@@ -6,14 +6,13 @@
 #include <botan/pkcs10.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
-
-#include <botan/libstate.h>
 using namespace Botan;
 
 #include <iostream>
 #include <memory>
 
 #include "validate.h"
+#include "common.h"
 
 X509_Cert_Options ca_opts();
 X509_Cert_Options req_opts1();
@@ -47,7 +46,7 @@ u64bit key_id(const Public_Key* key)
 
 u32bit check_against_copy(const Private_Key& orig)
    {
-   RandomNumberGenerator& rng = global_state().prng_reference();
+   RandomNumberGenerator& rng = global_rng();
 
    Private_Key* copy_priv = PKCS8::copy_key(orig, rng);
    Public_Key* copy_pub = X509::copy_key(orig);
@@ -78,7 +77,7 @@ u32bit check_against_copy(const Private_Key& orig)
 
 void do_x509_tests()
    {
-   RandomNumberGenerator& rng = global_state().prng_reference();
+   RandomNumberGenerator& rng = global_rng();
 
    std::cout << "Testing X.509 CA/CRL/cert/cert request: " << std::flush;
 

@@ -6,7 +6,6 @@
 #include <memory>
 
 #include <botan/botan.h>
-#include <botan/libstate.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
 #include <botan/dh.h>
@@ -152,7 +151,7 @@ u32bit validate_rsa_enc_pkcs8(const std::string& algo,
                                str[0].length());
 
    Private_Key* privkey = PKCS8::load_key(keysource,
-                                          global_state().prng_reference(),
+                                          global_rng(),
                                           pass);
 
    RSA_PrivateKey* rsapriv = dynamic_cast<RSA_PrivateKey*>(privkey);
@@ -178,7 +177,7 @@ u32bit validate_rsa_enc(const std::string& algo,
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
-   RandomNumberGenerator& rng = global_state().prng_reference();
+   RandomNumberGenerator& rng = global_rng();
 
    RSA_PrivateKey privkey(rng,
                           to_bigint(str[1]), to_bigint(str[2]),
@@ -202,7 +201,7 @@ u32bit validate_elg_enc(const std::string& algo,
    if(str.size() != 6 && str.size() != 7)
       throw Exception("Invalid input from pk_valid.dat");
 
-   RandomNumberGenerator& rng = global_state().prng_reference();
+   RandomNumberGenerator& rng = global_rng();
 
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]));
    ElGamal_PrivateKey privkey(rng, domain, to_bigint(str[2]));
@@ -231,7 +230,7 @@ u32bit validate_rsa_sig(const std::string& algo,
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
-   RandomNumberGenerator& rng = global_state().prng_reference();
+   RandomNumberGenerator& rng = global_rng();
 
    RSA_PrivateKey privkey(rng,
                           to_bigint(str[1]), to_bigint(str[2]),
@@ -330,7 +329,7 @@ u32bit validate_rw_sig(const std::string& algo,
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
-   RandomNumberGenerator& rng = global_state().prng_reference();
+   RandomNumberGenerator& rng = global_rng();
 
    RW_PrivateKey privkey(rng, to_bigint(str[1]), to_bigint(str[2]),
                          to_bigint(str[0]));
@@ -361,7 +360,7 @@ u32bit validate_dsa_sig(const std::string& algo,
                                str[0].length());
 
    Private_Key* privkey = PKCS8::load_key(keysource,
-                                          global_state().prng_reference(),
+                                          global_rng(),
                                           pass);
 
    DSA_PrivateKey* dsapriv = dynamic_cast<DSA_PrivateKey*>(privkey);
@@ -419,7 +418,7 @@ u32bit validate_nr_sig(const std::string& algo,
    if(str.size() != 8)
       throw Exception("Invalid input from pk_valid.dat");
 
-   RandomNumberGenerator& rng = global_state().prng_reference();
+   RandomNumberGenerator& rng = global_rng();
 
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]), to_bigint(str[2]));
    NR_PrivateKey privkey(rng, domain, to_bigint(str[4]));
@@ -441,7 +440,7 @@ u32bit validate_dh(const std::string& algo,
    if(str.size() != 5 && str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
-   RandomNumberGenerator& rng = global_state().prng_reference();
+   RandomNumberGenerator& rng = global_rng();
 
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]));
 
@@ -468,7 +467,7 @@ u32bit validate_dlies(const std::string& algo,
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
-   RandomNumberGenerator& rng = global_state().prng_reference();
+   RandomNumberGenerator& rng = global_rng();
 
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]));
 
@@ -529,7 +528,7 @@ void do_pk_keygen_tests()
    std::cout << '.' << std::flush;          \
    }
 
-   RandomNumberGenerator& rng = global_state().prng_reference();
+   RandomNumberGenerator& rng = global_rng();
 
    IF_SIG_KEY(RSA_PrivateKey, 1024);
    IF_SIG_KEY(RW_PrivateKey, 1024);
