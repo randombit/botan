@@ -27,10 +27,13 @@ class BOTAN_DLL IF_Core
       IF_Core() { op = 0; }
       IF_Core(const IF_Core&);
 
+      IF_Core(const BigInt&, const BigInt&);
+
       IF_Core(RandomNumberGenerator& rng,
               const BigInt&, const BigInt&,
-              const BigInt& = 0, const BigInt& = 0, const BigInt& = 0,
-              const BigInt& = 0, const BigInt& = 0, const BigInt& = 0);
+              const BigInt&, const BigInt&, const BigInt&,
+              const BigInt&, const BigInt&, const BigInt&);
+
       ~IF_Core() { delete op; }
    private:
       IF_Operation* op;

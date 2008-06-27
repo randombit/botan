@@ -162,7 +162,7 @@ PKCS8_Decoder* IF_Scheme_PrivateKey::pkcs8_decoder(RandomNumberGenerator& rng)
 *************************************************/
 void IF_Scheme_PublicKey::X509_load_hook(RandomNumberGenerator& rng)
    {
-   core = IF_Core(rng, e, n);
+   core = IF_Core(e, n);
    load_check(rng);
    }
 

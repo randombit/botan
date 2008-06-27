@@ -21,6 +21,15 @@ const u32bit BLINDING_BITS = BOTAN_PRIVATE_KEY_OP_BLINDING_BITS;
 /*************************************************
 * IF_Core Constructor                            *
 *************************************************/
+IF_Core::IF_Core(const BigInt& e, const BigInt& n)
+   {
+   op = Engine_Core::if_op(e, n, 0, 0, 0, 0, 0, 0);
+   }
+
+
+/*************************************************
+* IF_Core Constructor                            *
+*************************************************/
 IF_Core::IF_Core(RandomNumberGenerator& rng,
                  const BigInt& e, const BigInt& n, const BigInt& d,
                  const BigInt& p, const BigInt& q,
@@ -28,12 +37,10 @@ IF_Core::IF_Core(RandomNumberGenerator& rng,
    {
    op = Engine_Core::if_op(e, n, d, p, q, d1, d2, c);
 
-   if(d != 0)
+   if(BLINDING_BITS)
       {
       BigInt k(rng, std::min(n.bits()-1, BLINDING_BITS));
-
-      if(k != 0)
-         blinder = Blinder(power_mod(k, e, n), inverse_mod(k, n), n);
+      blinder = Blinder(power_mod(k, e, n), inverse_mod(k, n), n);
       }
    }
 
