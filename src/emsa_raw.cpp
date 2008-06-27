@@ -40,7 +40,7 @@ SecureVector<byte> EMSA_Raw::encoding_of(const MemoryRegion<byte>& msg,
 *************************************************/
 bool EMSA_Raw::verify(const MemoryRegion<byte>& coded,
                       const MemoryRegion<byte>& raw,
-                      u32bit key_bits) throw()
+                      u32bit) throw()
    {
    return (coded == raw);
    }
