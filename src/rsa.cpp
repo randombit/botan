@@ -7,7 +7,6 @@
 #include <botan/numthry.h>
 #include <botan/keypair.h>
 #include <botan/parsing.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 
