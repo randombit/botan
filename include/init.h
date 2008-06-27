@@ -20,7 +20,6 @@ class BOTAN_DLL InitializerOptions
    public:
       bool thread_safe() const;
       bool use_engines() const;
-      bool seed_rng() const;
       bool secure_memory() const;
       bool fips_mode() const;
       bool self_test() const;

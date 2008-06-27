@@ -45,18 +45,6 @@ class BOTAN_DLL Library_State
       void add_allocator(Allocator*);
       void set_default_allocator(const std::string&) const;
 
-      bool rng_is_seeded() const { return rng->is_seeded(); }
-      void randomize(byte[], u32bit);
-      byte random();
-
-      void set_prng(RandomNumberGenerator*);
-      void add_entropy_source(EntropySource*, bool = true);
-      void add_entropy(const byte[], u32bit);
-      void add_entropy(EntropySource&, bool);
-      u32bit seed_prng(bool, u32bit);
-
-      RandomNumberGenerator& prng_reference() { return (*rng); }
-
       class Config& config() const;
 
       class Mutex* get_mutex() const;
@@ -73,11 +61,7 @@ class BOTAN_DLL Library_State
       class Mutex* allocator_lock;
       std::map<std::string, Allocator*> alloc_factory;
       mutable Allocator* cached_default_allocator;
-
-      class Mutex* rng_lock;
-      RandomNumberGenerator* rng;
       std::vector<Allocator*> allocators;
-      std::vector<EntropySource*> entropy_sources;
 
       class Mutex* engine_lock;
       std::vector<class Engine*> engines;

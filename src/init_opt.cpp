@@ -62,14 +62,6 @@ bool InitializerOptions::use_engines() const
    }
 
 /*************************************************
-* Check if RNG seeding should be enabled         *
-*************************************************/
-bool InitializerOptions::seed_rng() const
-   {
-   return boolean_arg(args, "seed_rng", true);
-   }
-
-/*************************************************
 * Check if FIPS mode was requested               *
 *************************************************/
 bool InitializerOptions::fips_mode() const

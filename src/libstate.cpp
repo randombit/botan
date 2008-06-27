@@ -122,89 +122,6 @@ void Library_State::set_default_allocator(const std::string& type) const
    }
 
 /*************************************************
-* Set the global PRNG                            *
-*************************************************/
-void Library_State::set_prng(RandomNumberGenerator* new_rng)
-   {
-   Mutex_Holder lock(rng_lock);
-
-   delete rng;
-   rng = new_rng;
-   }
-
-/*************************************************
-* Get bytes from the global PRNG                 *
-*************************************************/
-void Library_State::randomize(byte out[], u32bit length)
-   {
-   Mutex_Holder lock(rng_lock);
-
-   rng->randomize(out, length);
-   }
-
-/*************************************************
-* Get a byte from the global PRNG                *
-*************************************************/
-byte Library_State::random()
-   {
-   byte out;
-   rng->randomize(&out, 1);
-   return out;
-   }
-
-/*************************************************
-* Add a new entropy source to use                *
-*************************************************/
-void Library_State::add_entropy_source(EntropySource* src, bool last_in_list)
-   {
-   Mutex_Holder lock(rng_lock);
-
-   if(last_in_list)
-      entropy_sources.push_back(src);
-   else
-      entropy_sources.insert(entropy_sources.begin(), src);
-   }
-
-/*************************************************
-* Add some bytes of entropy to the global PRNG   *
-*************************************************/
-void Library_State::add_entropy(const byte in[], u32bit length)
-   {
-   Mutex_Holder lock(rng_lock);
-
-   rng->add_entropy(in, length);
-   }
-
-/*************************************************
-* Add some bytes of entropy to the global PRNG   *
-*************************************************/
-void Library_State::add_entropy(EntropySource& source, bool slow_poll)
-   {
-   Mutex_Holder lock(rng_lock);
-
-   rng->add_entropy(source, slow_poll);
-   }
-
-/*************************************************
-* Gather entropy for our PRNG object             *
-*************************************************/
-u32bit Library_State::seed_prng(bool slow_poll, u32bit bits_to_get)
-   {
-   Mutex_Holder lock(rng_lock);
-
-   u32bit bits = 0;
-   for(u32bit j = 0; j != entropy_sources.size(); ++j)
-      {
-      bits += rng->add_entropy(*(entropy_sources[j]), slow_poll);
-
-      if(bits_to_get && bits >= bits_to_get)
-         return bits;
-      }
-
-   return bits;
-   }
-
-/*************************************************
 * Get an engine out of the list                  *
 *************************************************/
 Engine* Library_State::get_engine_n(u32bit n) const
@@ -255,7 +172,6 @@ void Library_State::initialize(const InitializerOptions& args,
 
    allocator_lock = get_mutex();
    engine_lock = get_mutex();
-   rng_lock = get_mutex();
 
    cached_default_allocator = 0;
 
@@ -268,26 +184,6 @@ void Library_State::initialize(const InitializerOptions& args,
    std::vector<Engine*> mod_engines = modules.engines();
    for(u32bit j = 0; j != mod_engines.size(); ++j)
       engines.push_back(mod_engines[j]);
-
-   std::vector<EntropySource*> sources = modules.entropy_sources();
-   for(u32bit j = 0; j != sources.size(); ++j)
-      add_entropy_source(sources[j]);
-
-   set_prng(new ANSI_X931_RNG("AES-256",
-                              new Randpool("AES-256", "HMAC(SHA-256)")));
-
-   if(args.seed_rng())
-      {
-      for(u32bit j = 0; j != 4; ++j)
-         {
-         seed_prng(true, 384);
-         if(rng_is_seeded())
-            break;
-         }
-
-      if(!rng_is_seeded())
-         throw PRNG_Unseeded("Unable to collect sufficient entropy");
-      }
 
    if(args.fips_mode() || args.self_test())
       {
@@ -303,11 +199,10 @@ Library_State::Library_State()
    {
    mutex_factory = 0;
 
-   allocator_lock = engine_lock = rng_lock = 0;
+   allocator_lock = engine_lock = 0;
 
    config_obj = 0;
 
-   rng = 0;
    cached_default_allocator = 0;
    }
 
@@ -316,11 +211,8 @@ Library_State::Library_State()
 *************************************************/
 Library_State::~Library_State()
    {
-   delete rng;
    delete config_obj;
 
-   std::for_each(entropy_sources.begin(), entropy_sources.end(),
-                 del_fun<EntropySource>());
    std::for_each(engines.begin(), engines.end(), del_fun<Engine>());
 
    cached_default_allocator = 0;
