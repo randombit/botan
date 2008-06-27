@@ -1,6 +1,6 @@
 /*************************************************
 * ANSI X9.31 RNG Header File                     *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_ANSI_X931_RNG_H__
@@ -22,10 +22,11 @@ class BOTAN_DLL ANSI_X931_RNG : public RandomNumberGenerator
       void clear() throw();
       std::string name() const;
 
+      void reseed();
+
       ANSI_X931_RNG(const std::string&, RandomNumberGenerator*);
       ~ANSI_X931_RNG();
    private:
-      void add_randomness(const byte[], u32bit);
       void update_buffer();
 
       BlockCipher* cipher;

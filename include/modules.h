@@ -1,6 +1,6 @@
 /*************************************************
 * Module Factory Header File                     *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_MODULE_FACTORIES_H__
@@ -23,7 +23,6 @@ class BOTAN_DLL Modules
       virtual std::string default_allocator() const = 0;
 
       virtual std::vector<class Allocator*> allocators() const = 0;
-      virtual std::vector<class EntropySource*> entropy_sources() const = 0;
       virtual std::vector<class Engine*> engines() const = 0;
 
       virtual ~Modules() {}
@@ -40,7 +39,6 @@ class BOTAN_DLL Builtin_Modules : public Modules
       std::string default_allocator() const;
 
       std::vector<class Allocator*> allocators() const;
-      std::vector<class EntropySource*> entropy_sources() const;
       std::vector<class Engine*> engines() const;
 
       Builtin_Modules(const InitializerOptions&);

@@ -1,6 +1,6 @@
 
 * 1.7.7, 2008-07-??
- - Remove many uses of the global PRNG object
+ - Remove the global PRNG object
  - Add a test suite for the ANSI X9.31 PRNG
  - Much cleaner and (mostly) thread-safe reimplementation of es_ftw
  - Remove both default arguments to ANSI_X931_RNG's constructor

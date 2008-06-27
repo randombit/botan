@@ -4,8 +4,48 @@
 *************************************************/
 
 #include <botan/rng.h>
-#include <botan/secmem.h>
+#include <botan/randpool.h>
+#include <botan/x931_rng.h>
 #include <botan/util.h>
+#include <botan/parsing.h>
+
+#if defined(BOTAN_EXT_TIMER_HARDWARE)
+  #include <botan/tm_hard.h>
+#elif defined(BOTAN_EXT_TIMER_POSIX)
+  #include <botan/tm_posix.h>
+#elif defined(BOTAN_EXT_TIMER_UNIX)
+  #include <botan/tm_unix.h>
+#elif defined(BOTAN_EXT_TIMER_WIN32)
+  #include <botan/tm_win32.h>
+#endif
+
+#if defined(BOTAN_EXT_ENTROPY_SRC_DEVICE)
+  #include <botan/es_dev.h>
+#endif
+
+#if defined(BOTAN_EXT_ENTROPY_SRC_EGD)
+  #include <botan/es_egd.h>
+#endif
+
+#if defined(BOTAN_EXT_ENTROPY_SRC_UNIX)
+  #include <botan/es_unix.h>
+#endif
+
+#if defined(BOTAN_EXT_ENTROPY_SRC_BEOS)
+  #include <botan/es_beos.h>
+#endif
+
+#if defined(BOTAN_EXT_ENTROPY_SRC_CAPI)
+  #include <botan/es_capi.h>
+#endif
+
+#if defined(BOTAN_EXT_ENTROPY_SRC_WIN32)
+  #include <botan/es_win32.h>
+#endif
+
+#if defined(BOTAN_EXT_ENTROPY_SRC_FTW)
+  #include <botan/es_ftw.h>
+#endif
 
 namespace Botan {
 
@@ -28,30 +68,61 @@ byte RandomNumberGenerator::next_byte()
    }
 
 /*************************************************
-* Add entropy to internal state                  *
+* Create and seed a new RNG object               *
 *************************************************/
-void RandomNumberGenerator::add_entropy(const byte random[], u32bit length)
+RandomNumberGenerator* make_rng()
    {
-   this->add_randomness(random, length);
-   }
+   Randpool* randpool = new Randpool("AES-256", "HMAC(SHA-256)");
 
-/*************************************************
-* Add entropy to internal state                  *
-*************************************************/
-u32bit RandomNumberGenerator::add_entropy(EntropySource& source,
-                                          bool slow_poll)
-   {
-   SecureVector<byte> buffer(1024);
-   u32bit bytes_gathered = 0;
+#if defined(BOTAN_EXT_TIMER_HARDWARE)
+   randpool->add_entropy_source(new Hardware_Timer);
+#elif defined(BOTAN_EXT_TIMER_POSIX)
+   randpool->add_entropy_source(new POSIX_Timer);
+#elif defined(BOTAN_EXT_TIMER_UNIX)
+   randpool->add_entropy_source(new Unix_Timer);
+#elif defined(BOTAN_EXT_TIMER_WIN32)
+   randpool->add_entropy_source(new Win32_Timer);
+#else
+   randpool->add_entropy_source(new Timer);
+#endif
 
-   if(slow_poll)
-      bytes_gathered = source.slow_poll(buffer, buffer.size());
-   else
-      bytes_gathered = source.fast_poll(buffer, buffer.size());
+#if defined(BOTAN_EXT_ENTROPY_SRC_DEVICE)
+   randpool->add_entropy_source(
+      new Device_EntropySource(
+         split_on("/dev/random:/dev/srandom:/dev/urandom", ':')
+         )
+      );
+#endif
 
-   this->add_entropy(buffer, bytes_gathered);
+#if defined(BOTAN_EXT_ENTROPY_SRC_EGD)
+   randpool->add_entropy_source(
+      new EGD_EntropySource(split_on("/var/run/egd-pool:/dev/egd-pool", ':'))
+      );
+#endif
 
-   return entropy_estimate(buffer, bytes_gathered);
+#if defined(BOTAN_EXT_ENTROPY_SRC_CAPI)
+   randpool->add_entropy_source(new Win32_CAPI_EntropySource);
+#endif
+
+#if defined(BOTAN_EXT_ENTROPY_SRC_WIN32)
+   randpool->add_entropy_source(new Win32_EntropySource);
+#endif
+
+#if defined(BOTAN_EXT_ENTROPY_SRC_UNIX)
+   randpool->add_entropy_source(
+      new Unix_EntropySource(split_on("/bin:/sbin:/usr/bin:/usr/sbin", ':'))
+      );
+#endif
+
+#if defined(BOTAN_EXT_ENTROPY_SRC_BEOS)
+   randpool->add_entropy_source(new BeOS_EntropySource);
+#endif
+
+#if defined(BOTAN_EXT_ENTROPY_SRC_FTW)
+   randpool->add_entropy_source(new FTW_EntropySource("/proc"));
+#endif
+
+   return new ANSI_X931_RNG("AES-256", randpool);
    }
 
 }

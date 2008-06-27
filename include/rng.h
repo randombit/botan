@@ -33,13 +33,15 @@ class BOTAN_DLL RandomNumberGenerator
 
       byte next_byte();
 
-      void add_entropy(const byte[], u32bit);
-      u32bit add_entropy(EntropySource&, bool = true);
+      virtual void reseed() {};
 
       virtual ~RandomNumberGenerator() {}
-   private:
-      virtual void add_randomness(const byte[], u32bit) = 0;
    };
+
+/*************************************************
+* Create and seed an RNG                         *
+*************************************************/
+RandomNumberGenerator* make_rng();
 
 }
 

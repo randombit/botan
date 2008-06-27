@@ -1,6 +1,6 @@
 /*************************************************
 * Randpool Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_RANDPOOL_H__
@@ -8,6 +8,7 @@
 
 #include <botan/rng.h>
 #include <botan/base.h>
+#include <vector>
 
 namespace Botan {
 
@@ -22,10 +23,13 @@ class BOTAN_DLL Randpool : public RandomNumberGenerator
       void clear() throw();
       std::string name() const;
 
+      void reseed();
+      void add_entropy_source(EntropySource*);
+      void add_entropy(const byte[], u32bit);
+
       Randpool(const std::string&, const std::string&);
       ~Randpool();
    private:
-      void add_randomness(const byte[], u32bit);
       void update_buffer();
       void mix_pool();
 
@@ -33,6 +37,7 @@ class BOTAN_DLL Randpool : public RandomNumberGenerator
       BlockCipher* cipher;
       MessageAuthenticationCode* mac;
 
+      std::vector<EntropySource*> entropy_sources;
       SecureVector<byte> pool, buffer, counter;
       u32bit entropy;
    };

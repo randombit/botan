@@ -113,28 +113,31 @@ Filter* lookup_rng(const std::string& algname,
    RandomNumberGenerator* prng = 0;
 
    if(algname == "X9.31-RNG(TripleDES)")
-      prng = new ANSI_X931_RNG("TripleDES", new Fixed_Output_RNG);
+      prng = new ANSI_X931_RNG("TripleDES", new Fixed_Output_RNG(decode_hex(key)));
    else if(algname == "X9.31-RNG(AES-128)")
-      prng = new ANSI_X931_RNG("AES-128", new Fixed_Output_RNG);
+      prng = new ANSI_X931_RNG("AES-128", new Fixed_Output_RNG(decode_hex(key)));
    else if(algname == "X9.31-RNG(AES-192)")
-      prng = new ANSI_X931_RNG("AES-192", new Fixed_Output_RNG);
+      prng = new ANSI_X931_RNG("AES-192", new Fixed_Output_RNG(decode_hex(key)));
    else if(algname == "X9.31-RNG(AES-256)")
-      prng = new ANSI_X931_RNG("AES-256", new Fixed_Output_RNG);
+      prng = new ANSI_X931_RNG("AES-256", new Fixed_Output_RNG(decode_hex(key)));
 
    // these are used for benchmarking: AES-256/SHA-256 matches library
    // defaults, so benchmark reflects real-world performance (maybe)
    else if(algname == "Randpool")
-      prng = new Randpool("AES-256", "HMAC(SHA-256)");
+      {
+      Randpool* randpool = new Randpool("AES-256", "HMAC(SHA-256)");
+      randpool->add_entropy((const byte*)key.c_str(), key.length());
+      prng = randpool;
+      }
    else if(algname == "X9.31-RNG")
-      prng = new ANSI_X931_RNG("AES-256",
-                               new Randpool("AES-256", "HMAC(SHA-256)"));
+      {
+      Randpool* randpool = new Randpool("AES-256", "HMAC(SHA-256)");
+      randpool->add_entropy((const byte*)key.c_str(), key.length());
+      prng = new ANSI_X931_RNG("AES-256", randpool);
+      }
 
    if(prng)
-      {
-      SecureVector<byte> seed = decode_hex(key);
-      prng->add_entropy(seed.begin(), seed.size());
       return new RNG_Filter(prng);
-      }
 
    return 0;
    }
