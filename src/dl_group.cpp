@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/dl_group.h>
-#include <botan/libstate.h>
 #include <botan/config.h>
 #include <botan/parsing.h>
 #include <botan/numthry.h>
@@ -127,9 +126,6 @@ void DL_Group::initialize(const BigInt& p1, const BigInt& q1, const BigInt& g1)
    p = p1;
    g = g1;
    q = q1;
-
-   if(q == 0 && check_prime((p - 1) / 2, global_state().prng_reference()))
-      q = (p - 1) / 2;
 
    initialized = true;
    }
