@@ -1,11 +1,12 @@
 #include <botan/botan.h>
 #include <botan/pkcs5.h>
-#include <botan/libstate.h>
 #include <iostream>
+#include <memory>
 
 using namespace Botan;
 
-std::string password_hash(const std::string& pass);
+std::string password_hash(const std::string& pass,
+                          RandomNumberGenerator& rng);
 bool password_hash_ok(const std::string& pass, const std::string& hash);
 
 int main(int argc, char* argv[])
@@ -19,9 +20,14 @@ int main(int argc, char* argv[])
 
    try
       {
+
       if(argc == 2)
+         {
+         std::auto_ptr<RandomNumberGenerator> rng(make_rng());
+
          std::cout << "H('" << argv[1] << "') = "
-                   << password_hash(argv[1]) << '\n';
+                   << password_hash(argv[1], *rng) << '\n';
+         }
       else
          {
          bool ok = password_hash_ok(argv[1], argv[2]);
@@ -39,12 +45,13 @@ int main(int argc, char* argv[])
    return 0;
    }
 
-std::string password_hash(const std::string& pass)
+std::string password_hash(const std::string& pass,
+                          RandomNumberGenerator& rng)
    {
    PKCS5_PBKDF2 kdf("SHA-1");
 
    kdf.set_iterations(10000);
-   kdf.new_random_salt(global_state().prng_reference(), 6); // 48 bits
+   kdf.new_random_salt(rng, 6); // 48 bits
 
    Pipe pipe(new Base64_Encoder);
    pipe.start_msg();
