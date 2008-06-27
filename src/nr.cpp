@@ -6,7 +6,6 @@
 #include <botan/nr.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -17,16 +16,15 @@ NR_PublicKey::NR_PublicKey(const DL_Group& grp, const BigInt& y1)
    {
    group = grp;
    y = y1;
-   X509_load_hook(global_state().prng_reference());
+   X509_load_hook();
    }
 
 /*************************************************
 * Algorithm Specific X.509 Initialization Code   *
 *************************************************/
-void NR_PublicKey::X509_load_hook(RandomNumberGenerator& rng)
+void NR_PublicKey::X509_load_hook()
    {
    core = NR_Core(group, y);
-   load_check(rng);
    }
 
 /*************************************************

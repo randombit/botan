@@ -29,12 +29,12 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
       virtual DL_Group::Format group_format() const = 0;
 
       X509_Encoder* x509_encoder() const;
-      X509_Decoder* x509_decoder(RandomNumberGenerator&);
+      X509_Decoder* x509_decoder();
    protected:
       BigInt y;
       DL_Group group;
    private:
-      virtual void X509_load_hook(RandomNumberGenerator&) {}
+      virtual void X509_load_hook() {}
    };
 
 /*************************************************

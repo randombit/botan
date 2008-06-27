@@ -5,7 +5,6 @@
 
 #include <botan/dh.h>
 #include <botan/numthry.h>
-#include <botan/libstate.h>
 #include <botan/util.h>
 
 namespace Botan {
@@ -17,15 +16,14 @@ DH_PublicKey::DH_PublicKey(const DL_Group& grp, const BigInt& y1)
    {
    group = grp;
    y = y1;
-   X509_load_hook(global_state().prng_reference());
+   X509_load_hook();
    }
 
 /*************************************************
 * Algorithm Specific X.509 Initialization Code   *
 *************************************************/
-void DH_PublicKey::X509_load_hook(RandomNumberGenerator& rng)
+void DH_PublicKey::X509_load_hook()
    {
-   load_check(rng);
    }
 
 /*************************************************

@@ -1,6 +1,6 @@
 /*************************************************
 * RSA Header File                                *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_RSA_H__
@@ -48,9 +48,12 @@ class BOTAN_DLL RSA_PrivateKey : public RSA_PublicKey,
       bool check_key(RandomNumberGenerator& rng, bool) const;
 
       RSA_PrivateKey() {}
-      RSA_PrivateKey(const BigInt&, const BigInt&, const BigInt&,
-                     const BigInt& = 0, const BigInt& = 0);
-      RSA_PrivateKey(u32bit, RandomNumberGenerator&, u32bit = 65537);
+
+      RSA_PrivateKey(RandomNumberGenerator&,
+                     const BigInt& p, const BigInt& q, const BigInt& e,
+                     const BigInt& d = 0, const BigInt& n = 0);
+
+      RSA_PrivateKey(RandomNumberGenerator&, u32bit bits, u32bit = 65537);
    private:
       BigInt private_op(const byte[], u32bit) const;
    };

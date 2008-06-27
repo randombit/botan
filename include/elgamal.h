@@ -30,7 +30,7 @@ class BOTAN_DLL ElGamal_PublicKey : public PK_Encrypting_Key,
    protected:
       ELG_Core core;
    private:
-      void X509_load_hook(RandomNumberGenerator&);
+      void X509_load_hook();
    };
 
 /*************************************************

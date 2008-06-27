@@ -179,21 +179,27 @@ SecureVector<byte> NR_Core::sign(const byte in[], u32bit length,
 /*************************************************
 * ELG_Core Constructor                           *
 *************************************************/
+ELG_Core::ELG_Core(const DL_Group& group, const BigInt& y)
+   {
+   op = Engine_Core::elg_op(group, y, 0);
+   p_bytes = 0;
+   }
+
+/*************************************************
+* ELG_Core Constructor                           *
+*************************************************/
 ELG_Core::ELG_Core(RandomNumberGenerator& rng,
                    const DL_Group& group, const BigInt& y, const BigInt& x)
    {
    op = Engine_Core::elg_op(group, y, x);
 
-   p_bytes = 0;
-   if(x != 0)
+   const BigInt& p = group.get_p();
+   p_bytes = p.bytes();
+
+   if(BLINDING_BITS)
       {
-      const BigInt& p = group.get_p();
-      p_bytes = p.bytes();
-
       BigInt k(rng, std::min(p.bits()-1, BLINDING_BITS));
-
-      if(k != 0)
-         blinder = Blinder(k, power_mod(k, x, p), p);
+      blinder = Blinder(k, power_mod(k, x, p), p);
       }
    }
 

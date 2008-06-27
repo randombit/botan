@@ -7,7 +7,6 @@
 #include <botan/numthry.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -46,7 +45,7 @@ X509_Encoder* IF_Scheme_PublicKey::x509_encoder() const
 /*************************************************
 * Return the X.509 public key decoder            *
 *************************************************/
-X509_Decoder* IF_Scheme_PublicKey::x509_decoder(RandomNumberGenerator& rng)
+X509_Decoder* IF_Scheme_PublicKey::x509_decoder()
    {
    class IF_Scheme_Decoder : public X509_Decoder
       {
@@ -62,17 +61,15 @@ X509_Decoder* IF_Scheme_PublicKey::x509_decoder(RandomNumberGenerator& rng)
                .verify_end()
                .end_cons();
 
-            key->X509_load_hook(rng);
+            key->X509_load_hook();
             }
 
-         IF_Scheme_Decoder(IF_Scheme_PublicKey* k, RandomNumberGenerator& r) :
-            key(k), rng(r) {}
+         IF_Scheme_Decoder(IF_Scheme_PublicKey* k) : key(k) {}
       private:
          IF_Scheme_PublicKey* key;
-         RandomNumberGenerator& rng;
       };
 
-   return new IF_Scheme_Decoder(this, rng);
+   return new IF_Scheme_Decoder(this);
    }
 
 /*************************************************
@@ -160,10 +157,9 @@ PKCS8_Decoder* IF_Scheme_PrivateKey::pkcs8_decoder(RandomNumberGenerator& rng)
 /*************************************************
 * Algorithm Specific X.509 Initialization Code   *
 *************************************************/
-void IF_Scheme_PublicKey::X509_load_hook(RandomNumberGenerator& rng)
+void IF_Scheme_PublicKey::X509_load_hook()
    {
    core = IF_Core(e, n);
-   load_check(rng);
    }
 
 /*************************************************

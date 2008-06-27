@@ -28,10 +28,8 @@ class BOTAN_DLL Public_Key
       virtual u32bit message_part_size() const { return 0; }
       virtual u32bit max_input_bits() const = 0;
 
-      virtual class X509_Encoder* x509_encoder() const
-         { return 0; }
-      virtual class X509_Decoder* x509_decoder(RandomNumberGenerator&)
-         { return 0; }
+      virtual class X509_Encoder* x509_encoder() const = 0;
+      virtual class X509_Decoder* x509_decoder() = 0;
 
       virtual ~Public_Key() {}
    protected:

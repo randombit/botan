@@ -1,13 +1,12 @@
 /*************************************************
 * Rabin-Williams Source File                     *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/rw.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
 #include <botan/parsing.h>
-#include <botan/libstate.h>
 #include <algorithm>
 
 namespace Botan {
@@ -19,7 +18,7 @@ RW_PublicKey::RW_PublicKey(const BigInt& mod, const BigInt& exp)
    {
    n = mod;
    e = exp;
-   X509_load_hook(global_state().prng_reference());
+   X509_load_hook();
    }
 
 /*************************************************
@@ -53,8 +52,8 @@ SecureVector<byte> RW_PublicKey::verify(const byte in[], u32bit len) const
 /*************************************************
 * Create a Rabin-Williams private key            *
 *************************************************/
-RW_PrivateKey::RW_PrivateKey(u32bit bits, RandomNumberGenerator& rng,
-                             u32bit exp)
+RW_PrivateKey::RW_PrivateKey(RandomNumberGenerator& rng,
+                             u32bit bits, u32bit exp)
    {
    if(bits < 1024)
       throw Invalid_Argument(algo_name() + ": Can't make a key that is only " +
@@ -76,7 +75,8 @@ RW_PrivateKey::RW_PrivateKey(u32bit bits, RandomNumberGenerator& rng,
 /*************************************************
 * RW_PrivateKey Constructor                      *
 *************************************************/
-RW_PrivateKey::RW_PrivateKey(const BigInt& prime1, const BigInt& prime2,
+RW_PrivateKey::RW_PrivateKey(RandomNumberGenerator& rng,
+                             const BigInt& prime1, const BigInt& prime2,
                              const BigInt& exp, const BigInt& d_exp,
                              const BigInt& mod)
    {
@@ -89,7 +89,7 @@ RW_PrivateKey::RW_PrivateKey(const BigInt& prime1, const BigInt& prime2,
    if(d == 0)
       d = inverse_mod(e, lcm(p - 1, q - 1) >> 1);
 
-   PKCS8_load_hook(global_state().prng_reference());
+   PKCS8_load_hook(rng);
    }
 
 /*************************************************

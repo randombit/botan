@@ -178,8 +178,12 @@ u32bit validate_rsa_enc(const std::string& algo,
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
-   RSA_PrivateKey privkey(to_bigint(str[1]), to_bigint(str[2]),
+   RandomNumberGenerator& rng = global_state().prng_reference();
+
+   RSA_PrivateKey privkey(rng,
+                          to_bigint(str[1]), to_bigint(str[2]),
                           to_bigint(str[0]));
+
    RSA_PublicKey pubkey = privkey;
 
    std::string eme = algo.substr(6, std::string::npos);
@@ -227,8 +231,12 @@ u32bit validate_rsa_sig(const std::string& algo,
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
-   RSA_PrivateKey privkey(to_bigint(str[1]), to_bigint(str[2]),
+   RandomNumberGenerator& rng = global_state().prng_reference();
+
+   RSA_PrivateKey privkey(rng,
+                          to_bigint(str[1]), to_bigint(str[2]),
                           to_bigint(str[0]));
+
    RSA_PublicKey pubkey = privkey;
 
    std::string emsa = algo.substr(7, std::string::npos);
@@ -322,7 +330,9 @@ u32bit validate_rw_sig(const std::string& algo,
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
-   RW_PrivateKey privkey(to_bigint(str[1]), to_bigint(str[2]),
+   RandomNumberGenerator& rng = global_state().prng_reference();
+
+   RW_PrivateKey privkey(rng, to_bigint(str[1]), to_bigint(str[2]),
                          to_bigint(str[0]));
    RW_PublicKey pubkey = privkey;
 
@@ -491,32 +501,32 @@ void do_pk_keygen_tests()
    std::cout << "Testing PK key generation: " << std::flush;
 
    /* Putting each key in a block reduces memory pressure, speeds it up */
-#define IF_SIG_KEY(TYPE, BITS)                                      \
-   {                                                                \
-   TYPE key(BITS, rng);                 \
-   key.check_key(rng, true);            \
-   std::cout << '.' << std::flush;                                  \
+#define IF_SIG_KEY(TYPE, BITS)              \
+   {                                        \
+   TYPE key(rng, BITS);                     \
+   key.check_key(rng, true);                \
+   std::cout << '.' << std::flush;          \
    }
 
-#define DL_SIG_KEY(TYPE, GROUP)    \
-   {                               \
-   TYPE key(rng, DL_Group(GROUP));    \
-   key.check_key(rng, true);         \
-   std::cout << '.' << std::flush;                               \
-   }
-
-#define DL_ENC_KEY(TYPE, GROUP)    \
-   {                               \
-   TYPE key(rng, DL_Group(GROUP));   \
-   key.check_key(rng, true);         \
-   std::cout << '.' << std::flush;   \
-   }
-
-#define DL_KEY(TYPE, GROUP)        \
-   {                               \
+#define DL_SIG_KEY(TYPE, GROUP)             \
+   {                                        \
    TYPE key(rng, DL_Group(GROUP));          \
-   key.check_key(rng, true);         \
-   std::cout << '.' << std::flush; \
+   key.check_key(rng, true);                \
+   std::cout << '.' << std::flush;          \
+   }
+
+#define DL_ENC_KEY(TYPE, GROUP)             \
+   {                                        \
+   TYPE key(rng, DL_Group(GROUP));          \
+   key.check_key(rng, true);                \
+   std::cout << '.' << std::flush;          \
+   }
+
+#define DL_KEY(TYPE, GROUP)                 \
+   {                                        \
+   TYPE key(rng, DL_Group(GROUP));          \
+   key.check_key(rng, true);                \
+   std::cout << '.' << std::flush;          \
    }
 
    RandomNumberGenerator& rng = global_state().prng_reference();

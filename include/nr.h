@@ -32,7 +32,7 @@ class BOTAN_DLL NR_PublicKey : public PK_Verifying_with_MR_Key,
    protected:
       NR_Core core;
    private:
-      void X509_load_hook(RandomNumberGenerator&);
+      void X509_load_hook();
    };
 
 /*************************************************

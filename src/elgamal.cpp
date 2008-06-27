@@ -7,7 +7,6 @@
 #include <botan/numthry.h>
 #include <botan/keypair.h>
 #include <botan/util.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -18,16 +17,15 @@ ElGamal_PublicKey::ElGamal_PublicKey(const DL_Group& grp, const BigInt& y1)
    {
    group = grp;
    y = y1;
-   X509_load_hook(global_state().prng_reference());
+   X509_load_hook();
    }
 
 /*************************************************
 * Algorithm Specific X.509 Initialization Code   *
 *************************************************/
-void ElGamal_PublicKey::X509_load_hook(RandomNumberGenerator& rng)
+void ElGamal_PublicKey::X509_load_hook()
    {
-   core = ELG_Core(rng, group, y);
-   load_check(rng);
+   core = ELG_Core(group, y);
    }
 
 /*************************************************

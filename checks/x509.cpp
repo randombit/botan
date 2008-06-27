@@ -84,7 +84,7 @@ void do_x509_tests()
 
    /* Create the CA's key and self-signed cert */
    std::cout << '.' << std::flush;
-   RSA_PrivateKey ca_key(1024, rng);
+   RSA_PrivateKey ca_key(rng, 1024);
 
    std::cout << '.' << std::flush;
    X509_Certificate ca_cert = X509::create_self_signed_cert(ca_opts(),
@@ -103,7 +103,7 @@ void do_x509_tests()
 
    /* Create user #2's key and cert request */
    std::cout << '.' << std::flush;
-   RSA_PrivateKey user2_key(1024, rng);
+   RSA_PrivateKey user2_key(rng, 1024);
    std::cout << '.' << std::flush;
    PKCS10_Request user2_req = X509::create_cert_req(req_opts2(),
                                                     user2_key,

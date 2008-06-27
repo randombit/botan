@@ -27,7 +27,7 @@ class BOTAN_DLL DH_PublicKey : public virtual DL_Scheme_PublicKey
       DH_PublicKey() {}
       DH_PublicKey(const DL_Group&, const BigInt&);
    private:
-      void X509_load_hook(RandomNumberGenerator&);
+      void X509_load_hook();
    };
 
 /*************************************************

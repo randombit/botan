@@ -41,9 +41,12 @@ class BOTAN_DLL RW_PrivateKey : public RW_PublicKey,
       bool check_key(RandomNumberGenerator& rng, bool) const;
 
       RW_PrivateKey() {}
-      RW_PrivateKey(const BigInt&, const BigInt&, const BigInt&,
+
+      RW_PrivateKey(RandomNumberGenerator&,
+                    const BigInt&, const BigInt&, const BigInt&,
                     const BigInt& = 0, const BigInt& = 0);
-      RW_PrivateKey(u32bit, RandomNumberGenerator& rng, u32bit = 2);
+
+      RW_PrivateKey(RandomNumberGenerator& rng, u32bit bits, u32bit = 2);
    };
 
 }

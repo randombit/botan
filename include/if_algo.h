@@ -26,9 +26,9 @@ class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
       u32bit max_input_bits() const { return (n.bits() - 1); }
 
       X509_Encoder* x509_encoder() const;
-      X509_Decoder* x509_decoder(RandomNumberGenerator&);
+      X509_Decoder* x509_decoder();
    protected:
-      virtual void X509_load_hook(RandomNumberGenerator&);
+      virtual void X509_load_hook();
       BigInt n, e;
       IF_Core core;
    };

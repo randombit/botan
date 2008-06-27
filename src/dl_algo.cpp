@@ -7,7 +7,6 @@
 #include <botan/numthry.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -43,7 +42,7 @@ X509_Encoder* DL_Scheme_PublicKey::x509_encoder() const
 /*************************************************
 * Return the X.509 public key decoder            *
 *************************************************/
-X509_Decoder* DL_Scheme_PublicKey::x509_decoder(RandomNumberGenerator& rng)
+X509_Decoder* DL_Scheme_PublicKey::x509_decoder()
    {
    class DL_Scheme_Decoder : public X509_Decoder
       {
@@ -57,18 +56,15 @@ X509_Decoder* DL_Scheme_PublicKey::x509_decoder(RandomNumberGenerator& rng)
          void key_bits(const MemoryRegion<byte>& bits)
             {
             BER_Decoder(bits).decode(key->y);
-            key->X509_load_hook(rng);
+            key->X509_load_hook();
             }
 
-         DL_Scheme_Decoder(DL_Scheme_PublicKey* k,
-                           RandomNumberGenerator& r) :
-            key(k), rng(r) {}
+         DL_Scheme_Decoder(DL_Scheme_PublicKey* k) : key(k) {}
       private:
          DL_Scheme_PublicKey* key;
-         RandomNumberGenerator& rng;
       };
 
-   return new DL_Scheme_Decoder(this, rng);
+   return new DL_Scheme_Decoder(this);
    }
 
 /*************************************************
