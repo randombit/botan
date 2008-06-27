@@ -5,9 +5,9 @@
 
 #include <botan/symkey.h>
 #include <botan/bit_ops.h>
+#include <botan/rng.h>
 #include <botan/pipe.h>
 #include <botan/hex.h>
-#include <botan/libstate.h>
 #include <algorithm>
 
 namespace Botan {
@@ -15,10 +15,11 @@ namespace Botan {
 /*************************************************
 * Create an OctetString from RNG output          *
 *************************************************/
-OctetString::OctetString(u32bit length)
+OctetString::OctetString(RandomNumberGenerator& rng,
+                         u32bit length)
    {
    bits.create(length);
-   global_state().randomize(bits, length);
+   rng.randomize(bits, length);
    }
 
 /*************************************************

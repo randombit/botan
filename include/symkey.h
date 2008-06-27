@@ -33,7 +33,7 @@ class BOTAN_DLL OctetString
       void change(const byte[], u32bit);
       void change(const MemoryRegion<byte>& in) { bits = in; }
 
-      OctetString(u32bit len);
+      OctetString(class RandomNumberGenerator&, u32bit len);
       OctetString(const std::string& str = "") { change(str); }
       OctetString(const byte in[], u32bit len) { change(in, len); }
       OctetString(const MemoryRegion<byte>& in) { change(in); }
