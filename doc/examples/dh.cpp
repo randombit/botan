@@ -7,22 +7,24 @@
 */
 #include <botan/botan.h>
 #include <botan/dh.h>
-#include <botan/libstate.h>
+#include <botan/rng.h>
 using namespace Botan;
 
 #include <iostream>
+#include <memory>
 
 int main()
    {
-   try {
+   try
+      {
+      std::auto_ptr<RandomNumberGenerator> rng(make_rng());
+
       // Alice creates a DH key and sends (the public part) to Bob
-      DH_PrivateKey private_a(DL_Group("modp/ietf/1024"),
-                              global_state().prng_reference());
+      DH_PrivateKey private_a(*rng, DL_Group("modp/ietf/1024"));
       DH_PublicKey public_a = private_a; // Bob gets this
 
       // Bob creates a key with a matching group
-      DH_PrivateKey private_b(public_a.get_domain(),
-                              global_state().prng_reference());
+      DH_PrivateKey private_b(*rng, public_a.get_domain());
 
       // Bob sends the key back to Alice
       DH_PublicKey public_b = private_b; // Alice gets this

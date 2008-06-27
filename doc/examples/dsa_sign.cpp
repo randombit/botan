@@ -48,8 +48,10 @@ int main(int argc, char* argv[])
          return 1;
          }
 
+      std::auto_ptr<RandomNumberGenerator> rng(make_rng());
+
       std::auto_ptr<PKCS8_PrivateKey> key(
-         PKCS8::load_key(argv[1], passphrase)
+         PKCS8::load_key(argv[1], *rng, passphrase)
          );
 
       DSA_PrivateKey* dsakey = dynamic_cast<DSA_PrivateKey*>(key.get());

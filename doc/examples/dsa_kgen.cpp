@@ -21,8 +21,10 @@ This file is in the public domain
 #include <string>
 #include <botan/botan.h>
 #include <botan/dsa.h>
-#include <botan/libstate.h>
+#include <botan/rng.h>
 using namespace Botan;
+
+#include <memory>
 
 int main(int argc, char* argv[])
    {
@@ -42,14 +44,14 @@ int main(int argc, char* argv[])
 
    try
       {
-      DSA_PrivateKey key(DL_Group("dsa/jce/1024"),
-                      global_state().prng_reference());
+      std::auto_ptr<RandomNumberGenerator> rng(make_rng());
+      DSA_PrivateKey key(*rng, DL_Group("dsa/jce/1024"));
 
       pub << X509::PEM_encode(key);
       if(argc == 1)
          priv << PKCS8::PEM_encode(key);
       else
-         priv << PKCS8::PEM_encode(key, argv[1]);
+         priv << PKCS8::PEM_encode(key, *rng, argv[1]);
    }
    catch(std::exception& e)
       {

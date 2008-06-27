@@ -13,10 +13,10 @@ This file is in the public domain
 #include <fstream>
 #include <string>
 #include <cstdlib>
+#include <memory>
 
 #include <botan/botan.h>
 #include <botan/rsa.h>
-#include <botan/libstate.h>
 using namespace Botan;
 
 int main(int argc, char* argv[])
@@ -45,13 +45,14 @@ int main(int argc, char* argv[])
 
    try
       {
-      RSA_PrivateKey key(bits, global_state().prng_reference());
+      std::auto_ptr<RandomNumberGenerator> rng(make_rng());
+      RSA_PrivateKey key(*rng, bits);
       pub << X509::PEM_encode(key);
 
       if(argc == 2)
          priv << PKCS8::PEM_encode(key);
       else
-         priv << PKCS8::PEM_encode(key, argv[2]);
+         priv << PKCS8::PEM_encode(key, *rng, argv[2]);
       }
    catch(std::exception& e)
       {

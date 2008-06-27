@@ -13,11 +13,11 @@ This file is in the public domain
 #include <botan/x509self.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
-#include <botan/libstate.h>
 using namespace Botan;
 
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 int main(int argc, char* argv[])
    {
@@ -42,10 +42,11 @@ int main(int argc, char* argv[])
 
    try
       {
-      RSA_PrivateKey key(1024, global_state().prng_reference());
+      std::auto_ptr<RandomNumberGenerator> rng(make_rng());
+      RSA_PrivateKey key(*rng, 1024);
 
       std::ofstream priv_key("private.pem");
-      priv_key << PKCS8::PEM_encode(key, argv[1]);
+      priv_key << PKCS8::PEM_encode(key, *rng, argv[1]);
 
       X509_Cert_Options opts;
 
@@ -60,7 +61,7 @@ int main(int argc, char* argv[])
       if(do_CA)
          opts.CA_key();
 
-      X509_Certificate cert = X509::create_self_signed_cert(opts, key);
+      X509_Certificate cert = X509::create_self_signed_cert(opts, key, *rng);
 
       std::ofstream cert_file("cert.pem");
       cert_file << cert.PEM_encode();

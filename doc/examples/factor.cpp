@@ -5,20 +5,20 @@
 #include <botan/botan.h>
 #include <botan/reducer.h>
 #include <botan/numthry.h>
-#include <botan/libstate.h>
 using namespace Botan;
 
 #include <algorithm>
 #include <iostream>
+#include <memory>
 
 // Pollard's Rho algorithm, as described in the MIT algorithms book
 
 // We use (x^2+x) mod n instead of (x*2-1) mod n as the random function,
 // it _seems_ to lead to faster factorization for the values I tried.
 
-BigInt rho(const BigInt& n)
+BigInt rho(const BigInt& n, RandomNumberGenerator& rng)
    {
-   BigInt x = random_integer(global_state().prng_reference(), 0, n-1);
+   BigInt x = random_integer(rng, 0, n-1);
    BigInt y = x;
    BigInt d = 0;
 
@@ -84,14 +84,15 @@ std::vector<BigInt> remove_small_factors(BigInt& n)
    return factors;
    }
 
-std::vector<BigInt> factorize(const BigInt& n_in)
+std::vector<BigInt> factorize(const BigInt& n_in,
+                              RandomNumberGenerator& rng)
    {
    BigInt n = n_in;
    std::vector<BigInt> factors = remove_small_factors(n);
 
    while(n != 1)
       {
-      if(is_prime(n, global_state().prng_reference()))
+      if(is_prime(n, rng))
          {
          factors.push_back(n);
          break;
@@ -99,9 +100,9 @@ std::vector<BigInt> factorize(const BigInt& n_in)
 
       BigInt a_factor = 0;
       while(a_factor == 0)
-         a_factor = rho(n);
+         a_factor = rho(n, rng);
 
-      std::vector<BigInt> rho_factored = factorize(a_factor);
+      std::vector<BigInt> rho_factored = factorize(a_factor, rng);
       for(u32bit j = 0; j != rho_factored.size(); j++)
          factors.push_back(rho_factored[j]);
 
@@ -122,7 +123,9 @@ int main(int argc, char* argv[])
       {
       BigInt n(argv[1]);
 
-      std::vector<BigInt> factors = factorize(n);
+      std::auto_ptr<RandomNumberGenerator> rng(make_rng());
+
+      std::vector<BigInt> factors = factorize(n, *rng);
       std::sort(factors.begin(), factors.end());
 
       std::cout << n << ": ";

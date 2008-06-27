@@ -14,6 +14,7 @@
 */
 
 #include <botan/botan.h>
+#include <botan/rng.h>
 #include <botan/x509_ca.h>
 #include <botan/util.h>
 using namespace Botan;
@@ -37,10 +38,12 @@ int main(int argc, char* argv[])
       const std::string arg_ca_key = argv[3];
       const std::string arg_req_file = argv[4];
 
+      std::auto_ptr<RandomNumberGenerator> rng(make_rng());
+
       X509_Certificate ca_cert(arg_ca_cert);
 
       std::auto_ptr<PKCS8_PrivateKey> privkey(
-         PKCS8::load_key(arg_ca_key, arg_passphrase)
+         PKCS8::load_key(arg_ca_key, *rng, arg_passphrase)
          );
 
       X509_CA ca(ca_cert, *privkey);
@@ -55,7 +58,7 @@ int main(int argc, char* argv[])
       X509_Time start_time(system_time());
       X509_Time end_time(system_time() + 365 * 60 * 60 * 24);
 
-      X509_Certificate new_cert = ca.sign_request(req, start_time, end_time);
+      X509_Certificate new_cert = ca.sign_request(req, *rng, start_time, end_time);
 
       // send the new cert back to the requestor
       std::cout << new_cert.PEM_encode();
