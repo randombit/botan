@@ -17,7 +17,7 @@ namespace Botan {
 class BOTAN_DLL ANSI_X931_RNG : public RandomNumberGenerator
    {
    public:
-      void randomize(byte[], u32bit) throw(PRNG_Unseeded);
+      void randomize(byte[], u32bit);
       bool is_seeded() const;
       void clear() throw();
       std::string name() const;

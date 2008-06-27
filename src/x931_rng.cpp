@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Generate a buffer of random bytes              *
 *************************************************/
-void ANSI_X931_RNG::randomize(byte out[], u32bit length) throw(PRNG_Unseeded)
+void ANSI_X931_RNG::randomize(byte out[], u32bit length)
    {
    if(!is_seeded())
       throw PRNG_Unseeded(name());

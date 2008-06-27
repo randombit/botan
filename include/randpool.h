@@ -17,7 +17,7 @@ namespace Botan {
 class BOTAN_DLL Randpool : public RandomNumberGenerator
    {
    public:
-      void randomize(byte[], u32bit) throw(PRNG_Unseeded);
+      void randomize(byte[], u32bit);
       bool is_seeded() const;
       void clear() throw();
       std::string name() const;
