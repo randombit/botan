@@ -223,6 +223,8 @@ Library_State::~Library_State()
       delete allocators[j];
       }
 
+   delete allocator_lock;
+   delete engine_lock;
    delete mutex_factory;
    }
 
