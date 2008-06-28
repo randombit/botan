@@ -72,22 +72,24 @@ byte RandomNumberGenerator::next_byte()
 *************************************************/
 RandomNumberGenerator* RandomNumberGenerator::make_rng()
    {
-   Randpool* randpool = new Randpool("AES-256", "HMAC(SHA-256)");
+   RandomNumberGenerator* rng =
+      new ANSI_X931_RNG("AES-256",
+                        new Randpool("AES-256", "HMAC(SHA-256)"));
 
 #if defined(BOTAN_EXT_TIMER_HARDWARE)
-   randpool->add_entropy_source(new Hardware_Timer);
+   rng->add_entropy_source(new Hardware_Timer);
 #elif defined(BOTAN_EXT_TIMER_POSIX)
-   randpool->add_entropy_source(new POSIX_Timer);
+   rng->add_entropy_source(new POSIX_Timer);
 #elif defined(BOTAN_EXT_TIMER_UNIX)
-   randpool->add_entropy_source(new Unix_Timer);
+   rng->add_entropy_source(new Unix_Timer);
 #elif defined(BOTAN_EXT_TIMER_WIN32)
-   randpool->add_entropy_source(new Win32_Timer);
+   rng->add_entropy_source(new Win32_Timer);
 #else
-   randpool->add_entropy_source(new Timer);
+   rng->add_entropy_source(new Timer);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_DEVICE)
-   randpool->add_entropy_source(
+   rng->add_entropy_source(
       new Device_EntropySource(
          split_on("/dev/random:/dev/srandom:/dev/urandom", ':')
          )
@@ -95,34 +97,34 @@ RandomNumberGenerator* RandomNumberGenerator::make_rng()
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_EGD)
-   randpool->add_entropy_source(
+   rng->add_entropy_source(
       new EGD_EntropySource(split_on("/var/run/egd-pool:/dev/egd-pool", ':'))
       );
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_CAPI)
-   randpool->add_entropy_source(new Win32_CAPI_EntropySource);
+   rng->add_entropy_source(new Win32_CAPI_EntropySource);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_WIN32)
-   randpool->add_entropy_source(new Win32_EntropySource);
+   rng->add_entropy_source(new Win32_EntropySource);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_UNIX)
-   randpool->add_entropy_source(
+   rng->add_entropy_source(
       new Unix_EntropySource(split_on("/bin:/sbin:/usr/bin:/usr/sbin", ':'))
       );
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_BEOS)
-   randpool->add_entropy_source(new BeOS_EntropySource);
+   rng->add_entropy_source(new BeOS_EntropySource);
 #endif
 
 #if defined(BOTAN_EXT_ENTROPY_SRC_FTW)
-   randpool->add_entropy_source(new FTW_EntropySource("/proc"));
+   rng->add_entropy_source(new FTW_EntropySource("/proc"));
 #endif
 
-   return new ANSI_X931_RNG("AES-256", randpool);
+   return rng;
    }
 
 }
