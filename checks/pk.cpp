@@ -137,7 +137,8 @@ void validate_kas(PK_Key_Agreement* kas, const std::string& algo,
    }
 
 u32bit validate_rsa_enc_pkcs8(const std::string& algo,
-                              const std::vector<std::string>& str)
+                              const std::vector<std::string>& str,
+                              RandomNumberGenerator& rng)
    {
    if(str.size() != 4 && str.size() != 5)
       throw Exception("Invalid input from pk_valid.dat");
@@ -150,9 +151,7 @@ u32bit validate_rsa_enc_pkcs8(const std::string& algo,
    DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
                                str[0].length());
 
-   Private_Key* privkey = PKCS8::load_key(keysource,
-                                          global_rng(),
-                                          pass);
+   Private_Key* privkey = PKCS8::load_key(keysource, rng, pass);
 
    RSA_PrivateKey* rsapriv = dynamic_cast<RSA_PrivateKey*>(privkey);
    if(!rsapriv)
@@ -172,12 +171,11 @@ u32bit validate_rsa_enc_pkcs8(const std::string& algo,
    }
 
 u32bit validate_rsa_enc(const std::string& algo,
-                        const std::vector<std::string>& str)
+                        const std::vector<std::string>& str,
+                        RandomNumberGenerator& rng)
    {
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
-
-   RandomNumberGenerator& rng = global_rng();
 
    RSA_PrivateKey privkey(rng,
                           to_bigint(str[1]), to_bigint(str[2]),
@@ -196,12 +194,11 @@ u32bit validate_rsa_enc(const std::string& algo,
    }
 
 u32bit validate_elg_enc(const std::string& algo,
-                        const std::vector<std::string>& str)
+                        const std::vector<std::string>& str,
+                        RandomNumberGenerator& rng)
    {
    if(str.size() != 6 && str.size() != 7)
       throw Exception("Invalid input from pk_valid.dat");
-
-   RandomNumberGenerator& rng = global_rng();
 
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]));
    ElGamal_PrivateKey privkey(rng, domain, to_bigint(str[2]));
@@ -225,12 +222,11 @@ u32bit validate_elg_enc(const std::string& algo,
    }
 
 u32bit validate_rsa_sig(const std::string& algo,
-                        const std::vector<std::string>& str)
+                        const std::vector<std::string>& str,
+                        RandomNumberGenerator& rng)
    {
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
-
-   RandomNumberGenerator& rng = global_rng();
 
    RSA_PrivateKey privkey(rng,
                           to_bigint(str[1]), to_bigint(str[2]),
@@ -324,12 +320,11 @@ u32bit validate_rw_ver(const std::string& algo,
    }
 
 u32bit validate_rw_sig(const std::string& algo,
-                       const std::vector<std::string>& str)
+                       const std::vector<std::string>& str,
+                       RandomNumberGenerator& rng)
    {
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
-
-   RandomNumberGenerator& rng = global_rng();
 
    RW_PrivateKey privkey(rng, to_bigint(str[1]), to_bigint(str[2]),
                          to_bigint(str[0]));
@@ -346,7 +341,8 @@ u32bit validate_rw_sig(const std::string& algo,
    }
 
 u32bit validate_dsa_sig(const std::string& algo,
-                        const std::vector<std::string>& str)
+                        const std::vector<std::string>& str,
+                        RandomNumberGenerator& rng)
    {
    if(str.size() != 4 && str.size() != 5)
       throw Exception("Invalid input from pk_valid.dat");
@@ -359,9 +355,7 @@ u32bit validate_dsa_sig(const std::string& algo,
    DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
                                str[0].length());
 
-   Private_Key* privkey = PKCS8::load_key(keysource,
-                                          global_rng(),
-                                          pass);
+   Private_Key* privkey = PKCS8::load_key(keysource, rng, pass);
 
    DSA_PrivateKey* dsapriv = dynamic_cast<DSA_PrivateKey*>(privkey);
    if(!dsapriv)
@@ -413,12 +407,11 @@ u32bit validate_dsa_ver(const std::string& algo,
    }
 
 u32bit validate_nr_sig(const std::string& algo,
-                       const std::vector<std::string>& str)
+                       const std::vector<std::string>& str,
+                       RandomNumberGenerator& rng)
    {
    if(str.size() != 8)
       throw Exception("Invalid input from pk_valid.dat");
-
-   RandomNumberGenerator& rng = global_rng();
 
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]), to_bigint(str[2]));
    NR_PrivateKey privkey(rng, domain, to_bigint(str[4]));
@@ -435,12 +428,11 @@ u32bit validate_nr_sig(const std::string& algo,
    }
 
 u32bit validate_dh(const std::string& algo,
-                   const std::vector<std::string>& str)
+                   const std::vector<std::string>& str,
+                   RandomNumberGenerator& rng)
    {
    if(str.size() != 5 && str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
-
-   RandomNumberGenerator& rng = global_rng();
 
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]));
 
@@ -462,12 +454,11 @@ u32bit validate_dh(const std::string& algo,
    }
 
 u32bit validate_dlies(const std::string& algo,
-                      const std::vector<std::string>& str)
+                      const std::vector<std::string>& str,
+                      RandomNumberGenerator& rng)
    {
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
-
-   RandomNumberGenerator& rng = global_rng();
 
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]));
 
@@ -495,7 +486,7 @@ u32bit validate_dlies(const std::string& algo,
    return (failure ? 1 : 0);
    }
 
-void do_pk_keygen_tests()
+void do_pk_keygen_tests(RandomNumberGenerator& rng)
    {
    std::cout << "Testing PK key generation: " << std::flush;
 
@@ -528,8 +519,6 @@ void do_pk_keygen_tests()
    std::cout << '.' << std::flush;          \
    }
 
-   RandomNumberGenerator& rng = global_rng();
-
    IF_SIG_KEY(RSA_PrivateKey, 1024);
    IF_SIG_KEY(RW_PrivateKey, 1024);
 
@@ -554,7 +543,8 @@ void do_pk_keygen_tests()
 
 }
 
-u32bit do_pk_validation_tests(const std::string& filename)
+u32bit do_pk_validation_tests(const std::string& filename,
+                              RandomNumberGenerator& rng)
    {
    std::ifstream test_data(filename.c_str());
 
@@ -623,33 +613,33 @@ u32bit do_pk_validation_tests(const std::string& filename)
       u32bit new_errors = 0;
 
       if(algorithm.find("DSA/") != std::string::npos)
-         new_errors = validate_dsa_sig(algorithm, substr);
+         new_errors = validate_dsa_sig(algorithm, substr, rng);
       else if(algorithm.find("DSA_VA/") != std::string::npos)
          new_errors = validate_dsa_ver(algorithm, substr);
 
       else if(algorithm.find("RSAES_PKCS8/") != std::string::npos)
-         new_errors = validate_rsa_enc_pkcs8(algorithm, substr);
+         new_errors = validate_rsa_enc_pkcs8(algorithm, substr, rng);
       else if(algorithm.find("RSAVA_X509/") != std::string::npos)
          new_errors = validate_rsa_ver_x509(algorithm, substr);
 
       else if(algorithm.find("RSAES/") != std::string::npos)
-         new_errors = validate_rsa_enc(algorithm, substr);
+         new_errors = validate_rsa_enc(algorithm, substr, rng);
       else if(algorithm.find("RSASSA/") != std::string::npos)
-         new_errors = validate_rsa_sig(algorithm, substr);
+         new_errors = validate_rsa_sig(algorithm, substr, rng);
       else if(algorithm.find("RSAVA/") != std::string::npos)
          new_errors = validate_rsa_ver(algorithm, substr);
       else if(algorithm.find("RWVA/") != std::string::npos)
          new_errors = validate_rw_ver(algorithm, substr);
       else if(algorithm.find("RW/") != std::string::npos)
-         new_errors = validate_rw_sig(algorithm, substr);
+         new_errors = validate_rw_sig(algorithm, substr, rng);
       else if(algorithm.find("NR/") != std::string::npos)
-         new_errors = validate_nr_sig(algorithm, substr);
+         new_errors = validate_nr_sig(algorithm, substr, rng);
       else if(algorithm.find("ElGamal/") != std::string::npos)
-         new_errors = validate_elg_enc(algorithm, substr);
+         new_errors = validate_elg_enc(algorithm, substr, rng);
       else if(algorithm.find("DH/") != std::string::npos)
-         new_errors = validate_dh(algorithm, substr);
+         new_errors = validate_dh(algorithm, substr, rng);
       else if(algorithm.find("DLIES/") != std::string::npos)
-         new_errors = validate_dlies(algorithm, substr);
+         new_errors = validate_dlies(algorithm, substr, rng);
       else
          std::cout << "WARNING: Unknown PK algorithm "
                    << algorithm << std::endl;
@@ -664,8 +654,8 @@ u32bit do_pk_validation_tests(const std::string& filename)
 
    std::cout << std::endl;
 
-   do_pk_keygen_tests();
-   do_x509_tests();
+   do_pk_keygen_tests(rng);
+   do_x509_tests(rng);
 
    return errors;
    }

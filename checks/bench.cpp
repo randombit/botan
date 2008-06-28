@@ -25,6 +25,7 @@ Botan::Filter* lookup(const std::string&,
 namespace {
 
 double bench_filter(std::string name, Botan::Filter* filter,
+                    Botan::RandomNumberGenerator& rng,
                     bool html, double seconds)
    {
    Botan::Pipe pipe(filter, new BitBucket);
@@ -33,7 +34,7 @@ double bench_filter(std::string name, Botan::Filter* filter,
    static const u32bit BUFFERSIZE = 32*1024;
    byte buf[BUFFERSIZE];
 
-   global_rng().randomize(buf, BUFFERSIZE);
+   rng.randomize(buf, BUFFERSIZE);
 
    u32bit iterations = 0;
    u64bit start = get_clock(), clocks_used = 0;
@@ -73,12 +74,13 @@ double bench_filter(std::string name, Botan::Filter* filter,
    }
 
 double bench(const std::string& name, const std::string& filtername, bool html,
-             double seconds, u32bit keylen, u32bit ivlen)
+             double seconds, u32bit keylen, u32bit ivlen,
+             Botan::RandomNumberGenerator& rng)
    {
    std::vector<std::string> params;
 
    Botan::SecureVector<byte> key(keylen);
-   global_rng().randomize(key, key.size());
+   rng.randomize(key, key.size());
    params.push_back(hex_encode(key, key.size()));
 
    //params.push_back(std::string(int(2*keylen), 'A'));
@@ -87,13 +89,15 @@ double bench(const std::string& name, const std::string& filtername, bool html,
    Botan::Filter* filter = lookup(filtername, params);
 
    if(filter)
-      return bench_filter(name, filter, html, seconds);
+      return bench_filter(name, filter, rng, html, seconds);
    return 0;
    }
 
 }
 
-void benchmark(const std::string& what, bool html, double seconds)
+void benchmark(const std::string& what,
+               Botan::RandomNumberGenerator& rng,
+               bool html, double seconds)
    {
    try {
       if(html)
@@ -120,7 +124,7 @@ void benchmark(const std::string& what, bool html, double seconds)
             {
             double speed = bench(algos[j].name, algos[j].filtername,
                                  html, seconds, algos[j].keylen,
-                                 algos[j].ivlen);
+                                 algos[j].ivlen, rng);
             if(speed > .00001) /* log(0) == -inf -> messed up average */
                sum += std::log(speed);
             how_many++;
@@ -158,7 +162,9 @@ void benchmark(const std::string& what, bool html, double seconds)
       }
    }
 
-u32bit bench_algo(const std::string& name, double seconds)
+u32bit bench_algo(const std::string& name,
+                  Botan::RandomNumberGenerator& rng,
+                  double seconds)
    {
    try {
       std::vector<algorithm> algos = get_algos();
@@ -168,7 +174,7 @@ u32bit bench_algo(const std::string& name, double seconds)
          if(algos[j].name == name)
             {
             bench(algos[j].name, algos[j].filtername, false, seconds,
-                  algos[j].keylen, algos[j].ivlen);
+                  algos[j].keylen, algos[j].ivlen, rng);
             return 1;
             }
          }

@@ -21,13 +21,20 @@ using namespace Botan;
 
 #define PRINT_MS_PER_OP 0 /* If 0, print ops / second */
 
-void bench_enc(PK_Encryptor*, const std::string&, double, bool);
-void bench_dec(PK_Encryptor*, PK_Decryptor*, const std::string&, double, bool);
-void bench_sig(PK_Signer*, const std::string&, double, bool);
-void bench_ver(PK_Signer*, PK_Verifier*, const std::string&, double, bool);
-void bench_kas(PK_Key_Agreement*, const std::string&, double, bool);
+void bench_enc(PK_Encryptor*, RandomNumberGenerator&,
+               const std::string&, double, bool);
+void bench_dec(PK_Encryptor*, PK_Decryptor*, RandomNumberGenerator&,
+               const std::string&, double, bool);
+void bench_sig(PK_Signer*, RandomNumberGenerator&,
+               const std::string&, double, bool);
+void bench_ver(PK_Signer*, PK_Verifier*,
+               RandomNumberGenerator&,
+               const std::string&, double, bool);
+void bench_kas(PK_Key_Agreement*, RandomNumberGenerator&,
+               const std::string&, double, bool);
 
-void bench_pk(const std::string& algo, bool html, double seconds)
+void bench_pk(RandomNumberGenerator& rng,
+              const std::string& algo, bool html, double seconds)
    {
    /*
      There is some strangeness going on here. It looks like algorithms
@@ -54,7 +61,6 @@ void bench_pk(const std::string& algo, bool html, double seconds)
      ad-hoc format (the RW algorithm has no assigned OID that I know of, so
      there is no way to encode a RW key into a PKCS #8 structure).
    */
-   RandomNumberGenerator& rng = global_rng();
 
    if(algo == "All" || algo == "RSA")
       {
@@ -73,11 +79,11 @@ void bench_pk(const std::string& algo, bool html, double seconds)
             throw Invalid_Argument("Failure reading RSA key from " + file);
 
          bench_enc(get_pk_encryptor(*key, "Raw"),
-                   "RSA-" + len_str, seconds, html);
+                   rng, "RSA-" + len_str, seconds, html);
 
          bench_dec(get_pk_encryptor(*key, "Raw"),
                    get_pk_decryptor(*key, "Raw"),
-                   "RSA-" + len_str, seconds, html);
+                   rng, "RSA-" + len_str, seconds, html);
          }
       }
 
@@ -93,10 +99,10 @@ void bench_pk(const std::string& algo, bool html, double seconds)
 
          bench_ver(get_pk_signer(key, "EMSA1(SHA-1)"),
                    get_pk_verifier(key, "EMSA1(SHA-1)"),
-                   "DSA-" + len_str, seconds, html);
+                   rng, "DSA-" + len_str, seconds, html);
 
          bench_sig(get_pk_signer(key, "EMSA1(SHA-1)"),
-                   "DSA-" + len_str, seconds, html);
+                   rng, "DSA-" + len_str, seconds, html);
          }
       }
 
@@ -111,7 +117,8 @@ void bench_pk(const std::string& algo, bool html, double seconds)
          DH_PrivateKey key(rng,
                            "modp/ietf/" + len_str);
 
-         bench_kas(get_pk_kas(key, "Raw"), "DH-" + len_str, seconds, html);
+         bench_kas(get_pk_kas(key, "Raw"), rng,
+                   "DH-" + len_str, seconds, html);
          }
       }
 
@@ -126,11 +133,11 @@ void bench_pk(const std::string& algo, bool html, double seconds)
          ElGamal_PrivateKey key(rng, "modp/ietf/" + len_str);
 
          bench_enc(get_pk_encryptor(key, "Raw"),
-                   "ELG-" + len_str, seconds, html);
+                   rng, "ELG-" + len_str, seconds, html);
 
          bench_dec(get_pk_encryptor(key, "Raw"),
                    get_pk_decryptor(key, "Raw"),
-                   "ELG-" + len_str, seconds, html);
+                   rng, "ELG-" + len_str, seconds, html);
          }
       }
 
@@ -146,10 +153,10 @@ void bench_pk(const std::string& algo, bool html, double seconds)
 
          bench_ver(get_pk_signer(key, "EMSA1(SHA-1)"),
                    get_pk_verifier(key, "EMSA1(SHA-1)"),
-                   "NR-" + len_str, seconds, html);
+                   rng, "NR-" + len_str, seconds, html);
 
          bench_sig(get_pk_signer(key, "EMSA1(SHA-1)"),
-                   "NR-" + len_str, seconds, html);
+                   rng, "NR-" + len_str, seconds, html);
          }
       }
 
@@ -167,9 +174,9 @@ void bench_pk(const std::string& algo, bool html, double seconds)
 
          bench_ver(get_pk_signer(*key, "EMSA2(SHA-1)"),
                    get_pk_verifier(*key, "EMSA2(SHA-1)"),
-                   "RW-" + len_str, seconds, html);
+                   rng, "RW-" + len_str, seconds, html);
          bench_sig(get_pk_signer(*key, "EMSA2(SHA-1)"),
-                   "RW-" + len_str, seconds, html);
+                   rng, "RW-" + len_str, seconds, html);
 
          delete key;
          }
@@ -212,7 +219,9 @@ void print_result(bool html, u32bit runs, u64bit clocks_used,
 
 }
 
-void bench_enc(PK_Encryptor* enc, const std::string& algo_name,
+void bench_enc(PK_Encryptor* enc,
+               RandomNumberGenerator& rng,
+               const std::string& algo_name,
                double seconds, bool html)
    {
    static const u32bit MSG_SIZE = 16;
@@ -226,10 +235,10 @@ void bench_enc(PK_Encryptor* enc, const std::string& algo_name,
    while(clocks_used < seconds * ticks)
       {
       runs++;
-      global_rng().randomize(msg, MSG_SIZE);
+      rng.randomize(msg, MSG_SIZE);
 
       u64bit start = get_clock();
-      enc->encrypt(msg, MSG_SIZE, global_rng());
+      enc->encrypt(msg, MSG_SIZE, rng);
       clocks_used += get_clock() - start;
       }
 
@@ -239,29 +248,28 @@ void bench_enc(PK_Encryptor* enc, const std::string& algo_name,
    }
 
 void bench_dec(PK_Encryptor* enc, PK_Decryptor* dec,
+               RandomNumberGenerator& rng,
                const std::string& algo_name,
                double seconds, bool html)
    {
    static const u32bit MSG_SIZE = 16;
    byte msg[MSG_SIZE];
-   global_rng().randomize(msg, MSG_SIZE);
+   rng.randomize(msg, MSG_SIZE);
    SecureVector<byte> output;
 
    u32bit runs = 0;
    u64bit clocks_used = 0;
 
-   SecureVector<byte> encrypted_msg = enc->encrypt(msg, MSG_SIZE,
-                                                   global_rng());
+   SecureVector<byte> encrypted_msg = enc->encrypt(msg, MSG_SIZE, rng);
 
    const u64bit ticks = get_ticks();
    while(clocks_used < seconds * ticks)
       {
       runs++;
 
-      global_rng().randomize(msg, MSG_SIZE);
+      rng.randomize(msg, MSG_SIZE);
       msg[0] |= 0x80; // make sure it works with "Raw" padding
-      encrypted_msg = enc->encrypt(msg, MSG_SIZE,
-                                   global_rng());
+      encrypted_msg = enc->encrypt(msg, MSG_SIZE, rng);
 
       u64bit start = get_clock();
       output = dec->decrypt(encrypted_msg);
@@ -282,7 +290,9 @@ void bench_dec(PK_Encryptor* enc, PK_Decryptor* dec,
    print_result(html, runs, clocks_used, algo_name, "private operation");
    }
 
-void bench_sig(PK_Signer* sig, const std::string& algo_name,
+void bench_sig(PK_Signer* sig,
+               RandomNumberGenerator& rng,
+               const std::string& algo_name,
                double seconds, bool html)
    {
    static const u32bit MSG_SIZE = 16;
@@ -295,10 +305,10 @@ void bench_sig(PK_Signer* sig, const std::string& algo_name,
    while(clocks_used < seconds * ticks)
       {
       runs++;
-      global_rng().randomize(msg, MSG_SIZE);
+      rng.randomize(msg, MSG_SIZE);
       u64bit start = get_clock();
       sig->update(msg, MSG_SIZE);
-      sig->signature(global_rng());
+      sig->signature(rng);
       clocks_used += get_clock() - start;
       }
 
@@ -308,15 +318,16 @@ void bench_sig(PK_Signer* sig, const std::string& algo_name,
    }
 
 void bench_ver(PK_Signer* sig, PK_Verifier* ver,
+               RandomNumberGenerator& rng,
                const std::string& algo_name,
                double seconds, bool html)
    {
    static const u32bit MSG_SIZE = 16;
    byte msg[MSG_SIZE];
-   global_rng().randomize(msg, MSG_SIZE);
+   rng.randomize(msg, MSG_SIZE);
 
    sig->update(msg, MSG_SIZE);
-   SecureVector<byte> signature = sig->signature(global_rng());
+   SecureVector<byte> signature = sig->signature(rng);
    u32bit runs = 0;
    u64bit clocks_used = 0;
 
@@ -326,9 +337,9 @@ void bench_ver(PK_Signer* sig, PK_Verifier* ver,
       // feel free to tweak, but make sure this always runs when runs == 0
       if(runs % 100 == 0)
          {
-         global_rng().randomize(msg, MSG_SIZE);
+         rng.randomize(msg, MSG_SIZE);
          sig->update(msg, MSG_SIZE);
-         signature = sig->signature(global_rng());
+         signature = sig->signature(rng);
          }
 
       runs++;
@@ -347,7 +358,9 @@ void bench_ver(PK_Signer* sig, PK_Verifier* ver,
    print_result(html, runs, clocks_used, algo_name, "public operation");
    }
 
-void bench_kas(PK_Key_Agreement* kas, const std::string& algo_name,
+void bench_kas(PK_Key_Agreement* kas,
+               RandomNumberGenerator& rng,
+               const std::string& algo_name,
                double seconds, bool html)
    {
    /* 128 bits: should always be considered valid (what about ECC?) */
@@ -361,7 +374,7 @@ void bench_kas(PK_Key_Agreement* kas, const std::string& algo_name,
    while(clocks_used < seconds * ticks)
       {
       runs++;
-      global_rng().randomize(key, REMOTE_KEY_SIZE);
+      rng.randomize(key, REMOTE_KEY_SIZE);
 
       u64bit start = get_clock();
       kas->derive_key(0, key, REMOTE_KEY_SIZE);

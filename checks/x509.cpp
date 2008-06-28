@@ -44,10 +44,9 @@ u64bit key_id(const Public_Key* key)
    return id;
    }
 
-u32bit check_against_copy(const Private_Key& orig)
+u32bit check_against_copy(const Private_Key& orig,
+                          RandomNumberGenerator& rng)
    {
-   RandomNumberGenerator& rng = global_rng();
-
    Private_Key* copy_priv = PKCS8::copy_key(orig, rng);
    Public_Key* copy_pub = X509::copy_key(orig);
 
@@ -75,10 +74,8 @@ u32bit check_against_copy(const Private_Key& orig)
 
 }
 
-void do_x509_tests()
+void do_x509_tests(RandomNumberGenerator& rng)
    {
-   RandomNumberGenerator& rng = global_rng();
-
    std::cout << "Testing X.509 CA/CRL/cert/cert request: " << std::flush;
 
    /* Create the CA's key and self-signed cert */
@@ -153,9 +150,9 @@ void do_x509_tests()
    if(store.validate_cert(user2_cert) != CERT_IS_REVOKED)
       std::cout << "\nFAILED: User cert #2 was not revoked" << std::endl;
 
-   check_against_copy(ca_key);
-   check_against_copy(user1_key);
-   check_against_copy(user2_key);
+   check_against_copy(ca_key, rng);
+   check_against_copy(user1_key, rng);
+   check_against_copy(user2_key, rng);
 
    std::cout << std::endl;
    }

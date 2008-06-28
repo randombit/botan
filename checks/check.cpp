@@ -19,6 +19,7 @@ using namespace Botan;
 #include "getopt.h"
 #include "bench.h"
 #include "validate.h"
+#include "common.h"
 
 const std::string VALIDATION_FILE = "checks/validate.dat";
 const std::string BIGINT_VALIDATION_FILE = "checks/mp_valid.dat";
@@ -37,6 +38,8 @@ int main(int argc, char* argv[])
 
       Botan::InitializerOptions init_options(opts.value_if_set("init"));
       Botan::LibraryInitializer init(init_options);
+
+      RandomNumberGenerator& rng = global_rng();
 
       if(opts.is_set("help") || argc <= 1)
          {
@@ -79,32 +82,32 @@ int main(int argc, char* argv[])
          for(u32bit j = 0; j != algs.size(); j++)
             {
             const std::string alg = algs[j];
-            u32bit found = bench_algo(alg, seconds);
+            u32bit found = bench_algo(alg, rng, seconds);
             if(!found) // maybe it's a PK algorithm
-               bench_pk(alg, html, seconds);
+               bench_pk(global_rng(), alg, html, seconds);
             }
          }
 
       if(opts.is_set("benchmark"))
-         benchmark("All", html, seconds);
+         benchmark("All", rng, html, seconds);
       else if(opts.is_set("bench-type"))
          {
          const std::string type = opts.value("bench-type");
 
          if(type == "all")
-            benchmark("All", html, seconds);
+            benchmark("All", rng, html, seconds);
          else if(type == "block")
-            benchmark("Block Cipher", html, seconds);
+            benchmark("Block Cipher", rng, html, seconds);
          else if(type == "stream")
-            benchmark("Stream Cipher", html, seconds);
+            benchmark("Stream Cipher", rng, html, seconds);
          else if(type == "hash")
-            benchmark("Hash", html, seconds);
+            benchmark("Hash", rng, html, seconds);
          else if(type == "mac")
-            benchmark("MAC", html, seconds);
+            benchmark("MAC", rng, html, seconds);
          else if(type == "rng")
-            benchmark("RNG", html, seconds);
+            benchmark("RNG", rng, html, seconds);
          else if(type == "pk")
-            bench_pk("All", html, seconds);
+            bench_pk(rng, "All", html, seconds);
          }
       }
    catch(Botan::Exception& e)
@@ -193,7 +196,8 @@ int validate()
       errors += do_validation_tests(VALIDATION_FILE);
       errors += do_validation_tests(EXPECTED_FAIL_FILE, false);
       errors += do_bigint_tests(BIGINT_VALIDATION_FILE);
-      errors += do_pk_validation_tests(PK_VALIDATION_FILE);
+      errors += do_pk_validation_tests(PK_VALIDATION_FILE,
+                                       global_rng());
       }
    catch(Botan::Exception& e)
       {
