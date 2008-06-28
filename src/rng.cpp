@@ -70,7 +70,7 @@ byte RandomNumberGenerator::next_byte()
 /*************************************************
 * Create and seed a new RNG object               *
 *************************************************/
-RandomNumberGenerator* make_rng()
+RandomNumberGenerator* RandomNumberGenerator::make_rng()
    {
    Randpool* randpool = new Randpool("AES-256", "HMAC(SHA-256)");
 

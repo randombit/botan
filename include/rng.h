@@ -27,6 +27,8 @@ class BOTAN_DLL EntropySource
 class BOTAN_DLL RandomNumberGenerator
    {
    public:
+      static RandomNumberGenerator* make_rng();
+
       virtual void randomize(byte[], u32bit) = 0;
       virtual bool is_seeded() const = 0;
       virtual void clear() throw() {};
@@ -37,11 +39,6 @@ class BOTAN_DLL RandomNumberGenerator
 
       virtual ~RandomNumberGenerator() {}
    };
-
-/*************************************************
-* Create and seed an RNG                         *
-*************************************************/
-RandomNumberGenerator* make_rng();
 
 }
 
