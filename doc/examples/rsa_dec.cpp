@@ -34,8 +34,12 @@ int main(int argc, char* argv[])
 
    try
       {
-      std::auto_ptr<RandomNumberGenerator> rng(make_rng());
-      std::auto_ptr<PKCS8_PrivateKey> key(PKCS8::load_key(argv[1], *rng, argv[3]));
+      std::auto_ptr<RandomNumberGenerator> rng(
+         RandomNumberGenerator::make_rng());
+
+      std::auto_ptr<PKCS8_PrivateKey> key(
+         PKCS8::load_key(argv[1], *rng, argv[3]));
+
       RSA_PrivateKey* rsakey = dynamic_cast<RSA_PrivateKey*>(key.get());
       if(!rsakey)
          {

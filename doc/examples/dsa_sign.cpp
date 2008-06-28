@@ -48,7 +48,8 @@ int main(int argc, char* argv[])
          return 1;
          }
 
-      std::auto_ptr<RandomNumberGenerator> rng(make_rng());
+      std::auto_ptr<RandomNumberGenerator> rng(
+         RandomNumberGenerator::make_rng());
 
       std::auto_ptr<PKCS8_PrivateKey> key(
          PKCS8::load_key(argv[1], *rng, passphrase)
@@ -62,13 +63,15 @@ int main(int argc, char* argv[])
          return 1;
          }
 
-      Pipe pipe(new PK_Signer_Filter(get_pk_signer(*dsakey, "EMSA1(SHA-1)")),
-                new Base64_Encoder);
+      PK_Signer signer(*dsakey, "EMSA1(SHA-1)");
 
-      pipe.start_msg();
-      message >> pipe;
-      pipe.end_msg();
+      DataSource_Stream in(message);
+      byte buf[4096] = { 0 };
+      while(u32bit got = in.read(buf, sizeof(buf)))
+         signer.update(buf, got);
 
+      Pipe pipe(new Base64_Encoder);
+      pipe.process_msg(signer.signature(*rng));
       sigfile << pipe.read_all_as_string() << std::endl;
    }
    catch(std::exception& e)

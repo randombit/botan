@@ -121,7 +121,8 @@ int main(int argc, char* argv[])
       const u32bit key_len = max_keylength_of(algo);
       const u32bit iv_len = block_size_of(algo);
 
-      std::auto_ptr<RandomNumberGenerator> rng(make_rng());
+      std::auto_ptr<RandomNumberGenerator> rng(
+         RandomNumberGenerator::make_rng());
 
       std::auto_ptr<S2K> s2k(get_s2k("PBKDF2(SHA-1)"));
       s2k->set_iterations(8192);

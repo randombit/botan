@@ -28,7 +28,9 @@ int main(int argc, char* argv[])
 
    try
       {
-      std::auto_ptr<RandomNumberGenerator> rng(make_rng());
+      std::auto_ptr<RandomNumberGenerator> rng(
+         RandomNumberGenerator::make_rng());
+
       RSA_PrivateKey priv_key(*rng, 1024);
       // If you want a DSA key instead of RSA, comment out the above line and
       // uncomment this one:

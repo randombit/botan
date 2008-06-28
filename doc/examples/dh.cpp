@@ -17,7 +17,8 @@ int main()
    {
    try
       {
-      std::auto_ptr<RandomNumberGenerator> rng(make_rng());
+      std::auto_ptr<RandomNumberGenerator> rng(
+         RandomNumberGenerator::make_rng());
 
       // Alice creates a DH key and sends (the public part) to Bob
       DH_PrivateKey private_a(*rng, DL_Group("modp/ietf/1024"));

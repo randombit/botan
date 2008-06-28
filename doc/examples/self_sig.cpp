@@ -42,7 +42,9 @@ int main(int argc, char* argv[])
 
    try
       {
-      std::auto_ptr<RandomNumberGenerator> rng(make_rng());
+      std::auto_ptr<RandomNumberGenerator> rng(
+         RandomNumberGenerator::make_rng());
+
       RSA_PrivateKey key(*rng, 1024);
 
       std::ofstream priv_key("private.pem");

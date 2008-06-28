@@ -73,7 +73,8 @@ int main(int argc, char* argv[])
          return 1;
          }
 
-      std::auto_ptr<RandomNumberGenerator> rng(make_rng());
+      std::auto_ptr<RandomNumberGenerator> rng(
+         RandomNumberGenerator::make_rng());
 
       std::auto_ptr<PK_Encryptor> encryptor(get_pk_encryptor(*rsakey,
                                                              "EME1(SHA-1)"));
@@ -89,7 +90,8 @@ int main(int argc, char* argv[])
          statistically indepedent. Practically speaking I don't think this is
          a problem.
       */
-      SymmetricKey masterkey(*rng, std::min(32U, encryptor->maximum_input_size()));
+      SymmetricKey masterkey(*rng,
+                             std::min(32U, encryptor->maximum_input_size()));
 
       SymmetricKey cast_key = derive_key("CAST", masterkey, 16);
       SymmetricKey mac_key  = derive_key("MAC",  masterkey, 16);

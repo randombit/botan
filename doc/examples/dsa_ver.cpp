@@ -67,19 +67,16 @@ int main(int argc, char* argv[])
 
       SecureVector<byte> sig = b64_decode(sigstr);
 
-      Pipe pipe(new PK_Verifier_Filter(
-                   get_pk_verifier(*dsakey, "EMSA1(SHA-1)"), sig
-                   )
-         );
+      std::auto_ptr<PK_Verifier> ver(get_pk_verifier(*dsakey, "EMSA1(SHA-1)"));
 
-      pipe.start_msg();
-      message >> pipe;
-      pipe.end_msg();
+      DataSource_Stream in(message);
+      byte buf[4096] = { 0 };
+      while(u32bit got = in.read(buf, sizeof(buf)))
+         ver->update(buf, got);
 
-      byte result = 0;
-      pipe.read(result);
+      bool ok = ver->check_signature(sig);
 
-      if(result)
+      if(ok)
          std::cout << "Signature verified\n";
       else
          std::cout << "Signature did NOT verify\n";

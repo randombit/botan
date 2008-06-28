@@ -44,7 +44,9 @@ int main(int argc, char* argv[])
 
    try
       {
-      std::auto_ptr<RandomNumberGenerator> rng(make_rng());
+      std::auto_ptr<RandomNumberGenerator> rng(
+         RandomNumberGenerator::make_rng());
+
       DSA_PrivateKey key(*rng, DL_Group("dsa/jce/1024"));
 
       pub << X509::PEM_encode(key);
