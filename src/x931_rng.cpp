@@ -56,6 +56,8 @@ void ANSI_X931_RNG::update_buffer()
 *************************************************/
 void ANSI_X931_RNG::reseed()
    {
+   prng->reseed();
+
    SecureVector<byte> key(cipher->MAXIMUM_KEYLENGTH);
    prng->randomize(key, key.size());
    cipher->set_key(key, key.size());
