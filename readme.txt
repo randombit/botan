@@ -1,4 +1,4 @@
-Botan 1.7.7 (prerelease)
+Botan 1.7.7
 http://botan.randombit.net/
 
 Please note that this is an experimental / development version of
