@@ -10,6 +10,7 @@
 #include <cstring>
 #include <exception>
 #include <limits>
+#include <memory>
 
 #include <botan/botan.h>
 #include <botan/mp_types.h>
@@ -26,7 +27,7 @@ const std::string BIGINT_VALIDATION_FILE = "checks/mp_valid.dat";
 const std::string PK_VALIDATION_FILE = "checks/pk_valid.dat";
 const std::string EXPECTED_FAIL_FILE = "checks/fail.dat";
 
-int validate();
+int validate(RandomNumberGenerator& rng);
 
 int main(int argc, char* argv[])
    {
@@ -39,7 +40,8 @@ int main(int argc, char* argv[])
       Botan::InitializerOptions init_options(opts.value_if_set("init"));
       Botan::LibraryInitializer init(init_options);
 
-      RandomNumberGenerator& rng = global_rng();
+      std::auto_ptr<RandomNumberGenerator> rng(
+         RandomNumberGenerator::make_rng());
 
       if(opts.is_set("help") || argc <= 1)
          {
@@ -58,7 +60,7 @@ int main(int argc, char* argv[])
          }
 
       if(opts.is_set("validate"))
-         return validate();
+         return validate(*rng);
 
       double seconds = 1.5;
 
@@ -82,32 +84,32 @@ int main(int argc, char* argv[])
          for(u32bit j = 0; j != algs.size(); j++)
             {
             const std::string alg = algs[j];
-            u32bit found = bench_algo(alg, rng, seconds);
+            u32bit found = bench_algo(alg, *rng, seconds);
             if(!found) // maybe it's a PK algorithm
-               bench_pk(global_rng(), alg, html, seconds);
+               bench_pk(*rng, alg, html, seconds);
             }
          }
 
       if(opts.is_set("benchmark"))
-         benchmark("All", rng, html, seconds);
+         benchmark("All", *rng, html, seconds);
       else if(opts.is_set("bench-type"))
          {
          const std::string type = opts.value("bench-type");
 
          if(type == "all")
-            benchmark("All", rng, html, seconds);
+            benchmark("All", *rng, html, seconds);
          else if(type == "block")
-            benchmark("Block Cipher", rng, html, seconds);
+            benchmark("Block Cipher", *rng, html, seconds);
          else if(type == "stream")
-            benchmark("Stream Cipher", rng, html, seconds);
+            benchmark("Stream Cipher", *rng, html, seconds);
          else if(type == "hash")
-            benchmark("Hash", rng, html, seconds);
+            benchmark("Hash", *rng, html, seconds);
          else if(type == "mac")
-            benchmark("MAC", rng, html, seconds);
-         else if(type == "rng")
-            benchmark("RNG", rng, html, seconds);
+            benchmark("MAC", *rng, html, seconds);
+         else if(type == "*rng")
+            benchmark("RNG", *rng, html, seconds);
          else if(type == "pk")
-            bench_pk(rng, "All", html, seconds);
+            bench_pk(*rng, "All", html, seconds);
          }
       }
    catch(Botan::Exception& e)
@@ -186,18 +188,17 @@ void test_types()
 
 }
 
-int validate()
+int validate(RandomNumberGenerator& rng)
    {
    std::cout << "Beginning validation tests..." << std::endl;
 
    test_types();
    u32bit errors = 0;
    try {
-      errors += do_validation_tests(VALIDATION_FILE);
-      errors += do_validation_tests(EXPECTED_FAIL_FILE, false);
-      errors += do_bigint_tests(BIGINT_VALIDATION_FILE);
-      errors += do_pk_validation_tests(PK_VALIDATION_FILE,
-                                       global_rng());
+      errors += do_validation_tests(VALIDATION_FILE, rng);
+      errors += do_validation_tests(EXPECTED_FAIL_FILE, rng, false);
+      errors += do_bigint_tests(BIGINT_VALIDATION_FILE, rng);
+      errors += do_pk_validation_tests(PK_VALIDATION_FILE, rng);
       }
    catch(Botan::Exception& e)
       {

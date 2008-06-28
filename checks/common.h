@@ -55,8 +55,6 @@ Botan::Filter* lookup_s2k(const std::string&, const std::vector<std::string>&);
 Botan::Filter* lookup_kdf(const std::string&, const std::string&,
                           const std::string&);
 
-Botan::RandomNumberGenerator& global_rng();
-
 class Fixed_Output_RNG : public Botan::RandomNumberGenerator
    {
    public:

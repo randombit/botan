@@ -20,7 +20,8 @@ using namespace Botan;
 
 namespace {
 
-u32bit random_word(u32bit max)
+u32bit random_word(Botan::RandomNumberGenerator& rng,
+                   u32bit max)
    {
 #if DEBUG
    /* deterministic version for tracking down buffering bugs */
@@ -35,7 +36,7 @@ u32bit random_word(u32bit max)
    /* normal version */
    u32bit r = 0;
    for(u32bit j = 0; j != 4; j++)
-      r = (r << 8) | global_rng().next_byte();
+      r = (r << 8) | rng.next_byte();
    return ((r % max) + 1); // return between 1 and max inclusive
 #endif
    }
@@ -46,13 +47,16 @@ Botan::Filter* lookup(const std::string&, const std::vector<std::string>&,
                       const std::string& = "All");
 
 bool failed_test(const std::string&, std::vector<std::string>, bool, bool,
-                 const std::string&, std::string&);
+                 const std::string&, std::string&,
+                 Botan::RandomNumberGenerator& rng);
 
 std::vector<std::string> parse(const std::string&);
 void strip(std::string&);
 Botan::SecureVector<byte> decode_hex(const std::string&);
 
-u32bit do_validation_tests(const std::string& filename, bool should_pass)
+u32bit do_validation_tests(const std::string& filename,
+                           RandomNumberGenerator& rng,
+                           bool should_pass)
    {
    std::ifstream test_data(filename.c_str());
    bool first_mark = true;
@@ -142,7 +146,7 @@ u32bit do_validation_tests(const std::string& filename, bool should_pass)
 
       bool failed = failed_test(algorithm, substr,
                                 is_extension, should_pass,
-                                section, last_missing);
+                                section, last_missing, rng);
 
       if(failed && should_pass)
          {
@@ -168,7 +172,8 @@ bool failed_test(const std::string& algo,
                  std::vector<std::string> params,
                  bool is_extension, bool exp_pass,
                  const std::string& section,
-                 std::string& last_missing)
+                 std::string& last_missing,
+                 Botan::RandomNumberGenerator& rng)
    {
 #if DEBUG
    std::cout << "Testing: " << algo;
@@ -221,7 +226,7 @@ bool failed_test(const std::string& algo,
       pipe.start_msg();
       while(len)
          {
-         u32bit how_much = random_word(len);
+         u32bit how_much = random_word(rng, len);
          pipe.write(data_ptr, how_much);
          data_ptr += how_much;
          len -= how_much;
@@ -258,8 +263,8 @@ bool failed_test(const std::string& algo,
    if(pipe.remaining())
       {
       /* Test peeking at an offset in Pipe/SecureQueue */
-      u32bit offset = random_word(pipe.remaining() - 1);
-      u32bit length = random_word(pipe.remaining() - offset);
+      u32bit offset = random_word(rng, pipe.remaining() - 1);
+      u32bit length = random_word(rng, pipe.remaining() - offset);
 
       Botan::SecureVector<byte> peekbuf(length);
       pipe.peek(peekbuf, length, offset);

@@ -19,14 +19,17 @@ u32bit check_sub(const std::vector<std::string>&);
 u32bit check_mul(const std::vector<std::string>&);
 u32bit check_sqr(const std::vector<std::string>&);
 u32bit check_div(const std::vector<std::string>&);
-u32bit check_mod(const std::vector<std::string>&);
+u32bit check_mod(const std::vector<std::string>&,
+                 Botan::RandomNumberGenerator& rng);
 u32bit check_shr(const std::vector<std::string>&);
 u32bit check_shl(const std::vector<std::string>&);
 
 u32bit check_powmod(const std::vector<std::string>&);
-u32bit check_primetest(const std::vector<std::string>&);
+u32bit check_primetest(const std::vector<std::string>&,
+                       Botan::RandomNumberGenerator&);
 
-u32bit do_bigint_tests(const std::string& filename)
+u32bit do_bigint_tests(const std::string& filename,
+                       Botan::RandomNumberGenerator& rng)
    {
    std::ifstream test_data(filename.c_str());
 
@@ -93,7 +96,7 @@ u32bit do_bigint_tests(const std::string& filename)
       else if(algorithm.find("Division") != std::string::npos)
          new_errors = check_div(substr);
       else if(algorithm.find("Modulo") != std::string::npos)
-         new_errors = check_mod(substr);
+         new_errors = check_mod(substr, rng);
       else if(algorithm.find("LeftShift") != std::string::npos)
          new_errors = check_shl(substr);
       else if(algorithm.find("RightShift") != std::string::npos)
@@ -101,7 +104,7 @@ u32bit do_bigint_tests(const std::string& filename)
       else if(algorithm.find("ModExp") != std::string::npos)
          new_errors = check_powmod(substr);
       else if(algorithm.find("PrimeTest") != std::string::npos)
-         new_errors = check_primetest(substr);
+         new_errors = check_primetest(substr, rng);
       else
          std::cout << "Unknown MPI test " << algorithm << std::endl;
 
@@ -249,7 +252,8 @@ u32bit check_div(const std::vector<std::string>& args)
    return results("/", a, b, c, d, e);
    }
 
-u32bit check_mod(const std::vector<std::string>& args)
+u32bit check_mod(const std::vector<std::string>& args,
+                 Botan::RandomNumberGenerator& rng)
    {
    BigInt a(args[0]);
    BigInt b(args[1]);
@@ -268,7 +272,7 @@ u32bit check_mod(const std::vector<std::string>& args)
    /* Won't work for us, just pick one at random */
    while(b_word == 0)
       for(u32bit j = 0; j != 2*sizeof(word); j++)
-         b_word = (b_word << 4) ^ global_rng().next_byte();
+         b_word = (b_word << 4) ^ rng.next_byte();
 
    b = b_word;
 
@@ -331,13 +335,13 @@ u32bit check_powmod(const std::vector<std::string>& args)
    }
 
 /* Make sure that n is prime or not prime, according to should_be_prime */
-u32bit check_primetest(const std::vector<std::string>& args)
+u32bit check_primetest(const std::vector<std::string>& args,
+                       Botan::RandomNumberGenerator& rng)
    {
    BigInt n(args[0]);
    bool should_be_prime = (args[1] == "1");
 
-   bool is_prime = Botan::verify_prime(n,
-                                       global_rng());
+   bool is_prime = Botan::verify_prime(n, rng);
 
    if(is_prime != should_be_prime)
       {
