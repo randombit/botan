@@ -23,6 +23,8 @@ class BOTAN_DLL ANSI_X931_RNG : public RandomNumberGenerator
       std::string name() const;
 
       void reseed();
+      void add_entropy_source(EntropySource*);
+      void add_entropy(const byte[], u32bit);
 
       ANSI_X931_RNG(const std::string&, RandomNumberGenerator*);
       ~ANSI_X931_RNG();

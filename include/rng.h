@@ -35,9 +35,23 @@ class BOTAN_DLL RandomNumberGenerator
 
       byte next_byte();
 
-      virtual void reseed() {};
+      virtual void reseed() {}
+      virtual void add_entropy_source(EntropySource*) = 0;
+      virtual void add_entropy(const byte[], u32bit) = 0;
 
       virtual ~RandomNumberGenerator() {}
+   };
+
+/*************************************************
+* Null Random Number Generator                   *
+*************************************************/
+class BOTAN_DLL Null_RNG : public RandomNumberGenerator
+   {
+   public:
+      void randomize(byte[], u32bit) { throw PRNG_Unseeded("Null_RNG"); }
+      bool is_seeded() const { return false; }
+      void add_entropy(const byte[], u32bit) {}
+      void add_entropy_source(EntropySource* es) { delete es; }
    };
 
 }

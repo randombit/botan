@@ -78,21 +78,19 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
 
       std::string name() const { return "Fixed_Output_RNG"; }
 
+      void add_entropy_source(Botan::EntropySource* src) { delete src; }
+      void add_entropy(const byte[], u32bit) {};
+
       void clear() throw() {}
 
-      void add_randomness(const byte in[], u32bit len) throw()
+      Fixed_Output_RNG(const Botan::SecureVector<byte>& in)
          {
-         buf.insert(buf.end(), in, in + len);
+         buf.insert(buf.end(), in.begin(), in.begin() + in.size());
          }
-
-      Fixed_Output_RNG(const Botan::SecureVector<byte>& x)
+      Fixed_Output_RNG(const std::string& in_str)
          {
-         add_randomness(x.begin(), x.size());
-         }
-      Fixed_Output_RNG(const std::string& in)
-         {
-         Botan::SecureVector<byte> x = decode_hex(in);
-         add_randomness(x.begin(), x.size());
+         Botan::SecureVector<byte> in = decode_hex(in_str);
+         buf.insert(buf.end(), in.begin(), in.begin() + in.size());
          }
 
       Fixed_Output_RNG() {}

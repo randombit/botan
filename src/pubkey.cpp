@@ -367,14 +367,6 @@ PK_Verifier_wo_MR::PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key& k,
 bool PK_Verifier_wo_MR::validate_signature(const MemoryRegion<byte>& msg,
                                            const byte sig[], u32bit sig_len)
    {
-   class Null_RNG : public RandomNumberGenerator
-      {
-      public:
-         void randomize(byte[], u32bit) { throw PRNG_Unseeded("Null_RNG"); }
-         bool is_seeded() const { return false; }
-         void add_randomness(const byte[], u32bit) {}
-      };
-
    Null_RNG rng;
 
    SecureVector<byte> encoded =
