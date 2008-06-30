@@ -823,7 +823,8 @@ sub dir_list {
     my ($dir) = @_;
     opendir(DIR, $dir) or croak("Couldn't read directory '$dir' ($!)");
 
-    my @listing = grep { $_ ne File::Spec->curdir() and
+    my @listing = grep { !/#/ and
+                         $_ ne File::Spec->curdir() and
                          $_ ne File::Spec->updir() } readdir DIR;
 
     closedir DIR;
