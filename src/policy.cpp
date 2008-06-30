@@ -220,9 +220,7 @@ void set_default_config(Library_State& config)
    config.set_option("pk/test/private", "basic");
    config.set_option("pk/test/private_gen", "all");
 
-   config.set_option("x509/validity_slack", "24h");
    config.set_option("x509/v1_assume_ca", "false");
-   config.set_option("x509/cache_verify_results", "30m");
 
    config.set_option("x509/ca/allow_ca", "false");
    config.set_option("x509/ca/basic_constraints", "always");

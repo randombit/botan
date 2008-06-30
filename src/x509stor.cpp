@@ -8,7 +8,6 @@
 #include <botan/pubkey.h>
 #include <botan/look_pk.h>
 #include <botan/oids.h>
-#include <botan/libstate.h>
 #include <botan/util.h>
 #include <algorithm>
 #include <memory>
@@ -168,15 +167,12 @@ bool X509_Store::CRL_Data::operator<(const X509_Store::CRL_Data& other) const
 /*************************************************
 * X509_Store Constructor                         *
 *************************************************/
-X509_Store::X509_Store()
+X509_Store::X509_Store(u32bit slack, u32bit cache_timeout)
    {
    revoked_info_valid = true;
 
-   time_slack = timespec_to_u32bit(
-      global_state().option("x509/validity_slack"));
-
-   validation_cache_timeout = timespec_to_u32bit(
-      global_state().option("x509/cache_verify_results"));
+   validation_cache_timeout = cache_timeout;
+   time_slack = slack;
    }
 
 /*************************************************
