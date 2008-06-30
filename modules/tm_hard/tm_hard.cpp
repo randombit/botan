@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/tm_hard.h>
-#include <botan/config.h>
 
 namespace Botan {
 

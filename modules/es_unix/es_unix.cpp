@@ -6,7 +6,6 @@
 #include <botan/es_unix.h>
 #include <botan/unix_cmd.h>
 #include <botan/parsing.h>
-#include <botan/config.h>
 #include <algorithm>
 #include <sys/time.h>
 #include <sys/stat.h>

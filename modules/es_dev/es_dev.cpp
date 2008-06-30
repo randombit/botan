@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/es_dev.h>
-#include <botan/config.h>
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/types.h>
