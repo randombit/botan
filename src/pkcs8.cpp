@@ -1,6 +1,6 @@
 /*************************************************
 * PKCS #8 Source File                            *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/pkcs8.h>
@@ -8,7 +8,6 @@
 #include <botan/ber_dec.h>
 #include <botan/asn1_obj.h>
 #include <botan/pk_algs.h>
-#include <botan/libstate.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
 #include <botan/pbe.h>
@@ -166,7 +165,7 @@ void encrypt_key(const Private_Key& key,
                  const std::string& pass, const std::string& pbe_algo,
                  X509_Encoding encoding)
    {
-   const std::string DEFAULT_PBE = global_state().option("base/default_pbe");
+   const std::string DEFAULT_PBE = "PBE-PKCS5v20(SHA-1,TripleDES/CBC)";
 
    Pipe raw_key;
    raw_key.start_msg();

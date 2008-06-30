@@ -212,8 +212,6 @@ void set_default_aliases(Library_State& config)
 *************************************************/
 void set_default_config(Library_State& config)
    {
-   config.set_option("base/default_pbe",
-                     "PBE-PKCS5v20(SHA-1,TripleDES/CBC)");
    config.set_option("base/default_allocator", "malloc");
 
    config.set_option("pk/test/public", "basic");
