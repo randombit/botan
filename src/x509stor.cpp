@@ -8,7 +8,7 @@
 #include <botan/pubkey.h>
 #include <botan/look_pk.h>
 #include <botan/oids.h>
-#include <botan/config.h>
+#include <botan/libstate.h>
 #include <botan/util.h>
 #include <algorithm>
 #include <memory>
@@ -173,10 +173,10 @@ X509_Store::X509_Store()
    revoked_info_valid = true;
 
    time_slack = timespec_to_u32bit(
-      global_config().option("x509/validity_slack"));
+      global_state().option("x509/validity_slack"));
 
    validation_cache_timeout = timespec_to_u32bit(
-      global_config().option("x509/cache_verify_results"));
+      global_state().option("x509/cache_verify_results"));
    }
 
 /*************************************************

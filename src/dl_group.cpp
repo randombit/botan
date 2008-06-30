@@ -5,6 +5,7 @@
 
 #include <botan/dl_group.h>
 #include <botan/config.h>
+#include <botan/libstate.h>
 #include <botan/parsing.h>
 #include <botan/numthry.h>
 #include <botan/der_enc.h>
@@ -28,7 +29,7 @@ DL_Group::DL_Group()
 *************************************************/
 DL_Group::DL_Group(const std::string& type)
    {
-   std::string grp_contents = global_config().get("dl", type);
+   std::string grp_contents = global_state().config().get("dl", type);
 
    if(grp_contents == "")
       throw Invalid_Argument("DL_Group: Unknown group " + type);

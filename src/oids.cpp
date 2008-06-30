@@ -5,6 +5,7 @@
 
 #include <botan/oids.h>
 #include <botan/config.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -17,10 +18,10 @@ void add_oid(const OID& oid, const std::string& name)
    {
    const std::string oid_str = oid.as_string();
 
-   if(!global_config().is_set("oid2str", oid_str))
-      global_config().set("oid2str", oid_str, name);
-   if(!global_config().is_set("str2oid", name))
-      global_config().set("str2oid", name, oid_str);
+   if(!global_state().config().is_set("oid2str", oid_str))
+      global_state().config().set("oid2str", oid_str, name);
+   if(!global_state().config().is_set("str2oid", name))
+      global_state().config().set("str2oid", name, oid_str);
    }
 
 /*************************************************
@@ -28,7 +29,7 @@ void add_oid(const OID& oid, const std::string& name)
 *************************************************/
 std::string lookup(const OID& oid)
    {
-   std::string name = global_config().get("oid2str", oid.as_string());
+   std::string name = global_state().config().get("oid2str", oid.as_string());
    if(name == "")
       return oid.as_string();
    return name;
@@ -39,7 +40,7 @@ std::string lookup(const OID& oid)
 *************************************************/
 OID lookup(const std::string& name)
    {
-   std::string value = global_config().get("str2oid", name);
+   std::string value = global_state().config().get("str2oid", name);
    if(value != "")
       return OID(value);
 
@@ -58,7 +59,7 @@ OID lookup(const std::string& name)
 *************************************************/
 bool have_oid(const std::string& name)
    {
-   return global_config().is_set("str2oid", name);
+   return global_state().config().is_set("str2oid", name);
    }
 
 /*************************************************

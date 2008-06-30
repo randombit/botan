@@ -7,6 +7,7 @@
 #include <botan/x509stor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+#include <botan/libstate.h>
 #include <botan/config.h>
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
@@ -188,7 +189,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
 
    if(next_update == 0)
       next_update = timespec_to_u32bit(
-         global_config().option("x509/crl/next_update"));
+         global_state().option("x509/crl/next_update"));
 
    // Totally stupid: ties encoding logic to the return of std::time!!
    const u64bit current_time = system_time();
@@ -252,19 +253,19 @@ PK_Signer* choose_sig_format(const Private_Key& key,
 
    if(algo_name == "RSA")
       {
-      std::string hash = global_config().option("x509/ca/rsa_hash");
+      std::string hash = global_state().option("x509/ca/rsa_hash");
 
       if(hash == "")
          throw Invalid_State("No value set for x509/ca/rsa_hash");
 
-      hash = global_config().deref_alias(hash);
+      hash = global_state().config().deref_alias(hash);
 
       padding = "EMSA3(" + hash + ")";
       format = IEEE_1363;
       }
    else if(algo_name == "DSA")
       {
-      std::string hash = global_config().deref_alias("SHA-1");
+      std::string hash = global_state().config().deref_alias("SHA-1");
       padding = "EMSA1(" + hash + ")";
       format = DER_SEQUENCE;
       }

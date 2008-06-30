@@ -46,6 +46,7 @@ class BOTAN_DLL Library_State
       void set_default_allocator(const std::string&) const;
 
       class Config& config() const;
+      std::string option(const std::string&) const;
 
       class Mutex* get_mutex() const;
    private:

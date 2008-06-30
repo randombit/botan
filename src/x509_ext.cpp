@@ -8,7 +8,7 @@
 #include <botan/ber_dec.h>
 #include <botan/lookup.h>
 #include <botan/oids.h>
-#include <botan/config.h>
+#include <botan/libstate.h>
 #include <botan/bit_ops.h>
 #include <algorithm>
 #include <memory>
@@ -80,7 +80,7 @@ void Extensions::encode_into(DER_Encoder& to_object) const
       std::string setting;
 
       if(ext->config_id() != "")
-         setting = global_config().option("x509/exts/" + ext->config_id());
+         setting = global_state().option("x509/exts/" + ext->config_id());
 
       if(setting == "")
          setting = "yes";

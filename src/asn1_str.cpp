@@ -8,7 +8,7 @@
 #include <botan/ber_dec.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
-#include <botan/config.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -17,7 +17,8 @@ namespace {
 /*************************************************
 * Choose an encoding for the string              *
 *************************************************/
-ASN1_Tag choose_encoding(const std::string& str)
+ASN1_Tag choose_encoding(const std::string& str,
+                         const std::string& type)
    {
    static const byte IS_PRINTABLE[256] = {
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -44,14 +45,14 @@ ASN1_Tag choose_encoding(const std::string& str)
       0x00, 0x00, 0x00, 0x00 };
 
    for(u32bit j = 0; j != str.size(); ++j)
+      {
       if(!IS_PRINTABLE[static_cast<byte>(str[j])])
          {
-         const std::string type = global_config().option("x509/ca/str_type");
-
          if(type == "utf8")   return UTF8_STRING;
          if(type == "latin1") return T61_STRING;
          throw Invalid_Argument("Bad setting for x509/ca/str_type: " + type);
          }
+      }
    return PRINTABLE_STRING;
    }
 
@@ -77,7 +78,8 @@ ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : tag(t)
    iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
 
    if(tag == DIRECTORY_STRING)
-      tag = choose_encoding(iso_8859_str);
+      tag = choose_encoding(iso_8859_str,
+                            global_state().option("x509/ca/str_type"));
 
    if(tag != NUMERIC_STRING &&
       tag != PRINTABLE_STRING &&
@@ -96,7 +98,8 @@ ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : tag(t)
 ASN1_String::ASN1_String(const std::string& str)
    {
    iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
-   tag = choose_encoding(iso_8859_str);
+   tag = choose_encoding(iso_8859_str,
+                         global_state().option("x509/ca/str_type"));
    }
 
 /*************************************************

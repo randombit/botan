@@ -13,14 +13,6 @@
 namespace Botan {
 
 /*************************************************
-* Get the global configuration object            *
-*************************************************/
-Config& global_config()
-   {
-   return global_state().config();
-   }
-
-/*************************************************
 * Dereference an alias                           *
 *************************************************/
 std::string deref_alias(const std::string& name)

@@ -42,11 +42,6 @@ class BOTAN_DLL Config
       Mutex* mutex;
    };
 
-/*************************************************
-* Hook for the global config                     *
-*************************************************/
-BOTAN_DLL Config& global_config();
-
 }
 
 #endif

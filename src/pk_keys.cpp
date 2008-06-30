@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/pk_keys.h>
-#include <botan/config.h>
+#include <botan/libstate.h>
 #include <botan/oids.h>
 
 namespace Botan {
@@ -16,7 +16,7 @@ namespace {
 *************************************************/
 bool key_check_level(const std::string& type)
    {
-   const std::string setting = global_config().option("pk/test/" + type);
+   const std::string setting = global_state().option("pk/test/" + type);
    if(setting == "basic")
       return false;
    return true;

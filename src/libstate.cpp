@@ -1,6 +1,6 @@
 /*************************************************
 * Library Internal/Global State Source File      *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/libstate.h>
@@ -143,7 +143,7 @@ void Library_State::add_engine(Engine* engine)
    }
 
 /*************************************************
-* Set the configuration object                   *
+* Get the configuration object                   *
 *************************************************/
 Config& Library_State::config() const
    {
@@ -154,6 +154,14 @@ Config& Library_State::config() const
       }
 
    return (*config_obj);
+   }
+
+/*************************************************
+* Set the configuration object                   *
+*************************************************/
+std::string Library_State::option(const std::string& name) const
+   {
+   return config().option(name);
    }
 
 /*************************************************
