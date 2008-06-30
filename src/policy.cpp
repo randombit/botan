@@ -220,8 +220,6 @@ void set_default_config(Library_State& config)
    config.set_option("pk/test/private", "basic");
    config.set_option("pk/test/private_gen", "all");
 
-   config.set_option("x509/v1_assume_ca", "false");
-
    config.set_option("x509/ca/allow_ca", "false");
    config.set_option("x509/ca/basic_constraints", "always");
    config.set_option("x509/ca/rsa_hash", "SHA-1");
