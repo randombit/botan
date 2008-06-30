@@ -149,8 +149,9 @@ bool passes_self_tests()
              "0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B"
              "0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B");
   }
-  catch(std::exception)
+  catch(std::exception& e)
      {
+     printf("%s\n", e.what());
      return false;
      }
 

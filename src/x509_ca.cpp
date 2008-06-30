@@ -8,7 +8,6 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/libstate.h>
-#include <botan/config.h>
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
 #include <botan/numthry.h>
@@ -258,14 +257,14 @@ PK_Signer* choose_sig_format(const Private_Key& key,
       if(hash == "")
          throw Invalid_State("No value set for x509/ca/rsa_hash");
 
-      hash = global_state().config().deref_alias(hash);
+      hash = global_state().deref_alias(hash);
 
       padding = "EMSA3(" + hash + ")";
       format = IEEE_1363;
       }
    else if(algo_name == "DSA")
       {
-      std::string hash = global_state().config().deref_alias("SHA-1");
+      std::string hash = global_state().deref_alias("SHA-1");
       padding = "EMSA1(" + hash + ")";
       format = DER_SEQUENCE;
       }

@@ -43,13 +43,23 @@ class BOTAN_DLL Library_State
 
       Allocator* get_allocator(const std::string& = "") const;
       void add_allocator(Allocator*);
-      void set_default_allocator(const std::string&) const;
+      void set_default_allocator(const std::string&);
 
-      class Config& config() const;
+      std::string get(const std::string&, const std::string&) const;
+      bool is_set(const std::string&, const std::string&) const;
+      void set(const std::string&, const std::string&,
+               const std::string&, bool = true);
+
       std::string option(const std::string&) const;
+      void set_option(const std::string, const std::string&);
+
+      void add_alias(const std::string&, const std::string&);
+      std::string deref_alias(const std::string&) const;
 
       class Mutex* get_mutex() const;
    private:
+      void load_default_config();
+
       Library_State(const Library_State&) {}
       Library_State& operator=(const Library_State&) { return (*this); }
 
@@ -57,7 +67,8 @@ class BOTAN_DLL Library_State
 
       class Mutex_Factory* mutex_factory;
 
-      mutable class Config* config_obj;
+      std::map<std::string, std::string> config;
+      class Mutex* config_lock;
 
       class Mutex* allocator_lock;
       std::map<std::string, Allocator*> alloc_factory;

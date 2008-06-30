@@ -1,9 +1,9 @@
 /*************************************************
 * Default Policy Source File                     *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/config.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -12,7 +12,7 @@ namespace {
 /*************************************************
 * OID loading helper function                    *
 *************************************************/
-void add_oid(Config& config,
+void add_oid(Library_State& config,
              const std::string& oid_str,
              const std::string& name)
    {
@@ -25,7 +25,7 @@ void add_oid(Config& config,
 /*************************************************
 * Load all of the default OIDs                   *
 *************************************************/
-void set_default_oids(Config& config)
+void set_default_oids(Library_State& config)
    {
    add_oid(config, "1.2.840.113549.1.1.1", "RSA");
    add_oid(config, "2.5.8.1.1", "RSA");
@@ -166,7 +166,7 @@ void set_default_oids(Config& config)
 /*************************************************
 * Set the default algorithm aliases              *
 *************************************************/
-void set_default_aliases(Config& config)
+void set_default_aliases(Library_State& config)
    {
    config.add_alias("OpenPGP.Cipher.1",  "IDEA");
    config.add_alias("OpenPGP.Cipher.2",  "TripleDES");
@@ -210,7 +210,7 @@ void set_default_aliases(Config& config)
 /*************************************************
 * Set the default configuration toggles          *
 *************************************************/
-void set_default_config(Config& config)
+void set_default_config(Library_State& config)
    {
    config.set_option("base/default_pbe",
                      "PBE-PKCS5v20(SHA-1,TripleDES/CBC)");
@@ -245,7 +245,7 @@ void set_default_config(Config& config)
 /*************************************************
 * Set the built-in discrete log groups           *
 *************************************************/
-void set_default_dl_groups(Config& config)
+void set_default_dl_groups(Library_State& config)
    {
    config.set("dl", "modp/ietf/768",
       "-----BEGIN X942 DH PARAMETERS-----"
@@ -375,7 +375,7 @@ void set_default_dl_groups(Config& config)
 /*************************************************
 * Set the default policy                         *
 *************************************************/
-void Config::load_defaults()
+void Library_State::load_default_config()
    {
    set_default_config(*this);
    set_default_aliases(*this);

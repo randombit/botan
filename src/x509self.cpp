@@ -7,7 +7,6 @@
 #include <botan/x509_ext.h>
 #include <botan/x509_ca.h>
 #include <botan/der_enc.h>
-#include <botan/config.h>
 #include <botan/look_pk.h>
 #include <botan/oids.h>
 #include <botan/pipe.h>

@@ -6,7 +6,6 @@
 #include <botan/pk_core.h>
 #include <botan/numthry.h>
 #include <botan/engine.h>
-#include <botan/config.h>
 #include <botan/parsing.h>
 #include <algorithm>
 
