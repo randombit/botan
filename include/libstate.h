@@ -7,7 +7,6 @@
 #define BOTAN_LIB_STATE_H__
 
 #include <botan/base.h>
-#include <botan/rng.h>
 #include <botan/init.h>
 #include <string>
 #include <vector>
