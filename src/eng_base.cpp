@@ -122,7 +122,7 @@ Modular_Exponentiator* Engine::mod_exp(const BigInt&,
 *************************************************/
 const BlockCipher* Engine::block_cipher(const std::string& name) const
    {
-   return lookup_algo(cache_of_bc, deref_alias(name),
+   return lookup_algo(cache_of_bc, global_state().deref_alias(name),
                       this, &Engine::find_block_cipher);
    }
 
@@ -131,7 +131,7 @@ const BlockCipher* Engine::block_cipher(const std::string& name) const
 *************************************************/
 const StreamCipher* Engine::stream_cipher(const std::string& name) const
    {
-   return lookup_algo(cache_of_sc, deref_alias(name),
+   return lookup_algo(cache_of_sc, global_state().deref_alias(name),
                       this, &Engine::find_stream_cipher);
    }
 
@@ -140,7 +140,7 @@ const StreamCipher* Engine::stream_cipher(const std::string& name) const
 *************************************************/
 const HashFunction* Engine::hash(const std::string& name) const
    {
-   return lookup_algo(cache_of_hf, deref_alias(name),
+   return lookup_algo(cache_of_hf, global_state().deref_alias(name),
                       this, &Engine::find_hash);
    }
 
@@ -149,7 +149,7 @@ const HashFunction* Engine::hash(const std::string& name) const
 *************************************************/
 const MessageAuthenticationCode* Engine::mac(const std::string& name) const
    {
-   return lookup_algo(cache_of_mac, deref_alias(name),
+   return lookup_algo(cache_of_mac, global_state().deref_alias(name),
                       this, &Engine::find_mac);
    }
 
@@ -158,7 +158,7 @@ const MessageAuthenticationCode* Engine::mac(const std::string& name) const
 *************************************************/
 const S2K* Engine::s2k(const std::string& name) const
    {
-   return lookup_algo(cache_of_s2k, deref_alias(name),
+   return lookup_algo(cache_of_s2k, global_state().deref_alias(name),
                       this, &Engine::find_s2k);
    }
 
@@ -168,7 +168,7 @@ const S2K* Engine::s2k(const std::string& name) const
 const BlockCipherModePaddingMethod*
 Engine::bc_pad(const std::string& name) const
    {
-   return lookup_algo(cache_of_bc_pad, deref_alias(name),
+   return lookup_algo(cache_of_bc_pad, global_state().deref_alias(name),
                       this, &Engine::find_bc_pad);
    }
 

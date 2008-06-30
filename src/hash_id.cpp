@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/hash_id.h>
-#include <botan/lookup.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -53,7 +53,7 @@ const byte TIGER_ID[] = {
 *************************************************/
 MemoryVector<byte> pkcs_hash_id(const std::string& name_or_alias)
    {
-   const std::string name = deref_alias(name_or_alias);
+   const std::string name = global_state().deref_alias(name_or_alias);
 
    MemoryVector<byte> out;
 
@@ -90,7 +90,7 @@ MemoryVector<byte> pkcs_hash_id(const std::string& name_or_alias)
 *************************************************/
 byte ieee1363_hash_id(const std::string& name_or_alias)
    {
-   const std::string name = deref_alias(name_or_alias);
+   const std::string name = global_state().deref_alias(name_or_alias);
 
    if(name == "RIPEMD-160") return 0x31;
    if(name == "RIPEMD-128") return 0x32;

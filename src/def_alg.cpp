@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/eng_def.h>
-#include <botan/lookup.h>
+#include <botan/libstate.h>
 #include <botan/parsing.h>
 
 #include <botan/aes.h>
@@ -113,7 +113,7 @@ Default_Engine::find_block_cipher(const std::string& algo_spec) const
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
    if(name.empty())
       return 0;
-   const std::string algo_name = deref_alias(name[0]);
+   const std::string algo_name = global_state().deref_alias(name[0]);
 
    HANDLE_TYPE_NO_ARGS("AES", AES);
    HANDLE_TYPE_NO_ARGS("AES-128", AES_128);
@@ -161,7 +161,7 @@ Default_Engine::find_stream_cipher(const std::string& algo_spec) const
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
    if(name.empty())
       return 0;
-   const std::string algo_name = deref_alias(name[0]);
+   const std::string algo_name = global_state().deref_alias(name[0]);
 
    HANDLE_TYPE_ONE_U32BIT("ARC4", ARC4, 0);
    HANDLE_TYPE_ONE_U32BIT("RC4_drop", ARC4, 768);
@@ -180,7 +180,7 @@ Default_Engine::find_hash(const std::string& algo_spec) const
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
    if(name.empty())
       return 0;
-   const std::string algo_name = deref_alias(name[0]);
+   const std::string algo_name = global_state().deref_alias(name[0]);
 
    HANDLE_TYPE_NO_ARGS("Adler32", Adler32);
    HANDLE_TYPE_NO_ARGS("CRC24", CRC24);
@@ -218,7 +218,7 @@ Default_Engine::find_mac(const std::string& algo_spec) const
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
    if(name.empty())
       return 0;
-   const std::string algo_name = deref_alias(name[0]);
+   const std::string algo_name = global_state().deref_alias(name[0]);
 
    HANDLE_TYPE_ONE_STRING("CBC-MAC", CBC_MAC);
    HANDLE_TYPE_ONE_STRING("CMAC", CMAC);
@@ -237,7 +237,7 @@ S2K* Default_Engine::find_s2k(const std::string& algo_spec) const
    if(name.empty())
       return 0;
 
-   const std::string algo_name = deref_alias(name[0]);
+   const std::string algo_name = global_state().deref_alias(name[0]);
 
    HANDLE_TYPE_ONE_STRING("PBKDF1", PKCS5_PBKDF1);
    HANDLE_TYPE_ONE_STRING("PBKDF2", PKCS5_PBKDF2);
@@ -256,7 +256,7 @@ Default_Engine::find_bc_pad(const std::string& algo_spec) const
    if(name.empty())
       return 0;
 
-   const std::string algo_name = deref_alias(name[0]);
+   const std::string algo_name = global_state().deref_alias(name[0]);
 
    HANDLE_TYPE_NO_ARGS("PKCS7",       PKCS7_Padding);
    HANDLE_TYPE_NO_ARGS("OneAndZeros", OneAndZeros_Padding);

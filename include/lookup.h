@@ -69,11 +69,6 @@ BOTAN_DLL bool have_hash(const std::string&);
 BOTAN_DLL bool have_mac(const std::string&);
 
 /*************************************************
-* Dereference an alias                           *
-*************************************************/
-BOTAN_DLL std::string deref_alias(const std::string&);
-
-/*************************************************
 * Query information about an algorithm           *
 *************************************************/
 BOTAN_DLL u32bit block_size_of(const std::string&);

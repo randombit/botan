@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/lookup.h>
+#include <botan/libstate.h>
 #include <botan/parsing.h>
 #include <botan/emsa.h>
 #include <botan/eme.h>
@@ -19,7 +20,7 @@ namespace Botan {
 EMSA* get_emsa(const std::string& algo_spec)
    {
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   const std::string emsa_name = deref_alias(name[0]);
+   const std::string emsa_name = global_state().deref_alias(name[0]);
 
    if(emsa_name == "Raw")
       {
@@ -62,7 +63,7 @@ EMSA* get_emsa(const std::string& algo_spec)
 EME* get_eme(const std::string& algo_spec)
    {
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   const std::string eme_name = deref_alias(name[0]);
+   const std::string eme_name = global_state().deref_alias(name[0]);
 
    if(eme_name == "PKCS1v15")
       {
@@ -88,7 +89,7 @@ EME* get_eme(const std::string& algo_spec)
 KDF* get_kdf(const std::string& algo_spec)
    {
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   const std::string kdf_name = deref_alias(name[0]);
+   const std::string kdf_name = global_state().deref_alias(name[0]);
 
    if(kdf_name == "KDF1")
       {
@@ -117,7 +118,7 @@ KDF* get_kdf(const std::string& algo_spec)
 MGF* get_mgf(const std::string& algo_spec)
    {
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   const std::string mgf_name = deref_alias(name[0]);
+   const std::string mgf_name = global_state().deref_alias(name[0]);
 
    if(mgf_name == "MGF1")
       {

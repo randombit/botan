@@ -25,14 +25,6 @@ Library_State* global_lib_state = 0;
 }
 
 /*************************************************
-* Dereference an alias                           *
-*************************************************/
-std::string deref_alias(const std::string& name)
-   {
-   return global_state().deref_alias(name);
-   }
-
-/*************************************************
 * Access the global state object                 *
 *************************************************/
 Library_State& global_state()
