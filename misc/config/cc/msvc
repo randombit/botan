@@ -15,7 +15,7 @@ no_debug_flags ""
 lang_flags "/EHsc /GR /D_CONSOLE"
 warning_flags ""
 
-dll_import_flags ""
+dll_import_flags "__declspec(dllimport)"
 dll_export_flags "__declspec(dllexport)"
 
 ar_command "link"
