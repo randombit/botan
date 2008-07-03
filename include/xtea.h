@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * XTEA                                           *
 *************************************************/
-class XTEA : public BlockCipher
+class BOTAN_DLL XTEA : public BlockCipher
    {
    public:
       void clear() throw() { EK.clear(); }
