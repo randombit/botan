@@ -16,9 +16,15 @@ BigInt random_prime(RandomNumberGenerator& rng,
                     u32bit bits, const BigInt& coprime,
                     u32bit equiv, u32bit modulo)
    {
-   if(bits < 48)
+   if(bits <= 1)
       throw Invalid_Argument("random_prime: Can't make a prime of " +
                              to_string(bits) + " bits");
+   else if(bits == 2)
+      return ((rng.next_byte() % 1) ? 2 : 3);
+   else if(bits == 3)
+      return ((rng.next_byte() % 1) ? 5 : 7);
+   else if(bits == 4)
+      return ((rng.next_byte() % 1) ? 11 : 13);
 
    if(coprime <= 0)
       throw Invalid_Argument("random_prime: coprime must be > 0");
@@ -51,6 +57,9 @@ BigInt random_prime(RandomNumberGenerator& rng,
          bool passes_sieve = true;
          ++counter;
          p += modulo;
+
+         if(p.bits() > bits)
+            break;
 
          for(u32bit j = 0; j != sieve.size(); ++j)
             {
