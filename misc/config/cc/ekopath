@@ -33,7 +33,7 @@ pentium4 -> "-mcpu=pentium4"
 
 opteron  -> "-mcpu=opteron"
 em64t    -> "-mcpu=em64t"
-core2duo -> "-mcpu=core"
+core2    -> "-mcpu=core"
 
 ia32     -> "-mcpu=anyx86"
 amd64    -> "-mcpu=athlon64"

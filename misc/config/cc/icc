@@ -25,7 +25,7 @@ makefile_style unix
 i686     -> "-march=pentium3"
 athlon   -> "-march=pentium3"
 pentium4 -> "-march=pentium4"
-core2duo -> "-msse3"
+core2    -> "-msse3"
 </mach_opt>
 
 <so_link_flags>
