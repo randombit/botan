@@ -13,14 +13,14 @@ x86_64 # for RPM
 <submodels>
 opteron
 em64t
-core2duo
+core2
 </submodels>
 
 <submodel_aliases>
-core -> core2duo
-core2 -> core2duo
-intelcore2 -> core2duo
-intelcore2duo -> core2duo
+core -> core2
+core2duo -> core2
+intelcore2 -> core2
+intelcore2duo -> core2
 athlon64 -> opteron
 k8 -> opteron
 </submodel_aliases>
