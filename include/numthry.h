@@ -36,6 +36,12 @@ s32bit BOTAN_DLL jacobi(const BigInt&, const BigInt&);
 BigInt BOTAN_DLL power_mod(const BigInt&, const BigInt&, const BigInt&);
 
 /*************************************************
+* Compute the square root of x modulo a prime    *
+* using the Shanks-Tonnelli algorithm            *
+*************************************************/
+BigInt ressol(const BigInt& x, const BigInt& p);
+
+/*************************************************
 * Utility Functions                              *
 *************************************************/
 u32bit BOTAN_DLL low_zero_bits(const BigInt&);
@@ -62,8 +68,8 @@ BigInt BOTAN_DLL random_integer(RandomNumberGenerator&,
                                 const BigInt&, const BigInt&);
 
 BigInt BOTAN_DLL random_prime(RandomNumberGenerator&,
-                              u32bit n, const BigInt& = 1,
-                              u32bit = 1, u32bit = 2);
+                              u32bit bits, const BigInt& coprime = 1,
+                              u32bit equiv = 1, u32bit equiv_mod = 2);
 
 BigInt BOTAN_DLL random_safe_prime(RandomNumberGenerator&,
                                    u32bit);

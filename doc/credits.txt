@@ -48,3 +48,9 @@ N: Luca Piccarreta
 E: luca.piccarreta@gmail.com
 D: x86/amd64 assembler, BigInt optimizations, Win32 mutex module
 S: Italy
+
+N: Falko Strenzke
+E: strenzke@flexsecure.de
+W: http://www.flexsecure.de/
+D: Shanks-Tonelli algorithm
+S: Darmstadt, Germany

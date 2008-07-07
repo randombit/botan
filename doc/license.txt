@@ -5,6 +5,8 @@ Copyright (C) 1999-2008 Jack Lloyd
               2005-2006 Matt Johnston
               2006 Luca Piccarreta
               2007 Yves Jerschow
+              2007-2008 FlexSecure GmbH
+              2007-2008 Falko Strenzke
 
 Redistribution and use in source and binary forms, for any use, with or without
 modification, is permitted provided that the following conditions are met:
