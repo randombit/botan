@@ -151,7 +151,6 @@ bool passes_self_tests()
   }
   catch(std::exception& e)
      {
-     printf("%s\n", e.what());
      return false;
      }
 
