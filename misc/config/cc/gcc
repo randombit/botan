@@ -45,14 +45,14 @@ alpha-ev7      -> "-mcpu=ev6"
 ppc601         -> "-mpowerpc -mcpu=601"
 sparc64-ultra3 -> "-mcpu=v9 -mtune=ultrasparc3"
 
-core2duo       -> "-march=nocona -momit-leaf-frame-pointer"
+core2duo       -> "-march=core2 -momit-leaf-frame-pointer"
 em64t          -> "-march=nocona -momit-leaf-frame-pointer"
 
 # Default family options (SUBMODEL is substitued with the real submodel)
 # Anything after the quotes is what should be *removed* from the submodel name
 # before it's put into SUBMODEL.
 alpha     -> "-mcpu=SUBMODEL" alpha-
-amd64     -> "-momit-leaf-frame-pointer"
+amd64     -> "-march=SUBMODEL -momit-leaf-frame-pointer"
 arm       -> "-mcpu=SUBMODEL"
 ia32      -> "-march=SUBMODEL -momit-leaf-frame-pointer"
 ia64      -> "-mtune=SUBMODEL"
