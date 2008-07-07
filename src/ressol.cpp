@@ -27,7 +27,7 @@ BigInt ressol(const BigInt& a, const BigInt& p)
       return a;
 
    if(jacobi(a, p) != 1) // not a quadratic residue
-      return -1;
+      return BigInt("-1");
 
    if(p % 4 == 3)
       return power_mod(a, ((p+1) >> 2), p);
@@ -67,7 +67,7 @@ BigInt ressol(const BigInt& a, const BigInt& p)
       u32bit t = s;
 
       if(t <= i)
-         return -1;
+         return BigInt("-1");
 
       c = power_mod(c, BigInt(BigInt::Power2, t-i-1), p);
       r = mod_p.multiply(r, c);
