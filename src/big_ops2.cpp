@@ -20,7 +20,7 @@ BigInt& BigInt::operator+=(const BigInt& y)
    const u32bit reg_size = std::max(x_sw, y_sw) + 1;
    grow_to(reg_size);
 
-   if((sign() == y.sign()))
+   if(sign() == y.sign())
       bigint_add2(get_reg(), reg_size - 1, y.data(), y_sw);
    else
       {
