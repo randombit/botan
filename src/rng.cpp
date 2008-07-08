@@ -8,6 +8,7 @@
 #include <botan/x931_rng.h>
 #include <botan/util.h>
 #include <botan/parsing.h>
+#include <botan/timers.h>
 
 #if defined(BOTAN_EXT_TIMER_HARDWARE)
   #include <botan/tm_hard.h>
