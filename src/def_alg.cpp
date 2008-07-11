@@ -19,6 +19,7 @@
 #include <botan/lubyrack.h>
 #include <botan/mars.h>
 #include <botan/misty1.h>
+#include <botan/noekeon.h>
 #include <botan/rc2.h>
 #include <botan/rc5.h>
 #include <botan/rc6.h>
@@ -131,6 +132,7 @@ Default_Engine::find_block_cipher(const std::string& algo_spec) const
    HANDLE_TYPE_ONE_STRING("Luby-Rackoff", LubyRackoff);
    HANDLE_TYPE_NO_ARGS("MARS", MARS);
    HANDLE_TYPE_ONE_U32BIT("MISTY1", MISTY1, 8);
+   HANDLE_TYPE_NO_ARGS("Noekeon", Noekeon);
    HANDLE_TYPE_NO_ARGS("RC2", RC2);
    HANDLE_TYPE_ONE_U32BIT("RC5", RC5, 12);
    HANDLE_TYPE_NO_ARGS("RC6", RC6);

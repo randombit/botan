@@ -28,6 +28,7 @@ std::vector<algorithm> get_algos()
              "Luby-Rackoff(SHA-1)/ECB", 16));
    algos.push_back(algorithm("Block Cipher", "MARS", "MARS/ECB", 32));
    algos.push_back(algorithm("Block Cipher", "MISTY1", "MISTY1/ECB", 16));
+   algos.push_back(algorithm("Block Cipher", "Noekeon", "Noekeon/ECB", 16));
    algos.push_back(algorithm("Block Cipher", "RC2", "RC2/ECB", 16));
    algos.push_back(algorithm("Block Cipher", "RC5(12)", "RC5(12)/ECB", 16));
    algos.push_back(algorithm("Block Cipher", "RC5(16)", "RC5(16)/ECB", 16));
