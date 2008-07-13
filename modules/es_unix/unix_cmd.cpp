@@ -41,7 +41,7 @@ void do_exec(const std::vector<std::string>& arg_list,
       {
       const std::string full_path = paths[j] + "/" + arg_list[0];
       const char* fsname = full_path.c_str();
-      ::execl(fsname, fsname, arg1, arg2, arg3, arg4, 0);
+      ::execl(fsname, fsname, arg1, arg2, arg3, arg4, NULL);
       }
    }
 
