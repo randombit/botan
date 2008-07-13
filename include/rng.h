@@ -39,6 +39,7 @@ class BOTAN_DLL RandomNumberGenerator
       virtual void add_entropy_source(EntropySource*) = 0;
       virtual void add_entropy(const byte[], u32bit) = 0;
 
+      RandomNumberGenerator() {}
       virtual ~RandomNumberGenerator() {}
    private:
       RandomNumberGenerator(const RandomNumberGenerator&) {}
