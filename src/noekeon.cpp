@@ -11,6 +11,9 @@ namespace Botan {
 
 namespace {
 
+/*************************************************
+* Noekeon's Theta Operation                      *
+*************************************************/
 inline void theta(u32bit& A0, u32bit& A1,
                   u32bit& A2, u32bit& A3,
                   const u32bit EK[4])
@@ -31,6 +34,26 @@ inline void theta(u32bit& A0, u32bit& A1,
    A2 ^= T;
    }
 
+/*************************************************
+* Theta With Null Key                            *
+*************************************************/
+inline void theta(u32bit& A0, u32bit& A1,
+                  u32bit& A2, u32bit& A3)
+   {
+   u32bit T = A0 ^ A2;
+   T ^= rotate_left(T, 8) ^ rotate_right(T, 8);
+   A1 ^= T;
+   A3 ^= T;
+
+   T = A1 ^ A3;
+   T ^= rotate_left(T, 8) ^ rotate_right(T, 8);
+   A0 ^= T;
+   A2 ^= T;
+   }
+
+/*************************************************
+* Noekeon's Gamma S-Box Layer                    *
+*************************************************/
 inline void gamma(u32bit& A0, u32bit& A1, u32bit& A2, u32bit& A3)
    {
    A1 ^= ~A3 & ~A2;
@@ -125,8 +148,6 @@ void Noekeon::dec(const byte in[], byte out[]) const
 *************************************************/
 void Noekeon::key(const byte key[], u32bit)
    {
-   const u32bit NullVector[] = { 0, 0, 0, 0 };
-
    u32bit A0 = load_be<u32bit>(key, 0);
    u32bit A1 = load_be<u32bit>(key, 1);
    u32bit A2 = load_be<u32bit>(key, 2);
@@ -135,7 +156,7 @@ void Noekeon::key(const byte key[], u32bit)
    for(u32bit j = 0; j != 16; ++j)
       {
       A0 ^= RC[j];
-      theta(A0, A1, A2, A3, NullVector);
+      theta(A0, A1, A2, A3);
 
       A1 = rotate_left(A1, 1);
       A2 = rotate_left(A2, 5);
@@ -155,7 +176,7 @@ void Noekeon::key(const byte key[], u32bit)
    DK[2] = A2;
    DK[3] = A3;
 
-   theta(A0, A1, A2, A3, NullVector);
+   theta(A0, A1, A2, A3);
 
    EK[0] = A0;
    EK[1] = A1;
