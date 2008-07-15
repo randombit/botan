@@ -1,5 +1,5 @@
 
-* 1.7.8, 2008-??-??
+* 1.7.8, 2008-07-15
  - Added the block cipher Noekeon
  - Remove global deref_alias function
  - X509_Store takes timeout options as constructor arguments
