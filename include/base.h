@@ -49,7 +49,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       void decrypt(byte block[]) const { dec(block, block); }
 
       virtual BlockCipher* clone() const = 0;
-      virtual void clear() throw() {};
+      virtual void clear() throw() = 0;
 
       BlockCipher(u32bit, u32bit, u32bit = 0, u32bit = 1);
       virtual ~BlockCipher() {}
@@ -74,7 +74,7 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       virtual void seek(u32bit);
 
       virtual StreamCipher* clone() const = 0;
-      virtual void clear() throw() {};
+      virtual void clear() throw() = 0;
 
       StreamCipher(u32bit, u32bit = 0, u32bit = 1, u32bit = 0);
       virtual ~StreamCipher() {}
@@ -115,7 +115,7 @@ class BOTAN_DLL HashFunction : public BufferedComputation
 
       virtual HashFunction* clone() const = 0;
       virtual std::string name() const = 0;
-      virtual void clear() throw() {};
+      virtual void clear() throw() = 0;
 
       HashFunction(u32bit, u32bit = 0);
       virtual ~HashFunction() {}
@@ -132,7 +132,7 @@ class BOTAN_DLL MessageAuthenticationCode : public BufferedComputation,
 
       virtual MessageAuthenticationCode* clone() const = 0;
       virtual std::string name() const = 0;
-      virtual void clear() throw() {};
+      virtual void clear() throw() = 0;
 
       MessageAuthenticationCode(u32bit, u32bit, u32bit = 0, u32bit = 1);
       virtual ~MessageAuthenticationCode() {}
