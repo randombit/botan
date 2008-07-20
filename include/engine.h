@@ -8,6 +8,7 @@
 
 #include <botan/base.h>
 #include <botan/mutex.h>
+#include <botan/ec_dompar.h>
 #include <botan/pk_ops.h>
 #include <botan/pow_mod.h>
 #include <botan/basefilt.h>
@@ -42,6 +43,14 @@ class BOTAN_DLL Engine
       virtual ELG_Operation* elg_op(const DL_Group&, const BigInt&,
                                     const BigInt&) const;
       virtual DH_Operation* dh_op(const DL_Group&, const BigInt&) const;
+
+      virtual ECDSA_Operation* ecdsa_op(const EC_Domain_Params& dom_pars,
+                                        const BigInt& priv_key,
+                                        const PointGFp& pub_key) const;
+
+      virtual ECKAEG_Operation* eckaeg_op(const EC_Domain_Params& dom_pars,
+                                          const BigInt& priv_key,
+                                          const PointGFp& pub_key) const;
 
       virtual Modular_Exponentiator* mod_exp(const BigInt&,
                                              Power_Mod::Usage_Hints) const;
@@ -115,6 +124,14 @@ NR_Operation* nr_op(const DL_Group&, const BigInt&, const BigInt&);
 ELG_Operation* elg_op(const DL_Group&, const BigInt&, const BigInt&);
 
 DH_Operation* dh_op(const DL_Group&, const BigInt&);
+
+ECDSA_Operation* ecdsa_op(const EC_Domain_Params& dom_pars,
+                          const BigInt& priv_key,
+                          const PointGFp& pub_key);
+
+ECKAEG_Operation* eckaeg_op(const EC_Domain_Params& dom_pars,
+                            const BigInt& priv_key,
+                            const PointGFp& pub_key);
 
 }
 
