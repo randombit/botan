@@ -18,5 +18,5 @@ all
 
 <aliases>
 win32
-mswin32
+MSWin32
 </aliases>

@@ -1829,14 +1829,16 @@ sub guess_compiler
     foreach (@CCS)
     {
         my $bin_name = $COMPILER{$_}{'binary_name'};
-        autoconfig("Guessing you want to use $_ as the compiler (use --cc to set)");
-        return $_ if(which($bin_name) ne '');
+        if(which($bin_name) ne '') {
+            autoconfig("Guessing to use $_ as the compiler " .
+                       "(use --cc to set)");
+            return $_;
+        }
     }
 
     croak(
-        "Can't find a usable C++ compiler, is your PATH right?\n" .
-        "You might need to run with explicit compiler/system flags;\n" .
-          "   run '$0 --help' for more information\n");
+        "Can't find a usable C++ compiler, is PATH right?\n" .
+        "You might need to run with the --cc option (try $0 --help)\n");
 }
 
 sub guess_os
@@ -1845,7 +1847,7 @@ sub guess_os
      {
          my $os = os_alias($_[0]);
          if(defined($OPERATING_SYSTEM{$os})) {
-             autoconfig("Guessing your operating system is $os (use --os to set)");
+             autoconfig("Guessing operating system is $os (use --os to set)");
              return $os;
          }
          return undef;
@@ -1879,7 +1881,7 @@ sub guess_cpu
     {
         my $cpu = guess_cpu_from_this(slurp_file($cpuinfo));
         if($cpu) {
-            autoconfig("Guessing (based on $cpuinfo) that your CPU is a $cpu (use --arch to set)");
+            autoconfig("Guessing (based on $cpuinfo) CPU is a $cpu (use --arch to set)");
             return $cpu;
         }
     }
@@ -1930,6 +1932,12 @@ sub guess_cpu
         }
     }
 
-    autoconfig("Guessing (based on uname -p) your CPU is a $cpu");
+    if($cpu eq 'generic') {
+        warning("Could not determine CPU type (try --cpu option)");
+    }
+    else {
+        autoconfig("Guessing (based on uname) CPU is a $cpu");
+    }
+
     return $cpu;
 }
