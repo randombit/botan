@@ -18,7 +18,7 @@ warning_flags ""
 dll_import_flags "__declspec(dllimport)"
 dll_export_flags "__declspec(dllexport)"
 
-ar_command "link"
+ar_command "lib"
 
 makefile_style nmake
 
