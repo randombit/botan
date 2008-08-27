@@ -56,23 +56,25 @@ SecureVector<byte> encode_der_ec_dompar_explicit(EC_Domain_Params const& dom_par
    {
    u32bit ecpVers1 = 1;
    OID curve_type_oid("1.2.840.10045.1.1");
-   SecureVector<byte> result = DER_Encoder()
-      .start_cons(SEQUENCE)
-      .encode(ecpVers1)
-      .start_cons(SEQUENCE)
-      .encode(curve_type_oid)
-      .encode(dom_pars.get_curve().get_p())
-      .end_cons()
-      .start_cons(SEQUENCE)
-      .encode(FE2OSP ( dom_pars.get_curve().get_a() ), OCTET_STRING)
-      .encode(FE2OSP ( dom_pars.get_curve().get_b() ), OCTET_STRING)
-      .end_cons()
-      .encode(EC2OSP ( dom_pars.get_base_point(), PointGFp::UNCOMPRESSED), OCTET_STRING)
-      .encode(dom_pars.get_order())
-      .encode(dom_pars.get_cofactor())
-      .end_cons()
-      .get_contents();
-   return result;
+
+   DER_Encoder der;
+
+   der.start_cons(SEQUENCE)
+         .encode(ecpVers1)
+         .start_cons(SEQUENCE)
+            .encode(curve_type_oid)
+            .encode(dom_pars.get_curve().get_p())
+         .end_cons()
+         .start_cons(SEQUENCE)
+            .encode(FE2OSP ( dom_pars.get_curve().get_a() ), OCTET_STRING)
+            .encode(FE2OSP ( dom_pars.get_curve().get_b() ), OCTET_STRING)
+         .end_cons()
+         .encode(EC2OSP ( dom_pars.get_base_point(), PointGFp::UNCOMPRESSED), OCTET_STRING)
+         .encode(dom_pars.get_order())
+         .encode(dom_pars.get_cofactor())
+      .end_cons();
+
+   return der.get_contents();
    }
 
 EC_Domain_Params decode_ber_ec_dompar_explicit(SecureVector<byte> const& encoded)
@@ -121,9 +123,10 @@ EC_Domain_Params decode_ber_ec_dompar_explicit(SecureVector<byte> const& encoded
 
 } // end anonymous namespace
 
-SecureVector<byte> const encode_der_ec_dompar(EC_Domain_Params const& dom_pars, EC_dompar_enc enc_type)
+SecureVector<byte> encode_der_ec_dompar(EC_Domain_Params const& dom_pars, EC_dompar_enc enc_type)
      {
      SecureVector<byte> result;
+
      if(enc_type == ENC_EXPLICIT)
         {
         result = encode_der_ec_dompar_explicit(dom_pars);
@@ -144,31 +147,25 @@ SecureVector<byte> const encode_der_ec_dompar(EC_Domain_Params const& dom_pars, 
      return result;
      }
 
-EC_Domain_Params const decode_ber_ec_dompar(SecureVector<byte> const& encoded)
+EC_Domain_Params decode_ber_ec_dompar(SecureVector<byte> const& encoded)
    {
    BER_Decoder dec(encoded);
    BER_Object obj = dec.get_next_object();
    ASN1_Tag tag = obj.type_tag;
    std::auto_ptr<EC_Domain_Params> p_result;
-   if(tag == OBJECT_ID)//if(tag == 6)
+
+   if(tag == OBJECT_ID)
       {
       OID dom_par_oid;
       BER_Decoder(encoded).decode(dom_par_oid);
-      p_result = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(get_ec_dompar(dom_par_oid.as_string())));
+      return EC_Domain_Params(get_ec_dompar(dom_par_oid.as_string()));
       }
-   else if(tag == SEQUENCE) //else if(tag == 16)
-      {
-      p_result = std::auto_ptr<EC_Domain_Params>(new  EC_Domain_Params(decode_ber_ec_dompar_explicit(encoded)));
-      }
+   else if(tag == SEQUENCE)
+      return EC_Domain_Params(decode_ber_ec_dompar_explicit(encoded));
    else if(tag == NULL_TAG)
-      {
       throw Decoding_Error("cannot decode ECDSA parameters that are ImplicitCA");
-      }
-   else
-      {
-      throw Decoding_Error("encountered unexpected when trying to decode domain parameters");
-      }
-   return *p_result;
+
+   throw Decoding_Error("encountered unexpected when trying to decode domain parameters");
    }
 
 bool operator==(EC_Domain_Params const& lhs, EC_Domain_Params const& rhs)

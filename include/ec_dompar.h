@@ -39,46 +39,43 @@ class EC_Domain_Params
       * Return domain parameter curve
       * @result domain parameter curve
       */
-      CurveGFp const get_curve() const
+      const CurveGFp& get_curve() const
          {
-         return CurveGFp(m_curve);
+         return m_curve;
          }
 
       /**
       * Return domain parameter curve
       * @result domain parameter curve
       */
-      PointGFp const get_base_point() const
+      const PointGFp& get_base_point() const
          {
-         return PointGFp(m_base_point);
+         return m_base_point;
          }
 
       /**
       * Return the order of the base point
       * @result order of the base point
       */
-      BigInt const get_order() const
+      const BigInt& get_order() const
          {
-         return BigInt(m_order);
+         return m_order;
          }
 
       /**
       * Return the cofactor
       * @result the cofactor
       */
-      BigInt const get_cofactor() const
+      const BigInt& get_cofactor() const
          {
-         return BigInt(m_cofactor);
+         return m_cofactor;
          }
 
       /**
       * Return the OID of these domain parameters
       * @result the OID
       */
-      std::string const get_oid() const
-         {
-         return m_oid;
-         }
+      std::string get_oid() const { return m_oid; }
 
    private:
       CurveGFp m_curve;
@@ -90,15 +87,18 @@ class EC_Domain_Params
 
 bool operator==(EC_Domain_Params const& lhs, EC_Domain_Params const& rhs);
 
-inline bool operator!=(EC_Domain_Params const& lhs, EC_Domain_Params const& rhs)
+inline bool operator!=(const EC_Domain_Params& lhs,
+                       const EC_Domain_Params& rhs)
    {
    return !(lhs == rhs);
    }
 
 enum EC_dompar_enc { ENC_EXPLICIT = 0, ENC_IMPLICITCA = 1, ENC_OID = 2 };
 
-SecureVector<byte> const encode_der_ec_dompar(EC_Domain_Params const& dom_pars, EC_dompar_enc enc_type);
-EC_Domain_Params const decode_ber_ec_dompar(SecureVector<byte> const& encoded);
+SecureVector<byte> encode_der_ec_dompar(EC_Domain_Params const& dom_pars,
+                                        EC_dompar_enc enc_type);
+
+EC_Domain_Params decode_ber_ec_dompar(SecureVector<byte> const& encoded);
 
 /**
 * Factory function, the only way to obtain EC domain parameters with an OID.

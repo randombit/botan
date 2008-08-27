@@ -133,18 +133,10 @@ struct Illegal_Point : public Exception
       * (will usually be  n-1 )
       * @result resulting PointGFp
       */
-#ifdef TA_COLL_T
-      PointGFp& mult_this_secure(BigInt const& scalar,
-                                 BigInt const& point_order,
-                                 BigInt const& max_secr,
-                                 bool new_rand = true
-        );
-#else
       PointGFp& mult_this_secure(BigInt const& scalar,
                                  BigInt const& point_order,
                                  BigInt const& max_secr
         );
-#endif
 
       /**
       * Negate internal value ( *this *= -1 )
@@ -252,10 +244,6 @@ struct Illegal_Point : public Exception
       void set_shrd_mod(std::tr1::shared_ptr<Botan::GFpModulus> p_mod);
 
       static GFpElement decompress ( bool yMod2, GFpElement const& x, CurveGFp const& curve );
-#ifdef TA_COLL_T
-
-      static void ta_bitwise_mult(PointGFp const& message, PointGFp& result, int bit_value);
-#endif
 
     private:
       static const u32bit GFPEL_WKSP_SIZE = 9;

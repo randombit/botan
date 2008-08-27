@@ -121,20 +121,6 @@ void inner_montg_mult_sos(word result[], const word* a_bar,
    t[s] = D;
    if (B == 0)
       {
-#ifdef TA_COUNT_MR
-      montgm_red++;
-#endif
-#ifdef MM_COLL_T
-      montgm_red++;
-#endif
-#ifdef TA_COLL_T
-      // waste some time...
-      for (volatile unsigned int i = 0; i < ta_mm_red_bloat; i++)
-         {
-         }
-
-#endif
-
       for (u32bit i=0; i<s; i++)
          {
          result[i] = t[i];
@@ -151,10 +137,6 @@ void inner_montg_mult_sos(word result[], const word* a_bar,
 
 void montg_mult(BigInt& result, BigInt& a_bar, BigInt& b_bar, const BigInt& m, const BigInt& m_dash, const BigInt )
    {
-#ifdef TA_COUNT_MR
-   montgm_mult++;
-#endif
-
    if (m.is_zero() || m_dash.is_zero())
       {
       throw Invalid_Argument("montg_mult(): neither modulus nor m_dash may be zero (and one of them was)");
@@ -522,13 +504,7 @@ GFpElement& GFpElement::operator*= ( GFpElement const& rhs )
          rhs.trf_to_mres();
          }
       workspace = m_value;
-#ifdef MM_COLL_T
-      start_counter();
-#endif
       montg_mult(m_value, workspace, rhs.m_value, mp_mod->m_p, mp_mod->m_p_dash, mp_mod->m_r);
-#ifdef MM_COLL_T
-      last_cycles = get_counter();
-#endif
       }
    else // ordinary multiplication
       {
