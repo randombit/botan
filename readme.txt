@@ -1,11 +1,11 @@
-Botan 1.6.4
+Botan 1.6.5
+http://botan.randombit.net/
 
-Botan 1.6 is mostly compatible with Botan 1.4, and many applications
-written against 1.4 will work against 1.6 without any modifications.
-However some applications, particularly ones doing complex processing,
-will require changes to match the new API.
+You can file bugs at http://www.randombit.net/bugzilla or by sending
+mail to the botan-devel mailing list.
 
-You can file bugs at http://www.randombit.net/bugzilla
+For more information, see info.txt, the API manual, and the tutorial,
+all of which can be found in the doc/ directory.
 
 Jack
 (lloyd@randombit.net)

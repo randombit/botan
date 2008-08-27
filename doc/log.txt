@@ -1,4 +1,8 @@
 
+* 1.6.5, August 27, 2008
+ - Add noexec stack marker for GNU linker in assembly code
+ - Fix autoconfiguration problem on x86 with GCC 4.2 and 4.3
+
 * 1.6.4, March 8, 2008
  - Fix a compilation problem with Visual Studio C++ 2003
 
