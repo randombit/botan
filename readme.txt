@@ -1,4 +1,4 @@
-Botan 1.7.8
+Botan 1.7.9
 http://botan.randombit.net/
 
 Please note that this is an experimental / development version of
