@@ -87,13 +87,13 @@ void* MemoryMapping_Allocator::alloc_block(u32bit n)
    if(::write(file.get_fd(), "\0", 1) != 1)
       throw MemoryMapping_Failed("Could not write to file");
 
-   int flags = MAP_SHARED;
-
-#ifdef MAP_NOSYNC
-   flags |= MAP_NOSYNC;
+#ifndef MAP_NOSYNC
+   #define MAP_NOSYNC 0
 #endif
 
-   void* ptr = ::mmap(0, n, PROT_READ | PROT_WRITE, flags,
+   void* ptr = ::mmap(0, n,
+                      PROT_READ | PROT_WRITE,
+                      MAP_SHARED | MAP_NOSYNC,
                       file.get_fd(), 0);
 
    if(ptr == static_cast<void*>(MAP_FAILED))
