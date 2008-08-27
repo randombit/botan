@@ -29,6 +29,7 @@ ia32     -> "-tp px"
 
 <arch>
 ia32
+amd64
 </arch>
 
 <os>
