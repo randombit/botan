@@ -1,10 +1,14 @@
 /*************************************************
 * Assembly Macros Header File                    *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_EXT_ASM_MACROS_H__
-#define BOTAN_EXT_ASM_MACROS_H__
+#ifndef BOTAN_EXT_IA32_ASM_MACROS_H__
+#define BOTAN_EXT_IA32_ASM_MACROS_H__
+
+#ifdef __ELF__
+.section .note.GNU-stack,"",%progbits
+#endif
 
 /*************************************************
 * General/Global Macros                          *
