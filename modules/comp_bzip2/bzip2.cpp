@@ -100,12 +100,12 @@ void Bzip_Compression::start_msg()
 *************************************************/
 void Bzip_Compression::write(const byte input[], u32bit length)
    {
-   bz->stream.next_in = (char*)input;
+   bz->stream.next_in = reinterpret_cast<char*>(const_cast<byte*>(input));
    bz->stream.avail_in = length;
 
    while(bz->stream.avail_in != 0)
       {
-      bz->stream.next_out = (char*)buffer.begin();
+      bz->stream.next_out = reinterpret_cast<char*>(buffer.begin());
       bz->stream.avail_out = buffer.size();
       BZ2_bzCompress(&(bz->stream), BZ_RUN);
       send(buffer, buffer.size() - bz->stream.avail_out);
@@ -123,7 +123,7 @@ void Bzip_Compression::end_msg()
    int rc = BZ_OK;
    while(rc != BZ_STREAM_END)
       {
-      bz->stream.next_out = (char*)buffer.begin();
+      bz->stream.next_out = reinterpret_cast<char*>(buffer.begin());
       bz->stream.avail_out = buffer.size();
       rc = BZ2_bzCompress(&(bz->stream), BZ_FINISH);
       send(buffer, buffer.size() - bz->stream.avail_out);
@@ -142,7 +142,7 @@ void Bzip_Compression::flush()
    int rc = BZ_OK;
    while(rc != BZ_RUN_OK)
       {
-      bz->stream.next_out = (char*)buffer.begin();
+      bz->stream.next_out = reinterpret_cast<char*>(buffer.begin());
       bz->stream.avail_out = buffer.size();
       rc = BZ2_bzCompress(&(bz->stream), BZ_FLUSH);
       send(buffer, buffer.size() - bz->stream.avail_out);
@@ -176,12 +176,12 @@ Bzip_Decompression::Bzip_Decompression(bool s) :
 void Bzip_Decompression::write(const byte input[], u32bit length)
    {
    if(length) no_writes = false;
-   bz->stream.next_in = (char*)input;
+   bz->stream.next_in = reinterpret_cast<char*>(const_cast<byte*>(input));
    bz->stream.avail_in = length;
 
    while(bz->stream.avail_in != 0)
       {
-      bz->stream.next_out = (char*)buffer.begin();
+      bz->stream.next_out = reinterpret_cast<char*>(buffer.begin());
       bz->stream.avail_out = buffer.size();
 
       int rc = BZ2_bzDecompress(&(bz->stream));
@@ -201,7 +201,7 @@ void Bzip_Decompression::write(const byte input[], u32bit length)
          {
          u32bit read_from_block = length - bz->stream.avail_in;
          start_msg();
-         bz->stream.next_in = (char*)input + read_from_block;
+         bz->stream.next_in = reinterpret_cast<char*>(const_cast<byte*>(input)) + read_from_block;
          bz->stream.avail_in = length - read_from_block;
          input += read_from_block;
          length -= read_from_block;
@@ -233,7 +233,7 @@ void Bzip_Decompression::end_msg()
    int rc = BZ_OK;
    while(rc != BZ_STREAM_END)
       {
-      bz->stream.next_out = (char*)buffer.begin();
+      bz->stream.next_out = reinterpret_cast<char*>(buffer.begin());
       bz->stream.avail_out = buffer.size();
       rc = BZ2_bzDecompress(&(bz->stream));
       if(rc != BZ_OK && rc != BZ_STREAM_END)
