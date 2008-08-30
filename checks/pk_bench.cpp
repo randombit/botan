@@ -64,7 +64,7 @@ void bench_pk(RandomNumberGenerator& rng,
 
    if(algo == "All" || algo == "RSA")
       {
-      const u32bit keylen[] = { 512, 1024, 1536, 2048, 3072, 4096, 0 };
+      const u32bit keylen[] = { 512, 1024, 2048, 3072, 4096, 8192, 0 };
 
       for(size_t j = 0; keylen[j]; j++)
          {
@@ -89,13 +89,23 @@ void bench_pk(RandomNumberGenerator& rng,
 
    if(algo == "All" || algo == "DSA")
       {
-      const u32bit keylen[] = { 512, 768, 1024, 0 };
+      struct dsa_groups { int psize; int qsize; };
 
-      for(size_t j = 0; keylen[j]; j++)
+      const dsa_groups keylen[] = { { 512, 160 },
+                                    { 768, 160 },
+                                    { 1024, 160 },
+                                    { 2048, 256 },
+                                    { 3072, 256 },
+                                    { 0, 0 } };
+
+      for(size_t j = 0; keylen[j].psize; j++)
          {
-         const std::string len_str = to_string(keylen[j]);
+         const std::string len_str = to_string(keylen[j].psize);
 
-         DSA_PrivateKey key(rng, "dsa/jce/" + len_str);
+         DL_Group group(rng, DL_Group::DSA_Kosherizer,
+                        keylen[j].psize, keylen[j].qsize);
+
+         DSA_PrivateKey key(rng, group);
 
          bench_ver(get_pk_signer(key, "EMSA1(SHA-1)"),
                    get_pk_verifier(key, "EMSA1(SHA-1)"),
@@ -108,7 +118,7 @@ void bench_pk(RandomNumberGenerator& rng,
 
    if(algo == "All" || algo == "DH")
       {
-      const u32bit keylen[] = { 768, 1024, 1536, 2048, 3072, 4096, 0 };
+      const u32bit keylen[] = { 1024, 2048, 3072, 4096, 8192, 0 };
 
       for(size_t j = 0; keylen[j]; j++)
          {
