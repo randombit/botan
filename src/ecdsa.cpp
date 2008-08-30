@@ -4,7 +4,7 @@
 
 namespace Botan {
 
-ECDSA_Signature::ECDSA_Signature(BigInt const& r, BigInt const& s)
+ECDSA_Signature::ECDSA_Signature(const BigInt& r, const BigInt& s)
    : m_r(r),
      m_s(s)
    {}

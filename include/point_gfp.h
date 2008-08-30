@@ -1,17 +1,14 @@
-/******************************************************
- * Arithmetic for point groups of elliptic curves     *
- * over GF(p) (header file)                           *
- *                                                    *
- * (C) 2007 Martin Döring                             *
- *          doering@cdc.informatik.tu-darmstadt.de    *
- *          Christoph Ludwig                          *
- *          ludwig@fh-worms.de                        *
- *          Falko Strenzke                            *
- *          strenzke@flexsecure.de                    *
- ******************************************************/
+/*************************************************
+* Arithmetic over GF(p)                          *
+*                                                *
+* (C) 2007 Martin Doering                        *
+*          Christoph Ludwig                      *
+*          Falko Strenzke                        *
+* (C) 2008 Jack Lloyd                            *
+*************************************************/
 
-#ifndef BOTAN_MATH_EC_POINT_GFP_H_GUARD_
-#define BOTAN_MATH_EC_POINT_GFP_H_GUARD_
+#ifndef BOTAN_POINT_GFP_H__
+#define BOTAN_POINT_GFP_H__
 
 #include <botan/curve_gfp.h>
 #include <botan/gfp_element.h>
@@ -19,23 +16,19 @@
 #include <botan/exceptn.h>
 #include <vector>
 
-
-namespace Botan
-  {
+namespace Botan {
 
 struct Illegal_Point : public Exception
-{
-    Illegal_Point(const std::string& err = "")
-    : Exception(err) {}
-};
+   {
+   Illegal_Point(const std::string& err = "") : Exception(err) {}
+   };
 
-  /**
-  * This class represents one point on a curve of GF(p).
-  */
-  class PointGFp
-    {
-
-    public:
+/**
+* This class represents one point on a curve of GF(p).
+*/
+class PointGFp
+   {
+   public:
       /**
       * uncompressed encoding byte value
       */
@@ -51,13 +44,11 @@ struct Illegal_Point : public Exception
       */
       static const int HYBRID = 2;
 
-
       /**
       * Construct the point O
       * @param curve The base curve
       */
-      explicit PointGFp ( CurveGFp const& curve);
-
+      explicit PointGFp(CurveGFp const& curve);
 
       /**
       * Construct a point given its affine coordinates
@@ -65,7 +56,7 @@ struct Illegal_Point : public Exception
       * @param x affine x coordinate
       * @param y affine y coordinate
       */
-      explicit PointGFp ( CurveGFp const& curve, GFpElement const& x,
+      explicit PointGFp(CurveGFp const& curve, GFpElement const& x,
                           GFpElement const& y );
 
       /**
@@ -75,20 +66,20 @@ struct Illegal_Point : public Exception
       * @param y jacobian projective y coordinate
       * @param z jacobian projective y coordinate
       */
-      explicit PointGFp ( CurveGFp const& curve, GFpElement const& x,
+      explicit PointGFp(CurveGFp const& curve, GFpElement const& x,
                           GFpElement const& y, GFpElement const& z );
 
       /**
       * copy constructor
       * @param other the value to clone
       */
-      PointGFp ( PointGFp const& other );
+      PointGFp(PointGFp const& other );
 
       /**
       * assignment operator
       * @param other The point to use as source for the assignment
       */
-      PointGFp const& operator= ( PointGFp const& other );
+      PointGFp const& operator=(PointGFp const& other );
 
       /**
       * assign another point which is on the same curve as *this
@@ -103,14 +94,14 @@ struct Illegal_Point : public Exception
       * @param rhs the PointGFp to add to the local value
       * @result resulting PointGFp
       */
-      PointGFp& operator+= ( PointGFp const& rhs );
+      PointGFp& operator+=(PointGFp const& rhs );
 
       /**
       * -= Operator
       * @param rhs the PointGFp to subtract from the local value
       * @result resulting PointGFp
       */
-      PointGFp& operator-= ( PointGFp const& rhs );
+      PointGFp& operator-=(PointGFp const& rhs );
 
       /**
       * *= Operator
@@ -119,7 +110,7 @@ struct Illegal_Point : public Exception
       * @param scalar the PointGFp to multiply with *this
       * @result resulting PointGFp
       */
-      PointGFp& operator*= ( BigInt const& scalar );
+      PointGFp& operator*=(const BigInt& scalar );
 
       /**
       * the equivalent to operator*= with countermeasures against
@@ -128,24 +119,24 @@ struct Illegal_Point : public Exception
       * countermeasures (suitable for ECDSA and ECKAEG)
       * @param scalar the scalar to multiply the point with
       * @param point_order a multiple of the order of the point
-      * ( = n * k in the general case; k is the cofactor)
+      *(= n * k in the general case; k is the cofactor)
       * @param max_secr the maximal size of the scalar
       * (will usually be  n-1 )
       * @result resulting PointGFp
       */
-      PointGFp& mult_this_secure(BigInt const& scalar,
-                                 BigInt const& point_order,
-                                 BigInt const& max_secr
-        );
+      PointGFp& mult_this_secure(const BigInt& scalar,
+                                 const BigInt& point_order,
+                                 const BigInt& max_secr
+         );
 
       /**
-      * Negate internal value ( *this *= -1 )
+      * Negate internal value(*this *= -1 )
       * @return *this
       */
       PointGFp& negate();
 
       /**
-      * Multiply the point by two ( *this *= 2 )
+      * Multiply the point by two(*this *= 2 )
       * @return *this
       */
       PointGFp& mult2_in_place();
@@ -228,7 +219,7 @@ struct Illegal_Point : public Exception
       *  swaps the states of *this and other, does not throw!
       * @param other the object to swap values with
       */
-      void swap ( PointGFp& other );
+      void swap(PointGFp& other );
 
       /**
       * Sets the shared pointer to the GFpModulus that will be
@@ -243,13 +234,13 @@ struct Illegal_Point : public Exception
       */
       void set_shrd_mod(std::tr1::shared_ptr<Botan::GFpModulus> p_mod);
 
-      static GFpElement decompress ( bool yMod2, GFpElement const& x, CurveGFp const& curve );
+      static GFpElement decompress(bool yMod2, GFpElement const& x, CurveGFp const& curve );
 
-    private:
+   private:
       static const u32bit GFPEL_WKSP_SIZE = 9;
       void ensure_worksp() const;
 
-      inline std::tr1::shared_ptr<PointGFp> mult_loop(int l, BigInt const& m, std::tr1::shared_ptr<PointGFp> H, std::tr1::shared_ptr<PointGFp> tmp, PointGFp const& P);
+      inline std::tr1::shared_ptr<PointGFp> mult_loop(int l, const BigInt& m, std::tr1::shared_ptr<PointGFp> H, std::tr1::shared_ptr<PointGFp> tmp, PointGFp const& P);
 
       CurveGFp mC;
       mutable GFpElement mX;  // NOTE: these values must be mutable (affine<->proj)
@@ -263,60 +254,54 @@ struct Illegal_Point : public Exception
       mutable bool mAZpow4_set;
       mutable std::tr1::shared_ptr<std::vector<GFpElement> > mp_worksp_gfp_el;
 
-    };
+   };
 
-  // relational operators
-  bool operator== ( PointGFp const& lhs, PointGFp const& rhs );
-  inline bool operator!= ( PointGFp const& lhs, PointGFp const& rhs )
-    {
-    return !operator== ( lhs, rhs );
-    }
+// relational operators
+bool operator==(PointGFp const& lhs, PointGFp const& rhs );
+inline bool operator!=(PointGFp const& lhs, PointGFp const& rhs )
+   {
+   return !operator==(lhs, rhs );
+   }
 
-  // arithmetic operators
-  PointGFp operator+ ( PointGFp const& lhs, PointGFp const& rhs );
-  PointGFp operator- ( PointGFp const& lhs, PointGFp const& rhs );
-  PointGFp operator- ( PointGFp const& lhs );
+// arithmetic operators
+PointGFp operator+(PointGFp const& lhs, PointGFp const& rhs );
+PointGFp operator-(PointGFp const& lhs, PointGFp const& rhs );
+PointGFp operator-(PointGFp const& lhs );
 
-  PointGFp operator* ( BigInt const& scalar, PointGFp const& point );
-  PointGFp operator* ( PointGFp const& point, BigInt const& scalar );
-  PointGFp mult_point_secure(PointGFp const& point, BigInt const& scalar, BigInt const& point_order, BigInt const& max_secret);
+PointGFp operator*(const BigInt& scalar, PointGFp const& point );
+PointGFp operator*(PointGFp const& point, const BigInt& scalar );
+PointGFp mult_point_secure(PointGFp const& point, const BigInt& scalar, const BigInt& point_order, const BigInt& max_secret);
 
-  PointGFp const mult2 (PointGFp const& point);
+PointGFp const mult2 (PointGFp const& point);
 
 PointGFp const create_random_point(RandomNumberGenerator& rng,
                                    CurveGFp const& curve);
 
-  // encoding and decoding
-  SecureVector<byte> EC2OSP ( PointGFp const& point, byte format );
-  PointGFp OS2ECP ( MemoryRegion<byte> const& os, CurveGFp const& curve );
+// encoding and decoding
+SecureVector<byte> EC2OSP(PointGFp const& point, byte format );
+PointGFp OS2ECP(MemoryRegion<byte> const& os, CurveGFp const& curve );
 
-  SecureVector<byte> encode_uncompressed ( PointGFp const& point ); // maybe make private
-  SecureVector<byte> encode_hybrid ( PointGFp const& point ); // maybe make private
-  SecureVector<byte> encode_compressed ( PointGFp const& point ); // maybe make private
+SecureVector<byte> encode_uncompressed(PointGFp const& point ); // maybe make private
+SecureVector<byte> encode_hybrid(PointGFp const& point ); // maybe make private
+SecureVector<byte> encode_compressed(PointGFp const& point ); // maybe make private
 
-  // swaps the states of point1 and point2, does not throw!
-  // cf. Meyers, Item 25
-  inline
-  void swap ( PointGFp& point1, PointGFp& point2 )
-    {
-    point1.swap ( point2 );
-    }
+// swaps the states of point1 and point2, does not throw!
+// cf. Meyers, Item 25
+inline
+void swap(PointGFp& point1, PointGFp& point2 )
+   {
+   point1.swap(point2 );
+   }
 
 } // namespace Botan
 
-namespace std
-  {
-    // swaps the states of point1 and point2, does not throw!
-    // cf. Meyers, Item 25
-    template<>
-    inline
-    void swap< Botan::PointGFp> (
-      Botan::PointGFp& point1,
-      Botan::PointGFp& point2 )
-    {
-      point1.swap ( point2 );
-    }
+namespace std {
 
-  } // namespace std
+// swaps the states of point1 and point2, does not throw!
+// cf. Meyers, Item 25
+template<> inline void
+swap<Botan::PointGFp>(Botan::PointGFp& x, Botan::PointGFp& y) { x.swap(y); }
+
+} // namespace std
 
 #endif

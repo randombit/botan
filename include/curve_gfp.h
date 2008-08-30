@@ -31,7 +31,7 @@ class CurveGFp
       * @param p prime number of the field
       */
       CurveGFp(GFpElement const& a, GFpElement const& b,
-               BigInt const& p);
+               const BigInt& p);
 
       /**
       * Copy constructor

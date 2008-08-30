@@ -158,7 +158,7 @@ void montg_mult(BigInt& result, BigInt& a_bar, BigInt& b_bar, const BigInt& m, c
 
 }
 
-GFpElement::GFpElement ( BigInt const& p, BigInt const& value, bool use_montgm)
+GFpElement::GFpElement ( const BigInt& p, const BigInt& value, bool use_montgm)
    : mp_mod(),
      m_value(value %p),
      m_use_montgm(use_montgm),
@@ -175,7 +175,7 @@ GFpElement::GFpElement ( BigInt const& p, BigInt const& value, bool use_montgm)
 
    }
 
-GFpElement::GFpElement(std::tr1::shared_ptr<GFpModulus> const mod, BigInt const& value, bool use_montgm)
+GFpElement::GFpElement(std::tr1::shared_ptr<GFpModulus> const mod, const BigInt& value, bool use_montgm)
    : mp_mod(),
      m_value(value % mod->m_p),
      m_use_montgm(use_montgm),

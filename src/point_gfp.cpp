@@ -325,9 +325,9 @@ PointGFp& PointGFp::operator-=(PointGFp const& rhs)
    return *this;
    }
 
-PointGFp& PointGFp::mult_this_secure(BigInt const& scalar,
-                                     BigInt const& /*point_order*/,
-                                     BigInt const& /*max_secr*/)
+PointGFp& PointGFp::mult_this_secure(const BigInt& scalar,
+                                     const BigInt& /*point_order*/,
+                                     const BigInt& /*max_secr*/)
    {
    // NOTE: FS: so far this is code duplication of op*=.
    // we have to see how we deal with this.
@@ -431,7 +431,7 @@ PointGFp& PointGFp::mult_this_secure(BigInt const& scalar,
    mZ.turn_off_sp_red_mul();
    return *this;
    }
-PointGFp& PointGFp::operator*=(BigInt const& scalar)
+PointGFp& PointGFp::operator*=(const BigInt& scalar)
    {
    // use montgomery mult. in this operation
 
@@ -481,7 +481,7 @@ PointGFp& PointGFp::operator*=(BigInt const& scalar)
 
 inline std::tr1::shared_ptr<PointGFp> PointGFp::mult_loop(
    int l,
-   BigInt const& m,
+   const BigInt& m,
    std::tr1::shared_ptr<PointGFp> H,
    std::tr1::shared_ptr<PointGFp> tmp,
    PointGFp const& P)
@@ -889,19 +889,19 @@ PointGFp operator-(PointGFp const& lhs)
    return PointGFp(lhs).negate();
    }
 
-PointGFp operator*(BigInt const& scalar, PointGFp const& point)
+PointGFp operator*(const BigInt& scalar, PointGFp const& point)
    {
    PointGFp result(point);
    return result *= scalar;
    }
 
-PointGFp operator*(PointGFp const& point, BigInt const& scalar)
+PointGFp operator*(PointGFp const& point, const BigInt& scalar)
    {
    PointGFp result(point);
    return result *= scalar;
    }
 
-PointGFp mult_point_secure(PointGFp const& point, BigInt const& scalar, BigInt const& point_order, BigInt const& max_secret)
+PointGFp mult_point_secure(PointGFp const& point, const BigInt& scalar, const BigInt& point_order, const BigInt& max_secret)
    {
    PointGFp result(point);
    result.mult_this_secure(scalar, point_order, max_secret);
@@ -1096,11 +1096,10 @@ PointGFp OS2ECP(MemoryRegion<byte> const& os, CurveGFp const& curve)
    //assert((result.get_jac_proj_y().is_trf_to_mres() && result.get_jac_proj_y().is_use_montgm()) || !result.get_jac_proj_y().is_trf_to_mres());
    //assert((result.get_jac_proj_z().is_trf_to_mres() && result.get_jac_proj_z().is_use_montgm()) || !result.get_jac_proj_z().is_trf_to_mres());
    return result;
-
-
    }
+
 GFpElement PointGFp::decompress(bool yMod2, GFpElement const& x,
-                                    CurveGFp const& curve)
+                                CurveGFp const& curve)
    {
    BigInt xVal = x.get_value();
    BigInt xpow3 = xVal * xVal * xVal;
@@ -1151,8 +1150,8 @@ PointGFp const create_random_point(RandomNumberGenerator& rng,
          mY = GFpElement(curve.get_p(), value);
       }
    mZ = GFpElement(curve.get_p(), BigInt(1));
-   return PointGFp(curve, mX, mY, mZ);
 
+   return PointGFp(curve, mX, mY, mZ);
    }
 
 } // namespace Botan

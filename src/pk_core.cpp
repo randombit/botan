@@ -370,7 +370,7 @@ ECDSA_Core::ECDSA_Core(const ECDSA_Core& core)
       op = core.op->clone();
    }
 
-ECDSA_Core::ECDSA_Core(EC_Domain_Params const& dom_pars, BigInt const& priv_key, PointGFp const& pub_key)
+ECDSA_Core::ECDSA_Core(EC_Domain_Params const& dom_pars, const BigInt& priv_key, PointGFp const& pub_key)
    {
    op = Engine_Core::ecdsa_op(dom_pars, priv_key, pub_key);
    }

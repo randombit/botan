@@ -59,7 +59,7 @@ class GFpElement
       * @param value the element value
       * @param use_montgm whether this object will use Montgomery multiplication
       */
-      explicit GFpElement ( BigInt const& p, BigInt const& value, bool use_montgm = false );
+      explicit GFpElement ( const BigInt& p, const BigInt& value, bool use_montgm = false );
 
 
       /** construct an element of GF(p) with the given value (defaults to 0).
@@ -74,7 +74,7 @@ class GFpElement
       * @param value the element value
       * @param use_montgm whether this object will use Montgomery multiplication
       */
-      explicit GFpElement(std::tr1::shared_ptr<GFpModulus> const mod, BigInt const& value, bool use_mongm = false);
+      explicit GFpElement(std::tr1::shared_ptr<GFpModulus> const mod, const BigInt& value, bool use_mongm = false);
 
       /**
       * Copy constructor

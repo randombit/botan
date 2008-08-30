@@ -22,7 +22,7 @@ class ECDSA_Signature
       friend class ECDSA_Signature_Decoder;
       friend class ECDSA_Signature_Encoder;
    public:
-      ECDSA_Signature(BigInt const& r, BigInt const& s);
+      ECDSA_Signature(const BigInt& r, const BigInt& s);
       ECDSA_Signature()
          {}
       ;

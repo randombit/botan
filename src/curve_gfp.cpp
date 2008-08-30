@@ -14,7 +14,7 @@
 namespace Botan {
 
 CurveGFp::CurveGFp(GFpElement const& a, GFpElement const& b,
-                   BigInt const& p) :
+                   const BigInt& p) :
    mA(a), mB(b)
    {
    if(p != mA.get_p() || p != mB.get_p())

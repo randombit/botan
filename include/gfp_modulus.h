@@ -70,7 +70,7 @@ class GFpModulus
       * @param mod the modulus to compare this with
       * @result true if the modulus of *this and the argument are equal.
       */
-      inline bool p_equal_to(BigInt const& mod) const
+      inline bool p_equal_to(const BigInt& mod) const
          {
          return (m_p == mod);
          }

@@ -15,15 +15,13 @@
 #include <botan/alg_id.h>
 #include <botan/enums.h>
 
-namespace Botan
-{
+namespace Botan {
 
 /**
 * This class represents elliptic curce domain parameters
 */
 class EC_Domain_Params
    {
-      friend EC_Domain_Params get_EC_Dom_Pars_by_oid(std::string oid);
    public:
 
       /**
@@ -33,7 +31,8 @@ class EC_Domain_Params
       * @param order the order of the base point
       * @param cofactor the cofactor
       */
-      EC_Domain_Params(CurveGFp const& curve, PointGFp const& base_point, BigInt const& order, BigInt const& cofactor);
+      EC_Domain_Params(CurveGFp const& curve, PointGFp const& base_point,
+                       const BigInt& order, const BigInt& cofactor);
 
       /**
       * Return domain parameter curve
@@ -78,6 +77,8 @@ class EC_Domain_Params
       std::string get_oid() const { return m_oid; }
 
    private:
+      friend EC_Domain_Params get_EC_Dom_Pars_by_oid(std::string oid);
+
       CurveGFp m_curve;
       PointGFp m_base_point;
       BigInt m_order;
