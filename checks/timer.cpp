@@ -36,32 +36,6 @@ void Timer::stop()
       }
    }
 
-u64bit Timer::value()
-   {
-   stop();
-   return time_used;
-   }
-
-double Timer::seconds()
-   {
-   return milliseconds() / 1000.0;
-   }
-
-double Timer::milliseconds()
-   {
-   return value() / 1000000.0;
-   }
-
-double Timer::ms_per_event()
-   {
-   return milliseconds() / events();
-   }
-
-double Timer::seconds_per_event()
-   {
-   return seconds() / events();
-   }
-
 std::ostream& operator<<(std::ostream& out, Timer& timer)
    {
    //out << timer.value() << " ";

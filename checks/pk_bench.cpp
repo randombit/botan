@@ -110,18 +110,21 @@ void benchmark_rsa(RandomNumberGenerator& rng,
       }
    }
 
-void benchmark_dsa(RandomNumberGenerator& rng,
-                   double seconds,
-                   Benchmark_Report& report)
+template<typename PRIV_KEY_TYPE>
+void benchmark_dsa_nr(RandomNumberGenerator& rng,
+                      double seconds,
+                      Benchmark_Report& report)
    {
-   struct dsa_groups { int psize; int qsize; };
+   struct group_info { int psize; int qsize; };
 
-   const dsa_groups keylen[] = { { 512, 160 },
+   const group_info keylen[] = { { 512, 160 },
                                  { 768, 160 },
                                  { 1024, 160 },
                                  { 2048, 256 },
                                  { 3072, 256 },
                                  { 0, 0 } };
+
+   const std::string algo_name = PRIV_KEY_TYPE().algo_name();
 
    for(size_t j = 0; keylen[j].psize; j++)
       {
@@ -141,7 +144,7 @@ void benchmark_dsa(RandomNumberGenerator& rng,
          groupgen_timer.stop();
 
          keygen_timer.start();
-         DSA_PrivateKey key(rng, group);
+         PRIV_KEY_TYPE key(rng, group);
          keygen_timer.stop();
 
          const std::string padding = "EMSA1(SHA-" + to_string(keylen[j].qsize) + ")";
@@ -151,7 +154,7 @@ void benchmark_dsa(RandomNumberGenerator& rng,
 
          SecureVector<byte> message, signature;
 
-         for(u32bit i = 0; i != 1000; ++i)
+         for(u32bit i = 0; i != 100; ++i)
             {
             if(private_op_timer.seconds() < seconds || signature.size() == 0)
                {
@@ -170,12 +173,12 @@ void benchmark_dsa(RandomNumberGenerator& rng,
                public_op_timer.stop();
 
                if(!verified)
-                  std::cerr << "Signature verification failure in DSA benchmark\n";
+                  std::cerr << "Signature verification failure in " << algo_name << " benchmark\n";
                }
             }
          }
 
-      const std::string nm = "DSA-" + to_string(keylen[j].psize);
+      const std::string nm = algo_name + "-" + to_string(keylen[j].psize);
       report.report(nm, groupgen_timer);
       report.report(nm, keygen_timer);
       report.report(nm, public_op_timer);
@@ -223,7 +226,7 @@ void bench_pk(RandomNumberGenerator& rng,
 
    if(algo == "All" || algo == "DSA")
       {
-      benchmark_dsa(rng, seconds, report);
+      benchmark_dsa_nr<DSA_PrivateKey>(rng, seconds, report);
       }
 
    if(algo == "All" || algo == "DH")
@@ -263,39 +266,24 @@ void bench_pk(RandomNumberGenerator& rng,
 
    if(algo == "All" || algo == "NR")
       {
-      const u32bit keylen[] = { 512, 768, 1024, 0 };
-
-      for(size_t j = 0; keylen[j]; j++)
-         {
-         const std::string len_str = to_string(keylen[j]);
-
-         NR_PrivateKey key(rng, "dsa/jce/" + len_str);
-
-         bench_ver(get_pk_signer(key, "EMSA1(SHA-1)"),
-                   get_pk_verifier(key, "EMSA1(SHA-1)"),
-                   rng, "NR-" + len_str, seconds, html);
-
-         bench_sig(get_pk_signer(key, "EMSA1(SHA-1)"),
-                   rng, "NR-" + len_str, seconds, html);
-         }
+      benchmark_dsa_nr<NR_PrivateKey>(rng, seconds, report);
       }
 
    if(algo == "All" || algo == "RW")
       {
-      const u32bit keylen[] = { 512, 1024, 0 };
+      const u32bit keylen[] = { 1024, 2048, 4096, 0 };
 
       for(size_t j = 0; keylen[j]; j++)
          {
          RW_PrivateKey key(rng, keylen[j]);
 
          const std::string len_str = to_string(keylen[j]);
-         bench_ver(get_pk_signer(*key, "EMSA2(SHA-1)"),
-                   get_pk_verifier(*key, "EMSA2(SHA-1)"),
-                   rng, "RW-" + len_str, seconds, html);
-         bench_sig(get_pk_signer(*key, "EMSA2(SHA-1)"),
-                   rng, "RW-" + len_str, seconds, html);
 
-         delete key;
+         bench_ver(get_pk_signer(key, "EMSA2(SHA-1)"),
+                   get_pk_verifier(key, "EMSA2(SHA-1)"),
+                   rng, "RW-" + len_str, seconds, html);
+         bench_sig(get_pk_signer(key, "EMSA2(SHA-1)"),
+                   rng, "RW-" + len_str, seconds, html);
          }
       }
    }

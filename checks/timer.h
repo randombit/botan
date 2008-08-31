@@ -20,12 +20,12 @@ class Timer
 
       void stop();
 
-      u64bit value();
-      double seconds();
-      double milliseconds();
+      u64bit value() { stop(); return time_used; }
+      double seconds() { return milliseconds() / 1000.0; }
+      double milliseconds() { return value() / 1000000.0; }
 
-      double ms_per_event();
-      double seconds_per_event();
+      double ms_per_event() { return milliseconds() / events(); }
+      double seconds_per_event() { return seconds() / events(); }
 
       u32bit events() const { return event_count; }
       std::string get_name() const { return name; }
