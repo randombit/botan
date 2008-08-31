@@ -7,19 +7,36 @@
 #include <botan/parsing.h>
 
 #include <botan/pkcs8.h>
+#include <botan/mem_ops.h>
 #include <botan/look_pk.h>
 
 using namespace Botan;
 
 #include "common.h"
+#include "timer.h"
 #include "bench.h"
 
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <memory>
+#include <map>
+#include <set>
 
 #define PRINT_MS_PER_OP 0 /* If 0, print ops / second */
+
+class Benchmark_Report
+   {
+   public:
+      void report(const std::string& name, Timer timer)
+         {
+         std::cout << name << " " << timer << "\n";
+         data[name].insert(timer);
+         }
+
+   private:
+      std::map<std::string, std::set<Timer> > data;
+   };
 
 void bench_enc(PK_Encryptor*, RandomNumberGenerator&,
                const std::string&, double, bool);
@@ -32,6 +49,141 @@ void bench_ver(PK_Signer*, PK_Verifier*,
                const std::string&, double, bool);
 void bench_kas(PK_Key_Agreement*, RandomNumberGenerator&,
                const std::string&, double, bool);
+
+namespace {
+
+void benchmark_rsa(RandomNumberGenerator& rng,
+                   double seconds,
+                   Benchmark_Report& report)
+   {
+   const u32bit keylens[] = { 512, 1024, 2048, 3072, 4096, 6144, 8192, 0 };
+
+   for(size_t j = 0; keylens[j]; j++)
+      {
+      u32bit keylen = keylens[j];
+
+      Timer keygen_timer("keygen");
+      Timer public_op_timer("public op");
+      Timer private_op_timer("private op");
+
+      while(public_op_timer.seconds() < seconds ||
+            private_op_timer.seconds() < seconds)
+         {
+         keygen_timer.start();
+         RSA_PrivateKey key(rng, keylen);
+         keygen_timer.stop();
+
+         std::auto_ptr<PK_Encryptor> enc(get_pk_encryptor(key, "Raw"));
+         std::auto_ptr<PK_Decryptor> dec(get_pk_decryptor(key, "Raw"));
+
+         SecureVector<byte> plaintext, ciphertext;
+
+         for(u32bit i = 0; i != 1000; ++i)
+            {
+            if(public_op_timer.seconds() < seconds || ciphertext.size() == 0)
+               {
+               plaintext.create(48);
+               rng.randomize(plaintext.begin(), plaintext.size());
+               plaintext[0] |= 0x80;
+
+               public_op_timer.start();
+               ciphertext = enc->encrypt(plaintext, rng);
+               public_op_timer.stop();
+               }
+
+            if(private_op_timer.seconds() < seconds)
+               {
+               private_op_timer.start();
+               SecureVector<byte> plaintext2 = dec->decrypt(ciphertext);
+               private_op_timer.stop();
+
+               if(plaintext != plaintext2)
+                  std::cerr << "Contents mismatched on decryption in RSA benchmark!\n";
+               }
+            }
+         }
+
+      const std::string nm = "RSA-" + to_string(keylen);
+      report.report(nm, keygen_timer);
+      report.report(nm, public_op_timer);
+      report.report(nm, private_op_timer);
+      }
+   }
+
+void benchmark_dsa(RandomNumberGenerator& rng,
+                   double seconds,
+                   Benchmark_Report& report)
+   {
+   struct dsa_groups { int psize; int qsize; };
+
+   const dsa_groups keylen[] = { { 512, 160 },
+                                 { 768, 160 },
+                                 { 1024, 160 },
+                                 { 2048, 256 },
+                                 { 3072, 256 },
+                                 { 0, 0 } };
+
+   for(size_t j = 0; keylen[j].psize; j++)
+      {
+      const std::string len_str = to_string(keylen[j].psize);
+
+      Timer groupgen_timer("group gen");
+      Timer keygen_timer("keygen");
+      Timer public_op_timer("verify");
+      Timer private_op_timer("signature");
+
+      while(public_op_timer.seconds() < seconds ||
+            private_op_timer.seconds() < seconds)
+         {
+         groupgen_timer.start();
+         DL_Group group(rng, DL_Group::DSA_Kosherizer,
+                        keylen[j].psize, keylen[j].qsize);
+         groupgen_timer.stop();
+
+         keygen_timer.start();
+         DSA_PrivateKey key(rng, group);
+         keygen_timer.stop();
+
+         const std::string padding = "EMSA1(SHA-" + to_string(keylen[j].qsize) + ")";
+
+         std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));
+         std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
+
+         SecureVector<byte> message, signature;
+
+         for(u32bit i = 0; i != 1000; ++i)
+            {
+            if(private_op_timer.seconds() < seconds || signature.size() == 0)
+               {
+               message.create(48);
+               rng.randomize(message.begin(), message.size());
+
+               private_op_timer.start();
+               signature = sig->sign_message(message, rng);
+               private_op_timer.stop();
+               }
+
+            if(private_op_timer.seconds() < seconds)
+               {
+               public_op_timer.start();
+               bool verified = ver->verify_message(message, signature);
+               public_op_timer.stop();
+
+               if(!verified)
+                  std::cerr << "Signature verification failure in DSA benchmark\n";
+               }
+            }
+         }
+
+      const std::string nm = "DSA-" + to_string(keylen[j].psize);
+      report.report(nm, groupgen_timer);
+      report.report(nm, keygen_timer);
+      report.report(nm, public_op_timer);
+      report.report(nm, private_op_timer);
+      }
+   }
+
+}
 
 void bench_pk(RandomNumberGenerator& rng,
               const std::string& algo, bool html, double seconds)
@@ -62,58 +214,16 @@ void bench_pk(RandomNumberGenerator& rng,
      there is no way to encode a RW key into a PKCS #8 structure).
    */
 
+   Benchmark_Report report;
+
    if(algo == "All" || algo == "RSA")
       {
-      const u32bit keylen[] = { 512, 1024, 2048, 3072, 4096, 8192, 0 };
-
-      for(size_t j = 0; keylen[j]; j++)
-         {
-         const std::string len_str = to_string(keylen[j]);
-         const std::string file = "checks/keys/rsa" + len_str + ".pem";
-
-         std::auto_ptr<RSA_PrivateKey> key(
-            dynamic_cast<RSA_PrivateKey*>(PKCS8::load_key(file, rng))
-            );
-
-         if(key.get() == 0)
-            throw Invalid_Argument("Failure reading RSA key from " + file);
-
-         bench_enc(get_pk_encryptor(*key, "Raw"),
-                   rng, "RSA-" + len_str, seconds, html);
-
-         bench_dec(get_pk_encryptor(*key, "Raw"),
-                   get_pk_decryptor(*key, "Raw"),
-                   rng, "RSA-" + len_str, seconds, html);
-         }
+      benchmark_rsa(rng, seconds, report);
       }
 
    if(algo == "All" || algo == "DSA")
       {
-      struct dsa_groups { int psize; int qsize; };
-
-      const dsa_groups keylen[] = { { 512, 160 },
-                                    { 768, 160 },
-                                    { 1024, 160 },
-                                    { 2048, 256 },
-                                    { 3072, 256 },
-                                    { 0, 0 } };
-
-      for(size_t j = 0; keylen[j].psize; j++)
-         {
-         const std::string len_str = to_string(keylen[j].psize);
-
-         DL_Group group(rng, DL_Group::DSA_Kosherizer,
-                        keylen[j].psize, keylen[j].qsize);
-
-         DSA_PrivateKey key(rng, group);
-
-         bench_ver(get_pk_signer(key, "EMSA1(SHA-1)"),
-                   get_pk_verifier(key, "EMSA1(SHA-1)"),
-                   rng, "DSA-" + len_str, seconds, html);
-
-         bench_sig(get_pk_signer(key, "EMSA1(SHA-1)"),
-                   rng, "DSA-" + len_str, seconds, html);
-         }
+      benchmark_dsa(rng, seconds, report);
       }
 
    if(algo == "All" || algo == "DH")
@@ -176,12 +286,9 @@ void bench_pk(RandomNumberGenerator& rng,
 
       for(size_t j = 0; keylen[j]; j++)
          {
+         RW_PrivateKey key(rng, keylen[j]);
+
          const std::string len_str = to_string(keylen[j]);
-         const std::string file = "checks/keys/rw" + len_str + ".pem";
-
-         RW_PrivateKey* key =
-            dynamic_cast<RW_PrivateKey*>(PKCS8::load_key(file, rng));
-
          bench_ver(get_pk_signer(*key, "EMSA2(SHA-1)"),
                    get_pk_verifier(*key, "EMSA2(SHA-1)"),
                    rng, "RW-" + len_str, seconds, html);
