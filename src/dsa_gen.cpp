@@ -19,12 +19,15 @@ namespace {
 *************************************************/
 bool fips186_3_valid_size(u32bit pbits, u32bit qbits)
    {
-   if(pbits == 1024 && qbits == 160)
-      return true;
-   if(pbits == 2048 && (qbits == 224 || qbits == 256))
-      return true;
-   if(pbits == 3072 && qbits == 256)
-      return true;
+   if(qbits == 160)
+      return (pbits == 512 || pbits == 768 || pbits == 1024);
+
+   if(qbits == 224)
+      return (pbits == 2048);
+
+   if(qbits == 256)
+      return (pbits == 2048 || pbits == 3072);
+
    return false;
    }
 
