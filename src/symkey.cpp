@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/symkey.h>
-#include <botan/bit_ops.h>
+#include <botan/xor_buf.h>
 #include <botan/rng.h>
 #include <botan/pipe.h>
 #include <botan/hex.h>

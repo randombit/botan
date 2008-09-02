@@ -5,7 +5,7 @@
 
 #include <botan/eax.h>
 #include <botan/lookup.h>
-#include <botan/bit_ops.h>
+#include <botan/xor_buf.h>
 #include <botan/parsing.h>
 #include <algorithm>
 

@@ -5,7 +5,7 @@
 
 #include <botan/wid_wake.h>
 #include <botan/loadstor.h>
-#include <botan/bit_ops.h>
+#include <botan/xor_buf.h>
 
 namespace Botan {
 
