@@ -65,6 +65,10 @@ encrypt: encrypt.cpp
 	$(CXX) $(FLAGS) $? $(LIBS) -o $@
 	@$(STRIP) $@
 
+ecdsa: ecdsa.cpp
+	$(CXX) $(FLAGS) $? $(LIBS) -o $@
+	@$(STRIP) $@
+
 factor: factor.cpp
 	$(CXX) $(FLAGS) $? $(LIBS) -o $@
 	@$(STRIP) $@
