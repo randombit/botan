@@ -9,12 +9,12 @@ sha160.cpp
 </replace>
 
 <ignore>
-mp_mulop.cpp
+#mp_mulop.cpp
 </ignore>
 
 <add>
 asm_macr.h
-mp_mulop.S
+#mp_mulop.S
 sha1core.S
 </add>
 
