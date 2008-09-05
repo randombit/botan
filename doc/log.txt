@@ -1,6 +1,12 @@
 
 * 1.7.10, 2008-??-??
- - Public key benchmarks more reflective of real-world use
+ - Public key benchmarks run using a selection of random keys
+ - New benchmark timer options are clock_gettime, gettimeofday, times, clock
+ - Including reinterpret_cast optimization for xor_buf in default header
+ - Split byte swapping and word rotation functions into distinct headers
+ - Add IETF modp 6144 group and 2048 and 3072 bit DSS groups
+ - Optimizes BigInt right shift
+ - BigInt now caches the significant word count
 
 * 1.7.9, 2008-08-27
  - Make clear() in most algorithm base classes a pure virtual
