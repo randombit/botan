@@ -47,20 +47,44 @@ void bigint_shr1(word x[], u32bit x_size, u32bit word_shift, u32bit bit_shift)
 
    if(word_shift)
       {
-      for(u32bit j = 0; j != x_size - word_shift; ++j)
-         x[j] = x[j + word_shift];
-      for(u32bit j = x_size - word_shift; j != x_size; ++j)
-         x[j] = 0;
+      copy_mem(x, x + word_shift, x_size - word_shift);
+      clear_mem(x + x_size - word_shift, word_shift);
       }
 
    if(bit_shift)
       {
       word carry = 0;
-      for(u32bit j = x_size - word_shift; j > 0; --j)
+
+      u32bit top = x_size - word_shift;
+
+      while(top >= 4)
          {
-         word temp = x[j-1];
-         x[j-1] = (temp >> bit_shift) | carry;
-         carry = (temp << (MP_WORD_BITS - bit_shift));
+         word w = x[top-1];
+         x[top-1] = (w >> bit_shift) | carry;
+         carry = (w << (MP_WORD_BITS - bit_shift));
+
+         w = x[top-2];
+         x[top-2] = (w >> bit_shift) | carry;
+         carry = (w << (MP_WORD_BITS - bit_shift));
+
+         w = x[top-3];
+         x[top-3] = (w >> bit_shift) | carry;
+         carry = (w << (MP_WORD_BITS - bit_shift));
+
+         w = x[top-4];
+         x[top-4] = (w >> bit_shift) | carry;
+         carry = (w << (MP_WORD_BITS - bit_shift));
+
+         top -= 4;
+         }
+
+      while(top)
+         {
+         word w = x[top-1];
+         x[top-1] = (w >> bit_shift) | carry;
+         carry = (w << (MP_WORD_BITS - bit_shift));
+
+         top--;
          }
       }
    }
@@ -78,9 +102,9 @@ void bigint_shl2(word y[], const word x[], u32bit x_size,
       word carry = 0;
       for(u32bit j = word_shift; j != x_size + word_shift + 1; ++j)
          {
-         word temp = y[j];
-         y[j] = (temp << bit_shift) | carry;
-         carry = (temp >> (MP_WORD_BITS - bit_shift));
+         word w = y[j];
+         y[j] = (w << bit_shift) | carry;
+         carry = (w >> (MP_WORD_BITS - bit_shift));
          }
       }
    }
@@ -100,9 +124,9 @@ void bigint_shr2(word y[], const word x[], u32bit x_size,
       word carry = 0;
       for(u32bit j = x_size - word_shift; j > 0; --j)
          {
-         word temp = y[j-1];
-         y[j-1] = (temp >> bit_shift) | carry;
-         carry = (temp << (MP_WORD_BITS - bit_shift));
+         word w = y[j-1];
+         y[j-1] = (w >> bit_shift) | carry;
+         carry = (w << (MP_WORD_BITS - bit_shift));
          }
       }
    }
