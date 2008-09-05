@@ -1,4 +1,7 @@
 
+* 1.7.10, 2008-??-??
+ - Public key benchmarks more reflective of real-world use
+
 * 1.7.9, 2008-08-27
  - Make clear() in most algorithm base classes a pure virtual
  - Add noexec stack marker for GNU linker in assembly code
