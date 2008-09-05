@@ -23,8 +23,6 @@ using namespace Botan;
 #include <map>
 #include <set>
 
-#define PRINT_MS_PER_OP 0 /* If 0, print ops / second */
-
 class Benchmark_Report
    {
    public:
@@ -37,9 +35,6 @@ class Benchmark_Report
    private:
       std::map<std::string, std::set<Timer> > data;
    };
-
-void bench_kas(PK_Key_Agreement*, RandomNumberGenerator&,
-               const std::string&, double, bool);
 
 namespace {
 
@@ -192,6 +187,68 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
       }
    }
 
+void benchmark_dh(RandomNumberGenerator& rng,
+                  double seconds,
+                  Benchmark_Report& report)
+   {
+   const char* domains[] = { "modp/ietf/768",
+                             "modp/ietf/1024",
+                             "modp/ietf/2048",
+                             "modp/ietf/3072",
+                             "modp/ietf/4096",
+                             "modp/ietf/6144",
+                             NULL };
+
+   for(size_t j = 0; domains[j]; j++)
+      {
+      Timer keygen_timer("keygen");
+      Timer kex_timer("kex");
+
+      while(kex_timer.seconds() < seconds)
+         {
+         DL_Group group(domains[j]);
+
+         keygen_timer.start();
+         DH_PrivateKey dh1(rng, group);
+         keygen_timer.stop();
+
+         keygen_timer.start();
+         DH_PrivateKey dh2(rng, group);
+         keygen_timer.stop();
+
+         DH_PublicKey pub1(dh1);
+         DH_PublicKey pub2(dh2);
+
+         SecureVector<byte> secret1, secret2;
+
+         for(u32bit i = 0; i != 100; ++i)
+            {
+            if(kex_timer.seconds() > seconds)
+               break;
+
+            kex_timer.start();
+            secret1 = dh1.derive_key(pub2);
+            kex_timer.stop();
+
+            kex_timer.start();
+            secret2 = dh2.derive_key(pub1);
+            kex_timer.stop();
+
+            if(secret1 != secret2)
+               {
+               std::cerr << "DH secrets did not match, bug in the library!?!\n";
+               }
+
+            }
+
+         }
+
+      const std::string nm = "DH-" + split_on(domains[j], '/')[2];
+      report.report(nm, keygen_timer);
+      report.report(nm, kex_timer);
+      }
+   }
+
 void benchmark_elg(RandomNumberGenerator& rng,
                    double seconds,
                    Benchmark_Report& report)
@@ -240,7 +297,7 @@ void benchmark_elg(RandomNumberGenerator& rng,
 }
 
 void bench_pk(RandomNumberGenerator& rng,
-              const std::string& algo, bool html, double seconds)
+              const std::string& algo, bool, double seconds)
    {
    /*
      There is some strangeness going on here. It looks like algorithms
@@ -271,127 +328,20 @@ void bench_pk(RandomNumberGenerator& rng,
    Benchmark_Report report;
 
    if(algo == "All" || algo == "RSA")
-      {
       benchmark_rsa_rw<RSA_PrivateKey>(rng, seconds, report);
-      }
 
    if(algo == "All" || algo == "DSA")
-      {
       benchmark_dsa_nr<DSA_PrivateKey>(rng, seconds, report);
-      }
 
    if(algo == "All" || algo == "DH")
-      {
-      const u32bit keylen[] = { 1024, 2048, 3072, 4096, 8192, 0 };
-
-      for(size_t j = 0; keylen[j]; j++)
-         {
-         const std::string len_str = to_string(keylen[j]);
-
-         DH_PrivateKey key(rng,
-                           "modp/ietf/" + len_str);
-
-         bench_kas(get_pk_kas(key, "Raw"), rng,
-                   "DH-" + len_str, seconds, html);
-         }
-      }
+      benchmark_dh(rng, seconds, report);
 
    if(algo == "All" || algo == "ELG" || algo == "ElGamal")
-      {
-
-      /*
-      const u32bit keylen[] = { 768, 1024, 1536, 2048, 3072, 4096, 0 };
-
-      for(size_t j = 0; keylen[j]; j++)
-         {
-         const std::string len_str = to_string(keylen[j]);
-
-         ElGamal_PrivateKey key(rng, "modp/ietf/" + len_str);
-
-         bench_enc(get_pk_encryptor(key, "Raw"),
-                   rng, "ELG-" + len_str, seconds, html);
-
-         bench_dec(get_pk_encryptor(key, "Raw"),
-                   get_pk_decryptor(key, "Raw"),
-                   rng, "ELG-" + len_str, seconds, html);
-         }
-      */
-
       benchmark_elg(rng, seconds, report);
 
-      }
-
    if(algo == "All" || algo == "NR")
-      {
       benchmark_dsa_nr<NR_PrivateKey>(rng, seconds, report);
-      }
 
    if(algo == "All" || algo == "RW")
-      {
       benchmark_rsa_rw<RW_PrivateKey>(rng, seconds, report);
-      }
-   }
-
-namespace {
-
-void print_result(bool html, u32bit runs, u64bit clocks_used,
-                  const std::string& algo_name, const std::string& op)
-   {
-   double seconds = static_cast<double>(clocks_used) / get_ticks();
-   double mseconds_per_run = 1000 * (seconds / runs);
-   double runs_per_sec = runs / seconds;
-
-   if(html)
-      {
-      std::cout << "   <TR><TH>" << algo_name << " (" << op << ") <TH>";
-
-      if(PRINT_MS_PER_OP)
-         std::cout << mseconds_per_run;
-      else
-         std::cout << runs_per_sec;
-
-      std::cout << std::endl;
-      }
-   else
-      {
-      std::cout << algo_name << ": ";
-
-      std::cout.setf(std::ios::fixed, std::ios::floatfield);
-      std::cout.precision(2);
-
-      if(PRINT_MS_PER_OP)
-         std::cout << mseconds_per_run << " ms / " << op << "\n";
-      else
-         std::cout << runs_per_sec << " ops / second (" << op << ")\n";
-      }
-   }
-
-}
-
-void bench_kas(PK_Key_Agreement* kas,
-               RandomNumberGenerator& rng,
-               const std::string& algo_name,
-               double seconds, bool html)
-   {
-   /* 128 bits: should always be considered valid (what about ECC?) */
-   static const u32bit REMOTE_KEY_SIZE = 16;
-   byte key[REMOTE_KEY_SIZE];
-
-   u32bit runs = 0;
-   u64bit clocks_used = 0;
-
-   const u64bit ticks = get_ticks();
-   while(clocks_used < seconds * ticks)
-      {
-      runs++;
-      rng.randomize(key, REMOTE_KEY_SIZE);
-
-      u64bit start = get_clock();
-      kas->derive_key(0, key, REMOTE_KEY_SIZE);
-      clocks_used += get_clock() - start;
-      }
-
-   delete kas;
-
-   print_result(html, runs, clocks_used, algo_name, "key agreement");
    }
