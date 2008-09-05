@@ -63,10 +63,12 @@ inline u32bit significant_bytes(T n)
 template<typename T>
 inline u32bit hamming_weight(T n)
    {
+   const byte NIBBLE_WEIGHTS[] = {
+      0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4 };
+
    u32bit weight = 0;
-   for(u32bit j = 0; j != 8*sizeof(T); ++j)
-      if((n >> j) & 0x01)
-         ++weight;
+   for(u32bit i = 0; i != 8*sizeof(T); i += 4)
+      weight += NIBBLE_WEIGHTS[(n >> i) & 0x0F];
    return weight;
    }
 
