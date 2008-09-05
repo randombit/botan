@@ -57,8 +57,10 @@ class BOTAN_DLL BigInt
       bool get_bit(u32bit) const;
       u32bit get_substring(u32bit, u32bit) const;
       byte byte_at(u32bit) const;
+
+      // same as operator[], remove this
       word word_at(u32bit n) const
-         { return ((n < size()) ? reg[n] : 0); }
+         { return ((n < size()) ? get_reg()[n] : 0); }
 
       u32bit to_u32bit() const;
 
@@ -70,18 +72,19 @@ class BOTAN_DLL BigInt
       void set_sign(Sign);
       BigInt abs() const;
 
-      u32bit size() const { return reg.size(); }
+      u32bit size() const { return get_reg().size(); }
       u32bit sig_words() const;
       u32bit bytes() const;
       u32bit bits() const;
 
-      const word* data() const { return reg.begin(); }
-      SecureVector<word>& get_reg() { return reg; }
+      const word* data() const { return get_reg().begin(); }
+      SecureVector<word>& get_reg() { return rep.get_reg(); }
+      const SecureVector<word>& get_reg() const { return rep.get_reg(); }
       void grow_reg(u32bit) const;
 
       word& operator[](u32bit);
       word operator[](u32bit) const;
-      void clear() { reg.clear(); }
+      void clear() { get_reg().clear(); }
 
       void randomize(RandomNumberGenerator& rng, u32bit n);
 
@@ -107,8 +110,35 @@ class BOTAN_DLL BigInt
       BigInt(Sign, u32bit);
       BigInt(NumberType, u32bit);
    private:
+      class Rep
+         {
+         public:
+            SecureVector<word>& get_reg()
+               { sig = INVALID_SIG_WORD; return reg; }
+
+            word& operator[](u32bit);
+            word operator[](u32bit) const;
+
+            const SecureVector<word>& get_reg() const { return reg; }
+
+            u32bit sig_words() const;
+
+            void swap(Rep& other)
+               {
+               std::swap(reg, other.reg);
+               std::swap(sig, other.sig);
+               }
+
+            Rep() { sig = INVALID_SIG_WORD; }
+         private:
+            static const u32bit INVALID_SIG_WORD = 0xFFFFFFFF;
+            mutable u32bit sig;
+            SecureVector<word> reg;
+         };
+
+
       void grow_to(u32bit) const;
-      SecureVector<word> reg;
+      Rep rep;
       Sign signedness;
    };
 
