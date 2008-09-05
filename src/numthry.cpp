@@ -86,7 +86,7 @@ u32bit low_zero_bits(const BigInt& n)
 
          if(x)
             {
-            low_zero += __builtin_ctzl(x);
+            low_zero += ctz(x);
             break;
             }
          else

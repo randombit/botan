@@ -13,7 +13,6 @@ namespace Botan {
 /*************************************************
 * Return true iff arg is 2**n for some n > 0     *
 * T should be an unsigned integer type           *
-* 
 *************************************************/
 template<typename T>
 inline bool power_of_2(T arg)
@@ -69,6 +68,18 @@ inline u32bit hamming_weight(T n)
       if((n >> j) & 0x01)
          ++weight;
    return weight;
+   }
+
+/*************************************************
+* Count the trailing zero bits in n              *
+*************************************************/
+template<typename T>
+inline int ctz(T n)
+   {
+   for(int i = 0; i != 8*sizeof(T); ++i)
+      if((n >> i) & 0x01)
+         return i;
+   return 8*sizeof(T);
    }
 
 }
