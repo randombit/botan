@@ -9,7 +9,8 @@ u64bit Timer::get_clock()
    return (tv.tv_sec * 1000000000ULL + tv.tv_nsec);
    }
 
-Timer::Timer(const std::string& n) : name(n)
+Timer::Timer(const std::string& n, u32bit e_mul) :
+   name(n), event_mult(e_mul)
    {
    time_used = 0;
    timer_start = 0;

@@ -14,7 +14,7 @@ class Timer
    public:
       static u64bit get_clock();
 
-      Timer(const std::string& name);
+      Timer(const std::string& name, u32bit event_mult = 1);
 
       void start();
 
@@ -27,12 +27,12 @@ class Timer
       double ms_per_event() { return milliseconds() / events(); }
       double seconds_per_event() { return seconds() / events(); }
 
-      u32bit events() const { return event_count; }
+      u32bit events() const { return event_count * event_mult; }
       std::string get_name() const { return name; }
    private:
       std::string name;
       u64bit time_used, timer_start;
-      u32bit event_count;
+      u32bit event_count, event_mult;
    };
 
 inline bool operator<(const Timer& x, const Timer& y)

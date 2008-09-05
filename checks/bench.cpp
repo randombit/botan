@@ -10,6 +10,7 @@ using Botan::byte;
 using Botan::u64bit;
 
 #include "common.h"
+#include "timer.h"
 #include "bench.h"
 
 /* Discard output to reduce overhead */
@@ -29,26 +30,24 @@ double bench_filter(std::string name, Botan::Filter* filter,
                     bool html, double seconds)
    {
    Botan::Pipe pipe(filter, new BitBucket);
+
    pipe.start_msg();
 
-   static const u32bit BUFFERSIZE = 32*1024;
-   byte buf[BUFFERSIZE];
+   byte buf[32 * 1024];
+   Timer timer(name, sizeof(buf));
 
-   rng.randomize(buf, BUFFERSIZE);
+   rng.randomize(buf, sizeof(buf));
 
-   u32bit iterations = 0;
-   u64bit start = get_clock(), clocks_used = 0;
-   u64bit go_up_to = static_cast<u64bit>(seconds * get_ticks());
-
-   while(clocks_used < go_up_to)
+   while(timer.seconds() < seconds)
       {
-      iterations++;
-      pipe.write(buf, BUFFERSIZE);
-      clocks_used = get_clock() - start;
+      timer.start();
+      pipe.write(buf, sizeof(buf));
+      timer.stop();
       }
 
-   double bytes_per_sec = (static_cast<double>(iterations) * BUFFERSIZE) /
-                          (static_cast<double>(clocks_used) / get_ticks());
+   pipe.end_msg();
+
+   double bytes_per_sec = timer.events() / timer.seconds();
    double mbytes_per_sec = bytes_per_sec / (1024.0 * 1024.0);
 
    std::cout.setf(std::ios::fixed, std::ios::floatfield);

@@ -20,21 +20,6 @@ using namespace Botan;
 #include <fstream>
 #include <string>
 #include <memory>
-#include <map>
-#include <set>
-
-class Benchmark_Report
-   {
-   public:
-      void report(const std::string& name, Timer timer)
-         {
-         std::cout << name << " " << timer << "\n";
-         data[name].insert(timer);
-         }
-
-   private:
-      std::map<std::string, std::set<Timer> > data;
-   };
 
 namespace {
 
