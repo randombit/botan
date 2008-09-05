@@ -21,7 +21,17 @@ class BOTAN_DLL DL_Group
       const BigInt& get_q() const;
       const BigInt& get_g() const;
 
-      enum Format { ANSI_X9_42, ANSI_X9_57, PKCS_3 };
+      enum Format {
+         ANSI_X9_42,
+         ANSI_X9_57,
+         PKCS_3,
+
+         DSA_PARAMETERS = ANSI_X9_57,
+         DH_PARAMETERS = ANSI_X9_42,
+         X942_DH_PARAMETERS = ANSI_X9_42,
+         PKCS3_DH_PARAMETERS = PKCS_3
+      };
+
       enum PrimeType { Strong, Prime_Subgroup, DSA_Kosherizer };
 
       bool verify_group(RandomNumberGenerator& rng, bool) const;
@@ -38,8 +48,8 @@ class BOTAN_DLL DL_Group
       DL_Group(RandomNumberGenerator& rng, const MemoryRegion<byte>&,
                u32bit = 1024, u32bit = 0);
 
-      DL_Group(const BigInt&, const BigInt&);
-      DL_Group(const BigInt&, const BigInt&, const BigInt&);
+      DL_Group(const BigInt& p, const BigInt& g);
+      DL_Group(const BigInt& p, const BigInt& g, const BigInt& q);
    private:
       static BigInt make_dsa_generator(const BigInt&, const BigInt&);
 
