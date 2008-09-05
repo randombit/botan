@@ -12,3 +12,5 @@
 ^check$
 ^doc/examples/.*\.pem$
 ^misc/nist_tests/x509test$
+/?callgrind.out.*
+
