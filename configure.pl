@@ -984,6 +984,13 @@ sub load_modules {
                 $defines .= "#define BOTAN_TARGET_CPU_IS_$submodel\n";
             }
 
+            my $os = $$config{'os'};
+            if($os ne 'generic') {
+                $os = uc $os;
+                $submodel =~ s/-/_/g;
+                $defines .= "#define BOTAN_TARGET_OS_IS_$os\n";
+            }
+
             my $unaligned_ok = 0;
 
             if(defined($endian)) {
