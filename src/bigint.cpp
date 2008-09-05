@@ -9,8 +9,6 @@
 #include <botan/parsing.h>
 #include <botan/util.h>
 
-#include <iostream>
-
 namespace Botan {
 
 /*************************************************
