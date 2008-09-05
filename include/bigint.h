@@ -81,6 +81,7 @@ class BOTAN_DLL BigInt
       SecureVector<word>& get_reg() { return rep.get_reg(); }
       const SecureVector<word>& get_reg() const { return rep.get_reg(); }
       void grow_reg(u32bit) const;
+      void grow_to(u32bit) const;
 
       word& operator[](u32bit);
       word operator[](u32bit) const;
@@ -136,8 +137,6 @@ class BOTAN_DLL BigInt
             SecureVector<word> reg;
          };
 
-
-      void grow_to(u32bit) const;
       Rep rep;
       Sign signedness;
    };
