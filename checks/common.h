@@ -37,9 +37,6 @@ std::vector<std::string> parse(const std::string& line);
 std::string hex_encode(const byte in[], u32bit len);
 Botan::SecureVector<byte> decode_hex(const std::string&);
 
-Botan::u64bit get_clock();
-Botan::u64bit get_ticks();
-
 Botan::Filter* lookup(const std::string& algname,
                       const std::vector<std::string>& params,
                       const std::string& section);
@@ -70,7 +67,7 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
          return out;
          }
 
-      void randomize(byte out[], u32bit len) throw()
+      void randomize(byte out[], u32bit len)
          {
          for(u32bit j = 0; j != len; j++)
             out[j] = random();

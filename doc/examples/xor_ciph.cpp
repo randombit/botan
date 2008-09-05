@@ -13,6 +13,8 @@ using namespace Botan;
 class XOR_Cipher : public StreamCipher
    {
    public:
+      void clear() throw() { mask.destroy(); mask_pos = 0; }
+
       // what we want to call this cipher
       std::string name() const { return "XOR"; }
 
@@ -51,12 +53,12 @@ void XOR_Cipher::key(const byte key[], u32bit length)
 #include <botan/look_add.h>
 #include <botan/lookup.h>
 #include <botan/filters.h>
-#include <botan/config.h>
+#include <botan/libstate.h>
 
 int main()
    {
    add_algorithm(new XOR_Cipher); // make it available to use
-   global_config().add_alias("Vernam", "XOR"); // make Vernam an alias for XOR
+   global_state().add_alias("Vernam", "XOR"); // make Vernam an alias for XOR
 
    // a hex key value
    SymmetricKey key("010203040506070809101112AAFF");

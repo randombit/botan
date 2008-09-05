@@ -87,7 +87,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
                    const MemoryRegion<byte>& seed, u32bit pbits, u32bit qbits)
    {
    if(!generate_dsa_primes(rng, p, q, pbits, qbits, seed))
-      throw Invalid_Argument("DL_Group: The seed/counter given does not "
+      throw Invalid_Argument("DL_Group: The seed given does not "
                              "generate a DSA group");
 
    g = make_dsa_generator(p, q);

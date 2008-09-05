@@ -55,7 +55,7 @@ SecureVector<byte> RSA_PublicKey::verify(const byte in[], u32bit len) const
 RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
                                u32bit bits, u32bit exp)
    {
-   if(bits < 1024)
+   if(bits < 512)
       throw Invalid_Argument(algo_name() + ": Can't make a key that is only " +
                              to_string(bits) + " bits long");
    if(exp < 3 || exp % 2 == 0)

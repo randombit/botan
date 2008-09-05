@@ -1,9 +1,10 @@
 /*************************************************
 * Number Theory Source File                      *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/numthry.h>
+#include <botan/bit_ops.h>
 #include <algorithm>
 
 namespace Botan {
@@ -73,12 +74,27 @@ u32bit miller_rabin_test_iterations(u32bit bits, bool verify)
 *************************************************/
 u32bit low_zero_bits(const BigInt& n)
    {
-   if(n.is_zero()) return 0;
+   if(n.is_negative() || n.is_zero()) return 0;
 
-   u32bit bits = 0, max_bits = n.bits();
-   while((n.get_bit(bits) == 0) && bits < max_bits)
-      ++bits;
-   return bits;
+   u32bit low_zero = 0;
+
+   if(n.is_positive() && n.is_nonzero())
+      {
+      for(u32bit i = 0; i != n.size(); ++i)
+         {
+         word x = n[i];
+
+         if(x)
+            {
+            low_zero += __builtin_ctzl(x);
+            break;
+            }
+         else
+            low_zero += BOTAN_MP_WORD_BITS;
+         }
+      }
+
+   return low_zero;
    }
 
 /*************************************************

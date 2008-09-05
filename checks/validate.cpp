@@ -144,9 +144,18 @@ u32bit do_validation_tests(const std::string& filename,
          }
       counter++;
 
-      bool failed = failed_test(algorithm, substr,
-                                is_extension, should_pass,
-                                section, last_missing, rng);
+      bool failed = true; // until proven otherwise
+
+      try
+         {
+         failed = failed_test(algorithm, substr,
+                              is_extension, should_pass,
+                              section, last_missing, rng);
+         }
+      catch(std::exception& e)
+         {
+         std::cout << "Exception: " << e.what() << "\n";
+         }
 
       if(failed && should_pass)
          {

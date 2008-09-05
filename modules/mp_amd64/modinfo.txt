@@ -5,7 +5,7 @@ mp_bits 64
 load_on asm_ok
 
 <replace>
-bit_ops.h
+bswap.h
 mp_asm.h
 mp_asmi.h
 </replace>

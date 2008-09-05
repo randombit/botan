@@ -612,40 +612,48 @@ u32bit do_pk_validation_tests(const std::string& filename,
 
       u32bit new_errors = 0;
 
-      if(algorithm.find("DSA/") != std::string::npos)
-         new_errors = validate_dsa_sig(algorithm, substr, rng);
-      else if(algorithm.find("DSA_VA/") != std::string::npos)
-         new_errors = validate_dsa_ver(algorithm, substr);
+      try
+         {
 
-      else if(algorithm.find("RSAES_PKCS8/") != std::string::npos)
-         new_errors = validate_rsa_enc_pkcs8(algorithm, substr, rng);
-      else if(algorithm.find("RSAVA_X509/") != std::string::npos)
-         new_errors = validate_rsa_ver_x509(algorithm, substr);
+         if(algorithm.find("DSA/") != std::string::npos)
+            new_errors = validate_dsa_sig(algorithm, substr, rng);
+         else if(algorithm.find("DSA_VA/") != std::string::npos)
+            new_errors = validate_dsa_ver(algorithm, substr);
 
-      else if(algorithm.find("RSAES/") != std::string::npos)
-         new_errors = validate_rsa_enc(algorithm, substr, rng);
-      else if(algorithm.find("RSASSA/") != std::string::npos)
-         new_errors = validate_rsa_sig(algorithm, substr, rng);
-      else if(algorithm.find("RSAVA/") != std::string::npos)
-         new_errors = validate_rsa_ver(algorithm, substr);
-      else if(algorithm.find("RWVA/") != std::string::npos)
-         new_errors = validate_rw_ver(algorithm, substr);
-      else if(algorithm.find("RW/") != std::string::npos)
-         new_errors = validate_rw_sig(algorithm, substr, rng);
-      else if(algorithm.find("NR/") != std::string::npos)
-         new_errors = validate_nr_sig(algorithm, substr, rng);
-      else if(algorithm.find("ElGamal/") != std::string::npos)
-         new_errors = validate_elg_enc(algorithm, substr, rng);
-      else if(algorithm.find("DH/") != std::string::npos)
-         new_errors = validate_dh(algorithm, substr, rng);
-      else if(algorithm.find("DLIES/") != std::string::npos)
-         new_errors = validate_dlies(algorithm, substr, rng);
-      else
-         std::cout << "WARNING: Unknown PK algorithm "
-                   << algorithm << std::endl;
+         else if(algorithm.find("RSAES_PKCS8/") != std::string::npos)
+            new_errors = validate_rsa_enc_pkcs8(algorithm, substr, rng);
+         else if(algorithm.find("RSAVA_X509/") != std::string::npos)
+            new_errors = validate_rsa_ver_x509(algorithm, substr);
 
-      alg_count++;
-      errors += new_errors;
+         else if(algorithm.find("RSAES/") != std::string::npos)
+            new_errors = validate_rsa_enc(algorithm, substr, rng);
+         else if(algorithm.find("RSASSA/") != std::string::npos)
+            new_errors = validate_rsa_sig(algorithm, substr, rng);
+         else if(algorithm.find("RSAVA/") != std::string::npos)
+            new_errors = validate_rsa_ver(algorithm, substr);
+         else if(algorithm.find("RWVA/") != std::string::npos)
+            new_errors = validate_rw_ver(algorithm, substr);
+         else if(algorithm.find("RW/") != std::string::npos)
+            new_errors = validate_rw_sig(algorithm, substr, rng);
+         else if(algorithm.find("NR/") != std::string::npos)
+            new_errors = validate_nr_sig(algorithm, substr, rng);
+         else if(algorithm.find("ElGamal/") != std::string::npos)
+            new_errors = validate_elg_enc(algorithm, substr, rng);
+         else if(algorithm.find("DH/") != std::string::npos)
+            new_errors = validate_dh(algorithm, substr, rng);
+         else if(algorithm.find("DLIES/") != std::string::npos)
+            new_errors = validate_dlies(algorithm, substr, rng);
+         else
+            std::cout << "WARNING: Unknown PK algorithm "
+                      << algorithm << std::endl;
+
+         alg_count++;
+         errors += new_errors;
+         }
+      catch(std::exception& e)
+         {
+         std::cout << "Exception: " << e.what() << "\n";
+         }
 
       if(new_errors)
          std::cout << "ERROR: \"" << algorithm << "\" failed test #"

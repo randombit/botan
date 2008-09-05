@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/md2.h>
-#include <botan/bit_ops.h>
+#include <botan/xor_buf.h>
 
 namespace Botan {
 

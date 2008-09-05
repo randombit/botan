@@ -99,12 +99,12 @@ void Zlib_Compression::start_msg()
 *************************************************/
 void Zlib_Compression::write(const byte input[], u32bit length)
    {
-   zlib->stream.next_in = (Bytef*)input;
+   zlib->stream.next_in = static_cast<Bytef*>(const_cast<byte*>(input));
    zlib->stream.avail_in = length;
 
    while(zlib->stream.avail_in != 0)
       {
-      zlib->stream.next_out = (Bytef*)buffer.begin();
+      zlib->stream.next_out = static_cast<Bytef*>(buffer.begin());
       zlib->stream.avail_out = buffer.size();
       deflate(&(zlib->stream), Z_NO_FLUSH);
       send(buffer.begin(), buffer.size() - zlib->stream.avail_out);
@@ -122,7 +122,7 @@ void Zlib_Compression::end_msg()
    int rc = Z_OK;
    while(rc != Z_STREAM_END)
       {
-      zlib->stream.next_out = (Bytef*)buffer.begin();
+      zlib->stream.next_out = reinterpret_cast<Bytef*>(buffer.begin());
       zlib->stream.avail_out = buffer.size();
       rc = deflate(&(zlib->stream), Z_FINISH);
       send(buffer.begin(), buffer.size() - zlib->stream.avail_out);

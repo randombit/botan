@@ -4,6 +4,25 @@
 
 #include <botan/rng.h>
 #include <string>
+#include <map>
+#include <set>
+#include "timer.h"
+
+#include <iostream>
+
+class Benchmark_Report
+   {
+   public:
+      void report(const std::string& name, Timer timer)
+         {
+         std::cout << name << " " << timer << "\n";
+         data[name].insert(timer);
+         }
+
+   private:
+      std::map<std::string, std::set<Timer> > data;
+   };
+
 
 void benchmark(const std::string&, Botan::RandomNumberGenerator&,
                bool html, double seconds);
