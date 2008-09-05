@@ -6,6 +6,7 @@
 #include <botan/util.h>
 #include <botan/bit_ops.h>
 #include <algorithm>
+#include <cmath>
 
 namespace Botan {
 
@@ -32,6 +33,7 @@ u32bit round_down(u32bit n, u32bit align_to)
 *************************************************/
 u32bit dl_work_factor(u32bit bits)
    {
+#if 0
    /*
    These values were taken from RFC 3526
    */
@@ -48,6 +50,18 @@ u32bit dl_work_factor(u32bit bits)
    else if(bits <= 8192)
       return 190;
    return 256;
+#else
+   const u32bit MIN_ESTIMATE = 64;
+
+   const double log_x = bits / 1.44;
+
+   const double strength =
+      2.76 * std::pow(log_x, 1.0/3.0) * std::pow(std::log(log_x), 2.0/3.0);
+
+   if(strength > MIN_ESTIMATE)
+      return static_cast<u32bit>(strength);
+   return MIN_ESTIMATE;
+#endif
    }
 
 /*************************************************
