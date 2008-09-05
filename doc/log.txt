@@ -6,6 +6,7 @@
  - Split byte swapping and word rotation functions into distinct headers
  - Add IETF modp 6144 group and 2048 and 3072 bit DSS groups
  - Optimizes BigInt right shift
+ - Add aliases in DL_Group::Format enum
  - BigInt now caches the significant word count
 
 * 1.7.9, 2008-08-27
