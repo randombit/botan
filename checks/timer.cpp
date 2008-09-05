@@ -1,13 +1,5 @@
 #include "timer.h"
-#include <time.h>
 #include <iomanip>
-
-u64bit Timer::get_clock()
-   {
-   struct timespec tv;
-   clock_gettime(CLOCK_REALTIME, &tv);
-   return (tv.tv_sec * 1000000000ULL + tv.tv_nsec);
-   }
 
 Timer::Timer(const std::string& n, u32bit e_mul) :
    name(n), event_mult(e_mul)
