@@ -74,7 +74,7 @@ inline u32bit hamming_weight(T n)
 * Count the trailing zero bits in n              *
 *************************************************/
 template<typename T>
-inline int ctz(T n)
+inline u32bit ctz(T n)
    {
    for(int i = 0; i != 8*sizeof(T); ++i)
       if((n >> i) & 0x01)
