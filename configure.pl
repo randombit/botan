@@ -48,6 +48,9 @@ sub main {
     $$config{'checks-dir'} = File::Spec->catdir($base_dir, 'checks');
     $$config{'doc-dir'} = File::Spec->catdir($base_dir, 'doc');
 
+    $$config{'command-line'} = $0 . ' ' . join(' ', @ARGV);
+    $$config{'timestamp'} = gmtime;
+
     %CPU = read_info_files($config, 'arch', \&get_arch_info);
     %OPERATING_SYSTEM = read_info_files($config, 'os', \&get_os_info);
     %COMPILER = read_info_files($config, 'cc', \&get_cc_info);
@@ -944,6 +947,8 @@ sub realname {
 sub load_modules {
     my ($config) = @_;
 
+    my @mod_names;
+
     foreach my $mod (sort keys %{$$config{'modules'}}) {
         load_module($config, $mod);
 
@@ -955,8 +960,10 @@ sub load_modules {
             }
         }
 
+        push @mod_names, $mod;
 
     }
+    $$config{'mod-list'} = join("\n", @mod_names);
 
     my $gen_defines = sub {
         my $defines = '';

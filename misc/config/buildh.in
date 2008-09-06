@@ -2,6 +2,23 @@
 #ifndef BOTAN_BUILD_CONFIG_H__
 #define BOTAN_BUILD_CONFIG_H__
 
+/*
+This file was automatically generated at
+  @{var:timestamp} UTC
+by
+  @{var:command-line}
+
+Target
+-------
+Compiler: @{var:cc} @{var:lib_opt} @{var:mach_opt}
+Arch: @{var:submodel}/@{var:arch}
+OS: @{var:os}
+
+Modules
+-------
+@{var:mod-list}
+*/
+
 #define BOTAN_VERSION_MAJOR @{var:version_major}
 #define BOTAN_VERSION_MINOR @{var:version_minor}
 #define BOTAN_VERSION_PATCH @{var:version_patch}
