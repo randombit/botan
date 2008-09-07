@@ -9,6 +9,7 @@
 #include <botan/pkcs8.h>
 #include <botan/mem_ops.h>
 #include <botan/look_pk.h>
+#include <botan/libstate.h>
 
 using namespace Botan;
 
@@ -309,6 +310,8 @@ void bench_pk(RandomNumberGenerator& rng,
      ad-hoc format (the RW algorithm has no assigned OID that I know of, so
      there is no way to encode a RW key into a PKCS #8 structure).
    */
+
+   global_state().set_option("pk/test/private_gen", "basic");
 
    Benchmark_Report report;
 
