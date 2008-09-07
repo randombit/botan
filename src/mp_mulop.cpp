@@ -20,11 +20,11 @@ word bigint_mul_add_words(word z[], const word x[], u32bit x_size, word y)
 
    word carry = 0;
 
-   for(u32bit j = 0; j != blocks; j += 8)
-      carry = word8_madd3(z + j, x + j, y, carry);
+   for(u32bit i = 0; i != blocks; i += 8)
+      carry = word8_madd3(z + i, x + i, y, carry);
 
-   for(u32bit j = blocks; j != x_size; ++j)
-      z[j] = word_madd3(x[j], y, z[j], &carry);
+   for(u32bit i = blocks; i != x_size; ++i)
+      z[i] = word_madd3(x[i], y, z[i], &carry);
 
    return carry;
    }
