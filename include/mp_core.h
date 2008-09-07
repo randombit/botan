@@ -38,10 +38,15 @@ void bigint_shr1(word[], u32bit, u32bit, u32bit);
 void bigint_shr2(word[], const word[], u32bit, u32bit, u32bit);
 
 /*************************************************
-* Multiplication and Squaring Operations         *
+* Simple O(N^2) Multiplication and Squaring      *
 *************************************************/
-word bigint_mul_add_words(word[], const word[], u32bit, word);
+void bigint_simple_mul(word z[], const word x[], u32bit x_size,
+                       const word y[], u32bit y_size);
+void bigint_simple_sqr(word z[], const word x[], u32bit x_size);
 
+/*************************************************
+* Linear Multiply                                *
+*************************************************/
 void bigint_linmul2(word[], u32bit, word);
 void bigint_linmul3(word[], const word[], u32bit, word);
 void bigint_linmul_add(word[], u32bit, const word[], u32bit, word);

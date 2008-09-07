@@ -12,29 +12,6 @@ namespace Botan {
 namespace {
 
 /*************************************************
-* Simple O(N^2) Multiplication                   *
-*************************************************/
-void bigint_simple_mul(word z[], const word x[], u32bit x_size,
-                                 const word y[], u32bit y_size)
-   {
-   clear_mem(z, x_size + y_size);
-
-   for(u32bit j = 0; j != x_size; ++j)
-      z[j+y_size] = bigint_mul_add_words(z + j, y, y_size, x[j]);
-   }
-
-/*************************************************
-* Simple O(N^2) Squaring                         *
-*************************************************/
-void bigint_simple_sqr(word z[], const word x[], u32bit x_size)
-   {
-   clear_mem(z, 2*x_size);
-
-   for(u32bit j = 0; j != x_size; ++j)
-      z[j+x_size] = bigint_mul_add_words(z + j, x, x_size, x[j]);
-   }
-
-/*************************************************
 * Karatsuba Multiplication Operation             *
 *************************************************/
 void karatsuba_mul(word z[], const word x[], const word y[], u32bit N,
