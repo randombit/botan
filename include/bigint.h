@@ -89,8 +89,8 @@ class BOTAN_DLL BigInt
       void grow_reg(u32bit) const;
       void grow_to(u32bit) const;
 
-      word& operator[](u32bit);
-      word operator[](u32bit) const;
+      word& operator[](u32bit i) { return rep[i]; }
+      word operator[](u32bit i) const { return rep[i]; }
       void clear() { get_reg().clear(); }
 
       void randomize(RandomNumberGenerator& rng, u32bit n);

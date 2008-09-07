@@ -376,22 +376,6 @@ BigInt BigInt::operator-() const
    }
 
 /*************************************************
-* Return a reference to the indexed word         *
-*************************************************/
-word& BigInt::operator[](u32bit index)
-   {
-   return rep[index];
-   }
-
-/*************************************************
-* Return the value of the indexed word           *
-*************************************************/
-word BigInt::operator[](u32bit index) const
-   {
-   return rep[index];
-   }
-
-/*************************************************
 * Return the absolute value of this number       *
 *************************************************/
 BigInt BigInt::abs() const
