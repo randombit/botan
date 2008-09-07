@@ -1,6 +1,6 @@
 realname "Algorithm x86 Assembler"
 
-mp_bits 32
+#mp_bits 32
 
 load_on asm_ok
 
@@ -12,7 +12,7 @@ serpent.cpp
 </replace>
 
 <ignore>
-mp_mulop.cpp
+#mp_mulop.cpp
 </ignore>
 
 <add>
@@ -21,7 +21,7 @@ md4core.S
 md5core.S
 sha1_asm.S
 serp_asm.S
-mp_mulop.S
+#mp_mulop.S
 </add>
 
 <arch>
