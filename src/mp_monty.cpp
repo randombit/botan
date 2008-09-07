@@ -151,9 +151,12 @@ s32bit bigint_cmp(const word x[], u32bit x_size,
 
    */
 
+   word carry = 0;
+   const u32bit blocks = x_size - (x_size % 8);
+
    if(z[x_size + x_size])
       {
-      assert(bigint_cmp(z + x_size, x_size + 1, x, x_size) > 0);
+      //assert((bigint_cmp(z + x_size, x_size + 1, x, x_size) > 0);
       goto do_sub;
       }
 
@@ -161,21 +164,33 @@ s32bit bigint_cmp(const word x[], u32bit x_size,
       {
       if(z[x_size + j - 1] > x[j-1])
          {
-         assert(bigint_cmp(z + x_size, x_size + 1, x, x_size) > 0);
+         //assert((bigint_cmp(z + x_size, x_size + 1, x, x_size) > 0);
          goto do_sub;
          }
 
       if(z[x_size + j - 1] < x[j-1])
          {
-         assert(bigint_cmp(z + x_size, x_size + 1, x, x_size) < 0);
+         //assert((bigint_cmp(z + x_size, x_size + 1, x, x_size) < 0);
          goto done;
          }
       }
 
-   assert(bigint_cmp(z + x_size, x_size + 1, x, x_size) == 0);
+   // default to subtraction (equal)
+
+   //assert(m(bigint_cmp(z + x_size, x_size + 1, x, x_size) == 0);
 
 do_sub:
-   bigint_sub2(z + x_size, x_size + 1, x, x_size);
+
+   //bigint_sub2(z + x_size, x_size + 1, x, x_size);
+
+   for(u32bit j = 0; j != blocks; j += 8)
+      carry = word8_sub2(z + x_size + j, x + j, carry);
+
+   for(u32bit j = blocks; j != x_size; ++j)
+      z[x_size + j] = word_sub(z[x_size + j], x[j], &carry);
+
+   if(carry)
+      --z[x_size+x_size];
 
 done:
    return;
