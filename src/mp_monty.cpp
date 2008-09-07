@@ -48,7 +48,7 @@ void bigint_monty_redc(word z[], u32bit z_size,
          }
       }
 
-#if 1
+#if 0
    if(bigint_cmp(z + x_size, x_size + 1, x, x_size) >= 0)
       bigint_sub2(z + x_size, x_size + 1, x, x_size);
 #else
@@ -151,13 +151,10 @@ s32bit bigint_cmp(const word x[], u32bit x_size,
 
    */
 
-   print
-
-   if(z[2*x_size + 1])
+   if(z[x_size + x_size])
       {
       assert(bigint_cmp(z + x_size, x_size + 1, x, x_size) > 0);
-      bigint_sub2(z + x_size, x_size + 1, x, x_size);
-      return;
+      goto do_sub;
       }
 
    for(u32bit j = x_size; j > 0; --j)
@@ -165,37 +162,23 @@ s32bit bigint_cmp(const word x[], u32bit x_size,
       if(z[x_size + j - 1] > x[j-1])
          {
          assert(bigint_cmp(z + x_size, x_size + 1, x, x_size) > 0);
-         bigint_sub2(z + x_size, x_size + 1, x, x_size);
-         return;
+         goto do_sub;
          }
 
       if(z[x_size + j - 1] < x[j-1])
          {
-         if(bigint_cmp(z + x_size, x_size + 1, x, x_size) >= 0)
-            {
-            printf("on j=%d\n", j);
-
-            printf("\nz=");
-            for(u32bit i = 0; i != x_size+1; i++)
-               printf("%08llX", z[x_size+i]);
-            printf("\n");
-
-            printf("x=");
-            printf("00000000");
-            for(u32bit i = 0; i != x_size; i++)
-               printf("%08llX", x[i]);
-            printf("\n");
-
-            printf("cmp=%d\n", bigint_cmp(z + x_size, x_size + 1, x, x_size));
-            }
-
          assert(bigint_cmp(z + x_size, x_size + 1, x, x_size) < 0);
-         return;
+         goto done;
          }
       }
 
    assert(bigint_cmp(z + x_size, x_size + 1, x, x_size) == 0);
+
+do_sub:
    bigint_sub2(z + x_size, x_size + 1, x, x_size);
+
+done:
+   return;
 
 #endif
    }
