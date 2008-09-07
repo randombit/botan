@@ -5,9 +5,9 @@
 
 #include <botan/asm_macr.h>
 
-START_LISTING(sha1core.S)
+START_LISTING(sha1_asm.S)
 
-START_FUNCTION(botan_asm_sha160_core)
+START_FUNCTION(botan_sha160_asm_amd64)
 
 #define DIGEST_ARR %rdi
 #define INPUT %rsi
@@ -255,4 +255,4 @@ ALIGN;
    ADD(ARRAY4(DIGEST_ARR, 3), B)
    ADD(ARRAY4(DIGEST_ARR, 4), C)
 
-END_FUNCTION(botan_asm_sha160_core)
+END_FUNCTION(botan_sha160_asm_amd64)

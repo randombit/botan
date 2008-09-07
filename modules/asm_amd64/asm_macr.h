@@ -49,10 +49,12 @@ func_name:
 #define R0  %rax
 #define R1  %rbx
 #define R2  %rcx
+#define R2_32  %ecx
 #define R3  %rdx
 #define R4  %rsp
 #define R5  %rbp
 #define R6  %rsi
+#define R6_32  %esi
 #define R7  %rdi
 #define R8  %r8
 #define R9  %r9
@@ -66,8 +68,10 @@ func_name:
 
 #define ARG_1 R7
 #define ARG_2 R6
+#define ARG_2_32 R6_32
 #define ARG_3 R3
 #define ARG_4 R2
+#define ARG_4_32 R2_32
 #define ARG_5 R8
 #define ARG_6 R9
 
