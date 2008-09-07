@@ -37,14 +37,14 @@ std::ostream& operator<<(std::ostream& out, Timer& timer)
 
    out << events_per_second << " " << timer.get_name() << " per second; ";
 
-   if(timer.seconds_per_event() < 10)
+   if(timer.seconds_per_event() < 1)
       out << std::setprecision(2) << std::fixed
           << timer.ms_per_event() << " ms/" << timer.get_name();
    else
       out << std::setprecision(4) << std::fixed
           << timer.seconds_per_event() << " s/" << timer.get_name();
 
-   if(timer.seconds() < 10)
+   if(timer.seconds() > 3)
       out << " (" << timer.events() << " ops in "
           << timer.milliseconds() << " ms)";
    else
