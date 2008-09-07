@@ -1,4 +1,6 @@
 
+* 1.7.11, 2008-??-??
+
 * 1.7.10, 2008-09-05
  - Public key benchmarks run using a selection of random keys
  - New benchmark timer options are clock_gettime, gettimeofday, times, clock
