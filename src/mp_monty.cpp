@@ -45,9 +45,7 @@ void bigint_monty_redc(word z[], u32bit z_size,
          }
       }
 
-   /* Check if z[x_size...x_size+1] >= x[0...x_size]
-      This is bigint_cmp, inlined
-   */
+   // Check if z[x_size...x_size+1] >= x[0...x_size] using bigint_cmp (inlined)
    if(!z[x_size + x_size])
       {
       for(u32bit j = x_size; j > 0; --j)
@@ -60,7 +58,7 @@ void bigint_monty_redc(word z[], u32bit z_size,
          }
       }
 
-   /* If the compare above is true, subtract using bigint_sub2 (inlined) */
+   // If the compare above is true, subtract using bigint_sub2 (inlined)
    word carry = 0;
    const u32bit blocks = x_size - (x_size % 8);
 
