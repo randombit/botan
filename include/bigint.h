@@ -79,7 +79,7 @@ class BOTAN_DLL BigInt
       BigInt abs() const;
 
       u32bit size() const { return get_reg().size(); }
-      u32bit sig_words() const;
+      u32bit sig_words() const { return rep.sig_words(); }
       u32bit bytes() const;
       u32bit bits() const;
 
@@ -119,16 +119,13 @@ class BOTAN_DLL BigInt
    private:
       class Rep
          {
+         private:
+            static const u32bit INVALID_SIG_WORD = 0xFFFFFFFF;
+            mutable u32bit sig;
+            SecureVector<word> reg;
+
          public:
-            SecureVector<word>& get_reg()
-               { sig = INVALID_SIG_WORD; return reg; }
-
-            word& operator[](u32bit);
-            word operator[](u32bit) const;
-
-            const SecureVector<word>& get_reg() const { return reg; }
-
-            u32bit sig_words() const;
+            Rep() { sig = INVALID_SIG_WORD; }
 
             void swap(Rep& other)
                {
@@ -136,11 +133,46 @@ class BOTAN_DLL BigInt
                std::swap(sig, other.sig);
                }
 
-            Rep() { sig = INVALID_SIG_WORD; }
-         private:
-            static const u32bit INVALID_SIG_WORD = 0xFFFFFFFF;
-            mutable u32bit sig;
-            SecureVector<word> reg;
+            SecureVector<word>& get_reg()
+               { sig = INVALID_SIG_WORD; return reg; }
+
+            word& operator[](u32bit n)
+               {
+               sig = INVALID_SIG_WORD;
+
+               if(n > reg.size())
+                  reg.grow_to(n+1);
+               return reg[n];
+               }
+
+            word operator[](u32bit n) const
+               {
+               if(n > reg.size())
+                  return 0;
+               return reg[n];
+               }
+
+            const SecureVector<word>& get_reg() const { return reg; }
+
+            /*************************************************
+            * Count the significant words, if cached value is
+            * not valid
+            *************************************************/
+            u32bit sig_words() const
+               {
+               if(sig == INVALID_SIG_WORD)
+                  {
+                  const word* x = reg.begin();
+                  u32bit top_set = reg.size();
+
+                  while(top_set && (x[top_set-1] == 0))
+                     top_set--;
+
+                  sig = top_set;
+                  }
+
+               return sig;
+               }
          };
 
       Rep rep;

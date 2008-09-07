@@ -235,64 +235,6 @@ void BigInt::mask_bits(u32bit n)
    }
 
 /*************************************************
-* Count the significant words, if cached value is
-* not valid
-*************************************************/
-u32bit BigInt::Rep::sig_words() const
-   {
-   if(sig == INVALID_SIG_WORD)
-      {
-      const word* x = reg.begin();
-      u32bit top_set = reg.size();
-
-      while(top_set >= 4)
-         {
-         if(x[top_set-1])
-            break;
-         if(x[top_set-2])
-            break;
-         if(x[top_set-3])
-            break;
-         if(x[top_set-4])
-            break;
-
-         top_set -= 4;
-         }
-      while(top_set && (x[top_set-1] == 0))
-         top_set--;
-
-      sig = top_set;
-      }
-
-   return sig;
-   }
-
-word& BigInt::Rep::operator[](u32bit n)
-   {
-   sig = INVALID_SIG_WORD;
-
-   if(n > reg.size())
-      reg.grow_to(n+1);
-   return reg[n];
-   }
-
-word BigInt::Rep::operator[](u32bit n) const
-   {
-   if(n > reg.size())
-      return 0;
-   return reg[n];
-   }
-
-
-/*************************************************
-* Count the significant words                    *
-*************************************************/
-u32bit BigInt::sig_words() const
-   {
-   return rep.sig_words();
-   }
-
-/*************************************************
 * Count how many bytes are being used            *
 *************************************************/
 u32bit BigInt::bytes() const
