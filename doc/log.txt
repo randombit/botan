@@ -1,5 +1,8 @@
 
 * 1.7.11, 2008-??-??
+ - Optimized Montgomery reduction, Karatsuba squaring
+ - Inline several BigInt functions
+ - Add useful information to the generated build.h
 
 * 1.7.10, 2008-09-05
  - Public key benchmarks run using a selection of random keys
