@@ -82,9 +82,30 @@ void karatsuba_mul(word z[], const word x[], const word y[], u32bit N,
       karatsuba_mul(z0, x0, y0, N2, workspace+N);
       karatsuba_mul(z1, x1, y1, N2, workspace+N);
 
-      word carry = bigint_add3_nc(workspace+N, z0, N, z1, N);
-      carry += bigint_add2_nc(z + N2, N, workspace + N, N);
-      bigint_add2_nc(z + N + N2, N2, &carry, 1);
+      const u32bit blocks_of_8 = N - (N % 8);
+
+      word carry = 0;
+
+      for(u32bit j = 0; j != blocks_of_8; j += 8)
+         carry = word8_add3(workspace + N + j, z0 + j, z1 + j, carry);
+
+      for(u32bit j = blocks_of_8; j != N; ++j)
+         workspace[N + j] = word_add(z0[j], z1[j], &carry);
+
+      word carry2 = 0;
+
+      for(u32bit j = 0; j != blocks_of_8; j += 8)
+         carry2 = word8_add2(z + N2 + j, workspace + N + j, carry2);
+
+      for(u32bit j = blocks_of_8; j != N; ++j)
+         z[N2 + j] = word_add(z[N2 + j], workspace[N + j], &carry2);
+
+      z[N + N2] = word_add(z[N + N2], carry2, &carry);
+
+      if(carry)
+         for(u32bit j = 1; j != N2; ++j)
+            if(++z[N + N2 + j])
+               break;
 
       if((cmp0 == cmp1) || (cmp0 == 0) || (cmp1 == 0))
          bigint_add2(z + N2, 2*N-N2, workspace, N);
@@ -132,22 +153,22 @@ void karatsuba_sqr(word z[], const word x[], u32bit N, word workspace[])
       karatsuba_sqr(z0, x0, N2, workspace+N);
       karatsuba_sqr(z1, x1, N2, workspace+N);
 
+      const u32bit blocks_of_8 = N - (N % 8);
+
       word carry = 0;
 
-      const u32bit blocks = N - (N % 8);
+      for(u32bit j = 0; j != blocks_of_8; j += 8)
+         carry = word8_add3(workspace + N + j, z0 + j, z1 + j, carry);
 
-      for(u32bit j = 0; j != blocks; j += 8)
-         carry = word8_add3(workspace+N + j, z0 + j, z1 + j, carry);
-
-      for(u32bit j = blocks; j != N; ++j)
-         workspace[N+j] = word_add(z0[j], z1[j], &carry);
+      for(u32bit j = blocks_of_8; j != N; ++j)
+         workspace[N + j] = word_add(z0[j], z1[j], &carry);
 
       word carry2 = 0;
 
-      for(u32bit j = 0; j != blocks; j += 8)
+      for(u32bit j = 0; j != blocks_of_8; j += 8)
          carry2 = word8_add2(z + N2 + j, workspace + N + j, carry2);
 
-      for(u32bit j = blocks; j != N; ++j)
+      for(u32bit j = blocks_of_8; j != N; ++j)
          z[N2 + j] = word_add(z[N2 + j], workspace[N + j], &carry2);
 
       z[N + N2] = word_add(z[N + N2], carry2, &carry);
