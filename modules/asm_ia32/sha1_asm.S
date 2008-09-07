@@ -5,9 +5,9 @@
 
 #include <botan/asm_macr.h>
 
-START_LISTING(sha1core.S)
+START_LISTING(sha1_asm.S)
 
-START_FUNCTION(sha160_core)
+START_FUNCTION(botan_sha160_asm_ia32)
    SPILL_REGS()
 
 #define PUSHED 4
@@ -239,4 +239,4 @@ LOOP_UNTIL_EQ(ESI, 80, .EXPANSION)
    ADD(ARRAY4(EBP, 4), ECX)
 
    RESTORE_REGS()
-END_FUNCTION(sha160_core)
+END_FUNCTION(botan_sha160_asm_ia32)

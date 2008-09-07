@@ -19,7 +19,7 @@ mp_mulop.cpp
 asm_macr.h
 md4core.S
 md5core.S
-sha1core.S
+sha1_asm.S
 serp_asm.S
 mp_mulop.S
 </add>

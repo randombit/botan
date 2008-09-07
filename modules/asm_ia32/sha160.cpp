@@ -8,7 +8,7 @@
 
 namespace Botan {
 
-extern "C" void sha160_core(u32bit[5], const byte[64], u32bit[81]);
+extern "C" void botan_sha160_asm_ia32(u32bit[5], const byte[64], u32bit[81]);
 
 /*************************************************
 * SHA-160 Compression Function                   *
