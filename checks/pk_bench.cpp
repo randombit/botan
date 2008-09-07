@@ -162,7 +162,7 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
          std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));
          std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
 
-         benchmark_sig_ver(*ver, *sig, verify_timer, sig_timer, rng, 100, seconds);
+         benchmark_sig_ver(*ver, *sig, verify_timer, sig_timer, rng, 1000, seconds);
          }
 
       const std::string nm = algo_name + "-" + to_string(pbits);
@@ -206,7 +206,7 @@ void benchmark_dh(RandomNumberGenerator& rng,
 
          SecureVector<byte> secret1, secret2;
 
-         for(u32bit i = 0; i != 100; ++i)
+         for(u32bit i = 0; i != 1000; ++i)
             {
             if(kex_timer.seconds() > seconds)
                break;
