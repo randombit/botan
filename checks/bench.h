@@ -15,7 +15,7 @@ class Benchmark_Report
    public:
       void report(const std::string& name, Timer timer)
          {
-         std::cout << name << " " << timer << "\n";
+         std::cout << name << " " << timer << std::endl;
          data[name].insert(timer);
          }
 
