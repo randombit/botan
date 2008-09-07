@@ -1,5 +1,5 @@
 /*************************************************
-* Multiply/Add Algorithm Source File             *
+* Simple O(N^2) Multiplication and Squaring      *
 * (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
