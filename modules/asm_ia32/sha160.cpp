@@ -15,7 +15,7 @@ extern "C" void botan_sha160_asm_ia32(u32bit[5], const byte[64], u32bit[81]);
 *************************************************/
 void SHA_160::hash(const byte input[])
    {
-   sha160_core(digest, input, W);
+   botan_sha160_asm_ia32(digest, input, W);
    }
 
 /*************************************************
