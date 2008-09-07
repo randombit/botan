@@ -51,6 +51,7 @@ func_name:
 #define R2  %rcx
 #define R2_32  %ecx
 #define R3  %rdx
+#define R3_32  %edx
 #define R4  %rsp
 #define R5  %rbp
 #define R6  %rsi
@@ -58,6 +59,7 @@ func_name:
 #define R7  %rdi
 #define R8  %r8
 #define R9  %r9
+#define R9_32  %r9d
 #define R10 %r10
 #define R11 %r11
 #define R12 %r12
@@ -70,16 +72,19 @@ func_name:
 #define ARG_2 R6
 #define ARG_2_32 R6_32
 #define ARG_3 R3
+#define ARG_3_32 R3_32
 #define ARG_4 R2
 #define ARG_4_32 R2_32
 #define ARG_5 R8
 #define ARG_6 R9
+#define ARG_6_32 R9_32
 
 #define TEMP_1 R10
 #define TEMP_2 R11
 #define TEMP_3 ARG_6
 #define TEMP_4 ARG_5
 #define TEMP_5 ARG_4
+#define TEMP_5_32 ARG_4_32
 #define TEMP_6 ARG_3
 #define TEMP_7 ARG_2
 #define TEMP_8 ARG_1

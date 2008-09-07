@@ -1,29 +1,85 @@
 /*************************************************
-* Multiply/Add Algorithm Source File             *
+* Simple O(N^2) Multiplication and Squaring      *
 * (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/asm_macr.h>
 
-START_LISTING(mp_muladd.S)
+START_LISTING(mp_mulop.S)
 
-START_FUNCTION(bigint_mul_add_words)
+#if 0
+void bigint_simple_sqr(word z[], const word x[], u32bit x_size)
+   {
+   const u32bit blocks = x_size - (x_size % 8);
+
+   clear_mem(z, 2*x_size);
+
+   for(u32bit i = 0; i != x_size; ++i)
+      {
+      word carry = 0;
+
+      /*
+      for(u32bit j = 0; j != blocks; j += 8)
+         carry = word8_madd3(z + i + j, x + j, x[i], carry);
+
+      for(u32bit j = blocks; j != x_size; ++j)
+         z[i+j] = word_madd3(x[j], x[i], z[i+j], &carry);
+      */
+
+
+      for(u32bit j = 0; j != x_size; ++j)
+         z[i+j] = word_madd3(x[j], x[i], z[i+j], &carry);
+
+      for(u32bit j = 0; j != x_size; ++j)
+         {
+         dword z = (dword)a * b + c + *d;
+         *d = (word)(z >> BOTAN_MP_WORD_BITS);
+         return (word)z;
+         }
+
+   
+   
+         z[i+j] = word_madd3(x[j], x[i], z[i+j], &carry);
+
+   }
+
+   
+
+      z[x_size+i] = carry;
+      }
+   }
+
+#endif
+
+START_FUNCTION(bigint_simple_sqr)
 
 #define Z_ARR    ARG_1
 #define X_ARR    ARG_2
-#define X_SIZE   %edx
-#define Y        ARG_4
+//#define X_SIZE   ARG_3_32
 
 #define CARRY    TEMP_1
 #define Z_WORD   TEMP_2
-#define LOOP_CTR %r9d
+#define LOOP_I   TEMP_3
+#define LOOP_J   TEMP_4
+#define X_SIZE   TEMP_5
 #define MUL_LO   %rax
+// arg 3, xsize
 #define MUL_HI   %rdx
+   
+// need arg3 == rdx for multiply
+   ASSIGN(X_SIZE, ARG3_32)
 
    ZEROIZE(CARRY)
 
-   ASSIGN(LOOP_CTR, X_SIZE)
+   ZEROIZE(LOOP_I)
 
+.LOOP_ZEROIZE_Z:
+
+   cmp LOOP_I, X_SIZE
+
+
+
+   
    JUMP_IF_ZERO(LOOP_CTR, .L_MULADD_DONE)
    JUMP_IF_LT(LOOP_CTR, 8, .LOOP_MULADD1)
 
@@ -38,7 +94,6 @@ START_FUNCTION(bigint_mul_add_words)
    ADD_LAST_CARRY(CARRY)            ; \
    ASSIGN(ARRAY8(Z_ARR, N), Z_WORD)
 
-ALIGN
 .LOOP_MULADD8:
    MULADD_OP(0)
    MULADD_OP(1)
@@ -70,4 +125,4 @@ ALIGN
 
 .L_MULADD_DONE:
    RETURN_VALUE_IS(CARRY)
-END_FUNCTION(bigint_mul_add_words)
+END_FUNCTION(bigint_simple_square)
