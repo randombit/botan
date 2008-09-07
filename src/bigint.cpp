@@ -1,6 +1,6 @@
 /*************************************************
 * BigInt Base Source File                        *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/bigint.h>
@@ -334,16 +334,6 @@ u32bit BigInt::encoded_size(Base base) const
       return static_cast<u32bit>((bits() * LOG_2_BASE_10) + 1);
    else
       throw Invalid_Argument("Unknown base for BigInt encoding");
-   }
-
-/*************************************************
-* Return true if this number is zero             *
-*************************************************/
-bool BigInt::is_zero() const
-   {
-   for(u32bit j = 0; j != size(); ++j)
-      if(rep[j]) return false;
-   return true;
    }
 
 /*************************************************

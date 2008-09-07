@@ -1,6 +1,6 @@
 /*************************************************
 * BigInt Header File                             *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_BIGINT_H__
@@ -47,8 +47,14 @@ class BOTAN_DLL BigInt
       s32bit cmp(const BigInt&, bool = true) const;
       bool is_even() const { return (get_bit(0) == 0); }
       bool is_odd()  const { return (get_bit(0) == 1); }
+
+      bool is_zero() const
+         {
+         for(u32bit i = 0; i != rep,sig_words(); ++i)
+            if(rep[i]) return false;
+         return true;
+         }
       bool is_nonzero() const { return (!is_zero()); }
-      bool is_zero() const;
 
       void set_bit(u32bit);
       void clear_bit(u32bit);
