@@ -50,7 +50,7 @@ class BOTAN_DLL BigInt
 
       bool is_zero() const
          {
-         for(u32bit i = 0; i != rep,sig_words(); ++i)
+         for(u32bit i = 0; i != rep.sig_words(); ++i)
             if(rep[i]) return false;
          return true;
          }
