@@ -15,7 +15,7 @@ sha160.cpp
 
 <add>
 asm_macr.h
-mp_mulop_amd64.S
+#mp_mulop_amd64.S
 #mp_monty.S
 sha1_asm.S
 </add>
