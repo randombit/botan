@@ -28,7 +28,7 @@ const std::string BIGINT_VALIDATION_FILE = "checks/mp_valid.dat";
 const std::string PK_VALIDATION_FILE = "checks/pk_valid.dat";
 const std::string EXPECTED_FAIL_FILE = "checks/fail.dat";
 
-int validate(RandomNumberGenerator& rng);
+int run_test_suite();
 
 namespace {
 
@@ -78,7 +78,7 @@ void test_types()
    bool passed = true;
 
    passed = passed && test<Botan::byte  >("byte",    8, false);
-   passed = passed && test<Botan::u16bit>("u16bit", 18, false);
+   passed = passed && test<Botan::u16bit>("u16bit", 16, false);
    passed = passed && test<Botan::u32bit>("u32bit", 32, false);
    passed = passed && test<Botan::u64bit>("u64bit", 64, false);
    passed = passed && test<Botan::s32bit>("s32bit", 31,  true);
@@ -102,16 +102,14 @@ int main(int argc, char* argv[])
 
       Botan::InitializerOptions init_options(opts.value_if_set("init"));
       //Botan::LibraryInitializer init(init_options);
-
-      std::auto_ptr<RandomNumberGenerator> rng(
-         RandomNumberGenerator::make_rng());
+      //Botan::LibraryInitializer::initialize(init_options);
 
       if(opts.is_set("help") || argc <= 1)
          {
          std::cerr << "Test driver for "
                    << Botan::version_string() << "\n"
                    << "Options:\n"
-                   << "  --validate: Check test vectors\n"
+                   << "  --test || --validate: Run tests (do this at least once)\n"
                    << "  --benchmark: Benchmark everything\n"
                    << "  --bench-type={block,mode,stream,hash,mac,rng,pk}:\n"
                    << "       Benchmark only algorithms of a particular type\n"
@@ -119,30 +117,31 @@ int main(int argc, char* argv[])
                    << "  --seconds=n: Benchmark for n seconds\n"
                    << "  --init=<str>: Pass <str> to the library\n"
                    << "  --help: Print this message\n";
-         return 1;
          }
-
-      if(opts.is_set("validate"))
-         return validate(*rng);
-
-      double seconds = 1.5;
-
-      if(opts.is_set("seconds"))
+      else if(opts.is_set("validate") || opts.is_set("test"))
          {
-         seconds = std::atof(opts.value("seconds").c_str());
-         if(seconds && (seconds < 0.1 || seconds > (5 * 60)))
+         run_test_suite();
+         }
+      if(opts.is_set("bench-algo") || opts.is_set("benchmark"))
+         {
+         double seconds = 1.5;
+
+         if(opts.is_set("seconds"))
             {
-            std::cout << "Invalid argument to --seconds\n";
-            return 2;
+            seconds = std::atof(opts.value("seconds").c_str());
+            if(seconds && (seconds < 0.1 || seconds > (5 * 60)))
+               {
+               std::cout << "Invalid argument to --seconds\n";
+               return 2;
+               }
             }
-         }
 
-      const bool html = opts.is_set("html");
-
-      if(opts.is_set("bench-algo"))
-         {
+         const bool html = opts.is_set("html");
          std::vector<std::string> algs =
             Botan::split_on(opts.value("bench-algo"), ',');
+
+         std::auto_ptr<RandomNumberGenerator> rng(
+            RandomNumberGenerator::make_rng());
 
          for(u32bit j = 0; j != algs.size(); j++)
             {
@@ -151,62 +150,58 @@ int main(int argc, char* argv[])
             if(!found) // maybe it's a PK algorithm
                bench_pk(*rng, alg, html, seconds);
             }
-         }
 
-      if(opts.is_set("benchmark"))
-         benchmark("All", *rng, html, seconds);
-      else if(opts.is_set("bench-type"))
-         {
-         const std::string type = opts.value("bench-type");
-
-         if(type == "all")
+         if(opts.is_set("benchmark"))
             benchmark("All", *rng, html, seconds);
-         else if(type == "block")
-            benchmark("Block Cipher", *rng, html, seconds);
-         else if(type == "stream")
-            benchmark("Stream Cipher", *rng, html, seconds);
-         else if(type == "hash")
-            benchmark("Hash", *rng, html, seconds);
-         else if(type == "mac")
-            benchmark("MAC", *rng, html, seconds);
-         else if(type == "*rng")
-            benchmark("RNG", *rng, html, seconds);
-         else if(type == "pk")
-            bench_pk(*rng, "All", html, seconds);
+         else if(opts.is_set("bench-type"))
+            {
+            const std::string type = opts.value("bench-type");
+
+            if(type == "all")
+               benchmark("All", *rng, html, seconds);
+            else if(type == "block")
+               benchmark("Block Cipher", *rng, html, seconds);
+            else if(type == "stream")
+               benchmark("Stream Cipher", *rng, html, seconds);
+            else if(type == "hash")
+               benchmark("Hash", *rng, html, seconds);
+            else if(type == "mac")
+               benchmark("MAC", *rng, html, seconds);
+            else if(type == "rng")
+               benchmark("RNG", *rng, html, seconds);
+            else if(type == "pk")
+               bench_pk(*rng, "All", html, seconds);
+            }
          }
 
       Botan::set_global_state(0);
       }
-   catch(Botan::Exception& e)
-      {
-      std::cout << "Exception caught:\n   " << e.what() << std::endl;
-      return 1;
-      }
    catch(std::exception& e)
       {
-      std::cout << "Standard library exception caught:\n   "
-                << e.what() << std::endl;
-      return 1;
+      std::cerr << "Exception: " << e.what() << std::endl;
       }
    catch(...)
       {
-      std::cout << "Unknown exception caught." << std::endl;
-      return 1;
+      std::cerr << "Unknown (...) exception caught" << std::endl;
       }
 
    return 0;
    }
 
-int validate(RandomNumberGenerator& rng)
+int run_test_suite()
    {
-   std::cout << "Beginning validation tests..." << std::endl;
+   std::cout << "Beginning tests..." << std::endl;
 
    u32bit errors = 0;
-   try {
-      errors += do_validation_tests(VALIDATION_FILE, rng);
-      errors += do_validation_tests(EXPECTED_FAIL_FILE, rng, false);
-      errors += do_bigint_tests(BIGINT_VALIDATION_FILE, rng);
-      errors += do_pk_validation_tests(PK_VALIDATION_FILE, rng);
+   try
+      {
+      std::auto_ptr<RandomNumberGenerator> rng(
+         RandomNumberGenerator::make_rng());
+
+      errors += do_validation_tests(VALIDATION_FILE, *rng);
+      errors += do_validation_tests(EXPECTED_FAIL_FILE, *rng, false);
+      errors += do_bigint_tests(BIGINT_VALIDATION_FILE, *rng);
+      errors += do_pk_validation_tests(PK_VALIDATION_FILE, *rng);
       }
    catch(Botan::Exception& e)
       {
