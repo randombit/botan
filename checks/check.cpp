@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
    {
    try
       {
-      OptionParser opts("help|html|init=|validate|"
+      OptionParser opts("help|html|init=|test|validate|"
                         "benchmark|bench-type=|bench-algo=|seconds=");
       opts.parse(argv);
 
