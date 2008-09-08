@@ -13,6 +13,7 @@
 #include <memory>
 
 #include <botan/botan.h>
+#include <botan/libstate.h>
 #include <botan/mp_types.h>
 
 using namespace Botan;
@@ -29,6 +30,66 @@ const std::string EXPECTED_FAIL_FILE = "checks/fail.dat";
 
 int validate(RandomNumberGenerator& rng);
 
+namespace {
+
+template<typename T>
+bool test(const char* type, int digits, bool is_signed)
+   {
+   if(std::numeric_limits<T>::is_specialized == false)
+      {
+      std::cout << "WARNING: Could not check parameters of " << type
+                << " in std::numeric_limits" << std::endl;
+
+      // assume it's OK (full tests will catch it later)
+      return true;
+      }
+
+   // continue checking after failures
+   bool passed = true;
+
+   if(std::numeric_limits<T>::is_integer == false)
+      {
+      std::cout << "WARN: std::numeric_limits<> says " << type
+                << " is not an integer" << std::endl;
+      passed = false;
+      }
+
+   if(std::numeric_limits<T>::is_signed != is_signed)
+      {
+      std::cout << "ERROR: numeric_limits<" << type << ">::is_signed == "
+                << std::boolalpha << std::numeric_limits<T>::is_signed
+                << std::endl;
+      passed = false;
+      }
+
+   if(std::numeric_limits<T>::digits != digits && digits != 0)
+      {
+      std::cout << "ERROR: numeric_limits<" << type << ">::digits == "
+                << std::numeric_limits<T>::digits
+                << " expected " << digits << std::endl;
+      passed = false;
+      }
+
+   return passed;
+   }
+
+void test_types()
+   {
+   bool passed = true;
+
+   passed = passed && test<Botan::byte  >("byte",    8, false);
+   passed = passed && test<Botan::u16bit>("u16bit", 18, false);
+   passed = passed && test<Botan::u32bit>("u32bit", 32, false);
+   passed = passed && test<Botan::u64bit>("u64bit", 64, false);
+   passed = passed && test<Botan::s32bit>("s32bit", 31,  true);
+   passed = passed && test<Botan::word>("word", 0, false);
+
+   if(!passed)
+      std::cout << "Typedefs in include/types.h may be incorrect!\n";
+   }
+
+}
+
 int main(int argc, char* argv[])
    {
    try
@@ -37,8 +98,10 @@ int main(int argc, char* argv[])
                         "benchmark|bench-type=|bench-algo=|seconds=");
       opts.parse(argv);
 
+      test_types(); // do this always
+
       Botan::InitializerOptions init_options(opts.value_if_set("init"));
-      Botan::LibraryInitializer init(init_options);
+      //Botan::LibraryInitializer init(init_options);
 
       std::auto_ptr<RandomNumberGenerator> rng(
          RandomNumberGenerator::make_rng());
@@ -111,6 +174,8 @@ int main(int argc, char* argv[])
          else if(type == "pk")
             bench_pk(*rng, "All", html, seconds);
          }
+
+      Botan::set_global_state(0);
       }
    catch(Botan::Exception& e)
       {
@@ -132,67 +197,10 @@ int main(int argc, char* argv[])
    return 0;
    }
 
-
-namespace {
-
-template<typename T>
-bool test(const char* type, int digits, bool is_signed)
-   {
-   bool passed = true;
-   if(std::numeric_limits<T>::is_specialized == false)
-      {
-      std::cout << "WARNING: Could not check parameters of " << type
-                << " in std::numeric_limits" << std::endl;
-      return true;
-      }
-
-   if(std::numeric_limits<T>::digits != digits && digits != 0)
-      {
-      std::cout << "ERROR: numeric_limits<" << type << ">::digits != "
-                << digits << std::endl;
-      passed = false;
-      }
-   if(std::numeric_limits<T>::is_signed != is_signed)
-      {
-      std::cout << "ERROR: numeric_limits<" << type << ">::is_signed != "
-                << std::boolalpha << is_signed << std::endl;
-      passed = false;
-      }
-   if(std::numeric_limits<T>::is_integer == false)
-      {
-      std::cout << "ERROR: numeric_limits<" << type
-                << ">::is_integer == false " << std::endl;
-      passed = false;
-      }
-   return passed;
-   }
-
-void test_types()
-   {
-   bool passed = true;
-
-   passed = passed && test<Botan::byte  >("byte",    8, false);
-   passed = passed && test<Botan::u16bit>("u16bit", 16, false);
-   passed = passed && test<Botan::u32bit>("u32bit", 32, false);
-   passed = passed && test<Botan::u64bit>("u64bit", 64, false);
-   passed = passed && test<Botan::s32bit>("s32bit", 31,  true);
-   passed = passed && test<Botan::word>("word", 0, false);
-
-   if(!passed)
-      {
-      std::cout << "Important settings in types.h are wrong. Please fix "
-                   "and recompile." << std::endl;
-      std::exit(1);
-      }
-   }
-
-}
-
 int validate(RandomNumberGenerator& rng)
    {
    std::cout << "Beginning validation tests..." << std::endl;
 
-   test_types();
    u32bit errors = 0;
    try {
       errors += do_validation_tests(VALIDATION_FILE, rng);
