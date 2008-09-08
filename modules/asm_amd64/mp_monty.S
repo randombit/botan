@@ -9,149 +9,292 @@ START_LISTING(mp_monty.S)
 
 START_FUNCTION(bigint_monty_redc)
 	pushq	%r15	#
-
-	movq	%r8, %r15	# u, u
 	pushq	%r14	#
-
 	pushq	%r13	#
-
 	pushq	%r12	#
-
-	movq	%rdi, %r12	# z, z
 	pushq	%rbp	#
-
-	movl	%esi, %edi	# z_size, z_size
 	pushq	%rbx	#
 
-        ZEROIZE(%esi)
-	movq	%rdx, %rbp	# x, x
+        movq	%rdi, %r14	# z
+	movq	%rdx, %r12	# x
+	movl	%esi, %ebp	# z_size
+
+	xorl	%esi, %esi	# j.76
+	movq	%r8, -16(%rsp)	# u, u
 	movl	%ecx, %ebx	# x_size, x_size
+	movl	%ecx, %r8d	# x_size, blocks_of_8
+	andl	$-8, %r8d	#, blocks_of_8
 	testl	%ecx, %ecx	# x_size
 	je	.L3	#,
-	mov	%ecx, %eax	# x_size, pretmp.62
-	leal	1(%rbx), %r13d	#, k
+	mov	%ecx, %eax	# x_size, pretmp.71
+	leal	1(%rbx), %r15d	#, k.73
 	salq	$3, %rax	#,
-        ZEROIZE(%r8d)
-	movq	%rax, -16(%rsp)	#, pretmp.18
-.L7:
-	mov	%r8d, %eax	# j, j
-	movq	%r15, %rsi	# u, y
-	leaq	(%r12,%rax,8), %r11	#, z_j
-        ZEROIZE(%r9d)           # i
-	imulq	(%r11), %rsi	#* z_j, y
-	ZEROIZE(%r10d)          # carry
-.L4:
-	mov	%r9d, %eax	# i, i
-	movq	%rsi, %rcx	# y, b
-	leaq	(%r11,%rax,8), %rdx	#,
-	incl	%r9d	# i
-	movq	(%rbp,%rax,8), %rax	#* x, tmp113
-	movq	%rdx, %r14	#,
-	movq	%rdx, -8(%rsp)	#, D.2312
-
-	mulq %rcx	# b
-	addq (%r14),%rax	#, a
-	adcq $0,%rdx	#
-	addq %r10,%rax	# carry, a
-	adcq $0,%rdx	#
-
-	cmpl	%r9d, %ebx	# i, x_size
-	movq	%rdx, %r10	#, carry
-	movq	%rax, (%r14)	# a,
-	jne	.L4	#,
-	movq	-16(%rsp), %rdx	# pretmp.18,
-	leaq	(%r11,%rdx), %rax	#, D.2319
-	movq	(%rax), %rcx	#* D.2319, D.2320
-	leaq	(%r10,%rcx), %rdx	#, z_sum
-	movq	%rdx, (%rax)	# z_sum,* D.2319
-	cmpq	%rdx, %rcx	# z_sum, D.2320
-	jbe	.L5	#,
-	cmpl	%edi, %r13d	# z_size, k
-	je	.L5	#,
-	movl	%r13d, %ecx	# k, k.52
-	jmp	.L6	#
-.L20:
-	incl	%ecx	# k.52
-	cmpl	%ecx, %edi	# k.52, z_size
-	je	.L5	#,
-.L6:
-	mov	%ecx, %edx	# k.52, k.52
-	leaq	(%r11,%rdx,8), %rdx	#, D.2330
-	movq	(%rdx), %rax	#* D.2330, tmp116
-	incq	%rax	# D.2332
-	movq	%rax, (%rdx)	# D.2332,* D.2330
-	testq	%rax, %rax	# D.2332
-	je	.L20	#,
-.L5:
-	incl	%r8d	# j
-	decl	%edi	# z_size
-	cmpl	%r8d, %ebx	# j, x_size
-	jne	.L7	#,
-	movl	%ebx, %esi	# x_size, j.61
-.L3:
-	leal	(%rbx,%rbx), %eax	#, tmp117
-	mov	%eax, %eax	# tmp117, tmp118
-	leaq	(%r12,%rax,8), %rdi	#, D.2337
-	cmpq	$0, (%rdi)	#,* D.2337
-	jne	.L8	#,
-	testl	%ebx, %ebx	# x_size
-	je	.L14	#,
-	leal	-1(%rbx), %ecx	#, j
-	leal	(%rsi,%rcx), %edx	#, tmp121
-	mov	%ecx, %eax	# j, j
-	movq	(%rbp,%rax,8), %r8	#* x,
-	cmpq	%r8, (%r12,%rdx,8)	#,* z
-	ja	.L10	#,
-	jb	.L14	#,
-	leal	-2(%rsi,%rbx), %edx	#, ivtmp.37
-	jmp	.L11	#
-.L12:
-	mov	%edx, %eax	# ivtmp.37, ivtmp.37
-	decl	%ecx	# j
-	movq	(%r12,%rax,8), %rsi	#* z, temp.55
-	mov	%ecx, %eax	# j, j
-	movq	(%rbp,%rax,8), %rax	#* x, D.2353
-	cmpq	%rax, %rsi	# D.2353, temp.55
-	ja	.L10	#,
-	decl	%edx	# ivtmp.37
-	cmpq	%rax, %rsi	# D.2353, temp.55
-	jb	.L14	#,
+	xorl	%r13d, %r13d	# j
+	movq	%rax, -8(%rsp)	#, pretmp.21
+	.p2align 4,,10
+	.p2align 3
 .L11:
-	testl	%ecx, %ecx	# j
-	jne	.L12	#,
-.L10:
-	ZEROIZE(%esi)            # j
-	ZEROIZE(%r8d)            # carry
-.L13:
-	leal	(%rsi,%rbx), %eax	#, tmp127
-	mov	%esi, %ecx	# j, j
-	leaq	(%r12,%rax,8), %rax	#, D.2361
-	incl	%esi	# j
-	movq	(%rax), %rdx	#* D.2361, tmp129
+	mov	%r13d, %eax	# j, j
+	movq	-16(%rsp), %rdi	# u, y
+	leaq	(%r14,%rax,8), %r11	#, z_j
+	xorl	%r9d, %r9d	# i
+	imulq	(%r11), %rdi	#* z_j, y
+	xorl	%r10d, %r10d	# carry
+	testl	%r8d, %r8d	# blocks_of_8
+	je	.L7	#,
+	.p2align 4,,10
+	.p2align 3
+.LOOP_MUL_ADD:
+	mov	%r9d, %ecx	# i, i
+	addl	$8, %r9d	#, i
+	salq	$3, %rcx	#, D.2315
+	leaq	(%r11,%rcx), %rsi	#, tmp130
+	leaq	(%r12,%rcx), %rcx	#, tmp131
 
-	rorq %r8	# carry
-	sbbq (%rbp,%rcx,8),%rdx	#* x, x
-	sbbq %r8,%r8	# carry
-	negq %r8	# carry
+	movq 8*0(%rcx), %rax
+	mulq %rdi	# y
+	addq %r10, %rax	# carry
+	adcq $0,%rdx
+	addq 8*0(%rsi), %rax
+	adcq $0,%rdx
+	movq %rdx,%r10	# carry
+	movq %rax, 8*0 (%rsi)
+
+        movq 8*1(%rcx), %rax
+	mulq %rdi	# y
+	addq %r10, %rax	# carry
+	adcq $0,%rdx
+	addq 8*1(%rsi), %rax
+	adcq $0,%rdx
+	movq %rdx,%r10	# carry
+	movq %rax, 8*1 (%rsi)
+
+        movq 8*2(%rcx), %rax
+	mulq %rdi	# y
+	addq %r10, %rax	# carry
+	adcq $0,%rdx
+	addq 8*2(%rsi), %rax
+	adcq $0,%rdx
+	movq %rdx,%r10	# carry
+	movq %rax, 8*2 (%rsi)
+
+        movq 8*3(%rcx), %rax
+	mulq %rdi	# y
+	addq %r10, %rax	# carry
+	adcq $0,%rdx
+	addq 8*3(%rsi), %rax
+	adcq $0,%rdx
+	movq %rdx,%r10	# carry
+	movq %rax, 8*3 (%rsi)
+
+        movq 8*4(%rcx), %rax
+	mulq %rdi	# y
+	addq %r10, %rax	# carry
+	adcq $0,%rdx
+	addq 8*4(%rsi), %rax
+	adcq $0,%rdx
+	movq %rdx,%r10	# carry
+	movq %rax, 8*4 (%rsi)
+
+        movq 8*5(%rcx), %rax
+	mulq %rdi	# y
+	addq %r10, %rax	# carry
+	adcq $0,%rdx
+	addq 8*5(%rsi), %rax
+	adcq $0,%rdx
+	movq %rdx,%r10	# carry
+	movq %rax, 8*5 (%rsi)
+
+        movq 8*6(%rcx), %rax
+	mulq %rdi	# y
+	addq %r10, %rax	# carry
+	adcq $0,%rdx
+	addq 8*6(%rsi), %rax
+	adcq $0,%rdx
+	movq %rdx,%r10	# carry
+	movq %rax, 8*6 (%rsi)
+
+        movq 8*7(%rcx), %rax
+	mulq %rdi	# y
+	addq %r10, %rax	# carry
+	adcq $0,%rdx
+	addq 8*7(%rsi), %rax
+	adcq $0,%rdx
+	movq %rdx,%r10	# carry
+	movq %rax, 8*7 (%rsi)
+
+	cmpl	%r9d, %r8d	# i, blocks_of_8
+	jne	.LOOP_MUL_ADD	#,
+	cmpl	%r8d, %ebx	# blocks_of_8, x_size
+	je	.L8	#,
+.L7:
+	movl	%r8d, %esi	# blocks_of_8, i
+	.p2align 4,,10
+	.p2align 3
+.L5:
+	mov	%esi, %eax	# i, i
+	movq	%rdi, %rcx	# y, b
+	leaq	(%r11, %rax,8), %r9	#, D.2325
+	incl	%esi	# i
+	movq	(%r12, %rax,8), %rax	#* x, tmp133
+
+        mulq %rcx	# b
+	addq (%r9), %rax	#* D.2325, a
+	adcq $0,%rdx	#
+	addq %r10, %rax	# carry, a
+	adcq $0,%rdx	#
+
+	cmpl	%esi, %ebx	# i, x_size
+	movq	%rdx, %r10	#, carry
+	movq	%rax, (%r9)	# a,* D.2325
+	jne	.L5	#,
+.L8:
+	movq	-8(%rsp), %rdx	# pretmp.21,
+	leaq	(%r11,%rdx), %rax	#, D.2332
+	movq	(%rax), %rcx	#* D.2332, D.2333
+	leaq	(%r10,%rcx), %rdx	#, z_sum
+	movq	%rdx, (%rax)	# z_sum,* D.2332
+	cmpq	%rdx, %rcx	# z_sum, D.2333
+	jbe	.L9	#,
+	cmpl	%ebp, %r15d	# z_size, k.73
+	je	.L9	#,
+	movl	%r15d, %ecx	# k.73, k
+	jmp	.L10	#
+	.p2align 4,,10
+	.p2align 3
+.L31:
+	incl	%ecx	# k
+	cmpl	%ecx, %ebp	# k, z_size
+	.p2align 4,,4
+	.p2align 3
+	je	.L9	#,
+.L10:
+	mov	%ecx, %edx	# k, k
+	leaq	(%r11,%rdx,8), %rdx	#, D.2342
+	movq	(%rdx), %rax	#* D.2342, tmp136
+	incq	%rax	# D.2344
+	movq	%rax, (%rdx)	# D.2344,* D.2342
+	testq	%rax, %rax	# D.2344
+	je	.L31	#,
+.L9:
+	incl	%r13d	# j
+	decl	%ebp	# z_size
+	cmpl	%r13d, %ebx	# j, x_size
+	jne	.L11	#,
+	movl	%ebx, %esi	# x_size, j.76
+.L3:
+	leal	(%rbx,%rbx), %eax	#, tmp137
+	mov	%eax, %eax
+	leaq	(%r14, %rax,8), %rdi	#, D.2349
+	cmpq	$0, (%rdi)	#,* D.2349
+	jne	.L12	#,
+	testl	%ebx, %ebx	# x_size
+	je	.L12	#,
+	leal	-1(%rbx), %ecx	#, j
+	leal	(%rsi,%rcx), %edx	#, tmp141
+	mov	%ecx, %eax	# j, j
+	movq	(%r14,%rdx,8), %rbp	#* z,
+	cmpq	%rbp, (%r12, %rax,8)	#,* x
+	jb	.L12	#,
+	ja	.L_EXIT	#,
+	leal	-2(%rsi,%rbx), %edx	#, ivtmp.45
+	jmp	.L14	#
+	.p2align 4,,10
+	.p2align 3
+.L15:
+	mov	%edx, %eax	# ivtmp.45, ivtmp.45
+	decl	%ecx	# j
+	movq	(%r14, %rax,8), %rsi	#* z, D.2360
+	mov	%ecx, %eax	# j, j
+	movq	(%r12, %rax,8), %rax	#* x, temp.68
+	cmpq	%rax, %rsi
+	ja	.L12	#,
+	decl	%edx	# ivtmp.45
+	cmpq	%rax, %rsi
+	jb	.L_EXIT	#,
+.L14:
+	testl	%ecx, %ecx	# j
+	jne	.L15	#,
+.L12:
+	xorl	%ecx, %ecx	# j
+	xorl	%r10d, %r10d	# carry
+	mov	%ebx, %esi	# x_size, pretmp.19
+	testl	%r8d, %r8d	# blocks_of_8
+	je	.L17	#,
+	.p2align 4,,10
+	.p2align 3
+.L22:
+	mov	%ecx, %edx	# j, D.2375
+	addl	$8, %ecx	#, j
+	leaq	(%rdx,%rsi), %rax	#, tmp146
+	leaq	(%r12,%rdx,8), %rdx	#, tmp150
+	leaq	(%r14, %rax,8), %rax	#, tmp148
+
+	rorq %r10	# carry
+
+        movq 8*0(%rdx), %r10
+	sbbq %r10, 8*0(%rax)
+
+        movq 8*1(%rdx), %r10
+	sbbq %r10, 8*1(%rax)
+
+        movq 8*2(%rdx), %r10
+	sbbq %r10, 8*2(%rax)
+
+        movq 8*3(%rdx), %r10
+	sbbq %r10, 8*3(%rax)
+
+        movq 8*4(%rdx), %r10
+	sbbq %r10, 8*4(%rax)
+
+        movq 8*5(%rdx), %r10
+	sbbq %r10, 8*5(%rax)
+
+        movq 8*6(%rdx), %r10
+	sbbq %r10, 8*6(%rax)
+
+        movq 8*7(%rdx), %r10
+	sbbq %r10, 8*7(%rax)
+
+        sbbq %r10,%r10	# carry
+	negq %r10	# carry
+
+	cmpl	%ecx, %r8d	# j, blocks_of_8
+	jne	.L22	#,
+.L17:
+	cmpl	%r8d, %ebx	# blocks_of_8, x_size
+	je	.L19	#,
+	leal	(%r8,%rbx), %r9d	#, ivtmp.33
+	movl	%r8d, %esi	# blocks_of_8, j
+	.p2align 4,,10
+	.p2align 3
+.L20:
+	mov	%r9d, %eax	# ivtmp.33, ivtmp.33
+	mov	%esi, %ecx	# j, j
+	leaq	(%r14, %rax,8), %rax	#, D.2387
+	incl	%esi	# j
+	movq	(%rax), %rdx	#* D.2387, tmp153
+	incl	%r9d	# ivtmp.33
+
+	rorq %r10	# carry
+	sbbq (%r12,%rcx,8),%rdx	#* x, x
+	sbbq %r10,%r10	# carry
+	negq %r10	# carry
 
 	cmpl	%esi, %ebx	# j, x_size
-	movq	%rdx, (%rax)	# x,* D.2361
-	jne	.L13	#,
-	testq	%r8, %r8	# carry
-	je	.L14	#,
-	decq	(%rdi)	#* D.2337
-.L14:
+	movq	%rdx, (%rax)	# x,* D.2387
+	jne	.L20	#,
+.L19:
+	testq	%r10, %r10	# carry
+	je	.L_EXIT	#,
+	decq	(%rdi)	#* D.2349
+.L_EXIT:
 	popq	%rbx	#
 	popq	%rbp	#
 	popq	%r12	#
 	popq	%r13	#
 	popq	%r14	#
 	popq	%r15	#
-	ret
-.L8:
-	testl	%ebx, %ebx	# x_size
-	jne	.L10	#,
-	jmp	.L14	#
 END_FUNCTION(bigint_monty_redc)
 
 
@@ -252,4 +395,3 @@ ALIGN
    pop %r13
    pop %r12
 #endif
-   
