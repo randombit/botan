@@ -41,10 +41,10 @@
 \pagebreak
 \section{Introduction}
 
-Botan is a C++ library which attempts to provide the most common cryptographic
-algorithms and operations in an easy to use and portable package. Currently it
-runs on a wide variety of systems, using numerous different compilers and on
-many different CPU architectures.
+Botan is a C++ library which attempts to provide the most common
+cryptographic algorithms and operations in an easy to use, efficient,
+and portable way. It runs on a wide variety of systems, and can be
+used with a number of different compilers.
 
 The base library is written in ISO C++, so it can be ported with
 minimal fuss, but Botan also supports a modules system. This system
@@ -53,27 +53,27 @@ interfaces, extending the set of services available to users.
 
 \subsection{Targets}
 
-Botan's primary targets (system-wise) are 32 and 64-bit systems with
-at least a few megabytes of memory. Generally, given the choice
-between optimizing for 32-bit systems and 64-bit systems, Botan is
-written to prefer 64-bit, simply on the theory that where performance
-is a real concern, modern 64-bit processors are the obvious
-choice. And also because two of the three machines owned by the
-primary developer have 64-bit CPUs. But performance on 32 bit systems
-is also quite good.
+Botan's primary targets (system-wise) are 32 and 64-bit CPUs, with a
+flat memory address space of at least 32 bits. Generally, given the
+choice between optimizing for 32-bit systems and 64-bit systems, Botan
+is written to prefer 64-bit, simply on the theory that where
+performance is a real concern, modern 64-bit processors are the
+obvious choice. However in most cases this is not an issue, as many
+algorithms are specified in terms of 32-bit operations precisely to
+target commodity processors.
 
-Today smaller systems, such as handhelds, set-top boxes, and the
+Smaller andhelds, set-top boxes, and the
 bigger smart phones and smart cards, are also capable of using
 Botan. However, Botan uses a fairly large amount of code space (up to
 several megabytes, depending upon the compiler and options used),
 which could be prohibitive in some systems. Usage of RAM is fairly
 modest, usually under 64K.
 
-Botan's design makes it quite easy to remove unused algorithms in such a way
-that applications do not need to be recompiled to work, even applications that
-use the algorithms in question. They can simply ask Botan if the algorithm
-exists, and if Botan says yes, ask the library to give them such an object for
-that algorithm.
+Botan's design makes it quite easy to remove unused algorithms in such
+a way that applications do not need to be recompiled to work, even
+applications that use the algorithms in question. They can simply ask
+Botan if the algorithm exists, and if Botan says yes, ask the library
+to give them such an object for that algorithm.
 
 \subsection{Why Botan?}
 
@@ -173,12 +173,12 @@ destroyed last. The initializer does things like initializing the
 memory allocation system, setting up the algorithm lookup tables,
 finding out if there is a high resolution timer available to use, and
 similar such matters. With no arguments, the library is initialized
-with various default settings. So 99\% of the time, all you need is
+with various default settings. So most of the time (unless you are
+writing threaded code; see below), all you need is:
 
 \texttt{Botan::LibraryInitializer init;}
 
-at the start of your \texttt{main}. If you're not doing anything
-exotic, then you can safely skip the rest of this section.
+at the start of your \texttt{main}.
 
 The constructor takes an instance of another object, called
 \type{InitializerOptions}, which specifies the settings of various
@@ -979,21 +979,31 @@ for your filters, depending on what you have in mind.
 \pagebreak
 \section{Public Key Cryptography}
 
-Let's create an RSA private key:
+Let's create a 1024-bit RSA private key, encode the public key as a
+PKCS \#1 file with PEM encoding (which can be understood by many other
+cryptographic programs)
 
 \begin{verbatim}
-   RSA_PrivateKey priv_rsa(1024 /* bits */);
+// everyone does:
+std::auto_ptr<RandomNumberGenerator> rng(RandomNumberGenerator::make_rng());
+
+// Alice
+RSA_PrivateKey priv_rsa(rng, 1024 /* bits */);
+
+std::string alice_pem = X509::PEM_encode(priv_rsa);
+
+// send alice_pem to Bob, who does
+
+// Bob
+std::auto_ptr<X509_PublicKey> alice(load_key(alice_pem));
+
+RSA_PublicKey* alice_rsa = dynamic_cast<RSA_PublicKey>(alice);
+if(alice_rsa)
+   {
+   /* ... */
+   }
+
 \end{verbatim}
-
-We can easily turn this into a public key, which we can then send to
-someone:
-
-\begin{verbatim}
-   RSA_PublicKey pub_rsa = priv_rsa;
-\end{verbatim}
-
-
-
 
 \subsection{Creating PK Algorithm Key Objects}
 
