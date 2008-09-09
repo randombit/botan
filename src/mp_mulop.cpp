@@ -37,7 +37,12 @@ void bigint_simple_mul(word z[], const word x[], u32bit x_size,
    }
 
 /*************************************************
-* Simple O(N^2) Squaring                         *
+* Simple O(N^2) Squaring
+
+This is exactly the same algorithm as bigint_simple_mul,
+however because C/C++ compilers suck at alias analysis it
+is good to have the version where the compiler knows
+that x == y
 *************************************************/
 void bigint_simple_sqr(word z[], const word x[], u32bit x_size)
    {
