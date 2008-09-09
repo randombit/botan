@@ -71,10 +71,13 @@ void bigint_wordmul(word, word, word*, word*);
 void bigint_comba_mul4(word[8], const word[4], const word[4]);
 void bigint_comba_mul6(word[12], const word[6], const word[6]);
 void bigint_comba_mul8(word[16], const word[8], const word[8]);
+void bigint_comba_mul16(word[32], const word[16], const word[16]);
 
 void bigint_comba_sqr4(word[8], const word[4]);
 void bigint_comba_sqr6(word[12], const word[6]);
 void bigint_comba_sqr8(word[16], const word[8]);
+void bigint_comba_sqr8(word[32], const word[16]);
+void bigint_comba_sqr16(word[64], const word[32]);
 
 }
 
