@@ -33,6 +33,7 @@
 #include <botan/xtea.h>
 
 #include <botan/arc4.h>
+#include <botan/salsa20.h>
 #include <botan/turing.h>
 #include <botan/wid_wake.h>
 
@@ -167,6 +168,7 @@ Default_Engine::find_stream_cipher(const std::string& algo_spec) const
 
    HANDLE_TYPE_ONE_U32BIT("ARC4", ARC4, 0);
    HANDLE_TYPE_ONE_U32BIT("RC4_drop", ARC4, 768);
+   HANDLE_TYPE_NO_ARGS("Salsa20", Salsa20);
    HANDLE_TYPE_NO_ARGS("Turing", Turing);
    HANDLE_TYPE_NO_ARGS("WiderWake4+1-BE", WiderWake_41_BE);
 
