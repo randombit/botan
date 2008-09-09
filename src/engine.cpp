@@ -350,7 +350,10 @@ Keyed_Filter* get_cipher(const std::string& algo_spec,
    {
    Keyed_Filter* cipher = get_cipher(algo_spec, direction);
    cipher->set_key(key);
-   cipher->set_iv(iv);
+
+   if(iv.length())
+      cipher->set_iv(iv);
+
    return cipher;
    }
 
