@@ -24,13 +24,15 @@ void bigint_simple_mul(word z[], const word x[], u32bit x_size,
 
    for(u32bit i = 0; i != y_size; ++i)
       {
+      const word y_i = y[i];
+
       word carry = 0;
 
       for(u32bit j = 0; j != blocks; j += 8)
-         carry = word8_madd3(z + i + j, x + j, y[i], carry);
+         carry = word8_madd3(z + i + j, x + j, y_i, carry);
 
       for(u32bit j = blocks; j != x_size; ++j)
-         z[i+j] = word_madd3(x[j], y[i], z[i+j], &carry);
+         z[i+j] = word_madd3(x[j], y_i, z[i+j], &carry);
 
       z[x_size+i] = carry;
       }
@@ -52,13 +54,14 @@ void bigint_simple_sqr(word z[], const word x[], u32bit x_size)
 
    for(u32bit i = 0; i != x_size; ++i)
       {
+      const word x_i = x[i];
       word carry = 0;
 
       for(u32bit j = 0; j != blocks; j += 8)
-         carry = word8_madd3(z + i + j, x + j, x[i], carry);
+         carry = word8_madd3(z + i + j, x + j, x_i, carry);
 
       for(u32bit j = blocks; j != x_size; ++j)
-         z[i+j] = word_madd3(x[j], x[i], z[i+j], &carry);
+         z[i+j] = word_madd3(x[j], x_i, z[i+j], &carry);
 
       z[x_size+i] = carry;
       }
