@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
          {
          run_test_suite();
          }
-      if(opts.is_set("bench-algo") || opts.is_set("benchmark"))
+      if(opts.is_set("bench-algo") || opts.is_set("benchmark") || opts.is_set("bench-type"))
          {
          double seconds = 1.5;
 
@@ -137,22 +137,27 @@ int main(int argc, char* argv[])
             }
 
          const bool html = opts.is_set("html");
-         std::vector<std::string> algs =
-            Botan::split_on(opts.value("bench-algo"), ',');
 
          std::auto_ptr<RandomNumberGenerator> rng(
             RandomNumberGenerator::make_rng());
 
-         for(u32bit j = 0; j != algs.size(); j++)
-            {
-            const std::string alg = algs[j];
-            u32bit found = bench_algo(alg, *rng, seconds);
-            if(!found) // maybe it's a PK algorithm
-               bench_pk(*rng, alg, html, seconds);
-            }
-
          if(opts.is_set("benchmark"))
+            {
             benchmark("All", *rng, html, seconds);
+            }
+         else if(opts.is_set("bench-algo"))
+            {
+            std::vector<std::string> algs =
+               Botan::split_on(opts.value("bench-algo"), ',');
+
+            for(u32bit j = 0; j != algs.size(); j++)
+               {
+               const std::string alg = algs[j];
+               u32bit found = bench_algo(alg, *rng, seconds);
+               if(!found) // maybe it's a PK algorithm
+                  bench_pk(*rng, alg, html, seconds);
+               }
+            }
          else if(opts.is_set("bench-type"))
             {
             const std::string type = opts.value("bench-type");
@@ -171,6 +176,8 @@ int main(int argc, char* argv[])
                benchmark("RNG", *rng, html, seconds);
             else if(type == "pk")
                bench_pk(*rng, "All", html, seconds);
+            else
+               std::cerr << "Unknown --bench-type " << type << "\n";
             }
          }
 
