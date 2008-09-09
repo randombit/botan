@@ -58,6 +58,8 @@ inline word word_madd3(word a, word b, word c, word* d)
    return a;
    }
 
+#undef ASM
+
 }
 
 }

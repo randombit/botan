@@ -218,8 +218,16 @@ inline void word3_muladd_2(word* w2, word* w1, word* w0, word x, word y)
       : "cc");
    }
 
-}
+
+#undef ASM
+#undef DO_8_TIMES
+#undef ADD_OR_SUBTRACT
+#undef ADDSUB2_OP
+#undef ADDSUB3_OP
+#undef LINMUL_OP
+#undef MULADD_OP
 
 }
 
+}
 #endif
