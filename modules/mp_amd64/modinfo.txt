@@ -8,6 +8,7 @@ load_on asm_ok
 bswap.h
 mp_asm.h
 mp_asmi.h
+#mp_mulop.cpp
 </replace>
 
 <arch>
