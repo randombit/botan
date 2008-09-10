@@ -2,6 +2,7 @@
 * 1.7.11, 2008-??-??
  - Added the Salsa20 stream cipher
  - Optimized Montgomery reduction, Karatsuba squaring
+ - Add 16x16->32 word Comba multiplication and squaring
  - Inline several BigInt functions
  - Add useful information to the generated build.h
 
