@@ -1661,7 +1661,8 @@ sub generate_makefile {
 
    if($$config{'shared'} eq 'yes' and
       (in_array('all', $OPERATING_SYSTEM{$os}{'supports_shared'}) or
-       in_array($arch, $OPERATING_SYSTEM{$os}{'supports_shared'}))) {
+       in_array($$config{'compiler'},
+                $OPERATING_SYSTEM{$os}{'supports_shared'}))) {
 
        $$config{'shared_flags'} = &$empty_if_nil($ccinfo{'shared_flags'});
        $$config{'so_link'} = &$empty_if_nil($ccinfo{'so_link_flags'}{$os});
@@ -1679,6 +1680,9 @@ sub generate_makefile {
        }
    }
    else {
+       autoconfig("No shared library generated with " .
+                  $$config{'compiler'} . " on " . $$config{'os'});
+
        $$config{'shared'} = 'no';
        $$config{'shared_flags'} = '';
        $$config{'so_link'} = '';
