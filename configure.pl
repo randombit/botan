@@ -1911,6 +1911,7 @@ sub guess_cpu
             autoconfig("Guessing (based on $cpuinfo) CPU is a $cpu (use --arch to set)");
             return $cpu;
         } else {
+            # This is odd, /proc/cpuinfo should always have enough information for us
             autoconfig("*** Could not figure out CPU based on $cpuinfo");
             autoconfig("*** Please mail contents to lloyd\@randombit.net");
         }
