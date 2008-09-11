@@ -9,8 +9,7 @@ add_lib_dir_option "-L"
 add_lib_option "-l"
 
 lang_flags "-D_REENTRANT -ansi -Wno-long-long"
-#warning_flags "-W -Wall"
-warning_flags "-Werror -Wall -Wextra -Wstrict-aliasing -Wstrict-overflow -Wcast-qual -Wmissing-declarations"
+warning_flags "-W -Wall"
 
 lib_opt_flags "-O2 -finline-functions"
 check_opt_flags "-O2"
