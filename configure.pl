@@ -3,6 +3,8 @@
 require 5.006;
 
 use strict;
+
+use Config;
 use Getopt::Long;
 use File::Spec;
 use File::Copy;
@@ -1789,6 +1791,8 @@ sub guess_cpu_from_this
     my $cpuinfo = lc $_[0];
     my $cpu = '';
 
+    $cpu = 'ia32' if($cpuinfo =~ /x86/);
+
     $cpu = 'athlon' if($cpuinfo =~ /athlon/);
     $cpu = 'pentium4' if($cpuinfo =~ /pentium 4/);
     $cpu = 'pentium4' if($cpuinfo =~ /pentium\(r\) 4/);
@@ -1896,7 +1900,7 @@ sub guess_cpu
 {
     # If we have /proc/cpuinfo, try to get nice specific information about
     # what kind of CPU we're running on.
-    my $cpuinfo = '/proc/cpuinfo';
+    my $cpuinfo = '/proc/cpuinfo.x';
 
     if(-e $cpuinfo and -r $cpuinfo)
     {
@@ -1906,15 +1910,6 @@ sub guess_cpu
             return $cpu;
         }
     }
-
-    # `umame -p` is sometimes something stupid like unknown, but in some
-    # cases it can be more specific (useful) than `uname -m`
-    my $uname_p = `uname -p 2>/dev/null`;
-    chomp $uname_p;
-    my $cpu = guess_cpu_from_this($uname_p);
-
-    # If guess_cpu_from_this didn't figure it out, try it as is
-    if($cpu eq '') { $cpu = lc $uname_p; }
 
     sub known_arch {
         my ($name) = @_;
@@ -1939,7 +1934,16 @@ sub guess_cpu
             }
         }
         return 0;
- }
+    }
+
+    # `umame -p` is sometimes something stupid like unknown, but in some
+    # cases it can be more specific (useful) than `uname -m`
+    my $uname_p = `uname -p 2>/dev/null`;
+    chomp $uname_p;
+    my $cpu = guess_cpu_from_this($uname_p);
+
+    # If guess_cpu_from_this didn't figure it out, try it as is
+    if($cpu eq '') { $cpu = lc $uname_p; }
 
     if(!known_arch($cpu))
     {
@@ -1949,12 +1953,18 @@ sub guess_cpu
 
         if(!known_arch($cpu))
         {
-            $cpu = 'generic';
+            $cpu = guess_cpu_from_this($Config{'archname'});
+            autoconfig("Guessing (based on \$Config{'archname'}) CPU is a $cpu");
+            if($cpu eq '') { $cpu = 'generic'; }
         }
     }
 
-    if($cpu eq 'generic') {
-        warning("Could not determine CPU type (try --cpu option)");
+    if(!known_arch($cpu)) {
+        warning("Detecting unknown CPU type $cpu; add entry to misc/config/arch");
+        return 'generic';
+    }
+    elsif($cpu eq 'generic') {
+        warning("Could not determine CPU type  (try --cpu option)");
     }
     else {
         autoconfig("Guessing (based on uname) CPU is a $cpu");
