@@ -22,10 +22,14 @@ std::vector<algorithm> get_algos()
    algos.push_back(algorithm("Block Cipher", "GOST", "GOST/ECB", 32));
    algos.push_back(algorithm("Block Cipher", "IDEA", "IDEA/ECB", 16));
    algos.push_back(algorithm("Block Cipher", "KASUMI", "KASUMI/ECB", 16));
-   algos.push_back(algorithm("Block Cipher", "Lion(MD5,WiderWake4+1)",
-             "Lion(MD5,WiderWake4+1-BE,65536)/ECB", 20));
-   algos.push_back(algorithm("Block Cipher", "Luby-Rackoff(SHA-1)",
-             "Luby-Rackoff(SHA-1)/ECB", 16));
+
+   algos.push_back(algorithm("Block Cipher",
+                             "Lion(SHA-256,Turing)",
+                             "Lion(SHA-256,Turing,8192)/ECB", 32));
+
+   algos.push_back(algorithm("Block Cipher", "Luby-Rackoff(SHA-512)",
+                             "Luby-Rackoff(SHA-512)/ECB", 16));
+
    algos.push_back(algorithm("Block Cipher", "MARS", "MARS/ECB", 32));
    algos.push_back(algorithm("Block Cipher", "MISTY1", "MISTY1/ECB", 16));
    algos.push_back(algorithm("Block Cipher", "Noekeon", "Noekeon/ECB", 16));
