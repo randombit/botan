@@ -111,6 +111,26 @@ DH_Operation* Engine::dh_op(const DL_Group&, const BigInt&) const
 /*************************************************
 * Basic No-Op Engine Implementation              *
 *************************************************/
+ECDSA_Operation* Engine::ecdsa_op(const EC_Domain_Params&,
+                                  const BigInt&,
+                                  const PointGFp&) const
+   {
+   return 0;
+   }
+
+/*************************************************
+* Basic No-Op Engine Implementation              *
+*************************************************/
+ECKAEG_Operation* Engine::eckaeg_op(const EC_Domain_Params&,
+                                    const BigInt&,
+                                    const PointGFp&) const
+   {
+   return 0;
+   }
+
+/*************************************************
+* Basic No-Op Engine Implementation              *
+*************************************************/
 Modular_Exponentiator* Engine::mod_exp(const BigInt&,
                                        Power_Mod::Usage_Hints) const
    {
