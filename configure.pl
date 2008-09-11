@@ -51,7 +51,7 @@ sub main {
 
     $$config{'command-line'} = $0 . ' ' . join(' ', @ARGV);
     $$config{'timestamp'} = gmtime;
-    $$config{'user'} = getpwuid($<) || "unknown";
+    $$config{'user'} = getlogin || getpwuid($<) || "";
     $$config{'hostname'} = hostname;
 
     %CPU = read_info_files($config, 'arch', \&get_arch_info);
