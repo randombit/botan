@@ -101,6 +101,44 @@ DH_Operation* dh_op(const DL_Group& group, const BigInt& x)
    }
 
 /*************************************************
+* Acquire an ECDSA op                            *
+*************************************************/
+ECDSA_Operation* ecdsa_op(const EC_Domain_Params& dom_pars,
+                          const BigInt& priv_key,
+                          const PointGFp& pub_key)
+   {
+   Library_State::Engine_Iterator i(global_state());
+
+   while(const Engine* engine = i.next())
+      {
+      ECDSA_Operation* op = engine->ecdsa_op(dom_pars, priv_key, pub_key);
+      if(op)
+         return op;
+      }
+
+   throw Lookup_Error("Engine_Core::ecdsa_op: Unable to find a working engine");
+   }
+
+/*************************************************
+* Acquire a ECKAEG op                            *
+*************************************************/
+ECKAEG_Operation* eckaeg_op(const EC_Domain_Params& dom_pars,
+                            const BigInt& priv_key,
+                            const PointGFp& pub_key)
+   {
+   Library_State::Engine_Iterator i(global_state());
+
+   while(const Engine* engine = i.next())
+      {
+      ECKAEG_Operation* op = engine->eckaeg_op(dom_pars, priv_key, pub_key);
+      if(op)
+         return op;
+      }
+
+   throw Lookup_Error("Engine_Core::eckaeg_op: Unable to find a working engine");
+   }
+
+/*************************************************
 * Acquire a modular exponentiator                *
 *************************************************/
 Modular_Exponentiator* mod_exp(const BigInt& n, Power_Mod::Usage_Hints hints)
