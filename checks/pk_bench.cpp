@@ -104,14 +104,14 @@ void benchmark_rsa_rw(RandomNumberGenerator& rng,
       Timer verify_timer("verify");
       Timer sig_timer("signature");
 
+      std::string padding = (algo_name == "RSA") ? "EMSA1(SHA-1)" : "EMSA2(SHA-1)";
+
       while(verify_timer.seconds() < seconds ||
             sig_timer.seconds() < seconds)
          {
          keygen_timer.start();
          PRIV_KEY_TYPE key(rng, keylen);
          keygen_timer.stop();
-
-         std::string padding = "EMSA4(SHA-1)";
 
          std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));
          std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
@@ -265,7 +265,7 @@ void benchmark_elg(RandomNumberGenerator& rng,
          ElGamal_PrivateKey key(rng, group);
          keygen_timer.stop();
 
-         const std::string padding = "Raw"; //"EME1(SHA-1)";
+         const std::string padding = "EME1(SHA-1)";
 
          std::auto_ptr<PK_Decryptor> dec(get_pk_decryptor(key, padding));
          std::auto_ptr<PK_Encryptor> enc(get_pk_encryptor(key, padding));
