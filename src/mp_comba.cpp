@@ -384,8 +384,6 @@ void bigint_comba_mul8(word z[16], const word x[8], const word y[8])
 *************************************************/
 void bigint_comba_sqr16(word z[32], const word x[16])
    {
-   return bigint_comba_mul16(z, x, x);
-
    word w2 = 0, w1 = 0, w0 = 0;
 
    word3_muladd(&w2, &w1, &w0, x[ 0], x[ 0]);
