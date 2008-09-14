@@ -121,7 +121,7 @@ void benchmark_rsa(RandomNumberGenerator& rng,
                    double seconds,
                    Benchmark_Report& report)
    {
-   for(size_t keylen = 512; keylen <= 8192; keylen += 256)
+   for(size_t keylen = 1024; keylen <= 4096; keylen += 1024)
       {
       Timer verify_timer("verify");
       Timer sig_timer("signature");
@@ -133,10 +133,16 @@ void benchmark_rsa(RandomNumberGenerator& rng,
 
       try
          {
+
+#if 0
          PKCS8_PrivateKey* pkcs8_key = PKCS8::load_key("rsa/" + to_string(keylen) + ".pem", rng);
          RSA_PrivateKey* key_ptr = dynamic_cast<RSA_PrivateKey*>(pkcs8_key);
 
          RSA_PrivateKey key = *key_ptr;
+#else
+
+         RSA_PrivateKey key(rng, keylen);
+#endif
 
          while(verify_timer.seconds() < seconds ||
                sig_timer.seconds() < seconds)
