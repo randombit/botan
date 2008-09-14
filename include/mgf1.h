@@ -11,15 +11,21 @@
 namespace Botan {
 
 /*************************************************
-* MGF1                                           *
+* MGF1 (Mask Generation Function)                *
 *************************************************/
 class BOTAN_DLL MGF1 : public MGF
    {
    public:
       void mask(const byte[], u32bit, byte[], u32bit) const;
-      MGF1(const std::string&);
+
+      /**
+      MGF1 constructor: takes ownership of hash
+      */
+      MGF1(HashFunction* hash);
+
+      ~MGF1();
    private:
-      const std::string hash_name;
+      HashFunction* hash;
    };
 
 }

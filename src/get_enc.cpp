@@ -123,7 +123,7 @@ MGF* get_mgf(const std::string& algo_spec)
    if(mgf_name == "MGF1")
       {
       if(name.size() == 2)
-         return new MGF1(name[1]);
+         return new MGF1(get_hash(name[1]));
       }
    else
       throw Algorithm_Not_Found(algo_spec);

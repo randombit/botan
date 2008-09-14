@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/mgf1.h>
-#include <botan/lookup.h>
 #include <botan/loadstor.h>
 #include <botan/xor_buf.h>
 #include <algorithm>
@@ -19,8 +18,6 @@ void MGF1::mask(const byte in[], u32bit in_len, byte out[],
                 u32bit out_len) const
    {
    u32bit counter = 0;
-
-   std::auto_ptr<HashFunction> hash(get_hash(hash_name));
 
    while(out_len)
       {
@@ -41,10 +38,18 @@ void MGF1::mask(const byte in[], u32bit in_len, byte out[],
 /*************************************************
 * MGF1 Constructor                               *
 *************************************************/
-MGF1::MGF1(const std::string& h_name) : hash_name(h_name)
+MGF1::MGF1(HashFunction* h) : hash(h)
    {
-   if(!have_hash(hash_name))
-      throw Algorithm_Not_Found(hash_name);
+   if(!hash)
+      throw Invalid_Argument("MGF1 given null hash object");
+   }
+
+/*************************************************
+* MGF1 Destructor                                *
+*************************************************/
+MGF1::~MGF1()
+   {
+   delete hash;
    }
 
 }
