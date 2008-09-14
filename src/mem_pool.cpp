@@ -9,8 +9,22 @@
 #include <botan/libstate.h>
 #include <botan/util.h>
 #include <algorithm>
+#include <exception>
 
 namespace Botan {
+
+namespace {
+
+/*************************************************
+* Memory Allocation Exception                    *
+*************************************************/
+struct Memory_Exhaustion : public std::bad_alloc
+   {
+   const char* what()
+     { return "Ran out of memory, allocation failed"; }
+   };
+
+}
 
 /*************************************************
 * Memory_Block Constructor                       *

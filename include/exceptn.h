@@ -190,15 +190,6 @@ struct BOTAN_DLL Self_Test_Failure : public Internal_Error
       Internal_Error("Self test failed: " + err) {}
    };
 
-/*************************************************
-* Memory Allocation Exception                    *
-*************************************************/
-struct BOTAN_DLL Memory_Exhaustion : public Exception
-   {
-   Memory_Exhaustion() :
-      Exception("Ran out of memory, allocation failed") {}
-   };
-
 }
 
 #endif
