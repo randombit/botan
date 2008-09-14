@@ -38,8 +38,11 @@ void benchmark_enc_dec(PK_Encryptor& enc, PK_Decryptor& dec,
          plaintext.create(enc.maximum_input_size());
 
          // Ensure for Raw, etc, it stays large
-         rng.randomize(plaintext.begin(), plaintext.size());
-         plaintext[0] |= 0x80;
+         if((i % 100) == 0)
+            {
+            rng.randomize(plaintext.begin(), plaintext.size());
+            plaintext[0] |= 0x80;
+            }
 
          enc_timer.start();
          ciphertext = enc.encrypt(plaintext, rng);
@@ -71,8 +74,11 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
       {
       if(sig_timer.seconds() < seconds || signature.size() == 0)
          {
-         message.create(48);
-         rng.randomize(message.begin(), message.size());
+         if((i % 100) == 0)
+            {
+            message.create(48);
+            rng.randomize(message.begin(), message.size());
+            }
 
          sig_timer.start();
          signature = sig.sign_message(message, rng);
@@ -88,9 +94,7 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
          if(!verified)
             std::cerr << "Signature verification failure\n";
 
-         /* Also do a false verification to test/time that */
-
-         if(rng.next_byte() % 2)
+         if((i % 100) == 0)
             {
             sig_random.create(signature.size());
             rng.randomize(sig_random, sig_random.size());
@@ -117,13 +121,8 @@ void benchmark_rsa(RandomNumberGenerator& rng,
                    double seconds,
                    Benchmark_Report& report)
    {
-   const u32bit keylens[] = { 512, 1024, 2048, 3072, 4096, 6144, 8192, 0 };
-
-   for(size_t j = 0; keylens[j]; j++)
+   for(size_t keylen = 512; keylen <= 8192; keylen += 256)
       {
-      u32bit keylen = keylens[j];
-
-      Timer keygen_timer("keygen");
       Timer verify_timer("verify");
       Timer sig_timer("signature");
       Timer enc_timer("encrypt");
@@ -132,29 +131,39 @@ void benchmark_rsa(RandomNumberGenerator& rng,
       const std::string sig_padding = "EMSA4(SHA-1)";
       const std::string enc_padding = "EME1(SHA-1)";
 
-      while(verify_timer.seconds() < seconds ||
-            sig_timer.seconds() < seconds)
+      try
          {
-         keygen_timer.start();
-         RSA_PrivateKey key(rng, keylen);
-         keygen_timer.stop();
+         PKCS8_PrivateKey* pkcs8_key = PKCS8::load_key("rsa/" + to_string(keylen) + ".pem", rng);
+         RSA_PrivateKey* key_ptr = dynamic_cast<RSA_PrivateKey*>(pkcs8_key);
 
-         std::auto_ptr<PK_Encryptor> enc(get_pk_encryptor(key, enc_padding));
-         std::auto_ptr<PK_Decryptor> dec(get_pk_decryptor(key, enc_padding));
-         benchmark_enc_dec(*enc, *dec, enc_timer, dec_timer, rng, 10000, seconds);
+         RSA_PrivateKey key = *key_ptr;
 
-         std::auto_ptr<PK_Signer> sig(get_pk_signer(key, sig_padding));
-         std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, sig_padding));
-         benchmark_sig_ver(*ver, *sig, verify_timer, sig_timer, rng, 10000, seconds);
+         while(verify_timer.seconds() < seconds ||
+               sig_timer.seconds() < seconds)
+            {
+            std::auto_ptr<PK_Encryptor> enc(get_pk_encryptor(key, enc_padding));
+            std::auto_ptr<PK_Decryptor> dec(get_pk_decryptor(key, enc_padding));
+            benchmark_enc_dec(*enc, *dec, enc_timer, dec_timer, rng, 10000, seconds);
+
+            std::auto_ptr<PK_Signer> sig(get_pk_signer(key, sig_padding));
+            std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, sig_padding));
+            benchmark_sig_ver(*ver, *sig, verify_timer, sig_timer, rng, 10000, seconds);
+            }
+
+         const std::string rsa_keylen = "RSA " + to_string(keylen);
+
+         report.report(rsa_keylen + " " + sig_padding, verify_timer);
+         report.report(rsa_keylen + " " + sig_padding, sig_timer);
+         report.report(rsa_keylen + " " + enc_padding, enc_timer);
+         report.report(rsa_keylen + " " + enc_padding, dec_timer);
          }
-
-      const std::string rsa_keylen = "RSA " + to_string(keylen);
-
-      report.report(rsa_keylen, keygen_timer);
-      report.report(rsa_keylen + " " + sig_padding, verify_timer);
-      report.report(rsa_keylen + " " + sig_padding, sig_timer);
-      report.report(rsa_keylen + " " + enc_padding, enc_timer);
-      report.report(rsa_keylen + " " + enc_padding, dec_timer);
+      catch(Stream_IO_Error)
+         {
+         }
+      catch(Exception& e)
+         {
+         std::cout << e.what() << "\n";
+         }
       }
    }
 
