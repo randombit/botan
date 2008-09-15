@@ -1,10 +1,9 @@
 /*************************************************
 * Luby-Rackoff Source File                       *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/lubyrack.h>
-#include <botan/lookup.h>
 #include <botan/xor_buf.h>
 
 namespace Botan {
@@ -14,28 +13,28 @@ namespace Botan {
 *************************************************/
 void LubyRackoff::enc(const byte in[], byte out[]) const
    {
-   const u32bit OUTPUT_LENGTH = hash->OUTPUT_LENGTH;
+   const u32bit len = hash->OUTPUT_LENGTH;
 
-   SecureVector<byte> buffer(OUTPUT_LENGTH);
+   SecureVector<byte> buffer(len);
    hash->update(K1);
-   hash->update(in, OUTPUT_LENGTH);
+   hash->update(in, len);
    hash->final(buffer);
-   xor_buf(out + OUTPUT_LENGTH, in + OUTPUT_LENGTH, buffer, OUTPUT_LENGTH);
+   xor_buf(out + len, in + len, buffer, len);
 
    hash->update(K2);
-   hash->update(out + OUTPUT_LENGTH, OUTPUT_LENGTH);
+   hash->update(out + len, len);
    hash->final(buffer);
-   xor_buf(out, in, buffer, OUTPUT_LENGTH);
+   xor_buf(out, in, buffer, len);
 
    hash->update(K1);
-   hash->update(out, OUTPUT_LENGTH);
+   hash->update(out, len);
    hash->final(buffer);
-   xor_buf(out + OUTPUT_LENGTH, buffer, OUTPUT_LENGTH);
+   xor_buf(out + len, buffer, len);
 
    hash->update(K2);
-   hash->update(out + OUTPUT_LENGTH, OUTPUT_LENGTH);
+   hash->update(out + len, len);
    hash->final(buffer);
-   xor_buf(out, buffer, OUTPUT_LENGTH);
+   xor_buf(out, buffer, len);
    }
 
 /*************************************************
@@ -43,28 +42,28 @@ void LubyRackoff::enc(const byte in[], byte out[]) const
 *************************************************/
 void LubyRackoff::dec(const byte in[], byte out[]) const
    {
-   const u32bit OUTPUT_LENGTH = hash->OUTPUT_LENGTH;
+   const u32bit len = hash->OUTPUT_LENGTH;
 
-   SecureVector<byte> buffer(OUTPUT_LENGTH);
+   SecureVector<byte> buffer(len);
    hash->update(K2);
-   hash->update(in + OUTPUT_LENGTH, OUTPUT_LENGTH);
+   hash->update(in + len, len);
    hash->final(buffer);
-   xor_buf(out, in, buffer, OUTPUT_LENGTH);
+   xor_buf(out, in, buffer, len);
 
    hash->update(K1);
-   hash->update(out, OUTPUT_LENGTH);
+   hash->update(out, len);
    hash->final(buffer);
-   xor_buf(out + OUTPUT_LENGTH, in + OUTPUT_LENGTH, buffer, OUTPUT_LENGTH);
+   xor_buf(out + len, in + len, buffer, len);
 
    hash->update(K2);
-   hash->update(out + OUTPUT_LENGTH, OUTPUT_LENGTH);
+   hash->update(out + len, len);
    hash->final(buffer);
-   xor_buf(out, buffer, OUTPUT_LENGTH);
+   xor_buf(out, buffer, len);
 
    hash->update(K1);
-   hash->update(out, OUTPUT_LENGTH);
+   hash->update(out, len);
    hash->final(buffer);
-   xor_buf(out + OUTPUT_LENGTH, buffer, OUTPUT_LENGTH);
+   xor_buf(out + len, buffer, len);
    }
 
 /*************************************************
@@ -91,7 +90,7 @@ void LubyRackoff::clear() throw()
 *************************************************/
 BlockCipher* LubyRackoff::clone() const
    {
-   return new LubyRackoff(hash->name());
+   return new LubyRackoff(hash->clone());
    }
 
 /*************************************************
@@ -105,9 +104,10 @@ std::string LubyRackoff::name() const
 /*************************************************
 * Luby-Rackoff Constructor                       *
 *************************************************/
-LubyRackoff::LubyRackoff(const std::string& hash_name) :
-   BlockCipher(2*output_length_of(hash_name), 2, 32, 2),
-   hash(get_hash(hash_name))
+LubyRackoff::LubyRackoff(HashFunction* h) :
+   BlockCipher(2 * (h ? h->OUTPUT_LENGTH: 0),
+               2, 32, 2),
+   hash(h)
    {
    }
 

@@ -130,7 +130,6 @@ Default_Engine::find_block_cipher(const std::string& algo_spec) const
    HANDLE_TYPE_NO_ARGS("GOST", GOST);
    HANDLE_TYPE_NO_ARGS("IDEA", IDEA);
    HANDLE_TYPE_NO_ARGS("KASUMI", KASUMI);
-   HANDLE_TYPE_ONE_STRING("Luby-Rackoff", LubyRackoff);
    HANDLE_TYPE_NO_ARGS("MARS", MARS);
    HANDLE_TYPE_ONE_U32BIT("MISTY1", MISTY1, 8);
    HANDLE_TYPE_NO_ARGS("Noekeon", Noekeon);
@@ -145,6 +144,13 @@ Default_Engine::find_block_cipher(const std::string& algo_spec) const
    HANDLE_TYPE_NO_ARGS("TEA", TEA);
    HANDLE_TYPE_NO_ARGS("Twofish", Twofish);
    HANDLE_TYPE_NO_ARGS("XTEA", XTEA);
+
+   if(algo_name == "Luby-Rackoff" && name.size() >= 2)
+      {
+      HashFunction* hash = find_hash(name[1]);
+      if(hash)
+         return new LubyRackoff(hash);
+      }
 
    if(algo_name == "Lion")
       {

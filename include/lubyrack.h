@@ -1,6 +1,6 @@
 /*************************************************
 * Luby-Rackoff Header File                       *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_LUBY_RACKOFF_H__
@@ -19,7 +19,8 @@ class BOTAN_DLL LubyRackoff : public BlockCipher
       void clear() throw();
       std::string name() const;
       BlockCipher* clone() const;
-      LubyRackoff(const std::string&);
+
+      LubyRackoff(HashFunction* hash);
       ~LubyRackoff() { delete hash; }
    private:
       void enc(const byte[], byte[]) const;
