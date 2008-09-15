@@ -123,17 +123,16 @@ Filter* lookup_rng(const std::string& algname,
 
    // these are used for benchmarking: AES-256/SHA-256 matches library
    // defaults, so benchmark reflects real-world performance (maybe)
-   else if(algname == "Randpool")
+   else if(algname == "Randpool" || algname == "X9.31-RNG")
       {
       Randpool* randpool = new Randpool("AES-256", "HMAC(SHA-256)");
-      randpool->add_entropy((const byte*)key.c_str(), key.length());
-      prng = randpool;
-      }
-   else if(algname == "X9.31-RNG")
-      {
-      Randpool* randpool = new Randpool("AES-256", "HMAC(SHA-256)");
-      randpool->add_entropy((const byte*)key.c_str(), key.length());
-      prng = new ANSI_X931_RNG("AES-256", randpool);
+      randpool->add_entropy(reinterpret_cast<const byte*>(key.c_str()),
+                            key.length());
+
+      if(algname == "Randpool")
+         prng = randpool;
+      else
+         prng = new ANSI_X931_RNG("AES-256", randpool);
       }
 
    if(prng)
