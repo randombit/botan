@@ -23,9 +23,9 @@ BigInt::BigInt(u64bit n)
 
    const u32bit limbs_needed = sizeof(u64bit) / sizeof(word);
 
-   get_reg().create(4*limbs_needed);
+   reg.create(4*limbs_needed);
    for(u32bit j = 0; j != limbs_needed; ++j)
-      rep[j] = ((n >> (j*MP_WORD_BITS)) & MP_WORD_MASK);
+      reg[j] = ((n >> (j*MP_WORD_BITS)) & MP_WORD_MASK);
    }
 
 /*************************************************
@@ -33,7 +33,7 @@ BigInt::BigInt(u64bit n)
 *************************************************/
 BigInt::BigInt(Sign s, u32bit size)
    {
-   get_reg().create(round_up(size, 8));
+   reg.create(round_up(size, 8));
    signedness = s;
    }
 
@@ -46,13 +46,13 @@ BigInt::BigInt(const BigInt& b)
 
    if(b_words)
       {
-      get_reg().create(round_up(b_words, 8));
-      get_reg().copy(b.data(), b_words);
+      reg.create(round_up(b_words, 8));
+      reg.copy(b.data(), b_words);
       set_sign(b.sign());
       }
    else
       {
-      get_reg().create(2);
+      reg.create(2);
       set_sign(Positive);
       }
    }
@@ -103,7 +103,7 @@ BigInt::BigInt(RandomNumberGenerator& rng, u32bit bits)
 *************************************************/
 void BigInt::swap(BigInt& other)
    {
-   rep.swap(other.rep);
+   reg.swap(other.reg);
    std::swap(signedness, other.signedness);
    }
 
@@ -112,7 +112,7 @@ void BigInt::swap(BigInt& other)
 *************************************************/
 void BigInt::grow_reg(u32bit n)
    {
-   get_reg().grow_to(round_up(size() + n, 8));
+   reg.grow_to(round_up(size() + n, 8));
    }
 
 /*************************************************
@@ -121,7 +121,7 @@ void BigInt::grow_reg(u32bit n)
 void BigInt::grow_to(u32bit n)
    {
    if(n > size())
-      get_reg().grow_to(round_up(n, 8));
+      reg.grow_to(round_up(n, 8));
    }
 
 /*************************************************
@@ -165,7 +165,7 @@ byte BigInt::byte_at(u32bit n) const
    if(word_num >= size())
       return 0;
    else
-      return get_byte(WORD_BYTES - byte_num - 1, rep[word_num]);
+      return get_byte(WORD_BYTES - byte_num - 1, reg[word_num]);
    }
 
 /*************************************************
@@ -202,7 +202,7 @@ void BigInt::set_bit(u32bit n)
    const u32bit which = n / MP_WORD_BITS;
    const word mask = static_cast<word>(1) << (n % MP_WORD_BITS);
    if(which >= size()) grow_to(which + 1);
-   rep[which] |= mask;
+   reg[which] |= mask;
    }
 
 /*************************************************
@@ -213,7 +213,7 @@ void BigInt::clear_bit(u32bit n)
    const u32bit which = n / MP_WORD_BITS;
    const word mask = static_cast<word>(1) << (n % MP_WORD_BITS);
    if(which < size())
-      rep[which] &= ~mask;
+      reg[which] &= ~mask;
    }
 
 /*************************************************
@@ -229,9 +229,9 @@ void BigInt::mask_bits(u32bit n)
 
    if(top_word < size())
       for(u32bit j = top_word + 1; j != size(); ++j)
-         rep[j] = 0;
+         reg[j] = 0;
 
-   rep[top_word] &= mask;
+   reg[top_word] &= mask;
    }
 
 /*************************************************
@@ -343,8 +343,6 @@ void BigInt::binary_encode(byte output[]) const
 void BigInt::binary_decode(const byte buf[], u32bit length)
    {
    const u32bit WORD_BYTES = sizeof(word);
-
-   SecureVector<word>& reg = get_reg();
 
    reg.create(round_up((length / WORD_BYTES) + 1, 8));
 
