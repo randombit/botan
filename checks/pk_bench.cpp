@@ -123,6 +123,7 @@ void benchmark_rsa(RandomNumberGenerator& rng,
    {
    for(size_t keylen = 1024; keylen <= 4096; keylen += 1024)
       {
+      Timer keygen_timer("keygen");
       Timer verify_timer("verify");
       Timer sig_timer("signature");
       Timer enc_timer("encrypt");
@@ -135,13 +136,15 @@ void benchmark_rsa(RandomNumberGenerator& rng,
          {
 
 #if 0
+         // for profiling
          PKCS8_PrivateKey* pkcs8_key = PKCS8::load_key("rsa/" + to_string(keylen) + ".pem", rng);
          RSA_PrivateKey* key_ptr = dynamic_cast<RSA_PrivateKey*>(pkcs8_key);
 
          RSA_PrivateKey key = *key_ptr;
 #else
-
+         keygen_timer.start();
          RSA_PrivateKey key(rng, keylen);
+         keygen_timer.stop();
 #endif
 
          while(verify_timer.seconds() < seconds ||
@@ -158,6 +161,7 @@ void benchmark_rsa(RandomNumberGenerator& rng,
 
          const std::string rsa_keylen = "RSA " + to_string(keylen);
 
+         report.report(rsa_keylen, keygen_timer);
          report.report(rsa_keylen + " " + sig_padding, verify_timer);
          report.report(rsa_keylen + " " + sig_padding, sig_timer);
          report.report(rsa_keylen + " " + enc_padding, enc_timer);
