@@ -61,7 +61,7 @@ class MemoryRegion
       void destroy() { create(0); }
 
       void create(u32bit);
-      void grow_to(u32bit) const;
+      void grow_to(u32bit);
       void swap(MemoryRegion<T>&);
 
       ~MemoryRegion() { deallocate(buf, allocated); }
@@ -78,18 +78,18 @@ class MemoryRegion
       void init(bool locking, u32bit length = 0)
          { alloc = Allocator::get(locking); create(length); }
    private:
-      T* allocate(u32bit n) const
+      T* allocate(u32bit n)
          {
          return static_cast<T*>(alloc->allocate(sizeof(T)*n));
          }
 
-      void deallocate(T* p, u32bit n) const
+      void deallocate(T* p, u32bit n)
          { alloc->deallocate(p, sizeof(T)*n); }
 
-      mutable T* buf;
-      mutable u32bit used;
-      mutable u32bit allocated;
-      mutable Allocator* alloc;
+      T* buf;
+      u32bit used;
+      u32bit allocated;
+      Allocator* alloc;
    };
 
 /*************************************************
@@ -108,7 +108,7 @@ void MemoryRegion<T>::create(u32bit n)
 * Increase the size of the buffer                *
 *************************************************/
 template<typename T>
-void MemoryRegion<T>::grow_to(u32bit n) const
+void MemoryRegion<T>::grow_to(u32bit n)
    {
    if(n > used && n <= allocated)
       {
