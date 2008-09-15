@@ -86,8 +86,8 @@ class BOTAN_DLL BigInt
       const word* data() const { return get_reg().begin(); }
       SecureVector<word>& get_reg() { return rep.get_reg(); }
       const SecureVector<word>& get_reg() const { return rep.get_reg(); }
-      void grow_reg(u32bit) const;
-      void grow_to(u32bit) const;
+      void grow_reg(u32bit);
+      void grow_to(u32bit);
 
       word& operator[](u32bit i) { return rep[i]; }
       word operator[](u32bit i) const { return rep[i]; }

@@ -110,7 +110,7 @@ void BigInt::swap(BigInt& other)
 /*************************************************
 * Grow the internal storage                      *
 *************************************************/
-void BigInt::grow_reg(u32bit n) const
+void BigInt::grow_reg(u32bit n)
    {
    get_reg().grow_to(round_up(size() + n, 8));
    }
@@ -118,7 +118,7 @@ void BigInt::grow_reg(u32bit n) const
 /*************************************************
 * Grow the internal storage                      *
 *************************************************/
-void BigInt::grow_to(u32bit n) const
+void BigInt::grow_to(u32bit n)
    {
    if(n > size())
       get_reg().grow_to(round_up(n, 8));
