@@ -1,4 +1,10 @@
 
+* 1.7.12, 2008-09
+ - Remove the BigInt::sig_words cache due to bugs
+ - Add IETF 8192 bit MODP group
+ - Reduce use of the RNG during benchmarks
+ - Benchmark RSA encryption and signatures
+
 * 1.7.11, 2008-09-11
  - Added the Salsa20 stream cipher
  - Optimized Montgomery reduction, Karatsuba squaring
