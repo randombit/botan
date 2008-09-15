@@ -67,8 +67,8 @@ inline u32bit hamming_weight(T n)
       0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4 };
 
    u32bit weight = 0;
-   for(u32bit i = 0; i != 8*sizeof(T); i += 4)
-      weight += NIBBLE_WEIGHTS[(n >> i) & 0x0F];
+   for(u32bit i = 0; i != 2*sizeof(T); ++i)
+      weight += NIBBLE_WEIGHTS[(n >> (4*i)) & 0x0F];
    return weight;
    }
 
