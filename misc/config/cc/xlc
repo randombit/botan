@@ -18,3 +18,7 @@ dll_import_flags ""
 dll_export_flags ""
 
 makefile_style unix
+
+<mach_opt>
+cellppu   -> "-march=cell"
+</mach_opt>
