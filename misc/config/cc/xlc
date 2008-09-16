@@ -1,4 +1,4 @@
-realname "IBM XLC"
+realname "IBM XL C/C++"
 
 binary_name "xlC"
 
