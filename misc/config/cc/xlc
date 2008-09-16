@@ -1,0 +1,20 @@
+realname "IBM XLC"
+
+binary_name "xlC"
+
+compile_option "-c "
+output_to_option "-o "
+add_include_dir_option "-I"
+add_lib_dir_option "-L"
+add_lib_option "-l"
+
+lib_opt_flags "-O2"
+check_opt_flags "-O2"
+lang_flags ""
+debug_flags "-g"
+no_debug_flags ""
+
+dll_import_flags ""
+dll_export_flags ""
+
+makefile_style unix
