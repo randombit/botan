@@ -1,10 +1,11 @@
 
 * 1.7.12, 2008-09
- - Fix builds on STI Cell PPU
  - Remove the BigInt::sig_words cache due to bugs
  - Add IETF 8192 bit MODP group
  - Reduce use of the RNG during benchmarks
  - Benchmark RSA encryption and signatures
+ - Fix builds on STI Cell PPU
+ - Add support for IBM's XLC compiler
 
 * 1.7.11, 2008-09-11
  - Added the Salsa20 stream cipher
