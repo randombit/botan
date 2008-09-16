@@ -1822,7 +1822,7 @@ sub guess_cpu_from_this
     $cpu = 'power4' if($cpuinfo =~ /power4/);
     $cpu = 'power5' if($cpuinfo =~ /power5/);
     $cpu = 'ppc970' if($cpuinfo =~ /ppc970/);
-    $cpu = 'cellppu' if($cpuinfo = ~/cell broadband engine/);
+    $cpu = 'cellppu' if($cpuinfo =~ /cell broadband engine/);
 
     # Ooh, an Alpha. Try to figure out what kind
     if($cpuinfo =~ /alpha/)
