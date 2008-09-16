@@ -138,8 +138,8 @@ architectures (such as Cell's SPU units, PowerPC, SPARCv9, MIPS, and
 ARM) could really help, as could further work on the x86 code
 (including making use of SSE instructions and VIA's Montgomery
 multiplication instruction). The key routines for good performance are
-bigint_monty_redc and bigint_mul_add_words; together they make up
-30-60% of the runtime of most public key algorithms.
+bigint_monty_redc and bigint_simple_sqr; together they make up 30-60%
+of the runtime of most public key algorithms.
 
 It is very likely that many of the core algorithms (in src/mp_*) could
 be optimized at the C level by anyone has some knowledge or interest
