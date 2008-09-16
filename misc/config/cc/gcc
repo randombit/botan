@@ -46,6 +46,7 @@ ppc601         -> "-mpowerpc -mcpu=601"
 sparc64-ultra3 -> "-mcpu=v9 -mtune=ultrasparc3"
 
 em64t          -> "-march=nocona -momit-leaf-frame-pointer"
+cellppu        -> ""
 
 # Default family options (SUBMODEL is substitued with the real submodel)
 # Anything after the quotes is what should be *removed* from the submodel name

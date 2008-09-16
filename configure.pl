@@ -1816,11 +1816,13 @@ sub guess_cpu_from_this
     $cpu = 'sparc32-v9' if($cpuinfo =~ /ultrasparc/);
 
     # 64-bit PowerPC
+    $cpu = 'ppc64' if($cpuinfo =~ /ppc64/);
     $cpu = 'rs64a' if($cpuinfo =~ /rs64-/);
     $cpu = 'power3' if($cpuinfo =~ /power3/);
     $cpu = 'power4' if($cpuinfo =~ /power4/);
     $cpu = 'power5' if($cpuinfo =~ /power5/);
     $cpu = 'ppc970' if($cpuinfo =~ /ppc970/);
+    $cpu = 'cellppu' if($cpuinfo = ~/cell broadband engine/);
 
     # Ooh, an Alpha. Try to figure out what kind
     if($cpuinfo =~ /alpha/)
