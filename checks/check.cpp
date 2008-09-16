@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
       test_types(); // do this always
 
       Botan::InitializerOptions init_options(opts.value_if_set("init"));
-      //Botan::LibraryInitializer init(init_options);
+      Botan::LibraryInitializer init(init_options);
       //Botan::LibraryInitializer::initialize(init_options);
 
       if(opts.is_set("help") || argc <= 1)
