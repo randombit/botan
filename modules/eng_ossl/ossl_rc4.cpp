@@ -4,8 +4,8 @@
 *************************************************/
 
 #include <botan/eng_ossl.h>
-#include <botan/lookup.h>
 #include <botan/parsing.h>
+#include <botan/libstate.h>
 #include <openssl/rc4.h>
 
 namespace Botan {
@@ -71,7 +71,7 @@ OpenSSL_Engine::find_stream_cipher(const std::string& algo_spec) const
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
    if(name.size() == 0)
       return 0;
-   const std::string algo_name = deref_alias(name[0]);
+   const std::string algo_name = global_state().deref_alias(name[0]);
 
 #define HANDLE_TYPE_ONE_U32BIT(NAME, TYPE, DEFAULT) \
    if(algo_name == NAME)                            \
