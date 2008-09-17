@@ -1910,7 +1910,7 @@ sub guess_cpu
     {
         my $cpu = guess_cpu_from_this(slurp_file($cpuinfo));
         if($cpu) {
-            autoconfig("Guessing (based on $cpuinfo) CPU is a $cpu (use --arch to set)");
+            autoconfig("Guessing (based on $cpuinfo) CPU is a $cpu (use --cpu to set)");
             return $cpu;
         } else {
             # This is odd, /proc/cpuinfo should always have enough information for us
