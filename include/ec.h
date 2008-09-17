@@ -62,6 +62,7 @@ class EC_PublicKey : public virtual Public_Key
       * @param enc the encoding to use
       */
       void set_parameter_encoding(EC_dompar_enc enc);
+
       /**
       * Get the domain parameter encoding to be used when encoding this key.
       * @result the encoding to use
@@ -84,6 +85,7 @@ class EC_PublicKey : public virtual Public_Key
       * @result an x509_encoder for this key
       */
       X509_Encoder* x509_encoder() const;
+
       /**
       * Get an x509_decoder that can be used to decode a stored key into
       * this key.
@@ -96,15 +98,16 @@ class EC_PublicKey : public virtual Public_Key
       * @throw Invalid_State if either of the two data members is not set
       */
       virtual void affirm_init() const;
-      virtual ~EC_PublicKey()
-         {}
+
+      virtual ~EC_PublicKey() {}
    protected:
       virtual void X509_load_hook();
+
       SecureVector<byte> m_enc_public_point; // stores the public point
-      // until dom pars are provided
+
       std::auto_ptr<EC_Domain_Params> mp_dom_pars;
       std::auto_ptr<Botan::PointGFp> mp_public_point;
-      mutable EC_dompar_enc m_param_enc;
+      EC_dompar_enc m_param_enc;
    };
 
 /**
@@ -154,14 +157,16 @@ class EC_PrivateKey : public virtual EC_PublicKey, public virtual Private_Key
 class ECDSA_PublicKey : public virtual EC_PublicKey, public PK_Verifying_wo_MR_Key
    {
    public:
+
       /**
       * Get this keys algorithm name.
-      * @result this keys algorithm name
+      * @result this keys algorithm name ("ECDSA")
       */
       std::string algo_name() const
          {
          return "ECDSA";
          }
+
       /**
       * Get the maximum number of bits allowed to be fed to this key.
       * This is the bitlength of the order of the base point.
@@ -169,6 +174,7 @@ class ECDSA_PublicKey : public virtual EC_PublicKey, public PK_Verifying_wo_MR_K
       * @result the maximum number of input bits
       */
       u32bit max_input_bits() const;
+
       /**
       * Verify a message with this key.
       * @param message the byte array containing the message
@@ -176,21 +182,22 @@ class ECDSA_PublicKey : public virtual EC_PublicKey, public PK_Verifying_wo_MR_K
       * @param signature the byte array containing the signature
       * @param sig_len the number of bytes in the signature byte array
       */
-      bool verify(const byte message[], u32bit mess_len, const byte signature [], u32bit sig_len) const;
+      bool verify(const byte message[], u32bit mess_len,
+                  const byte signature [], u32bit sig_len) const;
 
       /**
       * Default constructor. Use this one if you want to later fill this object with data
       * from an encoded key.
       */
-      ECDSA_PublicKey()
-         {}
+      ECDSA_PublicKey() {}
+
       /**
       * Construct a public key from a given public point.
       * @param dom_par the domain parameters associated with this key
       * @param public_point the public point defining this key
       */
       ECDSA_PublicKey(EC_Domain_Params const& dom_par, Botan::PointGFp const& public_point); // sets core
-      void X509_load_hook();
+
 
       ECDSA_PublicKey const& operator= (ECDSA_PublicKey const& rhs);
 
@@ -207,14 +214,15 @@ class ECDSA_PublicKey : public virtual EC_PublicKey, public PK_Verifying_wo_MR_K
       * and these are differing from those given as the parameter
       */
       void set_domain_parameters(EC_Domain_Params const& dom_pars);
+
       /**
       * Make sure that the public point and domain parameters of this key are set.
       * @throw Invalid_State if either of the two data members is not set
       */
       virtual void affirm_init() const;
 
-
    protected:
+      void X509_load_hook();
       virtual void set_all_values(ECDSA_PublicKey const& other);
 
       ECDSA_Core m_ecdsa_core;
@@ -237,13 +245,8 @@ class ECDSA_PrivateKey : public ECDSA_PublicKey, public EC_PrivateKey, public PK
       * @param the domain parameters to used for this key
       */
       ECDSA_PrivateKey(RandomNumberGenerator& rng,
-                       EC_Domain_Params const& dom_pars)
-         {
-         mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_pars));
-         generate_private_key(rng);
-         mp_public_point->check_invariants();
-         m_ecdsa_core = ECDSA_Core(*mp_dom_pars, m_private_value, *mp_public_point);
-         }
+                       const EC_Domain_Params& domain);
+
       ECDSA_PrivateKey(ECDSA_PrivateKey const& other);
       ECDSA_PrivateKey const& operator= (ECDSA_PrivateKey const& rhs);
 
@@ -253,7 +256,7 @@ class ECDSA_PrivateKey : public ECDSA_PublicKey, public EC_PrivateKey, public PK
       * @param mess_len the length of the message byte array
       * @result the signature
       */
-      SecureVector<byte> sign(const byte message[], u32bit mess_len) const;
+      SecureVector<byte> sign(const byte message[], u32bit mess_len, RandomNumberGenerator& rng) const;
       /**
       * Make sure that the public key parts of this object are set
       * (calls EC_PublicKey::affirm_init()) as well as the private key

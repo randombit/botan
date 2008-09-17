@@ -2,6 +2,7 @@
 #include <botan/ec.h>
 
 #include <memory>
+#include <iostream>
 
 using namespace Botan;
 
@@ -11,6 +12,9 @@ int main()
 
    EC_Domain_Params params = get_EC_Dom_Pars_by_oid("1.3.132.8");
 
-   ECDSA_PrivateKey ecdsa(rng, params);
+   std::cout << params.get_curve().get_p() << "\n";
+   std::cout << params.get_order() << "\n";
+
+   ECDSA_PrivateKey ecdsa(*rng, params);
 
    }

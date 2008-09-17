@@ -10,7 +10,7 @@ LIBS      = `$(BOTAN_DIR)/botan-config --libs`
 FLAGS     = $(INCLUDES) $(CFLAGS) -I$(BOTAN_DIR)/build/include -L$(BOTAN_DIR)
 
 PROGS = asn1 base base64 bzip ca decrypt dh dsa_kgen dsa_sign dsa_ver	\
-	encrypt factor hash hash_fd hasher hasher2 \
+	ecdsa encrypt factor hash hash_fd hasher hasher2 \
 	passhash pkcs10 rsa_dec rsa_enc rsa_kgen self_sig stack		\
 	x509info xor_ciph
 

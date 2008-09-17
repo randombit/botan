@@ -137,6 +137,24 @@ void EC_PrivateKey::affirm_init() const // virtual
       }
    }
 
+ECDSA_PrivateKey::ECDSA_PrivateKey(RandomNumberGenerator& rng,
+                                   const EC_Domain_Params& dom_pars)
+   {
+   mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_pars));
+   generate_private_key(rng);
+
+   try
+      {
+      mp_public_point->check_invariants();
+      }
+   catch(Illegal_Point& e)
+      {
+      throw Invalid_State("ECDSA key generation failed");
+      }
+
+   m_ecdsa_core = ECDSA_Core(*mp_dom_pars, m_private_value, *mp_public_point);
+   }
+
 /**
 * EC_PrivateKey generator
 **/
@@ -148,9 +166,9 @@ void EC_PrivateKey::generate_private_key(RandomNumberGenerator& rng)
       }
    BigInt tmp_private_value(0);
    tmp_private_value = random_integer (rng, 1, mp_dom_pars->get_order() );
-
    mp_public_point = std::auto_ptr<PointGFp>( new PointGFp (mp_dom_pars->get_base_point()));
    mp_public_point->mult_this_secure(tmp_private_value, mp_dom_pars->get_order(), mp_dom_pars->get_order()-1);
+
    //assert(mp_public_point.get() != 0);
    tmp_private_value.swap(m_private_value);
    }
@@ -254,6 +272,7 @@ void ECDSA_PublicKey::affirm_init() const // virtual
    {
    EC_PublicKey::affirm_init();
    }
+
 void ECDSA_PublicKey::set_domain_parameters(EC_Domain_Params const& dom_pars)
    {
    if (mp_dom_pars.get())
@@ -400,7 +419,8 @@ ECDSA_PrivateKey const& ECDSA_PrivateKey::operator= (ECDSA_PrivateKey const& rhs
    set_all_values(rhs);
    return *this;
    }
-SecureVector<byte> ECDSA_PrivateKey::sign ( const byte message [], u32bit mess_len ) const
+
+SecureVector<byte> ECDSA_PrivateKey::sign ( const byte message [], u32bit mess_len, RandomNumberGenerator&) const
    {
    affirm_init();
    SecureVector<byte> sv_sig = m_ecdsa_core.sign ( message, mess_len );
