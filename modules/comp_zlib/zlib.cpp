@@ -140,8 +140,11 @@ void Zlib_Compression::flush()
 
    while(true)
       {
-      zlib->stream.next_out = (Bytef*)buffer.begin();
       zlib->stream.avail_out = buffer.size();
+
+      zlib->stream.next_out = reinterpret_cast<Bytef*>(buffer.begin());
+
+
       deflate(&(zlib->stream), Z_FULL_FLUSH);
       send(buffer.begin(), buffer.size() - zlib->stream.avail_out);
       if(zlib->stream.avail_out == buffer.size()) break;
@@ -186,19 +189,23 @@ void Zlib_Decompression::start_msg()
 /*************************************************
 * Decompress Input with Zlib                     *
 *************************************************/
-void Zlib_Decompression::write(const byte input[], u32bit length)
+void Zlib_Decompression::write(const byte input_arr[], u32bit length)
    {
    if(length) no_writes = false;
 
-   zlib->stream.next_in = (Bytef*)input;
+   // non-const needed by zlib api :(
+   Bytef* input = reinterpret_cast<Bytef*>(const_cast<byte*>(input_arr));
+
+   zlib->stream.next_in = input;
    zlib->stream.avail_in = length;
 
    while(zlib->stream.avail_in != 0)
       {
-      zlib->stream.next_out = (Bytef*)buffer.begin();
+      zlib->stream.next_out = reinterpret_cast<Bytef*>(buffer.begin());
       zlib->stream.avail_out = buffer.size();
 
       int rc = inflate(&(zlib->stream), Z_SYNC_FLUSH);
+
       if(rc != Z_OK && rc != Z_STREAM_END)
          {
          clear();
@@ -210,13 +217,17 @@ void Zlib_Decompression::write(const byte input[], u32bit length)
             throw Exception("Zlib_Decompression: Memory allocation error");
          throw Exception("Zlib_Decompression: Unknown decompress error");
          }
+
       send(buffer.begin(), buffer.size() - zlib->stream.avail_out);
+
       if(rc == Z_STREAM_END)
          {
          u32bit read_from_block = length - zlib->stream.avail_in;
          start_msg();
-         zlib->stream.next_in = (Bytef*)input + read_from_block;
+
+         zlib->stream.next_in = input + read_from_block;
          zlib->stream.avail_in = length - read_from_block;
+
          input += read_from_block;
          length -= read_from_block;
          }
@@ -233,18 +244,22 @@ void Zlib_Decompression::end_msg()
    zlib->stream.avail_in = 0;
 
    int rc = Z_OK;
+
    while(rc != Z_STREAM_END)
       {
-      zlib->stream.next_out = (Bytef*)buffer.begin();
+      zlib->stream.next_out = reinterpret_cast<Bytef*>(buffer.begin());
       zlib->stream.avail_out = buffer.size();
       rc = inflate(&(zlib->stream), Z_SYNC_FLUSH);
+
       if(rc != Z_OK && rc != Z_STREAM_END)
          {
          clear();
          throw Exception("Zlib_Decompression: Error finalizing decompression");
          }
+
       send(buffer.begin(), buffer.size() - zlib->stream.avail_out);
       }
+
    clear();
    }
 
