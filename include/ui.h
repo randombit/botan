@@ -25,7 +25,7 @@ class BOTAN_DLL User_Interface
       User_Interface(const std::string& = "");
       virtual ~User_Interface() {}
    protected:
-      const std::string preset_passphrase;
+      std::string preset_passphrase;
       mutable bool first_try;
    };
 

@@ -67,6 +67,9 @@ class BOTAN_DLL PK_Signer
       PK_Signer(const PK_Signing_Key&, const std::string&);
       ~PK_Signer() { delete emsa; }
    private:
+      PK_Signer(const PK_Signer&);
+      PK_Signer& operator=(const PK_Signer&);
+
       const PK_Signing_Key& key;
       Signature_Format sig_format;
       EMSA* emsa;
@@ -101,6 +104,9 @@ class BOTAN_DLL PK_Verifier
 
       Signature_Format sig_format;
       EMSA* emsa;
+   private:
+      PK_Verifier(const PK_Verifier&);
+      PK_Verifier& operator=(const PK_Verifier&);
    };
 
 /*************************************************
@@ -116,6 +122,9 @@ class BOTAN_DLL PK_Key_Agreement
 
       PK_Key_Agreement(const PK_Key_Agreement_Key&, const std::string&);
    private:
+      PK_Key_Agreement(const PK_Key_Agreement_Key&);
+      PK_Key_Agreement& operator=(const PK_Key_Agreement&);
+
       const PK_Key_Agreement_Key& key;
       const std::string kdf_name;
    };
@@ -127,9 +136,14 @@ class BOTAN_DLL PK_Encryptor_MR_with_EME : public PK_Encryptor
    {
    public:
       u32bit maximum_input_size() const;
+
       PK_Encryptor_MR_with_EME(const PK_Encrypting_Key&, const std::string&);
       ~PK_Encryptor_MR_with_EME() { delete encoder; }
+
    private:
+      PK_Encryptor_MR_with_EME(const PK_Encryptor_MR_with_EME&);
+      PK_Encryptor_MR_with_EME& operator=(const PK_Encryptor_MR_with_EME&);
+
       SecureVector<byte> enc(const byte[], u32bit,
                              RandomNumberGenerator& rng) const;
 
@@ -146,7 +160,11 @@ class BOTAN_DLL PK_Decryptor_MR_with_EME : public PK_Decryptor
       PK_Decryptor_MR_with_EME(const PK_Decrypting_Key&, const std::string&);
       ~PK_Decryptor_MR_with_EME() { delete encoder; }
    private:
+      PK_Decryptor_MR_with_EME(const PK_Decryptor_MR_with_EME&);
+      PK_Decryptor_MR_with_EME& operator=(const PK_Decryptor_MR_with_EME&);
+
       SecureVector<byte> dec(const byte[], u32bit) const;
+
       const PK_Decrypting_Key& key;
       const EME* encoder;
    };
@@ -159,6 +177,9 @@ class BOTAN_DLL PK_Verifier_with_MR : public PK_Verifier
    public:
       PK_Verifier_with_MR(const PK_Verifying_with_MR_Key&, const std::string&);
    private:
+      PK_Verifier_with_MR(const PK_Verifying_with_MR_Key&);
+      PK_Verifier_with_MR& operator=(const PK_Verifier_with_MR&);
+
       bool validate_signature(const MemoryRegion<byte>&, const byte[], u32bit);
       u32bit key_message_parts() const { return key.message_parts(); }
       u32bit key_message_part_size() const { return key.message_part_size(); }
@@ -174,6 +195,9 @@ class BOTAN_DLL PK_Verifier_wo_MR : public PK_Verifier
    public:
       PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key&, const std::string&);
    private:
+      PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key&);
+      PK_Verifier_wo_MR& operator=(const PK_Verifier_wo_MR&);
+
       bool validate_signature(const MemoryRegion<byte>&, const byte[], u32bit);
       u32bit key_message_parts() const { return key.message_parts(); }
       u32bit key_message_part_size() const { return key.message_part_size(); }

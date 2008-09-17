@@ -101,6 +101,7 @@ class BOTAN_DLL BufferedComputation
       BufferedComputation(u32bit);
       virtual ~BufferedComputation() {}
    private:
+      BufferedComputation& operator=(const BufferedComputation&);
       virtual void add_data(const byte[], u32bit) = 0;
       virtual void final_result(byte[]) = 0;
    };
@@ -119,6 +120,8 @@ class BOTAN_DLL HashFunction : public BufferedComputation
 
       HashFunction(u32bit, u32bit = 0);
       virtual ~HashFunction() {}
+   private:
+      HashFunction& operator=(const HashFunction&);
    };
 
 /*************************************************
