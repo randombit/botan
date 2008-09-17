@@ -220,7 +220,7 @@ __forceinline word word8_sub3(word z[8], const word x[8],
 /*************************************************
 * Four Word Block Linear Multiplication          *
 *************************************************/
-inline word word4_linmul2(word x[4], word y, word carry)
+inline word word8_linmul2(word x[8], word y, word carry)
    {
    __asm
       {
@@ -250,7 +250,36 @@ inline word word4_linmul2(word x[4], word y, word carry)
        mul [y]           //edx(hi):eax(lo)=a*b
        add eax,ecx      //sum lo carry
        adc edx,0          //sum hi carry
+       mov ecx,edx      //store carry
        mov [esi+12],eax        //load a
+
+       mov eax,[esi+16]        //load a
+       mul [y]           //edx(hi):eax(lo)=a*b
+       add eax,ecx      //sum lo carry
+       adc edx,0          //sum hi carry
+       mov ecx,edx      //store carry
+       mov [esi+16],eax        //load a
+
+       mov eax,[esi+20]        //load a
+       mul [y]           //edx(hi):eax(lo)=a*b
+       add eax,ecx      //sum lo carry
+       adc edx,0          //sum hi carry
+       mov ecx,edx      //store carry
+       mov [esi+20],eax        //load a
+
+       mov eax,[esi+24]        //load a
+       mul [y]           //edx(hi):eax(lo)=a*b
+       add eax,ecx      //sum lo carry
+       adc edx,0          //sum hi carry
+       mov ecx,edx      //store carry
+       mov [esi+24],eax        //load a
+
+       mov eax,[esi+28]        //load a
+       mul [y]           //edx(hi):eax(lo)=a*b
+       add eax,ecx      //sum lo carry
+       adc edx,0          //sum hi carry
+       mov [esi+28],eax        //load a
+
        mov eax,edx      //store carry
       }
    }
@@ -465,18 +494,19 @@ __forceinline word word8_linmul3(word z[4], const word x[4], word y, word carry)
    }
 
 /*************************************************
-* Eight Word Block Multiply-Add                  *
+* Eight Word Block Multiply/Add                  *
 *************************************************/
-inline void word8_madd3(word z[], word x, const word y[], word* carry)
+inline word word8_madd3(word z[8], const word x[8], word y, word carry)
    {
-   word_madd(x, y[0], z[0], *carry, z + 0, carry);
-   word_madd(x, y[1], z[1], *carry, z + 1, carry);
-   word_madd(x, y[2], z[2], *carry, z + 2, carry);
-   word_madd(x, y[3], z[3], *carry, z + 3, carry);
-   word_madd(x, y[4], z[4], *carry, z + 4, carry);
-   word_madd(x, y[5], z[5], *carry, z + 5, carry);
-   word_madd(x, y[6], z[6], *carry, z + 6, carry);
-   word_madd(x, y[7], z[7], *carry, z + 7, carry);
+   z[0] = word_madd3(x[0], y, z[0], &carry);
+   z[1] = word_madd3(x[1], y, z[1], &carry);
+   z[2] = word_madd3(x[2], y, z[2], &carry);
+   z[3] = word_madd3(x[3], y, z[3], &carry);
+   z[4] = word_madd3(x[4], y, z[4], &carry);
+   z[5] = word_madd3(x[5], y, z[5], &carry);
+   z[6] = word_madd3(x[6], y, z[6], &carry);
+   z[7] = word_madd3(x[7], y, z[7], &carry);
+   return carry;
    }
 
 /*************************************************
