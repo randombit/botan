@@ -1,4 +1,4 @@
-realname "AMD64"
+realname "x86-64"
 
 default_submodel amd64
 
