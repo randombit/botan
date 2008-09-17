@@ -13,6 +13,11 @@ namespace Botan {
 *************************************************/
 void Blowfish::enc(const byte in[], byte out[]) const
    {
+   const u32bit* S1 = S + 0;
+   const u32bit* S2 = S + 256;
+   const u32bit* S3 = S + 512;
+   const u32bit* S4 = S + 768;
+
    u32bit L = load_be<u32bit>(in, 0);
    u32bit R = load_be<u32bit>(in, 1);
 
@@ -37,6 +42,11 @@ void Blowfish::enc(const byte in[], byte out[]) const
 *************************************************/
 void Blowfish::dec(const byte in[], byte out[]) const
    {
+   const u32bit* S1 = S + 0;
+   const u32bit* S2 = S + 256;
+   const u32bit* S3 = S + 512;
+   const u32bit* S4 = S + 768;
+
    u32bit L = load_be<u32bit>(in, 0);
    u32bit R = load_be<u32bit>(in, 1);
 
@@ -69,10 +79,7 @@ void Blowfish::key(const byte key[], u32bit length)
 
    u32bit L = 0, R = 0;
    generate_sbox(P,  18,  L, R);
-   generate_sbox(S1, 256, L, R);
-   generate_sbox(S2, 256, L, R);
-   generate_sbox(S3, 256, L, R);
-   generate_sbox(S4, 256, L, R);
+   generate_sbox(S, 1024, L, R);
    }
 
 /*************************************************
@@ -81,6 +88,11 @@ void Blowfish::key(const byte key[], u32bit length)
 void Blowfish::generate_sbox(u32bit Box[], u32bit size,
                              u32bit& L, u32bit& R) const
    {
+   const u32bit* S1 = S + 0;
+   const u32bit* S2 = S + 256;
+   const u32bit* S3 = S + 512;
+   const u32bit* S4 = S + 768;
+
    for(u32bit j = 0; j != size; j += 2)
       {
       for(u32bit k = 0; k != 16; k += 2)
@@ -104,11 +116,8 @@ void Blowfish::generate_sbox(u32bit Box[], u32bit size,
 *************************************************/
 void Blowfish::clear() throw()
    {
-   P.copy(PBOX, 18);
-   S1.copy(SBOX +   0, 256);
-   S2.copy(SBOX + 256, 256);
-   S3.copy(SBOX + 512, 256);
-   S4.copy(SBOX + 768, 256);
+   P.copy(P_INIT, 18);
+   S.copy(S_INIT, 1024);
    }
 
 }

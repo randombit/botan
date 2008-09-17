@@ -1,6 +1,6 @@
 /*************************************************
 * Blowfish Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_BLOWFISH_H__
@@ -26,10 +26,10 @@ class BOTAN_DLL Blowfish : public BlockCipher
       void key(const byte[], u32bit);
       void generate_sbox(u32bit[], u32bit, u32bit&, u32bit&) const;
 
-      static const u32bit PBOX[18];
-      static const u32bit SBOX[1024];
+      static const u32bit P_INIT[18];
+      static const u32bit S_INIT[1024];
 
-      SecureBuffer<u32bit, 256> S1, S2, S3, S4;
+      SecureBuffer<u32bit, 1024> S;
       SecureBuffer<u32bit, 18> P;
    };
 
