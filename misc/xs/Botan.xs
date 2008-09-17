@@ -18,6 +18,7 @@ extern "C" {
 #include <botan/init.h>
 #include <botan/oids.h>
 #include <botan/x509cert.h>
+#include <botan/x509_ext.h>
 
 
 /* xsubpp converts ':' to '_' in typemap. We create our types without ':' */
@@ -29,7 +30,7 @@ typedef Botan::Attribute		Botan__Attribute;
 typedef Botan::Base64_Decoder		Botan__Base64_Decoder;
 typedef Botan::Base64_Encoder		Botan__Base64_Encoder;
 typedef Botan::Chain			Botan__Chain;
-typedef Botan::Extension		Botan__Extension;
+typedef Botan::Certificate_Extension	Botan__Extension;
 typedef Botan::Filter			Botan__Filter;
 typedef Botan::Fork			Botan__Fork;
 typedef Botan::Hex_Decoder		Botan__Hex_Decoder;
@@ -719,7 +720,12 @@ char *
 Botan__X509_Certificate::subject_info(char *info)
     CODE:
 	try {
-	    RETVAL = const_cast<char *>(THIS->subject_info(info).c_str());
+            std::vector<std::string> s = THIS->subject_info(info);
+
+            if(s.size() > 0)
+                RETVAL = const_cast<char *>(s[0].c_str());
+            else
+                RETVAL = "err";
 	}
 	catch (const std::exception &e) {
 	    croak(e.what());
@@ -731,7 +737,12 @@ char *
 Botan__X509_Certificate::issuer_info(char *info)
     CODE:
 	try {
-	    RETVAL = const_cast<char *>(THIS->issuer_info(info).c_str());
+            std::vector<std::string> s = THIS->subject_info(info);
+
+            if(s.size() > 0)
+                RETVAL = const_cast<char *>(s[0].c_str());
+            else
+                RETVAL = "err";
 	}
 	catch (const std::exception &e) {
 	    croak(e.what());
