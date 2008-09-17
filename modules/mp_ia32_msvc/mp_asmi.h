@@ -30,7 +30,7 @@ inline word word_add(word x, word y, word* carry)
 *************************************************/
 inline word word4_addcarry(word x[4], word carry)
    {
-    __asm {
+   __asm {
        mov edx,[x]
        xor eax,eax
        sub eax,[carry] //force CF=1 iff *carry==1
@@ -43,13 +43,13 @@ inline word word4_addcarry(word x[4], word carry)
        adc [edx+12],0
        sbb eax,eax
        neg eax
-       }
+      }
    }
 
 /*************************************************
 * Four Word Block Addition, Two Argument         *
 *************************************************/
-inline word word8_add2(word x[4], const word y[4], word carry)
+inline word word8_add2(word x[8], const word y[8], word carry)
    {
    __asm {
        mov edx,[x]
@@ -80,9 +80,9 @@ inline word word8_add2(word x[4], const word y[4], word carry)
 /*************************************************
 * Four Word Block Addition, Three Argument       *
 *************************************************/
-inline word word8_add3(word z[4], const word x[4], const word y[4], word carry)
+inline word word8_add3(word z[8], const word x[8], const word y[8], word carry)
    {
-   __asm {
+    __asm {
        mov edi,[x]
        mov esi,[y]
        mov ebx,[z]
@@ -140,7 +140,7 @@ inline word word_sub(word x, word y, word* carry)
 /*************************************************
 * Four Word Block Subtraction, Two Argument      *
 *************************************************/
-inline word word8_sub2(word x[4], const word y[4], word carry)
+inline word word8_sub2(word x[8], const word y[8], word carry)
    {
     _asm {
        mov edi,[x]
@@ -182,7 +182,7 @@ inline word word8_sub2(word x[4], const word y[4], word carry)
 __forceinline word word8_sub3(word z[8], const word x[8],
                               const word y[8], word carry)
    {
-       __asm {
+    __asm {
        mov edi,[x]
        mov esi,[y]
        xor eax,eax
@@ -221,9 +221,9 @@ __forceinline word word8_sub3(word z[8], const word x[8],
 * Four Word Block Linear Multiplication          *
 *************************************************/
 inline word word4_linmul2(word x[4], word y, word carry)
-{
-   __asm
    {
+   __asm
+      {
        mov esi,[x]
        mov eax,[esi]        //load a
        mul [y]           //edx(hi):eax(lo)=a*b
@@ -252,20 +252,159 @@ inline word word4_linmul2(word x[4], word y, word carry)
        adc edx,0          //sum hi carry
        mov [esi+12],eax        //load a
        mov eax,edx      //store carry
-   }
+      }
    }
 
 /*************************************************
 * Eight Word Block Linear Multiplication          *
 *************************************************/
-__forceinline word word8_linmul3(word z[4], const word x[4],
-                                 word y, word carry)
+__forceinline word word8_muladd(word z[8], const word x[8],
+                                word y, word carry)
    {
    __asm
       {
+       mov esi,[x]
+       mov ebx,[y]
+       mov edi,[z]
+       mov eax,[esi]     //load a
+       mul ebx           //edx(hi):eax(lo)=a*b
+       add eax,[carry]   //sum lo carry
+       adc edx,0         //sum hi carry
+       add eax,[edi]     //sum lo z
+       adc edx,0         //sum hi z
+       mov ecx,edx       //carry for next block = hi z
+       mov [edi],eax     //save lo z
+
+       mov eax,[esi+4]
+       mul ebx
+       add eax,ecx
+       adc edx,0
+       add eax,[edi+4]
+       adc edx,0
+       mov ecx,edx
+       mov [edi+4],eax
+
+       mov eax,[esi+8]
+       mul ebx
+       add eax,ecx
+       adc edx,0
+       add eax,[edi+8]
+       adc edx,0
+       mov ecx,edx
+       mov [edi+8],eax
+
+       mov eax,[esi+12]
+       mul ebx
+       add eax,ecx
+       adc edx,0
+       add eax,[edi+12]
+       adc edx,0
+       mov ecx,edx
+       mov [edi+12],eax
+
+       mov eax,[esi+16]
+       mul ebx
+       add eax,ecx
+       adc edx,0
+       add eax,[edi+16]
+       adc edx,0
+       mov ecx,edx
+       mov [edi+16],eax
+
+       mov eax,[esi+20]
+       mul ebx
+       add eax,ecx
+       adc edx,0
+       add eax,[edi+20]
+       adc edx,0
+       mov ecx,edx
+       mov [edi+20],eax
+
+       mov eax,[esi+24]
+       mul ebx
+       add eax,ecx
+       adc edx,0
+       add eax,[edi+24]
+       adc edx,0
+       mov ecx,edx
+       mov [edi+24],eax
+
+       mov eax,[esi+28]
+       mul ebx
+       add eax,ecx
+       adc edx,0
+       add eax,[edi+28]
+       adc edx,0
+       mov [edi+28],eax
+       mov eax,edx
+   }
+   }
+
+__forceinline word word8_linmul3(word z[4], const word x[4], word y, word carry)
+   {
+   __asm
+   {
+#if 0
+        //it's slower!!!
+       mov edx,[z]
+       mov eax,[x]
+        movd mm7,[y]
+
+        movd mm0,[eax]
+        movd mm1,[eax+4]
+        movd mm2,[eax+8]
+        pmuludq mm0,mm7
+        pmuludq mm1,mm7
+        pmuludq mm2,mm7
+
+        movd mm6,[carry]
+        paddq mm0,mm6
+        movd [edx],mm0
+
+        psrlq mm0,32
+        paddq mm1,mm0
+        movd [edx+4],mm1
+
+        movd mm3,[eax+12]
+        psrlq mm1,32
+        paddq mm2,mm1
+        movd [edx+8],mm2
+
+        pmuludq mm3,mm7
+        movd mm4,[eax+16]
+        psrlq mm2,32
+        paddq mm3,mm2
+        movd [edx+12],mm3
+
+        pmuludq mm4,mm7
+        movd mm5,[eax+20]
+        psrlq mm3,32
+        paddq mm4,mm3
+        movd [edx+16],mm4
+
+        pmuludq mm5,mm7
+        movd mm0,[eax+24]
+        psrlq mm4,32
+        paddq mm5,mm4
+        movd [edx+20],mm5
+
+        pmuludq mm0,mm7
+        movd mm1,[eax+28]
+        psrlq mm5,32
+        paddq mm0,mm5
+        movd [edx+24],mm0
+
+        pmuludq mm1,mm7
+        psrlq mm0,32
+        paddq mm1,mm0
+        movd [edx+28],mm1
+
+        psrlq mm1,32
+        movd eax,mm1
+        emms
+#else
        mov edi,[z]
        mov esi,[x]
-
        mov eax,[esi]        //load a
        mul [y]           //edx(hi):eax(lo)=a*b
        add eax,[carry]    //sum lo carry
@@ -321,7 +460,8 @@ __forceinline word word8_linmul3(word z[4], const word x[4],
        adc edx,0          //sum hi carry
        mov [edi+28],eax        //load a
        mov eax,edx      //store carry
-       }
+#endif
+   }
    }
 
 /*************************************************
