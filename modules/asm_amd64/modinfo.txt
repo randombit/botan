@@ -1,4 +1,4 @@
-realname "Algorithm x86-64 Assembler"
+realname "x86-64 Assembler"
 
 mp_bits 64
 

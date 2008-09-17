@@ -1,4 +1,4 @@
-realname "Algorithm x86 Assembler"
+realname "x86 Assembler"
 
 #mp_bits 32
 

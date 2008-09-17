@@ -1,4 +1,4 @@
-realname "MPI Assembler Backend for x86-64/AMD64 Systems"
+realname "x86-64 MPI Assembler Core"
 
 mp_bits 64
 
