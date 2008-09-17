@@ -8,6 +8,8 @@
 
 #include <botan/mp_types.h>
 
+namespace Botan {
+
 #if (BOTAN_MP_WORD_BITS != 64)
    #error The mp_asm64 module requires that BOTAN_MP_WORD_BITS == 64
 #endif
@@ -41,14 +43,36 @@
 
 #else
 
-#include <botan/mp_core.h>
+// Do a 64x64->128 multiply using four 64x64->64 multiplies
+// plus some adds and shifts. Last resort for CPUs like UltraSPARC,
+// with 64-bit registers/ALU, but no 64x64->128 multiply.
+inline void bigint_2word_mul(word a, word b, word* z1, word* z0)
+   {
+   const u32bit MP_HWORD_BITS = MP_WORD_BITS / 2;
+   const word MP_HWORD_MASK = ((word)1 << MP_HWORD_BITS) - 1;
 
-#define BOTAN_WORD_MUL(a,b,z1,z0) \
-   do { bigint_wordmul(a, b, &z1, &z0); } while(0);
+   const word a_hi = (a >> MP_HWORD_BITS);
+   const word a_lo = (a & MP_HWORD_MASK);
+   const word b_hi = (b >> MP_HWORD_BITS);
+   const word b_lo = (b & MP_HWORD_MASK);
+
+   word x0 = a_hi * b_hi;
+   word x1 = a_lo * b_hi;
+   word x2 = a_hi * b_lo;
+   word x3 = a_lo * b_lo;
+
+   x2 += x3 >> (MP_HWORD_BITS);
+   x2 += x1;
+   if(x2 < x1)
+      x0 += ((word)1 << MP_HWORD_BITS);
+
+   *z0 = x0 + (x2 >> MP_HWORD_BITS);
+   *z1 = ((x2 & MP_HWORD_MASK) << MP_HWORD_BITS) + (x3 & MP_HWORD_MASK);
+   }
+
+#define BOTAN_WORD_MUL(a,b,z1,z0) bigint_2word_mul(a, b, &z1, &z0)
 
 #endif
-
-namespace Botan {
 
 /*************************************************
 * Word Multiply/Add                              *

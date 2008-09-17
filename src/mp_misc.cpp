@@ -87,33 +87,6 @@ word bigint_modop(word n1, word n0, word d)
    return (n0-z);
    }
 
-/*************************************************
-* Do a word*word->2-word Multiply                *
-*************************************************/
-void bigint_wordmul(word a, word b, word* out_low, word* out_high)
-   {
-   const u32bit MP_HWORD_BITS = MP_WORD_BITS / 2;
-   const word MP_HWORD_MASK = ((word)1 << MP_HWORD_BITS) - 1;
-
-   const word a_hi = (a >> MP_HWORD_BITS);
-   const word a_lo = (a & MP_HWORD_MASK);
-   const word b_hi = (b >> MP_HWORD_BITS);
-   const word b_lo = (b & MP_HWORD_MASK);
-
-   word x0 = a_hi * b_hi;
-   word x1 = a_lo * b_hi;
-   word x2 = a_hi * b_lo;
-   word x3 = a_lo * b_lo;
-
-   x2 += x3 >> (MP_HWORD_BITS);
-   x2 += x1;
-   if(x2 < x1)
-      x0 += ((word)1 << MP_HWORD_BITS);
-
-   *out_high = x0 + (x2 >> MP_HWORD_BITS);
-   *out_low = ((x2 & MP_HWORD_MASK) << MP_HWORD_BITS) + (x3 & MP_HWORD_MASK);
-   }
-
 }
 
 }
