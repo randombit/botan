@@ -417,8 +417,10 @@ sub autoload_modules {
     foreach my $mod (sort keys %MODULES) {
         my %modinfo = %{ $MODULES{$mod} };
 
+        my $realname = $modinfo{'realname'};
+
         if(defined($$config{'modules'}{$mod})) {
-            autoconfig("Module $mod - loading by user request");
+            autoconfig("$mod ($realname): loading by user request");
             next;
         }
 
@@ -426,34 +428,37 @@ sub autoload_modules {
         if(scalar @arch_list > 0 &&
            !in_array($arch, \@arch_list) &&
            !in_array($submodel, \@arch_list)) {
-            autoconfig("Module $mod - won't use, " .
-                       "doesn't run on CPU $arch/$submodel");
+            autoconfig("$mod ($realname): skipping, " .
+                       "not compatible with " . realname($arch));
             next;
         }
 
         my @os_list = @{ $modinfo{'os'} };
         if(scalar @os_list > 0 && !in_array($os, \@os_list)) {
-            autoconfig("Module $mod - won't use, not compatible with OS $os");
+            autoconfig("$mod ($realname): " .
+                       "skipping, not compatible with " . realname($os));
             next;
         }
 
         my @cc_list = @{ $modinfo{'cc'} };
         if(scalar @cc_list > 0 && !in_array($cc, \@cc_list)) {
-            autoconfig("Module $mod - won't use, not compatbile with CC $cc");
+            autoconfig("$mod ($realname): " .
+                       "skipping, not compatible with " . realname($cc));
             next;
         }
 
         if(!$asm_ok and $modinfo{'load_on'} eq 'asm_ok') {
-            autoconfig("Module $mod - won't use; avoiding due to use of --no-asm");
+            autoconfig("$mod ($realname): " .
+                       "skipping due to --no-asm");
             next;
         }
 
         if($modinfo{'load_on'} eq 'request') {
-            autoconfig("Module $mod - won't use, loaded by request only");
+            autoconfig("$mod ($realname): skipping, loaded by request only");
             next;
         }
 
-        autoconfig("Module $mod - autoloading");
+        autoconfig("$mod ($realname): loading");
         $$config{'modules'}{$mod} = 1;
     }
 }
@@ -1219,7 +1224,9 @@ sub process_template {
         }
 
         foreach my $key (sort keys %$config) {
-            print with_diagnostic("debug", "In %config:", $key, " -> ", summarize(60, $$config{$key}));
+            print with_diagnostic("debug",
+                                  "In %config:", $key, " -> ",
+                                  summarize(60, $$config{$key}));
         }
 
         croak("Unbound variable '$1' in $in");
