@@ -34,28 +34,28 @@ inline word word_add(word x, word y, word* carry)
 *************************************************/
 inline word word4_add2(word x[4], const word y[4], word carry)
    {
-      __asm {
-       mov esi,[y]
-       mov edi,[x]
-       xor ecx,ecx
-       sub ecx,[carry] //force CF=1 iff *carry==1
-       mov eax,[edi]
-       mov ecx,[edi+4]
-       adc eax,[esi]
-       adc ecx,[esi+4]
-       mov [edi],eax
-       mov [edi+4],ecx
-       mov eax,[edi+8]
-       mov ecx,[edi+12]
-       adc eax,[esi+8]
-       adc ecx,[esi+12]
-       mov [edi+8],eax
-       mov [edi+12],ecx
-       sbb edx,edx
-       neg edx
-       mov eax,edx
-
-   }
+   __asm
+      {
+      mov esi,[y]
+      mov edi,[x]
+      xor ecx,ecx
+      sub ecx,[carry] //force CF=1 iff *carry==1
+      mov eax,[edi]
+      mov ecx,[edi+4]
+      adc eax,[esi]
+      adc ecx,[esi+4]
+      mov [edi],eax
+      mov [edi+4],ecx
+      mov eax,[edi+8]
+      mov ecx,[edi+12]
+      adc eax,[esi+8]
+      adc ecx,[esi+12]
+      mov [edi+8],eax
+      mov [edi+12],ecx
+      sbb edx,edx
+      neg edx
+      mov eax,edx
+      }
    }
 
 /*************************************************
@@ -63,7 +63,8 @@ inline word word4_add2(word x[4], const word y[4], word carry)
 *************************************************/
 inline word word4_add3(word z[4], const word x[4], const word y[4], word carry)
    {
-       __asm {
+    __asm
+       {
        mov esi,[y]
        mov edi,[x]
        xor ecx,ecx
@@ -104,7 +105,8 @@ inline word word_sub(word x, word y, word* carry)
 *************************************************/
 inline word word4_sub2(word x[4], const word y[4], word carry)
    {
-    _asm {
+    _asm
+       {
        mov esi,[y]
        mov edi,[x]
        xor ecx,ecx
@@ -124,7 +126,7 @@ inline word word4_sub2(word x[4], const word y[4], word carry)
        sbb edx,edx
        neg edx
        mov eax,edx
-    }
+       }
    }
 
 /*************************************************
@@ -132,28 +134,29 @@ inline word word4_sub2(word x[4], const word y[4], word carry)
 *************************************************/
 inline word word4_sub3(word z[4], const word x[4],const word y[4], word carry)
    {
-       __asm {
-       mov esi,[y]
-       mov edi,[x]
-       xor ecx,ecx
-       sub ecx,[carry] //force CF=1 iff *carry==1
-       mov ebx,[z]
-       mov eax,[edi]
-       mov ecx,[edi+4]
-       sbb eax,[esi]
-       sbb ecx,[esi+4]
-       mov [ebx],eax
-       mov [ebx+4],ecx
-       mov eax,[edi+8]
-       mov ecx,[edi+12]
-       sbb eax,[esi+8]
-       sbb ecx,[esi+12]
-       mov [ebx+8],eax
-       mov [ebx+12],ecx
-       sbb edx,edx
-       neg edx
-       mov eax,edx
-       }
+   __asm
+      {
+      mov esi,[y]
+      mov edi,[x]
+      xor ecx,ecx
+      sub ecx,[carry] //force CF=1 iff *carry==1
+      mov ebx,[z]
+      mov eax,[edi]
+      mov ecx,[edi+4]
+      sbb eax,[esi]
+      sbb ecx,[esi+4]
+      mov [ebx],eax
+      mov [ebx+4],ecx
+      mov eax,[edi+8]
+      mov ecx,[edi+12]
+      sbb eax,[esi+8]
+      sbb ecx,[esi+12]
+      mov [ebx+8],eax
+      mov [ebx+12],ecx
+      sbb edx,edx
+      neg edx
+      mov eax,edx
+      }
    }
 
 /*************************************************
@@ -162,36 +165,36 @@ inline word word4_sub3(word z[4], const word x[4],const word y[4], word carry)
 inline word word4_linmul2(word x[4], word y, word carry)
 {
    __asm
-   {
-       mov esi,[x]
-       mov eax,[esi]        //load a
-       mul [y]           //edx(hi):eax(lo)=a*b
-       add eax,[carry]      //sum lo carry
-       adc edx,0          //sum hi carry
-       mov ecx,edx      //store carry
-       mov [esi],eax        //load a
+      {
+      mov esi,[x]
+      mov eax,[esi]        //load a
+      mul [y]           //edx(hi):eax(lo)=a*b
+      add eax,[carry]      //sum lo carry
+      adc edx,0          //sum hi carry
+      mov ecx,edx      //store carry
+      mov [esi],eax        //load a
 
-       mov eax,[esi+4]        //load a
-       mul [y]           //edx(hi):eax(lo)=a*b
-       add eax,ecx      //sum lo carry
-       adc edx,0          //sum hi carry
-       mov ecx,edx      //store carry
-       mov [esi+4],eax        //load a
+      mov eax,[esi+4]        //load a
+      mul [y]           //edx(hi):eax(lo)=a*b
+      add eax,ecx      //sum lo carry
+      adc edx,0          //sum hi carry
+      mov ecx,edx      //store carry
+      mov [esi+4],eax        //load a
 
-       mov eax,[esi+8]        //load a
-       mul [y]           //edx(hi):eax(lo)=a*b
-       add eax,ecx      //sum lo carry
-       adc edx,0          //sum hi carry
-       mov ecx,edx      //store carry
-       mov [esi+8],eax        //load a
+      mov eax,[esi+8]        //load a
+      mul [y]           //edx(hi):eax(lo)=a*b
+      add eax,ecx      //sum lo carry
+      adc edx,0          //sum hi carry
+      mov ecx,edx      //store carry
+      mov [esi+8],eax        //load a
 
-       mov eax,[esi+12]        //load a
-       mul [y]           //edx(hi):eax(lo)=a*b
-       add eax,ecx      //sum lo carry
-       adc edx,0          //sum hi carry
-       mov [esi+12],eax        //load a
-       mov eax,edx      //store carry
-   }
+      mov eax,[esi+12]        //load a
+      mul [y]           //edx(hi):eax(lo)=a*b
+      add eax,ecx      //sum lo carry
+      adc edx,0          //sum hi carry
+      mov [esi+12],eax        //load a
+      mov eax,edx      //store carry
+      }
    }
 
 /*************************************************
@@ -200,39 +203,38 @@ inline word word4_linmul2(word x[4], word y, word carry)
 inline word word4_linmul3(word z[4], const word x[4], word y, word carry)
    {
    __asm
-   {
-       mov edi,[z]
-       mov esi,[x]
+      {
+      mov edi,[z]
+      mov esi,[x]
 
-       mov eax,[esi]        //load a
-       mul [y]           //edx(hi):eax(lo)=a*b
-       add eax,[carry]    //sum lo carry
-       adc edx,0          //sum hi carry
-       mov ecx,edx      //store carry
-       mov [edi],eax        //load a
+      mov eax,[esi]        //load a
+      mul [y]           //edx(hi):eax(lo)=a*b
+      add eax,[carry]    //sum lo carry
+      adc edx,0          //sum hi carry
+      mov ecx,edx      //store carry
+      mov [edi],eax        //load a
 
-       mov eax,[esi+4]        //load a
-       mul [y]           //edx(hi):eax(lo)=a*b
-       add eax,ecx      //sum lo carry
-       adc edx,0          //sum hi carry
-       mov ecx,edx      //store carry
-       mov [edi+4],eax        //load a
+      mov eax,[esi+4]        //load a
+      mul [y]           //edx(hi):eax(lo)=a*b
+      add eax,ecx      //sum lo carry
+      adc edx,0          //sum hi carry
+      mov ecx,edx      //store carry
+      mov [edi+4],eax        //load a
 
-       mov eax,[esi+8]        //load a
-       mul [y]           //edx(hi):eax(lo)=a*b
-       add eax,ecx      //sum lo carry
-       adc edx,0          //sum hi carry
-       mov ecx,edx      //store carry
-       mov [edi+8],eax        //load a
+      mov eax,[esi+8]        //load a
+      mul [y]           //edx(hi):eax(lo)=a*b
+      add eax,ecx      //sum lo carry
+      adc edx,0          //sum hi carry
+      mov ecx,edx      //store carry
+      mov [edi+8],eax        //load a
 
-       mov eax,[esi+12]        //load a
-       mul [y]           //edx(hi):eax(lo)=a*b
-       add eax,ecx      //sum lo carry
-       adc edx,0          //sum hi carry
-       mov [edi+12],eax        //load a
-       mov eax,edx      //store carry
-
-   }
+      mov eax,[esi+12]        //load a
+      mul [y]           //edx(hi):eax(lo)=a*b
+      add eax,ecx      //sum lo carry
+      adc edx,0          //sum hi carry
+      mov [edi+12],eax        //load a
+      mov eax,edx      //store carry
+      }
    }
 
 /*************************************************
