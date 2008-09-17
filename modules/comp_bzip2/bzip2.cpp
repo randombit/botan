@@ -173,10 +173,13 @@ Bzip_Decompression::Bzip_Decompression(bool s) :
 /*************************************************
 * Decompress Input with Bzip                     *
 *************************************************/
-void Bzip_Decompression::write(const byte input[], u32bit length)
+void Bzip_Decompression::write(const byte input_arr[], u32bit length)
    {
    if(length) no_writes = false;
-   bz->stream.next_in = reinterpret_cast<char*>(const_cast<byte*>(input));
+
+   char* input = reinterpret_cast<char*>(const_cast<byte*>(input_arr));
+
+   bz->stream.next_in = input;
    bz->stream.avail_in = length;
 
    while(bz->stream.avail_in != 0)
@@ -185,6 +188,7 @@ void Bzip_Decompression::write(const byte input[], u32bit length)
       bz->stream.avail_out = buffer.size();
 
       int rc = BZ2_bzDecompress(&(bz->stream));
+
       if(rc != BZ_OK && rc != BZ_STREAM_END)
          {
          clear();
@@ -196,12 +200,14 @@ void Bzip_Decompression::write(const byte input[], u32bit length)
             throw Exception("Bzip_Decompression: Memory allocation error");
          throw Exception("Bzip_Decompression: Unknown decompress error");
          }
+
       send(buffer, buffer.size() - bz->stream.avail_out);
+
       if(rc == BZ_STREAM_END)
          {
          u32bit read_from_block = length - bz->stream.avail_in;
          start_msg();
-         bz->stream.next_in = reinterpret_cast<char*>(const_cast<byte*>(input)) + read_from_block;
+         bz->stream.next_in = input + read_from_block;
          bz->stream.avail_in = length - read_from_block;
          input += read_from_block;
          length -= read_from_block;
@@ -216,8 +222,10 @@ void Bzip_Decompression::start_msg()
    {
    clear();
    bz = new Bzip_Stream;
+
    if(BZ2_bzDecompressInit(&(bz->stream), 0, small_mem) != BZ_OK)
       throw Exception("Bzip_Decompression: Memory allocation error");
+
    no_writes = true;
    }
 
@@ -236,13 +244,16 @@ void Bzip_Decompression::end_msg()
       bz->stream.next_out = reinterpret_cast<char*>(buffer.begin());
       bz->stream.avail_out = buffer.size();
       rc = BZ2_bzDecompress(&(bz->stream));
+
       if(rc != BZ_OK && rc != BZ_STREAM_END)
          {
          clear();
          throw Exception("Bzip_Decompression: Error finalizing decompression");
          }
+
       send(buffer, buffer.size() - bz->stream.avail_out);
       }
+
    clear();
    }
 
