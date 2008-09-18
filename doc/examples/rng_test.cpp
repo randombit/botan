@@ -59,10 +59,12 @@ class Fixed_Output_RNG : public RandomNumberGenerator
 
       void clear() throw() {}
 
-      void add_randomness(const byte in[], u32bit len) throw()
+      void add_entropy(const byte in[], u32bit len)
          {
          buf.insert(buf.end(), in, in + len);
          }
+
+      void add_entropy_source(EntropySource* es) { delete es; }
 
       Fixed_Output_RNG() {}
    private:
