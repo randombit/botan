@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 
 #include <botan/botan.h>
 #include <botan/look_pk.h>
