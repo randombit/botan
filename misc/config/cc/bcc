@@ -12,7 +12,7 @@ lib_opt_flags "-O2"
 check_opt_flags "-O2"
 debug_flags ""
 no_debug_flags ""
-lang_flags "-tWR -tWM -tWC
+lang_flags "-tWR -tWM -tWC"
 warning_flags "-w"
 
 dll_import_flags ""
