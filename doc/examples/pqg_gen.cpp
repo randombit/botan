@@ -3,19 +3,25 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 
 #include <botan/botan.h>
 #include <botan/look_pk.h>
 #include <botan/dsa.h>
 #include <botan/numthry.h>
+#include <botan/dl_group.h>
 using namespace Botan;
 
-bool check(std::map<std::string, std::string>);
+bool check(RandomNumberGenerator& rng,
+           std::map<std::string, std::string>);
 
 int main()
    {
    try {
       LibraryInitializer init("use_engines");
+
+      std::auto_ptr<RandomNumberGenerator> rng(
+         RandomNumberGenerator::make_rng());
 
       std::ifstream in("PQGGen.rsp");
       if(!in)
@@ -45,7 +51,7 @@ int main()
 
          if(name == "H")
             {
-            bool result = check(inputs);
+            bool result = check(*rng, inputs);
             std::cout << "." << std::flush;
             if(result == false)
                {
@@ -71,7 +77,8 @@ int main()
    return 0;
    }
 
-bool check(std::map<std::string, std::string> inputs)
+bool check(RandomNumberGenerator& rng,
+           std::map<std::string, std::string> inputs)
    {
    BigInt p("0x"+inputs["P"]),
           q("0x"+inputs["Q"]),
@@ -80,7 +87,7 @@ bool check(std::map<std::string, std::string> inputs)
 
    if(h < 1 || h >= p-1) return false;
 
-   u32bit c = to_u32bit(inputs["c"]);
+   //u32bit c = to_u32bit(inputs["c"]);
 
    Pipe pipe(new Hex_Decoder);
    pipe.process_msg(inputs["Seed"]);
@@ -88,8 +95,10 @@ bool check(std::map<std::string, std::string> inputs)
 
    BigInt our_p, our_q;
 
-   bool found = generate_dsa_primes(our_p, our_q, seed, seed.size(),
-                                    p.bits(), 0);
+   u32bit qbits = (p.bits() <= 1024) ? 160 : 256;
+
+   bool found = DL_Group::generate_dsa_primes(rng, our_p, our_q,
+                                              p.bits(), qbits, seed);
 
    if(!found) /* bad seed */
       return false;
