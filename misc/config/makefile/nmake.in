@@ -73,6 +73,11 @@ all: $(LIBRARIES)
 ##################################################
 # Link Commands                                  #
 ##################################################
+
+# Link for Borland?
+#ilink32 -L$(BCB)\lib -w -c -x -Gn -ap -Tpe c0x32.obj \
+#    $(CHECKOBJS),check.exe,,$(LINK_TO) $(STATIC_LIB)
+
 $(CHECK): $(LIBRARIES) $(CHECKOBJS)
 	link /OUT:$@.exe $(CHECKOBJS) $(STATIC_LIB) $(LINK_TO)
 
