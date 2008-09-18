@@ -21,8 +21,11 @@ athlon
 pentium4
 amd64
 
-ppc   # PPC timebase register
-ppc64 # PPC timebase register
-alpha # rpcc
+ppc     # PPC timebase register
+ppc64   # PPC timebase register
+alpha   # rpcc
 sparc64 # %tick register
+ia64    # ar.itc
+s390x
+hppa
 </arch>
