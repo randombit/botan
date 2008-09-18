@@ -429,7 +429,8 @@ sub autoload_modules {
            !in_array($arch, \@arch_list) &&
            !in_array($submodel, \@arch_list)) {
             autoconfig("$mod ($realname): skipping, " .
-                       "not compatible with " . realname($arch));
+                       "not compatible with " . realname($arch) .
+                       "/" . $submodel);
             next;
         }
 
