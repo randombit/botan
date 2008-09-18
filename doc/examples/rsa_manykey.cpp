@@ -13,10 +13,9 @@ Generate a whole sequence of keys (for benchmarking)
 #include <botan/parsing.h>
 using namespace Botan;
 
-int main(int argc, char* argv[])
+int main()
    {
-   std::auto_ptr<RandomNumberGenerator> rng(
-      RandomNumberGenerator::make_rng());
+   std::auto_ptr<RandomNumberGenerator> rng(RandomNumberGenerator::make_rng());
 
    for(u32bit j = 512; j <= 8192; j += 256)
       {
