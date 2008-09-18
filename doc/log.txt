@@ -1,5 +1,5 @@
 
-* 1.7.12, 2008-09-??
+* 1.7.12, 2008-09-18
  - Add x86 assembly for Visual Studio C++, by Luca Piccarreta
  - Add a Perl XS module, by Vaclav Ovsik
  - Add SWIG-based wrapper for Botan
