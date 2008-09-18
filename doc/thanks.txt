@@ -22,6 +22,8 @@ drivers, enabling the creation of Botan's AEP engine module.
 
 In addition, the following people have unknowingly contributed help:
 
+  Dean Gaudet <dean@arctic.org> wrote the SSE2 implementation of SHA-1
+
   The implementation of DES is based off a public domain implementation by Phil
   Karn from 1994 (he, in turn, credits Richard Outerbridge and Jim Gillogly).
 
