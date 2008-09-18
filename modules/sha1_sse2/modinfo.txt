@@ -1,0 +1,31 @@
+realname "SSE2 implementation of SHA-1"
+
+load_on request
+
+<replace>
+sha160.cpp
+sha160.h
+</replace>
+
+<add>
+sha1core.cpp
+</add>
+
+<arch>
+pentium4
+amd64
+</arch>
+
+<cc>
+gcc
+icc
+</cc>
+
+# ELF systems
+<os>
+linux
+freebsd
+netbsd
+openbsd
+solaris
+</os>
