@@ -20,12 +20,3 @@ amd64
 gcc
 icc
 </cc>
-
-# ELF systems
-<os>
-linux
-freebsd
-netbsd
-openbsd
-solaris
-</os>
