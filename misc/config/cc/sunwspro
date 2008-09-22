@@ -43,4 +43,5 @@ sparc64    -> "-xchip=SUBMODEL" sparc64-
 
 <mach_abi_linking>
 sparc64    -> "-xarch=v9"
+amd64      -> "-m64"
 </mach_abi_linking>
