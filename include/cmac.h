@@ -19,6 +19,10 @@ class BOTAN_DLL CMAC : public MessageAuthenticationCode
       void clear() throw();
       std::string name() const;
       MessageAuthenticationCode* clone() const;
+
+      static SecureVector<byte> poly_double(const MemoryRegion<byte>& in,
+                                            byte polynomial);
+
       CMAC(const std::string&);
       ~CMAC() { delete e; }
    private:

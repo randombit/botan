@@ -9,12 +9,11 @@
 
 namespace Botan {
 
-namespace {
-
 /*************************************************
 * Perform CMAC's multiplication in GF(2^n)       *
 *************************************************/
-SecureVector<byte> poly_double(const MemoryRegion<byte>& in, byte polynomial)
+SecureVector<byte> CMAC::poly_double(const MemoryRegion<byte>& in,
+                                     byte polynomial)
    {
    const bool do_xor = (in[0] & 0x80) ? true : false;
 
@@ -33,8 +32,6 @@ SecureVector<byte> poly_double(const MemoryRegion<byte>& in, byte polynomial)
 
    return out;
    }
-
-}
 
 /*************************************************
 * Update an CMAC Calculation                     *
@@ -66,16 +63,18 @@ void CMAC::add_data(const byte input[], u32bit length)
 *************************************************/
 void CMAC::final_result(byte mac[])
    {
+   xor_buf(state, buffer, position);
+
    if(position == OUTPUT_LENGTH)
-      xor_buf(buffer, B, OUTPUT_LENGTH);
+      {
+      xor_buf(state, B, OUTPUT_LENGTH);
+      }
    else
       {
-      buffer[position] = 0x80;
-      for(u32bit j = position+1; j != OUTPUT_LENGTH; ++j)
-         buffer[j] = 0;
-      xor_buf(buffer, P, OUTPUT_LENGTH);
+      state[position] ^= 0x80;
+      xor_buf(state, P, OUTPUT_LENGTH);
       }
-   xor_buf(state, buffer, OUTPUT_LENGTH);
+
    e->encrypt(state);
 
    for(u32bit j = 0; j != OUTPUT_LENGTH; ++j)
