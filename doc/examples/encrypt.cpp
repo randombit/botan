@@ -28,8 +28,6 @@ This file is in the public domain
 
 #if defined(BOTAN_EXT_COMPRESSOR_ZLIB)
   #include <botan/zlib.h>
-#else
-  #error "You didn't compile the zlib module into Botan"
 #endif
 
 using namespace Botan;
@@ -141,7 +139,10 @@ int main(int argc, char* argv[])
                    new Chain(new MAC_Filter("HMAC(SHA-1)", mac_key),
                              new Base64_Encoder
                       ),
-                   new Chain(new Zlib_Compression,
+                   new Chain(
+#ifdef BOTAN_EXT_COMPRESSOR_ZLIB
+                             new Zlib_Compression,
+#endif
                              get_cipher(algo + "/CBC", bc_key, iv, ENCRYPTION),
                              new Base64_Encoder(true)
                       )
