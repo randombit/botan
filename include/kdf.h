@@ -16,11 +16,11 @@ namespace Botan {
 class BOTAN_DLL KDF1 : public KDF
    {
    public:
-      KDF1(const std::string&);
-   private:
       SecureVector<byte> derive(u32bit, const byte[], u32bit,
                                 const byte[], u32bit) const;
 
+      KDF1(const std::string&);
+   private:
       const std::string hash_name;
    };
 
@@ -30,11 +30,11 @@ class BOTAN_DLL KDF1 : public KDF
 class BOTAN_DLL KDF2 : public KDF
    {
    public:
+      SecureVector<byte> derive(u32bit, const byte[], u32bit,
+                                const byte[], u32bit) const;
 
       KDF2(const std::string&);
    private:
-      SecureVector<byte> derive(u32bit, const byte[], u32bit,
-                                const byte[], u32bit) const;
       const std::string hash_name;
    };
 
@@ -44,12 +44,36 @@ class BOTAN_DLL KDF2 : public KDF
 class BOTAN_DLL X942_PRF : public KDF
    {
    public:
-      X942_PRF(const std::string&);
-   private:
       SecureVector<byte> derive(u32bit, const byte[], u32bit,
                                 const byte[], u32bit) const;
 
+      X942_PRF(const std::string&);
+   private:
       std::string key_wrap_oid;
+   };
+
+/*************************************************
+* SSL3 PRF                                       *
+*************************************************/
+class BOTAN_DLL SSL3_PRF : public KDF
+   {
+   public:
+      SecureVector<byte> derive(u32bit, const byte[], u32bit,
+                                const byte[], u32bit) const;
+   };
+
+/*************************************************
+* TLS PRF                                        *
+*************************************************/
+class BOTAN_DLL TLS_PRF : public KDF
+   {
+   public:
+      SecureVector<byte> derive(u32bit, const byte[], u32bit,
+                                const byte[], u32bit) const;
+   private:
+      SecureVector<byte> P_hash(const std::string&, u32bit,
+                                const byte[], u32bit,
+                                const byte[], u32bit) const;
    };
 
 }

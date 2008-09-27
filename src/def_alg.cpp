@@ -57,6 +57,7 @@
 #include <botan/cbc_mac.h>
 #include <botan/cmac.h>
 #include <botan/hmac.h>
+#include <botan/ssl3_mac.h>
 #include <botan/x919_mac.h>
 
 #include <botan/mode_pad.h>
@@ -233,6 +234,7 @@ Default_Engine::find_mac(const std::string& algo_spec) const
    HANDLE_TYPE_ONE_STRING("CBC-MAC", CBC_MAC);
    HANDLE_TYPE_ONE_STRING("CMAC", CMAC);
    HANDLE_TYPE_ONE_STRING("HMAC", HMAC);
+   HANDLE_TYPE_ONE_STRING("SSL3-MAC", SSL3_MAC);
    HANDLE_TYPE_NO_ARGS("X9.19-MAC", ANSI_X919_MAC);
 
    return 0;

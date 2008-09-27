@@ -106,6 +106,16 @@ KDF* get_kdf(const std::string& algo_spec)
       if(name.size() == 2)
          return new X942_PRF(name[1]);
       }
+   if(kdf_name == "TLS-PRF")
+      {
+      if(name.size() == 1)
+         return new TLS_PRF;
+      }
+   else if(kdf_name == "SSL3-PRF")
+      {
+      if(name.size() == 1)
+         return new SSL3_PRF;
+      }
    else
       throw Algorithm_Not_Found(algo_spec);
 
