@@ -21,3 +21,6 @@ clean:
 
 %: %.cpp
 	$(CXX) $(FLAGS) $? $(LIBS) -o $@
+
+eax_test: eax_test.cpp
+	$(CXX) $(FLAGS) $? $(LIBS) -lboost_regex -o $@

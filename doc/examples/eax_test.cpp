@@ -168,8 +168,6 @@ void run_tests(std::istream& in)
    std::string algo;
    std::string key;
 
-   boost::regex vec_regex("^([ 0-9]{3}): (.*), (.*)$");
-
    while(in.good())
       {
       std::string line;
@@ -187,6 +185,8 @@ void run_tests(std::istream& in)
          }
       else if(algo != "")
          {
+         boost::regex vec_regex("^([ 0-9]{3}): (.*), (.*)$");
+
          boost::smatch what;
 
          if(boost::regex_match(line, what, vec_regex, boost::match_extra))
