@@ -1,4 +1,10 @@
 
+* 1.7.13, ????-??-??
+ - Allow all examples to compile even if compression not enabled
+ - Make CMAC's polynomial doubling operation a public class method
+ - Use the -m64 flag when compiling with Sun Forte on x86-64
+ - Clean up and slightly optimize CMAC::final_result
+
 * 1.7.12, 2008-09-18
  - Add x86 assembly for Visual Studio C++, by Luca Piccarreta
  - Add a Perl XS module, by Vaclav Ovsik
