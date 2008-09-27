@@ -1,4 +1,4 @@
-Botan 1.7.13 prerelease
+Botan 1.7.13 2008-09-27
 http://botan.randombit.net/
 
 Please note that this is an experimental / development version of
