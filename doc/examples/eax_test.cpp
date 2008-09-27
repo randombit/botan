@@ -120,9 +120,6 @@ std::pair<std::string, int> translate_algo(const std::string& in)
    if(in == "blowfish (8 byte key)")
       return std::make_pair("Blowfish", 8);
 
-   if(in == "xtea (16 byte key)xxx")
-      return std::make_pair("XTEA", 16);
-
    if(in == "rc2 (8 byte key)")
       return std::make_pair("RC2", 8);
 
@@ -144,11 +141,27 @@ std::pair<std::string, int> translate_algo(const std::string& in)
    if(in == "3des (24 byte key)")
       return std::make_pair("TripleDES", 24);
 
-   if(in == "noekeon (16 byte key)xxx")
+   // These 3 are disabled due to differences in base algorithm.
+
+#if 0
+   // XTEA: LTC uses little endian, Botan (and Crypto++) use big-endian
+   // I swapped to LE in XTEA and the vectors did match
+   if(in == "xtea (16 byte key)")
+      return std::make_pair("XTEA", 16);
+
+   // Skipjack: LTC uses big-endian, Botan (and Crypto++) use
+   // little-endian I am not sure if that was the full difference
+   // though, was unable to replicate LTC's EAX vectors with Skipjack
+   if(in == "skipjack (10 byte key)")
+      return std::make_pair("Skipjack", 10);
+
+   // Noekeon: unknown cause, though LTC's lone test vector does not
+   // match Botan
+
+   if(in == "noekeon (16 byte key)")
       return std::make_pair("Noekeon", 16);
 
-   if(in == "skipjack (10 byte key)xxx")
-      return std::make_pair("Skipjack", 10);
+#endif
 
    return std::make_pair("", 0);
    }
