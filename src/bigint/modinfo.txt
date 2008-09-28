@@ -15,6 +15,7 @@ bigint.h
 blinding.cpp
 blinding.h
 def_powm.h
+def_powm.cpp
 divide.cpp
 dsa_gen.cpp
 jacobi.cpp
