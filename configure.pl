@@ -1805,7 +1805,9 @@ sub guess_cpu_from_this
 
     $cpu = 'athlon' if($cpuinfo =~ /athlon/);
     $cpu = 'pentium4' if($cpuinfo =~ /pentium 4/);
+    $cpu = 'pentium4' if($cpuinfo =~ /pentium 4/);
     $cpu = 'pentium4' if($cpuinfo =~ /pentium\(r\) 4/);
+    $cpu = 'pentium-m' if($cpuinfo =~ /pentium\(r\) m/);
     $cpu = 'pentium3' if($cpuinfo =~ /pentium iii/);
     $cpu = 'pentium2' if($cpuinfo =~ /pentium ii/);
     $cpu = 'pentium3' if($cpuinfo =~ /pentium 3/);
@@ -1912,7 +1914,7 @@ sub guess_cpu
 {
     # If we have /proc/cpuinfo, try to get nice specific information about
     # what kind of CPU we're running on.
-    my $cpuinfo = '/proc/cpuinfo';
+    my $cpuinfo = '/home/lloyd/cpuinfo';
 
     if(-e $cpuinfo and -r $cpuinfo)
     {
