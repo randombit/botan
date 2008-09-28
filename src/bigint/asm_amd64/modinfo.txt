@@ -4,10 +4,6 @@ mp_bits 64
 
 load_on request
 
-<replace>
-sha160.cpp
-</replace>
-
 <ignore>
 #mp_mulop.cpp
 #mp_monty.cpp
@@ -17,7 +13,6 @@ sha160.cpp
 asm_macr.h
 #mp_mulop_amd64.S
 #mp_monty.S
-sha1_asm.S
 </add>
 
 <arch>
