@@ -1914,7 +1914,7 @@ sub guess_cpu
 {
     # If we have /proc/cpuinfo, try to get nice specific information about
     # what kind of CPU we're running on.
-    my $cpuinfo = '/home/lloyd/cpuinfo';
+    my $cpuinfo = '/proc/cpuinfo';
 
     if(-e $cpuinfo and -r $cpuinfo)
     {
