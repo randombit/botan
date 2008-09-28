@@ -530,7 +530,9 @@ sub get_options {
 
         foreach my $mod (split(/,/, $mods)) {
             # -1 means disabled by user, do not load
-            $$config{'modules'}{$mod} = 1 unless($$config{'modules'}{$mod} == -1);
+            $$config{'modules'}{$mod} = 1 unless(
+                defined($$config{'modules'}{$mod}) &&
+                $$config{'modules'}{$mod} == -1);
         }
     }
 
