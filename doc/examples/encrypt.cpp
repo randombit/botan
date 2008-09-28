@@ -26,7 +26,7 @@ This file is in the public domain
 
 #include <botan/botan.h>
 
-#if defined(BOTAN_EXT_COMPRESSOR_ZLIB)
+#if defined(BOTAN_HAS_COMPRESSOR_ZLIB)
   #include <botan/zlib.h>
 #endif
 
@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
                              new Base64_Encoder
                       ),
                    new Chain(
-#ifdef BOTAN_EXT_COMPRESSOR_ZLIB
+#ifdef BOTAN_HAS_COMPRESSOR_ZLIB
                              new Zlib_Compression,
 #endif
                              get_cipher(algo + "/CBC", bc_key, iv, ENCRYPTION),

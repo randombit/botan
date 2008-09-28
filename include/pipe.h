@@ -95,6 +95,6 @@ BOTAN_DLL std::istream& operator>>(std::istream&, Pipe&);
 
 #endif
 
-#if defined(BOTAN_EXT_PIPE_UNIXFD_IO)
+#if defined(BOTAN_HAS_PIPE_UNIXFD_IO)
   #include <botan/fd_unix.h>
 #endif

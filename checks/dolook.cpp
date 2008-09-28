@@ -4,15 +4,15 @@
 #include <botan/lookup.h>
 #include <botan/filters.h>
 
-#ifdef BOTAN_EXT_COMPRESSOR_BZIP2
+#ifdef BOTAN_HAS_COMPRESSOR_BZIP2
 #include <botan/bzip2.h>
 #endif
 
-#ifdef BOTAN_EXT_COMPRESSOR_GZIP
+#ifdef BOTAN_HAS_COMPRESSOR_GZIP
 #include <botan/gzip.h>
 #endif
 
-#ifdef BOTAN_EXT_COMPRESSOR_ZLIB
+#ifdef BOTAN_HAS_COMPRESSOR_ZLIB
 #include <botan/zlib.h>
 #endif
 
@@ -104,21 +104,21 @@ Filter* lookup_encoder(const std::string& algname)
    if(algname == "Base64_Decode")
       return new Base64_Decoder;
 
-#ifdef BOTAN_EXT_COMPRESSOR_BZIP2
+#ifdef BOTAN_HAS_COMPRESSOR_BZIP2
    if(algname == "Bzip_Compression")
       return new Bzip_Compression(9);
    if(algname == "Bzip_Decompression")
       return new Bzip_Decompression;
 #endif
 
-#ifdef BOTAN_EXT_COMPRESSOR_GZIP
+#ifdef BOTAN_HAS_COMPRESSOR_GZIP
    if(algname == "Gzip_Compression")
       return new Gzip_Compression(9);
    if(algname == "Gzip_Decompression")
       return new Gzip_Decompression;
 #endif
 
-#ifdef BOTAN_EXT_COMPRESSOR_ZLIB
+#ifdef BOTAN_HAS_COMPRESSOR_ZLIB
    if(algname == "Zlib_Compression")
       return new Zlib_Compression(9);
    if(algname == "Zlib_Decompression")

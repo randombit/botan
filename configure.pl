@@ -275,6 +275,8 @@ To change what modules to use:
   --modules=
        [$modules]
 
+  --disable-modules=module1[,module2[...]]
+
 To add a set of modules:
   --module-set=[$sets]
 
@@ -420,8 +422,17 @@ sub autoload_modules {
         my $realname = $modinfo{'realname'};
 
         if(defined($$config{'modules'}{$mod})) {
-            autoconfig("$mod ($realname): loading by user request");
-            next;
+
+            my $n = $$config{'modules'}{$mod};
+
+            if($n < 0) {
+                autoconfig("$mod ($realname): disabled by user request");
+                next;
+            }
+            else {
+                autoconfig("$mod ($realname): loading by user request");
+                next;
+            }
         }
 
         my @arch_list = @{ $modinfo{'arch'} };
@@ -518,7 +529,17 @@ sub get_options {
         my ($config,$mods) = @_;
 
         foreach my $mod (split(/,/, $mods)) {
-            $$config{'modules'}{$mod} = 1;
+            # -1 means disabled by user, do not load
+            $$config{'modules'}{$mod} = 1 unless($$config{'modules'}{$mod} == -1);
+        }
+    }
+
+    sub disable_modules {
+        my ($config,$mods) = @_;
+
+        foreach my $mod (split(/,/, $mods)) {
+            # -1 means disabled by user, do not load
+            $$config{'modules'}{$mod} = -1;
         }
     }
 
@@ -526,14 +547,14 @@ sub get_options {
         my ($config,$sets) = @_;
 
         foreach my $set (split(/,/, $sets)) {
-            for my $name (sort keys %MODULES) {
-                my %info = %{$MODULES{$name}};
+            for my $mod (sort keys %MODULES) {
+                my %info = %{$MODULES{$mod}};
 
                 next unless (defined($info{'modset'}));
 
                 for my $s (split(/,/, $info{'modset'})) {
                     if($s eq $set) {
-                        $$config{'modules'}{$name} = 1;
+                        $$config{'modules'}{$mod} = 1 unless($$config{'modules'}{$mod} == -1);
                     }
                 }
             }
@@ -568,6 +589,8 @@ sub get_options {
                'modules=s' => sub { add_modules($config, $_[1]); },
                'module-set=s' => sub { add_module_sets($config, $_[1]); },
                'module-sets=s' => sub { add_module_sets($config, $_[1]); },
+
+               'disable-modules=s' => sub { disable_modules($config, $_[1]); },
 
                'trace' => sub { $TRACING = 1; },
                'debug' => sub { &$save_option($_[0], 1); },
@@ -961,6 +984,9 @@ sub load_modules {
     my @mod_names;
 
     foreach my $mod (sort keys %{$$config{'modules'}}) {
+
+        next unless($$config{'modules'}{$mod} > 0);
+
         load_module($config, $mod);
 
         foreach my $req_mod (@{$MODULES{$mod}{'requires'}}) {
@@ -1044,6 +1070,8 @@ sub load_modules {
 
         my @defarray;
         foreach my $mod (sort keys %{$$config{'modules'}}) {
+            next unless $$config{'modules'}{$mod} > 0;
+
             my $defs = $MODULES{$mod}{'define'};
             next unless $defs;
 
@@ -1054,7 +1082,7 @@ sub load_modules {
 
         foreach (sort @defarray) {
             die unless(defined $_ and $_ ne '');
-            $defines .= "#define BOTAN_EXT_$_\n";
+            $defines .= "#define BOTAN_HAS_$_\n";
         }
         chomp($defines);
         return $defines;

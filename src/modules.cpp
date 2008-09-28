@@ -9,23 +9,23 @@
 #include <botan/timers.h>
 #include <botan/parsing.h>
 
-#if defined(BOTAN_EXT_MUTEX_PTHREAD)
+#if defined(BOTAN_HAS_MUTEX_PTHREAD)
   #include <botan/mux_pthr.h>
-#elif defined(BOTAN_EXT_MUTEX_WIN32)
+#elif defined(BOTAN_HAS_MUTEX_WIN32)
   #include <botan/mux_win32.h>
-#elif defined(BOTAN_EXT_MUTEX_QT)
+#elif defined(BOTAN_HAS_MUTEX_QT)
   #include <botan/mux_qt.h>
 #endif
 
-#if defined(BOTAN_EXT_ALLOC_MMAP)
+#if defined(BOTAN_HAS_ALLOC_MMAP)
   #include <botan/mmap_mem.h>
 #endif
 
-#if defined(BOTAN_EXT_ENGINE_GNU_MP)
+#if defined(BOTAN_HAS_ENGINE_GNU_MP)
   #include <botan/eng_gmp.h>
 #endif
 
-#if defined(BOTAN_EXT_ENGINE_OPENSSL)
+#if defined(BOTAN_HAS_ENGINE_OPENSSL)
   #include <botan/eng_ossl.h>
 #endif
 
@@ -36,11 +36,11 @@ namespace Botan {
 *************************************************/
 Mutex_Factory* Builtin_Modules::mutex_factory() const
    {
-#if defined(BOTAN_EXT_MUTEX_PTHREAD)
+#if defined(BOTAN_HAS_MUTEX_PTHREAD)
    return new Pthread_Mutex_Factory;
-#elif defined(BOTAN_EXT_MUTEX_WIN32)
+#elif defined(BOTAN_HAS_MUTEX_WIN32)
    return new Win32_Mutex_Factory;
-#elif defined(BOTAN_EXT_MUTEX_QT)
+#elif defined(BOTAN_HAS_MUTEX_QT)
    return new Qt_Mutex_Factory;
 #else
    return 0;
@@ -54,7 +54,7 @@ std::vector<Allocator*> Builtin_Modules::allocators() const
    {
    std::vector<Allocator*> allocators;
 
-#if defined(BOTAN_EXT_ALLOC_MMAP)
+#if defined(BOTAN_HAS_ALLOC_MMAP)
    allocators.push_back(new MemoryMapping_Allocator);
 #endif
 
@@ -71,7 +71,7 @@ std::string Builtin_Modules::default_allocator() const
    {
    if(should_lock)
       {
-#if defined(BOTAN_EXT_ALLOC_MMAP)
+#if defined(BOTAN_HAS_ALLOC_MMAP)
       return "mmap";
 #else
       return "locking";
@@ -90,11 +90,11 @@ std::vector<Engine*> Builtin_Modules::engines() const
 
    if(use_engines)
       {
-#if defined(BOTAN_EXT_ENGINE_GNU_MP)
+#if defined(BOTAN_HAS_ENGINE_GNU_MP)
       engines.push_back(new GMP_Engine);
 #endif
 
-#if defined(BOTAN_EXT_ENGINE_OPENSSL)
+#if defined(BOTAN_HAS_ENGINE_OPENSSL)
       engines.push_back(new OpenSSL_Engine);
 #endif
       }

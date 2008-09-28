@@ -37,7 +37,10 @@
 #include <botan/turing.h>
 #include <botan/wid_wake.h>
 
-#include <botan/adler32.h>
+#ifdef BOTAN_HAS_ADLER32
+  #include <botan/adler32.h>
+#endif
+
 #include <botan/crc24.h>
 #include <botan/crc32.h>
 #include <botan/fork256.h>
@@ -193,7 +196,10 @@ Default_Engine::find_hash(const std::string& algo_spec) const
       return 0;
    const std::string algo_name = global_state().deref_alias(name[0]);
 
+#ifdef BOTAN_HAS_ADLER32
    HANDLE_TYPE_NO_ARGS("Adler32", Adler32);
+#endif
+
    HANDLE_TYPE_NO_ARGS("CRC24", CRC24);
    HANDLE_TYPE_NO_ARGS("CRC32", CRC32);
    HANDLE_TYPE_NO_ARGS("FORK-256", FORK_256);

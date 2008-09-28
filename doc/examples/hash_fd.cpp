@@ -18,7 +18,7 @@ I guess any POSIX.1 compliant OS (in theory).
 #include <iostream>
 #include <botan/botan.h>
 
-#if !defined(BOTAN_EXT_PIPE_UNIXFD_IO)
+#if !defined(BOTAN_HAS_PIPE_UNIXFD_IO)
   #error "You didn't compile the pipe_unixfd module into Botan"
 #endif
 

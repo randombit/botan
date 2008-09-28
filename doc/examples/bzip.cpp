@@ -12,7 +12,7 @@ This file is in the public domain
 #include <iostream>
 #include <botan/botan.h>
 
-#if defined(BOTAN_EXT_COMPRESSOR_BZIP2)
+#if defined(BOTAN_HAS_COMPRESSOR_BZIP2)
   #include <botan/bzip2.h>
 #endif
 
@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
    try {
 
       Botan::Filter* bzip = 0;
-#ifdef BOTAN_EXT_COMPRESSOR_BZIP2
+#ifdef BOTAN_HAS_COMPRESSOR_BZIP2
       if(decompress)
          bzip = new Botan::Bzip_Decompression(small);
       else

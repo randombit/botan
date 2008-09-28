@@ -190,8 +190,8 @@ overwritten every time the configure script is run (and does not exist until
 after you run the script for the first time).
 
 Also included in \filename{config.h} are macros which are defined if one or
-more extensions are available. All of them begin with \verb|BOTAN_EXT_|. For
-example, if \verb|BOTAN_EXT_COMPRESSOR_BZIP2| is defined, then an application
+more extensions are available. All of them begin with \verb|BOTAN_HAS_|. For
+example, if \verb|BOTAN_HAS_COMPRESSOR_BZIP2| is defined, then an application
 using Botan can include \filename{<botan/bzip2.h>} and use the Bzip2 filters.
 
 \macro{BOTAN\_MP\_WORD\_BITS}: This macro controls the size of the
