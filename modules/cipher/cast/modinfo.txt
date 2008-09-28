@@ -1,7 +1,6 @@
 realname "CAST"
 
-define CAST_128
-define CAST_256
+define CAST
 
 load_on auto
 

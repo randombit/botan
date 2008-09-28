@@ -40,7 +40,7 @@
    #include <botan/lion.h>
 #endif
 
-#ifdef BOTAN_HAS_LUBYRACK
+#ifdef BOTAN_HAS_LUBY_RACKOFF
    #include <botan/lubyrack.h>
 #endif
 
@@ -148,11 +148,11 @@
    #include <botan/md5.h>
 #endif
 
-#ifdef BOTAN_HAS_RIPEMD128
+#ifdef BOTAN_HAS_RIPEMD_128
    #include <botan/rmd128.h>
 #endif
 
-#ifdef BOTAN_HAS_RIPEMD160
+#ifdef BOTAN_HAS_RIPEMD_160
    #include <botan/rmd160.h>
 #endif
 
@@ -178,8 +178,14 @@
 #include <botan/cbc_mac.h>
 #include <botan/cmac.h>
 #include <botan/hmac.h>
+
+#ifdef BOTAN_HAS_SSL3_MAC
 #include <botan/ssl3_mac.h>
+#endif
+
+#ifdef BOTAN_HAS_ANSI_X919_MAC
 #include <botan/x919_mac.h>
+#endif
 
 #include <botan/mode_pad.h>
 #include <botan/pgp_s2k.h>
@@ -475,8 +481,14 @@ Default_Engine::find_mac(const std::string& algo_spec) const
    HANDLE_TYPE_ONE_STRING("CBC-MAC", CBC_MAC);
    HANDLE_TYPE_ONE_STRING("CMAC", CMAC);
    HANDLE_TYPE_ONE_STRING("HMAC", HMAC);
+
+#ifdef BOTAN_HAS_SSL3_MAC
    HANDLE_TYPE_ONE_STRING("SSL3-MAC", SSL3_MAC);
+#endif
+
+#ifdef BOTAN_HAS_ANSI_X919_MAC
    HANDLE_TYPE_NO_ARGS("X9.19-MAC", ANSI_X919_MAC);
+#endif
 
    return 0;
    }

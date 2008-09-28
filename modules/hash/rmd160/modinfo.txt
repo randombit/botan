@@ -1,6 +1,6 @@
 realname "RIPEMD-160"
 
-define RIPEMD160
+define RIPEMD_160
 
 load_on auto
 

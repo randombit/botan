@@ -1,6 +1,6 @@
 realname "RIPEMD-128"
 
-define RIPEMD128
+define RIPEMD_128
 
 load_on auto
 
