@@ -46,7 +46,6 @@ sub main {
 
     $$config{'base-dir'} = $base_dir;
     $$config{'config-dir'} = File::Spec->catdir($base_dir, 'misc', 'config');
-    $$config{'mods-dir'} = File::Spec->catdir($base_dir, 'modules');
     $$config{'src-dir'} = File::Spec->catdir($base_dir, 'src');
     $$config{'include-dir'} = File::Spec->catdir($base_dir, 'include');
     $$config{'checks-dir'} = File::Spec->catdir($base_dir, 'checks');
@@ -54,7 +53,7 @@ sub main {
 
     $$config{'command-line'} = $0 . ' ' . join(' ', @ARGV);
     $$config{'timestamp'} = gmtime;
-    $$config{'user'} = getlogin || getpwuid($<) || "";
+    $$config{'user'} = getlogin || getpwuid($<) || '';
     $$config{'hostname'} = hostname;
 
     %CPU = read_info_files($config, 'arch', \&get_arch_info);
@@ -869,7 +868,7 @@ sub dir_list {
     my ($dir) = @_;
     opendir(DIR, $dir) or croak("Couldn't read directory '$dir' ($!)");
 
-    my @listing = grep { !/#/ and
+    my @listing = grep { !/#/ and -f File::Spec->catfile($dir, $_) and
                          $_ ne File::Spec->curdir() and
                          $_ ne File::Spec->updir() } readdir DIR;
 
@@ -1009,7 +1008,8 @@ sub load_modules {
         push @mod_names, $mod;
 
     }
-    $$config{'mod-list'} = join("\n", @mod_names);
+
+    $$config{'mod-list'} = join('\n', @mod_names);
 
     my $gen_defines = sub {
         my $defines = '';
@@ -1134,14 +1134,14 @@ sub load_module {
         unless(&$works_on($cc, $module{'cc'}));
 
     trace($modname);
-    trace($module{"moddirs"});
+    trace($module{'moddirs'});
 
     my $handle_files = sub {
         my($lst, $func) = @_;
         return unless defined($lst);
 
         foreach (sort @$lst) {
-            &$func($module{"moddirs"}, $config, $_);
+            &$func($module{'moddirs'}, $config, $_);
         }
     };
 
@@ -1362,8 +1362,6 @@ sub read_info_files {
 sub read_module_files {
     my ($config) = @_;
 
-    my $mod_dir = $$config{'mods-dir'};
-
     my %allinfo;
 
     my @modinfos;
@@ -1376,7 +1374,7 @@ sub read_module_files {
             }
           }
         },
-        $mod_dir);
+        $$config{'src-dir'});
 
     foreach my $modfile (@modinfos) {
         trace("reading $modfile");
