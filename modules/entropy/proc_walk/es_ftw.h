@@ -3,8 +3,8 @@
 * (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_EXT_ENTROPY_SRC_FTW_H__
-#define BOTAN_EXT_ENTROPY_SRC_FTW_H__
+#ifndef BOTAN_ENTROPY_SRC_FTW_H__
+#define BOTAN_ENTROPY_SRC_FTW_H__
 
 #include <botan/buf_es.h>
 

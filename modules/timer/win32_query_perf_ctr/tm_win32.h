@@ -3,8 +3,8 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_EXT_TIMER_WIN32_H__
-#define BOTAN_EXT_TIMER_WIN32_H__
+#ifndef BOTAN_TIMER_WIN32_H__
+#define BOTAN_TIMER_WIN32_H__
 
 #include <botan/timers.h>
 

@@ -3,8 +3,8 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_EXT_OPENSSL_BN_WRAP_H__
-#define BOTAN_EXT_OPENSSL_BN_WRAP_H__
+#ifndef BOTAN_OPENSSL_BN_WRAP_H__
+#define BOTAN_OPENSSL_BN_WRAP_H__
 
 #include <botan/bigint.h>
 #include <openssl/bn.h>

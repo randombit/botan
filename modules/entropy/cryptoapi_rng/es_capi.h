@@ -3,8 +3,8 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_EXT_ENTROPY_SRC_WIN32_CAPI_H__
-#define BOTAN_EXT_ENTROPY_SRC_WIN32_CAPI_H__
+#ifndef BOTAN_ENTROPY_SRC_WIN32_CAPI_H__
+#define BOTAN_ENTROPY_SRC_WIN32_CAPI_H__
 
 #include <botan/rng.h>
 #include <vector>

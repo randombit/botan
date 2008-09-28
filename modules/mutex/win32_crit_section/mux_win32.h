@@ -4,8 +4,8 @@
 *     2006-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_EXT_MUTEX_WIN32_H__
-#define BOTAN_EXT_MUTEX_WIN32_H__
+#ifndef BOTAN_MUTEX_WIN32_H__
+#define BOTAN_MUTEX_WIN32_H__
 
 #include <botan/mutex.h>
 

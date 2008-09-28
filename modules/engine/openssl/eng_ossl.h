@@ -3,8 +3,8 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_EXT_ENGINE_OPENSSL_H__
-#define BOTAN_EXT_ENGINE_OPENSSL_H__
+#ifndef BOTAN_ENGINE_OPENSSL_H__
+#define BOTAN_ENGINE_OPENSSL_H__
 
 #include <botan/engine.h>
 #include <botan/mutex.h>

@@ -3,8 +3,8 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_EXT_GMP_MPZ_WRAP_H__
-#define BOTAN_EXT_GMP_MPZ_WRAP_H__
+#ifndef BOTAN_GMP_MPZ_WRAP_H__
+#define BOTAN_GMP_MPZ_WRAP_H__
 
 #include <botan/bigint.h>
 #include <gmp.h>

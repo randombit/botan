@@ -4,8 +4,8 @@
 *     2004-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_EXT_MUTEX_QT_H__
-#define BOTAN_EXT_MUTEX_QT_H__
+#ifndef BOTAN_MUTEX_QT_H__
+#define BOTAN_MUTEX_QT_H__
 
 #include <botan/mutex.h>
 

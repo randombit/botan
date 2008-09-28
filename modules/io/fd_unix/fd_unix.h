@@ -3,8 +3,8 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_EXT_PIPE_UNIXFD_H__
-#define BOTAN_EXT_PIPE_UNIXFD_H__
+#ifndef BOTAN_PIPE_UNIXFD_H__
+#define BOTAN_PIPE_UNIXFD_H__
 
 #include <botan/pipe.h>
 

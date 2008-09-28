@@ -4,8 +4,8 @@
 *     2001-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_EXT_BZIP2_H__
-#define BOTAN_EXT_BZIP2_H__
+#ifndef BOTAN_BZIP2_H__
+#define BOTAN_BZIP2_H__
 
 #include <botan/filter.h>
 

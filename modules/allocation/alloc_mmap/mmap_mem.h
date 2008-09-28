@@ -3,8 +3,8 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_EXT_MMAP_ALLOCATOR_H__
-#define BOTAN_EXT_MMAP_ALLOCATOR_H__
+#ifndef BOTAN_MMAP_ALLOCATOR_H__
+#define BOTAN_MMAP_ALLOCATOR_H__
 
 #include <botan/mem_pool.h>
 

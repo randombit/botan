@@ -3,8 +3,8 @@
 * (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_EXT_AMD64_ASM_MACROS_H__
-#define BOTAN_EXT_AMD64_ASM_MACROS_H__
+#ifndef BOTAN_AMD64_ASM_MACROS_H__
+#define BOTAN_AMD64_ASM_MACROS_H__
 
 #ifdef __ELF__
 .section .note.GNU-stack,"",%progbits

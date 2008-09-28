@@ -3,8 +3,8 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_EXT_UNIX_CMD_H__
-#define BOTAN_EXT_UNIX_CMD_H__
+#ifndef BOTAN_UNIX_CMD_H__
+#define BOTAN_UNIX_CMD_H__
 
 #include <botan/types.h>
 #include <botan/data_src.h>
