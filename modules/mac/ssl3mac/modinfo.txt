@@ -1,0 +1,10 @@
+realname "SSLv3 MAC"
+
+define SSL3_MAC
+
+load_on auto
+
+<add>
+ssl3_mac.cpp
+ssl3_mac.h
+</add>
