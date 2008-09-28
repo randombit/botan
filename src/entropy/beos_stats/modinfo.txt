@@ -17,3 +17,7 @@ beos
 <libs>
 beos -> root,be
 </libs>
+
+<requires>
+buf_es
+</requires>
