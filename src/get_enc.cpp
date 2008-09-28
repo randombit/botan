@@ -6,7 +6,6 @@
 #include <botan/lookup.h>
 #include <botan/libstate.h>
 #include <botan/parsing.h>
-#include <botan/kdf.h>
 #include <botan/mgf1.h>
 #include <botan/util.h>
 
@@ -36,6 +35,26 @@
 
 #ifdef BOTAN_HAS_EME_PKCS1v15
    #include <botan/eme_pkcs.h>
+#endif
+
+#ifdef BOTAN_HAS_KDF1
+   #include <botan/kdf1.h>
+#endif
+
+#ifdef BOTAN_HAS_KDF2
+   #include <botan/kdf2.h>
+#endif
+
+#ifdef BOTAN_HAS_X942_PRF
+   #include <botan/prf_x942.h>
+#endif
+
+#ifdef BOTAN_HAS_SSL_V3_PRF
+   #include <botan/prf_ssl3.h>
+#endif
+
+#ifdef BOTAN_HAS_TLS_V10_PRF
+   #include <botan/prf_tls.h>
 #endif
 
 namespace Botan {
@@ -132,35 +151,45 @@ KDF* get_kdf(const std::string& algo_spec)
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
    const std::string kdf_name = global_state().deref_alias(name[0]);
 
+#ifdef BOTAN_HAS_KDF1
    if(kdf_name == "KDF1")
       {
       if(name.size() == 2)
          return new KDF1(name[1]);
       }
+#endif
 
+#ifdef BOTAN_HAS_KDF2
    if(kdf_name == "KDF2")
       {
       if(name.size() == 2)
          return new KDF2(name[1]);
       }
+#endif
 
+#ifdef BOTAN_HAS_X942_PRF
    if(kdf_name == "X9.42-PRF")
       {
       if(name.size() == 2)
          return new X942_PRF(name[1]);
       }
+#endif
 
+#ifdef BOTAN_HAS_TLS_V10_PRF
    if(kdf_name == "TLS-PRF")
       {
       if(name.size() == 1)
          return new TLS_PRF;
       }
+#endif
 
+#ifdef BOTAN_HAS_SSL_V3_PRF
    if(kdf_name == "SSL3-PRF")
       {
       if(name.size() == 1)
          return new SSL3_PRF;
       }
+#endif
 
    throw Algorithm_Not_Found(algo_spec);
    }

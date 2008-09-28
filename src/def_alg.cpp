@@ -11,8 +11,6 @@
 #include <botan/hmac.h>
 #include <botan/par_hash.h>
 #include <botan/mode_pad.h>
-#include <botan/pgp_s2k.h>
-#include <botan/pkcs5.h>
 
 #ifdef BOTAN_HAS_AES
    #include <botan/aes.h>
@@ -185,11 +183,23 @@
 #endif
 
 #ifdef BOTAN_HAS_SSL3_MAC
-#include <botan/ssl3_mac.h>
+   #include <botan/ssl3_mac.h>
 #endif
 
 #ifdef BOTAN_HAS_ANSI_X919_MAC
-#include <botan/x919_mac.h>
+   #include <botan/x919_mac.h>
+#endif
+
+#ifdef BOTAN_HAS_PBKDF1
+   #include <botan/pbkdf1.h>
+#endif
+
+#ifdef BOTAN_HAS_PBKDF2
+   #include <botan/pbkdf2.h>
+#endif
+
+#ifdef BOTAN_HAS_PGPS2K
+   #include <botan/pgp_s2k.h>
 #endif
 
 namespace Botan {
@@ -508,9 +518,17 @@ S2K* Default_Engine::find_s2k(const std::string& algo_spec) const
 
    const std::string algo_name = global_state().deref_alias(name[0]);
 
+#ifdef BOTAN_HAS_PBKDF1
    HANDLE_TYPE_ONE_STRING("PBKDF1", PKCS5_PBKDF1);
+#endif
+
+#ifdef BOTAN_HAS_PBKDF2
    HANDLE_TYPE_ONE_STRING("PBKDF2", PKCS5_PBKDF2);
+#endif
+
+#ifdef BOTAN_HAS_PGPS2K
    HANDLE_TYPE_ONE_STRING("OpenPGP-S2K", OpenPGP_S2K);
+#endif
 
    return 0;
    }

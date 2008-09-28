@@ -1,9 +1,9 @@
 /*************************************************
-* SSL3 PRF Source File                           *
+* SSLv3 PRF Source File                          *
 * (C) 2004-2006 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/kdf.h>
+#include <botan/prf_ssl3.h>
 #include <botan/lookup.h>
 #include <memory>
 

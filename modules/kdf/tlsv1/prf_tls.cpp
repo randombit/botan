@@ -3,7 +3,7 @@
 * (C) 2004-2006 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/kdf.h>
+#include <botan/prf_tls.h>
 #include <botan/lookup.h>
 #include <botan/xor_buf.h>
 #include <botan/hmac.h>
