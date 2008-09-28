@@ -1,10 +1,10 @@
 /*************************************************
-* EME Header File                                *
+* EME1 Header File                               *
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_EME_H__
-#define BOTAN_EME_H__
+#ifndef BOTAN_EME1_H__
+#define BOTAN_EME1_H__
 
 #include <botan/pk_util.h>
 
@@ -28,19 +28,6 @@ class BOTAN_DLL EME1 : public EME
       const u32bit HASH_LENGTH;
       SecureVector<byte> Phash;
       MGF* mgf;
-   };
-
-/*************************************************
-* EME_PKCS1v15                                   *
-*************************************************/
-class BOTAN_DLL EME_PKCS1v15 : public EME
-   {
-   public:
-      u32bit maximum_input_size(u32bit) const;
-   private:
-      SecureVector<byte> pad(const byte[], u32bit, u32bit,
-                             RandomNumberGenerator&) const;
-      SecureVector<byte> unpad(const byte[], u32bit, u32bit) const;
    };
 
 }

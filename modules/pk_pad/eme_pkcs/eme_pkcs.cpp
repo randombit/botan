@@ -3,7 +3,7 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/eme.h>
+#include <botan/eme_pkcs.h>
 
 namespace Botan {
 

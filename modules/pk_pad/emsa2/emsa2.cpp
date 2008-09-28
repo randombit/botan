@@ -3,7 +3,7 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/emsa.h>
+#include <botan/emsa2.h>
 #include <botan/hash_id.h>
 #include <botan/lookup.h>
 

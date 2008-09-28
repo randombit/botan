@@ -6,7 +6,6 @@
 #include <botan/lookup.h>
 #include <botan/libstate.h>
 #include <botan/parsing.h>
-#include <botan/eme.h>
 #include <botan/kdf.h>
 #include <botan/mgf1.h>
 #include <botan/util.h>
@@ -29,6 +28,14 @@
 
 #ifdef BOTAN_HAS_EMSA_RAW
    #include <botan/emsa_raw.h>
+#endif
+
+#ifdef BOTAN_HAS_EME1
+   #include <botan/eme1.h>
+#endif
+
+#ifdef BOTAN_HAS_EME_PKCS1v15
+   #include <botan/eme_pkcs.h>
 #endif
 
 namespace Botan {
@@ -96,12 +103,15 @@ EME* get_eme(const std::string& algo_spec)
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
    const std::string eme_name = global_state().deref_alias(name[0]);
 
+#ifdef BOTAN_HAS_EME_PKCS1v15
    if(eme_name == "PKCS1v15")
       {
       if(name.size() == 1)
          return new EME_PKCS1v15;
       }
+#endif
 
+#ifdef BOTAN_HAS_EME1
    if(eme_name == "EME1")
       {
       if(name.size() == 2)
@@ -109,6 +119,7 @@ EME* get_eme(const std::string& algo_spec)
       if(name.size() == 3)
          return new EME1(name[1], name[2]);
       }
+#endif
 
    throw Algorithm_Not_Found(algo_spec);
    }

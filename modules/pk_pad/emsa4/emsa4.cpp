@@ -3,7 +3,7 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/emsa.h>
+#include <botan/emsa4.h>
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
 #include <botan/bit_ops.h>

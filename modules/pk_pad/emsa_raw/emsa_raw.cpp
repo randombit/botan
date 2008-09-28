@@ -3,7 +3,7 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/emsa.h>
+#include <botan/emsa_raw.h>
 
 namespace Botan {
 

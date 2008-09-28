@@ -3,7 +3,7 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/eme.h>
+#include <botan/eme1.h>
 #include <botan/lookup.h>
 #include <memory>
 
