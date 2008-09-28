@@ -42,3 +42,7 @@ reducer.cpp
 reducer.h
 ressol.cpp
 </add>
+
+<requires>
+hex
+</requires>
