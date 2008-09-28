@@ -1,0 +1,10 @@
+realname "Hash Function Identifiers"
+
+define HASH_ID
+
+load_on auto
+
+<add>
+hash_id.cpp
+hash_id.h
+</add>
