@@ -9,8 +9,9 @@
 #include <botan/oids.h>
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
+#include <botan/libstate.h>
 #include <botan/pipe.h>
-#include <botan/config.h>
+#include <memory>
 
 namespace Botan {
 
@@ -23,8 +24,8 @@ std::string choose_algo(const std::string& user_algo,
                         const std::string& default_algo)
    {
    if(user_algo == "")
-      return deref_alias(default_algo);
-   return deref_alias(user_algo);
+      return global_state().deref_alias(default_algo);
+   return global_state().deref_alias(user_algo);
    }
 
 /*************************************************
@@ -127,7 +128,7 @@ void CMS_Encoder::encrypt_ktri(const X509_Certificate& to,
    const std::string pk_algo = pub_key->algo_name();
    std::auto_ptr<PK_Encryptor> enc(get_pk_encryptor(*pub_key, padding));
 
-   SymmetricKey cek = setup_key(cipher);
+   SymmetricKey cek = setup_key(rng, cipher);
 
    DER_Encoder encoder;
    encoder.start_cons(SEQUENCE);
@@ -155,7 +156,7 @@ void CMS_Encoder::encrypt_kari(const X509_Certificate&,
    {
    throw Exception("FIXME: unimplemented");
 #if 0
-   SymmetricKey cek = setup_key(cipher);
+   SymmetricKey cek = setup_key(rng, cipher);
 
    DER_Encoder encoder;
    encoder.start_cons(SEQUENCE);
@@ -184,7 +185,7 @@ void CMS_Encoder::encrypt(const SymmetricKey& kek,
    throw Exception("FIXME: untested");
 
    const std::string cipher = choose_algo(user_cipher, "TripleDES");
-   SymmetricKey cek = setup_key(cipher);
+   SymmetricKey cek = setup_key(rng, cipher);
 
    SecureVector<byte> kek_id; // FIXME: ?
 
@@ -273,7 +274,7 @@ void CMS_Encoder::sign(X509_Store& store, const PKCS8_PrivateKey& key)
 
    std::string padding, hash;
    Signature_Format format;
-   Config::choose_sig_format(key.algo_name(), padding, hash, format);
+   choose_sig_format(key.algo_name(), padding, hash, format);
    const std::string sig_algo = key.algo_name() + "/" + padding;
 
    SecureVector<byte> signed_attr = encode_attr(data, type, hash);

@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/cms_dec.h>
+#include <botan/x509find.h>
 #include <botan/ber_dec.h>
 #include <botan/oids.h>
 #include <botan/lookup.h>
@@ -45,11 +46,10 @@ std::vector<X509_Certificate> get_cert(BER_Decoder& signer_info,
       iands.decode(issuer);
       iands.decode(serial);
 
-      found = X509_Store_Search::by_iands(store, issuer,
-                                          BigInt::encode(serial));
+      found = store.get_certs(IandS_Match(issuer, BigInt::encode(serial)));
       }
    else if(id.type_tag == 0 && id.class_tag == CONSTRUCTED)
-      found = X509_Store_Search::by_SKID(store, id.value);
+      found = store.get_certs(SKID_Match(id.value));
    else
       throw Decoding_Error("CMS: Unknown tag for cert identifier");
 

@@ -53,10 +53,14 @@ class CMS_Encoder
       static SecureVector<byte> make_econtent(const SecureVector<byte>&,
                                               const std::string&);
 
-      static SymmetricKey setup_key(const std::string&);
-      static SecureVector<byte> wrap_key(const std::string&,
+      static SymmetricKey setup_key(RandomNumberGenerator& rng,
+                                    const std::string&);
+
+      static SecureVector<byte> wrap_key(RandomNumberGenerator& rng,
+                                         const std::string&,
                                          const SymmetricKey&,
                                          const SymmetricKey&);
+
       static SecureVector<byte> encode_params(const std::string&,
                                               const SymmetricKey&,
                                               const InitializationVector&);

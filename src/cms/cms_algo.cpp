@@ -17,7 +17,8 @@ namespace {
 /*************************************************
 * Wrap a key as specified in RFC 3217            *
 *************************************************/
-SecureVector<byte> do_rfc3217_wrap(const std::string& cipher,
+SecureVector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
+                                   const std::string& cipher,
                                    const SymmetricKey& kek,
                                    const SecureVector<byte>& input)
    {
@@ -45,7 +46,7 @@ SecureVector<byte> do_rfc3217_wrap(const std::string& cipher,
    Pipe icv(new Hash_Filter("SHA-160", 8));
    icv.process_msg(input);
 
-   InitializationVector iv(8);
+   InitializationVector iv(rng, 8);
    InitializationVector fixed("4ADDA22C79E82105");
 
    Pipe pipe(get_cipher(cipher + "/CBC/NoPadding", kek, iv, ENCRYPTION),
@@ -63,7 +64,8 @@ SecureVector<byte> do_rfc3217_wrap(const std::string& cipher,
 /*************************************************
 * Wrap a CEK with a KEK                          *
 *************************************************/
-SecureVector<byte> CMS_Encoder::wrap_key(const std::string& cipher,
+SecureVector<byte> CMS_Encoder::wrap_key(RandomNumberGenerator& rng,
+                                         const std::string& cipher,
                                          const SymmetricKey& cek,
                                          const SymmetricKey& kek)
    {
@@ -71,7 +73,7 @@ SecureVector<byte> CMS_Encoder::wrap_key(const std::string& cipher,
       {
       SymmetricKey cek_parity = cek;
       cek_parity.set_odd_parity();
-      return do_rfc3217_wrap(cipher, kek, cek_parity.bits_of());
+      return do_rfc3217_wrap(rng, cipher, kek, cek_parity.bits_of());
       }
    else if(cipher == "RC2" || cipher == "CAST-128")
       {
@@ -82,8 +84,8 @@ SecureVector<byte> CMS_Encoder::wrap_key(const std::string& cipher,
       lcekpad.append((byte)cek.length());
       lcekpad.append(cek.bits_of());
       while(lcekpad.size() % 8)
-         lcekpad.append(global_state().random());
-      return do_rfc3217_wrap(cipher, kek, lcekpad);
+         lcekpad.append(rng.next_byte());
+      return do_rfc3217_wrap(rng, cipher, kek, lcekpad);
       }
    else
       throw Invalid_Argument("CMS_Encoder::wrap: Unknown cipher " + cipher);
@@ -121,7 +123,8 @@ SecureVector<byte> CMS_Encoder::encode_params(const std::string& cipher,
 /*************************************************
 * Generate a CEK or KEK for the cipher           *
 *************************************************/
-SymmetricKey CMS_Encoder::setup_key(const std::string& cipher)
+SymmetricKey CMS_Encoder::setup_key(RandomNumberGenerator& rng,
+                                    const std::string& cipher)
    {
    u32bit keysize = 0;
 
@@ -132,7 +135,7 @@ SymmetricKey CMS_Encoder::setup_key(const std::string& cipher)
    if(keysize == 0)
       throw Invalid_Argument("CMS: Cannot encrypt with cipher " + cipher);
 
-   SymmetricKey key(keysize);
+   SymmetricKey key(rng, keysize);
    if(cipher == "DES" || cipher == "TripleDES")
       key.set_odd_parity();
    return key;
