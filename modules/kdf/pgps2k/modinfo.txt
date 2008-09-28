@@ -1,0 +1,10 @@
+realname "Pgps2k"
+
+define PGPS2K
+
+load_on auto
+
+<add>
+pgp_s2k.cpp
+pgp_s2k.h
+</add>

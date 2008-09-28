@@ -1,0 +1,10 @@
+realname "KDF1"
+
+define KDF1
+
+load_on auto
+
+<add>
+kdf1.h
+kdf1.cpp
+</add>

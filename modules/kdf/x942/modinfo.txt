@@ -1,0 +1,10 @@
+realname "X942 PRF"
+
+define X942_PRF
+
+load_on auto
+
+<add>
+prf_x942.cpp
+prf_x942.h
+</add>
