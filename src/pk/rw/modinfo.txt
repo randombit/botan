@@ -10,5 +10,6 @@ rw.h
 </add>
 
 <requires>
+asn1
 if_algo
 </requires>

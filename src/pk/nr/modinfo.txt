@@ -8,3 +8,8 @@ load_on auto
 nr.cpp
 nr.h
 </add>
+
+<requires>
+asn1
+dl_algo
+</requires>
