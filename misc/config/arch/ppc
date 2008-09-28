@@ -2,8 +2,7 @@ realname "PowerPC"
 
 endian big
 
-# G3; probably a reasonable assumption these days
-default_submodel ppc740
+default_submodel ppc604
 
 <aliases>
 powerpc

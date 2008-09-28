@@ -1,6 +1,6 @@
 realname "Motorola 680x0"
 
-default_submodel 68040
+default_submodel 68020
 
 <aliases>
 680x0
