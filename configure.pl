@@ -277,6 +277,7 @@ To change what modules to use:
        [$modules]
 
   --disable-modules=module1[,module2[...]]
+  --disable-module=module1[,module2[...]]
 
 To add a set of modules:
   --module-set=[$sets]
@@ -595,7 +596,10 @@ sub get_options {
                'module-set=s' => sub { add_module_sets($config, $_[1]); },
                'module-sets=s' => sub { add_module_sets($config, $_[1]); },
 
+               'disable-module=s' => sub { disable_modules($config, $_[1]); },
                'disable-modules=s' => sub { disable_modules($config, $_[1]); },
+               'no-module=s' => sub { disable_modules($config, $_[1]); },
+               'no-modules=s' => sub { disable_modules($config, $_[1]); },
 
                'trace' => sub { $TRACING = 1; },
                'debug' => sub { &$save_option($_[0], 1); },
