@@ -8,3 +8,7 @@ load_on auto
 emsa2.h
 emsa2.cpp
 </add>
+
+<requires>
+hash_id
+</requires>
