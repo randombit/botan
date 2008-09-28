@@ -3,7 +3,7 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/pbe_pkcs.h>
+#include <botan/pbes2.h>
 #include <botan/libstate.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
