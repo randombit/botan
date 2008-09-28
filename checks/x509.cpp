@@ -1,13 +1,19 @@
 
 #include <botan/filters.h>
-#include <botan/rsa.h>
-#include <botan/dsa.h>
+
+#if defined(BOTAN_HAS_RSA)
+  #include <botan/rsa.h>
+#endif
+
+#if defined(BOTAN_HAS_DSA)
+  #include <botan/dsa.h>
+#endif
 
 #ifdef BOTAN_HAS_X509
-#include <botan/x509self.h>
-#include <botan/x509stor.h>
-#include <botan/x509_ca.h>
-#include <botan/pkcs10.h>
+  #include <botan/x509self.h>
+  #include <botan/x509stor.h>
+  #include <botan/x509_ca.h>
+  #include <botan/pkcs10.h>
 #endif
 
 using namespace Botan;
@@ -18,7 +24,7 @@ using namespace Botan;
 #include "validate.h"
 #include "common.h"
 
-#ifdef BOTAN_HAS_X509
+#if defined(BOTAN_HAS_X509) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_DSA)
 
 namespace {
 

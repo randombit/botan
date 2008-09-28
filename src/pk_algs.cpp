@@ -4,12 +4,30 @@
 *************************************************/
 
 #include <botan/pk_algs.h>
+
+#ifdef BOTAN_HAS_RSA
 #include <botan/rsa.h>
+#endif
+
+#ifdef BOTAN_HAS_DSA
 #include <botan/dsa.h>
+#endif
+
+#ifdef BOTAN_HAS_DH
 #include <botan/dh.h>
+#endif
+
+#ifdef BOTAN_HAS_NR
 #include <botan/nr.h>
+#endif
+
+#ifdef BOTAN_HAS_RW
 #include <botan/rw.h>
+#endif
+
+#ifdef BOTAN_HAS_ELGAMAL
 #include <botan/elgamal.h>
+#endif
 
 namespace Botan {
 
@@ -18,14 +36,32 @@ namespace Botan {
 *************************************************/
 Public_Key* get_public_key(const std::string& alg_name)
    {
-   if(alg_name == "RSA")      return new RSA_PublicKey;
-   else if(alg_name == "DSA") return new DSA_PublicKey;
-   else if(alg_name == "DH")  return new DH_PublicKey;
-   else if(alg_name == "NR")  return new NR_PublicKey;
-   else if(alg_name == "RW")  return new RW_PublicKey;
-   else if(alg_name == "ELG") return new ElGamal_PublicKey;
-   else
-      return 0;
+#if defined(BOTAN_HAS_RSA)
+   if(alg_name == "RSA") return new RSA_PublicKey;
+#endif
+
+#if defined(BOTAN_HAS_DSA)
+   if(alg_name == "DSA") return new DSA_PublicKey;
+#endif
+
+#if defined(BOTAN_HAS_DH)
+   if(alg_name == "DH")  return new DH_PublicKey;
+#endif
+
+#if defined(BOTAN_HAS_NR)
+   if(alg_name == "NR")  return new NR_PublicKey;
+#endif
+
+#if defined(BOTAN_HAS_RW)
+   if(alg_name == "RW")  return new RW_PublicKey;
+#endif
+
+#if defined(BOTAN_HAS_ELG)
+   if(alg_name == "ELG") return new ElGamal_PublicKey;
+#endif
+
+
+   return 0;
    }
 
 /*************************************************
@@ -33,14 +69,32 @@ Public_Key* get_public_key(const std::string& alg_name)
 *************************************************/
 Private_Key* get_private_key(const std::string& alg_name)
    {
-   if(alg_name == "RSA")      return new RSA_PrivateKey;
-   else if(alg_name == "DSA") return new DSA_PrivateKey;
-   else if(alg_name == "DH")  return new DH_PrivateKey;
-   else if(alg_name == "NR")  return new NR_PrivateKey;
-   else if(alg_name == "RW")  return new RW_PrivateKey;
-   else if(alg_name == "ELG") return new ElGamal_PrivateKey;
-   else
-      return 0;
+#if defined(BOTAN_HAS_RSA)
+   if(alg_name == "RSA") return new RSA_PrivateKey;
+#endif
+
+#if defined(BOTAN_HAS_DSA)
+   if(alg_name == "DSA") return new DSA_PrivateKey;
+#endif
+
+#if defined(BOTAN_HAS_DH)
+   if(alg_name == "DH")  return new DH_PrivateKey;
+#endif
+
+#if defined(BOTAN_HAS_NR)
+   if(alg_name == "NR")  return new NR_PrivateKey;
+#endif
+
+#if defined(BOTAN_HAS_RW)
+   if(alg_name == "RW")  return new RW_PrivateKey;
+#endif
+
+#if defined(BOTAN_HAS_ELG)
+   if(alg_name == "ELG") return new ElGamal_PrivateKey;
+#endif
+
+
+   return 0;
    }
 
 }

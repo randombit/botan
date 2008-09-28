@@ -1,15 +1,36 @@
-#include <botan/dsa.h>
-#include <botan/rsa.h>
-#include <botan/dh.h>
-#include <botan/nr.h>
-#include <botan/rw.h>
-#include <botan/elgamal.h>
-#include <botan/parsing.h>
-
 #include <botan/pkcs8.h>
 #include <botan/mem_ops.h>
 #include <botan/look_pk.h>
 #include <botan/libstate.h>
+#include <botan/parsing.h>
+
+#if defined(BOTAN_HAS_RSA)
+  #include <botan/rsa.h>
+#endif
+
+#if defined(BOTAN_HAS_DSA)
+  #include <botan/dsa.h>
+#endif
+
+#if defined(BOTAN_HAS_DH)
+  #include <botan/dh.h>
+#endif
+
+#if defined(BOTAN_HAS_RN)
+  #include <botan/nr.h>
+#endif
+
+#if defined(BOTAN_HAS_RW)
+  #include <botan/rw.h>
+#endif
+
+#if defined(BOTAN_HAS_ELGAMAL)
+  #include <botan/elgamal.h>
+#endif
+
+#if defined(BOTAN_HAS_DLIES)
+  #include <botan/dlies.h>
+#endif
 
 using namespace Botan;
 
@@ -121,6 +142,8 @@ void benchmark_rsa(RandomNumberGenerator& rng,
                    double seconds,
                    Benchmark_Report& report)
    {
+#if defined(BOTAN_HAS_RSA)
+
    for(size_t keylen = 1024; keylen <= 4096; keylen += 1024)
       {
       Timer keygen_timer("keygen");
@@ -175,12 +198,16 @@ void benchmark_rsa(RandomNumberGenerator& rng,
          std::cout << e.what() << "\n";
          }
       }
+
+#endif
    }
 
 void benchmark_rw(RandomNumberGenerator& rng,
                   double seconds,
                   Benchmark_Report& report)
    {
+#if defined(BOTAN_HAS_RW)
+
    const u32bit keylens[] = { 512, 1024, 2048, 3072, 4096, 6144, 8192, 0 };
 
    for(size_t j = 0; keylens[j]; j++)
@@ -211,6 +238,8 @@ void benchmark_rw(RandomNumberGenerator& rng,
       report.report(nm, verify_timer);
       report.report(nm, sig_timer);
       }
+
+#endif
    }
 
 template<typename PRIV_KEY_TYPE>
@@ -218,6 +247,7 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
                       double seconds,
                       Benchmark_Report& report)
    {
+#if defined(BOTAN_HAS_NR) || defined(BOTAN_HAS_DSA)
    const char* domains[] = { "dsa/jce/512",
                              "dsa/jce/768",
                              "dsa/jce/1024",
@@ -258,12 +288,15 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
       report.report(nm, verify_timer);
       report.report(nm, sig_timer);
       }
+#endif
    }
 
 void benchmark_dh(RandomNumberGenerator& rng,
                   double seconds,
                   Benchmark_Report& report)
    {
+#ifdef BOTAN_HAS_DH
+
    const char* domains[] = { "modp/ietf/768",
                              "modp/ietf/1024",
                              "modp/ietf/2048",
@@ -321,12 +354,16 @@ void benchmark_dh(RandomNumberGenerator& rng,
       report.report(nm, keygen_timer);
       report.report(nm, kex_timer);
       }
+
+#endif
    }
 
 void benchmark_elg(RandomNumberGenerator& rng,
                    double seconds,
                    Benchmark_Report& report)
    {
+#ifdef BOTAN_HAS_ELGAMAL
+
    const char* domains[] = { "modp/ietf/768",
                              "modp/ietf/1024",
                              "modp/ietf/2048",
@@ -368,6 +405,7 @@ void benchmark_elg(RandomNumberGenerator& rng,
       report.report(nm, enc_timer);
       report.report(nm, dec_timer);
       }
+#endif
    }
 
 }
@@ -408,8 +446,10 @@ void bench_pk(RandomNumberGenerator& rng,
    if(algo == "All" || algo == "RSA")
       benchmark_rsa(rng, seconds, report);
 
+#if defined(BOTAN_HAS_DSA)
    if(algo == "All" || algo == "DSA")
       benchmark_dsa_nr<DSA_PrivateKey>(rng, seconds, report);
+#endif
 
    if(algo == "All" || algo == "DH")
       benchmark_dh(rng, seconds, report);
@@ -417,8 +457,10 @@ void bench_pk(RandomNumberGenerator& rng,
    if(algo == "All" || algo == "ELG" || algo == "ElGamal")
       benchmark_elg(rng, seconds, report);
 
+#if defined(BOTAN_HAS_NR)
    if(algo == "All" || algo == "NR")
       benchmark_dsa_nr<NR_PrivateKey>(rng, seconds, report);
+#endif
 
    if(algo == "All" || algo == "RW")
       benchmark_rw(rng, seconds, report);
