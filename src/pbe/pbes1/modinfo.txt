@@ -1,0 +1,10 @@
+realname "PKCS5 v1.5 PBE"
+
+define PBE_PKCS_V15
+
+load_on auto
+
+<add>
+pbes1.cpp
+pbes1.h
+</add>
