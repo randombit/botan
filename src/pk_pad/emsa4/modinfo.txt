@@ -8,3 +8,7 @@ load_on auto
 emsa4.h
 emsa4.cpp
 </add>
+
+<requires>
+mgf1
+</requires>

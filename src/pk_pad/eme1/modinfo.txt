@@ -8,3 +8,7 @@ load_on auto
 eme1.h
 eme1.cpp
 </add>
+
+<requires>
+mgf1
+</requires>
