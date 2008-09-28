@@ -8,3 +8,8 @@ load_on auto
 cfb.cpp
 cfb.h
 </add>
+
+<requires>
+modebase
+</requires>
+

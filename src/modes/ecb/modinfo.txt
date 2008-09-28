@@ -8,3 +8,8 @@ load_on auto
 ecb.cpp
 ecb.h
 </add>
+
+<requires>
+modebase
+</requires>
+

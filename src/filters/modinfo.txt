@@ -8,12 +8,14 @@ define FILTERS
 algo_filt.cpp
 basefilt.cpp
 buf_filt.cpp
+data_snk.cpp
 filter.cpp
 out_buf.cpp
 pipe.cpp
 pipe_io.cpp
 pipe_rw.cpp
 secqueue.cpp
+
 basefilt.h
 buf_filt.h
 data_snk.h

@@ -9,3 +9,8 @@ eax.cpp
 eax.h
 eax_dec.cpp
 </add>
+
+<requires>
+modebase
+</requires>
+

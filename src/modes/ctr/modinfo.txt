@@ -8,3 +8,8 @@ load_on auto
 ctr.cpp
 ctr.h
 </add>
+
+<requires>
+modebase
+</requires>
+

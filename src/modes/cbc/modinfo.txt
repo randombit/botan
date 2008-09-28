@@ -8,3 +8,8 @@ load_on auto
 cbc.cpp
 cbc.h
 </add>
+
+<requires>
+modebase
+</requires>
+

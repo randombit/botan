@@ -8,3 +8,8 @@ load_on auto
 cts.cpp
 cts.h
 </add>
+
+<requires>
+modebase
+</requires>
+
