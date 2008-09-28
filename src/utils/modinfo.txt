@@ -1,0 +1,19 @@
+realname "Utility Functions"
+
+define UTIL_FUNCTIONS
+
+load_on auto
+
+<add>
+parsing.cpp
+util.cpp
+version.cpp
+bit_ops.h
+bswap.h
+charset.h
+parsing.h
+stl_util.h
+util.h
+version.h
+xor_buf.h
+</add>
