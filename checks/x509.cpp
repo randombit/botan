@@ -1,11 +1,15 @@
 
 #include <botan/filters.h>
+#include <botan/rsa.h>
+#include <botan/dsa.h>
+
+#ifdef BOTAN_HAS_X509
 #include <botan/x509self.h>
 #include <botan/x509stor.h>
 #include <botan/x509_ca.h>
 #include <botan/pkcs10.h>
-#include <botan/rsa.h>
-#include <botan/dsa.h>
+#endif
+
 using namespace Botan;
 
 #include <iostream>
@@ -14,9 +18,7 @@ using namespace Botan;
 #include "validate.h"
 #include "common.h"
 
-X509_Cert_Options ca_opts();
-X509_Cert_Options req_opts1();
-X509_Cert_Options req_opts2();
+#ifdef BOTAN_HAS_X509
 
 namespace {
 
@@ -42,6 +44,45 @@ u64bit key_id(const Public_Key* key)
    for(u32bit j = 0; j != 8; ++j)
       id = (id << 8) | output[j];
    return id;
+   }
+
+
+/* Return some option sets */
+X509_Cert_Options ca_opts()
+   {
+   X509_Cert_Options opts("Test CA/US/Botan Project/Testing");
+
+   opts.uri = "http://botan.randombit.net";
+   opts.dns = "botan.randombit.net";
+   opts.email = "testing@randombit.net";
+
+   opts.CA_key(1);
+
+   return opts;
+   }
+
+X509_Cert_Options req_opts1()
+   {
+   X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
+
+   opts.uri = "http://botan.randombit.net";
+   opts.dns = "botan.randombit.net";
+   opts.email = "testing@randombit.net";
+
+   return opts;
+   }
+
+X509_Cert_Options req_opts2()
+   {
+   X509_Cert_Options opts("Test User 2/US/Botan Project/Testing");
+
+   opts.uri = "http://botan.randombit.net";
+   opts.dns = "botan.randombit.net";
+   opts.email = "testing@randombit.net";
+
+   opts.add_ex_constraint("PKIX.EmailProtection");
+
+   return opts;
    }
 
 u32bit check_against_copy(const Private_Key& orig,
@@ -157,40 +198,12 @@ void do_x509_tests(RandomNumberGenerator& rng)
    std::cout << std::endl;
    }
 
-/* Return some option sets */
-X509_Cert_Options ca_opts()
+#else
+
+void do_x509_tests(RandomNumberGenerator&)
    {
-   X509_Cert_Options opts("Test CA/US/Botan Project/Testing");
-
-   opts.uri = "http://botan.randombit.net";
-   opts.dns = "botan.randombit.net";
-   opts.email = "testing@randombit.net";
-
-   opts.CA_key(1);
-
-   return opts;
+   std::cout << "Skipping Botan X.509 tests (disabled in build)\n";
    }
 
-X509_Cert_Options req_opts1()
-   {
-   X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
+#endif
 
-   opts.uri = "http://botan.randombit.net";
-   opts.dns = "botan.randombit.net";
-   opts.email = "testing@randombit.net";
-
-   return opts;
-   }
-
-X509_Cert_Options req_opts2()
-   {
-   X509_Cert_Options opts("Test User 2/US/Botan Project/Testing");
-
-   opts.uri = "http://botan.randombit.net";
-   opts.dns = "botan.randombit.net";
-   opts.email = "testing@randombit.net";
-
-   opts.add_ex_constraint("PKIX.EmailProtection");
-
-   return opts;
-   }
