@@ -11,8 +11,12 @@ version.cpp
 bit_ops.h
 bswap.h
 charset.h
+loadstor.h
+mem_ops.h
 parsing.h
+rotate.h
 stl_util.h
+types.h
 util.h
 version.h
 xor_buf.h
