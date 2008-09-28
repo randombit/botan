@@ -20,6 +20,8 @@ dsa_gen.cpp
 jacobi.cpp
 make_prm.cpp
 mp_asm.cpp
+mp_asm.h
+mp_asmi.h
 mp_comba.cpp
 mp_core.h
 mp_karat.cpp
@@ -28,16 +30,15 @@ mp_monty.cpp
 mp_mulop.cpp
 mp_numth.cpp
 mp_shift.cpp
+mp_types.h
 numthry.cpp
 numthry.h
 pow_mod.cpp
 pow_mod.h
 powm_fw.cpp
 powm_mnt.cpp
+primes.cpp
 reducer.cpp
 reducer.h
 ressol.cpp
-mp_types.h
-mp_asm.h
-mp_asmi.h
 </add>
