@@ -1,0 +1,14 @@
+realname "Cipher Mode Base Class"
+
+define CIPHER_MODEBASE
+
+load_on auto
+
+<add>
+modebase.cpp
+modebase.h
+</add>
+
+<requires>
+filters
+</requires>
