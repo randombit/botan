@@ -12,6 +12,7 @@ sha1core.cpp
 </add>
 
 <arch>
+pentium-m
 pentium4
 amd64
 </arch>
