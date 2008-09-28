@@ -417,6 +417,8 @@ sub autoload_modules {
 
     my $asm_ok = $$config{'asm_ok'};
 
+    my @autoloaded;
+
     MOD: foreach my $mod (sort keys %MODULES) {
         my %modinfo = %{ $MODULES{$mod} };
 
@@ -487,9 +489,12 @@ sub autoload_modules {
             next;
         }
 
-        autoconfig("$mod ($realname): loading");
+        push @autoloaded, $mod;
+        trace("$mod ($realname): loading");
         $$config{'modules'}{$mod} = 1;
     }
+
+    autoconfig("Loaded " . join(' ', @autoloaded));
 }
 
 sub get_options {
@@ -821,6 +826,8 @@ sub libs {
 sub portable_symlink {
    my ($from, $to_dir, $to_fname) = @_;
 
+   trace("portable_symlink($from, $to_dir, $to_fname)");
+
    my $can_symlink = 0;
    my $can_link = 0;
 
@@ -1006,7 +1013,6 @@ sub load_modules {
     my @mod_names;
 
     foreach my $mod (sort keys %{$$config{'modules'}}) {
-
         next unless($$config{'modules'}{$mod} > 0);
 
         load_module($config, $mod);
