@@ -1,0 +1,10 @@
+realname "Base64 Codec"
+
+define BASE64_CODEC
+
+load_on auto
+
+<add>
+base64.cpp
+base64.h
+</add>

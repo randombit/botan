@@ -8,3 +8,7 @@ load_on auto
 dlies.cpp
 dlies.h
 </add>
+
+<requires>
+asn1
+</requires>
