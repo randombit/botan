@@ -16,7 +16,7 @@
   #include <botan/dh.h>
 #endif
 
-#if defined(BOTAN_HAS_RN)
+#if defined(BOTAN_HAS_NR)
   #include <botan/nr.h>
 #endif
 

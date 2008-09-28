@@ -19,7 +19,7 @@
   #include <botan/dh.h>
 #endif
 
-#if defined(BOTAN_HAS_RN)
+#if defined(BOTAN_HAS_NR)
   #include <botan/nr.h>
 #endif
 
@@ -176,7 +176,7 @@ u32bit validate_rsa_enc_pkcs8(const std::string& algo,
 
    std::auto_ptr<Private_Key> privkey(PKCS8::load_key(keysource, rng, pass));
 
-   RSA_PrivateKey* rsapriv = dynamic_cast<RSA_PrivateKey*>(privkey);
+   RSA_PrivateKey* rsapriv = dynamic_cast<RSA_PrivateKey*>(privkey.get());
    if(!rsapriv)
       throw Invalid_Argument("Bad key load for RSA key");
 
@@ -315,7 +315,7 @@ u32bit validate_rsa_ver_x509(const std::string& algo,
 
    std::auto_ptr<Public_Key> key(X509::load_key(keysource));
 
-   RSA_PublicKey* rsakey = dynamic_cast<RSA_PublicKey*>(key);
+   RSA_PublicKey* rsakey = dynamic_cast<RSA_PublicKey*>(key.get());
 
    if(!rsakey)
       throw Invalid_Argument("Bad key load for RSA public key");
@@ -402,7 +402,7 @@ u32bit validate_dsa_sig(const std::string& algo,
 
    std::auto_ptr<Private_Key> privkey(PKCS8::load_key(keysource, rng, pass));
 
-   DSA_PrivateKey* dsapriv = dynamic_cast<DSA_PrivateKey*>(privkey);
+   DSA_PrivateKey* dsapriv = dynamic_cast<DSA_PrivateKey*>(privkey.get());
    if(!dsapriv)
       throw Invalid_Argument("Bad key load for DSA private key");
 
@@ -414,7 +414,6 @@ u32bit validate_dsa_sig(const std::string& algo,
    PK_Signer* s = get_pk_signer(*dsapriv, emsa);
 
    validate_signature(v, s, algo, str[1], str[2], str[3], failure);
-   delete privkey;
 #endif
 
    return (failure ? 1 : 0);
@@ -434,7 +433,7 @@ u32bit validate_dsa_ver(const std::string& algo,
 #if defined(BOTAN_HAS_DSA)
    std::auto_ptr<Public_Key> key(X509::load_key(keysource));
 
-   DSA_PublicKey* dsakey = dynamic_cast<DSA_PublicKey*>(key);
+   DSA_PublicKey* dsakey = dynamic_cast<DSA_PublicKey*>(key.get());
 
    if(!dsakey)
       throw Invalid_Argument("Bad key load for DSA public key");
