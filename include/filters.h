@@ -9,8 +9,14 @@
 #include <botan/pipe.h>
 #include <botan/basefilt.h>
 #include <botan/data_snk.h>
-#include <botan/base64.h>
-#include <botan/hex.h>
+
+#if defined(BOTAN_HAS_BASE64_CODEC)
+  #include <botan/base64.h>
+#endif
+
+#if defined(BOTAN_HAS_HEX_CODEC)
+  #include <botan/hex.h>
+#endif
 
 namespace Botan {
 

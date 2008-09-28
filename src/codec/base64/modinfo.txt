@@ -6,5 +6,6 @@ load_on auto
 
 <add>
 base64.cpp
+b64_char.cpp
 base64.h
 </add>

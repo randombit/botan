@@ -1,0 +1,43 @@
+realname "BigInt"
+
+load_on auto
+
+define BIGINT
+
+<add>
+big_code.cpp
+big_io.cpp
+big_ops2.cpp
+big_ops3.cpp
+big_rand.cpp
+bigint.cpp
+bigint.h
+blinding.cpp
+blinding.h
+def_powm.h
+divide.cpp
+dsa_gen.cpp
+jacobi.cpp
+make_prm.cpp
+mp_asm.cpp
+mp_comba.cpp
+mp_core.h
+mp_karat.cpp
+mp_misc.cpp
+mp_monty.cpp
+mp_mulop.cpp
+mp_numth.cpp
+mp_shift.cpp
+numthry.cpp
+numthry.h
+pow_mod.cpp
+pow_mod.h
+powm_fw.cpp
+powm_mnt.cpp
+reducer.cpp
+reducer.h
+ressol.cpp
+mp_types.h
+mp_asm.h
+mp_asmi.h
+</add>
