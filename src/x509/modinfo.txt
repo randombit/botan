@@ -29,3 +29,8 @@ x509self.h
 x509stor.cpp
 x509stor.h
 </add>
+
+<requires>
+asn1
+bigint
+</requires>
