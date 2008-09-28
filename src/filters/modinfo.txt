@@ -23,5 +23,6 @@ filter.h
 filters.h
 out_buf.h
 pipe.h
+pbe.h
 secqueue.h
 </add>

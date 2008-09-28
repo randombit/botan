@@ -8,3 +8,8 @@ define DL_GROUP
 dl_group.cpp
 dl_group.h
 </add>
+
+<requires>
+asn1
+bigint
+</requires>

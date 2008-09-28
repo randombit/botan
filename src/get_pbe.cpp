@@ -3,9 +3,9 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
+#include <botan/lookup.h>
 #include <botan/pbe.h>
 #include <botan/oids.h>
-#include <botan/lookup.h>
 #include <botan/parsing.h>
 
 #if defined(BOTAN_HAS_PBE_PKCS_V15)

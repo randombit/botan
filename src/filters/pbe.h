@@ -3,8 +3,8 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_PBE_H__
-#define BOTAN_PBE_H__
+#ifndef BOTAN_PBE_BASE_H__
+#define BOTAN_PBE_BASE_H__
 
 #include <botan/asn1_oid.h>
 #include <botan/data_src.h>
@@ -27,12 +27,6 @@ class BOTAN_DLL PBE : public Filter
 
       virtual OID get_oid() const = 0;
    };
-
-/*************************************************
-* Get a PBE object                               *
-*************************************************/
-BOTAN_DLL PBE* get_pbe(const std::string&);
-BOTAN_DLL PBE* get_pbe(const OID&, DataSource&);
 
 }
 

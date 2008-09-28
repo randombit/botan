@@ -10,7 +10,7 @@
 #include <botan/pk_algs.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
-#include <botan/pbe.h>
+#include <botan/lookup.h>
 #include <memory>
 
 namespace Botan {

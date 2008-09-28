@@ -12,6 +12,7 @@
 #include <botan/mode_pad.h>
 #include <botan/pk_util.h>
 #include <botan/s2k.h>
+#include <botan/pbe.h>
 
 namespace Botan {
 
@@ -36,6 +37,12 @@ BOTAN_DLL HashFunction* get_hash(const std::string&);
 BOTAN_DLL MessageAuthenticationCode* get_mac(const std::string&);
 BOTAN_DLL S2K* get_s2k(const std::string&);
 BOTAN_DLL const BlockCipherModePaddingMethod* get_bc_pad(const std::string&);
+
+/*************************************************
+* Get a PBE object                               *
+*************************************************/
+BOTAN_DLL PBE* get_pbe(const std::string&);
+BOTAN_DLL PBE* get_pbe(const OID&, DataSource&);
 
 /*************************************************
 * Get an EMSA/EME/KDF/MGF function               *

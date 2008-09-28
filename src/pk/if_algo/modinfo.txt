@@ -8,3 +8,9 @@ load_on auto
 if_algo.cpp
 if_algo.h
 </add>
+
+<requires>
+asn1
+bigint
+filters
+</requires>

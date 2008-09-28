@@ -11,5 +11,6 @@ dl_algo.h
 
 <requires>
 asn1
+bigint
 dl_group
 </requires>
