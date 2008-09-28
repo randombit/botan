@@ -1,0 +1,10 @@
+realname "XTEA"
+
+define XTEA
+
+load_on auto
+
+<add>
+xtea.cpp
+xtea.h
+</add>

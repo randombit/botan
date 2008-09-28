@@ -1,0 +1,11 @@
+realname "MARS"
+
+define MARS
+
+load_on auto
+
+<add>
+mars.cpp
+mars.h
+mars_tab.cpp
+</add>

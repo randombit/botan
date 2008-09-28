@@ -1,0 +1,11 @@
+realname "SAFER"
+
+define SAFER
+
+load_on auto
+
+<add>
+safe_tab.cpp
+safer_sk.cpp
+safer_sk.h
+</add>

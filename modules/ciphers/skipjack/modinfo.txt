@@ -1,0 +1,10 @@
+realname "Skipjack"
+
+define SKIPJACK
+
+load_on auto
+
+<add>
+skipjack.cpp
+skipjack.h
+</add>

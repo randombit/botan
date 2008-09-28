@@ -1,0 +1,10 @@
+realname "RC6"
+
+define RC6
+
+load_on auto
+
+<add>
+rc6.cpp
+rc6.h
+</add>

@@ -1,0 +1,10 @@
+realname "Salsa20"
+
+define SALSA20
+
+load_on auto
+
+<add>
+salsa20.cpp
+salsa20.h
+</add>

@@ -1,0 +1,11 @@
+realname "AES"
+
+define AES
+
+load_on auto
+
+<add>
+aes.cpp
+aes.h
+aes_tab.cpp
+</add>

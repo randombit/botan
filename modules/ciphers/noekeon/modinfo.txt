@@ -1,0 +1,10 @@
+realname "Noekeon"
+
+define NOEKEON
+
+load_on auto
+
+<add>
+noekeon.cpp
+noekeon.h
+</add>

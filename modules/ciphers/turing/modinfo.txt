@@ -1,0 +1,11 @@
+realname "Turing"
+
+define TURING
+
+load_on auto
+
+<add>
+tur_tab.cpp
+turing.cpp
+turing.h
+</add>

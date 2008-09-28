@@ -1,0 +1,10 @@
+realname "WiderWake"
+
+define WID_WAKE
+
+load_on auto
+
+<add>
+wid_wake.cpp
+wid_wake.h
+</add>

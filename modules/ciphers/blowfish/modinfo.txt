@@ -1,0 +1,11 @@
+realname "Blowfish"
+
+define BLOWFISH
+
+load_on auto
+
+<add>
+blfs_tab.cpp
+blowfish.cpp
+blowfish.h
+</add>
