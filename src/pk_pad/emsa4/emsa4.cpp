@@ -5,7 +5,6 @@
 
 #include <botan/emsa4.h>
 #include <botan/lookup.h>
-#include <botan/look_pk.h>
 #include <botan/bit_ops.h>
 
 namespace Botan {
