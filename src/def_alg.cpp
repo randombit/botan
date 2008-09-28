@@ -7,6 +7,13 @@
 #include <botan/libstate.h>
 #include <botan/parsing.h>
 
+#include <botan/cmac.h>
+#include <botan/hmac.h>
+#include <botan/par_hash.h>
+#include <botan/mode_pad.h>
+#include <botan/pgp_s2k.h>
+#include <botan/pkcs5.h>
+
 #ifdef BOTAN_HAS_AES
    #include <botan/aes.h>
 #endif
@@ -173,11 +180,9 @@
    #include <botan/whrlpool.h>
 #endif
 
-#include <botan/par_hash.h>
-
-#include <botan/cbc_mac.h>
-#include <botan/cmac.h>
-#include <botan/hmac.h>
+#ifdef BOTAN_HAS_CBC_MAC
+   #include <botan/cbc_mac.h>
+#endif
 
 #ifdef BOTAN_HAS_SSL3_MAC
 #include <botan/ssl3_mac.h>
@@ -186,10 +191,6 @@
 #ifdef BOTAN_HAS_ANSI_X919_MAC
 #include <botan/x919_mac.h>
 #endif
-
-#include <botan/mode_pad.h>
-#include <botan/pgp_s2k.h>
-#include <botan/pkcs5.h>
 
 namespace Botan {
 
@@ -456,7 +457,6 @@ Default_Engine::find_hash(const std::string& algo_spec) const
    HANDLE_TYPE_NO_ARGS("Whirlpool", Whirlpool);
 #endif
 
-
    if(algo_name == "Parallel")
       {
       if(name.size() < 2)
@@ -464,6 +464,7 @@ Default_Engine::find_hash(const std::string& algo_spec) const
       name.erase(name.begin());
       return new Parallel(name);
       }
+
    return 0;
    }
 
@@ -478,7 +479,10 @@ Default_Engine::find_mac(const std::string& algo_spec) const
       return 0;
    const std::string algo_name = global_state().deref_alias(name[0]);
 
+#ifdef BOTAN_HAS_CBC_MAC
    HANDLE_TYPE_ONE_STRING("CBC-MAC", CBC_MAC);
+#endif
+
    HANDLE_TYPE_ONE_STRING("CMAC", CMAC);
    HANDLE_TYPE_ONE_STRING("HMAC", HMAC);
 
