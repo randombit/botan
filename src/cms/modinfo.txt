@@ -14,3 +14,8 @@ cms_ealg.cpp
 cms_enc.cpp
 cms_enc.h
 </add>
+
+<requires>
+asn1
+filters
+</requires>

@@ -9,4 +9,5 @@ openpgp.h
 
 <requires>
 base64
+filters
 </requires>

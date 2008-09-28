@@ -11,4 +11,5 @@ pem.h
 
 <requires>
 base64
+filters
 </requires>

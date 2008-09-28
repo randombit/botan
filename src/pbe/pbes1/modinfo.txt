@@ -8,3 +8,8 @@ load_on auto
 pbes1.cpp
 pbes1.h
 </add>
+
+<requires>
+asn1
+filters
+</requires>

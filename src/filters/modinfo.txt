@@ -1,0 +1,25 @@
+realname "Pipe/Filter"
+
+load_on auto
+
+define FILTERS
+
+<add>
+algo_filt.cpp
+basefilt.cpp
+buf_filt.cpp
+filter.cpp
+out_buf.cpp
+pipe.cpp
+pipe_io.cpp
+pipe_rw.cpp
+secqueue.cpp
+basefilt.h
+buf_filt.h
+data_snk.h
+filter.h
+filters.h
+out_buf.h
+pipe.h
+secqueue.h
+</add>
