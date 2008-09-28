@@ -7,7 +7,6 @@
 #include <botan/libstate.h>
 #include <botan/parsing.h>
 
-#include <botan/par_hash.h>
 #include <botan/mode_pad.h>
 
 #if defined(BOTAN_HAS_AES)
@@ -174,6 +173,10 @@
 
 #if defined(BOTAN_HAS_WHIRLPOOL)
   #include <botan/whrlpool.h>
+#endif
+
+#if defined(BOTAN_HAS_PARALLEL_HASH)
+  #include <botan/par_hash.h>
 #endif
 
 #if defined(BOTAN_HAS_CBC_MAC)

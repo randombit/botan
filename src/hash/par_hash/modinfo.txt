@@ -1,0 +1,10 @@
+realname "Parallel Hash"
+
+define PARALLEL_HASH
+
+load_on auto
+
+<add>
+par_hash.cpp
+par_hash.h
+</add>
