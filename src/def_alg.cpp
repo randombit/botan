@@ -7,8 +7,6 @@
 #include <botan/libstate.h>
 #include <botan/parsing.h>
 
-#include <botan/mode_pad.h>
-
 #if defined(BOTAN_HAS_AES)
   #include <botan/aes.h>
 #endif
@@ -116,6 +114,10 @@
 
 #if defined(BOTAN_HAS_WID_WAKE)
   #include <botan/wid_wake.h>
+#endif
+
+#if defined(BOTAN_HAS_CIPHER_MODE_PADDING)
+  #include <botan/mode_pad.h>
 #endif
 
 #if defined(BOTAN_HAS_ADLER32)
@@ -559,10 +561,12 @@ Default_Engine::find_bc_pad(const std::string& algo_spec) const
 
    const std::string algo_name = global_state().deref_alias(name[0]);
 
+#if defined(BOTAN_HAS_CIPHER_MODE_PADDING)
    HANDLE_TYPE_NO_ARGS("PKCS7",       PKCS7_Padding);
    HANDLE_TYPE_NO_ARGS("OneAndZeros", OneAndZeros_Padding);
    HANDLE_TYPE_NO_ARGS("X9.23",       ANSI_X923_Padding);
    HANDLE_TYPE_NO_ARGS("NoPadding",   Null_Padding);
+#endif
 
    return 0;
    }
