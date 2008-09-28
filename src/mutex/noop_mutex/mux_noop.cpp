@@ -1,43 +1,25 @@
 /*************************************************
-* Mutex Source File                              *
+* No-Op Mutex Factory Source File                *
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/mutex.h>
+#include <botan/mux_noop.h>
 
 namespace Botan {
 
 /*************************************************
-* Mutex_Holder Constructor                       *
+* No-Op Mutex Factory                            *
 *************************************************/
-Mutex_Holder::Mutex_Holder(Mutex* m) : mux(m)
+Mutex* Noop_Mutex_Factory::make()
    {
-   if(!mux)
-      throw Invalid_Argument("Mutex_Holder: Argument was NULL");
-   mux->lock();
-   }
-
-/*************************************************
-* Mutex_Holder Destructor                        *
-*************************************************/
-Mutex_Holder::~Mutex_Holder()
-   {
-   mux->unlock();
-   }
-
-/*************************************************
-* Default Mutex Factory                          *
-*************************************************/
-Mutex* Default_Mutex_Factory::make()
-   {
-   class Default_Mutex : public Mutex
+   class Noop_Mutex : public Mutex
       {
       public:
          class Mutex_State_Error : public Internal_Error
             {
             public:
                Mutex_State_Error(const std::string& where) :
-                  Internal_Error("Default_Mutex::" + where + ": " +
+                  Internal_Error("Noop_Mutex::" + where + ": " +
                                  "Mutex is already " + where + "ed") {}
             };
 
@@ -55,12 +37,12 @@ Mutex* Default_Mutex_Factory::make()
             locked = false;
             }
 
-         Default_Mutex() { locked = false; }
+         Noop_Mutex() { locked = false; }
       private:
          bool locked;
       };
 
-   return new Default_Mutex;
+   return new Noop_Mutex;
    }
 
 }

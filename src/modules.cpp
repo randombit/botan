@@ -17,6 +17,10 @@
   #include <botan/mux_qt.h>
 #endif
 
+#if defined(BOTAN_HAS_MUTEX_NOOP)
+  #include <botan/mux_noop.h>
+#endif
+
 #if defined(BOTAN_HAS_ALLOC_MMAP)
   #include <botan/mmap_mem.h>
 #endif
@@ -34,8 +38,15 @@ namespace Botan {
 /*************************************************
 * Return a mutex factory, if available           *
 *************************************************/
-Mutex_Factory* Builtin_Modules::mutex_factory() const
+Mutex_Factory* Builtin_Modules::mutex_factory(bool thread_safe) const
    {
+   if(!thread_safe)
+      {
+#if defined(BOTAN_HAS_MUTEX_NOOP)
+      return new Noop_Mutex_Factory;
+#endif
+      }
+
 #if defined(BOTAN_HAS_MUTEX_PTHREAD)
    return new Pthread_Mutex_Factory;
 #elif defined(BOTAN_HAS_MUTEX_WIN32)

@@ -228,10 +228,10 @@ void Library_State::initialize(const InitializerOptions& args,
    if(mutex_factory)
       throw Invalid_State("Library_State has already been initialized");
 
-   if(args.thread_safe())
-      mutex_factory = modules.mutex_factory();
-   else
-      mutex_factory = new Default_Mutex_Factory;
+   mutex_factory = modules.mutex_factory(args.thread_safe());
+
+   if(!mutex_factory)
+      throw Invalid_State("Could not acquire a mutex module at init");
 
    allocator_lock = get_mutex();
    engine_lock = get_mutex();

@@ -18,7 +18,7 @@ namespace Botan {
 class BOTAN_DLL Modules
    {
    public:
-      virtual class Mutex_Factory* mutex_factory() const = 0;
+      virtual class Mutex_Factory* mutex_factory(bool) const = 0;
 
       virtual std::string default_allocator() const = 0;
 
@@ -34,7 +34,7 @@ class BOTAN_DLL Modules
 class BOTAN_DLL Builtin_Modules : public Modules
    {
    public:
-      class Mutex_Factory* mutex_factory() const;
+      class Mutex_Factory* mutex_factory(bool) const;
 
       std::string default_allocator() const;
 

@@ -1,0 +1,10 @@
+realname "No-Op Mutex"
+
+load_on auto
+
+define MUTEX_NOOP
+
+<add>
+mux_noop.cpp
+mux_noop.h
+</add>

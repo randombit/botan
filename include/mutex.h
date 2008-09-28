@@ -32,24 +32,30 @@ class BOTAN_DLL Mutex_Factory
    };
 
 /*************************************************
+* Mutex Holding Class                            *
+*************************************************/
+class BOTAN_DLL Mutex_Holder
+   {
+   public:
+      Mutex_Holder(Mutex* m) : mux(m)
+         {
+         if(!mux)
+            throw Invalid_Argument("Mutex_Holder: Argument was NULL");
+         mux->lock();
+         }
+
+      ~Mutex_Holder() { mux->unlock(); }
+   private:
+      Mutex* mux;
+   };
+
+/*************************************************
 * Default Mutex Factory                          *
 *************************************************/
 class BOTAN_DLL Default_Mutex_Factory : public Mutex_Factory
    {
    public:
       Mutex* make();
-   };
-
-/*************************************************
-* Mutex Holding Class                            *
-*************************************************/
-class BOTAN_DLL Mutex_Holder
-   {
-   public:
-      Mutex_Holder(Mutex*);
-      ~Mutex_Holder();
-   private:
-      Mutex* mux;
    };
 
 }
