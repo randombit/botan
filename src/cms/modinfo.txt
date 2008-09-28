@@ -1,0 +1,16 @@
+realname "CMS"
+
+define CMS
+
+load_on request
+
+<add>
+cms_algo.cpp
+cms_comp.cpp
+cms_dalg.cpp
+cms_dec.cpp
+cms_dec.h
+cms_ealg.cpp
+cms_enc.cpp
+cms_enc.h
+</add>

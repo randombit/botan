@@ -1,0 +1,10 @@
+realname "Nyberg-Rueppel"
+
+define NR
+
+load_on auto
+
+<add>
+nr.cpp
+nr.h
+</add>

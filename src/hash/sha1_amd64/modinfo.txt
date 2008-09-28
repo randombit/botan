@@ -1,0 +1,27 @@
+realname "SHA-1 (x86-64 assembler)"
+
+load_on request
+
+<add>
+sha160.cpp
+asm_macr.h
+sha1_asm.S
+</add>
+
+<arch>
+amd64
+</arch>
+
+<cc>
+gcc
+icc
+</cc>
+
+# ELF systems
+<os>
+linux
+freebsd
+netbsd
+openbsd
+solaris
+</os>

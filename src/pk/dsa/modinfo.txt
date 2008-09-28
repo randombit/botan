@@ -1,0 +1,10 @@
+realname "DSA"
+
+define DSA
+
+load_on auto
+
+<add>
+dsa.cpp
+dsa.h
+</add>

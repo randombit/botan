@@ -1,0 +1,10 @@
+realname "DH"
+
+define DH
+
+load_on auto
+
+<add>
+dh.cpp
+dh.h
+</add>

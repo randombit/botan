@@ -1,0 +1,10 @@
+realname "ElGamal"
+
+define ELGAMAL
+
+load_on auto
+
+<add>
+elgamal.cpp
+elgamal.h
+</add>

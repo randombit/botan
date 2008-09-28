@@ -1,0 +1,14 @@
+realname "Rabin-Williams"
+
+define RW
+
+load_on auto
+
+<add>
+rw.cpp
+rw.h
+</add>
+
+<requires>
+if_algo
+</requires>
