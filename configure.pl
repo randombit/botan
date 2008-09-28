@@ -183,7 +183,7 @@ sub croak {
 }
 
 sub warning {
-    print with_diagnostic('warning', @_);
+    warn with_diagnostic('warning', @_);
 }
 
 sub autoconfig {
