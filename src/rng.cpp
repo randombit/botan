@@ -4,11 +4,17 @@
 *************************************************/
 
 #include <botan/rng.h>
-#include <botan/randpool.h>
-#include <botan/x931_rng.h>
 #include <botan/util.h>
 #include <botan/parsing.h>
 #include <botan/timers.h>
+
+#if defined(BOTAN_HAS_RANDPOOL)
+  #include <botan/randpool.h>
+#endif
+
+#if defined(BOTAN_HAS_X931_RNG)
+  #include <botan/x931_rng.h>
+#endif
 
 #if defined(BOTAN_HAS_TIMER_HARDWARE)
   #include <botan/tm_hard.h>
@@ -73,9 +79,14 @@ byte RandomNumberGenerator::next_byte()
 *************************************************/
 RandomNumberGenerator* RandomNumberGenerator::make_rng()
    {
-   RandomNumberGenerator* rng =
-      new ANSI_X931_RNG("AES-256",
-                        new Randpool("AES-256", "HMAC(SHA-256)"));
+   RandomNumberGenerator* rng = 0;
+
+#if defined(BOTAN_HAS_RANDPOOL)
+   rng = new Randpool("AES-256", "HMAC(SHA-256)");
+
+#if defined(BOTAN_HAS_X931_RNG)
+   rng = new ANSI_X931_RNG("AES-256", rng);
+#endif
 
 #if defined(BOTAN_HAS_TIMER_HARDWARE)
    rng->add_entropy_source(new Hardware_Timer);
@@ -123,6 +134,8 @@ RandomNumberGenerator* RandomNumberGenerator::make_rng()
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_FTW)
    rng->add_entropy_source(new FTW_EntropySource("/proc"));
+#endif
+
 #endif
 
    return rng;

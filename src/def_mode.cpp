@@ -8,32 +8,32 @@
 #include <botan/filters.h>
 #include <botan/lookup.h>
 
-#ifdef BOTAN_HAS_ECB
-   #include <botan/ecb.h>
+#if defined(BOTAN_HAS_ECB)
+  #include <botan/ecb.h>
 #endif
 
-#ifdef BOTAN_HAS_CBC
-   #include <botan/cbc.h>
+#if defined(BOTAN_HAS_CBC)
+  #include <botan/cbc.h>
 #endif
 
-#ifdef BOTAN_HAS_CTS
-   #include <botan/cts.h>
+#if defined(BOTAN_HAS_CTS)
+  #include <botan/cts.h>
 #endif
 
-#ifdef BOTAN_HAS_CFB
-   #include <botan/cfb.h>
+#if defined(BOTAN_HAS_CFB)
+  #include <botan/cfb.h>
 #endif
 
-#ifdef BOTAN_HAS_OFB
-   #include <botan/ofb.h>
+#if defined(BOTAN_HAS_OFB)
+  #include <botan/ofb.h>
 #endif
 
-#ifdef BOTAN_HAS_CTR
-   #include <botan/ctr.h>
+#if defined(BOTAN_HAS_CTR)
+  #include <botan/ctr.h>
 #endif
 
-#ifdef BOTAN_HAS_EAX
-   #include <botan/eax.h>
+#if defined(BOTAN_HAS_EAX)
+  #include <botan/eax.h>
 #endif
 
 namespace Botan {
@@ -90,7 +90,7 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
 
       if(mode == "OFB")
          {
-#ifdef BOTAN_HAS_OFB
+#if defined(BOTAN_HAS_OFB)
          return new OFB(cipher);
 #else
          return 0;
@@ -98,7 +98,7 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
          }
       else if(mode == "CTR-BE")
          {
-#ifdef BOTAN_HAS_CTR
+#if defined(BOTAN_HAS_CTR)
          return new CTR_BE(cipher);
 #else
          return 0;
@@ -109,7 +109,7 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
          {
          if(mode == "ECB")
             {
-#ifdef BOTAN_HAS_ECB
+#if defined(BOTAN_HAS_ECB)
             if(direction == ENCRYPTION)
                return new ECB_Encryption(cipher, padding);
             else
@@ -120,7 +120,7 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
             }
          else if(mode == "CFB")
             {
-#ifdef BOTAN_HAS_CFB
+#if defined(BOTAN_HAS_CFB)
             if(direction == ENCRYPTION)
                return new CFB_Encryption(cipher, bits);
             else
@@ -133,7 +133,7 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
             {
             if(padding == "CTS")
                {
-#ifdef BOTAN_HAS_CTS
+#if defined(BOTAN_HAS_CTS)
                if(direction == ENCRYPTION)
                   return new CTS_Encryption(cipher);
                else
@@ -143,7 +143,7 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
 #endif
                }
 
-#ifdef BOTAN_HAS_CBC
+#if defined(BOTAN_HAS_CBC)
             if(direction == ENCRYPTION)
                return new CBC_Encryption(cipher, padding);
             else
@@ -154,7 +154,7 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
             }
          else if(mode == "EAX")
             {
-#ifdef BOTAN_HAS_EAX
+#if defined(BOTAN_HAS_EAX)
             if(direction == ENCRYPTION)
                return new EAX_Encryption(cipher, bits);
             else

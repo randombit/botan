@@ -9,52 +9,52 @@
 #include <botan/mgf1.h>
 #include <botan/util.h>
 
-#ifdef BOTAN_HAS_EMSA1
-   #include <botan/emsa1.h>
+#if defined(BOTAN_HAS_EMSA1)
+  #include <botan/emsa1.h>
 #endif
 
-#ifdef BOTAN_HAS_EMSA2
-   #include <botan/emsa2.h>
+#if defined(BOTAN_HAS_EMSA2)
+  #include <botan/emsa2.h>
 #endif
 
-#ifdef BOTAN_HAS_EMSA3
-   #include <botan/emsa3.h>
+#if defined(BOTAN_HAS_EMSA3)
+  #include <botan/emsa3.h>
 #endif
 
-#ifdef BOTAN_HAS_EMSA4
-   #include <botan/emsa4.h>
+#if defined(BOTAN_HAS_EMSA4)
+  #include <botan/emsa4.h>
 #endif
 
-#ifdef BOTAN_HAS_EMSA_RAW
-   #include <botan/emsa_raw.h>
+#if defined(BOTAN_HAS_EMSA_RAW)
+  #include <botan/emsa_raw.h>
 #endif
 
-#ifdef BOTAN_HAS_EME1
-   #include <botan/eme1.h>
+#if defined(BOTAN_HAS_EME1)
+  #include <botan/eme1.h>
 #endif
 
-#ifdef BOTAN_HAS_EME_PKCS1v15
-   #include <botan/eme_pkcs.h>
+#if defined(BOTAN_HAS_EME_PKCS1v15)
+  #include <botan/eme_pkcs.h>
 #endif
 
-#ifdef BOTAN_HAS_KDF1
-   #include <botan/kdf1.h>
+#if defined(BOTAN_HAS_KDF1)
+  #include <botan/kdf1.h>
 #endif
 
-#ifdef BOTAN_HAS_KDF2
-   #include <botan/kdf2.h>
+#if defined(BOTAN_HAS_KDF2)
+  #include <botan/kdf2.h>
 #endif
 
-#ifdef BOTAN_HAS_X942_PRF
-   #include <botan/prf_x942.h>
+#if defined(BOTAN_HAS_X942_PRF)
+  #include <botan/prf_x942.h>
 #endif
 
-#ifdef BOTAN_HAS_SSL_V3_PRF
-   #include <botan/prf_ssl3.h>
+#if defined(BOTAN_HAS_SSL_V3_PRF)
+  #include <botan/prf_ssl3.h>
 #endif
 
-#ifdef BOTAN_HAS_TLS_V10_PRF
-   #include <botan/prf_tls.h>
+#if defined(BOTAN_HAS_TLS_V10_PRF)
+  #include <botan/prf_tls.h>
 #endif
 
 namespace Botan {
@@ -67,7 +67,7 @@ EMSA* get_emsa(const std::string& algo_spec)
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
    const std::string emsa_name = global_state().deref_alias(name[0]);
 
-#ifdef BOTAN_HAS_EMSA_RAW
+#if defined(BOTAN_HAS_EMSA_RAW)
    if(emsa_name == "Raw")
       {
       if(name.size() == 1)
@@ -75,7 +75,7 @@ EMSA* get_emsa(const std::string& algo_spec)
       }
 #endif
 
-#ifdef BOTAN_HAS_EMSA1
+#if defined(BOTAN_HAS_EMSA1)
    if(emsa_name == "EMSA1")
       {
       if(name.size() == 2)
@@ -83,7 +83,7 @@ EMSA* get_emsa(const std::string& algo_spec)
       }
 #endif
 
-#ifdef BOTAN_HAS_EMSA2
+#if defined(BOTAN_HAS_EMSA2)
    if(emsa_name == "EMSA2")
       {
       if(name.size() == 2)
@@ -91,7 +91,7 @@ EMSA* get_emsa(const std::string& algo_spec)
       }
 #endif
 
-#ifdef BOTAN_HAS_EMSA3
+#if defined(BOTAN_HAS_EMSA3)
    if(emsa_name == "EMSA3")
       {
       if(name.size() == 2)
@@ -99,7 +99,7 @@ EMSA* get_emsa(const std::string& algo_spec)
       }
 #endif
 
-#ifdef BOTAN_HAS_EMSA4
+#if defined(BOTAN_HAS_EMSA4)
    if(emsa_name == "EMSA4")
       {
       if(name.size() == 2)
@@ -122,7 +122,7 @@ EME* get_eme(const std::string& algo_spec)
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
    const std::string eme_name = global_state().deref_alias(name[0]);
 
-#ifdef BOTAN_HAS_EME_PKCS1v15
+#if defined(BOTAN_HAS_EME_PKCS1v15)
    if(eme_name == "PKCS1v15")
       {
       if(name.size() == 1)
@@ -130,7 +130,7 @@ EME* get_eme(const std::string& algo_spec)
       }
 #endif
 
-#ifdef BOTAN_HAS_EME1
+#if defined(BOTAN_HAS_EME1)
    if(eme_name == "EME1")
       {
       if(name.size() == 2)
@@ -151,7 +151,7 @@ KDF* get_kdf(const std::string& algo_spec)
    std::vector<std::string> name = parse_algorithm_name(algo_spec);
    const std::string kdf_name = global_state().deref_alias(name[0]);
 
-#ifdef BOTAN_HAS_KDF1
+#if defined(BOTAN_HAS_KDF1)
    if(kdf_name == "KDF1")
       {
       if(name.size() == 2)
@@ -159,7 +159,7 @@ KDF* get_kdf(const std::string& algo_spec)
       }
 #endif
 
-#ifdef BOTAN_HAS_KDF2
+#if defined(BOTAN_HAS_KDF2)
    if(kdf_name == "KDF2")
       {
       if(name.size() == 2)
@@ -167,7 +167,7 @@ KDF* get_kdf(const std::string& algo_spec)
       }
 #endif
 
-#ifdef BOTAN_HAS_X942_PRF
+#if defined(BOTAN_HAS_X942_PRF)
    if(kdf_name == "X9.42-PRF")
       {
       if(name.size() == 2)
@@ -175,7 +175,7 @@ KDF* get_kdf(const std::string& algo_spec)
       }
 #endif
 
-#ifdef BOTAN_HAS_TLS_V10_PRF
+#if defined(BOTAN_HAS_TLS_V10_PRF)
    if(kdf_name == "TLS-PRF")
       {
       if(name.size() == 1)
@@ -183,7 +183,7 @@ KDF* get_kdf(const std::string& algo_spec)
       }
 #endif
 
-#ifdef BOTAN_HAS_SSL_V3_PRF
+#if defined(BOTAN_HAS_SSL_V3_PRF)
    if(kdf_name == "SSL3-PRF")
       {
       if(name.size() == 1)
