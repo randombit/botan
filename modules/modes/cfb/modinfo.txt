@@ -1,0 +1,10 @@
+realname "CFB block cipher mode"
+
+define CFB
+
+load_on auto
+
+<add>
+cfb.cpp
+cfb.h
+</add>

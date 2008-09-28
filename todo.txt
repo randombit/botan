@@ -1,0 +1,45 @@
+
+Add an option to disable modules by name (or group?)
+
+Handle arbitrarily nested modules (find modules -name modinfo.txt)
+
+Flatten outconfig output:
+
+  Enabled
+    ciphers:
+    hashes:
+    macs:
+    <etc>
+
+  Disabled:
+    ciphers:
+    hashes:
+    macs:
+    <etc>
+
+Move most code into modules
+ - Much ifdef
+
+Fix the macros, extension doesn't seem right
+
+ BOTAN_HAS_*?
+
+Move src/* to src/corelib ?
+Move modules/* to src/*
+rmdir modules
+
+Further splits (some modules requiring others)
+   RNGs
+
+   RSA, RW, DSA, ElGamal NR, DLIES, DH
+   BigInt itself
+   X.509/PKCS #10
+   ASN.1 modules
+
+
+ Finally the 'core module' baselib consisting of
+   base classes, libstate, allocators, etc,
+   which requires (or detects and uses) other modules
+
+Move default mlock/mutex code as if modules
+  (may need configure changes to avoid conflicts)

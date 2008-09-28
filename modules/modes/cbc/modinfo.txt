@@ -1,0 +1,10 @@
+realname "CBC block cipher mode"
+
+define CBC
+
+load_on auto
+
+<add>
+cbc.cpp
+cbc.h
+</add>
