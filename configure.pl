@@ -183,7 +183,7 @@ sub croak {
 }
 
 sub warning {
-    warn with_diagnostic('warning', @_);
+    print with_diagnostic('warning', @_);
 }
 
 sub autoconfig {
@@ -204,7 +204,7 @@ sub trace {
 
     $func =~ s/main:://;
 
-    warn with_diagnostic('trace', "at $func:$line - ", @_);
+    print with_diagnostic('trace', "at $func:$line - ", @_);
 }
 
 ##################################################
@@ -1066,6 +1066,8 @@ sub load_modules {
 sub load_module {
     my ($config, $modname) = @_;
 
+    trace("load_module($modname)");
+
     my %module = %{$MODULES{$modname}};
 
     my $works_on = sub {
@@ -1094,12 +1096,15 @@ sub load_module {
     croak("Module '$modname' does not work with $cc")
         unless(&$works_on($cc, $module{'cc'}));
 
+    trace($modname);
+    trace($module{"moddirs"});
+
     my $handle_files = sub {
         my($lst, $func) = @_;
         return unless defined($lst);
 
         foreach (sort @$lst) {
-            &$func($modname, $config, $_);
+            &$func($module{"moddirs"}, $config, $_);
         }
     };
 
@@ -1127,11 +1132,9 @@ sub file_type {
 }
 
 sub add_file {
-    my ($modname, $config, $file) = @_;
+    my ($mod_dir, $config, $file) = @_;
 
-    check_for_file($config, $file, $modname, $modname);
-
-    my $mod_dir = File::Spec->catdir($$config{'mods-dir'}, $modname);
+    check_for_file($config, $file, $mod_dir, $mod_dir);
 
     my $do_add_file = sub {
         my ($type) = @_;
@@ -1146,15 +1149,15 @@ sub add_file {
 }
 
 sub ignore_file {
-    my ($modname, $config, $file) = @_;
-    check_for_file($config, $file, undef, $modname);
+    my ($mod_dir, $config, $file) = @_;
+    check_for_file($config, $file, undef, $mod_dir);
 
     my $do_ignore_file = sub {
         my ($type, $ok_if_from) = @_;
 
         if(defined ($$config{$type}{$file})) {
 
-            croak("$modname - File $file modified from ",
+            croak("$mod_dir - File $file modified from ",
                   $$config{$type}{$file})
                 if($$config{$type}{$file} ne $ok_if_from);
 
@@ -1166,13 +1169,14 @@ sub ignore_file {
 }
 
 sub check_for_file {
-   my ($config, $file, $added_from, $modname) = @_;
+   my ($config, $file, $added_from, $mod_dir) = @_;
+
+   #trace("check_for_file($file, $added_from, $mod_dir)");
 
    my $full_path = sub {
-       my ($file,$modname) = @_;
+       my ($file,$mod_dir) = @_;
 
-       return File::Spec->catfile($$config{'mods-dir'}, $modname, $file)
-           if(defined($modname));
+       return File::Spec->catfile($mod_dir, $file) if(defined($mod_dir));
 
        my @typeinfo = file_type($config, $file);
        return File::Spec->catfile($typeinfo[1], $file);
@@ -1180,7 +1184,7 @@ sub check_for_file {
 
    $file = &$full_path($file, $added_from);
 
-   croak("Module $modname requires that file $file exist. This error\n      ",
+   croak("Module $mod_dir requires that file $file exist. This error\n      ",
          'should never occur; please contact the maintainers with details.')
        unless(-e $file);
 }
@@ -1324,11 +1328,17 @@ sub read_module_files {
     my $mod_dir = $$config{'mods-dir'};
 
     my %allinfo;
-    foreach my $dir (dir_list($mod_dir)) {
-        my $modfile = File::Spec->catfile($mod_dir, $dir, 'modinfo.txt');
-
+    foreach my $modfile (glob("modules/*/*/modinfo.txt")) {
         trace("reading $modfile");
-        %{$allinfo{$dir}} = get_module_info($dir, $modfile);
+
+        my ($volume,$dirs,$file) = File::Spec->splitpath($modfile);
+
+        my @dirs = File::Spec->splitdir($dirs);
+        my $moddir = $dirs[$#dirs-1];
+
+        trace("module $moddir in $dirs $modfile");
+
+        %{$allinfo{$moddir}} = get_module_info($dirs, $moddir, $modfile);
     }
 
     return %allinfo;
@@ -1339,11 +1349,13 @@ sub read_module_files {
 ##################################################
 
 sub get_module_info {
-   my ($name, $file) = @_;
-   my $reader = make_reader($file);
+   my ($dirs, $name, $modfile) = @_;
+   my $reader = make_reader($modfile);
 
    my %info;
    $info{'name'} = $name;
+   $info{'modinfo'} = $modfile;
+   $info{'moddirs'} = $dirs;
    $info{'load_on'} = 'request'; # default unless specified
    $info{'libs'} = {};
 
