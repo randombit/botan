@@ -1,0 +1,10 @@
+realname "DLIES"
+
+define DLIES
+
+load_on auto
+
+<add>
+dlies.cpp
+dlies.h
+</add>
