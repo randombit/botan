@@ -6,27 +6,27 @@
 #include <botan/pk_algs.h>
 
 #ifdef BOTAN_HAS_RSA
-#include <botan/rsa.h>
+  #include <botan/rsa.h>
 #endif
 
 #ifdef BOTAN_HAS_DSA
-#include <botan/dsa.h>
+  #include <botan/dsa.h>
 #endif
 
 #ifdef BOTAN_HAS_DH
-#include <botan/dh.h>
+  #include <botan/dh.h>
 #endif
 
 #ifdef BOTAN_HAS_NR
-#include <botan/nr.h>
+  #include <botan/nr.h>
 #endif
 
 #ifdef BOTAN_HAS_RW
-#include <botan/rw.h>
+  #include <botan/rw.h>
 #endif
 
 #ifdef BOTAN_HAS_ELGAMAL
-#include <botan/elgamal.h>
+  #include <botan/elgamal.h>
 #endif
 
 namespace Botan {
@@ -60,7 +60,6 @@ Public_Key* get_public_key(const std::string& alg_name)
    if(alg_name == "ELG") return new ElGamal_PublicKey;
 #endif
 
-
    return 0;
    }
 
@@ -92,7 +91,6 @@ Private_Key* get_private_key(const std::string& alg_name)
 #if defined(BOTAN_HAS_ELG)
    if(alg_name == "ELG") return new ElGamal_PrivateKey;
 #endif
-
 
    return 0;
    }
