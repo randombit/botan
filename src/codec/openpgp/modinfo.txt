@@ -1,0 +1,8 @@
+realname "OpenPGP Codec"
+
+define OPENPGP_CODEC
+
+<add>
+openpgp.cpp
+openpgp.h
+</add>
