@@ -120,20 +120,59 @@
   #include <botan/adler32.h>
 #endif
 
-#include <botan/crc24.h>
-#include <botan/crc32.h>
-#include <botan/fork256.h>
-#include <botan/has160.h>
-#include <botan/md2.h>
-#include <botan/md4.h>
-#include <botan/md5.h>
-#include <botan/rmd128.h>
-#include <botan/rmd160.h>
-#include <botan/sha160.h>
-#include <botan/sha256.h>
-#include <botan/sha_64.h>
-#include <botan/tiger.h>
-#include <botan/whrlpool.h>
+#ifdef BOTAN_HAS_CRC24
+   #include <botan/crc24.h>
+#endif
+
+#ifdef BOTAN_HAS_CRC32
+   #include <botan/crc32.h>
+#endif
+
+#ifdef BOTAN_HAS_FORK_256
+   #include <botan/fork256.h>
+#endif
+
+#ifdef BOTAN_HAS_HAS_160
+   #include <botan/has160.h>
+#endif
+
+#ifdef BOTAN_HAS_MD2
+   #include <botan/md2.h>
+#endif
+
+#ifdef BOTAN_HAS_MD4
+   #include <botan/md4.h>
+#endif
+
+#ifdef BOTAN_HAS_MD5
+   #include <botan/md5.h>
+#endif
+
+#ifdef BOTAN_HAS_RIPEMD128
+   #include <botan/rmd128.h>
+#endif
+
+#ifdef BOTAN_HAS_RIPEMD160
+   #include <botan/rmd160.h>
+#endif
+
+#ifdef BOTAN_HAS_SHA1
+   #include <botan/sha160.h>
+#endif
+
+#ifdef BOTAN_HAS_SHA2
+   #include <botan/sha256.h>
+   #include <botan/sha_64.h>
+#endif
+
+#ifdef BOTAN_HAS_TIGER
+   #include <botan/tiger.h>
+#endif
+
+#ifdef BOTAN_HAS_WHIRLPOOL
+   #include <botan/whrlpool.h>
+#endif
+
 #include <botan/par_hash.h>
 
 #include <botan/cbc_mac.h>
@@ -357,21 +396,60 @@ Default_Engine::find_hash(const std::string& algo_spec) const
    HANDLE_TYPE_NO_ARGS("Adler32", Adler32);
 #endif
 
+#ifdef BOTAN_HAS_CRC24
    HANDLE_TYPE_NO_ARGS("CRC24", CRC24);
+#endif
+
+#ifdef BOTAN_HAS_CRC32
    HANDLE_TYPE_NO_ARGS("CRC32", CRC32);
+#endif
+
+#ifdef BOTAN_HAS_FORK_256
    HANDLE_TYPE_NO_ARGS("FORK-256", FORK_256);
+#endif
+
+#ifdef BOTAN_HAS_HAS_160
    HANDLE_TYPE_NO_ARGS("HAS-160", HAS_160);
+#endif
+
+#ifdef BOTAN_HAS_MD2
    HANDLE_TYPE_NO_ARGS("MD2", MD2);
+#endif
+
+#ifdef BOTAN_HAS_MD4
    HANDLE_TYPE_NO_ARGS("MD4", MD4);
+#endif
+
+#ifdef BOTAN_HAS_MD5
    HANDLE_TYPE_NO_ARGS("MD5", MD5);
+#endif
+
+#ifdef BOTAN_HAS_RIPEMD_128
    HANDLE_TYPE_NO_ARGS("RIPEMD-128", RIPEMD_128);
+#endif
+
+#ifdef BOTAN_HAS_RIPEMD_160
    HANDLE_TYPE_NO_ARGS("RIPEMD-160", RIPEMD_160);
+#endif
+
+#ifdef BOTAN_HAS_SHA1
    HANDLE_TYPE_NO_ARGS("SHA-160", SHA_160);
+#endif
+
+#ifdef BOTAN_HAS_SHA2
    HANDLE_TYPE_NO_ARGS("SHA-256", SHA_256);
    HANDLE_TYPE_NO_ARGS("SHA-384", SHA_384);
    HANDLE_TYPE_NO_ARGS("SHA-512", SHA_512);
+#endif
+
+#ifdef BOTAN_HAS_TIGER
    HANDLE_TYPE_TWO_U32BIT("Tiger", Tiger, 24);
+#endif
+
+#ifdef BOTAN_HAS_WHIRLPOOL
    HANDLE_TYPE_NO_ARGS("Whirlpool", Whirlpool);
+#endif
+
 
    if(algo_name == "Parallel")
       {

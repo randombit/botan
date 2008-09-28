@@ -1,0 +1,11 @@
+realname "Tiger"
+
+define TIGER
+
+load_on auto
+
+<add>
+tig_tab.cpp
+tiger.cpp
+tiger.h
+</add>

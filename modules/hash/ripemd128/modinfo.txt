@@ -1,0 +1,10 @@
+realname "RIPEMD-128"
+
+define RIPEMD128
+
+load_on auto
+
+<add>
+rmd128.cpp
+rmd128.h
+</add>
