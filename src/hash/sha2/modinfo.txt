@@ -10,3 +10,7 @@ sha256.h
 sha_64.cpp
 sha_64.h
 </add>
+
+<requires>
+mdx_hash
+</requires>

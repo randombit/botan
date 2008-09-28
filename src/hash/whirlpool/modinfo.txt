@@ -9,3 +9,7 @@ whrl_tab.cpp
 whrlpool.cpp
 whrlpool.h
 </add>
+
+<requires>
+mdx_hash
+</requires>

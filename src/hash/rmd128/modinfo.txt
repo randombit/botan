@@ -8,3 +8,7 @@ load_on auto
 rmd128.cpp
 rmd128.h
 </add>
+
+<requires>
+mdx_hash
+</requires>

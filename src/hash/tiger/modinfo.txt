@@ -9,3 +9,7 @@ tig_tab.cpp
 tiger.cpp
 tiger.h
 </add>
+
+<requires>
+mdx_hash
+</requires>

@@ -1,14 +1,11 @@
-realname "SSE2 implementation of SHA-1"
+realname "SHA-1 (SSE2)"
 
 load_on request
 
-<replace>
+<add>
 sha160.cpp
 sha160.h
-</replace>
-
-<add>
-sha1core.cpp
+sha1_sse.cpp
 </add>
 
 <arch>

@@ -8,3 +8,7 @@ load_on auto
 has160.cpp
 has160.h
 </add>
+
+<requires>
+mdx_hash
+</requires>

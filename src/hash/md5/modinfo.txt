@@ -8,3 +8,7 @@ load_on auto
 md5.cpp
 md5.h
 </add>
+
+<requires>
+mdx_hash
+</requires>

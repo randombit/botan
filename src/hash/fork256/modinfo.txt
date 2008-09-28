@@ -8,3 +8,7 @@ load_on auto
 fork256.cpp
 fork256.h
 </add>
+
+<requires>
+mdx_hash
+</requires>

@@ -417,15 +417,12 @@ sub autoload_modules {
 
     my $asm_ok = $$config{'asm_ok'};
 
-    foreach my $mod (sort keys %MODULES) {
+    MOD: foreach my $mod (sort keys %MODULES) {
         my %modinfo = %{ $MODULES{$mod} };
-
-        trace("Loading $mod");
 
         my $realname = $modinfo{'realname'};
 
         if(defined($$config{'modules'}{$mod})) {
-
             my $n = $$config{'modules'}{$mod};
 
             if($n < 0) {
@@ -435,6 +432,23 @@ sub autoload_modules {
             else {
                 autoconfig("$mod ($realname): loading by user request");
                 next;
+            }
+        }
+
+        foreach my $req_mod (@{$modinfo{'requires'}}) {
+            if(defined($$config{'modules'}{$req_mod})) {
+                if($$config{'modules'}{$req_mod} < 0) {
+                    autoconfig("Disabling $mod since required module " .
+                               "$req_mod is disabled");
+
+                    $$config{'modules'}{$mod} = -1;
+                    next MOD;
+                }
+
+            } else {
+                autoconfig("Enabling module $req_mod - required by $mod");
+                $$config{'modules'}{$req_mod} = 1;
+                load_module($config, $req_mod);
             }
         }
 
@@ -996,14 +1010,6 @@ sub load_modules {
         next unless($$config{'modules'}{$mod} > 0);
 
         load_module($config, $mod);
-
-        foreach my $req_mod (@{$MODULES{$mod}{'requires'}}) {
-            unless(defined($$config{'modules'}{$req_mod})) {
-                autoconfig("Module $req_mod - required by $mod");
-                $$config{'modules'}{$req_mod} = 1;
-                load_module($config, $req_mod);
-            }
-        }
 
         push @mod_names, $mod;
 

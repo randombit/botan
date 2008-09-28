@@ -8,3 +8,7 @@ load_on auto
 md4.cpp
 md4.h
 </add>
+
+<requires>
+mdx_hash
+</requires>
