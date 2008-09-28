@@ -49,15 +49,6 @@ class BOTAN_DLL Mutex_Holder
       Mutex* mux;
    };
 
-/*************************************************
-* Default Mutex Factory                          *
-*************************************************/
-class BOTAN_DLL Default_Mutex_Factory : public Mutex_Factory
-   {
-   public:
-      Mutex* make();
-   };
-
 }
 
 #endif
