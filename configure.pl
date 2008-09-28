@@ -8,6 +8,7 @@ use Config;
 use Getopt::Long;
 use File::Spec;
 use File::Copy;
+use File::Find;
 use Sys::Hostname;
 
 my $MAJOR_VERSION = 1;
@@ -418,6 +419,8 @@ sub autoload_modules {
 
     foreach my $mod (sort keys %MODULES) {
         my %modinfo = %{ $MODULES{$mod} };
+
+        trace("Loading $mod");
 
         my $realname = $modinfo{'realname'};
 
@@ -1358,7 +1361,20 @@ sub read_module_files {
     my $mod_dir = $$config{'mods-dir'};
 
     my %allinfo;
-    foreach my $modfile (glob("modules/*/*/modinfo.txt")) {
+
+    my @modinfos;
+
+    File::Find::find(
+        { wanted => sub
+          { if(-f $_ && /^modinfo\.txt\z/s) {
+              my $name = $File::Find::name;
+              push @modinfos, $name;
+            }
+          }
+        },
+        $mod_dir);
+
+    foreach my $modfile (@modinfos) {
         trace("reading $modfile");
 
         my ($volume,$dirs,$file) = File::Spec->splitpath($modfile);
