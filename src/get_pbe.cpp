@@ -3,10 +3,18 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
+#include <botan/pbe.h>
 #include <botan/oids.h>
 #include <botan/lookup.h>
-#include <botan/pbe_pkcs.h>
 #include <botan/parsing.h>
+
+#if defined(BOTAN_HAS_PBE_PKCS_V15)
+  #include <botan/pbes1.h>
+#endif
+
+#if defined(BOTAN_HAS_PBE_PKCS_V20)
+  #include <botan/pbes2.h>
+#endif
 
 namespace Botan {
 
@@ -27,10 +35,15 @@ PBE* get_pbe(const std::string& pbe_name)
 
    PBE* pbe_obj = 0;
 
-   if(pbe == "PBE-PKCS5v15")
+#if defined(BOTAN_HAS_PBE_PKCS_V15)
+   if(!pbe_obj && pbe == "PBE-PKCS5v15")
       pbe_obj = new PBE_PKCS5v15(digest, cipher, ENCRYPTION);
-   else if(pbe == "PBE-PKCS5v20")
+#endif
+
+#if defined(BOTAN_HAS_PBE_PKCS_V20)
+   if(!pbe_obj && pbe == "PBE-PKCS5v20")
       pbe_obj = new PBE_PKCS5v20(digest, cipher);
+#endif
 
    if(!pbe_obj)
       throw Algorithm_Not_Found(pbe_name);
@@ -52,6 +65,7 @@ PBE* get_pbe(const OID& pbe_oid, DataSource& params)
 
    if(pbe_algo == "PBE-PKCS5v15")
       {
+#if defined(BOTAN_HAS_PBE_PKCS_V15)
       if(algo_name.size() != 3)
          throw Invalid_Algorithm_Name(pbe_oid.as_string());
       const std::string digest = algo_name[1];
@@ -59,9 +73,14 @@ PBE* get_pbe(const OID& pbe_oid, DataSource& params)
       PBE* pbe = new PBE_PKCS5v15(digest, cipher, DECRYPTION);
       pbe->decode_params(params);
       return pbe;
+#endif
       }
    else if(pbe_algo == "PBE-PKCS5v20")
+      {
+#if defined(BOTAN_HAS_PBE_PKCS_V20)
       return new PBE_PKCS5v20(params);
+#endif
+      }
 
    throw Algorithm_Not_Found(pbe_oid.as_string());
    }
