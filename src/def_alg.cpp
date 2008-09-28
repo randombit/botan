@@ -7,8 +7,6 @@
 #include <botan/libstate.h>
 #include <botan/parsing.h>
 
-#include <botan/cmac.h>
-#include <botan/hmac.h>
 #include <botan/par_hash.h>
 #include <botan/mode_pad.h>
 
@@ -180,6 +178,14 @@
 
 #ifdef BOTAN_HAS_CBC_MAC
    #include <botan/cbc_mac.h>
+#endif
+
+#ifdef BOTAN_HAS_CMAC
+   #include <botan/cmac.h>
+#endif
+
+#ifdef BOTAN_HAS_HMAC
+   #include <botan/hmac.h>
 #endif
 
 #ifdef BOTAN_HAS_SSL3_MAC
@@ -493,8 +499,13 @@ Default_Engine::find_mac(const std::string& algo_spec) const
    HANDLE_TYPE_ONE_STRING("CBC-MAC", CBC_MAC);
 #endif
 
+#ifdef BOTAN_HAS_CMAC
    HANDLE_TYPE_ONE_STRING("CMAC", CMAC);
+#endif
+
+#ifdef BOTAN_HAS_HMAC
    HANDLE_TYPE_ONE_STRING("HMAC", HMAC);
+#endif
 
 #ifdef BOTAN_HAS_SSL3_MAC
    HANDLE_TYPE_ONE_STRING("SSL3-MAC", SSL3_MAC);
