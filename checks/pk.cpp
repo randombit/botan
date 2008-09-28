@@ -13,7 +13,10 @@
 #include <botan/nr.h>
 #include <botan/rw.h>
 #include <botan/elgamal.h>
-#include <botan/dlies.h>
+
+#if defined(BOTAN_HAS_DLIES)
+  #include <botan/dlies.h>
+#endif
 
 #include <botan/filters.h>
 #include <botan/look_pk.h>
@@ -460,6 +463,7 @@ u32bit validate_dlies(const std::string& algo,
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
+#if defined(BOTAN_HAS_DLIES)
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]));
 
    DH_PrivateKey from(rng, domain, to_bigint(str[2]));
@@ -484,6 +488,9 @@ u32bit validate_dlies(const std::string& algo,
    bool failure = false;
    validate_encryption(e, d, algo, str[4], empty, str[5], failure);
    return (failure ? 1 : 0);
+#else
+   return 0;
+#endif
    }
 
 void do_pk_keygen_tests(RandomNumberGenerator& rng)
