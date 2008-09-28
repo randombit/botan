@@ -9,9 +9,12 @@
 #include <botan/stl_util.h>
 #include <botan/mutex.h>
 #include <botan/charset.h>
-#include <botan/selftest.h>
 #include <botan/lookup.h>
 #include <algorithm>
+
+#if defined(BOTAN_HAS_SELFTEST)
+  #include <botan/selftest.h>
+#endif
 
 namespace Botan {
 
@@ -248,11 +251,13 @@ void Library_State::initialize(const InitializerOptions& args,
    for(u32bit j = 0; j != mod_engines.size(); ++j)
       engines.push_back(mod_engines[j]);
 
+#if defined(BOTAN_HAS_SELFTEST)
    if(args.fips_mode() || args.self_test())
       {
       if(!passes_self_tests())
          throw Self_Test_Failure("Initialization self-tests");
       }
+#endif
    }
 
 /*************************************************
