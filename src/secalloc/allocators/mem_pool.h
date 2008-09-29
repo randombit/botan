@@ -25,7 +25,7 @@ class BOTAN_DLL Pooling_Allocator : public Allocator
 
       void destroy();
 
-      Pooling_Allocator();
+      Pooling_Allocator(Mutex*);
       ~Pooling_Allocator();
    private:
       void get_more_core(u32bit);

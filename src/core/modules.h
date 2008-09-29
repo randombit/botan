@@ -7,6 +7,7 @@
 #define BOTAN_MODULE_FACTORIES_H__
 
 #include <botan/init.h>
+#include <botan/mutex.h>
 #include <string>
 #include <vector>
 
@@ -22,7 +23,9 @@ class BOTAN_DLL Modules
 
       virtual std::string default_allocator() const = 0;
 
-      virtual std::vector<class Allocator*> allocators() const = 0;
+      virtual std::vector<class Allocator*>
+         allocators(Mutex_Factory*) const = 0;
+
       virtual std::vector<class Engine*> engines() const = 0;
 
       virtual ~Modules() {}
@@ -38,7 +41,7 @@ class BOTAN_DLL Builtin_Modules : public Modules
 
       std::string default_allocator() const;
 
-      std::vector<class Allocator*> allocators() const;
+      std::vector<class Allocator*> allocators(Mutex_Factory*) const;
       std::vector<class Engine*> engines() const;
 
       Builtin_Modules(const InitializerOptions&);

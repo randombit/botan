@@ -239,7 +239,7 @@ void Library_State::initialize(const InitializerOptions& args,
 
    cached_default_allocator = 0;
 
-   std::vector<Allocator*> mod_allocs = modules.allocators();
+   std::vector<Allocator*> mod_allocs = modules.allocators(mutex_factory);
    for(u32bit j = 0; j != mod_allocs.size(); ++j)
       add_allocator(mod_allocs[j]);
 

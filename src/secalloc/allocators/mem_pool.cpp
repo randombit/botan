@@ -6,8 +6,8 @@
 *************************************************/
 
 #include <botan/mem_pool.h>
-#include <botan/libstate.h>
 #include <botan/util.h>
+#include <botan/mem_ops.h>
 #include <algorithm>
 #include <exception>
 
@@ -107,9 +107,8 @@ void Pooling_Allocator::Memory_Block::free(void* ptr, u32bit blocks) throw()
 /*************************************************
 * Pooling_Allocator Constructor                  *
 *************************************************/
-Pooling_Allocator::Pooling_Allocator()
+Pooling_Allocator::Pooling_Allocator(Mutex* m) : mutex(m)
    {
-   mutex = global_state().get_mutex();
    last_used = blocks.begin();
    }
 

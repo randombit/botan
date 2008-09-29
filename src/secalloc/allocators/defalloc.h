@@ -28,6 +28,8 @@ class BOTAN_DLL Malloc_Allocator : public Allocator
 class BOTAN_DLL Locking_Allocator : public Pooling_Allocator
    {
    public:
+      Locking_Allocator(Mutex* m) : Pooling_Allocator(m) {}
+
       std::string type() const { return "locking"; }
    private:
       void* alloc_block(u32bit);

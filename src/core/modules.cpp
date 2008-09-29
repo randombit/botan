@@ -61,15 +61,15 @@ Mutex_Factory* Builtin_Modules::mutex_factory(bool thread_safe) const
 /*************************************************
 * Find any usable allocators                     *
 *************************************************/
-std::vector<Allocator*> Builtin_Modules::allocators() const
+std::vector<Allocator*> Builtin_Modules::allocators(Mutex_Factory* mf) const
    {
    std::vector<Allocator*> allocators;
 
 #if defined(BOTAN_HAS_ALLOC_MMAP)
-   allocators.push_back(new MemoryMapping_Allocator);
+   allocators.push_back(new MemoryMapping_Allocator(mf->make()));
 #endif
 
-   allocators.push_back(new Locking_Allocator);
+   allocators.push_back(new Locking_Allocator(mf->make()));
    allocators.push_back(new Malloc_Allocator);
 
    return allocators;
