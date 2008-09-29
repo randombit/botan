@@ -2,6 +2,8 @@ realname "ASN.1/BER/DER module"
 
 define ASN1
 
+load_on required
+
 <add>
 alg_id.cpp
 asn1_alt.cpp

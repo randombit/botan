@@ -18,4 +18,6 @@ cms_enc.h
 <requires>
 asn1
 filters
+pubkey
+x509
 </requires>

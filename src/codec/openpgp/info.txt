@@ -2,6 +2,8 @@ realname "OpenPGP Codec"
 
 define OPENPGP_CODEC
 
+load_on auto
+
 <add>
 openpgp.cpp
 openpgp.h
