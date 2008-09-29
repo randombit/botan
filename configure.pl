@@ -1048,8 +1048,6 @@ sub load_modules {
     my $gen_defines = sub {
         my $defines = '';
 
-        my $arch = $$config{'arch'};
-
         my $os = $$config{'os'};
         if($os ne 'generic') {
             $defines .= '#define BOTAN_TARGET_OS_IS_' . uc $os . "\n";
@@ -1062,6 +1060,7 @@ sub load_modules {
             $defines .= "\n";
         }
 
+        my $arch = $$config{'arch'};
         if($arch ne 'generic') {
             my %cpu_info = %{$CPU{$arch}};
             my $endian = $cpu_info{'endian'};
