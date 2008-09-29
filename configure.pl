@@ -1041,7 +1041,7 @@ sub load_modules {
 
     }
 
-    $$config{'mod-list'} = join('\n', @mod_names);
+    $$config{'mod-list'} = join("\n", @mod_names);
 
     my $gen_defines = sub {
         my $defines = '';
