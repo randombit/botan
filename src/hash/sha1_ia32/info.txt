@@ -12,7 +12,7 @@ sha1_ia32.h
 
 <requires>
 asm_ia32
-mdx_hash
+sha1
 utils
 </requires>
 

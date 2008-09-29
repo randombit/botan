@@ -20,7 +20,10 @@ class BOTAN_DLL SHA_160 : public MDx_HashFunction
       std::string name() const { return "SHA-160"; }
       HashFunction* clone() const { return new SHA_160; }
       SHA_160();
-   private:
+
+   protected:
+      SHA_160(u32bit W_size);
+
       void hash(const byte[]);
       void copy_out(byte[]);
 

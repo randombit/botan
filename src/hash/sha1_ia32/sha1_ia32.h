@@ -6,29 +6,22 @@
 #ifndef BOTAN_SHA_160_IA32_H__
 #define BOTAN_SHA_160_IA32_H__
 
-#include <botan/mdx_hash.h>
+#include <botan/sha160.h>
 
 namespace Botan {
 
 /*************************************************
 * SHA-160                                        *
 *************************************************/
-class BOTAN_DLL SHA_160_IA32 : public MDx_HashFunction
+class BOTAN_DLL SHA_160_IA32 : public SHA_160
    {
    public:
-      void clear() throw();
-      std::string name() const { return "SHA-160"; }
       HashFunction* clone() const { return new SHA_160_IA32; }
 
-      SHA_160_IA32() : MDx_HashFunction(20, 64, true, true) { clear(); }
+      // Note 81 instead of normal 80: IA-32 asm needs an extra temp
+      SHA_160_IA32() : SHA_160(81) {}
    private:
       void hash(const byte[]);
-      void copy_out(byte[]);
-
-      SecureBuffer<u32bit, 5> digest;
-
-      // Note 81 instead of normal 80: IA-32 asm needs an extra temp
-      SecureBuffer<u32bit, 81> W;
    };
 
 }

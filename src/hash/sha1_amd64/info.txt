@@ -10,7 +10,7 @@ sha1_amd64.h
 
 <requires>
 asm_amd64
-mdx_hash
+sha1
 utils
 </requires>
 
