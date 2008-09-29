@@ -8,7 +8,6 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
-#include <botan/libstate.h>
 #include <botan/oids.h>
 #include <botan/util.h>
 
@@ -17,7 +16,8 @@ namespace Botan {
 /*************************************************
 * Create a CRL_Entry                             *
 *************************************************/
-CRL_Entry::CRL_Entry()
+CRL_Entry::CRL_Entry(bool t_on_unknown_crit) :
+   throw_on_unknown_critical(t_on_unknown_crit)
    {
    reason = UNSPECIFIED;
    }
@@ -25,7 +25,8 @@ CRL_Entry::CRL_Entry()
 /*************************************************
 * Create a CRL_Entry                             *
 *************************************************/
-CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why)
+CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why) :
+   throw_on_unknown_critical(false)
    {
    serial = cert.serial_number();
    time = X509_Time(system_time());
@@ -91,14 +92,7 @@ void CRL_Entry::decode_from(BER_Decoder& source)
 
    if(source.more_items())
       {
-      std::string action =
-         global_state().option("x509/crl/unknown_critical");
-
-      if(action != "throw" && action != "ignore")
-         throw Invalid_Argument("Bad setting x509/crl/unknown_critical: "
-                                + action);
-
-      Extensions extensions(action == "throw");
+      Extensions extensions(throw_on_unknown_critical);
       source.decode(extensions);
       Data_Store info;
       extensions.contents_to(info, info);

@@ -96,11 +96,16 @@ bool EMSA2::verify(const MemoryRegion<byte>& coded,
 *************************************************/
 EMSA2::EMSA2(const std::string& hash_name)
    {
-   hash_id = ieee1363_hash_id(hash_name);
-   if(hash_id == 0)
-      throw Encoding_Error("EMSA2 cannot be used with " + hash->name());
    hash = get_hash(hash_name);
    empty_hash = hash->final();
+
+   hash_id = ieee1363_hash_id(hash->name());
+
+   if(hash_id == 0)
+      {
+      delete hash;
+      throw Encoding_Error("EMSA2 cannot be used with " + hash->name());
+      }
    }
 
 }

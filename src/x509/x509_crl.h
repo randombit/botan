@@ -33,10 +33,12 @@ class BOTAN_DLL X509_CRL : public X509_Object
       X509_Time this_update() const;
       X509_Time next_update() const;
 
-      X509_CRL(DataSource&);
-      X509_CRL(const std::string&);
+      X509_CRL(DataSource&, bool throw_on_unknown_critical = false);
+      X509_CRL(const std::string&, bool throw_on_unknown_critical = false);
    private:
       void force_decode();
+
+      bool throw_on_unknown_critical;
       std::vector<CRL_Entry> revoked;
       Data_Store info;
    };

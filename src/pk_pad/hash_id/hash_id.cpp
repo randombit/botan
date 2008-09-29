@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/hash_id.h>
-#include <botan/libstate.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
@@ -51,10 +51,8 @@ const byte TIGER_ID[] = {
 /*************************************************
 * Return the HashID, as specified by PKCS        *
 *************************************************/
-MemoryVector<byte> pkcs_hash_id(const std::string& name_or_alias)
+MemoryVector<byte> pkcs_hash_id(const std::string& name)
    {
-   const std::string name = global_state().deref_alias(name_or_alias);
-
    MemoryVector<byte> out;
 
    if(name == "Parallel(MD5,SHA-160)")
@@ -82,16 +80,14 @@ MemoryVector<byte> pkcs_hash_id(const std::string& name_or_alias)
    if(out.size())
       return out;
 
-   throw Invalid_Argument("No PKCS #1 identifier for " + name_or_alias);
+   throw Invalid_Argument("No PKCS #1 identifier for " + name);
    }
 
 /*************************************************
 * Return the HashID, as specified by IEEE 1363   *
 *************************************************/
-byte ieee1363_hash_id(const std::string& name_or_alias)
+byte ieee1363_hash_id(const std::string& name)
    {
-   const std::string name = global_state().deref_alias(name_or_alias);
-
    if(name == "RIPEMD-160") return 0x31;
    if(name == "RIPEMD-128") return 0x32;
    if(name == "SHA-160")    return 0x33;

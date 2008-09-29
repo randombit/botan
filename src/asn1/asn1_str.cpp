@@ -49,7 +49,7 @@ ASN1_Tag choose_encoding(const std::string& str,
          {
          if(type == "utf8")   return UTF8_STRING;
          if(type == "latin1") return T61_STRING;
-         throw Invalid_Argument("Bad setting for x509/ca/str_type: " + type);
+         throw Invalid_Argument("choose_encoding: Bad string type " + type);
          }
       }
    return PRINTABLE_STRING;

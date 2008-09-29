@@ -23,10 +23,11 @@ class BOTAN_DLL CRL_Entry : public ASN1_Object
       X509_Time expire_time() const { return time; }
       CRL_Code reason_code() const { return reason; }
 
-      CRL_Entry();
+      CRL_Entry(bool throw_on_unknown_critical_extension = false);
       CRL_Entry(const X509_Certificate&, CRL_Code = UNSPECIFIED);
 
    private:
+      bool throw_on_unknown_critical;
       MemoryVector<byte> serial;
       X509_Time time;
       CRL_Code reason;

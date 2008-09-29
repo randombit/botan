@@ -8,7 +8,6 @@
 #include <botan/ber_dec.h>
 #include <botan/parsing.h>
 #include <botan/bigint.h>
-#include <botan/libstate.h>
 #include <botan/oids.h>
 
 namespace Botan {
@@ -16,7 +15,8 @@ namespace Botan {
 /*************************************************
 * Load a X.509 CRL                               *
 *************************************************/
-X509_CRL::X509_CRL(DataSource& in) : X509_Object(in, "X509 CRL/CRL")
+X509_CRL::X509_CRL(DataSource& in, bool touc) :
+   X509_Object(in, "X509 CRL/CRL"), throw_on_unknown_critical(touc)
    {
    do_decode();
    }
@@ -24,7 +24,8 @@ X509_CRL::X509_CRL(DataSource& in) : X509_Object(in, "X509 CRL/CRL")
 /*************************************************
 * Load a X.509 CRL                               *
 *************************************************/
-X509_CRL::X509_CRL(const std::string& in) : X509_Object(in, "CRL/X509 CRL")
+X509_CRL::X509_CRL(const std::string& in, bool touc) :
+   X509_Object(in, "CRL/X509 CRL"), throw_on_unknown_critical(touc)
    {
    do_decode();
    }
@@ -66,7 +67,7 @@ void X509_CRL::force_decode()
 
       while(cert_list.more_items())
          {
-         CRL_Entry entry;
+         CRL_Entry entry(throw_on_unknown_critical);
          cert_list.decode(entry);
          revoked.push_back(entry);
          }
@@ -78,12 +79,7 @@ void X509_CRL::force_decode()
       {
       BER_Decoder crl_options(next.value);
 
-      std::string action = global_state().option("x509/crl/unknown_critical");
-      if(action != "throw" && action != "ignore")
-         throw Invalid_Argument("Bad value of x509/crl/unknown_critical: "
-                                + action);
-
-      Extensions extensions(action == "throw");
+      Extensions extensions(throw_on_unknown_critical);
 
       crl_options.decode(extensions).verify_end();
 

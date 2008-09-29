@@ -90,8 +90,8 @@ bool EMSA3::verify(const MemoryRegion<byte>& coded,
 *************************************************/
 EMSA3::EMSA3(const std::string& hash_name)
    {
-   hash_id = pkcs_hash_id(hash_name);
    hash = get_hash(hash_name);
+   hash_id = pkcs_hash_id(hash->name());
    }
 
 }

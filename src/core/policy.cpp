@@ -218,13 +218,6 @@ void set_default_config(Library_State& config)
    config.set_option("pk/test/private", "basic");
    config.set_option("pk/test/private_gen", "all");
 
-   config.set_option("x509/ca/allow_ca", "false");
-   config.set_option("x509/ca/basic_constraints", "always");
-   config.set_option("x509/ca/rsa_hash", "SHA-1");
-
-   config.set_option("x509/crl/unknown_critical", "ignore");
-   config.set_option("x509/crl/next_update", "7d");
-
    config.set_option("x509/exts/basic_constraints", "critical");
    config.set_option("x509/exts/subject_key_id", "yes");
    config.set_option("x509/exts/authority_key_id", "yes");
