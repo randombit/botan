@@ -488,7 +488,7 @@ sub autoload_modules {
             }
         }
 
-        autoconfig("Enabling $mod ($realname): loading");
+        #autoconfig("Enabling $mod ($realname): loading");
         $loaded{$type}{$mod} = 1;
         $$config{'modules'}{$mod} = 1;
     }
