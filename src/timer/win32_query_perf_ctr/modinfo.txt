@@ -18,3 +18,8 @@ windows
 <libs>
 windows -> user32
 </libs>
+
+<requires>
+timer_base
+</requires>
+

@@ -21,3 +21,8 @@ linux
 #netbsd
 #openbsd
 </os>
+
+<requires>
+timer_base
+</requires>
+

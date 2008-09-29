@@ -25,3 +25,8 @@ qnx
 solaris
 tru64
 </os>
+
+<requires>
+timer_base
+</requires>
+

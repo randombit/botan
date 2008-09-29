@@ -29,3 +29,8 @@ ia64    # ar.itc
 s390x
 hppa
 </arch>
+
+<requires>
+timer_base
+</requires>
+
