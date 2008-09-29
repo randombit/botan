@@ -221,7 +221,6 @@ void set_default_config(Library_State& config)
    config.set_option("x509/ca/allow_ca", "false");
    config.set_option("x509/ca/basic_constraints", "always");
    config.set_option("x509/ca/rsa_hash", "SHA-1");
-   config.set_option("x509/ca/str_type", "latin1");
 
    config.set_option("x509/crl/unknown_critical", "ignore");
    config.set_option("x509/crl/next_update", "7d");

@@ -8,7 +8,6 @@
 #include <botan/ber_dec.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -78,8 +77,7 @@ ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : tag(t)
    iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
 
    if(tag == DIRECTORY_STRING)
-      tag = choose_encoding(iso_8859_str,
-                            global_state().option("x509/ca/str_type"));
+      tag = choose_encoding(iso_8859_str, "latin1");
 
    if(tag != NUMERIC_STRING &&
       tag != PRINTABLE_STRING &&
@@ -98,8 +96,7 @@ ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : tag(t)
 ASN1_String::ASN1_String(const std::string& str)
    {
    iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
-   tag = choose_encoding(iso_8859_str,
-                         global_state().option("x509/ca/str_type"));
+   tag = choose_encoding(iso_8859_str, "latin1");
    }
 
 /*************************************************
