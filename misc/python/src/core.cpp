@@ -24,7 +24,7 @@ BOOST_PYTHON_MODULE(_botan)
 
    python::class_<OctetString>("OctetString")
       .def(python::init< python::optional<std::string> >())
-      .def(python::init< u32bit >())
+      //.def(python::init< u32bit >())
       .def("__str__", &OctetString::as_string)
       .def("__len__", &OctetString::length);
 

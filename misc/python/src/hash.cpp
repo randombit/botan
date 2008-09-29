@@ -14,6 +14,8 @@ class Py_HashFunction : public HashFunction
       virtual void hash_str(const std::string&) = 0;
       virtual std::string final_str() = 0;
 
+      void clear() throw() {}
+
       void add_data(const byte input[], u32bit length)
          {
          hash_str(make_string(input, length));
@@ -33,6 +35,8 @@ class Wrapped_HashFunction : public HashFunction
    public:
       void add_data(const byte in[], u32bit len) { hash->update(in, len); }
       void final_result(byte out[]) { hash->final(out); }
+
+      void clear() throw() {}
 
       std::string name() const { return hash->name(); }
       HashFunction* clone() const { return hash->clone(); }

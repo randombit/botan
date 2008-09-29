@@ -44,6 +44,7 @@ std::string encode_priv(const Private_Key* key,
       throw Encoding_Error("Unknown key encoding method " + type);
    }
 
+/*
 Private_Key* load_priv(const std::string& file, const std::string& pass)
    {
    return PKCS8::load_key(file, pass);
@@ -53,7 +54,9 @@ Public_Key* load_public(const std::string& file)
    {
    return X509::load_key(file);
    }
+*/
 
+/*
 std::string encrypt_string(const PK_Encryptor* enc, const std::string& in)
    {
    SecureVector<byte> cipher = enc->encrypt((const byte*)in.data(), in.length());
@@ -65,13 +68,16 @@ std::string decrypt_string(const PK_Decryptor* dec, const std::string& in)
    SecureVector<byte> plain = dec->decrypt((const byte*)in.data(), in.length());
    return std::string((const char*)plain.begin(), plain.size());
    }
+*/
 
 void export_pk()
    {
+   /*
    python::def("private_key", load_priv,
                python::return_value_policy<python::manage_new_object>());
    python::def("public_key", load_public,
                python::return_value_policy<python::manage_new_object>());
+   */
 
    python::class_<Public_Key, boost::noncopyable>
       ("Public_Key", python::no_init)
@@ -95,8 +101,10 @@ void export_pk()
    python::class_<DSA_PublicKey, python::bases<Public_Key> >
       ("DSA_PublicKey", python::no_init);
 
+   /*
    python::class_<RSA_PrivateKey, python::bases<RSA_PublicKey, PK_Decrypting_Key> >
       ("RSA_PrivateKey", python::init<u32bit>());
+   */
 
    /*
    python::class_<PK_Encryptor, boost::noncopyable>

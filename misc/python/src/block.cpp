@@ -15,6 +15,8 @@ class Py_BlockCipher : public BlockCipher
       virtual std::string dec_str(const std::string&) const = 0;
       virtual void set_key_obj(const OctetString&) = 0;
 
+      void clear() throw() {}
+
       void enc(const byte in[], byte out[]) const
          {
          string2binary(
@@ -63,6 +65,8 @@ std::string decrypt_string(BlockCipher* cipher, const std::string& in)
 class Wrapped_Block_Cipher : public BlockCipher
    {
    public:
+      void clear() throw() { cipher->clear(); }
+
       void enc(const byte in[], byte out[]) const { cipher->encrypt(in, out); }
       void dec(const byte in[], byte out[]) const { cipher->decrypt(in, out); }
       void key(const byte key[], u32bit len) { cipher->set_key(key, len); }
@@ -88,6 +92,11 @@ class Py_BlockCipher_Wrapper : public Py_BlockCipher,
          python::object py_clone = self.attr("__class__")();
          BlockCipher* bc = python::extract<BlockCipher*>(py_clone);
          return new Wrapped_Block_Cipher(py_clone, bc);
+         }
+
+      void clear() throw()
+         {
+         this->get_override("clear")();
          }
 
       std::string name() const

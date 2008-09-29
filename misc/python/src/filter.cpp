@@ -92,7 +92,9 @@ Filter* make_filter3(const std::string& name,
                      const SymmetricKey& key,
                      Cipher_Dir direction)
    {
-   return return_or_raise(get_cipher(name, key, direction), name);
+   return return_or_raise(
+      get_cipher(global_state(), name, key, direction),
+      name);
    }
 
 Filter* make_filter4(const std::string& name,
@@ -100,7 +102,9 @@ Filter* make_filter4(const std::string& name,
                      const InitializationVector& iv,
                      Cipher_Dir direction)
    {
-   return return_or_raise(get_cipher(name, key, iv, direction), name);
+   return return_or_raise(
+      get_cipher(global_state(), name, key, iv, direction),
+      name);
    }
 
 void append_filter(Pipe& pipe, std::auto_ptr<Filter> filter)
