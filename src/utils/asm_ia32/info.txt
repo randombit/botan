@@ -1,6 +1,6 @@
 realname "Assembler Macros (IA-32)"
 
-load_on required
+load_on request
 
 <add>
 asm_macr.h
