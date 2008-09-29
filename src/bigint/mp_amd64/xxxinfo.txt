@@ -1,15 +1,13 @@
-realname "x86-64 MPI Assembler Core"
+realname "MPI Core (x86-64)"
 
 mp_bits 64
 
 load_on asm_ok
 
-<replace>
-bswap.h
+<add>
 mp_asm.h
 mp_asmi.h
-#mp_mulop.cpp
-</replace>
+</add>
 
 <arch>
 amd64

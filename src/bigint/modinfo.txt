@@ -6,6 +6,7 @@ define BIGINT
 
 <requires>
 hex
+mp_generic
 </requires>
 
 <add>
@@ -25,8 +26,6 @@ dsa_gen.cpp
 jacobi.cpp
 make_prm.cpp
 mp_asm.cpp
-mp_asm.h
-mp_asmi.h
 mp_comba.cpp
 mp_core.h
 mp_karat.cpp

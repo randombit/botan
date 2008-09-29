@@ -1,13 +1,13 @@
-realname "x86 MPI Assembler Core"
+realname "MPI Core (x86)"
 
 mp_bits 32
 
 load_on asm_ok
 
-<replace>
+<add>
 mp_asm.h
 mp_asmi.h
-</replace>
+</add>
 
 <arch>
 ia32
