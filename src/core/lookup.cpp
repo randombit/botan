@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/lookup.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -12,7 +13,7 @@ namespace Botan {
 *************************************************/
 BlockCipher* get_block_cipher(const std::string& name)
    {
-   const BlockCipher* cipher = retrieve_block_cipher(name);
+   const BlockCipher* cipher = retrieve_block_cipher(global_state(), name);
    if(cipher)
       return cipher->clone();
    throw Algorithm_Not_Found(name);
@@ -23,7 +24,7 @@ BlockCipher* get_block_cipher(const std::string& name)
 *************************************************/
 StreamCipher* get_stream_cipher(const std::string& name)
    {
-   const StreamCipher* cipher = retrieve_stream_cipher(name);
+   const StreamCipher* cipher = retrieve_stream_cipher(global_state(), name);
    if(cipher)
       return cipher->clone();
    throw Algorithm_Not_Found(name);
@@ -34,7 +35,7 @@ StreamCipher* get_stream_cipher(const std::string& name)
 *************************************************/
 HashFunction* get_hash(const std::string& name)
    {
-   const HashFunction* hash = retrieve_hash(name);
+   const HashFunction* hash = retrieve_hash(global_state(), name);
    if(hash)
       return hash->clone();
    throw Algorithm_Not_Found(name);
@@ -45,7 +46,7 @@ HashFunction* get_hash(const std::string& name)
 *************************************************/
 MessageAuthenticationCode* get_mac(const std::string& name)
    {
-   const MessageAuthenticationCode* mac = retrieve_mac(name);
+   const MessageAuthenticationCode* mac = retrieve_mac(global_state(), name);
    if(mac)
       return mac->clone();
    throw Algorithm_Not_Found(name);
@@ -56,7 +57,7 @@ MessageAuthenticationCode* get_mac(const std::string& name)
 *************************************************/
 S2K* get_s2k(const std::string& name)
    {
-   const S2K* s2k = retrieve_s2k(name);
+   const S2K* s2k = retrieve_s2k(global_state(), name);
    if(s2k)
       return s2k->clone();
    throw Algorithm_Not_Found(name);
@@ -67,7 +68,9 @@ S2K* get_s2k(const std::string& name)
 *************************************************/
 const BlockCipherModePaddingMethod* get_bc_pad(const std::string& name)
    {
-   const BlockCipherModePaddingMethod* pad = retrieve_bc_pad(name);
+   const BlockCipherModePaddingMethod* pad =
+      retrieve_bc_pad(global_state(), name);
+
    if(pad)
       return pad;
    throw Algorithm_Not_Found(name);
@@ -78,13 +81,13 @@ const BlockCipherModePaddingMethod* get_bc_pad(const std::string& name)
 *************************************************/
 bool have_algorithm(const std::string& name)
    {
-   if(retrieve_block_cipher(name))
+   if(retrieve_block_cipher(global_state(), name))
       return true;
-   if(retrieve_stream_cipher(name))
+   if(retrieve_stream_cipher(global_state(), name))
       return true;
-   if(retrieve_hash(name))
+   if(retrieve_hash(global_state(), name))
       return true;
-   if(retrieve_mac(name))
+   if(retrieve_mac(global_state(), name))
       return true;
    return false;
    }
@@ -94,7 +97,7 @@ bool have_algorithm(const std::string& name)
 *************************************************/
 bool have_block_cipher(const std::string& name)
    {
-   return (retrieve_block_cipher(name) != 0);
+   return (retrieve_block_cipher(global_state(), name) != 0);
    }
 
 /*************************************************
@@ -102,7 +105,7 @@ bool have_block_cipher(const std::string& name)
 *************************************************/
 bool have_stream_cipher(const std::string& name)
    {
-   return (retrieve_stream_cipher(name) != 0);
+   return (retrieve_stream_cipher(global_state(), name) != 0);
    }
 
 /*************************************************
@@ -110,7 +113,7 @@ bool have_stream_cipher(const std::string& name)
 *************************************************/
 bool have_hash(const std::string& name)
    {
-   return (retrieve_hash(name) != 0);
+   return (retrieve_hash(global_state(), name) != 0);
    }
 
 /*************************************************
@@ -118,7 +121,7 @@ bool have_hash(const std::string& name)
 *************************************************/
 bool have_mac(const std::string& name)
    {
-   return (retrieve_mac(name) != 0);
+   return (retrieve_mac(global_state(), name) != 0);
    }
 
 /*************************************************
@@ -126,11 +129,11 @@ bool have_mac(const std::string& name)
 *************************************************/
 u32bit block_size_of(const std::string& name)
    {
-   const BlockCipher* cipher = retrieve_block_cipher(name);
+   const BlockCipher* cipher = retrieve_block_cipher(global_state(), name);
    if(cipher)
       return cipher->BLOCK_SIZE;
 
-   const HashFunction* hash = retrieve_hash(name);
+   const HashFunction* hash = retrieve_hash(global_state(), name);
    if(hash)
       return hash->HASH_BLOCK_SIZE;
 
@@ -142,11 +145,11 @@ u32bit block_size_of(const std::string& name)
 *************************************************/
 u32bit output_length_of(const std::string& name)
    {
-   const HashFunction* hash = retrieve_hash(name);
+   const HashFunction* hash = retrieve_hash(global_state(), name);
    if(hash)
       return hash->OUTPUT_LENGTH;
 
-   const MessageAuthenticationCode* mac = retrieve_mac(name);
+   const MessageAuthenticationCode* mac = retrieve_mac(global_state(), name);
    if(mac)
       return mac->OUTPUT_LENGTH;
 
@@ -158,15 +161,15 @@ u32bit output_length_of(const std::string& name)
 *************************************************/
 bool valid_keylength_for(u32bit key_len, const std::string& name)
    {
-   const BlockCipher* bc = retrieve_block_cipher(name);
+   const BlockCipher* bc = retrieve_block_cipher(global_state(), name);
    if(bc)
       return bc->valid_keylength(key_len);
 
-   const StreamCipher* sc = retrieve_stream_cipher(name);
+   const StreamCipher* sc = retrieve_stream_cipher(global_state(), name);
    if(sc)
       return sc->valid_keylength(key_len);
 
-   const MessageAuthenticationCode* mac = retrieve_mac(name);
+   const MessageAuthenticationCode* mac = retrieve_mac(global_state(), name);
    if(mac)
       return mac->valid_keylength(key_len);
 
@@ -178,15 +181,15 @@ bool valid_keylength_for(u32bit key_len, const std::string& name)
 *************************************************/
 u32bit min_keylength_of(const std::string& name)
    {
-   const BlockCipher* bc = retrieve_block_cipher(name);
+   const BlockCipher* bc = retrieve_block_cipher(global_state(), name);
    if(bc)
       return bc->MINIMUM_KEYLENGTH;
 
-   const StreamCipher* sc = retrieve_stream_cipher(name);
+   const StreamCipher* sc = retrieve_stream_cipher(global_state(), name);
    if(sc)
       return sc->MINIMUM_KEYLENGTH;
 
-   const MessageAuthenticationCode* mac = retrieve_mac(name);
+   const MessageAuthenticationCode* mac = retrieve_mac(global_state(), name);
    if(mac)
       return mac->MINIMUM_KEYLENGTH;
 
@@ -198,15 +201,15 @@ u32bit min_keylength_of(const std::string& name)
 *************************************************/
 u32bit max_keylength_of(const std::string& name)
    {
-   const BlockCipher* bc = retrieve_block_cipher(name);
+   const BlockCipher* bc = retrieve_block_cipher(global_state(), name);
    if(bc)
       return bc->MAXIMUM_KEYLENGTH;
 
-   const StreamCipher* sc = retrieve_stream_cipher(name);
+   const StreamCipher* sc = retrieve_stream_cipher(global_state(), name);
    if(sc)
       return sc->MAXIMUM_KEYLENGTH;
 
-   const MessageAuthenticationCode* mac = retrieve_mac(name);
+   const MessageAuthenticationCode* mac = retrieve_mac(global_state(), name);
    if(mac)
       return mac->MAXIMUM_KEYLENGTH;
 
@@ -218,15 +221,15 @@ u32bit max_keylength_of(const std::string& name)
 *************************************************/
 u32bit keylength_multiple_of(const std::string& name)
    {
-   const BlockCipher* bc = retrieve_block_cipher(name);
+   const BlockCipher* bc = retrieve_block_cipher(global_state(), name);
    if(bc)
       return bc->KEYLENGTH_MULTIPLE;
 
-   const StreamCipher* sc = retrieve_stream_cipher(name);
+   const StreamCipher* sc = retrieve_stream_cipher(global_state(), name);
    if(sc)
       return sc->KEYLENGTH_MULTIPLE;
 
-   const MessageAuthenticationCode* mac = retrieve_mac(name);
+   const MessageAuthenticationCode* mac = retrieve_mac(global_state(), name);
    if(mac)
       return mac->KEYLENGTH_MULTIPLE;
 

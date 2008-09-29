@@ -33,7 +33,7 @@ void PBE_PKCS5v15::write(const byte input[], u32bit length)
 *************************************************/
 void PBE_PKCS5v15::start_msg()
    {
-   pipe.append(get_cipher(cipher, key, iv, direction));
+   pipe.append(get_cipher(global_state(), cipher, key, iv, direction));
    pipe.start_msg();
    if(pipe.message_count() > 1)
       pipe.set_default_msg(pipe.default_msg() + 1);

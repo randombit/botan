@@ -123,9 +123,10 @@ Modular_Exponentiator* mod_exp(const BigInt& n, Power_Mod::Usage_Hints hints)
 /*************************************************
 * Acquire a block cipher                         *
 *************************************************/
-const BlockCipher* retrieve_block_cipher(const std::string& name)
+const BlockCipher* retrieve_block_cipher(Library_State& libstate,
+                                         const std::string& name)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Library_State::Engine_Iterator i(libstate);
 
    while(const Engine* engine = i.next())
       {
@@ -140,9 +141,10 @@ const BlockCipher* retrieve_block_cipher(const std::string& name)
 /*************************************************
 * Acquire a stream cipher                        *
 *************************************************/
-const StreamCipher* retrieve_stream_cipher(const std::string& name)
+const StreamCipher* retrieve_stream_cipher(Library_State& libstate,
+                                           const std::string& name)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Library_State::Engine_Iterator i(libstate);
 
    while(const Engine* engine = i.next())
       {
@@ -157,9 +159,10 @@ const StreamCipher* retrieve_stream_cipher(const std::string& name)
 /*************************************************
 * Acquire a hash function                        *
 *************************************************/
-const HashFunction* retrieve_hash(const std::string& name)
+const HashFunction* retrieve_hash(Library_State& libstate,
+                                  const std::string& name)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Library_State::Engine_Iterator i(libstate);
 
    while(const Engine* engine = i.next())
       {
@@ -174,9 +177,10 @@ const HashFunction* retrieve_hash(const std::string& name)
 /*************************************************
 * Acquire an authentication code                 *
 *************************************************/
-const MessageAuthenticationCode* retrieve_mac(const std::string& name)
+const MessageAuthenticationCode* retrieve_mac(Library_State& libstate,
+                                              const std::string& name)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Library_State::Engine_Iterator i(libstate);
 
    while(const Engine* engine = i.next())
       {
@@ -191,9 +195,10 @@ const MessageAuthenticationCode* retrieve_mac(const std::string& name)
 /*************************************************
 * Acquire a string-to-key algorithm              *
 *************************************************/
-const S2K* retrieve_s2k(const std::string& name)
+const S2K* retrieve_s2k(Library_State& libstate,
+                        const std::string& name)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Library_State::Engine_Iterator i(libstate);
 
    while(const Engine* engine = i.next())
       {
@@ -208,9 +213,10 @@ const S2K* retrieve_s2k(const std::string& name)
 /*************************************************
 * Retrieve a block cipher padding method         *
 *************************************************/
-const BlockCipherModePaddingMethod* retrieve_bc_pad(const std::string& name)
+const BlockCipherModePaddingMethod* retrieve_bc_pad(Library_State& libstate,
+                                                    const std::string& name)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Library_State::Engine_Iterator i(libstate);
 
    while(const Engine* engine = i.next())
       {
@@ -225,9 +231,9 @@ const BlockCipherModePaddingMethod* retrieve_bc_pad(const std::string& name)
 /*************************************************
 * Add a new block cipher                         *
 *************************************************/
-void add_algorithm(BlockCipher* algo)
+void add_algorithm(Library_State& libstate, BlockCipher* algo)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Library_State::Engine_Iterator i(libstate);
 
    while(Engine* engine_base = i.next())
       {
@@ -245,9 +251,9 @@ void add_algorithm(BlockCipher* algo)
 /*************************************************
 * Add a new stream cipher                        *
 *************************************************/
-void add_algorithm(StreamCipher* algo)
+void add_algorithm(Library_State& libstate, StreamCipher* algo)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Library_State::Engine_Iterator i(libstate);
 
    while(Engine* engine_base = i.next())
       {
@@ -265,9 +271,9 @@ void add_algorithm(StreamCipher* algo)
 /*************************************************
 * Add a new hash function                        *
 *************************************************/
-void add_algorithm(HashFunction* algo)
+void add_algorithm(Library_State& libstate, HashFunction* algo)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Library_State::Engine_Iterator i(libstate);
 
    while(Engine* engine_base = i.next())
       {
@@ -285,9 +291,10 @@ void add_algorithm(HashFunction* algo)
 /*************************************************
 * Add a new authentication code                  *
 *************************************************/
-void add_algorithm(MessageAuthenticationCode* algo)
+void add_algorithm(Library_State& libstate,
+                   MessageAuthenticationCode* algo)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Library_State::Engine_Iterator i(libstate);
 
    while(Engine* engine_base = i.next())
       {
@@ -305,9 +312,10 @@ void add_algorithm(MessageAuthenticationCode* algo)
 /*************************************************
 * Add a padding method to the lookup table       *
 *************************************************/
-void add_algorithm(BlockCipherModePaddingMethod* algo)
+void add_algorithm(Library_State& libstate,
+                   BlockCipherModePaddingMethod* algo)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Library_State::Engine_Iterator i(libstate);
 
    while(Engine* engine_base = i.next())
       {
@@ -325,10 +333,11 @@ void add_algorithm(BlockCipherModePaddingMethod* algo)
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-Keyed_Filter* get_cipher(const std::string& algo_spec,
+Keyed_Filter* get_cipher(Library_State& libstate,
+                         const std::string& algo_spec,
                          Cipher_Dir direction)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Library_State::Engine_Iterator i(libstate);
 
    while(Engine* engine = i.next())
       {
@@ -343,12 +352,13 @@ Keyed_Filter* get_cipher(const std::string& algo_spec,
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-Keyed_Filter* get_cipher(const std::string& algo_spec,
+Keyed_Filter* get_cipher(Library_State& libstate,
+                         const std::string& algo_spec,
                          const SymmetricKey& key,
                          const InitializationVector& iv,
                          Cipher_Dir direction)
    {
-   Keyed_Filter* cipher = get_cipher(algo_spec, direction);
+   Keyed_Filter* cipher = get_cipher(libstate, algo_spec, direction);
    cipher->set_key(key);
 
    if(iv.length())
@@ -360,11 +370,13 @@ Keyed_Filter* get_cipher(const std::string& algo_spec,
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-Keyed_Filter* get_cipher(const std::string& algo_spec,
+Keyed_Filter* get_cipher(Library_State& libstate,
+                         const std::string& algo_spec,
                          const SymmetricKey& key,
                          Cipher_Dir direction)
    {
-   return get_cipher(algo_spec, key, InitializationVector(), direction);
+   return get_cipher(libstate, algo_spec,
+                     key, InitializationVector(), direction);
    }
 
 }

@@ -3,6 +3,7 @@
 
 #include <botan/lookup.h>
 #include <botan/filters.h>
+#include <botan/libstate.h>
 
 #ifdef BOTAN_HAS_COMPRESSOR_BZIP2
 #include <botan/bzip2.h>
@@ -88,9 +89,9 @@ Filter* lookup_cipher(const std::string& algname, const std::string& key,
    {
    try {
       if(encrypt)
-         return get_cipher(algname, key, iv, ENCRYPTION);
+         return get_cipher(global_state(), algname, key, iv, ENCRYPTION);
       else
-         return get_cipher(algname, key, iv, DECRYPTION);
+         return get_cipher(global_state(), algname, key, iv, DECRYPTION);
       }
    catch(Algorithm_Not_Found) {}
    catch(Invalid_Algorithm_Name) {}

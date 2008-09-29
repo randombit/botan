@@ -11,6 +11,7 @@
 #include <botan/filters.h>
 #include <botan/mode_pad.h>
 #include <botan/pk_util.h>
+#include <botan/libstate.h>
 #include <botan/s2k.h>
 #include <botan/pbe.h>
 
@@ -19,14 +20,22 @@ namespace Botan {
 /*************************************************
 * Retrieve an object from the lookup table       *
 *************************************************/
-BOTAN_DLL const BlockCipher* retrieve_block_cipher(const std::string&);
-BOTAN_DLL const StreamCipher* retrieve_stream_cipher(const std::string&);
-BOTAN_DLL const HashFunction* retrieve_hash(const std::string&);
-BOTAN_DLL const MessageAuthenticationCode* retrieve_mac(const std::string&);
-BOTAN_DLL const S2K* retrieve_s2k(const std::string&);
+BOTAN_DLL const BlockCipher*
+retrieve_block_cipher(Library_State&, const std::string&);
+
+BOTAN_DLL const StreamCipher*
+retrieve_stream_cipher(Library_State&, const std::string&);
+
+BOTAN_DLL const HashFunction*
+retrieve_hash(Library_State&, const std::string&);
+
+BOTAN_DLL const MessageAuthenticationCode*
+retrieve_mac(Library_State&, const std::string&);
+
+BOTAN_DLL const S2K* retrieve_s2k(Library_State&, const std::string&);
 
 BOTAN_DLL const BlockCipherModePaddingMethod*
-retrieve_bc_pad(const std::string&);
+retrieve_bc_pad(Library_State&, const std::string&);
 
 /*************************************************
 * Get an algorithm object                        *
@@ -55,16 +64,19 @@ BOTAN_DLL KDF*  get_kdf(const std::string&);
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-BOTAN_DLL Keyed_Filter* get_cipher(const std::string&,
+BOTAN_DLL Keyed_Filter* get_cipher(Library_State&,
+                                   const std::string&,
                                    const SymmetricKey&,
                                    const InitializationVector&,
                                    Cipher_Dir);
 
-BOTAN_DLL Keyed_Filter* get_cipher(const std::string&,
+BOTAN_DLL Keyed_Filter* get_cipher(Library_State&,
+                                   const std::string&,
                                    const SymmetricKey&,
                                    Cipher_Dir);
 
-BOTAN_DLL Keyed_Filter* get_cipher(const std::string&, Cipher_Dir);
+BOTAN_DLL Keyed_Filter* get_cipher(Library_State&,
+                                   const std::string&, Cipher_Dir);
 
 /*************************************************
 * Check to see if an algorithm exists            *
