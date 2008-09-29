@@ -1,15 +1,15 @@
 /*************************************************
-* Number Theory Header File                      *
+* Number Theory Functions Header File            *
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_NUMBTHRY_H__
-#define BOTAN_NUMBTHRY_H__
+#ifndef BOTAN_NUMBER_THEORY_H__
+#define BOTAN_NUMBER_THEORY_H__
 
-#include <botan/base.h>
 #include <botan/bigint.h>
 #include <botan/reducer.h>
 #include <botan/pow_mod.h>
+#include <botan/rng.h>
 
 namespace Botan {
 
@@ -64,9 +64,6 @@ bool BOTAN_DLL run_primality_tests(RandomNumberGenerator&,
 /*************************************************
 * Random Number Generation                       *
 *************************************************/
-BigInt BOTAN_DLL random_integer(RandomNumberGenerator&,
-                                const BigInt&, const BigInt&);
-
 BigInt BOTAN_DLL random_prime(RandomNumberGenerator&,
                               u32bit bits, const BigInt& coprime = 1,
                               u32bit equiv = 1, u32bit equiv_mod = 2);

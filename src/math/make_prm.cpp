@@ -76,4 +76,20 @@ BigInt random_prime(RandomNumberGenerator& rng,
       }
    }
 
+/*************************************************
+* Generate a random safe prime                   *
+*************************************************/
+BigInt random_safe_prime(RandomNumberGenerator& rng, u32bit bits)
+   {
+   if(bits <= 64)
+      throw Invalid_Argument("random_safe_prime: Can't make a prime of " +
+                             to_string(bits) + " bits");
+
+   BigInt p;
+   do
+      p = (random_prime(rng, bits - 1) << 1) + 1;
+   while(!is_prime(p, rng));
+   return p;
+   }
+
 }

@@ -63,7 +63,7 @@ NR_PrivateKey::NR_PrivateKey(RandomNumberGenerator& rng,
 
    if(x == 0)
       {
-      x = random_integer(rng, 2, group_q() - 1);
+      x = BigInt::random_integer(rng, 2, group_q() - 1);
       PKCS8_load_hook(rng, true);
       }
    else

@@ -4,6 +4,7 @@ define PUBKEY_BASE
 
 <requires>
 bigint
+math
 asn1
 </requires>
 

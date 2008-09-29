@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/bigint.h>
-#include <botan/numthry.h>
+#include <botan/divide.h>
 #include <botan/mp_core.h>
 #include <botan/bit_ops.h>
 #include <algorithm>

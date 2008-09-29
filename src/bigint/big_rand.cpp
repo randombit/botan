@@ -5,7 +5,6 @@
 
 #include <botan/bigint.h>
 #include <botan/parsing.h>
-#include <botan/numthry.h>
 
 namespace Botan {
 
@@ -46,8 +45,8 @@ void BigInt::randomize(RandomNumberGenerator& rng,
 /*************************************************
 * Generate a random integer within given range   *
 *************************************************/
-BigInt random_integer(RandomNumberGenerator& rng,
-                      const BigInt& min, const BigInt& max)
+BigInt BigInt::random_integer(RandomNumberGenerator& rng,
+                              const BigInt& min, const BigInt& max)
    {
    BigInt range = max - min;
 
@@ -55,22 +54,6 @@ BigInt random_integer(RandomNumberGenerator& rng,
       throw Invalid_Argument("random_integer: invalid min/max values");
 
    return (min + (BigInt(rng, range.bits() + 2) % range));
-   }
-
-/*************************************************
-* Generate a random safe prime                   *
-*************************************************/
-BigInt random_safe_prime(RandomNumberGenerator& rng, u32bit bits)
-   {
-   if(bits <= 64)
-      throw Invalid_Argument("random_safe_prime: Can't make a prime of " +
-                             to_string(bits) + " bits");
-
-   BigInt p;
-   do
-      p = (random_prime(rng, bits - 1) << 1) + 1;
-   while(!is_prime(p, rng));
-   return p;
    }
 
 }

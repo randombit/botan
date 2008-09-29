@@ -115,6 +115,9 @@ class BOTAN_DLL BigInt
       void binary_decode(const MemoryRegion<byte>&);
       u32bit encoded_size(Base = Binary) const;
 
+      static BigInt random_integer(RandomNumberGenerator&,
+                                   const BigInt&, const BigInt&);
+
       static SecureVector<byte> encode(const BigInt&, Base = Binary);
       static void encode(byte[], const BigInt&, Base = Binary);
       static BigInt decode(const byte[], u32bit, Base = Binary);

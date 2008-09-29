@@ -3,7 +3,7 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/numthry.h>
+#include <botan/divide.h>
 #include <botan/mp_core.h>
 
 namespace Botan {

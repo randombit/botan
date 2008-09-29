@@ -6,8 +6,11 @@ define CORE_MODULE
 
 <requires>
 aes
-bigint
 sha1
+sha2
+hmac
+bigint
+math
 allocators
 filters
 pubkey
@@ -19,6 +22,7 @@ data_src.cpp
 datastor.cpp
 def_alg.cpp
 def_mode.cpp
+def_powm.cpp
 eng_base.cpp
 engine.cpp
 exceptn.cpp

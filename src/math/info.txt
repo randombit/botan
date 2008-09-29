@@ -1,0 +1,29 @@
+realname "Math Functions"
+
+load_on auto
+
+define BIGINT_MATH
+
+<requires>
+bigint
+</requires>
+
+<add>
+blinding.cpp
+blinding.h
+def_powm.h
+dsa_gen.cpp
+jacobi.cpp
+make_prm.cpp
+mp_numth.cpp
+numthry.cpp
+numthry.h
+pow_mod.cpp
+pow_mod.h
+powm_fw.cpp
+powm_mnt.cpp
+primes.cpp
+reducer.cpp
+reducer.h
+ressol.cpp
+</add>

@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/bigint.h>
-#include <botan/numthry.h>
+#include <botan/divide.h>
 #include <botan/charset.h>
 #include <botan/hex.h>
 
