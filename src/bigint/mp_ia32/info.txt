@@ -1,4 +1,4 @@
-realname "MPI Core (x86)"
+realname "MPI Core (IA-32)"
 
 mp_bits 32
 

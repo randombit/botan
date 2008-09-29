@@ -1,17 +1,19 @@
-realname "SHA-1 (x86)"
+realname "SHA-1 (IA-32)"
 
-define SHA1
+define SHA1_IA32
 
-load_on requested
+load_on auto
 
 <add>
-sha1_ia32.S
-sha160.cpp
-sha160.h
+sha1_ia32_imp.S
+sha1_ia32.cpp
+sha1_ia32.h
 </add>
 
 <requires>
+asm_ia32
 mdx_hash
+utils
 </requires>
 
 <arch>

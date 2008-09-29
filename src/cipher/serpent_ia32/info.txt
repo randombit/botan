@@ -1,21 +1,22 @@
-realname "SHA-1 (x86-64 assembler)"
+realname "Serpent (IA-32)"
+
+define SERPENT_IA32
 
 load_on auto
 
 <add>
-sha1_amd64_imp.S
-sha1_amd64.cpp
-sha1_amd64.h
+serp_ia32_imp.S
+serp_ia32.cpp
+serp_ia32.h
 </add>
 
-<requires>
-asm_amd64
-mdx_hash
+<required>
+asm_ia32
 utils
-</requires>
+</required>
 
 <arch>
-amd64
+ia32
 </arch>
 
 <cc>

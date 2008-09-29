@@ -5,7 +5,7 @@
 
 #include <botan/asm_macr.h>
 
-START_LISTING(serp_asm.S)
+START_LISTING(serp_ia32.S)
 
 #define SBOX_E1(A, B, C, D, T)     \
    XOR(D, A)                     ; \
@@ -439,7 +439,7 @@ START_LISTING(serp_asm.S)
 /*************************************************
 * Serpent Encryption                             *
 *************************************************/
-START_FUNCTION(serpent_encrypt)
+START_FUNCTION(botan_serpent_ia32_encrypt)
    SPILL_REGS()
 #define PUSHED 4
 
@@ -505,12 +505,12 @@ START_FUNCTION(serpent_encrypt)
 
    RESTORE_REGS()
 #undef PUSHED
-END_FUNCTION(serpent_encrypt)
+END_FUNCTION(botan_serpent_ia32_encrypt)
 
 /*************************************************
 * Serpent Decryption                             *
 *************************************************/
-START_FUNCTION(serpent_decrypt)
+START_FUNCTION(botan_serpent_ia32_decrypt)
    SPILL_REGS()
 #define PUSHED 4
 
@@ -576,12 +576,12 @@ START_FUNCTION(serpent_decrypt)
 
    RESTORE_REGS()
 #undef PUSHED
-END_FUNCTION(serpent_decrypt)
+END_FUNCTION(botan_serpent_ia32_decrypt)
 
 /*************************************************
 * Serpent Key Schedule                           *
 *************************************************/
-START_FUNCTION(serpent_key_schedule)
+START_FUNCTION(botan_serpent_ia32_key_schedule)
    SPILL_REGS()
 #define PUSHED 4
 
@@ -664,4 +664,4 @@ LOOP_UNTIL_EQ(ESI, 140, .EXPANSION)
 
    RESTORE_REGS()
 #undef PUSHED
-END_FUNCTION(serpent_key_schedule)
+END_FUNCTION(botan_serpent_ia32_key_schedule)

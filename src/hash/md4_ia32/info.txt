@@ -1,17 +1,19 @@
-realname "MD4 (x86)"
+realname "MD4 (IA-32)"
 
-define MD4
+define MD4_IA32
 
-load_on requested
+load_on asm_ok
 
 <add>
-md4_ia32.S
-md4.cpp
-md4.h
+md4_ia32_imp.S
+md4_ia32.cpp
+md4_ia32.h
 </add>
 
 <requires>
+asm_ia32
 mdx_hash
+utils
 </requires>
 
 <arch>

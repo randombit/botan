@@ -411,12 +411,16 @@ sub autoload_modules {
 
     my $asm_ok = $$config{'asm_ok'};
 
-    my @autoloaded;
+    my %loaded; # type -> { mod1 => 1, mod2 => 1 }
 
     MOD: foreach my $mod (sort keys %MODULES) {
         my %modinfo = %{ $MODULES{$mod} };
 
         my $realname = $modinfo{'realname'};
+
+        my $type = $modinfo{'type'};
+
+        #autoconfig("$mod '$realname' is $type");
 
         if(defined($$config{'modules'}{$mod})) {
             my $n = $$config{'modules'}{$mod};
@@ -426,25 +430,9 @@ sub autoload_modules {
                 next;
             }
             else {
-                autoconfig("$mod ($realname): loading by user request");
+                #$loaded{$type}{$mod} = 1;
+                #autoconfig("$mod ($realname): loading by user request");
                 next;
-            }
-        }
-
-        foreach my $req_mod (@{$modinfo{'requires'}}) {
-            if(defined($$config{'modules'}{$req_mod})) {
-                if($$config{'modules'}{$req_mod} < 0) {
-                    autoconfig("Disabling $mod since required module " .
-                               "$req_mod is disabled");
-
-                    $$config{'modules'}{$mod} = -1;
-                    next MOD;
-                }
-
-            } else {
-                autoconfig("Enabling module $req_mod - required by $mod");
-                $$config{'modules'}{$req_mod} = 1;
-                load_module($config, $req_mod);
             }
         }
 
@@ -478,17 +466,37 @@ sub autoload_modules {
             next;
         }
 
+        foreach my $req_mod (@{$modinfo{'requires'}}) {
+            if(defined($$config{'modules'}{$req_mod})) {
+                if($$config{'modules'}{$req_mod} < 0) {
+                    autoconfig("Disabling $mod since required module " .
+                               "$req_mod is disabled");
+                    $$config{'modules'}{$mod} = -1;
+                    next MOD;
+                }
+
+            } else {
+                autoconfig("Enabling module $req_mod - required by $mod");
+                $$config{'modules'}{$req_mod} = 1;
+                $loaded{$type}{$mod} = 1;
+                load_module($config, $req_mod);
+            }
+        }
+
         if($modinfo{'load_on'} eq 'request') {
             autoconfig("$mod ($realname): skipping, loaded by request only");
             next;
         }
 
-        push @autoloaded, $mod;
-        trace("$mod ($realname): loading");
+        autoconfig("$mod ($realname): loading");
+        $loaded{$type}{$mod} = 1;
         $$config{'modules'}{$mod} = 1;
     }
 
-    autoconfig("Loaded " . join(' ', @autoloaded));
+    for my $type (sort keys %loaded) {
+        my %mods = %{$loaded{$type}};
+         autoconfig("*** Loading $type: " . join(' ', sort keys %mods));
+    }
 }
 
 sub get_options {
@@ -1111,6 +1119,8 @@ sub load_module {
 
     trace("load_module($modname)");
 
+    croak("Unknown module $modname") unless defined($MODULES{$modname});
+
     my %module = %{$MODULES{$modname}};
 
     my $works_on = sub {
@@ -1412,8 +1422,12 @@ sub get_module_info {
    $info{'load_on'} = 'request'; # default unless specified
    $info{'libs'} = {};
 
+   my @dir_arr = File::Spec->splitdir($dirs);
+   $info{'type'} = $dir_arr[$#dir_arr-2]; # cipher, hash, ...
+   if($info{'type'} eq 'src') { $info{'type'} = $dir_arr[$#dir_arr-1]; }
+
    while($_ = &$reader()) {
-       match_any_of($_, \%info, 'quoted', 'realname', 'note');
+       match_any_of($_, \%info, 'quoted', 'realname', 'note', 'type');
        match_any_of($_, \%info, 'unquoted', 'define', 'mp_bits', 'modset', 'load_on');
 
        read_list($_, $reader, 'arch', list_push(\@{$info{'arch'}}));

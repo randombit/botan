@@ -7,7 +7,7 @@
 
 START_LISTING(md5_ia32.S)
 
-START_FUNCTION(botan_md5_core_asm)
+START_FUNCTION(botan_md5_ia32_compress)
    SPILL_REGS()
 
 #define PUSHED 4
@@ -161,4 +161,4 @@ LOOP_UNTIL_EQ(ESI, 16, .LOAD_INPUT)
    ADD(ARRAY4(EBP, 3), EDX)
 
    RESTORE_REGS()
-END_FUNCTION(botan_md5_core_asm)
+END_FUNCTION(botan_md5_ia32_compress)

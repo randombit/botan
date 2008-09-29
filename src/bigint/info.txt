@@ -6,7 +6,7 @@ define BIGINT
 
 <requires>
 hex
-mp_generic
+mp_ia32
 </requires>
 
 <add>

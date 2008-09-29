@@ -188,8 +188,8 @@ static inline u32bit f60_79(u32bit x, u32bit y, u32bit z)
 		(xt) += ((xe) + rol((xa), 5));						\
 	} while(0)
 
-extern "C" void botan_sha1_sse(u32bit* H,
-                               const u32bit* inputu)
+extern "C" void botan_sha1_sse2_compress(u32bit* H,
+                                         const u32bit* inputu)
    {
    const __m128i *  input = (const __m128i *)inputu;
    __m128i W0, W1, W2, W3;

@@ -1,14 +1,19 @@
 realname "SHA-1 (SSE2)"
 
-define SHA1
+define SHA1_SSE2
 
-load_on request
+load_on auto
 
 <add>
-sha160.cpp
-sha160.h
-sha1_sse.cpp
+sha1_sse2_imp.cpp
+sha1_sse2.cpp
+sha1_sse2.h
 </add>
+
+<requires>
+mdx_hash
+utils
+</requires>
 
 <arch>
 pentium-m
