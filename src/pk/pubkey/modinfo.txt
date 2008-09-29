@@ -1,0 +1,33 @@
+realname "Public Key Base"
+
+define PUBKEY_BASE
+
+<requires>
+bigint
+asn1
+</requires>
+
+<add>
+dh_op.cpp
+dsa_op.cpp
+elg_op.cpp
+kdf.cpp
+modinfo.txt
+nr_op.cpp
+pk_algs.cpp
+pk_algs.h
+pk_core.cpp
+pk_core.h
+pk_keys.cpp
+pk_keys.h
+pk_ops.h
+pk_util.cpp
+pk_util.h
+pkcs8.cpp
+pkcs8.h
+pubkey.cpp
+pubkey.h
+rsa_op.cpp
+x509_key.cpp
+x509_key.h
+</add>
