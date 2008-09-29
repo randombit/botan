@@ -1373,7 +1373,7 @@ sub read_module_files {
 
     File::Find::find(
         { wanted => sub
-          { if(-f $_ && /^modinfo\.txt\z/s) {
+          { if(-f $_ && /^info\.txt\z/s) {
               my $name = $File::Find::name;
               push @modinfos, $name;
             }
