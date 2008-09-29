@@ -5,6 +5,7 @@ define UTIL_FUNCTIONS
 load_on auto
 
 <add>
+charset.cpp
 parsing.cpp
 util.cpp
 version.cpp
