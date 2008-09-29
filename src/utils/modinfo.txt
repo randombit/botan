@@ -21,4 +21,6 @@ types.h
 util.h
 version.h
 xor_buf.h
+ui.h
+ui.cpp
 </add>

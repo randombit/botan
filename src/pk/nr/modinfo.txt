@@ -12,4 +12,5 @@ nr.h
 <requires>
 asn1
 dl_algo
+keypair
 </requires>

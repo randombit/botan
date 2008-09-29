@@ -12,4 +12,5 @@ dsa.h
 <requires>
 asn1
 dl_algo
+keypair
 </requires>

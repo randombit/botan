@@ -8,3 +8,10 @@ load_on auto
 elgamal.cpp
 elgamal.h
 </add>
+
+<requires>
+asn1
+bigint
+dl_algo
+keypair
+</requires>

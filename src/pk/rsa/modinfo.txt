@@ -12,4 +12,5 @@ rsa.h
 <requires>
 asn1
 if_algo
+keypair
 </requires>

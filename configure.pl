@@ -47,7 +47,6 @@ sub main {
     $$config{'base-dir'} = $base_dir;
     $$config{'config-dir'} = File::Spec->catdir($base_dir, 'misc', 'config');
     $$config{'src-dir'} = File::Spec->catdir($base_dir, 'src');
-    $$config{'include-dir'} = File::Spec->catdir($base_dir, 'include');
     $$config{'checks-dir'} = File::Spec->catdir($base_dir, 'checks');
     $$config{'doc-dir'} = File::Spec->catdir($base_dir, 'doc');
 
@@ -122,13 +121,8 @@ sub main {
         'mp_bits'       => find_mp_bits(sort keys %{$$config{'modules'}}),
         'mod_libs'      => [ using_libs($os, sort keys %{$$config{'modules'}}) ],
 
-        'sources'       => {
-            map_to($$config{'src-dir'}, dir_list($$config{'src-dir'}))
-            },
-
-        'includes'      => {
-            map_to($$config{'include-dir'}, dir_list($$config{'include-dir'}))
-            },
+        'sources'       => { },
+        'includes'      => { },
 
         'check_src'     => {
             map_to($$config{'checks-dir'},
@@ -1170,12 +1164,11 @@ sub load_module {
 #                                                #
 ##################################################
 sub file_type {
-    my ($config, $file) = @_;
+    my ($file) = @_;
 
-    return ('sources', $$config{'src-dir'})
+    return 'sources'
         if($file =~ /\.cpp$/ or $file =~ /\.c$/ or $file =~ /\.S$/);
-    return ('includes', $$config{'include-dir'})
-        if($file =~ /\.h$/);
+    return 'includes' if($file =~ /\.h$/);
 
     croak('file_type() - don\'t know what sort of file ', $file, ' is');
 }
@@ -1194,7 +1187,7 @@ sub add_file {
         $$config{$type}{$file} = $mod_dir;
     };
 
-    &$do_add_file(file_type($config, $file));
+    &$do_add_file(file_type($file));
 }
 
 sub ignore_file {
@@ -1214,7 +1207,7 @@ sub ignore_file {
         }
     };
 
-    &$do_ignore_file(file_type($config, $file));
+    &$do_ignore_file(file_type($file));
 }
 
 sub check_for_file {
