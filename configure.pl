@@ -1660,8 +1660,6 @@ sub file_list {
 sub build_cmds {
     my ($config, $dir, $flags, $files) = @_;
 
-    my $output = '';
-
     my $obj_suffix = $$config{'obj_suffix'};
 
     my %ccinfo = my_compiler($config);
@@ -1678,6 +1676,8 @@ sub build_cmds {
 
     my $bld_line = "\t\$(CXX) $inc$inc_dir $flags $from\$? $to\$@";
 
+    my @output_lines;
+
     foreach (sort keys %$files) {
         my $src_file = File::Spec->catfile($$files{$_}, $_);
         my $obj_file = File::Spec->catfile($dir, $_);
@@ -1686,11 +1686,10 @@ sub build_cmds {
         $obj_file =~ s/\.c$/.$obj_suffix/;
         $obj_file =~ s/\.S$/.$obj_suffix/;
 
-        $output .= "$obj_file: $src_file\n$bld_line\n\n";
+        push @output_lines, "$obj_file: $src_file\n$bld_line";
     }
-    chomp($output);
-    chomp($output);
-    return $output;
+
+    return join("\n\n", @output_lines);
 }
 
 sub generate_makefile {
