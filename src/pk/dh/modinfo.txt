@@ -12,4 +12,5 @@ dh.h
 <requires>
 asn1
 dl_algo
+pubkey
 </requires>

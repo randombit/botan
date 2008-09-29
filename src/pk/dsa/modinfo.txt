@@ -13,4 +13,5 @@ dsa.h
 asn1
 dl_algo
 keypair
+pubkey
 </requires>

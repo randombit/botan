@@ -11,4 +11,6 @@ dlies.h
 
 <requires>
 asn1
+kdf2
+pubkey
 </requires>

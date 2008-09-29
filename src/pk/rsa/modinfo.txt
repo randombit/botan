@@ -13,4 +13,5 @@ rsa.h
 asn1
 if_algo
 keypair
+pubkey
 </requires>

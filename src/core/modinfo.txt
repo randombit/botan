@@ -4,15 +4,19 @@ load_on auto
 
 define CORE_MODULE
 
+<requires>
+aes
+sha1
+allocators
+filters
+</requires>
+
 <add>
 base.cpp
 data_src.cpp
 datastor.cpp
 def_alg.cpp
 def_mode.cpp
-dh_op.cpp
-dsa_op.cpp
-elg_op.cpp
 eng_base.cpp
 engine.cpp
 exceptn.cpp
@@ -21,25 +25,15 @@ get_enc.cpp
 get_pbe.cpp
 init_def.cpp
 init_opt.cpp
-kdf.cpp
 libstate.cpp
 look_pk.cpp
 mlock.cpp
 modules.cpp
-nr_op.cpp
 oids.cpp
-pk_algs.cpp
-pk_core.cpp
-pk_keys.cpp
-pk_util.cpp
-pkcs8.cpp
 policy.cpp
-pubkey.cpp
 rng.cpp
-rsa_op.cpp
 s2k.cpp
 symkey.cpp
-x509_key.cpp
 base.h
 botan.h
 data_src.h
@@ -56,22 +50,8 @@ lookup.h
 modules.h
 mutex.h
 oids.h
-pk_algs.h
-pk_core.h
-pk_keys.h
-pk_ops.h
-pk_util.h
-pkcs8.h
-pubkey.h
 rng.h
 s2k.h
 symkey.h
-x509_key.h
 </add>
 
-<requires>
-aes
-sha1
-allocators
-filters
-</requires>
