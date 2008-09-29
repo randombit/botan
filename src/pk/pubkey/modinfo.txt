@@ -12,7 +12,6 @@ dh_op.cpp
 dsa_op.cpp
 elg_op.cpp
 kdf.cpp
-modinfo.txt
 nr_op.cpp
 pk_algs.cpp
 pk_algs.h

@@ -6,6 +6,7 @@ define CORE_MODULE
 
 <requires>
 aes
+bigint
 sha1
 allocators
 filters
@@ -27,7 +28,6 @@ init_def.cpp
 init_opt.cpp
 libstate.cpp
 look_pk.cpp
-mlock.cpp
 modules.cpp
 oids.cpp
 policy.cpp
