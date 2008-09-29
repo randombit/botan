@@ -8,7 +8,7 @@
 
 namespace Botan {
 
-extern "C" void md4_core(u32bit[4], const byte[64], u32bit[16]);
+extern "C" void botan_md4_core_asm(u32bit[4], const byte[64], u32bit[16]);
 
 /*************************************************
 * MD4 Compression Function                       *

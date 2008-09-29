@@ -8,7 +8,7 @@
 
 namespace Botan {
 
-extern "C" void md5_core(u32bit[4], const byte[64], u32bit[16]);
+extern "C" void botan_md5_core_asm(u32bit[4], const byte[64], u32bit[16]);
 
 /*************************************************
 * MD5 Compression Function                       *

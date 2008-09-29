@@ -5,9 +5,9 @@
 
 #include <botan/asm_macr.h>
 
-START_LISTING(md4core.S)
+START_LISTING(md4_ia32.S)
 
-START_FUNCTION(md4_core)
+START_FUNCTION(botan_md4_core_asm)
    SPILL_REGS()
 
 #define PUSHED 4
@@ -132,4 +132,4 @@ LOOP_UNTIL_EQ(ESI, 16, .LOAD_INPUT)
    ADD(ARRAY4(EBP, 3), EDX)
 
    RESTORE_REGS()
-END_FUNCTION(md4_core)
+END_FUNCTION(botan_md4_core_asm)

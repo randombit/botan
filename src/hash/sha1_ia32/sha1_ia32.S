@@ -7,7 +7,7 @@
 
 START_LISTING(sha1_asm.S)
 
-START_FUNCTION(botan_sha160_asm_ia32)
+START_FUNCTION(botan_sha160_core_asm)
    SPILL_REGS()
 
 #define PUSHED 4
@@ -239,4 +239,4 @@ LOOP_UNTIL_EQ(ESI, 80, .EXPANSION)
    ADD(ARRAY4(EBP, 4), ECX)
 
    RESTORE_REGS()
-END_FUNCTION(botan_sha160_asm_ia32)
+END_FUNCTION(botan_sha160_core_asm)
