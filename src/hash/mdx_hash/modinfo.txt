@@ -2,7 +2,7 @@ realname "MDx Hash Base"
 
 define MDX_HASH_FUNCTION
 
-load_on auto
+load_on request
 
 <add>
 mdx_hash.cpp

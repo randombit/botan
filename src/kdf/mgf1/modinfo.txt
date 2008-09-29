@@ -2,7 +2,7 @@ realname "MGF1"
 
 define MGF1
 
-load_on auto
+load_on request
 
 <add>
 mgf1.h

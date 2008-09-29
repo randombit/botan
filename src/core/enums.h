@@ -6,6 +6,8 @@
 #ifndef BOTAN_ENUMS_H__
 #define BOTAN_ENUMS_H__
 
+#include <botan/types.h>
+
 namespace Botan {
 
 /*************************************************

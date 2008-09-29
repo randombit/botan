@@ -10,6 +10,7 @@ bigint
 sha1
 allocators
 filters
+pubkey
 </requires>
 
 <add>

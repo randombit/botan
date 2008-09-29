@@ -4,6 +4,10 @@ load_on auto
 
 define BIGINT
 
+<requires>
+hex
+</requires>
+
 <add>
 big_code.cpp
 big_io.cpp
@@ -43,7 +47,3 @@ reducer.cpp
 reducer.h
 ressol.cpp
 </add>
-
-<requires>
-hex
-</requires>
