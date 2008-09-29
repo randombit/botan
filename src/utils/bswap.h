@@ -21,7 +21,9 @@ inline u16bit reverse_bytes(u16bit input)
 
 inline u32bit reverse_bytes(u32bit input)
    {
-#if defined(BOTAN_TARGET_ARCH_IS_IA32) || defined(BOTAN_TARGET_ARCH_IS_AMD64)
+#if BOTAN_COMPILER_HAS_GCC_INLINE_ASM &&
+   (defined(BOTAN_TARGET_ARCH_IS_IA32) || defined(BOTAN_TARGET_ARCH_IS_AMD64))
+
    asm("bswapl %0" : "=r" (input) : "0" (input));
    return input;
 #else
@@ -32,7 +34,7 @@ inline u32bit reverse_bytes(u32bit input)
 
 inline u64bit reverse_bytes(u64bit input)
    {
-#if defined(BOTAN_TARGET_ARCH_IS_AMD64)
+#if BOTAN_COMPILER_HAS_GCC_INLINE_ASM && defined(BOTAN_TARGET_ARCH_IS_AMD64)
    asm("bswapq %0" : "=r" (input) : "0" (input));
    return input;
 #else
