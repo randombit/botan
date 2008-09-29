@@ -479,23 +479,27 @@ sub autoload_modules {
                     $$config{'modules'}{$mod} = -1;
                     next MOD;
                 }
-
             } else {
-                autoconfig("Enabling module $req_mod - required by $mod");
+                autoconfig("Enabling module $req_mod; " .
+                           "required by $mod '$realname'");
+
+                my $req_type = $MODULES{$req_mod}{'type'};
+
+                $loaded{$req_type}{$req_mod} = 1;
                 $$config{'modules'}{$req_mod} = 1;
-                $loaded{$type}{$mod} = 1;
                 load_module($config, $req_mod);
             }
         }
 
-        #autoconfig("Enabling $mod ($realname): loading");
+        trace("Enabling $mod ($realname): loading");
         $loaded{$type}{$mod} = 1;
         $$config{'modules'}{$mod} = 1;
     }
 
     for my $type (sort keys %loaded) {
         my %mods = %{$loaded{$type}};
-         autoconfig("*** Loading $type: " . join(' ', sort keys %mods));
+        print with_diagnostic('loading',
+                              $type . ': ' . join(' ', sort keys %mods));
     }
 }
 
