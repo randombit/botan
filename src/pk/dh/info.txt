@@ -11,6 +11,8 @@ dh.h
 
 <requires>
 asn1
+bigint
 dl_algo
+math
 pubkey
 </requires>

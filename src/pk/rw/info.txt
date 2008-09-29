@@ -11,7 +11,9 @@ rw.h
 
 <requires>
 asn1
+bigint
 if_algo
 keypair
+math
 pubkey
 </requires>

@@ -12,7 +12,9 @@ elgamal.h
 <requires>
 asn1
 bigint
+bigint
 dl_algo
 keypair
+math
 pubkey
 </requires>

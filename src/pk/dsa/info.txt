@@ -11,7 +11,9 @@ dsa.h
 
 <requires>
 asn1
+bigint
 dl_algo
 keypair
+math
 pubkey
 </requires>
