@@ -25,6 +25,11 @@ Botan supports the following basic cryptographic algorithms:
 For build instructions, read 'doc/building.pdf'. The license can be
 found in 'doc/license.txt', and the ChangeLog is in 'doc/log.txt'.
 
+Higher level protocols are implemented on top of Botan by:
+
+NetSieben SSH Library (SSHv2): http://www.netsieben.com/products/ssh/
+Ajisai (SSLv3/TLSv1): http://www.randombit.net/code/ajisai/
+
 Check http://botan.randombit.net/ for announcements and news. If
 you'll be developing code using Botan, consider joining the mailing
 lists; links to subscriptions forms and the archives can be found on

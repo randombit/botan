@@ -1,6 +1,6 @@
 realname "HP-PA"
 
-default_submodel hppa1.1
+default_submodel hppa1.0
 
 <aliases>
 hp-pa

@@ -1870,7 +1870,9 @@ sub guess_cpu_from_this
 
     $cpu = 'athlon' if($cpuinfo =~ /athlon/);
     $cpu = 'pentium4' if($cpuinfo =~ /pentium 4/);
+    $cpu = 'pentium4' if($cpuinfo =~ /pentium 4/);
     $cpu = 'pentium4' if($cpuinfo =~ /pentium\(r\) 4/);
+    $cpu = 'pentium-m' if($cpuinfo =~ /pentium\(r\) m/);
     $cpu = 'pentium3' if($cpuinfo =~ /pentium iii/);
     $cpu = 'pentium2' if($cpuinfo =~ /pentium ii/);
     $cpu = 'pentium3' if($cpuinfo =~ /pentium 3/);

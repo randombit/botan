@@ -1,6 +1,6 @@
 realname "DEC Alpha"
 
-default_submodel alpha-ev5
+default_submodel alpha-ev4
 endian little
 
 <aliases>

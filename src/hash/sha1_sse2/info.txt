@@ -11,6 +11,7 @@ sha1_sse.cpp
 </add>
 
 <arch>
+pentium-m
 pentium4
 amd64
 </arch>
