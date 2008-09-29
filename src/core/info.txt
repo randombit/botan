@@ -9,11 +9,8 @@ aes
 sha1
 sha2
 hmac
-bigint
-math
 allocators
 filters
-pubkey
 </requires>
 
 <add>

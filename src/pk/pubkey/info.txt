@@ -2,6 +2,8 @@ realname "Public Key Base"
 
 define PUBKEY_BASE
 
+load_on request
+
 <requires>
 bigint
 math

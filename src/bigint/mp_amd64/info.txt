@@ -2,7 +2,7 @@ realname "MPI Core (x86-64)"
 
 mp_bits 64
 
-load_on asm_ok
+load_on request
 
 <add>
 mp_asm.h

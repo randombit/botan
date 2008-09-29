@@ -10,10 +10,10 @@ serp_ia32.cpp
 serp_ia32.h
 </add>
 
-<required>
+<requires>
 asm_ia32
 utils
-</required>
+</requires>
 
 <arch>
 ia32

@@ -266,11 +266,12 @@ To set the compiler to use, or which OS or CPU to target, use:
 
 To change what modules to use:
 
-  --modules=
-       [$modules]
+  --enable-module(s)=[module list]
 
-  --disable-modules=module1[,module2[...]]
-  --disable-module=module1[,module2[...]]
+  --disable-module(s)=[module list]
+
+Known modules:
+        $modules
 
 To add a set of modules:
   --module-set=[$sets]
@@ -436,6 +437,23 @@ sub autoload_modules {
             }
         }
 
+        my @to_enable;
+
+        foreach my $req_mod (@{$modinfo{'requires'}}) {
+            print "Checking if $req_mod required by $mod is ok to use\n";
+
+            if(defined($$config{'modules'}{$req_mod})) {
+                if($$config{'modules'}{$req_mod} < 0) {
+                    autoconfig("Disabling $mod since required module " .
+                               "$req_mod is disabled");
+                    $$config{'modules'}{$mod} = -1;
+                    next MOD;
+                }
+            } else {
+                push @to_enable, $req_mod;
+            }
+        }
+
         my @arch_list = @{ $modinfo{'arch'} };
         if(scalar @arch_list > 0 &&
            !in_array($arch, \@arch_list) &&
@@ -471,24 +489,15 @@ sub autoload_modules {
             next;
         }
 
-        foreach my $req_mod (@{$modinfo{'requires'}}) {
-            if(defined($$config{'modules'}{$req_mod})) {
-                if($$config{'modules'}{$req_mod} < 0) {
-                    autoconfig("Disabling $mod since required module " .
-                               "$req_mod is disabled");
-                    $$config{'modules'}{$mod} = -1;
-                    next MOD;
-                }
-            } else {
-                autoconfig("Enabling module $req_mod; " .
-                           "required by $mod '$realname'");
+        foreach my $req_mod (@to_enable) {
+            autoconfig("Enabling module $req_mod; " .
+                       "required by $mod '$realname'");
 
-                my $req_type = $MODULES{$req_mod}{'type'};
+            my $req_type = $MODULES{$req_mod}{'type'};
 
-                $loaded{$req_type}{$req_mod} = 1;
-                $$config{'modules'}{$req_mod} = 1;
-                load_module($config, $req_mod);
-            }
+            $loaded{$req_type}{$req_mod} = 1;
+            $$config{'modules'}{$req_mod} = 1;
+            load_module($config, $req_mod);
         }
 
         trace("Enabling $mod ($realname): loading");
@@ -615,13 +624,16 @@ sub get_options {
 
                'make-style=s' => sub { &$save_option(@_); },
 
-               'module=s' => sub { add_modules($config, $_[1]); },
-               'modules=s' => sub { add_modules($config, $_[1]); },
                'module-set=s' => sub { add_module_sets($config, $_[1]); },
                'module-sets=s' => sub { add_module_sets($config, $_[1]); },
 
+               'enable-module=s' => sub { add_modules($config, $_[1]); },
+               'enable-modules=s' => sub { add_modules($config, $_[1]); },
                'disable-module=s' => sub { disable_modules($config, $_[1]); },
                'disable-modules=s' => sub { disable_modules($config, $_[1]); },
+
+               'module=s' => sub { add_modules($config, $_[1]); },
+               'modules=s' => sub { add_modules($config, $_[1]); },
                'no-module=s' => sub { disable_modules($config, $_[1]); },
                'no-modules=s' => sub { disable_modules($config, $_[1]); },
 

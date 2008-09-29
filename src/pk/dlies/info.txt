@@ -10,7 +10,7 @@ dlies.h
 </add>
 
 <requires>
-asn1
+dh
 kdf2
 pubkey
 </requires>
