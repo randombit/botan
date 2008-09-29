@@ -22,7 +22,7 @@ def_mode.cpp
 eng_base.cpp
 engine.cpp
 exceptn.cpp
-get_algo.cpp
+lookup.cpp
 get_enc.cpp
 get_pbe.cpp
 init_def.cpp
