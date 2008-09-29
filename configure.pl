@@ -45,10 +45,12 @@ sub main {
     my $base_dir = where_am_i();
 
     $$config{'base-dir'} = $base_dir;
-    $$config{'config-dir'} = File::Spec->catdir($base_dir, 'misc', 'config');
     $$config{'src-dir'} = File::Spec->catdir($base_dir, 'src');
     $$config{'checks-dir'} = File::Spec->catdir($base_dir, 'checks');
     $$config{'doc-dir'} = File::Spec->catdir($base_dir, 'doc');
+
+    $$config{'config-dir'} =
+        File::Spec->catdir($$config{'src-dir'}, 'build-data');
 
     $$config{'command-line'} = $0 . ' ' . join(' ', @ARGV);
     $$config{'timestamp'} = gmtime;
