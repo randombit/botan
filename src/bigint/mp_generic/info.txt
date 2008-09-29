@@ -1,7 +1,5 @@
 realname "MPI Core (C++)"
 
-mp_bits 32
-
 load_on request
 
 <add>

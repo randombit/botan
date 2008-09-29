@@ -402,6 +402,43 @@ sub choose_target {
     });
 }
 
+sub module_runs_on {
+    my ($noisy, $modinfo, $mod, $arch, $submodel, $os, $cc) = @_;
+
+    my %modinfo = %{$modinfo};
+
+    my $realname = $modinfo{'realname'};
+
+    my @arch_list = @{ $modinfo{'arch'} };
+    if(scalar @arch_list > 0 && !in_array($arch, \@arch_list) &&
+       !in_array($submodel, \@arch_list))
+    {
+        autoconfig("$mod ($realname): skipping, " .
+                   "not compatible with " . realname($arch) .
+                   "/" . $submodel) if $noisy;
+        return 0;
+    }
+
+    my @os_list = @{ $modinfo{'os'} };
+    if(scalar @os_list > 0 && !in_array($os, \@os_list))
+    {
+        autoconfig("$mod ($realname): " .
+                   "skipping, not compatible with " . realname($os)) if $noisy;
+        return 0;
+    }
+
+    my @cc_list = @{ $modinfo{'cc'} };
+    if(scalar @cc_list > 0 && !in_array($cc, \@cc_list)) {
+        autoconfig("$mod ($realname): " .
+                   "skipping, not compatible with " . realname($cc)) if $noisy;
+        return 0;
+    }
+
+
+    return 1;
+}
+
+
 # Add modules that we think would work (unless autoconfig is off)
 # to $$config{'modules'}
 sub autoload_modules {
@@ -423,7 +460,7 @@ sub autoload_modules {
 
         my $type = $modinfo{'type'};
 
-        #autoconfig("$mod '$realname' is $type");
+        autoconfig("$mod '$realname' is $type");
 
         if(defined($$config{'modules'}{$mod})) {
             my $n = $$config{'modules'}{$mod};
@@ -441,44 +478,42 @@ sub autoload_modules {
 
         my @to_enable;
 
-        foreach my $req_mod (@{$modinfo{'requires'}}) {
-            print "Checking if $req_mod required by $mod is ok to use\n";
+        foreach my $req_mod_l (@{$modinfo{'requires'}}) {
+            my @any_of = split(/\|/, $req_mod_l);
 
-            if(defined($$config{'modules'}{$req_mod})) {
-                if($$config{'modules'}{$req_mod} < 0) {
-                    autoconfig("Disabling $mod since required module " .
-                               "$req_mod is disabled");
-                    $$config{'modules'}{$mod} = -1;
-                    next MOD;
+            autoconfig("Finding a dep $req_mod_l of $realname");
+
+            my $mod_to_use = undef;
+            for my $req_mod (@any_of) {
+
+                # one already enabled or disabled
+                if(defined($$config{'modules'}{$req_mod})) {
+                    my $n = $$config{'modules'}{$req_mod};
+
+                    next if($n < 0);
+
+                    if($n > 0) {
+                        $mod_to_use = $mod;
+                        $loaded{$type}{$mod} = 1;
+                        $$config{'modules'}{$req_mod} = 1;
+                        last;
+                    }
                 }
-            } else {
-                push @to_enable, $req_mod;
+                elsif(module_runs_on(0, \%modinfo, $realname, $arch, $submodel, $os, $cc)) {
+                    autoconfig("XXX Enabling $req_mod for $mod");
+                    $mod_to_use = $mod;
+                    $loaded{$type}{$mod} = 1;
+                    $$config{'modules'}{$req_mod} = 1;
+                }
+            }
+
+            unless(defined $mod_to_use) {
+                autoconfig("Disabling module $mod due to missing dep $req_mod_l");
+                $$config{'modules'}{$mod} = -1;
             }
         }
 
-        my @arch_list = @{ $modinfo{'arch'} };
-        if(scalar @arch_list > 0 &&
-           !in_array($arch, \@arch_list) &&
-           !in_array($submodel, \@arch_list)) {
-            autoconfig("$mod ($realname): skipping, " .
-                       "not compatible with " . realname($arch) .
-                       "/" . $submodel);
-            next;
-        }
-
-        my @os_list = @{ $modinfo{'os'} };
-        if(scalar @os_list > 0 && !in_array($os, \@os_list)) {
-            autoconfig("$mod ($realname): " .
-                       "skipping, not compatible with " . realname($os));
-            next;
-        }
-
-        my @cc_list = @{ $modinfo{'cc'} };
-        if(scalar @cc_list > 0 && !in_array($cc, \@cc_list)) {
-            autoconfig("$mod ($realname): " .
-                       "skipping, not compatible with " . realname($cc));
-            next;
-        }
+        next unless module_runs_on(1, \%modinfo, $realname, $arch, $submodel, $os, $cc);
 
         if(!$asm_ok and $modinfo{'load_on'} eq 'asm_ok') {
             autoconfig("$mod ($realname): " .

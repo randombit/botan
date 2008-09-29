@@ -1,19 +1,16 @@
-realname "x86-64 Assembler"
+realname "BigInt Multiply-Add (x86-64)"
 
 mp_bits 64
 
 load_on request
 
-<ignore>
-#mp_mulop.cpp
-#mp_monty.cpp
-</ignore>
-
 <add>
-asm_macr.h
-#mp_mulop_amd64.S
-#mp_monty.S
+mp_mulop_amd64.S
 </add>
+
+<requires>
+asm_amd64
+</requires>
 
 <arch>
 amd64

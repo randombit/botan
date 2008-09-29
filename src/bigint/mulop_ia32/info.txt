@@ -1,0 +1,31 @@
+realname "BigInt Multiply-Add (IA-32)"
+
+mp_bits 32
+
+load_on request
+
+<add>
+mp_mulop.S
+</add>
+
+<requires>
+asm_amd64
+</requires>
+
+<arch>
+ia32
+</arch>
+
+<cc>
+gcc
+icc
+</cc>
+
+# ELF systems
+<os>
+linux
+freebsd
+netbsd
+openbsd
+solaris
+</os>

@@ -7,6 +7,8 @@ define BIGINT
 <requires>
 hex
 mp_amd64
+monty_amd64|monty_generic
+mulop_generic
 </requires>
 
 <add>
@@ -25,7 +27,5 @@ mp_asm.cpp
 mp_comba.cpp
 mp_karat.cpp
 mp_misc.cpp
-mp_monty.cpp
-mp_mulop.cpp
 mp_shift.cpp
 </add>
