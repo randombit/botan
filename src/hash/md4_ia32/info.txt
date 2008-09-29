@@ -12,8 +12,7 @@ md4_ia32.h
 
 <requires>
 asm_ia32
-mdx_hash
-utils
+md4
 </requires>
 
 <arch>

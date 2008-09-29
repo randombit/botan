@@ -20,7 +20,7 @@ class BOTAN_DLL MD4 : public MDx_HashFunction
       std::string name() const { return "MD4"; }
       HashFunction* clone() const { return new MD4; }
       MD4() : MDx_HashFunction(16, 64, false, true) { clear(); }
-   private:
+   protected:
       void hash(const byte[]);
       void copy_out(byte[]);
 

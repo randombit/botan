@@ -20,7 +20,7 @@ class BOTAN_DLL Serpent : public BlockCipher
       std::string name() const { return "Serpent"; }
       BlockCipher* clone() const { return new Serpent; }
       Serpent() : BlockCipher(16, 16, 32, 8) {}
-   private:
+   protected:
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
       void key(const byte[], u32bit);

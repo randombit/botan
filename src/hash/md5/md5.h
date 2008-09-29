@@ -20,7 +20,7 @@ class BOTAN_DLL MD5 : public MDx_HashFunction
       std::string name() const { return "MD5"; }
       HashFunction* clone() const { return new MD5; }
       MD5() : MDx_HashFunction(16, 64, false, true) { clear(); }
-   private:
+   protected:
       void hash(const byte[]);
       void copy_out(byte[]);
 
