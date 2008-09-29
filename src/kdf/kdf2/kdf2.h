@@ -6,7 +6,7 @@
 #ifndef BOTAN_KDF2_H__
 #define BOTAN_KDF2_H__
 
-#include <botan/pk_util.h>
+#include <botan/kdf.h>
 
 namespace Botan {
 

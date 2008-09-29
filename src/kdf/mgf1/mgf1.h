@@ -6,7 +6,8 @@
 #ifndef BOTAN_MGF1_H__
 #define BOTAN_MGF1_H__
 
-#include <botan/pk_util.h>
+#include <botan/kdf.h>
+#include <botan/base.h>
 
 namespace Botan {
 

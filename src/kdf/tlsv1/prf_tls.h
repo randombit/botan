@@ -6,7 +6,7 @@
 #ifndef BOTAN_TLS_PRF__
 #define BOTAN_TLS_PRF__
 
-#include <botan/pk_util.h>
+#include <botan/kdf.h>
 
 namespace Botan {
 

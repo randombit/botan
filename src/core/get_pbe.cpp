@@ -3,8 +3,7 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/lookup.h>
-#include <botan/pbe.h>
+#include <botan/get_pbe.h>
 #include <botan/oids.h>
 #include <botan/parsing.h>
 

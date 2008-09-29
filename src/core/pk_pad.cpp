@@ -1,9 +1,9 @@
 /*************************************************
-* PK Utility Classes Source File                 *
+* EME/EMSA Base Class Source File                *
 * (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/pk_util.h>
+#include <botan/pk_pad.h>
 
 namespace Botan {
 

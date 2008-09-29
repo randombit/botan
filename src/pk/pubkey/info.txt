@@ -14,7 +14,6 @@ asn1
 dh_op.cpp
 dsa_op.cpp
 elg_op.cpp
-kdf.cpp
 nr_op.cpp
 pk_algs.cpp
 pk_algs.h
@@ -23,8 +22,6 @@ pk_core.h
 pk_keys.cpp
 pk_keys.h
 pk_ops.h
-pk_util.cpp
-pk_util.h
 pkcs8.cpp
 pkcs8.h
 pubkey.cpp

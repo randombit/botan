@@ -6,7 +6,8 @@
 #ifndef BOTAN_EMSA4_H__
 #define BOTAN_EMSA4_H__
 
-#include <botan/pk_util.h>
+#include <botan/pk_pad.h>
+#include <botan/kdf.h>
 
 namespace Botan {
 

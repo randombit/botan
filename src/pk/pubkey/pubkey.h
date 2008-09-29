@@ -8,7 +8,7 @@
 
 #include <botan/base.h>
 #include <botan/pk_keys.h>
-#include <botan/pk_util.h>
+#include <botan/pk_pad.h>
 
 namespace Botan {
 

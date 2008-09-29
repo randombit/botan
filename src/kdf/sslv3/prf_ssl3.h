@@ -6,7 +6,7 @@
 #ifndef BOTAN_SSLV3_PRF_H__
 #define BOTAN_SSLV3_PRF_H__
 
-#include <botan/pk_util.h>
+#include <botan/kdf.h>
 
 namespace Botan {
 

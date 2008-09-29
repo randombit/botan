@@ -6,7 +6,7 @@
 #ifndef BOTAN_EME_PKCS1_H__
 #define BOTAN_EME_PKCS1_H__
 
-#include <botan/pk_util.h>
+#include <botan/pk_pad.h>
 
 namespace Botan {
 

@@ -3,7 +3,7 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/pk_util.h>
+#include <botan/kdf.h>
 #include <botan/lookup.h>
 #include <botan/loadstor.h>
 #include <algorithm>
