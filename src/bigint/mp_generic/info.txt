@@ -1,0 +1,8 @@
+realname "MPI Core (C++)"
+
+mp_bits 32
+
+<add>
+mp_asm.h
+mp_asmi.h
+</add>
