@@ -6,6 +6,7 @@ load_on auto
 
 <add>
 charset.cpp
+mlock.cpp
 parsing.cpp
 util.cpp
 version.cpp
