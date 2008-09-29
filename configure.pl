@@ -1043,10 +1043,24 @@ sub load_modules {
 
     $$config{'mod-list'} = join("\n", @mod_names);
 
+    my $unaligned_ok = 0;
+
     my $gen_defines = sub {
         my $defines = '';
 
         my $arch = $$config{'arch'};
+
+        my $os = $$config{'os'};
+        if($os ne 'generic') {
+            $defines .= '#define BOTAN_TARGET_OS_IS_' . uc $os . "\n";
+            my @features = @{$OPERATING_SYSTEM{$os}{'target_features'}};
+
+            for my $feature (@features) {
+                $defines .= '#define BOTAN_TARGET_OS_HAS_' . uc $feature . "\n";
+            }
+
+            $defines .= "\n";
+        }
 
         if($arch ne 'generic') {
             my %cpu_info = %{$CPU{$arch}};
@@ -1068,15 +1082,6 @@ sub load_modules {
                 $submodel =~ s/-/_/g;
                 $defines .= "#define BOTAN_TARGET_CPU_IS_$submodel\n";
             }
-
-            my $os = $$config{'os'};
-            if($os ne 'generic') {
-                $os = uc $os;
-                $submodel =~ s/-/_/g;
-                $defines .= "#define BOTAN_TARGET_OS_IS_$os\n";
-            }
-
-            my $unaligned_ok = 0;
 
             if(defined($endian)) {
                 $endian = uc $endian;
@@ -1104,26 +1109,29 @@ sub load_modules {
                     $unaligned_ok = 1;
                 }
             }
-
-            $defines .=
-                "#define BOTAN_TARGET_UNALIGNED_LOADSTOR_OK $unaligned_ok\n";
         }
 
-        my @defarray;
+        # always set (one or zero)
+        $defines .=
+            "#define BOTAN_TARGET_UNALIGNED_LOADSTOR_OK $unaligned_ok\n";
+
+        my %defines;
+
         foreach my $mod (sort keys %{$$config{'modules'}}) {
             next unless $$config{'modules'}{$mod} > 0;
 
             my $defs = $MODULES{$mod}{'define'};
             next unless $defs;
 
-            push @defarray, split(/,/, $defs);
+            push @{$defines{$MODULES{$mod}{'type'}}}, split(/,/, $defs);
         }
 
-        $defines .= "\n" if(@defarray);
-
-        foreach (sort @defarray) {
-            die unless(defined $_ and $_ ne '');
-            $defines .= "#define BOTAN_HAS_$_\n";
+        foreach my $type (sort keys %defines) {
+            $defines .= "\n/* $type */\n";
+            for my $macro (@{$defines{$type}}) {
+                die unless(defined $macro and $macro ne '');
+                $defines .= "#define BOTAN_HAS_$macro\n";
+            }
         }
         chomp($defines);
         return $defines;
@@ -1539,6 +1547,8 @@ sub get_os_info {
                      'install_cmd_exec');
 
         read_list($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
+
+        read_list($_, $reader, 'target_features', list_push(\@{$info{'target_features'}}));
 
         read_list($_, $reader, 'supports_shared',
                   list_push(\@{$info{'supports_shared'}}));

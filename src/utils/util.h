@@ -18,7 +18,7 @@ BOTAN_DLL u64bit system_time();
 /*************************************************
 * Memory Locking Functions                       *
 *************************************************/
-BOTAN_DLL void lock_mem(void*, u32bit);
+BOTAN_DLL bool lock_mem(void*, u32bit);
 BOTAN_DLL void unlock_mem(void*, u32bit);
 
 /*************************************************

@@ -4,6 +4,10 @@ define UTIL_FUNCTIONS
 
 load_on auto
 
+<libs>
+tru64 -> rt
+</libs>
+
 <add>
 charset.cpp
 mlock.cpp
