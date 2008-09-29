@@ -1,5 +1,7 @@
 realname "SHA-1 (SSE2)"
 
+define SHA1
+
 load_on request
 
 <add>

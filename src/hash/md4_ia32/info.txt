@@ -1,0 +1,33 @@
+realname "MD4 (x86)"
+
+define MD4
+
+load_on requested
+
+<add>
+md4_ia32.S
+md4.cpp
+md4.h
+</add>
+
+<requires>
+mdx_hash
+</requires>
+
+<arch>
+ia32
+</arch>
+
+<cc>
+gcc
+icc
+</cc>
+
+# ELF systems
+<os>
+linux
+freebsd
+netbsd
+openbsd
+solaris
+</os>
