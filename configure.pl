@@ -466,6 +466,11 @@ sub autoload_modules {
             next;
         }
 
+        if($modinfo{'load_on'} eq 'request') {
+            autoconfig("$mod ($realname): skipping, loaded by request only");
+            next;
+        }
+
         foreach my $req_mod (@{$modinfo{'requires'}}) {
             if(defined($$config{'modules'}{$req_mod})) {
                 if($$config{'modules'}{$req_mod} < 0) {
@@ -483,12 +488,7 @@ sub autoload_modules {
             }
         }
 
-        if($modinfo{'load_on'} eq 'request') {
-            autoconfig("$mod ($realname): skipping, loaded by request only");
-            next;
-        }
-
-        autoconfig("$mod ($realname): loading");
+        autoconfig("Enabling $mod ($realname): loading");
         $loaded{$type}{$mod} = 1;
         $$config{'modules'}{$mod} = 1;
     }
