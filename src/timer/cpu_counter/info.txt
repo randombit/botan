@@ -19,6 +19,7 @@ i586
 i686
 athlon
 pentium4
+pentium-m
 amd64
 
 ppc     # PPC timebase register
@@ -33,4 +34,3 @@ hppa
 <requires>
 timer_base
 </requires>
-
