@@ -1,5 +1,5 @@
 
-* 1.7.14, 2008-??-??
+* 1.7.14, 2008-09-30
  - Split library into parts allowing modular builds
  - Add (very preliminary) CMS support to the main library
  - Some constructors now require object pointers instead of names
