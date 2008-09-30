@@ -265,8 +265,8 @@ To set the compiler to use, or which OS or CPU to target, use:
   --os=[$oses generic]
   --cpu=[$cpus generic]
 
-  --endian=[little big none]
-  --unaligned-mem=[yes no]
+  --with-endian=[little big none]
+  --with-unaligned-mem=[yes no]
 
 To change what modules to use:
 
@@ -639,8 +639,8 @@ sub get_options {
                'cc=s' => sub { &$save_option('compiler', $_[1]) },
                'os=s' => sub { &$save_option(@_) },
                'cpu=s' => sub { &$save_option(@_) },
-               'endian=s' => sub { &$save_option(@_); },
-               'unaligned-mem=s' => sub { &$save_option(@_); },
+               'with-endian=s' => sub { &$save_option(@_); },
+               'with-unaligned-mem=s' => sub { &$save_option(@_); },
 
                'arch-info=s' => sub { emit_help(arch_info($_[1])); },
 
@@ -1143,8 +1143,8 @@ sub load_modules {
             my %cpu_info = %{$CPU{$arch}};
             my $endian = $cpu_info{'endian'};
 
-            if(defined($$config{'endian'})) {
-                $endian = $$config{'endian'};
+            if(defined($$config{'with_endian'})) {
+                $endian = $$config{'with_endian'};
                 $endian = undef unless($endian eq 'little' || $endian eq 'big');
             }
             elsif(defined($endian)) {
@@ -1164,8 +1164,8 @@ sub load_modules {
                 $endian = uc $endian;
                 $defines .= "#define BOTAN_TARGET_CPU_IS_${endian}_ENDIAN\n";
 
-                if(defined($$config{'unaligned_mem'})) {
-                    my $spec = $$config{'unaligned_mem'};
+                if(defined($$config{'with_unaligned_mem'})) {
+                    my $spec = $$config{'with_unaligned_mem'};
 
                     if($spec eq 'yes') {
                         $unaligned_ok = 1;
@@ -1174,7 +1174,7 @@ sub load_modules {
                         $unaligned_ok = 0;
                     }
                     else {
-                        warning("Unknown arg to --unaligned-mem '$spec', will ignore");
+                        warning("Unknown arg to --with-unaligned-mem '$spec', will ignore");
                         $unaligned_ok = 0;
                     }
                 }
