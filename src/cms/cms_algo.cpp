@@ -49,9 +49,11 @@ SecureVector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
    InitializationVector iv(rng, 8);
    InitializationVector fixed("4ADDA22C79E82105");
 
-   Pipe pipe(get_cipher(cipher + "/CBC/NoPadding", kek, iv, ENCRYPTION),
+   Pipe pipe(get_cipher(global_state(),
+                        cipher + "/CBC/NoPadding", kek, iv, ENCRYPTION),
              new Flip_Bytes(iv.bits_of()),
-             get_cipher(cipher + "/CBC/NoPadding", kek, fixed, ENCRYPTION));
+             get_cipher(global_state(),
+                        cipher + "/CBC/NoPadding", kek, fixed, ENCRYPTION));
    pipe.start_msg();
    pipe.write(input);
    pipe.write(icv.read_all());

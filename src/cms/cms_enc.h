@@ -18,15 +18,22 @@ namespace Botan {
 class CMS_Encoder
    {
    public:
-      void encrypt(const X509_Certificate&, const std::string = "");
-      void encrypt(const std::string&, const std::string& = "");
-      void encrypt(const SymmetricKey&, const std::string& = "");
+
+      void encrypt(RandomNumberGenerator&,
+                   const X509_Certificate&, const std::string = "");
+
+      void encrypt(RandomNumberGenerator& rng,
+                   const std::string&, const std::string& = "");
+
+      void encrypt(RandomNumberGenerator& rng,
+                   const SymmetricKey&, const std::string& = "");
 
       void authenticate(const X509_Certificate&, const std::string& = "");
       void authenticate(const std::string&, const std::string& = "");
       void authenticate(const SymmetricKey&, const std::string& = "");
 
-      void sign(X509_Store&, const PKCS8_PrivateKey&);
+      void sign(X509_Store&, const PKCS8_PrivateKey&,
+                RandomNumberGenerator& rng);
       void digest(const std::string& = "");
 
       void compress(const std::string&);
@@ -43,12 +50,15 @@ class CMS_Encoder
    private:
       void add_layer(const std::string&, DER_Encoder&);
 
-      void encrypt_ktri(const X509_Certificate&, PK_Encrypting_Key*,
+      void encrypt_ktri(RandomNumberGenerator&,
+                        const X509_Certificate&, PK_Encrypting_Key*,
                         const std::string&);
-      void encrypt_kari(const X509_Certificate&, X509_PublicKey*,
+      void encrypt_kari(RandomNumberGenerator&,
+                        const X509_Certificate&, X509_PublicKey*,
                         const std::string&);
 
-      SecureVector<byte> do_encrypt(const SymmetricKey&, const std::string&);
+      SecureVector<byte> do_encrypt(RandomNumberGenerator& rng,
+                                    const SymmetricKey&, const std::string&);
 
       static SecureVector<byte> make_econtent(const SecureVector<byte>&,
                                               const std::string&);
