@@ -1,13 +1,8 @@
-realname "Botan Core Module"
+realname "Botan Libstate Module"
 
 load_on auto
 
-define CORE_MODULE
-
-<requires>
-aes
-sha1
-</requires>
+define LIBSTATE_MODULE
 
 <add>
 def_alg.cpp
