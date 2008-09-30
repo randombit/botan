@@ -13,7 +13,7 @@
 \title{\textbf{Botan Build Guide}}
 \author{Jack Lloyd \\
         \texttt{lloyd@randombit.net}}
-\date{}
+\date{2008-09-30}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\module}[1]{\texttt{#1}}
@@ -41,10 +41,13 @@ POSIX (such as VMS, MacOS 9, OS/390, OS/400, ...) are not supported by
 the build system, primarily due to lack of access. Please contact the
 maintainer if you would like to build Botan on such a system.
 
+Botan's build is controlled by configure.pl, which is a Perl
+script. Perl 5.6 or later is required.
+
 \section{For the Impatient}
 
 \begin{verbatim}
-$ ./configure.pl
+$ ./configure.pl [--prefix=/some/directory]
 $ make
 $ make install
 \end{verbatim}
@@ -77,24 +80,42 @@ as ``sparc64'' or ``mips64'') if your operating system knows how to
 handle 64-bit object code -- a 32-bit kernel on a 64-bit CPU will
 generally not like 64-bit code.
 
-The script also knows about the various extension modules
-available. You can enable one or more with the option
-``\verb|--modules=MOD|'', where \verb|MOD| is some name that
-identifies the extension (or a comma separated list of them). Modules
-provide additional capabilities which require the use of APIs not
-provided by ISO C/C++.
+By default the script tries to figure out what will work on your
+system, and use that. It will print a display at the end showing
+which algorithms have and have not been abled. For instance on one
+system we might see the line:
 
-Not all OSes or CPUs have specific support in \filename{configure.pl}. If the
-CPU architecture of your system isn't supported by \filename{configure.pl}, use
-'generic'. This setting disables machine-specific optimization
-flags. Similarly, setting OS to 'generic' disables things which depend greatly
-on OS support (specifically, shared libraries).
+\begin{verbatim}
+   (loading): entropy: [beos_stats] buf_es [cryptoapi_rng] \\
+                       dev_random egd proc_walk unix_procs [win32_stats]
+\end{verbatim}
+
+The names listed in brackets are disabled, the others are
+enabled. Here we see the list of entropy sources which are going to be
+compiled into Botan. Since this particular line comes when Botan was
+configuring for a Linux system, the Win32 and BeOS specific modules
+were disabled, while modules that use Unix APIs and /dev/random are
+built.
+
+You can control which algorithms and modules are built using the
+options ``\verb|--enable-modules=MODS|'' and
+``\verb|--disable-modules=MODS|'', for instance \\
+``\verb|--enable-modules=blowfish,md5,rsa,zlib --disable-modules=arc4,cmac|''.
+Modules not listed on the command line will simply be loaded if needed
+or if configured to load by default.
+
+Not all OSes or CPUs have specific support in
+\filename{configure.pl}. If the CPU architecture of your system isn't
+supported by \filename{configure.pl}, use 'generic'. This setting
+disables machine-specific optimization flags. Similarly, setting OS to
+'generic' disables things which depend greatly on OS support
+(specifically, shared libraries).
 
 However, it's impossible to guess which options to give to a system
 compiler.  Thus, if you want to compile Botan with a compiler which
 \filename{configure.pl} does not support, you will need to tell it how
 that compiler works. This is done by adding a new file in the
-directory \filename{misc/config/cc}; the existing files should put you
+directory \filename{src/build-data/cc}; the existing files should put you
 in the right direction.
 
 The script tries to guess what kind of makefile to generate, and it
@@ -105,7 +126,7 @@ commands). Just in case, you can override it with
 are 'unix' (normal Unix makefiles), and 'nmake', the make variant
 commonly used by Windows compilers. To add a new variant (eg, a build
 script for VMS), you will need to create a new template file in
-\filename{misc/config/makefile}.
+\filename{src/build-data/makefile}.
 
 \pagebreak
 
@@ -114,7 +135,7 @@ script for VMS), you will need to create a new template file in
 The basic build procedure on Unix and Unix-like systems is:
 
 \begin{verbatim}
-   $ ./configure.pl --module-set=[unix|beos] --modules=<other mods>
+   $ ./configure.pl [--enable-modules=<list>] [--cc=CC]
    $ make
    # You may need to set your LD_LIBRARY_PATH or equivalent for ./check to run
    $ make check # optional, but a good idea
@@ -123,13 +144,6 @@ The basic build procedure on Unix and Unix-like systems is:
 
 This will probably default to using GCC, depending on what can be
 found within your PATH.
-
-The 'unix' module set should work on most POSIX/Unix systems out there
-(including MacOS X), while the 'beos' module is specific to BeOS. While the two
-sets share a number of modules, some normal Unix ones don't work on BeOS (in
-particular, BeOS doesn't have a working \function{mmap} function), and BeOS has
-a few extras just for it. The library will pick a default module set for you
-based on the value of OS, so there is rarely a reason to specify that.
 
 The \verb|make install| target has a default directory in which it
 will install Botan (typically \verb|/usr/local|). You can override
@@ -152,47 +166,44 @@ The situation is not much different here. We'll assume you're using Visual C++
 have a copy of Perl installed, and have both Perl and Visual C++ in your path.
 
 \begin{verbatim}
-   > perl configure.pl --cc=msvc --os=windows [--cpu=CPU] --module-set=win32
+   > perl configure.pl --cc=msvc --os=windows [--cpu=CPU]
    > nmake
    > nmake check # optional, but recommended
 \end{verbatim}
 
-The configure script will include the 'win32' module set by default if
-you pass \verb|--os=windows|. This module set includes a pair of
-entropy sources for use on Windows; at some point in the future it
-will also add support for high-resolution timers, mutexes for thread
-safety, and other useful things.
-
-For Win95 pre OSR2, the \verb|es_capi| module will not work, because
-CryptoAPI didn't exist. All versions of NT4 lack the ToolHelp32
-interface, which is how \verb|es_win32| does its slow polls, so a
-version of the library built with that module will not load under
-NT4. Later systems (98/ME/2000/XP) support both methods, so this
-shouldn't be much of an issue.
+For Win95 pre OSR2, the \verb|cryptoapi\_rng| module will not work,
+because CryptoAPI didn't exist. And all versions of NT4 lack the
+ToolHelp32 interface, which is how \verb|win32_stats| does its slow
+polls, so a version of the library built with that module will not
+load under NT4. Later systems (98/ME/2000/XP) support both methods, so
+this shouldn't be much of an issue.
 
 Unfortunately, there currently isn't an install script usable on
 Windows. Basically all you have to do is copy the newly created
 \filename{libbotan.lib} to someplace where you can find it later (say,
-\verb|C:\Botan\|). Then copy the entire \verb|include\botan| directory, which
-was constructed when you built the library, into the same directory.
+\verb|C:\botan\|). Then copy the entire \verb|build\include\botan|
+directory, which was constructed when you built the library, into the
+same directory.
 
 When building your applications, all you have to do is tell the compiler to
-look for both include files and library files in \verb|C:\Botan|, and it will
+look for both include files and library files in \verb|C:\botan|, and it will
 find both.
 
 \pagebreak
 
 \subsection{Configuration Parameters}
 
-There are some configuration parameters which you may want to tweak before
-building the library. These can be found in \filename{config.h}. This file is
-overwritten every time the configure script is run (and does not exist until
-after you run the script for the first time).
+There are some configuration parameters which you may want to tweak
+before building the library. These can be found in
+\filename{config.h}. This file is overwritten every time the configure
+script is run (and does not exist until after you run the script for
+the first time).
 
-Also included in \filename{config.h} are macros which are defined if one or
-more extensions are available. All of them begin with \verb|BOTAN_HAS_|. For
-example, if \verb|BOTAN_HAS_COMPRESSOR_BZIP2| is defined, then an application
-using Botan can include \filename{<botan/bzip2.h>} and use the Bzip2 filters.
+Also included in \filename{config.h} are macros which are defined if
+one or more extensions are available. All of them begin with
+\verb|BOTAN_HAS_|. For example, if \verb|BOTAN_HAS_COMPRESSOR_BZIP2|
+is defined, then an application using Botan can include
+\filename{<botan/bzip2.h>} and use the Bzip2 filters.
 
 \macro{BOTAN\_MP\_WORD\_BITS}: This macro controls the size of the
 words used for calculations with the MPI implementation in Botan. You
@@ -232,9 +243,9 @@ environment in a different directory.
 
 You may want to do something peculiar with the configuration; to
 support this there is a flag to \filename{configure.pl} called
-\texttt{--local-config=<file>}. The contents of the file are inserted into
-\filename{build/build.h} which is (indirectly) included into every
-Botan header and source file.
+\texttt{--with-local-config=<file>}. The contents of the file are
+inserted into \filename{build/build.h} which is (indirectly) included
+into every Botan header and source file.
 
 \pagebreak
 
@@ -252,80 +263,73 @@ unusual circumstances. The modules included with this release are:
          the sensitive data will be swapped to where we can later clean it,
          rather than somewhere in the swap partition.}
 
-  \item \mod{comp\_bzip2}{Enables an application to perform bzip2 compression
+  \item \mod{bzip2}{Enables an application to perform bzip2 compression
          and decompression using the library. Available on any system that has
          bzip2.}
 
-  \item \mod{comp\_zlib}{Enables an application to perform zlib compression and
+  \item \mod{zlib}{Enables an application to perform zlib compression and
          decompression using the library. Available on any system that has
          zlib.}
 
-  \item \mod{eng\_aep}{An engine that uses any available AEP accelerator card
-         to speed up PK operations. You have to have the AEP drivers installed
-         for this to link correctly, but you don't have to have a card
-         installed - it will automatically be enabled if a card is detected at
-         run time.}
+  %\item \mod{eng\_aep}{An engine that uses any available AEP accelerator card
+  %       to speed up PK operations. You have to have the AEP drivers installed
+  %       for this to link correctly, but you don't have to have a card
+  %       installed - it will automatically be enabled if a card is detected at
+  %       run time.}
 
-  \item \mod{eng\_gmp}{An engine that uses GNU MP to speed up PK operations.
+  \item \mod{gnump}{An engine that uses GNU MP to speed up PK operations.
          GNU MP 4.1 or later is required.}
 
-  \item \mod{eng\_ossl}{An engine that uses OpenSSL's BN library to speed up PK
-         operations. OpenSSL 0.9.7 or later is required.}
+  \item \mod{openssl}{An engine that uses OpenSSL to speed up public key
+                      operations and some ciphers/hashes. OpenSSL 0.9.7 or
+                      later is required.}
 
-  \item \mod{es\_beos}{An entropy source that uses BeOS-specific APIs to gather
-         (hopefully unpredictable) data from the system.}
+  \item \mod{beos\_stats}{An entropy source that uses BeOS-specific
+    APIs to gather (hopefully unpredictable) data from the system.}
 
-  \item \mod{es\_capi}{An entropy source that uses the Win32 CryptoAPI function
-         \texttt{CryptGenRandom} to gather entropy. Supported on NT4, Win95
-         OSR2, and all later Windows systems.}
+  \item \mod{cryptoapi\_rng}{An entropy source that uses the Win32
+    CryptoAPI function \texttt{CryptGenRandom} to gather
+    entropy. Supported on NT4, Win95 OSR2, and all later Windows
+    systems.}
 
-  \item \mod{es\_egd}{An entropy source that accesses EGD (the entropy
+  \item \mod{egd}{An entropy source that accesses EGD (the entropy
          gathering daemon). Common on Unix systems that don't have
          \texttt{/dev/random}.}
 
-  \item \mod{es\_ftw}{Gather entropy by reading files from a particular file
+  \item \mod{proc\_walk}{Gather entropy by reading files from a particular file
           tree. Usually used with \texttt{/proc}; most other file trees don't
           have sufficient variability over time to be useful.}
 
-  \item \mod{es\_unix}{Gather entropy by running various Unix programs, like
+  \item \mod{unix\_procs}{Gather entropy by running various Unix programs, like
           \texttt{arp} and \texttt{vmstat}, and reading their output in the
           hopes that at least some of it will be unpredictable to an attacker.}
 
-  \item \mod{es\_win32}{Gather entropy by walking through various pieces of
+  \item \mod{win32\_stats}{Gather entropy by walking through various pieces of
           information about processes running on the system. Does not run on
           NT4, but should run on all other Win32 systems.}
 
   \item \mod{fd\_unix}{Let the users of \texttt{Pipe} perform I/O with Unix
          file descriptors in addition to \texttt{iostream} objects.}
 
-  \item \mod{ml\_unix}{Add hooks for locking memory into RAM. Usually requires
-         the application to run as \texttt{root} to actually work, but if the
-         application is not allowed to call \texttt{mlock}, no harm results.}
-
-  \item \mod{mp\_asm64}{Use inline assembly to access the multiply instruction
-         available on some 64-bit CPUs. This module only runs on Alpha, AMD64,
-         IA-64, MIPS64, and PowerPC-64. Typically PKI operations are several
-         times as fast with this module than without.}
-
-  \item \mod{mux\_pthr}{Add support for using \texttt{pthread} mutexes to
+  \item \mod{pthread}{Add support for using \texttt{pthread} mutexes to
          lock internal data structures. Important if you are using threads
          with the library.}
 
-  \item \mod{mux\_qt}{Add support for using Qt mutexes to lock internal data
+  \item \mod{qt\_mutex}{Add support for using Qt mutexes to lock internal data
          structures.}
 
-  \item \mod{tm\_hard}{Use the contents of the CPU cycle counter when
+  \item \mod{cpu\_counter}{Use the contents of the CPU cycle counter when
          generating random bits to further randomize the results. Works on x86
          (Pentium and up), Alpha, and SPARCv9.}
 
-  \item \mod{tm\_posix}{Use the POSIX realtime clock as a high-resolution
+  \item \mod{posix\_rt}{Use the POSIX realtime clock as a high-resolution
          timer.}
 
-  \item \mod{tm\_unix}{Use the traditional Unix \texttt{gettimeofday} as a high
-         resolution timer.}
+  \item \mod{gettimeofday}{Use the traditional Unix
+    \texttt{gettimeofday} as a high resolution timer.}
 
-  \item \mod{tm\_win32}{Use Win32's \texttt{GetSystemTimeAsFileTime} as a high
-         resolution timer.}
+  \item \mod{win32\_query\_perf\_ctr}{Use Win32's
+    \texttt{QueryPerformanceCounter} as a high resolution timer.}
 
 \end{list}
 
