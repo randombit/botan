@@ -6,7 +6,6 @@
 #include <botan/cms_enc.h>
 #include <botan/der_enc.h>
 #include <botan/x509find.h>
-#include <botan/x509_ca.h>
 #include <botan/bigint.h>
 #include <botan/oids.h>
 #include <botan/lookup.h>
@@ -219,7 +218,7 @@ void CMS_Encoder::encrypt(RandomNumberGenerator& rng,
 /*************************************************
 * Encrypt a message with a passphrase            *
 *************************************************/
-void CMS_Encoder::encrypt(RandomNumberGenerator& rng,
+void CMS_Encoder::encrypt(RandomNumberGenerator&,
                           const std::string&,
                           const std::string& user_cipher)
    {
@@ -274,21 +273,23 @@ SecureVector<byte> CMS_Encoder::do_encrypt(RandomNumberGenerator& rng,
 /*************************************************
 * Sign a message                                 *
 *************************************************/
-void CMS_Encoder::sign(X509_Store& store, const PKCS8_PrivateKey& key,
-                       RandomNumberGenerator& rng)
+void CMS_Encoder::sign(const X509_Certificate& cert,
+                       const PKCS8_PrivateKey& key,
+                       RandomNumberGenerator& rng,
+                       const std::vector<X509_Certificate>& chain,
+                       const std::string& hash,
+                       const std::string& pad_algo)
    {
-   std::vector<X509_Certificate> matching =
-      store.get_certs(SKID_Match(key.key_id()));
+   std::string padding = pad_algo + "(" + hash + ")";
 
-   if(matching.size() == 0)
-      throw Encoding_Error("CMS::sign: Cannot find cert matching given key");
+   // FIXME: Add new get_format() func to PK_Signing_Key, PK_Verifying_*_Key
+   Signature_Format format = IEEE_1363;
 
-   const X509_Certificate& cert = matching[0];
+   const PK_Signing_Key& sig_key = dynamic_cast<const PK_Signing_Key&>(key);
+   std::auto_ptr<PK_Signer> signer(get_pk_signer(sig_key, padding, format));
 
-   std::vector<X509_Certificate> chain = store.get_cert_chain(cert);
-
-   AlgorithmIdentifier sig_algo;
-   std::auto_ptr<PK_Signer> signer(choose_sig_format(key, sig_algo));
+   AlgorithmIdentifier sig_algo(OIDS::lookup(key.algo_name() + "/" + padding),
+                                AlgorithmIdentifier::USE_NULL_PARAM);
 
    SecureVector<byte> signed_attr = encode_attr(data, type, hash);
    signer->update(signed_attr);

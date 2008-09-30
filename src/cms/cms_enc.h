@@ -32,8 +32,13 @@ class CMS_Encoder
       void authenticate(const std::string&, const std::string& = "");
       void authenticate(const SymmetricKey&, const std::string& = "");
 
-      void sign(X509_Store&, const PKCS8_PrivateKey&,
-                RandomNumberGenerator& rng);
+      void sign(const X509_Certificate& cert,
+                const PKCS8_PrivateKey& key,
+                RandomNumberGenerator& rng,
+                const std::vector<X509_Certificate>& cert_chain,
+                const std::string& hash,
+                const std::string& padding);
+
       void digest(const std::string& = "");
 
       void compress(const std::string&);

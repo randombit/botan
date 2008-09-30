@@ -34,7 +34,7 @@ CMS_Decoder::CMS_Decoder(DataSource& in, const X509_Store& x509store,
 /*************************************************
 * Read the outermost ContentInfo                 *
 *************************************************/
-void CMS_Decoder::initial_read(DataSource& in)
+void CMS_Decoder::initial_read(DataSource&)
    {
    // FIXME...
 
@@ -60,9 +60,11 @@ void CMS_Decoder::add_key(PKCS8_PrivateKey* key)
    if(!key)
       return;
 
+#if 0
    for(u32bit j = 0; j != keys.size(); j++)
       if(keys[j]->key_id() == key->key_id())
          return;
+#endif
 
    keys.push_back(key);
    }
