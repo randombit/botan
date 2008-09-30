@@ -101,12 +101,4 @@ bool EMSA1::verify(const MemoryRegion<byte>& coded,
       }
    }
 
-/*************************************************
-* EMSA1 Constructor                              *
-*************************************************/
-EMSA1::EMSA1(const std::string& hash_name) :
-   hash(get_hash(hash_name))
-   {
-   }
-
 }

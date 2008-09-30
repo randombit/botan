@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/emsa4.h>
-#include <botan/lookup.h>
+#include <botan/mgf1.h>
 #include <botan/bit_ops.h>
 
 namespace Botan {
@@ -123,21 +123,19 @@ bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
 /*************************************************
 * EMSA4 Constructor                              *
 *************************************************/
-EMSA4::EMSA4(const std::string& hash_name, const std::string& mgf_name) :
-   SALT_SIZE(output_length_of(hash_name))
+EMSA4::EMSA4(HashFunction* h) :
+   SALT_SIZE(h->OUTPUT_LENGTH), hash(h)
    {
-   hash = get_hash(hash_name);
-   mgf = get_mgf(mgf_name + "(" + hash_name + ")");
+   mgf = new MGF1(hash->clone());
    }
 
 /*************************************************
 * EMSA4 Constructor                              *
 *************************************************/
-EMSA4::EMSA4(const std::string& hash_name, const std::string& mgf_name,
-             u32bit salt_size) : SALT_SIZE(salt_size)
+EMSA4::EMSA4(HashFunction* h, u32bit salt_size) :
+   SALT_SIZE(salt_size), hash(h)
    {
-   hash = get_hash(hash_name);
-   mgf = get_mgf(mgf_name + "(" + hash_name + ")");
+   mgf = new MGF1(hash->clone());
    }
 
 }

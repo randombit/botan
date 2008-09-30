@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/lion.h>
-#include <botan/lookup.h>
 #include <botan/xor_buf.h>
 #include <botan/parsing.h>
 
@@ -76,7 +75,7 @@ std::string Lion::name() const
 *************************************************/
 BlockCipher* Lion::clone() const
    {
-   return new Lion(hash->name(), cipher->name(), BLOCK_SIZE);
+   return new Lion(hash->clone(), cipher->clone(), BLOCK_SIZE);
    }
 
 /*************************************************
@@ -93,14 +92,11 @@ void Lion::clear() throw()
 /*************************************************
 * Lion Constructor                               *
 *************************************************/
-Lion::Lion(const std::string& hash_name, const std::string& sc_name,
-           u32bit block_len) :
-   BlockCipher(block_len, 2, 2*output_length_of(hash_name), 2),
-   LEFT_SIZE(output_length_of(hash_name)), RIGHT_SIZE(BLOCK_SIZE - LEFT_SIZE)
+Lion::Lion(HashFunction* hash_in, StreamCipher* sc_in, u32bit block_len) :
+   BlockCipher(block_len, 2, 2*hash_in->OUTPUT_LENGTH, 2),
+   LEFT_SIZE(hash->OUTPUT_LENGTH), RIGHT_SIZE(BLOCK_SIZE - LEFT_SIZE),
+   hash(hash_in), cipher(sc_in)
    {
-   hash = get_hash(hash_name);
-   cipher = get_stream_cipher(sc_name);
-
    if(2*LEFT_SIZE + 1 > BLOCK_SIZE)
       throw Invalid_Argument(name() + ": Chosen block size is too small");
    if(!cipher->valid_keylength(LEFT_SIZE))

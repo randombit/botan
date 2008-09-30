@@ -82,7 +82,7 @@ EMSA* get_emsa(const std::string& algo_spec)
    if(emsa_name == "EMSA1")
       {
       if(name.size() == 2)
-         return new EMSA1(name[1]);
+         return new EMSA1(get_hash(name[1]));
       }
 #endif
 
@@ -90,7 +90,7 @@ EMSA* get_emsa(const std::string& algo_spec)
    if(emsa_name == "EMSA2")
       {
       if(name.size() == 2)
-         return new EMSA2(name[1]);
+         return new EMSA2(get_hash(name[1]));
       }
 #endif
 
@@ -98,19 +98,21 @@ EMSA* get_emsa(const std::string& algo_spec)
    if(emsa_name == "EMSA3")
       {
       if(name.size() == 2)
-         return new EMSA3(name[1]);
+         return new EMSA3(get_hash(name[1]));
       }
 #endif
 
 #if defined(BOTAN_HAS_EMSA4)
    if(emsa_name == "EMSA4")
       {
-      if(name.size() == 2)
-         return new EMSA4(name[1], "MGF1");
-      if(name.size() == 3)
-         return new EMSA4(name[1], name[2]);
-      if(name.size() == 4)
-         return new EMSA4(name[1], name[2], to_u32bit(name[3]));
+      // EMSA4 is hardcoded to use MGF1
+      if(name.size() >= 3 && name[2] != "MGF1")
+         throw Algorithm_Not_Found(algo_spec);
+
+      if(name.size() == 2 || name.size() == 3)
+         return new EMSA4(get_hash(name[1]));
+      else if(name.size() == 4)
+         return new EMSA4(get_hash(name[1]), to_u32bit(name[3]));
       }
 #endif
 
@@ -165,7 +167,7 @@ KDF* get_kdf(const std::string& algo_spec)
    if(kdf_name == "KDF1")
       {
       if(name.size() == 2)
-         return new KDF1(name[1]);
+         return new KDF1(get_hash(name[1]));
       }
 #endif
 
@@ -173,7 +175,7 @@ KDF* get_kdf(const std::string& algo_spec)
    if(kdf_name == "KDF2")
       {
       if(name.size() == 2)
-         return new KDF2(name[1]);
+         return new KDF2(get_hash(name[1]));
       }
 #endif
 

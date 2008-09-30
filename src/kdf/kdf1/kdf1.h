@@ -7,6 +7,7 @@
 #define BOTAN_KDF1_H__
 
 #include <botan/kdf.h>
+#include <botan/base.h>
 
 namespace Botan {
 
@@ -16,12 +17,16 @@ namespace Botan {
 class BOTAN_DLL KDF1 : public KDF
    {
    public:
-      SecureVector<byte> derive(u32bit, const byte[], u32bit,
-                                const byte[], u32bit) const;
+      SecureVector<byte> derive(u32bit,
+                                const byte secret[], u32bit secret_len,
+                                const byte P[], u32bit P_len) const;
 
-      KDF1(const std::string&);
+      KDF1(HashFunction* h) : hash(h) {}
+      KDF1(const KDF1& other) : hash(other.hash->clone()) {}
+
+      ~KDF1() { delete hash; }
    private:
-      const std::string hash_name;
+      HashFunction* hash;
    };
 
 }

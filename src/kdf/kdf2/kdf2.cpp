@@ -4,9 +4,7 @@
 *************************************************/
 
 #include <botan/kdf2.h>
-#include <botan/lookup.h>
 #include <botan/loadstor.h>
-#include <memory>
 
 namespace Botan {
 
@@ -20,7 +18,6 @@ SecureVector<byte> KDF2::derive(u32bit out_len,
    SecureVector<byte> output;
    u32bit counter = 1;
 
-   std::auto_ptr<HashFunction> hash(get_hash(hash_name));
    while(out_len && counter)
       {
       hash->update(secret, secret_len);
@@ -37,15 +34,6 @@ SecureVector<byte> KDF2::derive(u32bit out_len,
       }
 
    return output;
-   }
-
-/*************************************************
-* KDF2 Constructor                               *
-*************************************************/
-KDF2::KDF2(const std::string& h_name) : hash_name(h_name)
-   {
-   if(!have_hash(hash_name))
-      throw Algorithm_Not_Found(hash_name);
    }
 
 }

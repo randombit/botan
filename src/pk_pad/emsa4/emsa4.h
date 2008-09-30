@@ -17,8 +17,9 @@ namespace Botan {
 class BOTAN_DLL EMSA4 : public EMSA
    {
    public:
-      EMSA4(const std::string&, const std::string&);
-      EMSA4(const std::string&, const std::string&, u32bit);
+      EMSA4(HashFunction*);
+      EMSA4(HashFunction*, u32bit);
+
       ~EMSA4() { delete hash; delete mgf; }
    private:
       void update(const byte[], u32bit);
@@ -29,7 +30,7 @@ class BOTAN_DLL EMSA4 : public EMSA
       bool verify(const MemoryRegion<byte>&, const MemoryRegion<byte>&,
                   u32bit) throw();
 
-      const u32bit SALT_SIZE;
+      u32bit SALT_SIZE;
       HashFunction* hash;
       const MGF* mgf;
    };

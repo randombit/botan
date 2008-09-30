@@ -5,7 +5,6 @@
 
 #include <botan/emsa2.h>
 #include <botan/hash_id.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -94,9 +93,8 @@ bool EMSA2::verify(const MemoryRegion<byte>& coded,
 /*************************************************
 * EMSA2 Constructor                              *
 *************************************************/
-EMSA2::EMSA2(const std::string& hash_name)
+EMSA2::EMSA2(HashFunction* hash_in) : hash(hash_in)
    {
-   hash = get_hash(hash_name);
    empty_hash = hash->final();
 
    hash_id = ieee1363_hash_id(hash->name());

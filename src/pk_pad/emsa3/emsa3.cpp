@@ -5,7 +5,6 @@
 
 #include <botan/emsa3.h>
 #include <botan/hash_id.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -88,9 +87,8 @@ bool EMSA3::verify(const MemoryRegion<byte>& coded,
 /*************************************************
 * EMSA3 Constructor                              *
 *************************************************/
-EMSA3::EMSA3(const std::string& hash_name)
+EMSA3::EMSA3(HashFunction* hash_in) : hash(hash_in)
    {
-   hash = get_hash(hash_name);
    hash_id = pkcs_hash_id(hash->name());
    }
 

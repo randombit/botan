@@ -16,7 +16,7 @@ namespace Botan {
 class BOTAN_DLL EMSA1 : public EMSA
    {
    public:
-      EMSA1(const std::string&);
+      EMSA1(HashFunction* h) : hash(h) {}
       ~EMSA1() { delete hash; }
    private:
       void update(const byte[], u32bit);
