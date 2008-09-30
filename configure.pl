@@ -2039,7 +2039,7 @@ sub guess_os
 
     trace("Can't guess os from $^O");
 
-    my $uname = `uname -s 2>/dev/null`;
+    my $uname = `uname -s`;
     chomp $uname;
     $uname = lc $uname;
 
@@ -2103,7 +2103,7 @@ sub guess_cpu
 
     # `umame -p` is sometimes something stupid like unknown, but in some
     # cases it can be more specific (useful) than `uname -m`
-    my $cpu = guess_cpu_from_this(`uname -p 2>/dev/null`);
+    my $cpu = guess_cpu_from_this(`uname -p`);
 
     if($cpu ne '')
     {
@@ -2112,7 +2112,7 @@ sub guess_cpu
     }
 
     # Try uname -m
-    $cpu = guess_cpu_from_this(`uname -m 2>/dev/null`);
+    $cpu = guess_cpu_from_this(`uname -m`);
 
     if($cpu ne '')
     {
