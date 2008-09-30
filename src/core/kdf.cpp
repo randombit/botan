@@ -4,10 +4,6 @@
 *************************************************/
 
 #include <botan/kdf.h>
-#include <botan/lookup.h>
-#include <botan/loadstor.h>
-#include <algorithm>
-#include <memory>
 
 namespace Botan {
 
