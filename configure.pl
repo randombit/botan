@@ -1944,6 +1944,15 @@ sub guess_cpu_from_this
     $cpuinfo =~ s/\(tm\)//;
     $cpuinfo =~ s/ //g;
 
+    # The 32-bit SPARC stuff is impossible to match to arch type easily, and
+    # anyway the uname stuff will pick up that it's a SPARC so it doesn't
+    # matter. If it's an Ultra, assume a 32-bit userspace, no 64-bit code
+    # possible; that's the most common setup right now anyway
+    $cpu = 'sparc32-v9' if($cpuinfo =~ /ultrasparc/);
+
+    # 64-bit PowerPC
+    $cpu = 'cellppu' if($cpuinfo =~ /cell broadband engine/);
+
     foreach my $arch (keys %CPU) {
         my %info = %{$CPU{$arch}};
 
@@ -1969,38 +1978,6 @@ sub guess_cpu_from_this
                 $cpu = $sm_alias if($cpuinfo =~ /$sm_alias/);
             }
         }
-    }
-
-    # The 32-bit SPARC stuff is impossible to match to arch type easily, and
-    # anyway the uname stuff will pick up that it's a SPARC so it doesn't
-    # matter. If it's an Ultra, assume a 32-bit userspace, no 64-bit code
-    # possible; that's the most common setup right now anyway
-    $cpu = 'sparc32-v9' if($cpuinfo =~ /ultrasparc/);
-
-    # 64-bit PowerPC
-    $cpu = 'ppc64' if($cpuinfo =~ /ppc64/);
-    $cpu = 'rs64a' if($cpuinfo =~ /rs64-/);
-    $cpu = 'power3' if($cpuinfo =~ /power3/);
-    $cpu = 'power4' if($cpuinfo =~ /power4/);
-    $cpu = 'power5' if($cpuinfo =~ /power5/);
-    $cpu = 'ppc970' if($cpuinfo =~ /ppc970/);
-    $cpu = 'cellppu' if($cpuinfo =~ /cell broadband engine/);
-
-    # Ooh, an Alpha. Try to figure out what kind
-    if($cpuinfo =~ /alpha/)
-    {
-        $cpu = 'alpha-ev4' if($cpuinfo =~ /ev4/);
-        $cpu = 'alpha-ev5' if($cpuinfo =~ /ev5/);
-        $cpu = 'alpha-ev56' if($cpuinfo =~ /ev56/);
-        $cpu = 'alpha-pca56' if($cpuinfo =~ /pca56/);
-        $cpu = 'alpha-ev6' if($cpuinfo =~ /ev6/);
-        $cpu = 'alpha-ev67' if($cpuinfo =~ /ev67/);
-        $cpu = 'alpha-ev68' if($cpuinfo =~ /ev68/);
-        $cpu = 'alpha-ev7' if($cpuinfo =~ /ev7/);
-    }
-
-    if($cpu eq '' and !($cpuinfo =~ /\n/)) {
-        $cpu = $cpuinfo;
     }
 
     trace('guessing ', $cpu) if($cpu);
