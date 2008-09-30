@@ -32,8 +32,8 @@ std::string choose_algo(const std::string& user_algo,
 /*************************************************
 * Encode a SignerIdentifier/RecipientIdentifier  *
 *************************************************/
-void encode_si(DER_Encoder& der, const X509_Certificate& cert,
-               bool use_skid_encoding = false)
+DER_Encoder& encode_si(DER_Encoder& der, const X509_Certificate& cert,
+                       bool use_skid_encoding = false)
    {
    if(cert.subject_key_id().size() && use_skid_encoding)
       der.encode(cert.subject_key_id(), OCTET_STRING, ASN1_Tag(0));
@@ -44,6 +44,8 @@ void encode_si(DER_Encoder& der, const X509_Certificate& cert,
          encode(BigInt::decode(cert.serial_number())).
       end_cons();
       }
+
+   return der;
    }
 
 /*************************************************
@@ -137,18 +139,19 @@ void CMS_Encoder::encrypt_ktri(RandomNumberGenerator& rng,
                               AlgorithmIdentifier::USE_NULL_PARAM);
 
    DER_Encoder encoder;
-   encoder.start_cons(SEQUENCE);
-   encoder.encode((u32bit)0);
-     encoder.start_cons(SET);
-       encoder.start_cons(SEQUENCE);
-       encoder.encode((u32bit)0);
-         encode_si(encoder, to);
-         encoder.encode(alg_id);
-         encoder.encode(enc->encrypt(cek.bits_of(), rng), OCTET_STRING);
-       encoder.end_cons();
-     encoder.end_cons();
-     encoder.raw_bytes(do_encrypt(rng, cek, cipher));
-   encoder.end_cons();
+
+   encoder.start_cons(SEQUENCE)
+      .encode((u32bit)0)
+      .start_cons(SET)
+         .start_cons(SEQUENCE)
+            .encode((u32bit)0);
+            encode_si(encoder, to)
+            .encode(alg_id)
+            .encode(enc->encrypt(cek.bits_of(), rng), OCTET_STRING)
+         .end_cons()
+      .end_cons()
+      .raw_bytes(do_encrypt(rng, cek, cipher))
+   .end_cons();
 
    add_layer("CMS.EnvelopedData", encoder);
    }
@@ -162,6 +165,7 @@ void CMS_Encoder::encrypt_kari(RandomNumberGenerator&,
                                const std::string&)
    {
    throw Exception("FIXME: unimplemented");
+
 #if 0
    SymmetricKey cek = setup_key(rng, cipher);
 
@@ -198,19 +202,20 @@ void CMS_Encoder::encrypt(RandomNumberGenerator& rng,
    SecureVector<byte> kek_id; // FIXME: ?
 
    DER_Encoder encoder;
-   encoder.start_cons(SEQUENCE);
-   encoder.encode((u32bit)2);
-     encoder.start_explicit(ASN1_Tag(2));
-       encoder.encode((u32bit)4);
-       encoder.start_cons(SEQUENCE);
-         encoder.encode(kek_id, OCTET_STRING);
-       encoder.end_cons();
-       encoder.encode(AlgorithmIdentifier(OIDS::lookup("KeyWrap." + cipher),
-                                          AlgorithmIdentifier::USE_NULL_PARAM));
-       encoder.encode(wrap_key(rng, cipher, cek, kek), OCTET_STRING);
-     encoder.end_cons();
-     encoder.raw_bytes(do_encrypt(rng, cek, cipher));
-   encoder.end_cons();
+
+   encoder.start_cons(SEQUENCE)
+      .encode((u32bit)2)
+      .start_explicit(ASN1_Tag(2))
+         .encode((u32bit)4)
+         .start_cons(SEQUENCE)
+            .encode(kek_id, OCTET_STRING)
+         .end_cons()
+         .encode(AlgorithmIdentifier(OIDS::lookup("KeyWrap." + cipher),
+                                     AlgorithmIdentifier::USE_NULL_PARAM))
+         .encode(wrap_key(rng, cipher, cek, kek), OCTET_STRING)
+      .end_cons()
+      .raw_bytes(do_encrypt(rng, cek, cipher))
+   .end_cons();
 
    add_layer("CMS.EnvelopedData", encoder);
    }
@@ -300,35 +305,34 @@ void CMS_Encoder::sign(const X509_Certificate& cert,
    const u32bit CMS_VERSION = (type != "CMS.DataContent") ? 3 : SI_VERSION;
 
    DER_Encoder encoder;
-   encoder.start_cons(SEQUENCE);
-     encoder.encode(CMS_VERSION);
-     encoder.start_cons(SET);
-       encoder.encode(AlgorithmIdentifier(OIDS::lookup(hash),
-                                          AlgorithmIdentifier::USE_NULL_PARAM));
-     encoder.end_cons();
-     encoder.raw_bytes(make_econtent(data, type));
 
-     encoder.start_cons(ASN1_Tag(0), CONTEXT_SPECIFIC);
-     for(u32bit j = 0; j != chain.size(); j++)
-        encoder.raw_bytes(chain[j].BER_encode());
-     encoder.raw_bytes(cert.BER_encode());
-     encoder.end_cons();
+   encoder.start_cons(SEQUENCE)
+      .encode(CMS_VERSION)
+      .start_cons(SET)
+         .encode(AlgorithmIdentifier(OIDS::lookup(hash),
+                                     AlgorithmIdentifier::USE_NULL_PARAM))
+      .end_cons()
+   .raw_bytes(make_econtent(data, type));
 
-     encoder.start_cons(SET);
-       encoder.start_cons(SEQUENCE);
-         encoder.encode(SI_VERSION);
-         encode_si(encoder, cert, ((SI_VERSION == 3) ? true : false));
-         encoder.encode(
-            AlgorithmIdentifier(OIDS::lookup(hash),
-                                AlgorithmIdentifier::USE_NULL_PARAM)
-            );
+   encoder.start_cons(ASN1_Tag(0), CONTEXT_SPECIFIC);
+   for(u32bit j = 0; j != chain.size(); j++)
+      encoder.raw_bytes(chain[j].BER_encode());
+   encoder.raw_bytes(cert.BER_encode()).end_cons();
 
-         encoder.raw_bytes(signed_attr);
-         encoder.encode(sig_algo);
-         encoder.encode(signature, OCTET_STRING);
-       encoder.end_cons();
-     encoder.end_cons();
-   encoder.end_cons();
+   encoder.start_cons(SET)
+      .start_cons(SEQUENCE)
+      .encode(SI_VERSION);
+      encode_si(encoder, cert, ((SI_VERSION == 3) ? true : false))
+      .encode(
+         AlgorithmIdentifier(OIDS::lookup(hash),
+                             AlgorithmIdentifier::USE_NULL_PARAM)
+         )
+      .raw_bytes(signed_attr)
+      .encode(sig_algo)
+      .encode(signature, OCTET_STRING)
+      .end_cons()
+     .end_cons()
+   .end_cons();
 
    add_layer("CMS.SignedData", encoder);
    }
@@ -345,13 +349,13 @@ void CMS_Encoder::digest(const std::string& user_hash)
    const u32bit VERSION = (type != "CMS.DataContent") ? 2 : 0;
 
    DER_Encoder encoder;
-   encoder.start_cons(SEQUENCE);
-     encoder.encode(VERSION);
-     encoder.encode(AlgorithmIdentifier(OIDS::lookup(hash),
-                                        AlgorithmIdentifier::USE_NULL_PARAM));
-     encoder.raw_bytes(make_econtent(data, type));
-     encoder.encode(hash_of(data, hash), OCTET_STRING);
-   encoder.end_cons();
+   encoder.start_cons(SEQUENCE)
+      .encode(VERSION)
+      .encode(AlgorithmIdentifier(OIDS::lookup(hash),
+                                  AlgorithmIdentifier::USE_NULL_PARAM))
+      .raw_bytes(make_econtent(data, type))
+      .encode(hash_of(data, hash), OCTET_STRING)
+   .end_cons();
 
    add_layer("CMS.DigestedData", encoder);
    }
