@@ -19,7 +19,13 @@ class BOTAN_DLL EME1 : public EME
    public:
       u32bit maximum_input_size(u32bit) const;
 
-      EME1(const std::string&, const std::string&, const std::string& = "");
+      /**
+       EME1 constructor. Hash will be deleted by ~EME1 (when mgf is deleted)
+
+       P is an optional label. Normally empty.
+      */
+      EME1(HashFunction* hash, const std::string& P = "");
+
       ~EME1() { delete mgf; }
    private:
       SecureVector<byte> pad(const byte[], u32bit, u32bit,

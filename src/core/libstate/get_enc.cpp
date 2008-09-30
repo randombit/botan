@@ -136,10 +136,17 @@ EME* get_eme(const std::string& algo_spec)
 #if defined(BOTAN_HAS_EME1)
    if(eme_name == "EME1")
       {
-      if(name.size() == 2)
-         return new EME1(name[1], "MGF1");
-      if(name.size() == 3)
-         return new EME1(name[1], name[2]);
+      if(name.size() >= 2)
+         {
+         if(name.size() >= 3)
+            {
+            // EME1 is hardcoded for MGF1
+            if(name[2] != "MGF1")
+               throw Algorithm_Not_Found(algo_spec);
+            }
+
+         return new EME1(get_hash(name[1]));
+         }
       }
 #endif
 

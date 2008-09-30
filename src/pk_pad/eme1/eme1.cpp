@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/eme1.h>
-#include <botan/lookup.h>
+#include <botan/mgf1.h>
 #include <memory>
 
 namespace Botan {
@@ -83,13 +83,11 @@ u32bit EME1::maximum_input_size(u32bit keybits) const
 /*************************************************
 * EME1 Constructor                               *
 *************************************************/
-EME1::EME1(const std::string& hash_name, const std::string& mgf_name,
-           const std::string& P) :
-   HASH_LENGTH(output_length_of(hash_name))
+EME1::EME1(HashFunction* hash, const std::string& P) :
+   HASH_LENGTH(hash->OUTPUT_LENGTH)
    {
-   mgf = get_mgf(mgf_name + "(" + hash_name + ")");
-   std::auto_ptr<HashFunction> hash(get_hash(hash_name));
    Phash = hash->process(P);
+   mgf = new MGF1(hash);
    }
 
 }

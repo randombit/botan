@@ -11,4 +11,6 @@ eme1.cpp
 
 <requires>
 mgf1
+utils
+core
 </requires>
