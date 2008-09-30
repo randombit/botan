@@ -1255,7 +1255,6 @@ sub add_file {
             $$config{$type}{$2} = File::Spec->catdir(@dirs);
         }
         else {
-            print "$type $file = $mod_dir\n";
             $$config{$type}{$file} = $mod_dir;
         }
     };
