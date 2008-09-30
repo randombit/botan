@@ -17,6 +17,8 @@ i386
 i486
 i586
 i686
+pentium2
+pentium3
 pentium4
 pentium-m
 k6
@@ -27,8 +29,12 @@ athlon
 pentium -> i586
 pentiumpro -> i686
 pentium_pro -> i686
-pentium2 -> i686
-pentium3 -> i686
+pentium2 -> pentium2
+pentiumii -> pentium2
+pentium3 -> pentium3
+pentiumiii -> pentium3
+
+pentiumm -> pentium-m
 
 duron -> athlon
 athlon-xp -> athlon
