@@ -2,7 +2,7 @@ realname "CMS"
 
 define CMS
 
-load_on request
+load_on auto
 
 <add>
 cms_algo.cpp
