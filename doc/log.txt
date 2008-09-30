@@ -1,4 +1,7 @@
 
+* 1.7.15, ????-??-??
+ - Alter configure.pl options for better autotools compatability
+
 * 1.7.14, 2008-09-30
  - Split library into parts allowing modular builds
  - Add (very preliminary) CMS support to the main library
