@@ -22,7 +22,7 @@ class BOTAN_DLL KDF1 : public KDF
                                 const byte P[], u32bit P_len) const;
 
       KDF1(HashFunction* h) : hash(h) {}
-      KDF1(const KDF1& other) : hash(other.hash->clone()) {}
+      KDF1(const KDF1& other) : KDF(), hash(other.hash->clone()) {}
 
       ~KDF1() { delete hash; }
    private:
