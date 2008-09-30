@@ -3,7 +3,7 @@
 BOTAN_DIR = ../..
 
 CXX       = g++
-CFLAGS    = -O2 -ansi -W -Wall
+CFLAGS    = -O2 -ansi -W -Wall -Werror
 
 INCLUDES  = $(shell $(BOTAN_DIR)/botan-config --cflags)
 
