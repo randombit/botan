@@ -1,5 +1,6 @@
 
 * 1.7.15, ????-??-??
+ - Add ECDSA and ECKAEG implementations from InSiTo
  - Alter configure.pl options for better autotools compatability
 
 * 1.7.14, 2008-09-30
