@@ -270,9 +270,8 @@ To set the compiler to use, or which OS or CPU to target, use:
 
 To change what modules to use:
 
-  --enable-module(s)=[module list]
-
-  --disable-module(s)=[module list]
+  --enable-modules=[module list]
+  --disable-modules=[module list]
 
 Known modules:
         $modules
@@ -657,14 +656,9 @@ sub get_options {
                'module-set=s' => sub { add_module_sets($config, $_[1]); },
                'module-sets=s' => sub { add_module_sets($config, $_[1]); },
 
-               'enable-module=s' => sub { add_modules($config, $_[1]); },
                'enable-modules=s' => sub { add_modules($config, $_[1]); },
-               'disable-module=s' => sub { disable_modules($config, $_[1]); },
                'disable-modules=s' => sub { disable_modules($config, $_[1]); },
-
-               'module=s' => sub { add_modules($config, $_[1]); },
                'modules=s' => sub { add_modules($config, $_[1]); },
-               'no-module=s' => sub { disable_modules($config, $_[1]); },
                'no-modules=s' => sub { disable_modules($config, $_[1]); },
 
                'trace' => sub { $TRACING = 1; },
