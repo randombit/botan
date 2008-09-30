@@ -1,0 +1,34 @@
+realname "Botan Core Module"
+
+load_on auto
+
+define CORE_MODULE
+
+<requires>
+aes
+sha1
+</requires>
+
+<add>
+def_alg.cpp
+def_mode.cpp
+eng_base.cpp
+engine.cpp
+get_enc.cpp
+get_pbe.cpp
+init.h
+init_def.cpp
+init_opt.cpp
+libstate.cpp
+look_pk.cpp
+lookup.cpp
+oids.cpp
+policy.cpp
+engine.h
+get_pbe.h
+libstate.h
+look_add.h
+look_pk.h
+lookup.h
+oids.h
+</add>
