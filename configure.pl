@@ -276,39 +276,35 @@ To change what modules to use:
 Known modules:
         $modules
 
-To add a set of modules:
-  --module-set=[$sets]
-
-  --module-info:       display more information about modules
-  --noauto:            don't enable any modules unless specifically named
+  --module-info         display more information about modules
+  --disable-autoconfig  don't enable any modules unless specifically named
 
 To change where the library is installed:
 
-  --prefix=PATH:       set the base installation directory
-  --libdir=PATH:       install library files in \${prefix}/\${libdir}
-  --docdir=PATH:       install documentation in \${prefix}/\${docdir}
+  --prefix=PATH        set the base installation directory
+  --libdir=PATH        install library files in \${prefix}/\${libdir}
+  --docdir=PATH        install documentation in \${prefix}/\${docdir}
 
 To change build options:
 
-  --disable-debug:     don't worry about debugging
-  --enable-debug:      set compiler flags for debugging
+  --disable-debug      don't worry about debugging
+  --enable-debug       set compiler flags for debugging
 
-  --enable-shared:     enable shared libraries
-  --disable-shared:    don't build shared libararies
+  --enable-shared      enable shared libraries
+  --disable-shared     don't build shared libararies
 
-  --with-build-dir=DIR:     setup the build in DIR
-  --with-local-config=FILE: include the contents of FILE into build.h
-
-For more information about supported CPUs, use --arch-info:
-
-  --arch-info=[$cpus]
+  --with-build-dir=DIR      setup the build in DIR
+  --with-local-config=FILE  include the contents of FILE into build.h
 
 For diagnostic output:
 
-  --help               display this help
-  --version            display the version of Botan
-  --quiet              display only warnings and errors
-  --trace              enable runtime tracing of this program
+  --show-arch-info=CPU      show more information about CPU
+       [$cpus]
+
+  --help                    display this help
+  --version                 display the version of Botan
+  --quiet                   display only warnings and errors
+  --trace                   enable runtime tracing of this program
 
 See doc/building.pdf for more information about this program.
 
@@ -680,16 +676,16 @@ sub get_options {
         'enable-modules=s' => sub { add_modules($config, $_[1]); },
         'disable-modules=s' => sub { disable_modules($config, $_[1]); },
 
+        'enable-module-sets=s' => sub { add_module_sets($config, $_[1]); },
+
         'with-build-dir=s' => sub { $$config{'build-dir'} = $_[1]; },
         'with-endian=s' => sub { &$save_option(@_); },
         'with-unaligned-mem=s' => sub { &$save_option(@_); },
         'with-local-config=s' =>
-        sub { &$save_option('local_config', slurp_file($_[1])); },
+            sub { &$save_option('local_config', slurp_file($_[1])); },
 
-        'arch-info=s' => sub { emit_help(arch_info($_[1])); },
+        'show-arch-info=s' => sub { emit_help(arch_info($_[1])); },
         'make-style=s' => sub { &$save_option(@_); },
-        'module-set=s' => sub { add_module_sets($config, $_[1]); },
-        'module-sets=s' => sub { add_module_sets($config, $_[1]); },
         'dumb-gcc|gcc295x' => sub { $$config{'gcc_bug'} = 1; }
         );
 
