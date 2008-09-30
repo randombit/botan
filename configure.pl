@@ -513,20 +513,32 @@ sub print_enabled_modules {
 
     my %by_type;
 
-    foreach my $mod (sort keys %{$$config{'modules'}}) {
+    foreach my $mod (sort keys %MODULES) {
+        my $type = $MODULES{$mod}{'type'};
 
-        my $n = $$config{'modules'}{$mod};
+        my $n = 0;
+        $n = 1 if($$config{'modules'}{$mod} && $$config{'modules'}{$mod} > 0);
 
-        if($n > 0) {
-            my $type = $MODULES{$mod}{'type'};
-            $by_type{$type}{$mod} = $n;
-        }
+        $by_type{$type}{$mod} = $n;
     }
 
     for my $type (sort keys %by_type) {
         my %mods = %{$by_type{$type}};
-        print with_diagnostic('loading',
-                              $type . ': ' . join(' ', sort keys %mods));
+
+        my $s = $type . ': ';
+
+        for my $mod (sort keys %mods) {
+            my $on = $mods{$mod};
+
+            if($on > 0) {
+                $s .= $mod . ' ';
+            }
+            else {
+                $s .= '[' . $mod . '] ';
+            }
+        }
+
+        print with_diagnostic('loading', $s);
     }
 }
 
