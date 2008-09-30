@@ -20,6 +20,7 @@ buf_es
 <os>
 windows
 cygwin
+mingw
 </os>
 
 <libs>
