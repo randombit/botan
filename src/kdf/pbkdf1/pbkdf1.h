@@ -21,7 +21,9 @@ class BOTAN_DLL PKCS5_PBKDF1 : public S2K
       S2K* clone() const;
 
       PKCS5_PBKDF1(HashFunction* hash_in) : hash(hash_in) {}
-      PKCS5_PBKDF1(const PKCS5_PBKDF1& other) : hash(other.hash->clone()) {}
+      PKCS5_PBKDF1(const PKCS5_PBKDF1& other) :
+         S2K(), hash(other.hash->clone()) {}
+
       ~PKCS5_PBKDF1() { delete hash; }
    private:
       OctetString derive(u32bit, const std::string&,
