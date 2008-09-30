@@ -21,12 +21,12 @@ VERSION       = $(MAJOR).$(MINOR).$(PATCH)
 ##################################################
 # Installation Settings                          #
 ##################################################
-INSTALLROOT   = @{var:prefix}
+DESTDIR       = @{var:prefix}
 
-BINDIR        = $(INSTALLROOT)/bin
-LIBDIR        = $(INSTALLROOT)/@{var:libdir}
-HEADERDIR     = $(INSTALLROOT)/@{var:includedir}/botan
-DOCDIR        = $(INSTALLROOT)/@{var:docdir}/Botan-$(VERSION)
+BINDIR        = $(DESTDIR)/bin
+LIBDIR        = $(DESTDIR)/@{var:libdir}
+HEADERDIR     = $(DESTDIR)/@{var:includedir}/botan
+DOCDIR        = $(DESTDIR)/@{var:docdir}/Botan-$(VERSION)
 
 CONFIG_SCRIPT = @{var:botan-config}
 
@@ -102,7 +102,7 @@ distclean: clean
 	$(RM) Makefile $(CONFIG_SCRIPT)
 
 install: $(LIBRARIES)
-	$(ECHO) "Installing Botan into $(INSTALLROOT)... "
+	$(ECHO) "Installing Botan into $(DESTDIR)... "
 	$(MKDIR_INSTALL) $(DOCDIR)
 	$(MKDIR_INSTALL) $(HEADERDIR)
 	$(MKDIR_INSTALL) $(LIBDIR)

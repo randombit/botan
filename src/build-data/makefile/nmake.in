@@ -21,11 +21,11 @@ VERSION       = $(MAJOR).$(MINOR).$(PATCH)
 ##################################################
 # Installation Settings                          #
 ##################################################
-INSTALLROOT   = @{var:prefix}
+DESTDIR       = @{var:prefix}
 
-LIBDIR        = $(INSTALLROOT)\@{var:libdir}
-HEADERDIR     = $(INSTALLROOT)\@{var:includedir}\botan
-DOCDIR        = $(INSTALLROOT)\@{var:docdir}\Botan-$(VERSION)
+LIBDIR        = $(DESTDIR)\@{var:libdir}
+HEADERDIR     = $(DESTDIR)\@{var:includedir}\botan
+DOCDIR        = $(DESTDIR)\@{var:docdir}\Botan-$(VERSION)
 
 ##################################################
 # Aliases for Common Programs                    #
