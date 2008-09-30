@@ -2,7 +2,7 @@ realname "ECDSA/ECKAEG"
 
 define ECDSA
 
-load_on request
+load_on auto
 
 <add>
 ec.cpp
