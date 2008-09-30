@@ -4,8 +4,6 @@
 *************************************************/
 
 #include <botan/pbkdf1.h>
-#include <botan/lookup.h>
-#include <memory>
 
 namespace Botan {
 
@@ -20,7 +18,6 @@ OctetString PKCS5_PBKDF1::derive(u32bit key_len,
    if(iterations == 0)
       throw Invalid_Argument("PKCS#5 PBKDF1: Invalid iteration count");
 
-   std::auto_ptr<HashFunction> hash(get_hash(hash_name));
    if(key_len > hash->OUTPUT_LENGTH)
       throw Exception("PKCS#5 PBKDF1: Requested output length too long");
 
@@ -38,20 +35,19 @@ OctetString PKCS5_PBKDF1::derive(u32bit key_len,
    }
 
 /*************************************************
+* Clone this type                                *
+*************************************************/
+S2K* PKCS5_PBKDF1::clone() const
+   {
+   return new PKCS5_PBKDF1(hash->clone());
+   }
+
+/*************************************************
 * Return the name of this type                   *
 *************************************************/
 std::string PKCS5_PBKDF1::name() const
    {
-   return "PBKDF1(" + hash_name + ")";
-   }
-
-/*************************************************
-* PKCS5_PBKDF1 Constructor                       *
-*************************************************/
-PKCS5_PBKDF1::PKCS5_PBKDF1(const std::string& h_name) : hash_name(h_name)
-   {
-   if(!have_hash(hash_name))
-      throw Algorithm_Not_Found(hash_name);
+   return "PBKDF1(" + hash->name() + ")";
    }
 
 }

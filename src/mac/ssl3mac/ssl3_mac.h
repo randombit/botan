@@ -19,12 +19,14 @@ class SSL3_MAC : public MessageAuthenticationCode
       void clear() throw();
       std::string name() const;
       MessageAuthenticationCode* clone() const;
-      SSL3_MAC(const std::string&);
+
+      SSL3_MAC(HashFunction*);
       ~SSL3_MAC() { delete hash; }
    private:
       void add_data(const byte[], u32bit);
       void final_result(byte[]);
       void key(const byte[], u32bit);
+
       HashFunction* hash;
       SecureVector<byte> i_key, o_key;
    };

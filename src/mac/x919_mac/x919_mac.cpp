@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/x919_mac.h>
-#include <botan/lookup.h>
 #include <botan/xor_buf.h>
 #include <algorithm>
 
@@ -70,19 +69,33 @@ void ANSI_X919_MAC::clear() throw()
    position = 0;
    }
 
+std::string ANSI_X919_MAC::name() const
+   {
+   return "X9.19-MAC";
+   }
+
+MessageAuthenticationCode* ANSI_X919_MAC::clone() const
+   {
+   return new ANSI_X919_MAC(e->clone());
+   }
+
 /*************************************************
 * ANSI X9.19 MAC Constructor                     *
 *************************************************/
-ANSI_X919_MAC::ANSI_X919_MAC() : MessageAuthenticationCode(8, 8, 16, 8)
+ANSI_X919_MAC::ANSI_X919_MAC(BlockCipher* e_in) :
+   MessageAuthenticationCode(e_in->BLOCK_SIZE,
+                             e_in->MINIMUM_KEYLENGTH,
+                             2*e_in->MAXIMUM_KEYLENGTH,
+                             2*e_in->KEYLENGTH_MULTIPLE),
+   e(e_in), d(e->clone()), position(0)
    {
-   e = get_block_cipher("DES");
-   d = get_block_cipher("DES");
-   position = 0;
+   if(e->name() != "DES")
+      throw Invalid_Argument("ANSI X9.19 MAC only supports DES");
    }
 
 /*************************************************
 * ANSI X9.19 MAC Destructor                      *
-*************************************************/
+le*************************************************/
 ANSI_X919_MAC::~ANSI_X919_MAC()
    {
    delete e;

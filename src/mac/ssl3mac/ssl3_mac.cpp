@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/ssl3_mac.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -65,21 +64,22 @@ std::string SSL3_MAC::name() const
 *************************************************/
 MessageAuthenticationCode* SSL3_MAC::clone() const
    {
-   return new SSL3_MAC(hash->name());
+   return new SSL3_MAC(hash->clone());
    }
 
 /*************************************************
 * SSL3-MAC Constructor                           *
 *************************************************/
-SSL3_MAC::SSL3_MAC(const std::string& hash_name) :
-   MessageAuthenticationCode(output_length_of(hash_name),
-                             output_length_of(hash_name)),
-   hash(get_hash(hash_name))
+SSL3_MAC::SSL3_MAC(HashFunction* hash_in) :
+   MessageAuthenticationCode(hash_in->OUTPUT_LENGTH,
+                             hash_in->OUTPUT_LENGTH),
+   hash(hash_in)
    {
-   if(hash->name() != "MD5" && hash->name() != "SHA-160")
+   if(hash->HASH_BLOCK_SIZE == 0)
       throw Invalid_Argument("SSL3-MAC cannot be used with " + hash->name());
 
-   const u32bit INNER_HASH_LENGTH = (hash->name() == "MD5") ? 64 : 60;
+   u32bit INNER_HASH_LENGTH =
+      (hash->name() == "SHA-160") ? 60 : hash->HASH_BLOCK_SIZE;
 
    i_key.create(INNER_HASH_LENGTH);
    o_key.create(INNER_HASH_LENGTH);

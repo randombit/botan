@@ -87,7 +87,7 @@ RandomNumberGenerator* RandomNumberGenerator::make_rng()
                       get_mac("HMAC(SHA-256)"));
 
 #if defined(BOTAN_HAS_X931_RNG)
-   rng = new ANSI_X931_RNG("AES-256", rng);
+   rng = new ANSI_X931_RNG(get_block_cipher("AES-256"), rng);
 #endif
 
 #if defined(BOTAN_HAS_TIMER_HARDWARE)

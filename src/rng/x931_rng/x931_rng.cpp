@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/x931_rng.h>
-#include <botan/lookup.h>
 #include <botan/xor_buf.h>
 #include <algorithm>
 
@@ -117,14 +116,14 @@ std::string ANSI_X931_RNG::name() const
 /*************************************************
 * ANSI X931 RNG Constructor                      *
 *************************************************/
-ANSI_X931_RNG::ANSI_X931_RNG(const std::string& cipher_name,
-                             RandomNumberGenerator* prng_ptr)
+ANSI_X931_RNG::ANSI_X931_RNG(BlockCipher* cipher_in,
+                             RandomNumberGenerator* prng_in)
    {
-   if(!prng_ptr)
-      throw Invalid_Argument("ANSI_X931_RNG constructor: NULL prng");
+   if(!prng_in || !cipher_in)
+      throw Invalid_Argument("ANSI_X931_RNG constructor: NULL arguments");
 
-   prng = prng_ptr;
-   cipher = get_block_cipher(cipher_name);
+   cipher = cipher_in;
+   prng = prng_in;
 
    R.create(cipher->BLOCK_SIZE);
    position = 0;
