@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/emsa1.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 

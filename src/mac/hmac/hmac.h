@@ -19,7 +19,8 @@ class BOTAN_DLL HMAC : public MessageAuthenticationCode
       void clear() throw();
       std::string name() const;
       MessageAuthenticationCode* clone() const;
-      HMAC(const std::string&);
+
+      HMAC(HashFunction* hash);
       ~HMAC() { delete hash; }
    private:
       void add_data(const byte[], u32bit);

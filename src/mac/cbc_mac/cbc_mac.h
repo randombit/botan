@@ -19,7 +19,8 @@ class BOTAN_DLL CBC_MAC : public MessageAuthenticationCode
       void clear() throw();
       std::string name() const;
       MessageAuthenticationCode* clone() const;
-      CBC_MAC(const std::string&);
+
+      CBC_MAC(BlockCipher* e);
       ~CBC_MAC();
    private:
       void add_data(const byte[], u32bit);

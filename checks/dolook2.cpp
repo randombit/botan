@@ -135,7 +135,8 @@ Filter* lookup_rng(const std::string& algname,
    // defaults, so benchmark reflects real-world performance (maybe)
    if(!prng && (algname == "Randpool" || algname == "X9.31-RNG"))
       {
-      Randpool* randpool = new Randpool("AES-256", "HMAC(SHA-256)");
+      Randpool* randpool = new Randpool(get_block_cipher("AES-256"),
+                                        get_mac("HMAC(SHA-256)"));
       randpool->add_entropy(reinterpret_cast<const byte*>(key.c_str()),
                             key.length());
 

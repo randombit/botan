@@ -538,9 +538,12 @@ Default_Engine::find_mac(const std::string& algo_spec) const
       return 0;
    const std::string algo_name = global_state().deref_alias(name[0]);
 
-#if defined(BOTAN_HAS_CBC_MAC)
-   HANDLE_TYPE_ONE_STRING("CBC-MAC", CBC_MAC);
-#endif
+   if(algo_name == "CBC-MAC")
+      {
+      if(name.size() == 2)
+         return new CBC_MAC(find_block_cipher(name[1]));
+      throw Invalid_Algorithm_Name(algo_spec);
+      }
 
    if(algo_name == "CMAC")
       {
@@ -549,9 +552,12 @@ Default_Engine::find_mac(const std::string& algo_spec) const
       throw Invalid_Algorithm_Name(algo_spec);
       }
 
-#if defined(BOTAN_HAS_HMAC)
-   HANDLE_TYPE_ONE_STRING("HMAC", HMAC);
-#endif
+   if(algo_name == "HMAC")
+      {
+      if(name.size() == 2)
+         return new HMAC(find_hash(name[1]));
+      throw Invalid_Algorithm_Name(algo_spec);
+      }
 
 #if defined(BOTAN_HAS_SSL3_MAC)
    HANDLE_TYPE_ONE_STRING("SSL3-MAC", SSL3_MAC);
@@ -579,9 +585,12 @@ S2K* Default_Engine::find_s2k(const std::string& algo_spec) const
    HANDLE_TYPE_ONE_STRING("PBKDF1", PKCS5_PBKDF1);
 #endif
 
-#if defined(BOTAN_HAS_PBKDF2)
-   HANDLE_TYPE_ONE_STRING("PBKDF2", PKCS5_PBKDF2);
-#endif
+   if(algo_spec == "PBKDF2")
+      {
+      if(name.size() == 2)
+         return new PKCS5_PBKDF2(find_mac("HMAC(" + name[1] + ")"));
+      throw Invalid_Algorithm_Name(algo_spec);
+      }
 
 #if defined(BOTAN_HAS_PGPS2K)
    HANDLE_TYPE_ONE_STRING("OpenPGP-S2K", OpenPGP_S2K);

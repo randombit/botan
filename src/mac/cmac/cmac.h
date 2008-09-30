@@ -24,7 +24,7 @@ class BOTAN_DLL CMAC : public MessageAuthenticationCode
                                             byte polynomial);
 
       CMAC(BlockCipher* e);
-      ~CMAC() { delete e; }
+      ~CMAC();
    private:
       void add_data(const byte[], u32bit);
       void final_result(byte[]);

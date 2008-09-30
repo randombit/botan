@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/randpool.h>
-#include <botan/lookup.h>
 #include <botan/loadstor.h>
 #include <botan/xor_buf.h>
 #include <botan/util.h>
@@ -180,13 +179,15 @@ std::string Randpool::name() const
 /*************************************************
 * Randpool Constructor                           *
 *************************************************/
-Randpool::Randpool(const std::string& cipher_name,
-                   const std::string& mac_name) :
-   ITERATIONS_BEFORE_RESEED(128), POOL_BLOCKS(32)
+Randpool::Randpool(BlockCipher* cipher_in,
+                   MessageAuthenticationCode* mac_in,
+                   u32bit pool_blocks,
+                   u32bit iter_before_reseed) :
+   ITERATIONS_BEFORE_RESEED(iter_before_reseed),
+   POOL_BLOCKS(pool_blocks),
+   cipher(cipher_in),
+   mac(mac_in)
    {
-   cipher = get_block_cipher(cipher_name);
-   mac = get_mac(mac_name);
-
    const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
    const u32bit OUTPUT_LENGTH = mac->OUTPUT_LENGTH;
 
@@ -197,7 +198,7 @@ Randpool::Randpool(const std::string& cipher_name,
       delete cipher;
       delete mac;
       throw Internal_Error("Randpool: Invalid algorithm combination " +
-                           cipher_name + "/" + mac_name);
+                           cipher->name() + "/" + mac->name());
       }
 
    buffer.create(BLOCK_SIZE);

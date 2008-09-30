@@ -7,6 +7,7 @@
 #define BOTAN_TLS_PRF__
 
 #include <botan/kdf.h>
+#include <botan/base.h>
 
 namespace Botan {
 
@@ -18,10 +19,17 @@ class BOTAN_DLL TLS_PRF : public KDF
    public:
       SecureVector<byte> derive(u32bit, const byte[], u32bit,
                                 const byte[], u32bit) const;
+
+      TLS_PRF();
+      ~TLS_PRF();
    private:
-      SecureVector<byte> P_hash(const std::string&, u32bit,
-                                const byte[], u32bit,
-                                const byte[], u32bit) const;
+      static SecureVector<byte> P_hash(MessageAuthenticationCode*,
+                                       u32bit,
+                                       const byte[], u32bit,
+                                       const byte[], u32bit);
+
+      MessageAuthenticationCode* hmac_md5;
+      MessageAuthenticationCode* hmac_sha1;
    };
 
 }

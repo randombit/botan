@@ -5,7 +5,6 @@
 *************************************************/
 
 #include <botan/hmac.h>
-#include <botan/lookup.h>
 #include <botan/xor_buf.h>
 
 namespace Botan {
@@ -77,19 +76,20 @@ std::string HMAC::name() const
 *************************************************/
 MessageAuthenticationCode* HMAC::clone() const
    {
-   return new HMAC(hash->name());
+   return new HMAC(hash->clone());
    }
 
 /*************************************************
 * HMAC Constructor                               *
 *************************************************/
-HMAC::HMAC(const std::string& hash_name) :
-   MessageAuthenticationCode(output_length_of(hash_name),
-                             1, 2*block_size_of(hash_name)),
-   hash(get_hash(hash_name))
+HMAC::HMAC(HashFunction* hash_in) :
+   MessageAuthenticationCode(hash_in->OUTPUT_LENGTH,
+                             1, 2*hash_in->HASH_BLOCK_SIZE),
+   hash(hash_in)
    {
    if(hash->HASH_BLOCK_SIZE == 0)
       throw Invalid_Argument("HMAC cannot be used with " + hash->name());
+
    i_key.create(hash->HASH_BLOCK_SIZE);
    o_key.create(hash->HASH_BLOCK_SIZE);
    }

@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/cbc_mac.h>
-#include <botan/lookup.h>
 #include <botan/xor_buf.h>
 #include <algorithm>
 
@@ -81,20 +80,19 @@ std::string CBC_MAC::name() const
 *************************************************/
 MessageAuthenticationCode* CBC_MAC::clone() const
    {
-   return new CBC_MAC(e->name());
+   return new CBC_MAC(e->clone());
    }
 
 /*************************************************
 * CBC-MAC Constructor                            *
 *************************************************/
-CBC_MAC::CBC_MAC(const std::string& cipher) :
-   MessageAuthenticationCode(block_size_of(cipher),
-                             min_keylength_of(cipher),
-                             max_keylength_of(cipher),
-                             keylength_multiple_of(cipher)),
-   state(block_size_of(cipher))
+CBC_MAC::CBC_MAC(BlockCipher* e_in) :
+   MessageAuthenticationCode(e_in->BLOCK_SIZE,
+                             e_in->MINIMUM_KEYLENGTH,
+                             e_in->MAXIMUM_KEYLENGTH,
+                             e_in->KEYLENGTH_MULTIPLE),
+   e(e_in), state(e->BLOCK_SIZE)
    {
-   e = get_block_cipher(cipher);
    position = 0;
    }
 

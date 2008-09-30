@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/rng.h>
+#include <botan/lookup.h>
 #include <botan/util.h>
 #include <botan/parsing.h>
 #include <botan/timers.h>
@@ -82,7 +83,8 @@ RandomNumberGenerator* RandomNumberGenerator::make_rng()
    RandomNumberGenerator* rng = 0;
 
 #if defined(BOTAN_HAS_RANDPOOL)
-   rng = new Randpool("AES-256", "HMAC(SHA-256)");
+   rng = new Randpool(get_block_cipher("AES-256"),
+                      get_mac("HMAC(SHA-256)"));
 
 #if defined(BOTAN_HAS_X931_RNG)
    rng = new ANSI_X931_RNG("AES-256", rng);

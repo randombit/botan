@@ -27,13 +27,16 @@ class BOTAN_DLL Randpool : public RandomNumberGenerator
       void add_entropy_source(EntropySource*);
       void add_entropy(const byte[], u32bit);
 
-      Randpool(const std::string&, const std::string&);
+      Randpool(BlockCipher*, MessageAuthenticationCode*,
+               u32bit pool_blocks = 32,
+               u32bit iterations_before_reseed = 128);
+
       ~Randpool();
    private:
       void update_buffer();
       void mix_pool();
 
-      const u32bit ITERATIONS_BEFORE_RESEED, POOL_BLOCKS;
+      u32bit ITERATIONS_BEFORE_RESEED, POOL_BLOCKS;
       BlockCipher* cipher;
       MessageAuthenticationCode* mac;
 

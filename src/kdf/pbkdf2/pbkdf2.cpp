@@ -5,8 +5,6 @@
 
 #include <botan/pbkdf2.h>
 #include <botan/loadstor.h>
-#include <botan/hmac.h>
-#include <botan/lookup.h>
 #include <botan/xor_buf.h>
 
 namespace Botan {
@@ -25,9 +23,7 @@ OctetString PKCS5_PBKDF2::derive(u32bit key_len,
    if(passphrase.length() == 0)
       throw Invalid_Argument("PKCS#5 PBKDF2: Empty passphrase is invalid");
 
-   HMAC hmac(hash_name);
-
-   hmac.set_key(reinterpret_cast<const byte*>(passphrase.data()),
+   mac->set_key(reinterpret_cast<const byte*>(passphrase.data()),
                 passphrase.length());
 
    SecureVector<byte> key(key_len);
@@ -37,19 +33,19 @@ OctetString PKCS5_PBKDF2::derive(u32bit key_len,
    u32bit counter = 1;
    while(key_len)
       {
-      u32bit T_size = std::min(hmac.OUTPUT_LENGTH, key_len);
-      SecureVector<byte> U(hmac.OUTPUT_LENGTH);
+      u32bit T_size = std::min(mac->OUTPUT_LENGTH, key_len);
+      SecureVector<byte> U(mac->OUTPUT_LENGTH);
 
-      hmac.update(salt, salt_size);
+      mac->update(salt, salt_size);
       for(u32bit j = 0; j != 4; ++j)
-         hmac.update(get_byte(j, counter));
-      hmac.final(U);
+         mac->update(get_byte(j, counter));
+      mac->final(U);
       xor_buf(T, U, T_size);
 
       for(u32bit j = 1; j != iterations; ++j)
          {
-         hmac.update(U);
-         hmac.final(U);
+         mac->update(U);
+         mac->final(U);
          xor_buf(T, U, T_size);
          }
 
@@ -66,16 +62,19 @@ OctetString PKCS5_PBKDF2::derive(u32bit key_len,
 *************************************************/
 std::string PKCS5_PBKDF2::name() const
    {
-   return "PBKDF2(" + hash_name + ")";
+   return "PBKDF2(" + mac->name() + ")";
+   }
+
+S2K* PKCS5_PBKDF2::clone() const
+   {
+   return new PKCS5_PBKDF2(mac->clone());
    }
 
 /*************************************************
 * PKCS5_PBKDF2 Constructor                       *
 *************************************************/
-PKCS5_PBKDF2::PKCS5_PBKDF2(const std::string& h_name) : hash_name(h_name)
-   {
-   if(!have_hash(hash_name))
-      throw Algorithm_Not_Found(hash_name);
-   }
+PKCS5_PBKDF2::PKCS5_PBKDF2(MessageAuthenticationCode* m) : mac(m) {}
+
+PKCS5_PBKDF2::~PKCS5_PBKDF2() { delete mac; }
 
 }

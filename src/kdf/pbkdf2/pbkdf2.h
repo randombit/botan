@@ -7,6 +7,7 @@
 #define BOTAN_PBKDF2_H__
 
 #include <botan/s2k.h>
+#include <botan/base.h>
 
 namespace Botan {
 
@@ -17,12 +18,15 @@ class BOTAN_DLL PKCS5_PBKDF2 : public S2K
    {
    public:
       std::string name() const;
-      S2K* clone() const { return new PKCS5_PBKDF2(hash_name); }
-      PKCS5_PBKDF2(const std::string&);
+      S2K* clone() const;
+
+      PKCS5_PBKDF2(MessageAuthenticationCode* m);
+      ~PKCS5_PBKDF2();
    private:
       OctetString derive(u32bit, const std::string&,
                           const byte[], u32bit, u32bit) const;
-      const std::string hash_name;
+
+      MessageAuthenticationCode* mac;
    };
 
 }
