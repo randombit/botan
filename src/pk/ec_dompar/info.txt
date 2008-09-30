@@ -1,21 +1,17 @@
-realname "ECDSA/ECKAEG"
+realname "ECC Domain Parameters"
 
-define ECDSA
+define ECC_DOMAIN_PARAMATERS
 
 load_on request
 
 <add>
-ec.cpp
-ec.h
-ecdsa.cpp
-ecdsa.h
+ec_dompar.cpp
+ec_dompar.h
 </add>
 
 <requires>
 asn1
 bigint
-ec_dompar
 numbertheory
 gfpmath
-pubkey
 </requires>
