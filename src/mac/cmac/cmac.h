@@ -23,7 +23,7 @@ class BOTAN_DLL CMAC : public MessageAuthenticationCode
       static SecureVector<byte> poly_double(const MemoryRegion<byte>& in,
                                             byte polynomial);
 
-      CMAC(const std::string&);
+      CMAC(BlockCipher* e);
       ~CMAC() { delete e; }
    private:
       void add_data(const byte[], u32bit);

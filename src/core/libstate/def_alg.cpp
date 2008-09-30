@@ -542,9 +542,12 @@ Default_Engine::find_mac(const std::string& algo_spec) const
    HANDLE_TYPE_ONE_STRING("CBC-MAC", CBC_MAC);
 #endif
 
-#if defined(BOTAN_HAS_CMAC)
-   HANDLE_TYPE_ONE_STRING("CMAC", CMAC);
-#endif
+   if(algo_name == "CMAC")
+      {
+      if(name.size() == 2)
+         return new CMAC(find_block_cipher(name[1]));
+      throw Invalid_Algorithm_Name(algo_spec);
+      }
 
 #if defined(BOTAN_HAS_HMAC)
    HANDLE_TYPE_ONE_STRING("HMAC", HMAC);

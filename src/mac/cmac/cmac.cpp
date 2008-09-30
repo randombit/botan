@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/cmac.h>
-#include <botan/lookup.h>
 #include <botan/xor_buf.h>
 
 namespace Botan {
@@ -123,22 +122,23 @@ std::string CMAC::name() const
 *************************************************/
 MessageAuthenticationCode* CMAC::clone() const
    {
-   return new CMAC(e->name());
+   return new CMAC(e->clone());
    }
 
 /*************************************************
 * CMAC Constructor                               *
 *************************************************/
-CMAC::CMAC(const std::string& bc_name) :
-   MessageAuthenticationCode(block_size_of(bc_name),
-                             min_keylength_of(bc_name),
-                             max_keylength_of(bc_name),
-                             keylength_multiple_of(bc_name))
+CMAC::CMAC(BlockCipher* e_in) :
+   MessageAuthenticationCode(e_in->BLOCK_SIZE,
+                             e_in->MINIMUM_KEYLENGTH,
+                             e_in->MAXIMUM_KEYLENGTH,
+                             e_in->KEYLENGTH_MULTIPLE),
+   e(e_in)
    {
-   e = get_block_cipher(bc_name);
-
-   if(e->BLOCK_SIZE == 16)     polynomial = 0x87;
-   else if(e->BLOCK_SIZE == 8) polynomial = 0x1B;
+   if(e->BLOCK_SIZE == 16)
+      polynomial = 0x87;
+   else if(e->BLOCK_SIZE == 8)
+      polynomial = 0x1B;
    else
       throw Invalid_Argument("CMAC cannot use the cipher " + e->name());
 
