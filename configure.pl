@@ -290,13 +290,14 @@ To change where the library is installed:
 
 To change build options:
 
-  --build-dir=DIR:     setup the build in DIR
-  --local-config=FILE: include the contents of FILE into build.h
+  --disable-debug:     don't worry about debugging
+  --enable-debug:      set compiler flags for debugging
 
-  --debug:             set compiler flags for debugging
-  --no-asm:            disable all modules that contain assembly code
-  --no-shared:         don't build shared libararies
-  --make-style=STYLE:  override the guess as to what type of makefile to use
+  --enable-shared:     enable shared libraries
+  --disable-shared:    don't build shared libararies
+
+  --with-build-dir=DIR:     setup the build in DIR
+  --with-local-config=FILE: include the contents of FILE into build.h
 
 For more information about supported CPUs, use --arch-info:
 
@@ -307,7 +308,7 @@ For diagnostic output:
   --help               display this help
   --version            display the version of Botan
   --quiet              display only warnings and errors
-  --trace              enable tracing
+  --trace              enable runtime tracing of this program
 
 See doc/building.pdf for more information about this program.
 
@@ -630,43 +631,46 @@ sub get_options {
     }
 
     exit 1 unless GetOptions(
+               'prefix=s' => sub { &$save_option(@_); },
+               'docdir=s' => sub { &$save_option(@_); },
+               'libdir=s' => sub { &$save_option(@_); },
+
+               'cc=s' => sub { &$save_option('compiler', $_[1]) },
+               'os=s' => sub { &$save_option(@_) },
+               'cpu=s' => sub { &$save_option(@_) },
+
                'help' => sub { display_help(); },
                'module-info' => sub { emit_help(module_info()); },
                'version' => sub { emit_help("Botan $VERSION_STRING\n") },
 
                'quiet' => sub { $$config{'verbose'} = 0; },
+               'trace' => sub { $TRACING = 1; },
 
-               'cc=s' => sub { &$save_option('compiler', $_[1]) },
-               'os=s' => sub { &$save_option(@_) },
-               'cpu=s' => sub { &$save_option(@_) },
-               'with-endian=s' => sub { &$save_option(@_); },
-               'with-unaligned-mem=s' => sub { &$save_option(@_); },
+               'enable-asm' => sub { $$config{'asm_ok'} = 0; },
+               'disable-asm' => sub { $$config{'asm_ok'} = 0; },
 
-               'arch-info=s' => sub { emit_help(arch_info($_[1])); },
+               'enable-autoconfig' => sub { $$config{'autoconfig'} = 1; },
+               'disable-autoconfig' => sub { $$config{'autoconfig'} = 0; },
 
-               'prefix=s' => sub { &$save_option(@_); },
-               'docdir=s' => sub { &$save_option(@_); },
-               'libdir=s' => sub { &$save_option(@_); },
-               'build-dir=s' => sub { $$config{'build-dir'} = $_[1]; },
-               'local-config=s' =>
-                  sub { &$save_option('local_config', slurp_file($_[1])); },
+               'enable-shared' => sub { $$config{'shared'} = 'yes'; },
+               'disable-shared' => sub { $$config{'shared'} = 'no'; },
 
-               'make-style=s' => sub { &$save_option(@_); },
-
-               'module-set=s' => sub { add_module_sets($config, $_[1]); },
-               'module-sets=s' => sub { add_module_sets($config, $_[1]); },
+               'enable-debug' => sub { &$save_option('debug', 1); },
+               'disable-debug' => sub { &$save_option('debug', 0); },
 
                'enable-modules=s' => sub { add_modules($config, $_[1]); },
                'disable-modules=s' => sub { disable_modules($config, $_[1]); },
-               'modules=s' => sub { add_modules($config, $_[1]); },
-               'no-modules=s' => sub { disable_modules($config, $_[1]); },
 
-               'trace' => sub { $TRACING = 1; },
-               'debug' => sub { &$save_option($_[0], 1); },
-               'no-shared' => sub { $$config{'shared'} = 'no'; },
-               'no-asm' => sub { $$config{'asm_ok'} = 0; },
+               'with-build-dir=s' => sub { $$config{'build-dir'} = $_[1]; },
+               'with-endian=s' => sub { &$save_option(@_); },
+               'with-unaligned-mem=s' => sub { &$save_option(@_); },
+               'with-local-config=s' =>
+                  sub { &$save_option('local_config', slurp_file($_[1])); },
 
-               'noauto' => sub { $$config{'autoconfig'} = 0; },
+               'arch-info=s' => sub { emit_help(arch_info($_[1])); },
+               'make-style=s' => sub { &$save_option(@_); },
+               'module-set=s' => sub { add_module_sets($config, $_[1]); },
+               'module-sets=s' => sub { add_module_sets($config, $_[1]); },
                'dumb-gcc|gcc295x' => sub { $$config{'gcc_bug'} = 1; }
                );
 
@@ -1143,8 +1147,8 @@ sub load_modules {
             my %cpu_info = %{$CPU{$arch}};
             my $endian = $cpu_info{'endian'};
 
-            if(defined($$config{'with_endian'})) {
-                $endian = $$config{'with_endian'};
+            if(defined($$config{'endian'})) {
+                $endian = $$config{'endian'};
                 $endian = undef unless($endian eq 'little' || $endian eq 'big');
             }
             elsif(defined($endian)) {
@@ -1164,8 +1168,8 @@ sub load_modules {
                 $endian = uc $endian;
                 $defines .= "#define BOTAN_TARGET_CPU_IS_${endian}_ENDIAN\n";
 
-                if(defined($$config{'with_unaligned_mem'})) {
-                    my $spec = $$config{'with_unaligned_mem'};
+                if(defined($$config{'unaligned_mem'})) {
+                    my $spec = $$config{'unaligned_mem'};
 
                     if($spec eq 'yes') {
                         $unaligned_ok = 1;
