@@ -21,8 +21,6 @@ base.h
 botan.h
 data_src.cpp
 data_src.h
-datastor.cpp
-datastor.h
 def_powm.cpp
 eng_def.h
 enums.h
