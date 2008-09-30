@@ -20,8 +20,8 @@ namespace {
 *************************************************/
 struct Memory_Exhaustion : public std::bad_alloc
    {
-   const char* what()
-     { return "Ran out of memory, allocation failed"; }
+   const char* what() const throw()
+      { return "Ran out of memory, allocation failed"; }
    };
 
 }
