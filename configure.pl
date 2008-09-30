@@ -631,48 +631,67 @@ sub get_options {
     }
 
     exit 1 unless GetOptions(
-               'prefix=s' => sub { &$save_option(@_); },
-               'docdir=s' => sub { &$save_option(@_); },
-               'libdir=s' => sub { &$save_option(@_); },
+        'prefix=s' => sub { &$save_option(@_); },
+        'exec-prefix=s' => sub { &$save_option(@_); },
 
-               'cc=s' => sub { &$save_option('compiler', $_[1]) },
-               'os=s' => sub { &$save_option(@_) },
-               'cpu=s' => sub { &$save_option(@_) },
+        'bindir=s' => sub { &$save_option(@_); },
+        'datadir' => sub { &$save_option(@_); },
+        'datarootdir' => sub { &$save_option(@_); },
+        'docdir=s' => sub { &$save_option(@_); },
+        'dvidir' => sub { &$save_option(@_); },
+        'htmldir' => sub { &$save_option(@_); },
+        'includedir' => sub { &$save_option(@_); },
+        'infodir' => sub { &$save_option(@_); },
+        'libdir=s' => sub { &$save_option(@_); },
+        'libexecdir' => sub { &$save_option(@_); },
+        'localedir' => sub { &$save_option(@_); },
+        'localstatedir' => sub { &$save_option(@_); },
+        'mandir' => sub { &$save_option(@_); },
+        'oldincludedir' => sub { &$save_option(@_); },
+        'pdfdir' => sub { &$save_option(@_); },
+        'psdir' => sub { &$save_option(@_); },
+        'sbindir=s' => sub { &$save_option(@_); },
+        'sharedstatedir' => sub { &$save_option(@_); },
+        'sysconfdir' => sub { &$save_option(@_); },
 
-               'help' => sub { display_help(); },
-               'module-info' => sub { emit_help(module_info()); },
-               'version' => sub { emit_help("Botan $VERSION_STRING\n") },
+        'cc=s' => sub { &$save_option('compiler', $_[1]) },
+        'os=s' => sub { &$save_option(@_) },
+        'cpu=s' => sub { &$save_option(@_) },
 
-               'quiet' => sub { $$config{'verbose'} = 0; },
-               'trace' => sub { $TRACING = 1; },
+        'help' => sub { display_help(); },
+        'module-info' => sub { emit_help(module_info()); },
+        'version' => sub { emit_help("Botan $VERSION_STRING\n") },
 
-               'enable-asm' => sub { $$config{'asm_ok'} = 0; },
-               'disable-asm' => sub { $$config{'asm_ok'} = 0; },
+        'quiet' => sub { $$config{'verbose'} = 0; },
+        'trace' => sub { $TRACING = 1; },
 
-               'enable-autoconfig' => sub { $$config{'autoconfig'} = 1; },
-               'disable-autoconfig' => sub { $$config{'autoconfig'} = 0; },
+        'enable-asm' => sub { $$config{'asm_ok'} = 0; },
+        'disable-asm' => sub { $$config{'asm_ok'} = 0; },
 
-               'enable-shared' => sub { $$config{'shared'} = 'yes'; },
-               'disable-shared' => sub { $$config{'shared'} = 'no'; },
+        'enable-autoconfig' => sub { $$config{'autoconfig'} = 1; },
+        'disable-autoconfig' => sub { $$config{'autoconfig'} = 0; },
 
-               'enable-debug' => sub { &$save_option('debug', 1); },
-               'disable-debug' => sub { &$save_option('debug', 0); },
+        'enable-shared' => sub { $$config{'shared'} = 'yes'; },
+        'disable-shared' => sub { $$config{'shared'} = 'no'; },
 
-               'enable-modules=s' => sub { add_modules($config, $_[1]); },
-               'disable-modules=s' => sub { disable_modules($config, $_[1]); },
+        'enable-debug' => sub { &$save_option('debug', 1); },
+        'disable-debug' => sub { &$save_option('debug', 0); },
 
-               'with-build-dir=s' => sub { $$config{'build-dir'} = $_[1]; },
-               'with-endian=s' => sub { &$save_option(@_); },
-               'with-unaligned-mem=s' => sub { &$save_option(@_); },
-               'with-local-config=s' =>
-                  sub { &$save_option('local_config', slurp_file($_[1])); },
+        'enable-modules=s' => sub { add_modules($config, $_[1]); },
+        'disable-modules=s' => sub { disable_modules($config, $_[1]); },
 
-               'arch-info=s' => sub { emit_help(arch_info($_[1])); },
-               'make-style=s' => sub { &$save_option(@_); },
-               'module-set=s' => sub { add_module_sets($config, $_[1]); },
-               'module-sets=s' => sub { add_module_sets($config, $_[1]); },
-               'dumb-gcc|gcc295x' => sub { $$config{'gcc_bug'} = 1; }
-               );
+        'with-build-dir=s' => sub { $$config{'build-dir'} = $_[1]; },
+        'with-endian=s' => sub { &$save_option(@_); },
+        'with-unaligned-mem=s' => sub { &$save_option(@_); },
+        'with-local-config=s' =>
+        sub { &$save_option('local_config', slurp_file($_[1])); },
+
+        'arch-info=s' => sub { emit_help(arch_info($_[1])); },
+        'make-style=s' => sub { &$save_option(@_); },
+        'module-set=s' => sub { add_module_sets($config, $_[1]); },
+        'module-sets=s' => sub { add_module_sets($config, $_[1]); },
+        'dumb-gcc|gcc295x' => sub { $$config{'gcc_bug'} = 1; }
+        );
 
     # All arguments should now be consumed
     croak("Unknown option $ARGV[0] (try --help)") unless($#ARGV == -1);
