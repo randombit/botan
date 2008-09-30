@@ -2,27 +2,21 @@ realname "ECDSA"
 
 define ECDSA
 
-load_on auto
+load_on request
 
 <add>
-curve_gfp.cpp
-curve_gfp.h
 ec.cpp
 ec.h
 ec_dompar.cpp
 ec_dompar.h
 ecdsa.cpp
 ecdsa.h
-gfp_element.cpp
-gfp_element.h
-gfp_modulus.h
-point_gfp.cpp
-point_gfp.h
 </add>
 
 <requires>
 asn1
 bigint
 numbertheory
+gfpmath
 pubkey
 </requires>
