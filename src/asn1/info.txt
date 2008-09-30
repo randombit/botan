@@ -2,7 +2,7 @@ realname "ASN.1/BER/DER module"
 
 define ASN1
 
-load_on request
+load_on auto
 
 <requires>
 bigint

@@ -6,8 +6,8 @@ define BIGINT
 
 <requires>
 hex
-mp_amd64
-monty_amd64|monty_generic
+mp_amd64|mp_asm64|mp_ia32|mp_ia32_msvc|mp_generic
+monty_generic
 mulop_generic
 </requires>
 

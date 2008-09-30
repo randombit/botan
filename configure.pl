@@ -108,7 +108,9 @@ sub main {
     &$default_value_is('docdir', os_info_for($os, 'doc_dir'));
     &$default_value_is('make_style', $COMPILER{$cc}{'makefile_style'});
 
-    autoload_modules($config) if($$config{'autoconfig'});
+    scan_modules($config);
+
+    print_enabled_modules($config);
 
     add_to($config, {
         'includedir'    => os_info_for($os, 'header_dir'),
@@ -403,7 +405,12 @@ sub choose_target {
 }
 
 sub module_runs_on {
-    my ($noisy, $modinfo, $mod, $arch, $submodel, $os, $cc) = @_;
+    my ($config, $modinfo, $mod, $noisy) = @_;
+
+    my $cc = $$config{'compiler'};
+    my $os = $$config{'os'};
+    my $submodel = $$config{'submodel'};
+    my $arch = $$config{'arch'};
 
     my %modinfo = %{$modinfo};
 
@@ -438,112 +445,86 @@ sub module_runs_on {
     return 1;
 }
 
+sub can_enable_module {
+    my ($config, $mod, $for_dep) = @_;
 
-# Add modules that we think would work (unless autoconfig is off)
-# to $$config{'modules'}
-sub autoload_modules {
+    my %modinfo = %{ $MODULES{$mod} };
+
+    my $is_enabled = 0;
+
+    if(defined($$config{'modules'}{$mod})) {
+        return '' if($$config{'modules'}{$mod} < 0);
+        $is_enabled = 1;
+    }
+
+    unless($is_enabled) {
+        return '' if $modinfo{'load_on'} eq 'dep' and $for_dep == 0;
+        return '' if $modinfo{'load_on'} eq 'request';
+    }
+
+    return '' unless module_runs_on($config, \%modinfo, $mod, 0);
+
+    my @deps;
+    push @deps, $mod;
+
+    LINE: foreach (@{$modinfo{'requires'}}) {
+
+        for my $req_mod (split(/\|/, $_)) {
+
+            next unless defined $MODULES{$req_mod};
+
+            if(can_enable_module($config, $req_mod, 1)) {
+                #autoconfig("Use $req_mod to satisfy dep request $_ for mod $mod");
+                push @deps, $req_mod;
+                next LINE;
+            }
+        }
+
+        autoconfig("Could not get a dep match for $_ for mod $mod");
+        # Could not find a match
+        return '';
+    }
+
+    return join(' ', @deps);
+}
+
+sub scan_modules {
     my ($config) = @_;
-
-    my $cc = $$config{'compiler'};
-    my $os = $$config{'os'};
-    my $arch = $$config{'arch'};
-    my $submodel = $$config{'submodel'};
-
-    my $asm_ok = $$config{'asm_ok'};
-
-    my %loaded; # type -> { mod1 => 1, mod2 => 1 }
 
     MOD: foreach my $mod (sort keys %MODULES) {
         my %modinfo = %{ $MODULES{$mod} };
 
-        my $realname = $modinfo{'realname'};
+        my @mods = split(/ /, can_enable_module($config, $mod, 0));
 
-        my $type = $modinfo{'type'};
-
-        autoconfig("$mod '$realname' is $type");
-
-        if(defined($$config{'modules'}{$mod})) {
-            my $n = $$config{'modules'}{$mod};
-
-            if($n < 0) {
-                autoconfig("$mod ($realname): disabled by user request");
-                next;
-            }
-            else {
-                #$loaded{$type}{$mod} = 1;
-                #autoconfig("$mod ($realname): loading by user request");
-                next;
-            }
-        }
-
-        my @to_enable;
-
-        foreach my $req_mod_l (@{$modinfo{'requires'}}) {
-            my @any_of = split(/\|/, $req_mod_l);
-
-            autoconfig("Finding a dep $req_mod_l of $realname");
-
-            my $mod_to_use = undef;
-            for my $req_mod (@any_of) {
-
-                # one already enabled or disabled
-                if(defined($$config{'modules'}{$req_mod})) {
-                    my $n = $$config{'modules'}{$req_mod};
-
-                    next if($n < 0);
-
-                    if($n > 0) {
-                        $mod_to_use = $mod;
-                        $loaded{$type}{$mod} = 1;
-                        $$config{'modules'}{$req_mod} = 1;
-                        last;
-                    }
-                }
-                elsif(module_runs_on(0, \%modinfo, $realname, $arch, $submodel, $os, $cc)) {
-                    autoconfig("XXX Enabling $req_mod for $mod");
-                    $mod_to_use = $mod;
-                    $loaded{$type}{$mod} = 1;
-                    $$config{'modules'}{$req_mod} = 1;
-                }
-            }
-
-            unless(defined $mod_to_use) {
-                autoconfig("Disabling module $mod due to missing dep $req_mod_l");
-                $$config{'modules'}{$mod} = -1;
-            }
-        }
-
-        next unless module_runs_on(1, \%modinfo, $realname, $arch, $submodel, $os, $cc);
-
-        if(!$asm_ok and $modinfo{'load_on'} eq 'asm_ok') {
-            autoconfig("$mod ($realname): " .
-                       "skipping due to --no-asm");
+        if($#mods < 0) {
+            autoconfig("Will not enable $mod");
             next;
         }
 
-        if($modinfo{'load_on'} eq 'request') {
-            autoconfig("$mod ($realname): skipping, loaded by request only");
-            next;
-        }
-
-        foreach my $req_mod (@to_enable) {
-            autoconfig("Enabling module $req_mod; " .
-                       "required by $mod '$realname'");
-
-            my $req_type = $MODULES{$req_mod}{'type'};
-
-            $loaded{$req_type}{$req_mod} = 1;
+        foreach my $req_mod (@mods) {
+            #autoconfig("Enabling module $req_mod");
             $$config{'modules'}{$req_mod} = 1;
-            load_module($config, $req_mod);
         }
+    }
+}
 
-        trace("Enabling $mod ($realname): loading");
-        $loaded{$type}{$mod} = 1;
-        $$config{'modules'}{$mod} = 1;
+sub print_enabled_modules {
+    my ($config) = @_;
+
+    my %by_type;
+
+    foreach my $mod (sort keys %{$$config{'modules'}}) {
+
+        my $n = $$config{'modules'}{$mod};
+
+        if($n > 0) {
+            my $type = $MODULES{$mod}{'type'};
+            $by_type{$type}{$mod} = $n;
+        }
     }
 
-    for my $type (sort keys %loaded) {
-        my %mods = %{$loaded{$type}};
+    for my $type (sort keys %by_type) {
+        my %mods = %{$by_type{$type}};
         print with_diagnostic('loading',
                               $type . ': ' . join(' ', sort keys %mods));
     }
@@ -1062,6 +1043,63 @@ sub realname {
 ##################################################
 #                                                #
 ##################################################
+
+sub load_module {
+    my ($config, $modname) = @_;
+
+    trace("load_module($modname)");
+
+    croak("Unknown module $modname") unless defined($MODULES{$modname});
+
+    my %module = %{$MODULES{$modname}};
+
+    my $works_on = sub {
+        my ($what, $lst_ref) = @_;
+        my @lst = @{$lst_ref};
+        return 1 if not @lst; # empty list -> no restrictions
+        return 1 if $what eq 'generic'; # trust the user
+        return in_array($what, \@lst);
+    };
+
+    # Check to see if everything is OK WRT system requirements
+    my $os = $$config{'os'};
+
+    croak("Module '$modname' does not run on $os")
+        unless(&$works_on($os, $module{'os'}));
+
+    my $arch = $$config{'arch'};
+    my $sub = $$config{'submodel'};
+
+    croak("Module '$modname' does not run on $arch/$sub")
+        unless(&$works_on($arch, $module{'arch'}) or
+               &$works_on($sub, $module{'arch'}));
+
+    my $cc = $$config{'compiler'};
+
+    croak("Module '$modname' does not work with $cc")
+        unless(&$works_on($cc, $module{'cc'}));
+
+    trace($modname);
+    trace($module{'moddirs'});
+
+    my $handle_files = sub {
+        my($lst, $func) = @_;
+        return unless defined($lst);
+
+        foreach (sort @$lst) {
+            &$func($module{'moddirs'}, $config, $_);
+        }
+    };
+
+    &$handle_files($module{'ignore'},  \&ignore_file);
+    &$handle_files($module{'add'},     \&add_file);
+    &$handle_files($module{'replace'},
+                   sub { ignore_file(@_); add_file(@_); });
+
+    warning($modname, ': ', $module{'note'})
+        if(defined($module{'note'}));
+}
+
 sub load_modules {
     my ($config) = @_;
 
@@ -1073,7 +1111,6 @@ sub load_modules {
         load_module($config, $mod);
 
         push @mod_names, $mod;
-
     }
 
     $$config{'mod-list'} = join("\n", @mod_names);
@@ -1172,62 +1209,6 @@ sub load_modules {
     };
 
     $$config{'defines'} = &$gen_defines();
-}
-
-sub load_module {
-    my ($config, $modname) = @_;
-
-    trace("load_module($modname)");
-
-    croak("Unknown module $modname") unless defined($MODULES{$modname});
-
-    my %module = %{$MODULES{$modname}};
-
-    my $works_on = sub {
-        my ($what, $lst_ref) = @_;
-        my @lst = @{$lst_ref};
-        return 1 if not @lst; # empty list -> no restrictions
-        return 1 if $what eq 'generic'; # trust the user
-        return in_array($what, \@lst);
-    };
-
-    # Check to see if everything is OK WRT system requirements
-    my $os = $$config{'os'};
-
-    croak("Module '$modname' does not run on $os")
-        unless(&$works_on($os, $module{'os'}));
-
-    my $arch = $$config{'arch'};
-    my $sub = $$config{'submodel'};
-
-    croak("Module '$modname' does not run on $arch/$sub")
-        unless(&$works_on($arch, $module{'arch'}) or
-               &$works_on($sub, $module{'arch'}));
-
-    my $cc = $$config{'compiler'};
-
-    croak("Module '$modname' does not work with $cc")
-        unless(&$works_on($cc, $module{'cc'}));
-
-    trace($modname);
-    trace($module{'moddirs'});
-
-    my $handle_files = sub {
-        my($lst, $func) = @_;
-        return unless defined($lst);
-
-        foreach (sort @$lst) {
-            &$func($module{'moddirs'}, $config, $_);
-        }
-    };
-
-    &$handle_files($module{'ignore'},  \&ignore_file);
-    &$handle_files($module{'add'},     \&add_file);
-    &$handle_files($module{'replace'},
-                   sub { ignore_file(@_); add_file(@_); });
-
-    warning($modname, ': ', $module{'note'})
-        if(defined($module{'note'}));
 }
 
 ##################################################
@@ -1481,6 +1462,7 @@ sub get_module_info {
    $info{'moddirs'} = $dirs;
    $info{'load_on'} = 'request'; # default unless specified
    $info{'libs'} = {};
+   $info{'use'} = 'no';
 
    my @dir_arr = File::Spec->splitdir($dirs);
    $info{'type'} = $dir_arr[$#dir_arr-2]; # cipher, hash, ...

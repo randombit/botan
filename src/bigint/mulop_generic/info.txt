@@ -1,6 +1,6 @@
 realname "BigInt Multiply-Add"
 
-load_on request
+load_on dep
 
 <add>
 mp_mulop.cpp
