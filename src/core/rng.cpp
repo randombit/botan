@@ -80,11 +80,13 @@ byte RandomNumberGenerator::next_byte()
 *************************************************/
 RandomNumberGenerator* RandomNumberGenerator::make_rng()
    {
-   RandomNumberGenerator* rng = 0;
+#if !defined(BOTAN_HAS_RANDPOOL)
+   return 0;
+#else
 
-#if defined(BOTAN_HAS_RANDPOOL)
-   rng = new Randpool(get_block_cipher("AES-256"),
-                      get_mac("HMAC(SHA-256)"));
+   RandomNumberGenerator* rng = new Randpool(get_block_cipher("AES-256"),
+                                             get_mac("HMAC(SHA-256)"));
+
 
 #if defined(BOTAN_HAS_X931_RNG)
    rng = new ANSI_X931_RNG(get_block_cipher("AES-256"), rng);
@@ -138,9 +140,8 @@ RandomNumberGenerator* RandomNumberGenerator::make_rng()
    rng->add_entropy_source(new FTW_EntropySource("/proc"));
 #endif
 
-#endif
-
    return rng;
+#endif
    }
 
 }
