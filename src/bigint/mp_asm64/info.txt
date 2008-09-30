@@ -1,12 +1,12 @@
-realname "64-bit RISC MPI Assembler Core"
+realname "MPI Core (Alpha/IA-64/MIPS64/PowerPC-64/SPARC64)"
 
 mp_bits 64
 
-load_on asm_ok
+load_on dep
 
-<replace>
+<add>
 mp_asm.h
-</replace>
+</add>
 
 <arch>
 alpha
