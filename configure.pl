@@ -480,7 +480,7 @@ sub can_enable_module {
             }
         }
 
-        autoconfig("Could not get a dep match for $_ for mod $mod");
+        #autoconfig("Could not get a dep match for $_ for mod $mod");
         # Could not find a match
         return '';
     }
