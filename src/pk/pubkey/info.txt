@@ -6,7 +6,7 @@ load_on dep
 
 <requires>
 bigint
-math
+numbertheory
 asn1
 </requires>
 

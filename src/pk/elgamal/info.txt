@@ -15,6 +15,6 @@ bigint
 bigint
 dl_algo
 keypair
-math
+numbertheory
 pubkey
 </requires>

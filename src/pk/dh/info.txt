@@ -13,6 +13,6 @@ dh.h
 asn1
 bigint
 dl_algo
-math
+numbertheory
 pubkey
 </requires>

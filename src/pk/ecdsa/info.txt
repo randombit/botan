@@ -23,6 +23,6 @@ point_gfp.h
 <requires>
 asn1
 bigint
-math
+numbertheory
 pubkey
 </requires>
