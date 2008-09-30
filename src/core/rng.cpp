@@ -80,14 +80,14 @@ byte RandomNumberGenerator::next_byte()
 *************************************************/
 RandomNumberGenerator* RandomNumberGenerator::make_rng()
    {
-#if !defined(BOTAN_HAS_RANDPOOL)
-   return 0;
-#else
+#if defined(BOTAN_HAS_RANDPOOL)
 
+   /* Randpool is required for make_rng to work */
    RandomNumberGenerator* rng = new Randpool(get_block_cipher("AES-256"),
                                              get_mac("HMAC(SHA-256)"));
 
 
+   /* If X9.31 is available, wrap the Randpool algorithm in it */
 #if defined(BOTAN_HAS_X931_RNG)
    rng = new ANSI_X931_RNG(get_block_cipher("AES-256"), rng);
 #endif
@@ -142,6 +142,8 @@ RandomNumberGenerator* RandomNumberGenerator::make_rng()
 
    return rng;
 #endif
+
+   throw Algorithm_Not_Found("RandomNumberGenerator::make_rng - no RNG object available");
    }
 
 }
