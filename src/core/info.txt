@@ -11,6 +11,7 @@ sha2
 hmac
 allocators
 filters
+timer_base
 </requires>
 
 <add>
