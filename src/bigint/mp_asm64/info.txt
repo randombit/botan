@@ -6,6 +6,7 @@ load_on dep
 
 <add>
 mp_asm.h
+mp_generic:mp_asmi.h
 </add>
 
 <arch>

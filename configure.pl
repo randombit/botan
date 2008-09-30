@@ -1247,7 +1247,17 @@ sub add_file {
         croak("File $file already added from ", $$config{$type}{$file})
             if(defined($$config{$type}{$file}));
 
-        $$config{$type}{$file} = $mod_dir;
+        if($file =~ /(.*):(.*)/) {
+            my @dirs = File::Spec->splitdir($mod_dir);
+
+            $dirs[$#dirs-1] = $1;
+
+            $$config{$type}{$2} = File::Spec->catdir(@dirs);
+        }
+        else {
+            print "$type $file = $mod_dir\n";
+            $$config{$type}{$file} = $mod_dir;
+        }
     };
 
     &$do_add_file(file_type($file));
@@ -1281,10 +1291,14 @@ sub check_for_file {
    my $full_path = sub {
        my ($file,$mod_dir) = @_;
 
-       return File::Spec->catfile($mod_dir, $file) if(defined($mod_dir));
+       if($file =~ /(.*):(.*)/) {
+           return File::Spec->catfile($mod_dir, '..', $1, $2);
+       } else {
+           return File::Spec->catfile($mod_dir, $file) if(defined($mod_dir));
 
-       my @typeinfo = file_type($config, $file);
-       return File::Spec->catfile($typeinfo[1], $file);
+           my @typeinfo = file_type($config, $file);
+           return File::Spec->catfile($typeinfo[1], $file);
+       }
    };
 
    $file = &$full_path($file, $added_from);
