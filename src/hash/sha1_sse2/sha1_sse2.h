@@ -22,6 +22,8 @@ class SHA_160_SSE2 : public SHA_160
       void hash(const byte[]);
    };
 
+extern "C" void botan_sha1_sse2_compress(u32bit[5], const u32bit*);
+
 }
 
 #endif
