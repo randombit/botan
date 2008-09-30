@@ -1941,10 +1941,10 @@ sub guess_cpu_from_this
     my $cpu = '';
 
     $cpu = 'ia32' if($cpuinfo =~ /x86/);
-    $cpu = 'ia32' if($cpuinfo =~ /i686/);
     $cpu = 'amd64' if($cpuinfo =~ /x86-64/);
     $cpu = 'amd64' if($cpuinfo =~ /x86_64/);
 
+    $cpu = 'i686' if($cpuinfo =~ /i686/);
     $cpu = 'athlon' if($cpuinfo =~ /athlon/);
     $cpu = 'pentium4' if($cpuinfo =~ /pentium 4/);
     $cpu = 'pentium4' if($cpuinfo =~ /pentium 4/);
