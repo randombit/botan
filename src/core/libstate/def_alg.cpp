@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/eng_def.h>
+#include <botan/lookup.h>
 #include <botan/libstate.h>
 #include <botan/parsing.h>
 
@@ -386,7 +387,7 @@ Default_Engine::find_block_cipher(const std::string& algo_spec) const
 #if defined(BOTAN_HAS_LUBY_RACKOFF)
    if(algo_name == "Luby-Rackoff" && name.size() >= 2)
       {
-      HashFunction* hash = find_hash(name[1]);
+      HashFunction* hash = get_hash(name[1]);
       if(hash)
          return new LubyRackoff(hash);
       }
@@ -398,7 +399,7 @@ Default_Engine::find_block_cipher(const std::string& algo_spec) const
       if(name.size() != 4)
          throw Invalid_Algorithm_Name(algo_spec);
 
-      return new Lion(find_hash(name[1]), find_stream_cipher(name[2]),
+      return new Lion(get_hash(name[1]), get_stream_cipher(name[2]),
                       to_u32bit(name[3]));
       }
 #endif
@@ -516,6 +517,7 @@ Default_Engine::find_hash(const std::string& algo_spec) const
    HANDLE_TYPE_NO_ARGS("Whirlpool", Whirlpool);
 #endif
 
+#if defined(BOTAN_HAS_PARALLEL_HASH)
    if(algo_name == "Parallel")
       {
       if(name.size() < 2)
@@ -523,6 +525,7 @@ Default_Engine::find_hash(const std::string& algo_spec) const
       name.erase(name.begin());
       return new Parallel(name);
       }
+#endif
 
    return 0;
    }
@@ -542,7 +545,7 @@ Default_Engine::find_mac(const std::string& algo_spec) const
    if(algo_name == "CBC-MAC")
       {
       if(name.size() == 2)
-         return new CBC_MAC(find_block_cipher(name[1]));
+         return new CBC_MAC(get_block_cipher(name[1]));
       throw Invalid_Algorithm_Name(algo_spec);
       }
 #endif
@@ -551,7 +554,7 @@ Default_Engine::find_mac(const std::string& algo_spec) const
    if(algo_name == "CMAC")
       {
       if(name.size() == 2)
-         return new CMAC(find_block_cipher(name[1]));
+         return new CMAC(get_block_cipher(name[1]));
       throw Invalid_Algorithm_Name(algo_spec);
       }
 #endif
@@ -560,7 +563,7 @@ Default_Engine::find_mac(const std::string& algo_spec) const
    if(algo_name == "HMAC")
       {
       if(name.size() == 2)
-         return new HMAC(find_hash(name[1]));
+         return new HMAC(get_hash(name[1]));
       throw Invalid_Algorithm_Name(algo_spec);
       }
 #endif
@@ -569,7 +572,7 @@ Default_Engine::find_mac(const std::string& algo_spec) const
    if(algo_name == "SSL3-MAC")
       {
       if(name.size() == 2)
-         return new SSL3_MAC(find_hash(name[1]));
+         return new SSL3_MAC(get_hash(name[1]));
       throw Invalid_Algorithm_Name(algo_spec);
       }
 #endif
@@ -578,7 +581,7 @@ Default_Engine::find_mac(const std::string& algo_spec) const
    if(algo_name == "X9.19-MAC")
       {
       if(name.size() == 1)
-         return new ANSI_X919_MAC(find_block_cipher("DES"));
+         return new ANSI_X919_MAC(get_block_cipher("DES"));
       throw Invalid_Algorithm_Name(algo_spec);
       }
 #endif
@@ -597,19 +600,23 @@ S2K* Default_Engine::find_s2k(const std::string& algo_spec) const
 
    const std::string algo_name = global_state().deref_alias(name[0]);
 
+#if defined(BOTAN_HAS_PBKDF1)
    if(algo_name == "PBKDF1")
       {
       if(name.size() == 2)
-         return new PKCS5_PBKDF1(find_hash(name[1]));
+         return new PKCS5_PBKDF1(get_hash(name[1]));
       throw Invalid_Algorithm_Name(algo_spec);
       }
+#endif
 
+#if defined(BOTAN_HAS_PBKDF2)
    if(algo_name == "PBKDF2")
       {
       if(name.size() == 2)
-         return new PKCS5_PBKDF2(find_mac("HMAC(" + name[1] + ")"));
+         return new PKCS5_PBKDF2(get_mac("HMAC(" + name[1] + ")"));
       throw Invalid_Algorithm_Name(algo_spec);
       }
+#endif
 
 #if defined(BOTAN_HAS_PGPS2K)
    HANDLE_TYPE_ONE_STRING("OpenPGP-S2K", OpenPGP_S2K);
