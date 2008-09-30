@@ -1,0 +1,20 @@
+realname "GF(p) Math"
+
+load_on request
+
+define BIGINT_GFP
+
+<requires>
+bigint
+numbertheory
+</requires>
+
+<add>
+curve_gfp.cpp
+curve_gfp.h
+gfp_element.cpp
+gfp_element.h
+gfp_modulus.h
+point_gfp.cpp
+point_gfp.h
+</add>
