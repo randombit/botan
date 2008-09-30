@@ -9,7 +9,6 @@
 #include <botan/bigint.h>
 #include <botan/dl_group.h>
 #include <botan/point_gfp.h>
-#include <botan/ecdsa.h>
 
 namespace Botan {
 

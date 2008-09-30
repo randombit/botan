@@ -1,9 +1,10 @@
+
 #include <botan/ec_dompar.h>
-#include <botan/ec.h>
 #include <botan/enums.h>
 #include <botan/parsing.h>
 #include <botan/libstate.h>
 #include <botan/hex.h>
+#include <botan/pipe.h>
 
 namespace Botan {
 
