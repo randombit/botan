@@ -7,6 +7,7 @@
 *************************************************/
 
 #include <botan/ec.h>
+#include <botan/ecdsa.h>
 #include <botan/numthry.h>
 #include <botan/util.h>
 #include <botan/der_enc.h>
