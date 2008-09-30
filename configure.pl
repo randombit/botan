@@ -676,7 +676,7 @@ sub get_options {
         'enable-modules=s' => sub { add_modules($config, $_[1]); },
         'disable-modules=s' => sub { disable_modules($config, $_[1]); },
 
-        'enable-module-sets=s' => sub { add_module_sets($config, $_[1]); },
+        'use-module-set=s' => sub { add_module_sets($config, $_[1]); },
 
         'with-build-dir=s' => sub { $$config{'build-dir'} = $_[1]; },
         'with-endian=s' => sub { &$save_option(@_); },
