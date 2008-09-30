@@ -33,7 +33,7 @@ std::ostream& operator<<(std::ostream& out, Timer& timer)
    {
    //out << timer.value() << " ";
 
-   int events_per_second = timer.events() / timer.seconds();
+   int events_per_second = static_cast<int>(timer.events() / timer.seconds());
 
    out << events_per_second << " " << timer.get_name() << " per second; ";
 

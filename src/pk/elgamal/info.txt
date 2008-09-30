@@ -1,0 +1,20 @@
+realname "ElGamal"
+
+define ELGAMAL
+
+load_on auto
+
+<add>
+elgamal.cpp
+elgamal.h
+</add>
+
+<requires>
+asn1
+bigint
+bigint
+dl_algo
+keypair
+math
+pubkey
+</requires>

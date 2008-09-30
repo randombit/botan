@@ -1,0 +1,16 @@
+realname "Integer Factorization Algorithms"
+
+define IF_PUBLIC_KEY_FAMILY
+
+load_on auto
+
+<add>
+if_algo.cpp
+if_algo.h
+</add>
+
+<requires>
+asn1
+bigint
+filters
+</requires>

@@ -1,0 +1,14 @@
+realname "MD4"
+
+define MD4
+
+load_on auto
+
+<add>
+md4.cpp
+md4.h
+</add>
+
+<requires>
+mdx_hash
+</requires>

@@ -1,0 +1,14 @@
+realname "FORK-256"
+
+define FORK_256
+
+load_on auto
+
+<add>
+fork256.cpp
+fork256.h
+</add>
+
+<requires>
+mdx_hash
+</requires>

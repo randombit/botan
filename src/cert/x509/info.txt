@@ -1,0 +1,36 @@
+realname "X.509"
+
+define X509
+
+load_on auto
+
+<add>
+certstor.h
+certstor.cpp
+crl_ent.cpp
+crl_ent.h
+pkcs10.h
+pkcs10.cpp
+x509_ca.cpp
+x509_ca.h
+x509_crl.cpp
+x509_crl.h
+x509_ext.cpp
+x509_ext.h
+x509_obj.cpp
+x509_obj.h
+x509cert.cpp
+x509cert.h
+x509find.cpp
+x509find.h
+x509opt.cpp
+x509self.cpp
+x509self.h
+x509stor.cpp
+x509stor.h
+</add>
+
+<requires>
+asn1
+bigint
+</requires>

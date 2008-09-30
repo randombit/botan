@@ -1,0 +1,132 @@
+##################################################
+# Compiler Options                               #
+##################################################
+CXX           = @{var:cc}
+LIB_OPT       = @{var:lib_opt}
+CHECK_OPT     = @{var:check_opt}
+MACH_OPT      = @{var:mach_opt}
+LANG_FLAGS    = @{var:lang_flags}
+WARN_FLAGS    = @{var:warn_flags}
+SO_OBJ_FLAGS  = @{var:shared_flags}
+SO_LINK_CMD   = @{var:so_link}
+LINK_TO       = @{var:link_to}
+
+##################################################
+# Version Numbers                                #
+##################################################
+MAJOR         = @{var:version_major}
+MINOR         = @{var:version_minor}
+PATCH         = @{var:version_patch}
+
+VERSION       = $(MAJOR).$(MINOR).$(PATCH)
+
+##################################################
+# Installation Settings                          #
+##################################################
+DESTDIR       = @{var:prefix}
+
+BINDIR        = $(DESTDIR)/bin
+LIBDIR        = $(DESTDIR)/@{var:libdir}
+HEADERDIR     = $(DESTDIR)/@{var:includedir}/botan
+DOCDIR        = $(DESTDIR)/@{var:docdir}/Botan-$(VERSION)
+
+CONFIG_SCRIPT = @{var:botan-config}
+
+##################################################
+# Aliases for Common Programs                    #
+##################################################
+AR               = @{var:ar_command}
+CD               = @cd
+ECHO             = @echo
+INSTALL_CMD_EXEC = @{var:install_cmd_exec}
+INSTALL_CMD_DATA = @{var:install_cmd_data}
+LN               = ln -fs
+MKDIR            = @mkdir
+MKDIR_INSTALL    = @umask 022; mkdir -p -m 755
+RANLIB           = @{var:ranlib_command}
+RM               = @rm -f
+RM_R             = @rm -rf
+
+##################################################
+# File Lists                                     #
+##################################################
+CHECK         = @{var:check_prefix}check
+
+DOCS          = @{var:doc_files}
+
+HEADERS       = @{var:include_files}
+
+LIBOBJS       = @{var:lib_objs}
+
+CHECKOBJS     = @{var:check_objs}
+
+LIB_FLAGS     = $(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS) $(SO_OBJ_FLAGS)
+CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
+
+LIBRARIES     = $(STATIC_LIB) $(SHARED_LIB)
+
+LIBNAME       = @{var:lib_prefix}libbotan
+STATIC_LIB    = $(LIBNAME).a
+
+SHARED_LIB    = $(LIBNAME)-$(MAJOR).$(MINOR).$(PATCH).@{var:so_suffix}
+SONAME        = $(LIBNAME)-$(MAJOR).$(MINOR).$(PATCH).@{var:so_suffix}
+
+SYMLINK       = libbotan.@{var:so_suffix}
+
+all: $(LIBRARIES)
+
+##################################################
+# Build Commands                                 #
+##################################################
+@{var:lib_build_cmds}
+
+@{var:check_build_cmds}
+
+##################################################
+# Link Commands                                  #
+##################################################
+$(CHECK): $(LIBRARIES) $(CHECKOBJS)
+	$(CXX) $(CHECKOBJS) -L. -lbotan $(LINK_TO) -o $(CHECK)
+
+$(STATIC_LIB): $(LIBOBJS)
+	$(RM) $(STATIC_LIB)
+	$(AR) $(STATIC_LIB) $(LIBOBJS)
+	$(RANLIB) $(STATIC_LIB)
+
+$(SHARED_LIB): $(LIBOBJS)
+	$(SO_LINK_CMD) $(LINK_TO) $(LIBOBJS) -o $(SHARED_LIB)
+	$(LN) $(SHARED_LIB) $(SYMLINK)
+
+##################################################
+# Fake Targets                                   #
+##################################################
+.PHONY = clean distclean install static shared
+
+static: $(STATIC_LIB)
+
+shared: $(SHARED_LIB)
+
+clean:
+	$(RM_R) @{var:build-dir}/lib/* @{var:build-dir}/checks/*
+	$(RM) $(LIBRARIES) $(SYMLINK) $(CHECK)
+
+distclean: clean
+	$(RM_R) @{var:build-dir}
+	$(RM) Makefile $(CONFIG_SCRIPT)
+
+install: $(LIBRARIES)
+	$(ECHO) "Installing Botan into $(DESTDIR)... "
+	$(MKDIR_INSTALL) $(DOCDIR)
+	$(MKDIR_INSTALL) $(HEADERDIR)
+	$(MKDIR_INSTALL) $(LIBDIR)
+	$(MKDIR_INSTALL) $(BINDIR)
+	@for i in $(DOCS); do \
+	   $(INSTALL_CMD_DATA) $$i $(DOCDIR); \
+	 done
+	@for i in $(HEADERS); do \
+	   $(INSTALL_CMD_DATA) $$i $(HEADERDIR); \
+	 done
+	@$(INSTALL_CMD_DATA) $(STATIC_LIB) $(LIBDIR)
+	@$(INSTALL_CMD_EXEC) $(CONFIG_SCRIPT) $(BINDIR)
+	@$(INSTALL_CMD_EXEC) $(SHARED_LIB) $(LIBDIR)
+	$(CD) $(LIBDIR); $(LN) $(SHARED_LIB) $(SYMLINK)

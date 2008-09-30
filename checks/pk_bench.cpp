@@ -1,15 +1,36 @@
-#include <botan/dsa.h>
-#include <botan/rsa.h>
-#include <botan/dh.h>
-#include <botan/nr.h>
-#include <botan/rw.h>
-#include <botan/elgamal.h>
-#include <botan/parsing.h>
-
 #include <botan/pkcs8.h>
 #include <botan/mem_ops.h>
 #include <botan/look_pk.h>
 #include <botan/libstate.h>
+#include <botan/parsing.h>
+
+#if defined(BOTAN_HAS_RSA)
+  #include <botan/rsa.h>
+#endif
+
+#if defined(BOTAN_HAS_DSA)
+  #include <botan/dsa.h>
+#endif
+
+#if defined(BOTAN_HAS_DH)
+  #include <botan/dh.h>
+#endif
+
+#if defined(BOTAN_HAS_NR)
+  #include <botan/nr.h>
+#endif
+
+#if defined(BOTAN_HAS_RW)
+  #include <botan/rw.h>
+#endif
+
+#if defined(BOTAN_HAS_ELGAMAL)
+  #include <botan/elgamal.h>
+#endif
+
+#if defined(BOTAN_HAS_DLIES)
+  #include <botan/dlies.h>
+#endif
 
 using namespace Botan;
 
@@ -35,9 +56,14 @@ void benchmark_enc_dec(PK_Encryptor& enc, PK_Decryptor& dec,
       {
       if(enc_timer.seconds() < seconds || ciphertext.size() == 0)
          {
-         plaintext.create(48);
-         rng.randomize(plaintext.begin(), plaintext.size());
-         plaintext[0] |= 0x80;
+         plaintext.create(enc.maximum_input_size());
+
+         // Ensure for Raw, etc, it stays large
+         if((i % 100) == 0)
+            {
+            rng.randomize(plaintext.begin(), plaintext.size());
+            plaintext[0] |= 0x80;
+            }
 
          enc_timer.start();
          ciphertext = enc.encrypt(plaintext, rng);
@@ -47,11 +73,13 @@ void benchmark_enc_dec(PK_Encryptor& enc, PK_Decryptor& dec,
       if(dec_timer.seconds() < seconds)
          {
          dec_timer.start();
-         SecureVector<byte> plaintext2 = dec.decrypt(ciphertext);
+         SecureVector<byte> plaintext_out = dec.decrypt(ciphertext);
          dec_timer.stop();
 
-         if(plaintext != plaintext2)
-            std::cerr << "Contents mismatched on decryption in RSA benchmark!\n";
+         if(plaintext_out != plaintext)
+            { // has never happened...
+            std::cerr << "Contents mismatched on decryption during benchmark!\n";
+            }
          }
       }
    }
@@ -61,14 +89,17 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
                        RandomNumberGenerator& rng,
                        u32bit runs, double seconds)
    {
-   SecureVector<byte> message, signature;
+   SecureVector<byte> message, signature, sig_random;
 
    for(u32bit i = 0; i != runs; ++i)
       {
       if(sig_timer.seconds() < seconds || signature.size() == 0)
          {
-         message.create(48);
-         rng.randomize(message.begin(), message.size());
+         if((i % 100) == 0)
+            {
+            message.create(48);
+            rng.randomize(message.begin(), message.size());
+            }
 
          sig_timer.start();
          signature = sig.sign_message(message, rng);
@@ -83,18 +114,101 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
 
          if(!verified)
             std::cerr << "Signature verification failure\n";
+
+         if((i % 100) == 0)
+            {
+            sig_random.create(signature.size());
+            rng.randomize(sig_random, sig_random.size());
+
+            verify_timer.start();
+            bool verified2 = ver.verify_message(message, sig_random);
+            verify_timer.stop();
+
+            if(verified2)
+               std::cerr << "Signature verification failure (bad sig OK)\n";
+            }
          }
       }
    }
 
-template<typename PRIV_KEY_TYPE>
-void benchmark_rsa_rw(RandomNumberGenerator& rng,
-                      double seconds,
-                      Benchmark_Report& report)
-   {
-   const u32bit keylens[] = { 512, 1024, 2048, 3072, 4096, 6144, 8192, 0 };
+/*
+  Between benchmark_rsa_rw + benchmark_dsa_nr:
+     Type of the key
+     Arguments to the constructor (A list of some arbitrary type?)
+     Type of padding
+*/
 
-   const std::string algo_name = PRIV_KEY_TYPE().algo_name();
+void benchmark_rsa(RandomNumberGenerator& rng,
+                   double seconds,
+                   Benchmark_Report& report)
+   {
+#if defined(BOTAN_HAS_RSA)
+
+   for(size_t keylen = 1024; keylen <= 4096; keylen += 1024)
+      {
+      Timer keygen_timer("keygen");
+      Timer verify_timer("verify");
+      Timer sig_timer("signature");
+      Timer enc_timer("encrypt");
+      Timer dec_timer("decrypt");
+
+      const std::string sig_padding = "EMSA4(SHA-1)";
+      const std::string enc_padding = "EME1(SHA-1)";
+
+      try
+         {
+
+#if 0
+         // for profiling
+         PKCS8_PrivateKey* pkcs8_key = PKCS8::load_key("rsa/" + to_string(keylen) + ".pem", rng);
+         RSA_PrivateKey* key_ptr = dynamic_cast<RSA_PrivateKey*>(pkcs8_key);
+
+         RSA_PrivateKey key = *key_ptr;
+#else
+         keygen_timer.start();
+         RSA_PrivateKey key(rng, keylen);
+         keygen_timer.stop();
+#endif
+
+         while(verify_timer.seconds() < seconds ||
+               sig_timer.seconds() < seconds)
+            {
+            std::auto_ptr<PK_Encryptor> enc(get_pk_encryptor(key, enc_padding));
+            std::auto_ptr<PK_Decryptor> dec(get_pk_decryptor(key, enc_padding));
+            benchmark_enc_dec(*enc, *dec, enc_timer, dec_timer, rng, 10000, seconds);
+
+            std::auto_ptr<PK_Signer> sig(get_pk_signer(key, sig_padding));
+            std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, sig_padding));
+            benchmark_sig_ver(*ver, *sig, verify_timer, sig_timer, rng, 10000, seconds);
+            }
+
+         const std::string rsa_keylen = "RSA " + to_string(keylen);
+
+         report.report(rsa_keylen, keygen_timer);
+         report.report(rsa_keylen + " " + sig_padding, verify_timer);
+         report.report(rsa_keylen + " " + sig_padding, sig_timer);
+         report.report(rsa_keylen + " " + enc_padding, enc_timer);
+         report.report(rsa_keylen + " " + enc_padding, dec_timer);
+         }
+      catch(Stream_IO_Error)
+         {
+         }
+      catch(Exception& e)
+         {
+         std::cout << e.what() << "\n";
+         }
+      }
+
+#endif
+   }
+
+void benchmark_rw(RandomNumberGenerator& rng,
+                  double seconds,
+                  Benchmark_Report& report)
+   {
+#if defined(BOTAN_HAS_RW)
+
+   const u32bit keylens[] = { 512, 1024, 2048, 3072, 4096, 6144, 8192, 0 };
 
    for(size_t j = 0; keylens[j]; j++)
       {
@@ -104,13 +218,13 @@ void benchmark_rsa_rw(RandomNumberGenerator& rng,
       Timer verify_timer("verify");
       Timer sig_timer("signature");
 
-      std::string padding = (algo_name == "RSA") ? "EMSA1(SHA-1)" : "EMSA2(SHA-1)";
+      std::string padding = "EMSA2(SHA-1)";
 
       while(verify_timer.seconds() < seconds ||
             sig_timer.seconds() < seconds)
          {
          keygen_timer.start();
-         PRIV_KEY_TYPE key(rng, keylen);
+         RW_PrivateKey key(rng, keylen);
          keygen_timer.stop();
 
          std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));
@@ -119,11 +233,13 @@ void benchmark_rsa_rw(RandomNumberGenerator& rng,
          benchmark_sig_ver(*ver, *sig, verify_timer, sig_timer, rng, 10000, seconds);
          }
 
-      const std::string nm = algo_name + "-" + to_string(keylen);
+      const std::string nm = "RW-" + to_string(keylen);
       report.report(nm, keygen_timer);
       report.report(nm, verify_timer);
       report.report(nm, sig_timer);
       }
+
+#endif
    }
 
 template<typename PRIV_KEY_TYPE>
@@ -131,6 +247,7 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
                       double seconds,
                       Benchmark_Report& report)
    {
+#if defined(BOTAN_HAS_NR) || defined(BOTAN_HAS_DSA)
    const char* domains[] = { "dsa/jce/512",
                              "dsa/jce/768",
                              "dsa/jce/1024",
@@ -171,18 +288,22 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
       report.report(nm, verify_timer);
       report.report(nm, sig_timer);
       }
+#endif
    }
 
 void benchmark_dh(RandomNumberGenerator& rng,
                   double seconds,
                   Benchmark_Report& report)
    {
+#ifdef BOTAN_HAS_DH
+
    const char* domains[] = { "modp/ietf/768",
                              "modp/ietf/1024",
                              "modp/ietf/2048",
                              "modp/ietf/3072",
                              "modp/ietf/4096",
                              "modp/ietf/6144",
+                             "modp/ietf/8192",
                              NULL };
 
    for(size_t j = 0; domains[j]; j++)
@@ -233,17 +354,23 @@ void benchmark_dh(RandomNumberGenerator& rng,
       report.report(nm, keygen_timer);
       report.report(nm, kex_timer);
       }
+
+#endif
    }
 
 void benchmark_elg(RandomNumberGenerator& rng,
                    double seconds,
                    Benchmark_Report& report)
    {
+#ifdef BOTAN_HAS_ELGAMAL
+
    const char* domains[] = { "modp/ietf/768",
                              "modp/ietf/1024",
                              "modp/ietf/2048",
                              "modp/ietf/3072",
                              "modp/ietf/4096",
+                             "modp/ietf/6144",
+                             "modp/ietf/8192",
                              NULL };
 
    const std::string algo_name = "ElGamal";
@@ -270,7 +397,7 @@ void benchmark_elg(RandomNumberGenerator& rng,
          std::auto_ptr<PK_Decryptor> dec(get_pk_decryptor(key, padding));
          std::auto_ptr<PK_Encryptor> enc(get_pk_encryptor(key, padding));
 
-         benchmark_enc_dec(*enc, *dec, enc_timer, dec_timer, rng, 100, seconds);
+         benchmark_enc_dec(*enc, *dec, enc_timer, dec_timer, rng, 1000, seconds);
          }
 
       const std::string nm = algo_name + "-" + to_string(pbits);
@@ -278,6 +405,7 @@ void benchmark_elg(RandomNumberGenerator& rng,
       report.report(nm, enc_timer);
       report.report(nm, dec_timer);
       }
+#endif
    }
 
 }
@@ -316,10 +444,12 @@ void bench_pk(RandomNumberGenerator& rng,
    Benchmark_Report report;
 
    if(algo == "All" || algo == "RSA")
-      benchmark_rsa_rw<RSA_PrivateKey>(rng, seconds, report);
+      benchmark_rsa(rng, seconds, report);
 
+#if defined(BOTAN_HAS_DSA)
    if(algo == "All" || algo == "DSA")
       benchmark_dsa_nr<DSA_PrivateKey>(rng, seconds, report);
+#endif
 
    if(algo == "All" || algo == "DH")
       benchmark_dh(rng, seconds, report);
@@ -327,9 +457,11 @@ void bench_pk(RandomNumberGenerator& rng,
    if(algo == "All" || algo == "ELG" || algo == "ElGamal")
       benchmark_elg(rng, seconds, report);
 
+#if defined(BOTAN_HAS_NR)
    if(algo == "All" || algo == "NR")
       benchmark_dsa_nr<NR_PrivateKey>(rng, seconds, report);
+#endif
 
    if(algo == "All" || algo == "RW")
-      benchmark_rsa_rw<RW_PrivateKey>(rng, seconds, report);
+      benchmark_rw(rng, seconds, report);
    }

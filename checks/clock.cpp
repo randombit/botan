@@ -6,7 +6,7 @@
 */
 
 #if !defined(USE_CLOCK_GETTIME) && defined(BOTAN_TARGET_OS_IS_LINUX)
-  #define USE_CLOCK_GETTIME 1
+  #define USE_GETTIMEOFDAY 1
 #endif
 
 #if !defined(USE_GETTIMEOFDAY) && defined(BOTAN_TARGET_OS_IS_FREEBSD)

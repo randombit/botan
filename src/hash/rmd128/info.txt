@@ -1,0 +1,14 @@
+realname "RIPEMD-128"
+
+define RIPEMD_128
+
+load_on auto
+
+<add>
+rmd128.cpp
+rmd128.h
+</add>
+
+<requires>
+mdx_hash
+</requires>

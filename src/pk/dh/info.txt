@@ -1,0 +1,18 @@
+realname "DH"
+
+define DH
+
+load_on auto
+
+<add>
+dh.cpp
+dh.h
+</add>
+
+<requires>
+asn1
+bigint
+dl_algo
+math
+pubkey
+</requires>

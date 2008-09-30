@@ -1,0 +1,16 @@
+realname "Discrete Logarithm PK Algorithms"
+
+define DL_PUBLIC_KEY_FAMILY
+
+load_on auto
+
+<add>
+dl_algo.cpp
+dl_algo.h
+</add>
+
+<requires>
+asn1
+bigint
+dl_group
+</requires>

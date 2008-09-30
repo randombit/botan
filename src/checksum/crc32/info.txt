@@ -1,0 +1,10 @@
+realname "CRC-32"
+
+define CRC32
+
+load_on auto
+
+<add>
+crc32.cpp
+crc32.h
+</add>

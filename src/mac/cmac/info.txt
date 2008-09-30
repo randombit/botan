@@ -1,0 +1,10 @@
+realname "CMAC"
+
+define CMAC
+
+load_on auto
+
+<add>
+cmac.cpp
+cmac.h
+</add>

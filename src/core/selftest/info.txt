@@ -1,0 +1,24 @@
+realname "Selftests"
+
+define SELFTESTS
+
+load_on auto
+
+<add>
+selftest.cpp
+selftest.h
+</add>
+
+<requires>
+hex
+des
+aes
+sha1
+sha2
+hmac
+ecb
+cbc
+cfb
+ofb
+ctr
+</requires>

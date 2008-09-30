@@ -1,0 +1,31 @@
+realname "BigInt"
+
+load_on auto
+
+define BIGINT
+
+<requires>
+hex
+mp_amd64|mp_asm64|mp_ia32|mp_ia32_msvc|mp_generic
+monty_generic
+mulop_generic
+</requires>
+
+<add>
+bigint.h
+divide.h
+mp_core.h
+mp_types.h
+big_code.cpp
+big_io.cpp
+big_ops2.cpp
+big_ops3.cpp
+big_rand.cpp
+bigint.cpp
+divide.cpp
+mp_asm.cpp
+mp_comba.cpp
+mp_karat.cpp
+mp_misc.cpp
+mp_shift.cpp
+</add>

@@ -1,0 +1,16 @@
+realname "Assembler Macros (x86-64)"
+
+load_on required
+
+<add>
+asm_macr.h
+</add>
+
+<arch>
+amd64
+</arch>
+
+<cc>
+gcc
+icc
+</cc>

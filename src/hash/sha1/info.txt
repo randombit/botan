@@ -1,0 +1,14 @@
+realname "SHA-1"
+
+define SHA1
+
+load_on auto
+
+<add>
+sha160.cpp
+sha160.h
+</add>
+
+<requires>
+mdx_hash
+</requires>

@@ -67,7 +67,7 @@ double bench_filter(std::string name, Botan::Filter* filter,
       {
       std::cout << name << ": " << std::string(25 - name.length(), ' ');
       std::cout.width(6);
-      std::cout << mbytes_per_sec << " Mbytes/sec" << std::endl;
+      std::cout << mbytes_per_sec << " MiB/sec" << std::endl;
       }
    return (mbytes_per_sec);
    }
@@ -109,7 +109,7 @@ void benchmark(const std::string& what,
                    << "<P><TABLE BORDER CELLSPACING=1>\n"
                    << "<THEAD>\n"
                    << "<TR><TH>Algorithm                      "
-                   << "<TH>Mbytes / second\n"
+                   << "<TH>Mib / second\n"
                    << "<TBODY>\n";
          }
 

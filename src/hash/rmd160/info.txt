@@ -1,0 +1,14 @@
+realname "RIPEMD-160"
+
+define RIPEMD_160
+
+load_on auto
+
+<add>
+rmd160.cpp
+rmd160.h
+</add>
+
+<requires>
+mdx_hash
+</requires>

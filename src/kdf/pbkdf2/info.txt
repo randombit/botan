@@ -1,0 +1,10 @@
+realname "Pbkdf2"
+
+define PBKDF2
+
+load_on auto
+
+<add>
+pbkdf2.cpp
+pbkdf2.h
+</add>

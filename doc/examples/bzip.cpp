@@ -12,10 +12,8 @@ This file is in the public domain
 #include <iostream>
 #include <botan/botan.h>
 
-#if defined(BOTAN_EXT_COMPRESSOR_BZIP2)
+#if defined(BOTAN_HAS_COMPRESSOR_BZIP2)
   #include <botan/bzip2.h>
-#else
-  #error "You didn't compile the bzip module into Botan"
 #endif
 
 const std::string SUFFIX = ".bz2";
@@ -52,11 +50,19 @@ int main(int argc, char* argv[])
 
    try {
 
-      Botan::Filter* bzip;
+      Botan::Filter* bzip = 0;
+#ifdef BOTAN_HAS_COMPRESSOR_BZIP2
       if(decompress)
          bzip = new Botan::Bzip_Decompression(small);
       else
          bzip = new Botan::Bzip_Compression(level);
+#endif
+
+      if(!bzip)
+         {
+         std::cout << "Sorry, support for bzip2 not compiled into Botan\n";
+         return 1;
+         }
 
       Botan::Pipe pipe(bzip);
 

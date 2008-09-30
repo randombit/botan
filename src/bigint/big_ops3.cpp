@@ -1,0 +1,188 @@
+/*************************************************
+* BigInt Binary Operators Source File            *
+* (C) 1999-2007 Jack Lloyd                       *
+*************************************************/
+
+#include <botan/bigint.h>
+#include <botan/divide.h>
+#include <botan/mp_core.h>
+#include <botan/bit_ops.h>
+#include <algorithm>
+
+namespace Botan {
+
+/*************************************************
+* Addition Operator                              *
+*************************************************/
+BigInt operator+(const BigInt& x, const BigInt& y)
+   {
+   const u32bit x_sw = x.sig_words(), y_sw = y.sig_words();
+
+   BigInt z(x.sign(), std::max(x_sw, y_sw) + 1);
+
+   if((x.sign() == y.sign()))
+      bigint_add3(z.get_reg(), x.data(), x_sw, y.data(), y_sw);
+   else
+      {
+      s32bit relative_size = bigint_cmp(x.data(), x_sw, y.data(), y_sw);
+
+      if(relative_size < 0)
+         {
+         bigint_sub3(z.get_reg(), y.data(), y_sw, x.data(), x_sw);
+         z.set_sign(y.sign());
+         }
+      else if(relative_size == 0)
+         z.set_sign(BigInt::Positive);
+      else if(relative_size > 0)
+         bigint_sub3(z.get_reg(), x.data(), x_sw, y.data(), y_sw);
+      }
+
+   return z;
+   }
+
+/*************************************************
+* Subtraction Operator                           *
+*************************************************/
+BigInt operator-(const BigInt& x, const BigInt& y)
+   {
+   const u32bit x_sw = x.sig_words(), y_sw = y.sig_words();
+
+   s32bit relative_size = bigint_cmp(x.data(), x_sw, y.data(), y_sw);
+
+   BigInt z(BigInt::Positive, std::max(x_sw, y_sw) + 1);
+
+   if(relative_size < 0)
+      {
+      if(x.sign() == y.sign())
+         bigint_sub3(z.get_reg(), y.data(), y_sw, x.data(), x_sw);
+      else
+         bigint_add3(z.get_reg(), x.data(), x_sw, y.data(), y_sw);
+      z.set_sign(y.reverse_sign());
+      }
+   else if(relative_size == 0)
+      {
+      if(x.sign() != y.sign())
+         bigint_shl2(z.get_reg(), x.data(), x_sw, 0, 1);
+      }
+   else if(relative_size > 0)
+      {
+      if(x.sign() == y.sign())
+         bigint_sub3(z.get_reg(), x.data(), x_sw, y.data(), y_sw);
+      else
+         bigint_add3(z.get_reg(), x.data(), x_sw, y.data(), y_sw);
+      z.set_sign(x.sign());
+      }
+   return z;
+   }
+
+/*************************************************
+* Multiplication Operator                        *
+*************************************************/
+BigInt operator*(const BigInt& x, const BigInt& y)
+   {
+   const u32bit x_sw = x.sig_words(), y_sw = y.sig_words();
+
+   BigInt z(BigInt::Positive, x.size() + y.size());
+
+   if(x_sw == 1 && y_sw)
+      bigint_linmul3(z.get_reg(), y.data(), y_sw, x.word_at(0));
+   else if(y_sw == 1 && x_sw)
+      bigint_linmul3(z.get_reg(), x.data(), x_sw, y.word_at(0));
+   else if(x_sw && y_sw)
+      {
+      SecureVector<word> workspace(z.size());
+      bigint_mul(z.get_reg(), z.size(), workspace,
+                 x.data(), x.size(), x_sw,
+                 y.data(), y.size(), y_sw);
+      }
+
+   if(x_sw && y_sw && x.sign() != y.sign())
+      z.flip_sign();
+   return z;
+   }
+
+/*************************************************
+* Division Operator                              *
+*************************************************/
+BigInt operator/(const BigInt& x, const BigInt& y)
+   {
+   BigInt q, r;
+   divide(x, y, q, r);
+   return q;
+   }
+
+/*************************************************
+* Modulo Operator                                *
+*************************************************/
+BigInt operator%(const BigInt& n, const BigInt& mod)
+   {
+   if(mod.is_zero())
+      throw BigInt::DivideByZero();
+   if(mod.is_negative())
+      throw Invalid_Argument("BigInt::operator%: modulus must be > 0");
+   if(n.is_positive() && mod.is_positive() && n < mod)
+      return n;
+
+   BigInt q, r;
+   divide(n, mod, q, r);
+   return r;
+   }
+
+/*************************************************
+* Modulo Operator                                *
+*************************************************/
+word operator%(const BigInt& n, word mod)
+   {
+   if(mod == 0)
+      throw BigInt::DivideByZero();
+   if(power_of_2(mod))
+      return (n.word_at(0) & (mod - 1));
+
+   word remainder = 0;
+
+   for(u32bit j = n.sig_words(); j > 0; --j)
+      remainder = bigint_modop(remainder, n.word_at(j-1), mod);
+
+   if(remainder && n.sign() == BigInt::Negative)
+      return mod - remainder;
+   return remainder;
+   }
+
+/*************************************************
+* Left Shift Operator                            *
+*************************************************/
+BigInt operator<<(const BigInt& x, u32bit shift)
+   {
+   if(shift == 0)
+      return x;
+
+   const u32bit shift_words = shift / MP_WORD_BITS,
+                shift_bits  = shift % MP_WORD_BITS;
+
+   const u32bit x_sw = x.sig_words();
+
+   BigInt y(x.sign(), x_sw + shift_words + (shift_bits ? 1 : 0));
+   bigint_shl2(y.get_reg(), x.data(), x_sw, shift_words, shift_bits);
+   return y;
+   }
+
+/*************************************************
+* Right Shift Operator                           *
+*************************************************/
+BigInt operator>>(const BigInt& x, u32bit shift)
+   {
+   if(shift == 0)
+      return x;
+   if(x.bits() <= shift)
+      return 0;
+
+   const u32bit shift_words = shift / MP_WORD_BITS,
+                shift_bits  = shift % MP_WORD_BITS,
+                x_sw = x.sig_words();
+
+   BigInt y(x.sign(), x_sw - shift_words);
+   bigint_shr2(y.get_reg(), x.data(), x_sw, shift_words, shift_bits);
+   return y;
+   }
+
+}

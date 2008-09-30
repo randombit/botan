@@ -1,0 +1,18 @@
+realname "x86 MPI Assembler Core (MSVC)"
+
+mp_bits 32
+
+load_on dep
+
+<add>
+mp_generic:mp_asm.h
+mp_asmi.h
+</add>
+
+<arch>
+ia32
+</arch>
+
+<cc>
+msvc
+</cc>

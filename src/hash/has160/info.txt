@@ -1,0 +1,14 @@
+realname "HAS-160"
+
+define HAS_160
+
+load_on auto
+
+<add>
+has160.cpp
+has160.h
+</add>
+
+<requires>
+mdx_hash
+</requires>

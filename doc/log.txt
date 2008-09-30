@@ -1,4 +1,39 @@
 
+* 1.7.15, ????-??-??
+ - Alter configure.pl options for better autotools compatability
+
+* 1.7.14, 2008-09-30
+ - Split library into parts allowing modular builds
+ - Add (very preliminary) CMS support to the main library
+ - Some constructors now require object pointers instead of names
+ - Support multiple implementations of the same algorithm
+ - Build support for Pentium-M processors, from Derek Scherger
+ - Build support for MinGW/MSYS, from Zbigniew Zagorski
+ - Use inline assembly for bswap on 32-bit x86
+
+* 1.7.13, 2008-09-27
+ - Add SSLv3 MAC, SSLv3 PRF, and TLS v1.0 PRF from Ajisai
+ - Allow all examples to compile even if compression not enabled
+ - Make CMAC's polynomial doubling operation a public class method
+ - Use the -m64 flag when compiling with Sun Forte on x86-64
+ - Clean up and slightly optimize CMAC::final_result
+
+* 1.7.12, 2008-09-18
+ - Add x86 assembly for Visual Studio C++, by Luca Piccarreta
+ - Add a Perl XS module, by Vaclav Ovsik
+ - Add SWIG-based wrapper for Botan
+ - Remove the BigInt::sig_words cache due to bugs
+ - Combined the 4 Blowfish sboxes, suggested by Yves Jerschow
+ - Changed BigInt::grow_by and BigInt::grow_to to be non-const
+ - Add private assignment operators to classes that don't support assignment
+ - Benchmark RSA encryption and signatures
+ - Added test programs for random_prime and ressol
+ - Add high resolution timers for IA-64, HP-PA, S390x
+ - Reduce use of the RNG during benchmarks
+ - Fix builds on STI Cell PPU
+ - Add support for IBM's XLC compiler
+ - Add IETF 8192 bit MODP group
+
 * 1.7.11, 2008-09-11
  - Added the Salsa20 stream cipher
  - Optimized Montgomery reduction, Karatsuba squaring

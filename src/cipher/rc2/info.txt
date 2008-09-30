@@ -1,0 +1,10 @@
+realname "RC2"
+
+define RC2
+
+load_on auto
+
+<add>
+rc2.cpp
+rc2.h
+</add>

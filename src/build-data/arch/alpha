@@ -1,0 +1,31 @@
+realname "DEC Alpha"
+
+default_submodel alpha-ev4
+endian little
+
+<aliases>
+axp
+alphaaxp
+</aliases>
+
+<submodels>
+alpha-ev4
+alpha-ev5
+alpha-ev56
+alpha-pca56
+alpha-ev6
+alpha-ev67
+alpha-ev68
+alpha-ev7
+</submodels>
+
+<submodel_aliases>
+alphaev4   -> alpha-ev4
+alphaev5   -> alpha-ev5
+alphaev56  -> alpha-ev56
+alphapca56 -> alpha-pca56
+alphaev6   -> alpha-ev6
+alphaev67  -> alpha-ev67
+alphaev68  -> alpha-ev68
+alphaev7   -> alpha-ev7
+</submodel_aliases>

@@ -1,0 +1,15 @@
+realname "OpenPGP Codec"
+
+define OPENPGP_CODEC
+
+load_on auto
+
+<add>
+openpgp.cpp
+openpgp.h
+</add>
+
+<requires>
+base64
+filters
+</requires>

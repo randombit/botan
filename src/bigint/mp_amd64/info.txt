@@ -1,0 +1,19 @@
+realname "MPI Core (x86-64)"
+
+mp_bits 64
+
+load_on dep
+
+<add>
+mp_asm.h
+mp_asmi.h
+</add>
+
+<arch>
+amd64
+</arch>
+
+<cc>
+gcc
+icc
+</cc>

@@ -1,7 +1,0 @@
-realname "FreeBSD"
-
-os_type unix
-
-<supports_shared>
-all
-</supports_shared>

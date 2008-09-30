@@ -44,6 +44,10 @@ S: New York NY, USA
 N: Joel Low
 D: DLL symbol visibility
 
+N: Vaclav Ovsik
+E: vaclav.ovsik@i.cz
+D: Perl XS module
+
 N: Luca Piccarreta
 E: luca.piccarreta@gmail.com
 D: x86/amd64 assembler, BigInt optimizations, Win32 mutex module

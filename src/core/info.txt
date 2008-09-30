@@ -1,0 +1,45 @@
+realname "Botan Core Module"
+
+load_on auto
+
+define CORE_MODULE
+
+<requires>
+aes
+sha1
+sha2
+hmac
+filters
+libstate
+timer_base
+</requires>
+
+<add>
+allocate.h
+base.cpp
+base.h
+botan.h
+data_src.cpp
+data_src.h
+def_powm.cpp
+defalloc.cpp
+defalloc.h
+eng_def.h
+enums.h
+exceptn.cpp
+exceptn.h
+kdf.cpp
+kdf.h
+mem_pool.cpp
+mem_pool.h
+mutex.h
+pk_pad.cpp
+pk_pad.h
+rng.cpp
+rng.h
+s2k.cpp
+s2k.h
+secmem.h
+symkey.cpp
+symkey.h
+</add>

@@ -8,11 +8,12 @@ use Config;
 use Getopt::Long;
 use File::Spec;
 use File::Copy;
+use File::Find;
 use Sys::Hostname;
 
 my $MAJOR_VERSION = 1;
 my $MINOR_VERSION = 7;
-my $PATCH_VERSION = 11;
+my $PATCH_VERSION = 15;
 
 my $VERSION_STRING = "$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION";
 
@@ -44,16 +45,16 @@ sub main {
     my $base_dir = where_am_i();
 
     $$config{'base-dir'} = $base_dir;
-    $$config{'config-dir'} = File::Spec->catdir($base_dir, 'misc', 'config');
-    $$config{'mods-dir'} = File::Spec->catdir($base_dir, 'modules');
     $$config{'src-dir'} = File::Spec->catdir($base_dir, 'src');
-    $$config{'include-dir'} = File::Spec->catdir($base_dir, 'include');
     $$config{'checks-dir'} = File::Spec->catdir($base_dir, 'checks');
     $$config{'doc-dir'} = File::Spec->catdir($base_dir, 'doc');
 
+    $$config{'config-dir'} =
+        File::Spec->catdir($$config{'src-dir'}, 'build-data');
+
     $$config{'command-line'} = $0 . ' ' . join(' ', @ARGV);
     $$config{'timestamp'} = gmtime;
-    $$config{'user'} = getlogin || getpwuid($<) || "";
+    $$config{'user'} = getlogin || getpwuid($<) || '';
     $$config{'hostname'} = hostname;
 
     %CPU = read_info_files($config, 'arch', \&get_arch_info);
@@ -107,7 +108,9 @@ sub main {
     &$default_value_is('docdir', os_info_for($os, 'doc_dir'));
     &$default_value_is('make_style', $COMPILER{$cc}{'makefile_style'});
 
-    autoload_modules($config) if($$config{'autoconfig'});
+    scan_modules($config);
+
+    print_enabled_modules($config);
 
     add_to($config, {
         'includedir'    => os_info_for($os, 'header_dir'),
@@ -122,13 +125,8 @@ sub main {
         'mp_bits'       => find_mp_bits(sort keys %{$$config{'modules'}}),
         'mod_libs'      => [ using_libs($os, sort keys %{$$config{'modules'}}) ],
 
-        'sources'       => {
-            map_to($$config{'src-dir'}, dir_list($$config{'src-dir'}))
-            },
-
-        'includes'      => {
-            map_to($$config{'include-dir'}, dir_list($$config{'include-dir'}))
-            },
+        'sources'       => { },
+        'includes'      => { },
 
         'check_src'     => {
             map_to($$config{'checks-dir'},
@@ -204,7 +202,7 @@ sub trace {
 
     $func =~ s/main:://;
 
-    warn with_diagnostic('trace', "at $func:$line - ", @_);
+    print with_diagnostic('trace', "at $func:$line - ", @_);
 }
 
 ##################################################
@@ -267,46 +265,46 @@ To set the compiler to use, or which OS or CPU to target, use:
   --os=[$oses generic]
   --cpu=[$cpus generic]
 
-  --endian=[little big none]
-  --unaligned-mem=[yes no]
+  --with-endian=[little big none]
+  --with-unaligned-mem=[yes no]
 
 To change what modules to use:
 
-  --modules=
-       [$modules]
+  --enable-modules=[module list]
+  --disable-modules=[module list]
 
-To add a set of modules:
-  --module-set=[$sets]
+Known modules:
+        $modules
 
-  --module-info:       display more information about modules
-  --noauto:            don't enable any modules unless specifically named
+  --module-info         display more information about modules
+  --disable-autoconfig  don't enable any modules unless specifically named
 
 To change where the library is installed:
 
-  --prefix=PATH:       set the base installation directory
-  --libdir=PATH:       install library files in \${prefix}/\${libdir}
-  --docdir=PATH:       install documentation in \${prefix}/\${docdir}
+  --prefix=PATH        set the base installation directory
+  --libdir=PATH        install library files in \${prefix}/\${libdir}
+  --docdir=PATH        install documentation in \${prefix}/\${docdir}
 
 To change build options:
 
-  --build-dir=DIR:     setup the build in DIR
-  --local-config=FILE: include the contents of FILE into build.h
+  --disable-debug      don't worry about debugging
+  --enable-debug       set compiler flags for debugging
 
-  --debug:             set compiler flags for debugging
-  --no-asm:            disable all modules that contain assembly code
-  --no-shared:         don't build shared libararies
-  --make-style=STYLE:  override the guess as to what type of makefile to use
+  --enable-shared      enable shared libraries
+  --disable-shared     don't build shared libararies
 
-For more information about supported CPUs, use --arch-info:
-
-  --arch-info=[$cpus]
+  --with-build-dir=DIR      setup the build in DIR
+  --with-local-config=FILE  include the contents of FILE into build.h
 
 For diagnostic output:
 
-  --help               display this help
-  --version            display the version of Botan
-  --quiet              display only warnings and errors
-  --trace              enable tracing
+  --show-arch-info=CPU      show more information about CPU
+       [$cpus]
+
+  --help                    display this help
+  --version                 display the version of Botan
+  --quiet                   display only warnings and errors
+  --trace                   enable runtime tracing of this program
 
 See doc/building.pdf for more information about this program.
 
@@ -402,59 +400,141 @@ sub choose_target {
     });
 }
 
-# Add modules that we think would work (unless autoconfig is off)
-# to $$config{'modules'}
-sub autoload_modules {
-    my ($config) = @_;
+sub module_runs_on {
+    my ($config, $modinfo, $mod, $noisy) = @_;
 
     my $cc = $$config{'compiler'};
     my $os = $$config{'os'};
-    my $arch = $$config{'arch'};
     my $submodel = $$config{'submodel'};
+    my $arch = $$config{'arch'};
 
-    my $asm_ok = $$config{'asm_ok'};
+    my %modinfo = %{$modinfo};
 
-    foreach my $mod (sort keys %MODULES) {
+    my $realname = $modinfo{'realname'};
+
+    my @arch_list = @{ $modinfo{'arch'} };
+    if(scalar @arch_list > 0 && !in_array($arch, \@arch_list) &&
+       !in_array($submodel, \@arch_list))
+    {
+        autoconfig("$mod ($realname): skipping, " .
+                   "not compatible with " . realname($arch) .
+                   "/" . $submodel) if $noisy;
+        return 0;
+    }
+
+    my @os_list = @{ $modinfo{'os'} };
+    if(scalar @os_list > 0 && !in_array($os, \@os_list))
+    {
+        autoconfig("$mod ($realname): " .
+                   "skipping, not compatible with " . realname($os)) if $noisy;
+        return 0;
+    }
+
+    my @cc_list = @{ $modinfo{'cc'} };
+    if(scalar @cc_list > 0 && !in_array($cc, \@cc_list)) {
+        autoconfig("$mod ($realname): " .
+                   "skipping, not compatible with " . realname($cc)) if $noisy;
+        return 0;
+    }
+
+
+    return 1;
+}
+
+sub can_enable_module {
+    my ($config, $mod, $for_dep) = @_;
+
+    my %modinfo = %{ $MODULES{$mod} };
+
+    my $is_enabled = 0;
+
+    if(defined($$config{'modules'}{$mod})) {
+        return '' if($$config{'modules'}{$mod} < 0);
+        $is_enabled = 1;
+    }
+
+    unless($is_enabled) {
+        return '' if $modinfo{'load_on'} eq 'dep' and $for_dep == 0;
+        return '' if $modinfo{'load_on'} eq 'request';
+    }
+
+    return '' unless module_runs_on($config, \%modinfo, $mod, 0);
+
+    my @deps;
+    push @deps, $mod;
+
+    LINE: foreach (@{$modinfo{'requires'}}) {
+
+        for my $req_mod (split(/\|/, $_)) {
+
+            next unless defined $MODULES{$req_mod};
+
+            if(can_enable_module($config, $req_mod, 1)) {
+                #autoconfig("Use $req_mod to satisfy dep request $_ for mod $mod");
+                push @deps, $req_mod;
+                next LINE;
+            }
+        }
+
+        #autoconfig("Could not get a dep match for $_ for mod $mod");
+        # Could not find a match
+        return '';
+    }
+
+    return join(' ', @deps);
+}
+
+sub scan_modules {
+    my ($config) = @_;
+
+    MOD: foreach my $mod (sort keys %MODULES) {
         my %modinfo = %{ $MODULES{$mod} };
 
-        if(defined($$config{'modules'}{$mod})) {
-            autoconfig("Module $mod - loading by user request");
+        my @mods = split(/ /, can_enable_module($config, $mod, 0));
+
+        if($#mods < 0) {
+            autoconfig("Will not enable $mod");
             next;
         }
 
-        my @arch_list = @{ $modinfo{'arch'} };
-        if(scalar @arch_list > 0 &&
-           !in_array($arch, \@arch_list) &&
-           !in_array($submodel, \@arch_list)) {
-            autoconfig("Module $mod - won't use, " .
-                       "doesn't run on CPU $arch/$submodel");
-            next;
+        foreach my $req_mod (@mods) {
+            #autoconfig("Enabling module $req_mod");
+            $$config{'modules'}{$req_mod} = 1;
+        }
+    }
+}
+
+sub print_enabled_modules {
+    my ($config) = @_;
+
+    my %by_type;
+
+    foreach my $mod (sort keys %MODULES) {
+        my $type = $MODULES{$mod}{'type'};
+
+        my $n = 0;
+        $n = 1 if($$config{'modules'}{$mod} && $$config{'modules'}{$mod} > 0);
+
+        $by_type{$type}{$mod} = $n;
+    }
+
+    for my $type (sort keys %by_type) {
+        my %mods = %{$by_type{$type}};
+
+        my $s = $type . ': ';
+
+        for my $mod (sort keys %mods) {
+            my $on = $mods{$mod};
+
+            if($on > 0) {
+                $s .= $mod . ' ';
+            }
+            else {
+                $s .= '[' . $mod . '] ';
+            }
         }
 
-        my @os_list = @{ $modinfo{'os'} };
-        if(scalar @os_list > 0 && !in_array($os, \@os_list)) {
-            autoconfig("Module $mod - won't use, not compatible with OS $os");
-            next;
-        }
-
-        my @cc_list = @{ $modinfo{'cc'} };
-        if(scalar @cc_list > 0 && !in_array($cc, \@cc_list)) {
-            autoconfig("Module $mod - won't use, not compatbile with CC $cc");
-            next;
-        }
-
-        if(!$asm_ok and $modinfo{'load_on'} eq 'asm_ok') {
-            autoconfig("Module $mod - won't use; avoiding due to use of --no-asm");
-            next;
-        }
-
-        if($modinfo{'load_on'} eq 'request') {
-            autoconfig("Module $mod - won't use, loaded by request only");
-            next;
-        }
-
-        autoconfig("Module $mod - autoloading");
-        $$config{'modules'}{$mod} = 1;
+        print with_diagnostic('loading', $s);
     }
 }
 
@@ -512,7 +592,19 @@ sub get_options {
         my ($config,$mods) = @_;
 
         foreach my $mod (split(/,/, $mods)) {
-            $$config{'modules'}{$mod} = 1;
+            # -1 means disabled by user, do not load
+            $$config{'modules'}{$mod} = 1 unless(
+                defined($$config{'modules'}{$mod}) &&
+                $$config{'modules'}{$mod} == -1);
+        }
+    }
+
+    sub disable_modules {
+        my ($config,$mods) = @_;
+
+        foreach my $mod (split(/,/, $mods)) {
+            # -1 means disabled by user, do not load
+            $$config{'modules'}{$mod} = -1;
         }
     }
 
@@ -520,14 +612,14 @@ sub get_options {
         my ($config,$sets) = @_;
 
         foreach my $set (split(/,/, $sets)) {
-            for my $name (sort keys %MODULES) {
-                my %info = %{$MODULES{$name}};
+            for my $mod (sort keys %MODULES) {
+                my %info = %{$MODULES{$mod}};
 
                 next unless (defined($info{'modset'}));
 
                 for my $s (split(/,/, $info{'modset'})) {
                     if($s eq $set) {
-                        $$config{'modules'}{$name} = 1;
+                        $$config{'modules'}{$mod} = 1 unless($$config{'modules'}{$mod} == -1);
                     }
                 }
             }
@@ -535,42 +627,67 @@ sub get_options {
     }
 
     exit 1 unless GetOptions(
-               'help' => sub { display_help(); },
-               'module-info' => sub { emit_help(module_info()); },
-               'version' => sub { emit_help("Botan $VERSION_STRING\n") },
+        'prefix=s' => sub { &$save_option(@_); },
+        'exec-prefix=s' => sub { &$save_option(@_); },
 
-               'quiet' => sub { $$config{'verbose'} = 0; },
+        'bindir=s' => sub { &$save_option(@_); },
+        'datadir' => sub { &$save_option(@_); },
+        'datarootdir' => sub { &$save_option(@_); },
+        'docdir=s' => sub { &$save_option(@_); },
+        'dvidir' => sub { &$save_option(@_); },
+        'htmldir' => sub { &$save_option(@_); },
+        'includedir' => sub { &$save_option(@_); },
+        'infodir' => sub { &$save_option(@_); },
+        'libdir=s' => sub { &$save_option(@_); },
+        'libexecdir' => sub { &$save_option(@_); },
+        'localedir' => sub { &$save_option(@_); },
+        'localstatedir' => sub { &$save_option(@_); },
+        'mandir' => sub { &$save_option(@_); },
+        'oldincludedir' => sub { &$save_option(@_); },
+        'pdfdir' => sub { &$save_option(@_); },
+        'psdir' => sub { &$save_option(@_); },
+        'sbindir=s' => sub { &$save_option(@_); },
+        'sharedstatedir' => sub { &$save_option(@_); },
+        'sysconfdir' => sub { &$save_option(@_); },
 
-               'cc=s' => sub { &$save_option('compiler', $_[1]) },
-               'os=s' => sub { &$save_option(@_) },
-               'cpu=s' => sub { &$save_option(@_) },
-               'endian=s' => sub { &$save_option(@_); },
-               'unaligned-mem=s' => sub { &$save_option(@_); },
+        'cc=s' => sub { &$save_option('compiler', $_[1]) },
+        'os=s' => sub { &$save_option(@_) },
+        'cpu=s' => sub { &$save_option(@_) },
 
-               'arch-info=s' => sub { emit_help(arch_info($_[1])); },
+        'help' => sub { display_help(); },
+        'module-info' => sub { emit_help(module_info()); },
+        'version' => sub { emit_help("Botan $VERSION_STRING\n") },
 
-               'prefix=s' => sub { &$save_option(@_); },
-               'docdir=s' => sub { &$save_option(@_); },
-               'libdir=s' => sub { &$save_option(@_); },
-               'build-dir=s' => sub { $$config{'build-dir'} = $_[1]; },
-               'local-config=s' =>
-                  sub { &$save_option('local_config', slurp_file($_[1])); },
+        'quiet' => sub { $$config{'verbose'} = 0; },
+        'trace' => sub { $TRACING = 1; },
 
-               'make-style=s' => sub { &$save_option(@_); },
+        'enable-asm' => sub { $$config{'asm_ok'} = 0; },
+        'disable-asm' => sub { $$config{'asm_ok'} = 0; },
 
-               'module=s' => sub { add_modules($config, $_[1]); },
-               'modules=s' => sub { add_modules($config, $_[1]); },
-               'module-set=s' => sub { add_module_sets($config, $_[1]); },
-               'module-sets=s' => sub { add_module_sets($config, $_[1]); },
+        'enable-autoconfig' => sub { $$config{'autoconfig'} = 1; },
+        'disable-autoconfig' => sub { $$config{'autoconfig'} = 0; },
 
-               'trace' => sub { $TRACING = 1; },
-               'debug' => sub { &$save_option($_[0], 1); },
-               'no-shared' => sub { $$config{'shared'} = 'no'; },
-               'no-asm' => sub { $$config{'asm_ok'} = 0; },
+        'enable-shared' => sub { $$config{'shared'} = 'yes'; },
+        'disable-shared' => sub { $$config{'shared'} = 'no'; },
 
-               'noauto' => sub { $$config{'autoconfig'} = 0; },
-               'dumb-gcc|gcc295x' => sub { $$config{'gcc_bug'} = 1; }
-               );
+        'enable-debug' => sub { &$save_option('debug', 1); },
+        'disable-debug' => sub { &$save_option('debug', 0); },
+
+        'enable-modules=s' => sub { add_modules($config, $_[1]); },
+        'disable-modules=s' => sub { disable_modules($config, $_[1]); },
+
+        'enable-module-sets=s' => sub { add_module_sets($config, $_[1]); },
+
+        'with-build-dir=s' => sub { $$config{'build-dir'} = $_[1]; },
+        'with-endian=s' => sub { &$save_option(@_); },
+        'with-unaligned-mem=s' => sub { &$save_option(@_); },
+        'with-local-config=s' =>
+            sub { &$save_option('local_config', slurp_file($_[1])); },
+
+        'show-arch-info=s' => sub { emit_help(arch_info($_[1])); },
+        'make-style=s' => sub { &$save_option(@_); },
+        'dumb-gcc|gcc295x' => sub { $$config{'gcc_bug'} = 1; }
+        );
 
     # All arguments should now be consumed
     croak("Unknown option $ARGV[0] (try --help)") unless($#ARGV == -1);
@@ -770,6 +887,8 @@ sub libs {
 sub portable_symlink {
    my ($from, $to_dir, $to_fname) = @_;
 
+   trace("portable_symlink($from, $to_dir, $to_fname)");
+
    my $can_symlink = 0;
    my $can_link = 0;
 
@@ -831,7 +950,7 @@ sub dir_list {
     my ($dir) = @_;
     opendir(DIR, $dir) or croak("Couldn't read directory '$dir' ($!)");
 
-    my @listing = grep { !/#/ and
+    my @listing = grep { !/#/ and -f File::Spec->catfile($dir, $_) and
                          $_ ne File::Spec->curdir() and
                          $_ ne File::Spec->updir() } readdir DIR;
 
@@ -949,116 +1068,13 @@ sub realname {
 ##################################################
 #                                                #
 ##################################################
-sub load_modules {
-    my ($config) = @_;
-
-    my @mod_names;
-
-    foreach my $mod (sort keys %{$$config{'modules'}}) {
-        load_module($config, $mod);
-
-        foreach my $req_mod (@{$MODULES{$mod}{'requires'}}) {
-            unless(defined($$config{'modules'}{$req_mod})) {
-                autoconfig("Module $req_mod - required by $mod");
-                $$config{'modules'}{$req_mod} = 1;
-                load_module($config, $req_mod);
-            }
-        }
-
-        push @mod_names, $mod;
-
-    }
-    $$config{'mod-list'} = join("\n", @mod_names);
-
-    my $gen_defines = sub {
-        my $defines = '';
-
-        my $arch = $$config{'arch'};
-
-        if($arch ne 'generic') {
-            my %cpu_info = %{$CPU{$arch}};
-            my $endian = $cpu_info{'endian'};
-
-            if(defined($$config{'endian'})) {
-                $endian = $$config{'endian'};
-                $endian = undef unless($endian eq 'little' || $endian eq 'big');
-            }
-            elsif(defined($endian)) {
-                autoconfig("Since arch is $arch, assuming $endian endian mode");
-            }
-
-            $defines .= "#define BOTAN_TARGET_ARCH_IS_" . (uc $arch) . "\n";
-
-            my $submodel = $$config{'submodel'};
-            if($arch ne $submodel) {
-                $submodel = uc $submodel;
-                $submodel =~ s/-/_/g;
-                $defines .= "#define BOTAN_TARGET_CPU_IS_$submodel\n";
-            }
-
-            my $os = $$config{'os'};
-            if($os ne 'generic') {
-                $os = uc $os;
-                $submodel =~ s/-/_/g;
-                $defines .= "#define BOTAN_TARGET_OS_IS_$os\n";
-            }
-
-            my $unaligned_ok = 0;
-
-            if(defined($endian)) {
-                $endian = uc $endian;
-                $defines .= "#define BOTAN_TARGET_CPU_IS_${endian}_ENDIAN\n";
-
-                if(defined($$config{'unaligned_mem'})) {
-                    my $spec = $$config{'unaligned_mem'};
-
-                    if($spec eq 'yes') {
-                        $unaligned_ok = 1;
-                    }
-                    elsif($spec eq 'no') {
-                        $unaligned_ok = 0;
-                    }
-                    else {
-                        warning("Unknown arg to --unaligned-mem '$spec', will ignore");
-                        $unaligned_ok = 0;
-                    }
-                }
-                elsif(defined($cpu_info{'unaligned'}) and
-                      $cpu_info{'unaligned'} eq 'ok')
-                {
-                    autoconfig("Since arch is $arch, " .
-                               "assuming unaligned memory access is OK");
-                    $unaligned_ok = 1;
-                }
-            }
-
-            $defines .=
-                "#define BOTAN_TARGET_UNALIGNED_LOADSTOR_OK $unaligned_ok\n";
-        }
-
-        my @defarray;
-        foreach my $mod (sort keys %{$$config{'modules'}}) {
-            my $defs = $MODULES{$mod}{'define'};
-            next unless $defs;
-
-            push @defarray, split(/,/, $defs);
-        }
-
-        $defines .= "\n" if(@defarray);
-
-        foreach (sort @defarray) {
-            die unless(defined $_ and $_ ne '');
-            $defines .= "#define BOTAN_EXT_$_\n";
-        }
-        chomp($defines);
-        return $defines;
-    };
-
-    $$config{'defines'} = &$gen_defines();
-}
 
 sub load_module {
     my ($config, $modname) = @_;
+
+    trace("load_module($modname)");
+
+    croak("Unknown module $modname") unless defined($MODULES{$modname});
 
     my %module = %{$MODULES{$modname}};
 
@@ -1088,12 +1104,15 @@ sub load_module {
     croak("Module '$modname' does not work with $cc")
         unless(&$works_on($cc, $module{'cc'}));
 
+    trace($modname);
+    trace($module{'moddirs'});
+
     my $handle_files = sub {
         my($lst, $func) = @_;
         return unless defined($lst);
 
         foreach (sort @$lst) {
-            &$func($modname, $config, $_);
+            &$func($module{'moddirs'}, $config, $_);
         }
     };
 
@@ -1106,26 +1125,134 @@ sub load_module {
         if(defined($module{'note'}));
 }
 
+sub load_modules {
+    my ($config) = @_;
+
+    my @mod_names;
+
+    foreach my $mod (sort keys %{$$config{'modules'}}) {
+        next unless($$config{'modules'}{$mod} > 0);
+
+        load_module($config, $mod);
+
+        push @mod_names, $mod;
+    }
+
+    $$config{'mod-list'} = join("\n", @mod_names);
+
+    my $unaligned_ok = 0;
+
+    my $gen_defines = sub {
+        my $defines = '';
+
+        my $os = $$config{'os'};
+        if($os ne 'generic') {
+            $defines .= '#define BOTAN_TARGET_OS_IS_' . uc $os . "\n";
+            my @features = @{$OPERATING_SYSTEM{$os}{'target_features'}};
+
+            for my $feature (@features) {
+                $defines .= '#define BOTAN_TARGET_OS_HAS_' . uc $feature . "\n";
+            }
+
+            $defines .= "\n";
+        }
+
+        my $arch = $$config{'arch'};
+        if($arch ne 'generic') {
+            my %cpu_info = %{$CPU{$arch}};
+            my $endian = $cpu_info{'endian'};
+
+            if(defined($$config{'endian'})) {
+                $endian = $$config{'endian'};
+                $endian = undef unless($endian eq 'little' || $endian eq 'big');
+            }
+            elsif(defined($endian)) {
+                autoconfig("Since arch is $arch, assuming $endian endian mode");
+            }
+
+            $defines .= "#define BOTAN_TARGET_ARCH_IS_" . (uc $arch) . "\n";
+
+            my $submodel = $$config{'submodel'};
+            if($arch ne $submodel) {
+                $submodel = uc $submodel;
+                $submodel =~ s/-/_/g;
+                $defines .= "#define BOTAN_TARGET_CPU_IS_$submodel\n";
+            }
+
+            if(defined($endian)) {
+                $endian = uc $endian;
+                $defines .= "#define BOTAN_TARGET_CPU_IS_${endian}_ENDIAN\n";
+
+                if(defined($$config{'unaligned_mem'})) {
+                    my $spec = $$config{'unaligned_mem'};
+
+                    if($spec eq 'yes') {
+                        $unaligned_ok = 1;
+                    }
+                    elsif($spec eq 'no') {
+                        $unaligned_ok = 0;
+                    }
+                    else {
+                        warning("Unknown arg to --with-unaligned-mem '$spec', will ignore");
+                        $unaligned_ok = 0;
+                    }
+                }
+                elsif(defined($cpu_info{'unaligned'}) and
+                      $cpu_info{'unaligned'} eq 'ok')
+                {
+                    autoconfig("Since arch is $arch, " .
+                               "assuming unaligned memory access is OK");
+                    $unaligned_ok = 1;
+                }
+            }
+        }
+
+        # always set (one or zero)
+        $defines .=
+            "#define BOTAN_TARGET_UNALIGNED_LOADSTOR_OK $unaligned_ok\n";
+
+        my %defines;
+
+        foreach my $mod (sort keys %{$$config{'modules'}}) {
+            next unless $$config{'modules'}{$mod} > 0;
+
+            my $defs = $MODULES{$mod}{'define'};
+            next unless $defs;
+
+            push @{$defines{$MODULES{$mod}{'type'}}}, split(/,/, $defs);
+        }
+
+        foreach my $type (sort keys %defines) {
+            $defines .= "\n/* $type */\n";
+            for my $macro (@{$defines{$type}}) {
+                die unless(defined $macro and $macro ne '');
+                $defines .= "#define BOTAN_HAS_$macro\n";
+            }
+        }
+        chomp($defines);
+        return $defines;
+    };
+
+    $$config{'defines'} = &$gen_defines();
+}
+
 ##################################################
 #                                                #
 ##################################################
 sub file_type {
-    my ($config, $file) = @_;
+    my ($file) = @_;
 
-    return ('sources', $$config{'src-dir'})
+    return 'sources'
         if($file =~ /\.cpp$/ or $file =~ /\.c$/ or $file =~ /\.S$/);
-    return ('includes', $$config{'include-dir'})
-        if($file =~ /\.h$/);
+    return 'includes' if($file =~ /\.h$/);
 
     croak('file_type() - don\'t know what sort of file ', $file, ' is');
 }
 
 sub add_file {
-    my ($modname, $config, $file) = @_;
+    my ($mod_dir, $config, $file) = @_;
 
-    check_for_file($config, $file, $modname, $modname);
-
-    my $mod_dir = File::Spec->catdir($$config{'mods-dir'}, $modname);
+    check_for_file($config, $file, $mod_dir, $mod_dir);
 
     my $do_add_file = sub {
         my ($type) = @_;
@@ -1133,22 +1260,31 @@ sub add_file {
         croak("File $file already added from ", $$config{$type}{$file})
             if(defined($$config{$type}{$file}));
 
-        $$config{$type}{$file} = $mod_dir;
+        if($file =~ /(.*):(.*)/) {
+            my @dirs = File::Spec->splitdir($mod_dir);
+
+            $dirs[$#dirs-1] = $1;
+
+            $$config{$type}{$2} = File::Spec->catdir(@dirs);
+        }
+        else {
+            $$config{$type}{$file} = $mod_dir;
+        }
     };
 
-    &$do_add_file(file_type($config, $file));
+    &$do_add_file(file_type($file));
 }
 
 sub ignore_file {
-    my ($modname, $config, $file) = @_;
-    check_for_file($config, $file, undef, $modname);
+    my ($mod_dir, $config, $file) = @_;
+    check_for_file($config, $file, undef, $mod_dir);
 
     my $do_ignore_file = sub {
         my ($type, $ok_if_from) = @_;
 
         if(defined ($$config{$type}{$file})) {
 
-            croak("$modname - File $file modified from ",
+            croak("$mod_dir - File $file modified from ",
                   $$config{$type}{$file})
                 if($$config{$type}{$file} ne $ok_if_from);
 
@@ -1156,25 +1292,30 @@ sub ignore_file {
         }
     };
 
-    &$do_ignore_file(file_type($config, $file));
+    &$do_ignore_file(file_type($file));
 }
 
 sub check_for_file {
-   my ($config, $file, $added_from, $modname) = @_;
+   my ($config, $file, $added_from, $mod_dir) = @_;
+
+   #trace("check_for_file($file, $added_from, $mod_dir)");
 
    my $full_path = sub {
-       my ($file,$modname) = @_;
+       my ($file,$mod_dir) = @_;
 
-       return File::Spec->catfile($$config{'mods-dir'}, $modname, $file)
-           if(defined($modname));
+       if($file =~ /(.*):(.*)/) {
+           return File::Spec->catfile($mod_dir, '..', $1, $2);
+       } else {
+           return File::Spec->catfile($mod_dir, $file) if(defined($mod_dir));
 
-       my @typeinfo = file_type($config, $file);
-       return File::Spec->catfile($typeinfo[1], $file);
+           my @typeinfo = file_type($config, $file);
+           return File::Spec->catfile($typeinfo[1], $file);
+       }
    };
 
    $file = &$full_path($file, $added_from);
 
-   croak("Module $modname requires that file $file exist. This error\n      ",
+   croak("Module $mod_dir requires that file $file exist. This error\n      ",
          'should never occur; please contact the maintainers with details.')
        unless(-e $file);
 }
@@ -1219,7 +1360,9 @@ sub process_template {
         }
 
         foreach my $key (sort keys %$config) {
-            print with_diagnostic("debug", "In %config:", $key, " -> ", summarize(60, $$config{$key}));
+            print with_diagnostic("debug",
+                                  "In %config:", $key, " -> ",
+                                  summarize(60, $$config{$key}));
         }
 
         croak("Unbound variable '$1' in $in");
@@ -1313,14 +1456,31 @@ sub read_info_files {
 sub read_module_files {
     my ($config) = @_;
 
-    my $mod_dir = $$config{'mods-dir'};
-
     my %allinfo;
-    foreach my $dir (dir_list($mod_dir)) {
-        my $modfile = File::Spec->catfile($mod_dir, $dir, 'modinfo.txt');
 
+    my @modinfos;
+
+    File::Find::find(
+        { wanted => sub
+          { if(-f $_ && /^info\.txt\z/s) {
+              my $name = $File::Find::name;
+              push @modinfos, $name;
+            }
+          }
+        },
+        $$config{'src-dir'});
+
+    foreach my $modfile (@modinfos) {
         trace("reading $modfile");
-        %{$allinfo{$dir}} = get_module_info($dir, $modfile);
+
+        my ($volume,$dirs,$file) = File::Spec->splitpath($modfile);
+
+        my @dirs = File::Spec->splitdir($dirs);
+        my $moddir = $dirs[$#dirs-1];
+
+        trace("module $moddir in $dirs $modfile");
+
+        %{$allinfo{$moddir}} = get_module_info($dirs, $moddir, $modfile);
     }
 
     return %allinfo;
@@ -1331,16 +1491,23 @@ sub read_module_files {
 ##################################################
 
 sub get_module_info {
-   my ($name, $file) = @_;
-   my $reader = make_reader($file);
+   my ($dirs, $name, $modfile) = @_;
+   my $reader = make_reader($modfile);
 
    my %info;
    $info{'name'} = $name;
+   $info{'modinfo'} = $modfile;
+   $info{'moddirs'} = $dirs;
    $info{'load_on'} = 'request'; # default unless specified
    $info{'libs'} = {};
+   $info{'use'} = 'no';
+
+   my @dir_arr = File::Spec->splitdir($dirs);
+   $info{'type'} = $dir_arr[$#dir_arr-2]; # cipher, hash, ...
+   if($info{'type'} eq 'src') { $info{'type'} = $dir_arr[$#dir_arr-1]; }
 
    while($_ = &$reader()) {
-       match_any_of($_, \%info, 'quoted', 'realname', 'note');
+       match_any_of($_, \%info, 'quoted', 'realname', 'note', 'type');
        match_any_of($_, \%info, 'unquoted', 'define', 'mp_bits', 'modset', 'load_on');
 
        read_list($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
@@ -1434,6 +1601,8 @@ sub get_os_info {
                      'install_cmd_exec');
 
         read_list($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
+
+        read_list($_, $reader, 'target_features', list_push(\@{$info{'target_features'}}));
 
         read_list($_, $reader, 'supports_shared',
                   list_push(\@{$info{'supports_shared'}}));
@@ -1557,8 +1726,6 @@ sub file_list {
 sub build_cmds {
     my ($config, $dir, $flags, $files) = @_;
 
-    my $output = '';
-
     my $obj_suffix = $$config{'obj_suffix'};
 
     my %ccinfo = my_compiler($config);
@@ -1575,6 +1742,8 @@ sub build_cmds {
 
     my $bld_line = "\t\$(CXX) $inc$inc_dir $flags $from\$? $to\$@";
 
+    my @output_lines;
+
     foreach (sort keys %$files) {
         my $src_file = File::Spec->catfile($$files{$_}, $_);
         my $obj_file = File::Spec->catfile($dir, $_);
@@ -1583,11 +1752,10 @@ sub build_cmds {
         $obj_file =~ s/\.c$/.$obj_suffix/;
         $obj_file =~ s/\.S$/.$obj_suffix/;
 
-        $output .= "$obj_file: $src_file\n$bld_line\n\n";
+        push @output_lines, "$obj_file: $src_file\n$bld_line";
     }
-    chomp($output);
-    chomp($output);
-    return $output;
+
+    return join("\n\n", @output_lines);
 }
 
 sub generate_makefile {
@@ -1791,23 +1959,9 @@ sub guess_cpu_from_this
     my $cpuinfo = lc $_[0];
     my $cpu = '';
 
-    $cpu = 'ia32' if($cpuinfo =~ /x86/);
-    $cpu = 'amd64' if($cpuinfo =~ /x86-64/);
-    $cpu = 'amd64' if($cpuinfo =~ /x86_64/);
-
-    $cpu = 'athlon' if($cpuinfo =~ /athlon/);
-    $cpu = 'pentium4' if($cpuinfo =~ /pentium 4/);
-    $cpu = 'pentium4' if($cpuinfo =~ /pentium\(r\) 4/);
-    $cpu = 'pentium3' if($cpuinfo =~ /pentium iii/);
-    $cpu = 'pentium2' if($cpuinfo =~ /pentium ii/);
-    $cpu = 'pentium3' if($cpuinfo =~ /pentium 3/);
-    $cpu = 'pentium2' if($cpuinfo =~ /pentium 2/);
-
-    $cpu = 'core2duo' if($cpuinfo =~ /intel\(r\) core\(tm\)2/);
-
-    $cpu = 'athlon64' if($cpuinfo =~ /athlon64/);
-    $cpu = 'athlon64' if($cpuinfo =~ /athlon\(tm\) 64/);
-    $cpu = 'opteron' if($cpuinfo =~ /opteron/);
+    $cpuinfo =~ s/\(r\)//;
+    $cpuinfo =~ s/\(tm\)//;
+    $cpuinfo =~ s/ //g;
 
     # The 32-bit SPARC stuff is impossible to match to arch type easily, and
     # anyway the uname stuff will pick up that it's a SPARC so it doesn't
@@ -1816,23 +1970,33 @@ sub guess_cpu_from_this
     $cpu = 'sparc32-v9' if($cpuinfo =~ /ultrasparc/);
 
     # 64-bit PowerPC
-    $cpu = 'rs64a' if($cpuinfo =~ /rs64-/);
-    $cpu = 'power3' if($cpuinfo =~ /power3/);
-    $cpu = 'power4' if($cpuinfo =~ /power4/);
-    $cpu = 'power5' if($cpuinfo =~ /power5/);
-    $cpu = 'ppc970' if($cpuinfo =~ /ppc970/);
+    $cpu = 'cellppu' if($cpuinfo =~ /cell broadband engine/);
 
-    # Ooh, an Alpha. Try to figure out what kind
-    if($cpuinfo =~ /alpha/)
-    {
-        $cpu = 'alpha-ev4' if($cpuinfo =~ /ev4/);
-        $cpu = 'alpha-ev5' if($cpuinfo =~ /ev5/);
-        $cpu = 'alpha-ev56' if($cpuinfo =~ /ev56/);
-        $cpu = 'alpha-pca56' if($cpuinfo =~ /pca56/);
-        $cpu = 'alpha-ev6' if($cpuinfo =~ /ev6/);
-        $cpu = 'alpha-ev67' if($cpuinfo =~ /ev67/);
-        $cpu = 'alpha-ev68' if($cpuinfo =~ /ev68/);
-        $cpu = 'alpha-ev7' if($cpuinfo =~ /ev7/);
+    foreach my $arch (keys %CPU) {
+        my %info = %{$CPU{$arch}};
+
+        if($cpuinfo =~ /$info{'name'}/) {
+            $cpu = $info{'name'};
+        }
+
+        foreach my $alias (@{$info{'aliases'}}) {
+            if($cpuinfo =~ /$alias/) {
+                $cpu = $alias;
+            }
+        }
+
+        foreach my $submodel (@{$info{'submodels'}}) {
+            if($cpuinfo =~ /$submodel/) {
+                $cpu = $submodel;
+            }
+        }
+
+        if(defined($info{'submodel_aliases'})) {
+            my %submodel_aliases = %{$info{'submodel_aliases'}};
+            foreach my $sm_alias (keys %submodel_aliases) {
+                $cpu = $sm_alias if($cpuinfo =~ /$sm_alias/);
+            }
+        }
     }
 
     trace('guessing ', $cpu) if($cpu);
@@ -1885,7 +2049,7 @@ sub guess_os
 
     trace("Can't guess os from $^O");
 
-    my $uname = `uname -s 2>/dev/null`;
+    my $uname = `uname -s`;
     chomp $uname;
     $uname = lc $uname;
 
@@ -1908,7 +2072,7 @@ sub guess_cpu
     {
         my $cpu = guess_cpu_from_this(slurp_file($cpuinfo));
         if($cpu) {
-            autoconfig("Guessing (based on $cpuinfo) CPU is a $cpu (use --arch to set)");
+            autoconfig("Guessing (based on $cpuinfo) CPU is a $cpu (use --cpu to set)");
             return $cpu;
         } else {
             # This is odd, /proc/cpuinfo should always have enough information for us
@@ -1949,7 +2113,7 @@ sub guess_cpu
 
     # `umame -p` is sometimes something stupid like unknown, but in some
     # cases it can be more specific (useful) than `uname -m`
-    my $cpu = guess_cpu_from_this(`uname -p 2>/dev/null`);
+    my $cpu = guess_cpu_from_this(`uname -p`);
 
     if($cpu ne '')
     {
@@ -1958,7 +2122,7 @@ sub guess_cpu
     }
 
     # Try uname -m
-    $cpu = guess_cpu_from_this(`uname -m 2>/dev/null`);
+    $cpu = guess_cpu_from_this(`uname -m`);
 
     if($cpu ne '')
     {

@@ -1,0 +1,47 @@
+realname "Sun Workshop Pro C++"
+
+binary_name "CC"
+
+compile_option "-c "
+output_to_option "-o "
+add_include_dir_option "-I"
+add_lib_dir_option "-L"
+add_lib_option "-l"
+
+# The compiler supports up to -xO5, but anything higher than -xO2 causes
+# incorrect results, infinite loops, other badness. :(
+lib_opt_flags "-xO2"
+check_opt_flags "-xO2"
+debug_flags "-g"
+no_debug_flags ""
+shared_flags "-KPIC"
+warning_flags "+w"
+lang_flags "+p -D__EXTENSIONS__"
+
+dll_import_flags ""
+dll_export_flags ""
+
+makefile_style unix
+
+<so_link_flags>
+default -> "$(CXX) -G -h$(SONAME)"
+</so_link_flags>
+
+<mach_opt>
+i386       -> "-xtarget=486"
+i486       -> "-xtarget=486"
+i586       -> "-xtarget=pentium"
+i686       -> "-xtarget=pentium_pro"
+pentium4   -> "-xtarget=pentium_pro"
+k6         -> "-xtarget=pentium"
+
+sparc32-v9 -> "-xchip=ultra -xarch=v8"
+
+sparc32    -> "-xchip=ultra -xarch=SUBMODEL" sparc32-
+sparc64    -> "-xchip=SUBMODEL" sparc64-
+</mach_opt>
+
+<mach_abi_linking>
+sparc64    -> "-xarch=v9"
+amd64      -> "-m64"
+</mach_abi_linking>

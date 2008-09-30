@@ -1,0 +1,36 @@
+realname "Hardware Timer"
+
+define TIMER_HARDWARE
+
+load_on asm_ok
+
+<add>
+tm_hard.cpp
+tm_hard.h
+</add>
+
+<cc>
+gcc
+</cc>
+
+<arch>
+# RDTSC: Pentium and up
+i586
+i686
+athlon
+pentium4
+pentium-m
+amd64
+
+ppc     # PPC timebase register
+ppc64   # PPC timebase register
+alpha   # rpcc
+sparc64 # %tick register
+ia64    # ar.itc
+s390x
+hppa
+</arch>
+
+<requires>
+timer_base
+</requires>

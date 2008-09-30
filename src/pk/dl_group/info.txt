@@ -1,0 +1,15 @@
+realname "DL Group"
+
+load_on auto
+
+define DL_GROUP
+
+<add>
+dl_group.cpp
+dl_group.h
+</add>
+
+<requires>
+asn1
+bigint
+</requires>

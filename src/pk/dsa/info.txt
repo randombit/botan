@@ -1,0 +1,19 @@
+realname "DSA"
+
+define DSA
+
+load_on auto
+
+<add>
+dsa.cpp
+dsa.h
+</add>
+
+<requires>
+asn1
+bigint
+dl_algo
+keypair
+math
+pubkey
+</requires>

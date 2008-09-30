@@ -1,0 +1,14 @@
+realname "MD5"
+
+define MD5
+
+load_on auto
+
+<add>
+md5.cpp
+md5.h
+</add>
+
+<requires>
+mdx_hash
+</requires>

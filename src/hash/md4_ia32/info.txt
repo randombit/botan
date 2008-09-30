@@ -1,0 +1,34 @@
+realname "MD4 (IA-32)"
+
+define MD4_IA32
+
+load_on asm_ok
+
+<add>
+md4_ia32_imp.S
+md4_ia32.cpp
+md4_ia32.h
+</add>
+
+<requires>
+asm_ia32
+md4
+</requires>
+
+<arch>
+ia32
+</arch>
+
+<cc>
+gcc
+icc
+</cc>
+
+# ELF systems
+<os>
+linux
+freebsd
+netbsd
+openbsd
+solaris
+</os>

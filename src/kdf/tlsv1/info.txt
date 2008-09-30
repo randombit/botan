@@ -1,0 +1,10 @@
+realname "TLS v1.0 PRF"
+
+define TLS_V10_PRF
+
+load_on auto
+
+<add>
+prf_tls.h
+prf_tls.cpp
+</add>

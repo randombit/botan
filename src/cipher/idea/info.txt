@@ -1,0 +1,10 @@
+realname "IDEA"
+
+define IDEA
+
+load_on auto
+
+<add>
+idea.cpp
+idea.h
+</add>

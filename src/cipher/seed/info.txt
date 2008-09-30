@@ -1,0 +1,11 @@
+realname "SEED"
+
+define SEED
+
+load_on auto
+
+<add>
+seed.cpp
+seed.h
+seed_tab.cpp
+</add>

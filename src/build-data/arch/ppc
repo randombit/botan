@@ -1,0 +1,24 @@
+realname "PowerPC"
+
+endian big
+
+default_submodel ppc604
+
+<aliases>
+powerpc
+</aliases>
+
+<submodel_aliases>
+g3 -> ppc740
+g4 -> ppc7450
+</submodel_aliases>
+
+<submodels>
+ppc601
+ppc603
+ppc604
+ppc740
+ppc750
+ppc7400
+ppc7450
+</submodels>

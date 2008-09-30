@@ -1,0 +1,15 @@
+realname "ECB block cipher mode"
+
+define ECB
+
+load_on auto
+
+<add>
+ecb.cpp
+ecb.h
+</add>
+
+<requires>
+modebase
+</requires>
+

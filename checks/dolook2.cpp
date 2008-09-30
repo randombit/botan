@@ -6,8 +6,15 @@
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
 #include <botan/filters.h>
-#include <botan/randpool.h>
-#include <botan/x931_rng.h>
+
+#if defined(BOTAN_HAS_RANDPOOL)
+  #include <botan/randpool.h>
+#endif
+
+#if defined(BOTAN_HAS_X931_RNG)
+  #include <botan/x931_rng.h>
+#endif
+
 #include "common.h"
 using namespace Botan;
 
@@ -112,29 +119,33 @@ Filter* lookup_rng(const std::string& algname,
    {
    RandomNumberGenerator* prng = 0;
 
+#if defined(BOTAN_HAS_X931_RNG)
    if(algname == "X9.31-RNG(TripleDES)")
-      prng = new ANSI_X931_RNG("TripleDES", new Fixed_Output_RNG(decode_hex(key)));
+      prng = new ANSI_X931_RNG(get_block_cipher("TripleDES"), new Fixed_Output_RNG(decode_hex(key)));
    else if(algname == "X9.31-RNG(AES-128)")
-      prng = new ANSI_X931_RNG("AES-128", new Fixed_Output_RNG(decode_hex(key)));
+      prng = new ANSI_X931_RNG(get_block_cipher("AES-128"), new Fixed_Output_RNG(decode_hex(key)));
    else if(algname == "X9.31-RNG(AES-192)")
-      prng = new ANSI_X931_RNG("AES-192", new Fixed_Output_RNG(decode_hex(key)));
+      prng = new ANSI_X931_RNG(get_block_cipher("AES-192"), new Fixed_Output_RNG(decode_hex(key)));
    else if(algname == "X9.31-RNG(AES-256)")
-      prng = new ANSI_X931_RNG("AES-256", new Fixed_Output_RNG(decode_hex(key)));
+      prng = new ANSI_X931_RNG(get_block_cipher("AES-256"), new Fixed_Output_RNG(decode_hex(key)));
+#endif
 
+#if defined(BOTAN_HAS_X931_RNG) and defined(BOTAN_HAS_RANDPOOL)
    // these are used for benchmarking: AES-256/SHA-256 matches library
    // defaults, so benchmark reflects real-world performance (maybe)
-   else if(algname == "Randpool")
+   if(!prng && (algname == "Randpool" || algname == "X9.31-RNG"))
       {
-      Randpool* randpool = new Randpool("AES-256", "HMAC(SHA-256)");
-      randpool->add_entropy((const byte*)key.c_str(), key.length());
-      prng = randpool;
+      Randpool* randpool = new Randpool(get_block_cipher("AES-256"),
+                                        get_mac("HMAC(SHA-256)"));
+      randpool->add_entropy(reinterpret_cast<const byte*>(key.c_str()),
+                            key.length());
+
+      if(algname == "Randpool")
+         prng = randpool;
+      else
+         prng = new ANSI_X931_RNG(get_block_cipher("AES-256"), randpool);
       }
-   else if(algname == "X9.31-RNG")
-      {
-      Randpool* randpool = new Randpool("AES-256", "HMAC(SHA-256)");
-      randpool->add_entropy((const byte*)key.c_str(), key.length());
-      prng = new ANSI_X931_RNG("AES-256", randpool);
-      }
+#endif
 
    if(prng)
       return new RNG_Filter(prng);

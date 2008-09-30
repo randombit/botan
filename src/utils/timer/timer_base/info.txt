@@ -1,0 +1,10 @@
+realname "Timer Base Class"
+
+define TIMER
+
+load_on auto
+
+<add>
+timers.cpp
+timers.h
+</add>

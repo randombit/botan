@@ -1,0 +1,11 @@
+realname "Twofish"
+
+define TWOFISH
+
+load_on auto
+
+<add>
+two_tab.cpp
+twofish.cpp
+twofish.h
+</add>

@@ -1,0 +1,16 @@
+realname "EAX block cipher mode"
+
+define EAX
+
+load_on auto
+
+<add>
+eax.cpp
+eax.h
+eax_dec.cpp
+</add>
+
+<requires>
+modebase
+</requires>
+

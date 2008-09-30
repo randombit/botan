@@ -1,0 +1,7 @@
+realname "BigInt Multiply-Add"
+
+load_on dep
+
+<add>
+mp_mulop.cpp
+</add>

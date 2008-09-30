@@ -1,0 +1,15 @@
+realname "Whirlpool"
+
+define WHIRLPOOL
+
+load_on auto
+
+<add>
+whrl_tab.cpp
+whrlpool.cpp
+whrlpool.h
+</add>
+
+<requires>
+mdx_hash
+</requires>

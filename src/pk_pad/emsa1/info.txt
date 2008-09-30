@@ -1,0 +1,10 @@
+realname "EMSA1"
+
+define EMSA1
+
+load_on auto
+
+<add>
+emsa1.h
+emsa1.cpp
+</add>

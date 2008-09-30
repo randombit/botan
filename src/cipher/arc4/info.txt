@@ -1,0 +1,10 @@
+realname "ARC4"
+
+define ARC4
+
+load_on auto
+
+<add>
+arc4.cpp
+arc4.h
+</add>

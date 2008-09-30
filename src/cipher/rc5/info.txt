@@ -1,0 +1,10 @@
+realname "RC5"
+
+define RC5
+
+load_on auto
+
+<add>
+rc5.cpp
+rc5.h
+</add>

@@ -1,0 +1,35 @@
+realname "MD5 (IA-32)"
+
+define MD5_IA32
+
+load_on asm_ok
+
+<add>
+md5_ia32_imp.S
+md5_ia32.cpp
+md5_ia32.h
+</add>
+
+<requires>
+asm_ia32
+mdx_hash
+utils
+</requires>
+
+<arch>
+ia32
+</arch>
+
+<cc>
+gcc
+icc
+</cc>
+
+# ELF systems
+<os>
+linux
+freebsd
+netbsd
+openbsd
+solaris
+</os>

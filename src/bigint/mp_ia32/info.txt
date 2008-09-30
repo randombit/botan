@@ -1,0 +1,19 @@
+realname "MPI Core (IA-32)"
+
+mp_bits 32
+
+load_on asm_ok
+
+<add>
+mp_asm.h
+mp_asmi.h
+</add>
+
+<arch>
+ia32
+</arch>
+
+<cc>
+gcc
+icc
+</cc>

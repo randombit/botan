@@ -1,0 +1,26 @@
+realname "MS Windows"
+
+os_type windows
+
+obj_suffix obj
+so_suffix dll
+static_suffix lib
+
+install_root c:\Botan
+doc_dir docs
+
+install_cmd_data copy
+install_cmd_exec copy
+
+<target_features>
+win32_virtual_lock
+</target_features>
+
+<supports_shared>
+msvc
+</supports_shared>
+
+<aliases>
+win32
+MSWin32
+</aliases>

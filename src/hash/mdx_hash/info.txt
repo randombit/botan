@@ -1,0 +1,10 @@
+realname "MDx Hash Base"
+
+define MDX_HASH_FUNCTION
+
+load_on dep
+
+<add>
+mdx_hash.cpp
+mdx_hash.h
+</add>

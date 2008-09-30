@@ -1,0 +1,28 @@
+realname "POSIX Timer"
+
+define TIMER_POSIX
+
+load_on auto
+
+<add>
+tm_posix.cpp
+tm_posix.h
+</add>
+
+<libs>
+linux -> rt
+</libs>
+
+# The *BSDs put clock_gettime in sys/time.h, not time.h like POSIX says
+<os>
+cygwin
+linux
+#freebsd
+#netbsd
+#openbsd
+</os>
+
+<requires>
+timer_base
+</requires>
+

@@ -1,0 +1,33 @@
+realname "BigInt Multiply-Add (IA-32)"
+
+mp_bits 32
+
+# Out of date, still implements bigint_mul_add_words
+
+load_on request
+
+<add>
+mp_mulop.S
+</add>
+
+<requires>
+asm_ia32
+</requires>
+
+<arch>
+ia32
+</arch>
+
+<cc>
+gcc
+icc
+</cc>
+
+# ELF systems
+<os>
+linux
+freebsd
+netbsd
+openbsd
+solaris
+</os>

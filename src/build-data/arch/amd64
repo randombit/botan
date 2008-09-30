@@ -1,0 +1,26 @@
+realname "x86-64"
+
+default_submodel amd64
+
+endian little
+unaligned ok
+
+<aliases>
+x86-64
+x86_64 # for RPM
+</aliases>
+
+<submodels>
+opteron
+em64t
+core2
+</submodels>
+
+<submodel_aliases>
+core -> core2
+core2duo -> core2
+intelcore2 -> core2
+intelcore2duo -> core2
+athlon64 -> opteron
+k8 -> opteron
+</submodel_aliases>

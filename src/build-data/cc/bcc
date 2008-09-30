@@ -1,0 +1,31 @@
+realname "Borland C++"
+
+binary_name "bcc32"
+
+compile_option "-c "
+output_to_option "-o "
+add_include_dir_option "-I"
+add_lib_dir_option "-L"
+add_lib_option "-l"
+
+lib_opt_flags "-O2"
+check_opt_flags "-O2"
+debug_flags ""
+no_debug_flags ""
+lang_flags "-tWR -tWM -tWC"
+warning_flags "-w"
+
+dll_import_flags ""
+dll_export_flags ""
+
+ar_command "tlib /C /P256"
+
+makefile_style nmake
+
+<mach_opt>
+i486     -> "/G4"
+i586     -> "/G5"
+i686     -> "/G6"
+athlon   -> "/G6"
+pentium4 -> "/G6"
+</mach_opt>

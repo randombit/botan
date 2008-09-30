@@ -1,0 +1,26 @@
+realname "MPI Core (Alpha/IA-64/MIPS64/PowerPC-64/SPARC64)"
+
+mp_bits 64
+
+load_on dep
+
+<add>
+mp_asm.h
+mp_generic:mp_asmi.h
+</add>
+
+<arch>
+alpha
+ia64
+mips64
+ppc64
+sparc64
+</arch>
+
+# The inline asm only works with gcc, but it looks like (at least on
+# UltraSPARC), using 64-bit words and the sythensized multiply is a 5 to 25%
+# win, so it's probably worth using elsewhere.
+<cc>
+gcc
+sunwspro
+</cc>

@@ -1,0 +1,19 @@
+realname "RSA"
+
+define RSA
+
+load_on auto
+
+<add>
+rsa.cpp
+rsa.h
+</add>
+
+<requires>
+asn1
+bigint
+if_algo
+keypair
+math
+pubkey
+</requires>

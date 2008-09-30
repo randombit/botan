@@ -1,0 +1,15 @@
+realname "Motorola 680x0"
+
+default_submodel 68020
+
+<aliases>
+680x0
+68k
+</aliases>
+
+<submodels>
+68020
+68030
+68040
+68060
+</submodels>
