@@ -684,6 +684,7 @@ sub get_options {
         'with-local-config=s' =>
             sub { &$save_option('local_config', slurp_file($_[1])); },
 
+        'modules=s' => sub { add_modules($config, $_[1]); },
         'show-arch-info=s' => sub { emit_help(arch_info($_[1])); },
         'make-style=s' => sub { &$save_option(@_); },
         'dumb-gcc|gcc295x' => sub { $$config{'gcc_bug'} = 1; }
