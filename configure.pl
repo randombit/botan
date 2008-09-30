@@ -1940,26 +1940,36 @@ sub guess_cpu_from_this
     my $cpuinfo = lc $_[0];
     my $cpu = '';
 
-    $cpu = 'ia32' if($cpuinfo =~ /x86/);
-    $cpu = 'amd64' if($cpuinfo =~ /x86-64/);
-    $cpu = 'amd64' if($cpuinfo =~ /x86_64/);
+    $cpuinfo =~ s/\(r\)//;
+    $cpuinfo =~ s/\(tm\)//;
+    $cpuinfo =~ s/ //g;
 
-    $cpu = 'i686' if($cpuinfo =~ /i686/);
-    $cpu = 'athlon' if($cpuinfo =~ /athlon/);
-    $cpu = 'pentium4' if($cpuinfo =~ /pentium 4/);
-    $cpu = 'pentium4' if($cpuinfo =~ /pentium 4/);
-    $cpu = 'pentium4' if($cpuinfo =~ /pentium\(r\) 4/);
-    $cpu = 'pentium-m' if($cpuinfo =~ /pentium\(r\) m/);
-    $cpu = 'pentium3' if($cpuinfo =~ /pentium iii/);
-    $cpu = 'pentium2' if($cpuinfo =~ /pentium ii/);
-    $cpu = 'pentium3' if($cpuinfo =~ /pentium 3/);
-    $cpu = 'pentium2' if($cpuinfo =~ /pentium 2/);
+    foreach my $arch (keys %CPU) {
+        my %info = %{$CPU{$arch}};
 
-    $cpu = 'core2duo' if($cpuinfo =~ /intel\(r\) core\(tm\)2/);
+        if($cpuinfo =~ /$info{'name'}/) {
+            $cpu = $info{'name'};
+        }
 
-    $cpu = 'athlon64' if($cpuinfo =~ /athlon64/);
-    $cpu = 'athlon64' if($cpuinfo =~ /athlon\(tm\) 64/);
-    $cpu = 'opteron' if($cpuinfo =~ /opteron/);
+        foreach my $alias (@{$info{'aliases'}}) {
+            if($cpuinfo =~ /$alias/) {
+                $cpu = $alias;
+            }
+        }
+
+        foreach my $submodel (@{$info{'submodels'}}) {
+            if($cpuinfo =~ /$submodel/) {
+                $cpu = $submodel;
+            }
+        }
+
+        if(defined($info{'submodel_aliases'})) {
+            my %submodel_aliases = %{$info{'submodel_aliases'}};
+            foreach my $sm_alias (keys %submodel_aliases) {
+                $cpu = $sm_alias if($cpuinfo =~ /$sm_alias/);
+            }
+        }
+    }
 
     # The 32-bit SPARC stuff is impossible to match to arch type easily, and
     # anyway the uname stuff will pick up that it's a SPARC so it doesn't
@@ -1987,6 +1997,10 @@ sub guess_cpu_from_this
         $cpu = 'alpha-ev67' if($cpuinfo =~ /ev67/);
         $cpu = 'alpha-ev68' if($cpuinfo =~ /ev68/);
         $cpu = 'alpha-ev7' if($cpuinfo =~ /ev7/);
+    }
+
+    if($cpu eq '' and !($cpuinfo =~ /\n/)) {
+        $cpu = $cpuinfo;
     }
 
     trace('guessing ', $cpu) if($cpu);
