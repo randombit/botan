@@ -165,7 +165,7 @@ void EC_PrivateKey::generate_private_key(RandomNumberGenerator& rng)
       throw Invalid_State("cannot generate private key when domain parameters are not set");
       }
    BigInt tmp_private_value(0);
-   tmp_private_value = random_integer (rng, 1, mp_dom_pars->get_order() );
+   tmp_private_value = BigInt::random_integer(rng, 1, mp_dom_pars->get_order() );
    mp_public_point = std::auto_ptr<PointGFp>( new PointGFp (mp_dom_pars->get_base_point()));
    mp_public_point->mult_this_secure(tmp_private_value, mp_dom_pars->get_order(), mp_dom_pars->get_order()-1);
 
