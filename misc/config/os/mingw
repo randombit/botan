@@ -1,0 +1,22 @@
+realname "MS Windows (MinGW)"
+os_type windows
+
+obj_suffix o
+so_suffix dll
+static_suffix a
+
+ar_command "ar crs"
+ar_needs_ranlib yes
+
+install_root /mingw
+header_dir include
+lib_dir lib
+doc_dir share/doc
+
+install_cmd_data install -m 644
+install_cmd_exec install -m 755
+
+<aliases>
+msys
+mingw32
+</aliases>

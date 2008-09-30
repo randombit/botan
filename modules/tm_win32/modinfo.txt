@@ -13,6 +13,7 @@ tm_win32.h
 <os>
 cygwin
 windows
+mingw
 </os>
 
 <libs>

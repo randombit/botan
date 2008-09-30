@@ -9,4 +9,5 @@ mlock.cpp
 <os>
 windows
 cygwin
+mingw
 </os>

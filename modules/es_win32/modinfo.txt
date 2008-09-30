@@ -16,6 +16,7 @@ es_win32.cpp
 <os>
 windows
 cygwin
+mingw
 </os>
 
 <libs>
