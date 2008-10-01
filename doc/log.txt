@@ -4,6 +4,7 @@
  - Add ECDSA and ECKAEG implementations from InSiTo
  - Update build instructions for recent changes to configure.pl
  - Alter configure.pl options for better autotools compatability
+ - Fixes for CPU detection using /proc/cpuinfo
 
 * 1.7.14, 2008-09-30
  - Split library into parts allowing modular builds
