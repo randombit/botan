@@ -59,7 +59,7 @@ ia32      -> "-march=SUBMODEL -momit-leaf-frame-pointer"
 ia64      -> "-mtune=SUBMODEL"
 hppa      -> "-march=SUBMODEL" hppa
 m68k      -> "-mSUBMODEL"
-sh        -> "-mSUBMODEL" sh
+hitachi-sh -> "-mSUBMODEL" hitachi-sh
 sparc32   -> "-mcpu=SUBMODEL -Wa,-xarch=v8plus" sparc32-
 sparc64   -> "-mcpu=v9 -mtune=ultrasparc"
 mips32    -> "-mips1 -mcpu=SUBMODEL" mips32-

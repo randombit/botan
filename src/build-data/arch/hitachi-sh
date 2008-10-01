@@ -1,0 +1,11 @@
+realname "Hitachi SH"
+
+default_submodel hitachi-sh1
+
+<submodels>
+hitachi-sh1
+hitachi-sh2
+hitachi-sh3
+hitachi-sh3e
+hitachi-sh4
+</submodels>
