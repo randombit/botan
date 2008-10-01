@@ -6,7 +6,7 @@
 #ifndef BOTAN_KEYPAIR_H__
 #define BOTAN_KEYPAIR_H__
 
-#include <botan/look_pk.h>
+#include <botan/pubkey.h>
 
 namespace Botan {
 
