@@ -88,14 +88,14 @@ class BOTAN_DLL Engine
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
-      virtual ECDSA_Operation* ecdsa_op(const EC_Domain_Params& dom_pars,
-                                        const BigInt& priv_key,
-                                        const PointGFp& pub_key) const
+      virtual ECDSA_Operation* ecdsa_op(const EC_Domain_Params&,
+                                        const BigInt&,
+                                        const PointGFp&) const
          { return 0; }
 
-      virtual ECKAEG_Operation* eckaeg_op(const EC_Domain_Params& dom_pars,
-                                          const BigInt& priv_key,
-                                          const PointGFp& pub_key) const
+      virtual ECKAEG_Operation* eckaeg_op(const EC_Domain_Params&,
+                                          const BigInt&,
+                                          const PointGFp&) const
          { return 0; }
 #endif
 
