@@ -1958,50 +1958,57 @@ sub generate_makefile {
 sub guess_cpu_from_this
 {
     my $cpuinfo = lc $_[0];
-    my $cpu = '';
 
-    $cpuinfo =~ s/\(r\)//;
-    $cpuinfo =~ s/\(tm\)//;
-    $cpuinfo =~ s/ //g;
+    $cpuinfo =~ s/\(r\)//g;
+    $cpuinfo =~ s/\(tm\)//g;
+    $cpuinfo =~ s/\t/ /g;
+    $cpuinfo =~ s/ +/-/g;
+
+    trace("guess_cpu_from_this($cpuinfo)");
 
     # The 32-bit SPARC stuff is impossible to match to arch type easily, and
     # anyway the uname stuff will pick up that it's a SPARC so it doesn't
     # matter. If it's an Ultra, assume a 32-bit userspace, no 64-bit code
     # possible; that's the most common setup right now anyway
-    $cpu = 'sparc32-v9' if($cpuinfo =~ /ultrasparc/);
+    return 'sparc32-v9' if($cpuinfo =~ /ultrasparc/);
 
     # 64-bit PowerPC
-    $cpu = 'cellppu' if($cpuinfo =~ /cell broadband engine/);
+    return 'cellppu' if($cpuinfo =~ /cell-broadband-engine/);
 
+    # First check submodels and submodel aliases
     foreach my $arch (keys %CPU) {
         my %info = %{$CPU{$arch}};
 
-        if($cpuinfo =~ /$info{'name'}/) {
-            $cpu = $info{'name'};
-        }
+        if(defined($info{'submodel_aliases'})) {
+            my %submodel_aliases = %{$info{'submodel_aliases'}};
 
-        foreach my $alias (@{$info{'aliases'}}) {
-            if($cpuinfo =~ /$alias/) {
-                $cpu = $alias;
+            foreach my $sm_alias (keys %submodel_aliases) {
+                return $sm_alias if($cpuinfo =~ /$sm_alias/);
             }
         }
 
         foreach my $submodel (@{$info{'submodels'}}) {
             if($cpuinfo =~ /$submodel/) {
-                $cpu = $submodel;
-            }
-        }
-
-        if(defined($info{'submodel_aliases'})) {
-            my %submodel_aliases = %{$info{'submodel_aliases'}};
-            foreach my $sm_alias (keys %submodel_aliases) {
-                $cpu = $sm_alias if($cpuinfo =~ /$sm_alias/);
+                return $submodel;
             }
         }
     }
 
-    trace('guessing ', $cpu) if($cpu);
-    return $cpu;
+    # No match? Try arch names
+    foreach my $arch (keys %CPU) {
+        my %info = %{$CPU{$arch}};
+        if($cpuinfo =~ /$info{'name'}/) {
+            return $info{'name'};
+        }
+
+        foreach my $alias (@{$info{'aliases'}}) {
+            if($cpuinfo =~ /$alias/) {
+                return $alias;
+            }
+        }
+    }
+
+    return '';
 }
 
 # Do some WAGing and see if we can figure out what system we are. Think about
@@ -2071,15 +2078,28 @@ sub guess_cpu
 
     if(-e $cpuinfo and -r $cpuinfo)
     {
-        my $cpu = guess_cpu_from_this(slurp_file($cpuinfo));
-        if($cpu) {
-            autoconfig("Guessing (based on $cpuinfo) CPU is a $cpu (use --cpu to set)");
-            return $cpu;
-        } else {
-            # This is odd, /proc/cpuinfo should always have enough information for us
-            autoconfig("*** Could not figure out CPU based on $cpuinfo");
-            autoconfig("*** Please mail contents to lloyd\@randombit.net");
+        open CPUINFO, $cpuinfo or die "Could not read $cpuinfo\n";
+
+        while(<CPUINFO>) {
+
+            chomp;
+            $_ =~ s/\t/ /g;
+            $_ =~ s/ +/ /g;
+
+            if($_ =~ /^cpu +: (.*)/ or
+               $_ =~ /^model name +: (.*)/)
+            {
+                my $cpu = guess_cpu_from_this($1);
+                if($cpu ne '') {
+                    autoconfig("Guessing (based on $cpuinfo '$_') " .
+                               "CPU is a $cpu (use --cpu to set)");
+                    return $cpu;
+                }
+            }
         }
+
+        autoconfig("*** Could not figure out CPU based on $cpuinfo");
+        autoconfig("*** Please mail contents to lloyd\@randombit.net");
     }
 
     sub known_arch {
