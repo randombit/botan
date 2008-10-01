@@ -33,4 +33,5 @@ x509stor.h
 <requires>
 asn1
 bigint
+pubkey
 </requires>
