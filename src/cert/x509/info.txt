@@ -4,6 +4,14 @@ define X509
 
 load_on auto
 
+<requires>
+asn1
+bigint
+pubkey
+pk_lookup
+oid_lookup
+</requires>
+
 <add>
 certstor.h
 certstor.cpp
@@ -29,10 +37,3 @@ x509self.h
 x509stor.cpp
 x509stor.h
 </add>
-
-<requires>
-asn1
-bigint
-pubkey
-pk_lookup
-</requires>

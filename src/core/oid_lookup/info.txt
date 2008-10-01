@@ -1,0 +1,15 @@
+realname "OID Lookup"
+
+load_on dep
+
+define OID_LOOKUP
+
+<required>
+libstate
+asn1
+</required>
+
+<add>
+oids.cpp
+oids.h
+</add>

@@ -4,6 +4,11 @@ load_on auto
 
 define LIBSTATE_MODULE
 
+<required>
+core
+bigint
+</required>
+
 <add>
 def_alg.cpp
 def_mode.cpp
@@ -23,7 +28,5 @@ lookup.cpp
 lookup.h
 modules.cpp
 modules.h
-oids.cpp
-oids.h
 policy.cpp
 </add>

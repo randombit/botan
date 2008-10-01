@@ -6,6 +6,7 @@ load_on auto
 
 <requires>
 bigint
+oid_lookup
 </requires>
 
 <add>

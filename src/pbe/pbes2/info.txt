@@ -4,11 +4,12 @@ define PBE_PKCS_V20
 
 load_on auto
 
+<requires>
+oid_lookup
+pbe_base
+</requires>
+
 <add>
 pbes2.cpp
 pbes2.h
 </add>
-
-<requires>
-pbe_base
-</requires>
