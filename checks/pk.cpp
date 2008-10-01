@@ -487,7 +487,6 @@ u32bit validate_dh(const std::string& algo,
    if(str.size() != 5 && str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
-   bool failure = false;
 
 #if defined(BOTAN_HAS_DH)
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]));
@@ -503,11 +502,13 @@ u32bit validate_dh(const std::string& algo,
 
    PK_Key_Agreement* kas = get_pk_kas(mykey, kdf);
 
+   bool failure = false;
    validate_kas(kas, algo, otherkey.public_value(),
                 str[4], keylen, failure);
+   return (failure ? 1 : 0);
 #endif
 
-   return (failure ? 1 : 0);
+   return 2;
    }
 
 u32bit validate_dlies(const std::string& algo,
