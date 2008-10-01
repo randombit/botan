@@ -21,8 +21,6 @@ init_opt.cpp
 libstate.cpp
 libstate.h
 look_add.h
-look_pk.cpp
-look_pk.h
 lookup.cpp
 lookup.h
 modules.cpp

@@ -11,6 +11,8 @@ asn1
 </requires>
 
 <add>
+look_pk.cpp
+look_pk.h
 pk_algs.cpp
 pk_algs.h
 pk_keys.cpp

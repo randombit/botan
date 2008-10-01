@@ -6,6 +6,7 @@
 #ifndef BOTAN_PK_LOOKUP_H__
 #define BOTAN_PK_LOOKUP_H__
 
+#include <botan/build.h>
 #include <botan/pubkey.h>
 
 namespace Botan {
