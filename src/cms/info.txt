@@ -18,6 +18,7 @@ cms_enc.h
 <requires>
 asn1
 filters
+pk_lookup
 pubkey
 x509
 </requires>

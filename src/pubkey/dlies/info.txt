@@ -13,4 +13,5 @@ dlies.h
 dh
 kdf2
 pubkey
+pk_lookup
 </requires>

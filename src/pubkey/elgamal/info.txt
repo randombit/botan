@@ -4,6 +4,17 @@ define ELGAMAL
 
 load_on auto
 
+<requires>
+asn1
+bigint
+bigint
+dl_algo
+keypair
+numbertheory
+pk_lookup
+pubkey
+</requires>
+
 <add>
 elgamal.cpp
 elgamal.h
@@ -12,13 +23,3 @@ elg_core.h
 elg_op.cpp
 elg_op.h
 </add>
-
-<requires>
-asn1
-bigint
-bigint
-dl_algo
-keypair
-numbertheory
-pubkey
-</requires>

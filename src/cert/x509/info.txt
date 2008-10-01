@@ -34,4 +34,5 @@ x509stor.h
 asn1
 bigint
 pubkey
+pk_lookup
 </requires>
