@@ -1979,17 +1979,17 @@ sub guess_cpu_from_this
     foreach my $arch (keys %CPU) {
         my %info = %{$CPU{$arch}};
 
+        foreach my $submodel (@{$info{'submodels'}}) {
+            if($cpuinfo =~ /$submodel/) {
+                return $submodel;
+            }
+        }
+
         if(defined($info{'submodel_aliases'})) {
             my %submodel_aliases = %{$info{'submodel_aliases'}};
 
             foreach my $sm_alias (keys %submodel_aliases) {
                 return $sm_alias if($cpuinfo =~ /$sm_alias/);
-            }
-        }
-
-        foreach my $submodel (@{$info{'submodels'}}) {
-            if($cpuinfo =~ /$submodel/) {
-                return $submodel;
             }
         }
     }
