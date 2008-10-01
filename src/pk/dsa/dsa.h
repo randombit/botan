@@ -7,7 +7,7 @@
 #define BOTAN_DSA_H__
 
 #include <botan/dl_algo.h>
-#include <botan/pk_core.h>
+#include <botan/dsa_core.h>
 
 namespace Botan {
 

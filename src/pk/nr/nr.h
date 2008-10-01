@@ -7,7 +7,7 @@
 #define BOTAN_NYBERG_RUEPPEL_H__
 
 #include <botan/dl_algo.h>
-#include <botan/pk_core.h>
+#include <botan/nr_core.h>
 
 namespace Botan {
 

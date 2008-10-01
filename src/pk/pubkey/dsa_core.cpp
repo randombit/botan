@@ -3,7 +3,7 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/pk_core.h>
+#include <botan/dsa_core.h>
 #include <botan/numthry.h>
 #include <botan/engine.h>
 #include <botan/parsing.h>

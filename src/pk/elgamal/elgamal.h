@@ -7,7 +7,7 @@
 #define BOTAN_ELGAMAL_H__
 
 #include <botan/dl_algo.h>
-#include <botan/pk_core.h>
+#include <botan/elg_core.h>
 
 namespace Botan {
 

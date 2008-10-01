@@ -6,9 +6,9 @@
 #ifndef BOTAN_IF_ALGO_H__
 #define BOTAN_IF_ALGO_H__
 
+#include <botan/if_core.h>
 #include <botan/x509_key.h>
 #include <botan/pkcs8.h>
-#include <botan/pk_core.h>
 
 namespace Botan {
 
