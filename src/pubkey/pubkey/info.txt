@@ -1,13 +1,14 @@
 realname "Public Key Base"
 
-define PUBKEY_BASE
+define PUBLIC_KEY_CRYPTO
 
 load_on dep
 
 <requires>
+asn1
 bigint
 numbertheory
-asn1
+pbe_base
 </requires>
 
 <add>

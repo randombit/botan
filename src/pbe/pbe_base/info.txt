@@ -1,0 +1,15 @@
+realname "PBE Base"
+
+load_on auto
+
+define PASSWORD_BASED_ENCRYPTION
+
+<requires>
+filters
+asn1
+</requires>
+
+<add>
+get_pbe.cpp
+get_pbe.h
+</add>

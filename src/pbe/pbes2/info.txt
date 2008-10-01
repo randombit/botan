@@ -10,6 +10,5 @@ pbes2.h
 </add>
 
 <requires>
-asn1
-filters
+pbe_base
 </requires>
