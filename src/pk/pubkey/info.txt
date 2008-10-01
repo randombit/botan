@@ -11,13 +11,18 @@ asn1
 </requires>
 
 <add>
+dh_core.cpp
 dh_op.cpp
+dsa_core.cpp
 dsa_op.cpp
+ecc_core.cpp
+elg_core.cpp
 elg_op.cpp
+if_core.cpp
+nr_core.cpp
 nr_op.cpp
 pk_algs.cpp
 pk_algs.h
-pk_core.cpp
 pk_core.h
 pk_keys.cpp
 pk_keys.h
