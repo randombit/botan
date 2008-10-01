@@ -72,6 +72,20 @@ BigInt BOTAN_DLL random_safe_prime(RandomNumberGenerator&,
                                    u32bit);
 
 /*************************************************
+* DSA Parameter Generation                       *
+*************************************************/
+SecureVector<byte> BOTAN_DLL
+generate_dsa_primes(RandomNumberGenerator& rng,
+                    BigInt& p, BigInt& q,
+                    u32bit pbits, u32bit qbits);
+
+bool BOTAN_DLL
+generate_dsa_primes(RandomNumberGenerator& rng,
+                    BigInt& p_out, BigInt& q_out,
+                    u32bit p_bits, u32bit q_bits,
+                    const MemoryRegion<byte>& seed);
+
+/*************************************************
 * Prime Numbers                                  *
 *************************************************/
 const u32bit PRIME_TABLE_SIZE = 6541;

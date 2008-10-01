@@ -17,16 +17,6 @@ namespace Botan {
 class BOTAN_DLL DL_Group
    {
    public:
-      static SecureVector<byte>
-         generate_dsa_primes(RandomNumberGenerator& rng,
-                             BigInt& p, BigInt& q,
-                             u32bit pbits, u32bit qbits);
-
-      static bool generate_dsa_primes(RandomNumberGenerator& rng,
-                                      BigInt& p_out, BigInt& q_out,
-                                      u32bit p_bits, u32bit q_bits,
-                                      const MemoryRegion<byte>& seed);
-
       const BigInt& get_p() const;
       const BigInt& get_q() const;
       const BigInt& get_g() const;

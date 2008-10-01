@@ -3,7 +3,6 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/dl_group.h>
 #include <botan/numthry.h>
 #include <botan/lookup.h>
 #include <botan/parsing.h>
@@ -36,10 +35,10 @@ bool fips186_3_valid_size(u32bit pbits, u32bit qbits)
 /*************************************************
 * Attempt DSA prime generation with given seed   *
 *************************************************/
-bool DL_Group::generate_dsa_primes(RandomNumberGenerator& rng,
-                                   BigInt& p, BigInt& q,
-                                   u32bit pbits, u32bit qbits,
-                                   const MemoryRegion<byte>& seed_c)
+bool generate_dsa_primes(RandomNumberGenerator& rng,
+                         BigInt& p, BigInt& q,
+                         u32bit pbits, u32bit qbits,
+                         const MemoryRegion<byte>& seed_c)
    {
    if(!fips186_3_valid_size(pbits, qbits))
       throw Invalid_Argument(
@@ -116,9 +115,9 @@ bool DL_Group::generate_dsa_primes(RandomNumberGenerator& rng,
 /*************************************************
 * Generate DSA Primes                            *
 *************************************************/
-SecureVector<byte> DL_Group::generate_dsa_primes(RandomNumberGenerator& rng,
-                                                 BigInt& p, BigInt& q,
-                                                 u32bit pbits, u32bit qbits)
+SecureVector<byte> generate_dsa_primes(RandomNumberGenerator& rng,
+                                       BigInt& p, BigInt& q,
+                                       u32bit pbits, u32bit qbits)
    {
    SecureVector<byte> seed(qbits/8);
 
