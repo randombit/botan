@@ -459,9 +459,9 @@ u32bit validate_nr_sig(const std::string& algo,
    if(str.size() != 8)
       throw Exception("Invalid input from pk_valid.dat");
 
-   bool failure = false;
 
 #if defined(BOTAN_HAS_NR)
+
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]), to_bigint(str[2]));
    NR_PrivateKey privkey(rng, domain, to_bigint(str[4]));
    NR_PublicKey pubkey = privkey;
@@ -471,10 +471,12 @@ u32bit validate_nr_sig(const std::string& algo,
    PK_Verifier* v = get_pk_verifier(pubkey, emsa);
    PK_Signer* s = get_pk_signer(privkey, emsa);
 
+   bool failure = false;
    validate_signature(v, s, algo, str[5], str[6], str[7], failure);
+   return (failure ? 1 : 0);
 #endif
 
-   return (failure ? 1 : 0);
+   return 2;
    }
 
 u32bit validate_dh(const std::string& algo,
@@ -672,9 +674,6 @@ u32bit do_pk_validation_tests(const std::string& filename,
          continue;
          }
 
-      std::cout << '.';
-      std::cout.flush();
-
       std::vector<std::string> substr = parse(line);
 
 #if DEBUG
@@ -718,15 +717,25 @@ u32bit do_pk_validation_tests(const std::string& filename,
             std::cout << "WARNING: Unknown PK algorithm "
                       << algorithm << std::endl;
 
+         if(new_errors == 0) // OK
+            std::cout << '.';
+         else if(new_errors == 1) // test failed
+            std::cout << 'X';
+         else if(new_errors == 2) // unknown algo
+            std::cout << '?';
+
+         std::cout.flush();
+
          alg_count++;
-         errors += new_errors;
+         if(new_errors == 1)
+            errors += new_errors;
          }
       catch(std::exception& e)
          {
          std::cout << "Exception: " << e.what() << "\n";
          }
 
-      if(new_errors)
+      if(new_errors == 1)
          std::cout << "ERROR: \"" << algorithm << "\" failed test #"
                    << std::dec << alg_count << std::endl;
       }
