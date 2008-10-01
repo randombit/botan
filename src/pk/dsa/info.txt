@@ -7,6 +7,8 @@ load_on auto
 <add>
 dsa.cpp
 dsa.h
+dsa_core.cpp
+dsa_core.h
 </add>
 
 <requires>

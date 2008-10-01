@@ -2,11 +2,13 @@ realname "Integer Factorization Algorithms"
 
 define IF_PUBLIC_KEY_FAMILY
 
-load_on auto
+load_on required
 
 <add>
 if_algo.cpp
 if_algo.h
+if_core.cpp
+if_core.h
 </add>
 
 <requires>

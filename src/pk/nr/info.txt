@@ -7,6 +7,8 @@ load_on auto
 <add>
 nr.cpp
 nr.h
+nr_core.cpp
+nr_core.h
 </add>
 
 <requires>

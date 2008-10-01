@@ -11,21 +11,9 @@ asn1
 </requires>
 
 <add>
-dh_core.cpp
-dh_core.h
 dh_op.cpp
-dsa_core.cpp
-dsa_core.h
 dsa_op.cpp
-ecc_core.cpp
-ecc_core.h
-elg_core.cpp
-elg_core.h
 elg_op.cpp
-if_core.cpp
-if_core.h
-nr_core.cpp
-nr_core.h
 nr_op.cpp
 pk_algs.cpp
 pk_algs.h
