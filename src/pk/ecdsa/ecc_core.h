@@ -10,14 +10,10 @@
 #include <botan/bigint.h>
 #include <botan/blinding.h>
 #include <botan/pk_ops.h>
-
-#if defined(BOTAN_HAS_ECDSA)
-  #include <botan/ec_dompar.h>
-#endif
+#include <botan/ec_dompar.h>
 
 namespace Botan {
 
-#if defined(BOTAN_HAS_ECDSA)
 /*************************************************
 * ECDSA Core                                     *
 *************************************************/
@@ -67,7 +63,6 @@ class ECKAEG_Core
       ECKAEG_Operation* op;
       Blinder blinder;
    };
-#endif
 
 }
 
