@@ -48,7 +48,8 @@ void eax_test(const std::string& algo,
           plaintext_str.c_str(), ciphertext.c_str());
    */
 
-   //std::auto_ptr<RandomNumberGenerator> rng(RandomNumberGenerator::make_rng());
+   //std::auto_ptr<RandomNumberGenerator> rng(
+   xRandomNumberGenerator::make_rng());
 
    SymmetricKey key(key_str);
    InitializationVector iv(nonce_str);
@@ -74,7 +75,8 @@ void eax_test(const std::string& algo,
 
    if(out != ciphertext + tag_str)
       {
-      printf("BAD enc %s '%s' != '%s%s'\n", algo.c_str(), out.c_str(), ciphertext.c_str(), tag_str.c_str());
+      printf("BAD enc %s '%s' != '%s%s'\n", algo.c_str(),
+             out.c_str(), ciphertext.c_str(), tag_str.c_str());
       }
    else
       printf("OK enc %s\n", algo.c_str());
@@ -192,7 +194,9 @@ void run_tests(std::istream& in)
 
       if(line.size() > 5 && line.substr(0, 4) == "EAX-")
          {
-         std::pair<std::string, int> name_and_keylen = translate_algo(line.substr(4));
+         std::pair<std::string, int> name_and_keylen =
+            translate_algo(line.substr(4));
+
          algo = name_and_keylen.first;
          key = seq(name_and_keylen.second);
          }

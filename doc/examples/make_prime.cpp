@@ -50,7 +50,8 @@ int main()
 
       if(not_new % 100000 == 0)
          {
-         for(std::map<int, int>::iterator i = bit_count.begin(); i != bit_count.end(); ++i)
+         for(std::map<int, int>::iterator i = bit_count.begin();
+             i != bit_count.end(); ++i)
             std::cout << "bit_count[" << i->first << "] = "
                       << i->second << "\n";
          std::copy(primes.begin(), primes.end(),

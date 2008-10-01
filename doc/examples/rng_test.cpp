@@ -109,7 +109,8 @@ int main()
    }
 
 
-std::vector<std::pair<std::string, std::string> > read_file(const std::string& fsname)
+std::vector<std::pair<std::string, std::string> >
+read_file(const std::string& fsname)
    {
    std::ifstream in(fsname.c_str());
 

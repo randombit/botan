@@ -143,7 +143,7 @@ RandomNumberGenerator* RandomNumberGenerator::make_rng()
    return rng;
 #endif
 
-   throw Algorithm_Not_Found("RandomNumberGenerator::make_rng - no RNG object available");
+   throw Algorithm_Not_Found("RandomNumberGenerator::make_rng - no RNG found");
    }
 
 }
