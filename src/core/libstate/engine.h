@@ -34,6 +34,7 @@
 
 #if defined(BOTAN_HAS_ECDSA)
   #include <botan/ecc_op.h>
+  #include <botan/ec_dompar.h>
 #endif
 
 #include <utility>
