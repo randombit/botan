@@ -8,7 +8,10 @@
 
 #include <botan/bigint.h>
 #include <botan/dl_group.h>
-#include <botan/point_gfp.h>
+
+#if defined(BOTAN_HAS_ECDSA)
+  #include <botan/point_gfp.h>
+#endif
 
 namespace Botan {
 
@@ -75,6 +78,7 @@ class BOTAN_DLL DH_Operation
       virtual ~DH_Operation() {}
    };
 
+#if defined(BOTAN_HAS_ECDSA)
 /*************************************************
 * ECDSA Operation                               *
 *************************************************/
@@ -102,6 +106,7 @@ class BOTAN_DLL ECKAEG_Operation
       virtual ECKAEG_Operation* clone() const = 0;
       virtual ~ECKAEG_Operation() {}
    };
+#endif
 
 }
 

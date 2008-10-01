@@ -297,6 +297,8 @@ BigInt DH_Core::agree(const BigInt& i) const
    return blinder.unblind(op->agree(blinder.blind(i)));
    }
 
+#if defined(BOTAN_HAS_ECDSA)
+
 /*************************************************
 * ECKAEG_Core Constructor                        *
 *************************************************/
@@ -374,5 +376,6 @@ ECDSA_Core::ECDSA_Core(EC_Domain_Params const& dom_pars, const BigInt& priv_key,
    {
    op = Engine_Core::ecdsa_op(dom_pars, priv_key, pub_key);
    }
+#endif
 
 }

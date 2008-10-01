@@ -100,6 +100,7 @@ DH_Operation* dh_op(const DL_Group& group, const BigInt& x)
    throw Lookup_Error("Engine_Core::dh_op: Unable to find a working engine");
    }
 
+#if defined(BOTAN_HAS_ECDSA)
 /*************************************************
 * Acquire an ECDSA op                            *
 *************************************************/
@@ -137,6 +138,7 @@ ECKAEG_Operation* eckaeg_op(const EC_Domain_Params& dom_pars,
 
    throw Lookup_Error("Engine_Core::eckaeg_op: Unable to find a working engine");
    }
+#endif
 
 /*************************************************
 * Acquire a modular exponentiator                *

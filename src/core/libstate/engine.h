@@ -8,11 +8,15 @@
 
 #include <botan/base.h>
 #include <botan/mutex.h>
-#include <botan/ec_dompar.h>
 #include <botan/pk_ops.h>
 #include <botan/pow_mod.h>
 #include <botan/basefilt.h>
 #include <botan/enums.h>
+
+#if defined(BOTAN_HAS_ECDSA)
+  #include <botan/ec_dompar.h>
+#endif
+
 #include <utility>
 #include <map>
 
@@ -44,6 +48,7 @@ class BOTAN_DLL Engine
                                     const BigInt&) const;
       virtual DH_Operation* dh_op(const DL_Group&, const BigInt&) const;
 
+#if defined(BOTAN_HAS_ECDSA)
       virtual ECDSA_Operation* ecdsa_op(const EC_Domain_Params& dom_pars,
                                         const BigInt& priv_key,
                                         const PointGFp& pub_key) const;
@@ -51,6 +56,7 @@ class BOTAN_DLL Engine
       virtual ECKAEG_Operation* eckaeg_op(const EC_Domain_Params& dom_pars,
                                           const BigInt& priv_key,
                                           const PointGFp& pub_key) const;
+#endif
 
       virtual Modular_Exponentiator* mod_exp(const BigInt&,
                                              Power_Mod::Usage_Hints) const;
@@ -125,6 +131,7 @@ ELG_Operation* elg_op(const DL_Group&, const BigInt&, const BigInt&);
 
 DH_Operation* dh_op(const DL_Group&, const BigInt&);
 
+#if defined(BOTAN_HAS_ECDSA)
 ECDSA_Operation* ecdsa_op(const EC_Domain_Params& dom_pars,
                           const BigInt& priv_key,
                           const PointGFp& pub_key);
@@ -132,6 +139,7 @@ ECDSA_Operation* ecdsa_op(const EC_Domain_Params& dom_pars,
 ECKAEG_Operation* eckaeg_op(const EC_Domain_Params& dom_pars,
                             const BigInt& priv_key,
                             const PointGFp& pub_key);
+#endif
 
 }
 

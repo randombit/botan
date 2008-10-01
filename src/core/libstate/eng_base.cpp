@@ -108,6 +108,7 @@ DH_Operation* Engine::dh_op(const DL_Group&, const BigInt&) const
    return 0;
    }
 
+#if defined(BOTAN_HAS_ECDSA)
 /*************************************************
 * Basic No-Op Engine Implementation              *
 *************************************************/
@@ -127,6 +128,7 @@ ECKAEG_Operation* Engine::eckaeg_op(const EC_Domain_Params&,
    {
    return 0;
    }
+#endif
 
 /*************************************************
 * Basic No-Op Engine Implementation              *
