@@ -121,13 +121,17 @@ Filter* lookup_rng(const std::string& algname,
 
 #if defined(BOTAN_HAS_X931_RNG)
    if(algname == "X9.31-RNG(TripleDES)")
-      prng = new ANSI_X931_RNG(get_block_cipher("TripleDES"), new Fixed_Output_RNG(decode_hex(key)));
+      prng = new ANSI_X931_RNG(get_block_cipher("TripleDES"),
+                               new Fixed_Output_RNG(decode_hex(key)));
    else if(algname == "X9.31-RNG(AES-128)")
-      prng = new ANSI_X931_RNG(get_block_cipher("AES-128"), new Fixed_Output_RNG(decode_hex(key)));
+      prng = new ANSI_X931_RNG(get_block_cipher("AES-128"),
+                               new Fixed_Output_RNG(decode_hex(key)));
    else if(algname == "X9.31-RNG(AES-192)")
-      prng = new ANSI_X931_RNG(get_block_cipher("AES-192"), new Fixed_Output_RNG(decode_hex(key)));
+      prng = new ANSI_X931_RNG(get_block_cipher("AES-192"),
+                               new Fixed_Output_RNG(decode_hex(key)));
    else if(algname == "X9.31-RNG(AES-256)")
-      prng = new ANSI_X931_RNG(get_block_cipher("AES-256"), new Fixed_Output_RNG(decode_hex(key)));
+      prng = new ANSI_X931_RNG(get_block_cipher("AES-256"),
+                               new Fixed_Output_RNG(decode_hex(key)));
 #endif
 
 #if defined(BOTAN_HAS_X931_RNG) and defined(BOTAN_HAS_RANDPOOL)

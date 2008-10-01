@@ -122,7 +122,9 @@ int main(int argc, char* argv[])
          {
          run_test_suite();
          }
-      if(opts.is_set("bench-algo") || opts.is_set("benchmark") || opts.is_set("bench-type"))
+      if(opts.is_set("bench-algo") ||
+         opts.is_set("benchmark") ||
+         opts.is_set("bench-type"))
          {
          double seconds = 5;
 
