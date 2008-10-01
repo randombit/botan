@@ -394,9 +394,8 @@ u32bit validate_dsa_sig(const std::string& algo,
    strip_newlines(pass); /* it will have a newline thanks to the messy
                                 decoding method we use */
 
-   bool failure = false;
-
 #if defined(BOTAN_HAS_DSA)
+
    DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
                                str[0].length());
 
@@ -413,10 +412,12 @@ u32bit validate_dsa_sig(const std::string& algo,
    PK_Verifier* v = get_pk_verifier(*dsapub, emsa);
    PK_Signer* s = get_pk_signer(*dsapriv, emsa);
 
+   bool failure = false;
    validate_signature(v, s, algo, str[1], str[2], str[3], failure);
+   return (failure ? 1 : 0);
 #endif
 
-   return (failure ? 1 : 0);
+   return 2;
    }
 
 u32bit validate_dsa_ver(const std::string& algo,
@@ -428,7 +429,6 @@ u32bit validate_dsa_ver(const std::string& algo,
    DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
                                str[0].length());
 
-   bool passed = true;
 
 #if defined(BOTAN_HAS_DSA)
    std::auto_ptr<Public_Key> key(X509::load_key(keysource));
@@ -446,10 +446,11 @@ u32bit validate_dsa_ver(const std::string& algo,
    SecureVector<byte> sig = decode_hex(str[2]);
 
    v->set_input_format(DER_SEQUENCE);
-   passed = v->verify_message(msg, msg.size(), sig, sig.size());
+   bool passed = v->verify_message(msg, msg.size(), sig, sig.size());
+   return (passed ? 0 : 1);
 #endif
 
-   return (passed ? 0 : 1);
+   return 2;
    }
 
 u32bit validate_nr_sig(const std::string& algo,
