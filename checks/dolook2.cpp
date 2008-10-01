@@ -4,7 +4,6 @@
 
 #include <botan/botan.h>
 #include <botan/lookup.h>
-#include <botan/look_pk.h>
 #include <botan/filters.h>
 
 #if defined(BOTAN_HAS_RANDPOOL)
