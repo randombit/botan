@@ -3,33 +3,10 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
+#include <botan/dsa_op.h>
 #include <botan/eng_def.h>
-#include <botan/pow_mod.h>
-#include <botan/numthry.h>
-#include <botan/reducer.h>
 
 namespace Botan {
-
-namespace {
-
-/*************************************************
-* Default DSA Operation                          *
-*************************************************/
-class Default_DSA_Op : public DSA_Operation
-   {
-   public:
-      bool verify(const byte[], u32bit, const byte[], u32bit) const;
-      SecureVector<byte> sign(const byte[], u32bit, const BigInt&) const;
-
-      DSA_Operation* clone() const { return new Default_DSA_Op(*this); }
-
-      Default_DSA_Op(const DL_Group&, const BigInt&, const BigInt&);
-   private:
-      const BigInt x, y;
-      const DL_Group group;
-      Fixed_Base_Power_Mod powermod_g_p, powermod_y_p;
-      Modular_Reducer mod_p, mod_q;
-   };
 
 /*************************************************
 * Default_DSA_Op Constructor                     *
@@ -91,8 +68,6 @@ SecureVector<byte> Default_DSA_Op::sign(const byte in[], u32bit length,
    s.binary_encode(output + (output.size() - s.bytes()));
    return output;
    }
-
-}
 
 /*************************************************
 * Acquire a DSA op                               *

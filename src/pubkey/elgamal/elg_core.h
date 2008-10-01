@@ -6,8 +6,7 @@
 #ifndef BOTAN_ELGAMAL_CORE_H__
 #define BOTAN_ELGAMAL_CORE_H__
 
-#include <botan/pk_ops.h>
-#include <botan/bigint.h>
+#include <botan/elg_op.h>
 #include <botan/blinding.h>
 #include <botan/dl_group.h>
 

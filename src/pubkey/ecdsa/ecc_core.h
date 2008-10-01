@@ -7,9 +7,8 @@
 #ifndef BOTAN_ECC_CORE_H__
 #define BOTAN_ECC_CORE_H__
 
-#include <botan/bigint.h>
+#include <botan/ecc_op.h>
 #include <botan/blinding.h>
-#include <botan/pk_ops.h>
 #include <botan/ec_dompar.h>
 
 namespace Botan {

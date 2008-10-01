@@ -3,33 +3,10 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
+#include <botan/nr_op.h>
 #include <botan/eng_def.h>
-#include <botan/pow_mod.h>
-#include <botan/numthry.h>
-#include <botan/reducer.h>
 
 namespace Botan {
-
-namespace {
-
-/*************************************************
-* Default NR Operation                           *
-*************************************************/
-class Default_NR_Op : public NR_Operation
-   {
-   public:
-      SecureVector<byte> verify(const byte[], u32bit) const;
-      SecureVector<byte> sign(const byte[], u32bit, const BigInt&) const;
-
-      NR_Operation* clone() const { return new Default_NR_Op(*this); }
-
-      Default_NR_Op(const DL_Group&, const BigInt&, const BigInt&);
-   private:
-      const BigInt x, y;
-      const DL_Group group;
-      Fixed_Base_Power_Mod powermod_g_p, powermod_y_p;
-      Modular_Reducer mod_p, mod_q;
-   };
 
 /*************************************************
 * Default_NR_Op Constructor                      *
@@ -89,8 +66,6 @@ SecureVector<byte> Default_NR_Op::sign(const byte in[], u32bit length,
    d.binary_encode(output + (output.size() - d.bytes()));
    return output;
    }
-
-}
 
 /*************************************************
 * Acquire a NR op                                *

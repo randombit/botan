@@ -6,9 +6,8 @@
 #ifndef BOTAN_IF_CORE_H__
 #define BOTAN_IF_CORE_H__
 
-#include <botan/bigint.h>
+#include <botan/if_op.h>
 #include <botan/blinding.h>
-#include <botan/pk_ops.h>
 
 namespace Botan {
 

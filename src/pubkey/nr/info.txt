@@ -9,6 +9,8 @@ nr.cpp
 nr.h
 nr_core.cpp
 nr_core.h
+nr_op.cpp
+nr_op.h
 </add>
 
 <requires>

@@ -3,33 +3,10 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
+#include <botan/elg_op.h>
 #include <botan/eng_def.h>
-#include <botan/pow_mod.h>
-#include <botan/numthry.h>
-#include <botan/reducer.h>
 
 namespace Botan {
-
-namespace {
-
-/*************************************************
-* Default ElGamal Operation                      *
-*************************************************/
-class Default_ELG_Op : public ELG_Operation
-   {
-   public:
-      SecureVector<byte> encrypt(const byte[], u32bit, const BigInt&) const;
-      BigInt decrypt(const BigInt&, const BigInt&) const;
-
-      ELG_Operation* clone() const { return new Default_ELG_Op(*this); }
-
-      Default_ELG_Op(const DL_Group&, const BigInt&, const BigInt&);
-   private:
-      const BigInt p;
-      Fixed_Base_Power_Mod powermod_g_p, powermod_y_p;
-      Fixed_Exponent_Power_Mod powermod_x_p;
-      Modular_Reducer mod_p;
-   };
 
 /*************************************************
 * Default_ELG_Op Constructor                     *
@@ -74,8 +51,6 @@ BigInt Default_ELG_Op::decrypt(const BigInt& a, const BigInt& b) const
 
    return mod_p.multiply(b, inverse_mod(powermod_x_p(a), p));
    }
-
-}
 
 /*************************************************
 * Acquire an ElGamal op                          *

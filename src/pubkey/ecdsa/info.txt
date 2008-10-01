@@ -4,15 +4,6 @@ define ECDSA
 
 load_on auto
 
-<add>
-ec.cpp
-ec.h
-ecc_core.cpp
-ecc_core.h
-ecdsa.cpp
-ecdsa.h
-</add>
-
 <requires>
 asn1
 bigint
@@ -21,3 +12,13 @@ numbertheory
 gfpmath
 pubkey
 </requires>
+
+<add>
+ec.cpp
+ec.h
+ecc_core.cpp
+ecc_core.h
+ecc_op.h
+ecdsa.cpp
+ecdsa.h
+</add>

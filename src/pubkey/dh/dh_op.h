@@ -26,7 +26,7 @@ class BOTAN_DLL DH_Operation
 /*************************************************
 * Botan's Default DH Operation                   *
 *************************************************/
-class Default_DH_Op : public DH_Operation
+class BOTAN_DLL Default_DH_Op : public DH_Operation
    {
    public:
       BigInt agree(const BigInt& i) const { return powermod_x_p(i); }

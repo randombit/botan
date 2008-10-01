@@ -8,17 +8,33 @@
 
 #include <botan/base.h>
 #include <botan/mutex.h>
-#include <botan/pk_ops.h>
 #include <botan/pow_mod.h>
 #include <botan/basefilt.h>
 #include <botan/enums.h>
+
+#if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
+  #include <botan/if_op.h>
+#endif
+
+#if defined(BOTAN_HAS_DSA)
+  #include <botan/dsa_op.h>
+#endif
 
 #if defined(BOTAN_HAS_DH)
   #include <botan/dh_op.h>
 #endif
 
+#if defined(BOTAN_HAS_NR)
+  #include <botan/nr_op.h>
+#endif
+
+#if defined(BOTAN_HAS_ELGAMAL)
+  #include <botan/elg_op.h>
+#endif
+
+
 #if defined(BOTAN_HAS_ECDSA)
-  #include <botan/ec_dompar.h>
+  #include <botan/ecc_op.h>
 #endif
 
 #include <utility>

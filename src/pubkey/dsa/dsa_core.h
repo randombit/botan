@@ -6,8 +6,7 @@
 #ifndef BOTAN_DSA_CORE_H__
 #define BOTAN_DSA_CORE_H__
 
-#include <botan/bigint.h>
-#include <botan/pk_ops.h>
+#include <botan/dsa_op.h>
 #include <botan/dl_group.h>
 
 namespace Botan {

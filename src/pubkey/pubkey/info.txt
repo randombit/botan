@@ -11,15 +11,10 @@ asn1
 </requires>
 
 <add>
-dsa_op.cpp
-elg_op.cpp
-if_op.cpp
-nr_op.cpp
 pk_algs.cpp
 pk_algs.h
 pk_keys.cpp
 pk_keys.h
-pk_ops.h
 pkcs8.cpp
 pkcs8.h
 pubkey.cpp

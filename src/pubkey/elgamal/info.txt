@@ -9,6 +9,8 @@ elgamal.cpp
 elgamal.h
 elg_core.cpp
 elg_core.h
+elg_op.cpp
+elg_op.h
 </add>
 
 <requires>

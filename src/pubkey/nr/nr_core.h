@@ -6,8 +6,7 @@
 #ifndef BOTAN_NR_CORE_H__
 #define BOTAN_NR_CORE_H__
 
-#include <botan/bigint.h>
-#include <botan/pk_ops.h>
+#include <botan/nr_op.h>
 #include <botan/dl_group.h>
 
 namespace Botan {

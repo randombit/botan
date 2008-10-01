@@ -4,13 +4,6 @@ define DSA
 
 load_on auto
 
-<add>
-dsa.cpp
-dsa.h
-dsa_core.cpp
-dsa_core.h
-</add>
-
 <requires>
 asn1
 bigint
@@ -19,3 +12,12 @@ keypair
 numbertheory
 pubkey
 </requires>
+
+<add>
+dsa.cpp
+dsa.h
+dsa_core.cpp
+dsa_core.h
+dsa_op.cpp
+dsa_op.h
+</add>
