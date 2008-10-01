@@ -67,17 +67,6 @@ class BOTAN_DLL ELG_Operation
       virtual ~ELG_Operation() {}
    };
 
-/*************************************************
-* DH Operation                                   *
-*************************************************/
-class BOTAN_DLL DH_Operation
-   {
-   public:
-      virtual BigInt agree(const BigInt&) const = 0;
-      virtual DH_Operation* clone() const = 0;
-      virtual ~DH_Operation() {}
-   };
-
 #if defined(BOTAN_HAS_ECDSA)
 /*************************************************
 * ECDSA Operation                               *

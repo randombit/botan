@@ -24,7 +24,10 @@ class BOTAN_DLL Default_Engine : public Engine
       NR_Operation* nr_op(const DL_Group&, const BigInt&, const BigInt&) const;
       ELG_Operation* elg_op(const DL_Group&, const BigInt&,
                             const BigInt&) const;
+
+#if defined(BOTAN_HAS_DH)
       DH_Operation* dh_op(const DL_Group&, const BigInt&) const;
+#endif
 
       Modular_Exponentiator* mod_exp(const BigInt&,
                                      Power_Mod::Usage_Hints) const;

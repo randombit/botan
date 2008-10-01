@@ -83,6 +83,7 @@ ELG_Operation* elg_op(const DL_Group& group, const BigInt& y, const BigInt& x)
    throw Lookup_Error("Engine_Core::elg_op: Unable to find a working engine");
    }
 
+#if defined(BOTAN_HAS_DH)
 /*************************************************
 * Acquire a DH op                                *
 *************************************************/
@@ -99,6 +100,7 @@ DH_Operation* dh_op(const DL_Group& group, const BigInt& x)
 
    throw Lookup_Error("Engine_Core::dh_op: Unable to find a working engine");
    }
+#endif
 
 #if defined(BOTAN_HAS_ECDSA)
 /*************************************************

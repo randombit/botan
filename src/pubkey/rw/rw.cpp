@@ -6,6 +6,7 @@
 #include <botan/rw.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
+#include <botan/look_pk.h>
 #include <botan/parsing.h>
 #include <algorithm>
 

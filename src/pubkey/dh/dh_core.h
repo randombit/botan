@@ -6,10 +6,8 @@
 #ifndef BOTAN_DH_CORE_H__
 #define BOTAN_DH_CORE_H__
 
-#include <botan/bigint.h>
+#include <botan/dh_op.h>
 #include <botan/blinding.h>
-#include <botan/pk_ops.h>
-#include <botan/dl_group.h>
 
 namespace Botan {
 

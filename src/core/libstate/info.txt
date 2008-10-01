@@ -7,7 +7,9 @@ define LIBSTATE_MODULE
 <add>
 def_alg.cpp
 def_mode.cpp
+def_powm.cpp
 eng_base.cpp
+eng_def.h
 engine.cpp
 engine.h
 get_enc.cpp

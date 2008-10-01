@@ -21,10 +21,8 @@ base.h
 botan.h
 data_src.cpp
 data_src.h
-def_powm.cpp
 defalloc.cpp
 defalloc.h
-eng_def.h
 enums.h
 exceptn.cpp
 exceptn.h

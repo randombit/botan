@@ -6,6 +6,7 @@
 #include <botan/elgamal.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
+#include <botan/look_pk.h>
 #include <botan/util.h>
 
 namespace Botan {

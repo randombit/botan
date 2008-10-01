@@ -4,9 +4,10 @@
 *************************************************/
 
 #include <botan/rsa.h>
+#include <botan/parsing.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
-#include <botan/parsing.h>
+#include <botan/look_pk.h>
 
 namespace Botan {
 
