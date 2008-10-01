@@ -145,12 +145,14 @@ sub main {
 
     write_pkg_config($config);
 
-    generate_makefile($config);
+    determine_config($config);
 
     process_template(File::Spec->catfile($$config{'config-dir'}, 'buildh.in'),
                      File::Spec->catfile($$config{'build-dir'}, 'build.h'),
                      $config);
     $$config{'includes'}{'build.h'} = $$config{'build-dir'};
+
+    generate_makefile($config);
 
     copy_include_files($config);
 }
@@ -1759,10 +1761,8 @@ sub build_cmds {
     return join("\n\n", @output_lines);
 }
 
-sub generate_makefile {
+sub determine_config {
    my ($config) = @_;
-
-   trace('entering');
 
    sub os_ar_command {
        return os_info_for(shift, 'ar_command');
@@ -1879,6 +1879,10 @@ sub generate_makefile {
        'install_cmd_exec' => os_info_for($os, 'install_cmd_exec'),
        'install_cmd_data' => os_info_for($os, 'install_cmd_data'),
        });
+}
+
+sub generate_makefile {
+   my ($config) = @_;
 
    my $is_in_doc_dir =
        sub { -e File::Spec->catfile($$config{'doc-dir'}, $_[0]) };
