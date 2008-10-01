@@ -1,6 +1,6 @@
 realname "Assembler Macros (x86-64)"
 
-load_on required
+load_on dep
 
 <add>
 asm_macr.h
