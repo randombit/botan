@@ -121,12 +121,16 @@ void Salsa20::cipher(const byte in[], byte out[], u32bit length)
 *************************************************/
 void Salsa20::key(const byte key[], u32bit length)
    {
+   static const u32bit TAU[] =
+      { 0x61707865, 0x3120646e, 0x79622d36, 0x6b206574 };
+
+   static const u32bit SIGMA[] =
+      { 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574 };
+
    clear();
 
    if(length == 16)
       {
-      const u32bit TAU[] = { 0x61707865, 0x3120646e, 0x79622d36, 0x6b206574 };
-
       state[0] = TAU[0];
       state[1] = load_le<u32bit>(key, 0);
       state[2] = load_le<u32bit>(key, 1);
@@ -142,8 +146,6 @@ void Salsa20::key(const byte key[], u32bit length)
       }
    else if(length == 32)
       {
-      const u32bit SIGMA[] = { 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574 };
-
       state[0] = SIGMA[0];
       state[1] = load_le<u32bit>(key, 0);
       state[2] = load_le<u32bit>(key, 1);
