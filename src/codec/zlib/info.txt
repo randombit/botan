@@ -7,6 +7,10 @@ define COMPRESSOR_ZLIB
 load_on request
 modset compression
 
+<requires>
+filters
+</requires>
+
 <add>
 zlib.h
 zlib.cpp

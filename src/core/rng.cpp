@@ -4,17 +4,18 @@
 *************************************************/
 
 #include <botan/rng.h>
-#include <botan/lookup.h>
 #include <botan/util.h>
 #include <botan/parsing.h>
 #include <botan/timers.h>
 
 #if defined(BOTAN_HAS_RANDPOOL)
+  #include <botan/lookup.h>
   #include <botan/randpool.h>
-#endif
 
 #if defined(BOTAN_HAS_X931_RNG)
   #include <botan/x931_rng.h>
+#endif
+
 #endif
 
 #if defined(BOTAN_HAS_TIMER_HARDWARE)

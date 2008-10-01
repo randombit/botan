@@ -10,7 +10,7 @@ sha1
 sha2
 hmac
 filters
-libstate
+hex
 timer_base
 </requires>
 

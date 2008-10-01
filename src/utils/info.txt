@@ -8,6 +8,10 @@ load_on auto
 tru64 -> rt
 </libs>
 
+<requires>
+filters
+</requires>
+
 <add>
 bit_ops.h
 bswap.h

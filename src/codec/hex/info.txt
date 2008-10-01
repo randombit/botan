@@ -4,6 +4,10 @@ define HEX_CODEC
 
 load_on auto
 
+<requires>
+filters
+</requires>
+
 <add>
 hex.cpp
 hex_char.cpp

@@ -4,9 +4,10 @@
 *************************************************/
 
 #include <botan/datastor.h>
-#include <botan/filters.h>
+#include <botan/exceptn.h>
 #include <botan/parsing.h>
 #include <botan/stl_util.h>
+#include <botan/filters.h>
 
 namespace Botan {
 
