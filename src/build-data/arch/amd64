@@ -17,7 +17,6 @@ core2
 </submodels>
 
 <submodel_aliases>
-core -> core2
 core2duo -> core2
 intelcore2 -> core2
 intelcore2duo -> core2
