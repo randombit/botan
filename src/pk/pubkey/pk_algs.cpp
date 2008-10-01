@@ -17,6 +17,10 @@
   #include <botan/dh.h>
 #endif
 
+#ifdef BOTAN_HAS_ECDSA
+  #include <botan/ec.h>
+#endif
+
 #ifdef BOTAN_HAS_NR
   #include <botan/nr.h>
 #endif
@@ -60,6 +64,10 @@ Public_Key* get_public_key(const std::string& alg_name)
    if(alg_name == "ELG") return new ElGamal_PublicKey;
 #endif
 
+#if defined(BOTAN_HAS_ECDSA)
+   if(alg_name == "ECDSA") return new ECDSA_PublicKey;
+#endif
+
    return 0;
    }
 
@@ -90,6 +98,10 @@ Private_Key* get_private_key(const std::string& alg_name)
 
 #if defined(BOTAN_HAS_ELG)
    if(alg_name == "ELG") return new ElGamal_PrivateKey;
+#endif
+
+#if defined(BOTAN_HAS_ECDSA)
+   if(alg_name == "ECDSA") return new ECDSA_PrivateKey;
 #endif
 
    return 0;
