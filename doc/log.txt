@@ -2,8 +2,10 @@
 * 1.7.15, ????-??-??
  - Add GF(p) arithmetic from InSiTo
  - Add ECDSA and ECKAEG implementations from InSiTo
- - Update build instructions for recent changes to configure.pl
+ - Minimize internal dependencies, allowing for smaller build configurations
+ - Add new User Manual and Architecture Guide from FlexSecure GmbH
  - Alter configure.pl options for better autotools compatability
+ - Update build instructions for recent changes to configure.pl
  - Fixes for CPU detection using /proc/cpuinfo
 
 * 1.7.14, 2008-09-30
