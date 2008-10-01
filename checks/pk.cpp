@@ -15,11 +15,11 @@
   #include <botan/dsa.h>
 #endif
 
-#if defined(BOTAN_HAS_DH)
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
   #include <botan/dh.h>
 #endif
 
-#if defined(BOTAN_HAS_NR)
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
   #include <botan/nr.h>
 #endif
 
@@ -43,11 +43,15 @@ using namespace Botan;
 #include "common.h"
 #include "validate.h"
 
-static BigInt to_bigint(const std::string& h)
+namespace {
+
+BigInt to_bigint(const std::string& h)
    {
    return BigInt::decode(reinterpret_cast<const byte*>(h.data()),
                          h.length(), BigInt::Hexadecimal);
    }
+
+}
 
 #define DEBUG 0
 
@@ -163,7 +167,6 @@ u32bit validate_rsa_enc_pkcs8(const std::string& algo,
    if(str.size() != 4 && str.size() != 5)
       throw Exception("Invalid input from pk_valid.dat");
 
-   bool failure = false;
 
 #if defined(BOTAN_HAS_RSA)
    std::string pass;
@@ -187,10 +190,12 @@ u32bit validate_rsa_enc_pkcs8(const std::string& algo,
    PK_Encryptor* e = get_pk_encryptor(*rsapub, eme);
    PK_Decryptor* d = get_pk_decryptor(*rsapriv, eme);
 
+   bool failure = false;
    validate_encryption(e, d, algo, str[1], str[2], str[3], failure);
+   return (failure ? 1 : 0);
 #endif
 
-   return (failure ? 1 : 0);
+   return 2;
    }
 
 u32bit validate_rsa_enc(const std::string& algo,
@@ -200,7 +205,6 @@ u32bit validate_rsa_enc(const std::string& algo,
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
-   bool failure = false;
 
 #if defined(BOTAN_HAS_RSA)
    RSA_PrivateKey privkey(rng,
@@ -214,10 +218,12 @@ u32bit validate_rsa_enc(const std::string& algo,
    PK_Encryptor* e = get_pk_encryptor(pubkey, eme);
    PK_Decryptor* d = get_pk_decryptor(privkey, eme);
 
+   bool failure = false;
    validate_encryption(e, d, algo, str[3], str[4], str[5], failure);
+   return (failure ? 1 : 0);
 #endif
 
-   return (failure ? 1 : 0);
+   return 2;
    }
 
 u32bit validate_elg_enc(const std::string& algo,
@@ -227,7 +233,6 @@ u32bit validate_elg_enc(const std::string& algo,
    if(str.size() != 6 && str.size() != 7)
       throw Exception("Invalid input from pk_valid.dat");
 
-   bool failure = false;
 
 #if defined(BOTAN_HAS_ELGAMAL)
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]));
@@ -238,6 +243,7 @@ u32bit validate_elg_enc(const std::string& algo,
 
    PK_Decryptor* d = get_pk_decryptor(privkey, eme);
 
+   bool failure = false;
    if(str.size() == 7)
       {
       PK_Encryptor* e = get_pk_encryptor(pubkey, eme);
@@ -246,9 +252,10 @@ u32bit validate_elg_enc(const std::string& algo,
    else
       validate_decryption(d, algo, decode_hex(str[5]),
                           decode_hex(str[4]), failure);
+   return (failure ? 1 : 0);
 #endif
 
-   return (failure ? 1 : 0);
+   return 2;
    }
 
 u32bit validate_rsa_sig(const std::string& algo,
@@ -258,7 +265,6 @@ u32bit validate_rsa_sig(const std::string& algo,
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
-   bool failure = false;
 
 #if defined(BOTAN_HAS_RSA)
    RSA_PrivateKey privkey(rng,
@@ -271,10 +277,12 @@ u32bit validate_rsa_sig(const std::string& algo,
 
    PK_Verifier* v = get_pk_verifier(pubkey, emsa);
    PK_Signer* s = get_pk_signer(privkey, emsa);
+   bool failure = false;
    validate_signature(v, s, algo, str[3], str[4], str[5], failure);
+   return (failure ? 1 : 0);
 #endif
 
-   return (failure ? 1 : 0);
+   return 2;
    }
 
 u32bit validate_rsa_ver(const std::string& algo,
@@ -282,8 +290,6 @@ u32bit validate_rsa_ver(const std::string& algo,
    {
    if(str.size() != 5) /* is actually 4, parse() adds an extra empty one */
       throw Exception("Invalid input from pk_valid.dat");
-
-   bool passed = true;
 
 #if defined(BOTAN_HAS_RSA)
    RSA_PublicKey key(to_bigint(str[1]), to_bigint(str[0]));
@@ -295,10 +301,12 @@ u32bit validate_rsa_ver(const std::string& algo,
    SecureVector<byte> msg = decode_hex(str[2]);
    SecureVector<byte> sig = decode_hex(str[3]);
 
+   bool passed = true;
    passed = v->verify_message(msg, msg.size(), sig, sig.size());
+   return (passed ? 0 : 1);
 #endif
 
-   return (passed ? 0 : 1);
+   return 2;
    }
 
 u32bit validate_rsa_ver_x509(const std::string& algo,
@@ -306,8 +314,6 @@ u32bit validate_rsa_ver_x509(const std::string& algo,
    {
    if(str.size() != 5) /* is actually 3, parse() adds extra empty ones */
       throw Exception("Invalid input from pk_valid.dat");
-
-   bool passed = true;
 
 #if defined(BOTAN_HAS_RSA)
    DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
@@ -327,10 +333,12 @@ u32bit validate_rsa_ver_x509(const std::string& algo,
    SecureVector<byte> msg = decode_hex(str[1]);
    SecureVector<byte> sig = decode_hex(str[2]);
 
-   passed = v->verify_message(msg, msg.size(), sig, sig.size());
+   bool passed = v->verify_message(msg, msg.size(), sig, sig.size());
+   return (passed ? 0 : 1);
+
 #endif
 
-   return (passed ? 0 : 1);
+   return 2;
    }
 
 u32bit validate_rw_ver(const std::string& algo,
@@ -339,7 +347,7 @@ u32bit validate_rw_ver(const std::string& algo,
    if(str.size() != 5)
       throw Exception("Invalid input from pk_valid.dat");
 
-   bool passed = true;
+
 
 #if defined(BOTAN_HAS_RW)
    RW_PublicKey key(to_bigint(str[1]), to_bigint(str[0]));
@@ -351,10 +359,12 @@ u32bit validate_rw_ver(const std::string& algo,
    SecureVector<byte> msg = decode_hex(str[2]);
    SecureVector<byte> sig = decode_hex(str[3]);
 
+   bool passed = true;
    passed = v->verify_message(msg, msg.size(), sig, sig.size());
+   return (passed ? 0 : 1);
 #endif
 
-   return (passed ? 0 : 1);
+   return 2;
    }
 
 u32bit validate_rw_sig(const std::string& algo,
@@ -364,7 +374,6 @@ u32bit validate_rw_sig(const std::string& algo,
    if(str.size() != 6)
       throw Exception("Invalid input from pk_valid.dat");
 
-   bool failure = false;
 
 #if defined(BOTAN_HAS_RW)
    RW_PrivateKey privkey(rng, to_bigint(str[1]), to_bigint(str[2]),
@@ -376,10 +385,12 @@ u32bit validate_rw_sig(const std::string& algo,
    PK_Verifier* v = get_pk_verifier(pubkey, emsa);
    PK_Signer* s = get_pk_signer(privkey, emsa);
 
+   bool failure = false;
    validate_signature(v, s, algo, str[3], str[4], str[5], failure);
+   return (failure ? 1 : 0);
 #endif
 
-   return (failure ? 1 : 0);
+   return 2;
    }
 
 u32bit validate_dsa_sig(const std::string& algo,
@@ -461,7 +472,7 @@ u32bit validate_nr_sig(const std::string& algo,
       throw Exception("Invalid input from pk_valid.dat");
 
 
-#if defined(BOTAN_HAS_NR)
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
 
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]), to_bigint(str[2]));
    NR_PrivateKey privkey(rng, domain, to_bigint(str[4]));
@@ -488,7 +499,7 @@ u32bit validate_dh(const std::string& algo,
       throw Exception("Invalid input from pk_valid.dat");
 
 
-#if defined(BOTAN_HAS_DH)
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]));
 
    DH_PrivateKey mykey(rng, domain, to_bigint(str[2]));
@@ -544,7 +555,7 @@ u32bit validate_dlies(const std::string& algo,
    validate_encryption(e, d, algo, str[4], empty, str[5], failure);
    return (failure ? 1 : 0);
 #else
-   return 0;
+   return 2;
 #endif
    }
 
@@ -595,13 +606,13 @@ void do_pk_keygen_tests(RandomNumberGenerator& rng)
    DL_SIG_KEY(DSA_PrivateKey, "dsa/jce/1024");
 #endif
 
-#if defined(BOTAN_HAS_DH)
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    DL_KEY(DH_PrivateKey, "modp/ietf/768");
    DL_KEY(DH_PrivateKey, "modp/ietf/2048");
    DL_KEY(DH_PrivateKey, "dsa/jce/1024");
 #endif
 
-#if defined(BOTAN_HAS_NR)
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
    DL_SIG_KEY(NR_PrivateKey, "dsa/jce/512");
    DL_SIG_KEY(NR_PrivateKey, "dsa/jce/768");
    DL_SIG_KEY(NR_PrivateKey, "dsa/jce/1024");

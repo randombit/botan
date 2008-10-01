@@ -1,6 +1,6 @@
 realname "Nyberg-Rueppel"
 
-define NR
+define NYBERG_RUEPPEL
 
 load_on auto
 

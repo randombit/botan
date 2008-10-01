@@ -13,6 +13,7 @@ namespace Botan {
 
 namespace Engine_Core {
 
+#if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
 /*************************************************
 * Acquire an IF op                               *
 *************************************************/
@@ -31,7 +32,9 @@ IF_Operation* if_op(const BigInt& e, const BigInt& n, const BigInt& d,
 
    throw Lookup_Error("Engine_Core::if_op: Unable to find a working engine");
    }
+#endif
 
+#if defined(BOTAN_HAS_DSA)
 /*************************************************
 * Acquire a DSA op                               *
 *************************************************/
@@ -48,7 +51,9 @@ DSA_Operation* dsa_op(const DL_Group& group, const BigInt& y, const BigInt& x)
 
    throw Lookup_Error("Engine_Core::dsa_op: Unable to find a working engine");
    }
+#endif
 
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
 /*************************************************
 * Acquire a NR op                                *
 *************************************************/
@@ -65,7 +70,9 @@ NR_Operation* nr_op(const DL_Group& group, const BigInt& y, const BigInt& x)
 
    throw Lookup_Error("Engine_Core::nr_op: Unable to find a working engine");
    }
+#endif
 
+#if defined(BOTAN_HAS_ELGAMAL)
 /*************************************************
 * Acquire an ElGamal op                          *
 *************************************************/
@@ -82,8 +89,9 @@ ELG_Operation* elg_op(const DL_Group& group, const BigInt& y, const BigInt& x)
 
    throw Lookup_Error("Engine_Core::elg_op: Unable to find a working engine");
    }
+#endif
 
-#if defined(BOTAN_HAS_DH)
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
 /*************************************************
 * Acquire a DH op                                *
 *************************************************/

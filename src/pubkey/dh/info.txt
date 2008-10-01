@@ -1,6 +1,6 @@
-realname "DH"
+realname "Diffie-Hellman Key Agreement"
 
-define DH
+define DIFFIE_HELLMAN
 
 load_on auto
 

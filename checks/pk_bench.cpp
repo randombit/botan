@@ -12,11 +12,11 @@
   #include <botan/dsa.h>
 #endif
 
-#if defined(BOTAN_HAS_DH)
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
   #include <botan/dh.h>
 #endif
 
-#if defined(BOTAN_HAS_NR)
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
   #include <botan/nr.h>
 #endif
 
@@ -160,7 +160,8 @@ void benchmark_rsa(RandomNumberGenerator& rng,
 
 #if 0
          // for profiling
-         PKCS8_PrivateKey* pkcs8_key = PKCS8::load_key("rsa/" + to_string(keylen) + ".pem", rng);
+         PKCS8_PrivateKey* pkcs8_key =
+            PKCS8::load_key("rsa/" + to_string(keylen) + ".pem", rng);
          RSA_PrivateKey* key_ptr = dynamic_cast<RSA_PrivateKey*>(pkcs8_key);
 
          RSA_PrivateKey key = *key_ptr;
@@ -179,7 +180,8 @@ void benchmark_rsa(RandomNumberGenerator& rng,
 
             std::auto_ptr<PK_Signer> sig(get_pk_signer(key, sig_padding));
             std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, sig_padding));
-            benchmark_sig_ver(*ver, *sig, verify_timer, sig_timer, rng, 10000, seconds);
+            benchmark_sig_ver(*ver, *sig, verify_timer,
+                              sig_timer, rng, 10000, seconds);
             }
 
          const std::string rsa_keylen = "RSA " + to_string(keylen);
@@ -247,7 +249,7 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
                       double seconds,
                       Benchmark_Report& report)
    {
-#if defined(BOTAN_HAS_NR) || defined(BOTAN_HAS_DSA)
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL) || defined(BOTAN_HAS_DSA)
    const char* domains[] = { "dsa/jce/512",
                              "dsa/jce/768",
                              "dsa/jce/1024",
@@ -280,7 +282,8 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
          std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));
          std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
 
-         benchmark_sig_ver(*ver, *sig, verify_timer, sig_timer, rng, 1000, seconds);
+         benchmark_sig_ver(*ver, *sig, verify_timer,
+                           sig_timer, rng, 1000, seconds);
          }
 
       const std::string nm = algo_name + "-" + to_string(pbits);
@@ -295,7 +298,7 @@ void benchmark_dh(RandomNumberGenerator& rng,
                   double seconds,
                   Benchmark_Report& report)
    {
-#ifdef BOTAN_HAS_DH
+#ifdef BOTAN_HAS_DIFFIE_HELLMAN
 
    const char* domains[] = { "modp/ietf/768",
                              "modp/ietf/1024",
@@ -457,7 +460,7 @@ void bench_pk(RandomNumberGenerator& rng,
    if(algo == "All" || algo == "ELG" || algo == "ElGamal")
       benchmark_elg(rng, seconds, report);
 
-#if defined(BOTAN_HAS_NR)
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
    if(algo == "All" || algo == "NR")
       benchmark_dsa_nr<NR_PrivateKey>(rng, seconds, report);
 #endif

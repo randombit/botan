@@ -20,18 +20,17 @@
   #include <botan/dsa_op.h>
 #endif
 
-#if defined(BOTAN_HAS_DH)
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
   #include <botan/dh_op.h>
 #endif
 
-#if defined(BOTAN_HAS_NR)
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
   #include <botan/nr_op.h>
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
   #include <botan/elg_op.h>
 #endif
-
 
 #if defined(BOTAN_HAS_ECDSA)
   #include <botan/ecc_op.h>
@@ -57,24 +56,32 @@ class BOTAN_DLL Engine
             virtual ~Algorithm_Cache() {}
          };
 
+#if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
       virtual IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,
                                   const BigInt&, const BigInt&, const BigInt&,
                                   const BigInt&, const BigInt&) const
          { return 0; }
+#endif
 
+#if defined(BOTAN_HAS_DSA)
       virtual DSA_Operation* dsa_op(const DL_Group&, const BigInt&,
                                     const BigInt&) const
          { return 0; }
+#endif
 
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
       virtual NR_Operation* nr_op(const DL_Group&, const BigInt&,
                                   const BigInt&) const
          { return 0; }
+#endif
 
+#if defined(BOTAN_HAS_ELGAMAL)
       virtual ELG_Operation* elg_op(const DL_Group&, const BigInt&,
                                     const BigInt&) const
          { return 0; }
+#endif
 
-#if defined(BOTAN_HAS_DH)
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
       virtual DH_Operation* dh_op(const DL_Group&, const BigInt&) const
          { return 0; }
 #endif
@@ -154,16 +161,25 @@ namespace Engine_Core {
 *************************************************/
 Modular_Exponentiator* mod_exp(const BigInt&, Power_Mod::Usage_Hints);
 
+#if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
 IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,
                     const BigInt&, const BigInt&, const BigInt&,
                     const BigInt&, const BigInt&);
+#endif
 
+#if defined(BOTAN_HAS_DSA)
 DSA_Operation* dsa_op(const DL_Group&, const BigInt&, const BigInt&);
+#endif
+
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
 NR_Operation* nr_op(const DL_Group&, const BigInt&, const BigInt&);
+#endif
 
+#if defined(BOTAN_HAS_ELGAMAL)
 ELG_Operation* elg_op(const DL_Group&, const BigInt&, const BigInt&);
+#endif
 
-#if defined(BOTAN_HAS_DH)
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
 DH_Operation* dh_op(const DL_Group&, const BigInt&);
 #endif
 

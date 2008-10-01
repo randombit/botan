@@ -13,7 +13,7 @@
   #include <botan/dsa.h>
 #endif
 
-#ifdef BOTAN_HAS_DH
+#ifdef BOTAN_HAS_DIFFIE_HELLMAN
   #include <botan/dh.h>
 #endif
 
@@ -21,7 +21,7 @@
   #include <botan/ec.h>
 #endif
 
-#ifdef BOTAN_HAS_NR
+#ifdef BOTAN_HAS_NYBERG_RUEPPEL
   #include <botan/nr.h>
 #endif
 
@@ -48,11 +48,11 @@ Public_Key* get_public_key(const std::string& alg_name)
    if(alg_name == "DSA") return new DSA_PublicKey;
 #endif
 
-#if defined(BOTAN_HAS_DH)
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    if(alg_name == "DH")  return new DH_PublicKey;
 #endif
 
-#if defined(BOTAN_HAS_NR)
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
    if(alg_name == "NR")  return new NR_PublicKey;
 #endif
 
@@ -84,11 +84,11 @@ Private_Key* get_private_key(const std::string& alg_name)
    if(alg_name == "DSA") return new DSA_PrivateKey;
 #endif
 
-#if defined(BOTAN_HAS_DH)
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    if(alg_name == "DH")  return new DH_PrivateKey;
 #endif
 
-#if defined(BOTAN_HAS_NR)
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
    if(alg_name == "NR")  return new NR_PrivateKey;
 #endif
 
