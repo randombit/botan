@@ -4,6 +4,15 @@ define ENGINE_OPENSSL
 
 load_on request
 
+<required>
+dh
+dsa
+elgamal
+if_algo
+libstate
+nr
+</required>
+
 <add>
 eng_ossl.cpp
 bn_wrap.cpp
