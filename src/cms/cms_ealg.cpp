@@ -261,8 +261,7 @@ SecureVector<byte> CMS_Encoder::do_encrypt(RandomNumberGenerator& rng,
    content_cipher.oid = OIDS::lookup(cipher + "/CBC");
    content_cipher.parameters = encode_params(cipher, key, iv);
 
-   Pipe pipe(get_cipher(global_state(),
-                        cipher + "/CBC/PKCS7", key, iv, ENCRYPTION));
+   Pipe pipe(get_cipher(cipher + "/CBC/PKCS7", key, iv, ENCRYPTION));
    pipe.process_msg(data);
 
    DER_Encoder encoder;

@@ -383,11 +383,10 @@ void add_algorithm(Library_State& libstate,
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-Keyed_Filter* get_cipher(Library_State& libstate,
-                         const std::string& algo_spec,
+Keyed_Filter* get_cipher(const std::string& algo_spec,
                          Cipher_Dir direction)
    {
-   Library_State::Engine_Iterator i(libstate);
+   Library_State::Engine_Iterator i(global_state());
 
    while(Engine* engine = i.next())
       {
@@ -402,13 +401,12 @@ Keyed_Filter* get_cipher(Library_State& libstate,
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-Keyed_Filter* get_cipher(Library_State& libstate,
-                         const std::string& algo_spec,
+Keyed_Filter* get_cipher(const std::string& algo_spec,
                          const SymmetricKey& key,
                          const InitializationVector& iv,
                          Cipher_Dir direction)
    {
-   Keyed_Filter* cipher = get_cipher(libstate, algo_spec, direction);
+   Keyed_Filter* cipher = get_cipher(algo_spec, direction);
    cipher->set_key(key);
 
    if(iv.length())
@@ -420,12 +418,11 @@ Keyed_Filter* get_cipher(Library_State& libstate,
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-Keyed_Filter* get_cipher(Library_State& libstate,
-                         const std::string& algo_spec,
+Keyed_Filter* get_cipher(const std::string& algo_spec,
                          const SymmetricKey& key,
                          Cipher_Dir direction)
    {
-   return get_cipher(libstate, algo_spec,
+   return get_cipher(algo_spec,
                      key, InitializationVector(), direction);
    }
 

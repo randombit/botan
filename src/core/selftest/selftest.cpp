@@ -35,9 +35,9 @@ void cipher_kat(const std::string& in, const std::string& out,
                   const std::string& cipher)
    {
    do_kat(in, out, cipher,
-          get_cipher(global_state(), cipher, key, iv, ENCRYPTION));
+          get_cipher(cipher, key, iv, ENCRYPTION));
    do_kat(out, in, cipher,
-          get_cipher(global_state(), cipher, key, iv, DECRYPTION));
+          get_cipher(cipher, key, iv, DECRYPTION));
    }
 
 /*************************************************

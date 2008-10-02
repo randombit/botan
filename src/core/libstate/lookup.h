@@ -58,19 +58,16 @@ BOTAN_DLL KDF*  get_kdf(const std::string&);
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
-BOTAN_DLL Keyed_Filter* get_cipher(Library_State&,
-                                   const std::string&,
+BOTAN_DLL Keyed_Filter* get_cipher(const std::string&,
                                    const SymmetricKey&,
                                    const InitializationVector&,
                                    Cipher_Dir);
 
-BOTAN_DLL Keyed_Filter* get_cipher(Library_State&,
-                                   const std::string&,
+BOTAN_DLL Keyed_Filter* get_cipher(const std::string&,
                                    const SymmetricKey&,
                                    Cipher_Dir);
 
-BOTAN_DLL Keyed_Filter* get_cipher(Library_State&,
-                                   const std::string&, Cipher_Dir);
+BOTAN_DLL Keyed_Filter* get_cipher(const std::string&, Cipher_Dir);
 
 /*************************************************
 * Check to see if an algorithm exists            *
