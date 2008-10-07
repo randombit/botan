@@ -20,6 +20,8 @@ core2
 core2duo -> core2
 intelcore2 -> core2
 intelcore2duo -> core2
+
+amdopteron -> opteron
 athlon64 -> opteron
 k8 -> opteron
 </submodel_aliases>

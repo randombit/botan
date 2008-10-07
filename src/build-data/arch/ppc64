@@ -16,3 +16,7 @@ power4
 power5
 cellppu
 </submodels>
+
+<submodel_aliases>
+cellbroadbandengine -> cellppu
+</submodel_aliases>

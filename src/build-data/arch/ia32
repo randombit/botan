@@ -35,6 +35,9 @@ pentium3 -> pentium3
 pentiumiii -> pentium3
 
 pentiumm -> pentium-m
+intelpentiumm -> pentium-m
+
+intelpentium4 -> pentium4
 
 duron -> athlon
 athlon-xp -> athlon
