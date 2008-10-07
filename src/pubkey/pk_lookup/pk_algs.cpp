@@ -18,7 +18,7 @@
 #endif
 
 #ifdef BOTAN_HAS_ECDSA
-  #include <botan/ec.h>
+  #include <botan/ecdsa.h>
 #endif
 
 #ifdef BOTAN_HAS_NYBERG_RUEPPEL
