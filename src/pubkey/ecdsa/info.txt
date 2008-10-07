@@ -14,11 +14,15 @@ pubkey
 </requires>
 
 <add>
-ec.cpp
-ec.h
+ec_key.cpp
+ec_key.h
 ecc_core.cpp
 ecc_core.h
 ecc_op.h
 ecdsa.cpp
 ecdsa.h
+ecdsa_sig.cpp
+ecdsa_sig.h
+eckaeg.cpp
+eckaeg.h
 </add>

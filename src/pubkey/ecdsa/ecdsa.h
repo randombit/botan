@@ -1,99 +1,139 @@
 /*************************************************
 * ECDSA Header File                              *
 * (C) 2007 Falko Strenzke, FlexSecure GmbH       *
-* Defines classes ECDSA_Signature  and           *
-* ECDSA_Signature_De/Encoder,                    *
+*          Manuel hartl, FlexSecure GmbH         *
+* (C) 2008 Jack Lloyd                            *
 *************************************************/
 
-#ifndef BOTAN_ECDSA_H__
-#define BOTAN_ECDSA_H__
+#ifndef BOTAN_ECDSA_KEY_H__
+#define BOTAN_ECDSA_KEY_H__
 
-#include <botan/bigint.h>
-#include <botan/der_enc.h>
-#include <botan/ber_dec.h>
+#include <botan/ecc_key.h>
 
 namespace Botan {
 
-class ECDSA_Signature_Decoder;
-class ECDSA_Signature_Encoder;
-
-class ECDSA_Signature
+/**
+* This class represents ECDSA Public Keys.
+*/
+class ECDSA_PublicKey : public virtual EC_PublicKey,
+                        public PK_Verifying_wo_MR_Key
    {
-      friend class ECDSA_Signature_Decoder;
-      friend class ECDSA_Signature_Encoder;
    public:
-      ECDSA_Signature(const BigInt& r, const BigInt& s);
-      ECDSA_Signature()
-         {}
-      ;
-      ECDSA_Signature(ECDSA_Signature const& other);
-      ECDSA_Signature const& operator=(ECDSA_Signature const& other);
 
-      BigInt const get_r() const
-         {
-         return m_r;
-         }
-      BigInt const get_s() const
-         {
-         return m_s;
-         }
       /**
-      * return the r||s
+      * Get this keys algorithm name.
+      * @result this keys algorithm name ("ECDSA")
       */
-      SecureVector<byte> const get_concatenation() const;
+      std::string algo_name() const
+         {
+         return "ECDSA";
+         }
+
+      /**
+      * Get the maximum number of bits allowed to be fed to this key.
+      * This is the bitlength of the order of the base point.
+      *
+      * @result the maximum number of input bits
+      */
+      u32bit max_input_bits() const;
+
+      /**
+      * Verify a message with this key.
+      * @param message the byte array containing the message
+      * @param mess_len the number of bytes in the message byte array
+      * @param signature the byte array containing the signature
+      * @param sig_len the number of bytes in the signature byte array
+      */
+      bool verify(const byte message[], u32bit mess_len,
+                  const byte signature [], u32bit sig_len) const;
+
+      /**
+      * Default constructor. Use this one if you want to later fill this object with data
+      * from an encoded key.
+      */
+      ECDSA_PublicKey() {}
+
+      /**
+      * Construct a public key from a given public point.
+      * @param dom_par the domain parameters associated with this key
+      * @param public_point the public point defining this key
+      */
+      ECDSA_PublicKey(EC_Domain_Params const& dom_par, Botan::PointGFp const& public_point); // sets core
 
 
-      ECDSA_Signature_Encoder* x509_encoder() const;
-      ECDSA_Signature_Decoder* x509_decoder();
-   private:
-      BigInt m_r;
-      BigInt m_s;
+      ECDSA_PublicKey const& operator= (ECDSA_PublicKey const& rhs);
+
+      ECDSA_PublicKey(ECDSA_PublicKey const& other);
+
+      /**
+      * Set the domain parameters of this key. This function has to be
+      * used when a key encoded without domain parameters was decoded into
+      * this key. Otherwise it will not be able to verify a signature.
+      * @param dom_pars the domain_parameters associated with this key
+      * @throw Invalid_Argument if the point was found not to be satisfying the
+      * curve equation of the provided domain parameters
+      * or if this key already has domain parameters set
+      * and these are differing from those given as the parameter
+      */
+      void set_domain_parameters(EC_Domain_Params const& dom_pars);
+
+      /**
+      * Make sure that the public point and domain parameters of this key are set.
+      * @throw Invalid_State if either of the two data members is not set
+      */
+      virtual void affirm_init() const;
+
+   protected:
+      void X509_load_hook();
+      virtual void set_all_values(ECDSA_PublicKey const& other);
+
+      ECDSA_Core m_ecdsa_core;
    };
 
-bool operator== ( ECDSA_Signature const& lhs, ECDSA_Signature const& rhs );
-inline bool operator!= ( ECDSA_Signature const& lhs, ECDSA_Signature const& rhs )
-   {
-   return !operator== ( lhs, rhs );
-   }
-
-class ECDSA_Signature_Decoder
+/**
+* This class represents ECDSA Private Keys
+*/
+class ECDSA_PrivateKey : public ECDSA_PublicKey,
+                         public EC_PrivateKey,
+                         public PK_Signing_Key
    {
    public:
-      void signature_bits(const MemoryRegion<byte>& bits)
-         {
-         BER_Decoder(bits)
-            .start_cons(SEQUENCE)
-            .decode(m_signature->m_r)
-            .decode(m_signature->m_s)
-            .verify_end()
-            .end_cons();
-         }
-      ECDSA_Signature_Decoder(ECDSA_Signature* signature) : m_signature(signature)
+      //ctors
+      /**
+      * Default constructor. Use this one if you want to later fill this object with data
+      * from an encoded key.
+      */
+      ECDSA_PrivateKey()
          {}
-   private:
-      ECDSA_Signature* m_signature;
-   };
+      /**
+      * Generate a new private key
+      * @param the domain parameters to used for this key
+      */
+      ECDSA_PrivateKey(RandomNumberGenerator& rng,
+                       const EC_Domain_Params& domain);
 
-class ECDSA_Signature_Encoder
-   {
-   public:
-      MemoryVector<byte> signature_bits() const
-         {
-         return DER_Encoder()
-            .start_cons(SEQUENCE)
-            .encode(m_signature->m_r)
-            .encode(m_signature->m_s)
-            .end_cons()
-            .get_contents();
-         }
-      ECDSA_Signature_Encoder(const ECDSA_Signature* signature) : m_signature(signature)
-         {}
-   private:
-      const ECDSA_Signature* m_signature;
-   };
+      ECDSA_PrivateKey(ECDSA_PrivateKey const& other);
+      ECDSA_PrivateKey const& operator= (ECDSA_PrivateKey const& rhs);
 
-ECDSA_Signature const decode_seq(MemoryRegion<byte> const& seq);
-ECDSA_Signature const decode_concatenation(MemoryRegion<byte> const& concatenation);
+      /**
+      * Sign a message with this key.
+      * @param message the byte array representing the message to be signed
+      * @param mess_len the length of the message byte array
+      * @result the signature
+      */
+      SecureVector<byte> sign(const byte message[], u32bit mess_len, RandomNumberGenerator& rng) const;
+      /**
+      * Make sure that the public key parts of this object are set
+      * (calls EC_PublicKey::affirm_init()) as well as the private key
+      * value.
+      * @throw Invalid_State if the above conditions are not satisfied
+      */
+      virtual void affirm_init() const;
+   protected:
+      virtual void set_all_values ( ECDSA_PrivateKey const& other );
+   private:
+      void PKCS8_load_hook(bool = false);
+   };
 
 }
 
