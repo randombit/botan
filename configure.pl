@@ -495,7 +495,7 @@ sub scan_modules {
         my @mods = split(/ /, can_enable_module($config, $mod, 0));
 
         if($#mods < 0) {
-            autoconfig("Will not enable $mod");
+            trace("Will not enable $mod");
             next;
         }
 
@@ -536,7 +536,7 @@ sub print_enabled_modules {
             }
         }
 
-        print with_diagnostic('loading', $s);
+        autoconfig("Loading from $s");
     }
 }
 
