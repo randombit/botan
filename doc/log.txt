@@ -1,5 +1,5 @@
 
-* 1.7.15, ????-??-??
+* 1.7.15, 2008-10-07
  - Add GF(p) arithmetic from InSiTo
  - Add ECDSA and ECKAEG implementations from InSiTo
  - Minimize internal dependencies, allowing for smaller build configurations

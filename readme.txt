@@ -1,4 +1,4 @@
-Botan 1.7.15 ????-??-??
+Botan 1.7.15 2008-10-07
 http://botan.randombit.net/
 
 Please note that this is an experimental / development version of
