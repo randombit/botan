@@ -15,9 +15,9 @@ pubkey
 
 <add>
 ec_key.cpp
-ec_key.h
 ecc_core.cpp
 ecc_core.h
+ecc_key.cpp
 ecc_op.h
 ecdsa.cpp
 ecdsa.h

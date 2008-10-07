@@ -1,160 +1,141 @@
 /*************************************************
-* ECDSA Header File                              *
-* (C) 2007 Falko Strenzke, FlexSecure GmbH       *
-*          Manuel hartl, FlexSecure GmbH         *
-* (C) 2008 Jack Lloyd                            *
+* ECC Key implemenation                          *
+* (C) 2007 Manuel Hartl / FlexSecure GmbH        *
+*                                                *
+*          Falko Strenzke                        *
+*          strenzke@flexsecure.de                *
 *************************************************/
 
-#ifndef BOTAN_ECC_KEY_H__
-#define BOTAN_ECC_KEY_H__
-
-#include <botan/bigint.h>
-#include <botan/curve_gfp.h>
-#include <botan/pk_keys.h>
-#include <botan/ec_dompar.h>
-#include <botan/ecc_core.h>
+#include <botan/ecc_key.h>
 #include <botan/x509_key.h>
-#include <botan/pkcs8.h>
+#include <botan/numthry.h>
+#include <botan/util.h>
+#include <botan/der_enc.h>
+#include <botan/ber_dec.h>
+#include <botan/secmem.h>
+#include <botan/point_gfp.h>
 
 namespace Botan {
 
-/**
-* This class represents abstract EC Public Keys. When encoding a key
-* via an encoder that can be accessed via the corresponding member
-* functions, the key will decide upon its internally stored encoding
-* information whether to encode itself with or without domain
-* parameters, or using the domain parameter oid. Furthermore, a public
-* key without domain parameters can be decoded. In that case, it
-* cannot be used for verification until its domain parameters are set
-* by calling the corresponding member function.
-*/
-class EC_PublicKey : public virtual Public_Key
+/*************************************************
+* EC_PublicKey                                   *
+*************************************************/
+void EC_PublicKey::affirm_init() const // virtual
    {
-   public:
+   if ((mp_dom_pars.get() == 0) || (mp_public_point.get() == 0))
+      {
+      throw Invalid_State("cannot use uninitialized EC_Key");
+      }
+   }
+EC_Domain_Params const EC_PublicKey::get_domain_parameters() const
+   {
+   if(!mp_dom_pars.get())
+      {
+      throw Invalid_State("EC_PublicKey::get_domain_parameters(): ec domain parameters are not yet set");
+      }
+   return *mp_dom_pars;
+   }
+bool EC_PublicKey::domain_parameters_set()
+   {
+   if (mp_dom_pars.get())
+      {
+      return true;
+      }
+   return false;
+   }
+void EC_PublicKey::X509_load_hook()
+   {
+   try
+      {
+      // the base point is checked to be on curve already when decoding it
+      affirm_init();
+      mp_public_point->check_invariants();
+      }
+   catch ( Illegal_Point exc )
+      {
+      throw Decoding_Error ( "decoded public point was found not to lie on curve" );
+      }
+   }
 
-      /**
-      * Tells whether this key knows his own domain parameters.
-      * @result true if the domain parameters are set, false otherwise
-      */
-      bool domain_parameters_set();
 
-      /**
-      * Get the public point of this key.
-      * @throw Invalid_State is thrown if the
-      * domain parameters of this point are not set
-      * @result the public point of this key
-      */
-      inline Botan::PointGFp get_public_point() const
-         {
-         if (!mp_public_point.get())
+X509_Encoder* EC_PublicKey::x509_encoder() const
+   {
+   class EC_Key_Encoder : public X509_Encoder
+      {
+      public:
+         AlgorithmIdentifier alg_id() const
             {
-            throw Invalid_State("EC_PublicKey::get_public_point(): public point not set because ec domain parameters are not yet set");
+            key->affirm_init();
+            SecureVector<byte> params = encode_der_ec_dompar ( * ( key->mp_dom_pars ), key->m_param_enc );
+            return AlgorithmIdentifier ( key->get_oid(),
+                                         params );
             }
-         return *mp_public_point;
-         }
 
-      /**
-      * Get the domain parameters of this key.
-      * @throw Invalid_State is thrown if the
-      * domain parameters of this point are not set
-      * @result the domain parameters of this key
-      */
-      EC_Domain_Params const get_domain_parameters() const;
+         MemoryVector<byte> key_bits() const
+            {
+            key->affirm_init();
+            return EC2OSP ( * ( key->mp_public_point ), PointGFp::COMPRESSED );
 
-      /**
-      * Set the domain parameter encoding to be used when encoding this key.
-      * @param enc the encoding to use
-      */
-      void set_parameter_encoding(EC_dompar_enc enc);
+            }
 
-      /**
-      * Get the domain parameter encoding to be used when encoding this key.
-      * @result the encoding to use
-      */
-      inline int get_parameter_encoding() const
-         {
-         return m_param_enc;
-         }
+         EC_Key_Encoder ( const EC_PublicKey* k ) : key ( k )
+            {}
+      private:
+         const EC_PublicKey* key;
+      };
 
-      //ctors
-      EC_PublicKey()
-         : m_param_enc(ENC_EXPLICIT)
-         {
-         //assert(mp_dom_pars.get() == 0);
-         //assert(mp_public_point.get() == 0);
-         }
+   return new EC_Key_Encoder(this);
+   }
 
-      /**
-      * Get an x509_encoder that can be used to encode this key.
-      * @result an x509_encoder for this key
-      */
-      X509_Encoder* x509_encoder() const;
-
-      /**
-      * Get an x509_decoder that can be used to decode a stored key into
-      * this key.
-      * @result an x509_decoder for this key
-      */
-      X509_Decoder* x509_decoder();
-
-      /**
-      * Make sure that the public point and domain parameters of this key are set.
-      * @throw Invalid_State if either of the two data members is not set
-      */
-      virtual void affirm_init() const;
-
-      virtual ~EC_PublicKey() {}
-   protected:
-      virtual void X509_load_hook();
-
-      SecureVector<byte> m_enc_public_point; // stores the public point
-
-      std::auto_ptr<EC_Domain_Params> mp_dom_pars;
-      std::auto_ptr<Botan::PointGFp> mp_public_point;
-      EC_dompar_enc m_param_enc;
-   };
-
-/**
-* This abstract class represents general EC Private Keys
-*/
-class EC_PrivateKey : public virtual EC_PublicKey, public virtual Private_Key
+X509_Decoder* EC_PublicKey::x509_decoder()
    {
-   public:
+   class EC_Key_Decoder : public X509_Decoder
+      {
+      public:
+         void alg_id ( const AlgorithmIdentifier& alg_id )
+            {
+            key->mp_dom_pars.reset ( new EC_Domain_Params ( decode_ber_ec_dompar ( alg_id.parameters ) ) );
+            }
 
-      /**
-      * Get an PKCS#8 encoder that can be used to encoded this key.
-      * @result an PKCS#8 encoder for this key
-      */
-      PKCS8_Encoder* pkcs8_encoder() const;
-      /**
-      * Get an PKCS#8 decoder that can be used to decoded a stored key into
-      * this key.
-      * @result an PKCS#8 decoder for this key
-      */
-      PKCS8_Decoder* pkcs8_decoder(RandomNumberGenerator&);
-      /**
-      * Get the private key value of this key object.
-      * @result the private key value of this key object
-      */
-      inline BigInt const get_value() const
-         {
-         return m_private_value;
-         }
-      /**
-      * Make sure that the public key parts of this object are set
-      * (calls EC_PublicKey::affirm_init()) as well as the private key
-      * value.
-      * @throw Invalid_State if the above conditions are not satisfied
-      */
-      virtual void affirm_init()  const;
-      virtual ~EC_PrivateKey()
-         {}
-   protected:
-      virtual void PKCS8_load_hook(bool = false);
-      void generate_private_key(RandomNumberGenerator&);
-      BigInt m_private_value;
-   };
+         void key_bits ( const MemoryRegion<byte>& bits )
+            {
+            key->mp_public_point.reset ( new PointGFp ( OS2ECP ( bits, key->mp_dom_pars->get_curve() ) ) );
+            key->X509_load_hook();
+            }
+
+         EC_Key_Decoder ( EC_PublicKey* k ) : key ( k )
+            {}
+      private:
+         EC_PublicKey* key;
+      };
+
+   return new EC_Key_Decoder(this);
+   }
+
+void EC_PublicKey::set_parameter_encoding ( EC_dompar_enc type )
+   {
+   if ( ( type != ENC_EXPLICIT ) && ( type != ENC_IMPLICITCA ) && ( type != ENC_OID ) )
+      {
+      throw Invalid_Argument ( "invalid encoding type for EC-key object specified" );
+      }
+   affirm_init();
+   if ( ( mp_dom_pars->get_oid() == "" ) && ( type == ENC_OID ) )
+      {
+      throw Invalid_Argument ( "invalid encoding type ENC_OID specified for EC-key object whose corresponding domain parameters are without oid" );
+      }
+   m_param_enc = type;
+   }
+
+/********************************
+* EC_PrivateKey                 *
+********************************/
+void EC_PrivateKey::affirm_init() const // virtual
+   {
+   EC_PublicKey::affirm_init();
+   if (m_private_value == 0)
+      {
+      throw Invalid_State("cannot use EC_PrivateKey when private key is uninitialized");
+      }
+   }
 
 }
-
-#endif
