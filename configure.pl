@@ -1965,8 +1965,7 @@ sub guess_cpu_from_this
 
     $cpuinfo =~ s/\(r\)//g;
     $cpuinfo =~ s/\(tm\)//g;
-    $cpuinfo =~ s/\t/ /g;
-    $cpuinfo =~ s/ +/-/g;
+    $cpuinfo =~ s/ //g;
 
     trace("guess_cpu_from_this($cpuinfo)");
 
@@ -1976,25 +1975,30 @@ sub guess_cpu_from_this
     # possible; that's the most common setup right now anyway
     return 'sparc32-v9' if($cpuinfo =~ /ultrasparc/);
 
-    # 64-bit PowerPC
-    return 'cellppu' if($cpuinfo =~ /cell-broadband-engine/);
+    # Maybe do this once and cache it?
+    my @names;
 
-    # First check submodels and submodel aliases
     foreach my $arch (keys %CPU) {
         my %info = %{$CPU{$arch}};
 
         foreach my $submodel (@{$info{'submodels'}}) {
-            if($cpuinfo =~ /$submodel/) {
-                return $submodel;
-            }
+            push @names, $submodel;
         }
 
         if(defined($info{'submodel_aliases'})) {
             my %submodel_aliases = %{$info{'submodel_aliases'}};
-
             foreach my $sm_alias (keys %submodel_aliases) {
-                return $sm_alias if($cpuinfo =~ /$sm_alias/);
+                push @names, $sm_alias;
             }
+        }
+    }
+
+    @names = sort { length($b) <=> length($a) } @names;
+
+    foreach my $name (@names) {
+        if($cpuinfo =~ $name) {
+            trace("Matched '$cpuinfo' against '$name'");
+            return $name;
         }
     }
 
