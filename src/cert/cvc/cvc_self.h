@@ -59,7 +59,8 @@ EAC1_1_CVC create_self_signed_cert(Private_Key const& key,
 */
 EAC1_1_Req create_cvc_req(Private_Key const& priv_key,
                           ASN1_Chr const& chr,
-                          std::string const& hash_alg);
+                          std::string const& hash_alg,
+                          RandomNumberGenerator& rng);
 
 /**
 * Create an ADO from a request object.
@@ -97,6 +98,7 @@ EAC1_1_CVC create_cvca(Private_Key const& priv_key,
                        ASN1_Car const& car,
                        bool iris,
                        bool fingerpr,
+                       u32bit cvca_validity_months,
                        RandomNumberGenerator& rng);
 
 /**
@@ -126,7 +128,8 @@ EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
 */
 EAC1_1_Req create_cvc_req(Private_Key const& priv_key,
                           ASN1_Chr const& chr,
-                          std::string const& hash_alg);
+                          std::string const& hash_alg,
+                          RandomNumberGenerator& rng);
 
 /**
 * Sign a CVC request.
@@ -148,6 +151,8 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
                         u32bit seqnr,
                         u32bit seqnr_len,
                         bool domestic,
+                        u32bit dvca_validity_months,
+                        u32bit ca_is_validity_months,
                         RandomNumberGenerator& rng);
 }
 

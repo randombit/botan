@@ -79,7 +79,7 @@ EAC1_1_CVC create_self_signed_cert(Private_Key const& key,
 
    AlgorithmIdentifier sig_algo;
    std::string padding_and_hash(eac_cvc_emsa + "(" + opt.hash_alg + ")");
-   sig_algo.oid = OIDS::lookup_bsi(priv_key->algo_name() + "/" + padding_and_hash);
+   sig_algo.oid = OIDS::lookup(priv_key->algo_name() + "/" + padding_and_hash);
    sig_algo = AlgorithmIdentifier(sig_algo.oid, AlgorithmIdentifier::USE_NULL_PARAM);
 
    std::auto_ptr<Botan::PK_Signer> signer(get_pk_signer(*priv_key, padding_and_hash));
@@ -108,7 +108,7 @@ EAC1_1_Req create_cvc_req(Private_Key const& key,
       }
    AlgorithmIdentifier sig_algo;
    std::string padding_and_hash(eac_cvc_emsa + "(" + hash_alg + ")");
-   sig_algo.oid = OIDS::lookup_bsi(priv_key->algo_name() + "/" + padding_and_hash);
+   sig_algo.oid = OIDS::lookup(priv_key->algo_name() + "/" + padding_and_hash);
    sig_algo = AlgorithmIdentifier(sig_algo.oid, AlgorithmIdentifier::USE_NULL_PARAM);
 
    std::auto_ptr<Botan::PK_Signer> signer(get_pk_signer(*priv_key, padding_and_hash));
@@ -157,7 +157,10 @@ EAC1_1_ADO create_ado_req(Private_Key const& key,
 namespace DE_EAC
 {
 
-EAC1_1_CVC create_cvca(Private_Key const& key, std::string const& hash, ASN1_Car const& car, bool iris, bool fingerpr,
+EAC1_1_CVC create_cvca(Private_Key const& key,
+                       std::string const& hash,
+                       ASN1_Car const& car, bool iris, bool fingerpr,
+                       u32bit cvca_validity_months,
                        RandomNumberGenerator& rng)
    {
    ECDSA_PrivateKey const* priv_key = dynamic_cast<ECDSA_PrivateKey const*>(&key);
@@ -171,7 +174,7 @@ EAC1_1_CVC create_cvca(Private_Key const& key, std::string const& hash, ASN1_Car
 
    opts.ced = ASN1_Ced(current_time);
    opts.cex = ASN1_Cex(opts.ced);
-   opts.cex.add_months(global_config().option_as_u32bit("eac/ca/cvca_validity_months"));
+   opts.cex.add_months(cvca_validity_months);
    opts.holder_auth_templ = (CVCA | (iris * IRIS) | (fingerpr * FINGERPRINT));
    opts.hash_alg = hash;
    return Botan::CVC_EAC::create_self_signed_cert(*priv_key, opts, rng);
@@ -232,6 +235,8 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
                         u32bit seqnr,
                         u32bit seqnr_len,
                         bool domestic,
+                        u32bit dvca_validity_months,
+                        u32bit ca_is_validity_months,
                         RandomNumberGenerator& rng)
    {
    ECDSA_PrivateKey const* priv_key = dynamic_cast<ECDSA_PrivateKey const*>(&key);
@@ -270,7 +275,7 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
    if ((signer_cert.get_chat_value() & CVCA) == CVCA)
       {
       // we sign a dvca
-      cex.add_months(global_config().option_as_u32bit("eac/ca/dvca_validity_months"));
+      cex.add_months(dvca_validity_months);
       if (domestic)
          {
          chat_val = DVCA_domestic | chat_low;
@@ -283,7 +288,7 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
    else if ((signer_cert.get_chat_value() & DVCA_domestic) == DVCA_domestic ||
             (signer_cert.get_chat_value() & DVCA_foreign) == DVCA_foreign)
       {
-      cex.add_months(global_config().option_as_u32bit("eac/ca/is_validity_months"));
+      cex.add_months(ca_is_validity_months);
       chat_val = IS | chat_low;
       }
    else
@@ -302,7 +307,8 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
 
 EAC1_1_Req create_cvc_req(Private_Key const& prkey,
                           ASN1_Chr const& chr,
-                          std::string const& hash_alg)
+                          std::string const& hash_alg,
+                          RandomNumberGenerator& rng)
    {
    ECDSA_PrivateKey const* priv_key = dynamic_cast<ECDSA_PrivateKey const*>(&prkey);
    if (priv_key == 0)
@@ -311,7 +317,7 @@ EAC1_1_Req create_cvc_req(Private_Key const& prkey,
       }
    ECDSA_PrivateKey key(*priv_key);
    key.set_parameter_encoding(ENC_IMPLICITCA);
-   return Botan::CVC_EAC::create_cvc_req(key, chr, hash_alg);
+   return Botan::CVC_EAC::create_cvc_req(key, chr, hash_alg, rng);
    }
 
 } // namespace DE_EAC
