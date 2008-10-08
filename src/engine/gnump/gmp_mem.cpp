@@ -57,4 +57,12 @@ void GMP_Engine::set_memory_hooks()
       }
    }
 
+/*************************************************
+* GMP_Engine Constructor                         *
+*************************************************/
+GMP_Engine::GMP_Engine()
+   {
+   set_memory_hooks();
+   }
+
 }

@@ -4,24 +4,23 @@ define ENGINE_GNU_MP
 
 load_on request
 
-<requires>
-dh
-dsa
-elgamal
-if_algo
-libstate
-nr
-</requires>
-
-<add>
-eng_gmp.cpp
-gmp_wrap.cpp
-gmp_mem.cpp
-gmp_powm.cpp
-eng_gmp.h
-gmp_wrap.h
-</add>
-
 <libs>
 all -> gmp
 </libs>
+
+<requires>
+libstate
+</requires>
+
+<add>
+eng_gmp.h
+gmp_dh.cpp
+gmp_dsa.cpp
+gmp_elg.cpp
+gmp_if.cpp
+gmp_mem.cpp
+gmp_nr.cpp
+gmp_powm.cpp
+gmp_wrap.cpp
+gmp_wrap.h
+</add>
