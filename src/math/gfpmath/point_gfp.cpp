@@ -1,22 +1,22 @@
 /******************************************************
- * Arithmetic for point groups of elliptic curves     *
- * over GF(p) (source file)                           *
- *                                                    *
- * (C) 2007 Martin Döring                             *
- *          doering@cdc.informatik.tu-darmstadt.de    *
- *          Christoph Ludwig                          *
- *          ludwig@fh-worms.de                        *
- *          Falko Strenzke                            *
- *          strenzke@flexsecure.de                    *
- ******************************************************/
+* Arithmetic for point groups of elliptic curves      *
+* over GF(p) (source file)                            *
+*                                                     *
+* (C) 2007 Martin Doering                             *
+*          Christoph Ludwig                           *
+*          Falko Strenzke                             *
+*     2008 Jack Lloyd                                 *
+******************************************************/
 
 #include <botan/point_gfp.h>
 #include <botan/numthry.h>
 
+#include <iostream>
+
 namespace Botan {
 
 // construct the point at infinity or a random point
-PointGFp::PointGFp(CurveGFp const& curve)
+PointGFp::PointGFp(const CurveGFp& curve)
    :	mC(curve),
         mX(curve.get_p(), 0),
         mY(curve.get_p(), 1),
@@ -36,8 +36,8 @@ PointGFp::PointGFp(CurveGFp const& curve)
 
 
 // construct a point given its jacobian projective coordinates
-PointGFp::PointGFp(CurveGFp const& curve, GFpElement const& x,
-                   GFpElement const& y, GFpElement const& z)
+PointGFp::PointGFp(const CurveGFp& curve, const GFpElement& x,
+                   const GFpElement& y, const GFpElement& z)
    :	mC(curve),
         mX(x),
         mY(y),
@@ -51,8 +51,8 @@ PointGFp::PointGFp(CurveGFp const& curve, GFpElement const& x,
    {
    set_shrd_mod(mC.get_ptr_mod());
    }
-PointGFp::PointGFp ( CurveGFp const& curve, GFpElement const& x,
-                     GFpElement const& y )
+PointGFp::PointGFp ( const CurveGFp& curve, const GFpElement& x,
+                     const GFpElement& y )
    :mC(curve),
     mX(x),
     mY(y),
@@ -431,6 +431,7 @@ PointGFp& PointGFp::mult_this_secure(const BigInt& scalar,
    mZ.turn_off_sp_red_mul();
    return *this;
    }
+
 PointGFp& PointGFp::operator*=(const BigInt& scalar)
    {
    // use montgomery mult. in this operation
@@ -479,14 +480,12 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
    return *this;
    }
 
-inline std::tr1::shared_ptr<PointGFp> PointGFp::mult_loop(
-   int l,
-   const BigInt& m,
-   std::tr1::shared_ptr<PointGFp> H,
-   std::tr1::shared_ptr<PointGFp> tmp,
-   PointGFp const& P)
+inline std::tr1::shared_ptr<PointGFp> PointGFp::mult_loop(int l,
+                                                          const BigInt& m,
+                                                          std::tr1::shared_ptr<PointGFp> H,
+                                                          std::tr1::shared_ptr<PointGFp> tmp,
+                                                          PointGFp const& P)
    {
-
    //assert(l >= (int)m.bits()- 1);
    tmp = H;
    std::tr1::shared_ptr<PointGFp> to_add(new PointGFp(P)); // we just need some point
@@ -531,6 +530,7 @@ inline std::tr1::shared_ptr<PointGFp> PointGFp::mult_loop(
       }
    return H;
    }
+
 PointGFp& PointGFp::negate()
    {
    if (!is_zero())
@@ -539,6 +539,7 @@ PointGFp& PointGFp::negate()
       }
    return *this;
    }
+
 // *this *= 2
 PointGFp& PointGFp::mult2_in_place()
    {
@@ -663,8 +664,8 @@ PointGFp& PointGFp::mult2_in_place()
    mZpow3_set = false;
    mAZpow4_set = false;
    return *this;
-
    }
+
 void PointGFp::turn_on_sp_red_mul() const
    {
    mX.turn_on_sp_red_mul();
@@ -695,6 +696,7 @@ PointGFp const PointGFp::get_z_to_one() const
    {
    return PointGFp(*this).set_z_to_one();
    }
+
 /**
 * changes the representation of *this so that
 * Z has value one, i.e. x and y correspond to
@@ -723,10 +725,12 @@ PointGFp const& PointGFp::set_z_to_one() const
       }
    return *this; // mZ = 1 already
    }
-CurveGFp const PointGFp::get_curve() const
+
+const CurveGFp PointGFp::get_curve() const
    {
    return mC;
    }
+
 GFpElement const PointGFp::get_affine_x() const
    {
 
@@ -762,14 +766,17 @@ GFpElement const PointGFp::get_affine_y() const
    GFpElement z3 = mZpow3;
    return mY * z3.inverse_in_place();
    }
+
 GFpElement const PointGFp::get_jac_proj_x() const
    {
    return GFpElement(mX);
    }
+
 GFpElement const PointGFp::get_jac_proj_y() const
    {
    return GFpElement(mY);
    }
+
 GFpElement const PointGFp::get_jac_proj_z() const
    {
    return GFpElement(mZ);
@@ -788,6 +795,13 @@ bool PointGFp::is_zero() const
 // (If everything is correct, the point is always on its curve; then the
 // function will return silently. If Oskar managed to corrupt this object's state,
 // then it will throw an exception.)
+
+static void print(const GFpElement& e, const char* name)
+   {
+   std::cout << name << " = (" << e.get_value() << ", "
+             << e.get_p() << ")\n";
+   }
+
 void PointGFp::check_invariants() const
    {
    if (is_zero())
@@ -800,36 +814,39 @@ void PointGFp::check_invariants() const
    if (mZ.get_value() == BigInt(1))
       {
       GFpElement ax = mC.get_a() * mX;
-      if (y2 != (x3 + ax + mC.get_b()))
+      if(y2 != (x3 + ax + mC.get_b()))
          {
-         throw Illegal_Point();
+         print(y2, "y2");
+         print(x3, "x3");
+         print(ax, "ax");
+         print(mC.get_b(), "mC.b");
+         print(x3 + ax + mC.get_b(), "+");
+
+         //throw Illegal_Point();
          }
 
       }
-   /*if (!mZpow2_set)
-   {*/
+
    mZpow2 = mZ * mZ;
    mZpow2_set = true;
-   /*}
-   if (!mZpow3_set)
-   {*/
    mZpow3 = mZpow2 * mZ;
    mZpow3_set = true;
-   /*}
-   if(!mAZpow4_set)
-   {*/
    mAZpow4 = mZpow3 * mZ * mC.get_a();
    mAZpow4_set = true;
-   //}
    const GFpElement aXZ4 = mAZpow4 * mX;
    const GFpElement bZ6 = mC.get_b() * mZpow3 * mZpow3;
 
    if (y2 != (x3 + aXZ4 + bZ6))
       {
-      throw Illegal_Point();
+      print(y2, "y2");
+      print(x3, "x3");
+      print(aXZ4, "axZ4");
+      print(bZ6, "bZ6");
+      print(x3 + aXZ4 + bZ6, "+");
+      //throw Illegal_Point();
       }
-
    }
+
 // swaps the states of *this and other, does not throw!
 void PointGFp::swap(PointGFp& other)
    {
@@ -849,7 +866,6 @@ PointGFp const mult2(PointGFp const& point)
    {
    return (PointGFp(point)).mult2_in_place();
    }
-
 
 bool operator==(PointGFp const& lhs, PointGFp const& rhs)
    {
@@ -901,7 +917,8 @@ PointGFp operator*(PointGFp const& point, const BigInt& scalar)
    return result *= scalar;
    }
 
-PointGFp mult_point_secure(PointGFp const& point, const BigInt& scalar, const BigInt& point_order, const BigInt& max_secret)
+PointGFp mult_point_secure(const PointGFp& point, const BigInt& scalar,
+                           const BigInt& point_order, const BigInt& max_secret)
    {
    PointGFp result(point);
    result.mult_this_secure(scalar, point_order, max_secret);
@@ -1020,7 +1037,7 @@ SecureVector<byte> encode_hybrid(PointGFp const& point)
    return result;
    }
 
-PointGFp OS2ECP(MemoryRegion<byte> const& os, CurveGFp const& curve)
+PointGFp OS2ECP(MemoryRegion<byte> const& os, const CurveGFp& curve)
    {
    if (os.size() == 1 && os[0] == 0)
       {
@@ -1098,8 +1115,8 @@ PointGFp OS2ECP(MemoryRegion<byte> const& os, CurveGFp const& curve)
    return result;
    }
 
-GFpElement PointGFp::decompress(bool yMod2, GFpElement const& x,
-                                CurveGFp const& curve)
+GFpElement PointGFp::decompress(bool yMod2, const GFpElement& x,
+                                const CurveGFp& curve)
    {
    BigInt xVal = x.get_value();
    BigInt xpow3 = xVal * xVal * xVal;
@@ -1121,7 +1138,7 @@ GFpElement PointGFp::decompress(bool yMod2, GFpElement const& x,
    }
 
 PointGFp const create_random_point(RandomNumberGenerator& rng,
-                                   CurveGFp const& curve)
+                                   const CurveGFp& curve)
    {
 
    // create a random point
