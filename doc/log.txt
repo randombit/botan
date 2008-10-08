@@ -3,6 +3,7 @@
  - Add several missing pieces needed for ECDSA and ECKAEG
  - Added SHA-224 from InSiTo
  - Split ECDSA and ECKAEG into distinct modules
+ - Allow OpenSSL and GNU MP engines to be built with some PK algos disabled
  - Add GF(p) and ECDSA tests from InSiTo
  - Renamed sha256.h to sha2_32.h
  - Renamed sha_64.h to sha2_64.h
