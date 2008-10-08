@@ -18,6 +18,8 @@ class BOTAN_DLL EMSA1 : public EMSA
    public:
       EMSA1(HashFunction* h) : hash(h) {}
       ~EMSA1() { delete hash; }
+   protected:
+      const HashFunction* hash_ptr() const { return hash; }
    private:
       void update(const byte[], u32bit);
       SecureVector<byte> raw_data();

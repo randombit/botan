@@ -2,6 +2,7 @@
 * 1.7.16, ????-??-??
  - Add several missing pieces needed for ECDSA and ECKAEG
  - Add SHA-224 from InSiTo
+ - Add BSI variant of EMSA1 from InSiTo
  - Split ECDSA and ECKAEG into distinct modules
  - Allow OpenSSL and GNU MP engines to be built with some PK algos disabled
  - Add GF(p) and ECDSA tests from InSiTo

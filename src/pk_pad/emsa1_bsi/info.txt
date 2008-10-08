@@ -1,0 +1,14 @@
+realname "EMSA1 (BSI variant)"
+
+define EMSA1_BSI
+
+load_on auto
+
+<requires>
+emsa1
+</requires>
+
+<add>
+emsa1_bsi.h
+emsa1_bsi.cpp
+</add>

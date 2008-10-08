@@ -16,6 +16,10 @@
   #include <botan/emsa1.h>
 #endif
 
+#if defined(BOTAN_HAS_EMSA1_BSI)
+  #include <botan/emsa1_bsi.h>
+#endif
+
 #if defined(BOTAN_HAS_EMSA2)
   #include <botan/emsa2.h>
 #endif
@@ -83,6 +87,14 @@ EMSA* get_emsa(const std::string& algo_spec)
       {
       if(name.size() == 2)
          return new EMSA1(get_hash(name[1]));
+      }
+#endif
+
+#if defined(BOTAN_HAS_EMSA1_BSI)
+   if(emsa_name == "EMSA1_BSI")
+      {
+      if(name.size() == 2)
+         return new EMSA1_BSI(get_hash(name[1]));
       }
 #endif
 

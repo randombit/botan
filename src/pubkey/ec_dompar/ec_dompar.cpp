@@ -20,7 +20,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
    Version 0.3;
    section 2.1.2
    */
-   if(oid == "1.3.132.8") // InSiTo had '08'
+   if(oid == "1.3.132.0.8")
       {
       std::vector<std::string> dom_par;
       dom_par.push_back("0xffffffffffffffffffffffffffffffff7fffffff"); //p
