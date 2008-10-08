@@ -43,7 +43,7 @@ class EC_PublicKey : public virtual Public_Key
       * domain parameters of this point are not set
       * @result the public point of this key
       */
-      inline Botan::PointGFp get_public_point() const
+      inline PointGFp get_public_point() const
          {
          if (!mp_public_point.get())
             {
@@ -109,7 +109,7 @@ class EC_PublicKey : public virtual Public_Key
       SecureVector<byte> m_enc_public_point; // stores the public point
 
       std::auto_ptr<EC_Domain_Params> mp_dom_pars;
-      std::auto_ptr<Botan::PointGFp> mp_public_point;
+      std::auto_ptr<PointGFp> mp_public_point;
       EC_dompar_enc m_param_enc;
    };
 

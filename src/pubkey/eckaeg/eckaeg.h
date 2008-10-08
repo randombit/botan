@@ -19,27 +19,27 @@ namespace Botan {
 class ECKAEG_PublicKey : public virtual EC_PublicKey
    {
    public:
+
       /**
-      * Default constructor. Use this one if you want to later fill this object with data
-      * from an encoded key.
+      * Default constructor. Use this one if you want to later fill
+      * this object with data from an encoded key.
       */
-      ECKAEG_PublicKey()
-         {};
+      ECKAEG_PublicKey() {};
+
       /**
       * Construct a public key from a given public point.
       * @param dom_par the domain parameters associated with this key
       * @param public_point the public point defining this key
       */
-      ECKAEG_PublicKey(EC_Domain_Params const& dom_par, Botan::PointGFp const& public_point);
+      ECKAEG_PublicKey(const EC_Domain_Params& dom_par,
+                       const PointGFp& public_point);
 
       /**
       * Get this keys algorithm name.
       * @result this keys algorithm name
       */
-      std::string algo_name() const
-         {
-         return "ECKAEG";
-         }
+      std::string algo_name() const { return "ECKAEG"; }
+
       /**
       * Get the maximum number of bits allowed to be fed to this key.
       * This is the bitlength of the order of the base point.
@@ -48,24 +48,25 @@ class ECKAEG_PublicKey : public virtual EC_PublicKey
       */
       u32bit max_input_bits() const
          {
-         if (!mp_dom_pars.get())
-            {
+         if(!mp_dom_pars.get())
             throw Invalid_State("ECKAEG_PublicKey::max_input_bits(): domain parameters not set");
-            }
+
          return mp_dom_pars->get_order().bits();
          }
+
       ECKAEG_PublicKey(ECKAEG_PublicKey const& other);
       ECKAEG_PublicKey const& operator= (ECKAEG_PublicKey const& rhs);
 
-
       /**
-      * Make sure that the public point and domain parameters of this key are set.
+      * Make sure that the public point and domain parameters of this
+      * key are set.
       * @throw Invalid_State if either of the two data members is not set
       */
       virtual void affirm_init() const;
+
    protected:
       void X509_load_hook();
-      virtual void set_all_values ( ECKAEG_PublicKey const& other );
+      virtual void set_all_values(const ECKAEG_PublicKey& other);
 
       ECKAEG_Core m_eckaeg_core;
    };
@@ -73,27 +74,30 @@ class ECKAEG_PublicKey : public virtual EC_PublicKey
 /**
 * This class represents ECKAEG Private Keys.
 */
-class ECKAEG_PrivateKey : public ECKAEG_PublicKey, public EC_PrivateKey, public PK_Key_Agreement_Key
+class ECKAEG_PrivateKey : public ECKAEG_PublicKey,
+                          public EC_PrivateKey,
+                          public PK_Key_Agreement_Key
    {
    public:
+
       /**
       * Generate a new private key
       * @param the domain parameters to used for this key
       */
       ECKAEG_PrivateKey(RandomNumberGenerator& rng,
-                        EC_Domain_Params const& dom_pars)
+                        const EC_Domain_Params& dom_pars)
          {
          mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_pars));
          generate_private_key(rng);
          mp_public_point->check_invariants();
          m_eckaeg_core = ECKAEG_Core(*mp_dom_pars, m_private_value, *mp_public_point);
          }
+
       /**
       * Default constructor. Use this one if you want to later fill this object with data
       * from an encoded key.
       */
-      ECKAEG_PrivateKey()
-         {}
+      ECKAEG_PrivateKey() {}
       ECKAEG_PrivateKey(ECKAEG_PrivateKey const& other);
       ECKAEG_PrivateKey const& operator= (ECKAEG_PrivateKey const& rhs);
 
@@ -114,7 +118,7 @@ class ECKAEG_PrivateKey : public ECKAEG_PublicKey, public EC_PrivateKey, public 
       virtual void affirm_init() const;
 
    protected:
-      virtual void set_all_values ( ECKAEG_PrivateKey const& other );
+      virtual void set_all_values(const ECKAEG_PrivateKey& other);
    };
 
 }

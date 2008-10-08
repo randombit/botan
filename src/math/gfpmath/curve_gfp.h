@@ -54,7 +54,7 @@ class CurveGFp
       * @param mod a shared pointer to a GFpModulus object suitable for
       * *this.
       */
-      void set_shrd_mod(std::tr1::shared_ptr<Botan::GFpModulus> const mod);
+      void set_shrd_mod(std::tr1::shared_ptr<GFpModulus> const mod);
 
       // getters
 
@@ -116,7 +116,7 @@ class CurveGFp
       * Do NOT spread pointers to a GFpModulus over different threads!
       * @result a shared pointer to a GFpModulus object
       */
-      inline std::tr1::shared_ptr<Botan::GFpModulus> const get_ptr_mod() const
+      inline std::tr1::shared_ptr<GFpModulus> const get_ptr_mod() const
          {
          return mp_mod;
          }
@@ -128,7 +128,7 @@ class CurveGFp
       void swap(CurveGFp& other);
 
    private:
-      std::tr1::shared_ptr<Botan::GFpModulus> mp_mod;
+      std::tr1::shared_ptr<GFpModulus> mp_mod;
       GFpElement mA;
       GFpElement mB;
       mutable std::tr1::shared_ptr<GFpElement> mp_mres_a;
