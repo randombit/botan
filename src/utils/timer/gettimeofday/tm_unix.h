@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Unix Timer                                     *
 *************************************************/
-class Unix_Timer : public Timer
+class BOTAN_DLL Unix_Timer : public Timer
    {
    public:
       u64bit clock() const;

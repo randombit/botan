@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Hardware Timer                                 *
 *************************************************/
-class Hardware_Timer : public Timer
+class BOTAN_DLL Hardware_Timer : public Timer
    {
    public:
       u64bit clock() const;

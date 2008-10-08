@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * POSIX Timer                                    *
 *************************************************/
-class POSIX_Timer : public Timer
+class BOTAN_DLL POSIX_Timer : public Timer
    {
    public:
       u64bit clock() const;

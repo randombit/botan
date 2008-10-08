@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Win32 Timer                                    *
 *************************************************/
-class Win32_Timer : public Timer
+class BOTAN_DLL Win32_Timer : public Timer
    {
    public:
       u64bit clock() const;

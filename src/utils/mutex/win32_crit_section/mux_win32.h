@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Win32 Mutex Factory                            *
 *************************************************/
-class Win32_Mutex_Factory : public Mutex_Factory
+class BOTAN_DLL Win32_Mutex_Factory : public Mutex_Factory
    {
    public:
       Mutex* make();

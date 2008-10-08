@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Qt Mutex                                       *
 *************************************************/
-class Qt_Mutex_Factory : public Mutex_Factory
+class BOTAN_DLL Qt_Mutex_Factory : public Mutex_Factory
    {
    public:
       Mutex* make();

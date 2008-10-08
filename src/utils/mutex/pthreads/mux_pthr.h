@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Pthread Mutex Factory                          *
 *************************************************/
-class Pthread_Mutex_Factory : public Mutex_Factory
+class BOTAN_DLL Pthread_Mutex_Factory : public Mutex_Factory
    {
    public:
       Mutex* make();
