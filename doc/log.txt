@@ -1,12 +1,12 @@
 
 * 1.7.16, ????-??-??
  - Add several missing pieces needed for ECDSA and ECKAEG
- - Added SHA-224 from InSiTo
+ - Add SHA-224 from InSiTo
  - Split ECDSA and ECKAEG into distinct modules
  - Allow OpenSSL and GNU MP engines to be built with some PK algos disabled
  - Add GF(p) and ECDSA tests from InSiTo
- - Renamed sha256.h to sha2_32.h
- - Renamed sha_64.h to sha2_64.h
+ - Rename sha256.h to sha2_32.h
+ - Rename sha_64.h to sha2_64.h
 
 * 1.7.15, 2008-10-07
  - Add GF(p) arithmetic from InSiTo
@@ -15,7 +15,7 @@
  - Add new User Manual and Architecture Guide from FlexSecure GmbH
  - Alter configure.pl options for better autotools compatability
  - Update build instructions for recent changes to configure.pl
- - Fixes for CPU detection using /proc/cpuinfo
+ - Fix CPU detection using /proc/cpuinfo
 
 * 1.7.14, 2008-09-30
  - Split library into parts allowing modular builds
