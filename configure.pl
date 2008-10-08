@@ -1385,6 +1385,8 @@ sub read_list {
     if($line =~ m@^<$marker>$@) {
         while(1) {
             $line = &$reader();
+
+            die "EOF while searching for $marker" unless $line;
             last if($line =~ m@^</$marker>$@);
             &$func($line);
         }
