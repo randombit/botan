@@ -8,10 +8,12 @@
 #define BOTAN_EAC_CVC_GCERT_H__
 
 #include <botan/x509_key.h>
+#include <botan/eac_asn_obj.h>
 #include <botan/enums.h>
 #include <string>
 #include <botan/pubkey.h>
 #include <botan/ecdsa_sig.h>
+#include <assert.h>
 
 namespace Botan {
 
@@ -77,7 +79,8 @@ class EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation from EAC1
       */
       static MemoryVector<byte> make_signed(
          std::auto_ptr<PK_Signer> signer,
-         const MemoryRegion<byte>& tbs_bits);
+         const MemoryRegion<byte>& tbs_bits,
+         RandomNumberGenerator& rng);
       virtual ~EAC1_1_gen_CVC<Derived>()
          {}
 
@@ -93,9 +96,10 @@ template<typename Derived> bool EAC1_1_gen_CVC<Derived>::is_self_signed() const
    }
 template<typename Derived> MemoryVector<byte> EAC1_1_gen_CVC<Derived>::make_signed(
    std::auto_ptr<PK_Signer> signer,
-   const MemoryRegion<byte>& tbs_bits) // static
+   const MemoryRegion<byte>& tbs_bits,
+   RandomNumberGenerator& rng) // static
    {
-   SecureVector<byte> concat_sig = EAC1_1_obj<Derived>::make_signature(signer, tbs_bits);
+   SecureVector<byte> concat_sig = EAC1_1_obj<Derived>::make_signature(signer.get(), tbs_bits, rng);
    assert(concat_sig.size() % 2 == 0);
    return DER_Encoder()
       .start_cons(ASN1_Tag(33), APPLICATION)
@@ -144,14 +148,14 @@ void EAC1_1_gen_CVC<Derived>::decode_info(
    ECDSA_Signature & res_sig)
    {
    SecureVector<byte> concat_sig;
-   BER_Decoder(source.get_shared())
+   BER_Decoder(*source.get_shared().get())
       .start_cons(ASN1_Tag(33))
       .start_cons(ASN1_Tag(78))
       .raw_bytes(res_tbs_bits)
       .end_cons()
       .decode(concat_sig, OCTET_STRING, ASN1_Tag(55), APPLICATION)
       .end_cons();
-   res_sig = ecdsa::decode_concatenation(concat_sig);
+   res_sig = decode_concatenation(concat_sig);
    }
 
 }

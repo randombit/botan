@@ -1,6 +1,7 @@
 /*************************************************
 * EAC1.1 CVC Certificate Authority Header File   *
-* (C) 1999-2007 The Botan Project                *
+* (C) 2007 FlexSecure GmbH                       *
+*     2008 Jack Lloyd                            *
 *************************************************/
 
 #ifndef BOTAN_CVC_CA_H__
@@ -10,15 +11,15 @@
 #include <botan/pkcs10.h>
 #include <botan/pubkey.h>
 #include <botan/cvc_cert.h>
-namespace Botan
-  {
 
-  /**
-  * This class represents a CVC CA.
-  */
-  class EAC1_1_CVC_CA
-    {
-    public:
+namespace Botan {
+
+/**
+* This class represents a CVC CA.
+*/
+class EAC1_1_CVC_CA
+   {
+   public:
 
       /**
       * Create an arbitrary EAC 1.1 CVC.
@@ -33,19 +34,18 @@ namespace Botan
       * @param ced the CED to appear in the certificate
       * @param ced the CEX to appear in the certificate
       */
-      static EAC1_1_CVC make_cert(
-                                  std::auto_ptr<PK_Signer> signer,
+      static EAC1_1_CVC make_cert(std::auto_ptr<PK_Signer> signer,
                                   MemoryRegion<byte> const& public_key,
                                   ASN1_Car const& car,
                                   ASN1_Chr const& chr,
                                   byte holder_auth_templ,
                                   ASN1_Ced ced,
-                                  ASN1_Cex cex
-                                 );
+                                  ASN1_Cex cex,
+                                  RandomNumberGenerator& rng);
 
-    private:
+   private:
 
-    };
+   };
 
 
 

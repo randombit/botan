@@ -9,7 +9,7 @@
 
 #include <botan/pubkey.h>
 #include <botan/x509_key.h>
-#include <botan/x509_obj.h>
+#include <botan/signed_obj.h>
 #include <botan/enums.h>
 #include <botan/pubkey.h>
 #include <botan/parsing.h>
@@ -27,13 +27,12 @@ const std::string eac_cvc_emsa("EMSA1_BSI");
 * TR03110 v1.1 EAC CV Certificate                *
 *************************************************/
 template<typename Derived>
-class EAC1_1_obj : public X509_Object // CRTP is used enable the call sequence:
+class EAC1_1_obj : public EAC_Signed_Object // CRTP is used enable the call sequence:
    {
       // data members first:
    protected:
 
       ECDSA_Signature m_sig;
-
 
       // member functions here:
    public:
@@ -53,7 +52,7 @@ class EAC1_1_obj : public X509_Object // CRTP is used enable the call sequence:
    protected:
       void init(SharedPtrConverter<DataSource> in);
 
-      static SecureVector<byte> make_signature(const PK_Signer* signer,
+      static SecureVector<byte> make_signature(PK_Signer* signer,
                                                const MemoryRegion<byte>& tbs_bits,
                                                RandomNumberGenerator& rng);
 
@@ -65,7 +64,7 @@ template<typename Derived> SecureVector<byte> EAC1_1_obj<Derived>::get_concat_si
    {
    return m_sig.get_concatenation();
    }
-template<typename Derived> SecureVector<byte> EAC1_1_obj<Derived>::make_signature(const PK_Signer* signer,
+template<typename Derived> SecureVector<byte> EAC1_1_obj<Derived>::make_signature(PK_Signer* signer,
                                                                                   const MemoryRegion<byte>& tbs_bits,
                                                                                   RandomNumberGenerator& rng)
    {
@@ -115,7 +114,7 @@ template<typename Derived> bool EAC1_1_obj<Derived>::check_signature(Public_Key&
          {
          return false;
          }
-      std::auto_ptr<ECDSA_Signature_Encoder> enc = m_sig.x509_encoder();
+      std::auto_ptr<ECDSA_Signature_Encoder> enc(m_sig.x509_encoder());
       SecureVector<byte> seq_sig = enc->signature_bits();
       SecureVector<byte> to_sign = tbs_data();
       return verifier->verify_message(to_sign, seq_sig);

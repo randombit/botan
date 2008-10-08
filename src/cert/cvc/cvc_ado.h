@@ -44,7 +44,8 @@ class EAC1_1_ADO : public EAC1_1_obj<EAC1_1_ADO>
       */
       static MemoryVector<byte> make_signed(
          std::auto_ptr<PK_Signer> signer,
-         const MemoryRegion<byte>& tbs_bits);
+         const MemoryRegion<byte>& tbs_bits,
+         RandomNumberGenerator& rng);
       /**
       * Get the CAR of this CVC ADO request
       * @result the CAR of this CVC ADO request
