@@ -10,8 +10,8 @@
  *          strenzke@flexsecure.de                    *
  ******************************************************/
 
-#ifndef BOTAN_MATH_GF_GFP_MODULUS_H_GUARD_
-#define BOTAN_MATH_GF_GFP_MODULUS_H_GUARD_
+#ifndef BOTAN_GFP_MODULUS_H__
+#define BOTAN_GFP_MODULUS_H__
 
 #include <botan/bigint.h>
 
@@ -44,8 +44,8 @@ class GFpModulus
          {}
 
       /**
-      * Tells whether the precomputations necessary for the use of the montgomery
-      * multiplication have yet been established.
+      * Tells whether the precomputations necessary for the use of the
+      * montgomery multiplication have yet been established.
       * @result true if the precomputated value are already available.
       */
       inline bool has_precomputations() const
@@ -122,3 +122,4 @@ class GFpModulus
 }
 
 #endif
+

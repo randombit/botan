@@ -1,41 +1,42 @@
 /******************************************************
  * Arithmetic for prime fields GF(p) (header file)    *
  *                                                    *
- * (C) 2007 Martin Döring                             *
-*          doering@cdc.informatik.tu-darmstadt.de    *
-*          Christoph Ludwig                          *
-*          ludwig@fh-worms.de                        *
-*          Falko Strenzke                            *
-*          strenzke@flexsecure.de                    *
-******************************************************/
+ * (C) 2007 Martin Doering                            *
+ *          doering@cdc.informatik.tu-darmstadt.de    *
+ *          Christoph Ludwig                          *
+ *          ludwig@fh-worms.de                        *
+ *          Falko Strenzke                            *
+ *          strenzke@flexsecure.de                    *
+ ******************************************************/
 
-#ifndef BOTAN_MATH_GF_GFP_ELEMENT_H_GUARD_
-#define BOTAN_MATH_GF_GFP_ELEMENT_H_GUARD_
+#ifndef BOTAN_GFP_ELEMENT_H__
+#define BOTAN_GFP_ELEMENT_H__
 
-#include <botan/gfp_modulus.h>
 #include <botan/bigint.h>
-#include <tr1/memory>
+#include <botan/gfp_modulus.h>
+#include <botan/freestore.h>
+#include <iostream>
 
-namespace Botan
-{
+namespace Botan {
 
 struct Illegal_Transformation : public Exception
-{
-    Illegal_Transformation(const std::string& err = "Requested transformation is not possible")
-    : Exception(err) {}
-};
+   {
+   Illegal_Transformation(const std::string& err =
+                          "Requested transformation is not possible")
+      : Exception(err) {}
+   };
 
 /**
-* This class represents one element in GF(p). Enables the convenient, transparent use
-* of the montgomery multiplication.
-*/
+ * This class represents one element in GF(p). Enables the convenient, transparent use
+ * of the montgomery multiplication.
+ */
 class GFpElement
    {
-
    private:
       std::tr1::shared_ptr<GFpModulus> mp_mod;
       mutable BigInt m_value; // ordinary residue or m-residue respectively
       mutable BigInt workspace;
+
       // *****************************************
       // data members for montgomery multiplication
       mutable bool m_use_montgm;
@@ -44,22 +45,20 @@ class GFpElement
       // the actual value (in this case mValue doesn´t)
       mutable bool m_is_trf;
 
-
       void ensure_montgm_precomp() const;
       void trf_to_mres() const;
       void trf_to_ordres() const;
 
    public:
 
-
       /** construct an element of GF(p) with the given value.
-      * use_montg defaults to false and determines wether Montgomery multiplications
-      * will be use when applying operators '*' , '*='.
+      * use_montg defaults to false and determines wether Montgomery
+      * multiplications will be use when applying operators *, *=
       * @param p the prime number of the field
       * @param value the element value
       * @param use_montgm whether this object will use Montgomery multiplication
       */
-      explicit GFpElement ( const BigInt& p, const BigInt& value, bool use_montgm = false );
+      explicit GFpElement (const BigInt& p, const BigInt& value, bool use_montgm = false );
 
 
       /** construct an element of GF(p) with the given value (defaults to 0).
@@ -80,7 +79,7 @@ class GFpElement
       * Copy constructor
       * @param other The element to clone
       */
-      GFpElement ( GFpElement const& other );
+      GFpElement ( const GFpElement& other );
 
       /**
       * Assignment operator.
@@ -89,7 +88,7 @@ class GFpElement
       *
       * @param other The element to assign to our object
       */
-      GFpElement const& operator= ( GFpElement const& other );
+      const GFpElement& operator= ( const GFpElement& other );
 
       /**
       * Works like the assignment operator, but lets
@@ -99,7 +98,7 @@ class GFpElement
       * the shared GFpModulus objects!
       * @param other The element to assign to our object
       */
-      void share_assign(GFpElement const& other);
+      void share_assign(const GFpElement& other);
 
       /**
       * Switch Montgomery multiplcation optimizations ON
@@ -116,27 +115,27 @@ class GFpElement
       * @param rhs the GFpElement to add to the local value
       * @result *this
       */
-      GFpElement& operator+= ( GFpElement const& rhs );
+      GFpElement& operator+= ( const GFpElement& rhs );
 
       /**
       * -= Operator
       * @param rhs the GFpElement to subtract from the local value
       * @result *this
       */
-      GFpElement& operator-= ( GFpElement const& rhs );
+      GFpElement& operator-= ( const GFpElement& rhs );
 
       /**
       * *= Operator
       * @param rhs the GFpElement to multiply with the local value
       * @result *this
       */
-      GFpElement& operator*= ( GFpElement const& rhs );
+      GFpElement& operator*= ( const GFpElement& rhs );
       /**
       * /= Operator
       * @param rhs the GFpElement to divide the local value by
       * @result *this
       */
-      GFpElement& operator/= ( GFpElement const& rhs );
+      GFpElement& operator/= ( const GFpElement& rhs );
 
       /**
       * *= Operator
@@ -235,7 +234,7 @@ class GFpElement
       * @result true if both are transformed to their m-residue,
       * false it both are transformed to their normal residue.
       */
-      static bool align_operands_res(GFpElement const& lhs, GFpElement const& rhs);
+      static bool align_operands_res(const GFpElement& lhs, const GFpElement& rhs);
 
       //friend declarations for non-member functions
 
@@ -245,6 +244,8 @@ class GFpElement
       * @param elem the object to write
       * @result the output stream
       */
+      friend std::ostream& operator<< ( std::ostream& output, const GFpElement& elem );
+
       friend class Point_Coords_GFp;
 
       /**
@@ -256,53 +257,48 @@ class GFpElement
    };
 
 // relational operators
-bool operator== ( GFpElement const& lhs, GFpElement const& rhs );
-inline bool operator!= ( GFpElement const& lhs, GFpElement const& rhs )
+bool operator== ( const GFpElement& lhs, const GFpElement& rhs );
+inline bool operator!= ( const GFpElement& lhs, const GFpElement& rhs )
    {
    return !operator== ( lhs, rhs );
    }
 
 // arithmetic operators
-GFpElement operator+ ( GFpElement const& lhs, GFpElement const& rhs );
-GFpElement operator- ( GFpElement const& lhs, GFpElement const& rhs );
-GFpElement operator- ( GFpElement const& lhs );
+GFpElement operator+ ( const GFpElement& lhs, const GFpElement& rhs );
+GFpElement operator- ( const GFpElement& lhs, const GFpElement& rhs );
+GFpElement operator- ( const GFpElement& lhs );
 
-GFpElement operator* ( GFpElement const& lhs, GFpElement const& rhs );
-GFpElement operator/ ( GFpElement const& lhs, GFpElement const& rhs );
-GFpElement operator* (GFpElement const& lhs, u32bit rhs);
-GFpElement operator* (u32bit rhs, GFpElement const& lhs);
+GFpElement operator* ( const GFpElement& lhs, const GFpElement& rhs );
+GFpElement operator/ ( const GFpElement& lhs, const GFpElement& rhs );
+GFpElement operator* (const GFpElement& lhs, u32bit rhs);
+GFpElement operator* (u32bit rhs, const GFpElement& lhs);
+
+// io operators
+std::ostream& operator<< ( std::ostream& output, const GFpElement& elem );
 
 // return (*this)^(-1)
-GFpElement inverse ( GFpElement const& elem );
+GFpElement inverse ( const GFpElement& elem );
 
 // encoding and decoding
-SecureVector<byte> FE2OSP ( GFpElement const& elem );
-GFpElement OS2FEP ( MemoryRegion<byte> const& os, BigInt p );
+SecureVector<byte> FE2OSP ( const GFpElement& elem );
+GFpElement OS2FEP ( MemoryRegion<byte> const& os, BigInt p);
 
-
-// swaps the states of elem1 and elem2, does not throw!
-// cf. Meyers, Item 25
-inline
-void swap ( GFpElement& elem1, GFpElement& elem2 )
+inline void swap(GFpElement& x, GFpElement& y)
    {
-   elem1.swap ( elem2 );
+   x.swap(y);
    }
 
-} // namespace Botan
+}
 
-namespace std
-{
+namespace std {
 
-// swaps the states of elem1 and elem2, does not throw!
-// cf. Meyers, Item 25
-template<>
-inline
-void swap< Botan::GFpElement>(Botan::GFpElement& elem1,
-                              Botan::GFpElement& elem2)
+template<> inline
+void swap<Botan::GFpElement>(Botan::GFpElement& x,
+                             Botan::GFpElement& y)
    {
-   elem1.swap(elem2);
+   x.swap(y);
    }
 
-} // namespace std
+}
 
 #endif

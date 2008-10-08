@@ -9,12 +9,12 @@
  *          strenzke@flexsecure.de                    *
  ******************************************************/
 
-#ifndef BOTAN_EC_CURVE_GFP_H__
-#define BOTAN_EC_CURVE_GFP_H__
+#ifndef BOTAN_GFP_CURVE_H__
+#define BOTAN_GFP_CURVE_H__
 
-#include <botan/gfp_element.h>
 #include <botan/bigint.h>
-#include <tr1/memory>
+#include <botan/gfp_element.h>
+#include <iostream>
 
 namespace Botan {
 
@@ -24,26 +24,27 @@ namespace Botan {
 class CurveGFp
    {
    public:
+
       /**
       * Construct the elliptic curve E: y^2 = x^3 + ax + b over GF(p)
       * @param a first coefficient
       * @param b second coefficient
       * @param p prime number of the field
       */
-      CurveGFp(GFpElement const& a, GFpElement const& b,
+      CurveGFp(const GFpElement& a, const GFpElement& b,
                const BigInt& p);
 
       /**
       * Copy constructor
       * @param other The curve to clone
       */
-      CurveGFp(CurveGFp const& other);
+      CurveGFp(const CurveGFp& other);
 
       /**
       * Assignment operator
       * @param other The curve to use as source for the assignment
       */
-      CurveGFp const& operator=(CurveGFp const& other);
+      const CurveGFp& operator=(const CurveGFp& other);
 
       /**
       * Set the shared GFpModulus object.
@@ -54,7 +55,7 @@ class CurveGFp
       * @param mod a shared pointer to a GFpModulus object suitable for
       * *this.
       */
-      void set_shrd_mod(std::tr1::shared_ptr<GFpModulus> const mod);
+      void set_shrd_mod(SharedPtrConverter<GFpModulus> const mod);
 
       // getters
 
@@ -81,20 +82,20 @@ class CurveGFp
 
       /**
       * Get the GFpElement coefficient b transformed
-      * to it´s m-residue. This can be used for efficency reasons: the curve
+      * to its m-residue. This can be used for efficency reasons: the curve
       * stores the transformed version after the first invocation of this
       * function.
-      * @result the coefficient b, transformed to it´s m-residue
+      * @result the coefficient b, transformed to its m-residue
       */
       GFpElement const get_mres_b() const;
 
 
       /**
       * Get the GFpElement 1  transformed
-      * to it´s m-residue. This can be used for efficency reasons: the curve
+      * to its m-residue. This can be used for efficency reasons: the curve
       * stores the transformed version after the first invocation of this
       * function.
-      * @result the GFpElement 1, transformed to it´s m-residue
+      * @result the GFpElement 1, transformed to its m-residue
       */
       std::tr1::shared_ptr<GFpElement const> const get_mres_one() const;
 
@@ -137,10 +138,13 @@ class CurveGFp
    };
 
 // relational operators
-bool operator==(CurveGFp const& lhs, CurveGFp const& rhs);
-inline bool operator!=(CurveGFp const& lhs, CurveGFp const& rhs) {
+bool operator==(const CurveGFp& lhs, const CurveGFp& rhs);
+inline bool operator!=(const CurveGFp& lhs, const CurveGFp& rhs) {
 return !operator==(lhs, rhs);
 }
+
+// io operators
+std::ostream& operator<<(std::ostream& output, const CurveGFp& elem);
 
 // swaps the states of curve1 and curve2, does not throw!
 // cf. Meyers, Item 25
@@ -149,17 +153,21 @@ void swap(CurveGFp& curve1, CurveGFp& curve2) {
 curve1.swap(curve2);
 }
 
-}
+} // namespace Botan
+
 
 namespace std {
 
-template<> inline void swap<Botan::CurveGFp>(
+// swaps the states of curve1 and curve2, does not throw!
+// cf. Meyers, Item 25
+template<>
+inline
+void swap<Botan::CurveGFp>(
    Botan::CurveGFp& curve1,
-   Botan::CurveGFp& curve2)
-   {
-   curve1.swap(curve2);
-   }
-
+   Botan::CurveGFp& curve2) {
+curve1.swap(curve2);
 }
+
+} // namespace std
 
 #endif

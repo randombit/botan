@@ -17,4 +17,5 @@ gfp_element.h
 gfp_modulus.h
 point_gfp.cpp
 point_gfp.h
+freestore.h
 </add>
