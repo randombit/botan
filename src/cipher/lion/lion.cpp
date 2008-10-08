@@ -93,9 +93,12 @@ void Lion::clear() throw()
 * Lion Constructor                               *
 *************************************************/
 Lion::Lion(HashFunction* hash_in, StreamCipher* sc_in, u32bit block_len) :
-   BlockCipher(block_len, 2, 2*hash_in->OUTPUT_LENGTH, 2),
-   LEFT_SIZE(hash->OUTPUT_LENGTH), RIGHT_SIZE(BLOCK_SIZE - LEFT_SIZE),
-   hash(hash_in), cipher(sc_in)
+   BlockCipher(std::max<u32bit>(2*hash_in->OUTPUT_LENGTH + 1, block_len),
+               2, 2*hash_in->OUTPUT_LENGTH, 2),
+   LEFT_SIZE(hash_in->OUTPUT_LENGTH),
+   RIGHT_SIZE(BLOCK_SIZE - LEFT_SIZE),
+   hash(hash_in),
+   cipher(sc_in)
    {
    if(2*LEFT_SIZE + 1 > BLOCK_SIZE)
       throw Invalid_Argument(name() + ": Chosen block size is too small");
