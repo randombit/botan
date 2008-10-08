@@ -1,6 +1,7 @@
 #include <botan/botan.h>
 #include <botan/x931_rng.h>
 #include <botan/filters.h>
+#include <botan/lookup.h>
 
 #include <iostream>
 #include <fstream>
@@ -79,7 +80,8 @@ void x931_tests(std::vector<std::pair<std::string, std::string> > vecs,
       const std::string result = vecs[j].first;
       const std::string input = vecs[j].second;
 
-      ANSI_X931_RNG prng(cipher, new Fixed_Output_RNG);
+      ANSI_X931_RNG prng(get_block_cipher(cipher),
+                         new Fixed_Output_RNG);
 
       SecureVector<byte> x = decode_hex(input);
       prng.add_entropy(x.begin(), x.size());

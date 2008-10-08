@@ -57,7 +57,7 @@ void XOR_Cipher::key(const byte key[], u32bit length)
 
 int main()
    {
-   add_algorithm(new XOR_Cipher); // make it available to use
+   add_algorithm(global_state(), new XOR_Cipher); // make it available to use
    global_state().add_alias("Vernam", "XOR"); // make Vernam an alias for XOR
 
    // a hex key value

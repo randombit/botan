@@ -14,7 +14,7 @@ void test_ressol(const BigInt& p, RandomNumberGenerator& rng)
 
    for(int j = 0; j != 1000; ++j)
       {
-      BigInt x = random_integer(rng, 0, p);
+      BigInt x = BigInt::random_integer(rng, 0, p);
       //if(x % p_16 == 0)
       //std::cout << "p = " << p << " x = " << x << "\n";
 

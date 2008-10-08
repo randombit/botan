@@ -1,5 +1,7 @@
 #include <botan/botan.h>
-#include <botan/pkcs5.h>
+#include <botan/pbkdf2.h>
+#include <botan/hmac.h>
+#include <botan/sha160.h>
 #include <iostream>
 #include <memory>
 
@@ -49,7 +51,7 @@ int main(int argc, char* argv[])
 std::string password_hash(const std::string& pass,
                           RandomNumberGenerator& rng)
    {
-   PKCS5_PBKDF2 kdf("SHA-1");
+   PKCS5_PBKDF2 kdf(new HMAC(new SHA_160));
 
    kdf.set_iterations(10000);
    kdf.new_random_salt(rng, 6); // 48 bits
@@ -72,7 +74,7 @@ bool password_hash_ok(const std::string& pass, const std::string& hash)
 
    SecureVector<byte> hash_bin = pipe.read_all();
 
-   PKCS5_PBKDF2 kdf("SHA-1");
+   PKCS5_PBKDF2 kdf(new HMAC(new SHA_160));
 
    kdf.set_iterations(10000);
    kdf.change_salt(hash_bin, 6);

@@ -97,8 +97,8 @@ bool check(RandomNumberGenerator& rng,
 
    u32bit qbits = (p.bits() <= 1024) ? 160 : 256;
 
-   bool found = DL_Group::generate_dsa_primes(rng, our_p, our_q,
-                                              p.bits(), qbits, seed);
+   bool found = generate_dsa_primes(rng, our_p, our_q,
+                                    p.bits(), qbits, seed);
 
    if(!found) /* bad seed */
       return false;

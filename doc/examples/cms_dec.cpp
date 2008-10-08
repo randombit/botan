@@ -1,7 +1,10 @@
+#include <botan/botan.h>
+#include <botan/pkcs8.h>
 #include <botan/cms_dec.h>
 using namespace Botan;
 
 #include <iostream>
+#include <memory>
 
 int main(int argc, char* argv[])
    {
@@ -14,8 +17,11 @@ int main(int argc, char* argv[])
    LibraryInitializer init;
 
    try {
+      std::auto_ptr<RandomNumberGenerator> rng(
+         RandomNumberGenerator::make_rng());
+
       X509_Certificate mycert("mycert.pem");
-      PKCS8_PrivateKey* mykey = PKCS8::load_key("mykey.pem", "cut");
+      PKCS8_PrivateKey* mykey = PKCS8::load_key("mykey.pem", *rng, "cut");
 
       X509_Certificate yourcert("yourcert.pem");
       X509_Certificate cacert("cacert.pem");

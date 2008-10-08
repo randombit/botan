@@ -1,21 +1,25 @@
+#include <botan/botan.h>
 #include <botan/cms_enc.h>
 using namespace Botan;
 
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 int main()
    {
    LibraryInitializer init;
 
    try {
-      PKCS8_PrivateKey* mykey = PKCS8::load_key("mykey.pem", "cut");
 
       X509_Certificate mycert("mycert.pem");
       X509_Certificate mycert2("mycert2.pem");
       X509_Certificate yourcert("yourcert.pem");
       X509_Certificate cacert("cacert.pem");
       X509_Certificate int_ca("int_ca.pem");
+
+      std::auto_ptr<RandomNumberGenerator> rng(
+         RandomNumberGenerator::make_rng());
 
       X509_Store store;
       store.add_cert(mycert);
@@ -30,13 +34,17 @@ int main()
 
       encoder.compress("Zlib");
       encoder.digest();
-      encoder.encrypt(mycert);
+      encoder.encrypt(*rng, mycert);
+
+      /*
+      PKCS8_PrivateKey* mykey = PKCS8::load_key("mykey.pem", *rng, "cut");
       encoder.sign(store, *mykey);
+      */
 
       SecureVector<byte> raw = encoder.get_contents();
       std::ofstream out("out.der");
 
-      out.write((const char*)raw.ptr(), raw.size());
+      out.write((const char*)raw.begin(), raw.size());
    }
    catch(std::exception& e)
       {

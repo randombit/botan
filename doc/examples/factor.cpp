@@ -18,7 +18,7 @@ using namespace Botan;
 
 BigInt rho(const BigInt& n, RandomNumberGenerator& rng)
    {
-   BigInt x = random_integer(rng, 0, n-1);
+   BigInt x = BigInt::random_integer(rng, 0, n-1);
    BigInt y = x;
    BigInt d = 0;
 
