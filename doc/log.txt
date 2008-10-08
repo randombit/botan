@@ -1,7 +1,8 @@
 
 * 1.7.16, ????-??-??
- - Split ECDSA and ECKAEG into distinct modules
  - Added SHA-224 from InSiTo
+ - Split ECDSA and ECKAEG into distinct modules
+ - Add GF(p) and ECDSA tests from InSiTo
  - Rename sha256.h to sha2_32.h
  - Rename sha_64.h to sha2_64.h
 
