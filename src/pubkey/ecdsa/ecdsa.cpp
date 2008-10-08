@@ -34,62 +34,6 @@ ECDSA_PrivateKey::ECDSA_PrivateKey(RandomNumberGenerator& rng,
    m_ecdsa_core = ECDSA_Core(*mp_dom_pars, m_private_value, *mp_public_point);
    }
 
-/**
-* EC_PrivateKey generator
-**/
-void EC_PrivateKey::generate_private_key(RandomNumberGenerator& rng)
-   {
-   if (mp_dom_pars.get() == 0)
-      {
-      throw Invalid_State("cannot generate private key when domain parameters are not set");
-      }
-   BigInt tmp_private_value(0);
-   tmp_private_value = BigInt::random_integer(rng, 1, mp_dom_pars->get_order() );
-   mp_public_point = std::auto_ptr<PointGFp>( new PointGFp (mp_dom_pars->get_base_point()));
-   mp_public_point->mult_this_secure(tmp_private_value, mp_dom_pars->get_order(), mp_dom_pars->get_order()-1);
-
-   //assert(mp_public_point.get() != 0);
-   tmp_private_value.swap(m_private_value);
-   }
-
-/**
-* Return the PKCS #8 public key encoder
-**/
-PKCS8_Encoder* EC_PrivateKey::pkcs8_encoder() const
-   {
-   class EC_Key_Encoder : public PKCS8_Encoder
-      {
-      public:
-         AlgorithmIdentifier alg_id() const
-            {
-            key->affirm_init();
-            SecureVector<byte> params = encode_der_ec_dompar ( * ( key->mp_dom_pars ), ENC_EXPLICIT );
-            return AlgorithmIdentifier ( key->get_oid(),
-                                         params );
-            }
-
-         MemoryVector<byte> key_bits() const
-            {
-            key->affirm_init();
-            SecureVector<byte> octstr_secret = BigInt::encode_1363 ( key->m_private_value, key->m_private_value.bytes() );
-
-            return DER_Encoder()
-               .start_cons ( SEQUENCE )
-               .encode ( BigInt ( 1 ) )
-               .encode ( octstr_secret, OCTET_STRING )
-               .end_cons()
-               .get_contents();
-            }
-
-         EC_Key_Encoder ( const EC_PrivateKey* k ) : key ( k )
-            {}
-      private:
-         const EC_PrivateKey* key;
-      };
-
-   return new EC_Key_Encoder(this);
-   }
-
 /*************************************************
 * ECDSA_PublicKey                                *
 *************************************************/

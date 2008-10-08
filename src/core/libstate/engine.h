@@ -194,7 +194,9 @@ DH_Operation* dh_op(const DL_Group&, const BigInt&);
 ECDSA_Operation* ecdsa_op(const EC_Domain_Params& dom_pars,
                           const BigInt& priv_key,
                           const PointGFp& pub_key);
+#endif
 
+#if defined(BOTAN_HAS_ECKAEG)
 ECKAEG_Operation* eckaeg_op(const EC_Domain_Params& dom_pars,
                             const BigInt& priv_key,
                             const PointGFp& pub_key);

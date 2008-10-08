@@ -129,7 +129,9 @@ ECDSA_Operation* ecdsa_op(const EC_Domain_Params& dom_pars,
 
    throw Lookup_Error("Engine_Core::ecdsa_op: Unable to find a working engine");
    }
+#endif
 
+#if defined(BOTAN_HAS_ECKAEG)
 /*************************************************
 * Acquire a ECKAEG op                            *
 *************************************************/
