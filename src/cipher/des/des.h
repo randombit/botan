@@ -21,30 +21,9 @@ class BOTAN_DLL DES : public BlockCipher
       BlockCipher* clone() const { return new DES; }
       DES() : BlockCipher(8, 8) {}
    private:
-      friend class TripleDES;
-
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
       void key(const byte[], u32bit);
-      void raw_encrypt(u32bit&, u32bit&) const;
-      void raw_decrypt(u32bit&, u32bit&) const;
-      void round(u32bit&, u32bit, u32bit) const;
-      static void IP(u32bit&, u32bit&);
-      static void FP(u32bit&, u32bit&);
-
-      static const u32bit SPBOX1[256];
-      static const u32bit SPBOX2[256];
-      static const u32bit SPBOX3[256];
-      static const u32bit SPBOX4[256];
-      static const u32bit SPBOX5[256];
-      static const u32bit SPBOX6[256];
-      static const u32bit SPBOX7[256];
-      static const u32bit SPBOX8[256];
-
-      static const u64bit IPTAB1[256];
-      static const u64bit IPTAB2[256];
-      static const u64bit FPTAB1[256];
-      static const u64bit FPTAB2[256];
 
       SecureBuffer<u32bit, 32> round_key;
    };
@@ -55,7 +34,7 @@ class BOTAN_DLL DES : public BlockCipher
 class BOTAN_DLL TripleDES : public BlockCipher
    {
    public:
-      void clear() throw() { des1.clear(); des2.clear(); des3.clear(); }
+      void clear() throw() { round_key.clear(); }
       std::string name() const { return "TripleDES"; }
       BlockCipher* clone() const { return new TripleDES; }
       TripleDES() : BlockCipher(8, 16, 24, 8) {}
@@ -63,26 +42,26 @@ class BOTAN_DLL TripleDES : public BlockCipher
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
       void key(const byte[], u32bit);
-      DES des1, des2, des3;
+
+      SecureBuffer<u32bit, 96> round_key;
    };
 
 /*************************************************
-* DESX                                           *
+* DES Tables                                     *
 *************************************************/
-class BOTAN_DLL DESX : public BlockCipher
-   {
-   public:
-      void clear() throw() { des.clear(); K1.clear(); K2.clear(); }
-      std::string name() const { return "DESX"; }
-      BlockCipher* clone() const { return new DESX; }
-      DESX() : BlockCipher(8, 24) {}
-   private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
-      void key(const byte[], u32bit);
-      SecureBuffer<byte, 8> K1, K2;
-      DES des;
-   };
+extern const u32bit DES_SPBOX1[256];
+extern const u32bit DES_SPBOX2[256];
+extern const u32bit DES_SPBOX3[256];
+extern const u32bit DES_SPBOX4[256];
+extern const u32bit DES_SPBOX5[256];
+extern const u32bit DES_SPBOX6[256];
+extern const u32bit DES_SPBOX7[256];
+extern const u32bit DES_SPBOX8[256];
+
+extern const u64bit DES_IPTAB1[256];
+extern const u64bit DES_IPTAB2[256];
+extern const u64bit DES_FPTAB1[256];
+extern const u64bit DES_FPTAB2[256];
 
 }
 

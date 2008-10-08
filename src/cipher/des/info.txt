@@ -8,4 +8,6 @@ load_on auto
 des.cpp
 des.h
 des_tab.cpp
+desx.h
+desx.cpp
 </add>

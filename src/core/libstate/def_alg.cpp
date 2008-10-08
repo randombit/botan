@@ -24,6 +24,7 @@
 
 #if defined(BOTAN_HAS_DES)
   #include <botan/des.h>
+  #include <botan/desx.h>
 #endif
 
 #if defined(BOTAN_HAS_GOST)

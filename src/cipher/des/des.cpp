@@ -1,129 +1,23 @@
 /*************************************************
 * DES Source File                                *
-* (C) 1999-2007 Jack Lloyd                       *
+* (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
 #include <botan/des.h>
 #include <botan/loadstor.h>
-#include <botan/xor_buf.h>
 
 namespace Botan {
 
-/*************************************************
-* DES Encryption                                 *
-*************************************************/
-void DES::enc(const byte in[], byte out[]) const
-   {
-   u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
-
-   IP(L, R);
-   raw_encrypt(L, R);
-   FP(L, R);
-
-   store_be(out, R, L);
-   }
-
-/*************************************************
-* DES Decryption                                 *
-*************************************************/
-void DES::dec(const byte in[], byte out[]) const
-   {
-   u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
-
-   IP(L, R);
-   raw_decrypt(L, R);
-   FP(L, R);
-
-   store_be(out, R, L);
-   }
-
-/*************************************************
-* DES Initial Permutation                        *
-*************************************************/
-void DES::IP(u32bit& L, u32bit& R)
-   {
-   u64bit T = (IPTAB1[get_byte(0, L)]     ) | (IPTAB1[get_byte(1, L)] << 1) |
-              (IPTAB1[get_byte(2, L)] << 2) | (IPTAB1[get_byte(3, L)] << 3) |
-              (IPTAB1[get_byte(0, R)] << 4) | (IPTAB1[get_byte(1, R)] << 5) |
-              (IPTAB1[get_byte(2, R)] << 6) | (IPTAB2[get_byte(3, R)]     );
-   L = static_cast<u32bit>(T >> 32);
-   R = static_cast<u32bit>(T);
-   }
-
-/*************************************************
-* DES Final Permutation                          *
-*************************************************/
-void DES::FP(u32bit& L, u32bit& R)
-   {
-   u64bit T = (FPTAB1[get_byte(0, L)] << 5) | (FPTAB1[get_byte(1, L)] << 3) |
-              (FPTAB1[get_byte(2, L)] << 1) | (FPTAB2[get_byte(3, L)] << 1) |
-              (FPTAB1[get_byte(0, R)] << 4) | (FPTAB1[get_byte(1, R)] << 2) |
-              (FPTAB1[get_byte(2, R)]     ) | (FPTAB2[get_byte(3, R)]     );
-   L = static_cast<u32bit>(T >> 32);
-   R = static_cast<u32bit>(T);
-   }
-
-/*************************************************
-* DES Raw Encryption                             *
-*************************************************/
-void DES::raw_encrypt(u32bit& L, u32bit& R) const
-   {
-   for(u32bit j = 0; j != 16; j += 2)
-      {
-      u32bit T0, T1;
-
-      T0 = rotate_right(R, 4) ^ round_key[2*j];
-      T1 =              R     ^ round_key[2*j + 1];
-
-      L ^= SPBOX1[get_byte(0, T0)] ^ SPBOX2[get_byte(0, T1)] ^
-           SPBOX3[get_byte(1, T0)] ^ SPBOX4[get_byte(1, T1)] ^
-           SPBOX5[get_byte(2, T0)] ^ SPBOX6[get_byte(2, T1)] ^
-           SPBOX7[get_byte(3, T0)] ^ SPBOX8[get_byte(3, T1)];
-
-      T0 = rotate_right(L, 4) ^ round_key[2*j + 2];
-      T1 =              L     ^ round_key[2*j + 3];
-
-      R ^= SPBOX1[get_byte(0, T0)] ^ SPBOX2[get_byte(0, T1)] ^
-           SPBOX3[get_byte(1, T0)] ^ SPBOX4[get_byte(1, T1)] ^
-           SPBOX5[get_byte(2, T0)] ^ SPBOX6[get_byte(2, T1)] ^
-           SPBOX7[get_byte(3, T0)] ^ SPBOX8[get_byte(3, T1)];
-      }
-   }
-
-/*************************************************
-* DES Raw Decryption                             *
-*************************************************/
-void DES::raw_decrypt(u32bit& L, u32bit& R) const
-   {
-   for(u32bit j = 16; j != 0; j -= 2)
-      {
-      u32bit T0, T1;
-
-      T0 = rotate_right(R, 4) ^ round_key[2*j - 2];
-      T1 =              R     ^ round_key[2*j - 1];
-
-      L ^= SPBOX1[get_byte(0, T0)] ^ SPBOX2[get_byte(0, T1)] ^
-           SPBOX3[get_byte(1, T0)] ^ SPBOX4[get_byte(1, T1)] ^
-           SPBOX5[get_byte(2, T0)] ^ SPBOX6[get_byte(2, T1)] ^
-           SPBOX7[get_byte(3, T0)] ^ SPBOX8[get_byte(3, T1)];
-
-      T0 = rotate_right(L, 4) ^ round_key[2*j - 4];
-      T1 =              L     ^ round_key[2*j - 3];
-
-      R ^= SPBOX1[get_byte(0, T0)] ^ SPBOX2[get_byte(0, T1)] ^
-           SPBOX3[get_byte(1, T0)] ^ SPBOX4[get_byte(1, T1)] ^
-           SPBOX5[get_byte(2, T0)] ^ SPBOX6[get_byte(2, T1)] ^
-           SPBOX7[get_byte(3, T0)] ^ SPBOX8[get_byte(3, T1)];
-      }
-   }
+namespace {
 
 /*************************************************
 * DES Key Schedule                               *
 *************************************************/
-void DES::key(const byte key[], u32bit)
+void des_key_schedule(u32bit round_key[32], const byte key[8])
    {
    static const byte ROT[16] = { 1, 1, 2, 2, 2, 2, 2, 2,
                                  1, 2, 2, 2, 2, 2, 2, 1 };
+
    u32bit C = ((key[7] & 0x80) << 20) | ((key[6] & 0x80) << 19) |
               ((key[5] & 0x80) << 18) | ((key[4] & 0x80) << 17) |
               ((key[3] & 0x80) << 16) | ((key[2] & 0x80) << 15) |
@@ -152,6 +46,7 @@ void DES::key(const byte key[], u32bit)
               ((key[1] & 0x08) <<  2) | ((key[0] & 0x08) <<  1) |
               ((key[3] & 0x10) >>  1) | ((key[2] & 0x10) >>  2) |
               ((key[1] & 0x10) >>  3) | ((key[0] & 0x10) >>  4);
+
    for(u32bit j = 0; j != 16; ++j)
       {
       C = ((C << ROT[j]) | (C >> (28-ROT[j]))) & 0x0FFFFFFF;
@@ -182,19 +77,146 @@ void DES::key(const byte key[], u32bit)
    }
 
 /*************************************************
+* DES Encryption                                 *
+*************************************************/
+void des_encrypt(u32bit& L, u32bit& R,
+                 const u32bit round_key[32])
+   {
+   for(u32bit j = 0; j != 16; j += 2)
+      {
+      u32bit T0, T1;
+
+      T0 = rotate_right(R, 4) ^ round_key[2*j];
+      T1 =              R     ^ round_key[2*j + 1];
+
+      L ^= DES_SPBOX1[get_byte(0, T0)] ^ DES_SPBOX2[get_byte(0, T1)] ^
+           DES_SPBOX3[get_byte(1, T0)] ^ DES_SPBOX4[get_byte(1, T1)] ^
+           DES_SPBOX5[get_byte(2, T0)] ^ DES_SPBOX6[get_byte(2, T1)] ^
+           DES_SPBOX7[get_byte(3, T0)] ^ DES_SPBOX8[get_byte(3, T1)];
+
+      T0 = rotate_right(L, 4) ^ round_key[2*j + 2];
+      T1 =              L     ^ round_key[2*j + 3];
+
+      R ^= DES_SPBOX1[get_byte(0, T0)] ^ DES_SPBOX2[get_byte(0, T1)] ^
+           DES_SPBOX3[get_byte(1, T0)] ^ DES_SPBOX4[get_byte(1, T1)] ^
+           DES_SPBOX5[get_byte(2, T0)] ^ DES_SPBOX6[get_byte(2, T1)] ^
+           DES_SPBOX7[get_byte(3, T0)] ^ DES_SPBOX8[get_byte(3, T1)];
+      }
+   }
+
+/*************************************************
+* DES Decryption                                 *
+*************************************************/
+void des_decrypt(u32bit& L, u32bit& R,
+                 const u32bit round_key[32])
+   {
+   for(u32bit j = 16; j != 0; j -= 2)
+      {
+      u32bit T0, T1;
+
+      T0 = rotate_right(R, 4) ^ round_key[2*j - 2];
+      T1 =              R     ^ round_key[2*j - 1];
+
+      L ^= DES_SPBOX1[get_byte(0, T0)] ^ DES_SPBOX2[get_byte(0, T1)] ^
+           DES_SPBOX3[get_byte(1, T0)] ^ DES_SPBOX4[get_byte(1, T1)] ^
+           DES_SPBOX5[get_byte(2, T0)] ^ DES_SPBOX6[get_byte(2, T1)] ^
+           DES_SPBOX7[get_byte(3, T0)] ^ DES_SPBOX8[get_byte(3, T1)];
+
+      T0 = rotate_right(L, 4) ^ round_key[2*j - 4];
+      T1 =              L     ^ round_key[2*j - 3];
+
+      R ^= DES_SPBOX1[get_byte(0, T0)] ^ DES_SPBOX2[get_byte(0, T1)] ^
+           DES_SPBOX3[get_byte(1, T0)] ^ DES_SPBOX4[get_byte(1, T1)] ^
+           DES_SPBOX5[get_byte(2, T0)] ^ DES_SPBOX6[get_byte(2, T1)] ^
+           DES_SPBOX7[get_byte(3, T0)] ^ DES_SPBOX8[get_byte(3, T1)];
+      }
+   }
+
+}
+
+/*************************************************
+* DES Encryption                                 *
+*************************************************/
+void DES::enc(const byte in[], byte out[]) const
+   {
+   u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
+              (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
+              (DES_IPTAB1[in[4]] << 4) | (DES_IPTAB1[in[5]] << 5) |
+              (DES_IPTAB1[in[6]] << 6) | (DES_IPTAB2[in[7]]     );
+
+   u32bit L = static_cast<u32bit>(T >> 32);
+   u32bit R = static_cast<u32bit>(T);
+
+   des_encrypt(L, R, round_key);
+
+   T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
+       (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
+       (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
+       (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
+
+   T = rotate_left(T, 32);
+
+   store_be(T, out);
+   }
+
+/*************************************************
+* DES Decryption                                 *
+*************************************************/
+void DES::dec(const byte in[], byte out[]) const
+   {
+   u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
+              (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
+              (DES_IPTAB1[in[4]] << 4) | (DES_IPTAB1[in[5]] << 5) |
+              (DES_IPTAB1[in[6]] << 6) | (DES_IPTAB2[in[7]]     );
+
+   u32bit L = static_cast<u32bit>(T >> 32);
+   u32bit R = static_cast<u32bit>(T);
+
+   des_decrypt(L, R, round_key);
+
+   T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
+       (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
+       (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
+       (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
+
+   T = rotate_left(T, 32);
+
+   store_be(T, out);
+   }
+
+/*************************************************
+* DES Key Schedule                               *
+*************************************************/
+void DES::key(const byte key[], u32bit)
+   {
+   des_key_schedule(round_key.begin(), key);
+   }
+
+/*************************************************
 * TripleDES Encryption                           *
 *************************************************/
 void TripleDES::enc(const byte in[], byte out[]) const
    {
-   u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
+   u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
+              (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
+              (DES_IPTAB1[in[4]] << 4) | (DES_IPTAB1[in[5]] << 5) |
+              (DES_IPTAB1[in[6]] << 6) | (DES_IPTAB2[in[7]]     );
 
-   DES::IP(L, R);
-   des1.raw_encrypt(L, R);
-   des2.raw_decrypt(R, L);
-   des3.raw_encrypt(L, R);
-   DES::FP(L, R);
+   u32bit L = static_cast<u32bit>(T >> 32);
+   u32bit R = static_cast<u32bit>(T);
 
-   store_be(out, R, L);
+   des_encrypt(L, R, round_key);
+   des_decrypt(R, L, round_key + 32);
+   des_encrypt(L, R, round_key + 64);
+
+   T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
+       (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
+       (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
+       (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
+
+   T = rotate_left(T, 32);
+
+   store_be(T, out);
    }
 
 /*************************************************
@@ -202,15 +224,26 @@ void TripleDES::enc(const byte in[], byte out[]) const
 *************************************************/
 void TripleDES::dec(const byte in[], byte out[]) const
    {
-   u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
+   u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
+              (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
+              (DES_IPTAB1[in[4]] << 4) | (DES_IPTAB1[in[5]] << 5) |
+              (DES_IPTAB1[in[6]] << 6) | (DES_IPTAB2[in[7]]     );
 
-   DES::IP(L, R);
-   des3.raw_decrypt(L, R);
-   des2.raw_encrypt(R, L);
-   des1.raw_decrypt(L, R);
-   DES::FP(L, R);
+   u32bit L = static_cast<u32bit>(T >> 32);
+   u32bit R = static_cast<u32bit>(T);
 
-   store_be(out, R, L);
+   des_decrypt(L, R, round_key + 64);
+   des_encrypt(R, L, round_key + 32);
+   des_decrypt(L, R, round_key);
+
+   T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
+       (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
+       (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
+       (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
+
+   T = rotate_left(T, 32);
+
+   store_be(T, out);
    }
 
 /*************************************************
@@ -218,42 +251,13 @@ void TripleDES::dec(const byte in[], byte out[]) const
 *************************************************/
 void TripleDES::key(const byte key[], u32bit length)
    {
-   des1.set_key(key, 8);
-   des2.set_key(key + 8, 8);
+   des_key_schedule(&round_key[0], key);
+   des_key_schedule(&round_key[32], key + 8);
+
    if(length == 24)
-      des3.set_key(key + 16, 8);
+      des_key_schedule(&round_key[64], key + 16);
    else
-      des3.set_key(key, 8);
-   }
-
-/*************************************************
-* DESX Encryption                                *
-*************************************************/
-void DESX::enc(const byte in[], byte out[]) const
-   {
-   xor_buf(out, in, K1.begin(), BLOCK_SIZE);
-   des.encrypt(out);
-   xor_buf(out, K2.begin(), BLOCK_SIZE);
-   }
-
-/*************************************************
-* DESX Decryption                                *
-*************************************************/
-void DESX::dec(const byte in[], byte out[]) const
-   {
-   xor_buf(out, in, K2.begin(), BLOCK_SIZE);
-   des.decrypt(out);
-   xor_buf(out, K1.begin(), BLOCK_SIZE);
-   }
-
-/*************************************************
-* DESX Key Schedule                              *
-*************************************************/
-void DESX::key(const byte key[], u32bit)
-   {
-   K1.copy(key, 8);
-   des.set_key(key + 8, 8);
-   K2.copy(key + 16, 8);
+      copy_mem(&round_key[64], round_key.begin(), 32);
    }
 
 }
