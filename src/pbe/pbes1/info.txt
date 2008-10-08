@@ -11,4 +11,5 @@ pbes1.h
 
 <requires>
 pbe_base
+pbkdf1
 </requires>
