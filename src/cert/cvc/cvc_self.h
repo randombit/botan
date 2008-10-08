@@ -46,7 +46,8 @@ namespace CVC_EAC
 */
 
 EAC1_1_CVC create_self_signed_cert(Private_Key const& key,
-                                   EAC1_1_CVC_Options const& opts);
+                                   EAC1_1_CVC_Options const& opts,
+                                   RandomNumberGenerator& rng);
 /**
 * Create a CVC request. The key encoding will be according to the provided private key.
 * @param priv_key the private key associated with the requesting entity
@@ -107,7 +108,8 @@ EAC1_1_CVC create_cvca(Private_Key const& priv_key,
 */
 EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
                      Private_Key const& priv_key,
-                     EAC1_1_CVC const& to_be_signed);
+                     EAC1_1_CVC const& to_be_signed,
+                     RandomNumberGenerator& rng);
 
 /**
 * Create a CVC request. The key encoding will be implicitCA.
@@ -139,7 +141,8 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
                         EAC1_1_Req const& req,
                         u32bit seqnr,
                         u32bit seqnr_len,
-                        bool domestic);
+                        bool domestic,
+                        RandomNumberGenerator& rng);
 }
 
 }

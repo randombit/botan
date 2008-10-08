@@ -265,22 +265,6 @@ bool operator<(const EAC_Time& t1, const EAC_Time& t2)
    }
 
 /*************************************************
-* Do a validity check                            *
-*************************************************/
-s32bit validity_check(const EAC_Time& start, const EAC_Time& end,
-                      u64bit current_time)
-   {
-
-   const s32bit NOT_YET_VALID = -1, VALID_TIME = 0, EXPIRED = 1;
-
-   if (start.cmp(current_time) > 0)
-      return NOT_YET_VALID;
-   if (end.cmp(current_time) < 0)
-      return EXPIRED;
-   return VALID_TIME;
-   }
-
-/*************************************************
 * Decode a BER encoded EAC_Time                 *
 *************************************************/
 void EAC_Time::decode_from(BER_Decoder& source)
