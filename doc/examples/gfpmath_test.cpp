@@ -672,24 +672,28 @@ int main()
    test_turn_on_sp_red_mul();
    test_bi_div_even();
    test_bi_div_odd();
-   test_deep_montgm();
-   test_gfp_div_small_numbers();
    test_gfp_basics();
    test_gfp_addSubNegate();
-   test_gfp_mult();
-   test_gfp_div();
    test_gfp_add();
    test_gfp_sub();
-   test_more_gfp_div();
    test_gfp_mult_u32bit();
-   test_gfp_shared_vals();
-   test_gfpel_ass_op();
    test_gfp_swap();
    test_inv_in_place();
    test_op_eq();
    test_rand_int();
    test_bi_bit_access();
    test_sec_mod_mul();
+
+   test_deep_montgm();
+
+   std::cout << "\nrest\n";
+
+   test_gfp_div_small_numbers();
+   test_gfp_mult();
+   test_gfp_div();
+   test_more_gfp_div();
+   test_gfp_shared_vals();
+   test_gfpel_ass_op();
 
    std::cout << "\ndone\n";
    }
