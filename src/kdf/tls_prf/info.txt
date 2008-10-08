@@ -4,6 +4,10 @@ define TLS_V10_PRF
 
 load_on auto
 
+<requires>
+kdf_base
+</requires>
+
 <add>
 prf_tls.h
 prf_tls.cpp

@@ -4,11 +4,6 @@ load_on auto
 
 define LIBSTATE_MODULE
 
-<required>
-core
-bigint
-</required>
-
 <add>
 def_alg.cpp
 def_mode.cpp

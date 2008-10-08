@@ -4,6 +4,10 @@ define KDF1
 
 load_on auto
 
+<requires>
+kdf_base
+</requires>
+
 <add>
 kdf1.h
 kdf1.cpp

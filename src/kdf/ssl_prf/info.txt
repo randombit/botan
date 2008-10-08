@@ -4,6 +4,10 @@ define SSL_V3_PRF
 
 load_on auto
 
+<requires>
+kdf_base
+</requires>
+
 <add>
 prf_ssl3.h
 prf_ssl3.cpp

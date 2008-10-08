@@ -1,0 +1,10 @@
+realname "KDF Base Class"
+
+define KDF_BASE
+
+load_on auto
+
+<add>
+kdf.cpp
+kdf.h
+</add>

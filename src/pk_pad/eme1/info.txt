@@ -4,13 +4,12 @@ define EME1
 
 load_on auto
 
+<requires>
+mgf1
+utils
+</requires>
+
 <add>
 eme1.h
 eme1.cpp
 </add>
-
-<requires>
-mgf1
-utils
-core
-</requires>

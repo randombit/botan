@@ -4,6 +4,10 @@ define MGF1
 
 load_on dep
 
+<requires>
+kdf_base
+</requires>
+
 <add>
 mgf1.h
 mgf1.cpp

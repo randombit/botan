@@ -4,14 +4,14 @@ define ENGINE_GNU_MP
 
 load_on request
 
-<required>
+<requires>
 dh
 dsa
 elgamal
 if_algo
 libstate
 nr
-</required>
+</requires>
 
 <add>
 eng_gmp.cpp

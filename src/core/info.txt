@@ -11,6 +11,9 @@ sha2
 hmac
 filters
 hex
+bigint
+libstate
+kdf_base
 timer_base
 </requires>
 
@@ -26,8 +29,6 @@ defalloc.h
 enums.h
 exceptn.cpp
 exceptn.h
-kdf.cpp
-kdf.h
 mem_pool.cpp
 mem_pool.h
 mutex.h
