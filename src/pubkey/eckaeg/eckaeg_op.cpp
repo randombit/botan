@@ -6,6 +6,7 @@
 
 #include <botan/eckaeg_op.h>
 #include <botan/eng_def.h>
+#include <botan/numthry.h>
 
 namespace Botan {
 
