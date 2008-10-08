@@ -1,5 +1,5 @@
 #include <botan/botan.h>
-#include <botan/ec.h>
+#include <botan/ecdsa.h>
 
 #include <memory>
 #include <iostream>
