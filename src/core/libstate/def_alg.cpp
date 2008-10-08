@@ -190,8 +190,8 @@
 #endif
 
 #if defined(BOTAN_HAS_SHA2)
-  #include <botan/sha256.h>
-  #include <botan/sha_64.h>
+  #include <botan/sha2_32.h>
+  #include <botan/sha2_64.h>
 #endif
 
 #if defined(BOTAN_HAS_TIGER)
@@ -504,6 +504,7 @@ Default_Engine::find_hash(const std::string& algo_spec) const
 #endif
 
 #if defined(BOTAN_HAS_SHA2)
+   HANDLE_TYPE_NO_ARGS("SHA-224", SHA_224);
    HANDLE_TYPE_NO_ARGS("SHA-256", SHA_256);
    HANDLE_TYPE_NO_ARGS("SHA-384", SHA_384);
    HANDLE_TYPE_NO_ARGS("SHA-512", SHA_512);

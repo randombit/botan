@@ -1,6 +1,7 @@
 
 * 1.7.16, ????-??-??
  - Split ECDSA and ECKAEG into distinct modules
+ - Added SHA-224
 
 * 1.7.15, 2008-10-07
  - Add GF(p) arithmetic from InSiTo

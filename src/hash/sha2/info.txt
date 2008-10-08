@@ -1,14 +1,14 @@
-realname "SHA-2 (256, 384, 512)"
+realname "SHA-2 (224, 256, 384, 512)"
 
 define SHA2
 
 load_on auto
 
 <add>
-sha256.cpp
-sha256.h
-sha_64.cpp
-sha_64.h
+sha2_32.cpp
+sha2_32.h
+sha2_64.cpp
+sha2_64.h
 </add>
 
 <requires>
