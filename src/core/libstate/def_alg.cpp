@@ -399,8 +399,15 @@ Default_Engine::find_block_cipher(const std::string& algo_spec) const
       if(name.size() != 4)
          throw Invalid_Algorithm_Name(algo_spec);
 
-      return new Lion(get_hash(name[1]), get_stream_cipher(name[2]),
-                      to_u32bit(name[3]));
+      std::auto_ptr<HashFunction> hash(get_hash(name[1]));
+      if(!hash.get())
+         throw Algorithm_Not_Found(name[1]);
+
+      std::auto_ptr<StreamCipher> sc(get_stream_cipher(name[2]));
+      if(!sc.get())
+         throw Algorithm_Not_Found(name[2]);
+
+      return new Lion(hash.release(), sc.release(), to_u32bit(name[3]));
       }
 #endif
 
