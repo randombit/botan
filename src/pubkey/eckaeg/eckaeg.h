@@ -9,6 +9,7 @@
 #define BOTAN_ECKAEG_KEY_H__
 
 #include <botan/ecc_key.h>
+#include <botan/eckaeg_core.h>
 
 namespace Botan {
 

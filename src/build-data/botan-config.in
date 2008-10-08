@@ -1,10 +1,10 @@
 #!/bin/sh
 
-guess_prefix=`dirname \`dirname $0\``
+guess_prefix=`dirname $0`
 install_prefix=@{var:prefix}
 prefix=
-includedir=@{var:includedir}
-libdir=@{var:libdir}
+includedir=build/include
+libdir=
 
 usage()
 {

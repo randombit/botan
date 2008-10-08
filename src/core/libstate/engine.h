@@ -35,7 +35,12 @@
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
-  #include <botan/ecc_op.h>
+  #include <botan/ecdsa_op.h>
+  #include <botan/ec_dompar.h>
+#endif
+
+#if defined(BOTAN_HAS_ECKAEG)
+  #include <botan/eckaeg_op.h>
   #include <botan/ec_dompar.h>
 #endif
 
@@ -91,7 +96,9 @@ class BOTAN_DLL Engine
                                         const BigInt&,
                                         const PointGFp&) const
          { return 0; }
+#endif
 
+#if defined(BOTAN_HAS_ECKAEG)
       virtual ECKAEG_Operation* eckaeg_op(const EC_Domain_Params&,
                                           const BigInt&,
                                           const PointGFp&) const

@@ -12,7 +12,6 @@
 #include <botan/curve_gfp.h>
 #include <botan/pk_keys.h>
 #include <botan/ec_dompar.h>
-#include <botan/ecc_core.h>
 #include <botan/x509_key.h>
 #include <botan/pkcs8.h>
 

@@ -9,6 +9,7 @@
 #define BOTAN_ECDSA_KEY_H__
 
 #include <botan/ecc_key.h>
+#include <botan/ecdsa_core.h>
 
 namespace Botan {
 

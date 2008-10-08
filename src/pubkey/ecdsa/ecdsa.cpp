@@ -90,60 +90,6 @@ PKCS8_Encoder* EC_PrivateKey::pkcs8_encoder() const
    return new EC_Key_Encoder(this);
    }
 
-/**
-* Return the PKCS #8 public key decoder
-*/
-PKCS8_Decoder* EC_PrivateKey::pkcs8_decoder(RandomNumberGenerator&)
-   {
-   class EC_Key_Decoder : public PKCS8_Decoder
-      {
-      public:
-         void alg_id ( const AlgorithmIdentifier& alg_id )
-            {
-            key->mp_dom_pars.reset ( new EC_Domain_Params ( decode_ber_ec_dompar ( alg_id.parameters ) ) );
-            }
-
-         void key_bits ( const MemoryRegion<byte>& bits )
-            {
-            u32bit version;
-            SecureVector<byte> octstr_secret;
-            BER_Decoder ( bits )
-               .start_cons ( SEQUENCE )
-               .decode ( version )
-               .decode ( octstr_secret, OCTET_STRING )
-               .verify_end()
-               .end_cons();
-            key->m_private_value = BigInt::decode ( octstr_secret, octstr_secret.size() );
-            if ( version != 1 )
-               throw Decoding_Error ( "Wrong PKCS #1 key format version for EC key" );
-            key->PKCS8_load_hook();
-            }
-
-         EC_Key_Decoder ( EC_PrivateKey* k ) : key ( k )
-            {}
-      private:
-         EC_PrivateKey* key;
-      };
-
-   return new EC_Key_Decoder(this);
-   }
-
-
-void EC_PrivateKey::PKCS8_load_hook ( bool )
-   {
-   // we cannot use affirm_init() here because mp_public_point might still be null
-   if (mp_dom_pars.get() == 0 )
-      {
-      throw Invalid_State("attempt to set public point for an uninitialized key");
-      }
-   mp_public_point.reset ( new PointGFp ( m_private_value * mp_dom_pars->get_base_point() ) );
-   mp_public_point->check_invariants();
-
-   }
-
-
-
-
 /*************************************************
 * ECDSA_PublicKey                                *
 *************************************************/
@@ -183,6 +129,7 @@ void ECDSA_PublicKey::set_domain_parameters(EC_Domain_Params const& dom_pars)
       {
       throw Invalid_State("EC_PublicKey::set_domain_parameters(): point does not lie on provided curve");
       }
+
    std::auto_ptr<EC_Domain_Params> p_tmp_pars(new EC_Domain_Params(dom_pars));
    ECDSA_Core tmp_ecdsa_core( *p_tmp_pars, BigInt ( 0 ), tmp_pp );
    mp_public_point.reset(new PointGFp(tmp_pp));
@@ -195,28 +142,31 @@ void ECDSA_PublicKey::set_all_values ( ECDSA_PublicKey const& other )
    m_param_enc = other.m_param_enc;
    m_ecdsa_core = other.m_ecdsa_core;
    m_enc_public_point = other.m_enc_public_point;
-   if ( other.mp_dom_pars.get() )
-      {
+   if(other.mp_dom_pars.get())
       mp_dom_pars.reset ( new EC_Domain_Params ( * ( other.mp_dom_pars ) ) );
-      }
-   if ( other.mp_public_point.get() )
-      {
+
+   if(other.mp_public_point.get())
       mp_public_point.reset ( new PointGFp ( * ( other.mp_public_point ) ) );
-      }
    }
-ECDSA_PublicKey::ECDSA_PublicKey ( ECDSA_PublicKey const& other )
+
+ECDSA_PublicKey::ECDSA_PublicKey(const  ECDSA_PublicKey& other)
    : Public_Key(),
      EC_PublicKey(),
      PK_Verifying_wo_MR_Key()
    {
    set_all_values ( other );
    }
-ECDSA_PublicKey const& ECDSA_PublicKey::operator= ( ECDSA_PublicKey const& rhs )
+
+const ECDSA_PublicKey& ECDSA_PublicKey::operator=(const ECDSA_PublicKey& rhs)
    {
    set_all_values ( rhs );
    return *this;
    }
-bool ECDSA_PublicKey::verify ( const byte message[], u32bit mess_len, const byte signature [], u32bit sig_len ) const
+
+bool ECDSA_PublicKey::verify(const byte message[],
+                             u32bit mess_len,
+                             const byte signature[],
+                             u32bit sig_len) const
    {
    affirm_init();
    ECDSA_Signature sig;
@@ -227,19 +177,23 @@ bool ECDSA_PublicKey::verify ( const byte message[], u32bit mess_len, const byte
    SecureVector<byte> sv_plain_sig = sig.get_concatenation();
    return m_ecdsa_core.verify ( sv_plain_sig, sv_plain_sig.size(), message, mess_len );
    }
-ECDSA_PublicKey::ECDSA_PublicKey ( EC_Domain_Params const& dom_par, PointGFp const& public_point )
+
+ECDSA_PublicKey::ECDSA_PublicKey(const EC_Domain_Params& dom_par,
+                                 const PointGFp& public_point)
    {
-   mp_dom_pars = std::auto_ptr<EC_Domain_Params> ( new EC_Domain_Params ( dom_par ) );
-   mp_public_point = std::auto_ptr<PointGFp> ( new PointGFp ( public_point ) );
+   mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_par));
+   mp_public_point = std::auto_ptr<PointGFp>(new PointGFp(public_point));
    m_param_enc = ENC_EXPLICIT;
-   m_ecdsa_core = ECDSA_Core ( *mp_dom_pars, BigInt ( 0 ), *mp_public_point );
+   m_ecdsa_core = ECDSA_Core(*mp_dom_pars, BigInt(0), *mp_public_point);
    }
+
 void ECDSA_PublicKey::X509_load_hook()
    {
    EC_PublicKey::X509_load_hook();
    EC_PublicKey::affirm_init();
    m_ecdsa_core = ECDSA_Core ( *mp_dom_pars, BigInt ( 0 ), *mp_public_point );
    }
+
 u32bit ECDSA_PublicKey::max_input_bits() const
    {
    if(!mp_dom_pars.get())
@@ -249,11 +203,9 @@ u32bit ECDSA_PublicKey::max_input_bits() const
    return mp_dom_pars->get_order().bits();
    }
 
-
 /*************************
 * ECDSA_PrivateKey       *
 *************************/
-
 void ECDSA_PrivateKey::affirm_init() const // virtual
    {
    EC_PrivateKey::affirm_init();
@@ -293,16 +245,19 @@ ECDSA_PrivateKey::ECDSA_PrivateKey(ECDSA_PrivateKey const& other)
    {
    set_all_values(other);
    }
-ECDSA_PrivateKey const& ECDSA_PrivateKey::operator= (ECDSA_PrivateKey const& rhs)
+
+const ECDSA_PrivateKey& ECDSA_PrivateKey::operator=(const ECDSA_PrivateKey& rhs)
    {
    set_all_values(rhs);
    return *this;
    }
 
-SecureVector<byte> ECDSA_PrivateKey::sign ( const byte message [], u32bit mess_len, RandomNumberGenerator&) const
+SecureVector<byte> ECDSA_PrivateKey::sign(const byte message[],
+                                          u32bit mess_len,
+                                          RandomNumberGenerator& rng) const
    {
    affirm_init();
-   SecureVector<byte> sv_sig = m_ecdsa_core.sign ( message, mess_len );
+   SecureVector<byte> sv_sig = m_ecdsa_core.sign(message, mess_len, rng);
    //code which der encodes the signature returned
    ECDSA_Signature sig = decode_concatenation( sv_sig );
    std::auto_ptr<ECDSA_Signature_Encoder> enc(sig.x509_encoder());

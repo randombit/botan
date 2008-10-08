@@ -1,13 +1,13 @@
 /*************************************************
-* ECC Core Header File                           *
+* ECDSA Core Header File                         *
 * (C) 1999-2007 Jack Lloyd                       *
 * (C) 2007 FlexSecure GmbH                       *
 *************************************************/
 
-#ifndef BOTAN_ECC_CORE_H__
-#define BOTAN_ECC_CORE_H__
+#ifndef BOTAN_ECDSA_CORE_H__
+#define BOTAN_ECDSA_CORE_H__
 
-#include <botan/ecc_op.h>
+#include <botan/ecdsa_op.h>
 #include <botan/blinding.h>
 #include <botan/ec_dompar.h>
 
@@ -16,13 +16,14 @@ namespace Botan {
 /*************************************************
 * ECDSA Core                                     *
 *************************************************/
-class ECDSA_Core
+class BOTAN_DLL ECDSA_Core
    {
    public:
       bool verify(const byte signature[], u32bit sig_len,
                   const byte message[], u32bit mess_len) const;
 
-      SecureVector<byte> sign(const byte message[], u32bit mess_len) const;
+      SecureVector<byte> sign(const byte message[], u32bit mess_len,
+                              RandomNumberGenerator& rng) const;
 
       ECDSA_Core& operator=(const ECDSA_Core&);
 
@@ -37,30 +38,6 @@ class ECDSA_Core
       ~ECDSA_Core() { delete op; }
    private:
       ECDSA_Operation* op;
-   };
-
-/*************************************************
-* ECKAEG Core                                    *
-*************************************************/
-class ECKAEG_Core
-   {
-   public:
-      SecureVector<byte> agree(const PointGFp&) const;
-
-      ECKAEG_Core& operator=(const ECKAEG_Core&);
-
-      ECKAEG_Core() { op = 0; }
-
-      ECKAEG_Core(const ECKAEG_Core&);
-
-      ECKAEG_Core(const EC_Domain_Params& dom_pars,
-                  const BigInt& priv_key,
-                  PointGFp const& pub_key);
-
-      ~ECKAEG_Core() { delete op; }
-   private:
-      ECKAEG_Operation* op;
-      Blinder blinder;
    };
 
 }

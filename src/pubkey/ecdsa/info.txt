@@ -1,4 +1,4 @@
-realname "ECDSA/ECKAEG"
+realname "ECDSA"
 
 define ECDSA
 
@@ -8,21 +8,19 @@ load_on auto
 asn1
 bigint
 ec_dompar
+ecc_key
 numbertheory
 gfpmath
 pubkey
 </requires>
 
 <add>
-ecc_core.cpp
-ecc_core.h
-ecc_key.cpp
-ecc_key.h
-ecc_op.h
 ecdsa.cpp
 ecdsa.h
+ecdsa_core.cpp
+ecdsa_core.h
+ecdsa_op.cpp
+ecdsa_op.h
 ecdsa_sig.cpp
 ecdsa_sig.h
-eckaeg.cpp
-eckaeg.h
 </add>
