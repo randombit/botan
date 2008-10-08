@@ -1,0 +1,24 @@
+realname "Card Verifiable Certificates"
+
+define CARD_VERIFIABLE_CERTIFICATES
+
+load_on request
+
+<requires>
+</requires>
+
+<add>
+cvc_ado.cpp
+cvc_ado.h
+cvc_ca.cpp
+cvc_ca.h
+cvc_cert.cpp
+cvc_cert.h
+cvc_gen_cert.h
+cvc_key.h
+cvc_req.cpp
+cvc_req.h
+cvc_self.cpp
+cvc_self.h
+eac_obj.h
+</add>
