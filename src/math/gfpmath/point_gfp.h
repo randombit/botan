@@ -232,7 +232,7 @@ class PointGFp
       * @param mod a shared pointer to a GFpModulus that will
       * be held in the members *this
       */
-      void set_shrd_mod(std::tr1::shared_ptr<Botan::GFpModulus> p_mod);
+      void set_shrd_mod(std::tr1::shared_ptr<GFpModulus> p_mod);
 
       static GFpElement decompress(bool yMod2, GFpElement const& x, CurveGFp const& curve );
 
