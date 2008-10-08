@@ -4,26 +4,25 @@ define ENGINE_OPENSSL
 
 load_on request
 
-<requires>
-dh
-dsa
-elgamal
-if_algo
-libstate
-nr
-</requires>
-
-<add>
-eng_ossl.cpp
-bn_wrap.cpp
-bn_powm.cpp
-ossl_bc.cpp
-ossl_rc4.cpp
-ossl_md.cpp
-eng_ossl.h
-bn_wrap.h
-</add>
-
 <libs>
 all -> crypto
 </libs>
+
+<requires>
+libstate
+</requires>
+
+<add>
+bn_powm.cpp
+bn_wrap.cpp
+bn_wrap.h
+eng_ossl.h
+ossl_bc.cpp
+ossl_dh.cpp
+ossl_dsa.cpp
+ossl_elg.cpp
+ossl_if.cpp
+ossl_md.cpp
+ossl_nr.cpp
+ossl_rc4.cpp
+</add>
