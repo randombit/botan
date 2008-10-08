@@ -1,5 +1,6 @@
 
 * 1.7.16, ????-??-??
+ - Add several missing pieces needed for ECDSA and ECKAEG
  - Added SHA-224 from InSiTo
  - Split ECDSA and ECKAEG into distinct modules
  - Add GF(p) and ECDSA tests from InSiTo
