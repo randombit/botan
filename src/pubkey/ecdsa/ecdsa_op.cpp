@@ -5,6 +5,7 @@
 *************************************************/
 
 #include <botan/eng_def.h>
+#include <botan/numthry.h>
 
 namespace Botan {
 
