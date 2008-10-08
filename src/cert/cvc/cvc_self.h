@@ -70,7 +70,8 @@ EAC1_1_Req create_cvc_req(Private_Key const& priv_key,
 */
 EAC1_1_ADO create_ado_req(Private_Key const& priv_key,
                           EAC1_1_Req const& req,
-                          ASN1_Car const& car);
+                          ASN1_Car const& car,
+                          RandomNumberGenerator& rng);
 }
 /**
 * This namespace represents EAC 1.1 CVC convenience functions following the specific german
@@ -95,7 +96,8 @@ EAC1_1_CVC create_cvca(Private_Key const& priv_key,
                        std::string const& hash,
                        ASN1_Car const& car,
                        bool iris,
-                       bool fingerpr);
+                       bool fingerpr,
+                       RandomNumberGenerator& rng);
 
 /**
 * Create a link certificate between two CVCA certificates. The key
@@ -105,6 +107,7 @@ EAC1_1_CVC create_cvca(Private_Key const& priv_key,
 * @param priv_key the private key associated with the signer
 * @param to_be_signed the certificate which whose CAR/CHR will be
 * the holder of the link certificate
+* @param rng a random number generator
 */
 EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
                      Private_Key const& priv_key,
@@ -118,11 +121,13 @@ EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
 * sequence number)
 * @param hash_alg the string defining the hash algorithm to be used for the creation
 * of the signature
+* @param rng a random number generator
 * @result the new request
 */
 EAC1_1_Req create_cvc_req(Private_Key const& priv_key,
                           ASN1_Chr const& chr,
                           std::string const& hash_alg);
+
 /**
 * Sign a CVC request.
 * @param signer_cert the certificate of the signing entity
@@ -133,6 +138,7 @@ EAC1_1_Req create_cvc_req(Private_Key const& priv_key,
 * encoded in
 * @param domestic indicates whether to sign a domestic or a foreign certificate:
 * set to true for domestic
+* @param rng a random number generator
 * @result the new certificate
 *
 **/

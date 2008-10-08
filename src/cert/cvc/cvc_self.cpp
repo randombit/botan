@@ -157,7 +157,8 @@ EAC1_1_ADO create_ado_req(Private_Key const& key,
 namespace DE_EAC
 {
 
-EAC1_1_CVC create_cvca(Private_Key const& key, std::string const& hash, ASN1_Car const& car, bool iris, bool fingerpr)
+EAC1_1_CVC create_cvca(Private_Key const& key, std::string const& hash, ASN1_Car const& car, bool iris, bool fingerpr,
+                       RandomNumberGenerator& rng)
    {
    ECDSA_PrivateKey const* priv_key = dynamic_cast<ECDSA_PrivateKey const*>(&key);
    if (priv_key == 0)
@@ -173,7 +174,7 @@ EAC1_1_CVC create_cvca(Private_Key const& key, std::string const& hash, ASN1_Car
    opts.cex.add_months(global_config().option_as_u32bit("eac/ca/cvca_validity_months"));
    opts.holder_auth_templ = (CVCA | (iris * IRIS) | (fingerpr * FINGERPRINT));
    opts.hash_alg = hash;
-   return Botan::CVC_EAC::create_self_signed_cert(*priv_key, opts);
+   return Botan::CVC_EAC::create_self_signed_cert(*priv_key, opts, rng);
    }
 
 
@@ -298,6 +299,7 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
                                    cex,
                                    rng);
    }
+
 EAC1_1_Req create_cvc_req(Private_Key const& prkey,
                           ASN1_Chr const& chr,
                           std::string const& hash_alg)
