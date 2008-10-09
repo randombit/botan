@@ -27,8 +27,8 @@ struct Illegal_Transformation : public Exception
    };
 
 /**
- * This class represents one element in GF(p). Enables the convenient, transparent use
- * of the montgomery multiplication.
+ * This class represents one element in GF(p). Enables the convenient,
+ * transparent use of the montgomery multiplication.
  */
 class GFpElement
    {
@@ -58,7 +58,7 @@ class GFpElement
       * @param value the element value
       * @param use_montgm whether this object will use Montgomery multiplication
       */
-      explicit GFpElement (const BigInt& p, const BigInt& value, bool use_montgm = false );
+      explicit GFpElement (const BigInt& p, const BigInt& value, bool use_montgm = false);
 
 
       /** construct an element of GF(p) with the given value (defaults to 0).
@@ -79,7 +79,7 @@ class GFpElement
       * Copy constructor
       * @param other The element to clone
       */
-      GFpElement ( const GFpElement& other );
+      GFpElement(const GFpElement& other);
 
       /**
       * Assignment operator.
@@ -88,7 +88,7 @@ class GFpElement
       *
       * @param other The element to assign to our object
       */
-      const GFpElement& operator= ( const GFpElement& other );
+      const GFpElement& operator=(const GFpElement& other);
 
       /**
       * Works like the assignment operator, but lets
@@ -115,27 +115,27 @@ class GFpElement
       * @param rhs the GFpElement to add to the local value
       * @result *this
       */
-      GFpElement& operator+= ( const GFpElement& rhs );
+      GFpElement& operator+=(const GFpElement& rhs);
 
       /**
       * -= Operator
       * @param rhs the GFpElement to subtract from the local value
       * @result *this
       */
-      GFpElement& operator-= ( const GFpElement& rhs );
+      GFpElement& operator-=(const GFpElement& rhs);
 
       /**
       * *= Operator
       * @param rhs the GFpElement to multiply with the local value
       * @result *this
       */
-      GFpElement& operator*= ( const GFpElement& rhs );
+      GFpElement& operator*=(const GFpElement& rhs);
       /**
       * /= Operator
       * @param rhs the GFpElement to divide the local value by
       * @result *this
       */
-      GFpElement& operator/= ( const GFpElement& rhs );
+      GFpElement& operator/=(const GFpElement& rhs);
 
       /**
       * *= Operator
@@ -145,7 +145,7 @@ class GFpElement
       GFpElement& operator*= (u32bit rhs);
 
       /**
-      * Negate internal value ( *this *= -1 )
+      * Negate internal value(*this *= -1 )
       * @return *this
       */
       GFpElement& negate();
@@ -168,13 +168,13 @@ class GFpElement
       * return prime number of GF(p)
       * @result a prime number
       */
-      BigInt const get_p() const;
+      const BigInt& get_p() const;
 
       /**
       * Return the represented value in GF(p)
       * @result The value in GF(p)
       */
-      BigInt const get_value() const;
+      const BigInt& get_value() const;
 
       /**
       * Returns the shared pointer to the GFpModulus of *this.
@@ -209,7 +209,7 @@ class GFpElement
       * Transforms this to x_bar = x * r mod m
       * @result return the value x_bar.
       */
-      BigInt const get_mres() const;
+      const BigInt& get_mres() const;
 
       /**
       * Check, if montgomery multiplication is used.
@@ -244,7 +244,7 @@ class GFpElement
       * @param elem the object to write
       * @result the output stream
       */
-      friend std::ostream& operator<< ( std::ostream& output, const GFpElement& elem );
+      friend std::ostream& operator<<(std::ostream& output, const GFpElement& elem);
 
       friend class Point_Coords_GFp;
 
@@ -252,36 +252,36 @@ class GFpElement
       * swaps the states of *this and other, does not throw!
       * @param other The value to swap with
       */
-      void swap ( GFpElement& other );
+      void swap(GFpElement& other);
 
    };
 
 // relational operators
-bool operator== ( const GFpElement& lhs, const GFpElement& rhs );
-inline bool operator!= ( const GFpElement& lhs, const GFpElement& rhs )
+bool operator==(const GFpElement& lhs, const GFpElement& rhs);
+inline bool operator!=(const GFpElement& lhs, const GFpElement& rhs )
    {
-   return !operator== ( lhs, rhs );
+   return !operator==(lhs, rhs);
    }
 
 // arithmetic operators
-GFpElement operator+ ( const GFpElement& lhs, const GFpElement& rhs );
-GFpElement operator- ( const GFpElement& lhs, const GFpElement& rhs );
-GFpElement operator- ( const GFpElement& lhs );
+GFpElement operator+(const GFpElement& lhs, const GFpElement& rhs);
+GFpElement operator-(const GFpElement& lhs, const GFpElement& rhs);
+GFpElement operator-(const GFpElement& lhs);
 
-GFpElement operator* ( const GFpElement& lhs, const GFpElement& rhs );
-GFpElement operator/ ( const GFpElement& lhs, const GFpElement& rhs );
+GFpElement operator*(const GFpElement& lhs, const GFpElement& rhs);
+GFpElement operator/(const GFpElement& lhs, const GFpElement& rhs);
 GFpElement operator* (const GFpElement& lhs, u32bit rhs);
 GFpElement operator* (u32bit rhs, const GFpElement& lhs);
 
 // io operators
-std::ostream& operator<< ( std::ostream& output, const GFpElement& elem );
+std::ostream& operator<<(std::ostream& output, const GFpElement& elem);
 
 // return (*this)^(-1)
-GFpElement inverse ( const GFpElement& elem );
+GFpElement inverse(const GFpElement& elem);
 
 // encoding and decoding
-SecureVector<byte> FE2OSP ( const GFpElement& elem );
-GFpElement OS2FEP ( MemoryRegion<byte> const& os, BigInt p);
+SecureVector<byte> FE2OSP(const GFpElement& elem);
+GFpElement OS2FEP(MemoryRegion<byte> const& os, BigInt p);
 
 inline void swap(GFpElement& x, GFpElement& y)
    {

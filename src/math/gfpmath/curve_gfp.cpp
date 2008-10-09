@@ -19,7 +19,7 @@ void CurveGFp::set_shrd_mod(SharedPtrConverter<GFpModulus> const mod)
    mA.turn_off_sp_red_mul();// m.m. is not needed, must be trf. back
    mB.turn_off_sp_red_mul();// m.m. is not needed, must be trf. back
    //ok, above we destroy any evantually computated montg. mult. values,
-   // but that won´t influence performance in usual applications
+   // but that won't influence performance in usual applications
    mA.set_shrd_mod(mod.get_shared());
    mB.set_shrd_mod(mod.get_shared());
    }
@@ -95,6 +95,7 @@ GFpElement const CurveGFp::get_a() const
    {
    return mA;
    }
+
 GFpElement const CurveGFp::get_b() const
    {
    return mB;
@@ -116,6 +117,7 @@ void CurveGFp::swap(CurveGFp& other)
    std::swap(mp_mres_b, other.mp_mres_b);
    std::swap(mp_mres_one, other.mp_mres_one);
    }
+
 GFpElement const CurveGFp::get_mres_a() const
    {
    if(mp_mres_a.get() == 0)
@@ -126,6 +128,7 @@ GFpElement const CurveGFp::get_mres_a() const
       }
    return GFpElement(*mp_mres_a);
    }
+
 GFpElement const CurveGFp::get_mres_b() const
    {
    if(mp_mres_b.get() == 0)
@@ -136,6 +139,7 @@ GFpElement const CurveGFp::get_mres_b() const
       }
    return GFpElement(*mp_mres_b);
    }
+
 std::tr1::shared_ptr<GFpElement const> const CurveGFp::get_mres_one() const
    {
    if(mp_mres_one.get() == 0)
@@ -146,6 +150,7 @@ std::tr1::shared_ptr<GFpElement const> const CurveGFp::get_mres_one() const
       }
    return mp_mres_one;
    }
+
 bool operator==(const CurveGFp& lhs, const CurveGFp& rhs)
    {
    return (lhs.get_p() == rhs.get_p() && lhs.get_a() == rhs.get_a() && lhs.get_b() == rhs.get_b());

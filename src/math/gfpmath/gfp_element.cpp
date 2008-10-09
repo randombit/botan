@@ -312,18 +312,19 @@ bool GFpElement::align_operands_res(const GFpElement& lhs, const GFpElement& rhs
    assert(false);
 
    }
+
 bool GFpElement::is_trf_to_mres() const
    {
    return m_is_trf;
-
    }
-BigInt const GFpElement::get_p() const
+
+const BigInt& GFpElement::get_p() const
    {
    return (mp_mod->m_p);
    }
-BigInt const GFpElement::get_value() const
-   {
 
+const BigInt& GFpElement::get_value() const
+   {
    if(m_is_trf)
       {
       assert(m_use_montgm);
@@ -331,7 +332,8 @@ BigInt const GFpElement::get_value() const
       }
    return m_value;
    }
-BigInt const GFpElement::get_mres() const
+
+const BigInt& GFpElement::get_mres() const
    {
    if(!m_use_montgm)
       {
@@ -342,12 +344,12 @@ BigInt const GFpElement::get_mres() const
       }
    if(!m_is_trf)
       {
-
       trf_to_mres();
-
       }
+
    return m_value;
    }
+
 const GFpElement& GFpElement::operator=(const GFpElement& other)
    {
    m_value.grow_reg(other.m_value.size()); // grow first for exception safety
@@ -423,9 +425,8 @@ const GFpElement& GFpElement::operator=(const GFpElement& other)
    // our precomputations aren´t set, the arguments neither,
    // so we let them alone
    return *this;
-
-
    }
+
 void GFpElement::share_assign(const GFpElement& other)
    {
    assert((other.m_is_trf && other.m_use_montgm) || !other.m_is_trf);
@@ -437,8 +438,8 @@ void GFpElement::share_assign(const GFpElement& other)
    m_use_montgm = other.m_use_montgm;
    m_is_trf = other.m_is_trf;
    mp_mod = other.mp_mod; // cannot throw
-
    }
+
 GFpElement& GFpElement::operator+=(const GFpElement& rhs)
    {
    GFpElement::align_operands_res(*this, rhs);
@@ -456,6 +457,7 @@ GFpElement& GFpElement::operator+=(const GFpElement& rhs)
 
    return *this;
    }
+
 GFpElement& GFpElement::operator-=(const GFpElement& rhs)
    {
    GFpElement::align_operands_res(*this, rhs);

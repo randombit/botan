@@ -48,7 +48,7 @@ class PointGFp
       * Construct the point O
       * @param curve The base curve
       */
-      explicit PointGFp(CurveGFp const& curve);
+      explicit PointGFp(const CurveGFp& curve);
 
       /**
       * Construct a point given its affine coordinates
@@ -56,8 +56,8 @@ class PointGFp
       * @param x affine x coordinate
       * @param y affine y coordinate
       */
-      explicit PointGFp(CurveGFp const& curve, GFpElement const& x,
-                          GFpElement const& y );
+      explicit PointGFp(const CurveGFp& curve, GFpElement const& x,
+                          GFpElement const& y);
 
       /**
       * Construct a point given its jacobian projective coordinates
@@ -66,26 +66,26 @@ class PointGFp
       * @param y jacobian projective y coordinate
       * @param z jacobian projective y coordinate
       */
-      explicit PointGFp(CurveGFp const& curve, GFpElement const& x,
-                          GFpElement const& y, GFpElement const& z );
+      explicit PointGFp(const CurveGFp& curve, GFpElement const& x,
+                          GFpElement const& y, GFpElement const& z);
 
       /**
       * copy constructor
       * @param other the value to clone
       */
-      PointGFp(PointGFp const& other );
+      PointGFp(const PointGFp& other);
 
       /**
       * assignment operator
       * @param other The point to use as source for the assignment
       */
-      PointGFp const& operator=(PointGFp const& other );
+      const PointGFp& operator=(const PointGFp& other);
 
       /**
       * assign another point which is on the same curve as *this
       * @param other The point to use as source for the assignment
       */
-      PointGFp const& assign_within_same_curve(PointGFp const& other);
+      const PointGFp& assign_within_same_curve(const PointGFp& other);
 
 
 
@@ -94,14 +94,14 @@ class PointGFp
       * @param rhs the PointGFp to add to the local value
       * @result resulting PointGFp
       */
-      PointGFp& operator+=(PointGFp const& rhs );
+      PointGFp& operator+=(const PointGFp& rhs);
 
       /**
       * -= Operator
       * @param rhs the PointGFp to subtract from the local value
       * @result resulting PointGFp
       */
-      PointGFp& operator-=(PointGFp const& rhs );
+      PointGFp& operator-=(const PointGFp& rhs);
 
       /**
       * *= Operator
@@ -110,7 +110,7 @@ class PointGFp
       * @param scalar the PointGFp to multiply with *this
       * @result resulting PointGFp
       */
-      PointGFp& operator*=(const BigInt& scalar );
+      PointGFp& operator*=(const BigInt& scalar);
 
       /**
       * the equivalent to operator*= with countermeasures against
@@ -127,7 +127,7 @@ class PointGFp
       PointGFp& mult_this_secure(const BigInt& scalar,
                                  const BigInt& point_order,
                                  const BigInt& max_secr
-         );
+        );
 
       /**
       * Negate internal value(*this *= -1 )
@@ -145,7 +145,7 @@ class PointGFp
       * Set z coordinate to one.
       * @return *this
       */
-      PointGFp const& set_z_to_one() const;
+      const PointGFp& set_z_to_one() const;
 
       /**
       * Turn on the special reduction multiplication (i.e. the
@@ -219,7 +219,7 @@ class PointGFp
       *  swaps the states of *this and other, does not throw!
       * @param other the object to swap values with
       */
-      void swap(PointGFp& other );
+      void swap(PointGFp& other);
 
       /**
       * Sets the shared pointer to the GFpModulus that will be
@@ -234,13 +234,16 @@ class PointGFp
       */
       void set_shrd_mod(std::tr1::shared_ptr<GFpModulus> p_mod);
 
-      static GFpElement decompress(bool yMod2, GFpElement const& x, CurveGFp const& curve );
+      static GFpElement decompress(bool yMod2, GFpElement const& x, const CurveGFp& curve);
 
    private:
       static const u32bit GFPEL_WKSP_SIZE = 9;
       void ensure_worksp() const;
 
-      inline std::tr1::shared_ptr<PointGFp> mult_loop(int l, const BigInt& m, std::tr1::shared_ptr<PointGFp> H, std::tr1::shared_ptr<PointGFp> tmp, PointGFp const& P);
+      inline std::tr1::shared_ptr<PointGFp> mult_loop(int l, const BigInt& m,
+                                                      std::tr1::shared_ptr<PointGFp> H,
+                                                      std::tr1::shared_ptr<PointGFp> tmp,
+                                                      const PointGFp& P);
 
       CurveGFp mC;
       mutable GFpElement mX;  // NOTE: these values must be mutable (affine<->proj)
@@ -257,40 +260,40 @@ class PointGFp
    };
 
 // relational operators
-bool operator==(PointGFp const& lhs, PointGFp const& rhs );
-inline bool operator!=(PointGFp const& lhs, PointGFp const& rhs )
+bool operator==(const PointGFp& lhs, const PointGFp& rhs);
+inline bool operator!=(const PointGFp& lhs, const PointGFp& rhs )
    {
-   return !operator==(lhs, rhs );
+   return !operator==(lhs, rhs);
    }
 
 // arithmetic operators
-PointGFp operator+(PointGFp const& lhs, PointGFp const& rhs );
-PointGFp operator-(PointGFp const& lhs, PointGFp const& rhs );
-PointGFp operator-(PointGFp const& lhs );
+PointGFp operator+(const PointGFp& lhs, const PointGFp& rhs);
+PointGFp operator-(const PointGFp& lhs, const PointGFp& rhs);
+PointGFp operator-(const PointGFp& lhs);
 
-PointGFp operator*(const BigInt& scalar, PointGFp const& point );
-PointGFp operator*(PointGFp const& point, const BigInt& scalar );
-PointGFp mult_point_secure(PointGFp const& point, const BigInt& scalar, const BigInt& point_order, const BigInt& max_secret);
+PointGFp operator*(const BigInt& scalar, const PointGFp& point);
+PointGFp operator*(const PointGFp& point, const BigInt& scalar);
+PointGFp mult_point_secure(const PointGFp& point, const BigInt& scalar, const BigInt& point_order, const BigInt& max_secret);
 
-PointGFp const mult2 (PointGFp const& point);
+PointGFp const mult2 (const PointGFp& point);
 
 PointGFp const create_random_point(RandomNumberGenerator& rng,
-                                   CurveGFp const& curve);
+                                   const CurveGFp& curve);
 
 // encoding and decoding
-SecureVector<byte> EC2OSP(PointGFp const& point, byte format );
-PointGFp OS2ECP(MemoryRegion<byte> const& os, CurveGFp const& curve );
+SecureVector<byte> EC2OSP(const PointGFp& point, byte format);
+PointGFp OS2ECP(MemoryRegion<byte> const& os, const CurveGFp& curve);
 
-SecureVector<byte> encode_uncompressed(PointGFp const& point ); // maybe make private
-SecureVector<byte> encode_hybrid(PointGFp const& point ); // maybe make private
-SecureVector<byte> encode_compressed(PointGFp const& point ); // maybe make private
+SecureVector<byte> encode_uncompressed(const PointGFp& point); // maybe make private
+SecureVector<byte> encode_hybrid(const PointGFp& point); // maybe make private
+SecureVector<byte> encode_compressed(const PointGFp& point); // maybe make private
 
 // swaps the states of point1 and point2, does not throw!
 // cf. Meyers, Item 25
 inline
 void swap(PointGFp& point1, PointGFp& point2 )
    {
-   point1.swap(point2 );
+   point1.swap(point2);
    }
 
 } // namespace Botan

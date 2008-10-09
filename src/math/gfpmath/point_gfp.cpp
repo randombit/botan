@@ -11,8 +11,6 @@
 #include <botan/point_gfp.h>
 #include <botan/numthry.h>
 
-#include <iostream>
-
 namespace Botan {
 
 // construct the point at infinity or a random point
@@ -33,7 +31,6 @@ PointGFp::PointGFp(const CurveGFp& curve)
    set_shrd_mod(mC.get_ptr_mod());
 
    }
-
 
 // construct a point given its jacobian projective coordinates
 PointGFp::PointGFp(const CurveGFp& curve, const GFpElement& x,
@@ -68,7 +65,7 @@ PointGFp::PointGFp ( const CurveGFp& curve, const GFpElement& x,
    }
 
 // copy constructor
-PointGFp::PointGFp(PointGFp const& other)
+PointGFp::PointGFp(const PointGFp& other)
    :	mC(other.mC),
         mX(other.mX),
         mY(other.mY),
@@ -84,7 +81,7 @@ PointGFp::PointGFp(PointGFp const& other)
    }
 
 // assignment operator
-PointGFp const& PointGFp::operator=(PointGFp const& other)
+const PointGFp& PointGFp::operator=(PointGFp const& other)
    {
    mC = other.get_curve();
    mX = other.get_jac_proj_x();
@@ -100,7 +97,7 @@ PointGFp const& PointGFp::operator=(PointGFp const& other)
    return *this;
    }
 
-PointGFp const& PointGFp::assign_within_same_curve(PointGFp const& other)
+const PointGFp& PointGFp::assign_within_same_curve(PointGFp const& other)
    {
    mX = other.get_jac_proj_x();
    mY = other.get_jac_proj_y();
@@ -146,7 +143,7 @@ void PointGFp::ensure_worksp() const
    }
 
 // arithmetic operators
-PointGFp& PointGFp::operator+=(PointGFp const& rhs)
+PointGFp& PointGFp::operator+=(const PointGFp& rhs)
    {
    if (is_zero())
       {
@@ -310,7 +307,7 @@ PointGFp& PointGFp::operator+=(PointGFp const& rhs)
    return *this;
 
    }
-PointGFp& PointGFp::operator-=(PointGFp const& rhs)
+PointGFp& PointGFp::operator-=(const PointGFp& rhs)
    {
    PointGFp minus_rhs = PointGFp(rhs).negate();
 
@@ -484,7 +481,7 @@ inline std::tr1::shared_ptr<PointGFp> PointGFp::mult_loop(int l,
                                                           const BigInt& m,
                                                           std::tr1::shared_ptr<PointGFp> H,
                                                           std::tr1::shared_ptr<PointGFp> tmp,
-                                                          PointGFp const& P)
+                                                          const PointGFp& P)
    {
    //assert(l >= (int)m.bits()- 1);
    tmp = H;
@@ -703,7 +700,7 @@ PointGFp const PointGFp::get_z_to_one() const
 * their values in affine coordinates.
 * returns *this.
 */
-PointGFp const& PointGFp::set_z_to_one() const
+const PointGFp& PointGFp::set_z_to_one() const
    {
    if (!(mZ.get_value() == BigInt(1)) && !(mZ.get_value() == BigInt(0)))
       {
@@ -862,12 +859,12 @@ void PointGFp::swap(PointGFp& other)
    std::swap<bool>(mAZpow4_set, other.mAZpow4_set);
    }
 
-PointGFp const mult2(PointGFp const& point)
+PointGFp const mult2(const PointGFp& point)
    {
    return (PointGFp(point)).mult2_in_place();
    }
 
-bool operator==(PointGFp const& lhs, PointGFp const& rhs)
+bool operator==(const PointGFp& lhs, PointGFp const& rhs)
    {
    if (lhs.is_zero() && rhs.is_zero())
       {
@@ -888,30 +885,30 @@ bool operator==(PointGFp const& lhs, PointGFp const& rhs)
    }
 
 // arithmetic operators
-PointGFp operator+(PointGFp const& lhs, PointGFp const& rhs)
+PointGFp operator+(const PointGFp& lhs, PointGFp const& rhs)
    {
    PointGFp tmp(lhs);
    return tmp += rhs;
    }
 
-PointGFp operator-(PointGFp const& lhs, PointGFp const& rhs)
+PointGFp operator-(const PointGFp& lhs, PointGFp const& rhs)
    {
    PointGFp tmp(lhs);
    return tmp -= rhs;
    }
 
-PointGFp operator-(PointGFp const& lhs)
+PointGFp operator-(const PointGFp& lhs)
    {
    return PointGFp(lhs).negate();
    }
 
-PointGFp operator*(const BigInt& scalar, PointGFp const& point)
+PointGFp operator*(const BigInt& scalar, const PointGFp& point)
    {
    PointGFp result(point);
    return result *= scalar;
    }
 
-PointGFp operator*(PointGFp const& point, const BigInt& scalar)
+PointGFp operator*(const PointGFp& point, const BigInt& scalar)
    {
    PointGFp result(point);
    return result *= scalar;
@@ -926,7 +923,7 @@ PointGFp mult_point_secure(const PointGFp& point, const BigInt& scalar,
    }
 
 // encoding and decoding
-SecureVector<byte> EC2OSP(PointGFp const& point, byte format)
+SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
    {
    SecureVector<byte> result;
    if (format == PointGFp::UNCOMPRESSED)
@@ -948,7 +945,7 @@ SecureVector<byte> EC2OSP(PointGFp const& point, byte format)
       }
    return result;
    }
-SecureVector<byte> encode_compressed(PointGFp const& point)
+SecureVector<byte> encode_compressed(const PointGFp& point)
    {
 
 
@@ -980,7 +977,7 @@ SecureVector<byte> encode_compressed(PointGFp const& point)
    }
 
 
-SecureVector<byte> encode_uncompressed(PointGFp const& point)
+SecureVector<byte> encode_uncompressed(const PointGFp& point)
    {
    if (point.is_zero())
       {
@@ -1007,7 +1004,7 @@ SecureVector<byte> encode_uncompressed(PointGFp const& point)
 
    }
 
-SecureVector<byte> encode_hybrid(PointGFp const& point)
+SecureVector<byte> encode_hybrid(const PointGFp& point)
    {
    if (point.is_zero())
       {
