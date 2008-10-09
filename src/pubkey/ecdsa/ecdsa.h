@@ -16,8 +16,8 @@ namespace Botan {
 /**
 * This class represents ECDSA Public Keys.
 */
-class ECDSA_PublicKey : public virtual EC_PublicKey,
-                        public PK_Verifying_wo_MR_Key
+class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey,
+                                  public PK_Verifying_wo_MR_Key
    {
    public:
 
@@ -94,9 +94,9 @@ class ECDSA_PublicKey : public virtual EC_PublicKey,
 /**
 * This class represents ECDSA Private Keys
 */
-class ECDSA_PrivateKey : public ECDSA_PublicKey,
-                         public EC_PrivateKey,
-                         public PK_Signing_Key
+class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
+                                   public EC_PrivateKey,
+                                   public PK_Signing_Key
    {
    public:
       //ctors

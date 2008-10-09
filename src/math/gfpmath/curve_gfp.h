@@ -21,7 +21,7 @@ namespace Botan {
 /**
 * This class represents an elliptic curve over GF(p)
 */
-class CurveGFp
+class BOTAN_DLL CurveGFp
    {
    public:
 

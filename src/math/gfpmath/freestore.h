@@ -31,7 +31,7 @@
 namespace Botan {
 
 template<typename T>
-class SharedPtrConverter
+class BOTAN_DLL SharedPtrConverter
    {
    public:
       typedef std::tr1::shared_ptr<T> SharedPtr;
@@ -142,7 +142,7 @@ std::tr1::shared_ptr<T> create_shared_ptr(P1 p1, P2 p2, P3 p3, ...);
 * new (or new[]) operator, but only via one of the overloads
 * of function template Botan::create_ptr.
 */
-class Freestore
+class BOTAN_DLL Freestore
    {
    private:
       static

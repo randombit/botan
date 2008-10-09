@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * Unix Entropy Source                            *
 *************************************************/
-class Unix_EntropySource : public Buffered_EntropySource
+class BOTAN_DLL Unix_EntropySource : public Buffered_EntropySource
    {
    public:
       void add_sources(const Unix_Program[], u32bit);

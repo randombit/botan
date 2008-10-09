@@ -18,7 +18,7 @@ namespace Botan {
 /*************************************************
 * EAC SIGNED Object                              *
 *************************************************/
-class EAC_Signed_Object
+class BOTAN_DLL EAC_Signed_Object
    {
    public:
       virtual SecureVector<byte> tbs_data() const = 0;

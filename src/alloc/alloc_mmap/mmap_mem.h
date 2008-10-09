@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Memory Mapping Allocator                       *
 *************************************************/
-class MemoryMapping_Allocator : public Pooling_Allocator
+class BOTAN_DLL MemoryMapping_Allocator : public Pooling_Allocator
    {
    public:
       MemoryMapping_Allocator(Mutex* m) : Pooling_Allocator(m) {}

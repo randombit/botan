@@ -25,7 +25,7 @@ class BOTAN_DLL ECKAEG_Operation
 /*************************************************
 * Default ECKAEG operation                       *
 *************************************************/
-class Default_ECKAEG_Op : public ECKAEG_Operation
+class BOTAN_DLL Default_ECKAEG_Op : public ECKAEG_Operation
    {
    public:
       SecureVector<byte> agree(const PointGFp& i) const;

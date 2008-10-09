@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * EGD Entropy Source                             *
 *************************************************/
-class EGD_EntropySource : public EntropySource
+class BOTAN_DLL EGD_EntropySource : public EntropySource
    {
    public:
       u32bit slow_poll(byte[], u32bit);

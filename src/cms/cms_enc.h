@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * CMS Encoding Operation                         *
 *************************************************/
-class CMS_Encoder
+class BOTAN_DLL CMS_Encoder
    {
    public:
 

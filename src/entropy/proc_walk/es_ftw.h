@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * File Tree Walking Entropy Source               *
 *************************************************/
-class FTW_EntropySource : public Buffered_EntropySource
+class BOTAN_DLL FTW_EntropySource : public Buffered_EntropySource
    {
    public:
       FTW_EntropySource(const std::string& root_dir);

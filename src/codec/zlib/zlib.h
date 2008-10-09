@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Zlib Compression Filter                        *
 *************************************************/
-class Zlib_Compression : public Filter
+class BOTAN_DLL Zlib_Compression : public Filter
    {
    public:
       void write(const byte input[], u32bit length);
@@ -35,7 +35,7 @@ class Zlib_Compression : public Filter
 /*************************************************
 * Zlib Decompression Filter                      *
 *************************************************/
-class Zlib_Decompression : public Filter
+class BOTAN_DLL Zlib_Decompression : public Filter
    {
    public:
       void write(const byte input[], u32bit length);

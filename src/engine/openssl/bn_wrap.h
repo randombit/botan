@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Lightweight OpenSSL BN Wrapper                 *
 *************************************************/
-class OSSL_BN
+class BOTAN_DLL OSSL_BN
    {
    public:
       BIGNUM* value;
@@ -34,7 +34,7 @@ class OSSL_BN
 /*************************************************
 * Lightweight OpenSSL BN_CTX Wrapper             *
 *************************************************/
-class OSSL_BN_CTX
+class BOTAN_DLL OSSL_BN_CTX
    {
    public:
       BN_CTX* value;

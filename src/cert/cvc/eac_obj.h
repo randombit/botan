@@ -27,7 +27,7 @@ const std::string eac_cvc_emsa("EMSA1_BSI");
 * TR03110 v1.1 EAC CV Certificate                *
 *************************************************/
 template<typename Derived>
-class EAC1_1_obj : public EAC_Signed_Object // CRTP is used enable the call sequence:
+class BOTAN_DLL EAC1_1_obj : public EAC_Signed_Object // CRTP is used enable the call sequence:
    {
       // data members first:
    protected:

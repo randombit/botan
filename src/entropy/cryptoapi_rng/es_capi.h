@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Win32 CAPI Entropy Source                      *
 *************************************************/
-class Win32_CAPI_EntropySource : public EntropySource
+class BOTAN_DLL Win32_CAPI_EntropySource : public EntropySource
    {
    public:
       u32bit slow_poll(byte[], u32bit);

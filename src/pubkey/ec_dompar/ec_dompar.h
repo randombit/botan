@@ -20,7 +20,7 @@ namespace Botan {
 /**
 * This class represents elliptic curce domain parameters
 */
-class EC_Domain_Params
+class BOTAN_DLL EC_Domain_Params
    {
    public:
 

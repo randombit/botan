@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * This class represents ECKAEG Public Keys.
 */
-class ECKAEG_PublicKey : public virtual EC_PublicKey
+class BOTAN_DLL ECKAEG_PublicKey : public virtual EC_PublicKey
    {
    public:
 
@@ -74,9 +74,9 @@ class ECKAEG_PublicKey : public virtual EC_PublicKey
 /**
 * This class represents ECKAEG Private Keys.
 */
-class ECKAEG_PrivateKey : public ECKAEG_PublicKey,
-                          public EC_PrivateKey,
-                          public PK_Key_Agreement_Key
+class BOTAN_DLL ECKAEG_PrivateKey : public ECKAEG_PublicKey,
+                                    public EC_PrivateKey,
+                                    public PK_Key_Agreement_Key
    {
    public:
 

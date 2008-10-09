@@ -13,10 +13,10 @@
 
 namespace Botan {
 
-class ECDSA_Signature_Decoder;
-class ECDSA_Signature_Encoder;
+class BOTAN_DLL ECDSA_Signature_Decoder;
+class BOTAN_DLL ECDSA_Signature_Encoder;
 
-class ECDSA_Signature
+class BOTAN_DLL ECDSA_Signature
    {
       friend class ECDSA_Signature_Decoder;
       friend class ECDSA_Signature_Encoder;
@@ -55,7 +55,7 @@ inline bool operator!= ( ECDSA_Signature const& lhs, ECDSA_Signature const& rhs 
    return !operator== ( lhs, rhs );
    }
 
-class ECDSA_Signature_Decoder
+class BOTAN_DLL ECDSA_Signature_Decoder
    {
    public:
       void signature_bits(const MemoryRegion<byte>& bits)
@@ -73,7 +73,7 @@ class ECDSA_Signature_Decoder
       ECDSA_Signature* m_signature;
    };
 
-class ECDSA_Signature_Encoder
+class BOTAN_DLL ECDSA_Signature_Encoder
    {
    public:
       MemoryVector<byte> signature_bits() const

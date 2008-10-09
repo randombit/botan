@@ -30,7 +30,7 @@ struct Illegal_Transformation : public Exception
  * This class represents one element in GF(p). Enables the convenient,
  * transparent use of the montgomery multiplication.
  */
-class GFpElement
+class BOTAN_DLL GFpElement
    {
    private:
       std::tr1::shared_ptr<GFpModulus> mp_mod;

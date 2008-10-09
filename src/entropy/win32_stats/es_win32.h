@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * Win32 Entropy Source                           *
 *************************************************/
-class Win32_EntropySource : public Buffered_EntropySource
+class BOTAN_DLL Win32_EntropySource : public Buffered_EntropySource
    {
    private:
       void do_fast_poll();

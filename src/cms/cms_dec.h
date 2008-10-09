@@ -17,7 +17,7 @@ namespace Botan {
 /*************************************************
 * CMS Decoding Operation                         *
 *************************************************/
-class CMS_Decoder
+class BOTAN_DLL CMS_Decoder
    {
    public:
       enum Status { GOOD, BAD, NO_KEY, FAILURE };

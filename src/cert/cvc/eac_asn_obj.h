@@ -16,7 +16,7 @@ namespace Botan {
 /*************************************************
 * CVC EAC Time                                   *
 *************************************************/
-class EAC_Time : public ASN1_Object
+class BOTAN_DLL EAC_Time : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const;
@@ -50,7 +50,7 @@ class EAC_Time : public ASN1_Object
    };
 
 // function definitions in asn_eac_tm.cpp
-class ASN1_Ced : public EAC_Time
+class BOTAN_DLL ASN1_Ced : public EAC_Time
    {
    public:
       ASN1_Ced(std::string const& str="");
@@ -60,7 +60,7 @@ class ASN1_Ced : public EAC_Time
    };
 
 // function definitions in asn_eac_tm.cpp
-class ASN1_Cex : public EAC_Time
+class BOTAN_DLL ASN1_Cex : public EAC_Time
    {
    public:
       ASN1_Cex(std::string const& str="");
@@ -72,7 +72,7 @@ class ASN1_Cex : public EAC_Time
 /*************************************************
 * String for car/chr of cv certificates          *
 *************************************************/
-class ASN1_EAC_String: public ASN1_Object
+class BOTAN_DLL ASN1_EAC_String: public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const;
@@ -94,7 +94,7 @@ class ASN1_EAC_String: public ASN1_Object
 
 // String tagged with 2
 // function definitions in asn1_eac_str.cpp
-class ASN1_Car : public ASN1_EAC_String
+class BOTAN_DLL ASN1_Car : public ASN1_EAC_String
    {
    public:
       ASN1_Car(std::string const& str = "");
@@ -102,7 +102,7 @@ class ASN1_Car : public ASN1_EAC_String
 
 // String tagged with 32
 // function definitions in asn1_eac_str.cpp
-class ASN1_Chr : public ASN1_EAC_String
+class BOTAN_DLL ASN1_Chr : public ASN1_EAC_String
    {
    public:
       ASN1_Chr(std::string const& str = "");

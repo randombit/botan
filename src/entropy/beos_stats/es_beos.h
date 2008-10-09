@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * BeOS Entropy Source                            *
 *************************************************/
-class BeOS_EntropySource : public Buffered_EntropySource
+class BOTAN_DLL BeOS_EntropySource : public Buffered_EntropySource
    {
    private:
       void do_fast_poll();

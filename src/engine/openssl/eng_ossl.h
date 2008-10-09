@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * OpenSSL Engine                                 *
 *************************************************/
-class OpenSSL_Engine : public Engine
+class BOTAN_DLL OpenSSL_Engine : public Engine
    {
    public:
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)

@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Bzip Compression Filter                        *
 *************************************************/
-class Bzip_Compression : public Filter
+class BOTAN_DLL Bzip_Compression : public Filter
    {
    public:
       void write(const byte input[], u32bit length);
@@ -36,7 +36,7 @@ class Bzip_Compression : public Filter
 /*************************************************
 * Bzip Decompression Filter                      *
 *************************************************/
-class Bzip_Decompression : public Filter
+class BOTAN_DLL Bzip_Decompression : public Filter
    {
    public:
       void write(const byte input[], u32bit length);

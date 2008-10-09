@@ -34,7 +34,7 @@ class BOTAN_DLL ECDSA_Operation
 /*************************************************
 * Default ECDSA operation                        *
 *************************************************/
-class Default_ECDSA_Op : public ECDSA_Operation
+class BOTAN_DLL Default_ECDSA_Op : public ECDSA_Operation
    {
    public:
       bool verify(const byte signature[], u32bit sig_len,

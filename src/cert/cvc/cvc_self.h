@@ -20,7 +20,7 @@ namespace Botan {
 /**
 * This class represents a set of options used for the creation of CVC certificates
 */
-class EAC1_1_CVC_Options
+class BOTAN_DLL EAC1_1_CVC_Options
    {
    public:
 

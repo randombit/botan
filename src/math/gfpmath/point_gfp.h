@@ -26,7 +26,7 @@ struct Illegal_Point : public Exception
 /**
 * This class represents one point on a curve of GF(p).
 */
-class PointGFp
+class BOTAN_DLL PointGFp
    {
    public:
       /**

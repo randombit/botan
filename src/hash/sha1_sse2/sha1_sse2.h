@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * SHA-160                                        *
 *************************************************/
-class SHA_160_SSE2 : public SHA_160
+class BOTAN_DLL SHA_160_SSE2 : public SHA_160
    {
    public:
       HashFunction* clone() const { return new SHA_160_SSE2; }

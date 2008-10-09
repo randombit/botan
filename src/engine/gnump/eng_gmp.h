@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * GMP Engine                                     *
 *************************************************/
-class GMP_Engine : public Engine
+class BOTAN_DLL GMP_Engine : public Engine
    {
    public:
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)

@@ -18,12 +18,12 @@
 namespace Botan
 {
 
-class GFpElement;
+class BOTAN_DLL GFpElement;
 /**
 * This class represents a GFpElement modulus including the modulus related
 * values necessary for the montgomery multiplication.
 */
-class GFpModulus
+class BOTAN_DLL GFpModulus
    {
       friend class GFpElement;
    private:

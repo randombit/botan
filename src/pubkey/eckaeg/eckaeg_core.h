@@ -16,7 +16,7 @@ namespace Botan {
 /*************************************************
 * ECKAEG Core                                    *
 *************************************************/
-class ECKAEG_Core
+class BOTAN_DLL ECKAEG_Core
    {
    public:
       SecureVector<byte> agree(const PointGFp&) const;

@@ -14,7 +14,7 @@ namespace Botan {
 /*************************************************
 * Device Based Entropy Source                    *
 *************************************************/
-class Device_EntropySource : public EntropySource
+class BOTAN_DLL Device_EntropySource : public EntropySource
    {
    public:
       Device_EntropySource(const std::vector<std::string>& fs) : fsnames(fs) {}

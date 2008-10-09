@@ -27,7 +27,7 @@ namespace Botan {
 * cannot be used for verification until its domain parameters are set
 * by calling the corresponding member function.
 */
-class EC_PublicKey : public virtual Public_Key
+class BOTAN_DLL EC_PublicKey : public virtual Public_Key
    {
    public:
 
@@ -116,7 +116,7 @@ class EC_PublicKey : public virtual Public_Key
 /**
 * This abstract class represents general EC Private Keys
 */
-class EC_PrivateKey : public virtual EC_PublicKey, public virtual Private_Key
+class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey, public virtual Private_Key
    {
    public:
 

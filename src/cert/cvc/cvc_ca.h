@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * This class represents a CVC CA.
 */
-class EAC1_1_CVC_CA
+class BOTAN_DLL EAC1_1_CVC_CA
    {
    public:
 

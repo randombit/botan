@@ -13,7 +13,7 @@ namespace Botan {
 /*************************************************
 * SSL3-MAC                                       *
 *************************************************/
-class SSL3_MAC : public MessageAuthenticationCode
+class BOTAN_DLL SSL3_MAC : public MessageAuthenticationCode
    {
    public:
       void clear() throw();
