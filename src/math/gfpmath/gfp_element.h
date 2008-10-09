@@ -142,7 +142,7 @@ class BOTAN_DLL GFpElement
       * @param rhs the value to multiply with the local value
       * @result *this
       */
-      GFpElement& operator*= (u32bit rhs);
+      GFpElement& operator*= (u64bit rhs);
 
       /**
       * Negate internal value(*this *= -1 )
@@ -270,8 +270,8 @@ GFpElement operator-(const GFpElement& lhs);
 
 GFpElement operator*(const GFpElement& lhs, const GFpElement& rhs);
 GFpElement operator/(const GFpElement& lhs, const GFpElement& rhs);
-GFpElement operator* (const GFpElement& lhs, u32bit rhs);
-GFpElement operator* (u32bit rhs, const GFpElement& lhs);
+GFpElement operator* (const GFpElement& lhs, u64bit rhs);
+GFpElement operator* (u64bit rhs, const GFpElement& lhs);
 
 // io operators
 std::ostream& operator<<(std::ostream& output, const GFpElement& elem);
