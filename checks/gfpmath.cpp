@@ -122,7 +122,7 @@ void test_gfp_div_small_numbers()
    {
    std::cout << '.' << std::flush;
 
-   std::string s_prime = "5";
+   std::string s_prime = "13";
    BigInt bi_prime(s_prime);
    std::string s_value_a = "2";
    BigInt bi_value_a(s_value_a);
@@ -150,6 +150,17 @@ void test_gfp_div_small_numbers()
    BOOST_CHECK_MESSAGE(gfp_b.get_value() == s_value_b, "GFpElement has changed while division operation");
    GFpElement inverse_b = inverse(gfp_b);
    GFpElement res_div_alternative = gfp_a * inverse_b;
+
+   if(res_div_m != res_div_alternative)
+      {
+      std::cout << "a/b != a*b^-1 where\n"
+                << "a = " << gfp_a << "\n"
+                << "b = " << gfp_b << "\n"
+                << "b^-1 = " << inverse_b << "\n"
+                << "a*b^-1 = " << res_div_alternative << "\n"
+                << "a/b = " << res_div_n << "\n";
+      }
+
    BOOST_CHECK_MESSAGE(res_div_m == res_div_alternative, "a/b is not as equal to a * b^-1");
    //cout << "Div-result transformed:" << res_div_m.get_value() << endl;
    //cout << "Div-result untransformed:" << res_div_n.get_value() << endl;
@@ -219,7 +230,8 @@ void test_gfp_mult()
    GFpElement res_mult_n = gfp_a * gfp_c;
    BOOST_CHECK(!res_mult_n.is_trf_to_mres());
 
-   BOOST_CHECK(res_mult_n.get_value() == res_mult_m.get_value());
+   if(res_mult_n != res_mult_m)
+      std::cout << "n = " << res_mult_n << " != m = " << res_mult_m << "\n";
    }
 
 void test_gfp_div()
@@ -692,16 +704,12 @@ u32bit do_gfpmath_tests(Botan::RandomNumberGenerator& rng)
 
    test_deep_montgm();
 
-   std::cout << "\nrest\n";
-
-   test_gfp_div_small_numbers();
    test_gfp_mult();
+   test_gfp_div_small_numbers();
    test_gfp_div();
    test_more_gfp_div();
    test_gfp_shared_vals();
    test_gfpel_ass_op();
-
-   std::cout << "\ndone\n";
 
    return 0;
    }
