@@ -47,10 +47,8 @@ void test_turn_on_sp_red_mul()
 
    GFpElement c2 = a2*b2;
 
-   if(c1 == c2)
-      std::cout << "test_turn_on_sp_red_mul - c1 == c2\n";
-
-   //BOOST_CHECK_MESSAGE(c1 == c2, "error with multiple call to turn on spec red mul, should be " << c1 <<"\n, was " << c2);
+   if(c1 != c2)
+      std::cout << "test_turn_on_sp_red_mul - c1 != c2\n";
    }
 
 void test_bi_div_even()
@@ -153,7 +151,7 @@ void test_gfp_div_small_numbers()
 
    if(res_div_m != res_div_alternative)
       {
-      std::cout << "a/b != a*b^-1 where\n"
+      std::cout << "test_gfp_div_small_numbers - a/b != a*b^-1 where\n"
                 << "a = " << gfp_a << "\n"
                 << "b = " << gfp_b << "\n"
                 << "b^-1 = " << inverse_b << "\n"
@@ -231,7 +229,8 @@ void test_gfp_mult()
    BOOST_CHECK(!res_mult_n.is_trf_to_mres());
 
    if(res_mult_n != res_mult_m)
-      std::cout << "n = " << res_mult_n << " != m = " << res_mult_m << "\n";
+      std::cout << gfp_a << " * " << gfp_b << " =? "
+                << "n = " << res_mult_n << " != m = " << res_mult_m << "\n";
    }
 
 void test_gfp_div()
@@ -690,26 +689,27 @@ u32bit do_gfpmath_tests(Botan::RandomNumberGenerator& rng)
    test_turn_on_sp_red_mul();
    test_bi_div_even();
    test_bi_div_odd();
+   test_deep_montgm();
+   test_gfp_div_small_numbers();
    test_gfp_basics();
    test_gfp_addSubNegate();
+   test_gfp_mult();
+   test_gfp_div();
    test_gfp_add();
    test_gfp_sub();
+   test_more_gfp_div();
    test_gfp_mult_u32bit();
+   test_gfp_shared_vals();
+   test_gfpel_ass_op();
    test_gfp_swap();
    test_inv_in_place();
    test_op_eq();
    test_rand_int(rng);
    test_bi_bit_access();
    //test_sec_mod_mul();
+   //test_sec_bi_mul();
 
-   test_deep_montgm();
-
-   test_gfp_mult();
-   test_gfp_div_small_numbers();
-   test_gfp_div();
-   test_more_gfp_div();
-   test_gfp_shared_vals();
-   test_gfpel_ass_op();
+   std::cout << std::endl;
 
    return 0;
    }
