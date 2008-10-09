@@ -23,7 +23,6 @@
 #include <iostream>
 
 using namespace Botan;
-using namespace std;
 
 #define BOOST_CHECK_MESSAGE(expr, print) if(!(expr)) std::cout << print << "\n";
 #define BOOST_CHECK(expr) if(!(expr)) std::cout << #expr << "\n";
@@ -32,7 +31,7 @@ namespace {
 
 void test_turn_on_sp_red_mul()
    {
-   cout << "." << flush;
+   std::cout << "." << std::flush;
 
    GFpElement a1(23,15);
    GFpElement b1(23,18);
@@ -57,9 +56,9 @@ void test_turn_on_sp_red_mul()
 
 void test_bi_div_even()
    {
-   cout << "." << flush;
+   std::cout << "." << std::flush;
 
-   string str_large("1552518092300708935148979488462502555256886017116696611139052038026050952686323255099158638440248181850494907312621195144895406865083132424709500362534691373159016049946612882688577088900506460909202178541447303914546699487373976586");
+   std::string str_large("1552518092300708935148979488462502555256886017116696611139052038026050952686323255099158638440248181850494907312621195144895406865083132424709500362534691373159016049946612882688577088900506460909202178541447303914546699487373976586");
    BigInt to_div(str_large);
    BigInt half = to_div/2;
    BigInt should_be_to_div = half*2;
@@ -74,9 +73,9 @@ void test_bi_div_even()
 
 void test_bi_div_odd()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
-   string str_large("1552518092300708935148979488462502555256886017116696611139052038026050952686323255099158638440248181850494907312621195144895406865083132424709500362534691373159016049946612882688577088900506460909202178541447303914546699487373976585");
+   std::string str_large("1552518092300708935148979488462502555256886017116696611139052038026050952686323255099158638440248181850494907312621195144895406865083132424709500362534691373159016049946612882688577088900506460909202178541447303914546699487373976585");
    BigInt to_div(str_large);
    BigInt half = to_div/2;
    BigInt should_be_to_div = half*2;
@@ -93,16 +92,16 @@ void test_bi_div_odd()
 
 void test_deep_montgm()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
    //string s_prime = "5334243285367";
-   string s_prime = "5";
+   std::string s_prime = "5";
    BigInt bi_prime(s_prime);
    //string s_value_a = "3333333333334";
-   string s_value_a = "4";
+   std::string s_value_a = "4";
    BigInt bi_value_a(s_value_a);
    //string s_value_b = "4444444444444";
-   string s_value_b = "3";
+   std::string s_value_b = "3";
    BigInt bi_value_b(s_value_b);
 
    GFpElement gfp_a_trf(bi_prime, bi_value_a, true);
@@ -122,13 +121,13 @@ void test_deep_montgm()
 
 void test_gfp_div_small_numbers()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
-   string s_prime = "5";
+   std::string s_prime = "5";
    BigInt bi_prime(s_prime);
-   string s_value_a = "2";
+   std::string s_value_a = "2";
    BigInt bi_value_a(s_value_a);
-   string s_value_b = "3";
+   std::string s_value_b = "3";
    BigInt bi_value_b(s_value_b);
 
    GFpElement gfp_a(bi_prime, bi_value_a, true);
@@ -160,11 +159,11 @@ void test_gfp_div_small_numbers()
 
 void test_gfp_basics()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
-   string s_prime = "5334243285367";
+   std::string s_prime = "5334243285367";
    BigInt bi_prime(s_prime);
-   string s_value_a = "3333333333333";
+   std::string s_value_a = "3333333333333";
    BigInt bi_value_a(s_value_a);
 
    GFpElement gfp_a(bi_prime, bi_value_a, true);
@@ -177,11 +176,11 @@ void test_gfp_basics()
 
 void test_gfp_addSubNegate()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
-   string s_prime = "5334243285367";
+   std::string s_prime = "5334243285367";
    BigInt bi_prime(s_prime);
-   string s_value_a = "3333333333333";
+   std::string s_value_a = "3333333333333";
    BigInt bi_value_a(s_value_a);
 
    GFpElement gfp_a(bi_prime, bi_value_a, true);
@@ -196,13 +195,13 @@ void test_gfp_addSubNegate()
 
 void test_gfp_mult()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
-   string s_prime = "5334243285367";
+   std::string s_prime = "5334243285367";
    BigInt bi_prime(s_prime);
-   string s_value_a = "3333333333333";
+   std::string s_value_a = "3333333333333";
    BigInt bi_value_a(s_value_a);
-   string s_value_b = "4444444444444";
+   std::string s_value_b = "4444444444444";
    BigInt bi_value_b(s_value_b);
 
    GFpElement gfp_a(bi_prime, bi_value_a, true);
@@ -226,13 +225,13 @@ void test_gfp_mult()
 
 void test_gfp_div()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
-   string s_prime = "5334243285367";
+   std::string s_prime = "5334243285367";
    BigInt bi_prime(s_prime);
-   string s_value_a = "3333333333333";
+   std::string s_value_a = "3333333333333";
    BigInt bi_value_a(s_value_a);
-   string s_value_b = "4444444444444";
+   std::string s_value_b = "4444444444444";
    BigInt bi_value_b(s_value_b);
 
    GFpElement gfp_a(bi_prime, bi_value_a, true);
@@ -264,13 +263,13 @@ void test_gfp_div()
 
 void test_gfp_add()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
-   string s_prime = "5334243285367";
+   std::string s_prime = "5334243285367";
    BigInt bi_prime(s_prime);
-   string s_value_a = "3333333333333";
+   std::string s_value_a = "3333333333333";
    BigInt bi_value_a(s_value_a);
-   string s_value_b = "4444444444444";
+   std::string s_value_b = "4444444444444";
    BigInt bi_value_b(s_value_b);
 
    GFpElement gfp_a(bi_prime, bi_value_a, true);
@@ -297,13 +296,13 @@ void test_gfp_add()
 
 void test_gfp_sub()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
-   string s_prime = "5334243285367";
+   std::string s_prime = "5334243285367";
    BigInt bi_prime(s_prime);
-   string s_value_a = "3333333333333";
+   std::string s_value_a = "3333333333333";
    BigInt bi_value_a(s_value_a);
-   string s_value_b = "4444444444444";
+   std::string s_value_b = "4444444444444";
    BigInt bi_value_b(s_value_b);
 
    GFpElement gfp_a(bi_prime, bi_value_a, true);
@@ -335,13 +334,13 @@ void test_gfp_sub()
 
 void test_more_gfp_div()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
-   string s_prime = "5334243285367";
+   std::string s_prime = "5334243285367";
    BigInt bi_prime(s_prime);
-   string s_value_a = "3333333333333";
+   std::string s_value_a = "3333333333333";
    BigInt bi_value_a(s_value_a);
-   string s_value_b = "4444444444444";
+   std::string s_value_b = "4444444444444";
    BigInt bi_value_b(s_value_b);
 
    GFpElement gfp_a(bi_prime, bi_value_a, true);
@@ -385,7 +384,7 @@ void test_more_gfp_div()
 
 void test_gfp_mult_u32bit()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
    /*
    Botan::EC_Domain_Params parA(Botan::get_EC_Dom_Pars_by_oid("1.2.840.10045.3.1.1"));
@@ -410,7 +409,7 @@ void test_gfp_mult_u32bit()
 */
 void test_gfp_shared_vals()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
    BigInt p("5334243285367");
    GFpElement a(p, BigInt("234090"));
@@ -459,7 +458,7 @@ void test_gfp_shared_vals()
 */
 void test_gfpel_ass_op()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
 
    // test different moduli
@@ -541,7 +540,7 @@ void test_gfpel_ass_op()
 
 void test_gfp_swap()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
 
    BigInt p("173");
@@ -574,7 +573,7 @@ void test_gfp_swap()
 
 void test_inv_in_place()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
 
    BigInt mod(173);
@@ -599,7 +598,7 @@ void test_inv_in_place()
 
 void test_op_eq()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
    BigInt mod(173);
    GFpElement a1(mod, 299);
@@ -613,7 +612,7 @@ void test_rand_int(RandomNumberGenerator& rng)
    {
    for(int i=0; i< 100; i++)
       {
-      cout << "." << flush;
+      std::cout << '.' << std::flush;
       BigInt x = BigInt::random_integer(rng, 1,3);
       //cout << "x = " << x << "\n";  // only 1,2 are put out
       BOOST_CHECK(x == 1 || x==2);
@@ -622,7 +621,7 @@ void test_rand_int(RandomNumberGenerator& rng)
 
 void test_bi_bit_access()
    {
-   cout << "." << flush;
+   std::cout << '.' << std::flush;
 
    BigInt a(323);
    BOOST_CHECK(a.get_bit(1) == 1);
@@ -641,7 +640,7 @@ void test_sec_mod_mul()
    BigInt b("4444444444444");
    for(int i = 0; i<10; i++)
       {
-      cout << "." << flush;
+      std::cout << '.' << std::flush;
       BigInt c1 = a * b;
       c1 %= m;
       BigInt c2 = mod_mul_secure(a, b, m);
@@ -661,7 +660,7 @@ void test_sec_bi_mul()
    BigInt b("4444444444444");
    for(int i = 0; i<10; i++)
       {
-      cout << "." << flush;
+      std::cout << '.' << std::flush;
       BigInt c1 = a * b;
       //c1 %= m;
       BigInt c2(a);
