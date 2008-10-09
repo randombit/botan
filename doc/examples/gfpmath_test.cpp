@@ -19,11 +19,10 @@
 using namespace Botan;
 using namespace std;
 
-#define BOOST_AUTO_TEST_CASE(name) void name()
 #define BOOST_CHECK_MESSAGE(expr, print) if(!(expr)) std::cout << print << "\n";
 #define BOOST_CHECK(expr) if(!(expr)) std::cout << #expr << "\n";
 
-BOOST_AUTO_TEST_CASE(test_turn_on_sp_red_mul)
+void test_turn_on_sp_red_mul()
    {
    cout << "." << flush;
 
@@ -48,7 +47,7 @@ BOOST_AUTO_TEST_CASE(test_turn_on_sp_red_mul)
    //BOOST_CHECK_MESSAGE(c1 == c2, "error with multiple call to turn on spec red mul, should be " << c1 <<"\n, was " << c2);
    }
 
-BOOST_AUTO_TEST_CASE(test_bi_div_even)
+void test_bi_div_even()
    {
    cout << "." << flush;
 
@@ -65,7 +64,7 @@ BOOST_AUTO_TEST_CASE(test_bi_div_even)
    BOOST_CHECK_MESSAGE(should_be_before == before_div, "error in division/multiplication of large BigInt");
    }
 
-BOOST_AUTO_TEST_CASE(test_bi_div_odd)
+void test_bi_div_odd()
    {
    cout << "." << flush;
 
@@ -84,7 +83,7 @@ BOOST_AUTO_TEST_CASE(test_bi_div_odd)
    BOOST_CHECK_MESSAGE((diff2 <= 1) && (diff2 >= BigInt("-1")), "error in division/multiplication (/=) of large BigInt, difference = " << diff2);
    }
 
-BOOST_AUTO_TEST_CASE(test_deep_montgm)
+void test_deep_montgm()
    {
    cout << "." << flush;
 
@@ -113,7 +112,7 @@ BOOST_AUTO_TEST_CASE(test_deep_montgm)
    BOOST_CHECK_MESSAGE(c_trf.get_value() == c_ntrf.get_value(), "\nc_trf.value = " << c_trf.get_value() << "\nc_ntrf.value = " << c_ntrf.get_value());
    }
 
-BOOST_AUTO_TEST_CASE(test_gfp_div_small_numbers)
+void test_gfp_div_small_numbers()
    {
    cout << "." << flush;
 
@@ -151,7 +150,7 @@ BOOST_AUTO_TEST_CASE(test_gfp_div_small_numbers)
    //cout << "Div-Alternative: " << res_div_alternative.get_value() << endl;
    }
 
-BOOST_AUTO_TEST_CASE(test_gfp_basics)
+void test_gfp_basics()
    {
    cout << "." << flush;
 
@@ -168,7 +167,7 @@ BOOST_AUTO_TEST_CASE(test_gfp_basics)
    BOOST_CHECK(gfp_a.is_trf_to_mres());
    }
 
-BOOST_AUTO_TEST_CASE(test_gfp_addSubNegate)
+void test_gfp_addSubNegate()
    {
    cout << "." << flush;
 
@@ -187,7 +186,7 @@ BOOST_AUTO_TEST_CASE(test_gfp_addSubNegate)
    BOOST_CHECK(gfp_a.get_value() == bi_value_a);
    }
 
-BOOST_AUTO_TEST_CASE(test_gfp_mult)
+void test_gfp_mult()
    {
    cout << "." << flush;
 
@@ -217,7 +216,7 @@ BOOST_AUTO_TEST_CASE(test_gfp_mult)
    BOOST_CHECK(res_mult_n.get_value() == res_mult_m.get_value());
    }
 
-BOOST_AUTO_TEST_CASE(test_gfp_div)
+void test_gfp_div()
    {
    cout << "." << flush;
 
@@ -255,7 +254,7 @@ BOOST_AUTO_TEST_CASE(test_gfp_div)
    //cout << "Div-Alternative: " << res_div_alternative.get_value() << endl;
    }
 
-BOOST_AUTO_TEST_CASE(test_gfp_add)
+void test_gfp_add()
    {
    cout << "." << flush;
 
@@ -288,7 +287,7 @@ BOOST_AUTO_TEST_CASE(test_gfp_add)
    BOOST_CHECK(res_add_n.get_value() == res_add_m.get_value());
    }
 
-BOOST_AUTO_TEST_CASE(test_gfp_sub)
+void test_gfp_sub()
    {
    cout << "." << flush;
 
@@ -326,7 +325,7 @@ BOOST_AUTO_TEST_CASE(test_gfp_sub)
    BOOST_CHECK(res_sub_n.get_value() == res_sub_m.get_value());
    }
 
-BOOST_AUTO_TEST_CASE(test_more_gfp_div)
+void test_more_gfp_div()
    {
    cout << "." << flush;
 
@@ -376,7 +375,7 @@ BOOST_AUTO_TEST_CASE(test_more_gfp_div)
    BOOST_CHECK_MESSAGE(lhs == rhs, "\nrhs(trf) = " << rhs.get_value() << "\nlhs(n_trf) = " << lhs.get_value());
    }
 
-BOOST_AUTO_TEST_CASE(test_gfp_mult_u32bit)
+void test_gfp_mult_u32bit()
    {
    cout << "." << flush;
 
@@ -401,7 +400,7 @@ BOOST_AUTO_TEST_CASE(test_gfp_mult_u32bit)
 /**
 * This tests verifies the functionality of sharing pointers for modulus dependent values
 */
-BOOST_AUTO_TEST_CASE(test_gfp_shared_vals)
+void test_gfp_shared_vals()
    {
    cout << "." << flush;
 
@@ -450,7 +449,7 @@ BOOST_AUTO_TEST_CASE(test_gfp_shared_vals)
 * has quite complex behaviour with respect to sharing groups and precomputed values
 * (with respect to montgomery mult.)
 */
-BOOST_AUTO_TEST_CASE(test_gfpel_ass_op)
+void test_gfpel_ass_op()
    {
    cout << "." << flush;
 
@@ -532,7 +531,7 @@ BOOST_AUTO_TEST_CASE(test_gfpel_ass_op)
    BOOST_CHECK(g == g2);
    }
 
-BOOST_AUTO_TEST_CASE(test_gfp_swap)
+void test_gfp_swap()
    {
    cout << "." << flush;
 
@@ -565,7 +564,7 @@ BOOST_AUTO_TEST_CASE(test_gfp_swap)
    BOOST_CHECK(c.get_value() == (d*2).get_value());
    }
 
-BOOST_AUTO_TEST_CASE(test_inv_in_place)
+void test_inv_in_place()
    {
    cout << "." << flush;
 
@@ -590,7 +589,7 @@ BOOST_AUTO_TEST_CASE(test_inv_in_place)
    BOOST_CHECK(a2_inv.inverse_in_place() == a2);
    }
 
-BOOST_AUTO_TEST_CASE(test_op_eq)
+void test_op_eq()
    {
    cout << "." << flush;
 
@@ -602,7 +601,7 @@ BOOST_AUTO_TEST_CASE(test_op_eq)
    BOOST_CHECK_MESSAGE(a1 != a2, "error with GFpElement comparison");
    }
 
-BOOST_AUTO_TEST_CASE(test_rand_int)
+void test_rand_int()
    {
    std::auto_ptr<RandomNumberGenerator> rng(RandomNumberGenerator::make_rng());
 
@@ -615,7 +614,7 @@ BOOST_AUTO_TEST_CASE(test_rand_int)
       }
    }
 
-BOOST_AUTO_TEST_CASE(test_bi_bit_access)
+void test_bi_bit_access()
    {
    cout << "." << flush;
 
@@ -624,7 +623,7 @@ BOOST_AUTO_TEST_CASE(test_bi_bit_access)
    BOOST_CHECK(a.get_bit(1000) == 0);
    }
 
-BOOST_AUTO_TEST_CASE(test_sec_mod_mul)
+void test_sec_mod_mul()
    {
 #if 0
    //cout << "starting test_sec_mod_mul" << endl;
@@ -646,7 +645,7 @@ BOOST_AUTO_TEST_CASE(test_sec_mod_mul)
 #endif
    }
 
-/*BOOST_AUTO_TEST_CASE(test_sec_bi_mul)
+void test_sec_bi_mul()
 {
 
 //mod_mul_secure(BigInt const& a, BigInt const& b, BigInt const& m)
