@@ -5,10 +5,16 @@
 *                                                     *
 *          Falko Strenzke                             *
 *          strenzke@flexsecure.de                     *
+* (C) 2008 Jack Lloyd                                 *
 ******************************************************/
+
+#include "validate.h"
 
 #include <botan/bigint.h>
 #include <botan/numthry.h>
+
+#if defined(BOTAN_HAS_BIGINT_GFP)
+
 #include <botan/gfp_element.h>
 #include <botan/gfp_modulus.h>
 #include <botan/curve_gfp.h>
@@ -21,6 +27,8 @@ using namespace std;
 
 #define BOOST_CHECK_MESSAGE(expr, print) if(!(expr)) std::cout << print << "\n";
 #define BOOST_CHECK(expr) if(!(expr)) std::cout << #expr << "\n";
+
+namespace {
 
 void test_turn_on_sp_red_mul()
    {
@@ -601,14 +609,12 @@ void test_op_eq()
    BOOST_CHECK_MESSAGE(a1 != a2, "error with GFpElement comparison");
    }
 
-void test_rand_int()
+void test_rand_int(RandomNumberGenerator& rng)
    {
-   std::auto_ptr<RandomNumberGenerator> rng(RandomNumberGenerator::make_rng());
-
    for(int i=0; i< 100; i++)
       {
       cout << "." << flush;
-      BigInt x = BigInt::random_integer(*rng, 1,3);
+      BigInt x = BigInt::random_integer(rng, 1,3);
       //cout << "x = " << x << "\n";  // only 1,2 are put out
       BOOST_CHECK(x == 1 || x==2);
       }
@@ -623,9 +629,9 @@ void test_bi_bit_access()
    BOOST_CHECK(a.get_bit(1000) == 0);
    }
 
+#if 0
 void test_sec_mod_mul()
    {
-#if 0
    //cout << "starting test_sec_mod_mul" << endl;
 
    //mod_mul_secure(BigInt const& a, BigInt const& b, BigInt const& m)
@@ -642,32 +648,35 @@ void test_sec_mod_mul()
       BOOST_CHECK_MESSAGE(c1 == c2, "should be " << c1 << ", was " << c2);
       }
    //cout << "ending test_sec_mod_mul" << endl;
-#endif
    }
+#endif
 
+#if 0
 void test_sec_bi_mul()
-{
+   {
+   //mod_mul_secure(BigInt const& a, BigInt const& b, BigInt const& m)
 
-//mod_mul_secure(BigInt const& a, BigInt const& b, BigInt const& m)
+   BigInt m("5334243285367");
+   BigInt a("3333333333333");
+   BigInt b("4444444444444");
+   for(int i = 0; i<10; i++)
+      {
+      cout << "." << flush;
+      BigInt c1 = a * b;
+      //c1 %= m;
+      BigInt c2(a);
+      c2.mult_this_secure(b, m);
+      BOOST_CHECK_MESSAGE(c1 == c2, "should be " << c1 << ", was " << c2);
+      }
+   }
+#endif
 
-BigInt m("5334243285367");
-BigInt a("3333333333333");
-BigInt b("4444444444444");
-for(int i = 0; i<10; i++)
-{
-cout << "." << flush;
-BigInt c1 = a * b;
-//c1 %= m;
-BigInt c2(a);
-c2.mult_this_secure(b, m);
-BOOST_CHECK_MESSAGE(c1 == c2, "should be " << c1 << ", was " << c2);
 }
 
-
-}*/
-
-int main()
+u32bit do_gfpmath_tests(Botan::RandomNumberGenerator& rng)
    {
+   std::cout << "Testing GF(p) math" << std::flush;
+
    test_turn_on_sp_red_mul();
    test_bi_div_even();
    test_bi_div_odd();
@@ -679,9 +688,9 @@ int main()
    test_gfp_swap();
    test_inv_in_place();
    test_op_eq();
-   test_rand_int();
+   test_rand_int(rng);
    test_bi_bit_access();
-   test_sec_mod_mul();
+   //test_sec_mod_mul();
 
    test_deep_montgm();
 
@@ -695,4 +704,9 @@ int main()
    test_gfpel_ass_op();
 
    std::cout << "\ndone\n";
+
+   return 0;
    }
+#else
+u32bit do_gfpmath_tests(Botan::RandomNumberGenerator& rng);
+#endif
