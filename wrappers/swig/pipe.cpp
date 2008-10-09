@@ -1,6 +1,6 @@
 /*************************************************
 * SWIG Interface for Botan Pipe API              *
-* (C) 1999-2003 The Botan Project                *
+* (C) 1999-2003 Jack Lloyd                       *
 *************************************************/
 
 #include "base.h"

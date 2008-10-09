@@ -1,6 +1,6 @@
 /*************************************************
 * SWIG Interface for Botan                       *
-* (C) 1999-2003 The Botan Project                *
+* (C) 1999-2003 Jack Lloyd                       *
 *************************************************/
 
 #ifndef BOTAN_WRAP_BASE_H__

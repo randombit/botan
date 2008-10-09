@@ -1,6 +1,6 @@
 /*************************************************
 * SWIG Interface for basic Botan interface       *
-* (C) 1999-2003 The Botan Project                *
+* (C) 1999-2003 Jack Lloyd                       *
 *************************************************/
 
 #include "base.h"
