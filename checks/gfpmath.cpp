@@ -10,11 +10,10 @@
 
 #include "validate.h"
 
-#include <botan/bigint.h>
-#include <botan/numthry.h>
-
 #if defined(BOTAN_HAS_BIGINT_GFP)
 
+#include <botan/bigint.h>
+#include <botan/numthry.h>
 #include <botan/gfp_element.h>
 #include <botan/gfp_modulus.h>
 #include <botan/curve_gfp.h>
@@ -707,5 +706,5 @@ u32bit do_gfpmath_tests(Botan::RandomNumberGenerator& rng)
    return 0;
    }
 #else
-u32bit do_gfpmath_tests(Botan::RandomNumberGenerator& rng);
+u32bit do_gfpmath_tests(Botan::RandomNumberGenerator& rng) { return 0; }
 #endif
