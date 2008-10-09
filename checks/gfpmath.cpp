@@ -714,5 +714,5 @@ u32bit do_gfpmath_tests(Botan::RandomNumberGenerator& rng)
    return 0;
    }
 #else
-u32bit do_gfpmath_tests(Botan::RandomNumberGenerator& rng) { return 0; }
+u32bit do_gfpmath_tests(Botan::RandomNumberGenerator&) { return 0; }
 #endif
