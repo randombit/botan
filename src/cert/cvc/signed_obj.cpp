@@ -1,6 +1,7 @@
 /*************************************************
 * X.509 SIGNED Object Source File                *
-* (C) 1999-2007 The Botan Project                *
+* (C) 1999-2007 Jack Lloyd                       *
+*     2007 FlexSecure GmbH                       *
 *************************************************/
 
 #include <botan/signed_obj.h>

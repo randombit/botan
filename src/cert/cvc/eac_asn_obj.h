@@ -1,6 +1,7 @@
 /*************************************************
-* Common ASN.1 Objects Header File               *
-* (C) 1999-2007 The Botan Project                *
+* EAC ASN.1 Objects Header File                  *
+* (C) 1999-2007 Jack Lloyd                       *
+*     2007 FlexSecure GmbH                       *
 *************************************************/
 
 #ifndef BOTAN_EAC_ASN1_OBJ_H__
