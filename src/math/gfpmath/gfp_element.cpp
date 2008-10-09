@@ -1,7 +1,7 @@
 /******************************************************
  * Arithmetic for prime fields GF(p) (source file)    *
  *                                                    *
- * (C) 2007 Martin Döring                             *
+ * (C) 2007 Martin Doering                            *
  *          doering@cdc.informatik.tu-darmstadt.de    *
  *          Christoph Ludwig                          *
  *          ludwig@fh-worms.de                        *
@@ -26,6 +26,7 @@ void inner_montg_mult_sos(word result[], const word* a_bar, const word* b_bar, c
    SecureVector<word> t;
    t.grow_to(2*s+1);
 
+   // t = a_bar * b_bar
    for (u32bit i=0; i<s; i++)
       {
       word C = 0;
@@ -42,15 +43,15 @@ void inner_montg_mult_sos(word result[], const word* a_bar, const word* b_bar, c
       t[i+s] = C;
       }
 
-
+   // ???
    for (u32bit i=0; i<s; i++)
       {
       // word word_madd2(word a, word b, word c, word* carry)
       // returns a * b + c, resets the carry
 
       word C = 0;
-      word unused_carry = 0;
-      word m =  word_madd2(t[i], n_dash[0], &unused_carry);
+      word zero = 0;
+      word m = word_madd2(t[i], n_dash[0], &zero);
 
       for (u32bit j=0; j<s; j++)
          {
@@ -69,6 +70,8 @@ void inner_montg_mult_sos(word result[], const word* a_bar, const word* b_bar, c
          cnt++;
          }
       }
+
+   // u = t
    SecureVector<word> u;
    u.grow_to(s+1);
    for (u32bit j=0; j<s+1; j++)
@@ -76,6 +79,7 @@ void inner_montg_mult_sos(word result[], const word* a_bar, const word* b_bar, c
       u[j] = t[j+s];
       }
 
+   // t = u - n
    word B = 0;
    word D = 0;
    for (u32bit i=0; i<s; i++)
@@ -85,6 +89,8 @@ void inner_montg_mult_sos(word result[], const word* a_bar, const word* b_bar, c
       }
    D = word_sub(u[s], 0, &B);
    t[s] = D;
+
+   // if t >= 0 (B == 0 -> no borrow), return t
    if(B == 0)
       {
       for (u32bit i=0; i<s; i++)
@@ -92,7 +98,7 @@ void inner_montg_mult_sos(word result[], const word* a_bar, const word* b_bar, c
          result[i] = t[i];
          }
       }
-   else
+   else // else return u
       {
       for (u32bit i=0; i<s; i++)
          {
@@ -104,21 +110,23 @@ void inner_montg_mult_sos(word result[], const word* a_bar, const word* b_bar, c
 void montg_mult(BigInt& result, BigInt& a_bar, BigInt& b_bar, const BigInt& m, const BigInt& m_dash, const BigInt)
    {
    if(m.is_zero() || m_dash.is_zero())
-      {
       throw Invalid_Argument("montg_mult(): neither modulus nor m_dash may be zero (and one of them was)");
-      }
+
    if(a_bar.is_zero() || b_bar.is_zero())
-      {
       result = 0;
-      }
+
+#if 0
    u32bit s = m.sig_words();
    a_bar.grow_to(s);
    b_bar.grow_to(s);
-
    result.grow_to(s);
 
    inner_montg_mult_sos(result.get_reg(), a_bar.data(), b_bar.data(), m.data(), m_dash.data(), s);
-
+#else
+   result = a_bar * b_bar * m_dash;
+   if(result >= m)
+      result -= m;
+#endif
    }
 
 /**
@@ -131,7 +139,6 @@ BigInt montgm_calc_r_oddmod(const BigInt& prime)
    BigInt result(1);
    result <<= n*BOTAN_MP_WORD_BITS;
    return result;
-
    }
 
 /**
@@ -143,6 +150,7 @@ BigInt montgm_calc_m_dash(const BigInt& r, const BigInt& m, const BigInt& r_inv)
    BigInt result = ((r * r_inv) - BigInt(1))/m;
    return result;
    }
+
 BigInt montg_trf_to_mres(const BigInt& ord_res, const BigInt& r, const BigInt& m)
    {
    BigInt result(ord_res);
@@ -150,6 +158,7 @@ BigInt montg_trf_to_mres(const BigInt& ord_res, const BigInt& r, const BigInt& m
    result %= m;
    return result;
    }
+
 BigInt montg_trf_to_ordres(const BigInt& m_res, const BigInt& m, const BigInt& r_inv)
    {
    BigInt result(m_res);
@@ -157,7 +166,6 @@ BigInt montg_trf_to_ordres(const BigInt& m_res, const BigInt& m, const BigInt& r
    result %= m;
    return result;
    }
-
 
 }
 
@@ -200,6 +208,7 @@ void GFpElement::turn_on_sp_red_mul() const
    ensure_montgm_precomp();
    m_use_montgm = true;
    }
+
 void GFpElement::turn_off_sp_red_mul() const
    {
    if(m_is_trf)
@@ -210,6 +219,7 @@ void GFpElement::turn_off_sp_red_mul() const
       }
    m_use_montgm = false;
    }
+
 void GFpElement::ensure_montgm_precomp() const
    {
    if((!mp_mod->m_r.is_zero()) && (!mp_mod->m_r_inv.is_zero()) && (!mp_mod->m_p_dash.is_zero()))
@@ -243,6 +253,7 @@ void GFpElement::set_shrd_mod(std::tr1::shared_ptr<GFpModulus> const p_mod)
    {
    mp_mod = p_mod;
    }
+
 void GFpElement::trf_to_mres() const
    {
    if(!m_use_montgm)
@@ -255,18 +266,19 @@ void GFpElement::trf_to_mres() const
    m_value = montg_trf_to_mres(m_value, mp_mod->m_r, mp_mod->m_p);
    m_is_trf = true;
    }
+
 void GFpElement::trf_to_ordres() const
    {
    assert(m_is_trf == true);
    m_value = montg_trf_to_ordres(m_value, mp_mod->m_p, mp_mod->m_r_inv);
    m_is_trf = false;
    }
+
 bool GFpElement::align_operands_res(const GFpElement& lhs, const GFpElement& rhs) //static
    {
    assert(lhs.mp_mod->m_p == rhs.mp_mod->m_p);
    if(lhs.m_use_montgm && rhs.m_use_montgm)
       {
-
       assert(rhs.mp_mod->m_p_dash == lhs.mp_mod->m_p_dash);
       assert(rhs.mp_mod->m_r == lhs.mp_mod->m_r);
       assert(rhs.mp_mod->m_r_inv == lhs.mp_mod->m_r_inv);
@@ -310,7 +322,6 @@ bool GFpElement::align_operands_res(const GFpElement& lhs, const GFpElement& rhs
       return false;
       }
    assert(false);
-
    }
 
 bool GFpElement::is_trf_to_mres() const
@@ -447,9 +458,7 @@ GFpElement& GFpElement::operator+=(const GFpElement& rhs)
    workspace = m_value;
    workspace += rhs.m_value;
    if(workspace >= mp_mod->m_p)
-      {
       workspace -= mp_mod->m_p;
-      }
 
    m_value = workspace;
    assert(m_value < mp_mod->m_p);
@@ -467,9 +476,7 @@ GFpElement& GFpElement::operator-=(const GFpElement& rhs)
    workspace -= rhs.m_value;
 
    if(workspace.is_negative())
-      {
       workspace += mp_mod->m_p;
-      }
 
    m_value = workspace;
    assert(m_value < mp_mod->m_p);
@@ -491,7 +498,7 @@ GFpElement& GFpElement::operator*=(const GFpElement& rhs)
    assert(rhs.mp_mod->m_p == mp_mod->m_p);
    // here, we do not use align_operands_res() for one simple reason:
    // we want to enforce the transformation to an m-residue, otherwise it would
-   // never happen
+  // never happen
    if(m_use_montgm && rhs.m_use_montgm)
       {
       assert(rhs.mp_mod->m_p == mp_mod->m_p); // is montgm. mult is on, then precomps must be there
@@ -520,6 +527,7 @@ GFpElement& GFpElement::operator*=(const GFpElement& rhs)
          assert(rhs.m_use_montgm);
          rhs.trf_to_ordres();
          }
+
       workspace = m_value;
       workspace *= rhs.m_value;
       workspace %= mp_mod->m_p;
@@ -592,7 +600,7 @@ void GFpElement::swap(GFpElement& other)
 
 std::ostream& operator<<(std::ostream& output, const GFpElement& elem)
    {
-   return output << elem.get_p() << "," << elem.get_value();
+   return output << '(' << elem.get_value() << "," << elem.get_p() << ')';
    }
 
 bool operator==(const GFpElement& lhs, const GFpElement& rhs)
