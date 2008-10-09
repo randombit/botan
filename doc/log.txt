@@ -1,4 +1,7 @@
 
+* 1.7.17, ????-??-??
+ - Add BOTAN_DLL macro to over 30 classes missing it
+
 * 1.7.16, 2008-10-09
  - Add several missing pieces needed for ECDSA and ECKAEG
  - Add Card Verifiable Certificates from InSiTo
