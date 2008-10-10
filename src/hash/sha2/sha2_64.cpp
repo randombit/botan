@@ -45,7 +45,7 @@ inline u64bit sigma(u64bit X, u32bit rot1, u32bit rot2, u32bit shift)
 /*************************************************
 * SHA-{384,512} Compression Function             *
 *************************************************/
-void SHA_64_BASE::hash(const byte input[])
+void SHA_384_512_BASE::hash(const byte input[])
    {
    for(u32bit j = 0; j != 16; ++j)
       W[j] = load_be<u64bit>(input, j);
@@ -147,7 +147,7 @@ void SHA_64_BASE::hash(const byte input[])
 /*************************************************
 * Copy out the digest                            *
 *************************************************/
-void SHA_64_BASE::copy_out(byte output[])
+void SHA_384_512_BASE::copy_out(byte output[])
    {
    for(u32bit j = 0; j != OUTPUT_LENGTH; j += 8)
       store_be(digest[j/8], output + j);
@@ -156,7 +156,7 @@ void SHA_64_BASE::copy_out(byte output[])
 /*************************************************
 * Clear memory of sensitive data                 *
 *************************************************/
-void SHA_64_BASE::clear() throw()
+void SHA_384_512_BASE::clear() throw()
    {
    MDx_HashFunction::clear();
    W.clear();
@@ -167,7 +167,7 @@ void SHA_64_BASE::clear() throw()
 *************************************************/
 void SHA_384::clear() throw()
    {
-   SHA_64_BASE::clear();
+   SHA_384_512_BASE::clear();
    digest[0] = 0xCBBB9D5DC1059ED8;
    digest[1] = 0x629A292A367CD507;
    digest[2] = 0x9159015A3070DD17;
@@ -183,7 +183,7 @@ void SHA_384::clear() throw()
 *************************************************/
 void SHA_512::clear() throw()
    {
-   SHA_64_BASE::clear();
+   SHA_384_512_BASE::clear();
    digest[0] = 0x6A09E667F3BCC908;
    digest[1] = 0xBB67AE8584CAA73B;
    digest[2] = 0x3C6EF372FE94F82B;

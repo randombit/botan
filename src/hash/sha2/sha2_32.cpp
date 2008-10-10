@@ -46,10 +46,11 @@ inline void F1(u32bit A, u32bit B, u32bit C, u32bit& D,
 /*************************************************
 * SHA-256 Compression Function                   *
 *************************************************/
-void SHA_224256_BASE::hash(const byte input[])
+void SHA_224_256_BASE::hash(const byte input[])
    {
    for(u32bit j = 0; j != 16; ++j)
       W[j] = load_be<u32bit>(input, j);
+
    for(u32bit j = 16; j != 64; ++j)
       W[j] = sigma(W[j- 2], 17, 19, 10) + W[j- 7] +
              sigma(W[j-15],  7, 18,  3) + W[j-16];
@@ -99,7 +100,7 @@ void SHA_224256_BASE::hash(const byte input[])
 /*************************************************
 * Copy out the digest                            *
 *************************************************/
-void SHA_224256_BASE::copy_out(byte output[])
+void SHA_224_256_BASE::copy_out(byte output[])
    {
    for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
       store_be(digest[j/4], output + j);
@@ -108,7 +109,7 @@ void SHA_224256_BASE::copy_out(byte output[])
 /*************************************************
 * Clear memory of sensitive data                 *
 *************************************************/
-void SHA_224256_BASE::clear() throw()
+void SHA_224_256_BASE::clear() throw()
    {
    MDx_HashFunction::clear();
    W.clear();
@@ -119,7 +120,7 @@ void SHA_224256_BASE::clear() throw()
 *************************************************/
 void SHA_224::clear() throw()
    {
-   SHA_224256_BASE::clear();
+   SHA_224_256_BASE::clear();
    digest[0] = 0xc1059ed8;
    digest[1] = 0x367cd507;
    digest[2] = 0x3070dd17;
@@ -135,7 +136,7 @@ void SHA_224::clear() throw()
 *************************************************/
 void SHA_256::clear() throw()
    {
-   SHA_224256_BASE::clear();
+   SHA_224_256_BASE::clear();
    digest[0] = 0x6A09E667;
    digest[1] = 0xBB67AE85;
    digest[2] = 0x3C6EF372;
