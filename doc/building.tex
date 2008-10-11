@@ -166,12 +166,12 @@ The situation is not much different here. We'll assume you're using Visual C++
 have a copy of Perl installed, and have both Perl and Visual C++ in your path.
 
 \begin{verbatim}
-   > perl configure.pl --cc=msvc --os=windows [--cpu=CPU]
+   > perl configure.pl --cc=msvc (or --cc=gcc for MinGW) [--cpu=CPU]
    > nmake
    > nmake check # optional, but recommended
 \end{verbatim}
 
-For Win95 pre OSR2, the \verb|cryptoapi\_rng| module will not work,
+For Win95 pre OSR2, the \verb|cryptoapi_rng| module will not work,
 because CryptoAPI didn't exist. And all versions of NT4 lack the
 ToolHelp32 interface, which is how \verb|win32_stats| does its slow
 polls, so a version of the library built with that module will not
@@ -185,9 +185,11 @@ Windows. Basically all you have to do is copy the newly created
 directory, which was constructed when you built the library, into the
 same directory.
 
-When building your applications, all you have to do is tell the compiler to
-look for both include files and library files in \verb|C:\botan|, and it will
-find both.
+When building your applications, all you have to do is tell the
+compiler to look for both include files and library files in
+\verb|C:\botan|, and it will find both. Or you can move them to a
+place where they will be in the default compiler search paths (consult
+your documentation and/or local expert for details).
 
 \pagebreak
 
