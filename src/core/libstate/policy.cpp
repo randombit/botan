@@ -35,6 +35,13 @@ void set_default_oids(Library_State& config)
    add_oid(config, "1.3.6.1.4.1.25258.1.1", "RW");
    add_oid(config, "1.3.6.1.4.1.25258.1.2", "NR");
 
+   add_oid(config, "1.2.840.10045.2.1", "ECDSA");
+   add_oid(config, "1.2.840.10045.4.1", "ECDSA/EMSA1_BSI(SHA-1)");
+   add_oid(config, "1.2.840.10045.4.3.1", "ECDSA/EMSA1_BSI(SHA-224)");
+   add_oid(config, "1.2.840.10045.4.3.2", "ECDSA/EMSA1_BSI(SHA-256)");
+   add_oid(config, "1.2.840.10045.4.3.3", "ECDSA/EMSA1_BSI(SHA-384)");
+   add_oid(config, "1.2.840.10045.4.3.4", "ECDSA/EMSA1_BSI(SHA-512)");
+
    add_oid(config, "1.3.14.3.2.7", "DES/CBC");
    add_oid(config, "1.2.840.113549.3.7", "TripleDES/CBC");
    add_oid(config, "1.2.840.113549.3.2", "RC2/CBC");
