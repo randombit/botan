@@ -9,6 +9,10 @@
   #include <botan/dsa.h>
 #endif
 
+#if defined(BOTAN_HAS_ECDSA)
+  #include <botan/ecdsa.h>
+#endif
+
 #ifdef BOTAN_HAS_X509
   #include <botan/x509self.h>
   #include <botan/x509stor.h>
@@ -146,7 +150,12 @@ void do_x509_tests(RandomNumberGenerator& rng)
 
    /* Create user #2's key and cert request */
    std::cout << '.' << std::flush;
+#if defined(BOTAN_HAS_ECDSA)
+   ECDSA_PrivateKey user2_key(rng, get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
+#else
    RSA_PrivateKey user2_key(rng, 1024);
+#endif
+
    std::cout << '.' << std::flush;
    PKCS10_Request user2_req = X509::create_cert_req(req_opts2(),
                                                     user2_key,
