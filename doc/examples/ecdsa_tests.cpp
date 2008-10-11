@@ -27,8 +27,8 @@ using namespace Botan;
 using namespace std;
 
 #define BOOST_AUTO_TEST_CASE(name) void name()
-#define BOOST_CHECK_MESSAGE(expr, print) if(!(expr)) std::cout << print << "\n";
-#define BOOST_CHECK(expr) if(!(expr)) std::cout << #expr << "\n";
+#define BOOST_CHECK_MESSAGE(expr, print) try { if(!(expr)) std::cout << print << "\n"; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
+#define BOOST_CHECK(expr) try { if(!(expr)) std::cout << #expr << "\n"; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
 
 namespace {
 
@@ -590,8 +590,8 @@ BOOST_AUTO_TEST_CASE( test_non_init_ecdsa_keys )
 
 int main()
    {
-    Botan::InitializerOptions init_options("");
-    Botan::LibraryInitializer init(init_options);
+   Botan::InitializerOptions init_options("");
+   Botan::LibraryInitializer init(init_options);
 
    test_hash_larger_than_n();
    test_message_larger_than_n();
