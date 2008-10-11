@@ -5,8 +5,8 @@
 * (C) 2008 Jack Lloyd                            *
 *************************************************/
 
-#ifndef BOTAN_ECC_KEY_H__
-#define BOTAN_ECC_KEY_H__
+#ifndef BOTAN_ECC_PUBLIC_KEY_BASE_H__
+#define BOTAN_ECC_PUBLIC_KEY_BASE_H__
 
 #include <botan/bigint.h>
 #include <botan/curve_gfp.h>
@@ -43,14 +43,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * domain parameters of this point are not set
       * @result the public point of this key
       */
-      inline PointGFp get_public_point() const
-         {
-         if (!mp_public_point.get())
-            {
-            throw Invalid_State("EC_PublicKey::get_public_point(): public point not set because ec domain parameters are not yet set");
-            }
-         return *mp_public_point;
-         }
+      const PointGFp& public_point() const;
 
       /**
       * Get the domain parameters of this key.
@@ -58,7 +51,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * domain parameters of this point are not set
       * @result the domain parameters of this key
       */
-      EC_Domain_Params const get_domain_parameters() const;
+      const EC_Domain_Params& domain_parameters() const;
 
       /**
       * Set the domain parameter encoding to be used when encoding this key.
@@ -125,29 +118,29 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey, public virtual Priv
       * @result an PKCS#8 encoder for this key
       */
       PKCS8_Encoder* pkcs8_encoder() const;
+
       /**
       * Get an PKCS#8 decoder that can be used to decoded a stored key into
       * this key.
       * @result an PKCS#8 decoder for this key
       */
       PKCS8_Decoder* pkcs8_decoder(RandomNumberGenerator&);
+
       /**
       * Get the private key value of this key object.
       * @result the private key value of this key object
       */
-      inline BigInt const get_value() const
-         {
-         return m_private_value;
-         }
+      const BigInt& private_value() const;
+
       /**
       * Make sure that the public key parts of this object are set
       * (calls EC_PublicKey::affirm_init()) as well as the private key
       * value.
       * @throw Invalid_State if the above conditions are not satisfied
       */
-      virtual void affirm_init()  const;
-      virtual ~EC_PrivateKey()
-         {}
+      virtual void affirm_init() const;
+
+      virtual ~EC_PrivateKey() {}
    protected:
       virtual void PKCS8_load_hook(bool = false);
       void generate_private_key(RandomNumberGenerator&);

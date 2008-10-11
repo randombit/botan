@@ -13,46 +13,33 @@
 
 namespace Botan {
 
-class BOTAN_DLL ECDSA_Signature_Decoder;
-class BOTAN_DLL ECDSA_Signature_Encoder;
-
 class BOTAN_DLL ECDSA_Signature
    {
-      friend class ECDSA_Signature_Decoder;
-      friend class ECDSA_Signature_Encoder;
    public:
+      friend class ECDSA_Signature_Decoder;
+
+      ECDSA_Signature() {}
       ECDSA_Signature(const BigInt& r, const BigInt& s);
-      ECDSA_Signature()
-         {}
-      ;
       ECDSA_Signature(ECDSA_Signature const& other);
       ECDSA_Signature const& operator=(ECDSA_Signature const& other);
 
-      BigInt const get_r() const
-         {
-         return m_r;
-         }
-      BigInt const get_s() const
-         {
-         return m_s;
-         }
+      const BigInt& get_r() const { return m_r; }
+      const BigInt& get_s() const { return m_s; }
+
       /**
       * return the r||s
       */
       SecureVector<byte> const get_concatenation() const;
-
-
-      ECDSA_Signature_Encoder* x509_encoder() const;
-      ECDSA_Signature_Decoder* x509_decoder();
    private:
       BigInt m_r;
       BigInt m_s;
    };
 
-bool operator== ( ECDSA_Signature const& lhs, ECDSA_Signature const& rhs );
-inline bool operator!= ( ECDSA_Signature const& lhs, ECDSA_Signature const& rhs )
+/* Equality of ECDSA_Signature */
+bool operator==(const ECDSA_Signature& lhs, const ECDSA_Signature& rhs);
+inline bool operator!=(const ECDSA_Signature& lhs, const ECDSA_Signature& rhs)
    {
-   return !operator== ( lhs, rhs );
+   return !(lhs == rhs);
    }
 
 class BOTAN_DLL ECDSA_Signature_Decoder
@@ -80,8 +67,8 @@ class BOTAN_DLL ECDSA_Signature_Encoder
          {
          return DER_Encoder()
             .start_cons(SEQUENCE)
-            .encode(m_signature->m_r)
-            .encode(m_signature->m_s)
+            .encode(m_signature->get_r())
+            .encode(m_signature->get_s())
             .end_cons()
             .get_contents();
          }

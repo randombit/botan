@@ -26,8 +26,8 @@ const std::string eac_cvc_emsa("EMSA1_BSI");
 /*************************************************
 * TR03110 v1.1 EAC CV Certificate                *
 *************************************************/
-template<typename Derived>
-class BOTAN_DLL EAC1_1_obj : public EAC_Signed_Object // CRTP is used enable the call sequence:
+template<typename Derived> // CRTP is used enable the call sequence:
+class BOTAN_DLL EAC1_1_obj : public EAC_Signed_Object
    {
       // data members first:
    protected:
@@ -64,11 +64,15 @@ template<typename Derived> SecureVector<byte> EAC1_1_obj<Derived>::get_concat_si
    {
    return m_sig.get_concatenation();
    }
-template<typename Derived> SecureVector<byte> EAC1_1_obj<Derived>::make_signature(PK_Signer* signer,
-                                                                                  const MemoryRegion<byte>& tbs_bits,
-                                                                                  RandomNumberGenerator& rng)
+
+template<typename Derived> SecureVector<byte>
+EAC1_1_obj<Derived>::make_signature(PK_Signer* signer,
+                                    const MemoryRegion<byte>& tbs_bits,
+                                    RandomNumberGenerator& rng)
    {
-   SecureVector<byte> seq_sig = signer->sign_message(tbs_bits, rng); // this is the signature as a der sequence
+   // this is the signature as a der sequence
+   SecureVector<byte> seq_sig = signer->sign_message(tbs_bits, rng);
+
    ECDSA_Signature sig(decode_seq(seq_sig));
    SecureVector<byte> concat_sig(sig.get_concatenation());
    return concat_sig;
@@ -76,7 +80,6 @@ template<typename Derived> SecureVector<byte> EAC1_1_obj<Derived>::make_signatur
 
 template<typename Derived> void EAC1_1_obj<Derived>::init(SharedPtrConverter<DataSource> in)
    {
-
    try
       {
       Derived::decode_info(in.get_shared(), tbs_bits, m_sig);
@@ -87,7 +90,8 @@ template<typename Derived> void EAC1_1_obj<Derived>::init(SharedPtrConverter<Dat
       }
    }
 
-template<typename Derived> bool EAC1_1_obj<Derived>::check_signature(Public_Key& pub_key) const
+template<typename Derived>
+bool EAC1_1_obj<Derived>::check_signature(Public_Key& pub_key) const
    {
    try
       {
@@ -103,22 +107,16 @@ template<typename Derived> bool EAC1_1_obj<Derived>::check_signature(Public_Key&
       Signature_Format format =
          (pub_key.message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
 
-      std::auto_ptr<PK_Verifier> verifier;
-      if(dynamic_cast<PK_Verifying_wo_MR_Key*>(&pub_key))
-         {
-         PK_Verifying_wo_MR_Key& sig_key =
-            dynamic_cast<PK_Verifying_wo_MR_Key&>(pub_key);
-         verifier.reset(get_pk_verifier(sig_key, padding, format));
-         }
-      else
-         {
+      if(!dynamic_cast<PK_Verifying_wo_MR_Key*>(&pub_key))
          return false;
-         }
-      std::auto_ptr<ECDSA_Signature_Encoder> enc(m_sig.x509_encoder());
+
+      std::auto_ptr<ECDSA_Signature_Encoder> enc(new ECDSA_Signature_Encoder(&m_sig));
       SecureVector<byte> seq_sig = enc->signature_bits();
       SecureVector<byte> to_sign = tbs_data();
-      return verifier->verify_message(to_sign, seq_sig);
 
+      PK_Verifying_wo_MR_Key& sig_key = dynamic_cast<PK_Verifying_wo_MR_Key&>(pub_key);
+      std::auto_ptr<PK_Verifier> verifier(get_pk_verifier(sig_key, padding, format));
+      return verifier->verify_message(to_sign, seq_sig);
       }
    catch(...)
       {

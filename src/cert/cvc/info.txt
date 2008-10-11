@@ -12,6 +12,8 @@ ecdsa
 <add>
 asn1_eac_str.cpp
 asn1_eac_tm.cpp
+ecdsa_sig.cpp
+ecdsa_sig.h
 cvc_ado.cpp
 cvc_ado.h
 cvc_ca.cpp

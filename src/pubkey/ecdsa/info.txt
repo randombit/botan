@@ -21,6 +21,4 @@ ecdsa_core.cpp
 ecdsa_core.h
 ecdsa_op.cpp
 ecdsa_op.h
-ecdsa_sig.cpp
-ecdsa_sig.h
 </add>

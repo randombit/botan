@@ -129,7 +129,7 @@ SecureVector<byte> ECKAEG_PrivateKey::derive_key(const Public_Key& key) const
       throw Invalid_Argument("ECKAEG_PrivateKey::derive_key(): argument must be an EC_PublicKey");
       }
    p_ec_pk->affirm_init();
-   return m_eckaeg_core.agree ( p_ec_pk->get_public_point() );
+   return m_eckaeg_core.agree ( p_ec_pk->public_point() );
    }
 
 }

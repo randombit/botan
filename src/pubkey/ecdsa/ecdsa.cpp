@@ -6,7 +6,6 @@
 *************************************************/
 
 #include <botan/ecdsa.h>
-#include <botan/ecdsa_sig.h>
 #include <botan/numthry.h>
 #include <botan/util.h>
 #include <botan/der_enc.h>
@@ -113,13 +112,25 @@ bool ECDSA_PublicKey::verify(const byte message[],
                              u32bit sig_len) const
    {
    affirm_init();
-   ECDSA_Signature sig;
-   std::auto_ptr<ECDSA_Signature_Decoder> dec(sig.x509_decoder());
-   SecureVector<byte> sv_sig;
-   sv_sig.set ( signature, sig_len );
-   dec->signature_bits ( sv_sig );
-   SecureVector<byte> sv_plain_sig = sig.get_concatenation();
-   return m_ecdsa_core.verify ( sv_plain_sig, sv_plain_sig.size(), message, mess_len );
+
+   BigInt r, s;
+
+   BER_Decoder(signature, sig_len)
+      .start_cons(SEQUENCE)
+      .decode(r)
+      .decode(s)
+      .end_cons()
+      .verify_end();
+
+   u32bit enc_len = std::max(r.bytes(), s.bytes());
+
+   SecureVector<byte> sv_plain_sig;
+
+   sv_plain_sig.append(BigInt::encode_1363(r, enc_len));
+   sv_plain_sig.append(BigInt::encode_1363(s, enc_len));
+
+   return m_ecdsa_core.verify(sv_plain_sig, sv_plain_sig.size(),
+                              message, mess_len);
    }
 
 ECDSA_PublicKey::ECDSA_PublicKey(const EC_Domain_Params& dom_par,
@@ -201,11 +212,26 @@ SecureVector<byte> ECDSA_PrivateKey::sign(const byte message[],
                                           RandomNumberGenerator& rng) const
    {
    affirm_init();
+
    SecureVector<byte> sv_sig = m_ecdsa_core.sign(message, mess_len, rng);
-   //code which der encodes the signature returned
-   ECDSA_Signature sig = decode_concatenation( sv_sig );
-   std::auto_ptr<ECDSA_Signature_Encoder> enc(sig.x509_encoder());
-   return enc->signature_bits();
+
+   if(sv_sig.size() % 2 != 0)
+      throw Invalid_Argument("Erroneous length of signature");
+
+   u32bit rs_len = sv_sig.size() / 2;
+   SecureVector<byte> sv_r, sv_s;
+   sv_r.set(sv_sig.begin(), rs_len);
+   sv_s.set(&sv_sig[rs_len], rs_len);
+
+   BigInt r = BigInt::decode(sv_r, sv_r.size());
+   BigInt s = BigInt::decode(sv_s, sv_s.size());
+
+   return DER_Encoder()
+      .start_cons(SEQUENCE)
+      .encode(r)
+      .encode(s)
+      .end_cons()
+      .get_contents();
    }
 
 }

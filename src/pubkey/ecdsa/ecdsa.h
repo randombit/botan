@@ -25,10 +25,7 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey,
       * Get this keys algorithm name.
       * @result this keys algorithm name ("ECDSA")
       */
-      std::string algo_name() const
-         {
-         return "ECDSA";
-         }
+      std::string algo_name() const { return "ECDSA"; }
 
       /**
       * Get the maximum number of bits allowed to be fed to this key.
@@ -49,8 +46,8 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey,
                   const byte signature [], u32bit sig_len) const;
 
       /**
-      * Default constructor. Use this one if you want to later fill this object with data
-      * from an encoded key.
+      * Default constructor. Use this one if you want to later fill
+      * this object with data from an encoded key.
       */
       ECDSA_PublicKey() {}
 
@@ -62,9 +59,9 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey,
       ECDSA_PublicKey(const EC_Domain_Params& dom_par,
                       const PointGFp& public_point); // sets core
 
-      ECDSA_PublicKey const& operator= (ECDSA_PublicKey const& rhs);
+      ECDSA_PublicKey const& operator=(const ECDSA_PublicKey& rhs);
 
-      ECDSA_PublicKey(ECDSA_PublicKey const& other);
+      ECDSA_PublicKey(const ECDSA_PublicKey& other);
 
       /**
       * Set the domain parameters of this key. This function has to be
@@ -76,17 +73,17 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey,
       * or if this key already has domain parameters set
       * and these are differing from those given as the parameter
       */
-      void set_domain_parameters(EC_Domain_Params const& dom_pars);
+      void set_domain_parameters(const EC_Domain_Params& dom_pars);
 
       /**
-      * Make sure that the public point and domain parameters of this key are set.
+      * Ensure that the public point and domain parameters of this key are set.
       * @throw Invalid_State if either of the two data members is not set
       */
       virtual void affirm_init() const;
 
    protected:
       void X509_load_hook();
-      virtual void set_all_values(ECDSA_PublicKey const& other);
+      virtual void set_all_values(const ECDSA_PublicKey& other);
 
       ECDSA_Core m_ecdsa_core;
    };
@@ -100,9 +97,10 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
    {
    public:
       //ctors
+
       /**
-      * Default constructor. Use this one if you want to later fill this object with data
-      * from an encoded key.
+      * Default constructor. Use this one if you want to later fill
+      * this object with data from an encoded key.
       */
       ECDSA_PrivateKey() {}
 
@@ -113,8 +111,8 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       ECDSA_PrivateKey(RandomNumberGenerator& rng,
                        const EC_Domain_Params& domain);
 
-      ECDSA_PrivateKey(ECDSA_PrivateKey const& other);
-      ECDSA_PrivateKey const& operator= (ECDSA_PrivateKey const& rhs);
+      ECDSA_PrivateKey(const ECDSA_PrivateKey& other);
+      ECDSA_PrivateKey const& operator=(const ECDSA_PrivateKey& rhs);
 
       /**
       * Sign a message with this key.
@@ -122,7 +120,10 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       * @param mess_len the length of the message byte array
       * @result the signature
       */
-      SecureVector<byte> sign(const byte message[], u32bit mess_len, RandomNumberGenerator& rng) const;
+
+      SecureVector<byte> sign(const byte message[], u32bit mess_len,
+                              RandomNumberGenerator& rng) const;
+
       /**
       * Make sure that the public key parts of this object are set
       * (calls EC_PublicKey::affirm_init()) as well as the private key
@@ -130,8 +131,9 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       * @throw Invalid_State if the above conditions are not satisfied
       */
       virtual void affirm_init() const;
+
    protected:
-      virtual void set_all_values ( ECDSA_PrivateKey const& other );
+      virtual void set_all_values(const ECDSA_PrivateKey& other);
    private:
       void PKCS8_load_hook(bool = false);
    };
