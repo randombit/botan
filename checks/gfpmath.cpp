@@ -501,14 +501,16 @@ bool test_gfp_shared_vals()
    shcpy_a.turn_on_sp_red_mul();
    GFpElement c5 = shcpy_a * shcpy_a;
 
-   if(c1 != c2)
-      std::cout << "test_gfp_shared_vals failed - c1 = " << c1 << " c2 = " << c2 << "\n";
-   if(c2 != c3)
-      std::cout << "test_gfp_shared_vals failed - c2 = " << c2 << " c3 = " << c3 << "\n";
-   if(c3 != c4)
-      std::cout << "test_gfp_shared_vals failed - c3 = " << c3 << " c4 = " << c4 << "\n";
-   if(c4 != c5)
-      std::cout << "test_gfp_shared_vals failed - c4 = " << c4 << " c5 = " << c5 << "\n";
+   if(c1 != c2 || c2 != c3 || c3 != c4 || c4 != c5)
+      {
+      std::cout << "test_gfp_shared_vals failed"
+                << " a=" << a
+                << " shcpy_a=" << shcpy_a
+                << " c1=" << c1 << " c2=" << c2
+                << " c3=" << c3 << " c4=" << c4
+                << " c5=" << c5 << "\n";
+      pass = false;
+      }
 
    swap(a,shcpy_a);
    std::tr1::shared_ptr<GFpModulus> ptr3 = a.get_ptr_mod();
