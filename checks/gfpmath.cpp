@@ -802,10 +802,14 @@ u32bit do_gfpmath_tests(Botan::RandomNumberGenerator& rng)
    //failed += !test_sec_mod_mul();
    //failed += !test_sec_bi_mul();
 
+#if 0
    if(failed == 0)
-      std::cout << " OK" << std::endl;
+      std::cout << " OK";
    else
-      std::cout << ' ' << failed << " failed" << std::endl;
+      std::cout << ' ' << failed << " failed";
+#endif
+
+   std::cout << std::endl;
 
    return failed;
    }
