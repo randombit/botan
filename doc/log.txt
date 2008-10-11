@@ -1,6 +1,9 @@
 
 * 1.7.17, ????-??-??
+ - Fix error in x86-64 assembler affecting GF(p) math
+ - Modify botan-config to not print -L/usr/lib or -L/usr/local/lib
  - Add BOTAN_DLL macro to over 30 classes missing it
+ - Rename the two SHA-2 base classes for consistency
 
 * 1.7.16, 2008-10-09
  - Add several missing pieces needed for ECDSA and ECKAEG
@@ -17,7 +20,7 @@
  - Add ECDSA and ECKAEG implementations from InSiTo
  - Minimize internal dependencies, allowing for smaller build configurations
  - Add new User Manual and Architecture Guide from FlexSecure GmbH
- - Alter configure.pl options for better autotools compatability
+ - Alter configure.pl options for better autotools compatibility
  - Update build instructions for recent changes to configure.pl
  - Fix CPU detection using /proc/cpuinfo
 
@@ -134,7 +137,7 @@
  - Assembly for x86-64 for accessing the bswap instruction
  - Use larger buffers in ARC4 and WiderWAKE for significant throughput increase
  - Unroll loops in SHA-160 for a few percent increase in performance
- - Fix compliation with GCC 3.2 in es_ftw and es_unix
+ - Fix compilation with GCC 3.2 in es_ftw and es_unix
  - Build fix for NetBSD systems
  - Prevent es_dev from being built except on Unix systems
 
@@ -153,7 +156,7 @@
 
 * 1.7.2, 2007-10-13
  - Initialize the global library state lazily
- - Add plain CBC-MAC for backwards compatability with old systems
+ - Add plain CBC-MAC for backwards compatibility with old systems
  - Clean up some of the self test code
  - Throw a sensible exception if a DL_Group is not found
  - Truncate KDF2 output rather than allowing counter overflow
@@ -356,7 +359,7 @@
  - Placing the same Filter in multiple Pipes triggers an exception
  - The configure script accepts --docdir and --libdir
  - Merged doc/rngs.txt into the main API document
- - Thanks to Joel Low for several bugreports on early tarballs of 1.4.11
+ - Thanks to Joel Low for several bug reports on early tarballs of 1.4.11
 
 * 1.4.10, 2005-12-18
  - Added an implementation of KASUMI, the block cipher used in 3G phones
@@ -882,7 +885,7 @@
  - Added the Korean hash function HAS-160
  - Partial support for RSA and DSA X.509 public keys
  - Added a mostly functional BER encoder/decoder
- - Added support for nondeterministic MAC functions
+ - Added support for non-deterministic MAC functions
  - Initial support for PEM encoding/decoding
  - Internal cleanups in the PK algorithms
  - Several new convenience functions in Pipe
