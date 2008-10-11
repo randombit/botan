@@ -192,8 +192,8 @@ BOOST_AUTO_TEST_CASE( test_decode_ecdsa_X509)
 {
   cout << "." << flush;
 
-  Botan::X509_Certificate cert("checks/testdata/CSCA.CSCA.csca-germany.1.crt");
-  BOOST_CHECK_MESSAGE(Botan::OIDS::lookup(cert.signature_algorithm().oid) == "ECDSA/EMSA1_BSI(SHA-224)", "error reading signature algorithm from x509 ecdsa certificate");
+  Botan::X509_Certificate cert("ecc_testdata/CSCA.CSCA.csca-germany.1.crt");
+  BOOST_CHECK_MESSAGE(Botan::OIDS::lookup(cert.signature_algorithm().oid) == "ECC_TESTDATA/EMSA1_BSI(SHA-224)", "error reading signature algorithm from x509 ecdsa certificate");
   BOOST_CHECK_MESSAGE(to_hex(cert.serial_number()) == "01", "error reading serial from x509 ecdsa certificate");
   BOOST_CHECK_MESSAGE(to_hex(cert.authority_key_id()) == "0096452DE588F966C4CCDF161DD1F3F5341B71E7", "error reading authority key id from x509 ecdsa certificate");
   BOOST_CHECK_MESSAGE(to_hex(cert.subject_key_id()) == "0096452DE588F966C4CCDF161DD1F3F5341B71E7", "error reading Subject key id from x509 ecdsa certificate");
@@ -207,8 +207,8 @@ BOOST_AUTO_TEST_CASE( test_decode_ver_link_SHA256)
 {
   cout << "." << flush;
 
-  Botan::X509_Certificate root_cert("checks/testdata/root2_SHA256.cer");
-  Botan::X509_Certificate link_cert("checks/testdata/link_SHA256.cer");
+  Botan::X509_Certificate root_cert("ecc_testdata/root2_SHA256.cer");
+  Botan::X509_Certificate link_cert("ecc_testdata/link_SHA256.cer");
 
   auto_ptr<Botan::X509_PublicKey> pubkey(root_cert.subject_public_key());
   bool ver_ec = link_cert.check_signature(*pubkey);
@@ -219,8 +219,8 @@ BOOST_AUTO_TEST_CASE( test_decode_ver_link_SHA1)
 {
   cout << "." << flush;
 
-  Botan::X509_Certificate root_cert("checks/testdata/root_SHA1.163.crt");
-  Botan::X509_Certificate link_cert("checks/testdata/link_SHA1.166.crt");
+  Botan::X509_Certificate root_cert("ecc_testdata/root_SHA1.163.crt");
+  Botan::X509_Certificate link_cert("ecc_testdata/link_SHA1.166.crt");
 
   auto_ptr<Botan::X509_PublicKey> pubkey(root_cert.subject_public_key());
   bool ver_ec = link_cert.check_signature(*pubkey);
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(test_ec_sign)
           return;
         }
 
-      string outfile = "checks/temp/ec_test_mes1.sig";
+      string outfile = "ecc_testdata/ec_test_mes1.sig";
       ofstream sigfile(outfile.c_str());
       if (!sigfile)
         {
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(test_ec_sign)
 
       sigfile << pipe.read_all_as_string() << endl;
 
-      ofstream os_priv_key("checks/temp/matching_key.pkcs8.pem");
+      ofstream os_priv_key("ecc_testdata/matching_key.pkcs8.pem");
 
       os_priv_key << Botan::PKCS8::PEM_encode(priv_key);
       //BOOST_CHECK(true);
@@ -324,13 +324,13 @@ BOOST_AUTO_TEST_CASE( test_create_pkcs8)
       //cout << "\nequal: " <<  (rsa_key == rsa_key2) << "\n";
       //DSA_PrivateKey key(DL_Group("dsa/jce/1024"));
 
-      ofstream rsa_priv_key("checks/temp/rsa_private.pkcs8.pem");
+      ofstream rsa_priv_key("ecc_testdata/rsa_private.pkcs8.pem");
       rsa_priv_key << Botan::PKCS8::PEM_encode(rsa_key);
 
       //Botan::EC_Domain_Params dom_pars = global_config().get_ec_dompar("1.3.132.0.8");
       Botan::EC_Domain_Params dom_pars(Botan::get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
       Botan::ECDSA_PrivateKey key(*rng, dom_pars);
-      ofstream priv_key("checks/temp/wo_dompar_private.pkcs8.pem");
+      ofstream priv_key("ecc_testdata/wo_dompar_private.pkcs8.pem");
       priv_key << Botan::PKCS8::PEM_encode(key);
       //BOOST_CHECK(true);
     }
@@ -353,14 +353,14 @@ BOOST_AUTO_TEST_CASE( test_create_and_verify)
     //Botan::EC_Domain_Params dom_pars = global_config().get_ec_dompar("1.3.132.0.8");
     Botan::EC_Domain_Params dom_pars(Botan::get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
     Botan::ECDSA_PrivateKey key(*rng, dom_pars);
-    ofstream priv_key("checks/temp/dompar_private.pkcs8.pem");
+    ofstream priv_key("ecc_testdata/dompar_private.pkcs8.pem");
     priv_key << Botan::PKCS8::PEM_encode(key);
 
-    auto_ptr<Botan::PKCS8_PrivateKey> loaded_key(Botan::PKCS8::load_key("checks/temp/wo_dompar_private.pkcs8.pem", *rng));
+    auto_ptr<Botan::PKCS8_PrivateKey> loaded_key(Botan::PKCS8::load_key("ecc_testdata/wo_dompar_private.pkcs8.pem", *rng));
     Botan::ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key.get());
     BOOST_CHECK_MESSAGE(loaded_ec_key, "the loaded key could not be converted into an ECDSA_PrivateKey");
 
-    auto_ptr<Botan::PKCS8_PrivateKey> loaded_key_1(Botan::PKCS8::load_key("checks/temp/rsa_private.pkcs8.pem", *rng));
+    auto_ptr<Botan::PKCS8_PrivateKey> loaded_key_1(Botan::PKCS8::load_key("ecc_testdata/rsa_private.pkcs8.pem", *rng));
     Botan::ECDSA_PrivateKey* loaded_rsa_key = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key_1.get());
     BOOST_CHECK_MESSAGE(!loaded_rsa_key, "the loaded key is ECDSA_PrivateKey -> shouldn't be, is a RSA-Key");
   }
@@ -393,11 +393,11 @@ BOOST_AUTO_TEST_CASE( test_create_and_verify)
       Botan::EC_Domain_Params dom_params(curve, p_G, bi_order_g, BigInt(1));
       p_G.check_invariants();
       Botan::ECDSA_PrivateKey key(*rng, dom_params);
-      ofstream priv_key("checks/temp/ec_oid_not_in_reg_private.pkcs8.pem");
+      ofstream priv_key("ecc_testdata/ec_oid_not_in_reg_private.pkcs8.pem");
       priv_key << Botan::PKCS8::PEM_encode(key);
     }
 
-    auto_ptr<Botan::PKCS8_PrivateKey> loaded_key(Botan::PKCS8::load_key("checks/temp/ec_oid_not_in_reg_private.pkcs8.pem", *rng));
+    auto_ptr<Botan::PKCS8_PrivateKey> loaded_key(Botan::PKCS8::load_key("ecc_testdata/ec_oid_not_in_reg_private.pkcs8.pem", *rng));
     Botan::ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key.get());
     BOOST_CHECK_MESSAGE(loaded_ec_key, "the loaded key could not be converted into an ECDSA_PrivateKey");
   }
@@ -483,7 +483,7 @@ BOOST_AUTO_TEST_CASE( test_read_pkcs8)
     {
     std::auto_ptr<RandomNumberGenerator> rng(RandomNumberGenerator::make_rng());
 
-    auto_ptr<Botan::PKCS8_PrivateKey> loaded_key(Botan::PKCS8::load_key("checks/temp/wo_dompar_private.pkcs8.pem", *rng));
+    auto_ptr<Botan::PKCS8_PrivateKey> loaded_key(Botan::PKCS8::load_key("ecc_testdata/wo_dompar_private.pkcs8.pem", *rng));
       Botan::ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key.get());
       BOOST_CHECK_MESSAGE(loaded_ec_key, "the loaded key could not be converted into an ECDSA_PrivateKey");
 
@@ -494,7 +494,7 @@ BOOST_AUTO_TEST_CASE( test_read_pkcs8)
       bool ver_success = loaded_ec_key->verify(sv_message.begin(), sv_message.size(), signature.begin(), signature.size());
       BOOST_CHECK_MESSAGE(ver_success, "generated signature could not be verified positively");
 
-      auto_ptr<Botan::PKCS8_PrivateKey> loaded_key_nodp(Botan::PKCS8::load_key("checks/testdata/nodompar_private.pkcs8.pem", *rng));
+      auto_ptr<Botan::PKCS8_PrivateKey> loaded_key_nodp(Botan::PKCS8::load_key("ecc_testdata/nodompar_private.pkcs8.pem", *rng));
       // anew in each test with unregistered domain-parameters
       Botan::ECDSA_PrivateKey* loaded_ec_key_nodp = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key_nodp.get());
       BOOST_CHECK_MESSAGE(loaded_ec_key_nodp, "the loaded key could not be converted into an ECDSA_PrivateKey");
@@ -505,7 +505,7 @@ BOOST_AUTO_TEST_CASE( test_read_pkcs8)
       BOOST_CHECK_MESSAGE(ver_success_nodp, "generated signature could not be verified positively (no_dom)");
       try
         {
-        auto_ptr<Botan::PKCS8_PrivateKey> loaded_key_withdp(Botan::PKCS8::load_key("checks/testdata/withdompar_private.pkcs8.pem", *rng));
+        auto_ptr<Botan::PKCS8_PrivateKey> loaded_key_withdp(Botan::PKCS8::load_key("ecc_testdata/withdompar_private.pkcs8.pem", *rng));
           BOOST_CHECK_MESSAGE(false, "could load key but unknown OID is set");
         }
       catch (exception& e)
@@ -528,7 +528,7 @@ BOOST_AUTO_TEST_CASE( test_cp_and_as_ctors )
 
   std::auto_ptr<RandomNumberGenerator> rng(RandomNumberGenerator::make_rng());
 
-  auto_ptr<Botan::PKCS8_PrivateKey> loaded_key(Botan::PKCS8::load_key("checks/temp/wo_dompar_private.pkcs8.pem", *rng));
+  auto_ptr<Botan::PKCS8_PrivateKey> loaded_key(Botan::PKCS8::load_key("ecc_testdata/wo_dompar_private.pkcs8.pem", *rng));
   Botan::ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key.get());
   BOOST_CHECK_MESSAGE(loaded_ec_key, "the loaded key could not be converted into an ECDSA_PrivateKey");
   string str_message = ("12345678901234567890abcdef12");
@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE( test_non_init_ecdsa_keys )
 
   std::auto_ptr<RandomNumberGenerator> rng(RandomNumberGenerator::make_rng());
 
-  auto_ptr<Botan::PKCS8_PrivateKey> loaded_key(Botan::PKCS8::load_key("checks/temp/wo_dompar_private.pkcs8.pem", *rng));
+  auto_ptr<Botan::PKCS8_PrivateKey> loaded_key(Botan::PKCS8::load_key("ecc_testdata/wo_dompar_private.pkcs8.pem", *rng));
   //Botan::ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key.get());
   //BOOST_CHECK_MESSAGE(loaded_ec_key, "the loaded key could not be converted into an ECDSA_PrivateKey");
   string str_message = ("12345678901234567890abcdef12");
