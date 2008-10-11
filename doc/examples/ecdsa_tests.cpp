@@ -7,19 +7,11 @@
 ******************************************************/
 
 #include <botan/botan.h>
-#include <botan/oids.h>
+#include <botan/look_pk.h>
 #include <botan/ecdsa.h>
 #include <botan/rsa.h>
 #include <botan/x509cert.h>
-#include <botan/freestore.h>
-#include <botan/look_pk.h>
-#include <botan/bigint.h>
-#include <botan/numthry.h>
-#include <botan/gfp_element.h>
-#include <botan/gfp_modulus.h>
-#include <botan/curve_gfp.h>
-#include <botan/ec_dompar.h>
-#include <botan/pipe.h>
+#include <botan/oids.h>
 
 #include <iostream>
 #include <fstream>
