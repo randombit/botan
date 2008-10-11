@@ -38,11 +38,26 @@ my $config = {};
 main();
 exit;
 
+sub exec_uname {
+    # Only exec it if we think it might actually work
+    if(-f '/bin/uname' || -f '/usr/bin/uname' || -f '/bin/sh') {
+        my $uname = `uname -a`;
+        if($uname) {
+            chomp $uname;
+            return $uname;
+        }
+    }
+
+    return '';
+}
+
 ##################################################
 # Main Driver                                    #
 ##################################################
 sub main {
     my $base_dir = where_am_i();
+
+    $$config{'uname'} = exec_uname();
 
     $$config{'base-dir'} = $base_dir;
     $$config{'src-dir'} = File::Spec->catdir($base_dir, 'src');
@@ -2004,17 +2019,27 @@ sub guess_cpu_from_this
         }
     }
 
-    # No match? Try arch names
+    trace("Couldn't match $cpuinfo against any submodels");
+
+    # No match? Try arch names. Reset @names
+    @names = ();
+
     foreach my $arch (keys %CPU) {
         my %info = %{$CPU{$arch}};
-        if($cpuinfo =~ /$info{'name'}/) {
-            return $info{'name'};
-        }
+
+        push @names, $info{'name'};
 
         foreach my $alias (@{$info{'aliases'}}) {
-            if($cpuinfo =~ /$alias/) {
-                return $alias;
-            }
+            push @names, $alias;
+        }
+    }
+
+    @names = sort { length($b) <=> length($a) } @names;
+
+    foreach my $name (@names) {
+        if($cpuinfo =~ $name) {
+            trace("Matched '$cpuinfo' against '$name'");
+            return $name;
         }
     }
 
@@ -2067,14 +2092,13 @@ sub guess_os
 
     trace("Can't guess os from $^O");
 
-    my $uname = `uname -s`;
-    chomp $uname;
-    $uname = lc $uname;
+    my $uname = $$config{'uname'};
 
-    $guess = recognize_os($uname);
-    return $guess if $guess;
-
-    trace("Can't guess os from $uname");
+    if($uname ne '') {
+        $guess = recognize_os($uname);
+        return $guess if $guess;
+        trace("Can't guess os from $uname");
+    }
 
     warning("Unknown OS ('$^O', '$uname'), falling back to generic code");
     return 'generic';
@@ -2084,7 +2108,7 @@ sub guess_cpu
 {
     # If we have /proc/cpuinfo, try to get nice specific information about
     # what kind of CPU we're running on.
-    my $cpuinfo = '/proc/cpuinfo';
+    my $cpuinfo = '/proc/cpuinfo2';
 
     if(-e $cpuinfo and -r $cpuinfo)
     {
@@ -2142,33 +2166,27 @@ sub guess_cpu
         return known_arch($guess);
     }
 
-    # `umame -p` is sometimes something stupid like unknown, but in some
-    # cases it can be more specific (useful) than `uname -m`
-    my $cpu = guess_cpu_from_this(`uname -p`);
+    my $uname = $$config{'uname'};
+    if($uname ne '') {
+        my $cpu = guess_cpu_from_this($uname);
+
+        if($cpu ne '')
+        {
+            autoconfig("Guessing (based on uname '$uname') that CPU is a $cpu");
+            return $cpu if known_arch($cpu);
+        }
+    }
+
+    my $config_archname = $Config{'archname'};
+    my $cpu = guess_cpu_from_this($config_archname);
 
     if($cpu ne '')
     {
-        autoconfig("Guessing (based on uname -p) that CPU is a $cpu");
+        autoconfig("Guessing (based on Config{'archname'} $config_archname) " .
+                   "that CPU is a $cpu");
         return $cpu if known_arch($cpu);
     }
 
-    # Try uname -m
-    $cpu = guess_cpu_from_this(`uname -m`);
-
-    if($cpu ne '')
-    {
-        autoconfig("Guessing (based on uname -m) that CPU is a $cpu");
-        return $cpu if known_arch($cpu);
-    }
-
-    $cpu = guess_cpu_from_this($Config{'archname'});
-
-    if($cpu ne '')
-    {
-        autoconfig("Guessing (based on \$Config{'archname'}) that CPU is a $cpu");
-        return $cpu if known_arch($cpu);
-    }
-
-    warning("Could not determine CPU type  (try --cpu option)");
+    warning("Could not determine CPU type (try --cpu option)");
     return 'generic';
 }
