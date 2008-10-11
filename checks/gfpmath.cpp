@@ -23,8 +23,8 @@
 
 using namespace Botan;
 
-#define BOOST_CHECK_MESSAGE(expr, print) if(!(expr)) { std::cout << print << "\n"; pass = false; }
-#define BOOST_CHECK(expr) if(!(expr)) { std::cout << #expr << "\n"; pass = false; }
+#define CHECK_MESSAGE(expr, print) if(!(expr)) { std::cout << print << "\n"; pass = false; }
+#define CHECK(expr) if(!(expr)) { std::cout << #expr << "\n"; pass = false; }
 
 namespace {
 
@@ -70,13 +70,13 @@ bool test_bi_div_even()
    BigInt to_div(str_large);
    BigInt half = to_div/2;
    BigInt should_be_to_div = half*2;
-   BOOST_CHECK_MESSAGE(should_be_to_div == to_div, "error in division/multiplication of large BigInt");
+   CHECK_MESSAGE(should_be_to_div == to_div, "error in division/multiplication of large BigInt");
 
    // also testing /=...
    BigInt before_div = to_div;
    to_div /= 2;
    BigInt should_be_before(to_div*2);
-   BOOST_CHECK_MESSAGE(should_be_before == before_div, "error in division/multiplication of large BigInt");
+   CHECK_MESSAGE(should_be_before == before_div, "error in division/multiplication of large BigInt");
 
    return pass;
    }
@@ -92,14 +92,14 @@ bool test_bi_div_odd()
    BigInt half = to_div/2;
    BigInt should_be_to_div = half*2;
    BigInt diff = should_be_to_div-to_div;
-   BOOST_CHECK_MESSAGE((diff <= 1) && (diff >= BigInt("-1")), "error in division/multiplication (/) of large BigInt, differnce = " << diff);
+   CHECK_MESSAGE((diff <= 1) && (diff >= BigInt("-1")), "error in division/multiplication (/) of large BigInt, differnce = " << diff);
 
    // also testing /=...
    BigInt before_div = to_div;
    to_div /= 2;
    BigInt should_be_before(to_div*2);
    BigInt diff2(should_be_before - before_div);
-   BOOST_CHECK_MESSAGE((diff2 <= 1) && (diff2 >= BigInt("-1")), "error in division/multiplication (/=) of large BigInt, difference = " << diff2);
+   CHECK_MESSAGE((diff2 <= 1) && (diff2 >= BigInt("-1")), "error in division/multiplication (/=) of large BigInt, difference = " << diff2);
 
    return pass;
    }
@@ -125,7 +125,7 @@ bool test_deep_montgm()
    GFpElement gfp_b_trf(bi_prime, bi_value_b, true);
    GFpElement gfp_b_ntrf(bi_prime, bi_value_b, false);
 
-   //BOOST_CHECK(!gfp_b_trf.is_trf_to_mres());
+   //CHECK(!gfp_b_trf.is_trf_to_mres());
    gfp_b_trf.get_mres();
    gfp_a_trf.get_mres();
 
@@ -156,21 +156,21 @@ bool test_gfp_div_small_numbers()
    GFpElement gfp_b(bi_prime, bi_value_b, true);
    GFpElement gfp_c(bi_prime, bi_value_b, false);
 
-   BOOST_CHECK(!gfp_a.is_trf_to_mres());
+   CHECK(!gfp_a.is_trf_to_mres());
    //convert to montgomery
    gfp_b.get_mres();
-   BOOST_CHECK(gfp_b.is_trf_to_mres());
-   BOOST_CHECK(!gfp_c.is_trf_to_mres());
+   CHECK(gfp_b.is_trf_to_mres());
+   CHECK(!gfp_c.is_trf_to_mres());
 
    GFpElement res_div_m = gfp_a / gfp_b;
-   BOOST_CHECK(res_div_m.is_trf_to_mres());
+   CHECK(res_div_m.is_trf_to_mres());
 
    GFpElement res_div_n = gfp_a / gfp_c;
-   BOOST_CHECK(!res_div_n.is_trf_to_mres());
+   CHECK(!res_div_n.is_trf_to_mres());
 
-   BOOST_CHECK_MESSAGE(res_div_n.get_value() == res_div_m.get_value(), "transformed result is not equal to untransformed result");
-   BOOST_CHECK_MESSAGE(gfp_a.get_value() == s_value_a, "GFpElement has changed while division operation");
-   BOOST_CHECK_MESSAGE(gfp_b.get_value() == s_value_b, "GFpElement has changed while division operation");
+   CHECK_MESSAGE(res_div_n.get_value() == res_div_m.get_value(), "transformed result is not equal to untransformed result");
+   CHECK_MESSAGE(gfp_a.get_value() == s_value_a, "GFpElement has changed while division operation");
+   CHECK_MESSAGE(gfp_b.get_value() == s_value_b, "GFpElement has changed while division operation");
    GFpElement inverse_b = inverse(gfp_b);
    GFpElement res_div_alternative = gfp_a * inverse_b;
 
@@ -185,7 +185,7 @@ bool test_gfp_div_small_numbers()
       pass = false;
       }
 
-   BOOST_CHECK_MESSAGE(res_div_m == res_div_alternative, "a/b is not as equal to a * b^-1");
+   CHECK_MESSAGE(res_div_m == res_div_alternative, "a/b is not as equal to a * b^-1");
    //cout << "Div-result transformed:" << res_div_m.get_value() << endl;
    //cout << "Div-result untransformed:" << res_div_n.get_value() << endl;
    //cout << "Div-Alternative: " << res_div_alternative.get_value() << endl;
@@ -204,11 +204,11 @@ bool test_gfp_basics()
    BigInt bi_value_a(s_value_a);
 
    GFpElement gfp_a(bi_prime, bi_value_a, true);
-   BOOST_CHECK(gfp_a.get_p() == s_prime);
-   BOOST_CHECK(gfp_a.get_value() == s_value_a);
-   BOOST_CHECK(!gfp_a.is_trf_to_mres());
+   CHECK(gfp_a.get_p() == s_prime);
+   CHECK(gfp_a.get_value() == s_value_a);
+   CHECK(!gfp_a.is_trf_to_mres());
    gfp_a.get_mres();
-   BOOST_CHECK(gfp_a.is_trf_to_mres());
+   CHECK(gfp_a.is_trf_to_mres());
    return pass;
    }
 
@@ -229,8 +229,8 @@ bool test_gfp_addSubNegate()
    gfp_b.negate();
    GFpElement zero = gfp_a + gfp_b;
    BigInt bi_zero("0");
-   BOOST_CHECK(zero.get_value() == bi_zero);
-   BOOST_CHECK(gfp_a.get_value() == bi_value_a);
+   CHECK(zero.get_value() == bi_zero);
+   CHECK(gfp_a.get_value() == bi_value_a);
    return pass;
    }
 
@@ -251,17 +251,17 @@ bool test_gfp_mult()
    GFpElement gfp_b(bi_prime, bi_value_b, true);
    GFpElement gfp_c(bi_prime, bi_value_b, false);
 
-   BOOST_CHECK(!gfp_a.is_trf_to_mres());
+   CHECK(!gfp_a.is_trf_to_mres());
    //convert to montgomery
    gfp_b.get_mres();
-   BOOST_CHECK(gfp_b.is_trf_to_mres());
-   BOOST_CHECK(!gfp_c.is_trf_to_mres());
+   CHECK(gfp_b.is_trf_to_mres());
+   CHECK(!gfp_c.is_trf_to_mres());
 
    GFpElement res_mult_m = gfp_a * gfp_b;
-   BOOST_CHECK(res_mult_m.is_trf_to_mres());
+   CHECK(res_mult_m.is_trf_to_mres());
 
    GFpElement res_mult_n = gfp_a * gfp_c;
-   BOOST_CHECK(!res_mult_n.is_trf_to_mres());
+   CHECK(!res_mult_n.is_trf_to_mres());
 
    if(res_mult_n != res_mult_m)
       std::cout << gfp_a << " * " << gfp_b << " =? "
@@ -286,24 +286,24 @@ bool test_gfp_div()
    GFpElement gfp_b(bi_prime, bi_value_b, true);
    GFpElement gfp_c(bi_prime, bi_value_b, false);
 
-   BOOST_CHECK(!gfp_a.is_trf_to_mres());
+   CHECK(!gfp_a.is_trf_to_mres());
    //convert to montgomery
    gfp_b.get_mres();
-   BOOST_CHECK(gfp_b.is_trf_to_mres());
-   BOOST_CHECK(!gfp_c.is_trf_to_mres());
+   CHECK(gfp_b.is_trf_to_mres());
+   CHECK(!gfp_c.is_trf_to_mres());
 
    GFpElement res_div_m = gfp_a / gfp_b;
-   BOOST_CHECK(res_div_m.is_trf_to_mres());
+   CHECK(res_div_m.is_trf_to_mres());
 
    GFpElement res_div_n = gfp_a / gfp_c;
-   BOOST_CHECK(!res_div_n.is_trf_to_mres());
+   CHECK(!res_div_n.is_trf_to_mres());
 
-   BOOST_CHECK_MESSAGE(res_div_n.get_value() == res_div_m.get_value(), "transformed result is not equal to untransformed result");
-   BOOST_CHECK_MESSAGE(gfp_a.get_value() == s_value_a, "GFpElement has changed while division operation");
-   BOOST_CHECK_MESSAGE(gfp_b.get_value() == s_value_b, "GFpElement has changed while division operation");
+   CHECK_MESSAGE(res_div_n.get_value() == res_div_m.get_value(), "transformed result is not equal to untransformed result");
+   CHECK_MESSAGE(gfp_a.get_value() == s_value_a, "GFpElement has changed while division operation");
+   CHECK_MESSAGE(gfp_b.get_value() == s_value_b, "GFpElement has changed while division operation");
    GFpElement inverse_b = inverse(gfp_b);
    GFpElement res_div_alternative = gfp_a * inverse_b;
-   BOOST_CHECK_MESSAGE(res_div_m == res_div_alternative, "a/b is not as equal to a * b^-1");
+   CHECK_MESSAGE(res_div_m == res_div_alternative, "a/b is not as equal to a * b^-1");
    //cout << "Div-result transformed:" << res_div_m.get_value() << endl;
    //cout << "Div-result untransformed:" << res_div_n.get_value() << endl;
    //cout << "Div-Alternative: " << res_div_alternative.get_value() << endl;
@@ -327,22 +327,22 @@ bool test_gfp_add()
    GFpElement gfp_b(bi_prime, bi_value_b, true);
    GFpElement gfp_c(bi_prime, bi_value_b, true);
 
-   BOOST_CHECK(!gfp_a.is_trf_to_mres());
+   CHECK(!gfp_a.is_trf_to_mres());
    //convert to montgomery
    gfp_b.get_mres();
-   BOOST_CHECK(gfp_b.is_trf_to_mres());
-   BOOST_CHECK(!gfp_c.is_trf_to_mres());
+   CHECK(gfp_b.is_trf_to_mres());
+   CHECK(!gfp_c.is_trf_to_mres());
 
    GFpElement res_add_m = gfp_a + gfp_b;
-   BOOST_CHECK(res_add_m.is_trf_to_mres());
+   CHECK(res_add_m.is_trf_to_mres());
 
    GFpElement res_add_n = gfp_a + gfp_c;
    //  commented out by patrick, behavior is clear:
    //	rhs might be transformed, lhs never
    //  for now, this behavior is only intern, doesn't matter for programm function
-   //  BOOST_CHECK_MESSAGE(res_add_n.is_trf_to_mres(), "!! Falko: NO FAIL, wrong test, please repair"); // clear: rhs might be transformed, lhs never
+   //  CHECK_MESSAGE(res_add_n.is_trf_to_mres(), "!! Falko: NO FAIL, wrong test, please repair"); // clear: rhs might be transformed, lhs never
 
-   BOOST_CHECK(res_add_n.get_value() == res_add_m.get_value());
+   CHECK(res_add_n.get_value() == res_add_m.get_value());
    return pass;
    }
 
@@ -363,27 +363,27 @@ bool test_gfp_sub()
    GFpElement gfp_b(bi_prime, bi_value_b, true);
    GFpElement gfp_c(bi_prime, bi_value_b, true);
 
-   BOOST_CHECK(!gfp_a.is_trf_to_mres());
+   CHECK(!gfp_a.is_trf_to_mres());
    //convert to montgomery
    gfp_b.get_mres();
-   BOOST_CHECK(gfp_b.is_trf_to_mres());
-   BOOST_CHECK(!gfp_c.is_trf_to_mres());
+   CHECK(gfp_b.is_trf_to_mres());
+   CHECK(!gfp_c.is_trf_to_mres());
 
    GFpElement res_sub_m = gfp_b - gfp_a;
-   BOOST_CHECK(res_sub_m.is_trf_to_mres());
-   BOOST_CHECK(gfp_a.is_trf_to_mres()); // added by Falko
+   CHECK(res_sub_m.is_trf_to_mres());
+   CHECK(gfp_a.is_trf_to_mres()); // added by Falko
 
    GFpElement res_sub_n = gfp_c - gfp_a;
 
    //  commented out by psona, behavior is clear:
    //	rhs might be transformed, lhs never
    //  for now, this behavior is only intern, doesn't matter for programm function
-   //	BOOST_CHECK_MESSAGE(!res_sub_n.is_trf_to_mres(), "!! Falko: NO FAIL, wrong test, please repair"); // falsche
+   //	CHECK_MESSAGE(!res_sub_n.is_trf_to_mres(), "!! Falko: NO FAIL, wrong test, please repair"); // falsche
    // Erwartung: a wurde durch die operation oben auch
    // ins m-residue transformiert, daher passiert das hier auch mit
    // c, und das Ergebnis ist es auch
 
-   BOOST_CHECK(res_sub_n.get_value() == res_sub_m.get_value());
+   CHECK(res_sub_n.get_value() == res_sub_m.get_value());
    return pass;
    }
 
@@ -404,11 +404,11 @@ bool test_more_gfp_div()
    GFpElement gfp_b_trf(bi_prime, bi_value_b, true);
    GFpElement gfp_b_ntrf(bi_prime, bi_value_b, false);
 
-   BOOST_CHECK(!gfp_b_trf.is_trf_to_mres());
+   CHECK(!gfp_b_trf.is_trf_to_mres());
    gfp_b_trf.get_mres();
-   BOOST_CHECK(gfp_b_trf.is_trf_to_mres());
+   CHECK(gfp_b_trf.is_trf_to_mres());
 
-   BOOST_CHECK(!gfp_a.is_trf_to_mres());
+   CHECK(!gfp_a.is_trf_to_mres());
 
    bool exc_ntrf = false;
    try
@@ -419,21 +419,21 @@ bool test_more_gfp_div()
       {
       exc_ntrf = true;
       }
-   BOOST_CHECK(exc_ntrf);
+   CHECK(exc_ntrf);
 
-   BOOST_CHECK(!gfp_b_ntrf.is_trf_to_mres());
+   CHECK(!gfp_b_ntrf.is_trf_to_mres());
 
-   BOOST_CHECK_MESSAGE(gfp_b_trf == gfp_b_ntrf, "b is not equal to itself (trf)");
+   CHECK_MESSAGE(gfp_b_trf == gfp_b_ntrf, "b is not equal to itself (trf)");
 
    GFpElement b_trf_inv(gfp_b_trf);
    b_trf_inv.inverse_in_place();
    GFpElement b_ntrf_inv(gfp_b_ntrf);
    b_ntrf_inv.inverse_in_place();
-   BOOST_CHECK_MESSAGE(b_trf_inv == b_ntrf_inv, "b inverted is not equal to itself (trf)");
+   CHECK_MESSAGE(b_trf_inv == b_ntrf_inv, "b inverted is not equal to itself (trf)");
 
-   BOOST_CHECK(gfp_b_trf/gfp_b_ntrf == GFpElement(bi_prime, 1));
-   BOOST_CHECK(gfp_b_trf/gfp_b_trf == GFpElement(bi_prime, 1));
-   BOOST_CHECK(gfp_b_ntrf/gfp_b_ntrf == GFpElement(bi_prime, 1));
+   CHECK(gfp_b_trf/gfp_b_ntrf == GFpElement(bi_prime, 1));
+   CHECK(gfp_b_trf/gfp_b_trf == GFpElement(bi_prime, 1));
+   CHECK(gfp_b_ntrf/gfp_b_ntrf == GFpElement(bi_prime, 1));
    GFpElement rhs(gfp_a/gfp_b_trf);
    GFpElement lhs(gfp_a/gfp_b_ntrf);
 
@@ -462,11 +462,11 @@ bool test_gfp_mult_u32bit()
    Botan::u32bit u_x = 134234;
    BigInt b_x(u_x);
    GFpElement g_x(p, b_x);
-   BOOST_CHECK(a*u_x == a*g_x);
-   BOOST_CHECK(a*u_x == u_x*a);
-   BOOST_CHECK(a*g_x == g_x*a);
-   BOOST_CHECK(a_mr*u_x == a*g_x);
-   BOOST_CHECK(u_x*a_mr == a*g_x);
+   CHECK(a*u_x == a*g_x);
+   CHECK(a*u_x == u_x*a);
+   CHECK(a*g_x == g_x*a);
+   CHECK(a_mr*u_x == a*g_x);
+   CHECK(u_x*a_mr == a*g_x);
    */
    return pass;
    }
@@ -486,12 +486,12 @@ bool test_gfp_shared_vals()
    shcpy_a.share_assign(a);
    std::tr1::shared_ptr<GFpModulus> ptr1 = a.get_ptr_mod();
    std::tr1::shared_ptr<GFpModulus> ptr2 = shcpy_a.get_ptr_mod();
-   BOOST_CHECK_MESSAGE(ptr1.get() == ptr2.get(), "shared pointers for moduli aren´t equal");
+   CHECK_MESSAGE(ptr1.get() == ptr2.get(), "shared pointers for moduli aren´t equal");
 
    GFpElement b(1,0);
    b = a; // create a non shared copy
    std::tr1::shared_ptr<GFpModulus> ptr_b_p = b.get_ptr_mod();
-   BOOST_CHECK_MESSAGE(ptr1.get() != ptr_b_p.get(), "non shared pointers for moduli are equal");
+   CHECK_MESSAGE(ptr1.get() != ptr_b_p.get(), "non shared pointers for moduli are equal");
 
    a.turn_on_sp_red_mul();
    GFpElement c1 = a * shcpy_a;
@@ -515,15 +515,15 @@ bool test_gfp_shared_vals()
    swap(a,shcpy_a);
    std::tr1::shared_ptr<GFpModulus> ptr3 = a.get_ptr_mod();
    std::tr1::shared_ptr<GFpModulus> ptr4 = shcpy_a.get_ptr_mod();
-   BOOST_CHECK_MESSAGE(ptr3.get() == ptr4.get(), "shared pointers for moduli aren´t equal after swap");
-   BOOST_CHECK(ptr1.get() == ptr4.get());
-   BOOST_CHECK(ptr2.get() == ptr3.get());
+   CHECK_MESSAGE(ptr3.get() == ptr4.get(), "shared pointers for moduli aren´t equal after swap");
+   CHECK(ptr1.get() == ptr4.get());
+   CHECK(ptr2.get() == ptr3.get());
 
    swap(a,b);
    std::tr1::shared_ptr<GFpModulus> ptr_a = a.get_ptr_mod();
    std::tr1::shared_ptr<GFpModulus> ptr_b = shcpy_a.get_ptr_mod();
-   BOOST_CHECK(ptr_a.get() == ptr_b_p.get());
-   BOOST_CHECK(ptr_b.get() == ptr3.get());
+   CHECK(ptr_a.get() == ptr_b_p.get());
+   CHECK(ptr_b.get() == ptr3.get());
    return pass;
    }
 
@@ -546,18 +546,18 @@ bool test_gfpel_ass_op()
    GFpElement b2(11,6);
 
    a = b;
-   BOOST_CHECK(a==b2);
-   BOOST_CHECK(a.get_value() == b2.get_value());
-   BOOST_CHECK(a.get_p() == b2.get_p());
-   BOOST_CHECK(a.get_ptr_mod().get() != b.get_ptr_mod().get()); // sharing groups
+   CHECK(a==b2);
+   CHECK(a.get_value() == b2.get_value());
+   CHECK(a.get_p() == b2.get_p());
+   CHECK(a.get_ptr_mod().get() != b.get_ptr_mod().get()); // sharing groups
    // may not be fused!
 
    // also test some share_assign()...
    a.share_assign(b);
-   BOOST_CHECK(a==b2);
-   BOOST_CHECK(a.get_value() == b2.get_value());
-   BOOST_CHECK(a.get_p() == b2.get_p());
-   BOOST_CHECK(a.get_ptr_mod().get() == b.get_ptr_mod().get()); // sharing groups
+   CHECK(a==b2);
+   CHECK(a.get_value() == b2.get_value());
+   CHECK(a.get_p() == b2.get_p());
+   CHECK(a.get_ptr_mod().get() == b.get_ptr_mod().get()); // sharing groups
    // shall be fused!
    //---------------------------
 
@@ -566,21 +566,21 @@ bool test_gfpel_ass_op()
    GFpElement c(5,2);
    GFpElement d(5,2);
    d.share_assign(c);
-   BOOST_CHECK(d.get_ptr_mod().get() == c.get_ptr_mod().get());
-   BOOST_CHECK(d.get_ptr_mod()->get_p() == c.get_ptr_mod()->get_p());
-   BOOST_CHECK(c.get_ptr_mod()->get_r().is_zero());
+   CHECK(d.get_ptr_mod().get() == c.get_ptr_mod().get());
+   CHECK(d.get_ptr_mod()->get_p() == c.get_ptr_mod()->get_p());
+   CHECK(c.get_ptr_mod()->get_r().is_zero());
    c.turn_on_sp_red_mul();
-   BOOST_CHECK(d.get_ptr_mod().get() == c.get_ptr_mod().get());
-   BOOST_CHECK(d.get_ptr_mod()->get_p() == c.get_ptr_mod()->get_p());
-   BOOST_CHECK(!c.get_ptr_mod()->get_p().is_zero());
+   CHECK(d.get_ptr_mod().get() == c.get_ptr_mod().get());
+   CHECK(d.get_ptr_mod()->get_p() == c.get_ptr_mod()->get_p());
+   CHECK(!c.get_ptr_mod()->get_p().is_zero());
    GFpElement f(11,5);
    d = f;
-   BOOST_CHECK(f.get_ptr_mod().get() != c.get_ptr_mod().get());
+   CHECK(f.get_ptr_mod().get() != c.get_ptr_mod().get());
 
    GFpElement e = c*c;
    GFpElement g = d*d;
    GFpElement h = f*f;
-   BOOST_CHECK(h == g);
+   CHECK(h == g);
 
    GFpElement c2(5,2);
    GFpElement d2(5,2);
@@ -588,18 +588,18 @@ bool test_gfpel_ass_op()
    GFpElement f2(11,5);
    d2 = f2;
    c2.turn_on_sp_red_mul();
-   BOOST_CHECK(d2.get_ptr_mod().get() != c2.get_ptr_mod().get()); // the sharing group was left
-   BOOST_CHECK(d2.get_ptr_mod()->get_r() == f2.get_ptr_mod()->get_r());
-   BOOST_CHECK(c2.get_p() == 5); // c2´s shared values weren´t modified because
+   CHECK(d2.get_ptr_mod().get() != c2.get_ptr_mod().get()); // the sharing group was left
+   CHECK(d2.get_ptr_mod()->get_r() == f2.get_ptr_mod()->get_r());
+   CHECK(c2.get_p() == 5); // c2´s shared values weren´t modified because
    // the sharing group with d2 was separated by
    // the assignment "d2 = f2"
 
    d2.turn_on_sp_red_mul();
-   BOOST_CHECK(d2.get_ptr_mod()->get_p() != c2.get_ptr_mod()->get_p());
+   CHECK(d2.get_ptr_mod()->get_p() != c2.get_ptr_mod()->get_p());
    GFpElement e2 = c2*c2;
    GFpElement g2 = d2*d2;
    GFpElement h2 = f2*f2;
-   BOOST_CHECK(h2 == g2);
+   CHECK(h2 == g2);
 
    GFpElement c3(5,2);
    GFpElement d3(5,2);
@@ -609,11 +609,11 @@ bool test_gfpel_ass_op()
    GFpElement e3 = c3*c3;
    GFpElement g3 = d3*d3;
 
-   BOOST_CHECK(e == e2);
-   BOOST_CHECK(g == g2);
+   CHECK(e == e2);
+   CHECK(g == g2);
 
-   BOOST_CHECK(e == e3);
-   BOOST_CHECK(g == g2);
+   CHECK(e == e3);
+   CHECK(g == g2);
    return pass;
    }
 
@@ -635,21 +635,21 @@ bool test_gfp_swap()
    //GFpModulus* b_d = b.get_ptr_mod()->get_p_dash();
 
    swap(a,b);
-   BOOST_CHECK_MESSAGE(b.get_value() == 2342%173, "actual value of b was: " << b.get_value() );
-   BOOST_CHECK_MESSAGE(a.get_value() == 423420%173, "actual value of a was: " << a.get_value() );
+   CHECK_MESSAGE(b.get_value() == 2342%173, "actual value of b was: " << b.get_value() );
+   CHECK_MESSAGE(a.get_value() == 423420%173, "actual value of a was: " << a.get_value() );
 
-   BOOST_CHECK(a_mod == b.get_ptr_mod().get());
-   BOOST_CHECK(b_mod == a.get_ptr_mod().get());
-   //BOOST_CHECK(a_d == b.get_ptr_mod()->get_p_dash());
-   //BOOST_CHECK(b_d == a.get_ptr_p_dash()->get_p_dash());
+   CHECK(a_mod == b.get_ptr_mod().get());
+   CHECK(b_mod == a.get_ptr_mod().get());
+   //CHECK(a_d == b.get_ptr_mod()->get_p_dash());
+   //CHECK(b_d == a.get_ptr_p_dash()->get_p_dash());
 
    GFpElement c(p, BigInt("2342329"));
    GFpElement d(1,1);
    d.share_assign(c);
    d += d;
    c.swap(d);
-   BOOST_CHECK(d.get_value() == 2342329%173);
-   BOOST_CHECK(c.get_value() == (d*2).get_value());
+   CHECK(d.get_value() == 2342329%173);
+   CHECK(c.get_value() == (d*2).get_value());
    return pass;
    }
 
@@ -673,10 +673,10 @@ bool test_inv_in_place()
 
    /*cout << "a1_inv = " << a1_inv << endl;
    cout << "a2_inv = " << a2_inv << endl;*/
-   BOOST_CHECK_MESSAGE(a1_inv == a2_inv, "error with inverting tranformed GFpElement");
+   CHECK_MESSAGE(a1_inv == a2_inv, "error with inverting tranformed GFpElement");
 
-   BOOST_CHECK(a1_inv.inverse_in_place() == a1);
-   BOOST_CHECK(a2_inv.inverse_in_place() == a2);
+   CHECK(a1_inv.inverse_in_place() == a1);
+   CHECK(a2_inv.inverse_in_place() == a2);
    return pass;
    }
 
@@ -691,7 +691,7 @@ bool test_op_eq()
    a1.turn_on_sp_red_mul();
    a1.get_mres(); // enforce the conversion
    GFpElement a2(mod, 288);
-   BOOST_CHECK_MESSAGE(a1 != a2, "error with GFpElement comparison");
+   CHECK_MESSAGE(a1 != a2, "error with GFpElement comparison");
    return pass;
    }
 
@@ -704,7 +704,7 @@ bool test_rand_int(RandomNumberGenerator& rng)
       std::cout << '.' << std::flush;
       BigInt x = BigInt::random_integer(rng, 1,3);
       //cout << "x = " << x << "\n";  // only 1,2 are put out
-      BOOST_CHECK(x == 1 || x==2);
+      CHECK(x == 1 || x==2);
       }
 
    return pass;
@@ -717,8 +717,8 @@ bool test_bi_bit_access()
    bool pass = true;
 
    BigInt a(323);
-   BOOST_CHECK(a.get_bit(1) == 1);
-   BOOST_CHECK(a.get_bit(1000) == 0);
+   CHECK(a.get_bit(1) == 1);
+   CHECK(a.get_bit(1000) == 0);
    return pass;
    }
 
@@ -740,7 +740,7 @@ bool test_sec_mod_mul()
       BigInt c1 = a * b;
       c1 %= m;
       BigInt c2 = mod_mul_secure(a, b, m);
-      BOOST_CHECK_MESSAGE(c1 == c2, "should be " << c1 << ", was " << c2);
+      CHECK_MESSAGE(c1 == c2, "should be " << c1 << ", was " << c2);
       }
    //cout << "ending test_sec_mod_mul" << endl;
    return pass;
@@ -764,7 +764,7 @@ bool test_sec_bi_mul()
       //c1 %= m;
       BigInt c2(a);
       c2.mult_this_secure(b, m);
-      BOOST_CHECK_MESSAGE(c1 == c2, "should be " << c1 << ", was " << c2);
+      CHECK_MESSAGE(c1 == c2, "should be " << c1 << ", was " << c2);
       }
 
    return pass;
