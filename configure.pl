@@ -905,7 +905,7 @@ sub libs {
 sub portable_symlink {
    my ($from, $to_dir, $to_fname) = @_;
 
-   trace("portable_symlink($from, $to_dir, $to_fname)");
+   #trace("portable_symlink($from, $to_dir, $to_fname)");
 
    my $can_symlink = 0;
    my $can_link = 0;
@@ -1090,7 +1090,7 @@ sub realname {
 sub load_module {
     my ($config, $modname) = @_;
 
-    trace("load_module($modname)");
+    #trace("load_module($modname)");
 
     croak("Unknown module $modname") unless defined($MODULES{$modname});
 
@@ -1121,9 +1121,6 @@ sub load_module {
 
     croak("Module '$modname' does not work with $cc")
         unless(&$works_on($cc, $module{'cc'}));
-
-    trace($modname);
-    trace($module{'moddirs'});
 
     my $handle_files = sub {
         my($lst, $func) = @_;
@@ -1344,7 +1341,7 @@ sub check_for_file {
 sub process_template {
     my ($in, $out, $config) = @_;
 
-    trace("$in -> $out");
+    trace("process_template: $in -> $out");
 
     my $contents = slurp_file($in);
 
