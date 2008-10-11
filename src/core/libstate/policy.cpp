@@ -27,6 +27,7 @@ void add_oid(Library_State& config,
 *************************************************/
 void set_default_oids(Library_State& config)
    {
+   /* Public key types */
    add_oid(config, "1.2.840.113549.1.1.1", "RSA");
    add_oid(config, "2.5.8.1.1", "RSA");
    add_oid(config, "1.2.840.10040.4.1", "DSA");
@@ -34,14 +35,9 @@ void set_default_oids(Library_State& config)
    add_oid(config, "1.3.6.1.4.1.3029.1.2.1", "ELG");
    add_oid(config, "1.3.6.1.4.1.25258.1.1", "RW");
    add_oid(config, "1.3.6.1.4.1.25258.1.2", "NR");
-
    add_oid(config, "1.2.840.10045.2.1", "ECDSA");
-   add_oid(config, "1.2.840.10045.4.1", "ECDSA/EMSA1_BSI(SHA-1)");
-   add_oid(config, "1.2.840.10045.4.3.1", "ECDSA/EMSA1_BSI(SHA-224)");
-   add_oid(config, "1.2.840.10045.4.3.2", "ECDSA/EMSA1_BSI(SHA-256)");
-   add_oid(config, "1.2.840.10045.4.3.3", "ECDSA/EMSA1_BSI(SHA-384)");
-   add_oid(config, "1.2.840.10045.4.3.4", "ECDSA/EMSA1_BSI(SHA-512)");
 
+   /* Ciphers */
    add_oid(config, "1.3.14.3.2.7", "DES/CBC");
    add_oid(config, "1.2.840.113549.3.7", "TripleDES/CBC");
    add_oid(config, "1.2.840.113549.3.2", "RC2/CBC");
@@ -50,6 +46,7 @@ void set_default_oids(Library_State& config)
    add_oid(config, "2.16.840.1.101.3.4.1.22", "AES-192/CBC");
    add_oid(config, "2.16.840.1.101.3.4.1.42", "AES-256/CBC");
 
+   /* Hash Functions */
    add_oid(config, "1.2.840.113549.2.5", "MD5");
    add_oid(config, "1.3.6.1.4.1.11591.12.2", "Tiger(24,3)");
 
@@ -59,6 +56,7 @@ void set_default_oids(Library_State& config)
    add_oid(config, "2.16.840.1.101.3.4.2.2", "SHA-384");
    add_oid(config, "2.16.840.1.101.3.4.2.3", "SHA-512");
 
+   /* Key Wrap */
    add_oid(config, "1.2.840.113549.1.9.16.3.6", "KeyWrap.TripleDES");
    add_oid(config, "1.2.840.113549.1.9.16.3.7", "KeyWrap.RC2");
    add_oid(config, "1.2.840.113533.7.66.15", "KeyWrap.CAST-128");
@@ -66,8 +64,10 @@ void set_default_oids(Library_State& config)
    add_oid(config, "2.16.840.1.101.3.4.1.25", "KeyWrap.AES-192");
    add_oid(config, "2.16.840.1.101.3.4.1.45", "KeyWrap.AES-256");
 
+   /* Compression */
    add_oid(config, "1.2.840.113549.1.9.16.3.8", "Compression.Zlib");
 
+   /* Public key signature schemes */
    add_oid(config, "1.2.840.113549.1.1.1", "RSA/EME-PKCS1-v1_5");
    add_oid(config, "1.2.840.113549.1.1.2", "RSA/EMSA3(MD2)");
    add_oid(config, "1.2.840.113549.1.1.4", "RSA/EMSA3(MD5)");
@@ -80,6 +80,17 @@ void set_default_oids(Library_State& config)
    add_oid(config, "1.2.840.10040.4.3", "DSA/EMSA1(SHA-160)");
    add_oid(config, "2.16.840.1.101.3.4.3.1", "DSA/EMSA1(SHA-224)");
    add_oid(config, "2.16.840.1.101.3.4.3.2", "DSA/EMSA1(SHA-256)");
+
+   add_oid(config, "1.2.840.10045.4.1", "ECDSA/EMSA1_BSI(SHA-1)");
+   add_oid(config, "1.2.840.10045.4.3.1", "ECDSA/EMSA1_BSI(SHA-224)");
+   add_oid(config, "1.2.840.10045.4.3.2", "ECDSA/EMSA1_BSI(SHA-256)");
+   add_oid(config, "1.2.840.10045.4.3.3", "ECDSA/EMSA1_BSI(SHA-384)");
+   add_oid(config, "1.2.840.10045.4.3.4", "ECDSA/EMSA1_BSI(SHA-512)");
+
+   add_oid(config, "1.2.840.10045.4.3.1", "ECDSA/EMSA1(SHA-224)");
+   add_oid(config, "1.2.840.10045.4.3.2", "ECDSA/EMSA1(SHA-256)");
+   add_oid(config, "1.2.840.10045.4.3.3", "ECDSA/EMSA1(SHA-384)");
+   add_oid(config, "1.2.840.10045.4.3.4", "ECDSA/EMSA1(SHA-512)");
 
    add_oid(config, "1.3.6.1.4.1.25258.2.1.1.1", "RW/EMSA2(RIPEMD-160)");
    add_oid(config, "1.3.6.1.4.1.25258.2.1.1.2", "RW/EMSA2(SHA-160)");
