@@ -23,14 +23,16 @@
 
 using namespace Botan;
 
-#define BOOST_CHECK_MESSAGE(expr, print) if(!(expr)) std::cout << print << "\n";
-#define BOOST_CHECK(expr) if(!(expr)) std::cout << #expr << "\n";
+#define BOOST_CHECK_MESSAGE(expr, print) if(!(expr)) { std::cout << print << "\n"; pass = false; }
+#define BOOST_CHECK(expr) if(!(expr)) { std::cout << #expr << "\n"; pass = false; }
 
 namespace {
 
-void test_turn_on_sp_red_mul()
+bool test_turn_on_sp_red_mul()
    {
    std::cout << "." << std::flush;
+
+   bool pass = true;
 
    GFpElement a1(23,15);
    GFpElement b1(23,18);
@@ -48,12 +50,21 @@ void test_turn_on_sp_red_mul()
    GFpElement c2 = a2*b2;
 
    if(c1 != c2)
-      std::cout << "test_turn_on_sp_red_mul - c1 != c2\n";
+      {
+      std::cout << "test_turn_on_sp_red_mul: ";
+      std::cout << "c1 = " << c1 << " != ";
+      std::cout << "c2 = " << c2 << "\n";
+      return false; // test failed
+      }
+
+   return pass; // pass
    }
 
-void test_bi_div_even()
+bool test_bi_div_even()
    {
    std::cout << "." << std::flush;
+
+   bool pass = true;
 
    std::string str_large("1552518092300708935148979488462502555256886017116696611139052038026050952686323255099158638440248181850494907312621195144895406865083132424709500362534691373159016049946612882688577088900506460909202178541447303914546699487373976586");
    BigInt to_div(str_large);
@@ -66,11 +77,15 @@ void test_bi_div_even()
    to_div /= 2;
    BigInt should_be_before(to_div*2);
    BOOST_CHECK_MESSAGE(should_be_before == before_div, "error in division/multiplication of large BigInt");
+
+   return pass;
    }
 
-void test_bi_div_odd()
+bool test_bi_div_odd()
    {
    std::cout << '.' << std::flush;
+
+   bool pass = true;
 
    std::string str_large("1552518092300708935148979488462502555256886017116696611139052038026050952686323255099158638440248181850494907312621195144895406865083132424709500362534691373159016049946612882688577088900506460909202178541447303914546699487373976585");
    BigInt to_div(str_large);
@@ -85,20 +100,24 @@ void test_bi_div_odd()
    BigInt should_be_before(to_div*2);
    BigInt diff2(should_be_before - before_div);
    BOOST_CHECK_MESSAGE((diff2 <= 1) && (diff2 >= BigInt("-1")), "error in division/multiplication (/=) of large BigInt, difference = " << diff2);
+
+   return pass;
    }
 
-void test_deep_montgm()
+bool test_deep_montgm()
    {
    std::cout << '.' << std::flush;
 
-   //string s_prime = "5334243285367";
-   std::string s_prime = "5";
+   bool pass = true;
+
+   std::string s_prime = "5334243285367";
+   //std::string s_prime = "5";
    BigInt bi_prime(s_prime);
-   //string s_value_a = "3333333333334";
-   std::string s_value_a = "4";
+   std::string s_value_a = "3333333333334";
+   //std::string s_value_a = "4";
    BigInt bi_value_a(s_value_a);
-   //string s_value_b = "4444444444444";
-   std::string s_value_b = "3";
+   std::string s_value_b = "4444444444444";
+   //std::string s_value_b = "3";
    BigInt bi_value_b(s_value_b);
 
    GFpElement gfp_a_trf(bi_prime, bi_value_a, true);
@@ -113,12 +132,18 @@ void test_deep_montgm()
    GFpElement c_trf(gfp_a_trf * gfp_b_trf);
    GFpElement c_ntrf(gfp_a_ntrf * gfp_b_ntrf);
 
-   BOOST_CHECK_MESSAGE(c_trf.get_value() == c_ntrf.get_value(), "\nc_trf.value = " << c_trf.get_value() << "\nc_ntrf.value = " << c_ntrf.get_value());
+   if(c_trf != c_ntrf)
+      {
+      std::cout << "test_deep_montgm - " << c_trf << " != " << c_ntrf << "\n";
+      }
+   return pass; // pass
    }
 
-void test_gfp_div_small_numbers()
+bool test_gfp_div_small_numbers()
    {
    std::cout << '.' << std::flush;
+
+   bool pass = true;
 
    std::string s_prime = "13";
    BigInt bi_prime(s_prime);
@@ -157,17 +182,21 @@ void test_gfp_div_small_numbers()
                 << "b^-1 = " << inverse_b << "\n"
                 << "a*b^-1 = " << res_div_alternative << "\n"
                 << "a/b = " << res_div_n << "\n";
+      pass = false;
       }
 
    BOOST_CHECK_MESSAGE(res_div_m == res_div_alternative, "a/b is not as equal to a * b^-1");
    //cout << "Div-result transformed:" << res_div_m.get_value() << endl;
    //cout << "Div-result untransformed:" << res_div_n.get_value() << endl;
    //cout << "Div-Alternative: " << res_div_alternative.get_value() << endl;
+   return pass;
    }
 
-void test_gfp_basics()
+bool test_gfp_basics()
    {
    std::cout << '.' << std::flush;
+
+   bool pass = true;
 
    std::string s_prime = "5334243285367";
    BigInt bi_prime(s_prime);
@@ -180,11 +209,14 @@ void test_gfp_basics()
    BOOST_CHECK(!gfp_a.is_trf_to_mres());
    gfp_a.get_mres();
    BOOST_CHECK(gfp_a.is_trf_to_mres());
+   return pass;
    }
 
-void test_gfp_addSubNegate()
+bool test_gfp_addSubNegate()
    {
    std::cout << '.' << std::flush;
+
+   bool pass = true;
 
    std::string s_prime = "5334243285367";
    BigInt bi_prime(s_prime);
@@ -199,11 +231,14 @@ void test_gfp_addSubNegate()
    BigInt bi_zero("0");
    BOOST_CHECK(zero.get_value() == bi_zero);
    BOOST_CHECK(gfp_a.get_value() == bi_value_a);
+   return pass;
    }
 
-void test_gfp_mult()
+bool test_gfp_mult()
    {
    std::cout << '.' << std::flush;
+
+   bool pass = true;
 
    std::string s_prime = "5334243285367";
    BigInt bi_prime(s_prime);
@@ -231,11 +266,14 @@ void test_gfp_mult()
    if(res_mult_n != res_mult_m)
       std::cout << gfp_a << " * " << gfp_b << " =? "
                 << "n = " << res_mult_n << " != m = " << res_mult_m << "\n";
+   return pass;
    }
 
-void test_gfp_div()
+bool test_gfp_div()
    {
    std::cout << '.' << std::flush;
+
+   bool pass = true;
 
    std::string s_prime = "5334243285367";
    BigInt bi_prime(s_prime);
@@ -269,11 +307,14 @@ void test_gfp_div()
    //cout << "Div-result transformed:" << res_div_m.get_value() << endl;
    //cout << "Div-result untransformed:" << res_div_n.get_value() << endl;
    //cout << "Div-Alternative: " << res_div_alternative.get_value() << endl;
+   return pass;
    }
 
-void test_gfp_add()
+bool test_gfp_add()
    {
    std::cout << '.' << std::flush;
+
+   bool pass = true;
 
    std::string s_prime = "5334243285367";
    BigInt bi_prime(s_prime);
@@ -302,11 +343,14 @@ void test_gfp_add()
    //  BOOST_CHECK_MESSAGE(res_add_n.is_trf_to_mres(), "!! Falko: NO FAIL, wrong test, please repair"); // clear: rhs might be transformed, lhs never
 
    BOOST_CHECK(res_add_n.get_value() == res_add_m.get_value());
+   return pass;
    }
 
-void test_gfp_sub()
+bool test_gfp_sub()
    {
    std::cout << '.' << std::flush;
+
+   bool pass = true;
 
    std::string s_prime = "5334243285367";
    BigInt bi_prime(s_prime);
@@ -340,11 +384,14 @@ void test_gfp_sub()
    // c, und das Ergebnis ist es auch
 
    BOOST_CHECK(res_sub_n.get_value() == res_sub_m.get_value());
+   return pass;
    }
 
-void test_more_gfp_div()
+bool test_more_gfp_div()
    {
    std::cout << '.' << std::flush;
+
+   bool pass = true;
 
    std::string s_prime = "5334243285367";
    BigInt bi_prime(s_prime);
@@ -389,12 +436,21 @@ void test_more_gfp_div()
    BOOST_CHECK(gfp_b_ntrf/gfp_b_ntrf == GFpElement(bi_prime, 1));
    GFpElement rhs(gfp_a/gfp_b_trf);
    GFpElement lhs(gfp_a/gfp_b_ntrf);
-   BOOST_CHECK_MESSAGE(lhs == rhs, "\nrhs(trf) = " << rhs.get_value() << "\nlhs(n_trf) = " << lhs.get_value());
+
+   if(lhs != rhs)
+      {
+      std::cout << "test_more_gfp_div - " << lhs << " != " << rhs << "\n";
+      pass = false;
+      }
+
+   return pass;
    }
 
-void test_gfp_mult_u32bit()
+bool test_gfp_mult_u32bit()
    {
    std::cout << '.' << std::flush;
+
+   bool pass = true;
 
    /*
    Botan::EC_Domain_Params parA(Botan::get_EC_Dom_Pars_by_oid("1.2.840.10045.3.1.1"));
@@ -412,14 +468,17 @@ void test_gfp_mult_u32bit()
    BOOST_CHECK(a_mr*u_x == a*g_x);
    BOOST_CHECK(u_x*a_mr == a*g_x);
    */
+   return pass;
    }
 
 /**
 * This tests verifies the functionality of sharing pointers for modulus dependent values
 */
-void test_gfp_shared_vals()
+bool test_gfp_shared_vals()
    {
    std::cout << '.' << std::flush;
+
+   bool pass = true;
 
    BigInt p("5334243285367");
    GFpElement a(p, BigInt("234090"));
@@ -442,10 +501,14 @@ void test_gfp_shared_vals()
    shcpy_a.turn_on_sp_red_mul();
    GFpElement c5 = shcpy_a * shcpy_a;
 
-   BOOST_CHECK(c1 == c2);
-   BOOST_CHECK(c2 == c3);
-   BOOST_CHECK(c3 == c4);
-   BOOST_CHECK(c4 == c5);
+   if(c1 != c2)
+      std::cout << "test_gfp_shared_vals failed - c1 = " << c1 << " c2 = " << c2 << "\n";
+   if(c2 != c3)
+      std::cout << "test_gfp_shared_vals failed - c2 = " << c2 << " c3 = " << c3 << "\n";
+   if(c3 != c4)
+      std::cout << "test_gfp_shared_vals failed - c3 = " << c3 << " c4 = " << c4 << "\n";
+   if(c4 != c5)
+      std::cout << "test_gfp_shared_vals failed - c4 = " << c4 << " c5 = " << c5 << "\n";
 
    swap(a,shcpy_a);
    std::tr1::shared_ptr<GFpModulus> ptr3 = a.get_ptr_mod();
@@ -459,6 +522,7 @@ void test_gfp_shared_vals()
    std::tr1::shared_ptr<GFpModulus> ptr_b = shcpy_a.get_ptr_mod();
    BOOST_CHECK(ptr_a.get() == ptr_b_p.get());
    BOOST_CHECK(ptr_b.get() == ptr3.get());
+   return pass;
    }
 
 /**
@@ -466,9 +530,11 @@ void test_gfp_shared_vals()
 * has quite complex behaviour with respect to sharing groups and precomputed values
 * (with respect to montgomery mult.)
 */
-void test_gfpel_ass_op()
+bool test_gfpel_ass_op()
    {
    std::cout << '.' << std::flush;
+
+   bool pass = true;
 
 
    // test different moduli
@@ -546,11 +612,14 @@ void test_gfpel_ass_op()
 
    BOOST_CHECK(e == e3);
    BOOST_CHECK(g == g2);
+   return pass;
    }
 
-void test_gfp_swap()
+bool test_gfp_swap()
    {
    std::cout << '.' << std::flush;
+
+   bool pass = true;
 
 
    BigInt p("173");
@@ -579,12 +648,14 @@ void test_gfp_swap()
    c.swap(d);
    BOOST_CHECK(d.get_value() == 2342329%173);
    BOOST_CHECK(c.get_value() == (d*2).get_value());
+   return pass;
    }
 
-void test_inv_in_place()
+bool test_inv_in_place()
    {
    std::cout << '.' << std::flush;
 
+   bool pass = true;
 
    BigInt mod(173);
    GFpElement a1(mod, 288);
@@ -604,11 +675,14 @@ void test_inv_in_place()
 
    BOOST_CHECK(a1_inv.inverse_in_place() == a1);
    BOOST_CHECK(a2_inv.inverse_in_place() == a2);
+   return pass;
    }
 
-void test_op_eq()
+bool test_op_eq()
    {
    std::cout << '.' << std::flush;
+
+   bool pass = true;
 
    BigInt mod(173);
    GFpElement a1(mod, 299);
@@ -616,10 +690,13 @@ void test_op_eq()
    a1.get_mres(); // enforce the conversion
    GFpElement a2(mod, 288);
    BOOST_CHECK_MESSAGE(a1 != a2, "error with GFpElement comparison");
+   return pass;
    }
 
-void test_rand_int(RandomNumberGenerator& rng)
+bool test_rand_int(RandomNumberGenerator& rng)
    {
+   bool pass = true;
+
    for(int i=0; i< 100; i++)
       {
       std::cout << '.' << std::flush;
@@ -627,21 +704,28 @@ void test_rand_int(RandomNumberGenerator& rng)
       //cout << "x = " << x << "\n";  // only 1,2 are put out
       BOOST_CHECK(x == 1 || x==2);
       }
+
+   return pass;
    }
 
-void test_bi_bit_access()
+bool test_bi_bit_access()
    {
    std::cout << '.' << std::flush;
+
+   bool pass = true;
 
    BigInt a(323);
    BOOST_CHECK(a.get_bit(1) == 1);
    BOOST_CHECK(a.get_bit(1000) == 0);
+   return pass;
    }
 
 #if 0
-void test_sec_mod_mul()
+bool test_sec_mod_mul()
    {
    //cout << "starting test_sec_mod_mul" << endl;
+
+   bool pass = true;
 
    //mod_mul_secure(BigInt const& a, BigInt const& b, BigInt const& m)
 
@@ -657,13 +741,16 @@ void test_sec_mod_mul()
       BOOST_CHECK_MESSAGE(c1 == c2, "should be " << c1 << ", was " << c2);
       }
    //cout << "ending test_sec_mod_mul" << endl;
+   return pass;
    }
 #endif
 
 #if 0
-void test_sec_bi_mul()
+bool test_sec_bi_mul()
    {
    //mod_mul_secure(BigInt const& a, BigInt const& b, BigInt const& m)
+
+   bool pass = true;
 
    BigInt m("5334243285367");
    BigInt a("3333333333333");
@@ -677,6 +764,8 @@ void test_sec_bi_mul()
       c2.mult_this_secure(b, m);
       BOOST_CHECK_MESSAGE(c1 == c2, "should be " << c1 << ", was " << c2);
       }
+
+   return pass;
    }
 #endif
 
@@ -684,34 +773,39 @@ void test_sec_bi_mul()
 
 u32bit do_gfpmath_tests(Botan::RandomNumberGenerator& rng)
    {
-   std::cout << "Testing GF(p) math" << std::flush;
+   std::cout << "Testing GF(p) math " << std::flush;
 
-   test_turn_on_sp_red_mul();
-   test_bi_div_even();
-   test_bi_div_odd();
-   test_deep_montgm();
-   test_gfp_div_small_numbers();
-   test_gfp_basics();
-   test_gfp_addSubNegate();
-   test_gfp_mult();
-   test_gfp_div();
-   test_gfp_add();
-   test_gfp_sub();
-   test_more_gfp_div();
-   test_gfp_mult_u32bit();
-   test_gfp_shared_vals();
-   test_gfpel_ass_op();
-   test_gfp_swap();
-   test_inv_in_place();
-   test_op_eq();
-   test_rand_int(rng);
-   test_bi_bit_access();
-   //test_sec_mod_mul();
-   //test_sec_bi_mul();
+   u32bit failed = 0;
 
-   std::cout << std::endl;
+   failed += !test_turn_on_sp_red_mul();
+   failed += !test_bi_div_even();
+   failed += !test_bi_div_odd();
+   failed += !test_deep_montgm();
+   failed += !test_gfp_div_small_numbers();
+   failed += !test_gfp_basics();
+   failed += !test_gfp_addSubNegate();
+   failed += !test_gfp_mult();
+   failed += !test_gfp_div();
+   failed += !test_gfp_add();
+   failed += !test_gfp_sub();
+   failed += !test_more_gfp_div();
+   failed += !test_gfp_mult_u32bit();
+   failed += !test_gfp_shared_vals();
+   failed += !test_gfpel_ass_op();
+   failed += !test_gfp_swap();
+   failed += !test_inv_in_place();
+   failed += !test_op_eq();
+   failed += !test_rand_int(rng);
+   failed += !test_bi_bit_access();
+   //failed += !test_sec_mod_mul();
+   //failed += !test_sec_bi_mul();
 
-   return 0;
+   if(failed == 0)
+      std::cout << " OK" << std::endl;
+   else
+      std::cout << ' ' << failed << " failed" << std::endl;
+
+   return failed;
    }
 #else
 u32bit do_gfpmath_tests(Botan::RandomNumberGenerator&) { return 0; }
