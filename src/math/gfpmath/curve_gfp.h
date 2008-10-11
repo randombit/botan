@@ -55,7 +55,7 @@ class BOTAN_DLL CurveGFp
       * @param mod a shared pointer to a GFpModulus object suitable for
       * *this.
       */
-      void set_shrd_mod(SharedPtrConverter<GFpModulus> const mod);
+      void set_shrd_mod(const std::tr1::shared_ptr<GFpModulus> mod);
 
       // getters
 

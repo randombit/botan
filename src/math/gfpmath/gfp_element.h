@@ -14,8 +14,15 @@
 
 #include <botan/bigint.h>
 #include <botan/gfp_modulus.h>
-#include <botan/freestore.h>
 #include <iostream>
+
+#if defined(BOTAN_USE_TR1_SHARED_PTR)
+  #include <tr1/memory>
+#elif defined(BOTAN_USE_BOOST_TR1_SHARED_PTR)
+  #include <boost/tr1/memory.hpp>
+#else
+  #error "Please choose a shared_ptr implementation"
+#endif
 
 namespace Botan {
 

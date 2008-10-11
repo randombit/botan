@@ -28,4 +28,5 @@ eac_asn_obj.h
 eac_obj.h
 signed_obj.cpp
 signed_obj.h
+freestore.h
 </add>

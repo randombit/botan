@@ -13,15 +13,15 @@
 
 namespace Botan {
 
-void CurveGFp::set_shrd_mod(SharedPtrConverter<GFpModulus> const mod)
+void CurveGFp::set_shrd_mod(const std::tr1::shared_ptr<GFpModulus> mod)
    {
-   mp_mod = mod.get_shared();
+   mp_mod = mod;
    mA.turn_off_sp_red_mul();// m.m. is not needed, must be trf. back
    mB.turn_off_sp_red_mul();// m.m. is not needed, must be trf. back
    //ok, above we destroy any evantually computated montg. mult. values,
    // but that won't influence performance in usual applications
-   mA.set_shrd_mod(mod.get_shared());
-   mB.set_shrd_mod(mod.get_shared());
+   mA.set_shrd_mod(mod);
+   mB.set_shrd_mod(mod);
    }
 
 CurveGFp::CurveGFp(const GFpElement& a, const GFpElement& b,
