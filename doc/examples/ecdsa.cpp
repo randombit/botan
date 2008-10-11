@@ -19,6 +19,8 @@ int main()
       std::cout << params.get_order() << "\n";
 
       ECDSA_PrivateKey ecdsa(*rng, params);
+
+      std::cout << X509::PEM_encode(ecdsa);
       }
    catch(std::exception& e)
       {
