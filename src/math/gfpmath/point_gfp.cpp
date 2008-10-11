@@ -819,7 +819,7 @@ void PointGFp::check_invariants() const
          print(mC.get_b(), "mC.b");
          print(x3 + ax + mC.get_b(), "+");
 
-         //throw Illegal_Point();
+         throw Illegal_Point();
          }
 
       }
@@ -840,7 +840,7 @@ void PointGFp::check_invariants() const
       print(aXZ4, "axZ4");
       print(bZ6, "bZ6");
       print(x3 + aXZ4 + bZ6, "+");
-      //throw Illegal_Point();
+      throw Illegal_Point();
       }
    }
 
