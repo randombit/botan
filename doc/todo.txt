@@ -24,8 +24,8 @@ been attempted; the support is based entirely on documentation and
 conjecture, and is very unlikely to work. Support for several
 operating systems is completely nonexistent - this class includes VMS,
 vxWorks, eCos, MINIX, GNU/Hurd, L4, and Coyotos. Others, like IRIX,
-HP-UX, QNX, and Tru64, are tested only a few times a year. Similarly,
-many commercial compilers are only tested occasionally.
+HP-UX, QNX, and Tru64, are tested only very rarely. Similarly, many
+commercial compilers are only tested occasionally.
 
 Setting up a buildbot system would be ideal, if access to enough
 machines can be arranged (for the x86 and amd64 operating systems, a
@@ -85,7 +85,7 @@ included from the HTML file.
 New Memory Allocator
 --------------------
 
-The current pool allocator is servicable but it can be very wasteful
+The current pool allocator is serviceable but it can be very wasteful
 of memory and could easily be several times faster. Someone who is
 interested in algorithms might enjoy working on this.
 
