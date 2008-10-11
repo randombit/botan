@@ -258,6 +258,11 @@ PK_Signer* choose_sig_format(const Private_Key& key,
       padding = "EMSA1(SHA-160)";
       format = DER_SEQUENCE;
       }
+   else if(algo_name == "ECDSA")
+      {
+      padding = "EMSA1_BSI(SHA-160)";
+      format = IEEE_1363;
+      }
    else
       throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);
 
