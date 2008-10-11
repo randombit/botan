@@ -81,7 +81,7 @@ void set_default_oids(Library_State& config)
    add_oid(config, "2.16.840.1.101.3.4.3.1", "DSA/EMSA1(SHA-224)");
    add_oid(config, "2.16.840.1.101.3.4.3.2", "DSA/EMSA1(SHA-256)");
 
-   add_oid(config, "1.2.840.10045.4.1", "ECDSA/EMSA1_BSI(SHA-1)");
+   add_oid(config, "1.2.840.10045.4.1", "ECDSA/EMSA1_BSI(SHA-160)");
    add_oid(config, "1.2.840.10045.4.3.1", "ECDSA/EMSA1_BSI(SHA-224)");
    add_oid(config, "1.2.840.10045.4.3.2", "ECDSA/EMSA1_BSI(SHA-256)");
    add_oid(config, "1.2.840.10045.4.3.3", "ECDSA/EMSA1_BSI(SHA-384)");
