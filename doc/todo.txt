@@ -105,14 +105,6 @@ including encrypting a file with a shared passphrase, and securely
 salting and hashing a password for storage. Check the mailing list
 archives for ideas.
 
-ECC
---------------------
-
-For a long time, interest in ECC has been minimal, but there are
-rumblings indicating user desire for this is starting to become really
-active. We don't need anything obscure - ECDSA and ECDH using NIST's
-approved GF(p) curves gets us 90% of what users are wanting right now.
-
 Public Key Engines
 --------------------
 
