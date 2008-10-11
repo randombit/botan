@@ -10,6 +10,7 @@ mp_generic:mp_asmi.h
 </add>
 
 <arch>
+#amd64
 alpha
 ia64
 mips64

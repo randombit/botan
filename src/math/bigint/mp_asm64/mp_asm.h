@@ -21,6 +21,13 @@ namespace Botan {
    z1 = a * b;                                           \
 } while(0);
 
+#elif defined(BOTAN_TARGET_ARCH_IS_AMD64)
+
+#define BOTAN_WORD_MUL(a,b,z1,z0) do {       \
+   asm("mulq %3" : "=d" (z0), "=a" (z1) :    \
+       "a" (a), "rm" (b) : "cc");            \
+} while(0);
+
 #elif defined(BOTAN_TARGET_ARCH_IS_IA64)
 
 #define BOTAN_WORD_MUL(a,b,z1,z0) do {                     \
