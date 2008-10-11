@@ -29,13 +29,13 @@ void set_default_oids(Library_State& config)
    {
    /* Public key types */
    add_oid(config, "1.2.840.113549.1.1.1", "RSA");
-   add_oid(config, "2.5.8.1.1", "RSA");
+   add_oid(config, "2.5.8.1.1", "RSA"); // RSA alternate
    add_oid(config, "1.2.840.10040.4.1", "DSA");
    add_oid(config, "1.2.840.10046.2.1", "DH");
    add_oid(config, "1.3.6.1.4.1.3029.1.2.1", "ELG");
    add_oid(config, "1.3.6.1.4.1.25258.1.1", "RW");
    add_oid(config, "1.3.6.1.4.1.25258.1.2", "NR");
-   add_oid(config, "1.2.840.10045.2.1", "ECDSA");
+   add_oid(config, "1.2.840.10045.2.1", "ECDSA"); // X9.62
 
    /* Ciphers */
    add_oid(config, "1.3.14.3.2.7", "DES/CBC");
