@@ -133,7 +133,7 @@ Filter* lookup_rng(const std::string& algname,
                                new Fixed_Output_RNG(decode_hex(key)));
 #endif
 
-#if defined(BOTAN_HAS_X931_RNG) and defined(BOTAN_HAS_RANDPOOL)
+#if defined(BOTAN_HAS_X931_RNG) && defined(BOTAN_HAS_RANDPOOL)
    // these are used for benchmarking: AES-256/SHA-256 matches library
    // defaults, so benchmark reflects real-world performance (maybe)
    if(!prng && (algname == "Randpool" || algname == "X9.31-RNG"))
