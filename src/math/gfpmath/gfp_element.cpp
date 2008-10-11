@@ -1,14 +1,13 @@
 /******************************************************
-* Arithmetic for prime fields GF(p)                   *
-*                                                     *
-* (C) 2007 Martin Doering                             *
-*          doering@cdc.informatik.tu-darmstadt.de     *
-*          Christoph Ludwig                           *
-*          ludwig@fh-worms.de                         *
-*          Falko Strenzke                             *
-*          strenzke@flexsecure.de                     *
-*     2008 Jack Lloyd                                 *
-******************************************************/
+ * Arithmetic for prime fields GF(p) (source file)    *
+ *                                                    *
+ * (C) 2007 Martin Doering                            *
+ *          doering@cdc.informatik.tu-darmstadt.de    *
+ *          Christoph Ludwig                          *
+ *          ludwig@fh-worms.de                        *
+ *          Falko Strenzke                            *
+ *          strenzke@flexsecure.de                    *
+ ******************************************************/
 
 #include <botan/gfp_element.h>
 #include <botan/numthry.h>
@@ -22,7 +21,7 @@ namespace Botan {
 
 namespace {
 
-void inner_montg_mult_sos(word result[], const word* a_bar, const word* b_bar, const word* n, const word n_dash, u32bit s)
+void inner_montg_mult_sos(word result[], const word* a_bar, const word* b_bar, const word* n, const word* n_dash, u32bit s)
    {
    SecureVector<word> t;
    t.grow_to(2*s+1);
@@ -34,6 +33,10 @@ void inner_montg_mult_sos(word result[], const word* a_bar, const word* b_bar, c
       word S = 0;
       for (u32bit j=0; j<s; j++)
          {
+         // we use:
+         // word word_madd3(word a, word b, word c, word d, word* carry)
+         // returns a * b + c + d and resets the carry (not using it as input)
+
          S = word_madd3(a_bar[j], b_bar[i], t[i+j], &C);
          t[i+j] = S;
          }
@@ -48,7 +51,7 @@ void inner_montg_mult_sos(word result[], const word* a_bar, const word* b_bar, c
 
       word C = 0;
       word zero = 0;
-      word m = word_madd2(t[i], n_dash, &zero);
+      word m = word_madd2(t[i], n_dash[0], &zero);
 
       for (u32bit j=0; j<s; j++)
          {
@@ -117,14 +120,8 @@ void montg_mult(BigInt& result, BigInt& a_bar, BigInt& b_bar, const BigInt& m, c
    b_bar.grow_to(s);
    result.grow_to(s);
 
-   inner_montg_mult_sos(result.get_reg(), a_bar.data(), b_bar.data(), m.data(), m_dash.data()[0], s);
-   /*
-   std::cout << "result = " << result << "\n"
-             << "a_bar = " << a_bar << "\n"
-             << "b_bar = " << b_bar << "\n"
-             << "m = " << m << "\n"
-             << "m_dash = " << m_dash.data()[0] << "\n";
-   */
+   inner_montg_mult_sos(result.get_reg(), a_bar.data(), b_bar.data(),
+                        m.data(), m_dash.data(), s);
    }
 
 /**
@@ -133,8 +130,6 @@ void montg_mult(BigInt& result, BigInt& a_bar, BigInt& b_bar, const BigInt& m, c
 */
 BigInt montgm_calc_r_oddmod(const BigInt& prime)
    {
-   assert(prime.is_odd());
-
    u32bit n = prime.sig_words();
    BigInt result(1);
    result <<= n*BOTAN_MP_WORD_BITS;
@@ -196,6 +191,7 @@ GFpElement::GFpElement(const GFpElement& other)
    : m_value(other.m_value),
      m_use_montgm(other.m_use_montgm),
      m_is_trf(other.m_is_trf)
+
    {
    //creates an independent copy
    assert((other.m_is_trf && other.m_use_montgm) || !other.m_is_trf);
@@ -245,6 +241,7 @@ void GFpElement::ensure_montgm_precomp() const
       assert(!mp_mod->m_r_inv.is_zero());
       assert(!mp_mod->m_p_dash.is_zero());
       }
+
    }
 
 void GFpElement::set_shrd_mod(std::tr1::shared_ptr<GFpModulus> const p_mod)
@@ -482,7 +479,7 @@ GFpElement& GFpElement::operator-=(const GFpElement& rhs)
    return *this;
    }
 
-GFpElement& GFpElement::operator*= (u64bit rhs)
+GFpElement& GFpElement::operator*= (u32bit rhs)
    {
    workspace = m_value;
    workspace *= rhs;
@@ -661,14 +658,14 @@ GFpElement operator*(const GFpElement& lhs, const GFpElement& rhs)
    return result;
    }
 
-GFpElement operator*(const GFpElement& lhs, u64bit rhs)
+GFpElement operator*(const GFpElement& lhs, u32bit rhs)
    {
    GFpElement result(lhs);
    result *= rhs;
    return result;
    }
 
-GFpElement operator*(u64bit lhs, const GFpElement& rhs)
+GFpElement operator*(u32bit lhs, const GFpElement& rhs)
    {
    return rhs*lhs;
    }
