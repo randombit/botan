@@ -49,7 +49,7 @@ def main():
 
     results = load_results('results.txt')
 
-    for root, dirs, files in os.walk('../nist_tests/tests'):
+    for root, dirs, files in os.walk('../../checks/nist_tests/tests'):
         if files:
             thistest = root[root.rfind('/')+1:]
             if thistest in results:
