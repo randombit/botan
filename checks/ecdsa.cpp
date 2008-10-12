@@ -56,7 +56,7 @@ void test_hash_larger_than_n(RandomNumberGenerator& rng)
    EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
    // n:
    // 0x0100000000000000000001f4c8f927aed3ca752257 // 21 bytes
-   // -> shouldn´t work with SHA224 which outputs 23 bytes
+   // -> shouldn't work with SHA224 which outputs 23 bytes
    ECDSA_PrivateKey priv_key(rng, dom_pars);
    SecureVector<byte> message;
    for (unsigned j= 0; j<20; j++)
@@ -228,17 +228,16 @@ void test_sign_then_ver(RandomNumberGenerator& rng)
    CHECK_MESSAGE(!ver_must_fail, "corrupted signature could be verified positively");
    }
 
-void test_ec_sign(RandomNumberGenerator&)
+void test_ec_sign(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-#if 0
    try
       {
-      ifstream message("checks/messages/ec_test_mes1");
+      std::ifstream message(TEST_DATA_DIR "/ec_test_mes1");
       if(!message)
          {
-         CHECK_MESSAGE(false, "Couldn't read the message file.");
+         std::cout << "Could not read input file for test_ec_sign\n";
          return;
          }
 
@@ -246,38 +245,32 @@ void test_ec_sign(RandomNumberGenerator&)
       std::ofstream sigfile(outfile.c_str());
       if(!sigfile)
          {
-         CHECK_MESSAGE(false, "Couldn't write the signature to " << outfile);
+         std::cout << "Could not write to " << outfile << "\n";
          return;
          }
 
-      //EC_Domain_Params dom_pars = global_config().get_ec_dompar("1.3.132.0.8");
       EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
 
       ECDSA_PrivateKey priv_key(rng, dom_pars);
       std::auto_ptr<PK_Signer> dsa_sig(get_pk_signer(priv_key, "EMSA1(SHA-224)"));
 
-      tr1::shared_ptr<PK_Signer> sp_dsa_sig(dsa_sig);
-
       Pipe pipe(new Base64_Encoder);
-      pipe.process_msg(sp_dsa_sign->signature(rng));
+      pipe.process_msg(dsa_sig->signature(rng));
 
       pipe.start_msg();
       message >> pipe;
       pipe.end_msg();
 
-      sigfile << pipe.read_all_as_string() << endl;
+      sigfile << pipe.read_all_as_string() << std::endl;
 
       std::ofstream os_priv_key(TEST_DATA_DIR "/matching_key.pkcs8.pem");
 
       os_priv_key << PKCS8::PEM_encode(priv_key);
-      //CHECK(true);
       }
-
    catch (std::exception& e)
       {
-      CHECK_MESSAGE(false, "something went wrong while signing...");
+      std::cout << "Exception in test_ec_sign - " << e.what() << "\n";
       }
-#endif
    }
 
 
@@ -326,8 +319,6 @@ void test_create_and_verify(RandomNumberGenerator& rng)
    CHECK_MESSAGE(!loaded_rsa_key, "the loaded key is ECDSA_PrivateKey -> shouldn't be, is a RSA-Key");
 
    //calc a curve which is not in the registry
-
-   // init the lib
 
    // 	string p_secp = "2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809";
    std::string a_secp = "0a377dede6b523333d36c78e9b0eaa3bf48ce93041f6d4fc34014d08f6833807498deedd4290101c5866e8dfb589485d13357b9e78c2d7fbe9fe";
@@ -451,16 +442,14 @@ void test_read_pkcs8(RandomNumberGenerator& rng)
       try
          {
          std::auto_ptr<PKCS8_PrivateKey> loaded_key_withdp(PKCS8::load_key(TEST_DATA_DIR "/withdompar_private.pkcs8.pem", rng));
-         CHECK_MESSAGE(false, "could load key but unknown OID is set");
+
+         std::cout << "Unexpected success: loaded key with unknown OID\n";
          }
-      catch (std::exception& e)
-         {
-         CHECK(true);
-         }
+      catch (std::exception& e) { /* OK */ }
       }
    catch (std::exception& e)
       {
-      CHECK_MESSAGE(false, "Exception in test_read_pkcs8 message: " << e.what());
+      std::cout << "Exception in test_read_pkcs8 - " << e.what() << "\n";
       }
    }
 
