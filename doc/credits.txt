@@ -11,14 +11,23 @@
      S - meatspace location
 ----------
 
+N: Martin Doering
+E: doering@cdc.informatik.tu-darmstadt.de
+D: GF(p) arithmetic
+
 N: Matthew Gregan
 D: Binary file I/O support, allocator fixes
 
 N: Hany Greiss
 D: Windows porting
 
+N: Manuel Hartl
+E: hartl@flexsecure.de
+W: http://www.flexsecure.de/
+D: ECDSA, ECKAEG
+
 N: Yves Jerschow
-E: Yves.Jerschow@uni-duesseldorf.de
+E: yves.jerschow@uni-duesseldorf.de
 D: Optimizations for memory load/store and HMAC
 D: Support for IPv4 addresses in X.509 alternative names
 S: Germany
@@ -44,6 +53,10 @@ S: New York NY, USA
 N: Joel Low
 D: DLL symbol visibility
 
+N: Christoph Ludwig
+E: ludwig@fh-worms.de
+D: GP(p) arithmetic
+
 N: Vaclav Ovsik
 E: vaclav.ovsik@i.cz
 D: Perl XS module
@@ -56,5 +69,5 @@ S: Italy
 N: Falko Strenzke
 E: strenzke@flexsecure.de
 W: http://www.flexsecure.de/
-D: Shanks-Tonelli algorithm
+D: GF(p) arithmetic, CVC, Shanks-Tonelli algorithm
 S: Darmstadt, Germany
