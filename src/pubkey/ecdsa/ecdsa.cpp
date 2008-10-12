@@ -41,26 +41,19 @@ void ECDSA_PublicKey::affirm_init() const // virtual
    EC_PublicKey::affirm_init();
    }
 
-void ECDSA_PublicKey::set_domain_parameters(EC_Domain_Params const& dom_pars)
+void ECDSA_PublicKey::set_domain_parameters(const EC_Domain_Params& dom_pars)
    {
-   if (mp_dom_pars.get())
+   if(mp_dom_pars.get())
       {
       // they are already set, we must ensure that they are equal to the arg
-      if (dom_pars != *mp_dom_pars.get())
-         {
-         throw Invalid_Argument("EC_PublicKey::set_domain_parameters(): domain parameters are already set, and they are different from the argument");
-         }
-      else
-         {
-         // they are equal, so nothing to do
-         return;
-         }
+      if(dom_pars != *mp_dom_pars.get())
+         throw Invalid_Argument("EC_PublicKey::set_domain_parameters - cannot reset to a new value");
+
+      return;
       }
-   // set them ...
-   if (m_enc_public_point.size() == 0)
-      {
-      throw Invalid_State("EC_PublicKey::set_domain_parameters(): encoded public point isn´t set");
-      }
+
+   if(m_enc_public_point.size() == 0)
+      throw Invalid_State("EC_PublicKey::set_domain_parameters(): encoded public point isn't set");
 
    // now try to decode the public key ...
    PointGFp tmp_pp(OS2ECP(m_enc_public_point, dom_pars.get_curve()));
@@ -74,35 +67,35 @@ void ECDSA_PublicKey::set_domain_parameters(EC_Domain_Params const& dom_pars)
       }
 
    std::auto_ptr<EC_Domain_Params> p_tmp_pars(new EC_Domain_Params(dom_pars));
-   ECDSA_Core tmp_ecdsa_core( *p_tmp_pars, BigInt ( 0 ), tmp_pp );
+   ECDSA_Core tmp_ecdsa_core(*p_tmp_pars, BigInt(0), tmp_pp);
    mp_public_point.reset(new PointGFp(tmp_pp));
    m_ecdsa_core = tmp_ecdsa_core;
    mp_dom_pars = p_tmp_pars;
    }
 
-void ECDSA_PublicKey::set_all_values ( ECDSA_PublicKey const& other )
+void ECDSA_PublicKey::set_all_values(const ECDSA_PublicKey& other)
    {
    m_param_enc = other.m_param_enc;
    m_ecdsa_core = other.m_ecdsa_core;
    m_enc_public_point = other.m_enc_public_point;
    if(other.mp_dom_pars.get())
-      mp_dom_pars.reset ( new EC_Domain_Params ( * ( other.mp_dom_pars ) ) );
+      mp_dom_pars.reset(new EC_Domain_Params(other.domain_parameters()));
 
    if(other.mp_public_point.get())
-      mp_public_point.reset ( new PointGFp ( * ( other.mp_public_point ) ) );
+      mp_public_point.reset(new PointGFp(other.public_point()));
    }
 
-ECDSA_PublicKey::ECDSA_PublicKey(const  ECDSA_PublicKey& other)
+ECDSA_PublicKey::ECDSA_PublicKey(const ECDSA_PublicKey& other)
    : Public_Key(),
      EC_PublicKey(),
      PK_Verifying_wo_MR_Key()
    {
-   set_all_values ( other );
+   set_all_values(other);
    }
 
 const ECDSA_PublicKey& ECDSA_PublicKey::operator=(const ECDSA_PublicKey& rhs)
    {
-   set_all_values ( rhs );
+   set_all_values(rhs);
    return *this;
    }
 
@@ -166,28 +159,25 @@ void ECDSA_PrivateKey::affirm_init() const // virtual
    EC_PrivateKey::affirm_init();
    }
 
-void ECDSA_PrivateKey::PKCS8_load_hook ( bool generated )
+void ECDSA_PrivateKey::PKCS8_load_hook(bool generated)
    {
-   EC_PrivateKey::PKCS8_load_hook ( generated );
+   EC_PrivateKey::PKCS8_load_hook(generated);
    EC_PrivateKey::affirm_init();
-   m_ecdsa_core = ECDSA_Core ( *mp_dom_pars, m_private_value, *mp_public_point );
+   m_ecdsa_core = ECDSA_Core(*mp_dom_pars, m_private_value, *mp_public_point);
    }
 
-
-void ECDSA_PrivateKey::set_all_values ( ECDSA_PrivateKey const& other )
+void ECDSA_PrivateKey::set_all_values(const ECDSA_PrivateKey& other)
    {
    m_private_value = other.m_private_value;
    m_param_enc = other.m_param_enc;
    m_ecdsa_core = other.m_ecdsa_core;
    m_enc_public_point = other.m_enc_public_point;
-   if ( other.mp_dom_pars.get() )
-      {
-      mp_dom_pars.reset ( new EC_Domain_Params ( * ( other.mp_dom_pars ) ) );
-      }
-   if ( other.mp_public_point.get() )
-      {
-      mp_public_point.reset ( new PointGFp ( * ( other.mp_public_point ) ) );
-      }
+
+   if(other.mp_dom_pars.get())
+      mp_dom_pars.reset(new EC_Domain_Params(other.domain_parameters()));
+
+   if(other.mp_public_point.get())
+      mp_public_point.reset(new PointGFp(other.public_point()));
    }
 
 ECDSA_PrivateKey::ECDSA_PrivateKey(ECDSA_PrivateKey const& other)
@@ -200,6 +190,7 @@ ECDSA_PrivateKey::ECDSA_PrivateKey(ECDSA_PrivateKey const& other)
    {
    set_all_values(other);
    }
+
 
 const ECDSA_PrivateKey& ECDSA_PrivateKey::operator=(const ECDSA_PrivateKey& rhs)
    {
