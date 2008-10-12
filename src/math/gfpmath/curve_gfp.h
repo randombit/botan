@@ -63,13 +63,13 @@ class BOTAN_DLL CurveGFp
       * Get coefficient a
       * @result coefficient a
       */
-      GFpElement const get_a() const;
+      const GFpElement& get_a() const;
 
       /**
       * Get coefficient b
       * @result coefficient b
       */
-      GFpElement const get_b() const;
+      const GFpElement& get_b() const;
 
       /**
       * Get the GFpElement coefficient a  transformed

@@ -91,17 +91,17 @@ const CurveGFp& CurveGFp::operator=(const CurveGFp& other)
    }
 
 // getters
-GFpElement const CurveGFp::get_a() const
+const GFpElement& CurveGFp::get_a() const
    {
    return mA;
    }
 
-GFpElement const CurveGFp::get_b() const
+const GFpElement& CurveGFp::get_b() const
    {
    return mB;
    }
 
-BigInt const CurveGFp::get_p() const
+const BigInt CurveGFp::get_p() const
    {
    assert(mp_mod.get() != 0);
    return mp_mod->get_p();
