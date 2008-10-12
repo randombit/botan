@@ -1,5 +1,5 @@
 
-* 1.7.17, ????-??-??
+* 1.7.17, 2008-10-12
  - Add missing ECDSA object identifiers
  - Fix error in x86 and x86-64 assembler affecting GF(p) math
  - Remove Boost dependency from GF(p) math
