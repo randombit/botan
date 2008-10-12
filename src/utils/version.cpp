@@ -8,14 +8,20 @@
 
 namespace Botan {
 
+/*
+  These are intentionally compiled rather than inlined, so an
+  application running against a shared library can test the true
+  version they are running against.
+*/
+
 /*************************************************
 * Return the version as a string                 *
 *************************************************/
 std::string version_string()
    {
-   return "Botan " + to_string(version_major()) + "." +
-                     to_string(version_minor()) + "." +
-                     to_string(version_patch());
+   return to_string(version_major()) + "." +
+          to_string(version_minor()) + "." +
+          to_string(version_patch());
    }
 
 /*************************************************
