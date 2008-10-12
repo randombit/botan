@@ -33,12 +33,7 @@ namespace {
 
 std::string to_hex(const SecureVector<byte>& bin)
    {
-   Pipe pipe(new Hex_Encoder);
-   pipe.process_msg(bin);
-   if (pipe.remaining())
-      return pipe.read_all_as_string();
-   else
-      return "(none)";
+   return hex_encode(bin.begin(), bin.size());
    }
 
 /**
@@ -52,7 +47,6 @@ void test_hash_larger_than_n(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   //EC_Domain_Params dom_pars = global_config().get_ec_dompar("1.3.132.0.8");
    EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
    // n:
    // 0x0100000000000000000001f4c8f927aed3ca752257 // 21 bytes
@@ -138,12 +132,10 @@ void test_message_larger_than_n(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   //EC_Domain_Params dom_pars = global_config().get_ec_dompar("1.3.132.0.8");
    EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
-   //EC_Domain_Params dom_pars = global_config().get_ec_dompar("1.2.840.10045.3.1.1");
-   //EC_Domain_Params dom_pars = global_config().get_ec_dompar("1.3.36.3.3.2.8.1.1.3");
    ECDSA_PrivateKey priv_key(rng, dom_pars);
    std::string str_message = ("12345678901234567890abcdef1212345678901234567890abcdef1212345678901234567890abcdef12");
+
    SecureVector<byte> sv_message = decode_hex(str_message);
    bool thrn = false;
    SecureVector<byte> signature;
@@ -167,6 +159,7 @@ void test_decode_ecdsa_X509()
 
    X509_Certificate cert(TEST_DATA_DIR "/CSCA.CSCA.csca-germany.1.crt");
    CHECK_MESSAGE(OIDS::lookup(cert.signature_algorithm().oid) == "ECDSA/EMSA1_BSI(SHA-224)", "error reading signature algorithm from x509 ecdsa certificate");
+
    CHECK_MESSAGE(to_hex(cert.serial_number()) == "01", "error reading serial from x509 ecdsa certificate");
    CHECK_MESSAGE(to_hex(cert.authority_key_id()) == "0096452DE588F966C4CCDF161DD1F3F5341B71E7", "error reading authority key id from x509 ecdsa certificate");
    CHECK_MESSAGE(to_hex(cert.subject_key_id()) == "0096452DE588F966C4CCDF161DD1F3F5341B71E7", "error reading Subject key id from x509 ecdsa certificate");
@@ -228,49 +221,59 @@ void test_sign_then_ver(RandomNumberGenerator& rng)
    CHECK_MESSAGE(!ver_must_fail, "corrupted signature could be verified positively");
    }
 
-void test_ec_sign(RandomNumberGenerator& rng)
+bool test_ec_sign(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
    try
       {
-      std::ifstream message(TEST_DATA_DIR "/ec_test_mes1");
-      if(!message)
-         {
-         std::cout << "Could not read input file for test_ec_sign\n";
-         return;
-         }
-
-      std::string outfile = TEST_DATA_DIR "/ec_test_mes1.sig";
-      std::ofstream sigfile(outfile.c_str());
-      if(!sigfile)
-         {
-         std::cout << "Could not write to " << outfile << "\n";
-         return;
-         }
-
       EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
-
       ECDSA_PrivateKey priv_key(rng, dom_pars);
-      std::auto_ptr<PK_Signer> dsa_sig(get_pk_signer(priv_key, "EMSA1(SHA-224)"));
+      std::string pem_encoded_key = PKCS8::PEM_encode(priv_key);
 
-      Pipe pipe(new Base64_Encoder);
-      pipe.process_msg(dsa_sig->signature(rng));
+      std::auto_ptr<PK_Signer> signer(get_pk_signer(priv_key, "EMSA1(SHA-224)"));
+      std::auto_ptr<PK_Verifier> verifier(get_pk_verifier(priv_key, "EMSA1(SHA-224)"));
 
-      pipe.start_msg();
-      message >> pipe;
-      pipe.end_msg();
+      for(u32bit i = 0; i != 256; ++i)
+         signer->update((byte)i);
+      SecureVector<byte> sig = signer->signature(rng);
 
-      sigfile << pipe.read_all_as_string() << std::endl;
+      for(u32bit i = 0; i != 256; ++i)
+         verifier->update((byte)i);
+      if(!verifier->check_signature(sig))
+         {
+         std::cout << "ECDSA self-test failed!";
+         return false;
+         }
 
-      std::ofstream os_priv_key(TEST_DATA_DIR "/matching_key.pkcs8.pem");
+      // now check valid signature, different input
+      for(u32bit i = 1; i != 256; ++i) //starting from 1
+         verifier->update((byte)i);
 
-      os_priv_key << PKCS8::PEM_encode(priv_key);
+      if(verifier->check_signature(sig))
+         {
+         std::cout << "ECDSA with bad input passed validation";
+         return false;
+         }
+
+      // now check with original input, modified signature
+
+      sig[sig.size()/2]++;
+      for(u32bit i = 0; i != 256; ++i)
+         verifier->update((byte)i);
+
+      if(verifier->check_signature(sig))
+         {
+         std::cout << "ECDSA with bad signature passed validation";
+         return false;
+         }
       }
    catch (std::exception& e)
       {
       std::cout << "Exception in test_ec_sign - " << e.what() << "\n";
+      return false;
       }
+   return true;
    }
 
 
@@ -288,9 +291,10 @@ void test_create_pkcs8(RandomNumberGenerator& rng)
       std::ofstream rsa_priv_key(TEST_DATA_DIR "/rsa_private.pkcs8.pem");
       rsa_priv_key << PKCS8::PEM_encode(rsa_key);
 
-      //EC_Domain_Params dom_pars = global_config().get_ec_dompar("1.3.132.0.8");
       EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
       ECDSA_PrivateKey key(rng, dom_pars);
+
+      // later used by other tests :(
       std::ofstream priv_key(TEST_DATA_DIR "/wo_dompar_private.pkcs8.pem");
       priv_key << PKCS8::PEM_encode(key);
       }
@@ -304,7 +308,6 @@ void test_create_and_verify(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   //EC_Domain_Params dom_pars = global_config().get_ec_dompar("1.3.132.0.8");
    EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
    ECDSA_PrivateKey key(rng, dom_pars);
    std::ofstream priv_key(TEST_DATA_DIR "/dompar_private.pkcs8.pem");
@@ -391,11 +394,9 @@ void test_curve_registry(RandomNumberGenerator& rng)
    for (i = 0; i < oids.size(); i++)
       {
       std::cout << "." << std::flush;
-      //cout << "testing curve " << i+1 << "/" << oids.size() << ": " << oids[i] << endl;
-      //EC_Domain_Params dom_pars = global_config().get_ec_dompar(oids[i]);
+
       try
          {
-
          EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid(oids[i]));
          dom_pars.get_base_point().check_invariants();
          ECDSA_PrivateKey key(rng, dom_pars);
