@@ -10,6 +10,7 @@ Copyright (C) 1999-2008 Jack Lloyd
               2007 Martin Doering
               2007 Manuel Hartl
               2007 Christoph Ludwig
+              2007 Patrick Sona
 
 Redistribution and use in source and binary forms, for any use, with
 or without modification, of Botan (http://botan.randombit.net/) is
