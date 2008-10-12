@@ -6,12 +6,14 @@
 #ifndef BOTAN_FREESTORE_H__
 #define BOTAN_FREESTORE_H__
 
-#if defined(BOTAN_USE_TR1_SHARED_PTR)
+#include <botan/build.h>
+
+#if defined(BOTAN_USE_STD_TR1)
   #include <tr1/memory>
-#elif defined(BOTAN_USE_BOOST_TR1_SHARED_PTR)
+#elif defined(BOTAN_USE_BOOST_TR1)
   #include <boost/tr1/memory.hpp>
 #else
-  #error "Please choose a shared_ptr implementation"
+  #error "Please choose a TR1 implementation in build.h"
 #endif
 
 namespace Botan {

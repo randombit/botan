@@ -2,14 +2,50 @@
 #ifndef BOTAN_BUILD_CONFIG_H__
 #define BOTAN_BUILD_CONFIG_H__
 
+/* This file was automatically generated @{var:timestamp} UTC */
+
+#define BOTAN_VERSION_MAJOR @{var:version_major}
+#define BOTAN_VERSION_MINOR @{var:version_minor}
+#define BOTAN_VERSION_PATCH @{var:version_patch}
+
+#ifndef BOTAN_DLL
+  #define BOTAN_DLL @{var:dll_export_flags}
+#endif
+
+/* Chunk sizes */
+#define BOTAN_DEFAULT_BUFFER_SIZE 4096
+#define BOTAN_MEM_POOL_CHUNK_SIZE 64*1024
+
+/* BigInt toggles */
+#define BOTAN_MP_WORD_BITS @{var:mp_bits}
+#define BOTAN_KARAT_MUL_THRESHOLD 32
+#define BOTAN_KARAT_SQR_THRESHOLD 32
+#define BOTAN_PRIVATE_KEY_OP_BLINDING_BITS 64
+
+/* Should we use GCC-style inline assembler? */
+#if !defined(BOTAN_USE_GCC_INLINE_ASM) && defined(__GNUG__)
+  #define BOTAN_USE_GCC_INLINE_ASM 1
+#endif
+
+#ifndef BOTAN_USE_GCC_INLINE_ASM
+  #define BOTAN_USE_GCC_INLINE_ASM 0
+#endif
+
+/* Which TR1 shared_ptr implementation to use? */
+//#define BOTAN_USE_STD_TR1
+#define BOTAN_USE_BOOST_TR1
+
+#if !defined(BOTAN_USE_BOOST_TR1) and !defined(BOTAN_USE_STD_TR1)
+   #define BOTAN_USE_BOOST_TR1
+#endif
+
+/* Target identification and feature test macros */
+
+@{var:defines}
+@{var:local_config}
+
 /*
-This file was automatically generated
-
-@{var:timestamp} UTC
-
-by @{var:user} on @{var:hostname}
-
-@{var:command-line}
+@{var:user}@@{var:hostname} ran '@{var:command-line}'
 
 Target
 -------
@@ -22,33 +58,4 @@ Modules
 @{var:mod-list}
 */
 
-#define BOTAN_VERSION_MAJOR @{var:version_major}
-#define BOTAN_VERSION_MINOR @{var:version_minor}
-#define BOTAN_VERSION_PATCH @{var:version_patch}
-
-#define BOTAN_MP_WORD_BITS @{var:mp_bits}
-#define BOTAN_DEFAULT_BUFFER_SIZE 4096
-#define BOTAN_MEM_POOL_CHUNK_SIZE 64*1024
-#define BOTAN_PRIVATE_KEY_OP_BLINDING_BITS 64
-
-#define BOTAN_KARAT_MUL_THRESHOLD 32
-#define BOTAN_KARAT_SQR_THRESHOLD 32
-
-#ifdef __GNUG__
-  #define BOTAN_COMPILER_HAS_GCC_INLINE_ASM 1
-#endif
-
-//#define BOTAN_USE_TR1_SHARED_PTR
-#define BOTAN_USE_BOOST_TR1_SHARED_PTR
-
-#ifndef BOTAN_COMPILER_HAS_GCC_INLINE_ASM
-  #define BOTAN_COMPILER_HAS_GCC_INLINE_ASM 0
-#endif
-
-#ifndef BOTAN_DLL
-  #define BOTAN_DLL @{var:dll_export_flags}
-#endif
-
-@{var:defines}
-@{var:local_config}
 #endif
