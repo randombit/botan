@@ -32,6 +32,7 @@ class BOTAN_DLL RandomNumberGenerator
       virtual void randomize(byte[], u32bit) = 0;
       virtual bool is_seeded() const = 0;
       virtual void clear() throw() = 0;
+      virtual std::string name() const = 0;
 
       byte next_byte();
 
@@ -55,6 +56,7 @@ class BOTAN_DLL Null_RNG : public RandomNumberGenerator
    public:
       void randomize(byte[], u32bit) { throw PRNG_Unseeded("Null_RNG"); }
       void clear() throw() {};
+      std::string name() const { return "Null_RNG"; }
 
       bool is_seeded() const { return false; }
       void add_entropy(const byte[], u32bit) {}
