@@ -17,8 +17,11 @@ u32bit do_bigint_tests(const std::string&,
 
 u32bit do_gfpmath_tests(Botan::RandomNumberGenerator& rng);
 
+
 u32bit do_pk_validation_tests(const std::string&,
                               Botan::RandomNumberGenerator&);
+
+u32bit do_ecdsa_tests(Botan::RandomNumberGenerator& rng);
 void do_x509_tests(Botan::RandomNumberGenerator&);
 
 #endif

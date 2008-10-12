@@ -25,16 +25,6 @@ bool operator==(const ECDSA_Signature& lhs, const ECDSA_Signature& rhs)
    return (lhs.get_r() == rhs.get_r() && lhs.get_s() == rhs.get_s());
    }
 
-ECDSA_Signature_Decoder* ECDSA_Signature::x509_decoder()
-   {
-   return new ECDSA_Signature_Decoder(this);
-   }
-
-ECDSA_Signature_Encoder* ECDSA_Signature::x509_encoder() const
-   {
-   return new ECDSA_Signature_Encoder(this);
-   }
-
 SecureVector<byte> const ECDSA_Signature::get_concatenation() const
    {
    u32bit enc_len = m_r > m_s ? m_r.bytes() : m_s.bytes(); // use the larger

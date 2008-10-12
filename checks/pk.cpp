@@ -563,14 +563,6 @@ void do_pk_keygen_tests(RandomNumberGenerator& rng)
    {
    std::cout << "Testing PK key generation: " << std::flush;
 
-   /* Putting each key in a block reduces memory pressure, speeds it up */
-#define IF_SIG_KEY(TYPE, BITS)              \
-   {                                        \
-   TYPE key(rng, BITS);                     \
-   key.check_key(rng, true);                \
-   std::cout << '.' << std::flush;          \
-   }
-
 #define DL_SIG_KEY(TYPE, GROUP)             \
    {                                        \
    TYPE key(rng, DL_Group(GROUP));          \
@@ -593,11 +585,19 @@ void do_pk_keygen_tests(RandomNumberGenerator& rng)
    }
 
 #if defined(BOTAN_HAS_RSA)
-   IF_SIG_KEY(RSA_PrivateKey, 1024);
+      {
+      RSA_PrivateKey rsa1024(rng, 1024);
+      rsa1024.check_key(rng, true);
+      std::cout << '.' << std::flush;
+      }
 #endif
 
 #if defined(BOTAN_HAS_RW)
-   IF_SIG_KEY(RW_PrivateKey, 1024);
+      {
+      RW_PrivateKey rw1024(rng, 1024);
+      rw1024.check_key(rng, true);
+      std::cout << '.' << std::flush;
+      }
 #endif
 
 #if defined(BOTAN_HAS_DSA)
@@ -755,6 +755,7 @@ u32bit do_pk_validation_tests(const std::string& filename,
 
    std::cout << std::endl;
 
+   errors += do_ecdsa_tests(rng);
    do_pk_keygen_tests(rng);
    do_x509_tests(rng);
 
