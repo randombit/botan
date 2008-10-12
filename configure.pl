@@ -13,7 +13,7 @@ use Sys::Hostname;
 
 my $MAJOR_VERSION = 1;
 my $MINOR_VERSION = 7;
-my $PATCH_VERSION = 17;
+my $PATCH_VERSION = 18;
 
 my $VERSION_STRING = "$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION";
 
@@ -257,7 +257,7 @@ sub display_help {
 
         foreach my $name (sort @list) {
             next if $name eq 'defaults';
-            if($len > 65) {
+            if($len > 58) {
                 $output .= "\n        ";
                 $len = 8;
             }
@@ -267,42 +267,32 @@ sub display_help {
         return $output;
     };
 
-    my $modules = &$listing(keys %MODULES);
+    #my $modules = &$listing(keys %MODULES);
     my $compilers = &$listing(keys %COMPILER);
     my $oses =  &$listing(keys %OPERATING_SYSTEM);
     my $cpus = &$listing(keys %CPU);
 
     my $helptxt = <<ENDOFHELP;
+This is $0 from Botan $VERSION_STRING
 
-Usage for $0 (Botan $VERSION_STRING):
-
-To set the compiler to use, or which OS or CPU to target, use:
+To select the compiler, use
 
   --cc=[$compilers]
-  --os=[$oses generic]
-  --cpu=[$cpus generic]
+
+To select the OS and processor to target, use these options. By
+default, autodetection will be attempted.
+
+  --os=[generic $oses]
+  --cpu=[generic $cpus]
 
   --with-endian=[little big none]
   --with-unaligned-mem=[yes no]
 
-To change what modules to use:
-
-  --enable-modules=[module list]
-  --disable-modules=[module list]
-
-Known modules:
-        $modules
-
-  --module-info         display more information about modules
-  --disable-autoconfig  don't enable any modules unless specifically named
-
-To change where the library is installed:
-
-  --prefix=PATH        set the base installation directory
-  --libdir=PATH        install library files in \${prefix}/\${libdir}
-  --docdir=PATH        install documentation in \${prefix}/\${docdir}
-
 To change build options:
+
+  --with-tr1={boost,system}    enable using a TR1 implementation
+  --with-build-dir=DIR         setup the build in DIR
+  --with-local-config=FILE     include the contents of FILE into build.h
 
   --disable-debug      don't worry about debugging
   --enable-debug       set compiler flags for debugging
@@ -310,12 +300,22 @@ To change build options:
   --enable-shared      enable shared libraries
   --disable-shared     don't build shared libararies
 
-  --with-build-dir=DIR      setup the build in DIR
-  --with-local-config=FILE  include the contents of FILE into build.h
+To change where the library is installed:
 
-For diagnostic output:
+  --prefix=PATH        set the base installation directory
+  --libdir=PATH        install library files in \${prefix}/\${libdir}
+  --docdir=PATH        install documentation in \${prefix}/\${docdir}
 
-  --show-arch-info=CPU      show more information about CPU
+To change what modules to use:
+
+  --enable-modules=[module,[module[,...]]]
+  --disable-modules=[module,[module[,...]]]
+
+To get diagnostic and debug output:
+
+  --module-info             display more information about modules
+
+  --show-arch-info=CPU      show more information about a particular CPU
        [$cpus]
 
   --help                    display this help
@@ -465,6 +465,7 @@ sub can_enable_module {
 
     my $is_enabled = 0;
 
+    # If it was enabled by the user with --enable-modules, trust them
     if(defined($$config{'modules'}{$mod})) {
         return '' if($$config{'modules'}{$mod} < 0);
         $is_enabled = 1;
@@ -475,7 +476,17 @@ sub can_enable_module {
         return '' if $modinfo{'load_on'} eq 'request';
     }
 
+    # Doesn't run here, don't bother
     return '' unless module_runs_on($config, \%modinfo, $mod, 0);
+
+    if($modinfo{'uses_tr1'} eq 'yes') {
+        return '' unless defined($$config{'tr1'});
+    }
+
+    # @deps is the full list of modules that must be loaded (this loop
+    # every time is a really dumb way to do this, but it works since
+    # there are only about 150 info.txt files total, and most don't
+    # have complicated deps)
 
     my @deps;
     push @deps, $mod;
@@ -483,7 +494,6 @@ sub can_enable_module {
     LINE: foreach (@{$modinfo{'requires'}}) {
 
         for my $req_mod (split(/\|/, $_)) {
-
             next unless defined $MODULES{$req_mod};
 
             if(can_enable_module($config, $req_mod, 1)) {
@@ -566,6 +576,7 @@ sub get_options {
 
     $$config{'verbose'} = 1;
     $$config{'asm_ok'} = 1;
+    $$config{'tr1'} = undef; # not enabled by default
     $$config{'modules'} = {};
 
     sub arch_info {
@@ -674,6 +685,8 @@ sub get_options {
         'help' => sub { display_help(); },
         'module-info' => sub { emit_help(module_info()); },
         'version' => sub { emit_help("Botan $VERSION_STRING\n") },
+
+        'with-tr1-implementation=s' => sub { $$config{'tr1'} = $_[1]; },
 
         'quiet' => sub { $$config{'verbose'} = 0; },
         'trace' => sub { $TRACING = 1; },
@@ -1158,18 +1171,19 @@ sub load_modules {
     my $unaligned_ok = 0;
 
     my $gen_defines = sub {
-        my $defines = '';
+        my @macro_list;
 
         my $os = $$config{'os'};
         if($os ne 'generic') {
-            $defines .= '#define BOTAN_TARGET_OS_IS_' . uc $os . "\n";
+            push @macro_list, '#define BOTAN_TARGET_OS_IS_' . uc $os;
+
             my @features = @{$OPERATING_SYSTEM{$os}{'target_features'}};
 
             for my $feature (@features) {
-                $defines .= '#define BOTAN_TARGET_OS_HAS_' . uc $feature . "\n";
+                push @macro_list, '#define BOTAN_TARGET_OS_HAS_' . uc $feature;
             }
 
-            $defines .= "\n";
+            push @macro_list, "";
         }
 
         my $arch = $$config{'arch'};
@@ -1177,29 +1191,31 @@ sub load_modules {
             my %cpu_info = %{$CPU{$arch}};
             my $endian = $cpu_info{'endian'};
 
-            if(defined($$config{'endian'})) {
-                $endian = $$config{'endian'};
+            if(defined($$config{'with_endian'})) {
+                $endian = $$config{'with_endian'};
                 $endian = undef unless($endian eq 'little' || $endian eq 'big');
             }
             elsif(defined($endian)) {
                 autoconfig("Since arch is $arch, assuming $endian endian mode");
             }
 
-            $defines .= "#define BOTAN_TARGET_ARCH_IS_" . (uc $arch) . "\n";
+            push @macro_list, "#define BOTAN_TARGET_ARCH_IS_" . (uc $arch);
 
             my $submodel = $$config{'submodel'};
             if($arch ne $submodel) {
                 $submodel = uc $submodel;
-                $submodel =~ s/-/_/g;
-                $defines .= "#define BOTAN_TARGET_CPU_IS_$submodel\n";
+                $submodel =~ tr/-/_/;
+
+                push @macro_list, "#define BOTAN_TARGET_CPU_IS_$submodel";
             }
 
             if(defined($endian)) {
                 $endian = uc $endian;
-                $defines .= "#define BOTAN_TARGET_CPU_IS_${endian}_ENDIAN\n";
+                push @macro_list, "#define BOTAN_TARGET_CPU_IS_${endian}_ENDIAN";
 
-                if(defined($$config{'unaligned_mem'})) {
-                    my $spec = $$config{'unaligned_mem'};
+                # See if the user set --with-unaligned-mem
+                if(defined($$config{'with_unaligned_mem'})) {
+                    my $spec = $$config{'with_unaligned_mem'};
 
                     if($spec eq 'yes') {
                         $unaligned_ok = 1;
@@ -1212,19 +1228,28 @@ sub load_modules {
                         $unaligned_ok = 0;
                     }
                 }
-                elsif(defined($cpu_info{'unaligned'}) and
-                      $cpu_info{'unaligned'} eq 'ok')
+                # Otherwise, see if the CPU has a default setting
+                elsif(defined($cpu_info{'unaligned'}) and $cpu_info{'unaligned'} eq 'ok')
                 {
-                    autoconfig("Since arch is $arch, " .
-                               "assuming unaligned memory access is OK");
+                    autoconfig("Since arch is $arch, assuming unaligned memory access is OK");
                     $unaligned_ok = 1;
                 }
             }
         }
 
-        # always set (one or zero)
-        $defines .=
-            "#define BOTAN_TARGET_UNALIGNED_LOADSTOR_OK $unaligned_ok\n";
+        # variable is always set (one or zero)
+        push @macro_list, "#define BOTAN_TARGET_UNALIGNED_LOADSTOR_OK $unaligned_ok";
+
+        if(defined($$config{'tr1'})) {
+            my $tr1 = $$config{'tr1'};
+
+            if($tr1 eq 'system') {
+                push @macro_list, '#define BOTAN_USE_STD_TR1';
+            }
+            elsif($tr1 eq 'boost') {
+                push @macro_list, '#define BOTAN_USE_BOOST_TR1';
+            }
+        }
 
         my %defines;
 
@@ -1238,14 +1263,15 @@ sub load_modules {
         }
 
         foreach my $type (sort keys %defines) {
-            $defines .= "\n/* $type */\n";
+            push @macro_list, "\n/* $type */";
+
             for my $macro (@{$defines{$type}}) {
                 die unless(defined $macro and $macro ne '');
-                $defines .= "#define BOTAN_HAS_$macro\n";
+                push @macro_list, "#define BOTAN_HAS_$macro";
             }
         }
-        chomp($defines);
-        return $defines;
+
+        return join("\n", @macro_list);
     };
 
     $$config{'defines'} = &$gen_defines();
@@ -1348,7 +1374,10 @@ sub process_template {
     foreach my $name (keys %$config) {
         my $val = $$config{$name};
 
-        croak("Undefined variable $name in $in") unless defined $val;
+        unless(defined $val) {
+            trace("Undefined variable $name in $in");
+            next;
+        }
 
         $contents =~ s/@\{var:$name\}/$val/g;
 
@@ -1512,10 +1541,14 @@ sub get_module_info {
    my $reader = make_reader($modfile);
 
    my %info;
+
    $info{'name'} = $name;
    $info{'modinfo'} = $modfile;
    $info{'moddirs'} = $dirs;
+
+   # Default module settings
    $info{'load_on'} = 'request'; # default unless specified
+   $info{'uses_tr1'} = 'no';
    $info{'libs'} = {};
    $info{'use'} = 'no';
 
@@ -1525,7 +1558,7 @@ sub get_module_info {
 
    while($_ = &$reader()) {
        match_any_of($_, \%info, 'quoted', 'realname', 'note', 'type');
-       match_any_of($_, \%info, 'unquoted', 'define', 'mp_bits', 'modset', 'load_on');
+       match_any_of($_, \%info, 'unquoted', 'define', 'mp_bits', 'modset', 'load_on', 'uses_tr1');
 
        read_list($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
        read_list($_, $reader, 'cc', list_push(\@{$info{'cc'}}));

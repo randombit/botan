@@ -31,14 +31,6 @@
   #define BOTAN_USE_GCC_INLINE_ASM 0
 #endif
 
-/* Which TR1 shared_ptr implementation to use? */
-//#define BOTAN_USE_STD_TR1
-#define BOTAN_USE_BOOST_TR1
-
-#if !defined(BOTAN_USE_BOOST_TR1) and !defined(BOTAN_USE_STD_TR1)
-   #define BOTAN_USE_BOOST_TR1
-#endif
-
 /* Target identification and feature test macros */
 
 @{var:defines}

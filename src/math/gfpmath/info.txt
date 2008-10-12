@@ -1,6 +1,8 @@
 realname "GF(p) Math"
 
-load_on request
+uses_tr1 yes
+
+load_on auto
 
 define BIGINT_GFP
 

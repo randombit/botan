@@ -2,6 +2,8 @@ realname "Card Verifiable Certificates"
 
 define CARD_VERIFIABLE_CERTIFICATES
 
+uses_tr1 yes
+
 load_on auto
 
 <requires>

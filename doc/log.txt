@@ -1,4 +1,11 @@
 
+* 1.7.18, ????-??-??
+ - Add ECDSA benchmark
+ - Add configure.pl switch --with-tr1-implementation
+ - Fix configure.pl's --with-endian and --with-unaligned-mem options
+ - Optimize byteswap with x86 inline asm for Visual C++ by Yves Jerschow
+ - Use const references to avoid copying overhead in CurveGFp, GFpModulus
+
 * 1.7.17, 2008-10-12
  - Add missing ECDSA object identifiers
  - Fix error in x86 and x86-64 assembler affecting GF(p) math
