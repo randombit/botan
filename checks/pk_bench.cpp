@@ -32,6 +32,10 @@
   #include <botan/dlies.h>
 #endif
 
+#if defined(BOTAN_HAS_ECDSA)
+  #include <botan/ecdsa.h>
+#endif
+
 using namespace Botan;
 
 #include "common.h"
@@ -244,6 +248,55 @@ void benchmark_rw(RandomNumberGenerator& rng,
 #endif
    }
 
+#if defined(BOTAN_HAS_ECDSA)
+
+void benchmark_ecdsa(RandomNumberGenerator& rng,
+                     double seconds,
+                     Benchmark_Report& report)
+   {
+   const char* domains[] = { "1.3.132.0.6", // secp112r1
+                             "1.3.132.0.28", // secp128r1
+                             "1.3.132.0.30", // secp160r2
+                             "1.3.132.0.33", // secp224r1
+                             "1.3.132.0.34", // secp384r1
+                             "1.3.132.0.35", // secp512r1
+                             NULL };
+
+   for(size_t j = 0; domains[j]; j++)
+      {
+      EC_Domain_Params params = get_EC_Dom_Pars_by_oid(domains[j]);
+
+      u32bit pbits = params.get_curve().get_p().bits();
+
+      Timer keygen_timer("keygen");
+      Timer verify_timer("verify");
+      Timer sig_timer("signature");
+
+      while(verify_timer.seconds() < seconds ||
+            sig_timer.seconds() < seconds)
+         {
+         keygen_timer.start();
+         ECDSA_PrivateKey key(rng, params);
+         keygen_timer.stop();
+
+         const std::string padding = "EMSA1(SHA-160)";
+
+         std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));
+         std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
+
+         benchmark_sig_ver(*ver, *sig, verify_timer,
+                           sig_timer, rng, 1000, seconds);
+         }
+
+      const std::string nm = "ECDSA-" + to_string(pbits);
+      report.report(nm, keygen_timer);
+      report.report(nm, verify_timer);
+      report.report(nm, sig_timer);
+      }
+   }
+
+#endif
+
 template<typename PRIV_KEY_TYPE>
 void benchmark_dsa_nr(RandomNumberGenerator& rng,
                       double seconds,
@@ -452,6 +505,11 @@ void bench_pk(RandomNumberGenerator& rng,
 #if defined(BOTAN_HAS_DSA)
    if(algo == "All" || algo == "DSA")
       benchmark_dsa_nr<DSA_PrivateKey>(rng, seconds, report);
+#endif
+
+#if defined(BOTAN_HAS_ECDSA)
+   if(algo == "All" || algo == "ECDSA")
+      benchmark_ecdsa(rng, seconds, report);
 #endif
 
    if(algo == "All" || algo == "DH")
