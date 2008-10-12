@@ -1,6 +1,7 @@
 /*************************************************
 * Byte Swapping Operations Header File           *
 * (C) 1999-2008 Jack Lloyd                       *
+* (C) 2007 Yves Jerschow                         *
 *************************************************/
 
 #ifndef BOTAN_BYTE_SWAP_H__
@@ -24,9 +25,17 @@ inline u32bit reverse_bytes(u32bit input)
 #if BOTAN_COMPILER_HAS_GCC_INLINE_ASM && \
     (defined(BOTAN_TARGET_ARCH_IS_IA32) || defined(BOTAN_TARGET_ARCH_IS_AMD64))
 
+   /* GCC-style inline assembly for x86 or x86-64 */
    asm("bswapl %0" : "=r" (input) : "0" (input));
    return input;
+
+#elif defined(_MSC_VER) && defined(BOTAN_TARGER_ARCH_IS_IA32)
+   /* Visual C++ inline asm for 32-bit x86, by Yves Jerschow */
+   __asm mov eax, x;
+   __asm bswap eax;
+
 #else
+   /* Generic implementation */
    input = ((input & 0xFF00FF00) >> 8) | ((input & 0x00FF00FF) << 8);
    return rotate_left(input, 16);
 #endif
