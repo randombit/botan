@@ -8,6 +8,15 @@ using namespace Botan;
 #include <boost/python.hpp>
 namespace python = boost::python;
 
+
+extern void export_block_ciphers();
+extern void export_stream_ciphers();
+extern void export_hash_functions();
+extern void export_macs();
+extern void export_filters();
+extern void export_pk();
+extern void export_x509();
+
 class Bad_Size : public Exception
    {
    public:

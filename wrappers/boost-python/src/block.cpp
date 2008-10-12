@@ -6,7 +6,7 @@
 #include <botan/botan.h>
 using namespace Botan;
 
-#include "common.h"
+#include "python_botan.h"
 
 class Py_BlockCipher : public BlockCipher
    {
