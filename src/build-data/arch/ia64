@@ -1,6 +1,7 @@
 realname "IA-64"
 
-default_submodel itanium1
+# This is safe: only affects tuning, not ISA
+default_submodel itanium2
 
 <aliases>
 merced
