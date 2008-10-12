@@ -79,7 +79,7 @@ class BOTAN_DLL GFpModulus
       * Return the modulus of this GFpModulus.
       * @result the modulus of *this.
       */
-      inline const BigInt get_p() const
+      inline const BigInt& get_p() const
          {
          return m_p;
          }
@@ -90,7 +90,7 @@ class BOTAN_DLL GFpModulus
       * performed!
       * @result r
       */
-      inline const BigInt get_r() const
+      inline const BigInt& get_r() const
          {
          return m_r;
          }
@@ -101,7 +101,7 @@ class BOTAN_DLL GFpModulus
       * performed!
       * @result r^{-1}
       */
-      inline const BigInt get_r_inv() const
+      inline const BigInt& get_r_inv() const
          {
          return m_r_inv;
          }
@@ -112,7 +112,7 @@ class BOTAN_DLL GFpModulus
       * performed!
       * @result p'
       */
-      inline const BigInt get_p_dash() const
+      inline const BigInt& get_p_dash() const
          {
          return m_p_dash;
          }
