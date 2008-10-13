@@ -111,11 +111,11 @@ doxygen:
 
 clean:
 	$(RM_R) @{var:build-dir}/lib/* @{var:build-dir}/checks/*
-	$(RM_R) @{var:doc-dir}/doxygen @{var:doc-dir}/botan.doxy
 	$(RM) $(LIBRARIES) $(SYMLINK) $(CHECK)
 
 distclean: clean
 	$(RM_R) @{var:build-dir}
+	$(RM_R) @{var:doc-dir}/doxygen @{var:doc-dir}/botan.doxy
 	$(RM) Makefile $(CONFIG_SCRIPT)
 
 install: $(LIBRARIES)
