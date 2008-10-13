@@ -10,9 +10,11 @@
 
 namespace Botan {
 
-/*************************************************
-* Buffering Filter                               *
-*************************************************/
+/**
+* Buffering_Filter: This class represents filters for operations that
+* maintain an internal state.
+*/
+
 class BOTAN_DLL Buffering_Filter : public Filter
    {
    public:

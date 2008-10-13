@@ -10,9 +10,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Block Cipher Mode                              *
-*************************************************/
+/**
+* This class represents an abstract block cipher mode
+*/
 class BOTAN_DLL BlockCipherMode : public Keyed_Filter
    {
    public:
@@ -20,6 +20,7 @@ class BOTAN_DLL BlockCipherMode : public Keyed_Filter
 
       BlockCipherMode(const std::string&, const std::string&,
                       u32bit, u32bit = 0, u32bit = 1);
+
       virtual ~BlockCipherMode() { delete cipher; }
    protected:
       void set_iv(const InitializationVector&);
