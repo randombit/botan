@@ -11,16 +11,34 @@
 
 namespace Botan {
 
-/*************************************************
-* Discrete Logarithm Group                       *
-*************************************************/
+/**
+* This class represents discrete logarithm groups. It holds a prime p,
+* a prime q = (p-1)/2 and g = x^((p-1)/q) mod p.
+*/
 class BOTAN_DLL DL_Group
    {
    public:
+      /**
+      * Get the prime p.
+      * @return the prime p
+      */
       const BigInt& get_p() const;
+
+      /**
+      * Get the prime q.
+      * @return the prime q
+      */
       const BigInt& get_q() const;
+
+      /**
+      * Get the base g.
+      * @return the base g
+      */
       const BigInt& get_g() const;
 
+      /**
+      * The DL group encoding format variants.
+      */
       enum Format {
          ANSI_X9_42,
          ANSI_X9_57,
@@ -32,23 +50,101 @@ class BOTAN_DLL DL_Group
          PKCS3_DH_PARAMETERS = PKCS_3
       };
 
+      /**
+      * Determine the prime creation for DL groups.
+      */
       enum PrimeType { Strong, Prime_Subgroup, DSA_Kosherizer };
 
-      bool verify_group(RandomNumberGenerator& rng, bool) const;
+      /**
+      * Perform validity checks on the group.
+      * @param rng the rng to use
+      * @param strong whether to perform stronger by lengthier tests
+      * @return true if the object is consistent, false otherwise
+      */
+      bool verify_group(RandomNumberGenerator& rng, bool strong) const;
 
-      std::string PEM_encode(Format) const;
-      SecureVector<byte> DER_encode(Format) const;
-      void BER_decode(DataSource&, Format);
-      void PEM_decode(DataSource&);
+      /**
+      * Encode this group into a string using PEM encoding.
+      * @param format the encoding format
+      * @return the string holding the PEM encoded group
+      */
+      std::string PEM_encode(Format format) const;
 
+      /**
+      * Encode this group into a string using DER encoding.
+      * @param format the encoding format
+      * @return the string holding the DER encoded group
+      */
+      SecureVector<byte> DER_encode(Format format) const;
+
+      /**
+      * Decode a DER/BER encoded group into this instance.
+      * @param src a DataSource providing the encoded group
+      * @param format the format of the encoded group
+      */
+      void BER_decode(DataSource& src, Format format);
+
+      /**
+      * Decode a PEM encoded group into this instance.
+      * @param src a DataSource providing the encoded group
+      */
+      void PEM_decode(DataSource& src);
+
+      /**
+      * Construct a DL group with uninitialized internal value.
+      * Use this constructor is you wish to set the groups values
+      * from a DER or PEM encoded group.
+      */
       DL_Group();
-      DL_Group(const std::string&);
 
-      DL_Group(RandomNumberGenerator& rng, PrimeType, u32bit, u32bit = 0);
-      DL_Group(RandomNumberGenerator& rng, const MemoryRegion<byte>&,
-               u32bit = 1024, u32bit = 0);
+      /**
+      * Construct a DL group that is registered in the configuration.
+      * @param name the name that is configured in the global configuration
+      * for the desired group. If no configuration file is specified,
+      * the default values from the file policy.cpp will be used. For instance,
+      * use "modp/ietf/768" as name.
+      */
+      DL_Group(const std::string& name);
 
+      /**
+      * Create a new group randomly.
+      * @param rng the random number generator to use
+      * @param type specifies how the creation of primes p and q shall
+      * be performed. If type=Strong, then p will be determined as a
+      * safe prime, and q will be chosen as (p-1)/2. If
+      * type=Prime_Subgroup and qbits = 0, then the size of q will be
+      * determined according to the estimated difficulty of the DL
+      * problem. If type=DSA_Kosherizer, DSA primes will be created.
+      * @param pbits the number of bits of p
+      * @param qbits the number of bits of q. Leave it as 0 to have
+      * the value determined according to pbits.
+      */
+      DL_Group(RandomNumberGenerator& rng, PrimeType type,
+               u32bit pbits, u32bit qbits = 0);
+
+      /**
+      * Create a DSA group with a given seed.
+      * @param rng the random number generator to use
+      * @param seed the seed to use to create the random primes
+      * @param pbits the desired bit size of the prime p
+      * @param qbits the desired bit size of the prime q.
+      */
+      DL_Group(RandomNumberGenerator& rng, const MemoryRegion<byte>& seed,
+               u32bit pbits = 1024, u32bit qbits = 0);
+
+      /**
+      * Create a DL group. The prime q will be determined according to p.
+      * @param p the prime p
+      * @param g the base g
+      */
       DL_Group(const BigInt& p, const BigInt& g);
+
+      /**
+      * Create a DL group.
+      * @param p the prime p
+      * @param q the prime q
+      * @param g the base g
+      */
       DL_Group(const BigInt& p, const BigInt& g, const BigInt& q);
    private:
       static BigInt make_dsa_generator(const BigInt&, const BigInt&);
