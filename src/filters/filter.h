@@ -11,18 +11,49 @@
 
 namespace Botan {
 
-/*************************************************
-* Filter Base Class                              *
-*************************************************/
+/**
+* This class represents general abstract filter objects.
+*/
 class BOTAN_DLL Filter
    {
    public:
-      virtual void write(const byte[], u32bit) = 0;
+
+      /**
+      * Write a portion of a message to this filter.
+      * @param input the input as a byte array
+      * @param length the length of the byte array input
+      */
+      virtual void write(const byte input[], u32bit length) = 0;
+
+      /**
+      * Start a new message. Must be closed by end_msg() before another
+      * message can be startet.
+      */
       virtual void start_msg() {}
+
+      /**
+      * Tell the Filter that the current message shall be ended.
+      */
       virtual void end_msg() {}
+
+      /**
+      * Check whether this filter is an attachable filter.
+      * @return true if this filter is attachable, false otherwise
+      */
       virtual bool attachable() { return true; }
+
+      /**
+      * Start a new message in *this and all following filters. Only for
+      * internal use, not intended for use in client applications.
+      */
       void new_msg();
+
+      /**
+      * End a new message in *this and all following filters. Only for
+      * internal use, not intended for use in client applications.
+      */
       void finish_msg();
+
       virtual ~Filter() {}
    protected:
       void send(const byte[], u32bit);
@@ -49,12 +80,12 @@ class BOTAN_DLL Filter
       SecureVector<byte> write_queue;
       std::vector<Filter*> next;
       u32bit port_num, filter_owns;
-      bool owned;
+      bool owned; // true if filter belongs to a pipe --> prohibit filter sharing!
    };
 
-/*************************************************
-* Fanout Filter Base Class                       *
-*************************************************/
+/**
+* This is the abstract Fanout_Filter base class.
+**/
 class BOTAN_DLL Fanout_Filter : public Filter
    {
    protected:
