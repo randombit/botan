@@ -24,13 +24,15 @@ namespace Botan {
  // CRTP continuation from EAC1_1_obj
 class BOTAN_DLL EAC1_1_ADO : public EAC1_1_obj<EAC1_1_ADO>
    {
-      friend class EAC1_1_obj<EAC1_1_ADO>;
    public:
+      friend class EAC1_1_obj<EAC1_1_ADO>;
+
       /**
       * Construct a CVC ADO request from a DER encoded CVC ADO request file.
       * @param str the path to the DER encoded file
       */
       EAC1_1_ADO(const std::string& str);
+
       /**
       * Construct a CVC ADO request from a data source
       * @param source the data source
@@ -46,6 +48,7 @@ class BOTAN_DLL EAC1_1_ADO : public EAC1_1_obj<EAC1_1_ADO>
          std::auto_ptr<PK_Signer> signer,
          const MemoryRegion<byte>& tbs_bits,
          RandomNumberGenerator& rng);
+
       /**
       * Get the CAR of this CVC ADO request
       * @result the CAR of this CVC ADO request
@@ -72,8 +75,8 @@ class BOTAN_DLL EAC1_1_ADO : public EAC1_1_obj<EAC1_1_ADO>
       * @result the TBS data
       */
       SecureVector<byte> tbs_data() const;
-      virtual ~EAC1_1_ADO()
-         {}
+
+      virtual ~EAC1_1_ADO() {}
    private:
       ASN1_Car m_car;
       EAC1_1_Req m_req;

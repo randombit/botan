@@ -31,11 +31,11 @@ class BOTAN_DLL EAC1_1_CVC_Options
       ASN1_Cex cex;
       std::string hash_alg;
    };
+
 /**
 * This namespace represents general EAC 1.1 convenience functions.
 */
-namespace CVC_EAC
-{
+namespace CVC_EAC {
 
 /**
 * Create a selfsigned CVCA
@@ -81,8 +81,8 @@ EAC1_1_ADO create_ado_req(Private_Key const& priv_key,
 * This namespace represents EAC 1.1 CVC convenience functions following the specific german
 * requirements.
 */
-namespace DE_EAC
-{
+namespace DE_EAC {
+
 /**
 * Create a CVCA certificate.
 * @param priv_key the private key associated with the CVCA certificate

@@ -1,18 +1,18 @@
 /*************************************************
 * EAC1_1 general CVC Header File                 *
 * (C) 2008 Falko Strenzke                        *
-*          strenzke@flexsecure.de                *
+*     2008 Jack Lloyd                            *
 *************************************************/
 
-#ifndef BOTAN_EAC_CVC_GCERT_H__
-#define BOTAN_EAC_CVC_GCERT_H__
+#ifndef BOTAN_EAC_CVC_GEN_CERT_H__
+#define BOTAN_EAC_CVC_GEN_CERT_H__
 
 #include <botan/x509_key.h>
 #include <botan/eac_asn_obj.h>
 #include <botan/enums.h>
-#include <string>
 #include <botan/pubkey.h>
 #include <botan/ecdsa_sig.h>
+#include <string>
 #include <assert.h>
 
 namespace Botan {
@@ -24,12 +24,7 @@ template<typename Derived>
 class BOTAN_DLL EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation from EAC1_1_obj
    {
       friend class EAC1_1_obj<EAC1_1_gen_CVC>;
-   protected:
-      ECDSA_PublicKey m_pk; // public key
-      ASN1_Chr m_chr;
-      bool self_signed;
 
-      static void decode_info(SharedPtrConverter<DataSource> source, SecureVector<byte> & res_tbs_bits, ECDSA_Signature & res_sig);
    public:
 
       /**
@@ -84,16 +79,27 @@ class BOTAN_DLL EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation
       virtual ~EAC1_1_gen_CVC<Derived>()
          {}
 
-   }
-   ;
+   protected:
+      ECDSA_PublicKey m_pk; // public key
+      ASN1_Chr m_chr;
+      bool self_signed;
+
+      static void decode_info(SharedPtrConverter<DataSource> source,
+                              SecureVector<byte> & res_tbs_bits,
+                              ECDSA_Signature & res_sig);
+
+   };
+
 template<typename Derived> ASN1_Chr EAC1_1_gen_CVC<Derived>::get_chr() const
    {
    return m_chr;
    }
+
 template<typename Derived> bool EAC1_1_gen_CVC<Derived>::is_self_signed() const
    {
    return self_signed;
    }
+
 template<typename Derived> MemoryVector<byte> EAC1_1_gen_CVC<Derived>::make_signed(
    std::auto_ptr<PK_Signer> signer,
    const MemoryRegion<byte>& tbs_bits,
@@ -108,10 +114,12 @@ template<typename Derived> MemoryVector<byte> EAC1_1_gen_CVC<Derived>::make_sign
       .end_cons()
       .get_contents();
    }
+
 template<typename Derived> std::auto_ptr<Public_Key> EAC1_1_gen_CVC<Derived>::subject_public_key() const
    {
    return std::auto_ptr<Public_Key>(new ECDSA_PublicKey(m_pk));
    }
+
 template<typename Derived> SecureVector<byte> EAC1_1_gen_CVC<Derived>::build_cert_body(MemoryRegion<byte> const& tbs)
    {
    return DER_Encoder()
@@ -119,10 +127,12 @@ template<typename Derived> SecureVector<byte> EAC1_1_gen_CVC<Derived>::build_cer
       .raw_bytes(tbs)
       .end_cons().get_contents();
    }
+
 template<typename Derived> SecureVector<byte> EAC1_1_gen_CVC<Derived>::tbs_data() const
    {
    return build_cert_body(EAC1_1_obj<Derived>::tbs_bits);
    }
+
 template<typename Derived> void EAC1_1_gen_CVC<Derived>::encode(Pipe& out, X509_Encoding encoding) const
    {
    SecureVector<byte> concat_sig(EAC1_1_obj<Derived>::m_sig.get_concatenation());
