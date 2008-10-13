@@ -62,7 +62,7 @@ class BOTAN_DLL RandomNumberGenerator
       virtual std::string name() const = 0;
 
       /**
-      * Force a reseed of the PRNG
+      * Seed this RNG using the entropy sources it contains.
       */
       virtual void reseed() {}
 
