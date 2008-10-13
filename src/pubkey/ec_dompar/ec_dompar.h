@@ -1,10 +1,11 @@
 /*************************************************
 * ECDSA Domain Parameters Header File            *
-* (C) 2007  Falko Strenzke, FlexSecure GmbH      *
+* (C) 2007 Falko Strenzke, FlexSecure GmbH       *
+*     2008 Jack Lloyd                            *
 *************************************************/
 
-#ifndef EC_DOMPAR_H__
-#define EC_DOMPAR_H__
+#ifndef BOTAN_ECC_DOMAIN_PARAMETERS_H__
+#define BOTAN_ECC_DOMAIN_PARAMETERS_H__
 
 #include <botan/point_gfp.h>
 #include <botan/gfp_element.h>

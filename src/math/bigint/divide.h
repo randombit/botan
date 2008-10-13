@@ -3,8 +3,8 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_DIVISON_ALGORITHM__
-#define BOTAN_DIVISON_ALGORITHM__
+#ifndef BOTAN_DIVISON_ALGORITHM_H__
+#define BOTAN_DIVISON_ALGORITHM_H__
 
 #include <botan/bigint.h>
 

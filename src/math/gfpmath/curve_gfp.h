@@ -139,9 +139,11 @@ class BOTAN_DLL CurveGFp
 
 // relational operators
 bool operator==(const CurveGFp& lhs, const CurveGFp& rhs);
-inline bool operator!=(const CurveGFp& lhs, const CurveGFp& rhs) {
-return !operator==(lhs, rhs);
-}
+
+inline bool operator!=(const CurveGFp& lhs, const CurveGFp& rhs)
+   {
+   return !(lhs == rhs);
+   }
 
 // io operators
 std::ostream& operator<<(std::ostream& output, const CurveGFp& elem);
@@ -149,9 +151,10 @@ std::ostream& operator<<(std::ostream& output, const CurveGFp& elem);
 // swaps the states of curve1 and curve2, does not throw!
 // cf. Meyers, Item 25
 inline
-void swap(CurveGFp& curve1, CurveGFp& curve2) {
-curve1.swap(curve2);
-}
+void swap(CurveGFp& curve1, CurveGFp& curve2)
+   {
+   curve1.swap(curve2);
+   }
 
 } // namespace Botan
 
@@ -160,13 +163,12 @@ namespace std {
 
 // swaps the states of curve1 and curve2, does not throw!
 // cf. Meyers, Item 25
-template<>
-inline
-void swap<Botan::CurveGFp>(
-   Botan::CurveGFp& curve1,
-   Botan::CurveGFp& curve2) {
-curve1.swap(curve2);
-}
+template<> inline
+void swap<Botan::CurveGFp>(Botan::CurveGFp& curve1,
+                           Botan::CurveGFp& curve2)
+   {
+   curve1.swap(curve2);
+   }
 
 } // namespace std
 

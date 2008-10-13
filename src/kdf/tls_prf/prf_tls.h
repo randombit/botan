@@ -3,8 +3,8 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_TLS_PRF__
-#define BOTAN_TLS_PRF__
+#ifndef BOTAN_TLS_PRF_H__
+#define BOTAN_TLS_PRF_H__
 
 #include <botan/kdf.h>
 #include <botan/base.h>

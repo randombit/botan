@@ -3,8 +3,8 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_CBC_MAC__
-#define BOTAN_CBC_MAC__
+#ifndef BOTAN_CBC_MAC_H__
+#define BOTAN_CBC_MAC_H__
 
 #include <botan/base.h>
 

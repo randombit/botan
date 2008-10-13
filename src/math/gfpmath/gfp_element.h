@@ -68,19 +68,19 @@ class BOTAN_DLL GFpElement
       explicit GFpElement (const BigInt& p, const BigInt& value, bool use_montgm = false);
 
 
-      /** construct an element of GF(p) with the given value (defaults to 0).
-      * use_montg defaults to false and determines wether montgomery multiplications
-      * will be use when applying operators '*' , '*='.
-      * Use this constructor for efficient use of Montgomery multiplication in a context with a
-      * fixed a modulus.
-      * Warning: do not use this function unless you know in detail about
-      * the implications of using
-      * the shared GFpModulus objects!
+      /** construct an element of GF(p) with the given value (defaults
+      * to 0).  use_montg defaults to false and determines wether
+      * montgomery multiplications will be use when applying operators
+      * '*' , '*='.  Use this constructor for efficient use of
+      * Montgomery multiplication in a context with a fixed a modulus.
+      * Warning: do not use this function unless you know in detail
+      * about the implications of using the shared GFpModulus objects!
       * @param mod shared pointer to the GFpModulus to be shared
       * @param value the element value
       * @param use_montgm whether this object will use Montgomery multiplication
       */
-      explicit GFpElement(std::tr1::shared_ptr<GFpModulus> const mod, const BigInt& value, bool use_mongm = false);
+      explicit GFpElement(std::tr1::shared_ptr<GFpModulus> const mod,
+                          const BigInt& value, bool use_mongm = false);
 
       /**
       * Copy constructor

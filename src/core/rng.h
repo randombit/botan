@@ -3,8 +3,8 @@
 * (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_RANDOM_NUMBER_GENERATOR__
-#define BOTAN_RANDOM_NUMBER_GENERATOR__
+#ifndef BOTAN_RANDOM_NUMBER_GENERATOR_H__
+#define BOTAN_RANDOM_NUMBER_GENERATOR_H__
 
 #include <botan/exceptn.h>
 
