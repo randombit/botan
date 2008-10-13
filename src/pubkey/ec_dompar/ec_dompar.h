@@ -32,8 +32,10 @@ class BOTAN_DLL EC_Domain_Params
       * @param order the order of the base point
       * @param cofactor the cofactor
       */
-      EC_Domain_Params(CurveGFp const& curve, PointGFp const& base_point,
-                       const BigInt& order, const BigInt& cofactor);
+      EC_Domain_Params(const CurveGFp& curve,
+                       const PointGFp& base_point,
+                       const BigInt& order,
+                       const BigInt& cofactor);
 
       /**
       * Return domain parameter curve
@@ -103,9 +105,10 @@ SecureVector<byte> encode_der_ec_dompar(EC_Domain_Params const& dom_pars,
 EC_Domain_Params decode_ber_ec_dompar(SecureVector<byte> const& encoded);
 
 /**
-* Factory function, the only way to obtain EC domain parameters with an OID.
-* The demanded OID has to be registered in the InSiTo configuration. Consult the file
-* policy.cpp for the default configuration.
+* Factory function, the only way to obtain EC domain parameters with
+* an OID.  The demanded OID has to be registered in the InSiTo
+* configuration. Consult the file ec_dompar.cpp for the default
+* configuration.
 * @param the oid of the demanded EC domain parameters
 * @result the EC domain parameters associated with the OID
 */
