@@ -11,16 +11,20 @@
 
 namespace Botan {
 
-/*************************************************
-* PKCS #5 PBKDF2                                 *
-*************************************************/
+/**
+* This class implements the PKCS #5 PBKDF2 functionality.
+*/
 class BOTAN_DLL PKCS5_PBKDF2 : public S2K
    {
    public:
       std::string name() const;
       S2K* clone() const;
 
-      PKCS5_PBKDF2(MessageAuthenticationCode* m);
+      /**
+      * Create a PKCS #5 instance using the specified message auth code
+      * @param mac the MAC to use
+      */
+      PKCS5_PBKDF2(MessageAuthenticationCode* mac);
       ~PKCS5_PBKDF2();
    private:
       OctetString derive(u32bit, const std::string&,
