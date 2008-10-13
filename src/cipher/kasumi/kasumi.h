@@ -29,10 +29,6 @@ class BOTAN_DLL KASUMI : public BlockCipher
       SecureBuffer<u16bit, 64> EK;
    };
 
-extern const byte KASUMI_SBOX_S7[128];
-extern const u16bit KASUMI_SBOX_S9[512];
-
-
 }
 
 #endif

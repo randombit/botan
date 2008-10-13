@@ -5,7 +5,6 @@ define KASUMI
 load_on auto
 
 <add>
-kas_tab.cpp
 kasumi.cpp
 kasumi.h
 </add>
