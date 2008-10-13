@@ -18,24 +18,60 @@
 
 namespace Botan {
 
+/**
+* This class is intended as an function call parameter type and
+* enables convenient automatic conversions between plain and smart
+* pointer types. It internally stores a SharedPointer which can be
+* accessed.
+*/
 template<typename T>
 class BOTAN_DLL SharedPtrConverter
    {
    public:
       typedef std::tr1::shared_ptr<T> SharedPtr;
 
-      SharedPtrConverter() : ptr() {};
-      SharedPtrConverter(SharedPtrConverter const& other)
-         : ptr(other.ptr) {};
+      /**
+      * Construct a null pointer equivalent object.
+      */
+      SharedPtrConverter() : ptr() {}
 
+      /**
+      * Copy constructor.
+      */
+      SharedPtrConverter(SharedPtrConverter const& other) :
+         ptr(other.ptr) {}
+
+      /**
+      * Construct a converter object from another pointer type.
+      * @param p the pointer which shall be set as the internally stored
+      * pointer value of this converter.
+      */
       template<typename Ptr>
       SharedPtrConverter(Ptr p)
-         : ptr(p) {};
+         : ptr(p) {}
 
+      /**
+      * Get the internally stored shared pointer.
+      * @return the internally stored shared pointer
+      */
       SharedPtr const& get_ptr() const { return this->ptr; }
+
+      /**
+      * Get the internally stored shared pointer.
+      * @return the internally stored shared pointer
+      */
       SharedPtr get_ptr() { return this->ptr; }
 
+      /**
+      * Get the internally stored shared pointer.
+      * @return the internally stored shared pointer
+      */
       SharedPtr const& get_shared() const { return this->ptr; }
+
+      /**
+      * Get the internally stored shared pointer.
+      * @return the internally stored shared pointer
+      */
       SharedPtr get_shared() { return this->ptr; }
 
    private:
