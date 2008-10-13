@@ -178,7 +178,7 @@ void test_decode_ver_link_SHA256()
 
    std::auto_ptr<X509_PublicKey> pubkey(root_cert.subject_public_key());
    bool ver_ec = link_cert.check_signature(*pubkey);
-   CHECK_MESSAGE(ver_ec, "could not positively verifiy correct SHA256 link x509-ecdsa certificate");
+   CHECK_MESSAGE(ver_ec, "could not positively verify correct SHA256 link x509-ecdsa certificate");
 
    }
 void test_decode_ver_link_SHA1()
@@ -190,7 +190,7 @@ void test_decode_ver_link_SHA1()
 
    std::auto_ptr<X509_PublicKey> pubkey(root_cert.subject_public_key());
    bool ver_ec = link_cert.check_signature(*pubkey);
-   CHECK_MESSAGE(ver_ec, "could not positively verifiy correct SHA1 link x509-ecdsa certificate");
+   CHECK_MESSAGE(ver_ec, "could not positively verify correct SHA1 link x509-ecdsa certificate");
    }
 
 void test_sign_then_ver(RandomNumberGenerator& rng)
