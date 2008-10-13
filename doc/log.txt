@@ -1,6 +1,7 @@
 
 * 1.7.18, ????-??-??
  - Add ECDSA benchmark
+ - Add Doxygen comments from InSiTo
  - Add configure.pl switch --with-tr1-implementation
  - Fix configure.pl's --with-endian and --with-unaligned-mem options
  - Optimize byteswap with x86 inline asm for Visual C++ by Yves Jerschow

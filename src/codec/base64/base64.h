@@ -11,17 +11,34 @@
 
 namespace Botan {
 
-/*************************************************
-* Base64 Encoder                                 *
-*************************************************/
+/**
+* This class represents a Base64 encoder.
+*/
 class BOTAN_DLL Base64_Encoder : public Filter
    {
    public:
-      static void encode(const byte[3], byte[4]);
+      static void encode(const byte in[3], byte out[4]);
 
-      void write(const byte[], u32bit);
+      /**
+      * Input a part of a message to the encoder.
+      * @param input the message to input as a byte array
+      * @param length the length of the byte array input
+      */
+      void write(const byte input[], u32bit length);
+
+      /**
+      * Inform the Encoder that the current message shall be closed.
+      */
       void end_msg();
-      Base64_Encoder(bool = false, u32bit = 72, bool = false);
+
+      /**
+      * Create a base64 encoder.
+      * @param breaks whether to use line breaks in the Streamcipheroutput
+      * @param length the length of the lines of the output
+      * @param t_n whether to use a trailing newline
+      */
+      Base64_Encoder(bool breaks = false, u32bit length = 72,
+                     bool t_n = false);
    private:
       void encode_and_send(const byte[], u32bit);
       void do_output(const byte[], u32bit);
@@ -33,18 +50,34 @@ class BOTAN_DLL Base64_Encoder : public Filter
       u32bit position, counter;
    };
 
-/*************************************************
-* Base64 Decoder                                 *
-*************************************************/
+/**
+* This object represents a Base64 decoder.
+*/
 class BOTAN_DLL Base64_Decoder : public Filter
    {
    public:
-      static void decode(const byte[4], byte[3]);
+      static void decode(const byte input[4], byte output[3]);
+
       static bool is_valid(byte);
 
-      void write(const byte[], u32bit);
+      /**
+      * Input a part of a message to the decoder.
+      * @param input the message to input as a byte array
+      * @param length the length of the byte array input
+      */
+      void write(const byte input[], u32bit length);
+
+      /**
+      * Inform the Encoder that the current message shall be closed.
+      */
       void end_msg();
-      Base64_Decoder(Decoder_Checking = NONE);
+
+      /**
+      * Create a base64 encoder.
+      * @param checking the type of checking that shall be performed by
+      * the decoder
+      */
+      Base64_Decoder(Decoder_Checking checking = NONE);
    private:
       void decode_and_send(const byte[], u32bit);
       void handle_bad_char(byte);

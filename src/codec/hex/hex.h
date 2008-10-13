@@ -11,20 +11,40 @@
 
 namespace Botan {
 
-/*************************************************
-* Hex Encoder                                    *
-*************************************************/
+/**
+* This class represents a hex encoder. It encodes byte arrays to hex strings.
+*/
 class BOTAN_DLL Hex_Encoder : public Filter
    {
    public:
+      /**
+      * Whether to use uppercase or lowercase letters for the encoded string.
+      */
       enum Case { Uppercase, Lowercase };
-      static void encode(byte, byte[2], Case = Uppercase);
 
-      void write(const byte[], u32bit);
+      /**
+        Encode a single byte into two hex characters
+      */
+      static void encode(byte in, byte out[2], Case the_case = Uppercase);
+
+      void write(const byte in[], u32bit length);
       void end_msg();
 
-      Hex_Encoder(Case);
-      Hex_Encoder(bool = false, u32bit = 72, Case = Uppercase);
+      /**
+      * Create a hex encoder.
+      * @param the_case the case to use in the encoded strings.
+      */
+      Hex_Encoder(Case the_case);
+
+      /**
+      * Create a hex encoder.
+      * @param newlines should newlines be used
+      * @param line_length if newlines are used, how long are lines
+      * @param the_case the case to use in the encoded strings
+      */
+      Hex_Encoder(bool newlines = false,
+                  u32bit line_length = 72,
+                  Case the_case = Uppercase);
    private:
       void encode_and_send(const byte[], u32bit);
       static const byte BIN_TO_HEX_UPPER[16];
@@ -36,9 +56,9 @@ class BOTAN_DLL Hex_Encoder : public Filter
       u32bit position, counter;
    };
 
-/*************************************************
-* Hex Decoder                                    *
-*************************************************/
+/**
+* This class represents a hex decoder. It converts hex strings to byte arrays.
+*/
 class BOTAN_DLL Hex_Decoder : public Filter
    {
    public:
@@ -48,7 +68,12 @@ class BOTAN_DLL Hex_Decoder : public Filter
       void write(const byte[], u32bit);
       void end_msg();
 
-      Hex_Decoder(Decoder_Checking = NONE);
+      /**
+      * Construct a Hex Decoder using the specified
+      * character checking.
+      * @param checking the checking to use during decoding.
+      */
+      Hex_Decoder(Decoder_Checking checking = NONE);
    private:
       void decode_and_send(const byte[], u32bit);
       void handle_bad_char(byte);
