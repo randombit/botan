@@ -90,11 +90,15 @@ class BOTAN_DLL X509_CA
       PK_Signer* signer;
    };
 
-/*************************************************
-* Choose a signing format for the key            *
-*************************************************/
-BOTAN_DLL PK_Signer* choose_sig_format(const Private_Key&,
-                                       AlgorithmIdentifier&);
+/**
+* Choose the default signature format for a certain public key signature
+* scheme.
+* @param key will be the key to choose a padding scheme for
+* @param alg_id will be set to the chosen scheme
+* @returns A PK_Signer object for generating signatures
+*/
+BOTAN_DLL PK_Signer* choose_sig_format(const Private_Key& key,
+                                       AlgorithmIdentifier& alg_id);
 
 
 }

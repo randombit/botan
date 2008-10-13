@@ -44,15 +44,67 @@ class BOTAN_DLL Library_State
       void add_allocator(Allocator*);
       void set_default_allocator(const std::string&);
 
-      std::string get(const std::string&, const std::string&) const;
-      bool is_set(const std::string&, const std::string&) const;
-      void set(const std::string&, const std::string&,
-               const std::string&, bool = true);
+      /**
+      * Get a parameter value as std::string.
+      * @param section the section of the desired key
+      * @param key the desired keys name
+      * @result the value of the parameter
+      */
+      std::string get(const std::string& section,
+                      const std::string& key) const;
 
-      std::string option(const std::string&) const;
-      void set_option(const std::string, const std::string&);
+      /**
+      * Check whether a certain parameter is set
+      * or not.
+      * @param section the section of the desired key
+      * @param key the desired keys name
+      * @result true if the parameters value is set,
+      * false otherwise
+      */
+      bool is_set(const std::string& section, const std::string& key) const;
 
+        /**
+        * Set a configuration parameter.
+        * @param section the section of the desired key
+        * @param key the desired keys name
+        * @param overwrite if set to true, the parameters value
+        * will be overwritten even if it is already set, otherwise
+        * no existing values will be overwritten.
+        */
+      void set(const std::string& section, const std::string& key,
+                 const std::string& value, bool overwrite = true);
+
+        /**
+        * Get a parameters value out of the "conf" section (
+        * referred to as option).
+        * @param key the desired keys name
+        */
+      std::string option(const std::string& key) const;
+
+      /**
+      * Set an option.
+      * @param key the key of the option to set
+      * @param value the value to set
+      */
+      /**
+      * Set an option.
+      * @param key the key of the option to set
+      * @param value the value to set
+      */
+      void set_option(const std::string key, const std::string& value);
+
+      /**
+      * Add a parameter value to the "alias" section.
+      * @param key the name of the parameter which shall have a new alias
+      * @param value the new alias
+      */
       void add_alias(const std::string&, const std::string&);
+
+      /**
+      * Resolve an alias.
+      * @param alias the alias to resolve.
+      * @return what the alias stands for
+      */
       std::string deref_alias(const std::string&) const;
 
       class Mutex* get_mutex() const;
