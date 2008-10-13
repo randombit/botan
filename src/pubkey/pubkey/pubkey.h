@@ -265,7 +265,9 @@ class BOTAN_DLL PK_Key_Agreement
       * @param key the key to use
       * @param kdf_name the name of the key derivation function to use
       */
-      PK_Key_Agreement(const PK_Key_Agreement_Key& key, const std::string& kdf_name);
+      PK_Key_Agreement(const PK_Key_Agreement_Key& key,
+                       const std::string& kdf_name);
+
    private:
       PK_Key_Agreement(const PK_Key_Agreement_Key&);
       PK_Key_Agreement& operator=(const PK_Key_Agreement&);
@@ -287,7 +289,8 @@ class BOTAN_DLL PK_Encryptor_MR_with_EME : public PK_Encryptor
       * @param key the key to use inside the decryptor
       * @param eme the name of the eme to use
       */
-      PK_Encryptor_MR_with_EME(const PK_Encrypting_Key& key, const std::string& eme);
+      PK_Encryptor_MR_with_EME(const PK_Encrypting_Key& key,
+                               const std::string& eme);
 
       ~PK_Encryptor_MR_with_EME() { delete encoder; }
    private:
@@ -312,7 +315,8 @@ class BOTAN_DLL PK_Decryptor_MR_with_EME : public PK_Decryptor
       * @param key the key to use inside the encryptor
       * @param eme the name of the EME to use
       */
-      PK_Decryptor_MR_with_EME(const PK_Decrypting_Key& key, const std::string& eme);
+      PK_Decryptor_MR_with_EME(const PK_Decrypting_Key& key,
+                               const std::string& eme);
 
       ~PK_Decryptor_MR_with_EME() { delete encoder; }
    private:
@@ -361,7 +365,8 @@ class BOTAN_DLL PK_Verifier_wo_MR : public PK_Verifier
       * @param key the key to use inside the verifier
       * @param emsa_name the name of the EMSA to use
       */
-      PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key& key, const std::string& emsa_name);
+      PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key& key,
+                        const std::string& emsa_name);
 
    private:
       PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key&);
