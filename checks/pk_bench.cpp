@@ -36,6 +36,10 @@
   #include <botan/ecdsa.h>
 #endif
 
+#if defined(BOTAN_HAS_ECKAEG)
+  #include <botan/eckaeg.h>
+#endif
+
 using namespace Botan;
 
 #include "common.h"
@@ -297,6 +301,70 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
 
 #endif
 
+#if defined(BOTAN_HAS_ECKAEG)
+
+void benchmark_eckaeg(RandomNumberGenerator& rng,
+                      double seconds,
+                      Benchmark_Report& report)
+   {
+   const char* domains[] = { "1.3.132.0.6", // secp112r1
+                             "1.3.132.0.28", // secp128r1
+                             "1.3.132.0.30", // secp160r2
+                             "1.3.132.0.33", // secp224r1
+                             "1.3.132.0.34", // secp384r1
+                             "1.3.132.0.35", // secp512r1
+                             NULL };
+
+   for(size_t j = 0; domains[j]; j++)
+      {
+      EC_Domain_Params params = get_EC_Dom_Pars_by_oid(domains[j]);
+
+      u32bit pbits = params.get_curve().get_p().bits();
+
+      Timer keygen_timer("keygen");
+      Timer kex_timer("kex");
+
+      while(kex_timer.seconds() < seconds)
+         {
+         keygen_timer.start();
+         ECKAEG_PrivateKey eckaeg1(rng, params);
+         keygen_timer.stop();
+
+         keygen_timer.start();
+         ECKAEG_PrivateKey eckaeg2(rng, params);
+         keygen_timer.stop();
+
+         ECKAEG_PublicKey pub1(eckaeg1);
+         ECKAEG_PublicKey pub2(eckaeg2);
+
+         SecureVector<byte> secret1, secret2;
+
+         for(u32bit i = 0; i != 1000; ++i)
+            {
+            if(kex_timer.seconds() > seconds)
+               break;
+
+            kex_timer.start();
+            secret1 = eckaeg1.derive_key(pub2);
+            kex_timer.stop();
+
+            kex_timer.start();
+            secret2 = eckaeg2.derive_key(pub1);
+            kex_timer.stop();
+
+            if(secret1 != secret2)
+               std::cerr << "ECKAEG secrets did not match, bug in the library!?!\n";
+            }
+         }
+
+      const std::string nm = "ECKAEG-" + to_string(pbits);
+      report.report(nm, keygen_timer);
+      report.report(nm, kex_timer);
+      }
+   }
+
+#endif
+
 template<typename PRIV_KEY_TYPE>
 void benchmark_dsa_nr(RandomNumberGenerator& rng,
                       double seconds,
@@ -352,7 +420,6 @@ void benchmark_dh(RandomNumberGenerator& rng,
                   Benchmark_Report& report)
    {
 #ifdef BOTAN_HAS_DIFFIE_HELLMAN
-
    const char* domains[] = { "modp/ietf/768",
                              "modp/ietf/1024",
                              "modp/ietf/2048",
@@ -398,12 +465,8 @@ void benchmark_dh(RandomNumberGenerator& rng,
             kex_timer.stop();
 
             if(secret1 != secret2)
-               {
                std::cerr << "DH secrets did not match, bug in the library!?!\n";
-               }
-
             }
-
          }
 
       const std::string nm = "DH-" + split_on(domains[j], '/')[2];
@@ -510,6 +573,11 @@ void bench_pk(RandomNumberGenerator& rng,
 #if defined(BOTAN_HAS_ECDSA)
    if(algo == "All" || algo == "ECDSA")
       benchmark_ecdsa(rng, seconds, report);
+#endif
+
+#if defined(BOTAN_HAS_ECKAEG)
+   if(algo == "All" || algo == "ECKAEG")
+      benchmark_eckaeg(rng, seconds, report);
 #endif
 
    if(algo == "All" || algo == "DH")

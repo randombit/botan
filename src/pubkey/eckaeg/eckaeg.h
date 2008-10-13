@@ -101,13 +101,22 @@ class BOTAN_DLL ECKAEG_PrivateKey : public ECKAEG_PublicKey,
       ECKAEG_PrivateKey(ECKAEG_PrivateKey const& other);
       ECKAEG_PrivateKey const& operator=(ECKAEG_PrivateKey const& rhs);
 
+      MemoryVector<byte> public_value() const;
+
       void PKCS8_load_hook(bool = false);
 
       /**
       * Derive a shared key with the other partys public key.
-      * @param pub_key the other partys public key
+      * @param key the other partys public key
+      * @param key_len the other partys public key
       */
-      SecureVector<byte> derive_key(const Public_Key& pub_key) const;
+      SecureVector<byte> derive_key(const byte key[], u32bit key_len) const;
+
+      /**
+      * Derive a shared key with the other partys public key.
+      * @param other the other partys public key
+      */
+      SecureVector<byte> derive_key(const ECKAEG_PublicKey& other) const;
 
       /**
       * Make sure that the public key parts of this object are set
