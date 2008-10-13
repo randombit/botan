@@ -12,6 +12,9 @@
 
 namespace Botan {
 
+/**
+* The two types of signature format supported by Botan.
+*/
 enum Signature_Format { IEEE_1363, DER_SEQUENCE };
 
 /**
