@@ -12,29 +12,69 @@
 
 namespace Botan {
 
-/*************************************************
-* X.509 CRL                                      *
-*************************************************/
+/**
+* This class represents X.509 Certificate Revocation Lists (CRLs).
+*/
 class BOTAN_DLL X509_CRL : public X509_Object
    {
    public:
+      /**
+      * This class represents CRL related errors.
+      */
       struct X509_CRL_Error : public Exception
          {
          X509_CRL_Error(const std::string& error) :
             Exception("X509_CRL: " + error) {}
          };
 
+      /**
+      * Get the entries of this CRL in the form of a vector.
+      * @return a vector containing the entries of this CRL.
+      */
       std::vector<CRL_Entry> get_revoked() const;
 
+      /**
+      * Get the issuer DN of this CRL.
+      * @return the CRLs issuer DN
+      */
       X509_DN issuer_dn() const;
+
+      /**
+      * Get the AuthorityKeyIdentifier of this CRL.
+      * @return this CRLs AuthorityKeyIdentifier
+      */
       MemoryVector<byte> authority_key_id() const;
 
+      /**
+      * Get the serial number of this CRL.
+      * @return the CRLs serial number
+      */
       u32bit crl_number() const;
+
+      /**
+      * Get the CRL's thisUpdate value.
+      * @return the CRLs thisUpdate
+      */
       X509_Time this_update() const;
+
+      /**
+      * Get the CRL's nextUpdate value.
+      * @return the CRLs nextdUpdate
+      */
       X509_Time next_update() const;
 
+      /**
+      * Construct a CRL from a data source.
+      * @param source the data source providing the DER or PEM encoded CRL.
+      */
       X509_CRL(DataSource&, bool throw_on_unknown_critical = false);
-      X509_CRL(const std::string&, bool throw_on_unknown_critical = false);
+
+      /**
+      * Construct a CRL from a file containing the DER or PEM encoded CRL.
+      * @param filename the name of the CRL file
+      */
+      X509_CRL(const std::string& filename,
+               bool throw_on_unknown_critical = false);
    private:
       void force_decode();
 
