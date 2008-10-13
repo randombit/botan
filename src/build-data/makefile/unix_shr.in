@@ -100,14 +100,18 @@ $(SHARED_LIB): $(LIBOBJS)
 ##################################################
 # Fake Targets                                   #
 ##################################################
-.PHONY = clean distclean install static shared
+.PHONY = doxygen clean distclean install static shared
 
 static: $(STATIC_LIB)
 
 shared: $(SHARED_LIB)
 
+doxygen:
+	doxygen @{var:doc-dir}/botan.doxy
+
 clean:
 	$(RM_R) @{var:build-dir}/lib/* @{var:build-dir}/checks/*
+	$(RM_R) @{var:doc-dir}/doxygen @{var:doc-dir}/botan.doxy
 	$(RM) $(LIBRARIES) $(SYMLINK) $(CHECK)
 
 distclean: clean

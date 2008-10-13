@@ -9,8 +9,9 @@
 ^build/include/botan/.*\.h$
 ^build/lib$
 ^build/lib/.*\.o$
-^check$
-^doc/examples/.*\.pem$
-^misc/nist_tests/x509test$
 /?callgrind.out.*
-
+^check$
+^checks/nist_tests/x509test$
+^doc/botan.doxy$
+^doc/doxygen$
+^doc/examples/.*\.pem$

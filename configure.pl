@@ -165,6 +165,12 @@ sub main {
     process_template(File::Spec->catfile($$config{'config-dir'}, 'buildh.in'),
                      File::Spec->catfile($$config{'build-dir'}, 'build.h'),
                      $config);
+
+    process_template(File::Spec->catfile(
+                         $$config{'config-dir'}, 'botan.doxy.in'),
+                     File::Spec->catfile($$config{'doc-dir'}, 'botan.doxy'),
+                     $config);
+
     $$config{'includes'}{'build.h'} = $$config{'build-dir'};
 
     generate_makefile($config);

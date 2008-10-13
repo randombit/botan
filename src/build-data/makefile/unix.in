@@ -89,12 +89,16 @@ $(STATIC_LIB): $(LIBOBJS)
 ##################################################
 # Fake Targets                                   #
 ##################################################
-.PHONY = clean distclean install static
+.PHONY = doxygen clean distclean install static
 
 static: $(STATIC_LIB)
 
+doxygen:
+	doxygen @{var:doc-dir}/botan.doxy
+
 clean:
 	$(RM_R) @{var:build-dir}/lib/* @{var:build-dir}/checks/*
+	$(RM_R) @{var:doc-dir}/doxygen @{var:doc-dir}/botan.doxy
 	$(RM) $(LIBRARIES) $(SYMLINK) $(CHECK)
 
 distclean: clean
