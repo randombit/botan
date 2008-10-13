@@ -39,6 +39,7 @@ namespace CVC_EAC
 
 /**
 * Create a selfsigned CVCA
+* @param rng the rng to use
 * @param key the ECDSA private key to be used to sign the certificate
 * @param opts used to set several parameters. Necessary are:
 * car, holder_auth_templ, hash_alg, ced, cex and hash_alg
@@ -55,6 +56,7 @@ EAC1_1_CVC create_self_signed_cert(Private_Key const& key,
 * sequence number)
 * @param hash_alg the string defining the hash algorithm to be used for the creation
 * of the signature
+* @param rng the rng to use
 * @result the new request
 */
 EAC1_1_Req create_cvc_req(Private_Key const& priv_key,
@@ -68,6 +70,7 @@ EAC1_1_Req create_cvc_req(Private_Key const& priv_key,
 * @param req the request forming the body of the ADO
 * @param car the CAR forming the body of the ADO, i.e. the
 * CHR of the entity associated with the provided private key
+* @param rng the rng to use
 */
 EAC1_1_ADO create_ado_req(Private_Key const& priv_key,
                           EAC1_1_Req const& req,
@@ -91,6 +94,7 @@ namespace DE_EAC
 * shall be entitled to read the biometrical iris image
 * @param fingerpr indicates whether the entity associated with the certificate
 * shall be entitled to read the biometrical fingerprint image
+* @param rng the rng to use
 * @result the CVCA certificate created
 */
 EAC1_1_CVC create_cvca(Private_Key const& priv_key,
