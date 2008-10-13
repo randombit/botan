@@ -42,13 +42,7 @@ class BOTAN_DLL EAC1_1_CVC_CA
                                   ASN1_Ced ced,
                                   ASN1_Cex cex,
                                   RandomNumberGenerator& rng);
-
-   private:
-
    };
-
-
-
 
 }
 
