@@ -1,7 +1,7 @@
 /*************************************************
 * ECDSA Header File                              *
 * (C) 2007 Falko Strenzke, FlexSecure GmbH       *
-*          Manuel hartl, FlexSecure GmbH         *
+*          Manuel Hartl, FlexSecure GmbH         *
 * (C) 2008 Jack Lloyd                            *
 *************************************************/
 
@@ -43,7 +43,7 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey,
       * @param sig_len the number of bytes in the signature byte array
       */
       bool verify(const byte message[], u32bit mess_len,
-                  const byte signature [], u32bit sig_len) const;
+                  const byte signature[], u32bit sig_len) const;
 
       /**
       * Default constructor. Use this one if you want to later fill

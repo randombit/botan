@@ -94,7 +94,7 @@ class BOTAN_DLL Null_RNG : public RandomNumberGenerator
    {
    public:
       void randomize(byte[], u32bit) { throw PRNG_Unseeded("Null_RNG"); }
-      void clear() throw() {};
+      void clear() throw() {}
       std::string name() const { return "Null_RNG"; }
 
       bool is_seeded() const { return false; }

@@ -1,7 +1,7 @@
 /*************************************************
 * ECDSA Header File                              *
 * (C) 2007 Falko Strenzke, FlexSecure GmbH       *
-*          Manuel hartl, FlexSecure GmbH         *
+*          Manuel Hartl, FlexSecure GmbH         *
 * (C) 2008 Jack Lloyd                            *
 *************************************************/
 

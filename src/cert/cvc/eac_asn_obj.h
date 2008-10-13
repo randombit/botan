@@ -92,7 +92,8 @@ class BOTAN_DLL EAC_Time : public ASN1_Object
       //EAC_Time(const std::string& = "");
       EAC_Time(const std::string&, ASN1_Tag = ASN1_Tag(0));
       EAC_Time(u32bit year, u32bit month, u32bit day, ASN1_Tag = ASN1_Tag(0));
-      virtual ~EAC_Time(){};
+
+      virtual ~EAC_Time() {}
    private:
       SecureVector<byte> encoded_eac_time() const;
       bool passes_sanity_check() const;

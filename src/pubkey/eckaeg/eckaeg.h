@@ -1,7 +1,7 @@
 /*************************************************
 * ECKAEG Header File                             *
 * (C) 2007 Falko Strenzke, FlexSecure GmbH       *
-*          Manuel hartl, FlexSecure GmbH         *
+*          Manuel Hartl, FlexSecure GmbH         *
 * (C) 2008 Jack Lloyd                            *
 *************************************************/
 
@@ -24,7 +24,7 @@ class BOTAN_DLL ECKAEG_PublicKey : public virtual EC_PublicKey
       * Default constructor. Use this one if you want to later fill
       * this object with data from an encoded key.
       */
-      ECKAEG_PublicKey() {};
+      ECKAEG_PublicKey() {}
 
       /**
       * Construct a public key from a given public point.
@@ -99,7 +99,7 @@ class BOTAN_DLL ECKAEG_PrivateKey : public ECKAEG_PublicKey,
       */
       ECKAEG_PrivateKey() {}
       ECKAEG_PrivateKey(ECKAEG_PrivateKey const& other);
-      ECKAEG_PrivateKey const& operator= (ECKAEG_PrivateKey const& rhs);
+      ECKAEG_PrivateKey const& operator=(ECKAEG_PrivateKey const& rhs);
 
       void PKCS8_load_hook(bool = false);
 
