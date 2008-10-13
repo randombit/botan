@@ -47,6 +47,9 @@ std::vector<algorithm> get_algos()
    algos.push_back(algorithm("Block Cipher", "Twofish", "Twofish/ECB", 32));
    algos.push_back(algorithm("Block Cipher", "XTEA", "XTEA/ECB", 16));
 
+   algos.push_back(algorithm("Cipher Mode", "DES/CBC/PKCS7", 8, 8));
+   algos.push_back(algorithm("Cipher Mode", "TripleDES/CBC/PKCS7", 24, 8));
+
    algos.push_back(algorithm("Cipher Mode", "AES-128/CBC/PKCS7", 16, 16));
    algos.push_back(algorithm("Cipher Mode", "AES-128/CBC/CTS", 16, 16));
    algos.push_back(algorithm("Cipher Mode", "AES-128/CFB(128)", 16, 16));
