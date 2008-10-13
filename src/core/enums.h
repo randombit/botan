@@ -10,9 +10,9 @@
 
 namespace Botan {
 
-/*************************************************
-* X.509v3 Key Constraints                        *
-*************************************************/
+/**
+* X.509v3 Key Constraints.
+*/
 enum Key_Constraints {
    NO_CONSTRAINTS     = 0,
    DIGITAL_SIGNATURE  = 32768,
@@ -26,9 +26,9 @@ enum Key_Constraints {
    DECIPHER_ONLY      = 128
 };
 
-/*************************************************
-* X.509v2 CRL Reason Code                        *
-*************************************************/
+/**
+* X.509v2 CRL Reason Code.
+*/
 enum CRL_Code {
    UNSPECIFIED            = 0,
    KEY_COMPROMISE         = 1,
@@ -49,12 +49,29 @@ enum CRL_Code {
 /*************************************************
 * Various Other Enumerations                     *
 *************************************************/
+
+/**
+* The type of checking to be performed:
+* NONE - no checks, IGNORE_WS - perform checks, but ignore
+* whitespaces, FULL_CHECK - perform checks, also complain
+* about white spaces.
+*/
 enum Decoder_Checking { NONE, IGNORE_WS, FULL_CHECK };
 
+/**
+* The two types of X509 encoding supported by Botan.
+*/
 enum X509_Encoding { RAW_BER, PEM };
 
+/**
+* The two possible directions for cipher filters, determining whether they
+* actually perform encryption or decryption.
+*/
 enum Cipher_Dir { ENCRYPTION, DECRYPTION };
 
+/**
+* The different charsets supported by Botan.
+*/
 enum Character_Set {
    LOCAL_CHARSET,
    UCS2_CHARSET,
@@ -62,6 +79,10 @@ enum Character_Set {
    LATIN1_CHARSET
 };
 
+/**
+* Value to encode in case of no path limit in the X509
+* BasicConstraints extension.
+*/
 static const u32bit NO_CERT_PATH_LIMIT = 0xFFFFFFF0;
 
 }
