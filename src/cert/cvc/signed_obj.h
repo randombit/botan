@@ -73,20 +73,17 @@ class BOTAN_DLL EAC_Signed_Object
       */
       std::string PEM_encode() const;
 
-      EAC_Signed_Object(SharedPtrConverter<DataSource>, const std::string&);
-      EAC_Signed_Object(const std::string&, const std::string&);
       virtual ~EAC_Signed_Object() {}
    protected:
       void do_decode();
       EAC_Signed_Object() {}
+
       AlgorithmIdentifier sig_algo;
       SecureVector<byte> tbs_bits;
       std::string PEM_label_pref;
       std::vector<std::string> PEM_labels_allowed;
    private:
-
       virtual void force_decode() = 0;
-
    };
 
 }
