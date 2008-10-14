@@ -756,6 +756,7 @@ u32bit do_pk_validation_tests(const std::string& filename,
    std::cout << std::endl;
 
    errors += do_ecdsa_tests(rng);
+   errors += do_eckaeg_tests(rng);
    do_pk_keygen_tests(rng);
    do_x509_tests(rng);
 
