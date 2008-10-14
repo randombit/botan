@@ -10,5 +10,6 @@ instead.
 You can file bugs at http://www.randombit.net/bugzilla or by sending
 mail to the botan-devel mailing list.
 
-For more information, see info.txt, the API manual, and the tutorial,
-all of which can be found in the doc/ directory.
+For more information, see info.txt, the build instructions, the API
+reference manual, and the tutorial, all of which can be found in the
+doc/ directory.
