@@ -46,9 +46,9 @@ BOTAN_DLL u32bit version_patch();
 
 /**
 * Compare using BOTAN_VERSION_CODE_FOR, as in
-*  #if BOTAN_VERSION_CODE < BOTAN_VERSION_CODE_FOR(1,8,0)
-*      #error "Botan version too old"
-*  #endif
+*  # if BOTAN_VERSION_CODE < BOTAN_VERSION_CODE_FOR(1,8,0)
+*  #    error "Botan version too old"
+*  # endif
 */
 #define BOTAN_VERSION_CODE BOTAN_VERSION_CODE_FOR(BOTAN_VERSION_MAJOR, \
                                                   BOTAN_VERSION_MINOR, \
