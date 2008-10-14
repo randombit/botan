@@ -1255,6 +1255,9 @@ sub load_modules {
             elsif($tr1 eq 'boost') {
                 push @macro_list, '#define BOTAN_USE_BOOST_TR1';
             }
+            else {
+                warning("Unknown --with-tr1= option $tr1, will ignore");
+            }
         }
 
         my %defines;
