@@ -81,24 +81,12 @@ void test_eckaeg_normal_derivation(RandomNumberGenerator& rng)
    Botan::SymmetricKey alice_key = private_a.derive_key(public_b);
    Botan::SymmetricKey bob_key = private_b.derive_key(public_a);
 
-   CHECK_MESSAGE(alice_key == bob_key, "different keys - " << "Alice's key was: " << alice_key.as_string() << ", Bob's key was: " << bob_key.as_string());
-   //cout << "key: " << alice_key.as_string() << endl;
-   /*
-   if(alice_key == bob_key)
-   {
-   std::cout << "The two keys matched, everything worked\n";
-   std::cout << "bit length " << alice_key.length() << endl;
-   std::cout << "The shared key was: " << alice_key.as_string() << "\n";
-   }
-
-   else
-   {
-   std::cout << "The two keys didn't match!\n";
-   std::cout << "Alice's key was: " << alice_key.as_string() << "\n";
-   std::cout << "Bob's key was: " << bob_key.as_string() << "\n";
-   }
-   */
-   // Now Alice and Bob hash the key and use it for something
+   if(alice_key != bob_key)
+      {
+      std::cout << "The two keys didn't match!\n";
+      std::cout << "Alice's key was: " << alice_key.as_string() << "\n";
+      std::cout << "Bob's key was: " << bob_key.as_string() << "\n";
+      }
    }
 
 void test_eckaeg_some_dp(RandomNumberGenerator& rng)
@@ -107,6 +95,7 @@ void test_eckaeg_some_dp(RandomNumberGenerator& rng)
    oids.push_back("1.2.840.10045.3.1.7");
    oids.push_back("1.3.132.0.8");
    oids.push_back("1.2.840.10045.3.1.1");
+
    for(Botan::u32bit i = 0; i< oids.size(); i++)
       {
       std::cout << "." << std::flush;

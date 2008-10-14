@@ -212,6 +212,7 @@ int run_test_suite()
       errors += do_bigint_tests(BIGINT_VALIDATION_FILE, *rng);
       errors += do_gfpmath_tests(*rng);
       errors += do_pk_validation_tests(PK_VALIDATION_FILE, *rng);
+      //errors += do_cvc_tests(*rng);
       }
    catch(Botan::Exception& e)
       {
