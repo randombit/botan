@@ -10,9 +10,9 @@
 
 namespace Botan {
 
-/*************************************************
-* ANSI X9.19 MAC                                 *
-*************************************************/
+/**
+* DES/3DES-based MAC from ANSI X9.19
+*/
 class BOTAN_DLL ANSI_X919_MAC : public MessageAuthenticationCode
    {
    public:
