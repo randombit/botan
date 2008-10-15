@@ -10,8 +10,11 @@
 ^build/include/botan/.*\.h$
 ^build/lib$
 ^build/lib/.*\.o$
-/?callgrind.out.*
+callgrind.out.*
 ^check$
+^checks/ecc_testdata/dompar_private.pkcs8.pem$
+^checks/ecc_testdata/rsa_private.pkcs8.pem$
+^checks/ecc_testdata/wo_dompar_private.pkcs8.pem$
 ^checks/nist_tests/x509test$
 ^doc/botan.doxy$
 ^doc/doxygen$
