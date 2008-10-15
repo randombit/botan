@@ -26,28 +26,7 @@ inline word word_add(word x, word y, word* carry)
    }
 
 /*************************************************
-* Four Word Block Addition, Two Argument         *
-*************************************************/
-inline word word4_addcarry(word x[4], word carry)
-   {
-   __asm {
-       mov edx,[x]
-       xor eax,eax
-       sub eax,[carry] //force CF=1 iff *carry==1
-       adc [edx],0
-       mov eax,[esi+4]
-       adc [edx+4],0
-       mov eax,[esi+8]
-       adc [edx+8],0
-       mov eax,[esi+12]
-       adc [edx+12],0
-       sbb eax,eax
-       neg eax
-      }
-   }
-
-/*************************************************
-* Four Word Block Addition, Two Argument         *
+* Eight Word Block Addition, Two Argument        *
 *************************************************/
 inline word word8_add2(word x[8], const word y[8], word carry)
    {
@@ -78,7 +57,7 @@ inline word word8_add2(word x[8], const word y[8], word carry)
    }
 
 /*************************************************
-* Four Word Block Addition, Three Argument       *
+* Eight Word Block Addition, Three Argument      *
 *************************************************/
 inline word word8_add3(word z[8], const word x[8], const word y[8], word carry)
    {
@@ -138,7 +117,7 @@ inline word word_sub(word x, word y, word* carry)
    }
 
 /*************************************************
-* Four Word Block Subtraction, Two Argument      *
+* Eight Word Block Subtraction, Two Argument     *
 *************************************************/
 inline word word8_sub2(word x[8], const word y[8], word carry)
    {
@@ -177,10 +156,10 @@ inline word word8_sub2(word x[8], const word y[8], word carry)
    }
 
 /*************************************************
-* Four Word Block Subtraction, Three Argument    *
+* Eight Word Block Subtraction, Three Argument   *
 *************************************************/
-__forceinline word word8_sub3(word z[8], const word x[8],
-                              const word y[8], word carry)
+inline word word8_sub3(word z[8], const word x[8],
+                       const word y[8], word carry)
    {
     __asm {
        mov edi,[x]
@@ -218,7 +197,7 @@ __forceinline word word8_sub3(word z[8], const word x[8],
    }
 
 /*************************************************
-* Four Word Block Linear Multiplication          *
+* Eight Word Block Linear Multiplication         *
 *************************************************/
 inline word word8_linmul2(word x[8], word y, word carry)
    {
@@ -285,10 +264,10 @@ inline word word8_linmul2(word x[8], word y, word carry)
    }
 
 /*************************************************
-* Eight Word Block Linear Multiplication          *
+* Eight Word Block Linear Multiplication         *
 *************************************************/
-__forceinline word word8_muladd(word z[8], const word x[8],
-                                word y, word carry)
+inline word word8_muladd(word z[8], const word x[8],
+                         word y, word carry)
    {
    __asm
       {
@@ -369,7 +348,7 @@ __forceinline word word8_muladd(word z[8], const word x[8],
    }
    }
 
-__forceinline word word8_linmul3(word z[4], const word x[4], word y, word carry)
+inline word word8_linmul3(word z[4], const word x[4], word y, word carry)
    {
    __asm
    {
@@ -514,12 +493,10 @@ inline word word8_madd3(word z[8], const word x[8], word y, word carry)
 *************************************************/
 inline void word3_muladd(word* w2, word* w1, word* w0, word a, word b)
    {
-   dword z = (dword)a * b + (*w0);
-   *w0 = (word)z;  //lo
-
-   word t1 = (word)(z >> BOTAN_MP_WORD_BITS); //hi
-   *w1 += t1; //w1+=lo
-   *w2 += (*w1 < t1) ? 1 : 0; //w2+=carry
+   word carry = *w0;
+   *w0 = word_madd2(a, b, &carry);
+   *w1 += carry;
+   *w2 += (*w1 < carry) ? 1 : 0;
    }
 
 /*************************************************
@@ -527,17 +504,19 @@ inline void word3_muladd(word* w2, word* w1, word* w0, word a, word b)
 *************************************************/
 inline void word3_muladd_2(word* w2, word* w1, word* w0, word a, word b)
    {
-   dword z = (dword)a * b;
-   word t0 = (word)z;
-   word t1 = (word)(z >> BOTAN_MP_WORD_BITS);
+   word carry = 0;
+   a = word_madd2(a, b, &carry);
+   b = carry;
 
-   *w0 += t0;
-   *w1 += t1 + ((*w0 < t0) ? 1 : 0);
-   *w2 += (*w1 < t1) ? 1 : 0;
+   word top = (b >> (BOTAN_MP_WORD_BITS-1));
+   b <<= 1;
+   b |= (a >> (BOTAN_MP_WORD_BITS-1));
+   a <<= 1;
 
-   *w0 += t0;
-   *w1 += t1 + ((*w0 < t0) ? 1 : 0);
-   *w2 += (*w1 < t1) ? 1 : 0;
+   carry = 0;
+   *w0 = word_add(*w0, a, &carry);
+   *w1 = word_add(*w1, b, &carry);
+   *w2 = word_add(*w2, top, &carry);
    }
 
 }
