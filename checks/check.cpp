@@ -207,12 +207,12 @@ int run_test_suite()
       std::auto_ptr<RandomNumberGenerator> rng(
          RandomNumberGenerator::make_rng());
 
-      errors += do_cvc_tests(*rng);
       errors += do_validation_tests(VALIDATION_FILE, *rng);
       errors += do_validation_tests(EXPECTED_FAIL_FILE, *rng, false);
       errors += do_bigint_tests(BIGINT_VALIDATION_FILE, *rng);
       errors += do_gfpmath_tests(*rng);
       errors += do_pk_validation_tests(PK_VALIDATION_FILE, *rng);
+      //errors += do_cvc_tests(*rng);
       }
    catch(Botan::Exception& e)
       {
