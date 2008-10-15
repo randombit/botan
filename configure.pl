@@ -97,9 +97,14 @@ sub main {
     &$default_value_is('shared', 'yes');
     &$default_value_is('local_config', '');
 
+    # Goes into build-specific dirs (maybe)
     if(defined($$config{'build-dir'})) {
         $$config{'botan-config'} =
             File::Spec->catfile($$config{'build-dir'}, 'botan-config');
+
+        $$config{'botan-pkgconfig'} =
+            File::Spec->catfile($$config{'build-dir'}, 'botan.pc');
+
         $$config{'makefile'} =
             File::Spec->catfile($$config{'build-dir'}, 'Makefile');
         $$config{'check_prefix'} = $$config{'build-dir'};
@@ -108,6 +113,7 @@ sub main {
     else { # defaults
         $$config{'build-dir'} = 'build';
         $$config{'botan-config'} = 'botan-config';
+        $$config{'botan-pkgconfig'} = 'botan.pc';
         $$config{'makefile'} = 'Makefile';
         $$config{'check_prefix'} = '';
         $$config{'lib_prefix'} = '';
@@ -1745,6 +1751,10 @@ sub write_pkg_config {
        File::Spec->catfile($$config{'config-dir'}, 'botan-config.in'),
                      $botan_config, $config);
     chmod 0755, $botan_config;
+
+    process_template(
+       File::Spec->catfile($$config{'config-dir'}, 'botan.pc.in'),
+                           $$config{'botan-pkgconfig'}, $config);
 
     delete $$config{'link_to'};
 }

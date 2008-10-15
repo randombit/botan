@@ -1,0 +1,11 @@
+prefix=@{var:prefix}
+exec_prefix=${prefix}
+libdir=${prefix}/@{var:libdir}
+includedir=${prefix}/include
+
+Name: Botan
+Description: Multi-platform C++ crypto library
+Version: @{var:version}
+
+Libs: -L${libdir} -lbotan @{var:link_to}
+Cflags: -I${includedir}
