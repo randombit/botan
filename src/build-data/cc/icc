@@ -8,7 +8,7 @@ add_include_dir_option "-I"
 add_lib_dir_option "-L"
 add_lib_option "-l"
 
-lib_opt_flags "-O3 -ip -unroll"
+lib_opt_flags "-O2 -ip -unroll"
 check_opt_flags "-O2"
 debug_flags "-g"
 no_debug_flags "-fomit-frame-pointer"
