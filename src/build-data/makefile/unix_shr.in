@@ -29,8 +29,10 @@ BINDIR        = $(DESTDIR)/bin
 LIBDIR        = $(DESTDIR)/@{var:libdir}
 HEADERDIR     = $(DESTDIR)/@{var:includedir}/botan
 DOCDIR        = $(DESTDIR)/@{var:docdir}/Botan-$(VERSION)
+PKGCONF_DIR   = $(LIBDIR)/pkgconfig
 
 CONFIG_SCRIPT = @{var:botan-config}
+PKGCONFIG     = botan.pc
 
 ##################################################
 # Aliases for Common Programs                    #
@@ -124,13 +126,15 @@ install: $(LIBRARIES)
 	$(MKDIR_INSTALL) $(HEADERDIR)
 	$(MKDIR_INSTALL) $(LIBDIR)
 	$(MKDIR_INSTALL) $(BINDIR)
+	$(MKDIR_INSTALL) $(PKGCONF_DIR)
 	@for i in $(DOCS); do \
 	   $(INSTALL_CMD_DATA) $$i $(DOCDIR); \
 	 done
 	@for i in $(HEADERS); do \
 	   $(INSTALL_CMD_DATA) $$i $(HEADERDIR); \
 	 done
-	@$(INSTALL_CMD_DATA) $(STATIC_LIB) $(LIBDIR)
-	@$(INSTALL_CMD_EXEC) $(CONFIG_SCRIPT) $(BINDIR)
-	@$(INSTALL_CMD_EXEC) $(SHARED_LIB) $(LIBDIR)
+	$(INSTALL_CMD_DATA) $(STATIC_LIB) $(LIBDIR)
+	$(INSTALL_CMD_EXEC) $(CONFIG_SCRIPT) $(BINDIR)
+	$(INSTALL_CMD_EXEC) $(SHARED_LIB) $(LIBDIR)
+	$(INSTALL_CMD_DATA) $(PKGCONFIG) $(PKGCONF_DIR)
 	$(CD) $(LIBDIR); $(LN) $(SHARED_LIB) $(SYMLINK)
