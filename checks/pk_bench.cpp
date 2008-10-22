@@ -152,16 +152,22 @@ void benchmark_rsa(RandomNumberGenerator& rng,
    {
 #if defined(BOTAN_HAS_RSA)
 
-   for(size_t keylen = 1024; keylen <= 4096; keylen += 1024)
-      {
-      Timer keygen_timer("keygen");
-      Timer verify_timer("verify");
-      Timer sig_timer("signature");
-      Timer enc_timer("encrypt");
-      Timer dec_timer("decrypt");
+   size_t keylens[] = { 512, 1024, 2048, 4096, 6144, 8192, 0 };
 
-      const std::string sig_padding = "EMSA4(SHA-1)";
-      const std::string enc_padding = "EME1(SHA-1)";
+   for(size_t i = 0; keylens[i]; ++i)
+      {
+      size_t keylen = keylens[i];
+
+      //const std::string sig_padding = "EMSA4(SHA-1)";
+      //const std::string enc_padding = "EME1(SHA-1)";
+      const std::string sig_padding = "EMSA-PKCS1-v1_5(SHA-1)";
+      const std::string enc_padding = "EME-PKCS1-v1_5";
+
+      Timer keygen_timer("keygen");
+      Timer verify_timer(sig_padding + " verify");
+      Timer sig_timer(sig_padding + " signature");
+      Timer enc_timer(enc_padding + " encrypt");
+      Timer dec_timer(enc_padding + " decrypt");
 
       try
          {
@@ -192,13 +198,13 @@ void benchmark_rsa(RandomNumberGenerator& rng,
                               sig_timer, rng, 10000, seconds);
             }
 
-         const std::string rsa_keylen = "RSA " + to_string(keylen);
+         const std::string rsa_keylen = "RSA-" + to_string(keylen);
 
          report.report(rsa_keylen, keygen_timer);
-         report.report(rsa_keylen + " " + sig_padding, verify_timer);
-         report.report(rsa_keylen + " " + sig_padding, sig_timer);
-         report.report(rsa_keylen + " " + enc_padding, enc_timer);
-         report.report(rsa_keylen + " " + enc_padding, dec_timer);
+         report.report(rsa_keylen, verify_timer);
+         report.report(rsa_keylen, sig_timer);
+         report.report(rsa_keylen, enc_timer);
+         report.report(rsa_keylen, dec_timer);
          }
       catch(Stream_IO_Error)
          {
@@ -218,17 +224,17 @@ void benchmark_rw(RandomNumberGenerator& rng,
    {
 #if defined(BOTAN_HAS_RW)
 
-   const u32bit keylens[] = { 512, 1024, 2048, 3072, 4096, 6144, 8192, 0 };
+   const u32bit keylens[] = { 512, 1024, 2048, 4096, 6144, 8192, 0 };
 
    for(size_t j = 0; keylens[j]; j++)
       {
       u32bit keylen = keylens[j];
 
-      Timer keygen_timer("keygen");
-      Timer verify_timer("verify");
-      Timer sig_timer("signature");
+      std::string padding = "EMSA2(SHA-256)";
 
-      std::string padding = "EMSA2(SHA-1)";
+      Timer keygen_timer("keygen");
+      Timer verify_timer(padding + " verify");
+      Timer sig_timer(padding + " signature");
 
       while(verify_timer.seconds() < seconds ||
             sig_timer.seconds() < seconds)
@@ -272,9 +278,18 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
 
       u32bit pbits = params.get_curve().get_p().bits();
 
+      u32bit hashbits = pbits;
+
+      if(hashbits < 160)
+         hashbits = 160;
+      if(hashbits == 521)
+         hashbits = 512;
+
+      const std::string padding = "EMSA1(SHA-" + to_string(hashbits) + ")";
+
       Timer keygen_timer("keygen");
-      Timer verify_timer("verify");
-      Timer sig_timer("signature");
+      Timer verify_timer(padding + " verify");
+      Timer sig_timer(padding + " signature");
 
       while(verify_timer.seconds() < seconds ||
             sig_timer.seconds() < seconds)
@@ -282,8 +297,6 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
          keygen_timer.start();
          ECDSA_PrivateKey key(rng, params);
          keygen_timer.stop();
-
-         const std::string padding = "EMSA1(SHA-160)";
 
          std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));
          std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
@@ -293,6 +306,7 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
          }
 
       const std::string nm = "ECDSA-" + to_string(pbits);
+
       report.report(nm, keygen_timer);
       report.report(nm, verify_timer);
       report.report(nm, sig_timer);
@@ -322,7 +336,7 @@ void benchmark_eckaeg(RandomNumberGenerator& rng,
       u32bit pbits = params.get_curve().get_p().bits();
 
       Timer keygen_timer("keygen");
-      Timer kex_timer("kex");
+      Timer kex_timer("key exchange");
 
       while(kex_timer.seconds() < seconds)
          {
@@ -385,9 +399,11 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
       u32bit pbits = to_u32bit(split_on(domains[j], '/')[2]);
       u32bit qbits = (pbits <= 1024) ? 160 : 256;
 
+      const std::string padding = "EMSA1(SHA-" + to_string(qbits) + ")";
+
       Timer keygen_timer("keygen");
-      Timer verify_timer("verify");
-      Timer sig_timer("signature");
+      Timer verify_timer(padding + " verify");
+      Timer sig_timer(padding + " signature");
 
       while(verify_timer.seconds() < seconds ||
             sig_timer.seconds() < seconds)
@@ -397,8 +413,6 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
          keygen_timer.start();
          PRIV_KEY_TYPE key(rng, group);
          keygen_timer.stop();
-
-         const std::string padding = "EMSA1(SHA-" + to_string(qbits) + ")";
 
          std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));
          std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
@@ -432,7 +446,7 @@ void benchmark_dh(RandomNumberGenerator& rng,
    for(size_t j = 0; domains[j]; j++)
       {
       Timer keygen_timer("keygen");
-      Timer kex_timer("kex");
+      Timer kex_timer("key exchange");
 
       while(kex_timer.seconds() < seconds)
          {
@@ -498,9 +512,11 @@ void benchmark_elg(RandomNumberGenerator& rng,
       {
       u32bit pbits = to_u32bit(split_on(domains[j], '/')[2]);
 
+      const std::string padding = "EME1(SHA-1)";
+
       Timer keygen_timer("keygen");
-      Timer enc_timer("encrypt");
-      Timer dec_timer("decrypt");
+      Timer enc_timer(padding + " encrypt");
+      Timer dec_timer(padding + " decrypt");
 
       while(enc_timer.seconds() < seconds ||
             dec_timer.seconds() < seconds)
@@ -510,8 +526,6 @@ void benchmark_elg(RandomNumberGenerator& rng,
          keygen_timer.start();
          ElGamal_PrivateKey key(rng, group);
          keygen_timer.stop();
-
-         const std::string padding = "EME1(SHA-1)";
 
          std::auto_ptr<PK_Decryptor> dec(get_pk_decryptor(key, padding));
          std::auto_ptr<PK_Encryptor> enc(get_pk_encryptor(key, padding));
