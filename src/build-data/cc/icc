@@ -22,10 +22,10 @@ dll_export_flags ""
 makefile_style unix
 
 <mach_opt>
-i686     -> "-march=pentium3"
-athlon   -> "-march=pentium3"
+pentium3 -> "-march=pentium3"
 pentium4 -> "-march=pentium4"
-core2    -> "-msse3"
+pentium-m -> "-march=pentium3"
+core2    -> "-march=core2"
 </mach_opt>
 
 <so_link_flags>
