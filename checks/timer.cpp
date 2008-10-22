@@ -33,13 +33,18 @@ std::ostream& operator<<(std::ostream& out, Timer& timer)
    {
    //out << timer.value() << " ";
 
-   int events_per_second = static_cast<int>(timer.events() / timer.seconds());
+   double events_per_second_fl =
+      static_cast<double>(timer.events() / timer.seconds());
+
+   u64bit events_per_second = static_cast<u64bit>(events_per_second_fl);
 
    out << events_per_second << " " << timer.get_name() << " per second; ";
 
+   std::string op_or_ops = (timer.events() == 1) ? "op" : "ops";
+
    out << std::setprecision(2) << std::fixed
-       << timer.ms_per_event() << " ms/" << timer.get_name()
-       << " (" << timer.events() << " ops in "
+       << timer.ms_per_event() << " ms/op"
+       << " (" << timer.events() << " " << op_or_ops << " in "
        << timer.milliseconds() << " ms)";
 
    return out;
