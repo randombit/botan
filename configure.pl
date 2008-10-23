@@ -2159,6 +2159,17 @@ sub guess_cpu
     # what kind of CPU we're running on.
     my $cpuinfo = '/proc/cpuinfo';
 
+    if(defined($ENV{'CPUINFO'})) {
+        my $cpuinfo_env = $ENV{'CPUINFO'};
+
+        if(-e $cpuinfo_env and -r $cpuinfo_env) {
+            autoconfig("Will use $cpuinfo_env as /proc/cpuinfo");
+            $cpuinfo = $cpuinfo_env;
+        } else {
+            warn("Could not read from ENV /proc/cpuinfo ($cpuinfo_env)");
+        }
+    }
+
     if(-e $cpuinfo and -r $cpuinfo)
     {
         open CPUINFO, $cpuinfo or die "Could not read $cpuinfo\n";
