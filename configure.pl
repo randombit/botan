@@ -2041,8 +2041,9 @@ sub guess_cpu_from_this
     # possible; that's the most common setup right now anyway
     return 'sparc32-v9' if($cpuinfo =~ /ultrasparc/);
 
-    # Maybe do this once and cache it?
+    # Should probably do this once and cache it
     my @names;
+    my %all_alias;
 
     foreach my $arch (keys %CPU) {
         my %info = %{$CPU{$arch}};
@@ -2055,6 +2056,7 @@ sub guess_cpu_from_this
             my %submodel_aliases = %{$info{'submodel_aliases'}};
             foreach my $sm_alias (keys %submodel_aliases) {
                 push @names, $sm_alias;
+                $all_alias{$sm_alias} = $submodel_aliases{$sm_alias};
             }
         }
     }
@@ -2064,6 +2066,9 @@ sub guess_cpu_from_this
     foreach my $name (@names) {
         if($cpuinfo =~ $name) {
             trace("Matched '$cpuinfo' against '$name'");
+
+            return $all_alias{$name} if defined($all_alias{$name});
+
             return $name;
         }
     }
