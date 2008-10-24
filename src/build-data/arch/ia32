@@ -48,6 +48,7 @@ p2 -> i686
 p3 -> i686
 p4 -> pentium4
 
+intelcput2250 -> prescott
 intelcput2300 -> prescott
 intelcput2400 -> prescott
 intelcput2500 -> prescott
