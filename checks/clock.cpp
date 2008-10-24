@@ -29,7 +29,7 @@
 #endif
 
 /* the default: ANSI/ISO clock */
-#ifndef USE_CLOCKeemacs
+#ifndef USE_CLOCK
   #define USE_CLOCK 1
 #endif
 
