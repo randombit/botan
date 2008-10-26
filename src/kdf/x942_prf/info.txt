@@ -6,7 +6,7 @@ load_on auto
 
 <requires>
 core
-#kdf_base
+#kdf
 #oid_lookup
 </requires>
 

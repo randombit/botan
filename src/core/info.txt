@@ -13,7 +13,6 @@ filters
 hex
 bigint
 libstate
-kdf_base
 timer_base
 </requires>
 

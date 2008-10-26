@@ -5,7 +5,7 @@ define SSL_V3_PRF
 load_on auto
 
 <requires>
-kdf_base
+kdf
 </requires>
 
 <add>

@@ -5,7 +5,7 @@ define MGF1
 load_on dep
 
 <requires>
-kdf_base
+kdf
 </requires>
 
 <add>
