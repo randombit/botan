@@ -6,6 +6,8 @@ load_on auto
 
 <requires>
 kdf
+sha1
+md5
 </requires>
 
 <add>
