@@ -8,7 +8,7 @@ load_on dep
 asn1
 bigint
 numbertheory
-pbe_base
+pbe
 oid_lookup
 pk_pad
 </requires>

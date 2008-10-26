@@ -6,7 +6,7 @@ load_on auto
 
 <requires>
 oid_lookup
-pbe_base
+pbe
 pbkdf2
 </requires>
 

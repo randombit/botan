@@ -10,6 +10,6 @@ pbes1.h
 </add>
 
 <requires>
-pbe_base
+pbe
 pbkdf1
 </requires>
