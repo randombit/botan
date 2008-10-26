@@ -1,4 +1,5 @@
 #include <botan/numthry.h>
+#include <botan/auto_rng.h>
 
 using namespace Botan;
 
@@ -47,7 +48,7 @@ void test_ressol(const BigInt& p, RandomNumberGenerator& rng)
 
 int main()
    {
-   RandomNumberGenerator* rng = RandomNumberGenerator::make_rng();
+   AutoSeeded_RNG rng;
 
 #if 0
    std::cout << ressol(8, 17) << "\n";
@@ -58,8 +59,8 @@ int main()
    for(int j = 16; j != 1024; ++j)
       {
       std::cout << "Round " << j << "\n";
-      BigInt p = random_prime(*rng, j);
-      test_ressol(p, *rng);
+      BigInt p = random_prime(rng, j);
+      test_ressol(p, rng);
       //printf("%d\n", j);
 
 
@@ -70,7 +71,7 @@ int main()
       {
       std::cout << "PRIME[" << j << "] == " << PRIMES[j] << std::endl;
       //printf("%d - ", PRIMES[j]);
-      test_ressol(PRIMES[j], *rng);
+      test_ressol(PRIMES[j], rng);
       //printf("\n");
       }
    */

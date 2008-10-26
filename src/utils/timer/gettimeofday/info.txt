@@ -27,6 +27,6 @@ tru64
 </os>
 
 <requires>
-timer_base
+timer
 </requires>
 

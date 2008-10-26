@@ -45,16 +45,15 @@ int main(int argc, char* argv[])
 
    try
       {
-      std::auto_ptr<RandomNumberGenerator> rng(
-         RandomNumberGenerator::make_rng());
+      AutoSeeded_RNG rng;
 
-      RSA_PrivateKey key(*rng, bits);
+      RSA_PrivateKey key(rng, bits);
       pub << X509::PEM_encode(key);
 
       if(argc == 2)
          priv << PKCS8::PEM_encode(key);
       else
-         priv << PKCS8::PEM_encode(key, *rng, argv[2]);
+         priv << PKCS8::PEM_encode(key, rng, argv[2]);
       }
    catch(std::exception& e)
       {

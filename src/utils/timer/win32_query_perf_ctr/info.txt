@@ -21,6 +21,6 @@ windows -> user32
 </libs>
 
 <requires>
-timer_base
+timer
 </requires>
 

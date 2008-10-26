@@ -17,15 +17,14 @@ int main()
    {
    try
       {
-      std::auto_ptr<RandomNumberGenerator> rng(
-         RandomNumberGenerator::make_rng());
+      AutoSeeded_RNG rng;
 
       // Alice creates a DH key and sends (the public part) to Bob
-      DH_PrivateKey private_a(*rng, DL_Group("modp/ietf/1024"));
+      DH_PrivateKey private_a(rng, DL_Group("modp/ietf/1024"));
       DH_PublicKey public_a = private_a; // Bob gets this
 
       // Bob creates a key with a matching group
-      DH_PrivateKey private_b(*rng, public_a.get_domain());
+      DH_PrivateKey private_b(rng, public_a.get_domain());
 
       // Bob sends the key back to Alice
       DH_PublicKey public_b = private_b; // Alice gets this

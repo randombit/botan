@@ -1,4 +1,5 @@
 #include <botan/numthry.h>
+#include <botan/auto_rng.h>
 
 using namespace Botan;
 
@@ -9,7 +10,7 @@ using namespace Botan;
 
 int main()
    {
-   RandomNumberGenerator* rng = RandomNumberGenerator::make_rng();
+   AutoSeeded_RNG rng;
 
    std::set<BigInt> primes;
 
@@ -23,14 +24,14 @@ int main()
 
       u32bit bits = 18;
 
-      if(rng->next_byte() % 128 == 0)
-         bits -= rng->next_byte() % (bits-2);
+      if(rng.next_byte() % 128 == 0)
+         bits -= rng.next_byte() % (bits-2);
 
       bit_count[bits]++;
 
       //std::cout << "random_prime(" << bits << ")\n";
 
-      BigInt p = random_prime(*rng, bits);
+      BigInt p = random_prime(rng, bits);
 
       if(p.bits() != bits)
          {
@@ -39,7 +40,7 @@ int main()
          return 1;
          }
 
-      primes.insert(random_prime(*rng, bits));
+      primes.insert(random_prime(rng, bits));
 
       if(primes.size() != start_cnt)
          std::cout << primes.size() << "\n";

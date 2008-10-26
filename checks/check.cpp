@@ -140,12 +140,11 @@ int main(int argc, char* argv[])
 
          const bool html = opts.is_set("html");
 
-         std::auto_ptr<RandomNumberGenerator> rng(
-            RandomNumberGenerator::make_rng());
+         AutoSeeded_RNG rng;
 
          if(opts.is_set("benchmark"))
             {
-            benchmark("All", *rng, html, seconds);
+            benchmark("All", rng, html, seconds);
             }
          else if(opts.is_set("bench-algo"))
             {
@@ -155,9 +154,9 @@ int main(int argc, char* argv[])
             for(u32bit j = 0; j != algs.size(); j++)
                {
                const std::string alg = algs[j];
-               u32bit found = bench_algo(alg, *rng, seconds);
+               u32bit found = bench_algo(alg, rng, seconds);
                if(!found) // maybe it's a PK algorithm
-                  bench_pk(*rng, alg, html, seconds);
+                  bench_pk(rng, alg, html, seconds);
                }
             }
          else if(opts.is_set("bench-type"))
@@ -165,19 +164,19 @@ int main(int argc, char* argv[])
             const std::string type = opts.value("bench-type");
 
             if(type == "all")
-               benchmark("All", *rng, html, seconds);
+               benchmark("All", rng, html, seconds);
             else if(type == "block")
-               benchmark("Block Cipher", *rng, html, seconds);
+               benchmark("Block Cipher", rng, html, seconds);
             else if(type == "stream")
-               benchmark("Stream Cipher", *rng, html, seconds);
+               benchmark("Stream Cipher", rng, html, seconds);
             else if(type == "hash")
-               benchmark("Hash", *rng, html, seconds);
+               benchmark("Hash", rng, html, seconds);
             else if(type == "mac")
-               benchmark("MAC", *rng, html, seconds);
+               benchmark("MAC", rng, html, seconds);
             else if(type == "rng")
-               benchmark("RNG", *rng, html, seconds);
+               benchmark("RNG", rng, html, seconds);
             else if(type == "pk")
-               bench_pk(*rng, "All", html, seconds);
+               bench_pk(rng, "All", html, seconds);
             else
                std::cerr << "Unknown --bench-type " << type << "\n";
             }
@@ -204,15 +203,14 @@ int run_test_suite()
    u32bit errors = 0;
    try
       {
-      std::auto_ptr<RandomNumberGenerator> rng(
-         RandomNumberGenerator::make_rng());
+      AutoSeeded_RNG rng;
 
-      errors += do_validation_tests(VALIDATION_FILE, *rng);
-      errors += do_validation_tests(EXPECTED_FAIL_FILE, *rng, false);
-      errors += do_bigint_tests(BIGINT_VALIDATION_FILE, *rng);
-      errors += do_gfpmath_tests(*rng);
-      errors += do_pk_validation_tests(PK_VALIDATION_FILE, *rng);
-      //errors += do_cvc_tests(*rng);
+      errors += do_validation_tests(VALIDATION_FILE, rng);
+      errors += do_validation_tests(EXPECTED_FAIL_FILE, rng, false);
+      errors += do_bigint_tests(BIGINT_VALIDATION_FILE, rng);
+      errors += do_gfpmath_tests(rng);
+      errors += do_pk_validation_tests(PK_VALIDATION_FILE, rng);
+      //errors += do_cvc_tests(rng);
       }
    catch(Botan::Exception& e)
       {

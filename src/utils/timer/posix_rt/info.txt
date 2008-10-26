@@ -23,6 +23,6 @@ linux
 </os>
 
 <requires>
-timer_base
+timer
 </requires>
 

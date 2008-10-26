@@ -25,11 +25,10 @@ int main(int argc, char* argv[])
 
       if(argc == 2)
          {
-         std::auto_ptr<RandomNumberGenerator> rng(
-            RandomNumberGenerator::make_rng());
+         AutoSeeded_RNG rng;
 
          std::cout << "H('" << argv[1] << "') = "
-                   << password_hash(argv[1], *rng) << '\n';
+                   << password_hash(argv[1], rng) << '\n';
          }
       else
          {

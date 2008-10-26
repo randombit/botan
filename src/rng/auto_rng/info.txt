@@ -1,0 +1,18 @@
+realname "Auto-seeded Random Number Generator"
+
+define AUTO_SEEDING_RNG
+
+load_on auto
+
+<requires>
+randpool
+aes
+sha2
+hmac
+</requires>
+
+<add>
+auto_rng.h
+auto_rng.cpp
+</add>
+

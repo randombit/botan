@@ -1,21 +1,18 @@
 /*************************************************
-* Random Number Generator Base Source File       *
-* (C) 1999-2008 Jack Lloyd                       *
+* Auto Seeded RNG Source File                    *
+* (C) 2008 Jack Lloyd                            *
 *************************************************/
 
-#include <botan/rng.h>
-#include <botan/util.h>
+#include <botan/auto_rng.h>
+#include <botan/randpool.h>
 #include <botan/parsing.h>
 #include <botan/timers.h>
-
-#if defined(BOTAN_HAS_RANDPOOL)
-  #include <botan/lookup.h>
-  #include <botan/randpool.h>
+#include <botan/aes.h>
+#include <botan/hmac.h>
+#include <botan/sha2_32.h>
 
 #if defined(BOTAN_HAS_X931_RNG)
   #include <botan/x931_rng.h>
-#endif
-
 #endif
 
 #if defined(BOTAN_HAS_TIMER_HARDWARE)
@@ -58,41 +55,13 @@
 
 namespace Botan {
 
-/*************************************************
-* Default fast poll for EntropySources           *
-*************************************************/
-u32bit EntropySource::fast_poll(byte buf[], u32bit len)
+namespace {
+
+/**
+* Add any known entropy sources to this RNG
+*/
+void add_entropy_sources(RandomNumberGenerator* rng)
    {
-   return this->slow_poll(buf, len);
-   }
-
-/*************************************************
-* Get a single random byte                       *
-*************************************************/
-byte RandomNumberGenerator::next_byte()
-   {
-   byte out;
-   this->randomize(&out, 1);
-   return out;
-   }
-
-/*************************************************
-* Create and seed a new RNG object               *
-*************************************************/
-RandomNumberGenerator* RandomNumberGenerator::make_rng()
-   {
-#if defined(BOTAN_HAS_RANDPOOL)
-
-   /* Randpool is required for make_rng to work */
-   RandomNumberGenerator* rng = new Randpool(get_block_cipher("AES-256"),
-                                             get_mac("HMAC(SHA-256)"));
-
-
-   /* If X9.31 is available, wrap the Randpool algorithm in it */
-#if defined(BOTAN_HAS_X931_RNG)
-   rng = new ANSI_X931_RNG(get_block_cipher("AES-256"), rng);
-#endif
-
 #if defined(BOTAN_HAS_TIMER_HARDWARE)
    rng->add_entropy_source(new Hardware_Timer);
 #elif defined(BOTAN_HAS_TIMER_POSIX)
@@ -140,11 +109,21 @@ RandomNumberGenerator* RandomNumberGenerator::make_rng()
 #if defined(BOTAN_HAS_ENTROPY_SRC_FTW)
    rng->add_entropy_source(new FTW_EntropySource("/proc"));
 #endif
+   }
 
-   return rng;
+}
+
+AutoSeeded_RNG::AutoSeeded_RNG()
+   {
+   /* Randpool is required for make_rng to work */
+   rng = new Randpool(new AES_256, new HMAC(new SHA_256));
+
+   /* If X9.31 is available, wrap the Randpool algorithm in it */
+#if defined(BOTAN_HAS_X931_RNG)
+   rng = new ANSI_X931_RNG(new AES_256, rng);
 #endif
 
-   throw Algorithm_Not_Found("RandomNumberGenerator::make_rng - no RNG found");
+   add_entropy_sources(rng);
    }
 
 }

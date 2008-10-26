@@ -1,0 +1,8 @@
+realname "Random Number Generators"
+
+load_on auto
+
+<add>
+rng.cpp
+rng.h
+</add>

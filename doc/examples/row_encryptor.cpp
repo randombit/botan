@@ -88,9 +88,9 @@ int main()
    {
    LibraryInitializer init;
 
-   std::auto_ptr<RandomNumberGenerator> rng(RandomNumberGenerator::make_rng());
+   AutoSeeded_RNG rng;
 
-   Row_Encryptor encryptor("secret passphrase", *rng);
+   Row_Encryptor encryptor("secret passphrase", rng);
 
    std::vector<std::string> original_inputs;
 
@@ -104,7 +104,7 @@ int main()
       // TODO: Maybe randomize the length slightly?
 
       for(u32bit j = 0; j != 32; ++j)
-         out << std::hex << (int)rng->next_byte();
+         out << std::hex << (int)rng.next_byte();
 
       original_inputs.push_back(out.str());
       }

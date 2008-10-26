@@ -48,11 +48,10 @@ int main(int argc, char* argv[])
          return 1;
          }
 
-      std::auto_ptr<RandomNumberGenerator> rng(
-         RandomNumberGenerator::make_rng());
+      AutoSeeded_RNG rng;
 
       std::auto_ptr<PKCS8_PrivateKey> key(
-         PKCS8::load_key(argv[1], *rng, passphrase)
+         PKCS8::load_key(argv[1], rng, passphrase)
          );
 
       DSA_PrivateKey* dsakey = dynamic_cast<DSA_PrivateKey*>(key.get());
@@ -71,7 +70,7 @@ int main(int argc, char* argv[])
          signer.update(buf, got);
 
       Pipe pipe(new Base64_Encoder);
-      pipe.process_msg(signer.signature(*rng));
+      pipe.process_msg(signer.signature(rng));
       sigfile << pipe.read_all_as_string() << std::endl;
    }
    catch(std::exception& e)

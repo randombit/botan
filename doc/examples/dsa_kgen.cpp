@@ -44,18 +44,17 @@ int main(int argc, char* argv[])
 
    try
       {
-      std::auto_ptr<RandomNumberGenerator> rng(
-         RandomNumberGenerator::make_rng());
+      AutoSeeded_RNG rng;
 
-      DL_Group group(*rng, DL_Group::DSA_Kosherizer, 2048, 256);
+      DL_Group group(rng, DL_Group::DSA_Kosherizer, 2048, 256);
 
-      DSA_PrivateKey key(*rng, group);
+      DSA_PrivateKey key(rng, group);
 
       pub << X509::PEM_encode(key);
       if(argc == 1)
          priv << PKCS8::PEM_encode(key);
       else
-         priv << PKCS8::PEM_encode(key, *rng, argv[1]);
+         priv << PKCS8::PEM_encode(key, rng, argv[1]);
    }
    catch(std::exception& e)
       {

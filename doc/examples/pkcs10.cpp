@@ -8,6 +8,7 @@ Written by Jack Lloyd (lloyd@randombit.net), April 7, 2003
 This file is in the public domain
 */
 #include <botan/init.h>
+#include <botan/auto_rng.h>
 #include <botan/x509self.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
@@ -28,16 +29,15 @@ int main(int argc, char* argv[])
 
    try
       {
-      std::auto_ptr<RandomNumberGenerator> rng(
-         RandomNumberGenerator::make_rng());
+      AutoSeeded_RNG rng;
 
-      RSA_PrivateKey priv_key(*rng, 1024);
+      RSA_PrivateKey priv_key(rng, 1024);
       // If you want a DSA key instead of RSA, comment out the above line and
       // uncomment this one:
       //DSA_PrivateKey priv_key(DL_Group("dsa/jce/1024"));
 
       std::ofstream key_file("private.pem");
-      key_file << PKCS8::PEM_encode(priv_key, *rng, argv[1]);
+      key_file << PKCS8::PEM_encode(priv_key, rng, argv[1]);
 
       X509_Cert_Options opts;
 
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 
       opts.xmpp = "someid@xmpp.org";
 
-      PKCS10_Request req = X509::create_cert_req(opts, priv_key, *rng);
+      PKCS10_Request req = X509::create_cert_req(opts, priv_key, rng);
 
       std::ofstream req_file("req.pem");
       req_file << req.PEM_encode();

@@ -12,12 +12,11 @@ int main()
    {
    try
       {
-      std::auto_ptr<RandomNumberGenerator> rng(
-         RandomNumberGenerator::make_rng());
+      AutoSeeded_RNG rng;
 
       EC_Domain_Params params = get_EC_Dom_Pars_by_oid("1.3.132.0.8");
 
-      ECDSA_PrivateKey ecdsa(*rng, params);
+      ECDSA_PrivateKey ecdsa(rng, params);
 
       ECDSA_PublicKey ecdsa_pub = ecdsa;
 
@@ -34,7 +33,7 @@ int main()
 
       signer->update((const byte*)message, strlen(message));
 
-      SecureVector<byte> sig = signer->signature(*rng);
+      SecureVector<byte> sig = signer->signature(rng);
 
       std::cout << sig.size() << "\n";
 

@@ -9,3 +9,7 @@
 #include <botan/lookup.h>
 #include <botan/version.h>
 #include <botan/parsing.h>
+
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+  #include <botan/auto_rng.h>
+#endif

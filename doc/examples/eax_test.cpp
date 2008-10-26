@@ -48,9 +48,6 @@ void eax_test(const std::string& algo,
           plaintext_str.c_str(), ciphertext.c_str());
    */
 
-   std::auto_ptr<RandomNumberGenerator> rng(
-      RandomNumberGenerator::make_rng());
-
    SymmetricKey key(key_str);
    InitializationVector iv(nonce_str);
 

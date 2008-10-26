@@ -6,6 +6,7 @@
 #include <memory>
 
 #include <botan/botan.h>
+#include <botan/auto_rng.h>
 #include <botan/look_pk.h>
 #include <botan/dsa.h>
 #include <botan/numthry.h>
@@ -20,8 +21,7 @@ int main()
    try {
       LibraryInitializer init("use_engines");
 
-      std::auto_ptr<RandomNumberGenerator> rng(
-         RandomNumberGenerator::make_rng());
+      AutoSeeded_RNG rng;
 
       std::ifstream in("PQGGen.rsp");
       if(!in)
@@ -51,7 +51,7 @@ int main()
 
          if(name == "H")
             {
-            bool result = check(*rng, inputs);
+            bool result = check(rng, inputs);
             std::cout << "." << std::flush;
             if(result == false)
                {

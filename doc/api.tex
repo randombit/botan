@@ -985,7 +985,7 @@ cryptographic programs)
 
 \begin{verbatim}
 // everyone does:
-std::auto_ptr<RandomNumberGenerator> rng(RandomNumberGenerator::make_rng());
+AutoSeeded_RNG rng;
 
 // Alice
 RSA_PrivateKey priv_rsa(rng, 1024 /* bits */);

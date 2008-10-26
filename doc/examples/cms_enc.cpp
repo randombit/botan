@@ -18,8 +18,7 @@ int main()
       X509_Certificate cacert("cacert.pem");
       X509_Certificate int_ca("int_ca.pem");
 
-      std::auto_ptr<RandomNumberGenerator> rng(
-         RandomNumberGenerator::make_rng());
+      AutoSeeded_RNG rng;
 
       X509_Store store;
       store.add_cert(mycert);
@@ -34,10 +33,10 @@ int main()
 
       encoder.compress("Zlib");
       encoder.digest();
-      encoder.encrypt(*rng, mycert);
+      encoder.encrypt(rng, mycert);
 
       /*
-      PKCS8_PrivateKey* mykey = PKCS8::load_key("mykey.pem", *rng, "cut");
+      PKCS8_PrivateKey* mykey = PKCS8::load_key("mykey.pem", rng, "cut");
       encoder.sign(store, *mykey);
       */
 

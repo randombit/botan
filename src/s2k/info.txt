@@ -1,0 +1,12 @@
+realname "String to Key Functions"
+
+load_on auto
+
+<requires>
+utils
+</requires>
+
+<add>
+s2k.cpp
+s2k.h
+</add>

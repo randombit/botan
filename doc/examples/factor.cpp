@@ -123,10 +123,9 @@ int main(int argc, char* argv[])
       {
       BigInt n(argv[1]);
 
-      std::auto_ptr<RandomNumberGenerator> rng(
-         RandomNumberGenerator::make_rng());
+      AutoSeeded_RNG rng;
 
-      std::vector<BigInt> factors = factorize(n, *rng);
+      std::vector<BigInt> factors = factorize(n, rng);
       std::sort(factors.begin(), factors.end());
 
       std::cout << n << ": ";

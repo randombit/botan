@@ -119,12 +119,11 @@ int main(int argc, char* argv[])
       const u32bit key_len = max_keylength_of(algo);
       const u32bit iv_len = block_size_of(algo);
 
-      std::auto_ptr<RandomNumberGenerator> rng(
-         RandomNumberGenerator::make_rng());
+      AutoSeeded_RNG rng;
 
       std::auto_ptr<S2K> s2k(get_s2k("PBKDF2(SHA-1)"));
       s2k->set_iterations(8192);
-      s2k->new_random_salt(*rng, 8);
+      s2k->new_random_salt(rng, 8);
 
       SymmetricKey bc_key = s2k->derive_key(key_len, "BLK" + passphrase);
       InitializationVector iv = s2k->derive_key(iv_len, "IVL" + passphrase);
