@@ -6,7 +6,7 @@
 #include <botan/prf_x942.h>
 #include <botan/der_enc.h>
 #include <botan/oids.h>
-#include <botan/lookup.h>
+#include <botan/sha160.h>
 #include <botan/loadstor.h>
 #include <algorithm>
 #include <memory>
@@ -34,7 +34,7 @@ SecureVector<byte> X942_PRF::derive(u32bit key_len,
                                     const byte secret[], u32bit secret_len,
                                     const byte salt[], u32bit salt_len) const
    {
-   std::auto_ptr<HashFunction> hash(get_hash("SHA-1"));
+   SHA_160 hash;
    const OID kek_algo(key_wrap_oid);
 
    SecureVector<byte> key;
@@ -42,9 +42,9 @@ SecureVector<byte> X942_PRF::derive(u32bit key_len,
 
    while(key.size() != key_len && counter)
       {
-      hash->update(secret, secret_len);
+      hash.update(secret, secret_len);
 
-      hash->update(
+      hash.update(
          DER_Encoder().start_cons(SEQUENCE)
 
             .start_cons(SEQUENCE)
@@ -66,7 +66,7 @@ SecureVector<byte> X942_PRF::derive(u32bit key_len,
          .end_cons().get_contents()
          );
 
-      SecureVector<byte> digest = hash->final();
+      SecureVector<byte> digest = hash.final();
       key.append(digest, std::min(digest.size(), key_len - key.size()));
 
       ++counter;
