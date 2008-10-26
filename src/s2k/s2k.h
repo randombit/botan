@@ -86,6 +86,9 @@ class BOTAN_DLL S2K
       S2K() { iter = 0; }
       virtual ~S2K() {}
    private:
+      S2K(const S2K&) {}
+      S2K& operator=(const S2K&) { return (*this); }
+
       virtual OctetString derive(u32bit, const std::string&,
                                  const byte[], u32bit, u32bit) const = 0;
       SecureVector<byte> salt;
