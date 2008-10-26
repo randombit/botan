@@ -45,10 +45,6 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
          "FIPS 186-3 does not allow DSA domain parameters of " +
          to_string(pbits) + "/" + to_string(qbits) + " bits long");
 
-   if(qbits == 224)
-      throw Invalid_Argument(
-         "DSA parameter generation with a q of 224 bits not supported");
-
    if(seed_c.size() * 8 < qbits)
       throw Invalid_Argument(
          "Generating a DSA parameter set with a " + to_string(qbits) +
