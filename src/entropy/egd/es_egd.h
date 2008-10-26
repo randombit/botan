@@ -6,7 +6,7 @@
 #ifndef BOTAN_ENTROPY_SRC_EGD_H__
 #define BOTAN_ENTROPY_SRC_EGD_H__
 
-#include <botan/rng.h>
+#include <botan/entropy_src.h>
 #include <string>
 #include <vector>
 
@@ -18,7 +18,9 @@ namespace Botan {
 class BOTAN_DLL EGD_EntropySource : public EntropySource
    {
    public:
+      u32bit fast_poll(byte[], u32bit);
       u32bit slow_poll(byte[], u32bit);
+
       EGD_EntropySource(const std::vector<std::string>& p) : paths(p) {}
    private:
       u32bit do_poll(byte[], u32bit, const std::string&) const;

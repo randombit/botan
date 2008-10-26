@@ -6,20 +6,11 @@
 #ifndef BOTAN_RANDOM_NUMBER_GENERATOR_H__
 #define BOTAN_RANDOM_NUMBER_GENERATOR_H__
 
+#include <botan/entropy_src.h>
 #include <botan/exceptn.h>
+#include <string>
 
 namespace Botan {
-
-/*************************************************
-* Entropy Source                                 *
-*************************************************/
-class BOTAN_DLL EntropySource
-   {
-   public:
-      virtual u32bit slow_poll(byte[], u32bit) = 0;
-      virtual u32bit fast_poll(byte[], u32bit);
-      virtual ~EntropySource() {}
-   };
 
 /**
 * This class represents a random number (RNG) generator object.

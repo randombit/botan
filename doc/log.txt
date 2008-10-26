@@ -1,5 +1,6 @@
 
 * 1.7.19, ????-??-??
+ - Add a new AutoSeeded_RNG in auto_rng.h
  - Add automatic identification for Intel's Prescott processors
 
 * 1.7.18, 2008-10-22

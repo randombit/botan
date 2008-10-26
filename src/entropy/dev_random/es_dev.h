@@ -6,8 +6,9 @@
 #ifndef BOTAN_ENTROPY_SRC_DEVICE_H__
 #define BOTAN_ENTROPY_SRC_DEVICE_H__
 
-#include <botan/rng.h>
+#include <botan/entropy_src.h>
 #include <vector>
+#include <string>
 
 namespace Botan {
 
@@ -17,8 +18,11 @@ namespace Botan {
 class BOTAN_DLL Device_EntropySource : public EntropySource
    {
    public:
-      Device_EntropySource(const std::vector<std::string>& fs) : fsnames(fs) {}
+      Device_EntropySource(const std::vector<std::string>& fs) :
+         fsnames(fs) {}
+
       u32bit slow_poll(byte[], u32bit);
+      u32bit fast_poll(byte[], u32bit);
    private:
       std::vector<std::string> fsnames;
    };

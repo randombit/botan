@@ -89,9 +89,9 @@ int Device_Reader::open(const std::string& pathname)
 
 }
 
-/*************************************************
-* Gather entropy from a RNG device               *
-*************************************************/
+/**
+* Gather entropy from a RNG device
+*/
 u32bit Device_EntropySource::slow_poll(byte output[], u32bit length)
    {
    u32bit read = 0;
@@ -107,6 +107,14 @@ u32bit Device_EntropySource::slow_poll(byte output[], u32bit length)
       }
 
    return read;
+   }
+
+/**
+* Fast /dev/random and co poll: limit output to 64 bytes
+*/
+u32bit Device_EntropySource::fast_poll(byte output[], u32bit length)
+   {
+   return slow_poll(output, std::max<u32bit>(length, 64));
    }
 
 }

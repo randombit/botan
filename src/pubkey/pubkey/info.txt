@@ -11,6 +11,7 @@ numbertheory
 pbe
 oid_lookup
 pk_pad
+rng
 </requires>
 
 <add>

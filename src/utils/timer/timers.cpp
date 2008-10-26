@@ -29,7 +29,7 @@ u64bit Timer::clock() const
 /*************************************************
 * Read the clock and return the output           *
 *************************************************/
-u32bit Timer::slow_poll(byte out[], u32bit length)
+u32bit Timer::fast_poll(byte out[], u32bit length)
    {
    const u64bit clock_value = this->clock();
 
@@ -37,6 +37,11 @@ u32bit Timer::slow_poll(byte out[], u32bit length)
       out[j % length] ^= get_byte(j, clock_value);
 
    return (length < 8) ? length : 8;
+   }
+
+u32bit Timer::slow_poll(byte out[], u32bit length)
+   {
+   return fast_poll(out, length);
    }
 
 /*************************************************

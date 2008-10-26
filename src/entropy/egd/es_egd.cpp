@@ -6,6 +6,7 @@
 #include <botan/es_egd.h>
 #include <botan/bit_ops.h>
 #include <botan/parsing.h>
+#include <botan/exceptn.h>
 #include <cstring>
 
 #include <sys/types.h>
@@ -71,6 +72,14 @@ u32bit EGD_EntropySource::slow_poll(byte output[], u32bit length)
          return got;
       }
    return 0;
+   }
+
+/**
+* Gather Entropy from EGD, limiting to 32 bytes
+*/
+u32bit EGD_EntropySource::fast_poll(byte output[], u32bit length)
+   {
+   return slow_poll(output, std::max<u32bit>(length, 64));
    }
 
 }

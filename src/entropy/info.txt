@@ -1,0 +1,7 @@
+realname "Entropy Sources"
+
+load_on auto
+
+<add>
+entropy_src.h
+</add>

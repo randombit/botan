@@ -12,14 +12,6 @@
 namespace Botan {
 
 /*************************************************
-* Default fast poll for EntropySources           *
-*************************************************/
-u32bit EntropySource::fast_poll(byte buf[], u32bit len)
-   {
-   return this->slow_poll(buf, len);
-   }
-
-/*************************************************
 * Get a single random byte                       *
 *************************************************/
 byte RandomNumberGenerator::next_byte()
