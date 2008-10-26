@@ -34,8 +34,6 @@ mem_pool.h
 mutex.h
 rng.cpp
 rng.h
-s2k.cpp
-s2k.h
 secmem.h
 symkey.cpp
 symkey.h
