@@ -275,14 +275,6 @@ namespace Botan {
       throw Invalid_Algorithm_Name(algo_spec);                    \
       }
 
-#define HANDLE_TYPE_ONE_STRING(NAME, TYPE)     \
-   if(algo_name == NAME)                       \
-      {                                        \
-      if(name.size() == 2)                     \
-         return new TYPE(name[1]);             \
-      throw Invalid_Algorithm_Name(algo_spec); \
-      }
-
 /*************************************************
 * Look for an algorithm with this name           *
 *************************************************/
@@ -629,7 +621,12 @@ S2K* Default_Engine::find_s2k(const std::string& algo_spec) const
 #endif
 
 #if defined(BOTAN_HAS_PGPS2K)
-   HANDLE_TYPE_ONE_STRING("OpenPGP-S2K", OpenPGP_S2K);
+   if(algo_name == "OpenPGP-S2K")
+      {
+      if(name.size() == 2)
+         return new OpenPGP_S2K(get_hash(name[1]));
+      throw Invalid_Algorithm_Name(algo_spec);
+      }
 #endif
 
    return 0;

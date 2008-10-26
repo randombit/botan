@@ -7,6 +7,7 @@
 #define BOTAN_OPENPGP_S2K_H__
 
 #include <botan/s2k.h>
+#include <botan/base.h>
 
 namespace Botan {
 
@@ -18,11 +19,14 @@ class BOTAN_DLL OpenPGP_S2K : public S2K
    public:
       std::string name() const;
       S2K* clone() const;
-      OpenPGP_S2K(const std::string&);
+
+      OpenPGP_S2K(HashFunction* hash_in) : hash(hash_in) {}
+      ~OpenPGP_S2K() { delete hash; }
    private:
       OctetString derive(u32bit, const std::string&,
                          const byte[], u32bit, u32bit) const;
-      const std::string hash_name;
+
+      HashFunction* hash;
    };
 
 }

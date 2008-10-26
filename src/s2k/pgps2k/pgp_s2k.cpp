@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/pgp_s2k.h>
-#include <botan/lookup.h>
 #include <algorithm>
 #include <memory>
 
@@ -22,8 +21,6 @@ OctetString OpenPGP_S2K::derive(u32bit key_len, const std::string& passphrase,
    u32bit pass = 0, generated = 0,
           total_size = passphrase.size() + salt_size;
    u32bit to_hash = std::max(iterations, total_size);
-
-   std::auto_ptr<HashFunction> hash(get_hash(hash_name));
 
    hash->clear();
    while(key_len > generated)
@@ -61,7 +58,7 @@ OctetString OpenPGP_S2K::derive(u32bit key_len, const std::string& passphrase,
 *************************************************/
 std::string OpenPGP_S2K::name() const
    {
-   return "OpenPGP-S2K(" + hash_name + ")";
+   return "OpenPGP-S2K(" + hash->name() + ")";
    }
 
 /*************************************************
@@ -69,14 +66,7 @@ std::string OpenPGP_S2K::name() const
 *************************************************/
 S2K* OpenPGP_S2K::clone() const
    {
-   return new OpenPGP_S2K(hash_name);
-   }
-
-/*************************************************
-* OpenPGP S2K Constructor                        *
-*************************************************/
-OpenPGP_S2K::OpenPGP_S2K(const std::string& h) : hash_name(h)
-   {
+   return new OpenPGP_S2K(hash->clone());
    }
 
 }
