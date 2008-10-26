@@ -4,6 +4,10 @@ load_on auto
 
 define LIBSTATE_MODULE
 
+<requires>
+pk_pad
+</requires>
+
 <add>
 def_alg.cpp
 def_mode.cpp

@@ -10,6 +10,7 @@ bigint
 numbertheory
 pbe_base
 oid_lookup
+pk_pad
 </requires>
 
 <add>
