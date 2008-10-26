@@ -4,11 +4,6 @@ define SELFTESTS
 
 load_on auto
 
-<add>
-selftest.cpp
-selftest.h
-</add>
-
 <requires>
 hex
 des
@@ -22,3 +17,8 @@ cfb
 ofb
 ctr
 </requires>
+
+<add>
+selftest.cpp
+selftest.h
+</add>
