@@ -75,11 +75,11 @@ u32bit EGD_EntropySource::slow_poll(byte output[], u32bit length)
    }
 
 /**
-* Gather Entropy from EGD, limiting to 32 bytes
+* Gather Entropy from EGD, limiting to 64 bytes
 */
 u32bit EGD_EntropySource::fast_poll(byte output[], u32bit length)
    {
-   return slow_poll(output, std::max<u32bit>(length, 64));
+   return slow_poll(output, std::min<u32bit>(length, 64));
    }
 
 }

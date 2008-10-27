@@ -16,6 +16,7 @@ namespace Botan {
 class BOTAN_DLL Win32_Timer : public Timer
    {
    public:
+      std::string name() const { return "Win32 QueryPerformanceCounter"; }
       u64bit clock() const;
    };
 

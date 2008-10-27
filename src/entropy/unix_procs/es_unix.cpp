@@ -47,7 +47,7 @@ void Unix_EntropySource::add_sources(const Unix_Program srcs[], u32bit count)
 *************************************************/
 void Unix_EntropySource::do_fast_poll()
    {
-   const char* STAT_TARGETS[] = { "/", "/tmp", ".", "..", 0 };
+   const char* STAT_TARGETS[] = { "/", "/tmp", "/etc/passwd", ".", "..", 0 };
 
    for(u32bit j = 0; STAT_TARGETS[j]; j++)
       {

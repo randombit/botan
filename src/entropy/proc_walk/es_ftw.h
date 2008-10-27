@@ -16,7 +16,17 @@ namespace Botan {
 class BOTAN_DLL FTW_EntropySource : public Buffered_EntropySource
    {
    public:
+      std::string name() const { return "Proc Walker"; }
+
       FTW_EntropySource(const std::string& root_dir);
+      ~FTW_EntropySource();
+
+      class File_Descriptor_Source
+         {
+         public:
+            virtual int next_fd() = 0;
+            virtual ~File_Descriptor_Source() {}
+         };
    private:
       void do_fast_poll();
       void do_slow_poll();
@@ -24,6 +34,7 @@ class BOTAN_DLL FTW_EntropySource : public Buffered_EntropySource
       void poll(u32bit max_read);
 
       const std::string path;
+      File_Descriptor_Source* dir;
    };
 
 }

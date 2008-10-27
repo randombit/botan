@@ -16,6 +16,7 @@ namespace Botan {
 class BOTAN_DLL Hardware_Timer : public Timer
    {
    public:
+      std::string name() const { return "Hardware Timer"; }
       u64bit clock() const;
    };
 

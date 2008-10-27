@@ -18,6 +18,8 @@ namespace Botan {
 class BOTAN_DLL Device_EntropySource : public EntropySource
    {
    public:
+      std::string name() const { return "RNG Device Reader"; }
+
       Device_EntropySource(const std::vector<std::string>& fs) :
          fsnames(fs) {}
 

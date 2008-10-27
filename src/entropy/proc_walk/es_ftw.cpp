@@ -22,7 +22,7 @@ namespace Botan {
 
 namespace {
 
-class Directory_Walker
+class Directory_Walker : public FTW_EntropySource::File_Descriptor_Source
    {
    public:
       Directory_Walker(const std::string& root) { add_directory(root); }
@@ -93,11 +93,20 @@ int Directory_Walker::next_fd()
 
 }
 
-/*************************************************
-* FTW_EntropySource Constructor                  *
-*************************************************/
+/**
+* FTW_EntropySource Constructor
+*/
 FTW_EntropySource::FTW_EntropySource(const std::string& p) : path(p)
    {
+   dir = 0;
+   }
+
+/**
+* FTW_EntropySource Destructor
+*/
+FTW_EntropySource::~FTW_EntropySource()
+   {
+   delete dir;
    }
 
 /*************************************************
@@ -121,16 +130,25 @@ void FTW_EntropySource::do_slow_poll()
 *************************************************/
 void FTW_EntropySource::poll(u32bit max_read)
    {
-   Directory_Walker dir(path);
+   if(!dir)
+      dir = new Directory_Walker(path);
+
    SecureVector<byte> read_buf(1024);
 
    u32bit read_so_far = 0;
    while(read_so_far < max_read)
       {
-      int fd = dir.next_fd();
+      int fd = dir->next_fd();
 
       if(fd == -1)
-         break;
+         {
+         delete dir;
+         dir = new Directory_Walker(path);
+         fd = dir->next_fd();
+
+         if(fd == -1) // still fails (directory not mounted, etc) -> exit
+            break;
+         }
 
       ssize_t got = ::read(fd, read_buf.begin(), read_buf.size());
 

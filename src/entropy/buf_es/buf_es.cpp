@@ -13,10 +13,9 @@ namespace Botan {
 /*************************************************
 * Buffered_EntropySource Constructor             *
 *************************************************/
-Buffered_EntropySource::Buffered_EntropySource() : buffer(256)
+Buffered_EntropySource::Buffered_EntropySource() : buffer(128)
    {
    read_pos = write_pos = 0;
-   done_slow_poll = false;
    }
 
 /*************************************************
@@ -24,8 +23,6 @@ Buffered_EntropySource::Buffered_EntropySource() : buffer(256)
 *************************************************/
 u32bit Buffered_EntropySource::fast_poll(byte out[], u32bit length)
    {
-   if(!done_slow_poll) { do_slow_poll(); done_slow_poll = true; }
-
    do_fast_poll();
    return copy_out(out, length, buffer.size() / 4);
    }
@@ -36,7 +33,6 @@ u32bit Buffered_EntropySource::fast_poll(byte out[], u32bit length)
 u32bit Buffered_EntropySource::slow_poll(byte out[], u32bit length)
    {
    do_slow_poll();
-   done_slow_poll = true;
    return copy_out(out, length, buffer.size());
    }
 

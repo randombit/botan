@@ -106,16 +106,33 @@ void Randpool::mix_pool()
 *************************************************/
 void Randpool::reseed()
    {
-   SecureVector<byte> buffer(1024);
+   SecureVector<byte> buffer(128);
+
    u32bit gathered_entropy = 0;
 
+   // First do a fast poll of all sources (no matter what)
    for(u32bit j = 0; j != entropy_sources.size(); ++j)
       {
-      u32bit got = entropy_sources[j]->slow_poll(buffer, buffer.size());
+      u32bit got = entropy_sources[j]->fast_poll(buffer, buffer.size());
+      u32bit entropy = std::min<u32bit>(96, entropy_estimate(buffer, got));
 
       mac->update(buffer, got);
 
-      gathered_entropy += entropy_estimate(buffer, got);
+      gathered_entropy += entropy;
+      }
+
+   // Limit assumed entropy from fast polls to 256 bits total
+   gathered_entropy = std::min<u32bit>(256, gathered_entropy);
+
+   // Then do a slow poll, until we think we have got enough entropy
+   for(u32bit j = 0; j != entropy_sources.size(); ++j)
+      {
+      u32bit got = entropy_sources[j]->slow_poll(buffer, buffer.size());
+      u32bit entropy = std::min<u32bit>(256, entropy_estimate(buffer, got));
+
+      mac->update(buffer, got);
+
+      gathered_entropy += entropy;
       if(gathered_entropy > 512)
          break;
       }

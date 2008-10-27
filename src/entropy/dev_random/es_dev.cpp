@@ -114,7 +114,7 @@ u32bit Device_EntropySource::slow_poll(byte output[], u32bit length)
 */
 u32bit Device_EntropySource::fast_poll(byte output[], u32bit length)
    {
-   return slow_poll(output, std::max<u32bit>(length, 64));
+   return slow_poll(output, std::min<u32bit>(length, 64));
    }
 
 }

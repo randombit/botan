@@ -16,6 +16,8 @@ namespace Botan {
 class BOTAN_DLL BeOS_EntropySource : public Buffered_EntropySource
    {
    private:
+      std::string name() const { return "BeOS Statistics"; }
+
       void do_fast_poll();
       void do_slow_poll();
    };

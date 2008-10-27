@@ -18,6 +18,8 @@ namespace Botan {
 class BOTAN_DLL Unix_EntropySource : public Buffered_EntropySource
    {
    public:
+      std::string name() const { return "Unix Entropy Source"; }
+
       void add_sources(const Unix_Program[], u32bit);
       Unix_EntropySource(const std::vector<std::string>& path);
    private:

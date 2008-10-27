@@ -7,6 +7,7 @@
 #define BOTAN_ENTROPY_SOURCE_BASE_H__
 
 #include <botan/types.h>
+#include <string>
 
 namespace Botan {
 
@@ -16,6 +17,8 @@ namespace Botan {
 class BOTAN_DLL EntropySource
    {
    public:
+      virtual std::string name() const = 0;
+
       virtual u32bit slow_poll(byte buf[], u32bit len) = 0;
       virtual u32bit fast_poll(byte buf[], u32bit len) = 0;
       virtual ~EntropySource() {}

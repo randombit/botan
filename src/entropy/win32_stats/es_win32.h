@@ -16,6 +16,7 @@ namespace Botan {
 class BOTAN_DLL Win32_EntropySource : public Buffered_EntropySource
    {
    private:
+      std::string name() const { return "Win32 Statistics"; }
       void do_fast_poll();
       void do_slow_poll();
    };

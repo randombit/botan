@@ -16,6 +16,7 @@ namespace Botan {
 class BOTAN_DLL Unix_Timer : public Timer
    {
    public:
+      std::string name() const { return "Unix gettimeofday"; }
       u64bit clock() const;
    };
 

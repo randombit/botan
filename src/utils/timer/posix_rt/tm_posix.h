@@ -16,6 +16,7 @@ namespace Botan {
 class BOTAN_DLL POSIX_Timer : public Timer
    {
    public:
+      std::string name() const { return "POSIX clock_gettime"; }
       u64bit clock() const;
    };
 

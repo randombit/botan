@@ -18,6 +18,8 @@ namespace Botan {
 class BOTAN_DLL EGD_EntropySource : public EntropySource
    {
    public:
+      std::string name() const { return "EGD/PRNGD"; }
+
       u32bit fast_poll(byte[], u32bit);
       u32bit slow_poll(byte[], u32bit);
 

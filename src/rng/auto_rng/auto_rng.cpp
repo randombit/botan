@@ -17,11 +17,17 @@
 
 #if defined(BOTAN_HAS_TIMER_HARDWARE)
   #include <botan/tm_hard.h>
-#elif defined(BOTAN_HAS_TIMER_POSIX)
+#endif
+
+#if defined(BOTAN_HAS_TIMER_POSIX)
   #include <botan/tm_posix.h>
-#elif defined(BOTAN_HAS_TIMER_UNIX)
+#endif
+
+#if defined(BOTAN_HAS_TIMER_UNIX)
   #include <botan/tm_unix.h>
-#elif defined(BOTAN_HAS_TIMER_WIN32)
+#endif
+
+#if defined(BOTAN_HAS_TIMER_WIN32)
   #include <botan/tm_win32.h>
 #endif
 
@@ -64,14 +70,18 @@ void add_entropy_sources(RandomNumberGenerator* rng)
    {
 #if defined(BOTAN_HAS_TIMER_HARDWARE)
    rng->add_entropy_source(new Hardware_Timer);
-#elif defined(BOTAN_HAS_TIMER_POSIX)
+#endif
+
+#if defined(BOTAN_HAS_TIMER_POSIX)
    rng->add_entropy_source(new POSIX_Timer);
-#elif defined(BOTAN_HAS_TIMER_UNIX)
+#endif
+
+#if defined(BOTAN_HAS_TIMER_UNIX)
    rng->add_entropy_source(new Unix_Timer);
-#elif defined(BOTAN_HAS_TIMER_WIN32)
+#endif
+
+#if defined(BOTAN_HAS_TIMER_WIN32)
    rng->add_entropy_source(new Win32_Timer);
-#else
-   rng->add_entropy_source(new Timer);
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEVICE)
@@ -92,22 +102,23 @@ void add_entropy_sources(RandomNumberGenerator* rng)
    rng->add_entropy_source(new Win32_CAPI_EntropySource);
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
-   rng->add_entropy_source(new Win32_EntropySource);
+#if defined(BOTAN_HAS_ENTROPY_SRC_FTW)
+   rng->add_entropy_source(new FTW_EntropySource("/proc"));
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_UNIX)
-   rng->add_entropy_source(
-      new Unix_EntropySource(split_on("/bin:/sbin:/usr/bin:/usr/sbin", ':'))
-      );
+
+#if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
+   rng->add_entropy_source(new Win32_EntropySource);
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_BEOS)
    rng->add_entropy_source(new BeOS_EntropySource);
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_FTW)
-   rng->add_entropy_source(new FTW_EntropySource("/proc"));
+#if defined(BOTAN_HAS_ENTROPY_SRC_UNIX)
+   rng->add_entropy_source(
+      new Unix_EntropySource(split_on("/bin:/sbin:/usr/bin:/usr/sbin", ':'))
+      );
 #endif
    }
 
@@ -124,6 +135,8 @@ AutoSeeded_RNG::AutoSeeded_RNG()
 #endif
 
    add_entropy_sources(rng);
+
+   rng->reseed();
    }
 
 }
