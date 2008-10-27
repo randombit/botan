@@ -28,7 +28,7 @@ const std::string BIGINT_VALIDATION_FILE = "checks/mp_valid.dat";
 const std::string PK_VALIDATION_FILE = "checks/pk_valid.dat";
 const std::string EXPECTED_FAIL_FILE = "checks/fail.dat";
 
-int run_test_suite();
+int run_test_suite(RandomNumberGenerator& rng);
 
 namespace {
 
@@ -102,7 +102,8 @@ int main(int argc, char* argv[])
 
       Botan::InitializerOptions init_options(opts.value_if_set("init"));
       Botan::LibraryInitializer init(init_options);
-      //Botan::LibraryInitializer::initialize(init_options);
+
+      Botan::AutoSeeded_RNG rng;
 
       if(opts.is_set("help") || argc <= 1)
          {
@@ -120,7 +121,7 @@ int main(int argc, char* argv[])
          }
       else if(opts.is_set("validate") || opts.is_set("test"))
          {
-         run_test_suite();
+         run_test_suite(rng);
          }
       if(opts.is_set("bench-algo") ||
          opts.is_set("benchmark") ||
@@ -139,8 +140,6 @@ int main(int argc, char* argv[])
             }
 
          const bool html = opts.is_set("html");
-
-         AutoSeeded_RNG rng;
 
          if(opts.is_set("benchmark"))
             {
@@ -181,8 +180,6 @@ int main(int argc, char* argv[])
                std::cerr << "Unknown --bench-type " << type << "\n";
             }
          }
-
-      Botan::set_global_state(0);
       }
    catch(std::exception& e)
       {
@@ -196,15 +193,13 @@ int main(int argc, char* argv[])
    return 0;
    }
 
-int run_test_suite()
+int run_test_suite(RandomNumberGenerator& rng)
    {
    std::cout << "Beginning tests..." << std::endl;
 
    u32bit errors = 0;
    try
       {
-      AutoSeeded_RNG rng;
-
       errors += do_validation_tests(VALIDATION_FILE, rng);
       errors += do_validation_tests(EXPECTED_FAIL_FILE, rng, false);
       errors += do_bigint_tests(BIGINT_VALIDATION_FILE, rng);
