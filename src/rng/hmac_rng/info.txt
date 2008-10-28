@@ -1,0 +1,10 @@
+realname "HMAC RNG"
+
+define HMAC_RNG
+
+load_on auto
+
+<add>
+hmac_rng.cpp
+hmac_rng.h
+</add>
