@@ -215,7 +215,8 @@ class BOTAN_DLL BigInt
        * Return (a maximum of) 32 bits of the complete value
        * @param offset the offset to start extracting
        * @param length amount of bits to extract (starting at offset)
-       * @result the integer extracted from the register starting at offset with specified length
+       * @result the integer extracted from the register starting at
+       * offset with specified length
        */
       u32bit get_substring(u32bit offset, u32bit length) const;
 
@@ -230,9 +231,9 @@ class BOTAN_DLL BigInt
          { return ((n < size()) ? reg[n] : 0); }
 
       /**
-       * Return the integer as an unsigned 32bit-integer-value.
-       * If the value is negative OR to big to be stored in 32bits, this function
-       * will throw an exception.
+       * Return the integer as an unsigned 32bit-integer-value. If the
+       * value is negative OR to big to be stored in 32bits, this
+       * function will throw an exception.
        * @result a 32bit-integer
        */
       u32bit to_u32bit() const;

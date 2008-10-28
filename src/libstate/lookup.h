@@ -20,7 +20,8 @@ namespace Botan {
 /*************************************************
 * Retrieve an object from the lookup table       *
 *************************************************/
-// NOTE: these functions return internally stored objects, library retains ownership
+// NOTE: these functions return internally stored objects, library
+// retains ownership
 
 BOTAN_DLL const BlockCipher*
 retrieve_block_cipher(Library_State&, const std::string&);
@@ -42,7 +43,8 @@ retrieve_bc_pad(Library_State&, const std::string&);
 /*************************************************
 * Get an algorithm object                        *
 *************************************************/
-// NOTE: these functions create and return new objects, letting the caller assume ownership of them
+// NOTE: these functions create and return new objects, letting the
+// caller assume ownership of them
 
 /**
 * Block cipher factory method.
@@ -85,12 +87,14 @@ BOTAN_DLL S2K* get_s2k(const std::string& name);
 * @param name the name of the desired block cipher padding mode
 * @return the block cipher padding mode object
 */
-BOTAN_DLL const BlockCipherModePaddingMethod* get_bc_pad(const std::string& name);
+BOTAN_DLL const BlockCipherModePaddingMethod*
+   get_bc_pad(const std::string& name);
 
 /*************************************************
 * Get an EMSA/EME/KDF/MGF function               *
 *************************************************/
-// NOTE: these functions create and return new objects, letting the caller assume ownership of them
+// NOTE: these functions create and return new objects, letting the
+// caller assume ownership of them
 
 /**
 * Factory method for EME (message-encoding methods for encryption) objects
@@ -100,7 +104,8 @@ BOTAN_DLL const BlockCipherModePaddingMethod* get_bc_pad(const std::string& name
 BOTAN_DLL EME*  get_eme(const std::string& name);
 
 /**
-* Factory method for EMSA (message-encoding methods for signatures with appendix) objects
+* Factory method for EMSA (message-encoding methods for signatures
+* with appendix) objects
 * @param name the name of the EME to create
 * @return the desired EME object
 */
@@ -127,7 +132,8 @@ BOTAN_DLL KDF*  get_kdf(const std::string& name);
 /**
 * Factory method for general symmetric cipher filters.
 * @param name the name of the desired cipher
-* @param key the key to be used for encryption/decryption performed by the filter
+* @param key the key to be used for encryption/decryption performed by
+* the filter
 * @param iv the initialization vector to be used
 * @param dir determines whether the filter will be an encrypting or decrypting
 * filter
@@ -140,7 +146,8 @@ BOTAN_DLL Keyed_Filter* get_cipher(const std::string& name,
 /**
 * Factory method for general symmetric cipher filters.
 * @param name the name of the desired cipher
-* @param key the key to be used for encryption/decryption performed by the filter
+* @param key the key to be used for encryption/decryption performed by
+* the filter
 * @param dir determines whether the filter will be an encrypting or decrypting
 * filter
 * @return the encryption or decryption filter
@@ -152,7 +159,9 @@ BOTAN_DLL Keyed_Filter* get_cipher(const std::string& name,
 /** Factory method for general symmetric cipher filters. No key will
 * be set in the filter.
 * @param name the name of the desired cipher
-* @param dir determines whether the filter will be an encrypting or decrypting filter
+
+* @param dir determines whether the filter will be an encrypting or
+* decrypting filter
 * @return the encryption or decryption filter
 */
 BOTAN_DLL Keyed_Filter* get_cipher(const std::string& name, Cipher_Dir dir);
@@ -211,7 +220,8 @@ BOTAN_DLL u32bit block_size_of(const std::string& name);
 BOTAN_DLL u32bit output_length_of(const std::string& name);
 
 /**
-* Find out the whether a certain key length is allowd for a given symmetric algorithm.
+* Find out the whether a certain key length is allowd for a given
+* symmetric algorithm.
 * @param keylen the key length in question
 * @param name the name of the algorithm
 * @return true if the key length is valid for that algorithm, false otherwise

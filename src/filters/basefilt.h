@@ -22,8 +22,8 @@ class BOTAN_DLL Chain : public Fanout_Filter
       void write(const byte input[], u32bit length) { send(input, length); }
 
       /**
-      * Construct a chain of up to four filters. The filters are set up in the same order
-      * as the arguments.
+      * Construct a chain of up to four filters. The filters are set
+      * up in the same order as the arguments.
       */
       Chain(Filter* = 0, Filter* = 0, Filter* = 0, Filter* = 0);
 

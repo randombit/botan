@@ -181,7 +181,8 @@ void set_default_oids(Library_State& config)
    add_oid(config, "1.3.6.1.5.5.7.8.5", "PKIX.XMPPAddr");
 
    /* CVC */
-   add_oid(config, "0.4.0.127.0.7.3.1.2.1", "CertificateHolderAuthorizationTemplate");
+   add_oid(config, "0.4.0.127.0.7.3.1.2.1",
+           "CertificateHolderAuthorizationTemplate");
    }
 
 /*************************************************

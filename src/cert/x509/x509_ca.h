@@ -44,8 +44,8 @@ class BOTAN_DLL X509_CA
       /**
       * Create a new and empty CRL for this CA.
       * @param rng the random number generator to use
-      * @param next_update the time to set in next update in seconds as the offset from
-      * the current time
+      * @param next_update the time to set in next update in seconds
+      * as the offset from the current time
       * @return the new CRL
       */
       X509_CRL new_crl(RandomNumberGenerator& rng, u32bit = 0) const;

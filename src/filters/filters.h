@@ -118,7 +118,8 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
       * MAC. Otherwise, specify a smaller value here so that the
       * output of the MAC will be cut off.
       */
-      MAC_Filter(const std::string& mac, const SymmetricKey& key, u32bit len = 0);
+      MAC_Filter(const std::string& mac, const SymmetricKey& key,
+                 u32bit len = 0);
 
       ~MAC_Filter() { delete mac; }
    private:

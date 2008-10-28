@@ -165,14 +165,17 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
 
       /**
       * Encrypt a message.
-      * @param in the plaintext as input, after the function has returned it will hold the ciphertext
+      * @param in the plaintext as input, after the function has
+      * returned it will hold the ciphertext
+
       * @param len the length of in
       */
       void encrypt(byte in[], u32bit len) { cipher(in, in, len); }
 
       /**
       * Decrypt a message.
-      * @param in the ciphertext as input, after the function has returned it will hold the plaintext
+      * @param in the ciphertext as input, after the function has
+      * returned it will hold the plaintext
       * @param len the length of in
       */
       void decrypt(byte in[], u32bit len) { cipher(in, in, len); }

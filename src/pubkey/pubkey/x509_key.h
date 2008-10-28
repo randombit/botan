@@ -50,7 +50,8 @@ namespace X509 {
 * @param pipe the pipe to feed the encoded key into
 * @param enc the encoding type to use
 */
-BOTAN_DLL void encode(const Public_Key& key, Pipe& pipe, X509_Encoding enc = PEM);
+BOTAN_DLL void encode(const Public_Key& key, Pipe& pipe,
+                      X509_Encoding enc = PEM);
 
 /**
 * PEM encode a public key into a string.
@@ -89,13 +90,16 @@ BOTAN_DLL Public_Key* copy_key(const Public_Key& key);
 
 /**
 * Create the key constraints for a specific public key.
-* @param pub_key the public key from which the basic set of constraints
-* to be placed in the return value is
-* derived
-* @param limits additional limits that will be incorporated into the return value
-* @return the combination of key type specific constraints and additional limits
+* @param pub_key the public key from which the basic set of
+* constraints to be placed in the return value is derived
+* @param limits additional limits that will be incorporated into the
+* return value
+* @return the combination of key type specific constraints and
+* additional limits
 */
-BOTAN_DLL Key_Constraints find_constraints(const Public_Key& pub_key, Key_Constraints limits);
+
+BOTAN_DLL Key_Constraints find_constraints(const Public_Key& pub_key,
+                                           Key_Constraints limits);
 
 }
 

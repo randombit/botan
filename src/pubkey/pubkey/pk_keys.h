@@ -83,7 +83,8 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
    {
    public:
       /**
-      * Get a PKCS#8 encoder that can be used to encode this key in PKCS#8 format.
+      * Get a PKCS#8 encoder that can be used to encode this key in
+      * PKCS#8 format.
       * @return an PKCS#8 encoder for this key
       */
       virtual class PKCS8_Encoder* pkcs8_encoder() const
