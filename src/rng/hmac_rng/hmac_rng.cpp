@@ -89,14 +89,14 @@ void HMAC_RNG::randomize(byte out[], u32bit length)
          prf->update(get_byte(i, counter));
       prf->final(K);
 
+      ++counter;
+
       u32bit copied = std::min(K.size(), length);
 
       copy_mem(out, K.begin(), copied);
 
       out += copied;
       length -= copied;
-
-      ++counter;
       }
    }
 
@@ -207,7 +207,9 @@ void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
       }
 
    // Generate a new output using the HMAC PRF construction,
-   // using a CTXinfo of "reseed" and the last K value + counter
+   // using a CTXinfo of "reseed"
+   // the last K value used (possibly entirely output to user)
+   // the next counter value
 
    for(u32bit i = 0; i != prf->OUTPUT_LENGTH; ++i)
       prf->update(K);
@@ -215,13 +217,14 @@ void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
    for(u32bit i = 0; i != 4; ++i)
       prf->update(get_byte(i, counter));
 
-   // Add PRF output K(1) with CTXinfo "reseed" to the new SKM
+   // Add PRF output with CTXinfo "reseed" to the new SKM
    extractor->update(prf->final());
 
    // Now derive the new PRK and set the PRF key to that
    SecureVector<byte> prk = extractor->final();
    prf->set_key(prk, prk.size());
 
+   K.clear();
    counter = 0;
 
    // Increase entropy estimate (for is_seeded)
