@@ -57,15 +57,18 @@ void ANSI_X931_RNG::reseed()
    {
    prng->reseed();
 
-   SecureVector<byte> key(cipher->MAXIMUM_KEYLENGTH);
-   prng->randomize(key, key.size());
-   cipher->set_key(key, key.size());
+   if(prng->is_seeded())
+      {
+      SecureVector<byte> key(cipher->MAXIMUM_KEYLENGTH);
+      prng->randomize(key, key.size());
+      cipher->set_key(key, key.size());
 
-   if(V.size() != cipher->BLOCK_SIZE)
-      V.create(cipher->BLOCK_SIZE);
-   prng->randomize(V, V.size());
+      if(V.size() != cipher->BLOCK_SIZE)
+         V.create(cipher->BLOCK_SIZE);
+      prng->randomize(V, V.size());
 
-   update_buffer();
+      update_buffer();
+      }
    }
 
 /*************************************************
