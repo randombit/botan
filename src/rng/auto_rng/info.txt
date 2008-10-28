@@ -5,7 +5,6 @@ define AUTO_SEEDING_RNG
 load_on auto
 
 <requires>
-randpool
 aes
 sha2
 hmac

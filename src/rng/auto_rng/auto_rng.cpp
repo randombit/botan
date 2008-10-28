@@ -4,12 +4,20 @@
 *************************************************/
 
 #include <botan/auto_rng.h>
-#include <botan/randpool.h>
 #include <botan/parsing.h>
 #include <botan/timers.h>
-#include <botan/aes.h>
 #include <botan/hmac.h>
 #include <botan/sha2_32.h>
+#include <botan/sha2_64.h>
+#include <botan/aes.h>
+
+#if defined(BOTAN_HAS_RANDPOOL)
+  #include <botan/randpool.h>
+#endif
+
+#if defined(BOTAN_HAS_HMAC_RNG)
+  #include <botan/hmac_rng.h>
+#endif
 
 #if defined(BOTAN_HAS_X931_RNG)
   #include <botan/x931_rng.h>
@@ -126,10 +134,18 @@ void add_entropy_sources(RandomNumberGenerator* rng)
 
 AutoSeeded_RNG::AutoSeeded_RNG()
    {
-   /* Randpool is required for make_rng to work */
-   rng = new Randpool(new AES_256, new HMAC(new SHA_256));
+   rng = 0;
 
-   /* If X9.31 is available, wrap the Randpool algorithm in it */
+#if defined(BOTAN_HAS_HMAC_RNG)
+   rng = new HMAC_RNG(new HMAC(new SHA_512), new HMAC(new SHA_256));
+#elif defined(BOTAN_HAS_RANDPOOL)
+   rng = new Randpool(new AES_256, new HMAC(new SHA_256));
+#endif
+
+   if(!rng)
+      throw Algorithm_Not_Found("No usable RNG found enabled in build");
+
+   /* If X9.31 is available, use it to wrap the other RNG as a failsafe */
 #if defined(BOTAN_HAS_X931_RNG)
    rng = new ANSI_X931_RNG(new AES_256, rng);
 #endif
