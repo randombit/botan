@@ -97,6 +97,9 @@ void HMAC_RNG::randomize(byte out[], u32bit length)
 
       out += copied;
       length -= copied;
+
+      if(counter >= 8192)
+         reseed();
       }
    }
 
