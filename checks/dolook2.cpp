@@ -10,6 +10,13 @@
   #include <botan/randpool.h>
 #endif
 
+#if defined(BOTAN_HAS_HMAC_RNG)
+  #include <botan/hmac_rng.h>
+  #include <botan/hmac.h>
+  #include <botan/sha2_32.h>
+  #include <botan/sha2_64.h>
+#endif
+
 #if defined(BOTAN_HAS_X931_RNG)
   #include <botan/x931_rng.h>
 #endif
@@ -133,25 +140,41 @@ Filter* lookup_rng(const std::string& algname,
                                new Fixed_Output_RNG(decode_hex(key)));
 #endif
 
-#if defined(BOTAN_HAS_X931_RNG) && defined(BOTAN_HAS_RANDPOOL)
+#if defined(BOTAN_HAS_RANDPOOL)
+   if(algname == "Randpool")
+      {
+      prng = new Randpool(get_block_cipher("AES-256"),
+                          get_mac("HMAC(SHA-256)"));
+
+      prng->add_entropy(reinterpret_cast<const byte*>(key.c_str()),
+                        key.length());
+      }
+#endif
+
+#if defined(BOTAN_HAS_X931_RNG)
    // these are used for benchmarking: AES-256/SHA-256 matches library
    // defaults, so benchmark reflects real-world performance (maybe)
-   if(!prng && (algname == "Randpool" || algname == "X9.31-RNG"))
+   if(algname == "X9.31-RNG")
       {
-      Randpool* randpool = new Randpool(get_block_cipher("AES-256"),
-                                        get_mac("HMAC(SHA-256)"));
-      randpool->add_entropy(reinterpret_cast<const byte*>(key.c_str()),
-                            key.length());
+      RandomNumberGenerator* hmac_rng =
+         new HMAC_RNG(new HMAC(new SHA_512), new HMAC(new SHA_256));
+      prng = new ANSI_X931_RNG(get_block_cipher("AES-256"), hmac_rng);
+      }
+#endif
 
-      if(algname == "Randpool")
-         prng = randpool;
-      else
-         prng = new ANSI_X931_RNG(get_block_cipher("AES-256"), randpool);
+#if defined(BOTAN_HAS_HMAC_RNG)
+   if(algname == "HMAC_RNG")
+      {
+      prng = new HMAC_RNG(new HMAC(new SHA_512), new HMAC(new SHA_256));
       }
 #endif
 
    if(prng)
+      {
+      prng->add_entropy(reinterpret_cast<const byte*>(key.c_str()),
+                        key.length());
       return new RNG_Filter(prng);
+      }
 
    return 0;
    }
