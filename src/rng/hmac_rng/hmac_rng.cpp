@@ -105,104 +105,96 @@ void HMAC_RNG::randomize(byte out[], u32bit length)
 */
 void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
    {
-   SecureVector<byte> buffer(128);
    Entropy_Estimator estimate;
 
-   /*
-   Use the first entropy source (which is normally a timer of some
-   kind, producing an 8 byte output) as the new random key for the
-   extractor.  This takes the function of XTS as described in "On
-   Extract-then-Expand Key Derivation Functions and an HMAC-based KDF"
-   by Hugo Krawczyk (henceforce, 'E-t-E')
-
-   Set the extractor MAC key to this value: it's OK if the timer is
-   guessable. Even if the timer remained constant for a particular
-   machine, that is fine, as the only purpose is to parameterize the
-   hash function. See Krawczyk's paper for details.
-
-   If not available (no entropy sources at all), set to a constant;
-   this also should be safe
-   */
    if(entropy_sources.size())
       {
+      SecureVector<byte> buffer(128);
+
+      /*
+      Using the terminology of E-t-E, XTR is the MAC function (normally
+      HMAC) seeded with XTS (above) and we form SKM, the key material, by
+      fast polling each source, and then slow polling as many as we think
+      we need (in the following loop), and feeding all of the poll
+      results, along with any optional user input, along with, finally,
+      feedback of the current PRK value, into the extractor function.
+
+      Clearly you want the old key to feed back in somehow, because
+      otherwise if you have a good poll, collecting a lot of entropy,
+      and then have a bad poll, collecting very little, you don't want
+      to end up worse than you started (which you would if you threw
+      away the entire old key).
+
+      We don't keep the PRK value around (it is just used to seed the
+      PRF), so instead we apply the PRF using a CTXinfo of the ASCII
+      string "reseed" to generate an output value which is then fed back
+      into the extractor function. This should mean that at least some
+      bits of the newly chosen PRK will be a function of the previous
+      poll data.
+
+      Including the current PRK as an input to the extractor function
+      along with the poll data seems the most conservative choice,
+      because the extractor function should (assuming I understand the
+      E-t-E paper) be safe to use in this way (accepting potentially
+      correlated inputs), and this has the following good properties:
+
+      If an attacker recovers a PRK value (using swap forensics,
+      timing attacks, malware, etc), it seems very hard to work out
+      previous PRK values.
+
+      If an attacker recovers a PRK value, and you then do a poll
+      which manages to acquire sufficient (conditional) entropy, then
+      the new PRK seems hard to guess, because the old PRK is treated
+      just like any other poll input, which here can be coorelated,
+      etc without danger (I think) because of the use of a randomized
+      extraction function, and the results from the E-t-E paper.
+      */
+
+      /*
+      Use the first entropy source (which is normally a timer of some
+      kind, producing an 8 byte output) as the new random key for the
+      extractor.  This takes the function of XTS as described in "On
+      Extract-then-Expand Key Derivation Functions and an HMAC-based KDF"
+      by Hugo Krawczyk (henceforce, 'E-t-E')
+
+      Set the extractor MAC key to this value: it's OK if the timer is
+      guessable. Even if the timer remained constant for a particular
+      machine, that is fine, as the only purpose is to parameterize the
+      hash function. See Krawczyk's paper for details.
+      */
       u32bit got = entropy_sources[0]->fast_poll(buffer, buffer.size());
       extractor->set_key(buffer, got);
-      }
-   else
-      {
-      std::string xts = "Botan HMAC_RNG XTS";
-      extractor->set_key(reinterpret_cast<const byte*>(xts.c_str()),
-                         xts.length());
-      }
 
-   /*
-   Using the terminology of E-t-E, XTR is the MAC function (normally
-   HMAC) seeded with XTS (above) and we form SKM, the key material, by
-   fast polling each source, and then slow polling as many as we think
-   we need (in the following loop), and feeding all of the poll
-   results, along with any optional user input, along with, finally,
-   feedback of the current PRK value, into the extractor function.
+      /*
+      Fast poll all sources (except the first one, which we used to
+      choose XTS, above)
+      */
 
-   Clearly you want the old key to feed back in somehow, because
-   otherwise if you have a good poll, collecting a lot of entropy,
-   and then have a bad poll, collecting very little, you don't want
-   to end up worse than you started (which you would if you threw
-   away the entire old key).
+      for(u32bit j = 1; j < entropy_sources.size(); ++j)
+         {
+         u32bit got = entropy_sources[j]->fast_poll(buffer, buffer.size());
 
-   We don't keep the PRK value around (it is just used to seed the
-   PRF), so instead we apply the PRF using a CTXinfo of the ASCII
-   string "reseed" to generate an output value which is then fed back
-   into the extractor function. This should mean that at least some
-   bits of the newly chosen PRK will be a function of the previous
-   poll data.
+         extractor->update(buffer, got);
+         estimate.update(buffer, got, 96);
+         }
 
-   Including the current PRK as an input to the extractor function
-   along with the poll data seems the most conservative choice,
-   because the extractor function should (assuming I understand the
-   E-t-E paper) be safe to use in this way (accepting potentially
-   correlated inputs), and this has the following good properties:
+      /* Limit assumed entropy from fast polls (to ensure we do at
+      least a few slow polls)
+      */
+      estimate.set_upper_bound(256);
 
-   If an attacker recovers a PRK value (using swap forensics,
-   timing attacks, malware, etc), it seems very hard to work out
-   previous PRK values.
+      /* Then do a slow poll, until we think we have got enough entropy
+      */
+      for(u32bit j = 0; j != entropy_sources.size(); ++j)
+         {
+         u32bit got = entropy_sources[j]->slow_poll(buffer, buffer.size());
 
-   If an attacker recovers a PRK value, and you then do a poll
-   which manages to acquire sufficient (conditional) entropy, then
-   the new PRK seems hard to guess, because the old PRK is treated
-   just like any other poll input, which here can be coorelated,
-   etc without danger (I think) because of the use of a randomized
-   extraction function, and the results from the E-t-E paper.
-   */
+         extractor->update(buffer, got);
+         estimate.update(buffer, got, 256);
 
-   /*
-   Fast poll all sources (except the first one, which we used to
-   choose XTS, above)
-   */
-
-   for(u32bit j = 1; j < entropy_sources.size(); ++j)
-      {
-      u32bit got = entropy_sources[j]->fast_poll(buffer, buffer.size());
-
-      extractor->update(buffer, got);
-      estimate.update(buffer, got, 96);
-      }
-
-   /* Limit assumed entropy from fast polls (to ensure we do at
-   least a few slow polls)
-   */
-   estimate.set_upper_bound(256);
-
-   /* Then do a slow poll, until we think we have got enough entropy
-   */
-   for(u32bit j = 0; j != entropy_sources.size(); ++j)
-      {
-      u32bit got = entropy_sources[j]->slow_poll(buffer, buffer.size());
-
-      extractor->update(buffer, got);
-      estimate.update(buffer, got, 256);
-
-      if(estimate.value() > 8 * extractor->OUTPUT_LENGTH)
-         break;
+         if(estimate.value() > 8 * extractor->OUTPUT_LENGTH)
+            break;
+         }
       }
 
    /*
@@ -270,7 +262,7 @@ bool HMAC_RNG::is_seeded() const
    return (entropy >= 8 * prf->OUTPUT_LENGTH);
    }
 
-/*************************************************
+ /*************************************************
 * Clear memory of sensitive data                 *
 *************************************************/
 void HMAC_RNG::clear() throw()
@@ -319,6 +311,20 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
    std::string prf_key = "Botan HMAC_RNG PRF";
    prf->set_key(reinterpret_cast<const byte*>(prf_key.c_str()),
                 prf_key.length());
+
+   /*
+   This will only be used as the XTS if no entropy source at all is
+   enabled. Normally the first one included (typically a timer) is
+   used to choose a new extractor salt each time reseeding is
+   performed. However if no entropy sources at all are enabled,
+   instead this fixed extractor key will be used.
+
+   If I understand the E-t-E paper correctly (specifically Section 4),
+   this is safe to do.
+   */
+   std::string xts = "Botan HMAC_RNG XTS";
+   extractor->set_key(reinterpret_cast<const byte*>(xts.c_str()),
+                      xts.length());
    }
 
 /*************************************************
