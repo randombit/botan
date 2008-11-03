@@ -114,7 +114,11 @@ void Turing::generate()
 
    for(u32bit j = 0; j != 17; ++j)
       {
-      const byte idx_0 = OFFSETS[16*j];
+      const byte* R_off = OFFSETS + 16*j;
+
+      u32bit R0 = R[R_off[0]];
+
+      //const byte idx_0 = OFFSETS[16*j];
       const byte idx_1 = OFFSETS[16*j+1];
       const byte idx_2 = OFFSETS[16*j+2];
       const byte idx_3 = OFFSETS[16*j+3];
@@ -128,10 +132,10 @@ void Turing::generate()
       const byte idx_15 = OFFSETS[16*j+11];
       const byte idx_16 = OFFSETS[16*j+12];
 
-      R[idx_0] = ((R[idx_0] << 8) ^ MULT_TAB[(R[idx_0] >> 24) & 0xFF]) ^
-                 R[idx_15] ^ R[idx_4];
+      R[R_off[0]] = R0 =
+         ((R0 << 8) ^ MULT_TAB[(R0 >> 24) & 0xFF]) ^ R[R_off[11]] ^ R[idx_4];
 
-      u32bit A = R[idx_0];
+      u32bit A = R0;
       u32bit B = R[idx_14];
       u32bit C = R[idx_7];
       u32bit D = R[idx_2];
@@ -157,7 +161,7 @@ void Turing::generate()
       R[idx_1] = ((R[idx_1] << 8) ^ MULT_TAB[(R[idx_1] >> 24) & 0xFF]) ^
                  R[idx_16] ^ R[idx_5];
       R[idx_2] = ((R[idx_2] << 8) ^ MULT_TAB[(R[idx_2] >> 24) & 0xFF]) ^
-                 R[idx_0] ^ R[idx_6];
+                 R0 ^ R[idx_6];
       R[idx_3] = ((R[idx_3] << 8) ^ MULT_TAB[(R[idx_3] >> 24) & 0xFF]) ^
                  R[idx_1] ^ R[idx_7];
 
