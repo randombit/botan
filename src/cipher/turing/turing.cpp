@@ -143,7 +143,10 @@ void Turing::generate()
       u32bit E = R1;
 
       E += A + B + C + D;
-      A += E; B += E; C += E; D += E;
+      A += E;
+      B += E;
+      C += E;
+      D += E;
 
       A = S0[get_byte(0, A)] ^ S1[get_byte(1, A)] ^
           S2[get_byte(2, A)] ^ S3[get_byte(3, A)];
@@ -157,7 +160,11 @@ void Turing::generate()
           S2[get_byte(2, E)] ^ S3[get_byte(3, E)];
 
       E += A + B + C + D;
-      A += E; B += E; C += E; D += E;
+
+      A += E;
+      B += E;
+      C += E;
+      D += E;
 
       R[R_off[1]] = R1 =
          ((R1 << 8) ^ MULT_TAB[(R1 >> 24) & 0xFF]) ^ R12 ^ R5;
