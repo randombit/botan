@@ -25,11 +25,31 @@ inline void PHT(MemoryRegion<u32bit>& buf)
       buf[j] += sum;
    }
 
+}
+
 /*************************************************
-* Turing's polynomial multiplication             *
+* Combine cipher stream with message             *
 *************************************************/
-inline u32bit mul(u32bit X)
+void Turing::cipher(const byte in[], byte out[], u32bit length)
    {
+   while(length >= buffer.size() - position)
+      {
+      xor_buf(out, in, buffer.begin() + position, buffer.size() - position);
+      length -= (buffer.size() - position);
+      in += (buffer.size() - position);
+      out += (buffer.size() - position);
+      generate();
+      }
+   xor_buf(out, in, buffer.begin() + position, length);
+   position += length;
+   }
+
+/*************************************************
+* Generate cipher stream                         *
+*************************************************/
+void Turing::generate()
+   {
+   // Table for Turing's polynomial multiplication
    static const u32bit MULT_TAB[256] = {
       0x00000000, 0xD02B4367, 0xED5686CE, 0x3D7DC5A9, 0x97AC41D1, 0x478702B6,
       0x7AFAC71F, 0xAAD18478, 0x631582EF, 0xB33EC188, 0x8E430421, 0x5E684746,
@@ -75,50 +95,42 @@ inline u32bit mul(u32bit X)
       0x6131A7D0, 0xB11AE4B7, 0x78DEE220, 0xA8F5A147, 0x958864EE, 0x45A32789,
       0xEF72A3F1, 0x3F59E096, 0x0224253F, 0xD20F6658 };
 
-   return (X << 8) ^ MULT_TAB[(X >> 24) & 0xFF];
-   }
+   const byte OFFSETS[] = {
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 14, 15, 16, 0, 0, 0, 5, 6, 7, 8,
+      9, 10, 11, 12, 13, 0, 2, 3, 4, 0, 0, 0, 10, 11, 12, 13, 14, 15,
+      16, 0, 1, 5, 7, 8, 9, 0, 0, 0, 15, 16, 0, 1, 2, 3, 4, 5, 6, 10,
+      12, 13, 14, 0, 0, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 0, 1, 2,
+      0, 0, 0, 8, 9, 10, 11, 12, 13, 14, 15, 16, 3, 5, 6, 7, 0, 0, 0,
+      13, 14, 15, 16, 0, 1, 2, 3, 4, 8, 10, 11, 12, 0, 0, 0, 1, 2, 3,
+      4, 5, 6, 7, 8, 9, 13, 15, 16, 0, 0, 0, 0, 6, 7, 8, 9, 10, 11,
+      12, 13, 14, 1, 3, 4, 5, 0, 0, 0, 11, 12, 13, 14, 15, 16, 0, 1,
+      2, 6, 8, 9, 10, 0, 0, 0, 16, 0, 1, 2, 3, 4, 5, 6, 7, 11, 13, 14,
+      15, 0, 0, 0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 1, 2, 3, 0, 0, 0,
+      9, 10, 11, 12, 13, 14, 15, 16, 0, 4, 6, 7, 8, 0, 0, 0, 14, 15,
+      16, 0, 1, 2, 3, 4, 5, 9, 11, 12, 13, 0, 0, 0, 2, 3, 4, 5, 6, 7,
+      8, 9, 10, 14, 16, 0, 1, 0, 0, 0, 7, 8, 9, 10, 11, 12, 13, 14,
+      15, 2, 4, 5, 6, 0, 0, 0, 12, 13, 14, 15, 16, 0, 1, 2, 3, 7, 9,
+      10, 11, 0, 0, 0 };
 
-}
-
-/*************************************************
-* Combine cipher stream with message             *
-*************************************************/
-void Turing::cipher(const byte in[], byte out[], u32bit length)
-   {
-   while(length >= buffer.size() - position)
-      {
-      xor_buf(out, in, buffer.begin() + position, buffer.size() - position);
-      length -= (buffer.size() - position);
-      in += (buffer.size() - position);
-      out += (buffer.size() - position);
-      generate();
-      }
-   xor_buf(out, in, buffer.begin() + position, length);
-   position += length;
-   }
-
-/*************************************************
-* Generate cipher stream                         *
-*************************************************/
-void Turing::generate()
-   {
    for(u32bit j = 0; j != 17; ++j)
       {
-      const u32bit idx_0 = OFFSETS[16*j];
-      const u32bit idx_1 = OFFSETS[16*j+1];
-      const u32bit idx_2 = OFFSETS[16*j+2];
-      const u32bit idx_3 = OFFSETS[16*j+3];
-      const u32bit idx_4 = OFFSETS[16*j+4];
-      const u32bit idx_5 = OFFSETS[16*j+5];
-      const u32bit idx_6 = OFFSETS[16*j+6];
-      const u32bit idx_7 = OFFSETS[16*j+7];
-      const u32bit idx_8 = OFFSETS[16*j+8];
-      const u32bit idx_12 = OFFSETS[16*j+9];
-      const u32bit idx_14 = OFFSETS[16*j+10];
-      const u32bit idx_15 = OFFSETS[16*j+11];
-      const u32bit idx_16 = OFFSETS[16*j+12];
+      const byte idx_0 = OFFSETS[16*j];
+      const byte idx_1 = OFFSETS[16*j+1];
+      const byte idx_2 = OFFSETS[16*j+2];
+      const byte idx_3 = OFFSETS[16*j+3];
+      const byte idx_4 = OFFSETS[16*j+4];
+      const byte idx_5 = OFFSETS[16*j+5];
+      const byte idx_6 = OFFSETS[16*j+6];
+      const byte idx_7 = OFFSETS[16*j+7];
+      const byte idx_8 = OFFSETS[16*j+8];
+      const byte idx_12 = OFFSETS[16*j+9];
+      const byte idx_14 = OFFSETS[16*j+10];
+      const byte idx_15 = OFFSETS[16*j+11];
+      const byte idx_16 = OFFSETS[16*j+12];
 
-      R[idx_0] = mul(R[idx_0]) ^ R[idx_15] ^ R[idx_4];
+      // mul(X) == return (X << 8) ^ MULT_TAB[(X >> 24) & 0xFF];
+      R[idx_0] = ((R[idx_0] << 8) ^ MULT_TAB[(R[idx_0] >> 24) & 0xFF]) ^
+                 R[idx_15] ^ R[idx_4];
 
       u32bit A = R[idx_0];
       u32bit B = R[idx_14];
@@ -143,13 +155,25 @@ void Turing::generate()
       E += A + B + C + D;
       A += E; B += E; C += E; D += E;
 
+      // mul(X) == return (X << 8) ^ MULT_TAB[(X >> 24) & 0xFF];
+      R[idx_1] = ((R[idx_1] << 8) ^ MULT_TAB[(R[idx_1] >> 24) & 0xFF]) ^
+                 R[idx_16] ^ R[idx_5];
+      R[idx_2] = ((R[idx_2] << 8) ^ MULT_TAB[(R[idx_2] >> 24) & 0xFF]) ^
+                 R[idx_0] ^ R[idx_6];
+      R[idx_3] = ((R[idx_3] << 8) ^ MULT_TAB[(R[idx_3] >> 24) & 0xFF]) ^
+                 R[idx_1] ^ R[idx_7];
+
+#if 0
       R[idx_1] = mul(R[idx_1]) ^ R[idx_16] ^ R[idx_5];
       R[idx_2] = mul(R[idx_2]) ^ R[idx_0]  ^ R[idx_6];
       R[idx_3] = mul(R[idx_3]) ^ R[idx_1]  ^ R[idx_7];
+#endif
 
       E += R[idx_4];
 
-      R[idx_4] = mul(R[idx_4]) ^ R[idx_2]  ^ R[idx_8];
+      //R[idx_4] = mul(R[idx_4]) ^ R[idx_2]  ^ R[idx_8];
+      R[idx_4] = ((R[idx_4] << 8) ^ MULT_TAB[(R[idx_4] >> 24) & 0xFF]) ^
+                 R[idx_2] ^ R[idx_8];
 
       A += R[idx_1];
       B += R[idx_16];

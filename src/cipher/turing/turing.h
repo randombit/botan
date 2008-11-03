@@ -32,7 +32,6 @@ class BOTAN_DLL Turing : public StreamCipher
 
       static const u32bit Q_BOX[256];
       static const byte SBOX[256];
-      static const byte OFFSETS[272];
 
       SecureBuffer<u32bit, 256> S0, S1, S2, S3;
       SecureBuffer<u32bit, 17> R;
