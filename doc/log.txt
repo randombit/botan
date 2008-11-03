@@ -1,6 +1,7 @@
 
 * 1.7.19, ????-??-??
  - Add HMAC_RNG, based on a design by Hugo Krawczyk
+ - Optimized the Turing stream cipher (about 20% faster on x86-64)
  - Modify Randpool's reseeding algorithm to poll more sources
  - Add a new AutoSeeded_RNG in auto_rng.h
  - OpenPGP_S2K changed to take hash object instead of name
