@@ -121,23 +121,21 @@ void Turing::generate()
       u32bit R2 = R[R_off[2]];
       u32bit R3 = R[R_off[3]];
       u32bit R4 = R[R_off[4]];
-
-      //const byte idx_4 = OFFSETS[16*j+4];
-      const byte idx_5 = OFFSETS[16*j+5];
-      const byte idx_6 = OFFSETS[16*j+6];
-      const byte idx_7 = OFFSETS[16*j+7];
-      const byte idx_8 = OFFSETS[16*j+8];
-      const byte idx_12 = OFFSETS[16*j+9];
-      const byte idx_14 = OFFSETS[16*j+10];
-      const byte idx_15 = OFFSETS[16*j+11];
-      const byte idx_16 = OFFSETS[16*j+12];
+      const u32bit R5 = R[R_off[5]];
+      const u32bit R6 = R[R_off[6]];
+      const u32bit R7 = R[R_off[7]];
+      const u32bit R8 = R[R_off[8]];
+      const u32bit R9 = R[R_off[9]];
+      const u32bit R10 = R[R_off[10]];
+      // yes, R_off[11] unused!!
+      const u32bit R11 = R[R_off[12]];
 
       R[R_off[0]] = R0 =
          ((R0 << 8) ^ MULT_TAB[(R0 >> 24) & 0xFF]) ^ R[R_off[11]] ^ R4;
 
       u32bit A = R0;
-      u32bit B = R[idx_14];
-      u32bit C = R[idx_7];
+      u32bit B = R10;
+      u32bit C = R7;
       u32bit D = R2;
       u32bit E = R1;
 
@@ -159,23 +157,21 @@ void Turing::generate()
       A += E; B += E; C += E; D += E;
 
       R[R_off[1]] = R1 =
-         ((R1 << 8) ^ MULT_TAB[(R1 >> 24) & 0xFF]) ^ R[idx_16] ^ R[idx_5];
+         ((R1 << 8) ^ MULT_TAB[(R1 >> 24) & 0xFF]) ^ R11 ^ R5;
 
       R[R_off[2]] = R2 =
-         ((R2 << 8) ^ MULT_TAB[(R2 >> 24) & 0xFF]) ^ R0 ^ R[idx_6];
+         ((R2 << 8) ^ MULT_TAB[(R2 >> 24) & 0xFF]) ^ R0 ^ R6;
 
-      R[R_off[3]] = R3 =
-         ((R3 << 8) ^ MULT_TAB[(R3 >> 24) & 0xFF]) ^ R1 ^ R[idx_7];
+      R[R_off[3]] = ((R3 << 8) ^ MULT_TAB[(R3 >> 24) & 0xFF]) ^ R1 ^ R7;
 
       E += R4;
 
-      R[R_off[4]] = R4 =
-         ((R4 << 8) ^ MULT_TAB[(R4 >> 24) & 0xFF]) ^ R2 ^ R[idx_8];
+      R[R_off[4]] = ((R4 << 8) ^ MULT_TAB[(R4 >> 24) & 0xFF]) ^ R2 ^ R8;
 
       A += R1;
-      B += R[idx_16];
-      C += R[idx_12];
-      D += R[idx_5];
+      B += R11;
+      C += R9;
+      D += R5;
 
       store_be(A, buffer + 20*j + 0);
       store_be(B, buffer + 20*j + 4);
