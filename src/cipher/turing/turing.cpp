@@ -128,7 +128,6 @@ void Turing::generate()
       const byte idx_15 = OFFSETS[16*j+11];
       const byte idx_16 = OFFSETS[16*j+12];
 
-      // mul(X) == return (X << 8) ^ MULT_TAB[(X >> 24) & 0xFF];
       R[idx_0] = ((R[idx_0] << 8) ^ MULT_TAB[(R[idx_0] >> 24) & 0xFF]) ^
                  R[idx_15] ^ R[idx_4];
 
@@ -155,7 +154,6 @@ void Turing::generate()
       E += A + B + C + D;
       A += E; B += E; C += E; D += E;
 
-      // mul(X) == return (X << 8) ^ MULT_TAB[(X >> 24) & 0xFF];
       R[idx_1] = ((R[idx_1] << 8) ^ MULT_TAB[(R[idx_1] >> 24) & 0xFF]) ^
                  R[idx_16] ^ R[idx_5];
       R[idx_2] = ((R[idx_2] << 8) ^ MULT_TAB[(R[idx_2] >> 24) & 0xFF]) ^
@@ -163,15 +161,8 @@ void Turing::generate()
       R[idx_3] = ((R[idx_3] << 8) ^ MULT_TAB[(R[idx_3] >> 24) & 0xFF]) ^
                  R[idx_1] ^ R[idx_7];
 
-#if 0
-      R[idx_1] = mul(R[idx_1]) ^ R[idx_16] ^ R[idx_5];
-      R[idx_2] = mul(R[idx_2]) ^ R[idx_0]  ^ R[idx_6];
-      R[idx_3] = mul(R[idx_3]) ^ R[idx_1]  ^ R[idx_7];
-#endif
-
       E += R[idx_4];
 
-      //R[idx_4] = mul(R[idx_4]) ^ R[idx_2]  ^ R[idx_8];
       R[idx_4] = ((R[idx_4] << 8) ^ MULT_TAB[(R[idx_4] >> 24) & 0xFF]) ^
                  R[idx_2] ^ R[idx_8];
 
