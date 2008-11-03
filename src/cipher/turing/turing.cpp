@@ -156,14 +156,11 @@ void Turing::generate()
       C += R[idx_12];
       D += R[idx_5];
 
-      for(u32bit k = 0; k != 4; ++k)
-         {
-         buffer[20*j+k   ] = get_byte(k, A);
-         buffer[20*j+k+ 4] = get_byte(k, B);
-         buffer[20*j+k+ 8] = get_byte(k, C);
-         buffer[20*j+k+12] = get_byte(k, D);
-         buffer[20*j+k+16] = get_byte(k, E);
-         }
+      store_be(A, buffer + 20*j + 0);
+      store_be(B, buffer + 20*j + 4);
+      store_be(C, buffer + 20*j + 8);
+      store_be(D, buffer + 20*j + 12);
+      store_be(E, buffer + 20*j + 16);
       }
 
    position = 0;
