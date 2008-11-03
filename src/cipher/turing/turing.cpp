@@ -117,12 +117,12 @@ void Turing::generate()
       const byte* R_off = OFFSETS + 16*j;
 
       u32bit R0 = R[R_off[0]];
+      u32bit R1 = R[R_off[1]];
+      u32bit R2 = R[R_off[2]];
+      u32bit R3 = R[R_off[3]];
+      u32bit R4 = R[R_off[4]];
 
-      //const byte idx_0 = OFFSETS[16*j];
-      const byte idx_1 = OFFSETS[16*j+1];
-      const byte idx_2 = OFFSETS[16*j+2];
-      const byte idx_3 = OFFSETS[16*j+3];
-      const byte idx_4 = OFFSETS[16*j+4];
+      //const byte idx_4 = OFFSETS[16*j+4];
       const byte idx_5 = OFFSETS[16*j+5];
       const byte idx_6 = OFFSETS[16*j+6];
       const byte idx_7 = OFFSETS[16*j+7];
@@ -133,13 +133,13 @@ void Turing::generate()
       const byte idx_16 = OFFSETS[16*j+12];
 
       R[R_off[0]] = R0 =
-         ((R0 << 8) ^ MULT_TAB[(R0 >> 24) & 0xFF]) ^ R[R_off[11]] ^ R[idx_4];
+         ((R0 << 8) ^ MULT_TAB[(R0 >> 24) & 0xFF]) ^ R[R_off[11]] ^ R4;
 
       u32bit A = R0;
       u32bit B = R[idx_14];
       u32bit C = R[idx_7];
-      u32bit D = R[idx_2];
-      u32bit E = R[idx_1];
+      u32bit D = R2;
+      u32bit E = R1;
 
       E += A + B + C + D;
       A += E; B += E; C += E; D += E;
@@ -158,19 +158,21 @@ void Turing::generate()
       E += A + B + C + D;
       A += E; B += E; C += E; D += E;
 
-      R[idx_1] = ((R[idx_1] << 8) ^ MULT_TAB[(R[idx_1] >> 24) & 0xFF]) ^
-                 R[idx_16] ^ R[idx_5];
-      R[idx_2] = ((R[idx_2] << 8) ^ MULT_TAB[(R[idx_2] >> 24) & 0xFF]) ^
-                 R0 ^ R[idx_6];
-      R[idx_3] = ((R[idx_3] << 8) ^ MULT_TAB[(R[idx_3] >> 24) & 0xFF]) ^
-                 R[idx_1] ^ R[idx_7];
+      R[R_off[1]] = R1 =
+         ((R1 << 8) ^ MULT_TAB[(R1 >> 24) & 0xFF]) ^ R[idx_16] ^ R[idx_5];
 
-      E += R[idx_4];
+      R[R_off[2]] = R2 =
+         ((R2 << 8) ^ MULT_TAB[(R2 >> 24) & 0xFF]) ^ R0 ^ R[idx_6];
 
-      R[idx_4] = ((R[idx_4] << 8) ^ MULT_TAB[(R[idx_4] >> 24) & 0xFF]) ^
-                 R[idx_2] ^ R[idx_8];
+      R[R_off[3]] = R3 =
+         ((R3 << 8) ^ MULT_TAB[(R3 >> 24) & 0xFF]) ^ R1 ^ R[idx_7];
 
-      A += R[idx_1];
+      E += R4;
+
+      R[R_off[4]] = R4 =
+         ((R4 << 8) ^ MULT_TAB[(R4 >> 24) & 0xFF]) ^ R2 ^ R[idx_8];
+
+      A += R1;
       B += R[idx_16];
       C += R[idx_12];
       D += R[idx_5];
