@@ -10,12 +10,19 @@
 
 namespace Botan {
 
-/*************************************************
-* Gather Entropy from Win32 CAPI                 *
-*************************************************/
+/**
+* Gather Entropy from Win32 CAPI
+*/
 u32bit Win32_CAPI_EntropySource::slow_poll(byte output[], u32bit length)
    {
+   return fast_poll(output, length);
+   }
 
+/**
+* Gather Entropy from Win32 CAPI
+*/
+u32bit Win32_CAPI_EntropySource::fast_poll(byte output[], u32bit length)
+   {
    class CSP_Handle
       {
       public:
