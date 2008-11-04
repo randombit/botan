@@ -26,7 +26,6 @@ icc
 # ELF systems
 <os>
 linux
-freebsd
 netbsd
 openbsd
 solaris
