@@ -1,6 +1,6 @@
 realname "x86-64"
 
-default_submodel amd64
+default_submodel opteron
 
 endian little
 unaligned ok
