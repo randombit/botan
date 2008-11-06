@@ -16,7 +16,7 @@ namespace {
 /*************************************************
 * Generate Salsa20 cipher stream                 *
 *************************************************/
-void salsa20(byte output[64], u32bit input[16])
+void salsa20(byte output[64], const u32bit input[16])
    {
    u32bit x00 = input[0];
    u32bit x01 = input[1];
@@ -88,10 +88,6 @@ void salsa20(byte output[64], u32bit input[16])
    store_le(x13 + input[13], output + 4 * 13);
    store_le(x14 + input[14], output + 4 * 14);
    store_le(x15 + input[15], output + 4 * 15);
-
-   ++input[8];
-   if(!input[8])
-      ++input[9];
    }
 
 }
@@ -108,6 +104,11 @@ void Salsa20::cipher(const byte in[], byte out[], u32bit length)
       in += (buffer.size() - position);
       out += (buffer.size() - position);
       salsa20(buffer.begin(), state);
+
+      ++state[8];
+      if(!state[8]) // if overflow in state[8]
+         ++state[9]; // carry to state[9]
+
       position = 0;
       }
 
@@ -178,6 +179,10 @@ void Salsa20::resync(const byte iv[], u32bit length)
    state[9] = 0;
 
    salsa20(buffer.begin(), state);
+   ++state[8];
+   if(!state[8]) // if overflow in state[8]
+      ++state[9]; // carry to state[9]
+
    position = 0;
    }
 
