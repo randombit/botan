@@ -10,11 +10,8 @@
 #include <botan/oids.h>
 #include <botan/pipe.h>
 
-#if defined(BOTAN_EXT_COMPRESSOR_ZLIB)
+#if defined(BOTAN_HAS_COMPRESSOR_ZLIB)
   #include <botan/zlib.h>
-  #define HAVE_ZLIB 1
-#else
-  #define HAVE_ZLIB 0
 #endif
 
 namespace Botan {
@@ -29,7 +26,7 @@ void CMS_Encoder::compress(const std::string& algo)
 
    Filter* compressor = 0;
 
-#if HAVE_ZLIB
+#if defined(BOTAN_HAS_COMPRESSOR_ZLIB)
    if(algo == "Zlib") compressor = new Zlib_Compression;
 #endif
 
@@ -56,8 +53,11 @@ void CMS_Encoder::compress(const std::string& algo)
 *************************************************/
 bool CMS_Encoder::can_compress_with(const std::string& algo)
    {
-   if(HAVE_ZLIB && algo == "Zlib")
+#if defined(BOTAN_HAS_COMPRESSOR_ZLIB)
+   if(algo == "Zlib")
       return true;
+#endif
+
    return false;
    }
 
@@ -83,7 +83,7 @@ void CMS_Decoder::decompress(BER_Decoder& decoder)
 
    info = comp_algo.oid.as_string();
 
-#if HAVE_ZLIB
+#if defined(BOTAN_HAS_COMPRESSOR_ZLIB)
    if(comp_algo.oid == OIDS::lookup("Compression.Zlib"))
       {
       decompressor = new Zlib_Decompression;
