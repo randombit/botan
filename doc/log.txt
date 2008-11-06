@@ -1,4 +1,6 @@
 
+* 1.7.20-pre, ????-??-??
+
 * 1.7.19, 2008-11-06
  - Add HMAC_RNG, based on a design by Hugo Krawczyk
  - Optimized the Turing stream cipher (about 20% faster on x86-64)
