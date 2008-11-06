@@ -95,7 +95,18 @@ void Turing::generate()
       0x6131A7D0, 0xB11AE4B7, 0x78DEE220, 0xA8F5A147, 0x958864EE, 0x45A32789,
       0xEF72A3F1, 0x3F59E096, 0x0224253F, 0xD20F6658 };
 
-   const byte OFFSETS[221] = {
+   /*
+    I tried an implementation without precomputed LFSR offsets, since
+    I thought that might allow (especially on x86-64) the use of leal to
+    compute all the offsets.. However on my Core2 with GCC 4.3 it
+    turned out significantly slower (238 Mib/s, versus 300 Mib/s
+    with precomputed offsets)
+
+    I also tried using byte vs u32bit for the offset variable (since
+    x86 memory addressing modes can be odd), but it made things even
+    slower (186 Mib/s)
+   */
+   static const byte OFFSETS[221] = {
       0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 14, 15, 16,
       5, 6, 7, 8, 9, 10, 11, 12, 13, 0, 2, 3, 4,
       10, 11, 12, 13, 14, 15, 16, 0, 1, 5, 7, 8, 9,
@@ -133,8 +144,7 @@ void Turing::generate()
       const u32bit R11 = R[R_off[11]];
       const u32bit R12 = R[R_off[12]];
 
-      R[R_off[0]] = R0 =
-         ((R0 << 8) ^ MULT_TAB[(R0 >> 24) & 0xFF]) ^ R11 ^ R4;
+      R[R_off[0]] = R0 = ((R0 << 8) ^ MULT_TAB[(R0 >> 24) & 0xFF]) ^ R11 ^ R4;
 
       u32bit A = R0;
       u32bit B = R10;
@@ -143,6 +153,7 @@ void Turing::generate()
       u32bit E = R1;
 
       E += A + B + C + D;
+
       A += E;
       B += E;
       C += E;
@@ -166,12 +177,8 @@ void Turing::generate()
       C += E;
       D += E;
 
-      R[R_off[1]] = R1 =
-         ((R1 << 8) ^ MULT_TAB[(R1 >> 24) & 0xFF]) ^ R12 ^ R5;
-
-      R[R_off[2]] = R2 =
-         ((R2 << 8) ^ MULT_TAB[(R2 >> 24) & 0xFF]) ^ R0 ^ R6;
-
+      R[R_off[1]] = R1 = ((R1 << 8) ^ MULT_TAB[(R1 >> 24) & 0xFF]) ^ R12 ^ R5;
+      R[R_off[2]] = R2 = ((R2 << 8) ^ MULT_TAB[(R2 >> 24) & 0xFF]) ^ R0 ^ R6;
       R[R_off[3]] = ((R3 << 8) ^ MULT_TAB[(R3 >> 24) & 0xFF]) ^ R1 ^ R7;
 
       E += R4;
