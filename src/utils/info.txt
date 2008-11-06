@@ -19,6 +19,8 @@ charset.cpp
 charset.h
 datastor.cpp
 datastor.h
+entropy.h
+entropy.cpp
 loadstor.h
 mem_ops.h
 mlock.cpp

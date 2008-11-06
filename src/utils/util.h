@@ -30,7 +30,6 @@ BOTAN_DLL u32bit round_down(u32bit, u32bit);
 /*************************************************
 * Work Factor Estimates                          *
 *************************************************/
-BOTAN_DLL u32bit entropy_estimate(const byte[], u32bit);
 BOTAN_DLL u32bit dl_work_factor(u32bit);
 
 }

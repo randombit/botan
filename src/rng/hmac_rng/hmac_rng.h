@@ -13,12 +13,14 @@
 namespace Botan {
 
 /**
-HMAC_RNG - based on the design described in"On Extract-then-Expand Key
-Derivation Functions and an HMAC-based KDF" by Hugo Krawczyk
+HMAC_RNG - based on the design described in "On Extract-then-Expand
+Key Derivation Functions and an HMAC-based KDF" by Hugo Krawczyk
 (henceforce, 'E-t-E')
 
 However it actually can be parameterized with any two MAC functions,
-not restricted to HMAC (this is also described in Krawczyk's paper)
+not restricted to HMAC (this variation is also described in Krawczyk's
+paper), for instance one could use HMAC(SHA-512) as the extractor
+and CMAC(AES-256) as the PRF.
 */
 class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
    {
@@ -32,8 +34,8 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
       void add_entropy_source(EntropySource* es);
       void add_entropy(const byte[], u32bit);
 
-      HMAC_RNG(MessageAuthenticationCode*,
-               MessageAuthenticationCode*);
+      HMAC_RNG(MessageAuthenticationCode* extractor,
+               MessageAuthenticationCode* prf);
 
       ~HMAC_RNG();
    private:

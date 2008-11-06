@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/hmac_rng.h>
+#include <botan/entropy.h>
 #include <botan/loadstor.h>
 #include <botan/xor_buf.h>
 #include <botan/util.h>
@@ -12,58 +13,6 @@
 #include <algorithm>
 
 namespace Botan {
-
-namespace {
-
-class Entropy_Estimator
-   {
-   public:
-      Entropy_Estimator()
-         { last = last_delta = last_delta2 = 0; estimate = 0; }
-
-      u32bit value() const { return estimate; }
-
-      void set_upper_bound(u32bit upper_limit)
-         { estimate = std::min(estimate, upper_limit); }
-
-      void update(const byte buffer[], u32bit length, u32bit upper_limit = 0);
-   private:
-      u32bit estimate;
-      byte last, last_delta, last_delta2;
-   };
-
-void Entropy_Estimator::update(const byte buffer[], u32bit length,
-                               u32bit upper_limit)
-   {
-   u32bit this_buf_estimate = 0;
-
-   for(u32bit j = 0; j != length; ++j)
-      {
-      byte delta = last ^ buffer[j];
-      last = buffer[j];
-
-      byte delta2 = delta ^ last_delta;
-      last_delta = delta;
-
-      byte delta3 = delta2 ^ last_delta2;
-      last_delta2 = delta2;
-
-      byte min_delta = delta;
-      if(min_delta > delta2) min_delta = delta2;
-      if(min_delta > delta3) min_delta = delta3;
-
-      this_buf_estimate += hamming_weight(min_delta);
-      }
-
-   this_buf_estimate /= 2;
-
-   if(upper_limit)
-      estimate += std::min(upper_limit, this_buf_estimate);
-   else
-      estimate += this_buf_estimate;
-   }
-
-}
 
 /*************************************************
 * Generate a buffer of random bytes              *
@@ -226,6 +175,10 @@ void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
    // Now derive the new PRK and set the PRF key to that
    SecureVector<byte> prk = extractor->final();
    prf->set_key(prk, prk.size());
+
+   // Total gathered entropy is at most PRK bits (likely less, really,
+   // since PRF will probably hash it down further)
+   estimate.set_upper_bound(prk.size());
 
    K.clear();
    counter = 0;

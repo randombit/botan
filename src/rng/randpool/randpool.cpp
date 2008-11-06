@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/randpool.h>
+#include <botan/entropy.h>
 #include <botan/loadstor.h>
 #include <botan/xor_buf.h>
 #include <botan/util.h>
@@ -108,40 +109,41 @@ void Randpool::reseed()
    {
    SecureVector<byte> buffer(128);
 
-   u32bit gathered_entropy = 0;
+   Entropy_Estimator estimate;
 
    // First do a fast poll of all sources (no matter what)
    for(u32bit j = 0; j != entropy_sources.size(); ++j)
       {
       u32bit got = entropy_sources[j]->fast_poll(buffer, buffer.size());
-      u32bit entropy = std::min<u32bit>(96, entropy_estimate(buffer, got));
 
       mac->update(buffer, got);
-
-      gathered_entropy += entropy;
+      estimate.update(buffer, got, 96);
       }
 
-   // Limit assumed entropy from fast polls to 256 bits total
-   gathered_entropy = std::min<u32bit>(256, gathered_entropy);
+   /* Limit assumed entropy from fast polls (to ensure we do at
+   least a few slow polls)
+   */
+   estimate.set_upper_bound(256);
 
    // Then do a slow poll, until we think we have got enough entropy
    for(u32bit j = 0; j != entropy_sources.size(); ++j)
       {
       u32bit got = entropy_sources[j]->slow_poll(buffer, buffer.size());
-      u32bit entropy = std::min<u32bit>(256, entropy_estimate(buffer, got));
 
       mac->update(buffer, got);
 
-      gathered_entropy += entropy;
-      if(gathered_entropy > 512)
+      estimate.update(buffer, got, 256);
+
+      if(estimate.value() > 384)
          break;
       }
 
    SecureVector<byte> mac_val = mac->final();
+
    xor_buf(pool, mac_val, mac_val.size());
    mix_pool();
 
-   entropy += gathered_entropy;
+   entropy += estimate.value();
    }
 
 /*************************************************
@@ -153,7 +155,9 @@ void Randpool::add_entropy(const byte input[], u32bit length)
    xor_buf(pool, mac_val, mac_val.size());
    mix_pool();
 
-   entropy += entropy_estimate(input, length);
+   Entropy_Estimator estimate;
+   estimate.update(input, length);
+   entropy += estimate.value();
    }
 
 /*************************************************
