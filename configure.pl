@@ -101,26 +101,26 @@ sub main {
 
     # Goes into build-specific dirs (maybe)
 
-    $$config{'botan-config'} = 'botan-config';
+    $$config{'build-dir'} = 'build';
+    $$config{'botan-config'} = "botan-$major_minor-config";
     $$config{'botan-pkgconfig'} = "botan-$major_minor.pc";
     $$config{'makefile'} = 'Makefile';
     $$config{'check_prefix'} = '';
     $$config{'lib_prefix'} = '';
 
-    if(defined($$config{'build-dir'})) {
-
-        for my $var ('botan-config',
+    if(defined($$config{'with_build_dir'})) {
+        for my $var ('build-dir',
+                     'botan-config',
                      'botan-pkgconfig',
                      'makefile',
                      'check_prefix',
                      'lib_prefix')
         {
-            $$config{$var} = File::Spec->catfile($$config{'build-dir'},
+            $$config{$var} = File::Spec->catfile($$config{'with_build_dir'},
                                                  $$config{$var});
         }
     }
     else {
-        $$config{'build-dir'} = 'build';
     }
 
     choose_target($config);
@@ -724,7 +724,7 @@ sub get_options {
 
         'use-module-set=s' => sub { add_module_sets($config, $_[1]); },
 
-        'with-build-dir=s' => sub { $$config{'build-dir'} = $_[1]; },
+        'with-build-dir=s' => sub { &$save_option(@_); },
         'with-endian=s' => sub { &$save_option(@_); },
         'with-unaligned-mem=s' => sub { &$save_option(@_); },
         'with-local-config=s' =>

@@ -5,9 +5,9 @@ BOTAN_DIR = ../..
 CXX       = g++
 CFLAGS    = -O2 -ansi -W -Wall
 
-INCLUDES  = $(shell $(BOTAN_DIR)/botan-config --cflags)
+INCLUDES  = $(shell $(BOTAN_DIR)/botan-17-config --cflags)
 
-LIBS      = $(shell $(BOTAN_DIR)/botan-config --libs)
+LIBS      = $(shell $(BOTAN_DIR)/botan-17-config --libs)
 FLAGS     = $(INCLUDES) $(CFLAGS) -I$(BOTAN_DIR)/build/include -L$(BOTAN_DIR)
 
 SRCS=$(wildcard *.cpp)
