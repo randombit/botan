@@ -32,7 +32,7 @@ DOCDIR        = $(DESTDIR)/@{var:docdir}/Botan-$(VERSION)
 PKGCONF_DIR   = $(LIBDIR)/pkgconfig
 
 CONFIG_SCRIPT = @{var:botan-config}
-PKGCONFIG     = botan.pc
+PKGCONFIG     = @{var:botan-pkgconfig}
 
 ##################################################
 # Aliases for Common Programs                    #
@@ -118,7 +118,7 @@ clean:
 distclean: clean
 	$(RM_R) @{var:build-dir}
 	$(RM_R) @{var:doc-dir}/doxygen @{var:doc-dir}/botan.doxy
-	$(RM) Makefile $(CONFIG_SCRIPT) botan.pc
+	$(RM) Makefile $(CONFIG_SCRIPT) $(PKGCONFIG)
 
 install: $(LIBRARIES)
 	$(ECHO) "Installing Botan into $(DESTDIR)... "

@@ -97,26 +97,30 @@ sub main {
     &$default_value_is('shared', 'yes');
     &$default_value_is('local_config', '');
 
+    my $major_minor = $MAJOR_VERSION . $MINOR_VERSION;
+
     # Goes into build-specific dirs (maybe)
+
+    $$config{'botan-config'} = 'botan-config';
+    $$config{'botan-pkgconfig'} = "botan-$major_minor.pc";
+    $$config{'makefile'} = 'Makefile';
+    $$config{'check_prefix'} = '';
+    $$config{'lib_prefix'} = '';
+
     if(defined($$config{'build-dir'})) {
-        $$config{'botan-config'} =
-            File::Spec->catfile($$config{'build-dir'}, 'botan-config');
 
-        $$config{'botan-pkgconfig'} =
-            File::Spec->catfile($$config{'build-dir'}, 'botan.pc');
-
-        $$config{'makefile'} =
-            File::Spec->catfile($$config{'build-dir'}, 'Makefile');
-        $$config{'check_prefix'} = $$config{'build-dir'};
-        $$config{'lib_prefix'} = $$config{'build-dir'};
+        for my $var ('botan-config',
+                     'botan-pkgconfig',
+                     'makefile',
+                     'check_prefix',
+                     'lib_prefix')
+        {
+            $$config{$var} = File::Spec->catfile($$config{'build-dir'},
+                                                 $$config{$var});
+        }
     }
-    else { # defaults
+    else {
         $$config{'build-dir'} = 'build';
-        $$config{'botan-config'} = 'botan-config';
-        $$config{'botan-pkgconfig'} = 'botan.pc';
-        $$config{'makefile'} = 'Makefile';
-        $$config{'check_prefix'} = '';
-        $$config{'lib_prefix'} = '';
     }
 
     choose_target($config);
