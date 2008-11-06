@@ -1,5 +1,6 @@
 
 * 1.7.20-pre, ????-??-??
+ - Namespace pkg-config file by major and minor versions
 
 * 1.7.19, 2008-11-06
  - Add HMAC_RNG, based on a design by Hugo Krawczyk
