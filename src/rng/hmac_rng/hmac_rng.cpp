@@ -24,7 +24,7 @@ void HMAC_RNG::randomize(byte out[], u32bit length)
       reseed();
 
       if(!is_seeded())
-         throw PRNG_Unseeded(name());
+         throw PRNG_Unseeded(name() + " seeding attempt failed");
       }
 
    /*
@@ -175,10 +175,6 @@ void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
    // Now derive the new PRK and set the PRF key to that
    SecureVector<byte> prk = extractor->final();
    prf->set_key(prk, prk.size());
-
-   // Total gathered entropy is at most PRK bits (likely less, really,
-   // since PRF will probably hash it down further)
-   estimate.set_upper_bound(prk.size());
 
    K.clear();
    counter = 0;
