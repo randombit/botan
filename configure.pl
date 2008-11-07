@@ -520,9 +520,6 @@ sub can_enable_module {
             next unless defined $MODULES{$req_mod};
 
             if(can_enable_module($config, $req_mod, 1)) {
-                autoconfig("Use $req_mod to satisfy dep " .
-                           "request $_ for mod $mod");
-
                 push @deps, $req_mod;
                 next LINE;
             }
@@ -1261,7 +1258,7 @@ sub load_modules {
                 elsif(defined($cpu_info{'unaligned'}) and
                       $cpu_info{'unaligned'} eq 'ok')
                 {
-                    autoconfig("Since arch is $arch, "
+                    autoconfig("Since arch is $arch, " .
                                'assuming unaligned memory access is OK');
                     $unaligned_ok = 1;
                 }
@@ -2041,7 +2038,7 @@ sub generate_makefile {
 
    process_template($template, $$config{'makefile'}, $config);
 
-   autoconfig("Wrote ${makmake_style}-style makefile in $$config{'makefile'}");
+   autoconfig("Wrote ${make_style}-style makefile in $$config{'makefile'}");
 }
 
 ##################################################
