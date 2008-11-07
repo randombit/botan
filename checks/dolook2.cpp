@@ -21,6 +21,10 @@
   #include <botan/x931_rng.h>
 #endif
 
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+   #include <botan/auto_rng.h>
+#endif
+
 #include "common.h"
 using namespace Botan;
 
@@ -124,6 +128,11 @@ Filter* lookup_rng(const std::string& algname,
                    const std::string& key)
    {
    RandomNumberGenerator* prng = 0;
+
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+   if(algname == "AutoSeeded")
+      prng = new AutoSeeded_RNG;
+#endif
 
 #if defined(BOTAN_HAS_X931_RNG)
    if(algname == "X9.31-RNG(TripleDES)")
