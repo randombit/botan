@@ -4,6 +4,9 @@
 # this to the installed system version.
 BOTAN_CONFIG = ../../build/botan-17-config --prefix=../..
 
+# If installed:
+#BOTAN_CONFIG = botan-config
+
 CXX       = g++
 CFLAGS    = -O2 -ansi -W -Wall $(shell $(BOTAN_CONFIG) --cflags)
 LIBS      = $(shell $(BOTAN_CONFIG) --libs)
