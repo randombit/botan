@@ -15,7 +15,7 @@ prefix=
 
 usage()
 {
-    echo "botan-config [--prefix[=DIR]] [--version] [--libs] [--cflags]"
+    echo "$0 [--prefix[=DIR]] [--version] [--libs] [--cflags]"
     exit 1
 }
 
