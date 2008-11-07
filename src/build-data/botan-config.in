@@ -1,14 +1,14 @@
 #!/bin/sh
 
-#  For workspace builds:
-#guess_prefix=`dirname $0`
-#includedir=build/include
-#libdir=
-
 # For normal builds:
 guess_prefix=`dirname \`dirname $0\``
 includedir=@{var:includedir}
 libdir=@{var:libdir}
+
+#  For workspace builds:
+#guess_prefix=`dirname $0`
+#includedir=build/include
+#libdir=
 
 install_prefix=@{var:prefix}
 prefix=
