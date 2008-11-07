@@ -2027,7 +2027,7 @@ sub generate_makefile {
 
    process_template($template, $$config{'makefile'}, $config);
 
-   #autoconfig('Created ' . $$config{'makefile'});
+   autoconfig("Created ${make_style}-style makefile in $$config{'makefile'}");
 }
 
 ##################################################
