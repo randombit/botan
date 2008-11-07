@@ -97,16 +97,16 @@ sub main {
     &$default_value_is('shared', 'yes');
     &$default_value_is('local_config', '');
 
-    my $major_minor = $MAJOR_VERSION . $MINOR_VERSION;
-
     # Goes into build-specific dirs (maybe)
 
     $$config{'build-dir'} = 'build';
     $$config{'botan-config'} = File::Spec->catfile(
-        $$config{'build-dir'}, "botan-$major_minor-config");
+        $$config{'build-dir'},
+        'botan-' . $MAJOR_VERSION . $MINOR_VERSION . '-config');
 
     $$config{'botan-pkgconfig'} = File::Spec->catfile(
-        $$config{'build-dir'}, "botan-$major_minor.pc");
+        $$config{'build-dir'},
+        'botan-' . $MAJOR_VERSION . '.' . $MINOR_VERSION . '.pc');
 
     $$config{'makefile'} = 'Makefile';
     $$config{'check_prefix'} = '';
