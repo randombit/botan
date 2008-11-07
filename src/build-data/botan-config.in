@@ -57,7 +57,7 @@ while test $# -gt 0; do
            echo -n "-L$prefix/$libdir "
         fi
 
-        echo @{var:link_to} -lbotan
+        echo @{var:link_to} -lbotan-@{var:version}
         ;;
     *)
         usage
