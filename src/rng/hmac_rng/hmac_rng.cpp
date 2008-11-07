@@ -37,9 +37,9 @@ void hmac_prf(MessageAuthenticationCode* prf,
 *************************************************/
 void HMAC_RNG::randomize(byte out[], u32bit length)
    {
-   // Attempt to seed if we are either unseeded or have generated
-   // enouch counters that it seems wise to roll over keys
-   if(!is_seeded() || counter >= 8192)
+   /* Attempt to seed if we are either unseeded or have generated
+      enouch counters that it seems wise to roll over keys */
+   if(!is_seeded() || counter >= 16 * 1024)
       {
       reseed();
 
@@ -62,6 +62,14 @@ void HMAC_RNG::randomize(byte out[], u32bit length)
       }
 
    hmac_prf(prf, K, counter, "rng");
+
+   /* Every once in a while do a fast poll of a entropy source */
+   if(entropy_sources.size() && (counter % 1024 == 0))
+      {
+      u32bit got = entropy_sources.at(source_index)->fast_poll(io_buffer, io_buffer.size());
+      source_index = (source_index + 1) % entropy_sources.size();
+      extractor->update(io_buffer, got);
+      }
    }
 
 /**
@@ -73,8 +81,6 @@ void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
 
    if(entropy_sources.size())
       {
-      SecureVector<byte> buffer(128);
-
       /**
       Using the terminology of E-t-E, XTR is the MAC function (normally
       HMAC) seeded with XTS (below) and we form SKM, the key material, by
@@ -84,47 +90,25 @@ void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
       feedback of the current PRK value, into the extractor function.
       */
 
-      /*
-      Use the first entropy source (which is normally a timer of some
-      kind, producing an 8 byte output) as the new random key for the
-      extractor.  This takes the function of XTS as described in "On
-      Extract-then-Expand Key Derivation Functions and an HMAC-based KDF"
-      by Hugo Krawczyk (henceforce, 'E-t-E')
-
-      Set the extractor MAC key to this value: it's OK if the timer is
-      guessable. Even if the timer remained constant for a particular
-      machine, that is fine, as the only purpose is to parameterize the
-      hash function. See Krawczyk's paper for details.
-      */
-      u32bit got = entropy_sources[0]->fast_poll(buffer, buffer.size());
-      extractor->set_key(buffer, got);
-
-      /*
-      Fast poll all sources (except the first one, which we used to
-      choose XTS, above)
-      */
-
-      for(u32bit j = 1; j < entropy_sources.size(); ++j)
+      for(u32bit j = 0; j < entropy_sources.size(); ++j)
          {
-         u32bit got = entropy_sources[j]->fast_poll(buffer, buffer.size());
-
-         extractor->update(buffer, got);
-         estimate.update(buffer, got, 96);
+         u32bit got = entropy_sources[j]->fast_poll(io_buffer, io_buffer.size());
+         extractor->update(io_buffer, got);
+         estimate.update(io_buffer, got, 96);
          }
 
       /* Limit assumed entropy from fast polls (to ensure we do at
-      least a few slow polls)
-      */
+         least a few slow polls) */
       estimate.set_upper_bound(256);
 
       /* Then do a slow poll, until we think we have got enough entropy
       */
       for(u32bit j = 0; j != entropy_sources.size(); ++j)
          {
-         u32bit got = entropy_sources[j]->slow_poll(buffer, buffer.size());
+         u32bit got = entropy_sources[j]->slow_poll(io_buffer, io_buffer.size());
 
-         extractor->update(buffer, got);
-         estimate.update(buffer, got, 256);
+         extractor->update(io_buffer, got);
+         estimate.update(io_buffer, got, 256);
 
          if(estimate.value() > 8 * extractor->OUTPUT_LENGTH)
             break;
@@ -158,9 +142,12 @@ void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
    extractor->update(K); // K is the CTXinfo=reseed PRF output
 
    /* Now derive the new PRK using everything that has been fed into the extractor,
-      and set the PRF key to that
-   */
+      and set the PRF key to that*/
    prf->set_key(extractor->final());
+
+   // Now generate a new PRF output to use as the XTS extractor salt
+   hmac_prf(prf, K, counter, "xts");
+   extractor->set_key(K, K.size());
 
    // Reset state
    K.clear();
@@ -214,6 +201,7 @@ void HMAC_RNG::clear() throw()
    K.clear();
    entropy = 0;
    counter = 0;
+   source_index = 0;
    }
 
 /*************************************************
@@ -229,13 +217,14 @@ std::string HMAC_RNG::name() const
 *************************************************/
 HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
                    MessageAuthenticationCode* prf_mac) :
-   extractor(extractor_mac), prf(prf_mac)
+   extractor(extractor_mac), prf(prf_mac), io_buffer(128)
    {
    entropy = 0;
 
    // First PRF inputs are all zero, as specified in section 2
    K.create(prf->OUTPUT_LENGTH);
    counter = 0;
+   source_index = 0;
 
    /*
    Normally we want to feedback PRF output into the input to the
@@ -255,14 +244,11 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
                 prf_key.length());
 
    /*
-   This will only be used as the XTS if no entropy source at all is
-   enabled. Normally the first one included (typically a timer) is
-   used to choose a new extractor salt each time reseeding is
-   performed. However if no entropy sources at all are enabled,
-   instead this fixed extractor key will be used.
+   This will be used as the first XTS value when extracting input.
+   XTS values after this one are generated using the PRF.
 
    If I understand the E-t-E paper correctly (specifically Section 4),
-   this is safe to do.
+   using this fixed extractor key is safe to do.
    */
    std::string xts = "Botan HMAC_RNG XTS";
    extractor->set_key(reinterpret_cast<const byte*>(xts.c_str()),

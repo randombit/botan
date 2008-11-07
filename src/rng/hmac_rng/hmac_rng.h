@@ -47,8 +47,8 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
       std::vector<EntropySource*> entropy_sources;
       u32bit entropy;
 
-      SecureVector<byte> K;
-      u32bit counter;
+      SecureVector<byte> K, io_buffer;
+      u32bit counter, source_index;
    };
 
 }
