@@ -273,7 +273,10 @@ PointGFp operator-(const PointGFp& lhs);
 
 PointGFp operator*(const BigInt& scalar, const PointGFp& point);
 PointGFp operator*(const PointGFp& point, const BigInt& scalar);
-PointGFp mult_point_secure(const PointGFp& point, const BigInt& scalar, const BigInt& point_order, const BigInt& max_secret);
+PointGFp mult_point_secure(const PointGFp& point,
+                           const BigInt& scalar,
+                           const BigInt& point_order,
+                           const BigInt& max_secret);
 
 PointGFp const mult2(const PointGFp& point);
 

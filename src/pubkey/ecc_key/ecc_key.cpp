@@ -28,7 +28,8 @@ void EC_PublicKey::affirm_init() const // virtual
 const EC_Domain_Params& EC_PublicKey::domain_parameters() const
    {
    if(!mp_dom_pars.get())
-      throw Invalid_State("EC_PublicKey::domain_parameters(): ec domain parameters are not yet set");
+      throw Invalid_State("EC_PublicKey::domain_parameters(): "
+                          "ec domain parameters are not yet set");
 
    return *mp_dom_pars;
    }
@@ -101,7 +102,11 @@ X509_Decoder* EC_PublicKey::x509_decoder()
 
          void key_bits(const MemoryRegion<byte>& bits)
             {
-            key->mp_public_point.reset(new PointGFp(OS2ECP(bits, key->domain_parameters().get_curve())));
+            key->mp_public_point.reset(
+               new PointGFp(
+                  OS2ECP(bits, key->domain_parameters().get_curve())
+                  ));
+
             key->X509_load_hook();
             }
 
@@ -121,7 +126,9 @@ void EC_PublicKey::set_parameter_encoding(EC_dompar_enc type)
    affirm_init();
 
    if((type == ENC_OID) && (mp_dom_pars->get_oid() == ""))
-      throw Invalid_Argument("Invalid encoding type ENC_OID specified for EC-key object whose corresponding domain parameters are without oid");
+      throw Invalid_Argument("Invalid encoding type ENC_OID specified for "
+                             "EC-key object whose corresponding domain "
+                             "parameters are without oid");
 
    m_param_enc = type;
    }
@@ -158,7 +165,9 @@ void EC_PrivateKey::generate_private_key(RandomNumberGenerator& rng)
    BigInt tmp_private_value(0);
    tmp_private_value = BigInt::random_integer(rng, 1, mp_dom_pars->get_order());
    mp_public_point = std::auto_ptr<PointGFp>( new PointGFp (mp_dom_pars->get_base_point()));
-   mp_public_point->mult_this_secure(tmp_private_value, mp_dom_pars->get_order(), mp_dom_pars->get_order()-1);
+   mp_public_point->mult_this_secure(tmp_private_value,
+                                     mp_dom_pars->get_order(),
+                                     mp_dom_pars->get_order()-1);
 
    //assert(mp_public_point.get() != 0);
    tmp_private_value.swap(m_private_value);
@@ -176,7 +185,8 @@ PKCS8_Encoder* EC_PrivateKey::pkcs8_encoder() const
             {
             key->affirm_init();
 
-            SecureVector<byte> params = encode_der_ec_dompar(key->domain_parameters(), ENC_EXPLICIT);
+            SecureVector<byte> params =
+               encode_der_ec_dompar(key->domain_parameters(), ENC_EXPLICIT);
 
             return AlgorithmIdentifier(key->get_oid(), params);
             }
