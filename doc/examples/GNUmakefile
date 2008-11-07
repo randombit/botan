@@ -1,14 +1,12 @@
-# Assumes Botan was compiled with GCC
 
-BOTAN_DIR = ../..
+# You must modify generated botan-17-config for workspace builds
+# (see that file for details), or else install Botan and direct
+# this to the installed system version.
+BOTAN_CONFIG = ../../build/botan-17-config --prefix=../..
 
 CXX       = g++
-CFLAGS    = -O2 -ansi -W -Wall
-
-INCLUDES  = $(shell $(BOTAN_DIR)/botan-17-config --cflags)
-
-LIBS      = $(shell $(BOTAN_DIR)/botan-17-config --libs)
-FLAGS     = $(INCLUDES) $(CFLAGS) -I$(BOTAN_DIR)/build/include -L$(BOTAN_DIR)
+CFLAGS    = -O2 -ansi -W -Wall $(shell $(BOTAN_CONFIG) --cflags)
+LIBS      = $(shell $(BOTAN_CONFIG) --libs)
 
 SRCS=$(wildcard *.cpp)
 
@@ -20,7 +18,7 @@ clean:
 	@rm -f $(PROGS)
 
 %: %.cpp
-	$(CXX) $(FLAGS) $? $(LIBS) -o $@
+	$(CXX) $(CFLAGS) $? $(LIBS) -o $@
 
 eax_test: eax_test.cpp
-	$(CXX) $(FLAGS) $? $(LIBS) -lboost_regex -o $@
+	$(CXX) $(CFLAGS) $? $(LIBS) -lboost_regex -o $@
