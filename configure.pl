@@ -102,8 +102,12 @@ sub main {
     # Goes into build-specific dirs (maybe)
 
     $$config{'build-dir'} = 'build';
-    $$config{'botan-config'} = "botan-$major_minor-config";
-    $$config{'botan-pkgconfig'} = "botan-$major_minor.pc";
+    $$config{'botan-config'} = File::Spec->catfile(
+        $$config{'build-dir'}, "botan-$major_minor-config");
+
+    $$config{'botan-pkgconfig'} = File::Spec->catfile(
+        $$config{'build-dir'}, "botan-$major_minor.pc");
+
     $$config{'makefile'} = 'Makefile';
     $$config{'check_prefix'} = '';
     $$config{'lib_prefix'} = '';
