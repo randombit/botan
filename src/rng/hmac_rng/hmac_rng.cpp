@@ -14,12 +14,32 @@
 
 namespace Botan {
 
+namespace {
+
+void hmac_prf(MessageAuthenticationCode* prf,
+            MemoryRegion<byte>& K,
+            u32bit& counter,
+            const std::string& label)
+   {
+   prf->update(K, K.size());
+   prf->update(label);
+   for(u32bit i = 0; i != 4; ++i)
+      prf->update(get_byte(i, counter));
+   prf->final(K);
+
+   ++counter;
+   }
+
+}
+
 /*************************************************
 * Generate a buffer of random bytes              *
 *************************************************/
 void HMAC_RNG::randomize(byte out[], u32bit length)
    {
-   if(!is_seeded())
+   // Attempt to seed if we are either unseeded or have generated
+   // enouch counters that it seems wise to roll over keys
+   if(!is_seeded() || counter >= 8192)
       {
       reseed();
 
@@ -32,24 +52,16 @@ void HMAC_RNG::randomize(byte out[], u32bit length)
    */
    while(length)
       {
-      prf->update(K, K.size());
-      prf->update("rng");
-      for(u32bit i = 0; i != 4; ++i)
-         prf->update(get_byte(i, counter));
-      prf->final(K);
+      hmac_prf(prf, K, counter, "rng");
 
-      ++counter;
-
-      u32bit copied = std::min(K.size(), length);
+      const u32bit copied = std::min(K.size(), length);
 
       copy_mem(out, K.begin(), copied);
-
       out += copied;
       length -= copied;
-
-      if(counter >= 8192)
-         reseed();
       }
+
+   hmac_prf(prf, K, counter, "rng");
    }
 
 /**
@@ -63,43 +75,13 @@ void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
       {
       SecureVector<byte> buffer(128);
 
-      /*
+      /**
       Using the terminology of E-t-E, XTR is the MAC function (normally
-      HMAC) seeded with XTS (above) and we form SKM, the key material, by
+      HMAC) seeded with XTS (below) and we form SKM, the key material, by
       fast polling each source, and then slow polling as many as we think
       we need (in the following loop), and feeding all of the poll
       results, along with any optional user input, along with, finally,
       feedback of the current PRK value, into the extractor function.
-
-      Clearly you want the old key to feed back in somehow, because
-      otherwise if you have a good poll, collecting a lot of entropy,
-      and then have a bad poll, collecting very little, you don't want
-      to end up worse than you started (which you would if you threw
-      away the entire old key).
-
-      We don't keep the PRK value around (it is just used to seed the
-      PRF), so instead we apply the PRF using a CTXinfo of the ASCII
-      string "reseed" to generate an output value which is then fed back
-      into the extractor function. This should mean that at least some
-      bits of the newly chosen PRK will be a function of the previous
-      poll data.
-
-      Including the current PRK as an input to the extractor function
-      along with the poll data seems the most conservative choice,
-      because the extractor function should (assuming I understand the
-      E-t-E paper) be safe to use in this way (accepting potentially
-      correlated inputs), and this has the following good properties:
-
-      If an attacker recovers a PRK value (using swap forensics,
-      timing attacks, malware, etc), it seems very hard to work out
-      previous PRK values.
-
-      If an attacker recovers a PRK value, and you then do a poll
-      which manages to acquire sufficient (conditional) entropy, then
-      the new PRK seems hard to guess, because the old PRK is treated
-      just like any other poll input, which here can be coorelated,
-      etc without danger (I think) because of the use of a randomized
-      extraction function, and the results from the E-t-E paper.
       */
 
       /*
@@ -158,24 +140,29 @@ void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
       estimate.update(input, input_length);
       }
 
-   // Generate a new output using the HMAC PRF construction,
-   // using a CTXinfo of "reseed"
-   // the last K value used (possibly entirely output to user)
-   // the next counter value
+   /*
+   It is necessary to feed forward poll data. Otherwise, a good
+   poll (collecting a large amount of conditional entropy) followed
+   by a bad one (collecting little) would be unsafe. Do this by
+   generating new PRF outputs using the previous key and feeding them
+   into the extractor function.
 
-   for(u32bit i = 0; i != prf->OUTPUT_LENGTH; ++i)
-      prf->update(K);
-   prf->update("reseed"); // CTXinfo
-   for(u32bit i = 0; i != 4; ++i)
-      prf->update(get_byte(i, counter));
+   Cycle the RNG once (CTXinfo="rng"), then generate a new PRF output
+   using the CTXinfo "reseed". Provide these values as input to the
+   extractor function.
+   */
+   hmac_prf(prf, K, counter, "rng");
+   extractor->update(K); // K is the CTXinfo=rng PRF output
 
-   // Add PRF output with CTXinfo "reseed" to the new SKM
-   extractor->update(prf->final());
+   hmac_prf(prf, K, counter, "reseed");
+   extractor->update(K); // K is the CTXinfo=reseed PRF output
 
-   // Now derive the new PRK and set the PRF key to that
-   SecureVector<byte> prk = extractor->final();
-   prf->set_key(prk, prk.size());
+   /* Now derive the new PRK using everything that has been fed into the extractor,
+      and set the PRF key to that
+   */
+   prf->set_key(extractor->final());
 
+   // Reset state
    K.clear();
    counter = 0;
 
