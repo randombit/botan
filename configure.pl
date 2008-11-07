@@ -152,7 +152,8 @@ sub main {
             File::Spec->catdir($$config{'build-dir'}, 'include', 'botan'),
 
         'mp_bits'       => find_mp_bits(sort keys %{$$config{'modules'}}),
-        'mod_libs'      => [ using_libs($os, sort keys %{$$config{'modules'}}) ],
+        'mod_libs'      =>
+           [ using_libs($os, sort keys %{$$config{'modules'}}) ],
 
         'sources'       => { },
         'includes'      => { },
@@ -167,8 +168,10 @@ sub main {
     load_modules($config);
 
     my @dirs = mkdirs($$config{'build-dir'},
-                      $$config{'build_include'}, $$config{'build_include_botan'},
-                      $$config{'build_lib'}, $$config{'build_check'});
+                      $$config{'build_include'},
+                      $$config{'build_include_botan'},
+                      $$config{'build_lib'},
+                      $$config{'build_check'});
 
     #autoconfig('Created ' . join(' ', @dirs)) if @dirs;
 
@@ -517,7 +520,9 @@ sub can_enable_module {
             next unless defined $MODULES{$req_mod};
 
             if(can_enable_module($config, $req_mod, 1)) {
-                #autoconfig("Use $req_mod to satisfy dep request $_ for mod $mod");
+                autoconfig("Use $req_mod to satisfy dep " .
+                           "request $_ for mod $mod");
+
                 push @deps, $req_mod;
                 next LINE;
             }
@@ -605,7 +610,7 @@ sub get_options {
         my $arch = find_arch($arg);
 
         unless(defined($arch) and defined($CPU{$arch})) {
-            warning("Unknown arch name '$arg' passed to --arch-info (try --help)");
+            warning("Unknown arch '$arg' passed to --arch-info (try --help)");
             return '';
         }
 
@@ -667,7 +672,8 @@ sub get_options {
 
                 for my $s (split(/,/, $info{'modset'})) {
                     if($s eq $set) {
-                        $$config{'modules'}{$mod} = 1 unless($$config{'modules'}{$mod} == -1);
+                        $$config{'modules'}{$mod} = 1
+                            unless($$config{'modules'}{$mod} == -1);
                     }
                 }
             }
@@ -805,8 +811,8 @@ sub figure_out_arch {
     if($submodel eq '') {
         $submodel = $archinfo{'default_submodel'};
 
-        autoconfig("Using $submodel as default type for family ", realname($arch))
-           if($submodel ne $arch);
+        autoconfig("Using $submodel as default type for family ",
+                   realname($arch)) if($submodel ne $arch);
     }
 
     trace("mapped name '$name' to submodel '$submodel'");
@@ -1213,7 +1219,8 @@ sub load_modules {
 
             if(defined($$config{'with_endian'})) {
                 $endian = $$config{'with_endian'};
-                $endian = undef unless($endian eq 'little' || $endian eq 'big');
+                $endian = undef unless($endian eq 'little' ||
+                                       $endian eq 'big');
             }
             elsif(defined($endian)) {
                 autoconfig("Since arch is $arch, assuming $endian endian mode");
@@ -1231,7 +1238,8 @@ sub load_modules {
 
             if(defined($endian)) {
                 $endian = uc $endian;
-                push @macro_list, "#define BOTAN_TARGET_CPU_IS_${endian}_ENDIAN";
+                push @macro_list,
+                   "#define BOTAN_TARGET_CPU_IS_${endian}_ENDIAN";
 
                 # See if the user set --with-unaligned-mem
                 if(defined($$config{'with_unaligned_mem'})) {
@@ -1244,21 +1252,25 @@ sub load_modules {
                         $unaligned_ok = 0;
                     }
                     else {
-                        warning("Unknown arg to --with-unaligned-mem '$spec', will ignore");
+                        warning('Unknown arg to --with-unaligned-mem (' .
+                                $spec . ') will ignore');
                         $unaligned_ok = 0;
                     }
                 }
                 # Otherwise, see if the CPU has a default setting
-                elsif(defined($cpu_info{'unaligned'}) and $cpu_info{'unaligned'} eq 'ok')
+                elsif(defined($cpu_info{'unaligned'}) and
+                      $cpu_info{'unaligned'} eq 'ok')
                 {
-                    autoconfig("Since arch is $arch, assuming unaligned memory access is OK");
+                    autoconfig("Since arch is $arch, "
+                               'assuming unaligned memory access is OK');
                     $unaligned_ok = 1;
                 }
             }
         }
 
         # variable is always set (one or zero)
-        push @macro_list, "#define BOTAN_TARGET_UNALIGNED_LOADSTOR_OK $unaligned_ok";
+        push @macro_list,
+           "#define BOTAN_TARGET_UNALIGNED_LOADSTOR_OK $unaligned_ok";
 
         if(defined($$config{'tr1'})) {
             my $tr1 = $$config{'tr1'};
@@ -1581,7 +1593,8 @@ sub get_module_info {
 
    while($_ = &$reader()) {
        match_any_of($_, \%info, 'quoted', 'realname', 'note', 'type');
-       match_any_of($_, \%info, 'unquoted', 'define', 'mp_bits', 'modset', 'load_on', 'uses_tr1');
+       match_any_of($_, \%info, 'unquoted', 'define', 'mp_bits',
+                                'modset', 'load_on', 'uses_tr1');
 
        read_list($_, $reader, 'arch', list_push(\@{$info{'arch'}}));
        read_list($_, $reader, 'cc', list_push(\@{$info{'cc'}}));
@@ -1675,7 +1688,8 @@ sub get_os_info {
 
         read_list($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
 
-        read_list($_, $reader, 'target_features', list_push(\@{$info{'target_features'}}));
+        read_list($_, $reader, 'target_features',
+                  list_push(\@{$info{'target_features'}}));
 
         read_list($_, $reader, 'supports_shared',
                   list_push(\@{$info{'supports_shared'}}));
@@ -2027,7 +2041,7 @@ sub generate_makefile {
 
    process_template($template, $$config{'makefile'}, $config);
 
-   autoconfig("Created ${make_style}-style makefile in $$config{'makefile'}");
+   autoconfig("Wrote ${makmake_style}-style makefile in $$config{'makefile'}");
 }
 
 ##################################################
