@@ -12,29 +12,18 @@
 
 namespace Botan {
 
-namespace {
-
-/*************************************************
-* A class handling reading from a device         *
-*************************************************/
-class Device_Reader
+/**
+Close the device, if open
+*/
+Device_EntropySource::Device_Reader::~Device_Reader()
    {
-   public:
-      typedef int fd_type;
+   if(fd > 0) { ::close(fd); }
+   }
 
-      Device_Reader(fd_type device_fd) : fd(device_fd) {}
-      ~Device_Reader() { if(fd > 0) { ::close(fd); } }
-      u32bit get(byte out[], u32bit length);
-
-      static fd_type open(const std::string& pathname);
-   private:
-      fd_type fd;
-   };
-
-/*************************************************
-* Read from a device file                        *
-*************************************************/
-u32bit Device_Reader::get(byte out[], u32bit length)
+/**
+Read bytes from a device file
+*/
+u32bit Device_EntropySource::Device_Reader::get(byte out[], u32bit length)
    {
    if(fd < 0)
       return 0;
@@ -42,7 +31,7 @@ u32bit Device_Reader::get(byte out[], u32bit length)
    if(fd >= FD_SETSIZE)
       return 0;
 
-   const u32bit READ_WAIT_MS = 10;
+   const u32bit READ_WAIT_MS = 3;
 
    fd_set read_set;
    FD_ZERO(&read_set);
@@ -70,10 +59,10 @@ u32bit Device_Reader::get(byte out[], u32bit length)
    return ret;
    }
 
-/*************************************************
-* Attempt to open a device                       *
-*************************************************/
-int Device_Reader::open(const std::string& pathname)
+/**
+Attempt to open a device
+*/
+int Device_EntropySource::Device_Reader::open(const std::string& pathname)
    {
 #ifndef O_NONBLOCK
   #define O_NONBLOCK 0
@@ -87,7 +76,14 @@ int Device_Reader::open(const std::string& pathname)
    return ::open(pathname.c_str(), flags);
    }
 
-}
+/**
+Device_EntropySource constructor
+*/
+Device_EntropySource::Device_EntropySource(const std::vector<std::string>& fsnames)
+   {
+   for(u32bit i = 0; i != fsnames.size(); ++i)
+      devices.push_back(Device_Reader(Device_Reader::open(fsnames[i])));
+   }
 
 /**
 * Gather entropy from a RNG device
@@ -96,11 +92,9 @@ u32bit Device_EntropySource::slow_poll(byte output[], u32bit length)
    {
    u32bit read = 0;
 
-   for(size_t j = 0; j != fsnames.size(); ++j)
+   for(size_t i = 0; i != devices.size(); ++i)
       {
-      Device_Reader reader(Device_Reader::open(fsnames[j]));
-
-      read += reader.get(output + read, length - read);
+      read += devices[i].get(output + read, length - read);
 
       if(read == length)
          break;

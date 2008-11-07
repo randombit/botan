@@ -20,13 +20,30 @@ class BOTAN_DLL Device_EntropySource : public EntropySource
    public:
       std::string name() const { return "RNG Device Reader"; }
 
-      Device_EntropySource(const std::vector<std::string>& fs) :
-         fsnames(fs) {}
+      Device_EntropySource(const std::vector<std::string>& fsnames);
 
       u32bit slow_poll(byte[], u32bit);
       u32bit fast_poll(byte[], u32bit);
    private:
-      std::vector<std::string> fsnames;
+
+      /**
+      A class handling reading from a Unix character device
+      */
+      class Device_Reader
+         {
+         public:
+            typedef int fd_type;
+
+            Device_Reader(fd_type device_fd) : fd(device_fd) {}
+            ~Device_Reader();
+            u32bit get(byte out[], u32bit length);
+
+            static fd_type open(const std::string& pathname);
+         private:
+            fd_type fd;
+         };
+
+      std::vector<Device_Reader> devices;
    };
 
 }
