@@ -53,6 +53,9 @@ void CMS_Encoder::compress(const std::string& algo)
 *************************************************/
 bool CMS_Encoder::can_compress_with(const std::string& algo)
    {
+   if(algo == "")
+      throw Invalid_Algorithm_Name("Empty string to can_compress_with");
+
 #if defined(BOTAN_HAS_COMPRESSOR_ZLIB)
    if(algo == "Zlib")
       return true;
