@@ -9,7 +9,6 @@ utils
 </requires>
 
 <add>
-allocate.h
 botan.h
 data_src.cpp
 buf_comp.h

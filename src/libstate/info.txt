@@ -5,6 +5,7 @@ load_on auto
 define LIBSTATE_MODULE
 
 <requires>
+system_alloc
 pk_pad
 s2k
 </requires>
