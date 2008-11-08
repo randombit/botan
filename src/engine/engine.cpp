@@ -7,7 +7,6 @@
 #include <botan/libstate.h>
 #include <botan/lookup.h>
 #include <botan/look_add.h>
-#include <botan/eng_def.h>
 
 namespace Botan {
 
@@ -287,10 +286,9 @@ void add_algorithm(Library_State& libstate, BlockCipher* algo)
    {
    Library_State::Engine_Iterator i(libstate);
 
-   while(Engine* engine_base = i.next())
+   while(Engine* engine = i.next())
       {
-      Default_Engine* engine = dynamic_cast<Default_Engine*>(engine_base);
-      if(engine)
+      if(engine->can_add_algorithms())
          {
          engine->add_algorithm(algo);
          return;
@@ -307,10 +305,9 @@ void add_algorithm(Library_State& libstate, StreamCipher* algo)
    {
    Library_State::Engine_Iterator i(libstate);
 
-   while(Engine* engine_base = i.next())
+   while(Engine* engine = i.next())
       {
-      Default_Engine* engine = dynamic_cast<Default_Engine*>(engine_base);
-      if(engine)
+      if(engine->can_add_algorithms())
          {
          engine->add_algorithm(algo);
          return;
@@ -327,10 +324,9 @@ void add_algorithm(Library_State& libstate, HashFunction* algo)
    {
    Library_State::Engine_Iterator i(libstate);
 
-   while(Engine* engine_base = i.next())
+   while(Engine* engine = i.next())
       {
-      Default_Engine* engine = dynamic_cast<Default_Engine*>(engine_base);
-      if(engine)
+      if(engine->can_add_algorithms())
          {
          engine->add_algorithm(algo);
          return;
@@ -348,10 +344,9 @@ void add_algorithm(Library_State& libstate,
    {
    Library_State::Engine_Iterator i(libstate);
 
-   while(Engine* engine_base = i.next())
+   while(Engine* engine = i.next())
       {
-      Default_Engine* engine = dynamic_cast<Default_Engine*>(engine_base);
-      if(engine)
+      if(engine->can_add_algorithms())
          {
          engine->add_algorithm(algo);
          return;
@@ -369,10 +364,9 @@ void add_algorithm(Library_State& libstate,
    {
    Library_State::Engine_Iterator i(libstate);
 
-   while(Engine* engine_base = i.next())
+   while(Engine* engine = i.next())
       {
-      Default_Engine* engine = dynamic_cast<Default_Engine*>(engine_base);
-      if(engine)
+      if(engine->can_add_algorithms())
          {
          engine->add_algorithm(algo);
          return;

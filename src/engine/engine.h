@@ -122,6 +122,8 @@ class BOTAN_DLL Engine
       const class BlockCipherModePaddingMethod*
          bc_pad(const std::string&) const;
 
+      virtual bool can_add_algorithms() { return false; }
+
       void add_algorithm(BlockCipher*) const;
       void add_algorithm(StreamCipher*) const;
       void add_algorithm(HashFunction*) const;
