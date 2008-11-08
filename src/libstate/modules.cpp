@@ -5,7 +5,7 @@
 
 #include <botan/modules.h>
 #include <botan/defalloc.h>
-#include <botan/eng_def.h>
+#include <botan/def_eng.h>
 #include <botan/parsing.h>
 
 #if defined(BOTAN_HAS_MUTEX_PTHREAD)

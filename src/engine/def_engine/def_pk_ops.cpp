@@ -3,7 +3,7 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/eng_def.h>
+#include <botan/def_eng.h>
 
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
   #include <botan/if_op.h>

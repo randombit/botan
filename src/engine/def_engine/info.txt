@@ -7,7 +7,7 @@ load_on auto
 <add>
 def_mode.cpp
 def_powm.cpp
-eng_def.h
+def_eng.h
 lookup_cipher.cpp
 lookup_hash.cpp
 lookup_mac.cpp

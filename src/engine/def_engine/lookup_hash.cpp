@@ -3,7 +3,7 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/eng_def.h>
+#include <botan/def_eng.h>
 #include <botan/lookup.h>
 #include <botan/libstate.h>
 #include <botan/parsing.h>
