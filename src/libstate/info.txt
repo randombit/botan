@@ -12,7 +12,8 @@ s2k
 <add>
 lookup_cipher.cpp
 lookup_hash.cpp
-lookup_misc.cpp
+lookup_mac.cpp
+lookup_s2k.cpp
 def_mode.cpp
 def_powm.cpp
 eng_base.cpp
