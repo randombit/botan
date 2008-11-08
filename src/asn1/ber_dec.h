@@ -8,7 +8,6 @@
 
 #include <botan/asn1_oid.h>
 #include <botan/data_src.h>
-#include <botan/enums.h>
 
 namespace Botan {
 
@@ -115,15 +114,6 @@ BER_Decoder& BER_Decoder::decode_list(std::vector<T>& vec, bool clear_it)
       }
    return (*this);
    }
-
-/*************************************************
-* BER Decoding Functions                         *
-*************************************************/
-namespace BER {
-
-void BOTAN_DLL decode(BER_Decoder&, Key_Constraints&);
-
-}
 
 }
 

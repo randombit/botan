@@ -8,7 +8,7 @@
 #define BOTAN_EAC_CVC_ADO_H__
 
 #include <botan/x509_key.h>
-#include <botan/enums.h>
+#include <botan/pubkey_enums.h>
 #include <botan/pubkey.h>
 #include <botan/ecdsa.h>
 #include <botan/eac_obj.h>

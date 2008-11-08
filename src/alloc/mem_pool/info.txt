@@ -1,0 +1,12 @@
+realname "Memory Pool Allocator"
+
+load_on auto
+
+<requires>
+utils
+</requires>
+
+<add>
+mem_pool.cpp
+mem_pool.h
+</add>

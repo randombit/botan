@@ -6,7 +6,7 @@
 #ifndef BOTAN_ENUMS_H__
 #define BOTAN_ENUMS_H__
 
-#include <botan/types.h>
+#include <botan/ber_dec.h>
 
 namespace Botan {
 
@@ -25,6 +25,15 @@ enum Key_Constraints {
    ENCIPHER_ONLY      = 256,
    DECIPHER_ONLY      = 128
 };
+
+/**
+* BER Decoding Function for key constraints
+*/
+namespace BER {
+
+void BOTAN_DLL decode(BER_Decoder&, Key_Constraints&);
+
+}
 
 /**
 * X.509v2 CRL Reason Code.
@@ -51,33 +60,9 @@ enum CRL_Code {
 *************************************************/
 
 /**
-* The type of checking to be performed:
-* NONE - no checks, IGNORE_WS - perform checks, but ignore
-* whitespaces, FULL_CHECK - perform checks, also complain
-* about white spaces.
-*/
-enum Decoder_Checking { NONE, IGNORE_WS, FULL_CHECK };
-
-/**
 * The two types of X509 encoding supported by Botan.
 */
 enum X509_Encoding { RAW_BER, PEM };
-
-/**
-* The two possible directions for cipher filters, determining whether they
-* actually perform encryption or decryption.
-*/
-enum Cipher_Dir { ENCRYPTION, DECRYPTION };
-
-/**
-* The different charsets supported by Botan.
-*/
-enum Character_Set {
-   LOCAL_CHARSET,
-   UCS2_CHARSET,
-   UTF8_CHARSET,
-   LATIN1_CHARSET
-};
 
 /**
 * Value to encode in case of no path limit in the X509

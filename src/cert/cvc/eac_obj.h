@@ -10,7 +10,7 @@
 #include <botan/pubkey.h>
 #include <botan/x509_key.h>
 #include <botan/signed_obj.h>
-#include <botan/enums.h>
+#include <botan/pubkey_enums.h>
 #include <botan/pubkey.h>
 #include <botan/parsing.h>
 #include <botan/pem.h>

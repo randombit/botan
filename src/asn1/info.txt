@@ -15,7 +15,6 @@ asn1_alt.cpp
 asn1_att.cpp
 asn1_dn.cpp
 asn1_int.cpp
-asn1_ku.cpp
 asn1_oid.cpp
 asn1_str.cpp
 asn1_tm.cpp

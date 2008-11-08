@@ -88,6 +88,12 @@ class BOTAN_DLL SymmetricAlgorithm
       virtual void key(const byte[], u32bit) = 0;
    };
 
+/**
+* The two possible directions for cipher filters, determining whether they
+* actually perform encryption or decryption.
+*/
+enum Cipher_Dir { ENCRYPTION, DECRYPTION };
+
 }
 
 #endif

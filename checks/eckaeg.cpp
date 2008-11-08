@@ -16,6 +16,7 @@
 #include <iostream>
 #include <fstream>
 
+#include <botan/symkey.h>
 #include <botan/dh.h>
 #include <botan/eckaeg.h>
 #include <botan/x509self.h>

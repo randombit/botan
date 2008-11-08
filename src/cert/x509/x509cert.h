@@ -9,7 +9,7 @@
 #include <botan/x509_obj.h>
 #include <botan/x509_key.h>
 #include <botan/datastor.h>
-#include <botan/enums.h>
+#include <botan/pubkey_enums.h>
 #include <map>
 
 namespace Botan {

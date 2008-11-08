@@ -96,6 +96,14 @@ class BOTAN_DLL Fanout_Filter : public Filter
       void attach(Filter* f) { Filter::attach(f); }
    };
 
+/**
+* The type of checking to be performed by decoders:
+* NONE - no checks, IGNORE_WS - perform checks, but ignore
+* whitespaces, FULL_CHECK - perform checks, also complain
+* about white spaces.
+*/
+enum Decoder_Checking { NONE, IGNORE_WS, FULL_CHECK };
+
 }
 
 #endif

@@ -7,8 +7,8 @@
 #define BOTAN_PBE_PKCS_V15_H__
 
 #include <botan/pbe.h>
+#include <botan/sym_algo.h>
 #include <botan/pipe.h>
-#include <botan/enums.h>
 
 namespace Botan {
 

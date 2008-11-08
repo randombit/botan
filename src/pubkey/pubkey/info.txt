@@ -15,6 +15,8 @@ rng
 </requires>
 
 <add>
+pubkey_enums.h
+pubkey_enums.cpp
 pk_keys.cpp
 pk_keys.h
 pkcs8.cpp

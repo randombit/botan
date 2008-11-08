@@ -14,6 +14,7 @@ filters
 
 <add>
 bit_ops.h
+botan.h
 bswap.h
 buf_comp.h
 charset.cpp

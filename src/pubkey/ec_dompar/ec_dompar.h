@@ -14,7 +14,7 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/alg_id.h>
-#include <botan/enums.h>
+#include <botan/pubkey_enums.h>
 
 namespace Botan {
 

@@ -3,8 +3,7 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/asn1_obj.h>
-#include <botan/der_enc.h>
+#include <botan/pubkey_enums.h>
 #include <botan/ber_dec.h>
 
 namespace Botan {

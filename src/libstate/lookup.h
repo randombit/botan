@@ -12,7 +12,6 @@
 #include <botan/mac.h>
 #include <botan/s2k.h>
 
-#include <botan/enums.h>
 #include <botan/filters.h>
 #include <botan/mode_pad.h>
 #include <botan/kdf.h>

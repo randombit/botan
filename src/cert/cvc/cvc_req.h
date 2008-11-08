@@ -8,7 +8,7 @@
 #define BOTAN_EAC_CVC_REQ_H__
 
 #include <botan/x509_key.h>
-#include <botan/enums.h>
+#include <botan/pubkey_enums.h>
 #include <botan/cvc_gen_cert.h>
 #include <botan/cvc_req.h>
 
