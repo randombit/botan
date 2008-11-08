@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/base.h>
-#include <botan/mac.h>
 #include <botan/version.h>
 
 namespace Botan {
@@ -74,20 +73,6 @@ StreamCipher::StreamCipher(u32bit key_min, u32bit key_max, u32bit key_mod,
 *************************************************/
 BufferedComputation::BufferedComputation(u32bit olen) : OUTPUT_LENGTH(olen)
    {
-   }
-
-/*************************************************
-* Default MAC verification operation             *
-*************************************************/
-bool MessageAuthenticationCode::verify_mac(const byte mac[], u32bit length)
-   {
-   SecureVector<byte> our_mac = final();
-   if(our_mac.size() != length)
-      return false;
-   for(u32bit j = 0; j != length; ++j)
-      if(mac[j] != our_mac[j])
-         return false;
-   return true;
    }
 
 /*************************************************
