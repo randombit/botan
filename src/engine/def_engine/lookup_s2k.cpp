@@ -14,6 +14,7 @@
 
 #if defined(BOTAN_HAS_PBKDF2)
   #include <botan/pbkdf2.h>
+  #include <botan/hmac.h>
 #endif
 
 #if defined(BOTAN_HAS_PGPS2K)
@@ -46,7 +47,7 @@ S2K* Default_Engine::find_s2k(const std::string& algo_spec) const
    if(algo_name == "PBKDF2")
       {
       if(name.size() == 2)
-         return new PKCS5_PBKDF2(get_mac("HMAC(" + name[1] + ")"));
+         return new PKCS5_PBKDF2(new HMAC(get_hash(name[1])));
       throw Invalid_Algorithm_Name(algo_spec);
       }
 #endif
