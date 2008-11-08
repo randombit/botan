@@ -7,7 +7,7 @@
 #define BOTAN_HASH_FUNCTION_BASE_CLASS_H__
 
 #include <botan/types.h>
-#include <botan/base.h>
+#include <botan/buf_comp.h>
 #include <string>
 
 namespace Botan {

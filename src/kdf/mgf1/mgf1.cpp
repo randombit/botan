@@ -5,6 +5,7 @@
 
 #include <botan/mgf1.h>
 #include <botan/loadstor.h>
+#include <botan/exceptn.h>
 #include <botan/xor_buf.h>
 #include <algorithm>
 #include <memory>

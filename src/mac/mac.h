@@ -6,7 +6,9 @@
 #ifndef BOTAN_MESSAGE_AUTH_CODE_BASE_H__
 #define BOTAN_MESSAGE_AUTH_CODE_BASE_H__
 
+#include <botan/buf_comp.h>
 #include <botan/base.h>
+#include <string>
 
 namespace Botan {
 

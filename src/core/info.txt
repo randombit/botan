@@ -19,6 +19,8 @@ base.cpp
 base.h
 botan.h
 data_src.cpp
+buf_comp.h
+buf_comp.cpp
 data_src.h
 defalloc.cpp
 defalloc.h

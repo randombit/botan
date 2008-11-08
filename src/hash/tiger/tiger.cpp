@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/tiger.h>
+#include <botan/exceptn.h>
 #include <botan/loadstor.h>
 #include <botan/parsing.h>
 

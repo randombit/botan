@@ -4,6 +4,8 @@
 *************************************************/
 
 #include <botan/prf_ssl3.h>
+#include <botan/symkey.h>
+#include <botan/exceptn.h>
 #include <botan/sha160.h>
 #include <botan/md5.h>
 #include <memory>

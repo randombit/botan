@@ -69,13 +69,6 @@ StreamCipher::StreamCipher(u32bit key_min, u32bit key_max, u32bit key_mod,
    }
 
 /*************************************************
-* BufferedComputation Constructor                *
-*************************************************/
-BufferedComputation::BufferedComputation(u32bit olen) : OUTPUT_LENGTH(olen)
-   {
-   }
-
-/*************************************************
 * Default StreamCipher Resync Operation          *
 *************************************************/
 void StreamCipher::resync(const byte[], u32bit length)
@@ -91,75 +84,6 @@ void StreamCipher::resync(const byte[], u32bit length)
 void StreamCipher::seek(u32bit)
    {
    throw Exception("The stream cipher " + name() + " does not support seek()");
-   }
-
-/*************************************************
-* Hashing/MACing                                 *
-*************************************************/
-void BufferedComputation::update(const byte in[], u32bit n)
-   {
-   add_data(in, n);
-   }
-
-/*************************************************
-* Hashing/MACing                                 *
-*************************************************/
-void BufferedComputation::update(const MemoryRegion<byte>& in)
-   {
-   add_data(in, in.size());
-   }
-
-/*************************************************
-* Hashing/MACing                                 *
-*************************************************/
-void BufferedComputation::update(const std::string& str)
-   {
-   update(reinterpret_cast<const byte*>(str.data()), str.size());
-   }
-
-/*************************************************
-* Hashing/MACing                                 *
-*************************************************/
-void BufferedComputation::update(byte in)
-   {
-   update(&in, 1);
-   }
-
-/*************************************************
-* Hashing/MACing                                 *
-*************************************************/
-SecureVector<byte> BufferedComputation::final()
-   {
-   SecureVector<byte> output(OUTPUT_LENGTH);
-   final_result(output);
-   return output;
-   }
-
-/*************************************************
-* Hashing/MACing                                 *
-*************************************************/
-SecureVector<byte> BufferedComputation::process(const byte in[], u32bit len)
-   {
-   update(in, len);
-   return final();
-   }
-
-/*************************************************
-* Hashing/MACing                                 *
-*************************************************/
-SecureVector<byte> BufferedComputation::process(const MemoryRegion<byte>& in)
-   {
-   update(in, in.size());
-   return final();
-   }
-
-/*************************************************
-* Hashing/MACing                                 *
-*************************************************/
-SecureVector<byte> BufferedComputation::process(const std::string& in)
-   {
-   update(in);
-   return final();
    }
 
 }
