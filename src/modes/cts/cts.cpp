@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/cts.h>
-#include <botan/lookup.h>
 #include <botan/xor_buf.h>
 #include <algorithm>
 

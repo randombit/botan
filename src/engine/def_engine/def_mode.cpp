@@ -161,9 +161,9 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
             {
 #if defined(BOTAN_HAS_EAX)
             if(direction == ENCRYPTION)
-               return new EAX_Encryption(cipher, bits);
+               return new EAX_Encryption(get_block_cipher(cipher), bits);
             else
-               return new EAX_Decryption(cipher, bits);
+               return new EAX_Decryption(get_block_cipher(cipher), bits);
 #else
             return 0;
 #endif

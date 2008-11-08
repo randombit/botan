@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/eax.h>
-#include <botan/lookup.h>
 #include <botan/xor_buf.h>
 #include <botan/parsing.h>
 #include <algorithm>
@@ -14,9 +13,9 @@ namespace Botan {
 /*************************************************
 * EAX_Decryption Constructor                     *
 *************************************************/
-EAX_Decryption::EAX_Decryption(const std::string& cipher_name,
+EAX_Decryption::EAX_Decryption(BlockCipher* ciph,
                                u32bit tag_size) :
-   EAX_Base(cipher_name, tag_size)
+   EAX_Base(ciph, tag_size)
    {
    queue.create(2*TAG_SIZE + DEFAULT_BUFFERSIZE);
    queue_start = queue_end = 0;
@@ -25,11 +24,11 @@ EAX_Decryption::EAX_Decryption(const std::string& cipher_name,
 /*************************************************
 * EAX_Decryption Constructor                     *
 *************************************************/
-EAX_Decryption::EAX_Decryption(const std::string& cipher_name,
+EAX_Decryption::EAX_Decryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv,
                                u32bit tag_size) :
-   EAX_Base(cipher_name, tag_size)
+   EAX_Base(ciph, tag_size)
    {
    set_key(key);
    set_iv(iv);

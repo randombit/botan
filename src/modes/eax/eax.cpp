@@ -4,7 +4,7 @@
 *************************************************/
 
 #include <botan/eax.h>
-#include <botan/lookup.h>
+#include <botan/cmac.h>
 #include <botan/xor_buf.h>
 #include <botan/parsing.h>
 #include <algorithm>
@@ -32,15 +32,13 @@ SecureVector<byte> eax_prf(byte tag, u32bit BLOCK_SIZE,
 /*************************************************
 * EAX_Base Constructor                           *
 *************************************************/
-EAX_Base::EAX_Base(const std::string& cipher_name,
+EAX_Base::EAX_Base(BlockCipher* ciph,
                    u32bit tag_size) :
-   TAG_SIZE(tag_size ? tag_size / 8 : block_size_of(cipher_name)),
-   BLOCK_SIZE(block_size_of(cipher_name))
+   TAG_SIZE(tag_size ? tag_size / 8 : ciph->BLOCK_SIZE),
+   BLOCK_SIZE(ciph->BLOCK_SIZE)
    {
-   const std::string mac_name = "CMAC(" + cipher_name + ")";
-
-   cipher = get_block_cipher(cipher_name);
-   mac = get_mac(mac_name);
+   cipher = ciph;
+   mac = new CMAC(cipher->clone());
 
    if(tag_size % 8 != 0 || TAG_SIZE == 0 || TAG_SIZE > mac->OUTPUT_LENGTH)
       throw Invalid_Argument(name() + ": Bad tag size " + to_string(tag_size));
@@ -118,28 +116,6 @@ void EAX_Base::increment_counter()
          break;
    cipher->encrypt(state, buffer);
    position = 0;
-   }
-
-/*************************************************
-* EAX_Encryption Constructor                     *
-*************************************************/
-EAX_Encryption::EAX_Encryption(const std::string& cipher_name,
-                               u32bit tag_size) :
-   EAX_Base(cipher_name, tag_size)
-   {
-   }
-
-/*************************************************
-* EAX_Encryption Constructor                     *
-*************************************************/
-EAX_Encryption::EAX_Encryption(const std::string& cipher_name,
-                               const SymmetricKey& key,
-                               const InitializationVector& iv,
-                               u32bit tag_size) :
-   EAX_Base(cipher_name, tag_size)
-   {
-   set_key(key);
-   set_iv(iv);
    }
 
 /*************************************************
