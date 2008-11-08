@@ -6,7 +6,7 @@
 #ifndef BOTAN_CMAC_H__
 #define BOTAN_CMAC_H__
 
-#include <botan/base.h>
+#include <botan/mac.h>
 
 namespace Botan {
 

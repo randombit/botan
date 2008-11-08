@@ -6,8 +6,8 @@
 #ifndef BOTAN_HMAC_RNG_H__
 #define BOTAN_HMAC_RNG_H__
 
+#include <botan/mac.h>
 #include <botan/rng.h>
-#include <botan/base.h>
 #include <vector>
 
 namespace Botan {

@@ -8,6 +8,7 @@
 
 #include <botan/rng.h>
 #include <botan/base.h>
+#include <botan/mac.h>
 #include <vector>
 
 namespace Botan {

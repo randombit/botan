@@ -26,6 +26,7 @@ enums.h
 exceptn.cpp
 exceptn.h
 hash.h
+mac.h
 mem_pool.cpp
 mem_pool.h
 mutex.h

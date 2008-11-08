@@ -298,41 +298,6 @@ class BOTAN_DLL BufferedComputation
       virtual void final_result(byte[]) = 0;
    };
 
-/**
-* This class represents Message Authentication Code (MAC) objects.
-*/
-class BOTAN_DLL MessageAuthenticationCode : public BufferedComputation,
-                                  public SymmetricAlgorithm
-   {
-   public:
-      /**
-      * Verify a MAC.
-      * @param in the MAC to verify as a byte array
-      * @param length the length of the byte array
-      * @return true if the MAC is valid, false otherwise
-      */
-      virtual bool verify_mac(const byte[], u32bit);
-
-      /**
-      * Get a new object representing the same algorithm as *this
-      */
-      virtual MessageAuthenticationCode* clone() const = 0;
-
-      /**
-      * Get the name of this algorithm.
-      * @return the name of this algorithm
-      */
-      virtual std::string name() const = 0;
-
-      /**
-      * Reset the internal state of this object.
-      */
-      virtual void clear() throw() = 0;
-
-      MessageAuthenticationCode(u32bit, u32bit, u32bit = 0, u32bit = 1);
-      virtual ~MessageAuthenticationCode() {}
-   };
-
 }
 
 #endif

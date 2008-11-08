@@ -7,7 +7,7 @@
 #define BOTAN_PBKDF2_H__
 
 #include <botan/s2k.h>
-#include <botan/hash.h>
+#include <botan/mac.h>
 
 namespace Botan {
 

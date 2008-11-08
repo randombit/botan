@@ -8,6 +8,8 @@
 
 #include <botan/base.h>
 #include <botan/hash.h>
+#include <botan/mac.h>
+
 #include <botan/mutex.h>
 #include <botan/pow_mod.h>
 #include <botan/basefilt.h>

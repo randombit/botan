@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/base.h>
+#include <botan/mac.h>
 #include <botan/version.h>
 
 namespace Botan {
@@ -72,18 +73,6 @@ StreamCipher::StreamCipher(u32bit key_min, u32bit key_max, u32bit key_mod,
 * BufferedComputation Constructor                *
 *************************************************/
 BufferedComputation::BufferedComputation(u32bit olen) : OUTPUT_LENGTH(olen)
-   {
-   }
-
-/*************************************************
-* MessageAuthenticationCode Constructor          *
-*************************************************/
-MessageAuthenticationCode::MessageAuthenticationCode(u32bit mlen,
-                                                     u32bit key_min,
-                                                     u32bit key_max,
-                                                     u32bit key_mod) :
-   BufferedComputation(mlen),
-   SymmetricAlgorithm(key_min, key_max, key_mod)
    {
    }
 

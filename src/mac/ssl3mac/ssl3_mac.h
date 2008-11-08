@@ -7,6 +7,7 @@
 #define BOTAN_SSL3_MAC_H__
 
 #include <botan/hash.h>
+#include <botan/mac.h>
 
 namespace Botan {
 

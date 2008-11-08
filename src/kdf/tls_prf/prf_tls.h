@@ -7,7 +7,7 @@
 #define BOTAN_TLS_PRF_H__
 
 #include <botan/kdf.h>
-#include <botan/base.h>
+#include <botan/mac.h>
 
 namespace Botan {
 

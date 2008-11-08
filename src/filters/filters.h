@@ -6,9 +6,11 @@
 #ifndef BOTAN_FILTERS_H__
 #define BOTAN_FILTERS_H__
 
-#include <botan/pipe.h>
 #include <botan/base.h>
 #include <botan/hash.h>
+#include <botan/mac.h>
+
+#include <botan/pipe.h>
 #include <botan/basefilt.h>
 #include <botan/data_snk.h>
 
