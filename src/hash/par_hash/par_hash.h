@@ -1,10 +1,10 @@
 /*************************************************
-* Parallel Header File                           *
+* Parallel Hash Header File                      *
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_PAR_HASH_H__
-#define BOTAN_PAR_HASH_H__
+#ifndef BOTAN_PARALLEL_HASH_H__
+#define BOTAN_PARALLEL_HASH_H__
 
 #include <botan/hash.h>
 #include <vector>
@@ -20,7 +20,8 @@ class BOTAN_DLL Parallel : public HashFunction
       void clear() throw();
       std::string name() const;
       HashFunction* clone() const;
-      Parallel(const std::vector<std::string>&);
+
+      Parallel(const std::vector<HashFunction*>&);
       ~Parallel();
    private:
       void add_data(const byte[], u32bit);

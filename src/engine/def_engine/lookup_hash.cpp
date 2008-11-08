@@ -200,8 +200,13 @@ Default_Engine::find_hash(const std::string& algo_spec) const
       {
       if(name.size() < 2)
          throw Invalid_Algorithm_Name(algo_spec);
-      name.erase(name.begin());
-      return new Parallel(name);
+
+      std::vector<HashFunction*> hashes;
+
+      for(u32bit i = 1; i != name.size(); ++i)
+         hashes.push_back(get_hash(name[i]));
+
+      return new Parallel(hashes);
       }
 #endif
 

@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/par_hash.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -13,11 +12,13 @@ namespace {
 /*************************************************
 * Return the sum of the hash sizes               *
 *************************************************/
-u32bit sum_of_hash_lengths(const std::vector<std::string>& names)
+u32bit sum_of_hash_lengths(const std::vector<HashFunction*>& hashes)
    {
    u32bit sum = 0;
-   for(u32bit j = 0; j != names.size(); ++j)
-      sum += output_length_of(names[j]);
+
+   for(u32bit j = 0; j != hashes.size(); ++j)
+      sum += hashes[j]->OUTPUT_LENGTH;
+
    return sum;
    }
 
@@ -65,10 +66,10 @@ std::string Parallel::name() const
 *************************************************/
 HashFunction* Parallel::clone() const
    {
-   std::vector<std::string> names;
+   std::vector<HashFunction*> hash_copies;
    for(u32bit j = 0; j != hashes.size(); ++j)
-      names.push_back(hashes[j]->name());
-   return new Parallel(names);
+      hash_copies.push_back(hashes[j]->clone());
+   return new Parallel(hash_copies);
    }
 
 /*************************************************
@@ -83,11 +84,9 @@ void Parallel::clear() throw()
 /*************************************************
 * Parallel Constructor                           *
 *************************************************/
-Parallel::Parallel(const std::vector<std::string>& names) :
-   HashFunction(sum_of_hash_lengths(names))
+Parallel::Parallel(const std::vector<HashFunction*>& hash_in) :
+   HashFunction(sum_of_hash_lengths(hash_in)), hashes(hash_in)
    {
-   for(u32bit j = 0; j != names.size(); ++j)
-      hashes.push_back(get_hash(names[j]));
    }
 
 /*************************************************
