@@ -29,27 +29,30 @@ class BOTAN_DLL BufferedComputation
       * @param in the input to process as a byte array
       * @param the length of the byte array
       */
-      void update(const byte in[], u32bit length);
+      void update(const byte in[], u32bit length) { add_data(in, length); }
 
       /**
       * Add new input to process.
       * @param in the input to process as a MemoryRegion
       */
-      void update(const MemoryRegion<byte>& in);
+      void update(const MemoryRegion<byte>& in) { add_data(in, in.size()); }
 
       /**
       * Add new input to process.
-      * @param in the input to process as a std::string. Will be interpreted
+      * @param str the input to process as a std::string. Will be interpreted
       * as a byte array based on
       * the strings encoding.
       */
-      void update(const std::string&);
+      void update(const std::string& str)
+         {
+         add_data(reinterpret_cast<const byte*>(str.data()), str.size());
+         }
 
       /**
       * Process a single byte.
       * @param in the byte to process
       */
-      void update(byte in);
+      void update(byte in) { add_data(&in, 1); }
 
       /**
       * Complete the computation and retrieve the
@@ -64,7 +67,12 @@ class BOTAN_DLL BufferedComputation
       * final result.
       * @return a SecureVector holding the result
       */
-      SecureVector<byte> final();
+      SecureVector<byte> final()
+         {
+         SecureVector<byte> output(OUTPUT_LENGTH);
+         final_result(output);
+         return output;
+         }
 
       /**
       * Update and finalize computation. Does the same as calling update()
@@ -73,7 +81,11 @@ class BOTAN_DLL BufferedComputation
       * @param length the length of the byte array
       * @result the result of the call to final()
       */
-      SecureVector<byte> process(const byte in[], u32bit length);
+      SecureVector<byte> process(const byte in[], u32bit length)
+         {
+         add_data(in, length);
+         return final();
+         }
 
       /**
       * Update and finalize computation. Does the same as calling update()
@@ -81,7 +93,11 @@ class BOTAN_DLL BufferedComputation
       * @param in the input to process
       * @result the result of the call to final()
       */
-      SecureVector<byte> process(const MemoryRegion<byte>& in);
+      SecureVector<byte> process(const MemoryRegion<byte>& in)
+         {
+         add_data(in, in.size());
+         return final();
+         }
 
       /**
       * Update and finalize computation. Does the same as calling update()
@@ -89,9 +105,13 @@ class BOTAN_DLL BufferedComputation
       * @param in the input to process as a string
       * @result the result of the call to final()
       */
-      SecureVector<byte> process(const std::string& in);
+      SecureVector<byte> process(const std::string& in)
+         {
+         update(in);
+         return final();
+         }
 
-      BufferedComputation(u32bit);
+      BufferedComputation(u32bit out_len) : OUTPUT_LENGTH(out_len) {}
       virtual ~BufferedComputation() {}
    private:
       BufferedComputation& operator=(const BufferedComputation&);
