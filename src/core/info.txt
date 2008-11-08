@@ -26,11 +26,11 @@ defalloc.h
 enums.h
 exceptn.cpp
 exceptn.h
-hash.h
 mem_pool.cpp
 mem_pool.h
 mutex.h
 secmem.h
+sym_algo.h
 symkey.cpp
 symkey.h
 </add>

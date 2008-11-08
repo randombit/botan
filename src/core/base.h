@@ -8,6 +8,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/symkey.h>
+#include <botan/sym_algo.h>
 
 namespace Botan {
 
@@ -15,67 +16,6 @@ namespace Botan {
 * Constants                                      *
 *************************************************/
 static const u32bit DEFAULT_BUFFERSIZE = BOTAN_DEFAULT_BUFFER_SIZE;
-
-/**
-* This class represents a symmetric algorithm object.
-*/
-class BOTAN_DLL SymmetricAlgorithm
-   {
-   public:
-
-      /**
-      * The maximum allowed key length.
-      */
-      const u32bit MAXIMUM_KEYLENGTH;
-
-      /**
-      * The minimal allowed key length.
-      */
-      const u32bit MINIMUM_KEYLENGTH;
-
-      /**
-      * A valid keylength is a multiple of this value.
-      */
-      const u32bit KEYLENGTH_MULTIPLE;
-
-      /**
-      * The name of the algorithm.
-      * @return the name of the algorithm
-      */
-      virtual std::string name() const = 0;
-
-      /**
-      * Set the symmetric key of this object.
-      * @param key the SymmetricKey to be set.
-      */
-      void set_key(const SymmetricKey& key) throw(Invalid_Key_Length);
-
-      /**
-      * Set the symmetric key of this object.
-      * @param key the to be set as a byte array.
-      * @param the length of the byte array.
-      */
-      void set_key(const byte key[], u32bit length) throw(Invalid_Key_Length);
-
-      /**
-      * Check whether a given key length is valid for this algorithm.
-      * @param length the key length to be checked.
-      * @return true if the key length is valid.
-      */
-      bool valid_keylength(u32bit length) const;
-
-      /**
-      * Construct a SymmetricAlgorithm.
-      * @param key_min the minimum allowed key length
-      * @param key_max the maximum allowed key length
-      * @param key_mod any valid key length must be a multiple of this value
-      */
-      SymmetricAlgorithm(u32bit key_min, u32bit key_max, u32bit key_mod);
-
-      virtual ~SymmetricAlgorithm() {}
-   private:
-      virtual void key(const byte[], u32bit) = 0;
-   };
 
 /**
 * This class represents a block cipher object.
@@ -132,7 +72,13 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       */
       virtual void clear() throw() = 0;
 
-      BlockCipher(u32bit, u32bit, u32bit = 0, u32bit = 1);
+      BlockCipher(u32bit block_size,
+                  u32bit key_min,
+                  u32bit key_max = 0,
+                  u32bit key_mod = 1) :
+         SymmetricAlgorithm(key_min, key_max, key_mod),
+         BLOCK_SIZE(block_size) {}
+
       virtual ~BlockCipher() {}
    private:
       virtual void enc(const byte[], byte[]) const = 0;
@@ -203,7 +149,12 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       */
       virtual void clear() throw() = 0;
 
-      StreamCipher(u32bit, u32bit = 0, u32bit = 1, u32bit = 0);
+      StreamCipher(u32bit key_min, u32bit key_max = 0,
+                   u32bit key_mod = 1,
+                   u32bit iv_len = 0) :
+         SymmetricAlgorithm(key_min, key_max, key_mod),
+         IV_LENGTH(iv_len) {}
+
       virtual ~StreamCipher() {}
    private:
       virtual void cipher(const byte[], byte[], u32bit) = 0;
