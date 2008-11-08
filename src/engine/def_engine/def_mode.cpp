@@ -111,9 +111,12 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
             {
 #if defined(BOTAN_HAS_ECB)
             if(direction == ENCRYPTION)
-               return new ECB_Encryption(cipher, padding);
+               return new ECB_Encryption(get_block_cipher(cipher),
+                                         get_bc_pad(padding));
             else
-               return new ECB_Decryption(cipher, padding);
+               return new ECB_Decryption(get_block_cipher(cipher),
+                                         get_bc_pad(padding));
+
 #else
             return 0;
 #endif
@@ -122,9 +125,9 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
             {
 #if defined(BOTAN_HAS_CFB)
             if(direction == ENCRYPTION)
-               return new CFB_Encryption(cipher, bits);
+               return new CFB_Encryption(get_block_cipher(cipher), bits);
             else
-               return new CFB_Decryption(cipher, bits);
+               return new CFB_Decryption(get_block_cipher(cipher), bits);
 #else
             return 0;
 #endif
@@ -145,9 +148,11 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
 
 #if defined(BOTAN_HAS_CBC)
             if(direction == ENCRYPTION)
-               return new CBC_Encryption(cipher, padding);
+               return new CBC_Encryption(get_block_cipher(cipher),
+                                         get_bc_pad(padding));
             else
-               return new CBC_Decryption(cipher, padding);
+               return new CBC_Decryption(get_block_cipher(cipher),
+                                         get_bc_pad(padding));
 #else
             return 0;
 #endif

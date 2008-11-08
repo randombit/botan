@@ -8,6 +8,7 @@
 
 #include <botan/modebase.h>
 #include <botan/mode_pad.h>
+#include <botan/block_cipher.h>
 
 namespace Botan {
 
@@ -17,7 +18,9 @@ namespace Botan {
 class BOTAN_DLL ECB : public BlockCipherMode
    {
    protected:
-      ECB(const std::string&, const std::string&);
+      ECB(BlockCipher* ciph, const BlockCipherModePaddingMethod* pad) :
+         BlockCipherMode(ciph, "ECB", 0), padder(pad) {}
+
       std::string name() const;
       const BlockCipherModePaddingMethod* padder;
    private:
@@ -30,9 +33,14 @@ class BOTAN_DLL ECB : public BlockCipherMode
 class BOTAN_DLL ECB_Encryption : public ECB
    {
    public:
-      ECB_Encryption(const std::string&, const std::string&);
-      ECB_Encryption(const std::string&, const std::string&,
-                     const SymmetricKey&);
+      ECB_Encryption(BlockCipher* ciph,
+                     const BlockCipherModePaddingMethod* pad) :
+         ECB(ciph, pad) {}
+
+      ECB_Encryption(BlockCipher* ciph,
+                     const BlockCipherModePaddingMethod* pad,
+                     const SymmetricKey& key) :
+         ECB(ciph, pad) { set_key(key); }
    private:
       void write(const byte[], u32bit);
       void end_msg();
@@ -44,9 +52,14 @@ class BOTAN_DLL ECB_Encryption : public ECB
 class BOTAN_DLL ECB_Decryption : public ECB
    {
    public:
-      ECB_Decryption(const std::string&, const std::string&);
-      ECB_Decryption(const std::string&, const std::string&,
-                     const SymmetricKey&);
+      ECB_Decryption(BlockCipher* ciph,
+                     const BlockCipherModePaddingMethod* pad) :
+         ECB(ciph, pad) {}
+
+      ECB_Decryption(BlockCipher* ciph,
+                     const BlockCipherModePaddingMethod* pad,
+                     const SymmetricKey& key) :
+         ECB(ciph, pad) { set_key(key); }
    private:
       void write(const byte[], u32bit);
       void end_msg();

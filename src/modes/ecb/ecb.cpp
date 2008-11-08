@@ -4,18 +4,8 @@
 *************************************************/
 
 #include <botan/ecb.h>
-#include <botan/lookup.h>
 
 namespace Botan {
-
-/*************************************************
-* ECB Constructor                                *
-*************************************************/
-ECB::ECB(const std::string& cipher_name, const std::string& padding_name) :
-   BlockCipherMode(get_block_cipher(cipher_name),
-                   "ECB", 0), padder(get_bc_pad(padding_name))
-   {
-   }
 
 /*************************************************
 * Verify the IV is not set                       *
@@ -33,26 +23,6 @@ bool ECB::valid_iv_size(u32bit iv_size) const
 std::string ECB::name() const
    {
    return (cipher->name() + "/" + mode_name + "/" + padder->name());
-   }
-
-/*************************************************
-* ECB Encryption Constructor                     *
-*************************************************/
-ECB_Encryption::ECB_Encryption(const std::string& cipher_name,
-                               const std::string& padding_name) :
-   ECB(cipher_name, padding_name)
-   {
-   }
-
-/*************************************************
-* ECB Encryption Constructor                     *
-*************************************************/
-ECB_Encryption::ECB_Encryption(const std::string& cipher_name,
-                               const std::string& padding_name,
-                               const SymmetricKey& key) :
-   ECB(cipher_name, padding_name)
-   {
-   set_key(key);
    }
 
 /*************************************************
@@ -90,26 +60,6 @@ void ECB_Encryption::end_msg()
    write(padding, padder->pad_bytes(BLOCK_SIZE, position));
    if(position != 0)
       throw Encoding_Error(name() + ": Did not pad to full blocksize");
-   }
-
-/*************************************************
-* ECB Decryption Constructor                     *
-*************************************************/
-ECB_Decryption::ECB_Decryption(const std::string& cipher_name,
-                               const std::string& padding_name) :
-   ECB(cipher_name, padding_name)
-   {
-   }
-
-/*************************************************
-* ECB Decryption Constructor                     *
-*************************************************/
-ECB_Decryption::ECB_Decryption(const std::string& cipher_name,
-                               const std::string& padding_name,
-                               const SymmetricKey& key) :
-   ECB(cipher_name, padding_name)
-   {
-   set_key(key);
    }
 
 /*************************************************

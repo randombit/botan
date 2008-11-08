@@ -17,8 +17,8 @@ namespace Botan {
 class BOTAN_DLL CBC_Encryption : public BlockCipherMode
    {
    public:
-      CBC_Encryption(const std::string&, const std::string&);
-      CBC_Encryption(const std::string&, const std::string&,
+      CBC_Encryption(BlockCipher*, const BlockCipherModePaddingMethod*);
+      CBC_Encryption(BlockCipher*, const BlockCipherModePaddingMethod*,
                      const SymmetricKey&, const InitializationVector&);
    private:
       std::string name() const;
@@ -33,8 +33,8 @@ class BOTAN_DLL CBC_Encryption : public BlockCipherMode
 class BOTAN_DLL CBC_Decryption : public BlockCipherMode
    {
    public:
-      CBC_Decryption(const std::string&, const std::string&);
-      CBC_Decryption(const std::string&, const std::string&,
+      CBC_Decryption(BlockCipher*, const BlockCipherModePaddingMethod*);
+      CBC_Decryption(BlockCipher*, const BlockCipherModePaddingMethod*,
                      const SymmetricKey&, const InitializationVector&);
    private:
       std::string name() const;

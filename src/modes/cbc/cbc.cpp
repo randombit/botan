@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/cbc.h>
-#include <botan/lookup.h>
 #include <botan/xor_buf.h>
 #include <algorithm>
 
@@ -13,11 +12,10 @@ namespace Botan {
 /*************************************************
 * CBC Encryption Constructor                     *
 *************************************************/
-CBC_Encryption::CBC_Encryption(const std::string& cipher_name,
-                               const std::string& padding_name) :
-   BlockCipherMode(get_block_cipher(cipher_name),
-                   "CBC", block_size_of(cipher_name)),
-   padder(get_bc_pad(padding_name))
+CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
+                               const BlockCipherModePaddingMethod* pad) :
+   BlockCipherMode(ciph, "CBC", ciph->BLOCK_SIZE),
+   padder(pad)
    {
    if(!padder->valid_blocksize(BLOCK_SIZE))
       throw Invalid_Block_Size(name(), padder->name());
@@ -26,13 +24,12 @@ CBC_Encryption::CBC_Encryption(const std::string& cipher_name,
 /*************************************************
 * CBC Encryption Constructor                     *
 *************************************************/
-CBC_Encryption::CBC_Encryption(const std::string& cipher_name,
-                               const std::string& padding_name,
+CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
+                               const BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   BlockCipherMode(get_block_cipher(cipher_name),
-                   "CBC", block_size_of(cipher_name)),
-   padder(get_bc_pad(padding_name))
+   BlockCipherMode(ciph, "CBC", ciph->BLOCK_SIZE),
+   padder(pad)
    {
    if(!padder->valid_blocksize(BLOCK_SIZE))
       throw Invalid_Block_Size(name(), padder->name());
@@ -84,11 +81,10 @@ std::string CBC_Encryption::name() const
 /*************************************************
 * CBC Decryption Constructor                     *
 *************************************************/
-CBC_Decryption::CBC_Decryption(const std::string& cipher_name,
-                               const std::string& padding_name) :
-   BlockCipherMode(get_block_cipher(cipher_name),
-                   "CBC", block_size_of(cipher_name)),
-   padder(get_bc_pad(padding_name))
+CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
+                               const BlockCipherModePaddingMethod* pad) :
+   BlockCipherMode(ciph, "CBC", ciph->BLOCK_SIZE),
+   padder(pad)
    {
    if(!padder->valid_blocksize(BLOCK_SIZE))
       throw Invalid_Block_Size(name(), padder->name());
@@ -98,13 +94,12 @@ CBC_Decryption::CBC_Decryption(const std::string& cipher_name,
 /*************************************************
 * CBC Decryption Constructor                     *
 *************************************************/
-CBC_Decryption::CBC_Decryption(const std::string& cipher_name,
-                               const std::string& padding_name,
+CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
+                               const BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   BlockCipherMode(get_block_cipher(cipher_name),
-                   "CBC", block_size_of(cipher_name)),
-   padder(get_bc_pad(padding_name))
+   BlockCipherMode(ciph, "CBC", ciph->BLOCK_SIZE),
+   padder(pad)
    {
    if(!padder->valid_blocksize(BLOCK_SIZE))
       throw Invalid_Block_Size(name(), padder->name());

@@ -16,8 +16,8 @@ namespace Botan {
 class BOTAN_DLL CFB_Encryption : public BlockCipherMode
    {
    public:
-      CFB_Encryption(const std::string&, u32bit = 0);
-      CFB_Encryption(const std::string&, const SymmetricKey&,
+      CFB_Encryption(BlockCipher*, u32bit = 0);
+      CFB_Encryption(BlockCipher*, const SymmetricKey&,
                      const InitializationVector&, u32bit = 0);
    private:
       void write(const byte[], u32bit);
@@ -31,8 +31,8 @@ class BOTAN_DLL CFB_Encryption : public BlockCipherMode
 class BOTAN_DLL CFB_Decryption : public BlockCipherMode
    {
    public:
-      CFB_Decryption(const std::string&, u32bit = 0);
-      CFB_Decryption(const std::string&, const SymmetricKey&,
+      CFB_Decryption(BlockCipher*, u32bit = 0);
+      CFB_Decryption(BlockCipher*, const SymmetricKey&,
                      const InitializationVector&, u32bit = 0);
    private:
       void write(const byte[], u32bit);

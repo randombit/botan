@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/cfb.h>
-#include <botan/lookup.h>
 #include <botan/parsing.h>
 #include <botan/xor_buf.h>
 #include <algorithm>
@@ -29,10 +28,9 @@ void check_feedback(u32bit BLOCK_SIZE, u32bit FEEDBACK_SIZE, u32bit bits,
 /*************************************************
 * CFB Encryption Constructor                     *
 *************************************************/
-CFB_Encryption::CFB_Encryption(const std::string& cipher_name,
+CFB_Encryption::CFB_Encryption(BlockCipher* ciph,
                                u32bit fback_bits) :
-   BlockCipherMode(get_block_cipher(cipher_name),
-                   "CFB", block_size_of(cipher_name), 1),
+   BlockCipherMode(ciph, "CFB", ciph->BLOCK_SIZE, 1),
    FEEDBACK_SIZE(fback_bits ? fback_bits / 8: BLOCK_SIZE)
    {
    check_feedback(BLOCK_SIZE, FEEDBACK_SIZE, fback_bits, name());
@@ -41,12 +39,11 @@ CFB_Encryption::CFB_Encryption(const std::string& cipher_name,
 /*************************************************
 * CFB Encryption Constructor                     *
 *************************************************/
-CFB_Encryption::CFB_Encryption(const std::string& cipher_name,
+CFB_Encryption::CFB_Encryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv,
                                u32bit fback_bits) :
-   BlockCipherMode(get_block_cipher(cipher_name),
-                   "CFB", block_size_of(cipher_name), 1),
+   BlockCipherMode(ciph, "CFB", ciph->BLOCK_SIZE, 1),
    FEEDBACK_SIZE(fback_bits ? fback_bits / 8: BLOCK_SIZE)
    {
    check_feedback(BLOCK_SIZE, FEEDBACK_SIZE, fback_bits, name());
@@ -87,10 +84,9 @@ void CFB_Encryption::feedback()
 /*************************************************
 * CFB Decryption Constructor                     *
 *************************************************/
-CFB_Decryption::CFB_Decryption(const std::string& cipher_name,
+CFB_Decryption::CFB_Decryption(BlockCipher* ciph,
                                u32bit fback_bits) :
-   BlockCipherMode(get_block_cipher(cipher_name),
-                   "CFB", block_size_of(cipher_name), 1),
+   BlockCipherMode(ciph, "CFB", ciph->BLOCK_SIZE, 1),
    FEEDBACK_SIZE(fback_bits ? fback_bits / 8 : BLOCK_SIZE)
    {
    check_feedback(BLOCK_SIZE, FEEDBACK_SIZE, fback_bits, name());
@@ -99,12 +95,11 @@ CFB_Decryption::CFB_Decryption(const std::string& cipher_name,
 /*************************************************
 * CFB Decryption Constructor                     *
 *************************************************/
-CFB_Decryption::CFB_Decryption(const std::string& cipher_name,
+CFB_Decryption::CFB_Decryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv,
                                u32bit fback_bits) :
-   BlockCipherMode(get_block_cipher(cipher_name),
-                   "CFB", block_size_of(cipher_name), 1),
+   BlockCipherMode(ciph, "CFB", ciph->BLOCK_SIZE, 1),
    FEEDBACK_SIZE(fback_bits ? fback_bits / 8 : BLOCK_SIZE)
    {
    check_feedback(BLOCK_SIZE, FEEDBACK_SIZE, fback_bits, name());
