@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/buf_filt.h>
+#include <botan/exceptn.h>
 #include <algorithm>
 
 namespace Botan {

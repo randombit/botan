@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/pipe.h>
+#include <botan/exceptn.h>
 #include <unistd.h>
 
 namespace Botan {

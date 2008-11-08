@@ -6,7 +6,7 @@
 #ifndef BOTAN_FILTER_H__
 #define BOTAN_FILTER_H__
 
-#include <botan/base.h>
+#include <botan/secmem.h>
 #include <vector>
 
 namespace Botan {

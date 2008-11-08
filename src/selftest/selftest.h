@@ -6,7 +6,7 @@
 #ifndef BOTAN_SELF_TEST_H__
 #define BOTAN_SELF_TEST_H__
 
-#include <botan/base.h>
+#include <botan/types.h>
 
 namespace Botan {
 

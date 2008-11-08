@@ -6,7 +6,7 @@
 #ifndef BOTAN_CBC_PADDING_H__
 #define BOTAN_CBC_PADDING_H__
 
-#include <botan/base.h>
+#include <botan/types.h>
 #include <string>
 
 namespace Botan {

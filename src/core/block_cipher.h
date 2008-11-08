@@ -1,10 +1,10 @@
-/*************************************************
-* Base Classes Header File                       *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/**
+* Block Cipher Base Class
+* (C) 1999-2007 Jack Lloyd
+*/
 
-#ifndef BOTAN_BASE_H__
-#define BOTAN_BASE_H__
+#ifndef BOTAN_BLOCK_CIPHER__
+#define BOTAN_BLOCK_CIPHER__
 
 #include <botan/exceptn.h>
 #include <botan/symkey.h>

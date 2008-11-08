@@ -5,6 +5,7 @@
 
 #include <botan/base64.h>
 #include <botan/charset.h>
+#include <botan/exceptn.h>
 #include <algorithm>
 
 namespace Botan {

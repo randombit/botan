@@ -6,6 +6,8 @@
 *************************************************/
 
 #include <botan/zlib.h>
+#include <botan/exceptn.h>
+
 #include <cstring>
 #include <map>
 #include <zlib.h>

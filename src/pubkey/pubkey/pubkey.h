@@ -6,9 +6,10 @@
 #ifndef BOTAN_PUBKEY_H__
 #define BOTAN_PUBKEY_H__
 
-#include <botan/base.h>
 #include <botan/pk_keys.h>
 #include <botan/pk_pad.h>
+#include <botan/symkey.h>
+#include <botan/rng.h>
 
 namespace Botan {
 

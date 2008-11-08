@@ -7,7 +7,7 @@
 #define BOTAN_AUTO_SEEDING_RNG_H__
 
 #include <botan/rng.h>
-#include <botan/base.h>
+#include <string>
 
 namespace Botan {
 

@@ -7,6 +7,7 @@
 #define BOTAN_BASEFILT_H__
 
 #include <botan/filter.h>
+#include <botan/sym_algo.h>
 
 namespace Botan {
 

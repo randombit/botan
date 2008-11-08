@@ -6,7 +6,8 @@
 #ifndef BOTAN_DATA_SRC_H__
 #define BOTAN_DATA_SRC_H__
 
-#include <botan/base.h>
+#include <botan/secmem.h>
+#include <string>
 #include <iosfwd>
 
 namespace Botan {

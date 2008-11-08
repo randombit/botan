@@ -6,8 +6,10 @@
 #ifndef BOTAN_LIB_STATE_H__
 #define BOTAN_LIB_STATE_H__
 
-#include <botan/base.h>
+#include <botan/types.h>
 #include <botan/init.h>
+#include <botan/allocate.h>
+
 #include <string>
 #include <vector>
 #include <map>

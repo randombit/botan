@@ -7,6 +7,7 @@
 #define BOTAN_ANSI_X919_MAC_H__
 
 #include <botan/mac.h>
+#include <botan/block_cipher.h>
 
 namespace Botan {
 

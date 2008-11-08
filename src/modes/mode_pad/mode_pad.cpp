@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/mode_pad.h>
+#include <botan/exceptn.h>
 #include <botan/util.h>
 
 namespace Botan {

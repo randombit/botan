@@ -6,6 +6,8 @@
 *************************************************/
 
 #include <botan/bzip2.h>
+#include <botan/exceptn.h>
+
 #include <map>
 #include <cstring>
 #define BZ_NO_STDIO

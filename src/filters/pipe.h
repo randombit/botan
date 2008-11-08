@@ -8,6 +8,7 @@
 
 #include <botan/data_src.h>
 #include <botan/filter.h>
+#include <botan/exceptn.h>
 #include <iosfwd>
 
 namespace Botan {

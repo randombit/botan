@@ -6,10 +6,14 @@
 #ifndef BOTAN_LOOKUP_MANGEMENT_H__
 #define BOTAN_LOOKUP_MANGEMENT_H__
 
-#include <botan/base.h>
 #include <botan/libstate.h>
-#include <botan/mode_pad.h>
+
+#include <botan/block_cipher.h>
+#include <botan/stream_cipher.h>
+#include <botan/hash.h>
+#include <botan/mac.h>
 #include <botan/s2k.h>
+#include <botan/mode_pad.h>
 
 namespace Botan {
 

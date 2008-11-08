@@ -6,7 +6,7 @@
 #ifndef BOTAN_BLOWFISH_H__
 #define BOTAN_BLOWFISH_H__
 
-#include <botan/base.h>
+#include <botan/block_cipher.h>
 
 namespace Botan {
 

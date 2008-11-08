@@ -6,7 +6,7 @@
 #ifndef BOTAN_AES_H__
 #define BOTAN_AES_H__
 
-#include <botan/base.h>
+#include <botan/block_cipher.h>
 
 namespace Botan {
 

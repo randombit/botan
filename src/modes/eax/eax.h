@@ -7,6 +7,7 @@
 #define BOTAN_EAX_H__
 
 #include <botan/basefilt.h>
+#include <botan/block_cipher.h>
 #include <botan/mac.h>
 
 namespace Botan {

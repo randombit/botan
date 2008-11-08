@@ -6,7 +6,7 @@
 #ifndef BOTAN_PUBKEY_PAD_H__
 #define BOTAN_PUBKEY_PAD_H__
 
-#include <botan/base.h>
+#include <botan/secmem.h>
 #include <botan/rng.h>
 
 namespace Botan {

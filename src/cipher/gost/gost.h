@@ -6,7 +6,7 @@
 #ifndef BOTAN_GOST_H__
 #define BOTAN_GOST_H__
 
-#include <botan/base.h>
+#include <botan/block_cipher.h>
 
 namespace Botan {
 

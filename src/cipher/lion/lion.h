@@ -6,7 +6,7 @@
 #ifndef BOTAN_LION_H__
 #define BOTAN_LION_H__
 
-#include <botan/base.h>
+#include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
 #include <botan/hash.h>
 

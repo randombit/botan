@@ -5,6 +5,8 @@
 *************************************************/
 
 #include <botan/data_src.h>
+#include <botan/exceptn.h>
+
 #include <fstream>
 #include <algorithm>
 

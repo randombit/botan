@@ -6,7 +6,7 @@
 #ifndef BOTAN_LUBY_RACKOFF_H__
 #define BOTAN_LUBY_RACKOFF_H__
 
-#include <botan/base.h>
+#include <botan/block_cipher.h>
 #include <botan/hash.h>
 
 namespace Botan {

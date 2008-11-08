@@ -7,7 +7,7 @@
 #define BOTAN_ANSI_X931_RNG_H__
 
 #include <botan/rng.h>
-#include <botan/base.h>
+#include <botan/block_cipher.h>
 
 namespace Botan {
 

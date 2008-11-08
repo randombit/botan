@@ -13,6 +13,8 @@
 
 #include <botan/unix_cmd.h>
 #include <botan/parsing.h>
+#include <botan/exceptn.h>
+
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>

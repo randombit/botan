@@ -7,6 +7,7 @@
 #define BOTAN_MODEBASE_H__
 
 #include <botan/basefilt.h>
+#include <botan/block_cipher.h>
 
 namespace Botan {
 
