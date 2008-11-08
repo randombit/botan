@@ -5,7 +5,6 @@
 *************************************************/
 
 #include <botan/eckaeg_op.h>
-#include <botan/eng_def.h>
 #include <botan/numthry.h>
 
 namespace Botan {
@@ -30,16 +29,6 @@ SecureVector<byte> Default_ECKAEG_Op::agree(const PointGFp& i) const
    S.mult_this_secure((m_priv_key*l)%n, group_order, n-1);
    S.check_invariants();
    return FE2OSP(S.get_affine_x()); // fe2os(xs)
-   }
-
-/*************************************************
-* Acquire a ECKAEG op                            *
-*************************************************/
-ECKAEG_Operation* Default_Engine::eckaeg_op(const EC_Domain_Params& dom_pars,
-                                            const BigInt& priv_key,
-                                            const PointGFp& pub_key) const
-   {
-   return new Default_ECKAEG_Op(dom_pars, priv_key, pub_key);
    }
 
 }

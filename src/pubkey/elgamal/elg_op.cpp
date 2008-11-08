@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/elg_op.h>
-#include <botan/eng_def.h>
 
 namespace Botan {
 
@@ -50,15 +49,6 @@ BigInt Default_ELG_Op::decrypt(const BigInt& a, const BigInt& b) const
       throw Invalid_Argument("Default_ELG_Op: Invalid message");
 
    return mod_p.multiply(b, inverse_mod(powermod_x_p(a), p));
-   }
-
-/*************************************************
-* Acquire an ElGamal op                          *
-*************************************************/
-ELG_Operation* Default_Engine::elg_op(const DL_Group& group, const BigInt& y,
-                                      const BigInt& x) const
-   {
-   return new Default_ELG_Op(group, y, x);
    }
 
 }

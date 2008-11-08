@@ -10,7 +10,6 @@ dh.h
 dh_core.cpp
 dh_core.h
 dh_op.h
-dh_op.cpp
 </add>
 
 <requires>

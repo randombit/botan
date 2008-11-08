@@ -4,7 +4,7 @@
 *     2008 Jack Lloyd                            *
 *************************************************/
 
-#include <botan/eng_def.h>
+#include <botan/ecdsa_op.h>
 #include <botan/numthry.h>
 
 namespace Botan {
@@ -121,16 +121,6 @@ Default_ECDSA_Op::Default_ECDSA_Op(const EC_Domain_Params& dom_pars, const BigIn
      m_priv_key(priv_key)
    {
 
-   }
-
-/*************************************************
-* Acquire a ECDSA op                             *
-*************************************************/
-ECDSA_Operation* Default_Engine::ecdsa_op(const EC_Domain_Params& dom_pars,
-                                          const BigInt& priv_key,
-                                          const PointGFp& pub_key) const
-   {
-   return new Default_ECDSA_Op(dom_pars, priv_key, pub_key);
    }
 
 }

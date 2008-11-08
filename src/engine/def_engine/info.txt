@@ -12,4 +12,5 @@ lookup_cipher.cpp
 lookup_hash.cpp
 lookup_mac.cpp
 lookup_s2k.cpp
+def_pk_ops.cpp
 </add>

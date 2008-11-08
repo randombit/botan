@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/nr_op.h>
-#include <botan/eng_def.h>
 
 namespace Botan {
 
@@ -65,15 +64,6 @@ SecureVector<byte> Default_NR_Op::sign(const byte in[], u32bit length,
    c.binary_encode(output + (output.size() / 2 - c.bytes()));
    d.binary_encode(output + (output.size() - d.bytes()));
    return output;
-   }
-
-/*************************************************
-* Acquire a NR op                                *
-*************************************************/
-NR_Operation* Default_Engine::nr_op(const DL_Group& group, const BigInt& y,
-                                    const BigInt& x) const
-   {
-   return new Default_NR_Op(group, y, x);
    }
 
 }

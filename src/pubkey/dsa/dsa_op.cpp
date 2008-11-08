@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/dsa_op.h>
-#include <botan/eng_def.h>
 
 namespace Botan {
 
@@ -67,15 +66,6 @@ SecureVector<byte> Default_DSA_Op::sign(const byte in[], u32bit length,
    r.binary_encode(output + (output.size() / 2 - r.bytes()));
    s.binary_encode(output + (output.size() - s.bytes()));
    return output;
-   }
-
-/*************************************************
-* Acquire a DSA op                               *
-*************************************************/
-DSA_Operation* Default_Engine::dsa_op(const DL_Group& group, const BigInt& y,
-                                      const BigInt& x) const
-   {
-   return new Default_DSA_Op(group, y, x);
    }
 
 }
