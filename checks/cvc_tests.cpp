@@ -29,7 +29,6 @@
 #include <botan/cvc_cert.h>
 #include <botan/util.h>
 #include <botan/cvc_ado.h>
-#include <botan/enums.h>
 
 #define TEST_DATA_DIR "checks/ecc_testdata"
 
