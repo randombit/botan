@@ -5,12 +5,7 @@ load_on auto
 define CORE_MODULE
 
 <requires>
-rng
-filters
-hex
-bigint
-libstate
-timer
+utils
 </requires>
 
 <add>
@@ -26,9 +21,5 @@ exceptn.cpp
 exceptn.h
 mem_pool.cpp
 mem_pool.h
-mutex.h
 secmem.h
-sym_algo.h
-symkey.cpp
-symkey.h
 </add>
