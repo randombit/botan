@@ -1,0 +1,15 @@
+realname "Default Engine"
+
+define DEFAULT_ENGINE
+
+load_on auto
+
+<add>
+def_mode.cpp
+def_powm.cpp
+eng_def.h
+lookup_cipher.cpp
+lookup_hash.cpp
+lookup_mac.cpp
+lookup_s2k.cpp
+</add>
