@@ -99,7 +99,7 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
       else if(mode == "CTR-BE")
          {
 #if defined(BOTAN_HAS_CTR)
-         return new CTR_BE(cipher);
+         return new CTR_BE(get_block_cipher(cipher));
 #else
          return 0;
 #endif
