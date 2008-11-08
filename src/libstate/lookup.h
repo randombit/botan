@@ -7,6 +7,7 @@
 #define BOTAN_LOOKUP_H__
 
 #include <botan/base.h>
+#include <botan/hash.h>
 #include <botan/enums.h>
 #include <botan/filters.h>
 #include <botan/mode_pad.h>

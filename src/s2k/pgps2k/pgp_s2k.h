@@ -7,7 +7,7 @@
 #define BOTAN_OPENPGP_S2K_H__
 
 #include <botan/s2k.h>
-#include <botan/base.h>
+#include <botan/hash.h>
 
 namespace Botan {
 

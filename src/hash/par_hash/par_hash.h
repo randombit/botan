@@ -6,7 +6,7 @@
 #ifndef BOTAN_PAR_HASH_H__
 #define BOTAN_PAR_HASH_H__
 
-#include <botan/base.h>
+#include <botan/hash.h>
 #include <vector>
 
 namespace Botan {

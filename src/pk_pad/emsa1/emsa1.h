@@ -7,6 +7,7 @@
 #define BOTAN_EMSA1_H__
 
 #include <botan/pk_pad.h>
+#include <botan/hash.h>
 
 namespace Botan {
 

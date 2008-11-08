@@ -8,6 +8,7 @@
 
 #include <botan/pk_pad.h>
 #include <botan/kdf.h>
+#include <botan/hash.h>
 
 namespace Botan {
 

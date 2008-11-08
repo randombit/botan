@@ -7,7 +7,7 @@
 #define BOTAN_KDF1_H__
 
 #include <botan/kdf.h>
-#include <botan/base.h>
+#include <botan/hash.h>
 
 namespace Botan {
 

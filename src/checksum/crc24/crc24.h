@@ -6,7 +6,7 @@
 #ifndef BOTAN_CRC24_H__
 #define BOTAN_CRC24_H__
 
-#include <botan/base.h>
+#include <botan/hash.h>
 
 namespace Botan {
 

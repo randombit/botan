@@ -7,6 +7,7 @@
 #define BOTAN_LUBY_RACKOFF_H__
 
 #include <botan/base.h>
+#include <botan/hash.h>
 
 namespace Botan {
 

@@ -76,14 +76,6 @@ BufferedComputation::BufferedComputation(u32bit olen) : OUTPUT_LENGTH(olen)
    }
 
 /*************************************************
-* HashFunction Constructor                       *
-*************************************************/
-HashFunction::HashFunction(u32bit hlen, u32bit blen) :
-   BufferedComputation(hlen), HASH_BLOCK_SIZE(blen)
-   {
-   }
-
-/*************************************************
 * MessageAuthenticationCode Constructor          *
 *************************************************/
 MessageAuthenticationCode::MessageAuthenticationCode(u32bit mlen,

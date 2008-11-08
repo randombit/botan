@@ -7,6 +7,7 @@
 #define BOTAN_ENGINE_H__
 
 #include <botan/base.h>
+#include <botan/hash.h>
 #include <botan/mutex.h>
 #include <botan/pow_mod.h>
 #include <botan/basefilt.h>

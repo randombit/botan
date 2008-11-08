@@ -299,39 +299,6 @@ class BOTAN_DLL BufferedComputation
    };
 
 /**
-* This class represents hash function (message digest) objects.
-*/
-class BOTAN_DLL HashFunction : public BufferedComputation
-   {
-   public:
-      /**
-      * The hash block size as defined for this algorithm.
-      */
-      const u32bit HASH_BLOCK_SIZE;
-
-      /**
-      * Get a new object representing the same algorithm as *this
-      */
-      virtual HashFunction* clone() const = 0;
-
-      /**
-      * Get the name of this algorithm.
-      * @return the name of this algorithm
-      */
-      virtual std::string name() const = 0;
-
-      /**
-      * Reset the internal state of this object.
-      */
-      virtual void clear() throw() = 0;
-
-      HashFunction(u32bit, u32bit = 0);
-      virtual ~HashFunction() {}
-   private:
-      HashFunction& operator=(const HashFunction&);
-   };
-
-/**
 * This class represents Message Authentication Code (MAC) objects.
 */
 class BOTAN_DLL MessageAuthenticationCode : public BufferedComputation,

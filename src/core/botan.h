@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/base.h>
+#include <botan/hash.h>
 #include <botan/rng.h>
 #include <botan/init.h>
 #include <botan/lookup.h>

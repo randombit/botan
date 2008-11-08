@@ -6,7 +6,7 @@
 #ifndef BOTAN_SSL3_MAC_H__
 #define BOTAN_SSL3_MAC_H__
 
-#include <botan/base.h>
+#include <botan/hash.h>
 
 namespace Botan {
 

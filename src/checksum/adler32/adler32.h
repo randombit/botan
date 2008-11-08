@@ -6,7 +6,7 @@
 #ifndef BOTAN_ADLER32_H__
 #define BOTAN_ADLER32_H__
 
-#include <botan/base.h>
+#include <botan/hash.h>
 
 namespace Botan {
 

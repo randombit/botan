@@ -6,7 +6,7 @@
 #ifndef BOTAN_MDX_BASE_H__
 #define BOTAN_MDX_BASE_H__
 
-#include <botan/base.h>
+#include <botan/hash.h>
 
 namespace Botan {
 
