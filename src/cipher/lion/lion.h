@@ -7,6 +7,7 @@
 #define BOTAN_LION_H__
 
 #include <botan/base.h>
+#include <botan/stream_cipher.h>
 #include <botan/hash.h>
 
 namespace Botan {

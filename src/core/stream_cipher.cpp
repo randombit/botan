@@ -3,7 +3,7 @@
 * (C) 1999-2007 Jack Lloyd
 */
 
-#include <botan/base.h>
+#include <botan/stream_cipher.h>
 
 namespace Botan {
 

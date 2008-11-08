@@ -6,7 +6,7 @@
 #ifndef BOTAN_TURING_H__
 #define BOTAN_TURING_H__
 
-#include <botan/base.h>
+#include <botan/stream_cipher.h>
 
 namespace Botan {
 

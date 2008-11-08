@@ -26,6 +26,8 @@ typedef signed int s32bit;
    typedef unsigned long long u64bit;
 #endif
 
+static const u32bit DEFAULT_BUFFERSIZE = BOTAN_DEFAULT_BUFFER_SIZE;
+
 }
 
 namespace Botan_types {

@@ -6,7 +6,8 @@
 #ifndef BOTAN_ARC4_H__
 #define BOTAN_ARC4_H__
 
-#include <botan/base.h>
+#include <botan/stream_cipher.h>
+#include <botan/types.h>
 
 namespace Botan {
 

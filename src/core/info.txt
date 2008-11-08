@@ -15,7 +15,6 @@ timer
 
 <add>
 allocate.h
-base.cpp
 base.h
 botan.h
 data_src.cpp
@@ -33,4 +32,6 @@ secmem.h
 sym_algo.h
 symkey.cpp
 symkey.h
+stream_cipher.h
+stream_cipher.cpp
 </add>

@@ -6,7 +6,7 @@
 #ifndef BOTAN_WIDER_WAKE_H__
 #define BOTAN_WIDER_WAKE_H__
 
-#include <botan/base.h>
+#include <botan/stream_cipher.h>
 
 namespace Botan {
 
