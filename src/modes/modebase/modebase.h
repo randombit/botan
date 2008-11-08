@@ -19,7 +19,7 @@ class BOTAN_DLL BlockCipherMode : public Keyed_Filter
    public:
       std::string name() const;
 
-      BlockCipherMode(const std::string&, const std::string&,
+      BlockCipherMode(BlockCipher*, const std::string&,
                       u32bit, u32bit = 0, u32bit = 1);
 
       virtual ~BlockCipherMode() { delete cipher; }

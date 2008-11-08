@@ -31,7 +31,8 @@ void check_feedback(u32bit BLOCK_SIZE, u32bit FEEDBACK_SIZE, u32bit bits,
 *************************************************/
 CFB_Encryption::CFB_Encryption(const std::string& cipher_name,
                                u32bit fback_bits) :
-   BlockCipherMode(cipher_name, "CFB", block_size_of(cipher_name), 1),
+   BlockCipherMode(get_block_cipher(cipher_name),
+                   "CFB", block_size_of(cipher_name), 1),
    FEEDBACK_SIZE(fback_bits ? fback_bits / 8: BLOCK_SIZE)
    {
    check_feedback(BLOCK_SIZE, FEEDBACK_SIZE, fback_bits, name());
@@ -44,7 +45,8 @@ CFB_Encryption::CFB_Encryption(const std::string& cipher_name,
                                const SymmetricKey& key,
                                const InitializationVector& iv,
                                u32bit fback_bits) :
-   BlockCipherMode(cipher_name, "CFB", block_size_of(cipher_name), 1),
+   BlockCipherMode(get_block_cipher(cipher_name),
+                   "CFB", block_size_of(cipher_name), 1),
    FEEDBACK_SIZE(fback_bits ? fback_bits / 8: BLOCK_SIZE)
    {
    check_feedback(BLOCK_SIZE, FEEDBACK_SIZE, fback_bits, name());
@@ -87,7 +89,8 @@ void CFB_Encryption::feedback()
 *************************************************/
 CFB_Decryption::CFB_Decryption(const std::string& cipher_name,
                                u32bit fback_bits) :
-   BlockCipherMode(cipher_name, "CFB", block_size_of(cipher_name), 1),
+   BlockCipherMode(get_block_cipher(cipher_name),
+                   "CFB", block_size_of(cipher_name), 1),
    FEEDBACK_SIZE(fback_bits ? fback_bits / 8 : BLOCK_SIZE)
    {
    check_feedback(BLOCK_SIZE, FEEDBACK_SIZE, fback_bits, name());
@@ -100,7 +103,8 @@ CFB_Decryption::CFB_Decryption(const std::string& cipher_name,
                                const SymmetricKey& key,
                                const InitializationVector& iv,
                                u32bit fback_bits) :
-   BlockCipherMode(cipher_name, "CFB", block_size_of(cipher_name), 1),
+   BlockCipherMode(get_block_cipher(cipher_name),
+                   "CFB", block_size_of(cipher_name), 1),
    FEEDBACK_SIZE(fback_bits ? fback_bits / 8 : BLOCK_SIZE)
    {
    check_feedback(BLOCK_SIZE, FEEDBACK_SIZE, fback_bits, name());

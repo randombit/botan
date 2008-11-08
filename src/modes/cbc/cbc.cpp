@@ -15,7 +15,8 @@ namespace Botan {
 *************************************************/
 CBC_Encryption::CBC_Encryption(const std::string& cipher_name,
                                const std::string& padding_name) :
-   BlockCipherMode(cipher_name, "CBC", block_size_of(cipher_name)),
+   BlockCipherMode(get_block_cipher(cipher_name),
+                   "CBC", block_size_of(cipher_name)),
    padder(get_bc_pad(padding_name))
    {
    if(!padder->valid_blocksize(BLOCK_SIZE))
@@ -29,7 +30,8 @@ CBC_Encryption::CBC_Encryption(const std::string& cipher_name,
                                const std::string& padding_name,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   BlockCipherMode(cipher_name, "CBC", block_size_of(cipher_name)),
+   BlockCipherMode(get_block_cipher(cipher_name),
+                   "CBC", block_size_of(cipher_name)),
    padder(get_bc_pad(padding_name))
    {
    if(!padder->valid_blocksize(BLOCK_SIZE))
@@ -84,7 +86,8 @@ std::string CBC_Encryption::name() const
 *************************************************/
 CBC_Decryption::CBC_Decryption(const std::string& cipher_name,
                                const std::string& padding_name) :
-   BlockCipherMode(cipher_name, "CBC", block_size_of(cipher_name)),
+   BlockCipherMode(get_block_cipher(cipher_name),
+                   "CBC", block_size_of(cipher_name)),
    padder(get_bc_pad(padding_name))
    {
    if(!padder->valid_blocksize(BLOCK_SIZE))
@@ -99,7 +102,8 @@ CBC_Decryption::CBC_Decryption(const std::string& cipher_name,
                                const std::string& padding_name,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   BlockCipherMode(cipher_name, "CBC", block_size_of(cipher_name)),
+   BlockCipherMode(get_block_cipher(cipher_name),
+                   "CBC", block_size_of(cipher_name)),
    padder(get_bc_pad(padding_name))
    {
    if(!padder->valid_blocksize(BLOCK_SIZE))

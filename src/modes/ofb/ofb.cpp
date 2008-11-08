@@ -14,7 +14,8 @@ namespace Botan {
 * OFB Constructor                                *
 *************************************************/
 OFB::OFB(const std::string& cipher_name) :
-   BlockCipherMode(cipher_name, "OFB", block_size_of(cipher_name), 2)
+   BlockCipherMode(get_block_cipher(cipher_name),
+                   "OFB", block_size_of(cipher_name), 2)
    {
    }
 
@@ -23,7 +24,8 @@ OFB::OFB(const std::string& cipher_name) :
 *************************************************/
 OFB::OFB(const std::string& cipher_name, const SymmetricKey& key,
          const InitializationVector& iv) :
-   BlockCipherMode(cipher_name, "OFB", block_size_of(cipher_name), 2)
+   BlockCipherMode(get_block_cipher(cipher_name),
+                   "OFB", block_size_of(cipher_name), 2)
    {
    set_key(key);
    set_iv(iv);

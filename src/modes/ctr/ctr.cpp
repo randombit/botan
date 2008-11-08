@@ -14,7 +14,8 @@ namespace Botan {
 * CTR-BE Constructor                             *
 *************************************************/
 CTR_BE::CTR_BE(const std::string& cipher_name) :
-   BlockCipherMode(cipher_name, "CTR-BE", block_size_of(cipher_name), 1)
+   BlockCipherMode(get_block_cipher(cipher_name),
+                   "CTR-BE", block_size_of(cipher_name), 1)
    {
    }
 
@@ -23,7 +24,8 @@ CTR_BE::CTR_BE(const std::string& cipher_name) :
 *************************************************/
 CTR_BE::CTR_BE(const std::string& cipher_name, const SymmetricKey& key,
                const InitializationVector& iv) :
-   BlockCipherMode(cipher_name, "CTR-BE", block_size_of(cipher_name), 1)
+   BlockCipherMode(get_block_cipher(cipher_name),
+                   "CTR-BE", block_size_of(cipher_name), 1)
    {
    set_key(key);
    set_iv(iv);

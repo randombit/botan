@@ -12,7 +12,8 @@ namespace Botan {
 * ECB Constructor                                *
 *************************************************/
 ECB::ECB(const std::string& cipher_name, const std::string& padding_name) :
-   BlockCipherMode(cipher_name, "ECB", 0), padder(get_bc_pad(padding_name))
+   BlockCipherMode(get_block_cipher(cipher_name),
+                   "ECB", 0), padder(get_bc_pad(padding_name))
    {
    }
 
