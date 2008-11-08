@@ -14,12 +14,8 @@ botan.h
 data_src.cpp
 buf_comp.h
 data_src.h
-defalloc.cpp
-defalloc.h
 enums.h
 exceptn.cpp
 exceptn.h
-mem_pool.cpp
-mem_pool.h
 secmem.h
 </add>
