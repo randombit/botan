@@ -15,12 +15,17 @@ filters
 <add>
 bit_ops.h
 bswap.h
+buf_comp.h
 charset.cpp
 charset.h
+data_src.cpp
+data_src.h
 datastor.cpp
 datastor.h
-entropy.h
 entropy.cpp
+entropy.h
+exceptn.cpp
+exceptn.h
 loadstor.h
 mem_ops.h
 mlock.cpp
@@ -28,6 +33,7 @@ mutex.h
 parsing.cpp
 parsing.h
 rotate.h
+secmem.h
 stl_util.h
 types.h
 ui.cpp

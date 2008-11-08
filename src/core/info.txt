@@ -4,17 +4,7 @@ load_on auto
 
 define CORE_MODULE
 
-<requires>
-utils
-</requires>
-
 <add>
 botan.h
-data_src.cpp
-buf_comp.h
-data_src.h
 enums.h
-exceptn.cpp
-exceptn.h
-secmem.h
 </add>
