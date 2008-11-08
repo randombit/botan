@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/ofb.h>
-#include <botan/lookup.h>
 #include <botan/xor_buf.h>
 #include <algorithm>
 
@@ -13,19 +12,17 @@ namespace Botan {
 /*************************************************
 * OFB Constructor                                *
 *************************************************/
-OFB::OFB(const std::string& cipher_name) :
-   BlockCipherMode(get_block_cipher(cipher_name),
-                   "OFB", block_size_of(cipher_name), 2)
+OFB::OFB(BlockCipher* ciph) :
+   BlockCipherMode(ciph, "OFB", ciph->BLOCK_SIZE, 2)
    {
    }
 
 /*************************************************
 * OFB Constructor                                *
 *************************************************/
-OFB::OFB(const std::string& cipher_name, const SymmetricKey& key,
+OFB::OFB(BlockCipher* ciph, const SymmetricKey& key,
          const InitializationVector& iv) :
-   BlockCipherMode(get_block_cipher(cipher_name),
-                   "OFB", block_size_of(cipher_name), 2)
+   BlockCipherMode(ciph, "OFB", ciph->BLOCK_SIZE, 2)
    {
    set_key(key);
    set_iv(iv);

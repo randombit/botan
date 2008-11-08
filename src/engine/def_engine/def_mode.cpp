@@ -91,7 +91,7 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
       if(mode == "OFB")
          {
 #if defined(BOTAN_HAS_OFB)
-         return new OFB(cipher);
+         return new OFB(get_block_cipher(cipher));
 #else
          return 0;
 #endif

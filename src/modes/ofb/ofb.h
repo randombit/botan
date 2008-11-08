@@ -3,10 +3,11 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_OFB_H__
-#define BOTAN_OFB_H__
+#ifndef BOTAN_OUTPUT_FEEDBACK_MODE_H__
+#define BOTAN_OUTPUT_FEEDBACK_MODE_H__
 
 #include <botan/modebase.h>
+#include <botan/block_cipher.h>
 
 namespace Botan {
 
@@ -16,9 +17,11 @@ namespace Botan {
 class BOTAN_DLL OFB : public BlockCipherMode
    {
    public:
-      OFB(const std::string&);
-      OFB(const std::string&,
-          const SymmetricKey&, const InitializationVector&);
+      OFB(BlockCipher* cipher);
+
+      OFB(BlockCipher* cipher,
+          const SymmetricKey& key,
+          const InitializationVector& iv);
    private:
       void write(const byte[], u32bit);
    };
