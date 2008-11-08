@@ -27,7 +27,7 @@ class BOTAN_DLL IF_Operation
 /*************************************************
 * Default IF Operation                           *
 *************************************************/
-class Default_IF_Op : public IF_Operation
+class BOTAN_DLL Default_IF_Op : public IF_Operation
    {
    public:
       BigInt public_op(const BigInt& i) const
