@@ -218,23 +218,4 @@ KDF* get_kdf(const std::string& algo_spec)
    throw Algorithm_Not_Found(algo_spec);
    }
 
-/*************************************************
-* Get a MGF by name                              *
-*************************************************/
-MGF* get_mgf(const std::string& algo_spec)
-   {
-   std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   const std::string mgf_name = global_state().deref_alias(name[0]);
-
-#ifdef BOTAN_HAS_MGF1
-   if(mgf_name == "MGF1")
-      {
-      if(name.size() == 2)
-         return new MGF1(get_hash(name[1]));
-      }
-#endif
-
-   throw Algorithm_Not_Found(algo_spec);
-   }
-
 }

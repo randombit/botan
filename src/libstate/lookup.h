@@ -115,13 +115,6 @@ BOTAN_DLL EME*  get_eme(const std::string& name);
 BOTAN_DLL EMSA* get_emsa(const std::string& name);
 
 /**
-* Factory method for MGF (mask generation function)
-* @param name the name of the MGF to create
-* @return the desired MGF object
-*/
-BOTAN_DLL MGF*  get_mgf(const std::string& name);
-
-/**
 * Factory method for KDF (key derivation function)
 * @param name the name of the KDF to create
 * @return the desired KDF object
