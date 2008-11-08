@@ -7,7 +7,6 @@
 #include <botan/lookup.h>
 #include <botan/libstate.h>
 #include <botan/parsing.h>
-#include <memory>
 
 #if defined(BOTAN_HAS_PBKDF1)
   #include <botan/pbkdf1.h>
