@@ -11,28 +11,6 @@
 namespace Botan {
 
 /*************************************************
-* CTS Encryption Constructor                     *
-*************************************************/
-CTS_Encryption::CTS_Encryption(const std::string& cipher_name) :
-   BlockCipherMode(get_block_cipher(cipher_name),
-                   "CTS", block_size_of(cipher_name), 0, 2)
-   {
-   }
-
-/*************************************************
-* CTS Encryption Constructor                     *
-*************************************************/
-CTS_Encryption::CTS_Encryption(const std::string& cipher_name,
-                               const SymmetricKey& key,
-                               const InitializationVector& iv) :
-   BlockCipherMode(get_block_cipher(cipher_name),
-                   "CTS", block_size_of(cipher_name), 0, 2)
-   {
-   set_key(key);
-   set_iv(iv);
-   }
-
-/*************************************************
 * Encrypt a block                                *
 *************************************************/
 void CTS_Encryption::encrypt(const byte block[])
@@ -89,30 +67,6 @@ void CTS_Encryption::end_msg()
    clear_mem(buffer + position, BUFFER_SIZE - position);
    encrypt(buffer + BLOCK_SIZE);
    send(cn, position - BLOCK_SIZE);
-   }
-
-/*************************************************
-* CTS Decryption Constructor                     *
-*************************************************/
-CTS_Decryption::CTS_Decryption(const std::string& cipher_name) :
-   BlockCipherMode(get_block_cipher(cipher_name),
-                   "CTS", block_size_of(cipher_name), 0, 2)
-   {
-   temp.create(BLOCK_SIZE);
-   }
-
-/*************************************************
-* CTS Decryption Constructor                     *
-*************************************************/
-CTS_Decryption::CTS_Decryption(const std::string& cipher_name,
-                               const SymmetricKey& key,
-                               const InitializationVector& iv) :
-   BlockCipherMode(get_block_cipher(cipher_name),
-                   "CTS", block_size_of(cipher_name), 0, 2)
-   {
-   temp.create(BLOCK_SIZE);
-   set_key(key);
-   set_iv(iv);
    }
 
 /*************************************************

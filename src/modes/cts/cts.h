@@ -7,6 +7,7 @@
 #define BOTAN_CTS_H__
 
 #include <botan/modebase.h>
+#include <botan/block_cipher.h>
 
 namespace Botan {
 
@@ -16,9 +17,14 @@ namespace Botan {
 class BOTAN_DLL CTS_Encryption : public BlockCipherMode
    {
    public:
-      CTS_Encryption(const std::string&);
-      CTS_Encryption(const std::string&,
-                     const SymmetricKey&, const InitializationVector&);
+      CTS_Encryption(BlockCipher* ciph) :
+         BlockCipherMode(ciph, "CTS", ciph->BLOCK_SIZE, 0, 2) {}
+
+      CTS_Encryption(BlockCipher* ciph,
+                     const SymmetricKey& key,
+                     const InitializationVector& iv) :
+         BlockCipherMode(ciph, "CTS", ciph->BLOCK_SIZE, 0, 2)
+         { set_key(key); set_iv(iv); }
    private:
       void write(const byte[], u32bit);
       void end_msg();
@@ -31,9 +37,15 @@ class BOTAN_DLL CTS_Encryption : public BlockCipherMode
 class BOTAN_DLL CTS_Decryption : public BlockCipherMode
    {
    public:
-      CTS_Decryption(const std::string&);
-      CTS_Decryption(const std::string&,
-                     const SymmetricKey&, const InitializationVector&);
+      CTS_Decryption(BlockCipher* ciph) :
+         BlockCipherMode(ciph, "CTS", ciph->BLOCK_SIZE, 0, 2)
+         { temp.create(BLOCK_SIZE); }
+
+      CTS_Decryption(BlockCipher* ciph,
+                     const SymmetricKey& key,
+                     const InitializationVector& iv) :
+         BlockCipherMode(ciph, "CTS", ciph->BLOCK_SIZE, 0, 2)
+         { set_key(key); set_iv(iv); temp.create(BLOCK_SIZE); }
    private:
       void write(const byte[], u32bit);
       void end_msg();

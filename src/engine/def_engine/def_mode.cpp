@@ -138,9 +138,9 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
                {
 #if defined(BOTAN_HAS_CTS)
                if(direction == ENCRYPTION)
-                  return new CTS_Encryption(cipher);
+                  return new CTS_Encryption(get_block_cipher(cipher));
                else
-                  return new CTS_Decryption(cipher);
+                  return new CTS_Decryption(get_block_cipher(cipher));
 #else
                return 0;
 #endif
