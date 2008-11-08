@@ -7,7 +7,6 @@
 #define BOTAN_ENGINE_OPENSSL_H__
 
 #include <botan/engine.h>
-#include <botan/mutex.h>
 
 namespace Botan {
 
