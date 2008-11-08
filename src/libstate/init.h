@@ -33,13 +33,6 @@ class BOTAN_DLL InitializerOptions
       bool use_engines() const;
 
       /**
-      * Check whether this set of options has enabled the seeding of the
-      * global RNG at startup.
-      * @return true if the seeding at startup is enabled
-      */
-      bool seed_rng() const;
-
-      /**
       * Check whether this set of options has enabled the memory
       * locking feature. This is implemented for Unix and Win32, but
       * it only reliably works for Unix. There, all SecureVectors and
@@ -78,7 +71,6 @@ class BOTAN_DLL InitializerOptions
       * "config=<file name>",
       * "selftest",
       * "fips140",
-      * "seed_rng",
       * "use_engines",
       * "secure_memory",
       * "thread_safe"

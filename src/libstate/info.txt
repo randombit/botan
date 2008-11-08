@@ -11,10 +11,7 @@ s2k
 </requires>
 
 <add>
-lookup_cipher.cpp
-lookup_hash.cpp
-lookup_mac.cpp
-lookup_s2k.cpp
+botan.h
 def_mode.cpp
 def_powm.cpp
 eng_base.cpp
@@ -30,6 +27,10 @@ libstate.h
 look_add.h
 lookup.cpp
 lookup.h
+lookup_cipher.cpp
+lookup_hash.cpp
+lookup_mac.cpp
+lookup_s2k.cpp
 modules.cpp
 modules.h
 policy.cpp
