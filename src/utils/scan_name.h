@@ -35,6 +35,12 @@ class SCAN_Name
       u32bit arg_count() const { return name.size() - 1; }
 
       /**
+      @return if the number of arguments is between lower and upper
+      */
+      bool arg_count_between(u32bit lower, u32bit upper)
+         { return ((arg_count() >= lower) && (arg_count() <= upper)); }
+
+      /**
       @param i which argument
       @return the ith argument
       */
