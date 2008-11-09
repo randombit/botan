@@ -11,6 +11,6 @@ eax_dec.cpp
 </add>
 
 <requires>
-modebase
+modes
 </requires>
 

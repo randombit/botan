@@ -10,6 +10,6 @@ cbc.h
 </add>
 
 <requires>
-modebase
+modes
 </requires>
 

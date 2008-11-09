@@ -10,6 +10,6 @@ cfb.h
 </add>
 
 <requires>
-modebase
+modes
 </requires>
 
