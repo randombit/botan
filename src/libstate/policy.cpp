@@ -205,7 +205,6 @@ void set_default_aliases(Library_State& config)
    config.add_alias("OpenPGP.Digest.3", "RIPEMD-160");
    config.add_alias("OpenPGP.Digest.5", "MD2");
    config.add_alias("OpenPGP.Digest.6", "Tiger(24,3)");
-   config.add_alias("OpenPGP.Digest.7", "HAVAL(20,5)");
    config.add_alias("OpenPGP.Digest.8", "SHA-256");
 
    config.add_alias("TLS.Digest.0",     "Parallel(MD5,SHA-160)");
