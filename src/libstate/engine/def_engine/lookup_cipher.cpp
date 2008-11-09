@@ -266,8 +266,7 @@ Default_Engine::find_block_cipher(const std::string& algo_spec) const
 #endif
 
 #if defined(BOTAN_HAS_LION)
-   if(request.algo_name() == "Lion" &&
-      (request.arg_count() == 2 || request.arg_count() == 3))
+   if(request.algo_name() == "Lion" && request.arg_count_between(2, 3))
       {
       const u32bit block_size = request.argument_as_u32bit(2, 1024);
 
