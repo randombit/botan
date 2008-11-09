@@ -224,7 +224,6 @@ void set_default_aliases(Library_State& config)
    config.add_alias("CAST5",    "CAST-128");
    config.add_alias("SHA1",     "SHA-160");
    config.add_alias("SHA-1",    "SHA-160");
-   config.add_alias("SEAL",     "SEAL-3.0-BE");
    config.add_alias("MARK-4",   "ARC4(256)");
    config.add_alias("OMAC",     "CMAC");
    }
