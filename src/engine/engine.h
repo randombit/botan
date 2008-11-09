@@ -112,7 +112,8 @@ class BOTAN_DLL Engine
                                              Power_Mod::Usage_Hints) const
          { return 0; }
 
-      virtual Keyed_Filter* get_cipher(const std::string&, Cipher_Dir);
+      virtual Keyed_Filter* get_cipher(const std::string&, Cipher_Dir)
+         { return 0; }
 
       const BlockCipher* block_cipher(const std::string&) const;
       const StreamCipher* stream_cipher(const std::string&) const;
@@ -134,13 +135,23 @@ class BOTAN_DLL Engine
       Engine();
       virtual ~Engine();
    private:
-      virtual BlockCipher* find_block_cipher(const std::string&) const;
-      virtual StreamCipher* find_stream_cipher(const std::string&) const;
-      virtual HashFunction* find_hash(const std::string&) const;
-      virtual MessageAuthenticationCode* find_mac(const std::string&) const;
-      virtual class S2K* find_s2k(const std::string&) const;
+      virtual BlockCipher* find_block_cipher(const std::string&) const
+         { return 0; }
+      virtual StreamCipher* find_stream_cipher(const std::string&) const
+         { return 0; }
+
+      virtual HashFunction* find_hash(const std::string&) const
+         { return 0; }
+
+      virtual MessageAuthenticationCode* find_mac(const std::string&) const
+         { return 0; }
+
+      virtual class S2K* find_s2k(const std::string&) const
+         { return 0; }
+
       virtual class BlockCipherModePaddingMethod*
-         find_bc_pad(const std::string&) const;
+         find_bc_pad(const std::string&) const
+         { return 0; }
 
       template<typename T>
       const T* lookup_algo(const Algorithm_Cache<T>* cache,

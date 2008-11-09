@@ -194,62 +194,6 @@ Engine::~Engine()
    delete cache_of_bc_pad;
    }
 
-/*************************************************
-* Basic No-Op Engine Implementation              *
-*************************************************/
-BlockCipher* Engine::find_block_cipher(const std::string&) const
-   {
-   return 0;
-   }
-
-/*************************************************
-* Basic No-Op Engine Implementation              *
-*************************************************/
-StreamCipher* Engine::find_stream_cipher(const std::string&) const
-   {
-   return 0;
-   }
-
-/*************************************************
-* Basic No-Op Engine Implementation              *
-*************************************************/
-HashFunction* Engine::find_hash(const std::string&) const
-   {
-   return 0;
-   }
-
-/*************************************************
-* Basic No-Op Engine Implementation              *
-*************************************************/
-MessageAuthenticationCode* Engine::find_mac(const std::string&) const
-   {
-   return 0;
-   }
-
-/*************************************************
-* Basic No-Op Engine Implementation              *
-*************************************************/
-S2K* Engine::find_s2k(const std::string&) const
-   {
-   return 0;
-   }
-
-/*************************************************
-* Basic No-Op Engine Implementation              *
-*************************************************/
-BlockCipherModePaddingMethod* Engine::find_bc_pad(const std::string&) const
-   {
-   return 0;
-   }
-
-/*************************************************
-* Basic No-Op Engine Implementation              *
-*************************************************/
-Keyed_Filter* Engine::get_cipher(const std::string&, Cipher_Dir)
-   {
-   return 0;
-   }
-
 namespace Engine_Core {
 
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
