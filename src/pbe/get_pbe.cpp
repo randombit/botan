@@ -32,8 +32,6 @@ PBE* get_pbe(const std::string& pbe_name)
    const std::string digest = algo_name[1];
    const std::string cipher = algo_name[2];
 
-   PBE* pbe_obj = 0;
-
 #if defined(BOTAN_HAS_PBE_PKCS_V15)
    if(pbe == "PBE-PKCS5v15")
       return new PBE_PKCS5v15(digest, cipher, ENCRYPTION);
