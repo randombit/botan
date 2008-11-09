@@ -134,7 +134,7 @@ void IDEA::dec(const byte in[], byte out[]) const
 /*************************************************
 * IDEA Key Schedule                              *
 *************************************************/
-void IDEA::key(const byte key[], u32bit)
+void IDEA::key_schedule(const byte key[], u32bit)
    {
    for(u32bit j = 0; j != 8; ++j)
       EK[j] = load_be<u16bit>(key, j);

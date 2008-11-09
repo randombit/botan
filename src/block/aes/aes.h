@@ -24,7 +24,7 @@ class BOTAN_DLL AES : public BlockCipher
    private:
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
       static u32bit S(u32bit);
 
       static const byte SE[256];

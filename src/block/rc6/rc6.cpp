@@ -97,7 +97,7 @@ void RC6::dec(const byte in[], byte out[]) const
 /*************************************************
 * RC6 Key Schedule                               *
 *************************************************/
-void RC6::key(const byte key[], u32bit length)
+void RC6::key_schedule(const byte key[], u32bit length)
    {
    const u32bit WORD_KEYLENGTH = (((length - 1) / 4) + 1),
                 MIX_ROUNDS     = 3*std::max(WORD_KEYLENGTH, S.size());

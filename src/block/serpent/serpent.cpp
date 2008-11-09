@@ -333,7 +333,7 @@ void Serpent::dec(const byte in[], byte out[]) const
 /*************************************************
 * Serpent Key Schedule                           *
 *************************************************/
-void Serpent::key(const byte key[], u32bit length)
+void Serpent::key_schedule(const byte key[], u32bit length)
    {
    const u32bit PHI = 0x9E3779B9;
 

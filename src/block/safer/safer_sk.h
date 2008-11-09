@@ -23,7 +23,7 @@ class BOTAN_DLL SAFER_SK : public BlockCipher
    private:
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
 
       static const byte EXP[256];
       static const byte LOG[512];

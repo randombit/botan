@@ -187,7 +187,7 @@ void DES::dec(const byte in[], byte out[]) const
 /*************************************************
 * DES Key Schedule                               *
 *************************************************/
-void DES::key(const byte key[], u32bit)
+void DES::key_schedule(const byte key[], u32bit)
    {
    des_key_schedule(round_key.begin(), key);
    }
@@ -249,7 +249,7 @@ void TripleDES::dec(const byte in[], byte out[]) const
 /*************************************************
 * TripleDES Key Schedule                         *
 *************************************************/
-void TripleDES::key(const byte key[], u32bit length)
+void TripleDES::key_schedule(const byte key[], u32bit length)
    {
    des_key_schedule(&round_key[0], key);
    des_key_schedule(&round_key[32], key + 8);

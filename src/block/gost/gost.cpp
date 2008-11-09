@@ -57,7 +57,7 @@ void GOST::dec(const byte in[], byte out[]) const
 /*************************************************
 * GOST Key Schedule                              *
 *************************************************/
-void GOST::key(const byte key[], u32bit)
+void GOST::key_schedule(const byte key[], u32bit)
    {
    for(u32bit j = 0; j != 8; ++j)
       {

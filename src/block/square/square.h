@@ -23,7 +23,7 @@ class BOTAN_DLL Square : public BlockCipher
    private:
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
 
       static void transform(u32bit[4]);
 

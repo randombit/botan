@@ -123,7 +123,7 @@ void AES::dec(const byte in[], byte out[]) const
 /*************************************************
 * AES Key Schedule                               *
 *************************************************/
-void AES::key(const byte key[], u32bit length)
+void AES::key_schedule(const byte key[], u32bit length)
    {
    static const u32bit RC[10] = {
       0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000,

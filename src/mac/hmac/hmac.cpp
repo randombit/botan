@@ -32,7 +32,7 @@ void HMAC::final_result(byte mac[])
 /*************************************************
 * HMAC Key Schedule                              *
 *************************************************/
-void HMAC::key(const byte key[], u32bit length)
+void HMAC::key_schedule(const byte key[], u32bit length)
    {
    hash->clear();
    std::fill(i_key.begin(), i_key.end(), 0x36);

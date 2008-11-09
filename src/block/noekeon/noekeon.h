@@ -23,7 +23,7 @@ class BOTAN_DLL Noekeon : public BlockCipher
    private:
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
 
       static const byte RC[17];
 

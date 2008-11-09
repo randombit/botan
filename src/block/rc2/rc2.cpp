@@ -84,7 +84,7 @@ void RC2::dec(const byte in[], byte out[]) const
 /*************************************************
 * RC2 Key Schedule                               *
 *************************************************/
-void RC2::key(const byte key[], u32bit length)
+void RC2::key_schedule(const byte key[], u32bit length)
    {
    static const byte TABLE[256] = {
       0xD9, 0x78, 0xF9, 0xC4, 0x19, 0xDD, 0xB5, 0xED, 0x28, 0xE9, 0xFD, 0x79,

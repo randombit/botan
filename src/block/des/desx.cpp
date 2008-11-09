@@ -31,7 +31,7 @@ void DESX::dec(const byte in[], byte out[]) const
 /*************************************************
 * DESX Key Schedule                              *
 *************************************************/
-void DESX::key(const byte key[], u32bit)
+void DESX::key_schedule(const byte key[], u32bit)
    {
    K1.copy(key, 8);
    des.set_key(key + 8, 8);

@@ -47,7 +47,7 @@ void TEA::dec(const byte in[], byte out[]) const
 /*************************************************
 * TEA Key Schedule                               *
 *************************************************/
-void TEA::key(const byte key[], u32bit)
+void TEA::key_schedule(const byte key[], u32bit)
    {
    for(u32bit j = 0; j != 4; ++j)
       K[j] = load_be<u32bit>(key, j);

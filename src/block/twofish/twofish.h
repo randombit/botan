@@ -23,7 +23,7 @@ class BOTAN_DLL Twofish : public BlockCipher
    private:
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
 
       static void rs_mul(byte[4], byte, u32bit);
 

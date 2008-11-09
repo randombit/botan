@@ -114,7 +114,7 @@ void Square::dec(const byte in[], byte out[]) const
 /*************************************************
 * Square Key Schedule                            *
 *************************************************/
-void Square::key(const byte key[], u32bit)
+void Square::key_schedule(const byte key[], u32bit)
    {
    SecureBuffer<u32bit, 36> XEK, XDK;
    for(u32bit j = 0; j != 4; ++j)

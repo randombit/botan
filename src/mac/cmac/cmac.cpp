@@ -87,7 +87,7 @@ void CMAC::final_result(byte mac[])
 /*************************************************
 * CMAC Key Schedule                              *
 *************************************************/
-void CMAC::key(const byte key[], u32bit length)
+void CMAC::key_schedule(const byte key[], u32bit length)
    {
    clear();
    e->set_key(key, length);

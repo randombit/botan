@@ -66,7 +66,7 @@ void SAFER_SK::dec(const byte in[], byte out[]) const
 /*************************************************
 * SAFER-SK Key Schedule                          *
 *************************************************/
-void SAFER_SK::key(const byte key[], u32bit)
+void SAFER_SK::key_schedule(const byte key[], u32bit)
    {
    SecureBuffer<byte, 18> KB;
 

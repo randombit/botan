@@ -22,7 +22,7 @@ class BOTAN_DLL Turing : public StreamCipher
       Turing() : StreamCipher(4, 32, 4) { position = 0; }
    private:
       void cipher(const byte[], byte[], u32bit);
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
       void resync(const byte[], u32bit);
       void generate();
 

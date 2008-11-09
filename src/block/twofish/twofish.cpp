@@ -102,7 +102,7 @@ void Twofish::dec(const byte in[], byte out[]) const
 /*************************************************
 * Twofish Key Schedule                           *
 *************************************************/
-void Twofish::key(const byte key[], u32bit length)
+void Twofish::key_schedule(const byte key[], u32bit length)
    {
    SecureBuffer<byte, 16> S;
 

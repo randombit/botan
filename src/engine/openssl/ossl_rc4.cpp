@@ -25,7 +25,7 @@ class OpenSSL_ARC4 : public StreamCipher
       ~OpenSSL_ARC4() { clear(); }
    private:
       void cipher(const byte[], byte[], u32bit);
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
 
       const u32bit SKIP;
       RC4_KEY state;
@@ -44,7 +44,7 @@ std::string OpenSSL_ARC4::name() const
 /*************************************************
 * ARC4 Key Schedule                              *
 *************************************************/
-void OpenSSL_ARC4::key(const byte key[], u32bit length)
+void OpenSSL_ARC4::key_schedule(const byte key[], u32bit length)
    {
    RC4_set_key(&state, length, key);
    byte dummy = 0;

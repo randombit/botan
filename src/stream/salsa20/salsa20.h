@@ -26,7 +26,7 @@ class BOTAN_DLL Salsa20 : public StreamCipher
       ~Salsa20() { clear(); }
    private:
       void cipher(const byte[], byte[], u32bit);
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
 
       SecureBuffer<u32bit, 16> state;
 

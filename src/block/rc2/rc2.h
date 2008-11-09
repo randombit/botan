@@ -25,7 +25,7 @@ class BOTAN_DLL RC2 : public BlockCipher
    private:
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
 
       SecureBuffer<u16bit, 64> K;
    };

@@ -44,7 +44,7 @@ void XTEA::dec(const byte in[], byte out[]) const
 /*************************************************
 * XTEA Key Schedule                              *
 *************************************************/
-void XTEA::key(const byte key[], u32bit)
+void XTEA::key_schedule(const byte key[], u32bit)
    {
    static const u32bit DELTAS[64] = {
       0x00000000, 0x9E3779B9, 0x9E3779B9, 0x3C6EF372, 0x3C6EF372, 0xDAA66D2B,

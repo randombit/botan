@@ -69,7 +69,7 @@ void Blowfish::dec(const byte in[], byte out[]) const
 /*************************************************
 * Blowfish Key Schedule                          *
 *************************************************/
-void Blowfish::key(const byte key[], u32bit length)
+void Blowfish::key_schedule(const byte key[], u32bit length)
    {
    clear();
 

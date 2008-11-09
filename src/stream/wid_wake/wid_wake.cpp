@@ -70,7 +70,7 @@ void WiderWake_41_BE::generate(u32bit length)
 /*************************************************
 * WiderWake Key Schedule                         *
 *************************************************/
-void WiderWake_41_BE::key(const byte key[], u32bit)
+void WiderWake_41_BE::key_schedule(const byte key[], u32bit)
    {
    for(u32bit j = 0; j != 4; ++j)
       t_key[j] = load_be<u32bit>(key, j);

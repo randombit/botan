@@ -23,7 +23,7 @@ class BOTAN_DLL DES : public BlockCipher
    private:
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
 
       SecureBuffer<u32bit, 32> round_key;
    };
@@ -41,7 +41,7 @@ class BOTAN_DLL TripleDES : public BlockCipher
    private:
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
 
       SecureBuffer<u32bit, 96> round_key;
    };

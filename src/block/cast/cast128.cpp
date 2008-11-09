@@ -102,7 +102,7 @@ void CAST_128::dec(const byte in[], byte out[]) const
 /*************************************************
 * CAST-128 Key Schedule                          *
 *************************************************/
-void CAST_128::key(const byte key[], u32bit length)
+void CAST_128::key_schedule(const byte key[], u32bit length)
    {
    clear();
    SecureBuffer<u32bit, 4> X;

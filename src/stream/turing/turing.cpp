@@ -237,7 +237,7 @@ void Turing::gen_sbox(MemoryRegion<u32bit>& S, u32bit which,
 /*************************************************
 * Turing Key Schedule                            *
 *************************************************/
-void Turing::key(const byte key[], u32bit length)
+void Turing::key_schedule(const byte key[], u32bit length)
    {
    K.create(length / 4);
    for(u32bit j = 0; j != length; ++j)

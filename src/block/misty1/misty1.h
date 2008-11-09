@@ -23,7 +23,7 @@ class BOTAN_DLL MISTY1 : public BlockCipher
    private:
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
 
       static const byte EK_ORDER[100];
       static const byte DK_ORDER[100];

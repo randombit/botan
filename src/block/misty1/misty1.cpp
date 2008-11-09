@@ -116,7 +116,7 @@ void MISTY1::dec(const byte in[], byte out[]) const
 /*************************************************
 * MISTY1 Key Schedule                            *
 *************************************************/
-void MISTY1::key(const byte key[], u32bit length)
+void MISTY1::key_schedule(const byte key[], u32bit length)
    {
    SecureBuffer<u16bit, 32> KS;
    for(u32bit j = 0; j != length / 2; ++j)

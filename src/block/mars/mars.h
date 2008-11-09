@@ -20,7 +20,7 @@ class BOTAN_DLL MARS : public BlockCipher
    private:
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
 
       void encrypt_round(u32bit&, u32bit&, u32bit&, u32bit&, u32bit) const;
       void decrypt_round(u32bit&, u32bit&, u32bit&, u32bit&, u32bit) const;

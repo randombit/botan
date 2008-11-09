@@ -51,7 +51,7 @@ void ANSI_X919_MAC::final_result(byte mac[])
 /*************************************************
 * ANSI X9.19 MAC Key Schedule                    *
 *************************************************/
-void ANSI_X919_MAC::key(const byte key[], u32bit length)
+void ANSI_X919_MAC::key_schedule(const byte key[], u32bit length)
    {
    e->set_key(key, 8);
    if(length == 8) d->set_key(key, 8);

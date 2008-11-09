@@ -23,7 +23,7 @@ class BOTAN_DLL GOST : public BlockCipher
    private:
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
 
       static const u32bit SBOX1[256];
       static const u32bit SBOX2[256];

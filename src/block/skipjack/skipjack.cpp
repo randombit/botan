@@ -117,7 +117,7 @@ void Skipjack::step_Bi(u16bit& W2, u16bit& W3, u32bit round) const
 /*************************************************
 * Skipjack Key Schedule                          *
 *************************************************/
-void Skipjack::key(const byte key[], u32bit)
+void Skipjack::key_schedule(const byte key[], u32bit)
    {
    static const byte F[256] = {
       0xA3, 0xD7, 0x09, 0x83, 0xF8, 0x48, 0xF6, 0xF4, 0xB3, 0x21, 0x15, 0x78,

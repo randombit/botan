@@ -23,7 +23,7 @@ class BOTAN_DLL CAST_256 : public BlockCipher
    private:
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
 
       static const u32bit KEY_MASK[192];
       static const byte   KEY_ROT[32];

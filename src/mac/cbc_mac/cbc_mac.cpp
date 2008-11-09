@@ -52,7 +52,7 @@ void CBC_MAC::final_result(byte mac[])
 /*************************************************
 * CBC-MAC Key Schedule                           *
 *************************************************/
-void CBC_MAC::key(const byte key[], u32bit length)
+void CBC_MAC::key_schedule(const byte key[], u32bit length)
    {
    e->set_key(key, length);
    }

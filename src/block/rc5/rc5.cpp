@@ -60,7 +60,7 @@ void RC5::dec(const byte in[], byte out[]) const
 /*************************************************
 * RC5 Key Schedule                               *
 *************************************************/
-void RC5::key(const byte key[], u32bit length)
+void RC5::key_schedule(const byte key[], u32bit length)
    {
    const u32bit WORD_KEYLENGTH = (((length - 1) / 4) + 1),
                 MIX_ROUNDS     = 3*std::max(WORD_KEYLENGTH, S.size());

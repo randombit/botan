@@ -146,7 +146,7 @@ void Noekeon::dec(const byte in[], byte out[]) const
 /*************************************************
 * Noekeon Key Schedule                           *
 *************************************************/
-void Noekeon::key(const byte key[], u32bit)
+void Noekeon::key_schedule(const byte key[], u32bit)
    {
    u32bit A0 = load_be<u32bit>(key, 0);
    u32bit A1 = load_be<u32bit>(key, 1);

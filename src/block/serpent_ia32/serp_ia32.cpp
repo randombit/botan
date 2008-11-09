@@ -35,7 +35,7 @@ void Serpent_IA32::dec(const byte in[], byte out[]) const
 /*************************************************
 * Serpent Key Schedule                           *
 *************************************************/
-void Serpent_IA32::key(const byte key[], u32bit length)
+void Serpent_IA32::key_schedule(const byte key[], u32bit length)
    {
    SecureBuffer<u32bit, 140> W;
    for(u32bit j = 0; j != length / 4; ++j)

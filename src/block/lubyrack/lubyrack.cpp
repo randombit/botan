@@ -69,7 +69,7 @@ void LubyRackoff::dec(const byte in[], byte out[]) const
 /*************************************************
 * Luby-Rackoff Key Schedule                      *
 *************************************************/
-void LubyRackoff::key(const byte key[], u32bit length)
+void LubyRackoff::key_schedule(const byte key[], u32bit length)
    {
    K1.set(key, length / 2);
    K2.set(key + length / 2, length / 2);

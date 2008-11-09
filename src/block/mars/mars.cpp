@@ -213,7 +213,7 @@ void MARS::decrypt_round(u32bit& A, u32bit& B, u32bit& C, u32bit& D,
 /*************************************************
 * MARS Key Schedule                              *
 *************************************************/
-void MARS::key(const byte key[], u32bit length)
+void MARS::key_schedule(const byte key[], u32bit length)
    {
    SecureBuffer<u32bit, 15> T;
    for(u32bit j = 0; j != length / 4; ++j)

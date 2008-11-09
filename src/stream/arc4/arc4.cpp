@@ -57,7 +57,7 @@ void ARC4::generate()
 /*************************************************
 * ARC4 Key Schedule                              *
 *************************************************/
-void ARC4::key(const byte key[], u32bit length)
+void ARC4::key_schedule(const byte key[], u32bit length)
    {
    clear();
    for(u32bit j = 0; j != 256; ++j)

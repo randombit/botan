@@ -29,7 +29,7 @@ class EVP_BlockCipher : public BlockCipher
    private:
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
       std::string cipher_name;
       mutable EVP_CIPHER_CTX encrypt, decrypt;
    };
@@ -108,7 +108,7 @@ void EVP_BlockCipher::dec(const byte in[], byte out[]) const
 /*************************************************
 * Set the key                                    *
 *************************************************/
-void EVP_BlockCipher::key(const byte key[], u32bit length)
+void EVP_BlockCipher::key_schedule(const byte key[], u32bit length)
    {
    SecureVector<byte> full_key(key, length);
 

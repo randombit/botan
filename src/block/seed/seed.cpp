@@ -88,7 +88,7 @@ void SEED::dec(const byte in[], byte out[]) const
 /*************************************************
 * SEED Key Schedule                              *
 *************************************************/
-void SEED::key(const byte key[], u32bit)
+void SEED::key_schedule(const byte key[], u32bit)
    {
    const u32bit RC[16] = {
       0x9E3779B9, 0x3C6EF373, 0x78DDE6E6, 0xF1BBCDCC,

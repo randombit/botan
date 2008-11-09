@@ -23,7 +23,7 @@ class BOTAN_DLL DESX : public BlockCipher
    private:
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
       SecureBuffer<byte, 8> K1, K2;
       DES des;
    };
