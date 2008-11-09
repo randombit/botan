@@ -137,6 +137,7 @@ class BOTAN_DLL Engine
    private:
       virtual BlockCipher* find_block_cipher(const std::string&) const
          { return 0; }
+
       virtual StreamCipher* find_stream_cipher(const std::string&) const
          { return 0; }
 
