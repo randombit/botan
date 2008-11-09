@@ -6,8 +6,6 @@
 #ifndef BOTAN_STREAM_CIPHER_H__
 #define BOTAN_STREAM_CIPHER_H__
 
-#include <botan/exceptn.h>
-#include <botan/symkey.h>
 #include <botan/sym_algo.h>
 
 namespace Botan {

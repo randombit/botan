@@ -6,7 +6,6 @@
 #ifndef BOTAN_HASH_FUNCTION_BASE_CLASS_H__
 #define BOTAN_HASH_FUNCTION_BASE_CLASS_H__
 
-#include <botan/types.h>
 #include <botan/buf_comp.h>
 #include <string>
 
