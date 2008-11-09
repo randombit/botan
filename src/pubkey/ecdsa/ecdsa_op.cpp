@@ -79,7 +79,7 @@ SecureVector<byte> Default_ECDSA_Op::sign(const byte message[],
    // s = a - b mod n
    // where x is a random integer
 
-#ifdef CMS_RAND
+#if defined(CMS_RAND)
    BigInt x = BigInt::random_integer(0, n);
    BigInt s = m_priv_key + x; // obscure the secret from the beginning
    // all following operations thus are randomized

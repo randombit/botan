@@ -3,8 +3,8 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_COUNTER_MODE_H_
-#define BOTAN_COUNTER_MODE_H_
+#ifndef BOTAN_COUNTER_MODE_H__
+#define BOTAN_COUNTER_MODE_H__
 
 #include <botan/modebase.h>
 #include <botan/modebase.h>

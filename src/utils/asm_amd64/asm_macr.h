@@ -6,10 +6,6 @@
 #ifndef BOTAN_AMD64_ASM_MACROS_H__
 #define BOTAN_AMD64_ASM_MACROS_H__
 
-#ifdef __ELF__
-.section .note.GNU-stack,"",%progbits
-#endif
-
 /*************************************************
 * General/Global Macros                          *
 *************************************************/
@@ -19,6 +15,10 @@
    .file #FILENAME;             \
    .text;                       \
    ALIGN;
+
+#if defined(__ELF__)
+.section .note.GNU-stack,"",%progbits
+#endif
 
 /*************************************************
 * Function Definitions                           *

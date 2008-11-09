@@ -6,10 +6,6 @@
 #ifndef BOTAN_IA32_ASM_MACROS_H__
 #define BOTAN_IA32_ASM_MACROS_H__
 
-#ifdef __ELF__
-.section .note.GNU-stack,"",%progbits
-#endif
-
 /*************************************************
 * General/Global Macros                          *
 *************************************************/
@@ -18,9 +14,9 @@
 #define START_LISTING(FILENAME) \
    .file #FILENAME;             \
    .text;                       \
-   .p2align 4,,15;
+   ALIGN;
 
-#ifdef __ELF__
+#if defined(__ELF__)
 .section .note.GNU-stack,"",%progbits
 #endif
 
@@ -28,7 +24,6 @@
 * Function Definitions                           *
 *************************************************/
 #define START_FUNCTION(func_name) \
-   .align   8;                    \
    ALIGN;                         \
    .global  func_name;            \
    .type    func_name,@function;  \

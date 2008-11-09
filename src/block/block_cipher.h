@@ -3,8 +3,8 @@
 * (C) 1999-2007 Jack Lloyd
 */
 
-#ifndef BOTAN_BLOCK_CIPHER__
-#define BOTAN_BLOCK_CIPHER__
+#ifndef BOTAN_BLOCK_CIPHER_H__
+#define BOTAN_BLOCK_CIPHER_H__
 
 #include <botan/exceptn.h>
 #include <botan/symkey.h>

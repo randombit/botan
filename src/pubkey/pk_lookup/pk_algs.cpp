@@ -5,31 +5,31 @@
 
 #include <botan/pk_algs.h>
 
-#ifdef BOTAN_HAS_RSA
+#if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
 #endif
 
-#ifdef BOTAN_HAS_DSA
+#if defined(BOTAN_HAS_DSA)
   #include <botan/dsa.h>
 #endif
 
-#ifdef BOTAN_HAS_DIFFIE_HELLMAN
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
   #include <botan/dh.h>
 #endif
 
-#ifdef BOTAN_HAS_ECDSA
+#if defined(BOTAN_HAS_ECDSA)
   #include <botan/ecdsa.h>
 #endif
 
-#ifdef BOTAN_HAS_NYBERG_RUEPPEL
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
   #include <botan/nr.h>
 #endif
 
-#ifdef BOTAN_HAS_RW
+#if defined(BOTAN_HAS_RW)
   #include <botan/rw.h>
 #endif
 
-#ifdef BOTAN_HAS_ELGAMAL
+#if defined(BOTAN_HAS_ELGAMAL)
   #include <botan/elgamal.h>
 #endif
 
