@@ -5,6 +5,7 @@
 
 #include <botan/lookup.h>
 #include <botan/libstate.h>
+#include <botan/engine.h>
 
 namespace Botan {
 
@@ -234,6 +235,258 @@ u32bit keylength_multiple_of(const std::string& name)
       return mac->KEYLENGTH_MULTIPLE;
 
    throw Algorithm_Not_Found(name);
+   }
+
+
+/*************************************************
+* Acquire a block cipher                         *
+*************************************************/
+const BlockCipher* retrieve_block_cipher(Library_State& libstate,
+                                         const std::string& name)
+   {
+   Library_State::Engine_Iterator i(libstate);
+
+   while(const Engine* engine = i.next())
+      {
+      const BlockCipher* algo = engine->block_cipher(name);
+      if(algo)
+         return algo;
+      }
+
+   return 0;
+   }
+
+/*************************************************
+* Acquire a stream cipher                        *
+*************************************************/
+const StreamCipher* retrieve_stream_cipher(Library_State& libstate,
+                                           const std::string& name)
+   {
+   Library_State::Engine_Iterator i(libstate);
+
+   while(const Engine* engine = i.next())
+      {
+      const StreamCipher* algo = engine->stream_cipher(name);
+      if(algo)
+         return algo;
+      }
+
+   return 0;
+   }
+
+/*************************************************
+* Acquire a hash function                        *
+*************************************************/
+const HashFunction* retrieve_hash(Library_State& libstate,
+                                  const std::string& name)
+   {
+   Library_State::Engine_Iterator i(libstate);
+
+   while(const Engine* engine = i.next())
+      {
+      const HashFunction* algo = engine->hash(name);
+      if(algo)
+         return algo;
+      }
+
+   return 0;
+   }
+
+/*************************************************
+* Acquire an authentication code                 *
+*************************************************/
+const MessageAuthenticationCode* retrieve_mac(Library_State& libstate,
+                                              const std::string& name)
+   {
+   Library_State::Engine_Iterator i(libstate);
+
+   while(const Engine* engine = i.next())
+      {
+      const MessageAuthenticationCode* algo = engine->mac(name);
+      if(algo)
+         return algo;
+      }
+
+   return 0;
+   }
+
+/*************************************************
+* Acquire a string-to-key algorithm              *
+*************************************************/
+const S2K* retrieve_s2k(Library_State& libstate,
+                        const std::string& name)
+   {
+   Library_State::Engine_Iterator i(libstate);
+
+   while(const Engine* engine = i.next())
+      {
+      const S2K* algo = engine->s2k(name);
+      if(algo)
+         return algo;
+      }
+
+   return 0;
+   }
+
+/*************************************************
+* Retrieve a block cipher padding method         *
+*************************************************/
+const BlockCipherModePaddingMethod* retrieve_bc_pad(Library_State& libstate,
+                                                    const std::string& name)
+   {
+   Library_State::Engine_Iterator i(libstate);
+
+   while(const Engine* engine = i.next())
+      {
+      const BlockCipherModePaddingMethod* algo = engine->bc_pad(name);
+      if(algo)
+         return algo;
+      }
+
+   return 0;
+   }
+
+/*************************************************
+* Add a new block cipher                         *
+*************************************************/
+void add_algorithm(Library_State& libstate, BlockCipher* algo)
+   {
+   Library_State::Engine_Iterator i(libstate);
+
+   while(Engine* engine = i.next())
+      {
+      if(engine->can_add_algorithms())
+         {
+         engine->add_algorithm(algo);
+         return;
+         }
+      }
+
+   throw Invalid_State("add_algorithm: Couldn't find the Default_Engine");
+   }
+
+/*************************************************
+* Add a new stream cipher                        *
+*************************************************/
+void add_algorithm(Library_State& libstate, StreamCipher* algo)
+   {
+   Library_State::Engine_Iterator i(libstate);
+
+   while(Engine* engine = i.next())
+      {
+      if(engine->can_add_algorithms())
+         {
+         engine->add_algorithm(algo);
+         return;
+         }
+      }
+
+   throw Invalid_State("add_algorithm: Couldn't find the Default_Engine");
+   }
+
+/*************************************************
+* Add a new hash function                        *
+*************************************************/
+void add_algorithm(Library_State& libstate, HashFunction* algo)
+   {
+   Library_State::Engine_Iterator i(libstate);
+
+   while(Engine* engine = i.next())
+      {
+      if(engine->can_add_algorithms())
+         {
+         engine->add_algorithm(algo);
+         return;
+         }
+      }
+
+   throw Invalid_State("add_algorithm: Couldn't find the Default_Engine");
+   }
+
+/*************************************************
+* Add a new authentication code                  *
+*************************************************/
+void add_algorithm(Library_State& libstate,
+                   MessageAuthenticationCode* algo)
+   {
+   Library_State::Engine_Iterator i(libstate);
+
+   while(Engine* engine = i.next())
+      {
+      if(engine->can_add_algorithms())
+         {
+         engine->add_algorithm(algo);
+         return;
+         }
+      }
+
+   throw Invalid_State("add_algorithm: Couldn't find the Default_Engine");
+   }
+
+/*************************************************
+* Add a padding method to the lookup table       *
+*************************************************/
+void add_algorithm(Library_State& libstate,
+                   BlockCipherModePaddingMethod* algo)
+   {
+   Library_State::Engine_Iterator i(libstate);
+
+   while(Engine* engine = i.next())
+      {
+      if(engine->can_add_algorithms())
+         {
+         engine->add_algorithm(algo);
+         return;
+         }
+      }
+
+   throw Invalid_State("add_algorithm: Couldn't find the Default_Engine");
+   }
+
+/*************************************************
+* Get a cipher object                            *
+*************************************************/
+Keyed_Filter* get_cipher(const std::string& algo_spec,
+                         Cipher_Dir direction)
+   {
+   Library_State::Engine_Iterator i(global_state());
+
+   while(Engine* engine = i.next())
+      {
+      Keyed_Filter* algo = engine->get_cipher(algo_spec, direction);
+      if(algo)
+         return algo;
+      }
+
+   throw Algorithm_Not_Found(algo_spec);
+   }
+
+/*************************************************
+* Get a cipher object                            *
+*************************************************/
+Keyed_Filter* get_cipher(const std::string& algo_spec,
+                         const SymmetricKey& key,
+                         const InitializationVector& iv,
+                         Cipher_Dir direction)
+   {
+   Keyed_Filter* cipher = get_cipher(algo_spec, direction);
+   cipher->set_key(key);
+
+   if(iv.length())
+      cipher->set_iv(iv);
+
+   return cipher;
+   }
+
+/*************************************************
+* Get a cipher object                            *
+*************************************************/
+Keyed_Filter* get_cipher(const std::string& algo_spec,
+                         const SymmetricKey& key,
+                         Cipher_Dir direction)
+   {
+   return get_cipher(algo_spec,
+                     key, InitializationVector(), direction);
    }
 
 }

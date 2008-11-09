@@ -5,7 +5,6 @@ define ENGINES
 load_on auto
 
 <add>
-eng_base.cpp
 engine.cpp
 engine.h
 </add>
