@@ -16,9 +16,10 @@
 #include <botan/mode_pad.h>
 #include <botan/kdf.h>
 #include <botan/pk_pad.h>
-#include <botan/libstate.h>
 
 namespace Botan {
+
+class Library_State;
 
 /*************************************************
 * Retrieve an object from the lookup table       *
