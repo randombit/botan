@@ -1,4 +1,6 @@
 
+* 1.7.21, ????-??-??
+
 * 1.7.20, 2008-11-09
  - Namespace pkg-config file by major and minor versions
  - Cache device descriptors in Device_EntropySource
