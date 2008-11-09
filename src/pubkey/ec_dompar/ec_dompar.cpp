@@ -2,7 +2,6 @@
 #include <botan/ec_dompar.h>
 #include <botan/pubkey_enums.h>
 #include <botan/parsing.h>
-#include <botan/libstate.h>
 #include <botan/hex.h>
 #include <botan/pipe.h>
 

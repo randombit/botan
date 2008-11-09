@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/selftest.h>
-#include <botan/libstate.h>
 #include <botan/lookup.h>
 
 namespace Botan {

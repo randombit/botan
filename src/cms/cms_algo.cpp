@@ -7,7 +7,6 @@
 #include <botan/der_enc.h>
 #include <botan/lookup.h>
 #include <botan/filters.h>
-#include <botan/libstate.h>
 
 #if defined(BOTAN_HAS_RC2)
   #include <botan/rc2.h>
