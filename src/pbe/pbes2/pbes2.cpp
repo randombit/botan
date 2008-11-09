@@ -4,11 +4,13 @@
 *************************************************/
 
 #include <botan/pbes2.h>
+#include <botan/pbkdf2.h>
+#include <botan/hmac.h>
+#include <botan/lookup.h>
 #include <botan/libstate.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/parsing.h>
-#include <botan/lookup.h>
 #include <botan/asn1_obj.h>
 #include <botan/oids.h>
 #include <algorithm>
@@ -72,10 +74,11 @@ void PBE_PKCS5v20::flush_pipe(bool safe_to_skip)
 *************************************************/
 void PBE_PKCS5v20::set_key(const std::string& passphrase)
    {
-   std::auto_ptr<S2K> pbkdf(get_s2k("PBKDF2(" + digest + ")"));
-   pbkdf->set_iterations(iterations);
-   pbkdf->change_salt(salt, salt.size());
-   key = pbkdf->derive_key(key_length, passphrase).bits_of();
+   PKCS5_PBKDF2 pbkdf(new HMAC(get_hash(digest)));
+
+   pbkdf.set_iterations(iterations);
+   pbkdf.change_salt(salt, salt.size());
+   key = pbkdf.derive_key(key_length, passphrase).bits_of();
    }
 
 /*************************************************

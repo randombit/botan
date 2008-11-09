@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/pbes1.h>
+#include <botan/pbkdf1.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/parsing.h>
@@ -70,10 +71,11 @@ void PBE_PKCS5v15::flush_pipe(bool safe_to_skip)
 *************************************************/
 void PBE_PKCS5v15::set_key(const std::string& passphrase)
    {
-   std::auto_ptr<S2K> pbkdf(get_s2k("PBKDF1(" + digest + ")"));
-   pbkdf->set_iterations(iterations);
-   pbkdf->change_salt(salt, salt.size());
-   SymmetricKey key_and_iv = pbkdf->derive_key(16, passphrase);
+   PKCS5_PBKDF1 pbkdf(get_hash(digest));
+
+   pbkdf.set_iterations(iterations);
+   pbkdf.change_salt(salt, salt.size());
+   SymmetricKey key_and_iv = pbkdf.derive_key(16, passphrase);
 
    key.set(key_and_iv.begin(), 8);
    iv.set(key_and_iv.begin() + 8, 8);
