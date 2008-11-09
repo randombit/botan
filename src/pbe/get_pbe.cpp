@@ -5,7 +5,7 @@
 
 #include <botan/get_pbe.h>
 #include <botan/oids.h>
-#include <botan/parsing.h>
+#include <botan/scan_name.h>
 
 #if defined(BOTAN_HAS_PBE_PKCS_V15)
   #include <botan/pbes1.h>
@@ -22,15 +22,14 @@ namespace Botan {
 *************************************************/
 PBE* get_pbe(const std::string& pbe_name)
    {
-   std::vector<std::string> algo_name;
-   algo_name = parse_algorithm_name(pbe_name);
+   SCAN_Name request(pbe_name);
 
-   if(algo_name.size() != 3)
+   if(request.arg_count() != 2)
       throw Invalid_Algorithm_Name(pbe_name);
 
-   const std::string pbe = algo_name[0];
-   const std::string digest = algo_name[1];
-   const std::string cipher = algo_name[2];
+   const std::string pbe = request.algo_name();
+   const std::string digest = request.argument(0);
+   const std::string cipher = request.argument(1);
 
 #if defined(BOTAN_HAS_PBE_PKCS_V15)
    if(pbe == "PBE-PKCS5v15")
@@ -50,21 +49,16 @@ PBE* get_pbe(const std::string& pbe_name)
 *************************************************/
 PBE* get_pbe(const OID& pbe_oid, DataSource& params)
    {
-   std::vector<std::string> algo_name;
-   algo_name = parse_algorithm_name(OIDS::lookup(pbe_oid));
-
-   if(algo_name.size() < 1)
-      throw Invalid_Algorithm_Name(pbe_oid.as_string());
-   const std::string pbe_algo = algo_name[0];
+   SCAN_Name request(OIDS::lookup(pbe_oid));
 
 #if defined(BOTAN_HAS_PBE_PKCS_V15)
-   if(pbe_algo == "PBE-PKCS5v15")
+   if(request.algo_name() == "PBE-PKCS5v15")
       {
-      if(algo_name.size() != 3)
+      if(request.arg_count() != 2)
          throw Invalid_Algorithm_Name(pbe_oid.as_string());
 
-      const std::string digest = algo_name[1];
-      const std::string cipher = algo_name[2];
+      const std::string digest = request.argument(0);
+      const std::string cipher = request.argument(1);
 
       PBE* pbe = new PBE_PKCS5v15(digest, cipher, DECRYPTION);
       pbe->decode_params(params);
@@ -73,7 +67,7 @@ PBE* get_pbe(const OID& pbe_oid, DataSource& params)
 #endif
 
 #if defined(BOTAN_HAS_PBE_PKCS_V20)
-   if(pbe_algo == "PBE-PKCS5v20")
+   if(request.algo_name() == "PBE-PKCS5v20")
       return new PBE_PKCS5v20(params);
 #endif
 
