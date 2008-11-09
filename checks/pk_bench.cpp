@@ -146,11 +146,11 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
      Type of padding
 */
 
+#if defined(BOTAN_HAS_RSA)
 void benchmark_rsa(RandomNumberGenerator& rng,
                    double seconds,
                    Benchmark_Report& report)
    {
-#if defined(BOTAN_HAS_RSA)
 
    size_t keylens[] = { 512, 1024, 2048, 4096, 6144, 8192, 0 };
 
@@ -215,14 +215,14 @@ void benchmark_rsa(RandomNumberGenerator& rng,
          }
       }
 
-#endif
    }
+#endif
 
+#if defined(BOTAN_HAS_RW)
 void benchmark_rw(RandomNumberGenerator& rng,
                   double seconds,
                   Benchmark_Report& report)
    {
-#if defined(BOTAN_HAS_RW)
 
    const u32bit keylens[] = { 512, 1024, 2048, 4096, 6144, 8192, 0 };
 
@@ -254,9 +254,8 @@ void benchmark_rw(RandomNumberGenerator& rng,
       report.report(nm, verify_timer);
       report.report(nm, sig_timer);
       }
-
-#endif
    }
+#endif
 
 #if defined(BOTAN_HAS_ECDSA)
 
@@ -429,11 +428,11 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
 #endif
    }
 
+#ifdef BOTAN_HAS_DIFFIE_HELLMAN
 void benchmark_dh(RandomNumberGenerator& rng,
                   double seconds,
                   Benchmark_Report& report)
    {
-#ifdef BOTAN_HAS_DIFFIE_HELLMAN
    const char* domains[] = { "modp/ietf/768",
                              "modp/ietf/1024",
                              "modp/ietf/2048",
@@ -487,16 +486,68 @@ void benchmark_dh(RandomNumberGenerator& rng,
       report.report(nm, keygen_timer);
       report.report(nm, kex_timer);
       }
-
-#endif
    }
+#endif
 
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN) && defined(BOTAN_HAS_DLIES)
+void benchmark_dlies(RandomNumberGenerator& rng,
+                     double seconds,
+                     Benchmark_Report& report)
+   {
+   const char* domains[] = { "modp/ietf/768",
+                             "modp/ietf/1024",
+                             "modp/ietf/2048",
+                             "modp/ietf/3072",
+                             "modp/ietf/4096",
+                             "modp/ietf/6144",
+                             "modp/ietf/8192",
+                             NULL };
+
+   for(size_t j = 0; domains[j]; j++)
+      {
+      Timer keygen_timer("keygen");
+      Timer kex_timer("key exchange");
+
+      Timer enc_timer("encrypt");
+      Timer dec_timer("decrypt");
+
+      while(enc_timer.seconds() < seconds || dec_timer.seconds() < seconds)
+         {
+         DL_Group group(domains[j]);
+
+         keygen_timer.start();
+         DH_PrivateKey dh1_priv(rng, group);
+         keygen_timer.stop();
+
+         keygen_timer.start();
+         DH_PrivateKey dh2_priv(rng, group);
+         keygen_timer.stop();
+
+         DH_PublicKey dh2_pub(dh2_priv);
+
+         DLIES_Encryptor dlies_enc(dh1_priv);
+         dlies_enc.set_other_key(dh2_pub.public_value());
+
+         DLIES_Decryptor dlies_dec(dh2_priv);
+
+         benchmark_enc_dec(dlies_enc, dlies_dec,
+                           enc_timer, dec_timer, rng,
+                           1000, seconds);
+         }
+
+      const std::string nm = "DLIES-" + split_on(domains[j], '/')[2];
+      report.report(nm, keygen_timer);
+      report.report(nm, enc_timer);
+      report.report(nm, dec_timer);
+      }
+   }
+#endif
+
+#ifdef BOTAN_HAS_ELGAMAL
 void benchmark_elg(RandomNumberGenerator& rng,
                    double seconds,
                    Benchmark_Report& report)
    {
-#ifdef BOTAN_HAS_ELGAMAL
-
    const char* domains[] = { "modp/ietf/768",
                              "modp/ietf/1024",
                              "modp/ietf/2048",
@@ -538,8 +589,8 @@ void benchmark_elg(RandomNumberGenerator& rng,
       report.report(nm, enc_timer);
       report.report(nm, dec_timer);
       }
-#endif
    }
+#endif
 
 }
 
@@ -576,8 +627,10 @@ void bench_pk(RandomNumberGenerator& rng,
 
    Benchmark_Report report;
 
+#if defined(BOTAN_HAS_RSA)
    if(algo == "All" || algo == "RSA")
       benchmark_rsa(rng, seconds, report);
+#endif
 
 #if defined(BOTAN_HAS_DSA)
    if(algo == "All" || algo == "DSA")
@@ -594,11 +647,20 @@ void bench_pk(RandomNumberGenerator& rng,
       benchmark_eckaeg(rng, seconds, report);
 #endif
 
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    if(algo == "All" || algo == "DH")
       benchmark_dh(rng, seconds, report);
+#endif
 
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN) && defined(BOTAN_HAS_DLIES)
+   if(algo == "All" || algo == "DLIES")
+      benchmark_dlies(rng, seconds, report);
+#endif
+
+#if defined(BOTAN_HAS_ELGAMAL)
    if(algo == "All" || algo == "ELG" || algo == "ElGamal")
       benchmark_elg(rng, seconds, report);
+#endif
 
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL)
    if(algo == "All" || algo == "NR")
