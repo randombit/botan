@@ -33,6 +33,8 @@ mutex.h
 parsing.cpp
 parsing.h
 rotate.h
+scan_name.cpp
+scan_name.h
 secmem.h
 stl_util.h
 types.h
