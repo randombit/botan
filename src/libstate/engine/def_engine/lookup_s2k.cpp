@@ -5,8 +5,7 @@
 
 #include <botan/def_eng.h>
 #include <botan/lookup.h>
-#include <botan/libstate.h>
-#include <botan/parsing.h>
+#include <botan/scan_name.h>
 
 #if defined(BOTAN_HAS_PBKDF1)
   #include <botan/pbkdf1.h>
@@ -28,37 +27,21 @@ namespace Botan {
 *************************************************/
 S2K* Default_Engine::find_s2k(const std::string& algo_spec) const
    {
-   std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   if(name.empty())
-      return 0;
-
-   const std::string algo_name = global_state().deref_alias(name[0]);
+   SCAN_Name request(algo_spec);
 
 #if defined(BOTAN_HAS_PBKDF1)
-   if(algo_name == "PBKDF1")
-      {
-      if(name.size() == 2)
-         return new PKCS5_PBKDF1(get_hash(name[1]));
-      throw Invalid_Algorithm_Name(algo_spec);
-      }
+   if(request.algo_name() == "PBKDF1" && request.arg_count() == 1)
+      return new PKCS5_PBKDF1(get_hash(request.argument(0)));
 #endif
 
 #if defined(BOTAN_HAS_PBKDF2)
-   if(algo_name == "PBKDF2")
-      {
-      if(name.size() == 2)
-         return new PKCS5_PBKDF2(new HMAC(get_hash(name[1])));
-      throw Invalid_Algorithm_Name(algo_spec);
-      }
+   if(request.algo_name() == "PBKDF2" && request.arg_count() == 1)
+      return new PKCS5_PBKDF2(new HMAC(get_hash(request.argument(0))));
 #endif
 
 #if defined(BOTAN_HAS_PGPS2K)
-   if(algo_name == "OpenPGP-S2K")
-      {
-      if(name.size() == 2)
-         return new OpenPGP_S2K(get_hash(name[1]));
-      throw Invalid_Algorithm_Name(algo_spec);
-      }
+   if(request.algo_name() == "OpenPGP-S2K" && request.arg_count() == 1)
+      return new OpenPGP_S2K(get_hash(request.argument(0)));
 #endif
 
    return 0;

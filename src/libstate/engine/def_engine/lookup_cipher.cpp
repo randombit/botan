@@ -5,8 +5,7 @@
 
 #include <botan/def_eng.h>
 #include <botan/lookup.h>
-#include <botan/libstate.h>
-#include <botan/parsing.h>
+#include <botan/scan_name.h>
 #include <memory>
 
 #if defined(BOTAN_HAS_AES)
@@ -130,165 +129,157 @@
 namespace Botan {
 
 /*************************************************
-* Some macros to simplify control flow           *
-*************************************************/
-#define HANDLE_TYPE_NO_ARGS(NAME, TYPE)        \
-   if(algo_name == NAME)                       \
-      {                                        \
-      if(name.size() == 1)                     \
-         return new TYPE;                      \
-      throw Invalid_Algorithm_Name(algo_spec); \
-      }
-
-#define HANDLE_TYPE_ONE_U32BIT(NAME, TYPE, DEFAULT) \
-   if(algo_name == NAME)                            \
-      {                                             \
-      if(name.size() == 1)                          \
-         return new TYPE(DEFAULT);                  \
-      if(name.size() == 2)                          \
-         return new TYPE(to_u32bit(name[1]));       \
-      throw Invalid_Algorithm_Name(algo_spec);      \
-      }
-
-#define HANDLE_TYPE_TWO_U32BIT(NAME, TYPE, DEFAULT)               \
-   if(algo_name == NAME)                                          \
-      {                                                           \
-      if(name.size() == 1)                                        \
-         return new TYPE(DEFAULT);                                \
-      if(name.size() == 2)                                        \
-         return new TYPE(to_u32bit(name[1]));                     \
-      if(name.size() == 3)                                        \
-         return new TYPE(to_u32bit(name[1]), to_u32bit(name[2])); \
-      throw Invalid_Algorithm_Name(algo_spec);                    \
-      }
-
-/*************************************************
 * Look for an algorithm with this name           *
 *************************************************/
 BlockCipher*
 Default_Engine::find_block_cipher(const std::string& algo_spec) const
    {
-   std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   if(name.empty())
-      return 0;
-   const std::string algo_name = global_state().deref_alias(name[0]);
+   SCAN_Name request(algo_spec);
 
 #if defined(BOTAN_HAS_AES)
-   HANDLE_TYPE_NO_ARGS("AES", AES);
-   HANDLE_TYPE_NO_ARGS("AES-128", AES_128);
-   HANDLE_TYPE_NO_ARGS("AES-192", AES_192);
-   HANDLE_TYPE_NO_ARGS("AES-256", AES_256);
+   if(request.algo_name() == "AES")
+      return new AES;
+   if(request.algo_name() == "AES-128")
+      return new AES_128;
+   if(request.algo_name() == "AES-192")
+      return new AES_192;
+   if(request.algo_name() == "AES-256")
+      return new AES_256;
 #endif
 
 #if defined(BOTAN_HAS_BLOWFISH)
-   HANDLE_TYPE_NO_ARGS("Blowfish", Blowfish);
+   if(request.algo_name() == "Blowfish")
+      return new Blowfish;
 #endif
 
 #if defined(BOTAN_HAS_CAST)
-   HANDLE_TYPE_NO_ARGS("CAST-128", CAST_128);
-   HANDLE_TYPE_NO_ARGS("CAST-256", CAST_256);
+   if(request.algo_name() == "CAST-128")
+      return new CAST_128;
+   if(request.algo_name() == "CAST-256")
+      return new CAST_256;
 #endif
 
 #if defined(BOTAN_HAS_DES)
-   HANDLE_TYPE_NO_ARGS("DES", DES);
-   HANDLE_TYPE_NO_ARGS("DESX", DESX);
-   HANDLE_TYPE_NO_ARGS("TripleDES", TripleDES);
+   if(request.algo_name() == "DES")
+      return new DES;
+   if(request.algo_name() == "DESX")
+      return new DESX;
+   if(request.algo_name() == "TripleDES")
+      return new TripleDES;
 #endif
 
 #if defined(BOTAN_HAS_GOST)
-   HANDLE_TYPE_NO_ARGS("GOST", GOST);
+   if(request.algo_name() == "GOST")
+      return new GOST;
 #endif
 
 #if defined(BOTAN_HAS_IDEA)
-   HANDLE_TYPE_NO_ARGS("IDEA", IDEA);
+   if(request.algo_name() == "IDEA")
+      return new IDEA;
 #endif
 
 #if defined(BOTAN_HAS_KASUMI)
-   HANDLE_TYPE_NO_ARGS("KASUMI", KASUMI);
+   if(request.algo_name() == "KASUMI")
+      return new KASUMI;
 #endif
 
 #if defined(BOTAN_HAS_MARS)
-   HANDLE_TYPE_NO_ARGS("MARS", MARS);
+   if(request.algo_name() == "MARS")
+      return new MARS;
 #endif
 
 #if defined(BOTAN_HAS_MISTY1)
-   HANDLE_TYPE_ONE_U32BIT("MISTY1", MISTY1, 8);
+   if(request.algo_name() == "MISTY1")
+      return new MISTY1(request.argument_as_u32bit(0, 8));
 #endif
 
 #if defined(BOTAN_HAS_NOEKEON)
-   HANDLE_TYPE_NO_ARGS("Noekeon", Noekeon);
+   if(request.algo_name() == "Noekeon")
+      return new Noekeon;
 #endif
 
 #if defined(BOTAN_HAS_RC2)
-   HANDLE_TYPE_NO_ARGS("RC2", RC2);
+   if(request.algo_name() == "RC2")
+      return new RC2;
 #endif
 
 #if defined(BOTAN_HAS_RC5)
-   HANDLE_TYPE_ONE_U32BIT("RC5", RC5, 12);
+   if(request.algo_name() == "RC5")
+      return new RC5(request.argument_as_u32bit(0, 12));
 #endif
 
 #if defined(BOTAN_HAS_RC6)
-   HANDLE_TYPE_NO_ARGS("RC6", RC6);
+   if(request.algo_name() == "RC6")
+      return new RC6;
 #endif
 
 #if defined(BOTAN_HAS_SAFER)
-   HANDLE_TYPE_ONE_U32BIT("SAFER-SK", SAFER_SK, 10);
+   if(request.algo_name() == "SAFER-SK")
+      return new SAFER_SK(request.argument_as_u32bit(0, 10));
 #endif
 
 #if defined(BOTAN_HAS_SEED)
-   HANDLE_TYPE_NO_ARGS("SEED", SEED);
+   if(request.algo_name() == "SEED")
+      return new SEED;
 #endif
 
 #if defined(BOTAN_HAS_SERPENT_IA32)
-   HANDLE_TYPE_NO_ARGS("Serpent", Serpent_IA32);
+   if(request.algo_name() == "Serpent")
+      return new Serpent_IA32;
 #elif defined(BOTAN_HAS_SERPENT)
-   HANDLE_TYPE_NO_ARGS("Serpent", Serpent);
+   if(request.algo_name() == "Serpent")
+      return new Serpent;
 #endif
 
 #if defined(BOTAN_HAS_SKIPJACK)
-   HANDLE_TYPE_NO_ARGS("Skipjack", Skipjack);
+   if(request.algo_name() == "Skipjack")
+      return new Skipjack;
 #endif
 
 #if defined(BOTAN_HAS_SQUARE)
-   HANDLE_TYPE_NO_ARGS("Square", Square);
+   if(request.algo_name() == "Square")
+      return new Square;
 #endif
 
 #if defined(BOTAN_HAS_TEA)
-   HANDLE_TYPE_NO_ARGS("TEA", TEA);
+   if(request.algo_name() == "TEA")
+      return new TEA;
 #endif
 
 #if defined(BOTAN_HAS_TWOFISH)
-   HANDLE_TYPE_NO_ARGS("Twofish", Twofish);
+   if(request.algo_name() == "Twofish")
+      return new Twofish;
 #endif
 
 #if defined(BOTAN_HAS_XTEA)
-   HANDLE_TYPE_NO_ARGS("XTEA", XTEA);
+   if(request.algo_name() == "XTEA")
+      return new XTEA;
 #endif
 
 #if defined(BOTAN_HAS_LUBY_RACKOFF)
-   if(algo_name == "Luby-Rackoff" && name.size() >= 2)
+   if(request.algo_name() == "Luby-Rackoff" && request.arg_count() == 1)
       {
-      HashFunction* hash = get_hash(name[1]);
+      HashFunction* hash = get_hash(request.argument(0));
       if(hash)
          return new LubyRackoff(hash);
       }
 #endif
 
 #if defined(BOTAN_HAS_LION)
-   if(algo_name == "Lion")
+   if(request.algo_name() == "Lion" &&
+      (request.arg_count() == 2 || request.arg_count() == 3))
       {
-      if(name.size() != 4)
-         throw Invalid_Algorithm_Name(algo_spec);
+      const u32bit block_size = request.argument_as_u32bit(2, 1024);
 
-      std::auto_ptr<HashFunction> hash(get_hash(name[1]));
+      std::auto_ptr<HashFunction> hash(get_hash(request.argument(0)));
       if(!hash.get())
-         throw Algorithm_Not_Found(name[1]);
+         return 0;
 
-      std::auto_ptr<StreamCipher> sc(get_stream_cipher(name[2]));
+      std::auto_ptr<StreamCipher> sc(get_stream_cipher(request.argument(1)));
       if(!sc.get())
-         throw Algorithm_Not_Found(name[2]);
+         return 0;
 
-      return new Lion(hash.release(), sc.release(), to_u32bit(name[3]));
+      return new Lion(hash.release(), sc.release(), block_size);
       }
 #endif
 
@@ -301,26 +292,28 @@ Default_Engine::find_block_cipher(const std::string& algo_spec) const
 StreamCipher*
 Default_Engine::find_stream_cipher(const std::string& algo_spec) const
    {
-   std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   if(name.empty())
-      return 0;
-   const std::string algo_name = global_state().deref_alias(name[0]);
+   SCAN_Name request(algo_spec);
 
 #if defined(BOTAN_HAS_ARC4)
-   HANDLE_TYPE_ONE_U32BIT("ARC4", ARC4, 0);
-   HANDLE_TYPE_ONE_U32BIT("RC4_drop", ARC4, 768);
+   if(request.algo_name() == "ARC4")
+      return new ARC4(request.argument_as_u32bit(0, 0));
+   if(request.algo_name() == "RC4_drop")
+      return new ARC4(768);
 #endif
 
 #if defined(BOTAN_HAS_SALSA20)
-   HANDLE_TYPE_NO_ARGS("Salsa20", Salsa20);
+   if(request.algo_name() == "Salsa20")
+      return new Salsa20;
 #endif
 
 #if defined(BOTAN_HAS_TURING)
-   HANDLE_TYPE_NO_ARGS("Turing", Turing);
+   if(request.algo_name() == "Turing")
+      return new Turing;
 #endif
 
 #if defined(BOTAN_HAS_WID_WAKE)
-   HANDLE_TYPE_NO_ARGS("WiderWake4+1-BE", WiderWake_41_BE);
+   if(request.algo_name() == "WiderWake4+1-BE")
+      return new WiderWake_41_BE;
 #endif
 
    return 0;
@@ -332,17 +325,20 @@ Default_Engine::find_stream_cipher(const std::string& algo_spec) const
 BlockCipherModePaddingMethod*
 Default_Engine::find_bc_pad(const std::string& algo_spec) const
    {
-   std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   if(name.empty())
-      return 0;
-
-   const std::string algo_name = global_state().deref_alias(name[0]);
+   SCAN_Name request(algo_spec);
 
 #if defined(BOTAN_HAS_CIPHER_MODE_PADDING)
-   HANDLE_TYPE_NO_ARGS("PKCS7",       PKCS7_Padding);
-   HANDLE_TYPE_NO_ARGS("OneAndZeros", OneAndZeros_Padding);
-   HANDLE_TYPE_NO_ARGS("X9.23",       ANSI_X923_Padding);
-   HANDLE_TYPE_NO_ARGS("NoPadding",   Null_Padding);
+   if(request.algo_name() == "PKCS7")
+      return new PKCS7_Padding;
+
+   if(request.algo_name() == "OneAndZeros")
+      return new OneAndZeros_Padding;
+
+   if(request.algo_name() == "X9.23")
+      return new ANSI_X923_Padding;
+
+   if(request.algo_name() == "NoPadding")
+      return new Null_Padding;
 #endif
 
    return 0;
