@@ -18,14 +18,14 @@ SCAN_Name::SCAN_Name(const std::string& algo_spec)
       name[i] = global_state().deref_alias(name[i]);
    }
 
-std::string SCAN_Name::argument(u32bit i)
+std::string SCAN_Name::argument(u32bit i) const
    {
    if(i > arg_count())
       throw std::range_error("SCAN_Name::argument");
    return name[i+1];
    }
 
-u32bit SCAN_Name::argument_as_u32bit(u32bit i, u32bit def_value)
+u32bit SCAN_Name::argument_as_u32bit(u32bit i, u32bit def_value) const
    {
    if(i >= arg_count())
       return def_value;

@@ -38,13 +38,13 @@ class SCAN_Name
       @param i which argument
       @return the ith argument
       */
-      std::string argument(u32bit i);
+      std::string argument(u32bit i) const;
 
       /**
       @param i which argument
       @return the ith argument as a u32bit, or a default value
       */
-      u32bit argument_as_u32bit(u32bit i, u32bit def_value);
+      u32bit argument_as_u32bit(u32bit i, u32bit def_value) const;
 
    private:
       std::vector<std::string> name;
