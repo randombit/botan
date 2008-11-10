@@ -15,15 +15,16 @@ namespace Botan {
 /**
 Close the device, if open
 */
-Device_EntropySource::Device_Reader::~Device_Reader()
+void Device_EntropySource::Device_Reader::close()
    {
-   if(fd > 0) { ::close(fd); }
+   if(fd > 0) { ::close(fd); fd = -1; }
    }
 
 /**
 Read bytes from a device file
 */
-u32bit Device_EntropySource::Device_Reader::get(byte out[], u32bit length)
+u32bit Device_EntropySource::Device_Reader::get(byte out[], u32bit length,
+                                                u32bit ms_wait_time)
    {
    if(fd < 0)
       return 0;
@@ -31,15 +32,13 @@ u32bit Device_EntropySource::Device_Reader::get(byte out[], u32bit length)
    if(fd >= FD_SETSIZE)
       return 0;
 
-   const u32bit READ_WAIT_MS = 3;
-
    fd_set read_set;
    FD_ZERO(&read_set);
    FD_SET(fd, &read_set);
 
    struct ::timeval timeout;
    timeout.tv_sec = 0;
-   timeout.tv_usec = READ_WAIT_MS * 1000;
+   timeout.tv_usec = ms_wait_time * 1000;
 
    if(::select(fd + 1, &read_set, 0, 0, &timeout) < 0)
       return 0;
@@ -62,7 +61,8 @@ u32bit Device_EntropySource::Device_Reader::get(byte out[], u32bit length)
 /**
 Attempt to open a device
 */
-int Device_EntropySource::Device_Reader::open(const std::string& pathname)
+Device_EntropySource::Device_Reader::fd_type
+Device_EntropySource::Device_Reader::open(const std::string& pathname)
    {
 #ifndef O_NONBLOCK
   #define O_NONBLOCK 0
@@ -79,10 +79,15 @@ int Device_EntropySource::Device_Reader::open(const std::string& pathname)
 /**
 Device_EntropySource constructor
 */
-Device_EntropySource::Device_EntropySource(const std::vector<std::string>& fsnames)
+Device_EntropySource::Device_EntropySource(
+   const std::vector<std::string>& fsnames)
    {
    for(u32bit i = 0; i != fsnames.size(); ++i)
-      devices.push_back(Device_Reader(Device_Reader::open(fsnames[i])));
+      {
+      Device_Reader::fd_type fd = Device_Reader::open(fsnames[i]);
+      if(fd > 0)
+         devices.push_back(Device_Reader(fd));
+      }
    }
 
 /**
@@ -90,25 +95,37 @@ Device_EntropySource::Device_EntropySource(const std::vector<std::string>& fsnam
 */
 u32bit Device_EntropySource::slow_poll(byte output[], u32bit length)
    {
-   u32bit read = 0;
-
    for(size_t i = 0; i != devices.size(); ++i)
       {
-      read += devices[i].get(output + read, length - read);
+      const u32bit got = devices[i].get(output, length, 100);
 
-      if(read == length)
-         break;
+      if(got)
+         return got;
       }
 
-   return read;
+   return 0;
    }
 
 /**
-* Fast /dev/random and co poll: limit output to 64 bytes
+* Fast poll: try limit to 10 ms wait
 */
 u32bit Device_EntropySource::fast_poll(byte output[], u32bit length)
    {
-   return slow_poll(output, std::min<u32bit>(length, 64));
+   for(size_t i = 0; i != devices.size(); ++i)
+      {
+      const u32bit got = devices[i].get(output, length, 10);
+
+      if(got)
+         return got;
+      }
+
+   return 0;
+   }
+
+Device_EntropySource::~Device_EntropySource()
+   {
+   for(size_t i = 0; i != devices.size(); ++i)
+      devices[i].close();
    }
 
 }

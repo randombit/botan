@@ -21,6 +21,7 @@ class BOTAN_DLL Device_EntropySource : public EntropySource
       std::string name() const { return "RNG Device Reader"; }
 
       Device_EntropySource(const std::vector<std::string>& fsnames);
+      ~Device_EntropySource();
 
       u32bit slow_poll(byte[], u32bit);
       u32bit fast_poll(byte[], u32bit);
@@ -34,9 +35,12 @@ class BOTAN_DLL Device_EntropySource : public EntropySource
          public:
             typedef int fd_type;
 
+            // Does not own fd, a transient class
             Device_Reader(fd_type device_fd) : fd(device_fd) {}
-            ~Device_Reader();
-            u32bit get(byte out[], u32bit length);
+
+            void close();
+
+            u32bit get(byte out[], u32bit length, u32bit ms_wait_time);
 
             static fd_type open(const std::string& pathname);
          private:
