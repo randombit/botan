@@ -45,6 +45,9 @@ This is exactly the same algorithm as bigint_simple_mul,
 however because C/C++ compilers suck at alias analysis it
 is good to have the version where the compiler knows
 that x == y
+
+There is an O(n^1.5) squaring algorithm specified in Handbook of
+Applied Cryptography, chapter 14
 *************************************************/
 void bigint_simple_sqr(word z[], const word x[], u32bit x_size)
    {
