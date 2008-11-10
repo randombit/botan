@@ -6,7 +6,7 @@
 #ifndef BOTAN_EMSA_RAW_H__
 #define BOTAN_EMSA_RAW_H__
 
-#include <botan/pk_pad.h>
+#include <botan/emsa.h>
 
 namespace Botan {
 

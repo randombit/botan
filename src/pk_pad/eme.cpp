@@ -1,9 +1,9 @@
 /*************************************************
-* EME/EMSA Base Class Source File                *
+* EME Base Class Source File                     *
 * (C) 1999-2008 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/pk_pad.h>
+#include <botan/eme.h>
 
 namespace Botan {
 

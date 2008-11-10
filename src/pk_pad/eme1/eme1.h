@@ -6,7 +6,7 @@
 #ifndef BOTAN_EME1_H__
 #define BOTAN_EME1_H__
 
-#include <botan/pk_pad.h>
+#include <botan/eme.h>
 #include <botan/kdf.h>
 #include <botan/hash.h>
 

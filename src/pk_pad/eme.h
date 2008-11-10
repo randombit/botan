@@ -1,10 +1,10 @@
 /*************************************************
-* EME/EMSA Classes Header File                   *
+* EME Classes Header File                        *
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef BOTAN_PUBKEY_PAD_H__
-#define BOTAN_PUBKEY_PAD_H__
+#ifndef BOTAN_PUBKEY_EME_ENCRYPTION_PAD_H__
+#define BOTAN_PUBKEY_EME_ENCRYPTION_PAD_H__
 
 #include <botan/secmem.h>
 #include <botan/rng.h>
@@ -33,24 +33,6 @@ class BOTAN_DLL EME
                                      RandomNumberGenerator&) const = 0;
 
       virtual SecureVector<byte> unpad(const byte[], u32bit, u32bit) const = 0;
-   };
-
-/*************************************************
-* Encoding Method for Signatures, Appendix       *
-*************************************************/
-class BOTAN_DLL EMSA
-   {
-   public:
-      virtual void update(const byte[], u32bit) = 0;
-      virtual SecureVector<byte> raw_data() = 0;
-
-      virtual SecureVector<byte> encoding_of(const MemoryRegion<byte>&,
-                                             u32bit,
-                                             RandomNumberGenerator& rng) = 0;
-
-      virtual bool verify(const MemoryRegion<byte>&, const MemoryRegion<byte>&,
-                          u32bit) throw() = 0;
-      virtual ~EMSA() {}
    };
 
 }

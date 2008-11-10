@@ -15,7 +15,8 @@
 #include <botan/filters.h>
 #include <botan/mode_pad.h>
 #include <botan/kdf.h>
-#include <botan/pk_pad.h>
+#include <botan/eme.h>
+#include <botan/emsa.h>
 
 namespace Botan {
 

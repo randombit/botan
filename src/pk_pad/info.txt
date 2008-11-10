@@ -1,10 +1,11 @@
-realname "Public Key Signature and Encryption Padding"
+realname "Public Key EME/EMSA Padding Modes"
 
 define PK_PADDING
 
 load_on auto
 
 <add>
-pk_pad.cpp
-pk_pad.h
+emsa.h
+eme.cpp
+eme.h
 </add>

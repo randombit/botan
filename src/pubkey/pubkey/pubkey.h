@@ -7,9 +7,10 @@
 #define BOTAN_PUBKEY_H__
 
 #include <botan/pk_keys.h>
-#include <botan/pk_pad.h>
 #include <botan/symkey.h>
 #include <botan/rng.h>
+#include <botan/eme.h>
+#include <botan/emsa.h>
 
 namespace Botan {
 

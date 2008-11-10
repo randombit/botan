@@ -6,7 +6,7 @@
 #ifndef BOTAN_EMSA4_H__
 #define BOTAN_EMSA4_H__
 
-#include <botan/pk_pad.h>
+#include <botan/emsa.h>
 #include <botan/hash.h>
 #include <botan/kdf.h>
 
