@@ -220,7 +220,7 @@ u32bit keylength_multiple_of(const std::string& name)
 const BlockCipher* retrieve_block_cipher(Library_State& libstate,
                                          const std::string& name)
    {
-   Library_State::Engine_Iterator i(libstate);
+   Algorithm_Factory::Engine_Iterator i(libstate.algo_factory());
 
    while(const Engine* engine = i.next())
       {
@@ -238,7 +238,7 @@ const BlockCipher* retrieve_block_cipher(Library_State& libstate,
 const StreamCipher* retrieve_stream_cipher(Library_State& libstate,
                                            const std::string& name)
    {
-   Library_State::Engine_Iterator i(libstate);
+   Algorithm_Factory::Engine_Iterator i(libstate.algo_factory());
 
    while(const Engine* engine = i.next())
       {
@@ -256,7 +256,8 @@ const StreamCipher* retrieve_stream_cipher(Library_State& libstate,
 const HashFunction* retrieve_hash(Library_State& libstate,
                                   const std::string& name)
    {
-   Library_State::Engine_Iterator i(libstate);
+   //return libstate.algo_factory().prototype_hash_function(name);
+   Algorithm_Factory::Engine_Iterator i(libstate.algo_factory());
 
    while(const Engine* engine = i.next())
       {
@@ -274,7 +275,7 @@ const HashFunction* retrieve_hash(Library_State& libstate,
 const MessageAuthenticationCode* retrieve_mac(Library_State& libstate,
                                               const std::string& name)
    {
-   Library_State::Engine_Iterator i(libstate);
+   Algorithm_Factory::Engine_Iterator i(libstate.algo_factory());
 
    while(const Engine* engine = i.next())
       {
@@ -291,7 +292,7 @@ const MessageAuthenticationCode* retrieve_mac(Library_State& libstate,
 *************************************************/
 void add_algorithm(Library_State& libstate, BlockCipher* algo)
    {
-   Library_State::Engine_Iterator i(libstate);
+   Algorithm_Factory::Engine_Iterator i(libstate.algo_factory());
 
    while(Engine* engine = i.next())
       {
@@ -310,7 +311,7 @@ void add_algorithm(Library_State& libstate, BlockCipher* algo)
 *************************************************/
 void add_algorithm(Library_State& libstate, StreamCipher* algo)
    {
-   Library_State::Engine_Iterator i(libstate);
+   Algorithm_Factory::Engine_Iterator i(libstate.algo_factory());
 
    while(Engine* engine = i.next())
       {
@@ -329,7 +330,7 @@ void add_algorithm(Library_State& libstate, StreamCipher* algo)
 *************************************************/
 void add_algorithm(Library_State& libstate, HashFunction* algo)
    {
-   Library_State::Engine_Iterator i(libstate);
+   Algorithm_Factory::Engine_Iterator i(libstate.algo_factory());
 
    while(Engine* engine = i.next())
       {
@@ -349,7 +350,7 @@ void add_algorithm(Library_State& libstate, HashFunction* algo)
 void add_algorithm(Library_State& libstate,
                    MessageAuthenticationCode* algo)
    {
-   Library_State::Engine_Iterator i(libstate);
+   Algorithm_Factory::Engine_Iterator i(libstate.algo_factory());
 
    while(Engine* engine = i.next())
       {
@@ -369,7 +370,7 @@ void add_algorithm(Library_State& libstate,
 Keyed_Filter* get_cipher(const std::string& algo_spec,
                          Cipher_Dir direction)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
 
    while(Engine* engine = i.next())
       {

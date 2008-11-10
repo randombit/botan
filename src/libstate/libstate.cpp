@@ -56,14 +56,6 @@ Library_State* swap_global_state(Library_State* new_state)
    }
 
 /*************************************************
-* Increment the Engine iterator                  *
-*************************************************/
-Engine* Library_State::Engine_Iterator::next()
-   {
-   return lib.get_engine_n(n++);
-   }
-
-/*************************************************
 * Get a new mutex object                         *
 *************************************************/
 Mutex* Library_State::get_mutex() const
@@ -120,27 +112,6 @@ void Library_State::set_default_allocator(const std::string& type)
 
    this->set("conf", "base/default_allocator", type);
    cached_default_allocator = 0;
-   }
-
-/*************************************************
-* Get an engine out of the list                  *
-*************************************************/
-Engine* Library_State::get_engine_n(u32bit n) const
-   {
-   Mutex_Holder lock(engine_lock);
-
-   if(n >= engines.size())
-      return 0;
-   return engines[n];
-   }
-
-/*************************************************
-* Add a new engine to the list                   *
-*************************************************/
-void Library_State::add_engine(Engine* engine)
-   {
-   Mutex_Holder lock(engine_lock);
-   engines.insert(engines.begin(), engine);
    }
 
 /*************************************************
@@ -219,6 +190,16 @@ std::string Library_State::option(const std::string& key) const
    return get("conf", key);
    }
 
+/**
+Return a reference to the Algorithm_Factory
+*/
+Algorithm_Factory& Library_State::algo_factory()
+   {
+   if(!algorithm_factory)
+      throw Invalid_State("Uninitialized in Library_State::algo_factory");
+   return *algorithm_factory;
+   }
+
 /*************************************************
 * Load a set of modules                          *
 *************************************************/
@@ -234,7 +215,6 @@ void Library_State::initialize(const InitializerOptions& args,
       throw Invalid_State("Could not acquire a mutex module at init");
 
    allocator_lock = get_mutex();
-   engine_lock = get_mutex();
    config_lock = get_mutex();
 
    cached_default_allocator = 0;
@@ -247,9 +227,11 @@ void Library_State::initialize(const InitializerOptions& args,
 
    load_default_config();
 
+   algorithm_factory = new Algorithm_Factory(get_mutex());
+
    std::vector<Engine*> mod_engines = modules.engines();
    for(u32bit j = 0; j != mod_engines.size(); ++j)
-      engines.push_back(mod_engines[j]);
+      algorithm_factory->add_engine(mod_engines[j]);
 
 #if defined(BOTAN_HAS_SELFTEST)
    if(args.fips_mode() || args.self_test())
@@ -266,8 +248,9 @@ void Library_State::initialize(const InitializerOptions& args,
 Library_State::Library_State()
    {
    mutex_factory = 0;
-   allocator_lock = engine_lock = config_lock = 0;
+   allocator_lock = config_lock = 0;
    cached_default_allocator = 0;
+   algorithm_factory = 0;
    }
 
 /*************************************************
@@ -275,7 +258,7 @@ Library_State::Library_State()
 *************************************************/
 Library_State::~Library_State()
    {
-   std::for_each(engines.begin(), engines.end(), del_fun<Engine>());
+   delete algorithm_factory;
 
    cached_default_allocator = 0;
 
@@ -286,7 +269,6 @@ Library_State::~Library_State()
       }
 
    delete allocator_lock;
-   delete engine_lock;
    delete mutex_factory;
    delete config_lock;
    }

@@ -9,6 +9,7 @@
 #include <botan/types.h>
 #include <botan/init.h>
 #include <botan/allocate.h>
+#include <botan/algo_factory.h>
 
 #include <string>
 #include <vector>
@@ -29,18 +30,7 @@ class BOTAN_DLL Library_State
 
       void load(Modules&);
 
-      void add_engine(class Engine*);
-
-      class BOTAN_DLL Engine_Iterator
-         {
-         public:
-            class Engine* next();
-            Engine_Iterator(const Library_State& l) : lib(l) { n = 0; }
-         private:
-            const Library_State& lib;
-            u32bit n;
-         };
-      friend class Engine_Iterator;
+      Algorithm_Factory& algo_factory();
 
       Allocator* get_allocator(const std::string& = "") const;
       void add_allocator(Allocator*);
@@ -65,29 +55,24 @@ class BOTAN_DLL Library_State
       */
       bool is_set(const std::string& section, const std::string& key) const;
 
-        /**
-        * Set a configuration parameter.
-        * @param section the section of the desired key
-        * @param key the desired keys name
-        * @param overwrite if set to true, the parameters value
-        * will be overwritten even if it is already set, otherwise
-        * no existing values will be overwritten.
-        */
+      /**
+      * Set a configuration parameter.
+      * @param section the section of the desired key
+      * @param key the desired keys name
+      * @param overwrite if set to true, the parameters value
+      * will be overwritten even if it is already set, otherwise
+      * no existing values will be overwritten.
+      */
       void set(const std::string& section, const std::string& key,
                  const std::string& value, bool overwrite = true);
 
-        /**
-        * Get a parameters value out of the "conf" section (
-        * referred to as option).
-        * @param key the desired keys name
-        */
+      /**
+      * Get a parameters value out of the "conf" section (
+      * referred to as option).
+      * @param key the desired keys name
+      */
       std::string option(const std::string& key) const;
 
-      /**
-      * Set an option.
-      * @param key the key of the option to set
-      * @param value the value to set
-      */
       /**
       * Set an option.
       * @param key the key of the option to set
@@ -116,8 +101,6 @@ class BOTAN_DLL Library_State
       Library_State(const Library_State&) {}
       Library_State& operator=(const Library_State&) { return (*this); }
 
-      class Engine* get_engine_n(u32bit) const;
-
       class Mutex_Factory* mutex_factory;
 
       std::map<std::string, std::string> config;
@@ -128,8 +111,7 @@ class BOTAN_DLL Library_State
       mutable Allocator* cached_default_allocator;
       std::vector<Allocator*> allocators;
 
-      class Mutex* engine_lock;
-      std::vector<class Engine*> engines;
+      Algorithm_Factory* algorithm_factory;
    };
 
 /*************************************************

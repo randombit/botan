@@ -163,7 +163,7 @@ IF_Operation* if_op(const BigInt& e, const BigInt& n, const BigInt& d,
                     const BigInt& p, const BigInt& q, const BigInt& d1,
                     const BigInt& d2, const BigInt& c)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
 
    while(const Engine* engine = i.next())
       {
@@ -182,7 +182,7 @@ IF_Operation* if_op(const BigInt& e, const BigInt& n, const BigInt& d,
 *************************************************/
 DSA_Operation* dsa_op(const DL_Group& group, const BigInt& y, const BigInt& x)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
 
    while(const Engine* engine = i.next())
       {
@@ -201,7 +201,7 @@ DSA_Operation* dsa_op(const DL_Group& group, const BigInt& y, const BigInt& x)
 *************************************************/
 NR_Operation* nr_op(const DL_Group& group, const BigInt& y, const BigInt& x)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
 
    while(const Engine* engine = i.next())
       {
@@ -220,7 +220,7 @@ NR_Operation* nr_op(const DL_Group& group, const BigInt& y, const BigInt& x)
 *************************************************/
 ELG_Operation* elg_op(const DL_Group& group, const BigInt& y, const BigInt& x)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
 
    while(const Engine* engine = i.next())
       {
@@ -239,7 +239,7 @@ ELG_Operation* elg_op(const DL_Group& group, const BigInt& y, const BigInt& x)
 *************************************************/
 DH_Operation* dh_op(const DL_Group& group, const BigInt& x)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
 
    while(const Engine* engine = i.next())
       {
@@ -260,7 +260,7 @@ ECDSA_Operation* ecdsa_op(const EC_Domain_Params& dom_pars,
                           const BigInt& priv_key,
                           const PointGFp& pub_key)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
 
    while(const Engine* engine = i.next())
       {
@@ -281,7 +281,7 @@ ECKAEG_Operation* eckaeg_op(const EC_Domain_Params& dom_pars,
                             const BigInt& priv_key,
                             const PointGFp& pub_key)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
 
    while(const Engine* engine = i.next())
       {
@@ -299,7 +299,7 @@ ECKAEG_Operation* eckaeg_op(const EC_Domain_Params& dom_pars,
 *************************************************/
 Modular_Exponentiator* mod_exp(const BigInt& n, Power_Mod::Usage_Hints hints)
    {
-   Library_State::Engine_Iterator i(global_state());
+   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
 
    while(const Engine* engine = i.next())
       {

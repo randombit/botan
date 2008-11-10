@@ -13,6 +13,8 @@ system_alloc
 </requires>
 
 <add>
+algo_factory.cpp
+algo_factory.h
 botan.h
 get_enc.cpp
 init.h
