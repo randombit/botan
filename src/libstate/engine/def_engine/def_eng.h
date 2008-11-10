@@ -64,7 +64,6 @@ class BOTAN_DLL Default_Engine : public Engine
       HashFunction* find_hash(const std::string&) const;
       MessageAuthenticationCode* find_mac(const std::string&) const;
 
-      class S2K* find_s2k(const std::string&) const;
       class BlockCipherModePaddingMethod*
          find_bc_pad(const std::string&) const;
    };

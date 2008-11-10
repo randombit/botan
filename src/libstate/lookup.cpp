@@ -54,17 +54,6 @@ MessageAuthenticationCode* get_mac(const std::string& name)
    }
 
 /*************************************************
-* Get a S2K algorithm by name                    *
-*************************************************/
-S2K* get_s2k(const std::string& name)
-   {
-   const S2K* s2k = retrieve_s2k(global_state(), name);
-   if(s2k)
-      return s2k->clone();
-   throw Algorithm_Not_Found(name);
-   }
-
-/*************************************************
 * Get a block cipher padding method by name      *
 *************************************************/
 const BlockCipherModePaddingMethod* get_bc_pad(const std::string& name)
@@ -303,24 +292,6 @@ const MessageAuthenticationCode* retrieve_mac(Library_State& libstate,
    while(const Engine* engine = i.next())
       {
       const MessageAuthenticationCode* algo = engine->mac(name);
-      if(algo)
-         return algo;
-      }
-
-   return 0;
-   }
-
-/*************************************************
-* Acquire a string-to-key algorithm              *
-*************************************************/
-const S2K* retrieve_s2k(Library_State& libstate,
-                        const std::string& name)
-   {
-   Library_State::Engine_Iterator i(libstate);
-
-   while(const Engine* engine = i.next())
-      {
-      const S2K* algo = engine->s2k(name);
       if(algo)
          return algo;
       }

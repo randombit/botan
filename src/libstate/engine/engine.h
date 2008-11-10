@@ -119,7 +119,6 @@ class BOTAN_DLL Engine
       const StreamCipher* stream_cipher(const std::string&) const;
       const HashFunction* hash(const std::string&) const;
       const MessageAuthenticationCode* mac(const std::string&) const;
-      const class S2K* s2k(const std::string&) const;
       const class BlockCipherModePaddingMethod*
          bc_pad(const std::string&) const;
 
@@ -129,7 +128,6 @@ class BOTAN_DLL Engine
       void add_algorithm(StreamCipher*) const;
       void add_algorithm(HashFunction*) const;
       void add_algorithm(MessageAuthenticationCode*) const;
-      void add_algorithm(class S2K*) const;
       void add_algorithm(class BlockCipherModePaddingMethod*) const;
 
       Engine();
@@ -145,9 +143,6 @@ class BOTAN_DLL Engine
          { return 0; }
 
       virtual MessageAuthenticationCode* find_mac(const std::string&) const
-         { return 0; }
-
-      virtual class S2K* find_s2k(const std::string&) const
          { return 0; }
 
       virtual class BlockCipherModePaddingMethod*
@@ -175,7 +170,6 @@ class BOTAN_DLL Engine
       Algorithm_Cache<HashFunction>* cache_of_hf;
       Algorithm_Cache<MessageAuthenticationCode>* cache_of_mac;
       Algorithm_Cache<BlockCipherModePaddingMethod>* cache_of_bc_pad;
-      Algorithm_Cache<S2K>* cache_of_s2k;
    };
 
 namespace Engine_Core {

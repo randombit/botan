@@ -7,7 +7,6 @@
 #include <botan/libstate.h>
 #include <botan/stl_util.h>
 #include <botan/mode_pad.h>
-#include <botan/s2k.h>
 
 namespace Botan {
 
@@ -101,15 +100,6 @@ const MessageAuthenticationCode* Engine::mac(const std::string& name) const
    }
 
 /*************************************************
-* Acquire a S2K object                           *
-*************************************************/
-const S2K* Engine::s2k(const std::string& name) const
-   {
-   return lookup_algo(cache_of_s2k, global_state().deref_alias(name),
-                      this, &Engine::find_s2k);
-   }
-
-/*************************************************
 * Acquire a cipher padding object                *
 *************************************************/
 const BlockCipherModePaddingMethod*
@@ -152,14 +142,6 @@ void Engine::add_algorithm(MessageAuthenticationCode* algo) const
    }
 
 /*************************************************
-* Add a S2K to the lookup table                  *
-*************************************************/
-void Engine::add_algorithm(S2K* algo) const
-   {
-   cache_of_s2k->add(algo);
-   }
-
-/*************************************************
 * Add a cipher pad method to the lookup table    *
 *************************************************/
 void Engine::add_algorithm(BlockCipherModePaddingMethod* algo) const
@@ -176,7 +158,6 @@ Engine::Engine()
    cache_of_sc = new Algorithm_Cache_Impl<StreamCipher>();
    cache_of_hf = new Algorithm_Cache_Impl<HashFunction>();
    cache_of_mac = new Algorithm_Cache_Impl<MessageAuthenticationCode>();
-   cache_of_s2k = new Algorithm_Cache_Impl<S2K>();
    cache_of_bc_pad =
       new Algorithm_Cache_Impl<BlockCipherModePaddingMethod>();
    }
@@ -190,7 +171,6 @@ Engine::~Engine()
    delete cache_of_sc;
    delete cache_of_hf;
    delete cache_of_mac;
-   delete cache_of_s2k;
    delete cache_of_bc_pad;
    }
 

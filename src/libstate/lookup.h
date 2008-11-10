@@ -39,8 +39,6 @@ retrieve_hash(Library_State&, const std::string&);
 BOTAN_DLL const MessageAuthenticationCode*
 retrieve_mac(Library_State&, const std::string&);
 
-BOTAN_DLL const S2K* retrieve_s2k(Library_State&, const std::string&);
-
 BOTAN_DLL const BlockCipherModePaddingMethod*
 retrieve_bc_pad(Library_State&, const std::string&);
 
