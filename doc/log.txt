@@ -1,6 +1,7 @@
 
 * 1.7.21, ????-??-??
  - Increase intervals between HMAC_RNG automatic reseeding
+ - Drop InitializerOptions class, all options but thread safety
 
 * 1.7.20, 2008-11-09
  - Namespace pkg-config file by major and minor versions
