@@ -37,9 +37,13 @@ void hmac_prf(MessageAuthenticationCode* prf,
 *************************************************/
 void HMAC_RNG::randomize(byte out[], u32bit length)
    {
-   /* Attempt to seed if we are either unseeded or have generated
-      enouch counters that it seems wise to roll over keys */
-   if(!is_seeded() || counter >= 16 * 1024)
+   /* Attempt to seed if we are currently not seeded, or if the
+      counter is greater than 2^20
+
+      If HMAC_RNG is wrapped in an X9.31/AES PRNG (the default), this
+      means a reseed will be kicked off every 16 MiB of RNG output.
+   */
+   if(!is_seeded() || counter >= 0x100000)
       {
       reseed();
 
@@ -61,10 +65,8 @@ void HMAC_RNG::randomize(byte out[], u32bit length)
       length -= copied;
       }
 
-   hmac_prf(prf, K, counter, "rng");
-
    /* Every once in a while do a fast poll of a entropy source */
-   if(entropy_sources.size() && (counter % 1024 == 0))
+   if(entropy_sources.size() && (counter % 65536 == 0))
       {
       u32bit got = entropy_sources.at(source_index)->fast_poll(io_buffer, io_buffer.size());
       source_index = (source_index + 1) % entropy_sources.size();
@@ -77,8 +79,6 @@ void HMAC_RNG::randomize(byte out[], u32bit length)
 */
 void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
    {
-   Entropy_Estimator estimate;
-
    if(entropy_sources.size())
       {
       /**
@@ -90,28 +90,45 @@ void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
       feedback of the current PRK value, into the extractor function.
       */
 
+      /*
+      Previously this function did entropy estimation. However the paper
+
+      "Boaz Barak, Shai Halevi: A model and architecture for
+       pseudo-random generation with applications to /dev/random. ACM
+       Conference on Computer and Communications Security 2005."
+
+      provides a pretty strong case to not even try, since what we are
+      really interested in is the *conditional* entropy from the point
+      of view of an unknown attacker, which is impossible to
+      calculate. They recommend, if an entropy estimate of some kind
+      is needed, to use a low static estimate instead. We use here an
+      estimate of 1 bit per byte.
+
+      One thing I had been concerned about initially was that people
+      without any randomness source enabled (much more likely in the
+      days when you had to enable them manually) would find the RNG
+      was unseeded and then pull the manuever some OpenSSL users did
+      and seed the RNG with a constant string. However, upon further
+      thought, I've decided that people who do that deserve to lose
+      anyway.
+      */
+
       for(u32bit j = 0; j < entropy_sources.size(); ++j)
          {
-         u32bit got = entropy_sources[j]->fast_poll(io_buffer, io_buffer.size());
+         const u32bit got =
+            entropy_sources[j]->fast_poll(io_buffer, io_buffer.size());
+
+         entropy += got;
          extractor->update(io_buffer, got);
-         estimate.update(io_buffer, got, 96);
          }
 
-      /* Limit assumed entropy from fast polls (to ensure we do at
-         least a few slow polls) */
-      estimate.set_upper_bound(256);
-
-      /* Then do a slow poll, until we think we have got enough entropy
-      */
       for(u32bit j = 0; j != entropy_sources.size(); ++j)
          {
-         u32bit got = entropy_sources[j]->slow_poll(io_buffer, io_buffer.size());
+         const u32bit got =
+            entropy_sources[j]->slow_poll(io_buffer, io_buffer.size());
 
+         entropy += got;
          extractor->update(io_buffer, got);
-         estimate.update(io_buffer, got, 256);
-
-         if(estimate.value() > 8 * extractor->OUTPUT_LENGTH)
-            break;
          }
       }
 
@@ -121,7 +138,7 @@ void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
    if(input_length)
       {
       extractor->update(input, input_length);
-      estimate.update(input, input_length);
+      entropy += input_length;
       }
 
    /*
@@ -141,8 +158,8 @@ void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
    hmac_prf(prf, K, counter, "reseed");
    extractor->update(K); // K is the CTXinfo=reseed PRF output
 
-   /* Now derive the new PRK using everything that has been fed into the extractor,
-      and set the PRF key to that*/
+   /* Now derive the new PRK using everything that has been fed into
+      the extractor, and set the PRF key to that */
    prf->set_key(extractor->final());
 
    // Now generate a new PRF output to use as the XTS extractor salt
@@ -153,9 +170,8 @@ void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
    K.clear();
    counter = 0;
 
-   // Increase entropy estimate (for is_seeded)
-   entropy = std::min<u32bit>(entropy + estimate.value(),
-                              8 * extractor->OUTPUT_LENGTH);
+   // Upper bound entropy estimate at the extractor output size
+   entropy = std::min<u32bit>(entropy, 8 * extractor->OUTPUT_LENGTH);
    }
 
 /**
