@@ -10,6 +10,7 @@ openpgp.h
 </add>
 
 <requires>
+crc24
 base64
 filters
 </requires>

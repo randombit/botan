@@ -5,6 +5,7 @@
 
 #include <botan/filters.h>
 #include <botan/lookup.h>
+#include <botan/libstate.h>
 #include <algorithm>
 
 namespace Botan {
@@ -55,10 +56,11 @@ void StreamCipher_Filter::write(const byte input[], u32bit length)
 /*************************************************
 * Hash_Filter Constructor                        *
 *************************************************/
-Hash_Filter::Hash_Filter(const std::string& hash_name, u32bit len) :
+Hash_Filter::Hash_Filter(const std::string& algo_spec,
+                         u32bit len) :
    OUTPUT_LENGTH(len)
    {
-   hash = get_hash(hash_name);
+   hash = global_state().algo_factory().make_hash_function(algo_spec);
    }
 
 /*************************************************

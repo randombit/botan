@@ -6,6 +6,7 @@ Algorithm Factory
 #include <botan/libstate.h>
 #include <botan/stl_util.h>
 #include <botan/engine.h>
+#include <botan/exceptn.h>
 #include <algorithm>
 
 namespace Botan {
@@ -66,7 +67,8 @@ HashFunction* Algorithm_Factory::make_hash_function(const SCAN_Name& request)
    const HashFunction* prototype = prototype_hash_function(request);
    if(prototype)
       return prototype->clone();
-   return 0;
+
+   throw Algorithm_Not_Found(request.as_string());
    }
 
 }

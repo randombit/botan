@@ -6,6 +6,7 @@
 #include <botan/openpgp.h>
 #include <botan/filters.h>
 #include <botan/charset.h>
+#include <botan/crc24.h>
 
 namespace Botan {
 
@@ -38,7 +39,7 @@ std::string encode(const byte input[], u32bit length,
 
    Pipe pipe(new Fork(
                 new Base64_Encoder(true, PGP_WIDTH),
-                new Chain(new Hash_Filter("CRC24"), new Base64_Encoder)
+                new Chain(new Hash_Filter(new CRC24), new Base64_Encoder)
                 )
       );
 
@@ -133,7 +134,7 @@ SecureVector<byte> decode(DataSource& source, std::string& label,
 
    Pipe base64(new Base64_Decoder,
                new Fork(0,
-                        new Chain(new Hash_Filter("CRC24"),
+                        new Chain(new Hash_Filter(new CRC24),
                                   new Base64_Encoder)
                   )
       );

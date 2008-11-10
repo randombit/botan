@@ -23,13 +23,7 @@ const HashFunction* retrieve_hash(Library_State& libstate,
 *************************************************/
 HashFunction* get_hash(const std::string& algo_spec)
    {
-   const HashFunction* hash =
-      global_state().algo_factory().prototype_hash_function(algo_spec);
-
-   if(hash)
-      return hash->clone();
-
-   throw Algorithm_Not_Found(algo_spec);
+   return global_state().algo_factory().make_hash_function(algo_spec);
    }
 
 /*************************************************

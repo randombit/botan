@@ -14,6 +14,7 @@
 #include <botan/pipe.h>
 #include <botan/basefilt.h>
 #include <botan/data_snk.h>
+#include <botan/scan_name.h>
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
   #include <botan/base64.h>
@@ -82,13 +83,25 @@ class BOTAN_DLL Hash_Filter : public Filter
 
       /**
       * Construct a hash filter.
-      * @param hash the name of the hash algorithm to use
+      * @param hash_fun the hash function to use
       * @param len the output length of this filter. Leave the default
       * value 0 if you want to use the full output of the hashfunction
       * hash. Otherwise, specify a smaller value here so that the
       * output of the hash algorithm will be cut off.
       */
-      Hash_Filter(const std::string& hash, u32bit len = 0);
+      Hash_Filter(HashFunction* hash_fun, u32bit len = 0) :
+         OUTPUT_LENGTH(len), hash(hash_fun) {}
+
+      /**
+      * Construct a hash filter.
+      * @param request the name of the hash algorithm to use
+      * @param len the output length of this filter. Leave the default
+      * value 0 if you want to use the full output of the hashfunction
+      * hash. Otherwise, specify a smaller value here so that the
+      * output of the hash algorithm will be cut off.
+      */
+      Hash_Filter(const std::string& request, u32bit len = 0);
+
       ~Hash_Filter() { delete hash; }
    private:
       const u32bit OUTPUT_LENGTH;
