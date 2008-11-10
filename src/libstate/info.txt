@@ -9,6 +9,7 @@ system_alloc
 def_engine
 pk_pad
 s2k
+mode_pad
 </requires>
 
 <add>
