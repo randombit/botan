@@ -43,6 +43,40 @@ bool have_hash(const std::string& algo_spec)
    }
 
 /*************************************************
+* Acquire an authentication code                 *
+*************************************************/
+const MessageAuthenticationCode* retrieve_mac(Library_State& libstate,
+                                              const std::string& algo_spec)
+   {
+   return libstate.algo_factory().prototype_mac(algo_spec);
+   }
+
+/*************************************************
+* Get a MAC by name                              *
+*************************************************/
+MessageAuthenticationCode* get_mac(const std::string& algo_spec)
+   {
+   return global_state().algo_factory().make_mac(algo_spec);
+   }
+
+/*************************************************
+* Query if Botan has the named MAC               *
+*************************************************/
+bool have_mac(const std::string& algo_spec)
+   {
+   return global_state().algo_factory().prototype_mac(algo_spec);
+   }
+
+/*************************************************
+* Add a new authentication code                  *
+*************************************************/
+void add_algorithm(Library_State& libstate,
+                   MessageAuthenticationCode* algo)
+   {
+   libstate.algo_factory().add_mac(algo);
+   }
+
+/*************************************************
 * Get a block cipher by name                     *
 *************************************************/
 BlockCipher* get_block_cipher(const std::string& name)
@@ -61,17 +95,6 @@ StreamCipher* get_stream_cipher(const std::string& name)
    const StreamCipher* cipher = retrieve_stream_cipher(global_state(), name);
    if(cipher)
       return cipher->clone();
-   throw Algorithm_Not_Found(name);
-   }
-
-/*************************************************
-* Get a MAC by name                              *
-*************************************************/
-MessageAuthenticationCode* get_mac(const std::string& name)
-   {
-   const MessageAuthenticationCode* mac = retrieve_mac(global_state(), name);
-   if(mac)
-      return mac->clone();
    throw Algorithm_Not_Found(name);
    }
 
@@ -105,14 +128,6 @@ bool have_block_cipher(const std::string& name)
 bool have_stream_cipher(const std::string& name)
    {
    return (retrieve_stream_cipher(global_state(), name) != 0);
-   }
-
-/*************************************************
-* Query if Botan has the named MAC               *
-*************************************************/
-bool have_mac(const std::string& name)
-   {
-   return (retrieve_mac(global_state(), name) != 0);
    }
 
 /*************************************************
@@ -264,24 +279,6 @@ const StreamCipher* retrieve_stream_cipher(Library_State& libstate,
    }
 
 /*************************************************
-* Acquire an authentication code                 *
-*************************************************/
-const MessageAuthenticationCode* retrieve_mac(Library_State& libstate,
-                                              const std::string& name)
-   {
-   Algorithm_Factory::Engine_Iterator i(libstate.algo_factory());
-
-   while(const Engine* engine = i.next())
-      {
-      const MessageAuthenticationCode* algo = engine->mac(name);
-      if(algo)
-         return algo;
-      }
-
-   return 0;
-   }
-
-/*************************************************
 * Add a new block cipher                         *
 *************************************************/
 void add_algorithm(Library_State& libstate, BlockCipher* algo)
@@ -304,26 +301,6 @@ void add_algorithm(Library_State& libstate, BlockCipher* algo)
 * Add a new stream cipher                        *
 *************************************************/
 void add_algorithm(Library_State& libstate, StreamCipher* algo)
-   {
-   Algorithm_Factory::Engine_Iterator i(libstate.algo_factory());
-
-   while(Engine* engine = i.next())
-      {
-      if(engine->can_add_algorithms())
-         {
-         engine->add_algorithm(algo);
-         return;
-         }
-      }
-
-   throw Invalid_State("add_algorithm: Couldn't find the Default_Engine");
-   }
-
-/*************************************************
-* Add a new authentication code                  *
-*************************************************/
-void add_algorithm(Library_State& libstate,
-                   MessageAuthenticationCode* algo)
    {
    Algorithm_Factory::Engine_Iterator i(libstate.algo_factory());
 

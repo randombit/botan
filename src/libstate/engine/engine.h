@@ -119,21 +119,26 @@ class BOTAN_DLL Engine
       virtual Keyed_Filter* get_cipher(const std::string&, Cipher_Dir)
          { return 0; }
 
+      // Prototype object accessors
       const BlockCipher* block_cipher(const std::string&) const;
       const StreamCipher* stream_cipher(const std::string&) const;
 
-      const HashFunction* prototype_hash_function(const SCAN_Name& request,
-                                                  Algorithm_Factory& af) const;
+      const HashFunction*
+         prototype_hash_function(const SCAN_Name& request,
+                                 Algorithm_Factory& af) const;
 
-      const MessageAuthenticationCode* mac(const std::string&) const;
+      const MessageAuthenticationCode*
+         prototype_mac(const SCAN_Name& request,
+                       Algorithm_Factory& af) const;
 
-      virtual bool can_add_algorithms() { return false; }
-
+      // Add new algorithms
       void add_algorithm(BlockCipher*) const;
       void add_algorithm(StreamCipher*) const;
       void add_algorithm(HashFunction*) const;
       void add_algorithm(MessageAuthenticationCode*) const;
 
+      // Engine information
+      virtual bool can_add_algorithms() { return false; }
       virtual std::string provider_name() const = 0;
 
       Engine();
@@ -145,10 +150,12 @@ class BOTAN_DLL Engine
       virtual StreamCipher* find_stream_cipher(const std::string&) const
          { return 0; }
 
-      virtual HashFunction* find_hash(const SCAN_Name&, Algorithm_Factory&) const
+      virtual HashFunction* find_hash(const SCAN_Name&,
+                                      Algorithm_Factory&) const
          { return 0; }
 
-      virtual MessageAuthenticationCode* find_mac(const std::string&) const
+      virtual MessageAuthenticationCode* find_mac(const SCAN_Name&,
+                                                  Algorithm_Factory&) const
          { return 0; }
 
       template<typename T>

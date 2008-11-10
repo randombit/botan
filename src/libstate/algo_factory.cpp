@@ -7,6 +7,9 @@ Algorithm Factory
 #include <botan/stl_util.h>
 #include <botan/engine.h>
 #include <botan/exceptn.h>
+#include <botan/hash.h>
+#include <botan/mac.h>
+
 #include <algorithm>
 
 namespace Botan {
@@ -71,6 +74,9 @@ HashFunction* Algorithm_Factory::make_hash_function(const SCAN_Name& request)
    throw Algorithm_Not_Found(request.as_string());
    }
 
+/**
+* Add a new object
+*/
 void Algorithm_Factory::add_hash_function(HashFunction* hash)
    {
    for(u32bit i = 0; i != engines.size(); ++i)
@@ -84,5 +90,59 @@ void Algorithm_Factory::add_hash_function(HashFunction* hash)
 
    throw Exception("Algorithm_Factory::add_hash_function: No engine found");
    }
+
+
+
+/**
+* Return the prototypical object cooresponding to this request
+*/
+const MessageAuthenticationCode*
+Algorithm_Factory::prototype_mac(const SCAN_Name& request)
+   {
+   for(u32bit i = 0; i != engines.size(); ++i)
+      {
+      if(request.provider_allowed(engines[i]->provider_name()))
+         {
+         const MessageAuthenticationCode* algo =
+            engines[i]->prototype_mac(request, *this);
+
+         if(algo)
+            return algo;
+         }
+      }
+
+   return 0;
+   }
+
+/**
+* Return a new object cooresponding to this request
+*/
+MessageAuthenticationCode*
+Algorithm_Factory::make_mac(const SCAN_Name& request)
+   {
+   const MessageAuthenticationCode* prototype = prototype_mac(request);
+   if(prototype)
+      return prototype->clone();
+
+   throw Algorithm_Not_Found(request.as_string());
+   }
+
+/**
+* Add a new object
+*/
+void Algorithm_Factory::add_mac(MessageAuthenticationCode* hash)
+   {
+   for(u32bit i = 0; i != engines.size(); ++i)
+      {
+      if(engines[i]->can_add_algorithms())
+         {
+         engines[i]->add_algorithm(hash);
+         return;
+         }
+      }
+
+   throw Exception("Algorithm_Factory::add_mac: No engine found");
+   }
+
 
 }

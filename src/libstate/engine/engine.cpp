@@ -101,10 +101,21 @@ Engine::prototype_hash_function(const SCAN_Name& request,
 /*************************************************
 * Acquire a MessageAuthenticationCode            *
 *************************************************/
-const MessageAuthenticationCode* Engine::mac(const std::string& name) const
+const MessageAuthenticationCode*
+Engine::prototype_mac(const SCAN_Name& request,
+                      Algorithm_Factory& af) const
    {
-   return lookup_algo(cache_of_mac, global_state().deref_alias(name),
-                      this, &Engine::find_mac);
+   // This needs to respect provider settings
+   MessageAuthenticationCode* algo = cache_of_mac->get(request.as_string());
+   if(algo)
+      return algo;
+
+   // cache miss: do full search
+   algo = find_mac(request, af);
+   if(algo)
+      cache_of_mac->add(algo, request.as_string());
+
+   return algo;
    }
 
 /*************************************************

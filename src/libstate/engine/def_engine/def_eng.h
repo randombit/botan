@@ -64,10 +64,11 @@ class BOTAN_DLL Default_Engine : public Engine
       BlockCipher* find_block_cipher(const std::string&) const;
       StreamCipher* find_stream_cipher(const std::string&) const;
 
-      HashFunction* find_hash(const SCAN_Name& requst,
+      HashFunction* find_hash(const SCAN_Name& reqeust,
                               Algorithm_Factory&) const;
 
-      MessageAuthenticationCode* find_mac(const std::string&) const;
+      MessageAuthenticationCode* find_mac(const SCAN_Name& reqeust,
+                                          Algorithm_Factory&) const;
    };
 
 }

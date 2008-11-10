@@ -8,11 +8,13 @@
 
 #include <botan/scan_name.h>
 #include <botan/mutex.h>
-#include <botan/hash.h>
 #include <string>
 #include <vector>
 
 namespace Botan {
+
+class HashFunction;
+class MessageAuthenticationCode;
 
 /**
 * Algorithm Factory
@@ -39,6 +41,11 @@ class BOTAN_DLL Algorithm_Factory
       const HashFunction* prototype_hash_function(const SCAN_Name& request);
       HashFunction* make_hash_function(const SCAN_Name& request);
       void add_hash_function(HashFunction* hash);
+
+      // MAC operations
+      const MessageAuthenticationCode* prototype_mac(const SCAN_Name& request);
+      MessageAuthenticationCode* make_mac(const SCAN_Name& request);
+      void add_mac(MessageAuthenticationCode* mac);
 
    private:
       class Engine* get_engine_n(u32bit) const;
