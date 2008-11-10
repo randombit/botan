@@ -1,7 +1,7 @@
-/*************************************************
-* Basic No-Op Engine Source File                 *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/**
+* Engine Base Class
+* (C) 1999-2007 Jack Lloyd
+*/
 
 #include <botan/engine.h>
 #include <botan/libstate.h>
@@ -40,10 +40,7 @@ class Algorithm_Cache_Impl : public Engine::Algorithm_Cache<T>
          mappings[name] = algo;
          }
 
-      Algorithm_Cache_Impl()
-         {
-         mutex = global_state().get_mutex();
-         }
+      Algorithm_Cache_Impl(Mutex* m) : mutex(m) {}
 
       ~Algorithm_Cache_Impl()
          {
@@ -147,10 +144,17 @@ void Engine::add_algorithm(MessageAuthenticationCode* algo) const
 *************************************************/
 Engine::Engine()
    {
-   cache_of_bc = new Algorithm_Cache_Impl<BlockCipher>();
-   cache_of_sc = new Algorithm_Cache_Impl<StreamCipher>();
-   cache_of_hf = new Algorithm_Cache_Impl<HashFunction>();
-   cache_of_mac = new Algorithm_Cache_Impl<MessageAuthenticationCode>();
+   cache_of_bc = new Algorithm_Cache_Impl<BlockCipher>(
+      global_state().get_mutex());
+
+   cache_of_sc = new Algorithm_Cache_Impl<StreamCipher>(
+      global_state().get_mutex());
+
+   cache_of_hf = new Algorithm_Cache_Impl<HashFunction>(
+      global_state().get_mutex());
+
+   cache_of_mac = new Algorithm_Cache_Impl<MessageAuthenticationCode>(
+      global_state().get_mutex());
    }
 
 /*************************************************
@@ -163,166 +167,5 @@ Engine::~Engine()
    delete cache_of_hf;
    delete cache_of_mac;
    }
-
-namespace Engine_Core {
-
-#if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
-/*************************************************
-* Acquire an IF op                               *
-*************************************************/
-IF_Operation* if_op(const BigInt& e, const BigInt& n, const BigInt& d,
-                    const BigInt& p, const BigInt& q, const BigInt& d1,
-                    const BigInt& d2, const BigInt& c)
-   {
-   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
-
-   while(const Engine* engine = i.next())
-      {
-      IF_Operation* op = engine->if_op(e, n, d, p, q, d1, d2, c);
-      if(op)
-         return op;
-      }
-
-   throw Lookup_Error("Engine_Core::if_op: Unable to find a working engine");
-   }
-#endif
-
-#if defined(BOTAN_HAS_DSA)
-/*************************************************
-* Acquire a DSA op                               *
-*************************************************/
-DSA_Operation* dsa_op(const DL_Group& group, const BigInt& y, const BigInt& x)
-   {
-   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
-
-   while(const Engine* engine = i.next())
-      {
-      DSA_Operation* op = engine->dsa_op(group, y, x);
-      if(op)
-         return op;
-      }
-
-   throw Lookup_Error("Engine_Core::dsa_op: Unable to find a working engine");
-   }
-#endif
-
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-/*************************************************
-* Acquire a NR op                                *
-*************************************************/
-NR_Operation* nr_op(const DL_Group& group, const BigInt& y, const BigInt& x)
-   {
-   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
-
-   while(const Engine* engine = i.next())
-      {
-      NR_Operation* op = engine->nr_op(group, y, x);
-      if(op)
-         return op;
-      }
-
-   throw Lookup_Error("Engine_Core::nr_op: Unable to find a working engine");
-   }
-#endif
-
-#if defined(BOTAN_HAS_ELGAMAL)
-/*************************************************
-* Acquire an ElGamal op                          *
-*************************************************/
-ELG_Operation* elg_op(const DL_Group& group, const BigInt& y, const BigInt& x)
-   {
-   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
-
-   while(const Engine* engine = i.next())
-      {
-      ELG_Operation* op = engine->elg_op(group, y, x);
-      if(op)
-         return op;
-      }
-
-   throw Lookup_Error("Engine_Core::elg_op: Unable to find a working engine");
-   }
-#endif
-
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-/*************************************************
-* Acquire a DH op                                *
-*************************************************/
-DH_Operation* dh_op(const DL_Group& group, const BigInt& x)
-   {
-   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
-
-   while(const Engine* engine = i.next())
-      {
-      DH_Operation* op = engine->dh_op(group, x);
-      if(op)
-         return op;
-      }
-
-   throw Lookup_Error("Engine_Core::dh_op: Unable to find a working engine");
-   }
-#endif
-
-#if defined(BOTAN_HAS_ECDSA)
-/*************************************************
-* Acquire an ECDSA op                            *
-*************************************************/
-ECDSA_Operation* ecdsa_op(const EC_Domain_Params& dom_pars,
-                          const BigInt& priv_key,
-                          const PointGFp& pub_key)
-   {
-   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
-
-   while(const Engine* engine = i.next())
-      {
-      ECDSA_Operation* op = engine->ecdsa_op(dom_pars, priv_key, pub_key);
-      if(op)
-         return op;
-      }
-
-   throw Lookup_Error("Engine_Core::ecdsa_op: Unable to find a working engine");
-   }
-#endif
-
-#if defined(BOTAN_HAS_ECKAEG)
-/*************************************************
-* Acquire a ECKAEG op                            *
-*************************************************/
-ECKAEG_Operation* eckaeg_op(const EC_Domain_Params& dom_pars,
-                            const BigInt& priv_key,
-                            const PointGFp& pub_key)
-   {
-   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
-
-   while(const Engine* engine = i.next())
-      {
-      ECKAEG_Operation* op = engine->eckaeg_op(dom_pars, priv_key, pub_key);
-      if(op)
-         return op;
-      }
-
-   throw Lookup_Error("Engine_Core::eckaeg_op: Unable to find a working engine");
-   }
-#endif
-
-/*************************************************
-* Acquire a modular exponentiator                *
-*************************************************/
-Modular_Exponentiator* mod_exp(const BigInt& n, Power_Mod::Usage_Hints hints)
-   {
-   Algorithm_Factory::Engine_Iterator i(global_state().algo_factory());
-
-   while(const Engine* engine = i.next())
-      {
-      Modular_Exponentiator* op = engine->mod_exp(n, hints);
-
-      if(op)
-         return op;
-      }
-
-   throw Lookup_Error("Engine_Core::mod_exp: Unable to find a working engine");
-   }
-
-}
 
 }
