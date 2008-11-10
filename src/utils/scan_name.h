@@ -9,6 +9,7 @@ SCAN Name Abstraction
 #include <botan/types.h>
 #include <string>
 #include <vector>
+#include <set>
 
 namespace Botan {
 
@@ -21,8 +22,10 @@ class SCAN_Name
    public:
       /**
       @param algo_spec A SCAN name
+      @param providers An optional list of providers (like "sse2,openssl,x86-64,core")
       */
-      SCAN_Name(const std::string& algo_spec);
+      SCAN_Name(const std::string& algo_spec,
+                const std::string& providers = "");
 
       /**
       @return the algorithm name
@@ -33,6 +36,12 @@ class SCAN_Name
       @return the number of arguments
       */
       u32bit arg_count() const { return name.size() - 1; }
+
+      /**
+      @param provider a provider name
+      @returns if this provider was allowed by the request
+      */
+      bool provider_allowed(const std::string& provider) const;
 
       /**
       @return if the number of arguments is between lower and upper
@@ -54,6 +63,7 @@ class SCAN_Name
 
    private:
       std::vector<std::string> name;
+      std::set<std::string> providers;
    };
 
 }
