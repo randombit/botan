@@ -8,7 +8,37 @@ SCAN Name Abstraction
 #include <botan/libstate.h>
 #include <stdexcept>
 
+#include <iostream>
+
 namespace Botan {
+
+namespace {
+
+std::vector<std::string>
+parse_and_deref_aliases(const std::string& algo_spec)
+   {
+   std::vector<std::string> parts = parse_algorithm_name(algo_spec);
+   std::vector<std::string> out;
+
+   for(size_t i = 0; i != parts.size(); ++i)
+      {
+      std::string part_i = global_state().deref_alias(parts[i]);
+
+      if(i == 0 && part_i.find_first_of(",()") != std::string::npos)
+         {
+         std::vector<std::string> parts_i = parse_and_deref_aliases(part_i);
+
+         for(size_t j = 0; j != parts_i.size(); ++j)
+            out.push_back(parts_i[j]);
+         }
+      else
+         out.push_back(part_i);
+      }
+
+   return out;
+   }
+
+}
 
 SCAN_Name::SCAN_Name(const std::string& algo_spec,
                      const std::string& prov_names)
@@ -16,9 +46,7 @@ SCAN_Name::SCAN_Name(const std::string& algo_spec,
    orig_algo_spec = algo_spec;
    orig_providers = prov_names;
 
-   name = parse_algorithm_name(algo_spec);
-   for(u32bit i = 0; i != name.size(); ++i)
-      name[i] = global_state().deref_alias(name[i]);
+   name = parse_and_deref_aliases(algo_spec);
 
    if(prov_names.find(',') != std::string::npos)
       {
