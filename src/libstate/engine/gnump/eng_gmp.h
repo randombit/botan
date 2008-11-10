@@ -16,6 +16,8 @@ namespace Botan {
 class BOTAN_DLL GMP_Engine : public Engine
    {
    public:
+      std::string provider_name() const { return "gmp"; }
+
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
       IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,
                           const BigInt&, const BigInt&, const BigInt&,

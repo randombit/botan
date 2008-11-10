@@ -16,6 +16,8 @@ namespace Botan {
 class BOTAN_DLL Default_Engine : public Engine
    {
    public:
+      std::string provider_name() const { return "core"; }
+
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
       IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,
                           const BigInt&, const BigInt&, const BigInt&,
@@ -61,7 +63,10 @@ class BOTAN_DLL Default_Engine : public Engine
    private:
       BlockCipher* find_block_cipher(const std::string&) const;
       StreamCipher* find_stream_cipher(const std::string&) const;
-      HashFunction* find_hash(const std::string&) const;
+
+      HashFunction* find_hash(const SCAN_Name& requst,
+                              Algorithm_Factory&) const;
+
       MessageAuthenticationCode* find_mac(const std::string&) const;
    };
 

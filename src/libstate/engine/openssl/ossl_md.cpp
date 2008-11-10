@@ -91,10 +91,9 @@ EVP_HashFunction::~EVP_HashFunction()
 /*************************************************
 * Look for an algorithm with this name           *
 *************************************************/
-HashFunction* OpenSSL_Engine::find_hash(const std::string& algo_spec) const
+HashFunction* OpenSSL_Engine::find_hash(const SCAN_Name& request,
+                                        Algorithm_Factory&) const
    {
-   SCAN_Name request(algo_spec);
-
    if(request.algo_name() == "SHA-160")
       return new EVP_HashFunction(EVP_sha1(), "SHA-160");
 

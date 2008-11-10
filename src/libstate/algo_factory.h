@@ -6,6 +6,7 @@
 #ifndef BOTAN_ALGORITHM_FACTORY_H__
 #define BOTAN_ALGORITHM_FACTORY_H__
 
+#include <botan/scan_name.h>
 #include <botan/mutex.h>
 #include <botan/hash.h>
 #include <string>
@@ -19,10 +20,10 @@ namespace Botan {
 class BOTAN_DLL Algorithm_Factory
    {
    public:
-      Algorithm_Factory(Mutex* m) : mutex(m) {}
       ~Algorithm_Factory();
 
-      const HashFunction* prototype_hash_function(const std::string& algo_spec);
+      const HashFunction* prototype_hash_function(const SCAN_Name& request);
+      HashFunction* make_hash_function(const SCAN_Name& request);
 
       void add_engine(class Engine*);
 
@@ -40,7 +41,6 @@ class BOTAN_DLL Algorithm_Factory
    private:
       class Engine* get_engine_n(u32bit) const;
 
-      Mutex* mutex;
       std::vector<class Engine*> engines;
    };
 

@@ -17,8 +17,6 @@ Algorithm_Factory::~Algorithm_Factory()
    {
    std::for_each(engines.begin(), engines.end(), del_fun<Engine>());
    engines.clear();
-
-   delete mutex;
    }
 
 /**
@@ -26,8 +24,7 @@ Algorithm_Factory::~Algorithm_Factory()
 */
 void Algorithm_Factory::add_engine(Engine* engine)
    {
-   Mutex_Holder lock(mutex);
-   engines.insert(engines.begin(), engine);
+   engines.push_back(engine);
    }
 
 /*************************************************
@@ -35,24 +32,40 @@ void Algorithm_Factory::add_engine(Engine* engine)
 *************************************************/
 Engine* Algorithm_Factory::get_engine_n(u32bit n) const
    {
-   Mutex_Holder lock(mutex);
-
    if(n >= engines.size())
       return 0;
    return engines[n];
    }
 
-const HashFunction* Algorithm_Factory::prototype_hash_function(const std::string& algo_spec)
+/**
+* Return the prototypical object cooresponding to this request
+*/
+const HashFunction*
+Algorithm_Factory::prototype_hash_function(const SCAN_Name& request)
    {
-   Mutex_Holder lock(mutex);
-
    for(u32bit i = 0; i != engines.size(); ++i)
       {
-      const HashFunction* algo = engines[i]->hash(algo_spec);
-      if(algo)
-         return algo;
+      if(request.provider_allowed(engines[i]->provider_name()))
+         {
+         const HashFunction* algo =
+            engines[i]->prototype_hash_function(request, *this);
+
+         if(algo)
+            return algo;
+         }
       }
 
+   return 0;
+   }
+
+/**
+* Return a new object cooresponding to this request
+*/
+HashFunction* Algorithm_Factory::make_hash_function(const SCAN_Name& request)
+   {
+   const HashFunction* prototype = prototype_hash_function(request);
+   if(prototype)
+      return prototype->clone();
    return 0;
    }
 

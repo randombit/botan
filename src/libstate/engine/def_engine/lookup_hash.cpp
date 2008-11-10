@@ -4,8 +4,8 @@
 *************************************************/
 
 #include <botan/def_eng.h>
-#include <botan/lookup.h>
 #include <botan/scan_name.h>
+#include <botan/algo_factory.h>
 #include <memory>
 
 #if defined(BOTAN_HAS_ADLER32)
@@ -95,10 +95,9 @@ namespace Botan {
 * Look for an algorithm with this name           *
 *************************************************/
 HashFunction*
-Default_Engine::find_hash(const std::string& algo_spec) const
+Default_Engine::find_hash(const SCAN_Name& request,
+                          Algorithm_Factory& af) const
    {
-   SCAN_Name request(algo_spec);
-
 #if defined(BOTAN_HAS_ADLER32)
    if(request.algo_name() == "Adler32")
       return new Adler32;
@@ -192,15 +191,33 @@ Default_Engine::find_hash(const std::string& algo_spec) const
 #endif
 
 #if defined(BOTAN_HAS_PARALLEL_HASH)
-   if(request.algo_name() == "Parallel" && request.arg_count() > 0)
-      {
-      std::vector<HashFunction*> hashes;
 
-      for(u32bit i = 0; i != request.arg_count(); ++i)
-         hashes.push_back(get_hash(request.argument(i)));
+   if(request.algo_name() == "Parallel")
+      {
+      std::vector<const HashFunction*> hash_prototypes;
+
+      /* First pass, just get the prototypes (no memory allocation). Then
+         if all were found, replace each prototype with a newly created clone
+      */
+      for(size_t i = 0; i != request.arg_count(); ++i)
+         {
+         SCAN_Name hash_request(request.argument(i),
+                                request.providers_string());
+
+         const HashFunction* hash = af.prototype_hash_function(hash_request);
+         if(!hash)
+            return 0;
+
+         hash_prototypes.push_back(hash);
+         }
+
+      std::vector<HashFunction*> hashes;
+      for(size_t i = 0; i != hash_prototypes.size(); ++i)
+         hashes.push_back(hash_prototypes[i]->clone());
 
       return new Parallel(hashes);
       }
+
 #endif
 
    return 0;

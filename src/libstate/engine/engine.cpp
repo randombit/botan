@@ -84,10 +84,21 @@ const StreamCipher* Engine::stream_cipher(const std::string& name) const
 /*************************************************
 * Acquire a HashFunction                         *
 *************************************************/
-const HashFunction* Engine::hash(const std::string& name) const
+const HashFunction*
+Engine::prototype_hash_function(const SCAN_Name& request,
+                                Algorithm_Factory& af) const
    {
-   return lookup_algo(cache_of_hf, global_state().deref_alias(name),
-                      this, &Engine::find_hash);
+   // This needs to respect provider settings
+   HashFunction* algo = cache_of_hf->get(request.as_string());
+   if(algo)
+      return algo;
+
+   // cache miss: do full search
+   algo = find_hash(request, af);
+   if(algo)
+      cache_of_hf->add(algo, request.as_string());
+
+   return algo;
    }
 
 /*************************************************

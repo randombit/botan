@@ -227,7 +227,7 @@ void Library_State::initialize(const InitializerOptions& args,
 
    load_default_config();
 
-   algorithm_factory = new Algorithm_Factory(get_mutex());
+   algorithm_factory = new Algorithm_Factory;
 
    std::vector<Engine*> mod_engines = modules.engines();
    for(u32bit j = 0; j != mod_engines.size(); ++j)

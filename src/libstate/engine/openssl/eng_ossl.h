@@ -16,6 +16,11 @@ namespace Botan {
 class BOTAN_DLL OpenSSL_Engine : public Engine
    {
    public:
+      /**
+      * Return the provider name ("openssl")
+      */
+      std::string provider_name() const { return "openssl"; }
+
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
       IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,
                           const BigInt&, const BigInt&, const BigInt&,
@@ -45,7 +50,7 @@ class BOTAN_DLL OpenSSL_Engine : public Engine
    private:
       BlockCipher* find_block_cipher(const std::string&) const;
       StreamCipher* find_stream_cipher(const std::string&) const;
-      HashFunction* find_hash(const std::string&) const;
+      HashFunction* find_hash(const SCAN_Name&, Algorithm_Factory&) const;
    };
 
 }

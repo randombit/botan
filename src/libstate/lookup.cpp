@@ -10,6 +10,37 @@
 namespace Botan {
 
 /*************************************************
+* Acquire a hash function                        *
+*************************************************/
+const HashFunction* retrieve_hash(Library_State& libstate,
+                                  const std::string& name)
+   {
+   return libstate.algo_factory().prototype_hash_function(name);
+   }
+
+/*************************************************
+* Get a hash function by name                    *
+*************************************************/
+HashFunction* get_hash(const std::string& algo_spec)
+   {
+   const HashFunction* hash =
+      global_state().algo_factory().prototype_hash_function(algo_spec);
+
+   if(hash)
+      return hash->clone();
+
+   throw Algorithm_Not_Found(algo_spec);
+   }
+
+/*************************************************
+* Query if Botan has the named hash function     *
+*************************************************/
+bool have_hash(const std::string& algo_spec)
+   {
+   return global_state().algo_factory().prototype_hash_function(algo_spec);
+   }
+
+/*************************************************
 * Get a block cipher by name                     *
 *************************************************/
 BlockCipher* get_block_cipher(const std::string& name)
@@ -28,17 +59,6 @@ StreamCipher* get_stream_cipher(const std::string& name)
    const StreamCipher* cipher = retrieve_stream_cipher(global_state(), name);
    if(cipher)
       return cipher->clone();
-   throw Algorithm_Not_Found(name);
-   }
-
-/*************************************************
-* Get a hash function by name                    *
-*************************************************/
-HashFunction* get_hash(const std::string& name)
-   {
-   const HashFunction* hash = retrieve_hash(global_state(), name);
-   if(hash)
-      return hash->clone();
    throw Algorithm_Not_Found(name);
    }
 
@@ -83,14 +103,6 @@ bool have_block_cipher(const std::string& name)
 bool have_stream_cipher(const std::string& name)
    {
    return (retrieve_stream_cipher(global_state(), name) != 0);
-   }
-
-/*************************************************
-* Query if Botan has the named hash function     *
-*************************************************/
-bool have_hash(const std::string& name)
-   {
-   return (retrieve_hash(global_state(), name) != 0);
    }
 
 /*************************************************
@@ -213,7 +225,6 @@ u32bit keylength_multiple_of(const std::string& name)
    throw Algorithm_Not_Found(name);
    }
 
-
 /*************************************************
 * Acquire a block cipher                         *
 *************************************************/
@@ -243,25 +254,6 @@ const StreamCipher* retrieve_stream_cipher(Library_State& libstate,
    while(const Engine* engine = i.next())
       {
       const StreamCipher* algo = engine->stream_cipher(name);
-      if(algo)
-         return algo;
-      }
-
-   return 0;
-   }
-
-/*************************************************
-* Acquire a hash function                        *
-*************************************************/
-const HashFunction* retrieve_hash(Library_State& libstate,
-                                  const std::string& name)
-   {
-   //return libstate.algo_factory().prototype_hash_function(name);
-   Algorithm_Factory::Engine_Iterator i(libstate.algo_factory());
-
-   while(const Engine* engine = i.next())
-      {
-      const HashFunction* algo = engine->hash(name);
       if(algo)
          return algo;
       }
