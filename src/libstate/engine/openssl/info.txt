@@ -13,13 +13,11 @@ libstate
 </requires>
 
 <add>
-arc4_openssl.h
 arc4_openssl.cpp
 bn_powm.cpp
 bn_wrap.cpp
 bn_wrap.h
 eng_ossl.h
-eng_ossl.cpp
 ossl_bc.cpp
 ossl_dh.cpp
 ossl_dsa.cpp

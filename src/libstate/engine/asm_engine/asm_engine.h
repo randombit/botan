@@ -15,7 +15,8 @@ class BOTAN_DLL Assembler_Engine : public Engine
    public:
       std::string provider_name() const { return "asm"; }
    private:
-      //BlockCipher* find_block_cipher(const std::string&) const;
+      BlockCipher* find_block_cipher(const SCAN_Name&,
+                                     Algorithm_Factory&) const;
 
       HashFunction* find_hash(const SCAN_Name& reqeust,
                               Algorithm_Factory&) const;

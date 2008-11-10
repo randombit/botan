@@ -162,7 +162,7 @@ void EVP_BlockCipher::clear() throw()
 *************************************************/
 BlockCipher*
 OpenSSL_Engine::find_block_cipher(const SCAN_Name& request,
-                                  Algorithm_Factory&)
+                                  Algorithm_Factory&) const
    {
 #define HANDLE_EVP_CIPHER(NAME, EVP)                            \
    if(request.algo_name() == NAME && request.arg_count() == 0)  \

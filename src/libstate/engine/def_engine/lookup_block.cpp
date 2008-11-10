@@ -81,10 +81,6 @@
   #include <botan/serpent.h>
 #endif
 
-#if defined(BOTAN_HAS_SERPENT_IA32)
-  #include <botan/serp_ia32.h>
-#endif
-
 #if defined(BOTAN_HAS_SKIPJACK)
   #include <botan/skipjack.h>
 #endif
@@ -202,10 +198,7 @@ Default_Engine::find_block_cipher(const SCAN_Name& request,
       return new SEED;
 #endif
 
-#if defined(BOTAN_HAS_SERPENT_IA32)
-   if(request.algo_name() == "Serpent")
-      return new Serpent_IA32;
-#elif defined(BOTAN_HAS_SERPENT)
+#if defined(BOTAN_HAS_SERPENT)
    if(request.algo_name() == "Serpent")
       return new Serpent;
 #endif
