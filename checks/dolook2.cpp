@@ -6,19 +6,22 @@
 #include <botan/lookup.h>
 #include <botan/filters.h>
 
+#include <botan/hmac.h>
+#include <botan/aes.h>
+#include <botan/sha2_32.h>
+#include <botan/sha2_64.h>
+
 #if defined(BOTAN_HAS_RANDPOOL)
   #include <botan/randpool.h>
 #endif
 
 #if defined(BOTAN_HAS_HMAC_RNG)
   #include <botan/hmac_rng.h>
-  #include <botan/hmac.h>
-  #include <botan/sha2_32.h>
-  #include <botan/sha2_64.h>
 #endif
 
 #if defined(BOTAN_HAS_X931_RNG)
   #include <botan/x931_rng.h>
+  #include <botan/des.h>
 #endif
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
@@ -51,6 +54,7 @@ class S2K_Filter : public Filter
          outlen = o;
          iterations = i;
          salt = s.bits_of();
+
          }
       ~S2K_Filter() { delete s2k; }
    private:
@@ -136,24 +140,23 @@ Filter* lookup_rng(const std::string& algname,
 
 #if defined(BOTAN_HAS_X931_RNG)
    if(algname == "X9.31-RNG(TripleDES)")
-      prng = new ANSI_X931_RNG(get_block_cipher("TripleDES"),
+      prng = new ANSI_X931_RNG(new TripleDES,
                                new Fixed_Output_RNG(decode_hex(key)));
    else if(algname == "X9.31-RNG(AES-128)")
-      prng = new ANSI_X931_RNG(get_block_cipher("AES-128"),
+      prng = new ANSI_X931_RNG(new AES_128,
                                new Fixed_Output_RNG(decode_hex(key)));
    else if(algname == "X9.31-RNG(AES-192)")
-      prng = new ANSI_X931_RNG(get_block_cipher("AES-192"),
+      prng = new ANSI_X931_RNG(new AES_192,
                                new Fixed_Output_RNG(decode_hex(key)));
    else if(algname == "X9.31-RNG(AES-256)")
-      prng = new ANSI_X931_RNG(get_block_cipher("AES-256"),
+      prng = new ANSI_X931_RNG(new AES_256,
                                new Fixed_Output_RNG(decode_hex(key)));
 #endif
 
 #if defined(BOTAN_HAS_RANDPOOL)
    if(algname == "Randpool")
       {
-      prng = new Randpool(get_block_cipher("AES-256"),
-                          get_mac("HMAC(SHA-256)"));
+      prng = new Randpool(new AES_256, new HMAC(new SHA_256));
 
       prng->add_entropy(reinterpret_cast<const byte*>(key.c_str()),
                         key.length());
@@ -165,9 +168,15 @@ Filter* lookup_rng(const std::string& algname,
    // defaults, so benchmark reflects real-world performance (maybe)
    if(algname == "X9.31-RNG")
       {
-      RandomNumberGenerator* hmac_rng =
+      RandomNumberGenerator* rng =
+#if defined(BOTAN_HAS_HMAC_RNG)
          new HMAC_RNG(new HMAC(new SHA_512), new HMAC(new SHA_256));
-      prng = new ANSI_X931_RNG(get_block_cipher("AES-256"), hmac_rng);
+#elif defined(BOTAN_HAS_RANDPOOL)
+         new Randpool(new AES_256, new HMAC(new SHA_256));
+#endif
+
+      prng = new ANSI_X931_RNG(new AES_256, rng);
+
       }
 #endif
 
