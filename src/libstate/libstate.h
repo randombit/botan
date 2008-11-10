@@ -26,9 +26,7 @@ class BOTAN_DLL Library_State
       Library_State();
       ~Library_State();
 
-      void initialize(const InitializerOptions&, Modules&);
-
-      void load(Modules&);
+      void initialize(const InitializerOptions&);
 
       Algorithm_Factory& algo_factory();
 

@@ -25,7 +25,5 @@ libstate.h
 look_add.h
 lookup.cpp
 lookup.h
-modules.cpp
-modules.h
 policy.cpp
 </add>

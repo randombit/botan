@@ -82,7 +82,7 @@ class BOTAN_DLL InitializerOptions
    };
 
 /**
-* This class represents the Library Initialization/Shutdown Object. It has to 
+* This class represents the Library Initialization/Shutdown Object. It has to
 * exceed the lifetime of any Botan object used in an application.
 */
 class BOTAN_DLL LibraryInitializer
@@ -90,7 +90,6 @@ class BOTAN_DLL LibraryInitializer
    public:
       static void initialize(const std::string& = "");
       static void initialize(const InitializerOptions&);
-      static void initialize(const InitializerOptions&, class Modules&);
       static void deinitialize();
 
       /**

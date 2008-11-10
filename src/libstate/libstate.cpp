@@ -4,12 +4,38 @@
 *************************************************/
 
 #include <botan/libstate.h>
-#include <botan/modules.h>
 #include <botan/engine.h>
 #include <botan/stl_util.h>
 #include <botan/mutex.h>
+#include <botan/mux_noop.h>
 #include <botan/charset.h>
+#include <botan/defalloc.h>
+#include <botan/def_eng.h>
 #include <algorithm>
+
+#if defined(BOTAN_HAS_MUTEX_PTHREAD)
+  #include <botan/mux_pthr.h>
+#elif defined(BOTAN_HAS_MUTEX_WIN32)
+  #include <botan/mux_win32.h>
+#elif defined(BOTAN_HAS_MUTEX_QT)
+  #include <botan/mux_qt.h>
+#endif
+
+#if defined(BOTAN_HAS_ALLOC_MMAP)
+  #include <botan/mmap_mem.h>
+#endif
+
+#if defined(BOTAN_HAS_ENGINE_ASSEMBLER)
+  #include <botan/asm_engine.h>
+#endif
+
+#if defined(BOTAN_HAS_ENGINE_GNU_MP)
+  #include <botan/eng_gmp.h>
+#endif
+
+#if defined(BOTAN_HAS_ENGINE_OPENSSL)
+  #include <botan/eng_ossl.h>
+#endif
 
 #if defined(BOTAN_HAS_SELFTEST)
   #include <botan/selftest.h>
@@ -202,35 +228,59 @@ Algorithm_Factory& Library_State::algo_factory()
 /*************************************************
 * Load a set of modules                          *
 *************************************************/
-void Library_State::initialize(const InitializerOptions& args,
-                               Modules& modules)
+void Library_State::initialize(const InitializerOptions& args)
    {
    if(mutex_factory)
       throw Invalid_State("Library_State has already been initialized");
 
-   mutex_factory = modules.mutex_factory(args.thread_safe());
+   if(args.thread_safe() == false)
+      {
+      mutex_factory = new Noop_Mutex_Factory;
+      }
+   else
+      {
+#if defined(BOTAN_HAS_MUTEX_PTHREAD)
+      mutex_factory = new Pthread_Mutex_Factory;
+#elif defined(BOTAN_HAS_MUTEX_WIN32)
+      mutex_factory = new Win32_Mutex_Factory;
+#elif defined(BOTAN_HAS_MUTEX_QT)
+      mutex_factory Qt_Mutex_Factory;
+#else
+      throw Invalid_State("Could not find a thread-safe mutex object to use");
+#endif
+      }
 
-   if(!mutex_factory)
-      throw Invalid_State("Could not acquire a mutex module at init");
-
-   allocator_lock = get_mutex();
-   config_lock = get_mutex();
+   allocator_lock = mutex_factory->make();
+   config_lock = mutex_factory->make();
 
    cached_default_allocator = 0;
 
-   std::vector<Allocator*> mod_allocs = modules.allocators(mutex_factory);
-   for(u32bit j = 0; j != mod_allocs.size(); ++j)
-      add_allocator(mod_allocs[j]);
+   add_allocator(new Locking_Allocator(mutex_factory->make()));
+   add_allocator(new Malloc_Allocator);
+   set_default_allocator("locking");
 
-   set_default_allocator(modules.default_allocator());
+#if defined(BOTAN_HAS_ALLOC_MMAP)
+   add_allocator(new MemoryMapping_Allocator(mutex_factory->make()));
+   set_default_allocator("mmap");
+#endif
 
    load_default_config();
 
    algorithm_factory = new Algorithm_Factory;
 
-   std::vector<Engine*> mod_engines = modules.engines();
-   for(u32bit j = 0; j != mod_engines.size(); ++j)
-      algorithm_factory->add_engine(mod_engines[j]);
+#if defined(BOTAN_HAS_ENGINE_GNU_MP)
+      algorithm_factory->add_engine(new GMP_Engine);
+#endif
+
+#if defined(BOTAN_HAS_ENGINE_OPENSSL)
+      algorithm_factory->add_engine(new OpenSSL_Engine);
+#endif
+
+#if defined(BOTAN_HAS_ENGINE_ASSEMBLER)
+      algorithm_factory->add_engine(new Assembler_Engine);
+#endif
+
+   algorithm_factory->add_engine(new Default_Engine);
 
 #if defined(BOTAN_HAS_SELFTEST)
    if(args.fips_mode() || args.self_test())
