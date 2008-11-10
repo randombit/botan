@@ -11,5 +11,6 @@ ecb.h
 
 <requires>
 modes
+mode_pad
 </requires>
 
