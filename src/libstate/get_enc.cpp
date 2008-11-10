@@ -76,6 +76,10 @@
   #include <botan/prf_tls.h>
 #endif
 
+#if defined(BOTAN_HAS_CIPHER_MODE_PADDING)
+  #include <botan/mode_pad.h>
+#endif
+
 namespace Botan {
 
 /*************************************************
@@ -98,6 +102,30 @@ S2K* get_s2k(const std::string& algo_spec)
 #if defined(BOTAN_HAS_PGPS2K)
    if(request.algo_name() == "OpenPGP-S2K" && request.arg_count() == 1)
       return new OpenPGP_S2K(get_hash(request.argument(0)));
+#endif
+
+   throw Algorithm_Not_Found(algo_spec);
+   }
+
+/*************************************************
+* Get a block cipher padding method by name      *
+*************************************************/
+BlockCipherModePaddingMethod* get_bc_pad(const std::string& algo_spec)
+   {
+   SCAN_Name request(algo_spec);
+
+#if defined(BOTAN_HAS_CIPHER_MODE_PADDING)
+   if(request.algo_name() == "PKCS7")
+      return new PKCS7_Padding;
+
+   if(request.algo_name() == "OneAndZeros")
+      return new OneAndZeros_Padding;
+
+   if(request.algo_name() == "X9.23")
+      return new ANSI_X923_Padding;
+
+   if(request.algo_name() == "NoPadding")
+      return new Null_Padding;
 #endif
 
    throw Algorithm_Not_Found(algo_spec);

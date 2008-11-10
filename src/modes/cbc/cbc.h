@@ -20,6 +20,8 @@ class BOTAN_DLL CBC_Encryption : public BlockCipherMode
       CBC_Encryption(BlockCipher*, const BlockCipherModePaddingMethod*);
       CBC_Encryption(BlockCipher*, const BlockCipherModePaddingMethod*,
                      const SymmetricKey&, const InitializationVector&);
+
+      ~CBC_Encryption() { delete padder; }
    private:
       std::string name() const;
       void write(const byte[], u32bit);
@@ -36,6 +38,8 @@ class BOTAN_DLL CBC_Decryption : public BlockCipherMode
       CBC_Decryption(BlockCipher*, const BlockCipherModePaddingMethod*);
       CBC_Decryption(BlockCipher*, const BlockCipherModePaddingMethod*,
                      const SymmetricKey&, const InitializationVector&);
+
+      ~CBC_Decryption() { delete padder; }
    private:
       std::string name() const;
       void write(const byte[], u32bit);

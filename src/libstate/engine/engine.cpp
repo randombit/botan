@@ -100,16 +100,6 @@ const MessageAuthenticationCode* Engine::mac(const std::string& name) const
    }
 
 /*************************************************
-* Acquire a cipher padding object                *
-*************************************************/
-const BlockCipherModePaddingMethod*
-Engine::bc_pad(const std::string& name) const
-   {
-   return lookup_algo(cache_of_bc_pad, global_state().deref_alias(name),
-                      this, &Engine::find_bc_pad);
-   }
-
-/*************************************************
 * Add a block cipher to the lookup table         *
 *************************************************/
 void Engine::add_algorithm(BlockCipher* algo) const
@@ -142,14 +132,6 @@ void Engine::add_algorithm(MessageAuthenticationCode* algo) const
    }
 
 /*************************************************
-* Add a cipher pad method to the lookup table    *
-*************************************************/
-void Engine::add_algorithm(BlockCipherModePaddingMethod* algo) const
-   {
-   cache_of_bc_pad->add(algo);
-   }
-
-/*************************************************
 * Create an Engine                               *
 *************************************************/
 Engine::Engine()
@@ -158,8 +140,6 @@ Engine::Engine()
    cache_of_sc = new Algorithm_Cache_Impl<StreamCipher>();
    cache_of_hf = new Algorithm_Cache_Impl<HashFunction>();
    cache_of_mac = new Algorithm_Cache_Impl<MessageAuthenticationCode>();
-   cache_of_bc_pad =
-      new Algorithm_Cache_Impl<BlockCipherModePaddingMethod>();
    }
 
 /*************************************************
@@ -171,7 +151,6 @@ Engine::~Engine()
    delete cache_of_sc;
    delete cache_of_hf;
    delete cache_of_mac;
-   delete cache_of_bc_pad;
    }
 
 namespace Engine_Core {

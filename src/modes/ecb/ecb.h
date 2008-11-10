@@ -20,6 +20,7 @@ class BOTAN_DLL ECB : public BlockCipherMode
    protected:
       ECB(BlockCipher* ciph, const BlockCipherModePaddingMethod* pad) :
          BlockCipherMode(ciph, "ECB", 0), padder(pad) {}
+      ~ECB() { delete padder; }
 
       std::string name() const;
       const BlockCipherModePaddingMethod* padder;

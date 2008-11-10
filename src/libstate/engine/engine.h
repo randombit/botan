@@ -119,8 +119,6 @@ class BOTAN_DLL Engine
       const StreamCipher* stream_cipher(const std::string&) const;
       const HashFunction* hash(const std::string&) const;
       const MessageAuthenticationCode* mac(const std::string&) const;
-      const class BlockCipherModePaddingMethod*
-         bc_pad(const std::string&) const;
 
       virtual bool can_add_algorithms() { return false; }
 
@@ -128,7 +126,6 @@ class BOTAN_DLL Engine
       void add_algorithm(StreamCipher*) const;
       void add_algorithm(HashFunction*) const;
       void add_algorithm(MessageAuthenticationCode*) const;
-      void add_algorithm(class BlockCipherModePaddingMethod*) const;
 
       Engine();
       virtual ~Engine();
@@ -143,10 +140,6 @@ class BOTAN_DLL Engine
          { return 0; }
 
       virtual MessageAuthenticationCode* find_mac(const std::string&) const
-         { return 0; }
-
-      virtual class BlockCipherModePaddingMethod*
-         find_bc_pad(const std::string&) const
          { return 0; }
 
       template<typename T>
@@ -169,7 +162,6 @@ class BOTAN_DLL Engine
       Algorithm_Cache<StreamCipher>* cache_of_sc;
       Algorithm_Cache<HashFunction>* cache_of_hf;
       Algorithm_Cache<MessageAuthenticationCode>* cache_of_mac;
-      Algorithm_Cache<BlockCipherModePaddingMethod>* cache_of_bc_pad;
    };
 
 namespace Engine_Core {

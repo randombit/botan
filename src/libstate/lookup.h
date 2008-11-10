@@ -39,9 +39,6 @@ retrieve_hash(Library_State&, const std::string&);
 BOTAN_DLL const MessageAuthenticationCode*
 retrieve_mac(Library_State&, const std::string&);
 
-BOTAN_DLL const BlockCipherModePaddingMethod*
-retrieve_bc_pad(Library_State&, const std::string&);
-
 /*************************************************
 * Get an algorithm object                        *
 *************************************************/
@@ -85,12 +82,11 @@ BOTAN_DLL MessageAuthenticationCode* get_mac(const std::string& name);
 BOTAN_DLL S2K* get_s2k(const std::string& name);
 
 /**
-* Block cipher padding mode factory/retrieval method.
+* Block cipher padding mode factory method.
 * @param name the name of the desired block cipher padding mode
 * @return the block cipher padding mode object
 */
-BOTAN_DLL const BlockCipherModePaddingMethod*
-   get_bc_pad(const std::string& name);
+BOTAN_DLL BlockCipherModePaddingMethod* get_bc_pad(const std::string& name);
 
 /*************************************************
 * Get an EMSA/EME/KDF/MGF function               *

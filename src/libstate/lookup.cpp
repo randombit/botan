@@ -54,19 +54,6 @@ MessageAuthenticationCode* get_mac(const std::string& name)
    }
 
 /*************************************************
-* Get a block cipher padding method by name      *
-*************************************************/
-const BlockCipherModePaddingMethod* get_bc_pad(const std::string& name)
-   {
-   const BlockCipherModePaddingMethod* pad =
-      retrieve_bc_pad(global_state(), name);
-
-   if(pad)
-      return pad;
-   throw Algorithm_Not_Found(name);
-   }
-
-/*************************************************
 * Query if an algorithm exists                   *
 *************************************************/
 bool have_algorithm(const std::string& name)
@@ -300,24 +287,6 @@ const MessageAuthenticationCode* retrieve_mac(Library_State& libstate,
    }
 
 /*************************************************
-* Retrieve a block cipher padding method         *
-*************************************************/
-const BlockCipherModePaddingMethod* retrieve_bc_pad(Library_State& libstate,
-                                                    const std::string& name)
-   {
-   Library_State::Engine_Iterator i(libstate);
-
-   while(const Engine* engine = i.next())
-      {
-      const BlockCipherModePaddingMethod* algo = engine->bc_pad(name);
-      if(algo)
-         return algo;
-      }
-
-   return 0;
-   }
-
-/*************************************************
 * Add a new block cipher                         *
 *************************************************/
 void add_algorithm(Library_State& libstate, BlockCipher* algo)
@@ -379,26 +348,6 @@ void add_algorithm(Library_State& libstate, HashFunction* algo)
 *************************************************/
 void add_algorithm(Library_State& libstate,
                    MessageAuthenticationCode* algo)
-   {
-   Library_State::Engine_Iterator i(libstate);
-
-   while(Engine* engine = i.next())
-      {
-      if(engine->can_add_algorithms())
-         {
-         engine->add_algorithm(algo);
-         return;
-         }
-      }
-
-   throw Invalid_State("add_algorithm: Couldn't find the Default_Engine");
-   }
-
-/*************************************************
-* Add a padding method to the lookup table       *
-*************************************************/
-void add_algorithm(Library_State& libstate,
-                   BlockCipherModePaddingMethod* algo)
    {
    Library_State::Engine_Iterator i(libstate);
 

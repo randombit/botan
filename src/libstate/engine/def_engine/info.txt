@@ -9,7 +9,6 @@ def_eng.h
 def_mode.cpp
 def_pk_ops.cpp
 def_powm.cpp
-lookup_bc_pad.cpp
 lookup_block.cpp
 lookup_hash.cpp
 lookup_mac.cpp
