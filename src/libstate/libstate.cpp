@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/libstate.h>
+#include <botan/init.h>
 #include <botan/engine.h>
 #include <botan/stl_util.h>
 #include <botan/mutex.h>
@@ -37,10 +38,6 @@
   #include <botan/eng_ossl.h>
 #endif
 
-#if defined(BOTAN_HAS_SELFTEST)
-  #include <botan/selftest.h>
-#endif
-
 namespace Botan {
 
 /*************************************************
@@ -57,8 +54,12 @@ Library_State* global_lib_state = 0;
 *************************************************/
 Library_State& global_state()
    {
+   /* Lazy initialization. Botan still needs to be deinitialized later
+      on or memory might leak.
+   */
    if(!global_lib_state)
-      LibraryInitializer::initialize();
+      LibraryInitializer::initialize(true);
+
    return (*global_lib_state);
    }
 

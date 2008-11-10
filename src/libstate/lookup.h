@@ -82,13 +82,6 @@ BOTAN_DLL MessageAuthenticationCode* get_mac(const std::string& name);
 */
 BOTAN_DLL S2K* get_s2k(const std::string& name);
 
-/**
-* Block cipher padding mode factory method.
-* @param name the name of the desired block cipher padding mode
-* @return the block cipher padding mode object
-*/
-BOTAN_DLL BlockCipherModePaddingMethod* get_bc_pad(const std::string& name);
-
 /*************************************************
 * Get an EMSA/EME/KDF/MGF function               *
 *************************************************/

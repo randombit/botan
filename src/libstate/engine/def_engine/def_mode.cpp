@@ -6,7 +6,9 @@
 #include <botan/def_eng.h>
 #include <botan/parsing.h>
 #include <botan/filters.h>
+#include <botan/libstate.h>
 #include <botan/lookup.h>
+#include <botan/mode_pad.h>
 #include <memory>
 
 #if defined(BOTAN_HAS_ECB)
@@ -39,6 +41,34 @@
 
 namespace Botan {
 
+namespace {
+
+/**
+* Get a block cipher padding method by name
+*/
+BlockCipherModePaddingMethod* get_bc_pad(const std::string& algo_spec)
+   {
+   SCAN_Name request(algo_spec);
+
+#if defined(BOTAN_HAS_CIPHER_MODE_PADDING)
+   if(request.algo_name() == "PKCS7")
+      return new PKCS7_Padding;
+
+   if(request.algo_name() == "OneAndZeros")
+      return new OneAndZeros_Padding;
+
+   if(request.algo_name() == "X9.23")
+      return new ANSI_X923_Padding;
+
+   if(request.algo_name() == "NoPadding")
+      return new Null_Padding;
+#endif
+
+   throw Algorithm_Not_Found(algo_spec);
+   }
+
+}
+
 /*************************************************
 * Get a cipher object                            *
 *************************************************/
@@ -51,17 +81,16 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
 
    const std::string cipher_name = algo_parts[0];
 
-   if(have_stream_cipher(cipher_name))
-      {
-      if(algo_parts.size() == 1)
-         return new StreamCipher_Filter(cipher_name);
-      return 0;
-      }
+   Algorithm_Factory& af = global_state().algo_factory();
 
-   if(!have_block_cipher(cipher_name))
-      return 0;
+   // check if it is a stream cipher first (easy case)
+   const StreamCipher* stream_cipher = af.prototype_stream_cipher(cipher_name);
+   if(stream_cipher)
+      return new StreamCipher_Filter(stream_cipher->clone());
 
-   std::auto_ptr<BlockCipher> cipher(get_block_cipher(cipher_name));
+   const BlockCipher* block_cipher = af.prototype_block_cipher(cipher_name);
+   if(!block_cipher)
+      return 0;
 
    if(algo_parts.size() != 2 && algo_parts.size() != 3)
       return 0;
@@ -75,7 +104,7 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
       std::vector<std::string> algo_info = parse_algorithm_name(mode);
       mode = algo_info[0];
       if(algo_info.size() == 1)
-         bits = 8*cipher->BLOCK_SIZE;
+         bits = 8*block_cipher->BLOCK_SIZE;
       else if(algo_info.size() == 2)
          bits = to_u32bit(algo_info[1]);
       else
@@ -93,47 +122,35 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
    else if((mode != "CBC" && mode != "ECB") && padding != "NoPadding")
       throw Invalid_Algorithm_Name(algo_spec);
 
-   if(mode == "OFB")
-      {
 #if defined(BOTAN_HAS_OFB)
-      return new OFB(cipher.release());
-#else
-      return 0;
+   if(mode == "OFB")
+      return new OFB(block_cipher->clone());
 #endif
-      }
 
-   if(mode == "CTR-BE")
-      {
 #if defined(BOTAN_HAS_CTR)
-      return new CTR_BE(cipher.release());
-#else
-      return 0;
+   if(mode == "CTR-BE")
+      return new CTR_BE(block_cipher->clone());
 #endif
-      }
 
+#if defined(BOTAN_HAS_ECB)
    if(mode == "ECB")
       {
-#if defined(BOTAN_HAS_ECB)
       if(direction == ENCRYPTION)
-         return new ECB_Encryption(cipher.release(), get_bc_pad(padding));
+         return new ECB_Encryption(block_cipher->clone(), get_bc_pad(padding));
       else
-         return new ECB_Decryption(cipher.release(), get_bc_pad(padding));
-#else
-         return 0;
-#endif
+         return new ECB_Decryption(block_cipher->clone(), get_bc_pad(padding));
       }
+#endif
 
+#if defined(BOTAN_HAS_CFB)
    if(mode == "CFB")
       {
-#if defined(BOTAN_HAS_CFB)
       if(direction == ENCRYPTION)
-         return new CFB_Encryption(cipher.release(), bits);
+         return new CFB_Encryption(block_cipher->clone(), bits);
       else
-         return new CFB_Decryption(cipher.release(), bits);
-#else
-      return 0;
-#endif
+         return new CFB_Decryption(block_cipher->clone(), bits);
       }
+#endif
 
    if(mode == "CBC")
       {
@@ -141,9 +158,9 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
          {
 #if defined(BOTAN_HAS_CTS)
          if(direction == ENCRYPTION)
-            return new CTS_Encryption(cipher.release());
+            return new CTS_Encryption(block_cipher->clone());
          else
-            return new CTS_Decryption(cipher.release());
+            return new CTS_Decryption(block_cipher->clone());
 #else
          return 0;
 #endif
@@ -151,27 +168,25 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
 
 #if defined(BOTAN_HAS_CBC)
       if(direction == ENCRYPTION)
-         return new CBC_Encryption(cipher.release(),
+         return new CBC_Encryption(block_cipher->clone(),
                                    get_bc_pad(padding));
       else
-         return new CBC_Decryption(cipher.release(),
+         return new CBC_Decryption(block_cipher->clone(),
                                    get_bc_pad(padding));
 #else
       return 0;
 #endif
       }
 
+#if defined(BOTAN_HAS_EAX)
    if(mode == "EAX")
       {
-#if defined(BOTAN_HAS_EAX)
       if(direction == ENCRYPTION)
-         return new EAX_Encryption(cipher.release(), bits);
+         return new EAX_Encryption(block_cipher->clone(), bits);
       else
-         return new EAX_Decryption(cipher.release(), bits);
-#else
-      return 0;
-#endif
+         return new EAX_Decryption(block_cipher->clone(), bits);
       }
+#endif
 
    throw Algorithm_Not_Found("get_mode: " + cipher_name + "/" +
                              mode + "/" + padding);

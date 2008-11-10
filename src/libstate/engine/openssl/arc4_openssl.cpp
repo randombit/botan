@@ -3,7 +3,7 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/arc4_openssl.h>
+#include <botan/eng_ossl.h>
 #include <botan/parsing.h>
 #include <openssl/rc4.h>
 
