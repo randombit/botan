@@ -13,6 +13,8 @@ libstate
 </requires>
 
 <add>
+arc4_openssl.h
+arc4_openssl.cpp
 bn_powm.cpp
 bn_wrap.cpp
 bn_wrap.h
@@ -24,5 +26,4 @@ ossl_elg.cpp
 ossl_if.cpp
 ossl_md.cpp
 ossl_nr.cpp
-ossl_rc4.cpp
 </add>
