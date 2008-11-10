@@ -13,8 +13,6 @@ namespace Botan {
 class ARC4_OpenSSL : public StreamCipher
    {
    public:
-      std::string provider() const { return "openssl"; }
-
       void clear() throw() { std::memset(&state, 0, sizeof(state)); }
       std::string name() const;
       StreamCipher* clone() const { return new ARC4_OpenSSL(SKIP); }
