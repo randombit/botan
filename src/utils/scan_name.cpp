@@ -13,6 +13,9 @@ namespace Botan {
 SCAN_Name::SCAN_Name(const std::string& algo_spec,
                      const std::string& prov_names)
    {
+   orig_algo_spec = algo_spec;
+   orig_providers = prov_names;
+
    name = parse_algorithm_name(algo_spec);
    for(u32bit i = 0; i != name.size(); ++i)
       name[i] = global_state().deref_alias(name[i]);

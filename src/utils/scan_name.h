@@ -61,7 +61,10 @@ class SCAN_Name
       */
       u32bit argument_as_u32bit(u32bit i, u32bit def_value) const;
 
+      std::string as_string() const { return orig_algo_spec; }
+      std::string providers_string() const { return orig_providers; }
    private:
+      std::string orig_algo_spec, orig_providers;
       std::vector<std::string> name;
       std::set<std::string> providers;
    };
