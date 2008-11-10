@@ -61,8 +61,11 @@ class BOTAN_DLL Default_Engine : public Engine
 
       Keyed_Filter* get_cipher(const std::string&, Cipher_Dir);
    private:
-      BlockCipher* find_block_cipher(const std::string&) const;
-      StreamCipher* find_stream_cipher(const std::string&) const;
+      BlockCipher* find_block_cipher(const SCAN_Name&,
+                                     Algorithm_Factory&) const;
+
+      StreamCipher* find_stream_cipher(const SCAN_Name&,
+                                       Algorithm_Factory&) const;
 
       HashFunction* find_hash(const SCAN_Name& reqeust,
                               Algorithm_Factory&) const;

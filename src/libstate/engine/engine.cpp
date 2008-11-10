@@ -63,19 +63,41 @@ class Algorithm_Cache_Impl : public Engine::Algorithm_Cache<T>
 /*************************************************
 * Acquire a BlockCipher                          *
 *************************************************/
-const BlockCipher* Engine::block_cipher(const std::string& name) const
+const BlockCipher*
+Engine::prototype_block_cipher(const SCAN_Name& request,
+                               Algorithm_Factory& af) const
    {
-   return lookup_algo(cache_of_bc, global_state().deref_alias(name),
-                      this, &Engine::find_block_cipher);
+   // This needs to respect provider settings
+   BlockCipher* algo = cache_of_bc->get(request.as_string());
+   if(algo)
+      return algo;
+
+   // cache miss: do full search
+   algo = find_block_cipher(request, af);
+   if(algo)
+      cache_of_bc->add(algo, request.as_string());
+
+   return algo;
    }
 
 /*************************************************
 * Acquire a StreamCipher                         *
 *************************************************/
-const StreamCipher* Engine::stream_cipher(const std::string& name) const
+const StreamCipher*
+Engine::prototype_stream_cipher(const SCAN_Name& request,
+                                Algorithm_Factory& af) const
    {
-   return lookup_algo(cache_of_sc, global_state().deref_alias(name),
-                      this, &Engine::find_stream_cipher);
+   // This needs to respect provider settings
+   StreamCipher* algo = cache_of_sc->get(request.as_string());
+   if(algo)
+      return algo;
+
+   // cache miss: do full search
+   algo = find_stream_cipher(request, af);
+   if(algo)
+      cache_of_sc->add(algo, request.as_string());
+
+   return algo;
    }
 
 /*************************************************

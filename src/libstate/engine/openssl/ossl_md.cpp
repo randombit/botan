@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/eng_ossl.h>
-#include <botan/scan_name.h>
 #include <openssl/evp.h>
 
 namespace Botan {

@@ -13,6 +13,8 @@
 
 namespace Botan {
 
+class BlockCipher;
+class StreamCipher;
 class HashFunction;
 class MessageAuthenticationCode;
 
@@ -36,6 +38,16 @@ class BOTAN_DLL Algorithm_Factory
             u32bit n;
          };
       friend class Engine_Iterator;
+
+      // Block cipher operations
+      const BlockCipher* prototype_block_cipher(const SCAN_Name& request);
+      BlockCipher* make_block_cipher(const SCAN_Name& request);
+      void add_block_cipher(BlockCipher* hash);
+
+      // Stream cipher operations
+      const StreamCipher* prototype_stream_cipher(const SCAN_Name& request);
+      StreamCipher* make_stream_cipher(const SCAN_Name& request);
+      void add_stream_cipher(StreamCipher* hash);
 
       // Hash function operations
       const HashFunction* prototype_hash_function(const SCAN_Name& request);

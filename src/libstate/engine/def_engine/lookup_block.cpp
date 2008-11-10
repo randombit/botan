@@ -6,6 +6,7 @@
 #include <botan/def_eng.h>
 #include <botan/lookup.h>
 #include <botan/scan_name.h>
+#include <botan/algo_factory.h>
 #include <memory>
 
 #if defined(BOTAN_HAS_AES)
@@ -112,9 +113,9 @@ namespace Botan {
 * Look for an algorithm with this name           *
 *************************************************/
 BlockCipher*
-Default_Engine::find_block_cipher(const std::string& algo_spec) const
+Default_Engine::find_block_cipher(const SCAN_Name& request,
+                                  Algorithm_Factory& af) const
    {
-   SCAN_Name request(algo_spec);
 
 #if defined(BOTAN_HAS_AES)
    if(request.algo_name() == "AES")
@@ -239,9 +240,11 @@ Default_Engine::find_block_cipher(const std::string& algo_spec) const
 #if defined(BOTAN_HAS_LUBY_RACKOFF)
    if(request.algo_name() == "Luby-Rackoff" && request.arg_count() == 1)
       {
-      HashFunction* hash = get_hash(request.argument(0));
+      const HashFunction* hash =
+         af.make_hash_function(request.argument(0));
+
       if(hash)
-         return new LubyRackoff(hash);
+         return new LubyRackoff(hash->clone());
       }
 #endif
 
@@ -250,15 +253,15 @@ Default_Engine::find_block_cipher(const std::string& algo_spec) const
       {
       const u32bit block_size = request.argument_as_u32bit(2, 1024);
 
-      std::auto_ptr<HashFunction> hash(get_hash(request.argument(0)));
-      if(!hash.get())
+      const HashFunction* hash = af.make_hash_function(request.argument(0));
+      if(!hash)
          return 0;
 
       std::auto_ptr<StreamCipher> sc(get_stream_cipher(request.argument(1)));
       if(!sc.get())
          return 0;
 
-      return new Lion(hash.release(), sc.release(), block_size);
+      return new Lion(hash->clone(), sc.release(), block_size);
       }
 #endif
 

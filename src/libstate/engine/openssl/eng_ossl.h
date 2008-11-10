@@ -48,8 +48,12 @@ class BOTAN_DLL OpenSSL_Engine : public Engine
       Modular_Exponentiator* mod_exp(const BigInt&,
                                      Power_Mod::Usage_Hints) const;
    private:
-      BlockCipher* find_block_cipher(const std::string&) const;
-      StreamCipher* find_stream_cipher(const std::string&) const;
+      BlockCipher* find_block_cipher(const SCAN_Name&,
+                                     Algorithm_Factory&) const;
+
+      StreamCipher* find_stream_cipher(const SCAN_Name&,
+                                       Algorithm_Factory&) const;
+
       HashFunction* find_hash(const SCAN_Name&, Algorithm_Factory&) const;
    };
 

@@ -120,8 +120,13 @@ class BOTAN_DLL Engine
          { return 0; }
 
       // Prototype object accessors
-      const BlockCipher* block_cipher(const std::string&) const;
-      const StreamCipher* stream_cipher(const std::string&) const;
+      const BlockCipher*
+         prototype_block_cipher(const SCAN_Name& request,
+                                Algorithm_Factory& af) const;
+
+      const StreamCipher*
+         prototype_stream_cipher(const SCAN_Name& request,
+                                 Algorithm_Factory& af) const;
 
       const HashFunction*
          prototype_hash_function(const SCAN_Name& request,
@@ -144,10 +149,12 @@ class BOTAN_DLL Engine
       Engine();
       virtual ~Engine();
    private:
-      virtual BlockCipher* find_block_cipher(const std::string&) const
+      virtual BlockCipher* find_block_cipher(const SCAN_Name&,
+                                             Algorithm_Factory&) const
          { return 0; }
 
-      virtual StreamCipher* find_stream_cipher(const std::string&) const
+      virtual StreamCipher* find_stream_cipher(const SCAN_Name&,
+                                               Algorithm_Factory&) const
          { return 0; }
 
       virtual HashFunction* find_hash(const SCAN_Name&,
@@ -157,22 +164,6 @@ class BOTAN_DLL Engine
       virtual MessageAuthenticationCode* find_mac(const SCAN_Name&,
                                                   Algorithm_Factory&) const
          { return 0; }
-
-      template<typename T>
-      const T* lookup_algo(const Algorithm_Cache<T>* cache,
-                           const std::string& name,
-                           const Engine* engine,
-                           T* (Engine::*find)(const std::string&) const) const
-         {
-         T* algo = cache->get(name);
-         if(!algo)
-            {
-            algo = (engine->*find)(name);
-            if(algo)
-               cache->add(algo, name);
-            }
-         return algo;
-         }
 
       Algorithm_Cache<BlockCipher>* cache_of_bc;
       Algorithm_Cache<StreamCipher>* cache_of_sc;

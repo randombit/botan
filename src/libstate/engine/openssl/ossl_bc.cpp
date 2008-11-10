@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/eng_ossl.h>
-#include <botan/scan_name.h>
 #include <openssl/evp.h>
 
 namespace Botan {
@@ -162,10 +161,9 @@ void EVP_BlockCipher::clear() throw()
 * Look for an algorithm with this name           *
 *************************************************/
 BlockCipher*
-OpenSSL_Engine::find_block_cipher(const std::string& algo_spec) const
+OpenSSL_Engine::find_block_cipher(const SCAN_Name& request,
+                                  Algorithm_Factory&)
    {
-   SCAN_Name request(algo_spec);
-
 #define HANDLE_EVP_CIPHER(NAME, EVP)                            \
    if(request.algo_name() == NAME && request.arg_count() == 0)  \
       return new EVP_BlockCipher(EVP, NAME);

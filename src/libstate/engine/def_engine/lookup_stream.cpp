@@ -28,10 +28,9 @@ namespace Botan {
 * Look for an algorithm with this name           *
 *************************************************/
 StreamCipher*
-Default_Engine::find_stream_cipher(const std::string& algo_spec) const
+Default_Engine::find_stream_cipher(const SCAN_Name& request,
+                                   Algorithm_Factory&) const
    {
-   SCAN_Name request(algo_spec);
-
 #if defined(BOTAN_HAS_ARC4)
    if(request.algo_name() == "ARC4")
       return new ARC4(request.argument_as_u32bit(0, 0));
