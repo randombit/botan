@@ -284,6 +284,14 @@ void Library_State::initialize(bool thread_safe)
    algorithm_factory->add_engine(new Default_Engine);
    }
 
+/**
+* Add a new engine
+*/
+void Library_State::add_engine(Engine* engine)
+   {
+   algorithm_factory->add_engine(engine);
+   }
+
 /*************************************************
 * Library_State Constructor                      *
 *************************************************/
