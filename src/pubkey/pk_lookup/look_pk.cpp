@@ -14,7 +14,7 @@ namespace Botan {
 PK_Encryptor* get_pk_encryptor(const PK_Encrypting_Key& key,
                                const std::string& eme)
    {
-   return new PK_Encryptor_MR_with_EME(key, eme);
+   return new PK_Encryptor_MR_with_EME(key, get_eme(eme));
    }
 
 /*************************************************
@@ -23,17 +23,17 @@ PK_Encryptor* get_pk_encryptor(const PK_Encrypting_Key& key,
 PK_Decryptor* get_pk_decryptor(const PK_Decrypting_Key& key,
                                const std::string& eme)
    {
-   return new PK_Decryptor_MR_with_EME(key, eme);
+   return new PK_Decryptor_MR_with_EME(key, get_eme(eme));
    }
 
 /*************************************************
 * Get a PK_Signer object                         *
 *************************************************/
 PK_Signer* get_pk_signer(const PK_Signing_Key& key,
-                         const std::string& encoding,
+                         const std::string& emsa,
                          Signature_Format sig_format)
    {
-   PK_Signer* signer = new PK_Signer(key, encoding);
+   PK_Signer* signer = new PK_Signer(key, get_emsa(emsa));
    signer->set_output_format(sig_format);
    return signer;
    }
@@ -42,10 +42,10 @@ PK_Signer* get_pk_signer(const PK_Signing_Key& key,
 * Get a PK_Verifier object                       *
 *************************************************/
 PK_Verifier* get_pk_verifier(const PK_Verifying_with_MR_Key& key,
-                             const std::string& encoding,
+                             const std::string& emsa,
                              Signature_Format sig_format)
    {
-   PK_Verifier* verifier = new PK_Verifier_with_MR(key, encoding);
+   PK_Verifier* verifier = new PK_Verifier_with_MR(key, get_emsa(emsa));
    verifier->set_input_format(sig_format);
    return verifier;
    }
@@ -54,10 +54,10 @@ PK_Verifier* get_pk_verifier(const PK_Verifying_with_MR_Key& key,
 * Get a PK_Verifier object                       *
 *************************************************/
 PK_Verifier* get_pk_verifier(const PK_Verifying_wo_MR_Key& key,
-                             const std::string& encoding,
+                             const std::string& emsa,
                              Signature_Format sig_format)
    {
-   PK_Verifier* verifier = new PK_Verifier_wo_MR(key, encoding);
+   PK_Verifier* verifier = new PK_Verifier_wo_MR(key, get_emsa(emsa));
    verifier->set_input_format(sig_format);
    return verifier;
    }

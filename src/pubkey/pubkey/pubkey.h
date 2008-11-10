@@ -146,10 +146,10 @@ class BOTAN_DLL PK_Signer
       /**
       * Construct a PK Signer.
       * @param key the key to use inside this signer
-      * @param emsa_name the name of the emsa to use.
+      * @param emsa the EMSA to use
       * An example would be "EMSA1(SHA-224)".
       */
-      PK_Signer(const PK_Signing_Key& key, const std::string& emsa_name);
+      PK_Signer(const PK_Signing_Key& key, EMSA* emsa);
 
       ~PK_Signer() { delete emsa; }
    private:
@@ -235,10 +235,10 @@ class BOTAN_DLL PK_Verifier
 
       /**
       * Construct a PK Verifier.
-      * @param emsa_name the name of the emsa to use.
-      * An example would be "EMSA1(SHA-224)".
+      * @param emsa the EMSA to use
+      * An example would be new EMSA1(new SHA_224)
       */
-      PK_Verifier(const std::string& emsa_name);
+      PK_Verifier(EMSA* emsa);
 
       virtual ~PK_Verifier();
    protected:
@@ -292,10 +292,10 @@ class BOTAN_DLL PK_Encryptor_MR_with_EME : public PK_Encryptor
       /**
       * Construct an instance.
       * @param key the key to use inside the decryptor
-      * @param eme the name of the eme to use
+      * @param eme the EME to use
       */
       PK_Encryptor_MR_with_EME(const PK_Encrypting_Key& key,
-                               const std::string& eme);
+                               EME* eme);
 
       ~PK_Encryptor_MR_with_EME() { delete encoder; }
    private:
@@ -318,10 +318,10 @@ class BOTAN_DLL PK_Decryptor_MR_with_EME : public PK_Decryptor
      /**
       * Construct an instance.
       * @param key the key to use inside the encryptor
-      * @param eme the name of the EME to use
+      * @param eme the EME to use
       */
       PK_Decryptor_MR_with_EME(const PK_Decrypting_Key& key,
-                               const std::string& eme);
+                               EME* eme);
 
       ~PK_Decryptor_MR_with_EME() { delete encoder; }
    private:
@@ -345,8 +345,8 @@ class BOTAN_DLL PK_Verifier_with_MR : public PK_Verifier
       * @param key the key to use inside the verifier
       * @param emsa_name the name of the EMSA to use
       */
-      PK_Verifier_with_MR(const PK_Verifying_with_MR_Key& key,
-                          const std::string& emsa_name);
+      PK_Verifier_with_MR(const PK_Verifying_with_MR_Key& k,
+                          EMSA* emsa_obj) : PK_Verifier(emsa_obj), key(k) {}
 
    private:
       PK_Verifier_with_MR(const PK_Verifying_with_MR_Key&);
@@ -370,8 +370,8 @@ class BOTAN_DLL PK_Verifier_wo_MR : public PK_Verifier
       * @param key the key to use inside the verifier
       * @param emsa_name the name of the EMSA to use
       */
-      PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key& key,
-                        const std::string& emsa_name);
+      PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key& k,
+                        EMSA* emsa_obj) : PK_Verifier(emsa_obj), key(k) {}
 
    private:
       PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key&);

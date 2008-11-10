@@ -52,8 +52,8 @@ SecureVector<byte> PK_Decryptor::decrypt(const MemoryRegion<byte>& in) const
 * PK_Encryptor_MR_with_EME Constructor           *
 *************************************************/
 PK_Encryptor_MR_with_EME::PK_Encryptor_MR_with_EME(const PK_Encrypting_Key& k,
-                                                   const std::string& eme) :
-   key(k), encoder((eme == "Raw") ? 0 : get_eme(eme))
+                                                   EME* eme_obj) :
+   key(k), encoder(eme_obj)
    {
    }
 
@@ -92,8 +92,8 @@ u32bit PK_Encryptor_MR_with_EME::maximum_input_size() const
 * PK_Decryptor_MR_with_EME Constructor           *
 *************************************************/
 PK_Decryptor_MR_with_EME::PK_Decryptor_MR_with_EME(const PK_Decrypting_Key& k,
-                                                   const std::string& eme) :
-   key(k), encoder((eme == "Raw") ? 0 : get_eme(eme))
+                                                   EME* eme_obj) :
+   key(k), encoder(eme_obj)
    {
    }
 
@@ -123,8 +123,8 @@ SecureVector<byte> PK_Decryptor_MR_with_EME::dec(const byte msg[],
 /*************************************************
 * PK_Signer Constructor                          *
 *************************************************/
-PK_Signer::PK_Signer(const PK_Signing_Key& k, const std::string& emsa_name) :
-   key(k), emsa(get_emsa(emsa_name))
+PK_Signer::PK_Signer(const PK_Signing_Key& k, EMSA* emsa_obj) :
+   key(k), emsa(emsa_obj)
    {
    sig_format = IEEE_1363;
    }
@@ -221,9 +221,9 @@ SecureVector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
 /*************************************************
 * PK_Verifier Constructor                        *
 *************************************************/
-PK_Verifier::PK_Verifier(const std::string& emsa_name)
+PK_Verifier::PK_Verifier(EMSA* emsa_obj)
    {
-   emsa = get_emsa(emsa_name);
+   emsa = emsa_obj;
    sig_format = IEEE_1363;
    }
 
@@ -334,15 +334,6 @@ bool PK_Verifier::check_signature(const byte sig[], u32bit length)
    }
 
 /*************************************************
-* PK_Verifier_with_MR Constructor                *
-*************************************************/
-PK_Verifier_with_MR::PK_Verifier_with_MR(const PK_Verifying_with_MR_Key& k,
-                                         const std::string& emsa_name) :
-   PK_Verifier(emsa_name), key(k)
-   {
-   }
-
-/*************************************************
 * Verify a signature                             *
 *************************************************/
 bool PK_Verifier_with_MR::validate_signature(const MemoryRegion<byte>& msg,
@@ -350,15 +341,6 @@ bool PK_Verifier_with_MR::validate_signature(const MemoryRegion<byte>& msg,
    {
    SecureVector<byte> output_of_key = key.verify(sig, sig_len);
    return emsa->verify(output_of_key, msg, key.max_input_bits());
-   }
-
-/*************************************************
-* PK_Verifier_wo_MR Constructor                  *
-*************************************************/
-PK_Verifier_wo_MR::PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key& k,
-                                     const std::string& emsa_name) :
-   PK_Verifier(emsa_name), key(k)
-   {
    }
 
 /*************************************************
