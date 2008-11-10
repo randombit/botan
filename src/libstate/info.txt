@@ -5,11 +5,11 @@ load_on auto
 define LIBSTATE_MODULE
 
 <requires>
-system_alloc
 def_engine
+mode_pad
 pk_pad
 s2k
-mode_pad
+system_alloc
 </requires>
 
 <add>
