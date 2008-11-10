@@ -4,10 +4,8 @@
 *************************************************/
 
 #include <botan/def_eng.h>
-#include <botan/lookup.h>
 #include <botan/scan_name.h>
 #include <botan/algo_factory.h>
-#include <memory>
 
 #if defined(BOTAN_HAS_AES)
   #include <botan/aes.h>
@@ -253,15 +251,16 @@ Default_Engine::find_block_cipher(const SCAN_Name& request,
       {
       const u32bit block_size = request.argument_as_u32bit(2, 1024);
 
-      const HashFunction* hash = af.make_hash_function(request.argument(0));
-      if(!hash)
+      const HashFunction* hash =
+         af.prototype_hash_function(request.argument(0));
+
+      const StreamCipher* stream_cipher =
+         af.prototype_stream_cipher(request.argument(1));
+
+      if(!hash || !stream_cipher)
          return 0;
 
-      std::auto_ptr<StreamCipher> sc(get_stream_cipher(request.argument(1)));
-      if(!sc.get())
-         return 0;
-
-      return new Lion(hash->clone(), sc.release(), block_size);
+      return new Lion(hash->clone(), stream_cipher->clone(), block_size);
       }
 #endif
 

@@ -9,7 +9,6 @@
 #include <botan/stl_util.h>
 #include <botan/mutex.h>
 #include <botan/charset.h>
-#include <botan/lookup.h>
 #include <algorithm>
 
 #if defined(BOTAN_HAS_SELFTEST)
