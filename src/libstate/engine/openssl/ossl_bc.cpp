@@ -4,8 +4,7 @@
 *************************************************/
 
 #include <botan/eng_ossl.h>
-#include <botan/parsing.h>
-#include <botan/libstate.h>
+#include <botan/scan_name.h>
 #include <openssl/evp.h>
 
 namespace Botan {
@@ -165,35 +164,26 @@ void EVP_BlockCipher::clear() throw()
 BlockCipher*
 OpenSSL_Engine::find_block_cipher(const std::string& algo_spec) const
    {
-#define HANDLE_EVP_CIPHER(NAME, EVP)            \
-   if(algo_name == NAME)                        \
-      {                                         \
-      if(name.size() == 1)                      \
-         return new EVP_BlockCipher(EVP, NAME); \
-      throw Invalid_Algorithm_Name(algo_spec);  \
-      }
+   SCAN_Name request(algo_spec);
 
-#define HANDLE_EVP_CIPHER_KEYLEN(NAME, EVP, MIN, MAX, MOD)     \
-   if(algo_name == NAME)                                       \
-      {                                                        \
-      if(name.size() == 1)                                     \
-         return new EVP_BlockCipher(EVP, NAME, MIN, MAX, MOD); \
-      throw Invalid_Algorithm_Name(algo_spec);                 \
-      }
+#define HANDLE_EVP_CIPHER(NAME, EVP)                            \
+   if(request.algo_name() == NAME && request.arg_count() == 0)  \
+      return new EVP_BlockCipher(EVP, NAME);
 
-   std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   if(name.size() == 0)
-      return 0;
-   const std::string algo_name = global_state().deref_alias(name[0]);
+#define HANDLE_EVP_CIPHER_KEYLEN(NAME, EVP, MIN, MAX, MOD)      \
+   if(request.algo_name() == NAME && request.arg_count() == 0)  \
+      return new EVP_BlockCipher(EVP, NAME, MIN, MAX, MOD);
+
+   HANDLE_EVP_CIPHER("AES-128", EVP_aes_128_ecb());
+   HANDLE_EVP_CIPHER("AES-192", EVP_aes_192_ecb());
+   HANDLE_EVP_CIPHER("AES-256", EVP_aes_256_ecb());
+
+   HANDLE_EVP_CIPHER("DES", EVP_des_ecb());
+   HANDLE_EVP_CIPHER_KEYLEN("TripleDES", EVP_des_ede3_ecb(), 16, 24, 8);
 
    HANDLE_EVP_CIPHER_KEYLEN("Blowfish", EVP_bf_ecb(), 1, 56, 1);
    HANDLE_EVP_CIPHER_KEYLEN("CAST-128", EVP_cast5_ecb(), 1, 16, 1);
    HANDLE_EVP_CIPHER_KEYLEN("RC2", EVP_rc2_ecb(), 1, 32, 1);
-   HANDLE_EVP_CIPHER_KEYLEN("TripleDES", EVP_des_ede3_ecb(), 16, 24, 8);
-   HANDLE_EVP_CIPHER("DES", EVP_des_ecb());
-   HANDLE_EVP_CIPHER("AES-128", EVP_aes_128_ecb());
-   HANDLE_EVP_CIPHER("AES-192", EVP_aes_192_ecb());
-   HANDLE_EVP_CIPHER("AES-256", EVP_aes_256_ecb());
 
 #undef HANDLE_EVP_CIPHER
 #undef HANDLE_EVP_CIPHER_KEYLEN

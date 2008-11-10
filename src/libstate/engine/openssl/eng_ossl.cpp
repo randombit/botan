@@ -4,6 +4,8 @@ OpenSSL Engine
 */
 
 #include <botan/eng_ossl.h>
+#include <botan/arc4_openssl.h>
+#include <botan/scan_name.h>
 
 namespace Botan {
 

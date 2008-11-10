@@ -4,8 +4,7 @@
 *************************************************/
 
 #include <botan/eng_ossl.h>
-#include <botan/parsing.h>
-#include <botan/libstate.h>
+#include <botan/scan_name.h>
 #include <openssl/evp.h>
 
 namespace Botan {
@@ -94,26 +93,22 @@ EVP_HashFunction::~EVP_HashFunction()
 *************************************************/
 HashFunction* OpenSSL_Engine::find_hash(const std::string& algo_spec) const
    {
-   std::vector<std::string> name = parse_algorithm_name(algo_spec);
-   if(name.size() == 0)
-      return 0;
-   const std::string algo_name = global_state().deref_alias(name[0]);
+   SCAN_Name request(algo_spec);
 
-#define HANDLE_EVP_MD(NAME, EVP)                 \
-   if(algo_name == NAME)                         \
-      {                                          \
-      if(name.size() == 1)                       \
-         return new EVP_HashFunction(EVP, NAME); \
-      throw Invalid_Algorithm_Name(algo_spec);   \
-      }
+   if(request.algo_name() == "SHA-160")
+      return new EVP_HashFunction(EVP_sha1(), "SHA-160");
 
-   HANDLE_EVP_MD("SHA-160", EVP_sha1());
-   HANDLE_EVP_MD("MD2", EVP_md2());
-   HANDLE_EVP_MD("MD4", EVP_md4());
-   HANDLE_EVP_MD("MD5", EVP_md5());
-   HANDLE_EVP_MD("RIPEMD-160", EVP_ripemd160());
+   if(request.algo_name() == "MD2")
+      return new EVP_HashFunction(EVP_md2(), "MD2");
 
-#undef HANDLE_EVP_MD
+   if(request.algo_name() == "MD4")
+      return new EVP_HashFunction(EVP_md4(), "MD4");
+
+   if(request.algo_name() == "MD5")
+      return new EVP_HashFunction(EVP_md5(), "MD5");
+
+   if(request.algo_name() == "RIPEMD-160")
+      return new EVP_HashFunction(EVP_ripemd160(), "RIPEMD-160");
 
    return 0;
    }
