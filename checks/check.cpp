@@ -94,14 +94,13 @@ int main(int argc, char* argv[])
    {
    try
       {
-      OptionParser opts("help|html|init=|test|validate|"
+      OptionParser opts("help|html|test|validate|"
                         "benchmark|bench-type=|bench-algo=|seconds=");
       opts.parse(argv);
 
       test_types(); // do this always
 
-      Botan::InitializerOptions init_options(opts.value_if_set("init"));
-      Botan::LibraryInitializer init(init_options);
+      Botan::LibraryInitializer init(false);
 
       Botan::AutoSeeded_RNG rng;
 
