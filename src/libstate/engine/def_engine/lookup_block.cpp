@@ -165,7 +165,7 @@ Default_Engine::find_block_cipher(const SCAN_Name& request,
 
 #if defined(BOTAN_HAS_MISTY1)
    if(request.algo_name() == "MISTY1")
-      return new MISTY1(request.argument_as_u32bit(0, 8));
+      return new MISTY1(request.arg_as_u32bit(0, 8));
 #endif
 
 #if defined(BOTAN_HAS_NOEKEON)
@@ -180,7 +180,7 @@ Default_Engine::find_block_cipher(const SCAN_Name& request,
 
 #if defined(BOTAN_HAS_RC5)
    if(request.algo_name() == "RC5")
-      return new RC5(request.argument_as_u32bit(0, 12));
+      return new RC5(request.arg_as_u32bit(0, 12));
 #endif
 
 #if defined(BOTAN_HAS_RC6)
@@ -190,7 +190,7 @@ Default_Engine::find_block_cipher(const SCAN_Name& request,
 
 #if defined(BOTAN_HAS_SAFER)
    if(request.algo_name() == "SAFER-SK")
-      return new SAFER_SK(request.argument_as_u32bit(0, 10));
+      return new SAFER_SK(request.arg_as_u32bit(0, 10));
 #endif
 
 #if defined(BOTAN_HAS_SEED)
@@ -232,7 +232,7 @@ Default_Engine::find_block_cipher(const SCAN_Name& request,
    if(request.algo_name() == "Luby-Rackoff" && request.arg_count() == 1)
       {
       const HashFunction* hash =
-         af.make_hash_function(request.argument(0));
+         af.make_hash_function(request.arg(0));
 
       if(hash)
          return new LubyRackoff(hash->clone());
@@ -242,13 +242,13 @@ Default_Engine::find_block_cipher(const SCAN_Name& request,
 #if defined(BOTAN_HAS_LION)
    if(request.algo_name() == "Lion" && request.arg_count_between(2, 3))
       {
-      const u32bit block_size = request.argument_as_u32bit(2, 1024);
+      const u32bit block_size = request.arg_as_u32bit(2, 1024);
 
       const HashFunction* hash =
-         af.prototype_hash_function(request.argument(0));
+         af.prototype_hash_function(request.arg(0));
 
       const StreamCipher* stream_cipher =
-         af.prototype_stream_cipher(request.argument(1));
+         af.prototype_stream_cipher(request.arg(1));
 
       if(!hash || !stream_cipher)
          return 0;

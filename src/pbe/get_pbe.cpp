@@ -28,8 +28,8 @@ PBE* get_pbe(const std::string& pbe_name)
       throw Invalid_Algorithm_Name(pbe_name);
 
    const std::string pbe = request.algo_name();
-   const std::string digest = request.argument(0);
-   const std::string cipher = request.argument(1);
+   const std::string digest = request.arg(0);
+   const std::string cipher = request.arg(1);
 
 #if defined(BOTAN_HAS_PBE_PKCS_V15)
    if(pbe == "PBE-PKCS5v15")
@@ -57,8 +57,8 @@ PBE* get_pbe(const OID& pbe_oid, DataSource& params)
       if(request.arg_count() != 2)
          throw Invalid_Algorithm_Name(pbe_oid.as_string());
 
-      const std::string digest = request.argument(0);
-      const std::string cipher = request.argument(1);
+      const std::string digest = request.arg(0);
+      const std::string cipher = request.arg(1);
 
       PBE* pbe = new PBE_PKCS5v15(digest, cipher, DECRYPTION);
       pbe->decode_params(params);

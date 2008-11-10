@@ -53,13 +53,13 @@ class SCAN_Name
       @param i which argument
       @return the ith argument
       */
-      std::string argument(u32bit i) const;
+      std::string arg(u32bit i) const;
 
       /**
       @param i which argument
       @return the ith argument as a u32bit, or a default value
       */
-      u32bit argument_as_u32bit(u32bit i, u32bit def_value) const;
+      u32bit arg_as_u32bit(u32bit i, u32bit def_value) const;
 
       std::string as_string() const { return orig_algo_spec; }
       std::string providers_string() const { return orig_providers; }

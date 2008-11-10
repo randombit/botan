@@ -71,14 +71,14 @@ bool SCAN_Name::provider_allowed(const std::string& provider) const
    return (providers.find(provider) != providers.end());
    }
 
-std::string SCAN_Name::argument(u32bit i) const
+std::string SCAN_Name::arg(u32bit i) const
    {
    if(i > arg_count())
       throw std::range_error("SCAN_Name::argument");
    return name[i+1];
    }
 
-u32bit SCAN_Name::argument_as_u32bit(u32bit i, u32bit def_value) const
+u32bit SCAN_Name::arg_as_u32bit(u32bit i, u32bit def_value) const
    {
    if(i >= arg_count())
       return def_value;

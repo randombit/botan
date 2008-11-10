@@ -33,7 +33,7 @@ Default_Engine::find_stream_cipher(const SCAN_Name& request,
    {
 #if defined(BOTAN_HAS_ARC4)
    if(request.algo_name() == "ARC4")
-      return new ARC4(request.argument_as_u32bit(0, 0));
+      return new ARC4(request.arg_as_u32bit(0, 0));
    if(request.algo_name() == "RC4_drop")
       return new ARC4(768);
 #endif

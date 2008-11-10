@@ -87,17 +87,17 @@ S2K* get_s2k(const std::string& algo_spec)
 
 #if defined(BOTAN_HAS_PBKDF1)
    if(request.algo_name() == "PBKDF1" && request.arg_count() == 1)
-      return new PKCS5_PBKDF1(get_hash(request.argument(0)));
+      return new PKCS5_PBKDF1(get_hash(request.arg(0)));
 #endif
 
 #if defined(BOTAN_HAS_PBKDF2)
    if(request.algo_name() == "PBKDF2" && request.arg_count() == 1)
-      return new PKCS5_PBKDF2(new HMAC(get_hash(request.argument(0))));
+      return new PKCS5_PBKDF2(new HMAC(get_hash(request.arg(0))));
 #endif
 
 #if defined(BOTAN_HAS_PGPS2K)
    if(request.algo_name() == "OpenPGP-S2K" && request.arg_count() == 1)
-      return new OpenPGP_S2K(get_hash(request.argument(0)));
+      return new OpenPGP_S2K(get_hash(request.arg(0)));
 #endif
 
    throw Algorithm_Not_Found(algo_spec);
@@ -117,22 +117,22 @@ EMSA* get_emsa(const std::string& algo_spec)
 
 #if defined(BOTAN_HAS_EMSA1)
    if(request.algo_name() == "EMSA1" && request.arg_count() == 1)
-      return new EMSA1(get_hash(request.argument(0)));
+      return new EMSA1(get_hash(request.arg(0)));
 #endif
 
 #if defined(BOTAN_HAS_EMSA1_BSI)
    if(request.algo_name() == "EMSA1_BSI" && request.arg_count() == 1)
-      return new EMSA1_BSI(get_hash(request.argument(0)));
+      return new EMSA1_BSI(get_hash(request.arg(0)));
 #endif
 
 #if defined(BOTAN_HAS_EMSA2)
    if(request.algo_name() == "EMSA2" && request.arg_count() == 1)
-      return new EMSA2(get_hash(request.argument(0)));
+      return new EMSA2(get_hash(request.arg(0)));
 #endif
 
 #if defined(BOTAN_HAS_EMSA3)
    if(request.algo_name() == "EMSA3" && request.arg_count() == 1)
-      return new EMSA3(get_hash(request.argument(0)));
+      return new EMSA3(get_hash(request.arg(0)));
 #endif
 
 #if defined(BOTAN_HAS_EMSA4)
@@ -140,14 +140,14 @@ EMSA* get_emsa(const std::string& algo_spec)
       {
       // 3 args: Hash, MGF, salt size (MGF is hardcoded MGF1 in Botan)
       if(request.arg_count() == 1)
-         return new EMSA4(get_hash(request.argument(0)));
+         return new EMSA4(get_hash(request.arg(0)));
 
-      if(request.arg_count() == 2 && request.argument(1) != "MGF1")
-         return new EMSA4(get_hash(request.argument(0)));
+      if(request.arg_count() == 2 && request.arg(1) != "MGF1")
+         return new EMSA4(get_hash(request.arg(0)));
 
       if(request.arg_count() == 3)
-         return new EMSA4(get_hash(request.argument(0)),
-                          request.argument_as_u32bit(2, 0));
+         return new EMSA4(get_hash(request.arg(0)),
+                          request.arg_as_u32bit(2, 0));
       }
 #endif
 
@@ -170,9 +170,9 @@ EME* get_eme(const std::string& algo_spec)
    if(request.algo_name() == "EME1" && request.arg_count_between(1, 2))
       {
       if(request.arg_count() == 1 ||
-         (request.arg_count() == 2 && request.argument(1) == "MGF1"))
+         (request.arg_count() == 2 && request.arg(1) == "MGF1"))
          {
-         return new EME1(get_hash(request.argument(0)));
+         return new EME1(get_hash(request.arg(0)));
          }
       }
 #endif
@@ -189,17 +189,17 @@ KDF* get_kdf(const std::string& algo_spec)
 
 #if defined(BOTAN_HAS_KDF1)
    if(request.algo_name() == "KDF1" && request.arg_count() == 1)
-      return new KDF1(get_hash(request.argument(0)));
+      return new KDF1(get_hash(request.arg(0)));
 #endif
 
 #if defined(BOTAN_HAS_KDF2)
    if(request.algo_name() == "KDF2" && request.arg_count() == 1)
-      return new KDF2(get_hash(request.argument(0)));
+      return new KDF2(get_hash(request.arg(0)));
 #endif
 
 #if defined(BOTAN_HAS_X942_PRF)
    if(request.algo_name() == "X9.42-PRF" && request.arg_count() == 1)
-      return new X942_PRF(request.argument(0));
+      return new X942_PRF(request.arg(0));
 #endif
 
 #if defined(BOTAN_HAS_TLS_V10_PRF)
