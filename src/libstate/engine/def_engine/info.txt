@@ -5,12 +5,14 @@ define DEFAULT_ENGINE
 load_on auto
 
 <add>
-def_mode.cpp
-def_powm.cpp
 def_eng.h
-lookup_cipher.cpp
+def_mode.cpp
+def_pk_ops.cpp
+def_powm.cpp
+lookup_bc_pad.cpp
+lookup_block.cpp
 lookup_hash.cpp
 lookup_mac.cpp
 lookup_s2k.cpp
-def_pk_ops.cpp
+lookup_stream.cpp
 </add>
