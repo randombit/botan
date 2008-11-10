@@ -5,7 +5,6 @@
 
 #include <botan/modules.h>
 #include <botan/defalloc.h>
-#include <botan/def_eng.h>
 #include <botan/parsing.h>
 
 #if defined(BOTAN_HAS_MUTEX_PTHREAD)
@@ -22,6 +21,13 @@
 
 #if defined(BOTAN_HAS_ALLOC_MMAP)
   #include <botan/mmap_mem.h>
+#endif
+
+// Default engine
+#include <botan/def_eng.h>
+
+#if defined(BOTAN_HAS_ENGINE_ASSEMBLER)
+  #include <botan/asm_engine.h>
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_GNU_MP)
@@ -106,6 +112,10 @@ std::vector<Engine*> Builtin_Modules::engines() const
 
 #if defined(BOTAN_HAS_ENGINE_OPENSSL)
       engines.push_back(new OpenSSL_Engine);
+#endif
+
+#if defined(BOTAN_HAS_ENGINE_ASSEMBLER)
+      engines.push_back(new Assembler_Engine);
 #endif
       }
 

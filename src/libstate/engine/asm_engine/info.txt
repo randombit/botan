@@ -1,0 +1,10 @@
+realname "Assembler Engine"
+
+define ENGINE_ASSEMBLER
+
+load_on auto
+
+<add>
+asm_engine.cpp
+asm_engine.h
+</add>

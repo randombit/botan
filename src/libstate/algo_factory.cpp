@@ -25,6 +25,7 @@ Algorithm_Factory::~Algorithm_Factory()
 */
 void Algorithm_Factory::add_engine(Engine* engine)
    {
+   printf("Add engine %s\n", engine->provider_name().c_str());
    engines.push_back(engine);
    }
 
@@ -52,7 +53,11 @@ Algorithm_Factory::prototype_hash_function(const SCAN_Name& request)
             engines[i]->prototype_hash_function(request, *this);
 
          if(algo)
+            {
+            printf("Got %s from %s\n", algo->name().c_str(),
+                   engines[i]->provider_name().c_str());
             return algo;
+            }
          }
       }
 

@@ -36,16 +36,8 @@
   #include <botan/md4.h>
 #endif
 
-#if defined(BOTAN_HAS_MD4_IA32)
-  #include <botan/md4_ia32.h>
-#endif
-
 #if defined(BOTAN_HAS_MD5)
   #include <botan/md5.h>
-#endif
-
-#if defined(BOTAN_HAS_MD5_IA32)
-  #include <botan/md5_ia32.h>
 #endif
 
 #if defined(BOTAN_HAS_RIPEMD_128)
@@ -58,18 +50,6 @@
 
 #if defined(BOTAN_HAS_SHA1)
   #include <botan/sha160.h>
-#endif
-
-#if defined(BOTAN_HAS_SHA1_IA32)
-  #include <botan/sha1_ia32.h>
-#endif
-
-#if defined(BOTAN_HAS_SHA1_SSE2)
-  #include <botan/sha1_sse2.h>
-#endif
-
-#if defined(BOTAN_HAS_SHA1_AMD64)
-  #include <botan/sha1_amd64.h>
 #endif
 
 #if defined(BOTAN_HAS_SHA2)
@@ -128,18 +108,12 @@ Default_Engine::find_hash(const SCAN_Name& request,
       return new MD2;
 #endif
 
-#if defined(BOTAN_HAS_MD4_IA32)
-   if(request.algo_name() == "MD4")
-      return new MD4_IA32;
-#elif defined(BOTAN_HAS_MD4)
+#if defined(BOTAN_HAS_MD4)
    if(request.algo_name() == "MD4")
       return new MD4;
 #endif
 
-#if defined(BOTAN_HAS_MD5_IA32)
-   if(request.algo_name() == "MD5")
-      return new MD5_IA32;
-#elif defined(BOTAN_HAS_MD5)
+#if defined(BOTAN_HAS_MD5)
    if(request.algo_name() == "MD5")
       return new MD5;
 #endif
@@ -154,16 +128,7 @@ Default_Engine::find_hash(const SCAN_Name& request,
       return new RIPEMD_160;
 #endif
 
-#if defined(BOTAN_HAS_SHA1_SSE2)
-   if(request.algo_name() == "SHA-160")
-      return new SHA_160_SSE2;
-#elif defined(BOTAN_HAS_SHA1_AMD64)
-   if(request.algo_name() == "SHA-160")
-      return new SHA_160_AMD64;
-#elif defined(BOTAN_HAS_SHA1_IA32)
-   if(request.algo_name() == "SHA-160")
-      return new SHA_160_IA32;
-#elif defined(BOTAN_HAS_SHA1)
+#if defined(BOTAN_HAS_SHA1)
    if(request.algo_name() == "SHA-160")
       return new SHA_160;
 #endif
