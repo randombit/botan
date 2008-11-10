@@ -1,5 +1,11 @@
+/**
+OpenSSL Engine
+(C) 2008 Jack Lloyd
+*/
 
-#include <openssl/eng_ossl.h>
+#include <botan/eng_ossl.h>
+
+namespace Botan {
 
 /**
 * Look for an OpenSSL-suported stream cipher (ARC4)
@@ -16,3 +22,5 @@ OpenSSL_Engine::find_stream_cipher(const std::string& algo_spec) const
 
    return 0;
    }
+
+}
