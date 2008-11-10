@@ -228,12 +228,12 @@ Algorithm_Factory& Library_State::algo_factory()
 /*************************************************
 * Load a set of modules                          *
 *************************************************/
-void Library_State::initialize(const InitializerOptions& args)
+void Library_State::initialize(bool thread_safe)
    {
    if(mutex_factory)
       throw Invalid_State("Library_State has already been initialized");
 
-   if(args.thread_safe() == false)
+   if(!thread_safe)
       {
       mutex_factory = new Noop_Mutex_Factory;
       }
@@ -255,14 +255,14 @@ void Library_State::initialize(const InitializerOptions& args)
 
    cached_default_allocator = 0;
 
-   add_allocator(new Locking_Allocator(mutex_factory->make()));
    add_allocator(new Malloc_Allocator);
-   set_default_allocator("locking");
+   add_allocator(new Locking_Allocator(mutex_factory->make()));
 
 #if defined(BOTAN_HAS_ALLOC_MMAP)
    add_allocator(new MemoryMapping_Allocator(mutex_factory->make()));
-   set_default_allocator("mmap");
 #endif
+
+   set_default_allocator("locking");
 
    load_default_config();
 
@@ -281,14 +281,6 @@ void Library_State::initialize(const InitializerOptions& args)
 #endif
 
    algorithm_factory->add_engine(new Default_Engine);
-
-#if defined(BOTAN_HAS_SELFTEST)
-   if(args.fips_mode() || args.self_test())
-      {
-      if(!passes_self_tests())
-         throw Self_Test_Failure("Initialization self-tests");
-      }
-#endif
    }
 
 /*************************************************

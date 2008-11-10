@@ -1,7 +1,7 @@
-/*************************************************
-* Default Initialization Function Source File    *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/**
+* Default Initialization Function Source File
+* (C) 1999-2007 Jack Lloyd
+*/
 
 #include <botan/init.h>
 #include <botan/libstate.h>
@@ -11,7 +11,7 @@ namespace Botan {
 /*************************************************
 * Library Initialization                         *
 *************************************************/
-void LibraryInitializer::initialize(const InitializerOptions& args)
+void LibraryInitializer::initialize(bool thread_safe)
    {
    try
       {
@@ -23,7 +23,7 @@ void LibraryInitializer::initialize(const InitializerOptions& args)
       */
       set_global_state(new Library_State);
 
-      global_state().initialize(args);
+      global_state().initialize(thread_safe);
       }
    catch(...)
       {
@@ -38,16 +38,6 @@ void LibraryInitializer::initialize(const InitializerOptions& args)
 void LibraryInitializer::deinitialize()
    {
    set_global_state(0);
-   }
-
-/*************************************************
-* Library Initialization                         *
-*************************************************/
-void LibraryInitializer::initialize(const std::string& arg_string)
-   {
-   InitializerOptions args(arg_string);
-
-   initialize(args);
    }
 
 }

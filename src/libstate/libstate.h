@@ -7,7 +7,6 @@
 #define BOTAN_LIB_STATE_H__
 
 #include <botan/types.h>
-#include <botan/init.h>
 #include <botan/allocate.h>
 #include <botan/algo_factory.h>
 
@@ -26,7 +25,7 @@ class BOTAN_DLL Library_State
       Library_State();
       ~Library_State();
 
-      void initialize(const InitializerOptions&);
+      void initialize(bool thread_safe);
 
       Algorithm_Factory& algo_factory();
 

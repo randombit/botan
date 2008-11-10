@@ -18,8 +18,7 @@ algo_factory.h
 botan.h
 get_enc.cpp
 init.h
-init_def.cpp
-init_opt.cpp
+init.cpp
 libstate.cpp
 libstate.h
 look_add.h
