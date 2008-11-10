@@ -18,12 +18,12 @@ namespace Botan {
 class BOTAN_DLL ECB : public BlockCipherMode
    {
    protected:
-      ECB(BlockCipher* ciph, const BlockCipherModePaddingMethod* pad) :
+      ECB(BlockCipher* ciph, BlockCipherModePaddingMethod* pad) :
          BlockCipherMode(ciph, "ECB", 0), padder(pad) {}
       ~ECB() { delete padder; }
 
       std::string name() const;
-      const BlockCipherModePaddingMethod* padder;
+      BlockCipherModePaddingMethod* padder;
    private:
       bool valid_iv_size(u32bit) const;
    };
@@ -35,11 +35,11 @@ class BOTAN_DLL ECB_Encryption : public ECB
    {
    public:
       ECB_Encryption(BlockCipher* ciph,
-                     const BlockCipherModePaddingMethod* pad) :
+                     BlockCipherModePaddingMethod* pad) :
          ECB(ciph, pad) {}
 
       ECB_Encryption(BlockCipher* ciph,
-                     const BlockCipherModePaddingMethod* pad,
+                     BlockCipherModePaddingMethod* pad,
                      const SymmetricKey& key) :
          ECB(ciph, pad) { set_key(key); }
    private:
@@ -54,11 +54,11 @@ class BOTAN_DLL ECB_Decryption : public ECB
    {
    public:
       ECB_Decryption(BlockCipher* ciph,
-                     const BlockCipherModePaddingMethod* pad) :
+                     BlockCipherModePaddingMethod* pad) :
          ECB(ciph, pad) {}
 
       ECB_Decryption(BlockCipher* ciph,
-                     const BlockCipherModePaddingMethod* pad,
+                     BlockCipherModePaddingMethod* pad,
                      const SymmetricKey& key) :
          ECB(ciph, pad) { set_key(key); }
    private:

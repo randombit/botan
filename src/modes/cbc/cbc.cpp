@@ -13,7 +13,7 @@ namespace Botan {
 * CBC Encryption Constructor                     *
 *************************************************/
 CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
-                               const BlockCipherModePaddingMethod* pad) :
+                               BlockCipherModePaddingMethod* pad) :
    BlockCipherMode(ciph, "CBC", ciph->BLOCK_SIZE),
    padder(pad)
    {
@@ -25,7 +25,7 @@ CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
 * CBC Encryption Constructor                     *
 *************************************************/
 CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
-                               const BlockCipherModePaddingMethod* pad,
+                               BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
    BlockCipherMode(ciph, "CBC", ciph->BLOCK_SIZE),
@@ -82,7 +82,7 @@ std::string CBC_Encryption::name() const
 * CBC Decryption Constructor                     *
 *************************************************/
 CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
-                               const BlockCipherModePaddingMethod* pad) :
+                               BlockCipherModePaddingMethod* pad) :
    BlockCipherMode(ciph, "CBC", ciph->BLOCK_SIZE),
    padder(pad)
    {
@@ -95,7 +95,7 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
 * CBC Decryption Constructor                     *
 *************************************************/
 CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
-                               const BlockCipherModePaddingMethod* pad,
+                               BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
    BlockCipherMode(ciph, "CBC", ciph->BLOCK_SIZE),
