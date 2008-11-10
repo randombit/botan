@@ -97,7 +97,7 @@ u32bit Device_EntropySource::slow_poll(byte output[], u32bit length)
    {
    for(size_t i = 0; i != devices.size(); ++i)
       {
-      const u32bit got = devices[i].get(output, length, 100);
+      const u32bit got = devices[i].get(output, length, 20);
 
       if(got)
          return got;
@@ -113,7 +113,7 @@ u32bit Device_EntropySource::fast_poll(byte output[], u32bit length)
    {
    for(size_t i = 0; i != devices.size(); ++i)
       {
-      const u32bit got = devices[i].get(output, length, 10);
+      const u32bit got = devices[i].get(output, length, 5);
 
       if(got)
          return got;
