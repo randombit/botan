@@ -55,6 +55,12 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
 
       /**
       * Construct a stream cipher filter.
+      * @param cipher_obj a cipher object to use
+      */
+      StreamCipher_Filter(StreamCipher* cipher_obj);
+
+      /**
+      * Construct a stream cipher filter.
       * @param cipher the name of the desired cipher
       */
       StreamCipher_Filter(const std::string& cipher);

@@ -22,6 +22,15 @@ StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name) :
 /*************************************************
 * StreamCipher_Filter Constructor                *
 *************************************************/
+StreamCipher_Filter::StreamCipher_Filter(StreamCipher* stream_cipher) :
+   buffer(DEFAULT_BUFFERSIZE)
+   {
+   base_ptr = cipher = stream_cipher;
+   }
+
+/*************************************************
+* StreamCipher_Filter Constructor                *
+*************************************************/
 StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name,
                                          const SymmetricKey& key) :
    buffer(DEFAULT_BUFFERSIZE)
