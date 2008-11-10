@@ -71,4 +71,18 @@ HashFunction* Algorithm_Factory::make_hash_function(const SCAN_Name& request)
    throw Algorithm_Not_Found(request.as_string());
    }
 
+void Algorithm_Factory::add_hash_function(HashFunction* hash)
+   {
+   for(u32bit i = 0; i != engines.size(); ++i)
+      {
+      if(engines[i]->can_add_algorithms())
+         {
+         engines[i]->add_algorithm(hash);
+         return;
+         }
+      }
+
+   throw Exception("Algorithm_Factory::add_hash_function: No engine found");
+   }
+
 }

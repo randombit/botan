@@ -22,9 +22,6 @@ class BOTAN_DLL Algorithm_Factory
    public:
       ~Algorithm_Factory();
 
-      const HashFunction* prototype_hash_function(const SCAN_Name& request);
-      HashFunction* make_hash_function(const SCAN_Name& request);
-
       void add_engine(class Engine*);
 
       class BOTAN_DLL Engine_Iterator
@@ -37,6 +34,11 @@ class BOTAN_DLL Algorithm_Factory
             u32bit n;
          };
       friend class Engine_Iterator;
+
+      // Hash function operations
+      const HashFunction* prototype_hash_function(const SCAN_Name& request);
+      HashFunction* make_hash_function(const SCAN_Name& request);
+      void add_hash_function(HashFunction* hash);
 
    private:
       class Engine* get_engine_n(u32bit) const;

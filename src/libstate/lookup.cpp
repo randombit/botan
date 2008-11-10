@@ -27,6 +27,14 @@ HashFunction* get_hash(const std::string& algo_spec)
    }
 
 /*************************************************
+* Add a new hash function                        *
+*************************************************/
+void add_algorithm(Library_State& libstate, HashFunction* algo)
+   {
+   libstate.algo_factory().add_hash_function(algo);
+   }
+
+/*************************************************
 * Query if Botan has the named hash function     *
 *************************************************/
 bool have_hash(const std::string& algo_spec)
@@ -296,25 +304,6 @@ void add_algorithm(Library_State& libstate, BlockCipher* algo)
 * Add a new stream cipher                        *
 *************************************************/
 void add_algorithm(Library_State& libstate, StreamCipher* algo)
-   {
-   Algorithm_Factory::Engine_Iterator i(libstate.algo_factory());
-
-   while(Engine* engine = i.next())
-      {
-      if(engine->can_add_algorithms())
-         {
-         engine->add_algorithm(algo);
-         return;
-         }
-      }
-
-   throw Invalid_State("add_algorithm: Couldn't find the Default_Engine");
-   }
-
-/*************************************************
-* Add a new hash function                        *
-*************************************************/
-void add_algorithm(Library_State& libstate, HashFunction* algo)
    {
    Algorithm_Factory::Engine_Iterator i(libstate.algo_factory());
 
