@@ -52,9 +52,10 @@ DER_Encoder& encode_si(DER_Encoder& der, const X509_Certificate& cert,
 * Compute the hash of some content               *
 *************************************************/
 SecureVector<byte> hash_of(const SecureVector<byte>& content,
-                           const std::string& hash)
+                           const std::string& hash_name)
    {
-   std::auto_ptr<HashFunction> hash_fn(get_hash(hash));
+   Algorithm_Factory& af = global_state().algorithm_factory();
+   std::auto_ptr<HashFunction> hash_fn(af.make_hash_function(hash_name));
    return hash_fn->process(content);
    }
 

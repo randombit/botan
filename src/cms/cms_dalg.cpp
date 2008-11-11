@@ -7,9 +7,10 @@
 #include <botan/x509find.h>
 #include <botan/ber_dec.h>
 #include <botan/oids.h>
-#include <botan/lookup.h>
+#include <botan/hash.h>
 #include <botan/look_pk.h>
 #include <botan/bigint.h>
+#include <botan/libstate.h>
 #include <memory>
 
 namespace Botan {
@@ -24,7 +25,10 @@ SecureVector<byte> hash_of(const SecureVector<byte>& content,
                            std::string& hash_name)
    {
    hash_name = OIDS::lookup(hash_algo.oid);
-   std::auto_ptr<HashFunction> hash_fn(get_hash(hash_name));
+
+   Algorithm_Factory& af = global_state().algorithm_factory();
+
+   std::auto_ptr<HashFunction> hash_fn(af.make_hash_function(hash_name));
    return hash_fn->process(content);
    }
 
