@@ -7,12 +7,14 @@
 
 #include <botan/scan_name.h>
 #include <botan/mutex.h>
-#include <stdexcept>
-#include <map>
 #include <string>
+#include <map>
 
 namespace Botan {
 
+/**
+* Algorithm_Cache (used by Algorithm_Factory)
+*/
 template<typename T>
 class Algorithm_Cache
    {
@@ -35,7 +37,6 @@ class Algorithm_Cache
       Mutex* mutex;
       std::map<std::string, std::string> aliases;
       std::map<std::string, std::map<std::string, T*> > algorithms;
-
    };
 
 /**
@@ -84,7 +85,6 @@ const T* Algorithm_Cache<T>::get(const SCAN_Name& request)
       }
    else // no specific provider requested: pick one
       {
-      printf("No specific provider requested for %s\n", request.as_string().c_str());
       provider_iterator provider = algo->second.begin();
 
       while(provider != algo->second.end())

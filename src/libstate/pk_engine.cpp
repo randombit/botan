@@ -3,8 +3,9 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/engine.h>
+#include <botan/pk_engine.h>
 #include <botan/libstate.h>
+#include <botan/engine.h>
 
 namespace Botan {
 

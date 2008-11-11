@@ -68,8 +68,6 @@ class BOTAN_DLL Algorithm_Factory
       void add_mac(MessageAuthenticationCode* mac,
                    const std::string& provider);
    private:
-      Mutex_Factory& mutex_factory;
-
       class Engine* get_engine_n(u32bit) const;
 
       std::vector<class Engine*> engines;

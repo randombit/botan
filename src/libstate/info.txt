@@ -23,4 +23,6 @@ libstate.h
 lookup.cpp
 lookup.h
 policy.cpp
+pk_engine.h
+pk_engine.cpp
 </add>

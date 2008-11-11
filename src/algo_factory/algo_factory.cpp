@@ -18,7 +18,6 @@ Algorithm Factory
 namespace Botan {
 
 Algorithm_Factory::Algorithm_Factory(Mutex_Factory& mf) :
-   mutex_factory(mf),
    block_cipher_cache(mf.make()),
    stream_cipher_cache(mf.make()),
    hash_cache(mf.make()),
@@ -41,7 +40,6 @@ Algorithm_Factory::~Algorithm_Factory()
 */
 void Algorithm_Factory::add_engine(Engine* engine)
    {
-   engine->initialize(mutex_factory);
    engines.insert(engines.begin(), engine);
    }
 
