@@ -6,7 +6,8 @@
 #ifndef BOTAN_LIBRARY_INITIALIZER_H__
 #define BOTAN_LIBRARY_INITIALIZER_H__
 
-#include <botan/libstate.h>
+#include <botan/build.h>
+#include <string>
 
 namespace Botan {
 
