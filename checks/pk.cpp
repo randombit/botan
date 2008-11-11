@@ -543,12 +543,19 @@ u32bit validate_dlies(const std::string& algo,
    if(options.size() != 3)
       throw Exception("DLIES needs three options: " + opt_str);
 
-   KDF* kdf = get_kdf(options[0]);
    MessageAuthenticationCode* mac = get_mac(options[1]);
    u32bit mac_key_len = to_u32bit(options[2]);
 
-   PK_Decryptor* d = new DLIES_Decryptor(to, kdf, mac, mac_key_len);
-   DLIES_Encryptor* e = new DLIES_Encryptor(from, kdf, mac, mac_key_len);
+   PK_Decryptor* d =
+      new DLIES_Decryptor(to,
+                          get_kdf(options[0]),
+                          mac->clone(), mac_key_len);
+
+   DLIES_Encryptor* e =
+      new DLIES_Encryptor(from,
+                          get_kdf(options[0]),
+                          mac, mac_key_len);
+
    e->set_other_key(to.public_value());
 
    std::string empty = "";
