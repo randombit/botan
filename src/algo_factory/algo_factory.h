@@ -24,6 +24,7 @@ class MessageAuthenticationCode;
 class BOTAN_DLL Algorithm_Factory
    {
    public:
+      Algorithm_Factory(Mutex_Factory& mf) : mutex_factory(mf) {}
       ~Algorithm_Factory();
 
       void add_engine(class Engine*);
@@ -62,6 +63,8 @@ class BOTAN_DLL Algorithm_Factory
       void add_mac(MessageAuthenticationCode* mac);
 
    private:
+      Mutex_Factory& mutex_factory;
+
       class Engine* get_engine_n(u32bit) const;
 
       std::vector<class Engine*> engines;

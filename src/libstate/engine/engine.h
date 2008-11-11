@@ -146,6 +146,8 @@ class BOTAN_DLL Engine
       virtual bool can_add_algorithms() { return false; }
       virtual std::string provider_name() const = 0;
 
+      void initialize(Mutex_Factory& mf);
+
       Engine();
       virtual ~Engine();
    private:

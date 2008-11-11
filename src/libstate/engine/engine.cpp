@@ -4,7 +4,6 @@
 */
 
 #include <botan/engine.h>
-#include <botan/libstate.h>
 #include <botan/stl_util.h>
 #include <botan/mode_pad.h>
 
@@ -172,22 +171,21 @@ void Engine::add_algorithm(MessageAuthenticationCode* algo) const
    cache_of_mac->add(algo);
    }
 
-/*************************************************
-* Create an Engine                               *
-*************************************************/
+void Engine::initialize(Mutex_Factory& mf)
+   {
+   cache_of_bc = new Algorithm_Cache_Impl<BlockCipher>(mf.make());
+   cache_of_sc = new Algorithm_Cache_Impl<StreamCipher>(mf.make());
+   cache_of_hf = new Algorithm_Cache_Impl<HashFunction>(mf.make());
+   cache_of_mac =
+      new Algorithm_Cache_Impl<MessageAuthenticationCode>(mf.make());
+   }
+
 Engine::Engine()
    {
-   cache_of_bc = new Algorithm_Cache_Impl<BlockCipher>(
-      global_state().get_mutex());
-
-   cache_of_sc = new Algorithm_Cache_Impl<StreamCipher>(
-      global_state().get_mutex());
-
-   cache_of_hf = new Algorithm_Cache_Impl<HashFunction>(
-      global_state().get_mutex());
-
-   cache_of_mac = new Algorithm_Cache_Impl<MessageAuthenticationCode>(
-      global_state().get_mutex());
+   cache_of_bc = 0;
+   cache_of_sc = 0;
+   cache_of_hf = 0;
+   cache_of_mac = 0;
    }
 
 /*************************************************
