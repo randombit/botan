@@ -70,7 +70,7 @@ OpenSSL_Engine::find_stream_cipher(const SCAN_Name& request,
                                    Algorithm_Factory&) const
    {
    if(request.algo_name() == "ARC4")
-      return new ARC4_OpenSSL(request.argument_as_u32bit(0, 0));
+      return new ARC4_OpenSSL(request.arg_as_u32bit(0, 0));
    if(request.algo_name() == "RC4_drop")
       return new ARC4_OpenSSL(768);
 
