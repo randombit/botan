@@ -1,12 +1,13 @@
-/*************************************************
-* PKCS #5 PBES2 Source File                      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/**
+* PKCS #5 PBES2 Source File
+* (C) 1999-2008 Jack Lloyd
+*/
 
 #include <botan/pbes2.h>
 #include <botan/pbkdf2.h>
 #include <botan/hmac.h>
-#include <botan/lookup.h>
+#include <botan/cbc.h>
+#include <botan/algo_factory.h>
 #include <botan/libstate.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
@@ -18,9 +19,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Encrypt some bytes using PBES2                 *
-*************************************************/
+/**
+* Encrypt some bytes using PBES2
+*/
 void PBE_PKCS5v20::write(const byte input[], u32bit length)
    {
    while(length)
@@ -32,20 +33,28 @@ void PBE_PKCS5v20::write(const byte input[], u32bit length)
       }
    }
 
-/*************************************************
-* Start encrypting with PBES2                    *
-*************************************************/
+/**
+* Start encrypting with PBES2
+*/
 void PBE_PKCS5v20::start_msg()
    {
-   pipe.append(get_cipher(cipher, key, iv, direction));
+   if(direction == ENCRYPTION)
+      pipe.append(new CBC_Encryption(block_cipher->clone(),
+                                     new PKCS7_Padding,
+                                     key, iv));
+   else
+      pipe.append(new CBC_Decryption(block_cipher->clone(),
+                                     new PKCS7_Padding,
+                                     key, iv));
+
    pipe.start_msg();
    if(pipe.message_count() > 1)
       pipe.set_default_msg(pipe.default_msg() + 1);
    }
 
-/*************************************************
-* Finish encrypting with PBES2                   *
-*************************************************/
+/**
+* Finish encrypting with PBES2
+*/
 void PBE_PKCS5v20::end_msg()
    {
    pipe.end_msg();
@@ -53,9 +62,9 @@ void PBE_PKCS5v20::end_msg()
    pipe.reset();
    }
 
-/*************************************************
-* Flush the pipe                                 *
-*************************************************/
+/**
+* Flush the pipe
+*/
 void PBE_PKCS5v20::flush_pipe(bool safe_to_skip)
    {
    if(safe_to_skip && pipe.remaining() < 64)
@@ -69,36 +78,36 @@ void PBE_PKCS5v20::flush_pipe(bool safe_to_skip)
       }
    }
 
-/*************************************************
-* Set the passphrase to use                      *
-*************************************************/
+/**
+* Set the passphrase to use
+*/
 void PBE_PKCS5v20::set_key(const std::string& passphrase)
    {
-   PKCS5_PBKDF2 pbkdf(new HMAC(get_hash(digest)));
+   PKCS5_PBKDF2 pbkdf(new HMAC(hash_function->clone()));
 
    pbkdf.set_iterations(iterations);
    pbkdf.change_salt(salt, salt.size());
    key = pbkdf.derive_key(key_length, passphrase).bits_of();
    }
 
-/*************************************************
-* Create a new set of PBES2 parameters           *
-*************************************************/
+/**
+* Create a new set of PBES2 parameters
+*/
 void PBE_PKCS5v20::new_params(RandomNumberGenerator& rng)
    {
    iterations = 2048;
-   key_length = max_keylength_of(cipher_algo);
+   key_length = block_cipher->MAXIMUM_KEYLENGTH;
 
    salt.create(8);
    rng.randomize(salt, salt.size());
 
-   iv.create(block_size_of(cipher_algo));
+   iv.create(block_cipher->BLOCK_SIZE);
    rng.randomize(iv, iv.size());
    }
 
-/*************************************************
-* Encode PKCS#5 PBES2 parameters                 *
-*************************************************/
+/**
+* Encode PKCS#5 PBES2 parameters
+*/
 MemoryVector<byte> PBE_PKCS5v20::encode_params() const
    {
    return DER_Encoder()
@@ -115,7 +124,7 @@ MemoryVector<byte> PBE_PKCS5v20::encode_params() const
             )
          )
       .encode(
-         AlgorithmIdentifier(cipher,
+         AlgorithmIdentifier(block_cipher->name() + "/CBC",
             DER_Encoder()
                .encode(iv, OCTET_STRING)
             .get_contents()
@@ -125,9 +134,9 @@ MemoryVector<byte> PBE_PKCS5v20::encode_params() const
       .get_contents();
    }
 
-/*************************************************
-* Decode PKCS#5 PBES2 parameters                 *
-*************************************************/
+/**
+* Decode PKCS#5 PBES2 parameters
+*/
 void PBE_PKCS5v20::decode_params(DataSource& source)
    {
    AlgorithmIdentifier kdf_algo, enc_algo;
@@ -141,8 +150,6 @@ void PBE_PKCS5v20::decode_params(DataSource& source)
 
    if(kdf_algo.oid == OIDS::lookup("PKCS5.PBKDF2"))
       {
-      digest = "SHA-160";
-
       BER_Decoder(kdf_algo.parameters)
          .start_cons(SEQUENCE)
             .decode(salt, OCTET_STRING)
@@ -155,37 +162,41 @@ void PBE_PKCS5v20::decode_params(DataSource& source)
       throw Decoding_Error("PBE-PKCS5 v2.0: Unknown KDF algorithm " +
                            kdf_algo.oid.as_string());
 
-   cipher = OIDS::lookup(enc_algo.oid);
+   Algorithm_Factory& af = global_state().algorithm_factory();
+
+   std::string cipher = OIDS::lookup(enc_algo.oid);
    std::vector<std::string> cipher_spec = split_on(cipher, '/');
    if(cipher_spec.size() != 2)
       throw Decoding_Error("PBE-PKCS5 v2.0: Invalid cipher spec " + cipher);
-   cipher_algo = global_state().deref_alias(cipher_spec[0]);
 
-   if(!known_cipher(cipher_algo) || cipher_spec[1] != "CBC")
+   if(!known_cipher(cipher_spec[0]) || cipher_spec[1] != "CBC")
       throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " +
                            cipher);
 
    BER_Decoder(enc_algo.parameters).decode(iv, OCTET_STRING).verify_end();
 
+   block_cipher = af.make_block_cipher(cipher_spec[0]);
+   hash_function = af.make_hash_function(SCAN_Name("SHA-160"));
+
    if(key_length == 0)
-      key_length = max_keylength_of(cipher_algo);
+      key_length = block_cipher->MAXIMUM_KEYLENGTH;
 
    if(salt.size() < 8)
       throw Decoding_Error("PBE-PKCS5 v2.0: Encoded salt is too small");
    }
 
-/*************************************************
-* Return an OID for PBES2                        *
-*************************************************/
+/**
+* Return an OID for PBES2
+*/
 OID PBE_PKCS5v20::get_oid() const
    {
    return OIDS::lookup("PBE-PKCS5v20");
    }
 
-/*************************************************
-* Check if this is a known PBES2 cipher          *
-*************************************************/
-bool PBE_PKCS5v20::known_cipher(const std::string& algo) const
+/**
+* Check if this is a known PBES2 cipher
+*/
+bool PBE_PKCS5v20::known_cipher(const std::string& algo)
    {
    if(algo == "AES-128" || algo == "AES-192" || algo == "AES-256")
       return true;
@@ -194,39 +205,26 @@ bool PBE_PKCS5v20::known_cipher(const std::string& algo) const
    return false;
    }
 
-/*************************************************
-* PKCS#5 v2.0 PBE Constructor                    *
-*************************************************/
-PBE_PKCS5v20::PBE_PKCS5v20(const std::string& d_algo,
-                           const std::string& c_algo) :
-   direction(ENCRYPTION),
-   digest(global_state().deref_alias(d_algo)),
-   cipher(c_algo)
+/**
+* PKCS#5 v2.0 PBE Constructor
+*/
+PBE_PKCS5v20::PBE_PKCS5v20(BlockCipher* cipher,
+                           HashFunction* digest) :
+   direction(ENCRYPTION), block_cipher(cipher), hash_function(digest)
    {
-   std::vector<std::string> cipher_spec = split_on(cipher, '/');
-   if(cipher_spec.size() != 2)
-      throw Invalid_Argument("PBE-PKCS5 v2.0: Invalid cipher spec " + cipher);
-   cipher_algo = global_state().deref_alias(cipher_spec[0]);
-   const std::string cipher_mode = cipher_spec[1];
-
-   if(!have_block_cipher(cipher_algo))
-      throw Algorithm_Not_Found(cipher_algo);
-   if(!have_hash(digest))
-      throw Algorithm_Not_Found(digest);
-
-   if(!known_cipher(cipher_algo))
-      throw Invalid_Argument("PBE-PKCS5 v2.0: Invalid cipher " + cipher);
-   if(cipher_mode != "CBC")
-      throw Invalid_Argument("PBE-PKCS5 v2.0: Invalid cipher " + cipher);
-   if(digest != "SHA-160")
-      throw Invalid_Argument("PBE-PKCS5 v2.0: Invalid digest " + digest);
+   if(!known_cipher(block_cipher->name()))
+      throw Invalid_Argument("PBE-PKCS5 v2.0: Invalid cipher " + cipher->name());
+   if(hash_function->name() != "SHA-160")
+      throw Invalid_Argument("PBE-PKCS5 v2.0: Invalid digest " + digest->name());
    }
 
-/*************************************************
-* PKCS#5 v2.0 PBE Constructor                    *
-*************************************************/
+/**
+* PKCS#5 v2.0 PBE Constructor
+*/
 PBE_PKCS5v20::PBE_PKCS5v20(DataSource& params) : direction(DECRYPTION)
    {
+   hash_function = 0;
+   block_cipher = 0;
    decode_params(params);
    }
 

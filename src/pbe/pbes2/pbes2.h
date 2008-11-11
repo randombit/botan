@@ -7,7 +7,8 @@
 #define BOTAN_PBE_PKCS_v20_H__
 
 #include <botan/pbe.h>
-#include <botan/sym_algo.h>
+#include <botan/block_cipher.h>
+#include <botan/hash.h>
 #include <botan/pipe.h>
 
 namespace Botan {
@@ -18,11 +19,14 @@ namespace Botan {
 class BOTAN_DLL PBE_PKCS5v20 : public PBE
    {
    public:
+      static bool known_cipher(const std::string&);
+
       void write(const byte[], u32bit);
       void start_msg();
       void end_msg();
+
       PBE_PKCS5v20(DataSource&);
-      PBE_PKCS5v20(const std::string&, const std::string&);
+      PBE_PKCS5v20(BlockCipher*, HashFunction*);
    private:
       void set_key(const std::string&);
       void new_params(RandomNumberGenerator& rng);
@@ -31,10 +35,10 @@ class BOTAN_DLL PBE_PKCS5v20 : public PBE
       OID get_oid() const;
 
       void flush_pipe(bool);
-      bool known_cipher(const std::string&) const;
 
-      const Cipher_Dir direction;
-      std::string digest, cipher, cipher_algo;
+      Cipher_Dir direction;
+      BlockCipher* block_cipher;
+      HashFunction* hash_function;
       SecureVector<byte> salt, key, iv;
       u32bit iterations, key_length;
       Pipe pipe;
