@@ -1,0 +1,14 @@
+realname "Algorithm Factory"
+
+load_on auto
+
+define ALGORITHM_FACTORY
+
+<requires>
+utils
+</requires>
+
+<add>
+algo_factory.cpp
+algo_factory.h
+</add>

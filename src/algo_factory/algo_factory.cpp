@@ -3,7 +3,7 @@ Algorithm Factory
 (C) 2008 Jack Lloyd
 */
 
-#include <botan/libstate.h>
+#include <botan/algo_factory.h>
 #include <botan/stl_util.h>
 #include <botan/engine.h>
 #include <botan/exceptn.h>

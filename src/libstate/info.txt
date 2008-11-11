@@ -5,6 +5,7 @@ load_on auto
 define LIBSTATE_MODULE
 
 <requires>
+algo_factory
 def_engine
 mode_pad
 pk_pad
@@ -13,8 +14,6 @@ system_alloc
 </requires>
 
 <add>
-algo_factory.cpp
-algo_factory.h
 botan.h
 get_enc.cpp
 init.h
