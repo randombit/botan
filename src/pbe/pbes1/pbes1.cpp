@@ -7,11 +7,8 @@
 #include <botan/pbkdf1.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/parsing.h>
-#include <botan/lookup.h>
-#include <botan/libstate.h>
+#include <botan/cbc.h>
 #include <algorithm>
-#include <memory>
 
 namespace Botan {
 
@@ -34,7 +31,15 @@ void PBE_PKCS5v15::write(const byte input[], u32bit length)
 *************************************************/
 void PBE_PKCS5v15::start_msg()
    {
-   pipe.append(get_cipher(cipher, key, iv, direction));
+   if(direction == ENCRYPTION)
+      pipe.append(new CBC_Encryption(block_cipher->clone(),
+                                     new PKCS7_Padding,
+                                     key, iv));
+   else
+      pipe.append(new CBC_Decryption(block_cipher->clone(),
+                                     new PKCS7_Padding,
+                                     key, iv));
+
    pipe.start_msg();
    if(pipe.message_count() > 1)
       pipe.set_default_msg(pipe.default_msg() + 1);
@@ -71,7 +76,7 @@ void PBE_PKCS5v15::flush_pipe(bool safe_to_skip)
 *************************************************/
 void PBE_PKCS5v15::set_key(const std::string& passphrase)
    {
-   PKCS5_PBKDF1 pbkdf(get_hash(digest));
+   PKCS5_PBKDF1 pbkdf(hash_function->clone());
 
    pbkdf.set_iterations(iterations);
    pbkdf.change_salt(salt, salt.size());
@@ -126,17 +131,21 @@ void PBE_PKCS5v15::decode_params(DataSource& source)
 OID PBE_PKCS5v15::get_oid() const
    {
    const OID base_pbes1_oid("1.2.840.113549.1.5");
-   if(cipher == "DES/CBC" && digest == "MD2")
+
+   const std::string cipher = block_cipher->name();
+   const std::string digest = hash_function->name();
+
+   if(cipher == "DES" && digest == "MD2")
       return (base_pbes1_oid + 1);
-   else if(cipher == "DES/CBC" && digest == "MD5")
+   else if(cipher == "DES" && digest == "MD5")
       return (base_pbes1_oid + 3);
-   else if(cipher == "DES/CBC" && digest == "SHA-160")
+   else if(cipher == "DES" && digest == "SHA-160")
       return (base_pbes1_oid + 10);
-   else if(cipher == "RC2/CBC" && digest == "MD2")
+   else if(cipher == "RC2" && digest == "MD2")
       return (base_pbes1_oid + 4);
-   else if(cipher == "RC2/CBC" && digest == "MD5")
+   else if(cipher == "RC2" && digest == "MD5")
       return (base_pbes1_oid + 6);
-   else if(cipher == "RC2/CBC" && digest == "SHA-160")
+   else if(cipher == "RC2" && digest == "SHA-160")
       return (base_pbes1_oid + 11);
    else
       throw Internal_Error("PBE-PKCS5 v1.5: get_oid() has run out of options");
@@ -145,27 +154,29 @@ OID PBE_PKCS5v15::get_oid() const
 /*************************************************
 * PKCS#5 v1.5 PBE Constructor                    *
 *************************************************/
-PBE_PKCS5v15::PBE_PKCS5v15(const std::string& d_algo,
-                           const std::string& c_algo, Cipher_Dir dir) :
-   direction(dir),
-   digest(global_state().deref_alias(d_algo)),
-   cipher(c_algo)
+PBE_PKCS5v15::PBE_PKCS5v15(BlockCipher* cipher,
+                           HashFunction* hash,
+                           Cipher_Dir dir) :
+   direction(dir), block_cipher(cipher), hash_function(hash)
    {
-   std::vector<std::string> cipher_spec = split_on(c_algo, '/');
-   if(cipher_spec.size() != 2)
-      throw Invalid_Argument("PBE-PKCS5 v1.5: Invalid cipher spec " + c_algo);
-   const std::string cipher_algo = global_state().deref_alias(cipher_spec[0]);
-   const std::string cipher_mode = cipher_spec[1];
+   if(cipher->name() != "DES" && cipher->name() != "RC2")
+      {
+      throw Invalid_Argument("PBE_PKCS5v1.5: Unknown cipher " +
+                             cipher->name());
+      }
 
-   if(!have_block_cipher(cipher_algo))
-      throw Algorithm_Not_Found(cipher_algo);
-   if(!have_hash(digest))
-      throw Algorithm_Not_Found(digest);
+   if(hash->name() != "MD2" && hash->name() != "MD5" &&
+      hash->name() != "SHA-160")
+      {
+      throw Invalid_Argument("PBE_PKCS5v1.5: Unknown hash " +
+                             hash->name());
+      }
+   }
 
-   if((cipher_algo != "DES" && cipher_algo != "RC2") || (cipher_mode != "CBC"))
-      throw Invalid_Argument("PBE-PKCS5 v1.5: Invalid cipher " + cipher);
-   if(digest != "MD2" && digest != "MD5" && digest != "SHA-160")
-      throw Invalid_Argument("PBE-PKCS5 v1.5: Invalid digest " + digest);
+PBE_PKCS5v15::~PBE_PKCS5v15()
+   {
+   delete block_cipher;
+   delete hash_function;
    }
 
 }
