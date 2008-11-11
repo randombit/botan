@@ -45,35 +45,39 @@ class BOTAN_DLL Algorithm_Factory
          };
       friend class Engine_Iterator;
 
-      std::vector<std::string> providers_of(const SCAN_Name& request);
+      std::vector<std::string> providers_of(const std::string& algo_spec);
 
       // Block cipher operations
       const BlockCipher* prototype_block_cipher(const SCAN_Name& request);
       BlockCipher* make_block_cipher(const SCAN_Name& request);
-      void add_block_cipher(BlockCipher* hash);
+      void add_block_cipher(BlockCipher* hash, const std::string& provider);
 
       // Stream cipher operations
       const StreamCipher* prototype_stream_cipher(const SCAN_Name& request);
       StreamCipher* make_stream_cipher(const SCAN_Name& request);
-      void add_stream_cipher(StreamCipher* hash);
+      void add_stream_cipher(StreamCipher* hash, const std::string& provider);
 
       // Hash function operations
       const HashFunction* prototype_hash_function(const SCAN_Name& request);
       HashFunction* make_hash_function(const SCAN_Name& request);
-      void add_hash_function(HashFunction* hash);
+      void add_hash_function(HashFunction* hash, const std::string& provider);
 
       // MAC operations
       const MessageAuthenticationCode* prototype_mac(const SCAN_Name& request);
       MessageAuthenticationCode* make_mac(const SCAN_Name& request);
-      void add_mac(MessageAuthenticationCode* mac);
-
+      void add_mac(MessageAuthenticationCode* mac,
+                   const std::string& provider);
    private:
       Mutex_Factory& mutex_factory;
 
       class Engine* get_engine_n(u32bit) const;
 
       std::vector<class Engine*> engines;
+
+      Algorithm_Cache<BlockCipher> block_cipher_cache;
+      Algorithm_Cache<StreamCipher> stream_cipher_cache;
       Algorithm_Cache<HashFunction> hash_cache;
+      Algorithm_Cache<MessageAuthenticationCode> mac_cache;
    };
 
 }

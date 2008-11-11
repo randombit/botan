@@ -22,16 +22,44 @@ class Algorithm_Cache
                const std::string& requested_name,
                const std::string& provider);
 
+      std::vector<std::string> providers_of(const std::string& algo_name);
+
       Algorithm_Cache(Mutex* m) : mutex(m) {}
       ~Algorithm_Cache();
    private:
+      typedef typename std::map<std::string, std::map<std::string, T*> >::iterator algorithms_iterator;
+      typedef typename std::map<std::string, T*>::iterator provider_iterator;
+
+      algorithms_iterator find_algorithm(const std::string& algo_spec);
+
       Mutex* mutex;
       std::map<std::string, std::string> aliases;
       std::map<std::string, std::map<std::string, T*> > algorithms;
 
-      typedef typename std::map<std::string, std::map<std::string, T*> >::iterator algorithms_iterator;
-      typedef typename std::map<std::string, T*>::iterator provider_iterator;
    };
+
+/**
+* Look for an algorithm implementation in the cache, also checking aliases
+*/
+template<typename T>
+typename Algorithm_Cache<T>::algorithms_iterator
+Algorithm_Cache<T>::find_algorithm(const std::string& algo_spec)
+   {
+   // Assumes mutex is held
+   algorithms_iterator algo = algorithms.find(algo_spec);
+
+   // Not found? Check if a known alias
+   if(algo == algorithms.end())
+      {
+      std::map<std::string, std::string>::const_iterator alias =
+         aliases.find(algo_spec);
+
+      if(alias != aliases.end())
+         algo = algorithms.find(alias->second);
+      }
+
+   return algo;
+   }
 
 /**
 * Look for an algorithm implementation in the cache
@@ -41,24 +69,13 @@ const T* Algorithm_Cache<T>::get(const SCAN_Name& request)
    {
    Mutex_Holder lock(mutex);
 
-   algorithms_iterator algo = algorithms.find(request.as_string());
-
-   // Not found? Check if a known alias
-   if(algo == algorithms.end())
-      {
-      std::map<std::string, std::string>::const_iterator alias =
-         aliases.find(request.as_string());
-
-      if(alias != aliases.end())
-         algo = algorithms.find(alias->second);
-      }
-
-   if(algo == algorithms.end())
+   algorithms_iterator algo = find_algorithm(request.as_string());
+   if(algo == algorithms.end()) // not found at all
       return 0;
 
    const std::string requested_provider = request.provider();
 
-   if(requested_provider != "")
+   if(requested_provider != "") // If a specific request, allow that provider or core
       {
       provider_iterator provider = algo->second.find(requested_provider);
 
@@ -67,6 +84,7 @@ const T* Algorithm_Cache<T>::get(const SCAN_Name& request)
       }
    else // no specific provider requested: pick one
       {
+      printf("No specific provider requested for %s\n", request.as_string().c_str());
       provider_iterator provider = algo->second.begin();
 
       while(provider != algo->second.end())
@@ -99,6 +117,32 @@ void Algorithm_Cache<T>::add(T* algo,
 
    if(algo->name() != requested_name && aliases.find(requested_name) == aliases.end())
       aliases[requested_name] = algo->name();
+   }
+
+/**
+* Find the providers of this algo (if any)
+*/
+template<typename T> std::vector<std::string>
+Algorithm_Cache<T>::providers_of(const std::string& algo_name)
+   {
+   Mutex_Holder lock(mutex);
+
+   std::vector<std::string> providers;
+
+   algorithms_iterator algo = find_algorithm(algo_name);
+
+   if(algo != algorithms.end())
+      {
+      provider_iterator provider = algo->second.begin();
+
+      while(provider != algo->second.end())
+         {
+         providers.push_back(provider->first);
+         ++provider;
+         }
+      }
+
+   return providers;
    }
 
 /**

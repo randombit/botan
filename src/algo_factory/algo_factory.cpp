@@ -19,7 +19,10 @@ namespace Botan {
 
 Algorithm_Factory::Algorithm_Factory(Mutex_Factory& mf) :
    mutex_factory(mf),
-   hash_cache(mf.make())
+   block_cipher_cache(mf.make()),
+   stream_cipher_cache(mf.make()),
+   hash_cache(mf.make()),
+   mac_cache(mf.make())
    {
 
    }
@@ -56,125 +59,95 @@ Engine* Algorithm_Factory::get_engine_n(u32bit n) const
 * Return the possible providers of a request
 */
 std::vector<std::string>
-Algorithm_Factory::providers_of(const SCAN_Name& request)
+Algorithm_Factory::providers_of(const std::string& algo_name)
    {
-   std::vector<std::string> providers;
-   for(u32bit i = 0; i != engines.size(); ++i)
-      {
-      std::string provider = engines[i]->provider_name();
-      if(request.provider_allowed(provider))
-         {
-         if(engines[i]->prototype_block_cipher(request, *this) ||
-            engines[i]->prototype_stream_cipher(request, *this) ||
-            engines[i]->prototype_hash_function(request, *this) ||
-            engines[i]->prototype_mac(request, *this))
-            {
-            providers.push_back(provider);
-            }
-         }
-      }
+   if(prototype_block_cipher(algo_name))
+      return block_cipher_cache.providers_of(algo_name);
 
-   return providers;
+   if(prototype_stream_cipher(algo_name))
+      return stream_cipher_cache.providers_of(algo_name);
+
+   if(prototype_hash_function(algo_name))
+      return hash_cache.providers_of(algo_name);
+
+   if(prototype_mac(algo_name))
+      return mac_cache.providers_of(algo_name);
+
+   return std::vector<std::string>();
    }
 
 /**
-* Return the prototypical object cooresponding to this request
+* Return the prototypical block cipher cooresponding to this request
 */
 const BlockCipher*
 Algorithm_Factory::prototype_block_cipher(const SCAN_Name& request)
    {
+   if(const BlockCipher* cache_hit = block_cipher_cache.get(request))
+      return cache_hit;
+
    for(u32bit i = 0; i != engines.size(); ++i)
       {
-      if(request.provider_allowed(engines[i]->provider_name()))
-         {
-         const BlockCipher* algo =
-            engines[i]->prototype_block_cipher(request, *this);
-
-         if(algo)
-            return algo;
-         }
+      if(BlockCipher* impl = engines[i]->find_block_cipher(request, *this))
+         block_cipher_cache.add(impl, request.as_string(), engines[i]->provider_name());
       }
 
-   return 0;
+   return block_cipher_cache.get(request);
    }
 
 /**
-* Return a new object cooresponding to this request
+* Return a new block cipher cooresponding to this request
 */
 BlockCipher* Algorithm_Factory::make_block_cipher(const SCAN_Name& request)
    {
-   const BlockCipher* prototype = prototype_block_cipher(request);
-   if(prototype)
+   if(const BlockCipher* prototype = prototype_block_cipher(request))
       return prototype->clone();
-
    throw Algorithm_Not_Found(request.as_string());
    }
 
 /**
-* Add a new object
+* Add a new block cipher
 */
-void Algorithm_Factory::add_block_cipher(BlockCipher* hash)
+void Algorithm_Factory::add_block_cipher(BlockCipher* block_cipher,
+                                         const std::string& provider)
    {
-   for(u32bit i = 0; i != engines.size(); ++i)
-      {
-      if(engines[i]->can_add_algorithms())
-         {
-         engines[i]->add_algorithm(hash);
-         return;
-         }
-      }
-
-   throw Exception("Algorithm_Factory::add_block_cipher: No engine found");
+   block_cipher_cache.add(block_cipher, block_cipher->name(), provider);
    }
 
 /**
-* Return the prototypical object cooresponding to this request
+* Return the prototypical stream cipher cooresponding to this request
 */
 const StreamCipher*
 Algorithm_Factory::prototype_stream_cipher(const SCAN_Name& request)
    {
+   if(const StreamCipher* cache_hit = stream_cipher_cache.get(request))
+      return cache_hit;
+
    for(u32bit i = 0; i != engines.size(); ++i)
       {
-      if(request.provider_allowed(engines[i]->provider_name()))
-         {
-         const StreamCipher* algo =
-            engines[i]->prototype_stream_cipher(request, *this);
-
-         if(algo)
-            return algo;
-         }
+      if(StreamCipher* impl = engines[i]->find_stream_cipher(request, *this))
+         stream_cipher_cache.add(impl, request.as_string(), engines[i]->provider_name());
       }
 
-   return 0;
+   return stream_cipher_cache.get(request);
    }
 
 /**
-* Return a new object cooresponding to this request
+* Return a new stream cipher cooresponding to this request
 */
 StreamCipher* Algorithm_Factory::make_stream_cipher(const SCAN_Name& request)
    {
-   const StreamCipher* prototype = prototype_stream_cipher(request);
-   if(prototype)
+   if(const StreamCipher* prototype = prototype_stream_cipher(request))
       return prototype->clone();
-
    throw Algorithm_Not_Found(request.as_string());
    }
 
 /**
-* Add a new object
+* Add a new stream cipher
 */
-void Algorithm_Factory::add_stream_cipher(StreamCipher* hash)
+void Algorithm_Factory::add_stream_cipher(StreamCipher* stream_cipher,
+                                         const std::string& provider)
    {
-   for(u32bit i = 0; i != engines.size(); ++i)
-      {
-      if(engines[i]->can_add_algorithms())
-         {
-         engines[i]->add_algorithm(hash);
-         return;
-         }
-      }
-
-   throw Exception("Algorithm_Factory::add_stream_cipher: No engine found");
+   stream_cipher_cache.add(stream_cipher, stream_cipher->name(), provider);
    }
 
 /**
@@ -183,16 +156,13 @@ void Algorithm_Factory::add_stream_cipher(StreamCipher* hash)
 const HashFunction*
 Algorithm_Factory::prototype_hash_function(const SCAN_Name& request)
    {
-   const HashFunction* cache_hit = hash_cache.get(request);
-   if(cache_hit)
+   if(const HashFunction* cache_hit = hash_cache.get(request))
       return cache_hit;
 
    for(u32bit i = 0; i != engines.size(); ++i)
       {
       if(HashFunction* impl = engines[i]->find_hash(request, *this))
-         {
          hash_cache.add(impl, request.as_string(), engines[i]->provider_name());
-         }
       }
 
    return hash_cache.get(request);
@@ -203,28 +173,18 @@ Algorithm_Factory::prototype_hash_function(const SCAN_Name& request)
 */
 HashFunction* Algorithm_Factory::make_hash_function(const SCAN_Name& request)
    {
-   const HashFunction* prototype = prototype_hash_function(request);
-   if(prototype)
+   if(const HashFunction* prototype = prototype_hash_function(request))
       return prototype->clone();
-
    throw Algorithm_Not_Found(request.as_string());
    }
 
 /**
-* Add a new object
+* Add a new hash
 */
-void Algorithm_Factory::add_hash_function(HashFunction* hash)
+void Algorithm_Factory::add_hash_function(HashFunction* hash,
+                                          const std::string& provider)
    {
-   for(u32bit i = 0; i != engines.size(); ++i)
-      {
-      if(engines[i]->can_add_algorithms())
-         {
-         engines[i]->add_algorithm(hash);
-         return;
-         }
-      }
-
-   throw Exception("Algorithm_Factory::add_hash_function: No engine found");
+   hash_cache.add(hash, hash->name(), provider);
    }
 
 /**
@@ -233,19 +193,16 @@ void Algorithm_Factory::add_hash_function(HashFunction* hash)
 const MessageAuthenticationCode*
 Algorithm_Factory::prototype_mac(const SCAN_Name& request)
    {
+   if(const MessageAuthenticationCode* cache_hit = mac_cache.get(request))
+      return cache_hit;
+
    for(u32bit i = 0; i != engines.size(); ++i)
       {
-      if(request.provider_allowed(engines[i]->provider_name()))
-         {
-         const MessageAuthenticationCode* algo =
-            engines[i]->prototype_mac(request, *this);
-
-         if(algo)
-            return algo;
-         }
+      if(MessageAuthenticationCode* impl = engines[i]->find_mac(request, *this))
+         mac_cache.add(impl, request.as_string(), engines[i]->provider_name());
       }
 
-   return 0;
+   return mac_cache.get(request);
    }
 
 /**
@@ -254,28 +211,18 @@ Algorithm_Factory::prototype_mac(const SCAN_Name& request)
 MessageAuthenticationCode*
 Algorithm_Factory::make_mac(const SCAN_Name& request)
    {
-   const MessageAuthenticationCode* prototype = prototype_mac(request);
-   if(prototype)
+   if(const MessageAuthenticationCode* prototype = prototype_mac(request))
       return prototype->clone();
-
    throw Algorithm_Not_Found(request.as_string());
    }
 
 /**
-* Add a new object
+* Add a new mac
 */
-void Algorithm_Factory::add_mac(MessageAuthenticationCode* hash)
+void Algorithm_Factory::add_mac(MessageAuthenticationCode* mac,
+                                const std::string& provider)
    {
-   for(u32bit i = 0; i != engines.size(); ++i)
-      {
-      if(engines[i]->can_add_algorithms())
-         {
-         engines[i]->add_algorithm(hash);
-         return;
-         }
-      }
-
-   throw Exception("Algorithm_Factory::add_mac: No engine found");
+   mac_cache.add(mac, mac->name(), provider);
    }
 
 }
