@@ -80,7 +80,9 @@ class BOTAN_DLL Filter
       SecureVector<byte> write_queue;
       std::vector<Filter*> next;
       u32bit port_num, filter_owns;
-      bool owned; // true if filter belongs to a pipe --> prohibit filter sharing!
+
+      // true if filter belongs to a pipe --> prohibit filter sharing!
+      bool owned;
    };
 
 /**

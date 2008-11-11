@@ -212,7 +212,8 @@ Algorithm_Factory::prototype_mac(const SCAN_Name& request)
 
       SCAN_Name request_i(request.as_string(), provider);
 
-      if(MessageAuthenticationCode* impl = engines[i]->find_mac(request_i, *this))
+      if(MessageAuthenticationCode* impl =
+            engines[i]->find_mac(request_i, *this))
          mac_cache.add(impl, request.as_string(), provider);
       }
 

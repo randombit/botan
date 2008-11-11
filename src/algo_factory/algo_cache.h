@@ -29,7 +29,9 @@ class Algorithm_Cache
       Algorithm_Cache(Mutex* m) : mutex(m) {}
       ~Algorithm_Cache();
    private:
-      typedef typename std::map<std::string, std::map<std::string, T*> >::iterator algorithms_iterator;
+      typedef typename std::map<std::string, std::map<std::string, T*> >::iterator
+         algorithms_iterator;
+
       typedef typename std::map<std::string, T*>::iterator provider_iterator;
 
       algorithms_iterator find_algorithm(const std::string& algo_spec);
@@ -76,7 +78,7 @@ const T* Algorithm_Cache<T>::get(const SCAN_Name& request)
 
    const std::string requested_provider = request.provider();
 
-   if(requested_provider != "") // If a specific request, allow that provider or core
+   if(requested_provider != "")
       {
       provider_iterator provider = algo->second.find(requested_provider);
 
@@ -115,8 +117,11 @@ void Algorithm_Cache<T>::add(T* algo,
    delete algorithms[algo->name()][provider];
    algorithms[algo->name()][provider] = algo;
 
-   if(algo->name() != requested_name && aliases.find(requested_name) == aliases.end())
+   if(algo->name() != requested_name &&
+      aliases.find(requested_name) == aliases.end())
+      {
       aliases[requested_name] = algo->name();
+      }
    }
 
 /**

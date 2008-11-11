@@ -401,7 +401,8 @@ class BOTAN_DLL BigInt
        * @param base number-base of the integer in buf
        * @result BigInt-representing the given integer read from the byte array
        */
-      static BigInt decode(const byte buf[], u32bit length, Base base = Binary);
+      static BigInt decode(const byte buf[], u32bit length,
+                           Base base = Binary);
 
       static BigInt decode(const MemoryRegion<byte>&, Base = Binary);
 

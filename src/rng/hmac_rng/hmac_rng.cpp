@@ -68,7 +68,9 @@ void HMAC_RNG::randomize(byte out[], u32bit length)
    /* Every once in a while do a fast poll of a entropy source */
    if(entropy_sources.size() && (counter % 65536 == 0))
       {
-      u32bit got = entropy_sources.at(source_index)->fast_poll(io_buffer, io_buffer.size());
+      u32bit got = entropy_sources.at(source_index)->
+                       fast_poll(io_buffer, io_buffer.size());
+
       source_index = (source_index + 1) % entropy_sources.size();
       extractor->update(io_buffer, got);
       }
