@@ -14,7 +14,7 @@ namespace Botan {
 *************************************************/
 void LibraryInitializer::initialize(const std::string& arg_string)
    {
-   bool thread_safe = true;
+   bool thread_safe = false;
 
    const std::vector<std::string> arg_list = split_on(arg_string, ' ');
    for(u32bit j = 0; j != arg_list.size(); ++j)
