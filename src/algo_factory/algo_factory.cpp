@@ -45,6 +45,31 @@ Engine* Algorithm_Factory::get_engine_n(u32bit n) const
    }
 
 /**
+* Return the possible providers of a request
+*/
+std::vector<std::string>
+Algorithm_Factory::providers_of(const SCAN_Name& request)
+   {
+   std::vector<std::string> providers;
+   for(u32bit i = 0; i != engines.size(); ++i)
+      {
+      std::string provider = engines[i]->provider_name();
+      if(request.provider_allowed(provider))
+         {
+         if(engines[i]->prototype_block_cipher(request, *this) ||
+            engines[i]->prototype_stream_cipher(request, *this) ||
+            engines[i]->prototype_hash_function(request, *this) ||
+            engines[i]->prototype_mac(request, *this))
+            {
+            providers.push_back(provider);
+            }
+         }
+      }
+
+   return providers;
+   }
+
+/**
 * Return the prototypical object cooresponding to this request
 */
 const BlockCipher*

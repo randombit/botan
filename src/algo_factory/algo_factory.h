@@ -39,6 +39,8 @@ class BOTAN_DLL Algorithm_Factory
          };
       friend class Engine_Iterator;
 
+      std::vector<std::string> providers_of(const SCAN_Name& request);
+
       // Block cipher operations
       const BlockCipher* prototype_block_cipher(const SCAN_Name& request);
       BlockCipher* make_block_cipher(const SCAN_Name& request);
