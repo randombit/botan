@@ -231,8 +231,7 @@ Default_Engine::find_block_cipher(const SCAN_Name& request,
 #if defined(BOTAN_HAS_LUBY_RACKOFF)
    if(request.algo_name() == "Luby-Rackoff" && request.arg_count() == 1)
       {
-      const HashFunction* hash =
-         af.make_hash_function(request.arg(0));
+      const HashFunction* hash = af.prototype_hash_function(request.arg(0));
 
       if(hash)
          return new LubyRackoff(hash->clone());
