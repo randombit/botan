@@ -58,7 +58,7 @@ Library_State& global_state()
       on or memory might leak.
    */
    if(!global_lib_state)
-      LibraryInitializer::initialize(true);
+      LibraryInitializer::initialize("thread_safe=true");
 
    return (*global_lib_state);
    }

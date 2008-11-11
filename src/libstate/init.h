@@ -19,7 +19,7 @@ namespace Botan {
 class BOTAN_DLL LibraryInitializer
    {
    public:
-      static void initialize(bool thread_safe);
+      static void initialize(const std::string& options);
 
       static void deinitialize();
 
@@ -27,8 +27,8 @@ class BOTAN_DLL LibraryInitializer
       * Initialize the library
       * @param thread_safe if the library should use a thread-safe mutex
       */
-      LibraryInitializer(bool thread_safe = false)
-         { LibraryInitializer::initialize(thread_safe); }
+      LibraryInitializer(const std::string& options)
+         { LibraryInitializer::initialize(options); }
 
       ~LibraryInitializer() { LibraryInitializer::deinitialize(); }
    };

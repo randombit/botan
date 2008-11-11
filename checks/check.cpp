@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
 
       test_types(); // do this always
 
-      Botan::LibraryInitializer init(false);
+      Botan::LibraryInitializer init("thread_safe=no");
 
       Botan::AutoSeeded_RNG rng;
 
