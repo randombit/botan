@@ -22,8 +22,6 @@ data_src.cpp
 data_src.h
 datastor.cpp
 datastor.h
-entropy.cpp
-entropy.h
 exceptn.cpp
 exceptn.h
 loadstor.h

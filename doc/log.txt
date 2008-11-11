@@ -1,5 +1,6 @@
 
 * 1.7.21, ????-??-??
+ - Drop use of entropy estimation in the PRNGs
  - Make algorithm lookup much more configuable
  - Add a function for runtime performance testing
  - Increase intervals between HMAC_RNG automatic reseeding

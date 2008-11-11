@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/randpool.h>
-#include <botan/entropy.h>
 #include <botan/loadstor.h>
 #include <botan/xor_buf.h>
 #include <botan/util.h>
@@ -109,7 +108,19 @@ void Randpool::reseed()
    {
    SecureVector<byte> buffer(128);
 
-   Entropy_Estimator estimate;
+   u32bit entropy_est = 0;
+
+   /*
+   When we reseed, assume we get 1 bit per byte sampled.
+
+   This class used to perform entropy estimation, but what we really
+   want to measure is the conditional entropy of the data with respect
+   to an unknown attacker with unknown capabilities.  For this reason
+   making any sort of sane estimate is impossible. See also
+      "Boaz Barak, Shai Halevi: A model and architecture for
+       pseudo-random generation with applications to /dev/random. ACM
+       Conference on Computer and Communications Security 2005."
+   */
 
    // First do a fast poll of all sources (no matter what)
    for(u32bit j = 0; j != entropy_sources.size(); ++j)
@@ -117,13 +128,8 @@ void Randpool::reseed()
       u32bit got = entropy_sources[j]->fast_poll(buffer, buffer.size());
 
       mac->update(buffer, got);
-      estimate.update(buffer, got, 96);
+      entropy_est += got;
       }
-
-   /* Limit assumed entropy from fast polls (to ensure we do at
-   least a few slow polls)
-   */
-   estimate.set_upper_bound(256);
 
    // Then do a slow poll, until we think we have got enough entropy
    for(u32bit j = 0; j != entropy_sources.size(); ++j)
@@ -131,10 +137,9 @@ void Randpool::reseed()
       u32bit got = entropy_sources[j]->slow_poll(buffer, buffer.size());
 
       mac->update(buffer, got);
+      entropy_est += got;
 
-      estimate.update(buffer, got, 256);
-
-      if(estimate.value() > 384)
+      if(entropy_est > 512)
          break;
       }
 
@@ -143,7 +148,7 @@ void Randpool::reseed()
    xor_buf(pool, mac_val, mac_val.size());
    mix_pool();
 
-   entropy += estimate.value();
+   entropy = std::min<u32bit>(entropy + entropy_est, 8 * mac_val.size());
    }
 
 /*************************************************
@@ -155,9 +160,8 @@ void Randpool::add_entropy(const byte input[], u32bit length)
    xor_buf(pool, mac_val, mac_val.size());
    mix_pool();
 
-   Entropy_Estimator estimate;
-   estimate.update(input, length);
-   entropy += estimate.value();
+   // Assume 1 bit conditional entropy per byte of input
+   entropy = std::min<u32bit>(entropy + length, 8 * mac_val.size());
    }
 
 /*************************************************
@@ -173,7 +177,7 @@ void Randpool::add_entropy_source(EntropySource* src)
 *************************************************/
 bool Randpool::is_seeded() const
    {
-   return (entropy >= 384);
+   return (entropy >= 7 * mac->OUTPUT_LENGTH);
    }
 
 /*************************************************

@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/hmac_rng.h>
-#include <botan/entropy.h>
 #include <botan/loadstor.h>
 #include <botan/xor_buf.h>
 #include <botan/util.h>
