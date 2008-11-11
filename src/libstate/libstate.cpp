@@ -300,7 +300,7 @@ Library_State::Library_State()
    mutex_factory = 0;
    allocator_lock = config_lock = 0;
    cached_default_allocator = 0;
-   algorithm_factory = 0;
+   m_algorithm_factory = 0;
    }
 
 /*************************************************
