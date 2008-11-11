@@ -47,6 +47,9 @@ SCAN_Name::SCAN_Name(const std::string& algo_spec,
    m_provider = provider;
 
    name = parse_and_deref_aliases(algo_spec);
+
+   if(name.size() == 0)
+      throw Decoding_Error("Bad SCAN name " + algo_spec);
    }
 
 SCAN_Name SCAN_Name::arg(u32bit i) const
