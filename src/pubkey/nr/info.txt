@@ -19,6 +19,5 @@ bigint
 dl_algo
 keypair
 numbertheory
-pk_lookup
 pubkey
 </requires>

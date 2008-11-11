@@ -2,7 +2,7 @@ realname "Public Key Base"
 
 define PUBLIC_KEY_CRYPTO
 
-load_on dep
+load_on auto
 
 <requires>
 asn1
@@ -15,14 +15,16 @@ rng
 </requires>
 
 <add>
-pubkey_enums.h
-pubkey_enums.cpp
+pk_algs.cpp
+pk_algs.h
 pk_keys.cpp
 pk_keys.h
 pkcs8.cpp
 pkcs8.h
 pubkey.cpp
 pubkey.h
+pubkey_enums.cpp
+pubkey_enums.h
 x509_key.cpp
 x509_key.h
 </add>

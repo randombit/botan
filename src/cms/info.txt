@@ -8,7 +8,6 @@ load_on auto
 asn1
 filters
 oid_lookup
-pk_lookup
 pubkey
 x509
 </requires>

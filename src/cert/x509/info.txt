@@ -8,7 +8,6 @@ load_on auto
 asn1
 bigint
 pubkey
-pk_lookup
 oid_lookup
 </requires>
 

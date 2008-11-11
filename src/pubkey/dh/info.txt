@@ -18,5 +18,4 @@ bigint
 dl_algo
 numbertheory
 pubkey
-pk_lookup
 </requires>

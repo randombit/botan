@@ -11,5 +11,4 @@ keypair.h
 
 <requires>
 pubkey
-pk_lookup
 </requires>

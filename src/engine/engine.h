@@ -12,7 +12,7 @@
 #include <botan/stream_cipher.h>
 #include <botan/hash.h>
 #include <botan/mac.h>
-#include <botan/bigint.h>
+#include <botan/pow_mod.h>
 
 #include <utility>
 #include <map>
@@ -51,7 +51,6 @@ namespace Botan {
 
 class Algorithm_Factory;
 class Keyed_Filter;
-class Modular_Exponentiator;
 
 /*************************************************
 * Engine Base Class                              *
