@@ -136,21 +136,7 @@ class BOTAN_DLL Engine
          prototype_mac(const SCAN_Name& request,
                        Algorithm_Factory& af) const;
 
-      // Add new algorithms
-      void add_algorithm(BlockCipher*) const;
-      void add_algorithm(StreamCipher*) const;
-      void add_algorithm(HashFunction*) const;
-      void add_algorithm(MessageAuthenticationCode*) const;
-
-      // Engine information
-      virtual bool can_add_algorithms() { return false; }
-      virtual std::string provider_name() const = 0;
-
-      void initialize(Mutex_Factory& mf);
-
-      Engine();
-      virtual ~Engine();
-   private:
+      // Lookup functions
       virtual BlockCipher* find_block_cipher(const SCAN_Name&,
                                              Algorithm_Factory&) const
          { return 0; }
@@ -167,6 +153,22 @@ class BOTAN_DLL Engine
                                                   Algorithm_Factory&) const
          { return 0; }
 
+      // Add new algorithms
+      void add_algorithm(BlockCipher*) const;
+      void add_algorithm(StreamCipher*) const;
+      void add_algorithm(HashFunction*) const;
+      void add_algorithm(MessageAuthenticationCode*) const;
+
+      // Engine information
+      virtual bool can_add_algorithms() { return false; }
+      virtual std::string provider_name() const = 0;
+
+      void initialize(Mutex_Factory& mf);
+
+      Engine();
+      virtual ~Engine();
+
+   private:
       Algorithm_Cache<BlockCipher>* cache_of_bc;
       Algorithm_Cache<StreamCipher>* cache_of_sc;
       Algorithm_Cache<HashFunction>* cache_of_hf;
