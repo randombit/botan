@@ -28,6 +28,7 @@ class BOTAN_DLL Library_State
       void initialize(bool thread_safe);
 
       Algorithm_Factory& algo_factory();
+      Algorithm_Factory& algorithm_factory() { return algo_factory(); }
 
       void add_engine(class Engine*);
 
@@ -110,7 +111,7 @@ class BOTAN_DLL Library_State
       mutable Allocator* cached_default_allocator;
       std::vector<Allocator*> allocators;
 
-      Algorithm_Factory* algorithm_factory;
+      Algorithm_Factory* m_algorithm_factory;
    };
 
 /*************************************************

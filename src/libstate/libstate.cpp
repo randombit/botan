@@ -221,9 +221,9 @@ Return a reference to the Algorithm_Factory
 */
 Algorithm_Factory& Library_State::algo_factory()
    {
-   if(!algorithm_factory)
+   if(!m_algorithm_factory)
       throw Invalid_State("Uninitialized in Library_State::algo_factory");
-   return *algorithm_factory;
+   return *m_algorithm_factory;
    }
 
 /*************************************************
@@ -267,21 +267,21 @@ void Library_State::initialize(bool thread_safe)
 
    load_default_config();
 
-   algorithm_factory = new Algorithm_Factory;
+   m_algorithm_factory = new Algorithm_Factory;
 
 #if defined(BOTAN_HAS_ENGINE_GNU_MP)
-      algorithm_factory->add_engine(new GMP_Engine);
+   m_algorithm_factory->add_engine(new GMP_Engine);
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_OPENSSL)
-      algorithm_factory->add_engine(new OpenSSL_Engine);
+   m_algorithm_factory->add_engine(new OpenSSL_Engine);
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_ASSEMBLER)
-      algorithm_factory->add_engine(new Assembler_Engine);
+   m_algorithm_factory->add_engine(new Assembler_Engine);
 #endif
 
-   algorithm_factory->add_engine(new Default_Engine);
+   m_algorithm_factory->add_engine(new Default_Engine);
    }
 
 /**
@@ -289,7 +289,7 @@ void Library_State::initialize(bool thread_safe)
 */
 void Library_State::add_engine(Engine* engine)
    {
-   algorithm_factory->add_engine(engine);
+   m_algorithm_factory->add_engine(engine);
    }
 
 /*************************************************
@@ -308,7 +308,7 @@ Library_State::Library_State()
 *************************************************/
 Library_State::~Library_State()
    {
-   delete algorithm_factory;
+   delete m_algorithm_factory;
 
    cached_default_allocator = 0;
 
