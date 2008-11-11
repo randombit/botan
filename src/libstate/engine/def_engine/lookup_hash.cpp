@@ -166,10 +166,7 @@ Default_Engine::find_hash(const SCAN_Name& request,
       */
       for(size_t i = 0; i != request.arg_count(); ++i)
          {
-         SCAN_Name hash_request(request.arg(i),
-                                request.providers_string());
-
-         const HashFunction* hash = af.prototype_hash_function(hash_request);
+         const HashFunction* hash = af.prototype_hash_function(request.arg(i));
          if(!hash)
             return 0;
 

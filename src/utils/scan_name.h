@@ -53,7 +53,13 @@ class SCAN_Name
       @param i which argument
       @return the ith argument
       */
-      std::string arg(u32bit i) const;
+      std::string arg_as_string(u32bit i) const;
+
+      /**
+      @param i which argument
+      @return the ith argument
+      */
+      SCAN_Name arg(u32bit i) const;
 
       /**
       @param i which argument
