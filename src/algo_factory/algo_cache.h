@@ -18,13 +18,17 @@ class Algorithm_Cache
    {
    public:
       const T* get(const SCAN_Name& request);
-      void add(T* algo, const std::string& provider);
+      void add(T* algo,
+               const std::string& requested_name,
+               const std::string& provider);
 
       Algorithm_Cache(Mutex* m) : mutex(m) {}
       ~Algorithm_Cache();
    private:
       Mutex* mutex;
+      std::map<std::string, std::string> aliases;
       std::map<std::string, std::map<std::string, T*> > algorithms;
+
       typedef typename std::map<std::string, std::map<std::string, T*> >::iterator algorithms_iterator;
       typedef typename std::map<std::string, T*>::iterator provider_iterator;
    };
@@ -39,10 +43,20 @@ const T* Algorithm_Cache<T>::get(const SCAN_Name& request)
 
    algorithms_iterator algo = algorithms.find(request.as_string());
 
+   // Not found? Check if a known alias
+   if(algo == algorithms.end())
+      {
+      std::map<std::string, std::string>::const_iterator alias =
+         aliases.find(request.as_string());
+
+      if(alias != aliases.end())
+         algo = algorithms.find(alias->second);
+      }
+
    if(algo == algorithms.end())
       return 0;
 
-   const std::string requested_provider = request.providers_string();
+   const std::string requested_provider = request.provider();
 
    if(requested_provider != "")
       {
@@ -71,7 +85,9 @@ const T* Algorithm_Cache<T>::get(const SCAN_Name& request)
 * Add an implementation to the cache
 */
 template<typename T>
-void Algorithm_Cache<T>::add(T* algo, const std::string& provider)
+void Algorithm_Cache<T>::add(T* algo,
+                             const std::string& requested_name,
+                             const std::string& provider)
    {
    if(!algo)
       return;
@@ -80,6 +96,9 @@ void Algorithm_Cache<T>::add(T* algo, const std::string& provider)
 
    delete algorithms[algo->name()][provider];
    algorithms[algo->name()][provider] = algo;
+
+   if(algo->name() != requested_name && aliases.find(requested_name) == aliases.end())
+      aliases[requested_name] = algo->name();
    }
 
 /**

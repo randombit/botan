@@ -178,47 +178,24 @@ void Algorithm_Factory::add_stream_cipher(StreamCipher* hash)
    }
 
 /**
-* Return the prototypical object cooresponding to this request
+* Return the prototypical object cooresponding to this request (if found)
 */
 const HashFunction*
 Algorithm_Factory::prototype_hash_function(const SCAN_Name& request)
    {
-#if 1
-   for(u32bit i = 0; i != engines.size(); ++i)
-      {
-      if(request.provider_allowed(engines[i]->provider_name()))
-         {
-         const HashFunction* algo =
-            engines[i]->prototype_hash_function(request, *this);
-
-         if(algo)
-            return algo;
-         }
-      }
-
-   return 0;
-#else
    const HashFunction* cache_hit = hash_cache.get(request);
    if(cache_hit)
       return cache_hit;
 
-   // Search for all providers of this algorithm and add them to the cache
    for(u32bit i = 0; i != engines.size(); ++i)
       {
-      const std::string provider = engines[i]->provider_name();
-      HashFunction* impl = engines[i]->find_hash(request, *this);
-
-      if(impl)
-         hash_cache.add(impl, provider);
+      if(HashFunction* impl = engines[i]->find_hash(request, *this))
+         {
+         hash_cache.add(impl, request.as_string(), engines[i]->provider_name());
+         }
       }
 
-   /* Now try the cache search again (if the providers don't match up
-      with ones that exist in this build, this might still fail and
-      return 0).
-   */
-
    return hash_cache.get(request);
-#endif
    }
 
 /**
