@@ -1,5 +1,7 @@
 
 * 1.7.21, ????-??-??
+ - Make algorithm lookup much more configuable
+ - Add a function for runtime performance testing
  - Increase intervals between HMAC_RNG automatic reseeding
  - Drop InitializerOptions class, all options but thread safety
 
