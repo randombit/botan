@@ -7,7 +7,6 @@
 #include <botan/parsing.h>
 #include <botan/filters.h>
 #include <botan/libstate.h>
-#include <botan/lookup.h>
 #include <botan/mode_pad.h>
 #include <memory>
 

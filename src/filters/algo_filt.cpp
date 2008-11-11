@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/filters.h>
-#include <botan/lookup.h>
 #include <botan/libstate.h>
 #include <algorithm>
 
@@ -16,7 +15,8 @@ namespace Botan {
 StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name) :
    buffer(DEFAULT_BUFFERSIZE)
    {
-   base_ptr = cipher = get_stream_cipher(sc_name);
+   Algorithm_Factory& af = global_state().algo_factory();
+   base_ptr = cipher = af.make_stream_cipher(sc_name);
    }
 
 /*************************************************
@@ -35,7 +35,8 @@ StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name,
                                          const SymmetricKey& key) :
    buffer(DEFAULT_BUFFERSIZE)
    {
-   base_ptr = cipher = get_stream_cipher(sc_name);
+   Algorithm_Factory& af = global_state().algo_factory();
+   base_ptr = cipher = af.make_stream_cipher(sc_name);
    cipher->set_key(key);
    }
 
@@ -90,7 +91,8 @@ void Hash_Filter::end_msg()
 MAC_Filter::MAC_Filter(const std::string& mac_name, u32bit len) :
    OUTPUT_LENGTH(len)
    {
-   base_ptr = mac = get_mac(mac_name);
+   Algorithm_Factory& af = global_state().algo_factory();
+   base_ptr = mac = af.make_mac(mac_name);
    }
 
 /*************************************************
@@ -99,7 +101,8 @@ MAC_Filter::MAC_Filter(const std::string& mac_name, u32bit len) :
 MAC_Filter::MAC_Filter(const std::string& mac_name, const SymmetricKey& key,
                        u32bit len) : OUTPUT_LENGTH(len)
    {
-   base_ptr = mac = get_mac(mac_name);
+   Algorithm_Factory& af = global_state().algo_factory();
+   base_ptr = mac = af.make_mac(mac_name);
    mac->set_key(key);
    }
 

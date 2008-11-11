@@ -190,6 +190,9 @@ KDF* get_kdf(const std::string& algo_spec)
    {
    SCAN_Name request(algo_spec);
 
+   if(request.algo_name() == "Raw")
+      return 0; // No KDF
+
 #if defined(BOTAN_HAS_KDF1)
    if(request.algo_name() == "KDF1" && request.arg_count() == 1)
       return new KDF1(get_hash(request.arg(0)));

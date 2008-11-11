@@ -33,6 +33,7 @@
 
 #if defined(BOTAN_HAS_DLIES)
   #include <botan/dlies.h>
+  #include <botan/kdf.h>
 #endif
 
 #include <botan/filters.h>
@@ -542,8 +543,8 @@ u32bit validate_dlies(const std::string& algo,
    if(options.size() != 3)
       throw Exception("DLIES needs three options: " + opt_str);
 
-   std::string kdf = options[0];
-   std::string mac = options[1];
+   KDF* kdf = get_kdf(options[0]);
+   MessageAuthenticationCode* mac = get_mac(options[1]);
    u32bit mac_key_len = to_u32bit(options[2]);
 
    PK_Decryptor* d = new DLIES_Decryptor(to, kdf, mac, mac_key_len);

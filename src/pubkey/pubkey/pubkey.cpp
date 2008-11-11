@@ -4,7 +4,6 @@
 *************************************************/
 
 #include <botan/pubkey.h>
-#include <botan/lookup.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
@@ -361,8 +360,8 @@ bool PK_Verifier_wo_MR::validate_signature(const MemoryRegion<byte>& msg,
 * PK_Key_Agreement Constructor                   *
 *************************************************/
 PK_Key_Agreement::PK_Key_Agreement(const PK_Key_Agreement_Key& k,
-                                   const std::string& k_name) :
-   key(k), kdf_name(k_name)
+                                   KDF* kdf_obj) :
+   key(k), kdf(kdf_obj)
    {
    }
 
@@ -385,13 +384,11 @@ SymmetricKey PK_Key_Agreement::derive_key(u32bit key_len, const byte in[],
                                           u32bit in_len, const byte params[],
                                           u32bit params_len) const
    {
-   std::auto_ptr<KDF> kdf((kdf_name == "Raw") ? 0 : get_kdf(kdf_name));
    OctetString z = key.derive_key(in, in_len);
+   if(!kdf)
+      return z;
 
-   if(kdf.get())
-      z = kdf->derive_key(key_len, z.bits_of(), params, params_len);
-
-   return z;
+   return kdf->derive_key(key_len, z.bits_of(), params, params_len);
    }
 
 }

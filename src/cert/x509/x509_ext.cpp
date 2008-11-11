@@ -4,9 +4,9 @@
 *************************************************/
 
 #include <botan/x509_ext.h>
+#include <botan/sha160.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/lookup.h>
 #include <botan/oids.h>
 #include <botan/libstate.h>
 #include <botan/bit_ops.h>
@@ -303,8 +303,8 @@ void Subject_Key_ID::contents_to(Data_Store& subject, Data_Store&) const
 *************************************************/
 Subject_Key_ID::Subject_Key_ID(const MemoryRegion<byte>& pub_key)
    {
-   std::auto_ptr<HashFunction> hash(get_hash("SHA-1"));
-   key_id = hash->process(pub_key);
+   SHA_160 hash;
+   key_id = hash.process(pub_key);
    }
 
 /*************************************************

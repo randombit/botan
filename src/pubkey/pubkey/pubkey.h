@@ -11,6 +11,7 @@
 #include <botan/rng.h>
 #include <botan/eme.h>
 #include <botan/emsa.h>
+#include <botan/kdf.h>
 
 namespace Botan {
 
@@ -268,17 +269,17 @@ class BOTAN_DLL PK_Key_Agreement
       /**
       * Construct a PK Key Agreement.
       * @param key the key to use
-      * @param kdf_name the name of the key derivation function to use
+      * @param kdf the KDF to use
       */
-      PK_Key_Agreement(const PK_Key_Agreement_Key& key,
-                       const std::string& kdf_name);
+      PK_Key_Agreement(const PK_Key_Agreement_Key& key, KDF* kdf);
 
+      ~PK_Key_Agreement() { delete kdf; }
    private:
       PK_Key_Agreement(const PK_Key_Agreement_Key&);
       PK_Key_Agreement& operator=(const PK_Key_Agreement&);
 
       const PK_Key_Agreement_Key& key;
-      const std::string kdf_name;
+      KDF* kdf;
    };
 
 /**

@@ -30,6 +30,9 @@
 
 #if defined(BOTAN_HAS_DLIES)
   #include <botan/dlies.h>
+  #include <botan/kdf2.h>
+  #include <botan/hmac.h>
+  #include <botan/sha160.h>
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
@@ -525,10 +528,15 @@ void benchmark_dlies(RandomNumberGenerator& rng,
 
          DH_PublicKey dh2_pub(dh2_priv);
 
-         DLIES_Encryptor dlies_enc(dh1_priv);
+         DLIES_Encryptor dlies_enc(dh1_priv,
+                                   new KDF2(new SHA_160),
+                                   new HMAC(new SHA_160));
+
          dlies_enc.set_other_key(dh2_pub.public_value());
 
-         DLIES_Decryptor dlies_dec(dh2_priv);
+         DLIES_Decryptor dlies_dec(dh2_priv,
+                                   new KDF2(new SHA_160),
+                                   new HMAC(new SHA_160));
 
          benchmark_enc_dec(dlies_enc, dlies_dec,
                            enc_timer, dec_timer, rng,

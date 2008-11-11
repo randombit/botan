@@ -68,7 +68,7 @@ PK_Verifier* get_pk_verifier(const PK_Verifying_wo_MR_Key& key,
 PK_Key_Agreement* get_pk_kas(const PK_Key_Agreement_Key& key,
                              const std::string& kdf)
    {
-   return new PK_Key_Agreement(key, kdf);
+   return new PK_Key_Agreement(key, get_kdf(kdf));
    }
 
 }
