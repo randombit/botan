@@ -17,6 +17,13 @@ Algorithm Factory
 
 namespace Botan {
 
+Algorithm_Factory::Algorithm_Factory(Mutex_Factory& mf) :
+   mutex_factory(mf),
+   hash_cache(mf.make())
+   {
+
+   }
+
 /**
 * Delete all engines
 */
@@ -176,6 +183,7 @@ void Algorithm_Factory::add_stream_cipher(StreamCipher* hash)
 const HashFunction*
 Algorithm_Factory::prototype_hash_function(const SCAN_Name& request)
    {
+#if 1
    for(u32bit i = 0; i != engines.size(); ++i)
       {
       if(request.provider_allowed(engines[i]->provider_name()))
@@ -189,6 +197,28 @@ Algorithm_Factory::prototype_hash_function(const SCAN_Name& request)
       }
 
    return 0;
+#else
+   const HashFunction* cache_hit = hash_cache.get(request);
+   if(cache_hit)
+      return cache_hit;
+
+   // Search for all providers of this algorithm and add them to the cache
+   for(u32bit i = 0; i != engines.size(); ++i)
+      {
+      const std::string provider = engines[i]->provider_name();
+      HashFunction* impl = engines[i]->find_hash(request, *this);
+
+      if(impl)
+         hash_cache.add(impl, provider);
+      }
+
+   /* Now try the cache search again (if the providers don't match up
+      with ones that exist in this build, this might still fail and
+      return 0).
+   */
+
+   return hash_cache.get(request);
+#endif
    }
 
 /**

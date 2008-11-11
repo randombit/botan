@@ -6,13 +6,18 @@
 #ifndef BOTAN_ALGORITHM_FACTORY_H__
 #define BOTAN_ALGORITHM_FACTORY_H__
 
+#include <botan/algo_cache.h>
 #include <botan/scan_name.h>
 #include <botan/mutex.h>
 #include <string>
 #include <vector>
+#include <map>
 
 namespace Botan {
 
+/**
+* Forward declarations (don't need full definitions here)
+*/
 class BlockCipher;
 class StreamCipher;
 class HashFunction;
@@ -24,7 +29,7 @@ class MessageAuthenticationCode;
 class BOTAN_DLL Algorithm_Factory
    {
    public:
-      Algorithm_Factory(Mutex_Factory& mf) : mutex_factory(mf) {}
+      Algorithm_Factory(Mutex_Factory& mf);
       ~Algorithm_Factory();
 
       void add_engine(class Engine*);
@@ -68,6 +73,7 @@ class BOTAN_DLL Algorithm_Factory
       class Engine* get_engine_n(u32bit) const;
 
       std::vector<class Engine*> engines;
+      Algorithm_Cache<HashFunction> hash_cache;
    };
 
 }

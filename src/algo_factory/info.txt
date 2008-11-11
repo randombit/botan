@@ -11,4 +11,5 @@ utils
 <add>
 algo_factory.cpp
 algo_factory.h
+algo_cache.h
 </add>
