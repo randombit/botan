@@ -5,8 +5,10 @@
 
 #include <botan/cms_enc.h>
 #include <botan/der_enc.h>
-#include <botan/lookup.h>
+#include <botan/sha160.h>
+#include <botan/cbc.h>
 #include <botan/filters.h>
+#include <botan/libstate.h>
 
 #if defined(BOTAN_HAS_RC2)
   #include <botan/rc2.h>
@@ -20,7 +22,7 @@ namespace {
 * Wrap a key as specified in RFC 3217            *
 *************************************************/
 SecureVector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
-                                   const std::string& cipher,
+                                   const std::string& cipher_name,
                                    const SymmetricKey& kek,
                                    const SecureVector<byte>& input)
    {
@@ -42,18 +44,23 @@ SecureVector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
          SecureVector<byte> buf;
       };
 
-   if(block_size_of(cipher) != 8)
-      throw Encoding_Error("do_rfc3217_wrap: Bad cipher: " + cipher);
+   Algorithm_Factory& af = global_state().algorithm_factory();
 
-   Pipe icv(new Hash_Filter("SHA-160", 8));
+   const BlockCipher* cipher = af.prototype_block_cipher(cipher_name);
+
+   if(!cipher || cipher->BLOCK_SIZE != 8)
+      throw Encoding_Error("do_rfc3217_wrap: Bad cipher: " + cipher_name);
+
+   Pipe icv(new Hash_Filter(new SHA_160, 8));
    icv.process_msg(input);
 
    InitializationVector iv(rng, 8);
    InitializationVector fixed("4ADDA22C79E82105");
 
-   Pipe pipe(get_cipher(cipher + "/CBC/NoPadding", kek, iv, ENCRYPTION),
+   Pipe pipe(new CBC_Encryption(cipher->clone(), new Null_Padding, kek, iv),
              new Flip_Bytes(iv.bits_of()),
-             get_cipher(cipher + "/CBC/NoPadding", kek, fixed, ENCRYPTION));
+             new CBC_Encryption(cipher->clone(), new Null_Padding, kek, iv));
+
    pipe.start_msg();
    pipe.write(input);
    pipe.write(icv.read_all());

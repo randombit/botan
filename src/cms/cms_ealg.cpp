@@ -8,7 +8,8 @@
 #include <botan/x509find.h>
 #include <botan/bigint.h>
 #include <botan/oids.h>
-#include <botan/lookup.h>
+#include <botan/cbc.h>
+#include <botan/hash.h>
 #include <botan/look_pk.h>
 #include <botan/libstate.h>
 #include <botan/pipe.h>
@@ -248,21 +249,26 @@ void CMS_Encoder::encrypt(RandomNumberGenerator&,
 *************************************************/
 SecureVector<byte> CMS_Encoder::do_encrypt(RandomNumberGenerator& rng,
                                            const SymmetricKey& key,
-                                           const std::string& cipher)
+                                           const std::string& cipher_name)
    {
-   if(!have_block_cipher(cipher))
-      throw Invalid_Argument("CMS: Can't encrypt with non-existent cipher " +
-                             cipher);
-   if(!OIDS::have_oid(cipher + "/CBC"))
-      throw Encoding_Error("CMS: No OID assigned for " + cipher + "/CBC");
+   Algorithm_Factory& af = global_state().algorithm_factory();
 
-   InitializationVector iv(rng, block_size_of(cipher));
+   const BlockCipher* cipher = af.prototype_block_cipher(cipher_name);
+
+   if(!cipher)
+      throw Invalid_Argument("CMS: Can't encrypt with non-existent cipher " + cipher_name);
+
+   if(!OIDS::have_oid(cipher->name() + "/CBC"))
+      throw Encoding_Error("CMS: No OID assigned for " + cipher_name + "/CBC");
+
+   InitializationVector iv(rng, cipher->BLOCK_SIZE);
 
    AlgorithmIdentifier content_cipher;
-   content_cipher.oid = OIDS::lookup(cipher + "/CBC");
-   content_cipher.parameters = encode_params(cipher, key, iv);
+   content_cipher.oid = OIDS::lookup(cipher->name() + "/CBC");
+   content_cipher.parameters = encode_params(cipher->name(), key, iv);
 
-   Pipe pipe(get_cipher(cipher + "/CBC/PKCS7", key, iv, ENCRYPTION));
+   Pipe pipe(new CBC_Encryption(cipher->clone(), new PKCS7_Padding, key, iv));
+
    pipe.process_msg(data);
 
    DER_Encoder encoder;
