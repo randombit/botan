@@ -125,6 +125,37 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
 
       /**
       * Construct a MAC filter. The MAC key will be left empty.
+      * @param mac the MAC to use
+      * @param len the output length of this filter. Leave the default
+      * value 0 if you want to use the full output of the
+      * MAC. Otherwise, specify a smaller value here so that the
+      * output of the MAC will be cut off.
+      */
+      MAC_Filter(MessageAuthenticationCode* mac_obj,
+                 u32bit out_len = 0) : OUTPUT_LENGTH(out_len)
+         {
+         base_ptr = mac = mac_obj;
+         }
+
+      /**
+      * Construct a MAC filter.
+      * @param mac the MAC to use
+      * @param key the MAC key to use
+      * @param len the output length of this filter. Leave the default
+      * value 0 if you want to use the full output of the
+      * MAC. Otherwise, specify a smaller value here so that the
+      * output of the MAC will be cut off.
+      */
+      MAC_Filter(MessageAuthenticationCode* mac_obj,
+                 const SymmetricKey& key,
+                 u32bit out_len = 0) : OUTPUT_LENGTH(out_len)
+         {
+         base_ptr = mac = mac_obj;
+         mac->set_key(key);
+         }
+
+      /**
+      * Construct a MAC filter. The MAC key will be left empty.
       * @param mac the name of the MAC to use
       * @param len the output length of this filter. Leave the default
       * value 0 if you want to use the full output of the
