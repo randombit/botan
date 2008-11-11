@@ -234,10 +234,6 @@ void set_default_config(Library_State& config)
    {
    config.set_option("base/default_allocator", "malloc");
 
-   config.set_option("pk/test/public", "basic");
-   config.set_option("pk/test/private", "basic");
-   config.set_option("pk/test/private_gen", "all");
-
    config.set_option("x509/exts/basic_constraints", "critical");
    config.set_option("x509/exts/subject_key_id", "yes");
    config.set_option("x509/exts/authority_key_id", "yes");
