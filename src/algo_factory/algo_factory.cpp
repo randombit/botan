@@ -85,8 +85,12 @@ Algorithm_Factory::prototype_block_cipher(const SCAN_Name& request)
 
    for(u32bit i = 0; i != engines.size(); ++i)
       {
-      if(BlockCipher* impl = engines[i]->find_block_cipher(request, *this))
-         block_cipher_cache.add(impl, request.as_string(), engines[i]->provider_name());
+      const std::string provider = engines[i]->provider_name();
+
+      SCAN_Name request_i(request.as_string(), provider);
+
+      if(BlockCipher* impl = engines[i]->find_block_cipher(request_i, *this))
+         block_cipher_cache.add(impl, request.as_string(), provider);
       }
 
    return block_cipher_cache.get(request);
@@ -122,8 +126,12 @@ Algorithm_Factory::prototype_stream_cipher(const SCAN_Name& request)
 
    for(u32bit i = 0; i != engines.size(); ++i)
       {
-      if(StreamCipher* impl = engines[i]->find_stream_cipher(request, *this))
-         stream_cipher_cache.add(impl, request.as_string(), engines[i]->provider_name());
+      const std::string provider = engines[i]->provider_name();
+
+      SCAN_Name request_i(request.as_string(), provider);
+
+      if(StreamCipher* impl = engines[i]->find_stream_cipher(request_i, *this))
+         stream_cipher_cache.add(impl, request.as_string(), provider);
       }
 
    return stream_cipher_cache.get(request);
@@ -159,8 +167,12 @@ Algorithm_Factory::prototype_hash_function(const SCAN_Name& request)
 
    for(u32bit i = 0; i != engines.size(); ++i)
       {
-      if(HashFunction* impl = engines[i]->find_hash(request, *this))
-         hash_cache.add(impl, request.as_string(), engines[i]->provider_name());
+      const std::string provider = engines[i]->provider_name();
+
+      SCAN_Name request_i(request.as_string(), provider);
+
+      if(HashFunction* impl = engines[i]->find_hash(request_i, *this))
+         hash_cache.add(impl, request.as_string(), provider);
       }
 
    return hash_cache.get(request);
@@ -196,8 +208,12 @@ Algorithm_Factory::prototype_mac(const SCAN_Name& request)
 
    for(u32bit i = 0; i != engines.size(); ++i)
       {
-      if(MessageAuthenticationCode* impl = engines[i]->find_mac(request, *this))
-         mac_cache.add(impl, request.as_string(), engines[i]->provider_name());
+      const std::string provider = engines[i]->provider_name();
+
+      SCAN_Name request_i(request.as_string(), provider);
+
+      if(MessageAuthenticationCode* impl = engines[i]->find_mac(request_i, *this))
+         mac_cache.add(impl, request.as_string(), provider);
       }
 
    return mac_cache.get(request);
