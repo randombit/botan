@@ -27,14 +27,6 @@ BlockCipher* get_block_cipher(const std::string& algo_spec)
    }
 
 /**
-* Add a new block cipher
-*/
-void add_algorithm(Library_State& libstate, BlockCipher* algo)
-   {
-   libstate.algo_factory().add_block_cipher(algo);
-   }
-
-/**
 * Acquire a stream cipher
 */
 const StreamCipher* retrieve_stream_cipher(Library_State& libstate,
@@ -52,14 +44,6 @@ StreamCipher* get_stream_cipher(const std::string& algo_spec)
    }
 
 /**
-* Add a new stream cipher
-*/
-void add_algorithm(Library_State& libstate, StreamCipher* algo)
-   {
-   libstate.algo_factory().add_stream_cipher(algo);
-   }
-
-/**
 * Acquire a hash function
 */
 const HashFunction* retrieve_hash(Library_State& libstate,
@@ -74,14 +58,6 @@ const HashFunction* retrieve_hash(Library_State& libstate,
 HashFunction* get_hash(const std::string& algo_spec)
    {
    return global_state().algo_factory().make_hash_function(algo_spec);
-   }
-
-/**
-* Add a new hash function
-*/
-void add_algorithm(Library_State& libstate, HashFunction* algo)
-   {
-   libstate.algo_factory().add_hash_function(algo);
    }
 
 /**
@@ -115,15 +91,6 @@ MessageAuthenticationCode* get_mac(const std::string& algo_spec)
 bool have_mac(const std::string& algo_spec)
    {
    return global_state().algo_factory().prototype_mac(algo_spec);
-   }
-
-/**
-* Add a new authentication code
-*/
-void add_algorithm(Library_State& libstate,
-                   MessageAuthenticationCode* algo)
-   {
-   libstate.algo_factory().add_mac(algo);
    }
 
 /**
