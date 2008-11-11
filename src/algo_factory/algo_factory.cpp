@@ -17,13 +17,15 @@ Algorithm Factory
 
 namespace Botan {
 
+/**
+* Setup caches
+*/
 Algorithm_Factory::Algorithm_Factory(Mutex_Factory& mf) :
    block_cipher_cache(mf.make()),
    stream_cipher_cache(mf.make()),
    hash_cache(mf.make()),
    mac_cache(mf.make())
    {
-
    }
 
 /**
@@ -36,11 +38,11 @@ Algorithm_Factory::~Algorithm_Factory()
    }
 
 /**
-* Add a new engine to the list
+* Add a new engine to the search list
 */
 void Algorithm_Factory::add_engine(Engine* engine)
    {
-   engines.insert(engines.begin(), engine);
+   engines.push_back(engine);
    }
 
 /*************************************************
