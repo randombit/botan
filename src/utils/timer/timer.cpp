@@ -3,7 +3,7 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#include <botan/timers.h>
+#include <botan/timer.h>
 #include <botan/loadstor.h>
 #include <botan/util.h>
 #include <ctime>

@@ -5,7 +5,7 @@
 
 #include <botan/auto_rng.h>
 #include <botan/parsing.h>
-#include <botan/timers.h>
+#include <botan/timer.h>
 #include <botan/hmac.h>
 #include <botan/sha2_32.h>
 #include <botan/sha2_64.h>

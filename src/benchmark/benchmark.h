@@ -7,7 +7,7 @@
 #define BOTAN_RUNTIME_BENCHMARK_H__
 
 #include <botan/algo_factory.h>
-#include <botan/timers.h>
+#include <botan/timer.h>
 #include <botan/rng.h>
 #include <map>
 #include <string>

@@ -5,6 +5,6 @@ define TIMER
 load_on auto
 
 <add>
-timers.cpp
-timers.h
+timer.cpp
+timer.h
 </add>

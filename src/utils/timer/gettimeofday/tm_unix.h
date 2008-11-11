@@ -6,7 +6,7 @@
 #ifndef BOTAN_TIMER_UNIX_H__
 #define BOTAN_TIMER_UNIX_H__
 
-#include <botan/timers.h>
+#include <botan/timer.h>
 
 namespace Botan {
 
