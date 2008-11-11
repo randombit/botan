@@ -26,8 +26,16 @@
   #include <botan/mmap_mem.h>
 #endif
 
-#if defined(BOTAN_HAS_ENGINE_ASSEMBLER)
-  #include <botan/asm_engine.h>
+#if defined(BOTAN_HAS_ENGINE_IA32_ASSEMBLER)
+  #include <botan/eng_ia32.h>
+#endif
+
+#if defined(BOTAN_HAS_ENGINE_AMD64_ASSEMBLER)
+  #include <botan/eng_amd64.h>
+#endif
+
+#if defined(BOTAN_HAS_ENGINE_SSE2_ASSEMBLER)
+  #include <botan/eng_sse2.h>
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_GNU_MP)
@@ -269,19 +277,28 @@ void Library_State::initialize(bool thread_safe)
 
    m_algorithm_factory = new Algorithm_Factory(*mutex_factory);
 
-#if defined(BOTAN_HAS_ENGINE_GNU_MP)
-   m_algorithm_factory->add_engine(new GMP_Engine);
+   m_algorithm_factory->add_engine(new Default_Engine);
+
+#if defined(BOTAN_HAS_ENGINE_IA32_ASSEMBLER)
+   m_algorithm_factory->add_engine(new IA32_Assembler_Engine);
+#endif
+
+#if defined(BOTAN_HAS_ENGINE_AMD64_ASSEMBLER)
+   m_algorithm_factory->add_engine(new AMD64_Assembler_Engine);
+#endif
+
+#if defined(BOTAN_HAS_ENGINE_SSE2_ASSEMBLER)
+   m_algorithm_factory->add_engine(new SSE2_Assembler_Engine);
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_OPENSSL)
    m_algorithm_factory->add_engine(new OpenSSL_Engine);
 #endif
 
-#if defined(BOTAN_HAS_ENGINE_ASSEMBLER)
-   m_algorithm_factory->add_engine(new Assembler_Engine);
+#if defined(BOTAN_HAS_ENGINE_GNU_MP)
+   m_algorithm_factory->add_engine(new GMP_Engine);
 #endif
 
-   m_algorithm_factory->add_engine(new Default_Engine);
    }
 
 /**

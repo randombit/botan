@@ -1,5 +1,7 @@
 realname "SHA-1 (x86-64 assembler)"
 
+define SHA1_AMD64
+
 load_on auto
 
 <add>

@@ -1,0 +1,14 @@
+realname "AMD64 Assembler Engine"
+
+define ENGINE_AMD64_ASSEMBLER
+
+load_on auto
+
+<add>
+eng_amd64.cpp
+eng_amd64.h
+</add>
+
+<arch>
+amd64
+</arch>

@@ -32,7 +32,7 @@ Algorithm_Factory::~Algorithm_Factory()
 void Algorithm_Factory::add_engine(Engine* engine)
    {
    engine->initialize(mutex_factory);
-   engines.push_back(engine);
+   engines.insert(engines.begin(), engine);
    }
 
 /*************************************************

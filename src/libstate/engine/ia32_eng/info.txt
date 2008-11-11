@@ -1,0 +1,14 @@
+realname "IA32 Assembler Engine"
+
+define ENGINE_IA32_ASSEMBLER
+
+load_on auto
+
+<add>
+eng_ia32.cpp
+eng_ia32.h
+</add>
+
+<arch>
+ia32
+</arch>
