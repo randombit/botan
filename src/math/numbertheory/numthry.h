@@ -74,13 +74,17 @@ BigInt BOTAN_DLL random_safe_prime(RandomNumberGenerator&,
 /*************************************************
 * DSA Parameter Generation                       *
 *************************************************/
+class Algorithm_Factory;
+
 SecureVector<byte> BOTAN_DLL
 generate_dsa_primes(RandomNumberGenerator& rng,
+                    Algorithm_Factory& af,
                     BigInt& p, BigInt& q,
                     u32bit pbits, u32bit qbits);
 
 bool BOTAN_DLL
 generate_dsa_primes(RandomNumberGenerator& rng,
+                    Algorithm_Factory& af,
                     BigInt& p_out, BigInt& q_out,
                     u32bit p_bits, u32bit q_bits,
                     const MemoryRegion<byte>& seed);
