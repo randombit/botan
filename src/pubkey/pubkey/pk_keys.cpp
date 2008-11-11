@@ -4,25 +4,9 @@
 *************************************************/
 
 #include <botan/pk_keys.h>
-#include <botan/libstate.h>
 #include <botan/oids.h>
 
 namespace Botan {
-
-namespace {
-
-/*************************************************
-* Find out how much testing should be performed  *
-*************************************************/
-bool key_check_level(const std::string& type)
-   {
-   const std::string setting = global_state().option("pk/test/" + type);
-   if(setting == "basic")
-      return false;
-   return true;
-   }
-
-}
 
 /*************************************************
 * Default OID access                             *
@@ -43,7 +27,7 @@ OID Public_Key::get_oid() const
 *************************************************/
 void Public_Key::load_check(RandomNumberGenerator& rng) const
    {
-   if(!check_key(rng, key_check_level("public")))
+   if(!check_key(rng, BOTAN_PUBLIC_KEY_STRONG_CHECKS_ON_LOAD))
       throw Invalid_Argument(algo_name() + ": Invalid public key");
    }
 
@@ -52,7 +36,7 @@ void Public_Key::load_check(RandomNumberGenerator& rng) const
 *************************************************/
 void Private_Key::load_check(RandomNumberGenerator& rng) const
    {
-   if(!check_key(rng, key_check_level("private")))
+   if(!check_key(rng, BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_LOAD))
       throw Invalid_Argument(algo_name() + ": Invalid private key");
    }
 
@@ -61,7 +45,7 @@ void Private_Key::load_check(RandomNumberGenerator& rng) const
 *************************************************/
 void Private_Key::gen_check(RandomNumberGenerator& rng) const
    {
-   if(!check_key(rng, key_check_level("private_gen")))
+   if(!check_key(rng, BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_GENERATE))
       throw Self_Test_Failure(algo_name() + " private key generation failed");
    }
 
