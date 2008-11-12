@@ -20,6 +20,8 @@ class BOTAN_DLL Timer : public EntropySource
       u32bit slow_poll(byte[], u32bit);
       u32bit fast_poll(byte[], u32bit);
 
+      std::string name() const { return "ANSI clock"; }
+
       virtual ~Timer() {}
    protected:
       static u64bit combine_timers(u32bit, u32bit, u32bit);
