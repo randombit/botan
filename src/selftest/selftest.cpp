@@ -80,7 +80,7 @@ bool passes_self_tests(Algorithm_Factory& af)
   {
   try
      {
-     if(const BlockCipher* proto = af.prototype_block_cipher(SCAN_Name("DES")))
+     if(const BlockCipher* proto = af.prototype_block_cipher("DES"))
         {
         cipher_kat(proto,
                 "0123456789ABCDEF", "1234567890ABCDEF",
@@ -92,7 +92,7 @@ bool passes_self_tests(Algorithm_Factory& af)
                 "F3096249C7F46E51163A8CA0FFC94C27FA2F80F480B86F75");
         }
 
-     if(const BlockCipher* proto = af.prototype_block_cipher(SCAN_Name("TripleDES")))
+     if(const BlockCipher* proto = af.prototype_block_cipher("TripleDES"))
         {
         cipher_kat(proto,
                 "385D7189A5C3D485E1370AA5D408082B5CCCCB5E19F2D90E",
@@ -105,7 +105,7 @@ bool passes_self_tests(Algorithm_Factory& af)
                 "E26BA806A59B03303C62C2EFF32D3ACDD5D5F35EBCC53371");
         }
 
-     if(const BlockCipher* proto = af.prototype_block_cipher(SCAN_Name("AES")))
+     if(const BlockCipher* proto = af.prototype_block_cipher("AES"))
         {
         cipher_kat(proto,
                    "2B7E151628AED2A6ABF7158809CF4F3C",
@@ -124,7 +124,7 @@ bool passes_self_tests(Algorithm_Factory& af)
                    "010C041999E03F36448624483E582D0E");
         }
 
-     if(const HashFunction* proto = af.prototype_hash_function(SCAN_Name("SHA-1")))
+     if(const HashFunction* proto = af.prototype_hash_function("SHA-1"))
         {
         do_kat("", "DA39A3EE5E6B4B0D3255BFEF95601890AFD80709",
                proto->name(), new Hash_Filter(proto->clone()));
@@ -144,7 +144,7 @@ bool passes_self_tests(Algorithm_Factory& af)
                               SymmetricKey("0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B")));
         }
 
-     if(const HashFunction* proto = af.prototype_hash_function(SCAN_Name("SHA-256")))
+     if(const HashFunction* proto = af.prototype_hash_function("SHA-256"))
         {
         do_kat("",
                  "E3B0C44298FC1C149AFBF4C8996FB924"

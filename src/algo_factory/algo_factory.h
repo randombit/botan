@@ -7,11 +7,9 @@
 #define BOTAN_ALGORITHM_FACTORY_H__
 
 #include <botan/algo_cache.h>
-#include <botan/scan_name.h>
 #include <botan/mutex.h>
 #include <string>
 #include <vector>
-#include <map>
 
 namespace Botan {
 
@@ -29,11 +27,70 @@ class MessageAuthenticationCode;
 class BOTAN_DLL Algorithm_Factory
    {
    public:
+      /**
+      * Contructor
+      * @param mf a mutex factory
+      */
       Algorithm_Factory(Mutex_Factory& mf);
+
+      /**
+      * Destructor
+      */
       ~Algorithm_Factory();
 
+      /**
+      * Add an engine implementation to this factory (how steampunk)
+      */
       void add_engine(class Engine*);
 
+      /*
+      * Provider management
+      */
+      std::vector<std::string> providers_of(const std::string& algo_spec);
+
+      void set_preferred_provider(const std::string& algo_spec,
+                                  const std::string& provider);
+
+      /*
+      * Block cipher operations
+      */
+      const BlockCipher* prototype_block_cipher(const std::string& algo_spec,
+                                                const std::string& provider = "");
+      BlockCipher* make_block_cipher(const std::string& algo_spec,
+                                     const std::string& provider = "");
+      void add_block_cipher(BlockCipher* hash, const std::string& provider);
+
+      /*
+      * Stream cipher operations
+      */
+      const StreamCipher* prototype_stream_cipher(const std::string& algo_spec,
+                                                  const std::string& provider = "");
+      StreamCipher* make_stream_cipher(const std::string& algo_spec,
+                                       const std::string& provider = "");
+      void add_stream_cipher(StreamCipher* hash, const std::string& provider);
+
+      /*
+      * Hash function operations
+      */
+      const HashFunction* prototype_hash_function(const std::string& algo_spec,
+                                                  const std::string& provider = "");
+      HashFunction* make_hash_function(const std::string& algo_spec,
+                                       const std::string& provider = "");
+      void add_hash_function(HashFunction* hash, const std::string& provider);
+
+      /*
+      * MAC operations
+      */
+      const MessageAuthenticationCode* prototype_mac(const std::string& algo_spec,
+                                                     const std::string& provider = "");
+      MessageAuthenticationCode* make_mac(const std::string& algo_spec,
+                                          const std::string& provider = "");
+      void add_mac(MessageAuthenticationCode* mac,
+                   const std::string& provider);
+
+      /*
+      * Deprecated
+      */
       class BOTAN_DLL Engine_Iterator
          {
          public:
@@ -45,28 +102,6 @@ class BOTAN_DLL Algorithm_Factory
          };
       friend class Engine_Iterator;
 
-      std::vector<std::string> providers_of(const std::string& algo_spec);
-
-      // Block cipher operations
-      const BlockCipher* prototype_block_cipher(const SCAN_Name& request);
-      BlockCipher* make_block_cipher(const SCAN_Name& request);
-      void add_block_cipher(BlockCipher* hash, const std::string& provider);
-
-      // Stream cipher operations
-      const StreamCipher* prototype_stream_cipher(const SCAN_Name& request);
-      StreamCipher* make_stream_cipher(const SCAN_Name& request);
-      void add_stream_cipher(StreamCipher* hash, const std::string& provider);
-
-      // Hash function operations
-      const HashFunction* prototype_hash_function(const SCAN_Name& request);
-      HashFunction* make_hash_function(const SCAN_Name& request);
-      void add_hash_function(HashFunction* hash, const std::string& provider);
-
-      // MAC operations
-      const MessageAuthenticationCode* prototype_mac(const SCAN_Name& request);
-      MessageAuthenticationCode* make_mac(const SCAN_Name& request);
-      void add_mac(MessageAuthenticationCode* mac,
-                   const std::string& provider);
    private:
       class Engine* get_engine_n(u32bit) const;
 

@@ -176,7 +176,7 @@ void PBE_PKCS5v20::decode_params(DataSource& source)
    BER_Decoder(enc_algo.parameters).decode(iv, OCTET_STRING).verify_end();
 
    block_cipher = af.make_block_cipher(cipher_spec[0]);
-   hash_function = af.make_hash_function(SCAN_Name("SHA-160"));
+   hash_function = af.make_hash_function("SHA-160");
 
    if(key_length == 0)
       key_length = block_cipher->MAXIMUM_KEYLENGTH;

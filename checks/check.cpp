@@ -102,6 +102,8 @@ int main(int argc, char* argv[])
 
       Botan::LibraryInitializer init("thread_safe=no");
 
+      //Botan::global_state().algorithm_factory().set_preferred_provider("SHA-160", "core");
+
       Botan::AutoSeeded_RNG rng;
 
       if(opts.is_set("help") || argc <= 1)

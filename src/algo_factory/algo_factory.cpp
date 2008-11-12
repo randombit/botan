@@ -45,9 +45,25 @@ void Algorithm_Factory::add_engine(Engine* engine)
    engines.push_back(engine);
    }
 
-/*************************************************
-* Get an engine out of the list                  *
-*************************************************/
+/**
+* Set the preferred provider for an algorithm
+*/
+void Algorithm_Factory::set_preferred_provider(const std::string& algo_spec,
+                                               const std::string& provider)
+   {
+   if(prototype_block_cipher(algo_spec))
+      block_cipher_cache.set_preferred_provider(algo_spec, provider);
+   else if(prototype_stream_cipher(algo_spec))
+      stream_cipher_cache.set_preferred_provider(algo_spec, provider);
+   else if(prototype_hash_function(algo_spec))
+      hash_cache.set_preferred_provider(algo_spec, provider);
+   else if(prototype_mac(algo_spec))
+      mac_cache.set_preferred_provider(algo_spec, provider);
+   }
+
+/**
+* Get an engine out of the list
+*/
 Engine* Algorithm_Factory::get_engine_n(u32bit n) const
    {
    if(n >= engines.size())
@@ -57,55 +73,146 @@ Engine* Algorithm_Factory::get_engine_n(u32bit n) const
 
 /**
 * Return the possible providers of a request
+* Note: assumes you don't have different types by the same name
 */
 std::vector<std::string>
-Algorithm_Factory::providers_of(const std::string& algo_name)
+Algorithm_Factory::providers_of(const std::string& algo_spec)
    {
-   if(prototype_block_cipher(algo_name))
-      return block_cipher_cache.providers_of(algo_name);
-
-   if(prototype_stream_cipher(algo_name))
-      return stream_cipher_cache.providers_of(algo_name);
-
-   if(prototype_hash_function(algo_name))
-      return hash_cache.providers_of(algo_name);
-
-   if(prototype_mac(algo_name))
-      return mac_cache.providers_of(algo_name);
-
-   return std::vector<std::string>();
+   if(prototype_block_cipher(algo_spec))
+      return block_cipher_cache.providers_of(algo_spec);
+   else if(prototype_stream_cipher(algo_spec))
+      return stream_cipher_cache.providers_of(algo_spec);
+   else if(prototype_hash_function(algo_spec))
+      return hash_cache.providers_of(algo_spec);
+   else if(prototype_mac(algo_spec))
+      return mac_cache.providers_of(algo_spec);
+   else
+      return std::vector<std::string>();
    }
 
 /**
 * Return the prototypical block cipher cooresponding to this request
 */
 const BlockCipher*
-Algorithm_Factory::prototype_block_cipher(const SCAN_Name& request)
+Algorithm_Factory::prototype_block_cipher(const std::string& algo_spec,
+                                          const std::string& provider)
    {
-   if(const BlockCipher* cache_hit = block_cipher_cache.get(request))
-      return cache_hit;
+   if(const BlockCipher* hit = block_cipher_cache.get(algo_spec, provider))
+      return hit;
 
+   SCAN_Name scan_name(algo_spec);
    for(u32bit i = 0; i != engines.size(); ++i)
       {
-      const std::string provider = engines[i]->provider_name();
-
-      SCAN_Name request_i(request.as_string(), provider);
-
-      if(BlockCipher* impl = engines[i]->find_block_cipher(request_i, *this))
-         block_cipher_cache.add(impl, request.as_string(), provider);
+      if(BlockCipher* impl = engines[i]->find_block_cipher(scan_name, *this))
+         block_cipher_cache.add(impl, algo_spec, engines[i]->provider_name());
       }
 
-   return block_cipher_cache.get(request);
+   return block_cipher_cache.get(algo_spec, provider);
+   }
+
+/**
+* Return the prototypical stream cipher cooresponding to this request
+*/
+const StreamCipher*
+Algorithm_Factory::prototype_stream_cipher(const std::string& algo_spec,
+                                           const std::string& provider)
+   {
+   if(const StreamCipher* hit = stream_cipher_cache.get(algo_spec, provider))
+      return hit;
+
+   SCAN_Name scan_name(algo_spec);
+   for(u32bit i = 0; i != engines.size(); ++i)
+      {
+      if(StreamCipher* impl = engines[i]->find_stream_cipher(scan_name, *this))
+         stream_cipher_cache.add(impl, algo_spec, engines[i]->provider_name());
+      }
+
+   return stream_cipher_cache.get(algo_spec, provider);
+   }
+
+/**
+* Return the prototypical object cooresponding to this request (if found)
+*/
+const HashFunction*
+Algorithm_Factory::prototype_hash_function(const std::string& algo_spec,
+                                           const std::string& provider)
+   {
+   if(const HashFunction* hit = hash_cache.get(algo_spec, provider))
+      return hit;
+
+   SCAN_Name scan_name(algo_spec);
+   for(u32bit i = 0; i != engines.size(); ++i)
+      {
+      if(HashFunction* impl = engines[i]->find_hash(scan_name, *this))
+         hash_cache.add(impl, algo_spec, engines[i]->provider_name());
+      }
+
+   return hash_cache.get(algo_spec, provider);
+   }
+
+/**
+* Return the prototypical object cooresponding to this request
+*/
+const MessageAuthenticationCode*
+Algorithm_Factory::prototype_mac(const std::string& algo_spec,
+                                 const std::string& provider)
+   {
+   if(const MessageAuthenticationCode* hit = mac_cache.get(algo_spec, provider))
+      return hit;
+
+   SCAN_Name scan_name(algo_spec);
+   for(u32bit i = 0; i != engines.size(); ++i)
+      {
+      if(MessageAuthenticationCode* impl = engines[i]->find_mac(scan_name, *this))
+         mac_cache.add(impl, algo_spec, engines[i]->provider_name());
+      }
+
+   return mac_cache.get(algo_spec, provider);
    }
 
 /**
 * Return a new block cipher cooresponding to this request
 */
-BlockCipher* Algorithm_Factory::make_block_cipher(const SCAN_Name& request)
+BlockCipher* Algorithm_Factory::make_block_cipher(const std::string& algo_spec,
+                                                  const std::string& provider)
    {
-   if(const BlockCipher* prototype = prototype_block_cipher(request))
+   if(const BlockCipher* proto = prototype_block_cipher(algo_spec, provider))
+      return proto->clone();
+   throw Algorithm_Not_Found(algo_spec);
+   }
+
+/**
+* Return a new stream cipher cooresponding to this request
+*/
+StreamCipher* Algorithm_Factory::make_stream_cipher(const std::string& algo_spec,
+                                                    const std::string& provider)
+   {
+   if(const StreamCipher* prototype = prototype_stream_cipher(algo_spec, provider))
       return prototype->clone();
-   throw Algorithm_Not_Found(request.as_string());
+   throw Algorithm_Not_Found(algo_spec);
+   }
+
+/**
+* Return a new object cooresponding to this request
+*/
+HashFunction* Algorithm_Factory::make_hash_function(const std::string& algo_spec,
+                                                    const std::string& provider)
+   {
+   if(const HashFunction* prototype = prototype_hash_function(algo_spec, provider))
+      return prototype->clone();
+   throw Algorithm_Not_Found(algo_spec);
+   }
+
+/**
+* Return a new object cooresponding to this request
+*/
+MessageAuthenticationCode*
+Algorithm_Factory::make_mac(const std::string& algo_spec,
+                            const std::string& provider)
+   {
+   if(const MessageAuthenticationCode* prototype = prototype_mac(algo_spec, provider))
+      return prototype->clone();
+   throw Algorithm_Not_Found(algo_spec);
    }
 
 /**
@@ -118,38 +225,6 @@ void Algorithm_Factory::add_block_cipher(BlockCipher* block_cipher,
    }
 
 /**
-* Return the prototypical stream cipher cooresponding to this request
-*/
-const StreamCipher*
-Algorithm_Factory::prototype_stream_cipher(const SCAN_Name& request)
-   {
-   if(const StreamCipher* cache_hit = stream_cipher_cache.get(request))
-      return cache_hit;
-
-   for(u32bit i = 0; i != engines.size(); ++i)
-      {
-      const std::string provider = engines[i]->provider_name();
-
-      SCAN_Name request_i(request.as_string(), provider);
-
-      if(StreamCipher* impl = engines[i]->find_stream_cipher(request_i, *this))
-         stream_cipher_cache.add(impl, request.as_string(), provider);
-      }
-
-   return stream_cipher_cache.get(request);
-   }
-
-/**
-* Return a new stream cipher cooresponding to this request
-*/
-StreamCipher* Algorithm_Factory::make_stream_cipher(const SCAN_Name& request)
-   {
-   if(const StreamCipher* prototype = prototype_stream_cipher(request))
-      return prototype->clone();
-   throw Algorithm_Not_Found(request.as_string());
-   }
-
-/**
 * Add a new stream cipher
 */
 void Algorithm_Factory::add_stream_cipher(StreamCipher* stream_cipher,
@@ -159,78 +234,12 @@ void Algorithm_Factory::add_stream_cipher(StreamCipher* stream_cipher,
    }
 
 /**
-* Return the prototypical object cooresponding to this request (if found)
-*/
-const HashFunction*
-Algorithm_Factory::prototype_hash_function(const SCAN_Name& request)
-   {
-   if(const HashFunction* cache_hit = hash_cache.get(request))
-      return cache_hit;
-
-   for(u32bit i = 0; i != engines.size(); ++i)
-      {
-      const std::string provider = engines[i]->provider_name();
-
-      SCAN_Name request_i(request.as_string(), provider);
-
-      if(HashFunction* impl = engines[i]->find_hash(request_i, *this))
-         hash_cache.add(impl, request.as_string(), provider);
-      }
-
-   return hash_cache.get(request);
-   }
-
-/**
-* Return a new object cooresponding to this request
-*/
-HashFunction* Algorithm_Factory::make_hash_function(const SCAN_Name& request)
-   {
-   if(const HashFunction* prototype = prototype_hash_function(request))
-      return prototype->clone();
-   throw Algorithm_Not_Found(request.as_string());
-   }
-
-/**
 * Add a new hash
 */
 void Algorithm_Factory::add_hash_function(HashFunction* hash,
                                           const std::string& provider)
    {
    hash_cache.add(hash, hash->name(), provider);
-   }
-
-/**
-* Return the prototypical object cooresponding to this request
-*/
-const MessageAuthenticationCode*
-Algorithm_Factory::prototype_mac(const SCAN_Name& request)
-   {
-   if(const MessageAuthenticationCode* cache_hit = mac_cache.get(request))
-      return cache_hit;
-
-   for(u32bit i = 0; i != engines.size(); ++i)
-      {
-      const std::string provider = engines[i]->provider_name();
-
-      SCAN_Name request_i(request.as_string(), provider);
-
-      if(MessageAuthenticationCode* impl =
-            engines[i]->find_mac(request_i, *this))
-         mac_cache.add(impl, request.as_string(), provider);
-      }
-
-   return mac_cache.get(request);
-   }
-
-/**
-* Return a new object cooresponding to this request
-*/
-MessageAuthenticationCode*
-Algorithm_Factory::make_mac(const SCAN_Name& request)
-   {
-   if(const MessageAuthenticationCode* prototype = prototype_mac(request))
-      return prototype->clone();
-   throw Algorithm_Not_Found(request.as_string());
    }
 
 /**

@@ -22,20 +22,13 @@ class SCAN_Name
    public:
       /**
       @param algo_spec A SCAN name
-      @param providers An optional provider name
       */
-      SCAN_Name(const std::string& algo_spec,
-                const std::string& providers = "");
+      SCAN_Name(const std::string& algo_spec);
 
       /**
       @return the original input string
       */
       std::string as_string() const { return orig_algo_spec; }
-
-      /**
-      @return the provider name (or empty)
-      */
-      std::string provider() const { return m_provider; }
 
       /**
       @return the algorithm name
@@ -48,15 +41,6 @@ class SCAN_Name
       u32bit arg_count() const { return name.size() - 1; }
 
       /**
-      @param provider a provider name
-      @returns if this provider was allowed by the request
-      */
-      bool provider_allowed(const std::string& provider) const
-         {
-         return (m_provider == "" || m_provider == provider);
-         }
-
-      /**
       @return if the number of arguments is between lower and upper
       */
       bool arg_count_between(u32bit lower, u32bit upper) const
@@ -66,13 +50,7 @@ class SCAN_Name
       @param i which argument
       @return the ith argument
       */
-      std::string arg_as_string(u32bit i) const;
-
-      /**
-      @param i which argument
-      @return the ith argument
-      */
-      SCAN_Name arg(u32bit i) const;
+      std::string arg(u32bit i) const;
 
       /**
       @param i which argument
@@ -80,7 +58,7 @@ class SCAN_Name
       */
       u32bit arg_as_u32bit(u32bit i, u32bit def_value) const;
    private:
-      std::string orig_algo_spec, m_provider;
+      std::string orig_algo_spec;
       std::vector<std::string> name;
    };
 

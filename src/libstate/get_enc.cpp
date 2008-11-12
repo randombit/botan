@@ -146,7 +146,7 @@ EMSA* get_emsa(const std::string& algo_spec)
       if(request.arg_count() == 1)
          return new EMSA4(af.make_hash_function(request.arg(0)));
 
-      if(request.arg_count() == 2 && request.arg_as_string(1) != "MGF1")
+      if(request.arg_count() == 2 && request.arg(1) != "MGF1")
          return new EMSA4(af.make_hash_function(request.arg(0)));
 
       if(request.arg_count() == 3)
@@ -179,7 +179,7 @@ EME* get_eme(const std::string& algo_spec)
    if(request.algo_name() == "EME1" && request.arg_count_between(1, 2))
       {
       if(request.arg_count() == 1 ||
-         (request.arg_count() == 2 && request.arg_as_string(1) == "MGF1"))
+         (request.arg_count() == 2 && request.arg(1) == "MGF1"))
          {
          return new EME1(af.make_hash_function(request.arg(0)));
          }
@@ -213,7 +213,7 @@ KDF* get_kdf(const std::string& algo_spec)
 
 #if defined(BOTAN_HAS_X942_PRF)
    if(request.algo_name() == "X9.42-PRF" && request.arg_count() == 1)
-      return new X942_PRF(request.arg_as_string(0)); // OID
+      return new X942_PRF(request.arg(0)); // OID
 #endif
 
 #if defined(BOTAN_HAS_TLS_V10_PRF)

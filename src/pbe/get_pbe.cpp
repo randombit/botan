@@ -27,8 +27,8 @@ PBE* get_pbe(const std::string& algo_spec)
    SCAN_Name request(algo_spec);
 
    const std::string pbe = request.algo_name();
-   SCAN_Name digest_name = request.arg(0);
-   const std::string cipher = request.arg_as_string(1);
+   std::string digest_name = request.arg(0);
+   const std::string cipher = request.arg(1);
 
    std::vector<std::string> cipher_spec = split_on(cipher, '/');
    if(cipher_spec.size() != 2)
@@ -48,7 +48,7 @@ PBE* get_pbe(const std::string& algo_spec)
 
    const HashFunction* hash_function = af.make_hash_function(digest_name);
    if(!hash_function)
-      throw Algorithm_Not_Found(digest_name.as_string());
+      throw Algorithm_Not_Found(digest_name);
 
    if(request.arg_count() != 2)
       throw Invalid_Algorithm_Name(algo_spec);
@@ -84,8 +84,8 @@ PBE* get_pbe(const OID& pbe_oid, DataSource& params)
       if(request.arg_count() != 2)
          throw Invalid_Algorithm_Name(request.as_string());
 
-      SCAN_Name digest_name = request.arg(0);
-      const std::string cipher = request.arg_as_string(1);
+      std::string digest_name = request.arg(0);
+      const std::string cipher = request.arg(1);
 
       std::vector<std::string> cipher_spec = split_on(cipher, '/');
       if(cipher_spec.size() != 2)
@@ -105,7 +105,7 @@ PBE* get_pbe(const OID& pbe_oid, DataSource& params)
 
       const HashFunction* hash_function = af.make_hash_function(digest_name);
       if(!hash_function)
-         throw Algorithm_Not_Found(digest_name.as_string());
+         throw Algorithm_Not_Found(digest_name);
 
       PBE* pbe = new PBE_PKCS5v15(block_cipher->clone(),
                                   hash_function->clone(),

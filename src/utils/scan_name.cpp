@@ -40,11 +40,9 @@ parse_and_deref_aliases(const std::string& algo_spec)
 
 }
 
-SCAN_Name::SCAN_Name(const std::string& algo_spec,
-                     const std::string& provider)
+SCAN_Name::SCAN_Name(const std::string& algo_spec)
    {
    orig_algo_spec = algo_spec;
-   m_provider = provider;
 
    name = parse_and_deref_aliases(algo_spec);
 
@@ -52,15 +50,7 @@ SCAN_Name::SCAN_Name(const std::string& algo_spec,
       throw Decoding_Error("Bad SCAN name " + algo_spec);
    }
 
-SCAN_Name SCAN_Name::arg(u32bit i) const
-   {
-   if(i > arg_count())
-      throw std::range_error("SCAN_Name::argument");
-
-   return SCAN_Name(name[i+1], m_provider);
-   }
-
-std::string SCAN_Name::arg_as_string(u32bit i) const
+std::string SCAN_Name::arg(u32bit i) const
    {
    if(i > arg_count())
       throw std::range_error("SCAN_Name::argument");

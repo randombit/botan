@@ -12,4 +12,5 @@ utils
 algo_factory.cpp
 algo_factory.h
 algo_cache.h
+prov_weight.cpp
 </add>

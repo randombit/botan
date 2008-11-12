@@ -137,32 +137,33 @@ algorithm_benchmark(const std::string& name,
       {
       const std::string provider = providers[i];
 
-      SCAN_Name request(name, provider);
-
       std::pair<u32bit, u64bit> results = std::make_pair(0, 0);
 
-      if(const BlockCipher* proto = af.prototype_block_cipher(request))
+      if(const BlockCipher* proto =
+            af.prototype_block_cipher(name, provider))
          {
          std::auto_ptr<BlockCipher> block_cipher(proto->clone());
          results = bench_block_cipher(block_cipher.get(), timer,
                                       ns_per_provider,
                                       &buf[0], buf.size());
          }
-      else if(const StreamCipher* proto = af.prototype_stream_cipher(request))
+      else if(const StreamCipher* proto =
+                 af.prototype_stream_cipher(name, provider))
          {
          std::auto_ptr<StreamCipher> stream_cipher(proto->clone());
          results = bench_stream_cipher(stream_cipher.get(), timer,
                                        ns_per_provider,
                                        &buf[0], buf.size());
          }
-      else if(const HashFunction* proto = af.prototype_hash_function(request))
+      else if(const HashFunction* proto =
+                 af.prototype_hash_function(name, provider))
          {
          std::auto_ptr<HashFunction> hash(proto->clone());
          results = bench_hash(hash.get(), timer, ns_per_provider,
                               &buf[0], buf.size());
          }
       else if(const MessageAuthenticationCode* proto =
-                af.prototype_mac(request))
+                 af.prototype_mac(name, provider))
          {
          std::auto_ptr<MessageAuthenticationCode> mac(proto->clone());
          results = bench_mac(mac.get(), timer, ns_per_provider,
