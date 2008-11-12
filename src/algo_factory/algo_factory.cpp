@@ -4,6 +4,7 @@ Algorithm Factory
 */
 
 #include <botan/algo_factory.h>
+#include <botan/algo_cache.h>
 #include <botan/stl_util.h>
 #include <botan/engine.h>
 #include <botan/exceptn.h>
@@ -53,20 +54,23 @@ const T* factory_prototype(const std::string& algo_spec,
                            const std::string& provider,
                            const std::vector<Engine*>& engines,
                            Algorithm_Factory& af,
-                           Algorithm_Cache<T>& cache)
+                           Algorithm_Cache<T>* cache)
    {
-   if(const T* cache_hit = cache.get(algo_spec, provider))
+   if(const T* cache_hit = cache->get(algo_spec, provider))
       return cache_hit;
 
    SCAN_Name scan_name(algo_spec);
    for(u32bit i = 0; i != engines.size(); ++i)
       {
-      T* impl = engine_get_algo<T>(engines[i], scan_name, af);
-      if(impl)
-         cache.add(impl, algo_spec, engines[i]->provider_name());
+      if(provider == "" || engines[i]->provider_name() == provider)
+         {
+         T* impl = engine_get_algo<T>(engines[i], scan_name, af);
+         if(impl)
+            cache->add(impl, algo_spec, engines[i]->provider_name());
+         }
       }
 
-   return cache.get(algo_spec, provider);
+   return cache->get(algo_spec, provider);
    }
 
 }
@@ -75,13 +79,14 @@ const T* factory_prototype(const std::string& algo_spec,
 * Setup caches
 */
 Algorithm_Factory::Algorithm_Factory(const std::vector<Engine*>& engines_in,
-                                     Mutex_Factory& mf) :
-   engines(engines_in),
-   block_cipher_cache(mf.make()),
-   stream_cipher_cache(mf.make()),
-   hash_cache(mf.make()),
-   mac_cache(mf.make())
+                                     Mutex_Factory& mf)
    {
+   engines = engines_in;
+
+   block_cipher_cache = new Algorithm_Cache<BlockCipher>(mf.make());
+   stream_cipher_cache = new Algorithm_Cache<StreamCipher>(mf.make());
+   hash_cache = new Algorithm_Cache<HashFunction>(mf.make());
+   mac_cache = new Algorithm_Cache<MessageAuthenticationCode>(mf.make());
    }
 
 /**
@@ -90,7 +95,11 @@ Algorithm_Factory::Algorithm_Factory(const std::vector<Engine*>& engines_in,
 Algorithm_Factory::~Algorithm_Factory()
    {
    std::for_each(engines.begin(), engines.end(), del_fun<Engine>());
-   engines.clear();
+
+   delete block_cipher_cache;
+   delete stream_cipher_cache;
+   delete hash_cache;
+   delete mac_cache;
    }
 
 /**
@@ -100,13 +109,13 @@ void Algorithm_Factory::set_preferred_provider(const std::string& algo_spec,
                                                const std::string& provider)
    {
    if(prototype_block_cipher(algo_spec))
-      block_cipher_cache.set_preferred_provider(algo_spec, provider);
+      block_cipher_cache->set_preferred_provider(algo_spec, provider);
    else if(prototype_stream_cipher(algo_spec))
-      stream_cipher_cache.set_preferred_provider(algo_spec, provider);
+      stream_cipher_cache->set_preferred_provider(algo_spec, provider);
    else if(prototype_hash_function(algo_spec))
-      hash_cache.set_preferred_provider(algo_spec, provider);
+      hash_cache->set_preferred_provider(algo_spec, provider);
    else if(prototype_mac(algo_spec))
-      mac_cache.set_preferred_provider(algo_spec, provider);
+      mac_cache->set_preferred_provider(algo_spec, provider);
    }
 
 /**
@@ -132,13 +141,13 @@ Algorithm_Factory::providers_of(const std::string& algo_spec)
    */
 
    if(prototype_block_cipher(algo_spec))
-      return block_cipher_cache.providers_of(algo_spec);
+      return block_cipher_cache->providers_of(algo_spec);
    else if(prototype_stream_cipher(algo_spec))
-      return stream_cipher_cache.providers_of(algo_spec);
+      return stream_cipher_cache->providers_of(algo_spec);
    else if(prototype_hash_function(algo_spec))
-      return hash_cache.providers_of(algo_spec);
+      return hash_cache->providers_of(algo_spec);
    else if(prototype_mac(algo_spec))
-      return mac_cache.providers_of(algo_spec);
+      return mac_cache->providers_of(algo_spec);
    else
       return std::vector<std::string>();
    }
@@ -241,7 +250,7 @@ Algorithm_Factory::make_mac(const std::string& algo_spec,
 void Algorithm_Factory::add_block_cipher(BlockCipher* block_cipher,
                                          const std::string& provider)
    {
-   block_cipher_cache.add(block_cipher, block_cipher->name(), provider);
+   block_cipher_cache->add(block_cipher, block_cipher->name(), provider);
    }
 
 /**
@@ -250,7 +259,7 @@ void Algorithm_Factory::add_block_cipher(BlockCipher* block_cipher,
 void Algorithm_Factory::add_stream_cipher(StreamCipher* stream_cipher,
                                          const std::string& provider)
    {
-   stream_cipher_cache.add(stream_cipher, stream_cipher->name(), provider);
+   stream_cipher_cache->add(stream_cipher, stream_cipher->name(), provider);
    }
 
 /**
@@ -259,7 +268,7 @@ void Algorithm_Factory::add_stream_cipher(StreamCipher* stream_cipher,
 void Algorithm_Factory::add_hash_function(HashFunction* hash,
                                           const std::string& provider)
    {
-   hash_cache.add(hash, hash->name(), provider);
+   hash_cache->add(hash, hash->name(), provider);
    }
 
 /**
@@ -268,7 +277,7 @@ void Algorithm_Factory::add_hash_function(HashFunction* hash,
 void Algorithm_Factory::add_mac(MessageAuthenticationCode* mac,
                                 const std::string& provider)
    {
-   mac_cache.add(mac, mac->name(), provider);
+   mac_cache->add(mac, mac->name(), provider);
    }
 
 }

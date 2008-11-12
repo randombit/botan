@@ -6,7 +6,6 @@
 #ifndef BOTAN_ALGORITHM_FACTORY_H__
 #define BOTAN_ALGORITHM_FACTORY_H__
 
-#include <botan/algo_cache.h>
 #include <botan/mutex.h>
 #include <string>
 #include <vector>
@@ -20,6 +19,8 @@ class BlockCipher;
 class StreamCipher;
 class HashFunction;
 class MessageAuthenticationCode;
+
+template<typename T> class Algorithm_Cache;
 
 class Engine;
 
@@ -118,10 +119,10 @@ class BOTAN_DLL Algorithm_Factory
 
       std::vector<class Engine*> engines;
 
-      Algorithm_Cache<BlockCipher> block_cipher_cache;
-      Algorithm_Cache<StreamCipher> stream_cipher_cache;
-      Algorithm_Cache<HashFunction> hash_cache;
-      Algorithm_Cache<MessageAuthenticationCode> mac_cache;
+      Algorithm_Cache<BlockCipher>* block_cipher_cache;
+      Algorithm_Cache<StreamCipher>* stream_cipher_cache;
+      Algorithm_Cache<HashFunction>* hash_cache;
+      Algorithm_Cache<MessageAuthenticationCode>* mac_cache;
    };
 
 }
