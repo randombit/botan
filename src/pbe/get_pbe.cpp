@@ -42,11 +42,11 @@ PBE* get_pbe(const std::string& algo_spec)
 
    Algorithm_Factory& af = global_state().algorithm_factory();
 
-   const BlockCipher* block_cipher = af.make_block_cipher(cipher_algo);
+   const BlockCipher* block_cipher = af.prototype_block_cipher(cipher_algo);
    if(!block_cipher)
       throw Algorithm_Not_Found(cipher_algo);
 
-   const HashFunction* hash_function = af.make_hash_function(digest_name);
+   const HashFunction* hash_function = af.prototype_hash_function(digest_name);
    if(!hash_function)
       throw Algorithm_Not_Found(digest_name);
 
@@ -99,11 +99,13 @@ PBE* get_pbe(const OID& pbe_oid, DataSource& params)
 
       Algorithm_Factory& af = global_state().algorithm_factory();
 
-      const BlockCipher* block_cipher = af.make_block_cipher(cipher_algo);
+      const BlockCipher* block_cipher = af.prototype_block_cipher(cipher_algo);
       if(!block_cipher)
          throw Algorithm_Not_Found(cipher_algo);
 
-      const HashFunction* hash_function = af.make_hash_function(digest_name);
+      const HashFunction* hash_function =
+         af.prototype_hash_function(digest_name);
+
       if(!hash_function)
          throw Algorithm_Not_Found(digest_name);
 

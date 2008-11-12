@@ -27,6 +27,8 @@ class BOTAN_DLL PBE_PKCS5v20 : public PBE
 
       PBE_PKCS5v20(DataSource&);
       PBE_PKCS5v20(BlockCipher*, HashFunction*);
+
+      ~PBE_PKCS5v20();
    private:
       void set_key(const std::string&);
       void new_params(RandomNumberGenerator& rng);

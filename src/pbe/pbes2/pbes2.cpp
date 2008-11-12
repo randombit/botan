@@ -228,4 +228,10 @@ PBE_PKCS5v20::PBE_PKCS5v20(DataSource& params) : direction(DECRYPTION)
    decode_params(params);
    }
 
+PBE_PKCS5v20::~PBE_PKCS5v20()
+   {
+   delete hash_function;
+   delete block_cipher;
+   }
+
 }
