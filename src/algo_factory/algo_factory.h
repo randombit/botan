@@ -21,6 +21,8 @@ class StreamCipher;
 class HashFunction;
 class MessageAuthenticationCode;
 
+class Engine;
+
 /**
 * Algorithm Factory
 */
@@ -29,19 +31,16 @@ class BOTAN_DLL Algorithm_Factory
    public:
       /**
       * Contructor
+      * @param engines the list of engines to use
       * @param mf a mutex factory
       */
-      Algorithm_Factory(Mutex_Factory& mf);
+      Algorithm_Factory(const std::vector<Engine*>& engines,
+                        Mutex_Factory& mf);
 
       /**
       * Destructor
       */
       ~Algorithm_Factory();
-
-      /**
-      * Add an engine implementation to this factory (how steampunk)
-      */
-      void add_engine(class Engine*);
 
       /*
       * Provider management
@@ -54,37 +53,49 @@ class BOTAN_DLL Algorithm_Factory
       /*
       * Block cipher operations
       */
-      const BlockCipher* prototype_block_cipher(const std::string& algo_spec,
-                                                const std::string& provider = "");
+      const BlockCipher*
+         prototype_block_cipher(const std::string& algo_spec,
+                                const std::string& provider = "");
+
       BlockCipher* make_block_cipher(const std::string& algo_spec,
                                      const std::string& provider = "");
+
       void add_block_cipher(BlockCipher* hash, const std::string& provider);
 
       /*
       * Stream cipher operations
       */
-      const StreamCipher* prototype_stream_cipher(const std::string& algo_spec,
-                                                  const std::string& provider = "");
+      const StreamCipher*
+         prototype_stream_cipher(const std::string& algo_spec,
+                                 const std::string& provider = "");
+
       StreamCipher* make_stream_cipher(const std::string& algo_spec,
                                        const std::string& provider = "");
+
       void add_stream_cipher(StreamCipher* hash, const std::string& provider);
 
       /*
       * Hash function operations
       */
-      const HashFunction* prototype_hash_function(const std::string& algo_spec,
-                                                  const std::string& provider = "");
+      const HashFunction*
+         prototype_hash_function(const std::string& algo_spec,
+                                 const std::string& provider = "");
+
       HashFunction* make_hash_function(const std::string& algo_spec,
                                        const std::string& provider = "");
+
       void add_hash_function(HashFunction* hash, const std::string& provider);
 
       /*
       * MAC operations
       */
-      const MessageAuthenticationCode* prototype_mac(const std::string& algo_spec,
-                                                     const std::string& provider = "");
+      const MessageAuthenticationCode*
+         prototype_mac(const std::string& algo_spec,
+                       const std::string& provider = "");
+
       MessageAuthenticationCode* make_mac(const std::string& algo_spec,
                                           const std::string& provider = "");
+
       void add_mac(MessageAuthenticationCode* mac,
                    const std::string& provider);
 

@@ -275,38 +275,31 @@ void Library_State::initialize(bool thread_safe)
 
    load_default_config();
 
-   m_algorithm_factory = new Algorithm_Factory(*mutex_factory);
+   std::vector<Engine*> engines;
 
-   m_algorithm_factory->add_engine(new Default_Engine);
-
-#if defined(BOTAN_HAS_ENGINE_IA32_ASSEMBLER)
-   m_algorithm_factory->add_engine(new IA32_Assembler_Engine);
-#endif
-
-#if defined(BOTAN_HAS_ENGINE_AMD64_ASSEMBLER)
-   m_algorithm_factory->add_engine(new AMD64_Assembler_Engine);
-#endif
-
-#if defined(BOTAN_HAS_ENGINE_SSE2_ASSEMBLER)
-   m_algorithm_factory->add_engine(new SSE2_Assembler_Engine);
+#if defined(BOTAN_HAS_ENGINE_GNU_MP)
+   engines.push_back(new GMP_Engine);
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_OPENSSL)
-   m_algorithm_factory->add_engine(new OpenSSL_Engine);
+   engines.push_back(new OpenSSL_Engine);
 #endif
 
-#if defined(BOTAN_HAS_ENGINE_GNU_MP)
-   m_algorithm_factory->add_engine(new GMP_Engine);
+#if defined(BOTAN_HAS_ENGINE_SSE2_ASSEMBLER)
+   engines.push_back(new SSE2_Assembler_Engine);
 #endif
 
-   }
+#if defined(BOTAN_HAS_ENGINE_AMD64_ASSEMBLER)
+   engines.push_back(new AMD64_Assembler_Engine);
+#endif
 
-/**
-* Add a new engine
-*/
-void Library_State::add_engine(Engine* engine)
-   {
-   m_algorithm_factory->add_engine(engine);
+#if defined(BOTAN_HAS_ENGINE_IA32_ASSEMBLER)
+   engines.push_back(new IA32_Assembler_Engine);
+#endif
+
+   engines.push_back(new Default_Engine);
+
+   m_algorithm_factory = new Algorithm_Factory(engines, *mutex_factory);
    }
 
 /*************************************************

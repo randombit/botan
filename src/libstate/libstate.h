@@ -29,8 +29,6 @@ class BOTAN_DLL Library_State
 
       Algorithm_Factory& algorithm_factory();
 
-      void add_engine(class Engine*);
-
       Allocator* get_allocator(const std::string& = "") const;
       void add_allocator(Allocator*);
       void set_default_allocator(const std::string&);
