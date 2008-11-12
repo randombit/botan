@@ -126,6 +126,11 @@ Engine* Algorithm_Factory::get_engine_n(u32bit n) const
 std::vector<std::string>
 Algorithm_Factory::providers_of(const std::string& algo_spec)
    {
+   /* The checks with if(prototype_X(algo_spec)) have the effect of
+      forcing a full search, since otherwise there might not be any
+      providers at all in the cache.
+   */
+
    if(prototype_block_cipher(algo_spec))
       return block_cipher_cache.providers_of(algo_spec);
    else if(prototype_stream_cipher(algo_spec))
