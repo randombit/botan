@@ -21,7 +21,7 @@ namespace {
 */
 std::pair<u32bit, u64bit> bench_buf_es(BufferedComputation* buf_comp,
                                        Timer& timer,
-                                       u32bit nanoseconds_max,
+                                       u64bit nanoseconds_max,
                                        const byte buf[], u32bit buf_len)
    {
    const u64bit start = timer.clock();
@@ -44,7 +44,7 @@ std::pair<u32bit, u64bit> bench_buf_es(BufferedComputation* buf_comp,
 std::pair<u32bit, u64bit>
 bench_block_cipher(BlockCipher* block_cipher,
                    Timer& timer,
-                   u32bit nanoseconds_max,
+                   u64bit nanoseconds_max,
                    byte buf[], u32bit buf_len)
    {
    const u64bit start = timer.clock();
@@ -71,7 +71,7 @@ bench_block_cipher(BlockCipher* block_cipher,
 std::pair<u32bit, u64bit>
 bench_stream_cipher(StreamCipher* stream_cipher,
                     Timer& timer,
-                    u32bit nanoseconds_max,
+                    u64bit nanoseconds_max,
                     byte buf[], u32bit buf_len)
    {
    const u64bit start = timer.clock();
@@ -93,7 +93,7 @@ bench_stream_cipher(StreamCipher* stream_cipher,
 */
 std::pair<u32bit, u64bit>
 bench_hash(HashFunction* hash, Timer& timer,
-           u32bit nanoseconds_max,
+           u64bit nanoseconds_max,
            const byte buf[], u32bit buf_len)
    {
    return bench_buf_es(hash, timer, nanoseconds_max, buf, buf_len);
@@ -105,7 +105,7 @@ bench_hash(HashFunction* hash, Timer& timer,
 std::pair<u32bit, u64bit>
 bench_mac(MessageAuthenticationCode* mac,
           Timer& timer,
-          u32bit nanoseconds_max,
+          u64bit nanoseconds_max,
           const byte buf[], u32bit buf_len)
    {
    mac->set_key(buf, mac->MAXIMUM_KEYLENGTH);
@@ -127,8 +127,8 @@ algorithm_benchmark(const std::string& name,
    if(providers.empty()) // no providers, nothing to do
       return all_results;
 
-   const u32bit ns_per_provider =
-      (milliseconds * 1000 * 1000) / providers.size();
+   const u64bit ns_per_provider =
+      ((u64bit)milliseconds * 1000 * 1000) / providers.size();
 
    std::vector<byte> buf(16 * 1024);
    rng.randomize(&buf[0], buf.size());
