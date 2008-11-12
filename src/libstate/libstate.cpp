@@ -227,10 +227,10 @@ std::string Library_State::option(const std::string& key) const
 /**
 Return a reference to the Algorithm_Factory
 */
-Algorithm_Factory& Library_State::algo_factory()
+Algorithm_Factory& Library_State::algorithm_factory()
    {
    if(!m_algorithm_factory)
-      throw Invalid_State("Uninitialized in Library_State::algo_factory");
+      throw Invalid_State("Uninitialized in Library_State::algorithm_factory");
    return *m_algorithm_factory;
    }
 

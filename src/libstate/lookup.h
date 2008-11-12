@@ -20,8 +20,6 @@
 
 namespace Botan {
 
-class Library_State;
-
 /*************************************************
 * Retrieve an object from the lookup table       *
 *************************************************/
@@ -29,16 +27,16 @@ class Library_State;
 // retains ownership
 
 BOTAN_DLL const BlockCipher*
-retrieve_block_cipher(Library_State&, const std::string&);
+retrieve_block_cipher(const std::string&);
 
 BOTAN_DLL const StreamCipher*
-retrieve_stream_cipher(Library_State&, const std::string&);
+retrieve_stream_cipher(const std::string&);
 
 BOTAN_DLL const HashFunction*
-retrieve_hash(Library_State&, const std::string&);
+retrieve_hash(const std::string&);
 
 BOTAN_DLL const MessageAuthenticationCode*
-retrieve_mac(Library_State&, const std::string&);
+retrieve_mac(const std::string&);
 
 /*************************************************
 * Get an algorithm object                        *

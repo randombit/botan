@@ -80,7 +80,7 @@ Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
 
    const std::string cipher_name = algo_parts[0];
 
-   Algorithm_Factory& af = global_state().algo_factory();
+   Algorithm_Factory& af = global_state().algorithm_factory();
 
    // check if it is a stream cipher first (easy case)
    const StreamCipher* stream_cipher = af.prototype_stream_cipher(cipher_name);

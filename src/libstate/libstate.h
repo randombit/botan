@@ -27,8 +27,7 @@ class BOTAN_DLL Library_State
 
       void initialize(bool thread_safe);
 
-      Algorithm_Factory& algo_factory();
-      Algorithm_Factory& algorithm_factory() { return algo_factory(); }
+      Algorithm_Factory& algorithm_factory();
 
       void add_engine(class Engine*);
 
