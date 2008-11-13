@@ -114,10 +114,10 @@ install: $(LIBRARIES)
 	$(MKDIR_INSTALL) $(LIBDIR)
 	$(MKDIR_INSTALL) $(BINDIR)
 	$(MKDIR_INSTALL) $(PKGCONF_DIR)
-	@for i in $(DOCS); do \
+	for i in $(DOCS); do \
 	   $(INSTALL_CMD_DATA) $$i $(DOCDIR); \
 	 done
-	@for i in $(HEADERS); do \
+	for i in $(HEADERS); do \
 	   $(INSTALL_CMD_DATA) $$i $(HEADERDIR); \
 	 done
 	$(INSTALL_CMD_DATA) $(STATIC_LIB) $(LIBDIR)
