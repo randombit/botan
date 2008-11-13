@@ -102,10 +102,6 @@ int main(int argc, char* argv[])
 
       Botan::LibraryInitializer init("thread_safe=no");
 
-      //Botan::global_state().algorithm_factory().set_preferred_provider("SHA-160", "core");
-
-      Botan::AutoSeeded_RNG rng;
-
       if(opts.is_set("help") || argc <= 1)
          {
          std::cerr << "Test driver for "
@@ -119,8 +115,12 @@ int main(int argc, char* argv[])
                    << "  --seconds=n: Benchmark for n seconds\n"
                    << "  --init=<str>: Pass <str> to the library\n"
                    << "  --help: Print this message\n";
+         return 1;
          }
-      else if(opts.is_set("validate") || opts.is_set("test"))
+
+      Botan::AutoSeeded_RNG rng;
+
+      if(opts.is_set("validate") || opts.is_set("test"))
          {
          run_test_suite(rng);
          }
