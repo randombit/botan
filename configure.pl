@@ -101,8 +101,7 @@ sub main {
 
     $$config{'build-dir'} = 'build';
     $$config{'botan-config'} = File::Spec->catfile(
-        $$config{'build-dir'},
-        'botan-' . $MAJOR_VERSION . $MINOR_VERSION . '-config');
+        $$config{'build-dir'}, 'botan-config');
 
     $$config{'botan-pkgconfig'} = File::Spec->catfile(
         $$config{'build-dir'},
