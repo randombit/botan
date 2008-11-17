@@ -21,6 +21,8 @@ u32bit do_gfpmath_tests(Botan::RandomNumberGenerator& rng);
 u32bit do_pk_validation_tests(const std::string&,
                               Botan::RandomNumberGenerator&);
 
+void do_ec_tests(RandomNumberGenerator& rng);
+
 u32bit do_ecdsa_tests(Botan::RandomNumberGenerator& rng);
 u32bit do_eckaeg_tests(Botan::RandomNumberGenerator& rng);
 u32bit do_cvc_tests(Botan::RandomNumberGenerator& rng);
