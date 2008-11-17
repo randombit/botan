@@ -36,10 +36,10 @@ void AES::enc(const byte in[], byte out[]) const
       const u32bit EK_2 = EK[4*j+2];
       const u32bit EK_3 = EK[4*j+3];
 
-      const u32bit EK_4 = EK[4*j+0];
-      const u32bit EK_5 = EK[4*j+1];
-      const u32bit EK_6 = EK[4*j+2];
-      const u32bit EK_7 = EK[4*j+3];
+      const u32bit EK_4 = EK[4*j+4];
+      const u32bit EK_5 = EK[4*j+5];
+      const u32bit EK_6 = EK[4*j+6];
+      const u32bit EK_7 = EK[4*j+7];
 
       T0 = TE0[get_byte(0, B0)] ^ TE1[get_byte(1, B1)] ^
            TE2[get_byte(2, B2)] ^ TE3[get_byte(3, B3)] ^ EK_0;
