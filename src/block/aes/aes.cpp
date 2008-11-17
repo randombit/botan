@@ -31,23 +31,33 @@ void AES::enc(const byte in[], byte out[]) const
       {
       u32bit T0, T1, T2, T3;
 
+      const u32bit EK_0 = EK[4*j+0];
+      const u32bit EK_1 = EK[4*j+1];
+      const u32bit EK_2 = EK[4*j+2];
+      const u32bit EK_3 = EK[4*j+3];
+
+      const u32bit EK_4 = EK[4*j+0];
+      const u32bit EK_5 = EK[4*j+1];
+      const u32bit EK_6 = EK[4*j+2];
+      const u32bit EK_7 = EK[4*j+3];
+
       T0 = TE0[get_byte(0, B0)] ^ TE1[get_byte(1, B1)] ^
-           TE2[get_byte(2, B2)] ^ TE3[get_byte(3, B3)] ^ EK[4*j+0];
+           TE2[get_byte(2, B2)] ^ TE3[get_byte(3, B3)] ^ EK_0;
       T1 = TE0[get_byte(0, B1)] ^ TE1[get_byte(1, B2)] ^
-           TE2[get_byte(2, B3)] ^ TE3[get_byte(3, B0)] ^ EK[4*j+1];
+           TE2[get_byte(2, B3)] ^ TE3[get_byte(3, B0)] ^ EK_1;
       T2 = TE0[get_byte(0, B2)] ^ TE1[get_byte(1, B3)] ^
-           TE2[get_byte(2, B0)] ^ TE3[get_byte(3, B1)] ^ EK[4*j+2];
+           TE2[get_byte(2, B0)] ^ TE3[get_byte(3, B1)] ^ EK_2;
       T3 = TE0[get_byte(0, B3)] ^ TE1[get_byte(1, B0)] ^
-           TE2[get_byte(2, B1)] ^ TE3[get_byte(3, B2)] ^ EK[4*j+3];
+           TE2[get_byte(2, B1)] ^ TE3[get_byte(3, B2)] ^ EK_3;
 
       B0 = TE0[get_byte(0, T0)] ^ TE1[get_byte(1, T1)] ^
-           TE2[get_byte(2, T2)] ^ TE3[get_byte(3, T3)] ^ EK[4*j+4];
+           TE2[get_byte(2, T2)] ^ TE3[get_byte(3, T3)] ^ EK_4;
       B1 = TE0[get_byte(0, T1)] ^ TE1[get_byte(1, T2)] ^
-           TE2[get_byte(2, T3)] ^ TE3[get_byte(3, T0)] ^ EK[4*j+5];
+           TE2[get_byte(2, T3)] ^ TE3[get_byte(3, T0)] ^ EK_5;
       B2 = TE0[get_byte(0, T2)] ^ TE1[get_byte(1, T3)] ^
-           TE2[get_byte(2, T0)] ^ TE3[get_byte(3, T1)] ^ EK[4*j+6];
+           TE2[get_byte(2, T0)] ^ TE3[get_byte(3, T1)] ^ EK_6;
       B3 = TE0[get_byte(0, T3)] ^ TE1[get_byte(1, T0)] ^
-           TE2[get_byte(2, T1)] ^ TE3[get_byte(3, T2)] ^ EK[4*j+7];
+           TE2[get_byte(2, T1)] ^ TE3[get_byte(3, T2)] ^ EK_7;
       }
 
    out[ 0] = SE[get_byte(0, B0)] ^ ME[16];
