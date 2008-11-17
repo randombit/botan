@@ -1,3 +1,13 @@
+
+#include <botan/build.h>
+#include "validate.h"
+
+#if !defined(BOTAN_HAS_ECDSA)
+
+void do_ec_tests(RandomNumberGenerator&) { return; }
+
+#else
+
 #include <botan/bigint.h>
 #include <botan/numthry.h>
 #include <botan/mp_types.h>
@@ -12,8 +22,8 @@ using namespace Botan;
 #include <assert.h>
 
 #include "getopt.h"
+
 #include "common.h"
-#include "validate.h"
 
 #define CHECK_MESSAGE(expr, print) try { if(!(expr)) std::cout << print << "\n"; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
 #define CHECK(expr) try { if(!(expr)) std::cout << #expr << "\n"; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
@@ -1208,4 +1218,6 @@ void do_ec_tests(RandomNumberGenerator& rng)
 
    std::cout << std::endl;
    }
+
+#endif
 
