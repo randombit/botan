@@ -18,6 +18,7 @@ utils
 <arch>
 pentium-m
 pentium4
+prescott
 amd64
 </arch>
 
