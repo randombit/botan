@@ -31,8 +31,8 @@ double bench_filter(std::string name, Botan::Filter* filter,
    {
    Botan::Pipe pipe(filter, new BitBucket);
 
-   Botan::SecureVector<byte> buf(128 * 1024);
-   rng.randomize(buf, buf.size());
+   std::vector<byte> buf(128 * 1024);
+   rng.randomize(&buf[0], buf.size());
 
    pipe.start_msg();
 
@@ -41,7 +41,7 @@ double bench_filter(std::string name, Botan::Filter* filter,
    while(timer.seconds() < seconds)
       {
       timer.start();
-      pipe.write(buf, buf.size());
+      pipe.write(&buf[0], buf.size());
       timer.stop();
       }
 
