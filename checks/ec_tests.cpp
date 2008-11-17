@@ -1169,7 +1169,7 @@ void test_ec_key_cast(RandomNumberGenerator& rng)
 
 void do_ec_tests(RandomNumberGenerator& rng)
    {
-   std::cout << "InSiTo ECC tests: " << std::flush;
+   std::cout << "Testing ECC: " << std::flush;
 
    test_point_turn_on_sp_red_mul_simple();
    test_point_turn_on_sp_red_mul();
