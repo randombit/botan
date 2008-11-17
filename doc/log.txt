@@ -2,6 +2,7 @@
 * 1.7.23-pre, ????-??-??
  - By default use TR1 with GCC and ICC (use --with-tr1=none to disable)
  - Add ECC tests from InSiTo
+ - Minor documentation updates
 
 * 1.7.22, 2008-11-17
  - Add provider preferences to Algorithm_Factory
@@ -88,6 +89,7 @@
  - Add x86 assembly for Visual Studio C++, by Luca Piccarreta
  - Add a Perl XS module, by Vaclav Ovsik
  - Add SWIG-based wrapper for Botan
+ - Add SSE2 implementation of SHA-1, by Dean Gaudet
  - Remove the BigInt::sig_words cache due to bugs
  - Combined the 4 Blowfish sboxes, suggested by Yves Jerschow
  - Changed BigInt::grow_by and BigInt::grow_to to be non-const
