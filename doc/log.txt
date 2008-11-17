@@ -1,5 +1,6 @@
 
 * 1.7.23-pre, ????-??-??
+ - By default use TR1 with GCC and ICC (use --with-tr1=none to disable)
  - Add ECC tests from InSiTo
 
 * 1.7.22, 2008-11-17

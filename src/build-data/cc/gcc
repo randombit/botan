@@ -2,6 +2,8 @@ realname "GNU C++"
 
 binary_name "g++"
 
+compiler_has_tr1 yes
+
 compile_option "-c "
 output_to_option "-o "
 add_include_dir_option "-I"

@@ -224,8 +224,7 @@ sub warning {
 }
 
 sub autoconfig {
-    print with_diagnostic('autoconfig', @_)
-        if($$config{'verbose'});
+    print with_diagnostic('autoconfig', @_);
 }
 
 sub emit_help {
@@ -312,9 +311,9 @@ default, autodetection will be attempted.
 
 To change build options:
 
-  --with-tr1={boost,system}    enable using a TR1 implementation
-  --with-build-dir=DIR         setup the build in DIR
-  --with-local-config=FILE     include the contents of FILE into build.h
+  --with-tr1={none,system,boost}  enable (or disable) using a TR1 implementation
+  --with-build-dir=DIR            setup the build in DIR
+  --with-local-config=FILE        include the contents of FILE into build.h
 
   --disable-debug      don't worry about debugging
   --enable-debug       set compiler flags for debugging
@@ -390,6 +389,13 @@ sub choose_target {
         unless defined($COMPILER{$cc});
 
     my %ccinfo = %{$COMPILER{$cc}};
+
+    if(defined($ccinfo{'compiler_has_tr1'})) {
+        unless(defined($$config{'tr1'})) {
+            autoconfig("Assuming compiler $cc has TR1 headers. Use --with-tr1= to disable");
+            $$config{'tr1'} = 'system';
+        }
+    }
 
     $os = os_alias($os);
     croak("OS $os isn't known (try --help)") unless
@@ -503,6 +509,9 @@ sub can_enable_module {
 
     if($modinfo{'uses_tr1'} eq 'yes') {
         return '' unless defined($$config{'tr1'});
+
+        my $tr1 = $$config{'tr1'};
+        return '' unless($tr1 eq 'system' or $tr1 eq 'boost');
     }
 
     # @deps is the full list of modules that must be loaded (this loop
@@ -582,7 +591,7 @@ sub print_enabled_modules {
             }
         }
 
-        autoconfig("Loading from $s");
+        print with_diagnostic('loading', $s) if($$config{'verbose'});
     }
 }
 
@@ -1277,8 +1286,8 @@ sub load_modules {
             elsif($tr1 eq 'boost') {
                 push @macro_list, '#define BOTAN_USE_BOOST_TR1';
             }
-            else {
-                warning("Unknown --with-tr1= option $tr1, will ignore");
+            elsif($tr1 ne 'none') {
+                croak("Unknown --with-tr1= option value '$tr1' (try --help)");
             }
         }
 
@@ -1724,7 +1733,9 @@ sub get_cc_info {
                      'debug_flags',
                      'no_debug_flags');
 
-        match_any_of($_, \%info, 'unquoted', 'makefile_style');
+        match_any_of($_, \%info, 'unquoted',
+                     'makefile_style',
+                     'compiler_has_tr1');
 
         sub quoted_mapping {
             my $hashref = $_[0];
