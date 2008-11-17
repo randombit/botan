@@ -1,7 +1,7 @@
-/*************************************************
-* AES Header File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/**
+* AES Header File
+* (C) 1999-2007 Jack Lloyd
+*/
 
 #ifndef BOTAN_AES_H__
 #define BOTAN_AES_H__
@@ -10,9 +10,9 @@
 
 namespace Botan {
 
-/*************************************************
-* AES                                            *
-*************************************************/
+/**
+* Rijndael aka AES
+*/
 class BOTAN_DLL AES : public BlockCipher
    {
    public:
@@ -36,9 +36,9 @@ class BOTAN_DLL AES : public BlockCipher
       u32bit ROUNDS;
    };
 
-/*************************************************
-* AES-128                                        *
-*************************************************/
+/**
+* AES-128
+*/
 class BOTAN_DLL AES_128 : public AES
    {
    public:
@@ -47,9 +47,9 @@ class BOTAN_DLL AES_128 : public AES
       AES_128() : AES(16) {}
    };
 
-/*************************************************
-* AES-192                                        *
-*************************************************/
+/**
+* AES-192
+*/
 class BOTAN_DLL AES_192 : public AES
    {
    public:
@@ -58,9 +58,9 @@ class BOTAN_DLL AES_192 : public AES
       AES_192() : AES(24) {}
    };
 
-/*************************************************
-* AES-256                                        *
-*************************************************/
+/**
+* AES-256
+*/
 class BOTAN_DLL AES_256 : public AES
    {
    public:
