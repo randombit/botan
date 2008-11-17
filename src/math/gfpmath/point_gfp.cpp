@@ -793,12 +793,6 @@ bool PointGFp::is_zero() const
 // function will return silently. If Oskar managed to corrupt this object's state,
 // then it will throw an exception.)
 
-static void print(const GFpElement& e, const char* name)
-   {
-   std::cout << name << " = (" << e.get_value() << ", "
-             << e.get_p() << ")\n";
-   }
-
 void PointGFp::check_invariants() const
    {
    if (is_zero())
@@ -813,12 +807,6 @@ void PointGFp::check_invariants() const
       GFpElement ax = mC.get_a() * mX;
       if(y2 != (x3 + ax + mC.get_b()))
          {
-         print(y2, "y2");
-         print(x3, "x3");
-         print(ax, "ax");
-         print(mC.get_b(), "mC.b");
-         print(x3 + ax + mC.get_b(), "+");
-
          throw Illegal_Point();
          }
 
@@ -834,14 +822,7 @@ void PointGFp::check_invariants() const
    const GFpElement bZ6 = mC.get_b() * mZpow3 * mZpow3;
 
    if (y2 != (x3 + aXZ4 + bZ6))
-      {
-      print(y2, "y2");
-      print(x3, "x3");
-      print(aXZ4, "axZ4");
-      print(bZ6, "bZ6");
-      print(x3 + aXZ4 + bZ6, "+");
       throw Illegal_Point();
-      }
    }
 
 // swaps the states of *this and other, does not throw!
