@@ -392,7 +392,8 @@ sub choose_target {
 
     if(defined($ccinfo{'compiler_has_tr1'})) {
         unless(defined($$config{'tr1'})) {
-            autoconfig("Assuming compiler $cc has TR1 headers. Use --with-tr1= to disable");
+            autoconfig('Assuming compiler $cc has TR1 headers. ',
+                       'Use --with-tr1=none to disable');
             $$config{'tr1'} = 'system';
         }
     }
