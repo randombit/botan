@@ -12,7 +12,7 @@
 
 \title{\textbf{Botan API Reference}}
 \author{}
-\date{2007/03/03}
+\date{2008/11/17}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\manpage}[2]{\texttt{#1}(#2)}
@@ -62,12 +62,11 @@ obvious choice. However in most cases this is not an issue, as many
 algorithms are specified in terms of 32-bit operations precisely to
 target commodity processors.
 
-Smaller andhelds, set-top boxes, and the
-bigger smart phones and smart cards, are also capable of using
-Botan. However, Botan uses a fairly large amount of code space (up to
-several megabytes, depending upon the compiler and options used),
-which could be prohibitive in some systems. Usage of RAM is fairly
-modest, usually under 64K.
+Smaller andhelds, set-top boxes, and the bigger smart phones and smart
+cards, are also capable of using Botan. However, Botan uses a fairly
+large amount of code space (up to several megabytes, depending upon
+the compiler and options used), which could be prohibitive in some
+systems. Usage of RAM is fairly modest, usually under 64K.
 
 Botan's design makes it quite easy to remove unused algorithms in such
 a way that applications do not need to be recompiled to work, even
@@ -128,9 +127,6 @@ And the major downsides and deficiencies are:
         third-party, and there is an alpha-level SSL/TLS library
         currently available.
 
-  \item Doesn't support elliptic curve algorithms; ECDSA support is planned at
-        some point, but demand seems quite low.
-
   \item Doesn't currently support any very high level 'envelope' style
         processing - support for this will probably be added once support for
         CMS is available, so code using the high level interface will produce
@@ -163,76 +159,31 @@ should be used with the \filename{botan/} prefix in your actual code.
 There are a set of core services which the library needs access to
 while it is performing requests. To ensure these are set up, you must
 create a \type{LibraryInitializer} object (using called 'init' in
-Botan example code; 'botan\_library' or 'botan\_init' make more sense
-in real code) prior to making any calls to Botan. This object's
-lifetime must exceed that of all other Botan objects your application
-creates; for this reason the best place to create the
+Botan example code; 'botan\_library' or 'botan\_init' may make more
+sense in real applications) prior to making any calls to Botan. This
+objects lifetime must exceed that of all other Botan objects your
+application creates; for this reason the best place to create the
 \type{LibraryInitializer} is at the start of your \function{main}
 function, since this guarantees that it will be created first and
-destroyed last. The initializer does things like initializing the
-memory allocation system, setting up the algorithm lookup tables,
-finding out if there is a high resolution timer available to use, and
-similar such matters. With no arguments, the library is initialized
-with various default settings. So most of the time (unless you are
-writing threaded code; see below), all you need is:
+destroyed last (via standard C++ RAII rules). The initializer does
+things like setting up the memory allocation system and algorithm
+lookup tables, finding out if there is a high resolution timer
+available to use, and similar such matters. With no arguments, the
+library is initialized with various default settings. So most of the
+time (unless you are writing threaded code; see below), all you need
+is:
 
 \texttt{Botan::LibraryInitializer init;}
 
 at the start of your \texttt{main}.
 
-The constructor takes an instance of another object, called
-\type{InitializerOptions}, which specifies the settings of various
-options. Normally you can ignore this and simply pass a human readable
-string, which the \type{InitializerOptions} constructor will parse. An
-empty string signifies using defaults; any options not specifically
-mentioned in the initialization string also assume the compiled in
-default.
-If more than one option is used, they should be separated by a
-space. Boolean arguments (all except for the ``config'' option) can
-take an argument of ``true'' (or ``yes'') or ``false'' (or ``no'') to
-explicitly turn them on or off. Simply giving the name of the option
-without any argument signifies that the option should be toggled on.
-
-\newcommand{\option}[1]{\noindent \textbf{Option ``#1''}}
-
-\option{thread\_safe}: The library should use mutexes for guarding
-access to shared resources, such as the memory allocation system. If you pass
-the ``thread\_safe'' option, and the initializer can't find a useful mutex
-module, it will throw an exception. Botan seems to work in threaded programs,
-but it hasn't been tested thoroughly, and problems may remain. Note that Botan
-is not thread safe at the object level; any objects shared between threads need
-explicit locking.
-
-\option{secure\_memory}: Try to create a more secure allocator type --
-one that either locks allocated memory into RAM, or that memory maps a
-disk file that it erases after use. If both are available, it will
-prefer the memory mapping mechanism, because locking memory requires
-privileges on many systems.
-
-On systems that don't (currently) have any specialized allocators, like
-MS Windows, this option is ignored.
-
-\option{use\_engines}: Use any available ``engine'' modules to speed
-up processing. Currently Botan has support for engines based on the
-AEP1000/AEP2000 crypto hardware cards, GNU MP, and OpenSSL's BN
-library. Further support for crypto acceleration hardware will be
-added in future releases.
-
-\option{fips140}: This option, in theory, toggles Botan into FIPS 140
-mode. Please note that Botan \emph{has not} been FIPS 140 validated at
-this time, and that a number of changes will be necessary before such
-a validation could occur. Do not use this option.
-
-\option{selftest}: Run some basic self tests during startup.
-Specifically this runs a set of tests for DES, TripleDES, AES,
-CMAC(AES), SHA-1, HMAC(SHA-1), SHA-256, and HMAC(SHA-256). This option
-is enabled by default.
-
-\option{seed\_rng}: Attempt to seed the global PRNGs at
-startup. This option is toggled on by default, and can be disabled by passing
-``seed\_rng=false''. This is primarily useful when you know that the built-in
-library entropy sources will not work, and you are providing you own entropy
-source(s) later on.
+The constructor takes an optional string which specifies arguments.
+Currently the only possible argument is ``thread\_safe'', which must
+have an boolean argument (for instance ``thread\_safe=false'' or
+``thread\_safe=true''). If ``thread\_safe'' is specified as true the
+library will attempt to register a mutex type to properly guard access
+to shared resources. However these locks do not protect individual
+Botan objects: explicit locking must be used in this case.
 
 If you do not create a \type{LibraryInitializer} object, pretty much
 any Botan operation will fail, because it will be unable to do basic
@@ -250,34 +201,31 @@ for the operations (and thus for the internal library state as well).
 
 There are a few things to watch out for to prevent problems when using Botan.
 
-Never allocate any kind of Botan object globally. The problem with doing this
-is that the constructor for such an object will be called before the library is
-initialized. Many Botan objects will, in their constructor, make one or more
-calls into the library global state object. Access to this object is checked,
-so an exception should be thrown (rather than a memory access violation or
-undetected uninitialized object access). A rough equivalent which will work is
-to keep a global pointer to the object, initializing it after creating your
-\type{LibraryInitializer}. Merely making the \type{LibraryInitializer} also
-global will probably not help, because C++ does not make very strong guarantees
-about the order that such objects will be created.
+Never allocate any kind of Botan object globally. The problem with
+doing this is that the constructor for such an object will be called
+before the library is initialized. Many Botan objects will, in their
+constructor, make one or more calls into the library global state
+object. Access to this object is checked, so an exception should be
+thrown (rather than a memory access violation or undetected
+uninitialized object access). A rough equivalent which will work is to
+keep a global pointer to the object, initializing it after creating
+your \type{LibraryInitializer}. Merely making the
+\type{LibraryInitializer} also global will probably not help, because
+C++ does not make very strong guarantees about the order that such
+objects will be created.
 
-The same rule applies for making sure the destructors of all your Botan objects
-are called before the \type{LibraryInitializer} is destroyed. This implies you
-can't have static variables that are Botan objects inside functions or classes
-(since in most C++ runtimes, these objects will be destroyed after main has
-returned). This is inelegant, but seems to not cause many problems in practice.
+The same rule applies for making sure the destructors of all your
+Botan objects are called before the \type{LibraryInitializer} is
+destroyed. This implies you can't have static variables that are Botan
+objects inside functions or classes (since in most C++ runtimes, these
+objects will be destroyed after main has returned). This is inelegant,
+but seems to not cause many problems in practice.
 
 Botan's memory object classes (\type{MemoryVector},
 \type{SecureVector}, \type{SecureBuffer}) are extremely primitive, and
-do not meet the requirements for an STL container object. After Botan
-starts adopting C++0x features, they will be replaced by typedefs of
-\type{std::vector} with a custom allocator.
-
-Prefer using the factory methods to creating objects directly on the
-stack. This helps insulate your code against changes in the
-implementation, and using a late binding allows your code to access
-faster implementations (hardware or faster software) that might be
-detected as available at runtime.
+do not (currently) meet the requirements for an STL container
+object. After Botan starts adopting C++0x features, they will be
+replaced by typedefs of \type{std::vector} with a custom allocator.
 
 Use a \function{try}/\function{catch} block inside your
 \function{main} function, and catch any \type{std::exception} throws
@@ -320,7 +268,8 @@ Bytestreams in the pipe are grouped into messages; blocks of data that
 are processed in an identical fashion (\ie, with the same sequence of
 \type{Filter}s). Messages are delimited by calls to
 \function{start\_msg} and \function{end\_msg}. Each message in a pipe
-has its own number, which increments starting from zero.
+has its own identifier, which currently is an integer that increments
+up from zero.
 
 As you can see, the \type{Base64\_Encoder} was allocated using
 \keyword{new}; but where was it deallocated? When a filter object is
@@ -328,21 +277,23 @@ passed to a \type{Pipe}, the pipe takes ownership of the object, and
 will deallocate it when it is no longer needed.
 
 There are two different ways to make use of messages. One is to send
-several messages through a \type{Pipe} without changing the \type{Pipe}'s
-configuration, so you end up with a sequence of messages; one use of this would
-be to send a sequence of identically encrypted UDP packets, for example (note
-that the \emph{data} need not be identical; it is just that each is encrypted,
-encoded, signed, etc in an identical fashion). Another is to change the filters
-that are used in the \type{Pipe} between each message, by adding or removing
-\type{Filter}s; functions that let you do this are documented in the Pipe API
-section.
+several messages through a \type{Pipe} without changing the
+\type{Pipe}'s configuration, so you end up with a sequence of
+messages; one use of this would be to send a sequence of identically
+encrypted UDP packets, for example (note that the \emph{data} need not
+be identical; it is just that each is encrypted, encoded, signed, etc
+in an identical fashion). Another is to change the filters that are
+used in the \type{Pipe} between each message, by adding or removing
+\type{Filter}s; functions that let you do this are documented in the
+Pipe API section.
 
 Most operations in Botan have a corresponding filter for use in Pipe.
 Here's code that encrypts a string with AES-128 in CBC mode:
 
 \begin{verbatim}
-  SymmetricKey key(16); // a random 128-bit key
-  InitializationVector iv(16); // a random 128-bit IV
+  AutoSeeded_RNG rng,
+  SymmetricKey key(rng, 16); // a random 128-bit key
+  InitializationVector iv(rng, 16); // a random 128-bit IV
 
   // Notice the algorithm we want is specified by a string
   Pipe pipe(get_cipher(``AES-128/CBC'', key, iv, ENCRYPTION));
@@ -357,11 +308,16 @@ Here's code that encrypts a string with AES-128 in CBC mode:
   // use c2[0...got_out]
 \end{verbatim}
 
+Note the use of \type{AutoSeeded\_RNG}, which is a random number
+generator. If you want to, you can explicitly set up the random number
+generators and entropy sources you want to, however for 99\% of cases
+\type{AutoSeeded\_RNG} is preferable.
+
 \type{Pipe} also has convenience methods for dealing with
-\type{std::iostream}s. Here is an example of those, using
-the \type{Bzip\_Compression} filter (included as a module;
-if you have bzlib available, check \filename{building.pdf}
-for how to enable it) to compress a file:
+\type{std::iostream}s. Here is an example of those, using the
+\type{Bzip\_Compression} filter (included as a module; if you have
+bzlib available, check \filename{building.pdf} for how to enable it)
+to compress a file:
 
 \begin{verbatim}
   std::ifstream in(``data.bin'', std::ios::binary)
@@ -407,10 +363,13 @@ empty vector out.
 Here's an example using two computational filters:
 
 \begin{verbatim}
-   SymmetricKey key(32);
-   InitializationVector iv(16); // or use: block_size_of("AES")
+  AutoSeeded_RNG rng,
+   SymmetricKey key(rng, 32);
+   InitializationVector iv(rng, 16);
+
    Pipe encryptor(get_cipher("AES/CBC/PKCS7", key, iv, ENCRYPTION),
                   new Base64_Encoder);
+
    encryptor.start_msg();
    file >> encryptor;
    encryptor.end_msg(); // flush buffers, complete computations
@@ -419,13 +378,13 @@ Here's an example using two computational filters:
 
 \subsection{Fork}
 
-It is fairly common that you might receive some data and want to perform more
-than one operation on it (\ie, encrypt it with DES and calculate the MD5 hash
-of the plaintext at the same time). That's where \type{Fork} comes
-in. \type{Fork} is a filter that takes input and passes it on to \emph{one or
-more} \type{Filter}s which are attached to it. \type{Fork} changes the nature
-of the pipe system completely. Instead of being a linked list, it becomes a
-tree.
+It is fairly common that you might receive some data and want to
+perform more than one operation on it (\ie, encrypt it with Serpent
+and calculate the SHA-256 hash of the plaintext at the same
+time). That's where \type{Fork} comes in. \type{Fork} is a filter that
+takes input and passes it on to \emph{one or more} \type{Filter}s
+which are attached to it. \type{Fork} changes the nature of the pipe
+system completely. Instead of being a linked list, it becomes a tree.
 
 Each \type{Filter} in the fork is given its own output buffer, and
 thus its own message. For example, if you had previously written two
@@ -472,7 +431,8 @@ a case where that is useful:
 \begin{verbatim}
    // have std::string ciphertext, auth_code, key, iv, mac_key;
 
-   Pipe pipe(new Base64_Decoder, get_cipher(``AES-128'', key, iv, DECRYPTION),
+   Pipe pipe(new Base64_Decoder,
+             get_cipher(``AES-128'', key, iv, DECRYPTION),
              new Fork(
                 0
                 new MAC_Filter(``HMAC(SHA-1)'', mac_key)
@@ -1052,11 +1012,6 @@ use DSA-style primes, while others require strong prime groups).
 You can also generate a new random group. This is not recommend, because it is
 quite slow, especially for safe primes.
 
-You can register a new DL group with \function{add\_dl\_group} with a string
-naming the group and the \type{DL\_Group}. Future lookups on that name will
-return the group. There is no reason to register the group if you do decide to
-use a distinct DL group for each key.
-
 \subsection{Key Checking}
 
 Most public key algorithms have limitations or restrictions on their
@@ -1127,44 +1082,48 @@ objects when you're done with them.
 The \type{PK\_Encryptor} and \type{PK\_Decryptor} classes are the interface for
 encryption and decryption, respectively.
 
-Calling \function{encrypt} with a \type{byte} array and a length parameter will
-return the input encrypted with whatever scheme is being used. Calling the
-similar \function{decrypt} will perform the inverse operation. You can also do
-these operations with \type{SecureVector<byte>}s. In all cases, the output is
-returned via a \type{SecureVector<byte>}.
+Calling \function{encrypt} with a \type{byte} array, a length
+parameter, and an RNG object will return the input encrypted with
+whatever scheme is being used. Calling the similar \function{decrypt}
+will perform the inverse operation. You can also do these operations
+with \type{SecureVector<byte>}s. In all cases, the output is returned
+via a \type{SecureVector<byte>}.
 
-If you attempt an operation with a larger size than the key can support (this
-limit varies based on the algorithm, the key size, and the padding method used
-(if any)), an exception will be thrown. Alternately, you can call
-\function{maximum\_input\_size}, which will return the maximum size you can
-safely encrypt. In fact, you can often encrypt an object that is one byte
-longer, but only if enough of the high bits of the leading byte are set to
-zero. Since this is pretty dicey, it's best to stick with the advertised
-maximum.
+If you attempt an operation with a larger size than the key can
+support (this limit varies based on the algorithm, the key size, and
+the padding method used (if any)), an exception will be
+thrown. Alternately, you can call \function{maximum\_input\_size},
+which will return the maximum size you can safely encrypt. In fact,
+you can often encrypt an object that is one byte longer, but only if
+enough of the high bits of the leading byte are set to zero. Since
+this is pretty dicey, it's best to stick with the advertised maximum.
 
 Available public key encryption algorithms in Botan are RSA and ElGamal. The
 encoding methods are EME1, denoted by ``EME1(HASHNAME)'', PKCS \#1 v1.5,
 called ``PKCS1v15'' or ``EME-PKCS1-v1\_5'', and raw encoding (``Raw'').
 
-For compatibility reasons, PKCS \#1 v1.5 is recommend for use with ElGamal
-(most other implementations of ElGamal do not support any other encoding
-format). RSA can also be used with PKCS \# 1 encoding, but because of various
-possible attacks, EME1 is the preferred encoding. EME1 requires the use of a
-hash function: unless a competent applied cryptographer tells you otherwise,
-you should use SHA-1.
+For compatibility reasons, PKCS \#1 v1.5 is recommend for use with
+ElGamal (most other implementations of ElGamal do not support any
+other encoding format). RSA can also be used with PKCS \# 1 encoding,
+but because of various possible attacks, EME1 is the preferred
+encoding. EME1 requires the use of a hash function: unless a competent
+applied cryptographer tells you otherwise, you should use SHA-1.
 
-Don't use ``Raw'' encoding unless you need it for backward compatibility with
-old protocols. There are many possible attacks against both ElGamal and RSA
-when they are used this way.
+Don't use ``Raw'' encoding unless you need it for backward
+compatibility with old protocols. There are many possible attacks
+against both ElGamal and RSA when they are used in this way.
 
 \subsection{Signatures}
 
-The signature algorithms look quite a bit like the hash functions. You can
-repeatedly call \function{update}, giving more and more of a message you wish
-to sign, and then call \function{signature}, which will return a signature for
-that message. If you want to do it all in one shot, call
-\function{sign\_message}, which will just call \function{update} with its
-argument and then return whatever \function{signature} returns.
+The signature algorithms look quite a bit like the hash functions. You
+can repeatedly call \function{update}, giving more and more of a
+message you wish to sign, and then call \function{signature}, which
+will return a signature for that message. If you want to do it all in
+one shot, call \function{sign\_message}, which will just call
+\function{update} with its argument and then return whatever
+\function{signature} returns. Generating a signature requires random
+numbers with some schemes, so \function{signature} and
+\function{sign\_message} both take a \type{RandomNumberGenerator\&}.
 
 You can validate a signature by updating the verifier class, and finally seeing
 the if the value returned from \function{check\_signature} is true (you pass
@@ -2219,114 +2178,6 @@ indexes 0 $\ldots$ \arg{length} -- 1.
 You can avoid all the problem inherent to seeding the PRNG by using the
 globally shared PRNG, described later in this section.
 
-\subsection{Entropy Estimation}
-
-The PRNG algorithms included in Botan have various sanity checks included. In
-particular, they try to make sure that a reasonable amount of entropy has been
-input into them before they will output any randomness. If this condition is
-not met, they will throw a \type{PRNG\_Unseeded} exception. While generally a
-library shouldn't be making policy decisions for applications, it seems
-generally preferable for the application to fail than for it to generate
-insecure keys.
-
-On Windows and Unix systems, the available entropy source modules can provide
-more than enough entropy to seed the PRNGs sufficiently. However, if these
-entropy sources aren't compiled into the library, the application will have to
-handle seeding on its own.
-
-\subsection{The Global PRNG}
-
-Botan maintains a global PRNG (actually, a pair of them) that is used
-internally for things like generating secret keys and salts. These PRNGs are
-automatically seeded by the \type{LibraryInitializer}. Most of the time, you
-won't need to access it directly because the library handles the common cases
-where randomness is needed for you, but you might want to for a complicated
-application (or when implementing things at a low level).
-
-To use it, include \filename{rng.h}. You can't get a pointer to the actual
-global PRNG object, because it is guarded with a mutex for thread safety, so
-the interface basically defines a set of entry points into the object. All of
-them are in the namespace \namespace{Global\_RNG}, which is inside the
-\namespace{Botan} namespace. So you might call them as
-\texttt{Botan::Global\_RNG::function}, or if you have a \keyword{using}
-declaration to include Botan objects into the global namespace, just
-\texttt{Global\_RNG::function}.
-
-There are six functions, four for adding entropy and two for getting
-randomness out.
-
-\vskip 5pt
-\noindent
-\type{void} \function{Global\_RNG::randomize}(\type{byte} \arg{buf[]},
-                                              \type{u32bit} \arg{size})
-
-Get \arg{size} bytes of random bytes from the global PRNG and put it into
-\arg{buf}.
-
-\vskip 5pt
-\noindent
-\type{byte} \function{Global\_RNG::random}():
-
-Return a single random byte
-
-\vskip 5pt
-\noindent
-\type{void} \function{Global\_RNG::add\_entropy}(\type{const byte} \arg{buf}[],
-                                                 \type{u32bit} \arg{size}):
-
-Add the contents of \arg{buf}, which is of size \arg{size}, into the global
-PRNG's internal state. The contents of the buffer cannot be recovered from the
-PRNG output or internal state, and the PRNGs included in Botan are specifically
-designed to be safe even if fed large amounts of data chosen by an attacker
-trying to weaken the PRNG. So feel free to include things like data you
-received over a socket (if you're writing a network application), passwords,
-log data, etc.
-
-\vskip 5pt
-\noindent
-\type{void} \function{Global\_RNG::add\_entropy}(\type{EntropySource\&}
-                        \arg{es}, \type{bool} \arg{slow\_poll}):
-
-Poll \arg{es} for entropy. If \arg{slow\_poll} is true, then do a slow poll,
-otherwise do a fast poll.
-
-\vskip 5pt
-\noindent
-\type{u32bit} \function{Global\_RNG::seed}
-(\type{bool} \arg{slow\_poll} = \arg{true},
- \type{u32bit} \arg{bits\_to\_get} = 256)
-
-Seed the global PRNG, either a fast or slow poll (default a slow), until it
-gets at least \arg{bits\_to\_get} bits of entropy. However, if little entropy
-is available on the system, it's entirely possible it will retrieve less than
-that (particularly if a fast poll is being done). This function will return an
-estimate for how many bits were gathered by the seeding process.
-
-If you pass 0 for \arg{bits\_to\_get}, then a poll will be run from all
-available entropy sources. Usually if enough entropy is collected after a few
-sources, the function will exit early. This is especially useful if you don't
-trust \filename{/dev/urandom} to be safe for some reason.
-
-If you've got a long running server process, it's a good idea to create a
-thread that just calls this function every once in a while, sleeping the rest
-of the time. Make sure to cancel it before you shutdown the library, though;
-otherwise it will try to get memory from the now-nonexist allocators, fail, and
-throw an exception (or crash). An alternate method might be to call it after
-servicing a particular number of clients.
-
-\vskip 5pt
-\noindent
-\type{u32bit} \function{Global\_RNG::add\_es}
-(\type{EntropySource*} \arg{source}, \type{bool} \arg{last} = \arg{true})
-
-Normally the library generates a list of entropy sources for
-\function{Global\_RNG::seed} to call at initialization time. With this function
-you can add new entropy sources which will be queried. If \arg{last} is true,
-the the entropy source is put at the end of the list of currently used entropy
-sources. If you'd like to be sure that your source is always called, set
-\arg{last} to \arg{false}, in which case it will placed at the start of the
-list.
-
 \subsection{Randpool}
 
 \type{Randpool} is the primary PRNG within Botan. In recent versions all uses
@@ -2466,261 +2317,6 @@ application. If you write a \type{UI} object for another windowing system
 (Win32, Qt, wxWindows, FOX, etc), and would like to make it available to users
 in general (ideally under a permissive license such as public domain or
 MIT/BSD), feel free to send in a copy.
-
-\pagebreak
-\section{Policy Configuration}
-
-While Botan is performing operations on behalf on an application, there are
-times where there needs to be a policy decision. For example, when generating
-an X.509v3 certificate, should we include the key usage extension? Should it be
-marked as a critical extension, or is non-critical OK? And so on and so
-forth. It is not proper for a library to make these kinds of decisions for an
-application; after all, different applications might have different needs (not
-to mention the same application running at different sites). So, whenever it is
-sane to do so, the library will read from an internal table to find out what it
-should do when a policy decision is needed.
-
-Right now, the option table is populated by some fixed, reasonable values at
-startup. These options can then be changed by the application, either
-hard-coded into the source code as an application policy, or reading them from
-a file (or options screen or whatever) and setting them as the user desires
-(possibly placing application-policy limits on the range they can take).
-
-The library natively supports a simple format which is easy to parse and easy
-for humans to read and write. If you're at all familiar with Windows .INI files
-or OpenSSL's configs, it should be pretty easy to use. It's entirely possible
-that you want to instead use an XML config (or whatever), but you'll have to
-write you own parser for this (\filename{src/inifile.cpp} will provide some
-ideas on what it is supposed to do).
-
-There are basically four different things stored in the options table: strings,
-numbers, booleans, and times (\emph{not} dates; times are things like ``1
-hour'', ``15 minutes'', etc), though they are all represented by strings when
-they are provided to the library.
-
-\subsection{Option Types}
-
-Strings are simply strings~--~no strings attached (sorry). A list is a
-collection of strings, separated by a ':' character (no escaping is available,
-so you can't actually have a ':' character in a list item).
-
-A number (more precisely, a non-negative integer less than $2^{32}$) is
-specified as a string of decimal digits~--~no special formatters (such as a
-``0x'' prefix) are supported. However, you can do simply arithmetic ('+' and
-'*'), and they do commute correctly. There is no explicit grouping (\ie, with
-parenthesis), but generally a simple expression is all thats needed for this
-sort of thing.
-
-A boolean can take on the values true and false, which can be represented by
-``true'' (and ``1'') or ``false'' (and ``0'') respectively. Unlike C, a value
-of (say) ``7'' is not a boolean; it will be flagged as an error at runtime when
-the library attempts to read it. Finally, a time is essentially
-``\texttt{<integer>[s|m|h|d|y]}'', where integer is the magnitude and the
-suffix (if present) provides a scaling value. For example ``5d'' represents 5
-days, and ``60'', ``60s'', and ``1m'' all represent 60 seconds. If no suffix is
-provided, the scale defaults to seconds.
-
-\subsection{Setting and Getting Options}
-
-The header \filename{botan/config.h} has the interface for setting
-policy options. All the actual configuration options are stored in a
-global object (of type \type{Config}); you can get a reference to this
-object by calling \function{global\_config}.
-
-To add (or set) an option, call
-\function{global\_config}().\function{set\_option} (\type{std::string}
-\arg{name}, \type{std::string} \arg{value})
-
-To get the value of an option, there are number of member functions
-which provide access, converting the underlying storage unit
-(currently strings) into an appropriate base type:
-
-\type{std::string} \function{option}(\type{std::string} \arg{option})
-
-\type{std::vector<std::string>} \function{option\_as\_list}(\type{std::string}
-\arg{option})
-
-\type{u32bit} \function{option\_as\_u32bit}(\type{std::string} \arg{option})
-
-\type{u32bit} \function{option\_as\_time}(\type{std::string} \arg{option})
-
-\type{bool} \function{option\_as\_bool}(\type{std::string} \arg{option})
-
-Simply calling \function{option} returns a \type{std::string}, which
-is the underlying storage unit. If you're not sure what kind of value
-might be in the type, or you want to support a type coercion that
-Botan isn't supporting, you'll want to use this. Botan supports
-various simple coercions, which take the underlying string as the
-input. Taking the option as a list simply splits it on the ':'
-character (with no escaping of any kind, eg ``abc\\:def'' splits into
-``abc\\'' and ``def'')
-
-As to defaults: strings default to the empty string, lists to an empty list,
-integers default to 0, times default to no time (0 seconds), and booleans will
-throw an exception if no value has been set.
-
-\subsection{Available Options}
-
-Generally, the defaults are chosen to provide a good level of security and
-sense for typical applications. Currently, most of the options are for the
-X.509 handling, since that's the place where most freedom is given to
-implementations. Options are organized in a hierarchal fashion, with a
-separating character of '/'. All options beginning with ``app/'' are reserved
-for use by applications.
-
-\newcommand{\confopt}[4]{
-   \textbf{``#1''}, (\textbf{#2}, default \textbf{#3}): #4.
-}
-
-\begin{list}{$\cdot$}
-  \item \confopt{base/memory\_chunk}{integer}{``64*1024''}{how large a
-        block of memory to allocate at once}
-
-  \item \confopt{base/default\_pbe}{string}
-         {``PBE-PKCS5v20(SHA-1,TripleDES/CBC)''}{
-           The default algorithm for encrypting PKCS \#8 private keys}
-
-  \item \confopt{base/pkcs8\_tries}{integer}{3}{how many times
-         \function{PKCS8::load\_key} will ask a \type{UI} object for a
-         passphrase to decrypt the key before it gives up. If set to 0, it will
-         continue to query the \type{UI} object until the object indicates to
-         cancel the action.}
-
-  \item \confopt{pk/blinder\_size}{integer}{64}{how long (in bits) the
-        blinding factor will be when doing private-key PK operations; if set to
-        zero then blinding is not performed}
-
-  \item \confopt{pk/test/public}{string}{``basic''}{How much testing to
-        perform on imported public keys; can be ``basic'' or ``all''}
-
-  \item \confopt{pk/test/private}{string}{``basic''}{How much testing to
-        perform on imported private keys; can be ``basic'' or ``all''}
-
-  \item \confopt{pk/test/private\_gen}{string}{``all''}{How much testing to
-        perform on generated private keys; can be ``basic'' or ``all''}
-
-  \item \confopt{pem/search}{integer}{``4*1024''}{how large an area (in bytes)
-        to search for PEM signatures in the heuristic that decides if data is
-        PEM encoded, or raw BER data}
-
-  \item \confopt{pem/forgive}{integer}{``8''}{how many characters that
-       'look like' a PEM header will be forgiven, \ie how characters match
-       before we decide it really is the PEM header, and any bad characters
-       imply a malformed header}
-
-  \item \confopt{pem/width}{integer}{``64''}{how long each PEM line will be
-        encoded as; it should not be smaller than 50 or greater than 80}
-
-  \item \confopt{rng/min\_entropy}{integer}{384}{how many bits of entropy must
-        be collected before the PRNG is considered seeded}
-
-  \item \confopt{rng/es\_files}{list}{``/dev/urandom:/dev/random''}{what paths
-        to attempt reads from for entropy, typically in-kernel devices}
-
-  \item \confopt{rng/egd\_path}{list}{``/var/run/egd-pool:/dev/egd-pool''}{
-        what paths to attempt to use as an EGD socket}
-
-  \item \confopt{rng/ms\_capi\_prov\_type}{list}{``INTEL\_SEC:RSA\_FULL''}{
-        what providers the CAPI entropy source should attempt to use, in order}
-
-  \item \confopt{rng/unix\_path}{list}{``/usr/ucb:/usr/etc:/etc''}{extra path
-        fields to use when executing programs to gather entropy}
-
-  \item \confopt{x509/validity\_slack}{time}{``24h''}{how much slack to
-        allow when checking time validity on X.509 certificates}
-
-  \item \confopt{x509/v1\_assume\_ca}{boolean}{false}{if true, then v1/v2
-        X.509 certificates are considered CA certificates by default. If not
-        true, then no v1/v2 certificate is considered valid for CA use}
-
-  \item \confopt{x509/cache\_verify\_results}{time}{``30m''}{how long
-        to cache certificate verification results in a \type{X509\_Store}. Set
-        it to 0 if you don't want to cache the results, though this will cause
-        a lot of unnecessary overhead}
-
-  \item \confopt{x509/ca/allow\_ca}{boolean}{``false''}{whether a CA
-        will allow new certificates to be marked for CA usage}
-
-  \item \confopt{x509/ca/basic\_constraints}{string}{``always''}{can be either
-        ``always'' or ``ca\_only''; if ``always'' then the basic constraints
-        extension is included in new user certs as well as new CA certs}
-
-  \item \confopt{x509/ca/default\_expire}{time}{``1y''}{how long, by
-        default, a newly generated certificate is valid for}
-
-  \item \confopt{x509/ca/signing\_offset}{time}{``30s''}{when generating a
-        PKCS \#10 certificate request, it will be marked as becoming valid
-        this much time before the current time; helps protect against slightly
-        off clocks}
-
-  \item \confopt{x509/ca/rsa\_hash}{string}{``SHA-1''}{what hash to use
-        with an RSA key (SHA-1 is always used with DSA)}
-
-  \item \confopt{x509/ca/str\_type}{string}{``latin1''}{what encoding to use
-        by default (can be ``latin1'' or ``utf8'')}
-
-  \item \confopt{x509/crl/unknown\_critical}{string}{``ignore''}{what
-        to do when a CRL with an unknown critical extension is
-        processed. Options are ``ignore'' and ``throw''. For X.509v4
-        compliance, use ``ignore'', for PKIX compliance, use ``throw''}
-
-  \item \confopt{x509/crl/next\_update}{time}{``7d''}{new CRLs are marked as
-        expiring in this much time}
-\end{list}
-
-Here, in a separate list, are the options which control which extension are
-included in a newly generated X.509v3 certificate, and if they should be marked
-as critical extensions or not. Each one begins with ``x509/exts/'' (\ie, what
-is referred to as ``basic\_constraints'' below is actually
-``x509/exts/basic\_constraints''), and can take on a value of ``yes'', ``no'',
-``noncritical'', or ``critical''. A value of ``no'' means the extension is not
-included under any circumstances. A value of ``yes'' or ``noncritical'' (they
-have the same meaning), means that the extension is included in the certificate
-if there is some data to populate it with, and that the extension should be
-marked as non-critical. Finally, ``critical'' means that the extension should
-be marked as a critical extension. Unless otherwise noted, the option will
-default to ``yes'': including the extension if data is available to fill it in,
-and mark it as a non-critical extension.
-
-A word about X.509v3 extensions: each extension can be marked either critical
-or non-critical. A non-critical extension may be ignored by a compliant X.509v3
-implementation (though for the common extensions, it is fairly rare for an
-implementation to actually do so). On the other hand, a critical extension
-forces an all-or-nothing situation: if an implementation can't handle an
-extension marked critical, it is required to reject the certificate outright.
-
-For the full meaning of the extensions, it will probably be helpful to read an
-authoritative X.509 reference, such as RFC 2459 or ISO's X.509 v3/v4 documents.
-The default options here were chosen to comply with the IETF PKIX X.509v3
-profile, which is probably the most commonly supported X.509 profile, at least
-in the United States.
-
-\begin{list}{$\cdot$}
-   \item ``basic\_constraints'' (default ``critical''): Control the use of the
-         Basic Constraints extension, which marks if a certificate is a CA or
-         not. Changing this is \emph{not} recommended, as this should always
-         be a critical extension (doing otherwise violates most if not all
-         X.509v3 profiles).
-   \item
-   \item ``subject\_key\_id'': Controls the use of the subject key identifier.
-         Not many implementations make use of this extension, but it is not
-         harmful, and it is recommended it be included in all new certificates.
-
-   \item ``authority\_key\_id'': See comments on ``subject\_key\_id''
-
-   \item ``subject\_alternative\_name'': Contains various pieces of information
-         that don't fit into the standard certificate name, like email
-         addresses and URIs. Very commonly used.
-
-   \item ``issuer\_alternative\_name'': Like ``subject\_alternative\_name'',
-         but not used nearly as often.
-
-   \item ``key\_usage'' (default ``critical''): Marks what uses this
-         certificate is valid for.
-
-   \item ``extended\_key\_usage'': Similar to ``key\_usage'', but more general
-         and much less commonly used.
-\end{list}
 
 \pagebreak
 \section{Botan's Modules}
@@ -3111,36 +2707,15 @@ If your application is using threads, you \emph{must} add the option
 is available, an exception is thrown, since otherwise you would probably be
 facing a nasty crash.
 
-There are a few functions that shouldn't be called from threads. If you want to
-use them, you'll have to either do locking in your own code, or only call them
-from a single thread (presumably the main thread, which initialized the
-library, but that isn't required). It is assumed that most of them are called
-at most once, and then the application runs. Thread-unsafe functions in Botan
-include:
-
-\begin{verbatim}
-   add_engine(Engine*)
-   startup_engines()
-   shutdown_engines()
-   set_mutex_type(Mutex*)
-   set_timer_type(Timer*)
-   setup_global_rng(RandomNumberGenerator*, RandomNumberGenerator*)
-   destroy_global_rng()
-\end{verbatim}
-
-This list is \emph{not} complete. As you can see, most of them are used only at
-startup/shutdown; the functions/objects you would tend to use regularly in an
-application should be thread safe at the object level.
-
 \subsection{Secure Memory}
 
-A major concern with mixing modern multiuser OSes and cryptographic code is
-that at any time the code (including secret keys) could be swapped to disk,
-where it can later be read by an attacker. Botan stores almost everything (and
-especially anything sensitive) in memory buffers which a) clear out their
-contents when their destructors are called, and b) have easy plugins for
-various memory locking functions, such as the \function{mlock}(2) call on many
-Unix systems.
+A major concern with mixing modern multiuser OSes and cryptographic
+code is that at any time the code (including secret keys) could be
+swapped to disk, where it can later be read by an attacker. Botan
+stores almost everything (and especially anything sensitive) in memory
+buffers which a) clear out their contents when their destructors are
+called, and b) have easy plugins for various memory locking functions,
+such as the \function{mlock}(2) call on many Unix systems.
 
 Two of the allocation method used (``malloc'' and ``mmap'') don't
 require any extra privileges on Unix, but locking memory does. At
@@ -3212,24 +2787,6 @@ allocator was successfully registered. If you ask it to,
 Finally, you can set the default allocator type that will be returned using
 the policy setting ``default\_alloc'' to the name of any previously registered
 allocator.
-
-\subsection{Timers}
-
-Botan includes a pair of functions, \function{system\_time} and
-\function{system\_clock}, which are used extensively in some areas of the code
-(especially in the random number generators). These functions by default use
-\function{std::time} and \function{std::clock}, but often you can do better
-with system-dependent functions, especially for the system clock (for example,
-returning the microseconds value from \function{gettimeofday}, or the
-nanoseconds value from the POSIX.1b \function{clock\_gettime}, is far
-superior). Modules for this exist for several systems.
-
-You can register a new timer method with \function{set\_timer\_type}. For
-example, if the \texttt{timer\_unix} module is available, one could call
-\function{set\_timer\_type}(new \type{Unix\_Timer}), in which case
-\function{system\_clock} will return a more ``interesting'' value based on the
-return of the \function{gettimeofday} function call. This is done automatically
-by the \type{LibraryInitializer} object.
 
 \subsection{BigInt}
 
@@ -3339,10 +2896,7 @@ be more secure than the ones listed, but the algorithms listed here are
 (currently) thought to be safe.
 
 \begin{list}{$\cdot$}
-  \item Block ciphers: TripleDES or AES in CBC mode with ``PKCS7'' padding.
-  \item
-
-  \item Stream Ciphers: Use any of the recommended block ciphers in CTR mode.
+  \item Block ciphers: AES or Serpent in CBC or CTR mode
 
   \item Hash functions: SHA-1, SHA-256, SHA-512
 
@@ -3358,8 +2912,8 @@ be more secure than the ones listed, but the algorithms listed here are
 
 \subsection{Compliance with Standards}
 
-Botan is/should be compatible with many cryptographic standards, including the
-following:
+Botan is/should be at least roughly compatible with many cryptographic
+standards, including the following:
 
 \newcommand{\standard}[2]{
    \vskip 4pt
@@ -3446,72 +3000,6 @@ match that in SCAN, if it's defined there).
 \noindent
 \textbf{MACs:} ``HMAC(HASH)'', ``CMAC(BLOCK)'', ``X9.19-MAC''
 
-\subsection{Removing Algorithms}
-
-You may well want to remove some of Botan's algorithms in order to fit it into
-a memory-constrained system, where you're counting the kilobytes. For the most
-part, this is trivial to do, and Botan's interface makes it easy for
-applications to test for the presence of an algorithm at runtime, so a
-well-behaved application can work without any need for porting on such an
-version of Botan.
-
-In some versions of 1.3.x, you can use the 'minimal' module, which removes
-large amount of Botan, including most ciphers and hashes (except AES, DES/3DES,
-SHA-1, HMAC, RSA, DSA, and Diffie-Hellman), DLIES, EAX and CTS modes, and a few
-other odds and ends. You can check for this being the case by seeing if
-\macro{BOTAN\_EXT\_MINIMAL} is defined, though for the most part it's better to
-use the lookup interface (since you have no way of knowing what exactly the
-minimal module might remove from release to release, and certainly not if the
-shared object you're linking to has a particular algorithm). This module was
-removed just before 1.4.0, as there is a better way to handle all of this in
-the new engine code, which is aware of things outside public key algorithms.
-
-Removing things like the PK signature encoding schemes (EMSA2, EMSA3...) is
-somewhat more complicated and not documented here (thought it is actually quite
-simple if you know how to do it -- the minimal module shows how). This tutorial
-(of sorts) will go through the steps required to compile a version of Botan
-without the Blowfish block cipher (which has been included since the first
-release of Botan, in the spring of 2001).
-
-The first step is to remove the files \filename{include/blowfish.h},
-\filename{src/blowfish.cpp}, and \filename{src/blfs\_tab.cpp}, which actually
-implement the algorithm. Then minor editing of \filename{src/algolist.cpp} is
-required. First, remove the line that includes the Blowfish header
-\filename{botan/blowfish.h}. Then look in \function{get\_block\_cipher} for the
-code that adds a Blowfish block cipher object to the internal lookup table, and
-remove it. Run the configure script, and then \textbf{make} the library. Tada!
-Done.
-
-So how does an application test for such a situation? The first is to simply
-try to pass the name ``Blowfish'' to constructor of \type{CBC\_Encryption} or
-other Botan \type{Filter}, and catch the resulting exception. This is not
-particularly flexible, though. If an application wants to check on the status
-of Botan's support for a particular algorithm, it can call some status
-functions found in \filename{lookup.h}, called \function{have\_block\_cipher},
-\function{have\_stream\_cipher}, \function{have\_hash}, and
-\function{have\_mac}, passing in the name of the desired algorithm. If Botan
-knows about it, the function will return true.
-
-There are a handful of algorithms which are considered ``sacred'', in that an
-application can always expect that they exist, and a distributor or other
-end-user should not remove them without considering the possibly serious
-consequences. At this time, these are: AES, DES, TripleDES, SHA-1, and HMAC.
-This allows a workable fallback strategy for applications.
-
-One other useful application of this is to remove patented algorithms, for
-example if Botan were to be included as part of a commercial Linux
-distribution.
-
-For the most part, applications don't have to really worry about this, simply
-because the cases this will be required are fairly rare. Checking for the
-availability of patented algorithms like RC5 and IDEA before using them might
-be a good idea, though.
-
-Another advantage of this is that an application can be written to take
-advantage of an algorithm which is not currently part of Botan. If it's not
-available, one can simply fall back on another algorithm, and when/if it is
-added to Botan, the application will start using it automagically.
-
 \subsection{Compatibility}
 
 Generally, cryptographic algorithms are well standardized, and thus
@@ -3582,7 +3070,7 @@ programs using Botan, and basically anything else having to do with
 Botan are also welcome.
 
 The lists can be found at
-\url{http://www.randombit.net/mailman/listinfo/}.
+\url{http://lists.randombit.net/mailman/listinfo/}.
 
 \subsection{Contact Information}
 
@@ -3594,12 +3082,9 @@ PGP keys for the developers are also stored there.
 \vskip 5pt \noindent
 Web Site: \url{http://botan.randombit.net}
 
-\vskip 5pt \noindent
-Mailing lists: \url{http://www.randombit.net/mailman/}
-
 \subsection{License}
 
-Copyright \copyright  2000-2006, Jack Lloyd
+Copyright \copyright  2000-2008, Jack Lloyd
 
 This work is licensed under the Creative Commons
 Attribution-ShareAlike 2.5 License. To view a copy of this license,
