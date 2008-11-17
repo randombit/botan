@@ -1169,6 +1169,8 @@ void test_ec_key_cast(RandomNumberGenerator& rng)
 
 void do_ec_tests(RandomNumberGenerator& rng)
    {
+   std::cout << "InSiTo ECC tests: " << std::flush;
+
    test_point_turn_on_sp_red_mul_simple();
    test_point_turn_on_sp_red_mul();
    test_coordinates();
@@ -1203,5 +1205,7 @@ void do_ec_tests(RandomNumberGenerator& rng)
    test_curve_cp_ctor();
    test_ec_key_cp_and_assignment(rng);
    test_ec_key_cast(rng);
+
+   std::cout << std::endl;
    }
 
