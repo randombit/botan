@@ -29,35 +29,33 @@ void AES::enc(const byte in[], byte out[]) const
 
    for(u32bit j = 1; j != ROUNDS - 1; j += 2)
       {
+      const u32bit K0 = EK[4*j+0];
+      const u32bit K1 = EK[4*j+1];
+      const u32bit K2 = EK[4*j+2];
+      const u32bit K3 = EK[4*j+3];
+      const u32bit K4 = EK[4*j+4];
+      const u32bit K5 = EK[4*j+5];
+      const u32bit K6 = EK[4*j+6];
+      const u32bit K7 = EK[4*j+7];
+
       u32bit T0, T1, T2, T3;
-
-      const u32bit EK_0 = EK[4*j+0];
-      const u32bit EK_1 = EK[4*j+1];
-      const u32bit EK_2 = EK[4*j+2];
-      const u32bit EK_3 = EK[4*j+3];
-
-      const u32bit EK_4 = EK[4*j+4];
-      const u32bit EK_5 = EK[4*j+5];
-      const u32bit EK_6 = EK[4*j+6];
-      const u32bit EK_7 = EK[4*j+7];
-
       T0 = TE0[get_byte(0, B0)] ^ TE1[get_byte(1, B1)] ^
-           TE2[get_byte(2, B2)] ^ TE3[get_byte(3, B3)] ^ EK_0;
+           TE2[get_byte(2, B2)] ^ TE3[get_byte(3, B3)] ^ K0;
       T1 = TE0[get_byte(0, B1)] ^ TE1[get_byte(1, B2)] ^
-           TE2[get_byte(2, B3)] ^ TE3[get_byte(3, B0)] ^ EK_1;
+           TE2[get_byte(2, B3)] ^ TE3[get_byte(3, B0)] ^ K1;
       T2 = TE0[get_byte(0, B2)] ^ TE1[get_byte(1, B3)] ^
-           TE2[get_byte(2, B0)] ^ TE3[get_byte(3, B1)] ^ EK_2;
+           TE2[get_byte(2, B0)] ^ TE3[get_byte(3, B1)] ^ K2;
       T3 = TE0[get_byte(0, B3)] ^ TE1[get_byte(1, B0)] ^
-           TE2[get_byte(2, B1)] ^ TE3[get_byte(3, B2)] ^ EK_3;
+           TE2[get_byte(2, B1)] ^ TE3[get_byte(3, B2)] ^ K3;
 
       B0 = TE0[get_byte(0, T0)] ^ TE1[get_byte(1, T1)] ^
-           TE2[get_byte(2, T2)] ^ TE3[get_byte(3, T3)] ^ EK_4;
+           TE2[get_byte(2, T2)] ^ TE3[get_byte(3, T3)] ^ K4;
       B1 = TE0[get_byte(0, T1)] ^ TE1[get_byte(1, T2)] ^
-           TE2[get_byte(2, T3)] ^ TE3[get_byte(3, T0)] ^ EK_5;
+           TE2[get_byte(2, T3)] ^ TE3[get_byte(3, T0)] ^ K5;
       B2 = TE0[get_byte(0, T2)] ^ TE1[get_byte(1, T3)] ^
-           TE2[get_byte(2, T0)] ^ TE3[get_byte(3, T1)] ^ EK_6;
+           TE2[get_byte(2, T0)] ^ TE3[get_byte(3, T1)] ^ K6;
       B3 = TE0[get_byte(0, T3)] ^ TE1[get_byte(1, T0)] ^
-           TE2[get_byte(2, T1)] ^ TE3[get_byte(3, T2)] ^ EK_7;
+           TE2[get_byte(2, T1)] ^ TE3[get_byte(3, T2)] ^ K7;
       }
 
    out[ 0] = SE[get_byte(0, B0)] ^ ME[16];
@@ -99,25 +97,34 @@ void AES::dec(const byte in[], byte out[]) const
 
    for(u32bit j = 1; j != ROUNDS - 1; j += 2)
       {
+      const u32bit K0 = DK[4*j+0];
+      const u32bit K1 = DK[4*j+1];
+      const u32bit K2 = DK[4*j+2];
+      const u32bit K3 = DK[4*j+3];
+      const u32bit K4 = DK[4*j+4];
+      const u32bit K5 = DK[4*j+5];
+      const u32bit K6 = DK[4*j+6];
+      const u32bit K7 = DK[4*j+7];
+
       u32bit T0, T1, T2, T3;
 
       T0 = TD0[get_byte(0, B0)] ^ TD1[get_byte(1, B3)] ^
-           TD2[get_byte(2, B2)] ^ TD3[get_byte(3, B1)] ^ DK[4*j+0];
+           TD2[get_byte(2, B2)] ^ TD3[get_byte(3, B1)] ^ K0;
       T1 = TD0[get_byte(0, B1)] ^ TD1[get_byte(1, B0)] ^
-           TD2[get_byte(2, B3)] ^ TD3[get_byte(3, B2)] ^ DK[4*j+1];
+           TD2[get_byte(2, B3)] ^ TD3[get_byte(3, B2)] ^ K1;
       T2 = TD0[get_byte(0, B2)] ^ TD1[get_byte(1, B1)] ^
-           TD2[get_byte(2, B0)] ^ TD3[get_byte(3, B3)] ^ DK[4*j+2];
+           TD2[get_byte(2, B0)] ^ TD3[get_byte(3, B3)] ^ K2;
       T3 = TD0[get_byte(0, B3)] ^ TD1[get_byte(1, B2)] ^
-           TD2[get_byte(2, B1)] ^ TD3[get_byte(3, B0)] ^ DK[4*j+3];
+           TD2[get_byte(2, B1)] ^ TD3[get_byte(3, B0)] ^ K3;
 
       B0 = TD0[get_byte(0, T0)] ^ TD1[get_byte(1, T3)] ^
-           TD2[get_byte(2, T2)] ^ TD3[get_byte(3, T1)] ^ DK[4*j+4];
+           TD2[get_byte(2, T2)] ^ TD3[get_byte(3, T1)] ^ K4;
       B1 = TD0[get_byte(0, T1)] ^ TD1[get_byte(1, T0)] ^
-           TD2[get_byte(2, T3)] ^ TD3[get_byte(3, T2)] ^ DK[4*j+5];
+           TD2[get_byte(2, T3)] ^ TD3[get_byte(3, T2)] ^ K5;
       B2 = TD0[get_byte(0, T2)] ^ TD1[get_byte(1, T1)] ^
-           TD2[get_byte(2, T0)] ^ TD3[get_byte(3, T3)] ^ DK[4*j+6];
+           TD2[get_byte(2, T0)] ^ TD3[get_byte(3, T3)] ^ K6;
       B3 = TD0[get_byte(0, T3)] ^ TD1[get_byte(1, T2)] ^
-           TD2[get_byte(2, T1)] ^ TD3[get_byte(3, T0)] ^ DK[4*j+7];
+           TD2[get_byte(2, T1)] ^ TD3[get_byte(3, T0)] ^ K7;
       }
 
    out[ 0] = SD[get_byte(0, B0)] ^ MD[16];
