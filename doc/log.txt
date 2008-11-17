@@ -1,4 +1,7 @@
 
+* 1.7.23-pre, ????-??-??
+ - Add ECC tests from InSiTo
+
 * 1.7.22, 2008-11-17
  - Add provider preferences to Algorithm_Factory
  - Fix memory leaks in PBE_PKCS5v20 and get_pbe introduced in 1.7.21
