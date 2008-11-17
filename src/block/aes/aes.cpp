@@ -92,27 +92,27 @@ void AES::dec(const byte in[], byte out[]) const
    const u32bit* TD2 = TD + 512;
    const u32bit* TD3 = TD + 768;
 
-   u32bit B0 = TD0[in[ 0] ^ MD[ 0]] ^ TD1[in[13] ^ MD[13]] ^
-               TD2[in[10] ^ MD[10]] ^ TD3[in[ 7] ^ MD[ 7]] ^ DK[0];
-   u32bit B1 = TD0[in[ 4] ^ MD[ 4]] ^ TD1[in[ 1] ^ MD[ 1]] ^
-               TD2[in[14] ^ MD[14]] ^ TD3[in[11] ^ MD[11]] ^ DK[1];
-   u32bit B2 = TD0[in[ 8] ^ MD[ 8]] ^ TD1[in[ 5] ^ MD[ 5]] ^
-               TD2[in[ 2] ^ MD[ 2]] ^ TD3[in[15] ^ MD[15]] ^ DK[2];
-   u32bit B3 = TD0[in[12] ^ MD[12]] ^ TD1[in[ 9] ^ MD[ 9]] ^
-               TD2[in[ 6] ^ MD[ 6]] ^ TD3[in[ 3] ^ MD[ 3]] ^ DK[3];
+   u32bit T0 = load_be<u32bit>(in, 0) ^ DK[0];
+   u32bit T1 = load_be<u32bit>(in, 1) ^ DK[1];
+   u32bit T2 = load_be<u32bit>(in, 2) ^ DK[2];
+   u32bit T3 = load_be<u32bit>(in, 3) ^ DK[3];
 
-   for(u32bit j = 1; j != ROUNDS - 1; j += 2)
+   u32bit B0, B1, B2, B3;
+   B0 = TD0[get_byte(0, T0)] ^ TD1[get_byte(1, T3)] ^
+        TD2[get_byte(2, T2)] ^ TD3[get_byte(3, T1)] ^ DK[4];
+   B1 = TD0[get_byte(0, T1)] ^ TD1[get_byte(1, T0)] ^
+        TD2[get_byte(2, T3)] ^ TD3[get_byte(3, T2)] ^ DK[5];
+   B2 = TD0[get_byte(0, T2)] ^ TD1[get_byte(1, T1)] ^
+        TD2[get_byte(2, T0)] ^ TD3[get_byte(3, T3)] ^ DK[6];
+   B3 = TD0[get_byte(0, T3)] ^ TD1[get_byte(1, T2)] ^
+        TD2[get_byte(2, T1)] ^ TD3[get_byte(3, T0)] ^ DK[7];
+
+   for(u32bit j = 2; j != ROUNDS; j += 2)
       {
       const u32bit K0 = DK[4*j+0];
       const u32bit K1 = DK[4*j+1];
       const u32bit K2 = DK[4*j+2];
       const u32bit K3 = DK[4*j+3];
-      const u32bit K4 = DK[4*j+4];
-      const u32bit K5 = DK[4*j+5];
-      const u32bit K6 = DK[4*j+6];
-      const u32bit K7 = DK[4*j+7];
-
-      u32bit T0, T1, T2, T3;
 
       T0 = TD0[get_byte(0, B0)] ^ TD1[get_byte(1, B3)] ^
            TD2[get_byte(2, B2)] ^ TD3[get_byte(3, B1)] ^ K0;
@@ -122,6 +122,11 @@ void AES::dec(const byte in[], byte out[]) const
            TD2[get_byte(2, B0)] ^ TD3[get_byte(3, B3)] ^ K2;
       T3 = TD0[get_byte(0, B3)] ^ TD1[get_byte(1, B2)] ^
            TD2[get_byte(2, B1)] ^ TD3[get_byte(3, B0)] ^ K3;
+
+      const u32bit K4 = DK[4*(j+1)+0];
+      const u32bit K5 = DK[4*(j+1)+1];
+      const u32bit K6 = DK[4*(j+1)+2];
+      const u32bit K7 = DK[4*(j+1)+3];
 
       B0 = TD0[get_byte(0, T0)] ^ TD1[get_byte(1, T3)] ^
            TD2[get_byte(2, T2)] ^ TD3[get_byte(3, T1)] ^ K4;
@@ -133,22 +138,22 @@ void AES::dec(const byte in[], byte out[]) const
            TD2[get_byte(2, T1)] ^ TD3[get_byte(3, T0)] ^ K7;
       }
 
-   out[ 0] = SD[get_byte(0, B0)] ^ MD[16];
-   out[ 1] = SD[get_byte(1, B3)] ^ MD[17];
-   out[ 2] = SD[get_byte(2, B2)] ^ MD[18];
-   out[ 3] = SD[get_byte(3, B1)] ^ MD[19];
-   out[ 4] = SD[get_byte(0, B1)] ^ MD[20];
-   out[ 5] = SD[get_byte(1, B0)] ^ MD[21];
-   out[ 6] = SD[get_byte(2, B3)] ^ MD[22];
-   out[ 7] = SD[get_byte(3, B2)] ^ MD[23];
-   out[ 8] = SD[get_byte(0, B2)] ^ MD[24];
-   out[ 9] = SD[get_byte(1, B1)] ^ MD[25];
-   out[10] = SD[get_byte(2, B0)] ^ MD[26];
-   out[11] = SD[get_byte(3, B3)] ^ MD[27];
-   out[12] = SD[get_byte(0, B3)] ^ MD[28];
-   out[13] = SD[get_byte(1, B2)] ^ MD[29];
-   out[14] = SD[get_byte(2, B1)] ^ MD[30];
-   out[15] = SD[get_byte(3, B0)] ^ MD[31];
+   out[ 0] = SD[get_byte(0, B0)] ^ MD[0];
+   out[ 1] = SD[get_byte(1, B3)] ^ MD[1];
+   out[ 2] = SD[get_byte(2, B2)] ^ MD[2];
+   out[ 3] = SD[get_byte(3, B1)] ^ MD[3];
+   out[ 4] = SD[get_byte(0, B1)] ^ MD[4];
+   out[ 5] = SD[get_byte(1, B0)] ^ MD[5];
+   out[ 6] = SD[get_byte(2, B3)] ^ MD[6];
+   out[ 7] = SD[get_byte(3, B2)] ^ MD[7];
+   out[ 8] = SD[get_byte(0, B2)] ^ MD[8];
+   out[ 9] = SD[get_byte(1, B1)] ^ MD[9];
+   out[10] = SD[get_byte(2, B0)] ^ MD[10];
+   out[11] = SD[get_byte(3, B3)] ^ MD[11];
+   out[12] = SD[get_byte(0, B3)] ^ MD[12];
+   out[13] = SD[get_byte(1, B2)] ^ MD[13];
+   out[14] = SD[get_byte(2, B1)] ^ MD[14];
+   out[15] = SD[get_byte(3, B0)] ^ MD[15];
    }
 
 /**
@@ -194,15 +199,13 @@ void AES::key_schedule(const byte key[], u32bit length)
                TD[SE[get_byte(3, XDK[j])] + 768];
 
    for(u32bit j = 0; j != 4; ++j)
-      for(u32bit k = 0; k != 4; ++k)
-         {
-         ME[4*j+k   ] = get_byte(k, XEK[j+4*ROUNDS]);
-         MD[4*j+k   ] = get_byte(k, XDK[j]);
-         MD[4*j+k+16] = get_byte(k, XEK[j]);
-         }
+      {
+      store_be(XEK[j+4*ROUNDS], ME + 4*j);
+      store_be(XEK[j], MD + 4*j);
+      }
 
    EK.copy(XEK, length + 24);
-   DK.copy(XDK + 4, length + 20);
+   DK.copy(XDK, length + 24);
    }
 
 /**

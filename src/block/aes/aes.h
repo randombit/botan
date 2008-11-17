@@ -37,8 +37,8 @@ class BOTAN_DLL AES : public BlockCipher
       SecureBuffer<u32bit, 56> EK;
       SecureBuffer<byte, 16> ME;
 
-      SecureBuffer<u32bit, 52> DK;
-      SecureBuffer<byte, 32> MD;
+      SecureBuffer<u32bit, 56> DK;
+      SecureBuffer<byte, 16> MD;
    };
 
 /**
