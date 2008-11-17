@@ -1,8 +1,10 @@
 
 * 1.7.22, ????-??-??
  - Add provider preferences to Algorithm_Factory
- - Fixed memory leaks in PBE_PKCS5v20 and get_pbe
+ - Fix memory leaks in PBE_PKCS5v20 and get_pbe introduced in 1.7.21
  - Optimize AES encryption and decryption (about 10% faster)
+ - Fix nanoseconds overflow in benchmark code
+ - Remove Engine::add_engine
 
 * 1.7.21, 2008-11-11
  - Make algorithm lookup much more configuable
