@@ -171,6 +171,8 @@ int main(int argc, char* argv[])
                benchmark("Stream Cipher", rng, html, seconds);
             else if(type == "hash")
                benchmark("Hash", rng, html, seconds);
+            else if(type == "mode")
+               benchmark("Cipher Mode", rng, html, seconds);
             else if(type == "mac")
                benchmark("MAC", rng, html, seconds);
             else if(type == "rng")
