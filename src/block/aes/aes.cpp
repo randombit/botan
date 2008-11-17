@@ -18,27 +18,28 @@ void AES::enc(const byte in[], byte out[]) const
    const u32bit* TE2 = TE + 512;
    const u32bit* TE3 = TE + 768;
 
-   u32bit B0 = TE0[in[ 0] ^ ME[ 0]] ^ TE1[in[ 5] ^ ME[ 5]] ^
-               TE2[in[10] ^ ME[10]] ^ TE3[in[15] ^ ME[15]] ^ EK[0];
-   u32bit B1 = TE0[in[ 4] ^ ME[ 4]] ^ TE1[in[ 9] ^ ME[ 9]] ^
-               TE2[in[14] ^ ME[14]] ^ TE3[in[ 3] ^ ME[ 3]] ^ EK[1];
-   u32bit B2 = TE0[in[ 8] ^ ME[ 8]] ^ TE1[in[13] ^ ME[13]] ^
-               TE2[in[ 2] ^ ME[ 2]] ^ TE3[in[ 7] ^ ME[ 7]] ^ EK[2];
-   u32bit B3 = TE0[in[12] ^ ME[12]] ^ TE1[in[ 1] ^ ME[ 1]] ^
-               TE2[in[ 6] ^ ME[ 6]] ^ TE3[in[11] ^ ME[11]] ^ EK[3];
+   u32bit T0 = load_be<u32bit>(in, 0) ^ EK[0];
+   u32bit T1 = load_be<u32bit>(in, 1) ^ EK[1];
+   u32bit T2 = load_be<u32bit>(in, 2) ^ EK[2];
+   u32bit T3 = load_be<u32bit>(in, 3) ^ EK[3];
 
-   for(u32bit j = 1; j != ROUNDS - 1; j += 2)
+   u32bit B0, B1, B2, B3;
+   B0 = TE0[get_byte(0, T0)] ^ TE1[get_byte(1, T1)] ^
+        TE2[get_byte(2, T2)] ^ TE3[get_byte(3, T3)] ^ EK[4];
+   B1 = TE0[get_byte(0, T1)] ^ TE1[get_byte(1, T2)] ^
+        TE2[get_byte(2, T3)] ^ TE3[get_byte(3, T0)] ^ EK[5];
+   B2 = TE0[get_byte(0, T2)] ^ TE1[get_byte(1, T3)] ^
+        TE2[get_byte(2, T0)] ^ TE3[get_byte(3, T1)] ^ EK[6];
+   B3 = TE0[get_byte(0, T3)] ^ TE1[get_byte(1, T0)] ^
+        TE2[get_byte(2, T1)] ^ TE3[get_byte(3, T2)] ^ EK[7];
+
+   for(u32bit j = 2; j != ROUNDS; j += 2)
       {
-      const u32bit K0 = EK[4*j+0];
+      const u32bit K0 = EK[4*j];
       const u32bit K1 = EK[4*j+1];
       const u32bit K2 = EK[4*j+2];
       const u32bit K3 = EK[4*j+3];
-      const u32bit K4 = EK[4*j+4];
-      const u32bit K5 = EK[4*j+5];
-      const u32bit K6 = EK[4*j+6];
-      const u32bit K7 = EK[4*j+7];
 
-      u32bit T0, T1, T2, T3;
       T0 = TE0[get_byte(0, B0)] ^ TE1[get_byte(1, B1)] ^
            TE2[get_byte(2, B2)] ^ TE3[get_byte(3, B3)] ^ K0;
       T1 = TE0[get_byte(0, B1)] ^ TE1[get_byte(1, B2)] ^
@@ -47,6 +48,11 @@ void AES::enc(const byte in[], byte out[]) const
            TE2[get_byte(2, B0)] ^ TE3[get_byte(3, B1)] ^ K2;
       T3 = TE0[get_byte(0, B3)] ^ TE1[get_byte(1, B0)] ^
            TE2[get_byte(2, B1)] ^ TE3[get_byte(3, B2)] ^ K3;
+
+      const u32bit K4 = EK[4*(j+1)+0];
+      const u32bit K5 = EK[4*(j+1)+1];
+      const u32bit K6 = EK[4*(j+1)+2];
+      const u32bit K7 = EK[4*(j+1)+3];
 
       B0 = TE0[get_byte(0, T0)] ^ TE1[get_byte(1, T1)] ^
            TE2[get_byte(2, T2)] ^ TE3[get_byte(3, T3)] ^ K4;
@@ -58,22 +64,22 @@ void AES::enc(const byte in[], byte out[]) const
            TE2[get_byte(2, T1)] ^ TE3[get_byte(3, T2)] ^ K7;
       }
 
-   out[ 0] = SE[get_byte(0, B0)] ^ ME[16];
-   out[ 1] = SE[get_byte(1, B1)] ^ ME[17];
-   out[ 2] = SE[get_byte(2, B2)] ^ ME[18];
-   out[ 3] = SE[get_byte(3, B3)] ^ ME[19];
-   out[ 4] = SE[get_byte(0, B1)] ^ ME[20];
-   out[ 5] = SE[get_byte(1, B2)] ^ ME[21];
-   out[ 6] = SE[get_byte(2, B3)] ^ ME[22];
-   out[ 7] = SE[get_byte(3, B0)] ^ ME[23];
-   out[ 8] = SE[get_byte(0, B2)] ^ ME[24];
-   out[ 9] = SE[get_byte(1, B3)] ^ ME[25];
-   out[10] = SE[get_byte(2, B0)] ^ ME[26];
-   out[11] = SE[get_byte(3, B1)] ^ ME[27];
-   out[12] = SE[get_byte(0, B3)] ^ ME[28];
-   out[13] = SE[get_byte(1, B0)] ^ ME[29];
-   out[14] = SE[get_byte(2, B1)] ^ ME[30];
-   out[15] = SE[get_byte(3, B2)] ^ ME[31];
+   out[ 0] = SE[get_byte(0, B0)] ^ ME[0];
+   out[ 1] = SE[get_byte(1, B1)] ^ ME[1];
+   out[ 2] = SE[get_byte(2, B2)] ^ ME[2];
+   out[ 3] = SE[get_byte(3, B3)] ^ ME[3];
+   out[ 4] = SE[get_byte(0, B1)] ^ ME[4];
+   out[ 5] = SE[get_byte(1, B2)] ^ ME[5];
+   out[ 6] = SE[get_byte(2, B3)] ^ ME[6];
+   out[ 7] = SE[get_byte(3, B0)] ^ ME[7];
+   out[ 8] = SE[get_byte(0, B2)] ^ ME[8];
+   out[ 9] = SE[get_byte(1, B3)] ^ ME[9];
+   out[10] = SE[get_byte(2, B0)] ^ ME[10];
+   out[11] = SE[get_byte(3, B1)] ^ ME[11];
+   out[12] = SE[get_byte(0, B3)] ^ ME[12];
+   out[13] = SE[get_byte(1, B0)] ^ ME[13];
+   out[14] = SE[get_byte(2, B1)] ^ ME[14];
+   out[15] = SE[get_byte(3, B2)] ^ ME[15];
    }
 
 /**
@@ -190,13 +196,12 @@ void AES::key_schedule(const byte key[], u32bit length)
    for(u32bit j = 0; j != 4; ++j)
       for(u32bit k = 0; k != 4; ++k)
          {
-         ME[4*j+k   ] = get_byte(k, XEK[j]);
-         ME[4*j+k+16] = get_byte(k, XEK[j+4*ROUNDS]);
+         ME[4*j+k   ] = get_byte(k, XEK[j+4*ROUNDS]);
          MD[4*j+k   ] = get_byte(k, XDK[j]);
          MD[4*j+k+16] = get_byte(k, XEK[j]);
          }
 
-   EK.copy(XEK + 4, length + 20);
+   EK.copy(XEK, length + 24);
    DK.copy(XDK + 4, length + 20);
    }
 

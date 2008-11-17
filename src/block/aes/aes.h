@@ -31,9 +31,14 @@ class BOTAN_DLL AES : public BlockCipher
       static const byte SD[256];
       static const u32bit TE[1024];
       static const u32bit TD[1024];
-      SecureBuffer<u32bit, 52> EK, DK;
-      SecureBuffer<byte, 32> ME, MD;
+
       u32bit ROUNDS;
+
+      SecureBuffer<u32bit, 56> EK;
+      SecureBuffer<byte, 16> ME;
+
+      SecureBuffer<u32bit, 52> DK;
+      SecureBuffer<byte, 32> MD;
    };
 
 /**
