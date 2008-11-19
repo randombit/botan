@@ -378,6 +378,8 @@ sub choose_target {
     my $os = $$config{'os'};
     my $cpu = $$config{'cpu'};
 
+    autoconfig("Setting up build for Botan $VERSION_STRING");
+
     $cpu = guess_cpu() if not defined($cpu);
     $cc = guess_compiler() if not defined($cc);
     $os = guess_os() if not defined($os);
@@ -392,7 +394,7 @@ sub choose_target {
 
     if(defined($ccinfo{'compiler_has_tr1'})) {
         unless(defined($$config{'tr1'})) {
-            autoconfig('Assuming compiler $cc has TR1 headers. ',
+            autoconfig('Assuming compiler ', $cc, ' has TR1 headers. ',
                        'Use --with-tr1=none to disable');
             $$config{'tr1'} = 'system';
         }
@@ -565,6 +567,8 @@ sub scan_modules {
 sub print_enabled_modules {
     my ($config) = @_;
 
+    return unless($$config{'verbose'});
+
     my %by_type;
 
     foreach my $mod (sort keys %MODULES) {
@@ -579,20 +583,50 @@ sub print_enabled_modules {
     for my $type (sort keys %by_type) {
         my %mods = %{$by_type{$type}};
 
-        my $s = $type . ': ';
+        my @load_lines;
 
-        for my $mod (sort keys %mods) {
-            my $on = $mods{$mod};
+        if(keys %mods == 1) {
+            my $on = $mods{$type};
 
             if($on > 0) {
-                $s .= $mod . ' ';
+                print with_diagnostic('loading', $type);
             }
             else {
-                $s .= '[' . $mod . '] ';
+                print with_diagnostic('loading', '[', $type , ']');
             }
         }
+        else {
+            my $s = $type . ': ';
 
-        print with_diagnostic('loading', $s) if($$config{'verbose'});
+            for my $mod (sort keys %mods) {
+                my $on = $mods{$mod};
+
+                if($s eq '') {
+                    $s = ' ' x (length($type) + 16);
+                }
+
+                if($on > 0) {
+                    $s .= $mod . ' ';
+                }
+                else {
+                    $s .= '[' . $mod . '] ';
+                }
+
+                if(length($s) > 60) {
+                    push @load_lines, $s;
+                    $s = '';
+                }
+            }
+
+            #print "Last1 '$s'\n";
+
+            $s =~ s/\s*$//m; # strip trailing whitespace
+
+            push @load_lines, $s if($s ne '');
+
+
+            print with_diagnostic('loading', join("\n", @load_lines));
+        }
     }
 }
 
@@ -2220,8 +2254,8 @@ sub guess_cpu
             {
                 my $cpu = guess_cpu_from_this($1);
                 if($cpu ne '') {
-                    autoconfig("Guessing (based on $cpuinfo '$_') " .
-                               "CPU is a $cpu (use --cpu to set)");
+                    autoconfig("Guessing CPU using $cpuinfo line '$_'");
+                    autoconfig("Guessing CPU is a $cpu (use --cpu to set)");
                     return $cpu;
                 }
             }
@@ -2267,7 +2301,9 @@ sub guess_cpu
 
         if($cpu ne '')
         {
-            autoconfig("Guessing (based on uname '$uname') that CPU is a $cpu");
+            autoconfig("Guessing CPU using uname output '$uname'");
+            autoconfig("Guessing CPU is a $cpu (use --cpu to set)");
+
             return $cpu if known_arch($cpu);
         }
     }
