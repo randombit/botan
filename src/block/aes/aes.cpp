@@ -64,6 +64,20 @@ void AES::enc(const byte in[], byte out[]) const
            TE2[get_byte(2, T1)] ^ TE3[get_byte(3, T2)] ^ K7;
       }
 
+   /*
+   Joseph Bonneau and Ilya Mironov's paper
+   <a href = "http://icme2007.org/users/mironov/papers/aes-timing.pdf">
+   Cache-Collision Timing Attacks Against AES</a> describes an attack
+   that can recover AES keys with as few as 2<sup>13</sup> samples.
+
+   """In addition to OpenSSL v. 0.9.8.(a), which was used in our
+   experiments, the AES implementations of Crypto++ 5.2.1 and
+   LibTomCrypt 1.09 use the original Rijndael C implementation with
+   very few changes and are highly vulnerable. The AES implementations
+   in libgcrypt v. 1.2.2 and Botan v. 1.4.2 are also vulnerable, but
+   use a smaller byte-wide final table which lessens the effectiveness
+   of the attacks."""
+   */
    out[ 0] = SE[get_byte(0, B0)] ^ ME[0];
    out[ 1] = SE[get_byte(1, B1)] ^ ME[1];
    out[ 2] = SE[get_byte(2, B2)] ^ ME[2];
