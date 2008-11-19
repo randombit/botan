@@ -1,6 +1,6 @@
 
 * 1.7.23-pre, ????-??-??
- - By default use TR1 with GCC and ICC (use --with-tr1=none to disable)
+ - By default use TR1 (thus enabling ECDSA) with GCC and ICC
  - Add ECC tests from InSiTo
  - Minor documentation updates
 
