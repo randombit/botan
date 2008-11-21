@@ -12,16 +12,35 @@
 #include <map>
 #include <string>
 
+/**
+* Choose some sort of default timer implementation to use, since some
+* (like hardware tick counters and current Win32 timer) are not
+* reliable for benchmarking.
+*/
+#if defined(BOTAN_HAS_TIMER_POSIX)
+  #include <botan/tm_posix.h>
+#elif defined(BOTAN_HAS_TIMER_UNIX)
+  #include <botan/tm_unix.h>
+#endif
+
 namespace Botan {
 
+#if defined(BOTAN_HAS_TIMER_POSIX)
+  typedef POSIX_Timer Default_Benchmark_Timer;
+#elif defined(BOTAN_HAS_TIMER_UNIX)
+  typedef Unix_Timer Default_Benchmark_Timer;
+#else
+  typedef ANSI_Clock_Timer Default_Benchmark_Timer;
+#endif
+
 /**
-Algorithm benchmark
-@param name the name of the algorithm to test (cipher, hash, or MAC)
-@param milliseconds total time for the benchmark to run
-@param timer the timer to use
-@param rng the rng to use to generate random inputs
-@param af the algorithm factory used to create objects
-@returns results a map from provider to speed in mebibytes per second
+* Algorithm benchmark
+* @param name the name of the algorithm to test (cipher, hash, or MAC)
+* @param milliseconds total time for the benchmark to run
+* @param timer the timer to use
+* @param rng the rng to use to generate random inputs
+* @param af the algorithm factory used to create objects
+* @returns results a map from provider to speed in mebibytes per second
 */
 std::map<std::string, double>
 algorithm_benchmark(const std::string& name,
@@ -31,6 +50,5 @@ algorithm_benchmark(const std::string& name,
                     Algorithm_Factory& af);
 
 }
-
 
 #endif
