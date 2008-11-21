@@ -2,6 +2,7 @@
 #include <memory>
 #include <sstream>
 #include <iostream>
+#include <stdexcept>
 
 #include <botan/botan.h>
 #include <botan/filters.h>
@@ -47,8 +48,16 @@ Row_Encryptor::Row_Encryptor(const std::string& passphrase,
    /*
     Save pointers to the EAX objects so we can change the IV as needed
    */
-   enc_pipe.append(eax_enc = new EAX_Encryption("Serpent"));
-   dec_pipe.append(eax_dec = new EAX_Decryption("Serpent"));
+
+   Algorithm_Factory& af = global_state().algorithm_factory();
+
+   const BlockCipher* proto = af.prototype_block_cipher("Serpent");
+
+   if(!proto)
+      throw std::runtime_error("Could not get a Serpent proto object");
+
+   enc_pipe.append(eax_enc = new EAX_Encryption(proto->clone()));
+   dec_pipe.append(eax_dec = new EAX_Decryption(proto->clone()));
 
    eax_enc->set_key(key);
    eax_dec->set_key(key);

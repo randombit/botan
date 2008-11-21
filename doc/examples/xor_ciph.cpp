@@ -3,10 +3,12 @@
   and use your own cipher object. DO NOT make up your own ciphers. Please.
 
   Written by Jack Lloyd (lloyd@randombit.net) on Feb 17, 2004
+    Update November 21 2008 for new algorithm factory in 1.8
 
   This file is in the public domain
 */
-#include <botan/base.h>
+
+#include <botan/stream_cipher.h>
 #include <botan/init.h>
 using namespace Botan;
 
@@ -24,7 +26,7 @@ class XOR_Cipher : public StreamCipher
       XOR_Cipher() : StreamCipher(1, 32) { mask_pos = 0; }
    private:
       void cipher(const byte[], byte[], u32bit);
-      void key(const byte[], u32bit);
+      void key_schedule(const byte[], u32bit);
 
       SecureVector<byte> mask;
       u32bit mask_pos;
@@ -39,7 +41,7 @@ void XOR_Cipher::cipher(const byte in[], byte out[], u32bit length)
       }
    }
 
-void XOR_Cipher::key(const byte key[], u32bit length)
+void XOR_Cipher::key_schedule(const byte key[], u32bit length)
    {
    mask.set(key, length);
    }
@@ -50,15 +52,16 @@ void XOR_Cipher::key(const byte key[], u32bit length)
 #include <vector>
 #include <cstring>
 
-#include <botan/look_add.h>
 #include <botan/lookup.h>
 #include <botan/filters.h>
 #include <botan/libstate.h>
 
 int main()
    {
-   add_algorithm(global_state(), new XOR_Cipher); // make it available to use
-   global_state().add_alias("Vernam", "XOR"); // make Vernam an alias for XOR
+
+   LibraryInitializer init;
+
+   global_state().algorithm_factory().add_stream_cipher(new XOR_Cipher, "app");
 
    // a hex key value
    SymmetricKey key("010203040506070809101112AAFF");
@@ -71,7 +74,7 @@ int main()
     padding method, such as "/CBC/PKCS7".
    */
    Pipe enc(get_cipher("XOR", key, ENCRYPTION), new Hex_Encoder);
-   Pipe dec(new Hex_Decoder, get_cipher("Vernam", key, DECRYPTION));
+   Pipe dec(new Hex_Decoder, get_cipher("XOR", key, DECRYPTION));
 
    // I think the pigeons are actually asleep at midnight...
    std::string secret = "The pigeon flys at midnight.";

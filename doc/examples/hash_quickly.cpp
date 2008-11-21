@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
 
    const std::string hash = "SHA-1";
 
-   //set_fastest_implementation(hash, rng);
+   set_fastest_implementation(hash, rng);
 
    // Here we intentionally use the 'old style' lookup interface
    // which will also respect the provider settings. Or can use:

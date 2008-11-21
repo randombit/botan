@@ -54,7 +54,7 @@ void eax_test(const std::string& algo,
    EAX_Encryption* enc;
 
    Pipe pipe(new Hex_Decoder,
-             enc = new EAX_Encryption(algo),
+             enc = new EAX_Encryption(get_block_cipher(algo)),
              new Hex_Encoder);
 
    enc->set_key(key);
@@ -82,7 +82,7 @@ void eax_test(const std::string& algo,
       {
       EAX_Decryption* dec;
       Pipe pipe2(new Hex_Decoder,
-                 dec = new EAX_Decryption(algo),
+                 dec = new EAX_Decryption(get_block_cipher(algo)),
                  new Hex_Encoder);
 
       dec->set_key(key);
