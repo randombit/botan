@@ -1,11 +1,9 @@
 Botan 1.7.23-pre ????-??-??
 http://botan.randombit.net/
 
-Please note that this is an experimental / development version of
-Botan. Feedback and critical analysis is highly appreciated. There may
-be bugs (as always). APIs may be changed with little or no notice. If
-this sounds scary, it's recommended you use the latest stable release
-instead.
+This release of Botan is the second release candidate for the 1.8.0
+release. It should be stable, though some APIs have changed
+incompatibly since the 1.6 release.
 
 You can file bugs at http://www.randombit.net/bugzilla or by sending
 mail to the botan-devel mailing list.
