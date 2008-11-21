@@ -1,7 +1,7 @@
-/*************************************************
-* MISTY1 Header File                             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/**
+* MISTY1 Header File
+* (C) 1999-2008 Jack Lloyd
+*/
 
 #ifndef BOTAN_MISTY1_H__
 #define BOTAN_MISTY1_H__
@@ -10,9 +10,9 @@
 
 namespace Botan {
 
-/*************************************************
-* MISTY1                                         *
-*************************************************/
+/**
+* MISTY1
+*/
 class BOTAN_DLL MISTY1 : public BlockCipher
    {
    public:
@@ -25,14 +25,8 @@ class BOTAN_DLL MISTY1 : public BlockCipher
       void dec(const byte[], byte[]) const;
       void key_schedule(const byte[], u32bit);
 
-      static const byte EK_ORDER[100];
-      static const byte DK_ORDER[100];
       SecureBuffer<u16bit, 100> EK, DK;
    };
-
-extern const byte MISTY1_SBOX_S7[128];
-extern const u16bit MISTY1_SBOX_S9[512];
-
 
 }
 

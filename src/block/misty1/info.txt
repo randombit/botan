@@ -5,7 +5,6 @@ define MISTY1
 load_on auto
 
 <add>
-mist_tab.cpp
 misty1.cpp
 misty1.h
 </add>
