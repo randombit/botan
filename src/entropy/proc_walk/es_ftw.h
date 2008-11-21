@@ -6,17 +6,20 @@
 #ifndef BOTAN_ENTROPY_SRC_FTW_H__
 #define BOTAN_ENTROPY_SRC_FTW_H__
 
-#include <botan/buf_es.h>
+#include <botan/entropy_src.h>
 
 namespace Botan {
 
 /*************************************************
 * File Tree Walking Entropy Source               *
 *************************************************/
-class BOTAN_DLL FTW_EntropySource : public Buffered_EntropySource
+class BOTAN_DLL FTW_EntropySource : public EntropySource
    {
    public:
       std::string name() const { return "Proc Walker"; }
+
+      u32bit slow_poll(byte buf[], u32bit len);
+      u32bit fast_poll(byte buf[], u32bit len);
 
       FTW_EntropySource(const std::string& root_dir);
       ~FTW_EntropySource();
@@ -28,12 +31,8 @@ class BOTAN_DLL FTW_EntropySource : public Buffered_EntropySource
             virtual ~File_Descriptor_Source() {}
          };
    private:
-      void do_fast_poll();
-      void do_slow_poll();
 
-      void poll(u32bit max_read);
-
-      const std::string path;
+      std::string path;
       File_Descriptor_Source* dir;
    };
 

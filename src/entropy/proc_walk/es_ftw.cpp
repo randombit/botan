@@ -4,6 +4,7 @@
 *************************************************/
 
 #include <botan/es_ftw.h>
+#include <botan/secmem.h>
 #include <botan/util.h>
 #include <cstring>
 #include <deque>
@@ -109,34 +110,16 @@ FTW_EntropySource::~FTW_EntropySource()
    delete dir;
    }
 
-/*************************************************
-* FTW Fast Poll                                  *
-*************************************************/
-void FTW_EntropySource::do_fast_poll()
-   {
-   poll(32*1024);
-   }
-
-/*************************************************
-* FTW Slow Poll                                  *
-*************************************************/
-void FTW_EntropySource::do_slow_poll()
-   {
-   poll(256*1024);
-   }
-
-/*************************************************
-* FTW Poll                                       *
-*************************************************/
-void FTW_EntropySource::poll(u32bit max_read)
+u32bit FTW_EntropySource::slow_poll(byte buf[], u32bit length)
    {
    if(!dir)
       dir = new Directory_Walker(path);
 
-   SecureVector<byte> read_buf(1024);
+   SecureVector<byte> read_buf(4096);
 
-   u32bit read_so_far = 0;
-   while(read_so_far < max_read)
+   u32bit bytes_read = 0;
+
+   while(bytes_read < length * 32)
       {
       int fd = dir->next_fd();
 
@@ -146,20 +129,30 @@ void FTW_EntropySource::poll(u32bit max_read)
          dir = new Directory_Walker(path);
          fd = dir->next_fd();
 
-         if(fd == -1) // still fails (directory not mounted, etc) -> exit
-            break;
+         if(fd == -1) // still fails (directory not mounted, etc) -> fail
+            return 0;
          }
 
       ssize_t got = ::read(fd, read_buf.begin(), read_buf.size());
 
-      if(got > 0)
+      if(got > 0 && got <= read_buf.size())
          {
-         add_bytes(read_buf, got);
-         read_so_far += got;
+         for(ssize_t i = 0; i != got; ++i)
+            buf[i % length] ^= read_buf[i];
+
+         // never count any one file for more than 128 bytes
+         bytes_read += std::min<u32bit>(got, 128);
          }
 
       ::close(fd);
       }
+
+   return length;
+   }
+
+u32bit FTW_EntropySource::fast_poll(byte[], u32bit)
+   {
+   return 0; // no op
    }
 
 }
