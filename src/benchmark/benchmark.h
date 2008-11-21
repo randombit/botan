@@ -30,6 +30,9 @@ namespace Botan {
 #elif defined(BOTAN_HAS_TIMER_UNIX)
   typedef Unix_Timer Default_Benchmark_Timer;
 #else
+   /* I have not had good success using clock(), the results seem
+    * pretty bogus, but as a last resort it works.
+    */
   typedef ANSI_Clock_Timer Default_Benchmark_Timer;
 #endif
 
