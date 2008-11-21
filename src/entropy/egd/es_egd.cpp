@@ -101,7 +101,6 @@ u32bit EGD_EntropySource::slow_poll(byte output[], u32bit length)
          return 0;
 
       ssize_t count = ::read(socket.fd(), output, out_len);
-      printf("Got %d of %d\n", count, out_len);
 
       if(count < 0)
          return 0;
