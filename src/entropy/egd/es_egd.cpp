@@ -1,7 +1,7 @@
-/*************************************************
-* EGD EntropySource Source File                  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/**
+* EGD EntropySource Source File
+* (C) 1999-2008 Jack Lloyd
+*/
 
 #include <botan/es_egd.h>
 #include <botan/bit_ops.h>
@@ -20,57 +20,93 @@
 
 namespace Botan {
 
-/*************************************************
-* Gather Entropy from EGD                        *
-*************************************************/
-u32bit EGD_EntropySource::do_poll(byte output[], u32bit length,
-                                  const std::string& path) const
+EGD_EntropySource::EGD_Socket::EGD_Socket(const std::string& path)
+   {
+   m_fd = ::socket(PF_LOCAL, SOCK_STREAM, 0);
+
+   if(m_fd > 0)
+      {
+      sockaddr_un addr;
+      std::memset(&addr, 0, sizeof(addr));
+      addr.sun_family = PF_LOCAL;
+
+      if(sizeof(addr.sun_path) < path.length() + 1)
+         throw Exception("EGD_EntropySource: Socket path is too long");
+      std::strcpy(addr.sun_path, path.c_str());
+
+      int len = sizeof(addr.sun_family) + std::strlen(addr.sun_path) + 1;
+
+      if(::connect(m_fd, reinterpret_cast<struct ::sockaddr*>(&addr), len) < 0)
+         {
+         ::close(m_fd);
+         m_fd = -1;
+         }
+      }
+   }
+
+void EGD_EntropySource::EGD_Socket::close()
+   {
+   if(m_fd > 0)
+      {
+      ::close(m_fd);
+      m_fd = -1;
+      }
+   }
+
+/**
+* EGD_EntropySource constructor
+*/
+EGD_EntropySource::EGD_EntropySource(const std::vector<std::string>& paths)
+   {
+   for(size_t i = 0; i != paths.size(); ++i)
+      {
+      EGD_Socket sock(paths[i]);
+
+      if(sock.fd() != -1)
+         sockets.push_back(sock);
+      }
+   }
+
+EGD_EntropySource::~EGD_EntropySource()
+   {
+   for(size_t i = 0; i != sockets.size(); ++i)
+      sockets[i].close();
+   sockets.clear();
+   }
+
+/**
+* Gather Entropy from EGD
+*/
+u32bit EGD_EntropySource::slow_poll(byte output[], u32bit length)
    {
    if(length > 128)
       length = 128;
 
-   sockaddr_un addr;
-   std::memset(&addr, 0, sizeof(addr));
-   addr.sun_family = PF_LOCAL;
-
-   if(sizeof(addr.sun_path) < path.length() + 1)
-      throw Exception("EGD_EntropySource: Socket path is too long");
-   std::strcpy(addr.sun_path, path.c_str());
-
-   int fd = ::socket(addr.sun_family, SOCK_STREAM, 0);
-   if(fd == -1) return 0;
-
-   int len = sizeof(addr.sun_family) + std::strlen(addr.sun_path) + 1;
-   if(::connect(fd, reinterpret_cast<struct ::sockaddr*>(&addr), len))
-      { ::close(fd); return 0; }
-
-   byte buffer[2];
-   buffer[0] = 1;
-   buffer[1] = static_cast<byte>(length);
-
-   if(::write(fd, buffer, 2) != 2) { ::close(fd); return 0; }
-   if(::read(fd, buffer, 1) != 1)  { ::close(fd); return 0; }
-
-   ssize_t count = ::read(fd, output, buffer[0]);
-
-   if(count == -1) { close(fd); return 0; }
-
-   ::close(fd);
-
-   return count;
-   }
-
-/*************************************************
-* Gather Entropy from EGD                        *
-*************************************************/
-u32bit EGD_EntropySource::slow_poll(byte output[], u32bit length)
-   {
-   for(u32bit j = 0; j != paths.size(); j++)
+   for(size_t i = 0; i != sockets.size(); ++i)
       {
-      u32bit got = do_poll(output, length, paths[j]);
-      if(got)
-         return got;
+      EGD_Socket& socket = sockets[i];
+
+      byte buffer[2];
+      buffer[0] = 1;
+      buffer[1] = static_cast<byte>(length);
+
+      if(::write(socket.fd(), buffer, 2) != 2)
+         return 0;
+
+      byte out_len = 0;
+      if(::read(socket.fd(), &out_len, 1) != 1)
+         return 0;
+
+      if(out_len > length)
+         return 0;
+
+      ssize_t count = ::read(socket.fd(), output, out_len);
+      printf("Got %d of %d\n", count, out_len);
+
+      if(count < 0)
+         return 0;
       }
+
    return 0;
    }
 
