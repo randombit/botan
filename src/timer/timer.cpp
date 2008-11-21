@@ -42,8 +42,10 @@ u32bit Timer::slow_poll(byte out[], u32bit length)
 u64bit Timer::combine_timers(u32bit seconds, u32bit parts, u32bit parts_hz)
    {
    static const u64bit NANOSECONDS_UNITS = 1000000000;
-   parts *= (NANOSECONDS_UNITS / parts_hz);
-   return ((seconds * NANOSECONDS_UNITS) + parts);
+
+   u64bit res = seconds * NANOSECONDS_UNITS;
+   res += parts * (NANOSECONDS_UNITS / parts_hz);
+   return res;
    }
 
 /**
