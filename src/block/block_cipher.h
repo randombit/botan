@@ -21,6 +21,12 @@ namespace Botan {
 * more importantly counter mode (which most designs are moving to, due
 * to the parallelism possible in counter mode which is not the case
 * with feedback-based modes like CBC).
+*
+* Probable future API here:
+* virtual void encrypt_n(const byte in[], byte out[],
+*                        u32bit blocks) const = 0;
+* virtual void decrypt_n(const byte in[], byte out[],
+*                        u32bit blocks) const = 0;
 */
 class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
    {
