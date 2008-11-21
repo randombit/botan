@@ -10,10 +10,6 @@ es_ftw.h
 es_ftw.cpp
 </add>
 
-<requires>
-buf_es
-</requires>
-
 <os>
 aix
 cygwin
