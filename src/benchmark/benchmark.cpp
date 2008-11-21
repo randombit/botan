@@ -19,10 +19,10 @@ namespace {
 /**
 * Benchmark BufferedComputation (hash or MAC)
 */
-std::pair<u32bit, u64bit> bench_buf_es(BufferedComputation* buf_comp,
-                                       Timer& timer,
-                                       u64bit nanoseconds_max,
-                                       const byte buf[], u32bit buf_len)
+std::pair<u32bit, u64bit> bench_buf_comp(BufferedComputation* buf_comp,
+                                         Timer& timer,
+                                         u64bit nanoseconds_max,
+                                         const byte buf[], u32bit buf_len)
    {
    const u64bit start = timer.clock();
    u64bit nanoseconds_used = 0;
@@ -96,7 +96,7 @@ bench_hash(HashFunction* hash, Timer& timer,
            u64bit nanoseconds_max,
            const byte buf[], u32bit buf_len)
    {
-   return bench_buf_es(hash, timer, nanoseconds_max, buf, buf_len);
+   return bench_buf_comp(hash, timer, nanoseconds_max, buf, buf_len);
    }
 
 /**
@@ -109,7 +109,7 @@ bench_mac(MessageAuthenticationCode* mac,
           const byte buf[], u32bit buf_len)
    {
    mac->set_key(buf, mac->MAXIMUM_KEYLENGTH);
-   return bench_buf_es(mac, timer, nanoseconds_max, buf, buf_len);
+   return bench_buf_comp(mac, timer, nanoseconds_max, buf, buf_len);
    }
 
 }
