@@ -769,8 +769,8 @@ sub get_options {
         'enable-debug' => sub { &$save_option('debug', 1); },
         'disable-debug' => sub { &$save_option('debug', 0); },
 
-        'enable-modules=s' => sub { add_modules($config, $_[1]); },
-        'disable-modules=s' => sub { disable_modules($config, $_[1]); },
+        'enable-modules:s' => sub { add_modules($config, $_[1]); },
+        'disable-modules:s' => sub { disable_modules($config, $_[1]); },
 
         'use-module-set=s' => sub { add_module_sets($config, $_[1]); },
 
