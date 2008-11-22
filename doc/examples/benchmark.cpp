@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
    {
    if(argc <= 2)
       {
-      std::cout << "Usage: " << argv[0] << " ms <algo1> <algo2> ...\n";
+      std::cout << "Usage: " << argv[0] << " seconds <algo1> <algo2> ...\n";
       return 1;
       }
 
@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
 
    Botan::Algorithm_Factory& af = Botan::global_state().algorithm_factory();
 
-   double ms = std::atof(argv[1]);
+   double ms = 1000 * std::atof(argv[1]);
 
    for(size_t i = 2; argv[i]; ++i)
       {
