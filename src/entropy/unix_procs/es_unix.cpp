@@ -53,7 +53,7 @@ u32bit Unix_EntropySource::fast_poll(byte buf[], u32bit length)
 
    u32bit buf_i = 0;
 
-   const char* STAT_TARGETS[] = {
+   const char* stat_targets[] = {
       "/",
       "/tmp",
       "/var/tmp",
@@ -64,12 +64,10 @@ u32bit Unix_EntropySource::fast_poll(byte buf[], u32bit length)
       "..",
       0 };
 
-   for(u32bit j = 0; STAT_TARGETS[j]; j++)
+   for(u32bit j = 0; stat_targets[j]; j++)
       {
       struct stat statbuf;
-      clear_mem(&statbuf, 1);
-      ::stat(STAT_TARGETS[j], &statbuf);
-
+      ::stat(stat_targets[j], &statbuf);
       buf_i = xor_into_buf(buf, buf_i, length, statbuf);
       }
 
@@ -83,12 +81,10 @@ u32bit Unix_EntropySource::fast_poll(byte buf[], u32bit length)
       ::getsid(0)
    };
 
-   for(u32bit i = 0; i != sizeof(ids); ++i)
+   for(u32bit i = 0; i != sizeof(ids) / sizeof(ids[0]); ++i)
       buf_i = xor_into_buf(buf, buf_i, length, ids[i]);
 
    struct ::rusage usage;
-
-   clear_mem(&usage, 1);
    ::getrusage(RUSAGE_SELF, &usage);
    buf_i = xor_into_buf(buf, buf_i, length, usage);
 
