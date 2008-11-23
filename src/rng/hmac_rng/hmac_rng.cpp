@@ -237,7 +237,7 @@ std::string HMAC_RNG::name() const
 *************************************************/
 HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
                    MessageAuthenticationCode* prf_mac) :
-   extractor(extractor_mac), prf(prf_mac), io_buffer(128)
+   extractor(extractor_mac), prf(prf_mac), io_buffer(96)
    {
    entropy = 0;
 
