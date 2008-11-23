@@ -35,7 +35,7 @@ std::pair<u32bit, u64bit> bench_buf_comp(BufferedComputation* buf_comp,
       nanoseconds_used = timer.clock() - start;
       }
 
-   return std::make_pair(reps * buf_len, nanoseconds_used);
+   return std::make_pair(reps, nanoseconds_used);
    }
 
 /**
@@ -62,7 +62,7 @@ bench_block_cipher(BlockCipher* block_cipher,
       nanoseconds_used = timer.clock() - start;
       }
 
-   return std::make_pair(reps * buf_len, nanoseconds_used);
+   return std::make_pair(reps, nanoseconds_used);
    }
 
 /**
@@ -85,7 +85,7 @@ bench_stream_cipher(StreamCipher* stream_cipher,
       nanoseconds_used = timer.clock() - start;
       }
 
-   return std::make_pair(reps * buf_len, nanoseconds_used);
+   return std::make_pair(reps, nanoseconds_used);
    }
 
 /**
@@ -175,7 +175,7 @@ algorithm_benchmark(const std::string& name,
          /* 953.67 == 1000 * 1000 * 1000 / 1024 / 1024 - the conversion
             factor from bytes per nanosecond to mebibytes per second.
          */
-         double speed = (953.67 * results.first) / results.second;
+         double speed = (953.67 * buf.size() * results.first) / results.second;
          all_results[provider] = speed;
          }
       }
