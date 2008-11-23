@@ -50,6 +50,7 @@ u32bit Unix_EntropySource::fast_poll(byte buf[], u32bit length)
    {
    if(length == 0)
       return 0;
+   length = std::min<u32bit>(length, 32);
 
    u32bit buf_i = 0;
 
