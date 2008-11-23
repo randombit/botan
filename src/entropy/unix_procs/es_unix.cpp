@@ -103,10 +103,9 @@ u32bit Unix_EntropySource::slow_poll(byte buf[], u32bit length)
    if(length == 0)
       return 0;
 
-   const u32bit TRY_TO_GET = 16 * 1024;
    const u32bit MINIMAL_WORKING = 32;
 
-   u32bit got = 0;
+   u32bit total_got = 0;
    u32bit buf_i = 0;
 
    for(u32bit j = 0; j != sources.size(); j++)
@@ -124,9 +123,9 @@ u32bit Unix_EntropySource::slow_poll(byte buf[], u32bit length)
          }
 
       sources[j].working = (got_from_src >= MINIMAL_WORKING) ? true : false;
-      got += got_from_src;
+      total_got += got_from_src;
 
-      if(got >= TRY_TO_GET)
+      if(total_got >= 128*length)
          break;
       }
 
