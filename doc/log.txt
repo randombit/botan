@@ -3,6 +3,7 @@
  - By default use TR1 (thus enabling ECDSA) with GCC and ICC
  - Cache socket descriptors in the EGD entropy source
  - Avoid bogging down startup in /proc walking entropy source
+ - Optimize almost all hash functions, especially MD4 and Tiger
  - Make Timer pure virtual, and add ANSI_Clock_Timer
  - Add a Default_Benchmark_Timer typedef in benchmark.h
  - Add examples using benchmark.h and Algorithm_Factory
