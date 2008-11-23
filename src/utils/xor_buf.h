@@ -68,7 +68,9 @@ inline void xor_buf(byte out[],
    }
 
 /**
-* XOR values into buffer. Might do RLE on input
+* XOR values into buffer. Uses RLE compression
+* Intended for use in entropy sources to gather collected
+* data into a buffer to pass to an RNG.
 */
 u32bit xor_into_buf(byte buf[], u32bit buf_i, u32bit length,
                     const void* in_void, u32bit in_len);
