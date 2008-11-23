@@ -55,7 +55,7 @@ u32bit Win32_EntropySource::slow_poll(byte buf[], u32bit length)
       {
       do
          {
-         buf_i = xor_into_buf(buf, buf_i, length, info, heap_list);
+         buf_i = xor_into_buf(buf, buf_i, length, heap_list);
 
          if(heap_lists_found++ > HEAP_LISTS_MAX)
             break;
@@ -70,7 +70,7 @@ u32bit Win32_EntropySource::slow_poll(byte buf[], u32bit length)
                {
                if(heap_objs_found++ > HEAP_OBJS_PER_LIST)
                   break;
-               buf_i = xor_into_buf(buf, buf_i, length, info, heap_entry);
+               buf_i = xor_into_buf(buf, buf_i, length, heap_entry);
                } while(Heap32Next(&heap_entry));
             }
          } while(Heap32ListNext(snapshot, &heap_list));
