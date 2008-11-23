@@ -84,7 +84,7 @@ u32bit Unix_EntropySource::fast_poll(byte buf[], u32bit length)
    };
 
    for(u32bit i = 0; i != sizeof(ids); ++i)
-      buf_i = xor_into_buf(buf, buf_i, length, &ids[i], sizeof(ids[i]));
+      buf_i = xor_into_buf(buf, buf_i, length, ids[i]);
 
    struct ::rusage usage;
 
