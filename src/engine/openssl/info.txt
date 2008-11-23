@@ -8,10 +8,6 @@ load_on request
 all -> crypto
 </libs>
 
-<requires>
-libstate
-</requires>
-
 <add>
 arc4_openssl.cpp
 bn_powm.cpp

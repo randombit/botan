@@ -8,10 +8,6 @@ load_on request
 all -> gmp
 </libs>
 
-<requires>
-libstate
-</requires>
-
 <add>
 eng_gmp.h
 gmp_dh.cpp
