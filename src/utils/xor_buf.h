@@ -78,7 +78,7 @@ u32bit xor_into_buf(byte buf[], u32bit buf_i, u32bit length,
 */
 template<typename T>
 u32bit xor_into_buf(byte buf[], u32bit buf_i,
-                    u32bit length, T in)
+                    u32bit length, const T& in)
    {
    return xor_into_buf(buf, buf_i, length, &in, sizeof(in));
    }
