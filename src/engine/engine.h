@@ -83,7 +83,9 @@ class BOTAN_DLL Engine
          mod_exp(const BigInt&, Power_Mod::Usage_Hints) const
          { return 0; }
 
-      virtual Keyed_Filter* get_cipher(const std::string&, Cipher_Dir)
+      virtual Keyed_Filter* get_cipher(const std::string&,
+                                       Cipher_Dir,
+                                       Algorithm_Factory&)
          { return 0; }
 
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)

@@ -249,11 +249,13 @@ u32bit keylength_multiple_of(const std::string& name)
 Keyed_Filter* get_cipher(const std::string& algo_spec,
                          Cipher_Dir direction)
    {
-   Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
+   Algorithm_Factory& af = global_state().algorithm_factory();
+
+   Algorithm_Factory::Engine_Iterator i(af);
 
    while(Engine* engine = i.next())
       {
-      Keyed_Filter* algo = engine->get_cipher(algo_spec, direction);
+      Keyed_Filter* algo = engine->get_cipher(algo_spec, direction, af);
       if(algo)
          return algo;
       }

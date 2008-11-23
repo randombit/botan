@@ -6,7 +6,7 @@
 #include <botan/def_eng.h>
 #include <botan/parsing.h>
 #include <botan/filters.h>
-#include <botan/libstate.h>
+#include <botan/algo_factory.h>
 #include <botan/mode_pad.h>
 #include <memory>
 
@@ -72,15 +72,14 @@ BlockCipherModePaddingMethod* get_bc_pad(const std::string& algo_spec)
 * Get a cipher object                            *
 *************************************************/
 Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
-                                         Cipher_Dir direction)
+                                         Cipher_Dir direction,
+                                         Algorithm_Factory& af)
    {
    std::vector<std::string> algo_parts = split_on(algo_spec, '/');
    if(algo_parts.empty())
       throw Invalid_Algorithm_Name(algo_spec);
 
    const std::string cipher_name = algo_parts[0];
-
-   Algorithm_Factory& af = global_state().algorithm_factory();
 
    // check if it is a stream cipher first (easy case)
    const StreamCipher* stream_cipher = af.prototype_stream_cipher(cipher_name);

@@ -59,7 +59,9 @@ class BOTAN_DLL Default_Engine : public Engine
 
       virtual bool can_add_algorithms() { return true; }
 
-      Keyed_Filter* get_cipher(const std::string&, Cipher_Dir);
+      Keyed_Filter* get_cipher(const std::string&, Cipher_Dir,
+                               Algorithm_Factory&);
+
    private:
       BlockCipher* find_block_cipher(const SCAN_Name&,
                                      Algorithm_Factory&) const;
