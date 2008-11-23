@@ -18,9 +18,13 @@ void botan_sha160_ia32_compress(u32bit[5], const byte[64], u32bit[81]);
 /*************************************************
 * SHA-160 Compression Function                   *
 *************************************************/
-void SHA_160_IA32::hash(const byte input[])
+void SHA_160_IA32::compress_n(const byte input[], u32bit blocks)
    {
-   botan_sha160_ia32_compress(digest, input, W);
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      botan_sha160_ia32_compress(digest, input, W);
+      input += HASH_BLOCK_SIZE;
+      }
    }
 
 }
