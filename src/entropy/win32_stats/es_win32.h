@@ -17,8 +17,9 @@ class BOTAN_DLL Win32_EntropySource : public EntropySource
    {
    public:
       std::string name() const { return "Win32 Statistics"; }
-      void fast_poll(byte buf[], u32bit length);
-      void slow_poll(byte buf[], u32bit length);
+
+      u32bit fast_poll(byte buf[], u32bit length);
+      u32bit slow_poll(byte buf[], u32bit length);
    };
 
 }
