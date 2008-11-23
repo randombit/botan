@@ -772,6 +772,15 @@ sub get_options {
         'enable-modules:s' => sub { add_modules($config, $_[1]); },
         'disable-modules:s' => sub { disable_modules($config, $_[1]); },
 
+        'with-openssl' => sub { add_modules($config, 'openssl'); },
+        'without-openssl' => sub { disable_modules($config, 'openssl'); },
+        'with-gnump' => sub { add_modules($config, 'gnump'); },
+        'without-gnump' => sub { disable_modules($config, 'gnump'); },
+        'with-bzip2' => sub { add_modules($config, 'bzip2'); },
+        'without-bzip2' => sub { disable_modules($config, 'bzip2'); },
+        'with-zlib' => sub { add_modules($config, 'zlib'); },
+        'without-zlib' => sub { disable_modules($config, 'zlib'); },
+
         'use-module-set=s' => sub { add_module_sets($config, $_[1]); },
 
         'with-build-dir=s' => sub { &$save_option(@_); },
