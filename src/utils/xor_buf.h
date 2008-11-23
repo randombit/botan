@@ -68,18 +68,19 @@ inline void xor_buf(byte out[],
    }
 
 /**
-* Xor values into buffer
+* XOR values into buffer. Might do RLE on input
 */
-inline u32bit xor_into_buf(byte buf[], u32bit buf_i, u32bit length,
-                           const void* in_void, u32bit in_len)
+u32bit xor_into_buf(byte buf[], u32bit buf_i, u32bit length,
+                    const void* in_void, u32bit in_len);
+
+/**
+* XOR integer value (or something else, I guess) into buffer
+*/
+template<typename T>
+u32bit xor_into_buf(byte buf[], u32bit buf_i,
+                    u32bit length, T in)
    {
-   const byte* in = static_cast<const byte*>(in_void);
-   for(u32bit i = 0; i != in_len; ++i)
-      {
-      buf[buf_i] ^= in[i];
-      buf_i = (buf_i + 1) % length;
-      }
-   return buf_i;
+   return xor_into_buf(buf, buf_i, length, &in, sizeof(in));
    }
 
 }
