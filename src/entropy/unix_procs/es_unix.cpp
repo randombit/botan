@@ -70,7 +70,7 @@ u32bit Unix_EntropySource::fast_poll(byte buf[], u32bit length)
       clear_mem(&statbuf, 1);
       ::stat(STAT_TARGETS[j], &statbuf);
 
-      buf_i = xor_into_buf(buf, buf_i, length, &statbuf, sizeof(statbuf));
+      buf_i = xor_into_buf(buf, buf_i, length, statbuf);
       }
 
    u32bit ids[] = {
@@ -90,10 +90,10 @@ u32bit Unix_EntropySource::fast_poll(byte buf[], u32bit length)
 
    clear_mem(&usage, 1);
    ::getrusage(RUSAGE_SELF, &usage);
-   buf_i = xor_into_buf(buf, buf_i, length, &usage, sizeof(usage));
+   buf_i = xor_into_buf(buf, buf_i, length, usage);
 
    ::getrusage(RUSAGE_CHILDREN, &usage);
-   buf_i = xor_into_buf(buf, buf_i, length, &usage, sizeof(usage));
+   buf_i = xor_into_buf(buf, buf_i, length, usage);
 
    return length;
    }
