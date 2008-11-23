@@ -22,8 +22,7 @@ class BOTAN_DLL SHA_160_SSE2 : public SHA_160
       void compress_n(const byte[], u32bit blocks);
    };
 
-extern "C"
-void botan_sha1_sse2_compress(u32bit H[5], const u32bit inputu[], u32bit num_steps);
+extern "C" void botan_sha1_sse2_compress(u32bit[5], const u32bit*);
 
 }
 
