@@ -1,4 +1,4 @@
-Botan 1.7.23-pre ????-??-??
+Botan 1.7.23 2008-11-23
 http://botan.randombit.net/
 
 This release of Botan is the second release candidate for the 1.8.0
