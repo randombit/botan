@@ -18,7 +18,7 @@ class BOTAN_DLL SHA_160_AMD64 : public SHA_160
    public:
       HashFunction* clone() const { return new SHA_160_AMD64; }
    private:
-      void hash(const byte[]);
+      void compress_n(const byte[], u32bit blocks);
    };
 
 }

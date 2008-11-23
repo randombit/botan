@@ -21,7 +21,8 @@ class BOTAN_DLL MD4 : public MDx_HashFunction
       HashFunction* clone() const { return new MD4; }
       MD4() : MDx_HashFunction(16, 64, false, true) { clear(); }
    protected:
-      void hash(const byte[]);
+      void compress_n(const byte input[], u32bit blocks);
+      void hash_old(const byte[]);
       void copy_out(byte[]);
 
       SecureBuffer<u32bit, 48> M;

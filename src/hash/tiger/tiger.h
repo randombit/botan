@@ -21,7 +21,7 @@ class BOTAN_DLL Tiger : public MDx_HashFunction
       HashFunction* clone() const { return new Tiger(OUTPUT_LENGTH); }
       Tiger(u32bit = 24, u32bit = 3);
    private:
-      void hash(const byte[]);
+      void compress_n(const byte[], u32bit block);
       void copy_out(byte[]);
 
       static void pass(u64bit&, u64bit&, u64bit&, u64bit[8], byte);

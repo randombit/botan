@@ -21,7 +21,7 @@ class BOTAN_DLL SHA_160_IA32 : public SHA_160
       // Note 81 instead of normal 80: IA-32 asm needs an extra temp
       SHA_160_IA32() : SHA_160(81) {}
    private:
-      void hash(const byte[]);
+      void compress_n(const byte[], u32bit blocks);
    };
 
 }

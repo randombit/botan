@@ -18,7 +18,7 @@ class BOTAN_DLL MD4_IA32 : public MD4
    public:
       HashFunction* clone() const { return new MD4_IA32; }
    private:
-      void hash(const byte[]);
+      void compress_n(const byte[], u32bit blocks);
    };
 
 }

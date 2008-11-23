@@ -13,25 +13,29 @@ namespace Botan {
 /*************************************************
 * Tiger Compression Function                     *
 *************************************************/
-void Tiger::hash(const byte input[])
+void Tiger::compress_n(const byte input[], u32bit blocks)
    {
-   for(u32bit j = 0; j != 8; ++j)
-      X[j] = load_le<u64bit>(input, j);
-
-   u64bit A = digest[0], B = digest[1], C = digest[2];
-
-   pass(A, B, C, X, 5); mix(X);
-   pass(C, A, B, X, 7); mix(X);
-   pass(B, C, A, X, 9);
-
-   for(u32bit j = 3; j != PASS; ++j)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      mix(X);
-      pass(A, B, C, X, 9);
-      u64bit T = A; A = C; C = B; B = T;
-      }
+      for(u32bit j = 0; j != 8; ++j)
+         X[j] = load_le<u64bit>(input, j);
+      input += HASH_BLOCK_SIZE;
 
-   digest[0] ^= A; digest[1] = B - digest[1]; digest[2] += C;
+      u64bit A = digest[0], B = digest[1], C = digest[2];
+
+      pass(A, B, C, X, 5); mix(X);
+      pass(C, A, B, X, 7); mix(X);
+      pass(B, C, A, X, 9);
+
+      for(u32bit j = 3; j != PASS; ++j)
+         {
+         mix(X);
+         pass(A, B, C, X, 9);
+         u64bit T = A; A = C; C = B; B = T;
+         }
+
+      digest[0] ^= A; digest[1] = B - digest[1]; digest[2] += C;
+      }
    }
 
 /*************************************************

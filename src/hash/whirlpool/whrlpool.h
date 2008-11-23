@@ -21,7 +21,7 @@ class BOTAN_DLL Whirlpool : public MDx_HashFunction
       HashFunction* clone() const { return new Whirlpool; }
       Whirlpool() : MDx_HashFunction(64, 64, true, true, 32) { clear(); }
    private:
-      void hash(const byte[]);
+      void compress_n(const byte[], u32bit blocks);
       void copy_out(byte[]);
 
       static const u64bit C0[256];

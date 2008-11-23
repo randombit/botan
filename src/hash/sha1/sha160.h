@@ -24,7 +24,7 @@ class BOTAN_DLL SHA_160 : public MDx_HashFunction
    protected:
       SHA_160(u32bit W_size);
 
-      void hash(const byte[]);
+      void compress_n(const byte[], u32bit blocks);
       void copy_out(byte[]);
 
       SecureBuffer<u32bit, 5> digest;

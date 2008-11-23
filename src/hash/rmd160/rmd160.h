@@ -21,7 +21,7 @@ class BOTAN_DLL RIPEMD_160 : public MDx_HashFunction
       HashFunction* clone() const { return new RIPEMD_160; }
       RIPEMD_160() : MDx_HashFunction(20, 64, false, true) { clear(); }
    private:
-      void hash(const byte[]);
+      void compress_n(const byte[], u32bit blocks);
       void copy_out(byte[]);
 
       SecureBuffer<u32bit, 16> M;

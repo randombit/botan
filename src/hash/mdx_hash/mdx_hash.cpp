@@ -1,7 +1,7 @@
-/*************************************************
-* MDx Hash Function Source File                  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/**
+* Merkle-Damgard Hash Function
+* (C) 1999-2008 Jack Lloyd
+*/
 
 #include <botan/mdx_hash.h>
 #include <botan/exceptn.h>
@@ -9,9 +9,9 @@
 
 namespace Botan {
 
-/*************************************************
-* MDx_HashFunction Constructor                   *
-*************************************************/
+/**
+* MDx_HashFunction Constructor
+*/
 MDx_HashFunction::MDx_HashFunction(u32bit hash_len, u32bit block_len,
                                    bool byte_end, bool bit_end,
                                    u32bit cnt_size) :
@@ -23,18 +23,40 @@ MDx_HashFunction::MDx_HashFunction(u32bit hash_len, u32bit block_len,
    count = position = 0;
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/**
+* Clear memory of sensitive data
+*/
 void MDx_HashFunction::clear() throw()
    {
    buffer.clear();
    count = position = 0;
    }
 
-/*************************************************
-* Update the hash                                *
-*************************************************/
+/**
+* Update the hash
+*/
+/*
+void MDx_HashFunction::compress_n(const byte block[], u32bit block_n)
+   {
+   for(u32bit j = 0; j != block_n; ++j)
+      {
+      hash(block);
+      block += HASH_BLOCK_SIZE;
+      }
+   }
+*/
+/**
+* Update the hash
+*/
+/*
+void MDx_HashFunction::hash(const byte block[])
+   {
+   compress_n(block, 1);
+   }
+*/
+/**
+* Update the hash
+*/
 void MDx_HashFunction::add_data(const byte input[], u32bit length)
    {
    count += length;
@@ -45,48 +67,48 @@ void MDx_HashFunction::add_data(const byte input[], u32bit length)
 
       if(position + length >= HASH_BLOCK_SIZE)
          {
-         hash(buffer.begin());
+         compress_n(buffer.begin(), 1);
          input += (HASH_BLOCK_SIZE - position);
          length -= (HASH_BLOCK_SIZE - position);
          position = 0;
          }
       }
 
-   while(length >= HASH_BLOCK_SIZE)
-      {
-      hash(input);
-      input += HASH_BLOCK_SIZE;
-      length -= HASH_BLOCK_SIZE;
-      }
+   const u32bit full_blocks = length / HASH_BLOCK_SIZE;
+   const u32bit remaining   = length % HASH_BLOCK_SIZE;
 
-   buffer.copy(position, input, length);
+   compress_n(input, full_blocks);
 
-   position += length;
+   buffer.copy(position, input + full_blocks * HASH_BLOCK_SIZE, remaining);
+   position += remaining;
    }
 
-/*************************************************
-* Finalize a Hash                                *
-*************************************************/
+/**
+* Finalize a hash
+*/
 void MDx_HashFunction::final_result(byte output[])
    {
+
    buffer[position] = (BIG_BIT_ENDIAN ? 0x80 : 0x01);
    for(u32bit j = position+1; j != HASH_BLOCK_SIZE; ++j)
       buffer[j] = 0;
+
    if(position >= HASH_BLOCK_SIZE - COUNT_SIZE)
       {
-      hash(buffer);
+      compress_n(buffer, 1);
       buffer.clear();
       }
+
    write_count(buffer + HASH_BLOCK_SIZE - COUNT_SIZE);
 
-   hash(buffer);
+   compress_n(buffer, 1);
    copy_out(output);
    clear();
    }
 
-/*************************************************
-* Write the count bits to the buffer             *
-*************************************************/
+/**
+* Write the count bits to the buffer
+*/
 void MDx_HashFunction::write_count(byte out[])
    {
    if(COUNT_SIZE < 8)

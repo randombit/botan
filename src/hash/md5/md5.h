@@ -1,7 +1,7 @@
-/*************************************************
-* MD5 Header File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/**
+* MD5 Header File
+* (C) 1999-2008 Jack Lloyd
+*/
 
 #ifndef BOTAN_MD5_H__
 #define BOTAN_MD5_H__
@@ -10,9 +10,9 @@
 
 namespace Botan {
 
-/*************************************************
-* MD5                                            *
-*************************************************/
+/**
+* MD5
+*/
 class BOTAN_DLL MD5 : public MDx_HashFunction
    {
    public:
@@ -21,7 +21,7 @@ class BOTAN_DLL MD5 : public MDx_HashFunction
       HashFunction* clone() const { return new MD5; }
       MD5() : MDx_HashFunction(16, 64, false, true) { clear(); }
    protected:
-      void hash(const byte[]);
+      void compress_n(const byte[], u32bit blocks);
       void copy_out(byte[]);
 
       SecureBuffer<u32bit, 16> M;

@@ -19,7 +19,7 @@ class BOTAN_DLL SHA_160_SSE2 : public SHA_160
       HashFunction* clone() const { return new SHA_160_SSE2; }
       SHA_160_SSE2() : SHA_160(0) {} // no W needed
    private:
-      void hash(const byte[]);
+      void compress_n(const byte[], u32bit blocks);
    };
 
 extern "C" void botan_sha1_sse2_compress(u32bit[5], const u32bit*);
