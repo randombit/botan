@@ -6,6 +6,7 @@
  - Remove Buffered_EntropySource helper class
  - Optimize almost all hash functions, especially MD4 and Tiger
  - Make Timer pure virtual, and add ANSI_Clock_Timer
+ - Add configure.pl options --{with,without}-{bzip2,zlib,openssl,gnump}
  - Add a Default_Benchmark_Timer typedef in benchmark.h
  - Add examples using benchmark.h and Algorithm_Factory
  - Add ECC tests from InSiTo
