@@ -1,7 +1,7 @@
-/*************************************************
-* Xor Operations Header File                     *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/**
+* XOR operations
+* (C) 1999-2008 Jack Lloyd
+*/
 
 #ifndef BOTAN_XOR_BUF_H__
 #define BOTAN_XOR_BUF_H__
@@ -10,9 +10,12 @@
 
 namespace Botan {
 
-/*************************************************
-* XOR Arrays                                     *
-*************************************************/
+/**
+* XOR arrays. Postcondition out[i] = in[i] ^ out[i] forall i = 0...length
+* @param out the input/output buffer
+* @param in the read-only input buffer
+* @param length the length of the buffers
+*/
 inline void xor_buf(byte out[], const byte in[], u32bit length)
    {
    while(length >= 8)
@@ -32,9 +35,13 @@ inline void xor_buf(byte out[], const byte in[], u32bit length)
       out[j] ^= in[j];
    }
 
-/*************************************************
-* XOR Arrays                                     *
-*************************************************/
+/**
+* XOR arrays. Postcondition out[i] = in[i] ^ in2[i] forall i = 0...length
+* @param out the output buffer
+* @param in the first input buffer
+* @param in2 the second output buffer
+* @param length the length of the three buffers
+*/
 inline void xor_buf(byte out[],
                     const byte in[],
                     const byte in2[],
@@ -58,6 +65,21 @@ inline void xor_buf(byte out[],
 
    for(u32bit j = 0; j != length; ++j)
       out[j] = in[j] ^ in2[j];
+   }
+
+/**
+* Xor values into buffer
+*/
+inline u32bit xor_into_buf(byte buf[], u32bit buf_i, u32bit length,
+                           const void* in_void, u32bit in_len)
+   {
+   const byte* in = static_cast<const byte*>(in_void);
+   for(u32bit i = 0; i != in_len; ++i)
+      {
+      buf[buf_i] ^= in[i];
+      buf_i = (buf_i + 1) % length;
+      }
+   return buf_i;
    }
 
 }
