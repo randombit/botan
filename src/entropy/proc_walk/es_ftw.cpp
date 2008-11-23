@@ -5,7 +5,7 @@
 
 #include <botan/es_ftw.h>
 #include <botan/secmem.h>
-#include <botan/util.h>
+#include <botan/xor_buf.h>
 #include <cstring>
 #include <deque>
 
@@ -118,12 +118,13 @@ u32bit FTW_EntropySource::slow_poll(byte buf[], u32bit length)
    SecureVector<byte> read_buf(4096);
 
    u32bit bytes_read = 0;
+   u32bit buf_i = 0;
 
    while(bytes_read < length * 32)
       {
       int fd = dir->next_fd();
 
-      if(fd == -1)
+      if(fd == -1) // re-walk
          {
          delete dir;
          dir = new Directory_Walker(path);
@@ -137,8 +138,7 @@ u32bit FTW_EntropySource::slow_poll(byte buf[], u32bit length)
 
       if(got > 0 && got <= read_buf.size())
          {
-         for(ssize_t i = 0; i != got; ++i)
-            buf[i % length] ^= read_buf[i];
+         buf_i = xor_into_buf(buf, buf_i, length, read_buf, got);
 
          // never count any one file for more than 128 bytes
          bytes_read += std::min<u32bit>(got, 128);
