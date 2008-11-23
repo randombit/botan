@@ -25,7 +25,7 @@ class ECB_Encryption_ErrorCheck : public Filter
                                 const SymmetricKey& key) :
          BLOCKSIZE(block_size_of(cipher_name))
          {
-         const std::string HASH = "SHA-1";
+         const std::string HASH = "CRC32";
 
          cipher = get_block_cipher(cipher_name);
          input_hash = get_hash(HASH);
