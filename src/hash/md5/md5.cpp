@@ -58,13 +58,13 @@ inline void II(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
 *************************************************/
 void MD5::compress_n(const byte input[], u32bit blocks)
    {
+   u32bit A = digest[0], B = digest[1], C = digest[2], D = digest[3];
+
    for(u32bit i = 0; i != blocks; ++i)
       {
       for(u32bit j = 0; j != 16; ++j)
          M[j] = load_le<u32bit>(input, j);
       input += HASH_BLOCK_SIZE;
-
-      u32bit A = digest[0], B = digest[1], C = digest[2], D = digest[3];
 
       FF(A,B,C,D,M[ 0], 7,0xD76AA478);   FF(D,A,B,C,M[ 1],12,0xE8C7B756);
       FF(C,D,A,B,M[ 2],17,0x242070DB);   FF(B,C,D,A,M[ 3],22,0xC1BDCEEE);
@@ -102,7 +102,10 @@ void MD5::compress_n(const byte input[], u32bit blocks)
       II(A,B,C,D,M[ 4], 6,0xF7537E82);   II(D,A,B,C,M[11],10,0xBD3AF235);
       II(C,D,A,B,M[ 2],15,0x2AD7D2BB);   II(B,C,D,A,M[ 9],21,0xEB86D391);
 
-      digest[0] += A; digest[1] += B; digest[2] += C; digest[3] += D;
+      A = (digest[0] += A);
+      B = (digest[1] += B);
+      C = (digest[2] += C);
+      D = (digest[3] += D);
       }
    }
 

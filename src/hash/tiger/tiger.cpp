@@ -15,13 +15,13 @@ namespace Botan {
 *************************************************/
 void Tiger::compress_n(const byte input[], u32bit blocks)
    {
+   u64bit A = digest[0], B = digest[1], C = digest[2];
+
    for(u32bit i = 0; i != blocks; ++i)
       {
       for(u32bit j = 0; j != 8; ++j)
          X[j] = load_le<u64bit>(input, j);
       input += HASH_BLOCK_SIZE;
-
-      u64bit A = digest[0], B = digest[1], C = digest[2];
 
       pass(A, B, C, X, 5); mix(X);
       pass(C, A, B, X, 7); mix(X);
@@ -34,7 +34,9 @@ void Tiger::compress_n(const byte input[], u32bit blocks)
          u64bit T = A; A = C; C = B; B = T;
          }
 
-      digest[0] ^= A; digest[1] = B - digest[1]; digest[2] += C;
+      A = (digest[0] ^= A);
+      B = digest[1] = B - digest[1];
+      C = (digest[2] += C);
       }
    }
 

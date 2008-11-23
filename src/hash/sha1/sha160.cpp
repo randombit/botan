@@ -54,6 +54,9 @@ inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 *************************************************/
 void SHA_160::compress_n(const byte input[], u32bit blocks)
    {
+   u32bit A = digest[0], B = digest[1], C = digest[2],
+          D = digest[3], E = digest[4];
+
    for(u32bit i = 0; i != blocks; ++i)
       {
       for(u32bit j = 0; j != 16; j += 4)
@@ -72,9 +75,6 @@ void SHA_160::compress_n(const byte input[], u32bit blocks)
          W[j+2] = rotate_left((W[j-1] ^ W[j-6] ^ W[j-12] ^ W[j-14]), 1);
          W[j+3] = rotate_left((W[j  ] ^ W[j-5] ^ W[j-11] ^ W[j-13]), 1);
          }
-
-      u32bit A = digest[0], B = digest[1], C = digest[2],
-             D = digest[3], E = digest[4];
 
       F1(A,B,C,D,E,W[ 0]);   F1(E,A,B,C,D,W[ 1]);   F1(D,E,A,B,C,W[ 2]);
       F1(C,D,E,A,B,W[ 3]);   F1(B,C,D,E,A,W[ 4]);   F1(A,B,C,D,E,W[ 5]);
@@ -108,8 +108,11 @@ void SHA_160::compress_n(const byte input[], u32bit blocks)
       F4(A,B,C,D,E,W[75]);   F4(E,A,B,C,D,W[76]);   F4(D,E,A,B,C,W[77]);
       F4(C,D,E,A,B,W[78]);   F4(B,C,D,E,A,W[79]);
 
-      digest[0] += A; digest[1] += B; digest[2] += C;
-      digest[3] += D; digest[4] += E;
+      A = (digest[0] += A);
+      B = (digest[1] += B);
+      C = (digest[2] += C);
+      D = (digest[3] += D);
+      E = (digest[4] += E);
       }
    }
 

@@ -73,6 +73,11 @@ inline void F5(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
 *************************************************/
 void RIPEMD_160::compress_n(const byte input[], u32bit blocks)
    {
+   const u32bit MAGIC2 = 0x5A827999, MAGIC3 = 0x6ED9EBA1,
+                MAGIC4 = 0x8F1BBCDC, MAGIC5 = 0xA953FD4E,
+                MAGIC6 = 0x50A28BE6, MAGIC7 = 0x5C4DD124,
+                MAGIC8 = 0x6D703EF3, MAGIC9 = 0x7A6D76E9;
+
    for(u32bit i = 0; i != blocks; ++i)
       {
       for(u32bit j = 0; j != 16; ++j)
@@ -80,13 +85,8 @@ void RIPEMD_160::compress_n(const byte input[], u32bit blocks)
       input += HASH_BLOCK_SIZE;
 
       u32bit A1 = digest[0], A2 = A1, B1 = digest[1], B2 = B1,
-         C1 = digest[2], C2 = C1, D1 = digest[3], D2 = D1,
-         E1 = digest[4], E2 = E1;
-
-      const u32bit MAGIC2 = 0x5A827999, MAGIC3 = 0x6ED9EBA1,
-         MAGIC4 = 0x8F1BBCDC, MAGIC5 = 0xA953FD4E,
-         MAGIC6 = 0x50A28BE6, MAGIC7 = 0x5C4DD124,
-         MAGIC8 = 0x6D703EF3, MAGIC9 = 0x7A6D76E9;
+             C1 = digest[2], C2 = C1, D1 = digest[3], D2 = D1,
+             E1 = digest[4], E2 = E1;
 
       F1(A1,B1,C1,D1,E1,M[ 0],11       );  F5(A2,B2,C2,D2,E2,M[ 5], 8,MAGIC6);
       F1(E1,A1,B1,C1,D1,M[ 1],14       );  F5(E2,A2,B2,C2,D2,M[14], 9,MAGIC6);
@@ -173,9 +173,12 @@ void RIPEMD_160::compress_n(const byte input[], u32bit blocks)
       F5(C1,D1,E1,A1,B1,M[15], 5,MAGIC5);  F1(C2,D2,E2,A2,B2,M[ 9],11       );
       F5(B1,C1,D1,E1,A1,M[13], 6,MAGIC5);  F1(B2,C2,D2,E2,A2,M[11],11       );
 
-      C1        = digest[1] + C1 + D2; digest[1] = digest[2] + D1 + E2;
-      digest[2] = digest[3] + E1 + A2; digest[3] = digest[4] + A1 + B2;
-      digest[4] = digest[0] + B1 + C2; digest[0] = C1;
+      C1        = digest[1] + C1 + D2;
+      digest[1] = digest[2] + D1 + E2;
+      digest[2] = digest[3] + E1 + A2;
+      digest[3] = digest[4] + A1 + B2;
+      digest[4] = digest[0] + B1 + C2;
+      digest[0] = C1;
       }
    }
 

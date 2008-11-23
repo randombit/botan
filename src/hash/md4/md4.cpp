@@ -45,13 +45,13 @@ inline void HH(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit M, byte S)
 *************************************************/
 void MD4::compress_n(const byte input[], u32bit blocks)
    {
+   u32bit A = digest[0], B = digest[1], C = digest[2], D = digest[3];
+
    for(u32bit i = 0; i != blocks; ++i)
       {
       for(u32bit j = 0; j != 16; ++j)
          M[j] = load_le<u32bit>(input, j);
       input += HASH_BLOCK_SIZE;
-
-      u32bit A = digest[0], B = digest[1], C = digest[2], D = digest[3];
 
       FF(A,B,C,D,M[ 0], 3);   FF(D,A,B,C,M[ 1], 7);   FF(C,D,A,B,M[ 2],11);
       FF(B,C,D,A,M[ 3],19);   FF(A,B,C,D,M[ 4], 3);   FF(D,A,B,C,M[ 5], 7);
@@ -74,7 +74,10 @@ void MD4::compress_n(const byte input[], u32bit blocks)
       HH(A,B,C,D,M[ 3], 3);   HH(D,A,B,C,M[11], 9);   HH(C,D,A,B,M[ 7],11);
       HH(B,C,D,A,M[15],15);
 
-      digest[0] += A;   digest[1] += B;   digest[2] += C;   digest[3] += D;
+      A = (digest[0] += A);
+      B = (digest[1] += B);
+      C = (digest[2] += C);
+      D = (digest[3] += D);
       }
    }
 
