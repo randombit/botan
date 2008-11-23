@@ -6,6 +6,7 @@
 #include <botan/es_unix.h>
 #include <botan/unix_cmd.h>
 #include <botan/parsing.h>
+#include <botan/xor_buf.h>
 #include <algorithm>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -45,48 +46,72 @@ void Unix_EntropySource::add_sources(const Unix_Program srcs[], u32bit count)
 /*************************************************
 * Unix Fast Poll                                 *
 *************************************************/
-void Unix_EntropySource::do_fast_poll()
+u32bit Unix_EntropySource::fast_poll(byte buf[], u32bit length)
    {
-   const char* STAT_TARGETS[] = { "/", "/tmp", "/etc/passwd", ".", "..", 0 };
+   if(length == 0)
+      return 0;
+
+   u32bit buf_i = 0;
+
+   const char* STAT_TARGETS[] = {
+      "/",
+      "/tmp",
+      "/var/tmp",
+      "/usr",
+      "/home",
+      "/etc/passwd",
+      ".",
+      "..",
+      0 };
 
    for(u32bit j = 0; STAT_TARGETS[j]; j++)
       {
       struct stat statbuf;
       clear_mem(&statbuf, 1);
       ::stat(STAT_TARGETS[j], &statbuf);
-      add_bytes(&statbuf, sizeof(statbuf));
+
+      buf_i = xor_into_buf(buf, buf_i, length, &statbuf, sizeof(statbuf));
       }
 
-   add_bytes(::getpid());
-   add_bytes(::getppid());
+   u32bit ids[] = {
+      ::getpid(),
+      ::getppid(),
+      ::getuid(),
+      ::geteuid(),
+      ::getegid(),
+      ::getpgrp(),
+      ::getsid(0)
+   };
 
-   add_bytes(::getuid());
-   add_bytes(::getgid());
-   add_bytes(::geteuid());
-   add_bytes(::getegid());
-
-   add_bytes(::getpgrp());
-   add_bytes(::getsid(0));
+   for(u32bit i = 0; i != sizeof(ids); ++i)
+      buf_i = xor_into_buf(buf, buf_i, length, &ids[i], sizeof(ids[i]));
 
    struct ::rusage usage;
 
    clear_mem(&usage, 1);
    ::getrusage(RUSAGE_SELF, &usage);
-   add_bytes(&usage, sizeof(usage));
+   buf_i = xor_into_buf(buf, buf_i, length, &usage, sizeof(usage));
 
    ::getrusage(RUSAGE_CHILDREN, &usage);
-   add_bytes(&usage, sizeof(usage));
+   buf_i = xor_into_buf(buf, buf_i, length, &usage, sizeof(usage));
+
+   return length;
    }
 
 /*************************************************
 * Unix Slow Poll                                 *
 *************************************************/
-void Unix_EntropySource::do_slow_poll()
+u32bit Unix_EntropySource::slow_poll(byte buf[], u32bit length)
    {
+   if(length == 0)
+      return 0;
+
    const u32bit TRY_TO_GET = 16 * 1024;
    const u32bit MINIMAL_WORKING = 32;
 
    u32bit got = 0;
+   u32bit buf_i = 0;
+
    for(u32bit j = 0; j != sources.size(); j++)
       {
       DataSource_Command pipe(sources[j].name_and_args, PATH);
@@ -97,7 +122,7 @@ void Unix_EntropySource::do_slow_poll()
       while(!pipe.end_of_data())
          {
          u32bit this_loop = pipe.read(buffer, buffer.size());
-         add_bytes(buffer, this_loop);
+         buf_i = xor_into_buf(buf, buf_i, length, buffer, this_loop);
          got_from_src += this_loop;
          }
 
@@ -107,6 +132,8 @@ void Unix_EntropySource::do_slow_poll()
       if(got >= TRY_TO_GET)
          break;
       }
+
+   return length;
    }
 
 }

@@ -6,7 +6,7 @@
 #ifndef BOTAN_ENTROPY_SRC_UNIX_H__
 #define BOTAN_ENTROPY_SRC_UNIX_H__
 
-#include <botan/buf_es.h>
+#include <botan/entropy_src.h>
 #include <botan/unix_cmd.h>
 #include <vector>
 
@@ -15,7 +15,7 @@ namespace Botan {
 /*************************************************
 * Unix Entropy Source                            *
 *************************************************/
-class BOTAN_DLL Unix_EntropySource : public Buffered_EntropySource
+class BOTAN_DLL Unix_EntropySource : public EntropySource
    {
    public:
       std::string name() const { return "Unix Entropy Source"; }
@@ -25,8 +25,8 @@ class BOTAN_DLL Unix_EntropySource : public Buffered_EntropySource
    private:
       static void add_default_sources(std::vector<Unix_Program>&);
 
-      void do_fast_poll();
-      void do_slow_poll();
+      u32bit fast_poll(byte buf[], u32bit length);
+      u32bit slow_poll(byte buf[], u32bit length);
 
       const std::vector<std::string> PATH;
       std::vector<Unix_Program> sources;

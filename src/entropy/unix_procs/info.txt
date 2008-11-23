@@ -13,10 +13,6 @@ es_unix.h
 unix_cmd.h
 </add>
 
-<requires>
-buf_es
-</requires>
-
 <os>
 aix
 beos
