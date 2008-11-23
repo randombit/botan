@@ -13,10 +13,6 @@ es_win32.h
 es_win32.cpp
 </add>
 
-<requires>
-buf_es
-</requires>
-
 <os>
 windows
 cygwin

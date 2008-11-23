@@ -1,22 +1,26 @@
-/*************************************************
-* Win32 EntropySource Source File                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/**
+* Win32 EntropySource Source File
+* (C) 1999-2008 Jack Lloyd
+*/
 
 #include <botan/es_win32.h>
+#include <botan/xor_buf.h>
 #include <windows.h>
 #include <tlhelp32.h>
 
 namespace Botan {
 
-/*************************************************
-* Win32 Slow Poll                                *
-*************************************************/
-void Win32_EntropySource::do_slow_poll()
+/**
+* Win32 slow poll using Tooltip32
+*/
+u32bit Win32_EntropySource::slow_poll(byte buf[], u32bit length)
    {
-   const u32bit MAX_ITEMS = 256;
+   if(length == 0)
+      return 0;
 
-   do_fast_poll();
+   const u32bit MAX_ITEMS = length / 4;
+
+   u32bit buf_i = 0;
 
    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, 0);
 
@@ -30,7 +34,7 @@ void Win32_EntropySource::do_slow_poll()
       do                                                  \
          {                                                \
          if(items++ > MAX_ITEMS) break;                   \
-         add_bytes(&info, sizeof(info));                  \
+         buf_i = xor_into_buf(buf, buf_i, length, info);  \
          } while(FUNC_NEXT(snapshot, &info));             \
       }                                                   \
    }
@@ -51,7 +55,7 @@ void Win32_EntropySource::do_slow_poll()
       {
       do
          {
-         add_bytes(&heap_list, sizeof(HEAPLIST32));
+         buf_i = xor_into_buf(buf, buf_i, length, info, heap_list);
 
          if(heap_lists_found++ > HEAP_LISTS_MAX)
             break;
@@ -66,44 +70,59 @@ void Win32_EntropySource::do_slow_poll()
                {
                if(heap_objs_found++ > HEAP_OBJS_PER_LIST)
                   break;
-               add_bytes(&heap_entry, sizeof(HEAPENTRY32));
+               buf_i = xor_into_buf(buf, buf_i, length, info, heap_entry);
                } while(Heap32Next(&heap_entry));
             }
          } while(Heap32ListNext(snapshot, &heap_list));
       }
 
    CloseHandle(snapshot);
+
+   return length;
    }
 
-/*************************************************
-* Win32 Fast Poll                                *
-*************************************************/
-void Win32_EntropySource::do_fast_poll()
+/**
+* Win32 fast poll
+*/
+u32bit Win32_EntropySource::fast_poll(byte buf[], u32bit length)
    {
-   add_bytes(GetTickCount());
-   add_bytes(GetMessagePos());
-   add_bytes(GetMessageTime());
-   add_bytes(GetInputState());
-   add_bytes(GetCurrentProcessId());
-   add_bytes(GetCurrentThreadId());
+   if(length == 0)
+      return 0;
+
+   u32bit buf_i = 0;
+
+   u32bit stats[] = {
+      GetTickCount(),
+      GetMessagePos(),
+      GetMessageTime(),
+      GetInputState(),
+      GetCurrentProcessId(),
+      GetCurrentThreadId()
+   };
+
+   for(u32bit i = 0; i != sizeof(stats) / sizeof(stats[0]); ++i)
+      buf_i = xor_into_buf(buf, buf_i, length, stats[i]);
 
    SYSTEM_INFO sys_info;
    GetSystemInfo(&sys_info);
-   add_bytes(&sys_info, sizeof(sys_info));
+   buf_i = xor_into_buf(buf, buf_i, length, sys_info);
 
    MEMORYSTATUS mem_info;
    GlobalMemoryStatus(&mem_info);
-   add_bytes(&mem_info, sizeof(mem_info));
+   buf_i = xor_into_buf(buf, buf_i, length, mem_info);
 
    POINT point;
    GetCursorPos(&point);
-   add_bytes(&point, sizeof(point));
+   buf_i = xor_into_buf(buf, buf_i, length, point);
+
    GetCaretPos(&point);
-   add_bytes(&point, sizeof(point));
+   buf_i = xor_into_buf(buf, buf_i, length, point);
 
    LARGE_INTEGER perf_counter;
    QueryPerformanceCounter(&perf_counter);
-   add_bytes(&perf_counter, sizeof(perf_counter));
+   buf_i = xor_into_buf(buf, buf_i, length, perf_counter);
+
+   return length;
    }
 
 }
