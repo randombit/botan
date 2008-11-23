@@ -72,6 +72,7 @@ void HMAC_RNG::randomize(byte out[], u32bit length)
 
       source_index = (source_index + 1) % entropy_sources.size();
       extractor->update(io_buffer, got);
+      io_buffer.clear();
       }
    }
 
@@ -121,6 +122,7 @@ void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
 
          entropy += got;
          extractor->update(io_buffer, got);
+         io_buffer.clear();
          }
 
       for(u32bit j = 0; j != entropy_sources.size(); ++j)
@@ -130,6 +132,7 @@ void HMAC_RNG::reseed_with_input(const byte input[], u32bit input_length)
 
          entropy += got;
          extractor->update(io_buffer, got);
+         io_buffer.clear();
          }
       }
 

@@ -129,6 +129,7 @@ void Randpool::reseed()
 
       mac->update(buffer, got);
       entropy_est += got;
+      buffer.clear();
       }
 
    // Then do a slow poll, until we think we have got enough entropy
@@ -141,6 +142,7 @@ void Randpool::reseed()
 
       if(entropy_est > 512)
          break;
+      buffer.clear();
       }
 
    SecureVector<byte> mac_val = mac->final();
