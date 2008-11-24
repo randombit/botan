@@ -172,9 +172,15 @@ OpenSSL_Engine::find_block_cipher(const SCAN_Name& request,
    if(request.algo_name() == NAME && request.arg_count() == 0)  \
       return new EVP_BlockCipher(EVP, NAME, MIN, MAX, MOD);
 
+#if 0
+   /*
+   Using OpenSSL's AES causes crashes inside EVP on x86-64 with OpenSSL 0.9.8g
+   cause is unknown
+   */
    HANDLE_EVP_CIPHER("AES-128", EVP_aes_128_ecb());
    HANDLE_EVP_CIPHER("AES-192", EVP_aes_192_ecb());
    HANDLE_EVP_CIPHER("AES-256", EVP_aes_256_ecb());
+#endif
 
    HANDLE_EVP_CIPHER("DES", EVP_des_ecb());
    HANDLE_EVP_CIPHER_KEYLEN("TripleDES", EVP_des_ede3_ecb(), 16, 24, 8);
