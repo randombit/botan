@@ -2,6 +2,7 @@
 * 1.7.24-pre, ????-??-??
  - Wrap private structs in SSE2 SHA-1 code in anonymous namespace
  - Change configure.pl's CPU autodetection output to be more consistent
+ - Disable using OpenSSL's AES due to crashes
  - Fix warning in /proc walking entropy poller
  - Fix compilation with IBM XLC for Cell 0.9
  - Fix integer overflow in Pooling_Allocator::get_more_core (bug id #27)
