@@ -136,7 +136,7 @@ u32bit FTW_EntropySource::slow_poll(byte buf[], u32bit length)
 
       ssize_t got = ::read(fd, read_buf.begin(), read_buf.size());
 
-      if(got > 0 && got <= read_buf.size())
+      if(got > 0)
          {
          buf_i = xor_into_buf(buf, buf_i, length, read_buf, got);
 
