@@ -55,5 +55,9 @@ you'll be developing code using Botan, consider joining the mailing
 lists; links to subscriptions forms and the archives can be found on
 the web page. Feel free to contact me with any questions or comments.
 
+Many people have contributed to Botan. They are listed in the files
+license.txt, credits.txt, and thanks.txt, all of which are included in
+the Botan source distribution.
+
 Regards,
    Jack Lloyd (lloyd@randombit.net)
