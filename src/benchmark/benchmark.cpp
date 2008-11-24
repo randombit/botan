@@ -19,14 +19,14 @@ namespace {
 /**
 * Benchmark BufferedComputation (hash or MAC)
 */
-std::pair<u32bit, u64bit> bench_buf_comp(BufferedComputation* buf_comp,
+std::pair<u64bit, u64bit> bench_buf_comp(BufferedComputation* buf_comp,
                                          Timer& timer,
                                          u64bit nanoseconds_max,
                                          const byte buf[], u32bit buf_len)
    {
    const u64bit start = timer.clock();
    u64bit nanoseconds_used = 0;
-   u32bit reps = 0;
+   u64bit reps = 0;
 
    while(nanoseconds_used < nanoseconds_max)
       {
@@ -35,13 +35,13 @@ std::pair<u32bit, u64bit> bench_buf_comp(BufferedComputation* buf_comp,
       nanoseconds_used = timer.clock() - start;
       }
 
-   return std::make_pair(reps, nanoseconds_used);
+   return std::make_pair(reps * buf_len, nanoseconds_used);
    }
 
 /**
 * Benchmark block cipher
 */
-std::pair<u32bit, u64bit>
+std::pair<u64bit, u64bit>
 bench_block_cipher(BlockCipher* block_cipher,
                    Timer& timer,
                    u64bit nanoseconds_max,
@@ -49,26 +49,27 @@ bench_block_cipher(BlockCipher* block_cipher,
    {
    const u64bit start = timer.clock();
    u64bit nanoseconds_used = 0;
-   u32bit reps = 0;
+   u64bit reps = 0;
 
-   buf_len = round_down(buf_len - 1, block_cipher->BLOCK_SIZE);
+   const u32bit in_blocks = buf_len / block_cipher->BLOCK_SIZE;
 
    while(nanoseconds_used < nanoseconds_max)
       {
-      for(u32bit j = 0; j <= buf_len; j += block_cipher->BLOCK_SIZE)
-         block_cipher->encrypt(&buf[j]);
+      for(u32bit i = 0; i != in_blocks; ++i)
+         block_cipher->encrypt(buf + block_cipher->BLOCK_SIZE * i);
 
       ++reps;
       nanoseconds_used = timer.clock() - start;
       }
 
-   return std::make_pair(reps, nanoseconds_used);
+   return std::make_pair(reps * in_blocks * block_cipher->BLOCK_SIZE,
+                         nanoseconds_used);
    }
 
 /**
 * Benchmark stream
 */
-std::pair<u32bit, u64bit>
+std::pair<u64bit, u64bit>
 bench_stream_cipher(StreamCipher* stream_cipher,
                     Timer& timer,
                     u64bit nanoseconds_max,
@@ -76,7 +77,7 @@ bench_stream_cipher(StreamCipher* stream_cipher,
    {
    const u64bit start = timer.clock();
    u64bit nanoseconds_used = 0;
-   u32bit reps = 0;
+   u64bit reps = 0;
 
    while(nanoseconds_used < nanoseconds_max)
       {
@@ -85,13 +86,13 @@ bench_stream_cipher(StreamCipher* stream_cipher,
       nanoseconds_used = timer.clock() - start;
       }
 
-   return std::make_pair(reps, nanoseconds_used);
+   return std::make_pair(reps * buf_len, nanoseconds_used);
    }
 
 /**
 * Benchmark hash
 */
-std::pair<u32bit, u64bit>
+std::pair<u64bit, u64bit>
 bench_hash(HashFunction* hash, Timer& timer,
            u64bit nanoseconds_max,
            const byte buf[], u32bit buf_len)
@@ -102,7 +103,7 @@ bench_hash(HashFunction* hash, Timer& timer,
 /**
 * Benchmark MAC
 */
-std::pair<u32bit, u64bit>
+std::pair<u64bit, u64bit>
 bench_mac(MessageAuthenticationCode* mac,
           Timer& timer,
           u64bit nanoseconds_max,
@@ -137,7 +138,7 @@ algorithm_benchmark(const std::string& name,
       {
       const std::string provider = providers[i];
 
-      std::pair<u32bit, u64bit> results = std::make_pair(0, 0);
+      std::pair<u64bit, u64bit> results = std::make_pair(0, 0);
 
       if(const BlockCipher* proto =
             af.prototype_block_cipher(name, provider))
@@ -175,7 +176,7 @@ algorithm_benchmark(const std::string& name,
          /* 953.67 == 1000 * 1000 * 1000 / 1024 / 1024 - the conversion
             factor from bytes per nanosecond to mebibytes per second.
          */
-         double speed = (953.67 * buf.size() * results.first) / results.second;
+         double speed = (953.67 * results.first) / results.second;
          all_results[provider] = speed;
          }
       }
