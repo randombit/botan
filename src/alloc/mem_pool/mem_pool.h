@@ -61,8 +61,6 @@ class BOTAN_DLL Pooling_Allocator : public Allocator
             byte* buffer, *buffer_end;
          };
 
-      static const u32bit PREF_SIZE = BOTAN_MEM_POOL_CHUNK_SIZE;
-
       std::vector<Memory_Block> blocks;
       std::vector<Memory_Block>::iterator last_used;
       std::vector<std::pair<void*, u32bit> > allocated;

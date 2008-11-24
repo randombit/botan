@@ -154,7 +154,7 @@ void* Pooling_Allocator::allocate(u32bit n)
       if(mem)
          return mem;
 
-      get_more_core(PREF_SIZE);
+      get_more_core(BOTAN_MEM_POOL_CHUNK_SIZE);
 
       mem = allocate_blocks(block_no);
       if(mem)
@@ -236,6 +236,9 @@ void Pooling_Allocator::get_more_core(u32bit in_bytes)
    const u32bit BLOCK_SIZE = Memory_Block::block_size();
 
    const u32bit TOTAL_BLOCK_SIZE = BLOCK_SIZE * BITMAP_SIZE;
+
+   // upper bound on allocation is 1 MiB
+   in_bytes = std::min<u32bit>(in_bytes, 1024 * 1024);
 
    const u32bit in_blocks = round_up(in_bytes, BLOCK_SIZE) / TOTAL_BLOCK_SIZE;
    const u32bit to_allocate = in_blocks * TOTAL_BLOCK_SIZE;
