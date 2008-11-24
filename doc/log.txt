@@ -4,6 +4,7 @@
  - Wrap private structs in SSE2 SHA-1 code in anonymous namespace
  - Fix warning in /proc walking entropy poller
  - Make configure.pl's CPU autodetection output consistent
+ - Avoid integer overflow in Pooling_Allocator::get_more_core (bug id #27)
 
 * 1.7.23, 2008-11-23
  - By default use TR1 (thus enabling ECDSA) with GCC and ICC
