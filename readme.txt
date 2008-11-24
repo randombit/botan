@@ -1,7 +1,7 @@
-Botan 1.7.23 2008-11-23
+Botan 1.7.24-pre ????-??-??
 http://botan.randombit.net/
 
-This release of Botan is the second release candidate for the 1.8.0
+This release of Botan is the third release candidate for the 1.8.0
 release. It should be stable, though some APIs have changed
 incompatibly since the 1.6 release.
 
