@@ -25,6 +25,8 @@
 
 namespace Botan {
 
+namespace {
+
 typedef union {
    u32bit u32[4];
    __m128i u128;
@@ -187,6 +189,8 @@ static inline u32bit f60_79(u32bit x, u32bit y, u32bit z)
 		(xb) = rol((xb), 30); 							\
 		(xt) += ((xe) + rol((xa), 5));						\
 	} while(0)
+
+}
 
 extern "C" void botan_sha1_sse2_compress(u32bit H[5],
                                          const u32bit* inputu)
