@@ -1,16 +1,16 @@
 
 * 1.7.24-pre, ????-??-??
- - Compilation fix for IBM XLC for Cell 0.9
  - Wrap private structs in SSE2 SHA-1 code in anonymous namespace
+ - Change configure.pl's CPU autodetection output to be more consistent
  - Fix warning in /proc walking entropy poller
- - Make configure.pl's CPU autodetection output consistent
- - Avoid integer overflow in Pooling_Allocator::get_more_core (bug id #27)
+ - Fix compilation with IBM XLC for Cell 0.9
+ - Fix integer overflow in Pooling_Allocator::get_more_core (bug id #27)
 
 * 1.7.23, 2008-11-23
- - By default use TR1 (thus enabling ECDSA) with GCC and ICC
+ - Change to use TR1 (thus enabling ECDSA) with GCC and ICC
  - Optimize almost all hash functions, especially MD4 and Tiger
  - Add configure.pl options --{with,without}-{bzip2,zlib,openssl,gnump}
- - Make Timer pure virtual, and add ANSI_Clock_Timer
+ - Change Timer to be pure virtual, and add ANSI_Clock_Timer
  - Cache socket descriptors in the EGD entropy source
  - Avoid bogging down startup in /proc walking entropy source
  - Remove Buffered_EntropySource helper class
