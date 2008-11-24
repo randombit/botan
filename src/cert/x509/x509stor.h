@@ -69,6 +69,20 @@ class BOTAN_DLL X509_Store
       std::vector<X509_Certificate> get_cert_chain(const X509_Certificate&);
       std::string PEM_encode() const;
 
+      /*
+      * Made CRL_Data public for XLC for Cell 0.9, otherwise cannot
+      * instantiate member variable std::vector<CRL_Data> revoked
+      */
+      class BOTAN_DLL CRL_Data
+         {
+         public:
+            X509_DN issuer;
+            MemoryVector<byte> serial, auth_key_id;
+            bool operator==(const CRL_Data&) const;
+            bool operator!=(const CRL_Data&) const;
+            bool operator<(const CRL_Data&) const;
+         };
+
       X509_Code add_crl(const X509_CRL&);
       void add_cert(const X509_Certificate&, bool = false);
       void add_certs(DataSource&);
@@ -101,16 +115,6 @@ class BOTAN_DLL X509_Store
             mutable bool checked;
             mutable X509_Code result;
             mutable u64bit last_checked;
-         };
-
-      class BOTAN_DLL CRL_Data
-         {
-         public:
-            X509_DN issuer;
-            MemoryVector<byte> serial, auth_key_id;
-            bool operator==(const CRL_Data&) const;
-            bool operator!=(const CRL_Data&) const;
-            bool operator<(const CRL_Data&) const;
          };
 
       u32bit find_cert(const X509_DN&, const MemoryRegion<byte>&) const;
