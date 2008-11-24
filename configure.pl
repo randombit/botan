@@ -2322,8 +2322,9 @@ sub guess_cpu
 
     if($cpu ne '')
     {
-        autoconfig("Guessing (based on Config{'archname'} $config_archname) " .
-                   "that CPU is a $cpu");
+        autoconfig("Guessing CPU using Config{archname} '$config_archname'");
+        autoconfig("Guessing CPU is a $cpu (use --cpu to set)");
+
         return $cpu if known_arch($cpu);
     }
 
