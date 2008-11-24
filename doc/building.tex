@@ -13,7 +13,7 @@
 \title{\textbf{Botan Build Guide}}
 \author{Jack Lloyd \\
         \texttt{lloyd@randombit.net}}
-\date{2008-09-30}
+\date{2008-11-24}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\module}[1]{\texttt{#1}}
@@ -68,7 +68,7 @@ later version should also work.
 The script will attempt to guess what kind of system you are trying
 to compile for (and will print messages telling you what it guessed).
 You can override this process by passing the options \verb|--cc|,
-\verb|--os|, and \verb|--arch| -- acceptable values are printed if
+\verb|--os|, and \verb|--cpu| -- acceptable values are printed if
 you run \verb|configure.pl| with \verb|--help|.
 
 You can pass basically anything reasonable with \verb|--cpu|: the
@@ -86,7 +86,7 @@ which algorithms have and have not been abled. For instance on one
 system we might see the line:
 
 \begin{verbatim}
-   (loading): entropy: [beos_stats] buf_es [cryptoapi_rng] \\
+   (loading): entropy: [beos_stats] buf_es [cryptoapi_rng]
                        dev_random egd proc_walk unix_procs [win32_stats]
 \end{verbatim}
 
@@ -201,8 +201,8 @@ before building the library. These can be found in
 script is run (and does not exist until after you run the script for
 the first time).
 
-Also included in \filename{config.h} are macros which are defined if
-one or more extensions are available. All of them begin with
+Also included in \filename{build/build.h} are macros which are defined
+if one or more extensions are available. All of them begin with
 \verb|BOTAN_HAS_|. For example, if \verb|BOTAN_HAS_COMPRESSOR_BZIP2|
 is defined, then an application using Botan can include
 \filename{<botan/bzip2.h>} and use the Bzip2 filters.
@@ -350,11 +350,7 @@ figure out what libraries it \emph{is} linked against?
 
 The answer is to ask the \filename{botan-config} script. This
 basically solves the same problem all the other \filename{*-config}
-scripts solve, and in basically the same manner. At some point in the
-future, a transition to \filename{pkg-config} will be made (as it's
-less work, and has more features), but right now it doesn't exist on
-most Unix systems, while a plain Bourne shell script will run fine on
-anything.
+scripts solve, and in basically the same manner.
 
 There are 4 options:
 
@@ -377,6 +373,19 @@ include paths.
 Your \filename{Makefile} can run \filename{botan-config} and get the
 options necessary for getting your application to compile and link,
 regardless of whatever crazy libraries Botan might be linked against.
+
+Botan also by default installs a file for \texttt{pkg-config},
+namespaced by the major and minor versions. So it can be used,
+for instance, as
+
+\begin{verbatim}
+$ pkg-config botan-1.8 --modversion
+1.8.0
+$ pkg-config botan-1.8 --cflags
+-I/usr/local/include
+$ pkg-config botan-1.8 --libs
+-L/usr/local/lib -lbotan -lm -lbz2 -lpthread -lrt
+\end{verbatim}
 
 \subsection{MS Windows}
 
