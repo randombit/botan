@@ -104,6 +104,8 @@ u32bit EGD_EntropySource::slow_poll(byte output[], u32bit length)
 
       if(count < 0)
          return 0;
+
+      return static_cast<u32bit>(count);
       }
 
    return 0;
