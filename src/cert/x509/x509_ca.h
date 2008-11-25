@@ -95,7 +95,7 @@ class BOTAN_DLL X509_CA
 * scheme.
 * @param key will be the key to choose a padding scheme for
 * @param alg_id will be set to the chosen scheme
-* @returns A PK_Signer object for generating signatures
+* @return A PK_Signer object for generating signatures
 */
 BOTAN_DLL PK_Signer* choose_sig_format(const Private_Key& key,
                                        AlgorithmIdentifier& alg_id);

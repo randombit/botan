@@ -16,7 +16,11 @@ namespace Botan {
 class BOTAN_DLL Timer : public EntropySource
    {
    public:
+      /**
+      @return nanoseconds resolution timestamp, unknown epoch
+      */
       virtual u64bit clock() const = 0;
+
       u32bit slow_poll(byte[], u32bit);
       u32bit fast_poll(byte[], u32bit);
 
