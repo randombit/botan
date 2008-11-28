@@ -136,7 +136,11 @@ EMSA* get_emsa(const std::string& algo_spec)
 
 #if defined(BOTAN_HAS_EMSA3)
    if(request.algo_name() == "EMSA3" && request.arg_count() == 1)
+      {
+      if(request.arg(0) == "Raw")
+         return new EMSA3_Raw;
       return new EMSA3(af.make_hash_function(request.arg(0)));
+      }
 #endif
 
 #if defined(BOTAN_HAS_EMSA4)
