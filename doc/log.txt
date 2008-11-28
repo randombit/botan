@@ -8,9 +8,9 @@
  - Add many more test vectors for RSA with EMSA2, EMSA3, and EMSA4
  - Wrap private structs in SSE2 SHA-1 code in anonymous namespace
  - Change configure.pl's CPU autodetection output to be more consistent
- - Disable using OpenSSL's AES in engine/openssl due to strange crashes
+ - Disable using OpenSSL's AES due to crashes of unknown cause
  - Fix warning in /proc walking entropy poller
- - Fix compilation with IBM XLC for Cell 0.9
+ - Fix compilation with IBM XLC for Cell 0.9-200709
 
 * 1.7.23, 2008-11-23
  - Change to use TR1 (thus enabling ECDSA) with GCC and ICC
