@@ -30,6 +30,10 @@ const byte SHA_160_ID[] = {
 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2B, 0x0E, 0x03, 0x02,
 0x1A, 0x05, 0x00, 0x04, 0x14 };
 
+const byte SHA_224_ID[] = {
+0x30, 0x2D, 0x30, 0x0D, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01,
+0x65, 0x03, 0x04, 0x02, 0x04, 0x05, 0x00, 0x04, 0x1C };
+
 const byte SHA_256_ID[] = {
 0x30, 0x31, 0x30, 0x0D, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01,
 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20 };
@@ -70,6 +74,8 @@ MemoryVector<byte> pkcs_hash_id(const std::string& name)
       out.set(PKCS_IDS::RIPEMD_160_ID, sizeof(PKCS_IDS::RIPEMD_160_ID));
    else if(name == "SHA-160")
       out.set(PKCS_IDS::SHA_160_ID, sizeof(PKCS_IDS::SHA_160_ID));
+   else if(name == "SHA-224")
+      out.set(PKCS_IDS::SHA_224_ID, sizeof(PKCS_IDS::SHA_224_ID));
    else if(name == "SHA-256")
       out.set(PKCS_IDS::SHA_256_ID, sizeof(PKCS_IDS::SHA_256_ID));
    else if(name == "SHA-384")
@@ -90,13 +96,18 @@ MemoryVector<byte> pkcs_hash_id(const std::string& name)
 */
 byte ieee1363_hash_id(const std::string& name)
    {
+   if(name == "SHA-160")    return 0x33;
+
+   if(name == "SHA-224")    return 0x38;
+   if(name == "SHA-256")    return 0x34;
+   if(name == "SHA-384")    return 0x36;
+   if(name == "SHA-512")    return 0x35;
+
    if(name == "RIPEMD-160") return 0x31;
    if(name == "RIPEMD-128") return 0x32;
-   if(name == "SHA-160")    return 0x33;
-   if(name == "SHA-256")    return 0x34;
-   if(name == "SHA-512")    return 0x35;
-   if(name == "SHA-384")    return 0x36;
+
    if(name == "Whirlpool")  return 0x37;
+
    return 0;
    }
 
