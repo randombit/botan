@@ -1,5 +1,7 @@
 
 * 1.7.24-pre, ????-??-??
+ - Add EMSA3_Raw, sometimes called PKCS#11 CKM_RSA_PKCS
+ - Add support for SHA-224 in EMSA2 and EMSA3 PK signature padding schemes
  - Wrap private structs in SSE2 SHA-1 code in anonymous namespace
  - Change configure.pl's CPU autodetection output to be more consistent
  - Disable using OpenSSL's AES due to crashes
