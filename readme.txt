@@ -1,9 +1,9 @@
 Botan 1.7.24-pre ????-??-??
 http://botan.randombit.net/
 
-This is the first release of Botan 1.8. We consider it the best
-version of Botan available, and recommend all users upgrade from 1.6
-or earlier versions as soon as possible. Some APIs have changed
+This is the third release candidate of Botan 1.8.0. We consider it the
+best version of Botan available, and recommend all users upgrade from
+1.6 or earlier versions as soon as possible. Some APIs have changed
 incompatibly since the 1.6 release series, but most applications
 should work as-is or with only simple modifications.
 
