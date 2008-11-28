@@ -3,6 +3,7 @@ The following people (sorted alphabetically) contributed bug reports, useful
 information, or were generally just helpful people to talk to:
 
 Jeff B
+Rickard Bondesson
 Mike Desjardins
 Matthew Gregan
 Hany Greiss
@@ -16,9 +17,11 @@ Kaushik Veeraraghavan
 Dominik Vogt
 James Widener
 
+Cerulean Studios, creators of the Trillian instant messaging client,
+has provided financial assistance to the project.
+
 Barry Kavanagh of AEP Systems Ltd kindly provided an AEP2000 crypto card and
 drivers, enabling the creation of Botan's AEP engine module.
-
 
 In addition, the following people have unknowingly contributed help:
 

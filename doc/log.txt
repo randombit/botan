@@ -3,6 +3,7 @@
  - Wrap private structs in SSE2 SHA-1 code in anonymous namespace
  - Change configure.pl's CPU autodetection output to be more consistent
  - Disable using OpenSSL's AES due to crashes
+ - Fix a compatibility problem with SHA-512/EMSA3 signature padding
  - Fix bug preventing EGD entropy poller from working
  - Fix warning in /proc walking entropy poller
  - Fix compilation with IBM XLC for Cell 0.9
