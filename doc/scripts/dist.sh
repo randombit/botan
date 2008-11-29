@@ -1,10 +1,12 @@
 #!/bin/bash
 
+# This is probably only useful if run on my machine, which is not
+# exactly ideal
+
 SELECTOR=h:net.randombit.botan
 KEY_ID=EFBADFBC
-MTN_DB=${HOME}/var/mtn/botan.mtn
-WEB_DIR=${HOME}/projects/www
-
+MTN_DB=~/var/mtn/botan.mtn
+WEB_DIR=~/var/www
 DIST_DIR=~/Botan-dist
 
 # You shouldn't have to change anything after this
@@ -59,5 +61,5 @@ echo $PASSWORD | gpg --batch --armor -b --passphrase-fd 0 -u $KEY_ID Botan-$VERS
 echo $PASSWORD | gpg --batch --armor -b --passphrase-fd 0 -u $KEY_ID Botan-$VERSION.tbz
 
 mv Botan-$VERSION.tgz* $WEB_DIR/files/botan/archive/v1.7
-mv Botan-$VERSION.tbz* $WEB_DIR/files/botan/
+mv Botan-$VERSION.tbz* $WEB_DIR/files/botan/archive/v1.7
 mv -f log.txt $WEB_DIR/botan/log.txt
