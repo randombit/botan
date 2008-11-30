@@ -25,7 +25,7 @@ my (%CPU, %OPERATING_SYSTEM, %COMPILER, %MODULES);
 my @DOCS = (
    'api.pdf', 'tutorial.pdf', 'fips140.pdf',
    'api.tex', 'tutorial.tex', 'fips140.tex',
-   'credits.txt', 'info.txt', 'license.txt', 'log.txt',
+   'credits.txt', 'license.txt', 'log.txt',
    'thanks.txt', 'todo.txt', 'pgpkeys.asc');
 
 my $TRACING = 0;
