@@ -1,5 +1,5 @@
 
-* 1.7.24-pre, ????-??-??
+* 1.7.24, 2008-12-01
  - Fix a compatibility problem with SHA-512/EMSA3 signature padding
  - Fix bug preventing EGD/PRNGD entropy poller from working
  - Fix integer overflow in Pooling_Allocator::get_more_core (bug id #27)
