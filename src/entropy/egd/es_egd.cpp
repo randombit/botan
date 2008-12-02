@@ -10,9 +10,12 @@
 #include <cstring>
 
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <unistd.h>
 
 #ifndef PF_LOCAL
   #define PF_LOCAL PF_UNIX

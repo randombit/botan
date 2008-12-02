@@ -3,14 +3,6 @@
 * (C) 1999-2007 Jack Lloyd                       *
 *************************************************/
 
-#ifndef _XOPEN_SOURCE
-  #define _XOPEN_SOURCE 500
-#endif
-
-#ifndef _XOPEN_SOURCE_EXTENDED
-  #define _XOPEN_SOURCE_EXTENDED 1
-#endif
-
 #include <botan/unix_cmd.h>
 #include <botan/parsing.h>
 #include <botan/exceptn.h>

@@ -12,8 +12,8 @@ use File::Find;
 use Sys::Hostname;
 
 my $MAJOR_VERSION = 1;
-my $MINOR_VERSION = 7;
-my $PATCH_VERSION = 24;
+my $MINOR_VERSION = 8;
+my $PATCH_VERSION = 0;
 
 my $VERSION_STRING = "$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION";
 

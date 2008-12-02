@@ -4,11 +4,12 @@
 *************************************************/
 
 #include <botan/es_dev.h>
+
+#include <sys/types.h>
 #include <sys/select.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/fcntl.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 namespace Botan {
 

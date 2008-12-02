@@ -1,13 +1,12 @@
-Botan 1.7.24 2008-12-01
+Botan 1.8.0-pre 2008-12-??
 
 Botan is a C++ class library for performing a wide variety of
 cryptographic operations.
 
-This is the third release candidate for Botan 1.8.0. I consider it the
-best version available, and recommend all users upgrade from 1.6 or
-earlier versions as soon as possible. Some APIs have changed
-incompatibly since the 1.6 release series, but most applications
-should work as-is or with only simple modifications.
+I consider this release the best version available, and recommend all
+users upgrade from 1.6 or earlier versions as soon as possible. Some
+APIs have changed incompatibly since the 1.6 release series, but most
+applications should work as-is or with only simple modifications.
 
 Botan is under a BSD-like license, the details of which can be found
 in license.txt. More information about the authors and contributors

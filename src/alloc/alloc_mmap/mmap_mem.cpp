@@ -6,14 +6,6 @@
 #include <botan/mmap_mem.h>
 #include <cstring>
 
-#ifndef _XOPEN_SOURCE
-  #define _XOPEN_SOURCE 500
-#endif
-
-#ifndef _XOPEN_SOURCE_EXTENDED
-  #define _XOPEN_SOURCE_EXTENDED 1
-#endif
-
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
