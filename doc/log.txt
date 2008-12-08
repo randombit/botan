@@ -1,5 +1,5 @@
 
-* 1.8.0-pre, 2008-12-??
+* 1.8.0, 2008-12-08
  - Fix compilation on Solaris with GCC
 
 * 1.7.24, 2008-12-01
