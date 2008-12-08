@@ -42,6 +42,14 @@ SecureVector<byte> EME1::pad(const byte in[], u32bit in_length,
 SecureVector<byte> EME1::unpad(const byte in[], u32bit in_length,
                                u32bit key_length) const
    {
+   /*
+   Must be careful about error messages here; if an attacker can
+   distinguish them, it is easy to use the differences as an oracle to
+   find the secret key, as described in "A Chosen Ciphertext Attack on
+   RSA Optimal Asymmetric Encryption Padding (OAEP) as Standardized in
+   PKCS #1 v2.0", James Manger, Crypto 2001
+   */
+
    key_length /= 8;
    if(in_length > key_length)
       throw Decoding_Error("Invalid EME1 encoding");
