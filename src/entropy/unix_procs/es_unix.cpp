@@ -68,6 +68,7 @@ u32bit Unix_EntropySource::fast_poll(byte buf[], u32bit length)
    for(u32bit j = 0; stat_targets[j]; j++)
       {
       struct stat statbuf;
+      clear_mem(&statbuf, 1);
       ::stat(stat_targets[j], &statbuf);
       buf_i = xor_into_buf(buf, buf_i, length, statbuf);
       }
