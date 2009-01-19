@@ -54,7 +54,7 @@ while test $# -gt 0; do
     --libs)
         if [ $prefix != "/usr" -a $prefix != "/usr/local" ]
         then
-           echo -n "-L$prefix/$libdir "
+           printf "-L$prefix/$libdir "
         fi
 
         echo @{var:link_to} -lbotan
