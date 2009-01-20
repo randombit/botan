@@ -60,6 +60,5 @@ read -a PASSWORD -p "Enter PGP password (or ^C to skip signatures): "
 echo $PASSWORD | gpg --batch --armor -b --passphrase-fd 0 -u $KEY_ID Botan-$VERSION.tgz
 echo $PASSWORD | gpg --batch --armor -b --passphrase-fd 0 -u $KEY_ID Botan-$VERSION.tbz
 
-mv Botan-$VERSION.tgz* $WEB_DIR/files/botan/archive/v1.7
-mv Botan-$VERSION.tbz* $WEB_DIR/files/botan/archive/v1.7
-mv -f log.txt $WEB_DIR/botan/log.txt
+mv Botan-$VERSION.tgz* $WEB_DIR/files/botan/v1.8
+mv Botan-$VERSION.tbz* $WEB_DIR/files/botan/v1.8
