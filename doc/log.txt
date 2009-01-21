@@ -1,4 +1,7 @@
 
+* 1.8.2-pre, 2009-??-??
+ - Another atempt at fixing botan-config on MacOS X
+
 * 1.8.1, 2009-01-20
  - Avoid a valgrind warning in es_unix.cpp on 32-bit Linux
  - Fix memory leak in PKCS8 load_key and encrypt_key
