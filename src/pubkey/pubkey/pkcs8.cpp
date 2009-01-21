@@ -87,7 +87,7 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
          if(is_encrypted)
             {
             DataSource_Memory params(pbe_alg_id.parameters);
-            PBE* pbe = get_pbe(pbe_alg_id.oid, params);
+            std::auto_ptr<PBE> pbe(get_pbe(pbe_alg_id.oid, params));
 
             User_Interface::UI_Result result = User_Interface::OK;
             const std::string passphrase =
@@ -97,7 +97,8 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
                break;
 
             pbe->set_key(passphrase);
-            Pipe decryptor(pbe);
+            Pipe decryptor(pbe.release());
+
             decryptor.process_msg(key_data, key_data.size());
             key = decryptor.read_all();
             }
@@ -172,17 +173,20 @@ void encrypt_key(const Private_Key& key,
    encode(key, raw_key, RAW_BER);
    raw_key.end_msg();
 
-   PBE* pbe = get_pbe(((pbe_algo != "") ? pbe_algo : DEFAULT_PBE));
+   std::auto_ptr<PBE> pbe(get_pbe(((pbe_algo != "") ? pbe_algo : DEFAULT_PBE)));
+
    pbe->new_params(rng);
    pbe->set_key(pass);
 
-   Pipe key_encrytor(pbe);
+   AlgorithmIdentifier pbe_algid(pbe->get_oid(), pbe->encode_params());
+
+   Pipe key_encrytor(pbe.release());
    key_encrytor.process_msg(raw_key);
 
    SecureVector<byte> enc_key =
       DER_Encoder()
          .start_cons(SEQUENCE)
-            .encode(AlgorithmIdentifier(pbe->get_oid(), pbe->encode_params()))
+            .encode(pbe_algid)
             .encode(key_encrytor.read_all(), OCTET_STRING)
          .end_cons()
       .get_contents();

@@ -145,7 +145,7 @@ class BOTAN_DLL DL_Group
       * @param q the prime q
       * @param g the base g
       */
-      DL_Group(const BigInt& p, const BigInt& g, const BigInt& q);
+      DL_Group(const BigInt& p, const BigInt& q, const BigInt& g);
    private:
       static BigInt make_dsa_generator(const BigInt&, const BigInt&);
 
