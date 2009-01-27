@@ -1,7 +1,7 @@
-/*************************************************
-* Unix Command Execution Source File             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Unix Command Execution Source File
+* (C) 1999-2007 Jack Lloyd
+*/
 
 #include <botan/unix_cmd.h>
 #include <botan/parsing.h>
@@ -18,9 +18,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Attempt to execute the command                 *
-************************************************/
+/**
+* Attempt to execute the command
+*/
 void do_exec(const std::vector<std::string>& arg_list,
              const std::vector<std::string>& paths)
    {
@@ -41,9 +41,9 @@ void do_exec(const std::vector<std::string>& arg_list,
 
 }
 
-/*************************************************
-* Local information about the pipe               *
-*************************************************/
+/**
+* Local information about the pipe
+*/
 struct pipe_wrapper
    {
    int fd;
@@ -51,9 +51,9 @@ struct pipe_wrapper
    pipe_wrapper() { fd = -1; pid = 0; }
    };
 
-/*************************************************
-* Read from the pipe                             *
-*************************************************/
+/**
+* Read from the pipe
+*/
 u32bit DataSource_Command::read(byte buf[], u32bit length)
    {
    if(end_of_data())
@@ -83,9 +83,9 @@ u32bit DataSource_Command::read(byte buf[], u32bit length)
    return static_cast<u32bit>(got);
    }
 
-/*************************************************
-* Peek at the pipe contents                      *
-*************************************************/
+/**
+* Peek at the pipe contents
+*/
 u32bit DataSource_Command::peek(byte[], u32bit, u32bit) const
    {
    if(end_of_data())
@@ -93,17 +93,17 @@ u32bit DataSource_Command::peek(byte[], u32bit, u32bit) const
    throw Stream_IO_Error("Cannot peek/seek on a command pipe");
    }
 
-/*************************************************
-* Check if we reached EOF                        *
-*************************************************/
+/**
+* Check if we reached EOF
+*/
 bool DataSource_Command::end_of_data() const
    {
    return (pipe) ? false : true;
    }
 
-/*************************************************
-* Return the Unix file descriptor of the pipe    *
-*************************************************/
+/**
+* Return the Unix file descriptor of the pipe
+*/
 int DataSource_Command::fd() const
    {
    if(!pipe)
@@ -111,17 +111,17 @@ int DataSource_Command::fd() const
    return pipe->fd;
    }
 
-/*************************************************
-* Return a human-readable ID for this stream     *
-*************************************************/
+/**
+* Return a human-readable ID for this stream
+*/
 std::string DataSource_Command::id() const
    {
    return "Unix command: " + arg_list[0];
    }
 
-/*************************************************
-* Create the pipe                                *
-*************************************************/
+/**
+* Create the pipe
+*/
 void DataSource_Command::create_pipe(const std::vector<std::string>& paths)
    {
    bool found_something = false;
@@ -169,9 +169,9 @@ void DataSource_Command::create_pipe(const std::vector<std::string>& paths)
       }
    }
 
-/*************************************************
-* Shutdown the pipe                              *
-*************************************************/
+/**
+* Shutdown the pipe
+*/
 void DataSource_Command::shutdown_pipe()
    {
    if(pipe)
@@ -204,9 +204,9 @@ void DataSource_Command::shutdown_pipe()
       }
    }
 
-/*************************************************
-* DataSource_Command Constructor                 *
-*************************************************/
+/**
+* DataSource_Command Constructor
+*/
 DataSource_Command::DataSource_Command(const std::string& prog_and_args,
                                        const std::vector<std::string>& paths) :
    MAX_BLOCK_USECS(100000), KILL_WAIT(10000)
@@ -222,9 +222,9 @@ DataSource_Command::DataSource_Command(const std::string& prog_and_args,
    create_pipe(paths);
    }
 
-/*************************************************
-* DataSource_Command Destructor                  *
-*************************************************/
+/**
+* DataSource_Command Destructor
+*/
 DataSource_Command::~DataSource_Command()
    {
    if(!end_of_data())

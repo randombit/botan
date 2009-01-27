@@ -10,16 +10,15 @@
 
 namespace Botan {
 
-/*************************************************
-* File Tree Walking Entropy Source               *
-*************************************************/
+/**
+* File Tree Walking Entropy Source
+*/
 class BOTAN_DLL FTW_EntropySource : public EntropySource
    {
    public:
       std::string name() const { return "Proc Walker"; }
 
-      u32bit slow_poll(byte buf[], u32bit len);
-      u32bit fast_poll(byte buf[], u32bit len);
+      void poll(Entropy_Accumulator& accum);
 
       FTW_EntropySource(const std::string& root_dir);
       ~FTW_EntropySource();

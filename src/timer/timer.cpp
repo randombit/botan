@@ -1,6 +1,6 @@
 /**
 * Timestamp Functions Source File
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2009 Jack Lloyd
 */
 
 #include <botan/timer.h>
@@ -21,19 +21,10 @@ u64bit system_time()
 /**
 * Read the clock and return the output
 */
-u32bit Timer::fast_poll(byte out[], u32bit length)
+void Timer::poll(Entropy_Accumulator& accum)
    {
    const u64bit clock_value = this->clock();
-
-   for(u32bit j = 0; j != sizeof(clock_value); ++j)
-      out[j % length] ^= get_byte(j, clock_value);
-
-   return (length < 8) ? length : 8;
-   }
-
-u32bit Timer::slow_poll(byte out[], u32bit length)
-   {
-   return fast_poll(out, length);
+   accum.add(clock_value, 0);
    }
 
 /**
@@ -55,6 +46,5 @@ u64bit ANSI_Clock_Timer::clock() const
    {
    return combine_timers(std::time(0), std::clock(), CLOCKS_PER_SEC);
    }
-
 
 }

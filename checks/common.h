@@ -67,6 +67,8 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
          return out;
          }
 
+      void reseed(u32bit) {}
+
       void randomize(byte out[], u32bit len)
          {
          for(u32bit j = 0; j != len; j++)

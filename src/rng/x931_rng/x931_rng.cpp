@@ -15,7 +15,7 @@ namespace Botan {
 void ANSI_X931_RNG::randomize(byte out[], u32bit length)
    {
    if(!is_seeded())
-      reseed();
+      reseed(8 * cipher->BLOCK_SIZE);
 
    while(length)
       {
@@ -53,9 +53,9 @@ void ANSI_X931_RNG::update_buffer()
 /*************************************************
 * Reseed the internal state                      *
 *************************************************/
-void ANSI_X931_RNG::reseed()
+void ANSI_X931_RNG::reseed(u32bit poll_bits)
    {
-   prng->reseed();
+   prng->reseed(poll_bits);
 
    if(prng->is_seeded())
       {

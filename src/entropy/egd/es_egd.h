@@ -20,8 +20,7 @@ class BOTAN_DLL EGD_EntropySource : public EntropySource
    public:
       std::string name() const { return "EGD/PRNGD"; }
 
-      u32bit fast_poll(byte[], u32bit);
-      u32bit slow_poll(byte[], u32bit);
+      void poll(Entropy_Accumulator& accum);
 
       EGD_EntropySource(const std::vector<std::string>&);
       ~EGD_EntropySource();
@@ -32,9 +31,12 @@ class BOTAN_DLL EGD_EntropySource : public EntropySource
             EGD_Socket(const std::string& path);
 
             void close();
-            int fd() const { return m_fd; }
+            u32bit read(byte outbuf[], u32bit length);
          private:
-            int m_fd;
+            static int open_socket(const std::string& path);
+
+            std::string socket_path;
+            int m_fd; // cached fd
          };
 
       std::vector<EGD_Socket> sockets;

@@ -1,7 +1,7 @@
-/*************************************************
-* Device EntropySource Source File               *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* /dev/random EntropySource
+* (C) 1999-2009 Jack Lloyd
+*/
 
 #include <botan/es_dev.h>
 
@@ -79,6 +79,7 @@ Device_EntropySource::Device_Reader::open(const std::string& pathname)
 
 /**
 Device_EntropySource constructor
+Open a file descriptor to each (available) device in fsnames
 */
 Device_EntropySource::Device_EntropySource(
    const std::vector<std::string>& fsnames)
@@ -92,41 +93,36 @@ Device_EntropySource::Device_EntropySource(
    }
 
 /**
-* Gather entropy from a RNG device
+Device_EntropySource destructor: close all open devices
 */
-u32bit Device_EntropySource::slow_poll(byte output[], u32bit length)
-   {
-   for(size_t i = 0; i != devices.size(); ++i)
-      {
-      const u32bit got = devices[i].get(output, length, 20);
-
-      if(got)
-         return got;
-      }
-
-   return 0;
-   }
-
-/**
-* Fast poll: try limit to 10 ms wait
-*/
-u32bit Device_EntropySource::fast_poll(byte output[], u32bit length)
-   {
-   for(size_t i = 0; i != devices.size(); ++i)
-      {
-      const u32bit got = devices[i].get(output, length, 5);
-
-      if(got)
-         return got;
-      }
-
-   return 0;
-   }
-
 Device_EntropySource::~Device_EntropySource()
    {
    for(size_t i = 0; i != devices.size(); ++i)
       devices[i].close();
+   }
+
+/**
+* Gather entropy from a RNG device
+*/
+void Device_EntropySource::poll(Entropy_Accumulator& accum)
+   {
+   const u32bit MAX_READ_WAIT_MILLISECONDS = 50;
+
+   u32bit go_get = std::min<u32bit>(accum.desired_remaining_bits() / 8, 32);
+
+   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(go_get);
+
+   for(size_t i = 0; i != devices.size(); ++i)
+      {
+      u32bit got = devices[i].get(io_buffer.begin(), io_buffer.size(),
+                                  MAX_READ_WAIT_MILLISECONDS);
+
+      if(got)
+         {
+         accum.add(io_buffer.begin(), got, 8);
+         break;
+         }
+      }
    }
 
 }

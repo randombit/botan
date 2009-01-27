@@ -1,7 +1,7 @@
-/*************************************************
-* Unix Command Execution Header File             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/**
+* Unix Command Execution Header File
+* (C) 1999-2007 Jack Lloyd
+*/
 
 #ifndef BOTAN_UNIX_CMD_H__
 #define BOTAN_UNIX_CMD_H__
@@ -13,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Unix Program Info                              *
-*************************************************/
+/**
+* Unix Program Info
+*/
 struct Unix_Program
    {
    Unix_Program(const char* n, u32bit p)
@@ -26,9 +26,9 @@ struct Unix_Program
    bool working;
    };
 
-/*************************************************
-* Command Output DataSource                      *
-*************************************************/
+/**
+* Command Output DataSource
+*/
 class BOTAN_DLL DataSource_Command : public DataSource
    {
    public:

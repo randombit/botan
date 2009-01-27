@@ -1,7 +1,7 @@
-/*************************************************
-* RandomNumberGenerator Header File              *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* RandomNumberGenerator Header File
+* (C) 1999-2009 Jack Lloyd
+*/
 
 #ifndef BOTAN_RANDOM_NUMBER_GENERATOR_H__
 #define BOTAN_RANDOM_NUMBER_GENERATOR_H__
@@ -54,8 +54,10 @@ class BOTAN_DLL RandomNumberGenerator
 
       /**
       * Seed this RNG using the entropy sources it contains.
+      * @param bits_to_collect is the number of bits of entropy to
+               attempt to gather from the entropy sources
       */
-      virtual void reseed() {}
+      virtual void reseed(u32bit bits_to_collect) = 0;
 
       /**
       * Add this entropy source to the RNG object
@@ -88,6 +90,7 @@ class BOTAN_DLL Null_RNG : public RandomNumberGenerator
       void clear() throw() {}
       std::string name() const { return "Null_RNG"; }
 
+      void reseed(u32bit) {}
       bool is_seeded() const { return false; }
       void add_entropy(const byte[], u32bit) {}
       void add_entropy_source(EntropySource* es) { delete es; }

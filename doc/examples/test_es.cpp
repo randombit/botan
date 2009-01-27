@@ -32,30 +32,36 @@
 
 using namespace Botan;
 
-void test_entropy_source(EntropySource* es)
+void test_entropy_source(EntropySource* es,
+                         EntropySource* es2 = 0)
    {
    // sometimes iostreams really is just a pain
 
-   // upper buffer size of 96 to match HMAC_RNG's
-   byte buf[96] = { 0 };
-
    printf("Polling '%s':\n", es->name().c_str());
 
-   printf("  Fast poll... ");
-   u32bit fast_poll_got = es->fast_poll(buf, sizeof(buf));
-   printf("got %d bytes: ", fast_poll_got);
-   for(u32bit i = 0; i != fast_poll_got; ++i)
-      printf("%02X", buf[i]);
-   printf("\n");
+   Entropy_Accumulator accum1(256);
+   es->poll(accum1);
 
-   printf("  Slow poll... ");
-   u32bit slow_poll_got = es->slow_poll(buf, sizeof(buf));
-   printf("got %d bytes: ", slow_poll_got);
-   for(u32bit i = 0; i != slow_poll_got; ++i)
-      printf("%02X", buf[i]);
+   Entropy_Accumulator accum2(256);
+   if(es2)
+      es2->poll(accum2);
+   else
+      es->poll(accum2);
+
+   SecureVector<byte> polled1 = accum1.get_entropy_buffer();
+   SecureVector<byte> polled2 = accum2.get_entropy_buffer();
+
+   SecureVector<byte> compare(std::min(polled1.size(), polled2.size()));
+
+   for(u32bit i = 0; i != compare.size(); ++i)
+      compare[i] = polled1[i] ^ polled2[i];
+
+   for(u32bit i = 0; i != compare.size(); ++i)
+      printf("%02X", compare[i]);
    printf("\n");
 
    delete es;
+   delete es2;
    }
 
 int main()
@@ -81,7 +87,8 @@ int main()
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_FTW)
-   test_entropy_source(new FTW_EntropySource("/proc"));
+   test_entropy_source(new FTW_EntropySource("/proc"),
+                       new FTW_EntropySource("/proc"));
 #endif
 
 

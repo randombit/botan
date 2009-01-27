@@ -76,19 +76,15 @@ namespace {
 */
 void add_entropy_sources(RandomNumberGenerator* rng)
    {
+
+   // Add a high resolution timer, if available
 #if defined(BOTAN_HAS_TIMER_HARDWARE)
    rng->add_entropy_source(new Hardware_Timer);
-#endif
-
-#if defined(BOTAN_HAS_TIMER_POSIX)
+#elif defined(BOTAN_HAS_TIMER_POSIX)
    rng->add_entropy_source(new POSIX_Timer);
-#endif
-
-#if defined(BOTAN_HAS_TIMER_UNIX)
+#elif defined(BOTAN_HAS_TIMER_UNIX)
    rng->add_entropy_source(new Unix_Timer);
-#endif
-
-#if defined(BOTAN_HAS_TIMER_WIN32)
+#elif defined(BOTAN_HAS_TIMER_WIN32)
    rng->add_entropy_source(new Win32_Timer);
 #endif
 
@@ -114,7 +110,6 @@ void add_entropy_sources(RandomNumberGenerator* rng)
    rng->add_entropy_source(new FTW_EntropySource("/proc"));
 #endif
 
-
 #if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
    rng->add_entropy_source(new Win32_EntropySource);
 #endif
@@ -132,7 +127,7 @@ void add_entropy_sources(RandomNumberGenerator* rng)
 
 }
 
-AutoSeeded_RNG::AutoSeeded_RNG()
+AutoSeeded_RNG::AutoSeeded_RNG(u32bit poll_bits)
    {
    rng = 0;
 
@@ -152,7 +147,7 @@ AutoSeeded_RNG::AutoSeeded_RNG()
 
    add_entropy_sources(rng);
 
-   rng->reseed();
+   rng->reseed(poll_bits);
    }
 
 }

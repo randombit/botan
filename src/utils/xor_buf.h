@@ -67,24 +67,6 @@ inline void xor_buf(byte out[],
       out[j] = in[j] ^ in2[j];
    }
 
-/**
-* XOR values into buffer. Uses RLE compression
-* Intended for use in entropy sources to gather collected
-* data into a buffer to pass to an RNG.
-*/
-u32bit xor_into_buf(byte buf[], u32bit buf_i, u32bit length,
-                    const void* in_void, u32bit in_len);
-
-/**
-* XOR integer value (or something else, I guess) into buffer
-*/
-template<typename T>
-u32bit xor_into_buf(byte buf[], u32bit buf_i,
-                    u32bit length, const T& in)
-   {
-   return xor_into_buf(buf, buf_i, length, &in, sizeof(in));
-   }
-
 }
 
 #endif

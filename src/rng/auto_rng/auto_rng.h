@@ -25,13 +25,13 @@ class BOTAN_DLL AutoSeeded_RNG : public RandomNumberGenerator
       std::string name() const
          { return "AutoSeeded(" + rng->name() + ")"; }
 
-      void reseed() { rng->reseed(); }
+      void reseed(u32bit poll_bits) { rng->reseed(poll_bits); }
       void add_entropy_source(EntropySource* es)
          { rng->add_entropy_source(es); }
       void add_entropy(const byte in[], u32bit len)
          { rng->add_entropy(in, len); }
 
-      AutoSeeded_RNG();
+      AutoSeeded_RNG(u32bit poll_bits = 256);
       ~AutoSeeded_RNG() { delete rng; }
    private:
       RandomNumberGenerator* rng;

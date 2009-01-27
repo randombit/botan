@@ -1,15 +1,15 @@
-/*************************************************
-* Program List for Unix_EntropySource            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Program List for Unix_EntropySource
+* (C) 1999-2007 Jack Lloyd
+*/
 
 #include <botan/es_unix.h>
 
 namespace Botan {
 
-/*************************************************
-* Default Commands for Entropy Gathering         *
-*************************************************/
+/**
+* Default Commands for Entropy Gathering
+*/
 void Unix_EntropySource::add_default_sources(std::vector<Unix_Program>& srcs)
    {
    srcs.push_back(Unix_Program("vmstat",                1));

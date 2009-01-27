@@ -1,7 +1,7 @@
-/*************************************************
-* Device EntropySource Header File               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* /dev/random EntropySource
+* (C) 1999-2009 Jack Lloyd
+*/
 
 #ifndef BOTAN_ENTROPY_SRC_DEVICE_H__
 #define BOTAN_ENTROPY_SRC_DEVICE_H__
@@ -12,19 +12,15 @@
 
 namespace Botan {
 
-/*************************************************
-* Device Based Entropy Source                    *
-*************************************************/
 class BOTAN_DLL Device_EntropySource : public EntropySource
    {
    public:
       std::string name() const { return "RNG Device Reader"; }
 
+      void poll(Entropy_Accumulator& accum);
+
       Device_EntropySource(const std::vector<std::string>& fsnames);
       ~Device_EntropySource();
-
-      u32bit slow_poll(byte[], u32bit);
-      u32bit fast_poll(byte[], u32bit);
    private:
 
       /**

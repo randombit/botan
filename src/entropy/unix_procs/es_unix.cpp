@@ -1,12 +1,11 @@
-/*************************************************
-* Unix EntropySource Source File                 *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Unix EntropySource Source File
+* (C) 1999-2009 Jack Lloyd
+*/
 
 #include <botan/es_unix.h>
 #include <botan/unix_cmd.h>
 #include <botan/parsing.h>
-#include <botan/xor_buf.h>
 #include <algorithm>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -17,43 +16,40 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Sort ordering by priority                      *
-*************************************************/
+/**
+* Sort ordering by priority
+*/
 bool Unix_Program_Cmp(const Unix_Program& a, const Unix_Program& b)
    { return (a.priority < b.priority); }
 
 }
 
-/*************************************************
-* Unix_EntropySource Constructor                 *
-*************************************************/
+/**
+* Unix_EntropySource Constructor
+*/
 Unix_EntropySource::Unix_EntropySource(const std::vector<std::string>& path) :
    PATH(path)
    {
    add_default_sources(sources);
    }
 
-/*************************************************
-* Add sources to the list                        *
-*************************************************/
+/**
+* Add sources to the list
+*/
 void Unix_EntropySource::add_sources(const Unix_Program srcs[], u32bit count)
    {
    sources.insert(sources.end(), srcs, srcs + count);
    std::sort(sources.begin(), sources.end(), Unix_Program_Cmp);
    }
 
-/*************************************************
-* Unix Fast Poll                                 *
-*************************************************/
-u32bit Unix_EntropySource::fast_poll(byte buf[], u32bit length)
+/**
+* Poll for entropy on a generic Unix system, first by grabbing various
+* statistics (stat on common files, getrusage, etc), and then, if more
+* is required, by exec'ing various programs like uname and rpcinfo and
+* reading the output.
+*/
+void Unix_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   if(length == 0)
-      return 0;
-   length = std::min<u32bit>(length, 32);
-
-   u32bit buf_i = 0;
-
    const char* stat_targets[] = {
       "/",
       "/tmp",
@@ -70,67 +66,50 @@ u32bit Unix_EntropySource::fast_poll(byte buf[], u32bit length)
       struct stat statbuf;
       clear_mem(&statbuf, 1);
       ::stat(stat_targets[j], &statbuf);
-      buf_i = xor_into_buf(buf, buf_i, length, statbuf);
+      accum.add(&statbuf, sizeof(statbuf), .05);
       }
 
-   u32bit ids[] = {
-      ::getpid(),
-      ::getppid(),
-      ::getuid(),
-      ::geteuid(),
-      ::getegid(),
-      ::getpgrp(),
-      ::getsid(0)
-   };
-
-   for(u32bit i = 0; i != sizeof(ids) / sizeof(ids[0]); ++i)
-      buf_i = xor_into_buf(buf, buf_i, length, ids[i]);
+   accum.add(::getpid(),  0);
+   accum.add(::getppid(), 0);
+   accum.add(::getuid(),  0);
+   accum.add(::geteuid(), 0);
+   accum.add(::getegid(), 0);
+   accum.add(::getpgrp(), 0);
+   accum.add(::getsid(0), 0);
 
    struct ::rusage usage;
    ::getrusage(RUSAGE_SELF, &usage);
-   buf_i = xor_into_buf(buf, buf_i, length, usage);
+   accum.add(usage, .05);
 
    ::getrusage(RUSAGE_CHILDREN, &usage);
-   buf_i = xor_into_buf(buf, buf_i, length, usage);
+   accum.add(usage, .05);
 
-   return length;
-   }
+   if(accum.desired_remaining_bits() < 128)
+      return;
 
-/*************************************************
-* Unix Slow Poll                                 *
-*************************************************/
-u32bit Unix_EntropySource::slow_poll(byte buf[], u32bit length)
-   {
-   if(length == 0)
-      return 0;
+   const u32bit MINIMAL_WORKING = 16;
 
-   const u32bit MINIMAL_WORKING = 32;
-
-   u32bit total_got = 0;
-   u32bit buf_i = 0;
+   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(DEFAULT_BUFFERSIZE);
 
    for(u32bit j = 0; j != sources.size(); j++)
       {
       DataSource_Command pipe(sources[j].name_and_args, PATH);
-      SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
 
       u32bit got_from_src = 0;
 
       while(!pipe.end_of_data())
          {
-         u32bit this_loop = pipe.read(buffer, buffer.size());
-         buf_i = xor_into_buf(buf, buf_i, length, buffer, this_loop);
-         got_from_src += this_loop;
+         u32bit got_this_loop = pipe.read(io_buffer, io_buffer.size());
+         got_from_src += got_this_loop;
+
+         accum.add(io_buffer.begin(), got_this_loop, .005);
          }
 
       sources[j].working = (got_from_src >= MINIMAL_WORKING) ? true : false;
-      total_got += got_from_src;
 
-      if(total_got >= 128*length)
+      if(accum.polling_goal_achieved())
          break;
       }
-
-   return length;
    }
 
 }
