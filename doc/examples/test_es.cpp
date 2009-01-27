@@ -32,36 +32,43 @@
 
 using namespace Botan;
 
-void test_entropy_source(EntropySource* es,
-                         EntropySource* es2 = 0)
+class Saver_Of_Bytes : public BufferedComputation
+   {
+   public:
+      Saver_Of_Bytes() : BufferedComputation(0), outbuf(64), written(0) {}
+      void add_data(const byte in[], u32bit length)
+         {
+         for(size_t i = 0; i != length; ++i)
+            outbuf[i % outbuf.size()] ^= in[i];
+
+         written += length;
+         //outbuf.insert(outbuf.end(), in, in+length);
+         }
+      void final_result(byte[]) { if(written < 64) outbuf.resize(written); }
+
+      std::vector<byte> outbuf;
+      u32bit written;
+   };
+
+void test_entropy_source(EntropySource* es)
    {
    // sometimes iostreams really is just a pain
 
    printf("Polling '%s':\n", es->name().c_str());
 
-   Entropy_Accumulator accum1(256);
-   es->poll(accum1);
+   Saver_Of_Bytes save;
 
-   Entropy_Accumulator accum2(256);
-   if(es2)
-      es2->poll(accum2);
-   else
-      es->poll(accum2);
+   Entropy_Accumulator accum(save, 128);
+   es->poll(accum);
 
-   SecureVector<byte> polled1 = accum1.get_entropy_buffer();
-   SecureVector<byte> polled2 = accum2.get_entropy_buffer();
+   save.final_result(0);
 
-   SecureVector<byte> compare(std::min(polled1.size(), polled2.size()));
-
-   for(u32bit i = 0; i != compare.size(); ++i)
-      compare[i] = polled1[i] ^ polled2[i];
-
-   for(u32bit i = 0; i != compare.size(); ++i)
-      printf("%02X", compare[i]);
+   printf("Got %d bytes\n", save.written);
+   for(size_t i = 0; i != save.outbuf.size(); ++i)
+      printf("%02X", save.outbuf[i]);
    printf("\n");
 
    delete es;
-   delete es2;
    }
 
 int main()
@@ -87,8 +94,7 @@ int main()
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_FTW)
-   test_entropy_source(new FTW_EntropySource("/proc"),
-                       new FTW_EntropySource("/proc"));
+   test_entropy_source(new FTW_EntropySource("/proc"));
 #endif
 
 
