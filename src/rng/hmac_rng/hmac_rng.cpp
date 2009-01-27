@@ -36,19 +36,8 @@ void hmac_prf(MessageAuthenticationCode* prf,
 */
 void HMAC_RNG::randomize(byte out[], u32bit length)
    {
-   /* Attempt to seed if we are currently not seeded, or if the
-      counter is greater than 2^20
-
-      If HMAC_RNG is wrapped in an X9.31/AES PRNG (the default), this
-      means a reseed will be kicked off every 16 MiB of RNG output.
-   */
-   if(!is_seeded() || counter >= 0x100000)
-      {
-      reseed(8 * prf->OUTPUT_LENGTH);
-
-      if(!is_seeded())
-         throw PRNG_Unseeded(name() + " seeding attempt failed");
-      }
+   if(!is_seeded())
+      throw PRNG_Unseeded(name());
 
    /*
     HMAC KDF as described in E-t-E, using a CTXinfo of "rng"

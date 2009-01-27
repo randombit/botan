@@ -31,12 +31,7 @@ enum RANDPOOL_PRF_TAG {
 void Randpool::randomize(byte out[], u32bit length)
    {
    if(!is_seeded())
-      {
-      reseed(8 * mac->OUTPUT_LENGTH);
-
-      if(!is_seeded())
-         throw PRNG_Unseeded(name());
-      }
+      throw PRNG_Unseeded(name());
 
    update_buffer();
    while(length)

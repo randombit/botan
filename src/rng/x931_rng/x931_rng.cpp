@@ -15,7 +15,7 @@ namespace Botan {
 void ANSI_X931_RNG::randomize(byte out[], u32bit length)
    {
    if(!is_seeded())
-      reseed(8 * cipher->BLOCK_SIZE);
+      throw PRNG_Unseeded(name());
 
    while(length)
       {
