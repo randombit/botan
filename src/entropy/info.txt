@@ -4,5 +4,4 @@ load_on auto
 
 <add>
 entropy_src.h
-entropy_acc.cpp
 </add>

@@ -101,7 +101,7 @@ void Randpool::mix_pool()
 */
 void Randpool::reseed(u32bit poll_bits)
    {
-   Entropy_Accumulator accum(poll_bits);
+   Entropy_Accumulator accum(*mac, poll_bits);
 
    for(u32bit i = 0; i != entropy_sources.size(); ++i)
       {
@@ -111,7 +111,7 @@ void Randpool::reseed(u32bit poll_bits)
          break;
       }
 
-   SecureVector<byte> mac_val = mac->process(accum.get_entropy_buffer());
+   SecureVector<byte> mac_val = mac->final();
 
    xor_buf(pool, mac_val, mac_val.size());
    mix_pool();

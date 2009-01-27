@@ -69,7 +69,7 @@ void HMAC_RNG::reseed_with_input(u32bit poll_bits,
    feedback of the current PRK value, into the extractor function.
    */
 
-   Entropy_Accumulator accum(poll_bits);
+   Entropy_Accumulator accum(*extractor, poll_bits);
 
    for(u32bit i = 0; i < entropy_sources.size(); ++i)
       {
@@ -82,8 +82,6 @@ void HMAC_RNG::reseed_with_input(u32bit poll_bits,
    // And now add the user-provided input, if any
    if(input_length)
       accum.add(input, input_length, 1);
-
-   extractor->update(accum.get_entropy_buffer());
 
    /*
    It is necessary to feed forward poll data. Otherwise, a good poll
