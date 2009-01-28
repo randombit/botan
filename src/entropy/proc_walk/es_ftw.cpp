@@ -134,7 +134,7 @@ void FTW_EntropySource::poll(Entropy_Accumulator& accum)
       ::close(fd);
 
       if(got > 0)
-         accum.add(io_buffer.begin(), got, .005);
+         accum.add(io_buffer.begin(), got, .01);
 
       if(accum.polling_goal_achieved())
          break;
