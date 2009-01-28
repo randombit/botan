@@ -37,16 +37,16 @@ class Entropy_Accumulator
          return (collected_bits >= entropy_goal) ? 0 : (entropy_goal - collected_bits);
          }
 
-      void add(const void* bytes, u32bit length, u32bit estimated_entropy)
+      void add(const void* bytes, u32bit length, double entropy_bits_per_byte)
          {
          entropy_sink.update(reinterpret_cast<const byte*>(bytes), length);
-         collected_bits += std::min(estimated_entropy, length * 8);
+         collected_bits += std::min<u32bit>(8, entropy_bits_per_byte) * length;
          }
 
       template<typename T>
-      void add(const T& v, u32bit estimated_entropy)
+      void add(const T& v, double entropy_bits_per_byte)
          {
-         add(&v, sizeof(T), estimated_entropy);
+         add(&v, sizeof(T), entropy_bits_per_byte);
          }
    private:
       BufferedComputation& entropy_sink;
