@@ -23,7 +23,7 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
    accum.add(GetMessageTime(), 0);
    accum.add(GetInputState(), 0);
    accum.add(GetCurrentProcessId(), 0);
-   accum.add(GetCurrentThreadId() 0);
+   accum.add(GetCurrentThreadId(), 0);
 
    SYSTEM_INFO sys_info;
    GetSystemInfo(&sys_info);
@@ -42,7 +42,7 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
 
    LARGE_INTEGER perf_counter;
    QueryPerformanceCounter(&perf_counter);
-   accum.add(perf_count, 0);
+   accum.add(perf_counter, 0);
 
    /*
    Now use the Tooltip library to iterate throug various objects on
