@@ -44,7 +44,7 @@ class Entropy_Accumulator
 
       void add(const void* bytes, u32bit length, double entropy_bits_per_byte)
          {
-         add_bytes(bytes, length);
+         add_bytes(reinterpret_cast<const byte*>(bytes), length);
          collected_bits += entropy_bits_per_byte * length;
          }
 
@@ -54,7 +54,7 @@ class Entropy_Accumulator
          add(&v, sizeof(T), entropy_bits_per_byte);
          }
    private:
-      virtual void add_bytes(const void* bytes, u32bit length) = 0;
+      virtual void add_bytes(const byte bytes[], u32bit length) = 0;
 
       SecureVector<byte> io_buffer;
       u32bit entropy_goal;
@@ -69,9 +69,9 @@ class Entropy_Accumulator_BufferedComputation : public Entropy_Accumulator
          Entropy_Accumulator(goal), entropy_sink(sink) {}
 
    private:
-      virtual void add_bytes(const void* bytes, u32bit length)
+      virtual void add_bytes(const byte bytes[], u32bit length)
          {
-         entropy_sink.update(reinterpret_cast<const byte*>(bytes), length);
+         entropy_sink.update(bytes, length);
          }
 
       BufferedComputation& entropy_sink;
