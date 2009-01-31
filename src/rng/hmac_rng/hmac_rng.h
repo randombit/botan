@@ -26,7 +26,7 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
    {
    public:
       void randomize(byte buf[], u32bit len);
-      bool is_seeded() const;
+      bool is_seeded() const { return seeded; }
       void clear() throw();
       std::string name() const;
 
@@ -46,7 +46,7 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
       MessageAuthenticationCode* prf;
 
       std::vector<EntropySource*> entropy_sources;
-      u32bit entropy;
+      bool seeded;
 
       SecureVector<byte> K, io_buffer;
       u32bit counter, source_index;

@@ -112,9 +112,8 @@ void HMAC_RNG::reseed_with_input(u32bit poll_bits,
    K.clear();
    counter = 0;
 
-   // Upper bound entropy estimate at the extractor output size
-   entropy = std::min<u32bit>(entropy + accum.bits_collected(),
-                              8 * extractor->OUTPUT_LENGTH);
+   if(input_length || accum.bits_collected() >= poll_bits)
+      seeded = true;
    }
 
 /**
@@ -142,14 +141,6 @@ void HMAC_RNG::add_entropy_source(EntropySource* src)
    entropy_sources.push_back(src);
    }
 
-/**
-* Check if the the pool is seeded
-*/
-bool HMAC_RNG::is_seeded() const
-   {
-   return (entropy >= 8 * prf->OUTPUT_LENGTH);
-   }
-
 /*
 * Clear memory of sensitive data
 */
@@ -158,8 +149,8 @@ void HMAC_RNG::clear() throw()
    extractor->clear();
    prf->clear();
    K.clear();
-   entropy = 0;
    counter = 0;
+   seeded = false;
    }
 
 /**
@@ -177,11 +168,10 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
                    MessageAuthenticationCode* prf_mac) :
    extractor(extractor_mac), prf(prf_mac)
    {
-   entropy = 0;
-
    // First PRF inputs are all zero, as specified in section 2
    K.create(prf->OUTPUT_LENGTH);
    counter = 0;
+   seeded = false;
 
    /*
    Normally we want to feedback PRF output into the input to the
@@ -223,7 +213,6 @@ HMAC_RNG::~HMAC_RNG()
    std::for_each(entropy_sources.begin(), entropy_sources.end(),
                  del_fun<EntropySource>());
 
-   entropy = 0;
    counter = 0;
    }
 

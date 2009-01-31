@@ -116,8 +116,8 @@ void Randpool::reseed(u32bit poll_bits)
    xor_buf(pool, mac_val, mac_val.size());
    mix_pool();
 
-   entropy = std::min<u32bit>(entropy + accum.bits_collected(),
-                              8 * mac_val.size());
+   if(accum.bits_collected() >= poll_bits)
+      seeded = true;
    }
 
 /**
@@ -129,8 +129,8 @@ void Randpool::add_entropy(const byte input[], u32bit length)
    xor_buf(pool, mac_val, mac_val.size());
    mix_pool();
 
-   // Assume 1 bit conditional entropy per byte of input
-   entropy = std::min<u32bit>(entropy + length, 8 * mac_val.size());
+   if(length)
+      seeded = true;
    }
 
 /**
@@ -139,14 +139,6 @@ void Randpool::add_entropy(const byte input[], u32bit length)
 void Randpool::add_entropy_source(EntropySource* src)
    {
    entropy_sources.push_back(src);
-   }
-
-/**
-* Check if the the pool is seeded
-*/
-bool Randpool::is_seeded() const
-   {
-   return (entropy >= 7 * mac->OUTPUT_LENGTH);
    }
 
 /**
@@ -159,7 +151,7 @@ void Randpool::clear() throw()
    pool.clear();
    buffer.clear();
    counter.clear();
-   entropy = 0;
+   seeded = false;
    }
 
 /**
@@ -198,7 +190,7 @@ Randpool::Randpool(BlockCipher* cipher_in,
    buffer.create(BLOCK_SIZE);
    pool.create(POOL_BLOCKS * BLOCK_SIZE);
    counter.create(12);
-   entropy = 0;
+   seeded = false;
    }
 
 /**
@@ -211,8 +203,6 @@ Randpool::~Randpool()
 
    std::for_each(entropy_sources.begin(), entropy_sources.end(),
                  del_fun<EntropySource>());
-
-   entropy = 0;
    }
 
 }

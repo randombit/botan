@@ -20,7 +20,7 @@ class BOTAN_DLL Randpool : public RandomNumberGenerator
    {
    public:
       void randomize(byte[], u32bit);
-      bool is_seeded() const;
+      bool is_seeded() const { return seeded; }
       void clear() throw();
       std::string name() const;
 
@@ -43,7 +43,7 @@ class BOTAN_DLL Randpool : public RandomNumberGenerator
 
       std::vector<EntropySource*> entropy_sources;
       SecureVector<byte> pool, buffer, counter;
-      u32bit entropy;
+      bool seeded;
    };
 
 }
