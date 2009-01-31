@@ -1,7 +1,7 @@
-/*************************************************
-* Memory Operations Header File                  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Memory Operations Header File
+* (C) 1999-2009 Jack Lloyd
+*/
 
 #ifndef BOTAN_MEMORY_OPS_H__
 #define BOTAN_MEMORY_OPS_H__
@@ -11,14 +11,14 @@
 
 namespace Botan {
 
-/*************************************************
-* Memory Manipulation Functions                  *
-*************************************************/
+/*
+* Memory Manipulation Functions
+*/
 template<typename T> inline void copy_mem(T* out, const T* in, u32bit n)
    { std::memmove(out, in, sizeof(T)*n); }
 
 template<typename T> inline void clear_mem(T* ptr, u32bit n)
-   { std::memset(ptr, 0, sizeof(T)*n); }
+   { if(n) std::memset(ptr, 0, sizeof(T)*n); }
 
 template<typename T> inline void set_mem(T* ptr, u32bit n, byte val)
    { std::memset(ptr, val, sizeof(T)*n); }

@@ -51,12 +51,7 @@ u32bit Device_EntropySource::Device_Reader::get(byte out[], u32bit length,
    if(got <= 0)
       return 0;
 
-   const u32bit ret = static_cast<u32bit>(got);
-
-   if(ret > length)
-      return 0;
-
-   return ret;
+   return static_cast<u32bit>(got);
    }
 
 /**
@@ -106,16 +101,16 @@ Device_EntropySource::~Device_EntropySource()
 */
 void Device_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   const u32bit MAX_READ_WAIT_MILLISECONDS = 50;
+   u32bit go_get = std::min<u32bit>(accum.desired_remaining_bits() / 8, 16);
 
-   u32bit go_get = std::min<u32bit>(accum.desired_remaining_bits() / 8, 32);
+   u32bit read_wait_ms = go_get / 16;
 
    MemoryRegion<byte>& io_buffer = accum.get_io_buffer(go_get);
 
    for(size_t i = 0; i != devices.size(); ++i)
       {
       u32bit got = devices[i].get(io_buffer.begin(), io_buffer.size(),
-                                  MAX_READ_WAIT_MILLISECONDS);
+                                  read_wait_ms);
 
       if(got)
          {

@@ -32,19 +32,21 @@
 
 using namespace Botan;
 
-class Saver_Of_Bytes : public BufferedComputation
+class Saver_Of_Bytes : public Entropy_Accumulator
    {
    public:
-      Saver_Of_Bytes() : BufferedComputation(0), outbuf(64), written(0) {}
-      void add_data(const byte in[], u32bit length)
+      Saver_Of_Bytes(u32bit bits) :
+         Entropy_Accumulator(bits), outbuf(64), written(0) {}
+
+      void add_bytes(const byte in[], u32bit length)
          {
          for(size_t i = 0; i != length; ++i)
             outbuf[i % outbuf.size()] ^= in[i];
 
          written += length;
-         //outbuf.insert(outbuf.end(), in, in+length);
          }
-      void final_result(byte[]) { if(written < 64) outbuf.resize(written); }
+
+      void trunc() { if(written < 64) outbuf.resize(written); }
 
       std::vector<byte> outbuf;
       u32bit written;
@@ -56,16 +58,15 @@ void test_entropy_source(EntropySource* es)
 
    printf("Polling '%s':\n", es->name().c_str());
 
-   Saver_Of_Bytes save;
+   Saver_Of_Bytes accum(128);
 
-   Entropy_Accumulator accum(save, 128);
    es->poll(accum);
 
-   save.final_result(0);
+   accum.trunc();
 
-   printf("Got %d bytes\n", save.written);
-   for(size_t i = 0; i != save.outbuf.size(); ++i)
-      printf("%02X", save.outbuf[i]);
+   printf("Got %d bytes\n", accum.written);
+   for(size_t i = 0; i != accum.outbuf.size(); ++i)
+      printf("%02X", accum.outbuf[i]);
    printf("\n");
 
    delete es;

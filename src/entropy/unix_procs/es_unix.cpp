@@ -66,7 +66,7 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
       struct stat statbuf;
       clear_mem(&statbuf, 1);
       ::stat(stat_targets[j], &statbuf);
-      accum.add(&statbuf, sizeof(statbuf), .05);
+      accum.add(&statbuf, sizeof(statbuf), .005);
       }
 
    accum.add(::getpid(),  0);
@@ -79,13 +79,10 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
 
    struct ::rusage usage;
    ::getrusage(RUSAGE_SELF, &usage);
-   accum.add(usage, .05);
+   accum.add(usage, .005);
 
    ::getrusage(RUSAGE_CHILDREN, &usage);
-   accum.add(usage, .05);
-
-   if(accum.desired_remaining_bits() < 128)
-      return;
+   accum.add(usage, .005);
 
    const u32bit MINIMAL_WORKING = 16;
 
