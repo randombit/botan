@@ -11,16 +11,15 @@
 
 namespace Botan {
 
-/*************************************************
-* Win32 CAPI Entropy Source                      *
-*************************************************/
+/**
+* Win32 CAPI Entropy Source
+*/
 class BOTAN_DLL Win32_CAPI_EntropySource : public EntropySource
    {
    public:
       std::string name() const { return "Win32 CryptoGenRandom"; }
 
-      u32bit fast_poll(byte[], u32bit);
-      u32bit slow_poll(byte[], u32bit);
+      void poll(Entropy_Accumulator& accum);
 
       Win32_CAPI_EntropySource(const std::string& = "");
    private:

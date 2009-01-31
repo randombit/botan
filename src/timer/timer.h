@@ -1,6 +1,6 @@
 /**
 * Timestamp Functions Header File
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2009 Jack Lloyd
 */
 
 #ifndef BOTAN_TIMERS_H__
@@ -21,8 +21,7 @@ class BOTAN_DLL Timer : public EntropySource
       */
       virtual u64bit clock() const = 0;
 
-      u32bit slow_poll(byte[], u32bit);
-      u32bit fast_poll(byte[], u32bit);
+      void poll(Entropy_Accumulator& accum);
 
       virtual ~Timer() {}
    protected:

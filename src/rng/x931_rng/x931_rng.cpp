@@ -1,7 +1,7 @@
-/*************************************************
-* ANSI X9.31 RNG Source File                     *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* ANSI X9.31 RNG Source File
+* (C) 1999-2009 Jack Lloyd
+*/
 
 #include <botan/x931_rng.h>
 #include <botan/xor_buf.h>
@@ -9,13 +9,13 @@
 
 namespace Botan {
 
-/*************************************************
-* Generate a buffer of random bytes              *
-*************************************************/
+/**
+* Generate a buffer of random bytes
+*/
 void ANSI_X931_RNG::randomize(byte out[], u32bit length)
    {
    if(!is_seeded())
-      reseed();
+      throw PRNG_Unseeded(name());
 
    while(length)
       {
@@ -31,9 +31,9 @@ void ANSI_X931_RNG::randomize(byte out[], u32bit length)
       }
    }
 
-/*************************************************
-* Refill the internal state                      *
-*************************************************/
+/**
+* Refill the internal state
+*/
 void ANSI_X931_RNG::update_buffer()
    {
    SecureVector<byte> DT(cipher->BLOCK_SIZE);
@@ -50,13 +50,11 @@ void ANSI_X931_RNG::update_buffer()
    position = 0;
    }
 
-/*************************************************
-* Reseed the internal state                      *
-*************************************************/
-void ANSI_X931_RNG::reseed()
+/**
+* Reset V and the cipher key with new values
+*/
+void ANSI_X931_RNG::rekey()
    {
-   prng->reseed();
-
    if(prng->is_seeded())
       {
       SecureVector<byte> key(cipher->MAXIMUM_KEYLENGTH);
@@ -71,33 +69,43 @@ void ANSI_X931_RNG::reseed()
       }
    }
 
-/*************************************************
-* Add a entropy source to the underlying PRNG    *
-*************************************************/
+/**
+* Reseed the internal state
+*/
+void ANSI_X931_RNG::reseed(u32bit poll_bits)
+   {
+   prng->reseed(poll_bits);
+   rekey();
+   }
+
+/**
+* Add a entropy source to the underlying PRNG
+*/
 void ANSI_X931_RNG::add_entropy_source(EntropySource* src)
    {
    prng->add_entropy_source(src);
    }
 
-/*************************************************
-* Add some entropy to the underlying PRNG        *
-*************************************************/
+/**
+* Add some entropy to the underlying PRNG
+*/
 void ANSI_X931_RNG::add_entropy(const byte input[], u32bit length)
    {
    prng->add_entropy(input, length);
+   rekey();
    }
 
-/*************************************************
-* Check if the the PRNG is seeded                *
-*************************************************/
+/**
+* Check if the the PRNG is seeded
+*/
 bool ANSI_X931_RNG::is_seeded() const
    {
    return V.has_items();
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/**
+* Clear memory of sensitive data
+*/
 void ANSI_X931_RNG::clear() throw()
    {
    cipher->clear();
@@ -108,17 +116,17 @@ void ANSI_X931_RNG::clear() throw()
    position = 0;
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/**
+* Return the name of this type
+*/
 std::string ANSI_X931_RNG::name() const
    {
    return "X9.31(" + cipher->name() + ")";
    }
 
-/*************************************************
-* ANSI X931 RNG Constructor                      *
-*************************************************/
+/**
+* ANSI X931 RNG Constructor
+*/
 ANSI_X931_RNG::ANSI_X931_RNG(BlockCipher* cipher_in,
                              RandomNumberGenerator* prng_in)
    {
@@ -132,9 +140,9 @@ ANSI_X931_RNG::ANSI_X931_RNG(BlockCipher* cipher_in,
    position = 0;
    }
 
-/*************************************************
-* ANSI X931 RNG Destructor                       *
-*************************************************/
+/**
+* ANSI X931 RNG Destructor
+*/
 ANSI_X931_RNG::~ANSI_X931_RNG()
    {
    delete cipher;

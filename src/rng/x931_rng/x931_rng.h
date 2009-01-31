@@ -1,7 +1,7 @@
-/*************************************************
-* ANSI X9.31 RNG Header File                     *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* ANSI X9.31 RNG Header File
+* (C) 1999-2009 Jack Lloyd
+*/
 
 #ifndef BOTAN_ANSI_X931_RNG_H__
 #define BOTAN_ANSI_X931_RNG_H__
@@ -11,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* ANSI X9.31 RNG                                 *
-*************************************************/
+/**
+* ANSI X9.31 RNG
+*/
 class BOTAN_DLL ANSI_X931_RNG : public RandomNumberGenerator
    {
    public:
@@ -22,13 +22,14 @@ class BOTAN_DLL ANSI_X931_RNG : public RandomNumberGenerator
       void clear() throw();
       std::string name() const;
 
-      void reseed();
+      void reseed(u32bit poll_bits);
       void add_entropy_source(EntropySource*);
       void add_entropy(const byte[], u32bit);
 
       ANSI_X931_RNG(BlockCipher*, RandomNumberGenerator*);
       ~ANSI_X931_RNG();
    private:
+      void rekey();
       void update_buffer();
 
       BlockCipher* cipher;

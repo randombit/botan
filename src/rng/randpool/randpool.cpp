@@ -1,7 +1,7 @@
-/*************************************************
-* Randpool Source File                           *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Randpool Source File
+* (C) 1999-2009 Jack Lloyd
+*/
 
 #include <botan/randpool.h>
 #include <botan/loadstor.h>
@@ -14,9 +14,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* PRF based on a MAC                             *
-*************************************************/
+/**
+* PRF based on a MAC
+*/
 enum RANDPOOL_PRF_TAG {
    CIPHER_KEY = 0,
    MAC_KEY    = 1,
@@ -25,18 +25,13 @@ enum RANDPOOL_PRF_TAG {
 
 }
 
-/*************************************************
-* Generate a buffer of random bytes              *
-*************************************************/
+/**
+* Generate a buffer of random bytes
+*/
 void Randpool::randomize(byte out[], u32bit length)
    {
    if(!is_seeded())
-      {
-      reseed();
-
-      if(!is_seeded())
-         throw PRNG_Unseeded(name());
-      }
+      throw PRNG_Unseeded(name());
 
    update_buffer();
    while(length)
@@ -49,15 +44,15 @@ void Randpool::randomize(byte out[], u32bit length)
       }
    }
 
-/*************************************************
-* Refill the output buffer                       *
-*************************************************/
+/**
+* Refill the output buffer
+*/
 void Randpool::update_buffer()
    {
    const u64bit timestamp = system_time();
 
-   for(u32bit j = 0; j != counter.size(); ++j)
-      if(++counter[j])
+   for(u32bit i = 0; i != counter.size(); ++i)
+      if(++counter[i])
          break;
    store_be(timestamp, counter + 4);
 
@@ -65,17 +60,17 @@ void Randpool::update_buffer()
    mac->update(counter, counter.size());
    SecureVector<byte> mac_val = mac->final();
 
-   for(u32bit j = 0; j != mac_val.size(); ++j)
-      buffer[j % buffer.size()] ^= mac_val[j];
+   for(u32bit i = 0; i != mac_val.size(); ++i)
+      buffer[i % buffer.size()] ^= mac_val[i];
    cipher->encrypt(buffer);
 
    if(counter[0] % ITERATIONS_BEFORE_RESEED == 0)
       mix_pool();
    }
 
-/*************************************************
-* Mix the entropy pool                           *
-*************************************************/
+/**
+* Mix the entropy pool
+*/
 void Randpool::mix_pool()
    {
    const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
@@ -90,10 +85,10 @@ void Randpool::mix_pool()
 
    xor_buf(pool, buffer, BLOCK_SIZE);
    cipher->encrypt(pool);
-   for(u32bit j = 1; j != POOL_BLOCKS; ++j)
+   for(u32bit i = 1; i != POOL_BLOCKS; ++i)
       {
-      const byte* previous_block = pool + BLOCK_SIZE*(j-1);
-      byte* this_block = pool + BLOCK_SIZE*j;
+      const byte* previous_block = pool + BLOCK_SIZE*(i-1);
+      byte* this_block = pool + BLOCK_SIZE*i;
       xor_buf(this_block, previous_block, BLOCK_SIZE);
       cipher->encrypt(this_block);
       }
@@ -101,48 +96,19 @@ void Randpool::mix_pool()
    update_buffer();
    }
 
-/*************************************************
-* Reseed the internal state                      *
-*************************************************/
-void Randpool::reseed()
+/**
+* Reseed the internal state
+*/
+void Randpool::reseed(u32bit poll_bits)
    {
-   SecureVector<byte> buffer(128);
+   Entropy_Accumulator_BufferedComputation accum(*mac, poll_bits);
 
-   u32bit entropy_est = 0;
-
-   /*
-   When we reseed, assume we get 1 bit per byte sampled.
-
-   This class used to perform entropy estimation, but what we really
-   want to measure is the conditional entropy of the data with respect
-   to an unknown attacker with unknown capabilities.  For this reason
-   making any sort of sane estimate is impossible. See also
-      "Boaz Barak, Shai Halevi: A model and architecture for
-       pseudo-random generation with applications to /dev/random. ACM
-       Conference on Computer and Communications Security 2005."
-   */
-
-   // First do a fast poll of all sources (no matter what)
-   for(u32bit j = 0; j != entropy_sources.size(); ++j)
+   for(u32bit i = 0; i != entropy_sources.size(); ++i)
       {
-      u32bit got = entropy_sources[j]->fast_poll(buffer, buffer.size());
+      entropy_sources[i]->poll(accum);
 
-      mac->update(buffer, got);
-      entropy_est += got;
-      buffer.clear();
-      }
-
-   // Then do a slow poll, until we think we have got enough entropy
-   for(u32bit j = 0; j != entropy_sources.size(); ++j)
-      {
-      u32bit got = entropy_sources[j]->slow_poll(buffer, buffer.size());
-
-      mac->update(buffer, got);
-      entropy_est += got;
-
-      if(entropy_est > 512)
+      if(accum.polling_goal_achieved())
          break;
-      buffer.clear();
       }
 
    SecureVector<byte> mac_val = mac->final();
@@ -150,41 +116,34 @@ void Randpool::reseed()
    xor_buf(pool, mac_val, mac_val.size());
    mix_pool();
 
-   entropy = std::min<u32bit>(entropy + entropy_est, 8 * mac_val.size());
+   if(accum.bits_collected() >= poll_bits)
+      seeded = true;
    }
 
-/*************************************************
-* Add user-supplied entropy                      *
-*************************************************/
+/**
+* Add user-supplied entropy
+*/
 void Randpool::add_entropy(const byte input[], u32bit length)
    {
    SecureVector<byte> mac_val = mac->process(input, length);
    xor_buf(pool, mac_val, mac_val.size());
    mix_pool();
 
-   // Assume 1 bit conditional entropy per byte of input
-   entropy = std::min<u32bit>(entropy + length, 8 * mac_val.size());
+   if(length)
+      seeded = true;
    }
 
-/*************************************************
-* Add another entropy source to the list         *
-*************************************************/
+/**
+* Add another entropy source to the list
+*/
 void Randpool::add_entropy_source(EntropySource* src)
    {
    entropy_sources.push_back(src);
    }
 
-/*************************************************
-* Check if the the pool is seeded                *
-*************************************************/
-bool Randpool::is_seeded() const
-   {
-   return (entropy >= 7 * mac->OUTPUT_LENGTH);
-   }
-
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/**
+* Clear memory of sensitive data
+*/
 void Randpool::clear() throw()
    {
    cipher->clear();
@@ -192,20 +151,20 @@ void Randpool::clear() throw()
    pool.clear();
    buffer.clear();
    counter.clear();
-   entropy = 0;
+   seeded = false;
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/**
+* Return the name of this type
+*/
 std::string Randpool::name() const
    {
    return "Randpool(" + cipher->name() + "," + mac->name() + ")";
    }
 
-/*************************************************
-* Randpool Constructor                           *
-*************************************************/
+/**
+* Randpool Constructor
+*/
 Randpool::Randpool(BlockCipher* cipher_in,
                    MessageAuthenticationCode* mac_in,
                    u32bit pool_blocks,
@@ -231,12 +190,12 @@ Randpool::Randpool(BlockCipher* cipher_in,
    buffer.create(BLOCK_SIZE);
    pool.create(POOL_BLOCKS * BLOCK_SIZE);
    counter.create(12);
-   entropy = 0;
+   seeded = false;
    }
 
-/*************************************************
-* Randpool Destructor                            *
-*************************************************/
+/**
+* Randpool Destructor
+*/
 Randpool::~Randpool()
    {
    delete cipher;
@@ -244,8 +203,6 @@ Randpool::~Randpool()
 
    std::for_each(entropy_sources.begin(), entropy_sources.end(),
                  del_fun<EntropySource>());
-
-   entropy = 0;
    }
 
 }

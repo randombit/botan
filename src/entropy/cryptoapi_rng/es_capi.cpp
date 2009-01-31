@@ -1,7 +1,7 @@
-/*************************************************
-* Win32 CryptoAPI EntropySource Source File      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Win32 CryptoAPI EntropySource
+* (C) 1999-2009 Jack Lloyd
+*/
 
 #include <botan/es_capi.h>
 #include <botan/parsing.h>
@@ -10,71 +10,68 @@
 
 namespace Botan {
 
+namespace {
+
+class CSP_Handle
+   {
+   public:
+      CSP_Handle(u64bit capi_provider)
+         {
+         valid = false;
+         DWORD prov_type = (DWORD)capi_provider;
+
+         if(CryptAcquireContext(&handle, 0, 0,
+                                prov_type, CRYPT_VERIFYCONTEXT))
+            valid = true;
+         }
+
+      ~CSP_Handle()
+         {
+         if(is_valid())
+            CryptReleaseContext(handle, 0);
+         }
+
+      u32bit gen_random(byte out[], u32bit n) const
+         {
+         if(is_valid() && CryptGenRandom(handle, n, out))
+            return n;
+         return 0;
+         }
+
+      bool is_valid() const { return valid; }
+
+      HCRYPTPROV get_handle() const { return handle; }
+   private:
+      HCRYPTPROV handle;
+      bool valid;
+   };
+
+}
+
 /**
 * Gather Entropy from Win32 CAPI
 */
-u32bit Win32_CAPI_EntropySource::slow_poll(byte output[], u32bit length)
+void Win32_CAPI_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   return fast_poll(output, length);
-   }
-
-/**
-* Gather Entropy from Win32 CAPI
-*/
-u32bit Win32_CAPI_EntropySource::fast_poll(byte output[], u32bit length)
-   {
-   class CSP_Handle
-      {
-      public:
-         CSP_Handle(u64bit capi_provider)
-            {
-            valid = false;
-            DWORD prov_type = (DWORD)capi_provider;
-
-            if(CryptAcquireContext(&handle, 0, 0,
-                                   prov_type, CRYPT_VERIFYCONTEXT))
-               valid = true;
-            }
-
-         ~CSP_Handle()
-            {
-            if(is_valid())
-               CryptReleaseContext(handle, 0);
-            }
-
-         void gen_random(byte out[], u32bit n) const
-            {
-            if(is_valid())
-               CryptGenRandom(handle, n, out);
-            }
-
-         bool is_valid() const { return valid; }
-
-         HCRYPTPROV get_handle() const { return handle; }
-      private:
-         HCRYPTPROV handle;
-         bool valid;
-      };
-
-
-   if(length > 64)
-      length = 64;
+   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(32);
 
    for(u32bit j = 0; j != prov_types.size(); ++j)
       {
       CSP_Handle csp(prov_types[j]);
-      if(!csp.is_valid())
-         continue;
 
-      csp.gen_random(output, length);
-      break;
+      u32bit got = csp.gen_random(io_buffer.begin(), io_buffer.length());
+
+      if(got)
+         {
+         accum.add(io_buffer.begin(), io_buffer.length(), 8);
+         break;
+         }
       }
-   return length;
    }
 
-/*************************************************
-* Gather Entropy from Win32 CAPI                 *
-*************************************************/
+/**
+* Win32_Capi_Entropysource Constructor
+*/
 Win32_CAPI_EntropySource::Win32_CAPI_EntropySource(const std::string& provs)
    {
    std::vector<std::string> capi_provs = split_on(provs, ':');

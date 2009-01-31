@@ -42,6 +42,5 @@ util.cpp
 util.h
 version.cpp
 version.h
-xor_buf.cpp
 xor_buf.h
 </add>

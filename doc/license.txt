@@ -1,4 +1,4 @@
-Copyright (C) 1999-2008 Jack Lloyd
+Copyright (C) 1999-2009 Jack Lloyd
               2001 Peter J Jones
               2004-2007 Justin Karneges
               2005 Matthew Gregan

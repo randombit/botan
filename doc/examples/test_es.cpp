@@ -32,27 +32,40 @@
 
 using namespace Botan;
 
+class Saver_Of_Bytes : public BufferedComputation
+   {
+   public:
+      Saver_Of_Bytes() : BufferedComputation(0), outbuf(64), written(0) {}
+      void add_data(const byte in[], u32bit length)
+         {
+         for(size_t i = 0; i != length; ++i)
+            outbuf[i % outbuf.size()] ^= in[i];
+
+         written += length;
+         //outbuf.insert(outbuf.end(), in, in+length);
+         }
+      void final_result(byte[]) { if(written < 64) outbuf.resize(written); }
+
+      std::vector<byte> outbuf;
+      u32bit written;
+   };
+
 void test_entropy_source(EntropySource* es)
    {
    // sometimes iostreams really is just a pain
 
-   // upper buffer size of 96 to match HMAC_RNG's
-   byte buf[96] = { 0 };
-
    printf("Polling '%s':\n", es->name().c_str());
 
-   printf("  Fast poll... ");
-   u32bit fast_poll_got = es->fast_poll(buf, sizeof(buf));
-   printf("got %d bytes: ", fast_poll_got);
-   for(u32bit i = 0; i != fast_poll_got; ++i)
-      printf("%02X", buf[i]);
-   printf("\n");
+   Saver_Of_Bytes save;
 
-   printf("  Slow poll... ");
-   u32bit slow_poll_got = es->slow_poll(buf, sizeof(buf));
-   printf("got %d bytes: ", slow_poll_got);
-   for(u32bit i = 0; i != slow_poll_got; ++i)
-      printf("%02X", buf[i]);
+   Entropy_Accumulator accum(save, 128);
+   es->poll(accum);
+
+   save.final_result(0);
+
+   printf("Got %d bytes\n", save.written);
+   for(size_t i = 0; i != save.outbuf.size(); ++i)
+      printf("%02X", save.outbuf[i]);
    printf("\n");
 
    delete es;

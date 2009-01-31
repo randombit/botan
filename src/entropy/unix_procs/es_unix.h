@@ -1,7 +1,7 @@
-/*************************************************
-* Unix EntropySource Header File                 *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Unix EntropySource Header File
+* (C) 1999-2009 Jack Lloyd
+*/
 
 #ifndef BOTAN_ENTROPY_SRC_UNIX_H__
 #define BOTAN_ENTROPY_SRC_UNIX_H__
@@ -12,21 +12,21 @@
 
 namespace Botan {
 
-/*************************************************
-* Unix Entropy Source                            *
-*************************************************/
+/**
+* Unix Entropy Source
+*/
 class BOTAN_DLL Unix_EntropySource : public EntropySource
    {
    public:
       std::string name() const { return "Unix Entropy Source"; }
 
+      void poll(Entropy_Accumulator& accum);
+
       void add_sources(const Unix_Program[], u32bit);
       Unix_EntropySource(const std::vector<std::string>& path);
    private:
       static void add_default_sources(std::vector<Unix_Program>&);
-
-      u32bit fast_poll(byte buf[], u32bit length);
-      u32bit slow_poll(byte buf[], u32bit length);
+      void fast_poll(Entropy_Accumulator& accum);
 
       const std::vector<std::string> PATH;
       std::vector<Unix_Program> sources;

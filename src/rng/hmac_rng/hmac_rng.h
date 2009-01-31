@@ -1,7 +1,7 @@
-/*************************************************
-* HMAC RNG                                       *
-* (C) 2008 Jack Lloyd                            *
-*************************************************/
+/*
+* HMAC RNG
+* (C) 2008 Jack Lloyd
+*/
 
 #ifndef BOTAN_HMAC_RNG_H__
 #define BOTAN_HMAC_RNG_H__
@@ -26,11 +26,11 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
    {
    public:
       void randomize(byte buf[], u32bit len);
-      bool is_seeded() const;
+      bool is_seeded() const { return seeded; }
       void clear() throw();
       std::string name() const;
 
-      void reseed();
+      void reseed(u32bit poll_bits);
       void add_entropy_source(EntropySource* es);
       void add_entropy(const byte[], u32bit);
 
@@ -39,13 +39,14 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
 
       ~HMAC_RNG();
    private:
-      void reseed_with_input(const byte input[], u32bit length);
+      void reseed_with_input(u32bit poll_bits,
+                             const byte input[], u32bit length);
 
       MessageAuthenticationCode* extractor;
       MessageAuthenticationCode* prf;
 
       std::vector<EntropySource*> entropy_sources;
-      u32bit entropy;
+      bool seeded;
 
       SecureVector<byte> K, io_buffer;
       u32bit counter, source_index;

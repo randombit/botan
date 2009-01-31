@@ -5,7 +5,6 @@
 
 #include <botan/es_ftw.h>
 #include <botan/secmem.h>
-#include <botan/xor_buf.h>
 #include <cstring>
 #include <deque>
 
@@ -110,49 +109,36 @@ FTW_EntropySource::~FTW_EntropySource()
    delete dir;
    }
 
-u32bit FTW_EntropySource::slow_poll(byte buf[], u32bit length)
+void FTW_EntropySource::poll(Entropy_Accumulator& accum)
    {
+   const u32bit MAX_FILES_READ_PER_POLL = 1024;
+
    if(!dir)
       dir = new Directory_Walker(path);
 
-   SecureVector<byte> read_buf(4096);
+   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(2048);
 
-   u32bit bytes_read = 0;
-   u32bit buf_i = 0;
-
-   while(bytes_read < length * 32)
+   for(u32bit i = 0; i != MAX_FILES_READ_PER_POLL; ++i)
       {
       int fd = dir->next_fd();
 
-      if(fd == -1) // re-walk
+      // If we've exhaused this walk of the directory, halt the poll
+      if(fd == -1)
          {
          delete dir;
-         dir = new Directory_Walker(path);
-         fd = dir->next_fd();
-
-         if(fd == -1) // still fails (directory not mounted, etc) -> fail
-            return 0;
+         dir = 0;
+         break;
          }
 
-      ssize_t got = ::read(fd, read_buf.begin(), read_buf.size());
+      ssize_t got = ::read(fd, io_buffer.begin(), io_buffer.size());
+      ::close(fd);
 
       if(got > 0)
-         {
-         buf_i = xor_into_buf(buf, buf_i, length, read_buf, got);
+         accum.add(io_buffer.begin(), got, .01);
 
-         // never count any one file for more than 128 bytes
-         bytes_read += std::min<u32bit>(got, 128);
-         }
-
-      ::close(fd);
+      if(accum.polling_goal_achieved())
+         break;
       }
-
-   return length;
-   }
-
-u32bit FTW_EntropySource::fast_poll(byte[], u32bit)
-   {
-   return 0; // no op
    }
 
 }

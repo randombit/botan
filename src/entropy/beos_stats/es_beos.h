@@ -18,8 +18,7 @@ class BOTAN_DLL BeOS_EntropySource : public EntropySource
    private:
       std::string name() const { return "BeOS Statistics"; }
 
-      u32bit fast_poll(byte buf[], u32bit length);
-      u32bit slow_poll(byte buf[], u32bit length);
+      void poll(Entropy_Accumulator& accum);
    };
 
 }
