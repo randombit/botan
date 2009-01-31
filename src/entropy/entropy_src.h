@@ -29,7 +29,8 @@ class Entropy_Accumulator
       MemoryRegion<byte>& get_io_buffer(u32bit size)
          { io_buffer.create(size); return io_buffer; }
 
-      u32bit bits_collected() const { return collected_bits; }
+      u32bit bits_collected() const
+         { return static_cast<u32bit>(collected_bits); }
 
       bool polling_goal_achieved() const
          { return (collected_bits >= entropy_goal); }
@@ -44,7 +45,7 @@ class Entropy_Accumulator
       void add(const void* bytes, u32bit length, double entropy_bits_per_byte)
          {
          add_bytes(bytes, length);
-         collected_bits += std::min<u32bit>(8, entropy_bits_per_byte) * length;
+         collected_bits += entropy_bits_per_byte * length;
          }
 
       template<typename T>
@@ -56,7 +57,8 @@ class Entropy_Accumulator
       virtual void add_bytes(const void* bytes, u32bit length) = 0;
 
       SecureVector<byte> io_buffer;
-      u32bit entropy_goal, collected_bits;
+      u32bit entropy_goal;
+      double collected_bits;
    };
 
 class Entropy_Accumulator_BufferedComputation : public Entropy_Accumulator
