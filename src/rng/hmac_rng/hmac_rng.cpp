@@ -69,7 +69,7 @@ void HMAC_RNG::reseed_with_input(u32bit poll_bits,
    feedback of the current PRK value, into the extractor function.
    */
 
-   Entropy_Accumulator accum(*extractor, poll_bits);
+   Entropy_Accumulator_BufferedComputation accum(*extractor, poll_bits);
 
    for(u32bit i = 0; i < entropy_sources.size(); ++i)
       {

@@ -18,8 +18,10 @@ namespace Botan {
 class Entropy_Accumulator
    {
    public:
-      Entropy_Accumulator(BufferedComputation& sink, u32bit goal) :
-         entropy_sink(sink), entropy_goal(goal), collected_bits(0) {}
+      Entropy_Accumulator(u32bit goal) :
+         entropy_goal(goal), collected_bits(0) {}
+
+      virtual ~Entropy_Accumulator() {}
 
       /**
       @return cached I/O buffer for repeated polls
@@ -34,12 +36,14 @@ class Entropy_Accumulator
 
       u32bit desired_remaining_bits() const
          {
-         return (collected_bits >= entropy_goal) ? 0 : (entropy_goal - collected_bits);
+         if(collected_bits >= entropy_goal)
+            return 0;
+         return (entropy_goal - collected_bits);
          }
 
       void add(const void* bytes, u32bit length, double entropy_bits_per_byte)
          {
-         entropy_sink.update(reinterpret_cast<const byte*>(bytes), length);
+         add_bytes(bytes, length);
          collected_bits += std::min<u32bit>(8, entropy_bits_per_byte) * length;
          }
 
@@ -49,9 +53,26 @@ class Entropy_Accumulator
          add(&v, sizeof(T), entropy_bits_per_byte);
          }
    private:
-      BufferedComputation& entropy_sink;
+      virtual void add_bytes(const void* bytes, u32bit length) = 0;
+
       SecureVector<byte> io_buffer;
       u32bit entropy_goal, collected_bits;
+   };
+
+class Entropy_Accumulator_BufferedComputation : public Entropy_Accumulator
+   {
+   public:
+      Entropy_Accumulator_BufferedComputation(BufferedComputation& sink,
+                                              u32bit goal) :
+         Entropy_Accumulator(goal), entropy_sink(sink) {}
+
+   private:
+      virtual void add_bytes(const void* bytes, u32bit length)
+         {
+         entropy_sink.update(reinterpret_cast<const byte*>(bytes), length);
+         }
+
+      BufferedComputation& entropy_sink;
    };
 
 /**

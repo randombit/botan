@@ -101,7 +101,7 @@ void Randpool::mix_pool()
 */
 void Randpool::reseed(u32bit poll_bits)
    {
-   Entropy_Accumulator accum(*mac, poll_bits);
+   Entropy_Accumulator_BufferedComputation accum(*mac, poll_bits);
 
    for(u32bit i = 0; i != entropy_sources.size(); ++i)
       {
