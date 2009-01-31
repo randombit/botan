@@ -58,6 +58,8 @@ class Fixed_Output_RNG : public RandomNumberGenerator
 
       std::string name() const { return "Fixed_Output_RNG"; }
 
+      void reseed(u32bit) {}
+
       void clear() throw() {}
 
       void add_entropy(const byte in[], u32bit len)
