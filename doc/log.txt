@@ -1,5 +1,6 @@
 
 * 1.8.2-pre, 2009-??-??
+ - Make entropy polling more flexible and in most cases faster
  - Another atempt at fixing botan-config on MacOS X
 
 * 1.8.1, 2009-01-20
