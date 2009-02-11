@@ -12,7 +12,7 @@
 
 \title{\textbf{Botan API Reference}}
 \author{}
-\date{2008/11/17}
+\date{2009/2/10}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\manpage}[2]{\texttt{#1}(#2)}
@@ -62,7 +62,7 @@ obvious choice. However in most cases this is not an issue, as many
 algorithms are specified in terms of 32-bit operations precisely to
 target commodity processors.
 
-Smaller andhelds, set-top boxes, and the bigger smart phones and smart
+Smaller handhelds, set-top boxes, and the bigger smart phones and smart
 cards, are also capable of using Botan. However, Botan uses a fairly
 large amount of code space (up to several megabytes, depending upon
 the compiler and options used), which could be prohibitive in some
@@ -77,7 +77,7 @@ to give them such an object for that algorithm.
 \subsection{Why Botan?}
 
 Botan may be the perfect choice for your application. Or it might be a
-terribly bad idea. This section is basically to make it clear what Botan is
+terribly bad idea. This section will make clear what Botan is
 and is not.
 
 First, let's cover the major strengths:
@@ -94,7 +94,7 @@ First, let's cover the major strengths:
         public key algorithms and standards (such as IEEE 1363, PKCS, and
         X.509v3).
 
-  \item Supports a name-based lookup scheme, so you can get ahold of any
+  \item Supports a name-based lookup scheme, so you can get a hold of any
         algorithm on the fly.
 
   \item You can easily extend much of the system at application compile time or
@@ -141,7 +141,7 @@ And the major downsides and deficiencies are:
 With a very small number of exceptions, declarations in the library
 are contained within the namespace \namespace{Botan}. Botan declares
 several typedef'ed types to help buffer it against changes in machine
-architecture.  These types are used extensively in the interface, and
+architecture.  These types are used extensively in the interface,
 thus it would be often be convenient to use them without the
 \namespace{Botan} prefix. You can do so by \keyword{using} the
 namespace \namespace{Botan::types} (this way you can use the type
@@ -158,10 +158,10 @@ should be used with the \filename{botan/} prefix in your actual code.
 
 There are a set of core services which the library needs access to
 while it is performing requests. To ensure these are set up, you must
-create a \type{LibraryInitializer} object (using called 'init' in
+create a \type{LibraryInitializer} object (usually called 'init' in
 Botan example code; 'botan\_library' or 'botan\_init' may make more
 sense in real applications) prior to making any calls to Botan. This
-objects lifetime must exceed that of all other Botan objects your
+object's lifetime must exceed that of all other Botan objects your
 application creates; for this reason the best place to create the
 \type{LibraryInitializer} is at the start of your \function{main}
 function, since this guarantees that it will be created first and
@@ -195,7 +195,7 @@ the actual code performing the initialization and shutdown are in
 static member functions of \type{LibraryInitializer}, called
 \function{initialize} and \function{deinitialize}. A
 \type{LibraryInitializer} merely provides a convenient RAII wrapper
-for the operations (and thus for the internal library state as well).
+for the operations (thus for the internal library state as well).
 
 \subsection{Gotchas}
 
@@ -721,7 +721,7 @@ And remember: if you're resetting both values, reset the key \emph{first}.
 
 \subsubsection{Cipher Filters}
 
-Getting ahold of a \type{Filter} implementing a cipher is very easy. Simply
+Getting a hold of a \type{Filter} implementing a cipher is very easy. Simply
 make sure you're including the header \filename{lookup.h}, and call
 \function{get\_cipher}. Generally you will pass the return value directly into
 a \type{Pipe}. There are actually a couple different functions, which do pretty
@@ -1161,7 +1161,7 @@ methods are particularly useful for these algorithms.
 
 \subsection{Key Agreement}
 
-You can get ahold of a \type{PK\_Key\_Agreement\_Scheme} object by calling
+You can get a hold of a \type{PK\_Key\_Agreement\_Scheme} object by calling
 \function{get\_pk\_kas} with a key that is of a type that supports key
 agreement (such as a Diffie-Hellman key stored in a \type{DH\_PrivateKey}
 object), and the name of a key derivation function. This can be ``Raw'',
@@ -1581,7 +1581,7 @@ functions:
 
 \function{add\_trusted\_certs}(\type{DataSource\&} \arg{source})
 
-The versions that take a \type{DataSource\&} will add all of the certificates
+The versions that take a \type{DataSource\&} will add all the certificates
 that it can find in that source.
 
 All of them add the cert(s) to the store. The 'trusted' certificates are the
@@ -1938,7 +1938,7 @@ added to the list to include in the certificate.
 \section{The Low-Level Interface}
 
 Botan has two different interfaces. The one documented in this section is meant
-more for implementing higher-level types (see the section on filters, later in
+more for implementing higher-level types (see the section on filters, earlier in
 this manual) than for use by applications. Using it safely requires a solid
 knowledge of encryption techniques and best practices, so unless you know, for
 example, what CBC mode and nonces are, and why PKCS \#1 padding is important,
@@ -2169,13 +2169,13 @@ To ensure good quality output, a PRNG needs to be seeded with truly random data
 \type{u32bit} \arg{length}) or (better), use the \type{EntropySource}
 interface.
 
-One a PRNG has been initialized, you can get a single byte of random data by
+Once a PRNG has been initialized, you can get a single byte of random data by
 calling \type{byte} \function{random()}, or get a large block by calling
 \type{void} \function{randomize}(\type{byte} \arg{data}[], \type{u32bit}
 \arg{length}), which will put random bytes into each member of the array from
 indexes 0 $\ldots$ \arg{length} -- 1.
 
-You can avoid all the problem inherent to seeding the PRNG by using the
+You can avoid all the problems inherent in seeding the PRNG by using the
 globally shared PRNG, described later in this section.
 
 \subsection{Randpool}
@@ -2186,7 +2186,7 @@ for some reason you should have cause to create a PRNG instead of using the
 ``global'' one owned by the library, it would be wise to consider the same on
 the grounds of general caution; while \type{Randpool} is designed with known
 attacks and PRNG weaknesses in mind, it is not an standard/official PRNG. The
-remainer of this section is a (fairly technical, though high-level) description
+remainder of this section is a (fairly technical, though high-level) description
 of the algorithms used in this PRNG. Unless you have a specific interest in
 this subject, the rest of this section might prove somewhat uninteresting.
 
@@ -2198,7 +2198,7 @@ been generated but has just not been output yet.
 It is based around a MAC and a block cipher (which are currently HMAC(SHA-256)
 and AES-256). Where a specific size is mentioned, it should be taken as a
 multiple of the cipher's block size. For example, if a 256-bit block cipher
-were used instead of AES, all of the sizes internally would double. Every time
+were used instead of AES, all the sizes internally would double. Every time
 some new output is needed, we compute the MAC of a counter and a high
 resolution timer. The resulting MAC is XORed into the output buffer (wrapping
 as needed), and the output buffer is then encrypted with AES, producing 16
@@ -2228,7 +2228,7 @@ been checked against official X9.31 test vectors.
 Internally, the PRNG holds a pointer to another PRNG (typically
 Randpool). This internal PRNG generates the key and seed used by the
 X9.31 algorithm, as well as the date/time vectors. Each time an X9.31
-PRNG object recieves entropy, it simply passes it along to the PRNG it
+PRNG object receives entropy, it simply passes it along to the PRNG it
 is holding, and then pulls out some random bits to generate a new key
 and seed. This PRNG considers itself seeded as soon as the internal
 PRNG is seeded.
@@ -2254,7 +2254,7 @@ namespace.
 Note for writers of \type{EntropySource}s: it isn't necessary to use any kind
 of cryptographic hash on your output. The data produced by an EntropySource is
 only used by an application after it has been hashed by the
-\type{RandomNumberGenerator} which asked for the entropy, and thus any hashing
+\type{RandomNumberGenerator} which asked for the entropy, thus any hashing
 you do will be wasteful of both CPU cycles and possibly entropy.
 
 \pagebreak
@@ -2314,7 +2314,7 @@ There is an example \type{UI} which uses GTK+ available on the web site. The
 \type{GTK\_UI} code is cleanly separated from the rest of the example, so if
 you happen to be using GTK+, you can copy (and/or adapt) that code for your
 application. If you write a \type{UI} object for another windowing system
-(Win32, Qt, wxWindows, FOX, etc), and would like to make it available to users
+(Win32, Qt, wxWidgets, FOX, etc), and would like to make it available to users
 in general (ideally under a permissive license such as public domain or
 MIT/BSD), feel free to send in a copy.
 
@@ -3002,7 +3002,7 @@ match that in SCAN, if it's defined there).
 
 \subsection{Compatibility}
 
-Generally, cryptographic algorithms are well standardized, and thus
+Generally, cryptographic algorithms are well standardized, thus
 compatibility between implementations is relatively simple (of course, not all
 algorithms are supported by all implementations). But there are a few
 algorithms which are poorly specified, and these should be avoided if you wish
