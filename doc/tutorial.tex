@@ -10,10 +10,10 @@
 \setlength{\oddsidemargin}{0in}
 \setlength{\evensidemargin}{0in}
 
-\title{\textbf{Botan 1.4.x Tutorial}}
+\title{\textbf{Botan Tutorial}}
 \author{Jack Lloyd \\
         \texttt{lloyd@randombit.net}}
-\date{}
+\date{2009/2/10}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\manpage}[2]{\texttt{#1}(#2)}
@@ -36,11 +36,12 @@
 
 \section{Introduction}
 
-This document essentially sets up various simple scenarios and then shows how
-to solve the problems using Botan 1.4.x. It's fairly simple, and doesn't cover
-many of the available APIs and algorithms, especially the more obscure or
-unusual ones. It is a supplement to the API documentation and the example
-applications, which are included in the distribution.
+This document essentially sets up various simple scenarios and then
+shows how to solve the problems using Botan. It's fairly simple, and
+doesn't cover many of the available APIs and algorithms, especially
+the more obscure or unusual ones. It is a supplement to the API
+documentation and the example applications, which are included in the
+distribution.
 
 To quote the Perl man page: '``There's more than one way to do it.'' Divining
 how many more is left as an exercise to the reader.'
@@ -53,7 +54,7 @@ just written down from memory. If you find errors, please let me know.
 
 \section{Initializing the Library}
 
-The first step to using Botan is the create a \type{LibraryInitializer} object,
+The first step to using Botan is to create a \type{LibraryInitializer} object,
 which handles creating various internal structures, and also destroying them at
 shutdown. Essentially:
 
@@ -79,7 +80,7 @@ int main()
 
 Probably the most common crypto problem is encrypting a file (or some data that
 is in-memory) using a passphrase. There are a million ways to do this, most of
-them bad. In particular, you've have to protect against weak passphrases,
+them bad. In particular, you have to protect against weak passphrases,
 people reusing a passphrase many times, accidental and deliberate modification,
 and a dozen other potential problems.
 
@@ -95,12 +96,12 @@ generating the keys. For production code, another algorithm (such as TripleDES
 or AES) may be more appropriate. Whenever we need a hash function, we'll use
 SHA-1, since that is a common and well-known hash that is thought to be secure.
 
-In all examples, we choose to derive the IV from the passphrase. Another
-(probably more common) alternative is to generate the IV randomly and include
-it at the beginning of the message. Either way is acceptable, and can be
-secure. The method used here was chosen to make for more interesting examples
-(because it's harder to get right), and may not be an appropriate choice for
-some environments.
+In all examples, we choose to derive the Initialization Vector (IV) from the
+passphrase. Another (probably more common) alternative is to generate the IV
+randomly and include it at the beginning of the message. Either way is
+acceptable, and can be secure. The method used here was chosen to make for more
+interesting examples (because it's harder to get right), and may not be an
+appropriate choice for some environments.
 
 First, some notation. The passphrase is stored as a \type{std::string} named
 \variable{passphrase}. The input and output files (\variable{infile} and
@@ -131,7 +132,7 @@ it, and truncate it to 8 bytes (which is Blowfish's block size).
 \subsubsection{Problem 1: Buffering}
 
 There is a problem with the above code, if the input file is fairly large as
-compared to available memory. Specifically, all of the encrypted data is stored
+compared to available memory. Specifically, all the encrypted data is stored
 in memory, and then flushed to \variable{outfile} in a single go at the very
 end. If the input file is big (say, a gigabyte), this will be most problematic.
 
@@ -157,16 +158,19 @@ do is introduce a salt (or nonce) into the generation of the key from the
 passphrase. This will mean that the key will not be the same each time the same
 passphrase is typed in by a user.
 
-There is another problem with using a bare hash function to derive keys. While
-it's inconceivable that an attacker could brute-force a 160-bit key, it would
-be fairly simple for them to compute the SHA-1 hashes of various common
-passwords ('password', the name of the dog, SO's middle name, etc) and try
-those as keys. So we want to slow the attacker down if we can, and an easy way
-to do that is to iterate the hash function a bunch of times (say, 1024 to 4096
-times). This will involve only a small amount of effort for a legitimate user
-(since they only have to compute the hashes once, when they type in their
-passphrase), but an attacker, trying out a large list of potential passphrases,
-will be seriously annoyed by this.
+There is another problem with using a bare hash function to derive
+keys. While it's inconceivable (based on our current understanding of
+thermodynamics and theories of computation) that an attacker could
+brute-force a 160 bit key, it would be fairly simple for them to
+compute the SHA-1 hashes of various common passwords ('password', the
+name of the dog, the significant other's middle name, favorite sports
+team) and try those as keys. So we want to slow the attacker down if
+we can, and an easy way to do that is to iterate the hash function a
+bunch of times (say, 1024 to 4096 times). This will involve only a
+small amount of effort for a legitimate user (since they only have to
+compute the hashes once, when they type in their passphrase), but an
+attacker, trying out a large list of potential passphrases, will be
+seriously annoyed by this.
 
 In this iteration of the example, we'll kill these two birds with one stone,
 and derive the key from the passphrase using a S2K (string to key) algorithm
@@ -275,7 +279,7 @@ different values.
 
 \subsubsection{Final version}
 
-Here is the final version of the encryption code, with all of the changes we've
+Here is the final version of the encryption code, with all the changes we've
 made:
 
 \begin{verbatim}
@@ -413,7 +417,7 @@ response seems warranted, so we'll use SHA-1.
 
 Upon receiving the response from the client, the server computes what the
 response should have been based on the challenge it sent out, and the
-passphrase. If the two responses match, the the client is authenticated.
+passphrase. If the two responses match, the client is authenticated.
 Otherwise, it is not.
 
 An alternate method is to use PBKDF2 again, using the challenge as the salt. In
@@ -514,11 +518,13 @@ EMSA1 with SHA-1.
   byte msg[] = { /* ... */ };
 
   /*
-     You can also repeatedly call update(const byte[], u32bit), followed by a
-     call to signature(), which will return the final sig of all the date that
-     was passed through update(). sign_message() is just a stub that calls
-     update() once, and returns the value of signature().
+  You can also repeatedly call update(const byte[], u32bit), followed
+  by a call to signature(), which will return the final signature of
+  all the data that was passed through update(). sign_message() is
+  just a stub that calls update() once, and returns the value of
+  signature().
   */
+
   SecureVector<byte> signature = signer->sign_message(msg, sizeof(msg));
 \end{verbatim}
 
@@ -526,7 +532,7 @@ EMSA1 with SHA-1.
 
 \subsubsection{Signature Verification}
 
-In addition to all of the problems with choosing the correct padding method,
+In addition to all the problems with choosing the correct padding method,
 there is yet another complication with verifying a signature. Namely, there are
 two varieties of signature algorithms - those providing message recovery (that
 is, the value that was signed can be directly recovered by someone verifying
@@ -749,11 +755,11 @@ certificate in PEM encoding.
 Verifying a certificate requires that we build up a chain of trust, starting
 from the root (usually a commercial CA), down through some number of
 intermediate CAs, and finally reaching the actual certificate in
-question. Thus, to verify, we actually have to have all of those certificates
+question. Thus, to verify, we actually have to have all those certificates
 on hand (or at the very least, know where we can get the ones we need).
 
 The class which handles both storing certificates, and verifying them, is
-called \type{X509\_Store}. We'll start by assuming that we have all of the
+called \type{X509\_Store}. We'll start by assuming that we have all the
 certificates we need, and just want to verify a cert. This is done by calling
 the member function \function{validate\_cert}, which takes the
 \type{X509\_Certificate} in question, and an optional argument of type
@@ -786,7 +792,7 @@ WRITEME
 
 \section{Special Topics}
 
-This chapter is for subject which don't really fit into the API documentation
+This chapter is for subjects which don't really fit into the API documentation
 or into other chapters of the tutorial.
 
 \subsection{GUIs}
