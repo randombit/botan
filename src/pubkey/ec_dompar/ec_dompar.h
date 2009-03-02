@@ -109,7 +109,7 @@ EC_Domain_Params decode_ber_ec_dompar(SecureVector<byte> const& encoded);
 * an OID.  The demanded OID has to be registered in the InSiTo
 * configuration. Consult the file ec_dompar.cpp for the default
 * configuration.
-* @param the oid of the demanded EC domain parameters
+* @param oid the oid of the demanded EC domain parameters
 * @result the EC domain parameters associated with the OID
 */
 EC_Domain_Params get_EC_Dom_Pars_by_oid(std::string oid);
