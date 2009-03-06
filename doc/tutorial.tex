@@ -13,7 +13,7 @@
 \title{\textbf{Botan Tutorial}}
 \author{Jack Lloyd \\
         \texttt{lloyd@randombit.net}}
-\date{2009/2/10}
+\date{2009/2/25}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\manpage}[2]{\texttt{#1}(#2)}
@@ -88,13 +88,14 @@ We'll start with a simple method that is commonly used, and show the problems
 that can arise. Each subsequent solution will modify the previous one to
 prevent one or more common problems, until we arrive at a good version.
 
-In these examples, we'll always use Blowfish in CBC mode. Blowfish has been
-around almost 10 years at this point, and is well known and trusted. The main
-reason for choosing Blowfish over, say, TripleDES, is because Blowfish supports
-nearly arbitrary key lengths, allowing us to easily try many different ways of
-generating the keys. For production code, another algorithm (such as TripleDES
-or AES) may be more appropriate. Whenever we need a hash function, we'll use
-SHA-1, since that is a common and well-known hash that is thought to be secure.
+In these examples, we'll always use Blowfish in Cipher-Block Chaining (CBC)
+mode. Blowfish has been around almost 10 years at this point, and is well known
+and trusted. The main reason for choosing Blowfish over, say, TripleDES, is
+because Blowfish supports nearly arbitrary key lengths, allowing us to easily
+try many different ways of generating the keys. For production code, another
+algorithm (such as TripleDES or AES) may be more appropriate. Whenever we need a
+hash function, we'll use SHA-1, since that is a common and well-known hash that
+is thought to be secure.
 
 In all examples, we choose to derive the Initialization Vector (IV) from the
 passphrase. Another (probably more common) alternative is to generate the IV
@@ -161,7 +162,7 @@ passphrase is typed in by a user.
 There is another problem with using a bare hash function to derive
 keys. While it's inconceivable (based on our current understanding of
 thermodynamics and theories of computation) that an attacker could
-brute-force a 160 bit key, it would be fairly simple for them to
+brute-force a 160-bit key, it would be fairly simple for them to
 compute the SHA-1 hashes of various common passwords ('password', the
 name of the dog, the significant other's middle name, favorite sports
 team) and try those as keys. So we want to slow the attacker down if
@@ -174,16 +175,16 @@ seriously annoyed by this.
 
 In this iteration of the example, we'll kill these two birds with one stone,
 and derive the key from the passphrase using a S2K (string to key) algorithm
-(these are also often called PBKDF algorithms, for Password Based Key
-Derivation Function). In this example, we use PBKDF2 with HMAC(SHA-1), which is
-specified in PKCS \#5. We replace the first four lines of code from the first
-example with:
+(these are also often called PBKDF algorithms, for Password-Based Key
+Derivation Function). In this example, we use PBKDF2 with Hash Message
+Authentication Code (HMAC(SHA-1)), which is specified in PKCS \#5. We replace
+the first four lines of code from the first example with:
 
 \begin{verbatim}
    S2K* s2k = get_s2k("PBKDF2(SHA-1)");
    // hard-coded iteration count for simplicity; should be sufficient
    s2k->set_iterations(4096);
-   // 8 octets == 64 bit salt; again, good enough
+   // 8 octets == 64-bit salt; again, good enough
    s2k->new_random_salt(8);
    SecureVector<byte> the_salt = s2k->current_salt();
 
@@ -204,7 +205,7 @@ passphrase.
 
 As it is, an attacker can undetectably alter the message while it is in
 transit. It is vital to remember that encryption does not imply authentication
-(except when using special modes which are specifically designed to provide
+(except when using special modes that are specifically designed to provide
 authentication along with encryption, like OCB and EAX). For this purpose, we
 will append a message authentication code to the encrypted
 message. Specifically, we will generate an extra 160 bits of key data, and use
@@ -263,7 +264,7 @@ different values.
    S2K* s2k = get_s2k("PBKDF2(SHA-1)");
    // hard-coded iteration count for simplicity; should be sufficient
    s2k->set_iterations(4096);
-   // 8 octet == 64 bit salt; again, good enough
+   // 8 octet == 64-bit salt; again, good enough
    s2k->new_random_salt(8);
    // store the salt so we can write it to a file later
    SecureVector<byte> the_salt = s2k->current_salt();
@@ -385,8 +386,8 @@ and the client responds with an appropriate response to the challenge. The idea
 is that only someone who knows the passphrase can generate or check to see if a
 response is valid.
 
-Let's say we use 160 bit (20 byte) challenges, which seems fairly
-reasonable. We can create this challenge using the global RNG:
+Let's say we use 160-bit (20 byte) challenges, which seems fairly reasonable. We
+can create this challenge using the global random number generator (RNG):
 
 \begin{verbatim}
    byte challenge[20];
@@ -398,7 +399,7 @@ After reading the challenge, the client generates a response based on the
 challenge and the passphrase. In this case, we will do it by repeatedly hashing
 the challenge, the passphrase, and (if applicable) the previous digest. We
 iterate this construction 4096 times, to make brute force attacks on the
-passphrase hard to do. Since we are already using 160 bit challenges, a 160 bit
+passphrase hard to do. Since we are already using 160-bit challenges, a 160-bit
 response seems warranted, so we'll use SHA-1.
 
 \begin{verbatim}
@@ -436,7 +437,7 @@ In this section, we'll assume we have a \type{X509\_PublicKey*} named
 \arg{pubkey}, and, if necessary, a private key type (a
 \type{PKCS8\_PrivateKey*}) named \arg{privkey}. A description of these types,
 how to create them, and related details appears later in this tutorial. In this
-section, we will use various functions which are defined in
+section, we will use various functions that are defined in
 \filename{look\_pk.h} -- you will have to include this header explicitly.
 
 \subsubsection{Encryption}
@@ -642,7 +643,7 @@ cast it to \type{PK\_Decrypting\_Key}, \type{PK\_Signing\_Key}, or
 Sometimes you can get away with having a static passphrase passed to
 \function{load\_key}. Typically, however, you'll have to do some user
 interaction to get the appropriate passphrase. In that case you'll want to use
-the the \type{UI} related interface, which is fully described in the API
+the \type{UI} related interface, which is fully described in the API
 documentation.
 
 \subsubsection{Generating New Private Keys}
@@ -775,7 +776,7 @@ functions \function{add\_cert}, \function{add\_certs},
 \function{add\_trusted\_certs}, and \function{add\_crl}; for details, consult
 the API doc or read the \filename{x509stor.h} header. There is also a much more
 elegant and powerful method: \type{Certificate\_Store}s. A certificate store
-refers to an object which knows how to retrieve certificates from some external
+refers to an object that knows how to retrieve certificates from some external
 source (a file, an LDAP directory, a HTTP server, a SQL database, or anything
 else). By calling the function \function{add\_new\_certstore}, you can register
 a new certificate store, which \type{X509\_Store} will use to find certificates
@@ -792,7 +793,7 @@ WRITEME
 
 \section{Special Topics}
 
-This chapter is for subjects which don't really fit into the API documentation
+This chapter is for subjects that don't really fit into the API documentation
 or into other chapters of the tutorial.
 
 \subsection{GUIs}
