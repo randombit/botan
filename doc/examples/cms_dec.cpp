@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   LibraryInitializer init;
+   Botan::LibraryInitializer init;
 
    try {
       AutoSeeded_RNG rng;

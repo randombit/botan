@@ -15,7 +15,7 @@ bool check(std::map<std::string, std::string>);
 int main()
    {
    try {
-      LibraryInitializer init;
+       Botan::LibraryInitializer init;
 
       std::ifstream in("SigGen.rsp");
       if(!in)

@@ -105,6 +105,8 @@ void x931_tests(std::vector<std::pair<std::string, std::string> > vecs,
 
 int main()
    {
+   Botan::LibraryInitializer init;
+
    x931_tests(read_file("ANSI931_AES128VST.txt.vst"), "AES-128");
    x931_tests(read_file("ANSI931_AES192VST.txt.vst"), "AES-192");
    x931_tests(read_file("ANSI931_AES256VST.txt.vst"), "AES-256");

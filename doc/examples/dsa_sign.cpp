@@ -29,6 +29,8 @@ int main(int argc, char* argv[])
       return 1;
       }
 
+   Botan::LibraryInitializer init;
+
    try {
       std::string passphrase(argv[3]);
 

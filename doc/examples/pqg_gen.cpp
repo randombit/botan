@@ -19,7 +19,7 @@ bool check(RandomNumberGenerator& rng,
 int main()
    {
    try {
-      LibraryInitializer init("use_engines");
+       Botan::LibraryInitializer init("use_engines");
 
       AutoSeeded_RNG rng;
 

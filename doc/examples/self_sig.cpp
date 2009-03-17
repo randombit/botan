@@ -29,6 +29,8 @@ int main(int argc, char* argv[])
       return 1;
       }
 
+   Botan::LibraryInitializer init;
+
    std::string CA_flag = argv[2];
    bool do_CA = false;
 

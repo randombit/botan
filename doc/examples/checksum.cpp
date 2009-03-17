@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   LibraryInitializer init;
+   Botan::LibraryInitializer init;
 
    Pipe pipe(new Fork(
                 new Chain(new Hash_Filter("CRC24"), new Hex_Encoder),

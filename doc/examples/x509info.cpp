@@ -56,6 +56,8 @@ int main(int argc, char* argv[])
       return 1;
       }
 
+   Botan::LibraryInitializer init;
+
    try {
       X509_Certificate cert(argv[1]);
 

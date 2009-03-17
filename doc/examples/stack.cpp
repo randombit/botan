@@ -20,6 +20,8 @@ int main(int argc, char* argv[])
       return 1;
       }
 
+   Botan::LibraryInitializer init;
+
    // this is a pretty vacuous example, but it's useful as a test
    Botan::Pipe pipe;
 

@@ -10,6 +10,8 @@ using namespace Botan;
 
 int main()
    {
+   Botan::LibraryInitializer init;
+
    try
       {
       AutoSeeded_RNG rng;

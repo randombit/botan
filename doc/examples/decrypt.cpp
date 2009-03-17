@@ -35,6 +35,8 @@ int main(int argc, char* argv[])
       return 1;
       }
 
+   Botan::LibraryInitializer init;
+
    std::string filename, passphrase;
 
    for(int j = 1; argv[j] != 0; j++)

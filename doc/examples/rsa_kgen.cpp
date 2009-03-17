@@ -35,6 +35,8 @@ int main(int argc, char* argv[])
       return 1;
       }
 
+   Botan::LibraryInitializer init;
+
    std::ofstream pub("rsapub.pem");
    std::ofstream priv("rsapriv.pem");
    if(!priv || !pub)

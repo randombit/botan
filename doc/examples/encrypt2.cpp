@@ -9,7 +9,7 @@ using namespace Botan;
 
 int main()
    {
-   LibraryInitializer init;
+   Botan::LibraryInitializer init;
 
    AutoSeeded_RNG rng;
 

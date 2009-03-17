@@ -8,7 +8,7 @@ using namespace Botan;
 
 int main()
    {
-   LibraryInitializer init;
+   Botan::LibraryInitializer init;
 
    try {
 

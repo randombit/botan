@@ -56,6 +56,8 @@ int main(int argc, char* argv[])
       printf("Usage: %s <file>\n", argv[0]);
       return 1;
       }
+   
+   Botan::LibraryInitializer init;
 
    try {
       DataSource_Stream in(argv[1]);

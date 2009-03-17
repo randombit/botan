@@ -1,5 +1,6 @@
 #include <botan/numthry.h>
 #include <botan/auto_rng.h>
+#include <botan/botan.h>
 
 using namespace Botan;
 
@@ -10,6 +11,7 @@ using namespace Botan;
 
 int main()
    {
+   Botan::LibraryInitializer init;
    AutoSeeded_RNG rng;
 
    std::set<BigInt> primes;

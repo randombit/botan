@@ -14,6 +14,8 @@ using namespace Botan;
 
 int main(int argc, char* argv[])
    {
+   Botan::LibraryInitializer init;
+
    try
       {
       /* Put it inside the try block so exceptions at startup/shutdown will

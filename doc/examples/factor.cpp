@@ -119,6 +119,8 @@ int main(int argc, char* argv[])
       return 1;
       }
 
+   Botan::LibraryInitializer init;
+
    try
       {
       BigInt n(argv[1]);

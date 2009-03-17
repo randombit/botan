@@ -95,7 +95,7 @@ std::string Row_Encryptor::decrypt(const std::string& input,
 
 int main()
    {
-   LibraryInitializer init;
+   Botan::LibraryInitializer init;
 
    AutoSeeded_RNG rng;
 

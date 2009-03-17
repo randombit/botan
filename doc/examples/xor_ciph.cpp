@@ -59,7 +59,7 @@ void XOR_Cipher::key_schedule(const byte key[], u32bit length)
 int main()
    {
 
-   LibraryInitializer init;
+   Botan::LibraryInitializer init;
 
    global_state().algorithm_factory().add_stream_cipher(new XOR_Cipher, "app");
 

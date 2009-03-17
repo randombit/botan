@@ -15,6 +15,8 @@ using namespace Botan;
 
 int main()
    {
+   Botan::LibraryInitializer init;
+
    AutoSeeded_RNG rng;
 
    for(u32bit j = 512; j <= 8192; j += 256)

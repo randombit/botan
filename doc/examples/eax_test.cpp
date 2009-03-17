@@ -228,7 +228,7 @@ int main()
    {
    std::ifstream in("eax_tv.txt");
 
-   LibraryInitializer init;
+   Botan::LibraryInitializer init;
 
    if(!in)
       {

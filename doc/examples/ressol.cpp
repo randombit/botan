@@ -1,5 +1,6 @@
 #include <botan/numthry.h>
 #include <botan/auto_rng.h>
+#include <botan/botan.h>
 
 using namespace Botan;
 
@@ -48,6 +49,7 @@ void test_ressol(const BigInt& p, RandomNumberGenerator& rng)
 
 int main()
    {
+   Botan::LibraryInitializer init;
    AutoSeeded_RNG rng;
 
 #if 0

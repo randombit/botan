@@ -30,6 +30,8 @@ int main(int argc, char* argv[])
       return 1;
       }
 
+   Botan::LibraryInitializer init;
+
    try
       {
       const std::string arg_passphrase = argv[1];

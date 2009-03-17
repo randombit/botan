@@ -54,6 +54,8 @@ int main(int argc, char* argv[])
       return 1;
       }
 
+   Botan::LibraryInitializer init;
+
    std::string output_name(argv[2]);
    output_name += ".enc";
    std::ofstream ciphertext(output_name.c_str());

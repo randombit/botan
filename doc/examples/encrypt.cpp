@@ -44,6 +44,8 @@ int main(int argc, char* argv[])
       return 1;
       }
 
+   Botan::LibraryInitializer init;
+
    std::string algo = "TripleDES";
    std::string filename, passphrase;
 

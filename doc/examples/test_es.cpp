@@ -74,7 +74,7 @@ void test_entropy_source(EntropySource* es)
 
 int main()
    {
-   LibraryInitializer init;
+   Botan::LibraryInitializer init;
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEVICE)
    test_entropy_source(

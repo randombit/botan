@@ -33,6 +33,8 @@ int main(int argc, char* argv[])
       return 1;
       }
 
+   Botan::LibraryInitializer init;
+
    try
       {
       Botan::Pipe pipe(new Botan::Hash_Filter(argv[1]),
