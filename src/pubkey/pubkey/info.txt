@@ -17,6 +17,8 @@ rng
 <add>
 pk_algs.cpp
 pk_algs.h
+pk_filts.cpp
+pk_filts.h
 pk_keys.cpp
 pk_keys.h
 pkcs8.cpp
