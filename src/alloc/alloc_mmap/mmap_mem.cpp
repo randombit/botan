@@ -75,7 +75,9 @@ void* MemoryMapping_Allocator::alloc_block(u32bit n)
    if(::unlink(file.path().c_str()))
       throw MemoryMapping_Failed("Could not unlink file '" + file.path() + "'");
 
-   ::lseek(file.get_fd(), n-1, SEEK_SET);
+   if(::lseek(file.get_fd(), n-1, SEEK_SET) < 0)
+      throw MemoryMapping_Failed("Could not seek file");
+
    if(::write(file.get_fd(), "\0", 1) != 1)
       throw MemoryMapping_Failed("Could not write to file");
 
