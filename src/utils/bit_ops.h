@@ -78,7 +78,7 @@ inline u32bit hamming_weight(T n)
 template<typename T>
 inline u32bit ctz(T n)
    {
-   for(int i = 0; i != 8*sizeof(T); ++i)
+   for(u32bit i = 0; i != 8*sizeof(T); ++i)
       if((n >> i) & 0x01)
          return i;
    return 8*sizeof(T);
