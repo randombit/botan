@@ -25,8 +25,8 @@
   #include <botan/desx.h>
 #endif
 
-#if defined(BOTAN_HAS_GOST)
-  #include <botan/gost.h>
+#if defined(BOTAN_HAS_GOST_28147_89)
+  #include <botan/gost_28147.h>
 #endif
 
 #if defined(BOTAN_HAS_IDEA)
@@ -143,9 +143,9 @@ Default_Engine::find_block_cipher(const SCAN_Name& request,
       return new TripleDES;
 #endif
 
-#if defined(BOTAN_HAS_GOST)
-   if(request.algo_name() == "GOST")
-      return new GOST;
+#if defined(BOTAN_HAS_GOST_28147_89)
+   if(request.algo_name() == "GOST-28147-89")
+      return new GOST_28147_89;
 #endif
 
 #if defined(BOTAN_HAS_IDEA)

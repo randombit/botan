@@ -1,0 +1,10 @@
+realname "GOST 28147-89"
+
+define GOST_28147_89
+
+load_on auto
+
+<add>
+gost_28147.cpp
+gost_28147.h
+</add>
