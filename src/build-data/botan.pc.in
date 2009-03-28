@@ -7,5 +7,6 @@ Name: Botan
 Description: Multi-platform C++ crypto library
 Version: @{var:version}
 
-Libs: -L${libdir} -lbotan @{var:link_to}
+Libs: -L${libdir} -lbotan
+Libs.private: @{var:link_to}
 Cflags: -I${includedir}
