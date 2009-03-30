@@ -1,7 +1,9 @@
-/*************************************************
-* EME PKCS#1 v1.5 Header File                    *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* EME PKCS#1 v1.5
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_EME_PKCS1_H__
 #define BOTAN_EME_PKCS1_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* EME_PKCS1v15                                   *
-*************************************************/
+/*
+* EME_PKCS1v15
+*/
 class BOTAN_DLL EME_PKCS1v15 : public EME
    {
    public:

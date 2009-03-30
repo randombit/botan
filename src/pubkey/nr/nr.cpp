@@ -1,7 +1,9 @@
-/*************************************************
-* Nyberg-Rueppel Source File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Nyberg-Rueppel
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/nr.h>
 #include <botan/numthry.h>
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* NR_PublicKey Constructor                       *
-*************************************************/
+/*
+* NR_PublicKey Constructor
+*/
 NR_PublicKey::NR_PublicKey(const DL_Group& grp, const BigInt& y1)
    {
    group = grp;
@@ -20,41 +22,41 @@ NR_PublicKey::NR_PublicKey(const DL_Group& grp, const BigInt& y1)
    X509_load_hook();
    }
 
-/*************************************************
-* Algorithm Specific X.509 Initialization Code   *
-*************************************************/
+/*
+* Algorithm Specific X.509 Initialization Code
+*/
 void NR_PublicKey::X509_load_hook()
    {
    core = NR_Core(group, y);
    }
 
-/*************************************************
-* Nyberg-Rueppel Verification Function           *
-*************************************************/
+/*
+* Nyberg-Rueppel Verification Function
+*/
 SecureVector<byte> NR_PublicKey::verify(const byte sig[], u32bit sig_len) const
    {
    return core.verify(sig, sig_len);
    }
 
-/*************************************************
-* Return the maximum input size in bits          *
-*************************************************/
+/*
+* Return the maximum input size in bits
+*/
 u32bit NR_PublicKey::max_input_bits() const
    {
    return (group_q().bits() - 1);
    }
 
-/*************************************************
-* Return the size of each portion of the sig     *
-*************************************************/
+/*
+* Return the size of each portion of the sig
+*/
 u32bit NR_PublicKey::message_part_size() const
    {
    return group_q().bytes();
    }
 
-/*************************************************
-* Create a NR private key                        *
-*************************************************/
+/*
+* Create a NR private key
+*/
 NR_PrivateKey::NR_PrivateKey(RandomNumberGenerator& rng,
                              const DL_Group& grp,
                              const BigInt& x_arg)
@@ -71,9 +73,9 @@ NR_PrivateKey::NR_PrivateKey(RandomNumberGenerator& rng,
       PKCS8_load_hook(rng, false);
    }
 
-/*************************************************
-* Algorithm Specific PKCS #8 Initialization Code *
-*************************************************/
+/*
+* Algorithm Specific PKCS #8 Initialization Code
+*/
 void NR_PrivateKey::PKCS8_load_hook(RandomNumberGenerator& rng,
                                     bool generated)
    {
@@ -87,9 +89,9 @@ void NR_PrivateKey::PKCS8_load_hook(RandomNumberGenerator& rng,
       load_check(rng);
    }
 
-/*************************************************
-* Nyberg-Rueppel Signature Operation             *
-*************************************************/
+/*
+* Nyberg-Rueppel Signature Operation
+*/
 SecureVector<byte> NR_PrivateKey::sign(const byte in[], u32bit length,
                                        RandomNumberGenerator& rng) const
    {
@@ -103,9 +105,9 @@ SecureVector<byte> NR_PrivateKey::sign(const byte in[], u32bit length,
    return core.sign(in, length, k);
    }
 
-/*************************************************
-* Check Private Nyberg-Rueppel Parameters        *
-*************************************************/
+/*
+* Check Private Nyberg-Rueppel Parameters
+*/
 bool NR_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    {
    if(!DL_Scheme_PrivateKey::check_key(rng, strong) || x >= group_q())

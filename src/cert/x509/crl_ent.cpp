@@ -1,7 +1,9 @@
-/*************************************************
-* CRL Entry Source File                          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CRL Entry
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/crl_ent.h>
 #include <botan/x509_ext.h>
@@ -13,18 +15,18 @@
 
 namespace Botan {
 
-/*************************************************
-* Create a CRL_Entry                             *
-*************************************************/
+/*
+* Create a CRL_Entry
+*/
 CRL_Entry::CRL_Entry(bool t_on_unknown_crit) :
    throw_on_unknown_critical(t_on_unknown_crit)
    {
    reason = UNSPECIFIED;
    }
 
-/*************************************************
-* Create a CRL_Entry                             *
-*************************************************/
+/*
+* Create a CRL_Entry
+*/
 CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why) :
    throw_on_unknown_critical(false)
    {
@@ -33,9 +35,9 @@ CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why) :
    reason = why;
    }
 
-/*************************************************
-* Compare two CRL_Entrys for equality            *
-*************************************************/
+/*
+* Compare two CRL_Entrys for equality
+*/
 bool operator==(const CRL_Entry& a1, const CRL_Entry& a2)
    {
    if(a1.serial_number() != a2.serial_number())
@@ -47,25 +49,25 @@ bool operator==(const CRL_Entry& a1, const CRL_Entry& a2)
    return true;
    }
 
-/*************************************************
-* Compare two CRL_Entrys for inequality          *
-*************************************************/
+/*
+* Compare two CRL_Entrys for inequality
+*/
 bool operator!=(const CRL_Entry& a1, const CRL_Entry& a2)
    {
    return !(a1 == a2);
    }
 
-/*************************************************
-* Compare two CRL_Entrys                         *
-*************************************************/
+/*
+* Compare two CRL_Entrys
+*/
 bool operator<(const CRL_Entry& a1, const CRL_Entry& a2)
    {
    return (a1.expire_time().cmp(a2.expire_time()) < 0);
    }
 
-/*************************************************
-* DER encode a CRL_Entry                         *
-*************************************************/
+/*
+* DER encode a CRL_Entry
+*/
 void CRL_Entry::encode_into(DER_Encoder& der) const
    {
    Extensions extensions;
@@ -79,9 +81,9 @@ void CRL_Entry::encode_into(DER_Encoder& der) const
       .end_cons();
    }
 
-/*************************************************
-* Decode a BER encoded CRL_Entry                 *
-*************************************************/
+/*
+* Decode a BER encoded CRL_Entry
+*/
 void CRL_Entry::decode_from(BER_Decoder& source)
    {
    BigInt serial_number_bn;

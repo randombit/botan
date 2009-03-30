@@ -1,7 +1,9 @@
-/*************************************************
-* RIPEMD-160 Source File                         *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* RIPEMD-160
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/rmd160.h>
 #include <botan/loadstor.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* RIPEMD-160 F1 Function                         *
-*************************************************/
+/*
+* RIPEMD-160 F1 Function
+*/
 inline void F1(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
                u32bit msg, u32bit shift)
    {
@@ -22,9 +24,9 @@ inline void F1(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
    C  = rotate_left(C, 10);
    }
 
-/*************************************************
-* RIPEMD-160 F2 Function                         *
-*************************************************/
+/*
+* RIPEMD-160 F2 Function
+*/
 inline void F2(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
                u32bit msg, u32bit shift, u32bit magic)
    {
@@ -33,9 +35,9 @@ inline void F2(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
    C  = rotate_left(C, 10);
    }
 
-/*************************************************
-* RIPEMD-160 F3 Function                         *
-*************************************************/
+/*
+* RIPEMD-160 F3 Function
+*/
 inline void F3(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
                u32bit msg, u32bit shift, u32bit magic)
    {
@@ -44,9 +46,9 @@ inline void F3(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
    C  = rotate_left(C, 10);
    }
 
-/*************************************************
-* RIPEMD-160 F4 Function                         *
-*************************************************/
+/*
+* RIPEMD-160 F4 Function
+*/
 inline void F4(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
                u32bit msg, u32bit shift, u32bit magic)
    {
@@ -55,9 +57,9 @@ inline void F4(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
    C  = rotate_left(C, 10);
    }
 
-/*************************************************
-* RIPEMD-160 F5 Function                         *
-*************************************************/
+/*
+* RIPEMD-160 F5 Function
+*/
 inline void F5(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
                u32bit msg, u32bit shift, u32bit magic)
    {
@@ -68,9 +70,9 @@ inline void F5(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
 
 }
 
-/*************************************************
-* RIPEMD-160 Compression Function                *
-*************************************************/
+/*
+* RIPEMD-160 Compression Function
+*/
 void RIPEMD_160::compress_n(const byte input[], u32bit blocks)
    {
    const u32bit MAGIC2 = 0x5A827999, MAGIC3 = 0x6ED9EBA1,
@@ -182,18 +184,18 @@ void RIPEMD_160::compress_n(const byte input[], u32bit blocks)
       }
    }
 
-/*************************************************
-* Copy out the digest                            *
-*************************************************/
+/*
+* Copy out the digest
+*/
 void RIPEMD_160::copy_out(byte output[])
    {
    for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
       store_le(digest[j/4], output + j);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void RIPEMD_160::clear() throw()
    {
    MDx_HashFunction::clear();

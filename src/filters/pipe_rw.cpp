@@ -1,7 +1,9 @@
-/*************************************************
-* Pipe Reading/Writing Source File               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Pipe Reading/Writing
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/pipe.h>
 #include <botan/out_buf.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Look up the canonical ID for a queue           *
-*************************************************/
+/*
+* Look up the canonical ID for a queue
+*/
 Pipe::message_id Pipe::get_message_no(const std::string& func_name,
                                       message_id msg) const
    {
@@ -26,9 +28,9 @@ Pipe::message_id Pipe::get_message_no(const std::string& func_name,
    return msg;
    }
 
-/*************************************************
-* Write into a Pipe                              *
-*************************************************/
+/*
+* Write into a Pipe
+*/
 void Pipe::write(const byte input[], u32bit length)
    {
    if(!inside_msg)
@@ -36,33 +38,33 @@ void Pipe::write(const byte input[], u32bit length)
    pipe->write(input, length);
    }
 
-/*************************************************
-* Write into a Pipe                              *
-*************************************************/
+/*
+* Write into a Pipe
+*/
 void Pipe::write(const MemoryRegion<byte>& input)
    {
    write(input.begin(), input.size());
    }
 
-/*************************************************
-* Write a string into a Pipe                     *
-*************************************************/
+/*
+* Write a string into a Pipe
+*/
 void Pipe::write(const std::string& str)
    {
    write(reinterpret_cast<const byte*>(str.data()), str.size());
    }
 
-/*************************************************
-* Write a single byte into a Pipe                *
-*************************************************/
+/*
+* Write a single byte into a Pipe
+*/
 void Pipe::write(byte input)
    {
    write(&input, 1);
    }
 
-/*************************************************
-* Write the contents of a DataSource into a Pipe *
-*************************************************/
+/*
+* Write the contents of a DataSource into a Pipe
+*/
 void Pipe::write(DataSource& source)
    {
    SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
@@ -73,33 +75,33 @@ void Pipe::write(DataSource& source)
       }
    }
 
-/*************************************************
-* Read some data from the pipe                   *
-*************************************************/
+/*
+* Read some data from the pipe
+*/
 u32bit Pipe::read(byte output[], u32bit length, message_id msg)
    {
    return outputs->read(output, length, get_message_no("read", msg));
    }
 
-/*************************************************
-* Read some data from the pipe                   *
-*************************************************/
+/*
+* Read some data from the pipe
+*/
 u32bit Pipe::read(byte output[], u32bit length)
    {
    return read(output, length, DEFAULT_MESSAGE);
    }
 
-/*************************************************
-* Read a single byte from the pipe               *
-*************************************************/
+/*
+* Read a single byte from the pipe
+*/
 u32bit Pipe::read(byte& out, message_id msg)
    {
    return read(&out, 1, msg);
    }
 
-/*************************************************
-* Return all data in the pipe                    *
-*************************************************/
+/*
+* Return all data in the pipe
+*/
 SecureVector<byte> Pipe::read_all(message_id msg)
    {
    msg = ((msg != DEFAULT_MESSAGE) ? msg : default_msg());
@@ -108,9 +110,9 @@ SecureVector<byte> Pipe::read_all(message_id msg)
    return buffer;
    }
 
-/*************************************************
-* Return all data in the pipe as a string        *
-*************************************************/
+/*
+* Return all data in the pipe as a string
+*/
 std::string Pipe::read_all_as_string(message_id msg)
    {
    msg = ((msg != DEFAULT_MESSAGE) ? msg : default_msg());
@@ -129,34 +131,34 @@ std::string Pipe::read_all_as_string(message_id msg)
    return str;
    }
 
-/*************************************************
-* Find out how many bytes are ready to read      *
-*************************************************/
+/*
+* Find out how many bytes are ready to read
+*/
 u32bit Pipe::remaining(message_id msg) const
    {
    return outputs->remaining(get_message_no("remaining", msg));
    }
 
-/*************************************************
-* Peek at some data in the pipe                  *
-*************************************************/
+/*
+* Peek at some data in the pipe
+*/
 u32bit Pipe::peek(byte output[], u32bit length,
                   u32bit offset, message_id msg) const
    {
    return outputs->peek(output, length, offset, get_message_no("peek", msg));
    }
 
-/*************************************************
-* Peek at some data in the pipe                  *
-*************************************************/
+/*
+* Peek at some data in the pipe
+*/
 u32bit Pipe::peek(byte output[], u32bit length, u32bit offset) const
    {
    return peek(output, length, offset, DEFAULT_MESSAGE);
    }
 
-/*************************************************
-* Peek at a byte in the pipe                     *
-*************************************************/
+/*
+* Peek at a byte in the pipe
+*/
 u32bit Pipe::peek(byte& out, u32bit offset, message_id msg) const
    {
    return peek(&out, 1, offset, msg);

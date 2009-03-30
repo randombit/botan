@@ -1,7 +1,9 @@
-/*************************************************
-* CMS Compression Source File                    *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CMS Compression
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/cms_enc.h>
 #include <botan/cms_dec.h>
@@ -16,9 +18,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Compress a message                             *
-*************************************************/
+/*
+* Compress a message
+*/
 void CMS_Encoder::compress(const std::string& algo)
    {
    if(!CMS_Encoder::can_compress_with(algo))
@@ -48,9 +50,9 @@ void CMS_Encoder::compress(const std::string& algo)
    add_layer("CMS.CompressedData", encoder);
    }
 
-/*************************************************
-* See if the named compression algo is available *
-*************************************************/
+/*
+* See if the named compression algo is available
+*/
 bool CMS_Encoder::can_compress_with(const std::string& algo)
    {
    if(algo == "")
@@ -64,9 +66,9 @@ bool CMS_Encoder::can_compress_with(const std::string& algo)
    return false;
    }
 
-/*************************************************
-* Decompress a message                           *
-*************************************************/
+/*
+* Decompress a message
+*/
 void CMS_Decoder::decompress(BER_Decoder& decoder)
    {
    u32bit version;

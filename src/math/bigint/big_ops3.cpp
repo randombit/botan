@@ -1,7 +1,9 @@
-/*************************************************
-* BigInt Binary Operators Source File            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* BigInt Binary Operators
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/bigint.h>
 #include <botan/divide.h>
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Addition Operator                              *
-*************************************************/
+/*
+* Addition Operator
+*/
 BigInt operator+(const BigInt& x, const BigInt& y)
    {
    const u32bit x_sw = x.sig_words(), y_sw = y.sig_words();
@@ -40,9 +42,9 @@ BigInt operator+(const BigInt& x, const BigInt& y)
    return z;
    }
 
-/*************************************************
-* Subtraction Operator                           *
-*************************************************/
+/*
+* Subtraction Operator
+*/
 BigInt operator-(const BigInt& x, const BigInt& y)
    {
    const u32bit x_sw = x.sig_words(), y_sw = y.sig_words();
@@ -75,9 +77,9 @@ BigInt operator-(const BigInt& x, const BigInt& y)
    return z;
    }
 
-/*************************************************
-* Multiplication Operator                        *
-*************************************************/
+/*
+* Multiplication Operator
+*/
 BigInt operator*(const BigInt& x, const BigInt& y)
    {
    const u32bit x_sw = x.sig_words(), y_sw = y.sig_words();
@@ -101,9 +103,9 @@ BigInt operator*(const BigInt& x, const BigInt& y)
    return z;
    }
 
-/*************************************************
-* Division Operator                              *
-*************************************************/
+/*
+* Division Operator
+*/
 BigInt operator/(const BigInt& x, const BigInt& y)
    {
    BigInt q, r;
@@ -111,9 +113,9 @@ BigInt operator/(const BigInt& x, const BigInt& y)
    return q;
    }
 
-/*************************************************
-* Modulo Operator                                *
-*************************************************/
+/*
+* Modulo Operator
+*/
 BigInt operator%(const BigInt& n, const BigInt& mod)
    {
    if(mod.is_zero())
@@ -128,9 +130,9 @@ BigInt operator%(const BigInt& n, const BigInt& mod)
    return r;
    }
 
-/*************************************************
-* Modulo Operator                                *
-*************************************************/
+/*
+* Modulo Operator
+*/
 word operator%(const BigInt& n, word mod)
    {
    if(mod == 0)
@@ -148,9 +150,9 @@ word operator%(const BigInt& n, word mod)
    return remainder;
    }
 
-/*************************************************
-* Left Shift Operator                            *
-*************************************************/
+/*
+* Left Shift Operator
+*/
 BigInt operator<<(const BigInt& x, u32bit shift)
    {
    if(shift == 0)
@@ -166,9 +168,9 @@ BigInt operator<<(const BigInt& x, u32bit shift)
    return y;
    }
 
-/*************************************************
-* Right Shift Operator                           *
-*************************************************/
+/*
+* Right Shift Operator
+*/
 BigInt operator>>(const BigInt& x, u32bit shift)
    {
    if(shift == 0)

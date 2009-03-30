@@ -1,16 +1,18 @@
-/*************************************************
-* BigInt Input/Output Source File                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* BigInt Input/Output
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/bigint.h>
 #include <iostream>
 
 namespace Botan {
 
-/*************************************************
-* Write the BigInt into a stream                 *
-*************************************************/
+/*
+* Write the BigInt into a stream
+*/
 std::ostream& operator<<(std::ostream& stream, const BigInt& n)
    {
    BigInt::Base base = BigInt::Decimal;
@@ -37,9 +39,9 @@ std::ostream& operator<<(std::ostream& stream, const BigInt& n)
    return stream;
    }
 
-/*************************************************
-* Read the BigInt from a stream                  *
-*************************************************/
+/*
+* Read the BigInt from a stream
+*/
 std::istream& operator>>(std::istream& stream, BigInt& n)
    {
    std::string str;

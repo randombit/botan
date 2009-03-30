@@ -1,16 +1,18 @@
-/*************************************************
-* SecureQueue Source File                        *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* SecureQueue
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/secqueue.h>
 #include <algorithm>
 
 namespace Botan {
 
-/*************************************************
-* SecureQueueNode                                *
-*************************************************/
+/*
+* SecureQueueNode
+*/
 class SecureQueueNode
    {
    public:
@@ -46,18 +48,18 @@ class SecureQueueNode
       u32bit start, end;
    };
 
-/*************************************************
-* Create a SecureQueue                           *
-*************************************************/
+/*
+* Create a SecureQueue
+*/
 SecureQueue::SecureQueue()
    {
    set_next(0, 0);
    head = tail = new SecureQueueNode;
    }
 
-/*************************************************
-* Copy a SecureQueue                             *
-*************************************************/
+/*
+* Copy a SecureQueue
+*/
 SecureQueue::SecureQueue(const SecureQueue& input) :
    Fanout_Filter(), DataSource()
    {
@@ -72,9 +74,9 @@ SecureQueue::SecureQueue(const SecureQueue& input) :
       }
    }
 
-/*************************************************
-* Destroy this SecureQueue                       *
-*************************************************/
+/*
+* Destroy this SecureQueue
+*/
 void SecureQueue::destroy()
    {
    SecureQueueNode* temp = head;
@@ -87,9 +89,9 @@ void SecureQueue::destroy()
    head = tail = 0;
    }
 
-/*************************************************
-* Copy a SecureQueue                             *
-*************************************************/
+/*
+* Copy a SecureQueue
+*/
 SecureQueue& SecureQueue::operator=(const SecureQueue& input)
    {
    destroy();
@@ -103,9 +105,9 @@ SecureQueue& SecureQueue::operator=(const SecureQueue& input)
    return (*this);
    }
 
-/*************************************************
-* Add some bytes to the queue                    *
-*************************************************/
+/*
+* Add some bytes to the queue
+*/
 void SecureQueue::write(const byte input[], u32bit length)
    {
    if(!head)
@@ -123,9 +125,9 @@ void SecureQueue::write(const byte input[], u32bit length)
       }
    }
 
-/*************************************************
-* Read some bytes from the queue                 *
-*************************************************/
+/*
+* Read some bytes from the queue
+*/
 u32bit SecureQueue::read(byte output[], u32bit length)
    {
    u32bit got = 0;
@@ -145,9 +147,9 @@ u32bit SecureQueue::read(byte output[], u32bit length)
    return got;
    }
 
-/*************************************************
-* Read data, but do not remove it from queue     *
-*************************************************/
+/*
+* Read data, but do not remove it from queue
+*/
 u32bit SecureQueue::peek(byte output[], u32bit length, u32bit offset) const
    {
    SecureQueueNode* current = head;
@@ -176,9 +178,9 @@ u32bit SecureQueue::peek(byte output[], u32bit length, u32bit offset) const
    return got;
    }
 
-/*************************************************
-* Return how many bytes the queue holds          *
-*************************************************/
+/*
+* Return how many bytes the queue holds
+*/
 u32bit SecureQueue::size() const
    {
    SecureQueueNode* current = head;
@@ -192,9 +194,9 @@ u32bit SecureQueue::size() const
    return count;
    }
 
-/*************************************************
-* Test if the queue has any data in it           *
-*************************************************/
+/*
+* Test if the queue has any data in it
+*/
 bool SecureQueue::end_of_data() const
    {
    return (size() == 0);

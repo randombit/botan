@@ -1,7 +1,9 @@
-/*************************************************
-* Blowfish Header File                           *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Blowfish
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_BLOWFISH_H__
 #define BOTAN_BLOWFISH_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Blowfish                                       *
-*************************************************/
+/*
+* Blowfish
+*/
 class BOTAN_DLL Blowfish : public BlockCipher
    {
    public:

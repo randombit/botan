@@ -1,7 +1,9 @@
-/*************************************************
-* OpenSSL ARC4 Source File                       *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OpenSSL ARC4
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eng_ossl.h>
 #include <botan/parsing.h>
@@ -31,9 +33,9 @@ class ARC4_OpenSSL : public StreamCipher
       RC4_KEY state;
    };
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/*
+* Return the name of this type
+*/
 std::string ARC4_OpenSSL::name() const
    {
    if(SKIP == 0)   return "ARC4";
@@ -41,9 +43,9 @@ std::string ARC4_OpenSSL::name() const
    else            return "RC4_skip(" + to_string(SKIP) + ")";
    }
 
-/*************************************************
-* ARC4 Key Schedule                              *
-*************************************************/
+/*
+* ARC4 Key Schedule
+*/
 void ARC4_OpenSSL::key_schedule(const byte key[], u32bit length)
    {
    RC4_set_key(&state, length, key);
@@ -52,9 +54,9 @@ void ARC4_OpenSSL::key_schedule(const byte key[], u32bit length)
       RC4(&state, 1, &dummy, &dummy);
    }
 
-/*************************************************
-* ARC4 Encryption                                *
-*************************************************/
+/*
+* ARC4 Encryption
+*/
 void ARC4_OpenSSL::cipher(const byte in[], byte out[], u32bit length)
    {
    RC4(&state, length, in, out);

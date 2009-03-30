@@ -1,7 +1,9 @@
-/*************************************************
-* OpenSSL Block Cipher Source File               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OpenSSL Block Cipher
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eng_ossl.h>
 #include <openssl/evp.h>
@@ -10,9 +12,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* EVP Block Cipher                               *
-*************************************************/
+/*
+* EVP Block Cipher
+*/
 class EVP_BlockCipher : public BlockCipher
    {
    public:
@@ -32,9 +34,9 @@ class EVP_BlockCipher : public BlockCipher
       mutable EVP_CIPHER_CTX encrypt, decrypt;
    };
 
-/*************************************************
-* EVP Block Cipher Constructor                   *
-*************************************************/
+/*
+* EVP Block Cipher Constructor
+*/
 EVP_BlockCipher::EVP_BlockCipher(const EVP_CIPHER* algo,
                                  const std::string& algo_name) :
    BlockCipher(EVP_CIPHER_block_size(algo), EVP_CIPHER_key_length(algo)),
@@ -53,9 +55,9 @@ EVP_BlockCipher::EVP_BlockCipher(const EVP_CIPHER* algo,
    EVP_CIPHER_CTX_set_padding(&decrypt, 0);
    }
 
-/*************************************************
-* EVP Block Cipher Constructor                   *
-*************************************************/
+/*
+* EVP Block Cipher Constructor
+*/
 EVP_BlockCipher::EVP_BlockCipher(const EVP_CIPHER* algo,
                                  const std::string& algo_name,
                                  u32bit key_min, u32bit key_max,
@@ -76,36 +78,36 @@ EVP_BlockCipher::EVP_BlockCipher(const EVP_CIPHER* algo,
    EVP_CIPHER_CTX_set_padding(&decrypt, 0);
    }
 
-/*************************************************
-* EVP Block Cipher Destructor                    *
-*************************************************/
+/*
+* EVP Block Cipher Destructor
+*/
 EVP_BlockCipher::~EVP_BlockCipher()
    {
    EVP_CIPHER_CTX_cleanup(&encrypt);
    EVP_CIPHER_CTX_cleanup(&decrypt);
    }
 
-/*************************************************
-* Encrypt a block                                *
-*************************************************/
+/*
+* Encrypt a block
+*/
 void EVP_BlockCipher::enc(const byte in[], byte out[]) const
    {
    int out_len = 0;
    EVP_EncryptUpdate(&encrypt, out, &out_len, in, BLOCK_SIZE);
    }
 
-/*************************************************
-* Decrypt a block                                *
-*************************************************/
+/*
+* Decrypt a block
+*/
 void EVP_BlockCipher::dec(const byte in[], byte out[]) const
    {
    int out_len = 0;
    EVP_DecryptUpdate(&decrypt, out, &out_len, in, BLOCK_SIZE);
    }
 
-/*************************************************
-* Set the key                                    *
-*************************************************/
+/*
+* Set the key
+*/
 void EVP_BlockCipher::key_schedule(const byte key[], u32bit length)
    {
    SecureVector<byte> full_key(key, length);
@@ -128,9 +130,9 @@ void EVP_BlockCipher::key_schedule(const byte key[], u32bit length)
    EVP_DecryptInit_ex(&decrypt, 0, 0, full_key.begin(), 0);
    }
 
-/*************************************************
-* Return a clone of this object                  *
-*************************************************/
+/*
+* Return a clone of this object
+*/
 BlockCipher* EVP_BlockCipher::clone() const
    {
    return new EVP_BlockCipher(EVP_CIPHER_CTX_cipher(&encrypt),
@@ -138,9 +140,9 @@ BlockCipher* EVP_BlockCipher::clone() const
                               MAXIMUM_KEYLENGTH, KEYLENGTH_MULTIPLE);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void EVP_BlockCipher::clear() throw()
    {
    const EVP_CIPHER* algo = EVP_CIPHER_CTX_cipher(&encrypt);
@@ -157,9 +159,9 @@ void EVP_BlockCipher::clear() throw()
 
 }
 
-/*************************************************
-* Look for an algorithm with this name           *
-*************************************************/
+/*
+* Look for an algorithm with this name
+*/
 BlockCipher*
 OpenSSL_Engine::find_block_cipher(const SCAN_Name& request,
                                   Algorithm_Factory&) const

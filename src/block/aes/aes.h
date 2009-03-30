@@ -1,6 +1,8 @@
 /**
-* AES Header File
+* AES
 * (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_AES_H__

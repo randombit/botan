@@ -1,6 +1,8 @@
 /*
 * EMSA3 and EMSA3_Raw
 * (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_EMSA3_H__

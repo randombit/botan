@@ -1,7 +1,9 @@
-/*************************************************
-* Modular Exponentiator Header File              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Modular Exponentiator
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_POWER_MOD_H__
 #define BOTAN_POWER_MOD_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Modular Exponentiator Interface                *
-*************************************************/
+/*
+* Modular Exponentiator Interface
+*/
 class BOTAN_DLL Modular_Exponentiator
    {
    public:
@@ -23,9 +25,9 @@ class BOTAN_DLL Modular_Exponentiator
       virtual ~Modular_Exponentiator() {}
    };
 
-/*************************************************
-* Modular Exponentiator Proxy                    *
-*************************************************/
+/*
+* Modular Exponentiator Proxy
+*/
 class BOTAN_DLL Power_Mod
    {
    public:
@@ -58,9 +60,9 @@ class BOTAN_DLL Power_Mod
       Usage_Hints hints;
    };
 
-/*************************************************
-* Fixed Exponent Modular Exponentiator Proxy     *
-*************************************************/
+/*
+* Fixed Exponent Modular Exponentiator Proxy
+*/
 class BOTAN_DLL Fixed_Exponent_Power_Mod : public Power_Mod
    {
    public:
@@ -72,9 +74,9 @@ class BOTAN_DLL Fixed_Exponent_Power_Mod : public Power_Mod
                                Usage_Hints = NO_HINTS);
    };
 
-/*************************************************
-* Fixed Base Modular Exponentiator Proxy         *
-*************************************************/
+/*
+* Fixed Base Modular Exponentiator Proxy
+*/
 class BOTAN_DLL Fixed_Base_Power_Mod : public Power_Mod
    {
    public:

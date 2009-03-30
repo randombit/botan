@@ -1,7 +1,9 @@
-/*************************************************
-* EMSA4 Source File                              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* EMSA4
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/emsa4.h>
 #include <botan/mgf1.h>
@@ -9,25 +11,25 @@
 
 namespace Botan {
 
-/*************************************************
-* EMSA4 Update Operation                         *
-*************************************************/
+/*
+* EMSA4 Update Operation
+*/
 void EMSA4::update(const byte input[], u32bit length)
    {
    hash->update(input, length);
    }
 
-/*************************************************
-* Return the raw (unencoded) data                *
-*************************************************/
+/*
+* Return the raw (unencoded) data
+*/
 SecureVector<byte> EMSA4::raw_data()
    {
    return hash->final();
    }
 
-/*************************************************
-* EMSA4 Encode Operation                         *
-*************************************************/
+/*
+* EMSA4 Encode Operation
+*/
 SecureVector<byte> EMSA4::encoding_of(const MemoryRegion<byte>& msg,
                                       u32bit output_bits,
                                       RandomNumberGenerator& rng)
@@ -62,9 +64,9 @@ SecureVector<byte> EMSA4::encoding_of(const MemoryRegion<byte>& msg,
    return EM;
    }
 
-/*************************************************
-* EMSA4 Decode/Verify Operation                  *
-*************************************************/
+/*
+* EMSA4 Decode/Verify Operation
+*/
 bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
                    const MemoryRegion<byte>& raw, u32bit key_bits) throw()
    {
@@ -120,18 +122,18 @@ bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
    return (H == H2);
    }
 
-/*************************************************
-* EMSA4 Constructor                              *
-*************************************************/
+/*
+* EMSA4 Constructor
+*/
 EMSA4::EMSA4(HashFunction* h) :
    SALT_SIZE(h->OUTPUT_LENGTH), hash(h)
    {
    mgf = new MGF1(hash->clone());
    }
 
-/*************************************************
-* EMSA4 Constructor                              *
-*************************************************/
+/*
+* EMSA4 Constructor
+*/
 EMSA4::EMSA4(HashFunction* h, u32bit salt_size) :
    SALT_SIZE(salt_size), hash(h)
    {

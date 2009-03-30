@@ -1,7 +1,9 @@
-/*************************************************
-* CBC Mode Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CBC Mode
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_CBC_H__
 #define BOTAN_CBC_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* CBC Encryption                                 *
-*************************************************/
+/*
+* CBC Encryption
+*/
 class BOTAN_DLL CBC_Encryption : public BlockCipherMode
    {
    public:
@@ -29,9 +31,9 @@ class BOTAN_DLL CBC_Encryption : public BlockCipherMode
       const BlockCipherModePaddingMethod* padder;
    };
 
-/*************************************************
-* CBC Decryption                                 *
-*************************************************/
+/*
+* CBC Decryption
+*/
 class BOTAN_DLL CBC_Decryption : public BlockCipherMode
    {
    public:

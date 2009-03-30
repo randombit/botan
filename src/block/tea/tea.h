@@ -1,7 +1,9 @@
-/*************************************************
-* TEA Header File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* TEA
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_TEA_H__
 #define BOTAN_TEA_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* TEA                                            *
-*************************************************/
+/*
+* TEA
+*/
 class BOTAN_DLL TEA : public BlockCipher
    {
    public:

@@ -1,7 +1,9 @@
-/*************************************************
-* DLIES Source File                              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* DLIES
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/dlies.h>
 #include <botan/look_pk.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* DLIES_Encryptor Constructor                    *
-*************************************************/
+/*
+* DLIES_Encryptor Constructor
+*/
 DLIES_Encryptor::DLIES_Encryptor(const PK_Key_Agreement_Key& k,
                                  KDF* kdf_obj,
                                  MessageAuthenticationCode* mac_obj,
@@ -26,9 +28,9 @@ DLIES_Encryptor::~DLIES_Encryptor()
    delete mac;
    }
 
-/*************************************************
-* DLIES Encryption                               *
-*************************************************/
+/*
+* DLIES Encryption
+*/
 SecureVector<byte> DLIES_Encryptor::enc(const byte in[], u32bit length,
                                         RandomNumberGenerator&) const
    {
@@ -63,25 +65,25 @@ SecureVector<byte> DLIES_Encryptor::enc(const byte in[], u32bit length,
    return out;
    }
 
-/*************************************************
-* Set the other parties public key               *
-*************************************************/
+/*
+* Set the other parties public key
+*/
 void DLIES_Encryptor::set_other_key(const MemoryRegion<byte>& ok)
    {
    other_key = ok;
    }
 
-/*************************************************
-* Return the max size, in bytes, of a message    *
-*************************************************/
+/*
+* Return the max size, in bytes, of a message
+*/
 u32bit DLIES_Encryptor::maximum_input_size() const
    {
    return 32;
    }
 
-/*************************************************
-* DLIES_Decryptor Constructor                    *
-*************************************************/
+/*
+* DLIES_Decryptor Constructor
+*/
 DLIES_Decryptor::DLIES_Decryptor(const PK_Key_Agreement_Key& k,
                                  KDF* kdf_obj,
                                  MessageAuthenticationCode* mac_obj,
@@ -96,9 +98,9 @@ DLIES_Decryptor::~DLIES_Decryptor()
    delete mac;
    }
 
-/*************************************************
-* DLIES Decryption                               *
-*************************************************/
+/*
+* DLIES Decryption
+*/
 SecureVector<byte> DLIES_Decryptor::dec(const byte msg[], u32bit length) const
    {
    const u32bit public_len = key.public_value().size();

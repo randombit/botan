@@ -1,7 +1,9 @@
-/*************************************************
-* X9.42 PRF Source File                          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X9.42 PRF
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/prf_x942.h>
 #include <botan/der_enc.h>
@@ -15,9 +17,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Encode an integer as an OCTET STRING           *
-*************************************************/
+/*
+* Encode an integer as an OCTET STRING
+*/
 MemoryVector<byte> encode_x942_int(u32bit n)
    {
    byte n_buf[4] = { 0 };
@@ -27,9 +29,9 @@ MemoryVector<byte> encode_x942_int(u32bit n)
 
 }
 
-/*************************************************
-* X9.42 PRF                                      *
-*************************************************/
+/*
+* X9.42 PRF
+*/
 SecureVector<byte> X942_PRF::derive(u32bit key_len,
                                     const byte secret[], u32bit secret_len,
                                     const byte salt[], u32bit salt_len) const
@@ -75,9 +77,9 @@ SecureVector<byte> X942_PRF::derive(u32bit key_len,
    return key;
    }
 
-/*************************************************
-* X9.42 Constructor                              *
-*************************************************/
+/*
+* X9.42 Constructor
+*/
 X942_PRF::X942_PRF(const std::string& oid)
    {
    if(OIDS::have_oid(oid))

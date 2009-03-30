@@ -1,7 +1,9 @@
-/*************************************************
-* OpenSSL Engine Source File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OpenSSL Engine
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eng_ossl.h>
 #include <botan/bn_wrap.h>
@@ -17,9 +19,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* OpenSSL ElGamal Operation                      *
-*************************************************/
+/*
+* OpenSSL ElGamal Operation
+*/
 class OpenSSL_ELG_Op : public ELG_Operation
    {
    public:
@@ -35,9 +37,9 @@ class OpenSSL_ELG_Op : public ELG_Operation
       OSSL_BN_CTX ctx;
    };
 
-/*************************************************
-* OpenSSL ElGamal Encrypt Operation              *
-*************************************************/
+/*
+* OpenSSL ElGamal Encrypt Operation
+*/
 SecureVector<byte> OpenSSL_ELG_Op::encrypt(const byte in[], u32bit length,
                                            const BigInt& k_bn) const
    {
@@ -59,9 +61,9 @@ SecureVector<byte> OpenSSL_ELG_Op::encrypt(const byte in[], u32bit length,
    return output;
    }
 
-/*************************************************
-* OpenSSL ElGamal Decrypt Operation              *
-*************************************************/
+/*
+* OpenSSL ElGamal Decrypt Operation
+*/
 BigInt OpenSSL_ELG_Op::decrypt(const BigInt& a_bn, const BigInt& b_bn) const
    {
    if(BN_is_zero(x.value))
@@ -80,9 +82,9 @@ BigInt OpenSSL_ELG_Op::decrypt(const BigInt& a_bn, const BigInt& b_bn) const
 
 }
 
-/*************************************************
-* Acquire an ElGamal op                          *
-*************************************************/
+/*
+* Acquire an ElGamal op
+*/
 ELG_Operation* OpenSSL_Engine::elg_op(const DL_Group& group, const BigInt& y,
                                       const BigInt& x) const
    {

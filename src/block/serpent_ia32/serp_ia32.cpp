@@ -1,7 +1,9 @@
-/*************************************************
-* IA-32 Serpent Source File                      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* IA-32 Serpent
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/serp_ia32.h>
 #include <botan/loadstor.h>
@@ -16,25 +18,25 @@ void botan_serpent_ia32_key_schedule(u32bit[140]);
 
 }
 
-/*************************************************
-* Serpent Encryption                             *
-*************************************************/
+/*
+* Serpent Encryption
+*/
 void Serpent_IA32::enc(const byte in[], byte out[]) const
    {
    botan_serpent_ia32_encrypt(in, out, round_key);
    }
 
-/*************************************************
-* Serpent Decryption                             *
-*************************************************/
+/*
+* Serpent Decryption
+*/
 void Serpent_IA32::dec(const byte in[], byte out[]) const
    {
    botan_serpent_ia32_decrypt(in, out, round_key);
    }
 
-/*************************************************
-* Serpent Key Schedule                           *
-*************************************************/
+/*
+* Serpent Key Schedule
+*/
 void Serpent_IA32::key_schedule(const byte key[], u32bit length)
    {
    SecureBuffer<u32bit, 140> W;

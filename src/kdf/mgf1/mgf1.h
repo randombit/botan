@@ -1,7 +1,9 @@
-/*************************************************
-* MGF1 Header File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* MGF1
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_MGF1_H__
 #define BOTAN_MGF1_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* MGF1 (Mask Generation Function)                *
-*************************************************/
+/*
+* MGF1 (Mask Generation Function)
+*/
 class BOTAN_DLL MGF1 : public MGF
    {
    public:

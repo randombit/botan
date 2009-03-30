@@ -1,7 +1,9 @@
-/*************************************************
-* Auto Seeded RNG Header File                    *
-* (C) 2008 Jack Lloyd                            *
-*************************************************/
+/*
+* Auto Seeded RNG
+* (C) 2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_AUTO_SEEDING_RNG_H__
 #define BOTAN_AUTO_SEEDING_RNG_H__

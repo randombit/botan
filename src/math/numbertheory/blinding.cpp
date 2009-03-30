@@ -1,16 +1,18 @@
-/*************************************************
-* Blinder Source File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Blinder
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/blinding.h>
 #include <botan/numthry.h>
 
 namespace Botan {
 
-/*************************************************
-* Blinder Constructor                            *
-*************************************************/
+/*
+* Blinder Constructor
+*/
 Blinder::Blinder(const BigInt& e, const BigInt& d, const BigInt& n)
    {
    if(e < 1 || d < 1 || n < 1)
@@ -21,9 +23,9 @@ Blinder::Blinder(const BigInt& e, const BigInt& d, const BigInt& n)
    this->d = d;
    }
 
-/*************************************************
-* Blind a number                                 *
-*************************************************/
+/*
+* Blind a number
+*/
 BigInt Blinder::blind(const BigInt& i) const
    {
    if(!reducer.initialized())
@@ -34,9 +36,9 @@ BigInt Blinder::blind(const BigInt& i) const
    return reducer.multiply(i, e);
    }
 
-/*************************************************
-* Unblind a number                               *
-*************************************************/
+/*
+* Unblind a number
+*/
 BigInt Blinder::unblind(const BigInt& i) const
    {
    if(!reducer.initialized())

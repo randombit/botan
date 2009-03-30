@@ -1,8 +1,10 @@
-/*************************************************
-* Win32 Mutex Header File                        *
-* (C) 2006 Luca Piccarreta                       *
-*     2006-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Win32 Mutex
+* (C) 2006 Luca Piccarreta
+*     2006-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_MUTEX_WIN32_H__
 #define BOTAN_MUTEX_WIN32_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Win32 Mutex Factory                            *
-*************************************************/
+/*
+* Win32 Mutex Factory
+*/
 class BOTAN_DLL Win32_Mutex_Factory : public Mutex_Factory
    {
    public:

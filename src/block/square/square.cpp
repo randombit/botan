@@ -1,7 +1,9 @@
-/*************************************************
-* Square Source File                             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Square
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/square.h>
 #include <botan/loadstor.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Square Encryption                              *
-*************************************************/
+/*
+* Square Encryption
+*/
 void Square::enc(const byte in[], byte out[]) const
    {
    u32bit T0, T1, T2, T3, B0, B1, B2, B3;
@@ -60,9 +62,9 @@ void Square::enc(const byte in[], byte out[]) const
    out[15] = SE[get_byte(3, B3)] ^ ME[31];
    }
 
-/*************************************************
-* Square Decryption                              *
-*************************************************/
+/*
+* Square Decryption
+*/
 void Square::dec(const byte in[], byte out[]) const
    {
    u32bit T0, T1, T2, T3, B0, B1, B2, B3;
@@ -111,9 +113,9 @@ void Square::dec(const byte in[], byte out[]) const
    out[15] = SD[get_byte(3, B3)] ^ MD[31];
    }
 
-/*************************************************
-* Square Key Schedule                            *
-*************************************************/
+/*
+* Square Key Schedule
+*/
 void Square::key_schedule(const byte key[], u32bit)
    {
    SecureBuffer<u32bit, 36> XEK, XDK;
@@ -140,9 +142,9 @@ void Square::key_schedule(const byte key[], u32bit)
    DK.copy(XDK + 4, 28);
    }
 
-/*************************************************
-* Square's Inverse Linear Transformation         *
-*************************************************/
+/*
+* Square's Inverse Linear Transformation
+*/
 void Square::transform(u32bit round_key[4])
    {
    static const byte G[4][4] = {
@@ -171,9 +173,9 @@ void Square::transform(u32bit round_key[4])
       }
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void Square::clear() throw()
    {
    EK.clear();

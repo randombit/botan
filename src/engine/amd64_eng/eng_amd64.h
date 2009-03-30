@@ -1,6 +1,8 @@
 /**
 * x86-64 Assembly Implementation Engines
 * (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_AMD64_ASM_ENGINE_H__

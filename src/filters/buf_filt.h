@@ -1,7 +1,9 @@
-/*************************************************
-* Buffering Filter Header File                   *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Buffering Filter
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_BUFFERING_FILTER_H__
 #define BOTAN_BUFFERING_FILTER_H__

@@ -1,7 +1,9 @@
-/*************************************************
-* RC5 Source File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* RC5
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/rc5.h>
 #include <botan/loadstor.h>
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* RC5 Encryption                                 *
-*************************************************/
+/*
+* RC5 Encryption
+*/
 void RC5::enc(const byte in[], byte out[]) const
    {
    u32bit A = load_le<u32bit>(in, 0), B = load_le<u32bit>(in, 1);
@@ -34,9 +36,9 @@ void RC5::enc(const byte in[], byte out[]) const
    store_le(out, A, B);
    }
 
-/*************************************************
-* RC5 Decryption                                 *
-*************************************************/
+/*
+* RC5 Decryption
+*/
 void RC5::dec(const byte in[], byte out[]) const
    {
    u32bit A = load_le<u32bit>(in, 0), B = load_le<u32bit>(in, 1);
@@ -57,9 +59,9 @@ void RC5::dec(const byte in[], byte out[]) const
    store_le(out, A, B);
    }
 
-/*************************************************
-* RC5 Key Schedule                               *
-*************************************************/
+/*
+* RC5 Key Schedule
+*/
 void RC5::key_schedule(const byte key[], u32bit length)
    {
    const u32bit WORD_KEYLENGTH = (((length - 1) / 4) + 1),
@@ -80,17 +82,17 @@ void RC5::key_schedule(const byte key[], u32bit length)
       }
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/*
+* Return the name of this type
+*/
 std::string RC5::name() const
    {
    return "RC5(" + to_string(ROUNDS) + ")";
    }
 
-/*************************************************
-* RC5 Constructor                                *
-*************************************************/
+/*
+* RC5 Constructor
+*/
 RC5::RC5(u32bit r) : BlockCipher(8, 1, 32), ROUNDS(r)
    {
    if(ROUNDS < 8 || ROUNDS > 32 || (ROUNDS % 4 != 0))

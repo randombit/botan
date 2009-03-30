@@ -1,7 +1,9 @@
-/*************************************************
-* Hash Algorithms Lookup                         *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Hash Algorithms Lookup
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/def_eng.h>
 #include <botan/scan_name.h>
@@ -71,9 +73,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Look for an algorithm with this name           *
-*************************************************/
+/*
+* Look for an algorithm with this name
+*/
 HashFunction*
 Default_Engine::find_hash(const SCAN_Name& request,
                           Algorithm_Factory& af) const

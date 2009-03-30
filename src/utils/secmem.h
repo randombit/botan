@@ -1,7 +1,9 @@
-/*************************************************
-* Secure Memory Buffers Header File              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Secure Memory Buffers
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_SECURE_MEMORY_BUFFERS_H__
 #define BOTAN_SECURE_MEMORY_BUFFERS_H__
@@ -226,9 +228,9 @@ class MemoryRegion
       Allocator* alloc;
    };
 
-/*************************************************
-* Create a new buffer                            *
-*************************************************/
+/*
+* Create a new buffer
+*/
 template<typename T>
 void MemoryRegion<T>::create(u32bit n)
    {
@@ -238,9 +240,9 @@ void MemoryRegion<T>::create(u32bit n)
    allocated = used = n;
    }
 
-/*************************************************
-* Increase the size of the buffer                *
-*************************************************/
+/*
+* Increase the size of the buffer
+*/
 template<typename T>
 void MemoryRegion<T>::grow_to(u32bit n)
    {
@@ -260,9 +262,9 @@ void MemoryRegion<T>::grow_to(u32bit n)
       }
    }
 
-/*************************************************
-* Compare this buffer with another one           *
-*************************************************/
+/*
+* Compare this buffer with another one
+*/
 template<typename T>
 bool MemoryRegion<T>::operator<(const MemoryRegion<T>& in) const
    {
@@ -278,9 +280,9 @@ bool MemoryRegion<T>::operator<(const MemoryRegion<T>& in) const
    return false;
    }
 
-/*************************************************
-* Swap this buffer with another one              *
-*************************************************/
+/*
+* Swap this buffer with another one
+*/
 template<typename T>
 void MemoryRegion<T>::swap(MemoryRegion<T>& x)
    {
@@ -309,7 +311,7 @@ class MemoryVector : public MemoryRegion<T>
       /**
       * Create a buffer of the specified length.
       * @param n the length of the buffer to create.
-      *
+
       */
       MemoryVector(u32bit n = 0) { MemoryRegion<T>::init(false, n); }
 
@@ -361,7 +363,7 @@ class SecureVector : public MemoryRegion<T>
       /**
       * Create a buffer of the specified length.
       * @param n the length of the buffer to create.
-      *
+
       */
       SecureVector(u32bit n = 0) { MemoryRegion<T>::init(true, n); }
 

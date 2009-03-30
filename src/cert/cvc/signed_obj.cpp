@@ -1,16 +1,18 @@
-/*************************************************
-* X.509 SIGNED Object Source File                *
-* (C) 1999-2007 Jack Lloyd                       *
-*     2007 FlexSecure GmbH                       *
-*************************************************/
+/*
+* X.509 SIGNED Object
+* (C) 1999-2007 Jack Lloyd
+*     2007 FlexSecure GmbH
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/signed_obj.h>
 
 namespace Botan {
 
-/*************************************************
-* Return a BER encoded X.509 object              *
-*************************************************/
+/*
+* Return a BER encoded X.509 object
+*/
 SecureVector<byte> EAC_Signed_Object::BER_encode() const
    {
    Pipe ber;
@@ -20,9 +22,9 @@ SecureVector<byte> EAC_Signed_Object::BER_encode() const
    return ber.read_all();
    }
 
-/*************************************************
-* Return a PEM encoded X.509 object              *
-*************************************************/
+/*
+* Return a PEM encoded X.509 object
+*/
 std::string EAC_Signed_Object::PEM_encode() const
    {
    Pipe pem;
@@ -32,17 +34,17 @@ std::string EAC_Signed_Object::PEM_encode() const
    return pem.read_all_as_string();
    }
 
-/*************************************************
-* Return the algorithm used to sign this object  *
-*************************************************/
+/*
+* Return the algorithm used to sign this object
+*/
 AlgorithmIdentifier EAC_Signed_Object::signature_algorithm() const
    {
    return sig_algo;
    }
 
-/*************************************************
-* Try to decode the actual information           *
-*************************************************/
+/*
+* Try to decode the actual information
+*/
 void EAC_Signed_Object::do_decode()
    {
    try {

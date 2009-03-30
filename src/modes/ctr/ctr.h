@@ -1,7 +1,9 @@
-/*************************************************
-* CTR Mode Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CTR Mode
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_COUNTER_MODE_H__
 #define BOTAN_COUNTER_MODE_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* CTR-BE Mode                                    *
-*************************************************/
+/*
+* CTR-BE Mode
+*/
 class BOTAN_DLL CTR_BE : public BlockCipherMode
    {
    public:

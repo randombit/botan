@@ -1,7 +1,9 @@
-/*************************************************
-* Parallel Source File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Parallel
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/par_hash.h>
 
@@ -9,9 +11,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Return the sum of the hash sizes               *
-*************************************************/
+/*
+* Return the sum of the hash sizes
+*/
 u32bit sum_of_hash_lengths(const std::vector<HashFunction*>& hashes)
    {
    u32bit sum = 0;
@@ -24,18 +26,18 @@ u32bit sum_of_hash_lengths(const std::vector<HashFunction*>& hashes)
 
 }
 
-/*************************************************
-* Update the hash                                *
-*************************************************/
+/*
+* Update the hash
+*/
 void Parallel::add_data(const byte input[], u32bit length)
    {
    for(u32bit j = 0; j != hashes.size(); ++j)
       hashes[j]->update(input, length);
    }
 
-/*************************************************
-* Finalize the hash                              *
-*************************************************/
+/*
+* Finalize the hash
+*/
 void Parallel::final_result(byte hash[])
    {
    u32bit offset = 0;
@@ -46,9 +48,9 @@ void Parallel::final_result(byte hash[])
       }
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/*
+* Return the name of this type
+*/
 std::string Parallel::name() const
    {
    std::string hash_names;
@@ -61,9 +63,9 @@ std::string Parallel::name() const
    return "Parallel(" + hash_names + ")";
    }
 
-/*************************************************
-* Return a clone of this object                  *
-*************************************************/
+/*
+* Return a clone of this object
+*/
 HashFunction* Parallel::clone() const
    {
    std::vector<HashFunction*> hash_copies;
@@ -72,26 +74,26 @@ HashFunction* Parallel::clone() const
    return new Parallel(hash_copies);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void Parallel::clear() throw()
    {
    for(u32bit j = 0; j != hashes.size(); ++j)
       hashes[j]->clear();
    }
 
-/*************************************************
-* Parallel Constructor                           *
-*************************************************/
+/*
+* Parallel Constructor
+*/
 Parallel::Parallel(const std::vector<HashFunction*>& hash_in) :
    HashFunction(sum_of_hash_lengths(hash_in)), hashes(hash_in)
    {
    }
 
-/*************************************************
-* Parallel Destructor                            *
-*************************************************/
+/*
+* Parallel Destructor
+*/
 Parallel::~Parallel()
    {
    for(u32bit j = 0; j != hashes.size(); ++j)

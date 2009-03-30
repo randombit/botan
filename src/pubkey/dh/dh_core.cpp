@@ -1,7 +1,9 @@
-/*************************************************
-* PK Algorithm Core Source File                  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PK Algorithm Core
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/dh_core.h>
 #include <botan/numthry.h>
@@ -17,9 +19,9 @@ const u32bit BLINDING_BITS = BOTAN_PRIVATE_KEY_OP_BLINDING_BITS;
 
 }
 
-/*************************************************
-* DH_Core Constructor                            *
-*************************************************/
+/*
+* DH_Core Constructor
+*/
 DH_Core::DH_Core(RandomNumberGenerator& rng,
                  const DL_Group& group, const BigInt& x)
    {
@@ -33,9 +35,9 @@ DH_Core::DH_Core(RandomNumberGenerator& rng,
       blinder = Blinder(k, power_mod(inverse_mod(k, p), x, p), p);
    }
 
-/*************************************************
-* DH_Core Copy Constructor                       *
-*************************************************/
+/*
+* DH_Core Copy Constructor
+*/
 DH_Core::DH_Core(const DH_Core& core)
    {
    op = 0;
@@ -44,9 +46,9 @@ DH_Core::DH_Core(const DH_Core& core)
    blinder = core.blinder;
    }
 
-/*************************************************
-* DH_Core Assignment Operator                    *
-*************************************************/
+/*
+* DH_Core Assignment Operator
+*/
 DH_Core& DH_Core::operator=(const DH_Core& core)
    {
    delete op;
@@ -56,9 +58,9 @@ DH_Core& DH_Core::operator=(const DH_Core& core)
    return (*this);
    }
 
-/*************************************************
-* DH Operation                                   *
-*************************************************/
+/*
+* DH Operation
+*/
 BigInt DH_Core::agree(const BigInt& i) const
    {
    return blinder.unblind(op->agree(blinder.blind(i)));

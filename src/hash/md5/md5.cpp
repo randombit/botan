@@ -1,7 +1,9 @@
-/*************************************************
-* MD5 Source File                                *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* MD5
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/md5.h>
 #include <botan/loadstor.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* MD5 FF Function                                *
-*************************************************/
+/*
+* MD5 FF Function
+*/
 inline void FF(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
                byte S, u32bit magic)
    {
@@ -21,9 +23,9 @@ inline void FF(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
    A  = rotate_left(A, S) + B;
    }
 
-/*************************************************
-* MD5 GG Function                                *
-*************************************************/
+/*
+* MD5 GG Function
+*/
 inline void GG(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
                byte S, u32bit magic)
    {
@@ -31,9 +33,9 @@ inline void GG(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
    A  = rotate_left(A, S) + B;
    }
 
-/*************************************************
-* MD5 HH Function                                *
-*************************************************/
+/*
+* MD5 HH Function
+*/
 inline void HH(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
                byte S, u32bit magic)
    {
@@ -41,9 +43,9 @@ inline void HH(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
    A  = rotate_left(A, S) + B;
    }
 
-/*************************************************
-* MD5 II Function                                *
-*************************************************/
+/*
+* MD5 II Function
+*/
 inline void II(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
                byte S, u32bit magic)
    {
@@ -53,9 +55,9 @@ inline void II(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
 
 }
 
-/*************************************************
-* MD5 Compression Function                       *
-*************************************************/
+/*
+* MD5 Compression Function
+*/
 void MD5::compress_n(const byte input[], u32bit blocks)
    {
    u32bit A = digest[0], B = digest[1], C = digest[2], D = digest[3];
@@ -109,18 +111,18 @@ void MD5::compress_n(const byte input[], u32bit blocks)
       }
    }
 
-/*************************************************
-* Copy out the digest                            *
-*************************************************/
+/*
+* Copy out the digest
+*/
 void MD5::copy_out(byte output[])
    {
    for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
       store_le(digest[j/4], output + j);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void MD5::clear() throw()
    {
    MDx_HashFunction::clear();

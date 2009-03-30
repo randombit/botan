@@ -1,7 +1,9 @@
-/*************************************************
-* Filters Source File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Filters
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/filters.h>
 #include <botan/libstate.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* StreamCipher_Filter Constructor                *
-*************************************************/
+/*
+* StreamCipher_Filter Constructor
+*/
 StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name) :
    buffer(DEFAULT_BUFFERSIZE)
    {
@@ -19,18 +21,18 @@ StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name) :
    base_ptr = cipher = af.make_stream_cipher(sc_name);
    }
 
-/*************************************************
-* StreamCipher_Filter Constructor                *
-*************************************************/
+/*
+* StreamCipher_Filter Constructor
+*/
 StreamCipher_Filter::StreamCipher_Filter(StreamCipher* stream_cipher) :
    buffer(DEFAULT_BUFFERSIZE)
    {
    base_ptr = cipher = stream_cipher;
    }
 
-/*************************************************
-* StreamCipher_Filter Constructor                *
-*************************************************/
+/*
+* StreamCipher_Filter Constructor
+*/
 StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name,
                                          const SymmetricKey& key) :
    buffer(DEFAULT_BUFFERSIZE)
@@ -40,17 +42,17 @@ StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name,
    cipher->set_key(key);
    }
 
-/*************************************************
-* Set the IV of a stream cipher                  *
-*************************************************/
+/*
+* Set the IV of a stream cipher
+*/
 void StreamCipher_Filter::set_iv(const InitializationVector& iv)
    {
    cipher->resync(iv.begin(), iv.length());
    }
 
-/*************************************************
-* Write data into a StreamCipher_Filter          *
-*************************************************/
+/*
+* Write data into a StreamCipher_Filter
+*/
 void StreamCipher_Filter::write(const byte input[], u32bit length)
    {
    while(length)
@@ -63,9 +65,9 @@ void StreamCipher_Filter::write(const byte input[], u32bit length)
       }
    }
 
-/*************************************************
-* Hash_Filter Constructor                        *
-*************************************************/
+/*
+* Hash_Filter Constructor
+*/
 Hash_Filter::Hash_Filter(const std::string& algo_spec,
                          u32bit len) :
    OUTPUT_LENGTH(len)
@@ -74,9 +76,9 @@ Hash_Filter::Hash_Filter(const std::string& algo_spec,
    hash = af.make_hash_function(algo_spec);
    }
 
-/*************************************************
-* Complete a calculation by a Hash_Filter        *
-*************************************************/
+/*
+* Complete a calculation by a Hash_Filter
+*/
 void Hash_Filter::end_msg()
    {
    SecureVector<byte> output = hash->final();
@@ -86,9 +88,9 @@ void Hash_Filter::end_msg()
       send(output);
    }
 
-/*************************************************
-* MAC_Filter Constructor                         *
-*************************************************/
+/*
+* MAC_Filter Constructor
+*/
 MAC_Filter::MAC_Filter(const std::string& mac_name, u32bit len) :
    OUTPUT_LENGTH(len)
    {
@@ -96,9 +98,9 @@ MAC_Filter::MAC_Filter(const std::string& mac_name, u32bit len) :
    base_ptr = mac = af.make_mac(mac_name);
    }
 
-/*************************************************
-* MAC_Filter Constructor                         *
-*************************************************/
+/*
+* MAC_Filter Constructor
+*/
 MAC_Filter::MAC_Filter(const std::string& mac_name, const SymmetricKey& key,
                        u32bit len) : OUTPUT_LENGTH(len)
    {
@@ -107,9 +109,9 @@ MAC_Filter::MAC_Filter(const std::string& mac_name, const SymmetricKey& key,
    mac->set_key(key);
    }
 
-/*************************************************
-* Complete a calculation by a MAC_Filter         *
-*************************************************/
+/*
+* Complete a calculation by a MAC_Filter
+*/
 void MAC_Filter::end_msg()
    {
    SecureVector<byte> output = mac->final();

@@ -1,7 +1,9 @@
-/*************************************************
-* OpenPGP S2K Header File                        *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OpenPGP S2K
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_OPENPGP_S2K_H__
 #define BOTAN_OPENPGP_S2K_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* OpenPGP S2K                                    *
-*************************************************/
+/*
+* OpenPGP S2K
+*/
 class BOTAN_DLL OpenPGP_S2K : public S2K
    {
    public:

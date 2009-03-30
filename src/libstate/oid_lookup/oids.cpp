@@ -1,7 +1,9 @@
-/*************************************************
-* OID Registry Source File                       *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* OID Registry
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/oids.h>
 #include <botan/libstate.h>
@@ -10,9 +12,9 @@ namespace Botan {
 
 namespace OIDS {
 
-/*************************************************
-* Register an OID to string mapping              *
-*************************************************/
+/*
+* Register an OID to string mapping
+*/
 void add_oid(const OID& oid, const std::string& name)
    {
    const std::string oid_str = oid.as_string();
@@ -23,9 +25,9 @@ void add_oid(const OID& oid, const std::string& name)
       global_state().set("str2oid", name, oid_str);
    }
 
-/*************************************************
-* Do an OID to string lookup                     *
-*************************************************/
+/*
+* Do an OID to string lookup
+*/
 std::string lookup(const OID& oid)
    {
    std::string name = global_state().get("oid2str", oid.as_string());
@@ -34,9 +36,9 @@ std::string lookup(const OID& oid)
    return name;
    }
 
-/*************************************************
-* Do a string to OID lookup                      *
-*************************************************/
+/*
+* Do a string to OID lookup
+*/
 OID lookup(const std::string& name)
    {
    std::string value = global_state().get("str2oid", name);
@@ -53,17 +55,17 @@ OID lookup(const std::string& name)
       }
    }
 
-/*************************************************
-* Check to see if an OID exists in the table     *
-*************************************************/
+/*
+* Check to see if an OID exists in the table
+*/
 bool have_oid(const std::string& name)
    {
    return global_state().is_set("str2oid", name);
    }
 
-/*************************************************
-* Check to see if an OID exists in the table     *
-*************************************************/
+/*
+* Check to see if an OID exists in the table
+*/
 bool name_of(const OID& oid, const std::string& name)
    {
    return (oid == lookup(name));

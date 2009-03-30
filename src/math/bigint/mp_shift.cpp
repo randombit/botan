@@ -1,7 +1,9 @@
-/*************************************************
-* MP Shift Algorithms Source File                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* MP Shift Algorithms
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/mp_core.h>
 #include <botan/mem_ops.h>
@@ -10,9 +12,9 @@ namespace Botan {
 
 extern "C" {
 
-/*************************************************
-* Single Operand Left Shift                      *
-*************************************************/
+/*
+* Single Operand Left Shift
+*/
 void bigint_shl1(word x[], u32bit x_size, u32bit word_shift, u32bit bit_shift)
    {
    if(word_shift)
@@ -34,9 +36,9 @@ void bigint_shl1(word x[], u32bit x_size, u32bit word_shift, u32bit bit_shift)
       }
    }
 
-/*************************************************
-* Single Operand Right Shift                     *
-*************************************************/
+/*
+* Single Operand Right Shift
+*/
 void bigint_shr1(word x[], u32bit x_size, u32bit word_shift, u32bit bit_shift)
    {
    if(x_size < word_shift)
@@ -89,9 +91,9 @@ void bigint_shr1(word x[], u32bit x_size, u32bit word_shift, u32bit bit_shift)
       }
    }
 
-/*************************************************
-* Two Operand Left Shift                         *
-*************************************************/
+/*
+* Two Operand Left Shift
+*/
 void bigint_shl2(word y[], const word x[], u32bit x_size,
                  u32bit word_shift, u32bit bit_shift)
    {
@@ -109,9 +111,9 @@ void bigint_shl2(word y[], const word x[], u32bit x_size,
       }
    }
 
-/*************************************************
-* Two Operand Right Shift                        *
-*************************************************/
+/*
+* Two Operand Right Shift
+*/
 void bigint_shr2(word y[], const word x[], u32bit x_size,
                  u32bit word_shift, u32bit bit_shift)
    {

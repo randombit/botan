@@ -1,16 +1,18 @@
-/*************************************************
-* KDF2 Source File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* KDF2
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/kdf2.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
 
-/*************************************************
-* KDF2 Key Derivation Mechanism                  *
-*************************************************/
+/*
+* KDF2 Key Derivation Mechanism
+*/
 SecureVector<byte> KDF2::derive(u32bit out_len,
                                 const byte secret[], u32bit secret_len,
                                 const byte P[], u32bit P_len) const

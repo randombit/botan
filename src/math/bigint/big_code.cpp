@@ -1,7 +1,9 @@
-/*************************************************
-* BigInt Encoding/Decoding Source File           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* BigInt Encoding/Decoding
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/bigint.h>
 #include <botan/divide.h>
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Encode a BigInt                                *
-*************************************************/
+/*
+* Encode a BigInt
+*/
 void BigInt::encode(byte output[], const BigInt& n, Base base)
    {
    if(base == Binary)
@@ -53,9 +55,9 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
       throw Invalid_Argument("Unknown BigInt encoding method");
    }
 
-/*************************************************
-* Encode a BigInt                                *
-*************************************************/
+/*
+* Encode a BigInt
+*/
 SecureVector<byte> BigInt::encode(const BigInt& n, Base base)
    {
    SecureVector<byte> output(n.encoded_size(base));
@@ -67,9 +69,9 @@ SecureVector<byte> BigInt::encode(const BigInt& n, Base base)
    return output;
    }
 
-/*************************************************
-* Encode a BigInt, with leading 0s if needed     *
-*************************************************/
+/*
+* Encode a BigInt, with leading 0s if needed
+*/
 SecureVector<byte> BigInt::encode_1363(const BigInt& n, u32bit bytes)
    {
    const u32bit n_bytes = n.bytes();
@@ -83,17 +85,17 @@ SecureVector<byte> BigInt::encode_1363(const BigInt& n, u32bit bytes)
    return output;
    }
 
-/*************************************************
-* Decode a BigInt                                *
-*************************************************/
+/*
+* Decode a BigInt
+*/
 BigInt BigInt::decode(const MemoryRegion<byte>& buf, Base base)
    {
    return BigInt::decode(buf, buf.size(), base);
    }
 
-/*************************************************
-* Decode a BigInt                                *
-*************************************************/
+/*
+* Decode a BigInt
+*/
 BigInt BigInt::decode(const byte buf[], u32bit length, Base base)
    {
    BigInt r;

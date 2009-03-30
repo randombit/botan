@@ -1,7 +1,9 @@
-/*************************************************
-* Bit/Word Operations Header File                *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Bit/Word Operations
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_BIT_OPS_H__
 #define BOTAN_BIT_OPS_H__
@@ -10,20 +12,20 @@
 
 namespace Botan {
 
-/*************************************************
-* Return true iff arg is 2**n for some n > 0     *
-* T should be an unsigned integer type           *
-*************************************************/
+/*
+* Return true iff arg is 2**n for some n > 0
+* T should be an unsigned integer type
+*/
 template<typename T>
 inline bool power_of_2(T arg)
    {
    return ((arg != 0 && arg != 1) && ((arg & (arg-1)) == 0));
    }
 
-/*************************************************
+/*
 * Return the index of the highest set bit
 * T is an unsigned integer type
-*************************************************/
+*/
 template<typename T>
 inline u32bit high_bit(T n)
    {
@@ -33,9 +35,9 @@ inline u32bit high_bit(T n)
    return 0;
    }
 
-/*************************************************
-* Return the index of the lowest set bit         *
-*************************************************/
+/*
+* Return the index of the lowest set bit
+*/
 template<typename T>
 inline u32bit low_bit(T n)
    {
@@ -45,9 +47,9 @@ inline u32bit low_bit(T n)
    return 0;
    }
 
-/*************************************************
-* Return the number of significant bytes in n    *
-*************************************************/
+/*
+* Return the number of significant bytes in n
+*/
 template<typename T>
 inline u32bit significant_bytes(T n)
    {
@@ -57,9 +59,9 @@ inline u32bit significant_bytes(T n)
    return 0;
    }
 
-/*************************************************
-* Return the Hamming weight of n                 *
-*************************************************/
+/*
+* Return the Hamming weight of n
+*/
 template<typename T>
 inline u32bit hamming_weight(T n)
    {
@@ -72,9 +74,9 @@ inline u32bit hamming_weight(T n)
    return weight;
    }
 
-/*************************************************
-* Count the trailing zero bits in n              *
-*************************************************/
+/*
+* Count the trailing zero bits in n
+*/
 template<typename T>
 inline u32bit ctz(T n)
    {

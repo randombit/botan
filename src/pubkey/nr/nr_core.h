@@ -1,7 +1,9 @@
-/*************************************************
-* NR Core Header File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* NR Core
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_NR_CORE_H__
 #define BOTAN_NR_CORE_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* NR Core                                        *
-*************************************************/
+/*
+* NR Core
+*/
 class BOTAN_DLL NR_Core
    {
    public:

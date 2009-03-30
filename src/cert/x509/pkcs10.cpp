@@ -1,7 +1,9 @@
-/*************************************************
-* PKCS #10 Source File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PKCS #10
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/pkcs10.h>
 #include <botan/der_enc.h>
@@ -14,27 +16,27 @@
 
 namespace Botan {
 
-/*************************************************
-* PKCS10_Request Constructor                     *
-*************************************************/
+/*
+* PKCS10_Request Constructor
+*/
 PKCS10_Request::PKCS10_Request(DataSource& in) :
    X509_Object(in, "CERTIFICATE REQUEST/NEW CERTIFICATE REQUEST")
    {
    do_decode();
    }
 
-/*************************************************
-* PKCS10_Request Constructor                     *
-*************************************************/
+/*
+* PKCS10_Request Constructor
+*/
 PKCS10_Request::PKCS10_Request(const std::string& in) :
    X509_Object(in, "CERTIFICATE REQUEST/NEW CERTIFICATE REQUEST")
    {
    do_decode();
    }
 
-/*************************************************
-* Deocde the CertificateRequestInfo              *
-*************************************************/
+/*
+* Deocde the CertificateRequestInfo
+*/
 void PKCS10_Request::force_decode()
    {
    BER_Decoder cert_req_info(tbs_bits);
@@ -87,9 +89,9 @@ void PKCS10_Request::force_decode()
       throw Decoding_Error("PKCS #10 request: Bad signature detected");
    }
 
-/*************************************************
-* Handle attributes in a PKCS #10 request        *
-*************************************************/
+/*
+* Handle attributes in a PKCS #10 request
+*/
 void PKCS10_Request::handle_attribute(const Attribute& attr)
    {
    BER_Decoder value(attr.parameters);
@@ -116,59 +118,59 @@ void PKCS10_Request::handle_attribute(const Attribute& attr)
       }
    }
 
-/*************************************************
-* Return the challenge password (if any)         *
-*************************************************/
+/*
+* Return the challenge password (if any)
+*/
 std::string PKCS10_Request::challenge_password() const
    {
    return info.get1("PKCS9.ChallengePassword");
    }
 
-/*************************************************
-* Return the name of the requestor               *
-*************************************************/
+/*
+* Return the name of the requestor
+*/
 X509_DN PKCS10_Request::subject_dn() const
    {
    return create_dn(info);
    }
 
-/*************************************************
-* Return the public key of the requestor         *
-*************************************************/
+/*
+* Return the public key of the requestor
+*/
 MemoryVector<byte> PKCS10_Request::raw_public_key() const
    {
    DataSource_Memory source(info.get1("X509.Certificate.public_key"));
    return PEM_Code::decode_check_label(source, "PUBLIC KEY");
    }
 
-/*************************************************
-* Return the public key of the requestor         *
-*************************************************/
+/*
+* Return the public key of the requestor
+*/
 Public_Key* PKCS10_Request::subject_public_key() const
    {
    DataSource_Memory source(info.get1("X509.Certificate.public_key"));
    return X509::load_key(source);
    }
 
-/*************************************************
-* Return the alternative names of the requestor  *
-*************************************************/
+/*
+* Return the alternative names of the requestor
+*/
 AlternativeName PKCS10_Request::subject_alt_name() const
    {
    return create_alt_name(info);
    }
 
-/*************************************************
-* Return the key constraints (if any)            *
-*************************************************/
+/*
+* Return the key constraints (if any)
+*/
 Key_Constraints PKCS10_Request::constraints() const
    {
    return Key_Constraints(info.get1_u32bit("X509v3.KeyUsage", NO_CONSTRAINTS));
    }
 
-/*************************************************
-* Return the extendend key constraints (if any)  *
-*************************************************/
+/*
+* Return the extendend key constraints (if any)
+*/
 std::vector<OID> PKCS10_Request::ex_constraints() const
    {
    std::vector<std::string> oids = info.get("X509v3.ExtendedKeyUsage");
@@ -179,17 +181,17 @@ std::vector<OID> PKCS10_Request::ex_constraints() const
    return result;
    }
 
-/*************************************************
-* Return is a CA certificate is requested        *
-*************************************************/
+/*
+* Return is a CA certificate is requested
+*/
 bool PKCS10_Request::is_CA() const
    {
    return info.get1_u32bit("X509v3.BasicConstraints.is_ca");
    }
 
-/*************************************************
-* Return the desired path limit (if any)         *
-*************************************************/
+/*
+* Return the desired path limit (if any)
+*/
 u32bit PKCS10_Request::path_limit() const
    {
    return info.get1_u32bit("X509v3.BasicConstraints.path_constraint", 0);

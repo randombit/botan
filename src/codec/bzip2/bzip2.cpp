@@ -1,9 +1,11 @@
-/*************************************************
-* Bzip Compressor Source File                    *
-* (C) 2001 Peter J Jones                         *
-*     2001-2007 Jack Lloyd                       *
-*     2006 Matt Johnston                         *
-*************************************************/
+/*
+* Bzip Compressor
+* (C) 2001 Peter J Jones
+*     2001-2007 Jack Lloyd
+*     2006 Matt Johnston
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/bzip2.h>
 #include <botan/exceptn.h>
@@ -17,9 +19,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Allocation Information for Bzip                *
-*************************************************/
+/*
+* Allocation Information for Bzip
+*/
 class Bzip_Alloc_Info
    {
    public:
@@ -29,9 +31,9 @@ class Bzip_Alloc_Info
       Bzip_Alloc_Info() { alloc = Allocator::get(false); }
    };
 
-/*************************************************
-* Allocation Function for Bzip                   *
-*************************************************/
+/*
+* Allocation Function for Bzip
+*/
 void* bzip_malloc(void* info_ptr, int n, int size)
    {
    Bzip_Alloc_Info* info = static_cast<Bzip_Alloc_Info*>(info_ptr);
@@ -40,9 +42,9 @@ void* bzip_malloc(void* info_ptr, int n, int size)
    return ptr;
    }
 
-/*************************************************
-* Allocation Function for Bzip                   *
-*************************************************/
+/*
+* Allocation Function for Bzip
+*/
 void bzip_free(void* info_ptr, void* ptr)
    {
    Bzip_Alloc_Info* info = static_cast<Bzip_Alloc_Info*>(info_ptr);
@@ -54,9 +56,9 @@ void bzip_free(void* info_ptr, void* ptr)
 
 }
 
-/*************************************************
-* Wrapper Type for Bzip2 Stream                  *
-*************************************************/
+/*
+* Wrapper Type for Bzip2 Stream
+*/
 class Bzip_Stream
    {
    public:
@@ -77,18 +79,18 @@ class Bzip_Stream
          }
    };
 
-/*************************************************
-* Bzip_Compression Constructor                   *
-*************************************************/
+/*
+* Bzip_Compression Constructor
+*/
 Bzip_Compression::Bzip_Compression(u32bit l) :
    level((l >= 9) ? 9 : l), buffer(DEFAULT_BUFFERSIZE)
    {
    bz = 0;
    }
 
-/*************************************************
-* Start Compressing with Bzip                    *
-*************************************************/
+/*
+* Start Compressing with Bzip
+*/
 void Bzip_Compression::start_msg()
    {
    clear();
@@ -97,9 +99,9 @@ void Bzip_Compression::start_msg()
       throw Exception("Bzip_Compression: Memory allocation error");
    }
 
-/*************************************************
-* Compress Input with Bzip                       *
-*************************************************/
+/*
+* Compress Input with Bzip
+*/
 void Bzip_Compression::write(const byte input[], u32bit length)
    {
    bz->stream.next_in = reinterpret_cast<char*>(const_cast<byte*>(input));
@@ -114,9 +116,9 @@ void Bzip_Compression::write(const byte input[], u32bit length)
       }
    }
 
-/*************************************************
-* Finish Compressing with Bzip                   *
-*************************************************/
+/*
+* Finish Compressing with Bzip
+*/
 void Bzip_Compression::end_msg()
    {
    bz->stream.next_in = 0;
@@ -133,9 +135,9 @@ void Bzip_Compression::end_msg()
    clear();
    }
 
-/*************************************************
-* Flush the Bzip Compressor                      *
-*************************************************/
+/*
+* Flush the Bzip Compressor
+*/
 void Bzip_Compression::flush()
    {
    bz->stream.next_in = 0;
@@ -151,9 +153,9 @@ void Bzip_Compression::flush()
       }
    }
 
-/*************************************************
-* Clean up Compression Context                   *
-*************************************************/
+/*
+* Clean up Compression Context
+*/
 void Bzip_Compression::clear()
    {
    if(!bz) return;
@@ -162,9 +164,9 @@ void Bzip_Compression::clear()
    bz = 0;
    }
 
-/*************************************************
-* Bzip_Decompression Constructor                 *
-*************************************************/
+/*
+* Bzip_Decompression Constructor
+*/
 Bzip_Decompression::Bzip_Decompression(bool s) :
    small_mem(s), buffer(DEFAULT_BUFFERSIZE)
    {
@@ -172,9 +174,9 @@ Bzip_Decompression::Bzip_Decompression(bool s) :
    bz = 0;
    }
 
-/*************************************************
-* Decompress Input with Bzip                     *
-*************************************************/
+/*
+* Decompress Input with Bzip
+*/
 void Bzip_Decompression::write(const byte input_arr[], u32bit length)
    {
    if(length) no_writes = false;
@@ -217,9 +219,9 @@ void Bzip_Decompression::write(const byte input_arr[], u32bit length)
       }
    }
 
-/*************************************************
-* Start Decompressing with Bzip                  *
-*************************************************/
+/*
+* Start Decompressing with Bzip
+*/
 void Bzip_Decompression::start_msg()
    {
    clear();
@@ -231,9 +233,9 @@ void Bzip_Decompression::start_msg()
    no_writes = true;
    }
 
-/*************************************************
-* Finish Decompressing with Bzip                 *
-*************************************************/
+/*
+* Finish Decompressing with Bzip
+*/
 void Bzip_Decompression::end_msg()
    {
    if(no_writes) return;
@@ -259,9 +261,9 @@ void Bzip_Decompression::end_msg()
    clear();
    }
 
-/*************************************************
-* Clean up Decompression Context                 *
-*************************************************/
+/*
+* Clean up Decompression Context
+*/
 void Bzip_Decompression::clear()
    {
    if(!bz) return;

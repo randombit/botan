@@ -1,7 +1,9 @@
-/*************************************************
-* OctetString Header File                        *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OctetString
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_SYMKEY_H__
 #define BOTAN_SYMKEY_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Octet String                                   *
-*************************************************/
+/*
+* Octet String
+*/
 class BOTAN_DLL OctetString
    {
    public:
@@ -41,17 +43,17 @@ class BOTAN_DLL OctetString
       SecureVector<byte> bits;
    };
 
-/*************************************************
-* Operations on Octet Strings                    *
-*************************************************/
+/*
+* Operations on Octet Strings
+*/
 BOTAN_DLL bool operator==(const OctetString&, const OctetString&);
 BOTAN_DLL bool operator!=(const OctetString&, const OctetString&);
 BOTAN_DLL OctetString operator+(const OctetString&, const OctetString&);
 BOTAN_DLL OctetString operator^(const OctetString&, const OctetString&);
 
-/*************************************************
-* Alternate Names                                *
-*************************************************/
+/*
+* Alternate Names
+*/
 typedef OctetString SymmetricKey;
 typedef OctetString InitializationVector;
 

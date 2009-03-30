@@ -1,6 +1,8 @@
 /**
 * Default provider weights for Algorithm_Cache
 * (C) 2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #include <botan/algo_cache.h>

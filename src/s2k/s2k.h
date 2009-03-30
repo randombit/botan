@@ -1,7 +1,9 @@
-/*************************************************
-* S2K Header File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* S2K
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_S2K_H__
 #define BOTAN_S2K_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* S2K Interface                                  *
-*************************************************/
+/*
+* S2K Interface
+*/
 class BOTAN_DLL S2K
    {
    public:

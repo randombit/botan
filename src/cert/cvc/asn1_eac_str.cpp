@@ -1,8 +1,10 @@
-/*************************************************
-* Simple ASN.1 String Types Source File          *
-* (C) 2007 FlexSecure GmbH                       *
-*     2008 Jack Lloyd                            *
-*************************************************/
+/*
+* Simple ASN.1 String Types
+* (C) 2007 FlexSecure GmbH
+*     2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eac_asn_obj.h>
 #include <botan/der_enc.h>
@@ -13,9 +15,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Create an ASN1_EAC_String                      *
-*************************************************/
+/*
+* Create an ASN1_EAC_String
+*/
 ASN1_EAC_String::ASN1_EAC_String(const std::string& str, ASN1_Tag t) : tag(t)
    {
    iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
@@ -25,42 +27,42 @@ ASN1_EAC_String::ASN1_EAC_String(const std::string& str, ASN1_Tag t) : tag(t)
       }
    }
 
-/*************************************************
-* Return this string in ISO 8859-1 encoding      *
-*************************************************/
+/*
+* Return this string in ISO 8859-1 encoding
+*/
 std::string ASN1_EAC_String::iso_8859() const
    {
    return iso_8859_str;
    }
 
-/*************************************************
-* Return this string in local encoding           *
-*************************************************/
+/*
+* Return this string in local encoding
+*/
 std::string ASN1_EAC_String::value() const
    {
    return Charset::transcode(iso_8859_str, LATIN1_CHARSET, LOCAL_CHARSET);
    }
 
-/*************************************************
-* Return the type of this string object          *
-*************************************************/
+/*
+* Return the type of this string object
+*/
 ASN1_Tag ASN1_EAC_String::tagging() const
    {
    return tag;
    }
 
-/*************************************************
-* DER encode an ASN1_EAC_String                  *
-*************************************************/
+/*
+* DER encode an ASN1_EAC_String
+*/
 void ASN1_EAC_String::encode_into(DER_Encoder& encoder) const
    {
    std::string value = iso_8859();
    encoder.add_object(tagging(), APPLICATION, value);
    }
 
-/*************************************************
-* Decode a BER encoded ASN1_EAC_String           *
-*************************************************/
+/*
+* Decode a BER encoded ASN1_EAC_String
+*/
 void ASN1_EAC_String::decode_from(BER_Decoder& source)
    {
    BER_Object obj = source.get_next_object();

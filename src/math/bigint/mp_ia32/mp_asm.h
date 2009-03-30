@@ -1,8 +1,10 @@
-/*************************************************
-* Lowest Level MPI Algorithms Header File        *
-* (C) 1999-2008 Jack Lloyd                       *
-*     2006 Luca Piccarreta                       *
-*************************************************/
+/*
+* Lowest Level MPI Algorithms
+* (C) 1999-2008 Jack Lloyd
+*     2006 Luca Piccarreta
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_MP_ASM_H__
 #define BOTAN_MP_ASM_H__
@@ -17,14 +19,14 @@ namespace Botan {
 
 extern "C" {
 
-/*************************************************
-* Helper Macros for x86 Assembly                 *
-*************************************************/
+/*
+* Helper Macros for x86 Assembly
+*/
 #define ASM(x) x "\n\t"
 
-/*************************************************
-* Word Multiply                                  *
-*************************************************/
+/*
+* Word Multiply
+*/
 inline word word_madd2(word a, word b, word* c)
    {
    asm(
@@ -38,9 +40,9 @@ inline word word_madd2(word a, word b, word* c)
    return a;
    }
 
-/*************************************************
-* Word Multiply/Add                              *
-*************************************************/
+/*
+* Word Multiply/Add
+*/
 inline word word_madd3(word a, word b, word c, word* d)
    {
    asm(

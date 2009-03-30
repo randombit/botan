@@ -1,8 +1,10 @@
-/*************************************************
-* EAC1_1 objects Header File                     *
-* (C) 2008 Falko Strenzke                        *
-*          strenzke@flexsecure.de                *
-*************************************************/
+/*
+* EAC1_1 objects
+* (C) 2008 Falko Strenzke
+*          strenzke@flexsecure.de
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_EAC_OBJ_H__
 #define BOTAN_EAC_OBJ_H__
@@ -23,9 +25,9 @@ namespace Botan {
 
 const std::string eac_cvc_emsa("EMSA1_BSI");
 
-/*************************************************
-* TR03110 v1.1 EAC CV Certificate                *
-*************************************************/
+/*
+* TR03110 v1.1 EAC CV Certificate
+*/
 template<typename Derived> // CRTP is used enable the call sequence:
 class BOTAN_DLL EAC1_1_obj : public EAC_Signed_Object
    {

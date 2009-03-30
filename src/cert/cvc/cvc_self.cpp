@@ -1,6 +1,8 @@
 /*
   (C) 2007 FlexSecure GmbH
       2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #include <botan/cvc_self.h>
@@ -20,7 +22,7 @@ namespace Botan {
 namespace {
 
 /*******************************
-* cvc CHAT values              *
+* cvc CHAT values
 *******************************/
 enum CHAT_values{
       CVCA = 0xC0,

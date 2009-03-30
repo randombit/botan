@@ -1,11 +1,13 @@
-/*************************************************
-* Arithmetic over GF(p)                          *
-*                                                *
-* (C) 2007 Martin Doering                        *
-*          Christoph Ludwig                      *
-*          Falko Strenzke                        *
-* (C) 2008 Jack Lloyd                            *
-*************************************************/
+/*
+* Arithmetic over GF(p)
+*
+* (C) 2007 Martin Doering
+*          Christoph Ludwig
+*          Falko Strenzke
+* (C) 2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_POINT_GFP_H__
 #define BOTAN_POINT_GFP_H__

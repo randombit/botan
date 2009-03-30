@@ -1,7 +1,9 @@
-/*************************************************
-* S-Box and MDS Tables for Twofish               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* S-Box and MDS Tables for Twofish
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/twofish.h>
 

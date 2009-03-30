@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 SIGNED Object Source File                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 SIGNED Object
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/x509_obj.h>
 #include <botan/x509_key.h>
@@ -16,26 +18,26 @@
 
 namespace Botan {
 
-/*************************************************
-* Create a generic X.509 object                  *
-*************************************************/
+/*
+* Create a generic X.509 object
+*/
 X509_Object::X509_Object(DataSource& stream, const std::string& labels)
    {
    init(stream, labels);
    }
 
-/*************************************************
-* Createa a generic X.509 object                 *
-*************************************************/
+/*
+* Createa a generic X.509 object
+*/
 X509_Object::X509_Object(const std::string& file, const std::string& labels)
    {
    DataSource_Stream stream(file, true);
    init(stream, labels);
    }
 
-/*************************************************
-* Read a PEM or BER X.509 object                 *
-*************************************************/
+/*
+* Read a PEM or BER X.509 object
+*/
 void X509_Object::init(DataSource& in, const std::string& labels)
    {
    PEM_labels_allowed = split_on(labels, '/');
@@ -65,9 +67,9 @@ void X509_Object::init(DataSource& in, const std::string& labels)
       }
    }
 
-/*************************************************
-* Read a BER encoded X.509 object                *
-*************************************************/
+/*
+* Read a BER encoded X.509 object
+*/
 void X509_Object::decode_info(DataSource& source)
    {
    BER_Decoder(source)
@@ -81,9 +83,9 @@ void X509_Object::decode_info(DataSource& source)
       .end_cons();
    }
 
-/*************************************************
-* Return a BER or PEM encoded X.509 object       *
-*************************************************/
+/*
+* Return a BER or PEM encoded X.509 object
+*/
 void X509_Object::encode(Pipe& out, X509_Encoding encoding) const
    {
    SecureVector<byte> der = DER_Encoder()
@@ -102,9 +104,9 @@ void X509_Object::encode(Pipe& out, X509_Encoding encoding) const
       out.write(der);
    }
 
-/*************************************************
-* Return a BER encoded X.509 object              *
-*************************************************/
+/*
+* Return a BER encoded X.509 object
+*/
 SecureVector<byte> X509_Object::BER_encode() const
    {
    Pipe ber;
@@ -114,9 +116,9 @@ SecureVector<byte> X509_Object::BER_encode() const
    return ber.read_all();
    }
 
-/*************************************************
-* Return a PEM encoded X.509 object              *
-*************************************************/
+/*
+* Return a PEM encoded X.509 object
+*/
 std::string X509_Object::PEM_encode() const
    {
    Pipe pem;
@@ -126,33 +128,33 @@ std::string X509_Object::PEM_encode() const
    return pem.read_all_as_string();
    }
 
-/*************************************************
-* Return the TBS data                            *
-*************************************************/
+/*
+* Return the TBS data
+*/
 SecureVector<byte> X509_Object::tbs_data() const
    {
    return ASN1::put_in_sequence(tbs_bits);
    }
 
-/*************************************************
-* Return the signature of this object            *
-*************************************************/
+/*
+* Return the signature of this object
+*/
 SecureVector<byte> X509_Object::signature() const
    {
    return sig;
    }
 
-/*************************************************
-* Return the algorithm used to sign this object  *
-*************************************************/
+/*
+* Return the algorithm used to sign this object
+*/
 AlgorithmIdentifier X509_Object::signature_algorithm() const
    {
    return sig_algo;
    }
 
-/*************************************************
-* Check the signature on an object               *
-*************************************************/
+/*
+* Check the signature on an object
+*/
 bool X509_Object::check_signature(Public_Key& pub_key) const
    {
    try {
@@ -191,9 +193,9 @@ bool X509_Object::check_signature(Public_Key& pub_key) const
       }
    }
 
-/*************************************************
-* Apply the X.509 SIGNED macro                   *
-*************************************************/
+/*
+* Apply the X.509 SIGNED macro
+*/
 MemoryVector<byte> X509_Object::make_signed(PK_Signer* signer,
                                             RandomNumberGenerator& rng,
                                             const AlgorithmIdentifier& algo,
@@ -208,9 +210,9 @@ MemoryVector<byte> X509_Object::make_signed(PK_Signer* signer,
    .get_contents();
    }
 
-/*************************************************
-* Try to decode the actual information           *
-*************************************************/
+/*
+* Try to decode the actual information
+*/
 void X509_Object::do_decode()
    {
    try {

@@ -1,7 +1,9 @@
-/*************************************************
-* OpenSSL Modular Exponentiation Source File     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OpenSSL Modular Exponentiation
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eng_ossl.h>
 #include <botan/bn_wrap.h>
@@ -10,9 +12,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* OpenSSL Modular Exponentiator                  *
-*************************************************/
+/*
+* OpenSSL Modular Exponentiator
+*/
 class OpenSSL_Modular_Exponentiator : public Modular_Exponentiator
    {
    public:
@@ -28,9 +30,9 @@ class OpenSSL_Modular_Exponentiator : public Modular_Exponentiator
       OSSL_BN_CTX ctx;
    };
 
-/*************************************************
-* Compute the result                             *
-*************************************************/
+/*
+* Compute the result
+*/
 BigInt OpenSSL_Modular_Exponentiator::execute() const
    {
    OSSL_BN r;
@@ -40,9 +42,9 @@ BigInt OpenSSL_Modular_Exponentiator::execute() const
 
 }
 
-/*************************************************
-* Return the OpenSSL-based modular exponentiator *
-*************************************************/
+/*
+* Return the OpenSSL-based modular exponentiator
+*/
 Modular_Exponentiator* OpenSSL_Engine::mod_exp(const BigInt& n,
                                            Power_Mod::Usage_Hints) const
    {

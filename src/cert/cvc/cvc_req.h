@@ -1,8 +1,10 @@
-/*************************************************
-* EAC1_1 CVC Request Header File                 *
-* (C) 2008 Falko Strenzke                        *
-*          strenzke@flexsecure.de                *
-*************************************************/
+/*
+* EAC1_1 CVC Request
+* (C) 2008 Falko Strenzke
+*          strenzke@flexsecure.de
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_EAC_CVC_REQ_H__
 #define BOTAN_EAC_CVC_REQ_H__
@@ -48,9 +50,9 @@ class BOTAN_DLL EAC1_1_Req : public EAC1_1_gen_CVC<EAC1_1_Req>
       EAC1_1_Req() {}
    };
 
-/*************************************************
-* Comparison Operator                            *
-*************************************************/
+/*
+* Comparison Operator
+*/
 inline bool operator!=(EAC1_1_Req const& lhs, EAC1_1_Req const& rhs)
    {
    return !(lhs == rhs);

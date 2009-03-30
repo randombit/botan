@@ -1,7 +1,9 @@
-/*************************************************
-* OpenPGP Source File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OpenPGP
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/openpgp.h>
 #include <botan/filters.h>
@@ -12,9 +14,9 @@ namespace Botan {
 
 namespace OpenPGP {
 
-/*************************************************
-* OpenPGP Base64 encoding                        *
-*************************************************/
+/*
+* OpenPGP Base64 encoding
+*/
 std::string encode(const byte input[], u32bit length,
                    const std::string& label,
                    const std::map<std::string, std::string>& headers)
@@ -52,9 +54,9 @@ std::string encode(const byte input[], u32bit length,
    return pgp_encoded;
    }
 
-/*************************************************
-* OpenPGP Base64 encoding                        *
-*************************************************/
+/*
+* OpenPGP Base64 encoding
+*/
 std::string encode(const byte input[], u32bit length,
                    const std::string& type)
    {
@@ -62,9 +64,9 @@ std::string encode(const byte input[], u32bit length,
    return encode(input, length, type, empty);
    }
 
-/*************************************************
-* OpenPGP Base64 decoding                        *
-*************************************************/
+/*
+* OpenPGP Base64 decoding
+*/
 SecureVector<byte> decode(DataSource& source, std::string& label,
                           std::map<std::string, std::string>& headers)
    {
@@ -180,9 +182,9 @@ SecureVector<byte> decode(DataSource& source, std::string& label,
    return base64.read_all();
    }
 
-/*************************************************
-* OpenPGP Base64 decoding                        *
-*************************************************/
+/*
+* OpenPGP Base64 decoding
+*/
 SecureVector<byte> decode(DataSource& source, std::string& label)
    {
    std::map<std::string, std::string> ignored;

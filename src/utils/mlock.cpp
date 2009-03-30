@@ -1,7 +1,9 @@
-/*************************************************
-* Memory Locking Functions Source File           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Memory Locking Functions
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/util.h>
 
@@ -14,9 +16,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Lock an area of memory into RAM                *
-*************************************************/
+/*
+* Lock an area of memory into RAM
+*/
 bool lock_mem(void* ptr, u32bit bytes)
    {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
@@ -28,9 +30,9 @@ bool lock_mem(void* ptr, u32bit bytes)
 #endif
    }
 
-/*************************************************
-* Unlock a previously locked region of memory    *
-*************************************************/
+/*
+* Unlock a previously locked region of memory
+*/
 void unlock_mem(void* ptr, u32bit bytes)
    {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)

@@ -1,15 +1,17 @@
-/*************************************************
-* PKCS1 EME Source File                          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PKCS1 EME
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eme_pkcs.h>
 
 namespace Botan {
 
-/*************************************************
-* PKCS1 Pad Operation                            *
-*************************************************/
+/*
+* PKCS1 Pad Operation
+*/
 SecureVector<byte> EME_PKCS1v15::pad(const byte in[], u32bit inlen,
                                      u32bit olen,
                                      RandomNumberGenerator& rng) const
@@ -32,9 +34,9 @@ SecureVector<byte> EME_PKCS1v15::pad(const byte in[], u32bit inlen,
    return out;
    }
 
-/*************************************************
-* PKCS1 Unpad Operation                          *
-*************************************************/
+/*
+* PKCS1 Unpad Operation
+*/
 SecureVector<byte> EME_PKCS1v15::unpad(const byte in[], u32bit inlen,
                                        u32bit key_len) const
    {
@@ -54,9 +56,9 @@ SecureVector<byte> EME_PKCS1v15::unpad(const byte in[], u32bit inlen,
    return SecureVector<byte>(in + seperator + 1, inlen - seperator - 1);
    }
 
-/*************************************************
-* Return the max input size for a given key size *
-*************************************************/
+/*
+* Return the max input size for a given key size
+*/
 u32bit EME_PKCS1v15::maximum_input_size(u32bit keybits) const
    {
    if(keybits / 8 > 10)

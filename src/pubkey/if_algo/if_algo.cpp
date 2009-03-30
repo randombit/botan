@@ -1,7 +1,9 @@
-/*************************************************
-* IF Scheme Source File                          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* IF Scheme
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/if_algo.h>
 #include <botan/numthry.h>
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Return the X.509 public key encoder            *
-*************************************************/
+/*
+* Return the X.509 public key encoder
+*/
 X509_Encoder* IF_Scheme_PublicKey::x509_encoder() const
    {
    class IF_Scheme_Encoder : public X509_Encoder
@@ -42,9 +44,9 @@ X509_Encoder* IF_Scheme_PublicKey::x509_encoder() const
    return new IF_Scheme_Encoder(this);
    }
 
-/*************************************************
-* Return the X.509 public key decoder            *
-*************************************************/
+/*
+* Return the X.509 public key decoder
+*/
 X509_Decoder* IF_Scheme_PublicKey::x509_decoder()
    {
    class IF_Scheme_Decoder : public X509_Decoder
@@ -72,9 +74,9 @@ X509_Decoder* IF_Scheme_PublicKey::x509_decoder()
    return new IF_Scheme_Decoder(this);
    }
 
-/*************************************************
-* Return the PKCS #8 public key encoder          *
-*************************************************/
+/*
+* Return the PKCS #8 public key encoder
+*/
 PKCS8_Encoder* IF_Scheme_PrivateKey::pkcs8_encoder() const
    {
    class IF_Scheme_Encoder : public PKCS8_Encoder
@@ -111,9 +113,9 @@ PKCS8_Encoder* IF_Scheme_PrivateKey::pkcs8_encoder() const
    return new IF_Scheme_Encoder(this);
    }
 
-/*************************************************
-* Return the PKCS #8 public key decoder          *
-*************************************************/
+/*
+* Return the PKCS #8 public key decoder
+*/
 PKCS8_Decoder* IF_Scheme_PrivateKey::pkcs8_decoder(RandomNumberGenerator& rng)
    {
    class IF_Scheme_Decoder : public PKCS8_Decoder
@@ -154,17 +156,17 @@ PKCS8_Decoder* IF_Scheme_PrivateKey::pkcs8_decoder(RandomNumberGenerator& rng)
    return new IF_Scheme_Decoder(this, rng);
    }
 
-/*************************************************
-* Algorithm Specific X.509 Initialization Code   *
-*************************************************/
+/*
+* Algorithm Specific X.509 Initialization Code
+*/
 void IF_Scheme_PublicKey::X509_load_hook()
    {
    core = IF_Core(e, n);
    }
 
-/*************************************************
-* Algorithm Specific PKCS #8 Initialization Code *
-*************************************************/
+/*
+* Algorithm Specific PKCS #8 Initialization Code
+*/
 void IF_Scheme_PrivateKey::PKCS8_load_hook(RandomNumberGenerator& rng,
                                            bool generated)
    {
@@ -181,9 +183,9 @@ void IF_Scheme_PrivateKey::PKCS8_load_hook(RandomNumberGenerator& rng,
       load_check(rng);
    }
 
-/*************************************************
-* Check IF Scheme Public Parameters              *
-*************************************************/
+/*
+* Check IF Scheme Public Parameters
+*/
 bool IF_Scheme_PublicKey::check_key(RandomNumberGenerator&, bool) const
    {
    if(n < 35 || n.is_even() || e < 2)
@@ -191,9 +193,9 @@ bool IF_Scheme_PublicKey::check_key(RandomNumberGenerator&, bool) const
    return true;
    }
 
-/*************************************************
-* Check IF Scheme Private Parameters             *
-*************************************************/
+/*
+* Check IF Scheme Private Parameters
+*/
 bool IF_Scheme_PrivateKey::check_key(RandomNumberGenerator& rng,
                                      bool strong) const
    {

@@ -1,7 +1,9 @@
-/*************************************************
-* PK Key Factory Header File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PK Key Factory
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_PK_KEY_FACTORY_H__
 #define BOTAN_PK_KEY_FACTORY_H__

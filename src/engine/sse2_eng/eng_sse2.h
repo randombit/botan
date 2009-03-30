@@ -1,6 +1,8 @@
 /**
 * SSE2 Assembly Engine
 * (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_SSE2_ASM_ENGINE_H__

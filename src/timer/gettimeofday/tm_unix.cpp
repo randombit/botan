@@ -1,7 +1,9 @@
-/*************************************************
-* Unix Timer Source File                         *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Unix Timer
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/tm_unix.h>
 #include <botan/util.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Get the timestamp                              *
-*************************************************/
+/*
+* Get the timestamp
+*/
 u64bit Unix_Timer::clock() const
    {
    struct ::timeval tv;

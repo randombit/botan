@@ -1,7 +1,9 @@
-/*************************************************
-* OFB Mode Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OFB Mode
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_OUTPUT_FEEDBACK_MODE_H__
 #define BOTAN_OUTPUT_FEEDBACK_MODE_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* OFB Mode                                       *
-*************************************************/
+/*
+* OFB Mode
+*/
 class BOTAN_DLL OFB : public BlockCipherMode
    {
    public:

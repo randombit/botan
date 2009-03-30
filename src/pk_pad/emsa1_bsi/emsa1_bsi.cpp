@@ -1,16 +1,18 @@
-/*************************************************
-* EMSA1 BSI Source File                          *
-* (C) 1999-2008 Jack Lloyd                       *
-*     2008 Falko Strenzke, FlexSecure GmbH       *
-*************************************************/
+/*
+* EMSA1 BSI
+* (C) 1999-2008 Jack Lloyd
+*     2008 Falko Strenzke, FlexSecure GmbH
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/emsa1_bsi.h>
 
 namespace Botan {
 
-/*************************************************
-* EMSA1 BSI Encode Operation                     *
-*************************************************/
+/*
+* EMSA1 BSI Encode Operation
+*/
 SecureVector<byte> EMSA1_BSI::encoding_of(const MemoryRegion<byte>& msg,
                                           u32bit output_bits,
                                           RandomNumberGenerator&)

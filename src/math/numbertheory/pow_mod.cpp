@@ -1,25 +1,27 @@
-/*************************************************
-* Modular Exponentiation Proxy Source File       *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Modular Exponentiation Proxy
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/pow_mod.h>
 #include <botan/engine.h>
 
 namespace Botan {
 
-/*************************************************
-* Power_Mod Constructor                          *
-*************************************************/
+/*
+* Power_Mod Constructor
+*/
 Power_Mod::Power_Mod(const BigInt& n, Usage_Hints hints)
    {
    core = 0;
    set_modulus(n, hints);
    }
 
-/*************************************************
-* Power_Mod Copy Constructor                     *
-*************************************************/
+/*
+* Power_Mod Copy Constructor
+*/
 Power_Mod::Power_Mod(const Power_Mod& other)
    {
    core = 0;
@@ -27,9 +29,9 @@ Power_Mod::Power_Mod(const Power_Mod& other)
       core = other.core->copy();
    }
 
-/*************************************************
-* Power_Mod Assignment Operator                  *
-*************************************************/
+/*
+* Power_Mod Assignment Operator
+*/
 Power_Mod& Power_Mod::operator=(const Power_Mod& other)
    {
    delete core;
@@ -39,26 +41,26 @@ Power_Mod& Power_Mod::operator=(const Power_Mod& other)
    return (*this);
    }
 
-/*************************************************
-* Power_Mod Destructor                           *
-*************************************************/
+/*
+* Power_Mod Destructor
+*/
 Power_Mod::~Power_Mod()
    {
    delete core;
    }
 
-/*************************************************
-* Set the modulus                                *
-*************************************************/
+/*
+* Set the modulus
+*/
 void Power_Mod::set_modulus(const BigInt& n, Usage_Hints hints) const
    {
    delete core;
    core = ((n == 0) ? 0 : Engine_Core::mod_exp(n, hints));
    }
 
-/*************************************************
-* Set the base                                   *
-*************************************************/
+/*
+* Set the base
+*/
 void Power_Mod::set_base(const BigInt& b) const
    {
    if(b.is_zero() || b.is_negative())
@@ -69,9 +71,9 @@ void Power_Mod::set_base(const BigInt& b) const
    core->set_base(b);
    }
 
-/*************************************************
-* Set the exponent                               *
-*************************************************/
+/*
+* Set the exponent
+*/
 void Power_Mod::set_exponent(const BigInt& e) const
    {
    if(e.is_negative())
@@ -82,9 +84,9 @@ void Power_Mod::set_exponent(const BigInt& e) const
    core->set_exponent(e);
    }
 
-/*************************************************
-* Compute the result                             *
-*************************************************/
+/*
+* Compute the result
+*/
 BigInt Power_Mod::execute() const
    {
    if(!core)
@@ -94,9 +96,9 @@ BigInt Power_Mod::execute() const
 
 namespace {
 
-/*************************************************
-* Choose potentially useful hints                *
-*************************************************/
+/*
+* Choose potentially useful hints
+*/
 Power_Mod::Usage_Hints choose_base_hints(const BigInt& b, const BigInt& n)
    {
    if(b == 2)
@@ -114,9 +116,9 @@ Power_Mod::Usage_Hints choose_base_hints(const BigInt& b, const BigInt& n)
    return Power_Mod::NO_HINTS;
    }
 
-/*************************************************
-* Choose potentially useful hints                *
-*************************************************/
+/*
+* Choose potentially useful hints
+*/
 Power_Mod::Usage_Hints choose_exp_hints(const BigInt& e, const BigInt& n)
    {
    const u32bit e_bits = e.bits();
@@ -131,9 +133,9 @@ Power_Mod::Usage_Hints choose_exp_hints(const BigInt& e, const BigInt& n)
 
 }
 
-/*************************************************
-* Fixed_Exponent_Power_Mod Constructor           *
-*************************************************/
+/*
+* Fixed_Exponent_Power_Mod Constructor
+*/
 Fixed_Exponent_Power_Mod::Fixed_Exponent_Power_Mod(const BigInt& e,
                                                    const BigInt& n,
                                                    Usage_Hints hints) :
@@ -142,9 +144,9 @@ Fixed_Exponent_Power_Mod::Fixed_Exponent_Power_Mod(const BigInt& e,
    set_exponent(e);
    }
 
-/*************************************************
-* Fixed_Base_Power_Mod Constructor               *
-*************************************************/
+/*
+* Fixed_Base_Power_Mod Constructor
+*/
 Fixed_Base_Power_Mod::Fixed_Base_Power_Mod(const BigInt& b, const BigInt& n,
                                            Usage_Hints hints) :
    Power_Mod(n, Usage_Hints(hints | BASE_IS_FIXED | choose_base_hints(b, n)))

@@ -1,6 +1,8 @@
 /*
-* RandomNumberGenerator Header File
+* RandomNumberGenerator
 * (C) 1999-2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_RANDOM_NUMBER_GENERATOR_H__
@@ -80,9 +82,9 @@ class BOTAN_DLL RandomNumberGenerator
          { return (*this); }
    };
 
-/*************************************************
-* Null Random Number Generator                   *
-*************************************************/
+/*
+* Null Random Number Generator
+*/
 class BOTAN_DLL Null_RNG : public RandomNumberGenerator
    {
    public:

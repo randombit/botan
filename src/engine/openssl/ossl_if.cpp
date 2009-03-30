@@ -1,7 +1,9 @@
-/*************************************************
-* OpenSSL IF Engine Source File                  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OpenSSL IF Engine
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eng_ossl.h>
 #include <botan/bn_wrap.h>
@@ -17,9 +19,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* OpenSSL IF Operation                           *
-*************************************************/
+/*
+* OpenSSL IF Operation
+*/
 class OpenSSL_IF_Op : public IF_Operation
    {
    public:
@@ -37,9 +39,9 @@ class OpenSSL_IF_Op : public IF_Operation
       OSSL_BN_CTX ctx;
    };
 
-/*************************************************
-* OpenSSL IF Public Operation                    *
-*************************************************/
+/*
+* OpenSSL IF Public Operation
+*/
 BigInt OpenSSL_IF_Op::public_op(const BigInt& i_bn) const
    {
    OSSL_BN i(i_bn), r;
@@ -47,9 +49,9 @@ BigInt OpenSSL_IF_Op::public_op(const BigInt& i_bn) const
    return r.to_bigint();
    }
 
-/*************************************************
-* OpenSSL IF Private Operation                   *
-*************************************************/
+/*
+* OpenSSL IF Private Operation
+*/
 BigInt OpenSSL_IF_Op::private_op(const BigInt& i_bn) const
    {
    if(BN_is_zero(p.value))
@@ -68,9 +70,9 @@ BigInt OpenSSL_IF_Op::private_op(const BigInt& i_bn) const
 
 }
 
-/*************************************************
-* Acquire an IF op                               *
-*************************************************/
+/*
+* Acquire an IF op
+*/
 IF_Operation* OpenSSL_Engine::if_op(const BigInt& e, const BigInt& n,
                                     const BigInt& d, const BigInt& p,
                                     const BigInt& q, const BigInt& d1,

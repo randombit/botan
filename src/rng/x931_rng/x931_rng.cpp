@@ -1,6 +1,8 @@
 /*
-* ANSI X9.31 RNG Source File
+* ANSI X9.31 RNG
 * (C) 1999-2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #include <botan/x931_rng.h>

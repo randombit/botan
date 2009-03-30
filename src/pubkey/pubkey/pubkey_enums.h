@@ -1,7 +1,9 @@
-/*************************************************
-* Enumerations Header File                       *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Enumerations
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ENUMS_H__
 #define BOTAN_ENUMS_H__
@@ -55,9 +57,9 @@ enum CRL_Code {
    OCSP_UNKNOWN           = 0xFF02
 };
 
-/*************************************************
-* Various Other Enumerations                     *
-*************************************************/
+/*
+* Various Other Enumerations
+*/
 
 /**
 * The two types of X509 encoding supported by Botan.

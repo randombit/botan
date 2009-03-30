@@ -1,8 +1,10 @@
-/*************************************************
-* SHA-{224,256} Header File                      *
-* (C) 1999-2008 Jack Lloyd                       *
-*     2007 FlexSecure GmbH                       *
-*************************************************/
+/*
+* SHA-{224,256}
+* (C) 1999-2008 Jack Lloyd
+*     2007 FlexSecure GmbH
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_SHA_256_H__
 #define BOTAN_SHA_256_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* SHA-{224,256} Base                             *
-*************************************************/
+/*
+* SHA-{224,256} Base
+*/
 class BOTAN_DLL SHA_224_256_BASE : public MDx_HashFunction
    {
    protected:
@@ -28,9 +30,9 @@ class BOTAN_DLL SHA_224_256_BASE : public MDx_HashFunction
       void copy_out(byte[]);
    };
 
-/*************************************************
-* SHA-224                                        *
-*************************************************/
+/*
+* SHA-224
+*/
 class BOTAN_DLL SHA_224 : public SHA_224_256_BASE
    {
    public:
@@ -40,9 +42,9 @@ class BOTAN_DLL SHA_224 : public SHA_224_256_BASE
       SHA_224() : SHA_224_256_BASE(28) { clear(); }
    };
 
-/*************************************************
-* SHA-256                                        *
-*************************************************/
+/*
+* SHA-256
+*/
 class BOTAN_DLL SHA_256 : public SHA_224_256_BASE
    {
    public:

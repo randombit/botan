@@ -1,7 +1,9 @@
-/*************************************************
-* CMS Decoding Source File                       *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CMS Decoding
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/cms_dec.h>
 #include <botan/ber_dec.h>
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* CMS_Decoder Constructor                        *
-*************************************************/
+/*
+* CMS_Decoder Constructor
+*/
 CMS_Decoder::CMS_Decoder(DataSource& in, const X509_Store& x509store,
                          User_Interface& ui_ref, PKCS8_PrivateKey* key) :
    ui(ui_ref), store(x509store)
@@ -31,9 +33,9 @@ CMS_Decoder::CMS_Decoder(DataSource& in, const X509_Store& x509store,
       }
    }
 
-/*************************************************
-* Read the outermost ContentInfo                 *
-*************************************************/
+/*
+* Read the outermost ContentInfo
+*/
 void CMS_Decoder::initial_read(DataSource&)
    {
    // FIXME...
@@ -52,9 +54,9 @@ void CMS_Decoder::initial_read(DataSource&)
    decode_layer();
    }
 
-/*************************************************
-* Add another private key to use                 *
-*************************************************/
+/*
+* Add another private key to use
+*/
 void CMS_Decoder::add_key(PKCS8_PrivateKey* key)
    {
    if(!key)
@@ -69,17 +71,17 @@ void CMS_Decoder::add_key(PKCS8_PrivateKey* key)
    keys.push_back(key);
    }
 
-/*************************************************
-* Return the status information                  *
-*************************************************/
+/*
+* Return the status information
+*/
 CMS_Decoder::Status CMS_Decoder::layer_status() const
    {
    return status;
    }
 
-/*************************************************
-* Return the final data content                  *
-*************************************************/
+/*
+* Return the final data content
+*/
 std::string CMS_Decoder::get_data() const
    {
    if(layer_type() != DATA)
@@ -87,9 +89,9 @@ std::string CMS_Decoder::get_data() const
    return std::string((const char*)data.begin(), data.size());
    }
 
-/*************************************************
-* Return the content type of this layer          *
-*************************************************/
+/*
+* Return the content type of this layer
+*/
 CMS_Decoder::Content_Type CMS_Decoder::layer_type() const
    {
    if(type == OIDS::lookup("CMS.DataContent"))       return DATA;
@@ -101,17 +103,17 @@ CMS_Decoder::Content_Type CMS_Decoder::layer_type() const
    return UNKNOWN;
    }
 
-/*************************************************
-* Return some information about this layer       *
-*************************************************/
+/*
+* Return some information about this layer
+*/
 std::string CMS_Decoder::layer_info() const
    {
    return info;
    }
 
-/*************************************************
-* Return some information about this layer       *
-*************************************************/
+/*
+* Return some information about this layer
+*/
 void CMS_Decoder::read_econtent(BER_Decoder& decoder)
    {
    BER_Decoder econtent_info = decoder.start_cons(SEQUENCE);

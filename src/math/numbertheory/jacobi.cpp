@@ -1,15 +1,17 @@
-/*************************************************
-* Jacobi Function Source File                    *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Jacobi Function
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/numthry.h>
 
 namespace Botan {
 
-/*************************************************
-* Calculate the Jacobi symbol                    *
-*************************************************/
+/*
+* Calculate the Jacobi symbol
+*/
 s32bit jacobi(const BigInt& a, const BigInt& n)
    {
    if(a.is_negative())

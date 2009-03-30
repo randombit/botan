@@ -1,7 +1,9 @@
-/*************************************************
-* ElGamal Operations Header File                 *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* ElGamal Operations
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ELGAMAL_OPS_H__
 #define BOTAN_ELGAMAL_OPS_H__
@@ -13,9 +15,9 @@
 
 namespace Botan {
 
-/*************************************************
-* ElGamal Operation                              *
-*************************************************/
+/*
+* ElGamal Operation
+*/
 class BOTAN_DLL ELG_Operation
    {
    public:
@@ -26,9 +28,9 @@ class BOTAN_DLL ELG_Operation
       virtual ~ELG_Operation() {}
    };
 
-/*************************************************
-* Botan's Default ElGamal Operation              *
-*************************************************/
+/*
+* Botan's Default ElGamal Operation
+*/
 class BOTAN_DLL Default_ELG_Op : public ELG_Operation
    {
    public:

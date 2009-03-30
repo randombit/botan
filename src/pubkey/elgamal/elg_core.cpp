@@ -1,7 +1,9 @@
-/*************************************************
-* ElGamal Core Source File                       *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* ElGamal Core
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/elg_core.h>
 #include <botan/numthry.h>
@@ -17,18 +19,18 @@ const u32bit BLINDING_BITS = BOTAN_PRIVATE_KEY_OP_BLINDING_BITS;
 
 }
 
-/*************************************************
-* ELG_Core Constructor                           *
-*************************************************/
+/*
+* ELG_Core Constructor
+*/
 ELG_Core::ELG_Core(const DL_Group& group, const BigInt& y)
    {
    op = Engine_Core::elg_op(group, y, 0);
    p_bytes = 0;
    }
 
-/*************************************************
-* ELG_Core Constructor                           *
-*************************************************/
+/*
+* ELG_Core Constructor
+*/
 ELG_Core::ELG_Core(RandomNumberGenerator& rng,
                    const DL_Group& group, const BigInt& y, const BigInt& x)
    {
@@ -44,9 +46,9 @@ ELG_Core::ELG_Core(RandomNumberGenerator& rng,
       }
    }
 
-/*************************************************
-* ELG_Core Copy Constructor                      *
-*************************************************/
+/*
+* ELG_Core Copy Constructor
+*/
 ELG_Core::ELG_Core(const ELG_Core& core)
    {
    op = 0;
@@ -56,9 +58,9 @@ ELG_Core::ELG_Core(const ELG_Core& core)
    p_bytes = core.p_bytes;
    }
 
-/*************************************************
-* ELG_Core Assignment Operator                   *
-*************************************************/
+/*
+* ELG_Core Assignment Operator
+*/
 ELG_Core& ELG_Core::operator=(const ELG_Core& core)
    {
    delete op;
@@ -69,18 +71,18 @@ ELG_Core& ELG_Core::operator=(const ELG_Core& core)
    return (*this);
    }
 
-/*************************************************
-* ElGamal Encrypt Operation                      *
-*************************************************/
+/*
+* ElGamal Encrypt Operation
+*/
 SecureVector<byte> ELG_Core::encrypt(const byte in[], u32bit length,
                                      const BigInt& k) const
    {
    return op->encrypt(in, length, k);
    }
 
-/*************************************************
-* ElGamal Decrypt Operation                      *
-*************************************************/
+/*
+* ElGamal Decrypt Operation
+*/
 SecureVector<byte> ELG_Core::decrypt(const byte in[], u32bit length) const
    {
    if(length != 2*p_bytes)

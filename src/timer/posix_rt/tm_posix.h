@@ -1,7 +1,9 @@
-/*************************************************
-* POSIX Timer Header File                        *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* POSIX Timer
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_TIMER_POSIX_H__
 #define BOTAN_TIMER_POSIX_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* POSIX Timer                                    *
-*************************************************/
+/*
+* POSIX Timer
+*/
 class BOTAN_DLL POSIX_Timer : public Timer
    {
    public:

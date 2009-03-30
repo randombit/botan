@@ -1,7 +1,9 @@
-/*************************************************
-* CMS Encoding Header File                       *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CMS Encoding
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_CMS_ENCODER_H__
 #define BOTAN_CMS_ENCODER_H__
@@ -13,9 +15,9 @@
 
 namespace Botan {
 
-/*************************************************
-* CMS Encoding Operation                         *
-*************************************************/
+/*
+* CMS Encoding Operation
+*/
 class BOTAN_DLL CMS_Encoder
    {
    public:

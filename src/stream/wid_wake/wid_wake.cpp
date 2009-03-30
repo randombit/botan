@@ -1,7 +1,9 @@
-/*************************************************
-* WiderWake Source File                          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* WiderWake
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/wid_wake.h>
 #include <botan/loadstor.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Combine cipher stream with message             *
-*************************************************/
+/*
+* Combine cipher stream with message
+*/
 void WiderWake_41_BE::cipher(const byte in[], byte out[], u32bit length)
    {
    while(length >= buffer.size() - position)
@@ -26,9 +28,9 @@ void WiderWake_41_BE::cipher(const byte in[], byte out[], u32bit length)
    position += length;
    }
 
-/*************************************************
-* Generate cipher stream                         *
-*************************************************/
+/*
+* Generate cipher stream
+*/
 void WiderWake_41_BE::generate(u32bit length)
    {
    u32bit R0 = state[0], R1 = state[1],
@@ -67,9 +69,9 @@ void WiderWake_41_BE::generate(u32bit length)
    position = 0;
    }
 
-/*************************************************
-* WiderWake Key Schedule                         *
-*************************************************/
+/*
+* WiderWake Key Schedule
+*/
 void WiderWake_41_BE::key_schedule(const byte key[], u32bit)
    {
    for(u32bit j = 0; j != 4; ++j)
@@ -112,9 +114,9 @@ void WiderWake_41_BE::key_schedule(const byte key[], u32bit)
    resync(iv, 8);
    }
 
-/*************************************************
-* Resynchronization                              *
-*************************************************/
+/*
+* Resynchronization
+*/
 void WiderWake_41_BE::resync(const byte iv[], u32bit length)
    {
    if(length != 8)
@@ -130,9 +132,9 @@ void WiderWake_41_BE::resync(const byte iv[], u32bit length)
    generate(buffer.size());
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void WiderWake_41_BE::clear() throw()
    {
    position = 0;

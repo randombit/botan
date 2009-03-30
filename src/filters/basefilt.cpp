@@ -1,15 +1,17 @@
-/*************************************************
-* Basic Filters Source File                      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Basic Filters
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/basefilt.h>
 
 namespace Botan {
 
-/*************************************************
-* Chain Constructor                              *
-*************************************************/
+/*
+* Chain Constructor
+*/
 Chain::Chain(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
    {
    if(f1) { attach(f1); incr_owns(); }
@@ -18,9 +20,9 @@ Chain::Chain(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
    if(f4) { attach(f4); incr_owns(); }
    }
 
-/*************************************************
-* Chain Constructor                              *
-*************************************************/
+/*
+* Chain Constructor
+*/
 Chain::Chain(Filter* filters[], u32bit count)
    {
    for(u32bit j = 0; j != count; ++j)
@@ -31,26 +33,26 @@ Chain::Chain(Filter* filters[], u32bit count)
          }
    }
 
-/*************************************************
-* Fork Constructor                               *
-*************************************************/
+/*
+* Fork Constructor
+*/
 Fork::Fork(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
    {
    Filter* filters[4] = { f1, f2, f3, f4 };
    set_next(filters, 4);
    }
 
-/*************************************************
-* Fork Constructor                               *
-*************************************************/
+/*
+* Fork Constructor
+*/
 Fork::Fork(Filter* filters[], u32bit count)
    {
    set_next(filters, count);
    }
 
-/*************************************************
-* Set the algorithm key                          *
-*************************************************/
+/*
+* Set the algorithm key
+*/
 void Keyed_Filter::set_key(const SymmetricKey& key)
    {
    if(base_ptr)
@@ -59,9 +61,9 @@ void Keyed_Filter::set_key(const SymmetricKey& key)
       throw Invalid_State("Keyed_Filter::set_key: No base algorithm set");
    }
 
-/*************************************************
-* Check if a keylength is valid                  *
-*************************************************/
+/*
+* Check if a keylength is valid
+*/
 bool Keyed_Filter::valid_keylength(u32bit n) const
    {
    if(base_ptr)

@@ -1,7 +1,9 @@
-/*************************************************
-* XTEA Header File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* XTEA
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_XTEA_H__
 #define BOTAN_XTEA_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* XTEA                                           *
-*************************************************/
+/*
+* XTEA
+*/
 class BOTAN_DLL XTEA : public BlockCipher
    {
    public:

@@ -1,16 +1,18 @@
-/*************************************************
-* Whirlpool Source File                          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Whirlpool
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/whrlpool.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
 
-/*************************************************
-* Whirlpool Compression Function                 *
-*************************************************/
+/*
+* Whirlpool Compression Function
+*/
 void Whirlpool::compress_n(const byte in[], u32bit blocks)
    {
    static const u64bit RC[10] = {
@@ -122,18 +124,18 @@ void Whirlpool::compress_n(const byte in[], u32bit blocks)
       }
    }
 
-/*************************************************
-* Copy out the digest                            *
-*************************************************/
+/*
+* Copy out the digest
+*/
 void Whirlpool::copy_out(byte output[])
    {
    for(u32bit j = 0; j != OUTPUT_LENGTH; j += 8)
       store_be(digest[j/8], output + j);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void Whirlpool::clear() throw()
    {
    MDx_HashFunction::clear();

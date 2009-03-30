@@ -1,7 +1,9 @@
-/*************************************************
-* BER Decoder Header File                        *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* BER Decoder
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_BER_DECODER_H__
 #define BOTAN_BER_DECODER_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* BER Decoding Object                            *
-*************************************************/
+/*
+* BER Decoding Object
+*/
 class BOTAN_DLL BER_Decoder
    {
    public:
@@ -67,9 +69,9 @@ class BOTAN_DLL BER_Decoder
       mutable bool owns;
    };
 
-/*************************************************
-* Decode an OPTIONAL or DEFAULT element          *
-*************************************************/
+/*
+* Decode an OPTIONAL or DEFAULT element
+*/
 template<typename T>
 BER_Decoder& BER_Decoder::decode_optional(T& out,
                                           ASN1_Tag type_tag,
@@ -97,9 +99,9 @@ BER_Decoder& BER_Decoder::decode_optional(T& out,
    return (*this);
    }
 
-/*************************************************
-* Decode a list of homogenously typed values     *
-*************************************************/
+/*
+* Decode a list of homogenously typed values
+*/
 template<typename T>
 BER_Decoder& BER_Decoder::decode_list(std::vector<T>& vec, bool clear_it)
    {

@@ -1,6 +1,8 @@
 /**
-* MISTY1 Header File
+* MISTY1
 * (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_MISTY1_H__

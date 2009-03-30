@@ -1,9 +1,11 @@
-/*************************************************
-* ECDSA Header File                              *
-* (C) 2007 Falko Strenzke, FlexSecure GmbH       *
-*          Manuel Hartl, FlexSecure GmbH         *
-* (C) 2008 Jack Lloyd                            *
-*************************************************/
+/*
+* ECDSA
+* (C) 2007 Falko Strenzke, FlexSecure GmbH
+*          Manuel Hartl, FlexSecure GmbH
+* (C) 2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ECDSA_KEY_H__
 #define BOTAN_ECDSA_KEY_H__
@@ -30,7 +32,7 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey,
       /**
       * Get the maximum number of bits allowed to be fed to this key.
       * This is the bitlength of the order of the base point.
-      *
+
       * @result the maximum number of input bits
       */
       u32bit max_input_bits() const;

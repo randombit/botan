@@ -1,8 +1,10 @@
-/*************************************************
-* EAC1.1 CVC Certificate Authority Header File   *
-* (C) 2007 FlexSecure GmbH                       *
-*     2008 Jack Lloyd                            *
-*************************************************/
+/*
+* EAC1.1 CVC Certificate Authority
+* (C) 2007 FlexSecure GmbH
+*     2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_CVC_CA_H__
 #define BOTAN_CVC_CA_H__

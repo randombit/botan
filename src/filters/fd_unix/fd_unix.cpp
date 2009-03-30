@@ -1,7 +1,9 @@
-/*************************************************
-* Pipe I/O for Unix Source File                  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Pipe I/O for Unix
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/pipe.h>
 #include <botan/exceptn.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Write data from a pipe into a Unix fd          *
-*************************************************/
+/*
+* Write data from a pipe into a Unix fd
+*/
 int operator<<(int fd, Pipe& pipe)
    {
    SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
@@ -31,9 +33,9 @@ int operator<<(int fd, Pipe& pipe)
    return fd;
    }
 
-/*************************************************
-* Read data from a Unix fd into a pipe           *
-*************************************************/
+/*
+* Read data from a Unix fd into a pipe
+*/
 int operator>>(int fd, Pipe& pipe)
    {
    SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);

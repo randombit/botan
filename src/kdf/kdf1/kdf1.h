@@ -1,7 +1,9 @@
-/*************************************************
-* KDF1 Header File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* KDF1
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_KDF1_H__
 #define BOTAN_KDF1_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* KDF1                                           *
-*************************************************/
+/*
+* KDF1
+*/
 class BOTAN_DLL KDF1 : public KDF
    {
    public:

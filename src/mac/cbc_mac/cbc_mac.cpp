@@ -1,7 +1,9 @@
-/*************************************************
-* CBC-MAC Source File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CBC-MAC
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/cbc_mac.h>
 #include <botan/xor_buf.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Update an CBC-MAC Calculation                  *
-*************************************************/
+/*
+* Update an CBC-MAC Calculation
+*/
 void CBC_MAC::add_data(const byte input[], u32bit length)
    {
    u32bit xored = std::min(OUTPUT_LENGTH - position, length);
@@ -36,9 +38,9 @@ void CBC_MAC::add_data(const byte input[], u32bit length)
    position = length;
    }
 
-/*************************************************
-* Finalize an CBC-MAC Calculation                *
-*************************************************/
+/*
+* Finalize an CBC-MAC Calculation
+*/
 void CBC_MAC::final_result(byte mac[])
    {
    if(position)
@@ -49,17 +51,17 @@ void CBC_MAC::final_result(byte mac[])
    position = 0;
    }
 
-/*************************************************
-* CBC-MAC Key Schedule                           *
-*************************************************/
+/*
+* CBC-MAC Key Schedule
+*/
 void CBC_MAC::key_schedule(const byte key[], u32bit length)
    {
    e->set_key(key, length);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void CBC_MAC::clear() throw()
    {
    e->clear();
@@ -67,25 +69,25 @@ void CBC_MAC::clear() throw()
    position = 0;
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/*
+* Return the name of this type
+*/
 std::string CBC_MAC::name() const
    {
    return "CBC-MAC(" + e->name() + ")";
    }
 
-/*************************************************
-* Return a clone of this object                  *
-*************************************************/
+/*
+* Return a clone of this object
+*/
 MessageAuthenticationCode* CBC_MAC::clone() const
    {
    return new CBC_MAC(e->clone());
    }
 
-/*************************************************
-* CBC-MAC Constructor                            *
-*************************************************/
+/*
+* CBC-MAC Constructor
+*/
 CBC_MAC::CBC_MAC(BlockCipher* e_in) :
    MessageAuthenticationCode(e_in->BLOCK_SIZE,
                              e_in->MINIMUM_KEYLENGTH,
@@ -96,9 +98,9 @@ CBC_MAC::CBC_MAC(BlockCipher* e_in) :
    position = 0;
    }
 
-/*************************************************
-* CBC-MAC Destructor                             *
-*************************************************/
+/*
+* CBC-MAC Destructor
+*/
 CBC_MAC::~CBC_MAC()
    {
    delete e;

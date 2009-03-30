@@ -1,7 +1,9 @@
-/*************************************************
-* EMSA1 Header File                              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* EMSA1
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_EMSA1_H__
 #define BOTAN_EMSA1_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* EMSA1                                          *
-*************************************************/
+/*
+* EMSA1
+*/
 class BOTAN_DLL EMSA1 : public EMSA
    {
    public:

@@ -1,8 +1,10 @@
-/*************************************************
-* ECKAEG Operations Header File                  *
-* (C) 1999-2008 Jack Lloyd                       *
-*     2007 FlexSecure GmbH                       *
-*************************************************/
+/*
+* ECKAEG Operations
+* (C) 1999-2008 Jack Lloyd
+*     2007 FlexSecure GmbH
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ECKAEG_OPERATIONS_H__
 #define BOTAN_ECKAEG_OPERATIONS_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* ECKAEG Operation                               *
-*************************************************/
+/*
+* ECKAEG Operation
+*/
 class BOTAN_DLL ECKAEG_Operation
    {
    public:
@@ -22,9 +24,9 @@ class BOTAN_DLL ECKAEG_Operation
       virtual ~ECKAEG_Operation() {}
    };
 
-/*************************************************
-* Default ECKAEG operation                       *
-*************************************************/
+/*
+* Default ECKAEG operation
+*/
 class BOTAN_DLL Default_ECKAEG_Op : public ECKAEG_Operation
    {
    public:

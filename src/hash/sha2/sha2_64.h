@@ -1,7 +1,9 @@
-/*************************************************
-* SHA-{384,512} Header File                      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* SHA-{384,512}
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_SHA_64BIT_H__
 #define BOTAN_SHA_64BIT_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* SHA-{384,512} Base                             *
-*************************************************/
+/*
+* SHA-{384,512} Base
+*/
 class BOTAN_DLL SHA_384_512_BASE : public MDx_HashFunction
    {
    protected:
@@ -29,9 +31,9 @@ class BOTAN_DLL SHA_384_512_BASE : public MDx_HashFunction
       SecureBuffer<u64bit, 80> W;
    };
 
-/*************************************************
-* SHA-384                                        *
-*************************************************/
+/*
+* SHA-384
+*/
 class BOTAN_DLL SHA_384 : public SHA_384_512_BASE
    {
    public:
@@ -41,9 +43,9 @@ class BOTAN_DLL SHA_384 : public SHA_384_512_BASE
       SHA_384() : SHA_384_512_BASE(48) { clear(); }
    };
 
-/*************************************************
-* SHA-512                                        *
-*************************************************/
+/*
+* SHA-512
+*/
 class BOTAN_DLL SHA_512 : public SHA_384_512_BASE
    {
    public:

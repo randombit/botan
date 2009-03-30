@@ -1,7 +1,9 @@
-/*************************************************
-* Pooling Allocator Header File                  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Pooling Allocator
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_POOLING_ALLOCATOR_H__
 #define BOTAN_POOLING_ALLOCATOR_H__
@@ -14,9 +16,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Pooling Allocator                              *
-*************************************************/
+/*
+* Pooling Allocator
+*/
 class BOTAN_DLL Pooling_Allocator : public Allocator
    {
    public:

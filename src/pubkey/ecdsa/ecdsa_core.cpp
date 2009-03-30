@@ -1,8 +1,10 @@
-/*************************************************
-* ECDSA Core Source File                         *
-* (C) 1999-2007 Jack Lloyd                       *
-* (C) 2007 FlexSecure GmbH                       *
-*************************************************/
+/*
+* ECDSA Core
+* (C) 1999-2007 Jack Lloyd
+* (C) 2007 FlexSecure GmbH
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/ecdsa_core.h>
 #include <botan/numthry.h>
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* ECDSA Operation                                *
-*************************************************/
+/*
+* ECDSA Operation
+*/
 bool ECDSA_Core::verify(const byte signature[], u32bit sig_len,
                         const byte message[], u32bit mess_len) const
    {

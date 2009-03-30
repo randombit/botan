@@ -1,7 +1,9 @@
-/*************************************************
-* CTS Mode Source File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CTS Mode
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/cts.h>
 #include <botan/xor_buf.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Encrypt a block                                *
-*************************************************/
+/*
+* Encrypt a block
+*/
 void CTS_Encryption::encrypt(const byte block[])
    {
    xor_buf(state, block, BLOCK_SIZE);
@@ -19,9 +21,9 @@ void CTS_Encryption::encrypt(const byte block[])
    send(state, BLOCK_SIZE);
    }
 
-/*************************************************
-* Encrypt in CTS mode                            *
-*************************************************/
+/*
+* Encrypt in CTS mode
+*/
 void CTS_Encryption::write(const byte input[], u32bit length)
    {
    u32bit copied = std::min(BUFFER_SIZE - position, length);
@@ -53,9 +55,9 @@ void CTS_Encryption::write(const byte input[], u32bit length)
    position += length;
    }
 
-/*************************************************
-* Finish encrypting in CTS mode                  *
-*************************************************/
+/*
+* Finish encrypting in CTS mode
+*/
 void CTS_Encryption::end_msg()
    {
    if(position < BLOCK_SIZE + 1)
@@ -68,9 +70,9 @@ void CTS_Encryption::end_msg()
    send(cn, position - BLOCK_SIZE);
    }
 
-/*************************************************
-* Decrypt a block                                *
-*************************************************/
+/*
+* Decrypt a block
+*/
 void CTS_Decryption::decrypt(const byte block[])
    {
    cipher->decrypt(block, temp);
@@ -79,9 +81,9 @@ void CTS_Decryption::decrypt(const byte block[])
    state.copy(block, BLOCK_SIZE);
    }
 
-/*************************************************
-* Decrypt in CTS mode                            *
-*************************************************/
+/*
+* Decrypt in CTS mode
+*/
 void CTS_Decryption::write(const byte input[], u32bit length)
    {
    u32bit copied = std::min(BUFFER_SIZE - position, length);
@@ -113,9 +115,9 @@ void CTS_Decryption::write(const byte input[], u32bit length)
    position += length;
    }
 
-/*************************************************
-* Finish decrypting in CTS mode                  *
-*************************************************/
+/*
+* Finish decrypting in CTS mode
+*/
 void CTS_Decryption::end_msg()
    {
    cipher->decrypt(buffer, temp);

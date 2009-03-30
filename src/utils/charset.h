@@ -1,7 +1,9 @@
-/*************************************************
-* Character Set Handling Header File             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Character Set Handling
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_CHARSET_H__
 #define BOTAN_CHARSET_H__
@@ -23,9 +25,9 @@ enum Character_Set {
 
 namespace Charset {
 
-/*************************************************
-* Character Set Handling                         *
-*************************************************/
+/*
+* Character Set Handling
+*/
 std::string transcode(const std::string&, Character_Set, Character_Set);
 
 bool is_digit(char);

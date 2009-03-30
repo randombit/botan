@@ -1,7 +1,9 @@
-/*************************************************
-* ARC4 Header File                               *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* ARC4
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ARC4_H__
 #define BOTAN_ARC4_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* ARC4                                           *
-*************************************************/
+/*
+* ARC4
+*/
 class BOTAN_DLL ARC4 : public StreamCipher
    {
    public:

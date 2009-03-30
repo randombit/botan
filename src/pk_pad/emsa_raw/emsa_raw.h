@@ -1,7 +1,9 @@
-/*************************************************
-* EMSA-Raw Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* EMSA-Raw
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_EMSA_RAW_H__
 #define BOTAN_EMSA_RAW_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* EMSA-Raw                                       *
-*************************************************/
+/*
+* EMSA-Raw
+*/
 class BOTAN_DLL EMSA_Raw : public EMSA
    {
    private:

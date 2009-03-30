@@ -1,7 +1,9 @@
-/*************************************************
-* Noekeon Header File                            *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Noekeon
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_NOEKEON_H__
 #define BOTAN_NOEKEON_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Noekeon                                        *
-*************************************************/
+/*
+* Noekeon
+*/
 class BOTAN_DLL Noekeon : public BlockCipher
    {
    public:

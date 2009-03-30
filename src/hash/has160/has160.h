@@ -1,7 +1,9 @@
-/*************************************************
-* HAS-160 Header File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* HAS-160
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_HAS_160_H__
 #define BOTAN_HAS_160_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* HAS-160                                        *
-*************************************************/
+/*
+* HAS-160
+*/
 class BOTAN_DLL HAS_160 : public MDx_HashFunction
    {
    public:

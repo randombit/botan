@@ -1,13 +1,13 @@
-/******************************************************
- * Arithmetic for prime fields GF(p) (source file)    *
- *                                                    *
- * (C) 2007 Martin Doering                            *
- *          doering@cdc.informatik.tu-darmstadt.de    *
- *          Christoph Ludwig                          *
- *          ludwig@fh-worms.de                        *
- *          Falko Strenzke                            *
- *          strenzke@flexsecure.de                    *
- ******************************************************/
+/******
+ * Arithmetic for prime fields GF(p) (source file)
+ *
+ * (C) 2007 Martin Doering
+ *          doering@cdc.informatik.tu-darmstadt.de
+ *          Christoph Ludwig
+ *          ludwig@fh-worms.de
+ *          Falko Strenzke
+ *          strenzke@flexsecure.de
+ ******/
 
 #include <botan/gfp_element.h>
 #include <botan/numthry.h>
@@ -127,6 +127,8 @@ void montg_mult(BigInt& result, BigInt& a_bar, BigInt& b_bar, const BigInt& m, c
 /**
 *calculates R=b^n (here b=2) with R>m (and R beeing as small as possible) for an odd modulus m.
 * no check for oddity is performed!
+*
+* Distributed under the terms of the Botan license
 */
 BigInt montgm_calc_r_oddmod(const BigInt& prime)
    {

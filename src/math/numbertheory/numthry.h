@@ -1,7 +1,9 @@
-/*************************************************
-* Number Theory Functions Header File            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Number Theory Functions
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_NUMBER_THEORY_H__
 #define BOTAN_NUMBER_THEORY_H__
@@ -13,15 +15,15 @@
 
 namespace Botan {
 
-/*************************************************
-* Fused Arithmetic Operations                    *
-*************************************************/
+/*
+* Fused Arithmetic Operations
+*/
 BigInt BOTAN_DLL mul_add(const BigInt&, const BigInt&, const BigInt&);
 BigInt BOTAN_DLL sub_mul(const BigInt&, const BigInt&, const BigInt&);
 
-/*************************************************
-* Number Theory Functions                        *
-*************************************************/
+/*
+* Number Theory Functions
+*/
 inline BigInt abs(const BigInt& n) { return n.abs(); }
 
 void BOTAN_DLL divide(const BigInt&, const BigInt&, BigInt&, BigInt&);
@@ -35,20 +37,20 @@ s32bit BOTAN_DLL jacobi(const BigInt&, const BigInt&);
 
 BigInt BOTAN_DLL power_mod(const BigInt&, const BigInt&, const BigInt&);
 
-/*************************************************
-* Compute the square root of x modulo a prime    *
-* using the Shanks-Tonnelli algorithm            *
-*************************************************/
+/*
+* Compute the square root of x modulo a prime
+* using the Shanks-Tonnelli algorithm
+*/
 BigInt ressol(const BigInt& x, const BigInt& p);
 
-/*************************************************
-* Utility Functions                              *
-*************************************************/
+/*
+* Utility Functions
+*/
 u32bit BOTAN_DLL low_zero_bits(const BigInt&);
 
-/*************************************************
-* Primality Testing                              *
-*************************************************/
+/*
+* Primality Testing
+*/
 bool BOTAN_DLL check_prime(const BigInt&, RandomNumberGenerator&);
 bool BOTAN_DLL is_prime(const BigInt&, RandomNumberGenerator&);
 bool BOTAN_DLL verify_prime(const BigInt&, RandomNumberGenerator&);
@@ -61,9 +63,9 @@ bool BOTAN_DLL passes_mr_tests(RandomNumberGenerator&,
 bool BOTAN_DLL run_primality_tests(RandomNumberGenerator&,
                                    const BigInt&, u32bit = 1);
 
-/*************************************************
-* Random Number Generation                       *
-*************************************************/
+/*
+* Random Number Generation
+*/
 BigInt BOTAN_DLL random_prime(RandomNumberGenerator&,
                               u32bit bits, const BigInt& coprime = 1,
                               u32bit equiv = 1, u32bit equiv_mod = 2);
@@ -71,9 +73,9 @@ BigInt BOTAN_DLL random_prime(RandomNumberGenerator&,
 BigInt BOTAN_DLL random_safe_prime(RandomNumberGenerator&,
                                    u32bit);
 
-/*************************************************
-* DSA Parameter Generation                       *
-*************************************************/
+/*
+* DSA Parameter Generation
+*/
 class Algorithm_Factory;
 
 SecureVector<byte> BOTAN_DLL
@@ -89,18 +91,18 @@ generate_dsa_primes(RandomNumberGenerator& rng,
                     u32bit p_bits, u32bit q_bits,
                     const MemoryRegion<byte>& seed);
 
-/*************************************************
-* Prime Numbers                                  *
-*************************************************/
+/*
+* Prime Numbers
+*/
 const u32bit PRIME_TABLE_SIZE = 6541;
 const u32bit PRIME_PRODUCTS_TABLE_SIZE = 256;
 
 extern const u16bit BOTAN_DLL PRIMES[];
 extern const u64bit PRIME_PRODUCTS[];
 
-/*************************************************
-* Miller-Rabin Primality Tester                  *
-*************************************************/
+/*
+* Miller-Rabin Primality Tester
+*/
 class BOTAN_DLL MillerRabin_Test
    {
    public:

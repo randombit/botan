@@ -1,7 +1,9 @@
-/*************************************************
-* OpenSSL DSA Engine Source File                 *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OpenSSL DSA Engine
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eng_ossl.h>
 #include <botan/bn_wrap.h>
@@ -17,9 +19,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* OpenSSL DSA Operation                          *
-*************************************************/
+/*
+* OpenSSL DSA Operation
+*/
 class OpenSSL_DSA_Op : public DSA_Operation
    {
    public:
@@ -36,9 +38,9 @@ class OpenSSL_DSA_Op : public DSA_Operation
       OSSL_BN_CTX ctx;
    };
 
-/*************************************************
-* OpenSSL DSA Verify Operation                   *
-*************************************************/
+/*
+* OpenSSL DSA Verify Operation
+*/
 bool OpenSSL_DSA_Op::verify(const byte msg[], u32bit msg_len,
                             const byte sig[], u32bit sig_len) const
    {
@@ -75,9 +77,9 @@ bool OpenSSL_DSA_Op::verify(const byte msg[], u32bit msg_len,
    return false;
    }
 
-/*************************************************
-* OpenSSL DSA Sign Operation                     *
-*************************************************/
+/*
+* OpenSSL DSA Sign Operation
+*/
 SecureVector<byte> OpenSSL_DSA_Op::sign(const byte in[], u32bit length,
                                         const BigInt& k_bn) const
    {
@@ -111,9 +113,9 @@ SecureVector<byte> OpenSSL_DSA_Op::sign(const byte in[], u32bit length,
 
 }
 
-/*************************************************
-* Acquire a DSA op                               *
-*************************************************/
+/*
+* Acquire a DSA op
+*/
 DSA_Operation* OpenSSL_Engine::dsa_op(const DL_Group& group, const BigInt& y,
                                       const BigInt& x) const
    {

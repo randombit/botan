@@ -1,15 +1,17 @@
-/*************************************************
-* Block Cipher Mode Source File                  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Block Cipher Mode
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/modebase.h>
 
 namespace Botan {
 
-/*************************************************
-* Block Cipher Mode Constructor                  *
-*************************************************/
+/*
+* Block Cipher Mode Constructor
+*/
 BlockCipherMode::BlockCipherMode(BlockCipher* cipher_ptr,
                                  const std::string& cipher_mode_name,
                                  u32bit iv_size, u32bit iv_meth,
@@ -23,17 +25,17 @@ BlockCipherMode::BlockCipherMode(BlockCipher* cipher_ptr,
    position = 0;
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/*
+* Return the name of this type
+*/
 std::string BlockCipherMode::name() const
    {
    return (cipher->name() + "/" + mode_name);
    }
 
-/*************************************************
-* Set the IV                                     *
-*************************************************/
+/*
+* Set the IV
+*/
 void BlockCipherMode::set_iv(const InitializationVector& new_iv)
    {
    if(new_iv.length() != state.size())

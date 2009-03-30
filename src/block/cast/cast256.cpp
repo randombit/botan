@@ -1,7 +1,9 @@
-/*************************************************
-* CAST-256 Source File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CAST-256
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/cast256.h>
 #include <botan/loadstor.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* CAST-256 Round Type 1                          *
-*************************************************/
+/*
+* CAST-256 Round Type 1
+*/
 void round1(u32bit& out, u32bit in, u32bit mask, u32bit rot)
    {
    u32bit temp = rotate_left(mask + in, rot);
@@ -21,9 +23,9 @@ void round1(u32bit& out, u32bit in, u32bit mask, u32bit rot)
             CAST_SBOX3[get_byte(2, temp)] + CAST_SBOX4[get_byte(3, temp)];
    }
 
-/*************************************************
-* CAST-256 Round Type 2                          *
-*************************************************/
+/*
+* CAST-256 Round Type 2
+*/
 void round2(u32bit& out, u32bit in, u32bit mask, u32bit rot)
    {
    u32bit temp = rotate_left(mask ^ in, rot);
@@ -31,9 +33,9 @@ void round2(u32bit& out, u32bit in, u32bit mask, u32bit rot)
             CAST_SBOX3[get_byte(2, temp)]) ^ CAST_SBOX4[get_byte(3, temp)];
    }
 
-/*************************************************
-* CAST-256 Round Type 3                          *
-*************************************************/
+/*
+* CAST-256 Round Type 3
+*/
 void round3(u32bit& out, u32bit in, u32bit mask, u32bit rot)
    {
    u32bit temp = rotate_left(mask - in, rot);
@@ -43,9 +45,9 @@ void round3(u32bit& out, u32bit in, u32bit mask, u32bit rot)
 
 }
 
-/*************************************************
-* CAST-256 Encryption                            *
-*************************************************/
+/*
+* CAST-256 Encryption
+*/
 void CAST_256::enc(const byte in[], byte out[]) const
    {
    u32bit A = load_be<u32bit>(in, 0);
@@ -81,9 +83,9 @@ void CAST_256::enc(const byte in[], byte out[]) const
    store_be(out, A, B, C, D);
    }
 
-/*************************************************
-* CAST-256 Decryption                            *
-*************************************************/
+/*
+* CAST-256 Decryption
+*/
 void CAST_256::dec(const byte in[], byte out[]) const
    {
    u32bit A = load_be<u32bit>(in, 0);
@@ -119,9 +121,9 @@ void CAST_256::dec(const byte in[], byte out[]) const
    store_be(out, A, B, C, D);
    }
 
-/*************************************************
-* CAST-256 Key Schedule                          *
-*************************************************/
+/*
+* CAST-256 Key Schedule
+*/
 void CAST_256::key_schedule(const byte key[], u32bit length)
    {
    SecureBuffer<u32bit, 8> TMP;

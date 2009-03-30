@@ -1,7 +1,9 @@
-/*************************************************
-* Character Set Handling Source File             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Character Set Handling
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/charset.h>
 #include <botan/parsing.h>
@@ -14,9 +16,9 @@ namespace Charset {
 
 namespace {
 
-/*************************************************
-* Convert from UCS-2 to ISO 8859-1               *
-*************************************************/
+/*
+* Convert from UCS-2 to ISO 8859-1
+*/
 std::string ucs2_to_latin1(const std::string& ucs2)
    {
    if(ucs2.size() % 2 == 1)
@@ -38,9 +40,9 @@ std::string ucs2_to_latin1(const std::string& ucs2)
    return latin1;
    }
 
-/*************************************************
-* Convert from UTF-8 to ISO 8859-1               *
-*************************************************/
+/*
+* Convert from UTF-8 to ISO 8859-1
+*/
 std::string utf8_to_latin1(const std::string& utf8)
    {
    std::string iso8859;
@@ -72,9 +74,9 @@ std::string utf8_to_latin1(const std::string& utf8)
    return iso8859;
    }
 
-/*************************************************
-* Convert from ISO 8859-1 to UTF-8               *
-*************************************************/
+/*
+* Convert from ISO 8859-1 to UTF-8
+*/
 std::string latin1_to_utf8(const std::string& iso8859)
    {
    std::string utf8;
@@ -95,9 +97,9 @@ std::string latin1_to_utf8(const std::string& iso8859)
 
 }
 
-/*************************************************
-* Perform character set transcoding              *
-*************************************************/
+/*
+* Perform character set transcoding
+*/
 std::string transcode(const std::string& str,
                       Character_Set to, Character_Set from)
    {
@@ -120,9 +122,9 @@ std::string transcode(const std::string& str,
                           to_string(from) + " to " + to_string(to));
    }
 
-/*************************************************
-* Check if a character represents a digit        *
-*************************************************/
+/*
+* Check if a character represents a digit
+*/
 bool is_digit(char c)
    {
    if(c == '0' || c == '1' || c == '2' || c == '3' || c == '4' ||
@@ -131,9 +133,9 @@ bool is_digit(char c)
    return false;
    }
 
-/*************************************************
-* Check if a character represents whitespace     *
-*************************************************/
+/*
+* Check if a character represents whitespace
+*/
 bool is_space(char c)
    {
    if(c == ' ' || c == '\t' || c == '\n' || c == '\r')
@@ -141,9 +143,9 @@ bool is_space(char c)
    return false;
    }
 
-/*************************************************
-* Convert a character to a digit                 *
-*************************************************/
+/*
+* Convert a character to a digit
+*/
 byte char2digit(char c)
    {
    switch(c)
@@ -163,9 +165,9 @@ byte char2digit(char c)
    throw Invalid_Argument("char2digit: Input is not a digit character");
    }
 
-/*************************************************
-* Convert a digit to a character                 *
-*************************************************/
+/*
+* Convert a digit to a character
+*/
 char digit2char(byte b)
    {
    switch(b)
@@ -185,9 +187,9 @@ char digit2char(byte b)
    throw Invalid_Argument("digit2char: Input is not a digit");
    }
 
-/*************************************************
-* Case-insensitive character comparison          *
-*************************************************/
+/*
+* Case-insensitive character comparison
+*/
 bool caseless_cmp(char a, char b)
    {
    return (std::tolower(static_cast<unsigned char>(a)) ==

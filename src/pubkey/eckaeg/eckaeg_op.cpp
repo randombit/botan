@@ -1,8 +1,10 @@
-/*************************************************
-* ECKAEG Operation                               *
-* (C) 2007 FlexSecure GmbH                       *
-*     2008 Jack Lloyd                            *
-*************************************************/
+/*
+* ECKAEG Operation
+* (C) 2007 FlexSecure GmbH
+*     2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eckaeg_op.h>
 #include <botan/numthry.h>

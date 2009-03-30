@@ -1,7 +1,9 @@
-/*************************************************
-* RC2 Header File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* RC2
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_RC2_H__
 #define BOTAN_RC2_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* RC2                                            *
-*************************************************/
+/*
+* RC2
+*/
 class BOTAN_DLL RC2 : public BlockCipher
    {
    public:

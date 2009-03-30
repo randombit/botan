@@ -1,7 +1,9 @@
-/*************************************************
-* RIPEMD-128 Source File                         *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* RIPEMD-128
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/rmd128.h>
 #include <botan/loadstor.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* RIPEMD-128 F1 Function                         *
-*************************************************/
+/*
+* RIPEMD-128 F1 Function
+*/
 inline void F1(u32bit& A, u32bit B, u32bit C, u32bit D,
                u32bit msg, u32bit shift)
    {
@@ -21,9 +23,9 @@ inline void F1(u32bit& A, u32bit B, u32bit C, u32bit D,
    A  = rotate_left(A, shift);
    }
 
-/*************************************************
-* RIPEMD-128 F2 Function                         *
-*************************************************/
+/*
+* RIPEMD-128 F2 Function
+*/
 inline void F2(u32bit& A, u32bit B, u32bit C, u32bit D,
                u32bit msg, u32bit shift, u32bit magic)
    {
@@ -31,9 +33,9 @@ inline void F2(u32bit& A, u32bit B, u32bit C, u32bit D,
    A  = rotate_left(A, shift);
    }
 
-/*************************************************
-* RIPEMD-128 F3 Function                         *
-*************************************************/
+/*
+* RIPEMD-128 F3 Function
+*/
 inline void F3(u32bit& A, u32bit B, u32bit C, u32bit D,
                u32bit msg, u32bit shift, u32bit magic)
    {
@@ -41,9 +43,9 @@ inline void F3(u32bit& A, u32bit B, u32bit C, u32bit D,
    A  = rotate_left(A, shift);
    }
 
-/*************************************************
-* RIPEMD-128 F4 Function                         *
-*************************************************/
+/*
+* RIPEMD-128 F4 Function
+*/
 inline void F4(u32bit& A, u32bit B, u32bit C, u32bit D,
                u32bit msg, u32bit shift, u32bit magic)
    {
@@ -53,9 +55,9 @@ inline void F4(u32bit& A, u32bit B, u32bit C, u32bit D,
 
 }
 
-/*************************************************
-* RIPEMD-128 Compression Function                *
-*************************************************/
+/*
+* RIPEMD-128 Compression Function
+*/
 void RIPEMD_128::compress_n(const byte input[], u32bit blocks)
    {
    for(u32bit i = 0; i != blocks; ++i)
@@ -145,18 +147,18 @@ void RIPEMD_128::compress_n(const byte input[], u32bit blocks)
       }
    }
 
-/*************************************************
-* Copy out the digest                            *
-*************************************************/
+/*
+* Copy out the digest
+*/
 void RIPEMD_128::copy_out(byte output[])
    {
    for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
       store_le(digest[j/4], output + j);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void RIPEMD_128::clear() throw()
    {
    MDx_HashFunction::clear();

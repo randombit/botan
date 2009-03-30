@@ -1,8 +1,10 @@
-/*************************************************
-* Load/Store Operators Header File               *
-* (C) 1999-2007 Jack Lloyd                       *
-*     2007 Yves Jerschow                         *
-*************************************************/
+/*
+* Load/Store Operators
+* (C) 1999-2007 Jack Lloyd
+*     2007 Yves Jerschow
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_LOAD_STORE_H__
 #define BOTAN_LOAD_STORE_H__
@@ -35,17 +37,17 @@
 
 namespace Botan {
 
-/*************************************************
-* Byte Extraction Function                       *
-*************************************************/
+/*
+* Byte Extraction Function
+*/
 template<typename T> inline byte get_byte(u32bit byte_num, T input)
    {
    return (input >> ((sizeof(T)-1-(byte_num&(sizeof(T)-1))) << 3));
    }
 
-/*************************************************
-* Byte to Word Conversions                       *
-*************************************************/
+/*
+* Byte to Word Conversions
+*/
 inline u16bit make_u16bit(byte i0, byte i1)
    {
    return ((static_cast<u16bit>(i0) << 8) | i1);
@@ -72,9 +74,9 @@ inline u64bit make_u64bit(byte i0, byte i1, byte i2, byte i3,
            (static_cast<u64bit>(i7)));
     }
 
-/*************************************************
-* Endian-Specific Word Loading Operations        *
-*************************************************/
+/*
+* Endian-Specific Word Loading Operations
+*/
 template<typename T>
 inline T load_be(const byte in[], u32bit off)
    {
@@ -163,9 +165,9 @@ inline u64bit load_le<u64bit>(const byte in[], u32bit off)
 #endif
    }
 
-/*************************************************
-* Endian-Specific Word Storing Operations        *
-*************************************************/
+/*
+* Endian-Specific Word Storing Operations
+*/
 inline void store_be(u16bit in, byte out[2])
    {
 #if BOTAN_TARGET_UNALIGNED_LOADSTOR_OK

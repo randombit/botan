@@ -1,8 +1,10 @@
-/*************************************************
-* EAC1_1 general CVC Header File                 *
-* (C) 2008 Falko Strenzke                        *
-*     2008 Jack Lloyd                            *
-*************************************************/
+/*
+* EAC1_1 general CVC
+* (C) 2008 Falko Strenzke
+*     2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_EAC_CVC_GEN_CERT_H__
 #define BOTAN_EAC_CVC_GEN_CERT_H__

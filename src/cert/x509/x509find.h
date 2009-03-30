@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 Certificate Store Searching Header File  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 Certificate Store Searching
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_X509_CERT_STORE_SEARCH_H__
 #define BOTAN_X509_CERT_STORE_SEARCH_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Search based on the contents of a DN entry     *
-*************************************************/
+/*
+* Search based on the contents of a DN entry
+*/
 class BOTAN_DLL DN_Check : public X509_Store::Search_Func
    {
    public:
@@ -28,9 +30,9 @@ class BOTAN_DLL DN_Check : public X509_Store::Search_Func
       compare_fn compare;
    };
 
-/*************************************************
-* Search for a certificate by issuer/serial      *
-*************************************************/
+/*
+* Search for a certificate by issuer/serial
+*/
 class BOTAN_DLL IandS_Match : public X509_Store::Search_Func
    {
    public:
@@ -41,9 +43,9 @@ class BOTAN_DLL IandS_Match : public X509_Store::Search_Func
       MemoryVector<byte> serial;
    };
 
-/*************************************************
-* Search for a certificate by subject keyid      *
-*************************************************/
+/*
+* Search for a certificate by subject keyid
+*/
 class BOTAN_DLL SKID_Match : public X509_Store::Search_Func
    {
    public:

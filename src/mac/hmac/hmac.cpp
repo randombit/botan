@@ -1,25 +1,27 @@
-/*************************************************
-* HMAC Source File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*     2007 Yves Jerschow                         *
-*************************************************/
+/*
+* HMAC
+* (C) 1999-2007 Jack Lloyd
+*     2007 Yves Jerschow
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/hmac.h>
 #include <botan/xor_buf.h>
 
 namespace Botan {
 
-/*************************************************
-* Update a HMAC Calculation                      *
-*************************************************/
+/*
+* Update a HMAC Calculation
+*/
 void HMAC::add_data(const byte input[], u32bit length)
    {
    hash->update(input, length);
    }
 
-/*************************************************
-* Finalize a HMAC Calculation                    *
-*************************************************/
+/*
+* Finalize a HMAC Calculation
+*/
 void HMAC::final_result(byte mac[])
    {
    hash->final(mac);
@@ -29,9 +31,9 @@ void HMAC::final_result(byte mac[])
    hash->update(i_key);
    }
 
-/*************************************************
-* HMAC Key Schedule                              *
-*************************************************/
+/*
+* HMAC Key Schedule
+*/
 void HMAC::key_schedule(const byte key[], u32bit length)
    {
    hash->clear();
@@ -53,9 +55,9 @@ void HMAC::key_schedule(const byte key[], u32bit length)
    hash->update(i_key);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void HMAC::clear() throw()
    {
    hash->clear();
@@ -63,25 +65,25 @@ void HMAC::clear() throw()
    o_key.clear();
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/*
+* Return the name of this type
+*/
 std::string HMAC::name() const
    {
    return "HMAC(" + hash->name() + ")";
    }
 
-/*************************************************
-* Return a clone of this object                  *
-*************************************************/
+/*
+* Return a clone of this object
+*/
 MessageAuthenticationCode* HMAC::clone() const
    {
    return new HMAC(hash->clone());
    }
 
-/*************************************************
-* HMAC Constructor                               *
-*************************************************/
+/*
+* HMAC Constructor
+*/
 HMAC::HMAC(HashFunction* hash_in) :
    MessageAuthenticationCode(hash_in->OUTPUT_LENGTH,
                              1, 2*hash_in->HASH_BLOCK_SIZE),

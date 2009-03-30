@@ -1,7 +1,9 @@
-/*************************************************
-* RC5 Header File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* RC5
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_RC5_H__
 #define BOTAN_RC5_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* RC5                                            *
-*************************************************/
+/*
+* RC5
+*/
 class BOTAN_DLL RC5 : public BlockCipher
    {
    public:

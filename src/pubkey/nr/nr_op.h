@@ -1,7 +1,9 @@
-/*************************************************
-* NR Operations Header File                     *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* NR Operations
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_NR_OPS_H__
 #define BOTAN_NR_OPS_H__
@@ -13,9 +15,9 @@
 
 namespace Botan {
 
-/*************************************************
-* NR Operation                                   *
-*************************************************/
+/*
+* NR Operation
+*/
 class BOTAN_DLL NR_Operation
    {
    public:
@@ -26,9 +28,9 @@ class BOTAN_DLL NR_Operation
       virtual ~NR_Operation() {}
    };
 
-/*************************************************
-* Botan's Default NR Operation                   *
-*************************************************/
+/*
+* Botan's Default NR Operation
+*/
 class BOTAN_DLL Default_NR_Op : public NR_Operation
    {
    public:

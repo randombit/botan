@@ -1,7 +1,9 @@
-/*************************************************
-* Karatsuba Multiplication/Squaring Source File  *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Karatsuba Multiplication/Squaring
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/mp_core.h>
 #include <botan/mem_ops.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Karatsuba Multiplication Operation             *
-*************************************************/
+/*
+* Karatsuba Multiplication Operation
+*/
 void karatsuba_mul(word z[], const word x[], const word y[], u32bit N,
                    word workspace[])
    {
@@ -91,9 +93,9 @@ void karatsuba_mul(word z[], const word x[], const word y[], u32bit N,
       }
    }
 
-/*************************************************
-* Karatsuba Squaring Operation                   *
-*************************************************/
+/*
+* Karatsuba Squaring Operation
+*/
 void karatsuba_sqr(word z[], const word x[], u32bit N, word workspace[])
    {
    if(N == 6)
@@ -162,9 +164,9 @@ void karatsuba_sqr(word z[], const word x[], u32bit N, word workspace[])
       }
    }
 
-/*************************************************
-* Pick a good size for the Karatsuba multiply    *
-*************************************************/
+/*
+* Pick a good size for the Karatsuba multiply
+*/
 u32bit karatsuba_size(u32bit z_size,
                       u32bit x_size, u32bit x_sw,
                       u32bit y_size, u32bit y_sw)
@@ -206,9 +208,9 @@ u32bit karatsuba_size(u32bit z_size,
    return 0;
    }
 
-/*************************************************
-* Pick a good size for the Karatsuba squaring    *
-*************************************************/
+/*
+* Pick a good size for the Karatsuba squaring
+*/
 u32bit karatsuba_size(u32bit z_size, u32bit x_size, u32bit x_sw)
    {
    if(x_sw == x_size)
@@ -236,9 +238,9 @@ u32bit karatsuba_size(u32bit z_size, u32bit x_size, u32bit x_sw)
 
 }
 
-/*************************************************
-* Multiplication Algorithm Dispatcher            *
-*************************************************/
+/*
+* Multiplication Algorithm Dispatcher
+*/
 void bigint_mul(word z[], u32bit z_size, word workspace[],
                 const word x[], u32bit x_size, u32bit x_sw,
                 const word y[], u32bit y_size, u32bit y_sw)
@@ -287,9 +289,9 @@ void bigint_mul(word z[], u32bit z_size, word workspace[],
       }
    }
 
-/*************************************************
-* Squaring Algorithm Dispatcher                  *
-*************************************************/
+/*
+* Squaring Algorithm Dispatcher
+*/
 void bigint_sqr(word z[], u32bit z_size, word workspace[],
                 const word x[], u32bit x_size, u32bit x_sw)
    {

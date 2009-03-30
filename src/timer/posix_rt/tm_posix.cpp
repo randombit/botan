@@ -1,7 +1,9 @@
-/*************************************************
-* POSIX Timer Source File                        *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* POSIX Timer
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/tm_posix.h>
 #include <botan/util.h>
@@ -18,9 +20,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Get the timestamp                              *
-*************************************************/
+/*
+* Get the timestamp
+*/
 u64bit POSIX_Timer::clock() const
    {
    struct ::timespec tv;

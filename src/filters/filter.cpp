@@ -1,7 +1,9 @@
-/*************************************************
-* Filter Source File                             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Filter
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/filter.h>
 #include <botan/secqueue.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Filter Constructor                             *
-*************************************************/
+/*
+* Filter Constructor
+*/
 Filter::Filter()
    {
    next.resize(1);
@@ -20,9 +22,9 @@ Filter::Filter()
    owned = false;
    }
 
-/*************************************************
-* Send data to all ports                         *
-*************************************************/
+/*
+* Send data to all ports
+*/
 void Filter::send(const byte input[], u32bit length)
    {
    bool nothing_attached = true;
@@ -40,9 +42,9 @@ void Filter::send(const byte input[], u32bit length)
       write_queue.destroy();
    }
 
-/*************************************************
-* Start a new message                            *
-*************************************************/
+/*
+* Start a new message
+*/
 void Filter::new_msg()
    {
    start_msg();
@@ -51,9 +53,9 @@ void Filter::new_msg()
          next[j]->new_msg();
    }
 
-/*************************************************
-* End the current message                        *
-*************************************************/
+/*
+* End the current message
+*/
 void Filter::finish_msg()
    {
    end_msg();
@@ -62,9 +64,9 @@ void Filter::finish_msg()
          next[j]->finish_msg();
    }
 
-/*************************************************
-* Attach a filter to the current port            *
-*************************************************/
+/*
+* Attach a filter to the current port
+*/
 void Filter::attach(Filter* new_filter)
    {
    if(new_filter)
@@ -76,9 +78,9 @@ void Filter::attach(Filter* new_filter)
       }
    }
 
-/*************************************************
-* Set the active port on a filter                *
-*************************************************/
+/*
+* Set the active port on a filter
+*/
 void Filter::set_port(u32bit new_port)
    {
    if(new_port >= total_ports())
@@ -86,9 +88,9 @@ void Filter::set_port(u32bit new_port)
    port_num = new_port;
    }
 
-/*************************************************
-* Return the next Filter in the logical chain    *
-*************************************************/
+/*
+* Return the next Filter in the logical chain
+*/
 Filter* Filter::get_next() const
    {
    if(port_num < next.size())
@@ -96,9 +98,9 @@ Filter* Filter::get_next() const
    return 0;
    }
 
-/*************************************************
-* Set the next Filters                           *
-*************************************************/
+/*
+* Set the next Filters
+*/
 void Filter::set_next(Filter* filters[], u32bit size)
    {
    while(size && filters && filters[size-1] == 0)
@@ -114,9 +116,9 @@ void Filter::set_next(Filter* filters[], u32bit size)
       next[j] = filters[j];
    }
 
-/*************************************************
-* Return the total number of ports               *
-*************************************************/
+/*
+* Return the total number of ports
+*/
 u32bit Filter::total_ports() const
    {
    return next.size();

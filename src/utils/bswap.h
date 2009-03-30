@@ -1,8 +1,10 @@
-/*************************************************
-* Byte Swapping Operations Header File           *
-* (C) 1999-2008 Jack Lloyd                       *
-* (C) 2007 Yves Jerschow                         *
-*************************************************/
+/*
+* Byte Swapping Operations
+* (C) 1999-2008 Jack Lloyd
+* (C) 2007 Yves Jerschow
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_BYTE_SWAP_H__
 #define BOTAN_BYTE_SWAP_H__
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Byte Swapping Functions                        *
-*************************************************/
+/*
+* Byte Swapping Functions
+*/
 inline u16bit reverse_bytes(u16bit input)
    {
    return rotate_left(input, 8);

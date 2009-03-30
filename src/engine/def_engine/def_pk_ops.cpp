@@ -1,7 +1,9 @@
-/*************************************************
-* PK Operations Source File                      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PK Operations
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/def_eng.h>
 
@@ -36,9 +38,9 @@
 namespace Botan {
 
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
-/*************************************************
-* Acquire an IF op                               *
-*************************************************/
+/*
+* Acquire an IF op
+*/
 IF_Operation* Default_Engine::if_op(const BigInt& e, const BigInt& n,
                                     const BigInt& d, const BigInt& p,
                                     const BigInt& q, const BigInt& d1,
@@ -49,9 +51,9 @@ IF_Operation* Default_Engine::if_op(const BigInt& e, const BigInt& n,
 #endif
 
 #if defined(BOTAN_HAS_DSA)
-/*************************************************
-* Acquire a DSA op                               *
-*************************************************/
+/*
+* Acquire a DSA op
+*/
 DSA_Operation* Default_Engine::dsa_op(const DL_Group& group, const BigInt& y,
                                       const BigInt& x) const
    {
@@ -60,9 +62,9 @@ DSA_Operation* Default_Engine::dsa_op(const DL_Group& group, const BigInt& y,
 #endif
 
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-/*************************************************
-* Acquire a NR op                                *
-*************************************************/
+/*
+* Acquire a NR op
+*/
 NR_Operation* Default_Engine::nr_op(const DL_Group& group, const BigInt& y,
                                     const BigInt& x) const
    {
@@ -71,9 +73,9 @@ NR_Operation* Default_Engine::nr_op(const DL_Group& group, const BigInt& y,
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
-/*************************************************
-* Acquire an ElGamal op                          *
-*************************************************/
+/*
+* Acquire an ElGamal op
+*/
 ELG_Operation* Default_Engine::elg_op(const DL_Group& group, const BigInt& y,
                                       const BigInt& x) const
    {
@@ -82,9 +84,9 @@ ELG_Operation* Default_Engine::elg_op(const DL_Group& group, const BigInt& y,
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-/*************************************************
-* Acquire a DH op                                *
-*************************************************/
+/*
+* Acquire a DH op
+*/
 DH_Operation* Default_Engine::dh_op(const DL_Group& group,
                                     const BigInt& x) const
    {
@@ -93,9 +95,9 @@ DH_Operation* Default_Engine::dh_op(const DL_Group& group,
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
-/*************************************************
-* Acquire a ECDSA op                             *
-*************************************************/
+/*
+* Acquire a ECDSA op
+*/
 ECDSA_Operation* Default_Engine::ecdsa_op(const EC_Domain_Params& dom_pars,
                                           const BigInt& priv_key,
                                           const PointGFp& pub_key) const
@@ -105,9 +107,9 @@ ECDSA_Operation* Default_Engine::ecdsa_op(const EC_Domain_Params& dom_pars,
 #endif
 
 #if defined(BOTAN_HAS_ECKAEG)
-/*************************************************
-* Acquire a ECKAEG op                            *
-*************************************************/
+/*
+* Acquire a ECKAEG op
+*/
 ECKAEG_Operation* Default_Engine::eckaeg_op(const EC_Domain_Params& dom_pars,
                                             const BigInt& priv_key,
                                             const PointGFp& pub_key) const

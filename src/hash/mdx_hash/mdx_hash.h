@@ -1,6 +1,8 @@
 /**
-* MDx Hash Function Header File
+* MDx Hash Function
 * (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_MDX_BASE_H__

@@ -1,7 +1,9 @@
-/*************************************************
-* MAC Lookup                                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* MAC Lookup
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/def_eng.h>
 #include <botan/scan_name.h>
@@ -29,9 +31,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Look for an algorithm with this name           *
-*************************************************/
+/*
+* Look for an algorithm with this name
+*/
 MessageAuthenticationCode*
 Default_Engine::find_mac(const SCAN_Name& request,
                          Algorithm_Factory& af) const

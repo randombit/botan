@@ -1,7 +1,9 @@
-/*************************************************
-* Skipjack Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Skipjack
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_SKIPJACK_H__
 #define BOTAN_SKIPJACK_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Skipjack                                       *
-*************************************************/
+/*
+* Skipjack
+*/
 class BOTAN_DLL Skipjack : public BlockCipher
    {
    public:

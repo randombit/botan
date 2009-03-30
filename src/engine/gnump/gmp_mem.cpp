@@ -1,7 +1,9 @@
-/*************************************************
-* GNU MP Memory Handlers Source File             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* GNU MP Memory Handlers
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eng_gmp.h>
 #include <cstring>
@@ -11,22 +13,22 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Allocator used by GNU MP                       *
-*************************************************/
+/*
+* Allocator used by GNU MP
+*/
 Allocator* gmp_alloc = 0;
 
-/*************************************************
-* Allocation Function for GNU MP                 *
-*************************************************/
+/*
+* Allocation Function for GNU MP
+*/
 void* gmp_malloc(size_t n)
    {
    return gmp_alloc->allocate(n);
    }
 
-/*************************************************
-* Reallocation Function for GNU MP               *
-*************************************************/
+/*
+* Reallocation Function for GNU MP
+*/
 void* gmp_realloc(void* ptr, size_t old_n, size_t new_n)
    {
    void* new_buf = gmp_alloc->allocate(new_n);
@@ -35,9 +37,9 @@ void* gmp_realloc(void* ptr, size_t old_n, size_t new_n)
    return new_buf;
    }
 
-/*************************************************
-* Deallocation Function for GNU MP               *
-*************************************************/
+/*
+* Deallocation Function for GNU MP
+*/
 void gmp_free(void* ptr, size_t n)
    {
    gmp_alloc->deallocate(ptr, n);
@@ -45,9 +47,9 @@ void gmp_free(void* ptr, size_t n)
 
 }
 
-/*************************************************
-* Set the GNU MP memory functions                *
-*************************************************/
+/*
+* Set the GNU MP memory functions
+*/
 void GMP_Engine::set_memory_hooks()
    {
    if(gmp_alloc == 0)
@@ -57,9 +59,9 @@ void GMP_Engine::set_memory_hooks()
       }
    }
 
-/*************************************************
-* GMP_Engine Constructor                         *
-*************************************************/
+/*
+* GMP_Engine Constructor
+*/
 GMP_Engine::GMP_Engine()
    {
    set_memory_hooks();

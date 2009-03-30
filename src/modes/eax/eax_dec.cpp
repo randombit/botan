@@ -1,7 +1,9 @@
-/*************************************************
-* EAX Mode Encryption Source File                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* EAX Mode Encryption
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eax.h>
 #include <botan/xor_buf.h>
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* EAX_Decryption Constructor                     *
-*************************************************/
+/*
+* EAX_Decryption Constructor
+*/
 EAX_Decryption::EAX_Decryption(BlockCipher* ciph,
                                u32bit tag_size) :
    EAX_Base(ciph, tag_size)
@@ -21,9 +23,9 @@ EAX_Decryption::EAX_Decryption(BlockCipher* ciph,
    queue_start = queue_end = 0;
    }
 
-/*************************************************
-* EAX_Decryption Constructor                     *
-*************************************************/
+/*
+* EAX_Decryption Constructor
+*/
 EAX_Decryption::EAX_Decryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv,
@@ -36,9 +38,9 @@ EAX_Decryption::EAX_Decryption(BlockCipher* ciph,
    queue_start = queue_end = 0;
    }
 
-/*************************************************
-* Decrypt in EAX mode                            *
-*************************************************/
+/*
+* Decrypt in EAX mode
+*/
 void EAX_Decryption::write(const byte input[], u32bit length)
    {
    while(length)
@@ -70,9 +72,9 @@ void EAX_Decryption::write(const byte input[], u32bit length)
       }
    }
 
-/*************************************************
-* Decrypt in EAX mode                            *
-*************************************************/
+/*
+* Decrypt in EAX mode
+*/
 void EAX_Decryption::do_write(const byte input[], u32bit length)
    {
    mac->update(input, length);
@@ -102,9 +104,9 @@ void EAX_Decryption::do_write(const byte input[], u32bit length)
    position += length;
    }
 
-/*************************************************
-* Finish decrypting in EAX mode                  *
-*************************************************/
+/*
+* Finish decrypting in EAX mode
+*/
 void EAX_Decryption::end_msg()
    {
    if((queue_end - queue_start) != TAG_SIZE)

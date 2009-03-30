@@ -1,7 +1,9 @@
-/*************************************************
-* PBKDF2 Header File                             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PBKDF2
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_PBKDF2_H__
 #define BOTAN_PBKDF2_H__

@@ -1,7 +1,9 @@
-/*************************************************
-* Mutex Header File                              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Mutex
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_MUTEX_H__
 #define BOTAN_MUTEX_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Mutex Base Class                               *
-*************************************************/
+/*
+* Mutex Base Class
+*/
 class BOTAN_DLL Mutex
    {
    public:
@@ -21,9 +23,9 @@ class BOTAN_DLL Mutex
       virtual ~Mutex() {}
    };
 
-/*************************************************
-* Mutex Factory                                  *
-*************************************************/
+/*
+* Mutex Factory
+*/
 class BOTAN_DLL Mutex_Factory
    {
    public:
@@ -31,9 +33,9 @@ class BOTAN_DLL Mutex_Factory
       virtual ~Mutex_Factory() {}
    };
 
-/*************************************************
-* Mutex Holding Class                            *
-*************************************************/
+/*
+* Mutex Holding Class
+*/
 class BOTAN_DLL Mutex_Holder
    {
    public:

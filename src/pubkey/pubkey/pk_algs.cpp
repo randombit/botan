@@ -1,7 +1,9 @@
-/*************************************************
-* PK Key Source File                             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PK Key
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/pk_algs.h>
 
@@ -35,9 +37,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Get an PK public key object                    *
-*************************************************/
+/*
+* Get an PK public key object
+*/
 Public_Key* get_public_key(const std::string& alg_name)
    {
 #if defined(BOTAN_HAS_RSA)
@@ -71,9 +73,9 @@ Public_Key* get_public_key(const std::string& alg_name)
    return 0;
    }
 
-/*************************************************
-* Get an PK private key object                   *
-*************************************************/
+/*
+* Get an PK private key object
+*/
 Private_Key* get_private_key(const std::string& alg_name)
    {
 #if defined(BOTAN_HAS_RSA)

@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 Certificate Authority Header File        *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 Certificate Authority
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_X509_CA_H__
 #define BOTAN_X509_CA_H__

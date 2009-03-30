@@ -1,7 +1,9 @@
-/*************************************************
-* EAX Mode Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* EAX Mode
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_EAX_H__
 #define BOTAN_EAX_H__
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* EAX Base Class                                 *
-*************************************************/
+/*
+* EAX Base Class
+*/
 class BOTAN_DLL EAX_Base : public Keyed_Filter
    {
    public:
@@ -38,9 +40,9 @@ class BOTAN_DLL EAX_Base : public Keyed_Filter
       u32bit position;
    };
 
-/*************************************************
-* EAX Encryption                                 *
-*************************************************/
+/*
+* EAX Encryption
+*/
 class BOTAN_DLL EAX_Encryption : public EAX_Base
    {
    public:
@@ -59,9 +61,9 @@ class BOTAN_DLL EAX_Encryption : public EAX_Base
       void end_msg();
    };
 
-/*************************************************
-* EAX Decryption                                 *
-*************************************************/
+/*
+* EAX Decryption
+*/
 class BOTAN_DLL EAX_Decryption : public EAX_Base
    {
    public:

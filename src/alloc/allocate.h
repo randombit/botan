@@ -1,7 +1,9 @@
-/*************************************************
-* Allocator Header File                          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Allocator
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ALLOCATOR_H__
 #define BOTAN_ALLOCATOR_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Allocator Interface                            *
-*************************************************/
+/*
+* Allocator Interface
+*/
 class BOTAN_DLL Allocator
    {
    public:

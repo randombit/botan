@@ -1,7 +1,9 @@
-/*************************************************
-* PEM Encoding/Decoding Header File              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PEM Encoding/Decoding
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_PEM_H__
 #define BOTAN_PEM_H__
@@ -12,9 +14,9 @@ namespace Botan {
 
 namespace PEM_Code {
 
-/*************************************************
-* PEM Encoding/Decoding                          *
-*************************************************/
+/*
+* PEM Encoding/Decoding
+*/
 BOTAN_DLL std::string encode(const byte[], u32bit,
                              const std::string&, u32bit = 64);
 BOTAN_DLL std::string encode(const MemoryRegion<byte>&,

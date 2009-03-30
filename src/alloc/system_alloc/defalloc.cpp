@@ -1,7 +1,9 @@
-/*************************************************
-* Basic Allocators Source File                   *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Basic Allocators
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/defalloc.h>
 #include <botan/libstate.h>
@@ -13,9 +15,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Perform Memory Allocation                      *
-*************************************************/
+/*
+* Perform Memory Allocation
+*/
 void* do_malloc(u32bit n, bool do_lock)
    {
    void* ptr = std::malloc(n);
@@ -30,9 +32,9 @@ void* do_malloc(u32bit n, bool do_lock)
    return ptr;
    }
 
-/*************************************************
-* Perform Memory Deallocation                    *
-*************************************************/
+/*
+* Perform Memory Deallocation
+*/
 void do_free(void* ptr, u32bit n, bool do_lock)
    {
    if(!ptr)
@@ -47,41 +49,41 @@ void do_free(void* ptr, u32bit n, bool do_lock)
 
 }
 
-/*************************************************
-* Malloc_Allocator's Allocation                  *
-*************************************************/
+/*
+* Malloc_Allocator's Allocation
+*/
 void* Malloc_Allocator::allocate(u32bit n)
    {
    return do_malloc(n, false);
    }
 
-/*************************************************
-* Malloc_Allocator's Deallocation                *
-*************************************************/
+/*
+* Malloc_Allocator's Deallocation
+*/
 void Malloc_Allocator::deallocate(void* ptr, u32bit n)
    {
    do_free(ptr, n, false);
    }
 
-/*************************************************
-* Locking_Allocator's Allocation                 *
-*************************************************/
+/*
+* Locking_Allocator's Allocation
+*/
 void* Locking_Allocator::alloc_block(u32bit n)
    {
    return do_malloc(n, true);
    }
 
-/*************************************************
-* Locking_Allocator's Deallocation               *
-*************************************************/
+/*
+* Locking_Allocator's Deallocation
+*/
 void Locking_Allocator::dealloc_block(void* ptr, u32bit n)
    {
    do_free(ptr, n, true);
    }
 
-/*************************************************
-* Get an allocator                               *
-*************************************************/
+/*
+* Get an allocator
+*/
 Allocator* Allocator::get(bool locking)
    {
    std::string type = "";

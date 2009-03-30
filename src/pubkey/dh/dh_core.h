@@ -1,7 +1,9 @@
-/*************************************************
-* DH Core Header File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* DH Core
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_DH_CORE_H__
 #define BOTAN_DH_CORE_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* DH Core                                        *
-*************************************************/
+/*
+* DH Core
+*/
 class BOTAN_DLL DH_Core
    {
    public:

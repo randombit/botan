@@ -1,6 +1,8 @@
 /**
 * Block Cipher Base Class
 * (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_BLOCK_CIPHER_H__

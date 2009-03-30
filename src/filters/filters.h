@@ -1,7 +1,9 @@
-/*************************************************
-* Filters Header File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Filters
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_FILTERS_H__
 #define BOTAN_FILTERS_H__

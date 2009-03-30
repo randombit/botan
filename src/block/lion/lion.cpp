@@ -1,7 +1,9 @@
-/*************************************************
-* Lion Source File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Lion
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/lion.h>
 #include <botan/xor_buf.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Lion Encryption                                *
-*************************************************/
+/*
+* Lion Encryption
+*/
 void Lion::enc(const byte in[], byte out[]) const
    {
    SecureVector<byte> buffer(LEFT_SIZE);
@@ -29,9 +31,9 @@ void Lion::enc(const byte in[], byte out[]) const
    cipher->encrypt(out + LEFT_SIZE, RIGHT_SIZE);
    }
 
-/*************************************************
-* Lion Decryption                                *
-*************************************************/
+/*
+* Lion Decryption
+*/
 void Lion::dec(const byte in[], byte out[]) const
    {
    SecureVector<byte> buffer(LEFT_SIZE);
@@ -49,9 +51,9 @@ void Lion::dec(const byte in[], byte out[]) const
    cipher->encrypt(out + LEFT_SIZE, RIGHT_SIZE);
    }
 
-/*************************************************
-* Lion Key Schedule                              *
-*************************************************/
+/*
+* Lion Key Schedule
+*/
 void Lion::key_schedule(const byte key[], u32bit length)
    {
    clear();
@@ -60,9 +62,9 @@ void Lion::key_schedule(const byte key[], u32bit length)
    key2.copy(key + length / 2, length / 2);
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/*
+* Return the name of this type
+*/
 std::string Lion::name() const
    {
    return "Lion(" + hash->name() + "," +
@@ -70,17 +72,17 @@ std::string Lion::name() const
                     to_string(BLOCK_SIZE) + ")";
    }
 
-/*************************************************
-* Return a clone of this object                  *
-*************************************************/
+/*
+* Return a clone of this object
+*/
 BlockCipher* Lion::clone() const
    {
    return new Lion(hash->clone(), cipher->clone(), BLOCK_SIZE);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void Lion::clear() throw()
    {
    hash->clear();
@@ -89,9 +91,9 @@ void Lion::clear() throw()
    key2.clear();
    }
 
-/*************************************************
-* Lion Constructor                               *
-*************************************************/
+/*
+* Lion Constructor
+*/
 Lion::Lion(HashFunction* hash_in, StreamCipher* sc_in, u32bit block_len) :
    BlockCipher(std::max<u32bit>(2*hash_in->OUTPUT_LENGTH + 1, block_len),
                2, 2*hash_in->OUTPUT_LENGTH, 2),

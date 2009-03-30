@@ -1,7 +1,9 @@
-/*************************************************
-* Montgomery Exponentiation Source File          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Montgomery Exponentiation
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/def_powm.h>
 #include <botan/numthry.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Try to choose a good window size               *
-*************************************************/
+/*
+* Try to choose a good window size
+*/
 u32bit choose_window_bits(u32bit exp_bits, u32bit,
                           Power_Mod::Usage_Hints hints)
    {
@@ -43,9 +45,9 @@ u32bit choose_window_bits(u32bit exp_bits, u32bit,
    return window_bits;
    }
 
-/*************************************************
-* Montgomery Reduction                           *
-*************************************************/
+/*
+* Montgomery Reduction
+*/
 inline void montgomery_reduce(BigInt& out, MemoryRegion<word>& z_buf,
                               const BigInt& x_bn, u32bit x_size, word u)
    {
@@ -60,18 +62,18 @@ inline void montgomery_reduce(BigInt& out, MemoryRegion<word>& z_buf,
 
 }
 
-/*************************************************
-* Set the exponent                               *
-*************************************************/
+/*
+* Set the exponent
+*/
 void Montgomery_Exponentiator::set_exponent(const BigInt& exp)
    {
    this->exp = exp;
    exp_bits = exp.bits();
    }
 
-/*************************************************
-* Set the base                                   *
-*************************************************/
+/*
+* Set the base
+*/
 void Montgomery_Exponentiator::set_base(const BigInt& base)
    {
    window_bits = choose_window_bits(exp.bits(), base.bits(), hints);
@@ -105,9 +107,9 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
       }
    }
 
-/*************************************************
-* Compute the result                             *
-*************************************************/
+/*
+* Compute the result
+*/
 BigInt Montgomery_Exponentiator::execute() const
    {
    const u32bit exp_nibbles = (exp_bits + window_bits - 1) / window_bits;
@@ -148,9 +150,9 @@ BigInt Montgomery_Exponentiator::execute() const
    return x;
    }
 
-/*************************************************
-* Montgomery_Exponentiator Constructor           *
-*************************************************/
+/*
+* Montgomery_Exponentiator Constructor
+*/
 Montgomery_Exponentiator::Montgomery_Exponentiator(const BigInt& mod,
    Power_Mod::Usage_Hints hints)
    {

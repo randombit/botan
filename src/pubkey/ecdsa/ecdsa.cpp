@@ -1,9 +1,11 @@
-/*************************************************
-* ECDSA implemenation                            *
-* (C) 2007 Manuel Hartl, FlexSecure GmbH         *
-*     2007 Falko Strenzke, FlexSecure GmbH       *
-*     2008 Jack Lloyd                            *
-*************************************************/
+/*
+* ECDSA implemenation
+* (C) 2007 Manuel Hartl, FlexSecure GmbH
+*     2007 Falko Strenzke, FlexSecure GmbH
+*     2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/ecdsa.h>
 #include <botan/numthry.h>
@@ -33,9 +35,9 @@ ECDSA_PrivateKey::ECDSA_PrivateKey(RandomNumberGenerator& rng,
    m_ecdsa_core = ECDSA_Core(*mp_dom_pars, m_private_value, *mp_public_point);
    }
 
-/*************************************************
-* ECDSA_PublicKey                                *
-*************************************************/
+/*
+* ECDSA_PublicKey
+*/
 void ECDSA_PublicKey::affirm_init() const // virtual
    {
    EC_PublicKey::affirm_init();
@@ -152,7 +154,7 @@ u32bit ECDSA_PublicKey::max_input_bits() const
    }
 
 /*************************
-* ECDSA_PrivateKey       *
+* ECDSA_PrivateKey
 *************************/
 void ECDSA_PrivateKey::affirm_init() const // virtual
    {

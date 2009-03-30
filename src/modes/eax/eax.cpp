@@ -1,7 +1,9 @@
-/*************************************************
-* EAX Mode Encryption Source File                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* EAX Mode Encryption
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eax.h>
 #include <botan/cmac.h>
@@ -13,9 +15,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* EAX MAC-based PRF                              *
-*************************************************/
+/*
+* EAX MAC-based PRF
+*/
 SecureVector<byte> eax_prf(byte tag, u32bit BLOCK_SIZE,
                            MessageAuthenticationCode* mac,
                            const byte in[], u32bit length)
@@ -29,9 +31,9 @@ SecureVector<byte> eax_prf(byte tag, u32bit BLOCK_SIZE,
 
 }
 
-/*************************************************
-* EAX_Base Constructor                           *
-*************************************************/
+/*
+* EAX_Base Constructor
+*/
 EAX_Base::EAX_Base(BlockCipher* ciph,
                    u32bit tag_size) :
    TAG_SIZE(tag_size ? tag_size / 8 : ciph->BLOCK_SIZE),
@@ -48,9 +50,9 @@ EAX_Base::EAX_Base(BlockCipher* ciph,
    position = 0;
    }
 
-/*************************************************
-* Check if a keylength is valid for EAX          *
-*************************************************/
+/*
+* Check if a keylength is valid for EAX
+*/
 bool EAX_Base::valid_keylength(u32bit n) const
    {
    if(!cipher->valid_keylength(n))
@@ -60,9 +62,9 @@ bool EAX_Base::valid_keylength(u32bit n) const
    return true;
    }
 
-/*************************************************
-* Set the EAX key                                *
-*************************************************/
+/*
+* Set the EAX key
+*/
 void EAX_Base::set_key(const SymmetricKey& key)
    {
    cipher->set_key(key);
@@ -70,9 +72,9 @@ void EAX_Base::set_key(const SymmetricKey& key)
    header_mac = eax_prf(1, BLOCK_SIZE, mac, 0, 0);
    }
 
-/*************************************************
-* Do setup at the start of each message          *
-*************************************************/
+/*
+* Do setup at the start of each message
+*/
 void EAX_Base::start_msg()
    {
    for(u32bit j = 0; j != BLOCK_SIZE - 1; ++j)
@@ -80,9 +82,9 @@ void EAX_Base::start_msg()
    mac->update(2);
    }
 
-/*************************************************
-* Set the EAX nonce                              *
-*************************************************/
+/*
+* Set the EAX nonce
+*/
 void EAX_Base::set_iv(const InitializationVector& iv)
    {
    nonce_mac = eax_prf(0, BLOCK_SIZE, mac, iv.begin(), iv.length());
@@ -90,25 +92,25 @@ void EAX_Base::set_iv(const InitializationVector& iv)
    cipher->encrypt(state, buffer);
    }
 
-/*************************************************
-* Set the EAX header                             *
-*************************************************/
+/*
+* Set the EAX header
+*/
 void EAX_Base::set_header(const byte header[], u32bit length)
    {
    header_mac = eax_prf(1, BLOCK_SIZE, mac, header, length);
    }
 
-/*************************************************
-* Return the name of this cipher mode            *
-*************************************************/
+/*
+* Return the name of this cipher mode
+*/
 std::string EAX_Base::name() const
    {
    return (cipher->name() + "/EAX");
    }
 
-/*************************************************
-* Increment the counter and update the buffer    *
-*************************************************/
+/*
+* Increment the counter and update the buffer
+*/
 void EAX_Base::increment_counter()
    {
    for(s32bit j = BLOCK_SIZE - 1; j >= 0; --j)
@@ -118,9 +120,9 @@ void EAX_Base::increment_counter()
    position = 0;
    }
 
-/*************************************************
-* Encrypt in EAX mode                            *
-*************************************************/
+/*
+* Encrypt in EAX mode
+*/
 void EAX_Encryption::write(const byte input[], u32bit length)
    {
    u32bit copied = std::min(BLOCK_SIZE - position, length);
@@ -151,9 +153,9 @@ void EAX_Encryption::write(const byte input[], u32bit length)
    position += length;
    }
 
-/*************************************************
-* Finish encrypting in EAX mode                  *
-*************************************************/
+/*
+* Finish encrypting in EAX mode
+*/
 void EAX_Encryption::end_msg()
    {
    SecureVector<byte> data_mac = mac->final();

@@ -1,7 +1,9 @@
-/*************************************************
-* BER Decoder Source File                        *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* BER Decoder
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* BER decode an ASN.1 type tag                   *
-*************************************************/
+/*
+* BER decode an ASN.1 type tag
+*/
 u32bit decode_tag(DataSource* ber, ASN1_Tag& type_tag, ASN1_Tag& class_tag)
    {
    byte b;
@@ -48,14 +50,14 @@ u32bit decode_tag(DataSource* ber, ASN1_Tag& type_tag, ASN1_Tag& class_tag)
    return tag_bytes;
    }
 
-/*************************************************
-* Find the EOC marker                            *
-*************************************************/
+/*
+* Find the EOC marker
+*/
 u32bit find_eoc(DataSource*);
 
-/*************************************************
-* BER decode an ASN.1 length field               *
-*************************************************/
+/*
+* BER decode an ASN.1 length field
+*/
 u32bit decode_length(DataSource* ber, u32bit& field_size)
    {
    byte b;
@@ -83,18 +85,18 @@ u32bit decode_length(DataSource* ber, u32bit& field_size)
    return length;
    }
 
-/*************************************************
-* BER decode an ASN.1 length field               *
-*************************************************/
+/*
+* BER decode an ASN.1 length field
+*/
 u32bit decode_length(DataSource* ber)
    {
    u32bit dummy;
    return decode_length(ber, dummy);
    }
 
-/*************************************************
-* Find the EOC marker                            *
-*************************************************/
+/*
+* Find the EOC marker
+*/
 u32bit find_eoc(DataSource* ber)
    {
    SecureVector<byte> buffer(DEFAULT_BUFFERSIZE), data;
@@ -132,18 +134,18 @@ u32bit find_eoc(DataSource* ber)
 
 }
 
-/*************************************************
-* Check a type invariant on BER data             *
-*************************************************/
+/*
+* Check a type invariant on BER data
+*/
 void BER_Object::assert_is_a(ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
    if(this->type_tag != type_tag || this->class_tag != class_tag)
       throw BER_Decoding_Error("Tag mismatch when decoding");
    }
 
-/*************************************************
-* Check if more objects are there                *
-*************************************************/
+/*
+* Check if more objects are there
+*/
 bool BER_Decoder::more_items() const
    {
    if(source->end_of_data() && (pushed.type_tag == NO_OBJECT))
@@ -151,9 +153,9 @@ bool BER_Decoder::more_items() const
    return true;
    }
 
-/*************************************************
-* Verify that no bytes remain in the source      *
-*************************************************/
+/*
+* Verify that no bytes remain in the source
+*/
 BER_Decoder& BER_Decoder::verify_end()
    {
    if(!source->end_of_data() || (pushed.type_tag != NO_OBJECT))
@@ -161,9 +163,9 @@ BER_Decoder& BER_Decoder::verify_end()
    return (*this);
    }
 
-/*************************************************
-* Save all the bytes remaining in the source     *
-*************************************************/
+/*
+* Save all the bytes remaining in the source
+*/
 BER_Decoder& BER_Decoder::raw_bytes(MemoryRegion<byte>& out)
    {
    out.destroy();
@@ -173,9 +175,9 @@ BER_Decoder& BER_Decoder::raw_bytes(MemoryRegion<byte>& out)
    return (*this);
    }
 
-/*************************************************
-* Discard all the bytes remaining in the source  *
-*************************************************/
+/*
+* Discard all the bytes remaining in the source
+*/
 BER_Decoder& BER_Decoder::discard_remaining()
    {
    byte buf;
@@ -184,9 +186,9 @@ BER_Decoder& BER_Decoder::discard_remaining()
    return (*this);
    }
 
-/*************************************************
-* Return the BER encoding of the next object     *
-*************************************************/
+/*
+* Return the BER encoding of the next object
+*/
 BER_Object BER_Decoder::get_next_object()
    {
    BER_Object next;
@@ -213,9 +215,9 @@ BER_Object BER_Decoder::get_next_object()
    return next;
    }
 
-/*************************************************
-* Push a object back into the stream             *
-*************************************************/
+/*
+* Push a object back into the stream
+*/
 void BER_Decoder::push_back(const BER_Object& obj)
    {
    if(pushed.type_tag != NO_OBJECT)
@@ -223,9 +225,9 @@ void BER_Decoder::push_back(const BER_Object& obj)
    pushed = obj;
    }
 
-/*************************************************
-* Begin decoding a CONSTRUCTED type              *
-*************************************************/
+/*
+* Begin decoding a CONSTRUCTED type
+*/
 BER_Decoder BER_Decoder::start_cons(ASN1_Tag type_tag,
                                     ASN1_Tag class_tag)
    {
@@ -237,9 +239,9 @@ BER_Decoder BER_Decoder::start_cons(ASN1_Tag type_tag,
    return result;
    }
 
-/*************************************************
-* Finish decoding a CONSTRUCTED type             *
-*************************************************/
+/*
+* Finish decoding a CONSTRUCTED type
+*/
 BER_Decoder& BER_Decoder::end_cons()
    {
    if(!parent)
@@ -249,9 +251,9 @@ BER_Decoder& BER_Decoder::end_cons()
    return (*parent);
    }
 
-/*************************************************
-* BER_Decoder Constructor                        *
-*************************************************/
+/*
+* BER_Decoder Constructor
+*/
 BER_Decoder::BER_Decoder(DataSource& src)
    {
    source = &src;
@@ -260,9 +262,9 @@ BER_Decoder::BER_Decoder(DataSource& src)
    parent = 0;
    }
 
-/*************************************************
-* BER_Decoder Constructor                        *
- *************************************************/
+/*
+* BER_Decoder Constructor
+ */
 BER_Decoder::BER_Decoder(const byte data[], u32bit length)
    {
    source = new DataSource_Memory(data, length);
@@ -271,9 +273,9 @@ BER_Decoder::BER_Decoder(const byte data[], u32bit length)
    parent = 0;
    }
 
-/*************************************************
-* BER_Decoder Constructor                        *
-*************************************************/
+/*
+* BER_Decoder Constructor
+*/
 BER_Decoder::BER_Decoder(const MemoryRegion<byte>& data)
    {
    source = new DataSource_Memory(data);
@@ -282,9 +284,9 @@ BER_Decoder::BER_Decoder(const MemoryRegion<byte>& data)
    parent = 0;
    }
 
-/*************************************************
-* BER_Decoder Copy Constructor                   *
-*************************************************/
+/*
+* BER_Decoder Copy Constructor
+*/
 BER_Decoder::BER_Decoder(const BER_Decoder& other)
    {
    source = other.source;
@@ -298,9 +300,9 @@ BER_Decoder::BER_Decoder(const BER_Decoder& other)
    parent = other.parent;
    }
 
-/*************************************************
-* BER_Decoder Destructor                         *
-*************************************************/
+/*
+* BER_Decoder Destructor
+*/
 BER_Decoder::~BER_Decoder()
    {
    if(owns)
@@ -308,18 +310,18 @@ BER_Decoder::~BER_Decoder()
    source = 0;
    }
 
-/*************************************************
-* Request for an object to decode itself         *
-*************************************************/
+/*
+* Request for an object to decode itself
+*/
 BER_Decoder& BER_Decoder::decode(ASN1_Object& obj)
    {
    obj.decode_from(*this);
    return (*this);
    }
 
-/*************************************************
-* Decode a BER encoded NULL                      *
-*************************************************/
+/*
+* Decode a BER encoded NULL
+*/
 BER_Decoder& BER_Decoder::decode_null()
    {
    BER_Object obj = get_next_object();
@@ -329,33 +331,33 @@ BER_Decoder& BER_Decoder::decode_null()
    return (*this);
    }
 
-/*************************************************
-* Decode a BER encoded BOOLEAN                   *
-*************************************************/
+/*
+* Decode a BER encoded BOOLEAN
+*/
 BER_Decoder& BER_Decoder::decode(bool& out)
    {
    return decode(out, BOOLEAN, UNIVERSAL);
    }
 
-/*************************************************
-* Decode a small BER encoded INTEGER             *
-*************************************************/
+/*
+* Decode a small BER encoded INTEGER
+*/
 BER_Decoder& BER_Decoder::decode(u32bit& out)
    {
    return decode(out, INTEGER, UNIVERSAL);
    }
 
-/*************************************************
-* Decode a BER encoded INTEGER                   *
-*************************************************/
+/*
+* Decode a BER encoded INTEGER
+*/
 BER_Decoder& BER_Decoder::decode(BigInt& out)
    {
    return decode(out, INTEGER, UNIVERSAL);
    }
 
-/*************************************************
-* Decode a BER encoded BOOLEAN                   *
-*************************************************/
+/*
+* Decode a BER encoded BOOLEAN
+*/
 BER_Decoder& BER_Decoder::decode(bool& out,
                                  ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
@@ -369,9 +371,9 @@ BER_Decoder& BER_Decoder::decode(bool& out,
    return (*this);
    }
 
-/*************************************************
-* Decode a small BER encoded INTEGER             *
-*************************************************/
+/*
+* Decode a small BER encoded INTEGER
+*/
 BER_Decoder& BER_Decoder::decode(u32bit& out,
                                  ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
@@ -381,9 +383,9 @@ BER_Decoder& BER_Decoder::decode(u32bit& out,
    return (*this);
    }
 
-/*************************************************
-* Decode a BER encoded INTEGER                   *
-*************************************************/
+/*
+* Decode a BER encoded INTEGER
+*/
 BER_Decoder& BER_Decoder::decode(BigInt& out,
                                  ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
@@ -414,17 +416,17 @@ BER_Decoder& BER_Decoder::decode(BigInt& out,
    return (*this);
    }
 
-/*************************************************
-* BER decode a BIT STRING or OCTET STRING        *
-*************************************************/
+/*
+* BER decode a BIT STRING or OCTET STRING
+*/
 BER_Decoder& BER_Decoder::decode(MemoryRegion<byte>& out, ASN1_Tag real_type)
    {
    return decode(out, real_type, real_type, UNIVERSAL);
    }
 
-/*************************************************
-* BER decode a BIT STRING or OCTET STRING        *
-*************************************************/
+/*
+* BER decode a BIT STRING or OCTET STRING
+*/
 BER_Decoder& BER_Decoder::decode(MemoryRegion<byte>& buffer,
                                  ASN1_Tag real_type,
                                  ASN1_Tag type_tag, ASN1_Tag class_tag)
@@ -446,9 +448,9 @@ BER_Decoder& BER_Decoder::decode(MemoryRegion<byte>& buffer,
    return (*this);
    }
 
-/*************************************************
-* Decode an OPTIONAL string type                 *
-*************************************************/
+/*
+* Decode an OPTIONAL string type
+*/
 BER_Decoder& BER_Decoder::decode_optional_string(MemoryRegion<byte>& out,
                                                  ASN1_Tag real_type,
                                                  u16bit type_no)

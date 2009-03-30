@@ -1,7 +1,9 @@
-/*************************************************
-* ASN.1 Internals Source File                    *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* ASN.1 Internals
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/asn1_int.h>
 #include <botan/der_enc.h>
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* BER Decoding Exceptions                        *
-*************************************************/
+/*
+* BER Decoding Exceptions
+*/
 BER_Decoding_Error::BER_Decoding_Error(const std::string& str) :
    Decoding_Error("BER: " + str) {}
 
@@ -26,9 +28,9 @@ BER_Bad_Tag::BER_Bad_Tag(const std::string& str,
 
 namespace ASN1 {
 
-/*************************************************
-* Put some arbitrary bytes into a SEQUENCE       *
-*************************************************/
+/*
+* Put some arbitrary bytes into a SEQUENCE
+*/
 SecureVector<byte> put_in_sequence(const MemoryRegion<byte>& contents)
    {
    return DER_Encoder()
@@ -38,18 +40,18 @@ SecureVector<byte> put_in_sequence(const MemoryRegion<byte>& contents)
    .get_contents();
    }
 
-/*************************************************
-* Convert a BER object into a string object      *
-*************************************************/
+/*
+* Convert a BER object into a string object
+*/
 std::string to_string(const BER_Object& obj)
    {
    return std::string(reinterpret_cast<const char*>(obj.value.begin()),
                       obj.value.size());
    }
 
-/*************************************************
-* Do heuristic tests for BER data                *
-*************************************************/
+/*
+* Do heuristic tests for BER data
+*/
 bool maybe_BER(DataSource& source)
    {
    byte first_byte;

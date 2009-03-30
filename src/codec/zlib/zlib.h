@@ -1,8 +1,10 @@
-/*************************************************
-* Zlib Compressor Header File                    *
-* (C) 2001 Peter J Jones                         *
-*     2001-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Zlib Compressor
+* (C) 2001 Peter J Jones
+*     2001-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ZLIB_H__
 #define BOTAN_ZLIB_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Zlib Compression Filter                        *
-*************************************************/
+/*
+* Zlib Compression Filter
+*/
 class BOTAN_DLL Zlib_Compression : public Filter
    {
    public:
@@ -32,9 +34,9 @@ class BOTAN_DLL Zlib_Compression : public Filter
       class Zlib_Stream* zlib;
    };
 
-/*************************************************
-* Zlib Decompression Filter                      *
-*************************************************/
+/*
+* Zlib Decompression Filter
+*/
 class BOTAN_DLL Zlib_Decompression : public Filter
    {
    public:

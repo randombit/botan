@@ -1,9 +1,11 @@
-/*************************************************
-* Zlib Compressor Source File                    *
-* (C) 2001 Peter J Jones                         *
-*     2001-2007 Jack Lloyd                       *
-*     2006 Matt Johnston                         *
-*************************************************/
+/*
+* Zlib Compressor
+* (C) 2001 Peter J Jones
+*     2001-2007 Jack Lloyd
+*     2006 Matt Johnston
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/zlib.h>
 #include <botan/exceptn.h>
@@ -16,9 +18,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Allocation Information for Zlib                *
-*************************************************/
+/*
+* Allocation Information for Zlib
+*/
 class Zlib_Alloc_Info
    {
    public:
@@ -28,9 +30,9 @@ class Zlib_Alloc_Info
       Zlib_Alloc_Info() { alloc = Allocator::get(false); }
    };
 
-/*************************************************
-* Allocation Function for Zlib                   *
-*************************************************/
+/*
+* Allocation Function for Zlib
+*/
 void* zlib_malloc(void* info_ptr, unsigned int n, unsigned int size)
    {
    Zlib_Alloc_Info* info = static_cast<Zlib_Alloc_Info*>(info_ptr);
@@ -39,9 +41,9 @@ void* zlib_malloc(void* info_ptr, unsigned int n, unsigned int size)
    return ptr;
    }
 
-/*************************************************
-* Allocation Function for Zlib                   *
-*************************************************/
+/*
+* Allocation Function for Zlib
+*/
 void zlib_free(void* info_ptr, void* ptr)
    {
    Zlib_Alloc_Info* info = static_cast<Zlib_Alloc_Info*>(info_ptr);
@@ -53,9 +55,9 @@ void zlib_free(void* info_ptr, void* ptr)
 
 }
 
-/*************************************************
-* Wrapper Type for Zlib z_stream                 *
-*************************************************/
+/*
+* Wrapper Type for Zlib z_stream
+*/
 class Zlib_Stream
    {
    public:
@@ -76,18 +78,18 @@ class Zlib_Stream
          }
    };
 
-/*************************************************
-* Zlib_Compression Constructor                   *
-*************************************************/
+/*
+* Zlib_Compression Constructor
+*/
 Zlib_Compression::Zlib_Compression(u32bit l) :
    level((l >= 9) ? 9 : l), buffer(DEFAULT_BUFFERSIZE)
    {
    zlib = 0;
    }
 
-/*************************************************
-* Start Compressing with Zlib                    *
-*************************************************/
+/*
+* Start Compressing with Zlib
+*/
 void Zlib_Compression::start_msg()
    {
    clear();
@@ -96,9 +98,9 @@ void Zlib_Compression::start_msg()
       throw Exception("Zlib_Compression: Memory allocation error");
    }
 
-/*************************************************
-* Compress Input with Zlib                       *
-*************************************************/
+/*
+* Compress Input with Zlib
+*/
 void Zlib_Compression::write(const byte input[], u32bit length)
    {
    zlib->stream.next_in = static_cast<Bytef*>(const_cast<byte*>(input));
@@ -113,9 +115,9 @@ void Zlib_Compression::write(const byte input[], u32bit length)
       }
    }
 
-/*************************************************
-* Finish Compressing with Zlib                   *
-*************************************************/
+/*
+* Finish Compressing with Zlib
+*/
 void Zlib_Compression::end_msg()
    {
    zlib->stream.next_in = 0;
@@ -132,9 +134,9 @@ void Zlib_Compression::end_msg()
    clear();
    }
 
-/*************************************************
-* Flush the Zlib Compressor                      *
-*************************************************/
+/*
+* Flush the Zlib Compressor
+*/
 void Zlib_Compression::flush()
    {
    zlib->stream.next_in = 0;
@@ -153,9 +155,9 @@ void Zlib_Compression::flush()
       }
    }
 
-/*************************************************
-* Clean up Compression Context                   *
-*************************************************/
+/*
+* Clean up Compression Context
+*/
 void Zlib_Compression::clear()
    {
    if(zlib)
@@ -168,18 +170,18 @@ void Zlib_Compression::clear()
    buffer.clear();
    }
 
-/*************************************************
-* Zlib_Decompression Constructor                 *
-*************************************************/
+/*
+* Zlib_Decompression Constructor
+*/
 Zlib_Decompression::Zlib_Decompression() : buffer(DEFAULT_BUFFERSIZE)
    {
    zlib = 0;
    no_writes = true;
    }
 
-/*************************************************
-* Start Decompressing with Zlib                  *
-*************************************************/
+/*
+* Start Decompressing with Zlib
+*/
 void Zlib_Decompression::start_msg()
    {
    clear();
@@ -188,9 +190,9 @@ void Zlib_Decompression::start_msg()
       throw Exception("Zlib_Decompression: Memory allocation error");
    }
 
-/*************************************************
-* Decompress Input with Zlib                     *
-*************************************************/
+/*
+* Decompress Input with Zlib
+*/
 void Zlib_Decompression::write(const byte input_arr[], u32bit length)
    {
    if(length) no_writes = false;
@@ -236,9 +238,9 @@ void Zlib_Decompression::write(const byte input_arr[], u32bit length)
       }
    }
 
-/*************************************************
-* Finish Decompressing with Zlib                 *
-*************************************************/
+/*
+* Finish Decompressing with Zlib
+*/
 void Zlib_Decompression::end_msg()
    {
    if(no_writes) return;
@@ -265,9 +267,9 @@ void Zlib_Decompression::end_msg()
    clear();
    }
 
-/*************************************************
-* Clean up Decompression Context                 *
-*************************************************/
+/*
+* Clean up Decompression Context
+*/
 void Zlib_Decompression::clear()
    {
    no_writes = true;

@@ -1,7 +1,9 @@
-/*************************************************
-* Pthread Mutex Source File                      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Pthread Mutex
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/mux_pthr.h>
 #include <botan/exceptn.h>
@@ -14,9 +16,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Pthread Mutex Factory                          *
-*************************************************/
+/*
+* Pthread Mutex Factory
+*/
 Mutex* Pthread_Mutex_Factory::make()
    {
 

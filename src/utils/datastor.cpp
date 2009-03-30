@@ -1,7 +1,9 @@
-/*************************************************
-* Data Store Source File                         *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Data Store
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/datastor.h>
 #include <botan/exceptn.h>
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Default Matcher transform operation (identity) *
-*************************************************/
+/*
+* Default Matcher transform operation (identity)
+*/
 std::pair<std::string, std::string>
 Data_Store::Matcher::transform(const std::string& key,
                                const std::string& value) const
@@ -21,25 +23,25 @@ Data_Store::Matcher::transform(const std::string& key,
    return std::make_pair(key, value);
    }
 
-/*************************************************
-* Data_Store Equality Comparison                 *
-*************************************************/
+/*
+* Data_Store Equality Comparison
+*/
 bool Data_Store::operator==(const Data_Store& other) const
    {
    return (contents == other.contents);
    }
 
-/*************************************************
-* Check if this key has at least one value       *
-*************************************************/
+/*
+* Check if this key has at least one value
+*/
 bool Data_Store::has_value(const std::string& key) const
    {
    return (contents.lower_bound(key) != contents.end());
    }
 
-/*************************************************
-* Search based on an arbitrary predicate         *
-*************************************************/
+/*
+* Search based on an arbitrary predicate
+*/
 std::multimap<std::string, std::string>
 Data_Store::search_with(const Matcher& matcher) const
    {
@@ -58,9 +60,9 @@ Data_Store::search_with(const Matcher& matcher) const
    return out;
    }
 
-/*************************************************
-* Search based on key equality                   *
-*************************************************/
+/*
+* Search based on key equality
+*/
 std::vector<std::string> Data_Store::get(const std::string& looking_for) const
    {
    typedef std::multimap<std::string, std::string>::const_iterator iter;
@@ -73,9 +75,9 @@ std::vector<std::string> Data_Store::get(const std::string& looking_for) const
    return out;
    }
 
-/*************************************************
-* Get a single atom                              *
-*************************************************/
+/*
+* Get a single atom
+*/
 std::string Data_Store::get1(const std::string& key) const
    {
    std::vector<std::string> vals = get(key);
@@ -88,9 +90,9 @@ std::string Data_Store::get1(const std::string& key) const
    return vals[0];
    }
 
-/*************************************************
-* Get a single MemoryVector atom                 *
-*************************************************/
+/*
+* Get a single MemoryVector atom
+*/
 MemoryVector<byte>
 Data_Store::get1_memvec(const std::string& key) const
    {
@@ -111,9 +113,9 @@ Data_Store::get1_memvec(const std::string& key) const
    return pipe.read_all();
    }
 
-/*************************************************
-* Get a single u32bit atom                       *
-*************************************************/
+/*
+* Get a single u32bit atom
+*/
 u32bit Data_Store::get1_u32bit(const std::string& key,
                                u32bit default_val) const
    {
@@ -128,25 +130,25 @@ u32bit Data_Store::get1_u32bit(const std::string& key,
    return to_u32bit(vals[0]);
    }
 
-/*************************************************
-* Insert a single key and value                  *
-*************************************************/
+/*
+* Insert a single key and value
+*/
 void Data_Store::add(const std::string& key, const std::string& val)
    {
    multimap_insert(contents, key, val);
    }
 
-/*************************************************
-* Insert a single key and value                  *
-*************************************************/
+/*
+* Insert a single key and value
+*/
 void Data_Store::add(const std::string& key, u32bit val)
    {
    add(key, to_string(val));
    }
 
-/*************************************************
-* Insert a single key and value                  *
-*************************************************/
+/*
+* Insert a single key and value
+*/
 void Data_Store::add(const std::string& key, const MemoryRegion<byte>& val)
    {
    Pipe pipe(new Hex_Encoder);
@@ -154,9 +156,9 @@ void Data_Store::add(const std::string& key, const MemoryRegion<byte>& val)
    add(key, pipe.read_all_as_string());
    }
 
-/*************************************************
-* Insert a mapping of key/value pairs            *
-*************************************************/
+/*
+* Insert a mapping of key/value pairs
+*/
 void Data_Store::add(const std::multimap<std::string, std::string>& in)
    {
    std::multimap<std::string, std::string>::const_iterator i = in.begin();

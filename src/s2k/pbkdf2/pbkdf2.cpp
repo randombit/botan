@@ -1,7 +1,9 @@
-/*************************************************
-* PBKDF2 Source File                             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PBKDF2
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/pbkdf2.h>
 #include <botan/loadstor.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Return a PKCS#5 PBKDF2 derived key             *
-*************************************************/
+/*
+* Return a PKCS#5 PBKDF2 derived key
+*/
 OctetString PKCS5_PBKDF2::derive(u32bit key_len,
                                  const std::string& passphrase,
                                  const byte salt[], u32bit salt_size,
@@ -57,9 +59,9 @@ OctetString PKCS5_PBKDF2::derive(u32bit key_len,
    return key;
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/*
+* Return the name of this type
+*/
 std::string PKCS5_PBKDF2::name() const
    {
    return "PBKDF2(" + mac->name() + ")";
@@ -70,9 +72,9 @@ S2K* PKCS5_PBKDF2::clone() const
    return new PKCS5_PBKDF2(mac->clone());
    }
 
-/*************************************************
-* PKCS5_PBKDF2 Constructor                       *
-*************************************************/
+/*
+* PKCS5_PBKDF2 Constructor
+*/
 PKCS5_PBKDF2::PKCS5_PBKDF2(MessageAuthenticationCode* m) : mac(m) {}
 
 PKCS5_PBKDF2::~PKCS5_PBKDF2() { delete mac; }

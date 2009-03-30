@@ -1,7 +1,9 @@
-/*************************************************
-* DER Encoder Header File                        *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* DER Encoder
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_DER_ENCODER_H__
 #define BOTAN_DER_ENCODER_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* General DER Encoding Object                    *
-*************************************************/
+/*
+* General DER Encoding Object
+*/
 class BOTAN_DLL DER_Encoder
    {
    public:

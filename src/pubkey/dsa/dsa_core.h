@@ -1,7 +1,9 @@
-/*************************************************
-* DSA Core Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* DSA Core
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_DSA_CORE_H__
 #define BOTAN_DSA_CORE_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* DSA Core                                       *
-*************************************************/
+/*
+* DSA Core
+*/
 class BOTAN_DLL DSA_Core
    {
    public:

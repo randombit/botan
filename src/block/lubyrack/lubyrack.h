@@ -1,7 +1,9 @@
-/*************************************************
-* Luby-Rackoff Header File                       *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Luby-Rackoff
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_LUBY_RACKOFF_H__
 #define BOTAN_LUBY_RACKOFF_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Luby-Rackoff                                   *
-*************************************************/
+/*
+* Luby-Rackoff
+*/
 class BOTAN_DLL LubyRackoff : public BlockCipher
    {
    public:

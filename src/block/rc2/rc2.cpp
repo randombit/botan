@@ -1,7 +1,9 @@
-/*************************************************
-* RC2 Source File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* RC2
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/rc2.h>
 #include <botan/loadstor.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* RC2 Encryption                                 *
-*************************************************/
+/*
+* RC2 Encryption
+*/
 void RC2::enc(const byte in[], byte out[]) const
    {
    u16bit R0 = load_le<u16bit>(in, 0);
@@ -45,9 +47,9 @@ void RC2::enc(const byte in[], byte out[]) const
    store_le(out, R0, R1, R2, R3);
    }
 
-/*************************************************
-* RC2 Decryption                                 *
-*************************************************/
+/*
+* RC2 Decryption
+*/
 void RC2::dec(const byte in[], byte out[]) const
    {
    u16bit R0 = load_le<u16bit>(in, 0);
@@ -81,9 +83,9 @@ void RC2::dec(const byte in[], byte out[]) const
    store_le(out, R0, R1, R2, R3);
    }
 
-/*************************************************
-* RC2 Key Schedule                               *
-*************************************************/
+/*
+* RC2 Key Schedule
+*/
 void RC2::key_schedule(const byte key[], u32bit length)
    {
    static const byte TABLE[256] = {
@@ -123,9 +125,9 @@ void RC2::key_schedule(const byte key[], u32bit length)
       K[j] = load_le<u16bit>(L, j);
    }
 
-/*************************************************
-* Return the code of the effective key bits      *
-*************************************************/
+/*
+* Return the code of the effective key bits
+*/
 byte RC2::EKB_code(u32bit ekb)
    {
    const byte EKB[256] = {

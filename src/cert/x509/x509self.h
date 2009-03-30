@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 Self-Signed Certificate Header File      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 Self-Signed Certificate
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_X509_SELF_H__
 #define BOTAN_X509_SELF_H__

@@ -1,7 +1,9 @@
-/*************************************************
-* ASN.1 OID Header File                          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* ASN.1 OID
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ASN1_OID_H__
 #define BOTAN_ASN1_OID_H__

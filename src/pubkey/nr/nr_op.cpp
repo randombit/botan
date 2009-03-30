@@ -1,15 +1,17 @@
-/*************************************************
-* NR Operations Source File                      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* NR Operations
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/nr_op.h>
 
 namespace Botan {
 
-/*************************************************
-* Default_NR_Op Constructor                      *
-*************************************************/
+/*
+* Default_NR_Op Constructor
+*/
 Default_NR_Op::Default_NR_Op(const DL_Group& grp, const BigInt& y1,
                              const BigInt& x1) : x(x1), y(y1), group(grp)
    {
@@ -19,9 +21,9 @@ Default_NR_Op::Default_NR_Op(const DL_Group& grp, const BigInt& y1,
    mod_q = Modular_Reducer(group.get_q());
    }
 
-/*************************************************
-* Default NR Verify Operation                    *
-*************************************************/
+/*
+* Default NR Verify Operation
+*/
 SecureVector<byte> Default_NR_Op::verify(const byte in[], u32bit length) const
    {
    const BigInt& q = group.get_q();
@@ -39,9 +41,9 @@ SecureVector<byte> Default_NR_Op::verify(const byte in[], u32bit length) const
    return BigInt::encode(mod_q.reduce(c - i));
    }
 
-/*************************************************
-* Default NR Sign Operation                      *
-*************************************************/
+/*
+* Default NR Sign Operation
+*/
 SecureVector<byte> Default_NR_Op::sign(const byte in[], u32bit length,
                                        const BigInt& k) const
    {

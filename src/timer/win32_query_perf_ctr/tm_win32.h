@@ -1,7 +1,9 @@
-/*************************************************
-* Win32 Timer Header File                        *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Win32 Timer
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_TIMER_WIN32_H__
 #define BOTAN_TIMER_WIN32_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Win32 Timer                                    *
-*************************************************/
+/*
+* Win32 Timer
+*/
 class BOTAN_DLL Win32_Timer : public Timer
    {
    public:

@@ -1,7 +1,9 @@
-/*************************************************
-* KDF/MGF Header File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* KDF/MGF
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_KDF_BASE_H__
 #define BOTAN_KDF_BASE_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Key Derivation Function                        *
-*************************************************/
+/*
+* Key Derivation Function
+*/
 class BOTAN_DLL KDF
    {
    public:
@@ -35,9 +37,9 @@ class BOTAN_DLL KDF
                                         const byte[], u32bit) const = 0;
    };
 
-/*************************************************
-* Mask Generation Function                       *
-*************************************************/
+/*
+* Mask Generation Function
+*/
 class BOTAN_DLL MGF
    {
    public:

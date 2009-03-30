@@ -1,7 +1,9 @@
-/*************************************************
-* CMAC Header File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CMAC
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_CMAC_H__
 #define BOTAN_CMAC_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* CMAC                                           *
-*************************************************/
+/*
+* CMAC
+*/
 class BOTAN_DLL CMAC : public MessageAuthenticationCode
    {
    public:

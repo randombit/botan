@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 Certificate Store Searching Source File  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 Certificate Store Searching
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/x509find.h>
 #include <botan/charset.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Compare based on case-insensive substrings     *
-*************************************************/
+/*
+* Compare based on case-insensive substrings
+*/
 bool substring_match(const std::string& searching_for,
                      const std::string& found)
    {
@@ -23,9 +25,9 @@ bool substring_match(const std::string& searching_for,
    return false;
    }
 
-/*************************************************
-* Compare based on case-insensive match          *
-*************************************************/
+/*
+* Compare based on case-insensive match
+*/
 bool ignore_case(const std::string& searching_for, const std::string& found)
    {
    if(searching_for.size() != found.size())
@@ -37,9 +39,9 @@ bool ignore_case(const std::string& searching_for, const std::string& found)
 
 }
 
-/*************************************************
-* Search based on the contents of a DN entry     *
-*************************************************/
+/*
+* Search based on the contents of a DN entry
+*/
 bool DN_Check::match(const X509_Certificate& cert) const
    {
    std::vector<std::string> info = cert.subject_info(dn_entry);
@@ -50,9 +52,9 @@ bool DN_Check::match(const X509_Certificate& cert) const
    return false;
    }
 
-/*************************************************
-* DN_Check Constructor                           *
-*************************************************/
+/*
+* DN_Check Constructor
+*/
 DN_Check::DN_Check(const std::string& dn_entry, const std::string& looking_for,
                    compare_fn func)
    {
@@ -61,9 +63,9 @@ DN_Check::DN_Check(const std::string& dn_entry, const std::string& looking_for,
    compare = func;
    }
 
-/*************************************************
-* DN_Check Constructor                           *
-*************************************************/
+/*
+* DN_Check Constructor
+*/
 DN_Check::DN_Check(const std::string& dn_entry, const std::string& looking_for,
                    Search_Type method)
    {
@@ -78,9 +80,9 @@ DN_Check::DN_Check(const std::string& dn_entry, const std::string& looking_for,
       throw Invalid_Argument("Unknown method argument to DN_Check()");
    }
 
-/*************************************************
-* Match by issuer and serial number              *
-*************************************************/
+/*
+* Match by issuer and serial number
+*/
 bool IandS_Match::match(const X509_Certificate& cert) const
    {
    if(cert.serial_number() != serial)
@@ -88,9 +90,9 @@ bool IandS_Match::match(const X509_Certificate& cert) const
    return (cert.issuer_dn() == issuer);
    }
 
-/*************************************************
-* IandS_Match Constructor                        *
-*************************************************/
+/*
+* IandS_Match Constructor
+*/
 IandS_Match::IandS_Match(const X509_DN& issuer,
                          const MemoryRegion<byte>& serial)
    {
@@ -98,9 +100,9 @@ IandS_Match::IandS_Match(const X509_DN& issuer,
    this->serial = serial;
    }
 
-/*************************************************
-* Match by subject key identifier                *
-*************************************************/
+/*
+* Match by subject key identifier
+*/
 bool SKID_Match::match(const X509_Certificate& cert) const
    {
    return (cert.subject_key_id() == skid);

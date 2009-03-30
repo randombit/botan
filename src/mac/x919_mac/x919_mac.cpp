@@ -1,7 +1,9 @@
-/*************************************************
-* ANSI X9.19 MAC Source File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* ANSI X9.19 MAC
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/x919_mac.h>
 #include <botan/xor_buf.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Update an ANSI X9.19 MAC Calculation           *
-*************************************************/
+/*
+* Update an ANSI X9.19 MAC Calculation
+*/
 void ANSI_X919_MAC::add_data(const byte input[], u32bit length)
    {
    u32bit xored = std::min(8 - position, length);
@@ -35,9 +37,9 @@ void ANSI_X919_MAC::add_data(const byte input[], u32bit length)
    position = length;
    }
 
-/*************************************************
-* Finalize an ANSI X9.19 MAC Calculation         *
-*************************************************/
+/*
+* Finalize an ANSI X9.19 MAC Calculation
+*/
 void ANSI_X919_MAC::final_result(byte mac[])
    {
    if(position)
@@ -48,9 +50,9 @@ void ANSI_X919_MAC::final_result(byte mac[])
    position = 0;
    }
 
-/*************************************************
-* ANSI X9.19 MAC Key Schedule                    *
-*************************************************/
+/*
+* ANSI X9.19 MAC Key Schedule
+*/
 void ANSI_X919_MAC::key_schedule(const byte key[], u32bit length)
    {
    e->set_key(key, 8);
@@ -58,9 +60,9 @@ void ANSI_X919_MAC::key_schedule(const byte key[], u32bit length)
    else            d->set_key(key + 8, 8);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void ANSI_X919_MAC::clear() throw()
    {
    e->clear();
@@ -79,9 +81,9 @@ MessageAuthenticationCode* ANSI_X919_MAC::clone() const
    return new ANSI_X919_MAC(e->clone());
    }
 
-/*************************************************
-* ANSI X9.19 MAC Constructor                     *
-*************************************************/
+/*
+* ANSI X9.19 MAC Constructor
+*/
 ANSI_X919_MAC::ANSI_X919_MAC(BlockCipher* e_in) :
    MessageAuthenticationCode(e_in->BLOCK_SIZE,
                              e_in->MINIMUM_KEYLENGTH,
@@ -93,9 +95,9 @@ ANSI_X919_MAC::ANSI_X919_MAC(BlockCipher* e_in) :
       throw Invalid_Argument("ANSI X9.19 MAC only supports DES");
    }
 
-/*************************************************
-* ANSI X9.19 MAC Destructor                      *
-le*************************************************/
+/*
+* ANSI X9.19 MAC Destructor
+le*/
 ANSI_X919_MAC::~ANSI_X919_MAC()
    {
    delete e;

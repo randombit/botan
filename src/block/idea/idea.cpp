@@ -1,7 +1,9 @@
-/*************************************************
-* IDEA Source File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* IDEA
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/idea.h>
 #include <botan/loadstor.h>
@@ -10,9 +12,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Multiplication modulo 65537                    *
-*************************************************/
+/*
+* Multiplication modulo 65537
+*/
 inline u16bit mul(u16bit x, u16bit y)
    {
    if(x && y)
@@ -26,9 +28,9 @@ inline u16bit mul(u16bit x, u16bit y)
       return static_cast<u16bit>(1 - x - y);
    }
 
-/*************************************************
-* Find multiplicative inverses modulo 65537      *
-*************************************************/
+/*
+* Find multiplicative inverses modulo 65537
+*/
 u16bit mul_inv(u16bit x)
    {
    if(x <= 1)
@@ -55,9 +57,9 @@ u16bit mul_inv(u16bit x)
 
 }
 
-/*************************************************
-* IDEA Encryption                                *
-*************************************************/
+/*
+* IDEA Encryption
+*/
 void IDEA::enc(const byte in[], byte out[]) const
    {
    u16bit X1 = load_be<u16bit>(in, 0);
@@ -93,9 +95,9 @@ void IDEA::enc(const byte in[], byte out[]) const
    store_be(out, X1, X3, X2, X4);
    }
 
-/*************************************************
-* IDEA Decryption                                *
-*************************************************/
+/*
+* IDEA Decryption
+*/
 void IDEA::dec(const byte in[], byte out[]) const
    {
    u16bit X1 = load_be<u16bit>(in, 0);
@@ -131,9 +133,9 @@ void IDEA::dec(const byte in[], byte out[]) const
    store_be(out, X1, X3, X2, X4);
    }
 
-/*************************************************
-* IDEA Key Schedule                              *
-*************************************************/
+/*
+* IDEA Key Schedule
+*/
 void IDEA::key_schedule(const byte key[], u32bit)
    {
    for(u32bit j = 0; j != 8; ++j)

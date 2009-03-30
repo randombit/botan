@@ -1,7 +1,9 @@
-/*************************************************
-* FORK-256 Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* FORK-256
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_FORK_256_H__
 #define BOTAN_FORK_256_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* FORK-256                                       *
-*************************************************/
+/*
+* FORK-256
+*/
 class BOTAN_DLL FORK_256 : public MDx_HashFunction
    {
    public:

@@ -1,7 +1,9 @@
-/*************************************************
-* ARC4 Source File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* ARC4
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/arc4.h>
 #include <botan/xor_buf.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Combine cipher stream with message             *
-*************************************************/
+/*
+* Combine cipher stream with message
+*/
 void ARC4::cipher(const byte in[], byte out[], u32bit length)
    {
    while(length >= buffer.size() - position)
@@ -26,9 +28,9 @@ void ARC4::cipher(const byte in[], byte out[], u32bit length)
    position += length;
    }
 
-/*************************************************
-* Generate cipher stream                         *
-*************************************************/
+/*
+* Generate cipher stream
+*/
 void ARC4::generate()
    {
    u32bit SX, SY;
@@ -54,9 +56,9 @@ void ARC4::generate()
    position = 0;
    }
 
-/*************************************************
-* ARC4 Key Schedule                              *
-*************************************************/
+/*
+* ARC4 Key Schedule
+*/
 void ARC4::key_schedule(const byte key[], u32bit length)
    {
    clear();
@@ -72,9 +74,9 @@ void ARC4::key_schedule(const byte key[], u32bit length)
    position += (SKIP % buffer.size());
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/*
+* Return the name of this type
+*/
 std::string ARC4::name() const
    {
    if(SKIP == 0)   return "ARC4";
@@ -82,9 +84,9 @@ std::string ARC4::name() const
    else            return "RC4_skip(" + to_string(SKIP) + ")";
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void ARC4::clear() throw()
    {
    state.clear();
@@ -92,9 +94,9 @@ void ARC4::clear() throw()
    position = X = Y = 0;
    }
 
-/*************************************************
-* ARC4 Constructor                               *
-*************************************************/
+/*
+* ARC4 Constructor
+*/
 ARC4::ARC4(u32bit s) : StreamCipher(1, 256), SKIP(s)
    {
    clear();

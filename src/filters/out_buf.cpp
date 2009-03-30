@@ -1,16 +1,18 @@
-/*************************************************
-* Pipe Output Buffer Source file                 *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Pipe Output Buffer Source file
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/out_buf.h>
 #include <botan/secqueue.h>
 
 namespace Botan {
 
-/*************************************************
-* Read data from a message                       *
-*************************************************/
+/*
+* Read data from a message
+*/
 u32bit Output_Buffers::read(byte output[], u32bit length,
                             Pipe::message_id msg)
    {
@@ -20,9 +22,9 @@ u32bit Output_Buffers::read(byte output[], u32bit length,
    return 0;
    }
 
-/*************************************************
-* Peek at data in a message                      *
-*************************************************/
+/*
+* Peek at data in a message
+*/
 u32bit Output_Buffers::peek(byte output[], u32bit length,
                             u32bit stream_offset,
                             Pipe::message_id msg) const
@@ -33,9 +35,9 @@ u32bit Output_Buffers::peek(byte output[], u32bit length,
    return 0;
    }
 
-/*************************************************
-* Check available bytes in a message             *
-*************************************************/
+/*
+* Check available bytes in a message
+*/
 u32bit Output_Buffers::remaining(Pipe::message_id msg) const
    {
    SecureQueue* q = get(msg);
@@ -44,9 +46,9 @@ u32bit Output_Buffers::remaining(Pipe::message_id msg) const
    return 0;
    }
 
-/*************************************************
-* Add a new output queue                         *
-*************************************************/
+/*
+* Add a new output queue
+*/
 void Output_Buffers::add(SecureQueue* queue)
    {
    if(!queue)
@@ -58,9 +60,9 @@ void Output_Buffers::add(SecureQueue* queue)
    buffers.push_back(queue);
    }
 
-/*************************************************
-* Retire old output queues                       *
-*************************************************/
+/*
+* Retire old output queues
+*/
 void Output_Buffers::retire()
    {
    while(buffers.size())
@@ -76,9 +78,9 @@ void Output_Buffers::retire()
       }
    }
 
-/*************************************************
-* Get a particular output queue                  *
-*************************************************/
+/*
+* Get a particular output queue
+*/
 SecureQueue* Output_Buffers::get(Pipe::message_id msg) const
    {
    if(msg < offset)
@@ -89,25 +91,25 @@ SecureQueue* Output_Buffers::get(Pipe::message_id msg) const
    return buffers[msg-offset];
    }
 
-/*************************************************
-* Return the total number of messages            *
-*************************************************/
+/*
+* Return the total number of messages
+*/
 Pipe::message_id Output_Buffers::message_count() const
    {
    return (offset + buffers.size());
    }
 
-/*************************************************
-* Output_Buffers Constructor                     *
-*************************************************/
+/*
+* Output_Buffers Constructor
+*/
 Output_Buffers::Output_Buffers()
    {
    offset = 0;
    }
 
-/*************************************************
-* Output_Buffers Destructor                      *
-*************************************************/
+/*
+* Output_Buffers Destructor
+*/
 Output_Buffers::~Output_Buffers()
    {
    for(u32bit j = 0; j != buffers.size(); ++j)

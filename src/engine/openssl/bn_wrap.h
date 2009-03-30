@@ -1,7 +1,9 @@
-/*************************************************
-* OpenSSL BN Wrapper Header File                 *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OpenSSL BN Wrapper
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_OPENSSL_BN_WRAP_H__
 #define BOTAN_OPENSSL_BN_WRAP_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Lightweight OpenSSL BN Wrapper                 *
-*************************************************/
+/*
+* Lightweight OpenSSL BN Wrapper
+*/
 class BOTAN_DLL OSSL_BN
    {
    public:
@@ -31,9 +33,9 @@ class BOTAN_DLL OSSL_BN
       ~OSSL_BN();
    };
 
-/*************************************************
-* Lightweight OpenSSL BN_CTX Wrapper             *
-*************************************************/
+/*
+* Lightweight OpenSSL BN_CTX Wrapper
+*/
 class BOTAN_DLL OSSL_BN_CTX
    {
    public:

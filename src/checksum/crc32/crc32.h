@@ -1,7 +1,9 @@
-/*************************************************
-* CRC32 Header File                              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CRC32
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_CRC32_H__
 #define BOTAN_CRC32_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* CRC32                                          *
-*************************************************/
+/*
+* CRC32
+*/
 class BOTAN_DLL CRC32 : public HashFunction
    {
    public:

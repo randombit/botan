@@ -1,14 +1,14 @@
-/******************************************************
- * Modulus and related data for a specific            *
- * implementation of  GF(p) (header file)             *
- *                                                    *
- * (C) 2008 Martin Döring                             *
- *          doering@cdc.informatik.tu-darmstadt.de    *
- *          Christoph Ludwig                          *
- *          ludwig@fh-worms.de                        *
- *          Falko Strenzke                            *
- *          strenzke@flexsecure.de                    *
- ******************************************************/
+/******
+ * Modulus and related data for a specific
+ * implementation of  GF(p) (header file)
+ *
+ * (C) 2008 Martin Döring
+ *          doering@cdc.informatik.tu-darmstadt.de
+ *          Christoph Ludwig
+ *          ludwig@fh-worms.de
+ *          Falko Strenzke
+ *          strenzke@flexsecure.de
+ ******/
 
 #ifndef BOTAN_GFP_MODULUS_H__
 #define BOTAN_GFP_MODULUS_H__
@@ -22,6 +22,8 @@ class BOTAN_DLL GFpElement;
 /**
 * This class represents a GFpElement modulus including the modulus related
 * values necessary for the montgomery multiplication.
+*
+* Distributed under the terms of the Botan license
 */
 class BOTAN_DLL GFpModulus
    {

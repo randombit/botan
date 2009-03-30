@@ -1,7 +1,9 @@
-/*************************************************
-* OFB Mode Source File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OFB Mode
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/ofb.h>
 #include <botan/xor_buf.h>
@@ -9,17 +11,17 @@
 
 namespace Botan {
 
-/*************************************************
-* OFB Constructor                                *
-*************************************************/
+/*
+* OFB Constructor
+*/
 OFB::OFB(BlockCipher* ciph) :
    BlockCipherMode(ciph, "OFB", ciph->BLOCK_SIZE, 2)
    {
    }
 
-/*************************************************
-* OFB Constructor                                *
-*************************************************/
+/*
+* OFB Constructor
+*/
 OFB::OFB(BlockCipher* ciph, const SymmetricKey& key,
          const InitializationVector& iv) :
    BlockCipherMode(ciph, "OFB", ciph->BLOCK_SIZE, 2)
@@ -28,9 +30,9 @@ OFB::OFB(BlockCipher* ciph, const SymmetricKey& key,
    set_iv(iv);
    }
 
-/*************************************************
-* OFB Encryption/Decryption                      *
-*************************************************/
+/*
+* OFB Encryption/Decryption
+*/
 void OFB::write(const byte input[], u32bit length)
    {
    u32bit copied = std::min(BLOCK_SIZE - position, length);

@@ -1,7 +1,9 @@
-/*************************************************
-* DL Scheme Source File                          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* DL Scheme
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/dl_algo.h>
 #include <botan/numthry.h>
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Return the X.509 public key encoder            *
-*************************************************/
+/*
+* Return the X.509 public key encoder
+*/
 X509_Encoder* DL_Scheme_PublicKey::x509_encoder() const
    {
    class DL_Scheme_Encoder : public X509_Encoder
@@ -39,9 +41,9 @@ X509_Encoder* DL_Scheme_PublicKey::x509_encoder() const
    return new DL_Scheme_Encoder(this);
    }
 
-/*************************************************
-* Return the X.509 public key decoder            *
-*************************************************/
+/*
+* Return the X.509 public key decoder
+*/
 X509_Decoder* DL_Scheme_PublicKey::x509_decoder()
    {
    class DL_Scheme_Decoder : public X509_Decoder
@@ -67,9 +69,9 @@ X509_Decoder* DL_Scheme_PublicKey::x509_decoder()
    return new DL_Scheme_Decoder(this);
    }
 
-/*************************************************
-* Return the PKCS #8 private key encoder         *
-*************************************************/
+/*
+* Return the PKCS #8 private key encoder
+*/
 PKCS8_Encoder* DL_Scheme_PrivateKey::pkcs8_encoder() const
    {
    class DL_Scheme_Encoder : public PKCS8_Encoder
@@ -96,9 +98,9 @@ PKCS8_Encoder* DL_Scheme_PrivateKey::pkcs8_encoder() const
    return new DL_Scheme_Encoder(this);
    }
 
-/*************************************************
-* Return the PKCS #8 private key decoder         *
-*************************************************/
+/*
+* Return the PKCS #8 private key decoder
+*/
 PKCS8_Decoder* DL_Scheme_PrivateKey::pkcs8_decoder(RandomNumberGenerator& rng)
    {
    class DL_Scheme_Decoder : public PKCS8_Decoder
@@ -126,9 +128,9 @@ PKCS8_Decoder* DL_Scheme_PrivateKey::pkcs8_decoder(RandomNumberGenerator& rng)
    return new DL_Scheme_Decoder(this, rng);
    }
 
-/*************************************************
-* Check Public DL Parameters                     *
-*************************************************/
+/*
+* Check Public DL Parameters
+*/
 bool DL_Scheme_PublicKey::check_key(RandomNumberGenerator& rng,
                                     bool strong) const
    {
@@ -139,9 +141,9 @@ bool DL_Scheme_PublicKey::check_key(RandomNumberGenerator& rng,
    return true;
    }
 
-/*************************************************
-* Check DL Scheme Private Parameters             *
-*************************************************/
+/*
+* Check DL Scheme Private Parameters
+*/
 bool DL_Scheme_PrivateKey::check_key(RandomNumberGenerator& rng,
                                      bool strong) const
    {

@@ -1,6 +1,8 @@
 /**
-* BeOS EntropySource Header File
+* BeOS EntropySource
 * (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_ENTROPY_SRC_BEOS_H__

@@ -1,6 +1,8 @@
 /**
 * IA-32 Assembly Implementation Engines
 * (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_IA32_ASM_ENGINE_H__

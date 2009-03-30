@@ -1,7 +1,9 @@
-/*************************************************
-* OpenPGP S2K Source File                        *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OpenPGP S2K
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/pgp_s2k.h>
 #include <algorithm>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Derive a key using the OpenPGP S2K algorithm   *
-*************************************************/
+/*
+* Derive a key using the OpenPGP S2K algorithm
+*/
 OctetString OpenPGP_S2K::derive(u32bit key_len, const std::string& passphrase,
                                 const byte salt_buf[], u32bit salt_size,
                                 u32bit iterations) const
@@ -53,17 +55,17 @@ OctetString OpenPGP_S2K::derive(u32bit key_len, const std::string& passphrase,
    return key;
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/*
+* Return the name of this type
+*/
 std::string OpenPGP_S2K::name() const
    {
    return "OpenPGP-S2K(" + hash->name() + ")";
    }
 
-/*************************************************
-* Return a clone of this object                  *
-*************************************************/
+/*
+* Return a clone of this object
+*/
 S2K* OpenPGP_S2K::clone() const
    {
    return new OpenPGP_S2K(hash->clone());

@@ -1,7 +1,9 @@
-/*************************************************
-* Keypair Checks Header File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Keypair Checks
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_KEYPAIR_H__
 #define BOTAN_KEYPAIR_H__

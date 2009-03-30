@@ -1,7 +1,9 @@
-/*************************************************
-* Adler32 Header File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Adler32
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ADLER32_H__
 #define BOTAN_ADLER32_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Adler32                                        *
-*************************************************/
+/*
+* Adler32
+*/
 class BOTAN_DLL Adler32 : public HashFunction
    {
    public:

@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 Certificate Store Source File            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 Certificate Store
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/x509stor.h>
 #include <botan/parsing.h>
@@ -16,9 +18,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Do a validity check                            *
-*************************************************/
+/*
+* Do a validity check
+*/
 s32bit validity_check(const X509_Time& start, const X509_Time& end,
                       u64bit current_time, u32bit slack)
    {
@@ -31,9 +33,9 @@ s32bit validity_check(const X509_Time& start, const X509_Time& end,
    return VALID_TIME;
    }
 
-/*************************************************
-* Compare the value of unique ID fields          *
-*************************************************/
+/*
+* Compare the value of unique ID fields
+*/
 bool compare_ids(const MemoryVector<byte>& id1,
                  const MemoryVector<byte>& id2)
    {
@@ -42,9 +44,9 @@ bool compare_ids(const MemoryVector<byte>& id1,
    return (id1 == id2);
    }
 
-/*************************************************
-* Check a particular usage restriction           *
-*************************************************/
+/*
+* Check a particular usage restriction
+*/
 bool check_usage(const X509_Certificate& cert, X509_Store::Cert_Usage usage,
                  X509_Store::Cert_Usage check_for, Key_Constraints constraints)
    {
@@ -57,9 +59,9 @@ bool check_usage(const X509_Certificate& cert, X509_Store::Cert_Usage usage,
    return false;
    }
 
-/*************************************************
-* Check a particular usage restriction           *
-*************************************************/
+/*
+* Check a particular usage restriction
+*/
 bool check_usage(const X509_Certificate& cert, X509_Store::Cert_Usage usage,
                  X509_Store::Cert_Usage check_for,
                  const std::string& usage_oid)
@@ -76,9 +78,9 @@ bool check_usage(const X509_Certificate& cert, X509_Store::Cert_Usage usage,
                              usage_oid);
    }
 
-/*************************************************
-* Check the usage restrictions                   *
-*************************************************/
+/*
+* Check the usage restrictions
+*/
 X509_Code usage_check(const X509_Certificate& cert,
                       X509_Store::Cert_Usage usage)
    {
@@ -106,9 +108,9 @@ X509_Code usage_check(const X509_Certificate& cert,
 
 }
 
-/*************************************************
-* Define equality for revocation data            *
-*************************************************/
+/*
+* Define equality for revocation data
+*/
 bool X509_Store::CRL_Data::operator==(const CRL_Data& other) const
    {
    if(issuer != other.issuer)
@@ -118,17 +120,17 @@ bool X509_Store::CRL_Data::operator==(const CRL_Data& other) const
    return compare_ids(auth_key_id, other.auth_key_id);
    }
 
-/*************************************************
-* Define inequality for revocation data          *
-*************************************************/
+/*
+* Define inequality for revocation data
+*/
 bool X509_Store::CRL_Data::operator!=(const CRL_Data& other) const
    {
    return !((*this) == other);
    }
 
-/*************************************************
-* Define an ordering for revocation data         *
-*************************************************/
+/*
+* Define an ordering for revocation data
+*/
 bool X509_Store::CRL_Data::operator<(const X509_Store::CRL_Data& other) const
    {
    if(*this == other)
@@ -164,9 +166,9 @@ bool X509_Store::CRL_Data::operator<(const X509_Store::CRL_Data& other) const
    return (issuer < other.issuer);
    }
 
-/*************************************************
-* X509_Store Constructor                         *
-*************************************************/
+/*
+* X509_Store Constructor
+*/
 X509_Store::X509_Store(u32bit slack, u32bit cache_timeout)
    {
    revoked_info_valid = true;
@@ -175,9 +177,9 @@ X509_Store::X509_Store(u32bit slack, u32bit cache_timeout)
    time_slack = slack;
    }
 
-/*************************************************
-* X509_Store Copy Constructor                    *
-*************************************************/
+/*
+* X509_Store Copy Constructor
+*/
 X509_Store::X509_Store(const X509_Store& other)
    {
    certs = other.certs;
@@ -188,18 +190,18 @@ X509_Store::X509_Store(const X509_Store& other)
    time_slack = other.time_slack;
    }
 
-/*************************************************
-* X509_Store Destructor                          *
-*************************************************/
+/*
+* X509_Store Destructor
+*/
 X509_Store::~X509_Store()
    {
    for(u32bit j = 0; j != stores.size(); ++j)
       delete stores[j];
    }
 
-/*************************************************
-* Verify a certificate's authenticity            *
-*************************************************/
+/*
+* Verify a certificate's authenticity
+*/
 X509_Code X509_Store::validate_cert(const X509_Certificate& cert,
                                     Cert_Usage cert_usage)
    {
@@ -244,9 +246,9 @@ X509_Code X509_Store::validate_cert(const X509_Certificate& cert,
    return usage_check(cert, cert_usage);
    }
 
-/*************************************************
-* Find this certificate                          *
-*************************************************/
+/*
+* Find this certificate
+*/
 u32bit X509_Store::find_cert(const X509_DN& subject_dn,
                              const MemoryRegion<byte>& subject_key_id) const
    {
@@ -260,9 +262,9 @@ u32bit X509_Store::find_cert(const X509_DN& subject_dn,
    return NO_CERT_FOUND;
    }
 
-/*************************************************
-* Find the parent of this certificate            *
-*************************************************/
+/*
+* Find the parent of this certificate
+*/
 u32bit X509_Store::find_parent_of(const X509_Certificate& cert)
    {
    const X509_DN issuer_dn = cert.issuer_dn();
@@ -291,9 +293,9 @@ u32bit X509_Store::find_parent_of(const X509_Certificate& cert)
    return NO_CERT_FOUND;
    }
 
-/*************************************************
-* Construct a chain of certificate relationships *
-*************************************************/
+/*
+* Construct a chain of certificate relationships
+*/
 X509_Code X509_Store::construct_cert_chain(const X509_Certificate& end_cert,
                                            std::vector<u32bit>& indexes,
                                            bool need_full_chain)
@@ -354,9 +356,9 @@ X509_Code X509_Store::construct_cert_chain(const X509_Certificate& end_cert,
    return VERIFIED;
    }
 
-/*************************************************
-* Check the CAs signature on a certificate       *
-*************************************************/
+/*
+* Check the CAs signature on a certificate
+*/
 X509_Code X509_Store::check_sig(const Cert_Info& cert_info,
                                 const Cert_Info& ca_cert_info) const
    {
@@ -373,9 +375,9 @@ X509_Code X509_Store::check_sig(const Cert_Info& cert_info,
    return verify_code;
    }
 
-/*************************************************
-* Check a CA's signature                         *
-*************************************************/
+/*
+* Check a CA's signature
+*/
 X509_Code X509_Store::check_sig(const X509_Object& object, Public_Key* key)
    {
    std::auto_ptr<Public_Key> pub_key(key);
@@ -422,9 +424,9 @@ X509_Code X509_Store::check_sig(const X509_Object& object, Public_Key* key)
    return UNKNOWN_X509_ERROR;
    }
 
-/*************************************************
-* Recompute the revocation status of the certs   *
-*************************************************/
+/*
+* Recompute the revocation status of the certs
+*/
 void X509_Store::recompute_revoked_info() const
    {
    if(revoked_info_valid)
@@ -443,9 +445,9 @@ void X509_Store::recompute_revoked_info() const
    revoked_info_valid = true;
    }
 
-/*************************************************
-* Check if a certificate is revoked              *
-*************************************************/
+/*
+* Check if a certificate is revoked
+*/
 bool X509_Store::is_revoked(const X509_Certificate& cert) const
    {
    CRL_Data revoked_info;
@@ -458,9 +460,9 @@ bool X509_Store::is_revoked(const X509_Certificate& cert) const
    return false;
    }
 
-/*************************************************
-* Retrieve all the certificates in the store     *
-*************************************************/
+/*
+* Retrieve all the certificates in the store
+*/
 std::vector<X509_Certificate>
 X509_Store::get_certs(const Search_Func& search) const
    {
@@ -473,9 +475,9 @@ X509_Store::get_certs(const Search_Func& search) const
    return found_certs;
    }
 
-/*************************************************
-* Construct a path back to a root for this cert  *
-*************************************************/
+/*
+* Construct a path back to a root for this cert
+*/
 std::vector<X509_Certificate>
 X509_Store::get_cert_chain(const X509_Certificate& cert)
    {
@@ -491,17 +493,17 @@ X509_Store::get_cert_chain(const X509_Certificate& cert)
    return result;
    }
 
-/*************************************************
-* Add a certificate store to the list of stores  *
-*************************************************/
+/*
+* Add a certificate store to the list of stores
+*/
 void X509_Store::add_new_certstore(Certificate_Store* certstore)
    {
    stores.push_back(certstore);
    }
 
-/*************************************************
-* Add a certificate to the store                 *
-*************************************************/
+/*
+* Add a certificate to the store
+*/
 void X509_Store::add_cert(const X509_Certificate& cert, bool trusted)
    {
    if(trusted && !cert.is_self_signed())
@@ -524,9 +526,9 @@ void X509_Store::add_cert(const X509_Certificate& cert, bool trusted)
       }
    }
 
-/*************************************************
-* Add one or more certificates to the store      *
-*************************************************/
+/*
+* Add one or more certificates to the store
+*/
 void X509_Store::do_add_certs(DataSource& source, bool trusted)
    {
    while(!source.end_of_data())
@@ -540,25 +542,25 @@ void X509_Store::do_add_certs(DataSource& source, bool trusted)
       }
    }
 
-/*************************************************
-* Add one or more certificates to the store      *
-*************************************************/
+/*
+* Add one or more certificates to the store
+*/
 void X509_Store::add_certs(DataSource& source)
    {
    do_add_certs(source, false);
    }
 
-/*************************************************
-* Add one or more certificates to the store      *
-*************************************************/
+/*
+* Add one or more certificates to the store
+*/
 void X509_Store::add_trusted_certs(DataSource& source)
    {
    do_add_certs(source, true);
    }
 
-/*************************************************
-* Add one or more certificates to the store      *
-*************************************************/
+/*
+* Add one or more certificates to the store
+*/
 X509_Code X509_Store::add_crl(const X509_CRL& crl)
    {
    s32bit time_check = validity_check(crl.this_update(), crl.next_update(),
@@ -622,9 +624,9 @@ X509_Code X509_Store::add_crl(const X509_CRL& crl)
    return VERIFIED;
    }
 
-/*************************************************
-* PEM encode the set of certificates             *
-*************************************************/
+/*
+* PEM encode the set of certificates
+*/
 std::string X509_Store::PEM_encode() const
    {
    std::string cert_store;
@@ -633,9 +635,9 @@ std::string X509_Store::PEM_encode() const
    return cert_store;
    }
 
-/*************************************************
-* Create a Cert_Info structure                   *
-*************************************************/
+/*
+* Create a Cert_Info structure
+*/
 X509_Store::Cert_Info::Cert_Info(const X509_Certificate& c,
                                  bool t) : cert(c), trusted(t)
    {
@@ -644,9 +646,9 @@ X509_Store::Cert_Info::Cert_Info(const X509_Certificate& c,
    last_checked = 0;
    }
 
-/*************************************************
-* Return the verification results                *
-*************************************************/
+/*
+* Return the verification results
+*/
 X509_Code X509_Store::Cert_Info::verify_result() const
    {
    if(!checked)
@@ -654,9 +656,9 @@ X509_Code X509_Store::Cert_Info::verify_result() const
    return result;
    }
 
-/*************************************************
-* Set the verification results                   *
-*************************************************/
+/*
+* Set the verification results
+*/
 void X509_Store::Cert_Info::set_result(X509_Code code) const
    {
    result = code;
@@ -664,17 +666,17 @@ void X509_Store::Cert_Info::set_result(X509_Code code) const
    checked = true;
    }
 
-/*************************************************
-* Check if this certificate can be trusted       *
-*************************************************/
+/*
+* Check if this certificate can be trusted
+*/
 bool X509_Store::Cert_Info::is_trusted() const
    {
    return trusted;
    }
 
-/*************************************************
-* Check if this certificate has been verified    *
-*************************************************/
+/*
+* Check if this certificate has been verified
+*/
 bool X509_Store::Cert_Info::is_verified(u32bit timeout) const
    {
    if(!checked)

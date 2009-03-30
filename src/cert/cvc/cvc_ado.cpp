@@ -1,8 +1,10 @@
-/*************************************************
-* CVC Certificate Constructor                    *
-* (C) 2007 FlexSecure GmbH                       *
-*      2008 Jack Lloyd                           *
-*************************************************/
+/*
+* CVC Certificate Constructor
+* (C) 2007 FlexSecure GmbH
+*      2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/cvc_ado.h>
 #include <fstream>

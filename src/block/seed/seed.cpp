@@ -1,25 +1,27 @@
-/*************************************************
-* SEED Source File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* SEED
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/seed.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
 
-/*************************************************
-* SEED G Function                                *
-*************************************************/
+/*
+* SEED G Function
+*/
 u32bit SEED::G_FUNC::operator()(u32bit X) const
    {
    return (S0[get_byte(3, X)] ^ S1[get_byte(2, X)] ^
            S2[get_byte(1, X)] ^ S3[get_byte(0, X)]);
    }
 
-/*************************************************
-* SEED Encryption                                *
-*************************************************/
+/*
+* SEED Encryption
+*/
 void SEED::enc(const byte in[], byte out[]) const
    {
    u32bit B0 = load_be<u32bit>(in, 0);
@@ -51,9 +53,9 @@ void SEED::enc(const byte in[], byte out[]) const
    store_be(out, B2, B3, B0, B1);
    }
 
-/*************************************************
-* SEED Decryption                                *
-*************************************************/
+/*
+* SEED Decryption
+*/
 void SEED::dec(const byte in[], byte out[]) const
    {
    u32bit B0 = load_be<u32bit>(in, 0);
@@ -85,9 +87,9 @@ void SEED::dec(const byte in[], byte out[]) const
    store_be(out, B2, B3, B0, B1);
    }
 
-/*************************************************
-* SEED Key Schedule                              *
-*************************************************/
+/*
+* SEED Key Schedule
+*/
 void SEED::key_schedule(const byte key[], u32bit)
    {
    const u32bit RC[16] = {

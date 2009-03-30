@@ -1,7 +1,9 @@
-/*************************************************
-* PKCS #5 PBES1 Source File                      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PKCS #5 PBES1
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/pbes1.h>
 #include <botan/pbkdf1.h>
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Encrypt some bytes using PBES1                 *
-*************************************************/
+/*
+* Encrypt some bytes using PBES1
+*/
 void PBE_PKCS5v15::write(const byte input[], u32bit length)
    {
    while(length)
@@ -26,9 +28,9 @@ void PBE_PKCS5v15::write(const byte input[], u32bit length)
       }
    }
 
-/*************************************************
-* Start encrypting with PBES1                    *
-*************************************************/
+/*
+* Start encrypting with PBES1
+*/
 void PBE_PKCS5v15::start_msg()
    {
    if(direction == ENCRYPTION)
@@ -45,9 +47,9 @@ void PBE_PKCS5v15::start_msg()
       pipe.set_default_msg(pipe.default_msg() + 1);
    }
 
-/*************************************************
-* Finish encrypting with PBES1                   *
-*************************************************/
+/*
+* Finish encrypting with PBES1
+*/
 void PBE_PKCS5v15::end_msg()
    {
    pipe.end_msg();
@@ -55,9 +57,9 @@ void PBE_PKCS5v15::end_msg()
    pipe.reset();
    }
 
-/*************************************************
-* Flush the pipe                                 *
-*************************************************/
+/*
+* Flush the pipe
+*/
 void PBE_PKCS5v15::flush_pipe(bool safe_to_skip)
    {
    if(safe_to_skip && pipe.remaining() < 64)
@@ -71,9 +73,9 @@ void PBE_PKCS5v15::flush_pipe(bool safe_to_skip)
       }
    }
 
-/*************************************************
-* Set the passphrase to use                      *
-*************************************************/
+/*
+* Set the passphrase to use
+*/
 void PBE_PKCS5v15::set_key(const std::string& passphrase)
    {
    PKCS5_PBKDF1 pbkdf(hash_function->clone());
@@ -86,9 +88,9 @@ void PBE_PKCS5v15::set_key(const std::string& passphrase)
    iv.set(key_and_iv.begin() + 8, 8);
    }
 
-/*************************************************
-* Create a new set of PBES1 parameters           *
-*************************************************/
+/*
+* Create a new set of PBES1 parameters
+*/
 void PBE_PKCS5v15::new_params(RandomNumberGenerator& rng)
    {
    iterations = 2048;
@@ -96,9 +98,9 @@ void PBE_PKCS5v15::new_params(RandomNumberGenerator& rng)
    rng.randomize(salt, salt.size());
    }
 
-/*************************************************
-* Encode PKCS#5 PBES1 parameters                 *
-*************************************************/
+/*
+* Encode PKCS#5 PBES1 parameters
+*/
 MemoryVector<byte> PBE_PKCS5v15::encode_params() const
    {
    return DER_Encoder()
@@ -109,9 +111,9 @@ MemoryVector<byte> PBE_PKCS5v15::encode_params() const
    .get_contents();
    }
 
-/*************************************************
-* Decode PKCS#5 PBES1 parameters                 *
-*************************************************/
+/*
+* Decode PKCS#5 PBES1 parameters
+*/
 void PBE_PKCS5v15::decode_params(DataSource& source)
    {
    BER_Decoder(source)
@@ -125,9 +127,9 @@ void PBE_PKCS5v15::decode_params(DataSource& source)
       throw Decoding_Error("PBES1: Encoded salt is not 8 octets");
    }
 
-/*************************************************
-* Return an OID for this PBES1 type              *
-*************************************************/
+/*
+* Return an OID for this PBES1 type
+*/
 OID PBE_PKCS5v15::get_oid() const
    {
    const OID base_pbes1_oid("1.2.840.113549.1.5");
@@ -151,9 +153,9 @@ OID PBE_PKCS5v15::get_oid() const
       throw Internal_Error("PBE-PKCS5 v1.5: get_oid() has run out of options");
    }
 
-/*************************************************
-* PKCS#5 v1.5 PBE Constructor                    *
-*************************************************/
+/*
+* PKCS#5 v1.5 PBE Constructor
+*/
 PBE_PKCS5v15::PBE_PKCS5v15(BlockCipher* cipher,
                            HashFunction* hash,
                            Cipher_Dir dir) :

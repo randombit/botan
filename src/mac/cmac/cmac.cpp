@@ -1,16 +1,18 @@
-/*************************************************
-* CMAC Source File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CMAC
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/cmac.h>
 #include <botan/xor_buf.h>
 
 namespace Botan {
 
-/*************************************************
-* Perform CMAC's multiplication in GF(2^n)       *
-*************************************************/
+/*
+* Perform CMAC's multiplication in GF(2^n)
+*/
 SecureVector<byte> CMAC::poly_double(const MemoryRegion<byte>& in,
                                      byte polynomial)
    {
@@ -32,9 +34,9 @@ SecureVector<byte> CMAC::poly_double(const MemoryRegion<byte>& in,
    return out;
    }
 
-/*************************************************
-* Update an CMAC Calculation                     *
-*************************************************/
+/*
+* Update an CMAC Calculation
+*/
 void CMAC::add_data(const byte input[], u32bit length)
    {
    buffer.copy(position, input, length);
@@ -57,9 +59,9 @@ void CMAC::add_data(const byte input[], u32bit length)
    position += length;
    }
 
-/*************************************************
-* Finalize an CMAC Calculation                   *
-*************************************************/
+/*
+* Finalize an CMAC Calculation
+*/
 void CMAC::final_result(byte mac[])
    {
    xor_buf(state, buffer, position);
@@ -84,9 +86,9 @@ void CMAC::final_result(byte mac[])
    position = 0;
    }
 
-/*************************************************
-* CMAC Key Schedule                              *
-*************************************************/
+/*
+* CMAC Key Schedule
+*/
 void CMAC::key_schedule(const byte key[], u32bit length)
    {
    clear();
@@ -96,9 +98,9 @@ void CMAC::key_schedule(const byte key[], u32bit length)
    P = poly_double(B, polynomial);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void CMAC::clear() throw()
    {
    e->clear();
@@ -109,25 +111,25 @@ void CMAC::clear() throw()
    position = 0;
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/*
+* Return the name of this type
+*/
 std::string CMAC::name() const
    {
    return "CMAC(" + e->name() + ")";
    }
 
-/*************************************************
-* Return a clone of this object                  *
-*************************************************/
+/*
+* Return a clone of this object
+*/
 MessageAuthenticationCode* CMAC::clone() const
    {
    return new CMAC(e->clone());
    }
 
-/*************************************************
-* CMAC Constructor                               *
-*************************************************/
+/*
+* CMAC Constructor
+*/
 CMAC::CMAC(BlockCipher* e_in) :
    MessageAuthenticationCode(e_in->BLOCK_SIZE,
                              e_in->MINIMUM_KEYLENGTH,
@@ -149,9 +151,9 @@ CMAC::CMAC(BlockCipher* e_in) :
    position = 0;
    }
 
-/*************************************************
-* CMAC Destructor                                *
-*************************************************/
+/*
+* CMAC Destructor
+*/
 CMAC::~CMAC()
    {
    delete e;

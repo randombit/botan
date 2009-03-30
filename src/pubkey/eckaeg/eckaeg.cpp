@@ -1,9 +1,11 @@
-/*************************************************
-* ECKAEG implemenation                           *
-* (C) 2007 Manuel Hartl, FlexSecure GmbH         *
-*     2007 Falko Strenzke, FlexSecure GmbH       *
-*     2008 Jack Lloyd                            *
-*************************************************/
+/*
+* ECKAEG implemenation
+* (C) 2007 Manuel Hartl, FlexSecure GmbH
+*     2007 Falko Strenzke, FlexSecure GmbH
+*     2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eckaeg.h>
 #include <botan/numthry.h>
@@ -16,7 +18,7 @@
 namespace Botan {
 
 /*********************************
-* ECKAEG_PublicKey               *
+* ECKAEG_PublicKey
 *********************************/
 
 void ECKAEG_PublicKey::affirm_init() const // virtual
@@ -72,7 +74,7 @@ ECKAEG_PublicKey::ECKAEG_PublicKey(EC_Domain_Params const& dom_par, PointGFp con
    }
 
 /*********************************
-* ECKAEG_PrivateKey              *
+* ECKAEG_PrivateKey
 *********************************/
 void ECKAEG_PrivateKey::affirm_init() const // virtual
    {

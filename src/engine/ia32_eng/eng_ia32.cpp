@@ -1,7 +1,9 @@
-/*************************************************
-* Assembly Implementation Engine Header File     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Assembly Implementation Engine
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eng_ia32.h>
 

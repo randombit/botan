@@ -1,7 +1,9 @@
-/*************************************************
-* Simple ASN.1 String Types Source File          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Simple ASN.1 String Types
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/asn1_obj.h>
 #include <botan/der_enc.h>
@@ -13,9 +15,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Choose an encoding for the string              *
-*************************************************/
+/*
+* Choose an encoding for the string
+*/
 ASN1_Tag choose_encoding(const std::string& str,
                          const std::string& type)
    {
@@ -57,9 +59,9 @@ ASN1_Tag choose_encoding(const std::string& str,
 
 }
 
-/*************************************************
-* Check if type is a known ASN.1 string type     *
-*************************************************/
+/*
+* Check if type is a known ASN.1 string type
+*/
 bool is_string_type(ASN1_Tag tag)
    {
    if(tag == NUMERIC_STRING || tag == PRINTABLE_STRING ||
@@ -69,9 +71,9 @@ bool is_string_type(ASN1_Tag tag)
    return false;
    }
 
-/*************************************************
-* Create an ASN1_String                          *
-*************************************************/
+/*
+* Create an ASN1_String
+*/
 ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : tag(t)
    {
    iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
@@ -90,42 +92,42 @@ ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : tag(t)
                              to_string(tag));
    }
 
-/*************************************************
-* Create an ASN1_String                          *
-*************************************************/
+/*
+* Create an ASN1_String
+*/
 ASN1_String::ASN1_String(const std::string& str)
    {
    iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
    tag = choose_encoding(iso_8859_str, "latin1");
    }
 
-/*************************************************
-* Return this string in ISO 8859-1 encoding      *
-*************************************************/
+/*
+* Return this string in ISO 8859-1 encoding
+*/
 std::string ASN1_String::iso_8859() const
    {
    return iso_8859_str;
    }
 
-/*************************************************
-* Return this string in local encoding           *
-*************************************************/
+/*
+* Return this string in local encoding
+*/
 std::string ASN1_String::value() const
    {
    return Charset::transcode(iso_8859_str, LATIN1_CHARSET, LOCAL_CHARSET);
    }
 
-/*************************************************
-* Return the type of this string object          *
-*************************************************/
+/*
+* Return the type of this string object
+*/
 ASN1_Tag ASN1_String::tagging() const
    {
    return tag;
    }
 
-/*************************************************
-* DER encode an ASN1_String                      *
-*************************************************/
+/*
+* DER encode an ASN1_String
+*/
 void ASN1_String::encode_into(DER_Encoder& encoder) const
    {
    std::string value = iso_8859();
@@ -134,9 +136,9 @@ void ASN1_String::encode_into(DER_Encoder& encoder) const
    encoder.add_object(tagging(), UNIVERSAL, value);
    }
 
-/*************************************************
-* Decode a BER encoded ASN1_String               *
-*************************************************/
+/*
+* Decode a BER encoded ASN1_String
+*/
 void ASN1_String::decode_from(BER_Decoder& source)
    {
    BER_Object obj = source.get_next_object();

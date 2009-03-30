@@ -1,9 +1,11 @@
-/*************************************************
-* ECC Key implemenation                          *
-* (C) 2007 Manuel Hartl, FlexSecure GmbH         *
-*          Falko Strenzke, FlexSecure GmbH       *
-*     2008 Jack Lloyd                            *
-*************************************************/
+/*
+* ECC Key implemenation
+* (C) 2007 Manuel Hartl, FlexSecure GmbH
+*          Falko Strenzke, FlexSecure GmbH
+*     2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/ecc_key.h>
 #include <botan/x509_key.h>
@@ -16,9 +18,9 @@
 
 namespace Botan {
 
-/*************************************************
-* EC_PublicKey                                   *
-*************************************************/
+/*
+* EC_PublicKey
+*/
 void EC_PublicKey::affirm_init() const // virtual
    {
    if((mp_dom_pars.get() == 0) || (mp_public_point.get() == 0))
@@ -134,7 +136,7 @@ void EC_PublicKey::set_parameter_encoding(EC_dompar_enc type)
    }
 
 /********************************
-* EC_PrivateKey                 *
+* EC_PrivateKey
 ********************************/
 void EC_PrivateKey::affirm_init() const // virtual
    {

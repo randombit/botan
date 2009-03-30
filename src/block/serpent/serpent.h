@@ -1,7 +1,9 @@
-/*************************************************
-* Serpent Header File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Serpent
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_SERPENT_H__
 #define BOTAN_SERPENT_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Serpent                                        *
-*************************************************/
+/*
+* Serpent
+*/
 class BOTAN_DLL Serpent : public BlockCipher
    {
    public:

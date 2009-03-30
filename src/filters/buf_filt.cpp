@@ -1,7 +1,9 @@
-/*************************************************
-* Buffering Filter Source File                   *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Buffering Filter
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/buf_filt.h>
 #include <botan/exceptn.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Buffering_Filter Constructor                   *
-*************************************************/
+/*
+* Buffering_Filter Constructor
+*/
 Buffering_Filter::Buffering_Filter(u32bit b, u32bit i) : INITIAL_BLOCK_SIZE(i),
                                                          BLOCK_SIZE(b)
    {
@@ -20,9 +22,9 @@ Buffering_Filter::Buffering_Filter(u32bit b, u32bit i) : INITIAL_BLOCK_SIZE(i),
    block.create(BLOCK_SIZE);
    }
 
-/*************************************************
-* Reset the Buffering Filter                     *
-*************************************************/
+/*
+* Reset the Buffering Filter
+*/
 void Buffering_Filter::end_msg()
    {
    if(initial_block_pos != INITIAL_BLOCK_SIZE)
@@ -33,9 +35,9 @@ void Buffering_Filter::end_msg()
    block.clear();
    }
 
-/*************************************************
-* Buffer input into blocks                       *
-*************************************************/
+/*
+* Buffer input into blocks
+*/
 void Buffering_Filter::write(const byte input[], u32bit length)
    {
    if(initial_block_pos != INITIAL_BLOCK_SIZE)

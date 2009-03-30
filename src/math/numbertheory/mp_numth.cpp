@@ -1,7 +1,9 @@
-/*************************************************
-* Fused and Important MP Algorithms Source File  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Fused and Important MP Algorithms
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/numthry.h>
 #include <botan/mp_core.h>
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Square a BigInt                                *
-*************************************************/
+/*
+* Square a BigInt
+*/
 BigInt square(const BigInt& x)
    {
    const u32bit x_sw = x.sig_words();
@@ -25,9 +27,9 @@ BigInt square(const BigInt& x)
    return z;
    }
 
-/*************************************************
-* Multiply-Add Operation                         *
-*************************************************/
+/*
+* Multiply-Add Operation
+*/
 BigInt mul_add(const BigInt& a, const BigInt& b, const BigInt& c)
    {
    if(c.is_negative() || c.is_zero())
@@ -52,9 +54,9 @@ BigInt mul_add(const BigInt& a, const BigInt& b, const BigInt& c)
    return r;
    }
 
-/*************************************************
-* Subtract-Multiply Operation                    *
-*************************************************/
+/*
+* Subtract-Multiply Operation
+*/
 BigInt sub_mul(const BigInt& a, const BigInt& b, const BigInt& c)
    {
    if(a.is_negative() || b.is_negative())

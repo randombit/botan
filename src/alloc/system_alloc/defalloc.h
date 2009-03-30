@@ -1,7 +1,9 @@
-/*************************************************
-* Basic Allocators Header File                   *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Basic Allocators
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_BASIC_ALLOC_H__
 #define BOTAN_BASIC_ALLOC_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Malloc Allocator                              *
-*************************************************/
+/*
+* Malloc Allocator
+*/
 class BOTAN_DLL Malloc_Allocator : public Allocator
    {
    public:
@@ -22,9 +24,9 @@ class BOTAN_DLL Malloc_Allocator : public Allocator
       std::string type() const { return "malloc"; }
    };
 
-/*************************************************
-* Locking Allocator                              *
-*************************************************/
+/*
+* Locking Allocator
+*/
 class BOTAN_DLL Locking_Allocator : public Pooling_Allocator
    {
    public:

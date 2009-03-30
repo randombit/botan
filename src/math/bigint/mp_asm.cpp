@@ -1,8 +1,10 @@
-/*************************************************
-* Lowest Level MPI Algorithms Source File        *
-* (C) 1999-2008 Jack Lloyd                       *
-*     2006 Luca Piccarreta                       *
-*************************************************/
+/*
+* Lowest Level MPI Algorithms
+* (C) 1999-2008 Jack Lloyd
+*     2006 Luca Piccarreta
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/mp_asm.h>
 #include <botan/mp_asmi.h>
@@ -13,9 +15,9 @@ namespace Botan {
 
 extern "C" {
 
-/*************************************************
-* Two Operand Addition, No Carry                 *
-*************************************************/
+/*
+* Two Operand Addition, No Carry
+*/
 word bigint_add2_nc(word x[], u32bit x_size, const word y[], u32bit y_size)
    {
    word carry = 0;
@@ -38,9 +40,9 @@ word bigint_add2_nc(word x[], u32bit x_size, const word y[], u32bit y_size)
    return 1;
    }
 
-/*************************************************
-* Three Operand Addition, No Carry               *
-*************************************************/
+/*
+* Three Operand Addition, No Carry
+*/
 word bigint_add3_nc(word z[], const word x[], u32bit x_size,
                               const word y[], u32bit y_size)
    {
@@ -68,18 +70,18 @@ word bigint_add3_nc(word z[], const word x[], u32bit x_size,
    return carry;
    }
 
-/*************************************************
-* Two Operand Addition                           *
-*************************************************/
+/*
+* Two Operand Addition
+*/
 void bigint_add2(word x[], u32bit x_size, const word y[], u32bit y_size)
    {
    if(bigint_add2_nc(x, x_size, y, y_size))
       ++x[x_size];
    }
 
-/*************************************************
-* Three Operand Addition                         *
-*************************************************/
+/*
+* Three Operand Addition
+*/
 void bigint_add3(word z[], const word x[], u32bit x_size,
                            const word y[], u32bit y_size)
    {
@@ -87,9 +89,9 @@ void bigint_add3(word z[], const word x[], u32bit x_size,
       ++z[(x_size > y_size ? x_size : y_size)];
    }
 
-/*************************************************
-* Two Operand Subtraction                        *
-*************************************************/
+/*
+* Two Operand Subtraction
+*/
 void bigint_sub2(word x[], u32bit x_size, const word y[], u32bit y_size)
    {
    word carry = 0;
@@ -111,9 +113,9 @@ void bigint_sub2(word x[], u32bit x_size, const word y[], u32bit y_size)
       }
    }
 
-/*************************************************
-* Three Operand Subtraction                      *
-*************************************************/
+/*
+* Three Operand Subtraction
+*/
 void bigint_sub3(word z[], const word x[], u32bit x_size,
                            const word y[], u32bit y_size)
    {
@@ -136,9 +138,9 @@ void bigint_sub3(word z[], const word x[], u32bit x_size,
       }
    }
 
-/*************************************************
-* Two Operand Linear Multiply                    *
-*************************************************/
+/*
+* Two Operand Linear Multiply
+*/
 void bigint_linmul2(word x[], u32bit x_size, word y)
    {
    const u32bit blocks = x_size - (x_size % 8);
@@ -154,9 +156,9 @@ void bigint_linmul2(word x[], u32bit x_size, word y)
    x[x_size] = carry;
    }
 
-/*************************************************
-* Three Operand Linear Multiply                  *
-*************************************************/
+/*
+* Three Operand Linear Multiply
+*/
 void bigint_linmul3(word z[], const word x[], u32bit x_size, word y)
    {
    const u32bit blocks = x_size - (x_size % 8);

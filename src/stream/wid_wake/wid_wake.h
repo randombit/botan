@@ -1,7 +1,9 @@
-/*************************************************
-* WiderWake Header File                          *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* WiderWake
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_WIDER_WAKE_H__
 #define BOTAN_WIDER_WAKE_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* WiderWake4+1-BE                                *
-*************************************************/
+/*
+* WiderWake4+1-BE
+*/
 class BOTAN_DLL WiderWake_41_BE : public StreamCipher
    {
    public:

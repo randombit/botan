@@ -1,7 +1,9 @@
-/*************************************************
-* ElGamal Core Header File                       *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* ElGamal Core
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ELGAMAL_CORE_H__
 #define BOTAN_ELGAMAL_CORE_H__
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* ElGamal Core                                   *
-*************************************************/
+/*
+* ElGamal Core
+*/
 class BOTAN_DLL ELG_Core
    {
    public:

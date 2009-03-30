@@ -1,8 +1,10 @@
-/*************************************************
-* Lowest Level MPI Algorithms Header File        *
-* (C) 1999-2007 Jack Lloyd                       *
-*     2006 Luca Piccarreta                       *
-*************************************************/
+/*
+* Lowest Level MPI Algorithms
+* (C) 1999-2007 Jack Lloyd
+*     2006 Luca Piccarreta
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_MP_ASM_INTERNAL_H__
 #define BOTAN_MP_ASM_INTERNAL_H__
@@ -13,9 +15,9 @@ namespace Botan {
 
 extern "C" {
 
-/*************************************************
-* Helper Macros for x86 Assembly                 *
-*************************************************/
+/*
+* Helper Macros for x86 Assembly
+*/
 #ifndef ASM
   #define ASM(x) x "\n\t"
 #endif
@@ -63,9 +65,9 @@ extern "C" {
         ASM("sbbl %[carry],%[carry]")  \
         ASM("negl %[carry]")
 
-/*************************************************
-* Word Addition                                  *
-*************************************************/
+/*
+* Word Addition
+*/
 inline word word_add(word x, word y, word* carry)
    {
 #if 0
@@ -84,9 +86,9 @@ inline word word_add(word x, word y, word* carry)
 #endif
    }
 
-/*************************************************
-* Eight Word Block Addition, Two Argument        *
-*************************************************/
+/*
+* Eight Word Block Addition, Two Argument
+*/
 inline word word8_add2(word x[8], const word y[8], word carry)
    {
    asm(
@@ -97,9 +99,9 @@ inline word word8_add2(word x[8], const word y[8], word carry)
    return carry;
    }
 
-/*************************************************
-* Eight Word Block Addition, Three Argument      *
-*************************************************/
+/*
+* Eight Word Block Addition, Three Argument
+*/
 inline word word8_add3(word z[8], const word x[8], const word y[8], word carry)
    {
    asm(
@@ -110,9 +112,9 @@ inline word word8_add3(word z[8], const word x[8], const word y[8], word carry)
    return carry;
    }
 
-/*************************************************
-* Word Subtraction                               *
-*************************************************/
+/*
+* Word Subtraction
+*/
 inline word word_sub(word x, word y, word* carry)
    {
    asm(
@@ -123,9 +125,9 @@ inline word word_sub(word x, word y, word* carry)
    return x;
    }
 
-/*************************************************
-* Eight Word Block Subtraction, Two Argument     *
-*************************************************/
+/*
+* Eight Word Block Subtraction, Two Argument
+*/
 inline word word8_sub2(word x[8], const word y[8], word carry)
    {
    asm(
@@ -136,9 +138,9 @@ inline word word8_sub2(word x[8], const word y[8], word carry)
    return carry;
    }
 
-/*************************************************
-* Eight Word Block Subtraction, Three Argument   *
-*************************************************/
+/*
+* Eight Word Block Subtraction, Three Argument
+*/
 inline word word8_sub3(word z[8], const word x[8], const word y[8], word carry)
    {
    asm(
@@ -149,9 +151,9 @@ inline word word8_sub3(word z[8], const word x[8], const word y[8], word carry)
    return carry;
    }
 
-/*************************************************
-* Eight Word Block Linear Multiplication         *
-*************************************************/
+/*
+* Eight Word Block Linear Multiplication
+*/
 inline word word8_linmul2(word x[8], word y, word carry)
    {
    asm(
@@ -162,9 +164,9 @@ inline word word8_linmul2(word x[8], word y, word carry)
    return carry;
    }
 
-/*************************************************
-* Eight Word Block Linear Multiplication          *
-*************************************************/
+/*
+* Eight Word Block Linear Multiplication
+*/
 inline word word8_linmul3(word z[8], const word x[8], word y, word carry)
    {
    asm(
@@ -175,9 +177,9 @@ inline word word8_linmul3(word z[8], const word x[8], word y, word carry)
    return carry;
    }
 
-/*************************************************
-* Eight Word Block Multiply/Add                  *
-*************************************************/
+/*
+* Eight Word Block Multiply/Add
+*/
 inline word word8_madd3(word z[8], const word x[8], word y, word carry)
    {
    asm(
@@ -188,9 +190,9 @@ inline word word8_madd3(word z[8], const word x[8], word y, word carry)
    return carry;
    }
 
-/*************************************************
-* Multiply-Add Accumulator                       *
-*************************************************/
+/*
+* Multiply-Add Accumulator
+*/
 inline void word3_muladd(word* w2, word* w1, word* w0, word x, word y)
    {
    asm(
@@ -205,9 +207,9 @@ inline void word3_muladd(word* w2, word* w1, word* w0, word x, word y)
       : "cc");
    }
 
-/*************************************************
-* Multiply-Add Accumulator                       *
-*************************************************/
+/*
+* Multiply-Add Accumulator
+*/
 inline void word3_muladd_2(word* w2, word* w1, word* w0, word x, word y)
    {
    asm(

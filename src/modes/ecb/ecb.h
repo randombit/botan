@@ -1,7 +1,9 @@
-/*************************************************
-* ECB Mode Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* ECB Mode
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ECB_H__
 #define BOTAN_ECB_H__
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* ECB                                            *
-*************************************************/
+/*
+* ECB
+*/
 class BOTAN_DLL ECB : public BlockCipherMode
    {
    protected:
@@ -28,9 +30,9 @@ class BOTAN_DLL ECB : public BlockCipherMode
       bool valid_iv_size(u32bit) const;
    };
 
-/*************************************************
-* ECB Encryption                                 *
-*************************************************/
+/*
+* ECB Encryption
+*/
 class BOTAN_DLL ECB_Encryption : public ECB
    {
    public:
@@ -47,9 +49,9 @@ class BOTAN_DLL ECB_Encryption : public ECB
       void end_msg();
    };
 
-/*************************************************
-* ECB Decryption                                 *
-*************************************************/
+/*
+* ECB Decryption
+*/
 class BOTAN_DLL ECB_Decryption : public ECB
    {
    public:

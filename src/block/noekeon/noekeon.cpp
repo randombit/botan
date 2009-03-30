@@ -1,7 +1,9 @@
-/*************************************************
-* Noekeon Source File                            *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Noekeon
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/noekeon.h>
 #include <botan/loadstor.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Noekeon's Theta Operation                      *
-*************************************************/
+/*
+* Noekeon's Theta Operation
+*/
 inline void theta(u32bit& A0, u32bit& A1,
                   u32bit& A2, u32bit& A3,
                   const u32bit EK[4])
@@ -34,9 +36,9 @@ inline void theta(u32bit& A0, u32bit& A1,
    A2 ^= T;
    }
 
-/*************************************************
-* Theta With Null Key                            *
-*************************************************/
+/*
+* Theta With Null Key
+*/
 inline void theta(u32bit& A0, u32bit& A1,
                   u32bit& A2, u32bit& A3)
    {
@@ -51,9 +53,9 @@ inline void theta(u32bit& A0, u32bit& A1,
    A2 ^= T;
    }
 
-/*************************************************
-* Noekeon's Gamma S-Box Layer                    *
-*************************************************/
+/*
+* Noekeon's Gamma S-Box Layer
+*/
 inline void gamma(u32bit& A0, u32bit& A1, u32bit& A2, u32bit& A3)
    {
    A1 ^= ~A3 & ~A2;
@@ -71,17 +73,17 @@ inline void gamma(u32bit& A0, u32bit& A1, u32bit& A2, u32bit& A3)
 
 }
 
-/*************************************************
-* Noekeon Round Constants                        *
-*************************************************/
+/*
+* Noekeon Round Constants
+*/
 const byte Noekeon::RC[] = {
    0x80, 0x1B, 0x36, 0x6C, 0xD8, 0xAB, 0x4D, 0x9A,
    0x2F, 0x5E, 0xBC, 0x63, 0xC6, 0x97, 0x35, 0x6A,
    0xD4 };
 
-/*************************************************
-* Noekeon Encryption                             *
-*************************************************/
+/*
+* Noekeon Encryption
+*/
 void Noekeon::enc(const byte in[], byte out[]) const
    {
    u32bit A0 = load_be<u32bit>(in, 0);
@@ -111,9 +113,9 @@ void Noekeon::enc(const byte in[], byte out[]) const
    store_be(out, A0, A1, A2, A3);
    }
 
-/*************************************************
-* Noekeon Encryption                             *
-*************************************************/
+/*
+* Noekeon Encryption
+*/
 void Noekeon::dec(const byte in[], byte out[]) const
    {
    u32bit A0 = load_be<u32bit>(in, 0);
@@ -143,9 +145,9 @@ void Noekeon::dec(const byte in[], byte out[]) const
    store_be(out, A0, A1, A2, A3);
    }
 
-/*************************************************
-* Noekeon Key Schedule                           *
-*************************************************/
+/*
+* Noekeon Key Schedule
+*/
 void Noekeon::key_schedule(const byte key[], u32bit)
    {
    u32bit A0 = load_be<u32bit>(key, 0);
@@ -184,9 +186,9 @@ void Noekeon::key_schedule(const byte key[], u32bit)
    EK[3] = A3;
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void Noekeon::clear() throw()
    {
    EK.clear();

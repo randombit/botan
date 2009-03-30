@@ -1,7 +1,9 @@
-/*************************************************
-* DL Scheme Header File                          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* DL Scheme
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_DL_ALGO_H__
 #define BOTAN_DL_ALGO_H__

@@ -1,7 +1,9 @@
-/*************************************************
-* SecureQueue Header File                        *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* SecureQueue
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_SECURE_QUEUE_H__
 #define BOTAN_SECURE_QUEUE_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* SecureQueue                                    *
-*************************************************/
+/*
+* SecureQueue
+*/
 class BOTAN_DLL SecureQueue : public Fanout_Filter, public DataSource
    {
    public:

@@ -1,7 +1,9 @@
-/*************************************************
-* Base64 Encoder/Decoder Source File             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Base64 Encoder/Decoder
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/base64.h>
 #include <botan/charset.h>
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Base64_Encoder Constructor                     *
-*************************************************/
+/*
+* Base64_Encoder Constructor
+*/
 Base64_Encoder::Base64_Encoder(bool breaks, u32bit length, bool t_n) :
    line_length(breaks ? length : 0), trailing_newline(t_n)
    {
@@ -22,9 +24,9 @@ Base64_Encoder::Base64_Encoder(bool breaks, u32bit length, bool t_n) :
    counter = position = 0;
    }
 
-/*************************************************
-* Base64 Encoding Operation                      *
-*************************************************/
+/*
+* Base64 Encoding Operation
+*/
 void Base64_Encoder::encode(const byte in[3], byte out[4])
    {
    out[0] = BIN_TO_BASE64[((in[0] & 0xFC) >> 2)];
@@ -33,9 +35,9 @@ void Base64_Encoder::encode(const byte in[3], byte out[4])
    out[3] = BIN_TO_BASE64[((in[2] & 0x3F)     )];
    }
 
-/*************************************************
-* Encode and send a block                        *
-*************************************************/
+/*
+* Encode and send a block
+*/
 void Base64_Encoder::encode_and_send(const byte block[], u32bit length)
    {
    for(u32bit j = 0; j != length; j += 3)
@@ -45,9 +47,9 @@ void Base64_Encoder::encode_and_send(const byte block[], u32bit length)
       }
    }
 
-/*************************************************
-* Handle the output                              *
-*************************************************/
+/*
+* Handle the output
+*/
 void Base64_Encoder::do_output(const byte input[], u32bit length)
    {
    if(line_length == 0)
@@ -71,9 +73,9 @@ void Base64_Encoder::do_output(const byte input[], u32bit length)
       }
    }
 
-/*************************************************
-* Convert some data into Base64                  *
-*************************************************/
+/*
+* Convert some data into Base64
+*/
 void Base64_Encoder::write(const byte input[], u32bit length)
    {
    in.copy(position, input, length);
@@ -94,9 +96,9 @@ void Base64_Encoder::write(const byte input[], u32bit length)
    position += length;
    }
 
-/*************************************************
-* Flush buffers                                  *
-*************************************************/
+/*
+* Flush buffers
+*/
 void Base64_Encoder::end_msg()
    {
    u32bit start_of_last_block = 3 * (position / 3),
@@ -125,9 +127,9 @@ void Base64_Encoder::end_msg()
    counter = position = 0;
    }
 
-/*************************************************
-* Base64_Decoder Constructor                     *
-*************************************************/
+/*
+* Base64_Decoder Constructor
+*/
 Base64_Decoder::Base64_Decoder(Decoder_Checking c) : checking(c)
    {
    in.create(48);
@@ -135,17 +137,17 @@ Base64_Decoder::Base64_Decoder(Decoder_Checking c) : checking(c)
    position = 0;
    }
 
-/*************************************************
-* Check if a character is a valid Base64 char    *
-*************************************************/
+/*
+* Check if a character is a valid Base64 char
+*/
 bool Base64_Decoder::is_valid(byte in)
    {
    return (BASE64_TO_BIN[in] != 0x80);
    }
 
-/*************************************************
-* Base64 Decoding Operation                      *
-*************************************************/
+/*
+* Base64 Decoding Operation
+*/
 void Base64_Decoder::decode(const byte in[4], byte out[3])
    {
    out[0] = ((BASE64_TO_BIN[in[0]] << 2) | (BASE64_TO_BIN[in[1]] >> 4));
@@ -153,9 +155,9 @@ void Base64_Decoder::decode(const byte in[4], byte out[3])
    out[2] = ((BASE64_TO_BIN[in[2]] << 6) | (BASE64_TO_BIN[in[3]]));
    }
 
-/*************************************************
-* Decode and send a block                        *
-*************************************************/
+/*
+* Decode and send a block
+*/
 void Base64_Decoder::decode_and_send(const byte block[], u32bit length)
    {
    for(u32bit j = 0; j != length; j += 4)
@@ -165,9 +167,9 @@ void Base64_Decoder::decode_and_send(const byte block[], u32bit length)
       }
    }
 
-/*************************************************
-* Handle processing an invalid character         *
-*************************************************/
+/*
+* Handle processing an invalid character
+*/
 void Base64_Decoder::handle_bad_char(byte c)
    {
    if(c == '=' || checking == NONE)
@@ -182,9 +184,9 @@ void Base64_Decoder::handle_bad_char(byte c)
       );
    }
 
-/*************************************************
-* Convert some data from Base64                  *
-*************************************************/
+/*
+* Convert some data from Base64
+*/
 void Base64_Decoder::write(const byte input[], u32bit length)
    {
    for(u32bit j = 0; j != length; ++j)
@@ -202,9 +204,9 @@ void Base64_Decoder::write(const byte input[], u32bit length)
       }
    }
 
-/*************************************************
-* Flush buffers                                  *
-*************************************************/
+/*
+* Flush buffers
+*/
 void Base64_Decoder::end_msg()
    {
    if(position != 0)

@@ -1,7 +1,9 @@
-/*************************************************
-* Memory Mapping Allocator Header File           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Memory Mapping Allocator
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_MMAP_ALLOCATOR_H__
 #define BOTAN_MMAP_ALLOCATOR_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Memory Mapping Allocator                       *
-*************************************************/
+/*
+* Memory Mapping Allocator
+*/
 class BOTAN_DLL MemoryMapping_Allocator : public Pooling_Allocator
    {
    public:

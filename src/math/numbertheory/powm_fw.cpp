@@ -1,7 +1,9 @@
-/*************************************************
-* Fixed Window Exponentiation Source File        *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Fixed Window Exponentiation
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/def_powm.h>
 #include <botan/numthry.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Try to choose a good window size               *
-*************************************************/
+/*
+* Try to choose a good window size
+*/
 u32bit choose_window_bits(u32bit exp_bits, u32bit,
                           Power_Mod::Usage_Hints hints)
    {
@@ -47,17 +49,17 @@ u32bit choose_window_bits(u32bit exp_bits, u32bit,
 
 }
 
-/*************************************************
-* Set the exponent                               *
-*************************************************/
+/*
+* Set the exponent
+*/
 void Fixed_Window_Exponentiator::set_exponent(const BigInt& e)
    {
    exp = e;
    }
 
-/*************************************************
-* Set the base                                   *
-*************************************************/
+/*
+* Set the base
+*/
 void Fixed_Window_Exponentiator::set_base(const BigInt& base)
    {
    window_bits = choose_window_bits(exp.bits(), base.bits(), hints);
@@ -68,9 +70,9 @@ void Fixed_Window_Exponentiator::set_base(const BigInt& base)
       g[j] = reducer.multiply(g[j-1], g[0]);
    }
 
-/*************************************************
-* Compute the result                             *
-*************************************************/
+/*
+* Compute the result
+*/
 BigInt Fixed_Window_Exponentiator::execute() const
    {
    const u32bit exp_nibbles = (exp.bits() + window_bits - 1) / window_bits;
@@ -88,9 +90,9 @@ BigInt Fixed_Window_Exponentiator::execute() const
    return x;
    }
 
-/*************************************************
-* Fixed_Window_Exponentiator Constructor         *
-*************************************************/
+/*
+* Fixed_Window_Exponentiator Constructor
+*/
 Fixed_Window_Exponentiator::Fixed_Window_Exponentiator(const BigInt& n,
    Power_Mod::Usage_Hints hints)
    {

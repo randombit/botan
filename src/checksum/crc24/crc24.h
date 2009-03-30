@@ -1,7 +1,9 @@
-/*************************************************
-* CRC24 Header File                              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CRC24
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_CRC24_H__
 #define BOTAN_CRC24_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* CRC24                                          *
-*************************************************/
+/*
+* CRC24
+*/
 class BOTAN_DLL CRC24 : public HashFunction
    {
    public:

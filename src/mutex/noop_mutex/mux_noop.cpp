@@ -1,15 +1,17 @@
-/*************************************************
-* No-Op Mutex Factory Source File                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* No-Op Mutex Factory
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/mux_noop.h>
 
 namespace Botan {
 
-/*************************************************
-* No-Op Mutex Factory                            *
-*************************************************/
+/*
+* No-Op Mutex Factory
+*/
 Mutex* Noop_Mutex_Factory::make()
    {
    class Noop_Mutex : public Mutex

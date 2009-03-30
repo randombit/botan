@@ -1,23 +1,25 @@
-/*************************************************
-* SSL3-MAC Source File                           *
-* (C) 1999-2004 Jack Lloyd                       *
-*************************************************/
+/*
+* SSL3-MAC
+* (C) 1999-2004 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/ssl3_mac.h>
 
 namespace Botan {
 
-/*************************************************
-* Update a SSL3-MAC Calculation                  *
-*************************************************/
+/*
+* Update a SSL3-MAC Calculation
+*/
 void SSL3_MAC::add_data(const byte input[], u32bit length)
    {
    hash->update(input, length);
    }
 
-/*************************************************
-* Finalize a SSL3-MAC Calculation                *
-*************************************************/
+/*
+* Finalize a SSL3-MAC Calculation
+*/
 void SSL3_MAC::final_result(byte mac[])
    {
    hash->final(mac);
@@ -27,9 +29,9 @@ void SSL3_MAC::final_result(byte mac[])
    hash->update(i_key);
    }
 
-/*************************************************
-* SSL3-MAC Key Schedule                          *
-*************************************************/
+/*
+* SSL3-MAC Key Schedule
+*/
 void SSL3_MAC::key_schedule(const byte key[], u32bit length)
    {
    hash->clear();
@@ -41,9 +43,9 @@ void SSL3_MAC::key_schedule(const byte key[], u32bit length)
    hash->update(i_key);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void SSL3_MAC::clear() throw()
    {
    hash->clear();
@@ -51,25 +53,25 @@ void SSL3_MAC::clear() throw()
    o_key.clear();
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/*
+* Return the name of this type
+*/
 std::string SSL3_MAC::name() const
    {
    return "SSL3-MAC(" + hash->name() + ")";
    }
 
-/*************************************************
-* Return a clone of this object                  *
-*************************************************/
+/*
+* Return a clone of this object
+*/
 MessageAuthenticationCode* SSL3_MAC::clone() const
    {
    return new SSL3_MAC(hash->clone());
    }
 
-/*************************************************
-* SSL3-MAC Constructor                           *
-*************************************************/
+/*
+* SSL3-MAC Constructor
+*/
 SSL3_MAC::SSL3_MAC(HashFunction* hash_in) :
    MessageAuthenticationCode(hash_in->OUTPUT_LENGTH,
                              hash_in->OUTPUT_LENGTH),

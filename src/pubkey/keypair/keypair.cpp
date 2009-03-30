@@ -1,7 +1,9 @@
-/*************************************************
-* Keypair Checks Source File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Keypair Checks
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/keypair.h>
 #include <botan/look_pk.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace KeyPair {
 
-/*************************************************
-* Check an encryption key pair for consistency   *
-*************************************************/
+/*
+* Check an encryption key pair for consistency
+*/
 void check_key(RandomNumberGenerator& rng,
                PK_Encryptor* encryptor, PK_Decryptor* decryptor)
    {
@@ -35,9 +37,9 @@ void check_key(RandomNumberGenerator& rng,
       throw Self_Test_Failure("Encryption key pair consistency failure");
    }
 
-/*************************************************
-* Check a signature key pair for consistency     *
-*************************************************/
+/*
+* Check a signature key pair for consistency
+*/
 void check_key(RandomNumberGenerator& rng,
                PK_Signer* signer, PK_Verifier* verifier)
    {

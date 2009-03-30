@@ -1,7 +1,9 @@
-/*************************************************
-* CMS Decoding Header File                       *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CMS Decoding
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_CMS_DECODER_H__
 #define BOTAN_CMS_DECODER_H__
@@ -14,9 +16,9 @@
 
 namespace Botan {
 
-/*************************************************
-* CMS Decoding Operation                         *
-*************************************************/
+/*
+* CMS Decoding Operation
+*/
 class BOTAN_DLL CMS_Decoder
    {
    public:

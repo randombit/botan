@@ -1,8 +1,10 @@
-/*************************************************
-* SHA-{224,256} Source File                      *
-* (C) 1999-2008 Jack Lloyd                       *
-*     2007 FlexSecure GmbH                       *
-*************************************************/
+/*
+* SHA-{224,256}
+* (C) 1999-2008 Jack Lloyd
+*     2007 FlexSecure GmbH
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/sha2_32.h>
 #include <botan/loadstor.h>
@@ -12,26 +14,26 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* SHA-256 Rho Function                           *
-*************************************************/
+/*
+* SHA-256 Rho Function
+*/
 inline u32bit rho(u32bit X, u32bit rot1, u32bit rot2, u32bit rot3)
    {
    return (rotate_right(X, rot1) ^ rotate_right(X, rot2) ^
            rotate_right(X, rot3));
    }
 
-/*************************************************
-* SHA-256 Sigma Function                         *
-*************************************************/
+/*
+* SHA-256 Sigma Function
+*/
 inline u32bit sigma(u32bit X, u32bit rot1, u32bit rot2, u32bit shift)
    {
    return (rotate_right(X, rot1) ^ rotate_right(X, rot2) ^ (X >> shift));
    }
 
-/*************************************************
-* SHA-256 F1 Function                            *
-*************************************************/
+/*
+* SHA-256 F1 Function
+*/
 inline void F1(u32bit A, u32bit B, u32bit C, u32bit& D,
                u32bit E, u32bit F, u32bit G, u32bit& H,
                u32bit msg, u32bit magic)
@@ -43,9 +45,9 @@ inline void F1(u32bit A, u32bit B, u32bit C, u32bit& D,
 
 }
 
-/*************************************************
-* SHA-256 Compression Function                   *
-*************************************************/
+/*
+* SHA-256 Compression Function
+*/
 void SHA_224_256_BASE::compress_n(const byte input[], u32bit blocks)
    {
    u32bit A = digest[0], B = digest[1], C = digest[2],
@@ -138,27 +140,27 @@ void SHA_224_256_BASE::compress_n(const byte input[], u32bit blocks)
       }
    }
 
-/*************************************************
-* Copy out the digest                            *
-*************************************************/
+/*
+* Copy out the digest
+*/
 void SHA_224_256_BASE::copy_out(byte output[])
    {
    for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
       store_be(digest[j/4], output + j);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void SHA_224_256_BASE::clear() throw()
    {
    MDx_HashFunction::clear();
    W.clear();
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void SHA_224::clear() throw()
    {
    SHA_224_256_BASE::clear();
@@ -172,9 +174,9 @@ void SHA_224::clear() throw()
    digest[7] = 0xbefa4fa4;
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void SHA_256::clear() throw()
    {
    SHA_224_256_BASE::clear();

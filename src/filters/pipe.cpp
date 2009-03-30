@@ -1,7 +1,9 @@
-/*************************************************
-* Pipe Source File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Pipe
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/pipe.h>
 #include <botan/out_buf.h>
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Constructor for Invalid_Message_Number         *
-*************************************************/
+/*
+* Constructor for Invalid_Message_Number
+*/
 Pipe::Invalid_Message_Number::Invalid_Message_Number(const std::string& where,
                                                      message_id msg)
    {
@@ -22,9 +24,9 @@ Pipe::Invalid_Message_Number::Invalid_Message_Number(const std::string& where,
 
 namespace {
 
-/*************************************************
-* A Filter that does nothing                     *
-*************************************************/
+/*
+* A Filter that does nothing
+*/
 class Null_Filter : public Filter
    {
    public:
@@ -34,9 +36,9 @@ class Null_Filter : public Filter
 
 }
 
-/*************************************************
-* Pipe Constructor                               *
-*************************************************/
+/*
+* Pipe Constructor
+*/
 Pipe::Pipe(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
    {
    init();
@@ -46,9 +48,9 @@ Pipe::Pipe(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
    append(f4);
    }
 
-/*************************************************
-* Pipe Constructor                               *
-*************************************************/
+/*
+* Pipe Constructor
+*/
 Pipe::Pipe(Filter* filter_array[], u32bit count)
    {
    init();
@@ -56,18 +58,18 @@ Pipe::Pipe(Filter* filter_array[], u32bit count)
       append(filter_array[j]);
    }
 
-/*************************************************
-* Pipe Destructor                                *
-*************************************************/
+/*
+* Pipe Destructor
+*/
 Pipe::~Pipe()
    {
    destruct(pipe);
    delete outputs;
    }
 
-/*************************************************
-* Initialize the Pipe                            *
-*************************************************/
+/*
+* Initialize the Pipe
+*/
 void Pipe::init()
    {
    outputs = new Output_Buffers;
@@ -76,9 +78,9 @@ void Pipe::init()
    inside_msg = false;
    }
 
-/*************************************************
-* Reset the Pipe                                 *
-*************************************************/
+/*
+* Reset the Pipe
+*/
 void Pipe::reset()
    {
    if(inside_msg)
@@ -88,9 +90,9 @@ void Pipe::reset()
    inside_msg = false;
    }
 
-/*************************************************
-* Destroy the Pipe                               *
-*************************************************/
+/*
+* Destroy the Pipe
+*/
 void Pipe::destruct(Filter* to_kill)
    {
    if(!to_kill || dynamic_cast<SecureQueue*>(to_kill))
@@ -100,17 +102,17 @@ void Pipe::destruct(Filter* to_kill)
    delete to_kill;
    }
 
-/*************************************************
-* Test if the Pipe has any data in it            *
-*************************************************/
+/*
+* Test if the Pipe has any data in it
+*/
 bool Pipe::end_of_data() const
    {
    return (remaining() == 0);
    }
 
-/*************************************************
-* Set the default read message                   *
-*************************************************/
+/*
+* Set the default read message
+*/
 void Pipe::set_default_msg(message_id msg)
    {
    if(msg >= message_count())
@@ -118,9 +120,9 @@ void Pipe::set_default_msg(message_id msg)
    default_read = msg;
    }
 
-/*************************************************
-* Process a full message at once                 *
-*************************************************/
+/*
+* Process a full message at once
+*/
 void Pipe::process_msg(const byte input[], u32bit length)
    {
    start_msg();
@@ -128,25 +130,25 @@ void Pipe::process_msg(const byte input[], u32bit length)
    end_msg();
    }
 
-/*************************************************
-* Process a full message at once                 *
-*************************************************/
+/*
+* Process a full message at once
+*/
 void Pipe::process_msg(const MemoryRegion<byte>& input)
    {
    process_msg(input.begin(), input.size());
    }
 
-/*************************************************
-* Process a full message at once                 *
-*************************************************/
+/*
+* Process a full message at once
+*/
 void Pipe::process_msg(const std::string& input)
    {
    process_msg(reinterpret_cast<const byte*>(input.data()), input.length());
    }
 
-/*************************************************
-* Process a full message at once                 *
-*************************************************/
+/*
+* Process a full message at once
+*/
 void Pipe::process_msg(DataSource& input)
    {
    start_msg();
@@ -154,9 +156,9 @@ void Pipe::process_msg(DataSource& input)
    end_msg();
    }
 
-/*************************************************
-* Start a new message                            *
-*************************************************/
+/*
+* Start a new message
+*/
 void Pipe::start_msg()
    {
    if(inside_msg)
@@ -168,9 +170,9 @@ void Pipe::start_msg()
    inside_msg = true;
    }
 
-/*************************************************
-* End the current message                        *
-*************************************************/
+/*
+* End the current message
+*/
 void Pipe::end_msg()
    {
    if(!inside_msg)
@@ -187,9 +189,9 @@ void Pipe::end_msg()
    outputs->retire();
    }
 
-/*************************************************
-* Find the endpoints of the Pipe                 *
-*************************************************/
+/*
+* Find the endpoints of the Pipe
+*/
 void Pipe::find_endpoints(Filter* f)
    {
    for(u32bit j = 0; j != f->total_ports(); ++j)
@@ -203,9 +205,9 @@ void Pipe::find_endpoints(Filter* f)
          }
    }
 
-/*************************************************
-* Remove the SecureQueues attached to the Filter *
-*************************************************/
+/*
+* Remove the SecureQueues attached to the Filter
+*/
 void Pipe::clear_endpoints(Filter* f)
    {
    if(!f) return;
@@ -217,9 +219,9 @@ void Pipe::clear_endpoints(Filter* f)
       }
    }
 
-/*************************************************
-* Append a Filter to the Pipe                    *
-*************************************************/
+/*
+* Append a Filter to the Pipe
+*/
 void Pipe::append(Filter* filter)
    {
    if(inside_msg)
@@ -237,9 +239,9 @@ void Pipe::append(Filter* filter)
    else      pipe->attach(filter);
    }
 
-/*************************************************
-* Prepend a Filter to the Pipe                   *
-*************************************************/
+/*
+* Prepend a Filter to the Pipe
+*/
 void Pipe::prepend(Filter* filter)
    {
    if(inside_msg)
@@ -257,9 +259,9 @@ void Pipe::prepend(Filter* filter)
    pipe = filter;
    }
 
-/*************************************************
-* Pop a Filter off the Pipe                      *
-*************************************************/
+/*
+* Pop a Filter off the Pipe
+*/
 void Pipe::pop()
    {
    if(inside_msg)
@@ -284,17 +286,17 @@ void Pipe::pop()
       }
    }
 
-/*************************************************
-* Return the number of messages in this Pipe     *
-*************************************************/
+/*
+* Return the number of messages in this Pipe
+*/
 Pipe::message_id Pipe::message_count() const
    {
    return outputs->message_count();
    }
 
-/*************************************************
-* Static Member Variables                        *
-*************************************************/
+/*
+* Static Member Variables
+*/
 const Pipe::message_id Pipe::LAST_MESSAGE =
    static_cast<Pipe::message_id>(-2);
 

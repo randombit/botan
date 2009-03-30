@@ -1,15 +1,17 @@
-/*************************************************
-* Hardware Timer Source File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Hardware Timer
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/tm_hard.h>
 
 namespace Botan {
 
-/*************************************************
-* Get the timestamp                              *
-*************************************************/
+/*
+* Get the timestamp
+*/
 u64bit Hardware_Timer::clock() const
    {
    u64bit rtc = 0;

@@ -1,13 +1,13 @@
-/******************************************************
- * Arithmetic for prime fields GF(p) (header file)    *
- *                                                    *
- * (C) 2007 Martin Doering                            *
- *          doering@cdc.informatik.tu-darmstadt.de    *
- *          Christoph Ludwig                          *
- *          ludwig@fh-worms.de                        *
- *          Falko Strenzke                            *
- *          strenzke@flexsecure.de                    *
- ******************************************************/
+/******
+ * Arithmetic for prime fields GF(p) (header file)
+ *
+ * (C) 2007 Martin Doering
+ *          doering@cdc.informatik.tu-darmstadt.de
+ *          Christoph Ludwig
+ *          ludwig@fh-worms.de
+ *          Falko Strenzke
+ *          strenzke@flexsecure.de
+ ******/
 
 #ifndef BOTAN_GFP_ELEMENT_H__
 #define BOTAN_GFP_ELEMENT_H__
@@ -92,7 +92,7 @@ class BOTAN_DLL GFpElement
       * Assignment operator.
       * makes *this a totally independent object
       * (gives *this independent modulus specific values).
-      *
+
       * @param other The element to assign to our object
       */
       const GFpElement& operator=(const GFpElement& other);

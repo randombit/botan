@@ -1,7 +1,9 @@
-/*************************************************
-* Win32 CAPI EntropySource Header File           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Win32 CAPI EntropySource
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ENTROPY_SRC_WIN32_CAPI_H__
 #define BOTAN_ENTROPY_SRC_WIN32_CAPI_H__

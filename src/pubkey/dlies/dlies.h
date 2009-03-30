@@ -1,7 +1,9 @@
-/*************************************************
-* DLIES Header File                              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* DLIES
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_DLIES_H__
 #define BOTAN_DLIES_H__
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* DLIES Encryption                               *
-*************************************************/
+/*
+* DLIES Encryption
+*/
 class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
    {
    public:
@@ -39,9 +41,9 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
       u32bit mac_keylen;
    };
 
-/*************************************************
-* DLIES Decryption                               *
-*************************************************/
+/*
+* DLIES Decryption
+*/
 class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor
    {
    public:

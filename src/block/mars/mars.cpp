@@ -1,7 +1,9 @@
-/*************************************************
-* MARS Source File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* MARS
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/mars.h>
 #include <botan/loadstor.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Generate a mask for runs of bits               *
-*************************************************/
+/*
+* Generate a mask for runs of bits
+*/
 u32bit gen_mask(u32bit input)
    {
    u32bit mask = 0;
@@ -45,9 +47,9 @@ u32bit gen_mask(u32bit input)
 
 }
 
-/*************************************************
-* MARS Encryption                                *
-*************************************************/
+/*
+* MARS Encryption
+*/
 void MARS::enc(const byte in[], byte out[]) const
    {
    u32bit A = load_le<u32bit>(in, 0) + EK[0];
@@ -82,9 +84,9 @@ void MARS::enc(const byte in[], byte out[]) const
    store_le(out, A, B, C, D);
    }
 
-/*************************************************
-* MARS Decryption                                *
-*************************************************/
+/*
+* MARS Decryption
+*/
 void MARS::dec(const byte in[], byte out[]) const
    {
    u32bit A = load_le<u32bit>(in, 3) + EK[39];
@@ -119,9 +121,9 @@ void MARS::dec(const byte in[], byte out[]) const
    store_le(out, D, C, B, A);
    }
 
-/*************************************************
-* MARS Forward Mixing Operation                  *
-*************************************************/
+/*
+* MARS Forward Mixing Operation
+*/
 void MARS::forward_mix(u32bit& A, u32bit& B, u32bit& C, u32bit& D)
    {
    for(u32bit j = 0; j != 2; ++j)
@@ -144,9 +146,9 @@ void MARS::forward_mix(u32bit& A, u32bit& B, u32bit& C, u32bit& D)
       }
    }
 
-/*************************************************
-* MARS Reverse Mixing Operation                  *
-*************************************************/
+/*
+* MARS Reverse Mixing Operation
+*/
 void MARS::reverse_mix(u32bit& A, u32bit& B, u32bit& C, u32bit& D)
    {
    for(u32bit j = 0; j != 2; ++j)
@@ -170,9 +172,9 @@ void MARS::reverse_mix(u32bit& A, u32bit& B, u32bit& C, u32bit& D)
       }
    }
 
-/*************************************************
-* MARS Encryption Round                          *
-*************************************************/
+/*
+* MARS Encryption Round
+*/
 void MARS::encrypt_round(u32bit& A, u32bit& B, u32bit& C, u32bit& D,
                          u32bit round) const
    {
@@ -190,9 +192,9 @@ void MARS::encrypt_round(u32bit& A, u32bit& B, u32bit& C, u32bit& D,
    B += rotate_left(Z, Y % 32);
    }
 
-/*************************************************
-* MARS Decryption Round                          *
-*************************************************/
+/*
+* MARS Decryption Round
+*/
 void MARS::decrypt_round(u32bit& A, u32bit& B, u32bit& C, u32bit& D,
                          u32bit round) const
    {
@@ -210,9 +212,9 @@ void MARS::decrypt_round(u32bit& A, u32bit& B, u32bit& C, u32bit& D,
    B -= rotate_left(Z, Y % 32);
    }
 
-/*************************************************
-* MARS Key Schedule                              *
-*************************************************/
+/*
+* MARS Key Schedule
+*/
 void MARS::key_schedule(const byte key[], u32bit length)
    {
    SecureBuffer<u32bit, 15> T;

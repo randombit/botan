@@ -1,7 +1,9 @@
-/*************************************************
-* Parallel Hash Header File                      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Parallel Hash
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_PARALLEL_HASH_H__
 #define BOTAN_PARALLEL_HASH_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Parallel                                       *
-*************************************************/
+/*
+* Parallel
+*/
 class BOTAN_DLL Parallel : public HashFunction
    {
    public:

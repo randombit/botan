@@ -1,7 +1,9 @@
-/*************************************************
-* Simple O(N^2) Multiplication and Squaring      *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Simple O(N^2) Multiplication and Squaring
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/mp_asm.h>
 #include <botan/mp_asmi.h>
@@ -12,9 +14,9 @@ namespace Botan {
 
 extern "C" {
 
-/*************************************************
-* Simple O(N^2) Multiplication                   *
-*************************************************/
+/*
+* Simple O(N^2) Multiplication
+*/
 void bigint_simple_mul(word z[], const word x[], u32bit x_size,
                                  const word y[], u32bit y_size)
    {
@@ -38,7 +40,7 @@ void bigint_simple_mul(word z[], const word x[], u32bit x_size,
       }
    }
 
-/*************************************************
+/*
 * Simple O(N^2) Squaring
 
 This is exactly the same algorithm as bigint_simple_mul,
@@ -48,7 +50,7 @@ that x == y
 
 There is an O(n^1.5) squaring algorithm specified in Handbook of
 Applied Cryptography, chapter 14
-*************************************************/
+*/
 void bigint_simple_sqr(word z[], const word x[], u32bit x_size)
    {
    const u32bit x_size_8 = x_size - (x_size % 8);

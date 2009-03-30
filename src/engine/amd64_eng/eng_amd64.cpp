@@ -1,6 +1,8 @@
 /**
 * AMD64 Assembly Implementation Engine
 * (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #include <botan/eng_amd64.h>

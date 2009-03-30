@@ -1,7 +1,9 @@
-/*************************************************
-* Simple O(N^2) Multiplication and Squaring      *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Simple O(N^2) Multiplication and Squaring
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/mp_asm.h>
 #include <botan/mp_asmi.h>
@@ -12,9 +14,9 @@ namespace Botan {
 
 extern "C" {
 
-/*************************************************
-* Simple O(N^2) Multiplication                   *
-*************************************************/
+/*
+* Simple O(N^2) Multiplication
+*/
 void bigint_simple_mul(word z[], const word x[], u32bit x_size,
                                  const word y[], u32bit y_size)
    {
@@ -38,14 +40,14 @@ void bigint_simple_mul(word z[], const word x[], u32bit x_size,
 
 inline word word_sqr(word x,
 
-/*************************************************
+/*
 * Simple O(N^2) Squaring
 
 This is exactly the same algorithm as bigint_simple_mul,
 however because C/C++ compilers suck at alias analysis it
 is good to have the version where the compiler knows
 that x == y
-*************************************************/
+*/
 void bigint_simple_sqr(word z[], const word x[], u32bit x_size)
    {
    clear_mem(z, 2*x_size);

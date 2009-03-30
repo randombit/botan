@@ -1,7 +1,9 @@
-/*************************************************
-* Output Buffer Header File                      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Output Buffer
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_OUTPUT_BUFFER_H__
 #define BOTAN_OUTPUT_BUFFER_H__
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Container of output buffers for Pipe           *
-*************************************************/
+/*
+* Container of output buffers for Pipe
+*/
 class BOTAN_DLL Output_Buffers
    {
    public:

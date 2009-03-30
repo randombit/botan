@@ -1,8 +1,10 @@
-/*************************************************
-* BigInt Header File                             *
-* (C) 1999-2008 Jack Lloyd                       *
-*     2007 FlexSecure                            *
-*************************************************/
+/*
+* BigInt
+* (C) 1999-2008 Jack Lloyd
+*     2007 FlexSecure
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_BIGINT_H__
 #define BOTAN_BIGINT_H__
@@ -18,7 +20,7 @@ namespace Botan {
  * Big Integer representation.  This class defines an integer type,
  * that can be very big. Additionally some helper functions are
  * defined to work more comfortably.
- *
+
  */
 class BOTAN_DLL BigInt
    {
@@ -45,7 +47,7 @@ class BOTAN_DLL BigInt
          { DivideByZero() : Exception("BigInt divide by zero") {} };
 
       /*************
-      * operators  *
+      * operators
       *************/
 
       /**
@@ -142,7 +144,7 @@ class BOTAN_DLL BigInt
       void clear() { get_reg().clear(); }
 
       /*************
-      * functions *
+      * functions
       ************/
 
       /**
@@ -487,9 +489,9 @@ class BOTAN_DLL BigInt
       Sign signedness;
    };
 
-/*************************************************
-* Arithmetic Operators                           *
-*************************************************/
+/*
+* Arithmetic Operators
+*/
 BigInt BOTAN_DLL operator+(const BigInt&, const BigInt&);
 BigInt BOTAN_DLL operator-(const BigInt&, const BigInt&);
 BigInt BOTAN_DLL operator*(const BigInt&, const BigInt&);
@@ -499,9 +501,9 @@ word   BOTAN_DLL operator%(const BigInt&, word);
 BigInt BOTAN_DLL operator<<(const BigInt&, u32bit);
 BigInt BOTAN_DLL operator>>(const BigInt&, u32bit);
 
-/*************************************************
-* Comparison Operators                           *
-*************************************************/
+/*
+* Comparison Operators
+*/
 inline bool operator==(const BigInt& a, const BigInt& b)
    { return (a.cmp(b) == 0); }
 inline bool operator!=(const BigInt& a, const BigInt& b)
@@ -515,9 +517,9 @@ inline bool operator<(const BigInt& a, const BigInt& b)
 inline bool operator>(const BigInt& a, const BigInt& b)
    { return (a.cmp(b) > 0); }
 
-/*************************************************
-* I/O Operators                                  *
-*************************************************/
+/*
+* I/O Operators
+*/
 BOTAN_DLL std::ostream& operator<<(std::ostream&, const BigInt&);
 BOTAN_DLL std::istream& operator>>(std::istream&, BigInt&);
 

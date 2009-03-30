@@ -1,7 +1,9 @@
-/*************************************************
-* CFB Mode Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CFB Mode
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_CFB_H__
 #define BOTAN_CFB_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* CFB Encryption                                 *
-*************************************************/
+/*
+* CFB Encryption
+*/
 class BOTAN_DLL CFB_Encryption : public BlockCipherMode
    {
    public:
@@ -25,9 +27,9 @@ class BOTAN_DLL CFB_Encryption : public BlockCipherMode
       const u32bit FEEDBACK_SIZE;
    };
 
-/*************************************************
-* CFB Decryption                                 *
-*************************************************/
+/*
+* CFB Decryption
+*/
 class BOTAN_DLL CFB_Decryption : public BlockCipherMode
    {
    public:

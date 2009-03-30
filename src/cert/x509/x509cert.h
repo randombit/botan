@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 Certificates Header File                 *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 Certificates
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_X509_CERTS_H__
 #define BOTAN_X509_CERTS_H__
@@ -172,9 +174,9 @@ class BOTAN_DLL X509_Certificate : public X509_Object
 */
 BOTAN_DLL bool operator!=(const X509_Certificate&, const X509_Certificate&);
 
-/*************************************************
-* Data Store Extraction Operations               *
-*************************************************/
+/*
+* Data Store Extraction Operations
+*/
 BOTAN_DLL X509_DN create_dn(const Data_Store&);
 BOTAN_DLL AlternativeName create_alt_name(const Data_Store&);
 

@@ -1,7 +1,9 @@
-/*************************************************
-* Public Key Interface Header File               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Public Key Interface
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_PUBKEY_H__
 #define BOTAN_PUBKEY_H__
@@ -255,9 +257,9 @@ class BOTAN_DLL PK_Verifier
       PK_Verifier& operator=(const PK_Verifier&);
    };
 
-/*************************************************
-* Key Agreement                                  *
-*************************************************/
+/*
+* Key Agreement
+*/
 class BOTAN_DLL PK_Key_Agreement
    {
    public:

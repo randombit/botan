@@ -1,7 +1,9 @@
-/*************************************************
-* Random Number Generator Base Source File       *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Random Number Generator Base
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/rng.h>
 
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Get a single random byte                       *
-*************************************************/
+/*
+* Get a single random byte
+*/
 byte RandomNumberGenerator::next_byte()
    {
    byte out;
@@ -21,9 +23,9 @@ byte RandomNumberGenerator::next_byte()
    return out;
    }
 
-/*************************************************
-* Create and seed a new RNG object               *
-*************************************************/
+/*
+* Create and seed a new RNG object
+*/
 RandomNumberGenerator* RandomNumberGenerator::make_rng()
    {
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)

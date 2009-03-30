@@ -1,7 +1,9 @@
-/*************************************************
-* Algorithm Lookup Header File                   *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Algorithm Lookup
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_LOOKUP_H__
 #define BOTAN_LOOKUP_H__
@@ -20,9 +22,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Retrieve an object from the lookup table       *
-*************************************************/
+/*
+* Retrieve an object from the lookup table
+*/
 // NOTE: these functions return internally stored objects, library
 // retains ownership
 
@@ -38,9 +40,9 @@ retrieve_hash(const std::string&);
 BOTAN_DLL const MessageAuthenticationCode*
 retrieve_mac(const std::string&);
 
-/*************************************************
-* Get an algorithm object                        *
-*************************************************/
+/*
+* Get an algorithm object
+*/
 // NOTE: these functions create and return new objects, letting the
 // caller assume ownership of them
 
@@ -80,9 +82,9 @@ BOTAN_DLL MessageAuthenticationCode* get_mac(const std::string& name);
 */
 BOTAN_DLL S2K* get_s2k(const std::string& name);
 
-/*************************************************
-* Get an EMSA/EME/KDF/MGF function               *
-*************************************************/
+/*
+* Get an EMSA/EME/KDF/MGF function
+*/
 // NOTE: these functions create and return new objects, letting the
 // caller assume ownership of them
 
@@ -108,9 +110,9 @@ BOTAN_DLL EMSA* get_emsa(const std::string& name);
 */
 BOTAN_DLL KDF*  get_kdf(const std::string& name);
 
-/*************************************************
-* Get a cipher object                            *
-*************************************************/
+/*
+* Get a cipher object
+*/
 
 /**
 * Factory method for general symmetric cipher filters.
@@ -184,9 +186,9 @@ BOTAN_DLL bool have_hash(const std::string& name);
 */
 BOTAN_DLL bool have_mac(const std::string& name);
 
-/*************************************************
-* Query information about an algorithm           *
-*************************************************/
+/*
+* Query information about an algorithm
+*/
 
 /**
 * Find out the block size of a certain symmetric algorithm.

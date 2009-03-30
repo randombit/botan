@@ -1,6 +1,8 @@
 /*
-* MD2 Header File
+* MD2
 * (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_MD2_H__

@@ -1,6 +1,8 @@
 /**
-* Default Initialization Function Source File
+* Default Initialization Function
 * (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #include <botan/init.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Library Initialization                         *
-*************************************************/
+/*
+* Library Initialization
+*/
 void LibraryInitializer::initialize(const std::string& arg_string)
    {
    bool thread_safe = false;
@@ -62,9 +64,9 @@ void LibraryInitializer::initialize(const std::string& arg_string)
       }
    }
 
-/*************************************************
-* Library Shutdown                               *
-*************************************************/
+/*
+* Library Shutdown
+*/
 void LibraryInitializer::deinitialize()
    {
    set_global_state(0);

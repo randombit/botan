@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 Certificate Extensions Header File       *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 Certificate Extensions
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_X509_EXTENSIONS_H__
 #define BOTAN_X509_EXTENSIONS_H__
@@ -14,9 +16,9 @@
 
 namespace Botan {
 
-/*************************************************
-* X.509 Certificate Extension                    *
-*************************************************/
+/*
+* X.509 Certificate Extension
+*/
 class BOTAN_DLL Certificate_Extension
    {
    public:
@@ -36,9 +38,9 @@ class BOTAN_DLL Certificate_Extension
       virtual void decode_inner(const MemoryRegion<byte>&) = 0;
    };
 
-/*************************************************
-* X.509 Certificate Extension List               *
-*************************************************/
+/*
+* X.509 Certificate Extension List
+*/
 class BOTAN_DLL Extensions : public ASN1_Object
    {
    public:
@@ -64,9 +66,9 @@ class BOTAN_DLL Extensions : public ASN1_Object
 
 namespace Cert_Extension {
 
-/*************************************************
-* Basic Constraints Extension                    *
-*************************************************/
+/*
+* Basic Constraints Extension
+*/
 class BOTAN_DLL Basic_Constraints : public Certificate_Extension
    {
    public:
@@ -90,9 +92,9 @@ class BOTAN_DLL Basic_Constraints : public Certificate_Extension
       u32bit path_limit;
    };
 
-/*************************************************
-* Key Usage Constraints Extension                *
-*************************************************/
+/*
+* Key Usage Constraints Extension
+*/
 class BOTAN_DLL Key_Usage : public Certificate_Extension
    {
    public:
@@ -113,9 +115,9 @@ class BOTAN_DLL Key_Usage : public Certificate_Extension
       Key_Constraints constraints;
    };
 
-/*************************************************
-* Subject Key Identifier Extension               *
-*************************************************/
+/*
+* Subject Key Identifier Extension
+*/
 class BOTAN_DLL Subject_Key_ID : public Certificate_Extension
    {
    public:
@@ -137,9 +139,9 @@ class BOTAN_DLL Subject_Key_ID : public Certificate_Extension
       MemoryVector<byte> key_id;
    };
 
-/*************************************************
-* Authority Key Identifier Extension             *
-*************************************************/
+/*
+* Authority Key Identifier Extension
+*/
 class BOTAN_DLL Authority_Key_ID : public Certificate_Extension
    {
    public:
@@ -161,9 +163,9 @@ class BOTAN_DLL Authority_Key_ID : public Certificate_Extension
       MemoryVector<byte> key_id;
    };
 
-/*************************************************
-* Alternative Name Extension Base Class          *
-*************************************************/
+/*
+* Alternative Name Extension Base Class
+*/
 class BOTAN_DLL Alternative_Name : public Certificate_Extension
    {
    public:
@@ -187,9 +189,9 @@ class BOTAN_DLL Alternative_Name : public Certificate_Extension
       AlternativeName alt_name;
    };
 
-/*************************************************
-* Subject Alternative Name Extension             *
-*************************************************/
+/*
+* Subject Alternative Name Extension
+*/
 class BOTAN_DLL Subject_Alternative_Name : public Alternative_Name
    {
    public:
@@ -199,9 +201,9 @@ class BOTAN_DLL Subject_Alternative_Name : public Alternative_Name
       Subject_Alternative_Name(const AlternativeName& = AlternativeName());
    };
 
-/*************************************************
-* Issuer Alternative Name Extension              *
-*************************************************/
+/*
+* Issuer Alternative Name Extension
+*/
 class BOTAN_DLL Issuer_Alternative_Name : public Alternative_Name
    {
    public:
@@ -211,9 +213,9 @@ class BOTAN_DLL Issuer_Alternative_Name : public Alternative_Name
       Issuer_Alternative_Name(const AlternativeName& = AlternativeName());
    };
 
-/*************************************************
-* Extended Key Usage Extension                   *
-*************************************************/
+/*
+* Extended Key Usage Extension
+*/
 class BOTAN_DLL Extended_Key_Usage : public Certificate_Extension
    {
    public:
@@ -235,9 +237,9 @@ class BOTAN_DLL Extended_Key_Usage : public Certificate_Extension
       std::vector<OID> oids;
    };
 
-/*************************************************
-* Certificate Policies Extension                 *
-*************************************************/
+/*
+* Certificate Policies Extension
+*/
 class BOTAN_DLL Certificate_Policies : public Certificate_Extension
    {
    public:
@@ -260,9 +262,9 @@ class BOTAN_DLL Certificate_Policies : public Certificate_Extension
       std::vector<OID> oids;
    };
 
-/*************************************************
-* CRL Number Extension                           *
-*************************************************/
+/*
+* CRL Number Extension
+*/
 class BOTAN_DLL CRL_Number : public Certificate_Extension
    {
    public:
@@ -285,9 +287,9 @@ class BOTAN_DLL CRL_Number : public Certificate_Extension
       u32bit crl_number;
    };
 
-/*************************************************
-* CRL Entry Reason Code Extension                *
-*************************************************/
+/*
+* CRL Entry Reason Code Extension
+*/
 class BOTAN_DLL CRL_ReasonCode : public Certificate_Extension
    {
    public:

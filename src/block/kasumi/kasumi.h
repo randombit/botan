@@ -1,7 +1,9 @@
-/*************************************************
-* KASUMI Header File                             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* KASUMI
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_KASUMI_H__
 #define BOTAN_KASUMI_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* KASUMI                                         *
-*************************************************/
+/*
+* KASUMI
+*/
 class BOTAN_DLL KASUMI : public BlockCipher
    {
    public:

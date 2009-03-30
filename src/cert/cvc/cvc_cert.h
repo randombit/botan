@@ -1,8 +1,10 @@
-/*************************************************
-* EAC1_1 CVC Header File                         *
-* (C) 2008 Falko Strenzke                        *
-*     2008 Jack Lloyd                            *
-*************************************************/
+/*
+* EAC1_1 CVC
+* (C) 2008 Falko Strenzke
+*     2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_CVC_EAC_H__
 #define BOTAN_CVC_EAC_H__
@@ -78,9 +80,9 @@ class BOTAN_DLL EAC1_1_CVC : public EAC1_1_gen_CVC<EAC1_1_CVC>//Signed_Object
        OID m_chat_oid;
     };
 
-/*************************************************
-* Comparison                                     *
-*************************************************/
+/*
+* Comparison
+*/
 inline bool operator!=(EAC1_1_CVC const& lhs, EAC1_1_CVC const& rhs)
    {
    return !(lhs == rhs);

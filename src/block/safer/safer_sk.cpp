@@ -1,7 +1,9 @@
-/*************************************************
-* SAFER-SK Source File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* SAFER-SK
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/safer_sk.h>
 #include <botan/bit_ops.h>
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* SAFER-SK Encryption                            *
-*************************************************/
+/*
+* SAFER-SK Encryption
+*/
 void SAFER_SK::enc(const byte in[], byte out[]) const
    {
    byte A = in[0], B = in[1], C = in[2], D = in[3],
@@ -36,9 +38,9 @@ void SAFER_SK::enc(const byte in[], byte out[]) const
    out[6] = G + EK[16*ROUNDS+6]; out[7] = H ^ EK[16*ROUNDS+7];
    }
 
-/*************************************************
-* SAFER-SK Decryption                            *
-*************************************************/
+/*
+* SAFER-SK Decryption
+*/
 void SAFER_SK::dec(const byte in[], byte out[]) const
    {
    byte A = in[0], B = in[1], C = in[2], D = in[3],
@@ -63,9 +65,9 @@ void SAFER_SK::dec(const byte in[], byte out[]) const
    out[4] = E; out[5] = F; out[6] = G; out[7] = H;
    }
 
-/*************************************************
-* SAFER-SK Key Schedule                          *
-*************************************************/
+/*
+* SAFER-SK Key Schedule
+*/
 void SAFER_SK::key_schedule(const byte key[], u32bit)
    {
    SecureBuffer<byte, 18> KB;
@@ -84,25 +86,25 @@ void SAFER_SK::key_schedule(const byte key[], u32bit)
       }
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/*
+* Return the name of this type
+*/
 std::string SAFER_SK::name() const
    {
    return "SAFER-SK(" + to_string(ROUNDS) + ")";
    }
 
-/*************************************************
-* Return a clone of this object                  *
-*************************************************/
+/*
+* Return a clone of this object
+*/
 BlockCipher* SAFER_SK::clone() const
    {
    return new SAFER_SK(ROUNDS);
    }
 
-/*************************************************
-* SAFER-SK Constructor                           *
-*************************************************/
+/*
+* SAFER-SK Constructor
+*/
 SAFER_SK::SAFER_SK(u32bit rounds) : BlockCipher(8, 16),
                                     EK(16 * rounds + 8), ROUNDS(rounds)
    {

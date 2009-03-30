@@ -1,23 +1,25 @@
-/*************************************************
-* EMSA-Raw Source File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* EMSA-Raw
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/emsa_raw.h>
 
 namespace Botan {
 
-/*************************************************
-* EMSA-Raw Encode Operation                      *
-*************************************************/
+/*
+* EMSA-Raw Encode Operation
+*/
 void EMSA_Raw::update(const byte input[], u32bit length)
    {
    message.append(input, length);
    }
 
-/*************************************************
-* Return the raw (unencoded) data                *
-*************************************************/
+/*
+* Return the raw (unencoded) data
+*/
 SecureVector<byte> EMSA_Raw::raw_data()
    {
    SecureVector<byte> buf = message;
@@ -25,9 +27,9 @@ SecureVector<byte> EMSA_Raw::raw_data()
    return buf;
    }
 
-/*************************************************
-* EMSA-Raw Encode Operation                      *
-*************************************************/
+/*
+* EMSA-Raw Encode Operation
+*/
 SecureVector<byte> EMSA_Raw::encoding_of(const MemoryRegion<byte>& msg,
                                          u32bit,
                                          RandomNumberGenerator&)
@@ -35,9 +37,9 @@ SecureVector<byte> EMSA_Raw::encoding_of(const MemoryRegion<byte>& msg,
    return msg;
    }
 
-/*************************************************
-* EMSA-Raw Verify Operation                      *
-*************************************************/
+/*
+* EMSA-Raw Verify Operation
+*/
 bool EMSA_Raw::verify(const MemoryRegion<byte>& coded,
                       const MemoryRegion<byte>& raw,
                       u32bit) throw()

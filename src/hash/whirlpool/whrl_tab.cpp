@@ -1,7 +1,9 @@
-/*************************************************
-* Diffusion Tables for Whirlpool                 *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Diffusion Tables for Whirlpool
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/whrlpool.h>
 

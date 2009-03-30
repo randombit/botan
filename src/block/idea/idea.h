@@ -1,7 +1,9 @@
-/*************************************************
-* IDEA Header File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* IDEA
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_IDEA_H__
 #define BOTAN_IDEA_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* IDEA                                           *
-*************************************************/
+/*
+* IDEA
+*/
 class BOTAN_DLL IDEA : public BlockCipher
    {
    public:

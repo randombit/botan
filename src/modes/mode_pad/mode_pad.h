@@ -1,6 +1,8 @@
 /**
-* CBC Padding Methods Header File
+* CBC Padding Methods
 * (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_CBC_PADDING_H__

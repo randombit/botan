@@ -1,6 +1,8 @@
 /*
-* Unix EntropySource Source File
+* Unix EntropySource
 * (C) 1999-2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #include <botan/es_unix.h>

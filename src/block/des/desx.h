@@ -1,7 +1,9 @@
-/*************************************************
-* DESX Header File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* DESX
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_DESX_H__
 #define BOTAN_DESX_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* DESX                                           *
-*************************************************/
+/*
+* DESX
+*/
 class BOTAN_DLL DESX : public BlockCipher
    {
    public:

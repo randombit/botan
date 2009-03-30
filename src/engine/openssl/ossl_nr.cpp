@@ -1,7 +1,9 @@
-/*************************************************
-* OpenSSL NR Engine Source File                  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OpenSSL NR Engine
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eng_ossl.h>
 #include <botan/bn_wrap.h>
@@ -17,9 +19,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* OpenSSL NR Operation                           *
-*************************************************/
+/*
+* OpenSSL NR Operation
+*/
 class OpenSSL_NR_Op : public NR_Operation
    {
    public:
@@ -36,9 +38,9 @@ class OpenSSL_NR_Op : public NR_Operation
       OSSL_BN_CTX ctx;
    };
 
-/*************************************************
-* OpenSSL NR Verify Operation                    *
-*************************************************/
+/*
+* OpenSSL NR Verify Operation
+*/
 SecureVector<byte> OpenSSL_NR_Op::verify(const byte sig[],
                                          u32bit sig_len) const
    {
@@ -63,9 +65,9 @@ SecureVector<byte> OpenSSL_NR_Op::verify(const byte sig[],
    return BigInt::encode(i1.to_bigint());
    }
 
-/*************************************************
-* OpenSSL NR Sign Operation                      *
-*************************************************/
+/*
+* OpenSSL NR Sign Operation
+*/
 SecureVector<byte> OpenSSL_NR_Op::sign(const byte in[], u32bit length,
                                        const BigInt& k_bn) const
    {
@@ -98,9 +100,9 @@ SecureVector<byte> OpenSSL_NR_Op::sign(const byte in[], u32bit length,
 
 }
 
-/*************************************************
-* Acquire a NR op                                *
-*************************************************/
+/*
+* Acquire a NR op
+*/
 NR_Operation* OpenSSL_Engine::nr_op(const DL_Group& group, const BigInt& y,
                                     const BigInt& x) const
    {

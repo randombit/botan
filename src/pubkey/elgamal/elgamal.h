@@ -1,7 +1,9 @@
-/*************************************************
-* ElGamal Header File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* ElGamal
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ELGAMAL_H__
 #define BOTAN_ELGAMAL_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* ElGamal Public Key                             *
-*************************************************/
+/*
+* ElGamal Public Key
+*/
 class BOTAN_DLL ElGamal_PublicKey : public PK_Encrypting_Key,
                                     public virtual DL_Scheme_PublicKey
    {
@@ -33,9 +35,9 @@ class BOTAN_DLL ElGamal_PublicKey : public PK_Encrypting_Key,
       void X509_load_hook();
    };
 
-/*************************************************
-* ElGamal Private Key                            *
-*************************************************/
+/*
+* ElGamal Private Key
+*/
 class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
                                      public PK_Decrypting_Key,
                                      public virtual DL_Scheme_PrivateKey

@@ -1,7 +1,9 @@
-/*************************************************
-* S-Box Tables for CAST-128 and CAST-256         *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* S-Box Tables for CAST-128 and CAST-256
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/cast128.h>
 #include <botan/cast256.h>

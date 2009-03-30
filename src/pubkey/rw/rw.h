@@ -1,7 +1,9 @@
-/*************************************************
-* Rabin-Williams Header File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Rabin-Williams
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_RW_H__
 #define BOTAN_RW_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Rabin-Williams Public Key                      *
-*************************************************/
+/*
+* Rabin-Williams Public Key
+*/
 class BOTAN_DLL RW_PublicKey : public PK_Verifying_with_MR_Key,
                                public virtual IF_Scheme_PublicKey
    {
@@ -27,9 +29,9 @@ class BOTAN_DLL RW_PublicKey : public PK_Verifying_with_MR_Key,
       BigInt public_op(const BigInt&) const;
    };
 
-/*************************************************
-* Rabin-Williams Private Key                     *
-*************************************************/
+/*
+* Rabin-Williams Private Key
+*/
 class BOTAN_DLL RW_PrivateKey : public RW_PublicKey,
                                 public PK_Signing_Key,
                                 public IF_Scheme_PrivateKey

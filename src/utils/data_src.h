@@ -1,7 +1,9 @@
-/*************************************************
-* DataSource Header File                         *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* DataSource
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_DATA_SRC_H__
 #define BOTAN_DATA_SRC_H__

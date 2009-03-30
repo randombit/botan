@@ -1,9 +1,11 @@
-/*************************************************
-* ECDSA Header File                              *
-* (C) 2007 Falko Strenzke, FlexSecure GmbH       *
-*          Manuel Hartl, FlexSecure GmbH         *
-* (C) 2008 Jack Lloyd                            *
-*************************************************/
+/*
+* ECDSA
+* (C) 2007 Falko Strenzke, FlexSecure GmbH
+*          Manuel Hartl, FlexSecure GmbH
+* (C) 2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ECC_PUBLIC_KEY_BASE_H__
 #define BOTAN_ECC_PUBLIC_KEY_BASE_H__

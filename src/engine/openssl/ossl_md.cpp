@@ -1,7 +1,9 @@
-/*************************************************
-* OpenSSL Hash Functions Source File             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OpenSSL Hash Functions
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eng_ossl.h>
 #include <openssl/evp.h>
@@ -10,9 +12,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* EVP Hash Function                              *
-*************************************************/
+/*
+* EVP Hash Function
+*/
 class EVP_HashFunction : public HashFunction
    {
    public:
@@ -29,17 +31,17 @@ class EVP_HashFunction : public HashFunction
       EVP_MD_CTX md;
    };
 
-/*************************************************
-* Update an EVP Hash Calculation                 *
-*************************************************/
+/*
+* Update an EVP Hash Calculation
+*/
 void EVP_HashFunction::add_data(const byte input[], u32bit length)
    {
    EVP_DigestUpdate(&md, input, length);
    }
 
-/*************************************************
-* Finalize an EVP Hash Calculation               *
-*************************************************/
+/*
+* Finalize an EVP Hash Calculation
+*/
 void EVP_HashFunction::final_result(byte output[])
    {
    EVP_DigestFinal_ex(&md, output, 0);
@@ -47,27 +49,27 @@ void EVP_HashFunction::final_result(byte output[])
    EVP_DigestInit_ex(&md, algo, 0);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void EVP_HashFunction::clear() throw()
    {
    const EVP_MD* algo = EVP_MD_CTX_md(&md);
    EVP_DigestInit_ex(&md, algo, 0);
    }
 
-/*************************************************
-* Return a clone of this object                  *
-*************************************************/
+/*
+* Return a clone of this object
+*/
 HashFunction* EVP_HashFunction::clone() const
    {
    const EVP_MD* algo = EVP_MD_CTX_md(&md);
    return new EVP_HashFunction(algo, name());
    }
 
-/*************************************************
-* Create an EVP hash function                    *
-*************************************************/
+/*
+* Create an EVP hash function
+*/
 EVP_HashFunction::EVP_HashFunction(const EVP_MD* algo,
                                    const std::string& name) :
    HashFunction(EVP_MD_size(algo), EVP_MD_block_size(algo)),
@@ -77,9 +79,9 @@ EVP_HashFunction::EVP_HashFunction(const EVP_MD* algo,
    EVP_DigestInit_ex(&md, algo, 0);
    }
 
-/*************************************************
-* Destroy an EVP hash function                   *
-*************************************************/
+/*
+* Destroy an EVP hash function
+*/
 EVP_HashFunction::~EVP_HashFunction()
    {
    EVP_MD_CTX_cleanup(&md);
@@ -87,9 +89,9 @@ EVP_HashFunction::~EVP_HashFunction()
 
 }
 
-/*************************************************
-* Look for an algorithm with this name           *
-*************************************************/
+/*
+* Look for an algorithm with this name
+*/
 HashFunction* OpenSSL_Engine::find_hash(const SCAN_Name& request,
                                         Algorithm_Factory&) const
    {

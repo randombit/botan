@@ -1,7 +1,9 @@
-/*************************************************
-* Tiger Source File                              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Tiger
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/tiger.h>
 #include <botan/exceptn.h>
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Tiger Compression Function                     *
-*************************************************/
+/*
+* Tiger Compression Function
+*/
 void Tiger::compress_n(const byte input[], u32bit blocks)
    {
    u64bit A = digest[0], B = digest[1], C = digest[2];
@@ -40,18 +42,18 @@ void Tiger::compress_n(const byte input[], u32bit blocks)
       }
    }
 
-/*************************************************
-* Copy out the digest                            *
-*************************************************/
+/*
+* Copy out the digest
+*/
 void Tiger::copy_out(byte output[])
    {
    for(u32bit j = 0; j != OUTPUT_LENGTH; ++j)
       output[j] = get_byte(7 - (j % 8), digest[j/8]);
    }
 
-/*************************************************
-* Tiger Pass                                     *
-*************************************************/
+/*
+* Tiger Pass
+*/
 void Tiger::pass(u64bit& A, u64bit& B, u64bit& C, u64bit X[8], byte mul)
    {
    C ^= X[0];
@@ -111,9 +113,9 @@ void Tiger::pass(u64bit& A, u64bit& B, u64bit& C, u64bit X[8], byte mul)
    C *= mul;
    }
 
-/*************************************************
-* Tiger Mixing Function                          *
-*************************************************/
+/*
+* Tiger Mixing Function
+*/
 void Tiger::mix(u64bit X[8])
    {
    X[0] -= X[7] ^ 0xA5A5A5A5A5A5A5A5; X[1] ^= X[0];
@@ -124,9 +126,9 @@ void Tiger::mix(u64bit X[8])
    X[6] += X[5]; X[7] -= X[6] ^ 0x0123456789ABCDEF;
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void Tiger::clear() throw()
    {
    MDx_HashFunction::clear();
@@ -136,17 +138,17 @@ void Tiger::clear() throw()
    digest[2] = 0xF096A5B4C3B2E187;
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/*
+* Return the name of this type
+*/
 std::string Tiger::name() const
    {
    return "Tiger(" + to_string(OUTPUT_LENGTH) + "," + to_string(PASS) + ")";
    }
 
-/*************************************************
-* Tiger Constructor                              *
-*************************************************/
+/*
+* Tiger Constructor
+*/
 Tiger::Tiger(u32bit hashlen, u32bit pass) :
    MDx_HashFunction(hashlen, 64, false, false), PASS(pass)
    {

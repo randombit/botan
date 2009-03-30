@@ -1,7 +1,9 @@
-/*************************************************
-* Pthread Mutex Header File                      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Pthread Mutex
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_MUTEX_PTHREAD_H__
 #define BOTAN_MUTEX_PTHREAD_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Pthread Mutex Factory                          *
-*************************************************/
+/*
+* Pthread Mutex Factory
+*/
 class BOTAN_DLL Pthread_Mutex_Factory : public Mutex_Factory
    {
    public:

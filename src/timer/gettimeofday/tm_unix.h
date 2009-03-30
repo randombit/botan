@@ -1,7 +1,9 @@
-/*************************************************
-* Unix Timer Header File                         *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Unix Timer
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_TIMER_UNIX_H__
 #define BOTAN_TIMER_UNIX_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Unix Timer                                     *
-*************************************************/
+/*
+* Unix Timer
+*/
 class BOTAN_DLL Unix_Timer : public Timer
    {
    public:

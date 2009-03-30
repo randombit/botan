@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 CRL Source File                          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 CRL
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/x509_crl.h>
 #include <botan/x509_ext.h>
@@ -12,27 +14,27 @@
 
 namespace Botan {
 
-/*************************************************
-* Load a X.509 CRL                               *
-*************************************************/
+/*
+* Load a X.509 CRL
+*/
 X509_CRL::X509_CRL(DataSource& in, bool touc) :
    X509_Object(in, "X509 CRL/CRL"), throw_on_unknown_critical(touc)
    {
    do_decode();
    }
 
-/*************************************************
-* Load a X.509 CRL                               *
-*************************************************/
+/*
+* Load a X.509 CRL
+*/
 X509_CRL::X509_CRL(const std::string& in, bool touc) :
    X509_Object(in, "CRL/X509 CRL"), throw_on_unknown_critical(touc)
    {
    do_decode();
    }
 
-/*************************************************
-* Decode the TBSCertList data                    *
-*************************************************/
+/*
+* Decode the TBSCertList data
+*/
 void X509_CRL::force_decode()
    {
    BER_Decoder tbs_crl(tbs_bits);
@@ -94,49 +96,49 @@ void X509_CRL::force_decode()
    tbs_crl.verify_end();
    }
 
-/*************************************************
-* Return the list of revoked certificates        *
-*************************************************/
+/*
+* Return the list of revoked certificates
+*/
 std::vector<CRL_Entry> X509_CRL::get_revoked() const
    {
    return revoked;
    }
 
-/*************************************************
-* Return the distinguished name of the issuer    *
-*************************************************/
+/*
+* Return the distinguished name of the issuer
+*/
 X509_DN X509_CRL::issuer_dn() const
    {
    return create_dn(info);
    }
 
-/*************************************************
-* Return the key identifier of the issuer        *
-*************************************************/
+/*
+* Return the key identifier of the issuer
+*/
 MemoryVector<byte> X509_CRL::authority_key_id() const
    {
    return info.get1_memvec("X509v3.AuthorityKeyIdentifier");
    }
 
-/*************************************************
-* Return the CRL number of this CRL              *
-*************************************************/
+/*
+* Return the CRL number of this CRL
+*/
 u32bit X509_CRL::crl_number() const
    {
    return info.get1_u32bit("X509v3.CRLNumber");
    }
 
-/*************************************************
-* Return the issue data of the CRL               *
-*************************************************/
+/*
+* Return the issue data of the CRL
+*/
 X509_Time X509_CRL::this_update() const
    {
    return info.get1("X509.CRL.start");
    }
 
-/*************************************************
-* Return the date when a new CRL will be issued  *
-*************************************************/
+/*
+* Return the date when a new CRL will be issued
+*/
 X509_Time X509_CRL::next_update() const
    {
    return info.get1("X509.CRL.end");

@@ -1,7 +1,9 @@
-/*************************************************
-* Number Theory Source File                      *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Number Theory
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/numthry.h>
 #include <botan/bit_ops.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Miller-Rabin Iterations                        *
-*************************************************/
+/*
+* Miller-Rabin Iterations
+*/
 u32bit miller_rabin_test_iterations(u32bit bits, bool verify)
    {
    struct mapping { u32bit bits; u32bit verify_iter; u32bit check_iter; };
@@ -69,9 +71,9 @@ u32bit miller_rabin_test_iterations(u32bit bits, bool verify)
 
 }
 
-/*************************************************
-* Return the number of 0 bits at the end of n    *
-*************************************************/
+/*
+* Return the number of 0 bits at the end of n
+*/
 u32bit low_zero_bits(const BigInt& n)
    {
    if(n.is_negative() || n.is_zero()) return 0;
@@ -97,9 +99,9 @@ u32bit low_zero_bits(const BigInt& n)
    return low_zero;
    }
 
-/*************************************************
-* Calculate the GCD                              *
-*************************************************/
+/*
+* Calculate the GCD
+*/
 BigInt gcd(const BigInt& a, const BigInt& b)
    {
    if(a.is_zero() || b.is_zero()) return 0;
@@ -124,17 +126,17 @@ BigInt gcd(const BigInt& a, const BigInt& b)
    return (y << shift);
    }
 
-/*************************************************
-* Calculate the LCM                              *
-*************************************************/
+/*
+* Calculate the LCM
+*/
 BigInt lcm(const BigInt& a, const BigInt& b)
    {
    return ((a * b) / gcd(a, b));
    }
 
-/*************************************************
-* Find the Modular Inverse                       *
-*************************************************/
+/*
+* Find the Modular Inverse
+*/
 BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    {
    if(mod.is_zero())
@@ -181,9 +183,9 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    return D;
    }
 
-/*************************************************
-* Modular Exponentiation                         *
-*************************************************/
+/*
+* Modular Exponentiation
+*/
 BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod)
    {
    Power_Mod pow_mod(mod);
@@ -192,9 +194,9 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod)
    return pow_mod.execute();
    }
 
-/*************************************************
-* Do simple tests of primality                   *
-*************************************************/
+/*
+* Do simple tests of primality
+*/
 s32bit simple_primality_tests(const BigInt& n)
    {
    const s32bit NOT_PRIME = -1, UNKNOWN = 0, PRIME = 1;
@@ -223,33 +225,33 @@ s32bit simple_primality_tests(const BigInt& n)
    return UNKNOWN;
    }
 
-/*************************************************
-* Fast check of primality                        *
-*************************************************/
+/*
+* Fast check of primality
+*/
 bool check_prime(const BigInt& n, RandomNumberGenerator& rng)
    {
    return run_primality_tests(rng, n, 0);
    }
 
-/*************************************************
-* Test for primality                             *
-*************************************************/
+/*
+* Test for primality
+*/
 bool is_prime(const BigInt& n, RandomNumberGenerator& rng)
    {
    return run_primality_tests(rng, n, 1);
    }
 
-/*************************************************
-* Verify primality                               *
-*************************************************/
+/*
+* Verify primality
+*/
 bool verify_prime(const BigInt& n, RandomNumberGenerator& rng)
    {
    return run_primality_tests(rng, n, 2);
    }
 
-/*************************************************
-* Verify primality                               *
-*************************************************/
+/*
+* Verify primality
+*/
 bool run_primality_tests(RandomNumberGenerator& rng,
                          const BigInt& n, u32bit level)
    {
@@ -258,9 +260,9 @@ bool run_primality_tests(RandomNumberGenerator& rng,
    return passes_mr_tests(rng, n, level);
    }
 
-/*************************************************
-* Test for primaility using Miller-Rabin         *
-*************************************************/
+/*
+* Test for primaility using Miller-Rabin
+*/
 bool passes_mr_tests(RandomNumberGenerator& rng,
                      const BigInt& n, u32bit level)
    {
@@ -295,9 +297,9 @@ bool passes_mr_tests(RandomNumberGenerator& rng,
    return true;
    }
 
-/*************************************************
-* Miller-Rabin Test                              *
-*************************************************/
+/*
+* Miller-Rabin Test
+*/
 bool MillerRabin_Test::passes_test(const BigInt& a)
    {
    if(a < 2 || a >= n_minus_1)
@@ -319,9 +321,9 @@ bool MillerRabin_Test::passes_test(const BigInt& a)
    return false;
    }
 
-/*************************************************
-* Miller-Rabin Constructor                       *
-*************************************************/
+/*
+* Miller-Rabin Constructor
+*/
 MillerRabin_Test::MillerRabin_Test(const BigInt& num)
    {
    if(num.is_even() || num < 3)

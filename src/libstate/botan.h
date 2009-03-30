@@ -1,6 +1,8 @@
 /**
 * A vague catch all include file for Botan
 * (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #include <botan/init.h>

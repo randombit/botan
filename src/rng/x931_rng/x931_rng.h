@@ -1,6 +1,8 @@
 /*
-* ANSI X9.31 RNG Header File
+* ANSI X9.31 RNG
 * (C) 1999-2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_ANSI_X931_RNG_H__

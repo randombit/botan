@@ -1,7 +1,9 @@
-/*************************************************
-* Serpent Source File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Serpent
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/serpent.h>
 #include <botan/loadstor.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Serpent Encryption S-Box 1                     *
-*************************************************/
+/*
+* Serpent Encryption S-Box 1
+*/
 inline void SBoxE1(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
@@ -23,9 +25,9 @@ inline void SBoxE1(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T1; B1 = T4; B2 = T2; B3 = T0;
    }
 
-/*************************************************
-* Serpent Encryption S-Box 2                     *
-*************************************************/
+/*
+* Serpent Encryption S-Box 2
+*/
 inline void SBoxE2(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
@@ -35,9 +37,9 @@ inline void SBoxE2(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T2; B1 = T0; B2 = T3; B3 = T1;
    }
 
-/*************************************************
-* Serpent Encryption S-Box 3                     *
-*************************************************/
+/*
+* Serpent Encryption S-Box 3
+*/
 inline void SBoxE3(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
@@ -47,9 +49,9 @@ inline void SBoxE3(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T2; B1 = T3; B2 = T1; B3 = T4;
    }
 
-/*************************************************
-* Serpent Encryption S-Box 4                     *
-*************************************************/
+/*
+* Serpent Encryption S-Box 4
+*/
 inline void SBoxE4(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
@@ -59,9 +61,9 @@ inline void SBoxE4(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T1; B1 = T2; B2 = T3; B3 = T4;
    }
 
-/*************************************************
-* Serpent Encryption S-Box 5                     *
-*************************************************/
+/*
+* Serpent Encryption S-Box 5
+*/
 inline void SBoxE5(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
@@ -71,9 +73,9 @@ inline void SBoxE5(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T1; B1 = T4; B2 = T0; B3 = T3;
    }
 
-/*************************************************
-* Serpent Encryption S-Box 6                     *
-*************************************************/
+/*
+* Serpent Encryption S-Box 6
+*/
 inline void SBoxE6(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
@@ -83,9 +85,9 @@ inline void SBoxE6(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T1; B1 = T3; B2 = T0; B3 = T2;
    }
 
-/*************************************************
-* Serpent Encryption S-Box 7                     *
-*************************************************/
+/*
+* Serpent Encryption S-Box 7
+*/
 inline void SBoxE7(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
@@ -95,9 +97,9 @@ inline void SBoxE7(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T0; B1 = T1; B2 = T4; B3 = T2;
    }
 
-/*************************************************
-* Serpent Encryption S-Box 8                     *
-*************************************************/
+/*
+* Serpent Encryption S-Box 8
+*/
 inline void SBoxE8(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
@@ -107,9 +109,9 @@ inline void SBoxE8(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T4; B1 = T3; B2 = T1; B3 = T0;
    }
 
-/*************************************************
-* Serpent Decryption S-Box 1                     *
-*************************************************/
+/*
+* Serpent Decryption S-Box 1
+*/
 inline void SBoxD1(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
@@ -119,9 +121,9 @@ inline void SBoxD1(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T0; B1 = T4; B2 = T1; B3 = T3;
    }
 
-/*************************************************
-* Serpent Decryption S-Box 2                     *
-*************************************************/
+/*
+* Serpent Decryption S-Box 2
+*/
 inline void SBoxD2(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
@@ -131,9 +133,9 @@ inline void SBoxD2(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T4; B1 = T0; B2 = T3; B3 = T2;
    }
 
-/*************************************************
-* Serpent Decryption S-Box 3                     *
-*************************************************/
+/*
+* Serpent Decryption S-Box 3
+*/
 inline void SBoxD3(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
@@ -143,9 +145,9 @@ inline void SBoxD3(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T1; B1 = T4; B2 = T2; B3 = T3;
    }
 
-/*************************************************
-* Serpent Decryption S-Box 4                     *
-*************************************************/
+/*
+* Serpent Decryption S-Box 4
+*/
 inline void SBoxD4(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
@@ -155,9 +157,9 @@ inline void SBoxD4(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T2; B1 = T1; B2 = T3; B3 = T0;
    }
 
-/*************************************************
-* Serpent Decryption S-Box 5                     *
-*************************************************/
+/*
+* Serpent Decryption S-Box 5
+*/
 inline void SBoxD5(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
@@ -167,9 +169,9 @@ inline void SBoxD5(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T0; B1 = T3; B2 = T2; B3 = T4;
    }
 
-/*************************************************
-* Serpent Decryption S-Box 6                     *
-*************************************************/
+/*
+* Serpent Decryption S-Box 6
+*/
 inline void SBoxD6(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
@@ -179,9 +181,9 @@ inline void SBoxD6(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T1; B1 = T4; B2 = T3; B3 = T2;
    }
 
-/*************************************************
-* Serpent Decryption S-Box 7                     *
-*************************************************/
+/*
+* Serpent Decryption S-Box 7
+*/
 inline void SBoxD7(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
@@ -191,9 +193,9 @@ inline void SBoxD7(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T1; B1 = T2; B2 = T4; B3 = T3;
    }
 
-/*************************************************
-* Serpent Decryption S-Box 8                     *
-*************************************************/
+/*
+* Serpent Decryption S-Box 8
+*/
 inline void SBoxD8(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    u32bit T0 = B0, T1 = B1, T2 = B2, T3 = B3, T4;
@@ -203,9 +205,9 @@ inline void SBoxD8(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0 = T3; B1 = T0; B2 = T1; B3 = T4;
    }
 
-/*************************************************
-* Serpent's Linear Transformation                *
-*************************************************/
+/*
+* Serpent's Linear Transformation
+*/
 inline void transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    B0  = rotate_left(B0, 13);   B2  = rotate_left(B2, 3);
@@ -215,9 +217,9 @@ inline void transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    B0  = rotate_left(B0, 5);    B2  = rotate_left(B2, 22);
    }
 
-/*************************************************
-* Serpent's Inverse Linear Transformation        *
-*************************************************/
+/*
+* Serpent's Inverse Linear Transformation
+*/
 inline void i_transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
    B2  = rotate_right(B2, 22);  B0  = rotate_right(B0, 5);
@@ -229,18 +231,18 @@ inline void i_transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
 
 }
 
-/*************************************************
-* XOR a key block with a data block              *
-*************************************************/
+/*
+* XOR a key block with a data block
+*/
 #define key_xor(round, B0, B1, B2, B3) \
    B0 ^= round_key[4*round  ]; \
    B1 ^= round_key[4*round+1]; \
    B2 ^= round_key[4*round+2]; \
    B3 ^= round_key[4*round+3];
 
-/*************************************************
-* Serpent Encryption                             *
-*************************************************/
+/*
+* Serpent Encryption
+*/
 void Serpent::enc(const byte in[], byte out[]) const
    {
    u32bit B0 = load_le<u32bit>(in, 0);
@@ -284,9 +286,9 @@ void Serpent::enc(const byte in[], byte out[]) const
    store_le(out, B0, B1, B2, B3);
    }
 
-/*************************************************
-* Serpent Decryption                             *
-*************************************************/
+/*
+* Serpent Decryption
+*/
 void Serpent::dec(const byte in[], byte out[]) const
    {
    u32bit B0 = load_le<u32bit>(in, 0);
@@ -330,9 +332,9 @@ void Serpent::dec(const byte in[], byte out[]) const
    store_le(out, B0, B1, B2, B3);
    }
 
-/*************************************************
-* Serpent Key Schedule                           *
-*************************************************/
+/*
+* Serpent Key Schedule
+*/
 void Serpent::key_schedule(const byte key[], u32bit length)
    {
    const u32bit PHI = 0x9E3779B9;

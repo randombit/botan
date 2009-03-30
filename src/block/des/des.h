@@ -1,7 +1,9 @@
-/*************************************************
-* DES Header File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* DES
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_DES_H__
 #define BOTAN_DES_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* DES                                            *
-*************************************************/
+/*
+* DES
+*/
 class BOTAN_DLL DES : public BlockCipher
    {
    public:
@@ -28,9 +30,9 @@ class BOTAN_DLL DES : public BlockCipher
       SecureBuffer<u32bit, 32> round_key;
    };
 
-/*************************************************
-* Triple DES                                     *
-*************************************************/
+/*
+* Triple DES
+*/
 class BOTAN_DLL TripleDES : public BlockCipher
    {
    public:
@@ -46,9 +48,9 @@ class BOTAN_DLL TripleDES : public BlockCipher
       SecureBuffer<u32bit, 96> round_key;
    };
 
-/*************************************************
-* DES Tables                                     *
-*************************************************/
+/*
+* DES Tables
+*/
 extern const u32bit DES_SPBOX1[256];
 extern const u32bit DES_SPBOX2[256];
 extern const u32bit DES_SPBOX3[256];

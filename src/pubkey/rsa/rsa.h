@@ -1,7 +1,9 @@
-/*************************************************
-* RSA Header File                                *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* RSA
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_RSA_H__
 #define BOTAN_RSA_H__

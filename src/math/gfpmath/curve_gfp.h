@@ -1,13 +1,13 @@
-/******************************************************
- * Elliptic curves over GF(p) (header file)           *
- *                                                    *
- * (C) 2007 Martin Doering                             *
- *          doering@cdc.informatik.tu-darmstadt.de    *
- *          Christoph Ludwig                          *
- *          ludwig@fh-worms.de                        *
- *          Falko Strenzke                            *
- *          strenzke@flexsecure.de                    *
- ******************************************************/
+/******
+ * Elliptic curves over GF(p) (header file)
+ *
+ * (C) 2007 Martin Doering
+ *          doering@cdc.informatik.tu-darmstadt.de
+ *          Christoph Ludwig
+ *          ludwig@fh-worms.de
+ *          Falko Strenzke
+ *          strenzke@flexsecure.de
+ ******/
 
 #ifndef BOTAN_GFP_CURVE_H__
 #define BOTAN_GFP_CURVE_H__
@@ -20,6 +20,8 @@ namespace Botan {
 
 /**
 * This class represents an elliptic curve over GF(p)
+*
+* Distributed under the terms of the Botan license
 */
 class BOTAN_DLL CurveGFp
    {

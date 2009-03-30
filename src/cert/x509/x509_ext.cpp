@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 Certificate Extensions Source File       *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 Certificate Extensions
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/x509_ext.h>
 #include <botan/sha160.h>
@@ -15,9 +17,9 @@
 
 namespace Botan {
 
-/*************************************************
-* List of X.509 Certificate Extensions           *
-*************************************************/
+/*
+* List of X.509 Certificate Extensions
+*/
 Certificate_Extension* Extensions::get_extension(const OID& oid)
    {
 #define X509_EXTENSION(NAME, TYPE) \
@@ -37,17 +39,17 @@ Certificate_Extension* Extensions::get_extension(const OID& oid)
    return 0;
    }
 
-/*************************************************
-* Extensions Copy Constructor                    *
-*************************************************/
+/*
+* Extensions Copy Constructor
+*/
 Extensions::Extensions(const Extensions& extensions) : ASN1_Object()
    {
    *this = extensions;
    }
 
-/*************************************************
-* Extensions Assignment Operator                 *
-*************************************************/
+/*
+* Extensions Assignment Operator
+*/
 Extensions& Extensions::operator=(const Extensions& other)
    {
    for(u32bit j = 0; j != extensions.size(); ++j)
@@ -60,17 +62,17 @@ Extensions& Extensions::operator=(const Extensions& other)
    return (*this);
    }
 
-/*************************************************
-* Return the OID of this extension               *
-*************************************************/
+/*
+* Return the OID of this extension
+*/
 OID Certificate_Extension::oid_of() const
    {
    return OIDS::lookup(oid_name());
    }
 
-/*************************************************
-* Encode an Extensions list                      *
-*************************************************/
+/*
+* Encode an Extensions list
+*/
 void Extensions::encode_into(DER_Encoder& to_object) const
    {
    for(u32bit j = 0; j != extensions.size(); ++j)
@@ -104,9 +106,9 @@ void Extensions::encode_into(DER_Encoder& to_object) const
       }
    }
 
-/*************************************************
-* Decode a list of Extensions                    *
-*************************************************/
+/*
+* Decode a list of Extensions
+*/
 void Extensions::decode_from(BER_Decoder& from_source)
    {
    for(u32bit j = 0; j != extensions.size(); ++j)
@@ -145,9 +147,9 @@ void Extensions::decode_from(BER_Decoder& from_source)
    sequence.verify_end();
    }
 
-/*************************************************
-* Write the extensions to an info store          *
-*************************************************/
+/*
+* Write the extensions to an info store
+*/
 void Extensions::contents_to(Data_Store& subject_info,
                              Data_Store& issuer_info) const
    {
@@ -155,9 +157,9 @@ void Extensions::contents_to(Data_Store& subject_info,
       extensions[j]->contents_to(subject_info, issuer_info);
    }
 
-/*************************************************
-* Delete an Extensions list                      *
-*************************************************/
+/*
+* Delete an Extensions list
+*/
 Extensions::~Extensions()
    {
    for(u32bit j = 0; j != extensions.size(); ++j)
@@ -166,9 +168,9 @@ Extensions::~Extensions()
 
 namespace Cert_Extension {
 
-/*************************************************
-* Checked accessor for the path_limit member     *
-*************************************************/
+/*
+* Checked accessor for the path_limit member
+*/
 u32bit Basic_Constraints::get_path_limit() const
    {
    if(!is_ca)
@@ -176,9 +178,9 @@ u32bit Basic_Constraints::get_path_limit() const
    return path_limit;
    }
 
-/*************************************************
-* Encode the extension                           *
-*************************************************/
+/*
+* Encode the extension
+*/
 MemoryVector<byte> Basic_Constraints::encode_inner() const
    {
    return DER_Encoder()
@@ -192,9 +194,9 @@ MemoryVector<byte> Basic_Constraints::encode_inner() const
    .get_contents();
    }
 
-/*************************************************
-* Decode the extension                           *
-*************************************************/
+/*
+* Decode the extension
+*/
 void Basic_Constraints::decode_inner(const MemoryRegion<byte>& in)
    {
    BER_Decoder(in)
@@ -208,18 +210,18 @@ void Basic_Constraints::decode_inner(const MemoryRegion<byte>& in)
       path_limit = 0;
    }
 
-/*************************************************
-* Return a textual representation                *
-*************************************************/
+/*
+* Return a textual representation
+*/
 void Basic_Constraints::contents_to(Data_Store& subject, Data_Store&) const
    {
    subject.add("X509v3.BasicConstraints.is_ca", (is_ca ? 1 : 0));
    subject.add("X509v3.BasicConstraints.path_constraint", path_limit);
    }
 
-/*************************************************
-* Encode the extension                           *
-*************************************************/
+/*
+* Encode the extension
+*/
 MemoryVector<byte> Key_Usage::encode_inner() const
    {
    if(constraints == NO_CONSTRAINTS)
@@ -238,9 +240,9 @@ MemoryVector<byte> Key_Usage::encode_inner() const
    return der;
    }
 
-/*************************************************
-* Decode the extension                           *
-*************************************************/
+/*
+* Decode the extension
+*/
 void Key_Usage::decode_inner(const MemoryRegion<byte>& in)
    {
    BER_Decoder ber(in);
@@ -266,50 +268,50 @@ void Key_Usage::decode_inner(const MemoryRegion<byte>& in)
    constraints = Key_Constraints(usage);
    }
 
-/*************************************************
-* Return a textual representation                *
-*************************************************/
+/*
+* Return a textual representation
+*/
 void Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
    {
    subject.add("X509v3.KeyUsage", constraints);
    }
 
-/*************************************************
-* Encode the extension                           *
-*************************************************/
+/*
+* Encode the extension
+*/
 MemoryVector<byte> Subject_Key_ID::encode_inner() const
    {
    return DER_Encoder().encode(key_id, OCTET_STRING).get_contents();
    }
 
-/*************************************************
-* Decode the extension                           *
-*************************************************/
+/*
+* Decode the extension
+*/
 void Subject_Key_ID::decode_inner(const MemoryRegion<byte>& in)
    {
    BER_Decoder(in).decode(key_id, OCTET_STRING).verify_end();
    }
 
-/*************************************************
-* Return a textual representation                *
-*************************************************/
+/*
+* Return a textual representation
+*/
 void Subject_Key_ID::contents_to(Data_Store& subject, Data_Store&) const
    {
    subject.add("X509v3.SubjectKeyIdentifier", key_id);
    }
 
-/*************************************************
-* Subject_Key_ID Constructor                     *
-*************************************************/
+/*
+* Subject_Key_ID Constructor
+*/
 Subject_Key_ID::Subject_Key_ID(const MemoryRegion<byte>& pub_key)
    {
    SHA_160 hash;
    key_id = hash.process(pub_key);
    }
 
-/*************************************************
-* Encode the extension                           *
-*************************************************/
+/*
+* Encode the extension
+*/
 MemoryVector<byte> Authority_Key_ID::encode_inner() const
    {
    return DER_Encoder()
@@ -319,9 +321,9 @@ MemoryVector<byte> Authority_Key_ID::encode_inner() const
       .get_contents();
    }
 
-/*************************************************
-* Decode the extension                           *
-*************************************************/
+/*
+* Decode the extension
+*/
 void Authority_Key_ID::decode_inner(const MemoryRegion<byte>& in)
    {
    BER_Decoder(in)
@@ -329,34 +331,34 @@ void Authority_Key_ID::decode_inner(const MemoryRegion<byte>& in)
       .decode_optional_string(key_id, OCTET_STRING, 0);
    }
 
-/*************************************************
-* Return a textual representation                *
-*************************************************/
+/*
+* Return a textual representation
+*/
 void Authority_Key_ID::contents_to(Data_Store&, Data_Store& issuer) const
    {
    if(key_id.size())
       issuer.add("X509v3.AuthorityKeyIdentifier", key_id);
    }
 
-/*************************************************
-* Encode the extension                           *
-*************************************************/
+/*
+* Encode the extension
+*/
 MemoryVector<byte> Alternative_Name::encode_inner() const
    {
    return DER_Encoder().encode(alt_name).get_contents();
    }
 
-/*************************************************
-* Decode the extension                           *
-*************************************************/
+/*
+* Decode the extension
+*/
 void Alternative_Name::decode_inner(const MemoryRegion<byte>& in)
    {
    BER_Decoder(in).decode(alt_name);
    }
 
-/*************************************************
-* Return a textual representation                *
-*************************************************/
+/*
+* Return a textual representation
+*/
 void Alternative_Name::contents_to(Data_Store& subject_info,
                                    Data_Store& issuer_info) const
    {
@@ -372,9 +374,9 @@ void Alternative_Name::contents_to(Data_Store& subject_info,
                            oid_name_str);
    }
 
-/*************************************************
-* Alternative_Name Constructor                   *
-*************************************************/
+/*
+* Alternative_Name Constructor
+*/
 Alternative_Name::Alternative_Name(const AlternativeName& alt_name,
                                    const std::string& oid_name_str,
                                    const std::string& config_name_str)
@@ -384,9 +386,9 @@ Alternative_Name::Alternative_Name(const AlternativeName& alt_name,
    this->config_name_str = config_name_str;
    }
 
-/*************************************************
-* Subject_Alternative_Name Constructor           *
-*************************************************/
+/*
+* Subject_Alternative_Name Constructor
+*/
 Subject_Alternative_Name::Subject_Alternative_Name(
    const AlternativeName& name) :
 
@@ -395,18 +397,18 @@ Subject_Alternative_Name::Subject_Alternative_Name(
    {
    }
 
-/*************************************************
-* Issuer_Alternative_Name Constructor           *
-*************************************************/
+/*
+* Issuer_Alternative_Name Constructor
+*/
 Issuer_Alternative_Name::Issuer_Alternative_Name(const AlternativeName& name) :
    Alternative_Name(name, "X509v3.IssuerAlternativeName",
                     "issuer_alternative_name")
    {
    }
 
-/*************************************************
-* Encode the extension                           *
-*************************************************/
+/*
+* Encode the extension
+*/
 MemoryVector<byte> Extended_Key_Usage::encode_inner() const
    {
    return DER_Encoder()
@@ -416,9 +418,9 @@ MemoryVector<byte> Extended_Key_Usage::encode_inner() const
    .get_contents();
    }
 
-/*************************************************
-* Decode the extension                           *
-*************************************************/
+/*
+* Decode the extension
+*/
 void Extended_Key_Usage::decode_inner(const MemoryRegion<byte>& in)
    {
    BER_Decoder(in)
@@ -427,9 +429,9 @@ void Extended_Key_Usage::decode_inner(const MemoryRegion<byte>& in)
       .end_cons();
    }
 
-/*************************************************
-* Return a textual representation                *
-*************************************************/
+/*
+* Return a textual representation
+*/
 void Extended_Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
    {
    for(u32bit j = 0; j != oids.size(); ++j)
@@ -438,9 +440,9 @@ void Extended_Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
 
 namespace {
 
-/*************************************************
-* A policy specifier                             *
-*************************************************/
+/*
+* A policy specifier
+*/
 class Policy_Information : public ASN1_Object
    {
    public:
@@ -464,9 +466,9 @@ class Policy_Information : public ASN1_Object
 
 }
 
-/*************************************************
-* Encode the extension                           *
-*************************************************/
+/*
+* Encode the extension
+*/
 MemoryVector<byte> Certificate_Policies::encode_inner() const
    {
    throw Exception("Certificate_Policies::encode_inner: Bugged");
@@ -480,9 +482,9 @@ MemoryVector<byte> Certificate_Policies::encode_inner() const
    .get_contents();
    }
 
-/*************************************************
-* Decode the extension                           *
-*************************************************/
+/*
+* Decode the extension
+*/
 void Certificate_Policies::decode_inner(const MemoryRegion<byte>& in)
    {
    std::vector<Policy_Information> policies;
@@ -493,18 +495,18 @@ void Certificate_Policies::decode_inner(const MemoryRegion<byte>& in)
       .end_cons();
    }
 
-/*************************************************
-* Return a textual representation                *
-*************************************************/
+/*
+* Return a textual representation
+*/
 void Certificate_Policies::contents_to(Data_Store& info, Data_Store&) const
    {
    for(u32bit j = 0; j != oids.size(); ++j)
       info.add("X509v3.ExtendedKeyUsage", oids[j].as_string());
    }
 
-/*************************************************
-* Checked accessor for the crl_number member     *
-*************************************************/
+/*
+* Checked accessor for the crl_number member
+*/
 u32bit CRL_Number::get_crl_number() const
    {
    if(!has_value)
@@ -512,9 +514,9 @@ u32bit CRL_Number::get_crl_number() const
    return crl_number;
    }
 
-/*************************************************
-* Copy a CRL_Number extension                    *
-*************************************************/
+/*
+* Copy a CRL_Number extension
+*/
 CRL_Number* CRL_Number::copy() const
    {
    if(!has_value)
@@ -522,33 +524,33 @@ CRL_Number* CRL_Number::copy() const
    return new CRL_Number(crl_number);
    }
 
-/*************************************************
-* Encode the extension                           *
-*************************************************/
+/*
+* Encode the extension
+*/
 MemoryVector<byte> CRL_Number::encode_inner() const
    {
    return DER_Encoder().encode(crl_number).get_contents();
    }
 
-/*************************************************
-* Decode the extension                           *
-*************************************************/
+/*
+* Decode the extension
+*/
 void CRL_Number::decode_inner(const MemoryRegion<byte>& in)
    {
    BER_Decoder(in).decode(crl_number);
    }
 
-/*************************************************
-* Return a textual representation                *
-*************************************************/
+/*
+* Return a textual representation
+*/
 void CRL_Number::contents_to(Data_Store& info, Data_Store&) const
    {
    info.add("X509v3.CRLNumber", crl_number);
    }
 
-/*************************************************
-* Encode the extension                           *
-*************************************************/
+/*
+* Encode the extension
+*/
 MemoryVector<byte> CRL_ReasonCode::encode_inner() const
    {
    return DER_Encoder()
@@ -556,9 +558,9 @@ MemoryVector<byte> CRL_ReasonCode::encode_inner() const
    .get_contents();
    }
 
-/*************************************************
-* Decode the extension                           *
-*************************************************/
+/*
+* Decode the extension
+*/
 void CRL_ReasonCode::decode_inner(const MemoryRegion<byte>& in)
    {
    u32bit reason_code = 0;
@@ -566,9 +568,9 @@ void CRL_ReasonCode::decode_inner(const MemoryRegion<byte>& in)
    reason = static_cast<CRL_Code>(reason_code);
    }
 
-/*************************************************
-* Return a textual representation                *
-*************************************************/
+/*
+* Return a textual representation
+*/
 void CRL_ReasonCode::contents_to(Data_Store& info, Data_Store&) const
    {
    info.add("X509v3.CRLReasonCode", reason);

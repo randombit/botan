@@ -1,7 +1,9 @@
-/*************************************************
-* Pipe Header File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Pipe
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_PIPE_H__
 #define BOTAN_PIPE_H__
@@ -258,9 +260,9 @@ class BOTAN_DLL Pipe : public DataSource
       bool inside_msg;
    };
 
-/*************************************************
-* I/O Operators for Pipe                         *
-*************************************************/
+/*
+* I/O Operators for Pipe
+*/
 BOTAN_DLL std::ostream& operator<<(std::ostream&, Pipe&);
 BOTAN_DLL std::istream& operator>>(std::istream&, Pipe&);
 

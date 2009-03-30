@@ -1,7 +1,9 @@
-/*************************************************
-* SSLv3 PRF Source File                          *
-* (C) 2004-2006 Jack Lloyd                       *
-*************************************************/
+/*
+* SSLv3 PRF
+* (C) 2004-2006 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/prf_ssl3.h>
 #include <botan/symkey.h>
@@ -14,9 +16,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Return the next inner hash                     *
-*************************************************/
+/*
+* Return the next inner hash
+*/
 OctetString next_hash(u32bit where, u32bit want,
                       HashFunction& md5, HashFunction& sha1,
                       const byte secret[], u32bit secret_len,
@@ -42,9 +44,9 @@ OctetString next_hash(u32bit where, u32bit want,
 
 }
 
-/*************************************************
-* SSL3 PRF                                       *
-*************************************************/
+/*
+* SSL3 PRF
+*/
 SecureVector<byte> SSL3_PRF::derive(u32bit key_len,
                                     const byte secret[], u32bit secret_len,
                                     const byte seed[], u32bit seed_len) const

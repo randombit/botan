@@ -1,16 +1,18 @@
-/*************************************************
-* Pipe I/O Source File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Pipe I/O
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/pipe.h>
 #include <iostream>
 
 namespace Botan {
 
-/*************************************************
-* Write data from a pipe into an ostream         *
-*************************************************/
+/*
+* Write data from a pipe into an ostream
+*/
 std::ostream& operator<<(std::ostream& stream, Pipe& pipe)
    {
    SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
@@ -24,9 +26,9 @@ std::ostream& operator<<(std::ostream& stream, Pipe& pipe)
    return stream;
    }
 
-/*************************************************
-* Read data from an istream into a pipe          *
-*************************************************/
+/*
+* Read data from an istream into a pipe
+*/
 std::istream& operator>>(std::istream& stream, Pipe& pipe)
    {
    SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);

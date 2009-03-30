@@ -1,14 +1,16 @@
-/*************************************************
-* Assembly Macros Header File                    *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Assembly Macros
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_IA32_ASM_MACROS_H__
 #define BOTAN_IA32_ASM_MACROS_H__
 
-/*************************************************
-* General/Global Macros                          *
-*************************************************/
+/*
+* General/Global Macros
+*/
 #define ALIGN .p2align 4,,15
 
 #define START_LISTING(FILENAME) \
@@ -20,9 +22,9 @@
 .section .note.GNU-stack,"",%progbits
 #endif
 
-/*************************************************
-* Function Definitions                           *
-*************************************************/
+/*
+* Function Definitions
+*/
 #define START_FUNCTION(func_name) \
    ALIGN;                         \
    .global  func_name;            \
@@ -32,9 +34,9 @@ func_name:
 #define END_FUNCTION(func_name) \
    ret
 
-/*************************************************
-* Loop Control                                   *
-*************************************************/
+/*
+* Loop Control
+*/
 #define START_LOOP(LABEL) \
    ALIGN;                 \
    LABEL##_LOOP:
@@ -47,9 +49,9 @@ func_name:
    cmpl IMM(NUM), REG;                 \
    jge LABEL##_LOOP
 
-/*************************************************
- Conditional Jumps                              *
-*************************************************/
+/*
+ Conditional Jumps
+*/
 #define JUMP_IF_ZERO(REG, LABEL) \
    cmpl IMM(0), REG;             \
    jz LABEL
@@ -58,9 +60,9 @@ func_name:
    cmpl IMM(NUM), REG;              \
    jl LABEL
 
-/*************************************************
-* Register Names                                 *
-*************************************************/
+/*
+* Register Names
+*/
 #define EAX %eax
 #define EBX %ebx
 #define ECX %ecx
@@ -70,9 +72,9 @@ func_name:
 #define ESI %esi
 #define ESP %esp
 
-/*************************************************
-* Memory Access Operations                       *
-*************************************************/
+/*
+* Memory Access Operations
+*/
 #define ARRAY1(REG, NUM) (NUM)(REG)
 #define ARRAY4(REG, NUM) 4*(NUM)(REG)
 #define ARRAY4_INDIRECT(BASE, OFFSET, NUM) 4*(NUM)(BASE,OFFSET,4)
@@ -96,9 +98,9 @@ func_name:
    POP(EDI) ;  \
    POP(EBP)
 
-/*************************************************
-* ALU Operations                                 *
-*************************************************/
+/*
+* ALU Operations
+*/
 #define IMM(VAL) $VAL
 
 #define ADD(TO, FROM) addl FROM, TO

@@ -1,7 +1,9 @@
-/*************************************************
-* Division Algorithm Source File                 *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Division Algorithm
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/divide.h>
 #include <botan/mp_core.h>
@@ -10,9 +12,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Handle signed operands, if necessary           *
-*************************************************/
+/*
+* Handle signed operands, if necessary
+*/
 void sign_fixup(const BigInt& x, const BigInt& y, BigInt& q, BigInt& r)
    {
    if(x.sign() == BigInt::Negative)
@@ -26,9 +28,9 @@ void sign_fixup(const BigInt& x, const BigInt& y, BigInt& q, BigInt& r)
 
 }
 
-/*************************************************
-* Solve x = q * y + r                            *
-*************************************************/
+/*
+* Solve x = q * y + r
+*/
 void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
    {
    if(y_arg.is_zero())

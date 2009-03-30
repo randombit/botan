@@ -1,7 +1,9 @@
-/*************************************************
-* Comba Multiplication and Squaring Source File  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Comba Multiplication and Squaring
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/mp_core.h>
 #include <botan/mp_asmi.h>
@@ -10,9 +12,9 @@ namespace Botan {
 
 extern "C" {
 
-/*************************************************
-* Comba 4x4 Squaring                             *
-*************************************************/
+/*
+* Comba 4x4 Squaring
+*/
 void bigint_comba_sqr4(word z[8], const word x[4])
    {
    word w2 = 0, w1 = 0, w0 = 0;
@@ -43,9 +45,9 @@ void bigint_comba_sqr4(word z[8], const word x[4])
    z[7] = w1;
    }
 
-/*************************************************
-* Comba 4x4 Multiplication                       *
-*************************************************/
+/*
+* Comba 4x4 Multiplication
+*/
 void bigint_comba_mul4(word z[8], const word x[4], const word y[4])
    {
    word w2 = 0, w1 = 0, w0 = 0;
@@ -82,9 +84,9 @@ void bigint_comba_mul4(word z[8], const word x[4], const word y[4])
    z[7] = w1;
    }
 
-/*************************************************
-* Comba 6x6 Squaring                             *
-*************************************************/
+/*
+* Comba 6x6 Squaring
+*/
 void bigint_comba_sqr6(word z[12], const word x[6])
    {
    word w2 = 0, w1 = 0, w0 = 0;
@@ -134,9 +136,9 @@ void bigint_comba_sqr6(word z[12], const word x[6])
    z[11] = w1;
    }
 
-/*************************************************
-* Comba 6x6 Multiplication                       *
-*************************************************/
+/*
+* Comba 6x6 Multiplication
+*/
 void bigint_comba_mul6(word z[12], const word x[6], const word y[6])
    {
    word w2 = 0, w1 = 0, w0 = 0;
@@ -201,9 +203,9 @@ void bigint_comba_mul6(word z[12], const word x[6], const word y[6])
    z[11] = w1;
    }
 
-/*************************************************
-* Comba 8x8 Squaring                             *
-*************************************************/
+/*
+* Comba 8x8 Squaring
+*/
 void bigint_comba_sqr8(word z[16], const word x[8])
    {
    word w2 = 0, w1 = 0, w0 = 0;
@@ -276,9 +278,9 @@ void bigint_comba_sqr8(word z[16], const word x[8])
    z[15] = w1;
    }
 
-/*************************************************
-* Comba 8x8 Multiplication                       *
-*************************************************/
+/*
+* Comba 8x8 Multiplication
+*/
 void bigint_comba_mul8(word z[16], const word x[8], const word y[8])
    {
    word w2 = 0, w1 = 0, w0 = 0;
@@ -379,9 +381,9 @@ void bigint_comba_mul8(word z[16], const word x[8], const word y[8])
    z[15] = w1;
    }
 
-/*************************************************
-* Comba 16x16 Squaring                           *
-*************************************************/
+/*
+* Comba 16x16 Squaring
+*/
 void bigint_comba_sqr16(word z[32], const word x[16])
    {
    word w2 = 0, w1 = 0, w0 = 0;
@@ -586,9 +588,9 @@ void bigint_comba_sqr16(word z[32], const word x[16])
    z[31] = w1;
    }
 
-/*************************************************
-* Comba 16x16 Multiplication                     *
-*************************************************/
+/*
+* Comba 16x16 Multiplication
+*/
 void bigint_comba_mul16(word z[32], const word x[16], const word y[16])
    {
    word w2 = 0, w1 = 0, w0 = 0;

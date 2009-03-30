@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 SIGNED Object Header File                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 SIGNED Object
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_X509_OBJECT_H__
 #define BOTAN_X509_OBJECT_H__

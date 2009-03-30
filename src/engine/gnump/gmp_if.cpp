@@ -1,7 +1,9 @@
-/*************************************************
-* GMP IF Engine Source File                      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* GMP IF Engine
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eng_gmp.h>
 #include <botan/gmp_wrap.h>
@@ -13,9 +15,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* GMP IF Operation                               *
-*************************************************/
+/*
+* GMP IF Operation
+*/
 class GMP_IF_Op : public IF_Operation
    {
    public:
@@ -32,9 +34,9 @@ class GMP_IF_Op : public IF_Operation
       const GMP_MPZ e, n, p, q, d1, d2, c;
    };
 
-/*************************************************
-* GMP IF Public Operation                        *
-*************************************************/
+/*
+* GMP IF Public Operation
+*/
 BigInt GMP_IF_Op::public_op(const BigInt& i_bn) const
    {
    GMP_MPZ i(i_bn);
@@ -42,9 +44,9 @@ BigInt GMP_IF_Op::public_op(const BigInt& i_bn) const
    return i.to_bigint();
    }
 
-/*************************************************
-* GMP IF Private Operation                       *
-*************************************************/
+/*
+* GMP IF Private Operation
+*/
 BigInt GMP_IF_Op::private_op(const BigInt& i_bn) const
    {
    if(mpz_cmp_ui(p.value, 0) == 0)
@@ -64,9 +66,9 @@ BigInt GMP_IF_Op::private_op(const BigInt& i_bn) const
 
 }
 
-/*************************************************
-* Acquire an IF op                               *
-*************************************************/
+/*
+* Acquire an IF op
+*/
 IF_Operation* GMP_Engine::if_op(const BigInt& e, const BigInt& n,
                                 const BigInt& d, const BigInt& p,
                                 const BigInt& q, const BigInt& d1,

@@ -1,7 +1,9 @@
-/*************************************************
-* Version Information Header File                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Version Information
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_VERSION_H__
 #define BOTAN_VERSION_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Get information describing the version         *
-*************************************************/
+/*
+* Get information describing the version
+*/
 
 /**
 * Get the version string identifying the version of Botan.
@@ -39,9 +41,9 @@ BOTAN_DLL u32bit version_minor();
 */
 BOTAN_DLL u32bit version_patch();
 
-/*************************************************
-* Macros for compile-time version checks         *
-*************************************************/
+/*
+* Macros for compile-time version checks
+*/
 #define BOTAN_VERSION_CODE_FOR(a,b,c) ((a << 16) | (b << 8) | (c))
 
 /**

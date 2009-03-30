@@ -1,7 +1,9 @@
-/*************************************************
-* HMAC Header File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* HMAC
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_HMAC_H__
 #define BOTAN_HMAC_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* HMAC                                           *
-*************************************************/
+/*
+* HMAC
+*/
 class BOTAN_DLL HMAC : public MessageAuthenticationCode
    {
    public:

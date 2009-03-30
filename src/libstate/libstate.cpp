@@ -1,7 +1,9 @@
-/*************************************************
-* Library Internal/Global State Source File      *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Library Internal/Global State
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/libstate.h>
 #include <botan/init.h>
@@ -48,18 +50,18 @@
 
 namespace Botan {
 
-/*************************************************
-* Botan's global state                           *
-*************************************************/
+/*
+* Botan's global state
+*/
 namespace {
 
 Library_State* global_lib_state = 0;
 
 }
 
-/*************************************************
-* Access the global state object                 *
-*************************************************/
+/*
+* Access the global state object
+*/
 Library_State& global_state()
    {
    /* Lazy initialization. Botan still needs to be deinitialized later
@@ -71,17 +73,17 @@ Library_State& global_state()
    return (*global_lib_state);
    }
 
-/*************************************************
-* Set a new global state object                  *
-*************************************************/
+/*
+* Set a new global state object
+*/
 void set_global_state(Library_State* new_state)
    {
    delete swap_global_state(new_state);
    }
 
-/*************************************************
-* Swap two global state objects                  *
-*************************************************/
+/*
+* Swap two global state objects
+*/
 Library_State* swap_global_state(Library_State* new_state)
    {
    Library_State* old_state = global_lib_state;
@@ -89,17 +91,17 @@ Library_State* swap_global_state(Library_State* new_state)
    return old_state;
    }
 
-/*************************************************
-* Get a new mutex object                         *
-*************************************************/
+/*
+* Get a new mutex object
+*/
 Mutex* Library_State::get_mutex() const
    {
    return mutex_factory->make();
    }
 
-/*************************************************
-* Get an allocator by its name                   *
-*************************************************/
+/*
+* Get an allocator by its name
+*/
 Allocator* Library_State::get_allocator(const std::string& type) const
    {
    Mutex_Holder lock(allocator_lock);
@@ -121,9 +123,9 @@ Allocator* Library_State::get_allocator(const std::string& type) const
    return cached_default_allocator;
    }
 
-/*************************************************
-* Create a new name to object mapping            *
-*************************************************/
+/*
+* Create a new name to object mapping
+*/
 void Library_State::add_allocator(Allocator* allocator)
    {
    Mutex_Holder lock(allocator_lock);
@@ -134,9 +136,9 @@ void Library_State::add_allocator(Allocator* allocator)
    alloc_factory[allocator->type()] = allocator;
    }
 
-/*************************************************
-* Set the default allocator type                 *
-*************************************************/
+/*
+* Set the default allocator type
+*/
 void Library_State::set_default_allocator(const std::string& type)
    {
    Mutex_Holder lock(allocator_lock);
@@ -148,9 +150,9 @@ void Library_State::set_default_allocator(const std::string& type)
    cached_default_allocator = 0;
    }
 
-/*************************************************
-* Get a configuration value                      *
-*************************************************/
+/*
+* Get a configuration value
+*/
 std::string Library_State::get(const std::string& section,
                                const std::string& key) const
    {
@@ -160,9 +162,9 @@ std::string Library_State::get(const std::string& section,
                                                section + "/" + key, "");
    }
 
-/*************************************************
-* See if a particular option has been set        *
-*************************************************/
+/*
+* See if a particular option has been set
+*/
 bool Library_State::is_set(const std::string& section,
                            const std::string& key) const
    {
@@ -171,9 +173,9 @@ bool Library_State::is_set(const std::string& section,
    return search_map(config, section + "/" + key, false, true);
    }
 
-/*************************************************
-* Set a configuration value                      *
-*************************************************/
+/*
+* Set a configuration value
+*/
 void Library_State::set(const std::string& section, const std::string& key,
                         const std::string& value, bool overwrite)
    {
@@ -188,17 +190,17 @@ void Library_State::set(const std::string& section, const std::string& key,
       config[full_key] = value;
    }
 
-/*************************************************
-* Add an alias                                   *
-*************************************************/
+/*
+* Add an alias
+*/
 void Library_State::add_alias(const std::string& key, const std::string& value)
    {
    set("alias", key, value);
    }
 
-/*************************************************
-* Dereference an alias to a fixed name           *
-*************************************************/
+/*
+* Dereference an alias to a fixed name
+*/
 std::string Library_State::deref_alias(const std::string& key) const
    {
    std::string result = key;
@@ -207,18 +209,18 @@ std::string Library_State::deref_alias(const std::string& key) const
    return result;
    }
 
-/*************************************************
-* Set/Add an option                              *
-*************************************************/
+/*
+* Set/Add an option
+*/
 void Library_State::set_option(const std::string key,
                                const std::string& value)
    {
    set("conf", key, value);
    }
 
-/*************************************************
-* Get an option value                            *
-*************************************************/
+/*
+* Get an option value
+*/
 std::string Library_State::option(const std::string& key) const
    {
    return get("conf", key);
@@ -234,9 +236,9 @@ Algorithm_Factory& Library_State::algorithm_factory()
    return *m_algorithm_factory;
    }
 
-/*************************************************
-* Load a set of modules                          *
-*************************************************/
+/*
+* Load a set of modules
+*/
 void Library_State::initialize(bool thread_safe)
    {
    if(mutex_factory)
@@ -302,9 +304,9 @@ void Library_State::initialize(bool thread_safe)
    m_algorithm_factory = new Algorithm_Factory(engines, *mutex_factory);
    }
 
-/*************************************************
-* Library_State Constructor                      *
-*************************************************/
+/*
+* Library_State Constructor
+*/
 Library_State::Library_State()
    {
    mutex_factory = 0;
@@ -313,9 +315,9 @@ Library_State::Library_State()
    m_algorithm_factory = 0;
    }
 
-/*************************************************
-* Library_State Destructor                       *
-*************************************************/
+/*
+* Library_State Destructor
+*/
 Library_State::~Library_State()
    {
    delete m_algorithm_factory;

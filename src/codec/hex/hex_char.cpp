@@ -1,15 +1,17 @@
-/*************************************************
-* Hex Character Table                            *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Hex Character Table
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/hex.h>
 
 namespace Botan {
 
-/*************************************************
-* Hex Encoder Lookup Tables                      *
-*************************************************/
+/*
+* Hex Encoder Lookup Tables
+*/
 const byte Hex_Encoder::BIN_TO_HEX_UPPER[16] = {
 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x41, 0x42, 0x43,
 0x44, 0x45, 0x46 };
@@ -18,9 +20,9 @@ const byte Hex_Encoder::BIN_TO_HEX_LOWER[16] = {
 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x61, 0x62, 0x63,
 0x64, 0x65, 0x66 };
 
-/*************************************************
-* Hex Decoder Lookup Table                       *
-*************************************************/
+/*
+* Hex Decoder Lookup Table
+*/
 const byte Hex_Decoder::HEX_TO_BIN[256] = {
 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,

@@ -1,7 +1,9 @@
-/*************************************************
-* Parser Functions Source File                   *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Parser Functions
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/parsing.h>
 #include <botan/exceptn.h>
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Convert a string into an integer               *
-*************************************************/
+/*
+* Convert a string into an integer
+*/
 u32bit to_u32bit(const std::string& number)
    {
    u32bit n = 0;
@@ -31,9 +33,9 @@ u32bit to_u32bit(const std::string& number)
    return n;
    }
 
-/*************************************************
-* Convert an integer into a string               *
-*************************************************/
+/*
+* Convert an integer into a string
+*/
 std::string to_string(u64bit n, u32bit min_len)
    {
    std::string lenstr;
@@ -54,9 +56,9 @@ std::string to_string(u64bit n, u32bit min_len)
    return lenstr;
    }
 
-/*************************************************
-* Convert a string into a time duration          *
-*************************************************/
+/*
+* Convert a string into a time duration
+*/
 u32bit timespec_to_u32bit(const std::string& timespec)
    {
    if(timespec == "")
@@ -85,9 +87,9 @@ u32bit timespec_to_u32bit(const std::string& timespec)
    return scale * to_u32bit(value);
    }
 
-/*************************************************
-* Parse a SCAN-style algorithm name              *
-*************************************************/
+/*
+* Parse a SCAN-style algorithm name
+*/
 std::vector<std::string> parse_algorithm_name(const std::string& namex)
    {
    if(namex.find('(') == std::string::npos &&
@@ -141,9 +143,9 @@ std::vector<std::string> parse_algorithm_name(const std::string& namex)
    return elems;
    }
 
-/*************************************************
-* Split the string on slashes                    *
-*************************************************/
+/*
+* Split the string on slashes
+*/
 std::vector<std::string> split_on(const std::string& str, char delim)
    {
    std::vector<std::string> elems;
@@ -169,9 +171,9 @@ std::vector<std::string> split_on(const std::string& str, char delim)
    return elems;
    }
 
-/*************************************************
-* Parse an ASN.1 OID string                      *
-*************************************************/
+/*
+* Parse an ASN.1 OID string
+*/
 std::vector<u32bit> parse_asn1_oid(const std::string& oid)
    {
    std::string substring;
@@ -202,9 +204,9 @@ std::vector<u32bit> parse_asn1_oid(const std::string& oid)
    return oid_elems;
    }
 
-/*************************************************
-* X.500 String Comparison                        *
-*************************************************/
+/*
+* X.500 String Comparison
+*/
 bool x500_name_cmp(const std::string& name1, const std::string& name2)
    {
    std::string::const_iterator p1 = name1.begin();
@@ -241,9 +243,9 @@ bool x500_name_cmp(const std::string& name1, const std::string& name2)
    return true;
    }
 
-/*************************************************
-* Convert a decimal-dotted string to binary IP   *
-*************************************************/
+/*
+* Convert a decimal-dotted string to binary IP
+*/
 u32bit string_to_ipv4(const std::string& str)
    {
    std::vector<std::string> parts = split_on(str, '.');
@@ -266,9 +268,9 @@ u32bit string_to_ipv4(const std::string& str)
    return ip;
    }
 
-/*************************************************
-* Convert an IP address to decimal-dotted string *
-*************************************************/
+/*
+* Convert an IP address to decimal-dotted string
+*/
 std::string ipv4_to_string(u32bit ip)
    {
    std::string str;

@@ -1,7 +1,9 @@
-/*************************************************
-* Auto Seeded RNG Source File                    *
-* (C) 2008 Jack Lloyd                            *
-*************************************************/
+/*
+* Auto Seeded RNG
+* (C) 2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/auto_rng.h>
 #include <botan/parsing.h>

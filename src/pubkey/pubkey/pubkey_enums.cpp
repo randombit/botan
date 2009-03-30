@@ -1,7 +1,9 @@
-/*************************************************
-* KeyUsage Source File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* KeyUsage
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/pubkey_enums.h>
 #include <botan/ber_dec.h>
@@ -10,9 +12,9 @@ namespace Botan {
 
 namespace BER {
 
-/*************************************************
-* Decode a BER encoded KeyUsage                  *
-*************************************************/
+/*
+* Decode a BER encoded KeyUsage
+*/
 void decode(BER_Decoder& source, Key_Constraints& key_usage)
    {
    BER_Object obj = source.get_next_object();

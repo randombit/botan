@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 Certificate Options Source File          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 Certificate Options
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/x509self.h>
 #include <botan/util.h>
@@ -11,58 +13,58 @@
 
 namespace Botan {
 
-/*************************************************
-* Set when the certificate should become valid   *
-*************************************************/
+/*
+* Set when the certificate should become valid
+*/
 void X509_Cert_Options::not_before(const std::string& time_string)
    {
    start = X509_Time(time_string);
    }
 
-/*************************************************
-* Set when the certificate should expire         *
-*************************************************/
+/*
+* Set when the certificate should expire
+*/
 void X509_Cert_Options::not_after(const std::string& time_string)
    {
    end = X509_Time(time_string);
    }
 
-/*************************************************
-* Set key constraint information                 *
-*************************************************/
+/*
+* Set key constraint information
+*/
 void X509_Cert_Options::add_constraints(Key_Constraints usage)
    {
    constraints = usage;
    }
 
-/*************************************************
-* Set key constraint information                 *
-*************************************************/
+/*
+* Set key constraint information
+*/
 void X509_Cert_Options::add_ex_constraint(const OID& oid)
    {
    ex_constraints.push_back(oid);
    }
 
-/*************************************************
-* Set key constraint information                 *
-*************************************************/
+/*
+* Set key constraint information
+*/
 void X509_Cert_Options::add_ex_constraint(const std::string& oid_str)
    {
    ex_constraints.push_back(OIDS::lookup(oid_str));
    }
 
-/*************************************************
-* Mark this certificate for CA usage             *
-*************************************************/
+/*
+* Mark this certificate for CA usage
+*/
 void X509_Cert_Options::CA_key(u32bit limit)
    {
    is_CA = true;
    path_limit = limit;
    }
 
-/*************************************************
-* Do basic sanity checks                         *
-*************************************************/
+/*
+* Do basic sanity checks
+*/
 void X509_Cert_Options::sanity_check() const
    {
    if(common_name == "" || country == "")
@@ -73,9 +75,9 @@ void X509_Cert_Options::sanity_check() const
       throw Encoding_Error("X509_Cert_Options: invalid time constraints");
    }
 
-/*************************************************
-* Initialize the certificate options             *
-*************************************************/
+/*
+* Initialize the certificate options
+*/
 X509_Cert_Options::X509_Cert_Options(const std::string& initial_opts,
                                      u32bit expiration_time_in_seconds)
    {

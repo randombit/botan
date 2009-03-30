@@ -1,7 +1,9 @@
-/*************************************************
-* Default Engine Source File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Default Engine
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/def_eng.h>
 #include <botan/parsing.h>
@@ -68,9 +70,9 @@ BlockCipherModePaddingMethod* get_bc_pad(const std::string& algo_spec)
 
 }
 
-/*************************************************
-* Get a cipher object                            *
-*************************************************/
+/*
+* Get a cipher object
+*/
 Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
                                          Cipher_Dir direction,
                                          Algorithm_Factory& af)

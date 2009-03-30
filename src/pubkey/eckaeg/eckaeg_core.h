@@ -1,8 +1,10 @@
-/*************************************************
-* ECKAEG Core Header File                        *
-* (C) 1999-2007 Jack Lloyd                       *
-* (C) 2007 FlexSecure GmbH                       *
-*************************************************/
+/*
+* ECKAEG Core
+* (C) 1999-2007 Jack Lloyd
+* (C) 2007 FlexSecure GmbH
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ECKAEG_CORE_H__
 #define BOTAN_ECKAEG_CORE_H__
@@ -13,9 +15,9 @@
 
 namespace Botan {
 
-/*************************************************
-* ECKAEG Core                                    *
-*************************************************/
+/*
+* ECKAEG Core
+*/
 class BOTAN_DLL ECKAEG_Core
    {
    public:

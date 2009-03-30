@@ -1,7 +1,9 @@
-/*************************************************
-* User Interface Header File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* User Interface
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_UI_H__
 #define BOTAN_UI_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* User Interface                                 *
-*************************************************/
+/*
+* User Interface
+*/
 class BOTAN_DLL User_Interface
    {
    public:

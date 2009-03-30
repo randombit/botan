@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 CRL Header File                          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 CRL
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_X509_CRL_H__
 #define BOTAN_X509_CRL_H__

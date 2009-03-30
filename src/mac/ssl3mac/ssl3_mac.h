@@ -1,7 +1,9 @@
-/*************************************************
-* SSL3-MAC Header File                           *
-* (C) 1999-2004 Jack Lloyd                       *
-*************************************************/
+/*
+* SSL3-MAC
+* (C) 1999-2004 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_SSL3_MAC_H__
 #define BOTAN_SSL3_MAC_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* SSL3-MAC                                       *
-*************************************************/
+/*
+* SSL3-MAC
+*/
 class BOTAN_DLL SSL3_MAC : public MessageAuthenticationCode
    {
    public:

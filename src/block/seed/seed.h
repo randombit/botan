@@ -1,7 +1,9 @@
-/*************************************************
-* SEED Header File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* SEED
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_SEED_H__
 #define BOTAN_SEED_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* SEED                                           *
-*************************************************/
+/*
+* SEED
+*/
 class BOTAN_DLL SEED : public BlockCipher
    {
    public:

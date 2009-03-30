@@ -1,7 +1,9 @@
-/*************************************************
-* PKCS #5 v2.0 PBE Header File                   *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PKCS #5 v2.0 PBE
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_PBE_PKCS_v20_H__
 #define BOTAN_PBE_PKCS_v20_H__
@@ -13,9 +15,9 @@
 
 namespace Botan {
 
-/*************************************************
-* PKCS#5 v2.0 PBE                                *
-*************************************************/
+/*
+* PKCS#5 v2.0 PBE
+*/
 class BOTAN_DLL PBE_PKCS5v20 : public PBE
    {
    public:

@@ -1,7 +1,9 @@
-/*************************************************
-* GMP MPZ Wrapper Header File                    *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* GMP MPZ Wrapper
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_GMP_MPZ_WRAP_H__
 #define BOTAN_GMP_MPZ_WRAP_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Lightweight GMP mpz_t Wrapper                  *
-*************************************************/
+/*
+* Lightweight GMP mpz_t Wrapper
+*/
 class BOTAN_DLL GMP_MPZ
    {
    public:

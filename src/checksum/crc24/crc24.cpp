@@ -1,16 +1,18 @@
-/*************************************************
-* CRC24 Source File                              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CRC24
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/crc24.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
 
-/*************************************************
-* Update a CRC24 Checksum                        *
-*************************************************/
+/*
+* Update a CRC24 Checksum
+*/
 void CRC24::add_data(const byte input[], u32bit length)
    {
    const u32bit TABLE[256] = {
@@ -85,9 +87,9 @@ void CRC24::add_data(const byte input[], u32bit length)
    crc = tmp;
    }
 
-/*************************************************
-* Finalize a CRC24 Checksum                      *
-*************************************************/
+/*
+* Finalize a CRC24 Checksum
+*/
 void CRC24::final_result(byte output[])
    {
    for(u32bit j = 0; j != 3; ++j)

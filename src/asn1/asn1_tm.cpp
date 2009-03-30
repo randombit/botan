@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 Time Types Source File                   *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 Time Types
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/asn1_obj.h>
 #include <botan/der_enc.h>
@@ -14,9 +16,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Convert a time_t to a struct tm                *
-*************************************************/
+/*
+* Convert a time_t to a struct tm
+*/
 std::tm get_tm(u64bit timer)
    {
    std::time_t time_val = static_cast<std::time_t>(timer);
@@ -30,17 +32,17 @@ std::tm get_tm(u64bit timer)
 
 }
 
-/*************************************************
-* Create an X509_Time                            *
-*************************************************/
+/*
+* Create an X509_Time
+*/
 X509_Time::X509_Time(const std::string& time_str)
    {
    set_to(time_str);
    }
 
-/*************************************************
-* Create an X509_Time                            *
-*************************************************/
+/*
+* Create an X509_Time
+*/
 X509_Time::X509_Time(u64bit timer)
    {
    std::tm time_info = get_tm(timer);
@@ -58,17 +60,17 @@ X509_Time::X509_Time(u64bit timer)
       tag = UTC_TIME;
    }
 
-/*************************************************
-* Create an X509_Time                            *
-*************************************************/
+/*
+* Create an X509_Time
+*/
 X509_Time::X509_Time(const std::string& t_spec, ASN1_Tag t) : tag(t)
    {
    set_to(t_spec, tag);
    }
 
-/*************************************************
-* Set the time with a human readable string      *
-*************************************************/
+/*
+* Set the time with a human readable string
+*/
 void X509_Time::set_to(const std::string& time_str)
    {
    if(time_str == "")
@@ -113,9 +115,9 @@ void X509_Time::set_to(const std::string& time_str)
       throw Invalid_Argument("Invalid time specification " + time_str);
    }
 
-/*************************************************
-* Set the time with an ISO time format string    *
-*************************************************/
+/*
+* Set the time with an ISO time format string
+*/
 void X509_Time::set_to(const std::string& t_spec, ASN1_Tag tag)
    {
    if(tag != GENERALIZED_TIME && tag != UTC_TIME)
@@ -164,9 +166,9 @@ void X509_Time::set_to(const std::string& t_spec, ASN1_Tag tag)
       throw Invalid_Argument("Invalid time specification " + t_spec);
    }
 
-/*************************************************
-* DER encode a X509_Time                         *
-*************************************************/
+/*
+* DER encode a X509_Time
+*/
 void X509_Time::encode_into(DER_Encoder& der) const
    {
    if(tag != GENERALIZED_TIME && tag != UTC_TIME)
@@ -176,9 +178,9 @@ void X509_Time::encode_into(DER_Encoder& der) const
                                      LOCAL_CHARSET, LATIN1_CHARSET));
    }
 
-/*************************************************
-* Decode a BER encoded X509_Time                 *
-*************************************************/
+/*
+* Decode a BER encoded X509_Time
+*/
 void X509_Time::decode_from(BER_Decoder& source)
    {
    BER_Object ber_time = source.get_next_object();
@@ -187,9 +189,9 @@ void X509_Time::decode_from(BER_Decoder& source)
           ber_time.type_tag);
    }
 
-/*************************************************
-* Return a string representation of the time     *
-*************************************************/
+/*
+* Return a string representation of the time
+*/
 std::string X509_Time::as_string() const
    {
    if(time_is_set() == false)
@@ -212,17 +214,17 @@ std::string X509_Time::as_string() const
    return asn1rep;
    }
 
-/*************************************************
-* Return if the time has been set somehow        *
-*************************************************/
+/*
+* Return if the time has been set somehow
+*/
 bool X509_Time::time_is_set() const
    {
    return (year != 0);
    }
 
-/*************************************************
-* Return a human readable string representation  *
-*************************************************/
+/*
+* Return a human readable string representation
+*/
 std::string X509_Time::readable_string() const
    {
    if(time_is_set() == false)
@@ -238,9 +240,9 @@ std::string X509_Time::readable_string() const
    return readable;
    }
 
-/*************************************************
-* Do a general sanity check on the time          *
-*************************************************/
+/*
+* Do a general sanity check on the time
+*/
 bool X509_Time::passes_sanity_check() const
    {
    if(year < 1950 || year > 2100)
@@ -254,9 +256,9 @@ bool X509_Time::passes_sanity_check() const
    return true;
    }
 
-/*************************************************
-* Compare this time against another              *
-*************************************************/
+/*
+* Compare this time against another
+*/
 s32bit X509_Time::cmp(const X509_Time& other) const
    {
    if(time_is_set() == false)
@@ -280,9 +282,9 @@ s32bit X509_Time::cmp(const X509_Time& other) const
    return SAME_TIME;
    }
 
-/*************************************************
-* Compare two X509_Times for in various ways     *
-*************************************************/
+/*
+* Compare two X509_Times for in various ways
+*/
 bool operator==(const X509_Time& t1, const X509_Time& t2)
    { return (t1.cmp(t2) == 0); }
 bool operator!=(const X509_Time& t1, const X509_Time& t2)

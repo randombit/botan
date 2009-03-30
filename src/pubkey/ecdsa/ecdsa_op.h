@@ -1,8 +1,10 @@
-/*************************************************
-* ECDSA Operations Header File                   *
-* (C) 1999-2008 Jack Lloyd                       *
-* (C) 2007 FlexSecure GmbH                       *
-*************************************************/
+/*
+* ECDSA Operations
+* (C) 1999-2008 Jack Lloyd
+* (C) 2007 FlexSecure GmbH
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ECDSA_OPERATIONS_H__
 #define BOTAN_ECDSA_OPERATIONS_H__
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* ECDSA Operation                               *
-*************************************************/
+/*
+* ECDSA Operation
+*/
 class BOTAN_DLL ECDSA_Operation
    {
    public:
@@ -31,9 +33,9 @@ class BOTAN_DLL ECDSA_Operation
    };
 
 
-/*************************************************
-* Default ECDSA operation                        *
-*************************************************/
+/*
+* Default ECDSA operation
+*/
 class BOTAN_DLL Default_ECDSA_Op : public ECDSA_Operation
    {
    public:

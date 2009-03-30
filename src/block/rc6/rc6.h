@@ -1,7 +1,9 @@
-/*************************************************
-* RC6 Header File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* RC6
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_RC6_H__
 #define BOTAN_RC6_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* RC6                                            *
-*************************************************/
+/*
+* RC6
+*/
 class BOTAN_DLL RC6 : public BlockCipher
    {
    public:

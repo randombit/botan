@@ -1,7 +1,9 @@
-/*************************************************
-* MD4 Header File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* MD4
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_MD4_H__
 #define BOTAN_MD4_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* MD4                                            *
-*************************************************/
+/*
+* MD4
+*/
 class BOTAN_DLL MD4 : public MDx_HashFunction
    {
    public:

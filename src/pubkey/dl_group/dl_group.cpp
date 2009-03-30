@@ -1,7 +1,9 @@
-/*************************************************
-* Discrete Logarithm Parameters Source File      *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Discrete Logarithm Parameters
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/dl_group.h>
 #include <botan/libstate.h>
@@ -15,17 +17,17 @@
 
 namespace Botan {
 
-/*************************************************
-* DL_Group Constructor                           *
-*************************************************/
+/*
+* DL_Group Constructor
+*/
 DL_Group::DL_Group()
    {
    initialized = false;
    }
 
-/*************************************************
-* DL_Group Constructor                           *
-*************************************************/
+/*
+* DL_Group Constructor
+*/
 DL_Group::DL_Group(const std::string& type)
    {
    std::string grp_contents = global_state().get("dl", type);
@@ -37,9 +39,9 @@ DL_Group::DL_Group(const std::string& type)
    PEM_decode(pem);
    }
 
-/*************************************************
-* DL_Group Constructor                           *
-*************************************************/
+/*
+* DL_Group Constructor
+*/
 DL_Group::DL_Group(RandomNumberGenerator& rng,
                    PrimeType type, u32bit pbits, u32bit qbits)
    {
@@ -82,9 +84,9 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
    initialized = true;
    }
 
-/*************************************************
-* DL_Group Constructor                           *
-*************************************************/
+/*
+* DL_Group Constructor
+*/
 DL_Group::DL_Group(RandomNumberGenerator& rng,
                    const MemoryRegion<byte>& seed, u32bit pbits, u32bit qbits)
    {
@@ -99,25 +101,25 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
    initialized = true;
    }
 
-/*************************************************
-* DL_Group Constructor                           *
-*************************************************/
+/*
+* DL_Group Constructor
+*/
 DL_Group::DL_Group(const BigInt& p1, const BigInt& g1)
    {
    initialize(p1, 0, g1);
    }
 
-/*************************************************
-* DL_Group Constructor                           *
-*************************************************/
+/*
+* DL_Group Constructor
+*/
 DL_Group::DL_Group(const BigInt& p1, const BigInt& q1, const BigInt& g1)
    {
    initialize(p1, q1, g1);
    }
 
-/*************************************************
-* DL_Group Initializer                           *
-*************************************************/
+/*
+* DL_Group Initializer
+*/
 void DL_Group::initialize(const BigInt& p1, const BigInt& q1, const BigInt& g1)
    {
    if(p1 < 3)
@@ -134,18 +136,18 @@ void DL_Group::initialize(const BigInt& p1, const BigInt& q1, const BigInt& g1)
    initialized = true;
    }
 
-/*************************************************
-* Verify that the group has been set             *
-*************************************************/
+/*
+* Verify that the group has been set
+*/
 void DL_Group::init_check() const
    {
    if(!initialized)
       throw Invalid_State("DLP group cannot be used uninitialized");
    }
 
-/*************************************************
-* Verify the parameters                          *
-*************************************************/
+/*
+* Verify the parameters
+*/
 bool DL_Group::verify_group(RandomNumberGenerator& rng,
                             bool strong) const
    {
@@ -166,27 +168,27 @@ bool DL_Group::verify_group(RandomNumberGenerator& rng,
    return true;
    }
 
-/*************************************************
-* Return the prime                               *
-*************************************************/
+/*
+* Return the prime
+*/
 const BigInt& DL_Group::get_p() const
    {
    init_check();
    return p;
    }
 
-/*************************************************
-* Return the generator                           *
-*************************************************/
+/*
+* Return the generator
+*/
 const BigInt& DL_Group::get_g() const
    {
    init_check();
    return g;
    }
 
-/*************************************************
-* Return the subgroup                            *
-*************************************************/
+/*
+* Return the subgroup
+*/
 const BigInt& DL_Group::get_q() const
    {
    init_check();
@@ -195,9 +197,9 @@ const BigInt& DL_Group::get_q() const
    return q;
    }
 
-/*************************************************
-* DER encode the parameters                      *
-*************************************************/
+/*
+* DER encode the parameters
+*/
 SecureVector<byte> DL_Group::DER_encode(Format format) const
    {
    init_check();
@@ -238,9 +240,9 @@ SecureVector<byte> DL_Group::DER_encode(Format format) const
    throw Invalid_Argument("Unknown DL_Group encoding " + to_string(format));
    }
 
-/*************************************************
-* PEM encode the parameters                      *
-*************************************************/
+/*
+* PEM encode the parameters
+*/
 std::string DL_Group::PEM_encode(Format format) const
    {
    SecureVector<byte> encoding = DER_encode(format);
@@ -254,9 +256,9 @@ std::string DL_Group::PEM_encode(Format format) const
       throw Invalid_Argument("Unknown DL_Group encoding " + to_string(format));
    }
 
-/*************************************************
-* Decode BER encoded parameters                  *
-*************************************************/
+/*
+* Decode BER encoded parameters
+*/
 void DL_Group::BER_decode(DataSource& source, Format format)
    {
    BigInt new_p, new_q, new_g;
@@ -290,9 +292,9 @@ void DL_Group::BER_decode(DataSource& source, Format format)
    initialize(new_p, new_q, new_g);
    }
 
-/*************************************************
-* Decode PEM encoded parameters                  *
-*************************************************/
+/*
+* Decode PEM encoded parameters
+*/
 void DL_Group::PEM_decode(DataSource& source)
    {
    std::string label;
@@ -308,9 +310,9 @@ void DL_Group::PEM_decode(DataSource& source)
       throw Decoding_Error("DL_Group: Invalid PEM label " + label);
    }
 
-/*************************************************
-* Create a random DSA-style generator            *
-*************************************************/
+/*
+* Create a random DSA-style generator
+*/
 BigInt DL_Group::make_dsa_generator(const BigInt& p, const BigInt& q)
    {
    BigInt g, e = (p - 1) / q;

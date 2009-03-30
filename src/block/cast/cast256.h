@@ -1,7 +1,9 @@
-/*************************************************
-* CAST-256 Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CAST-256
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_CAST256_H__
 #define BOTAN_CAST256_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* CAST-256                                       *
-*************************************************/
+/*
+* CAST-256
+*/
 class BOTAN_DLL CAST_256 : public BlockCipher
    {
    public:

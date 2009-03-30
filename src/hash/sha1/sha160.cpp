@@ -1,7 +1,9 @@
-/*************************************************
-* SHA-160 Source File                            *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* SHA-160
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/sha160.h>
 #include <botan/loadstor.h>
@@ -11,36 +13,36 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* SHA-160 F1 Function                            *
-*************************************************/
+/*
+* SHA-160 F1 Function
+*/
 inline void F1(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
    {
    E += (D ^ (B & (C ^ D))) + msg + 0x5A827999 + rotate_left(A, 5);
    B  = rotate_left(B, 30);
    }
 
-/*************************************************
-* SHA-160 F2 Function                            *
-*************************************************/
+/*
+* SHA-160 F2 Function
+*/
 inline void F2(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
    {
    E += (B ^ C ^ D) + msg + 0x6ED9EBA1 + rotate_left(A, 5);
    B  = rotate_left(B, 30);
    }
 
-/*************************************************
-* SHA-160 F3 Function                            *
-*************************************************/
+/*
+* SHA-160 F3 Function
+*/
 inline void F3(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
    {
    E += ((B & C) | ((B | C) & D)) + msg + 0x8F1BBCDC + rotate_left(A, 5);
    B  = rotate_left(B, 30);
    }
 
-/*************************************************
-* SHA-160 F4 Function                            *
-*************************************************/
+/*
+* SHA-160 F4 Function
+*/
 inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
    {
    E += (B ^ C ^ D) + msg + 0xCA62C1D6 + rotate_left(A, 5);
@@ -49,9 +51,9 @@ inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 
 }
 
-/*************************************************
-* SHA-160 Compression Function                   *
-*************************************************/
+/*
+* SHA-160 Compression Function
+*/
 void SHA_160::compress_n(const byte input[], u32bit blocks)
    {
    u32bit A = digest[0], B = digest[1], C = digest[2],
@@ -116,18 +118,18 @@ void SHA_160::compress_n(const byte input[], u32bit blocks)
       }
    }
 
-/*************************************************
-* Copy out the digest                            *
-*************************************************/
+/*
+* Copy out the digest
+*/
 void SHA_160::copy_out(byte output[])
    {
    for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
       store_be(digest[j/4], output + j);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void SHA_160::clear() throw()
    {
    MDx_HashFunction::clear();
@@ -139,18 +141,18 @@ void SHA_160::clear() throw()
    digest[4] = 0xC3D2E1F0;
    }
 
-/*************************************************
-* SHA_160 Constructor                            *
-*************************************************/
+/*
+* SHA_160 Constructor
+*/
 SHA_160::SHA_160() :
    MDx_HashFunction(20, 64, true, true), W(80)
    {
    clear();
    }
 
-/*************************************************
-* SHA_160 Constructor                            *
-*************************************************/
+/*
+* SHA_160 Constructor
+*/
 SHA_160::SHA_160(u32bit W_size) :
    MDx_HashFunction(20, 64, true, true), W(W_size)
    {

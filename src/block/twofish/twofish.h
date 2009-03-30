@@ -1,7 +1,9 @@
-/*************************************************
-* Twofish Header File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Twofish
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_TWOFISH_H__
 #define BOTAN_TWOFISH_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Twofish                                        *
-*************************************************/
+/*
+* Twofish
+*/
 class BOTAN_DLL Twofish : public BlockCipher
    {
    public:

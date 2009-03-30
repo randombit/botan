@@ -1,14 +1,16 @@
-/*************************************************
-* Assembly Macros Header File                    *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Assembly Macros
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_AMD64_ASM_MACROS_H__
 #define BOTAN_AMD64_ASM_MACROS_H__
 
-/*************************************************
-* General/Global Macros                          *
-*************************************************/
+/*
+* General/Global Macros
+*/
 #define ALIGN .p2align 4,,15
 
 #define START_LISTING(FILENAME) \
@@ -20,9 +22,9 @@
 .section .note.GNU-stack,"",%progbits
 #endif
 
-/*************************************************
-* Function Definitions                           *
-*************************************************/
+/*
+* Function Definitions
+*/
 #define START_FUNCTION(func_name) \
    ALIGN;                         \
    .global  func_name;            \
@@ -32,9 +34,9 @@ func_name:
 #define END_FUNCTION(func_name) \
    ret
 
-/*************************************************
-* Conditional Jumps                              *
-*************************************************/
+/*
+* Conditional Jumps
+*/
 #define JUMP_IF_ZERO(REG, LABEL) \
    cmp IMM(0), REG;              \
    jz LABEL
@@ -43,9 +45,9 @@ func_name:
    cmp IMM(NUM), REG;               \
    jl LABEL
 
-/*************************************************
-* Register Names                                 *
-*************************************************/
+/*
+* Register Names
+*/
 #define R0  %rax
 #define R1  %rbx
 #define R2  %rcx
@@ -90,17 +92,17 @@ func_name:
 #define TEMP_8 ARG_1
 #define TEMP_9 R0
 
-/*************************************************
-* Memory Access Operations                       *
-*************************************************/
+/*
+* Memory Access Operations
+*/
 #define ARRAY8(REG, NUM) 8*(NUM)(REG)
 #define ARRAY4(REG, NUM) 4*(NUM)(REG)
 
 #define ASSIGN(TO, FROM) mov FROM, TO
 
-/*************************************************
-* ALU Operations                                 *
-*************************************************/
+/*
+* ALU Operations
+*/
 #define IMM(VAL) $VAL
 
 #define ADD(TO, FROM) add FROM, TO

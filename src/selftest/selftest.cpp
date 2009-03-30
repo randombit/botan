@@ -1,7 +1,9 @@
-/*************************************************
-* Startup Self Tests Source File                 *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Startup Self Tests
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/selftest.h>
 #include <botan/filters.h>
@@ -16,9 +18,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Perform a Known Answer Test                    *
-*************************************************/
+/*
+* Perform a Known Answer Test
+*/
 void do_kat(const std::string& in, const std::string& out,
             const std::string& algo_name, Filter* filter)
    {
@@ -32,9 +34,9 @@ void do_kat(const std::string& in, const std::string& out,
       }
    }
 
-/*************************************************
-* Perform a KAT for a cipher                     *
-*************************************************/
+/*
+* Perform a KAT for a cipher
+*/
 void cipher_kat(const BlockCipher* proto,
                 const std::string& key_str,
                 const std::string& iv_str,
@@ -73,9 +75,9 @@ void cipher_kat(const BlockCipher* proto,
 
 }
 
-/*************************************************
-* Perform Self Tests                             *
-*************************************************/
+/*
+* Perform Self Tests
+*/
 bool passes_self_tests(Algorithm_Factory& af)
   {
   try

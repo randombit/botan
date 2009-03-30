@@ -1,16 +1,18 @@
-/*************************************************
-* Blowfish Source File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Blowfish
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/blowfish.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
 
-/*************************************************
-* Blowfish Encryption                            *
-*************************************************/
+/*
+* Blowfish Encryption
+*/
 void Blowfish::enc(const byte in[], byte out[]) const
    {
    const u32bit* S1 = S + 0;
@@ -37,9 +39,9 @@ void Blowfish::enc(const byte in[], byte out[]) const
    store_be(out, R, L);
    }
 
-/*************************************************
-* Blowfish Decryption                            *
-*************************************************/
+/*
+* Blowfish Decryption
+*/
 void Blowfish::dec(const byte in[], byte out[]) const
    {
    const u32bit* S1 = S + 0;
@@ -66,9 +68,9 @@ void Blowfish::dec(const byte in[], byte out[]) const
    store_be(out, R, L);
    }
 
-/*************************************************
-* Blowfish Key Schedule                          *
-*************************************************/
+/*
+* Blowfish Key Schedule
+*/
 void Blowfish::key_schedule(const byte key[], u32bit length)
    {
    clear();
@@ -82,9 +84,9 @@ void Blowfish::key_schedule(const byte key[], u32bit length)
    generate_sbox(S, 1024, L, R);
    }
 
-/*************************************************
-* Generate one of the Sboxes                     *
-*************************************************/
+/*
+* Generate one of the Sboxes
+*/
 void Blowfish::generate_sbox(u32bit Box[], u32bit size,
                              u32bit& L, u32bit& R) const
    {
@@ -111,9 +113,9 @@ void Blowfish::generate_sbox(u32bit Box[], u32bit size,
       }
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void Blowfish::clear() throw()
    {
    P.copy(P_INIT, 18);

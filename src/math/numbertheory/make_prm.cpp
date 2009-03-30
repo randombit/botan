@@ -1,7 +1,9 @@
-/*************************************************
-* Prime Generation Source File                   *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Prime Generation
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/numthry.h>
 #include <botan/parsing.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Generate a random prime                        *
-*************************************************/
+/*
+* Generate a random prime
+*/
 BigInt random_prime(RandomNumberGenerator& rng,
                     u32bit bits, const BigInt& coprime,
                     u32bit equiv, u32bit modulo)
@@ -76,9 +78,9 @@ BigInt random_prime(RandomNumberGenerator& rng,
       }
    }
 
-/*************************************************
-* Generate a random safe prime                   *
-*************************************************/
+/*
+* Generate a random safe prime
+*/
 BigInt random_safe_prime(RandomNumberGenerator& rng, u32bit bits)
    {
    if(bits <= 64)

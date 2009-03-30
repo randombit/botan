@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 Certificates Source File                 *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 Certificates
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/x509cert.h>
 #include <botan/x509_ext.h>
@@ -18,9 +20,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Lookup each OID in the vector                  *
-*************************************************/
+/*
+* Lookup each OID in the vector
+*/
 std::vector<std::string> lookup_oids(const std::vector<std::string>& in)
    {
    std::vector<std::string> out;
@@ -36,9 +38,9 @@ std::vector<std::string> lookup_oids(const std::vector<std::string>& in)
 
 }
 
-/*************************************************
-* X509_Certificate Constructor                   *
-*************************************************/
+/*
+* X509_Certificate Constructor
+*/
 X509_Certificate::X509_Certificate(DataSource& in) :
    X509_Object(in, "CERTIFICATE/X509 CERTIFICATE")
    {
@@ -46,9 +48,9 @@ X509_Certificate::X509_Certificate(DataSource& in) :
    do_decode();
    }
 
-/*************************************************
-* X509_Certificate Constructor                   *
-*************************************************/
+/*
+* X509_Certificate Constructor
+*/
 X509_Certificate::X509_Certificate(const std::string& in) :
    X509_Object(in, "CERTIFICATE/X509 CERTIFICATE")
    {
@@ -56,9 +58,9 @@ X509_Certificate::X509_Certificate(const std::string& in) :
    do_decode();
    }
 
-/*************************************************
-* Decode the TBSCertificate data                 *
-*************************************************/
+/*
+* Decode the TBSCertificate data
+*/
 void X509_Certificate::force_decode()
    {
    u32bit version;
@@ -141,60 +143,60 @@ void X509_Certificate::force_decode()
       }
    }
 
-/*************************************************
-* Return the X.509 version in use                *
-*************************************************/
+/*
+* Return the X.509 version in use
+*/
 u32bit X509_Certificate::x509_version() const
    {
    return (subject.get1_u32bit("X509.Certificate.version") + 1);
    }
 
-/*************************************************
-* Return the time this cert becomes valid        *
-*************************************************/
+/*
+* Return the time this cert becomes valid
+*/
 std::string X509_Certificate::start_time() const
    {
    return subject.get1("X509.Certificate.start");
    }
 
-/*************************************************
-* Return the time this cert becomes invalid      *
-*************************************************/
+/*
+* Return the time this cert becomes invalid
+*/
 std::string X509_Certificate::end_time() const
    {
    return subject.get1("X509.Certificate.end");
    }
 
-/*************************************************
-* Return information about the subject           *
-*************************************************/
+/*
+* Return information about the subject
+*/
 std::vector<std::string>
 X509_Certificate::subject_info(const std::string& what) const
    {
    return subject.get(X509_DN::deref_info_field(what));
    }
 
-/*************************************************
-* Return information about the issuer            *
-*************************************************/
+/*
+* Return information about the issuer
+*/
 std::vector<std::string>
 X509_Certificate::issuer_info(const std::string& what) const
    {
    return issuer.get(X509_DN::deref_info_field(what));
    }
 
-/*************************************************
-* Return the public key in this certificate      *
-*************************************************/
+/*
+* Return the public key in this certificate
+*/
 Public_Key* X509_Certificate::subject_public_key() const
    {
    DataSource_Memory source(subject.get1("X509.Certificate.public_key"));
    return X509::load_key(source);
    }
 
-/*************************************************
-* Check if the certificate is for a CA           *
-*************************************************/
+/*
+* Check if the certificate is for a CA
+*/
 bool X509_Certificate::is_CA_cert() const
    {
    if(!subject.get1_u32bit("X509v3.BasicConstraints.is_ca"))
@@ -204,82 +206,82 @@ bool X509_Certificate::is_CA_cert() const
    return false;
    }
 
-/*************************************************
-* Return the path length constraint              *
-*************************************************/
+/*
+* Return the path length constraint
+*/
 u32bit X509_Certificate::path_limit() const
    {
    return subject.get1_u32bit("X509v3.BasicConstraints.path_constraint", 0);
    }
 
-/*************************************************
-* Return the key usage constraints               *
-*************************************************/
+/*
+* Return the key usage constraints
+*/
 Key_Constraints X509_Certificate::constraints() const
    {
    return Key_Constraints(subject.get1_u32bit("X509v3.KeyUsage",
                                               NO_CONSTRAINTS));
    }
 
-/*************************************************
-* Return the list of extended key usage OIDs     *
-*************************************************/
+/*
+* Return the list of extended key usage OIDs
+*/
 std::vector<std::string> X509_Certificate::ex_constraints() const
    {
    return lookup_oids(subject.get("X509v3.ExtendedKeyUsage"));
    }
 
-/*************************************************
-* Return the list of certificate policies        *
-*************************************************/
+/*
+* Return the list of certificate policies
+*/
 std::vector<std::string> X509_Certificate::policies() const
    {
    return lookup_oids(subject.get("X509v3.CertificatePolicies"));
    }
 
-/*************************************************
-* Return the authority key id                    *
-*************************************************/
+/*
+* Return the authority key id
+*/
 MemoryVector<byte> X509_Certificate::authority_key_id() const
    {
    return issuer.get1_memvec("X509v3.AuthorityKeyIdentifier");
    }
 
-/*************************************************
-* Return the subject key id                      *
-*************************************************/
+/*
+* Return the subject key id
+*/
 MemoryVector<byte> X509_Certificate::subject_key_id() const
    {
    return subject.get1_memvec("X509v3.SubjectKeyIdentifier");
    }
 
-/*************************************************
-* Return the certificate serial number           *
-*************************************************/
+/*
+* Return the certificate serial number
+*/
 MemoryVector<byte> X509_Certificate::serial_number() const
    {
    return subject.get1_memvec("X509.Certificate.serial");
    }
 
-/*************************************************
-* Return the distinguished name of the issuer    *
-*************************************************/
+/*
+* Return the distinguished name of the issuer
+*/
 X509_DN X509_Certificate::issuer_dn() const
    {
    return create_dn(issuer);
    }
 
-/*************************************************
-* Return the distinguished name of the subject   *
-*************************************************/
+/*
+* Return the distinguished name of the subject
+*/
 X509_DN X509_Certificate::subject_dn() const
    {
    return create_dn(subject);
    }
 
-/*************************************************
-* Compare two certificates for equality          *
-*************************************************/
+/*
+* Compare two certificates for equality
+*/
 bool X509_Certificate::operator==(const X509_Certificate& other) const
    {
    return (sig == other.sig &&
@@ -289,17 +291,17 @@ bool X509_Certificate::operator==(const X509_Certificate& other) const
            subject == other.subject);
    }
 
-/*************************************************
-* X.509 Certificate Comparison                   *
-*************************************************/
+/*
+* X.509 Certificate Comparison
+*/
 bool operator!=(const X509_Certificate& cert1, const X509_Certificate& cert2)
    {
    return !(cert1 == cert2);
    }
 
-/*************************************************
-* Create and populate a X509_DN                  *
-*************************************************/
+/*
+* Create and populate a X509_DN
+*/
 X509_DN create_dn(const Data_Store& info)
    {
    class DN_Matcher : public Data_Store::Matcher
@@ -325,9 +327,9 @@ X509_DN create_dn(const Data_Store& info)
    return dn;
    }
 
-/*************************************************
-* Create and populate an AlternativeName         *
-*************************************************/
+/*
+* Create and populate an AlternativeName
+*/
 AlternativeName create_alt_name(const Data_Store& info)
    {
    class AltName_Matcher : public Data_Store::Matcher

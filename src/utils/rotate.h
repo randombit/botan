@@ -1,7 +1,9 @@
-/*************************************************
-* Word Rotation Operations Header File           *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Word Rotation Operations
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_WORD_ROTATE_H__
 #define BOTAN_WORD_ROTATE_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Word Rotation Functions                        *
-*************************************************/
+/*
+* Word Rotation Functions
+*/
 template<typename T> inline T rotate_left(T input, u32bit rot)
    {
    return static_cast<T>((input << rot) | (input >> (8*sizeof(T)-rot)));;

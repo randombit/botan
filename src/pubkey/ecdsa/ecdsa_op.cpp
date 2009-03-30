@@ -1,8 +1,10 @@
-/*************************************************
-* ECDSA Operation                                *
-* (C) 2007 FlexSecure GmbH                       *
-*     2008 Jack Lloyd                            *
-*************************************************/
+/*
+* ECDSA Operation
+* (C) 2007 FlexSecure GmbH
+*     2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/ecdsa_op.h>
 #include <botan/numthry.h>

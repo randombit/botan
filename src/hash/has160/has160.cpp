@@ -1,7 +1,9 @@
-/*************************************************
-* HAS-160 Source File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* HAS-160
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/has160.h>
 #include <botan/loadstor.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* HAS-160 F1 Function                            *
-*************************************************/
+/*
+* HAS-160 F1 Function
+*/
 inline void F1(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E,
                u32bit msg, u32bit rot)
    {
@@ -21,9 +23,9 @@ inline void F1(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E,
    B  = rotate_left(B, 10);
    }
 
-/*************************************************
-* HAS-160 F2 Function                            *
-*************************************************/
+/*
+* HAS-160 F2 Function
+*/
 inline void F2(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E,
                u32bit msg, u32bit rot)
    {
@@ -31,9 +33,9 @@ inline void F2(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E,
    B  = rotate_left(B, 17);
    }
 
-/*************************************************
-* HAS-160 F3 Function                            *
-*************************************************/
+/*
+* HAS-160 F3 Function
+*/
 inline void F3(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E,
                u32bit msg, u32bit rot)
    {
@@ -41,9 +43,9 @@ inline void F3(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E,
    B  = rotate_left(B, 25);
    }
 
-/*************************************************
-* HAS-160 F4 Function                            *
-*************************************************/
+/*
+* HAS-160 F4 Function
+*/
 inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E,
                u32bit msg, u32bit rot)
    {
@@ -53,9 +55,9 @@ inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E,
 
 }
 
-/*************************************************
-* HAS-160 Compression Function                   *
-*************************************************/
+/*
+* HAS-160 Compression Function
+*/
 void HAS_160::compress_n(const byte input[], u32bit blocks)
    {
    for(u32bit i = 0; i != blocks; ++i)
@@ -131,18 +133,18 @@ void HAS_160::compress_n(const byte input[], u32bit blocks)
       }
    }
 
-/*************************************************
-* Copy out the digest                            *
-*************************************************/
+/*
+* Copy out the digest
+*/
 void HAS_160::copy_out(byte output[])
    {
    for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
       store_le(digest[j/4], output + j);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void HAS_160::clear() throw()
    {
    MDx_HashFunction::clear();

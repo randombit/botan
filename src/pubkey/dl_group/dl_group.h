@@ -1,7 +1,9 @@
-/*************************************************
-* Discrete Logarithm Group Header File           *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Discrete Logarithm Group
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_DL_PARAM_H__
 #define BOTAN_DL_PARAM_H__

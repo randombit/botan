@@ -1,7 +1,9 @@
-/*************************************************
-* GMP Engine Header File                         *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* GMP Engine
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ENGINE_GMP_H__
 #define BOTAN_ENGINE_GMP_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* GMP Engine                                     *
-*************************************************/
+/*
+* GMP Engine
+*/
 class BOTAN_DLL GMP_Engine : public Engine
    {
    public:

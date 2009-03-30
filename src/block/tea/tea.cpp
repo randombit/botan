@@ -1,16 +1,18 @@
-/*************************************************
-* TEA Source File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* TEA
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/tea.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
 
-/*************************************************
-* TEA Encryption                                 *
-*************************************************/
+/*
+* TEA Encryption
+*/
 void TEA::enc(const byte in[], byte out[]) const
    {
    u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
@@ -26,9 +28,9 @@ void TEA::enc(const byte in[], byte out[]) const
    store_be(out, L, R);
    }
 
-/*************************************************
-* TEA Decryption                                 *
-*************************************************/
+/*
+* TEA Decryption
+*/
 void TEA::dec(const byte in[], byte out[]) const
    {
    u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
@@ -44,9 +46,9 @@ void TEA::dec(const byte in[], byte out[]) const
    store_be(out, L, R);
    }
 
-/*************************************************
-* TEA Key Schedule                               *
-*************************************************/
+/*
+* TEA Key Schedule
+*/
 void TEA::key_schedule(const byte key[], u32bit)
    {
    for(u32bit j = 0; j != 4; ++j)

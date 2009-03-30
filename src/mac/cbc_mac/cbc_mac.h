@@ -1,7 +1,9 @@
-/*************************************************
-* CBC-MAC Header File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CBC-MAC
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_CBC_MAC_H__
 #define BOTAN_CBC_MAC_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* CBC-MAC                                        *
-*************************************************/
+/*
+* CBC-MAC
+*/
 class BOTAN_DLL CBC_MAC : public MessageAuthenticationCode
    {
    public:

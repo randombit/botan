@@ -1,7 +1,9 @@
-/*************************************************
-* Modular Reducer Header File                    *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Modular Reducer
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_MODARITH_H__
 #define BOTAN_MODARITH_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Modular Reducer                                *
-*************************************************/
+/*
+* Modular Reducer
+*/
 class BOTAN_DLL Modular_Reducer
    {
    public:

@@ -1,7 +1,9 @@
-/*************************************************
-* IF Algorithm Core Header File                  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* IF Algorithm Core
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_IF_CORE_H__
 #define BOTAN_IF_CORE_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* IF Core                                        *
-*************************************************/
+/*
+* IF Core
+*/
 class BOTAN_DLL IF_Core
    {
    public:

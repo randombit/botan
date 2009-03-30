@@ -1,7 +1,9 @@
-/*************************************************
-* MGF1 Source File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* MGF1
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/mgf1.h>
 #include <botan/loadstor.h>
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* MGF1 Mask Generation Function                  *
-*************************************************/
+/*
+* MGF1 Mask Generation Function
+*/
 void MGF1::mask(const byte in[], u32bit in_len, byte out[],
                 u32bit out_len) const
    {
@@ -36,18 +38,18 @@ void MGF1::mask(const byte in[], u32bit in_len, byte out[],
       }
    }
 
-/*************************************************
-* MGF1 Constructor                               *
-*************************************************/
+/*
+* MGF1 Constructor
+*/
 MGF1::MGF1(HashFunction* h) : hash(h)
    {
    if(!hash)
       throw Invalid_Argument("MGF1 given null hash object");
    }
 
-/*************************************************
-* MGF1 Destructor                                *
-*************************************************/
+/*
+* MGF1 Destructor
+*/
 MGF1::~MGF1()
    {
    delete hash;

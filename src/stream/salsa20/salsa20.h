@@ -1,7 +1,9 @@
-/*************************************************
-* Salsa20 Header File                            *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Salsa20
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_SALSA20_H__
 #define BOTAN_SALSA20_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Salsa20                                        *
-*************************************************/
+/*
+* Salsa20
+*/
 class BOTAN_DLL Salsa20 : public StreamCipher
    {
    public:

@@ -1,7 +1,9 @@
-/*************************************************
-* CMS Decoding Operations Source File            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CMS Decoding Operations
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/cms_dec.h>
 #include <botan/x509find.h>
@@ -17,9 +19,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Compute the hash of some content               *
-*************************************************/
+/*
+* Compute the hash of some content
+*/
 SecureVector<byte> hash_of(const SecureVector<byte>& content,
                            const AlgorithmIdentifier& hash_algo,
                            std::string& hash_name)
@@ -32,9 +34,9 @@ SecureVector<byte> hash_of(const SecureVector<byte>& content,
    return hash_fn->process(content);
    }
 
-/*************************************************
-* Find a cert based on SignerIdentifier          *
-*************************************************/
+/*
+* Find a cert based on SignerIdentifier
+*/
 std::vector<X509_Certificate> get_cert(BER_Decoder& signer_info,
                                        X509_Store& store)
    {
@@ -64,9 +66,9 @@ std::vector<X509_Certificate> get_cert(BER_Decoder& signer_info,
    return found;
    }
 
-/*************************************************
-* Read OriginatorInfo                            *
-*************************************************/
+/*
+* Read OriginatorInfo
+*/
 void read_orig_info(BER_Decoder& info, X509_Store& store)
    {
    BER_Object next = info.get_next_object();
@@ -99,9 +101,9 @@ void read_orig_info(BER_Decoder& info, X509_Store& store)
    info.push_back(next);
    }
 
-/*************************************************
-* Decode any Attributes, and check type          *
-*************************************************/
+/*
+* Decode any Attributes, and check type
+*/
 SecureVector<byte> decode_attributes(BER_Decoder& ber, const OID& type,
                                      bool& bad_attributes)
    {
@@ -150,9 +152,9 @@ SecureVector<byte> decode_attributes(BER_Decoder& ber, const OID& type,
 
 }
 
-/*************************************************
-* Decode this layer of CMS encoding              *
-*************************************************/
+/*
+* Decode this layer of CMS encoding
+*/
 void CMS_Decoder::decode_layer()
    {
    try {

@@ -1,16 +1,18 @@
-/*************************************************
-* CRC32 Source File                              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CRC32
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/crc32.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
 
-/*************************************************
-* Update a CRC32 Checksum                        *
-*************************************************/
+/*
+* Update a CRC32 Checksum
+*/
 void CRC32::add_data(const byte input[], u32bit length)
    {
    const u32bit TABLE[256] = {
@@ -87,9 +89,9 @@ void CRC32::add_data(const byte input[], u32bit length)
    crc = tmp;
    }
 
-/*************************************************
-* Finalize a CRC32 Checksum                      *
-*************************************************/
+/*
+* Finalize a CRC32 Checksum
+*/
 void CRC32::final_result(byte output[])
    {
    crc ^= 0xFFFFFFFF;

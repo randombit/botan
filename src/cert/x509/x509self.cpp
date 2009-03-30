@@ -1,7 +1,9 @@
-/*************************************************
-* PKCS #10/Self Signed Cert Creation Source File *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* PKCS #10/Self Signed Cert Creation
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/x509self.h>
 #include <botan/x509_ext.h>
@@ -16,9 +18,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Shared setup for self-signed items             *
-*************************************************/
+/*
+* Shared setup for self-signed items
+*/
 MemoryVector<byte> shared_setup(const X509_Cert_Options& opts,
                                 const Private_Key& key)
    {
@@ -36,9 +38,9 @@ MemoryVector<byte> shared_setup(const X509_Cert_Options& opts,
    return key_encoder.read_all();
    }
 
-/*************************************************
-* Load information from the X509_Cert_Options    *
-*************************************************/
+/*
+* Load information from the X509_Cert_Options
+*/
 void load_info(const X509_Cert_Options& opts, X509_DN& subject_dn,
                AlternativeName& subject_alt)
    {
@@ -58,9 +60,9 @@ void load_info(const X509_Cert_Options& opts, X509_DN& subject_dn,
 
 namespace X509 {
 
-/*************************************************
-* Create a new self-signed X.509 certificate     *
-*************************************************/
+/*
+* Create a new self-signed X.509 certificate
+*/
 X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
                                          const Private_Key& key,
                                          RandomNumberGenerator& rng)
@@ -96,9 +98,9 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
                              extensions);
    }
 
-/*************************************************
-* Create a PKCS #10 certificate request          *
-*************************************************/
+/*
+* Create a PKCS #10 certificate request
+*/
 PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
                                const Private_Key& key,
                                RandomNumberGenerator& rng)

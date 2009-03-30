@@ -1,7 +1,9 @@
-/*************************************************
-* GMP Wrapper Source File                        *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* GMP Wrapper
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/gmp_wrap.h>
 
@@ -17,9 +19,9 @@
 
 namespace Botan {
 
-/*************************************************
-* GMP_MPZ Constructor                            *
-*************************************************/
+/*
+* GMP_MPZ Constructor
+*/
 GMP_MPZ::GMP_MPZ(const BigInt& in)
    {
    mpz_init(value);
@@ -27,60 +29,60 @@ GMP_MPZ::GMP_MPZ(const BigInt& in)
       mpz_import(value, in.sig_words(), -1, sizeof(word), 0, 0, in.data());
    }
 
-/*************************************************
-* GMP_MPZ Constructor                            *
-*************************************************/
+/*
+* GMP_MPZ Constructor
+*/
 GMP_MPZ::GMP_MPZ(const byte in[], u32bit length)
    {
    mpz_init(value);
    mpz_import(value, length, 1, 1, 0, 0, in);
    }
 
-/*************************************************
-* GMP_MPZ Copy Constructor                       *
-*************************************************/
+/*
+* GMP_MPZ Copy Constructor
+*/
 GMP_MPZ::GMP_MPZ(const GMP_MPZ& other)
    {
    mpz_init_set(value, other.value);
    }
 
-/*************************************************
-* GMP_MPZ Destructor                             *
-*************************************************/
+/*
+* GMP_MPZ Destructor
+*/
 GMP_MPZ::~GMP_MPZ()
    {
    mpz_clear(value);
    }
 
-/*************************************************
-* GMP_MPZ Assignment Operator                    *
-*************************************************/
+/*
+* GMP_MPZ Assignment Operator
+*/
 GMP_MPZ& GMP_MPZ::operator=(const GMP_MPZ& other)
    {
    mpz_set(value, other.value);
    return (*this);
    }
 
-/*************************************************
-* Export the mpz_t as a bytestring               *
-*************************************************/
+/*
+* Export the mpz_t as a bytestring
+*/
 void GMP_MPZ::encode(byte out[], u32bit length) const
    {
    size_t dummy = 0;
    mpz_export(out + (length - bytes()), &dummy, 1, 1, 0, 0, value);
    }
 
-/*************************************************
-* Return the number of significant bytes         *
-*************************************************/
+/*
+* Return the number of significant bytes
+*/
 u32bit GMP_MPZ::bytes() const
    {
    return ((mpz_sizeinbase(value, 2) + 7) / 8);
    }
 
-/*************************************************
-* GMP to BigInt Conversions                      *
-*************************************************/
+/*
+* GMP to BigInt Conversions
+*/
 BigInt GMP_MPZ::to_bigint() const
    {
    BigInt out(BigInt::Positive, (bytes() + sizeof(word) - 1) / sizeof(word));

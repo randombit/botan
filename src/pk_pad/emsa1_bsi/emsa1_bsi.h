@@ -1,8 +1,10 @@
-/*************************************************
-* EMSA1 BSI Variant Header File                  *
-* (C) 1999-2008 Jack Lloyd                       *
-*     2007 FlexSecure GmbH                       *
-*************************************************/
+/*
+* EMSA1 BSI Variant
+* (C) 1999-2008 Jack Lloyd
+*     2007 FlexSecure GmbH
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_EMSA1_BSI_H__
 #define BOTAN_EMSA1_BSI_H__

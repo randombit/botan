@@ -1,7 +1,9 @@
-/*************************************************
-* Algorithm Identifier Source File               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Algorithm Identifier
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/alg_id.h>
 #include <botan/der_enc.h>
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Create an AlgorithmIdentifier                  *
-*************************************************/
+/*
+* Create an AlgorithmIdentifier
+*/
 AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
                                          const MemoryRegion<byte>& param)
    {
@@ -20,9 +22,9 @@ AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
    parameters = param;
    }
 
-/*************************************************
-* Create an AlgorithmIdentifier                  *
-*************************************************/
+/*
+* Create an AlgorithmIdentifier
+*/
 AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
                                          const MemoryRegion<byte>& param)
    {
@@ -30,9 +32,9 @@ AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
    parameters = param;
    }
 
-/*************************************************
-* Create an AlgorithmIdentifier                  *
-*************************************************/
+/*
+* Create an AlgorithmIdentifier
+*/
 AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
                                          Encoding_Option option)
    {
@@ -43,9 +45,9 @@ AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
       parameters.append(DER_NULL, sizeof(DER_NULL));
    }
 
-/*************************************************
-* Create an AlgorithmIdentifier                  *
-*************************************************/
+/*
+* Create an AlgorithmIdentifier
+*/
 AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
                                          Encoding_Option option)
    {
@@ -56,9 +58,9 @@ AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
       parameters.append(DER_NULL, sizeof(DER_NULL));
    }
 
-/*************************************************
-* Compare two AlgorithmIdentifiers               *
-*************************************************/
+/*
+* Compare two AlgorithmIdentifiers
+*/
 bool operator==(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2)
    {
    if(a1.oid != a2.oid)
@@ -68,17 +70,17 @@ bool operator==(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2)
    return true;
    }
 
-/*************************************************
-* Compare two AlgorithmIdentifiers               *
-*************************************************/
+/*
+* Compare two AlgorithmIdentifiers
+*/
 bool operator!=(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2)
    {
    return !(a1 == a2);
    }
 
-/*************************************************
-* DER encode an AlgorithmIdentifier              *
-*************************************************/
+/*
+* DER encode an AlgorithmIdentifier
+*/
 void AlgorithmIdentifier::encode_into(DER_Encoder& codec) const
    {
    codec.start_cons(SEQUENCE)
@@ -87,9 +89,9 @@ void AlgorithmIdentifier::encode_into(DER_Encoder& codec) const
    .end_cons();
    }
 
-/*************************************************
-* Decode a BER encoded AlgorithmIdentifier       *
-*************************************************/
+/*
+* Decode a BER encoded AlgorithmIdentifier
+*/
 void AlgorithmIdentifier::decode_from(BER_Decoder& codec)
    {
    codec.start_cons(SEQUENCE)

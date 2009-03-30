@@ -1,7 +1,9 @@
-/*************************************************
-* EME1 Source File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* EME1
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eme1.h>
 #include <botan/mgf1.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* EME1 Pad Operation                             *
-*************************************************/
+/*
+* EME1 Pad Operation
+*/
 SecureVector<byte> EME1::pad(const byte in[], u32bit in_length,
                              u32bit key_length,
                              RandomNumberGenerator& rng) const
@@ -36,9 +38,9 @@ SecureVector<byte> EME1::pad(const byte in[], u32bit in_length,
    return out;
    }
 
-/*************************************************
-* EME1 Unpad Operation                           *
-*************************************************/
+/*
+* EME1 Unpad Operation
+*/
 SecureVector<byte> EME1::unpad(const byte in[], u32bit in_length,
                                u32bit key_length) const
    {
@@ -77,9 +79,9 @@ SecureVector<byte> EME1::unpad(const byte in[], u32bit in_length,
    throw Decoding_Error("Invalid EME1 encoding");
    }
 
-/*************************************************
-* Return the max input size for a given key size *
-*************************************************/
+/*
+* Return the max input size for a given key size
+*/
 u32bit EME1::maximum_input_size(u32bit keybits) const
    {
    if(keybits / 8 > 2*HASH_LENGTH + 1)
@@ -88,9 +90,9 @@ u32bit EME1::maximum_input_size(u32bit keybits) const
       return 0;
    }
 
-/*************************************************
-* EME1 Constructor                               *
-*************************************************/
+/*
+* EME1 Constructor
+*/
 EME1::EME1(HashFunction* hash, const std::string& P) :
    HASH_LENGTH(hash->OUTPUT_LENGTH)
    {

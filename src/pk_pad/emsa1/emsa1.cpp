@@ -1,7 +1,9 @@
-/*************************************************
-* EMSA1 Source File                              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* EMSA1
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/emsa1.h>
 
@@ -38,25 +40,25 @@ SecureVector<byte> emsa1_encoding(const MemoryRegion<byte>& msg,
 
 }
 
-/*************************************************
-* EMSA1 Update Operation                         *
-*************************************************/
+/*
+* EMSA1 Update Operation
+*/
 void EMSA1::update(const byte input[], u32bit length)
    {
    hash->update(input, length);
    }
 
-/*************************************************
-* Return the raw (unencoded) data                *
-*************************************************/
+/*
+* Return the raw (unencoded) data
+*/
 SecureVector<byte> EMSA1::raw_data()
    {
    return hash->final();
    }
 
-/*************************************************
-* EMSA1 Encode Operation                         *
-*************************************************/
+/*
+* EMSA1 Encode Operation
+*/
 SecureVector<byte> EMSA1::encoding_of(const MemoryRegion<byte>& msg,
                                       u32bit output_bits,
                                       RandomNumberGenerator&)
@@ -66,9 +68,9 @@ SecureVector<byte> EMSA1::encoding_of(const MemoryRegion<byte>& msg,
    return emsa1_encoding(msg, output_bits);
    }
 
-/*************************************************
-* EMSA1 Decode/Verify Operation                  *
-*************************************************/
+/*
+* EMSA1 Decode/Verify Operation
+*/
 bool EMSA1::verify(const MemoryRegion<byte>& coded,
                    const MemoryRegion<byte>& raw, u32bit key_bits) throw()
    {

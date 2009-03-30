@@ -1,8 +1,10 @@
-/*************************************************
-* Shanks-Tonnelli (RESSOL) Source File           *
-* (C) 2007-2008 Falko Strenzke, FlexSecure GmbH  *
-* (C) 2008 Jack Lloyd                            *
-*************************************************/
+/*
+* Shanks-Tonnelli (RESSOL)
+* (C) 2007-2008 Falko Strenzke, FlexSecure GmbH
+* (C) 2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/numthry.h>
 #include <botan/reducer.h>
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Shanks-Tonnelli algorithm                      *
-*************************************************/
+/*
+* Shanks-Tonnelli algorithm
+*/
 BigInt ressol(const BigInt& a, const BigInt& p)
    {
    if(a < 0)

@@ -1,16 +1,18 @@
-/*************************************************
-* IF (RSA/RW) Operation Source File              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* IF (RSA/RW) Operation
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/if_op.h>
 #include <botan/numthry.h>
 
 namespace Botan {
 
-/*************************************************
-* Default_IF_Op Constructor                      *
-*************************************************/
+/*
+* Default_IF_Op Constructor
+*/
 Default_IF_Op::Default_IF_Op(const BigInt& e, const BigInt& n, const BigInt&,
                              const BigInt& p, const BigInt& q,
                              const BigInt& d1, const BigInt& d2,
@@ -28,9 +30,9 @@ Default_IF_Op::Default_IF_Op(const BigInt& e, const BigInt& n, const BigInt&,
       }
    }
 
-/*************************************************
-* Default IF Private Operation                   *
-*************************************************/
+/*
+* Default IF Private Operation
+*/
 BigInt Default_IF_Op::private_op(const BigInt& i) const
    {
    if(q == 0)

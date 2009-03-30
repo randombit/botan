@@ -1,7 +1,9 @@
-/*************************************************
-* ASN.1 OID Source File                          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* ASN.1 OID
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/asn1_oid.h>
 #include <botan/der_enc.h>
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* ASN.1 OID Constructor                          *
-*************************************************/
+/*
+* ASN.1 OID Constructor
+*/
 OID::OID(const std::string& oid_str)
    {
    if(oid_str != "")
@@ -26,17 +28,17 @@ OID::OID(const std::string& oid_str)
       }
    }
 
-/*************************************************
-* Clear the current OID                          *
-*************************************************/
+/*
+* Clear the current OID
+*/
 void OID::clear()
    {
    id.clear();
    }
 
-/*************************************************
-* Return this OID as a string                    *
-*************************************************/
+/*
+* Return this OID as a string
+*/
 std::string OID::as_string() const
    {
    std::string oid_str;
@@ -49,9 +51,9 @@ std::string OID::as_string() const
    return oid_str;
    }
 
-/*************************************************
-* OID equality comparison                        *
-*************************************************/
+/*
+* OID equality comparison
+*/
 bool OID::operator==(const OID& oid) const
    {
    if(id.size() != oid.id.size())
@@ -62,18 +64,18 @@ bool OID::operator==(const OID& oid) const
    return true;
    }
 
-/*************************************************
-* Append another component to the OID            *
-*************************************************/
+/*
+* Append another component to the OID
+*/
 OID& OID::operator+=(u32bit component)
    {
    id.push_back(component);
    return (*this);
    }
 
-/*************************************************
-* Append another component to the OID            *
-*************************************************/
+/*
+* Append another component to the OID
+*/
 OID operator+(const OID& oid, u32bit component)
    {
    OID new_oid(oid);
@@ -81,17 +83,17 @@ OID operator+(const OID& oid, u32bit component)
    return new_oid;
    }
 
-/*************************************************
-* OID inequality comparison                      *
-*************************************************/
+/*
+* OID inequality comparison
+*/
 bool operator!=(const OID& a, const OID& b)
    {
    return !(a == b);
    }
 
-/*************************************************
-* Compare two OIDs                               *
-*************************************************/
+/*
+* Compare two OIDs
+*/
 bool operator<(const OID& a, const OID& b)
    {
    std::vector<u32bit> oid1 = a.get_id();
@@ -111,9 +113,9 @@ bool operator<(const OID& a, const OID& b)
    return false;
    }
 
-/*************************************************
-* DER encode an OBJECT IDENTIFIER                *
-*************************************************/
+/*
+* DER encode an OBJECT IDENTIFIER
+*/
 void OID::encode_into(DER_Encoder& der) const
    {
    if(id.size() < 2)
@@ -139,9 +141,9 @@ void OID::encode_into(DER_Encoder& der) const
    der.add_object(OBJECT_ID, UNIVERSAL, encoding);
    }
 
-/*************************************************
-* Decode a BER encoded OBJECT IDENTIFIER         *
-*************************************************/
+/*
+* Decode a BER encoded OBJECT IDENTIFIER
+*/
 void OID::decode_from(BER_Decoder& decoder)
    {
    BER_Object obj = decoder.get_next_object();

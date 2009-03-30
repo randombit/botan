@@ -1,7 +1,9 @@
-/*************************************************
-* Default Engine Header File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Default Engine
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_DEFAULT_ENGINE_H__
 #define BOTAN_DEFAULT_ENGINE_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Default Engine                                 *
-*************************************************/
+/*
+* Default Engine
+*/
 class BOTAN_DLL Default_Engine : public Engine
    {
    public:

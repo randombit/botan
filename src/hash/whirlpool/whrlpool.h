@@ -1,7 +1,9 @@
-/*************************************************
-* Whirlpool Header File                          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Whirlpool
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_WHIRLPOOL_H__
 #define BOTAN_WHIRLPOOL_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Whirlpool                                      *
-*************************************************/
+/*
+* Whirlpool
+*/
 class BOTAN_DLL Whirlpool : public MDx_HashFunction
    {
    public:

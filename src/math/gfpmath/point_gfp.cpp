@@ -1,12 +1,12 @@
-/******************************************************
-* Arithmetic for point groups of elliptic curves      *
-* over GF(p) (source file)                            *
-*                                                     *
-* (C) 2007 Martin Doering                             *
-*          Christoph Ludwig                           *
-*          Falko Strenzke                             *
-*     2008 Jack Lloyd                                 *
-******************************************************/
+/******
+* Arithmetic for point groups of elliptic curves
+* over GF(p) (source file)
+*
+* (C) 2007 Martin Doering
+*          Christoph Ludwig
+*          Falko Strenzke
+*     2008 Jack Lloyd
+******/
 
 #include <botan/point_gfp.h>
 #include <botan/numthry.h>
@@ -688,6 +688,8 @@ void PointGFp::turn_on_sp_red_mul() const
 * returns a point equivalent to *this but were
 * Z has value one, i.e. x and y correspond to
 * their values in affine coordinates
+*
+* Distributed under the terms of the Botan license
 */
 PointGFp const PointGFp::get_z_to_one() const
    {

@@ -1,7 +1,9 @@
-/*************************************************
-* RC6 Source File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* RC6
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/rc6.h>
 #include <botan/loadstor.h>
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* RC6 Encryption                                 *
-*************************************************/
+/*
+* RC6 Encryption
+*/
 void RC6::enc(const byte in[], byte out[]) const
    {
    u32bit A = load_le<u32bit>(in, 0);
@@ -52,9 +54,9 @@ void RC6::enc(const byte in[], byte out[]) const
    store_le(out, A, B, C, D);
    }
 
-/*************************************************
-* RC6 Decryption                                 *
-*************************************************/
+/*
+* RC6 Decryption
+*/
 void RC6::dec(const byte in[], byte out[]) const
    {
    u32bit A = load_le<u32bit>(in, 0);
@@ -94,9 +96,9 @@ void RC6::dec(const byte in[], byte out[]) const
    store_le(out, A, B, C, D);
    }
 
-/*************************************************
-* RC6 Key Schedule                               *
-*************************************************/
+/*
+* RC6 Key Schedule
+*/
 void RC6::key_schedule(const byte key[], u32bit length)
    {
    const u32bit WORD_KEYLENGTH = (((length - 1) / 4) + 1),

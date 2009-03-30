@@ -1,6 +1,8 @@
 /**
-* Unix Command Execution Header File
+* Unix Command Execution
 * (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_UNIX_CMD_H__

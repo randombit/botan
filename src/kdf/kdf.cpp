@@ -1,15 +1,17 @@
-/*************************************************
-* KDF Base Class Source File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* KDF Base Class
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/kdf.h>
 
 namespace Botan {
 
-/*************************************************
-* Derive a key                                   *
-*************************************************/
+/*
+* Derive a key
+*/
 SecureVector<byte> KDF::derive_key(u32bit key_len,
                                    const MemoryRegion<byte>& secret,
                                    const std::string& salt) const
@@ -19,9 +21,9 @@ SecureVector<byte> KDF::derive_key(u32bit key_len,
                      salt.length());
    }
 
-/*************************************************
-* Derive a key                                   *
-*************************************************/
+/*
+* Derive a key
+*/
 SecureVector<byte> KDF::derive_key(u32bit key_len,
                                    const MemoryRegion<byte>& secret,
                                    const byte salt[], u32bit salt_len) const
@@ -30,9 +32,9 @@ SecureVector<byte> KDF::derive_key(u32bit key_len,
                      salt, salt_len);
    }
 
-/*************************************************
-* Derive a key                                   *
-*************************************************/
+/*
+* Derive a key
+*/
 SecureVector<byte> KDF::derive_key(u32bit key_len,
                                    const MemoryRegion<byte>& secret,
                                    const MemoryRegion<byte>& salt) const
@@ -41,9 +43,9 @@ SecureVector<byte> KDF::derive_key(u32bit key_len,
                      salt.begin(), salt.size());
    }
 
-/*************************************************
-* Derive a key                                   *
-*************************************************/
+/*
+* Derive a key
+*/
 SecureVector<byte> KDF::derive_key(u32bit key_len,
                                    const byte secret[], u32bit secret_len,
                                    const std::string& salt) const
@@ -53,9 +55,9 @@ SecureVector<byte> KDF::derive_key(u32bit key_len,
                      salt.length());
    }
 
-/*************************************************
-* Derive a key                                   *
-*************************************************/
+/*
+* Derive a key
+*/
 SecureVector<byte> KDF::derive_key(u32bit key_len,
                                    const byte secret[], u32bit secret_len,
                                    const byte salt[], u32bit salt_len) const

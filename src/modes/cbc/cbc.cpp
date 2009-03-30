@@ -1,7 +1,9 @@
-/*************************************************
-* CBC Mode Source File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CBC Mode
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/cbc.h>
 #include <botan/xor_buf.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* CBC Encryption Constructor                     *
-*************************************************/
+/*
+* CBC Encryption Constructor
+*/
 CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad) :
    BlockCipherMode(ciph, "CBC", ciph->BLOCK_SIZE),
@@ -21,9 +23,9 @@ CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
       throw Invalid_Block_Size(name(), padder->name());
    }
 
-/*************************************************
-* CBC Encryption Constructor                     *
-*************************************************/
+/*
+* CBC Encryption Constructor
+*/
 CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key,
@@ -37,9 +39,9 @@ CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
    set_iv(iv);
    }
 
-/*************************************************
-* Encrypt in CBC mode                            *
-*************************************************/
+/*
+* Encrypt in CBC mode
+*/
 void CBC_Encryption::write(const byte input[], u32bit length)
    {
    while(length)
@@ -58,9 +60,9 @@ void CBC_Encryption::write(const byte input[], u32bit length)
       }
    }
 
-/*************************************************
-* Finish encrypting in CBC mode                  *
-*************************************************/
+/*
+* Finish encrypting in CBC mode
+*/
 void CBC_Encryption::end_msg()
    {
    SecureVector<byte> padding(BLOCK_SIZE);
@@ -70,17 +72,17 @@ void CBC_Encryption::end_msg()
       throw Exception(name() + ": Did not pad to full blocksize");
    }
 
-/*************************************************
-* Return a CBC mode name                         *
-*************************************************/
+/*
+* Return a CBC mode name
+*/
 std::string CBC_Encryption::name() const
    {
    return (cipher->name() + "/" + mode_name + "/" + padder->name());
    }
 
-/*************************************************
-* CBC Decryption Constructor                     *
-*************************************************/
+/*
+* CBC Decryption Constructor
+*/
 CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad) :
    BlockCipherMode(ciph, "CBC", ciph->BLOCK_SIZE),
@@ -91,9 +93,9 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
    temp.create(BLOCK_SIZE);
    }
 
-/*************************************************
-* CBC Decryption Constructor                     *
-*************************************************/
+/*
+* CBC Decryption Constructor
+*/
 CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key,
@@ -108,9 +110,9 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
    set_iv(iv);
    }
 
-/*************************************************
-* Decrypt in CBC mode                            *
-*************************************************/
+/*
+* Decrypt in CBC mode
+*/
 void CBC_Decryption::write(const byte input[], u32bit length)
    {
    while(length)
@@ -131,9 +133,9 @@ void CBC_Decryption::write(const byte input[], u32bit length)
       }
    }
 
-/*************************************************
-* Finish decrypting in CBC mode                  *
-*************************************************/
+/*
+* Finish decrypting in CBC mode
+*/
 void CBC_Decryption::end_msg()
    {
    if(position != BLOCK_SIZE)
@@ -145,9 +147,9 @@ void CBC_Decryption::end_msg()
    position = 0;
    }
 
-/*************************************************
-* Return a CBC mode name                         *
-*************************************************/
+/*
+* Return a CBC mode name
+*/
 std::string CBC_Decryption::name() const
    {
    return (cipher->name() + "/" + mode_name + "/" + padder->name());

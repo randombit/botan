@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 Certificate Authority Source File        *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 Certificate Authority
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/x509_ca.h>
 #include <botan/x509stor.h>
@@ -20,9 +22,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Load the certificate and private key           *
-*************************************************/
+/*
+* Load the certificate and private key
+*/
 X509_CA::X509_CA(const X509_Certificate& c,
                  const Private_Key& key) : cert(c)
    {
@@ -36,9 +38,9 @@ X509_CA::X509_CA(const X509_Certificate& c,
    signer = choose_sig_format(key, ca_sig_algo);
    }
 
-/*************************************************
-* Sign a PKCS #10 certificate request            *
-*************************************************/
+/*
+* Sign a PKCS #10 certificate request
+*/
 X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
                                        RandomNumberGenerator& rng,
                                        const X509_Time& not_before,
@@ -74,9 +76,9 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
                     extensions);
    }
 
-/*************************************************
-* Create a new certificate                       *
-*************************************************/
+/*
+* Create a new certificate
+*/
 X509_Certificate X509_CA::make_cert(PK_Signer* signer,
                                     RandomNumberGenerator& rng,
                                     const AlgorithmIdentifier& sig_algo,
@@ -123,9 +125,9 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
    return X509_Certificate(source);
    }
 
-/*************************************************
-* Create a new, empty CRL                        *
-*************************************************/
+/*
+* Create a new, empty CRL
+*/
 X509_CRL X509_CA::new_crl(RandomNumberGenerator& rng,
                           u32bit next_update) const
    {
@@ -133,9 +135,9 @@ X509_CRL X509_CA::new_crl(RandomNumberGenerator& rng,
    return make_crl(empty, 1, next_update, rng);
    }
 
-/*************************************************
-* Update a CRL with new entries                  *
-*************************************************/
+/*
+* Update a CRL with new entries
+*/
 X509_CRL X509_CA::update_crl(const X509_CRL& crl,
                              const std::vector<CRL_Entry>& new_revoked,
                              RandomNumberGenerator& rng,
@@ -175,9 +177,9 @@ X509_CRL X509_CA::update_crl(const X509_CRL& crl,
    return make_crl(cert_list, crl.crl_number() + 1, next_update, rng);
    }
 
-/*************************************************
-* Create a CRL                                   *
-*************************************************/
+/*
+* Create a CRL
+*/
 X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
                            u32bit crl_number, u32bit next_update,
                            RandomNumberGenerator& rng) const
@@ -220,25 +222,25 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
    return X509_CRL(source);
    }
 
-/*************************************************
-* Return the CA's certificate                    *
-*************************************************/
+/*
+* Return the CA's certificate
+*/
 X509_Certificate X509_CA::ca_certificate() const
    {
    return cert;
    }
 
-/*************************************************
-* X509_CA Destructor                             *
-*************************************************/
+/*
+* X509_CA Destructor
+*/
 X509_CA::~X509_CA()
    {
    delete signer;
    }
 
-/*************************************************
-* Choose a signing format for the key            *
-*************************************************/
+/*
+* Choose a signing format for the key
+*/
 PK_Signer* choose_sig_format(const Private_Key& key,
                              AlgorithmIdentifier& sig_algo)
    {

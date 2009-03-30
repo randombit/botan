@@ -1,7 +1,9 @@
-/*************************************************
-* Rabin-Williams Source File                     *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Rabin-Williams
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/rw.h>
 #include <botan/numthry.h>
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* RW_PublicKey Constructor                       *
-*************************************************/
+/*
+* RW_PublicKey Constructor
+*/
 RW_PublicKey::RW_PublicKey(const BigInt& mod, const BigInt& exp)
    {
    n = mod;
@@ -22,9 +24,9 @@ RW_PublicKey::RW_PublicKey(const BigInt& mod, const BigInt& exp)
    X509_load_hook();
    }
 
-/*************************************************
-* Rabin-Williams Public Operation                *
-*************************************************/
+/*
+* Rabin-Williams Public Operation
+*/
 BigInt RW_PublicKey::public_op(const BigInt& i) const
    {
    if((i > (n >> 1)) || i.is_negative())
@@ -41,18 +43,18 @@ BigInt RW_PublicKey::public_op(const BigInt& i) const
    throw Invalid_Argument(algo_name() + "::public_op: Invalid input");
    }
 
-/*************************************************
-* Rabin-Williams Verification Function           *
-*************************************************/
+/*
+* Rabin-Williams Verification Function
+*/
 SecureVector<byte> RW_PublicKey::verify(const byte in[], u32bit len) const
    {
    BigInt i(in, len);
    return BigInt::encode(public_op(i));
    }
 
-/*************************************************
-* Create a Rabin-Williams private key            *
-*************************************************/
+/*
+* Create a Rabin-Williams private key
+*/
 RW_PrivateKey::RW_PrivateKey(RandomNumberGenerator& rng,
                              u32bit bits, u32bit exp)
    {
@@ -73,9 +75,9 @@ RW_PrivateKey::RW_PrivateKey(RandomNumberGenerator& rng,
       throw Self_Test_Failure(algo_name() + " private key generation failed");
    }
 
-/*************************************************
-* RW_PrivateKey Constructor                      *
-*************************************************/
+/*
+* RW_PrivateKey Constructor
+*/
 RW_PrivateKey::RW_PrivateKey(RandomNumberGenerator& rng,
                              const BigInt& prime1, const BigInt& prime2,
                              const BigInt& exp, const BigInt& d_exp,
@@ -93,9 +95,9 @@ RW_PrivateKey::RW_PrivateKey(RandomNumberGenerator& rng,
    PKCS8_load_hook(rng);
    }
 
-/*************************************************
-* Rabin-Williams Signature Operation             *
-*************************************************/
+/*
+* Rabin-Williams Signature Operation
+*/
 SecureVector<byte> RW_PrivateKey::sign(const byte in[], u32bit len,
                                        RandomNumberGenerator&) const
    {
@@ -114,9 +116,9 @@ SecureVector<byte> RW_PrivateKey::sign(const byte in[], u32bit len,
    return BigInt::encode_1363(r, n.bytes());
    }
 
-/*************************************************
-* Check Private Rabin-Williams Parameters        *
-*************************************************/
+/*
+* Check Private Rabin-Williams Parameters
+*/
 bool RW_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    {
    if(!IF_Scheme_PrivateKey::check_key(rng, strong))

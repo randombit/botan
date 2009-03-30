@@ -1,7 +1,9 @@
-/*************************************************
-* Block Cipher Mode Header File                  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Block Cipher Mode
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_MODEBASE_H__
 #define BOTAN_MODEBASE_H__

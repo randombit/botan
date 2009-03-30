@@ -1,7 +1,9 @@
-/*************************************************
-* EME Classes Header File                        *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* EME Classes
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_PUBKEY_EME_ENCRYPTION_PAD_H__
 #define BOTAN_PUBKEY_EME_ENCRYPTION_PAD_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Encoding Method for Encryption                 *
-*************************************************/
+/*
+* Encoding Method for Encryption
+*/
 class BOTAN_DLL EME
    {
    public:

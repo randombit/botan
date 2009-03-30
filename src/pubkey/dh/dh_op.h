@@ -1,7 +1,9 @@
-/*************************************************
-* DH Operations Header File                      *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* DH Operations
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_DH_OPS_H__
 #define BOTAN_DH_OPS_H__
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* DH Operation Interface                         *
-*************************************************/
+/*
+* DH Operation Interface
+*/
 class BOTAN_DLL DH_Operation
    {
    public:
@@ -23,9 +25,9 @@ class BOTAN_DLL DH_Operation
       virtual ~DH_Operation() {}
    };
 
-/*************************************************
-* Botan's Default DH Operation                   *
-*************************************************/
+/*
+* Botan's Default DH Operation
+*/
 class BOTAN_DLL Default_DH_Op : public DH_Operation
    {
    public:

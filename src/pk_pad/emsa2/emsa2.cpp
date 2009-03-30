@@ -1,7 +1,9 @@
-/*************************************************
-* EMSA2 Source File                              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* EMSA2
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/emsa2.h>
 #include <botan/hash_id.h>
@@ -10,9 +12,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* EMSA2 Encode Operation                         *
-*************************************************/
+/*
+* EMSA2 Encode Operation
+*/
 SecureVector<byte> emsa2_encoding(const MemoryRegion<byte>& msg,
                                   u32bit output_bits,
                                   const MemoryRegion<byte>& empty_hash,
@@ -46,25 +48,25 @@ SecureVector<byte> emsa2_encoding(const MemoryRegion<byte>& msg,
 
 }
 
-/*************************************************
-* EMSA2 Update Operation                         *
-*************************************************/
+/*
+* EMSA2 Update Operation
+*/
 void EMSA2::update(const byte input[], u32bit length)
    {
    hash->update(input, length);
    }
 
-/*************************************************
-* Return the raw (unencoded) data                *
-*************************************************/
+/*
+* Return the raw (unencoded) data
+*/
 SecureVector<byte> EMSA2::raw_data()
    {
    return hash->final();
    }
 
-/*************************************************
-* EMSA2 Encode Operation                         *
-*************************************************/
+/*
+* EMSA2 Encode Operation
+*/
 SecureVector<byte> EMSA2::encoding_of(const MemoryRegion<byte>& msg,
                                       u32bit output_bits,
                                       RandomNumberGenerator&)
@@ -72,9 +74,9 @@ SecureVector<byte> EMSA2::encoding_of(const MemoryRegion<byte>& msg,
    return emsa2_encoding(msg, output_bits, empty_hash, hash_id);
    }
 
-/*************************************************
-* EMSA2 Verify Operation                         *
-*************************************************/
+/*
+* EMSA2 Verify Operation
+*/
 bool EMSA2::verify(const MemoryRegion<byte>& coded,
                    const MemoryRegion<byte>& raw,
                    u32bit key_bits) throw()
@@ -90,9 +92,9 @@ bool EMSA2::verify(const MemoryRegion<byte>& coded,
       }
    }
 
-/*************************************************
-* EMSA2 Constructor                              *
-*************************************************/
+/*
+* EMSA2 Constructor
+*/
 EMSA2::EMSA2(HashFunction* hash_in) : hash(hash_in)
    {
    empty_hash = hash->final();

@@ -1,7 +1,9 @@
-/*************************************************
-* Data Store Header File                         *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Data Store
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_DATA_STORE_H__
 #define BOTAN_DATA_STORE_H__

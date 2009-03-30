@@ -1,7 +1,9 @@
-/*************************************************
-* BigInt Base Source File                        *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* BigInt Base
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/bigint.h>
 #include <botan/mp_core.h>
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Construct a BigInt from a regular number       *
-*************************************************/
+/*
+* Construct a BigInt from a regular number
+*/
 BigInt::BigInt(u64bit n)
    {
    set_sign(Positive);
@@ -28,18 +30,18 @@ BigInt::BigInt(u64bit n)
       reg[j] = ((n >> (j*MP_WORD_BITS)) & MP_WORD_MASK);
    }
 
-/*************************************************
-* Construct a BigInt of the specified size       *
-*************************************************/
+/*
+* Construct a BigInt of the specified size
+*/
 BigInt::BigInt(Sign s, u32bit size)
    {
    reg.create(round_up(size, 8));
    signedness = s;
    }
 
-/*************************************************
-* Construct a BigInt from a "raw" BigInt         *
-*************************************************/
+/*
+* Construct a BigInt from a "raw" BigInt
+*/
 BigInt::BigInt(const BigInt& b)
    {
    const u32bit b_words = b.sig_words();
@@ -57,9 +59,9 @@ BigInt::BigInt(const BigInt& b)
       }
    }
 
-/*************************************************
-* Construct a BigInt from a string               *
-*************************************************/
+/*
+* Construct a BigInt from a string
+*/
 BigInt::BigInt(const std::string& str)
    {
    Base base = Decimal;
@@ -80,53 +82,53 @@ BigInt::BigInt(const std::string& str)
    else         set_sign(Positive);
    }
 
-/*************************************************
-* Construct a BigInt from an encoded BigInt      *
-*************************************************/
+/*
+* Construct a BigInt from an encoded BigInt
+*/
 BigInt::BigInt(const byte input[], u32bit length, Base base)
    {
    set_sign(Positive);
    *this = decode(input, length, base);
    }
 
-/*************************************************
-* Construct a BigInt from an encoded BigInt      *
-*************************************************/
+/*
+* Construct a BigInt from an encoded BigInt
+*/
 BigInt::BigInt(RandomNumberGenerator& rng, u32bit bits)
    {
    set_sign(Positive);
    randomize(rng, bits);
    }
 
-/*************************************************
-* Swap this BigInt with another                  *
-*************************************************/
+/*
+* Swap this BigInt with another
+*/
 void BigInt::swap(BigInt& other)
    {
    reg.swap(other.reg);
    std::swap(signedness, other.signedness);
    }
 
-/*************************************************
-* Grow the internal storage                      *
-*************************************************/
+/*
+* Grow the internal storage
+*/
 void BigInt::grow_reg(u32bit n)
    {
    reg.grow_to(round_up(size() + n, 8));
    }
 
-/*************************************************
-* Grow the internal storage                      *
-*************************************************/
+/*
+* Grow the internal storage
+*/
 void BigInt::grow_to(u32bit n)
    {
    if(n > size())
       reg.grow_to(round_up(n, 8));
    }
 
-/*************************************************
-* Comparison Function                            *
-*************************************************/
+/*
+* Comparison Function
+*/
 s32bit BigInt::cmp(const BigInt& n, bool check_signs) const
    {
    if(check_signs)
@@ -139,9 +141,9 @@ s32bit BigInt::cmp(const BigInt& n, bool check_signs) const
    return bigint_cmp(data(), sig_words(), n.data(), n.sig_words());
    }
 
-/*************************************************
-* Convert this number to a u32bit, if possible   *
-*************************************************/
+/*
+* Convert this number to a u32bit, if possible
+*/
 u32bit BigInt::to_u32bit() const
    {
    if(is_negative())
@@ -155,9 +157,9 @@ u32bit BigInt::to_u32bit() const
    return out;
    }
 
-/*************************************************
-* Return byte n of this number                   *
-*************************************************/
+/*
+* Return byte n of this number
+*/
 byte BigInt::byte_at(u32bit n) const
    {
    const u32bit WORD_BYTES = sizeof(word);
@@ -168,17 +170,17 @@ byte BigInt::byte_at(u32bit n) const
       return get_byte(WORD_BYTES - byte_num - 1, reg[word_num]);
    }
 
-/*************************************************
-* Return bit n of this number                    *
-*************************************************/
+/*
+* Return bit n of this number
+*/
 bool BigInt::get_bit(u32bit n) const
    {
    return ((word_at(n / MP_WORD_BITS) >> (n % MP_WORD_BITS)) & 1);
    }
 
-/*************************************************
-* Return bits {offset...offset+length}           *
-*************************************************/
+/*
+* Return bits {offset...offset+length}
+*/
 u32bit BigInt::get_substring(u32bit offset, u32bit length) const
    {
    if(length > 32)
@@ -194,9 +196,9 @@ u32bit BigInt::get_substring(u32bit offset, u32bit length) const
    return static_cast<u32bit>((piece >> shift) & mask);
    }
 
-/*************************************************
-* Set bit number n                               *
-*************************************************/
+/*
+* Set bit number n
+*/
 void BigInt::set_bit(u32bit n)
    {
    const u32bit which = n / MP_WORD_BITS;
@@ -205,9 +207,9 @@ void BigInt::set_bit(u32bit n)
    reg[which] |= mask;
    }
 
-/*************************************************
-* Clear bit number n                             *
-*************************************************/
+/*
+* Clear bit number n
+*/
 void BigInt::clear_bit(u32bit n)
    {
    const u32bit which = n / MP_WORD_BITS;
@@ -216,9 +218,9 @@ void BigInt::clear_bit(u32bit n)
       reg[which] &= ~mask;
    }
 
-/*************************************************
-* Clear all but the lowest n bits                *
-*************************************************/
+/*
+* Clear all but the lowest n bits
+*/
 void BigInt::mask_bits(u32bit n)
    {
    if(n == 0) { clear(); return; }
@@ -234,17 +236,17 @@ void BigInt::mask_bits(u32bit n)
    reg[top_word] &= mask;
    }
 
-/*************************************************
-* Count how many bytes are being used            *
-*************************************************/
+/*
+* Count how many bytes are being used
+*/
 u32bit BigInt::bytes() const
    {
    return (bits() + 7) / 8;
    }
 
-/*************************************************
-* Count how many bits are being used             *
-*************************************************/
+/*
+* Count how many bits are being used
+*/
 u32bit BigInt::bits() const
    {
    if(sig_words() == 0)
@@ -259,9 +261,9 @@ u32bit BigInt::bits() const
    return (full_words * MP_WORD_BITS + top_bits);
    }
 
-/*************************************************
-* Calcluate the size in a certain base           *
-*************************************************/
+/*
+* Calcluate the size in a certain base
+*/
 u32bit BigInt::encoded_size(Base base) const
    {
    static const double LOG_2_BASE_10 = 0.30102999566;
@@ -278,9 +280,9 @@ u32bit BigInt::encoded_size(Base base) const
       throw Invalid_Argument("Unknown base for BigInt encoding");
    }
 
-/*************************************************
-* Set the sign                                   *
-*************************************************/
+/*
+* Set the sign
+*/
 void BigInt::set_sign(Sign s)
    {
    if(is_zero())
@@ -289,17 +291,17 @@ void BigInt::set_sign(Sign s)
       signedness = s;
    }
 
-/*************************************************
-* Reverse the value of the sign flag             *
-*************************************************/
+/*
+* Reverse the value of the sign flag
+*/
 void BigInt::flip_sign()
    {
    set_sign(reverse_sign());
    }
 
-/*************************************************
-* Return the opposite value of the current sign  *
-*************************************************/
+/*
+* Return the opposite value of the current sign
+*/
 BigInt::Sign BigInt::reverse_sign() const
    {
    if(sign() == Positive)
@@ -307,9 +309,9 @@ BigInt::Sign BigInt::reverse_sign() const
    return Positive;
    }
 
-/*************************************************
-* Return the negation of this number             *
-*************************************************/
+/*
+* Return the negation of this number
+*/
 BigInt BigInt::operator-() const
    {
    BigInt x = (*this);
@@ -317,9 +319,9 @@ BigInt BigInt::operator-() const
    return x;
    }
 
-/*************************************************
-* Return the absolute value of this number       *
-*************************************************/
+/*
+* Return the absolute value of this number
+*/
 BigInt BigInt::abs() const
    {
    BigInt x = (*this);
@@ -327,9 +329,9 @@ BigInt BigInt::abs() const
    return x;
    }
 
-/*************************************************
-* Encode this number into bytes                  *
-*************************************************/
+/*
+* Encode this number into bytes
+*/
 void BigInt::binary_encode(byte output[]) const
    {
    const u32bit sig_bytes = bytes();
@@ -337,9 +339,9 @@ void BigInt::binary_encode(byte output[]) const
       output[sig_bytes-j-1] = byte_at(j);
    }
 
-/*************************************************
-* Set this number to the value in buf            *
-*************************************************/
+/*
+* Set this number to the value in buf
+*/
 void BigInt::binary_decode(const byte buf[], u32bit length)
    {
    const u32bit WORD_BYTES = sizeof(word);
@@ -356,9 +358,9 @@ void BigInt::binary_decode(const byte buf[], u32bit length)
       reg[length / WORD_BYTES] = (reg[length / WORD_BYTES] << 8) | buf[j];
    }
 
-/*************************************************
-* Set this number to the value in buf            *
-*************************************************/
+/*
+* Set this number to the value in buf
+*/
 void BigInt::binary_decode(const MemoryRegion<byte>& buf)
    {
    binary_decode(buf, buf.size());

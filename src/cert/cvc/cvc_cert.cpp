@@ -1,6 +1,8 @@
 /*
  (C) 2007 FlexSecure GmbH
      2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #include <botan/cvc_cert.h>
@@ -27,9 +29,9 @@ u32bit EAC1_1_CVC::get_chat_value() const
    return m_chat_val;
    }
 
-/*************************************************
-* Decode the TBSCertificate data                 *
-*************************************************/
+/*
+* Decode the TBSCertificate data
+*/
 void EAC1_1_CVC::force_decode()
    {
    SecureVector<byte> enc_pk;
@@ -73,9 +75,9 @@ void EAC1_1_CVC::force_decode()
 #endif
    }
 
-/*************************************************
-* CVC Certificate Constructor                   *
-*************************************************/
+/*
+* CVC Certificate Constructor
+*/
 EAC1_1_CVC::EAC1_1_CVC(std::tr1::shared_ptr<DataSource>& in)
    {
    init(in);

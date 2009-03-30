@@ -1,8 +1,10 @@
-/*************************************************
-* AlternativeName Source File                    *
-* (C) 1999-2007 Jack Lloyd                       *
-*     2007 Yves Jerschow                         *
-*************************************************/
+/*
+* AlternativeName
+* (C) 1999-2007 Jack Lloyd
+*     2007 Yves Jerschow
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/asn1_obj.h>
 #include <botan/der_enc.h>
@@ -15,9 +17,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Create an AlternativeName                      *
-*************************************************/
+/*
+* Create an AlternativeName
+*/
 AlternativeName::AlternativeName(const std::string& email_addr,
                                  const std::string& uri,
                                  const std::string& dns,
@@ -29,9 +31,9 @@ AlternativeName::AlternativeName(const std::string& email_addr,
    add_attribute("IP", ip);
    }
 
-/*************************************************
-* Add an attribute to an alternative name        *
-*************************************************/
+/*
+* Add an attribute to an alternative name
+*/
 void AlternativeName::add_attribute(const std::string& type,
                                     const std::string& str)
    {
@@ -47,9 +49,9 @@ void AlternativeName::add_attribute(const std::string& type,
    multimap_insert(alt_info, type, str);
    }
 
-/*************************************************
-* Add an OtherName field                         *
-*************************************************/
+/*
+* Add an OtherName field
+*/
 void AlternativeName::add_othername(const OID& oid, const std::string& value,
                                     ASN1_Tag type)
    {
@@ -58,25 +60,25 @@ void AlternativeName::add_othername(const OID& oid, const std::string& value,
    multimap_insert(othernames, oid, ASN1_String(value, type));
    }
 
-/*************************************************
-* Get the attributes of this alternative name    *
-*************************************************/
+/*
+* Get the attributes of this alternative name
+*/
 std::multimap<std::string, std::string> AlternativeName::get_attributes() const
    {
    return alt_info;
    }
 
-/*************************************************
-* Get the otherNames                             *
-*************************************************/
+/*
+* Get the otherNames
+*/
 std::multimap<OID, ASN1_String> AlternativeName::get_othernames() const
    {
    return othernames;
    }
 
-/*************************************************
-* Return all of the alternative names            *
-*************************************************/
+/*
+* Return all of the alternative names
+*/
 std::multimap<std::string, std::string> AlternativeName::contents() const
    {
    std::multimap<std::string, std::string> names;
@@ -92,9 +94,9 @@ std::multimap<std::string, std::string> AlternativeName::contents() const
    return names;
    }
 
-/*************************************************
-* Return if this object has anything useful      *
-*************************************************/
+/*
+* Return if this object has anything useful
+*/
 bool AlternativeName::has_items() const
    {
    return (alt_info.size() > 0 || othernames.size() > 0);
@@ -102,9 +104,9 @@ bool AlternativeName::has_items() const
 
 namespace {
 
-/*************************************************
-* DER encode an AlternativeName entry            *
-*************************************************/
+/*
+* DER encode an AlternativeName entry
+*/
 void encode_entries(DER_Encoder& encoder,
                     const std::multimap<std::string, std::string>& attr,
                     const std::string& type, ASN1_Tag tagging)
@@ -131,9 +133,9 @@ void encode_entries(DER_Encoder& encoder,
 
 }
 
-/*************************************************
-* DER encode an AlternativeName extension        *
-*************************************************/
+/*
+* DER encode an AlternativeName extension
+*/
 void AlternativeName::encode_into(DER_Encoder& der) const
    {
    der.start_cons(SEQUENCE);
@@ -157,9 +159,9 @@ void AlternativeName::encode_into(DER_Encoder& der) const
    der.end_cons();
    }
 
-/*************************************************
-* Decode a BER encoded AlternativeName           *
-*************************************************/
+/*
+* Decode a BER encoded AlternativeName
+*/
 void AlternativeName::decode_from(BER_Decoder& source)
    {
    BER_Decoder names = source.start_cons(SEQUENCE);

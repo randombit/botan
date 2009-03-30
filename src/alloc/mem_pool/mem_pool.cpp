@@ -1,9 +1,11 @@
-/*************************************************
-* Pooling Allocator Source File                  *
-* (C) 1999-2008 Jack Lloyd                       *
-*     2005 Matthew Gregan                        *
-*     2005-2006 Matt Johnston                    *
-*************************************************/
+/*
+* Pooling Allocator
+* (C) 1999-2008 Jack Lloyd
+*     2005 Matthew Gregan
+*     2005-2006 Matt Johnston
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/mem_pool.h>
 #include <botan/util.h>
@@ -15,9 +17,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Memory Allocation Exception                    *
-*************************************************/
+/*
+* Memory Allocation Exception
+*/
 struct Memory_Exhaustion : public std::bad_alloc
    {
    const char* what() const throw()
@@ -26,9 +28,9 @@ struct Memory_Exhaustion : public std::bad_alloc
 
 }
 
-/*************************************************
-* Memory_Block Constructor                       *
-*************************************************/
+/*
+* Memory_Block Constructor
+*/
 Pooling_Allocator::Memory_Block::Memory_Block(void* buf)
    {
    buffer = static_cast<byte*>(buf);
@@ -36,9 +38,9 @@ Pooling_Allocator::Memory_Block::Memory_Block(void* buf)
    buffer_end = buffer + (BLOCK_SIZE * BITMAP_SIZE);
    }
 
-/*************************************************
-* See if ptr is contained by this block          *
-*************************************************/
+/*
+* See if ptr is contained by this block
+*/
 bool Pooling_Allocator::Memory_Block::contains(void* ptr,
                                                u32bit length) const throw()
    {
@@ -46,9 +48,9 @@ bool Pooling_Allocator::Memory_Block::contains(void* ptr,
            (buffer_end >= static_cast<byte*>(ptr) + length * BLOCK_SIZE));
    }
 
-/*************************************************
-* Allocate some memory, if possible              *
-*************************************************/
+/*
+* Allocate some memory, if possible
+*/
 byte* Pooling_Allocator::Memory_Block::alloc(u32bit n) throw()
    {
    if(n == 0 || n > BITMAP_SIZE)
@@ -86,9 +88,9 @@ byte* Pooling_Allocator::Memory_Block::alloc(u32bit n) throw()
    return buffer + offset * BLOCK_SIZE;
    }
 
-/*************************************************
-* Mark this memory as free, if we own it         *
-*************************************************/
+/*
+* Mark this memory as free, if we own it
+*/
 void Pooling_Allocator::Memory_Block::free(void* ptr, u32bit blocks) throw()
    {
    clear_mem(static_cast<byte*>(ptr), blocks * BLOCK_SIZE);
@@ -104,17 +106,17 @@ void Pooling_Allocator::Memory_Block::free(void* ptr, u32bit blocks) throw()
       }
    }
 
-/*************************************************
-* Pooling_Allocator Constructor                  *
-*************************************************/
+/*
+* Pooling_Allocator Constructor
+*/
 Pooling_Allocator::Pooling_Allocator(Mutex* m) : mutex(m)
    {
    last_used = blocks.begin();
    }
 
-/*************************************************
-* Pooling_Allocator Destructor                   *
-*************************************************/
+/*
+* Pooling_Allocator Destructor
+*/
 Pooling_Allocator::~Pooling_Allocator()
    {
    delete mutex;
@@ -122,9 +124,9 @@ Pooling_Allocator::~Pooling_Allocator()
       throw Invalid_State("Pooling_Allocator: Never released memory");
    }
 
-/*************************************************
-* Free all remaining memory                      *
-*************************************************/
+/*
+* Free all remaining memory
+*/
 void Pooling_Allocator::destroy()
    {
    Mutex_Holder lock(mutex);
@@ -136,9 +138,9 @@ void Pooling_Allocator::destroy()
    allocated.clear();
    }
 
-/*************************************************
-* Allocation                                     *
-*************************************************/
+/*
+* Allocation
+*/
 void* Pooling_Allocator::allocate(u32bit n)
    {
    const u32bit BITMAP_SIZE = Memory_Block::bitmap_size();
@@ -170,9 +172,9 @@ void* Pooling_Allocator::allocate(u32bit n)
    throw Memory_Exhaustion();
    }
 
-/*************************************************
-* Deallocation                                   *
-*************************************************/
+/*
+* Deallocation
+*/
 void Pooling_Allocator::deallocate(void* ptr, u32bit n)
    {
    const u32bit BITMAP_SIZE = Memory_Block::bitmap_size();
@@ -199,9 +201,9 @@ void Pooling_Allocator::deallocate(void* ptr, u32bit n)
       }
    }
 
-/*************************************************
-* Try to get some memory from an existing block  *
-*************************************************/
+/*
+* Try to get some memory from an existing block
+*/
 byte* Pooling_Allocator::allocate_blocks(u32bit n)
    {
    if(blocks.empty())
@@ -227,9 +229,9 @@ byte* Pooling_Allocator::allocate_blocks(u32bit n)
    return 0;
    }
 
-/*************************************************
-* Allocate more memory for the pool              *
-*************************************************/
+/*
+* Allocate more memory for the pool
+*/
 void Pooling_Allocator::get_more_core(u32bit in_bytes)
    {
    const u32bit BITMAP_SIZE = Memory_Block::bitmap_size();

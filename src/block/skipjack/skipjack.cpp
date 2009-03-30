@@ -1,16 +1,18 @@
-/*************************************************
-* Skipjack Source File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Skipjack
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/skipjack.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
 
-/*************************************************
-* Skipjack Encryption                            *
-*************************************************/
+/*
+* Skipjack Encryption
+*/
 void Skipjack::enc(const byte in[], byte out[]) const
    {
    u16bit W1 = load_le<u16bit>(in, 3);
@@ -33,9 +35,9 @@ void Skipjack::enc(const byte in[], byte out[]) const
    store_le(out, W4, W3, W2, W1);
    }
 
-/*************************************************
-* Skipjack Decryption                            *
-*************************************************/
+/*
+* Skipjack Decryption
+*/
 void Skipjack::dec(const byte in[], byte out[]) const
    {
    u16bit W1 = load_le<u16bit>(in, 3);
@@ -58,9 +60,9 @@ void Skipjack::dec(const byte in[], byte out[]) const
    store_le(out, W4, W3, W2, W1);
    }
 
-/*************************************************
-* Skipjack Stepping Rule 'A'                     *
-*************************************************/
+/*
+* Skipjack Stepping Rule 'A'
+*/
 void Skipjack::step_A(u16bit& W1, u16bit& W4, u32bit round) const
    {
    byte G1 = get_byte(0, W1), G2 = get_byte(1, W1), G3;
@@ -72,9 +74,9 @@ void Skipjack::step_A(u16bit& W1, u16bit& W4, u32bit round) const
    W4 ^= W1 ^ round;
    }
 
-/*************************************************
-* Skipjack Stepping Rule 'B'                     *
-*************************************************/
+/*
+* Skipjack Stepping Rule 'B'
+*/
 void Skipjack::step_B(u16bit& W1, u16bit& W2, u32bit round) const
    {
    W2 ^= W1 ^ round;
@@ -86,9 +88,9 @@ void Skipjack::step_B(u16bit& W1, u16bit& W2, u32bit round) const
    W1 =  make_u16bit(G2, G3);
    }
 
-/*************************************************
-* Skipjack Invserse Stepping Rule 'A'            *
-*************************************************/
+/*
+* Skipjack Invserse Stepping Rule 'A'
+*/
 void Skipjack::step_Ai(u16bit& W1, u16bit& W2, u32bit round) const
    {
    W1 ^= W2 ^ round;
@@ -100,9 +102,9 @@ void Skipjack::step_Ai(u16bit& W1, u16bit& W2, u32bit round) const
    W2 = make_u16bit(G3, G2);
    }
 
-/*************************************************
-* Skipjack Invserse Stepping Rule 'B'            *
-*************************************************/
+/*
+* Skipjack Invserse Stepping Rule 'B'
+*/
 void Skipjack::step_Bi(u16bit& W2, u16bit& W3, u32bit round) const
    {
    byte G1 = get_byte(1, W2), G2 = get_byte(0, W2), G3;
@@ -114,9 +116,9 @@ void Skipjack::step_Bi(u16bit& W2, u16bit& W3, u32bit round) const
    W3 ^= W2 ^ round;
    }
 
-/*************************************************
-* Skipjack Key Schedule                          *
-*************************************************/
+/*
+* Skipjack Key Schedule
+*/
 void Skipjack::key_schedule(const byte key[], u32bit)
    {
    static const byte F[256] = {
@@ -148,9 +150,9 @@ void Skipjack::key_schedule(const byte key[], u32bit)
          FTABLE[j][k] = F[k ^ key[9-j]];
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void Skipjack::clear() throw()
    {
    for(u32bit j = 0; j != 10; ++j)

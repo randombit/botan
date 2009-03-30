@@ -1,7 +1,9 @@
-/*************************************************
-* MD4 Source File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* MD4
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/md4.h>
 #include <botan/loadstor.h>
@@ -11,27 +13,27 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* MD4 FF Function                                *
-*************************************************/
+/*
+* MD4 FF Function
+*/
 inline void FF(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit M, byte S)
    {
    A += (D ^ (B & (C ^ D))) + M;
    A  = rotate_left(A, S);
    }
 
-/*************************************************
-* MD4 GG Function                                *
-*************************************************/
+/*
+* MD4 GG Function
+*/
 inline void GG(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit M, byte S)
    {
    A += ((B & C) | (D & (B | C))) + M + 0x5A827999;
    A  = rotate_left(A, S);
    }
 
-/*************************************************
-* MD4 HH Function                                *
-*************************************************/
+/*
+* MD4 HH Function
+*/
 inline void HH(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit M, byte S)
    {
    A += (B ^ C ^ D) + M + 0x6ED9EBA1;
@@ -40,9 +42,9 @@ inline void HH(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit M, byte S)
 
 }
 
-/*************************************************
-* MD4 Compression Function                       *
-*************************************************/
+/*
+* MD4 Compression Function
+*/
 void MD4::compress_n(const byte input[], u32bit blocks)
    {
    u32bit A = digest[0], B = digest[1], C = digest[2], D = digest[3];
@@ -81,18 +83,18 @@ void MD4::compress_n(const byte input[], u32bit blocks)
       }
    }
 
-/*************************************************
-* Copy out the digest                            *
-*************************************************/
+/*
+* Copy out the digest
+*/
 void MD4::copy_out(byte output[])
    {
    for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
       store_le(digest[j/4], output + j);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void MD4::clear() throw()
    {
    MDx_HashFunction::clear();

@@ -1,15 +1,17 @@
-/*************************************************
-* User Interface Source File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* User Interface
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/ui.h>
 
 namespace Botan {
 
-/*************************************************
-* Get a passphrase from the user                 *
-*************************************************/
+/*
+* Get a passphrase from the user
+*/
 std::string User_Interface::get_passphrase(const std::string&,
                                            const std::string&,
                                            UI_Result& action) const
@@ -22,9 +24,9 @@ std::string User_Interface::get_passphrase(const std::string&,
    return preset_passphrase;
    }
 
-/*************************************************
-* User_Interface Constructor                     *
-*************************************************/
+/*
+* User_Interface Constructor
+*/
 User_Interface::User_Interface(const std::string& preset) :
    preset_passphrase(preset)
    {

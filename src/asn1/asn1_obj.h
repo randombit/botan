@@ -1,8 +1,10 @@
-/*************************************************
-* Common ASN.1 Objects Header File               *
-* (C) 1999-2007 Jack Lloyd                       *
-*     2007 Yves Jerschow                         *
-*************************************************/
+/*
+* Common ASN.1 Objects
+* (C) 1999-2007 Jack Lloyd
+*     2007 Yves Jerschow
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ASN1_OBJ_H__
 #define BOTAN_ASN1_OBJ_H__
@@ -15,9 +17,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Attribute                                      *
-*************************************************/
+/*
+* Attribute
+*/
 class BOTAN_DLL Attribute : public ASN1_Object
    {
    public:
@@ -32,9 +34,9 @@ class BOTAN_DLL Attribute : public ASN1_Object
       Attribute(const std::string&, const MemoryRegion<byte>&);
    };
 
-/*************************************************
-* X.509 Time                                     *
-*************************************************/
+/*
+* X.509 Time
+*/
 class BOTAN_DLL X509_Time : public ASN1_Object
    {
    public:
@@ -59,9 +61,9 @@ class BOTAN_DLL X509_Time : public ASN1_Object
       ASN1_Tag tag;
    };
 
-/*************************************************
-* Simple String                                  *
-*************************************************/
+/*
+* Simple String
+*/
 class BOTAN_DLL ASN1_String : public ASN1_Object
    {
    public:
@@ -80,9 +82,9 @@ class BOTAN_DLL ASN1_String : public ASN1_Object
       ASN1_Tag tag;
    };
 
-/*************************************************
-* Distinguished Name                             *
-*************************************************/
+/*
+* Distinguished Name
+*/
 class BOTAN_DLL X509_DN : public ASN1_Object
    {
    public:
@@ -110,9 +112,9 @@ class BOTAN_DLL X509_DN : public ASN1_Object
       MemoryVector<byte> dn_bits;
    };
 
-/*************************************************
-* Alternative Name                               *
-*************************************************/
+/*
+* Alternative Name
+*/
 class BOTAN_DLL AlternativeName : public ASN1_Object
    {
    public:
@@ -136,9 +138,9 @@ class BOTAN_DLL AlternativeName : public ASN1_Object
       std::multimap<OID, ASN1_String> othernames;
    };
 
-/*************************************************
-* Comparison Operations                          *
-*************************************************/
+/*
+* Comparison Operations
+*/
 bool BOTAN_DLL operator==(const X509_Time&, const X509_Time&);
 bool BOTAN_DLL operator!=(const X509_Time&, const X509_Time&);
 bool BOTAN_DLL operator<=(const X509_Time&, const X509_Time&);
@@ -148,9 +150,9 @@ bool BOTAN_DLL operator==(const X509_DN&, const X509_DN&);
 bool BOTAN_DLL operator!=(const X509_DN&, const X509_DN&);
 bool BOTAN_DLL operator<(const X509_DN&, const X509_DN&);
 
-/*************************************************
-* Helper Functions                               *
-*************************************************/
+/*
+* Helper Functions
+*/
 bool BOTAN_DLL is_string_type(ASN1_Tag);
 
 }

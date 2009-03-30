@@ -1,7 +1,9 @@
-/*************************************************
-* CAST-128 Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CAST-128
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_CAST128_H__
 #define BOTAN_CAST128_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* CAST-128                                       *
-*************************************************/
+/*
+* CAST-128
+*/
 class BOTAN_DLL CAST_128 : public BlockCipher
    {
    public:

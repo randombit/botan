@@ -1,7 +1,9 @@
-/*************************************************
-* OctetString Source File                        *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OctetString
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/symkey.h>
 #include <botan/xor_buf.h>
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Create an OctetString from RNG output          *
-*************************************************/
+/*
+* Create an OctetString from RNG output
+*/
 OctetString::OctetString(RandomNumberGenerator& rng,
                          u32bit length)
    {
@@ -22,9 +24,9 @@ OctetString::OctetString(RandomNumberGenerator& rng,
    rng.randomize(bits, length);
    }
 
-/*************************************************
-* Create an OctetString from a hex string        *
-*************************************************/
+/*
+* Create an OctetString from a hex string
+*/
 void OctetString::change(const std::string& hex_string)
    {
    SecureVector<byte> hex;
@@ -39,18 +41,18 @@ void OctetString::change(const std::string& hex_string)
       bits[j] = Hex_Decoder::decode(hex.begin() + 2*j);
    }
 
-/*************************************************
-* Create an OctetString from a byte string       *
-*************************************************/
+/*
+* Create an OctetString from a byte string
+*/
 void OctetString::change(const byte in[], u32bit n)
    {
    bits.create(n);
    bits.copy(in, n);
    }
 
-/*************************************************
-* Set the parity of each key byte to odd         *
-*************************************************/
+/*
+* Set the parity of each key byte to odd
+*/
 void OctetString::set_odd_parity()
    {
    const byte ODD_PARITY[256] = {
@@ -81,9 +83,9 @@ void OctetString::set_odd_parity()
       bits[j] = ODD_PARITY[bits[j]];
    }
 
-/*************************************************
-* Hex encode an OctetString                      *
-*************************************************/
+/*
+* Hex encode an OctetString
+*/
 std::string OctetString::as_string() const
    {
    Pipe pipe(new Hex_Encoder);
@@ -91,9 +93,9 @@ std::string OctetString::as_string() const
    return pipe.read_all_as_string();
    }
 
-/*************************************************
-* XOR Operation for OctetStrings                 *
-*************************************************/
+/*
+* XOR Operation for OctetStrings
+*/
 OctetString& OctetString::operator^=(const OctetString& k)
    {
    if(&k == this) { bits.clear(); return (*this); }
@@ -101,33 +103,33 @@ OctetString& OctetString::operator^=(const OctetString& k)
    return (*this);
    }
 
-/*************************************************
-* Equality Operation for OctetStrings            *
-*************************************************/
+/*
+* Equality Operation for OctetStrings
+*/
 bool operator==(const OctetString& s1, const OctetString& s2)
    {
    return (s1.bits_of() == s2.bits_of());
    }
 
-/*************************************************
-* Unequality Operation for OctetStrings          *
-*************************************************/
+/*
+* Unequality Operation for OctetStrings
+*/
 bool operator!=(const OctetString& s1, const OctetString& s2)
    {
    return !(s1 == s2);
    }
 
-/*************************************************
-* Append Operation for OctetStrings              *
-*************************************************/
+/*
+* Append Operation for OctetStrings
+*/
 OctetString operator+(const OctetString& k1, const OctetString& k2)
    {
    return OctetString(SecureVector<byte>(k1.bits_of(), k2.bits_of()));
    }
 
-/*************************************************
-* XOR Operation for OctetStrings                 *
-*************************************************/
+/*
+* XOR Operation for OctetStrings
+*/
 OctetString operator^(const OctetString& k1, const OctetString& k2)
    {
    SecureVector<byte> ret(std::max(k1.length(), k2.length()));

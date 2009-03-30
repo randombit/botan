@@ -1,7 +1,9 @@
-/*************************************************
-* PK Engine Lookup Source File                   *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PK Engine Lookup
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/pk_engine.h>
 #include <botan/libstate.h>
@@ -12,9 +14,9 @@ namespace Botan {
 namespace Engine_Core {
 
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
-/*************************************************
-* Acquire an IF op                               *
-*************************************************/
+/*
+* Acquire an IF op
+*/
 IF_Operation* if_op(const BigInt& e, const BigInt& n, const BigInt& d,
                     const BigInt& p, const BigInt& q, const BigInt& d1,
                     const BigInt& d2, const BigInt& c)
@@ -33,9 +35,9 @@ IF_Operation* if_op(const BigInt& e, const BigInt& n, const BigInt& d,
 #endif
 
 #if defined(BOTAN_HAS_DSA)
-/*************************************************
-* Acquire a DSA op                               *
-*************************************************/
+/*
+* Acquire a DSA op
+*/
 DSA_Operation* dsa_op(const DL_Group& group, const BigInt& y, const BigInt& x)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
@@ -52,9 +54,9 @@ DSA_Operation* dsa_op(const DL_Group& group, const BigInt& y, const BigInt& x)
 #endif
 
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-/*************************************************
-* Acquire a NR op                                *
-*************************************************/
+/*
+* Acquire a NR op
+*/
 NR_Operation* nr_op(const DL_Group& group, const BigInt& y, const BigInt& x)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
@@ -71,9 +73,9 @@ NR_Operation* nr_op(const DL_Group& group, const BigInt& y, const BigInt& x)
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
-/*************************************************
-* Acquire an ElGamal op                          *
-*************************************************/
+/*
+* Acquire an ElGamal op
+*/
 ELG_Operation* elg_op(const DL_Group& group, const BigInt& y, const BigInt& x)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
@@ -90,9 +92,9 @@ ELG_Operation* elg_op(const DL_Group& group, const BigInt& y, const BigInt& x)
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-/*************************************************
-* Acquire a DH op                                *
-*************************************************/
+/*
+* Acquire a DH op
+*/
 DH_Operation* dh_op(const DL_Group& group, const BigInt& x)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
@@ -109,9 +111,9 @@ DH_Operation* dh_op(const DL_Group& group, const BigInt& x)
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
-/*************************************************
-* Acquire an ECDSA op                            *
-*************************************************/
+/*
+* Acquire an ECDSA op
+*/
 ECDSA_Operation* ecdsa_op(const EC_Domain_Params& dom_pars,
                           const BigInt& priv_key,
                           const PointGFp& pub_key)
@@ -130,9 +132,9 @@ ECDSA_Operation* ecdsa_op(const EC_Domain_Params& dom_pars,
 #endif
 
 #if defined(BOTAN_HAS_ECKAEG)
-/*************************************************
-* Acquire a ECKAEG op                            *
-*************************************************/
+/*
+* Acquire a ECKAEG op
+*/
 ECKAEG_Operation* eckaeg_op(const EC_Domain_Params& dom_pars,
                             const BigInt& priv_key,
                             const PointGFp& pub_key)
@@ -150,9 +152,9 @@ ECKAEG_Operation* eckaeg_op(const EC_Domain_Params& dom_pars,
    }
 #endif
 
-/*************************************************
-* Acquire a modular exponentiator                *
-*************************************************/
+/*
+* Acquire a modular exponentiator
+*/
 Modular_Exponentiator* mod_exp(const BigInt& n, Power_Mod::Usage_Hints hints)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());

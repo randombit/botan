@@ -1,16 +1,18 @@
-/*************************************************
-* PK Key Types Source File                       *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PK Key Types
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/pk_keys.h>
 #include <botan/oids.h>
 
 namespace Botan {
 
-/*************************************************
-* Default OID access                             *
-*************************************************/
+/*
+* Default OID access
+*/
 OID Public_Key::get_oid() const
    {
    try {
@@ -22,27 +24,27 @@ OID Public_Key::get_oid() const
       }
    }
 
-/*************************************************
-* Run checks on a loaded public key              *
-*************************************************/
+/*
+* Run checks on a loaded public key
+*/
 void Public_Key::load_check(RandomNumberGenerator& rng) const
    {
    if(!check_key(rng, BOTAN_PUBLIC_KEY_STRONG_CHECKS_ON_LOAD))
       throw Invalid_Argument(algo_name() + ": Invalid public key");
    }
 
-/*************************************************
-* Run checks on a loaded private key             *
-*************************************************/
+/*
+* Run checks on a loaded private key
+*/
 void Private_Key::load_check(RandomNumberGenerator& rng) const
    {
    if(!check_key(rng, BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_LOAD))
       throw Invalid_Argument(algo_name() + ": Invalid private key");
    }
 
-/*************************************************
-* Run checks on a generated private key          *
-*************************************************/
+/*
+* Run checks on a generated private key
+*/
 void Private_Key::gen_check(RandomNumberGenerator& rng) const
    {
    if(!check_key(rng, BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_GENERATE))

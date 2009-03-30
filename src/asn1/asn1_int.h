@@ -1,7 +1,9 @@
-/*************************************************
-* ASN.1 Internals Header File                    *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* ASN.1 Internals
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ASN1_H__
 #define BOTAN_ASN1_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* ASN.1 Type and Class Tags                      *
-*************************************************/
+/*
+* ASN.1 Type and Class Tags
+*/
 enum ASN1_Tag {
    UNIVERSAL        = 0x00,
    APPLICATION      = 0x40,
@@ -48,9 +50,9 @@ enum ASN1_Tag {
    DIRECTORY_STRING = 0xFF01
 };
 
-/*************************************************
-* Basic ASN.1 Object Interface                   *
-*************************************************/
+/*
+* Basic ASN.1 Object Interface
+*/
 class BOTAN_DLL ASN1_Object
    {
    public:
@@ -59,9 +61,9 @@ class BOTAN_DLL ASN1_Object
       virtual ~ASN1_Object() {}
    };
 
-/*************************************************
-* BER Encoded Object                             *
-*************************************************/
+/*
+* BER Encoded Object
+*/
 class BOTAN_DLL BER_Object
    {
    public:
@@ -71,9 +73,9 @@ class BOTAN_DLL BER_Object
       SecureVector<byte> value;
    };
 
-/*************************************************
-* ASN.1 Utility Functions                        *
-*************************************************/
+/*
+* ASN.1 Utility Functions
+*/
 class DataSource;
 
 namespace ASN1 {
@@ -84,17 +86,17 @@ bool maybe_BER(DataSource&);
 
 }
 
-/*************************************************
-* General BER Decoding Error Exception           *
-*************************************************/
+/*
+* General BER Decoding Error Exception
+*/
 struct BER_Decoding_Error : public Decoding_Error
    {
    BER_Decoding_Error(const std::string&);
    };
 
-/*************************************************
-* Exception For Incorrect BER Taggings           *
-*************************************************/
+/*
+* Exception For Incorrect BER Taggings
+*/
 struct BER_Bad_Tag : public BER_Decoding_Error
    {
    BER_Bad_Tag(const std::string&, ASN1_Tag);

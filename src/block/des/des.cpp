@@ -1,7 +1,9 @@
-/*************************************************
-* DES Source File                                *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* DES
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/des.h>
 #include <botan/loadstor.h>
@@ -10,9 +12,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* DES Key Schedule                               *
-*************************************************/
+/*
+* DES Key Schedule
+*/
 void des_key_schedule(u32bit round_key[32], const byte key[8])
    {
    static const byte ROT[16] = { 1, 1, 2, 2, 2, 2, 2, 2,
@@ -76,9 +78,9 @@ void des_key_schedule(u32bit round_key[32], const byte key[8])
       }
    }
 
-/*************************************************
-* DES Encryption                                 *
-*************************************************/
+/*
+* DES Encryption
+*/
 void des_encrypt(u32bit& L, u32bit& R,
                  const u32bit round_key[32])
    {
@@ -104,9 +106,9 @@ void des_encrypt(u32bit& L, u32bit& R,
       }
    }
 
-/*************************************************
-* DES Decryption                                 *
-*************************************************/
+/*
+* DES Decryption
+*/
 void des_decrypt(u32bit& L, u32bit& R,
                  const u32bit round_key[32])
    {
@@ -134,9 +136,9 @@ void des_decrypt(u32bit& L, u32bit& R,
 
 }
 
-/*************************************************
-* DES Encryption                                 *
-*************************************************/
+/*
+* DES Encryption
+*/
 void DES::enc(const byte in[], byte out[]) const
    {
    u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
@@ -159,9 +161,9 @@ void DES::enc(const byte in[], byte out[]) const
    store_be(T, out);
    }
 
-/*************************************************
-* DES Decryption                                 *
-*************************************************/
+/*
+* DES Decryption
+*/
 void DES::dec(const byte in[], byte out[]) const
    {
    u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
@@ -184,17 +186,17 @@ void DES::dec(const byte in[], byte out[]) const
    store_be(T, out);
    }
 
-/*************************************************
-* DES Key Schedule                               *
-*************************************************/
+/*
+* DES Key Schedule
+*/
 void DES::key_schedule(const byte key[], u32bit)
    {
    des_key_schedule(round_key.begin(), key);
    }
 
-/*************************************************
-* TripleDES Encryption                           *
-*************************************************/
+/*
+* TripleDES Encryption
+*/
 void TripleDES::enc(const byte in[], byte out[]) const
    {
    u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
@@ -219,9 +221,9 @@ void TripleDES::enc(const byte in[], byte out[]) const
    store_be(T, out);
    }
 
-/*************************************************
-* TripleDES Decryption                           *
-*************************************************/
+/*
+* TripleDES Decryption
+*/
 void TripleDES::dec(const byte in[], byte out[]) const
    {
    u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
@@ -246,9 +248,9 @@ void TripleDES::dec(const byte in[], byte out[]) const
    store_be(T, out);
    }
 
-/*************************************************
-* TripleDES Key Schedule                         *
-*************************************************/
+/*
+* TripleDES Key Schedule
+*/
 void TripleDES::key_schedule(const byte key[], u32bit length)
    {
    des_key_schedule(&round_key[0], key);

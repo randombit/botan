@@ -1,7 +1,9 @@
-/*************************************************
-* GMP NR Engine Source File                      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* GMP NR Engine
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eng_gmp.h>
 #include <botan/gmp_wrap.h>
@@ -13,9 +15,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* GMP NR Operation                               *
-*************************************************/
+/*
+* GMP NR Operation
+*/
 class GMP_NR_Op : public NR_Operation
    {
    public:
@@ -30,9 +32,9 @@ class GMP_NR_Op : public NR_Operation
       const GMP_MPZ x, y, p, q, g;
    };
 
-/*************************************************
-* GMP NR Verify Operation                        *
-*************************************************/
+/*
+* GMP NR Verify Operation
+*/
 SecureVector<byte> GMP_NR_Op::verify(const byte sig[], u32bit sig_len) const
    {
    const u32bit q_bytes = q.bytes();
@@ -57,9 +59,9 @@ SecureVector<byte> GMP_NR_Op::verify(const byte sig[], u32bit sig_len) const
    return BigInt::encode(i1.to_bigint());
    }
 
-/*************************************************
-* GMP NR Sign Operation                          *
-*************************************************/
+/*
+* GMP NR Sign Operation
+*/
 SecureVector<byte> GMP_NR_Op::sign(const byte in[], u32bit length,
                                     const BigInt& k_bn) const
    {
@@ -92,9 +94,9 @@ SecureVector<byte> GMP_NR_Op::sign(const byte in[], u32bit length,
 
 }
 
-/*************************************************
-* Acquire a NR op                                *
-*************************************************/
+/*
+* Acquire a NR op
+*/
 NR_Operation* GMP_Engine::nr_op(const DL_Group& group, const BigInt& y,
                                 const BigInt& x) const
    {

@@ -1,16 +1,18 @@
-/*************************************************
-* BigInt Random Generation Source File           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* BigInt Random Generation
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/bigint.h>
 #include <botan/parsing.h>
 
 namespace Botan {
 
-/*************************************************
-* Construct a BigInt of a specific form          *
-*************************************************/
+/*
+* Construct a BigInt of a specific form
+*/
 BigInt::BigInt(NumberType type, u32bit bits)
    {
    set_sign(Positive);
@@ -21,9 +23,9 @@ BigInt::BigInt(NumberType type, u32bit bits)
       throw Invalid_Argument("BigInt(NumberType): Unknown type");
    }
 
-/*************************************************
-* Randomize this number                          *
-*************************************************/
+/*
+* Randomize this number
+*/
 void BigInt::randomize(RandomNumberGenerator& rng,
                        u32bit bitsize)
    {
@@ -42,9 +44,9 @@ void BigInt::randomize(RandomNumberGenerator& rng,
       }
    }
 
-/*************************************************
-* Generate a random integer within given range   *
-*************************************************/
+/*
+* Generate a random integer within given range
+*/
 BigInt BigInt::random_integer(RandomNumberGenerator& rng,
                               const BigInt& min, const BigInt& max)
    {

@@ -1,7 +1,9 @@
-/*************************************************
-* Modular Reducer Source File                    *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Modular Reducer
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/reducer.h>
 #include <botan/numthry.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Modular_Reducer Constructor                    *
-*************************************************/
+/*
+* Modular_Reducer Constructor
+*/
 Modular_Reducer::Modular_Reducer(const BigInt& mod)
    {
    if(mod <= 0)
@@ -27,9 +29,9 @@ Modular_Reducer::Modular_Reducer(const BigInt& mod)
    mu_words = mu.sig_words();
    }
 
-/*************************************************
-* Barrett Reduction                              *
-*************************************************/
+/*
+* Barrett Reduction
+*/
 BigInt Modular_Reducer::reduce(const BigInt& x) const
    {
    if(mod_words == 0)
@@ -76,17 +78,17 @@ BigInt Modular_Reducer::reduce(const BigInt& x) const
    return t1;
    }
 
-/*************************************************
-* Multiply, followed by a reduction              *
-*************************************************/
+/*
+* Multiply, followed by a reduction
+*/
 BigInt Modular_Reducer::multiply(const BigInt& x, const BigInt& y) const
    {
    return reduce(x * y);
    }
 
-/*************************************************
-* Square, followed by a reduction                *
-*************************************************/
+/*
+* Square, followed by a reduction
+*/
 BigInt Modular_Reducer::square(const BigInt& x) const
    {
    return reduce(Botan::square(x));

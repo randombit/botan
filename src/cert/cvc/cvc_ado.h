@@ -1,8 +1,10 @@
-/*************************************************
-* EAC1_1 CVC ADO Header File                     *
-* (C) 2008 Falko Strenzke                        *
-*          strenzke@flexsecure.de                *
-*************************************************/
+/*
+* EAC1_1 CVC ADO
+* (C) 2008 Falko Strenzke
+*          strenzke@flexsecure.de
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_EAC_CVC_ADO_H__
 #define BOTAN_EAC_CVC_ADO_H__

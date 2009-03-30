@@ -1,7 +1,9 @@
-/*************************************************
-* PBE Retrieval Source File                      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PBE Retrieval
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/get_pbe.h>
 #include <botan/oids.h>
@@ -19,9 +21,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Get an encryption PBE, set new parameters      *
-*************************************************/
+/*
+* Get an encryption PBE, set new parameters
+*/
 PBE* get_pbe(const std::string& algo_spec)
    {
    SCAN_Name request(algo_spec);
@@ -69,9 +71,9 @@ PBE* get_pbe(const std::string& algo_spec)
    throw Algorithm_Not_Found(algo_spec);
    }
 
-/*************************************************
-* Get a decryption PBE, decode parameters        *
-*************************************************/
+/*
+* Get a decryption PBE, decode parameters
+*/
 PBE* get_pbe(const OID& pbe_oid, DataSource& params)
    {
    SCAN_Name request(OIDS::lookup(pbe_oid));

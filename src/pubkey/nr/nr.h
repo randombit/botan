@@ -1,7 +1,9 @@
-/*************************************************
-* Nyberg-Rueppel Header File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Nyberg-Rueppel
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_NYBERG_RUEPPEL_H__
 #define BOTAN_NYBERG_RUEPPEL_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Nyberg-Rueppel Public Key                      *
-*************************************************/
+/*
+* Nyberg-Rueppel Public Key
+*/
 class BOTAN_DLL NR_PublicKey : public PK_Verifying_with_MR_Key,
                                public virtual DL_Scheme_PublicKey
    {
@@ -35,9 +37,9 @@ class BOTAN_DLL NR_PublicKey : public PK_Verifying_with_MR_Key,
       void X509_load_hook();
    };
 
-/*************************************************
-* Nyberg-Rueppel Private Key                     *
-*************************************************/
+/*
+* Nyberg-Rueppel Private Key
+*/
 class BOTAN_DLL NR_PrivateKey : public NR_PublicKey,
                                 public PK_Signing_Key,
                                 public virtual DL_Scheme_PrivateKey

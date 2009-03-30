@@ -1,7 +1,9 @@
-/*************************************************
-* SHA-{384,512} Source File                      *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* SHA-{384,512}
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/sha2_64.h>
 #include <botan/loadstor.h>
@@ -11,18 +13,18 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* SHA-{384,512} Rho Function                     *
-*************************************************/
+/*
+* SHA-{384,512} Rho Function
+*/
 inline u64bit rho(u64bit X, u32bit rot1, u32bit rot2, u32bit rot3)
    {
    return (rotate_right(X, rot1) ^ rotate_right(X, rot2) ^
            rotate_right(X, rot3));
    }
 
-/*************************************************
-* SHA-{384,512} F1 Function                      *
-*************************************************/
+/*
+* SHA-{384,512} F1 Function
+*/
 inline void F1(u64bit A, u64bit B, u64bit C, u64bit& D,
                u64bit E, u64bit F, u64bit G, u64bit& H,
                u64bit msg, u64bit magic)
@@ -32,9 +34,9 @@ inline void F1(u64bit A, u64bit B, u64bit C, u64bit& D,
    H += magic + rho(A, 28, 34, 39) + ((A & B) ^ (A & C) ^ (B & C));
    }
 
-/*************************************************
-* SHA-{384,512} Sigma Function                   *
-*************************************************/
+/*
+* SHA-{384,512} Sigma Function
+*/
 inline u64bit sigma(u64bit X, u32bit rot1, u32bit rot2, u32bit shift)
    {
    return (rotate_right(X, rot1) ^ rotate_right(X, rot2) ^ (X >> shift));
@@ -42,9 +44,9 @@ inline u64bit sigma(u64bit X, u32bit rot1, u32bit rot2, u32bit shift)
 
 }
 
-/*************************************************
-* SHA-{384,512} Compression Function             *
-*************************************************/
+/*
+* SHA-{384,512} Compression Function
+*/
 void SHA_384_512_BASE::compress_n(const byte input[], u32bit blocks)
    {
    u64bit A = digest[0], B = digest[1], C = digest[2],
@@ -153,27 +155,27 @@ void SHA_384_512_BASE::compress_n(const byte input[], u32bit blocks)
       }
    }
 
-/*************************************************
-* Copy out the digest                            *
-*************************************************/
+/*
+* Copy out the digest
+*/
 void SHA_384_512_BASE::copy_out(byte output[])
    {
    for(u32bit j = 0; j != OUTPUT_LENGTH; j += 8)
       store_be(digest[j/8], output + j);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void SHA_384_512_BASE::clear() throw()
    {
    MDx_HashFunction::clear();
    W.clear();
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void SHA_384::clear() throw()
    {
    SHA_384_512_BASE::clear();
@@ -187,9 +189,9 @@ void SHA_384::clear() throw()
    digest[7] = 0x47B5481DBEFA4FA4;
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void SHA_512::clear() throw()
    {
    SHA_384_512_BASE::clear();

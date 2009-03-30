@@ -1,8 +1,10 @@
-/*************************************************
-* Bzip Compressor Header File                    *
-* (C) 2001 Peter J Jones                         *
-*     2001-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Bzip Compressor
+* (C) 2001 Peter J Jones
+*     2001-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_BZIP2_H__
 #define BOTAN_BZIP2_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Bzip Compression Filter                        *
-*************************************************/
+/*
+* Bzip Compression Filter
+*/
 class BOTAN_DLL Bzip_Compression : public Filter
    {
    public:
@@ -33,9 +35,9 @@ class BOTAN_DLL Bzip_Compression : public Filter
       class Bzip_Stream* bz;
    };
 
-/*************************************************
-* Bzip Decompression Filter                      *
-*************************************************/
+/*
+* Bzip Decompression Filter
+*/
 class BOTAN_DLL Bzip_Decompression : public Filter
    {
    public:

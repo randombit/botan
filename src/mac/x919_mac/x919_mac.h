@@ -1,7 +1,9 @@
-/*************************************************
-* ANSI X9.19 MAC Header File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* ANSI X9.19 MAC
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ANSI_X919_MAC_H__
 #define BOTAN_ANSI_X919_MAC_H__

@@ -1,6 +1,8 @@
 /*
 * HMAC RNG
 * (C) 2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_HMAC_RNG_H__

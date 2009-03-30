@@ -1,7 +1,9 @@
-/*************************************************
-* Turing Source File                             *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Turing
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/turing.h>
 #include <botan/loadstor.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Perform an N-way PHT                           *
-*************************************************/
+/*
+* Perform an N-way PHT
+*/
 inline void PHT(MemoryRegion<u32bit>& buf)
    {
    u32bit sum = 0;
@@ -27,9 +29,9 @@ inline void PHT(MemoryRegion<u32bit>& buf)
 
 }
 
-/*************************************************
-* Combine cipher stream with message             *
-*************************************************/
+/*
+* Combine cipher stream with message
+*/
 void Turing::cipher(const byte in[], byte out[], u32bit length)
    {
    while(length >= buffer.size() - position)
@@ -44,9 +46,9 @@ void Turing::cipher(const byte in[], byte out[], u32bit length)
    position += length;
    }
 
-/*************************************************
-* Generate cipher stream                         *
-*************************************************/
+/*
+* Generate cipher stream
+*/
 void Turing::generate()
    {
    // Table for Turing's polynomial multiplication
@@ -200,9 +202,9 @@ void Turing::generate()
    position = 0;
    }
 
-/*************************************************
-* Turing's byte mixing step                      *
-*************************************************/
+/*
+* Turing's byte mixing step
+*/
 u32bit Turing::fixedS(u32bit W)
    {
    for(u32bit j = 0; j != 4; ++j)
@@ -215,9 +217,9 @@ u32bit Turing::fixedS(u32bit W)
    return W;
    }
 
-/*************************************************
-* Generate the expanded Turing Sbox tables       *
-*************************************************/
+/*
+* Generate the expanded Turing Sbox tables
+*/
 void Turing::gen_sbox(MemoryRegion<u32bit>& S, u32bit which,
                       const MemoryRegion<u32bit>& K)
    {
@@ -234,9 +236,9 @@ void Turing::gen_sbox(MemoryRegion<u32bit>& S, u32bit which,
       }
    }
 
-/*************************************************
-* Turing Key Schedule                            *
-*************************************************/
+/*
+* Turing Key Schedule
+*/
 void Turing::key_schedule(const byte key[], u32bit length)
    {
    K.create(length / 4);
@@ -256,9 +258,9 @@ void Turing::key_schedule(const byte key[], u32bit length)
    resync(0, 0);
    }
 
-/*************************************************
-* Resynchronization                              *
-*************************************************/
+/*
+* Resynchronization
+*/
 void Turing::resync(const byte iv[], u32bit length)
    {
    if(length % 4 != 0 || length > 16)
@@ -288,9 +290,9 @@ void Turing::resync(const byte iv[], u32bit length)
    generate();
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void Turing::clear() throw()
    {
    S0.clear();

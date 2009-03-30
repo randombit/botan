@@ -1,7 +1,9 @@
-/*************************************************
-* File Tree Walking EntropySource Header File    *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* File Tree Walking EntropySource
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ENTROPY_SRC_FTW_H__
 #define BOTAN_ENTROPY_SRC_FTW_H__

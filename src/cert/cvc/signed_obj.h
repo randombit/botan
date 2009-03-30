@@ -1,8 +1,10 @@
-/*************************************************
-* EAC SIGNED Object Header File                  *
-* (C) 2007 FlexSecure GmbH                       *
-*     2008 Jack Lloyd                            *
-*************************************************/
+/*
+* EAC SIGNED Object
+* (C) 2007 FlexSecure GmbH
+*     2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_EAC_SIGNED_OBJECT_H__
 #define BOTAN_EAC_SIGNED_OBJECT_H__

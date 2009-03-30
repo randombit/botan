@@ -1,6 +1,8 @@
 /**
-* Win32 EntropySource Header File
+* Win32 EntropySource
 * (C) 1999-2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_ENTROPY_SRC_WIN32_H__

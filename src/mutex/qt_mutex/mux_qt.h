@@ -1,8 +1,10 @@
-/*************************************************
-* Qt Mutex Header File                           *
-* (C) 2004-2007 Justin Karneges                  *
-*     2004-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Qt Mutex
+* (C) 2004-2007 Justin Karneges
+*     2004-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_MUTEX_QT_H__
 #define BOTAN_MUTEX_QT_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Qt Mutex                                       *
-*************************************************/
+/*
+* Qt Mutex
+*/
 class BOTAN_DLL Qt_Mutex_Factory : public Mutex_Factory
    {
    public:

@@ -1,7 +1,9 @@
-/*************************************************
-* DSA Parameter Generation Source File           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* DSA Parameter Generation
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/numthry.h>
 #include <botan/algo_factory.h>
@@ -14,9 +16,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Check if this size is allowed by FIPS 186-3    *
-*************************************************/
+/*
+* Check if this size is allowed by FIPS 186-3
+*/
 bool fips186_3_valid_size(u32bit pbits, u32bit qbits)
    {
    if(qbits == 160)
@@ -33,9 +35,9 @@ bool fips186_3_valid_size(u32bit pbits, u32bit qbits)
 
 }
 
-/*************************************************
-* Attempt DSA prime generation with given seed   *
-*************************************************/
+/*
+* Attempt DSA prime generation with given seed
+*/
 bool generate_dsa_primes(RandomNumberGenerator& rng,
                          Algorithm_Factory& af,
                          BigInt& p, BigInt& q,
@@ -111,9 +113,9 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    return false;
    }
 
-/*************************************************
-* Generate DSA Primes                            *
-*************************************************/
+/*
+* Generate DSA Primes
+*/
 SecureVector<byte> generate_dsa_primes(RandomNumberGenerator& rng,
                                        Algorithm_Factory& af,
                                        BigInt& p, BigInt& q,

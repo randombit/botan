@@ -1,7 +1,9 @@
-/*************************************************
-* CMS Encoding Operations Source File            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CMS Encoding Operations
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/cms_enc.h>
 #include <botan/der_enc.h>
@@ -19,9 +21,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Choose an algorithm                            *
-*************************************************/
+/*
+* Choose an algorithm
+*/
 std::string choose_algo(const std::string& user_algo,
                         const std::string& default_algo)
    {
@@ -30,9 +32,9 @@ std::string choose_algo(const std::string& user_algo,
    return global_state().deref_alias(user_algo);
    }
 
-/*************************************************
-* Encode a SignerIdentifier/RecipientIdentifier  *
-*************************************************/
+/*
+* Encode a SignerIdentifier/RecipientIdentifier
+*/
 DER_Encoder& encode_si(DER_Encoder& der, const X509_Certificate& cert,
                        bool use_skid_encoding = false)
    {
@@ -49,9 +51,9 @@ DER_Encoder& encode_si(DER_Encoder& der, const X509_Certificate& cert,
    return der;
    }
 
-/*************************************************
-* Compute the hash of some content               *
-*************************************************/
+/*
+* Compute the hash of some content
+*/
 SecureVector<byte> hash_of(const SecureVector<byte>& content,
                            const std::string& hash_name)
    {
@@ -60,9 +62,9 @@ SecureVector<byte> hash_of(const SecureVector<byte>& content,
    return hash_fn->process(content);
    }
 
-/*************************************************
-* Encode Attributes containing info on content   *
-*************************************************/
+/*
+* Encode Attributes containing info on content
+*/
 SecureVector<byte> encode_attr(const SecureVector<byte>& data,
                                const std::string& type,
                                const std::string& hash)
@@ -86,9 +88,9 @@ SecureVector<byte> encode_attr(const SecureVector<byte>& data,
 
 }
 
-/*************************************************
-* Encrypt a message                              *
-*************************************************/
+/*
+* Encrypt a message
+*/
 void CMS_Encoder::encrypt(RandomNumberGenerator& rng,
                           const X509_Certificate& to,
                           const std::string user_cipher)
@@ -123,9 +125,9 @@ void CMS_Encoder::encrypt(RandomNumberGenerator& rng,
       throw Invalid_Argument("Unknown CMS PK encryption algorithm " + algo);
    }
 
-/*************************************************
-* Encrypt a message with a key transport algo    *
-*************************************************/
+/*
+* Encrypt a message with a key transport algo
+*/
 void CMS_Encoder::encrypt_ktri(RandomNumberGenerator& rng,
                                const X509_Certificate& to,
                                PK_Encrypting_Key* pub_key,
@@ -158,9 +160,9 @@ void CMS_Encoder::encrypt_ktri(RandomNumberGenerator& rng,
    add_layer("CMS.EnvelopedData", encoder);
    }
 
-/*************************************************
-* Encrypt a message with a key agreement algo    *
-*************************************************/
+/*
+* Encrypt a message with a key agreement algo
+*/
 void CMS_Encoder::encrypt_kari(RandomNumberGenerator&,
                                const X509_Certificate&,
                                X509_PublicKey*,
@@ -189,9 +191,9 @@ void CMS_Encoder::encrypt_kari(RandomNumberGenerator&,
 #endif
    }
 
-/*************************************************
-* Encrypt a message with a shared key            *
-*************************************************/
+/*
+* Encrypt a message with a shared key
+*/
 void CMS_Encoder::encrypt(RandomNumberGenerator& rng,
                           const SymmetricKey& kek,
                           const std::string& user_cipher)
@@ -222,9 +224,9 @@ void CMS_Encoder::encrypt(RandomNumberGenerator& rng,
    add_layer("CMS.EnvelopedData", encoder);
    }
 
-/*************************************************
-* Encrypt a message with a passphrase            *
-*************************************************/
+/*
+* Encrypt a message with a passphrase
+*/
 void CMS_Encoder::encrypt(RandomNumberGenerator&,
                           const std::string&,
                           const std::string& user_cipher)
@@ -244,9 +246,9 @@ void CMS_Encoder::encrypt(RandomNumberGenerator&,
    */
    }
 
-/*************************************************
-* Encrypt the content with the chosen key/cipher *
-*************************************************/
+/*
+* Encrypt the content with the chosen key/cipher
+*/
 SecureVector<byte> CMS_Encoder::do_encrypt(RandomNumberGenerator& rng,
                                            const SymmetricKey& key,
                                            const std::string& cipher_name)
@@ -281,9 +283,9 @@ SecureVector<byte> CMS_Encoder::do_encrypt(RandomNumberGenerator& rng,
    return encoder.get_contents();
    }
 
-/*************************************************
-* Sign a message                                 *
-*************************************************/
+/*
+* Sign a message
+*/
 void CMS_Encoder::sign(const X509_Certificate& cert,
                        const PKCS8_PrivateKey& key,
                        RandomNumberGenerator& rng,
@@ -343,9 +345,9 @@ void CMS_Encoder::sign(const X509_Certificate& cert,
    add_layer("CMS.SignedData", encoder);
    }
 
-/*************************************************
-* Digest a message                               *
-*************************************************/
+/*
+* Digest a message
+*/
 void CMS_Encoder::digest(const std::string& user_hash)
    {
    const std::string hash = choose_algo(user_hash, "SHA-1");
@@ -366,9 +368,9 @@ void CMS_Encoder::digest(const std::string& user_hash)
    add_layer("CMS.DigestedData", encoder);
    }
 
-/*************************************************
-* MAC a message with an encrypted key            *
-*************************************************/
+/*
+* MAC a message with an encrypted key
+*/
 void CMS_Encoder::authenticate(const X509_Certificate&,
                                const std::string& mac_algo)
    {
@@ -376,9 +378,9 @@ void CMS_Encoder::authenticate(const X509_Certificate&,
    throw Exception("FIXME: unimplemented");
    }
 
-/*************************************************
-* MAC a message with a shared key                *
-*************************************************/
+/*
+* MAC a message with a shared key
+*/
 void CMS_Encoder::authenticate(const SymmetricKey&,
                                const std::string& mac_algo)
    {
@@ -386,9 +388,9 @@ void CMS_Encoder::authenticate(const SymmetricKey&,
    throw Exception("FIXME: unimplemented");
    }
 
-/*************************************************
-* MAC a message with a passphrase                *
-*************************************************/
+/*
+* MAC a message with a passphrase
+*/
 void CMS_Encoder::authenticate(const std::string&,
                                const std::string& mac_algo)
    {

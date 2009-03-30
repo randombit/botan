@@ -1,7 +1,9 @@
-/*************************************************
-* CAST-128 Source File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CAST-128
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/cast128.h>
 #include <botan/loadstor.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* CAST-128 Round Type 1                          *
-*************************************************/
+/*
+* CAST-128 Round Type 1
+*/
 inline void R1(u32bit& L, u32bit R, u32bit MK, u32bit RK)
    {
    u32bit T = rotate_left(MK + R, RK);
@@ -21,9 +23,9 @@ inline void R1(u32bit& L, u32bit R, u32bit MK, u32bit RK)
          CAST_SBOX3[get_byte(2, T)] + CAST_SBOX4[get_byte(3, T)];
    }
 
-/*************************************************
-* CAST-128 Round Type 2                          *
-*************************************************/
+/*
+* CAST-128 Round Type 2
+*/
 inline void R2(u32bit& L, u32bit R, u32bit MK, u32bit RK)
    {
    u32bit T = rotate_left(MK ^ R, RK);
@@ -31,9 +33,9 @@ inline void R2(u32bit& L, u32bit R, u32bit MK, u32bit RK)
          CAST_SBOX3[get_byte(2, T)]) ^ CAST_SBOX4[get_byte(3, T)];
    }
 
-/*************************************************
-* CAST-128 Round Type 3                          *
-*************************************************/
+/*
+* CAST-128 Round Type 3
+*/
 inline void R3(u32bit& L, u32bit R, u32bit MK, u32bit RK)
    {
    u32bit T = rotate_left(MK - R, RK);
@@ -43,9 +45,9 @@ inline void R3(u32bit& L, u32bit R, u32bit MK, u32bit RK)
 
 }
 
-/*************************************************
-* CAST-128 Encryption                            *
-*************************************************/
+/*
+* CAST-128 Encryption
+*/
 void CAST_128::enc(const byte in[], byte out[]) const
    {
    u32bit L = load_be<u32bit>(in, 0);
@@ -71,9 +73,9 @@ void CAST_128::enc(const byte in[], byte out[]) const
    store_be(out, R, L);
    }
 
-/*************************************************
-* CAST-128 Decryption                            *
-*************************************************/
+/*
+* CAST-128 Decryption
+*/
 void CAST_128::dec(const byte in[], byte out[]) const
    {
    u32bit L = load_be<u32bit>(in, 0);
@@ -99,9 +101,9 @@ void CAST_128::dec(const byte in[], byte out[]) const
    store_be(out, R, L);
    }
 
-/*************************************************
-* CAST-128 Key Schedule                          *
-*************************************************/
+/*
+* CAST-128 Key Schedule
+*/
 void CAST_128::key_schedule(const byte key[], u32bit length)
    {
    clear();
@@ -116,9 +118,9 @@ void CAST_128::key_schedule(const byte key[], u32bit length)
       RK[j] %= 32;
    }
 
-/*************************************************
-* S-Box Based Key Expansion                      *
-*************************************************/
+/*
+* S-Box Based Key Expansion
+*/
 void CAST_128::key_schedule(u32bit K[16], u32bit X[4])
    {
    class ByteReader

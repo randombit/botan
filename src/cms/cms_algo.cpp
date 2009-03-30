@@ -1,7 +1,9 @@
-/*************************************************
-* CMS Algorithm Specific Code Source File        *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CMS Algorithm Specific Code
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/cms_enc.h>
 #include <botan/der_enc.h>
@@ -18,9 +20,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Wrap a key as specified in RFC 3217            *
-*************************************************/
+/*
+* Wrap a key as specified in RFC 3217
+*/
 SecureVector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
                                    const std::string& cipher_name,
                                    const SymmetricKey& kek,
@@ -70,9 +72,9 @@ SecureVector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
 
 }
 
-/*************************************************
-* Wrap a CEK with a KEK                          *
-*************************************************/
+/*
+* Wrap a CEK with a KEK
+*/
 SecureVector<byte> CMS_Encoder::wrap_key(RandomNumberGenerator& rng,
                                          const std::string& cipher,
                                          const SymmetricKey& cek,
@@ -105,9 +107,9 @@ SecureVector<byte> CMS_Encoder::wrap_key(RandomNumberGenerator& rng,
    throw Invalid_Argument("CMS_Encoder::wrap: Unknown cipher " + cipher);
    }
 
-/*************************************************
-* Encode the parameters for an encryption algo   *
-*************************************************/
+/*
+* Encode the parameters for an encryption algo
+*/
 SecureVector<byte> CMS_Encoder::encode_params(const std::string& cipher,
                                               const SymmetricKey& key,
                                               const InitializationVector& iv)
@@ -138,9 +140,9 @@ SecureVector<byte> CMS_Encoder::encode_params(const std::string& cipher,
    return encoder.get_contents();
    }
 
-/*************************************************
-* Generate a CEK or KEK for the cipher           *
-*************************************************/
+/*
+* Generate a CEK or KEK for the cipher
+*/
 SymmetricKey CMS_Encoder::setup_key(RandomNumberGenerator& rng,
                                     const std::string& cipher)
    {

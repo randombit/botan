@@ -1,7 +1,9 @@
-/*************************************************
-* GMP DSA Engine Source File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* GMP DSA Engine
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eng_gmp.h>
 #include <botan/gmp_wrap.h>
@@ -13,9 +15,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* GMP DSA Operation                              *
-*************************************************/
+/*
+* GMP DSA Operation
+*/
 class GMP_DSA_Op : public DSA_Operation
    {
    public:
@@ -30,9 +32,9 @@ class GMP_DSA_Op : public DSA_Operation
       const GMP_MPZ x, y, p, q, g;
    };
 
-/*************************************************
-* GMP DSA Verify Operation                       *
-*************************************************/
+/*
+* GMP DSA Verify Operation
+*/
 bool GMP_DSA_Op::verify(const byte msg[], u32bit msg_len,
                         const byte sig[], u32bit sig_len) const
    {
@@ -72,9 +74,9 @@ bool GMP_DSA_Op::verify(const byte msg[], u32bit msg_len,
    return false;
    }
 
-/*************************************************
-* GMP DSA Sign Operation                         *
-*************************************************/
+/*
+* GMP DSA Sign Operation
+*/
 SecureVector<byte> GMP_DSA_Op::sign(const byte in[], u32bit length,
                                     const BigInt& k_bn) const
    {
@@ -109,9 +111,9 @@ SecureVector<byte> GMP_DSA_Op::sign(const byte in[], u32bit length,
 
 }
 
-/*************************************************
-* Acquire a DSA op                               *
-*************************************************/
+/*
+* Acquire a DSA op
+*/
 DSA_Operation* GMP_Engine::dsa_op(const DL_Group& group, const BigInt& y,
                                   const BigInt& x) const
    {

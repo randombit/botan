@@ -1,16 +1,18 @@
-/*************************************************
-* Adler32 Source File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Adler32
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/adler32.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
 
-/*************************************************
-* Adler32 Checksum                               *
-*************************************************/
+/*
+* Adler32 Checksum
+*/
 void Adler32::hash(const byte input[], u32bit length)
    {
    u32bit S1x = S1, S2x = S2;
@@ -45,9 +47,9 @@ void Adler32::hash(const byte input[], u32bit length)
    S2 = S2x;
    }
 
-/*************************************************
-* Update an Adler32 Checksum                     *
-*************************************************/
+/*
+* Update an Adler32 Checksum
+*/
 void Adler32::add_data(const byte input[], u32bit length)
    {
    const u32bit PROCESS_AMOUNT = 5552;
@@ -60,9 +62,9 @@ void Adler32::add_data(const byte input[], u32bit length)
    hash(input, length);
    }
 
-/*************************************************
-* Finalize an Adler32 Checksum                   *
-*************************************************/
+/*
+* Finalize an Adler32 Checksum
+*/
 void Adler32::final_result(byte output[])
    {
    store_be(output, S2, S1);

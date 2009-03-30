@@ -1,7 +1,9 @@
-/*************************************************
-* OpenSSL Engine Source File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* OpenSSL Engine
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eng_ossl.h>
 #include <botan/bn_wrap.h>
@@ -17,9 +19,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* OpenSSL DH Operation                           *
-*************************************************/
+/*
+* OpenSSL DH Operation
+*/
 class OpenSSL_DH_Op : public DH_Operation
    {
    public:
@@ -33,9 +35,9 @@ class OpenSSL_DH_Op : public DH_Operation
       OSSL_BN_CTX ctx;
    };
 
-/*************************************************
-* OpenSSL DH Key Agreement Operation             *
-*************************************************/
+/*
+* OpenSSL DH Key Agreement Operation
+*/
 BigInt OpenSSL_DH_Op::agree(const BigInt& i_bn) const
    {
    OSSL_BN i(i_bn), r;
@@ -45,9 +47,9 @@ BigInt OpenSSL_DH_Op::agree(const BigInt& i_bn) const
 
 }
 
-/*************************************************
-* Acquire a DH op                                *
-*************************************************/
+/*
+* Acquire a DH op
+*/
 DH_Operation* OpenSSL_Engine::dh_op(const DL_Group& group,
                                     const BigInt& x) const
    {

@@ -1,7 +1,9 @@
-/*************************************************
-* PKCS #10 Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PKCS #10
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_PKCS10_H__
 #define BOTAN_PKCS10_H__

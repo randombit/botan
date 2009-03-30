@@ -1,7 +1,9 @@
-/*************************************************
-* Default Policy Source File                     *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Default Policy
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/libstate.h>
 
@@ -9,9 +11,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* OID loading helper function                    *
-*************************************************/
+/*
+* OID loading helper function
+*/
 void add_oid(Library_State& config,
              const std::string& oid_str,
              const std::string& name)
@@ -22,9 +24,9 @@ void add_oid(Library_State& config,
       config.set("str2oid", name, oid_str);
    }
 
-/*************************************************
-* Load all of the default OIDs                   *
-*************************************************/
+/*
+* Load all of the default OIDs
+*/
 void set_default_oids(Library_State& config)
    {
    /* Public key types */
@@ -185,9 +187,9 @@ void set_default_oids(Library_State& config)
            "CertificateHolderAuthorizationTemplate");
    }
 
-/*************************************************
-* Set the default algorithm aliases              *
-*************************************************/
+/*
+* Set the default algorithm aliases
+*/
 void set_default_aliases(Library_State& config)
    {
    config.add_alias("OpenPGP.Cipher.1",  "IDEA");
@@ -228,9 +230,9 @@ void set_default_aliases(Library_State& config)
    config.add_alias("GOST",     "GOST-28147-89");
    }
 
-/*************************************************
-* Set the default configuration toggles          *
-*************************************************/
+/*
+* Set the default configuration toggles
+*/
 void set_default_config(Library_State& config)
    {
    config.set_option("base/default_allocator", "malloc");
@@ -245,9 +247,9 @@ void set_default_config(Library_State& config)
    config.set_option("x509/exts/crl_number", "yes");
    }
 
-/*************************************************
-* Set the built-in discrete log groups           *
-*************************************************/
+/*
+* Set the built-in discrete log groups
+*/
 void set_default_dl_groups(Library_State& config)
    {
    config.set("dl", "modp/ietf/768",
@@ -495,9 +497,9 @@ void set_default_dl_groups(Library_State& config)
    }
 }
 
-/*************************************************
-* Set the default policy                         *
-*************************************************/
+/*
+* Set the default policy
+*/
 void Library_State::load_default_config()
    {
    set_default_config(*this);

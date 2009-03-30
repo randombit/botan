@@ -1,7 +1,9 @@
-/*************************************************
-* KASUMI Source File                             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* KASUMI
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/kasumi.h>
 #include <botan/loadstor.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* KASUMI S-Boxes                                 *
-*************************************************/
+/*
+* KASUMI S-Boxes
+*/
 const byte KASUMI_SBOX_S7[128] = {
    0x36, 0x32, 0x3E, 0x38, 0x16, 0x22, 0x5E, 0x60, 0x26, 0x06, 0x3F, 0x5D,
    0x02, 0x12, 0x7B, 0x21, 0x37, 0x71, 0x27, 0x72, 0x15, 0x43, 0x41, 0x0C,
@@ -86,9 +88,9 @@ const u16bit KASUMI_SBOX_S9[512] = {
    0x017C, 0x002B, 0x0042, 0x003C, 0x01C7, 0x0155, 0x01BD, 0x00CA, 0x01B0,
    0x0008, 0x00ED, 0x000F, 0x0178, 0x01B4, 0x01D0, 0x003B, 0x01CD };
 
-/*************************************************
-* KASUMI FI Function                             *
-*************************************************/
+/*
+* KASUMI FI Function
+*/
 u16bit FI(u16bit I, u16bit K)
    {
    u16bit D9 = (I >> 7);
@@ -104,9 +106,9 @@ u16bit FI(u16bit I, u16bit K)
 
 }
 
-/*************************************************
-* KASUMI Encryption                              *
-*************************************************/
+/*
+* KASUMI Encryption
+*/
 void KASUMI::enc(const byte in[], byte out[]) const
    {
    u16bit B0 = load_be<u16bit>(in, 0);
@@ -142,9 +144,9 @@ void KASUMI::enc(const byte in[], byte out[]) const
    store_be(out, B0, B1, B2, B3);
    }
 
-/*************************************************
-* KASUMI Decryption                              *
-*************************************************/
+/*
+* KASUMI Decryption
+*/
 void KASUMI::dec(const byte in[], byte out[]) const
    {
    u16bit B0 = load_be<u16bit>(in, 0);
@@ -182,9 +184,9 @@ void KASUMI::dec(const byte in[], byte out[]) const
    store_be(out, B0, B1, B2, B3);
    }
 
-/*************************************************
-* KASUMI Key Schedule                            *
-*************************************************/
+/*
+* KASUMI Key Schedule
+*/
 void KASUMI::key_schedule(const byte key[], u32bit)
    {
    static const u16bit RC[] = { 0x0123, 0x4567, 0x89AB, 0xCDEF,

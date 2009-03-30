@@ -1,9 +1,11 @@
-/*************************************************
-* EAC CVC Public Key Header File                 *
-* (C) 2008 FlexSecure Gmbh                       *
-*          Falko Strenzke                        *
-*          strenzke@flexsecure.de                *
-*************************************************/
+/*
+* EAC CVC Public Key
+* (C) 2008 FlexSecure Gmbh
+*          Falko Strenzke
+*          strenzke@flexsecure.de
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_EAC1_1_CVC_PUBLIC_KEY_H__
 #define BOTAN_EAC1_1_CVC_PUBLIC_KEY_H__

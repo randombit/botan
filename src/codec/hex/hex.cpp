@@ -1,7 +1,9 @@
-/*************************************************
-* Hex Encoder/Decoder Source File                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Hex Encoder/Decoder
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/hex.h>
 #include <botan/parsing.h>
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Hex_Encoder Constructor                        *
-*************************************************/
+/*
+* Hex_Encoder Constructor
+*/
 Hex_Encoder::Hex_Encoder(bool breaks, u32bit length, Case c) :
    casing(c), line_length(breaks ? length : 0)
    {
@@ -22,9 +24,9 @@ Hex_Encoder::Hex_Encoder(bool breaks, u32bit length, Case c) :
    counter = position = 0;
    }
 
-/*************************************************
-* Hex_Encoder Constructor                        *
-*************************************************/
+/*
+* Hex_Encoder Constructor
+*/
 Hex_Encoder::Hex_Encoder(Case c) : casing(c), line_length(0)
    {
    in.create(64);
@@ -32,9 +34,9 @@ Hex_Encoder::Hex_Encoder(Case c) : casing(c), line_length(0)
    counter = position = 0;
    }
 
-/*************************************************
-* Hex Encoding Operation                         *
-*************************************************/
+/*
+* Hex Encoding Operation
+*/
 void Hex_Encoder::encode(byte in, byte out[2], Hex_Encoder::Case casing)
    {
    const byte* BIN_TO_HEX = ((casing == Uppercase) ? BIN_TO_HEX_UPPER :
@@ -44,9 +46,9 @@ void Hex_Encoder::encode(byte in, byte out[2], Hex_Encoder::Case casing)
    out[1] = BIN_TO_HEX[((in     ) & 0x0F)];
    }
 
-/*************************************************
-* Encode and send a block                        *
-*************************************************/
+/*
+* Encode and send a block
+*/
 void Hex_Encoder::encode_and_send(const byte block[], u32bit length)
    {
    for(u32bit j = 0; j != length; ++j)
@@ -73,9 +75,9 @@ void Hex_Encoder::encode_and_send(const byte block[], u32bit length)
       }
    }
 
-/*************************************************
-* Convert some data into hex format              *
-*************************************************/
+/*
+* Convert some data into hex format
+*/
 void Hex_Encoder::write(const byte input[], u32bit length)
    {
    in.copy(position, input, length);
@@ -96,9 +98,9 @@ void Hex_Encoder::write(const byte input[], u32bit length)
    position += length;
    }
 
-/*************************************************
-* Flush buffers                                  *
-*************************************************/
+/*
+* Flush buffers
+*/
 void Hex_Encoder::end_msg()
    {
    encode_and_send(in, position);
@@ -107,9 +109,9 @@ void Hex_Encoder::end_msg()
    counter = position = 0;
    }
 
-/*************************************************
-* Hex_Decoder Constructor                        *
-*************************************************/
+/*
+* Hex_Decoder Constructor
+*/
 Hex_Decoder::Hex_Decoder(Decoder_Checking c) : checking(c)
    {
    in.create(64);
@@ -117,17 +119,17 @@ Hex_Decoder::Hex_Decoder(Decoder_Checking c) : checking(c)
    position = 0;
    }
 
-/*************************************************
-* Check if a character is a valid hex char       *
-*************************************************/
+/*
+* Check if a character is a valid hex char
+*/
 bool Hex_Decoder::is_valid(byte in)
    {
    return (HEX_TO_BIN[in] != 0x80);
    }
 
-/*************************************************
-* Handle processing an invalid character         *
-*************************************************/
+/*
+* Handle processing an invalid character
+*/
 void Hex_Decoder::handle_bad_char(byte c)
    {
    if(checking == NONE)
@@ -140,17 +142,17 @@ void Hex_Decoder::handle_bad_char(byte c)
                         to_string(c));
    }
 
-/*************************************************
-* Hex Decoding Operation                         *
-*************************************************/
+/*
+* Hex Decoding Operation
+*/
 byte Hex_Decoder::decode(const byte hex[2])
    {
    return ((HEX_TO_BIN[hex[0]] << 4) | HEX_TO_BIN[hex[1]]);
    }
 
-/*************************************************
-* Decode and send a block                        *
-*************************************************/
+/*
+* Decode and send a block
+*/
 void Hex_Decoder::decode_and_send(const byte block[], u32bit length)
    {
    for(u32bit j = 0; j != length / 2; ++j)
@@ -158,9 +160,9 @@ void Hex_Decoder::decode_and_send(const byte block[], u32bit length)
    send(out, length / 2);
    }
 
-/*************************************************
-* Convert some data from hex format              *
-*************************************************/
+/*
+* Convert some data from hex format
+*/
 void Hex_Decoder::write(const byte input[], u32bit length)
    {
    for(u32bit j = 0; j != length; ++j)
@@ -177,9 +179,9 @@ void Hex_Decoder::write(const byte input[], u32bit length)
       }
    }
 
-/*************************************************
-* Flush buffers                                  *
-*************************************************/
+/*
+* Flush buffers
+*/
 void Hex_Decoder::end_msg()
    {
    decode_and_send(in, position);

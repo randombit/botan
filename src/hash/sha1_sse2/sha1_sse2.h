@@ -1,7 +1,9 @@
-/*************************************************
-* SHA-160 Header File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* SHA-160
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_SHA_160_SSE2_H__
 #define BOTAN_SHA_160_SSE2_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* SHA-160                                        *
-*************************************************/
+/*
+* SHA-160
+*/
 class BOTAN_DLL SHA_160_SSE2 : public SHA_160
    {
    public:

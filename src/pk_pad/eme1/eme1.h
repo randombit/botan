@@ -1,7 +1,9 @@
-/*************************************************
-* EME1 Header File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* EME1
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_EME1_H__
 #define BOTAN_EME1_H__
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* EME1                                           *
-*************************************************/
+/*
+* EME1
+*/
 class BOTAN_DLL EME1 : public EME
    {
    public:

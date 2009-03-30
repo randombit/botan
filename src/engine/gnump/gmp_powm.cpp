@@ -1,7 +1,9 @@
-/*************************************************
-* GMP Modular Exponentiation Source File         *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* GMP Modular Exponentiation
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eng_gmp.h>
 #include <botan/gmp_wrap.h>
@@ -10,9 +12,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* GMP Modular Exponentiator                      *
-*************************************************/
+/*
+* GMP Modular Exponentiator
+*/
 class GMP_Modular_Exponentiator : public Modular_Exponentiator
    {
    public:
@@ -27,9 +29,9 @@ class GMP_Modular_Exponentiator : public Modular_Exponentiator
       GMP_MPZ base, exp, mod;
    };
 
-/*************************************************
-* Compute the result                             *
-*************************************************/
+/*
+* Compute the result
+*/
 BigInt GMP_Modular_Exponentiator::execute() const
    {
    GMP_MPZ r;
@@ -39,9 +41,9 @@ BigInt GMP_Modular_Exponentiator::execute() const
 
 }
 
-/*************************************************
-* Return the GMP-based modular exponentiator     *
-*************************************************/
+/*
+* Return the GMP-based modular exponentiator
+*/
 Modular_Exponentiator* GMP_Engine::mod_exp(const BigInt& n,
                                            Power_Mod::Usage_Hints) const
    {

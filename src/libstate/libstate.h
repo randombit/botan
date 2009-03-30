@@ -1,7 +1,9 @@
-/*************************************************
-* Library Internal/Global State Header File      *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Library Internal/Global State
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_LIB_STATE_H__
 #define BOTAN_LIB_STATE_H__
@@ -16,9 +18,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Global State Container Base                    *
-*************************************************/
+/*
+* Global State Container Base
+*/
 class BOTAN_DLL Library_State
    {
    public:
@@ -111,9 +113,9 @@ class BOTAN_DLL Library_State
       Algorithm_Factory* m_algorithm_factory;
    };
 
-/*************************************************
-* Global State                                   *
-*************************************************/
+/*
+* Global State
+*/
 BOTAN_DLL Library_State& global_state();
 BOTAN_DLL void set_global_state(Library_State*);
 BOTAN_DLL Library_State* swap_global_state(Library_State*);

@@ -1,7 +1,9 @@
-/*************************************************
-* IF Scheme Header File                          *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* IF Scheme
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_IF_ALGO_H__
 #define BOTAN_IF_ALGO_H__

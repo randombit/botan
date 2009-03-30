@@ -1,6 +1,8 @@
 /**
-* EntropySource Header File
+* EntropySource
 * (C) 2008-2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_ENTROPY_SOURCE_BASE_H__

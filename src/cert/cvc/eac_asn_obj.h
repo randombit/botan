@@ -1,8 +1,10 @@
-/*************************************************
-* EAC ASN.1 Objects Header File                  *
-* (C) 2007-2008 FlexSecure GmbH                  *
-*     2008 Jack Lloyd                            *
-*************************************************/
+/*
+* EAC ASN.1 Objects
+* (C) 2007-2008 FlexSecure GmbH
+*     2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_EAC_ASN1_OBJ_H__
 #define BOTAN_EAC_ASN1_OBJ_H__
@@ -221,9 +223,9 @@ class BOTAN_DLL ASN1_Chr : public ASN1_EAC_String
       ASN1_Chr(std::string const& str = "");
    };
 
-/*************************************************
-* Comparison Operations                          *
-*************************************************/
+/*
+* Comparison Operations
+*/
 bool operator==(const EAC_Time&, const EAC_Time&);
 bool operator!=(const EAC_Time&, const EAC_Time&);
 bool operator<=(const EAC_Time&, const EAC_Time&);

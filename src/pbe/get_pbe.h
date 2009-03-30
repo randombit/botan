@@ -1,7 +1,9 @@
-/*************************************************
-* PBE Lookup Header File                         *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PBE Lookup
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_LOOKUP_PBE_H__
 #define BOTAN_LOOKUP_PBE_H__

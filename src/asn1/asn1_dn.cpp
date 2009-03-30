@@ -1,7 +1,9 @@
-/*************************************************
-* X509_DN Source File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X509_DN
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/asn1_obj.h>
 #include <botan/der_enc.h>
@@ -12,16 +14,16 @@
 
 namespace Botan {
 
-/*************************************************
-* Create an empty X509_DN                        *
-*************************************************/
+/*
+* Create an empty X509_DN
+*/
 X509_DN::X509_DN()
    {
    }
 
-/*************************************************
-* Create an X509_DN                              *
-*************************************************/
+/*
+* Create an X509_DN
+*/
 X509_DN::X509_DN(const std::multimap<OID, std::string>& args)
    {
    std::multimap<OID, std::string>::const_iterator j;
@@ -29,9 +31,9 @@ X509_DN::X509_DN(const std::multimap<OID, std::string>& args)
       add_attribute(j->first, j->second);
    }
 
-/*************************************************
-* Create an X509_DN                              *
-*************************************************/
+/*
+* Create an X509_DN
+*/
 X509_DN::X509_DN(const std::multimap<std::string, std::string>& args)
    {
    std::multimap<std::string, std::string>::const_iterator j;
@@ -39,9 +41,9 @@ X509_DN::X509_DN(const std::multimap<std::string, std::string>& args)
       add_attribute(OIDS::lookup(j->first), j->second);
    }
 
-/*************************************************
-* Add an attribute to a X509_DN                  *
-*************************************************/
+/*
+* Add an attribute to a X509_DN
+*/
 void X509_DN::add_attribute(const std::string& type,
                             const std::string& str)
    {
@@ -49,9 +51,9 @@ void X509_DN::add_attribute(const std::string& type,
    add_attribute(oid, str);
    }
 
-/*************************************************
-* Add an attribute to a X509_DN                  *
-*************************************************/
+/*
+* Add an attribute to a X509_DN
+*/
 void X509_DN::add_attribute(const OID& oid, const std::string& str)
    {
    if(str == "")
@@ -68,9 +70,9 @@ void X509_DN::add_attribute(const OID& oid, const std::string& str)
    dn_bits.destroy();
    }
 
-/*************************************************
-* Get the attributes of this X509_DN             *
-*************************************************/
+/*
+* Get the attributes of this X509_DN
+*/
 std::multimap<OID, std::string> X509_DN::get_attributes() const
    {
    typedef std::multimap<OID, ASN1_String>::const_iterator rdn_iter;
@@ -81,9 +83,9 @@ std::multimap<OID, std::string> X509_DN::get_attributes() const
    return retval;
    }
 
-/*************************************************
-* Get the contents of this X.500 Name            *
-*************************************************/
+/*
+* Get the contents of this X.500 Name
+*/
 std::multimap<std::string, std::string> X509_DN::contents() const
    {
    typedef std::multimap<OID, ASN1_String>::const_iterator rdn_iter;
@@ -94,9 +96,9 @@ std::multimap<std::string, std::string> X509_DN::contents() const
    return retval;
    }
 
-/*************************************************
-* Get a single attribute type                    *
-*************************************************/
+/*
+* Get a single attribute type
+*/
 std::vector<std::string> X509_DN::get_attribute(const std::string& attr) const
    {
    typedef std::multimap<OID, ASN1_String>::const_iterator rdn_iter;
@@ -110,9 +112,9 @@ std::vector<std::string> X509_DN::get_attribute(const std::string& attr) const
    return values;
    }
 
-/*************************************************
-* Handle the decoding operation of a DN          *
-*************************************************/
+/*
+* Handle the decoding operation of a DN
+*/
 void X509_DN::do_decode(const MemoryRegion<byte>& bits)
    {
    BER_Decoder sequence(bits);
@@ -139,17 +141,17 @@ void X509_DN::do_decode(const MemoryRegion<byte>& bits)
    dn_bits = bits;
    }
 
-/*************************************************
-* Return the BER encoded data, if any            *
-*************************************************/
+/*
+* Return the BER encoded data, if any
+*/
 MemoryVector<byte> X509_DN::get_bits() const
    {
    return dn_bits;
    }
 
-/*************************************************
-* Deref aliases in a subject/issuer info request *
-*************************************************/
+/*
+* Deref aliases in a subject/issuer info request
+*/
 std::string X509_DN::deref_info_field(const std::string& info)
    {
    if(info == "Name" || info == "CommonName") return "X520.CommonName";
@@ -164,9 +166,9 @@ std::string X509_DN::deref_info_field(const std::string& info)
    return info;
    }
 
-/*************************************************
-* Compare two X509_DNs for equality              *
-*************************************************/
+/*
+* Compare two X509_DNs for equality
+*/
 bool operator==(const X509_DN& dn1, const X509_DN& dn2)
    {
    typedef std::multimap<OID, std::string>::const_iterator rdn_iter;
@@ -194,17 +196,17 @@ bool operator==(const X509_DN& dn1, const X509_DN& dn2)
    return true;
    }
 
-/*************************************************
-* Compare two X509_DNs for inequality            *
-*************************************************/
+/*
+* Compare two X509_DNs for inequality
+*/
 bool operator!=(const X509_DN& dn1, const X509_DN& dn2)
    {
    return !(dn1 == dn2);
    }
 
-/*************************************************
-* Compare two X509_DNs                           *
-*************************************************/
+/*
+* Compare two X509_DNs
+*/
 bool operator<(const X509_DN& dn1, const X509_DN& dn2)
    {
    typedef std::multimap<OID, std::string>::const_iterator rdn_iter;
@@ -228,9 +230,9 @@ bool operator<(const X509_DN& dn1, const X509_DN& dn2)
 
 namespace {
 
-/*************************************************
-* DER encode a RelativeDistinguishedName         *
-*************************************************/
+/*
+* DER encode a RelativeDistinguishedName
+*/
 void do_ava(DER_Encoder& encoder,
             const std::multimap<OID, std::string>& dn_info,
             ASN1_Tag string_type, const std::string& oid_str,
@@ -260,9 +262,9 @@ void do_ava(DER_Encoder& encoder,
 
 }
 
-/*************************************************
-* DER encode a DistinguishedName                 *
-*************************************************/
+/*
+* DER encode a DistinguishedName
+*/
 void X509_DN::encode_into(DER_Encoder& der) const
    {
    std::multimap<OID, std::string> dn_info = get_attributes();
@@ -285,9 +287,9 @@ void X509_DN::encode_into(DER_Encoder& der) const
    der.end_cons();
    }
 
-/*************************************************
-* Decode a BER encoded DistinguishedName         *
-*************************************************/
+/*
+* Decode a BER encoded DistinguishedName
+*/
 void X509_DN::decode_from(BER_Decoder& source)
    {
    dn_info.clear();

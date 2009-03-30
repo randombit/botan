@@ -1,7 +1,9 @@
-/*************************************************
-* IF Algorithm Core Source File                  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* IF Algorithm Core
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/if_core.h>
 #include <botan/numthry.h>
@@ -17,18 +19,18 @@ const u32bit BLINDING_BITS = BOTAN_PRIVATE_KEY_OP_BLINDING_BITS;
 
 }
 
-/*************************************************
-* IF_Core Constructor                            *
-*************************************************/
+/*
+* IF_Core Constructor
+*/
 IF_Core::IF_Core(const BigInt& e, const BigInt& n)
    {
    op = Engine_Core::if_op(e, n, 0, 0, 0, 0, 0, 0);
    }
 
 
-/*************************************************
-* IF_Core Constructor                            *
-*************************************************/
+/*
+* IF_Core Constructor
+*/
 IF_Core::IF_Core(RandomNumberGenerator& rng,
                  const BigInt& e, const BigInt& n, const BigInt& d,
                  const BigInt& p, const BigInt& q,
@@ -43,9 +45,9 @@ IF_Core::IF_Core(RandomNumberGenerator& rng,
       }
    }
 
-/*************************************************
-* IF_Core Copy Constructor                       *
-*************************************************/
+/*
+* IF_Core Copy Constructor
+*/
 IF_Core::IF_Core(const IF_Core& core)
    {
    op = 0;
@@ -54,9 +56,9 @@ IF_Core::IF_Core(const IF_Core& core)
    blinder = core.blinder;
    }
 
-/*************************************************
-* IF_Core Assignment Operator                    *
-*************************************************/
+/*
+* IF_Core Assignment Operator
+*/
 IF_Core& IF_Core::operator=(const IF_Core& core)
    {
    delete op;
@@ -66,17 +68,17 @@ IF_Core& IF_Core::operator=(const IF_Core& core)
    return (*this);
    }
 
-/*************************************************
-* IF Public Operation                            *
-*************************************************/
+/*
+* IF Public Operation
+*/
 BigInt IF_Core::public_op(const BigInt& i) const
    {
    return op->public_op(i);
    }
 
-/*************************************************
-* IF Private Operation                           *
-*************************************************/
+/*
+* IF Private Operation
+*/
 BigInt IF_Core::private_op(const BigInt& i) const
    {
    return blinder.unblind(op->private_op(blinder.blind(i)));

@@ -1,8 +1,10 @@
-/*************************************************
-* ECDSA Core Header File                         *
-* (C) 1999-2007 Jack Lloyd                       *
-* (C) 2007 FlexSecure GmbH                       *
-*************************************************/
+/*
+* ECDSA Core
+* (C) 1999-2007 Jack Lloyd
+* (C) 2007 FlexSecure GmbH
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_ECDSA_CORE_H__
 #define BOTAN_ECDSA_CORE_H__
@@ -13,9 +15,9 @@
 
 namespace Botan {
 
-/*************************************************
-* ECDSA Core                                     *
-*************************************************/
+/*
+* ECDSA Core
+*/
 class BOTAN_DLL ECDSA_Core
    {
    public:

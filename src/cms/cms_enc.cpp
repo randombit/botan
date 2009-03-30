@@ -1,7 +1,9 @@
-/*************************************************
-* CMS Encoding Base Source File                  *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CMS Encoding Base
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/cms_enc.h>
 #include <botan/der_enc.h>
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Setup the intitial layer of CMS data           *
-*************************************************/
+/*
+* Setup the intitial layer of CMS data
+*/
 void CMS_Encoder::set_data(const byte buf[], u32bit length)
    {
    if(data.has_items())
@@ -22,17 +24,17 @@ void CMS_Encoder::set_data(const byte buf[], u32bit length)
    type = "CMS.DataContent";
    }
 
-/*************************************************
-* Setup the intitial layer of CMS data           *
-*************************************************/
+/*
+* Setup the intitial layer of CMS data
+*/
 void CMS_Encoder::set_data(const std::string& str)
    {
    set_data((const byte*)str.c_str(), str.length());
    }
 
-/*************************************************
-* Finalize and return the CMS encoded data       *
-*************************************************/
+/*
+* Finalize and return the CMS encoded data
+*/
 SecureVector<byte> CMS_Encoder::get_contents()
    {
    DER_Encoder encoder;
@@ -49,26 +51,26 @@ SecureVector<byte> CMS_Encoder::get_contents()
    return encoder.get_contents();
    }
 
-/*************************************************
-* Add a new layer of encapsulation               *
-*************************************************/
+/*
+* Add a new layer of encapsulation
+*/
 void CMS_Encoder::add_layer(const std::string& oid, DER_Encoder& new_layer)
    {
    data = new_layer.get_contents();
    type = oid;
    }
 
-/*************************************************
-* Return the PEM-encoded data                    *
-*************************************************/
+/*
+* Return the PEM-encoded data
+*/
 std::string CMS_Encoder::PEM_contents()
    {
    return PEM_Code::encode(get_contents(), "PKCS7");
    }
 
-/*************************************************
-* Make an EncapsulatedContentInfo                *
-*************************************************/
+/*
+* Make an EncapsulatedContentInfo
+*/
 SecureVector<byte> CMS_Encoder::make_econtent(const SecureVector<byte>& data,
                                               const std::string& type)
    {

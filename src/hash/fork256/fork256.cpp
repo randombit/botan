@@ -1,7 +1,9 @@
-/*************************************************
-* FORK-256 Source File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* FORK-256
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/fork256.h>
 #include <botan/loadstor.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* FORK-256 Step Function                         *
-*************************************************/
+/*
+* FORK-256 Step Function
+*/
 inline void step(u32bit& A, u32bit& B, u32bit& C, u32bit& D,
                  u32bit& E, u32bit& F, u32bit& G, u32bit& H,
                  u32bit M1, u32bit M2, u32bit D1, u32bit D2)
@@ -37,9 +39,9 @@ inline void step(u32bit& A, u32bit& B, u32bit& C, u32bit& D,
 
 }
 
-/*************************************************
-* FORK-256 Compression Function                   *
-*************************************************/
+/*
+* FORK-256 Compression Function
+*/
 void FORK_256::compress_n(const byte input[], u32bit blocks)
    {
    const u32bit DELTA[16] = {
@@ -119,18 +121,18 @@ void FORK_256::compress_n(const byte input[], u32bit blocks)
       }
    }
 
-/*************************************************
-* Copy out the digest                            *
-*************************************************/
+/*
+* Copy out the digest
+*/
 void FORK_256::copy_out(byte output[])
    {
    for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
       store_be(digest[j/4], output + j);
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void FORK_256::clear() throw()
    {
    MDx_HashFunction::clear();

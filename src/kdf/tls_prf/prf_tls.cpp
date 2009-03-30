@@ -1,7 +1,9 @@
-/*************************************************
-* TLS PRF Source File                            *
-* (C) 2004-2006 Jack Lloyd                       *
-*************************************************/
+/*
+* TLS PRF
+* (C) 2004-2006 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/prf_tls.h>
 #include <botan/xor_buf.h>
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* TLS PRF Constructor and Destructor             *
-*************************************************/
+/*
+* TLS PRF Constructor and Destructor
+*/
 TLS_PRF::TLS_PRF()
    {
    hmac_md5 = new HMAC(new MD5);
@@ -26,9 +28,9 @@ TLS_PRF::~TLS_PRF()
    delete hmac_sha1;
    }
 
-/*************************************************
-* TLS PRF                                        *
-*************************************************/
+/*
+* TLS PRF
+*/
 SecureVector<byte> TLS_PRF::derive(u32bit key_len,
                                    const byte secret[], u32bit secret_len,
                                    const byte seed[], u32bit seed_len) const
@@ -47,9 +49,9 @@ SecureVector<byte> TLS_PRF::derive(u32bit key_len,
    return key1;
    }
 
-/*************************************************
-* TLS PRF P_hash function                        *
-*************************************************/
+/*
+* TLS PRF P_hash function
+*/
 SecureVector<byte> TLS_PRF::P_hash(MessageAuthenticationCode* mac,
                                    u32bit len,
                                    const byte secret[], u32bit secret_len,

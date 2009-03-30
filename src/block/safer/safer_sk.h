@@ -1,7 +1,9 @@
-/*************************************************
-* SAFER-SK Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* SAFER-SK
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_SAFER_SK_H__
 #define BOTAN_SAFER_SK_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* SAFER-SK                                       *
-*************************************************/
+/*
+* SAFER-SK
+*/
 class BOTAN_DLL SAFER_SK : public BlockCipher
    {
    public:

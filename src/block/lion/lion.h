@@ -1,7 +1,9 @@
-/*************************************************
-* Lion Header File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Lion
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_LION_H__
 #define BOTAN_LION_H__
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Lion                                           *
-*************************************************/
+/*
+* Lion
+*/
 class BOTAN_DLL Lion : public BlockCipher
    {
    public:

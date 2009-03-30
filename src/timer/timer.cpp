@@ -1,6 +1,8 @@
 /**
-* Timestamp Functions Source File
+* Timestamp Functions
 * (C) 1999-2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #include <botan/timer.h>

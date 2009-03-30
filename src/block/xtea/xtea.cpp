@@ -1,7 +1,9 @@
-/*************************************************
-* XTEA Source File                               *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* XTEA
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/xtea.h>
 #include <botan/loadstor.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* XTEA Encryption                                *
-*************************************************/
+/*
+* XTEA Encryption
+*/
 void XTEA::enc(const byte in[], byte out[]) const
    {
    u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
@@ -25,9 +27,9 @@ void XTEA::enc(const byte in[], byte out[]) const
    store_be(out, L, R);
    }
 
-/*************************************************
-* XTEA Decryption                                *
-*************************************************/
+/*
+* XTEA Decryption
+*/
 void XTEA::dec(const byte in[], byte out[]) const
    {
    u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
@@ -41,9 +43,9 @@ void XTEA::dec(const byte in[], byte out[]) const
    store_be(out, L, R);
    }
 
-/*************************************************
-* XTEA Key Schedule                              *
-*************************************************/
+/*
+* XTEA Key Schedule
+*/
 void XTEA::key_schedule(const byte key[], u32bit)
    {
    static const u32bit DELTAS[64] = {

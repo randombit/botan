@@ -1,7 +1,9 @@
-/*************************************************
-* MISTY1 Source File                             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* MISTY1
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/misty1.h>
 #include <botan/loadstor.h>
@@ -83,9 +85,9 @@ static const u16bit MISTY1_SBOX_S9[512] = {
    0x00BE, 0x0078, 0x0000, 0x00AC, 0x0110, 0x015E, 0x0124, 0x0002, 0x01BC,
    0x00A2, 0x00EA, 0x0070, 0x01FC, 0x0116, 0x015C, 0x004C, 0x01C2 };
 
-/*************************************************
-* MISTY1 FI Function                             *
-*************************************************/
+/*
+* MISTY1 FI Function
+*/
 u16bit FI(u16bit input, u16bit key7, u16bit key9)
    {
    u16bit D9 = input >> 7, D7 = input & 0x7F;
@@ -97,9 +99,9 @@ u16bit FI(u16bit input, u16bit key7, u16bit key9)
 
 }
 
-/*************************************************
-* MISTY1 Encryption                              *
-*************************************************/
+/*
+* MISTY1 Encryption
+*/
 void MISTY1::enc(const byte in[], byte out[]) const
    {
    u16bit B0 = load_be<u16bit>(in, 0);
@@ -141,9 +143,9 @@ void MISTY1::enc(const byte in[], byte out[]) const
    store_be(out, B2, B3, B0, B1);
    }
 
-/*************************************************
-* MISTY1 Decryption                              *
-*************************************************/
+/*
+* MISTY1 Decryption
+*/
 void MISTY1::dec(const byte in[], byte out[]) const
    {
    u16bit B0 = load_be<u16bit>(in, 2);
@@ -185,9 +187,9 @@ void MISTY1::dec(const byte in[], byte out[]) const
    store_be(out, B0, B1, B2, B3);
    }
 
-/*************************************************
-* MISTY1 Key Schedule                            *
-*************************************************/
+/*
+* MISTY1 Key Schedule
+*/
 void MISTY1::key_schedule(const byte key[], u32bit length)
    {
    SecureBuffer<u16bit, 32> KS;
@@ -234,9 +236,9 @@ void MISTY1::key_schedule(const byte key[], u32bit length)
       }
    }
 
-/*************************************************
-* MISTY1 Constructor                             *
-*************************************************/
+/*
+* MISTY1 Constructor
+*/
 MISTY1::MISTY1(u32bit rounds) : BlockCipher(8, 16)
    {
    if(rounds != 8)

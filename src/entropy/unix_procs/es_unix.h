@@ -1,6 +1,8 @@
 /*
-* Unix EntropySource Header File
+* Unix EntropySource
 * (C) 1999-2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_ENTROPY_SRC_UNIX_H__

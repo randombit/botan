@@ -1,7 +1,9 @@
-/*************************************************
-* Base64 Encoder/Decoder Header File             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Base64 Encoder/Decoder
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_BASE64_H__
 #define BOTAN_BASE64_H__

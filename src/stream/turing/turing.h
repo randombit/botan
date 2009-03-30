@@ -1,7 +1,9 @@
-/*************************************************
-* Turing Header File                             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Turing
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_TURING_H__
 #define BOTAN_TURING_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Turing                                         *
-*************************************************/
+/*
+* Turing
+*/
 class BOTAN_DLL Turing : public StreamCipher
    {
    public:

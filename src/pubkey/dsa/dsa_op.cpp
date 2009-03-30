@@ -1,15 +1,17 @@
-/*************************************************
-* DSA Operations Source File                     *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* DSA Operations
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/dsa_op.h>
 
 namespace Botan {
 
-/*************************************************
-* Default_DSA_Op Constructor                     *
-*************************************************/
+/*
+* Default_DSA_Op Constructor
+*/
 Default_DSA_Op::Default_DSA_Op(const DL_Group& grp, const BigInt& y1,
                                const BigInt& x1) : x(x1), y(y1), group(grp)
    {
@@ -19,9 +21,9 @@ Default_DSA_Op::Default_DSA_Op(const DL_Group& grp, const BigInt& y1,
    mod_q = Modular_Reducer(group.get_q());
    }
 
-/*************************************************
-* Default DSA Verify Operation                   *
-*************************************************/
+/*
+* Default DSA Verify Operation
+*/
 bool Default_DSA_Op::verify(const byte msg[], u32bit msg_len,
                             const byte sig[], u32bit sig_len) const
    {
@@ -44,9 +46,9 @@ bool Default_DSA_Op::verify(const byte msg[], u32bit msg_len,
    return (mod_q.reduce(s) == r);
    }
 
-/*************************************************
-* Default DSA Sign Operation                     *
-*************************************************/
+/*
+* Default DSA Sign Operation
+*/
 SecureVector<byte> Default_DSA_Op::sign(const byte in[], u32bit length,
                                         const BigInt& k) const
    {

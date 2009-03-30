@@ -1,8 +1,10 @@
-/*************************************************
-* EAC Time Types Source File                     *
-* (C) 2007 FlexSecure GmbH                       *
-*     2008 Jack Lloyd                            *
-*************************************************/
+/*
+* EAC Time Types
+* (C) 2007 FlexSecure GmbH
+*     2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eac_asn_obj.h>
 #include <botan/der_enc.h>
@@ -16,9 +18,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Convert a time_t to a struct tm                *
-*************************************************/
+/*
+* Convert a time_t to a struct tm
+*/
 std::tm get_tm(u64bit timer)
    {
    std::time_t time_val = static_cast<std::time_t>(timer);
@@ -59,9 +61,9 @@ u32bit dec_two_digit(byte b1, byte b2)
    }
 }
 
-/*************************************************
-* Create an EAC_Time                            *
-*************************************************/
+/*
+* Create an EAC_Time
+*/
 EAC_Time::EAC_Time(u64bit timer, ASN1_Tag t)
    :tag(t)
    {
@@ -73,17 +75,17 @@ EAC_Time::EAC_Time(u64bit timer, ASN1_Tag t)
 
    }
 
-/*************************************************
-* Create an EAC_Time                             *
-*************************************************/
+/*
+* Create an EAC_Time
+*/
 EAC_Time::EAC_Time(const std::string& t_spec, ASN1_Tag t)
    :tag(t)
    {
    set_to(t_spec);
    }
-/*************************************************
-* Create an EAC_Time                             *
-*************************************************/
+/*
+* Create an EAC_Time
+*/
 EAC_Time::EAC_Time(u32bit y, u32bit m, u32bit d, ASN1_Tag t)
    : year(y),
      month(m),
@@ -92,9 +94,9 @@ EAC_Time::EAC_Time(u32bit y, u32bit m, u32bit d, ASN1_Tag t)
    {
    }
 
-/*************************************************
-* Set the time with a human readable string      *
-*************************************************/
+/*
+* Set the time with a human readable string
+*/
 void EAC_Time::set_to(const std::string& time_str)
    {
    if (time_str == "")
@@ -132,18 +134,18 @@ void EAC_Time::set_to(const std::string& time_str)
    }
 
 
-/*************************************************
-* DER encode a EAC_Time                         *
-*************************************************/
+/*
+* DER encode a EAC_Time
+*/
 void EAC_Time::encode_into(DER_Encoder& der) const
    {
    der.add_object(tag, APPLICATION,
                   encoded_eac_time());
    }
 
-/*************************************************
-* Return a string representation of the time     *
-*************************************************/
+/*
+* Return a string representation of the time
+*/
 std::string EAC_Time::as_string() const
    {
    if (time_is_set() == false)
@@ -157,17 +159,17 @@ std::string EAC_Time::as_string() const
    return asn1rep;
    }
 
-/*************************************************
-* Return if the time has been set somehow        *
-*************************************************/
+/*
+* Return if the time has been set somehow
+*/
 bool EAC_Time::time_is_set() const
    {
    return (year != 0);
    }
 
-/*************************************************
-* Return a human readable string representation  *
-*************************************************/
+/*
+* Return a human readable string representation
+*/
 std::string EAC_Time::readable_string() const
    {
    if (time_is_set() == false)
@@ -181,9 +183,9 @@ std::string EAC_Time::readable_string() const
    return readable;
    }
 
-/*************************************************
-* Do a general sanity check on the time          *
-*************************************************/
+/*
+* Do a general sanity check on the time
+*/
 bool EAC_Time::passes_sanity_check() const
    {
    if (year < 2000 || year > 2099)
@@ -197,7 +199,7 @@ bool EAC_Time::passes_sanity_check() const
    }
 
 /******************************************
-* modification functions                  *
+* modification functions
 ******************************************/
 
 void EAC_Time::add_years(u32bit years)
@@ -216,9 +218,9 @@ void EAC_Time::add_months(u32bit months)
    }
 
 
-/*************************************************
-* Compare this time against another              *
-*************************************************/
+/*
+* Compare this time against another
+*/
 s32bit EAC_Time::cmp(const EAC_Time& other) const
    {
    if (time_is_set() == false)
@@ -236,9 +238,9 @@ s32bit EAC_Time::cmp(const EAC_Time& other) const
    return SAME_TIME;
    }
 
-/*************************************************
-* Compare two EAC_Times for in various ways     *
-*************************************************/
+/*
+* Compare two EAC_Times for in various ways
+*/
 bool operator==(const EAC_Time& t1, const EAC_Time& t2)
    {
    return (t1.cmp(t2) == 0);
@@ -264,9 +266,9 @@ bool operator<(const EAC_Time& t1, const EAC_Time& t2)
    return (t1.cmp(t2) < 0);
    }
 
-/*************************************************
-* Decode a BER encoded EAC_Time                 *
-*************************************************/
+/*
+* Decode a BER encoded EAC_Time
+*/
 void EAC_Time::decode_from(BER_Decoder& source)
    {
    BER_Object obj = source.get_next_object();
@@ -320,9 +322,9 @@ u32bit EAC_Time::get_day() const
    return day;
    }
 
-/*************************************************
-* make the value an octet string for encoding    *
-*************************************************/
+/*
+* make the value an octet string for encoding
+*/
 SecureVector<byte> EAC_Time::encoded_eac_time() const
    {
    SecureVector<byte> result;

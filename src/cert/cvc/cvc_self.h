@@ -1,8 +1,10 @@
-/*************************************************
-* CVC Self-Signed Certificate Header File        *
-* (C) 2007 FlexSecure GmbH                       *
-*     2008 Jack Lloyd                            *
-*************************************************/
+/*
+* CVC Self-Signed Certificate
+* (C) 2007 FlexSecure GmbH
+*     2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_CVC_EAC_SELF_H__
 #define BOTAN_CVC_EAC_SELF_H__

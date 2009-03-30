@@ -1,8 +1,10 @@
-/*************************************************
-* Montgomery Reduction Source File               *
-* (C) 1999-2008 Jack Lloyd                       *
-*     2006 Luca Piccarreta                       *
-*************************************************/
+/*
+* Montgomery Reduction
+* (C) 1999-2008 Jack Lloyd
+*     2006 Luca Piccarreta
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/mp_core.h>
 #include <botan/mp_asm.h>
@@ -12,9 +14,9 @@ namespace Botan {
 
 extern "C" {
 
-/*************************************************
-* Montgomery Reduction Algorithm                 *
-*************************************************/
+/*
+* Montgomery Reduction Algorithm
+*/
 void bigint_monty_redc(word z[], u32bit z_size,
                        const word x[], u32bit x_size, word u)
    {

@@ -1,7 +1,9 @@
-/*************************************************
-* DSA Operations Header File                     *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* DSA Operations
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_DSA_OPS_H__
 #define BOTAN_DSA_OPS_H__
@@ -13,9 +15,9 @@
 
 namespace Botan {
 
-/*************************************************
-* DSA Operation                                  *
-*************************************************/
+/*
+* DSA Operation
+*/
 class BOTAN_DLL DSA_Operation
    {
    public:
@@ -27,9 +29,9 @@ class BOTAN_DLL DSA_Operation
       virtual ~DSA_Operation() {}
    };
 
-/*************************************************
-* Botan's Default DSA Operation                  *
-*************************************************/
+/*
+* Botan's Default DSA Operation
+*/
 class BOTAN_DLL Default_DSA_Op : public DSA_Operation
    {
    public:

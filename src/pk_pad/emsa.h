@@ -1,7 +1,9 @@
-/*************************************************
-* EMSA Classes Header File                       *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* EMSA Classes
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_PUBKEY_EMSA_H__
 #define BOTAN_PUBKEY_EMSA_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Encoding Method for Signatures, Appendix       *
-*************************************************/
+/*
+* Encoding Method for Signatures, Appendix
+*/
 class BOTAN_DLL EMSA
    {
    public:

@@ -1,7 +1,9 @@
-/*************************************************
-* PBKDF/EMSA/EME/KDF/MGF Retrieval Source File   *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PBKDF/EMSA/EME/KDF/MGF Retrieval
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/lookup.h>
 #include <botan/libstate.h>
@@ -78,9 +80,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Get a S2K algorithm by name                    *
-*************************************************/
+/*
+* Get a S2K algorithm by name
+*/
 S2K* get_s2k(const std::string& algo_spec)
    {
    SCAN_Name request(algo_spec);
@@ -105,9 +107,9 @@ S2K* get_s2k(const std::string& algo_spec)
    throw Algorithm_Not_Found(algo_spec);
    }
 
-/*************************************************
-* Get an EMSA by name                            *
-*************************************************/
+/*
+* Get an EMSA by name
+*/
 EMSA* get_emsa(const std::string& algo_spec)
    {
    SCAN_Name request(algo_spec);
@@ -162,9 +164,9 @@ EMSA* get_emsa(const std::string& algo_spec)
    throw Algorithm_Not_Found(algo_spec);
    }
 
-/*************************************************
-* Get an EME by name                             *
-*************************************************/
+/*
+* Get an EME by name
+*/
 EME* get_eme(const std::string& algo_spec)
    {
    SCAN_Name request(algo_spec);
@@ -193,9 +195,9 @@ EME* get_eme(const std::string& algo_spec)
    throw Algorithm_Not_Found(algo_spec);
    }
 
-/*************************************************
-* Get an KDF by name                             *
-*************************************************/
+/*
+* Get an KDF by name
+*/
 KDF* get_kdf(const std::string& algo_spec)
    {
    SCAN_Name request(algo_spec);

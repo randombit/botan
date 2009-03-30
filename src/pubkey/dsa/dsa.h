@@ -1,7 +1,9 @@
-/*************************************************
-* DSA Header File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* DSA
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_DSA_H__
 #define BOTAN_DSA_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* DSA Public Key                                 *
-*************************************************/
+/*
+* DSA Public Key
+*/
 class BOTAN_DLL DSA_PublicKey : public PK_Verifying_wo_MR_Key,
                                 public virtual DL_Scheme_PublicKey
    {
@@ -35,9 +37,9 @@ class BOTAN_DLL DSA_PublicKey : public PK_Verifying_wo_MR_Key,
       void X509_load_hook();
    };
 
-/*************************************************
-* DSA Private Key                                *
-*************************************************/
+/*
+* DSA Private Key
+*/
 class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
                                  public PK_Signing_Key,
                                  public virtual DL_Scheme_PrivateKey

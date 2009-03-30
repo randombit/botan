@@ -1,7 +1,9 @@
-/*************************************************
-* Twofish Source File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Twofish
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/twofish.h>
 #include <botan/loadstor.h>
@@ -9,9 +11,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Twofish Encryption                             *
-*************************************************/
+/*
+* Twofish Encryption
+*/
 void Twofish::enc(const byte in[], byte out[]) const
    {
    u32bit A = load_le<u32bit>(in, 0) ^ round_key[0];
@@ -54,9 +56,9 @@ void Twofish::enc(const byte in[], byte out[]) const
    store_le(out, C, D, A, B);
    }
 
-/*************************************************
-* Twofish Decryption                             *
-*************************************************/
+/*
+* Twofish Decryption
+*/
 void Twofish::dec(const byte in[], byte out[]) const
    {
    u32bit A = load_le<u32bit>(in, 0) ^ round_key[4];
@@ -99,9 +101,9 @@ void Twofish::dec(const byte in[], byte out[]) const
    store_le(out, C, D, A, B);
    }
 
-/*************************************************
-* Twofish Key Schedule                           *
-*************************************************/
+/*
+* Twofish Key Schedule
+*/
 void Twofish::key_schedule(const byte key[], u32bit length)
    {
    SecureBuffer<byte, 16> S;
@@ -180,9 +182,9 @@ void Twofish::key_schedule(const byte key[], u32bit length)
       }
    }
 
-/*************************************************
-* Do one column of the RS matrix multiplcation   *
-*************************************************/
+/*
+* Do one column of the RS matrix multiplcation
+*/
 void Twofish::rs_mul(byte S[4], byte key, u32bit offset)
    {
    if(key)
@@ -201,9 +203,9 @@ void Twofish::rs_mul(byte S[4], byte key, u32bit offset)
       }
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void Twofish::clear() throw()
    {
    SBox0.clear();

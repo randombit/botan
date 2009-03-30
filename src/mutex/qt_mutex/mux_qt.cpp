@@ -1,8 +1,10 @@
-/*************************************************
-* Qt Thread Mutex Source File                    *
-* (C) 2004-2007 Justin Karneges                  *
-*     2004-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Qt Thread Mutex
+* (C) 2004-2007 Justin Karneges
+*     2004-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/mux_qt.h>
 #include <qmutex.h>
@@ -13,9 +15,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Qt Mutex Factory                               *
-*************************************************/
+/*
+* Qt Mutex Factory
+*/
 Mutex* Qt_Mutex_Factory::make()
    {
    class Qt_Mutex : public Mutex

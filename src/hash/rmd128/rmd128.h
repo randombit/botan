@@ -1,7 +1,9 @@
-/*************************************************
-* RIPEMD-128 Header File                         *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* RIPEMD-128
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_RIPEMD_128_H__
 #define BOTAN_RIPEMD_128_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* RIPEMD-128                                     *
-*************************************************/
+/*
+* RIPEMD-128
+*/
 class BOTAN_DLL RIPEMD_128 : public MDx_HashFunction
    {
    public:

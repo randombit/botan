@@ -1,7 +1,9 @@
-/*************************************************
-* Salsa20 Source File                            *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Salsa20
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/salsa20.h>
 #include <botan/mem_ops.h>
@@ -13,9 +15,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Generate Salsa20 cipher stream                 *
-*************************************************/
+/*
+* Generate Salsa20 cipher stream
+*/
 void salsa20(byte output[64], const u32bit input[16])
    {
    u32bit x00 = input[0];
@@ -92,9 +94,9 @@ void salsa20(byte output[64], const u32bit input[16])
 
 }
 
-/*************************************************
-* Combine cipher stream with message             *
-*************************************************/
+/*
+* Combine cipher stream with message
+*/
 void Salsa20::cipher(const byte in[], byte out[], u32bit length)
    {
    while(length >= buffer.size() - position)
@@ -117,9 +119,9 @@ void Salsa20::cipher(const byte in[], byte out[], u32bit length)
    position += length;
    }
 
-/*************************************************
-* Salsa20 Key Schedule                           *
-*************************************************/
+/*
+* Salsa20 Key Schedule
+*/
 void Salsa20::key_schedule(const byte key[], u32bit length)
    {
    static const u32bit TAU[] =
@@ -165,9 +167,9 @@ void Salsa20::key_schedule(const byte key[], u32bit length)
    resync(ZERO, sizeof(ZERO));
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/*
+* Return the name of this type
+*/
 void Salsa20::resync(const byte iv[], u32bit length)
    {
    if(length != IV_LENGTH)
@@ -186,17 +188,17 @@ void Salsa20::resync(const byte iv[], u32bit length)
    position = 0;
    }
 
-/*************************************************
-* Return the name of this type                   *
-*************************************************/
+/*
+* Return the name of this type
+*/
 std::string Salsa20::name() const
    {
    return "Salsa20";
    }
 
-/*************************************************
-* Clear memory of sensitive data                 *
-*************************************************/
+/*
+* Clear memory of sensitive data
+*/
 void Salsa20::clear() throw()
    {
    state.clear();
@@ -204,9 +206,9 @@ void Salsa20::clear() throw()
    position = 0;
    }
 
-/*************************************************
-* Salsa20 Constructor                            *
-*************************************************/
+/*
+* Salsa20 Constructor
+*/
 Salsa20::Salsa20() : StreamCipher(16, 32, 16, 8)
    {
    clear();

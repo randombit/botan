@@ -1,7 +1,9 @@
-/*************************************************
-* PKCS #8 Header File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PKCS #8
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_PKCS8_H__
 #define BOTAN_PKCS8_H__
@@ -33,9 +35,9 @@ class BOTAN_DLL PKCS8_Encoder
       virtual ~PKCS8_Encoder() {}
    };
 
-/*************************************************
-* PKCS #8 Private Key Decoder                    *
-*************************************************/
+/*
+* PKCS #8 Private Key Decoder
+*/
 class BOTAN_DLL PKCS8_Decoder
    {
    public:

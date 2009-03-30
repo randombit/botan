@@ -1,7 +1,9 @@
-/*************************************************
-* PK Key Types Header File                       *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PK Key Types
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_PK_KEYS_H__
 #define BOTAN_PK_KEYS_H__
@@ -166,9 +168,9 @@ class BOTAN_DLL PK_Key_Agreement_Key : public virtual Private_Key
       virtual ~PK_Key_Agreement_Key() {}
    };
 
-/*************************************************
-* Typedefs                                       *
-*************************************************/
+/*
+* Typedefs
+*/
 typedef PK_Key_Agreement_Key PK_KA_Key;
 typedef Public_Key X509_PublicKey;
 typedef Private_Key PKCS8_PrivateKey;

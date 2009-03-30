@@ -1,7 +1,9 @@
-/*************************************************
-* GMP ElGamal Engine Source File                 *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* GMP ElGamal Engine
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/eng_gmp.h>
 #include <botan/gmp_wrap.h>
@@ -13,9 +15,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* GMP ElGamal Operation                          *
-*************************************************/
+/*
+* GMP ElGamal Operation
+*/
 class GMP_ELG_Op : public ELG_Operation
    {
    public:
@@ -30,9 +32,9 @@ class GMP_ELG_Op : public ELG_Operation
       GMP_MPZ x, y, g, p;
    };
 
-/*************************************************
-* GMP ElGamal Encrypt Operation                  *
-*************************************************/
+/*
+* GMP ElGamal Encrypt Operation
+*/
 SecureVector<byte> GMP_ELG_Op::encrypt(const byte in[], u32bit length,
                                        const BigInt& k_bn) const
    {
@@ -55,9 +57,9 @@ SecureVector<byte> GMP_ELG_Op::encrypt(const byte in[], u32bit length,
    return output;
    }
 
-/*************************************************
-* GMP ElGamal Decrypt Operation                  *
-*************************************************/
+/*
+* GMP ElGamal Decrypt Operation
+*/
 BigInt GMP_ELG_Op::decrypt(const BigInt& a_bn, const BigInt& b_bn) const
    {
    if(mpz_cmp_ui(x.value, 0) == 0)
@@ -77,9 +79,9 @@ BigInt GMP_ELG_Op::decrypt(const BigInt& a_bn, const BigInt& b_bn) const
 
 }
 
-/*************************************************
-* Acquire an ElGamal op                          *
-*************************************************/
+/*
+* Acquire an ElGamal op
+*/
 ELG_Operation* GMP_Engine::elg_op(const DL_Group& group, const BigInt& y,
                                   const BigInt& x) const
    {

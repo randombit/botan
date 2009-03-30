@@ -1,7 +1,9 @@
-/*************************************************
-* Modular Exponentiation Header File             *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Modular Exponentiation
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_DEFAULT_MODEXP_H__
 #define BOTAN_DEFAULT_MODEXP_H__
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* Fixed Window Exponentiator                     *
-*************************************************/
+/*
+* Fixed Window Exponentiator
+*/
 class BOTAN_DLL Fixed_Window_Exponentiator : public Modular_Exponentiator
    {
    public:
@@ -34,9 +36,9 @@ class BOTAN_DLL Fixed_Window_Exponentiator : public Modular_Exponentiator
       Power_Mod::Usage_Hints hints;
    };
 
-/*************************************************
-* Montgomery Exponentiator                       *
-*************************************************/
+/*
+* Montgomery Exponentiator
+*/
 class BOTAN_DLL Montgomery_Exponentiator : public Modular_Exponentiator
    {
    public:

@@ -1,7 +1,9 @@
-/*************************************************
-* PEM Encoding/Decoding Source File              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* PEM Encoding/Decoding
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/pem.h>
 #include <botan/filters.h>
@@ -11,9 +13,9 @@ namespace Botan {
 
 namespace PEM_Code {
 
-/*************************************************
-* PEM encode BER/DER-encoded objects             *
-*************************************************/
+/*
+* PEM encode BER/DER-encoded objects
+*/
 std::string encode(const byte der[], u32bit length, const std::string& label,
                    u32bit width)
    {
@@ -25,18 +27,18 @@ std::string encode(const byte der[], u32bit length, const std::string& label,
    return (PEM_HEADER + pipe.read_all_as_string() + PEM_TRAILER);
    }
 
-/*************************************************
-* PEM encode BER/DER-encoded objects             *
-*************************************************/
+/*
+* PEM encode BER/DER-encoded objects
+*/
 std::string encode(const MemoryRegion<byte>& data, const std::string& label,
                    u32bit width)
    {
    return encode(data, data.size(), label, width);
    }
 
-/*************************************************
-* Decode PEM down to raw BER/DER                 *
-*************************************************/
+/*
+* Decode PEM down to raw BER/DER
+*/
 SecureVector<byte> decode_check_label(DataSource& source,
                                       const std::string& label_want)
    {
@@ -48,9 +50,9 @@ SecureVector<byte> decode_check_label(DataSource& source,
    return ber;
    }
 
-/*************************************************
-* Decode PEM down to raw BER/DER                 *
-*************************************************/
+/*
+* Decode PEM down to raw BER/DER
+*/
 SecureVector<byte> decode(DataSource& source, std::string& label)
    {
    const u32bit RANDOM_CHAR_LIMIT = 8;
@@ -108,9 +110,9 @@ SecureVector<byte> decode(DataSource& source, std::string& label)
    return base64.read_all();
    }
 
-/*************************************************
-* Search for a PEM signature                     *
-*************************************************/
+/*
+* Search for a PEM signature
+*/
 bool matches(DataSource& source, const std::string& extra,
              u32bit search_range)
    {

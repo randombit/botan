@@ -1,7 +1,9 @@
-/*************************************************
-* CTS Mode Header File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CTS Mode
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_CTS_H__
 #define BOTAN_CTS_H__
@@ -11,9 +13,9 @@
 
 namespace Botan {
 
-/*************************************************
-* CTS Encryption                                 *
-*************************************************/
+/*
+* CTS Encryption
+*/
 class BOTAN_DLL CTS_Encryption : public BlockCipherMode
    {
    public:
@@ -31,9 +33,9 @@ class BOTAN_DLL CTS_Encryption : public BlockCipherMode
       void encrypt(const byte[]);
    };
 
-/*************************************************
-* CTS Decryption                                 *
-*************************************************/
+/*
+* CTS Decryption
+*/
 class BOTAN_DLL CTS_Decryption : public BlockCipherMode
    {
    public:

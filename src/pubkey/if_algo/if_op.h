@@ -1,7 +1,9 @@
-/*************************************************
-* IF Operations Header File                      *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* IF Operations
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_IF_OP_H__
 #define BOTAN_IF_OP_H__
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* IF Operation                                   *
-*************************************************/
+/*
+* IF Operation
+*/
 class BOTAN_DLL IF_Operation
    {
    public:
@@ -24,9 +26,9 @@ class BOTAN_DLL IF_Operation
       virtual ~IF_Operation() {}
    };
 
-/*************************************************
-* Default IF Operation                           *
-*************************************************/
+/*
+* Default IF Operation
+*/
 class BOTAN_DLL Default_IF_Op : public IF_Operation
    {
    public:

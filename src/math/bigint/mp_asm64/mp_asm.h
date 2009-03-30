@@ -1,7 +1,9 @@
-/*************************************************
-* MPI Multiply-Add Core Header File              *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* MPI Multiply-Add Core
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_MP_MADD_H__
 #define BOTAN_MP_MADD_H__
@@ -81,9 +83,9 @@ inline void bigint_2word_mul(word a, word b, word* z1, word* z0)
 
 #endif
 
-/*************************************************
-* Word Multiply/Add                              *
-*************************************************/
+/*
+* Word Multiply/Add
+*/
 inline word word_madd2(word a, word b, word* c)
    {
    word z0 = 0, z1 = 0;
@@ -96,9 +98,9 @@ inline word word_madd2(word a, word b, word* c)
    return z1;
    }
 
-/*************************************************
-* Word Multiply/Add                              *
-*************************************************/
+/*
+* Word Multiply/Add
+*/
 inline word word_madd3(word a, word b, word c, word* d)
    {
    word z0 = 0, z1 = 0;

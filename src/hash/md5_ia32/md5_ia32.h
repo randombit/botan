@@ -1,7 +1,9 @@
-/*************************************************
-* MD5 (IA-32) Header File                        *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* MD5 (IA-32)
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_MD5_IA32_H__
 #define BOTAN_MD5_IA32_H__
@@ -10,9 +12,9 @@
 
 namespace Botan {
 
-/*************************************************
-* MD5                                            *
-*************************************************/
+/*
+* MD5
+*/
 class BOTAN_DLL MD5_IA32 : public MD5
    {
    public:

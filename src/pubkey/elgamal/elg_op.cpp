@@ -1,15 +1,17 @@
-/*************************************************
-* ElGamal Operations Source File                 *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* ElGamal Operations
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/elg_op.h>
 
 namespace Botan {
 
-/*************************************************
-* Default_ELG_Op Constructor                     *
-*************************************************/
+/*
+* Default_ELG_Op Constructor
+*/
 Default_ELG_Op::Default_ELG_Op(const DL_Group& group, const BigInt& y,
                                const BigInt& x) : p(group.get_p())
    {
@@ -21,9 +23,9 @@ Default_ELG_Op::Default_ELG_Op(const DL_Group& group, const BigInt& y,
       powermod_x_p = Fixed_Exponent_Power_Mod(x, p);
    }
 
-/*************************************************
-* Default ElGamal Encrypt Operation              *
-*************************************************/
+/*
+* Default ElGamal Encrypt Operation
+*/
 SecureVector<byte> Default_ELG_Op::encrypt(const byte in[], u32bit length,
                                            const BigInt& k) const
    {
@@ -40,9 +42,9 @@ SecureVector<byte> Default_ELG_Op::encrypt(const byte in[], u32bit length,
    return output;
    }
 
-/*************************************************
-* Default ElGamal Decrypt Operation              *
-*************************************************/
+/*
+* Default ElGamal Decrypt Operation
+*/
 BigInt Default_ELG_Op::decrypt(const BigInt& a, const BigInt& b) const
    {
    if(a >= p || b >= p)

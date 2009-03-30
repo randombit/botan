@@ -1,7 +1,9 @@
-/*************************************************
-* CFB Mode Source File                           *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* CFB Mode
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/cfb.h>
 #include <botan/parsing.h>
@@ -12,9 +14,9 @@ namespace Botan {
 
 namespace {
 
-/*************************************************
-* Check the feedback size                        *
-*************************************************/
+/*
+* Check the feedback size
+*/
 void check_feedback(u32bit BLOCK_SIZE, u32bit FEEDBACK_SIZE, u32bit bits,
                     const std::string& name)
    {
@@ -25,9 +27,9 @@ void check_feedback(u32bit BLOCK_SIZE, u32bit FEEDBACK_SIZE, u32bit bits,
 
 }
 
-/*************************************************
-* CFB Encryption Constructor                     *
-*************************************************/
+/*
+* CFB Encryption Constructor
+*/
 CFB_Encryption::CFB_Encryption(BlockCipher* ciph,
                                u32bit fback_bits) :
    BlockCipherMode(ciph, "CFB", ciph->BLOCK_SIZE, 1),
@@ -36,9 +38,9 @@ CFB_Encryption::CFB_Encryption(BlockCipher* ciph,
    check_feedback(BLOCK_SIZE, FEEDBACK_SIZE, fback_bits, name());
    }
 
-/*************************************************
-* CFB Encryption Constructor                     *
-*************************************************/
+/*
+* CFB Encryption Constructor
+*/
 CFB_Encryption::CFB_Encryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv,
@@ -51,9 +53,9 @@ CFB_Encryption::CFB_Encryption(BlockCipher* ciph,
    set_iv(iv);
    }
 
-/*************************************************
-* Encrypt data in CFB mode                       *
-*************************************************/
+/*
+* Encrypt data in CFB mode
+*/
 void CFB_Encryption::write(const byte input[], u32bit length)
    {
    while(length)
@@ -69,9 +71,9 @@ void CFB_Encryption::write(const byte input[], u32bit length)
       }
    }
 
-/*************************************************
-* Do the feedback                                *
-*************************************************/
+/*
+* Do the feedback
+*/
 void CFB_Encryption::feedback()
    {
    for(u32bit j = 0; j != BLOCK_SIZE - FEEDBACK_SIZE; ++j)
@@ -81,9 +83,9 @@ void CFB_Encryption::feedback()
    position = 0;
    }
 
-/*************************************************
-* CFB Decryption Constructor                     *
-*************************************************/
+/*
+* CFB Decryption Constructor
+*/
 CFB_Decryption::CFB_Decryption(BlockCipher* ciph,
                                u32bit fback_bits) :
    BlockCipherMode(ciph, "CFB", ciph->BLOCK_SIZE, 1),
@@ -92,9 +94,9 @@ CFB_Decryption::CFB_Decryption(BlockCipher* ciph,
    check_feedback(BLOCK_SIZE, FEEDBACK_SIZE, fback_bits, name());
    }
 
-/*************************************************
-* CFB Decryption Constructor                     *
-*************************************************/
+/*
+* CFB Decryption Constructor
+*/
 CFB_Decryption::CFB_Decryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv,
@@ -107,9 +109,9 @@ CFB_Decryption::CFB_Decryption(BlockCipher* ciph,
    set_iv(iv);
    }
 
-/*************************************************
-* Decrypt data in CFB mode                       *
-*************************************************/
+/*
+* Decrypt data in CFB mode
+*/
 void CFB_Decryption::write(const byte input[], u32bit length)
    {
    while(length)
@@ -126,9 +128,9 @@ void CFB_Decryption::write(const byte input[], u32bit length)
       }
    }
 
-/*************************************************
-* Do the feedback                                *
-*************************************************/
+/*
+* Do the feedback
+*/
 void CFB_Decryption::feedback()
    {
    for(u32bit j = 0; j != BLOCK_SIZE - FEEDBACK_SIZE; ++j)

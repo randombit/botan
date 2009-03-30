@@ -1,7 +1,9 @@
-/*************************************************
-* X.509 Certificate Store Header File            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* X.509 Certificate Store
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_X509_CERT_STORE_H__
 #define BOTAN_X509_CERT_STORE_H__
@@ -12,9 +14,9 @@
 
 namespace Botan {
 
-/*************************************************
-* X.509 Certificate Validation Result            *
-*************************************************/
+/*
+* X.509 Certificate Validation Result
+*/
 enum X509_Code {
    VERIFIED,
    UNKNOWN_X509_ERROR,
@@ -40,9 +42,9 @@ enum X509_Code {
    CA_CERT_NOT_FOR_CRL_ISSUER
 };
 
-/*************************************************
-* X.509 Certificate Store                        *
-*************************************************/
+/*
+* X.509 Certificate Store
+*/
 class BOTAN_DLL X509_Store
    {
    public:
