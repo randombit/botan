@@ -12,6 +12,32 @@
 
 namespace Botan {
 
+class GOST_28147_89_Params;
+
+/**
+* The GOST 28147-89 block cipher uses a set of 4 bit Sboxes, however
+* the standard does not actually define these Sboxes; they are
+* considered a local configuration issue. Several different sets are
+* used.
+*/
+class GOST_28147_89_Params
+   {
+   public:
+      byte sbox_entry(u32bit row, u32bit col) const;
+
+      /**
+      * Default GOST parameters are the ones given in GOST R 34.11 for
+      * testing purposes; these sboxes are also used by Crypto++, and,
+      * at least according to Wikipedia, the Central Bank of Russian Federation
+      */
+      GOST_28147_89_Params(const std::string& name = "R3411_94_TestParam");
+   private:
+      static const byte GOST_R_3411_TEST_PARAMS[64];
+      static const byte GOST_R_3411_CRYPTOPRO_PARAMS[64];
+
+      const byte* sboxes;
+   };
+
 /**
 * GOST 28147-89
 */
@@ -21,10 +47,13 @@ class BOTAN_DLL GOST_28147_89 : public BlockCipher
       void clear() throw() { EK.clear(); }
 
       std::string name() const { return "GOST-28147-89"; }
-      BlockCipher* clone() const { return new GOST_28147_89; }
+      BlockCipher* clone() const { return new GOST_28147_89(SBOX); }
 
-      GOST_28147_89();
+      GOST_28147_89(const GOST_28147_89_Params& params);
    private:
+      GOST_28147_89(const SecureBuffer<u32bit, 1024>& other_SBOX) :
+         BlockCipher(8, 32), SBOX(other_SBOX) {}
+
       void enc(const byte[], byte[]) const;
       void dec(const byte[], byte[]) const;
       void key_schedule(const byte[], u32bit);
