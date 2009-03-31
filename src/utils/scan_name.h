@@ -56,7 +56,15 @@ class SCAN_Name
 
       /**
       @param i which argument
-      @return the ith argument as a u32bit, or a default value
+      @param def_value the default value
+      @return the ith argument or the default value
+      */
+      std::string arg(u32bit i, const std::string& def_value) const;
+
+      /**
+      @param i which argument
+      @param def_value the default value
+      @return the ith argument as a u32bit, or the default value
       */
       u32bit arg_as_u32bit(u32bit i, u32bit def_value) const;
    private:

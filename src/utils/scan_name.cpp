@@ -54,8 +54,15 @@ SCAN_Name::SCAN_Name(const std::string& algo_spec)
 
 std::string SCAN_Name::arg(u32bit i) const
    {
-   if(i > arg_count())
+   if(i >= arg_count())
       throw std::range_error("SCAN_Name::argument");
+   return name[i+1];
+   }
+
+std::string SCAN_Name::arg(u32bit i, const std::string& def_value) const
+   {
+   if(i >= arg_count())
+      return def_value;
    return name[i+1];
    }
 
