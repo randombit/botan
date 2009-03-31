@@ -147,7 +147,7 @@ Default_Engine::find_block_cipher(const SCAN_Name& request,
 
 #if defined(BOTAN_HAS_GOST_28147_89)
    if(request.algo_name() == "GOST-28147-89")
-      return new GOST_28147_89;
+      return new GOST_28147_89(request.arg(0, "R3411_94_TestParam"));
 #endif
 
 #if defined(BOTAN_HAS_IDEA)
