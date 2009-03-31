@@ -37,28 +37,42 @@ GOST_28147_89::GOST_28147_89() : BlockCipher(8, 32)
    }
 
 /*
+* Two rounds of GOST
+*/
+#define GOST_2ROUND(N1, N2, R1, R2)   \
+   {                                  \
+   u32bit T0 = N1 + EK[R1];           \
+   N2 ^= SBOX[get_byte(3, T0)] |      \
+         SBOX[get_byte(2, T0)+256] |  \
+         SBOX[get_byte(1, T0)+512] |  \
+         SBOX[get_byte(0, T0)+768];   \
+                                      \
+   T0 = N2 + EK[R2];                  \
+   N1 ^= SBOX[get_byte(3, T0)] |      \
+         SBOX[get_byte(2, T0)+256] |  \
+         SBOX[get_byte(1, T0)+512] |  \
+         SBOX[get_byte(0, T0)+768];   \
+   }
+
+/*
 * GOST Encryption
 */
 void GOST_28147_89::enc(const byte in[], byte out[]) const
    {
    u32bit N1 = load_le<u32bit>(in, 0), N2 = load_le<u32bit>(in, 1);
 
-   for(u32bit j = 0; j != 32; j += 2)
+   for(size_t i = 0; i != 3; ++i)
       {
-      u32bit T0;
-
-      T0 = N1 + EK[j];
-      N2 ^= SBOX[get_byte(3, T0)] |
-            SBOX[get_byte(2, T0)+256] |
-            SBOX[get_byte(1, T0)+512] |
-            SBOX[get_byte(0, T0)+768];
-
-      T0 = N2 + EK[j+1];
-      N1 ^= SBOX[get_byte(3, T0)] |
-            SBOX[get_byte(2, T0)+256] |
-            SBOX[get_byte(1, T0)+512] |
-            SBOX[get_byte(0, T0)+768];
+      GOST_2ROUND(N1, N2, 0, 1);
+      GOST_2ROUND(N1, N2, 2, 3);
+      GOST_2ROUND(N1, N2, 4, 5);
+      GOST_2ROUND(N1, N2, 6, 7);
       }
+
+   GOST_2ROUND(N1, N2, 7, 6);
+   GOST_2ROUND(N1, N2, 5, 4);
+   GOST_2ROUND(N1, N2, 3, 2);
+   GOST_2ROUND(N1, N2, 1, 0);
 
    store_le(out, N2, N1);
    }
@@ -70,21 +84,17 @@ void GOST_28147_89::dec(const byte in[], byte out[]) const
    {
    u32bit N1 = load_le<u32bit>(in, 0), N2 = load_le<u32bit>(in, 1);
 
-   for(u32bit j = 0; j != 32; j += 2)
+   GOST_2ROUND(N1, N2, 0, 1);
+   GOST_2ROUND(N1, N2, 2, 3);
+   GOST_2ROUND(N1, N2, 4, 5);
+   GOST_2ROUND(N1, N2, 6, 7);
+
+   for(size_t i = 0; i != 3; ++i)
       {
-      u32bit T0;
-
-      T0 = N1 + EK[31-j];
-      N2 ^= SBOX[get_byte(3, T0)] |
-            SBOX[get_byte(2, T0)+256] |
-            SBOX[get_byte(1, T0)+512] |
-            SBOX[get_byte(0, T0)+768];
-
-      T0 = N2 + EK[30-j];
-      N1 ^= SBOX[get_byte(3, T0)] |
-            SBOX[get_byte(2, T0)+256] |
-            SBOX[get_byte(1, T0)+512] |
-            SBOX[get_byte(0, T0)+768];
+      GOST_2ROUND(N1, N2, 7, 6);
+      GOST_2ROUND(N1, N2, 5, 4);
+      GOST_2ROUND(N1, N2, 3, 2);
+      GOST_2ROUND(N1, N2, 1, 0);
       }
 
    store_le(out, N2, N1);
@@ -96,13 +106,7 @@ void GOST_28147_89::dec(const byte in[], byte out[]) const
 void GOST_28147_89::key_schedule(const byte key[], u32bit)
    {
    for(u32bit j = 0; j != 8; ++j)
-      {
-      u32bit K = load_le<u32bit>(key, j);
-      EK[j] = EK[j+8] = EK[j+16] = K;
-      }
-
-   for(u32bit j = 24; j != 32; ++j)
-      EK[j] = EK[7-(j-24)];
+      EK[j] = load_le<u32bit>(key, j);
    }
 
 }

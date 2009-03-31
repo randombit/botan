@@ -30,7 +30,7 @@ class BOTAN_DLL GOST_28147_89 : public BlockCipher
       void key_schedule(const byte[], u32bit);
 
       SecureBuffer<u32bit, 1024> SBOX;
-      SecureBuffer<u32bit, 32> EK;
+      SecureBuffer<u32bit, 8> EK;
    };
 
 }
