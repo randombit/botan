@@ -5,7 +5,7 @@
 #include <botan/oids.h>
 namespace Botan {
 
-EAC1_1_CVC EAC1_1_CVC_CA::make_cert(std::auto_ptr<PK_Signer> signer,
+EAC1_1_CVC EAC1_1_CVC_CA::make_cert(PK_Signer& signer,
                                     MemoryRegion<byte> const& public_key,
                                     ASN1_Car const& car,
                                     ASN1_Chr const& chr,

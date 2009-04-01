@@ -41,7 +41,7 @@ ECDSA_Signature const decode_seq(MemoryRegion<byte> const& seq)
    {
    ECDSA_Signature sig;
 
-   std::auto_ptr<ECDSA_Signature_Decoder> dec(new ECDSA_Signature_Decoder(&sig));
+   std::unique_ptr<ECDSA_Signature_Decoder> dec(new ECDSA_Signature_Decoder(&sig));
    dec->signature_bits(seq);
    return sig;
    }
