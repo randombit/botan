@@ -15,14 +15,7 @@
 #include <botan/bigint.h>
 #include <botan/gfp_modulus.h>
 #include <iostream>
-
-#if defined(BOTAN_USE_STD_TR1)
-  #include <tr1/memory>
-#elif defined(BOTAN_USE_BOOST_TR1)
-  #include <boost/tr1/memory.hpp>
-#else
-  #error "Please choose a TR1 implementation in build.h"
-#endif
+#include <memory>
 
 namespace Botan {
 
@@ -40,7 +33,7 @@ struct Illegal_Transformation : public Exception
 class BOTAN_DLL GFpElement
    {
    private:
-      std::tr1::shared_ptr<GFpModulus> mp_mod;
+      std::shared_ptr<GFpModulus> mp_mod;
       mutable BigInt m_value; // ordinary residue or m-residue respectively
       mutable BigInt workspace;
 
@@ -79,7 +72,7 @@ class BOTAN_DLL GFpElement
       * @param value the element value
       * @param use_montgm whether this object will use Montgomery multiplication
       */
-      explicit GFpElement(std::tr1::shared_ptr<GFpModulus> const mod,
+      explicit GFpElement(std::shared_ptr<GFpModulus> const mod,
                           const BigInt& value, bool use_mongm = false);
 
       /**
@@ -190,7 +183,7 @@ class BOTAN_DLL GFpElement
       * the shared GFpModulus objects!
       * @result the shared pointer to the GFpModulus of *this
       */
-      inline std::tr1::shared_ptr<GFpModulus> const get_ptr_mod() const
+      inline std::shared_ptr<GFpModulus> const get_ptr_mod() const
          {
          return mp_mod;
          }
@@ -203,7 +196,7 @@ class BOTAN_DLL GFpElement
       * the shared GFpModulus objects!
       * @param mod a shared pointer to a GFpModulus that will be held in *this
       */
-      void set_shrd_mod(std::tr1::shared_ptr<GFpModulus> const mod);
+      void set_shrd_mod(std::shared_ptr<GFpModulus> const mod);
 
       /**
       * Tells whether this GFpElement is currently transformed to it´ m-residue,
