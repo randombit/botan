@@ -25,6 +25,8 @@ class GOST_28147_89_Params
    public:
       byte sbox_entry(u32bit row, u32bit col) const;
 
+      std::string param_name() const { return name; }
+
       /**
       * Default GOST parameters are the ones given in GOST R 34.11 for
       * testing purposes; these sboxes are also used by Crypto++, and,
@@ -32,10 +34,8 @@ class GOST_28147_89_Params
       */
       GOST_28147_89_Params(const std::string& name = "R3411_94_TestParam");
    private:
-      static const byte GOST_R_3411_TEST_PARAMS[64];
-      static const byte GOST_R_3411_CRYPTOPRO_PARAMS[64];
-
       const byte* sboxes;
+      std::string name;
    };
 
 /**
