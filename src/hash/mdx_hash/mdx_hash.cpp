@@ -57,7 +57,8 @@ void MDx_HashFunction::add_data(const byte input[], u32bit length)
    const u32bit full_blocks = length / HASH_BLOCK_SIZE;
    const u32bit remaining   = length % HASH_BLOCK_SIZE;
 
-   compress_n(input, full_blocks);
+   if(full_blocks)
+      compress_n(input, full_blocks);
 
    buffer.copy(position, input + full_blocks * HASH_BLOCK_SIZE, remaining);
    position += remaining;
