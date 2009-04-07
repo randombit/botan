@@ -1,8 +1,8 @@
 
 * 1.8.2-pre, 2009-??-??
  - Make entropy polling more flexible and in most cases faster
- - Change GOST to use the GostR3411_94_TestParamSet sboxes
- - Another atempt at fixing botan-config on MacOS X
+ - GOST 28147 now supports multiple sbox parameters
+ - Fix botan-config problems on MacOS X
 
 * 1.8.1, 2009-01-20
  - Avoid a valgrind warning in es_unix.cpp on 32-bit Linux

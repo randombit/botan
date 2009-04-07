@@ -53,6 +53,7 @@ GOST_28147_89_Params::GOST_28147_89_Params(const std::string& n) : name(n)
 GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) :
    BlockCipher(8, 32)
    {
+   // Convert the parallel 4x4 sboxes into larger word-based sboxes
    for(size_t i = 0; i != 4; ++i)
       for(size_t j = 0; j != 256; ++j)
          {
@@ -66,19 +67,19 @@ GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) :
 * Two rounds of GOST
 */
 #define GOST_2ROUND(N1, N2, R1, R2)   \
-   {                                  \
+   do {                               \
    u32bit T0 = N1 + EK[R1];           \
    N2 ^= SBOX[get_byte(3, T0)] |      \
          SBOX[get_byte(2, T0)+256] |  \
          SBOX[get_byte(1, T0)+512] |  \
          SBOX[get_byte(0, T0)+768];   \
                                       \
-   T0 = N2 + EK[R2];                  \
-   N1 ^= SBOX[get_byte(3, T0)] |      \
-         SBOX[get_byte(2, T0)+256] |  \
-         SBOX[get_byte(1, T0)+512] |  \
-         SBOX[get_byte(0, T0)+768];   \
-   }
+   u32bit T1 = N2 + EK[R2];           \
+   N1 ^= SBOX[get_byte(3, T1)] |      \
+         SBOX[get_byte(2, T1)+256] |  \
+         SBOX[get_byte(1, T1)+512] |  \
+         SBOX[get_byte(0, T1)+768];   \
+   } while(0)
 
 /*
 * GOST Encryption
