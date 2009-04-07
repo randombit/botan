@@ -37,28 +37,6 @@ void MDx_HashFunction::clear() throw()
 /**
 * Update the hash
 */
-/*
-void MDx_HashFunction::compress_n(const byte block[], u32bit block_n)
-   {
-   for(u32bit j = 0; j != block_n; ++j)
-      {
-      hash(block);
-      block += HASH_BLOCK_SIZE;
-      }
-   }
-*/
-/**
-* Update the hash
-*/
-/*
-void MDx_HashFunction::hash(const byte block[])
-   {
-   compress_n(block, 1);
-   }
-*/
-/**
-* Update the hash
-*/
 void MDx_HashFunction::add_data(const byte input[], u32bit length)
    {
    count += length;
@@ -90,7 +68,6 @@ void MDx_HashFunction::add_data(const byte input[], u32bit length)
 */
 void MDx_HashFunction::final_result(byte output[])
    {
-
    buffer[position] = (BIG_BIT_ENDIAN ? 0x80 : 0x01);
    for(u32bit j = position+1; j != HASH_BLOCK_SIZE; ++j)
       buffer[j] = 0;

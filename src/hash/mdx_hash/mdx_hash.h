@@ -29,10 +29,7 @@ class BOTAN_DLL MDx_HashFunction : public HashFunction
       void add_data(const byte[], u32bit);
       void final_result(byte output[]);
 
-      // these are mutually recurisve unless one is overridden
-      // (backwards compatability hack)
       virtual void compress_n(const byte block[], u32bit block_n) = 0;
-      //virtual void hash(const byte[]);
 
       virtual void copy_out(byte[]) = 0;
       virtual void write_count(byte[]);
