@@ -26,6 +26,10 @@
   #include <botan/fork256.h>
 #endif
 
+#if defined(BOTAN_HAS_GOST_34_11)
+  #include <botan/gost_3411.h>
+#endif
+
 #if defined(BOTAN_HAS_HAS_160)
   #include <botan/has160.h>
 #endif
@@ -98,6 +102,11 @@ Default_Engine::find_hash(const SCAN_Name& request,
 #if defined(BOTAN_HAS_FORK_256)
    if(request.algo_name() == "FORK-256")
       return new FORK_256;
+#endif
+
+#if defined(BOTAN_HAS_GOST_34_11)
+   if(request.algo_name() == "GOST-34.11")
+      return new GOST_34_11;
 #endif
 
 #if defined(BOTAN_HAS_HAS_160)

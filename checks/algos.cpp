@@ -72,6 +72,7 @@ std::vector<algorithm> get_algos()
    algos.push_back(algorithm("Hash", "CRC24"));
    algos.push_back(algorithm("Hash", "CRC32"));
    algos.push_back(algorithm("Hash", "FORK-256"));
+   algos.push_back(algorithm("Hash", "GOST-34.11"));
    algos.push_back(algorithm("Hash", "HAS-160"));
    algos.push_back(algorithm("Hash", "HAS-V"));
    algos.push_back(algorithm("Hash", "MD2"));
