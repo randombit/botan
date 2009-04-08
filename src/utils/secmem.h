@@ -10,6 +10,7 @@
 
 #include <botan/allocate.h>
 #include <botan/mem_ops.h>
+#include <algorithm>
 
 namespace Botan {
 
