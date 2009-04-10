@@ -161,12 +161,12 @@ void GOST_34_11::compress_n(const byte input[], u32bit blocks)
 
       xor_buf(S, S2, input + 32*i, 32);
 
-      byte x = S[0] ^ S[2] ^ S[4] ^ S[6] ^ S[24] ^ S[30];
-      byte y = S[1] ^ S[3] ^ S[5] ^ S[7] ^ S[25] ^ S[31];
+      S2[0] = S[0] ^ S[2] ^ S[4] ^ S[6] ^ S[24] ^ S[30];
+      S2[1] = S[1] ^ S[3] ^ S[5] ^ S[7] ^ S[25] ^ S[31];
 
       copy_mem(S, S+2, 30);
-      S[30] = x;
-      S[31] = y;
+      S[30] = S2[0];
+      S[31] = S2[1];
 
       xor_buf(S, hash, 32);
 
