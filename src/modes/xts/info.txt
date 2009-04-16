@@ -1,0 +1,15 @@
+realname "XTS block cipher mode"
+
+define XTS
+
+load_on auto
+
+<add>
+xts.cpp
+xts.h
+</add>
+
+<requires>
+modes
+</requires>
+
