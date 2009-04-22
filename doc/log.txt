@@ -1,6 +1,7 @@
 
 * 1.8.3-pre, 2009-??-??
  - Add XTS mode from IEEE P1619
+ - Use a default value for AutoSeeded_RNG::reseed
 
 * 1.8.2, 2009-04-07
  - Make entropy polling more flexible and in most cases faster
