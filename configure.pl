@@ -15,7 +15,10 @@ my $MAJOR_VERSION = 1;
 my $MINOR_VERSION = 8;
 my $PATCH_VERSION = 3;
 
+my $SO_PATCH_VERSION = 2;
+
 my $VERSION_STRING = "$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION";
+my $SO_VERSION_STRING = "$MAJOR_VERSION.$MINOR_VERSION.$SO_PATCH_VERSION";
 
 ##################################################
 # Data                                           #
@@ -82,6 +85,7 @@ sub main {
         'version_minor' => $MINOR_VERSION,
         'version_patch' => $PATCH_VERSION,
         'version'       => $VERSION_STRING,
+        'so_version'    => $SO_VERSION_STRING,
         });
 
     get_options($config);
@@ -750,7 +754,8 @@ sub get_options {
 
         'help' => sub { display_help(); },
         'module-info' => sub { emit_help(module_info()); },
-        'version' => sub { emit_help("Botan $VERSION_STRING\n") },
+        'version' => sub { emit_help("$VERSION_STRING\n") },
+        'so-version' => sub { emit_help("$SO_VERSION_STRING\n") },
 
         'with-tr1-implementation=s' => sub { $$config{'tr1'} = $_[1]; },
 

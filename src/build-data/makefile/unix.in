@@ -12,11 +12,7 @@ LINK_TO       = @{var:link_to}
 ##################################################
 # Version Numbers                                #
 ##################################################
-MAJOR         = @{var:version_major}
-MINOR         = @{var:version_minor}
-PATCH         = @{var:version_patch}
-
-VERSION       = $(MAJOR).$(MINOR).$(PATCH)
+VERSION       = @{var:version}
 
 ##################################################
 # Installation Settings                          #

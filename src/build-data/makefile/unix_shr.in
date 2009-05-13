@@ -14,11 +14,8 @@ LINK_TO       = @{var:link_to}
 ##################################################
 # Version Numbers                                #
 ##################################################
-MAJOR         = @{var:version_major}
-MINOR         = @{var:version_minor}
-PATCH         = @{var:version_patch}
-
-VERSION       = $(MAJOR).$(MINOR).$(PATCH)
+VERSION       = @{var:version}
+SO_VERSION    = @{var:so_version}
 
 ##################################################
 # Installation Settings                          #
@@ -70,8 +67,8 @@ LIBRARIES     = $(STATIC_LIB) $(SHARED_LIB)
 LIBNAME       = @{var:lib_prefix}libbotan
 STATIC_LIB    = $(LIBNAME).a
 
-SHARED_LIB    = $(LIBNAME)-$(MAJOR).$(MINOR).$(PATCH).@{var:so_suffix}
-SONAME        = $(LIBNAME)-$(MAJOR).$(MINOR).$(PATCH).@{var:so_suffix}
+SHARED_LIB    = $(LIBNAME)-$(SO_VERSION).@{var:so_suffix}
+SONAME        = $(LIBNAME)-$(SO_VERSION).@{var:so_suffix}
 
 SYMLINK       = libbotan.@{var:so_suffix}
 
@@ -88,7 +85,7 @@ all: $(LIBRARIES)
 # Link Commands                                  #
 ##################################################
 $(CHECK): $(LIBRARIES) $(CHECKOBJS)
-	$(CXX) $(CHECKOBJS) -L. -lbotan-@{var:version} $(LINK_TO) -o $(CHECK)
+	$(CXX) $(CHECKOBJS) -L. -lbotan $(LINK_TO) -o $(CHECK)
 
 $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)
