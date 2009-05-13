@@ -7,7 +7,7 @@
 
 #include <botan/if_core.h>
 #include <botan/numthry.h>
-#include <botan/engine.h>
+#include <botan/pk_engine.h>
 #include <botan/parsing.h>
 #include <algorithm>
 
