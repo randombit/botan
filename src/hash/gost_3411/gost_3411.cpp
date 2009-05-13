@@ -5,7 +5,7 @@
 
 #include <botan/gost_3411.h>
 #include <botan/loadstor.h>
-#include <botan/bit_ops.h>
+#include <botan/rotate.h>
 #include <botan/xor_buf.h>
 
 namespace Botan {

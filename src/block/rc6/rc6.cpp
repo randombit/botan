@@ -7,7 +7,7 @@
 
 #include <botan/rc6.h>
 #include <botan/loadstor.h>
-#include <botan/bit_ops.h>
+#include <botan/rotate.h>
 #include <algorithm>
 
 namespace Botan {

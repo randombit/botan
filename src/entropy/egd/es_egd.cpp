@@ -6,7 +6,6 @@
 */
 
 #include <botan/es_egd.h>
-#include <botan/bit_ops.h>
 #include <botan/parsing.h>
 #include <botan/exceptn.h>
 #include <cstring>

@@ -6,7 +6,6 @@
 */
 
 #include <botan/util.h>
-#include <botan/bit_ops.h>
 #include <algorithm>
 #include <cmath>
 

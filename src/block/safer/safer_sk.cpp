@@ -6,7 +6,7 @@
 */
 
 #include <botan/safer_sk.h>
-#include <botan/bit_ops.h>
+#include <botan/rotate.h>
 #include <botan/parsing.h>
 #include <botan/rotate.h>
 
