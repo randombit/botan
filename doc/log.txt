@@ -1,5 +1,6 @@
 
 * 1.8.3-pre, 2009-??-??
+ - Add the Skein-512 hash function
  - Add XTS mode from IEEE P1619
  - Use a default value for AutoSeeded_RNG::reseed
 

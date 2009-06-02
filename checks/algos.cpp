@@ -85,6 +85,7 @@ std::vector<algorithm> get_algos()
    algos.push_back(algorithm("Hash", "SHA-256"));
    algos.push_back(algorithm("Hash", "SHA-384"));
    algos.push_back(algorithm("Hash", "SHA-512"));
+   algos.push_back(algorithm("Hash", "Skein-512"));
    algos.push_back(algorithm("Hash", "Tiger"));
    algos.push_back(algorithm("Hash", "Whirlpool"));
 

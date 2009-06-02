@@ -1,0 +1,10 @@
+realname "Skein"
+
+define SKEIN_512
+
+load_on auto
+
+<add>
+skein_512.cpp
+skein_512.h
+</add>
