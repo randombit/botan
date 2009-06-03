@@ -167,7 +167,8 @@ Default_Engine::find_hash(const SCAN_Name& request,
 
 #if defined(BOTAN_HAS_SKEIN_512)
    if(request.algo_name() == "Skein-512")
-      return new Skein_512(request.arg_as_u32bit(0, 512));
+      return new Skein_512(request.arg_as_u32bit(0, 512),
+                           request.arg(1, ""));
 #endif
 
 #if defined(BOTAN_HAS_WHIRLPOOL)

@@ -17,17 +17,17 @@ namespace Botan {
 class Skein_512 : public HashFunction
    {
    public:
-      Skein_512(u32bit output_bits = 512);
+      Skein_512(u32bit output_bits = 512,
+                const std::string& personalization = "");
 
-      HashFunction* clone() const { return new Skein_512(output_bits); }
-
+      HashFunction* clone() const;
       std::string name() const;
-
       void clear() throw();
    private:
       void add_data(const byte input[], u32bit length);
       void final_result(byte out[]);
 
+      std::string personalization;
       u32bit output_bits;
       SecureBuffer<u64bit, 9> H;
       SecureBuffer<u64bit, 3> T;
