@@ -27,7 +27,6 @@ exceptn.h
 loadstor.h
 mem_ops.h
 mlock.cpp
-mutex.h
 parsing.cpp
 parsing.h
 rotate.h

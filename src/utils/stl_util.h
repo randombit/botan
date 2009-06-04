@@ -13,22 +13,6 @@
 namespace Botan {
 
 /*
-* Copy-on-Predicate Algorithm
-*/
-template<typename InputIterator, typename OutputIterator, typename Predicate>
-OutputIterator copy_if(InputIterator current, InputIterator end,
-                       OutputIterator dest, Predicate copy_p)
-   {
-   while(current != end)
-      {
-      if(copy_p(*current))
-         *dest++ = *current;
-      ++current;
-      }
-   return dest;
-   }
-
-/*
 * Searching through a std::map
 */
 template<typename K, typename V>
