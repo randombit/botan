@@ -85,7 +85,7 @@ all: $(LIBRARIES)
 # Link Commands                                  #
 ##################################################
 $(CHECK): $(LIBRARIES) $(CHECKOBJS)
-	$(CXX) $(LDFLAGS) $(CHECKOBJS) -o $(CHECK) -L. -lbotan-@{var:version} $(LINK_TO)
+	$(CXX) $(LDFLAGS) $(CHECKOBJS) -o $(CHECK) -L. -lbotan-@{var:so_version} $(LINK_TO)
 
 $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)
