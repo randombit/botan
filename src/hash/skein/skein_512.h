@@ -5,8 +5,8 @@
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_SKEIN_H__
-#define BOTAN_SKEIN_H__
+#ifndef BOTAN_SKEIN_512_H__
+#define BOTAN_SKEIN_512_H__
 
 #include <botan/secmem.h>
 #include <botan/hash.h>
@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-class Skein_512 : public HashFunction
+class BOTAN_DLL Skein_512 : public HashFunction
    {
    public:
       Skein_512(u32bit output_bits = 512,

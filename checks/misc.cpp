@@ -25,8 +25,10 @@ void strip(std::string& line)
    {
    strip_comments(line);
 
+#if 0
    while(line.find(' ') != std::string::npos)
       line = line.erase(line.find(' '), 1);
+#endif
 
    while(line.find('\t') != std::string::npos)
       line = line.erase(line.find('\t'), 1);
