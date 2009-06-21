@@ -105,12 +105,15 @@ void Randpool::reseed(u32bit poll_bits)
    {
    Entropy_Accumulator_BufferedComputation accum(*mac, poll_bits);
 
-   for(u32bit i = 0; i != entropy_sources.size(); ++i)
+   if(!entropy_sources.empty())
       {
-      entropy_sources[i]->poll(accum);
+      u32bit poll_attempt = 0;
 
-      if(accum.polling_goal_achieved())
-         break;
+      while(!accum.polling_goal_achieved() && poll_attempt < poll_bits)
+         {
+         entropy_sources[poll_attempt % entropy_sources.size()]->poll(accum);
+         ++poll_attempt;
+         }
       }
 
    SecureVector<byte> mac_val = mac->final();
