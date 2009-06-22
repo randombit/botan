@@ -1,6 +1,7 @@
 
 * 1.8.3-pre, 2009-??-??
  - Improve handling of low-entropy situations during PRNG seeding
+ - Use an input insensitive implementation of same_mem instead of memcmp
  - Add the Skein-512 SHA-3 candidate hash function
  - Add the XTS block cipher mode from IEEE P1619
  - Provide a default value for AutoSeeded_RNG::reseed
