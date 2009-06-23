@@ -189,7 +189,7 @@ the first four lines of code from the first example with:
    SecureVector<byte> the_salt = s2k->current_salt();
 
    // 28 octets == 20 for key + 8 for IV
-   SecureVector<byte> key_and_IV = s2k->derive_key(28, passphrase);
+   SecureVector<byte> key_and_IV = s2k->derive_key(28, passphrase).bits_of();
 
    SymmetricKey key(key_and_IV, 20);
    InitializationVector iv(key_and_IV + 20, 8);
