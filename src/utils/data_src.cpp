@@ -38,7 +38,7 @@ u32bit DataSource::discard_next(u32bit n)
    u32bit discarded = 0;
    byte dummy;
    for(u32bit j = 0; j != n; ++j)
-      discarded = read_byte(dummy);
+      discarded += read_byte(dummy);
    return discarded;
    }
 
