@@ -2,15 +2,15 @@
 
 # For normal builds:
 guess_prefix=`dirname \`dirname $0\``
-includedir=@{var:includedir}
-libdir=@{var:libdir}
+includedir=%{includedir}
+libdir=%{libdir}
 
 #  For workspace builds:
 #guess_prefix=`dirname $0`
 #includedir=build/include
 #libdir=
 
-install_prefix=@{var:prefix}
+install_prefix=%{prefix}
 prefix=
 
 usage()
@@ -42,7 +42,7 @@ while test $# -gt 0; do
         echo $prefix
         ;;
     --version)
-        echo @{var:version}
+        echo %{version}
         exit 0
         ;;
     --cflags)
@@ -54,9 +54,9 @@ while test $# -gt 0; do
     --libs)
         if [ $prefix != "/usr" -a $prefix != "/usr/local" ]
         then
-           echo -L$prefix/$libdir -lbotan @{var:link_to}
+           echo -L$prefix/$libdir -lbotan %{link_to}
         else
-           echo -lbotan @{var:link_to}
+           echo -lbotan %{link_to}
         fi
         ;;
     *)
