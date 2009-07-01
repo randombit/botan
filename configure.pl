@@ -1726,7 +1726,9 @@ sub get_os_info {
     $info{'name'} = $name;
 
     while($_ = &$reader()) {
-        match_any_of($_, \%info, 'quoted', 'realname', 'ar_command');
+        match_any_of($_, \%info,
+                     'quoted', 'realname', 'ar_command',
+                     'install_cmd_data', 'install_cmd_exec');
 
         match_any_of($_, \%info, 'unquoted',
                      'os_type',
@@ -1736,9 +1738,7 @@ sub get_os_info {
                      'install_root',
                      'header_dir',
                      'lib_dir', 'doc_dir',
-                     'ar_needs_ranlib',
-                     'install_cmd_data',
-                     'install_cmd_exec');
+                     'ar_needs_ranlib');
 
         read_list($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
 

@@ -13,8 +13,8 @@ header_dir include
 lib_dir lib
 doc_dir share/doc
 
-install_cmd_data install -m 644
-install_cmd_exec install -m 755
+install_cmd_data "install -m 644"
+install_cmd_exec "install -m 755"
 
 <aliases>
 msys

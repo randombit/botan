@@ -14,13 +14,6 @@ doc_dir doc
 all
 </supports_shared>
 
-<arch>
-ia32
-amd64
-ppc
-ppc64 # g5!
-</arch>
-
 <aliases>
 macosx
 </aliases>
