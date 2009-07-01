@@ -50,69 +50,71 @@ def process_command_line(args):
 
     return (options, args)
 
+"""
+Generic lexer function for info.txt and src/build-data files
+"""
+def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
 
-class LexerError(Exception):
-    def __init__(self, msg, filename, line):
-        self.msg = msg
-        self.filename = filename
-        self.line = line
+    class LexerError(Exception):
+        def __init__(self, msg, line):
+            self.msg = msg
+            self.line = line
 
-    def __str__(self):
-        return "%s at %s:%d" % (self.msg, self.filename, self.line)
+        def __str__(self):
+            return "%s at %s:%d" % (self.msg, infofile, self.line)
+
+    lex = shlex.shlex(open(infofile), infofile, posix=True)
+
+    lex.wordchars += ':.<>/,-'
+
+    for group in allowed_groups:
+        to_obj.__dict__[group] = []
+    for (key,val) in name_val_pairs.iteritems():
+        to_obj.__dict__[key] = val
+
+    token = lex.get_token()
+    while token != None:
+        match = re.match('<(.*)>', token)
+
+        # Check for a grouping
+        if match is not None:
+            group = match.group(1)
+
+            if group not in allowed_groups:
+                raise LexerError("Unknown group '%s'" % (group), lex.lineno)
+
+            end_marker = '</' + group + '>'
+
+            token = lex.get_token()
+            while token != None and token != end_marker:
+                to_obj.__dict__[group].append(token)
+                token = lex.get_token()
+        elif token in name_val_pairs.keys():
+            to_obj.__dict__[token] = lex.get_token()
+        else: # No match -> error
+            raise LexerError("Bad token '%s'" % (token), lex.lineno)
+
+        token = lex.get_token()
 
 
-def lex_me_harder():
-    pass
-
+def force_to_dict(l):
+    return dict(zip(l[::3],l[2::3]))
 
 """
 Represents the information about a particular module
 """
 class ModuleInfo(object):
     def __init__(self, infofile):
-        lex = shlex.shlex(open(infofile), infofile, posix=True)
 
-        self.realname = "<UNKNOWN>"
-        self.load_on = "request"
-        self.define = None
-        self.modset = None
-        self.uses_tr1 = False
-        self.notes = ''
-        self.mp_bits = 0
-
-        self.requires = []
-        self.add = []
-        self.os = []
-        self.arch = []
-        self.cc = []
-        self.libs = []
-
-        lex.wordchars += '.<>/,'
-
-        token = lex.get_token()
-        while token != None:
-            match = re.match('<(.*)>', token)
-
-            # Check for a grouping
-            if match is not None:
-                group = match.group(1)
-
-                if group not in ['add','requires','os','arch','cc','libs']:
-                    raise LexerError("Unknown group '%s'" % (group), infofile, lex.lineno)
-
-                end_marker = '</' + group + '>'
-
-                token = lex.get_token()
-                while token != None and token != end_marker:
-                    self.__dict__[group].append(token)
-                    token = lex.get_token()
-            # Or single name->value pairs
-            elif token in ['realname', 'define', 'load_on', 'modset', 'note', 'mp_bits', 'uses_tr1']:
-                self.__dict__[token] = lex.get_token()
-            else: # No match -> error
-                raise LexerError("Bad token '%s'" % (token), infofile, lex.lineno)
-
-            token = lex.get_token()
+        lex_me_harder(infofile, self,
+                      ['add', 'requires', 'os', 'arch', 'cc', 'libs'],
+                      { 'realname': '<UNKNOWN>',
+                        'load_on': 'request',
+                        'define': None,
+                        'modset': None,
+                        'uses_tr1': 'false',
+                        'note': '',
+                        'mp_bits': 0 })
 
         # Coerce to more useful types
         self.mp_bits = int(self.mp_bits)
@@ -125,48 +127,72 @@ class ModuleInfo(object):
 
 class ArchInfo(object):
     def __init__(self, infofile):
-        self.realname = "<UNKNOWN>"
-        self.default_submodel = None
-        self.endian = None
-        self.unaligned = 'no'
+        lex_me_harder(infofile, self,
+                      ['aliases', 'submodels', 'submodel_aliases'],
+                      { 'realname': '<UNKNOWN>',
+                        'default_submodel': None,
+                        'endian': None,
+                        'unaligned': 'no'
+                        })
 
-        self.submodels = []
-        #self.aliases = []
-        self.submodel_aliases = []
-
-        lex = shlex.shlex(open(infofile), infofile, posix=True)
-
-        lex.wordchars += '.<>/,-'
-
-        token = lex.get_token()
-        while token != None:
-            match = re.match('<(.*)>', token)
-
-            # Check for a grouping
-            if match is not None:
-                group = match.group(1)
-
-                if group not in ['aliases','submodels','submodel_aliases']:
-                    raise LexerError("Unknown group '%s'" % (group), infofile, lex.lineno)
-
-                end_marker = '</' + group + '>'
-
-                token = lex.get_token()
-                while token != None and token != end_marker:
-                    if group not in self.__dict__:
-                        self.__dict__[group] = []
-                    #self.__dict__[group].append(token)
-                    token = lex.get_token()
-            # Or single name->value pairs
-            elif token in ['realname', 'default_submodel', 'endian','unaligned']:
-                self.__dict__[token] = lex.get_token()
-            else: # No match -> error
-                raise LexerError("Bad token '%s'" % (token), infofile, lex.lineno)
-
-            token = lex.get_token()
+        self.submodel_aliases = force_to_dict(self.submodel_aliases)
 
     def __str__(self):
-        return ','.join(self.aliases)
+        return "%s - %s" % (self.realname, ','.join(self.aliases))
+
+class CompilerInfo(object):
+    def __init__(self, infofile):
+        lex_me_harder(infofile, self,
+                      ['so_link_flags', 'mach_opt', 'mach_abi_linking'],
+                      { 'realname': '<UNKNOWN>',
+                        'binary_name': None,
+                        'compile_option': '-c ',
+                        'output_to_option': '-o ',
+                        'add_include_dir_option': '-I',
+                        'add_lib_dir_option': '-L',
+                        'add_lib_option': '-l',
+                        'lib_opt_flags': '',
+                        'check_opt_flags': '',
+                        'debug_flags': '',
+                        'no_debug_flags': '',
+                        'shared_flags': '',
+                        'lang_flags': '',
+                        'warning_flags': '',
+                        'dll_import_flags': '',
+                        'dll_export_flags': '',
+                        'ar_command': '',
+                        'makefile_style': '',
+                        'compiler_has_tr1': False,
+                        })
+
+        self.so_link_flags = force_to_dict(self.so_link_flags)
+        self.mach_opt = force_to_dict(self.mach_opt)
+        self.mach_abi_linking = force_to_dict(self.mach_abi_linking)
+
+    def __str__(self):
+        return "%s %s" % (self.realname, self.binary_name)
+
+class OperatingSystemInfo(object):
+    def __init__(self, infofile):
+        lex_me_harder(infofile, self,
+                      ['aliases', 'target_features', 'supports_shared'],
+                      { 'realname': '<UNKNOWN>',
+                        'os_type': None,
+                        'obj_suffix': 'o',
+                        'so_suffix': 'so',
+                        'static_suffix': 'a',
+                        'ar_command': 'ar crs',
+                        'ar_needs_ranlib': False,
+                        'install_root': '/usr/local',
+                        'header_dir': 'include',
+                        'lib_dir': 'lib',
+                        'doc_dir': 'share/doc',
+                        'install_cmd_data': 'install -m 644',
+                        'install_cmd_exec': 'install -m 755'
+                        })
+
+    def __str__(self):
+        return self.realname
 
 def main(argv = None):
     if argv is None:
@@ -191,9 +217,13 @@ def main(argv = None):
         modules = [ModuleInfo(info) for info in find_files_named('info.txt', 'src')]
 
         arches = [ArchInfo(info) for info in list_files_in('src/build-data/arch')]
+        compilers = [CompilerInfo(info) for info in list_files_in('src/build-data/cc')]
+        oses = [OperatingSystemInfo(info) for info in list_files_in('src/build-data/os')]
 
         #print '\n'.join(map(str, modules))
-        print '\n'.join(map(str, arches))
+        #print '\n'.join(map(str, arches))
+        #print '\n'.join(map(str, compilers))
+        print '\n'.join(map(str, oses))
     except Exception,e:
         print "Exception:", e
 
