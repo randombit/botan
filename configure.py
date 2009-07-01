@@ -41,6 +41,9 @@ def process_command_line(args):
     parser.add_option("--docdir", dest="docdir", default="docdir",
                       help="set the documentation installation directory")
 
+    parser.add_option("--with-local-config", dest="local_config", metavar="FILE",
+                      help="include the contents of FILE into build.h")
+
     compat_with_autoconf_options = [
         "bindir",
         "datadir",
@@ -298,7 +301,9 @@ def create_template_vars(options, modules, cc, arch, osinfo):
     vars['target_cpu_defines'] = arch.defines(options.cpu)
     vars['target_compiler_defines'] = cc.defines()
 
-    vars['local_config'] = "NO LOCAL CONFIG FOR YOU"
+    vars['local_config'] = ""
+    if options.local_config != None:
+        vars['local_config'] = ''.join(open(options.local_config).readlines())
 
     vars['cc'] = cc.binary_name
     vars['lib_opt'] = cc.lib_opt_flags
