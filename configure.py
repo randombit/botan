@@ -6,6 +6,7 @@ import shlex
 import platform
 import os.path
 
+from string import Template
 from os import walk as os_walk
 from optparse import OptionParser, SUPPRESS_HELP
 
@@ -65,7 +66,9 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
         def __str__(self):
             return "%s at %s:%d" % (self.msg, infofile, self.line)
 
-    basename = os.path.basename(infofile)
+    (dirname, basename) = os.path.split(infofile)
+
+    to_obj.lives_in = dirname
     if basename != 'info.txt':
         to_obj.basename = basename
 
@@ -127,6 +130,8 @@ class ModuleInfo(object):
         # Coerce to more useful types
         self.mp_bits = int(self.mp_bits)
         self.uses_tr1 == bool(self.uses_tr1)
+
+        self.add = map(lambda f: os.path.join(self.lives_in, f), self.add)
 
     def __str__(self):
         return "ModuleInfo('%s', '-D%s', add=%s, requires=%s)" % (
@@ -225,6 +230,20 @@ def guess_processor(archinfo):
     # No matches, so just use the base proc type
     return (base_proc,base_proc)
 
+class MakefileTemplate(Template):
+    pattern = r"""
+    @(?:
+      (?P<escaped>@) |
+      (var:(?P<named>[_a-z]+)) |
+      {(var:(?P<braced>[_a-z]+))} |
+      (?P<invalid>)
+    )
+    """
+
+    def __init__(self, filename):
+        s = ''.join(open(filename).readlines())
+        Template.__init__(self, s)
+
 def main(argv = None):
     if argv is None:
         argv = sys.argv
@@ -263,17 +282,34 @@ def main(argv = None):
     if options.compiler is None:
         options.compiler = 'gcc'
 
+    all_files = []
+
     for module in modules:
         if module.cc != [] and options.compiler not in module.cc:
             continue
+
         if module.os != [] and options.os not in module.os:
             continue
-        if module.arch != [] and options.arch not in module.arch:
+
+        if module.arch != [] and options.arch not in module.arch \
+               and options.cpu not in module.arch:
             continue
-        print module
+
+        all_files += module.add
+
+    headers = [file for file in all_files if file.endswith('.h')]
+    sources = list(set(all_files) - set(headers))
+
+    makefile = MakefileTemplate('src/build-data/makefile/unix.in')
+    options.prefix = '/usr/local'
+    print options.__dict__['prefix']
+    print makefile.substitute(options.__dict__)
+
+    #print '\n'.join(sorted(sources))
+    #print '\n'.join(sorted(headers))
 
 if __name__ == '__main__':
     try:
         sys.exit(main())
     except Exception, e:
-        print >>sys.stderr, "Exception:", e
+        print >>sys.stderr, "Exception:", str(type(e)), e
