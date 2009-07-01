@@ -1,13 +1,22 @@
 #!/usr/bin/python
 
-import sys
-import re
-import shlex
-import platform
+"""
+Configuration program for botan
+Requires at least python 2.4 (for string.Template)
+
+(C) 2009 Jack Lloyd
+Distributed under the terms of the Botan license
+"""
+
+import os
 import os.path
+import platform
+import re
+import shutil
+import shlex
+import sys
 
 from string import Template
-from os import walk as os_walk
 from optparse import OptionParser, SUPPRESS_HELP
 
 def process_command_line(args):
@@ -20,18 +29,19 @@ def process_command_line(args):
     parser.add_option("--cpu", dest="cpu",
                       help="set the target processor type/model")
 
-    parser.add_option("--with-build-dir", dest="build-dir",
+    parser.add_option("--with-build-dir", dest="build_dir",
                       metavar="DIR", default="build",
                       help="setup the build in DIR [default %default]")
 
     parser.add_option("--prefix", dest="prefix",
                       help="set the base installation directory")
+    parser.add_option("--docdir", dest="docdir", default="docdir",
+                      help="set the documentation installation directory")
 
     compat_with_autoconf_options = [
         "bindir",
         "datadir",
         "datarootdir",
-        "docdir",
         "dvidir",
         "exec-prefix",
         "htmldir",
@@ -137,11 +147,6 @@ class ModuleInfo(object):
 
         self.add = map(lambda f: os.path.join(self.lives_in, f), self.add)
 
-    def __str__(self):
-        return "ModuleInfo('%s', '-D%s', add=%s, requires=%s)" % (
-            self.realname, self.define, ','.join(self.add),
-            ','.join(self.requires))
-
 class ArchInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
@@ -153,9 +158,6 @@ class ArchInfo(object):
                         })
 
         self.submodel_aliases = force_to_dict(self.submodel_aliases)
-
-    def __str__(self):
-        return "%s - %s" % (self.realname, ','.join(self.aliases))
 
 class CompilerInfo(object):
     def __init__(self, infofile):
@@ -183,11 +185,10 @@ class CompilerInfo(object):
                         })
 
         self.so_link_flags = force_to_dict(self.so_link_flags)
-        self.mach_opt = force_to_dict(self.mach_opt)
         self.mach_abi_linking = force_to_dict(self.mach_abi_linking)
 
-    def __str__(self):
-        return "%s %s" % (self.realname, self.binary_name)
+        # FIXME: this has weirdness to handle s// ing out bits
+        self.mach_opt = force_to_dict(self.mach_opt)
 
 class OperatingSystemInfo(object):
     def __init__(self, infofile):
@@ -207,9 +208,6 @@ class OperatingSystemInfo(object):
                         'install_cmd_data': 'install -m 644',
                         'install_cmd_exec': 'install -m 755'
                         })
-
-    def __str__(self):
-        return self.realname
 
 def guess_processor(archinfo):
     base_proc = platform.machine()
@@ -236,20 +234,11 @@ def guess_processor(archinfo):
 
 def process_makefile_template(template, options):
     class MakefileTemplate(Template):
-        delimiter = '@'
-
-        pattern = r"""
-        @(?:
-        (?P<escaped>@) |
-        (var:(?P<named>[_\-a-z]+)) |
-        {(var:(?P<braced>[_\-a-z]+))} |
-        (?P<invalid>)
-        )
-        """
+        delimiter = '%'
 
     try:
         makefile = MakefileTemplate(''.join(open(template).readlines()))
-        return makefile.safe_substitute(options.__dict__)
+        return makefile.substitute(options.__dict__)
     except KeyError, e:
         raise Exception("Unbound variable %s in template %s" % (e, template))
 
@@ -261,15 +250,51 @@ def add_compiler_info(options, ccinfo):
         options.cc = cc.binary_name
         options.lib_opt = cc.lib_opt_flags
         options.check_opt = cc.check_opt_flags
-        #options.mach_opt = cc.mach_opt
+        options.mach_opt = ''
         options.lang_flags = cc.lang_flags
         options.warn_flags = cc.warning_flags
+
+        options.link_to = ''
+
+        options.ar_command = cc.ar_command
+
+        options.install_cmd_exec = 'install exec'
+        options.install_cmd_data = 'install data'
+        options.ranlib_command = 'randlib command'
+        options.check_prefix = 'check prefix'
+        options.doc_files = 'list of doc files'
+        options.doc_src_dir = 'doc'
+        options.include_files = 'list of include files'
+        options.lib_objs = 'list of obj files'
+        options.check_objs = 'list of check objs'
+        options.lib_prefix = 'lib prefix'
+        options.lib_build_cmds = 'lib build commands'
+        options.check_build_cmds = 'check build commands'
+
+        options.botan_config = 'botan-config'
+        options.botan_pkgconfig = 'botan.pc'
+
+def setup_build_tree(options, headers, sources):
+    shutil.rmtree(options.build_dir)
+
+    include_dir = os.path.join(options.build_dir, 'include', 'botan')
+    checks_dir = os.path.join(options.build_dir, 'checks')
+    libobj_dir = os.path.join(options.build_dir, 'lib')
+
+    os.makedirs(include_dir)
+    os.makedirs(checks_dir)
+    os.makedirs(libobj_dir)
+
+    for header_file in headers:
+        shutil.copy(header_file, include_dir)
 
 def main(argv = None):
     if argv is None:
         argv = sys.argv
 
     (options, args) = process_command_line(argv[1:])
+
+    options.version = '1.8.3'
 
     if args != []:
         raise Exception("Unhandled option(s) " + ' '.join(args))
@@ -278,12 +303,12 @@ def main(argv = None):
     Walk through a directory and find all files named desired_name
     """
     def find_files_named(desired_name, in_path):
-        for (dirpath, dirnames, filenames) in os_walk(in_path):
+        for (dirpath, dirnames, filenames) in os.walk(in_path):
             if desired_name in filenames:
                 yield os.path.join(dirpath, desired_name)
 
     def list_files_in(in_path):
-        for (dirpath, dirnames, filenames) in os_walk(in_path):
+        for (dirpath, dirnames, filenames) in os.walk(in_path):
             for filename in filenames:
                 yield os.path.join(dirpath, filename)
 
@@ -322,6 +347,8 @@ def main(argv = None):
 
     headers = [file for file in all_files if file.endswith('.h')]
     sources = list(set(all_files) - set(headers))
+
+    #setup_build_tree(options, headers, sources)
 
     print process_makefile_template('src/build-data/makefile/unix.in', options)
 
