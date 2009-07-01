@@ -11,11 +11,14 @@ Distributed under the terms of the Botan license
 import os
 import os.path
 import platform
+import pwd
 import re
 import shutil
 import shlex
 import sys
+import time
 
+from socket import gethostname
 from string import Template
 from optparse import OptionParser, SUPPRESS_HELP
 
@@ -83,7 +86,9 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
     (dirname, basename) = os.path.split(infofile)
 
     to_obj.lives_in = dirname
-    if basename != 'info.txt':
+    if basename == 'info.txt':
+        (dummy,to_obj.basename) = os.path.split(dirname)
+    else:
         to_obj.basename = basename
 
     lex = shlex.shlex(open(infofile), infofile, posix=True)
@@ -147,6 +152,13 @@ class ModuleInfo(object):
 
         self.add = map(lambda f: os.path.join(self.lives_in, f), self.add)
 
+    def __cmp__(self, other):
+        if self.basename < other.basename:
+            return -1
+        if self.basename == other.basename:
+            return 0
+        return 1
+
 class ArchInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
@@ -158,6 +170,20 @@ class ArchInfo(object):
                         })
 
         self.submodel_aliases = force_to_dict(self.submodel_aliases)
+
+    def defines(self, target_submodel):
+        define = []
+        define.append("TARGET_ARCH_IS_%s" % (self.basename.upper()))
+
+        if self.basename != target_submodel:
+            define.append("TARGET_CPU_IS_%s" % (target_submodel.upper()))
+
+        if self.endian != None:
+            define.append("TARGET_CPU_IS_%s_ENDIAN" % (self.endian.upper()))
+
+        define.append("TARGET_UNALIGNED_LOADSTORE_OK %d" % (self.unaligned == "ok"))
+
+        return "\n".join(["#define BOTAN_" + macro for macro in define])
 
 class CompilerInfo(object):
     def __init__(self, infofile):
@@ -190,6 +216,11 @@ class CompilerInfo(object):
         # FIXME: this has weirdness to handle s// ing out bits
         self.mach_opt = force_to_dict(self.mach_opt)
 
+    def defines(self):
+        if self.compiler_has_tr1:
+            return "#define BOTAN_USE_STD_TR1"
+        return ""
+
 class OperatingSystemInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
@@ -208,6 +239,12 @@ class OperatingSystemInfo(object):
                         'install_cmd_data': 'install -m 644',
                         'install_cmd_exec': 'install -m 755'
                         })
+
+    def defines(self):
+        define = ["TARGET_OS_IS_%s" % (self.basename.upper())]
+        define += ["TARGET_OS_HAS_" + feat.upper() for feat in self.target_features]
+
+        return "\n".join(["#define BOTAN_" + macro for macro in define])
 
 def guess_processor(archinfo):
     base_proc = platform.machine()
@@ -232,47 +269,97 @@ def guess_processor(archinfo):
     # No matches, so just use the base proc type
     return (base_proc,base_proc)
 
-def process_makefile_template(template, options):
-    class MakefileTemplate(Template):
+def process_template(template, variables):
+    class PercentSignTemplate(Template):
         delimiter = '%'
 
     try:
-        makefile = MakefileTemplate(''.join(open(template).readlines()))
-        return makefile.substitute(options.__dict__)
+        template = PercentSignTemplate(''.join(open(template).readlines()))
+        return template.substitute(variables)
     except KeyError, e:
         raise Exception("Unbound variable %s in template %s" % (e, template))
 
-def add_compiler_info(options, ccinfo):
-    for cc in ccinfo:
-        if options.compiler != cc.basename:
+def create_template_vars(options, modules, cc, arch, osinfo):
+    vars = {}
+
+    vars['version_major'] = 1
+    vars['version_minor'] = 8
+    vars['version_patch'] = 3
+    vars['version'] = '1.8.3'
+
+    vars['timestamp'] = time.ctime()
+    vars['user'] = pwd.getpwuid(os.getuid())[0]
+    vars['hostname'] = gethostname()
+    vars['command_line'] = ' '.join(sys.argv)
+
+    vars['module_defines'] = "\n".join(sorted(["#define BOTAN_HAS_" + m.define
+                                               for m in modules if m.define != None]))
+    vars['target_os_defines'] = osinfo.defines()
+    vars['target_cpu_defines'] = arch.defines(options.cpu)
+    vars['target_compiler_defines'] = cc.defines()
+
+    vars['local_config'] = "NO LOCAL CONFIG FOR YOU"
+
+    vars['cc'] = cc.binary_name
+    vars['lib_opt'] = cc.lib_opt_flags
+    vars['check_opt'] = cc.check_opt_flags
+    vars['mach_opt'] = ''
+    vars['lang_flags'] = cc.lang_flags
+    vars['warn_flags'] = cc.warning_flags
+    vars['shared_flags'] = cc.shared_flags
+    vars['so_link'] = 'so link command'
+    vars['so_version'] = 'SO VERSION'
+    vars['so_suffix'] = 'SO'
+    vars['dll_export_flags'] = cc.dll_export_flags
+    vars['mp_bits'] = 666
+
+    vars['submodel'] = options.cpu
+    vars['arch'] = options.arch
+    vars['os'] = options.os
+
+    vars['mod_list'] = "\n".join(["%s (%s)" % (m.basename, m.realname)
+                                  for m in sorted(modules)])
+
+    vars['link_to'] = ''
+
+    vars['ar_command'] = cc.ar_command
+
+    vars['install_cmd_exec'] = 'install exec'
+    vars['install_cmd_data'] = 'install data'
+    vars['ranlib_command'] = 'randlib command'
+    vars['check_prefix'] = 'check prefix'
+    vars['doc_files'] = 'list of doc files'
+    vars['doc_src_dir'] = 'doc'
+    vars['include_files'] = 'list of include files'
+    vars['lib_objs'] = 'list of obj files'
+    vars['check_objs'] = 'list of check objs'
+    vars['lib_prefix'] = 'lib prefix'
+    vars['lib_build_cmds'] = 'lib build commands'
+    vars['check_build_cmds'] = 'check build commands'
+
+    vars['static_suffix'] = 'a'
+
+    vars['botan_config'] = 'botan-config'
+    vars['botan_pkgconfig'] = 'botan.pc'
+
+    return vars
+
+def choose_modules_to_use(options, modules):
+    chosen = []
+
+    for module in modules:
+        if module.cc != [] and options.compiler not in module.cc:
             continue
 
-        options.cc = cc.binary_name
-        options.lib_opt = cc.lib_opt_flags
-        options.check_opt = cc.check_opt_flags
-        options.mach_opt = ''
-        options.lang_flags = cc.lang_flags
-        options.warn_flags = cc.warning_flags
+        if module.os != [] and options.os not in module.os:
+            continue
 
-        options.link_to = ''
+        if module.arch != [] and options.arch not in module.arch \
+               and options.cpu not in module.arch:
+            continue
 
-        options.ar_command = cc.ar_command
-
-        options.install_cmd_exec = 'install exec'
-        options.install_cmd_data = 'install data'
-        options.ranlib_command = 'randlib command'
-        options.check_prefix = 'check prefix'
-        options.doc_files = 'list of doc files'
-        options.doc_src_dir = 'doc'
-        options.include_files = 'list of include files'
-        options.lib_objs = 'list of obj files'
-        options.check_objs = 'list of check objs'
-        options.lib_prefix = 'lib prefix'
-        options.lib_build_cmds = 'lib build commands'
-        options.check_build_cmds = 'check build commands'
-
-        options.botan_config = 'botan-config'
-        options.botan_pkgconfig = 'botan.pc'
+        chosen.append(module)
+    return chosen
 
 def setup_build_tree(options, headers, sources):
     shutil.rmtree(options.build_dir)
@@ -294,8 +381,6 @@ def main(argv = None):
 
     (options, args) = process_command_line(argv[1:])
 
-    options.version = '1.8.3'
-
     if args != []:
         raise Exception("Unhandled option(s) " + ' '.join(args))
 
@@ -312,11 +397,15 @@ def main(argv = None):
             for filename in filenames:
                 yield os.path.join(dirpath, filename)
 
-    modules = [ModuleInfo(info) for info in find_files_named('info.txt', 'src')]
+    modules = [ModuleInfo(info)
+               for info in find_files_named('info.txt', 'src')]
 
-    archinfo = [ArchInfo(info) for info in list_files_in('src/build-data/arch')]
-    ccinfo = [CompilerInfo(info) for info in list_files_in('src/build-data/cc')]
-    osinfo = [OperatingSystemInfo(info) for info in list_files_in('src/build-data/os')]
+    archinfo = [ArchInfo(info)
+                for info in list_files_in('src/build-data/arch')]
+    ccinfo   = [CompilerInfo(info)
+                for info in list_files_in('src/build-data/cc')]
+    osinfo   = [OperatingSystemInfo(info)
+                for info in list_files_in('src/build-data/os')]
 
     # FIXME: need full canonicalization to (arch,submodel) when --cpu is used
     if options.cpu is None:
@@ -328,32 +417,25 @@ def main(argv = None):
     if options.compiler is None:
         options.compiler = 'gcc'
 
-    add_compiler_info(options, ccinfo)
+    modules_to_use = choose_modules_to_use(options, modules)
 
-    all_files = []
+    def find_it(what, infoset):
+        for info in infoset:
+            if info.basename == what:
+                return info
+        return None
 
-    for module in modules:
-        if module.cc != [] and options.compiler not in module.cc:
-            continue
+    template_vars = create_template_vars(options, modules_to_use,
+                                         find_it(options.compiler, ccinfo),
+                                         find_it(options.arch, archinfo),
+                                         find_it(options.os, osinfo))
 
-        if module.os != [] and options.os not in module.os:
-            continue
-
-        if module.arch != [] and options.arch not in module.arch \
-               and options.cpu not in module.arch:
-            continue
-
-        all_files += module.add
-
-    headers = [file for file in all_files if file.endswith('.h')]
-    sources = list(set(all_files) - set(headers))
-
+    #headers = [file for file in all_files if file.endswith('.h')]
+    #sources = list(set(all_files) - set(headers))
     #setup_build_tree(options, headers, sources)
 
-    print process_makefile_template('src/build-data/makefile/unix.in', options)
+    print process_template('src/build-data/buildh.in', template_vars)
 
-    #print '\n'.join(sorted(sources))
-    #print '\n'.join(sorted(headers))
 
 if __name__ == '__main__':
     try:
