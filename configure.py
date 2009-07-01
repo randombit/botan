@@ -230,19 +230,23 @@ def guess_processor(archinfo):
     # No matches, so just use the base proc type
     return (base_proc,base_proc)
 
-class MakefileTemplate(Template):
-    pattern = r"""
-    @(?:
-      (?P<escaped>@) |
-      (var:(?P<named>[_a-z]+)) |
-      {(var:(?P<braced>[_a-z]+))} |
-      (?P<invalid>)
-    )
-    """
+def process_makefile_template(template, options):
+    class MakefileTemplate(Template):
+        pattern = r"""
+        @(?:
+        (?P<escaped>@) |
+        (var:(?P<named>[_a-z]+)) |
+        {(var:(?P<braced>[_a-z]+))} |
+        (?P<invalid>)
+        )
+        """
 
-    def __init__(self, filename):
-        s = ''.join(open(filename).readlines())
-        Template.__init__(self, s)
+    try:
+        makefile = MakefileTemplate(''.join(open(template).readlines()))
+        print makefile.substitute(options.__dict__)
+    except KeyError, e:
+        raise Exception("Unbound variable %s in template %s" % (e, template))
+
 
 def main(argv = None):
     if argv is None:
@@ -300,10 +304,7 @@ def main(argv = None):
     headers = [file for file in all_files if file.endswith('.h')]
     sources = list(set(all_files) - set(headers))
 
-    makefile = MakefileTemplate('src/build-data/makefile/unix.in')
-    options.prefix = '/usr/local'
-    print options.__dict__['prefix']
-    print makefile.substitute(options.__dict__)
+    print process_makefile_template('src/build-data/makefile/unix.in', options)
 
     #print '\n'.join(sorted(sources))
     #print '\n'.join(sorted(headers))
@@ -312,4 +313,4 @@ if __name__ == '__main__':
     try:
         sys.exit(main())
     except Exception, e:
-        print >>sys.stderr, "Exception:", str(type(e)), e
+        print >>sys.stderr, "Exception:", e
