@@ -20,6 +20,10 @@ def process_command_line(args):
     parser.add_option("--cpu", dest="cpu",
                       help="set the target processor type/model")
 
+    parser.add_option("--with-build-dir", dest="build-dir",
+                      metavar="DIR", default="build",
+                      help="setup the build in DIR [default %default]")
+
     parser.add_option("--prefix", dest="prefix",
                       help="set the base installation directory")
 
@@ -232,21 +236,34 @@ def guess_processor(archinfo):
 
 def process_makefile_template(template, options):
     class MakefileTemplate(Template):
+        delimiter = '@'
+
         pattern = r"""
         @(?:
         (?P<escaped>@) |
-        (var:(?P<named>[_a-z]+)) |
-        {(var:(?P<braced>[_a-z]+))} |
+        (var:(?P<named>[_\-a-z]+)) |
+        {(var:(?P<braced>[_\-a-z]+))} |
         (?P<invalid>)
         )
         """
 
     try:
         makefile = MakefileTemplate(''.join(open(template).readlines()))
-        print makefile.substitute(options.__dict__)
+        return makefile.safe_substitute(options.__dict__)
     except KeyError, e:
         raise Exception("Unbound variable %s in template %s" % (e, template))
 
+def add_compiler_info(options, ccinfo):
+    for cc in ccinfo:
+        if options.compiler != cc.basename:
+            continue
+
+        options.cc = cc.binary_name
+        options.lib_opt = cc.lib_opt_flags
+        options.check_opt = cc.check_opt_flags
+        #options.mach_opt = cc.mach_opt
+        options.lang_flags = cc.lang_flags
+        options.warn_flags = cc.warning_flags
 
 def main(argv = None):
     if argv is None:
@@ -285,6 +302,8 @@ def main(argv = None):
     # FIXME: epic fail
     if options.compiler is None:
         options.compiler = 'gcc'
+
+    add_compiler_info(options, ccinfo)
 
     all_files = []
 
