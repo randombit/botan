@@ -3,8 +3,10 @@
 import sys
 import re
 import shlex
+import platform
+import os.path
+
 from os import walk as os_walk
-from os.path import join as os_path_join
 from optparse import OptionParser, SUPPRESS_HELP
 
 def process_command_line(args):
@@ -12,8 +14,8 @@ def process_command_line(args):
 
     parser.add_option("--cc", dest="compiler",
                       help="set the desired build compiler")
-    parser.add_option("--os", dest="os",
-                      help="set the target operating system")
+    parser.add_option("--os", dest="os", default=platform.system().lower(),
+                      help="set the target operating system [%default]")
     parser.add_option("--cpu", dest="cpu",
                       help="set the target processor type/model")
 
@@ -63,6 +65,10 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
         def __str__(self):
             return "%s at %s:%d" % (self.msg, infofile, self.line)
 
+    basename = os.path.basename(infofile)
+    if basename != 'info.txt':
+        to_obj.basename = basename
+
     lex = shlex.shlex(open(infofile), infofile, posix=True)
 
     lex.wordchars += ':.<>/,-'
@@ -96,7 +102,9 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
 
         token = lex.get_token()
 
-
+"""
+Convert a lex'ed map (from build-data files) from a list to a dict
+"""
 def force_to_dict(l):
     return dict(zip(l[::3],l[2::3]))
 
@@ -194,6 +202,27 @@ class OperatingSystemInfo(object):
     def __str__(self):
         return self.realname
 
+def guess_processor(archinfo):
+    base_proc = platform.machine()
+    full_proc = platform.processor()
+
+    full_proc = full_proc.replace(' ', '').lower()
+
+    for junk in ['(tm)', '(r)']:
+        full_proc = full_proc.replace(junk, '')
+
+    for ainfo in archinfo:
+        if ainfo.basename == base_proc or base_proc in ainfo.aliases:
+            for sm_alias in ainfo.submodel_aliases:
+                if re.match(sm_alias, full_proc) != None:
+                    return ainfo.submodel_aliases[sm_alias]
+            for submodel in ainfo.submodels:
+                if re.match(submodel, full_proc) != None:
+                    return submodel
+
+    # No matches, so just use the base proc type
+    return base_proc
+
 def main(argv = None):
     if argv is None:
         argv = sys.argv
@@ -204,26 +233,33 @@ def main(argv = None):
     def find_files_named(desired_name, in_path):
         for (dirpath, dirnames, filenames) in os_walk(in_path):
             if desired_name in filenames:
-                yield os_path_join(dirpath, desired_name)
+                yield os.path.join(dirpath, desired_name)
 
     def list_files_in(in_path):
         for (dirpath, dirnames, filenames) in os_walk(in_path):
             for filename in filenames:
-                yield os_path_join(dirpath, filename)
+                yield os.path.join(dirpath, filename)
 
     try:
         (options, args) = process_command_line(argv[1:])
 
+        if args != []:
+            raise Exception("Unhandled option(s) " + ' '.join(args))
+
         modules = [ModuleInfo(info) for info in find_files_named('info.txt', 'src')]
 
-        arches = [ArchInfo(info) for info in list_files_in('src/build-data/arch')]
-        compilers = [CompilerInfo(info) for info in list_files_in('src/build-data/cc')]
-        oses = [OperatingSystemInfo(info) for info in list_files_in('src/build-data/os')]
+        archinfo = [ArchInfo(info) for info in list_files_in('src/build-data/arch')]
+        ccinfo = [CompilerInfo(info) for info in list_files_in('src/build-data/cc')]
+        osinfo = [OperatingSystemInfo(info) for info in list_files_in('src/build-data/os')]
 
-        #print '\n'.join(map(str, modules))
-        #print '\n'.join(map(str, arches))
-        #print '\n'.join(map(str, compilers))
-        print '\n'.join(map(str, oses))
+        if options.cpu is None:
+            options.cpu = guess_processor(archinfo)
+        if options.compiler is None:
+            options.compiler = 'gcc' # FIXME
+
+        for module in modules:
+            print module
+
     except Exception,e:
         print "Exception:", e
 
