@@ -1,12 +1,13 @@
 
 * 1.8.3-pre, 2009-??-??
- - Improve handling of low-entropy situations during PRNG seeding
- - Use an input insensitive implementation of same_mem instead of memcmp
- - Change random device polling to prefer /dev/urandom over /dev/random
  - Add the Skein-512 SHA-3 candidate hash function
  - Add the XTS block cipher mode from IEEE P1619
- - Provide a default value for AutoSeeded_RNG::reseed
+ - Improve handling of low-entropy situations during PRNG seeding
+ - Change random device polling to prefer /dev/urandom over /dev/random
+ - Use an input insensitive implementation of same_mem instead of memcmp
  - Correct DataSource::discard_next to return the number of discarded bytes
+ - Various changes to the makefile template language for easier parsing
+ - Provide a default value for AutoSeeded_RNG::reseed
  - Fix Gentoo bug 272242
 
 * 1.8.2, 2009-04-07
