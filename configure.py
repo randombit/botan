@@ -213,19 +213,26 @@ def guess_processor(archinfo):
 
     for ainfo in archinfo:
         if ainfo.basename == base_proc or base_proc in ainfo.aliases:
+            base_proc = ainfo.basename
+
             for sm_alias in ainfo.submodel_aliases:
                 if re.match(sm_alias, full_proc) != None:
-                    return ainfo.submodel_aliases[sm_alias]
+                    return (base_proc,ainfo.submodel_aliases[sm_alias])
             for submodel in ainfo.submodels:
                 if re.match(submodel, full_proc) != None:
-                    return submodel
+                    return (base_proc,submodel)
 
     # No matches, so just use the base proc type
-    return base_proc
+    return (base_proc,base_proc)
 
 def main(argv = None):
     if argv is None:
         argv = sys.argv
+
+    (options, args) = process_command_line(argv[1:])
+
+    if args != []:
+        raise Exception("Unhandled option(s) " + ' '.join(args))
 
     """
     Walk through a directory and find all files named desired_name
@@ -240,28 +247,33 @@ def main(argv = None):
             for filename in filenames:
                 yield os.path.join(dirpath, filename)
 
-    try:
-        (options, args) = process_command_line(argv[1:])
+    modules = [ModuleInfo(info) for info in find_files_named('info.txt', 'src')]
 
-        if args != []:
-            raise Exception("Unhandled option(s) " + ' '.join(args))
+    archinfo = [ArchInfo(info) for info in list_files_in('src/build-data/arch')]
+    ccinfo = [CompilerInfo(info) for info in list_files_in('src/build-data/cc')]
+    osinfo = [OperatingSystemInfo(info) for info in list_files_in('src/build-data/os')]
 
-        modules = [ModuleInfo(info) for info in find_files_named('info.txt', 'src')]
+    # FIXME: need full canonicalization to (arch,submodel) when --cpu is used
+    if options.cpu is None:
+        (options.arch,options.cpu) = guess_processor(archinfo)
+    else:
+        options.arch = options.cpu
 
-        archinfo = [ArchInfo(info) for info in list_files_in('src/build-data/arch')]
-        ccinfo = [CompilerInfo(info) for info in list_files_in('src/build-data/cc')]
-        osinfo = [OperatingSystemInfo(info) for info in list_files_in('src/build-data/os')]
+    # FIXME: epic fail
+    if options.compiler is None:
+        options.compiler = 'gcc'
 
-        if options.cpu is None:
-            options.cpu = guess_processor(archinfo)
-        if options.compiler is None:
-            options.compiler = 'gcc' # FIXME
-
-        for module in modules:
-            print module
-
-    except Exception,e:
-        print "Exception:", e
+    for module in modules:
+        if module.cc != [] and options.compiler not in module.cc:
+            continue
+        if module.os != [] and options.os not in module.os:
+            continue
+        if module.arch != [] and options.arch not in module.arch:
+            continue
+        print module
 
 if __name__ == '__main__':
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except Exception, e:
+        print >>sys.stderr, "Exception:", e
