@@ -95,11 +95,11 @@ doxygen:
 	doxygen %{doc_src_dir}/botan.doxy
 
 clean:
-	$(RM_R) %{build-dir}/lib/* %{build-dir}/checks/*
+	$(RM_R) %{build_dir}/lib/* %{build_dir}/checks/*
 	$(RM) $(LIBRARIES) $(SYMLINK) $(CHECK)
 
 distclean: clean
-	$(RM_R) %{build-dir}
+	$(RM_R) %{build_dir}
 	$(RM_R) %{doc_src_dir}/doxygen %{doc_src_dir}/botan.doxy
 	$(RM) Makefile $(CONFIG_SCRIPT) $(PKGCONFIG)
 

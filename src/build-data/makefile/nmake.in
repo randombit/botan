@@ -93,15 +93,15 @@ static: $(STATIC_LIB)
 # Fake Targets                                   #
 ##################################################
 clean:
-	$(RM) %{build-dir}\lib\* %{build-dir}\checks\*
+	$(RM) %{build_dir}\lib\* %{build_dir}\checks\*
 	$(RM) $(LIBRARIES) $(CHECK)
 
 distclean: clean
-	$(RM) %{build-dir}\build.h
-	$(RM) %{build-dir}\include\botan\*
-	$(RMDIR) %{build-dir}\include\botan %{build-dir}\include
-	$(RMDIR) %{build-dir}\lib %{build-dir}\checks
-	$(RMDIR) %{build-dir}
+	$(RM) %{build_dir}\build.h
+	$(RM) %{build_dir}\include\botan\*
+	$(RMDIR) %{build_dir}\include\botan %{build_dir}\include
+	$(RMDIR) %{build_dir}\lib %{build_dir}\checks
+	$(RMDIR) %{build_dir}
 	$(RM) Makefile
 
 ##################################################
