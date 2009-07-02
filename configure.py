@@ -96,21 +96,26 @@ def process_command_line(args):
                             help='set the target operating system [%default]')
     target_group.add_option('--cpu',
                             help='set the target processor type/model')
-
-    parser.add_option_group(target_group)
-
+    target_group.add_option('--with-endian', metavar='ORDER', default=None,
+                            help='override guess of CPU byte order')
 
     build_group = OptionGroup(parser, "Build options")
 
     build_group.add_option('--enable-shared', dest='build_shared_lib',
-                           action='store_true', default=True)
+                           action='store_true', default=True,
+                           help="enable building a shared library")
     build_group.add_option('--disable-shared', dest='build_shared_lib',
-                           action='store_false')
+                           action='store_false', help=SUPPRESS_HELP)
+
+    build_group.add_option('--enable-debug', dest='debug_build',
+                           action='store_true', default=False,
+                           help="enable debug build")
+    build_group.add_option('--disable-debug', dest='debug_build',
+                           action='store_false', help=SUPPRESS_HELP)
 
     build_group.add_option('--with-tr1-implementation', metavar='WHICH',
                            dest='with_tr1', default=None,
                            help='enable TR1 (options: none, system, boost)')
-
 
     build_group.add_option('--with-build-dir',
                            metavar='DIR', default='',
@@ -122,7 +127,6 @@ def process_command_line(args):
     build_group.add_option('--with-local-config',
                            dest='local_config', metavar='FILE',
                            help='include the contents of FILE into build.h')
-    parser.add_option_group(build_group)
 
     mods_group = OptionGroup(parser, "Module selection")
 
@@ -137,11 +141,8 @@ def process_command_line(args):
         mods_group.add_option('--with-%s' % (mod), dest='enabled_modules',
                               action='append_const', const=mod)
         mods_group.add_option('--without-%s' % (mod), dest='disabled_modules',
-                              action='append_const', const=mod)
-
-    parser.add_option_group(mods_group)
-
-
+                              action='append_const', const=mod,
+                              help=SUPPRESS_HELP)
 
     install_group = OptionGroup(parser, "Installation options")
 
@@ -153,6 +154,10 @@ def process_command_line(args):
                              help='set the library install directory')
     install_group.add_option('--includedir', metavar='DIR',
                              help='set the include file install directory')
+
+    parser.add_option_group(target_group)
+    parser.add_option_group(build_group)
+    parser.add_option_group(mods_group)
     parser.add_option_group(install_group)
 
 
@@ -306,14 +311,19 @@ class ArchInfo(object):
         else:
             self.unaligned_ok = 0
 
-    def defines(self, target_submodel):
+    def defines(self, target_submodel, with_endian):
         macros = ['TARGET_ARCH_IS_%s' % (self.basename.upper())]
 
         if self.basename != target_submodel:
             macros.append('TARGET_CPU_IS_%s' % (target_submodel.upper()))
 
-        if self.endian != None:
+        if with_endian:
+            if with_endian == 'little' or with_endian == 'big':
+                macros.append('TARGET_CPU_IS_%s_ENDIAN' % (with_endian.upper()))
+        elif self.endian != None:
             macros.append('TARGET_CPU_IS_%s_ENDIAN' % (self.endian.upper()))
+
+        print macros
 
         macros.append('TARGET_UNALIGNED_LOADSTORE_OK %d' % (self.unaligned_ok))
 
@@ -586,7 +596,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                                            for m in modules if m.define]),
 
         'target_os_defines': make_cpp_macros(osinfo.defines()),
-        'target_cpu_defines': make_cpp_macros(arch.defines(options.cpu)),
+        'target_cpu_defines': make_cpp_macros(arch.defines(options.cpu, options.with_endian)),
         'target_compiler_defines': make_cpp_macros(cc.defines()),
 
         'include_files': makefile_list(build_config.headers),
