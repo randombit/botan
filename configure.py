@@ -86,7 +86,8 @@ class BuildConfigurationInformation(object):
 Handle command line options
 """
 def process_command_line(args):
-    parser = OptionParser(formatter = IndentedHelpFormatter(max_help_position = 50))
+    parser = OptionParser(formatter =
+                          IndentedHelpFormatter(max_help_position = 50))
 
     target_group = OptionGroup(parser, "Target options")
 
@@ -160,7 +161,7 @@ def process_command_line(args):
     parser.add_option_group(mods_group)
     parser.add_option_group(install_group)
 
-    # These exist only for autoconf compatability (requested by zw for monotone)
+    # These exist only for autoconf compatability (requested by zw for mtn)
     compat_with_autoconf_options = [
         'bindir',
         'datadir',
@@ -279,7 +280,10 @@ class ModuleInfo(object):
             if filename.count(':') == 0:
                 return os.path.join(self.lives_in, filename)
 
-            # For these, assume always in neighboring directory
+            # modules can request to add files of the form
+            # MODULE_NAME:FILE_NAME to add a file from another module
+            # For these, assume other module is always in a
+            # neighboring directory; this is true for all current uses
             return os.path.join(os.path.split(self.lives_in)[0],
                                 *filename.split(':'))
 
@@ -599,8 +603,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                                            for m in modules if m.define]),
 
         'target_os_defines': make_cpp_macros(osinfo.defines()),
-        'target_cpu_defines': make_cpp_macros(arch.defines(options.cpu, options.with_endian)),
         'target_compiler_defines': make_cpp_macros(cc.defines()),
+        'target_cpu_defines': make_cpp_macros(
+            arch.defines(options.cpu, options.with_endian)),
 
         'include_files': makefile_list(build_config.headers),
 
@@ -791,8 +796,9 @@ def setup_build(build_config, options, template_vars):
         else:
             raise Exception('Unknown makefile style "%s"' % (style))
 
-    makefile_template = os.path.join(options.makefile_dir,
-                                     choose_makefile_template(template_vars['makefile_style']))
+    makefile_template = os.path.join(
+        options.makefile_dir,
+        choose_makefile_template(template_vars['makefile_style']))
 
     templates_to_proc[makefile_template] = 'Makefile'
 
@@ -803,7 +809,8 @@ def setup_build(build_config, options, template_vars):
         finally:
             f.close()
 
-    build_config.headers.append(os.path.join(build_config.build_dir, 'build.h'))
+    build_config.headers.append(
+        os.path.join(build_config.build_dir, 'build.h'))
 
     def portable_symlink(filename, target_dir):
         if 'symlink' in os.__dict__:
