@@ -96,7 +96,7 @@ def process_command_line(args):
                             help='set the target operating system [%default]')
     target_group.add_option('--cpu',
                             help='set the target processor type/model')
-    target_group.add_option('--with-tr1', metavar='WHICH', default='none',
+    target_group.add_option('--with-tr1', metavar='WHICH', default=None,
                             help='enable using TR1 (options: none, system, boost)')
     parser.add_option_group(target_group)
 
@@ -256,11 +256,16 @@ class ModuleInfo(object):
                         'mp_bits': 0 })
 
         # Coerce to more useful types
-        self.mp_bits = int(self.mp_bits)
-        self.uses_tr1 == bool(self.uses_tr1)
         self.libs = force_to_dict(self.libs)
 
         self.add = map(lambda f: os.path.join(self.lives_in, f), self.add)
+
+        self.mp_bits = int(self.mp_bits)
+
+        if self.uses_tr1 == 'yes':
+            self.uses_tr1 = True
+        else:
+            self.uses_tr1 = False
 
     def __cmp__(self, other):
         if self.basename < other.basename:
@@ -647,6 +652,10 @@ def choose_modules_to_use(options, modules):
 
         # TR1 checks
 
+        if module.uses_tr1 is True:
+            if options.with_tr1 != 'boost' and options.with_tr1 != 'system':
+                return (False, [])
+
         # dependency checks
         deps = []
         deps_met = True
@@ -667,7 +676,8 @@ def choose_modules_to_use(options, modules):
 
     use_module = {}
     for (name,module) in modules.iteritems():
-        if use_module.get(name, False) is True: # already enabled (dep, perhaps)
+        if use_module.get(name, False) is True:
+             # already enabled (a dep, most likely)
             continue
 
         (should_use,deps) = enable_module(module)
@@ -818,6 +828,12 @@ def main(argv = None):
         (options.arch, options.cpu) = guess_processor(archinfo)
     else:
         (options.arch, options.cpu) = canon_processor(archinfo, options.cpu)
+
+    if options.with_tr1 == None:
+        if ccinfo[options.compiler].compiler_has_tr1:
+            options.with_tr1 = 'system'
+        else:
+            options.with_tr1 = 'none'
 
     modules_to_use = choose_modules_to_use(options, modules)
 
