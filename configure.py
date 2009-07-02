@@ -399,10 +399,16 @@ class CompilerInfo(object):
             return self.so_link_flags[osname]
         return self.so_link_flags['default']
 
-    def defines(self):
-        if self.compiler_has_tr1:
+    def defines(self, with_tr1):
+        if with_tr1:
+            if with_tr1 == 'boost':
+                return ['USE_BOOST_TR1']
+            elif with_tr1 == 'system':
+                return ['USE_STD_TR1']
+        elif self.compiler_has_tr1:
             return ['USE_STD_TR1']
-        return []
+        else:
+            return []
 
 class OsInfo(object):
     def __init__(self, infofile):
@@ -603,7 +609,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                                            for m in modules if m.define]),
 
         'target_os_defines': make_cpp_macros(osinfo.defines()),
-        'target_compiler_defines': make_cpp_macros(cc.defines()),
+        'target_compiler_defines': make_cpp_macros(cc.defines(options.with_tr1)),
         'target_cpu_defines': make_cpp_macros(
             arch.defines(options.cpu, options.with_endian)),
 
