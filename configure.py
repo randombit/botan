@@ -84,8 +84,7 @@ class BuildConfigurationInformation(object):
 Handle command line options
 """
 def process_command_line(args):
-    parser = OptionParser(version = '1.8.3',
-                          formatter = IndentedHelpFormatter(max_help_position = 50))
+    parser = OptionParser(formatter = IndentedHelpFormatter(max_help_position = 50))
 
     target_group = OptionGroup(parser, "Target options")
 
@@ -566,6 +565,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'install_cmd_exec': osinfo.install_cmd_exec,
         'install_cmd_data': osinfo.install_cmd_data,
 
+        'check_prefix': '',
+        'lib_prefix': '',
+
         'static_suffix': osinfo.static_suffix,
         'so_suffix': osinfo.so_suffix,
 
@@ -578,16 +580,24 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                                for m in sorted(modules)]),
         }
 
+    # Change settings for out of tree builds
+    if options.build_dir != None:
+        for var in ['build_dir',
+                    'botan_config',
+                    'botan_pkgconfig',
+                    'check_prefix',
+                    'lib_prefix']:
+            vars[var] = os.path.join(options.build_dir, vars[var])
+
+    # FIXME
     vars['mp_bits'] = 666
-    vars['check_prefix'] = 'check prefix'
-    vars['lib_prefix'] = 'lib prefix'
 
     return vars
 
+"""
+Determine which modules to load based on options, target, etc
+"""
 def choose_modules_to_use(options, modules):
-    print options.disabled_modules
-    print options.enabled_modules
-
     def enable_module(module, for_dep = False):
         # First check options for --enable-modules/--disable-modules
 
@@ -651,16 +661,9 @@ def choose_modules_to_use(options, modules):
 
     return chosen
 
-def setup_build_tree(build_config, options, headers, sources):
-    shutil.rmtree(options.build_dir)
-
-    #os.makedirs(include_dir)
-    #os.makedirs(checks_dir)
-    #os.makedirs(libobj_dir)
-
-    for header_file in headers:
-        shutil.copy(header_file, include_dir)
-
+"""
+Load the info files about modules, targets, etc
+"""
 def load_info_files(options):
 
     def find_files_named(desired_name, in_path):
@@ -691,6 +694,47 @@ def load_info_files(options):
 
     return (modules, archinfo, ccinfo, osinfo)
 
+"""
+Perform the filesystem operations needed to setup the build
+"""
+def setup_build(build_config, options, template_vars):
+    try:
+        shutil.rmtree(options.build_dir)
+    except OSError, e:
+        pass # directory not found (FIXME: check against errno?)
+
+    for dirs in [build_config.checkobj_dir,
+                 build_config.libobj_dir,
+                 build_config.full_include_dir]:
+        os.makedirs(dirs)
+
+    for header_file in build_config.headers:
+        # FIXME: symlink or link if possible
+        shutil.copy(header_file, build_config.full_include_dir)
+
+
+    templates_to_proc = {
+        os.path.join(options.makefile_dir, 'nmake.in'): 'Makefile',
+        os.path.join(options.makefile_dir, 'unix.in'): 'Makefile',
+        os.path.join(options.makefile_dir, 'unix_shr.in'): 'Makefile',
+
+        os.path.join(options.build_data, 'buildh.in'): \
+           os.path.join(options.build_dir, 'build.h'),
+
+        os.path.join(options.build_data, 'botan-config.in'): \
+           os.path.join(options.build_dir, 'botan-config'),
+
+        os.path.join(options.build_data, 'botan.pc.in'): \
+           os.path.join(options.build_dir, 'botan-1.8.pc')
+        }
+
+    for (template, sink) in templates_to_proc.items():
+        try:
+            f = open(sink, 'w')
+            f.write(process_template(template, template_vars))
+        finally:
+            f.close()
+
 def main(argv = None):
     if argv is None:
         argv = sys.argv
@@ -699,7 +743,9 @@ def main(argv = None):
     if args != []:
         raise Exception('Unhandled option(s) ' + ' '.join(args))
 
+    # FIXME
     options.build_data = os.path.join('src', 'build-data')
+    options.makefile_dir = os.path.join(options.build_data, 'makefile')
 
     (modules, archinfo, ccinfo, osinfo) = load_info_files(options)
 
@@ -730,27 +776,8 @@ def main(argv = None):
                                          archinfo[options.arch],
                                          osinfo[options.os])
 
-    #setup_build_tree(build_config, options, headers, sources)
-
-    options.makefile_dir = os.path.join(options.build_data, 'makefile')
-
-    templates_to_proc = {
-        os.path.join(options.makefile_dir, 'unix_shr.in'): 'Makefile',
-        os.path.join(options.makefile_dir, 'unix.in'): 'Makefile',
-        os.path.join(options.makefile_dir, 'nmake.in'): 'Makefile',
-
-        os.path.join(options.build_data, 'buildh.in'): \
-           os.path.join(options.build_dir, 'build.h'),
-
-        os.path.join(options.build_data, 'botan-config.in'): \
-           os.path.join(options.build_dir, 'botan-config'),
-
-        os.path.join(options.build_data, 'botan.pc.in'): \
-           os.path.join(options.build_dir, 'botan-1.8.pc')
-        }
-
-    for (template, sink) in templates_to_proc.items():
-        process_template(template, template_vars)
+    # Performs the I/O
+    setup_build(build_config, options, template_vars)
 
 if __name__ == '__main__':
     try:
