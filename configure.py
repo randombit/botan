@@ -25,12 +25,19 @@ from time import ctime
 
 class BuildConfigurationInformation():
 
-    def __init__(self, options):
+    def __init__(self, options, modules):
         self.checkobj_dir = os.path.join(options.build_dir, 'checks')
         self.libobj_dir = os.path.join(options.build_dir, 'lib')
 
         self.include_dir = os.path.join(options.build_dir, 'include')
         self.full_include_dir = os.path.join(self.include_dir, 'botan')
+
+        all_files = sum([mod.add for mod in modules], [])
+        self.headers = sorted([file for file in all_files if file.endswith('.h')])
+        self.sources = sorted(set(all_files) - set(self.headers))
+
+        self.check_sources = sorted(
+            [os.path.join('checks', file) for file in os.listdir('checks') if file.endswith('.cpp')])
 
     def doc_files(self):
         docs = ['readme.txt']
@@ -345,6 +352,20 @@ class OsInfo(object):
         return ['TARGET_OS_IS_%s' % (self.basename.upper())] + \
                ['TARGET_OS_HAS_' + feat.upper() for feat in self.target_features]
 
+def canon_processor(archinfo, proc):
+    for ainfo in archinfo.values():
+        if ainfo.basename == proc or proc in ainfo.aliases:
+            return (ainfo.basename, ainfo.basename)
+        else:
+            for sm_alias in ainfo.submodel_aliases:
+                if re.match(sm_alias, proc) != None:
+                    return (ainfo.basename,ainfo.submodel_aliases[sm_alias])
+            for submodel in ainfo.submodels:
+                if re.match(submodel, proc) != None:
+                    return (ainfo.basename,submodel)
+
+    raise Exception("Unknown or unidentifiable processor '%s'" % (proc))
+
 def guess_processor(archinfo):
     base_proc = platform.machine()
     full_proc = platform.processor()
@@ -354,7 +375,7 @@ def guess_processor(archinfo):
     for junk in ['(tm)', '(r)']:
         full_proc = full_proc.replace(junk, '')
 
-    for ainfo in archinfo:
+    for ainfo in archinfo.values():
         if ainfo.basename == base_proc or base_proc in ainfo.aliases:
             base_proc = ainfo.basename
 
@@ -421,6 +442,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                 basename = basename.replace(src_suffix, '.' + osinfo.obj_suffix)
             yield os.path.join(obj_dir, basename)
 
+    """
+    Form snippets of makefile for building each source file
+    """
     def build_commands(sources, obj_dir, flags):
         for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
             yield "%s: %s\n\t$(CXX) %s%s $(%s_FLAGS) %s$? %s$@\n" % (
@@ -559,9 +583,16 @@ def load_info_files(options):
             for filename in filenames:
                 yield os.path.join(dirpath, filename)
 
-    archinfo = [ArchInfo(info) for info in list_files_in_build_data('arch')]
-    ccinfo   = [CompilerInfo(info) for info in list_files_in_build_data('cc')]
-    osinfo   = [OsInfo(info) for info in list_files_in_build_data('os')]
+    archinfo = dict([(os.path.basename(info), ArchInfo(info))
+                     for info in list_files_in_build_data('arch')])
+
+    osinfo   = dict([(os.path.basename(info), OsInfo(info))
+                      for info in list_files_in_build_data('os')])
+
+    del osinfo['defaults'] # FIXME
+
+    ccinfo = dict([(os.path.basename(info), CompilerInfo(info))
+                    for info in list_files_in_build_data('cc')])
 
     return (modules, archinfo, ccinfo, osinfo)
 
@@ -573,51 +604,63 @@ def main(argv = None):
     if args != []:
         raise Exception('Unhandled option(s) ' + ' '.join(args))
 
-    build_config = BuildConfigurationInformation(options)
     options.build_data = os.path.join('src', 'build-data')
 
     (modules, archinfo, ccinfo, osinfo) = load_info_files(options)
-
-    # FIXME: need full canonicalization to (arch,submodel) when --cpu is used
-    if options.cpu is None:
-        (options.arch,options.cpu) = guess_processor(archinfo)
-    else:
-        options.arch = options.cpu
 
     # FIXME: epic fail
     if options.compiler is None:
         options.compiler = 'gcc'
 
+    if options.compiler not in ccinfo:
+        raise Exception("Unknown compiler '%s'; available options: %s" % (
+            options.compiler, ' '.join(sorted(ccinfo.keys()))))
+
+    if options.os not in osinfo:
+        raise Exception("Unknown OS '%s'; available options: %s" % (
+            options.os, ' '.join(sorted(osinfo.keys()))))
+
+    if options.cpu is None:
+        (options.arch, options.cpu) = guess_processor(archinfo)
+    else:
+        (options.arch, options.cpu) = canon_processor(archinfo, options.cpu)
+
     modules_to_use = choose_modules_to_use(options, modules)
 
-    all_files = sum([mod.add for mod in modules_to_use], [])
-    build_config.headers = sorted([file for file in all_files if file.endswith('.h')])
-    build_config.sources = sorted(set(all_files) - set(build_config.headers))
-
-    build_config.check_sources = sorted(
-        [os.path.join('checks', file) for file in os.listdir('checks') if file.endswith('.cpp')])
-
-    def find_it(what, infoset):
-        for info in infoset:
-            if info.basename == what:
-                return info
-        return None
+    build_config = BuildConfigurationInformation(options, modules_to_use)
 
     template_vars = create_template_vars(build_config, options,
                                          modules_to_use,
-                                         find_it(options.compiler, ccinfo),
-                                         find_it(options.arch, archinfo),
-                                         find_it(options.os, osinfo))
+                                         ccinfo[options.compiler],
+                                         archinfo[options.arch],
+                                         osinfo[options.os])
 
     #setup_build_tree(build_config, options, headers, sources)
 
     options.makefile_dir = os.path.join(options.build_data, 'makefile')
 
+    templates_to_proc = {
+        os.path.join(options.build_data, 'buildh.in'): os.path.join(options.build_dir, 'build.h'),
+
+        os.path.join(options.makefile_dir, 'unix_shr.in'): 'Makefile',
+        os.path.join(options.makefile_dir, 'unix.in'): 'Makefile',
+        os.path.join(options.makefile_dir, 'nmake.in'): 'Makefile',
+
+        os.path.join(options.build_data, 'botan-config.in'): os.path.join(options.build_dir, 'botan-config'),
+
+        os.path.join(options.build_data, 'botan.pc.in'): os.path.join(options.build_dir, 'botan-1.8.pc')
+        }
+
+    for (template, sink) in templates_to_proc.items():
+        process_template(template, template_vars)
+
     #print process_template(os.path.join(options.build_data, 'buildh.in'), template_vars)
-    print process_template(os.path.join(options.makefile_dir, 'unix_shr.in'), template_vars)
+    #print process_template(os.path.join(options.makefile_dir, 'unix_shr.in'), template_vars)
 
 if __name__ == '__main__':
     try:
         sys.exit(main())
     except Exception, e:
-        print >>sys.stderr, 'Exception:', e
+        print >>sys.stderr, e
+        #import traceback
+        #traceback.print_exc(file=sys.stderr)
