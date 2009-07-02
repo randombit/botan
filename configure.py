@@ -748,18 +748,22 @@ def setup_build(build_config, options, template_vars):
     build_config.headers.append(os.path.join(build_config.build_dir, 'build.h'))
 
     def portable_symlink(filename, target_dir):
-        def count_dirs(dir):
-            (dir,basename) = os.path.split(dir)
-            cnt = 1
-            while dir != '':
+        if False and 'symlink' in os.__dict__:
+            def count_dirs(dir):
                 (dir,basename) = os.path.split(dir)
-                cnt += 1
-            return cnt
+                cnt = 1
+                while dir != '':
+                    (dir,basename) = os.path.split(dir)
+                    cnt += 1
+                return cnt
 
-        dirs_up = count_dirs(target_dir)
-        target = os.path.join(os.path.join(*[os.path.pardir]*dirs_up), filename)
-
-        os.symlink(target, os.path.join(target_dir, os.path.basename(filename)))
+            dirs_up = count_dirs(target_dir)
+            target = os.path.join(os.path.join(*[os.path.pardir]*dirs_up), filename)
+            os.symlink(target, os.path.join(target_dir, os.path.basename(filename)))
+        elif 'link' in os.__dict__:
+            os.link(filename, os.path.join(target_dir, os.path.basename(filename)))
+        else:
+            shutil.copy(filename, target_dir)
 
     for header_file in build_config.headers:
         portable_symlink(header_file, build_config.full_include_dir)
