@@ -96,28 +96,25 @@ def process_command_line(args):
                             help='set the target operating system [%default]')
     target_group.add_option('--cpu',
                             help='set the target processor type/model')
-    target_group.add_option('--with-tr1', metavar='WHICH', default=None,
-                            help='enable using TR1 (options: none, system, boost)')
+
     parser.add_option_group(target_group)
 
 
     build_group = OptionGroup(parser, "Build options")
-
-    build_group.add_option('--enable-modules', dest='enabled_modules',
-                           metavar='MODS', action='append', default=[],
-                           help='enable specific modules')
-    build_group.add_option('--disable-modules', dest='disabled_modules',
-                           metavar='MODS', action='append', default=[],
-                           help='disable specific modules')
 
     build_group.add_option('--enable-shared', dest='build_shared_lib',
                            action='store_true', default=True)
     build_group.add_option('--disable-shared', dest='build_shared_lib',
                            action='store_false')
 
+    build_group.add_option('--with-tr1-implementation', metavar='WHICH',
+                           dest='with_tr1', default=None,
+                           help='enable TR1 (options: none, system, boost)')
+
+
     build_group.add_option('--with-build-dir',
                            metavar='DIR', default='',
-                           help='setup the build in DIR [%default]')
+                           help='setup the build in DIR')
 
     build_group.add_option('--makefile-style', metavar='STYLE', default=None,
                            help='choose a makefile style (unix, nmake)')
@@ -127,17 +124,35 @@ def process_command_line(args):
                            help='include the contents of FILE into build.h')
     parser.add_option_group(build_group)
 
+    mods_group = OptionGroup(parser, "Module selection")
+
+    mods_group.add_option('--enable-modules', dest='enabled_modules',
+                          metavar='MODS', action='append', default=[],
+                          help='enable specific modules')
+    mods_group.add_option('--disable-modules', dest='disabled_modules',
+                          metavar='MODS', action='append', default=[],
+                          help='disable specific modules')
+
+    for mod in ['openssl', 'gnump', 'bzip2', 'zlib']:
+        mods_group.add_option('--with-%s' % (mod), dest='enabled_modules',
+                              action='append_const', const=mod)
+        mods_group.add_option('--without-%s' % (mod), dest='disabled_modules',
+                              action='append_const', const=mod)
+
+    parser.add_option_group(mods_group)
+
+
 
     install_group = OptionGroup(parser, "Installation options")
 
     install_group.add_option('--prefix', metavar='DIR',
-                             help='set the base installation directory')
+                             help='set the base install directory')
     install_group.add_option('--docdir', metavar='DIR',
-                             help='set the documentation installation directory')
+                             help='set the documentation install directory')
     install_group.add_option('--libdir', metavar='DIR',
-                             help='set the library installation directory')
+                             help='set the library install directory')
     install_group.add_option('--includedir', metavar='DIR',
-                             help='set the include file installation directory')
+                             help='set the include file install directory')
     parser.add_option_group(install_group)
 
 
@@ -394,7 +409,7 @@ class OsInfo(object):
         self.ar_needs_ranlib = bool(self.ar_needs_ranlib)
 
     def ranlib_command(self):
-        if self.ar_needs_ranlib == True:
+        if self.ar_needs_ranlib:
             return 'ranlib'
         else:
             return 'true' # no-op
@@ -635,7 +650,7 @@ def choose_modules_to_use(options, modules):
 
         # If it was specifically requested, skip most tests (trust the user)
         if module.basename not in options.enabled_modules:
-            if module.load_on == 'dep' and for_dep == False:
+            if module.load_on == 'dep' and not for_dep:
                 return (False, [])
             if module.load_on == 'request':
                 return (False, [])
@@ -651,8 +666,7 @@ def choose_modules_to_use(options, modules):
                 return (False, [])
 
         # TR1 checks
-
-        if module.uses_tr1 is True:
+        if module.uses_tr1:
             if options.with_tr1 != 'boost' and options.with_tr1 != 'system':
                 return (False, [])
 
@@ -669,14 +683,14 @@ def choose_modules_to_use(options, modules):
             else:
                 deps_met = False
 
-        if deps_met is True:
+        if deps_met:
             return (True,deps)
         else:
             return (False, [])
 
     use_module = {}
     for (name,module) in modules.iteritems():
-        if use_module.get(name, False) is True:
+        if use_module.get(name, False):
              # already enabled (a dep, most likely)
             continue
 
