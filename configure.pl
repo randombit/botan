@@ -1673,7 +1673,7 @@ sub get_module_info {
        read_list($_, $reader, 'libs',
                  sub {
                      my $line = $_[0];
-                     $line =~ m/^([\w!,]*) -> ([\w,-]*)$/;
+                     $line =~ m/^([\w!,]*) -> ([\w.,-]*)$/;
                      $info{'libs'}{$1} = $2;
                  });
 
@@ -2097,8 +2097,7 @@ sub generate_makefile {
 
        add_to($config, {
            'shared' => 'no',
-           'link_to' => libs('', '.'.$$config{'static_suffix'},
-                             @{$$config{'mod_libs'}}),
+           'link_to' => libs('', '', '', @{$$config{'mod_libs'}}),
        });
    }
 

@@ -407,8 +407,8 @@ class CompilerInfo(object):
                 return ['USE_STD_TR1']
         elif self.compiler_has_tr1:
             return ['USE_STD_TR1']
-        else:
-            return []
+
+        return []
 
 class OsInfo(object):
     def __init__(self, infofile):
