@@ -2,7 +2,8 @@
 
 """
 Configuration program for botan
-Requires at least python 2.4 (for string.Template)
+
+Python 2.4 or higher required
 
 (C) 2009 Jack Lloyd
 Distributed under the terms of the Botan license
@@ -11,16 +12,33 @@ Distributed under the terms of the Botan license
 import os
 import os.path
 import platform
-import pwd
 import re
-import shutil
 import shlex
+import shutil
 import sys
-import time
 
-from socket import gethostname
-from string import Template
 from optparse import OptionParser, SUPPRESS_HELP
+from string import Template
+
+from getpass import getuser
+from time import ctime
+
+class BuildConfigurationInformation():
+    def version_major(): return 1
+    def version_minor(): return 8
+    def version_patch(): return 3
+
+    def version_string():
+        return "%d.%d.%d" % (version_major(), version_minor(), version_patch())
+
+    def username():
+        return getuser()
+
+    def hostname():
+        return platform.node()
+
+    def timestamp():
+        return ctime()
 
 def process_command_line(args):
     parser = OptionParser()
@@ -285,14 +303,17 @@ def process_template(template, variables):
 def create_template_vars(options, modules, cc, arch, osinfo):
     vars = {}
 
-    vars['version_major'] = 1
-    vars['version_minor'] = 8
-    vars['version_patch'] = 3
-    vars['version'] = '1.8.3'
+    build_config = BuildConfigurationInformation()
 
-    vars['timestamp'] = time.ctime()
-    vars['user'] = pwd.getpwuid(os.getuid())[0]
-    vars['hostname'] = gethostname()
+    vars['version_major'] = build_config.version_major()
+    vars['version_minor'] = build_config.version_minor()
+    vars['version_patch'] = build_config.version_patch()
+
+    vars['version'] = build_config.version_string()
+
+    vars['timestamp'] = build_config.timestamp()
+    vars['user'] = build_config.username()
+    vars['hostname'] = build_config.hostname()
     vars['command_line'] = ' '.join(sys.argv)
 
     vars['module_defines'] = "\n".join(sorted(["#define BOTAN_HAS_" + m.define
@@ -405,12 +426,14 @@ def main(argv = None):
     modules = [ModuleInfo(info)
                for info in find_files_named('info.txt', 'src')]
 
+    build_data = os.path.join('src', 'build-data')
+
     archinfo = [ArchInfo(info)
-                for info in list_files_in('src/build-data/arch')]
+                for info in list_files_in(os.path.join(build_data, 'arch'))]
     ccinfo   = [CompilerInfo(info)
-                for info in list_files_in('src/build-data/cc')]
+                for info in list_files_in(os.path.join(build_data, 'cc'))]
     osinfo   = [OperatingSystemInfo(info)
-                for info in list_files_in('src/build-data/os')]
+                for info in list_files_in(os.path.join(build_data, 'os'))]
 
     # FIXME: need full canonicalization to (arch,submodel) when --cpu is used
     if options.cpu is None:
@@ -439,8 +462,7 @@ def main(argv = None):
     #sources = list(set(all_files) - set(headers))
     #setup_build_tree(options, headers, sources)
 
-    print process_template('src/build-data/buildh.in', template_vars)
-
+    print process_template(os.path.join(build_data, 'buildh.in'), template_vars)
 
 if __name__ == '__main__':
     try:
