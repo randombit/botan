@@ -1250,7 +1250,7 @@ sub load_modules {
 
     my $unaligned_ok = 0;
 
-    my $gen_defines = sub {
+    my $target_os_defines = sub {
         my @macro_list;
 
         my $os = $$config{'os'};
@@ -1263,8 +1263,14 @@ sub load_modules {
                 push @macro_list, '#define BOTAN_TARGET_OS_HAS_' . uc $feature;
             }
 
-            push @macro_list, "";
         }
+        return join("\n", @macro_list);
+    };
+
+    $$config{'target_os_defines'} = &$target_os_defines();
+
+    my $target_cpu_defines = sub {
+        my @macro_list;
 
         my $arch = $$config{'arch'};
         if($arch ne 'generic') {
@@ -1325,6 +1331,13 @@ sub load_modules {
         # variable is always set (one or zero)
         push @macro_list,
            "#define BOTAN_TARGET_UNALIGNED_LOADSTOR_OK $unaligned_ok";
+        return join("\n", @macro_list);
+    };
+
+    $$config{'target_cpu_defines'} = &$target_cpu_defines();
+
+    my $target_compiler_defines = sub {
+        my @macro_list;
 
         if(defined($$config{'tr1'})) {
             my $tr1 = $$config{'tr1'};
@@ -1339,6 +1352,14 @@ sub load_modules {
                 croak("Unknown --with-tr1= option value '$tr1' (try --help)");
             }
         }
+
+        return join("\n", @macro_list);
+    };
+
+    $$config{'target_compiler_defines'} = &$target_compiler_defines();
+
+    my $gen_defines = sub {
+        my @macro_list;
 
         my %defines;
 
@@ -1363,7 +1384,7 @@ sub load_modules {
         return join("\n", @macro_list);
     };
 
-    $$config{'defines'} = &$gen_defines();
+    $$config{'module_defines'} = &$gen_defines();
 }
 
 ##################################################
@@ -1652,7 +1673,7 @@ sub get_module_info {
        read_list($_, $reader, 'libs',
                  sub {
                      my $line = $_[0];
-                     $line =~ m/^([\w!,]*) -> ([\w,-]*)$/;
+                     $line =~ m/^([\w!,]*) -> ([\w.,-]*)$/;
                      $info{'libs'}{$1} = $2;
                  });
 
@@ -2076,8 +2097,7 @@ sub generate_makefile {
 
        add_to($config, {
            'shared' => 'no',
-           'link_to' => libs('', '.'.$$config{'static_suffix'},
-                             @{$$config{'mod_libs'}}),
+           'link_to' => libs('', '', '', @{$$config{'mod_libs'}}),
        });
    }
 

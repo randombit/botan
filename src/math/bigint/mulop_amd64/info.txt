@@ -2,7 +2,7 @@ realname "BigInt Multiply-Add (x86-64)"
 
 mp_bits 64
 
-load_on dep
+load_on request
 
 <add>
 mp_mulop_amd64.S
