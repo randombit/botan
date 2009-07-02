@@ -32,14 +32,33 @@ class BuildConfigurationInformation():
         self.include_dir = os.path.join(options.build_dir, 'include')
         self.full_include_dir = os.path.join(self.include_dir, 'botan')
 
+    def doc_files(self):
+        docs = ['readme.txt']
+
+        for docfile in ['api.pdf', 'tutorial.pdf', 'fips140.pdf',
+                        'api.tex', 'tutorial.tex', 'fips140.tex',
+                        'credits.txt', 'license.txt', 'log.txt',
+                        'thanks.txt', 'todo.txt', 'pgpkeys.asc']:
+            filename = os.path.join('doc', docfile)
+            if os.access(filename, os.R_OK):
+                docs.append(filename)
+        return docs
+
     def version_major(self): return 1
     def version_minor(self): return 8
     def version_patch(self): return 3
+
+    def version_so_patch(self): return 2
 
     def version_string(self):
         return '%d.%d.%d' % (self.version_major(),
                              self.version_minor(),
                              self.version_patch())
+
+    def soversion_string(self):
+        return '%d.%d.%d' % (self.version_major(),
+                             self.version_minor(),
+                             self.version_so_patch())
 
     def username(self):
         return getuser()
@@ -251,7 +270,7 @@ class CompilerInfo(object):
                         'warning_flags': '',
                         'dll_import_flags': '',
                         'dll_export_flags': '',
-                        'ar_command': '',
+                        'ar_command': None,
                         'makefile_style': '',
                         'compiler_has_tr1': False,
                         })
@@ -326,16 +345,30 @@ def guess_processor(archinfo):
     # No matches, so just use the base proc type
     return (base_proc,base_proc)
 
+"""
+Read a whole file into memory as a string
+"""
+def slurp_file(filename):
+    if filename is None:
+        return ''
+    return ''.join(open(filename).readlines())
+
+"""
+Perform template substitution
+"""
 def process_template(template_file, variables):
     class PercentSignTemplate(Template):
         delimiter = '%'
 
     try:
-        template = PercentSignTemplate(''.join(open(template_file).readlines()))
+        template = PercentSignTemplate(slurp_file(template_file))
         return template.substitute(variables)
     except KeyError, e:
         raise Exception('Unbound variable %s in template %s' % (e, template_file))
 
+"""
+Create the template variables needed to process the makefile, build.h, etc
+"""
 def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     def make_cpp_macros(macros):
         return '\n'.join(['#define BOTAN_' + macro for macro in macros])
@@ -354,13 +387,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                         exceptions = match.group(1).split(',')
                         if osinfo.basename not in exceptions:
                             yield link_to
-
-
-    def slurp_file(filename):
-        if filename is None:
-            return ''
-        return ''.join(open(filename).readlines())
-
 
     def objectfile_list(sources, obj_dir):
         for src in sources:
@@ -388,6 +414,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'version_minor': build_config.version_minor(),
         'version_patch': build_config.version_patch(),
         'version':       build_config.version_string(),
+        'so_version': build_config.soversion_string(),
 
         'timestamp': build_config.timestamp(),
         'user':      build_config.username(),
@@ -441,7 +468,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'check_build_cmds': '\n'.join(build_commands(build_config.check_sources,
                                                      build_config.checkobj_dir, 'CHECK')),
 
-        'ar_command': cc.ar_command,
+        'ar_command': cc.ar_command or osinfo.ar_command,
         'ranlib_command': osinfo.ranlib_command(),
         'install_cmd_exec': osinfo.install_cmd_exec,
         'install_cmd_data': osinfo.install_cmd_data,
@@ -452,21 +479,16 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'botan_config': 'botan-config',
         'botan_pkgconfig': 'botan.pc',
 
+        'doc_files': makefile_list(sorted(build_config.doc_files())),
+
         'mod_list': '\n'.join(['%s (%s)' % (m.basename, m.realname)
                                for m in sorted(modules)]),
         }
 
-
     vars['mach_opt'] = '*MACH_OPT*'
-
     vars['mp_bits'] = 666
-
     vars['check_prefix'] = 'check prefix'
     vars['lib_prefix'] = 'lib prefix'
-
-    vars['so_version'] = '*SO VERSION*'
-
-    vars['doc_files'] = 'list of doc files'
 
     return vars
 
