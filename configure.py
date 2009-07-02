@@ -390,10 +390,24 @@ class CompilerInfo(object):
 
         del self.mach_opt
 
+    def mach_abi_link_flags(self, osname, arch, submodel):
+
+        abi_link = set()
+        for what in ['all', osname, arch, submodel]:
+            if self.mach_abi_linking.get(what) != None:
+                abi_link.add(self.mach_abi_linking.get(what))
+
+        if len(abi_link) == 0:
+            return ''
+        return ' ' + ' '.join(abi_link)
+
     def mach_opts(self, arch, submodel):
 
         def submodel_fixup(tup):
             return tup[0].replace('SUBMODEL', submodel.replace(tup[1], ''))
+
+        if submodel == arch:
+            return ''
 
         if submodel in self.mach_opt_flags:
             return submodel_fixup(self.mach_opt_flags[submodel])
@@ -600,7 +614,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'mp_bits': choose_mp_bits(),
 
-        'cc': cc.binary_name,
+        'cc': cc.binary_name + cc.mach_abi_link_flags(options.os, options.arch, options.cpu),
         'lib_opt': cc.lib_opt_flags,
         'mach_opt': cc.mach_opts(options.arch, options.cpu),
         'check_opt': cc.check_opt_flags,
