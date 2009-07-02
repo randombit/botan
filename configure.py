@@ -17,7 +17,7 @@ import shlex
 import shutil
 import sys
 
-from optparse import OptionParser, SUPPRESS_HELP
+from optparse import OptionParser, OptionGroup, IndentedHelpFormatter, SUPPRESS_HELP
 from string import Template
 
 from getpass import getuser
@@ -80,30 +80,57 @@ class BuildConfigurationInformation(object):
     def timestamp(self):
         return ctime()
 
+"""
+Handle command line options
+"""
 def process_command_line(args):
-    parser = OptionParser()
+    parser = OptionParser(version = '1.8.3',
+                          formatter = IndentedHelpFormatter(max_help_position = 50))
 
-    parser.add_option('--cc', dest='compiler',
-                      help='set the desired build compiler')
-    parser.add_option('--os', dest='os', default=platform.system().lower(),
-                      help='set the target operating system [%default]')
-    parser.add_option('--cpu', dest='cpu',
-                      help='set the target processor type/model')
+    target_group = OptionGroup(parser, "Target options")
 
-    parser.add_option('--with-build-dir', dest='build_dir',
-                      metavar='DIR', default='build',
-                      help='setup the build in DIR [default %default]')
+    target_group.add_option('--cc', dest='compiler',
+                            help='set the desired build compiler')
+    target_group.add_option('--os',  default=platform.system().lower(),
+                            help='set the target operating system [%default]')
+    target_group.add_option('--cpu',
+                            help='set the target processor type/model')
+    target_group.add_option('--with-tr1', metavar='WHICH', default='none',
+                            help='enable using TR1 (options: none, system, boost)')
+    parser.add_option_group(target_group)
 
-    parser.add_option('--prefix', dest='prefix',
-                      help='set the base installation directory')
-    parser.add_option('--docdir', dest='docdir',
-                      help='set the documentation installation directory')
-    parser.add_option('--libdir', dest='libdir',
-                      help='set the library installation directory')
 
-    parser.add_option('--with-local-config',
-                      dest='local_config', metavar='FILE',
-                      help='include the contents of FILE into build.h')
+    build_group = OptionGroup(parser, "Build options")
+
+    build_group.add_option('--enable-modules', dest='enabled_modules',
+                           metavar='MODS', action='append', default=[],
+                           help='enable specific modules')
+    build_group.add_option('--disable-modules', dest='disabled_modules',
+                           metavar='MODS', action='append', default=[],
+                           help='disable specific modules')
+
+    build_group.add_option('--with-build-dir', dest='build_dir',
+                           metavar='DIR', default='build',
+                           help='setup the build in DIR [%default]')
+
+    build_group.add_option('--with-local-config',
+                           dest='local_config', metavar='FILE',
+                           help='include the contents of FILE into build.h')
+    parser.add_option_group(build_group)
+
+
+    install_group = OptionGroup(parser, "Installation options")
+
+    install_group.add_option('--prefix', metavar='DIR',
+                             help='set the base installation directory')
+    install_group.add_option('--docdir', metavar='DIR',
+                             help='set the documentation installation directory')
+    install_group.add_option('--libdir', metavar='DIR',
+                             help='set the library installation directory')
+    install_group.add_option('--includedir', metavar='DIR',
+                             help='set the include file installation directory')
+    parser.add_option_group(install_group)
+
 
     """
     These exist only for autoconf compatability (requested by zw for monotone)
@@ -115,7 +142,6 @@ def process_command_line(args):
         'dvidir',
         'exec-prefix',
         'htmldir',
-        'includedir',
         'infodir',
         'libexecdir',
         'localedir',
@@ -130,9 +156,14 @@ def process_command_line(args):
         ]
 
     for opt in compat_with_autoconf_options:
-        parser.add_option('--' + opt, dest=opt, help=SUPPRESS_HELP)
+        parser.add_option('--' + opt, help=SUPPRESS_HELP)
 
     (options, args) = parser.parse_args(args)
+
+    options.enabled_modules = \
+       sorted(set(sum([s.split(',') for s in options.enabled_modules], [])))
+    options.disabled_modules = \
+       sorted(set(sum([s.split(',') for s in options.disabled_modules], [])))
 
     return (options, args)
 
@@ -292,7 +323,7 @@ class CompilerInfo(object):
         while self.mach_opt != []:
             proc = self.mach_opt.pop(0)
             if self.mach_opt.pop(0) != '->':
-                raise Exception("Parsing err in %s mach_opt" % (self.basename))
+                raise Exception('Parsing err in %s mach_opt' % (self.basename))
 
             flags = self.mach_opt.pop(0)
             regex = ''
@@ -371,7 +402,7 @@ def canon_processor(archinfo, proc):
                 if re.match(submodel, proc) != None:
                     return (ainfo.basename,submodel)
 
-    raise Exception("Unknown or unidentifiable processor '%s'" % (proc))
+    raise Exception('Unknown or unidentifiable processor "%s"' % (proc))
 
 def guess_processor(archinfo):
     base_proc = platform.machine()
@@ -456,7 +487,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     """
     def build_commands(sources, obj_dir, flags):
         for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
-            yield "%s: %s\n\t$(CXX) %s%s $(%s_FLAGS) %s$? %s$@\n" % (
+            yield '%s: %s\n\t$(CXX) %s%s $(%s_FLAGS) %s$? %s$@\n' % (
                 obj_file, src,
                 cc.add_include_dir_option,
                 build_config.include_dir,
@@ -554,26 +585,31 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     return vars
 
 def choose_modules_to_use(options, modules):
+    print options.disabled_modules
+    print options.enabled_modules
+
     def enable_module(module, for_dep = False):
         # First check options for --enable-modules/--disable-modules
 
-        requested = False
+        if module.basename in options.disabled_modules:
+            return (False, [])
 
-        if not requested:
+        # If it was specifically requested, skip most tests (trust the user)
+        if module.basename not in options.enabled_modules:
             if module.load_on == 'dep' and for_dep == False:
                 return (False, [])
             if module.load_on == 'request':
                 return (False, [])
 
-        if module.cc != [] and options.compiler not in module.cc:
-            return (False, [])
+            if module.cc != [] and options.compiler not in module.cc:
+                return (False, [])
 
-        if module.os != [] and options.os not in module.os:
-            return (False, [])
+            if module.os != [] and options.os not in module.os:
+                return (False, [])
 
-        if module.arch != [] and options.arch not in module.arch \
-               and options.cpu not in module.arch:
-            return (False, [])
+            if module.arch != [] and options.arch not in module.arch \
+                   and options.cpu not in module.arch:
+                return (False, [])
 
         # TR1 checks
 
@@ -582,11 +618,12 @@ def choose_modules_to_use(options, modules):
         deps_met = True
         for req in module.requires:
             for mod in req.split('|'):
-                if enable_module(modules[mod], True):
+                (can_enable, deps_of_dep) = enable_module(modules[mod], True)
+                if can_enable:
                     deps.append(mod)
+                    deps += deps_of_dep
                     break
             else:
-                print "Couldnt do deps"
                 deps_met = False
 
         if deps_met is True:
@@ -594,15 +631,12 @@ def choose_modules_to_use(options, modules):
         else:
             return (False, [])
 
-
     use_module = {}
     for (name,module) in modules.iteritems():
         if use_module.get(name, False) is True: # already enabled (dep, perhaps)
             continue
 
         (should_use,deps) = enable_module(module)
-
-        print name, should_use, deps
 
         use_module[name] = should_use
 
@@ -614,10 +648,7 @@ def choose_modules_to_use(options, modules):
     for (name,useme) in use_module.iteritems():
         if useme:
             chosen.append(modules[name])
-        else:
-            print "Skipping", name
 
-    print "Chosen: ", ' '.join(sorted(map(lambda m: m.basename, chosen)))
     return chosen
 
 def setup_build_tree(build_config, options, headers, sources):
@@ -677,11 +708,11 @@ def main(argv = None):
         options.compiler = 'gcc'
 
     if options.compiler not in ccinfo:
-        raise Exception("Unknown compiler '%s'; available options: %s" % (
+        raise Exception('Unknown compiler "%s"; available options: %s' % (
             options.compiler, ' '.join(sorted(ccinfo.keys()))))
 
     if options.os not in osinfo:
-        raise Exception("Unknown OS '%s'; available options: %s" % (
+        raise Exception('Unknown OS "%s"; available options: %s' % (
             options.os, ' '.join(sorted(osinfo.keys()))))
 
     if options.cpu is None:
