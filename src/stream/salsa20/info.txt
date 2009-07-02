@@ -4,6 +4,10 @@ define SALSA20
 
 load_on auto
 
+<requires>
+stream
+</requires>
+
 <add>
 salsa20.cpp
 salsa20.h

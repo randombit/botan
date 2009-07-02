@@ -4,6 +4,10 @@ define WID_WAKE
 
 load_on auto
 
+<requires>
+stream
+</requires>
+
 <add>
 wid_wake.cpp
 wid_wake.h
