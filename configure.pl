@@ -38,6 +38,10 @@ my $TRACING = 0;
 ##################################################
 my $config = {};
 
+print STDERR "*                           WARNING\n" .
+             "* $0 is deprecated; consider trying configure.py instead\n" .
+             "* If it works, great. If not, file a bug and continue using $0\n*\n";
+
 main();
 exit;
 
