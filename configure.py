@@ -104,9 +104,17 @@ def process_command_line(args):
 
     build_group.add_option('--enable-shared', dest='build_shared_lib',
                            action='store_true', default=True,
-                           help="enable building a shared library")
+                            help=SUPPRESS_HELP)
     build_group.add_option('--disable-shared', dest='build_shared_lib',
-                           action='store_false', help=SUPPRESS_HELP)
+                           action='store_false',
+                           help="disable building a shared library")
+
+    build_group.add_option('--enable-asm', dest='asm_ok',
+                           action='store_true', default=True,
+                           help=SUPPRESS_HELP)
+    build_group.add_option('--disable-asm', dest='asm_ok',
+                           action='store_false',
+                           help="disallow use of assembler")
 
     build_group.add_option('--enable-debug', dest='debug_build',
                            action='store_true', default=False,
@@ -674,11 +682,6 @@ def choose_modules_to_use(options, modules):
 
         # If it was specifically requested, skip most tests (trust the user)
         if module.basename not in options.enabled_modules:
-            if module.load_on == 'dep' and not for_dep:
-                return (False, [])
-            if module.load_on == 'request':
-                return (False, [])
-
             if module.cc != [] and options.compiler not in module.cc:
                 return (False, [])
 
@@ -687,6 +690,13 @@ def choose_modules_to_use(options, modules):
 
             if module.arch != [] and options.arch not in module.arch \
                    and options.cpu not in module.arch:
+                return (False, [])
+
+            if module.load_on == 'dep' and not for_dep:
+                return (False, [])
+            elif module.load_on == 'request':
+                return (False, [])
+            elif module.load_on == 'asm_ok' and not options.asm_ok:
                 return (False, [])
 
         # TR1 checks
