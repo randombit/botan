@@ -210,9 +210,6 @@ class ModuleInfo(object):
 
         self.add = map(lambda f: os.path.join(self.lives_in, f), self.add)
 
-    def libs_needed(self):
-        print self.libs
-
     def __cmp__(self, other):
         if self.basename < other.basename:
             return -1
@@ -278,8 +275,34 @@ class CompilerInfo(object):
         self.so_link_flags = force_to_dict(self.so_link_flags)
         self.mach_abi_linking = force_to_dict(self.mach_abi_linking)
 
-        # FIXME: this has weirdness to handle s// ing out bits
-        self.mach_opt = force_to_dict(self.mach_opt)
+        self.mach_opt_flags = {}
+
+        while self.mach_opt != []:
+            proc = self.mach_opt.pop(0)
+            if self.mach_opt.pop(0) != '->':
+                raise Exception("Parsing problem in %s mach_opt fields" % (self.basename))
+
+            flags = self.mach_opt.pop(0)
+            regex = ''
+
+            if len(self.mach_opt) > 0 and (len(self.mach_opt) == 1 or self.mach_opt[1] != '->'):
+                regex = self.mach_opt.pop(0)
+
+            self.mach_opt_flags[proc] = (flags,regex)
+
+        del self.mach_opt
+
+    def mach_opts(self, arch, submodel):
+
+        def submodel_fixup(tup):
+            return tup[0].replace('SUBMODEL', submodel.replace(tup[1], ''))
+
+        if submodel in self.mach_opt_flags:
+            return submodel_fixup(self.mach_opt_flags[submodel])
+        if arch in self.mach_opt_flags:
+            return submodel_fixup(self.mach_opt_flags[arch])
+
+        return ''
 
     def so_link_command_for(self, osname):
         if osname in self.so_link_flags:
@@ -376,17 +399,19 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     """
     Figure out what external libraries are needed based on selected modules
     """
-    def link_against():
+    def link_to():
+        libs = set()
         for module in modules:
             for (osname,link_to) in module.libs.iteritems():
                 if osname == 'all' or osname == osinfo.basename:
-                    yield link_to
+                    libs.add(link_to)
                 else:
                     match = re.match('^all!(.*)', osname)
                     if match is not None:
                         exceptions = match.group(1).split(',')
                         if osinfo.basename not in exceptions:
-                            yield link_to
+                            libs.add(link_to)
+        return sorted(libs)
 
     def objectfile_list(sources, obj_dir):
         for src in sources:
@@ -436,6 +461,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'cc': cc.binary_name,
         'lib_opt': cc.lib_opt_flags,
+        'mach_opt': cc.mach_opts(options.arch, options.cpu),
         'check_opt': cc.check_opt_flags,
         'lang_flags': cc.lang_flags,
         'warn_flags': cc.warning_flags,
@@ -444,8 +470,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'so_link': cc.so_link_command_for(osinfo.basename),
 
-        'link_to': ' '.join([cc.add_lib_option + lib
-                             for lib in sorted(link_against())]),
+        'link_to': ' '.join([cc.add_lib_option + lib for lib in link_to()]),
 
         'module_defines': make_cpp_macros(['HAS_' + m.define
                                            for m in modules if m.define]),
@@ -485,7 +510,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                                for m in sorted(modules)]),
         }
 
-    vars['mach_opt'] = '*MACH_OPT*'
     vars['mp_bits'] = 666
     vars['check_prefix'] = 'check prefix'
     vars['lib_prefix'] = 'lib prefix'
