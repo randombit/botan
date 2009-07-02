@@ -110,9 +110,17 @@ def process_command_line(args):
                            metavar='MODS', action='append', default=[],
                            help='disable specific modules')
 
+    build_group.add_option('--enable-shared', dest='build_shared_lib',
+                           action='store_true', default=True)
+    build_group.add_option('--disable-shared', dest='build_shared_lib',
+                           action='store_false')
+
     build_group.add_option('--with-build-dir',
                            metavar='DIR', default='',
                            help='setup the build in DIR [%default]')
+
+    build_group.add_option('--makefile-style', metavar='STYLE', default=None,
+                           help='choose a makefile style (unix, nmake)')
 
     build_group.add_option('--with-local-config',
                            dest='local_config', metavar='FILE',
@@ -525,6 +533,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'hostname':  build_config.hostname(),
         'command_line': ' '.join(sys.argv),
         'local_config': slurp_file(options.local_config),
+        'makefile_style': options.makefile_style or cc.makefile_style,
 
         'prefix': options.prefix or osinfo.install_root,
         'libdir': options.libdir or osinfo.lib_dir,
@@ -724,10 +733,6 @@ def setup_build(build_config, options, template_vars):
         os.makedirs(dirs)
 
     templates_to_proc = {
-        os.path.join(options.makefile_dir, 'nmake.in'): 'Makefile',
-        os.path.join(options.makefile_dir, 'unix.in'): 'Makefile',
-        os.path.join(options.makefile_dir, 'unix_shr.in'): 'Makefile',
-
         os.path.join(options.build_data, 'buildh.in'): \
            os.path.join(build_config.build_dir, 'build.h'),
 
@@ -737,6 +742,22 @@ def setup_build(build_config, options, template_vars):
         os.path.join(options.build_data, 'botan.pc.in'): \
            os.path.join(build_config.build_dir, 'botan-1.8.pc')
         }
+
+    def choose_makefile_template(style):
+        if style == 'nmake':
+            return 'nmake.in'
+        elif style == 'unix':
+            if options.build_shared_lib:
+                return 'unix_shr.in'
+            else:
+                return 'unix.in'
+        else:
+            raise Exception('Unknown makefile style "%s"' % (style))
+
+    makefile_template = os.path.join(options.makefile_dir,
+                                     choose_makefile_template(template_vars['makefile_style']))
+
+    templates_to_proc[makefile_template] = 'Makefile'
 
     for (template, sink) in templates_to_proc.items():
         try:
@@ -760,7 +781,7 @@ def setup_build(build_config, options, template_vars):
             dirs_up = count_dirs(target_dir)
             target = os.path.join(os.path.join(*[os.path.pardir]*dirs_up), filename)
             os.symlink(target, os.path.join(target_dir, os.path.basename(filename)))
-        elif 'link' in os.__dict__:
+        elif False and 'link' in os.__dict__:
             os.link(filename, os.path.join(target_dir, os.path.basename(filename)))
         else:
             shutil.copy(filename, target_dir)
