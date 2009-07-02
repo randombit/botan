@@ -24,20 +24,22 @@ from getpass import getuser
 from time import ctime
 
 class BuildConfigurationInformation():
-    def version_major(): return 1
-    def version_minor(): return 8
-    def version_patch(): return 3
+    def version_major(self): return 1
+    def version_minor(self): return 8
+    def version_patch(self): return 3
 
-    def version_string():
-        return "%d.%d.%d" % (version_major(), version_minor(), version_patch())
+    def version_string(self):
+        return "%d.%d.%d" % (self.version_major(),
+                             self.version_minor(),
+                             self.version_patch())
 
-    def username():
+    def username(self):
         return getuser()
 
-    def hostname():
+    def hostname(self):
         return platform.node()
 
-    def timestamp():
+    def timestamp(self):
         return ctime()
 
 def process_command_line(args):
@@ -121,8 +123,13 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
     for (key,val) in name_val_pairs.iteritems():
         to_obj.__dict__[key] = val
 
-    token = lex.get_token()
-    while token != None:
+    def lexed_tokens(): # Convert to an interator
+        token = lex.get_token()
+        while token != None:
+            yield token
+            token = lex.get_token()
+
+    for token in lexed_tokens():
         match = re.match('<(.*)>', token)
 
         # Check for a grouping
@@ -142,8 +149,6 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
             to_obj.__dict__[token] = lex.get_token()
         else: # No match -> error
             raise LexerError("Bad token '%s'" % (token), lex.lineno)
-
-        token = lex.get_token()
 
 """
 Convert a lex'ed map (from build-data files) from a list to a dict
@@ -193,18 +198,17 @@ class ArchInfo(object):
         self.submodel_aliases = force_to_dict(self.submodel_aliases)
 
     def defines(self, target_submodel):
-        define = []
-        define.append("TARGET_ARCH_IS_%s" % (self.basename.upper()))
+        macros = ["TARGET_ARCH_IS_%s" % (self.basename.upper())]
 
         if self.basename != target_submodel:
-            define.append("TARGET_CPU_IS_%s" % (target_submodel.upper()))
+            macros.append("TARGET_CPU_IS_%s" % (target_submodel.upper()))
 
         if self.endian != None:
-            define.append("TARGET_CPU_IS_%s_ENDIAN" % (self.endian.upper()))
+            macros.append("TARGET_CPU_IS_%s_ENDIAN" % (self.endian.upper()))
 
-        define.append("TARGET_UNALIGNED_LOADSTORE_OK %d" % (self.unaligned == "ok"))
+        macros.append("TARGET_UNALIGNED_LOADSTORE_OK %d" % (self.unaligned == "ok"))
 
-        return "\n".join(["#define BOTAN_" + macro for macro in define])
+        return macros
 
 class CompilerInfo(object):
     def __init__(self, infofile):
@@ -239,8 +243,8 @@ class CompilerInfo(object):
 
     def defines(self):
         if self.compiler_has_tr1:
-            return "#define BOTAN_USE_STD_TR1"
-        return ""
+            return ["USE_STD_TR1"]
+        return []
 
 class OperatingSystemInfo(object):
     def __init__(self, infofile):
@@ -262,10 +266,8 @@ class OperatingSystemInfo(object):
                         })
 
     def defines(self):
-        define = ["TARGET_OS_IS_%s" % (self.basename.upper())]
-        define += ["TARGET_OS_HAS_" + feat.upper() for feat in self.target_features]
-
-        return "\n".join(["#define BOTAN_" + macro for macro in define])
+        return ["TARGET_OS_IS_%s" % (self.basename.upper())] + \
+               ["TARGET_OS_HAS_" + feat.upper() for feat in self.target_features]
 
 def guess_processor(archinfo):
     base_proc = platform.machine()
@@ -303,6 +305,9 @@ def process_template(template, variables):
 def create_template_vars(options, modules, cc, arch, osinfo):
     vars = {}
 
+    def create_macro_tokens(macros):
+        return "\n".join(["#define BOTAN_" + macro for macro in macros])
+
     build_config = BuildConfigurationInformation()
 
     vars['version_major'] = build_config.version_major()
@@ -316,11 +321,12 @@ def create_template_vars(options, modules, cc, arch, osinfo):
     vars['hostname'] = build_config.hostname()
     vars['command_line'] = ' '.join(sys.argv)
 
-    vars['module_defines'] = "\n".join(sorted(["#define BOTAN_HAS_" + m.define
-                                               for m in modules if m.define != None]))
-    vars['target_os_defines'] = osinfo.defines()
-    vars['target_cpu_defines'] = arch.defines(options.cpu)
-    vars['target_compiler_defines'] = cc.defines()
+    vars['module_defines'] = create_macro_tokens(["HAS_" + m.define
+                                                  for m in modules if m.define])
+
+    vars['target_os_defines'] = create_macro_tokens(osinfo.defines())
+    vars['target_cpu_defines'] = create_macro_tokens(arch.defines(options.cpu))
+    vars['target_compiler_defines'] = create_macro_tokens(cc.defines())
 
     vars['local_config'] = ""
     if options.local_config != None:
