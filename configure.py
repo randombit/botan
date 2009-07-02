@@ -3,7 +3,7 @@
 """
 Configuration program for botan
 
-Python 2.4 or higher required
+Python 2.5 or higher required
 
 (C) 2009 Jack Lloyd
 Distributed under the terms of the Botan license
@@ -160,10 +160,7 @@ def process_command_line(args):
     parser.add_option_group(mods_group)
     parser.add_option_group(install_group)
 
-
-    """
-    These exist only for autoconf compatability (requested by zw for monotone)
-    """
+    # These exist only for autoconf compatability (requested by zw for monotone)
     compat_with_autoconf_options = [
         'bindir',
         'datadir',
@@ -322,8 +319,6 @@ class ArchInfo(object):
                 macros.append('TARGET_CPU_IS_%s_ENDIAN' % (with_endian.upper()))
         elif self.endian != None:
             macros.append('TARGET_CPU_IS_%s_ENDIAN' % (self.endian.upper()))
-
-        print macros
 
         macros.append('TARGET_UNALIGNED_LOADSTORE_OK %d' % (self.unaligned_ok))
 
@@ -803,19 +798,18 @@ def setup_build(build_config, options, template_vars):
     build_config.headers.append(os.path.join(build_config.build_dir, 'build.h'))
 
     def portable_symlink(filename, target_dir):
-        if False and 'symlink' in os.__dict__:
-            def count_dirs(dir):
+        if 'symlink' in os.__dict__:
+            def count_dirs(dir, accum = 0):
+                if dir == '':
+                    return accum
                 (dir,basename) = os.path.split(dir)
-                cnt = 1
-                while dir != '':
-                    (dir,basename) = os.path.split(dir)
-                    cnt += 1
-                return cnt
+                return accum + 1 + count_dirs(dir)
 
             dirs_up = count_dirs(target_dir)
+            print dirs_up
             target = os.path.join(os.path.join(*[os.path.pardir]*dirs_up), filename)
             os.symlink(target, os.path.join(target_dir, os.path.basename(filename)))
-        elif False and 'link' in os.__dict__:
+        elif 'link' in os.__dict__:
             os.link(filename, os.path.join(target_dir, os.path.basename(filename)))
         else:
             shutil.copy(filename, target_dir)
@@ -875,7 +869,9 @@ def main(argv = None):
 if __name__ == '__main__':
     try:
         sys.exit(main())
+    except SystemExit:
+        pass
     except Exception, e:
         print >>sys.stderr, e
-        #import traceback
-        #traceback.print_exc(file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
