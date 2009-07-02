@@ -37,8 +37,16 @@
 #endif
 
 /* Target identification and feature test macros */
+%{target_os_defines}
 
-%{defines}
+%{target_cpu_defines}
+
+%{target_compiler_defines}
+
+/* Module definitions */
+%{module_defines}
+
+/* Local configuration options */
 %{local_config}
 
 /*
