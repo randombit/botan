@@ -275,7 +275,15 @@ class ModuleInfo(object):
         # Coerce to more useful types
         self.libs = force_to_dict(self.libs)
 
-        self.add = map(lambda f: os.path.join(self.lives_in, f), self.add)
+        def add_dir_name(filename):
+            if filename.count(':') == 0:
+                return os.path.join(self.lives_in, filename)
+
+            # For these, assume always in neighboring directory
+            return os.path.join(os.path.split(self.lives_in)[0],
+                                *filename.split(':'))
+
+        self.add = map(add_dir_name, self.add)
 
         self.mp_bits = int(self.mp_bits)
 
@@ -806,7 +814,6 @@ def setup_build(build_config, options, template_vars):
                 return accum + 1 + count_dirs(dir)
 
             dirs_up = count_dirs(target_dir)
-            print dirs_up
             target = os.path.join(os.path.join(*[os.path.pardir]*dirs_up), filename)
             os.symlink(target, os.path.join(target_dir, os.path.basename(filename)))
         elif 'link' in os.__dict__:
