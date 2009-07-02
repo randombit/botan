@@ -847,6 +847,9 @@ def setup_build(build_config, options, template_vars):
     for header_file in build_config.headers:
         portable_symlink(header_file, build_config.full_include_dir)
 
+def autoconfig(s):
+    print s
+
 def main(argv = None):
     if argv is None:
         argv = sys.argv
@@ -860,9 +863,12 @@ def main(argv = None):
 
     (modules, archinfo, ccinfo, osinfo) = load_info_files(options)
 
-    # FIXME: epic fail
     if options.compiler is None:
-        options.compiler = 'gcc'
+        if platform.system().lower() == 'windows':
+            options.compiler = 'msvc'
+        else:
+            options.compiler = 'gcc'
+        autoconfig('Guessing to use compiler %s' % (options.compiler))
 
     if options.compiler not in ccinfo:
         raise Exception('Unknown compiler "%s"; available options: %s' % (
@@ -874,6 +880,7 @@ def main(argv = None):
 
     if options.cpu is None:
         (options.arch, options.cpu) = guess_processor(archinfo)
+        autoconfig('Guessing target processor is a %s/%s' % (options.arch, options.cpu))
     else:
         (options.arch, options.cpu) = canon_processor(archinfo, options.cpu)
 
@@ -895,6 +902,8 @@ def main(argv = None):
 
     # Performs the I/O
     setup_build(build_config, options, template_vars)
+
+    autoconfig('Build setup complete')
 
 if __name__ == '__main__':
     try:
