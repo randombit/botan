@@ -159,7 +159,7 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
 
     lex = shlex.shlex(open(infofile), infofile, posix=True)
 
-    lex.wordchars += ':.<>/,-!'
+    lex.wordchars += '|:.<>/,-!' # handle various funky chars in info.txt
 
     for group in allowed_groups:
         to_obj.__dict__[group] = []
@@ -554,22 +554,70 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     return vars
 
 def choose_modules_to_use(options, modules):
-    chosen = []
+    def enable_module(module, for_dep = False):
+        # First check options for --enable-modules/--disable-modules
 
-    for (name,module) in modules.iteritems():
+        requested = False
 
-        # First eliminate all modules which simply do not work on target system
+        if not requested:
+            if module.load_on == 'dep' and for_dep == False:
+                return (False, [])
+            if module.load_on == 'request':
+                return (False, [])
+
         if module.cc != [] and options.compiler not in module.cc:
-            continue
+            return (False, [])
 
         if module.os != [] and options.os not in module.os:
-            continue
+            return (False, [])
 
         if module.arch != [] and options.arch not in module.arch \
                and options.cpu not in module.arch:
+            return (False, [])
+
+        # TR1 checks
+
+        # dependency checks
+        deps = []
+        deps_met = True
+        for req in module.requires:
+            for mod in req.split('|'):
+                if enable_module(modules[mod], True):
+                    deps.append(mod)
+                    break
+            else:
+                print "Couldnt do deps"
+                deps_met = False
+
+        if deps_met is True:
+            return (True,deps)
+        else:
+            return (False, [])
+
+
+    use_module = {}
+    for (name,module) in modules.iteritems():
+        if use_module.get(name, False) is True: # already enabled (dep, perhaps)
             continue
 
-        chosen.append(module)
+        (should_use,deps) = enable_module(module)
+
+        print name, should_use, deps
+
+        use_module[name] = should_use
+
+        if should_use:
+            for dep in deps:
+                use_module[dep] = True
+
+    chosen = []
+    for (name,useme) in use_module.iteritems():
+        if useme:
+            chosen.append(modules[name])
+        else:
+            print "Skipping", name
+
+    print "Chosen: ", ' '.join(sorted(map(lambda m: m.basename, chosen)))
     return chosen
 
 def setup_build_tree(build_config, options, headers, sources):
