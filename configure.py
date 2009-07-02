@@ -26,10 +26,12 @@ from time import ctime
 class BuildConfigurationInformation(object):
 
     def __init__(self, options, modules):
-        self.checkobj_dir = os.path.join(options.build_dir, 'checks')
-        self.libobj_dir = os.path.join(options.build_dir, 'lib')
+        self.build_dir = os.path.join(options.with_build_dir, 'build')
 
-        self.include_dir = os.path.join(options.build_dir, 'include')
+        self.checkobj_dir = os.path.join(self.build_dir, 'checks')
+        self.libobj_dir = os.path.join(self.build_dir, 'lib')
+
+        self.include_dir = os.path.join(self.build_dir, 'include')
         self.full_include_dir = os.path.join(self.include_dir, 'botan')
 
         all_files = sum([mod.add for mod in modules], [])
@@ -108,8 +110,8 @@ def process_command_line(args):
                            metavar='MODS', action='append', default=[],
                            help='disable specific modules')
 
-    build_group.add_option('--with-build-dir', dest='build_dir',
-                           metavar='DIR', default='build',
+    build_group.add_option('--with-build-dir',
+                           metavar='DIR', default='',
                            help='setup the build in DIR [%default]')
 
     build_group.add_option('--with-local-config',
@@ -481,6 +483,20 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
             yield os.path.join(obj_dir, basename)
 
+
+    def choose_mp_bits():
+        mp_bits = [mod.mp_bits for mod in modules if mod.mp_bits != 0]
+
+        if mp_bits == []:
+            return 32 # default
+
+        # Check that settings are consistent across modules
+        for mp_bit in mp_bits[1:]:
+            if mp_bit != mp_bits[0]:
+                raise Exception("Incompatible mp_bits settings found")
+
+        return mp_bits[0]
+
     """
     Form snippets of makefile for building each source file
     """
@@ -516,11 +532,13 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'docdir': options.docdir or osinfo.doc_dir,
 
         'doc_src_dir': 'doc',
-        'build_dir': options.build_dir,
+        'build_dir': build_config.build_dir,
 
         'os': options.os,
         'arch': options.arch,
         'submodel': options.cpu,
+
+        'mp_bits': choose_mp_bits(),
 
         'cc': cc.binary_name,
         'lib_opt': cc.lib_opt_flags,
@@ -581,16 +599,13 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         }
 
     # Change settings for out of tree builds
-    if options.build_dir != None:
+    if options.with_build_dir != None:
         for var in ['build_dir',
                     'botan_config',
                     'botan_pkgconfig',
                     'check_prefix',
                     'lib_prefix']:
-            vars[var] = os.path.join(options.build_dir, vars[var])
-
-    # FIXME
-    vars['mp_bits'] = 666
+            vars[var] = os.path.join(options.with_build_dir, vars[var])
 
     return vars
 
@@ -690,7 +705,7 @@ def load_info_files(options):
     ccinfo = dict([(os.path.basename(info), CompilerInfo(info))
                     for info in list_files_in_build_data('cc')])
 
-    del osinfo['defaults'] # FIXME
+    del osinfo['defaults'] # FIXME (remove the file)
 
     return (modules, archinfo, ccinfo, osinfo)
 
@@ -699,7 +714,7 @@ Perform the filesystem operations needed to setup the build
 """
 def setup_build(build_config, options, template_vars):
     try:
-        shutil.rmtree(options.build_dir)
+        shutil.rmtree(build_config.build_dir)
     except OSError, e:
         pass # directory not found (FIXME: check against errno?)
 
@@ -708,24 +723,19 @@ def setup_build(build_config, options, template_vars):
                  build_config.full_include_dir]:
         os.makedirs(dirs)
 
-    for header_file in build_config.headers:
-        # FIXME: symlink or link if possible
-        shutil.copy(header_file, build_config.full_include_dir)
-
-
     templates_to_proc = {
         os.path.join(options.makefile_dir, 'nmake.in'): 'Makefile',
         os.path.join(options.makefile_dir, 'unix.in'): 'Makefile',
         os.path.join(options.makefile_dir, 'unix_shr.in'): 'Makefile',
 
         os.path.join(options.build_data, 'buildh.in'): \
-           os.path.join(options.build_dir, 'build.h'),
+           os.path.join(build_config.build_dir, 'build.h'),
 
         os.path.join(options.build_data, 'botan-config.in'): \
-           os.path.join(options.build_dir, 'botan-config'),
+           os.path.join(build_config.build_dir, 'botan-config'),
 
         os.path.join(options.build_data, 'botan.pc.in'): \
-           os.path.join(options.build_dir, 'botan-1.8.pc')
+           os.path.join(build_config.build_dir, 'botan-1.8.pc')
         }
 
     for (template, sink) in templates_to_proc.items():
@@ -735,6 +745,25 @@ def setup_build(build_config, options, template_vars):
         finally:
             f.close()
 
+    build_config.headers.append(os.path.join(build_config.build_dir, 'build.h'))
+
+    def portable_symlink(filename, target_dir):
+        def count_dirs(dir):
+            (dir,basename) = os.path.split(dir)
+            cnt = 1
+            while dir != '':
+                (dir,basename) = os.path.split(dir)
+                cnt += 1
+            return cnt
+
+        dirs_up = count_dirs(target_dir)
+        target = os.path.join(os.path.join(*[os.path.pardir]*dirs_up), filename)
+
+        os.symlink(target, os.path.join(target_dir, os.path.basename(filename)))
+
+    for header_file in build_config.headers:
+        portable_symlink(header_file, build_config.full_include_dir)
+
 def main(argv = None):
     if argv is None:
         argv = sys.argv
@@ -743,7 +772,6 @@ def main(argv = None):
     if args != []:
         raise Exception('Unhandled option(s) ' + ' '.join(args))
 
-    # FIXME
     options.build_data = os.path.join('src', 'build-data')
     options.makefile_dir = os.path.join(options.build_data, 'makefile')
 
