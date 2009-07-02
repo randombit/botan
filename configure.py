@@ -23,7 +23,7 @@ from string import Template
 from getpass import getuser
 from time import ctime
 
-class BuildConfigurationInformation():
+class BuildConfigurationInformation(object):
 
     def __init__(self, options, modules):
         self.checkobj_dir = os.path.join(options.build_dir, 'checks')
@@ -33,11 +33,15 @@ class BuildConfigurationInformation():
         self.full_include_dir = os.path.join(self.include_dir, 'botan')
 
         all_files = sum([mod.add for mod in modules], [])
-        self.headers = sorted([file for file in all_files if file.endswith('.h')])
+
+        self.headers = sorted(
+            [file for file in all_files if file.endswith('.h')])
+
         self.sources = sorted(set(all_files) - set(self.headers))
 
         self.check_sources = sorted(
-            [os.path.join('checks', file) for file in os.listdir('checks') if file.endswith('.cpp')])
+            [os.path.join('checks', file) for file in
+             os.listdir('checks') if file.endswith('.cpp')])
 
     def doc_files(self):
         docs = ['readme.txt']
@@ -97,7 +101,8 @@ def process_command_line(args):
     parser.add_option('--libdir', dest='libdir',
                       help='set the library installation directory')
 
-    parser.add_option('--with-local-config', dest='local_config', metavar='FILE',
+    parser.add_option('--with-local-config',
+                      dest='local_config', metavar='FILE',
                       help='include the contents of FILE into build.h')
 
     """
@@ -287,12 +292,13 @@ class CompilerInfo(object):
         while self.mach_opt != []:
             proc = self.mach_opt.pop(0)
             if self.mach_opt.pop(0) != '->':
-                raise Exception("Parsing problem in %s mach_opt fields" % (self.basename))
+                raise Exception("Parsing err in %s mach_opt" % (self.basename))
 
             flags = self.mach_opt.pop(0)
             regex = ''
 
-            if len(self.mach_opt) > 0 and (len(self.mach_opt) == 1 or self.mach_opt[1] != '->'):
+            if len(self.mach_opt) > 0 and \
+               (len(self.mach_opt) == 1 or self.mach_opt[1] != '->'):
                 regex = self.mach_opt.pop(0)
 
             self.mach_opt_flags[proc] = (flags,regex)
@@ -350,7 +356,8 @@ class OsInfo(object):
 
     def defines(self):
         return ['TARGET_OS_IS_%s' % (self.basename.upper())] + \
-               ['TARGET_OS_HAS_' + feat.upper() for feat in self.target_features]
+               ['TARGET_OS_HAS_' + feat.upper()
+                for feat in self.target_features]
 
 def canon_processor(archinfo, proc):
     for ainfo in archinfo.values():
@@ -408,7 +415,7 @@ def process_template(template_file, variables):
         template = PercentSignTemplate(slurp_file(template_file))
         return template.substitute(variables)
     except KeyError, e:
-        raise Exception('Unbound variable %s in template %s' % (e, template_file))
+        raise Exception('Unbound var %s in template %s' % (e, template_file))
 
 """
 Create the template variables needed to process the makefile, build.h, etc
@@ -439,7 +446,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             basename = os.path.basename(src)
 
             for src_suffix in ['.cpp', '.S']:
-                basename = basename.replace(src_suffix, '.' + osinfo.obj_suffix)
+                basename = basename.replace(src_suffix,
+                                            '.' + osinfo.obj_suffix)
+
             yield os.path.join(obj_dir, basename)
 
     """
@@ -505,17 +514,21 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'include_files': makefile_list(build_config.headers),
 
-        'lib_objs': makefile_list(objectfile_list(build_config.sources,
-                                                  build_config.libobj_dir)),
+        'lib_objs': makefile_list(
+            objectfile_list(build_config.sources,
+                            build_config.libobj_dir)),
 
-        'check_objs': makefile_list(objectfile_list(build_config.check_sources,
-                                                    build_config.checkobj_dir)),
+        'check_objs': makefile_list(
+            objectfile_list(build_config.check_sources,
+                            build_config.checkobj_dir)),
 
-        'lib_build_cmds': '\n'.join(build_commands(build_config.sources,
-                                                   build_config.libobj_dir, 'LIB')),
+        'lib_build_cmds': '\n'.join(
+            build_commands(build_config.sources,
+                           build_config.libobj_dir, 'LIB')),
 
-        'check_build_cmds': '\n'.join(build_commands(build_config.check_sources,
-                                                     build_config.checkobj_dir, 'CHECK')),
+        'check_build_cmds': '\n'.join(
+            build_commands(build_config.check_sources,
+                           build_config.checkobj_dir, 'CHECK')),
 
         'ar_command': cc.ar_command or osinfo.ar_command,
         'ranlib_command': osinfo.ranlib_command(),
@@ -543,7 +556,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 def choose_modules_to_use(options, modules):
     chosen = []
 
-    for module in modules:
+    for (name,module) in modules.iteritems():
+
+        # First eliminate all modules which simply do not work on target system
         if module.cc != [] and options.compiler not in module.cc:
             continue
 
@@ -574,8 +589,9 @@ def load_info_files(options):
             if desired_name in filenames:
                 yield os.path.join(dirpath, desired_name)
 
-    modules = [ModuleInfo(info)
-               for info in find_files_named('info.txt', 'src')]
+    modules = dict([(mod.basename, mod) for mod in
+                    [ModuleInfo(info) for info in
+                     find_files_named('info.txt', 'src')]])
 
     def list_files_in_build_data(subdir):
         for (dirpath, dirnames, filenames) in \
@@ -589,10 +605,10 @@ def load_info_files(options):
     osinfo   = dict([(os.path.basename(info), OsInfo(info))
                       for info in list_files_in_build_data('os')])
 
-    del osinfo['defaults'] # FIXME
-
     ccinfo = dict([(os.path.basename(info), CompilerInfo(info))
                     for info in list_files_in_build_data('cc')])
+
+    del osinfo['defaults'] # FIXME
 
     return (modules, archinfo, ccinfo, osinfo)
 
@@ -640,22 +656,22 @@ def main(argv = None):
     options.makefile_dir = os.path.join(options.build_data, 'makefile')
 
     templates_to_proc = {
-        os.path.join(options.build_data, 'buildh.in'): os.path.join(options.build_dir, 'build.h'),
-
         os.path.join(options.makefile_dir, 'unix_shr.in'): 'Makefile',
         os.path.join(options.makefile_dir, 'unix.in'): 'Makefile',
         os.path.join(options.makefile_dir, 'nmake.in'): 'Makefile',
 
-        os.path.join(options.build_data, 'botan-config.in'): os.path.join(options.build_dir, 'botan-config'),
+        os.path.join(options.build_data, 'buildh.in'): \
+           os.path.join(options.build_dir, 'build.h'),
 
-        os.path.join(options.build_data, 'botan.pc.in'): os.path.join(options.build_dir, 'botan-1.8.pc')
+        os.path.join(options.build_data, 'botan-config.in'): \
+           os.path.join(options.build_dir, 'botan-config'),
+
+        os.path.join(options.build_data, 'botan.pc.in'): \
+           os.path.join(options.build_dir, 'botan-1.8.pc')
         }
 
     for (template, sink) in templates_to_proc.items():
         process_template(template, template_vars)
-
-    #print process_template(os.path.join(options.build_data, 'buildh.in'), template_vars)
-    #print process_template(os.path.join(options.makefile_dir, 'unix_shr.in'), template_vars)
 
 if __name__ == '__main__':
     try:
