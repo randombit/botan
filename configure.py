@@ -24,12 +24,20 @@ from getpass import getuser
 from time import ctime
 
 class BuildConfigurationInformation():
+
+    def __init__(self, options):
+        self.checkobj_dir = os.path.join(options.build_dir, 'checks')
+        self.libobj_dir = os.path.join(options.build_dir, 'lib')
+
+        self.include_dir = os.path.join(options.build_dir, 'include')
+        self.full_include_dir = os.path.join(self.include_dir, 'botan')
+
     def version_major(self): return 1
     def version_minor(self): return 8
     def version_patch(self): return 3
 
     def version_string(self):
-        return "%d.%d.%d" % (self.version_major(),
+        return '%d.%d.%d' % (self.version_major(),
                              self.version_minor(),
                              self.version_patch())
 
@@ -45,49 +53,53 @@ class BuildConfigurationInformation():
 def process_command_line(args):
     parser = OptionParser()
 
-    parser.add_option("--cc", dest="compiler",
-                      help="set the desired build compiler")
-    parser.add_option("--os", dest="os", default=platform.system().lower(),
-                      help="set the target operating system [%default]")
-    parser.add_option("--cpu", dest="cpu",
-                      help="set the target processor type/model")
+    parser.add_option('--cc', dest='compiler',
+                      help='set the desired build compiler')
+    parser.add_option('--os', dest='os', default=platform.system().lower(),
+                      help='set the target operating system [%default]')
+    parser.add_option('--cpu', dest='cpu',
+                      help='set the target processor type/model')
 
-    parser.add_option("--with-build-dir", dest="build_dir",
-                      metavar="DIR", default="build",
-                      help="setup the build in DIR [default %default]")
+    parser.add_option('--with-build-dir', dest='build_dir',
+                      metavar='DIR', default='build',
+                      help='setup the build in DIR [default %default]')
 
-    parser.add_option("--prefix", dest="prefix",
-                      help="set the base installation directory")
-    parser.add_option("--docdir", dest="docdir", default="docdir",
-                      help="set the documentation installation directory")
+    parser.add_option('--prefix', dest='prefix',
+                      help='set the base installation directory')
+    parser.add_option('--docdir', dest='docdir',
+                      help='set the documentation installation directory')
+    parser.add_option('--libdir', dest='libdir',
+                      help='set the library installation directory')
 
-    parser.add_option("--with-local-config", dest="local_config", metavar="FILE",
-                      help="include the contents of FILE into build.h")
+    parser.add_option('--with-local-config', dest='local_config', metavar='FILE',
+                      help='include the contents of FILE into build.h')
 
+    """
+    These exist only for autoconf compatability (requested by zw for monotone)
+    """
     compat_with_autoconf_options = [
-        "bindir",
-        "datadir",
-        "datarootdir",
-        "dvidir",
-        "exec-prefix",
-        "htmldir",
-        "includedir",
-        "infodir",
-        "libdir",
-        "libexecdir",
-        "localedir",
-        "localstatedir",
-        "mandir",
-        "oldincludedir",
-        "pdfdir",
-        "psdir",
-        "sbindir",
-        "sharedstatedir",
-        "sysconfdir"
+        'bindir',
+        'datadir',
+        'datarootdir',
+        'dvidir',
+        'exec-prefix',
+        'htmldir',
+        'includedir',
+        'infodir',
+        'libexecdir',
+        'localedir',
+        'localstatedir',
+        'mandir',
+        'oldincludedir',
+        'pdfdir',
+        'psdir',
+        'sbindir',
+        'sharedstatedir',
+        'sysconfdir'
         ]
 
     for opt in compat_with_autoconf_options:
-        parser.add_option("--" + opt, dest=opt, help=SUPPRESS_HELP)
+        parser.add_option('--' + opt, dest=opt, help=SUPPRESS_HELP)
 
     (options, args) = parser.parse_args(args)
 
@@ -104,7 +116,7 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
             self.line = line
 
         def __str__(self):
-            return "%s at %s:%d" % (self.msg, infofile, self.line)
+            return '%s at %s:%d' % (self.msg, infofile, self.line)
 
     (dirname, basename) = os.path.split(infofile)
 
@@ -116,7 +128,7 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
 
     lex = shlex.shlex(open(infofile), infofile, posix=True)
 
-    lex.wordchars += ':.<>/,-'
+    lex.wordchars += ':.<>/,-!'
 
     for group in allowed_groups:
         to_obj.__dict__[group] = []
@@ -137,7 +149,7 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
             group = match.group(1)
 
             if group not in allowed_groups:
-                raise LexerError("Unknown group '%s'" % (group), lex.lineno)
+                raise LexerError('Unknown group "%s"' % (group), lex.lineno)
 
             end_marker = '</' + group + '>'
 
@@ -148,7 +160,7 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
         elif token in name_val_pairs.keys():
             to_obj.__dict__[token] = lex.get_token()
         else: # No match -> error
-            raise LexerError("Bad token '%s'" % (token), lex.lineno)
+            raise LexerError('Bad token "%s"' % (token), lex.lineno)
 
 """
 Convert a lex'ed map (from build-data files) from a list to a dict
@@ -175,8 +187,12 @@ class ModuleInfo(object):
         # Coerce to more useful types
         self.mp_bits = int(self.mp_bits)
         self.uses_tr1 == bool(self.uses_tr1)
+        self.libs = force_to_dict(self.libs)
 
         self.add = map(lambda f: os.path.join(self.lives_in, f), self.add)
+
+    def libs_needed(self):
+        print self.libs
 
     def __cmp__(self, other):
         if self.basename < other.basename:
@@ -197,16 +213,21 @@ class ArchInfo(object):
 
         self.submodel_aliases = force_to_dict(self.submodel_aliases)
 
+        if self.unaligned == 'ok':
+            self.unaligned_ok = 1
+        else:
+            self.unaligned_ok = 0
+
     def defines(self, target_submodel):
-        macros = ["TARGET_ARCH_IS_%s" % (self.basename.upper())]
+        macros = ['TARGET_ARCH_IS_%s' % (self.basename.upper())]
 
         if self.basename != target_submodel:
-            macros.append("TARGET_CPU_IS_%s" % (target_submodel.upper()))
+            macros.append('TARGET_CPU_IS_%s' % (target_submodel.upper()))
 
         if self.endian != None:
-            macros.append("TARGET_CPU_IS_%s_ENDIAN" % (self.endian.upper()))
+            macros.append('TARGET_CPU_IS_%s_ENDIAN' % (self.endian.upper()))
 
-        macros.append("TARGET_UNALIGNED_LOADSTORE_OK %d" % (self.unaligned == "ok"))
+        macros.append('TARGET_UNALIGNED_LOADSTORE_OK %d' % (self.unaligned_ok))
 
         return macros
 
@@ -241,12 +262,17 @@ class CompilerInfo(object):
         # FIXME: this has weirdness to handle s// ing out bits
         self.mach_opt = force_to_dict(self.mach_opt)
 
+    def so_link_command_for(self, osname):
+        if osname in self.so_link_flags:
+            return self.so_link_flags[osname]
+        return self.so_link_flags['default']
+
     def defines(self):
         if self.compiler_has_tr1:
-            return ["USE_STD_TR1"]
+            return ['USE_STD_TR1']
         return []
 
-class OperatingSystemInfo(object):
+class OsInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
                       ['aliases', 'target_features', 'supports_shared'],
@@ -265,9 +291,17 @@ class OperatingSystemInfo(object):
                         'install_cmd_exec': 'install -m 755'
                         })
 
+        self.ar_needs_ranlib = bool(self.ar_needs_ranlib)
+
+    def ranlib_command(self):
+        if self.ar_needs_ranlib == True:
+            return 'ranlib'
+        else:
+            return 'true' # no-op
+
     def defines(self):
-        return ["TARGET_OS_IS_%s" % (self.basename.upper())] + \
-               ["TARGET_OS_HAS_" + feat.upper() for feat in self.target_features]
+        return ['TARGET_OS_IS_%s' % (self.basename.upper())] + \
+               ['TARGET_OS_HAS_' + feat.upper() for feat in self.target_features]
 
 def guess_processor(archinfo):
     base_proc = platform.machine()
@@ -292,87 +326,147 @@ def guess_processor(archinfo):
     # No matches, so just use the base proc type
     return (base_proc,base_proc)
 
-def process_template(template, variables):
+def process_template(template_file, variables):
     class PercentSignTemplate(Template):
         delimiter = '%'
 
     try:
-        template = PercentSignTemplate(''.join(open(template).readlines()))
+        template = PercentSignTemplate(''.join(open(template_file).readlines()))
         return template.substitute(variables)
     except KeyError, e:
-        raise Exception("Unbound variable %s in template %s" % (e, template))
+        raise Exception('Unbound variable %s in template %s' % (e, template_file))
 
-def create_template_vars(options, modules, cc, arch, osinfo):
-    vars = {}
+def create_template_vars(build_config, options, modules, cc, arch, osinfo):
+    def make_cpp_macros(macros):
+        return '\n'.join(['#define BOTAN_' + macro for macro in macros])
 
-    def create_macro_tokens(macros):
-        return "\n".join(["#define BOTAN_" + macro for macro in macros])
+    """
+    Figure out what external libraries are needed based on selected modules
+    """
+    def link_against():
+        for module in modules:
+            for (osname,link_to) in module.libs.iteritems():
+                if osname == 'all' or osname == osinfo.basename:
+                    yield link_to
+                else:
+                    match = re.match('^all!(.*)', osname)
+                    if match is not None:
+                        exceptions = match.group(1).split(',')
+                        if osinfo.basename not in exceptions:
+                            yield link_to
 
-    build_config = BuildConfigurationInformation()
 
-    vars['version_major'] = build_config.version_major()
-    vars['version_minor'] = build_config.version_minor()
-    vars['version_patch'] = build_config.version_patch()
+    def slurp_file(filename):
+        if filename is None:
+            return ''
+        return ''.join(open(filename).readlines())
 
-    vars['version'] = build_config.version_string()
 
-    vars['timestamp'] = build_config.timestamp()
-    vars['user'] = build_config.username()
-    vars['hostname'] = build_config.hostname()
-    vars['command_line'] = ' '.join(sys.argv)
+    def objectfile_list(sources, obj_dir):
+        for src in sources:
+            basename = os.path.basename(src)
 
-    vars['module_defines'] = create_macro_tokens(["HAS_" + m.define
-                                                  for m in modules if m.define])
+            for src_suffix in ['.cpp', '.S']:
+                basename = basename.replace(src_suffix, '.' + osinfo.obj_suffix)
+            yield os.path.join(obj_dir, basename)
 
-    vars['target_os_defines'] = create_macro_tokens(osinfo.defines())
-    vars['target_cpu_defines'] = create_macro_tokens(arch.defines(options.cpu))
-    vars['target_compiler_defines'] = create_macro_tokens(cc.defines())
+    def build_commands(sources, obj_dir, flags):
+        for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
+            yield "%s: %s\n\t$(CXX) %s%s $(%s_FLAGS) %s$? %s$@\n" % (
+                obj_file, src,
+                cc.add_include_dir_option,
+                build_config.include_dir,
+                flags,
+                cc.compile_option,
+                cc.output_to_option)
 
-    vars['local_config'] = ""
-    if options.local_config != None:
-        vars['local_config'] = ''.join(open(options.local_config).readlines())
+    def makefile_list(items):
+        return (' '*16).join([item + ' \\\n' for item in items])
 
-    vars['cc'] = cc.binary_name
-    vars['lib_opt'] = cc.lib_opt_flags
-    vars['check_opt'] = cc.check_opt_flags
-    vars['mach_opt'] = ''
-    vars['lang_flags'] = cc.lang_flags
-    vars['warn_flags'] = cc.warning_flags
-    vars['shared_flags'] = cc.shared_flags
-    vars['so_link'] = 'so link command'
-    vars['so_version'] = 'SO VERSION'
-    vars['so_suffix'] = 'SO'
-    vars['dll_export_flags'] = cc.dll_export_flags
+    vars = {
+        'version_major': build_config.version_major(),
+        'version_minor': build_config.version_minor(),
+        'version_patch': build_config.version_patch(),
+        'version':       build_config.version_string(),
+
+        'timestamp': build_config.timestamp(),
+        'user':      build_config.username(),
+        'hostname':  build_config.hostname(),
+        'command_line': ' '.join(sys.argv),
+        'local_config': slurp_file(options.local_config),
+
+        'prefix': options.prefix or osinfo.install_root,
+        'libdir': options.libdir or osinfo.lib_dir,
+        'includedir': options.includedir or osinfo.header_dir,
+        'docdir': options.docdir or osinfo.doc_dir,
+
+        'doc_src_dir': 'doc',
+        'build_dir': options.build_dir,
+
+        'os': options.os,
+        'arch': options.arch,
+        'submodel': options.cpu,
+
+        'cc': cc.binary_name,
+        'lib_opt': cc.lib_opt_flags,
+        'check_opt': cc.check_opt_flags,
+        'lang_flags': cc.lang_flags,
+        'warn_flags': cc.warning_flags,
+        'shared_flags': cc.shared_flags,
+        'dll_export_flags': cc.dll_export_flags,
+
+        'so_link': cc.so_link_command_for(osinfo.basename),
+
+        'link_to': ' '.join([cc.add_lib_option + lib
+                             for lib in sorted(link_against())]),
+
+        'module_defines': make_cpp_macros(['HAS_' + m.define
+                                           for m in modules if m.define]),
+
+        'target_os_defines': make_cpp_macros(osinfo.defines()),
+        'target_cpu_defines': make_cpp_macros(arch.defines(options.cpu)),
+        'target_compiler_defines': make_cpp_macros(cc.defines()),
+
+        'include_files': makefile_list(build_config.headers),
+
+        'lib_objs': makefile_list(objectfile_list(build_config.sources,
+                                                  build_config.libobj_dir)),
+
+        'check_objs': makefile_list(objectfile_list(build_config.check_sources,
+                                                    build_config.checkobj_dir)),
+
+        'lib_build_cmds': '\n'.join(build_commands(build_config.sources,
+                                                   build_config.libobj_dir, 'LIB')),
+
+        'check_build_cmds': '\n'.join(build_commands(build_config.check_sources,
+                                                     build_config.checkobj_dir, 'CHECK')),
+
+        'ar_command': cc.ar_command,
+        'ranlib_command': osinfo.ranlib_command(),
+        'install_cmd_exec': osinfo.install_cmd_exec,
+        'install_cmd_data': osinfo.install_cmd_data,
+
+        'static_suffix': osinfo.static_suffix,
+        'so_suffix': osinfo.so_suffix,
+
+        'botan_config': 'botan-config',
+        'botan_pkgconfig': 'botan.pc',
+
+        'mod_list': '\n'.join(['%s (%s)' % (m.basename, m.realname)
+                               for m in sorted(modules)]),
+        }
+
+
+    vars['mach_opt'] = '*MACH_OPT*'
+
     vars['mp_bits'] = 666
 
-    vars['submodel'] = options.cpu
-    vars['arch'] = options.arch
-    vars['os'] = options.os
-
-    vars['mod_list'] = "\n".join(["%s (%s)" % (m.basename, m.realname)
-                                  for m in sorted(modules)])
-
-    vars['link_to'] = ''
-
-    vars['ar_command'] = cc.ar_command
-
-    vars['install_cmd_exec'] = 'install exec'
-    vars['install_cmd_data'] = 'install data'
-    vars['ranlib_command'] = 'randlib command'
     vars['check_prefix'] = 'check prefix'
-    vars['doc_files'] = 'list of doc files'
-    vars['doc_src_dir'] = 'doc'
-    vars['include_files'] = 'list of include files'
-    vars['lib_objs'] = 'list of obj files'
-    vars['check_objs'] = 'list of check objs'
     vars['lib_prefix'] = 'lib prefix'
-    vars['lib_build_cmds'] = 'lib build commands'
-    vars['check_build_cmds'] = 'check build commands'
 
-    vars['static_suffix'] = 'a'
+    vars['so_version'] = '*SO VERSION*'
 
-    vars['botan_config'] = 'botan-config'
-    vars['botan_pkgconfig'] = 'botan.pc'
+    vars['doc_files'] = 'list of doc files'
 
     return vars
 
@@ -393,53 +487,50 @@ def choose_modules_to_use(options, modules):
         chosen.append(module)
     return chosen
 
-def setup_build_tree(options, headers, sources):
+def setup_build_tree(build_config, options, headers, sources):
     shutil.rmtree(options.build_dir)
 
-    include_dir = os.path.join(options.build_dir, 'include', 'botan')
-    checks_dir = os.path.join(options.build_dir, 'checks')
-    libobj_dir = os.path.join(options.build_dir, 'lib')
-
-    os.makedirs(include_dir)
-    os.makedirs(checks_dir)
-    os.makedirs(libobj_dir)
+    #os.makedirs(include_dir)
+    #os.makedirs(checks_dir)
+    #os.makedirs(libobj_dir)
 
     for header_file in headers:
         shutil.copy(header_file, include_dir)
+
+def load_info_files(options):
+
+    def find_files_named(desired_name, in_path):
+        for (dirpath, dirnames, filenames) in os.walk(in_path):
+            if desired_name in filenames:
+                yield os.path.join(dirpath, desired_name)
+
+    modules = [ModuleInfo(info)
+               for info in find_files_named('info.txt', 'src')]
+
+    def list_files_in_build_data(subdir):
+        for (dirpath, dirnames, filenames) in \
+                os.walk(os.path.join(options.build_data, subdir)):
+            for filename in filenames:
+                yield os.path.join(dirpath, filename)
+
+    archinfo = [ArchInfo(info) for info in list_files_in_build_data('arch')]
+    ccinfo   = [CompilerInfo(info) for info in list_files_in_build_data('cc')]
+    osinfo   = [OsInfo(info) for info in list_files_in_build_data('os')]
+
+    return (modules, archinfo, ccinfo, osinfo)
 
 def main(argv = None):
     if argv is None:
         argv = sys.argv
 
     (options, args) = process_command_line(argv[1:])
-
     if args != []:
-        raise Exception("Unhandled option(s) " + ' '.join(args))
+        raise Exception('Unhandled option(s) ' + ' '.join(args))
 
-    """
-    Walk through a directory and find all files named desired_name
-    """
-    def find_files_named(desired_name, in_path):
-        for (dirpath, dirnames, filenames) in os.walk(in_path):
-            if desired_name in filenames:
-                yield os.path.join(dirpath, desired_name)
+    build_config = BuildConfigurationInformation(options)
+    options.build_data = os.path.join('src', 'build-data')
 
-    def list_files_in(in_path):
-        for (dirpath, dirnames, filenames) in os.walk(in_path):
-            for filename in filenames:
-                yield os.path.join(dirpath, filename)
-
-    modules = [ModuleInfo(info)
-               for info in find_files_named('info.txt', 'src')]
-
-    build_data = os.path.join('src', 'build-data')
-
-    archinfo = [ArchInfo(info)
-                for info in list_files_in(os.path.join(build_data, 'arch'))]
-    ccinfo   = [CompilerInfo(info)
-                for info in list_files_in(os.path.join(build_data, 'cc'))]
-    osinfo   = [OperatingSystemInfo(info)
-                for info in list_files_in(os.path.join(build_data, 'os'))]
+    (modules, archinfo, ccinfo, osinfo) = load_info_files(options)
 
     # FIXME: need full canonicalization to (arch,submodel) when --cpu is used
     if options.cpu is None:
@@ -453,25 +544,34 @@ def main(argv = None):
 
     modules_to_use = choose_modules_to_use(options, modules)
 
+    all_files = sum([mod.add for mod in modules_to_use], [])
+    build_config.headers = sorted([file for file in all_files if file.endswith('.h')])
+    build_config.sources = sorted(set(all_files) - set(build_config.headers))
+
+    build_config.check_sources = sorted(
+        [os.path.join('checks', file) for file in os.listdir('checks') if file.endswith('.cpp')])
+
     def find_it(what, infoset):
         for info in infoset:
             if info.basename == what:
                 return info
         return None
 
-    template_vars = create_template_vars(options, modules_to_use,
+    template_vars = create_template_vars(build_config, options,
+                                         modules_to_use,
                                          find_it(options.compiler, ccinfo),
                                          find_it(options.arch, archinfo),
                                          find_it(options.os, osinfo))
 
-    #headers = [file for file in all_files if file.endswith('.h')]
-    #sources = list(set(all_files) - set(headers))
-    #setup_build_tree(options, headers, sources)
+    #setup_build_tree(build_config, options, headers, sources)
 
-    print process_template(os.path.join(build_data, 'buildh.in'), template_vars)
+    options.makefile_dir = os.path.join(options.build_data, 'makefile')
+
+    #print process_template(os.path.join(options.build_data, 'buildh.in'), template_vars)
+    print process_template(os.path.join(options.makefile_dir, 'unix_shr.in'), template_vars)
 
 if __name__ == '__main__':
     try:
         sys.exit(main())
     except Exception, e:
-        print >>sys.stderr, "Exception:", e
+        print >>sys.stderr, 'Exception:', e
