@@ -40,8 +40,9 @@ u32bit Device_EntropySource::Device_Reader::get(byte out[], u32bit length,
    FD_SET(fd, &read_set);
 
    struct ::timeval timeout;
-   timeout.tv_sec = 0;
-   timeout.tv_usec = ms_wait_time * 1000;
+
+   timeout.tv_sec = (ms_wait_time / 1000);
+   timeout.tv_usec = (ms_wait_time % 1000) * 1000;
 
    if(::select(fd + 1, &read_set, 0, 0, &timeout) < 0)
       return 0;
