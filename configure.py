@@ -3,7 +3,12 @@
 """
 Configuration program for botan
 
-Python 2.5 or higher required
+CPython version requirements:
+  2.5 or higher strongly recommended
+  2.4 will work if you install a recent version of Optik
+  2.3 untested; might work, might not
+
+Has not been tested with Jython, IronPython, or PyPy
 
 (C) 2009 Jack Lloyd
 Distributed under the terms of the Botan license
@@ -24,6 +29,11 @@ from getpass import getuser
 from time import ctime
 
 class BuildConfigurationInformation(object):
+    def version_major(self): return 1
+    def version_minor(self): return 8
+    def version_patch(self): return 3
+
+    def version_so_patch(self): return 2
 
     def __init__(self, options, modules):
         self.build_dir = os.path.join(options.with_build_dir, 'build')
@@ -56,12 +66,6 @@ class BuildConfigurationInformation(object):
             if os.access(filename, os.R_OK):
                 docs.append(filename)
         return docs
-
-    def version_major(self): return 1
-    def version_minor(self): return 8
-    def version_patch(self): return 3
-
-    def version_so_patch(self): return 2
 
     def version_string(self):
         return '%d.%d.%d' % (self.version_major(),
@@ -149,6 +153,7 @@ def process_command_line(args):
     for mod in ['openssl', 'gnump', 'bzip2', 'zlib']:
         mods_group.add_option('--with-%s' % (mod), dest='enabled_modules',
                               action='append_const', const=mod)
+
         mods_group.add_option('--without-%s' % (mod), dest='disabled_modules',
                               action='append_const', const=mod,
                               help=SUPPRESS_HELP)
@@ -804,6 +809,9 @@ def setup_build(build_config, options, template_vars):
                  build_config.full_include_dir]:
         os.makedirs(dirs)
 
+    pkg_config_file = 'botan-%d.%d.pc' % (build_config.version_major(),
+                                          build_config.version_minor())
+
     templates_to_proc = {
         os.path.join(options.build_data, 'buildh.in'): \
            os.path.join(build_config.build_dir, 'build.h'),
@@ -812,7 +820,7 @@ def setup_build(build_config, options, template_vars):
            os.path.join(build_config.build_dir, 'botan-config'),
 
         os.path.join(options.build_data, 'botan.pc.in'): \
-           os.path.join(build_config.build_dir, 'botan-1.8.pc')
+           os.path.join(build_config.build_dir, pkg_config_file)
         }
 
     def choose_makefile_template(style):
