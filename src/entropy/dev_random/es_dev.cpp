@@ -40,8 +40,9 @@ u32bit Device_EntropySource::Device_Reader::get(byte out[], u32bit length,
    FD_SET(fd, &read_set);
 
    struct ::timeval timeout;
-   timeout.tv_sec = 0;
-   timeout.tv_usec = ms_wait_time * 1000;
+
+   timeout.tv_sec = (ms_wait_time / 1000);
+   timeout.tv_usec = (ms_wait_time % 1000) * 1000;
 
    if(::select(fd + 1, &read_set, 0, 0, &timeout) < 0)
       return 0;
@@ -103,10 +104,9 @@ Device_EntropySource::~Device_EntropySource()
 */
 void Device_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   u32bit go_get = std::min<u32bit>(accum.desired_remaining_bits() / 8, 16);
+   u32bit go_get = std::min<u32bit>(accum.desired_remaining_bits() / 8, 48);
 
-   u32bit read_wait_ms = go_get / 16;
-
+   u32bit read_wait_ms = std::max<u32bit>(go_get, 1000);
    MemoryRegion<byte>& io_buffer = accum.get_io_buffer(go_get);
 
    for(size_t i = 0; i != devices.size(); ++i)

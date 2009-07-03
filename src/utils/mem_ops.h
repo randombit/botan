@@ -26,7 +26,14 @@ template<typename T> inline void set_mem(T* ptr, u32bit n, byte val)
    { std::memset(ptr, val, sizeof(T)*n); }
 
 template<typename T> inline bool same_mem(const T* p1, const T* p2, u32bit n)
-   { return (std::memcmp(p1, p2, sizeof(T)*n) == 0); }
+   {
+   bool is_same = true;
+
+   for(u32bit i = 0; i != n; ++i)
+      is_same &= (p1[i] == p2[i]);
+
+   return is_same;
+   }
 
 }
 

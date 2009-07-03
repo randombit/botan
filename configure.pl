@@ -38,6 +38,10 @@ my $TRACING = 0;
 ##################################################
 my $config = {};
 
+print STDERR "*                           WARNING\n" .
+             "* $0 is deprecated; consider trying configure.py instead\n" .
+             "* If it works, great. If not, file a bug and continue using $0\n*\n";
+
 main();
 exit;
 
@@ -65,12 +69,12 @@ sub main {
     $$config{'base-dir'} = $base_dir;
     $$config{'src-dir'} = File::Spec->catdir($base_dir, 'src');
     $$config{'checks-dir'} = File::Spec->catdir($base_dir, 'checks');
-    $$config{'doc-dir'} = File::Spec->catdir($base_dir, 'doc');
+    $$config{'doc_src_dir'} = File::Spec->catdir($base_dir, 'doc');
 
     $$config{'config-dir'} =
         File::Spec->catdir($$config{'src-dir'}, 'build-data');
 
-    $$config{'command-line'} = $0 . ' ' . join(' ', @ARGV);
+    $$config{'command_line'} = $0 . ' ' . join(' ', @ARGV);
     $$config{'timestamp'} = gmtime;
     $$config{'user'} = getlogin || getpwuid($<) || '';
     $$config{'hostname'} = hostname;
@@ -103,12 +107,12 @@ sub main {
 
     # Goes into build-specific dirs (maybe)
 
-    $$config{'build-dir'} = 'build';
-    $$config{'botan-config'} = File::Spec->catfile(
-        $$config{'build-dir'}, 'botan-config');
+    $$config{'build_dir'} = 'build';
+    $$config{'botan_config'} = File::Spec->catfile(
+        $$config{'build_dir'}, 'botan-config');
 
-    $$config{'botan-pkgconfig'} = File::Spec->catfile(
-        $$config{'build-dir'},
+    $$config{'botan_pkgconfig'} = File::Spec->catfile(
+        $$config{'build_dir'},
         'botan-' . $MAJOR_VERSION . '.' . $MINOR_VERSION . '.pc');
 
     $$config{'makefile'} = 'Makefile';
@@ -116,9 +120,9 @@ sub main {
     $$config{'lib_prefix'} = '';
 
     if(defined($$config{'with_build_dir'})) {
-        for my $var ('build-dir',
-                     'botan-config',
-                     'botan-pkgconfig',
+        for my $var ('build_dir',
+                     'botan_config',
+                     'botan_pkgconfig',
                      'makefile',
                      'check_prefix',
                      'lib_prefix')
@@ -147,12 +151,12 @@ sub main {
     add_to($config, {
         'includedir'    => os_info_for($os, 'header_dir'),
 
-        'build_lib'     => File::Spec->catdir($$config{'build-dir'}, 'lib'),
-        'build_check'   => File::Spec->catdir($$config{'build-dir'}, 'checks'),
+        'build_lib'     => File::Spec->catdir($$config{'build_dir'}, 'lib'),
+        'build_check'   => File::Spec->catdir($$config{'build_dir'}, 'checks'),
         'build_include' =>
-            File::Spec->catdir($$config{'build-dir'}, 'include'),
+            File::Spec->catdir($$config{'build_dir'}, 'include'),
         'build_include_botan' =>
-            File::Spec->catdir($$config{'build-dir'}, 'include', 'botan'),
+            File::Spec->catdir($$config{'build_dir'}, 'include', 'botan'),
 
         'mp_bits'       => find_mp_bits(sort keys %{$$config{'modules'}}),
         'mod_libs'      =>
@@ -170,7 +174,7 @@ sub main {
 
     load_modules($config);
 
-    my @dirs = mkdirs($$config{'build-dir'},
+    my @dirs = mkdirs($$config{'build_dir'},
                       $$config{'build_include'},
                       $$config{'build_include_botan'},
                       $$config{'build_lib'},
@@ -183,15 +187,15 @@ sub main {
     determine_config($config);
 
     process_template(File::Spec->catfile($$config{'config-dir'}, 'buildh.in'),
-                     File::Spec->catfile($$config{'build-dir'}, 'build.h'),
+                     File::Spec->catfile($$config{'build_dir'}, 'build.h'),
                      $config);
 
     process_template(File::Spec->catfile(
                          $$config{'config-dir'}, 'botan.doxy.in'),
-                     File::Spec->catfile($$config{'doc-dir'}, 'botan.doxy'),
+                     File::Spec->catfile($$config{'doc_src_dir'}, 'botan.doxy'),
                      $config);
 
-    $$config{'includes'}{'build.h'} = $$config{'build-dir'};
+    $$config{'includes'}{'build.h'} = $$config{'build_dir'};
 
     generate_makefile($config);
 
@@ -1246,11 +1250,11 @@ sub load_modules {
         push @mod_names, $mod;
     }
 
-    $$config{'mod-list'} = join("\n", @mod_names);
+    $$config{'mod_list'} = join("\n", @mod_names);
 
     my $unaligned_ok = 0;
 
-    my $gen_defines = sub {
+    my $target_os_defines = sub {
         my @macro_list;
 
         my $os = $$config{'os'};
@@ -1263,8 +1267,14 @@ sub load_modules {
                 push @macro_list, '#define BOTAN_TARGET_OS_HAS_' . uc $feature;
             }
 
-            push @macro_list, "";
         }
+        return join("\n", @macro_list);
+    };
+
+    $$config{'target_os_defines'} = &$target_os_defines();
+
+    my $target_cpu_defines = sub {
+        my @macro_list;
 
         my $arch = $$config{'arch'};
         if($arch ne 'generic') {
@@ -1325,6 +1335,13 @@ sub load_modules {
         # variable is always set (one or zero)
         push @macro_list,
            "#define BOTAN_TARGET_UNALIGNED_LOADSTOR_OK $unaligned_ok";
+        return join("\n", @macro_list);
+    };
+
+    $$config{'target_cpu_defines'} = &$target_cpu_defines();
+
+    my $target_compiler_defines = sub {
+        my @macro_list;
 
         if(defined($$config{'tr1'})) {
             my $tr1 = $$config{'tr1'};
@@ -1339,6 +1356,14 @@ sub load_modules {
                 croak("Unknown --with-tr1= option value '$tr1' (try --help)");
             }
         }
+
+        return join("\n", @macro_list);
+    };
+
+    $$config{'target_compiler_defines'} = &$target_compiler_defines();
+
+    my $gen_defines = sub {
+        my @macro_list;
 
         my %defines;
 
@@ -1363,7 +1388,7 @@ sub load_modules {
         return join("\n", @macro_list);
     };
 
-    $$config{'defines'} = &$gen_defines();
+    $$config{'module_defines'} = &$gen_defines();
 }
 
 ##################################################
@@ -1468,19 +1493,10 @@ sub process_template {
             next;
         }
 
-        $contents =~ s/@\{var:$name\}/$val/g;
-
-        unless($val eq 'no' or $val eq 'false') {
-            $contents =~ s/\@\{if:$name (.*)\}/$1/g;
-            $contents =~ s/\@\{if:$name (.*) (.*)\}/$1/g;
-        } else {
-            $contents =~ s/\@\{if:$name (.*)\}//g;
-            $contents =~ s/\@\{if:$name (.*) (.*)\}/$2/g;
-        }
+        $contents =~ s/\%\{$name\}/$val/g;
     }
 
-    if($contents =~ /@\{var:([a-z_]*)\}/ or
-       $contents =~ /@\{if:(.*) /) {
+    if($contents =~ /\%\{([a-z_]*)\}/) {
 
         sub summarize {
             my ($n, $s) = @_;
@@ -1661,7 +1677,7 @@ sub get_module_info {
        read_list($_, $reader, 'libs',
                  sub {
                      my $line = $_[0];
-                     $line =~ m/^([\w!,]*) -> ([\w,-]*)$/;
+                     $line =~ m/^([\w!,]*) -> ([\w.,-]*)$/;
                      $info{'libs'}{$1} = $2;
                  });
 
@@ -1726,7 +1742,9 @@ sub get_os_info {
     $info{'name'} = $name;
 
     while($_ = &$reader()) {
-        match_any_of($_, \%info, 'quoted', 'realname', 'ar_command');
+        match_any_of($_, \%info,
+                     'quoted', 'realname', 'ar_command',
+                     'install_cmd_data', 'install_cmd_exec');
 
         match_any_of($_, \%info, 'unquoted',
                      'os_type',
@@ -1736,9 +1754,7 @@ sub get_os_info {
                      'install_root',
                      'header_dir',
                      'lib_dir', 'doc_dir',
-                     'ar_needs_ranlib',
-                     'install_cmd_data',
-                     'install_cmd_exec');
+                     'ar_needs_ranlib');
 
         read_list($_, $reader, 'aliases', list_push(\@{$info{'aliases'}}));
 
@@ -1823,7 +1839,7 @@ sub write_pkg_config {
 
     $$config{'link_to'} = libs('-l', '', 'm', @{$$config{'mod_libs'}});
 
-    my $botan_config = $$config{'botan-config'};
+    my $botan_config = $$config{'botan_config'};
 
     process_template(
        File::Spec->catfile($$config{'config-dir'}, 'botan-config.in'),
@@ -1832,7 +1848,7 @@ sub write_pkg_config {
 
     process_template(
        File::Spec->catfile($$config{'config-dir'}, 'botan.pc.in'),
-                           $$config{'botan-pkgconfig'}, $config);
+                           $$config{'botan_pkgconfig'}, $config);
 
     delete $$config{'link_to'};
 }
@@ -2029,10 +2045,10 @@ sub generate_makefile {
    my ($config) = @_;
 
    my $is_in_doc_dir =
-       sub { -e File::Spec->catfile($$config{'doc-dir'}, $_[0]) };
+       sub { -e File::Spec->catfile($$config{'doc_src_dir'}, $_[0]) };
 
    my $docs = file_list(undef, undef, undef,
-                        map_to($$config{'doc-dir'},
+                        map_to($$config{'doc_src_dir'},
                                grep { &$is_in_doc_dir($_); } @DOCS));
 
    $docs .= File::Spec->catfile($$config{'base-dir'}, 'readme.txt');
@@ -2085,8 +2101,7 @@ sub generate_makefile {
 
        add_to($config, {
            'shared' => 'no',
-           'link_to' => libs('', '.'.$$config{'static_suffix'},
-                             @{$$config{'mod_libs'}}),
+           'link_to' => libs('', '', '', @{$$config{'mod_libs'}}),
        });
    }
 

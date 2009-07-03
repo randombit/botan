@@ -35,6 +35,9 @@ pentiumii -> pentium2
 pentium3 -> pentium3
 pentiumiii -> pentium3
 
+x86family5 -> i586
+x86family6 -> i686
+
 pentiumm -> pentium-m
 intelpentiumm -> pentium-m
 

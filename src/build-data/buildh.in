@@ -2,14 +2,14 @@
 #ifndef BOTAN_BUILD_CONFIG_H__
 #define BOTAN_BUILD_CONFIG_H__
 
-/* This file was automatically generated @{var:timestamp} UTC */
+/* This file was automatically generated %{timestamp} UTC */
 
-#define BOTAN_VERSION_MAJOR @{var:version_major}
-#define BOTAN_VERSION_MINOR @{var:version_minor}
-#define BOTAN_VERSION_PATCH @{var:version_patch}
+#define BOTAN_VERSION_MAJOR %{version_major}
+#define BOTAN_VERSION_MINOR %{version_minor}
+#define BOTAN_VERSION_PATCH %{version_patch}
 
 #ifndef BOTAN_DLL
-  #define BOTAN_DLL @{var:dll_export_flags}
+  #define BOTAN_DLL %{dll_export_flags}
 #endif
 
 /* Chunk sizes */
@@ -17,7 +17,7 @@
 #define BOTAN_MEM_POOL_CHUNK_SIZE 64*1024
 
 /* BigInt toggles */
-#define BOTAN_MP_WORD_BITS @{var:mp_bits}
+#define BOTAN_MP_WORD_BITS %{mp_bits}
 #define BOTAN_KARAT_MUL_THRESHOLD 32
 #define BOTAN_KARAT_SQR_THRESHOLD 32
 #define BOTAN_PRIVATE_KEY_OP_BLINDING_BITS 64
@@ -37,22 +37,30 @@
 #endif
 
 /* Target identification and feature test macros */
+%{target_os_defines}
 
-@{var:defines}
-@{var:local_config}
+%{target_cpu_defines}
+
+%{target_compiler_defines}
+
+/* Module definitions */
+%{module_defines}
+
+/* Local configuration options */
+%{local_config}
 
 /*
-@{var:user}@@{var:hostname} ran '@{var:command-line}'
+%{user}@%{hostname} ran '%{command_line}'
 
 Target
 -------
-Compiler: @{var:cc} @{var:lib_opt} @{var:mach_opt}
-Arch: @{var:submodel}/@{var:arch}
-OS: @{var:os}
+Compiler: %{cc} %{lib_opt} %{mach_opt}
+Arch: %{submodel}/%{arch}
+OS: %{os}
 
 Modules
 -------
-@{var:mod-list}
+%{mod_list}
 */
 
 #endif

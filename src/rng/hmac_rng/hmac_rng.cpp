@@ -72,12 +72,15 @@ void HMAC_RNG::reseed_with_input(u32bit poll_bits,
 
    Entropy_Accumulator_BufferedComputation accum(*extractor, poll_bits);
 
-   for(u32bit i = 0; i < entropy_sources.size(); ++i)
+   if(!entropy_sources.empty())
       {
-      if(accum.polling_goal_achieved())
-         break;
+      u32bit poll_attempt = 0;
 
-      entropy_sources[i]->poll(accum);
+      while(!accum.polling_goal_achieved() && poll_attempt < poll_bits)
+         {
+         entropy_sources[poll_attempt % entropy_sources.size()]->poll(accum);
+         ++poll_attempt;
+         }
       }
 
    // And now add the user-provided input, if any

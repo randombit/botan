@@ -132,6 +132,7 @@ void initial_block(u64bit H[9], u64bit T[3], u32bit output_bits,
    {
    clear_mem(H, 9);
 
+   // ASCII("SHA3") followed by version (0x0001) code
    byte config_str[32] = { 0x53, 0x48, 0x41, 0x33, 0x01, 0x00, 0 };
    store_le(output_bits, config_str + 8);
 
@@ -140,6 +141,11 @@ void initial_block(u64bit H[9], u64bit T[3], u32bit output_bits,
 
    if(personalization != "")
       {
+      /*
+        This is a limitation of this implementation, and not of the
+        algorithm specification. Could be fixed relatively easily, but
+        doesn't seem worth the trouble.
+      */
       if(personalization.length() > 64)
          throw Invalid_Argument("Skein personalization must be <= 64 bytes");
 

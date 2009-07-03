@@ -1,40 +1,36 @@
 ##################################################
 # Compiler Options                               #
 ##################################################
-CXX           = @{var:cc}
-LIB_OPT       = @{var:lib_opt}
-CHECK_OPT     = @{var:check_opt}
-MACH_OPT      = @{var:mach_opt}
-LANG_FLAGS    = @{var:lang_flags}
-WARN_FLAGS    = @{var:warn_flags}
-LINK_TO       = @{var:link_to}
+CXX           = %{cc}
+LIB_OPT       = %{lib_opt}
+CHECK_OPT     = %{check_opt}
+MACH_OPT      = %{mach_opt}
+LANG_FLAGS    = %{lang_flags}
+WARN_FLAGS    = %{warn_flags}
+LINK_TO       = %{link_to}
 
 ##################################################
 # Version Numbers                                #
 ##################################################
-MAJOR         = @{var:version_major}
-MINOR         = @{var:version_minor}
-PATCH         = @{var:version_patch}
-
-VERSION       = $(MAJOR).$(MINOR).$(PATCH)
+VERSION       = %{version}
 
 ##################################################
 # Installation Settings                          #
 ##################################################
-DESTDIR       = @{var:prefix}
+DESTDIR       = %{prefix}
 
-LIBDIR        = $(DESTDIR)\@{var:libdir}
-HEADERDIR     = $(DESTDIR)\@{var:includedir}\botan
-DOCDIR        = $(DESTDIR)\@{var:docdir}\Botan-$(VERSION)
+LIBDIR        = $(DESTDIR)\%{libdir}
+HEADERDIR     = $(DESTDIR)\%{includedir}\botan
+DOCDIR        = $(DESTDIR)\%{docdir}\Botan-$(VERSION)
 
 ##################################################
 # Aliases for Common Programs                    #
 ##################################################
-AR            = @{var:ar_command}
+AR            = %{ar_command}
 CD            = @cd
 ECHO          = @echo
-INSTALL       = @{var:install_cmd_exec}
-INSTALL_CMD   = @{var:install_cmd_exec}
+INSTALL       = %{install_cmd_exec}
+INSTALL_CMD   = %{install_cmd_exec}
 MKDIR         = @md
 MKDIR_INSTALL = @md
 RM            = @del /Q
@@ -45,13 +41,13 @@ RMDIR         = @rmdir
 ##################################################
 CHECK         = check
 
-DOCS          = @{var:doc_files}
+DOCS          = %{doc_files}
 
-HEADERS       = @{var:include_files}
+HEADERS       = %{include_files}
 
-LIBOBJS       = @{var:lib_objs}
+LIBOBJS       = %{lib_objs}
 
-CHECKOBJS     = @{var:check_objs}
+CHECKOBJS     = %{check_objs}
 
 LIB_FLAGS     = $(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
 CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
@@ -59,16 +55,16 @@ CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
 LIBRARIES     = $(STATIC_LIB)
 
 LIBNAME       = libbotan
-STATIC_LIB    = $(LIBNAME).@{var:static_suffix}
+STATIC_LIB    = $(LIBNAME).%{static_suffix}
 
 all: $(LIBRARIES)
 
 ##################################################
 # Build Commands                                 #
 ##################################################
-@{var:lib_build_cmds}
+%{lib_build_cmds}
 
-@{var:check_build_cmds}
+%{check_build_cmds}
 
 ##################################################
 # Link Commands                                  #
@@ -93,15 +89,15 @@ static: $(STATIC_LIB)
 # Fake Targets                                   #
 ##################################################
 clean:
-	$(RM) @{var:build-dir}\lib\* @{var:build-dir}\checks\*
+	$(RM) %{build_dir}\lib\* %{build_dir}\checks\*
 	$(RM) $(LIBRARIES) $(CHECK)
 
 distclean: clean
-	$(RM) @{var:build-dir}\build.h
-	$(RM) @{var:build-dir}\include\botan\*
-	$(RMDIR) @{var:build-dir}\include\botan @{var:build-dir}\include
-	$(RMDIR) @{var:build-dir}\lib @{var:build-dir}\checks
-	$(RMDIR) @{var:build-dir}
+	$(RM) %{build_dir}\build.h
+	$(RM) %{build_dir}\include\botan\*
+	$(RMDIR) %{build_dir}\include\botan %{build_dir}\include
+	$(RMDIR) %{build_dir}\lib %{build_dir}\checks
+	$(RMDIR) %{build_dir}
 	$(RM) Makefile
 
 ##################################################

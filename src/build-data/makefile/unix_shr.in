@@ -1,91 +1,91 @@
 ##################################################
 # Compiler Options                               #
 ##################################################
-CXX           = @{var:cc}
-LIB_OPT       = @{var:lib_opt}
-CHECK_OPT     = @{var:check_opt}
-MACH_OPT      = @{var:mach_opt}
-LANG_FLAGS    = @{var:lang_flags}
-WARN_FLAGS    = @{var:warn_flags}
-SO_OBJ_FLAGS  = @{var:shared_flags}
-SO_LINK_CMD   = @{var:so_link}
-LINK_TO       = @{var:link_to}
+CXX           = %{cc}
+LIB_OPT       = %{lib_opt}
+CHECK_OPT     = %{check_opt}
+MACH_OPT      = %{mach_opt}
+LANG_FLAGS    = %{lang_flags}
+WARN_FLAGS    = %{warn_flags}
+SO_OBJ_FLAGS  = %{shared_flags}
+SO_LINK_CMD   = %{so_link}
+LINK_TO       = %{link_to}
 
 ##################################################
 # Version Numbers                                #
 ##################################################
-VERSION       = @{var:version}
-SO_VERSION    = @{var:so_version}
+VERSION       = %{version}
+SO_VERSION    = %{so_version}
 
 ##################################################
 # Installation Settings                          #
 ##################################################
-DESTDIR       = @{var:prefix}
+DESTDIR       = %{prefix}
 
 BINDIR        = $(DESTDIR)/bin
-LIBDIR        = $(DESTDIR)/@{var:libdir}
-HEADERDIR     = $(DESTDIR)/@{var:includedir}/botan
-DOCDIR        = $(DESTDIR)/@{var:docdir}/Botan-$(VERSION)
+LIBDIR        = $(DESTDIR)/%{libdir}
+HEADERDIR     = $(DESTDIR)/%{includedir}/botan
+DOCDIR        = $(DESTDIR)/%{docdir}/Botan-$(VERSION)
 PKGCONF_DIR   = $(LIBDIR)/pkgconfig
 
-CONFIG_SCRIPT = @{var:botan-config}
-PKGCONFIG     = @{var:botan-pkgconfig}
+CONFIG_SCRIPT = %{botan_config}
+PKGCONFIG     = %{botan_pkgconfig}
 
 ##################################################
 # Aliases for Common Programs                    #
 ##################################################
-AR               = @{var:ar_command}
+AR               = %{ar_command}
 CD               = @cd
 ECHO             = @echo
-INSTALL_CMD_EXEC = @{var:install_cmd_exec}
-INSTALL_CMD_DATA = @{var:install_cmd_data}
+INSTALL_CMD_EXEC = %{install_cmd_exec}
+INSTALL_CMD_DATA = %{install_cmd_data}
 LN               = ln -fs
 MKDIR            = @mkdir
 MKDIR_INSTALL    = @umask 022; mkdir -p -m 755
-RANLIB           = @{var:ranlib_command}
+RANLIB           = %{ranlib_command}
 RM               = @rm -f
 RM_R             = @rm -rf
 
 ##################################################
 # File Lists                                     #
 ##################################################
-CHECK         = @{var:check_prefix}check
+CHECK         = %{check_prefix}check
 
-DOCS          = @{var:doc_files}
+DOCS          = %{doc_files}
 
-HEADERS       = @{var:include_files}
+HEADERS       = %{include_files}
 
-LIBOBJS       = @{var:lib_objs}
+LIBOBJS       = %{lib_objs}
 
-CHECKOBJS     = @{var:check_objs}
+CHECKOBJS     = %{check_objs}
 
 LIB_FLAGS     = $(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS) $(SO_OBJ_FLAGS)
 CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
 
 LIBRARIES     = $(STATIC_LIB) $(SHARED_LIB)
 
-LIBNAME       = @{var:lib_prefix}libbotan
+LIBNAME       = %{lib_prefix}libbotan
 STATIC_LIB    = $(LIBNAME).a
 
-SHARED_LIB    = $(LIBNAME)-$(SO_VERSION).@{var:so_suffix}
-SONAME        = $(LIBNAME)-$(SO_VERSION).@{var:so_suffix}
+SHARED_LIB    = $(LIBNAME)-$(SO_VERSION).%{so_suffix}
+SONAME        = $(LIBNAME)-$(SO_VERSION).%{so_suffix}
 
-SYMLINK       = libbotan.@{var:so_suffix}
+SYMLINK       = libbotan.%{so_suffix}
 
 all: $(LIBRARIES)
 
 ##################################################
 # Build Commands                                 #
 ##################################################
-@{var:lib_build_cmds}
+%{lib_build_cmds}
 
-@{var:check_build_cmds}
+%{check_build_cmds}
 
 ##################################################
 # Link Commands                                  #
 ##################################################
 $(CHECK): $(LIBRARIES) $(CHECKOBJS)
-	$(CXX) $(CHECKOBJS) -L. -lbotan $(LINK_TO) -o $(CHECK)
+	$(CXX) $(LDFLAGS) $(CHECKOBJS) -o $(CHECK) -L. -lbotan-%{so_version} $(LINK_TO)
 
 $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)
@@ -93,7 +93,7 @@ $(STATIC_LIB): $(LIBOBJS)
 	$(RANLIB) $(STATIC_LIB)
 
 $(SHARED_LIB): $(LIBOBJS)
-	$(SO_LINK_CMD) $(LINK_TO) $(LIBOBJS) -o $(SHARED_LIB)
+	$(SO_LINK_CMD) $(LDFLAGS) $(LIBOBJS) -o $(SHARED_LIB) $(LINK_TO)
 	$(LN) $(SHARED_LIB) $(SYMLINK)
 
 ##################################################
@@ -106,15 +106,15 @@ static: $(STATIC_LIB)
 shared: $(SHARED_LIB)
 
 doxygen:
-	doxygen @{var:doc-dir}/botan.doxy
+	doxygen %{doc_src_dir}/botan.doxy
 
 clean:
-	$(RM_R) @{var:build-dir}/lib/* @{var:build-dir}/checks/*
+	$(RM_R) %{build_dir}/lib/* %{build_dir}/checks/*
 	$(RM) $(LIBRARIES) $(SYMLINK) $(CHECK)
 
 distclean: clean
-	$(RM_R) @{var:build-dir}
-	$(RM_R) @{var:doc-dir}/doxygen @{var:doc-dir}/botan.doxy
+	$(RM_R) %{build_dir}
+	$(RM_R) %{doc_src_dir}/doxygen %{doc_src_dir}/botan.doxy
 	$(RM) Makefile $(CONFIG_SCRIPT) $(PKGCONFIG)
 
 install: $(LIBRARIES)
