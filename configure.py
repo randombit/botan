@@ -892,7 +892,7 @@ def main(argv = None):
         argv = sys.argv
 
     logging.basicConfig(stream = sys.stdout, format = '%(message)s',
-                        level = logging.DEBUG)
+                        level = logging.INFO)
 
     logging.debug('%s invoked with options "%s"' % (
         argv[0], ' '.join(argv[1:])))
