@@ -2,7 +2,7 @@ realname "SHA-1 (IA-32)"
 
 define SHA1_IA32
 
-load_on auto
+load_on asm_ok
 
 <add>
 sha1_ia32_imp.S
