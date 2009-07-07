@@ -504,7 +504,7 @@ def guess_processor(archinfo):
                     return (base_proc,submodel)
 
     # No matches, so just use the base proc type
-    return (base_proc,base_proc)
+    return canon_processor(archinfo, base_proc)
 
 """
 Read a whole file into memory as a string
