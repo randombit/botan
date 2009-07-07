@@ -6,7 +6,6 @@ Configuration program for botan
 CPython version requirements:
   2.5 or higher strongly recommended
   2.4 will work if you install a recent version of Optik
-  2.3 untested; might work, might not
 
 Has not been tested with Jython, IronPython, or PyPy
 
@@ -14,13 +13,14 @@ Has not been tested with Jython, IronPython, or PyPy
 Distributed under the terms of the Botan license
 """
 
+import sys
 import os
 import os.path
 import platform
+import logging
 import re
 import shlex
 import shutil
-import sys
 
 from optparse import OptionParser, OptionGroup, IndentedHelpFormatter, SUPPRESS_HELP
 from string import Template
@@ -333,6 +333,10 @@ class ArchInfo(object):
         else:
             self.unaligned_ok = 0
 
+    def all_submodels(self):
+        all = zip(self.submodels, self.submodels) + self.submodel_aliases.items()
+        return sorted(all, key = lambda k: len(k[0]), reverse = True)
+
     def defines(self, target_submodel, with_endian):
         macros = ['TARGET_ARCH_IS_%s' % (self.basename.upper())]
 
@@ -474,12 +478,9 @@ def canon_processor(archinfo, proc):
         if ainfo.basename == proc or proc in ainfo.aliases:
             return (ainfo.basename, ainfo.basename)
         else:
-            for sm_alias in ainfo.submodel_aliases:
-                if re.match(sm_alias, proc) != None:
-                    return (ainfo.basename,ainfo.submodel_aliases[sm_alias])
-            for submodel in ainfo.submodels:
-                if re.match(submodel, proc) != None:
-                    return (ainfo.basename,submodel)
+            for (match,submodel) in ainfo.all_submodels():
+                if re.search(match, proc) != None:
+                    return (ainfo.basename, submodel)
 
     raise Exception('Unknown or unidentifiable processor "%s"' % (proc))
 
@@ -494,14 +495,11 @@ def guess_processor(archinfo):
 
     for ainfo in archinfo.values():
         if ainfo.basename == base_proc or base_proc in ainfo.aliases:
-            base_proc = ainfo.basename
+            for (match,submodel) in ainfo.all_submodels():
+                if re.search(match, full_proc) != None:
+                    return (ainfo.basename, submodel)
 
-            for sm_alias in ainfo.submodel_aliases:
-                if re.match(sm_alias, full_proc) != None:
-                    return (base_proc,ainfo.submodel_aliases[sm_alias])
-            for submodel in ainfo.submodels:
-                if re.match(submodel, full_proc) != None:
-                    return (base_proc,submodel)
+            return canon_processor(archinfo, ainfo.basename)
 
     # No matches, so just use the base proc type
     return canon_processor(archinfo, base_proc)
@@ -869,9 +867,6 @@ def setup_build(build_config, options, template_vars):
     for header_file in build_config.headers:
         portable_symlink(header_file, build_config.full_include_dir)
 
-def autoconfig(s):
-    print s
-
 def main(argv = None):
     if argv is None:
         argv = sys.argv
@@ -885,12 +880,16 @@ def main(argv = None):
 
     (modules, archinfo, ccinfo, osinfo) = load_info_files(options)
 
+    config_log = logging.getLogger('configure.autoconfig')
+    config_log.addHandler(logging.StreamHandler())
+    config_log.setLevel(logging.DEBUG)
+
     if options.compiler is None:
         if platform.system().lower() == 'windows':
             options.compiler = 'msvc'
         else:
             options.compiler = 'gcc'
-        autoconfig('Guessing to use compiler %s' % (options.compiler))
+        config_log.info('Guessing to use compiler %s' % (options.compiler))
 
     if options.compiler not in ccinfo:
         raise Exception('Unknown compiler "%s"; available options: %s' % (
@@ -902,9 +901,10 @@ def main(argv = None):
 
     if options.cpu is None:
         (options.arch, options.cpu) = guess_processor(archinfo)
-        autoconfig('Guessing target processor is a %s/%s' % (options.arch, options.cpu))
+        config_log.info('Guessing target processor is a %s/%s' % (options.arch, options.cpu))
     else:
         (options.arch, options.cpu) = canon_processor(archinfo, options.cpu)
+        config_log.debug('Canonicalizized --cpu to %s/%s' % (options.arch, options.cpu))
 
     if options.with_tr1 == None:
         if ccinfo[options.compiler].compiler_has_tr1:
@@ -925,7 +925,7 @@ def main(argv = None):
     # Performs the I/O
     setup_build(build_config, options, template_vars)
 
-    autoconfig('Build setup complete')
+    config_log.info('Build setup complete')
 
 if __name__ == '__main__':
     try:
