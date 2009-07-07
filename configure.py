@@ -202,12 +202,15 @@ def process_command_line(args):
 
     (options, args) = parser.parse_args(args)
 
+    if args != []:
+        raise Exception('Unhandled option(s): ' + ' '.join(args))
+
     options.enabled_modules = \
        sorted(set(sum([s.split(',') for s in options.enabled_modules], [])))
     options.disabled_modules = \
        sorted(set(sum([s.split(',') for s in options.disabled_modules], [])))
 
-    return (options, args)
+    return options
 
 """
 Generic lexer function for info.txt and src/build-data files
@@ -677,7 +680,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'botan_config': prefix_with_build_dir('botan-config'),
         'botan_pkgconfig': prefix_with_build_dir('botan.pc'),
 
-        'doc_files': makefile_list(sorted(build_config.doc_files())),
+        'doc_files': makefile_list(build_config.doc_files()),
 
         'mod_list': '\n'.join(['%s (%s)' % (m.basename, m.realname)
                                for m in sorted(modules)]),
@@ -832,6 +835,8 @@ def setup_build(build_config, options, template_vars):
         options.makefile_dir,
         choose_makefile_template(template_vars['makefile_style']))
 
+    logging.debug('Using makefile template %s' % (makefile_template))
+
     templates_to_proc[makefile_template] = 'Makefile'
 
     for (template, sink) in templates_to_proc.items():
@@ -860,6 +865,9 @@ def setup_build(build_config, options, template_vars):
         else:
             shutil.copy(filename, target_dir)
 
+    logging.debug('Linking %d header files in %s' % (len(build_config.headers),
+                                                     build_config.full_include_dir))
+
     for header_file in build_config.headers:
         portable_symlink(header_file, build_config.full_include_dir)
 
@@ -867,9 +875,12 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv
 
-    (options, args) = process_command_line(argv[1:])
-    if args != []:
-        raise Exception('Unhandled option(s) ' + ' '.join(args))
+    logging.basicConfig(stream = sys.stdout, format = "%(message)s",
+                        level = logging.INFO)
+
+    logging.debug('%s invoked with options "%s"' % (argv[0], ' '.join(argv[1:])))
+
+    options = process_command_line(argv[1:])
 
     options.base_dir = os.path.dirname(argv[0])
     options.src_dir = os.path.join(options.base_dir, 'src')
@@ -879,16 +890,12 @@ def main(argv = None):
 
     (modules, archinfo, ccinfo, osinfo) = load_info_files(options)
 
-    config_log = logging.getLogger('configure.autoconfig')
-    config_log.addHandler(logging.StreamHandler())
-    config_log.setLevel(logging.DEBUG)
-
     if options.compiler is None:
         if platform.system().lower() == 'windows':
             options.compiler = 'msvc'
         else:
             options.compiler = 'gcc'
-        config_log.info('Guessing to use compiler %s' % (options.compiler))
+        logging.info('Guessing to use compiler %s' % (options.compiler))
 
     if options.compiler not in ccinfo:
         raise Exception('Unknown compiler "%s"; available options: %s' % (
@@ -900,10 +907,12 @@ def main(argv = None):
 
     if options.cpu is None:
         (options.arch, options.cpu) = guess_processor(archinfo)
-        config_log.info('Guessing target processor is a %s/%s' % (options.arch, options.cpu))
+        logging.info('Guessing target processor is a %s/%s' % (options.arch, options.cpu))
     else:
         (options.arch, options.cpu) = canon_processor(archinfo, options.cpu)
-        config_log.debug('Canonicalizized --cpu to %s/%s' % (options.arch, options.cpu))
+        logging.debug('Canonicalizized --cpu to %s/%s' % (options.arch, options.cpu))
+
+    logging.info('Target is %s-%s-%s-%s' % (options.compiler, options.os, options.arch, options.cpu))
 
     if options.with_tr1 == None:
         if ccinfo[options.compiler].compiler_has_tr1:
@@ -924,7 +933,7 @@ def main(argv = None):
     # Performs the I/O
     setup_build(build_config, options, template_vars)
 
-    config_log.info('Build setup complete')
+    logging.info('Build setup complete')
 
 if __name__ == '__main__':
     try:
@@ -933,5 +942,5 @@ if __name__ == '__main__':
         pass
     except Exception, e:
         print >>sys.stderr, e
-        import traceback
-        traceback.print_exc(file=sys.stderr)
+        #import traceback
+        #traceback.print_exc(file=sys.stderr)
