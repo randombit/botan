@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
 """
-Configuration program for botan
+Configuration program for botan (http://botan.randombit.net/)
 
-CPython version requirements:
-  2.5 or higher strongly recommended
-  2.4 will work if you install a recent version of Optik
+Tested with
+   CPython 2.5, 2.6 - OK
+   CPython 2.4 - OK, needs updated Optik library
+   Jython 2.5 - OK, target detection does not work
 
-Has not been tested with Jython, IronPython, or PyPy
+Has not been tested with IronPython or PyPy
 
 (C) 2009 Jack Lloyd
 Distributed under the terms of the Botan license
@@ -95,7 +96,7 @@ def process_command_line(args):
     parser = OptionParser(formatter =
                           IndentedHelpFormatter(max_help_position = 50))
 
-    target_group = OptionGroup(parser, "Target options")
+    target_group = OptionGroup(parser, 'Target options')
 
     target_group.add_option('--cc', dest='compiler',
                             help='set the desired build compiler')
@@ -106,25 +107,25 @@ def process_command_line(args):
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
                             help='override guess of CPU byte order')
 
-    build_group = OptionGroup(parser, "Build options")
+    build_group = OptionGroup(parser, 'Build options')
 
     build_group.add_option('--enable-shared', dest='build_shared_lib',
                            action='store_true', default=True,
                             help=SUPPRESS_HELP)
     build_group.add_option('--disable-shared', dest='build_shared_lib',
                            action='store_false',
-                           help="disable building a shared library")
+                           help='disable building a shared library')
 
     build_group.add_option('--enable-asm', dest='asm_ok',
                            action='store_true', default=True,
                            help=SUPPRESS_HELP)
     build_group.add_option('--disable-asm', dest='asm_ok',
                            action='store_false',
-                           help="disallow use of assembler")
+                           help='disallow use of assembler')
 
     build_group.add_option('--enable-debug', dest='debug_build',
                            action='store_true', default=False,
-                           help="enable debug build")
+                           help='enable debug build')
     build_group.add_option('--disable-debug', dest='debug_build',
                            action='store_false', help=SUPPRESS_HELP)
 
@@ -143,7 +144,7 @@ def process_command_line(args):
                            dest='local_config', metavar='FILE',
                            help='include the contents of FILE into build.h')
 
-    mods_group = OptionGroup(parser, "Module selection")
+    mods_group = OptionGroup(parser, 'Module selection')
 
     mods_group.add_option('--enable-modules', dest='enabled_modules',
                           metavar='MODS', action='append', default=[],
@@ -160,7 +161,7 @@ def process_command_line(args):
                               action='append_const', const=mod,
                               help=SUPPRESS_HELP)
 
-    install_group = OptionGroup(parser, "Installation options")
+    install_group = OptionGroup(parser, 'Installation options')
 
     install_group.add_option('--prefix', metavar='DIR',
                              help='set the base install directory')
@@ -204,6 +205,8 @@ def process_command_line(args):
 
     if args != []:
         raise Exception('Unhandled option(s): ' + ' '.join(args))
+    if options.with_endian != None and options.with_endian not in ['little', 'big']:
+        raise Exception('Bad value to --with-endian "%s"' % (options.with_endian))
 
     options.enabled_modules = \
        sorted(set(sum([s.split(',') for s in options.enabled_modules], [])))
@@ -339,8 +342,9 @@ class ArchInfo(object):
             self.unaligned_ok = 0
 
     def all_submodels(self):
-        all = zip(self.submodels, self.submodels) + self.submodel_aliases.items()
-        return sorted(all, key = lambda k: len(k[0]), reverse = True)
+        return sorted(zip(self.submodels, self.submodels) +
+                          self.submodel_aliases.items(),
+                      key = lambda k: len(k[0]), reverse = True)
 
     def defines(self, target_submodel, with_endian):
         macros = ['TARGET_ARCH_IS_%s' % (self.basename.upper())]
@@ -349,8 +353,7 @@ class ArchInfo(object):
             macros.append('TARGET_CPU_IS_%s' % (target_submodel.upper()))
 
         if with_endian:
-            if with_endian == 'little' or with_endian == 'big':
-                macros.append('TARGET_CPU_IS_%s_ENDIAN' % (with_endian.upper()))
+            macros.append('TARGET_CPU_IS_%s_ENDIAN' % (with_endian.upper()))
         elif self.endian != None:
             macros.append('TARGET_CPU_IS_%s_ENDIAN' % (self.endian.upper()))
 
@@ -574,7 +577,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         # Check that settings are consistent across modules
         for mp_bit in mp_bits[1:]:
             if mp_bit != mp_bits[0]:
-                raise Exception("Incompatible mp_bits settings found")
+                raise Exception('Incompatible mp_bits settings found')
 
         return mp_bits[0]
 
@@ -592,7 +595,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                 cc.output_to_option)
 
     def makefile_list(items):
-        return (' '*16).join([item + ' \\\n' for item in items])
+        items = list(items) # force evaluation so we can slice it
+        return (' '*16).join([item + ' \\\n' for item in items[:-1]] +
+                             [items[-1]])
 
     def prefix_with_build_dir(path):
         if options.with_build_dir != None:
@@ -627,7 +632,10 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'mp_bits': choose_mp_bits(),
 
-        'cc': cc.binary_name + cc.mach_abi_link_flags(options.os, options.arch, options.cpu),
+        'cc': cc.binary_name + cc.mach_abi_link_flags(options.os,
+                                                      options.arch,
+                                                      options.cpu),
+
         'lib_opt': cc.lib_opt_flags,
         'mach_opt': cc.mach_opts(options.arch, options.cpu),
         'check_opt': cc.check_opt_flags,
@@ -644,7 +652,10 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                                            for m in modules if m.define]),
 
         'target_os_defines': make_cpp_macros(osinfo.defines()),
-        'target_compiler_defines': make_cpp_macros(cc.defines(options.with_tr1)),
+
+        'target_compiler_defines': make_cpp_macros(
+            cc.defines(options.with_tr1)),
+
         'target_cpu_defines': make_cpp_macros(
             arch.defines(options.cpu, options.with_endian)),
 
@@ -858,15 +869,20 @@ def setup_build(build_config, options, template_vars):
                 return accum + 1 + count_dirs(dir)
 
             dirs_up = count_dirs(target_dir)
-            target = os.path.join(os.path.join(*[os.path.pardir]*dirs_up), filename)
-            os.symlink(target, os.path.join(target_dir, os.path.basename(filename)))
+
+            os.symlink(os.path.join(os.path.join(*[os.path.pardir]*dirs_up),
+                                    filename),
+                       os.path.join(target_dir, os.path.basename(filename)))
+
         elif 'link' in os.__dict__:
-            os.link(filename, os.path.join(target_dir, os.path.basename(filename)))
+            os.link(filename,
+                    os.path.join(target_dir, os.path.basename(filename)))
+
         else:
             shutil.copy(filename, target_dir)
 
-    logging.debug('Linking %d header files in %s' % (len(build_config.headers),
-                                                     build_config.full_include_dir))
+    logging.debug('Linking %d header files in %s' % (
+        len(build_config.headers), build_config.full_include_dir))
 
     for header_file in build_config.headers:
         portable_symlink(header_file, build_config.full_include_dir)
@@ -875,12 +891,19 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv
 
-    logging.basicConfig(stream = sys.stdout, format = "%(message)s",
-                        level = logging.INFO)
+    logging.basicConfig(stream = sys.stdout, format = '%(message)s',
+                        level = logging.DEBUG)
 
-    logging.debug('%s invoked with options "%s"' % (argv[0], ' '.join(argv[1:])))
+    logging.debug('%s invoked with options "%s"' % (
+        argv[0], ' '.join(argv[1:])))
+
+    logging.debug('Platform: OS="%s" machine="%s" proc="%s"' % (
+        platform.system(), platform.machine(), platform.processor()))
 
     options = process_command_line(argv[1:])
+
+    if options.os == "java":
+        raise Exception("Jython detected: need --os and --cpu to set target")
 
     options.base_dir = os.path.dirname(argv[0])
     options.src_dir = os.path.join(options.base_dir, 'src')
@@ -907,12 +930,15 @@ def main(argv = None):
 
     if options.cpu is None:
         (options.arch, options.cpu) = guess_processor(archinfo)
-        logging.info('Guessing target processor is a %s/%s' % (options.arch, options.cpu))
+        logging.info('Guessing target processor is a %s/%s' % (
+            options.arch, options.cpu))
     else:
         (options.arch, options.cpu) = canon_processor(archinfo, options.cpu)
-        logging.debug('Canonicalizized --cpu to %s/%s' % (options.arch, options.cpu))
+        logging.debug('Canonicalizized --cpu to %s/%s' % (
+            options.arch, options.cpu))
 
-    logging.info('Target is %s-%s-%s-%s' % (options.compiler, options.os, options.arch, options.cpu))
+    logging.info('Target is %s-%s-%s-%s' % (
+        options.compiler, options.os, options.arch, options.cpu))
 
     if options.with_tr1 == None:
         if ccinfo[options.compiler].compiler_has_tr1:
