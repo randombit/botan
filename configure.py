@@ -51,9 +51,11 @@ class BuildConfigurationInformation(object):
 
         self.sources = sorted(set(all_files) - set(self.headers))
 
+        checks_dir = os.path.join(options.base_dir, 'checks')
+
         self.check_sources = sorted(
-            [os.path.join('checks', file) for file in
-             os.listdir('checks') if file.endswith('.cpp')])
+            [os.path.join(checks_dir, file) for file in os.listdir(checks_dir)
+             if file.endswith('.cpp')])
 
     def doc_files(self):
         docs = ['readme.txt']
@@ -589,7 +591,12 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     def makefile_list(items):
         return (' '*16).join([item + ' \\\n' for item in items])
 
-    vars = {
+    def prefix_with_build_dir(path):
+        if options.with_build_dir != None:
+            return os.path.join(options.with_build_dir, path)
+        return path
+
+    return {
         'version_major': build_config.version_major(),
         'version_minor': build_config.version_minor(),
         'version_patch': build_config.version_patch(),
@@ -609,7 +616,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'docdir': options.docdir or osinfo.doc_dir,
 
         'doc_src_dir': 'doc',
-        'build_dir': build_config.build_dir,
+        'build_dir': prefix_with_build_dir(build_config.build_dir),
 
         'os': options.os,
         'arch': options.arch,
@@ -661,31 +668,20 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'install_cmd_exec': osinfo.install_cmd_exec,
         'install_cmd_data': osinfo.install_cmd_data,
 
-        'check_prefix': '',
-        'lib_prefix': '',
+        'check_prefix': prefix_with_build_dir(''),
+        'lib_prefix': prefix_with_build_dir(''),
 
         'static_suffix': osinfo.static_suffix,
         'so_suffix': osinfo.so_suffix,
 
-        'botan_config': 'botan-config',
-        'botan_pkgconfig': 'botan.pc',
+        'botan_config': prefix_with_build_dir('botan-config'),
+        'botan_pkgconfig': prefix_with_build_dir('botan.pc'),
 
         'doc_files': makefile_list(sorted(build_config.doc_files())),
 
         'mod_list': '\n'.join(['%s (%s)' % (m.basename, m.realname)
                                for m in sorted(modules)]),
         }
-
-    # Change settings for out of tree builds
-    if options.with_build_dir != None:
-        for var in ['build_dir',
-                    'botan_config',
-                    'botan_pkgconfig',
-                    'check_prefix',
-                    'lib_prefix']:
-            vars[var] = os.path.join(options.with_build_dir, vars[var])
-
-    return vars
 
 """
 Determine which modules to load based on options, target, etc
@@ -772,7 +768,7 @@ def load_info_files(options):
 
     modules = dict([(mod.basename, mod) for mod in
                     [ModuleInfo(info) for info in
-                     find_files_named('info.txt', 'src')]])
+                     find_files_named('info.txt', options.src_dir)]])
 
     def list_files_in_build_data(subdir):
         for (dirpath, dirnames, filenames) in \
@@ -875,7 +871,10 @@ def main(argv = None):
     if args != []:
         raise Exception('Unhandled option(s) ' + ' '.join(args))
 
-    options.build_data = os.path.join('src', 'build-data')
+    options.base_dir = os.path.dirname(argv[0])
+    options.src_dir = os.path.join(options.base_dir, 'src')
+
+    options.build_data = os.path.join(options.src_dir, 'build-data')
     options.makefile_dir = os.path.join(options.build_data, 'makefile')
 
     (modules, archinfo, ccinfo, osinfo) = load_info_files(options)
