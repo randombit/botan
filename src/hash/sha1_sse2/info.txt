@@ -11,6 +11,7 @@ sha1_sse2.h
 </add>
 
 <requires>
+sse2_eng
 sha1
 utils
 </requires>

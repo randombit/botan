@@ -11,6 +11,7 @@ sha1_amd64.h
 </add>
 
 <requires>
+amd64_eng
 asm_amd64
 sha1
 utils

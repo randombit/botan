@@ -2,7 +2,7 @@ realname "SSE2 Assembler Engine"
 
 define ENGINE_SSE2_ASSEMBLER
 
-load_on auto
+load_on dep
 
 <add>
 eng_sse2.cpp

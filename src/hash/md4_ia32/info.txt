@@ -11,6 +11,7 @@ md4_ia32.h
 </add>
 
 <requires>
+ia32_eng
 asm_ia32
 md4
 </requires>
