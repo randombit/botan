@@ -428,7 +428,7 @@ sub choose_target {
             my $has_ll_bug = 0;
             $has_ll_bug = 1 if($gcc_version =~ /4\.[0123]/);
             $has_ll_bug = 1 if($gcc_version =~ /3\.[34]/);
-            $has_ll_bug = 1 if($gcc_version =~ /2\.25\.[0-4]/);
+            $has_ll_bug = 1 if($gcc_version =~ /2\.95\.[0-4]/);
             $has_ll_bug = 1 if($gcc_version eq '');
 
             $has_ll_bug = 0 if($arch eq 'alpha' or $arch =~ /.*64$/);
