@@ -1036,13 +1036,14 @@ configuration subsystem for details).
 
 \subsection{Getting a PK algorithm object}
 
-The key types, like \type{RSA\_PrivateKey}, do not implement any kind of
-padding or encoding (which is generally necessary for security). To get an
-object like this, the easiest thing to do is call the functions found in
-\filename{look\_pk.h}. Generally these take a key, followed by a string that
-specified what hashing and encoding method(s) to use. Examples of such strings
-are ``EME1(SHA-1)'' for OAEP encryption and ``EMSA4(SHA-1)'' for PSS signatures
-(where the message is hashed using SHA-1).
+The key types, like \type{RSA\_PrivateKey}, do not implement any kind
+of padding or encoding (which is generally necessary for security). To
+get an object like this, the easiest thing to do is call the functions
+found in \filename{look\_pk.h}. Generally these take a key, followed
+by a string that specified what hashing and encoding method(s) to
+use. Examples of such strings are ``EME1(SHA-256)'' for OAEP
+encryption and ``EMSA4(SHA-256)'' for PSS signatures (where the
+message is hashed using SHA-256).
 
 Here are some basic examples (using an RSA key) to give you a feel for the
 possibilities. These examples assume \type{rsakey} is an
@@ -1107,7 +1108,8 @@ ElGamal (most other implementations of ElGamal do not support any
 other encoding format). RSA can also be used with PKCS \# 1 encoding,
 but because of various possible attacks, EME1 is the preferred
 encoding. EME1 requires the use of a hash function: unless a competent
-applied cryptographer tells you otherwise, you should use SHA-1.
+applied cryptographer tells you otherwise, you should use SHA-256 or
+SHA-512.
 
 Don't use ``Raw'' encoding unless you need it for backward
 compatibility with old protocols. There are many possible attacks
@@ -1167,7 +1169,7 @@ agreement (such as a Diffie-Hellman key stored in a \type{DH\_PrivateKey}
 object), and the name of a key derivation function. This can be ``Raw'',
 meaning the output of the primitive itself is returned as the key, or
 ``KDF1(hash)'' or ``KDF2(hash)'' where ``hash'' is any string you happen to
-like (hopefully you like strings like ``SHA-1'' or ``RIPEMD-160''), or
+like (hopefully you like strings like ``SHA-256'' or ``RIPEMD-160''), or
 ``X9.42-PRF(keywrap)'', which uses the PRF specified in ANSI X9.42. It takes
 the name or OID of the key wrap algorithm which will be used to encrypt a
 content encryption key.
@@ -1192,9 +1194,10 @@ The public value which should be used can be obtained by calling
 \function{public\_data}, which exists for any key that is associated with a
 key agreement algorithm. It returns a \type{SecureVector<byte>}.
 
-``KDF2(SHA-1)'' is by far the preferred algorithm for key derivation in new
-applications. The X9.42 algorithm may be useful in some circumstances, but
-unless you need X9.42 compatibility, KDF2 is easier to use.
+``KDF2(SHA-256)'' is by far the preferred algorithm for key derivation
+in new applications. The X9.42 algorithm may be useful in some
+circumstances, but unless you need X9.42 compatibility, KDF2 is easier
+to use.
 
 There is a Diffie-Hellman example included in the distribution, which you may
 want to examine.
@@ -1272,7 +1275,7 @@ and pass it to a higher-level class. For example:
    PK_Encrypting_Key* enc_key = dynamic_cast<PK_Encrypting_Key*>(key);
    if(!enc_key)
       throw Some_Exception();
-   PK_Encryptor* enc = get_pk_encryptor(*enc_key, "EME1(SHA-1)");
+   PK_Encryptor* enc = get_pk_encryptor(*enc_key, "EME1(SHA-256)");
    SecureVector<byte> cipher = enc->encrypt(some_message, size_of_message);
 \end{verbatim}
 
@@ -2627,17 +2630,16 @@ random data. You can also have the class generate a new salt for you with
 \function{new\_random\_salt}; the salt that was generated can be retrieved with
 \function{current\_salt}.
 
-Additionally some algorithms allow you to set some sort of iteration count,
-which will make the algorithm take longer to compute the final key (reducing
-the speed of brute-force attacks of various kinds). This can be changed with
-the \function{set\_iterations} function. Most standards recommend an iteration
-count of at least 1000. ``PBKDF2(SHA-1)'', with an 8-byte salt and an iteration
-count of 2048, is recommend for new applications. Currently defined S2K
-algorithms are ``PBKDF1(digest)'', ``PBKDF2(digest)'', and
+Additionally some algorithms allow you to set some sort of iteration
+count, which will make the algorithm take longer to compute the final
+key (reducing the speed of brute-force attacks of various kinds). This
+can be changed with the \function{set\_iterations} function. Most
+standards recommend an iteration count of at least 1000. Currently
+defined S2K algorithms are ``PBKDF1(digest)'', ``PBKDF2(digest)'', and
 ``OpenPGP-S2K(digest)''; you can retrieve any of these using the
 \function{get\_s2k}, found in \filename{lookup.h}. As of this writing,
-``PBKDF2(SHA-1)'' with 10000 iterations and an 8 byte salt is recommend for new
-applications.
+``PBKDF2(SHA-256)'' with 10000 iterations and an 8 byte salt is
+recommend for new applications.
 
 \subsubsection{OpenPGP S2K}
 
@@ -2898,16 +2900,16 @@ be more secure than the ones listed, but the algorithms listed here are
 \begin{list}{$\cdot$}
   \item Block ciphers: AES or Serpent in CBC or CTR mode
 
-  \item Hash functions: SHA-1, SHA-256, SHA-512
+  \item Hash functions: SHA-256, SHA-512
 
   \item MACs: HMAC with any recommended hash function
 
-  \item Public Key Encryption: RSA with ``EME1(SHA-1)''
+  \item Public Key Encryption: RSA with ``EME1(SHA-256)''
 
   \item Public Key Signatures: RSA with EMSA4 and any recommended hash, or DSA
-     with ``EMSA1(SHA-1)''
+     with ``EMSA1(SHA-256)''
 
-  \item Key Agreement: Diffie-Hellman, with ``KDF2(SHA-1)''
+  \item Key Agreement: Diffie-Hellman, with ``KDF2(SHA-256)''
 \end{list}
 
 \subsection{Compliance with Standards}
@@ -2993,9 +2995,10 @@ match that in SCAN, if it's defined there).
 \textbf{Stream Ciphers:} ``ARC4'', ``MARK4'', ``Turing'', ``WiderWake4+1-BE''
 
 \noindent
-\textbf{Hash Functions:} ``FORK-256'', ``HAS-160'', ``MD2'', ``MD4'', ``MD5'',
-``RIPEMD-128'', ``RIPEMD-160'', ``SHA-160'', ``SHA-256'', ``SHA-384'',
-``SHA-512'', ``Tiger(OUTSZ,PASS)'', ``Whirlpool''
+\textbf{Hash Functions:} ``FORK-256'', ``HAS-160'', ``GOST-34.11'',
+``MD2'', ``MD4'', ``MD5'', ``RIPEMD-128'', ``RIPEMD-160'',
+``SHA-160'', ``SHA-256'', ``SHA-384'', ``SHA-512'', ``Skein-512'',
+``Tiger(OUTSZ,PASS)'', ``Whirlpool''
 
 \noindent
 \textbf{MACs:} ``HMAC(HASH)'', ``CMAC(BLOCK)'', ``X9.19-MAC''
@@ -3015,7 +3018,7 @@ sample boxes, which leads to issues of endian conventions, etc.
 
 If you wish maximum portability between different implementations of an
 algorithm, it's best to stick to strongly defined and well standardized
-algorithms, TripleDES, AES, HMAC, and SHA-1 all being good examples.
+algorithms, TripleDES, AES, HMAC, and SHA-256 all being good examples.
 
 \pagebreak
 \section{Support and Further Information}
