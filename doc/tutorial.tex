@@ -13,7 +13,7 @@
 \title{\textbf{Botan Tutorial}}
 \author{Jack Lloyd \\
         \texttt{lloyd@randombit.net}}
-\date{2009/2/25}
+\date{2009/07/08}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\manpage}[2]{\texttt{#1}(#2)}
@@ -43,8 +43,8 @@ the more obscure or unusual ones. It is a supplement to the API
 documentation and the example applications, which are included in the
 distribution.
 
-To quote the Perl man page: '``There's more than one way to do it.'' Divining
-how many more is left as an exercise to the reader.'
+To quote the Perl man page: '``There's more than one way to do it.''
+Divining how many more is left as an exercise to the reader.'
 
 This is \emph{not} a general introduction to cryptography, and most simple
 terms and ideas are not explained in any great detail.
@@ -72,8 +72,6 @@ int main()
 
 \section{Hashing a File}
 
-
-
 \section{Symmetric Cryptography}
 
 \subsection{Encryption with a passphrase}
@@ -88,14 +86,9 @@ We'll start with a simple method that is commonly used, and show the problems
 that can arise. Each subsequent solution will modify the previous one to
 prevent one or more common problems, until we arrive at a good version.
 
-In these examples, we'll always use Blowfish in Cipher-Block Chaining (CBC)
-mode. Blowfish has been around almost 10 years at this point, and is well known
-and trusted. The main reason for choosing Blowfish over, say, TripleDES, is
-because Blowfish supports nearly arbitrary key lengths, allowing us to easily
-try many different ways of generating the keys. For production code, another
-algorithm (such as TripleDES or AES) may be more appropriate. Whenever we need a
-hash function, we'll use SHA-1, since that is a common and well-known hash that
-is thought to be secure.
+In these examples, we'll always use Serpent in Cipher-Block Chaining
+(CBC) mode. Whenever we need a hash function, we'll use SHA-256, since
+that is a common and well-known hash that is thought to be secure.
 
 In all examples, we choose to derive the Initialization Vector (IV) from the
 passphrase. Another (probably more common) alternative is to generate the IV
@@ -111,18 +104,19 @@ First, some notation. The passphrase is stored as a \type{std::string} named
 
 \subsubsection{First try}
 
-We hash the passphrase with SHA-1, and use the resulting hash to key Blowfish.
-To generate the IV, we prepend a single '0' character to the passphrase, hash
-it, and truncate it to 8 bytes (which is Blowfish's block size).
+We hash the passphrase with SHA-256, and use the resulting hash to key
+Serpent. To generate the IV, we prepend a single '0' character to the
+passphrase, hash it, and truncate it to 16 bytes (which is Serpent's
+block size).
 
 \begin{verbatim}
-   HashFunction* hash = get_hash("SHA-1");
+   HashFunction* hash = get_hash("SHA-256");
 
    SymmetricKey key = hash->process(passphrase);
    SecureVector<byte> raw_iv = hash->process('0' + passphrase);
-   InitializationVector iv(raw_iv, 8);
+   InitializationVector iv(raw_iv, 16);
 
-   Pipe pipe(get_cipher("Blowfish/CBC/PKCS7", key, iv, ENCRYPTION));
+   Pipe pipe(get_cipher("Serpent/CBC/PKCS7", key, iv, ENCRYPTION));
 
    pipe.start_msg();
    infile >> pipe;
@@ -142,7 +136,7 @@ to \arg{outfile} will be implicit with writing to the \type{Pipe}). We can do
 this by replacing the last few lines with:
 
 \begin{verbatim}
-   Pipe pipe(get_cipher("Blowfish/CBC/PKCS7", key, iv, ENCRYPTION),
+   Pipe pipe(get_cipher("Serpent/CBC/PKCS7", key, iv, ENCRYPTION),
              new DataSink_Stream(outfile));
 
    pipe.start_msg();
@@ -152,47 +146,49 @@ this by replacing the last few lines with:
 
 \subsubsection{Problem 2: Deriving the key and IV}
 
-Hash functions like SHA-1 are deterministic; if the same passphrase is supplied
-twice, then the key (and in our case, the IV) will be the same. This is very
-dangerous, and could easily open the whole system up to attack. What we need to
-do is introduce a salt (or nonce) into the generation of the key from the
-passphrase. This will mean that the key will not be the same each time the same
-passphrase is typed in by a user.
+Hash functions like SHA-256 are deterministic; if the same passphrase
+is supplied twice, then the key (and in our case, the IV) will be the
+same. This is very dangerous, and could easily open the whole system
+up to attack. What we need to do is introduce a salt (or nonce) into
+the generation of the key from the passphrase. This will mean that the
+key will not be the same each time the same passphrase is typed in by
+a user.
 
 There is another problem with using a bare hash function to derive
 keys. While it's inconceivable (based on our current understanding of
 thermodynamics and theories of computation) that an attacker could
-brute-force a 160-bit key, it would be fairly simple for them to
-compute the SHA-1 hashes of various common passwords ('password', the
-name of the dog, the significant other's middle name, favorite sports
-team) and try those as keys. So we want to slow the attacker down if
-we can, and an easy way to do that is to iterate the hash function a
-bunch of times (say, 1024 to 4096 times). This will involve only a
-small amount of effort for a legitimate user (since they only have to
-compute the hashes once, when they type in their passphrase), but an
-attacker, trying out a large list of potential passphrases, will be
-seriously annoyed by this.
+brute-force a 256-bit key, it would be fairly simple for them to
+compute the SHA-256 hashes of various common passwords ('password',
+the name of the dog, the significant other's middle name, favorite
+sports team) and try those as keys. So we want to slow the attacker
+down if we can, and an easy way to do that is to iterate the hash
+function a bunch of times (say, 1024 to 4096 times). This will involve
+only a small amount of effort for a legitimate user (since they only
+have to compute the hashes once, when they type in their passphrase),
+but an attacker, trying out a large list of potential passphrases,
+will be seriously annoyed (and slowed down) by this.
 
-In this iteration of the example, we'll kill these two birds with one stone,
-and derive the key from the passphrase using a S2K (string to key) algorithm
-(these are also often called PBKDF algorithms, for Password-Based Key
-Derivation Function). In this example, we use PBKDF2 with Hash Message
-Authentication Code (HMAC(SHA-1)), which is specified in PKCS \#5. We replace
-the first four lines of code from the first example with:
+In this iteration of the example, we'll kill these two birds with one
+stone, and derive the key from the passphrase using a S2K (string to
+key) algorithm (these are also often called PBKDF algorithms, for
+Password-Based Key Derivation Function). In this example, we use
+PBKDF2 with Hash Message Authentication Code (HMAC(SHA-256)), which is
+specified in PKCS \#5. We replace the first four lines of code from
+the first example with:
 
 \begin{verbatim}
-   S2K* s2k = get_s2k("PBKDF2(SHA-1)");
+   S2K* s2k = get_s2k("PBKDF2(SHA-256)");
    // hard-coded iteration count for simplicity; should be sufficient
    s2k->set_iterations(4096);
    // 8 octets == 64-bit salt; again, good enough
    s2k->new_random_salt(8);
    SecureVector<byte> the_salt = s2k->current_salt();
 
-   // 28 octets == 20 for key + 8 for IV
-   SecureVector<byte> key_and_IV = s2k->derive_key(28, passphrase).bits_of();
+   // 48 octets == 32 for key + 16 for IV
+   SecureVector<byte> key_and_IV = s2k->derive_key(48, passphrase).bits_of();
 
-   SymmetricKey key(key_and_IV, 20);
-   InitializationVector iv(key_and_IV + 20, 8);
+   SymmetricKey key(key_and_IV, 32);
+   InitializationVector iv(key_and_IV + 32, 16);
 \end{verbatim}
 
 To complete the example, we have to remember to write out the salt (stored in
@@ -203,29 +199,30 @@ passphrase.
 
 \subsubsection{Problem 3: Protecting against modification}
 
-As it is, an attacker can undetectably alter the message while it is in
-transit. It is vital to remember that encryption does not imply authentication
-(except when using special modes that are specifically designed to provide
-authentication along with encryption, like OCB and EAX). For this purpose, we
-will append a message authentication code to the encrypted
-message. Specifically, we will generate an extra 160 bits of key data, and use
-it to key the ``HMAC(SHA-1)'' MAC function. We don't want to have the MAC and
-the cipher to share the same key; that is very much a no-no.
+As it is, an attacker can undetectably alter the message while it is
+in transit. It is vital to remember that encryption does not imply
+authentication (except when using special modes that are specifically
+designed to provide authentication along with encryption, like OCB and
+EAX). For this purpose, we will append a message authentication code
+to the encrypted message. Specifically, we will generate an extra 256
+bits of key data, and use it to key the ``HMAC(SHA-256)'' MAC
+function. We don't want to have the MAC and the cipher to share the
+same key; that is very much a no-no.
 
 \begin{verbatim}
-   // 48 octets == 20 for blowfish key + 8 for IV + 20 for hmac key
-   SecureVector<byte> keys_and_IV = s2k->derive_key(48, passphrase);
+   // 80 octets == 32 for cipher key + 16 for IV + 32 for hmac key
+   SecureVector<byte> keys_and_IV = s2k->derive_key(80, passphrase);
 
-   SymmetricKey key(keys_and_IV, 20);
-   InitializationVector iv(keys_and_IV + 20, 8);
-   SymmetricKey mac_key(keys_and_IV + 28, 20);
+   SymmetricKey key(keys_and_IV, 32);
+   InitializationVector iv(keys_and_IV + 32, 16);
+   SymmetricKey mac_key(keys_and_IV + 32 + 16, 32);
 
    Pipe pipe(new Fork(
                 new Chain(
-                   get_cipher("Blowfish/CBC/PKCS7", key, iv, ENCRYPTION),
+                   get_cipher("Serpent/CBC/PKCS7", key, iv, ENCRYPTION),
                    new DataSink_Stream(outfile)
                    ),
-                new MAC_Filter("HMAC(SHA-1)", mac_key)
+                new MAC_Filter("HMAC(SHA-256)", mac_key)
                 )
       );
 
@@ -240,7 +237,7 @@ the cipher to share the same key; that is very much a no-no.
 
 The receiver can check the size of the file (in bytes), and since it knows how
 long the MAC is, can figure out how many bytes of ciphertext there are. Then it
-reads in that many bytes, sending them to a Blowfish/CBC decryption object
+reads in that many bytes, sending them to a Serpent/CBC decryption object
 (which could be obtained by calling \verb|get_cipher| with an argument of
 \type{DECRYPTION} instead of \type{ENCRYPTION}), and storing the final bytes to
 authenticate the message with.
@@ -261,7 +258,7 @@ key'', etc) makes sure that each of the three derived variables will have
 different values.
 
 \begin{verbatim}
-   S2K* s2k = get_s2k("PBKDF2(SHA-1)");
+   S2K* s2k = get_s2k("PBKDF2(SHA-256)");
    // hard-coded iteration count for simplicity; should be sufficient
    s2k->set_iterations(4096);
    // 8 octet == 64-bit salt; again, good enough
@@ -271,11 +268,11 @@ different values.
 
    SymmetricKey master_key = s2k->derive_key(48, passphrase);
 
-   KDF* kdf = get_kdf("KDF2(SHA-1)");
+   KDF* kdf = get_kdf("KDF2(SHA-256)");
 
-   SymmetricKey key = kdf->derive_key(20, master_key, "cipher key");
-   SymmetricKey mac_key = kdf->derive_key(20, master_key, "hmac key");
-   InitializationVector iv = kdf->derive_key(8, master_key, "cipher iv");
+   SymmetricKey key = kdf->derive_key(32, master_key, "cipher key");
+   SymmetricKey mac_key = kdf->derive_key(32, master_key, "hmac key");
+   InitializationVector iv = kdf->derive_key(16, master_key, "cipher iv");
 \end{verbatim}
 
 \subsubsection{Final version}
@@ -284,25 +281,25 @@ Here is the final version of the encryption code, with all the changes we've
 made:
 
 \begin{verbatim}
-   S2K* s2k = get_s2k("PBKDF2(SHA-1)");
+   S2K* s2k = get_s2k("PBKDF2(SHA-256)");
    s2k->set_iterations(4096);
    s2k->new_random_salt(8);
    SecureVector<byte> the_salt = s2k->current_salt();
 
    SymmetricKey master_key = s2k->derive_key(48, passphrase);
 
-   KDF* kdf = get_kdf("KDF2(SHA-1)");
+   KDF* kdf = get_kdf("KDF2(SHA-256)");
 
-   SymmetricKey key = kdf->derive_key(20, master_key, "cipher key");
-   SymmetricKey mac_key = kdf->derive_key(20, masterkey, "hmac key");
-   InitializationVector iv = kdf->derive_key(8, masterkey, "cipher iv");
+   SymmetricKey key = kdf->derive_key(32, master_key, "cipher key");
+   SymmetricKey mac_key = kdf->derive_key(32, masterkey, "hmac key");
+   InitializationVector iv = kdf->derive_key(16, masterkey, "cipher iv");
 
    Pipe pipe(new Fork(
                 new Chain(
-                   get_cipher("Blowfish/CBC/PKCS7", key, iv, ENCRYPTION),
+                   get_cipher("Serpent/CBC/PKCS7", key, iv, ENCRYPTION),
                    new DataSink_Stream(outfile)
                    ),
-                new MAC_Filter("HMAC(SHA-1)", mac_key)
+                new MAC_Filter("HMAC(SHA-256)", mac_key)
                 )
       );
 
@@ -359,14 +356,14 @@ In this case, we'll hex-encode the salt and the MAC, and output them both to
 standard output (the salt followed by the MAC).
 
 \begin{verbatim}
-   S2K* s2k = get_s2k("PBKDF2(SHA-1)");
+   S2K* s2k = get_s2k("PBKDF2(SHA-256)");
    s2k->set_iterations(4096);
    s2k->new_random_salt(8);
    OctetString the_salt = s2k->current_salt();
 
-   SymmetricKey hmac_key = s2k->derive_key(20, passphrase);
+   SymmetricKey hmac_key = s2k->derive_key(32, passphrase);
 
-   Pipe pipe(new MAC_Filter("HMAC(SHA-1)", mac_key),
+   Pipe pipe(new MAC_Filter("HMAC(SHA-256)", mac_key),
              new Hex_Encoder
    );
 
@@ -386,8 +383,9 @@ and the client responds with an appropriate response to the challenge. The idea
 is that only someone who knows the passphrase can generate or check to see if a
 response is valid.
 
-Let's say we use 160-bit (20 byte) challenges, which seems fairly reasonable. We
-can create this challenge using the global random number generator (RNG):
+Let's say we use 160-bit (20 byte) challenges, which seems fairly
+reasonable. We can create this challenge using the global random
+number generator (RNG):
 
 \begin{verbatim}
    byte challenge[20];
@@ -395,12 +393,13 @@ can create this challenge using the global random number generator (RNG):
    // send challenge to client
 \end{verbatim}
 
-After reading the challenge, the client generates a response based on the
-challenge and the passphrase. In this case, we will do it by repeatedly hashing
-the challenge, the passphrase, and (if applicable) the previous digest. We
-iterate this construction 4096 times, to make brute force attacks on the
-passphrase hard to do. Since we are already using 160-bit challenges, a 160-bit
-response seems warranted, so we'll use SHA-1.
+After reading the challenge, the client generates a response based on
+the challenge and the passphrase. In this case, we will do it by
+repeatedly hashing the challenge, the passphrase, and (if applicable)
+the previous digest. We iterate this construction 4096 times, to make
+brute force attacks on the passphrase hard to do. Since we are already
+using 160-bit challenges, a 160-bit response seems warranted, so we'll
+use SHA-1.
 
 \begin{verbatim}
    HashFunction* hash = get_hash("SHA-1");
@@ -452,7 +451,7 @@ other public key encryption scheme, like Rabin or an elliptic curve scheme.
   PK_Encrypting_Key* key = dynamic_cast<PK_Encrypting_Key*>(pubkey);
   if(!key)
      error();
-  PK_Encryptor* enc = get_pk_encryptor(*key, "EME1(SHA-1)");
+  PK_Encryptor* enc = get_pk_encryptor(*key, "EME1(SHA-256)");
 
   byte msg[] = { /* ... */ };
 
@@ -465,14 +464,14 @@ other public key encryption scheme, like Rabin or an elliptic curve scheme.
 This is essentially the same as the encryption operation, but using a private
 key instead. One major difference is that the decryption operation can fail due
 to the fact that the ciphertext was invalid (most common padding schemes, such
-as ``EME1(SHA-1)'', include various pieces of redundancy, which are checked
+as ``EME1(SHA-256)'', include various pieces of redundancy, which are checked
 after decryption).
 
 \begin{verbatim}
   PK_Decrypting_Key* key = dynamic_cast<PK_Decrypting_Key*>(privkey);
   if(!key)
      error();
-  PK_Decryptor* dec = get_pk_decryptor(*key, "EME1(SHA-1)");
+  PK_Decryptor* dec = get_pk_decryptor(*key, "EME1(SHA-256)");
 
   byte msg[] = { /* ... */ };
 
@@ -508,13 +507,13 @@ significantly more secure than the alternatives. However, most current
 applications/libraries only support EMSA2 with Rabin-Williams and EMSA3 with
 RSA. Given this, you may be forced to use less secure encoding methods for the
 near future. In these examples, we punt on the problem, and hard-code using
-EMSA1 with SHA-1.
+EMSA1 with SHA-256.
 
 \begin{verbatim}
   PK_Signing_Key* key = dynamic_cast<PK_Signing_Key*>(privkey);
   if(!key)
      error();
-  PK_Signer* signer = get_pk_signer(*key, "EMSA1(SHA-1)");
+  PK_Signer* signer = get_pk_signer(*key, "EMSA1(SHA-256)");
 
   byte msg[] = { /* ... */ };
 
@@ -552,9 +551,9 @@ however, the implementation is still not at all difficult.
      dynamic_cast<PK_Verifying_wo_MR_Key*>(pubkey);
 
   if(key1)
-     verifier = get_pk_verifier(*key1, "EMSA1(SHA-1)");
+     verifier = get_pk_verifier(*key1, "EMSA1(SHA-256)");
   else if(key2)
-     verifier = get_pk_verifier(*key2, "EMSA1(SHA-1)");
+     verifier = get_pk_verifier(*key2, "EMSA1(SHA-256)");
   else
      error();
 
