@@ -22,6 +22,7 @@ import logging
 import re
 import shlex
 import shutil
+import subprocess
 
 from optparse import OptionParser, OptionGroup, IndentedHelpFormatter, SUPPRESS_HELP
 from string import Template
@@ -143,6 +144,10 @@ def process_command_line(args):
     build_group.add_option('--with-local-config',
                            dest='local_config', metavar='FILE',
                            help='include the contents of FILE into build.h')
+
+    build_group.add_option('--dumb-gcc', dest='dumb_gcc',
+                           action='store_true', default=False,
+                           help=SUPPRESS_HELP)
 
     mods_group = OptionGroup(parser, 'Module selection')
 
@@ -639,7 +644,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'lib_opt': cc.lib_opt_flags,
         'mach_opt': cc.mach_opts(options.arch, options.cpu),
         'check_opt': cc.check_opt_flags,
-        'lang_flags': cc.lang_flags,
+        'lang_flags': cc.lang_flags + options.extra_flags,
         'warn_flags': cc.warning_flags,
         'shared_flags': cc.shared_flags,
         'dll_export_flags': cc.dll_export_flags,
@@ -939,6 +944,29 @@ def main(argv = None):
 
     logging.info('Target is %s-%s-%s-%s' % (
         options.compiler, options.os, options.arch, options.cpu))
+
+    # Kind of a hack...
+    options.extra_flags = ''
+    if options.compiler == 'gcc':
+
+        def is_64bit_arch(arch):
+            if arch == 'alpha' or arch.endswith('64'):
+                return True
+            return False
+
+        if not is_64bit_arch(options.arch) and not options.dumb_gcc:
+            gcc_version = ''.join(
+                subprocess.Popen(['g++', '-v'],
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE).communicate())
+            if re.search('4\.[01234]', gcc_version) or \
+               re.search('3\.[34]', gcc_version) or \
+               re.search('2\.95\.[0-4]', gcc_version):
+                options.dumb_gcc = True
+
+        if options.dumb_gcc is True:
+            logging.info('Setting -fpermissive to work around gcc bug')
+            options.extra_flags = ' -fpermissive'
 
     if options.with_tr1 == None:
         if ccinfo[options.compiler].compiler_has_tr1:
