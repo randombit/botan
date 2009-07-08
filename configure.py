@@ -959,9 +959,9 @@ def main(argv = None):
                 subprocess.Popen(['g++', '-v'],
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE).communicate())
-            if re.search('4\.[01234]', gcc_version) or \
-               re.search('3\.[34]', gcc_version) or \
-               re.search('2\.95\.[0-4]', gcc_version):
+
+            if re.search('(4\.[01234]\.)|(3\.[34]\.)|(2\.95\.[0-4])',
+                         gcc_version):
                 options.dumb_gcc = True
 
         if options.dumb_gcc is True:
