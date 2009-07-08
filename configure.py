@@ -18,17 +18,17 @@ import sys
 import os
 import os.path
 import platform
-import logging
 import re
 import shlex
 import shutil
+import string
 import subprocess
+import logging
+import getpass
+import time
 
-from optparse import OptionParser, OptionGroup, IndentedHelpFormatter, SUPPRESS_HELP
-from string import Template
-
-from getpass import getuser
-from time import ctime
+from optparse import (OptionParser, OptionGroup,
+                      IndentedHelpFormatter, SUPPRESS_HELP)
 
 class BuildConfigurationInformation(object):
     def version_major(self): return 1
@@ -82,13 +82,13 @@ class BuildConfigurationInformation(object):
                              self.version_so_patch())
 
     def username(self):
-        return getuser()
+        return getpass.getuser()
 
     def hostname(self):
         return platform.node()
 
     def timestamp(self):
-        return ctime()
+        return time.ctime()
 
 """
 Handle command line options
@@ -213,10 +213,11 @@ def process_command_line(args):
     if options.with_endian != None and options.with_endian not in ['little', 'big']:
         raise Exception('Bad value to --with-endian "%s"' % (options.with_endian))
 
-    options.enabled_modules = \
-       sorted(set(sum([s.split(',') for s in options.enabled_modules], [])))
-    options.disabled_modules = \
-       sorted(set(sum([s.split(',') for s in options.disabled_modules], [])))
+    def parse_module_opts(modules):
+        return sorted(set(sum([s.split(',') for s in modules], [])))
+
+    options.enabled_modules = parse_module_opts(options.enabled_modules)
+    options.disabled_modules = parse_module_opts(options.disabled_modules)
 
     return options
 
@@ -529,7 +530,7 @@ def slurp_file(filename):
 Perform template substitution
 """
 def process_template(template_file, variables):
-    class PercentSignTemplate(Template):
+    class PercentSignTemplate(string.Template):
         delimiter = '%'
 
     try:
