@@ -500,10 +500,11 @@ def canon_processor(archinfo, proc):
 
 def guess_processor(archinfo):
     base_proc = platform.machine()
-    full_proc = platform.processor()
 
-    full_proc = full_proc.replace(' ', '').lower()
+    if base_proc == '':
+        raise Exception('Could not determine target CPU; set with --cpu')
 
+    full_proc = platform.processor().lower().replace(' ', '')
     for junk in ['(tm)', '(r)']:
         full_proc = full_proc.replace(junk, '')
 
@@ -810,29 +811,33 @@ def load_info_files(options):
 Perform the filesystem operations needed to setup the build
 """
 def setup_build(build_config, options, template_vars):
-    try:
-        shutil.rmtree(build_config.build_dir)
-    except OSError, e:
-        pass # directory not found (FIXME: check against errno?)
 
-    for dirs in [build_config.checkobj_dir,
-                 build_config.libobj_dir,
-                 build_config.full_include_dir]:
-        os.makedirs(dirs)
+    """
+    Copy or link the file, depending on what the platform offers
+    """
+    def portable_symlink(filename, target_dir):
+        if 'symlink' in os.__dict__:
+            def count_dirs(dir, accum = 0):
+                if dir == '' or dir == os.path.curdir:
+                    return accum
+                (dir,basename) = os.path.split(dir)
+                return accum + 1 + count_dirs(dir)
 
-    pkg_config_file = 'botan-%d.%d.pc' % (build_config.version_major(),
-                                          build_config.version_minor())
+            dirs_up = count_dirs(target_dir)
 
-    templates_to_proc = {
-        os.path.join(options.build_data, 'buildh.in'): \
-           os.path.join(build_config.build_dir, 'build.h'),
+            source = os.path.join(os.path.join(*[os.path.pardir]*dirs_up),
+                                  filename)
 
-        os.path.join(options.build_data, 'botan-config.in'): \
-           os.path.join(build_config.build_dir, 'botan-config'),
+            target = os.path.join(target_dir, os.path.basename(filename))
 
-        os.path.join(options.build_data, 'botan.pc.in'): \
-           os.path.join(build_config.build_dir, pkg_config_file)
-        }
+            os.symlink(source, target)
+
+        elif 'link' in os.__dict__:
+            os.link(filename,
+                    os.path.join(target_dir, os.path.basename(filename)))
+
+        else:
+            shutil.copy(filename, target_dir)
 
     def choose_makefile_template(style):
         if style == 'nmake':
@@ -845,13 +850,35 @@ def setup_build(build_config, options, template_vars):
         else:
             raise Exception('Unknown makefile style "%s"' % (style))
 
+    # First delete the build tree, if existing
+    try:
+        shutil.rmtree(build_config.build_dir)
+    except OSError, e:
+        logging.debug('Error while removing build dir: %s' % (e))
+
+    for dirs in [build_config.checkobj_dir,
+                 build_config.libobj_dir,
+                 build_config.full_include_dir]:
+        os.makedirs(dirs)
+
     makefile_template = os.path.join(
         options.makefile_dir,
         choose_makefile_template(template_vars['makefile_style']))
 
     logging.debug('Using makefile template %s' % (makefile_template))
 
-    templates_to_proc[makefile_template] = 'Makefile'
+    templates_to_proc = {
+        makefile_template: 'Makefile'
+        }
+
+    pkg_config_file = 'botan-%d.%d.pc' % (build_config.version_major(),
+                                          build_config.version_minor())
+
+    for (template, sink) in [('buildh.in', 'build.h'),
+                             ('botan-config.in', 'botan-config'),
+                             ('botan.pc.in', pkg_config_file)]:
+        templates_to_proc[os.path.join(options.build_data, template)] = \
+             os.path.join(build_config.build_dir, sink)
 
     for (template, sink) in templates_to_proc.items():
         try:
@@ -862,27 +889,6 @@ def setup_build(build_config, options, template_vars):
 
     build_config.headers.append(
         os.path.join(build_config.build_dir, 'build.h'))
-
-    def portable_symlink(filename, target_dir):
-        if 'symlink' in os.__dict__:
-            def count_dirs(dir, accum = 0):
-                if dir == '':
-                    return accum
-                (dir,basename) = os.path.split(dir)
-                return accum + 1 + count_dirs(dir)
-
-            dirs_up = count_dirs(target_dir)
-
-            os.symlink(os.path.join(os.path.join(*[os.path.pardir]*dirs_up),
-                                    filename),
-                       os.path.join(target_dir, os.path.basename(filename)))
-
-        elif 'link' in os.__dict__:
-            os.link(filename,
-                    os.path.join(target_dir, os.path.basename(filename)))
-
-        else:
-            shutil.copy(filename, target_dir)
 
     logging.debug('Linking %d header files in %s' % (
         len(build_config.headers), build_config.full_include_dir))
