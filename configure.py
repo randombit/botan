@@ -507,6 +507,9 @@ def guess_processor(archinfo):
     for junk in ['(tm)', '(r)']:
         full_proc = full_proc.replace(junk, '')
 
+    if full_proc == '':
+        full_proc = base_proc
+
     for ainfo in archinfo.values():
         if ainfo.basename == base_proc or base_proc in ainfo.aliases:
             for (match,submodel) in ainfo.all_submodels():
@@ -757,24 +760,18 @@ def choose_modules_to_use(options, modules):
 
     use_module = {}
     for (name,module) in modules.iteritems():
-        if use_module.get(name, False):
-             # already enabled (a dep, most likely)
-            continue
+        if use_module.get(name, False) is False:
+            (should_use,deps) = enable_module(module)
 
-        (should_use,deps) = enable_module(module)
+            use_module[name] = should_use
 
-        use_module[name] = should_use
+            if should_use:
+                for dep in deps:
+                    use_module[dep] = True
 
-        if should_use:
-            for dep in deps:
-                use_module[dep] = True
-
-    chosen = []
-    for (name,useme) in use_module.iteritems():
-        if useme:
-            chosen.append(modules[name])
-
-    return chosen
+    return [modules[name]
+            for (name,useme) in use_module.items()
+            if useme]
 
 """
 Load the info files about modules, targets, etc
