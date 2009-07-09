@@ -210,8 +210,10 @@ def process_command_line(args):
 
     if args != []:
         raise Exception('Unhandled option(s): ' + ' '.join(args))
-    if options.with_endian != None and options.with_endian not in ['little', 'big']:
-        raise Exception('Bad value to --with-endian "%s"' % (options.with_endian))
+    if options.with_endian != None and \
+       options.with_endian not in ['little', 'big']:
+        raise Exception('Bad value to --with-endian "%s"' % (
+            options.with_endian))
 
     def parse_module_opts(modules):
         return sorted(set(sum([s.split(',') for s in modules], [])))
@@ -242,9 +244,8 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
     else:
         to_obj.basename = basename
 
-    lex = shlex.shlex(open(infofile), infofile, posix=True)
-
-    lex.wordchars += '|:.<>/,-!' # handle various funky chars in info.txt
+    lexer = shlex.shlex(open(infofile), infofile, posix=True)
+    lexer.wordchars += '|:.<>/,-!' # handle various funky chars in info.txt
 
     for group in allowed_groups:
         to_obj.__dict__[group] = []
@@ -252,10 +253,10 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
         to_obj.__dict__[key] = val
 
     def lexed_tokens(): # Convert to an interator
-        token = lex.get_token()
+        token = lexer.get_token()
         while token != None:
             yield token
-            token = lex.get_token()
+            token = lexer.get_token()
 
     for token in lexed_tokens():
         match = re.match('<(.*)>', token)
@@ -265,18 +266,23 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
             group = match.group(1)
 
             if group not in allowed_groups:
-                raise LexerError('Unknown group "%s"' % (group), lex.lineno)
+                raise LexerError('Unknown group "%s"' % (group),
+                                 lexer.lineno)
 
             end_marker = '</' + group + '>'
 
-            token = lex.get_token()
-            while token != None and token != end_marker:
+            token = lexer.get_token()
+            while token != end_marker:
                 to_obj.__dict__[group].append(token)
-                token = lex.get_token()
+                token = lexer.get_token()
+                if token is None:
+                    raise LexerError('Group "%s" not terminated' % (group),
+                                     lexer.lineno)
+
         elif token in name_val_pairs.keys():
-            to_obj.__dict__[token] = lex.get_token()
+            to_obj.__dict__[token] = lexer.get_token()
         else: # No match -> error
-            raise LexerError('Bad token "%s"' % (token), lex.lineno)
+            raise LexerError('Bad token "%s"' % (token), lexer.lineno)
 
 """
 Convert a lex'ed map (from build-data files) from a list to a dict
@@ -995,10 +1001,10 @@ def main(argv = None):
 
 if __name__ == '__main__':
     try:
-        sys.exit(main())
-    except SystemExit:
-        pass
+        main()
     except Exception, e:
         print >>sys.stderr, e
         #import traceback
         #traceback.print_exc(file=sys.stderr)
+        sys.exit(1)
+    sys.exit(0)
