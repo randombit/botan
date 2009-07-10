@@ -3,6 +3,7 @@
  - Add a new Python configuration script
  - Add the Skein-512 SHA-3 candidate hash function
  - Add the XTS block cipher mode from IEEE P1619
+ - Fix random_prime when generating a prime of less than 5 bits
  - Improve handling of low-entropy situations during PRNG seeding
  - Change random device polling to prefer /dev/urandom over /dev/random
  - Use an input insensitive implementation of same_mem instead of memcmp
