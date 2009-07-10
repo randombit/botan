@@ -41,7 +41,7 @@ class Entropy_Accumulator
          {
          if(collected_bits >= entropy_goal)
             return 0;
-         return (entropy_goal - collected_bits);
+         return static_cast<u32bit>(entropy_goal - collected_bits);
          }
 
       void add(const void* bytes, u32bit length, double entropy_bits_per_byte)
