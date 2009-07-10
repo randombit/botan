@@ -81,6 +81,10 @@ class BuildConfigurationInformation(object):
                              self.version_minor(),
                              self.version_so_patch())
 
+    def pkg_config_file(self):
+        return 'botan-%d.%d.pc' % (self.version_major(),
+                                   self.version_minor())
+
     def username(self):
         return getpass.getuser()
 
@@ -620,6 +624,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             return os.path.join(options.with_build_dir, path)
         return path
 
+    base_build_dir = prefix_with_build_dir(build_config.build_dir)
+
     return {
         'version_major': build_config.version_major(),
         'version_minor': build_config.version_minor(),
@@ -640,7 +646,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'docdir': options.docdir or osinfo.doc_dir,
 
         'doc_src_dir': 'doc',
-        'build_dir': prefix_with_build_dir(build_config.build_dir),
+        'build_dir': base_build_dir,
 
         'os': options.os,
         'arch': options.arch,
@@ -664,8 +670,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'link_to': ' '.join([cc.add_lib_option + lib for lib in link_to()]),
 
-        'module_defines': make_cpp_macros(['HAS_' + m.define
-                                           for m in modules if m.define]),
+        'module_defines': make_cpp_macros(
+            sorted(['HAS_' + m.define for m in modules if m.define])),
 
         'target_os_defines': make_cpp_macros(osinfo.defines()),
 
@@ -704,8 +710,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'static_suffix': osinfo.static_suffix,
         'so_suffix': osinfo.so_suffix,
 
-        'botan_config': prefix_with_build_dir('botan-config'),
-        'botan_pkgconfig': prefix_with_build_dir('botan.pc'),
+        'botan_config': os.path.join(base_build_dir, 'botan-config'),
+        'botan_pkgconfig': os.path.join(base_build_dir,
+                                        build_config.pkg_config_file()),
 
         'doc_files': makefile_list(build_config.doc_files()),
 
@@ -877,12 +884,9 @@ def setup_build(build_config, options, template_vars):
         makefile_template: 'Makefile'
         }
 
-    pkg_config_file = 'botan-%d.%d.pc' % (build_config.version_major(),
-                                          build_config.version_minor())
-
     for (template, sink) in [('buildh.in', 'build.h'),
                              ('botan-config.in', 'botan-config'),
-                             ('botan.pc.in', pkg_config_file)]:
+                             ('botan.pc.in', build_config.pkg_config_file())]:
         templates_to_proc[os.path.join(options.build_data, template)] = \
              os.path.join(build_config.build_dir, sink)
 
@@ -892,9 +896,6 @@ def setup_build(build_config, options, template_vars):
             f.write(process_template(template, template_vars))
         finally:
             f.close()
-
-    build_config.headers.append(
-        os.path.join(build_config.build_dir, 'build.h'))
 
     logging.debug('Linking %d header files in %s' % (
         len(build_config.headers), build_config.full_include_dir))
@@ -987,6 +988,8 @@ def main(argv = None):
     modules_to_use = choose_modules_to_use(options, modules)
 
     build_config = BuildConfigurationInformation(options, modules_to_use)
+    build_config.headers.append(
+        os.path.join(build_config.build_dir, 'build.h'))
 
     template_vars = create_template_vars(build_config, options,
                                          modules_to_use,
