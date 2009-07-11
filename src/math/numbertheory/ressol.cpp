@@ -9,8 +9,6 @@
 #include <botan/numthry.h>
 #include <botan/reducer.h>
 
-#include <iostream>
-
 namespace Botan {
 
 /*

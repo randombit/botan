@@ -14,7 +14,7 @@
 
 #include <botan/bigint.h>
 #include <botan/gfp_element.h>
-#include <iostream>
+#include <iosfwd>
 
 namespace Botan {
 

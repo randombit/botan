@@ -10,8 +10,6 @@ SCAN Name Abstraction
 #include <botan/libstate.h>
 #include <stdexcept>
 
-#include <iostream>
-
 namespace Botan {
 
 namespace {

@@ -10,6 +10,7 @@
 #include <botan/curve_gfp.h>
 #include <botan/bigint.h>
 #include <assert.h>
+#include <ostream>
 
 namespace Botan {
 

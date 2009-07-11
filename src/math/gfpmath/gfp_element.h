@@ -14,7 +14,7 @@
 
 #include <botan/bigint.h>
 #include <botan/gfp_modulus.h>
-#include <iostream>
+#include <iosfwd>
 
 #if defined(BOTAN_USE_STD_TR1)
   #include <tr1/memory>
