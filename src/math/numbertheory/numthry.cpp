@@ -1,6 +1,6 @@
 /*
-* Number Theory
-* (C) 1999-2008 Jack Lloyd
+* Number Theory Functions
+* (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -56,14 +56,14 @@ u32bit miller_rabin_test_iterations(u32bit bits, bool verify)
       {    0,  0,  0 }
    };
 
-   for(u32bit j = 0; tests[j].bits; ++j)
+   for(u32bit i = 0; tests[i].bits; ++i)
       {
-      if(bits <= tests[j].bits)
+      if(bits <= tests[i].bits)
          {
          if(verify)
-            return tests[j].verify_iter;
+            return tests[i].verify_iter;
          else
-            return tests[j].check_iter;
+            return tests[i].check_iter;
          }
       }
    return 2;
@@ -154,7 +154,7 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
       {
       u32bit zero_bits = low_zero_bits(u);
       u >>= zero_bits;
-      for(u32bit j = 0; j != zero_bits; ++j)
+      for(u32bit i = 0; i != zero_bits; ++i)
          {
          if(A.is_odd() || B.is_odd())
             { A += y; B -= x; }
@@ -163,7 +163,7 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
 
       zero_bits = low_zero_bits(v);
       v >>= zero_bits;
-      for(u32bit j = 0; j != zero_bits; ++j)
+      for(u32bit i = 0; i != zero_bits; ++i)
          {
          if(C.is_odd() || D.is_odd())
             { C += y; D -= x; }
@@ -209,17 +209,17 @@ s32bit simple_primality_tests(const BigInt& n)
    if(n <= PRIMES[PRIME_TABLE_SIZE-1])
       {
       const word num = n.word_at(0);
-      for(u32bit j = 0; PRIMES[j]; ++j)
+      for(u32bit i = 0; PRIMES[i]; ++i)
          {
-         if(num == PRIMES[j]) return PRIME;
-         if(num <  PRIMES[j]) return NOT_PRIME;
+         if(num == PRIMES[i]) return PRIME;
+         if(num <  PRIMES[i]) return NOT_PRIME;
          }
       return NOT_PRIME;
       }
 
    u32bit check_first = std::min(n.bits() / 32, PRIME_PRODUCTS_TABLE_SIZE);
-   for(u32bit j = 0; j != check_first; ++j)
-      if(gcd(n, PRIME_PRODUCTS[j]) != 1)
+   for(u32bit i = 0; i != check_first; ++i)
+      if(gcd(n, PRIME_PRODUCTS[i]) != 1)
          return NOT_PRIME;
 
    return UNKNOWN;
@@ -286,10 +286,15 @@ bool passes_mr_tests(RandomNumberGenerator& rng,
    u32bit tests = miller_rabin_test_iterations(n.bits(), verify);
 
    BigInt nonce;
-   for(u32bit j = 0; j != tests; ++j)
+   for(u32bit i = 0; i != tests; ++i)
       {
-      if(verify) nonce.randomize(rng, NONCE_BITS);
-      else       nonce = PRIMES[j];
+      if(!verify && PRIMES[i] < (n-1))
+         nonce = PRIMES[i];
+      else
+         {
+         while(nonce < 2 && nonce >= (n-1))
+            nonce.randomize(rng, NONCE_BITS);
+         }
 
       if(!mr.passes_test(nonce))
          return false;
@@ -309,7 +314,7 @@ bool MillerRabin_Test::passes_test(const BigInt& a)
    if(y == 1 || y == n_minus_1)
       return true;
 
-   for(u32bit j = 1; j != s; ++j)
+   for(u32bit i = 1; i != s; ++i)
       {
       y = reducer.square(y);
 
