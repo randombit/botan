@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
 
       if(opts.is_set("validate") || opts.is_set("test"))
          {
-         run_test_suite(rng);
+         return run_test_suite(rng);
          }
       if(opts.is_set("bench-algo") ||
          opts.is_set("benchmark") ||
