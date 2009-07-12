@@ -292,7 +292,7 @@ bool passes_mr_tests(RandomNumberGenerator& rng,
          nonce = PRIMES[i];
       else
          {
-         while(nonce < 2 && nonce >= (n-1))
+         while(nonce < 2 || nonce >= (n-1))
             nonce.randomize(rng, NONCE_BITS);
          }
 
