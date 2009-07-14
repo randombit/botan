@@ -640,8 +640,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             return os.path.join(options.with_build_dir, path)
         return path
 
-    base_build_dir = prefix_with_build_dir(build_config.build_dir)
-
     return {
         'version_major': build_config.version_major,
         'version_minor': build_config.version_minor,
@@ -656,13 +654,15 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'local_config': slurp_file(options.local_config),
         'makefile_style': options.makefile_style or cc.makefile_style,
 
+        'makefile_path': prefix_with_build_dir('Makefile'),
+
         'prefix': options.prefix or osinfo.install_root,
         'libdir': options.libdir or osinfo.lib_dir,
         'includedir': options.includedir or osinfo.header_dir,
         'docdir': options.docdir or osinfo.doc_dir,
 
         'doc_src_dir': 'doc',
-        'build_dir': base_build_dir,
+        'build_dir': build_config.build_dir,
 
         'os': options.os,
         'arch': options.arch,
@@ -726,9 +726,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'static_suffix': osinfo.static_suffix,
         'so_suffix': osinfo.so_suffix,
 
-        'botan_config': os.path.join(base_build_dir, 'botan-config'),
-        'botan_pkgconfig': os.path.join(base_build_dir,
-                                        build_config.pkg_config_file()),
+        'botan_config': prefix_with_build_dir('botan-config'),
+        'botan_pkgconfig': prefix_with_build_dir(
+            build_config.pkg_config_file()),
 
         'doc_files': makefile_list(build_config.doc_files()),
 
@@ -897,7 +897,7 @@ def setup_build(build_config, options, template_vars):
     logging.debug('Using makefile template %s' % (makefile_template))
 
     templates_to_proc = {
-        makefile_template: 'Makefile'
+        makefile_template: template_vars['makefile_path']
         }
 
     for (template, sink) in [('buildh.in', 'build.h'),
