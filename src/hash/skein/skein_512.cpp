@@ -193,6 +193,9 @@ void Skein_512::clear() throw()
 
 void Skein_512::add_data(const byte input[], u32bit length)
    {
+   if(length == 0)
+      return;
+
    if(buf_pos)
       {
       buffer.copy(buf_pos, input, length);
