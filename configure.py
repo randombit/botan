@@ -4,8 +4,7 @@
 Configuration program for botan (http://botan.randombit.net/)
 
 Tested with
-   CPython 2.5, 2.6 - OK
-   CPython 2.4 - OK, needs updated Optik library
+   CPython 2.4, 2.5, 2.6 - OK
    Jython 2.5 - OK, target detection does not work
 
 Has not been tested with IronPython or PyPy
@@ -163,12 +162,27 @@ def process_command_line(args):
                           help='disable specific modules')
 
     for mod in ['openssl', 'gnump', 'bzip2', 'zlib']:
-        mods_group.add_option('--with-%s' % (mod), dest='enabled_modules',
-                              action='append_const', const=mod)
 
-        mods_group.add_option('--without-%s' % (mod), dest='disabled_modules',
-                              action='append_const', const=mod,
-                              help=SUPPRESS_HELP)
+        # This is just an implementation of Optik's append_const action,
+        # but that is not available in Python 2.4's optparse, so use a
+        # callback instead
+
+        def optparse_callback(option, opt, value, parser, dest, mod):
+            parser.values.__dict__[dest].append(mod)
+
+        mods_group.add_option('--with-%s' % (mod),
+                              action='callback',
+                              callback=optparse_callback,
+                              callback_kwargs = {
+                                  'dest': 'enabled_modules', 'mod': mod }
+                              )
+
+        mods_group.add_option('--without-%s' % (mod), help=SUPPRESS_HELP,
+                              action='callback',
+                              callback=optparse_callback,
+                              callback_kwargs = {
+                                  'dest': 'disabled_modules', 'mod': mod }
+                              )
 
     install_group = OptionGroup(parser, 'Installation options')
 
