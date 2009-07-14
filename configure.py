@@ -2,15 +2,14 @@
 
 """
 Configuration program for botan (http://botan.randombit.net/)
+  (C) 2009 Jack Lloyd
+  Distributed under the terms of the Botan license
 
 Tested with
    CPython 2.4, 2.5, 2.6 - OK
-   Jython 2.5 - OK, target detection does not work
+   Jython 2.5 - Target detection does not work (use --os and --cpu)
 
-Has not been tested with IronPython or PyPy
-
-(C) 2009 Jack Lloyd
-Distributed under the terms of the Botan license
+   Has not been tested with IronPython or PyPy
 """
 
 import sys
@@ -30,12 +29,24 @@ from optparse import (OptionParser, OptionGroup,
                       IndentedHelpFormatter, SUPPRESS_HELP)
 
 class BuildConfigurationInformation(object):
-    def version_major(self): return 1
-    def version_minor(self): return 8
-    def version_patch(self): return 5
 
-    def version_so_patch(self): return 5
+    """
+    Version information
+    """
+    version_major = 1
+    version_minor = 8
+    version_patch = 5
+    version_so_patch = 5
+    version_suffix = '-pre'
 
+    version_string = '%d.%d.%d%s' % (
+        version_major, version_minor, version_patch, version_suffix)
+    soversion_string = '%d.%d.%d%s' % (
+        version_major, version_minor, version_so_patch, version_suffix)
+
+    """
+    Constructor
+    """
     def __init__(self, options, modules):
         self.build_dir = os.path.join(options.with_build_dir, 'build')
 
@@ -70,19 +81,9 @@ class BuildConfigurationInformation(object):
                 docs.append(filename)
         return docs
 
-    def version_string(self):
-        return '%d.%d.%d' % (self.version_major(),
-                             self.version_minor(),
-                             self.version_patch())
-
-    def soversion_string(self):
-        return '%d.%d.%d' % (self.version_major(),
-                             self.version_minor(),
-                             self.version_so_patch())
-
     def pkg_config_file(self):
-        return 'botan-%d.%d.pc' % (self.version_major(),
-                                   self.version_minor())
+        return 'botan-%d.%d.pc' % (self.version_major,
+                                   self.version_minor)
 
     def username(self):
         return getpass.getuser()
@@ -97,8 +98,9 @@ class BuildConfigurationInformation(object):
 Handle command line options
 """
 def process_command_line(args):
-    parser = OptionParser(formatter =
-                          IndentedHelpFormatter(max_help_position = 50))
+    parser = OptionParser(
+        formatter = IndentedHelpFormatter(max_help_position = 50),
+        version = BuildConfigurationInformation.version_string)
 
     target_group = OptionGroup(parser, 'Target options')
 
@@ -641,11 +643,11 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     base_build_dir = prefix_with_build_dir(build_config.build_dir)
 
     return {
-        'version_major': build_config.version_major(),
-        'version_minor': build_config.version_minor(),
-        'version_patch': build_config.version_patch(),
-        'version':       build_config.version_string(),
-        'so_version': build_config.soversion_string(),
+        'version_major': build_config.version_major,
+        'version_minor': build_config.version_minor,
+        'version_patch': build_config.version_patch,
+        'version':       build_config.version_string,
+        'so_version': build_config.soversion_string,
 
         'timestamp': build_config.timestamp(),
         'user':      build_config.username(),
@@ -1024,7 +1026,8 @@ def main(argv = None):
     # Performs the I/O
     setup_build(build_config, options, template_vars)
 
-    logging.info('Build setup complete')
+    logging.info('Botan %s build setup is complete' % (
+        build_config.version_string))
 
 if __name__ == '__main__':
     try:
