@@ -955,8 +955,18 @@ def main(argv = None):
             options.compiler, ' '.join(sorted(ccinfo.keys()))))
 
     if options.os not in osinfo:
-        raise Exception('Unknown OS "%s"; available options: %s' % (
-            options.os, ' '.join(sorted(osinfo.keys()))))
+
+        def find_canonical_os_name(os):
+            for (name, info) in osinfo.items():
+                if os in info.aliases:
+                    return name
+            return os # not found
+
+        options.os = find_canonical_os_name(options.os)
+
+        if options.os not in osinfo:
+            raise Exception('Unknown OS "%s"; available options: %s' % (
+                options.os, ' '.join(sorted(osinfo.keys()))))
 
     if options.cpu is None:
         (options.arch, options.cpu) = guess_processor(archinfo)
