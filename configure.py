@@ -902,7 +902,8 @@ def setup_build(build_config, options, template_vars):
 
     for (template, sink) in [('buildh.in', 'build.h'),
                              ('botan-config.in', 'botan-config'),
-                             ('botan.pc.in', build_config.pkg_config_file())]:
+                             ('botan.pc.in', build_config.pkg_config_file()),
+                             ('botan.doxy.in', 'botan.doxy')]:
         templates_to_proc[os.path.join(options.build_data, template)] = \
              os.path.join(build_config.build_dir, sink)
 
