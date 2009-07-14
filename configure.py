@@ -32,9 +32,9 @@ from optparse import (OptionParser, OptionGroup,
 class BuildConfigurationInformation(object):
     def version_major(self): return 1
     def version_minor(self): return 8
-    def version_patch(self): return 4
+    def version_patch(self): return 5
 
-    def version_so_patch(self): return 2
+    def version_so_patch(self): return 5
 
     def __init__(self, options, modules):
         self.build_dir = os.path.join(options.with_build_dir, 'build')

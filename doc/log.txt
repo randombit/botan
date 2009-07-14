@@ -1,4 +1,7 @@
 
+* 1.8.5, 2009-??-??
+ - Change configure.py to work on stock Python 2.4
+
 * 1.8.4, 2009-07-12
  - Fix a bug in nonce generation in the Miller-Rabin test
 
