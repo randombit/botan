@@ -7,7 +7,7 @@ load_on auto
 <requires>
 asn1
 bigint
-pubkey
+pk_codecs
 oid_lookup
 </requires>
 

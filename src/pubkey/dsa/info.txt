@@ -10,7 +10,6 @@ bigint
 dl_algo
 keypair
 numbertheory
-pubkey
 </requires>
 
 <add>

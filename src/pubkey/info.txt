@@ -8,8 +8,9 @@ load_on auto
 asn1
 bigint
 numbertheory
-pbe
 oid_lookup
+pbe
+pk_codecs
 pk_pad
 rng
 </requires>
@@ -21,8 +22,6 @@ pk_filts.cpp
 pk_filts.h
 pk_keys.cpp
 pk_keys.h
-pkcs8.cpp
-pkcs8.h
 pubkey.cpp
 pubkey.h
 pubkey_enums.cpp

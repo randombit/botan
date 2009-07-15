@@ -10,7 +10,6 @@ bigint
 ec_dompar
 numbertheory
 gfpmath
-pubkey
 </requires>
 
 <add>

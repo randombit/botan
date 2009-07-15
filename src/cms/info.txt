@@ -8,7 +8,7 @@ load_on auto
 asn1
 filters
 oid_lookup
-pubkey
+pk_codecs
 x509
 </requires>
 

@@ -12,5 +12,4 @@ dlies.h
 <requires>
 dh
 kdf2
-pubkey
 </requires>

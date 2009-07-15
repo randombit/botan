@@ -17,5 +17,4 @@ asn1
 bigint
 dl_algo
 numbertheory
-pubkey
 </requires>
