@@ -9,7 +9,7 @@ cts.cpp
 cts.h
 </add>
 
-<requires>
-modes
-</requires>
 
+<requires>
+block
+</requires>

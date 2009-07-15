@@ -1,0 +1,18 @@
+realname "PK codecs (PKCS8, X.509)"
+
+load_on auto
+
+<add>
+pkcs8.h
+pkcs8.cpp
+x509_key.h
+x509_key.cpp
+</add>
+
+<requires>
+asn1
+filters
+oid_lookup
+pbe
+pem
+</requires>

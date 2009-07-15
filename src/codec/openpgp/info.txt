@@ -11,6 +11,5 @@ openpgp.h
 
 <requires>
 crc24
-base64
 filters
 </requires>

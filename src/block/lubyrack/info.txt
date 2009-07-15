@@ -8,3 +8,7 @@ load_on auto
 lubyrack.cpp
 lubyrack.h
 </add>
+
+<requires>
+hash
+</requires>

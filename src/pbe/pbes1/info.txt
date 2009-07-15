@@ -10,6 +10,10 @@ pbes1.h
 </add>
 
 <requires>
-pbe
+asn1
+block
+cbc
+filters
+hash
 pbkdf1
 </requires>

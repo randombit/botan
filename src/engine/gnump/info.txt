@@ -20,3 +20,7 @@ gmp_powm.cpp
 gmp_wrap.cpp
 gmp_wrap.h
 </add>
+
+<requires>
+bigint
+</requires>

@@ -4,17 +4,6 @@ define PUBLIC_KEY_CRYPTO
 
 load_on auto
 
-<requires>
-asn1
-bigint
-numbertheory
-oid_lookup
-pbe
-pk_codecs
-pk_pad
-rng
-</requires>
-
 <add>
 pk_algs.cpp
 pk_algs.h
@@ -29,3 +18,14 @@ pubkey_enums.h
 x509_key.cpp
 x509_key.h
 </add>
+
+<requires>
+asn1
+bigint
+filters
+kdf
+oid_lookup
+pk_pad
+rng
+sym_algo
+</requires>

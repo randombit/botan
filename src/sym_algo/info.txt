@@ -2,12 +2,14 @@ realname "Symmetric Algorithms"
 
 load_on auto
 
-<requires>
-rng
-</requires>
-
 <add>
 sym_algo.h
 symkey.cpp
 symkey.h
 </add>
+
+<requires>
+filters
+hex
+rng
+</requires>

@@ -7,10 +7,6 @@ modset compression
 
 load_on request
 
-<requires>
-filters
-</requires>
-
 <add>
 bzip2.h
 bzip2.cpp
@@ -19,3 +15,7 @@ bzip2.cpp
 <libs>
 all -> bz2
 </libs>
+
+<requires>
+filters
+</requires>

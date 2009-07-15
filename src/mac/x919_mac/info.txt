@@ -8,3 +8,7 @@ load_on auto
 x919_mac.cpp
 x919_mac.h
 </add>
+
+<requires>
+block
+</requires>

@@ -8,10 +8,6 @@ load_on auto
 tru64 -> rt
 </libs>
 
-<requires>
-filters
-</requires>
-
 <add>
 bit_ops.h
 bswap.h
@@ -43,3 +39,9 @@ version.cpp
 version.h
 xor_buf.h
 </add>
+
+<requires>
+alloc
+filters
+libstate
+</requires>

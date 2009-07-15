@@ -8,3 +8,8 @@ load_on auto
 randpool.cpp
 randpool.h
 </add>
+
+<requires>
+block
+mac
+</requires>

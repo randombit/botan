@@ -25,3 +25,14 @@ pipe_rw.cpp
 secqueue.cpp
 secqueue.h
 </add>
+
+<requires>
+asn1
+block
+hash
+libstate
+mac
+rng
+stream
+sym_algo
+</requires>

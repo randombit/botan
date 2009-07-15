@@ -2,11 +2,11 @@ realname "Message Authentication Codes"
 
 load_on auto
 
-<requires>
-utils
-</requires>
-
 <add>
 mac.h
 mac.cpp
 </add>
+
+<requires>
+sym_algo
+</requires>

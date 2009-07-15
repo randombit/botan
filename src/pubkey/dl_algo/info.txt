@@ -11,6 +11,8 @@ dl_algo.h
 
 <requires>
 asn1
-bigint
 dl_group
+numbertheory
+pk_codecs
+rng
 </requires>

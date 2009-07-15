@@ -2,12 +2,12 @@ realname "String to Key Functions"
 
 load_on auto
 
-<requires>
-utils
-rng
-</requires>
-
 <add>
 s2k.cpp
 s2k.h
 </add>
+
+<requires>
+rng
+sym_algo
+</requires>

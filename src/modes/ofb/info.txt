@@ -9,7 +9,7 @@ ofb.cpp
 ofb.h
 </add>
 
-<requires>
-modes
-</requires>
 
+<requires>
+block
+</requires>

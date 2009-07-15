@@ -9,8 +9,8 @@ ecb.cpp
 ecb.h
 </add>
 
+
 <requires>
-modes
+block
 mode_pad
 </requires>
-

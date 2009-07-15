@@ -10,13 +10,6 @@ sha1_ia32.cpp
 sha1_ia32.h
 </add>
 
-<requires>
-ia32_eng
-asm_ia32
-sha1
-utils
-</requires>
-
 <arch>
 ia32
 </arch>
@@ -34,3 +27,8 @@ netbsd
 openbsd
 solaris
 </os>
+
+<requires>
+asm_ia32
+sha1
+</requires>

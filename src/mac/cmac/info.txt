@@ -8,3 +8,7 @@ load_on auto
 cmac.cpp
 cmac.h
 </add>
+
+<requires>
+block
+</requires>

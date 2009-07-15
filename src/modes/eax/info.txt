@@ -10,7 +10,10 @@ eax.h
 eax_dec.cpp
 </add>
 
-<requires>
-modes
-</requires>
 
+<requires>
+block
+cmac
+filters
+mac
+</requires>

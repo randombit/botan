@@ -8,3 +8,7 @@ load_on auto
 hmac_rng.cpp
 hmac_rng.h
 </add>
+
+<requires>
+mac
+</requires>

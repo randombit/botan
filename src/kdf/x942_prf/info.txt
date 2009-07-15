@@ -4,13 +4,13 @@ define X942_PRF
 
 load_on auto
 
-<requires>
-md5
-sha1
-#oid_lookup
-</requires>
-
 <add>
 prf_x942.cpp
 prf_x942.h
 </add>
+
+<requires>
+asn1
+oid_lookup
+sha1
+</requires>

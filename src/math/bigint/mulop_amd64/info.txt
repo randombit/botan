@@ -8,10 +8,6 @@ load_on never
 mp_mulop_amd64.S
 </add>
 
-<requires>
-asm_amd64
-</requires>
-
 <arch>
 amd64
 </arch>
@@ -29,3 +25,9 @@ netbsd
 openbsd
 solaris
 </os>
+
+<requires>
+asm_ia32
+mp_ia32
+mp_ia32_msvc
+</requires>

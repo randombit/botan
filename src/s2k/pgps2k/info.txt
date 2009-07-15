@@ -8,3 +8,7 @@ load_on auto
 pgp_s2k.cpp
 pgp_s2k.h
 </add>
+
+<requires>
+hash
+</requires>

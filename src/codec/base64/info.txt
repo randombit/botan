@@ -4,12 +4,12 @@ define BASE64_CODEC
 
 load_on auto
 
-<requires>
-filters
-</requires>
-
 <add>
 base64.cpp
 b64_char.cpp
 base64.h
 </add>
+
+<requires>
+filters
+</requires>

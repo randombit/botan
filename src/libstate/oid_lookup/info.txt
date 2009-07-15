@@ -4,12 +4,11 @@ load_on dep
 
 define OID_LOOKUP
 
-<requires>
-#libstate
-#asn1
-</requires>
-
 <add>
 oids.cpp
 oids.h
 </add>
+
+<requires>
+asn1
+</requires>

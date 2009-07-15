@@ -12,6 +12,7 @@ ec_dompar.h
 <requires>
 asn1
 bigint
-numbertheory
+filters
 gfpmath
+hex
 </requires>

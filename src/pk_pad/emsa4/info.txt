@@ -10,5 +10,7 @@ emsa4.cpp
 </add>
 
 <requires>
+hash
+kdf
 mgf1
 </requires>

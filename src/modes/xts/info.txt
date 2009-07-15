@@ -9,7 +9,8 @@ xts.cpp
 xts.h
 </add>
 
-<requires>
-modes
-</requires>
 
+<requires>
+block
+filters
+</requires>

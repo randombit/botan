@@ -4,13 +4,20 @@ define PBE_PKCS_V20
 
 load_on auto
 
-<requires>
-oid_lookup
-pbe
-pbkdf2
-</requires>
-
 <add>
 pbes2.cpp
 pbes2.h
 </add>
+
+<requires>
+algo_factory
+asn1
+block
+cbc
+filters
+hash
+hmac
+libstate
+oid_lookup
+pbkdf2
+</requires>

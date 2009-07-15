@@ -8,3 +8,8 @@ load_on auto
 lion.cpp
 lion.h
 </add>
+
+<requires>
+hash
+stream
+</requires>

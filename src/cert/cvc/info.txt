@@ -6,11 +6,6 @@ uses_tr1 yes
 
 load_on auto
 
-<requires>
-asn1
-ecdsa
-</requires>
-
 <add>
 asn1_eac_str.cpp
 asn1_eac_tm.cpp
@@ -34,3 +29,16 @@ signed_obj.cpp
 signed_obj.h
 freestore.h
 </add>
+
+<requires>
+asn1
+bigint
+ecdsa
+filters
+libstate
+oid_lookup
+pem
+pk_codecs
+pubkey
+x509
+</requires>

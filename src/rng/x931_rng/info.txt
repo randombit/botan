@@ -10,5 +10,5 @@ x931_rng.h
 </add>
 
 <requires>
-randpool
+block
 </requires>

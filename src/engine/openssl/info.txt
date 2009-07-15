@@ -22,3 +22,7 @@ ossl_if.cpp
 ossl_md.cpp
 ossl_nr.cpp
 </add>
+
+<requires>
+bigint
+</requires>

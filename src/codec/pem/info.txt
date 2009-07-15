@@ -10,6 +10,5 @@ pem.h
 </add>
 
 <requires>
-base64
 filters
 </requires>
