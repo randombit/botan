@@ -8,6 +8,7 @@ SCAN Name Abstraction
 #include <botan/scan_name.h>
 #include <botan/parsing.h>
 #include <botan/libstate.h>
+#include <botan/exceptn.h>
 #include <stdexcept>
 
 namespace Botan {
