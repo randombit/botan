@@ -2,7 +2,7 @@ realname "Montgomery Reduction (x86-64)"
 
 mp_bits 64
 
-load_on request
+load_on never
 
 <add>
 mp_monty.S

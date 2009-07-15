@@ -762,6 +762,8 @@ def choose_modules_to_use(options, modules):
                 return (False, 'loaded only if needed by dependency')
             elif module.load_on == 'request':
                 return (False, 'loaded on request only')
+            elif module.load_on == 'never':
+                return (False, 'disabled as buggy')
             elif module.load_on == 'asm_ok' and not options.asm_ok:
                 return (False, 'load_on asm_ok only')
 

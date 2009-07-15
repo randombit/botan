@@ -513,6 +513,7 @@ sub can_enable_module {
     unless($is_enabled) {
         return '' if $modinfo{'load_on'} eq 'dep' and $for_dep == 0;
         return '' if $modinfo{'load_on'} eq 'request';
+        return '' if $modinfo{'load_on'} eq 'never';
     }
 
     # Doesn't run here, don't bother
