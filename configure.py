@@ -744,60 +744,72 @@ def choose_modules_to_use(options, modules):
         # First check options for --enable-modules/--disable-modules
 
         if module.basename in options.disabled_modules:
-            return (False, [])
+            return (False, 'disabled by user')
 
         # If it was specifically requested, skip most tests (trust the user)
         if module.basename not in options.enabled_modules:
-            if module.cc != [] and options.compiler not in module.cc:
-                return (False, [])
-
-            if module.os != [] and options.os not in module.os:
-                return (False, [])
-
             if module.arch != [] and options.arch not in module.arch \
                    and options.cpu not in module.arch:
-                return (False, [])
+                return (False, 'CPU incompatible')
+
+            if module.os != [] and options.os not in module.os:
+                return (False, 'OS incompatable')
+
+            if module.cc != [] and options.compiler not in module.cc:
+                return (False, 'compiler incompatible')
 
             if module.load_on == 'dep' and not for_dep:
-                return (False, [])
+                return (False, 'loaded only if needed by dependency')
             elif module.load_on == 'request':
-                return (False, [])
+                return (False, 'loaded on request only')
             elif module.load_on == 'asm_ok' and not options.asm_ok:
-                return (False, [])
+                return (False, 'load_on asm_ok only')
 
         # TR1 checks
         if module.uses_tr1:
             if options.with_tr1 != 'boost' and options.with_tr1 != 'system':
-                return (False, [])
+                return (False, 'TR1 disabled')
 
         # dependency checks
         deps = []
         deps_met = True
         for req in module.requires:
             for mod in req.split('|'):
-                (can_enable, deps_of_dep) = enable_module(modules[mod], True)
+                (can_enable, deps_or_reason) = enable_module(modules[mod], True)
                 if can_enable:
                     deps.append(mod)
-                    deps += deps_of_dep
+                    deps += deps_or_reason
                     break
             else:
                 deps_met = False
 
         if deps_met:
-            return (True,deps)
+            return (True, deps)
         else:
-            return (False, [])
+            return (False, 'dependency failure')
 
     use_module = {}
+    not_using_because = {}
+
     for (name,module) in modules.iteritems():
         if use_module.get(name, False) is False:
-            (should_use,deps) = enable_module(module)
+            (should_use, deps_or_reason) = enable_module(module)
 
             use_module[name] = should_use
 
             if should_use:
-                for dep in deps:
+                for dep in deps_or_reason:
                     use_module[dep] = True
+            else:
+                reason = deps_or_reason
+                not_using_because.setdefault(reason, []).append(module.basename)
+
+    for reason in sorted(not_using_because.keys()):
+        disabled_mods = [mod for mod in not_using_because[reason] if not use_module.get(mod, False)]
+
+        if disabled_mods != []:
+            logging.info('Skipping mod because %s - %s' % (
+                reason, ' '.join(disabled_mods)))
 
     return [modules[name]
             for (name,useme) in use_module.items()
