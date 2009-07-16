@@ -27,3 +27,7 @@ qnx
 solaris
 tru64
 </os>
+
+<requires>
+filters
+</requires>

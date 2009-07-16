@@ -11,13 +11,10 @@ tru64 -> rt
 <add>
 bit_ops.h
 bswap.h
-buf_comp.h
 charset.cpp
 charset.h
 data_src.cpp
 data_src.h
-datastor.cpp
-datastor.h
 exceptn.cpp
 exceptn.h
 loadstor.h
@@ -26,9 +23,6 @@ mlock.cpp
 parsing.cpp
 parsing.h
 rotate.h
-scan_name.cpp
-scan_name.h
-secmem.h
 stl_util.h
 types.h
 ui.cpp
@@ -39,9 +33,3 @@ version.cpp
 version.h
 xor_buf.h
 </add>
-
-<requires>
-alloc
-filters
-libstate
-</requires>

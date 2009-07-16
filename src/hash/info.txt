@@ -2,10 +2,10 @@ realname "Hash Functions"
 
 load_on auto
 
-<requires>
-utils
-</requires>
-
 <add>
 hash.h
 </add>
+
+<requires>
+buf_comp
+</requires>

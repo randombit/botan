@@ -11,5 +11,6 @@ eme.h
 </add>
 
 <requires>
+alloc
 rng
 </requires>

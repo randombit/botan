@@ -14,6 +14,7 @@ eckaeg_op.h
 </add>
 
 <requires>
+alloc
 asn1
 ec_dompar
 ecc_key

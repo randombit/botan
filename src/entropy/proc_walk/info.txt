@@ -27,3 +27,7 @@ tru64
 # big deal since it has /dev/*random
 #netbsd
 </os>
+
+<requires>
+alloc
+</requires>

@@ -8,5 +8,6 @@ mac.cpp
 </add>
 
 <requires>
+buf_comp
 sym_algo
 </requires>

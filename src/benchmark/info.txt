@@ -12,6 +12,7 @@ benchmark.h
 <requires>
 algo_factory
 block
+buf_comp
 hash
 mac
 rng

@@ -18,6 +18,7 @@ lookup_stream.cpp
 <requires>
 algo_factory
 filters
+libstate
 mode_pad
 numbertheory
 </requires>

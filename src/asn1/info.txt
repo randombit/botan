@@ -24,6 +24,8 @@ der_enc.h
 </add>
 
 <requires>
+alloc
 bigint
+filters
 oid_lookup
 </requires>

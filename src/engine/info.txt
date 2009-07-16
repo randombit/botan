@@ -11,6 +11,7 @@ engine.h
 <requires>
 block
 hash
+libstate
 mac
 numbertheory
 stream

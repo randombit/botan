@@ -18,6 +18,8 @@ lookup.h
 pk_engine.cpp
 pk_engine.h
 policy.cpp
+scan_name.cpp
+scan_name.h
 </add>
 
 <requires>

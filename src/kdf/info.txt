@@ -8,3 +8,7 @@ load_on auto
 kdf.cpp
 kdf.h
 </add>
+
+<requires>
+alloc
+</requires>

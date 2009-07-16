@@ -9,6 +9,7 @@ symkey.h
 </add>
 
 <requires>
+alloc
 filters
 hex
 rng

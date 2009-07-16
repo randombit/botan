@@ -33,6 +33,7 @@ x509stor.h
 <requires>
 asn1
 bigint
+datastor
 filters
 libstate
 oid_lookup

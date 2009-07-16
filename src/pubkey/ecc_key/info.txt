@@ -10,6 +10,7 @@ ecc_key.h
 </add>
 
 <requires>
+alloc
 asn1
 bigint
 ec_dompar

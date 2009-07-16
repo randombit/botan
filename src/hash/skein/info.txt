@@ -8,3 +8,7 @@ load_on auto
 skein_512.cpp
 skein_512.h
 </add>
+
+<requires>
+alloc
+</requires>

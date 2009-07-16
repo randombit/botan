@@ -24,6 +24,7 @@ mp_shift.cpp
 </add>
 
 <requires>
+alloc
 hex
 mp_ia32
 mp_ia32_msvc
