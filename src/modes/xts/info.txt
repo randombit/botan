@@ -9,7 +9,6 @@ xts.cpp
 xts.h
 </add>
 
-
 <requires>
 block
 filters

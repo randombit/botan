@@ -24,4 +24,5 @@ icc
 
 <requires>
 sha1
+sse2_eng
 </requires>

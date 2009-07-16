@@ -10,7 +10,6 @@ eax.h
 eax_dec.cpp
 </add>
 
-
 <requires>
 block
 cmac

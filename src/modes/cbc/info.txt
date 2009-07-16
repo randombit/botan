@@ -9,7 +9,6 @@ cbc.cpp
 cbc.h
 </add>
 
-
 <requires>
 mode_pad
 </requires>

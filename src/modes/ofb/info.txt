@@ -9,7 +9,6 @@ ofb.cpp
 ofb.h
 </add>
 
-
 <requires>
 block
 </requires>
