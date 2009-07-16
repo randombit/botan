@@ -15,8 +15,6 @@ pubkey.cpp
 pubkey.h
 pubkey_enums.cpp
 pubkey_enums.h
-x509_key.cpp
-x509_key.h
 </add>
 
 <requires>
