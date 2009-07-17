@@ -18,7 +18,5 @@ point_gfp.h
 
 <requires>
 bigint
-mp_ia32
-mp_ia32_msvc
 numbertheory
 </requires>

@@ -16,7 +16,3 @@ ia32
 <cc>
 msvc
 </cc>
-
-<requires>
-mp_ia32
-</requires>

@@ -5,8 +5,3 @@ load_on dep
 <add>
 mp_monty.cpp
 </add>
-
-<requires>
-mp_ia32
-mp_ia32_msvc
-</requires>

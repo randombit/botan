@@ -27,5 +27,5 @@ solaris
 </os>
 
 <requires>
-asm_ia32
+asm_amd64
 </requires>
