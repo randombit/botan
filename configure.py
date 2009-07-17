@@ -773,6 +773,9 @@ def choose_modules_to_use(options, modules):
     for (modname, module) in modules.iteritems():
         if modname in options.disabled_modules:
             cannot_use_because(modname, 'disabled by user')
+        elif modname in options.enabled_modules:
+            to_load.append(modname) # trust the user
+
         elif not module.compatible_cpu(options.arch, options.cpu):
             cannot_use_because(modname, 'CPU incompatible')
         elif not module.compatible_os(options.os):
@@ -780,6 +783,7 @@ def choose_modules_to_use(options, modules):
         elif not module.compatible_compiler(options.compiler,
                                             options.with_tr1):
             cannot_use_because(modname, 'compiler incompatible')
+
         else:
             if module.load_on == 'never':
                 cannot_use_because(modname, 'disabled as buggy')
