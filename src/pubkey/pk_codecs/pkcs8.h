@@ -117,11 +117,6 @@ BOTAN_DLL std::string PEM_encode(const Private_Key& key,
                                  const std::string& pass,
                                  const std::string& pbe_algo = "");
 
-BOTAN_DLL std::string PEM_encode(const Private_Key&,
-                                 const std::string&,
-                                 const std::string& = "");
-
-
 /**
 * Load a key from a data source.
 * @param source the data source providing the encoded key
