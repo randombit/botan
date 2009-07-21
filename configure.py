@@ -748,9 +748,11 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'static_suffix': osinfo.static_suffix,
         'so_suffix': osinfo.so_suffix,
 
-        'botan_config': prefix_with_build_dir('botan-config'),
+        'botan_config': prefix_with_build_dir(
+            os.path.join(build_config.build_dir, 'botan-config')),
         'botan_pkgconfig': prefix_with_build_dir(
-            build_config.pkg_config_file()),
+            os.path.join(build_config.build_dir,
+                         build_config.pkg_config_file())),
 
         'doc_files': makefile_list(build_config.doc_files()),
 
