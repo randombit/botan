@@ -11,6 +11,11 @@
      S - meatspace location
 ----------
 
+N - Charles Brockman
+W - http://www.securitygenetics.com/
+D - documentation editing
+S - Oregon, USA
+
 N: Martin Doering
 E: doering@cdc.informatik.tu-darmstadt.de
 D: GF(p) arithmetic
