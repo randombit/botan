@@ -13,12 +13,6 @@
 
 namespace Botan {
 
-namespace {
-
-const u32bit BLINDING_BITS = BOTAN_PRIVATE_KEY_OP_BLINDING_BITS;
-
-}
-
 /*
 * DSA_Core Constructor
 */

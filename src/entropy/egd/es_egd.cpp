@@ -98,7 +98,7 @@ u32bit EGD_EntropySource::EGD_Socket::read(byte outbuf[], u32bit length)
 
       return static_cast<u32bit>(count);
       }
-   catch(std::exception& e)
+   catch(std::exception)
       {
       this->close();
       // Will attempt to reopen next poll

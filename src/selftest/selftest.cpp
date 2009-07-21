@@ -173,7 +173,7 @@ bool passes_self_tests(Algorithm_Factory& af)
                                            "0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B")));
         }
   }
-  catch(std::exception& e)
+  catch(std::exception)
      {
      return false;
      }

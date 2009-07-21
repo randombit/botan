@@ -57,7 +57,7 @@ void EC_PublicKey::X509_load_hook()
       affirm_init();
       mp_public_point->check_invariants();
       }
-   catch(Illegal_Point exc)
+   catch(Illegal_Point)
       {
       throw Decoding_Error("decoded public point was found not to lie on curve");
       }
