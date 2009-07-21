@@ -161,8 +161,7 @@ sub main {
             File::Spec->catdir($$config{'build_dir'}, 'include', 'botan'),
 
         'mp_bits'       => find_mp_bits($config),
-        'mod_libs'      =>
-           [ using_libs($os, sort keys %{$$config{'modules'}}) ],
+        'mod_libs'      => [ using_libs($config) ],
 
         'sources'       => { },
         'includes'      => { },
@@ -939,24 +938,30 @@ sub mach_opt {
 #                                                #
 ##################################################
 sub using_libs {
-   my ($os,@using) = @_;
+   my ($config) = @_;
+
+   my $os = $$config{'os'};
    my %libs;
 
-   foreach my $mod (@using) {
+   foreach my $mod (sort keys %{$$config{'modules'}}) {
+       next if ${$$config{'modules'}}{$mod} < 0;
+
       my %MOD_LIBS = %{ $MODULES{$mod}{'libs'} };
-      foreach my $mod_os (keys %MOD_LIBS) {
+
+      foreach my $mod_os (keys %MOD_LIBS)
+      {
           next if($mod_os =~ /^all!$os$/);
           next if($mod_os =~ /^all!$os,/);
-          next if($mod_os =~ /^all!.*,${os}$/);
+          #next if($mod_os =~ /^all!.*,${os}$/);
           next if($mod_os =~ /^all!.*,$os,.*/);
           next unless($mod_os eq $os or ($mod_os =~ /^all.*/));
           my @liblist = split(/,/, $MOD_LIBS{$mod_os});
           foreach my $lib (@liblist) { $libs{$lib} = 1; }
-          }
       }
+   }
 
    return sort keys %libs;
-   }
+}
 
 sub libs {
     my ($prefix,$suffix,@libs) = @_;
