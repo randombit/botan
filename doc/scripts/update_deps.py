@@ -14,12 +14,16 @@ def update_requires(dir, deps):
         while lines.pop(start) != '</requires>':
             pass
 
-    lines.append('')
-    lines.append('<requires>')
-    for dep in deps:
-        lines.append(dep)
-    lines.append('</requires>')
-    lines.append('')
+    while lines[-1] == '':
+        lines = lines[:-1]
+
+    if len(deps) > 0:
+        lines.append('')
+        lines.append('<requires>')
+        for dep in deps:
+            lines.append(dep)
+        lines.append('</requires>')
+        lines.append('')
 
     lines = "\n".join(lines).replace("\n\n\n", "\n\n")
 
