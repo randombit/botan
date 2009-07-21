@@ -1,14 +1,13 @@
-realname "KDF Base Class"
-
-define KDF_BASE
+realname "Datastore"
 
 load_on auto
 
 <add>
-kdf.cpp
-kdf.h
+datastor.cpp
+datastor.h
 </add>
 
 <requires>
 alloc
+filters
 </requires>

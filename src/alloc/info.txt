@@ -4,4 +4,5 @@ load_on auto
 
 <add>
 allocate.h
+secmem.h
 </add>

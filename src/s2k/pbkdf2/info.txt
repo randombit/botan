@@ -8,3 +8,7 @@ load_on auto
 pbkdf2.cpp
 pbkdf2.h
 </add>
+
+<requires>
+mac
+</requires>

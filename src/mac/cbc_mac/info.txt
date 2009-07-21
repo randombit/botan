@@ -8,3 +8,7 @@ load_on auto
 cbc_mac.cpp
 cbc_mac.h
 </add>
+
+<requires>
+block
+</requires>

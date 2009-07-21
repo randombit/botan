@@ -6,3 +6,7 @@ load_on auto
 rng.cpp
 rng.h
 </add>
+
+<requires>
+entropy
+</requires>

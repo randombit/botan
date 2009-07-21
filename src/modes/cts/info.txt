@@ -10,6 +10,5 @@ cts.h
 </add>
 
 <requires>
-modes
+block
 </requires>
-

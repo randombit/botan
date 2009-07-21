@@ -9,3 +9,8 @@ emsa.h
 eme.cpp
 eme.h
 </add>
+
+<requires>
+alloc
+rng
+</requires>

@@ -4,16 +4,6 @@ define ECKAEG
 
 load_on auto
 
-<requires>
-asn1
-bigint
-ec_dompar
-ecc_key
-numbertheory
-gfpmath
-pubkey
-</requires>
-
 <add>
 eckaeg.cpp
 eckaeg.h
@@ -22,3 +12,13 @@ eckaeg_core.h
 eckaeg_op.cpp
 eckaeg_op.h
 </add>
+
+<requires>
+alloc
+asn1
+ec_dompar
+ecc_key
+gfpmath
+libstate
+numbertheory
+</requires>

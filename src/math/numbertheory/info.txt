@@ -4,10 +4,6 @@ load_on auto
 
 define BIGINT_MATH
 
-<requires>
-bigint
-</requires>
-
 <add>
 blinding.cpp
 blinding.h
@@ -27,3 +23,11 @@ reducer.cpp
 reducer.h
 ressol.cpp
 </add>
+
+<requires>
+algo_factory
+bigint
+hash
+libstate
+rng
+</requires>

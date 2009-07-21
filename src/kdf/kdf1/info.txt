@@ -4,12 +4,11 @@ define KDF1
 
 load_on auto
 
-<requires>
-kdf
-</requires>
-
 <add>
 kdf1.h
 kdf1.cpp
 </add>
 
+<requires>
+hash
+</requires>

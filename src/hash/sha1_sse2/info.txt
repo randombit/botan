@@ -10,12 +10,6 @@ sha1_sse2.cpp
 sha1_sse2.h
 </add>
 
-<requires>
-sse2_eng
-sha1
-utils
-</requires>
-
 <arch>
 pentium-m
 pentium4
@@ -27,3 +21,8 @@ amd64
 gcc
 icc
 </cc>
+
+<requires>
+sha1
+sse2_eng
+</requires>

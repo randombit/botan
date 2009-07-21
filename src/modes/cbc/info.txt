@@ -10,7 +10,5 @@ cbc.h
 </add>
 
 <requires>
-modes
 mode_pad
 </requires>
-

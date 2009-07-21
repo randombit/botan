@@ -4,16 +4,6 @@ define ECDSA
 
 load_on auto
 
-<requires>
-asn1
-bigint
-ec_dompar
-ecc_key
-numbertheory
-gfpmath
-pubkey
-</requires>
-
 <add>
 ecdsa.cpp
 ecdsa.h
@@ -22,3 +12,14 @@ ecdsa_core.h
 ecdsa_op.cpp
 ecdsa_op.h
 </add>
+
+<requires>
+alloc
+asn1
+ec_dompar
+ecc_key
+gfpmath
+libstate
+numbertheory
+rng
+</requires>

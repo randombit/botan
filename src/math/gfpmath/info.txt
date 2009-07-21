@@ -6,11 +6,6 @@ load_on auto
 
 define BIGINT_GFP
 
-<requires>
-bigint
-numbertheory
-</requires>
-
 <add>
 curve_gfp.cpp
 curve_gfp.h
@@ -20,3 +15,8 @@ gfp_modulus.h
 point_gfp.cpp
 point_gfp.h
 </add>
+
+<requires>
+bigint
+numbertheory
+</requires>

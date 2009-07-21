@@ -14,3 +14,11 @@ lookup_hash.cpp
 lookup_mac.cpp
 lookup_stream.cpp
 </add>
+
+<requires>
+algo_factory
+filters
+libstate
+mode_pad
+numbertheory
+</requires>

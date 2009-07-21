@@ -8,3 +8,7 @@ load_on auto
 timer.cpp
 timer.h
 </add>
+
+<requires>
+rng
+</requires>

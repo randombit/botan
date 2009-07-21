@@ -10,7 +10,7 @@ dlies.h
 </add>
 
 <requires>
-dh
-kdf2
-pubkey
+kdf
+libstate
+mac
 </requires>

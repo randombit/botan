@@ -15,10 +15,12 @@ my $MAJOR_VERSION = 1;
 my $MINOR_VERSION = 8;
 my $PATCH_VERSION = 5;
 
+my $VERSION_SUFFIX = '-rc1';
+
 my $SO_PATCH_VERSION = 5;
 
-my $VERSION_STRING = "$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION";
-my $SO_VERSION_STRING = "$MAJOR_VERSION.$MINOR_VERSION.$SO_PATCH_VERSION";
+my $VERSION_STRING = "$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION$VERSION_SUFFIX";
+my $SO_VERSION_STRING = "$MAJOR_VERSION.$MINOR_VERSION.$SO_PATCH_VERSION$VERSION_SUFFIX";
 
 ##################################################
 # Data                                           #
@@ -158,7 +160,7 @@ sub main {
         'build_include_botan' =>
             File::Spec->catdir($$config{'build_dir'}, 'include', 'botan'),
 
-        'mp_bits'       => find_mp_bits(sort keys %{$$config{'modules'}}),
+        'mp_bits'       => find_mp_bits($config),
         'mod_libs'      =>
            [ using_libs($os, sort keys %{$$config{'modules'}}) ],
 
@@ -494,81 +496,51 @@ sub module_runs_on {
     }
 
 
-    return 1;
-}
-
-sub can_enable_module {
-    my ($config, $mod, $for_dep) = @_;
-
-    my %modinfo = %{ $MODULES{$mod} };
-
-    my $is_enabled = 0;
-
-    # If it was enabled by the user with --enable-modules, trust them
-    if(defined($$config{'modules'}{$mod})) {
-        return '' if($$config{'modules'}{$mod} < 0);
-        $is_enabled = 1;
-    }
-
-    unless($is_enabled) {
-        return '' if $modinfo{'load_on'} eq 'dep' and $for_dep == 0;
-        return '' if $modinfo{'load_on'} eq 'request';
-    }
-
-    # Doesn't run here, don't bother
-    return '' unless module_runs_on($config, \%modinfo, $mod, 0);
-
     if($modinfo{'uses_tr1'} eq 'yes') {
-        return '' unless defined($$config{'tr1'});
+        return 0 unless defined($$config{'tr1'});
 
         my $tr1 = $$config{'tr1'};
-        return '' unless($tr1 eq 'system' or $tr1 eq 'boost');
+        return 0 unless($tr1 eq 'system' or $tr1 eq 'boost');
     }
 
-    # @deps is the full list of modules that must be loaded (this loop
-    # every time is a really dumb way to do this, but it works since
-    # there are only about 150 info.txt files total, and most don't
-    # have complicated deps)
-
-    my @deps;
-    push @deps, $mod;
-
-    LINE: foreach (@{$modinfo{'requires'}}) {
-
-        for my $req_mod (split(/\|/, $_)) {
-            next unless defined $MODULES{$req_mod};
-
-            if(can_enable_module($config, $req_mod, 1)) {
-                push @deps, $req_mod;
-                next LINE;
-            }
-        }
-
-        #autoconfig("Could not get a dep match for $_ for mod $mod");
-        # Could not find a match
-        return '';
-    }
-
-    return join(' ', @deps);
+    return 1;
 }
 
 sub scan_modules {
     my ($config) = @_;
 
-    MOD: foreach my $mod (sort keys %MODULES) {
+    my %dep_mods = ();
+
+    foreach my $mod (sort keys %MODULES) {
         my %modinfo = %{ $MODULES{$mod} };
 
-        my @mods = split(/ /, can_enable_module($config, $mod, 0));
+        next if(defined($$config{'modules'}{$mod}) && $$config{'modules'}{$mod} < 0);
 
-        if($#mods < 0) {
-            trace("Will not enable $mod");
+        next unless(module_runs_on($config, \%modinfo, $mod, 0));
+
+        if($modinfo{'load_on'} eq 'auto' or
+            ($modinfo{'load_on'} eq 'asm_ok' and $$config{'asm_ok'})) {
+
+            $$config{'modules'}{$mod} = 1;
+
+            LINE: foreach (@{$modinfo{'requires'}}) {
+                for my $req_mod (split(/\|/, $_)) {
+                    next unless defined $MODULES{$req_mod};
+
+                    next if(defined($$config{'modules'}{$req_mod}) && $$config{'modules'}{$req_mod} < 0);
+                    next unless(module_runs_on($config, $MODULES{$req_mod}, $req_mod, 0));
+
+                    $dep_mods{$req_mod} = 1;
+                    next LINE;
+                }
+            }
+
             next;
         }
+    }
 
-        foreach my $req_mod (@mods) {
-            #autoconfig("Enabling module $req_mod");
-            $$config{'modules'}{$req_mod} = 1;
-        }
+    foreach my $mod (sort keys %dep_mods) {
+        $$config{'modules'}{$mod} = 1;
     }
 }
 
@@ -766,7 +738,7 @@ sub get_options {
         'quiet' => sub { $$config{'verbose'} = 0; },
         'trace' => sub { $TRACING = 1; },
 
-        'enable-asm' => sub { $$config{'asm_ok'} = 0; },
+        'enable-asm' => sub { $$config{'asm_ok'} = 1; },
         'disable-asm' => sub { $$config{'asm_ok'} = 0; },
 
         'enable-autoconfig' => sub { $$config{'autoconfig'} = 1; },
@@ -1145,8 +1117,10 @@ sub find_mp_bits {
 
     my $seen_mp_module = undef;
 
-    foreach my $modname (@modules_list) {
+    foreach my $modname (sort keys %{$$config{'modules'}}) {
         croak("Unknown module $modname") unless defined $MODULES{$modname};
+
+        next if $$config{'modules'}{$modname} < 0;
 
         my %modinfo = %{ $MODULES{$modname} };
         if($modinfo{'mp_bits'}) {

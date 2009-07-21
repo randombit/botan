@@ -8,20 +8,11 @@ load_on auto
 tru64 -> rt
 </libs>
 
-<requires>
-filters
-</requires>
-
 <add>
 bit_ops.h
 bswap.h
-buf_comp.h
 charset.cpp
 charset.h
-data_src.cpp
-data_src.h
-datastor.cpp
-datastor.h
 exceptn.cpp
 exceptn.h
 loadstor.h
@@ -30,9 +21,6 @@ mlock.cpp
 parsing.cpp
 parsing.h
 rotate.h
-scan_name.cpp
-scan_name.h
-secmem.h
 stl_util.h
 types.h
 ui.cpp

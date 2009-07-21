@@ -4,12 +4,6 @@ define IF_PUBLIC_KEY_FAMILY
 
 load_on dep
 
-<requires>
-asn1
-bigint
-filters
-</requires>
-
 <add>
 if_algo.cpp
 if_algo.h
@@ -18,3 +12,11 @@ if_core.h
 if_op.cpp
 if_op.h
 </add>
+
+<requires>
+asn1
+bigint
+libstate
+numbertheory
+pk_codecs
+</requires>

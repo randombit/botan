@@ -10,10 +10,6 @@ load_on request
 mp_mulop.S
 </add>
 
-<requires>
-asm_ia32
-</requires>
-
 <arch>
 ia32
 </arch>
@@ -31,3 +27,7 @@ netbsd
 openbsd
 solaris
 </os>
+
+<requires>
+asm_ia32
+</requires>

@@ -8,3 +8,7 @@ load_on auto
 pbkdf1.cpp
 pbkdf1.h
 </add>
+
+<requires>
+hash
+</requires>

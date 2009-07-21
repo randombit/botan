@@ -8,3 +8,7 @@ load_on auto
 hash_id.cpp
 hash_id.h
 </add>
+
+<requires>
+alloc
+</requires>

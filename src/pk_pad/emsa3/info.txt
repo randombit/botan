@@ -10,5 +10,6 @@ emsa3.cpp
 </add>
 
 <requires>
+hash
 hash_id
 </requires>

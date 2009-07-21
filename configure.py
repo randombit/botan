@@ -37,7 +37,7 @@ class BuildConfigurationInformation(object):
     version_minor = 8
     version_patch = 5
     version_so_patch = 5
-    version_suffix = '-pre'
+    version_suffix = '-rc1'
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
@@ -260,7 +260,11 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
 
     to_obj.lives_in = dirname
     if basename == 'info.txt':
-        (dummy,to_obj.basename) = os.path.split(dirname)
+        (obj_dir,to_obj.basename) = os.path.split(dirname)
+        if os.access(os.path.join(obj_dir, 'info.txt'), os.R_OK):
+            to_obj.parent_module = os.path.basename(obj_dir)
+        else:
+            to_obj.parent_module = None
     else:
         to_obj.basename = basename
 
@@ -348,6 +352,24 @@ class ModuleInfo(object):
             self.uses_tr1 = True
         else:
             self.uses_tr1 = False
+
+    def compatible_cpu(self, arch, cpu):
+        return self.arch == [] or (arch in self.arch or cpu in self.arch)
+
+    def compatible_os(self, os):
+        return self.os == [] or os in self.os
+
+    def compatible_compiler(self, cc, with_tr1):
+        if self.uses_tr1 and with_tr1 not in ['boost', 'system']:
+            return False
+        return self.cc == [] or cc in self.cc
+
+    def dependencies(self):
+        # utils is an implicit dep (contains types, etc)
+        deps = self.requires + ['utils']
+        if self.parent_module != None:
+            deps.append(self.parent_module)
+        return deps
 
     def __cmp__(self, other):
         if self.basename < other.basename:
@@ -740,68 +762,82 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 Determine which modules to load based on options, target, etc
 """
 def choose_modules_to_use(options, modules):
-    def enable_module(module, for_dep = False):
-        # First check options for --enable-modules/--disable-modules
 
-        if module.basename in options.disabled_modules:
-            return (False, [])
+    to_load = []
+    maybe_dep = []
+    not_using_because = {}
 
-        # If it was specifically requested, skip most tests (trust the user)
-        if module.basename not in options.enabled_modules:
-            if module.cc != [] and options.compiler not in module.cc:
-                return (False, [])
+    def cannot_use_because(mod, reason):
+        not_using_because.setdefault(reason, []).append(mod)
 
-            if module.os != [] and options.os not in module.os:
-                return (False, [])
+    for (modname, module) in modules.iteritems():
+        if modname in options.disabled_modules:
+            cannot_use_because(modname, 'disabled by user')
+        elif modname in options.enabled_modules:
+            to_load.append(modname) # trust the user
 
-            if module.arch != [] and options.arch not in module.arch \
-                   and options.cpu not in module.arch:
-                return (False, [])
+        elif not module.compatible_cpu(options.arch, options.cpu):
+            cannot_use_because(modname, 'CPU incompatible')
+        elif not module.compatible_os(options.os):
+            cannot_use_because(modname, 'OS incompatible')
+        elif not module.compatible_compiler(options.compiler,
+                                            options.with_tr1):
+            cannot_use_because(modname, 'compiler incompatible')
 
-            if module.load_on == 'dep' and not for_dep:
-                return (False, [])
-            elif module.load_on == 'request':
-                return (False, [])
-            elif module.load_on == 'asm_ok' and not options.asm_ok:
-                return (False, [])
-
-        # TR1 checks
-        if module.uses_tr1:
-            if options.with_tr1 != 'boost' and options.with_tr1 != 'system':
-                return (False, [])
-
-        # dependency checks
-        deps = []
-        deps_met = True
-        for req in module.requires:
-            for mod in req.split('|'):
-                (can_enable, deps_of_dep) = enable_module(modules[mod], True)
-                if can_enable:
-                    deps.append(mod)
-                    deps += deps_of_dep
-                    break
-            else:
-                deps_met = False
-
-        if deps_met:
-            return (True,deps)
         else:
-            return (False, [])
+            if module.load_on == 'never':
+                cannot_use_because(modname, 'disabled as buggy')
+            elif module.load_on == 'request':
+                cannot_use_because(modname, 'loaded on request only')
+            elif module.load_on == 'dep':
+                maybe_dep.append(modname)
+            elif module.load_on in ['auto', 'asm_ok']:
+                if module.load_on == 'asm_ok' and not options.asm_ok:
+                    cannot_use_because(modname, 'uses assembly and --disable-asm set')
+                else:
+                    to_load.append(modname)
+            else:
+                logging.warning('Unknown load_on %s in %s' % (module.load_on, modname))
 
-    use_module = {}
-    for (name,module) in modules.iteritems():
-        if use_module.get(name, False) is False:
-            (should_use,deps) = enable_module(module)
+    dependency_failure = True
 
-            use_module[name] = should_use
+    while dependency_failure:
+        dependency_failure = False
+        for modname in to_load:
+            for deplist in map(lambda s: s.split('|'),
+                               modules[modname].dependencies()):
 
-            if should_use:
-                for dep in deps:
-                    use_module[dep] = True
+                dep_met = False
+                for mod in deplist:
+                    if dep_met is True:
+                        break
 
-    return [modules[name]
-            for (name,useme) in use_module.items()
-            if useme]
+                    if mod in to_load:
+                        dep_met = True
+                    elif mod in maybe_dep:
+                        maybe_dep.remove(mod)
+                        to_load.append(mod)
+                        dep_met = True
+
+                if dep_met == False:
+                    dependency_failure = True
+                    if modname in to_load:
+                        to_load.remove(modname)
+                    if modname in maybe_dep:
+                        maybe_dep.remove(modname)
+                    cannot_use_because(modname, 'of dependency failure')
+
+    for not_a_dep in maybe_dep:
+        cannot_use_because(not_a_dep, 'loaded only if needed by dependency')
+
+    for reason in sorted(not_using_because.keys()):
+        disabled_mods = sorted(set([mod for mod in not_using_because[reason]]))
+
+        if disabled_mods != []:
+            logging.info('Skipping mod because %s - %s' % (
+                reason, ' '.join(disabled_mods)))
+
+    return [modules[mod] for mod in to_load]
 
 """
 Load the info files about modules, targets, etc
@@ -920,6 +956,9 @@ def setup_build(build_config, options, template_vars):
     for header_file in build_config.headers:
         portable_symlink(header_file, build_config.full_include_dir)
 
+"""
+Main driver
+"""
 def main(argv = None):
     if argv is None:
         argv = sys.argv

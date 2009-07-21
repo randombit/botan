@@ -2,11 +2,12 @@ realname "Default (Malloc) Allocators"
 
 load_on auto
 
-<requires>
-utils
-</requires>
-
 <add>
 defalloc.cpp
 defalloc.h
 </add>
+
+<requires>
+libstate
+mem_pool
+</requires>

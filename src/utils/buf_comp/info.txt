@@ -1,14 +1,11 @@
-realname "KDF2"
-
-define KDF2
+realname "Buffered Computation"
 
 load_on auto
 
 <add>
-kdf2.cpp
-kdf2.h
+buf_comp.h
 </add>
 
 <requires>
-hash
+alloc
 </requires>

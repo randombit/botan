@@ -4,11 +4,10 @@ load_on auto
 
 define BLOCK_CIPHER
 
-<requires>
-utils
-sym_algo
-</requires>
-
 <add>
 block_cipher.h
 </add>
+
+<requires>
+sym_algo
+</requires>

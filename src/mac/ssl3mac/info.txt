@@ -8,3 +8,7 @@ load_on auto
 ssl3_mac.cpp
 ssl3_mac.h
 </add>
+
+<requires>
+hash
+</requires>

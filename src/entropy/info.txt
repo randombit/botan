@@ -5,3 +5,7 @@ load_on auto
 <add>
 entropy_src.h
 </add>
+
+<requires>
+buf_comp
+</requires>

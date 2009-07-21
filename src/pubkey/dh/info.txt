@@ -13,9 +13,8 @@ dh_op.h
 </add>
 
 <requires>
-asn1
-bigint
 dl_algo
+dl_group
+libstate
 numbertheory
-pubkey
 </requires>

@@ -2,15 +2,11 @@ realname "Montgomery Reduction (x86-64)"
 
 mp_bits 64
 
-load_on request
+load_on never
 
 <add>
 mp_monty.S
 </add>
-
-<requires>
-asm_amd64
-</requires>
 
 <arch>
 amd64
@@ -29,3 +25,7 @@ netbsd
 openbsd
 solaris
 </os>
+
+<requires>
+asm_amd64
+</requires>

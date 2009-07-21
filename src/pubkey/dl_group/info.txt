@@ -12,4 +12,8 @@ dl_group.h
 <requires>
 asn1
 bigint
+filters
+libstate
+numbertheory
+pem
 </requires>

@@ -11,6 +11,8 @@ eax_dec.cpp
 </add>
 
 <requires>
-modes
+block
+cmac
+filters
+mac
 </requires>
-

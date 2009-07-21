@@ -4,16 +4,14 @@ define RW
 
 load_on auto
 
-<requires>
-asn1
-bigint
-if_algo
-keypair
-numbertheory
-pubkey
-</requires>
-
 <add>
 rw.cpp
 rw.h
 </add>
+
+<requires>
+if_algo
+keypair
+libstate
+numbertheory
+</requires>

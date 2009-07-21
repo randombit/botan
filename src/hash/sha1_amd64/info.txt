@@ -10,13 +10,6 @@ sha1_amd64.cpp
 sha1_amd64.h
 </add>
 
-<requires>
-amd64_eng
-asm_amd64
-sha1
-utils
-</requires>
-
 <arch>
 amd64
 </arch>
@@ -33,3 +26,9 @@ netbsd
 openbsd
 solaris
 </os>
+
+<requires>
+amd64_eng
+asm_amd64
+sha1
+</requires>

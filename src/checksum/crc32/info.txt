@@ -8,3 +8,7 @@ load_on auto
 crc32.cpp
 crc32.h
 </add>
+
+<requires>
+hash
+</requires>

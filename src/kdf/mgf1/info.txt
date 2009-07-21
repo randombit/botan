@@ -4,11 +4,11 @@ define MGF1
 
 load_on dep
 
-<requires>
-kdf
-</requires>
-
 <add>
 mgf1.h
 mgf1.cpp
 </add>
+
+<requires>
+hash
+</requires>

@@ -10,6 +10,6 @@ xts.h
 </add>
 
 <requires>
-modes
+block
+filters
 </requires>
-

@@ -4,15 +4,6 @@ load_on auto
 
 define LIBSTATE_MODULE
 
-<requires>
-algo_factory
-def_engine
-mode_pad
-pk_pad
-s2k
-system_alloc
-</requires>
-
 <add>
 botan.h
 get_enc.cpp
@@ -27,4 +18,28 @@ lookup.h
 pk_engine.cpp
 pk_engine.h
 policy.cpp
+scan_name.cpp
+scan_name.h
 </add>
+
+<requires>
+algo_factory
+alloc
+bigint
+block
+def_engine
+engine
+filters
+hash
+kdf
+mac
+mode_pad
+mutex
+noop_mutex
+pk_pad
+pubkey
+rng
+s2k
+stream
+system_alloc
+</requires>

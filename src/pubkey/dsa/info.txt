@@ -4,15 +4,6 @@ define DSA
 
 load_on auto
 
-<requires>
-asn1
-bigint
-dl_algo
-keypair
-numbertheory
-pubkey
-</requires>
-
 <add>
 dsa.cpp
 dsa.h
@@ -21,3 +12,11 @@ dsa_core.h
 dsa_op.cpp
 dsa_op.h
 </add>
+
+<requires>
+dl_algo
+dl_group
+keypair
+libstate
+numbertheory
+</requires>

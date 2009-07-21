@@ -12,6 +12,8 @@ buf_filt.cpp
 buf_filt.h
 data_snk.cpp
 data_snk.h
+data_src.cpp
+data_src.h
 filter.cpp
 filter.h
 filters.h
@@ -25,3 +27,15 @@ pipe_rw.cpp
 secqueue.cpp
 secqueue.h
 </add>
+
+<requires>
+alloc
+asn1
+block
+hash
+libstate
+mac
+rng
+stream
+sym_algo
+</requires>

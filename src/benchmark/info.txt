@@ -9,3 +9,13 @@ benchmark.cpp
 benchmark.h
 </add>
 
+<requires>
+algo_factory
+block
+buf_comp
+hash
+mac
+rng
+stream
+timer
+</requires>

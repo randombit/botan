@@ -14,10 +14,9 @@ nr_op.h
 </add>
 
 <requires>
-asn1
-bigint
 dl_algo
+dl_group
 keypair
+libstate
 numbertheory
-pubkey
 </requires>

@@ -13,6 +13,39 @@
 
 namespace Botan {
 
+namespace {
+
+/*
+* TLS PRF P_hash function
+*/
+SecureVector<byte> P_hash(MessageAuthenticationCode* mac,
+                          u32bit len,
+                          const byte secret[], u32bit secret_len,
+                          const byte seed[], u32bit seed_len)
+   {
+   SecureVector<byte> out;
+
+   mac->set_key(secret, secret_len);
+
+   SecureVector<byte> A(seed, seed_len);
+   while(len)
+      {
+      const u32bit this_block_len = std::min(mac->OUTPUT_LENGTH, len);
+
+      A = mac->process(A);
+
+      mac->update(A);
+      mac->update(seed, seed_len);
+      SecureVector<byte> block = mac->final();
+
+      out.append(block, this_block_len);
+      len -= this_block_len;
+      }
+   return out;
+   }
+
+}
+
 /*
 * TLS PRF Constructor and Destructor
 */
@@ -47,35 +80,6 @@ SecureVector<byte> TLS_PRF::derive(u32bit key_len,
    xor_buf(key1.begin(), key2.begin(), key2.size());
 
    return key1;
-   }
-
-/*
-* TLS PRF P_hash function
-*/
-SecureVector<byte> TLS_PRF::P_hash(MessageAuthenticationCode* mac,
-                                   u32bit len,
-                                   const byte secret[], u32bit secret_len,
-                                   const byte seed[], u32bit seed_len)
-   {
-   SecureVector<byte> out;
-
-   mac->set_key(secret, secret_len);
-
-   SecureVector<byte> A(seed, seed_len);
-   while(len)
-      {
-      const u32bit this_block_len = std::min(mac->OUTPUT_LENGTH, len);
-
-      A = mac->process(A);
-
-      mac->update(A);
-      mac->update(seed, seed_len);
-      SecureVector<byte> block = mac->final();
-
-      out.append(block, this_block_len);
-      len -= this_block_len;
-      }
-   return out;
    }
 
 }

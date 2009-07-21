@@ -4,11 +4,6 @@ define ASN1
 
 load_on auto
 
-<requires>
-bigint
-oid_lookup
-</requires>
-
 <add>
 alg_id.cpp
 asn1_alt.cpp
@@ -27,3 +22,10 @@ asn1_oid.h
 ber_dec.h
 der_enc.h
 </add>
+
+<requires>
+alloc
+bigint
+filters
+oid_lookup
+</requires>

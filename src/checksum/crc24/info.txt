@@ -8,3 +8,7 @@ load_on auto
 crc24.cpp
 crc24.h
 </add>
+
+<requires>
+hash
+</requires>

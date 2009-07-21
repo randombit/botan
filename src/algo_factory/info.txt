@@ -4,13 +4,18 @@ load_on auto
 
 define ALGORITHM_FACTORY
 
-<requires>
-utils
-</requires>
-
 <add>
 algo_factory.cpp
 algo_factory.h
 algo_cache.h
 prov_weight.cpp
 </add>
+
+<requires>
+block
+engine
+hash
+mac
+mutex
+stream
+</requires>

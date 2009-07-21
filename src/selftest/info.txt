@@ -4,21 +4,18 @@ define SELFTESTS
 
 load_on auto
 
-<requires>
-hex
-des
-aes
-sha1
-sha2
-hmac
-ecb
-cbc
-cfb
-ofb
-ctr
-</requires>
-
 <add>
 selftest.cpp
 selftest.h
 </add>
+
+<requires>
+algo_factory
+cbc
+cfb
+ctr
+ecb
+filters
+hmac
+ofb
+</requires>

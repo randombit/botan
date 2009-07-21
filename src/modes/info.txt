@@ -10,5 +10,6 @@ modebase.h
 </add>
 
 <requires>
+block
 filters
 </requires>

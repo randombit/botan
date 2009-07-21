@@ -4,16 +4,17 @@ define ECC_PUBLIC_KEY_CRYPTO
 
 load_on auto
 
-<requires>
-asn1
-bigint
-ec_dompar
-numbertheory
-gfpmath
-pubkey
-</requires>
-
 <add>
 ecc_key.cpp
 ecc_key.h
 </add>
+
+<requires>
+alloc
+asn1
+bigint
+ec_dompar
+gfpmath
+numbertheory
+pk_codecs
+</requires>

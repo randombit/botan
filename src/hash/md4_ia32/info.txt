@@ -10,12 +10,6 @@ md4_ia32.cpp
 md4_ia32.h
 </add>
 
-<requires>
-ia32_eng
-asm_ia32
-md4
-</requires>
-
 <arch>
 ia32
 </arch>
@@ -33,3 +27,8 @@ netbsd
 openbsd
 solaris
 </os>
+
+<requires>
+asm_ia32
+md4
+</requires>

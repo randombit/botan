@@ -7,3 +7,12 @@ load_on auto
 <add>
 engine.h
 </add>
+
+<requires>
+block
+hash
+libstate
+mac
+numbertheory
+stream
+</requires>

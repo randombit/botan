@@ -8,8 +8,7 @@
 #ifndef BOTAN_PK_KEY_FACTORY_H__
 #define BOTAN_PK_KEY_FACTORY_H__
 
-#include <botan/x509_key.h>
-#include <botan/pkcs8.h>
+#include <botan/pk_keys.h>
 
 namespace Botan {
 

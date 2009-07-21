@@ -4,14 +4,6 @@ define CMS
 
 load_on auto
 
-<requires>
-asn1
-filters
-oid_lookup
-pubkey
-x509
-</requires>
-
 <add>
 cms_algo.cpp
 cms_comp.cpp
@@ -22,3 +14,18 @@ cms_ealg.cpp
 cms_enc.cpp
 cms_enc.h
 </add>
+
+<requires>
+asn1
+bigint
+cbc
+filters
+hash
+libstate
+oid_lookup
+pem
+pk_codecs
+sha1
+sym_algo
+x509
+</requires>

@@ -8,3 +8,7 @@ load_on auto
 gost_3411.cpp
 gost_3411.h
 </add>
+
+<requires>
+gost_28147
+</requires>

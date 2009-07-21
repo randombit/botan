@@ -25,11 +25,6 @@ class BOTAN_DLL TLS_PRF : public KDF
       TLS_PRF();
       ~TLS_PRF();
    private:
-      static SecureVector<byte> P_hash(MessageAuthenticationCode*,
-                                       u32bit,
-                                       const byte[], u32bit,
-                                       const byte[], u32bit);
-
       MessageAuthenticationCode* hmac_md5;
       MessageAuthenticationCode* hmac_sha1;
    };

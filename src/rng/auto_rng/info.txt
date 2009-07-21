@@ -4,14 +4,14 @@ define AUTO_SEEDING_RNG
 
 load_on auto
 
-<requires>
-aes
-sha2
-hmac
-</requires>
-
 <add>
 auto_rng.h
 auto_rng.cpp
 </add>
 
+<requires>
+aes
+hmac
+sha2
+timer
+</requires>
