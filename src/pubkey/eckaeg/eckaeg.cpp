@@ -129,9 +129,10 @@ MemoryVector<byte> ECKAEG_PrivateKey::public_value() const
 /**
 * Derive a key
 */
-SecureVector<byte> ECKAEG_PrivateKey::derive_key(const byte key[], u32bit key_len) const
+SecureVector<byte> ECKAEG_PrivateKey::derive_key(const byte key[],
+                                                 u32bit key_len) const
    {
-   MemoryVector<byte> key_x(key, key_len); // XXX fix this, nasty/slow
+   MemoryVector<byte> key_x(key, key_len); // FIXME: nasty/slow
    PointGFp point = OS2ECP(key_x, public_point().get_curve());
 
    return m_eckaeg_core.agree(point);

@@ -86,7 +86,7 @@ EAC1_1_CVC create_self_signed_cert(Private_Key const& key,
 
    std::auto_ptr<Botan::PK_Signer> signer(get_pk_signer(*priv_key, padding_and_hash));
 
-#if 0
+#if 0 // FIXME
    std::auto_ptr<EAC1_1_CVC_Encoder> enc(priv_key->cvc_eac1_1_encoder());
    MemoryVector<byte> enc_public_key = enc->public_key(sig_algo);
 #else
@@ -115,7 +115,7 @@ EAC1_1_Req create_cvc_req(Private_Key const& key,
 
    std::auto_ptr<Botan::PK_Signer> signer(get_pk_signer(*priv_key, padding_and_hash));
 
-#if 0
+#if 0 // FIXME
    std::auto_ptr<EAC1_1_CVC_Encoder> enc(priv_key->cvc_eac1_1_encoder());
    MemoryVector<byte> enc_public_key = enc->public_key(sig_algo);
 #else
@@ -215,7 +215,7 @@ EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
    ECDSA_PublicKey*  subj_pk = dynamic_cast<ECDSA_PublicKey*>(pk.get());
    subj_pk->set_parameter_encoding(ENC_EXPLICIT);
 
-#if 0
+#if 0 // FIXME
    std::auto_ptr<EAC1_1_CVC_Encoder> enc(subj_pk->cvc_eac1_1_encoder());
    MemoryVector<byte> enc_public_key = enc->public_key(sig_algo);
 #else
@@ -261,7 +261,7 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
 
    subj_pk->set_parameter_encoding(ENC_IMPLICITCA);
 
-#if 0
+#if 0 // FIXME
    std::auto_ptr<EAC1_1_CVC_Encoder> enc(subj_pk->cvc_eac1_1_encoder());
    MemoryVector<byte> enc_public_key = enc->public_key(sig_algo);
 #else

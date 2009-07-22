@@ -30,7 +30,7 @@ class BOTAN_DLL PKCS8_Encoder
       * Get the DER encoded key.
       * @return the DER encoded key
       */
-      // XXX: Why not SecureVector?
+      // FIXME: Why not SecureVector?
       virtual MemoryVector<byte> key_bits() const = 0;
       virtual ~PKCS8_Encoder() {}
    };

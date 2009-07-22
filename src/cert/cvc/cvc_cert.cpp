@@ -58,7 +58,7 @@ void EAC1_1_CVC::force_decode()
    if(cpi != 0)
       throw Decoding_Error("EAC1_1 certificate´s cpi was not 0");
 
-   // XXX: PK algos have no notion of EAC encoder/decoder currently
+   // FIXME: PK algos have no notion of EAC encoder/decoder currently
 #if 0
    ECDSA_PublicKey tmp_pk;
    std::auto_ptr<EAC1_1_CVC_Decoder> dec = tmp_pk.cvc_eac1_1_decoder();

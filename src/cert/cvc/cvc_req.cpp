@@ -41,7 +41,7 @@ void EAC1_1_Req::force_decode()
       throw Decoding_Error("EAC1_1 request´s cpi was not 0");
       }
 
-   // XXX: No EAC support in ECDSA
+   // FIXME: No EAC support in ECDSA
 #if 0
    ECDSA_PublicKey tmp_pk;
    std::auto_ptr<EAC1_1_CVC_Decoder> dec = tmp_pk.cvc_eac1_1_decoder();
