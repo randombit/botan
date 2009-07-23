@@ -1275,6 +1275,7 @@ sub load_modules {
             if($arch ne $submodel) {
                 $submodel = uc $submodel;
                 $submodel =~ tr/-/_/;
+                $submodel =~ tr/.//;
 
                 push @macro_list, "#define BOTAN_TARGET_CPU_IS_$submodel";
             }

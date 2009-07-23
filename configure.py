@@ -403,8 +403,12 @@ class ArchInfo(object):
     def defines(self, target_submodel, with_endian):
         macros = ['TARGET_ARCH_IS_%s' % (self.basename.upper())]
 
+        def form_cpu_macro(cpu_name):
+            return cpu_name.upper().replace('.', '').replace('-', '_')
+
         if self.basename != target_submodel:
-            macros.append('TARGET_CPU_IS_%s' % (target_submodel.upper()))
+            macros.append('TARGET_CPU_IS_%s' % (
+                form_cpu_macro(target_submodel)))
 
         if with_endian:
             macros.append('TARGET_CPU_IS_%s_ENDIAN' % (with_endian.upper()))
