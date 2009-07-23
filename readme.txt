@@ -1,4 +1,4 @@
-Botan 1.8.5-rc1 2009-07-20
+Botan 1.8.5 2009-07-23
 
 Botan is a C++ class library for performing a wide variety of
 cryptographic operations.
