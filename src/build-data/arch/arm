@@ -19,4 +19,5 @@ xscale
 sa110 -> strongarm110
 sa1100 -> strongarm1100
 strongarm1110 -> strongarm1100
+armv5tel -> xscale
 </submodel_aliases>
