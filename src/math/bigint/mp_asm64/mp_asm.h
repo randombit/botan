@@ -57,7 +57,7 @@ namespace Botan {
 // with 64-bit registers/ALU, but no 64x64->128 multiply.
 inline void bigint_2word_mul(word a, word b, word* z1, word* z0)
    {
-   const u32bit MP_HWORD_BITS = MP_WORD_BITS / 2;
+   const u32bit MP_HWORD_BITS = BOTAN_MP_WORD_BITS / 2;
    const word MP_HWORD_MASK = ((word)1 << MP_HWORD_BITS) - 1;
 
    const word a_hi = (a >> MP_HWORD_BITS);
