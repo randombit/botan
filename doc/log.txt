@@ -1,4 +1,9 @@
 
+* 1.8.6-pre, 2009-??-??
+ - Add support for Dragonfly BSD (contributed by Patrick Georgi)
+ - Only read world-readable files when walking /proc for entropy
+ - Minor changes to license to be equivalent to the FreeBSD/NetBSD license
+
 * 1.8.5, 2009-07-23
  - Change configure.py to work on stock Python 2.4
  - Avoid a crash in Skein_512::add_data processing a zero-length input
