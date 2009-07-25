@@ -21,6 +21,7 @@ icc
 <os>
 linux
 freebsd
+dragonfly
 netbsd
 openbsd
 solaris

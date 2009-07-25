@@ -18,6 +18,7 @@ linux -> rt
 cygwin
 linux
 #freebsd
+dragonfly
 #netbsd
 #openbsd
 </os>

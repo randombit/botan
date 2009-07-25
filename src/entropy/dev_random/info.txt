@@ -16,6 +16,7 @@ beos
 cygwin
 darwin
 freebsd
+dragonfly
 hpux
 irix
 linux

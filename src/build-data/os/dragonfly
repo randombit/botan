@@ -1,0 +1,11 @@
+realname "DragonFly"
+
+os_type unix
+
+<target_features>
+posix_mlock
+</target_features>
+
+<supports_shared>
+all
+</supports_shared>

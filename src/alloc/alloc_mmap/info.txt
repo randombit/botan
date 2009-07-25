@@ -13,6 +13,7 @@ mmap_mem.h
 <os>
 linux
 freebsd
+dragonfly
 openbsd
 netbsd
 solaris
