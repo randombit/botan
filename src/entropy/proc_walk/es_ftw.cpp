@@ -81,7 +81,7 @@ int Directory_Walker::next_fd()
 
       if(S_ISDIR(stat_buf.st_mode))
          add_directory(full_path);
-      else if(S_ISREG(stat_buf.st_mode))
+      else if(S_ISREG(stat_buf.st_mode) && (stat_buf.st_mode & S_IROTH))
          {
          int fd = ::open(full_path.c_str(), O_RDONLY | O_NOCTTY);
 
@@ -118,7 +118,7 @@ void FTW_EntropySource::poll(Entropy_Accumulator& accum)
    if(!dir)
       dir = new Directory_Walker(path);
 
-   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(2048);
+   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(128);
 
    for(u32bit i = 0; i != MAX_FILES_READ_PER_POLL; ++i)
       {
