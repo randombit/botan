@@ -140,7 +140,7 @@ algorithm_benchmark(const std::string& name,
       {
       const std::string provider = providers[i];
 
-      std::pair<u64bit, u64bit> results = std::make_pair(0, 0);
+      std::pair<u64bit, u64bit> results(0, 0);
 
       if(const BlockCipher* proto =
             af.prototype_block_cipher(name, provider))
