@@ -1038,14 +1038,19 @@ def main(argv = None):
             return False
 
         if not is_64bit_arch(options.arch) and not options.dumb_gcc:
-            gcc_version = ''.join(
-                subprocess.Popen(['g++', '-v'],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE).communicate())
+            try:
 
-            if re.search('(4\.[01234]\.)|(3\.[34]\.)|(2\.95\.[0-4])',
-                         gcc_version):
-                options.dumb_gcc = True
+                matching_version = '(4\.[01234]\.)|(3\.[34]\.)|(2\.95\.[0-4])'
+
+                gcc_version = ''.join(
+                    subprocess.Popen(['g++', '-v'],
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE).communicate())
+
+                if re.search(matching_version, gcc_version):
+                    options.dumb_gcc = True
+            except OSError, e:
+                logging.info('Could not execute GCC for version check')
 
         if options.dumb_gcc is True:
             logging.info('Setting -fpermissive to work around gcc bug')
