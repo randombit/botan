@@ -31,7 +31,7 @@ inline u32bit reverse_bytes(u32bit input)
    asm("bswapl %0" : "=r" (input) : "0" (input));
    return input;
 
-#elif defined(_MSC_VER) && defined(BOTAN_TARGER_ARCH_IS_IA32)
+#elif defined(_MSC_VER) && defined(BOTAN_TARGET_ARCH_IS_IA32)
    /* Visual C++ inline asm for 32-bit x86, by Yves Jerschow */
    __asm mov eax, x;
    __asm bswap eax;
