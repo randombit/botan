@@ -1,0 +1,30 @@
+realname "Open64"
+
+binary_name "openCC"
+
+compile_option "-c "
+output_to_option "-o "
+add_include_dir_option "-I"
+add_lib_dir_option "-L"
+add_lib_option "-l"
+
+lib_opt_flags "-O3 -OPT:alias=TYPED"
+check_opt_flags "-O3 -OPT:alias=TYPED"
+debug_flags "-g3"
+no_debug_flags "-fomit-frame-pointer"
+shared_flags "-fPIC"
+lang_flags "-ansi -LANG:ansi-for-init-scope=ON"
+warning_flags "-Wall -W"
+
+dll_import_flags ""
+dll_export_flags ""
+
+makefile_style unix
+
+<so_link_flags>
+default -> "$(CXX) -shared -Wl,-soname,$(SONAME)"
+</so_link_flags>
+
+<mach_abi_linking>
+amd64   -> "-m64"
+</mach_abi_linking>
