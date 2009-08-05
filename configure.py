@@ -799,11 +799,13 @@ def choose_modules_to_use(options, modules):
                 maybe_dep.append(modname)
             elif module.load_on in ['auto', 'asm_ok']:
                 if module.load_on == 'asm_ok' and not options.asm_ok:
-                    cannot_use_because(modname, 'uses assembly and --disable-asm set')
+                    cannot_use_because(modname,
+                                       'uses assembly and --disable-asm set')
                 else:
                     to_load.append(modname)
             else:
-                logging.warning('Unknown load_on %s in %s' % (module.load_on, modname))
+                logging.warning('Unknown load_on %s in %s' % (
+                    module.load_on, modname))
 
     dependency_failure = True
 
