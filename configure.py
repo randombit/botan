@@ -1033,7 +1033,7 @@ def main(argv = None):
     if options.compiler == 'gcc':
 
         def is_64bit_arch(arch):
-            if arch == 'alpha' or arch.endswith('64'):
+            if arch.endswith('64') or arch in ['alpha', 's930x']:
                 return True
             return False
 
