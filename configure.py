@@ -9,6 +9,8 @@ Tested with
    CPython 2.4, 2.5, 2.6 - OK
    Jython 2.5 - Target detection does not work (use --os and --cpu)
 
+   CPython 2.3 and earlier are not supported
+
    Has not been tested with IronPython or PyPy
 """
 
@@ -971,7 +973,8 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv
 
-    logging.basicConfig(stream = sys.stdout, format = '%(message)s',
+    logging.basicConfig(stream = sys.stdout,
+                        format = '%(levelname) 7s: %(message)s',
                         level = logging.INFO)
 
     logging.debug('%s invoked with options "%s"' % (
