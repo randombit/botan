@@ -73,7 +73,6 @@ ppc64     -> "-mcpu=SUBMODEL" ppc
 # Note that the 'linking' bit means "use this for both compiling *and* linking"
 <mach_abi_linking>
 amd64   -> "-m64"
-mips32  -> "-mabi=n32"
 mips64  -> "-mabi=64"
 s390    -> "-m31"
 s390x   -> "-m64"
