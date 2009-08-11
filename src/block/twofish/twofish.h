@@ -23,8 +23,8 @@ class BOTAN_DLL Twofish : public BlockCipher
       BlockCipher* clone() const { return new Twofish; }
       Twofish() : BlockCipher(16, 16, 32, 8) {}
    private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
 
       static void rs_mul(byte[4], byte, u32bit);

@@ -54,8 +54,8 @@ class BOTAN_DLL GOST_28147_89 : public BlockCipher
       GOST_28147_89(const SecureBuffer<u32bit, 1024>& other_SBOX) :
          BlockCipher(8, 32), SBOX(other_SBOX) {}
 
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
 
       SecureBuffer<u32bit, 1024> SBOX;

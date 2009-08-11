@@ -23,8 +23,8 @@ class BOTAN_DLL Skipjack : public BlockCipher
       BlockCipher* clone() const { return new Skipjack; }
       Skipjack() : BlockCipher(8, 10) {}
    private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
       void step_A(u16bit&, u16bit&, u32bit) const;
       void step_B(u16bit&, u16bit&, u32bit) const;

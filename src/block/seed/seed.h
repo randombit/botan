@@ -23,8 +23,8 @@ class BOTAN_DLL SEED : public BlockCipher
       BlockCipher* clone() const { return new SEED; }
       SEED() : BlockCipher(16, 16) {}
    private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
 
       class G_FUNC

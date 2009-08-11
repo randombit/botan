@@ -23,8 +23,8 @@ class BOTAN_DLL RC5 : public BlockCipher
       BlockCipher* clone() const { return new RC5(ROUNDS); }
       RC5(u32bit);
    private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
       SecureVector<u32bit> S;
       const u32bit ROUNDS;

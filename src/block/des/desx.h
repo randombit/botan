@@ -23,8 +23,8 @@ class BOTAN_DLL DESX : public BlockCipher
       BlockCipher* clone() const { return new DESX; }
       DESX() : BlockCipher(8, 24) {}
    private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
       SecureBuffer<byte, 8> K1, K2;
       DES des;

@@ -1,6 +1,6 @@
 /*
 * CTR Mode
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -14,9 +14,13 @@ namespace Botan {
 /*
 * CTR-BE Constructor
 */
-CTR_BE::CTR_BE(BlockCipher* ciph) :
-   BlockCipherMode(ciph, "CTR-BE", ciph->BLOCK_SIZE, 1)
+CTR_BE::CTR_BE(BlockCipher* ciph) : cipher(ciph)
    {
+   base_ptr = cipher;
+   position = 0;
+
+   counter.create(ciph->BLOCK_SIZE * CTR_BLOCKS_PARALLEL);
+   enc_buffer.create(ciph->BLOCK_SIZE * CTR_BLOCKS_PARALLEL);
    }
 
 /*
@@ -24,10 +28,57 @@ CTR_BE::CTR_BE(BlockCipher* ciph) :
 */
 CTR_BE::CTR_BE(BlockCipher* ciph, const SymmetricKey& key,
                const InitializationVector& iv) :
-   BlockCipherMode(ciph, "CTR-BE", ciph->BLOCK_SIZE, 1)
+   cipher(ciph)
    {
+   base_ptr = cipher;
+   position = 0;
+
+   counter.create(ciph->BLOCK_SIZE * CTR_BLOCKS_PARALLEL);
+   enc_buffer.create(ciph->BLOCK_SIZE * CTR_BLOCKS_PARALLEL);
+
    set_key(key);
    set_iv(iv);
+   }
+
+/*
+* CTR_BE Destructor
+*/
+CTR_BE::~CTR_BE()
+   {
+   delete cipher;
+   }
+
+/*
+* Return the name of this type
+*/
+std::string CTR_BE::name() const
+   {
+   return ("CTR-BE/" + cipher->name());
+   }
+
+/*
+* Set CTR-BE IV
+*/
+void CTR_BE::set_iv(const InitializationVector& iv)
+   {
+   if(iv.length() != cipher->BLOCK_SIZE)
+      throw Invalid_IV_Length(name(), iv.length());
+
+   enc_buffer.clear();
+   position = 0;
+
+   for(u32bit i = 0; i != CTR_BLOCKS_PARALLEL; ++i)
+      {
+      counter.copy(i*cipher->BLOCK_SIZE, iv.begin(), iv.length());
+
+      // FIXME: this is stupid
+      for(u32bit j = 0; j != i; ++j)
+         for(s32bit k = cipher->BLOCK_SIZE - 1; k >= 0; --k)
+            if(++counter[i*cipher->BLOCK_SIZE+k])
+               break;
+      }
+
+   cipher->encrypt_n(counter, enc_buffer, CTR_BLOCKS_PARALLEL);
    }
 
 /*
@@ -35,28 +86,28 @@ CTR_BE::CTR_BE(BlockCipher* ciph, const SymmetricKey& key,
 */
 void CTR_BE::write(const byte input[], u32bit length)
    {
-   u32bit copied = std::min(BLOCK_SIZE - position, length);
-   xor_buf(buffer + position, input, copied);
-   send(buffer + position, copied);
+   u32bit copied = std::min(enc_buffer.size() - position, length);
+   xor_buf(enc_buffer + position, input, copied);
+   send(enc_buffer + position, copied);
    input += copied;
    length -= copied;
    position += copied;
 
-   if(position == BLOCK_SIZE)
+   if(position == enc_buffer.size())
       increment_counter();
 
-   while(length >= BLOCK_SIZE)
+   while(length >= enc_buffer.size())
       {
-      xor_buf(buffer, input, BLOCK_SIZE);
-      send(buffer, BLOCK_SIZE);
+      xor_buf(enc_buffer, input, enc_buffer.size());
+      send(enc_buffer, enc_buffer.size());
 
-      input += BLOCK_SIZE;
-      length -= BLOCK_SIZE;
+      input += enc_buffer.size();
+      length -= enc_buffer.size();
       increment_counter();
       }
 
-   xor_buf(buffer + position, input, length);
-   send(buffer + position, length);
+   xor_buf(enc_buffer + position, input, length);
+   send(enc_buffer + position, length);
    position += length;
    }
 
@@ -65,10 +116,25 @@ void CTR_BE::write(const byte input[], u32bit length)
 */
 void CTR_BE::increment_counter()
    {
-   for(s32bit j = BLOCK_SIZE - 1; j >= 0; --j)
-      if(++state[j])
-         break;
-   cipher->encrypt(state, buffer);
+   for(u32bit i = 0; i != CTR_BLOCKS_PARALLEL; ++i)
+      {
+      // FIXME: Can do it in a single loop
+      /*
+      for(u32bit j = 1; j != cipher->BLOCK_SIZE; ++j)
+         {
+         byte carry = 0;
+         byte z = counter[(i+1)*cipher->BLOCK_SIZE-1] + CTR_BLOCKS_PARALLEL;
+
+      if(
+      */
+      for(u32bit j = 0; j != CTR_BLOCKS_PARALLEL; ++j)
+         for(s32bit k = cipher->BLOCK_SIZE - 1; k >= 0; --k)
+            if(++counter[i*cipher->BLOCK_SIZE+k])
+               break;
+      }
+
+   cipher->encrypt_n(counter, enc_buffer, CTR_BLOCKS_PARALLEL);
+
    position = 0;
    }
 

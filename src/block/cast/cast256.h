@@ -23,8 +23,8 @@ class BOTAN_DLL CAST_256 : public BlockCipher
       BlockCipher* clone() const { return new CAST_256; }
       CAST_256() : BlockCipher(16, 4, 32, 4) {}
    private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
 
       static const u32bit KEY_MASK[192];

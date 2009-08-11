@@ -27,8 +27,8 @@ class BOTAN_DLL Lion : public BlockCipher
       Lion(HashFunction*, StreamCipher*, u32bit);
       ~Lion() { delete hash; delete cipher; }
    private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
 
       const u32bit LEFT_SIZE, RIGHT_SIZE;

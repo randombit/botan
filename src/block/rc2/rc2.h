@@ -25,8 +25,8 @@ class BOTAN_DLL RC2 : public BlockCipher
       BlockCipher* clone() const { return new RC2; }
       RC2() : BlockCipher(8, 1, 32) {}
    private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
 
       SecureBuffer<u16bit, 64> K;

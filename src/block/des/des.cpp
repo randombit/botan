@@ -139,51 +139,63 @@ void des_decrypt(u32bit& L, u32bit& R,
 /*
 * DES Encryption
 */
-void DES::enc(const byte in[], byte out[]) const
+void DES::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
-              (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
-              (DES_IPTAB1[in[4]] << 4) | (DES_IPTAB1[in[5]] << 5) |
-              (DES_IPTAB1[in[6]] << 6) | (DES_IPTAB2[in[7]]     );
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
+         (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
+         (DES_IPTAB1[in[4]] << 4) | (DES_IPTAB1[in[5]] << 5) |
+         (DES_IPTAB1[in[6]] << 6) | (DES_IPTAB2[in[7]]     );
 
-   u32bit L = static_cast<u32bit>(T >> 32);
-   u32bit R = static_cast<u32bit>(T);
+      u32bit L = static_cast<u32bit>(T >> 32);
+      u32bit R = static_cast<u32bit>(T);
 
-   des_encrypt(L, R, round_key);
+      des_encrypt(L, R, round_key);
 
-   T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
-       (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
-       (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
-       (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
+      T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
+         (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
+         (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
+         (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
 
-   T = rotate_left(T, 32);
+      T = rotate_left(T, 32);
 
-   store_be(T, out);
+      store_be(T, out);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*
 * DES Decryption
 */
-void DES::dec(const byte in[], byte out[]) const
+void DES::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
-              (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
-              (DES_IPTAB1[in[4]] << 4) | (DES_IPTAB1[in[5]] << 5) |
-              (DES_IPTAB1[in[6]] << 6) | (DES_IPTAB2[in[7]]     );
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
+         (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
+         (DES_IPTAB1[in[4]] << 4) | (DES_IPTAB1[in[5]] << 5) |
+         (DES_IPTAB1[in[6]] << 6) | (DES_IPTAB2[in[7]]     );
 
-   u32bit L = static_cast<u32bit>(T >> 32);
-   u32bit R = static_cast<u32bit>(T);
+      u32bit L = static_cast<u32bit>(T >> 32);
+      u32bit R = static_cast<u32bit>(T);
 
-   des_decrypt(L, R, round_key);
+      des_decrypt(L, R, round_key);
 
-   T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
-       (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
-       (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
-       (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
+      T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
+         (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
+         (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
+         (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
 
-   T = rotate_left(T, 32);
+      T = rotate_left(T, 32);
 
-   store_be(T, out);
+      store_be(T, out);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*
@@ -197,55 +209,67 @@ void DES::key_schedule(const byte key[], u32bit)
 /*
 * TripleDES Encryption
 */
-void TripleDES::enc(const byte in[], byte out[]) const
+void TripleDES::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
-              (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
-              (DES_IPTAB1[in[4]] << 4) | (DES_IPTAB1[in[5]] << 5) |
-              (DES_IPTAB1[in[6]] << 6) | (DES_IPTAB2[in[7]]     );
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
+                 (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
+                 (DES_IPTAB1[in[4]] << 4) | (DES_IPTAB1[in[5]] << 5) |
+                 (DES_IPTAB1[in[6]] << 6) | (DES_IPTAB2[in[7]]     );
 
-   u32bit L = static_cast<u32bit>(T >> 32);
-   u32bit R = static_cast<u32bit>(T);
+      u32bit L = static_cast<u32bit>(T >> 32);
+      u32bit R = static_cast<u32bit>(T);
 
-   des_encrypt(L, R, round_key);
-   des_decrypt(R, L, round_key + 32);
-   des_encrypt(L, R, round_key + 64);
+      des_encrypt(L, R, round_key);
+      des_decrypt(R, L, round_key + 32);
+      des_encrypt(L, R, round_key + 64);
 
-   T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
-       (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
-       (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
-       (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
+      T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
+          (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
+          (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
+          (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
 
-   T = rotate_left(T, 32);
+      T = rotate_left(T, 32);
 
-   store_be(T, out);
+      store_be(T, out);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*
 * TripleDES Decryption
 */
-void TripleDES::dec(const byte in[], byte out[]) const
+void TripleDES::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
-              (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
-              (DES_IPTAB1[in[4]] << 4) | (DES_IPTAB1[in[5]] << 5) |
-              (DES_IPTAB1[in[6]] << 6) | (DES_IPTAB2[in[7]]     );
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
+                 (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
+                 (DES_IPTAB1[in[4]] << 4) | (DES_IPTAB1[in[5]] << 5) |
+                 (DES_IPTAB1[in[6]] << 6) | (DES_IPTAB2[in[7]]     );
 
-   u32bit L = static_cast<u32bit>(T >> 32);
-   u32bit R = static_cast<u32bit>(T);
+      u32bit L = static_cast<u32bit>(T >> 32);
+      u32bit R = static_cast<u32bit>(T);
 
-   des_decrypt(L, R, round_key + 64);
-   des_encrypt(R, L, round_key + 32);
-   des_decrypt(L, R, round_key);
+      des_decrypt(L, R, round_key + 64);
+      des_encrypt(R, L, round_key + 32);
+      des_decrypt(L, R, round_key);
 
-   T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
-       (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
-       (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
-       (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
+      T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
+          (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
+          (DES_FPTAB1[get_byte(0, R)] << 4) | (DES_FPTAB1[get_byte(1, R)] << 2) |
+          (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
 
-   T = rotate_left(T, 32);
+      T = rotate_left(T, 32);
 
-   store_be(T, out);
+      store_be(T, out);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*

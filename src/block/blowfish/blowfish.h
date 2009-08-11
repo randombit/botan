@@ -1,6 +1,6 @@
 /*
 * Blowfish
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -23,8 +23,8 @@ class BOTAN_DLL Blowfish : public BlockCipher
       BlockCipher* clone() const { return new Blowfish; }
       Blowfish() : BlockCipher(8, 1, 56) {}
    private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
       void generate_sbox(u32bit[], u32bit, u32bit&, u32bit&) const;
 
