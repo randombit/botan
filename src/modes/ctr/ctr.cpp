@@ -11,16 +11,21 @@
 
 namespace Botan {
 
+namespace {
+
+const u32bit PARALLEL_BLOCKS = BOTAN_PARALLEL_BLOCKS_CTR;
+
+}
+
 /*
 * CTR-BE Constructor
 */
 CTR_BE::CTR_BE(BlockCipher* ciph) : cipher(ciph)
    {
-   base_ptr = cipher;
    position = 0;
 
-   counter.create(ciph->BLOCK_SIZE * CTR_BLOCKS_PARALLEL);
-   enc_buffer.create(ciph->BLOCK_SIZE * CTR_BLOCKS_PARALLEL);
+   counter.create(ciph->BLOCK_SIZE * PARALLEL_BLOCKS);
+   enc_buffer.create(ciph->BLOCK_SIZE * PARALLEL_BLOCKS);
    }
 
 /*
@@ -30,13 +35,12 @@ CTR_BE::CTR_BE(BlockCipher* ciph, const SymmetricKey& key,
                const InitializationVector& iv) :
    cipher(ciph)
    {
-   base_ptr = cipher;
    position = 0;
 
-   counter.create(ciph->BLOCK_SIZE * CTR_BLOCKS_PARALLEL);
-   enc_buffer.create(ciph->BLOCK_SIZE * CTR_BLOCKS_PARALLEL);
+   counter.create(ciph->BLOCK_SIZE * PARALLEL_BLOCKS);
+   enc_buffer.create(ciph->BLOCK_SIZE * PARALLEL_BLOCKS);
 
-   set_key(key);
+   cipher->set_key(key);
    set_iv(iv);
    }
 
@@ -67,7 +71,7 @@ void CTR_BE::set_iv(const InitializationVector& iv)
    enc_buffer.clear();
    position = 0;
 
-   for(u32bit i = 0; i != CTR_BLOCKS_PARALLEL; ++i)
+   for(u32bit i = 0; i != PARALLEL_BLOCKS; ++i)
       {
       counter.copy(i*cipher->BLOCK_SIZE, iv.begin(), iv.length());
 
@@ -78,7 +82,7 @@ void CTR_BE::set_iv(const InitializationVector& iv)
                break;
       }
 
-   cipher->encrypt_n(counter, enc_buffer, CTR_BLOCKS_PARALLEL);
+   cipher->encrypt_n(counter, enc_buffer, PARALLEL_BLOCKS);
    }
 
 /*
@@ -116,24 +120,24 @@ void CTR_BE::write(const byte input[], u32bit length)
 */
 void CTR_BE::increment_counter()
    {
-   for(u32bit i = 0; i != CTR_BLOCKS_PARALLEL; ++i)
+   for(u32bit i = 0; i != PARALLEL_BLOCKS; ++i)
       {
       // FIXME: Can do it in a single loop
       /*
       for(u32bit j = 1; j != cipher->BLOCK_SIZE; ++j)
          {
          byte carry = 0;
-         byte z = counter[(i+1)*cipher->BLOCK_SIZE-1] + CTR_BLOCKS_PARALLEL;
+         byte z = counter[(i+1)*cipher->BLOCK_SIZE-1] + PARALLEL_BLOCKS;
 
       if(
       */
-      for(u32bit j = 0; j != CTR_BLOCKS_PARALLEL; ++j)
+      for(u32bit j = 0; j != PARALLEL_BLOCKS; ++j)
          for(s32bit k = cipher->BLOCK_SIZE - 1; k >= 0; --k)
             if(++counter[i*cipher->BLOCK_SIZE+k])
                break;
       }
 
-   cipher->encrypt_n(counter, enc_buffer, CTR_BLOCKS_PARALLEL);
+   cipher->encrypt_n(counter, enc_buffer, PARALLEL_BLOCKS);
 
    position = 0;
    }

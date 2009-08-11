@@ -8,7 +8,7 @@
 #ifndef BOTAN_EAX_H__
 #define BOTAN_EAX_H__
 
-#include <botan/basefilt.h>
+#include <botan/key_filt.h>
 #include <botan/block_cipher.h>
 #include <botan/mac.h>
 
