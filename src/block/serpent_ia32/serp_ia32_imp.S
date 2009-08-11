@@ -1,7 +1,9 @@
-/*************************************************
-* Serpent Source File                            *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Serpent Source File
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/asm_macr.h>
 
@@ -436,9 +438,9 @@ START_LISTING(serp_ia32.S)
    XOR(C, ARRAY4(EDI, (4*N+2)))  ; \
    XOR(D, ARRAY4(EDI, (4*N+3)))  ;
 
-/*************************************************
-* Serpent Encryption                             *
-*************************************************/
+/*
+* Serpent Encryption
+*/
 START_FUNCTION(botan_serpent_ia32_encrypt)
    SPILL_REGS()
 #define PUSHED 4
@@ -507,9 +509,9 @@ START_FUNCTION(botan_serpent_ia32_encrypt)
 #undef PUSHED
 END_FUNCTION(botan_serpent_ia32_encrypt)
 
-/*************************************************
-* Serpent Decryption                             *
-*************************************************/
+/*
+* Serpent Decryption
+*/
 START_FUNCTION(botan_serpent_ia32_decrypt)
    SPILL_REGS()
 #define PUSHED 4
@@ -578,9 +580,9 @@ START_FUNCTION(botan_serpent_ia32_decrypt)
 #undef PUSHED
 END_FUNCTION(botan_serpent_ia32_decrypt)
 
-/*************************************************
-* Serpent Key Schedule                           *
-*************************************************/
+/*
+* Serpent Key Schedule
+*/
 START_FUNCTION(botan_serpent_ia32_key_schedule)
    SPILL_REGS()
 #define PUSHED 4

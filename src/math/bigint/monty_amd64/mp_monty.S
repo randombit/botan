@@ -1,7 +1,9 @@
-/*************************************************
-* Montgomery Reduction Source File               *
-* (C) 2008 Jack Lloyd                            *
-*************************************************/
+/*
+* Montgomery Reduction Source File
+* (C) 2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/asm_macr.h>
 

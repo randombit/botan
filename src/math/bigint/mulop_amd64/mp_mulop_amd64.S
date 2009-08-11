@@ -1,7 +1,9 @@
-/*************************************************
-* Simple O(N^2) Multiplication and Squaring      *
-* (C) 1999-2008 Jack Lloyd                       *
-*************************************************/
+/*
+* Simple O(N^2) Multiplication and Squaring
+* (C) 1999-2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/asm_macr.h>
 

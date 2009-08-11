@@ -1,7 +1,9 @@
-/*************************************************
-* MD4 Source File                                *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* MD4 Source File
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/asm_macr.h>
 
