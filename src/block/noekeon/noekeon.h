@@ -18,13 +18,15 @@ namespace Botan {
 class BOTAN_DLL Noekeon : public BlockCipher
    {
    public:
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+
       void clear() throw();
       std::string name() const { return "Noekeon"; }
       BlockCipher* clone() const { return new Noekeon; }
+
       Noekeon() : BlockCipher(16, 16) {}
    private:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
 
       static const byte RC[17];

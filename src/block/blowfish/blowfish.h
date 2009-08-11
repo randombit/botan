@@ -18,13 +18,15 @@ namespace Botan {
 class BOTAN_DLL Blowfish : public BlockCipher
    {
    public:
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+
       void clear() throw();
       std::string name() const { return "Blowfish"; }
       BlockCipher* clone() const { return new Blowfish; }
+
       Blowfish() : BlockCipher(8, 1, 56) {}
    private:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
       void generate_sbox(u32bit[], u32bit, u32bit&, u32bit&) const;
 

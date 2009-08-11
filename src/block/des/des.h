@@ -18,13 +18,15 @@ namespace Botan {
 class BOTAN_DLL DES : public BlockCipher
    {
    public:
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+
       void clear() throw() { round_key.clear(); }
       std::string name() const { return "DES"; }
       BlockCipher* clone() const { return new DES; }
+
       DES() : BlockCipher(8, 8) {}
    private:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
 
       SecureBuffer<u32bit, 32> round_key;
@@ -36,13 +38,15 @@ class BOTAN_DLL DES : public BlockCipher
 class BOTAN_DLL TripleDES : public BlockCipher
    {
    public:
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+
       void clear() throw() { round_key.clear(); }
       std::string name() const { return "TripleDES"; }
       BlockCipher* clone() const { return new TripleDES; }
+
       TripleDES() : BlockCipher(8, 16, 24, 8) {}
    private:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
 
       SecureBuffer<u32bit, 96> round_key;

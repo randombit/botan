@@ -18,15 +18,17 @@ namespace Botan {
 class BOTAN_DLL RC2 : public BlockCipher
    {
    public:
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+
       static byte EKB_code(u32bit);
 
       void clear() throw() { K.clear(); }
       std::string name() const { return "RC2"; }
       BlockCipher* clone() const { return new RC2; }
+
       RC2() : BlockCipher(8, 1, 32) {}
    private:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
 
       SecureBuffer<u16bit, 64> K;

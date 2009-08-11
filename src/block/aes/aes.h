@@ -18,14 +18,16 @@ namespace Botan {
 class BOTAN_DLL AES : public BlockCipher
    {
    public:
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+
       void clear() throw();
       std::string name() const { return "AES"; }
       BlockCipher* clone() const { return new AES; }
+
       AES() : BlockCipher(16, 16, 32, 8) { ROUNDS = 14; }
       AES(u32bit);
    private:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
       static u32bit S(u32bit);
 

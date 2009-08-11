@@ -1,0 +1,27 @@
+realname "Serpent (SSE2)"
+
+define SERPENT_SSE2
+
+load_on auto
+
+<add>
+serp_sse2.cpp
+serp_sse2.h
+</add>
+
+<arch>
+pentium-m
+pentium4
+prescott
+amd64
+</arch>
+
+<cc>
+gcc
+icc
+</cc>
+
+<requires>
+serpent
+sse2_eng
+</requires>
