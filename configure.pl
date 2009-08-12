@@ -40,10 +40,6 @@ my $TRACING = 0;
 ##################################################
 my $config = {};
 
-print STDERR "*                           WARNING\n" .
-             "* $0 is deprecated; consider trying configure.py instead\n" .
-             "* If it works, great. If not, file a bug and continue using $0\n*\n";
-
 main();
 exit;
 
@@ -60,11 +56,17 @@ sub exec_uname {
     return '';
 }
 
+sub deprecation_warning {
+    warning("$0 is deprecated; migration to ./configure.py strongly recommended");
+}
+
 ##################################################
 # Main Driver                                    #
 ##################################################
 sub main {
     my $base_dir = where_am_i();
+
+    deprecation_warning();
 
     $$config{'uname'} = exec_uname();
 
@@ -201,6 +203,8 @@ sub main {
     generate_makefile($config);
 
     copy_include_files($config);
+
+    deprecation_warning();
 }
 
 sub where_am_i {
@@ -508,8 +512,6 @@ sub module_runs_on {
 sub scan_modules {
     my ($config) = @_;
 
-    my %dep_mods = ();
-
     foreach my $mod (sort keys %MODULES) {
         my %modinfo = %{ $MODULES{$mod} };
 
@@ -520,7 +522,8 @@ sub scan_modules {
         if($modinfo{'load_on'} eq 'auto' or
             ($modinfo{'load_on'} eq 'asm_ok' and $$config{'asm_ok'})) {
 
-            $$config{'modules'}{$mod} = 1;
+            my %maybe_load = ();
+            my $all_deps_found = 1;
 
             LINE: foreach (@{$modinfo{'requires'}}) {
                 for my $req_mod (split(/\|/, $_)) {
@@ -529,17 +532,18 @@ sub scan_modules {
                     next if(defined($$config{'modules'}{$req_mod}) && $$config{'modules'}{$req_mod} < 0);
                     next unless(module_runs_on($config, $MODULES{$req_mod}, $req_mod, 0));
 
-                    $dep_mods{$req_mod} = 1;
+                    $maybe_load{$req_mod} = 1;
                     next LINE;
                 }
+                $all_deps_found = 0;
             }
 
-            next;
+            if($all_deps_found) {
+                foreach my $depmod (keys %maybe_load)
+                   { $$config{'modules'}{$depmod} = 1; }
+                $$config{'modules'}{$mod} = 1;
+            }
         }
-    }
-
-    foreach my $mod (sort keys %dep_mods) {
-        $$config{'modules'}{$mod} = 1;
     }
 }
 
