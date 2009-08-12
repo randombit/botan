@@ -891,6 +891,11 @@ def setup_build(build_config, options, template_vars):
     Copy or link the file, depending on what the platform offers
     """
     def portable_symlink(filename, target_dir):
+
+        if not os.access(filename, os.R_OK):
+            logging.warning('Missing file %s' % (filename))
+            return
+
         if 'symlink' in os.__dict__:
             def count_dirs(dir, accum = 0):
                 if dir == '' or dir == os.path.curdir:
