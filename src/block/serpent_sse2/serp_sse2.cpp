@@ -14,88 +14,76 @@ namespace Botan {
 
 namespace {
 
+#define key_xor(round, B0, B1, B2, B3)                                      \
+   do {                                                                     \
+      __m128i key = _mm_loadu_si128(keys + round);                          \
+      B0 = _mm_xor_si128(B0, _mm_shuffle_epi32(key, _MM_SHUFFLE(0,0,0,0))); \
+      B1 = _mm_xor_si128(B1, _mm_shuffle_epi32(key, _MM_SHUFFLE(1,1,1,1))); \
+      B2 = _mm_xor_si128(B2, _mm_shuffle_epi32(key, _MM_SHUFFLE(2,2,2,2))); \
+      B3 = _mm_xor_si128(B3, _mm_shuffle_epi32(key, _MM_SHUFFLE(3,3,3,3))); \
+   } while(0);
+
+/*
+* Serpent's linear transformation
+*/
 #define rotate_left_m128(vec, rot)              \
    _mm_or_si128(_mm_slli_epi32(vec, rot), _mm_srli_epi32(vec, 32-rot))
 
-#define key_xor(round, b0, b1, b2, b3)                                      \
-   do {                                                                     \
-      __m128i key = _mm_loadu_si128(keys + round);                          \
-      b0 = _mm_xor_si128(b0, _mm_shuffle_epi32(key, _MM_SHUFFLE(0,0,0,0))); \
-      b1 = _mm_xor_si128(b1, _mm_shuffle_epi32(key, _MM_SHUFFLE(1,1,1,1))); \
-      b2 = _mm_xor_si128(b2, _mm_shuffle_epi32(key, _MM_SHUFFLE(2,2,2,2))); \
-      b3 = _mm_xor_si128(b3, _mm_shuffle_epi32(key, _MM_SHUFFLE(3,3,3,3))); \
-      } while(0);
+#define transform(B0, B1, B2, B3)                                       \
+   do {                                                                 \
+      B0 = rotate_left_m128(B0, 13);                                    \
+      B2 = rotate_left_m128(B2, 3);                                     \
+      B1 = _mm_xor_si128(B1, _mm_xor_si128(B0, B2));                    \
+      B3 = _mm_xor_si128(B3, _mm_xor_si128(B2, _mm_slli_epi32(B0, 3))); \
+      B1 = rotate_left_m128(B1, 1);                                     \
+      B3 = rotate_left_m128(B3, 7);                                     \
+      B0 = _mm_xor_si128(B0, _mm_xor_si128(B1, B3));                    \
+      B2 = _mm_xor_si128(B2, _mm_xor_si128(B3, _mm_slli_epi32(B1, 7))); \
+      B0 = rotate_left_m128(B0, 5);                                     \
+      B2 = rotate_left_m128(B2, 22);                                    \
+   } while(0);
 
-#define transform(b0, b1, b2, b3)                                       \
-   do                                                                   \
-      {                                                                 \
-      b0 = rotate_left_m128(b0, 13);                                    \
-      b2 = rotate_left_m128(b2, 3);                                     \
-      b1 = _mm_xor_si128(b1, _mm_xor_si128(b0, b2));                    \
-      b3 = _mm_xor_si128(b3, _mm_xor_si128(b2, _mm_slli_epi32(b0, 3))); \
-      b1 = rotate_left_m128(b1, 1);                                     \
-      b3 = rotate_left_m128(b3, 7);                                     \
-      b0 = _mm_xor_si128(b0, _mm_xor_si128(b1, b3));                    \
-      b2 = _mm_xor_si128(b2, _mm_xor_si128(b3, _mm_slli_epi32(b1, 7))); \
-      b0 = rotate_left_m128(b0, 5);                                     \
-      b2 = rotate_left_m128(b2, 22);                                    \
-      } while(0);
+/*
+* 4x4 SSE2 integer matrix transpose
+*/
+#define transpose(B0, B1, B2, B3)               \
+   do {                                         \
+      __m128i T0 = _mm_unpacklo_epi32(B0, B1);  \
+      __m128i T1 = _mm_unpacklo_epi32(B2, B3);  \
+      __m128i T2 = _mm_unpackhi_epi32(B0, B1);  \
+      __m128i T3 = _mm_unpackhi_epi32(B2, B3);  \
+      B0 = _mm_unpacklo_epi64(T0, T1);          \
+      B1 = _mm_unpackhi_epi64(T0, T1);          \
+      B2 = _mm_unpacklo_epi64(T2, T3);          \
+      B3 = _mm_unpackhi_epi64(T2, T3);          \
+   } while(0);
 
-void print_simd(const char* name, __m128i vec)
-   {
-   union { __m128i v; int32_t ints[4]; } u = { vec };
-
-   printf("%s: ", name);
-   for(u32bit i = 0; i != 4; ++i)
-      printf("%08X ", u.ints[i]);
-   printf("\n");
-   }
-
+/*
+* SSE2 Serpent Encryption of 4 blocks in parallel
+*/
 void serpent_encrypt_4(const byte in[64],
                        byte out[64],
                        const u32bit keys_32[132])
    {
    const __m128i* keys = (const __m128i*)(keys_32);
+   __m128i* out_mm = (__m128i*)(out);
+   __m128i* in_mm = (__m128i*)(in);
 
-   /*
-   FIXME: figure out a fast way to do this with 4 loads with
-   _mm_loadu_si128 plus shuffle/interleave ops
-   */
-   union { __m128i v; u32bit u32[4]; } convert;
+   __m128i B0 = _mm_loadu_si128(in_mm);
+   __m128i B1 = _mm_loadu_si128(in_mm + 1);
+   __m128i B2 = _mm_loadu_si128(in_mm + 2);
+   __m128i B3 = _mm_loadu_si128(in_mm + 3);
 
-   convert.u32[0] = load_le<u32bit>(in, 0);
-   convert.u32[1] = load_le<u32bit>(in, 4);
-   convert.u32[2] = load_le<u32bit>(in, 8);
-   convert.u32[3] = load_le<u32bit>(in, 12);
-   __m128i B0 = convert.v;
+   transpose(B0, B1, B2, B3);
 
-   convert.u32[0] = load_le<u32bit>(in, 1);
-   convert.u32[1] = load_le<u32bit>(in, 5);
-   convert.u32[2] = load_le<u32bit>(in, 9);
-   convert.u32[3] = load_le<u32bit>(in, 13);
-   __m128i B1 = convert.v;
-
-   convert.u32[0] = load_le<u32bit>(in, 2);
-   convert.u32[1] = load_le<u32bit>(in, 6);
-   convert.u32[2] = load_le<u32bit>(in, 10);
-   convert.u32[3] = load_le<u32bit>(in, 14);
-   __m128i B2 = convert.v;
-
-   convert.u32[0] = load_le<u32bit>(in, 3);
-   convert.u32[1] = load_le<u32bit>(in, 7);
-   convert.u32[2] = load_le<u32bit>(in, 11);
-   convert.u32[3] = load_le<u32bit>(in, 15);
-   __m128i B3 = convert.v;
-
-   key_xor(0,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(1,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(2,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(3,B0,B1,B2,B3); SBoxE4(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(4,B0,B1,B2,B3); SBoxE5(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(5,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(6,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(7,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-
+   key_xor( 0,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 1,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 2,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 3,B0,B1,B2,B3); SBoxE4(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 4,B0,B1,B2,B3); SBoxE5(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 5,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 6,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 7,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor( 8,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor( 9,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor(10,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
@@ -121,30 +109,12 @@ void serpent_encrypt_4(const byte in[64],
    key_xor(30,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor(31,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); key_xor(32,B0,B1,B2,B3);
 
-   // FIXME: figure out how to do this fast
-   union { __m128i v; u32bit u32[4]; } convert_B0;
-   union { __m128i v; u32bit u32[4]; } convert_B1;
-   union { __m128i v; u32bit u32[4]; } convert_B2;
-   union { __m128i v; u32bit u32[4]; } convert_B3;
-   convert_B0.v = B0;
-   convert_B1.v = B1;
-   convert_B2.v = B2;
-   convert_B3.v = B3;
-   store_le(out,
-            convert_B0.u32[0], convert_B1.u32[0],
-            convert_B2.u32[0], convert_B3.u32[0]);
+   transpose(B0, B1, B2, B3);
 
-   store_le(out + 16,
-            convert_B0.u32[1], convert_B1.u32[1],
-            convert_B2.u32[1], convert_B3.u32[1]);
-
-   store_le(out + 32,
-            convert_B0.u32[2], convert_B1.u32[2],
-            convert_B2.u32[2], convert_B3.u32[2]);
-
-   store_le(out + 48,
-            convert_B0.u32[3], convert_B1.u32[3],
-            convert_B2.u32[3], convert_B3.u32[3]);
+   _mm_storeu_si128(out_mm    , B0);
+   _mm_storeu_si128(out_mm + 1, B1);
+   _mm_storeu_si128(out_mm + 2, B2);
+   _mm_storeu_si128(out_mm + 3, B3);
    }
 
 }
