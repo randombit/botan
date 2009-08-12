@@ -65,6 +65,8 @@ void serpent_encrypt_4(const byte in[64],
                        byte out[64],
                        const u32bit keys_32[132])
    {
+   const __m128i all_ones = _mm_set1_epi8(0xFF);
+
    const __m128i* keys = (const __m128i*)(keys_32);
    __m128i* out_mm = (__m128i*)(out);
    __m128i* in_mm = (__m128i*)(in);
@@ -84,6 +86,7 @@ void serpent_encrypt_4(const byte in[64],
    key_xor( 5,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor( 6,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor( 7,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+
    key_xor( 8,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor( 9,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor(10,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
@@ -92,6 +95,7 @@ void serpent_encrypt_4(const byte in[64],
    key_xor(13,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor(14,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor(15,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+
    key_xor(16,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor(17,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor(18,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
@@ -100,6 +104,7 @@ void serpent_encrypt_4(const byte in[64],
    key_xor(21,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor(22,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor(23,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+
    key_xor(24,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor(25,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor(26,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
@@ -127,7 +132,6 @@ void Serpent_SSE2::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    while(blocks >= 4)
       {
       serpent_encrypt_4(in, out, this->round_key);
-      //Serpent::encrypt_n(in, out, 4);
       in += 4 * BLOCK_SIZE;
       out += 4 * BLOCK_SIZE;
       blocks -= 4;
