@@ -65,21 +65,24 @@ std::string CTR_BE::name() const
 */
 void CTR_BE::set_iv(const InitializationVector& iv)
    {
-   if(iv.length() != cipher->BLOCK_SIZE)
+   const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
+
+   if(iv.length() != BLOCK_SIZE)
       throw Invalid_IV_Length(name(), iv.length());
 
    enc_buffer.clear();
    position = 0;
 
-   for(u32bit i = 0; i != PARALLEL_BLOCKS; ++i)
-      {
-      counter.copy(i*cipher->BLOCK_SIZE, iv.begin(), iv.length());
+   counter.copy(0, iv.begin(), iv.length());
 
-      // FIXME: this is stupid
-      for(u32bit j = 0; j != i; ++j)
-         for(s32bit k = cipher->BLOCK_SIZE - 1; k >= 0; --k)
-            if(++counter[i*cipher->BLOCK_SIZE+k])
-               break;
+   for(u32bit i = 1; i != PARALLEL_BLOCKS; ++i)
+      {
+      counter.copy(i*BLOCK_SIZE,
+                   counter.begin() + (i-1)*BLOCK_SIZE, BLOCK_SIZE);
+
+      for(s32bit j = BLOCK_SIZE - 1; j >= 0; --j)
+         if(++counter[i*BLOCK_SIZE+j])
+            break;
       }
 
    cipher->encrypt_n(counter, enc_buffer, PARALLEL_BLOCKS);
@@ -122,19 +125,17 @@ void CTR_BE::increment_counter()
    {
    for(u32bit i = 0; i != PARALLEL_BLOCKS; ++i)
       {
-      // FIXME: Can do it in a single loop
-      /*
-      for(u32bit j = 1; j != cipher->BLOCK_SIZE; ++j)
-         {
-         byte carry = 0;
-         byte z = counter[(i+1)*cipher->BLOCK_SIZE-1] + PARALLEL_BLOCKS;
+      byte* this_ctr = counter + i*cipher->BLOCK_SIZE;
 
-      if(
-      */
-      for(u32bit j = 0; j != PARALLEL_BLOCKS; ++j)
-         for(s32bit k = cipher->BLOCK_SIZE - 1; k >= 0; --k)
-            if(++counter[i*cipher->BLOCK_SIZE+k])
+      byte last_byte = this_ctr[cipher->BLOCK_SIZE-1];
+      last_byte += PARALLEL_BLOCKS;
+
+      if(this_ctr[cipher->BLOCK_SIZE-1] > last_byte)
+         for(s32bit j = cipher->BLOCK_SIZE - 2; j >= 0; --j)
+            if(++this_ctr[j])
                break;
+
+      this_ctr[cipher->BLOCK_SIZE-1] = last_byte;
       }
 
    cipher->encrypt_n(counter, enc_buffer, PARALLEL_BLOCKS);
