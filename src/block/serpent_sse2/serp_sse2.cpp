@@ -218,12 +218,7 @@ void Serpent_SSE2::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       blocks -= 4;
       }
 
-   for(u32bit i = 0; i != blocks; ++i)
-      {
-      Serpent::encrypt_n(in, out, 1);
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
-      }
+   Serpent::encrypt_n(in, out, blocks);
    }
 
 /*
@@ -239,12 +234,7 @@ void Serpent_SSE2::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       blocks -= 4;
       }
 
-   for(u32bit i = 0; i != blocks; ++i)
-      {
-      Serpent::decrypt_n(in, out, 1);
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
-      }
+   Serpent::decrypt_n(in, out, blocks);
    }
 
 }
