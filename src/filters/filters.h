@@ -14,8 +14,10 @@
 #include <botan/mac.h>
 
 #include <botan/pipe.h>
+#include <botan/basefilt.h>
 #include <botan/key_filt.h>
 #include <botan/data_snk.h>
+
 #include <botan/scan_name.h>
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
