@@ -1,4 +1,6 @@
 
+* 1.8.7-pre, 2009-??-??
+
 * 1.8.6, 2009-08-13
  - Add Cryptobox, a set of simple password-based encryption routines
  - Only read world-readable files when walking /proc for entropy
