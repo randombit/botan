@@ -1,0 +1,22 @@
+realname "Crypto Box"
+
+load_on auto
+
+define CRYPTO_BOX
+
+<add>
+cryptobox.h
+cryptobox.cpp
+</add>
+
+<requires>
+filters
+ctr
+hmac
+rng
+serpent
+sha2
+base64
+pbkdf2
+pem
+</requires>

@@ -5,8 +5,8 @@
 
 SELECTOR=h:net.randombit.botan
 KEY_ID=EFBADFBC
-MTN_DB=~/var/mtn/botan.mtn
-WEB_DIR=~/var/www
+MTN_DB=/storage/mtn/botan.mtn
+WEB_DIR=~/projects/www
 DIST_DIR=~/Botan-dist
 
 # You shouldn't have to change anything after this
@@ -15,7 +15,7 @@ cd $DIST_DIR
 
 mtn -d $MTN_DB checkout -r $SELECTOR Botan
 
-VERSION=$(Botan/configure.pl --version | sed 's/Botan //')
+VERSION=$(Botan/configure.py --version)
 
 mv Botan Botan-$VERSION
 

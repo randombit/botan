@@ -38,8 +38,8 @@ class BuildConfigurationInformation(object):
     version_major = 1
     version_minor = 8
     version_patch = 6
-    version_so_patch = 6
-    version_suffix = '-pre'
+    version_so_patch = 2
+    version_suffix = ''
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
@@ -1043,7 +1043,7 @@ def main(argv = None):
     if options.compiler == 'gcc':
 
         def is_64bit_arch(arch):
-            if arch.endswith('64') or arch in ['alpha', 's930x']:
+            if arch.endswith('64') or arch in ['alpha', 's390x']:
                 return True
             return False
 
