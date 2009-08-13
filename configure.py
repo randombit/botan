@@ -36,10 +36,10 @@ class BuildConfigurationInformation(object):
     Version information
     """
     version_major = 1
-    version_minor = 8
-    version_patch = 6
-    version_so_patch = 2
-    version_suffix = ''
+    version_minor = 9
+    version_patch = 0
+    version_so_patch = 0
+    version_suffix = '-pre'
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
