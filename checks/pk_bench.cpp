@@ -603,7 +603,7 @@ void benchmark_elg(RandomNumberGenerator& rng,
 }
 
 void bench_pk(RandomNumberGenerator& rng,
-              const std::string& algo, bool, double seconds)
+              const std::string& algo, double seconds)
    {
    /*
      There is some strangeness going on here. It looks like algorithms
