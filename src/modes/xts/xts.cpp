@@ -188,6 +188,8 @@ void XTS_Encryption::end_msg()
 
       send(buffer, position);
       }
+
+   position = 0;
    }
 
 /*
@@ -339,6 +341,8 @@ void XTS_Decryption::end_msg()
 
       send(buffer, position);
       }
+
+   position = 0;
    }
 
 }
