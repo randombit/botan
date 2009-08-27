@@ -10,6 +10,13 @@ eng_sse2.h
 </add>
 
 <arch>
-ia32
+pentium-m
+pentium4
+prescott
 amd64
 </arch>
+
+<cc>
+gcc
+icc
+</cc>
