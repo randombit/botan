@@ -16,10 +16,10 @@ namespace Botan {
 */
 void Lion::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
+   SecureVector<byte> buffer(LEFT_SIZE);
+
    for(u32bit i = 0; i != blocks; ++i)
       {
-      SecureVector<byte> buffer(LEFT_SIZE);
-
       xor_buf(buffer, in, key1, LEFT_SIZE);
       cipher->set_key(buffer, LEFT_SIZE);
       cipher->encrypt(in + LEFT_SIZE, out + LEFT_SIZE, RIGHT_SIZE);
@@ -42,10 +42,10 @@ void Lion::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void Lion::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
+   SecureVector<byte> buffer(LEFT_SIZE);
+
    for(u32bit i = 0; i != blocks; ++i)
       {
-      SecureVector<byte> buffer(LEFT_SIZE);
-
       xor_buf(buffer, in, key2, LEFT_SIZE);
       cipher->set_key(buffer, LEFT_SIZE);
       cipher->encrypt(in + LEFT_SIZE, out + LEFT_SIZE, RIGHT_SIZE);
