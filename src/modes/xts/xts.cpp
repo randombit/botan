@@ -41,7 +41,6 @@ XTS_Encryption::XTS_Encryption(BlockCipher* ciph) : cipher(ciph)
       throw std::invalid_argument("Bad cipher for XTS: " + cipher->name());
 
    cipher2 = cipher->clone();
-   buffer.create(cipher->BLOCK_SIZE);
    tweak.create(cipher->BLOCK_SIZE);
    buffer.create(2 * cipher->BLOCK_SIZE);
    position = 0;
@@ -58,7 +57,6 @@ XTS_Encryption::XTS_Encryption(BlockCipher* ciph,
       throw std::invalid_argument("Bad cipher for XTS: " + cipher->name());
 
    cipher2 = cipher->clone();
-   buffer.create(cipher->BLOCK_SIZE);
    tweak.create(cipher->BLOCK_SIZE);
    buffer.create(2 * cipher->BLOCK_SIZE);
    position = 0;
@@ -188,6 +186,8 @@ void XTS_Encryption::end_msg()
 
       send(buffer, position);
       }
+
+   position = 0;
    }
 
 /*
@@ -197,7 +197,6 @@ XTS_Decryption::XTS_Decryption(BlockCipher* ciph)
    {
    cipher = ciph;
    cipher2 = ciph->clone();
-   buffer.create(cipher->BLOCK_SIZE);
    tweak.create(cipher->BLOCK_SIZE);
    buffer.create(2 * cipher->BLOCK_SIZE);
    position = 0;
@@ -212,7 +211,6 @@ XTS_Decryption::XTS_Decryption(BlockCipher* ciph,
    {
    cipher = ciph;
    cipher2 = ciph->clone();
-   buffer.create(cipher->BLOCK_SIZE);
    tweak.create(cipher->BLOCK_SIZE);
    buffer.create(2 * cipher->BLOCK_SIZE);
    position = 0;
@@ -339,6 +337,8 @@ void XTS_Decryption::end_msg()
 
       send(buffer, position);
       }
+
+   position = 0;
    }
 
 }
