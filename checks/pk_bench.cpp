@@ -675,6 +675,8 @@ void bench_pk(RandomNumberGenerator& rng,
       benchmark_dsa_nr<NR_PrivateKey>(rng, seconds, report);
 #endif
 
+#if defined(BOTAN_HAS_RW)
    if(algo == "All" || algo == "RW")
       benchmark_rw(rng, seconds, report);
+#endif
    }
