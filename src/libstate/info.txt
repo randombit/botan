@@ -1,6 +1,6 @@
 realname "Botan Libstate Module"
 
-load_on auto
+load_on always
 
 define LIBSTATE_MODULE
 

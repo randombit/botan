@@ -164,6 +164,8 @@ def process_command_line(args):
     mods_group.add_option('--disable-modules', dest='disabled_modules',
                           metavar='MODS', action='append', default=[],
                           help='disable specific modules')
+    mods_group.add_option('--no-autoload', action='store_true', default=False,
+                          help='disable automatic loading')
 
     for mod in ['openssl', 'gnump', 'bzip2', 'zlib']:
 
@@ -799,10 +801,22 @@ def choose_modules_to_use(options, modules):
                 cannot_use_because(modname, 'loaded on request only')
             elif module.load_on == 'dep':
                 maybe_dep.append(modname)
-            elif module.load_on in ['auto', 'asm_ok']:
-                if module.load_on == 'asm_ok' and not options.asm_ok:
+
+            elif module.load_on == 'always':
+                to_load.append(modname)
+
+            elif module.load_on == 'asm_ok':
+                if options.asm_ok:
+                    if options.no_autoload:
+                        maybe_dep.append(modname)
+                    else:
+                        to_load.append(modname)
+                else:
                     cannot_use_because(modname,
                                        'uses assembly and --disable-asm set')
+            elif module.load_on == 'auto':
+                if options.no_autoload:
+                    maybe_dep.append(modname)
                 else:
                     to_load.append(modname)
             else:
@@ -846,6 +860,8 @@ def choose_modules_to_use(options, modules):
         if disabled_mods != []:
             logging.info('Skipping mod because %s - %s' % (
                 reason, ' '.join(disabled_mods)))
+
+    logging.info('Loading modules %s', ' '.join(sorted(to_load)))
 
     return [modules[mod] for mod in to_load]
 
