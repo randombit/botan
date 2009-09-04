@@ -520,6 +520,7 @@ sub scan_modules {
         next unless(module_runs_on($config, \%modinfo, $mod, 0));
 
         if($modinfo{'load_on'} eq 'auto' or
+           $modinfo{'load_on'} eq 'always' or
             ($modinfo{'load_on'} eq 'asm_ok' and $$config{'asm_ok'})) {
 
             my %maybe_load = ();

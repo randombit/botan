@@ -9,6 +9,7 @@
 #define BOTAN_ENGINE_PK_LOOKUP_H__
 
 #include <botan/bigint.h>
+#include <botan/pow_mod.h>
 
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
   #include <botan/if_op.h>

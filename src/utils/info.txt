@@ -2,7 +2,7 @@ realname "Utility Functions"
 
 define UTIL_FUNCTIONS
 
-load_on auto
+load_on always
 
 <libs>
 tru64 -> rt

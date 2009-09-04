@@ -6,6 +6,8 @@
  - Minor speedups to the Turing key schedule
 
 * 1.8.7-pre, 2009-??-??
+ - Fix processing multiple messages in XTS mode
+ - Add --no-autoload option to configure.py, for minimized builds
 
 * 1.8.6, 2009-08-13
  - Add Cryptobox, a set of simple password-based encryption routines
