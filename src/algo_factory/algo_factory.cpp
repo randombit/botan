@@ -1,6 +1,6 @@
 /*
-Algorithm Factory
-(C) 2008 Jack Lloyd
+* Algorithm Factory
+* (C) 2008 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */

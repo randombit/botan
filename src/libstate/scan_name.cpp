@@ -1,6 +1,6 @@
 /**
-SCAN Name Abstraction
-(C) 2008 Jack Lloyd
+* SCAN Name Abstraction
+* (C) 2008 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
