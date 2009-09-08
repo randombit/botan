@@ -115,6 +115,15 @@ def process_command_line(args):
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
                             help='override guess of CPU byte order')
 
+    target_group.add_option('--with-unaligned-mem',
+                            dest='unaligned_mem', action='store_true',
+                            default=None,
+                            help='enable unaligned memory accesses')
+
+    target_group.add_option('--without-unaligned-mem',
+                            dest='unaligned_mem', action='store_false',
+                            help=SUPPRESS_HELP)
+
     build_group = OptionGroup(parser, 'Build options')
 
     build_group.add_option('--enable-shared', dest='build_shared_lib',
@@ -404,7 +413,7 @@ class ArchInfo(object):
                           self.submodel_aliases.items(),
                       key = lambda k: len(k[0]), reverse = True)
 
-    def defines(self, target_submodel, with_endian):
+    def defines(self, target_submodel, with_endian, unaligned_ok):
         macros = ['TARGET_ARCH_IS_%s' % (self.basename.upper())]
 
         def form_cpu_macro(cpu_name):
@@ -419,7 +428,12 @@ class ArchInfo(object):
         elif self.endian != None:
             macros.append('TARGET_CPU_IS_%s_ENDIAN' % (self.endian.upper()))
 
-        macros.append('TARGET_UNALIGNED_LOADSTORE_OK %d' % (self.unaligned_ok))
+        if unaligned_ok is None:
+            unaligned_ok = self.unaligned_ok
+
+        if unaligned_ok:
+            logging.info('Assuming unaligned memory access works on this CPU')
+        macros.append('TARGET_UNALIGNED_LOADSTORE_OK %d' % (unaligned_ok))
 
         return macros
 
@@ -725,7 +739,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             cc.defines(options.with_tr1)),
 
         'target_cpu_defines': make_cpp_macros(
-            arch.defines(options.cpu, options.with_endian)),
+            arch.defines(options.cpu, options.with_endian,
+                         options.unaligned_mem)),
 
         'include_files': makefile_list(build_config.headers),
 
@@ -861,7 +876,7 @@ def choose_modules_to_use(options, modules):
             logging.info('Skipping mod because %s - %s' % (
                 reason, ' '.join(disabled_mods)))
 
-    logging.info('Loading modules %s', ' '.join(sorted(to_load)))
+    logging.debug('Loading modules %s', ' '.join(sorted(to_load)))
 
     return [modules[mod] for mod in to_load]
 
