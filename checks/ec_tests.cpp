@@ -80,8 +80,8 @@ void test_point_turn_on_sp_red_mul()
    CHECK_MESSAGE(r1 == r2, "error with point mul after extra turn on sp red mul");
    CHECK(r1.get_affine_x().get_value() != BigInt("0"));
 
-   std::tr1::shared_ptr<PointGFp> p_r1(new PointGFp(r1));
-   std::tr1::shared_ptr<PointGFp> p_r2(new PointGFp(r2));
+   std::shared_ptr<PointGFp> p_r1(new PointGFp(r1));
+   std::shared_ptr<PointGFp> p_r2(new PointGFp(r2));
 
    p_r1->mult2_in_place(); // wird für Fehler nicht gebraucht
    p_r2->turn_on_sp_red_mul();    // 1. t_o() macht nur p_r2 kaputt
@@ -794,11 +794,11 @@ void test_enc_dec_uncompressed_521_prime_too_large()
    BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
 
    CurveGFp secp521r1 ( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
-   std::auto_ptr<PointGFp> p_G;
+   std::unique_ptr<PointGFp> p_G;
    bool exc = false;
    try
       {
-      p_G = std::auto_ptr<PointGFp>(new PointGFp(OS2ECP ( sv_G_secp_uncomp, secp521r1)));
+      p_G = std::unique_ptr<PointGFp>(new PointGFp(OS2ECP ( sv_G_secp_uncomp, secp521r1)));
       p_G->check_invariants();
       }
    catch (std::exception e)
@@ -981,7 +981,7 @@ void test_point_worksp()
    {
 
    EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
-   std::tr1::shared_ptr<std::vector<GFpElement> > worksp1;
+   std::shared_ptr<std::vector<GFpElement> > worksp1;
    assert(worksp1.get() == 0);
       {
       PointGFp p = dom_pars.get_base_point();

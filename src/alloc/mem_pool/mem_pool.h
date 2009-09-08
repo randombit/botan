@@ -10,7 +10,7 @@
 
 #include <botan/allocate.h>
 #include <botan/exceptn.h>
-#include <botan/mutex.h>
+#include <mutex>
 #include <utility>
 #include <vector>
 
@@ -27,7 +27,7 @@ class BOTAN_DLL Pooling_Allocator : public Allocator
 
       void destroy();
 
-      Pooling_Allocator(Mutex*);
+      Pooling_Allocator();
       ~Pooling_Allocator();
    private:
       void get_more_core(u32bit);
@@ -66,7 +66,7 @@ class BOTAN_DLL Pooling_Allocator : public Allocator
       std::vector<Memory_Block> blocks;
       std::vector<Memory_Block>::iterator last_used;
       std::vector<std::pair<void*, u32bit> > allocated;
-      Mutex* mutex;
+      std::mutex mutex;
    };
 
 }

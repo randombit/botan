@@ -545,7 +545,7 @@ EC_Domain_Params decode_ber_ec_dompar(SecureVector<byte> const& encoded)
    BER_Decoder dec(encoded);
    BER_Object obj = dec.get_next_object();
    ASN1_Tag tag = obj.type_tag;
-   std::auto_ptr<EC_Domain_Params> p_result;
+   std::unique_ptr<EC_Domain_Params> p_result;
 
    if(tag == OBJECT_ID)
       {

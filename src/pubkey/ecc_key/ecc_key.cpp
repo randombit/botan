@@ -166,7 +166,7 @@ void EC_PrivateKey::generate_private_key(RandomNumberGenerator& rng)
 
    BigInt tmp_private_value(0);
    tmp_private_value = BigInt::random_integer(rng, 1, mp_dom_pars->get_order());
-   mp_public_point = std::auto_ptr<PointGFp>( new PointGFp (mp_dom_pars->get_base_point()));
+   mp_public_point = std::unique_ptr<PointGFp>( new PointGFp (mp_dom_pars->get_base_point()));
    mp_public_point->mult_this_secure(tmp_private_value,
                                      mp_dom_pars->get_order(),
                                      mp_dom_pars->get_order()-1);
