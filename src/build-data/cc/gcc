@@ -1,6 +1,6 @@
 realname "GNU C++"
 
-binary_name "g++-4.4-20090331"
+binary_name "g++-4.4.1"
 
 compiler_has_tr1 yes
 
