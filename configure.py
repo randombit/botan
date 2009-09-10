@@ -38,8 +38,8 @@ class BuildConfigurationInformation(object):
     version_major = 1
     version_minor = 8
     version_patch = 7
-    version_so_patch = 7
-    version_suffix = '-pre'
+    version_so_patch = 2
+    version_suffix = ''
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
@@ -861,7 +861,7 @@ def choose_modules_to_use(options, modules):
             logging.info('Skipping mod because %s - %s' % (
                 reason, ' '.join(disabled_mods)))
 
-    logging.info('Loading modules %s', ' '.join(sorted(to_load)))
+    logging.debug('Loading modules %s', ' '.join(sorted(to_load)))
 
     return [modules[mod] for mod in to_load]
 
