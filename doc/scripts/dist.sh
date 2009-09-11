@@ -3,7 +3,7 @@
 # This is probably only useful if run on my machine, which is not
 # exactly ideal
 
-SELECTOR=h:net.randombit.botan
+SELECTOR=h:net.randombit.botan.1_8
 KEY_ID=EFBADFBC
 MTN_DB=/storage/mtn/botan.mtn
 WEB_DIR=~/projects/www
