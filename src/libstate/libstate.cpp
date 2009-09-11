@@ -9,7 +9,6 @@
 #include <botan/init.h>
 #include <botan/engine.h>
 #include <botan/stl_util.h>
-#include <botan/mux_noop.h>
 #include <botan/charset.h>
 #include <botan/defalloc.h>
 #include <botan/def_eng.h>
@@ -77,7 +76,7 @@ void set_global_state(Library_State* new_state)
 */
 Library_State* swap_global_state(Library_State* new_state)
    {
-   Library_State* old_state = global_lib_state;
+   auto old_state = global_lib_state;
    global_lib_state = new_state;
    return old_state;
    }
@@ -124,10 +123,10 @@ void Library_State::add_allocator(Allocator* allocator)
 */
 void Library_State::set_default_allocator(const std::string& type)
    {
-   std::lock_guard<std::mutex> lock(allocator_lock);
-
    if(type == "")
       return;
+
+   std::lock_guard<std::mutex> lock(allocator_lock);
 
    this->set("conf", "base/default_allocator", type);
    cached_default_allocator = 0;
@@ -240,29 +239,30 @@ void Library_State::initialize()
 
    load_default_config();
 
-   std::vector<Engine*> engines;
+   std::vector<Engine*> engines = {
 
 #if defined(BOTAN_HAS_ENGINE_GNU_MP)
-   engines.push_back(new GMP_Engine);
+      new GMP_Engine,
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_OPENSSL)
-   engines.push_back(new OpenSSL_Engine);
+      new OpenSSL_Engine,
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_SSE2_ASSEMBLER)
-   engines.push_back(new SSE2_Assembler_Engine);
+      new SSE2_Assembler_Engine,
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_AMD64_ASSEMBLER)
-   engines.push_back(new AMD64_Assembler_Engine);
+      new AMD64_Assembler_Engine,
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_IA32_ASSEMBLER)
-   engines.push_back(new IA32_Assembler_Engine);
+      new IA32_Assembler_Engine,
 #endif
 
-   engines.push_back(new Default_Engine);
+      new Default_Engine
+   };
 
    m_algorithm_factory = new Algorithm_Factory(engines);
    }
