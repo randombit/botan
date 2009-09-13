@@ -19,4 +19,5 @@ amd64
 <cc>
 gcc
 icc
+msvc
 </cc>
