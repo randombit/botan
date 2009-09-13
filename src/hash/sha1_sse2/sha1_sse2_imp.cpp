@@ -20,8 +20,10 @@
  * on a Linux/Core2 system.
 
  */
+
 #include <botan/sha1_sse2.h>
-#include <xmmintrin.h>
+#include <botan/rotate.h>
+#include <emmintrin.h>
 
 namespace Botan {
 
@@ -30,20 +32,12 @@ namespace {
 typedef union {
    u32bit u32[4];
    __m128i u128;
-   } v4si __attribute__((aligned(16)));
+   } v4si;
 
 static const v4si K00_19 = { { 0x5a827999, 0x5a827999, 0x5a827999, 0x5a827999 } };
 static const v4si K20_39 = { { 0x6ed9eba1, 0x6ed9eba1, 0x6ed9eba1, 0x6ed9eba1 } };
 static const v4si K40_59 = { { 0x8f1bbcdc, 0x8f1bbcdc, 0x8f1bbcdc, 0x8f1bbcdc } };
 static const v4si K60_79 = { { 0xca62c1d6, 0xca62c1d6, 0xca62c1d6, 0xca62c1d6 } };
-
-#define UNALIGNED 1
-#if UNALIGNED
-#define load(p)	_mm_loadu_si128(p)
-#else
-#define load(p) (*p)
-#endif
-
 
 /*
 the first 16 bytes only need byte swapping
@@ -57,18 +51,14 @@ and is overwritten with the swapped bytes
 		__m128i r1, r2;						\
 									\
 		r1 = (W);						\
-		if (1) {						\
 		r1 = _mm_shufflehi_epi16(r1, _MM_SHUFFLE(2, 3, 0, 1));	\
 		r1 = _mm_shufflelo_epi16(r1, _MM_SHUFFLE(2, 3, 0, 1));	\
 		r2 = _mm_slli_epi16(r1, 8);				\
 		r1 = _mm_srli_epi16(r1, 8);				\
 		r1 = _mm_or_si128(r1, r2);				\
 		(W) = r1;						\
-		}							\
 		(prep).u128 = _mm_add_epi32(K00_19.u128, r1);		\
 	} while(0)
-
-
 
 /*
 for each multiple of 4, t, we want to calculate this:
@@ -115,45 +105,38 @@ W0 = W[t]..W[t+3]
 * efficeon, pentium-m, and opteron but shifts are available in
 * only one unit.
 */
-#define prep(prep, XW0, XW1, XW2, XW3, K) do { 					\
-		__m128i r0, r1, r2, r3;						\
-										\
-		/* load W[t-4] 16-byte aligned, and shift */			\
-		r3 = _mm_srli_si128((XW3), 4);					\
-		r0 = (XW0);							\
-		/* get high 64-bits of XW0 into low 64-bits */			\
-		r1 = _mm_shuffle_epi32((XW0), _MM_SHUFFLE(1,0,3,2));		\
-		/* load high 64-bits of r1 */					\
-		r1 = _mm_unpacklo_epi64(r1, (XW1));				\
-		r2 = (XW2);							\
-										\
-		r0 = _mm_xor_si128(r1, r0);					\
-		r2 = _mm_xor_si128(r3, r2);					\
-		r0 = _mm_xor_si128(r2, r0);					\
-		/* unrotated W[t]..W[t+2] in r0 ... still need W[t+3] */	\
-										\
-		r2 = _mm_slli_si128(r0, 12);					\
-		r1 = _mm_cmplt_epi32(r0, _mm_setzero_si128());			\
-		r0 = _mm_add_epi32(r0, r0);	/* shift left by 1 */		\
-		r0 = _mm_sub_epi32(r0, r1);	/* r0 has W[t]..W[t+2] */	\
-										\
-		r3 = _mm_srli_epi32(r2, 30);					\
-		r2 = _mm_slli_epi32(r2, 2);					\
-										\
-		r0 = _mm_xor_si128(r0, r3);					\
-		r0 = _mm_xor_si128(r0, r2);	/* r0 now has W[t+3] */		\
-										\
-		(XW0) = r0;							\
-		(prep).u128 = _mm_add_epi32(r0, (K).u128);			\
-	} while(0)
-
-
-static inline u32bit rol(u32bit src, u32bit amt)
-   {
-   /* gcc and icc appear to turn this into a rotate */
-   return (src << amt) | (src >> (32 - amt));
-   }
-
+#define prep(prep, XW0, XW1, XW2, XW3, K)                               \
+   do {                                                                 \
+      __m128i r0, r1, r2, r3;						\
+                                                                        \
+      /* load W[t-4] 16-byte aligned, and shift */                      \
+      r3 = _mm_srli_si128((XW3), 4);					\
+      r0 = (XW0);                                                       \
+      /* get high 64-bits of XW0 into low 64-bits */			\
+      r1 = _mm_shuffle_epi32((XW0), _MM_SHUFFLE(1,0,3,2));              \
+      /* load high 64-bits of r1 */					\
+      r1 = _mm_unpacklo_epi64(r1, (XW1));                               \
+      r2 = (XW2);                                                       \
+                                                                        \
+      r0 = _mm_xor_si128(r1, r0);                                       \
+      r2 = _mm_xor_si128(r3, r2);                                       \
+      r0 = _mm_xor_si128(r2, r0);                                       \
+      /* unrotated W[t]..W[t+2] in r0 ... still need W[t+3] */          \
+                                                                        \
+      r2 = _mm_slli_si128(r0, 12);                                      \
+      r1 = _mm_cmplt_epi32(r0, _mm_setzero_si128());			\
+      r0 = _mm_add_epi32(r0, r0);	/* shift left by 1 */           \
+      r0 = _mm_sub_epi32(r0, r1);	/* r0 has W[t]..W[t+2] */       \
+                                                                        \
+      r3 = _mm_srli_epi32(r2, 30);                                      \
+      r2 = _mm_slli_epi32(r2, 2);                                       \
+                                                                        \
+      r0 = _mm_xor_si128(r0, r3);                                       \
+      r0 = _mm_xor_si128(r0, r2);	/* r0 now has W[t+3] */         \
+                                                                        \
+      (XW0) = r0;                                                       \
+      (prep).u128 = _mm_add_epi32(r0, (K).u128);                        \
+   } while(0)
 
 static inline u32bit f00_19(u32bit x, u32bit y, u32bit z)
    {
@@ -184,11 +167,12 @@ static inline u32bit f60_79(u32bit x, u32bit y, u32bit z)
    return f20_39(x, y, z);
    }
 
-#define step(nn_mm, xa, xb, xc, xd, xe, xt, input) do {					\
-		(xt) = (input) + f##nn_mm((xb), (xc), (xd));				\
-		(xb) = rol((xb), 30); 							\
-		(xt) += ((xe) + rol((xa), 5));						\
-	} while(0)
+#define step(nn_mm, xa, xb, xc, xd, xe, xt, input)                      \
+   do {                                                                 \
+      (xt) = (input) + f##nn_mm((xb), (xc), (xd));			\
+      (xb) = rotate_left((xb), 30);                                     \
+      (xt) += ((xe) + rotate_left((xa), 5));                            \
+   } while(0)
 
 }
 
@@ -210,14 +194,14 @@ extern "C" void botan_sha1_sse2_compress(u32bit H[5],
    * steps ahead of the integer code.  12 steps ahead seems
    * to produce the best performance. -dean
    */
-   W0 = load(&input[0]);
+   W0 = _mm_loadu_si128(&input[0]);
    prep00_15(prep0, W0);				/* prepare for 00 through 03 */
-   W1 = load(&input[1]);
+   W1 = _mm_loadu_si128(&input[1]);
    prep00_15(prep1, W1);				/* prepare for 04 through 07 */
-   W2 = load(&input[2]);
+   W2 = _mm_loadu_si128(&input[2]);
    prep00_15(prep2, W2);				/* prepare for 08 through 11 */
 
-   W3 = load(&input[3]);
+   W3 = _mm_loadu_si128(&input[3]);
    step(00_19, a, b, c, d, e, t, prep0.u32[0]);	/* 00 */
    step(00_19, t, a, b, c, d, e, prep0.u32[1]);	/* 01 */
    step(00_19, e, t, a, b, c, d, prep0.u32[2]);	/* 02 */
