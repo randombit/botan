@@ -7,26 +7,6 @@ using namespace Botan;
 
 #include <iostream>
 
-double best_speed(const std::string& algorithm,
-                  u32bit milliseconds,
-                  RandomNumberGenerator& rng,
-                  Timer& timer)
-   {
-   std::map<std::string, double> speeds =
-      algorithm_benchmark(algorithm, milliseconds,
-                          timer, rng,
-                          global_state().algorithm_factory());
-
-   double best_time = 0;
-
-   for(std::map<std::string, double>::const_iterator i = speeds.begin();
-       i != speeds.end(); ++i)
-      if(i->second > best_time)
-         best_time = i->second;
-
-   return best_time;
-   }
-
 const std::string algos[] = {
    "AES-128",
    "AES-192",
@@ -62,7 +42,6 @@ const std::string algos[] = {
    "FORK-256",
    "GOST-34.11",
    "HAS-160",
-   "HAS-V",
    "MD2",
    "MD4",
    "MD5",
@@ -89,10 +68,28 @@ int main()
    AutoSeeded_RNG rng;
    Default_Benchmark_Timer timer;
 
+   Algorithm_Factory& af = global_state().algorithm_factory();
+
+   std::vector<std::string> providers = af.providers_of("Serpent");
+   for(size_t i = 0; i != providers.size(); ++i)
+      std::cout << providers[i].c_str() << "\n";
+
+
+
    for(u32bit i = 0; algos[i] != ""; ++i)
       {
       std::string algo = algos[i];
-      std::cout << algo << ' '
-                << best_speed(algo, milliseconds, rng, timer) << "\n";
+
+      std::map<std::string, double> speeds =
+         algorithm_benchmark(algos[i], milliseconds, timer, rng, af);
+
+      std::cout << algo << ":";
+
+      for(std::map<std::string, double>::const_iterator i = speeds.begin();
+          i != speeds.end(); ++i)
+         {
+         std::cout << " " << i->second << " [" << i->first << "]";
+         }
+      std::cout << "\n";
       }
    }
