@@ -18,19 +18,22 @@ namespace Botan {
 class BOTAN_DLL SAFER_SK : public BlockCipher
    {
    public:
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+
       void clear() throw() { EK.clear(); }
       std::string name() const;
       BlockCipher* clone() const;
+
       SAFER_SK(u32bit);
    private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
       void key_schedule(const byte[], u32bit);
 
       static const byte EXP[256];
       static const byte LOG[512];
       static const byte BIAS[208];
       static const byte KEY_INDEX[208];
+
       SecureVector<byte> EK;
       const u32bit ROUNDS;
    };

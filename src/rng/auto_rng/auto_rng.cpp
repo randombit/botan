@@ -140,7 +140,7 @@ AutoSeeded_RNG::AutoSeeded_RNG(u32bit poll_bits)
 #endif
 
    if(!rng)
-      throw Algorithm_Not_Found("No usable RNG found enabled in build");
+      throw Internal_Error("No usable RNG found enabled in build");
 
    /* If X9.31 is available, use it to wrap the other RNG as a failsafe */
 #if defined(BOTAN_HAS_X931_RNG)

@@ -62,6 +62,8 @@ std::vector<algorithm> get_algos()
                              "AES-128/CTR-BE", 16, 16));
    algos.push_back(algorithm("Cipher Mode", "AES-128/EAX", 16, 16));
    algos.push_back(algorithm("Cipher Mode", "AES-128/XTS", 32, 16));
+   algos.push_back(algorithm("Cipher Mode", "Serpent/CTR",
+                             "Serpent/CTR-BE", 32, 16));
 
    algos.push_back(algorithm("Stream Cipher", "ARC4", 16));
    algos.push_back(algorithm("Stream Cipher", "Salsa20", 32));

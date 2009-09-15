@@ -212,7 +212,7 @@ std::string Library_State::deref_alias(const std::string& key) const
 /*
 * Set/Add an option
 */
-void Library_State::set_option(const std::string key,
+void Library_State::set_option(const std::string& key,
                                const std::string& value)
    {
    set("conf", key, value);

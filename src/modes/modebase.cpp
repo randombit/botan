@@ -19,7 +19,7 @@ BlockCipherMode::BlockCipherMode(BlockCipher* cipher_ptr,
    BLOCK_SIZE(cipher_ptr->BLOCK_SIZE), BUFFER_SIZE(buf_mult * BLOCK_SIZE),
    IV_METHOD(iv_meth), mode_name(cipher_mode_name)
    {
-   base_ptr = cipher = cipher_ptr;
+   cipher = cipher_ptr;
    buffer.create(BUFFER_SIZE);
    state.create(iv_size);
    position = 0;

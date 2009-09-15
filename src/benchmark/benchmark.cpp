@@ -57,8 +57,7 @@ bench_block_cipher(BlockCipher* block_cipher,
 
    while(nanoseconds_used < nanoseconds_max)
       {
-      for(u32bit i = 0; i != in_blocks; ++i)
-         block_cipher->encrypt(buf + block_cipher->BLOCK_SIZE * i);
+      block_cipher->encrypt_n(buf, buf, in_blocks);
 
       ++reps;
       nanoseconds_used = timer.clock() - start;

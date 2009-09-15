@@ -27,7 +27,7 @@ namespace {
 
 double bench_filter(std::string name, Botan::Filter* filter,
                     Botan::RandomNumberGenerator& rng,
-                    bool html, double seconds)
+                    double seconds)
    {
    Botan::Pipe pipe(filter, new BitBucket);
 
@@ -52,27 +52,13 @@ double bench_filter(std::string name, Botan::Filter* filter,
 
    std::cout.setf(std::ios::fixed, std::ios::floatfield);
    std::cout.precision(2);
-   if(html)
-      {
-      if(name.find("<") != std::string::npos)
-         name.replace(name.find("<"), 1, "&lt;");
-      if(name.find(">") != std::string::npos)
-         name.replace(name.find(">"), 1, "&gt;");
-      std::cout << "   <TR><TH>" << name
-                << std::string(25 - name.length(), ' ') << "   <TH>";
-      std::cout.width(6);
-      std::cout << mbytes_per_sec << std::endl;
-      }
-   else
-      {
-      std::cout << name << ": " << std::string(25 - name.length(), ' ');
-      std::cout.width(6);
-      std::cout << mbytes_per_sec << " MiB/sec" << std::endl;
-      }
+   std::cout << name << " " << std::string(25 - name.length(), ' ');
+   std::cout.width(6);
+   std::cout << mbytes_per_sec << " MiB/sec" << std::endl;
    return (mbytes_per_sec);
    }
 
-double bench(const std::string& name, const std::string& filtername, bool html,
+double bench(const std::string& name, const std::string& filtername,
              double seconds, u32bit keylen, u32bit ivlen,
              Botan::RandomNumberGenerator& rng)
    {
@@ -88,7 +74,7 @@ double bench(const std::string& name, const std::string& filtername, bool html,
    Botan::Filter* filter = lookup(filtername, params);
 
    if(filter)
-      return bench_filter(name, filter, rng, html, seconds);
+      return bench_filter(name, filter, rng, seconds);
    return 0;
    }
 
@@ -96,23 +82,9 @@ double bench(const std::string& name, const std::string& filtername, bool html,
 
 void benchmark(const std::string& what,
                Botan::RandomNumberGenerator& rng,
-               bool html, double seconds)
+               double seconds)
    {
    try {
-      if(html)
-         {
-         std::cout << "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD "
-                   << "HTML 4.0 Transitional//EN\">\n"
-                   << "<HTML>\n\n"
-                   << "<TITLE>Botan Benchmarks</TITLE>\n\n"
-                   << "<BODY>\n\n"
-                   << "<P><TABLE BORDER CELLSPACING=1>\n"
-                   << "<THEAD>\n"
-                   << "<TR><TH>Algorithm                      "
-                   << "<TH>Mib / second\n"
-                   << "<TBODY>\n";
-         }
-
       double sum = 0;
       u32bit how_many = 0;
 
@@ -122,26 +94,18 @@ void benchmark(const std::string& what,
          if(what == "All" || what == algos[j].type)
             {
             double speed = bench(algos[j].name, algos[j].filtername,
-                                 html, seconds, algos[j].keylen,
+                                 seconds, algos[j].keylen,
                                  algos[j].ivlen, rng);
             if(speed > .00001) /* log(0) == -inf -> messed up average */
                sum += std::log(speed);
             how_many++;
             }
 
-      if(html)
-         std::cout << "</TABLE>\n\n";
-
       double average = std::exp(sum / static_cast<double>(how_many));
 
-      if(what == "All" && html)
-         std::cout << "\n<P>Overall speed average: " << average
-                   << "\n\n";
-      else if(what == "All")
+      if(what == "All")
           std::cout << "\nOverall speed average: " << average
                     << std::endl;
-
-      if(html) std::cout << "</BODY></HTML>\n";
       }
    catch(Botan::Exception& e)
       {
@@ -172,7 +136,7 @@ u32bit bench_algo(const std::string& name,
          {
          if(algos[j].name == name)
             {
-            bench(algos[j].name, algos[j].filtername, false, seconds,
+            bench(algos[j].name, algos[j].filtername, seconds,
                   algos[j].keylen, algos[j].ivlen, rng);
             return 1;
             }

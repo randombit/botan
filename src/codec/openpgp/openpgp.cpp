@@ -7,6 +7,7 @@
 
 #include <botan/openpgp.h>
 #include <botan/filters.h>
+#include <botan/basefilt.h>
 #include <botan/charset.h>
 #include <botan/crc24.h>
 

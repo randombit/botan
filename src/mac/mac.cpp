@@ -1,6 +1,6 @@
 /**
-Message Authentication Code base class
-(C) 1999-2008 Jack Lloyd
+* Message Authentication Code base class
+* (C) 1999-2008 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
