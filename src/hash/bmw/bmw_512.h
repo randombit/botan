@@ -23,7 +23,8 @@ class BMW_512 : public MDx_HashFunction
       void compress_n(const byte input[], u32bit blocks);
       void copy_out(byte output[]);
 
-      SecureBuffer<u64bit, 16> H;
+      SecureBuffer<u64bit, 32> H;
+      SecureBuffer<u64bit, 16> M;
    };
 
 }
