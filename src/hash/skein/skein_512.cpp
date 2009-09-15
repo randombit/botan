@@ -79,17 +79,17 @@ void ubi_512(u64bit H[9], u64bit T[], const byte msg[], u64bit msg_len)
 
 #define THREEFISH_8_ROUNDS(R1,R2)                         \
       do {                                                \
-         THREEFISH_ROUND(0,1,2,3,4,5,6,7, 38,30,50,53);   \
-         THREEFISH_ROUND(2,1,4,7,6,5,0,3, 48,20,43,31);   \
-         THREEFISH_ROUND(4,1,6,3,0,5,2,7, 34,14,15,27);   \
-         THREEFISH_ROUND(6,1,0,7,2,5,4,3, 26,12,58, 7);   \
+         THREEFISH_ROUND(0,1,2,3,4,5,6,7, 46,36,19,37);   \
+         THREEFISH_ROUND(2,1,4,7,6,5,0,3, 33,27,14,42);   \
+         THREEFISH_ROUND(4,1,6,3,0,5,2,7, 17,49,36,39);   \
+         THREEFISH_ROUND(6,1,0,7,2,5,4,3, 44, 9,54,56);   \
                                                           \
          THREEFISH_INJECT_KEY(R1);                        \
                                                           \
-         THREEFISH_ROUND(0,1,2,3,4,5,6,7, 33,49, 8,42);   \
-         THREEFISH_ROUND(2,1,4,7,6,5,0,3, 39,27,41,14);   \
-         THREEFISH_ROUND(4,1,6,3,0,5,2,7, 29,26,11, 9);   \
-         THREEFISH_ROUND(6,1,0,7,2,5,4,3, 33,51,39,35);   \
+         THREEFISH_ROUND(0,1,2,3,4,5,6,7, 39,30,34,24);   \
+         THREEFISH_ROUND(2,1,4,7,6,5,0,3, 13,50,10,17);   \
+         THREEFISH_ROUND(4,1,6,3,0,5,2,7, 25,29,39,43);   \
+         THREEFISH_ROUND(6,1,0,7,2,5,4,3,  8,35,56,22);   \
                                                           \
          THREEFISH_INJECT_KEY(R2);                        \
       } while(0);

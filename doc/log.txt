@@ -1,5 +1,6 @@
 
 * 1.8.8-dev, 2009-??-??
+ - Alter Skein-512 to match the tweaked 1.2 specification
 
 * 1.8.7, 2009-09-09
  - Fix processing multiple messages in XTS mode
