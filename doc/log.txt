@@ -1,4 +1,6 @@
 
+* 1.8.8-dev, 2009-??-??
+
 * 1.8.7, 2009-09-09
  - Fix processing multiple messages in XTS mode
  - Add --no-autoload option to configure.py, for minimized builds
