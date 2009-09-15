@@ -70,12 +70,6 @@ int main()
 
    Algorithm_Factory& af = global_state().algorithm_factory();
 
-   std::vector<std::string> providers = af.providers_of("Serpent");
-   for(size_t i = 0; i != providers.size(); ++i)
-      std::cout << providers[i].c_str() << "\n";
-
-
-
    for(u32bit i = 0; algos[i] != ""; ++i)
       {
       std::string algo = algos[i];
