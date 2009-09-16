@@ -66,7 +66,6 @@ int main()
 
    u32bit milliseconds = 1000;
    AutoSeeded_RNG rng;
-   Default_Benchmark_Timer timer;
 
    Algorithm_Factory& af = global_state().algorithm_factory();
 
@@ -75,7 +74,7 @@ int main()
       std::string algo = algos[i];
 
       std::map<std::string, double> speeds =
-         algorithm_benchmark(algos[i], milliseconds, timer, rng, af);
+         algorithm_benchmark(algos[i], milliseconds, rng, af);
 
       std::cout << algo << ":";
 
