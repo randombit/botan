@@ -22,8 +22,8 @@ void check_key(RandomNumberGenerator& rng,
    if(encryptor->maximum_input_size() == 0)
       return;
 
-   std::auto_ptr<PK_Encryptor> enc(encryptor);
-   std::auto_ptr<PK_Decryptor> dec(decryptor);
+   std::unique_ptr<PK_Encryptor> enc(encryptor);
+   std::unique_ptr<PK_Decryptor> dec(decryptor);
 
    SecureVector<byte> message(enc->maximum_input_size() - 1);
    rng.randomize(message, message.size());
@@ -43,8 +43,8 @@ void check_key(RandomNumberGenerator& rng,
 void check_key(RandomNumberGenerator& rng,
                PK_Signer* signer, PK_Verifier* verifier)
    {
-   std::auto_ptr<PK_Signer> sig(signer);
-   std::auto_ptr<PK_Verifier> ver(verifier);
+   std::unique_ptr<PK_Signer> sig(signer);
+   std::unique_ptr<PK_Verifier> ver(verifier);
 
    SecureVector<byte> message(16);
    rng.randomize(message, message.size());

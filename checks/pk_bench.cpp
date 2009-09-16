@@ -191,12 +191,12 @@ void benchmark_rsa(RandomNumberGenerator& rng,
          while(verify_timer.seconds() < seconds ||
                sig_timer.seconds() < seconds)
             {
-            std::auto_ptr<PK_Encryptor> enc(get_pk_encryptor(key, enc_padding));
-            std::auto_ptr<PK_Decryptor> dec(get_pk_decryptor(key, enc_padding));
+            std::unique_ptr<PK_Encryptor> enc(get_pk_encryptor(key, enc_padding));
+            std::unique_ptr<PK_Decryptor> dec(get_pk_decryptor(key, enc_padding));
             benchmark_enc_dec(*enc, *dec, enc_timer, dec_timer, rng, 10000, seconds);
 
-            std::auto_ptr<PK_Signer> sig(get_pk_signer(key, sig_padding));
-            std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, sig_padding));
+            std::unique_ptr<PK_Signer> sig(get_pk_signer(key, sig_padding));
+            std::unique_ptr<PK_Verifier> ver(get_pk_verifier(key, sig_padding));
             benchmark_sig_ver(*ver, *sig, verify_timer,
                               sig_timer, rng, 10000, seconds);
             }
@@ -246,8 +246,8 @@ void benchmark_rw(RandomNumberGenerator& rng,
          RW_PrivateKey key(rng, keylen);
          keygen_timer.stop();
 
-         std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));
-         std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
+         std::unique_ptr<PK_Signer> sig(get_pk_signer(key, padding));
+         std::unique_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
 
          benchmark_sig_ver(*ver, *sig, verify_timer, sig_timer, rng, 10000, seconds);
          }
@@ -300,8 +300,8 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
          ECDSA_PrivateKey key(rng, params);
          keygen_timer.stop();
 
-         std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));
-         std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
+         std::unique_ptr<PK_Signer> sig(get_pk_signer(key, padding));
+         std::unique_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
 
          benchmark_sig_ver(*ver, *sig, verify_timer,
                            sig_timer, rng, 1000, seconds);
@@ -416,8 +416,8 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
          PRIV_KEY_TYPE key(rng, group);
          keygen_timer.stop();
 
-         std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));
-         std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
+         std::unique_ptr<PK_Signer> sig(get_pk_signer(key, padding));
+         std::unique_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
 
          benchmark_sig_ver(*ver, *sig, verify_timer,
                            sig_timer, rng, 1000, seconds);
@@ -586,8 +586,8 @@ void benchmark_elg(RandomNumberGenerator& rng,
          ElGamal_PrivateKey key(rng, group);
          keygen_timer.stop();
 
-         std::auto_ptr<PK_Decryptor> dec(get_pk_decryptor(key, padding));
-         std::auto_ptr<PK_Encryptor> enc(get_pk_encryptor(key, padding));
+         std::unique_ptr<PK_Decryptor> dec(get_pk_decryptor(key, padding));
+         std::unique_ptr<PK_Encryptor> enc(get_pk_encryptor(key, padding));
 
          benchmark_enc_dec(*enc, *dec, enc_timer, dec_timer, rng, 1000, seconds);
          }

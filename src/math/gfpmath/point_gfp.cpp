@@ -109,7 +109,7 @@ const PointGFp& PointGFp::assign_within_same_curve(PointGFp const& other)
    return *this;
    }
 
-void PointGFp::set_shrd_mod(std::tr1::shared_ptr<GFpModulus> p_mod)
+void PointGFp::set_shrd_mod(std::shared_ptr<GFpModulus> p_mod)
    {
    mX.set_shrd_mod(p_mod);
    mY.set_shrd_mod(p_mod);
@@ -133,7 +133,7 @@ void PointGFp::ensure_worksp() const
          }
       }
 
-   mp_worksp_gfp_el = std::tr1::shared_ptr<std::vector<GFpElement> >(new std::vector<GFpElement>);
+   mp_worksp_gfp_el = std::shared_ptr<std::vector<GFpElement> >(new std::vector<GFpElement>);
    mp_worksp_gfp_el->reserve(9);
    for (u32bit i=0; i<GFPEL_WKSP_SIZE; i++)
       {
@@ -337,8 +337,8 @@ PointGFp& PointGFp::mult_this_secure(const BigInt& scalar,
    // use montgomery mult. in this operation
    this->turn_on_sp_red_mul();
 
-   std::tr1::shared_ptr<PointGFp> H(new PointGFp(this->mC));
-   std::tr1::shared_ptr<PointGFp> tmp; // used for AADA
+   std::shared_ptr<PointGFp> H(new PointGFp(this->mC));
+   std::shared_ptr<PointGFp> tmp; // used for AADA
 
    PointGFp P(*this);
    BigInt m(scalar);
@@ -477,15 +477,15 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
    return *this;
    }
 
-inline std::tr1::shared_ptr<PointGFp> PointGFp::mult_loop(int l,
+inline std::shared_ptr<PointGFp> PointGFp::mult_loop(int l,
                                                           const BigInt& m,
-                                                          std::tr1::shared_ptr<PointGFp> H,
-                                                          std::tr1::shared_ptr<PointGFp> tmp,
+                                                          std::shared_ptr<PointGFp> H,
+                                                          std::shared_ptr<PointGFp> tmp,
                                                           const PointGFp& P)
    {
    //assert(l >= (int)m.bits()- 1);
    tmp = H;
-   std::tr1::shared_ptr<PointGFp> to_add(new PointGFp(P)); // we just need some point
+   std::shared_ptr<PointGFp> to_add(new PointGFp(P)); // we just need some point
    // so that we can use op=
    // inside the loop
    for (int i=l; i >=0; i--)

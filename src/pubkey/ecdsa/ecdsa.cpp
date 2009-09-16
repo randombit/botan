@@ -20,7 +20,7 @@ namespace Botan {
 ECDSA_PrivateKey::ECDSA_PrivateKey(RandomNumberGenerator& rng,
                                    const EC_Domain_Params& dom_pars)
    {
-   mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_pars));
+   mp_dom_pars = std::unique_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_pars));
    generate_private_key(rng);
 
    try
@@ -68,11 +68,10 @@ void ECDSA_PublicKey::set_domain_parameters(const EC_Domain_Params& dom_pars)
       throw Invalid_State("EC_PublicKey::set_domain_parameters(): point does not lie on provided curve");
       }
 
-   std::auto_ptr<EC_Domain_Params> p_tmp_pars(new EC_Domain_Params(dom_pars));
-   ECDSA_Core tmp_ecdsa_core(*p_tmp_pars, BigInt(0), tmp_pp);
+   mp_dom_pars.reset(new EC_Domain_Params(dom_pars));
+   ECDSA_Core tmp_ecdsa_core(*mp_dom_pars, BigInt(0), tmp_pp);
    mp_public_point.reset(new PointGFp(tmp_pp));
    m_ecdsa_core = tmp_ecdsa_core;
-   mp_dom_pars = p_tmp_pars;
    }
 
 void ECDSA_PublicKey::set_all_values(const ECDSA_PublicKey& other)
@@ -131,8 +130,8 @@ bool ECDSA_PublicKey::verify(const byte message[],
 ECDSA_PublicKey::ECDSA_PublicKey(const EC_Domain_Params& dom_par,
                                  const PointGFp& public_point)
    {
-   mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_par));
-   mp_public_point = std::auto_ptr<PointGFp>(new PointGFp(public_point));
+   mp_dom_pars = std::unique_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_par));
+   mp_public_point = std::unique_ptr<PointGFp>(new PointGFp(public_point));
    m_param_enc = ENC_EXPLICIT;
    m_ecdsa_core = ECDSA_Core(*mp_dom_pars, BigInt(0), *mp_public_point);
    }

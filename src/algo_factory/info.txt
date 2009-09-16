@@ -16,6 +16,5 @@ block
 engine
 hash
 mac
-mutex
 stream
 </requires>
