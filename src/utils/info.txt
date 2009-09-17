@@ -17,6 +17,7 @@ exceptn.cpp
 exceptn.h
 loadstor.h
 mem_ops.h
+mlock.h
 mlock.cpp
 parsing.cpp
 parsing.h

@@ -18,16 +18,22 @@ namespace Botan {
 BOTAN_DLL u64bit system_time();
 
 /*
-* Memory Locking Functions
+* Round up n to multiple of align_to
 */
-BOTAN_DLL bool lock_mem(void*, u32bit);
-BOTAN_DLL void unlock_mem(void*, u32bit);
+inline u32bit round_up(u32bit n, u32bit align_to)
+   {
+   if(n % align_to || n == 0)
+      n += align_to - (n % align_to);
+   return n;
+   }
 
 /*
-* Misc Utility Functions
+* Round down n to multiple of align_to
 */
-BOTAN_DLL u32bit round_up(u32bit, u32bit);
-BOTAN_DLL u32bit round_down(u32bit, u32bit);
+inline u32bit round_down(u32bit n, u32bit align_to)
+   {
+   return (n - (n % align_to));
+   }
 
 /*
 * Work Factor Estimates
