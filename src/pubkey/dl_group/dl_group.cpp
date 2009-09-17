@@ -12,7 +12,7 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/pipe.h>
-#include <botan/util.h>
+#include <botan/workfactor.h>
 #include <botan/pem.h>
 
 namespace Botan {

@@ -2,6 +2,11 @@ realname "Motorola 680x0"
 
 default_submodel 68020
 
+endian big
+
+# Except for Coldfire
+#unaligned ok
+
 <aliases>
 680x0
 68k

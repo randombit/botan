@@ -1,33 +1,15 @@
 /*
-* Utility Functions
+* Public Key Work Factor Functions
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/util.h>
+#include <botan/workfactor.h>
 #include <algorithm>
 #include <cmath>
 
 namespace Botan {
-
-/*
-* Round up n to multiple of align_to
-*/
-u32bit round_up(u32bit n, u32bit align_to)
-   {
-   if(n % align_to || n == 0)
-      n += align_to - (n % align_to);
-   return n;
-   }
-
-/*
-* Round down n to multiple of align_to
-*/
-u32bit round_down(u32bit n, u32bit align_to)
-   {
-   return (n - (n % align_to));
-   }
 
 /*
 * Choose the exponent size for a DL group
@@ -64,5 +46,6 @@ u32bit dl_work_factor(u32bit bits)
    return MIN_ESTIMATE;
 #endif
    }
+
 
 }

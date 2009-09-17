@@ -84,47 +84,58 @@ GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) :
 /*
 * GOST Encryption
 */
-void GOST_28147_89::enc(const byte in[], byte out[]) const
+void GOST_28147_89::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u32bit N1 = load_le<u32bit>(in, 0), N2 = load_le<u32bit>(in, 1);
-
-   for(size_t i = 0; i != 3; ++i)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      GOST_2ROUND(N1, N2, 0, 1);
-      GOST_2ROUND(N1, N2, 2, 3);
-      GOST_2ROUND(N1, N2, 4, 5);
-      GOST_2ROUND(N1, N2, 6, 7);
+      u32bit N1 = load_le<u32bit>(in, 0), N2 = load_le<u32bit>(in, 1);
+
+      for(size_t j = 0; j != 3; ++j)
+         {
+         GOST_2ROUND(N1, N2, 0, 1);
+         GOST_2ROUND(N1, N2, 2, 3);
+         GOST_2ROUND(N1, N2, 4, 5);
+         GOST_2ROUND(N1, N2, 6, 7);
+         }
+
+      GOST_2ROUND(N1, N2, 7, 6);
+      GOST_2ROUND(N1, N2, 5, 4);
+      GOST_2ROUND(N1, N2, 3, 2);
+      GOST_2ROUND(N1, N2, 1, 0);
+
+      store_le(out, N2, N1);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
-
-   GOST_2ROUND(N1, N2, 7, 6);
-   GOST_2ROUND(N1, N2, 5, 4);
-   GOST_2ROUND(N1, N2, 3, 2);
-   GOST_2ROUND(N1, N2, 1, 0);
-
-   store_le(out, N2, N1);
    }
 
 /*
 * GOST Decryption
 */
-void GOST_28147_89::dec(const byte in[], byte out[]) const
+void GOST_28147_89::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u32bit N1 = load_le<u32bit>(in, 0), N2 = load_le<u32bit>(in, 1);
-
-   GOST_2ROUND(N1, N2, 0, 1);
-   GOST_2ROUND(N1, N2, 2, 3);
-   GOST_2ROUND(N1, N2, 4, 5);
-   GOST_2ROUND(N1, N2, 6, 7);
-
-   for(size_t i = 0; i != 3; ++i)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      GOST_2ROUND(N1, N2, 7, 6);
-      GOST_2ROUND(N1, N2, 5, 4);
-      GOST_2ROUND(N1, N2, 3, 2);
-      GOST_2ROUND(N1, N2, 1, 0);
-      }
+      u32bit N1 = load_le<u32bit>(in, 0), N2 = load_le<u32bit>(in, 1);
 
-   store_le(out, N2, N1);
+      GOST_2ROUND(N1, N2, 0, 1);
+      GOST_2ROUND(N1, N2, 2, 3);
+      GOST_2ROUND(N1, N2, 4, 5);
+      GOST_2ROUND(N1, N2, 6, 7);
+
+      for(size_t i = 0; i != 3; ++i)
+         {
+         GOST_2ROUND(N1, N2, 7, 6);
+         GOST_2ROUND(N1, N2, 5, 4);
+         GOST_2ROUND(N1, N2, 3, 2);
+         GOST_2ROUND(N1, N2, 1, 0);
+         }
+
+      store_le(out, N2, N1);
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*

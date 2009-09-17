@@ -1,4 +1,18 @@
 
+* 1.9.1-pre, 2009-??-??
+ - Enable SSE2 optimizations under Visual C++
+ - Add an implementation of Blue Midnight Wish (BMW-512)
+ - Alter Skein-512 to match the tweaked 1.2 specification
+
+* 1.9.0, 2009-09-09
+ - Add support for parallel invocation of block ciphers where possible
+ - Add SSE2 implementation of Serpent
+ - Add Rivest's package transform (an all or nothing transform)
+ - Minor speedups to the Turing key schedule
+ - Fix processing multiple messages in XTS mode
+ - Add --no-autoload option to configure.py, for minimized builds
+ - The previously used configure.pl script is no longer supported
+
 * 1.8.8-dev, 2009-??-??
  - Alter Skein-512 to match the tweaked 1.2 specification
 

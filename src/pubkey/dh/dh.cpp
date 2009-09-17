@@ -7,7 +7,7 @@
 
 #include <botan/dh.h>
 #include <botan/numthry.h>
-#include <botan/util.h>
+#include <botan/workfactor.h>
 
 namespace Botan {
 

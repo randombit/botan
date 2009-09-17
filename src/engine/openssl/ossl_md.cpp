@@ -95,27 +95,41 @@ EVP_HashFunction::~EVP_HashFunction()
 HashFunction* OpenSSL_Engine::find_hash(const SCAN_Name& request,
                                         Algorithm_Factory&) const
    {
-#ifndef OPENSSL_NO_SHA
+#if !defined(OPENSSL_NO_SHA)
    if(request.algo_name() == "SHA-160")
       return new EVP_HashFunction(EVP_sha1(), "SHA-160");
 #endif
 
-#ifndef OPENSSL_NO_MD2
+#if !defined(OPENSSL_NO_SHA256)
+   if(request.algo_name() == "SHA-224")
+      return new EVP_HashFunction(EVP_sha224(), "SHA-224");
+   if(request.algo_name() == "SHA-256")
+      return new EVP_HashFunction(EVP_sha256(), "SHA-256");
+#endif
+
+#if !defined(OPENSSL_NO_SHA512)
+   if(request.algo_name() == "SHA-384")
+      return new EVP_HashFunction(EVP_sha384(), "SHA-384");
+   if(request.algo_name() == "SHA-512")
+      return new EVP_HashFunction(EVP_sha512(), "SHA-512");
+#endif
+
+#if !defined(OPENSSL_NO_MD2)
    if(request.algo_name() == "MD2")
       return new EVP_HashFunction(EVP_md2(), "MD2");
 #endif
 
-#ifndef OPENSSL_NO_MD4
+#if !defined(OPENSSL_NO_MD4)
    if(request.algo_name() == "MD4")
       return new EVP_HashFunction(EVP_md4(), "MD4");
 #endif
 
-#ifndef OPENSSL_NO_MD5
+#if !defined(OPENSSL_NO_MD5)
    if(request.algo_name() == "MD5")
       return new EVP_HashFunction(EVP_md5(), "MD5");
 #endif
 
-#ifndef OPENSSL_NO_RIPEMD
+#if !defined(OPENSSL_NO_RIPEMD)
    if(request.algo_name() == "RIPEMD-160")
       return new EVP_HashFunction(EVP_ripemd160(), "RIPEMD-160");
 #endif

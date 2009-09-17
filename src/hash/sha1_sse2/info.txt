@@ -10,18 +10,6 @@ sha1_sse2.cpp
 sha1_sse2.h
 </add>
 
-<arch>
-pentium-m
-pentium4
-prescott
-amd64
-</arch>
-
-<cc>
-gcc
-icc
-</cc>
-
 <requires>
 sha1
 sse2_eng

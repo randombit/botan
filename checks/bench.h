@@ -25,10 +25,10 @@ class Benchmark_Report
 
 
 void benchmark(const std::string&, Botan::RandomNumberGenerator&,
-               bool html, double seconds);
+               double seconds);
 
 void bench_pk(Botan::RandomNumberGenerator&,
-              const std::string&, bool html, double seconds);
+              const std::string&, double seconds);
 
 u32bit bench_algo(const std::string&,
                   Botan::RandomNumberGenerator&,

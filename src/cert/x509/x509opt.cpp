@@ -6,10 +6,9 @@
 */
 
 #include <botan/x509self.h>
-#include <botan/util.h>
-#include <botan/parsing.h>
 #include <botan/oids.h>
-#include <ctime>
+#include <botan/parsing.h>
+#include <botan/timer.h>
 
 namespace Botan {
 

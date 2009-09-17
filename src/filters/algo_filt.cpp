@@ -18,7 +18,7 @@ StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name) :
    buffer(DEFAULT_BUFFERSIZE)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
-   base_ptr = cipher = af.make_stream_cipher(sc_name);
+   cipher = af.make_stream_cipher(sc_name);
    }
 
 /*
@@ -27,7 +27,7 @@ StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name) :
 StreamCipher_Filter::StreamCipher_Filter(StreamCipher* stream_cipher) :
    buffer(DEFAULT_BUFFERSIZE)
    {
-   base_ptr = cipher = stream_cipher;
+   cipher = stream_cipher;
    }
 
 /*
@@ -38,7 +38,7 @@ StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name,
    buffer(DEFAULT_BUFFERSIZE)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
-   base_ptr = cipher = af.make_stream_cipher(sc_name);
+   cipher = af.make_stream_cipher(sc_name);
    cipher->set_key(key);
    }
 
@@ -95,7 +95,7 @@ MAC_Filter::MAC_Filter(const std::string& mac_name, u32bit len) :
    OUTPUT_LENGTH(len)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
-   base_ptr = mac = af.make_mac(mac_name);
+   mac = af.make_mac(mac_name);
    }
 
 /*
@@ -105,7 +105,7 @@ MAC_Filter::MAC_Filter(const std::string& mac_name, const SymmetricKey& key,
                        u32bit len) : OUTPUT_LENGTH(len)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
-   base_ptr = mac = af.make_mac(mac_name);
+   mac = af.make_mac(mac_name);
    mac->set_key(key);
    }
 

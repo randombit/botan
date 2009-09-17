@@ -50,25 +50,4 @@ Fork::Fork(Filter* filters[], u32bit count)
    set_next(filters, count);
    }
 
-/*
-* Set the algorithm key
-*/
-void Keyed_Filter::set_key(const SymmetricKey& key)
-   {
-   if(base_ptr)
-      base_ptr->set_key(key);
-   else
-      throw Invalid_State("Keyed_Filter::set_key: No base algorithm set");
-   }
-
-/*
-* Check if a keylength is valid
-*/
-bool Keyed_Filter::valid_keylength(u32bit n) const
-   {
-   if(base_ptr)
-      return base_ptr->valid_keylength(n);
-   throw Invalid_State("Keyed_Filter::valid_keylength: No base algorithm set");
-   }
-
 }

@@ -29,8 +29,6 @@ class BOTAN_DLL Turing : public StreamCipher
       void generate();
 
       static u32bit fixedS(u32bit);
-      static void gen_sbox(MemoryRegion<u32bit>&, u32bit,
-                           const MemoryRegion<u32bit>&);
 
       static const u32bit Q_BOX[256];
       static const byte SBOX[256];

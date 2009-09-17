@@ -16,47 +16,59 @@ namespace Botan {
 /*
 * RC5 Encryption
 */
-void RC5::enc(const byte in[], byte out[]) const
+void RC5::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u32bit A = load_le<u32bit>(in, 0), B = load_le<u32bit>(in, 1);
-
-   A += S[0]; B += S[1];
-   for(u32bit j = 0; j != ROUNDS; j += 4)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      A = rotate_left(A ^ B, B % 32) + S[2*j+2];
-      B = rotate_left(B ^ A, A % 32) + S[2*j+3];
-      A = rotate_left(A ^ B, B % 32) + S[2*j+4];
-      B = rotate_left(B ^ A, A % 32) + S[2*j+5];
-      A = rotate_left(A ^ B, B % 32) + S[2*j+6];
-      B = rotate_left(B ^ A, A % 32) + S[2*j+7];
-      A = rotate_left(A ^ B, B % 32) + S[2*j+8];
-      B = rotate_left(B ^ A, A % 32) + S[2*j+9];
-      }
+      u32bit A = load_le<u32bit>(in, 0), B = load_le<u32bit>(in, 1);
 
-   store_le(out, A, B);
+      A += S[0]; B += S[1];
+      for(u32bit j = 0; j != ROUNDS; j += 4)
+         {
+         A = rotate_left(A ^ B, B % 32) + S[2*j+2];
+         B = rotate_left(B ^ A, A % 32) + S[2*j+3];
+         A = rotate_left(A ^ B, B % 32) + S[2*j+4];
+         B = rotate_left(B ^ A, A % 32) + S[2*j+5];
+         A = rotate_left(A ^ B, B % 32) + S[2*j+6];
+         B = rotate_left(B ^ A, A % 32) + S[2*j+7];
+         A = rotate_left(A ^ B, B % 32) + S[2*j+8];
+         B = rotate_left(B ^ A, A % 32) + S[2*j+9];
+         }
+
+      store_le(out, A, B);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*
 * RC5 Decryption
 */
-void RC5::dec(const byte in[], byte out[]) const
+void RC5::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u32bit A = load_le<u32bit>(in, 0), B = load_le<u32bit>(in, 1);
-
-   for(u32bit j = ROUNDS; j != 0; j -= 4)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      B = rotate_right(B - S[2*j+1], A % 32) ^ A;
-      A = rotate_right(A - S[2*j  ], B % 32) ^ B;
-      B = rotate_right(B - S[2*j-1], A % 32) ^ A;
-      A = rotate_right(A - S[2*j-2], B % 32) ^ B;
-      B = rotate_right(B - S[2*j-3], A % 32) ^ A;
-      A = rotate_right(A - S[2*j-4], B % 32) ^ B;
-      B = rotate_right(B - S[2*j-5], A % 32) ^ A;
-      A = rotate_right(A - S[2*j-6], B % 32) ^ B;
-      }
-   B -= S[1]; A -= S[0];
+      u32bit A = load_le<u32bit>(in, 0), B = load_le<u32bit>(in, 1);
 
-   store_le(out, A, B);
+      for(u32bit j = ROUNDS; j != 0; j -= 4)
+         {
+         B = rotate_right(B - S[2*j+1], A % 32) ^ A;
+         A = rotate_right(A - S[2*j  ], B % 32) ^ B;
+         B = rotate_right(B - S[2*j-1], A % 32) ^ A;
+         A = rotate_right(A - S[2*j-2], B % 32) ^ B;
+         B = rotate_right(B - S[2*j-3], A % 32) ^ A;
+         A = rotate_right(A - S[2*j-4], B % 32) ^ B;
+         B = rotate_right(B - S[2*j-5], A % 32) ^ A;
+         A = rotate_right(A - S[2*j-6], B % 32) ^ B;
+         }
+      B -= S[1]; A -= S[0];
+
+      store_le(out, A, B);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*

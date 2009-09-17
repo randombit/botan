@@ -1,0 +1,16 @@
+realname "Serpent (SSE2)"
+
+define SERPENT_SSE2
+
+load_on auto
+
+<add>
+serp_sse2.cpp
+serp_sse2.h
+serp_sse2_sbox.h
+</add>
+
+<requires>
+serpent
+sse2_eng
+</requires>
