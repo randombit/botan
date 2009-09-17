@@ -12,6 +12,11 @@
 
 namespace Botan {
 
+/*
+* Time Access Functions
+*/
+BOTAN_DLL u64bit system_time();
+
 /**
 * Timer Interface
 */

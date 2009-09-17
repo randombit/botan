@@ -1,11 +1,11 @@
 /*
-* Utility Functions
+* Public Key Work Factor Functions
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/util.h>
+#include <botan/workfactor.h>
 #include <algorithm>
 #include <cmath>
 
@@ -46,5 +46,6 @@ u32bit dl_work_factor(u32bit bits)
    return MIN_ESTIMATE;
 #endif
    }
+
 
 }

@@ -7,7 +7,7 @@
 
 #include <botan/numthry.h>
 #include <botan/mp_core.h>
-#include <botan/util.h>
+#include <botan/rounding.h>
 #include <algorithm>
 
 namespace Botan {
