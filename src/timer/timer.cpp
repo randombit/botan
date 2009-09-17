@@ -7,7 +7,6 @@
 
 #include <botan/timer.h>
 #include <botan/loadstor.h>
-#include <botan/util.h>
 #include <ctime>
 
 namespace Botan {

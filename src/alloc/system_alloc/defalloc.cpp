@@ -7,7 +7,7 @@
 
 #include <botan/defalloc.h>
 #include <botan/libstate.h>
-#include <botan/util.h>
+#include <botan/mlock.h>
 #include <cstdlib>
 #include <cstring>
 

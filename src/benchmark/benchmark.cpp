@@ -11,7 +11,6 @@
 #include <botan/stream_cipher.h>
 #include <botan/hash.h>
 #include <botan/mac.h>
-#include <botan/util.h>
 #include <memory>
 #include <vector>
 #include <chrono>

@@ -8,7 +8,7 @@
 */
 
 #include <botan/mem_pool.h>
-#include <botan/util.h>
+#include <botan/rounding.h>
 #include <botan/mem_ops.h>
 #include <algorithm>
 #include <exception>
