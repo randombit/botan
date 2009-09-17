@@ -60,7 +60,8 @@ const std::string algos[] = {
    "",
 };
 
-int main()
+void benchmark_algo(const std::string& algo,
+                    RandomNumberGenerator& rng)
    {
    LibraryInitializer init;
 
