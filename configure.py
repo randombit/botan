@@ -419,7 +419,7 @@ class ArchInfo(object):
         elif self.endian != None:
             macros.append('TARGET_CPU_IS_%s_ENDIAN' % (self.endian.upper()))
 
-        macros.append('TARGET_UNALIGNED_LOADSTORE_OK %d' % (self.unaligned_ok))
+        macros.append('TARGET_UNALIGNED_LOADSTOR_OK %d' % (self.unaligned_ok))
 
         return macros
 
@@ -1018,7 +1018,7 @@ def main(argv = None):
     (modules, archinfo, ccinfo, osinfo) = load_info_files(options)
 
     if options.compiler is None:
-        if platform.system().lower() == 'windows':
+        if options.os == 'windows':
             options.compiler = 'msvc'
         else:
             options.compiler = 'gcc'
