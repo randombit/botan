@@ -9,7 +9,6 @@
 #include <botan/oids.h>
 #include <botan/parsing.h>
 #include <botan/timer.h>
-#include <ctime>
 
 namespace Botan {
 
