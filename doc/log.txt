@@ -1,7 +1,7 @@
 
 * 1.9.1-pre, 2009-??-??
  - Enable SSE2 optimizations under Visual C++
- - Add an implementation of Blue Midnight Wish (BMW-512)
+ - Add an implementation of Blue Midnight Wish (Round 2 tweak version)
  - Alter Skein-512 to match the tweaked 1.2 specification
 
 * 1.9.0, 2009-09-09

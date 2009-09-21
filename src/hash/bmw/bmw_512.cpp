@@ -1,5 +1,5 @@
 /*
-* Blue Midnight Wish 512
+* Blue Midnight Wish 512 (Round 2 tweaked)
 * (C) 2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
@@ -39,6 +39,106 @@ inline u64bit S4(u64bit X)
    {
    return (X >> 1) ^ X;
    }
+
+/**
+* Blue Midnight Wish 512 compression function
+*/
+void BMW_512_compress(u64bit H[16], const u64bit M[16], u64bit Q[32])
+   {
+   const u32bit EXPAND_1_ROUNDS = 2;
+
+   for(u32bit i = 0; i != 16; ++i)
+      Q[i] = H[i] ^ M[i];
+
+   Q[16] = Q[ 5] - Q[ 7] + Q[10] + Q[13] + Q[14];
+   Q[17] = Q[ 6] - Q[ 8] + Q[11] + Q[14] - Q[15];
+   Q[18] = Q[ 0] + Q[ 7] + Q[ 9] - Q[12] + Q[15];
+   Q[19] = Q[ 0] - Q[ 1] + Q[ 8] - Q[10] + Q[13];
+   Q[20] = Q[ 1] + Q[ 2] + Q[ 9] - Q[11] - Q[14];
+   Q[21] = Q[ 3] - Q[ 2] + Q[10] - Q[12] + Q[15];
+   Q[22] = Q[ 4] - Q[ 0] - Q[ 3] - Q[11] + Q[13];
+   Q[23] = Q[ 1] - Q[ 4] - Q[ 5] - Q[12] - Q[14];
+   Q[24] = Q[ 2] - Q[ 5] - Q[ 6] + Q[13] - Q[15];
+   Q[25] = Q[ 0] - Q[ 3] + Q[ 6] - Q[ 7] + Q[14];
+   Q[26] = Q[ 8] - Q[ 1] - Q[ 4] - Q[ 7] + Q[15];
+   Q[27] = Q[ 8] - Q[ 0] - Q[ 2] - Q[ 5] + Q[ 9];
+   Q[28] = Q[ 1] + Q[ 3] - Q[ 6] - Q[ 9] + Q[10];
+   Q[29] = Q[ 2] + Q[ 4] + Q[ 7] + Q[10] + Q[11];
+   Q[30] = Q[ 3] - Q[ 5] + Q[ 8] - Q[11] - Q[12];
+   Q[31] = Q[12] - Q[ 4] - Q[ 6] - Q[ 9] + Q[13];
+
+   Q[ 0] = S0(Q[16]) + H[ 1];
+   Q[ 1] = S1(Q[17]) + H[ 2];
+   Q[ 2] = S2(Q[18]) + H[ 3];
+   Q[ 3] = S3(Q[19]) + H[ 4];
+   Q[ 4] = S4(Q[20]) + H[ 5];
+   Q[ 5] = S0(Q[21]) + H[ 6];
+   Q[ 6] = S1(Q[22]) + H[ 7];
+   Q[ 7] = S2(Q[23]) + H[ 8];
+   Q[ 8] = S3(Q[24]) + H[ 9];
+   Q[ 9] = S4(Q[25]) + H[10];
+   Q[10] = S0(Q[26]) + H[11];
+   Q[11] = S1(Q[27]) + H[12];
+   Q[12] = S2(Q[28]) + H[13];
+   Q[13] = S3(Q[29]) + H[14];
+   Q[14] = S4(Q[30]) + H[15];
+   Q[15] = S0(Q[31]) + H[ 0];
+
+   for(u32bit i = 16; i != 16 + EXPAND_1_ROUNDS; ++i)
+      {
+      Q[i] = S1(Q[i-16]) + S2(Q[i-15]) + S3(Q[i-14]) + S0(Q[i-13]) +
+             S1(Q[i-12]) + S2(Q[i-11]) + S3(Q[i-10]) + S0(Q[i- 9]) +
+             S1(Q[i- 8]) + S2(Q[i- 7]) + S3(Q[i- 6]) + S0(Q[i- 5]) +
+             S1(Q[i- 4]) + S2(Q[i- 3]) + S3(Q[i- 2]) + S0(Q[i- 1]) +
+             ((rotate_left(M[(i-16) % 16], ((i-16)%16) + 1) +
+               rotate_left(M[(i-13) % 16], ((i-13)%16) + 1) -
+               rotate_left(M[(i- 6) % 16], ((i-6)%16) + 1) +
+               (0x0555555555555555 * i)) ^ H[(i-16+7)%16]);
+      }
+
+   for(u32bit i = 16 + EXPAND_1_ROUNDS; i != 32; ++i)
+      {
+      Q[i] = Q[i-16] + rotate_left(Q[i-15],  5) +
+             Q[i-14] + rotate_left(Q[i-13], 11) +
+             Q[i-12] + rotate_left(Q[i-11], 27) +
+             Q[i-10] + rotate_left(Q[i- 9], 32) +
+             Q[i- 8] + rotate_left(Q[i- 7], 37) +
+             Q[i- 6] + rotate_left(Q[i- 5], 43) +
+             Q[i- 4] + rotate_left(Q[i- 3], 53) +
+             S4(Q[i - 2]) + ((Q[i-1] >> 2) ^ Q[i-1]) +
+             ((rotate_left(M[(i-16) % 16], ((i-16)%16 + 1)) +
+               rotate_left(M[(i-13) % 16], ((i-13)%16 + 1)) -
+               rotate_left(M[(i- 6) % 16], ((i-6)%16 + 1)) +
+               (0x0555555555555555 * i)) ^ H[(i-16+7)%16]);
+      }
+
+   u64bit XL = Q[16] ^ Q[17] ^ Q[18] ^ Q[19] ^
+               Q[20] ^ Q[21] ^ Q[22] ^ Q[23];
+
+   u64bit XH = Q[24] ^ Q[25] ^ Q[26] ^ Q[27] ^
+               Q[28] ^ Q[29] ^ Q[30] ^ Q[31];
+
+   XH ^= XL;
+
+   H[ 0] = ((XH <<  5) ^ (Q[16] >> 5) ^ M[0]) + (XL ^ Q[24] ^ Q[0]);
+   H[ 1] = ((XH >>  7) ^ (Q[17] << 8) ^ M[1]) + (XL ^ Q[25] ^ Q[1]);
+   H[ 2] = ((XH >>  5) ^ (Q[18] << 5) ^ M[2]) + (XL ^ Q[26] ^ Q[2]);
+   H[ 3] = ((XH >>  1) ^ (Q[19] << 5) ^ M[3]) + (XL ^ Q[27] ^ Q[3]);
+   H[ 4] = ((XH >>  3) ^ (Q[20]     ) ^ M[4]) + (XL ^ Q[28] ^ Q[4]);
+   H[ 5] = ((XH <<  6) ^ (Q[21] >> 6) ^ M[5]) + (XL ^ Q[29] ^ Q[5]);
+   H[ 6] = ((XH >>  4) ^ (Q[22] << 6) ^ M[6]) + (XL ^ Q[30] ^ Q[6]);
+   H[ 7] = ((XH >> 11) ^ (Q[23] << 2) ^ M[7]) + (XL ^ Q[31] ^ Q[7]);
+
+   H[ 8] = rotate_left(H[4],  9) + (XH ^ Q[24] ^ M[ 8]) + ((XL << 8) ^ Q[23] ^ Q[ 8]);
+   H[ 9] = rotate_left(H[5], 10) + (XH ^ Q[25] ^ M[ 9]) + ((XL >> 6) ^ Q[16] ^ Q[ 9]);
+   H[10] = rotate_left(H[6], 11) + (XH ^ Q[26] ^ M[10]) + ((XL << 6) ^ Q[17] ^ Q[10]);
+   H[11] = rotate_left(H[7], 12) + (XH ^ Q[27] ^ M[11]) + ((XL << 4) ^ Q[18] ^ Q[11]);
+   H[12] = rotate_left(H[0], 13) + (XH ^ Q[28] ^ M[12]) + ((XL >> 3) ^ Q[19] ^ Q[12]);
+   H[13] = rotate_left(H[1], 14) + (XH ^ Q[29] ^ M[13]) + ((XL >> 4) ^ Q[20] ^ Q[13]);
+   H[14] = rotate_left(H[2], 15) + (XH ^ Q[30] ^ M[14]) + ((XL >> 7) ^ Q[21] ^ Q[14]);
+   H[15] = rotate_left(H[3], 16) + (XH ^ Q[31] ^ M[15]) + ((XL >> 2) ^ Q[22] ^ Q[15]);
+   }
+
 }
 
 void BMW_512::compress_n(const byte input[], u32bit blocks)
@@ -46,92 +146,11 @@ void BMW_512::compress_n(const byte input[], u32bit blocks)
    for(u32bit i = 0; i != blocks; ++i)
       {
       for(u32bit j = 0; j != 16; ++j)
-         H[j] ^= M[j] = load_le<u64bit>(input, j);
+         M[j] = load_le<u64bit>(input, j);
+
+      BMW_512_compress(H, M, Q);
+
       input += HASH_BLOCK_SIZE;
-
-      H[16] = H[ 5] - H[ 7] + H[10] + H[13] + H[14];
-      H[17] = H[ 6] - H[ 8] + H[11] + H[14] - H[15];
-      H[18] = H[ 0] + H[ 7] + H[ 9] - H[12] + H[15];
-      H[19] = H[ 0] - H[ 1] + H[ 8] - H[10] + H[13];
-      H[20] = H[ 1] + H[ 2] + H[ 9] - H[11] - H[14];
-      H[21] = H[ 3] - H[ 2] + H[10] - H[12] + H[15];
-      H[22] = H[ 4] - H[ 0] - H[ 3] - H[11] + H[13];
-      H[23] = H[ 1] - H[ 4] - H[ 5] - H[12] - H[14];
-      H[24] = H[ 2] - H[ 5] - H[ 6] + H[13] - H[15];
-      H[25] = H[ 0] - H[ 3] + H[ 6] - H[ 7] + H[14];
-      H[26] = H[ 8] - H[ 1] - H[ 4] - H[ 7] + H[15];
-      H[27] = H[ 8] - H[ 0] - H[ 2] - H[ 5] + H[ 9];
-      H[28] = H[ 1] + H[ 3] - H[ 6] - H[ 9] + H[10];
-      H[29] = H[ 2] + H[ 4] + H[ 7] + H[10] + H[11];
-      H[30] = H[ 3] - H[ 5] + H[ 8] - H[11] - H[12];
-      H[31] = H[12] - H[ 4] - H[ 6] - H[ 9] + H[13];
-
-      H[ 0] = S0(H[16]);
-      H[ 1] = S1(H[17]);
-      H[ 2] = S2(H[18]);
-      H[ 3] = S3(H[19]);
-      H[ 4] = S4(H[20]);
-      H[ 5] = S0(H[21]);
-      H[ 6] = S1(H[22]);
-      H[ 7] = S2(H[23]);
-      H[ 8] = S3(H[24]);
-      H[ 9] = S4(H[25]);
-      H[10] = S0(H[26]);
-      H[11] = S1(H[27]);
-      H[12] = S2(H[28]);
-      H[13] = S3(H[29]);
-      H[14] = S4(H[30]);
-      H[15] = S0(H[31]);
-
-      for(u32bit j = 16; j != 18; ++j)
-         {
-         H[j] = S1(H[j-16]) + S2(H[j-15]) + S3(H[j-14]) + S0(H[j-13]) +
-                S1(H[j-12]) + S2(H[j-11]) + S3(H[j-10]) + S0(H[j- 9]) +
-                S1(H[j- 8]) + S2(H[j- 7]) + S3(H[j- 6]) + S0(H[j- 5]) +
-                S1(H[j- 4]) + S2(H[j- 3]) + S3(H[j- 2]) + S0(H[j- 1]) +
-                M[j-16] + M[j-13] - M[j-6] +
-                (0x0555555555555555 * j);
-         }
-
-      for(u32bit j = 18; j != 32; ++j)
-         {
-         H[j] = H[j-16] + rotate_left(H[j-15],  5) +
-                H[j-14] + rotate_left(H[j-13], 11) +
-                H[j-12] + rotate_left(H[j-11], 27) +
-                H[j-10] + rotate_left(H[j- 9], 32) +
-                H[j- 8] + rotate_left(H[j- 7], 37) +
-                H[j- 6] + rotate_left(H[j- 5], 43) +
-                H[j- 4] + rotate_left(H[j- 3], 53) +
-                (H[j- 2] >> 2 ^ H[j- 2]) + S4(H[j- 1]) +
-                M[j-16] + M[(j-13) % 16] - M[(j-6) % 16] +
-                (0x0555555555555555 * j);
-         }
-
-      u64bit XL = H[16] ^ H[17] ^ H[18] ^ H[19] ^
-                  H[20] ^ H[21] ^ H[22] ^ H[23];
-
-      u64bit XH = H[24] ^ H[25] ^ H[26] ^ H[27] ^
-                  H[28] ^ H[29] ^ H[30] ^ H[31];
-
-      XH ^= XL;
-
-      H[ 0] = ((XH <<  5) ^ (H[16] >> 5) ^ M[0]) + (XL ^ H[24] ^ H[0]);
-      H[ 1] = ((XH >>  7) ^ (H[17] << 8) ^ M[1]) + (XL ^ H[25] ^ H[1]);
-      H[ 2] = ((XH >>  5) ^ (H[18] << 5) ^ M[2]) + (XL ^ H[26] ^ H[2]);
-      H[ 3] = ((XH >>  1) ^ (H[19] << 5) ^ M[3]) + (XL ^ H[27] ^ H[3]);
-      H[ 4] = ((XH >>  3) ^ (H[20]     ) ^ M[4]) + (XL ^ H[28] ^ H[4]);
-      H[ 5] = ((XH <<  6) ^ (H[21] >> 6) ^ M[5]) + (XL ^ H[29] ^ H[5]);
-      H[ 6] = ((XH >>  4) ^ (H[22] << 6) ^ M[6]) + (XL ^ H[30] ^ H[6]);
-      H[ 7] = ((XH >> 11) ^ (H[23] << 2) ^ M[7]) + (XL ^ H[31] ^ H[7]);
-
-      H[ 8] = rotate_left(H[4],  9) + (XH ^ H[24] ^ M[ 8]) + ((XL << 8) ^ H[23] ^ H[ 8]);
-      H[ 9] = rotate_left(H[5], 10) + (XH ^ H[25] ^ M[ 9]) + ((XL >> 6) ^ H[16] ^ H[ 9]);
-      H[10] = rotate_left(H[6], 11) + (XH ^ H[26] ^ M[10]) + ((XL << 6) ^ H[17] ^ H[10]);
-      H[11] = rotate_left(H[7], 12) + (XH ^ H[27] ^ M[11]) + ((XL << 4) ^ H[18] ^ H[11]);
-      H[12] = rotate_left(H[0], 13) + (XH ^ H[28] ^ M[12]) + ((XL >> 3) ^ H[19] ^ H[12]);
-      H[13] = rotate_left(H[1], 14) + (XH ^ H[29] ^ M[13]) + ((XL >> 4) ^ H[20] ^ H[13]);
-      H[14] = rotate_left(H[2], 15) + (XH ^ H[30] ^ M[14]) + ((XL >> 7) ^ H[21] ^ H[14]);
-      H[15] = rotate_left(H[3], 16) + (XH ^ H[31] ^ M[15]) + ((XL >> 2) ^ H[22] ^ H[15]);
       }
    }
 
@@ -140,8 +159,20 @@ void BMW_512::compress_n(const byte input[], u32bit blocks)
 */
 void BMW_512::copy_out(byte output[])
    {
+   u64bit final[16] = {
+      0xAAAAAAAAAAAAAAA0,  0xAAAAAAAAAAAAAAA1,
+      0xAAAAAAAAAAAAAAA2,  0xAAAAAAAAAAAAAAA3,
+      0xAAAAAAAAAAAAAAA4,  0xAAAAAAAAAAAAAAA5,
+      0xAAAAAAAAAAAAAAA6,  0xAAAAAAAAAAAAAAA7,
+      0xAAAAAAAAAAAAAAA8,  0xAAAAAAAAAAAAAAA9,
+      0xAAAAAAAAAAAAAAAA,  0xAAAAAAAAAAAAAAAB,
+      0xAAAAAAAAAAAAAAAC,  0xAAAAAAAAAAAAAAAD,
+      0xAAAAAAAAAAAAAAAE,  0xAAAAAAAAAAAAAAAF };
+
+   BMW_512_compress(final, H, Q);
+
    for(u32bit i = 0; i != OUTPUT_LENGTH; i += 8)
-      store_le(H[8 + i/8], output + i);
+      store_le(final[8 + i/8], output + i);
    }
 
 /*
@@ -151,6 +182,7 @@ void BMW_512::clear() throw()
    {
    MDx_HashFunction::clear();
    M.clear();
+   Q.clear();
 
    H[ 0] = 0x8081828384858687;
    H[ 1] = 0x88898A8B8C8D8E8F;
