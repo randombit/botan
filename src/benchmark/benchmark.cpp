@@ -54,6 +54,8 @@ bench_block_cipher(BlockCipher* block_cipher,
 
    const u32bit in_blocks = buf_len / block_cipher->BLOCK_SIZE;
 
+   block_cipher->set_key(buf, block_cipher->MAXIMUM_KEYLENGTH);
+
    while(nanoseconds_used < nanoseconds_max)
       {
       block_cipher->encrypt_n(buf, buf, in_blocks);
@@ -78,6 +80,8 @@ bench_stream_cipher(StreamCipher* stream_cipher,
    const u64bit start = timer.clock();
    u64bit nanoseconds_used = 0;
    u64bit reps = 0;
+
+   stream_cipher->set_key(buf, stream_cipher->MAXIMUM_KEYLENGTH);
 
    while(nanoseconds_used < nanoseconds_max)
       {
