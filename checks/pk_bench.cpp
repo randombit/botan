@@ -53,8 +53,22 @@ using namespace Botan;
 #include <fstream>
 #include <string>
 #include <memory>
+#include <set>
 
 namespace {
+
+class Benchmark_Report
+   {
+   public:
+      void report(const std::string& name, Timer timer)
+         {
+         std::cout << name << " " << timer << std::endl;
+         data[name].insert(timer);
+         }
+
+   private:
+      std::map<std::string, std::set<Timer> > data;
+   };
 
 void benchmark_enc_dec(PK_Encryptor& enc, PK_Decryptor& dec,
                        Timer& enc_timer, Timer& dec_timer,

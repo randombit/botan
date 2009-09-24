@@ -111,8 +111,6 @@ int main(int argc, char* argv[])
                    << "Options:\n"
                    << "  --test || --validate: Run tests (do this at least once)\n"
                    << "  --benchmark: Benchmark everything\n"
-                   << "  --bench-type={block,mode,stream,hash,mac,rng,pk}:\n"
-                   << "       Benchmark only algorithms of a particular type\n"
                    << "  --seconds=n: Benchmark for n seconds\n"
                    << "  --init=<str>: Pass <str> to the library\n"
                    << "  --help: Print this message\n";
@@ -127,7 +125,7 @@ int main(int argc, char* argv[])
          opts.is_set("benchmark") ||
          opts.is_set("bench-type"))
          {
-         double seconds = 5;
+         double seconds = 2;
 
          if(opts.is_set("seconds"))
             {
@@ -141,7 +139,7 @@ int main(int argc, char* argv[])
 
          if(opts.is_set("benchmark"))
             {
-            benchmark("All", rng, seconds);
+            benchmark(rng, seconds);
             }
          else if(opts.is_set("bench-algo"))
             {
@@ -151,33 +149,9 @@ int main(int argc, char* argv[])
             for(u32bit j = 0; j != algs.size(); j++)
                {
                const std::string alg = algs[j];
-               u32bit found = bench_algo(alg, rng, seconds);
-               if(!found) // maybe it's a PK algorithm
+               if(!bench_algo(alg, rng, seconds)) // maybe it's a PK algorithm
                   bench_pk(rng, alg, seconds);
                }
-            }
-         else if(opts.is_set("bench-type"))
-            {
-            const std::string type = opts.value("bench-type");
-
-            if(type == "all")
-               benchmark("All", rng, seconds);
-            else if(type == "block")
-               benchmark("Block Cipher", rng, seconds);
-            else if(type == "stream")
-               benchmark("Stream Cipher", rng, seconds);
-            else if(type == "hash")
-               benchmark("Hash", rng, seconds);
-            else if(type == "mode")
-               benchmark("Cipher Mode", rng, seconds);
-            else if(type == "mac")
-               benchmark("MAC", rng, seconds);
-            else if(type == "rng")
-               benchmark("RNG", rng, seconds);
-            else if(type == "pk")
-               bench_pk(rng, "All", seconds);
-            else
-               std::cerr << "Unknown --bench-type " << type << "\n";
             }
          }
       }

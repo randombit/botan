@@ -1,37 +1,18 @@
 
-#ifndef BOTAN_BENCHMARCH_H__
-#define BOTAN_BENCHMARCH_H__
+#ifndef BOTAN_CHECK_BENCHMARK_H__
+#define BOTAN_CHECK_BENCHMARK_H__
 
 #include <botan/rng.h>
 #include <string>
-#include <map>
-#include <set>
-#include "timer.h"
 
-#include <iostream>
-
-class Benchmark_Report
-   {
-   public:
-      void report(const std::string& name, Timer timer)
-         {
-         std::cout << name << " " << timer << std::endl;
-         data[name].insert(timer);
-         }
-
-   private:
-      std::map<std::string, std::set<Timer> > data;
-   };
-
-
-void benchmark(const std::string&, Botan::RandomNumberGenerator&,
+void benchmark(Botan::RandomNumberGenerator& rng,
                double seconds);
+
+bool bench_algo(const std::string& algo_name,
+                Botan::RandomNumberGenerator& rng,
+                double seconds);
 
 void bench_pk(Botan::RandomNumberGenerator&,
               const std::string&, double seconds);
-
-u32bit bench_algo(const std::string&,
-                  Botan::RandomNumberGenerator&,
-                  double);
 
 #endif

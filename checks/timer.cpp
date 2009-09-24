@@ -1,4 +1,5 @@
 #include "timer.h"
+#include <botan/benchmark.h>
 #include <iomanip>
 
 Timer::Timer(const std::string& n, u32bit e_mul) :
@@ -27,6 +28,12 @@ void Timer::stop()
       timer_start = 0;
       ++event_count;
       }
+   }
+
+u64bit Timer::get_clock()
+   {
+   Botan::Default_Benchmark_Timer timer;
+   return timer.clock();
    }
 
 std::ostream& operator<<(std::ostream& out, Timer& timer)
