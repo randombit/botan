@@ -14,3 +14,7 @@ ia32
 gcc
 icc
 </cc>
+
+<requires>
+ia32_eng
+</requires>
