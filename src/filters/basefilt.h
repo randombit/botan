@@ -13,6 +13,14 @@
 namespace Botan {
 
 /**
+* BitBucket is a filter which simply discards all inputs
+*/
+struct BitBucket : public Filter
+   {
+   void write(const byte[], u32bit) {}
+   };
+
+/**
 * This class represents Filter chains. A Filter chain is an ordered
 * concatenation of Filters, the input to a Chain sequentially passes
 * through all the Filters contained in the Chain.
