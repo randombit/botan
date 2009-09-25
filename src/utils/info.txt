@@ -13,6 +13,8 @@ bit_ops.h
 bswap.h
 charset.cpp
 charset.h
+cpuid.cpp
+cpuid.h
 exceptn.cpp
 exceptn.h
 loadstor.h
