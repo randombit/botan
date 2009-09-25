@@ -1,6 +1,7 @@
 
 * 1.9.1-pre, 2009-??-??
  - Enable SSE2 optimizations under Visual C++
+ - Add runtime checking for SSE2 availability
  - Add an implementation of Blue Midnight Wish (BMW-512)
  - Alter Skein-512 to match the tweaked 1.2 specification
 
