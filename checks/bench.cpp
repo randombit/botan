@@ -166,7 +166,7 @@ bool bench_algo(const std::string& algo,
 
       std::vector<std::string> algo_parts = Botan::split_on(algo, '/');
 
-      if(algo_parts.empty())
+      if(algo_parts.size() < 2) // not a cipher mode
          return false;
 
       std::string cipher = algo_parts[0];
