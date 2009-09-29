@@ -2,14 +2,6 @@ realname "SHA-1 (SSE2)"
 
 define SHA1_SSE2
 
-load_on auto
-
-<add>
-sha1_sse2_imp.cpp
-sha1_sse2.cpp
-sha1_sse2.h
-</add>
-
 <requires>
 sha1
 sse2_eng

@@ -2,13 +2,6 @@ realname "GOST 34.11"
 
 define GOST_34_11
 
-load_on auto
-
-<add>
-gost_3411.cpp
-gost_3411.h
-</add>
-
 <requires>
 gost_28147
 </requires>

@@ -2,13 +2,6 @@ realname "Blue Midnight Wish"
 
 define BMW_512
 
-load_on auto
-
-<add>
-bmw_512.cpp
-bmw_512.h
-</add>
-
 <requires>
 mdx_hash
 </requires>
