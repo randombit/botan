@@ -336,12 +336,19 @@ class ModuleInfo(object):
         lex_me_harder(infofile, self,
                       ['add', 'requires', 'os', 'arch', 'cc', 'libs'],
                       { 'realname': '<UNKNOWN>',
-                        'load_on': 'request',
+                        'load_on': 'auto',
                         'define': None,
                         'modset': None,
                         'uses_tr1': 'false',
                         'note': '',
                         'mp_bits': 0 })
+
+        if self.add == []:
+            for (dirpath, dirnames, filenames) in os.walk(self.lives_in):
+                if dirpath == self.lives_in:
+                    self.add = [filename for filename in filenames
+                                if filename.endswith('.cpp') or
+                                filename.endswith('.h')]
 
         # Coerce to more useful types
         self.libs = force_to_dict(self.libs)
