@@ -12,27 +12,43 @@
 
 namespace Botan {
 
-inline void prefetch_readonly(const void* addr_void, u32bit length)
+namespace PREFETCH {
+
+template<typename T>
+inline void readonly(const T* addr, u32bit length)
    {
 #if defined(__GNUG__)
-   const byte* addr = static_cast<const byte*>(addr_void);
-   const u32bit cl_size = CPUID::cache_line_size();
+   const u32bit Ts_per_cache_line = CPUID::cache_line_size() / sizeof(T);
 
-   for(u32bit i = 0; i <= length; i += cl_size)
+   for(u32bit i = 0; i <= length; i += Ts_per_cache_line)
       __builtin_prefetch(addr + i, 0);
 #endif
    }
 
-inline void prefetch_readwrite(const void* addr_void, u32bit length)
+template<typename T>
+inline void readwrite(const T* addr, u32bit length)
    {
 #if defined(__GNUG__)
-   const byte* addr = static_cast<const byte*>(addr_void);
-   const u32bit cl_size = CPUID::cache_line_size();
+   const u32bit Ts_per_cache_line = CPUID::cache_line_size() / sizeof(T);
 
-   for(u32bit i = 0; i <= length; i += cl_size)
-      __builtin_prefetch(addr + i, 1);
+   for(u32bit i = 0; i <= length; i += Ts_per_cache_line)
+      __builtin_prefetch(addr + i, 0);
 #endif
    }
+
+inline void cipher_fetch(const byte* in_block,
+                         const byte* out_block,
+                         u32bit blocks,
+                         u32bit block_size)
+   {
+   // Only prefetch input specifically if in != out
+   if(in_block != out_block)
+      readonly(in_block, blocks * block_size);
+
+   readwrite(out_block, blocks * block_size);
+   }
+
+}
 
 }
 
