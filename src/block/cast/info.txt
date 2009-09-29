@@ -1,13 +1,3 @@
 realname "CAST"
 
 define CAST
-
-load_on auto
-
-<add>
-cast128.cpp
-cast128.h
-cast256.cpp
-cast256.h
-cast_tab.cpp
-</add>
