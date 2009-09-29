@@ -7,6 +7,10 @@
 
 #include <botan/cpuid.h>
 #include <botan/types.h>
+#include <botan/loadstor.h>
+#include <botan/mem_ops.h>
+
+#include <stdio.h>
 
 #if defined(_MSC_VER)
   #include <intrin.h>
@@ -14,95 +18,87 @@
 
 namespace Botan {
 
-namespace CPUID {
-
 namespace {
+
+void x86_cpuid(u32bit type, u32bit out[4])
+   {
+   out[0] = out[1] = out[2] = out[3] = 0;
+
+#if defined(BOTAN_BUILD_COMPILER_IS_GCC)
+
+#if defined(BOTAN_TARGET_ARCH_IS_X86)
+
+   asm("pushq %%ebx; cpuid; mov %%ebx, %%edi; popq %%ebx"
+       : "=a" (out[0]), "=D" (out[1]), "=c" (out[2]), "=d" (out[3])
+       : "0" (type));
+
+#elif defined(BOTAN_TARGET_ARCH_IS_AMD64)
+
+   asm("pushq %%rbx; cpuid; mov %%ebx, %%edi; popq %%rbx"
+       : "=a" (out[0]), "=D" (out[1]), "=c" (out[2]), "=d" (out[3])
+       : "0" (type));
+#endif
+
+#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+   __cpuid(out, type);
+#endif
+   }
+
+u32bit get_x86_cache_line_size()
+   {
+   const u32bit INTEL_CPUID[3] = { 0x756E6547, 0x6C65746E, 0x49656E69 };
+   const u32bit AMD_CPUID[3] = { 0, 0, 0 };
+
+   u32bit cpuid[4] = { 0 };
+   x86_cpuid(0, cpuid);
+
+   if(same_mem(cpuid + 1, INTEL_CPUID, 3) && cpuid[0] > 2)
+      {
+      x86_cpuid(1, cpuid);
+      return 8 * get_byte(2, cpuid[1]);
+      }
+
+   if(same_mem(cpuid + 1, AMD_CPUID, 3))
+      {
+      x86_cpuid(0x80000005, cpuid);
+      return get_byte(3, cpuid[2]);
+      }
+
+   return 32; // default cache line guess
+   }
+
+}
 
 /*
 * Call the x86 CPUID instruction and return the contents of ecx and
 * edx, which contain the feature masks.
 */
-u64bit x86_processor_flags()
+u64bit CPUID::x86_processor_flags()
    {
    static u64bit proc_flags = 0;
 
    if(proc_flags)
       return proc_flags;
 
-#if defined(BOTAN_TARGET_ARCH_IS_X86) || defined(BOTAN_TARGET_ARCH_IS_AMD64)
+   u32bit cpuid[4] = { 0 };
+   x86_cpuid(1, cpuid);
 
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC)
-
-   u32bit a = 1, b = 0, c = 0, d = 0;
-
-#if defined(__i386__) && defined(__PIC__)
-   // ebx is reserved for PIC on 32-bit x86, so save and restore it
-   asm("xchgl %%ebx, %1\n\t"
-       "cpuid\n\t"
-       "xchgl %%ebx, %1\n\t"
-       : "=a" (a), "=r" (b), "=c" (c), "=d" (d) : "0" (a));
-#else
-   // if not PIC or in 64-bit mode, can smash ebx
-   asm("cpuid" : "=a" (a), "=b" (b), "=c" (c), "=d" (d) : "0" (a));
-
-#endif
-
-   proc_flags = ((u64bit)c << 32) | d;
-
-#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-
-   int cpuinfo[4] = { 0 };
-   __cpuid(cpuinfo, 1);
-
-   proc_flags = ((u64bit)cpuinfo[2] << 32) | cpuinfo[3];
-
-#endif
-
-#endif
+   // Set the FPU bit on to force caching in proc_flags
+   proc_flags = ((u64bit)cpuid[2] << 32) | cpuid[3] | 1;
 
    return proc_flags;
    }
 
-enum CPUID_bits {
-   CPUID_RDTSC_BIT = 4,
-   CPUID_SSE2_BIT = 26,
-   CPUID_SSSE3_BIT = 41,
-   CPUID_SSE41_BIT = 51,
-   CPUID_SSE42_BIT = 52
-};
-
-}
-
-u32bit cache_line_size()
+u32bit CPUID::cache_line_size()
    {
-   return 32; // FIXME!
-   }
+   static u32bit cl_size = 0;
 
-bool has_rdtsc()
-   {
-   return ((x86_processor_flags() >> CPUID_RDTSC_BIT) & 1);
-   }
+   if(cl_size)
+      return cl_size;
 
-bool has_sse2()
-   {
-   return ((x86_processor_flags() >> CPUID_SSE2_BIT) & 1);
-   }
+   cl_size = get_x86_cache_line_size();
 
-bool has_ssse3()
-   {
-   return ((x86_processor_flags() >> CPUID_SSSE3_BIT) & 1);
+   return cl_size;
    }
-
-bool has_sse41()
-   {
-   return ((x86_processor_flags() >> CPUID_SSE41_BIT) & 1);
-   }
-
-bool has_sse42()
-   {
-   return ((x86_processor_flags() >> CPUID_SSE42_BIT) & 1);
-   }
-
-}
 
 }
