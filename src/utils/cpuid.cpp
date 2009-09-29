@@ -47,7 +47,7 @@ void x86_cpuid(u32bit type, u32bit out[4])
 u32bit get_x86_cache_line_size()
    {
    const u32bit INTEL_CPUID[3] = { 0x756E6547, 0x6C65746E, 0x49656E69 };
-   const u32bit AMD_CPUID[3] = { 0, 0, 0 };
+   const u32bit AMD_CPUID[3] = { 0x68747541, 0x444D4163, 0x69746E65 };
 
    u32bit cpuid[4] = { 0 };
    x86_cpuid(0, cpuid);
