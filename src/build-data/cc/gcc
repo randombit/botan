@@ -1,5 +1,7 @@
 realname "GNU C++"
 
+macro_name "GCC"
+
 binary_name "g++"
 
 compiler_has_tr1 yes

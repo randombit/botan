@@ -443,6 +443,7 @@ class CompilerInfo(object):
                       ['so_link_flags', 'mach_opt', 'mach_abi_linking'],
                       { 'realname': '<UNKNOWN>',
                         'binary_name': None,
+                        'macro_name': None,
                         'compile_option': '-c ',
                         'output_to_option': '-o ',
                         'add_include_dir_option': '-I',
@@ -483,6 +484,7 @@ class CompilerInfo(object):
 
         del self.mach_opt
 
+
     def mach_abi_link_flags(self, osname, arch, submodel):
 
         abi_link = set()
@@ -515,15 +517,18 @@ class CompilerInfo(object):
         return self.so_link_flags['default']
 
     def defines(self, with_tr1):
-        if with_tr1:
-            if with_tr1 == 'boost':
-                return ['USE_BOOST_TR1']
-            elif with_tr1 == 'system':
-                return ['USE_STD_TR1']
-        elif self.compiler_has_tr1:
-            return ['USE_STD_TR1']
 
-        return []
+        def tr1_macro():
+            if with_tr1:
+                if with_tr1 == 'boost':
+                    return ['USE_BOOST_TR1']
+                elif with_tr1 == 'system':
+                    return ['USE_STD_TR1']
+            elif self.compiler_has_tr1:
+                return ['USE_STD_TR1']
+            return []
+
+        return ['BUILD_COMPILER_IS_' + self.macro_name] + tr1_macro()
 
 class OsInfo(object):
     def __init__(self, infofile):
