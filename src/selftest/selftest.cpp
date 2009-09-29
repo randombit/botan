@@ -13,6 +13,7 @@
 #include <botan/ofb.h>
 #include <botan/ctr.h>
 #include <botan/hmac.h>
+#include <botan/stl_util.h>
 
 namespace Botan {
 
@@ -21,17 +22,21 @@ namespace {
 /*
 * Perform a Known Answer Test
 */
+bool test_filter_kat(Filter* filter,
+                     const std::string& input,
+                     const std::string& output)
+   {
+   Pipe pipe(new Hex_Decoder, filter, new Hex_Encoder);
+   pipe.process_msg(input);
+
+   return (output == pipe.read_all_as_string());
+   }
+
 void do_kat(const std::string& in, const std::string& out,
             const std::string& algo_name, Filter* filter)
    {
-   if(out.length())
-      {
-      Pipe pipe(new Hex_Decoder, filter, new Hex_Encoder);
-      pipe.process_msg(in);
-
-      if(out != pipe.read_all_as_string())
-         throw Self_Test_Failure(algo_name + " startup test");
-      }
+   if(!test_filter_kat(filter, in, out))
+      throw Self_Test_Failure(algo_name + " startup test");
    }
 
 /*
@@ -74,6 +79,61 @@ void cipher_kat(const BlockCipher* proto,
    }
 
 }
+
+/*
+* Run a set of KATs
+*/
+std::map<std::string, bool>
+algorithm_kat(const std::string& name,
+              const std::map<std::string, std::string>& vars,
+              Algorithm_Factory& af)
+   {
+   std::vector<std::string> providers = af.providers_of(name);
+   std::map<std::string, bool> all_results;
+
+   if(providers.empty()) // no providers, nothing to do
+      return all_results;
+
+   const std::string input = search_map(vars, std::string("input"));
+   const std::string output = search_map(vars, std::string("output"));
+   const std::string key = search_map(vars, std::string("key"));
+
+   for(u32bit i = 0; i != providers.size(); ++i)
+      {
+      const std::string provider = providers[i];
+
+      if(const HashFunction* proto =
+            af.prototype_hash_function(name, provider))
+         {
+         all_results[provider] = test_filter_kat(new Hash_Filter(proto->clone()),
+                                                 input, output);
+         }
+      else if(const MessageAuthenticationCode* proto =
+                 af.prototype_mac(name, provider))
+         {
+         all_results[provider] = test_filter_kat(new MAC_Filter(proto->clone(), key),
+                                                 input, output);
+         }
+
+#if 0
+      if(const BlockCipher* proto =
+            af.prototype_block_cipher(name, provider))
+         {
+         std::auto_ptr<BlockCipher> block_cipher(proto->clone());
+         all_results[provider] = test_block_cipher(block_cipher.get());
+         }
+      else if(const StreamCipher* proto =
+                 af.prototype_stream_cipher(name, provider))
+         {
+         std::auto_ptr<StreamCipher> stream_cipher(proto->clone());
+         all_results[provider] = test_stream_cipher(stream_cipher.get());
+         }
+      else
+#endif
+      }
+
+   return all_results;
+   }
 
 /*
 * Perform Self Tests
