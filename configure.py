@@ -348,7 +348,8 @@ class ModuleInfo(object):
                 if dirpath == self.lives_in:
                     self.add = [filename for filename in filenames
                                 if filename.endswith('.cpp') or
-                                filename.endswith('.h')]
+                                filename.endswith('.h') or
+                                filename.endswith('.S')]
 
         # Coerce to more useful types
         self.libs = force_to_dict(self.libs)
