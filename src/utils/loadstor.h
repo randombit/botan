@@ -12,6 +12,7 @@
 #include <botan/types.h>
 #include <botan/bswap.h>
 #include <botan/rotate.h>
+#include <botan/prefetch.h>
 
 #if BOTAN_TARGET_UNALIGNED_LOADSTOR_OK
 

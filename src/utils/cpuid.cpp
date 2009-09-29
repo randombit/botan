@@ -31,12 +31,12 @@ u64bit x86_processor_flags()
 
 #if defined(BOTAN_TARGET_ARCH_IS_X86) || defined(BOTAN_TARGET_ARCH_IS_AMD64)
 
-#if defined(__GNUG__)
+#if defined(BOTAN_BUILD_COMPILER_IS_GCC)
 
    u32bit a = 1, b = 0, c = 0, d = 0;
 
 #if defined(__i386__) && defined(__PIC__)
-   // ebx is used in PIC on 32-bit x86, so save and restore it
+   // ebx is reserved for PIC on 32-bit x86, so save and restore it
    asm("xchgl %%ebx, %1\n\t"
        "cpuid\n\t"
        "xchgl %%ebx, %1\n\t"
@@ -49,7 +49,7 @@ u64bit x86_processor_flags()
 
    proc_flags = ((u64bit)c << 32) | d;
 
-#elif defined(_MSC_VER)
+#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
 
    int cpuinfo[4] = { 0 };
    __cpuid(cpuinfo, 1);

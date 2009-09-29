@@ -23,6 +23,7 @@ mlock.h
 mlock.cpp
 parsing.cpp
 parsing.h
+prefetch.h
 rotate.h
 rounding.h
 stl_util.h
