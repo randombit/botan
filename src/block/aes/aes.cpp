@@ -20,10 +20,6 @@ void AES::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    const u32bit* TE2 = TE + 512;
    const u32bit* TE3 = TE + 768;
 
-   PREFETCH::readonly(TE, 1024);
-   PREFETCH::readonly(SE, 256);
-   PREFETCH::cipher_fetch(in, out, blocks, this->BLOCK_SIZE);
-
    for(u32bit i = 0; i != blocks; ++i)
       {
       u32bit T0 = load_be<u32bit>(in, 0) ^ EK[0];
@@ -117,10 +113,6 @@ void AES::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    const u32bit* TD1 = TD + 256;
    const u32bit* TD2 = TD + 512;
    const u32bit* TD3 = TD + 768;
-
-   PREFETCH::readonly(TD, 1024);
-   PREFETCH::readonly(SD, 256);
-   PREFETCH::cipher_fetch(in, out, blocks, this->BLOCK_SIZE);
 
    for(u32bit i = 0; i != blocks; ++i)
       {

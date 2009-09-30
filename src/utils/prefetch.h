@@ -36,18 +36,6 @@ inline void readwrite(const T* addr, u32bit length)
 #endif
    }
 
-inline void cipher_fetch(const byte* in_block,
-                         const byte* out_block,
-                         u32bit blocks,
-                         u32bit block_size)
-   {
-   // Only prefetch input specifically if in != out
-   if(in_block != out_block)
-      readonly(in_block, blocks * block_size);
-
-   readwrite(out_block, blocks * block_size);
-   }
-
 }
 
 }
