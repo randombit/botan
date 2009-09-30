@@ -20,7 +20,8 @@ class CPUID
          CPUID_SSE2_BIT = 26,
          CPUID_SSSE3_BIT = 41,
          CPUID_SSE41_BIT = 51,
-         CPUID_SSE42_BIT = 52
+         CPUID_SSE42_BIT = 52,
+         CPUID_INTEL_AES_BIT = 57,
       };
 
       /**
@@ -57,6 +58,12 @@ class CPUID
       */
       static bool has_sse42()
          { return ((x86_processor_flags() >> CPUID_SSE42_BIT) & 1); }
+
+      /**
+      * Check if the processor supports Intel AES instructions
+      */
+      static bool has_intel_aes()
+         { return ((x86_processor_flags() >> CPUID_INTEL_AES_BIT) & 1); }
 
    private:
       static u64bit x86_processor_flags();
