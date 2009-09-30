@@ -51,7 +51,7 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
       constraints = Key_Constraints(KEY_CERT_SIGN | CRL_SIGN);
    else
       {
-      std::auto_ptr<Public_Key> key(req.subject_public_key());
+      std::unique_ptr<Public_Key> key(req.subject_public_key());
       constraints = X509::find_constraints(*key, req.constraints());
       }
 
@@ -269,7 +269,7 @@ PK_Signer* choose_sig_format(const Private_Key& key,
 
    sig_algo.oid = OIDS::lookup(algo_name + "/" + padding);
 
-   std::auto_ptr<X509_Encoder> encoding(key.x509_encoder());
+   std::unique_ptr<X509_Encoder> encoding(key.x509_encoder());
    if(!encoding.get())
       throw Encoding_Error("Key " + algo_name + " does not support "
                            "X.509 encoding");

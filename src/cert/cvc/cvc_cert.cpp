@@ -61,7 +61,7 @@ void EAC1_1_CVC::force_decode()
    // FIXME: PK algos have no notion of EAC encoder/decoder currently
 #if 0
    ECDSA_PublicKey tmp_pk;
-   std::auto_ptr<EAC1_1_CVC_Decoder> dec = tmp_pk.cvc_eac1_1_decoder();
+   std::unique_ptr<EAC1_1_CVC_Decoder> dec = tmp_pk.cvc_eac1_1_decoder();
    sig_algo = dec->public_key(enc_pk);
 
 
@@ -78,7 +78,7 @@ void EAC1_1_CVC::force_decode()
 /*
 * CVC Certificate Constructor
 */
-EAC1_1_CVC::EAC1_1_CVC(std::tr1::shared_ptr<DataSource>& in)
+EAC1_1_CVC::EAC1_1_CVC(std::shared_ptr<DataSource>& in)
    {
    init(in);
    self_signed = false;
@@ -87,7 +87,7 @@ EAC1_1_CVC::EAC1_1_CVC(std::tr1::shared_ptr<DataSource>& in)
 
 EAC1_1_CVC::EAC1_1_CVC(const std::string& in)
    {
-   std::tr1::shared_ptr<DataSource> stream(new DataSource_Stream(in, true));
+   std::shared_ptr<DataSource> stream(new DataSource_Stream(in, true));
    init(stream);
    self_signed = false;
    do_decode();
