@@ -44,10 +44,50 @@ SCAN_Name::SCAN_Name(const std::string& algo_spec)
    {
    orig_algo_spec = algo_spec;
 
-   name = parse_and_deref_aliases(algo_spec);
+   try
+      {
+      name = parse_and_deref_aliases(algo_spec);
+      if(name.size() == 0)
+         throw Decoding_Error("Bad SCAN name " + algo_spec);
+      }
+   catch(Invalid_Algorithm_Name)
+      {
+      name.clear();
+      }
 
-   if(name.size() == 0)
-      throw Decoding_Error("Bad SCAN name " + algo_spec);
+   if(name.size() == 0 && algo_spec.find('/') != std::string::npos)
+      {
+      std::vector<std::string> algo_parts = split_on(algo_spec, '/');
+
+      name = parse_and_deref_aliases(algo_parts[0]);
+      if(name.size() == 0)
+         throw Decoding_Error("Bad SCAN name " + algo_spec);
+
+      for(size_t i = 1; i != algo_parts.size(); ++i)
+         mode_str.push_back(algo_parts[i]);
+      }
+   }
+
+std::string SCAN_Name::algo_name_and_args() const
+   {
+   std::string out;
+
+   out = name[0];
+
+   if(arg_count())
+      {
+      out += '(';
+      for(u32bit i = 0; i != arg_count(); ++i)
+         {
+         out += arg(i);
+         if(i != arg_count() - 1)
+            out += ',';
+         }
+      out += ')';
+
+      }
+
+   return out;
    }
 
 std::string SCAN_Name::arg(u32bit i) const
