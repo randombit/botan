@@ -10,39 +10,34 @@
 #include <botan/loadstor.h>
 #include <botan/mem_ops.h>
 
-#include <stdio.h>
+#if defined(BOTAN_TARGET_ARCH_IS_X86) || defined(BOTAN_TARGET_ARCH_IS_AMD64)
 
-#if defined(_MSC_VER)
+#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+
   #include <intrin.h>
+  #define CALL_CPUID(type, out) do { __cpuid(out, type) } while(0)
+
+#elif defined(BOTAN_BUILD_COMPILER_IS_ICC)
+
+  #include <ia32intrin.h>
+  #define CALL_CPUID(type, out) do { __cpuid(out, type) } while(0);
+
+#elif defined(BOTAN_BUILD_COMPILER_IS_GCC)
+
+  #include <cpuid.h>
+  #define CALL_CPUID(type, out) \
+    do { __get_cpuid(type, out, out+1, out+2, out+3); } while(0);
+
+#endif
+
+#else
+  // In all other cases, just zeroize the supposed cpuid output
+  #define CALL_CPUID(type, out) out[0] = out[1] = out[2] = out[3] = 0;
 #endif
 
 namespace Botan {
 
 namespace {
-
-void x86_cpuid(u32bit type, u32bit out[4])
-   {
-   out[0] = out[1] = out[2] = out[3] = 0;
-
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC)
-
-#if defined(BOTAN_TARGET_ARCH_IS_X86)
-
-   asm("pushq %%ebx; cpuid; mov %%ebx, %%edi; popq %%ebx"
-       : "=a" (out[0]), "=D" (out[1]), "=c" (out[2]), "=d" (out[3])
-       : "0" (type));
-
-#elif defined(BOTAN_TARGET_ARCH_IS_AMD64)
-
-   asm("pushq %%rbx; cpuid; mov %%ebx, %%edi; popq %%rbx"
-       : "=a" (out[0]), "=D" (out[1]), "=c" (out[2]), "=d" (out[3])
-       : "0" (type));
-#endif
-
-#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-   __cpuid(out, type);
-#endif
-   }
 
 u32bit get_x86_cache_line_size()
    {
@@ -50,21 +45,20 @@ u32bit get_x86_cache_line_size()
    const u32bit AMD_CPUID[3] = { 0x68747541, 0x444D4163, 0x69746E65 };
 
    u32bit cpuid[4] = { 0 };
-   x86_cpuid(0, cpuid);
+   CALL_CPUID(0, cpuid);
 
-   if(same_mem(cpuid + 1, INTEL_CPUID, 3) && cpuid[0] > 2)
+   if(same_mem(cpuid + 1, INTEL_CPUID, 3))
       {
-      x86_cpuid(1, cpuid);
+      CALL_CPUID(1, cpuid);
       return 8 * get_byte(2, cpuid[1]);
       }
-
-   if(same_mem(cpuid + 1, AMD_CPUID, 3))
+   else if(same_mem(cpuid + 1, AMD_CPUID, 3))
       {
-      x86_cpuid(0x80000005, cpuid);
+      CALL_CPUID(0x80000005, cpuid);
       return get_byte(3, cpuid[2]);
       }
-
-   return 32; // default cache line guess
+   else
+      return 32; // default cache line guess
    }
 
 }
@@ -81,7 +75,7 @@ u64bit CPUID::x86_processor_flags()
       return proc_flags;
 
    u32bit cpuid[4] = { 0 };
-   x86_cpuid(1, cpuid);
+   CALL_CPUID(1, cpuid);
 
    // Set the FPU bit on to force caching in proc_flags
    proc_flags = ((u64bit)cpuid[2] << 32) | cpuid[3] | 1;
