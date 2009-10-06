@@ -55,7 +55,7 @@ SCAN_Name::SCAN_Name(const std::string& algo_spec)
       name.clear();
       }
 
-   if(name.size() == 0 && algo_spec.find('/') != std::string::npos)
+   if(name.size() <= 1 && algo_spec.find('/') != std::string::npos)
       {
       std::vector<std::string> algo_parts = split_on(algo_spec, '/');
 
