@@ -3,6 +3,8 @@
  - Add an implementation of Blue Midnight Wish (Round 2 tweak version)
  - Add threshold secret sharing (draft-mcgrew-tss-02)
  - Add runtime cpu feature detection for x86/x86-64
+ - Add code for general runtime self testing for hashes, MACs, and ciphers
+ - New parsing code for SCAN algorithm names
  - Alter Skein-512 to match the tweaked 1.2 specification
  - Enable SSE2 optimizations under Visual C++
 
