@@ -1,25 +1,14 @@
-/* this code is public domain.
-
- * dean gaudet <dean@arctic.org>
-
- * this code was inspired by this paper:
-
- *     SHA: A Design for Parallel Architectures?
- *     Antoon Bosselaers, Ren´e Govaerts and Joos Vandewalle
- *     <http://www.esat.kuleuven.ac.be/~cosicart/pdf/AB-9700.pdf>
-
- * more information available on this implementation here:
-
- * 	http://arctic.org/~dean/crypto/sha1.html
-
- * version: 2
- */
+/*
+* SHA-1 using SSE2
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 /*
- * Lightly modified for Botan, tested under GCC 4.1.1 and ICC 9.1
- * on a Linux/Core2 system.
-
- */
+* Based on public domain code by Dean Gaudet <dean@arctic.org>
+*   http://arctic.org/~dean/crypto/sha1.html
+*/
 
 #include <botan/sha1_sse2.h>
 #include <botan/rotate.h>

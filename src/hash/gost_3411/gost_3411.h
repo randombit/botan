@@ -1,6 +1,8 @@
 /**
 * GOST 34.11
 * (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_GOST_3411_H__

@@ -1,39 +1,33 @@
-/******
- * Modulus and related data for a specific
- * implementation of  GF(p) (header file)
- *
- * (C) 2008 Martin Döring
- *          doering@cdc.informatik.tu-darmstadt.de
- *          Christoph Ludwig
- *          ludwig@fh-worms.de
- *          Falko Strenzke
- *          strenzke@flexsecure.de
- ******/
+/*
+* Modulus and related data for a specific implementation of GF(p)
+*
+* (C) 2008 Martin Döring
+*          <doering@cdc.informatik.tu-darmstadt.de>
+*          Christoph Ludwig
+*          <ludwig@fh-worms.de>
+*          Falko Strenzke
+*          <strenzke@flexsecure.de>
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_GFP_MODULUS_H__
 #define BOTAN_GFP_MODULUS_H__
 
 #include <botan/bigint.h>
 
-namespace Botan
-{
+namespace Botan {
 
 class BOTAN_DLL GFpElement;
+
 /**
-* This class represents a GFpElement modulus including the modulus related
-* values necessary for the montgomery multiplication.
-*
-* Distributed under the terms of the Botan license
+* This class represents a GFpElement modulus including the modulus
+* related values necessary for the montgomery multiplication.
 */
 class BOTAN_DLL GFpModulus
    {
-      friend class GFpElement;
-   private:
-      BigInt m_p; // the modulus itself
-      mutable BigInt m_p_dash;
-      mutable BigInt m_r;
-      mutable BigInt m_r_inv;
    public:
+      friend class GFpElement;
 
       /**
       * Construct a GF(P)-Modulus from a BigInt
@@ -119,9 +113,14 @@ class BOTAN_DLL GFpModulus
          return m_p_dash;
          }
       // default cp-ctor, op= are fine
+
+   private:
+      BigInt m_p; // the modulus itself
+      mutable BigInt m_p_dash;
+      mutable BigInt m_r;
+      mutable BigInt m_r_inv;
    };
 
 }
 
 #endif
-
