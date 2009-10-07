@@ -10,8 +10,6 @@
 #include <botan/def_eng.h>
 #include <botan/stl_util.h>
 
-#include <stdio.h>
-
 namespace Botan {
 
 namespace {

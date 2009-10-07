@@ -13,8 +13,6 @@
 #include <botan/sha160.h>
 #include <memory>
 
-#include <stdio.h>
-
 namespace Botan {
 
 namespace {
