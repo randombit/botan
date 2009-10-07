@@ -111,15 +111,6 @@ algorithm_kat(const SCAN_Name& algo_name,
 
 namespace {
 
-
-void do_kat(const std::string& in, const std::string& out,
-            const std::string& algo_name, Filter* filter)
-   {
-   if(!test_filter_kat(filter, in, out))
-      throw Self_Test_Failure(algo_name + " startup test");
-   }
-
-
 void verify_results(const std::string& algo,
                     const std::map<std::string, bool>& results)
    {
