@@ -10,6 +10,8 @@
 
 #include <botan/filters.h>
 #include <botan/exceptn.h>
+#include <botan/selftest.h>
+#include <botan/libstate.h>
 using namespace Botan;
 
 #include "validate.h"
@@ -43,8 +45,7 @@ u32bit random_word(Botan::RandomNumberGenerator& rng,
 
 }
 
-Botan::Filter* lookup(const std::string&, const std::vector<std::string>&,
-                      const std::string& = "All");
+Botan::Filter* lookup(const std::string&, const std::vector<std::string>&);
 
 bool failed_test(const std::string&, std::vector<std::string>, bool, bool,
                  const std::string&, std::string&,
@@ -184,16 +185,38 @@ bool failed_test(const std::string& algo,
                  std::string& last_missing,
                  Botan::RandomNumberGenerator& rng)
    {
-#if DEBUG
-   std::cout << "Testing: " << algo;
-   if(!exp_pass)
-      std::cout << " (expecting failure)";
-   std::cout << std::endl;
-#endif
-
 #if !EXTRA_TESTS
    if(!exp_pass) return true;
 #endif
+
+   std::map<std::string, std::string> vars;
+   vars["input"] = params[0];
+   vars["output"] = params[1];
+
+   if(params.size() > 2)
+      vars["key"] = params[2];
+
+   if(params.size() > 3)
+      vars["iv"] = params[3];
+
+   std::map<std::string, bool> results =
+      algorithm_kat(algo, vars, global_state().algorithm_factory());
+
+   if(results.size())
+      {
+      for(std::map<std::string, bool>::const_iterator i = results.begin();
+          i != results.end(); ++i)
+         {
+         if(i->second == false)
+            {
+            std::cout << algo << " test with provider "
+                      << i->first << " failed\n";
+            return true;
+            }
+         }
+
+      return false; // OK
+      }
 
    const std::string in = params[0];
    const std::string expected = params[1];
@@ -210,7 +233,7 @@ bool failed_test(const std::string& algo,
    Botan::Pipe pipe;
 
    try {
-      Botan::Filter* test = lookup(algo, params, section);
+      Botan::Filter* test = lookup(algo, params);
       if(test == 0 && is_extension) return !exp_pass;
       if(test == 0)
          {
