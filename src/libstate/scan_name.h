@@ -35,7 +35,7 @@ class SCAN_Name
       /**
       @return the algorithm name
       */
-      std::string algo_name() const { return name[0]; }
+      std::string algo_name() const { return alg_name; }
 
       /**
       @return the algorithm name plus any arguments
@@ -45,7 +45,7 @@ class SCAN_Name
       /**
       @return the number of arguments
       */
-      u32bit arg_count() const { return name.size() - 1; }
+      u32bit arg_count() const { return args.size(); }
 
       /**
       @return if the number of arguments is between lower and upper
@@ -77,18 +77,19 @@ class SCAN_Name
       @return the cipher mode (if any)
       */
       std::string cipher_mode() const
-         { return (mode_str.size() >= 1) ? mode_str[0] : ""; }
+         { return (mode_info.size() >= 1) ? mode_info[0] : ""; }
 
       /**
       @return the cipher mode padding (if any)
       */
       std::string cipher_mode_pad() const
-         { return (mode_str.size() >= 2) ? mode_str[1] : ""; }
+         { return (mode_info.size() >= 2) ? mode_info[1] : ""; }
 
    private:
       std::string orig_algo_spec;
-      std::vector<std::string> name;
-      std::vector<std::string> mode_str;
+      std::string alg_name;
+      std::vector<std::string> args;
+      std::vector<std::string> mode_info;
    };
 
 }
