@@ -7,6 +7,7 @@
 
 #include <botan/libstate.h>
 #include <botan/init.h>
+#include <botan/selftest.h>
 #include <botan/engine.h>
 #include <botan/stl_util.h>
 #include <botan/mutex.h>
@@ -302,6 +303,9 @@ void Library_State::initialize(bool thread_safe)
    engines.push_back(new Default_Engine);
 
    m_algorithm_factory = new Algorithm_Factory(engines, *mutex_factory);
+
+   if(!passes_self_tests(algorithm_factory()))
+      throw Self_Test_Failure("Startup self tests failed");
    }
 
 /*
