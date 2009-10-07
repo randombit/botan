@@ -18,6 +18,7 @@ darwin
 freebsd
 dragonfly
 hpux
+hurd
 irix
 linux
 netbsd
