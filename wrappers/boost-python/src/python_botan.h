@@ -2,17 +2,14 @@
 #ifndef BOTAN_BOOST_PYTHON_COMMON_H__
 #define BOTAN_BOOST_PYTHON_COMMON_H__
 
-#include <botan/base.h>
+#include <botan/exceptn.h>
+#include <botan/parsing.h>
+#include <botan/secmem.h>
 using namespace Botan;
 
 #include <boost/python.hpp>
 namespace python = boost::python;
 
-
-extern void export_block_ciphers();
-extern void export_stream_ciphers();
-extern void export_hash_functions();
-extern void export_macs();
 extern void export_filters();
 extern void export_pk();
 extern void export_x509();
