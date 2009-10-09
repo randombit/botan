@@ -55,6 +55,12 @@ class BuildConfigurationInformation(object):
         self.checkobj_dir = os.path.join(self.build_dir, 'checks')
         self.libobj_dir = os.path.join(self.build_dir, 'lib')
 
+        self.python_dir = os.path.join(options.src_dir, 'wrap', 'python')
+
+        self.use_boost_python = options.boost_python
+
+        self.pyobject_dir = os.path.join(self.build_dir, 'python')
+
         self.include_dir = os.path.join(self.build_dir, 'include')
         self.full_include_dir = os.path.join(self.include_dir, 'botan')
 
@@ -69,6 +75,10 @@ class BuildConfigurationInformation(object):
 
         self.check_sources = sorted(
             [os.path.join(checks_dir, file) for file in os.listdir(checks_dir)
+             if file.endswith('.cpp')])
+
+        self.python_sources = sorted(
+            [os.path.join(self.python_dir, file) for file in os.listdir(self.python_dir)
              if file.endswith('.cpp')])
 
     def doc_files(self):
@@ -86,6 +96,14 @@ class BuildConfigurationInformation(object):
     def pkg_config_file(self):
         return 'botan-%d.%d.pc' % (self.version_major,
                                    self.version_minor)
+
+    def build_dirs(self):
+        dirs = [self.checkobj_dir,
+                self.libobj_dir,
+                self.full_include_dir]
+        if self.use_boost_python:
+            dirs.append(self.pyobject_dir)
+        return dirs
 
     def username(self):
         return getpass.getuser()
@@ -145,6 +163,10 @@ def process_command_line(args):
                            help='enable debug build')
     build_group.add_option('--disable-debug', dest='debug_build',
                            action='store_false', help=SUPPRESS_HELP)
+
+    build_group.add_option('--use-boost-python', dest='boost_python',
+                           default=False, action='store_true',
+                           help='enable Boost.Python wrapper')
 
     build_group.add_option('--with-tr1-implementation', metavar='WHICH',
                            dest='with_tr1', default=None,
@@ -781,6 +803,14 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             build_commands(build_config.check_sources,
                            build_config.checkobj_dir, 'CHECK')),
 
+        'python_objs': makefile_list(
+            objectfile_list(build_config.python_sources,
+                            build_config.pyobject_dir)),
+
+        'python_build_cmds': '\n'.join(
+            build_commands(build_config.python_sources,
+                           build_config.pyobject_dir, 'PYTHON')),
+
         'ar_command': cc.ar_command or osinfo.ar_command,
         'ranlib_command': osinfo.ranlib_command(),
         'install_cmd_exec': osinfo.install_cmd_exec,
@@ -802,6 +832,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'mod_list': '\n'.join(['%s (%s)' % (m.basename, m.realname)
                                for m in sorted(modules)]),
+
+        'python_version': '.'.join(map(str, sys.version_info[0:2]))
         }
 
 """
@@ -988,10 +1020,8 @@ def setup_build(build_config, options, template_vars):
     except OSError, e:
         logging.debug('Error while removing build dir: %s' % (e))
 
-    for dirs in [build_config.checkobj_dir,
-                 build_config.libobj_dir,
-                 build_config.full_include_dir]:
-        os.makedirs(dirs)
+    for dir in build_config.build_dirs():
+        os.makedirs(dir)
 
     makefile_template = os.path.join(
         options.makefile_dir,
@@ -1009,6 +1039,10 @@ def setup_build(build_config, options, template_vars):
                              ('botan.doxy.in', 'botan.doxy')]:
         templates_to_proc[os.path.join(options.build_data, template)] = \
              os.path.join(build_config.build_dir, sink)
+
+    if options.boost_python:
+        templates_to_proc[
+            os.path.join(options.makefile_dir, 'python.in')] = 'Makefile.python'
 
     for (template, sink) in templates_to_proc.items():
         try:

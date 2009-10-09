@@ -159,8 +159,10 @@ void export_filters()
 
    class_<Pipe, boost::noncopyable>("PipeObj")
       .def(init<>())
+      /*
       .def_readonly("LAST_MESSAGE", &Pipe::LAST_MESSAGE)
       .def_readonly("DEFAULT_MESSAGE", &Pipe::DEFAULT_MESSAGE)
+      */
       .add_property("default_msg", &Pipe::default_msg, &Pipe::set_default_msg)
       .add_property("msg_count", &Pipe::message_count)
       .def("append", append_filter)

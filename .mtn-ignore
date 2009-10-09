@@ -1,4 +1,4 @@
-^Makefile$
+^Makefile.*$
 ^botan-config$
 ^botan.pc$
 ^build$
