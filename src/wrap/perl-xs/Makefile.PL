@@ -9,7 +9,7 @@ if ( $^O eq 'MSWin32' )
 else
 {
     $cc = 'g++';
-    $cflags = '-fexceptions ' . qx( botan-config --cflags );
+    $cflags = '-Wno-write-strings -fexceptions ' . qx( botan-config --cflags );
     $libs = qx( botan-config --libs );
 }
 
