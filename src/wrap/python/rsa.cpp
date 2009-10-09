@@ -21,13 +21,6 @@ std::string bigint2str(const BigInt& n)
    return out.str();
    }
 
-std::string secvec2str(const MemoryRegion<byte>& vec)
-   {
-   std::string str(vec.size(), 0);
-   memcpy(&str[0], vec.begin(), vec.size());
-   return str;
-   }
-
 class Py_RSA_PrivateKey
    {
    public:
@@ -66,7 +59,7 @@ std::string Py_RSA_PrivateKey::decrypt(const std::string& in,
 
    const byte* in_bytes = reinterpret_cast<const byte*>(in.data());
 
-   return secvec2str(enc->decrypt(in_bytes, in.size()));
+   return make_string(enc->decrypt(in_bytes, in.size()));
    }
 
 std::string Py_RSA_PrivateKey::sign(const std::string& in,
@@ -76,7 +69,7 @@ std::string Py_RSA_PrivateKey::sign(const std::string& in,
    std::auto_ptr<PK_Signer> sign(get_pk_signer(*rsa_key, padding));
    const byte* in_bytes = reinterpret_cast<const byte*>(in.data());
    sign->update(in_bytes, in.size());
-   return secvec2str(sign->signature(rng.get_underlying_rng()));
+   return make_string(sign->signature(rng.get_underlying_rng()));
    }
 
 Py_RSA_PrivateKey::Py_RSA_PrivateKey(u32bit bits,
@@ -155,7 +148,7 @@ std::string Py_RSA_PublicKey::encrypt(const std::string& in,
 
    const byte* in_bytes = reinterpret_cast<const byte*>(in.data());
 
-   return secvec2str(enc->encrypt(in_bytes, in.size(),
+   return make_string(enc->encrypt(in_bytes, in.size(),
                                   rng.get_underlying_rng()));
    }
 
