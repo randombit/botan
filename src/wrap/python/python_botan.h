@@ -11,7 +11,7 @@ using namespace Botan;
 namespace python = boost::python;
 
 extern void export_filters();
-extern void export_pk();
+extern void export_rsa();
 extern void export_x509();
 
 class Bad_Size : public Exception
@@ -47,5 +47,33 @@ inline python::object get_owner(T* me)
       python::handle<>(
          python::borrowed(python::detail::wrapper_base_::get_owner(*me))));
    }
+
+class Python_RandomNumberGenerator
+   {
+   public:
+      Python_RandomNumberGenerator()
+         { rng = RandomNumberGenerator::make_rng(); }
+      ~Python_RandomNumberGenerator() { delete rng; }
+
+      std::string name() const { return rng->name(); }
+
+      void reseed() { rng->reseed(192); }
+
+      int gen_random_byte() { return rng->next_byte(); }
+
+      std::string gen_random(int n)
+         {
+         std::string s(n, 0);
+         rng->randomize(reinterpret_cast<byte*>(&s[0]), n);
+         return s;
+         }
+
+      void add_entropy(const std::string& in)
+         { rng->add_entropy(reinterpret_cast<const byte*>(in.c_str()), in.length()); }
+
+      RandomNumberGenerator& get_underlying_rng() { return *rng; }
+   private:
+      RandomNumberGenerator* rng;
+   };
 
 #endif

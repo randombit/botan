@@ -11,34 +11,6 @@ using namespace Botan;
 
 #include "python_botan.h"
 
-class Python_RandomNumberGenerator
-   {
-   public:
-      Python_RandomNumberGenerator()
-         { rng = RandomNumberGenerator::make_rng(); }
-      ~Python_RandomNumberGenerator() { delete rng; }
-
-      std::string name() const { return rng->name(); }
-
-      void reseed() { rng->reseed(192); }
-
-      int gen_random_byte() { return rng->next_byte(); }
-
-      std::string gen_random(int n)
-         {
-         std::string s(n, 0);
-         rng->randomize(reinterpret_cast<byte*>(&s[0]), n);
-         return s;
-         }
-
-      void add_entropy(const std::string& in)
-         { rng->add_entropy(reinterpret_cast<const byte*>(in.c_str()), in.length()); }
-
-      RandomNumberGenerator& get_underlying_rng() { return *rng; }
-   private:
-      RandomNumberGenerator* rng;
-   };
-
 class Py_Cipher
    {
    public:
@@ -222,6 +194,6 @@ BOOST_PYTHON_MODULE(_botan)
    python::def("cryptobox_decrypt", cryptobox_decrypt);
 
    export_filters();
-   export_pk();
+   export_rsa();
    export_x509();
    }
