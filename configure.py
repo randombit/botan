@@ -519,6 +519,14 @@ class CompilerInfo(object):
 
         return ''
 
+    def library_opt_flags(self, debug_build):
+        flags = self.lib_opt_flags
+        if debug_build and self.debug_flags != '':
+            flags += ' ' + self.debug_flags
+        if not debug_build and self.no_debug_flags != '':
+            flags += ' ' + self.no_debug_flags
+        return flags
+
     def so_link_command_for(self, osname):
         if osname in self.so_link_flags:
             return self.so_link_flags[osname]
@@ -731,7 +739,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                                                       options.arch,
                                                       options.cpu),
 
-        'lib_opt': cc.lib_opt_flags,
+        'lib_opt': cc.library_opt_flags(options.debug_build),
         'mach_opt': cc.mach_opts(options.arch, options.cpu),
         'check_opt': cc.check_opt_flags,
         'lang_flags': cc.lang_flags + options.extra_flags,
@@ -1139,7 +1147,7 @@ if __name__ == '__main__':
         main()
     except Exception, e:
         print >>sys.stderr, e
-        #import traceback
-        #traceback.print_exc(file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
         sys.exit(1)
     sys.exit(0)
