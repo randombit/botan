@@ -7,6 +7,8 @@
 #include <botan/pipe.h>
 #include <botan/lookup.h>
 #include <botan/cryptobox.h>
+#include <botan/pbkdf2.h>
+#include <botan/hmac.h>
 using namespace Botan;
 
 #include "python_botan.h"
@@ -156,6 +158,20 @@ std::string cryptobox_decrypt(const std::string& in,
                              passphrase);
    }
 
+std::string python_pbkdf2(const std::string& passphrase,
+                          const std::string& salt,
+                          u32bit iterations,
+                          u32bit output_size,
+                          const std::string& hash_fn)
+   {
+   PKCS5_PBKDF2 pbkdf2(new HMAC(get_hash(hash_fn)));
+
+   pbkdf2.set_iterations(iterations);
+   pbkdf2.change_salt(reinterpret_cast<const byte*>(salt.data()), salt.size());
+
+   return make_string(pbkdf2.derive_key(output_size, passphrase).bits_of());
+   }
+
 BOOST_PYTHON_MODULE(_botan)
    {
    python::class_<LibraryInitializer>("LibraryInitializer")
@@ -192,6 +208,7 @@ BOOST_PYTHON_MODULE(_botan)
 
    python::def("cryptobox_encrypt", cryptobox_encrypt);
    python::def("cryptobox_decrypt", cryptobox_decrypt);
+   python::def("pbkdf2", python_pbkdf2);
 
    export_filters();
    export_rsa();
