@@ -22,3 +22,6 @@ callgrind.out.*
 ^doc/.*\.log$
 ^doc/.*\.toc$
 ^doc/examples/.*\.pem$
+^src/wrap/perl-xs/Botan.(bs|c)$
+^src/wrap/perl-xs/Makefile(\.old)?$
+^src/wrap/perl-xs/.*blib$
