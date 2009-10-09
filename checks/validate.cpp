@@ -48,7 +48,7 @@ u32bit random_word(Botan::RandomNumberGenerator& rng,
 Botan::Filter* lookup(const std::string&, const std::vector<std::string>&);
 
 bool failed_test(const std::string&, std::vector<std::string>, bool, bool,
-                 const std::string&, std::string&,
+                 std::string&,
                  Botan::RandomNumberGenerator& rng);
 
 std::vector<std::string> parse(const std::string&);
@@ -151,7 +151,7 @@ u32bit do_validation_tests(const std::string& filename,
          {
          failed = failed_test(algorithm, substr,
                               is_extension, should_pass,
-                              section, last_missing, rng);
+                              last_missing, rng);
          }
       catch(std::exception& e)
          {
@@ -181,7 +181,6 @@ u32bit do_validation_tests(const std::string& filename,
 bool failed_test(const std::string& algo,
                  std::vector<std::string> params,
                  bool is_extension, bool exp_pass,
-                 const std::string& section,
                  std::string& last_missing,
                  Botan::RandomNumberGenerator& rng)
    {
