@@ -2,7 +2,7 @@ CXX = g++
 
 PYTHON_ROOT = /usr/lib/python%{python_version}/config
 PYTHON_INC = -I/usr/include/python%{python_version}
-PYTHON_SITE_PACKAGE_DIR = /tmp/usr/lib/python%{python_version}/site-packages/
+PYTHON_SITE_PACKAGE_DIR = /usr/lib/python%{python_version}/site-packages/
 
 PYTHON_FLAGS = -Isrc/wrap/python -Os -fPIC -ftemplate-depth-255 -Wall -Wno-unused $(PYTHON_INC)
 

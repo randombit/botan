@@ -6,6 +6,7 @@
 #include <botan/init.h>
 #include <botan/pipe.h>
 #include <botan/lookup.h>
+#include <botan/cryptobox.h>
 using namespace Botan;
 
 #include "python_botan.h"
@@ -33,6 +34,7 @@ class Python_RandomNumberGenerator
       void add_entropy(const std::string& in)
          { rng->add_entropy(reinterpret_cast<const byte*>(in.c_str()), in.length()); }
 
+      RandomNumberGenerator& get_underlying_rng() { return *rng; }
    private:
       RandomNumberGenerator* rng;
    };
@@ -163,6 +165,25 @@ class Py_MAC
       MessageAuthenticationCode* mac;
    };
 
+std::string cryptobox_encrypt(const std::string& in,
+                              const std::string& passphrase,
+                              Python_RandomNumberGenerator& rng)
+   {
+   const byte* in_bytes = reinterpret_cast<const byte*>(in.data());
+
+   return CryptoBox::encrypt(in_bytes, in.size(),
+                             passphrase, rng.get_underlying_rng());
+   }
+
+std::string cryptobox_decrypt(const std::string& in,
+                              const std::string& passphrase)
+   {
+   const byte* in_bytes = reinterpret_cast<const byte*>(in.data());
+
+   return CryptoBox::decrypt(in_bytes, in.size(),
+                             passphrase);
+   }
+
 BOOST_PYTHON_MODULE(_botan)
    {
    python::class_<LibraryInitializer>("LibraryInitializer")
@@ -196,6 +217,9 @@ BOOST_PYTHON_MODULE(_botan)
       .def("final", &Py_MAC::final)
       .def("name", &Py_MAC::name)
       .def("output_length", &Py_MAC::output_length);
+
+   python::def("cryptobox_encrypt", cryptobox_encrypt);
+   python::def("cryptobox_decrypt", cryptobox_decrypt);
 
    export_filters();
    export_pk();

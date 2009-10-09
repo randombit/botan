@@ -1,5 +1,6 @@
 
 * 1.9.1-pre, 2009-??-??
+ - Better support for Python and Perl wrappers
  - Add an implementation of Blue Midnight Wish (Round 2 tweak version)
  - Add threshold secret sharing (draft-mcgrew-tss-02)
  - Add runtime cpu feature detection for x86/x86-64
