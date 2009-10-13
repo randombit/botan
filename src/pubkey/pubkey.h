@@ -181,7 +181,7 @@ class BOTAN_DLL PK_Verifier
       * @return true if the signature is valid
       */
       bool verify_message(const byte msg[], u32bit msg_length,
-                                 const byte sig[], u32bit sig_length);
+                          const byte sig[], u32bit sig_length);
       /**
       * Verify a signature.
       * @param msg the message that the signature belongs to
