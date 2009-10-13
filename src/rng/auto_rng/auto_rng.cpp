@@ -11,7 +11,6 @@
 #include <botan/hmac.h>
 #include <botan/sha2_32.h>
 #include <botan/sha2_64.h>
-#include <botan/aes.h>
 
 #if defined(BOTAN_HAS_RANDPOOL)
   #include <botan/randpool.h>
@@ -23,6 +22,10 @@
 
 #if defined(BOTAN_HAS_X931_RNG)
   #include <botan/x931_rng.h>
+#endif
+
+#if defined(BOTAN_HAS_AES)
+  #include <botan/aes.h>
 #endif
 
 #if defined(BOTAN_HAS_TIMER_HARDWARE)
@@ -135,7 +138,7 @@ AutoSeeded_RNG::AutoSeeded_RNG(u32bit poll_bits)
 
 #if defined(BOTAN_HAS_HMAC_RNG)
    rng = new HMAC_RNG(new HMAC(new SHA_512), new HMAC(new SHA_256));
-#elif defined(BOTAN_HAS_RANDPOOL)
+#elif defined(BOTAN_HAS_RANDPOOL) && defined(BOTAN_HAS_AES)
    rng = new Randpool(new AES_256, new HMAC(new SHA_256));
 #endif
 
@@ -143,7 +146,7 @@ AutoSeeded_RNG::AutoSeeded_RNG(u32bit poll_bits)
       throw Algorithm_Not_Found("No usable RNG found enabled in build");
 
    /* If X9.31 is available, use it to wrap the other RNG as a failsafe */
-#if defined(BOTAN_HAS_X931_RNG)
+#if defined(BOTAN_HAS_X931_RNG) && defined(BOTAN_HAS_AES)
    rng = new ANSI_X931_RNG(new AES_256, rng);
 #endif
 

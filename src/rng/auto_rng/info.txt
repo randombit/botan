@@ -10,7 +10,6 @@ auto_rng.cpp
 </add>
 
 <requires>
-aes
 hmac
 sha2
 timer
