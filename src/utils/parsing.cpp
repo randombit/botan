@@ -23,7 +23,7 @@ u32bit to_u32bit(const std::string& number)
       {
       const u32bit OVERFLOW_MARK = 0xFFFFFFFF / 10;
 
-      if(*j == ' ')
+      if(*i == ' ')
          continue;
 
       byte digit = Charset::char2digit(*i);
