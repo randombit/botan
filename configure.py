@@ -270,7 +270,7 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
         else:
             to_obj.parent_module = None
     else:
-        to_obj.basename = basename
+        to_obj.basename = basename.replace('.txt', '')
 
     lexer = shlex.shlex(open(infofile), infofile, posix=True)
     lexer.wordchars += '|:.<>/,-!' # handle various funky chars in info.txt
@@ -883,18 +883,23 @@ def load_info_files(options):
         for (dirpath, dirnames, filenames) in \
                 os.walk(os.path.join(options.build_data, subdir)):
             for filename in filenames:
-                yield os.path.join(dirpath, filename)
+                if filename.endswith('.txt'):
+                    yield os.path.join(dirpath, filename)
 
-    archinfo = dict([(os.path.basename(info), ArchInfo(info))
+    def form_name(filepath):
+        return os.path.basename(filepath).replace('.txt', '')
+
+    archinfo = dict([(form_name(info), ArchInfo(info))
                      for info in list_files_in_build_data('arch')])
 
-    osinfo   = dict([(os.path.basename(info), OsInfo(info))
+    osinfo   = dict([(form_name(info), OsInfo(info))
                       for info in list_files_in_build_data('os')])
 
-    ccinfo = dict([(os.path.basename(info), CompilerInfo(info))
+    ccinfo = dict([(form_name(info), CompilerInfo(info))
                     for info in list_files_in_build_data('cc')])
 
-    del osinfo['defaults'] # FIXME (remove the file)
+    if 'defaults' in osinfo:
+        del osinfo['defaults'] # FIXME (remove the file)
 
     return (modules, archinfo, ccinfo, osinfo)
 

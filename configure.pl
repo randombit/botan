@@ -1582,6 +1582,8 @@ sub read_info_files {
     foreach my $file (dir_list($dir)) {
         my $fullpath = File::Spec->catfile($dir, $file);
 
+        $file =~ s/.txt//;
+
         trace("reading $fullpath");
         %{$allinfo{$file}} = &$func($file, $fullpath);
     }
