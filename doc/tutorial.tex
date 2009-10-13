@@ -626,9 +626,11 @@ This is very similar to reading raw public keys, with the difference that the
 key may be encrypted with a user passphrase:
 
 \begin{verbatim}
+   // rng is a RandomNumberGenerator, like AutoSeeded_RNG
+
    DataSource_Stream somefile("somefile");
    std::string a_passphrase = /* get from the user */
-   PKCS8_PrivateKey* key = PKCS8::load_key(somefile, a_passphrase);
+   PKCS8_PrivateKey* key = PKCS8::load_key(somefile, rng, a_passphrase);
 \end{verbatim}
 
 You can, by the way, convert a \type{PKCS8\_PrivateKey} to a

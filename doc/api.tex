@@ -1360,12 +1360,18 @@ private key:
 
 \begin{verbatim}
 namespace PKCS8 {
-   PKCS8_PrivateKey* load_key(DataSource& in, const User_Interface& ui);
-   PKCS8_PrivateKey* load_key(DataSource& in, std::string passphrase = "");
+   PKCS8_PrivateKey* load_key(DataSource& in,
+                              RandomNumberGenerator& rng,
+                              const User_Interface& ui);
+   PKCS8_PrivateKey* load_key(DataSource& in,
+                              RandomNumberGenerator& rng,
+                              std::string passphrase = "");
 
    PKCS8_PrivateKey* load_key(const std::string& filename,
+                              RandomNumberGenerator& rng,
                               const User_Interface& ui);
    PKCS8_PrivateKey* load_key(const std::string& filename,
+                              RandomNumberGenerator& rng,
                               const std::string& passphrase = "");
 }
 \end{verbatim}
@@ -1383,6 +1389,9 @@ way to glue together Botan and whatever user interface you happen to be
 using. You can think of it as a user interface interface. The default
 \type{User\_Interface} is actually very dumb, and effectively acts just like
 the versions taking the \type{std::string}.
+
+All versions need access to a \type{RandomNumberGenerator} in order to
+perform probabilistic tests on the loaded key material.
 
 After loading a key, you can use \function{dynamic\_cast} to find out what
 operations it supports, and use it appropriately. Remember to \function{delete}
