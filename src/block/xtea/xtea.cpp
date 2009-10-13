@@ -7,40 +7,51 @@
 
 #include <botan/xtea.h>
 #include <botan/loadstor.h>
-#include <botan/parsing.h>
 
 namespace Botan {
 
 /*
 * XTEA Encryption
 */
-void XTEA::enc(const byte in[], byte out[]) const
+void XTEA::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
-
-   for(u32bit j = 0; j != 32; ++j)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      L += (((R << 4) ^ (R >> 5)) + R) ^ EK[2*j];
-      R += (((L << 4) ^ (L >> 5)) + L) ^ EK[2*j+1];
-      }
+      u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
 
-   store_be(out, L, R);
+      for(u32bit j = 0; j != 32; ++j)
+         {
+         L += (((R << 4) ^ (R >> 5)) + R) ^ EK[2*j];
+         R += (((L << 4) ^ (L >> 5)) + L) ^ EK[2*j+1];
+         }
+
+      store_be(out, L, R);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*
 * XTEA Decryption
 */
-void XTEA::dec(const byte in[], byte out[]) const
+void XTEA::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
-
-   for(u32bit j = 0; j != 32; ++j)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      R -= (((L << 4) ^ (L >> 5)) + L) ^ EK[63 - 2*j];
-      L -= (((R << 4) ^ (R >> 5)) + R) ^ EK[62 - 2*j];
-      }
+      u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
 
-   store_be(out, L, R);
+      for(u32bit j = 0; j != 32; ++j)
+         {
+         R -= (((L << 4) ^ (L >> 5)) + L) ^ EK[63 - 2*j];
+         L -= (((R << 4) ^ (R >> 5)) + R) ^ EK[62 - 2*j];
+         }
+
+      store_be(out, L, R);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*

@@ -27,8 +27,8 @@ class EVP_BlockCipher : public BlockCipher
 
       ~EVP_BlockCipher();
    private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void key_schedule(const byte[], u32bit);
       std::string cipher_name;
       mutable EVP_CIPHER_CTX encrypt, decrypt;
@@ -90,19 +90,21 @@ EVP_BlockCipher::~EVP_BlockCipher()
 /*
 * Encrypt a block
 */
-void EVP_BlockCipher::enc(const byte in[], byte out[]) const
+void EVP_BlockCipher::encrypt_n(const byte in[], byte out[],
+                                u32bit blocks) const
    {
    int out_len = 0;
-   EVP_EncryptUpdate(&encrypt, out, &out_len, in, BLOCK_SIZE);
+   EVP_EncryptUpdate(&encrypt, out, &out_len, in, blocks * BLOCK_SIZE);
    }
 
 /*
 * Decrypt a block
 */
-void EVP_BlockCipher::dec(const byte in[], byte out[]) const
+void EVP_BlockCipher::decrypt_n(const byte in[], byte out[],
+                                u32bit blocks) const
    {
    int out_len = 0;
-   EVP_DecryptUpdate(&decrypt, out, &out_len, in, BLOCK_SIZE);
+   EVP_DecryptUpdate(&decrypt, out, &out_len, in, blocks * BLOCK_SIZE);
    }
 
 /*
@@ -174,7 +176,7 @@ OpenSSL_Engine::find_block_cipher(const SCAN_Name& request,
    if(request.algo_name() == NAME && request.arg_count() == 0)  \
       return new EVP_BlockCipher(EVP, NAME, MIN, MAX, MOD);
 
-#if 0
+#if !defined(OPENSSL_NO_AES)
    /*
    Using OpenSSL's AES causes crashes inside EVP on x86-64 with OpenSSL 0.9.8g
    cause is unknown
@@ -184,12 +186,36 @@ OpenSSL_Engine::find_block_cipher(const SCAN_Name& request,
    HANDLE_EVP_CIPHER("AES-256", EVP_aes_256_ecb());
 #endif
 
+#if !defined(OPENSSL_NO_DES)
    HANDLE_EVP_CIPHER("DES", EVP_des_ecb());
    HANDLE_EVP_CIPHER_KEYLEN("TripleDES", EVP_des_ede3_ecb(), 16, 24, 8);
+#endif
 
+#if !defined(OPENSSL_NO_BF)
    HANDLE_EVP_CIPHER_KEYLEN("Blowfish", EVP_bf_ecb(), 1, 56, 1);
+#endif
+
+#if !defined(OPENSSL_NO_CAST)
    HANDLE_EVP_CIPHER_KEYLEN("CAST-128", EVP_cast5_ecb(), 1, 16, 1);
+#endif
+
+#if !defined(OPENSSL_NO_RC2)
    HANDLE_EVP_CIPHER_KEYLEN("RC2", EVP_rc2_ecb(), 1, 32, 1);
+#endif
+
+#if !defined(OPENSSL_NO_RC5)
+   if(request.algo_name() == "RC5")
+      if(request.arg_as_u32bit(0, 12) == 12)
+         return new EVP_BlockCipher(EVP_rc5_32_12_16_ecb(), "RC5(12)", 1, 32, 1);
+#endif
+
+#if !defined(OPENSSL_NO_IDEA)
+   HANDLE_EVP_CIPHER("IDEA", EVP_idea_ecb());
+#endif
+
+#if !defined(OPENSSL_NO_SEED)
+   HANDLE_EVP_CIPHER("SEED", EVP_seed_ecb());
+#endif
 
 #undef HANDLE_EVP_CIPHER
 #undef HANDLE_EVP_CIPHER_KEYLEN

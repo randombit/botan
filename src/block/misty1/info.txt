@@ -1,10 +1,3 @@
 realname "MISTY-1"
 
 define MISTY1
-
-load_on auto
-
-<add>
-misty1.cpp
-misty1.h
-</add>

@@ -1,3 +1,11 @@
+/*
+* ECC Domain Parameters
+*
+* (C) 2007 Falko Strenzke, FlexSecure GmbH
+*     2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/ec_dompar.h>
 #include <botan/pubkey_enums.h>

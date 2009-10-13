@@ -1,13 +1,15 @@
-/******
- * Arithmetic for prime fields GF(p) (header file)
- *
- * (C) 2007 Martin Doering
- *          doering@cdc.informatik.tu-darmstadt.de
- *          Christoph Ludwig
- *          ludwig@fh-worms.de
- *          Falko Strenzke
- *          strenzke@flexsecure.de
- ******/
+/*
+* Arithmetic for prime fields GF(p)
+*
+* (C) 2007 Martin Doering
+*          doering@cdc.informatik.tu-darmstadt.de
+*          Christoph Ludwig
+*          ludwig@fh-worms.de
+*          Falko Strenzke
+*          strenzke@flexsecure.de
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_GFP_ELEMENT_H__
 #define BOTAN_GFP_ELEMENT_H__
@@ -26,11 +28,11 @@
 
 namespace Botan {
 
-struct Illegal_Transformation : public Exception
+struct BOTAN_DLL Illegal_Transformation : public Exception
    {
    Illegal_Transformation(const std::string& err =
-                          "Requested transformation is not possible")
-      : Exception(err) {}
+                          "Requested transformation is not possible") :
+      Exception(err) {}
    };
 
 /**
@@ -39,23 +41,6 @@ struct Illegal_Transformation : public Exception
  */
 class BOTAN_DLL GFpElement
    {
-   private:
-      std::tr1::shared_ptr<GFpModulus> mp_mod;
-      mutable BigInt m_value; // ordinary residue or m-residue respectively
-      mutable BigInt workspace;
-
-      // *****************************************
-      // data members for montgomery multiplication
-      mutable bool m_use_montgm;
-      //mutable BigInt m_mres;
-      // this bool tells use whether the m_mres carries
-      // the actual value (in this case mValue doesn´t)
-      mutable bool m_is_trf;
-
-      void ensure_montgm_precomp() const;
-      void trf_to_mres() const;
-      void trf_to_ordres() const;
-
    public:
 
       /** construct an element of GF(p) with the given value.
@@ -260,7 +245,22 @@ class BOTAN_DLL GFpElement
       * @param other The value to swap with
       */
       void swap(GFpElement& other);
+   private:
+      void ensure_montgm_precomp() const;
+      void trf_to_mres() const;
+      void trf_to_ordres() const;
 
+      std::tr1::shared_ptr<GFpModulus> mp_mod;
+      mutable BigInt m_value; // ordinary residue or m-residue respectively
+      mutable BigInt workspace;
+
+      // *****************************************
+      // data members for montgomery multiplication
+      mutable bool m_use_montgm;
+      //mutable BigInt m_mres;
+      // this bool tells use whether the m_mres carries
+      // the actual value (in this case mValue doesn´t)
+      mutable bool m_is_trf;
    };
 
 // relational operators

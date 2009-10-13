@@ -22,69 +22,81 @@ u32bit SEED::G_FUNC::operator()(u32bit X) const
 /*
 * SEED Encryption
 */
-void SEED::enc(const byte in[], byte out[]) const
+void SEED::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u32bit B0 = load_be<u32bit>(in, 0);
-   u32bit B1 = load_be<u32bit>(in, 1);
-   u32bit B2 = load_be<u32bit>(in, 2);
-   u32bit B3 = load_be<u32bit>(in, 3);
-
-   G_FUNC G;
-
-   for(u32bit j = 0; j != 16; j += 2)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      u32bit T0, T1;
+      u32bit B0 = load_be<u32bit>(in, 0);
+      u32bit B1 = load_be<u32bit>(in, 1);
+      u32bit B2 = load_be<u32bit>(in, 2);
+      u32bit B3 = load_be<u32bit>(in, 3);
 
-      T0 = B2 ^ K[2*j];
-      T1 = G(B2 ^ B3 ^ K[2*j+1]);
-      T0 = G(T1 + T0);
-      T1 = G(T1 + T0);
-      B1 ^= T1;
-      B0 ^= T0 + T1;
+      G_FUNC G;
 
-      T0 = B0 ^ K[2*j+2];
-      T1 = G(B0 ^ B1 ^ K[2*j+3]);
-      T0 = G(T1 + T0);
-      T1 = G(T1 + T0);
-      B3 ^= T1;
-      B2 ^= T0 + T1;
+      for(u32bit j = 0; j != 16; j += 2)
+         {
+         u32bit T0, T1;
+
+         T0 = B2 ^ K[2*j];
+         T1 = G(B2 ^ B3 ^ K[2*j+1]);
+         T0 = G(T1 + T0);
+         T1 = G(T1 + T0);
+         B1 ^= T1;
+         B0 ^= T0 + T1;
+
+         T0 = B0 ^ K[2*j+2];
+         T1 = G(B0 ^ B1 ^ K[2*j+3]);
+         T0 = G(T1 + T0);
+         T1 = G(T1 + T0);
+         B3 ^= T1;
+         B2 ^= T0 + T1;
+         }
+
+      store_be(out, B2, B3, B0, B1);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
-
-   store_be(out, B2, B3, B0, B1);
    }
 
 /*
 * SEED Decryption
 */
-void SEED::dec(const byte in[], byte out[]) const
+void SEED::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u32bit B0 = load_be<u32bit>(in, 0);
-   u32bit B1 = load_be<u32bit>(in, 1);
-   u32bit B2 = load_be<u32bit>(in, 2);
-   u32bit B3 = load_be<u32bit>(in, 3);
-
-   G_FUNC G;
-
-   for(u32bit j = 0; j != 16; j += 2)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      u32bit T0, T1;
+      u32bit B0 = load_be<u32bit>(in, 0);
+      u32bit B1 = load_be<u32bit>(in, 1);
+      u32bit B2 = load_be<u32bit>(in, 2);
+      u32bit B3 = load_be<u32bit>(in, 3);
 
-      T0 = B2 ^ K[30-2*j];
-      T1 = G(B2 ^ B3 ^ K[31-2*j]);
-      T0 = G(T1 + T0);
-      T1 = G(T1 + T0);
-      B1 ^= T1;
-      B0 ^= T0 + T1;
+      G_FUNC G;
 
-      T0 = B0 ^ K[28-2*j];
-      T1 = G(B0 ^ B1 ^ K[29-2*j]);
-      T0 = G(T1 + T0);
-      T1 = G(T1 + T0);
-      B3 ^= T1;
-      B2 ^= T0 + T1;
+      for(u32bit j = 0; j != 16; j += 2)
+         {
+         u32bit T0, T1;
+
+         T0 = B2 ^ K[30-2*j];
+         T1 = G(B2 ^ B3 ^ K[31-2*j]);
+         T0 = G(T1 + T0);
+         T1 = G(T1 + T0);
+         B1 ^= T1;
+         B0 ^= T0 + T1;
+
+         T0 = B0 ^ K[28-2*j];
+         T1 = G(B0 ^ B1 ^ K[29-2*j]);
+         T0 = G(T1 + T0);
+         T1 = G(T1 + T0);
+         B3 ^= T1;
+         B2 ^= T0 + T1;
+         }
+
+      store_be(out, B2, B3, B0, B1);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
-
-   store_be(out, B2, B3, B0, B1);
    }
 
 /*

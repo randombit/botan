@@ -60,77 +60,89 @@ u16bit mul_inv(u16bit x)
 /*
 * IDEA Encryption
 */
-void IDEA::enc(const byte in[], byte out[]) const
+void IDEA::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u16bit X1 = load_be<u16bit>(in, 0);
-   u16bit X2 = load_be<u16bit>(in, 1);
-   u16bit X3 = load_be<u16bit>(in, 2);
-   u16bit X4 = load_be<u16bit>(in, 3);
-
-   for(u32bit j = 0; j != 8; ++j)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      X1 = mul(X1, EK[6*j+0]);
-      X2 += EK[6*j+1];
-      X3 += EK[6*j+2];
-      X4 = mul(X4, EK[6*j+3]);
+      u16bit X1 = load_be<u16bit>(in, 0);
+      u16bit X2 = load_be<u16bit>(in, 1);
+      u16bit X3 = load_be<u16bit>(in, 2);
+      u16bit X4 = load_be<u16bit>(in, 3);
 
-      u16bit T0 = X3;
-      X3 = mul(X3 ^ X1, EK[6*j+4]);
+      for(u32bit j = 0; j != 8; ++j)
+         {
+         X1 = mul(X1, EK[6*j+0]);
+         X2 += EK[6*j+1];
+         X3 += EK[6*j+2];
+         X4 = mul(X4, EK[6*j+3]);
 
-      u16bit T1 = X2;
-      X2 = mul((X2 ^ X4) + X3, EK[6*j+5]);
-      X3 += X2;
+         u16bit T0 = X3;
+         X3 = mul(X3 ^ X1, EK[6*j+4]);
 
-      X1 ^= X2;
-      X4 ^= X3;
-      X2 ^= T0;
-      X3 ^= T1;
+         u16bit T1 = X2;
+         X2 = mul((X2 ^ X4) + X3, EK[6*j+5]);
+         X3 += X2;
+
+         X1 ^= X2;
+         X4 ^= X3;
+         X2 ^= T0;
+         X3 ^= T1;
+         }
+
+      X1  = mul(X1, EK[48]);
+      X2 += EK[50];
+      X3 += EK[49];
+      X4  = mul(X4, EK[51]);
+
+      store_be(out, X1, X3, X2, X4);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
-
-   X1  = mul(X1, EK[48]);
-   X2 += EK[50];
-   X3 += EK[49];
-   X4  = mul(X4, EK[51]);
-
-   store_be(out, X1, X3, X2, X4);
    }
 
 /*
 * IDEA Decryption
 */
-void IDEA::dec(const byte in[], byte out[]) const
+void IDEA::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u16bit X1 = load_be<u16bit>(in, 0);
-   u16bit X2 = load_be<u16bit>(in, 1);
-   u16bit X3 = load_be<u16bit>(in, 2);
-   u16bit X4 = load_be<u16bit>(in, 3);
-
-   for(u32bit j = 0; j != 8; ++j)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      X1 = mul(X1, DK[6*j+0]);
-      X2 += DK[6*j+1];
-      X3 += DK[6*j+2];
-      X4 = mul(X4, DK[6*j+3]);
+      u16bit X1 = load_be<u16bit>(in, 0);
+      u16bit X2 = load_be<u16bit>(in, 1);
+      u16bit X3 = load_be<u16bit>(in, 2);
+      u16bit X4 = load_be<u16bit>(in, 3);
 
-      u16bit T0 = X3;
-      X3 = mul(X3 ^ X1, DK[6*j+4]);
+      for(u32bit j = 0; j != 8; ++j)
+         {
+         X1 = mul(X1, DK[6*j+0]);
+         X2 += DK[6*j+1];
+         X3 += DK[6*j+2];
+         X4 = mul(X4, DK[6*j+3]);
 
-      u16bit T1 = X2;
-      X2 = mul((X2 ^ X4) + X3, DK[6*j+5]);
-      X3 += X2;
+         u16bit T0 = X3;
+         X3 = mul(X3 ^ X1, DK[6*j+4]);
 
-      X1 ^= X2;
-      X4 ^= X3;
-      X2 ^= T0;
-      X3 ^= T1;
+         u16bit T1 = X2;
+         X2 = mul((X2 ^ X4) + X3, DK[6*j+5]);
+         X3 += X2;
+
+         X1 ^= X2;
+         X4 ^= X3;
+         X2 ^= T0;
+         X3 ^= T1;
+         }
+
+      X1  = mul(X1, DK[48]);
+      X2 += DK[50];
+      X3 += DK[49];
+      X4  = mul(X4, DK[51]);
+
+      store_be(out, X1, X3, X2, X4);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
-
-   X1  = mul(X1, DK[48]);
-   X2 += DK[50];
-   X3 += DK[49];
-   X4  = mul(X4, DK[51]);
-
-   store_be(out, X1, X3, X2, X4);
    }
 
 /*

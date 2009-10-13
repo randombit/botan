@@ -14,3 +14,7 @@ amd64
 gcc
 icc
 </cc>
+
+<requires>
+amd64_eng
+</requires>

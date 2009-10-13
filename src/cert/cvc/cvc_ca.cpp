@@ -1,7 +1,6 @@
 #include <botan/cvc_ca.h>
 #include <botan/cvc_cert.h>
 #include <botan/der_enc.h>
-#include <botan/util.h>
 #include <botan/oids.h>
 namespace Botan {
 

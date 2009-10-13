@@ -1,198 +1,230 @@
 
 #include <iostream>
 #include <iomanip>
-#include <cmath>
-#include <string>
-#include <exception>
 
+#include <botan/benchmark.h>
+#include <botan/libstate.h>
+#include <botan/pipe.h>
 #include <botan/filters.h>
-using Botan::byte;
-using Botan::u64bit;
+#include <botan/engine.h>
+#include <botan/parsing.h>
+#include <botan/symkey.h>
 
 #include "common.h"
-#include "timer.h"
 #include "bench.h"
-
-/* Discard output to reduce overhead */
-struct BitBucket : public Botan::Filter
-   {
-   void write(const byte[], u32bit) {}
-   };
-
-Botan::Filter* lookup(const std::string&,
-                      const std::vector<std::string>&,
-                      const std::string& = "All");
 
 namespace {
 
-double bench_filter(std::string name, Botan::Filter* filter,
-                    Botan::RandomNumberGenerator& rng,
-                    bool html, double seconds)
+const std::string algos[] = {
+
+   /* Block ciphers */
+   "AES-128",
+   "AES-192",
+   "AES-256",
+   "Blowfish",
+   "CAST-128",
+   "CAST-256",
+   "DES",
+   "DESX",
+   "GOST",
+   "IDEA",
+   "KASUMI",
+   "Lion(SHA-256,Turing,8192)",
+   "Luby-Rackoff(SHA-512)",
+   "MARS",
+   "MISTY1",
+   "Noekeon",
+   "RC2",
+   "RC5(12)",
+   "RC5(16)",
+   "RC6",
+   "SAFER-SK(10)",
+   "SEED",
+   "Serpent",
+   "Skipjack",
+   "Square",
+   "TEA",
+   "TripleDES",
+   "Twofish",
+   "XTEA",
+
+   /* Cipher modes */
+   "TripleDES/CBC/PKCS7",
+   "TripleDES/CBC/CTS",
+   "TripleDES/CTR-BE",
+   "TripleDES/EAX",
+   "TripleDES/OFB",
+   "TripleDES/CFB(64)",
+   "TripleDES/CFB(32)",
+   "TripleDES/CFB(16)",
+   "TripleDES/CFB(8)",
+
+   "AES-128/CBC/PKCS7",
+   "AES-128/CBC/CTS",
+   "AES-128/CTR-BE",
+   "AES-128/EAX",
+   "AES-128/OFB",
+   "AES-128/XTS",
+   "AES-128/CFB(128)",
+   "AES-128/CFB(64)",
+   "AES-128/CFB(32)",
+   "AES-128/CFB(16)",
+   "AES-128/CFB(8)",
+
+   "Serpent/CBC/PKCS7",
+   "Serpent/CBC/CTS",
+   "Serpent/CTR-BE",
+   "Serpent/EAX",
+   "Serpent/OFB",
+   "Serpent/XTS",
+   "Serpent/CFB(128)",
+   "Serpent/CFB(64)",
+   "Serpent/CFB(32)",
+   "Serpent/CFB(16)",
+   "Serpent/CFB(8)",
+
+   /* Stream ciphers */
+   "ARC4",
+   "Salsa20",
+   "Turing",
+   "WiderWake4+1-BE",
+
+   /* Checksums */
+   "Adler32",
+   "CRC24",
+   "CRC32",
+
+   /* Hashes */
+   "BMW-512",
+   "FORK-256",
+   "GOST-34.11",
+   "HAS-160",
+   "MD2",
+   "MD4",
+   "MD5",
+   "RIPEMD-128",
+   "RIPEMD-160",
+   "SHA-160",
+   "SHA-256",
+   "SHA-384",
+   "SHA-512",
+   "Skein-512",
+   "Tiger",
+   "Whirlpool",
+
+   /* MACs */
+   "CMAC(AES-128)",
+   "HMAC(SHA-1)",
+   "X9.19-MAC",
+   "",
+};
+
+void report_results(const std::string& algo,
+                    const std::map<std::string, double>& speeds)
    {
-   Botan::Pipe pipe(filter, new BitBucket);
+   // invert, showing fastest impl first
+   std::map<double, std::string> results;
 
-   std::vector<byte> buf(128 * 1024);
-   rng.randomize(&buf[0], buf.size());
-
-   pipe.start_msg();
-
-   Timer timer(name, buf.size());
-
-   while(timer.seconds() < seconds)
+   for(std::map<std::string, double>::const_iterator i = speeds.begin();
+       i != speeds.end(); ++i)
       {
-      timer.start();
-      pipe.write(&buf[0], buf.size());
-      timer.stop();
+      // Speeds might collide, tweak slightly to handle this
+      if(results[i->second] == "")
+         results[i->second] = i->first;
+      else
+         results[i->second - .01] = i->first;
       }
 
-   pipe.end_msg();
+   std::cout << algo;
 
-   double bytes_per_sec = timer.events() / timer.seconds();
-   double mbytes_per_sec = bytes_per_sec / (1024.0 * 1024.0);
-
-   std::cout.setf(std::ios::fixed, std::ios::floatfield);
-   std::cout.precision(2);
-   if(html)
+   for(std::map<double, std::string>::const_reverse_iterator i = results.rbegin();
+       i != results.rend(); ++i)
       {
-      if(name.find("<") != std::string::npos)
-         name.replace(name.find("<"), 1, "&lt;");
-      if(name.find(">") != std::string::npos)
-         name.replace(name.find(">"), 1, "&gt;");
-      std::cout << "   <TR><TH>" << name
-                << std::string(25 - name.length(), ' ') << "   <TH>";
-      std::cout.width(6);
-      std::cout << mbytes_per_sec << std::endl;
+      std::cout << " [" << i->second << "] "
+                << std::fixed << std::setprecision(2) << i->first;
       }
-   else
-      {
-      std::cout << name << ": " << std::string(25 - name.length(), ' ');
-      std::cout.width(6);
-      std::cout << mbytes_per_sec << " MiB/sec" << std::endl;
-      }
-   return (mbytes_per_sec);
-   }
-
-double bench(const std::string& name, const std::string& filtername, bool html,
-             double seconds, u32bit keylen, u32bit ivlen,
-             Botan::RandomNumberGenerator& rng)
-   {
-   std::vector<std::string> params;
-
-   Botan::SecureVector<byte> key(keylen);
-   rng.randomize(key, key.size());
-   params.push_back(hex_encode(key, key.size()));
-
-   //params.push_back(std::string(int(2*keylen), 'A'));
-   params.push_back(std::string(int(2* ivlen), 'A'));
-
-   Botan::Filter* filter = lookup(filtername, params);
-
-   if(filter)
-      return bench_filter(name, filter, rng, html, seconds);
-   return 0;
+   std::cout << "\n";
    }
 
 }
 
-void benchmark(const std::string& what,
-               Botan::RandomNumberGenerator& rng,
-               bool html, double seconds)
+bool bench_algo(const std::string& algo,
+                Botan::RandomNumberGenerator& rng,
+                double seconds)
    {
-   try {
-      if(html)
+   Botan::Default_Benchmark_Timer timer;
+   Botan::Algorithm_Factory& af = Botan::global_state().algorithm_factory();
+
+   u32bit milliseconds = static_cast<u32bit>(seconds * 1000);
+
+   std::map<std::string, double> speeds =
+      algorithm_benchmark(algo, milliseconds, timer, rng, af);
+
+   if(speeds.empty()) // maybe a cipher mode, then?
+      {
+      Botan::Algorithm_Factory::Engine_Iterator i(af);
+
+      std::vector<std::string> algo_parts = Botan::split_on(algo, '/');
+
+      if(algo_parts.size() < 2) // not a cipher mode
+         return false;
+
+      std::string cipher = algo_parts[0];
+
+      u32bit cipher_keylen =
+         af.prototype_block_cipher(cipher)->MAXIMUM_KEYLENGTH;
+      u32bit cipher_ivlen =
+         af.prototype_block_cipher(cipher)->BLOCK_SIZE;
+
+      if(algo_parts[1] == "XTS")
+         cipher_keylen *= 2; // hack!
+
+      std::vector<byte> buf(16 * 1024);
+      rng.randomize(&buf[0], buf.size());
+
+      while(Botan::Engine* engine = i.next())
          {
-         std::cout << "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD "
-                   << "HTML 4.0 Transitional//EN\">\n"
-                   << "<HTML>\n\n"
-                   << "<TITLE>Botan Benchmarks</TITLE>\n\n"
-                   << "<BODY>\n\n"
-                   << "<P><TABLE BORDER CELLSPACING=1>\n"
-                   << "<THEAD>\n"
-                   << "<TR><TH>Algorithm                      "
-                   << "<TH>Mib / second\n"
-                   << "<TBODY>\n";
-         }
+         u64bit nanoseconds_max = static_cast<u64bit>(seconds * 1000000000.0);
 
-      double sum = 0;
-      u32bit how_many = 0;
+         Botan::Keyed_Filter* filt =
+            engine->get_cipher(algo, Botan::ENCRYPTION, af);
 
-      std::vector<algorithm> algos = get_algos();
+         if(!filt)
+            continue;
 
-      for(u32bit j = 0; j != algos.size(); j++)
-         if(what == "All" || what == algos[j].type)
+         filt->set_key(Botan::SymmetricKey(&buf[0], cipher_keylen));
+         filt->set_iv(Botan::InitializationVector(&buf[0], cipher_ivlen));
+
+         Botan::Pipe pipe(filt, new Botan::BitBucket);
+         pipe.start_msg();
+
+         const u64bit start = timer.clock();
+         u64bit nanoseconds_used = 0;
+         u64bit reps = 0;
+
+         while(nanoseconds_used < nanoseconds_max)
             {
-            double speed = bench(algos[j].name, algos[j].filtername,
-                                 html, seconds, algos[j].keylen,
-                                 algos[j].ivlen, rng);
-            if(speed > .00001) /* log(0) == -inf -> messed up average */
-               sum += std::log(speed);
-            how_many++;
+            pipe.write(&buf[0], buf.size());
+            ++reps;
+            nanoseconds_used = timer.clock() - start;
             }
 
-      if(html)
-         std::cout << "</TABLE>\n\n";
+         double mbytes_per_second =
+            (953.67 * (buf.size() * reps)) / nanoseconds_used;
 
-      double average = std::exp(sum / static_cast<double>(how_many));
+         speeds[engine->provider_name()] = mbytes_per_second;
+         }
+      }
 
-      if(what == "All" && html)
-         std::cout << "\n<P>Overall speed average: " << average
-                   << "\n\n";
-      else if(what == "All")
-          std::cout << "\nOverall speed average: " << average
-                    << std::endl;
+   if(!speeds.empty())
+      report_results(algo, speeds);
 
-      if(html) std::cout << "</BODY></HTML>\n";
-      }
-   catch(Botan::Exception& e)
-      {
-      std::cout << "Botan exception caught: " << e.what() << std::endl;
-      return;
-      }
-   catch(std::exception& e)
-      {
-      std::cout << "Standard library exception caught: " << e.what()
-                << std::endl;
-      return;
-      }
-   catch(...)
-      {
-      std::cout << "Unknown exception caught." << std::endl;
-      return;
-      }
+   return !speeds.empty();
    }
 
-u32bit bench_algo(const std::string& name,
-                  Botan::RandomNumberGenerator& rng,
-                  double seconds)
+void benchmark(Botan::RandomNumberGenerator& rng,
+               double seconds)
    {
-   try {
-      std::vector<algorithm> algos = get_algos();
-
-      for(u32bit j = 0; j != algos.size(); j++)
-         {
-         if(algos[j].name == name)
-            {
-            bench(algos[j].name, algos[j].filtername, false, seconds,
-                  algos[j].keylen, algos[j].ivlen, rng);
-            return 1;
-            }
-         }
-      return 0;
-      }
-   catch(Botan::Exception& e)
-      {
-      std::cout << "Botan exception caught: " << e.what() << std::endl;
-      return 0;
-      }
-   catch(std::exception& e)
-      {
-      std::cout << "Standard library exception caught: " << e.what()
-                << std::endl;
-      return 0;
-      }
-   catch(...)
-      {
-      std::cout << "Unknown exception caught." << std::endl;
-      return 0;
-      }
+   for(u32bit i = 0; algos[i] != ""; ++i)
+      bench_algo(algos[i], rng, seconds);
    }

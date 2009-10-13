@@ -1,5 +1,8 @@
-/**
+/*
 * An algorithm cache (used by Algorithm_Factory)
+* (C) 2008-2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_ALGORITHM_CACHE_TEMPLATE_H__

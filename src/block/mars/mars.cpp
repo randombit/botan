@@ -1,6 +1,6 @@
 /*
 * MARS
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -50,75 +50,87 @@ u32bit gen_mask(u32bit input)
 /*
 * MARS Encryption
 */
-void MARS::enc(const byte in[], byte out[]) const
+void MARS::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u32bit A = load_le<u32bit>(in, 0) + EK[0];
-   u32bit B = load_le<u32bit>(in, 1) + EK[1];
-   u32bit C = load_le<u32bit>(in, 2) + EK[2];
-   u32bit D = load_le<u32bit>(in, 3) + EK[3];
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      u32bit A = load_le<u32bit>(in, 0) + EK[0];
+      u32bit B = load_le<u32bit>(in, 1) + EK[1];
+      u32bit C = load_le<u32bit>(in, 2) + EK[2];
+      u32bit D = load_le<u32bit>(in, 3) + EK[3];
 
-   forward_mix(A, B, C, D);
+      forward_mix(A, B, C, D);
 
-   encrypt_round(A, B, C, D,  0);
-   encrypt_round(B, C, D, A,  1);
-   encrypt_round(C, D, A, B,  2);
-   encrypt_round(D, A, B, C,  3);
-   encrypt_round(A, B, C, D,  4);
-   encrypt_round(B, C, D, A,  5);
-   encrypt_round(C, D, A, B,  6);
-   encrypt_round(D, A, B, C,  7);
+      encrypt_round(A, B, C, D,  0);
+      encrypt_round(B, C, D, A,  1);
+      encrypt_round(C, D, A, B,  2);
+      encrypt_round(D, A, B, C,  3);
+      encrypt_round(A, B, C, D,  4);
+      encrypt_round(B, C, D, A,  5);
+      encrypt_round(C, D, A, B,  6);
+      encrypt_round(D, A, B, C,  7);
 
-   encrypt_round(A, D, C, B,  8);
-   encrypt_round(B, A, D, C,  9);
-   encrypt_round(C, B, A, D, 10);
-   encrypt_round(D, C, B, A, 11);
-   encrypt_round(A, D, C, B, 12);
-   encrypt_round(B, A, D, C, 13);
-   encrypt_round(C, B, A, D, 14);
-   encrypt_round(D, C, B, A, 15);
+      encrypt_round(A, D, C, B,  8);
+      encrypt_round(B, A, D, C,  9);
+      encrypt_round(C, B, A, D, 10);
+      encrypt_round(D, C, B, A, 11);
+      encrypt_round(A, D, C, B, 12);
+      encrypt_round(B, A, D, C, 13);
+      encrypt_round(C, B, A, D, 14);
+      encrypt_round(D, C, B, A, 15);
 
-   reverse_mix(A, B, C, D);
+      reverse_mix(A, B, C, D);
 
-   A -= EK[36]; B -= EK[37]; C -= EK[38]; D -= EK[39];
+      A -= EK[36]; B -= EK[37]; C -= EK[38]; D -= EK[39];
 
-   store_le(out, A, B, C, D);
+      store_le(out, A, B, C, D);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*
 * MARS Decryption
 */
-void MARS::dec(const byte in[], byte out[]) const
+void MARS::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u32bit A = load_le<u32bit>(in, 3) + EK[39];
-   u32bit B = load_le<u32bit>(in, 2) + EK[38];
-   u32bit C = load_le<u32bit>(in, 1) + EK[37];
-   u32bit D = load_le<u32bit>(in, 0) + EK[36];
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      u32bit A = load_le<u32bit>(in, 3) + EK[39];
+      u32bit B = load_le<u32bit>(in, 2) + EK[38];
+      u32bit C = load_le<u32bit>(in, 1) + EK[37];
+      u32bit D = load_le<u32bit>(in, 0) + EK[36];
 
-   forward_mix(A, B, C, D);
+      forward_mix(A, B, C, D);
 
-   decrypt_round(A, B, C, D, 15);
-   decrypt_round(B, C, D, A, 14);
-   decrypt_round(C, D, A, B, 13);
-   decrypt_round(D, A, B, C, 12);
-   decrypt_round(A, B, C, D, 11);
-   decrypt_round(B, C, D, A, 10);
-   decrypt_round(C, D, A, B,  9);
-   decrypt_round(D, A, B, C,  8);
+      decrypt_round(A, B, C, D, 15);
+      decrypt_round(B, C, D, A, 14);
+      decrypt_round(C, D, A, B, 13);
+      decrypt_round(D, A, B, C, 12);
+      decrypt_round(A, B, C, D, 11);
+      decrypt_round(B, C, D, A, 10);
+      decrypt_round(C, D, A, B,  9);
+      decrypt_round(D, A, B, C,  8);
 
-   decrypt_round(A, D, C, B,  7);
-   decrypt_round(B, A, D, C,  6);
-   decrypt_round(C, B, A, D,  5);
-   decrypt_round(D, C, B, A,  4);
-   decrypt_round(A, D, C, B,  3);
-   decrypt_round(B, A, D, C,  2);
-   decrypt_round(C, B, A, D,  1);
-   decrypt_round(D, C, B, A,  0);
+      decrypt_round(A, D, C, B,  7);
+      decrypt_round(B, A, D, C,  6);
+      decrypt_round(C, B, A, D,  5);
+      decrypt_round(D, C, B, A,  4);
+      decrypt_round(A, D, C, B,  3);
+      decrypt_round(B, A, D, C,  2);
+      decrypt_round(C, B, A, D,  1);
+      decrypt_round(D, C, B, A,  0);
 
-   reverse_mix(A, B, C, D);
+      reverse_mix(A, B, C, D);
 
-   A -= EK[3]; B -= EK[2]; C -= EK[1]; D -= EK[0];
+      A -= EK[3]; B -= EK[2]; C -= EK[1]; D -= EK[0];
 
-   store_le(out, D, C, B, A);
+      store_le(out, D, C, B, A);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*

@@ -18,10 +18,11 @@ namespace Botan {
 class BOTAN_DLL Serpent_IA32 : public Serpent
    {
    public:
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+
       BlockCipher* clone() const { return new Serpent_IA32; }
    private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
       void key_schedule(const byte[], u32bit);
    };
 

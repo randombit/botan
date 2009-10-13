@@ -11,7 +11,6 @@
 #include <botan/stream_cipher.h>
 #include <botan/hash.h>
 #include <botan/mac.h>
-#include <botan/util.h>
 #include <memory>
 
 namespace Botan {
@@ -55,10 +54,11 @@ bench_block_cipher(BlockCipher* block_cipher,
 
    const u32bit in_blocks = buf_len / block_cipher->BLOCK_SIZE;
 
+   block_cipher->set_key(buf, block_cipher->MAXIMUM_KEYLENGTH);
+
    while(nanoseconds_used < nanoseconds_max)
       {
-      for(u32bit i = 0; i != in_blocks; ++i)
-         block_cipher->encrypt(buf + block_cipher->BLOCK_SIZE * i);
+      block_cipher->encrypt_n(buf, buf, in_blocks);
 
       ++reps;
       nanoseconds_used = timer.clock() - start;
@@ -80,6 +80,8 @@ bench_stream_cipher(StreamCipher* stream_cipher,
    const u64bit start = timer.clock();
    u64bit nanoseconds_used = 0;
    u64bit reps = 0;
+
+   stream_cipher->set_key(buf, stream_cipher->MAXIMUM_KEYLENGTH);
 
    while(nanoseconds_used < nanoseconds_max)
       {

@@ -1,11 +1,11 @@
-/******
+/*
 * Elliptic curves over GF(p)
 *
-* (C) 2007 Martin Doering
-*          Christoph Ludwig
-*          Falko Strenzke
+* (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
 *     2008 Jack Lloyd
-******/
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/curve_gfp.h>
 #include <botan/bigint.h>

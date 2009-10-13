@@ -78,6 +78,11 @@ class BOTAN_DLL Default_Engine : public Engine
                                           Algorithm_Factory&) const;
    };
 
+Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
+                              Cipher_Dir direction,
+                              const std::string& mode,
+                              const std::string& padding);
+
 }
 
 #endif

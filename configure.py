@@ -36,10 +36,10 @@ class BuildConfigurationInformation(object):
     Version information
     """
     version_major = 1
-    version_minor = 8
-    version_patch = 8
-    version_so_patch = 8
-    version_suffix = '-dev'
+    version_minor = 9
+    version_patch = 1
+    version_so_patch = 1
+    version_suffix = '-rc1'
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
@@ -54,6 +54,12 @@ class BuildConfigurationInformation(object):
 
         self.checkobj_dir = os.path.join(self.build_dir, 'checks')
         self.libobj_dir = os.path.join(self.build_dir, 'lib')
+
+        self.python_dir = os.path.join(options.src_dir, 'wrap', 'python')
+
+        self.use_boost_python = options.boost_python
+
+        self.pyobject_dir = os.path.join(self.build_dir, 'python')
 
         self.include_dir = os.path.join(self.build_dir, 'include')
         self.full_include_dir = os.path.join(self.include_dir, 'botan')
@@ -71,6 +77,10 @@ class BuildConfigurationInformation(object):
             [os.path.join(checks_dir, file) for file in os.listdir(checks_dir)
              if file.endswith('.cpp')])
 
+        self.python_sources = sorted(
+            [os.path.join(self.python_dir, file) for file in os.listdir(self.python_dir)
+             if file.endswith('.cpp')])
+
     def doc_files(self):
         docs = ['readme.txt']
 
@@ -86,6 +96,14 @@ class BuildConfigurationInformation(object):
     def pkg_config_file(self):
         return 'botan-%d.%d.pc' % (self.version_major,
                                    self.version_minor)
+
+    def build_dirs(self):
+        dirs = [self.checkobj_dir,
+                self.libobj_dir,
+                self.full_include_dir]
+        if self.use_boost_python:
+            dirs.append(self.pyobject_dir)
+        return dirs
 
     def username(self):
         return getpass.getuser()
@@ -115,6 +133,15 @@ def process_command_line(args):
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
                             help='override guess of CPU byte order')
 
+    target_group.add_option('--with-unaligned-mem',
+                            dest='unaligned_mem', action='store_true',
+                            default=None,
+                            help='enable unaligned memory accesses')
+
+    target_group.add_option('--without-unaligned-mem',
+                            dest='unaligned_mem', action='store_false',
+                            help=SUPPRESS_HELP)
+
     build_group = OptionGroup(parser, 'Build options')
 
     build_group.add_option('--enable-shared', dest='build_shared_lib',
@@ -136,6 +163,10 @@ def process_command_line(args):
                            help='enable debug build')
     build_group.add_option('--disable-debug', dest='debug_build',
                            action='store_false', help=SUPPRESS_HELP)
+
+    build_group.add_option('--use-boost-python', dest='boost_python',
+                           default=False, action='store_true',
+                           help='enable Boost.Python wrapper')
 
     build_group.add_option('--with-tr1-implementation', metavar='WHICH',
                            dest='with_tr1', default=None,
@@ -327,12 +358,20 @@ class ModuleInfo(object):
         lex_me_harder(infofile, self,
                       ['add', 'requires', 'os', 'arch', 'cc', 'libs'],
                       { 'realname': '<UNKNOWN>',
-                        'load_on': 'request',
+                        'load_on': 'auto',
                         'define': None,
                         'modset': None,
                         'uses_tr1': 'false',
                         'note': '',
                         'mp_bits': 0 })
+
+        if self.add == []:
+            for (dirpath, dirnames, filenames) in os.walk(self.lives_in):
+                if dirpath == self.lives_in:
+                    self.add = [filename for filename in filenames
+                                if filename.endswith('.cpp') or
+                                filename.endswith('.h') or
+                                filename.endswith('.S')]
 
         # Coerce to more useful types
         self.libs = force_to_dict(self.libs)
@@ -404,7 +443,7 @@ class ArchInfo(object):
                           self.submodel_aliases.items(),
                       key = lambda k: len(k[0]), reverse = True)
 
-    def defines(self, target_submodel, with_endian):
+    def defines(self, target_submodel, with_endian, unaligned_ok):
         macros = ['TARGET_ARCH_IS_%s' % (self.basename.upper())]
 
         def form_cpu_macro(cpu_name):
@@ -419,7 +458,12 @@ class ArchInfo(object):
         elif self.endian != None:
             macros.append('TARGET_CPU_IS_%s_ENDIAN' % (self.endian.upper()))
 
-        macros.append('TARGET_UNALIGNED_LOADSTOR_OK %d' % (self.unaligned_ok))
+        if unaligned_ok is None:
+            unaligned_ok = self.unaligned_ok
+
+        if unaligned_ok:
+            logging.info('Assuming unaligned memory access works on this CPU')
+        macros.append('TARGET_UNALIGNED_LOADSTOR_OK %d' % (unaligned_ok))
 
         return macros
 
@@ -429,6 +473,7 @@ class CompilerInfo(object):
                       ['so_link_flags', 'mach_opt', 'mach_abi_linking'],
                       { 'realname': '<UNKNOWN>',
                         'binary_name': None,
+                        'macro_name': None,
                         'compile_option': '-c ',
                         'output_to_option': '-o ',
                         'add_include_dir_option': '-I',
@@ -469,6 +514,7 @@ class CompilerInfo(object):
 
         del self.mach_opt
 
+
     def mach_abi_link_flags(self, osname, arch, submodel):
 
         abi_link = set()
@@ -495,21 +541,32 @@ class CompilerInfo(object):
 
         return ''
 
+    def library_opt_flags(self, debug_build):
+        flags = self.lib_opt_flags
+        if debug_build and self.debug_flags != '':
+            flags += ' ' + self.debug_flags
+        if not debug_build and self.no_debug_flags != '':
+            flags += ' ' + self.no_debug_flags
+        return flags
+
     def so_link_command_for(self, osname):
         if osname in self.so_link_flags:
             return self.so_link_flags[osname]
         return self.so_link_flags['default']
 
     def defines(self, with_tr1):
-        if with_tr1:
-            if with_tr1 == 'boost':
-                return ['USE_BOOST_TR1']
-            elif with_tr1 == 'system':
-                return ['USE_STD_TR1']
-        elif self.compiler_has_tr1:
-            return ['USE_STD_TR1']
 
-        return []
+        def tr1_macro():
+            if with_tr1:
+                if with_tr1 == 'boost':
+                    return ['USE_BOOST_TR1']
+                elif with_tr1 == 'system':
+                    return ['USE_STD_TR1']
+            elif self.compiler_has_tr1:
+                return ['USE_STD_TR1']
+            return []
+
+        return ['BUILD_COMPILER_IS_' + self.macro_name] + tr1_macro()
 
 class OsInfo(object):
     def __init__(self, infofile):
@@ -704,7 +761,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                                                       options.arch,
                                                       options.cpu),
 
-        'lib_opt': cc.lib_opt_flags,
+        'lib_opt': cc.library_opt_flags(options.debug_build),
         'mach_opt': cc.mach_opts(options.arch, options.cpu),
         'check_opt': cc.check_opt_flags,
         'lang_flags': cc.lang_flags + options.extra_flags,
@@ -725,7 +782,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             cc.defines(options.with_tr1)),
 
         'target_cpu_defines': make_cpp_macros(
-            arch.defines(options.cpu, options.with_endian)),
+            arch.defines(options.cpu, options.with_endian,
+                         options.unaligned_mem)),
 
         'include_files': makefile_list(build_config.headers),
 
@@ -744,6 +802,14 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'check_build_cmds': '\n'.join(
             build_commands(build_config.check_sources,
                            build_config.checkobj_dir, 'CHECK')),
+
+        'python_objs': makefile_list(
+            objectfile_list(build_config.python_sources,
+                            build_config.pyobject_dir)),
+
+        'python_build_cmds': '\n'.join(
+            build_commands(build_config.python_sources,
+                           build_config.pyobject_dir, 'PYTHON')),
 
         'ar_command': cc.ar_command or osinfo.ar_command,
         'ranlib_command': osinfo.ranlib_command(),
@@ -766,6 +832,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'mod_list': '\n'.join(['%s (%s)' % (m.basename, m.realname)
                                for m in sorted(modules)]),
+
+        'python_version': '.'.join(map(str, sys.version_info[0:2]))
         }
 
 """
@@ -957,10 +1025,8 @@ def setup_build(build_config, options, template_vars):
     except OSError, e:
         logging.debug('Error while removing build dir: %s' % (e))
 
-    for dirs in [build_config.checkobj_dir,
-                 build_config.libobj_dir,
-                 build_config.full_include_dir]:
-        os.makedirs(dirs)
+    for dir in build_config.build_dirs():
+        os.makedirs(dir)
 
     makefile_template = os.path.join(
         options.makefile_dir,
@@ -978,6 +1044,10 @@ def setup_build(build_config, options, template_vars):
                              ('botan.doxy.in', 'botan.doxy')]:
         templates_to_proc[os.path.join(options.build_data, template)] = \
              os.path.join(build_config.build_dir, sink)
+
+    if options.boost_python:
+        templates_to_proc[
+            os.path.join(options.makefile_dir, 'python.in')] = 'Makefile.python'
 
     for (template, sink) in templates_to_proc.items():
         try:
@@ -1116,7 +1186,7 @@ if __name__ == '__main__':
         main()
     except Exception, e:
         print >>sys.stderr, e
-        #import traceback
-        #traceback.print_exc(file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
         sys.exit(1)
     sys.exit(0)

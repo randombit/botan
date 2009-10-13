@@ -48,57 +48,69 @@ inline void R3(u32bit& L, u32bit R, u32bit MK, u32bit RK)
 /*
 * CAST-128 Encryption
 */
-void CAST_128::enc(const byte in[], byte out[]) const
+void CAST_128::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u32bit L = load_be<u32bit>(in, 0);
-   u32bit R = load_be<u32bit>(in, 1);
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      u32bit L = load_be<u32bit>(in, 0);
+      u32bit R = load_be<u32bit>(in, 1);
 
-   R1(L, R, MK[ 0], RK[ 0]);
-   R2(R, L, MK[ 1], RK[ 1]);
-   R3(L, R, MK[ 2], RK[ 2]);
-   R1(R, L, MK[ 3], RK[ 3]);
-   R2(L, R, MK[ 4], RK[ 4]);
-   R3(R, L, MK[ 5], RK[ 5]);
-   R1(L, R, MK[ 6], RK[ 6]);
-   R2(R, L, MK[ 7], RK[ 7]);
-   R3(L, R, MK[ 8], RK[ 8]);
-   R1(R, L, MK[ 9], RK[ 9]);
-   R2(L, R, MK[10], RK[10]);
-   R3(R, L, MK[11], RK[11]);
-   R1(L, R, MK[12], RK[12]);
-   R2(R, L, MK[13], RK[13]);
-   R3(L, R, MK[14], RK[14]);
-   R1(R, L, MK[15], RK[15]);
+      R1(L, R, MK[ 0], RK[ 0]);
+      R2(R, L, MK[ 1], RK[ 1]);
+      R3(L, R, MK[ 2], RK[ 2]);
+      R1(R, L, MK[ 3], RK[ 3]);
+      R2(L, R, MK[ 4], RK[ 4]);
+      R3(R, L, MK[ 5], RK[ 5]);
+      R1(L, R, MK[ 6], RK[ 6]);
+      R2(R, L, MK[ 7], RK[ 7]);
+      R3(L, R, MK[ 8], RK[ 8]);
+      R1(R, L, MK[ 9], RK[ 9]);
+      R2(L, R, MK[10], RK[10]);
+      R3(R, L, MK[11], RK[11]);
+      R1(L, R, MK[12], RK[12]);
+      R2(R, L, MK[13], RK[13]);
+      R3(L, R, MK[14], RK[14]);
+      R1(R, L, MK[15], RK[15]);
 
-   store_be(out, R, L);
+      store_be(out, R, L);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*
 * CAST-128 Decryption
 */
-void CAST_128::dec(const byte in[], byte out[]) const
+void CAST_128::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u32bit L = load_be<u32bit>(in, 0);
-   u32bit R = load_be<u32bit>(in, 1);
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      u32bit L = load_be<u32bit>(in, 0);
+      u32bit R = load_be<u32bit>(in, 1);
 
-   R1(L, R, MK[15], RK[15]);
-   R3(R, L, MK[14], RK[14]);
-   R2(L, R, MK[13], RK[13]);
-   R1(R, L, MK[12], RK[12]);
-   R3(L, R, MK[11], RK[11]);
-   R2(R, L, MK[10], RK[10]);
-   R1(L, R, MK[ 9], RK[ 9]);
-   R3(R, L, MK[ 8], RK[ 8]);
-   R2(L, R, MK[ 7], RK[ 7]);
-   R1(R, L, MK[ 6], RK[ 6]);
-   R3(L, R, MK[ 5], RK[ 5]);
-   R2(R, L, MK[ 4], RK[ 4]);
-   R1(L, R, MK[ 3], RK[ 3]);
-   R3(R, L, MK[ 2], RK[ 2]);
-   R2(L, R, MK[ 1], RK[ 1]);
-   R1(R, L, MK[ 0], RK[ 0]);
+      R1(L, R, MK[15], RK[15]);
+      R3(R, L, MK[14], RK[14]);
+      R2(L, R, MK[13], RK[13]);
+      R1(R, L, MK[12], RK[12]);
+      R3(L, R, MK[11], RK[11]);
+      R2(R, L, MK[10], RK[10]);
+      R1(L, R, MK[ 9], RK[ 9]);
+      R3(R, L, MK[ 8], RK[ 8]);
+      R2(L, R, MK[ 7], RK[ 7]);
+      R1(R, L, MK[ 6], RK[ 6]);
+      R3(L, R, MK[ 5], RK[ 5]);
+      R2(R, L, MK[ 4], RK[ 4]);
+      R1(L, R, MK[ 3], RK[ 3]);
+      R3(R, L, MK[ 2], RK[ 2]);
+      R2(L, R, MK[ 1], RK[ 1]);
+      R1(R, L, MK[ 0], RK[ 0]);
 
-   store_be(out, R, L);
+      store_be(out, R, L);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*

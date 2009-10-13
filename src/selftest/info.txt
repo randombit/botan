@@ -11,11 +11,6 @@ selftest.h
 
 <requires>
 algo_factory
-cbc
-cfb
-ctr
-ecb
 filters
-hmac
-ofb
+def_engine
 </requires>

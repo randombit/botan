@@ -1,5 +1,7 @@
 realname "IBM XL C/C++"
 
+macro_name "IBM_XLC"
+
 binary_name "xlC"
 
 compile_option "-c "

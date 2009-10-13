@@ -115,7 +115,7 @@ clean:
 distclean: clean
 	$(RM_R) %{build_dir}
 	$(RM_R) %{doc_src_dir}/doxygen %{doc_src_dir}/botan.doxy
-	$(RM) Makefile $(CONFIG_SCRIPT) $(PKGCONFIG)
+	$(RM) Makefile* $(CONFIG_SCRIPT) $(PKGCONFIG)
 
 install: $(LIBRARIES)
 	$(ECHO) "Installing Botan into $(DESTDIR)... "

@@ -1,4 +1,24 @@
 
+* 1.9.1-rc1, 2009-10-09
+ - Better support for Python and Perl wrappers
+ - Add an implementation of Blue Midnight Wish (Round 2 tweak version)
+ - Add threshold secret sharing (draft-mcgrew-tss-02)
+ - Add runtime cpu feature detection for x86/x86-64
+ - Add code for general runtime self testing for hashes, MACs, and ciphers
+ - Add support for GNU/Hurd
+ - New parsing code for SCAN algorithm names
+ - Alter Skein-512 to match the tweaked 1.2 specification
+ - Enable SSE2 optimizations under Visual C++
+
+* 1.9.0, 2009-09-09
+ - Add support for parallel invocation of block ciphers where possible
+ - Add SSE2 implementation of Serpent
+ - Add Rivest's package transform (an all or nothing transform)
+ - Minor speedups to the Turing key schedule
+ - Fix processing multiple messages in XTS mode
+ - Add --no-autoload option to configure.py, for minimized builds
+ - The previously used configure.pl script is no longer supported
+
 * 1.8.8-dev, 2009-??-??
  - Alter Skein-512 to match the tweaked 1.2 specification
 

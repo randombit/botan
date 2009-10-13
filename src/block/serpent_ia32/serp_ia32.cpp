@@ -21,17 +21,27 @@ void botan_serpent_ia32_key_schedule(u32bit[140]);
 /*
 * Serpent Encryption
 */
-void Serpent_IA32::enc(const byte in[], byte out[]) const
+void Serpent_IA32::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   botan_serpent_ia32_encrypt(in, out, round_key);
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      botan_serpent_ia32_encrypt(in, out, round_key);
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*
 * Serpent Decryption
 */
-void Serpent_IA32::dec(const byte in[], byte out[]) const
+void Serpent_IA32::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   botan_serpent_ia32_decrypt(in, out, round_key);
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      botan_serpent_ia32_decrypt(in, out, round_key);
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*
@@ -41,7 +51,7 @@ void Serpent_IA32::key_schedule(const byte key[], u32bit length)
    {
    SecureBuffer<u32bit, 140> W;
    for(u32bit j = 0; j != length / 4; ++j)
-      W[j] = make_u32bit(key[4*j+3], key[4*j+2], key[4*j+1], key[4*j]);
+      W[j] = load_le<u32bit>(key, j);
    W[length / 4] |= u32bit(1) << ((length%4)*8);
 
    botan_serpent_ia32_key_schedule(W);

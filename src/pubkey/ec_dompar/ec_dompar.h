@@ -1,5 +1,6 @@
 /*
-* ECDSA Domain Parameters
+* ECC Domain Parameters
+*
 * (C) 2007 Falko Strenzke, FlexSecure GmbH
 *     2008 Jack Lloyd
 *

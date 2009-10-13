@@ -17,6 +17,7 @@ data_src.h
 filter.cpp
 filter.h
 filters.h
+key_filt.h
 out_buf.cpp
 out_buf.h
 pbe.h

@@ -1,0 +1,8 @@
+realname "Threshold Secret Sharing"
+
+<requires>
+hash
+rng
+filters
+hex
+</requires>
