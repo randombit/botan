@@ -13,7 +13,7 @@
 #include <botan/bigint.h>
 #include <botan/parsing.h>
 #include <botan/oids.h>
-#include <botan/timer.h>
+#include <botan/time.h>
 #include <algorithm>
 #include <typeinfo>
 #include <iterator>

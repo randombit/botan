@@ -12,5 +12,4 @@ auto_rng.cpp
 <requires>
 hmac
 sha2
-timer
 </requires>
