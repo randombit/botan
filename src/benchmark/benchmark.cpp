@@ -1,6 +1,6 @@
 /**
 * Runtime benchmarking
-* (C) 2008 Jack Lloyd
+* (C) 2008-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -12,31 +12,40 @@
 #include <botan/hash.h>
 #include <botan/mac.h>
 #include <memory>
+#include <vector>
+#include <chrono>
 
 namespace Botan {
 
 namespace {
 
+typedef std::chrono::high_resolution_clock benchmark_clock;
+
 /**
 * Benchmark BufferedComputation (hash or MAC)
 */
 std::pair<u64bit, u64bit> bench_buf_comp(BufferedComputation* buf_comp,
-                                         Timer& timer,
                                          u64bit nanoseconds_max,
                                          const byte buf[], u32bit buf_len)
    {
-   const u64bit start = timer.clock();
-   u64bit nanoseconds_used = 0;
    u64bit reps = 0;
 
-   while(nanoseconds_used < nanoseconds_max)
+   std::chrono::nanoseconds max_time(nanoseconds_max);
+   std::chrono::nanoseconds time_used(0);
+
+   auto start = benchmark_clock::now();
+
+   while(time_used < max_time)
       {
       buf_comp->update(buf, buf_len);
       ++reps;
-      nanoseconds_used = timer.clock() - start;
+      time_used = benchmark_clock::now() - start;
       }
 
-   return std::make_pair(reps * buf_len, nanoseconds_used);
+   u64bit ns_taken =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(time_used).count();
+
+   return std::make_pair(reps * buf_len, ns_taken);
    }
 
 /**
@@ -44,28 +53,32 @@ std::pair<u64bit, u64bit> bench_buf_comp(BufferedComputation* buf_comp,
 */
 std::pair<u64bit, u64bit>
 bench_block_cipher(BlockCipher* block_cipher,
-                   Timer& timer,
                    u64bit nanoseconds_max,
                    byte buf[], u32bit buf_len)
    {
-   const u64bit start = timer.clock();
-   u64bit nanoseconds_used = 0;
+   const u32bit in_blocks = buf_len / block_cipher->BLOCK_SIZE;
+
    u64bit reps = 0;
 
-   const u32bit in_blocks = buf_len / block_cipher->BLOCK_SIZE;
+   std::chrono::nanoseconds max_time(nanoseconds_max);
+   std::chrono::nanoseconds time_used(0);
+
+   auto start = benchmark_clock::now();
 
    block_cipher->set_key(buf, block_cipher->MAXIMUM_KEYLENGTH);
 
-   while(nanoseconds_used < nanoseconds_max)
+   while(time_used < max_time)
       {
       block_cipher->encrypt_n(buf, buf, in_blocks);
-
       ++reps;
-      nanoseconds_used = timer.clock() - start;
+      time_used = benchmark_clock::now() - start;
       }
 
+   u64bit ns_taken =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(time_used).count();
+
    return std::make_pair(reps * in_blocks * block_cipher->BLOCK_SIZE,
-                         nanoseconds_used);
+                         ns_taken);
    }
 
 /**
@@ -73,35 +86,40 @@ bench_block_cipher(BlockCipher* block_cipher,
 */
 std::pair<u64bit, u64bit>
 bench_stream_cipher(StreamCipher* stream_cipher,
-                    Timer& timer,
                     u64bit nanoseconds_max,
                     byte buf[], u32bit buf_len)
    {
-   const u64bit start = timer.clock();
-   u64bit nanoseconds_used = 0;
    u64bit reps = 0;
 
    stream_cipher->set_key(buf, stream_cipher->MAXIMUM_KEYLENGTH);
 
-   while(nanoseconds_used < nanoseconds_max)
+   std::chrono::nanoseconds max_time(nanoseconds_max);
+   std::chrono::nanoseconds time_used(0);
+
+   auto start = benchmark_clock::now();
+
+   while(time_used < max_time)
       {
       stream_cipher->encrypt(buf, buf_len);
       ++reps;
-      nanoseconds_used = timer.clock() - start;
+      time_used = benchmark_clock::now() - start;
       }
 
-   return std::make_pair(reps * buf_len, nanoseconds_used);
+   u64bit ns_taken =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(time_used).count();
+
+   return std::make_pair(reps * buf_len, ns_taken);
    }
 
 /**
 * Benchmark hash
 */
 std::pair<u64bit, u64bit>
-bench_hash(HashFunction* hash, Timer& timer,
+bench_hash(HashFunction* hash,
            u64bit nanoseconds_max,
            const byte buf[], u32bit buf_len)
    {
-   return bench_buf_comp(hash, timer, nanoseconds_max, buf, buf_len);
+   return bench_buf_comp(hash, nanoseconds_max, buf, buf_len);
    }
 
 /**
@@ -109,12 +127,11 @@ bench_hash(HashFunction* hash, Timer& timer,
 */
 std::pair<u64bit, u64bit>
 bench_mac(MessageAuthenticationCode* mac,
-          Timer& timer,
           u64bit nanoseconds_max,
           const byte buf[], u32bit buf_len)
    {
    mac->set_key(buf, mac->MAXIMUM_KEYLENGTH);
-   return bench_buf_comp(mac, timer, nanoseconds_max, buf, buf_len);
+   return bench_buf_comp(mac, nanoseconds_max, buf, buf_len);
    }
 
 }
@@ -122,7 +139,6 @@ bench_mac(MessageAuthenticationCode* mac,
 std::map<std::string, double>
 algorithm_benchmark(const std::string& name,
                     u32bit milliseconds,
-                    Timer& timer,
                     RandomNumberGenerator& rng,
                     Algorithm_Factory& af)
    {
@@ -148,7 +164,7 @@ algorithm_benchmark(const std::string& name,
             af.prototype_block_cipher(name, provider))
          {
          std::auto_ptr<BlockCipher> block_cipher(proto->clone());
-         results = bench_block_cipher(block_cipher.get(), timer,
+         results = bench_block_cipher(block_cipher.get(),
                                       ns_per_provider,
                                       &buf[0], buf.size());
          }
@@ -156,7 +172,7 @@ algorithm_benchmark(const std::string& name,
                  af.prototype_stream_cipher(name, provider))
          {
          std::auto_ptr<StreamCipher> stream_cipher(proto->clone());
-         results = bench_stream_cipher(stream_cipher.get(), timer,
+         results = bench_stream_cipher(stream_cipher.get(),
                                        ns_per_provider,
                                        &buf[0], buf.size());
          }
@@ -164,14 +180,14 @@ algorithm_benchmark(const std::string& name,
                  af.prototype_hash_function(name, provider))
          {
          std::auto_ptr<HashFunction> hash(proto->clone());
-         results = bench_hash(hash.get(), timer, ns_per_provider,
+         results = bench_hash(hash.get(), ns_per_provider,
                               &buf[0], buf.size());
          }
       else if(const MessageAuthenticationCode* proto =
                  af.prototype_mac(name, provider))
          {
          std::auto_ptr<MessageAuthenticationCode> mac(proto->clone());
-         results = bench_mac(mac.get(), timer, ns_per_provider,
+         results = bench_mac(mac.get(), ns_per_provider,
                              &buf[0], buf.size());
          }
 

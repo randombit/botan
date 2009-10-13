@@ -380,8 +380,8 @@ X509_Code X509_Store::check_sig(const Cert_Info& cert_info,
 */
 X509_Code X509_Store::check_sig(const X509_Object& object, Public_Key* key)
    {
-   std::auto_ptr<Public_Key> pub_key(key);
-   std::auto_ptr<PK_Verifier> verifier;
+   std::unique_ptr<Public_Key> pub_key(key);
+   std::unique_ptr<PK_Verifier> verifier;
 
    try {
       std::vector<std::string> sig_info =

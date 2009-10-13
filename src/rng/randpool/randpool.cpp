@@ -8,9 +8,9 @@
 #include <botan/randpool.h>
 #include <botan/loadstor.h>
 #include <botan/xor_buf.h>
-#include <botan/timer.h>
 #include <botan/stl_util.h>
 #include <algorithm>
+#include <chrono>
 
 namespace Botan {
 
@@ -51,7 +51,9 @@ void Randpool::randomize(byte out[], u32bit length)
 */
 void Randpool::update_buffer()
    {
-   const u64bit timestamp = system_time();
+   const u64bit timestamp =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(
+         std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
    for(u32bit i = 0; i != counter.size(); ++i)
       if(++counter[i])

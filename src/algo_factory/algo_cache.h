@@ -8,8 +8,9 @@
 #ifndef BOTAN_ALGORITHM_CACHE_TEMPLATE_H__
 #define BOTAN_ALGORITHM_CACHE_TEMPLATE_H__
 
-#include <botan/mutex.h>
+#include <botan/types.h>
 #include <botan/stl_util.h>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <map>
@@ -50,7 +51,6 @@ class Algorithm_Cache
       */
       std::vector<std::string> providers_of(const std::string& algo_name);
 
-      Algorithm_Cache(Mutex* m) : mutex(m) {}
       ~Algorithm_Cache();
    private:
       typedef typename std::map<std::string, std::map<std::string, T*> >::iterator
@@ -60,7 +60,7 @@ class Algorithm_Cache
 
       algorithms_iterator find_algorithm(const std::string& algo_spec);
 
-      Mutex* mutex;
+      std::mutex mutex;
       std::map<std::string, std::string> aliases;
       std::map<std::string, std::string> pref_providers;
       std::map<std::string, std::map<std::string, T*> > algorithms;
@@ -96,7 +96,7 @@ template<typename T>
 const T* Algorithm_Cache<T>::get(const std::string& algo_spec,
                                  const std::string& requested_provider)
    {
-   Mutex_Holder lock(mutex);
+   std::lock_guard<std::mutex> lock(mutex);
 
    algorithms_iterator algo = find_algorithm(algo_spec);
    if(algo == algorithms.end()) // algo not found at all (no providers)
@@ -148,7 +148,7 @@ void Algorithm_Cache<T>::add(T* algo,
    if(!algo)
       return;
 
-   Mutex_Holder lock(mutex);
+   std::lock_guard<std::mutex> lock(mutex);
 
    delete algorithms[algo->name()][provider];
    algorithms[algo->name()][provider] = algo;
@@ -166,7 +166,7 @@ void Algorithm_Cache<T>::add(T* algo,
 template<typename T> std::vector<std::string>
 Algorithm_Cache<T>::providers_of(const std::string& algo_name)
    {
-   Mutex_Holder lock(mutex);
+   std::lock_guard<std::mutex> lock(mutex);
 
    std::vector<std::string> providers;
 
@@ -193,7 +193,7 @@ template<typename T>
 void Algorithm_Cache<T>::set_preferred_provider(const std::string& algo_spec,
                                                 const std::string& provider)
    {
-   Mutex_Holder lock(mutex);
+   std::lock_guard<std::mutex> lock(mutex);
 
    pref_providers[algo_spec] = provider;
    }
@@ -218,8 +218,6 @@ Algorithm_Cache<T>::~Algorithm_Cache()
 
       ++algo;
       }
-
-   delete mutex;
    }
 
 }

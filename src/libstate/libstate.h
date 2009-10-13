@@ -12,6 +12,7 @@
 #include <botan/allocate.h>
 #include <botan/algo_factory.h>
 
+#include <mutex>
 #include <string>
 #include <vector>
 #include <map>
@@ -27,11 +28,11 @@ class BOTAN_DLL Library_State
       Library_State();
       ~Library_State();
 
-      void initialize(bool thread_safe);
+      void initialize();
 
       Algorithm_Factory& algorithm_factory();
 
-      Allocator* get_allocator(const std::string& = "") const;
+      Allocator* get_allocator(const std::string& = "");
       void add_allocator(Allocator*);
       void set_default_allocator(const std::string&);
 
@@ -42,7 +43,7 @@ class BOTAN_DLL Library_State
       * @result the value of the parameter
       */
       std::string get(const std::string& section,
-                      const std::string& key) const;
+                      const std::string& key);
 
       /**
       * Check whether a certain parameter is set
@@ -52,7 +53,7 @@ class BOTAN_DLL Library_State
       * @result true if the parameters value is set,
       * false otherwise
       */
-      bool is_set(const std::string& section, const std::string& key) const;
+      bool is_set(const std::string& section, const std::string& key);
 
       /**
       * Set a configuration parameter.
@@ -70,7 +71,7 @@ class BOTAN_DLL Library_State
       * referred to as option).
       * @param key the desired keys name
       */
-      std::string option(const std::string& key) const;
+      std::string option(const std::string& key);
 
       /**
       * Set an option.
@@ -91,21 +92,17 @@ class BOTAN_DLL Library_State
       * @param alias the alias to resolve.
       * @return what the alias stands for
       */
-      std::string deref_alias(const std::string&) const;
-
-      class Mutex* get_mutex() const;
+      std::string deref_alias(const std::string&);
    private:
       void load_default_config();
 
       Library_State(const Library_State&) {}
       Library_State& operator=(const Library_State&) { return (*this); }
 
-      class Mutex_Factory* mutex_factory;
-
+      std::mutex config_lock;
       std::map<std::string, std::string> config;
-      class Mutex* config_lock;
 
-      class Mutex* allocator_lock;
+      std::mutex allocator_lock;
       std::map<std::string, Allocator*> alloc_factory;
       mutable Allocator* cached_default_allocator;
       std::vector<Allocator*> allocators;
