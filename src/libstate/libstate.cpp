@@ -85,7 +85,7 @@ Library_State* swap_global_state(Library_State* new_state)
 /*
 * Get an allocator by its name
 */
-Allocator* Library_State::get_allocator(const std::string& type) const
+Allocator* Library_State::get_allocator(const std::string& type)
    {
    std::lock_guard<std::mutex> lock(allocator_lock);
 
@@ -137,7 +137,7 @@ void Library_State::set_default_allocator(const std::string& type)
 * Get a configuration value
 */
 std::string Library_State::get(const std::string& section,
-                               const std::string& key) const
+                               const std::string& key)
    {
    std::lock_guard<std::mutex> lock(config_lock);
 
@@ -149,7 +149,7 @@ std::string Library_State::get(const std::string& section,
 * See if a particular option has been set
 */
 bool Library_State::is_set(const std::string& section,
-                           const std::string& key) const
+                           const std::string& key)
    {
    std::lock_guard<std::mutex> lock(config_lock);
 
@@ -184,7 +184,7 @@ void Library_State::add_alias(const std::string& key, const std::string& value)
 /*
 * Dereference an alias to a fixed name
 */
-std::string Library_State::deref_alias(const std::string& key) const
+std::string Library_State::deref_alias(const std::string& key)
    {
    std::string result = key;
    while(is_set("alias", result))
@@ -204,7 +204,7 @@ void Library_State::set_option(const std::string& key,
 /*
 * Get an option value
 */
-std::string Library_State::option(const std::string& key) const
+std::string Library_State::option(const std::string& key)
    {
    return get("conf", key);
    }
