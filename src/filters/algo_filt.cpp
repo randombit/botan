@@ -47,7 +47,7 @@ StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name,
 */
 void StreamCipher_Filter::set_iv(const InitializationVector& iv)
    {
-   cipher->resync(iv.begin(), iv.length());
+   cipher->set_iv(iv.begin(), iv.length());
    }
 
 /*
@@ -58,7 +58,7 @@ void StreamCipher_Filter::write(const byte input[], u32bit length)
    while(length)
       {
       u32bit copied = std::min(length, buffer.size());
-      cipher->encrypt(input, buffer, copied);
+      cipher->cipher(input, buffer, copied);
       send(buffer, copied);
       input += copied;
       length -= copied;

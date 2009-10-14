@@ -19,13 +19,16 @@ namespace Botan {
 class BOTAN_DLL ARC4 : public StreamCipher
    {
    public:
+      void cipher(const byte in[], byte out[], u32bit length);
+
       void clear() throw();
       std::string name() const;
+
       StreamCipher* clone() const { return new ARC4(SKIP); }
+
       ARC4(u32bit = 0);
       ~ARC4() { clear(); }
    private:
-      void cipher(const byte[], byte[], u32bit);
       void key_schedule(const byte[], u32bit);
       void generate();
 

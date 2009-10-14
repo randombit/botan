@@ -18,14 +18,18 @@ namespace Botan {
 class BOTAN_DLL WiderWake_41_BE : public StreamCipher
    {
    public:
+      void cipher(const byte[], byte[], u32bit);
+      void set_iv(const byte[], u32bit);
+
+      bool valid_iv_length(u32bit iv_len) const
+         { return (iv_len == 8); }
+
       void clear() throw();
       std::string name() const { return "WiderWake4+1-BE"; }
       StreamCipher* clone() const { return new WiderWake_41_BE; }
-      WiderWake_41_BE() : StreamCipher(16, 16, 1, 8) {}
+      WiderWake_41_BE() : StreamCipher(16, 16, 1) {}
    private:
-      void cipher(const byte[], byte[], u32bit);
       void key_schedule(const byte[], u32bit);
-      void resync(const byte[], u32bit);
 
       void generate(u32bit);
 

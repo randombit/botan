@@ -18,14 +18,18 @@ namespace Botan {
 class BOTAN_DLL Turing : public StreamCipher
    {
    public:
+      void cipher(const byte in[], byte out[], u32bit length);
+      void set_iv(const byte[], u32bit);
+
+      bool valid_iv_length(u32bit iv_len) const
+         { return (iv_len % 4 == 0 && iv_len <= 16); }
+
       void clear() throw();
       std::string name() const { return "Turing"; }
       StreamCipher* clone() const { return new Turing; }
       Turing() : StreamCipher(4, 32, 4) { position = 0; }
    private:
-      void cipher(const byte[], byte[], u32bit);
       void key_schedule(const byte[], u32bit);
-      void resync(const byte[], u32bit);
       void generate();
 
       static u32bit fixedS(u32bit);

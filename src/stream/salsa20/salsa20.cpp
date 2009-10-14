@@ -162,15 +162,15 @@ void Salsa20::key_schedule(const byte key[], u32bit length)
       }
 
    const byte ZERO[8] = { 0 };
-   resync(ZERO, sizeof(ZERO));
+   set_iv(ZERO, sizeof(ZERO));
    }
 
 /*
 * Return the name of this type
 */
-void Salsa20::resync(const byte iv[], u32bit length)
+void Salsa20::set_iv(const byte iv[], u32bit length)
    {
-   if(length != IV_LENGTH)
+   if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
 
    state[6] = load_le<u32bit>(iv, 0);
@@ -207,7 +207,7 @@ void Salsa20::clear() throw()
 /*
 * Salsa20 Constructor
 */
-Salsa20::Salsa20() : StreamCipher(16, 32, 16, 8)
+Salsa20::Salsa20() : StreamCipher(16, 32, 16)
    {
    clear();
    }

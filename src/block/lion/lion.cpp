@@ -22,7 +22,7 @@ void Lion::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       {
       xor_buf(buffer, in, key1, LEFT_SIZE);
       cipher->set_key(buffer, LEFT_SIZE);
-      cipher->encrypt(in + LEFT_SIZE, out + LEFT_SIZE, RIGHT_SIZE);
+      cipher->cipher(in + LEFT_SIZE, out + LEFT_SIZE, RIGHT_SIZE);
 
       hash->update(out + LEFT_SIZE, RIGHT_SIZE);
       hash->final(buffer);
@@ -30,7 +30,7 @@ void Lion::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 
       xor_buf(buffer, out, key2, LEFT_SIZE);
       cipher->set_key(buffer, LEFT_SIZE);
-      cipher->encrypt(out + LEFT_SIZE, RIGHT_SIZE);
+      cipher->cipher1(out + LEFT_SIZE, RIGHT_SIZE);
 
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;
@@ -48,7 +48,7 @@ void Lion::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       {
       xor_buf(buffer, in, key2, LEFT_SIZE);
       cipher->set_key(buffer, LEFT_SIZE);
-      cipher->encrypt(in + LEFT_SIZE, out + LEFT_SIZE, RIGHT_SIZE);
+      cipher->cipher(in + LEFT_SIZE, out + LEFT_SIZE, RIGHT_SIZE);
 
       hash->update(out + LEFT_SIZE, RIGHT_SIZE);
       hash->final(buffer);
@@ -56,7 +56,7 @@ void Lion::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 
       xor_buf(buffer, out, key1, LEFT_SIZE);
       cipher->set_key(buffer, LEFT_SIZE);
-      cipher->encrypt(out + LEFT_SIZE, RIGHT_SIZE);
+      cipher->cipher1(out + LEFT_SIZE, RIGHT_SIZE);
 
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;

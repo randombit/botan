@@ -44,18 +44,8 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
       */
       void write(const byte input[], u32bit input_len);
 
-      /**
-      * Seek in the stream.
-      * @param position the position to seek ahead
-      */
-      void seek(u32bit position) { cipher->seek(position); }
-
-      /**
-      * Find out whether the cipher underlying this filter supports
-      * resyncing.
-      * @return true if the cipher supports resyncing
-      */
-      bool supports_resync() const { return (cipher->IV_LENGTH != 0); }
+      bool valid_iv_length(u32bit iv_len)
+         { return cipher->valid_iv_length(iv_len); }
 
       /**
       * Set the initialization vector for this filter.

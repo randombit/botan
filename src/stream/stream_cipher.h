@@ -18,53 +18,40 @@ namespace Botan {
 class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
    {
    public:
-      const u32bit IV_LENGTH;
+      /**
+      * Encrypt or decrypt a message
+      * @param in the plaintext
+      * @param out the byte array to hold the output, i.e. the ciphertext
+      * @param len the length of both in and out in bytes
+      */
+      virtual void cipher(const byte in[], byte out[], u32bit len) = 0;
 
       /**
-      * Encrypt a message.
-      * @param i the plaintext
-      * @param o the byte array to hold the output, i.e. the ciphertext
-      * @param len the length of both i and o
+      * Encrypt or decrypt a message
+      * @param buf the plaintext / ciphertext
+      * @param len the length of buf in bytes
       */
-      void encrypt(const byte i[], byte o[], u32bit len) { cipher(i, o, len); }
-
-      /**
-      * Decrypt a message.
-      * @param i the ciphertext to decrypt
-      * @param o the byte array to hold the output, i.e. the plaintext
-      * @param len the length of both i and o
-      */
-      void decrypt(const byte i[], byte o[], u32bit len) { cipher(i, o, len); }
-
-      /**
-      * Encrypt a message.
-      * @param in the plaintext as input, after the function has
-      * returned it will hold the ciphertext
-
-      * @param len the length of in
-      */
-      void encrypt(byte in[], u32bit len) { cipher(in, in, len); }
-
-      /**
-      * Decrypt a message.
-      * @param in the ciphertext as input, after the function has
-      * returned it will hold the plaintext
-      * @param len the length of in
-      */
-      void decrypt(byte in[], u32bit len) { cipher(in, in, len); }
+      void cipher1(byte buf[], u32bit len)
+         { cipher(buf, buf, len); }
 
       /**
       * Resync the cipher using the IV
       * @param iv the initialization vector
       * @param iv_len the length of the IV in bytes
       */
-      virtual void resync(const byte iv[], u32bit iv_len);
+      virtual void set_iv(const byte[], u32bit iv_len)
+         {
+         if(iv_len)
+            throw Exception("The stream cipher " + name() +
+                            " does not support resyncronization");
+         }
 
       /**
-      * Seek ahead in the stream.
-      * @param len the length to seek ahead.
+      * @param iv_len the length of the IV in bytes
+      * @return if the length is valid for this algorithm
       */
-      virtual void seek(u32bit len);
+      virtual bool valid_iv_length(u32bit iv_len) const
+         { return (iv_len == 0); }
 
       /**
       * Get a new object representing the same algorithm as *this
@@ -76,15 +63,15 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       */
       virtual void clear() throw() = 0;
 
-      StreamCipher(u32bit key_min, u32bit key_max = 0,
-                   u32bit key_mod = 1,
-                   u32bit iv_len = 0) :
-         SymmetricAlgorithm(key_min, key_max, key_mod),
-         IV_LENGTH(iv_len) {}
+      /**
+      * StreamCipher constructor
+      */
+      StreamCipher(u32bit key_min,
+                   u32bit key_max = 0,
+                   u32bit key_mod = 1) :
+         SymmetricAlgorithm(key_min, key_max, key_mod) {}
 
       virtual ~StreamCipher() {}
-   private:
-      virtual void cipher(const byte[], byte[], u32bit) = 0;
    };
 
 }
