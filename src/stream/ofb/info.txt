@@ -11,4 +11,5 @@ ofb.h
 
 <requires>
 block
+stream
 </requires>

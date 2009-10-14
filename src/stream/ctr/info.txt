@@ -10,6 +10,7 @@ ctr.h
 </add>
 
 <requires>
+block
 stream
 </requires>
 

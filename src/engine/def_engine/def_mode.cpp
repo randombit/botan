@@ -81,7 +81,7 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
    {
 #if defined(BOTAN_HAS_OFB)
    if(mode == "OFB")
-      return new OFB(block_cipher->clone());
+      return new StreamCipher_Filter(new OFB(block_cipher->clone()));
 #endif
 
 #if defined(BOTAN_HAS_CTR_BE)
