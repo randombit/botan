@@ -14,20 +14,31 @@ namespace Botan {
 /*
 * StreamCipher_Filter Constructor
 */
-StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name) :
+StreamCipher_Filter::StreamCipher_Filter(StreamCipher* stream_cipher) :
    buffer(DEFAULT_BUFFERSIZE)
    {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-   cipher = af.make_stream_cipher(sc_name);
+   cipher = stream_cipher;
    }
 
 /*
 * StreamCipher_Filter Constructor
 */
-StreamCipher_Filter::StreamCipher_Filter(StreamCipher* stream_cipher) :
+StreamCipher_Filter::StreamCipher_Filter(StreamCipher* stream_cipher,
+                                         const SymmetricKey& key) :
    buffer(DEFAULT_BUFFERSIZE)
    {
    cipher = stream_cipher;
+   cipher->set_key(key);
+   }
+
+/*
+* StreamCipher_Filter Constructor
+*/
+StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name) :
+   buffer(DEFAULT_BUFFERSIZE)
+   {
+   Algorithm_Factory& af = global_state().algorithm_factory();
+   cipher = af.make_stream_cipher(sc_name);
    }
 
 /*

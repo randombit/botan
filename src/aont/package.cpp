@@ -7,7 +7,7 @@
 */
 
 #include <botan/package.h>
-#include <botan/pipe.h>
+#include <botan/filters.h>
 #include <botan/ctr.h>
 #include <botan/loadstor.h>
 #include <botan/xor_buf.h>
@@ -29,12 +29,7 @@ void package(RandomNumberGenerator& rng,
 
    SymmetricKey package_key(rng, cipher->BLOCK_SIZE);
 
-   // takes ownership of cipher object
-   Keyed_Filter* ctr_mode = new CTR_BE(cipher,
-                                       package_key,
-                                       InitializationVector(all_zeros));
-
-   Pipe pipe(ctr_mode);
+   Pipe pipe(new StreamCipher_Filter(new CTR_BE(cipher), package_key));
 
    pipe.process_msg(input, input_len);
    pipe.read(output, pipe.remaining());
@@ -113,10 +108,7 @@ void unpackage(BlockCipher* cipher,
       xor_buf(&package_key[0], buf, cipher->BLOCK_SIZE);
       }
 
-   // takes ownership of cipher object
-   Pipe pipe(new CTR_BE(cipher,
-                        SymmetricKey(package_key),
-                        InitializationVector(all_zeros)));
+   Pipe pipe(new StreamCipher_Filter(new CTR_BE(cipher), package_key));
 
    pipe.process_msg(input, input_len - cipher->BLOCK_SIZE);
 

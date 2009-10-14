@@ -1,6 +1,6 @@
-realname "CTR block cipher mode"
+realname "CTR mode"
 
-define CTR
+define CTR_BE
 
 load_on auto
 
@@ -10,6 +10,6 @@ ctr.h
 </add>
 
 <requires>
-modes
+stream
 </requires>
 
