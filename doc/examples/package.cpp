@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
                                     &unpackage_output[0]);
 
    if(unpackage_output == input)
-      std::cout << Package/unpackage worked\n";
+      std::cout << "Package/unpackage worked\n";
    else
       std::cout << "Something went wrong :(\n";
    }

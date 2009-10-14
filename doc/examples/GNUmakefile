@@ -2,8 +2,8 @@
 BOTAN_CONFIG = botan-config
 
 CXX       = g++
-CFLAGS    = -O2 -ansi -W -Wall $(shell $(BOTAN_CONFIG) --cflags)
-LIBS      = $(shell $(BOTAN_CONFIG) --libs)
+CFLAGS    = -O2 -ansi -W -Wall -I../../build/include
+LIBS      = -L../.. -lbotan
 
 SRCS=$(wildcard *.cpp)
 
