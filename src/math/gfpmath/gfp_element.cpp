@@ -68,7 +68,9 @@ void inner_montg_mult_sos(word result[], const word* a_bar, const word* b_bar, c
       while (C > 0)
          {
          // we need not worry here about C > 1, because the other operand is zero
-         word tmp = word_add(t[i+s+cnt], 0, &C);
+
+         word tmp = t[i+s+cnt] + C;
+         C = (tmp < t[i+s+cnt]);
          t[i+s+cnt] = tmp;
          cnt++;
          }
