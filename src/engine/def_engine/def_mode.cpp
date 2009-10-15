@@ -32,7 +32,7 @@
   #include <botan/ofb.h>
 #endif
 
-#if defined(BOTAN_HAS_CTR)
+#if defined(BOTAN_HAS_CTR_BE)
   #include <botan/ctr.h>
 #endif
 
@@ -81,12 +81,12 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
    {
 #if defined(BOTAN_HAS_OFB)
    if(mode == "OFB")
-      return new OFB(block_cipher->clone());
+      return new StreamCipher_Filter(new OFB(block_cipher->clone()));
 #endif
 
-#if defined(BOTAN_HAS_CTR)
+#if defined(BOTAN_HAS_CTR_BE)
    if(mode == "CTR-BE")
-      return new CTR_BE(block_cipher->clone());
+      return new StreamCipher_Filter(new CTR_BE(block_cipher->clone()));
 #endif
 
 #if defined(BOTAN_HAS_ECB)

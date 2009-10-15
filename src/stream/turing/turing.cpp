@@ -257,15 +257,15 @@ void Turing::key_schedule(const byte key[], u32bit length)
       S3[i] = (W3 & 0xFFFFFF00) | C3;
       }
 
-   resync(0, 0);
+   set_iv(0, 0);
    }
 
 /*
 * Resynchronization
 */
-void Turing::resync(const byte iv[], u32bit length)
+void Turing::set_iv(const byte iv[], u32bit length)
    {
-   if(length % 4 != 0 || length > 16)
+   if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
 
    SecureVector<u32bit> IV(length / 4);

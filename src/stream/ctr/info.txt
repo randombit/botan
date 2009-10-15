@@ -1,14 +1,16 @@
-realname "OFB block cipher mode"
+realname "CTR mode"
 
-define OFB
+define CTR_BE
 
 load_on auto
 
 <add>
-ofb.cpp
-ofb.h
+ctr.cpp
+ctr.h
 </add>
 
 <requires>
 block
+stream
 </requires>
+

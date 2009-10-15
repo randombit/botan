@@ -85,7 +85,7 @@ bench_stream_cipher(StreamCipher* stream_cipher,
 
    while(nanoseconds_used < nanoseconds_max)
       {
-      stream_cipher->encrypt(buf, buf_len);
+      stream_cipher->cipher1(buf, buf_len);
       ++reps;
       nanoseconds_used = timer.clock() - start;
       }
