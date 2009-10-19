@@ -600,7 +600,15 @@ class OsInfo(object):
                ['TARGET_OS_HAS_' + feat.upper()
                 for feat in self.target_features]
 
+def fixup_proc_name(proc):
+    proc = proc.lower().replace(' ', '')
+    for junk in ['(tm)', '(r)']:
+        proc = proc.replace(junk, '')
+    return proc
+
 def canon_processor(archinfo, proc):
+    proc = fixup_proc_name(proc)
+
     for ainfo in archinfo.values():
         if ainfo.basename == proc or proc in ainfo.aliases:
             return (ainfo.basename, ainfo.basename)
@@ -617,12 +625,7 @@ def guess_processor(archinfo):
     if base_proc == '':
         raise Exception('Could not determine target CPU; set with --cpu')
 
-    full_proc = platform.processor().lower().replace(' ', '')
-    for junk in ['(tm)', '(r)']:
-        full_proc = full_proc.replace(junk, '')
-
-    if full_proc == '':
-        full_proc = base_proc
+    full_proc = fixup_proc_name(platform.processor()) or base_proc
 
     for ainfo in archinfo.values():
         if ainfo.basename == base_proc or base_proc in ainfo.aliases:
