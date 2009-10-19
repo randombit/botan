@@ -5,7 +5,7 @@
  - Add threshold secret sharing (draft-mcgrew-tss-02)
  - Add runtime cpu feature detection for x86/x86-64
  - Add code for general runtime self testing for hashes, MACs, and ciphers
- - Add support for GNU/Hurd
+ - Add support for GNU/Hurd and Clang/LLVM
  - New parsing code for SCAN algorithm names
  - Alter Skein-512 to match the tweaked 1.2 specification
  - Enable SSE2 optimizations under Visual C++
