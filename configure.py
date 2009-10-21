@@ -1189,7 +1189,7 @@ if __name__ == '__main__':
         main()
     except Exception, e:
         print >>sys.stderr, e
-        import traceback
-        traceback.print_exc(file=sys.stderr)
+        #import traceback
+        #traceback.print_exc(file=sys.stderr)
         sys.exit(1)
     sys.exit(0)
