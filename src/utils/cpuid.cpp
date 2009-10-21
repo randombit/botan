@@ -10,7 +10,7 @@
 #include <botan/loadstor.h>
 #include <botan/mem_ops.h>
 
-#if defined(BOTAN_TARGET_ARCH_IS_X86) || defined(BOTAN_TARGET_ARCH_IS_AMD64)
+#if defined(BOTAN_TARGET_ARCH_IS_IA32) || defined(BOTAN_TARGET_ARCH_IS_AMD64)
 
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
 
