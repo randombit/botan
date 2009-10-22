@@ -128,7 +128,7 @@ void Blowfish::generate_sbox(u32bit Box[], u32bit size,
 /*
 * Clear memory of sensitive data
 */
-void Blowfish::clear() throw()
+void Blowfish::clear()
    {
    P.copy(P_INIT, 18);
    S.copy(S_INIT, 1024);

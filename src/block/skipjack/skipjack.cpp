@@ -165,7 +165,7 @@ void Skipjack::key_schedule(const byte key[], u32bit)
 /*
 * Clear memory of sensitive data
 */
-void Skipjack::clear() throw()
+void Skipjack::clear()
    {
    for(u32bit j = 0; j != 10; ++j)
       FTABLE[j].clear();

@@ -21,7 +21,7 @@ class BOTAN_DLL XTEA : public BlockCipher
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
-      void clear() throw() { EK.clear(); }
+      void clear() { EK.clear(); }
       std::string name() const { return "XTEA"; }
       BlockCipher* clone() const { return new XTEA; }
 

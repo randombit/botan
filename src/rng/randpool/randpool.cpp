@@ -149,7 +149,7 @@ void Randpool::add_entropy_source(EntropySource* src)
 /**
 * Clear memory of sensitive data
 */
-void Randpool::clear() throw()
+void Randpool::clear()
    {
    cipher->clear();
    mac->clear();

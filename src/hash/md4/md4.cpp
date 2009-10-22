@@ -95,7 +95,7 @@ void MD4::copy_out(byte output[])
 /*
 * Clear memory of sensitive data
 */
-void MD4::clear() throw()
+void MD4::clear()
    {
    MDx_HashFunction::clear();
    M.clear();

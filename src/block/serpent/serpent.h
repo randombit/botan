@@ -21,7 +21,7 @@ class BOTAN_DLL Serpent : public BlockCipher
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
-      void clear() throw() { round_key.clear(); }
+      void clear() { round_key.clear(); }
       std::string name() const { return "Serpent"; }
       BlockCipher* clone() const { return new Serpent; }
       Serpent() : BlockCipher(16, 16, 32, 8) {}

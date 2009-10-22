@@ -19,7 +19,7 @@ namespace Botan {
 class BOTAN_DLL SHA_224_256_BASE : public MDx_HashFunction
    {
    protected:
-      void clear() throw();
+      void clear();
       SHA_224_256_BASE(u32bit out) :
          MDx_HashFunction(out, 64, true, true) { clear(); }
 
@@ -36,7 +36,7 @@ class BOTAN_DLL SHA_224_256_BASE : public MDx_HashFunction
 class BOTAN_DLL SHA_224 : public SHA_224_256_BASE
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const { return "SHA-224"; }
       HashFunction* clone() const { return new SHA_224; }
       SHA_224() : SHA_224_256_BASE(28) { clear(); }
@@ -48,7 +48,7 @@ class BOTAN_DLL SHA_224 : public SHA_224_256_BASE
 class BOTAN_DLL SHA_256 : public SHA_224_256_BASE
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const { return "SHA-256"; }
       HashFunction* clone() const { return new SHA_256; }
       SHA_256() : SHA_224_256_BASE(32) { clear (); }

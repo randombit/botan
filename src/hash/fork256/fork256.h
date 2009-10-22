@@ -18,7 +18,7 @@ namespace Botan {
 class BOTAN_DLL FORK_256 : public MDx_HashFunction
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const { return "FORK-256"; }
       HashFunction* clone() const { return new FORK_256; }
       FORK_256() : MDx_HashFunction(32, 64, true, true) { clear(); }

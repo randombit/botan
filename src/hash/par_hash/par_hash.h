@@ -19,7 +19,7 @@ namespace Botan {
 class BOTAN_DLL Parallel : public HashFunction
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const;
       HashFunction* clone() const;
 

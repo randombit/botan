@@ -31,7 +31,7 @@ class BOTAN_DLL CTR_BE : public StreamCipher
       CTR_BE* clone() const
          { return new CTR_BE(permutation->clone()); }
 
-      void clear() throw();
+      void clear();
 
       CTR_BE(BlockCipher*);
       ~CTR_BE();

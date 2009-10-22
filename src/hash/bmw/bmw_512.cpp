@@ -176,7 +176,7 @@ void BMW_512::copy_out(byte output[])
 /*
 * Clear memory of sensitive data
 */
-void BMW_512::clear() throw()
+void BMW_512::clear()
    {
    MDx_HashFunction::clear();
    M.clear();

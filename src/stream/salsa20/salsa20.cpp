@@ -197,7 +197,7 @@ std::string Salsa20::name() const
 /*
 * Clear memory of sensitive data
 */
-void Salsa20::clear() throw()
+void Salsa20::clear()
    {
    state.clear();
    buffer.clear();

@@ -37,7 +37,7 @@ CTR_BE::~CTR_BE()
 /*
 * Zeroize
 */
-void CTR_BE::clear() throw()
+void CTR_BE::clear()
    {
    permutation->clear();
    buffer.clear();

@@ -295,7 +295,7 @@ void Turing::set_iv(const byte iv[], u32bit length)
 /*
 * Clear memory of sensitive data
 */
-void Turing::clear() throw()
+void Turing::clear()
    {
    S0.clear();
    S1.clear();

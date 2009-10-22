@@ -258,7 +258,7 @@ AES::AES(u32bit key_size) : BlockCipher(16, key_size)
 /**
 * Clear memory of sensitive data
 */
-void AES::clear() throw()
+void AES::clear()
    {
    EK.clear();
    DK.clear();

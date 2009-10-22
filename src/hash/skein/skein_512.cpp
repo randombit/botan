@@ -183,7 +183,7 @@ HashFunction* Skein_512::clone() const
    return new Skein_512(output_bits, personalization);
    }
 
-void Skein_512::clear() throw()
+void Skein_512::clear()
    {
    H.clear();
    T.clear();

@@ -72,7 +72,7 @@ SecureVector<byte> EMSA3::encoding_of(const MemoryRegion<byte>& msg,
 */
 bool EMSA3::verify(const MemoryRegion<byte>& coded,
                    const MemoryRegion<byte>& raw,
-                   u32bit key_bits) throw()
+                   u32bit key_bits)
    {
    if(raw.size() != hash->OUTPUT_LENGTH)
       return false;
@@ -137,7 +137,7 @@ SecureVector<byte> EMSA3_Raw::encoding_of(const MemoryRegion<byte>& msg,
 */
 bool EMSA3_Raw::verify(const MemoryRegion<byte>& coded,
                        const MemoryRegion<byte>& raw,
-                       u32bit key_bits) throw()
+                       u32bit key_bits)
    {
    try
       {

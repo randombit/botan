@@ -136,7 +136,7 @@ void WiderWake_41_BE::set_iv(const byte iv[], u32bit length)
 /*
 * Clear memory of sensitive data
 */
-void WiderWake_41_BE::clear() throw()
+void WiderWake_41_BE::clear()
    {
    position = 0;
    t_key.clear();

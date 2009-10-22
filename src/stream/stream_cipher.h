@@ -61,7 +61,7 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       /**
       * Zeroize internal state
       */
-      virtual void clear() throw() = 0;
+      virtual void clear() = 0;
 
       /**
       * StreamCipher constructor

@@ -31,7 +31,7 @@ class BOTAN_DLL EMSA4 : public EMSA
       SecureVector<byte> encoding_of(const MemoryRegion<byte>&, u32bit,
                                      RandomNumberGenerator& rng);
       bool verify(const MemoryRegion<byte>&, const MemoryRegion<byte>&,
-                  u32bit) throw();
+                  u32bit);
 
       u32bit SALT_SIZE;
       HashFunction* hash;

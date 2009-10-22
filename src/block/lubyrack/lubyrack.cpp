@@ -92,7 +92,7 @@ void LubyRackoff::key_schedule(const byte key[], u32bit length)
 /*
 * Clear memory of sensitive data
 */
-void LubyRackoff::clear() throw()
+void LubyRackoff::clear()
    {
    K1.clear();
    K2.clear();

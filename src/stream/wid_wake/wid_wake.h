@@ -24,7 +24,7 @@ class BOTAN_DLL WiderWake_41_BE : public StreamCipher
       bool valid_iv_length(u32bit iv_len) const
          { return (iv_len == 8); }
 
-      void clear() throw();
+      void clear();
       std::string name() const { return "WiderWake4+1-BE"; }
       StreamCipher* clone() const { return new WiderWake_41_BE; }
       WiderWake_41_BE() : StreamCipher(16, 16, 1) {}

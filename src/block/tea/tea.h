@@ -21,7 +21,7 @@ class BOTAN_DLL TEA : public BlockCipher
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
-      void clear() throw() { K.clear(); }
+      void clear() { K.clear(); }
       std::string name() const { return "TEA"; }
       BlockCipher* clone() const { return new TEA; }
 

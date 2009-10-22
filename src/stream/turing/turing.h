@@ -24,7 +24,7 @@ class BOTAN_DLL Turing : public StreamCipher
       bool valid_iv_length(u32bit iv_len) const
          { return (iv_len % 4 == 0 && iv_len <= 16); }
 
-      void clear() throw();
+      void clear();
       std::string name() const { return "Turing"; }
       StreamCipher* clone() const { return new Turing; }
       Turing() : StreamCipher(4, 32, 4) { position = 0; }

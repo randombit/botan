@@ -18,7 +18,7 @@ namespace {
 class EVP_HashFunction : public HashFunction
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const { return algo_name; }
       HashFunction* clone() const;
       EVP_HashFunction(const EVP_MD*, const std::string&);
@@ -52,7 +52,7 @@ void EVP_HashFunction::final_result(byte output[])
 /*
 * Clear memory of sensitive data
 */
-void EVP_HashFunction::clear() throw()
+void EVP_HashFunction::clear()
    {
    const EVP_MD* algo = EVP_MD_CTX_md(&md);
    EVP_DigestInit_ex(&md, algo, 0);

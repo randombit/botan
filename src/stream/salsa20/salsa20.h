@@ -25,7 +25,7 @@ class BOTAN_DLL Salsa20 : public StreamCipher
       bool valid_iv_length(u32bit iv_len) const
          { return (iv_len == 8); }
 
-      void clear() throw();
+      void clear();
       std::string name() const;
       StreamCipher* clone() const { return new Salsa20; }
 

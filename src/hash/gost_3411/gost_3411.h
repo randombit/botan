@@ -19,7 +19,7 @@ namespace Botan {
 class BOTAN_DLL GOST_34_11 : public HashFunction
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const { return "GOST-R-34.11-94" ; }
       HashFunction* clone() const { return new GOST_34_11; }
 

@@ -23,7 +23,7 @@ class BOTAN_DLL RC2 : public BlockCipher
 
       static byte EKB_code(u32bit);
 
-      void clear() throw() { K.clear(); }
+      void clear() { K.clear(); }
       std::string name() const { return "RC2"; }
       BlockCipher* clone() const { return new RC2; }
 

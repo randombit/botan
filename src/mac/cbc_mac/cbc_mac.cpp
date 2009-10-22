@@ -62,7 +62,7 @@ void CBC_MAC::key_schedule(const byte key[], u32bit length)
 /*
 * Clear memory of sensitive data
 */
-void CBC_MAC::clear() throw()
+void CBC_MAC::clear()
    {
    e->clear();
    state.clear();

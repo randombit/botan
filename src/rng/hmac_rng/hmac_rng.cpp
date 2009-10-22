@@ -147,7 +147,7 @@ void HMAC_RNG::add_entropy_source(EntropySource* src)
 /*
 * Clear memory of sensitive data
 */
-void HMAC_RNG::clear() throw()
+void HMAC_RNG::clear()
    {
    extractor->clear();
    prf->clear();

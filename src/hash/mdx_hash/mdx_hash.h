@@ -25,7 +25,7 @@ class BOTAN_DLL MDx_HashFunction : public HashFunction
       void final_result(byte output[]);
       virtual void compress_n(const byte block[], u32bit block_n) = 0;
 
-      void clear() throw();
+      void clear();
       virtual void copy_out(byte[]) = 0;
       virtual void write_count(byte[]);
    private:

@@ -15,7 +15,7 @@ namespace Botan {
 class BMW_512 : public MDx_HashFunction
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const { return "BMW512"; }
       HashFunction* clone() const { return new BMW_512; }
       BMW_512() : MDx_HashFunction(64, 128, false, true) { clear(); }

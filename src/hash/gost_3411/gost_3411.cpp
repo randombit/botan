@@ -23,7 +23,7 @@ GOST_34_11::GOST_34_11() :
    position = 0;
    }
 
-void GOST_34_11::clear() throw()
+void GOST_34_11::clear()
    {
    cipher.clear();
    sum.clear();

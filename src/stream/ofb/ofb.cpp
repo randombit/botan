@@ -35,7 +35,7 @@ OFB::~OFB()
 /*
 * Zeroize
 */
-void OFB::clear() throw()
+void OFB::clear()
    {
    permutation->clear();
    buffer.clear();

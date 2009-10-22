@@ -133,7 +133,7 @@ void FORK_256::copy_out(byte output[])
 /*
 * Clear memory of sensitive data
 */
-void FORK_256::clear() throw()
+void FORK_256::clear()
    {
    MDx_HashFunction::clear();
    digest[0] = 0x6A09E667;

@@ -95,7 +95,7 @@ BlockCipher* Lion::clone() const
 /*
 * Clear memory of sensitive data
 */
-void Lion::clear() throw()
+void Lion::clear()
    {
    hash->clear();
    cipher->clear();

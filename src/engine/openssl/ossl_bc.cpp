@@ -18,7 +18,7 @@ namespace {
 class EVP_BlockCipher : public BlockCipher
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const { return cipher_name; }
       BlockCipher* clone() const;
       EVP_BlockCipher(const EVP_CIPHER*, const std::string&);
@@ -145,7 +145,7 @@ BlockCipher* EVP_BlockCipher::clone() const
 /*
 * Clear memory of sensitive data
 */
-void EVP_BlockCipher::clear() throw()
+void EVP_BlockCipher::clear()
    {
    const EVP_CIPHER* algo = EVP_CIPHER_CTX_cipher(&encrypt);
 

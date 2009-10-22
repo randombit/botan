@@ -201,7 +201,7 @@ void Noekeon::key_schedule(const byte key[], u32bit)
 /*
 * Clear memory of sensitive data
 */
-void Noekeon::clear() throw()
+void Noekeon::clear()
    {
    EK.clear();
    DK.clear();

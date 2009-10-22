@@ -87,7 +87,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       /**
       * Zeroize internal state
       */
-      virtual void clear() throw() = 0;
+      virtual void clear() = 0;
 
       BlockCipher(u32bit block_size,
                   u32bit key_min,

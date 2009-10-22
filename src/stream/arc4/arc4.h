@@ -21,7 +21,7 @@ class BOTAN_DLL ARC4 : public StreamCipher
    public:
       void cipher(const byte in[], byte out[], u32bit length);
 
-      void clear() throw();
+      void clear();
       std::string name() const;
 
       StreamCipher* clone() const { return new ARC4(SKIP); }

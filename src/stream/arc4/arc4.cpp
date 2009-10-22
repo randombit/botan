@@ -87,7 +87,7 @@ std::string ARC4::name() const
 /*
 * Clear memory of sensitive data
 */
-void ARC4::clear() throw()
+void ARC4::clear()
    {
    state.clear();
    buffer.clear();

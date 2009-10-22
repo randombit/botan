@@ -21,7 +21,7 @@ class BOTAN_DLL Skipjack : public BlockCipher
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
-      void clear() throw();
+      void clear();
       std::string name() const { return "Skipjack"; }
       BlockCipher* clone() const { return new Skipjack; }
 

@@ -18,7 +18,7 @@ namespace Botan {
 class BOTAN_DLL RIPEMD_128 : public MDx_HashFunction
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const { return "RIPEMD-128"; }
       HashFunction* clone() const { return new RIPEMD_128; }
       RIPEMD_128() : MDx_HashFunction(16, 64, false, true) { clear(); }

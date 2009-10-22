@@ -77,7 +77,7 @@ HashFunction* Parallel::clone() const
 /*
 * Clear memory of sensitive data
 */
-void Parallel::clear() throw()
+void Parallel::clear()
    {
    for(u32bit j = 0; j != hashes.size(); ++j)
       hashes[j]->clear();

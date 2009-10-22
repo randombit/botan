@@ -21,7 +21,7 @@ class BOTAN_DLL RC6 : public BlockCipher
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
-      void clear() throw() { S.clear(); }
+      void clear() { S.clear(); }
       std::string name() const { return "RC6"; }
       BlockCipher* clone() const { return new RC6; }
 

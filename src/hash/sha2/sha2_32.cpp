@@ -152,7 +152,7 @@ void SHA_224_256_BASE::copy_out(byte output[])
 /*
 * Clear memory of sensitive data
 */
-void SHA_224_256_BASE::clear() throw()
+void SHA_224_256_BASE::clear()
    {
    MDx_HashFunction::clear();
    W.clear();
@@ -161,7 +161,7 @@ void SHA_224_256_BASE::clear() throw()
 /*
 * Clear memory of sensitive data
 */
-void SHA_224::clear() throw()
+void SHA_224::clear()
    {
    SHA_224_256_BASE::clear();
    digest[0] = 0xc1059ed8;
@@ -177,7 +177,7 @@ void SHA_224::clear() throw()
 /*
 * Clear memory of sensitive data
 */
-void SHA_256::clear() throw()
+void SHA_256::clear()
    {
    SHA_224_256_BASE::clear();
    digest[0] = 0x6A09E667;

@@ -18,7 +18,7 @@ namespace Botan {
 class BOTAN_DLL MD5 : public MDx_HashFunction
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const { return "MD5"; }
       HashFunction* clone() const { return new MD5; }
       MD5() : MDx_HashFunction(16, 64, false, true) { clear(); }

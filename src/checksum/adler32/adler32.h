@@ -18,7 +18,7 @@ namespace Botan {
 class BOTAN_DLL Adler32 : public HashFunction
    {
    public:
-      void clear() throw() { S1 = 1; S2 = 0; }
+      void clear() { S1 = 1; S2 = 0; }
       std::string name() const { return "Adler32"; }
       HashFunction* clone() const { return new Adler32; }
       Adler32() : HashFunction(4) { clear(); }

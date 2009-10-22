@@ -159,7 +159,7 @@ void RIPEMD_128::copy_out(byte output[])
 /*
 * Clear memory of sensitive data
 */
-void RIPEMD_128::clear() throw()
+void RIPEMD_128::clear()
    {
    MDx_HashFunction::clear();
    M.clear();

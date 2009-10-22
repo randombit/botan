@@ -47,7 +47,7 @@ class BOTAN_DLL RandomNumberGenerator
       /**
       * Clear all internally held values of this RNG.
       */
-      virtual void clear() throw() = 0;
+      virtual void clear() = 0;
 
       /**
       * Return the name of this object
@@ -89,7 +89,7 @@ class BOTAN_DLL Null_RNG : public RandomNumberGenerator
    {
    public:
       void randomize(byte[], u32bit) { throw PRNG_Unseeded("Null_RNG"); }
-      void clear() throw() {}
+      void clear() {}
       std::string name() const { return "Null_RNG"; }
 
       void reseed(u32bit) {}

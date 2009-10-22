@@ -196,7 +196,7 @@ void Square::transform(u32bit round_key[4])
 /*
 * Clear memory of sensitive data
 */
-void Square::clear() throw()
+void Square::clear()
    {
    EK.clear();
    DK.clear();

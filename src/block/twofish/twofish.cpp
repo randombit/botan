@@ -218,7 +218,7 @@ void Twofish::rs_mul(byte S[4], byte key, u32bit offset)
 /*
 * Clear memory of sensitive data
 */
-void Twofish::clear() throw()
+void Twofish::clear()
    {
    SBox0.clear();
    SBox1.clear();

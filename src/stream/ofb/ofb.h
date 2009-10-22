@@ -31,7 +31,7 @@ class BOTAN_DLL OFB : public StreamCipher
       OFB* clone() const
          { return new OFB(permutation->clone()); }
 
-      void clear() throw();
+      void clear();
 
       OFB(BlockCipher*);
       ~OFB();

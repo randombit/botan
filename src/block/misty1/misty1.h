@@ -21,7 +21,7 @@ class BOTAN_DLL MISTY1 : public BlockCipher
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
-      void clear() throw() { EK.clear(); DK.clear(); }
+      void clear() { EK.clear(); DK.clear(); }
       std::string name() const { return "MISTY1"; }
       BlockCipher* clone() const { return new MISTY1; }
 
