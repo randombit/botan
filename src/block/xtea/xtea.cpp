@@ -16,10 +16,8 @@ namespace {
 
 void xtea_encrypt_4(const byte in[32], byte out[32], const u32bit EK[64])
    {
-   u32bit L0 = load_be<u32bit>(in, 0), R0 = load_be<u32bit>(in, 1);
-   u32bit L1 = load_be<u32bit>(in, 2), R1 = load_be<u32bit>(in, 3);
-   u32bit L2 = load_be<u32bit>(in, 4), R2 = load_be<u32bit>(in, 5);
-   u32bit L3 = load_be<u32bit>(in, 6), R3 = load_be<u32bit>(in, 7);
+   u32bit L0, R0, L1, R1, L2, R2, L3, R3;
+   load_be(in, L0, R0, L1, R1, L2, R2, L3, R3);
 
    for(u32bit i = 0; i != 32; ++i)
       {
@@ -34,16 +32,13 @@ void xtea_encrypt_4(const byte in[32], byte out[32], const u32bit EK[64])
       R3 += (((L3 << 4) ^ (L3 >> 5)) + L3) ^ EK[2*i+1];
       }
 
-   store_be(out     , L0, R0, L1, R1);
-   store_be(out + 16, L2, R2, L3, R3);
+   store_be(out, L0, R0, L1, R1, L2, R2, L3, R3);
    }
 
 void xtea_decrypt_4(const byte in[32], byte out[32], const u32bit EK[64])
    {
-   u32bit L0 = load_be<u32bit>(in, 0), R0 = load_be<u32bit>(in, 1);
-   u32bit L1 = load_be<u32bit>(in, 2), R1 = load_be<u32bit>(in, 3);
-   u32bit L2 = load_be<u32bit>(in, 4), R2 = load_be<u32bit>(in, 5);
-   u32bit L3 = load_be<u32bit>(in, 6), R3 = load_be<u32bit>(in, 7);
+   u32bit L0, R0, L1, R1, L2, R2, L3, R3;
+   load_be(in, L0, R0, L1, R1, L2, R2, L3, R3);
 
    for(u32bit i = 0; i != 32; ++i)
       {
@@ -58,8 +53,7 @@ void xtea_decrypt_4(const byte in[32], byte out[32], const u32bit EK[64])
       L3 -= (((R3 << 4) ^ (R3 >> 5)) + R3) ^ EK[62 - 2*i];
       }
 
-   store_be(out     , L0, R0, L1, R1);
-   store_be(out + 16, L2, R2, L3, R3);
+   store_be(out, L0, R0, L1, R1, L2, R2, L3, R3);
    }
 
 }
