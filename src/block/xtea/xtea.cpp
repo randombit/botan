@@ -8,13 +8,75 @@
 #include <botan/xtea.h>
 #include <botan/loadstor.h>
 
+#include <stdio.h>
+
 namespace Botan {
+
+namespace {
+
+void xtea_encrypt_4(const byte in[32], byte out[32], const u32bit EK[64])
+   {
+   u32bit L0 = load_be<u32bit>(in, 0), R0 = load_be<u32bit>(in, 1);
+   u32bit L1 = load_be<u32bit>(in, 2), R1 = load_be<u32bit>(in, 3);
+   u32bit L2 = load_be<u32bit>(in, 4), R2 = load_be<u32bit>(in, 5);
+   u32bit L3 = load_be<u32bit>(in, 6), R3 = load_be<u32bit>(in, 7);
+
+   for(u32bit i = 0; i != 32; ++i)
+      {
+      L0 += (((R0 << 4) ^ (R0 >> 5)) + R0) ^ EK[2*i];
+      L1 += (((R1 << 4) ^ (R1 >> 5)) + R1) ^ EK[2*i];
+      L2 += (((R2 << 4) ^ (R2 >> 5)) + R2) ^ EK[2*i];
+      L3 += (((R3 << 4) ^ (R3 >> 5)) + R3) ^ EK[2*i];
+
+      R0 += (((L0 << 4) ^ (L0 >> 5)) + L0) ^ EK[2*i+1];
+      R1 += (((L1 << 4) ^ (L1 >> 5)) + L1) ^ EK[2*i+1];
+      R2 += (((L2 << 4) ^ (L2 >> 5)) + L2) ^ EK[2*i+1];
+      R3 += (((L3 << 4) ^ (L3 >> 5)) + L3) ^ EK[2*i+1];
+      }
+
+   store_be(out     , L0, R0, L1, R1);
+   store_be(out + 16, L2, R2, L3, R3);
+   }
+
+void xtea_decrypt_4(const byte in[32], byte out[32], const u32bit EK[64])
+   {
+   u32bit L0 = load_be<u32bit>(in, 0), R0 = load_be<u32bit>(in, 1);
+   u32bit L1 = load_be<u32bit>(in, 2), R1 = load_be<u32bit>(in, 3);
+   u32bit L2 = load_be<u32bit>(in, 4), R2 = load_be<u32bit>(in, 5);
+   u32bit L3 = load_be<u32bit>(in, 6), R3 = load_be<u32bit>(in, 7);
+
+   for(u32bit i = 0; i != 32; ++i)
+      {
+      R0 -= (((L0 << 4) ^ (L0 >> 5)) + L0) ^ EK[63 - 2*i];
+      R1 -= (((L1 << 4) ^ (L1 >> 5)) + L1) ^ EK[63 - 2*i];
+      R2 -= (((L2 << 4) ^ (L2 >> 5)) + L2) ^ EK[63 - 2*i];
+      R3 -= (((L3 << 4) ^ (L3 >> 5)) + L3) ^ EK[63 - 2*i];
+
+      L0 -= (((R0 << 4) ^ (R0 >> 5)) + R0) ^ EK[62 - 2*i];
+      L1 -= (((R1 << 4) ^ (R1 >> 5)) + R1) ^ EK[62 - 2*i];
+      L2 -= (((R2 << 4) ^ (R2 >> 5)) + R2) ^ EK[62 - 2*i];
+      L3 -= (((R3 << 4) ^ (R3 >> 5)) + R3) ^ EK[62 - 2*i];
+      }
+
+   store_be(out     , L0, R0, L1, R1);
+   store_be(out + 16, L2, R2, L3, R3);
+   }
+
+}
 
 /*
 * XTEA Encryption
 */
 void XTEA::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
+   while(blocks >= 4)
+      {
+      xtea_encrypt_4(in, out, this->EK);
+      in += 4 * BLOCK_SIZE;
+      out += 4 * BLOCK_SIZE;
+      blocks -= 4;
+      }
+
    for(u32bit i = 0; i != blocks; ++i)
       {
       u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
@@ -37,6 +99,14 @@ void XTEA::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void XTEA::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
+   while(blocks >= 4)
+      {
+      xtea_decrypt_4(in, out, this->EK);
+      in += 4 * BLOCK_SIZE;
+      out += 4 * BLOCK_SIZE;
+      blocks -= 4;
+      }
+
    for(u32bit i = 0; i != blocks; ++i)
       {
       u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
