@@ -8,8 +8,6 @@
 #include <botan/xtea.h>
 #include <botan/loadstor.h>
 
-#include <stdio.h>
-
 namespace Botan {
 
 namespace {
