@@ -3,11 +3,18 @@
 # This is probably only useful if run on my machine, which is not
 # exactly ideal
 
-SELECTOR=h:net.randombit.botan.1_8
+# Make that limitation explicit
+if [ $(hostname -s) != 'chihiro' ]; then
+  echo "This script probably won't work on this machine without fixes"
+  exit 1
+fi
+
+SELECTOR=h:net.randombit.botan
 KEY_ID=EFBADFBC
-MTN_DB=/storage/mtn/botan.mtn
-WEB_DIR=~/projects/www
+MTN_DB=$HOME/var/mtn/botan.mtn
+WEB_DIR=/var/www/randombit.net/
 DIST_DIR=~/Botan-dist
+VERSION_DIR=v1.9
 
 # You shouldn't have to change anything after this
 mkdir -p $DIST_DIR
@@ -26,7 +33,7 @@ rm -f .mtn-ignore
 # Build docs
 cd doc
 
-for doc in api tutorial building
+for doc in api tutorial building python
 do
   latex $doc.tex
   latex $doc.tex
@@ -60,5 +67,5 @@ read -a PASSWORD -p "Enter PGP password (or ^C to skip signatures): "
 echo $PASSWORD | gpg --batch --armor -b --passphrase-fd 0 -u $KEY_ID Botan-$VERSION.tgz
 echo $PASSWORD | gpg --batch --armor -b --passphrase-fd 0 -u $KEY_ID Botan-$VERSION.tbz
 
-mv Botan-$VERSION.tgz* $WEB_DIR/files/botan/v1.8
-mv Botan-$VERSION.tbz* $WEB_DIR/files/botan/v1.8
+mv Botan-$VERSION.tgz* $WEB_DIR/files/botan/${VERSION_DIR}
+mv Botan-$VERSION.tbz* $WEB_DIR/files/botan/${VERSION_DIR}
