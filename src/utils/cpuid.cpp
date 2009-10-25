@@ -15,7 +15,7 @@
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
 
   #include <intrin.h>
-  #define CALL_CPUID(type, out) do { __cpuid(out, type) } while(0)
+  #define CALL_CPUID(type, out) do { __cpuid((int*)out, type) } while(0)
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_ICC)
 
@@ -30,9 +30,12 @@
 
 #endif
 
-#else
+#endif
+
+#ifndef CALL_CPUID
   // In all other cases, just zeroize the supposed cpuid output
-  #define CALL_CPUID(type, out) out[0] = out[1] = out[2] = out[3] = 0;
+  #define CALL_CPUID(type, out) \
+    do { out[0] = out[1] = out[2] = out[3] = 0; } while(0);
 #endif
 
 namespace Botan {
