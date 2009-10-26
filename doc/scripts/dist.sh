@@ -12,9 +12,8 @@ fi
 SELECTOR=h:net.randombit.botan
 KEY_ID=EFBADFBC
 MTN_DB=$HOME/var/mtn/botan.mtn
-WEB_DIR=/var/www/randombit.net/
+WEB_DIR=/var/www/randombit.net/files/botan/v1.9
 DIST_DIR=~/Botan-dist
-VERSION_DIR=v1.9
 
 # You shouldn't have to change anything after this
 mkdir -p $DIST_DIR
@@ -67,5 +66,5 @@ read -a PASSWORD -p "Enter PGP password (or ^C to skip signatures): "
 echo $PASSWORD | gpg --batch --armor -b --passphrase-fd 0 -u $KEY_ID Botan-$VERSION.tgz
 echo $PASSWORD | gpg --batch --armor -b --passphrase-fd 0 -u $KEY_ID Botan-$VERSION.tbz
 
-mv Botan-$VERSION.tgz* $WEB_DIR/files/botan/${VERSION_DIR}
-mv Botan-$VERSION.tbz* $WEB_DIR/files/botan/${VERSION_DIR}
+mv Botan-$VERSION.tgz* $WEB_DIR
+mv Botan-$VERSION.tbz* $WEB_DIR
