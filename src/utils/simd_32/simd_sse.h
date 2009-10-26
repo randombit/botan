@@ -70,6 +70,16 @@ class SIMD_SSE2
          return _mm_add_epi32(reg, other.reg);
          }
 
+      void operator-=(const SIMD_SSE2& other)
+         {
+         reg = _mm_sub_epi32(reg, other.reg);
+         }
+
+      SIMD_SSE2 operator-(const SIMD_SSE2& other) const
+         {
+         return _mm_sub_epi32(reg, other.reg);
+         }
+
       void operator^=(const SIMD_SSE2& other)
          {
          reg = _mm_xor_si128(reg, other.reg);
