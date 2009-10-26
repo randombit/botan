@@ -62,7 +62,7 @@ void SHA_224_256_BASE::compress_n(const byte input[], u32bit blocks)
 
       for(u32bit j = 16; j != 64; ++j)
          W[j] = sigma(W[j- 2], 17, 19, 10) + W[j- 7] +
-            sigma(W[j-15],  7, 18,  3) + W[j-16];
+                sigma(W[j-15],  7, 18,  3) + W[j-16];
 
       F1(A, B, C, D, E, F, G, H, W[ 0], 0x428A2F98);
       F1(H, A, B, C, D, E, F, G, W[ 1], 0x71374491);
