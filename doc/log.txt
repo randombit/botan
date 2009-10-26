@@ -1,4 +1,6 @@
 
+* 1.9.2-dev, ????-??-??
+
 * 1.9.1, 2009-10-23
  - Better support for Python and Perl wrappers
  - Add an implementation of Blue Midnight Wish (Round 2 tweak version)
