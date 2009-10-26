@@ -16,6 +16,10 @@
   #include <botan/serp_sse2.h>
 #endif
 
+#if defined(BOTAN_HAS_XTEA_SSE2)
+  #include <botan/xtea_sse2.h>
+#endif
+
 namespace Botan {
 
 BlockCipher*
@@ -28,6 +32,11 @@ SSE2_Assembler_Engine::find_block_cipher(const SCAN_Name& request,
 #if defined(BOTAN_HAS_SERPENT_SSE2)
    if(request.algo_name() == "Serpent")
       return new Serpent_SSE2;
+#endif
+
+#if defined(BOTAN_HAS_XTEA_SSE2)
+   if(request.algo_name() == "XTEA")
+      return new XTEA_SSE2;
 #endif
 
    return 0;
