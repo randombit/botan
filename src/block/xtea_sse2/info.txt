@@ -1,0 +1,15 @@
+realname "XTEA (SSE2)"
+
+define XTEA_SSE2
+
+load_on auto
+
+<add>
+xtea_sse2.cpp
+xtea_sse2.h
+</add>
+
+<requires>
+xtea
+sse2_eng
+</requires>

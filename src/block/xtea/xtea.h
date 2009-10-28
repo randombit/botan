@@ -26,7 +26,7 @@ class BOTAN_DLL XTEA : public BlockCipher
       BlockCipher* clone() const { return new XTEA; }
 
       XTEA() : BlockCipher(8, 16) {}
-   private:
+   protected:
       void key_schedule(const byte[], u32bit);
       SecureBuffer<u32bit, 64> EK;
    };

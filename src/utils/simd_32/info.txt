@@ -1,0 +1,18 @@
+realname "SIMD"
+
+define SIMD_32
+
+load_on always
+
+<arch>
+pentium-m
+pentium4
+prescott
+amd64
+</arch>
+
+<cc>
+gcc
+icc
+msvc
+</cc>
