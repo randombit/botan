@@ -35,7 +35,7 @@ class SIMD_SSE2
 
       static SIMD_SSE2 load_be(const void* in)
          {
-         return SIMD_SSE2(_mm_loadu_si128((const __m128i*)in)).bswap();
+         return load_le(in).bswap();
          }
 
       void store_le(byte out[]) const
@@ -56,8 +56,7 @@ class SIMD_SSE2
 
       void rotate_right(u32bit rot)
          {
-         reg = _mm_or_si128(_mm_srli_epi32(reg, rot),
-                            _mm_slli_epi32(reg, 32-rot));
+         rotate_left(32 - rot);
          }
 
       void operator+=(const SIMD_SSE2& other)
