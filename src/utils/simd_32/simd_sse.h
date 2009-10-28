@@ -1,5 +1,8 @@
 /**
 * Lightweight wrappers for SSE2 intrinsics for 32-bit operations
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_SIMD_SSE_H__

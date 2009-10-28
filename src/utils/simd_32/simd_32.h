@@ -1,5 +1,8 @@
 /**
 * Lightweight wrappers for SIMD operations
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_SIMD_32_H__

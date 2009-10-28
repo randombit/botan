@@ -1,5 +1,8 @@
 /**
-* Altivec SIMD
+* Lightweight wrappers around AltiVec for 32-bit operations
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_SIMD_ALTIVEC_H__

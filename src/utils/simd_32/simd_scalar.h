@@ -1,5 +1,8 @@
 /**
-* Scalar emulation of SIMD operations
+* Scalar emulation of SIMD 32-bit operations
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_SIMD_SCALAR_H__
