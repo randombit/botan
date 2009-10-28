@@ -1,5 +1,7 @@
 
 * 1.9.2-dev, ????-??-??
+ - Add SIMD version of XTEA
+ - Support both SSE2 and AltiVec SIMD for Serpent and XTEA
 
 * 1.9.1, 2009-10-23
  - Better support for Python and Perl wrappers
