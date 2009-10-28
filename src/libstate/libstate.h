@@ -77,7 +77,7 @@ class BOTAN_DLL Library_State
       * @param key the key of the option to set
       * @param value the value to set
       */
-      void set_option(const std::string key, const std::string& value);
+      void set_option(const std::string& key, const std::string& value);
 
       /**
       * Add a parameter value to the "alias" section.

@@ -1,6 +1,6 @@
 /*
 * Blowfish
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -13,59 +13,71 @@ namespace Botan {
 /*
 * Blowfish Encryption
 */
-void Blowfish::enc(const byte in[], byte out[]) const
+void Blowfish::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    const u32bit* S1 = S + 0;
    const u32bit* S2 = S + 256;
    const u32bit* S3 = S + 512;
    const u32bit* S4 = S + 768;
 
-   u32bit L = load_be<u32bit>(in, 0);
-   u32bit R = load_be<u32bit>(in, 1);
-
-   for(u32bit j = 0; j != 16; j += 2)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      L ^= P[j];
-      R ^= ((S1[get_byte(0, L)]  + S2[get_byte(1, L)]) ^
-             S3[get_byte(2, L)]) + S4[get_byte(3, L)];
+      u32bit L = load_be<u32bit>(in, 0);
+      u32bit R = load_be<u32bit>(in, 1);
 
-      R ^= P[j+1];
-      L ^= ((S1[get_byte(0, R)]  + S2[get_byte(1, R)]) ^
-             S3[get_byte(2, R)]) + S4[get_byte(3, R)];
+      for(u32bit j = 0; j != 16; j += 2)
+         {
+         L ^= P[j];
+         R ^= ((S1[get_byte(0, L)]  + S2[get_byte(1, L)]) ^
+                S3[get_byte(2, L)]) + S4[get_byte(3, L)];
+
+         R ^= P[j+1];
+         L ^= ((S1[get_byte(0, R)]  + S2[get_byte(1, R)]) ^
+                S3[get_byte(2, R)]) + S4[get_byte(3, R)];
+         }
+
+      L ^= P[16]; R ^= P[17];
+
+      store_be(out, R, L);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
-
-   L ^= P[16]; R ^= P[17];
-
-   store_be(out, R, L);
    }
 
 /*
 * Blowfish Decryption
 */
-void Blowfish::dec(const byte in[], byte out[]) const
+void Blowfish::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    const u32bit* S1 = S + 0;
    const u32bit* S2 = S + 256;
    const u32bit* S3 = S + 512;
    const u32bit* S4 = S + 768;
 
-   u32bit L = load_be<u32bit>(in, 0);
-   u32bit R = load_be<u32bit>(in, 1);
-
-   for(u32bit j = 17; j != 1; j -= 2)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      L ^= P[j];
-      R ^= ((S1[get_byte(0, L)]  + S2[get_byte(1, L)]) ^
-             S3[get_byte(2, L)]) + S4[get_byte(3, L)];
+      u32bit L = load_be<u32bit>(in, 0);
+      u32bit R = load_be<u32bit>(in, 1);
 
-      R ^= P[j-1];
-      L ^= ((S1[get_byte(0, R)]  + S2[get_byte(1, R)]) ^
-             S3[get_byte(2, R)]) + S4[get_byte(3, R)];
+      for(u32bit j = 17; j != 1; j -= 2)
+         {
+         L ^= P[j];
+         R ^= ((S1[get_byte(0, L)]  + S2[get_byte(1, L)]) ^
+                S3[get_byte(2, L)]) + S4[get_byte(3, L)];
+
+         R ^= P[j-1];
+         L ^= ((S1[get_byte(0, R)]  + S2[get_byte(1, R)]) ^
+                S3[get_byte(2, R)]) + S4[get_byte(3, R)];
+         }
+
+      L ^= P[1]; R ^= P[0];
+
+      store_be(out, R, L);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
-
-   L ^= P[1]; R ^= P[0];
-
-   store_be(out, R, L);
    }
 
 /*
@@ -116,7 +128,7 @@ void Blowfish::generate_sbox(u32bit Box[], u32bit size,
 /*
 * Clear memory of sensitive data
 */
-void Blowfish::clear() throw()
+void Blowfish::clear()
    {
    P.copy(P_INIT, 18);
    S.copy(S_INIT, 1024);

@@ -167,7 +167,7 @@ void SHA_384_512_BASE::copy_out(byte output[])
 /*
 * Clear memory of sensitive data
 */
-void SHA_384_512_BASE::clear() throw()
+void SHA_384_512_BASE::clear()
    {
    MDx_HashFunction::clear();
    W.clear();
@@ -176,7 +176,7 @@ void SHA_384_512_BASE::clear() throw()
 /*
 * Clear memory of sensitive data
 */
-void SHA_384::clear() throw()
+void SHA_384::clear()
    {
    SHA_384_512_BASE::clear();
    digest[0] = 0xCBBB9D5DC1059ED8;
@@ -192,7 +192,7 @@ void SHA_384::clear() throw()
 /*
 * Clear memory of sensitive data
 */
-void SHA_512::clear() throw()
+void SHA_512::clear()
    {
    SHA_384_512_BASE::clear();
    digest[0] = 0x6A09E667F3BCC908;

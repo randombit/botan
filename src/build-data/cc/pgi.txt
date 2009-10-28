@@ -1,5 +1,7 @@
 realname "Portland Group C++"
 
+macro_name "PORTLAND_GROUP"
+
 binary_name "pgCC"
 
 compile_option "-c "

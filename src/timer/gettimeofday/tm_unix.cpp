@@ -6,7 +6,6 @@
 */
 
 #include <botan/tm_unix.h>
-#include <botan/util.h>
 #include <sys/time.h>
 
 namespace Botan {

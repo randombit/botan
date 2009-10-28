@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/util.h>
+#include <botan/mlock.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
   #include <sys/types.h>

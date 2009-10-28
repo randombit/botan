@@ -19,7 +19,7 @@ namespace Botan {
 class BOTAN_DLL ANSI_X919_MAC : public MessageAuthenticationCode
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const;
       MessageAuthenticationCode* clone() const;
 

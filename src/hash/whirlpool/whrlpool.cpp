@@ -136,7 +136,7 @@ void Whirlpool::copy_out(byte output[])
 /*
 * Clear memory of sensitive data
 */
-void Whirlpool::clear() throw()
+void Whirlpool::clear()
    {
    MDx_HashFunction::clear();
    M.clear();

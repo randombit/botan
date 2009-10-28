@@ -7,7 +7,6 @@
 
 #include <botan/timer.h>
 #include <botan/loadstor.h>
-#include <botan/util.h>
 #include <ctime>
 
 namespace Botan {
@@ -18,6 +17,19 @@ namespace Botan {
 u64bit system_time()
    {
    return static_cast<u64bit>(std::time(0));
+   }
+
+/*
+* Convert a time_t to a struct tm
+*/
+std::tm time_t_to_tm(u64bit timer)
+   {
+   std::time_t time_val = static_cast<std::time_t>(timer);
+
+   std::tm* tm_p = std::gmtime(&time_val);
+   if (tm_p == 0)
+      throw Encoding_Error("time_t_to_tm could not convert");
+   return (*tm_p);
    }
 
 /**

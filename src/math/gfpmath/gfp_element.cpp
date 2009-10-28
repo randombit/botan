@@ -1,13 +1,15 @@
-/******
- * Arithmetic for prime fields GF(p) (source file)
- *
- * (C) 2007 Martin Doering
- *          doering@cdc.informatik.tu-darmstadt.de
- *          Christoph Ludwig
- *          ludwig@fh-worms.de
- *          Falko Strenzke
- *          strenzke@flexsecure.de
- ******/
+/*
+* Arithmetic for prime fields GF(p)
+*
+* (C) 2007 Martin Doering
+*          doering@cdc.informatik.tu-darmstadt.de
+*          Christoph Ludwig
+*          ludwig@fh-worms.de
+*          Falko Strenzke
+*          strenzke@flexsecure.de
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/gfp_element.h>
 #include <botan/numthry.h>
@@ -15,8 +17,8 @@
 #include <botan/mp_types.h>
 #include <botan/mp_asm.h>
 #include <botan/mp_asmi.h>
-#include <assert.h>
 #include <ostream>
+#include <assert.h>
 
 namespace Botan {
 
@@ -66,7 +68,9 @@ void inner_montg_mult_sos(word result[], const word* a_bar, const word* b_bar, c
       while (C > 0)
          {
          // we need not worry here about C > 1, because the other operand is zero
-         word tmp = word_add(t[i+s+cnt], 0, &C);
+
+         word tmp = t[i+s+cnt] + C;
+         C = (tmp < t[i+s+cnt]);
          t[i+s+cnt] = tmp;
          cnt++;
          }

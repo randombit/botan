@@ -18,7 +18,7 @@ namespace Botan {
 class BOTAN_DLL Tiger : public MDx_HashFunction
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const;
       HashFunction* clone() const { return new Tiger(OUTPUT_LENGTH); }
       Tiger(u32bit = 24, u32bit = 3);

@@ -18,7 +18,7 @@ namespace Botan {
 class BOTAN_DLL MD2 : public HashFunction
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const { return "MD2"; }
       HashFunction* clone() const { return new MD2; }
       MD2() : HashFunction(16, 16) { clear(); }

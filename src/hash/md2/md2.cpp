@@ -97,7 +97,7 @@ void MD2::final_result(byte output[])
 /**
 * Clear memory of sensitive data
 */
-void MD2::clear() throw()
+void MD2::clear()
    {
    X.clear();
    checksum.clear();

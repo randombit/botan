@@ -1,6 +1,6 @@
 /*
-Algorithm Factory
-(C) 2008 Jack Lloyd
+* Algorithm Factory
+* (C) 2008 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -62,6 +62,10 @@ const T* factory_prototype(const std::string& algo_spec,
       return cache_hit;
 
    SCAN_Name scan_name(algo_spec);
+
+   if(scan_name.cipher_mode() != "")
+      return 0;
+
    for(u32bit i = 0; i != engines.size(); ++i)
       {
       if(provider == "" || engines[i]->provider_name() == provider)

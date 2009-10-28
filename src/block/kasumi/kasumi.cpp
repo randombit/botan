@@ -109,79 +109,91 @@ u16bit FI(u16bit I, u16bit K)
 /*
 * KASUMI Encryption
 */
-void KASUMI::enc(const byte in[], byte out[]) const
+void KASUMI::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u16bit B0 = load_be<u16bit>(in, 0);
-   u16bit B1 = load_be<u16bit>(in, 1);
-   u16bit B2 = load_be<u16bit>(in, 2);
-   u16bit B3 = load_be<u16bit>(in, 3);
-
-   for(u32bit j = 0; j != 8; j += 2)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      const u16bit* K = EK + 8*j;
+      u16bit B0 = load_be<u16bit>(in, 0);
+      u16bit B1 = load_be<u16bit>(in, 1);
+      u16bit B2 = load_be<u16bit>(in, 2);
+      u16bit B3 = load_be<u16bit>(in, 3);
 
-      u16bit R = B1 ^ (rotate_left(B0, 1) & K[0]);
-      u16bit L = B0 ^ (rotate_left(R, 1) | K[1]);
+      for(u32bit j = 0; j != 8; j += 2)
+         {
+         const u16bit* K = EK + 8*j;
 
-      L = FI(L ^ K[ 2], K[ 3]) ^ R;
-      R = FI(R ^ K[ 4], K[ 5]) ^ L;
-      L = FI(L ^ K[ 6], K[ 7]) ^ R;
+         u16bit R = B1 ^ (rotate_left(B0, 1) & K[0]);
+         u16bit L = B0 ^ (rotate_left(R, 1) | K[1]);
 
-      R = B2 ^= R;
-      L = B3 ^= L;
+         L = FI(L ^ K[ 2], K[ 3]) ^ R;
+         R = FI(R ^ K[ 4], K[ 5]) ^ L;
+         L = FI(L ^ K[ 6], K[ 7]) ^ R;
 
-      R = FI(R ^ K[10], K[11]) ^ L;
-      L = FI(L ^ K[12], K[13]) ^ R;
-      R = FI(R ^ K[14], K[15]) ^ L;
+         R = B2 ^= R;
+         L = B3 ^= L;
 
-      R ^= (rotate_left(L, 1) & K[8]);
-      L ^= (rotate_left(R, 1) | K[9]);
+         R = FI(R ^ K[10], K[11]) ^ L;
+         L = FI(L ^ K[12], K[13]) ^ R;
+         R = FI(R ^ K[14], K[15]) ^ L;
 
-      B0 ^= L;
-      B1 ^= R;
+         R ^= (rotate_left(L, 1) & K[8]);
+         L ^= (rotate_left(R, 1) | K[9]);
+
+         B0 ^= L;
+         B1 ^= R;
+         }
+
+      store_be(out, B0, B1, B2, B3);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
-
-   store_be(out, B0, B1, B2, B3);
    }
 
 /*
 * KASUMI Decryption
 */
-void KASUMI::dec(const byte in[], byte out[]) const
+void KASUMI::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u16bit B0 = load_be<u16bit>(in, 0);
-   u16bit B1 = load_be<u16bit>(in, 1);
-   u16bit B2 = load_be<u16bit>(in, 2);
-   u16bit B3 = load_be<u16bit>(in, 3);
-
-   for(u32bit j = 0; j != 8; j += 2)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      const u16bit* K = EK + 8*(6-j);
+      u16bit B0 = load_be<u16bit>(in, 0);
+      u16bit B1 = load_be<u16bit>(in, 1);
+      u16bit B2 = load_be<u16bit>(in, 2);
+      u16bit B3 = load_be<u16bit>(in, 3);
 
-      u16bit L = B2, R = B3;
+      for(u32bit j = 0; j != 8; j += 2)
+         {
+         const u16bit* K = EK + 8*(6-j);
 
-      L = FI(L ^ K[10], K[11]) ^ R;
-      R = FI(R ^ K[12], K[13]) ^ L;
-      L = FI(L ^ K[14], K[15]) ^ R;
+         u16bit L = B2, R = B3;
 
-      L ^= (rotate_left(R, 1) & K[8]);
-      R ^= (rotate_left(L, 1) | K[9]);
+         L = FI(L ^ K[10], K[11]) ^ R;
+         R = FI(R ^ K[12], K[13]) ^ L;
+         L = FI(L ^ K[14], K[15]) ^ R;
 
-      R = B0 ^= R;
-      L = B1 ^= L;
+         L ^= (rotate_left(R, 1) & K[8]);
+         R ^= (rotate_left(L, 1) | K[9]);
 
-      L ^= (rotate_left(R, 1) & K[0]);
-      R ^= (rotate_left(L, 1) | K[1]);
+         R = B0 ^= R;
+         L = B1 ^= L;
 
-      R = FI(R ^ K[2], K[3]) ^ L;
-      L = FI(L ^ K[4], K[5]) ^ R;
-      R = FI(R ^ K[6], K[7]) ^ L;
+         L ^= (rotate_left(R, 1) & K[0]);
+         R ^= (rotate_left(L, 1) | K[1]);
 
-      B2 ^= L;
-      B3 ^= R;
+         R = FI(R ^ K[2], K[3]) ^ L;
+         L = FI(L ^ K[4], K[5]) ^ R;
+         R = FI(R ^ K[6], K[7]) ^ L;
+
+         B2 ^= L;
+         B3 ^= R;
+         }
+
+      store_be(out, B0, B1, B2, B3);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
-
-   store_be(out, B0, B1, B2, B3);
    }
 
 /*

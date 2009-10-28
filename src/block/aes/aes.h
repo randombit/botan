@@ -1,6 +1,6 @@
 /**
 * AES
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -18,14 +18,16 @@ namespace Botan {
 class BOTAN_DLL AES : public BlockCipher
    {
    public:
-      void clear() throw();
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+
+      void clear();
       std::string name() const { return "AES"; }
       BlockCipher* clone() const { return new AES; }
+
       AES() : BlockCipher(16, 16, 32, 8) { ROUNDS = 14; }
       AES(u32bit);
    private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
       void key_schedule(const byte[], u32bit);
       static u32bit S(u32bit);
 

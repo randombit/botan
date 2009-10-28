@@ -1,0 +1,8 @@
+realname "Serpent (SSE2)"
+
+define SERPENT_SSE2
+
+<requires>
+serpent
+sse2_eng
+</requires>

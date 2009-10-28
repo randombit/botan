@@ -14,20 +14,7 @@
 
 using Botan::byte;
 using Botan::u32bit;
-
-struct algorithm
-   {
-      algorithm(const char* t, const char* n,
-                u32bit k = 0, u32bit i = 0) :
-         type(t), name(n), filtername(n), keylen(k), ivlen(i) {}
-      algorithm(const char* t, const char* n,
-                const char* f, u32bit k = 0, u32bit i = 0) :
-         type(t), name(n), filtername(f), keylen(k), ivlen(i) {}
-      std::string type, name, filtername;
-      u32bit keylen, ivlen, weight;
-   };
-
-std::vector<algorithm> get_algos();
+using Botan::u64bit;
 
 void strip_comments(std::string& line);
 void strip_newlines(std::string& line);

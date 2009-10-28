@@ -4,12 +4,6 @@ define MD5_IA32
 
 load_on asm_ok
 
-<add>
-md5_ia32_imp.S
-md5_ia32.cpp
-md5_ia32.h
-</add>
-
 <arch>
 ia32
 </arch>

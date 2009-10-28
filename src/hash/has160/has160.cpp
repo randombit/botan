@@ -145,7 +145,7 @@ void HAS_160::copy_out(byte output[])
 /*
 * Clear memory of sensitive data
 */
-void HAS_160::clear() throw()
+void HAS_160::clear()
    {
    MDx_HashFunction::clear();
    X.clear();

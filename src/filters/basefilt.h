@@ -9,9 +9,16 @@
 #define BOTAN_BASEFILT_H__
 
 #include <botan/filter.h>
-#include <botan/sym_algo.h>
 
 namespace Botan {
+
+/**
+* BitBucket is a filter which simply discards all inputs
+*/
+struct BitBucket : public Filter
+   {
+   void write(const byte[], u32bit) {}
+   };
 
 /**
 * This class represents Filter chains. A Filter chain is an ordered
@@ -60,38 +67,6 @@ class BOTAN_DLL Fork : public Fanout_Filter
       * @param length how many filters
       */
       Fork(Filter* filter_arr[], u32bit length);
-   };
-
-/**
-* This class represents keyed filters, i.e. filters that have to be
-* fed with a key in order to function.
-*/
-class BOTAN_DLL Keyed_Filter : public Filter
-   {
-   public:
-
-      /**
-      * Set the key of this filter.
-      * @param key the key to set
-      */
-      virtual void set_key(const SymmetricKey& key);
-
-      /**
-      * Set the initialization vector of this filter.
-      * @param iv the initialization vector to set
-      */
-      virtual void set_iv(const InitializationVector&) {}
-
-      /**
-      * Check whether a key length is valid for this filter.
-      * @param length the key length to be checked for validity
-      * @return true if the key length is valid, false otherwise
-      */
-      virtual bool valid_keylength(u32bit length) const;
-
-      Keyed_Filter() { base_ptr = 0; }
-   protected:
-      SymmetricAlgorithm* base_ptr;
    };
 
 }

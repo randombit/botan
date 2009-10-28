@@ -18,7 +18,7 @@ namespace Botan {
 class BOTAN_DLL HAS_160 : public MDx_HashFunction
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const { return "HAS-160"; }
       HashFunction* clone() const { return new HAS_160; }
       HAS_160() : MDx_HashFunction(20, 64, false, true) { clear(); }

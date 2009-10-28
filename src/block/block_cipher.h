@@ -1,6 +1,6 @@
 /**
 * Block Cipher Base Class
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -45,7 +45,8 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * @param out The byte array designated to hold the encrypted block.
       * Must be of length BLOCK_SIZE.
       */
-      void encrypt(const byte in[], byte out[]) const { enc(in, out); }
+      void encrypt(const byte in[], byte out[]) const
+         { encrypt_n(in, out, 1); }
 
       /**
       * Decrypt a block.
@@ -54,7 +55,8 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * @param out The byte array designated to hold the decrypted block.
       * Must be of length BLOCK_SIZE.
       */
-      void decrypt(const byte in[], byte out[]) const { dec(in, out); }
+      void decrypt(const byte in[], byte out[]) const
+         { decrypt_n(in, out, 1); }
 
       /**
       * Encrypt a block.
@@ -62,7 +64,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * Must be of length BLOCK_SIZE. Will hold the result when the function
       * has finished.
       */
-      void encrypt(byte block[]) const { enc(block, block); }
+      void encrypt(byte block[]) const { encrypt_n(block, block, 1); }
 
       /**
       * Decrypt a block.
@@ -70,7 +72,12 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * Must be of length BLOCK_SIZE. Will hold the result when the function
       * has finished.
       */
-      void decrypt(byte block[]) const { dec(block, block); }
+      void decrypt(byte block[]) const { decrypt_n(block, block, 1); }
+
+      virtual void encrypt_n(const byte in[], byte out[],
+                             u32bit blocks) const = 0;
+      virtual void decrypt_n(const byte in[], byte out[],
+                             u32bit blocks) const = 0;
 
       /**
       * Get a new object representing the same algorithm as *this
@@ -80,7 +87,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       /**
       * Zeroize internal state
       */
-      virtual void clear() throw() = 0;
+      virtual void clear() = 0;
 
       BlockCipher(u32bit block_size,
                   u32bit key_min,
@@ -90,9 +97,6 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
          BLOCK_SIZE(block_size) {}
 
       virtual ~BlockCipher() {}
-   private:
-      virtual void enc(const byte[], byte[]) const = 0;
-      virtual void dec(const byte[], byte[]) const = 0;
    };
 
 }

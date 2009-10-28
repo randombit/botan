@@ -11,7 +11,7 @@
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/oids.h>
-#include <botan/util.h>
+#include <botan/timer.h>
 
 namespace Botan {
 

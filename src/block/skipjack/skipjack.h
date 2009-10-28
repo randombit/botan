@@ -18,18 +18,21 @@ namespace Botan {
 class BOTAN_DLL Skipjack : public BlockCipher
    {
    public:
-      void clear() throw();
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+
+      void clear();
       std::string name() const { return "Skipjack"; }
       BlockCipher* clone() const { return new Skipjack; }
+
       Skipjack() : BlockCipher(8, 10) {}
    private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
       void key_schedule(const byte[], u32bit);
       void step_A(u16bit&, u16bit&, u32bit) const;
       void step_B(u16bit&, u16bit&, u32bit) const;
       void step_Ai(u16bit&, u16bit&, u32bit) const;
       void step_Bi(u16bit&, u16bit&, u32bit) const;
+
       SecureBuffer<byte, 256> FTABLE[10];
    };
 

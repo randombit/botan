@@ -1,6 +1,6 @@
 /**
-SCAN Name Abstraction
-(C) 2008 Jack Lloyd
+* SCAN Name Abstraction
+* (C) 2008 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -14,28 +14,50 @@ namespace Botan {
 
 namespace {
 
-std::vector<std::string>
-parse_and_deref_aliases(const std::string& algo_spec)
+std::string make_arg(
+   const std::vector<std::pair<u32bit, std::string> >& name, u32bit start)
    {
-   std::vector<std::string> parts = parse_algorithm_name(algo_spec);
-   std::vector<std::string> out;
+   std::string output = name[start].second;
+   u32bit level = name[start].first;
 
-   for(size_t i = 0; i != parts.size(); ++i)
+   u32bit paren_depth = 0;
+
+   for(u32bit i = start + 1; i != name.size(); ++i)
       {
-      std::string part_i = global_state().deref_alias(parts[i]);
+      if(name[i].first <= name[start].first)
+         break;
 
-      if(i == 0 && part_i.find_first_of(",()") != std::string::npos)
+      if(name[i].first > level)
          {
-         std::vector<std::string> parts_i = parse_and_deref_aliases(part_i);
-
-         for(size_t j = 0; j != parts_i.size(); ++j)
-            out.push_back(parts_i[j]);
+         output += '(' + name[i].second;
+         ++paren_depth;
+         }
+      else if(name[i].first < level)
+         {
+         output += ")," + name[i].second;
+         --paren_depth;
          }
       else
-         out.push_back(part_i);
+         {
+         if(output[output.size() - 1] != '(')
+            output += ",";
+         output += name[i].second;
+         }
+
+      level = name[i].first;
       }
 
-   return out;
+   for(u32bit i = 0; i != paren_depth; ++i)
+      output += ')';
+
+   return output;
+   }
+
+std::pair<u32bit, std::string>
+deref_aliases(const std::pair<u32bit, std::string>& in)
+   {
+   return std::make_pair(in.first,
+                         global_state().deref_alias(in.second));
    }
 
 }
@@ -44,31 +66,101 @@ SCAN_Name::SCAN_Name(const std::string& algo_spec)
    {
    orig_algo_spec = algo_spec;
 
-   name = parse_and_deref_aliases(algo_spec);
+   std::vector<std::pair<u32bit, std::string> > name;
+   u32bit level = 0;
+   std::pair<u32bit, std::string> accum = std::make_pair(level, "");
 
-   if(name.size() == 0)
+   for(u32bit i = 0; i != algo_spec.size(); ++i)
+      {
+      char c = algo_spec[i];
+
+      if(c == '/' || c == ',' || c == '(' || c == ')')
+         {
+         if(c == '(')
+            ++level;
+         else if(c == ')')
+            {
+            if(level == 0)
+               throw Decoding_Error("Bad SCAN name " + algo_spec);
+            --level;
+            }
+
+         if(c == '/' && level > 0)
+            accum.second.push_back(c);
+         else
+            {
+            if(accum.second != "")
+               name.push_back(deref_aliases(accum));
+            accum = std::make_pair(level, "");
+            }
+         }
+      else
+         accum.second.push_back(c);
+      }
+
+   if(accum.second != "")
+      name.push_back(deref_aliases(accum));
+
+   if(level != 0 || name.size() == 0)
       throw Decoding_Error("Bad SCAN name " + algo_spec);
+
+   alg_name = name[0].second;
+
+   bool in_modes = false;
+
+   for(u32bit i = 1; i != name.size(); ++i)
+      {
+      if(name[i].first == 0)
+         {
+         mode_info.push_back(make_arg(name, i));
+         in_modes = true;
+         }
+      else if(name[i].first == 1 && !in_modes)
+         args.push_back(make_arg(name, i));
+      }
+   }
+
+std::string SCAN_Name::algo_name_and_args() const
+   {
+   std::string out;
+
+   out = algo_name();
+
+   if(arg_count())
+      {
+      out += '(';
+      for(u32bit i = 0; i != arg_count(); ++i)
+         {
+         out += arg(i);
+         if(i != arg_count() - 1)
+            out += ',';
+         }
+      out += ')';
+
+      }
+
+   return out;
    }
 
 std::string SCAN_Name::arg(u32bit i) const
    {
    if(i >= arg_count())
       throw std::range_error("SCAN_Name::argument");
-   return name[i+1];
+   return args[i];
    }
 
 std::string SCAN_Name::arg(u32bit i, const std::string& def_value) const
    {
    if(i >= arg_count())
       return def_value;
-   return name[i+1];
+   return args[i];
    }
 
 u32bit SCAN_Name::arg_as_u32bit(u32bit i, u32bit def_value) const
    {
    if(i >= arg_count())
       return def_value;
-   return to_u32bit(name[i+1]);
+   return to_u32bit(args[i]);
    }
 
 }

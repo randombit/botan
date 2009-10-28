@@ -72,7 +72,7 @@ SecureVector<byte> EMSA1::encoding_of(const MemoryRegion<byte>& msg,
 * EMSA1 Decode/Verify Operation
 */
 bool EMSA1::verify(const MemoryRegion<byte>& coded,
-                   const MemoryRegion<byte>& raw, u32bit key_bits) throw()
+                   const MemoryRegion<byte>& raw, u32bit key_bits)
    {
    try {
       if(raw.size() != hash->OUTPUT_LENGTH)

@@ -14,73 +14,85 @@ namespace Botan {
 /*
 * RC2 Encryption
 */
-void RC2::enc(const byte in[], byte out[]) const
+void RC2::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u16bit R0 = load_le<u16bit>(in, 0);
-   u16bit R1 = load_le<u16bit>(in, 1);
-   u16bit R2 = load_le<u16bit>(in, 2);
-   u16bit R3 = load_le<u16bit>(in, 3);
-
-   for(u32bit j = 0; j != 16; ++j)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      R0 += (R1 & ~R3) + (R2 & R3) + K[4*j];
-      R0 = rotate_left(R0, 1);
+      u16bit R0 = load_le<u16bit>(in, 0);
+      u16bit R1 = load_le<u16bit>(in, 1);
+      u16bit R2 = load_le<u16bit>(in, 2);
+      u16bit R3 = load_le<u16bit>(in, 3);
 
-      R1 += (R2 & ~R0) + (R3 & R0) + K[4*j + 1];
-      R1 = rotate_left(R1, 2);
-
-      R2 += (R3 & ~R1) + (R0 & R1) + K[4*j + 2];
-      R2 = rotate_left(R2, 3);
-
-      R3 += (R0 & ~R2) + (R1 & R2) + K[4*j + 3];
-      R3 = rotate_left(R3, 5);
-
-      if(j == 4 || j == 10)
+      for(u32bit j = 0; j != 16; ++j)
          {
-         R0 += K[R3 % 64];
-         R1 += K[R0 % 64];
-         R2 += K[R1 % 64];
-         R3 += K[R2 % 64];
-         }
-      }
+         R0 += (R1 & ~R3) + (R2 & R3) + K[4*j];
+         R0 = rotate_left(R0, 1);
 
-   store_le(out, R0, R1, R2, R3);
+         R1 += (R2 & ~R0) + (R3 & R0) + K[4*j + 1];
+         R1 = rotate_left(R1, 2);
+
+         R2 += (R3 & ~R1) + (R0 & R1) + K[4*j + 2];
+         R2 = rotate_left(R2, 3);
+
+         R3 += (R0 & ~R2) + (R1 & R2) + K[4*j + 3];
+         R3 = rotate_left(R3, 5);
+
+         if(j == 4 || j == 10)
+            {
+            R0 += K[R3 % 64];
+            R1 += K[R0 % 64];
+            R2 += K[R1 % 64];
+            R3 += K[R2 % 64];
+            }
+         }
+
+      store_le(out, R0, R1, R2, R3);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*
 * RC2 Decryption
 */
-void RC2::dec(const byte in[], byte out[]) const
+void RC2::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u16bit R0 = load_le<u16bit>(in, 0);
-   u16bit R1 = load_le<u16bit>(in, 1);
-   u16bit R2 = load_le<u16bit>(in, 2);
-   u16bit R3 = load_le<u16bit>(in, 3);
-
-   for(u32bit j = 0; j != 16; ++j)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      R3 = rotate_right(R3, 5);
-      R3 -= (R0 & ~R2) + (R1 & R2) + K[63 - (4*j + 0)];
+      u16bit R0 = load_le<u16bit>(in, 0);
+      u16bit R1 = load_le<u16bit>(in, 1);
+      u16bit R2 = load_le<u16bit>(in, 2);
+      u16bit R3 = load_le<u16bit>(in, 3);
 
-      R2 = rotate_right(R2, 3);
-      R2 -= (R3 & ~R1) + (R0 & R1) + K[63 - (4*j + 1)];
-
-      R1 = rotate_right(R1, 2);
-      R1 -= (R2 & ~R0) + (R3 & R0) + K[63 - (4*j + 2)];
-
-      R0 = rotate_right(R0, 1);
-      R0 -= (R1 & ~R3) + (R2 & R3) + K[63 - (4*j + 3)];
-
-      if(j == 4 || j == 10)
+      for(u32bit j = 0; j != 16; ++j)
          {
-         R3 -= K[R2 % 64];
-         R2 -= K[R1 % 64];
-         R1 -= K[R0 % 64];
-         R0 -= K[R3 % 64];
-         }
-      }
+         R3 = rotate_right(R3, 5);
+         R3 -= (R0 & ~R2) + (R1 & R2) + K[63 - (4*j + 0)];
 
-   store_le(out, R0, R1, R2, R3);
+         R2 = rotate_right(R2, 3);
+         R2 -= (R3 & ~R1) + (R0 & R1) + K[63 - (4*j + 1)];
+
+         R1 = rotate_right(R1, 2);
+         R1 -= (R2 & ~R0) + (R3 & R0) + K[63 - (4*j + 2)];
+
+         R0 = rotate_right(R0, 1);
+         R0 -= (R1 & ~R3) + (R2 & R3) + K[63 - (4*j + 3)];
+
+         if(j == 4 || j == 10)
+            {
+            R3 -= K[R2 % 64];
+            R2 -= K[R1 % 64];
+            R1 -= K[R0 % 64];
+            R0 -= K[R3 % 64];
+            }
+         }
+
+      store_le(out, R0, R1, R2, R3);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*

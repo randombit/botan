@@ -12,6 +12,7 @@
 #include <botan/types.h>
 #include <botan/bswap.h>
 #include <botan/rotate.h>
+#include <botan/prefetch.h>
 
 #if BOTAN_TARGET_UNALIGNED_LOADSTOR_OK
 
@@ -165,6 +166,70 @@ inline u64bit load_le<u64bit>(const byte in[], u32bit off)
 #endif
    }
 
+template<typename T>
+inline void load_le(const byte in[], T& x0, T& x1)
+   {
+   x0 = load_le<T>(in, 0);
+   x1 = load_le<T>(in, 1);
+   }
+
+template<typename T>
+inline void load_le(const byte in[],
+                    T& x0, T& x1, T& x2, T& x3)
+   {
+   x0 = load_le<T>(in, 0);
+   x1 = load_le<T>(in, 1);
+   x2 = load_le<T>(in, 2);
+   x3 = load_le<T>(in, 3);
+   }
+
+template<typename T>
+inline void load_le(const byte in[],
+                    T& x0, T& x1, T& x2, T& x3,
+                    T& x4, T& x5, T& x6, T& x7)
+   {
+   x0 = load_le<T>(in, 0);
+   x1 = load_le<T>(in, 1);
+   x2 = load_le<T>(in, 2);
+   x3 = load_le<T>(in, 3);
+   x4 = load_le<T>(in, 4);
+   x5 = load_le<T>(in, 5);
+   x6 = load_le<T>(in, 6);
+   x7 = load_le<T>(in, 7);
+   }
+
+template<typename T>
+inline void load_be(const byte in[], T& x0, T& x1)
+   {
+   x0 = load_be<T>(in, 0);
+   x1 = load_be<T>(in, 1);
+   }
+
+template<typename T>
+inline void load_be(const byte in[],
+                    T& x0, T& x1, T& x2, T& x3)
+   {
+   x0 = load_be<T>(in, 0);
+   x1 = load_be<T>(in, 1);
+   x2 = load_be<T>(in, 2);
+   x3 = load_be<T>(in, 3);
+   }
+
+template<typename T>
+inline void load_be(const byte in[],
+                    T& x0, T& x1, T& x2, T& x3,
+                    T& x4, T& x5, T& x6, T& x7)
+   {
+   x0 = load_be<T>(in, 0);
+   x1 = load_be<T>(in, 1);
+   x2 = load_be<T>(in, 2);
+   x3 = load_be<T>(in, 3);
+   x4 = load_be<T>(in, 4);
+   x5 = load_be<T>(in, 5);
+   x6 = load_be<T>(in, 6);
+   x7 = load_be<T>(in, 7);
+   }
+
 /*
 * Endian-Specific Word Storing Operations
 */
@@ -245,35 +310,63 @@ inline void store_le(u64bit in, byte out[8])
    }
 
 template<typename T>
-inline void store_le(byte out[], T a, T b)
+inline void store_le(byte out[], T x0, T x1)
    {
-   store_le(a, out + (0 * sizeof(T)));
-   store_le(b, out + (1 * sizeof(T)));
+   store_le(x0, out + (0 * sizeof(T)));
+   store_le(x1, out + (1 * sizeof(T)));
    }
 
 template<typename T>
-inline void store_be(byte out[], T a, T b)
+inline void store_be(byte out[], T x0, T x1)
    {
-   store_be(a, out + (0 * sizeof(T)));
-   store_be(b, out + (1 * sizeof(T)));
+   store_be(x0, out + (0 * sizeof(T)));
+   store_be(x1, out + (1 * sizeof(T)));
    }
 
 template<typename T>
-inline void store_le(byte out[], T a, T b, T c, T d)
+inline void store_le(byte out[], T x0, T x1, T x2, T x3)
    {
-   store_le(a, out + (0 * sizeof(T)));
-   store_le(b, out + (1 * sizeof(T)));
-   store_le(c, out + (2 * sizeof(T)));
-   store_le(d, out + (3 * sizeof(T)));
+   store_le(x0, out + (0 * sizeof(T)));
+   store_le(x1, out + (1 * sizeof(T)));
+   store_le(x2, out + (2 * sizeof(T)));
+   store_le(x3, out + (3 * sizeof(T)));
    }
 
 template<typename T>
-inline void store_be(byte out[], T a, T b, T c, T d)
+inline void store_be(byte out[], T x0, T x1, T x2, T x3)
    {
-   store_be(a, out + (0 * sizeof(T)));
-   store_be(b, out + (1 * sizeof(T)));
-   store_be(c, out + (2 * sizeof(T)));
-   store_be(d, out + (3 * sizeof(T)));
+   store_be(x0, out + (0 * sizeof(T)));
+   store_be(x1, out + (1 * sizeof(T)));
+   store_be(x2, out + (2 * sizeof(T)));
+   store_be(x3, out + (3 * sizeof(T)));
+   }
+
+template<typename T>
+inline void store_le(byte out[], T x0, T x1, T x2, T x3,
+                                 T x4, T x5, T x6, T x7)
+   {
+   store_le(x0, out + (0 * sizeof(T)));
+   store_le(x1, out + (1 * sizeof(T)));
+   store_le(x2, out + (2 * sizeof(T)));
+   store_le(x3, out + (3 * sizeof(T)));
+   store_le(x4, out + (4 * sizeof(T)));
+   store_le(x5, out + (5 * sizeof(T)));
+   store_le(x6, out + (6 * sizeof(T)));
+   store_le(x7, out + (7 * sizeof(T)));
+   }
+
+template<typename T>
+inline void store_be(byte out[], T x0, T x1, T x2, T x3,
+                                 T x4, T x5, T x6, T x7)
+   {
+   store_be(x0, out + (0 * sizeof(T)));
+   store_be(x1, out + (1 * sizeof(T)));
+   store_be(x2, out + (2 * sizeof(T)));
+   store_be(x3, out + (3 * sizeof(T)));
+   store_be(x4, out + (4 * sizeof(T)));
+   store_be(x5, out + (5 * sizeof(T)));
+   store_be(x6, out + (6 * sizeof(T)));
+   store_be(x7, out + (7 * sizeof(T)));
    }
 
 }

@@ -9,8 +9,16 @@
 #define BOTAN_TIMERS_H__
 
 #include <botan/rng.h>
+#include <ctime>
 
 namespace Botan {
+
+/*
+* Time Access/Conversion Functions
+*/
+BOTAN_DLL u64bit system_time();
+
+BOTAN_DLL std::tm time_t_to_tm(u64bit);
 
 /**
 * Timer Interface

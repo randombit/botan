@@ -1,5 +1,7 @@
 realname "Intel C++"
 
+macro_name "INTEL"
+
 binary_name "icpc"
 
 compiler_has_tr1 yes

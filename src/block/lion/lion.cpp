@@ -14,41 +14,53 @@ namespace Botan {
 /*
 * Lion Encryption
 */
-void Lion::enc(const byte in[], byte out[]) const
+void Lion::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    SecureVector<byte> buffer(LEFT_SIZE);
 
-   xor_buf(buffer, in, key1, LEFT_SIZE);
-   cipher->set_key(buffer, LEFT_SIZE);
-   cipher->encrypt(in + LEFT_SIZE, out + LEFT_SIZE, RIGHT_SIZE);
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      xor_buf(buffer, in, key1, LEFT_SIZE);
+      cipher->set_key(buffer, LEFT_SIZE);
+      cipher->cipher(in + LEFT_SIZE, out + LEFT_SIZE, RIGHT_SIZE);
 
-   hash->update(out + LEFT_SIZE, RIGHT_SIZE);
-   hash->final(buffer);
-   xor_buf(out, in, buffer, LEFT_SIZE);
+      hash->update(out + LEFT_SIZE, RIGHT_SIZE);
+      hash->final(buffer);
+      xor_buf(out, in, buffer, LEFT_SIZE);
 
-   xor_buf(buffer, out, key2, LEFT_SIZE);
-   cipher->set_key(buffer, LEFT_SIZE);
-   cipher->encrypt(out + LEFT_SIZE, RIGHT_SIZE);
+      xor_buf(buffer, out, key2, LEFT_SIZE);
+      cipher->set_key(buffer, LEFT_SIZE);
+      cipher->cipher1(out + LEFT_SIZE, RIGHT_SIZE);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*
 * Lion Decryption
 */
-void Lion::dec(const byte in[], byte out[]) const
+void Lion::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    SecureVector<byte> buffer(LEFT_SIZE);
 
-   xor_buf(buffer, in, key2, LEFT_SIZE);
-   cipher->set_key(buffer, LEFT_SIZE);
-   cipher->encrypt(in + LEFT_SIZE, out + LEFT_SIZE, RIGHT_SIZE);
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      xor_buf(buffer, in, key2, LEFT_SIZE);
+      cipher->set_key(buffer, LEFT_SIZE);
+      cipher->cipher(in + LEFT_SIZE, out + LEFT_SIZE, RIGHT_SIZE);
 
-   hash->update(out + LEFT_SIZE, RIGHT_SIZE);
-   hash->final(buffer);
-   xor_buf(out, in, buffer, LEFT_SIZE);
+      hash->update(out + LEFT_SIZE, RIGHT_SIZE);
+      hash->final(buffer);
+      xor_buf(out, in, buffer, LEFT_SIZE);
 
-   xor_buf(buffer, out, key1, LEFT_SIZE);
-   cipher->set_key(buffer, LEFT_SIZE);
-   cipher->encrypt(out + LEFT_SIZE, RIGHT_SIZE);
+      xor_buf(buffer, out, key1, LEFT_SIZE);
+      cipher->set_key(buffer, LEFT_SIZE);
+      cipher->cipher1(out + LEFT_SIZE, RIGHT_SIZE);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*
@@ -83,7 +95,7 @@ BlockCipher* Lion::clone() const
 /*
 * Clear memory of sensitive data
 */
-void Lion::clear() throw()
+void Lion::clear()
    {
    hash->clear();
    cipher->clear();

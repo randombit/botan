@@ -7,26 +7,6 @@ using namespace Botan;
 
 #include <iostream>
 
-double best_speed(const std::string& algorithm,
-                  u32bit milliseconds,
-                  RandomNumberGenerator& rng,
-                  Timer& timer)
-   {
-   std::map<std::string, double> speeds =
-      algorithm_benchmark(algorithm, milliseconds,
-                          timer, rng,
-                          global_state().algorithm_factory());
-
-   double best_time = 0;
-
-   for(std::map<std::string, double>::const_iterator i = speeds.begin();
-       i != speeds.end(); ++i)
-      if(i->second > best_time)
-         best_time = i->second;
-
-   return best_time;
-   }
-
 const std::string algos[] = {
    "AES-128",
    "AES-192",
@@ -62,7 +42,6 @@ const std::string algos[] = {
    "FORK-256",
    "GOST-34.11",
    "HAS-160",
-   "HAS-V",
    "MD2",
    "MD4",
    "MD5",
@@ -81,18 +60,40 @@ const std::string algos[] = {
    "",
 };
 
-int main()
+void benchmark_algo(const std::string& algo,
+                    RandomNumberGenerator& rng)
+   {
+   u32bit milliseconds = 3000;
+   Default_Benchmark_Timer timer;
+   Algorithm_Factory& af = global_state().algorithm_factory();
+
+   std::map<std::string, double> speeds =
+      algorithm_benchmark(algo, milliseconds, timer, rng, af);
+
+   std::cout << algo << ":";
+
+   for(std::map<std::string, double>::const_iterator i = speeds.begin();
+       i != speeds.end(); ++i)
+      {
+      std::cout << " " << i->second << " [" << i->first << "]";
+      }
+   std::cout << "\n";
+   }
+
+int main(int argc, char* argv[])
    {
    LibraryInitializer init;
 
-   u32bit milliseconds = 1000;
    AutoSeeded_RNG rng;
-   Default_Benchmark_Timer timer;
 
-   for(u32bit i = 0; algos[i] != ""; ++i)
+   if(argc == 1) // no args, benchmark everything
       {
-      std::string algo = algos[i];
-      std::cout << algo << ' '
-                << best_speed(algo, milliseconds, rng, timer) << "\n";
+      for(u32bit i = 0; algos[i] != ""; ++i)
+         benchmark_algo(algos[i], rng);
+      }
+   else
+      {
+      for(int i = 1; argv[i]; ++i)
+         benchmark_algo(argv[i], rng);
       }
    }

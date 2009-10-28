@@ -130,7 +130,7 @@ void SHA_160::copy_out(byte output[])
 /*
 * Clear memory of sensitive data
 */
-void SHA_160::clear() throw()
+void SHA_160::clear()
    {
    MDx_HashFunction::clear();
    W.clear();

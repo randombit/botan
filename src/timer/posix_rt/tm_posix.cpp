@@ -6,7 +6,6 @@
 */
 
 #include <botan/tm_posix.h>
-#include <botan/util.h>
 
 #ifndef _POSIX_C_SOURCE
   #define _POSIX_C_SOURCE 199309

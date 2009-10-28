@@ -218,25 +218,6 @@ u32bit Turing::fixedS(u32bit W)
    }
 
 /*
-* Generate the expanded Turing Sbox tables
-*/
-void Turing::gen_sbox(MemoryRegion<u32bit>& S, u32bit which,
-                      const MemoryRegion<u32bit>& K)
-   {
-   for(u32bit j = 0; j != 256; ++j)
-      {
-      u32bit W = 0, C = j;
-
-      for(u32bit k = 0; k < K.size(); ++k)
-         {
-         C = SBOX[get_byte(which, K[k]) ^ C];
-         W ^= rotate_left(Q_BOX[C], k + 8*which);
-         }
-      S[j] = (W & rotate_right(0x00FFFFFF, 8*which)) | (C << (24 - 8*which));
-      }
-   }
-
-/*
 * Turing Key Schedule
 */
 void Turing::key_schedule(const byte key[], u32bit length)
@@ -250,20 +231,41 @@ void Turing::key_schedule(const byte key[], u32bit length)
 
    PHT(K);
 
-   gen_sbox(S0, 0, K);
-   gen_sbox(S1, 1, K);
-   gen_sbox(S2, 2, K);
-   gen_sbox(S3, 3, K);
+   for(u32bit i = 0; i != 256; ++i)
+      {
+      u32bit W0 = 0, C0 = i;
+      u32bit W1 = 0, C1 = i;
+      u32bit W2 = 0, C2 = i;
+      u32bit W3 = 0, C3 = i;
 
-   resync(0, 0);
+      for(u32bit j = 0; j < K.size(); ++j)
+         {
+         C0 = SBOX[get_byte(0, K[j]) ^ C0];
+         C1 = SBOX[get_byte(1, K[j]) ^ C1];
+         C2 = SBOX[get_byte(2, K[j]) ^ C2];
+         C3 = SBOX[get_byte(3, K[j]) ^ C3];
+
+         W0 ^= rotate_left(Q_BOX[C0], j);
+         W1 ^= rotate_left(Q_BOX[C1], j + 8);
+         W2 ^= rotate_left(Q_BOX[C2], j + 16);
+         W3 ^= rotate_left(Q_BOX[C3], j + 24);
+         }
+
+      S0[i] = (W0 & 0x00FFFFFF) | (C0 << 24);
+      S1[i] = (W1 & 0xFF00FFFF) | (C1 << 16);
+      S2[i] = (W2 & 0xFFFF00FF) | (C2 << 8);
+      S3[i] = (W3 & 0xFFFFFF00) | C3;
+      }
+
+   set_iv(0, 0);
    }
 
 /*
 * Resynchronization
 */
-void Turing::resync(const byte iv[], u32bit length)
+void Turing::set_iv(const byte iv[], u32bit length)
    {
-   if(length % 4 != 0 || length > 16)
+   if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
 
    SecureVector<u32bit> IV(length / 4);
@@ -293,7 +295,7 @@ void Turing::resync(const byte iv[], u32bit length)
 /*
 * Clear memory of sensitive data
 */
-void Turing::clear() throw()
+void Turing::clear()
    {
    S0.clear();
    S1.clear();

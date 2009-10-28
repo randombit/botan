@@ -110,16 +110,17 @@ void WiderWake_41_BE::key_schedule(const byte key[], u32bit)
    T[X] = Z;
 
    position = 0;
-   const byte iv[8] = { 0 };
-   resync(iv, 8);
+
+   const byte ZEROS[8] = { 0 };
+   set_iv(ZEROS, sizeof(ZEROS));
    }
 
 /*
 * Resynchronization
 */
-void WiderWake_41_BE::resync(const byte iv[], u32bit length)
+void WiderWake_41_BE::set_iv(const byte iv[], u32bit length)
    {
-   if(length != 8)
+   if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
 
    for(u32bit j = 0; j != 4; ++j)
@@ -135,7 +136,7 @@ void WiderWake_41_BE::resync(const byte iv[], u32bit length)
 /*
 * Clear memory of sensitive data
 */
-void WiderWake_41_BE::clear() throw()
+void WiderWake_41_BE::clear()
    {
    position = 0;
    t_key.clear();

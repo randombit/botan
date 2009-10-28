@@ -8,7 +8,6 @@
 #include <botan/hmac_rng.h>
 #include <botan/loadstor.h>
 #include <botan/xor_buf.h>
-#include <botan/util.h>
 #include <botan/stl_util.h>
 #include <algorithm>
 
@@ -148,7 +147,7 @@ void HMAC_RNG::add_entropy_source(EntropySource* src)
 /*
 * Clear memory of sensitive data
 */
-void HMAC_RNG::clear() throw()
+void HMAC_RNG::clear()
    {
    extractor->clear();
    prf->clear();

@@ -23,7 +23,7 @@ class BOTAN_DLL Randpool : public RandomNumberGenerator
    public:
       void randomize(byte[], u32bit);
       bool is_seeded() const { return seeded; }
-      void clear() throw();
+      void clear();
       std::string name() const;
 
       void reseed(u32bit bits_to_collect);

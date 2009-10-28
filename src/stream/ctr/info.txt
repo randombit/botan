@@ -1,0 +1,16 @@
+realname "CTR mode"
+
+define CTR_BE
+
+load_on auto
+
+<add>
+ctr.cpp
+ctr.h
+</add>
+
+<requires>
+block
+stream
+</requires>
+

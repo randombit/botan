@@ -101,7 +101,7 @@ void CMAC::key_schedule(const byte key[], u32bit length)
 /*
 * Clear memory of sensitive data
 */
-void CMAC::clear() throw()
+void CMAC::clear()
    {
    e->clear();
    state.clear();

@@ -32,7 +32,7 @@ class BOTAN_DLL EMSA3 : public EMSA
                                      RandomNumberGenerator& rng);
 
       bool verify(const MemoryRegion<byte>&, const MemoryRegion<byte>&,
-                  u32bit) throw();
+                  u32bit);
    private:
       HashFunction* hash;
       SecureVector<byte> hash_id;
@@ -54,7 +54,7 @@ class BOTAN_DLL EMSA3_Raw : public EMSA
                                      RandomNumberGenerator& rng);
 
       bool verify(const MemoryRegion<byte>&, const MemoryRegion<byte>&,
-                  u32bit) throw();
+                  u32bit);
 
    private:
       SecureVector<byte> message;

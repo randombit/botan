@@ -15,7 +15,9 @@
 
 #include <botan/pipe.h>
 #include <botan/basefilt.h>
+#include <botan/key_filt.h>
 #include <botan/data_snk.h>
+
 #include <botan/scan_name.h>
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
@@ -36,30 +38,47 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
    public:
 
       /**
-      * Seek in the stream.
-      * @param position the position to seek ahead
+      * Write input data
+      * @param input data
+      * @param input_len length of input in bytes
       */
-      void seek(u32bit position) { cipher->seek(position); }
+      void write(const byte input[], u32bit input_len);
 
-      /**
-      * Find out whether the cipher underlying this filter supports
-      * resyncing.
-      * @return true if the cipher supports resyncing
-      */
-      bool supports_resync() const { return (cipher->IV_LENGTH != 0); }
+      bool valid_iv_length(u32bit iv_len)
+         { return cipher->valid_iv_length(iv_len); }
 
       /**
       * Set the initialization vector for this filter.
       * @param iv the initialization vector to set
       */
       void set_iv(const InitializationVector& iv);
-      void write(const byte[], u32bit);
+
+      /**
+      * Set the key of this filter.
+      * @param key the key to set
+      */
+      void set_key(const SymmetricKey& key) { cipher->set_key(key); }
+
+      /**
+      * Check whether a key length is valid for this filter.
+      * @param length the key length to be checked for validity
+      * @return true if the key length is valid, false otherwise
+      */
+      bool valid_keylength(u32bit length) const
+         { return cipher->valid_keylength(length); }
 
       /**
       * Construct a stream cipher filter.
       * @param cipher_obj a cipher object to use
       */
       StreamCipher_Filter(StreamCipher* cipher_obj);
+
+      /**
+      * Construct a stream cipher filter.
+      * @param cipher_obj a cipher object to use
+      * @param key the key to use inside this filter
+      */
+      StreamCipher_Filter(StreamCipher* cipher_obj, const SymmetricKey& key);
 
       /**
       * Construct a stream cipher filter.
@@ -126,6 +145,20 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
       void end_msg();
 
       /**
+      * Set the key of this filter.
+      * @param key the key to set
+      */
+      void set_key(const SymmetricKey& key) { mac->set_key(key); }
+
+      /**
+      * Check whether a key length is valid for this filter.
+      * @param length the key length to be checked for validity
+      * @return true if the key length is valid, false otherwise
+      */
+      bool valid_keylength(u32bit length) const
+         { return mac->valid_keylength(length); }
+
+      /**
       * Construct a MAC filter. The MAC key will be left empty.
       * @param mac the MAC to use
       * @param len the output length of this filter. Leave the default
@@ -136,7 +169,7 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
       MAC_Filter(MessageAuthenticationCode* mac_obj,
                  u32bit out_len = 0) : OUTPUT_LENGTH(out_len)
          {
-         base_ptr = mac = mac_obj;
+         mac = mac_obj;
          }
 
       /**
@@ -152,7 +185,7 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
                  const SymmetricKey& key,
                  u32bit out_len = 0) : OUTPUT_LENGTH(out_len)
          {
-         base_ptr = mac = mac_obj;
+         mac = mac_obj;
          mac->set_key(key);
          }
 

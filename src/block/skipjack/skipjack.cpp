@@ -13,51 +13,63 @@ namespace Botan {
 /*
 * Skipjack Encryption
 */
-void Skipjack::enc(const byte in[], byte out[]) const
+void Skipjack::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u16bit W1 = load_le<u16bit>(in, 3);
-   u16bit W2 = load_le<u16bit>(in, 2);
-   u16bit W3 = load_le<u16bit>(in, 1);
-   u16bit W4 = load_le<u16bit>(in, 0);
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      u16bit W1 = load_le<u16bit>(in, 3);
+      u16bit W2 = load_le<u16bit>(in, 2);
+      u16bit W3 = load_le<u16bit>(in, 1);
+      u16bit W4 = load_le<u16bit>(in, 0);
 
-   step_A(W1,W4, 1); step_A(W4,W3, 2); step_A(W3,W2, 3); step_A(W2,W1, 4);
-   step_A(W1,W4, 5); step_A(W4,W3, 6); step_A(W3,W2, 7); step_A(W2,W1, 8);
+      step_A(W1,W4, 1); step_A(W4,W3, 2); step_A(W3,W2, 3); step_A(W2,W1, 4);
+      step_A(W1,W4, 5); step_A(W4,W3, 6); step_A(W3,W2, 7); step_A(W2,W1, 8);
 
-   step_B(W1,W2, 9); step_B(W4,W1,10); step_B(W3,W4,11); step_B(W2,W3,12);
-   step_B(W1,W2,13); step_B(W4,W1,14); step_B(W3,W4,15); step_B(W2,W3,16);
+      step_B(W1,W2, 9); step_B(W4,W1,10); step_B(W3,W4,11); step_B(W2,W3,12);
+      step_B(W1,W2,13); step_B(W4,W1,14); step_B(W3,W4,15); step_B(W2,W3,16);
 
-   step_A(W1,W4,17); step_A(W4,W3,18); step_A(W3,W2,19); step_A(W2,W1,20);
-   step_A(W1,W4,21); step_A(W4,W3,22); step_A(W3,W2,23); step_A(W2,W1,24);
+      step_A(W1,W4,17); step_A(W4,W3,18); step_A(W3,W2,19); step_A(W2,W1,20);
+      step_A(W1,W4,21); step_A(W4,W3,22); step_A(W3,W2,23); step_A(W2,W1,24);
 
-   step_B(W1,W2,25); step_B(W4,W1,26); step_B(W3,W4,27); step_B(W2,W3,28);
-   step_B(W1,W2,29); step_B(W4,W1,30); step_B(W3,W4,31); step_B(W2,W3,32);
+      step_B(W1,W2,25); step_B(W4,W1,26); step_B(W3,W4,27); step_B(W2,W3,28);
+      step_B(W1,W2,29); step_B(W4,W1,30); step_B(W3,W4,31); step_B(W2,W3,32);
 
-   store_le(out, W4, W3, W2, W1);
+      store_le(out, W4, W3, W2, W1);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*
 * Skipjack Decryption
 */
-void Skipjack::dec(const byte in[], byte out[]) const
+void Skipjack::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u16bit W1 = load_le<u16bit>(in, 3);
-   u16bit W2 = load_le<u16bit>(in, 2);
-   u16bit W3 = load_le<u16bit>(in, 1);
-   u16bit W4 = load_le<u16bit>(in, 0);
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      u16bit W1 = load_le<u16bit>(in, 3);
+      u16bit W2 = load_le<u16bit>(in, 2);
+      u16bit W3 = load_le<u16bit>(in, 1);
+      u16bit W4 = load_le<u16bit>(in, 0);
 
-   step_Bi(W2,W3,32); step_Bi(W3,W4,31); step_Bi(W4,W1,30); step_Bi(W1,W2,29);
-   step_Bi(W2,W3,28); step_Bi(W3,W4,27); step_Bi(W4,W1,26); step_Bi(W1,W2,25);
+      step_Bi(W2,W3,32); step_Bi(W3,W4,31); step_Bi(W4,W1,30); step_Bi(W1,W2,29);
+      step_Bi(W2,W3,28); step_Bi(W3,W4,27); step_Bi(W4,W1,26); step_Bi(W1,W2,25);
 
-   step_Ai(W1,W2,24); step_Ai(W2,W3,23); step_Ai(W3,W4,22); step_Ai(W4,W1,21);
-   step_Ai(W1,W2,20); step_Ai(W2,W3,19); step_Ai(W3,W4,18); step_Ai(W4,W1,17);
+      step_Ai(W1,W2,24); step_Ai(W2,W3,23); step_Ai(W3,W4,22); step_Ai(W4,W1,21);
+      step_Ai(W1,W2,20); step_Ai(W2,W3,19); step_Ai(W3,W4,18); step_Ai(W4,W1,17);
 
-   step_Bi(W2,W3,16); step_Bi(W3,W4,15); step_Bi(W4,W1,14); step_Bi(W1,W2,13);
-   step_Bi(W2,W3,12); step_Bi(W3,W4,11); step_Bi(W4,W1,10); step_Bi(W1,W2, 9);
+      step_Bi(W2,W3,16); step_Bi(W3,W4,15); step_Bi(W4,W1,14); step_Bi(W1,W2,13);
+      step_Bi(W2,W3,12); step_Bi(W3,W4,11); step_Bi(W4,W1,10); step_Bi(W1,W2, 9);
 
-   step_Ai(W1,W2, 8); step_Ai(W2,W3, 7); step_Ai(W3,W4, 6); step_Ai(W4,W1, 5);
-   step_Ai(W1,W2, 4); step_Ai(W2,W3, 3); step_Ai(W3,W4, 2); step_Ai(W4,W1, 1);
+      step_Ai(W1,W2, 8); step_Ai(W2,W3, 7); step_Ai(W3,W4, 6); step_Ai(W4,W1, 5);
+      step_Ai(W1,W2, 4); step_Ai(W2,W3, 3); step_Ai(W3,W4, 2); step_Ai(W4,W1, 1);
 
-   store_le(out, W4, W3, W2, W1);
+      store_le(out, W4, W3, W2, W1);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*
@@ -153,7 +165,7 @@ void Skipjack::key_schedule(const byte key[], u32bit)
 /*
 * Clear memory of sensitive data
 */
-void Skipjack::clear() throw()
+void Skipjack::clear()
    {
    for(u32bit j = 0; j != 10; ++j)
       FTABLE[j].clear();

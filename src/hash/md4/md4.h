@@ -18,7 +18,7 @@ namespace Botan {
 class BOTAN_DLL MD4 : public MDx_HashFunction
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const { return "MD4"; }
       HashFunction* clone() const { return new MD4; }
       MD4() : MDx_HashFunction(16, 64, false, true) { clear(); }

@@ -23,7 +23,7 @@ class BOTAN_DLL AutoSeeded_RNG : public RandomNumberGenerator
          { rng->randomize(out, len); }
       bool is_seeded() const
          { return rng->is_seeded(); }
-      void clear() throw() { rng->clear(); }
+      void clear() { rng->clear(); }
       std::string name() const
          { return "AutoSeeded(" + rng->name() + ")"; }
 

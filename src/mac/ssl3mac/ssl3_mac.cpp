@@ -46,7 +46,7 @@ void SSL3_MAC::key_schedule(const byte key[], u32bit length)
 /*
 * Clear memory of sensitive data
 */
-void SSL3_MAC::clear() throw()
+void SSL3_MAC::clear()
    {
    hash->clear();
    i_key.clear();

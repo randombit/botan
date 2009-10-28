@@ -129,7 +129,7 @@ void Tiger::mix(u64bit X[8])
 /*
 * Clear memory of sensitive data
 */
-void Tiger::clear() throw()
+void Tiger::clear()
    {
    MDx_HashFunction::clear();
    X.clear();
