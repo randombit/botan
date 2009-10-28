@@ -4,6 +4,10 @@ endian big
 
 default_submodel power4
 
+<aliases>
+powerpc64
+</aliases>
+
 <submodel_aliases>
 g5 -> ppc970
 </submodel_aliases>
