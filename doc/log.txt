@@ -9,6 +9,7 @@
  - Add runtime cpu feature detection for x86/x86-64
  - Add code for general runtime self testing for hashes, MACs, and ciphers
  - Optimize XTEA; twice as fast as before on Core2 and Opteron
+ - Convert CTR_BE and OFB from filters to stream ciphers
  - New parsing code for SCAN algorithm names
  - Enable SSE2 optimizations under Visual C++
  - Remove all use of C++ exception specifications
