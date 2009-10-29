@@ -1,9 +1,8 @@
-define SHA1_SSE2
+realname "SIMD"
 
-<requires>
-sha1
-simd_engine
-</requires>
+define SIMD_32
+
+load_on always
 
 <arch>
 pentium-m
