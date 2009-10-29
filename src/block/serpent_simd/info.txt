@@ -1,0 +1,8 @@
+realname "Serpent (SIMD)"
+define SERPENT_SIMD
+
+<requires>
+serpent
+simd_32
+simd_engine
+</requires>
