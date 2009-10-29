@@ -98,4 +98,64 @@ u32bit CPUID::cache_line_size()
    return cl_size;
    }
 
+bool CPUID::has_altivec()
+   {
+   static bool first_time = true;
+   static bool altivec_capable = false;
+
+   if(first_time)
+      {
+#if defined(BOTAN_TARGET_ARCH_IS_PPC) || defined(BOTAN_TARGET_ARCH_IS_PPC64)
+
+      /*
+      PVR identifiers for various AltiVec enabled CPUs. Taken from
+      PearPC and Linux sources, mostly.
+      */
+      const u16bit PVR_G4_7400  = 0x000C;
+      const u16bit PVR_G5_970   = 0x0039;
+      const u16bit PVR_G5_970FX = 0x003C;
+      const u16bit PVR_G5_970MP = 0x0044;
+      const u16bit PVR_G5_970GX = 0x0045;
+      const u16bit PVR_POWER6   = 0x003E;
+      const u16bit PVR_CELL_PPU = 0x0070;
+
+      // Motorola produced G4s with PVR 0x800[0123C] (at least)
+      const u16bit PVR_G4_74xx_24  = 0x800;
+
+      u32bit pvr = 0;
+      /*
+      On PowerPC, MSR 287 is PVR, the Processor Version Number
+
+      Normally it is only accessible to ring 0, but Linux and NetBSD
+      (at least) will trap and emulate it for us. This is roughly 20x
+      saner than every other approach I've seen for this (all of which
+      are entirely OS specific, to boot).
+
+      Apparently OS X doesn't support this, but then again OS X
+      doesn't really support PPC anymore, so I'm not worrying about it.
+
+      For OSes that aren't (known to) support the emulation, leave pvr
+      as 0 which will cause all subsequent model number checks to fail.
+      */
+#if defined(BOTAN_TARGET_OS_IS_LINUX) || defined(BOTAN_TARGET_OS_IS_NETBSD)
+      asm volatile("mfspr %0, 287" : "=r" (pvr));
+#endif
+      // Top 16 bit suffice to identify model
+      pvr >>= 16;
+
+      altivec_capable |= (pvr == PVR_G4_7400);
+      altivec_capable |= ((pvr >> 8) == PVR_G4_74xx_24);
+      altivec_capable |= (pvr == PVR_G5_970);
+      altivec_capable |= (pvr == PVR_G5_970FX);
+      altivec_capable |= (pvr == PVR_G5_970MP);
+      altivec_capable |= (pvr == PVR_G5_970GX);
+      altivec_capable |= (pvr == PVR_CELL_PPU);
+#endif
+
+      first_time = false;
+      }
+
+   return altivec_capable;
+   }
+
 }

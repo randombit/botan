@@ -37,8 +37,8 @@
   #include <botan/eng_amd64.h>
 #endif
 
-#if defined(BOTAN_HAS_ENGINE_SSE2_ASSEMBLER)
-  #include <botan/eng_sse2.h>
+#if defined(BOTAN_HAS_ENGINE_SIMD)
+  #include <botan/simd_engine.h>
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_GNU_MP)
@@ -288,8 +288,8 @@ void Library_State::initialize(bool thread_safe)
    engines.push_back(new OpenSSL_Engine);
 #endif
 
-#if defined(BOTAN_HAS_ENGINE_SSE2_ASSEMBLER)
-   engines.push_back(new SSE2_Assembler_Engine);
+#if defined(BOTAN_HAS_ENGINE_SIMD)
+   engines.push_back(new SIMD_Engine);
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_AMD64_ASSEMBLER)

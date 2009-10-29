@@ -65,6 +65,7 @@ class CPUID
       static bool has_intel_aes()
          { return ((x86_processor_flags() >> CPUID_INTEL_AES_BIT) & 1); }
 
+      static bool has_altivec();
    private:
       static u64bit x86_processor_flags();
    };
