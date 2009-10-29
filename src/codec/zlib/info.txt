@@ -1,5 +1,3 @@
-#realname "Zlib/Gzip Compressor"
-
 define COMPRESSOR_ZLIB
 #define COMPRESSOR_ZLIB,COMPRESSOR_GZIP
 
