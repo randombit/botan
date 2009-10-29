@@ -1,4 +1,3 @@
-realname "Serpent (SIMD)"
 define SERPENT_SIMD
 
 <requires>

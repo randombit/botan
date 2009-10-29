@@ -1,5 +1,3 @@
-realname "SIMD"
-
 define SIMD_32
 
 load_on always

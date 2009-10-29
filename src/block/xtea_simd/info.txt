@@ -1,5 +1,3 @@
-realname "XTEA (SIMD)"
-
 define XTEA_SIMD
 
 load_on auto
