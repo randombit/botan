@@ -168,6 +168,15 @@ class SIMD_Altivec
          return vec_nor(reg, reg);
          }
 
+      SIMD_Altivec bswap() const
+         {
+         __vector unsigned char perm = vec_lvsl(0, (u32bit*)0);
+
+         perm = vec_xor(perm, vec_splat_u8(3));
+
+         return SIMD_Altivec(vec_perm(reg, reg, perm));
+         }
+
       static void transpose(SIMD_Altivec& B0, SIMD_Altivec& B1,
                             SIMD_Altivec& B2, SIMD_Altivec& B3)
          {

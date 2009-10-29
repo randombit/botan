@@ -9,6 +9,7 @@
 #define BOTAN_SIMD_SCALAR_H__
 
 #include <botan/loadstor.h>
+#include <botan/bswap.h>
 
 namespace Botan {
 
@@ -168,6 +169,14 @@ class SIMD_Scalar
       SIMD_Scalar operator~() const
          {
          return SIMD_Scalar(~R0, ~R1, ~R2, ~R3);
+         }
+
+      SIMD_Scalar bswap() const
+         {
+         return SIMD_Scalar(reverse_bytes(R0),
+                            reverse_bytes(R1),
+                            reverse_bytes(R2),
+                            reverse_bytes(R3));
          }
 
       static void transpose(SIMD_Scalar& B0, SIMD_Scalar& B1,

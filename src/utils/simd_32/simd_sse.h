@@ -121,6 +121,17 @@ class SIMD_SSE2
          return _mm_xor_si128(reg, all_ones);
          }
 
+      SIMD_SSE2 bswap() const
+         {
+         __m128i T = reg;
+
+         T = _mm_shufflehi_epi16(T, _MM_SHUFFLE(2, 3, 0, 1));
+         T = _mm_shufflelo_epi16(T, _MM_SHUFFLE(2, 3, 0, 1));
+
+         return _mm_or_si128(_mm_srli_epi16(T, 8),
+                             _mm_slli_epi16(T, 8));
+         }
+
       static void transpose(SIMD_SSE2& B0, SIMD_SSE2& B1,
                             SIMD_SSE2& B2, SIMD_SSE2& B3)
          {
@@ -136,17 +147,6 @@ class SIMD_SSE2
 
    private:
       SIMD_SSE2(__m128i in) { reg = in; }
-
-      SIMD_SSE2 bswap() const
-         {
-         __m128i T = reg;
-
-         T = _mm_shufflehi_epi16(T, _MM_SHUFFLE(2, 3, 0, 1));
-         T = _mm_shufflelo_epi16(T, _MM_SHUFFLE(2, 3, 0, 1));
-
-         return _mm_or_si128(_mm_srli_epi16(T, 8),
-                             _mm_slli_epi16(T, 8));
-         }
 
       __m128i reg;
    };
