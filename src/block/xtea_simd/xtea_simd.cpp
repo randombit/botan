@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/xtea_sse2.h>
+#include <botan/xtea_simd.h>
 #include <botan/loadstor.h>
 #include <botan/simd_32.h>
 
@@ -92,7 +92,7 @@ void xtea_decrypt_8(const byte in[64], byte out[64], const u32bit EK[64])
 /*
 * XTEA Encryption
 */
-void XTEA_SSE2::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void XTEA_SIMD::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    while(blocks >= 8)
       {
@@ -108,7 +108,7 @@ void XTEA_SSE2::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * XTEA Decryption
 */
-void XTEA_SSE2::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void XTEA_SIMD::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    while(blocks >= 8)
       {

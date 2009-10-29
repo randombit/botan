@@ -5,8 +5,8 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/serp_sse2.h>
-#include <botan/serp_sse2_sbox.h>
+#include <botan/serp_simd.h>
+#include <botan/serp_simd_sbox.h>
 #include <botan/simd_32.h>
 #include <botan/loadstor.h>
 
@@ -54,7 +54,7 @@ namespace {
    } while(0);
 
 /*
-* SSE2 Serpent Encryption of 4 blocks in parallel
+* SIMD Serpent Encryption of 4 blocks in parallel
 */
 void serpent_encrypt_4(const byte in[64],
                        byte out[64],
@@ -112,7 +112,7 @@ void serpent_encrypt_4(const byte in[64],
    }
 
 /*
-* SSE2 Serpent Decryption of 4 blocks in parallel
+* SIMD Serpent Decryption of 4 blocks in parallel
 */
 void serpent_decrypt_4(const byte in[64],
                        byte out[64],
@@ -174,7 +174,7 @@ void serpent_decrypt_4(const byte in[64],
 /*
 * Serpent Encryption
 */
-void Serpent_SSE2::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Serpent_SIMD::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    while(blocks >= 4)
       {
@@ -190,7 +190,7 @@ void Serpent_SSE2::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * Serpent Decryption
 */
-void Serpent_SSE2::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Serpent_SIMD::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    while(blocks >= 4)
       {

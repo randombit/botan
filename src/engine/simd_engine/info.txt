@@ -1,0 +1,5 @@
+realname "SIMD Engine"
+
+define ENGINE_SIMD
+
+load_on dep
