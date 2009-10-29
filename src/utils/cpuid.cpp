@@ -143,13 +143,13 @@ bool CPUID::has_altivec()
       // Top 16 bit suffice to identify model
       pvr >>= 16;
 
-      altivec_capable ||= (pvr == PVR_G4_7400);
-      altivec_capable ||= ((pvr >> 8) == PVR_G4_74xx_24);
-      altivec_capable ||= (pvr == PVR_G5_970);
-      altivec_capable ||= (pvr == PVR_G5_970FX);
-      altivec_capable ||= (pvr == PVR_G5_970MP);
-      altivec_capable ||= (pvr == PVR_G5_970GX);
-      altivec_capable ||= (pvr == PVR_CELL_PPU);
+      altivec_capable |= (pvr == PVR_G4_7400);
+      altivec_capable |= ((pvr >> 8) == PVR_G4_74xx_24);
+      altivec_capable |= (pvr == PVR_G5_970);
+      altivec_capable |= (pvr == PVR_G5_970FX);
+      altivec_capable |= (pvr == PVR_G5_970MP);
+      altivec_capable |= (pvr == PVR_G5_970GX);
+      altivec_capable |= (pvr == PVR_CELL_PPU);
 #endif
 
       first_time = false;
