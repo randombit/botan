@@ -122,22 +122,29 @@ bool CPUID::has_altivec()
       // Motorola produced G4s with PVR 0x800[0123C] (at least)
       const u16bit PVR_G4_74xx_24  = 0x800;
 
-      u32bit pvr = 0;
       /*
       On PowerPC, MSR 287 is PVR, the Processor Version Number
 
       Normally it is only accessible to ring 0, but Linux and NetBSD
       (at least) will trap and emulate it for us. This is roughly 20x
-      saner than every other approach I've seen for this (all of which
-      are entirely OS specific, to boot).
+      saner than every other approach I've seen for AltiVec detection
+      (all of which are entirely OS specific, to boot).
 
       Apparently OS X doesn't support this, but then again OS X
       doesn't really support PPC anymore, so I'm not worrying about it.
 
-      For OSes that aren't (known to) support the emulation, leave pvr
-      as 0 which will cause all subsequent model number checks to fail.
+      For OSes that aren't (known to) support the emulation, skip the
+      call, leaving pvr as 0 which will cause all subsequent model
+      number checks to fail (and we'll assume no AltiVec)
       */
+
 #if defined(BOTAN_TARGET_OS_IS_LINUX) || defined(BOTAN_TARGET_OS_IS_NETBSD)
+  #define BOTAN_TARGET_OS_SUPPORTS_MFSPR_EMUL
+#endif
+
+      u32bit pvr = 0;
+
+#if defined(BOTAN_TARGET_OS_SUPPORTS_MFSPR_EMUL)
       asm volatile("mfspr %0, 287" : "=r" (pvr));
 #endif
       // Top 16 bit suffice to identify model
