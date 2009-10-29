@@ -70,12 +70,16 @@ void SHA_160::compress_n(const byte input[], u32bit blocks)
          }
       input += HASH_BLOCK_SIZE;
 
-      for(u32bit j = 16; j != 80; j += 4)
+      for(u32bit j = 16; j != 80; j += 8)
          {
          W[j  ] = rotate_left((W[j-3] ^ W[j-8] ^ W[j-14] ^ W[j-16]), 1);
          W[j+1] = rotate_left((W[j-2] ^ W[j-7] ^ W[j-13] ^ W[j-15]), 1);
          W[j+2] = rotate_left((W[j-1] ^ W[j-6] ^ W[j-12] ^ W[j-14]), 1);
          W[j+3] = rotate_left((W[j  ] ^ W[j-5] ^ W[j-11] ^ W[j-13]), 1);
+         W[j+4] = rotate_left((W[j+1] ^ W[j-4] ^ W[j-10] ^ W[j-12]), 1);
+         W[j+5] = rotate_left((W[j+2] ^ W[j-3] ^ W[j- 9] ^ W[j-11]), 1);
+         W[j+6] = rotate_left((W[j+3] ^ W[j-2] ^ W[j- 8] ^ W[j-10]), 1);
+         W[j+7] = rotate_left((W[j+4] ^ W[j-1] ^ W[j- 7] ^ W[j- 9]), 1);
          }
 
       F1(A,B,C,D,E,W[ 0]);   F1(E,A,B,C,D,W[ 1]);   F1(D,E,A,B,C,W[ 2]);
