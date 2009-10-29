@@ -60,9 +60,17 @@ void SHA_224_256_BASE::compress_n(const byte input[], u32bit blocks)
          W[j] = load_be<u32bit>(input, j);
       input += HASH_BLOCK_SIZE;
 
-      for(u32bit j = 16; j != 64; ++j)
-         W[j] = sigma(W[j- 2], 17, 19, 10) + W[j- 7] +
-                sigma(W[j-15],  7, 18,  3) + W[j-16];
+      for(u32bit j = 16; j != 64; j += 8)
+         {
+         W[j  ] = sigma(W[j-2], 17, 19, 10) + W[j-7] + sigma(W[j-15], 7, 18, 3) + W[j-16];
+         W[j+1] = sigma(W[j-1], 17, 19, 10) + W[j-6] + sigma(W[j-14], 7, 18, 3) + W[j-15];
+         W[j+2] = sigma(W[j  ], 17, 19, 10) + W[j-5] + sigma(W[j-13], 7, 18, 3) + W[j-14];
+         W[j+3] = sigma(W[j+1], 17, 19, 10) + W[j-4] + sigma(W[j-12], 7, 18, 3) + W[j-13];
+         W[j+4] = sigma(W[j+2], 17, 19, 10) + W[j-3] + sigma(W[j-11], 7, 18, 3) + W[j-12];
+         W[j+5] = sigma(W[j+3], 17, 19, 10) + W[j-2] + sigma(W[j-10], 7, 18, 3) + W[j-11];
+         W[j+6] = sigma(W[j+4], 17, 19, 10) + W[j-1] + sigma(W[j- 9], 7, 18, 3) + W[j-10];
+         W[j+7] = sigma(W[j+5], 17, 19, 10) + W[j  ] + sigma(W[j- 8], 7, 18, 3) + W[j- 9];
+         }
 
       F1(A, B, C, D, E, F, G, H, W[ 0], 0x428A2F98);
       F1(H, A, B, C, D, E, F, G, W[ 1], 0x71374491);
@@ -164,14 +172,14 @@ void SHA_224_256_BASE::clear()
 void SHA_224::clear()
    {
    SHA_224_256_BASE::clear();
-   digest[0] = 0xc1059ed8;
-   digest[1] = 0x367cd507;
-   digest[2] = 0x3070dd17;
-   digest[3] = 0xf70e5939;
-   digest[4] = 0xffc00b31;
+   digest[0] = 0xC1059ED8;
+   digest[1] = 0x367CD507;
+   digest[2] = 0x3070DD17;
+   digest[3] = 0xF70E5939;
+   digest[4] = 0xFFC00B31;
    digest[5] = 0x68581511;
-   digest[6] = 0x64f98fa7;
-   digest[7] = 0xbefa4fa4;
+   digest[6] = 0x64F98FA7;
+   digest[7] = 0xBEFA4FA4;
    }
 
 /*
