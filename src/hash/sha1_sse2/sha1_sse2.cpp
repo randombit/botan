@@ -17,23 +17,17 @@ namespace Botan {
 namespace {
 
 /*
-the first 16 bytes only need byte swapping
-
-prepared points to 4x u32bit, 16-byte aligned
-
-W points to the 4 dwords which need preparing --
-and is overwritten with the swapped bytes
+First 16 bytes just need byte swapping. Preparing just means
+adding in the round constants.
 */
-#define prep00_15(prep, W)                                     \
-   do {                                                        \
-      __m128i r1 = (W);                                        \
-      r1 = _mm_shufflehi_epi16(r1, _MM_SHUFFLE(2, 3, 0, 1));   \
-      r1 = _mm_shufflelo_epi16(r1, _MM_SHUFFLE(2, 3, 0, 1));   \
-      __m128i r2 = _mm_slli_epi16(r1, 8);                      \
-      r1 = _mm_srli_epi16(r1, 8);                              \
-      r1 = _mm_or_si128(r1, r2);                               \
-      (W) = r1;                                                \
-      (prep).u128 = _mm_add_epi32(K00_19, r1);                 \
+
+#define prep00_15(P, W)                                      \
+   do {                                                      \
+      W = _mm_shufflehi_epi16(W, _MM_SHUFFLE(2, 3, 0, 1));   \
+      W = _mm_shufflelo_epi16(W, _MM_SHUFFLE(2, 3, 0, 1));   \
+      W = _mm_or_si128(_mm_slli_epi16(W, 8),                 \
+                       _mm_srli_epi16(W, 8));                \
+      P.u128 = _mm_add_epi32(W, K00_19);                     \
    } while(0)
 
 /*
