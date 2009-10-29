@@ -60,13 +60,12 @@ inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E,
 */
 void HAS_160::compress_n(const byte input[], u32bit blocks)
    {
+   u32bit A = digest[0], B = digest[1], C = digest[2],
+          D = digest[3], E = digest[4];
+
    for(u32bit i = 0; i != blocks; ++i)
       {
-      for(u32bit j = 0; j != 16; ++j)
-         X[j] = load_le<u32bit>(input, j);
-
-      u32bit A = digest[0], B = digest[1], C = digest[2],
-         D = digest[3], E = digest[4];
+      load_le(X.begin(), input, 16);
 
       X[16] = X[ 0] ^ X[ 1] ^ X[ 2] ^ X[ 3];
       X[17] = X[ 4] ^ X[ 5] ^ X[ 6] ^ X[ 7];
@@ -128,8 +127,13 @@ void HAS_160::compress_n(const byte input[], u32bit blocks)
       F4(E,A,B,C,D,X[11], 9);   F4(D,E,A,B,C,X[ 6],14);
       F4(C,D,E,A,B,X[ 1], 5);   F4(B,C,D,E,A,X[12],13);
 
-      digest[0] += A; digest[1] += B; digest[2] += C;
-      digest[3] += D; digest[4] += E;
+      A = (digest[0] += A);
+      B = (digest[1] += B);
+      C = (digest[2] += C);
+      D = (digest[3] += D);
+      E = (digest[4] += E);
+
+      input += HASH_BLOCK_SIZE;
       }
    }
 

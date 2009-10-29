@@ -199,6 +199,29 @@ inline void load_le(const byte in[],
    }
 
 template<typename T>
+inline void load_le(T out[],
+                    const byte in[],
+                    u32bit count)
+   {
+   const u32bit blocks = count - (count % 4);
+   const u32bit left = count - blocks;
+
+   for(u32bit i = 0; i != blocks; i += 4)
+      {
+      out[0] = load_le<T>(in, 0);
+      out[1] = load_le<T>(in, 1);
+      out[2] = load_le<T>(in, 2);
+      out[3] = load_le<T>(in, 3);
+
+      out += 4;
+      in  += 4*sizeof(T);
+      }
+
+   for(u32bit i = 0; i != left; ++i)
+      out[i] = load_le<T>(in, i);
+   }
+
+template<typename T>
 inline void load_be(const byte in[], T& x0, T& x1)
    {
    x0 = load_be<T>(in, 0);
@@ -228,6 +251,29 @@ inline void load_be(const byte in[],
    x5 = load_be<T>(in, 5);
    x6 = load_be<T>(in, 6);
    x7 = load_be<T>(in, 7);
+   }
+
+template<typename T>
+inline void load_be(T out[],
+                    const byte in[],
+                    u32bit count)
+   {
+   const u32bit blocks = count - (count % 4);
+   const u32bit left = count - blocks;
+
+   for(u32bit i = 0; i != blocks; i += 4)
+      {
+      out[0] = load_be<T>(in, 0);
+      out[1] = load_be<T>(in, 1);
+      out[2] = load_be<T>(in, 2);
+      out[3] = load_be<T>(in, 3);
+
+      out += 4;
+      in  += 4*sizeof(T);
+      }
+
+   for(u32bit i = 0; i != left; ++i)
+      out[i] = load_be<T>(in, i);
    }
 
 /*

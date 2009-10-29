@@ -21,9 +21,7 @@ void Tiger::compress_n(const byte input[], u32bit blocks)
 
    for(u32bit i = 0; i != blocks; ++i)
       {
-      for(u32bit j = 0; j != 8; ++j)
-         X[j] = load_le<u64bit>(input, j);
-      input += HASH_BLOCK_SIZE;
+      load_le(X.begin(), input, X.size());
 
       pass(A, B, C, X, 5); mix(X);
       pass(C, A, B, X, 7); mix(X);
@@ -39,6 +37,8 @@ void Tiger::compress_n(const byte input[], u32bit blocks)
       A = (digest[0] ^= A);
       B = digest[1] = B - digest[1];
       C = (digest[2] += C);
+
+      input += HASH_BLOCK_SIZE;
       }
    }
 

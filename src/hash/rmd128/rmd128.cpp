@@ -60,18 +60,16 @@ inline void F4(u32bit& A, u32bit B, u32bit C, u32bit D,
 */
 void RIPEMD_128::compress_n(const byte input[], u32bit blocks)
    {
+   const u32bit MAGIC2 = 0x5A827999, MAGIC3 = 0x6ED9EBA1,
+                MAGIC4 = 0x8F1BBCDC, MAGIC5 = 0x50A28BE6,
+                MAGIC6 = 0x5C4DD124, MAGIC7 = 0x6D703EF3;
+
    for(u32bit i = 0; i != blocks; ++i)
       {
-      for(u32bit j = 0; j != 16; ++j)
-         M[j] = load_le<u32bit>(input, j);
-      input += HASH_BLOCK_SIZE;
+      load_le(M.begin(), input, M.size());
 
       u32bit A1 = digest[0], A2 = A1, B1 = digest[1], B2 = B1,
-         C1 = digest[2], C2 = C1, D1 = digest[3], D2 = D1;
-
-      const u32bit MAGIC2 = 0x5A827999, MAGIC3 = 0x6ED9EBA1,
-         MAGIC4 = 0x8F1BBCDC, MAGIC5 = 0x50A28BE6,
-         MAGIC6 = 0x5C4DD124, MAGIC7 = 0x6D703EF3;
+             C1 = digest[2], C2 = C1, D1 = digest[3], D2 = D1;
 
       F1(A1,B1,C1,D1,M[ 0],11       );   F4(A2,B2,C2,D2,M[ 5], 8,MAGIC5);
       F1(D1,A1,B1,C1,M[ 1],14       );   F4(D2,A2,B2,C2,M[14], 9,MAGIC5);
@@ -141,9 +139,13 @@ void RIPEMD_128::compress_n(const byte input[], u32bit blocks)
       F4(C1,D1,A1,B1,M[ 6], 5,MAGIC4);   F1(C2,D2,A2,B2,M[10],15       );
       F4(B1,C1,D1,A1,M[ 2],12,MAGIC4);   F1(B2,C2,D2,A2,M[14], 8       );
 
-      D2        = digest[1] + C1 + D2; digest[1] = digest[2] + D1 + A2;
-      digest[2] = digest[3] + A1 + B2; digest[3] = digest[0] + B1 + C2;
+      D2        = digest[1] + C1 + D2;
+      digest[1] = digest[2] + D1 + A2;
+      digest[2] = digest[3] + A1 + B2;
+      digest[3] = digest[0] + B1 + C2;
       digest[0] = D2;
+
+      input += HASH_BLOCK_SIZE;
       }
    }
 

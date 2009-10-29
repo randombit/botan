@@ -51,6 +51,7 @@ void MD4::compress_n(const byte input[], u32bit blocks)
 
    for(u32bit i = 0; i != blocks; ++i)
       {
+      //load_le(M.begin(), input, M.size());
       for(u32bit j = 0; j != 16; ++j)
          M[j] = load_le<u32bit>(input, j);
       input += HASH_BLOCK_SIZE;
