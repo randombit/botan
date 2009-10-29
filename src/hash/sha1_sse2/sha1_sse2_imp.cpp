@@ -36,18 +36,17 @@ prepared points to 4x u32bit, 16-byte aligned
 W points to the 4 dwords which need preparing --
 and is overwritten with the swapped bytes
 */
-#define prep00_15(prep, W)	do { 					\
-		__m128i r1, r2;						\
-									\
-		r1 = (W);						\
-		r1 = _mm_shufflehi_epi16(r1, _MM_SHUFFLE(2, 3, 0, 1));	\
-		r1 = _mm_shufflelo_epi16(r1, _MM_SHUFFLE(2, 3, 0, 1));	\
-		r2 = _mm_slli_epi16(r1, 8);				\
-		r1 = _mm_srli_epi16(r1, 8);				\
-		r1 = _mm_or_si128(r1, r2);				\
-		(W) = r1;						\
-		(prep).u128 = _mm_add_epi32(K00_19.u128, r1);		\
-	} while(0)
+#define prep00_15(prep, W)                                     \
+   do {                                                        \
+      __m128i r1 = (W);                                        \
+      r1 = _mm_shufflehi_epi16(r1, _MM_SHUFFLE(2, 3, 0, 1));   \
+      r1 = _mm_shufflelo_epi16(r1, _MM_SHUFFLE(2, 3, 0, 1));   \
+      __m128i r2 = _mm_slli_epi16(r1, 8);                      \
+      r1 = _mm_srli_epi16(r1, 8);                              \
+      r1 = _mm_or_si128(r1, r2);                               \
+      (W) = r1;                                                \
+      (prep).u128 = _mm_add_epi32(K00_19.u128, r1);            \
+   } while(0)
 
 /*
 for each multiple of 4, t, we want to calculate this:
@@ -96,14 +95,14 @@ W0 = W[t]..W[t+3]
 */
 #define prep(prep, XW0, XW1, XW2, XW3, K)                               \
    do {                                                                 \
-      __m128i r0, r1, r2, r3;						\
+      __m128i r0, r1, r2, r3;                                           \
                                                                         \
       /* load W[t-4] 16-byte aligned, and shift */                      \
-      r3 = _mm_srli_si128((XW3), 4);					\
+      r3 = _mm_srli_si128((XW3), 4);                                    \
       r0 = (XW0);                                                       \
-      /* get high 64-bits of XW0 into low 64-bits */			\
+      /* get high 64-bits of XW0 into low 64-bits */                    \
       r1 = _mm_shuffle_epi32((XW0), _MM_SHUFFLE(1,0,3,2));              \
-      /* load high 64-bits of r1 */					\
+      /* load high 64-bits of r1 */                                     \
       r1 = _mm_unpacklo_epi64(r1, (XW1));                               \
       r2 = (XW2);                                                       \
                                                                         \
@@ -113,15 +112,15 @@ W0 = W[t]..W[t+3]
       /* unrotated W[t]..W[t+2] in r0 ... still need W[t+3] */          \
                                                                         \
       r2 = _mm_slli_si128(r0, 12);                                      \
-      r1 = _mm_cmplt_epi32(r0, _mm_setzero_si128());			\
-      r0 = _mm_add_epi32(r0, r0);	/* shift left by 1 */           \
-      r0 = _mm_sub_epi32(r0, r1);	/* r0 has W[t]..W[t+2] */       \
+      r1 = _mm_cmplt_epi32(r0, _mm_setzero_si128());                    \
+      r0 = _mm_add_epi32(r0, r0);   /* shift left by 1 */               \
+      r0 = _mm_sub_epi32(r0, r1);   /* r0 has W[t]..W[t+2] */           \
                                                                         \
       r3 = _mm_srli_epi32(r2, 30);                                      \
       r2 = _mm_slli_epi32(r2, 2);                                       \
                                                                         \
       r0 = _mm_xor_si128(r0, r3);                                       \
-      r0 = _mm_xor_si128(r0, r2);	/* r0 now has W[t+3] */         \
+      r0 = _mm_xor_si128(r0, r2);   /* r0 now has W[t+3] */             \
                                                                         \
       (XW0) = r0;                                                       \
       (prep).u128 = _mm_add_epi32(r0, (K).u128);                        \
@@ -135,12 +134,10 @@ static inline u32bit f00_19(u32bit x, u32bit y, u32bit z)
    return ((y ^ z) & x) ^ z;
    }
 
-
 static inline u32bit f20_39(u32bit x, u32bit y, u32bit z)
    {
    return (x ^ z) ^ y;
    }
-
 
 static inline u32bit f40_59(u32bit x, u32bit y, u32bit z)
    {
@@ -150,7 +147,6 @@ static inline u32bit f40_59(u32bit x, u32bit y, u32bit z)
    return (x & z) | ((x | z) & y);
    }
 
-
 static inline u32bit f60_79(u32bit x, u32bit y, u32bit z)
    {
    return f20_39(x, y, z);
@@ -158,7 +154,7 @@ static inline u32bit f60_79(u32bit x, u32bit y, u32bit z)
 
 #define step(nn_mm, xa, xb, xc, xd, xe, xt, input)                      \
    do {                                                                 \
-      (xt) = (input) + f##nn_mm((xb), (xc), (xd));			\
+      (xt) = (input) + f##nn_mm((xb), (xc), (xd));                      \
       (xb) = rotate_left((xb), 30);                                     \
       (xt) += ((xe) + rotate_left((xa), 5));                            \
    } while(0)
@@ -169,130 +165,132 @@ extern "C" void botan_sha1_sse2_compress(u32bit H[5],
                                          const u32bit* inputu)
    {
    const __m128i *  input = (const __m128i *)inputu;
-   __m128i W0, W1, W2, W3;
-   v4si prep0, prep1, prep2;
-   u32bit a, b, c, d, e, t;
 
-   a = H[0];
-   b = H[1];
-   c = H[2];
-   d = H[3];
-   e = H[4];
+   u32bit a = H[0];
+   u32bit b = H[1];
+   u32bit c = H[2];
+   u32bit d = H[3];
+   u32bit e = H[4];
+   u32bit t = 0;
 
    /* i've tried arranging the SSE2 code to be 4, 8, 12, and 16
    * steps ahead of the integer code.  12 steps ahead seems
    * to produce the best performance. -dean
    */
-   W0 = _mm_loadu_si128(&input[0]);
-   prep00_15(prep0, W0);				/* prepare for 00 through 03 */
-   W1 = _mm_loadu_si128(&input[1]);
-   prep00_15(prep1, W1);				/* prepare for 04 through 07 */
-   W2 = _mm_loadu_si128(&input[2]);
-   prep00_15(prep2, W2);				/* prepare for 08 through 11 */
+   v4si prep0, prep1, prep2;
 
-   W3 = _mm_loadu_si128(&input[3]);
-   step(00_19, a, b, c, d, e, t, prep0.u32[0]);	/* 00 */
-   step(00_19, t, a, b, c, d, e, prep0.u32[1]);	/* 01 */
-   step(00_19, e, t, a, b, c, d, prep0.u32[2]);	/* 02 */
-   step(00_19, d, e, t, a, b, c, prep0.u32[3]);	/* 03 */
+   __m128i W0 = _mm_loadu_si128(&input[0]);
+   prep00_15(prep0, W0);            /* prepare for 00 through 03 */
+
+   __m128i W1 = _mm_loadu_si128(&input[1]);
+   prep00_15(prep1, W1);            /* prepare for 04 through 07 */
+
+   __m128i W2 = _mm_loadu_si128(&input[2]);
+   prep00_15(prep2, W2);            /* prepare for 08 through 11 */
+
+   __m128i W3 = _mm_loadu_si128(&input[3]);
+   step(00_19, a, b, c, d, e, t, prep0.u32[0]);   /* 00 */
+   step(00_19, t, a, b, c, d, e, prep0.u32[1]);   /* 01 */
+   step(00_19, e, t, a, b, c, d, prep0.u32[2]);   /* 02 */
+   step(00_19, d, e, t, a, b, c, prep0.u32[3]);   /* 03 */
    prep00_15(prep0, W3);
-   step(00_19, c, d, e, t, a, b, prep1.u32[0]);	/* 04 */
-   step(00_19, b, c, d, e, t, a, prep1.u32[1]);	/* 05 */
-   step(00_19, a, b, c, d, e, t, prep1.u32[2]);	/* 06 */
-   step(00_19, t, a, b, c, d, e, prep1.u32[3]);	/* 07 */
-   prep(prep1, W0, W1, W2, W3, K00_19);		/* prepare for 16 through 19 */
-   step(00_19, e, t, a, b, c, d, prep2.u32[0]);	/* 08 */
-   step(00_19, d, e, t, a, b, c, prep2.u32[1]);	/* 09 */
-   step(00_19, c, d, e, t, a, b, prep2.u32[2]);	/* 10 */
-   step(00_19, b, c, d, e, t, a, prep2.u32[3]);	/* 11 */
-   prep(prep2, W1, W2, W3, W0, K20_39);		/* prepare for 20 through 23 */
-   step(00_19, a, b, c, d, e, t, prep0.u32[0]);	/* 12 */
-   step(00_19, t, a, b, c, d, e, prep0.u32[1]);	/* 13 */
-   step(00_19, e, t, a, b, c, d, prep0.u32[2]);	/* 14 */
-   step(00_19, d, e, t, a, b, c, prep0.u32[3]);	/* 15 */
+   step(00_19, c, d, e, t, a, b, prep1.u32[0]);   /* 04 */
+   step(00_19, b, c, d, e, t, a, prep1.u32[1]);   /* 05 */
+   step(00_19, a, b, c, d, e, t, prep1.u32[2]);   /* 06 */
+   step(00_19, t, a, b, c, d, e, prep1.u32[3]);   /* 07 */
+   prep(prep1, W0, W1, W2, W3, K00_19);      /* prepare for 16 through 19 */
+   step(00_19, e, t, a, b, c, d, prep2.u32[0]);   /* 08 */
+   step(00_19, d, e, t, a, b, c, prep2.u32[1]);   /* 09 */
+   step(00_19, c, d, e, t, a, b, prep2.u32[2]);   /* 10 */
+   step(00_19, b, c, d, e, t, a, prep2.u32[3]);   /* 11 */
+   prep(prep2, W1, W2, W3, W0, K20_39);      /* prepare for 20 through 23 */
+   step(00_19, a, b, c, d, e, t, prep0.u32[0]);   /* 12 */
+   step(00_19, t, a, b, c, d, e, prep0.u32[1]);   /* 13 */
+   step(00_19, e, t, a, b, c, d, prep0.u32[2]);   /* 14 */
+   step(00_19, d, e, t, a, b, c, prep0.u32[3]);   /* 15 */
    prep(prep0, W2, W3, W0, W1, K20_39);
-   step(00_19, c, d, e, t, a, b, prep1.u32[0]);	/* 16 */
-   step(00_19, b, c, d, e, t, a, prep1.u32[1]);	/* 17 */
-   step(00_19, a, b, c, d, e, t, prep1.u32[2]);	/* 18 */
-   step(00_19, t, a, b, c, d, e, prep1.u32[3]);	/* 19 */
+   step(00_19, c, d, e, t, a, b, prep1.u32[0]);   /* 16 */
+   step(00_19, b, c, d, e, t, a, prep1.u32[1]);   /* 17 */
+   step(00_19, a, b, c, d, e, t, prep1.u32[2]);   /* 18 */
+   step(00_19, t, a, b, c, d, e, prep1.u32[3]);   /* 19 */
 
    prep(prep1, W3, W0, W1, W2, K20_39);
-   step(20_39, e, t, a, b, c, d, prep2.u32[0]);	/* 20 */
-   step(20_39, d, e, t, a, b, c, prep2.u32[1]);	/* 21 */
-   step(20_39, c, d, e, t, a, b, prep2.u32[2]);	/* 22 */
-   step(20_39, b, c, d, e, t, a, prep2.u32[3]);	/* 23 */
+   step(20_39, e, t, a, b, c, d, prep2.u32[0]);   /* 20 */
+   step(20_39, d, e, t, a, b, c, prep2.u32[1]);   /* 21 */
+   step(20_39, c, d, e, t, a, b, prep2.u32[2]);   /* 22 */
+   step(20_39, b, c, d, e, t, a, prep2.u32[3]);   /* 23 */
    prep(prep2, W0, W1, W2, W3, K20_39);
-   step(20_39, a, b, c, d, e, t, prep0.u32[0]);	/* 24 */
-   step(20_39, t, a, b, c, d, e, prep0.u32[1]);	/* 25 */
-   step(20_39, e, t, a, b, c, d, prep0.u32[2]);	/* 26 */
-   step(20_39, d, e, t, a, b, c, prep0.u32[3]);	/* 27 */
+   step(20_39, a, b, c, d, e, t, prep0.u32[0]);   /* 24 */
+   step(20_39, t, a, b, c, d, e, prep0.u32[1]);   /* 25 */
+   step(20_39, e, t, a, b, c, d, prep0.u32[2]);   /* 26 */
+   step(20_39, d, e, t, a, b, c, prep0.u32[3]);   /* 27 */
    prep(prep0, W1, W2, W3, W0, K20_39);
-   step(20_39, c, d, e, t, a, b, prep1.u32[0]);	/* 28 */
-   step(20_39, b, c, d, e, t, a, prep1.u32[1]);	/* 29 */
-   step(20_39, a, b, c, d, e, t, prep1.u32[2]);	/* 30 */
-   step(20_39, t, a, b, c, d, e, prep1.u32[3]);	/* 31 */
+   step(20_39, c, d, e, t, a, b, prep1.u32[0]);   /* 28 */
+   step(20_39, b, c, d, e, t, a, prep1.u32[1]);   /* 29 */
+   step(20_39, a, b, c, d, e, t, prep1.u32[2]);   /* 30 */
+   step(20_39, t, a, b, c, d, e, prep1.u32[3]);   /* 31 */
    prep(prep1, W2, W3, W0, W1, K40_59);
-   step(20_39, e, t, a, b, c, d, prep2.u32[0]);	/* 32 */
-   step(20_39, d, e, t, a, b, c, prep2.u32[1]);	/* 33 */
-   step(20_39, c, d, e, t, a, b, prep2.u32[2]);	/* 34 */
-   step(20_39, b, c, d, e, t, a, prep2.u32[3]);	/* 35 */
+   step(20_39, e, t, a, b, c, d, prep2.u32[0]);   /* 32 */
+   step(20_39, d, e, t, a, b, c, prep2.u32[1]);   /* 33 */
+   step(20_39, c, d, e, t, a, b, prep2.u32[2]);   /* 34 */
+   step(20_39, b, c, d, e, t, a, prep2.u32[3]);   /* 35 */
    prep(prep2, W3, W0, W1, W2, K40_59);
-   step(20_39, a, b, c, d, e, t, prep0.u32[0]);	/* 36 */
-   step(20_39, t, a, b, c, d, e, prep0.u32[1]);	/* 37 */
-   step(20_39, e, t, a, b, c, d, prep0.u32[2]);	/* 38 */
-   step(20_39, d, e, t, a, b, c, prep0.u32[3]);	/* 39 */
+   step(20_39, a, b, c, d, e, t, prep0.u32[0]);   /* 36 */
+   step(20_39, t, a, b, c, d, e, prep0.u32[1]);   /* 37 */
+   step(20_39, e, t, a, b, c, d, prep0.u32[2]);   /* 38 */
+   step(20_39, d, e, t, a, b, c, prep0.u32[3]);   /* 39 */
 
    prep(prep0, W0, W1, W2, W3, K40_59);
-   step(40_59, c, d, e, t, a, b, prep1.u32[0]);	/* 40 */
-   step(40_59, b, c, d, e, t, a, prep1.u32[1]);	/* 41 */
-   step(40_59, a, b, c, d, e, t, prep1.u32[2]);	/* 42 */
-   step(40_59, t, a, b, c, d, e, prep1.u32[3]);	/* 43 */
+   step(40_59, c, d, e, t, a, b, prep1.u32[0]);   /* 40 */
+   step(40_59, b, c, d, e, t, a, prep1.u32[1]);   /* 41 */
+   step(40_59, a, b, c, d, e, t, prep1.u32[2]);   /* 42 */
+   step(40_59, t, a, b, c, d, e, prep1.u32[3]);   /* 43 */
    prep(prep1, W1, W2, W3, W0, K40_59);
-   step(40_59, e, t, a, b, c, d, prep2.u32[0]);	/* 44 */
-   step(40_59, d, e, t, a, b, c, prep2.u32[1]);	/* 45 */
-   step(40_59, c, d, e, t, a, b, prep2.u32[2]);	/* 46 */
-   step(40_59, b, c, d, e, t, a, prep2.u32[3]);	/* 47 */
+   step(40_59, e, t, a, b, c, d, prep2.u32[0]);   /* 44 */
+   step(40_59, d, e, t, a, b, c, prep2.u32[1]);   /* 45 */
+   step(40_59, c, d, e, t, a, b, prep2.u32[2]);   /* 46 */
+   step(40_59, b, c, d, e, t, a, prep2.u32[3]);   /* 47 */
    prep(prep2, W2, W3, W0, W1, K40_59);
-   step(40_59, a, b, c, d, e, t, prep0.u32[0]);	/* 48 */
-   step(40_59, t, a, b, c, d, e, prep0.u32[1]);	/* 49 */
-   step(40_59, e, t, a, b, c, d, prep0.u32[2]);	/* 50 */
-   step(40_59, d, e, t, a, b, c, prep0.u32[3]);	/* 51 */
+   step(40_59, a, b, c, d, e, t, prep0.u32[0]);   /* 48 */
+   step(40_59, t, a, b, c, d, e, prep0.u32[1]);   /* 49 */
+   step(40_59, e, t, a, b, c, d, prep0.u32[2]);   /* 50 */
+   step(40_59, d, e, t, a, b, c, prep0.u32[3]);   /* 51 */
    prep(prep0, W3, W0, W1, W2, K60_79);
-   step(40_59, c, d, e, t, a, b, prep1.u32[0]);	/* 52 */
-   step(40_59, b, c, d, e, t, a, prep1.u32[1]);	/* 53 */
-   step(40_59, a, b, c, d, e, t, prep1.u32[2]);	/* 54 */
-   step(40_59, t, a, b, c, d, e, prep1.u32[3]);	/* 55 */
+   step(40_59, c, d, e, t, a, b, prep1.u32[0]);   /* 52 */
+   step(40_59, b, c, d, e, t, a, prep1.u32[1]);   /* 53 */
+   step(40_59, a, b, c, d, e, t, prep1.u32[2]);   /* 54 */
+   step(40_59, t, a, b, c, d, e, prep1.u32[3]);   /* 55 */
    prep(prep1, W0, W1, W2, W3, K60_79);
-   step(40_59, e, t, a, b, c, d, prep2.u32[0]);	/* 56 */
-   step(40_59, d, e, t, a, b, c, prep2.u32[1]);	/* 57 */
-   step(40_59, c, d, e, t, a, b, prep2.u32[2]);	/* 58 */
-   step(40_59, b, c, d, e, t, a, prep2.u32[3]);	/* 59 */
+   step(40_59, e, t, a, b, c, d, prep2.u32[0]);   /* 56 */
+   step(40_59, d, e, t, a, b, c, prep2.u32[1]);   /* 57 */
+   step(40_59, c, d, e, t, a, b, prep2.u32[2]);   /* 58 */
+   step(40_59, b, c, d, e, t, a, prep2.u32[3]);   /* 59 */
 
    prep(prep2, W1, W2, W3, W0, K60_79);
-   step(60_79, a, b, c, d, e, t, prep0.u32[0]);	/* 60 */
-   step(60_79, t, a, b, c, d, e, prep0.u32[1]);	/* 61 */
-   step(60_79, e, t, a, b, c, d, prep0.u32[2]);	/* 62 */
-   step(60_79, d, e, t, a, b, c, prep0.u32[3]);	/* 63 */
+   step(60_79, a, b, c, d, e, t, prep0.u32[0]);   /* 60 */
+   step(60_79, t, a, b, c, d, e, prep0.u32[1]);   /* 61 */
+   step(60_79, e, t, a, b, c, d, prep0.u32[2]);   /* 62 */
+   step(60_79, d, e, t, a, b, c, prep0.u32[3]);   /* 63 */
    prep(prep0, W2, W3, W0, W1, K60_79);
-   step(60_79, c, d, e, t, a, b, prep1.u32[0]);	/* 64 */
-   step(60_79, b, c, d, e, t, a, prep1.u32[1]);	/* 65 */
-   step(60_79, a, b, c, d, e, t, prep1.u32[2]);	/* 66 */
-   step(60_79, t, a, b, c, d, e, prep1.u32[3]);	/* 67 */
+   step(60_79, c, d, e, t, a, b, prep1.u32[0]);   /* 64 */
+   step(60_79, b, c, d, e, t, a, prep1.u32[1]);   /* 65 */
+   step(60_79, a, b, c, d, e, t, prep1.u32[2]);   /* 66 */
+   step(60_79, t, a, b, c, d, e, prep1.u32[3]);   /* 67 */
    prep(prep1, W3, W0, W1, W2, K60_79);
-   step(60_79, e, t, a, b, c, d, prep2.u32[0]);	/* 68 */
-   step(60_79, d, e, t, a, b, c, prep2.u32[1]);	/* 69 */
-   step(60_79, c, d, e, t, a, b, prep2.u32[2]);	/* 70 */
-   step(60_79, b, c, d, e, t, a, prep2.u32[3]);	/* 71 */
+   step(60_79, e, t, a, b, c, d, prep2.u32[0]);   /* 68 */
+   step(60_79, d, e, t, a, b, c, prep2.u32[1]);   /* 69 */
+   step(60_79, c, d, e, t, a, b, prep2.u32[2]);   /* 70 */
+   step(60_79, b, c, d, e, t, a, prep2.u32[3]);   /* 71 */
 
-   step(60_79, a, b, c, d, e, t, prep0.u32[0]);	/* 72 */
-   step(60_79, t, a, b, c, d, e, prep0.u32[1]);	/* 73 */
-   step(60_79, e, t, a, b, c, d, prep0.u32[2]);	/* 74 */
-   step(60_79, d, e, t, a, b, c, prep0.u32[3]);	/* 75 */
+   step(60_79, a, b, c, d, e, t, prep0.u32[0]);   /* 72 */
+   step(60_79, t, a, b, c, d, e, prep0.u32[1]);   /* 73 */
+   step(60_79, e, t, a, b, c, d, prep0.u32[2]);   /* 74 */
+   step(60_79, d, e, t, a, b, c, prep0.u32[3]);   /* 75 */
    /* no more input to prepare */
-   step(60_79, c, d, e, t, a, b, prep1.u32[0]);	/* 76 */
-   step(60_79, b, c, d, e, t, a, prep1.u32[1]);	/* 77 */
-   step(60_79, a, b, c, d, e, t, prep1.u32[2]);	/* 78 */
-   step(60_79, t, a, b, c, d, e, prep1.u32[3]);	/* 79 */
+   step(60_79, c, d, e, t, a, b, prep1.u32[0]);   /* 76 */
+   step(60_79, b, c, d, e, t, a, prep1.u32[1]);   /* 77 */
+   step(60_79, a, b, c, d, e, t, prep1.u32[2]);   /* 78 */
+   step(60_79, t, a, b, c, d, e, prep1.u32[3]);   /* 79 */
    /* e, t, a, b, c, d */
    H[0] += e;
    H[1] += t;
