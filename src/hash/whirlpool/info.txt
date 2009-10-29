@@ -1,5 +1,3 @@
-realname "Whirlpool"
-
 define WHIRLPOOL
 
 <requires>

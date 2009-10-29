@@ -1,5 +1,3 @@
-realname "Motorola 680x0"
-
 default_submodel 68020
 
 endian big

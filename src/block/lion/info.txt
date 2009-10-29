@@ -1,5 +1,3 @@
-realname "Lion"
-
 define LION
 
 <requires>

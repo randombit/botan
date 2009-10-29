@@ -1,5 +1,3 @@
-realname "HMAC"
-
 define HMAC
 
 load_on auto

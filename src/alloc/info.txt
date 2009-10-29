@@ -1,5 +1,3 @@
-realname "Allocator"
-
 load_on auto
 
 <add>

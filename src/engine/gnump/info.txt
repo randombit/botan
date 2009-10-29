@@ -1,5 +1,3 @@
-realname "GMP Engine"
-
 define ENGINE_GNU_MP
 
 load_on request

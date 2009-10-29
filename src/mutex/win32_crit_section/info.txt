@@ -1,5 +1,3 @@
-realname "Win32 Mutex"
-
 define MUTEX_WIN32
 modset win32
 

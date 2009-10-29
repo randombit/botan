@@ -1,5 +1,3 @@
-realname "OFB block cipher mode"
-
 define OFB
 
 load_on auto

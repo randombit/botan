@@ -1,5 +1,3 @@
-realname "SSLv3 PRF"
-
 define SSL_V3_PRF
 
 load_on auto

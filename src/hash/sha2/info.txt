@@ -1,5 +1,3 @@
-realname "SHA-2 (224, 256, 384, 512)"
-
 define SHA2
 
 <requires>

@@ -1,5 +1,3 @@
-realname "Default (Malloc) Allocators"
-
 load_on auto
 
 <add>

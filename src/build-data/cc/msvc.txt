@@ -1,5 +1,3 @@
-realname "Visual C++"
-
 macro_name "MSVC"
 
 binary_name "cl.exe"

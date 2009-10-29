@@ -1,5 +1,3 @@
-realname "Nyberg-Rueppel"
-
 define NYBERG_RUEPPEL
 
 load_on auto

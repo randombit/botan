@@ -1,5 +1,3 @@
-realname "Qt Mutex"
-
 define MUTEX_QT
 
 note "You'll probably have to add -I/-L flags to the Makefile to find Qt"

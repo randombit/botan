@@ -1,5 +1,3 @@
-realname "EGD Entropy Source"
-
 define ENTROPY_SRC_EGD
 
 load_on auto

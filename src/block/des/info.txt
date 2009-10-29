@@ -1,3 +1,1 @@
-realname "DES"
-
 define DES

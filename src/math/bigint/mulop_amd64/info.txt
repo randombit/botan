@@ -1,5 +1,3 @@
-realname "BigInt Multiply-Add (x86-64)"
-
 mp_bits 64
 
 load_on never

@@ -1,5 +1,3 @@
-realname "X942 PRF"
-
 define X942_PRF
 
 load_on auto

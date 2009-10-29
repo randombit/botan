@@ -1,5 +1,3 @@
-realname "EMSA-Raw"
-
 define EMSA_RAW
 
 load_on auto

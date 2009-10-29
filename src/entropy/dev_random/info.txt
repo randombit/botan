@@ -1,5 +1,3 @@
-realname "RNG Device Reader"
-
 define ENTROPY_SRC_DEVICE
 
 load_on auto

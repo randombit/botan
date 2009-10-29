@@ -1,5 +1,3 @@
-realname "Botan Libstate Module"
-
 load_on always
 
 define LIBSTATE_MODULE

@@ -1,5 +1,3 @@
-realname "ECKAEG"
-
 define ECKAEG
 
 load_on auto

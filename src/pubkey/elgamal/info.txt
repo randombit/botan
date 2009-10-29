@@ -1,5 +1,3 @@
-realname "ElGamal"
-
 define ELGAMAL
 
 load_on auto

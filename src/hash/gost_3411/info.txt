@@ -1,5 +1,3 @@
-realname "GOST 34.11"
-
 define GOST_34_11
 
 <requires>

@@ -1,5 +1,3 @@
-realname "MS Windows"
-
 os_type windows
 
 obj_suffix obj

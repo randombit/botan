@@ -1,5 +1,3 @@
-realname "GNU C++"
-
 macro_name "GCC"
 
 binary_name "g++"

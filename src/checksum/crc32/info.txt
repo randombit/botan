@@ -1,5 +1,3 @@
-realname "CRC-32"
-
 define CRC32
 
 load_on auto

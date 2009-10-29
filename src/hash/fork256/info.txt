@@ -1,5 +1,3 @@
-realname "FORK-256"
-
 define FORK_256
 
 <requires>

@@ -1,5 +1,3 @@
-realname "SSE2 Assembler Engine"
-
 define ENGINE_SSE2_ASSEMBLER
 
 load_on dep

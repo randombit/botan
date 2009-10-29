@@ -1,5 +1,3 @@
-realname "Unix I/O support for Pipe"
-
 define PIPE_UNIXFD_IO
 modset unix,beos
 

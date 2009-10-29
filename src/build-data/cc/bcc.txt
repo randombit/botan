@@ -1,5 +1,3 @@
-realname "Borland C++"
-
 macro_name "BORLAND"
 
 binary_name "bcc32"

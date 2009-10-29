@@ -1,5 +1,3 @@
-realname "SHA-1"
-
 define SHA1
 
 <requires>

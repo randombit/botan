@@ -1,5 +1,3 @@
-realname "Symmetric Algorithms"
-
 load_on auto
 
 <add>

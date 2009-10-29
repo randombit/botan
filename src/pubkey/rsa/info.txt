@@ -1,5 +1,3 @@
-realname "RSA"
-
 define RSA
 
 load_on auto

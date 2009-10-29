@@ -1,5 +1,3 @@
-realname "ECC Public Key"
-
 define ECC_PUBLIC_KEY_CRYPTO
 
 load_on auto

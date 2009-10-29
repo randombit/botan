@@ -1,5 +1,3 @@
-realname "Selftests"
-
 define SELFTESTS
 
 load_on auto

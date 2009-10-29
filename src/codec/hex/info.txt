@@ -1,5 +1,3 @@
-realname "Hex Codec"
-
 define HEX_CODEC
 
 load_on auto

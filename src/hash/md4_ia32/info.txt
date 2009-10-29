@@ -1,5 +1,3 @@
-realname "MD4 (IA-32)"
-
 define MD4_IA32
 
 load_on asm_ok

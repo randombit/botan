@@ -1,5 +1,3 @@
-realname "Blue Midnight Wish"
-
 define BMW_512
 
 <requires>

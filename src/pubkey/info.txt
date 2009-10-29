@@ -1,5 +1,3 @@
-realname "Public Key Base"
-
 define PUBLIC_KEY_CRYPTO
 
 load_on auto

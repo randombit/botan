@@ -1,5 +1,3 @@
-realname "Clang/LLVM"
-
 # Largely copied from the gcc config
 
 macro_name "CLANG"

@@ -1,5 +1,3 @@
-realname "Serpent (IA-32)"
-
 define SERPENT_IA32
 
 load_on asm_ok

@@ -1,5 +1,3 @@
-realname "HMAC RNG"
-
 define HMAC_RNG
 
 load_on auto

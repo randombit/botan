@@ -1,5 +1,3 @@
-realname "Adler32"
-
 define ADLER32
 
 load_on auto

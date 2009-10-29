@@ -1,5 +1,3 @@
-realname "Cipher Mode Base Class"
-
 define CIPHER_MODEBASE
 
 load_on auto

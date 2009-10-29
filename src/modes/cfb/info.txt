@@ -1,5 +1,3 @@
-realname "CFB block cipher mode"
-
 define CFB
 
 load_on auto
@@ -12,4 +10,3 @@ cfb.h
 <requires>
 modes
 </requires>
-

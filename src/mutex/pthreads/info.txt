@@ -1,5 +1,3 @@
-realname "Pthread Mutex"
-
 define MUTEX_PTHREAD
 
 load_on auto

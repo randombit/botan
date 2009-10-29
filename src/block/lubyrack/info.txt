@@ -1,5 +1,3 @@
-realname "Luby-Rackoff"
-
 define LUBY_RACKOFF
 
 <requires>

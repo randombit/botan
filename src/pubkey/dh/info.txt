@@ -1,5 +1,3 @@
-realname "Diffie-Hellman Key Agreement"
-
 define DIFFIE_HELLMAN
 
 load_on auto

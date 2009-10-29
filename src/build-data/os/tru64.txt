@@ -1,5 +1,3 @@
-realname "Tru64"
-
 os_type unix
 
 <supports_shared>

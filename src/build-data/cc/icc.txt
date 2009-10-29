@@ -1,5 +1,3 @@
-realname "Intel C++"
-
 macro_name "INTEL"
 
 binary_name "icpc"

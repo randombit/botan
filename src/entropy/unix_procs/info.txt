@@ -1,5 +1,3 @@
-realname "Generic Unix Entropy Source"
-
 define ENTROPY_SRC_UNIX
 modset unix,beos
 

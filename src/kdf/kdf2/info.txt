@@ -1,5 +1,3 @@
-realname "KDF2"
-
 define KDF2
 
 load_on auto

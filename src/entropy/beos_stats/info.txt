@@ -1,5 +1,3 @@
-realname "BeOS Entropy Source"
-
 define ENTROPY_SRC_BEOS
 modset beos
 

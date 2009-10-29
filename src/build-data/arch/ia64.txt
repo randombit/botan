@@ -1,5 +1,3 @@
-realname "IA-64"
-
 # This is safe: only affects tuning, not ISA
 default_submodel itanium2
 

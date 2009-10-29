@@ -1,5 +1,3 @@
-realname "CTR mode"
-
 define CTR_BE
 
 load_on auto
@@ -13,4 +11,3 @@ ctr.h
 block
 stream
 </requires>
-

@@ -1,5 +1,3 @@
-realname "Hardware Timer"
-
 define TIMER_HARDWARE
 
 load_on asm_ok

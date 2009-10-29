@@ -1,5 +1,3 @@
-realname "KAI C++"
-
 macro_name "KAI"
 
 binary_name "KCC"

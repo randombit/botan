@@ -1,5 +1,3 @@
-realname "SHA-1 (SSE2)"
-
 define SHA1_SSE2
 
 <requires>

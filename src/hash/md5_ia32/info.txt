@@ -1,5 +1,3 @@
-realname "MD5 (IA-32)"
-
 define MD5_IA32
 
 load_on asm_ok

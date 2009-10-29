@@ -1,5 +1,3 @@
-realname "Entropy Sources"
-
 load_on auto
 
 <add>

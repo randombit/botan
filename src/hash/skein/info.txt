@@ -1,5 +1,3 @@
-realname "Skein"
-
 define SKEIN_512
 
 <requires>

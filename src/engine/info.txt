@@ -1,5 +1,3 @@
-realname "Engines"
-
 define ENGINES
 
 load_on auto

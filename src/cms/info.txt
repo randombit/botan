@@ -1,5 +1,3 @@
-realname "CMS"
-
 define CMS
 
 load_on auto

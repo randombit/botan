@@ -1,5 +1,3 @@
-realname "HAS-160"
-
 define HAS_160
 
 <requires>

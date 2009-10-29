@@ -1,5 +1,3 @@
-realname "File Tree Walking Entropy Source"
-
 define ENTROPY_SRC_FTW
 
 load_on auto

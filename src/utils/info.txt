@@ -1,5 +1,3 @@
-realname "Utility Functions"
-
 define UTIL_FUNCTIONS
 
 load_on always

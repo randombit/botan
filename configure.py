@@ -357,8 +357,7 @@ class ModuleInfo(object):
 
         lex_me_harder(infofile, self,
                       ['add', 'requires', 'os', 'arch', 'cc', 'libs'],
-                      { 'realname': '<UNKNOWN>',
-                        'load_on': 'auto',
+                      { 'load_on': 'auto',
                         'define': None,
                         'modset': None,
                         'uses_tr1': 'false',
@@ -425,8 +424,7 @@ class ArchInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
                       ['aliases', 'submodels', 'submodel_aliases'],
-                      { 'realname': '<UNKNOWN>',
-                        'default_submodel': None,
+                      { 'default_submodel': None,
                         'endian': None,
                         'unaligned': 'no'
                         })
@@ -471,8 +469,7 @@ class CompilerInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
                       ['so_link_flags', 'mach_opt', 'mach_abi_linking'],
-                      { 'realname': '<UNKNOWN>',
-                        'binary_name': None,
+                      { 'binary_name': None,
                         'macro_name': None,
                         'compile_option': '-c ',
                         'output_to_option': '-o ',
@@ -572,8 +569,7 @@ class OsInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
                       ['aliases', 'target_features', 'supports_shared'],
-                      { 'realname': '<UNKNOWN>',
-                        'os_type': None,
+                      { 'os_type': None,
                         'obj_suffix': 'o',
                         'so_suffix': 'so',
                         'static_suffix': 'a',
@@ -833,8 +829,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'doc_files': makefile_list(build_config.doc_files()),
 
-        'mod_list': '\n'.join(['%s (%s)' % (m.basename, m.realname)
-                               for m in sorted(modules)]),
+        'mod_list': '\n'.join(sorted([m.basename for m in modules])),
 
         'python_version': '.'.join(map(str, sys.version_info[0:2]))
         }

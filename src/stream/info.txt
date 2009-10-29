@@ -1,5 +1,3 @@
-realname "Stream Ciphers"
-
 load_on auto
 
 define STREAM_CIPHER

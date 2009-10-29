@@ -1,5 +1,3 @@
-realname "Assembler Macros (IA-32)"
-
 load_on dep
 
 <add>

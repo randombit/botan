@@ -1,5 +1,3 @@
-realname "String to Key Functions"
-
 load_on auto
 
 <add>

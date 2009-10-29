@@ -1,5 +1,3 @@
-realname "WiderWake"
-
 define WID_WAKE
 
 load_on auto

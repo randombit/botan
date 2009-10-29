@@ -1,5 +1,3 @@
-realname "Memory Pool Allocator"
-
 load_on auto
 
 <add>

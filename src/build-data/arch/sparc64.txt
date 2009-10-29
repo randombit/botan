@@ -1,5 +1,3 @@
-realname "SPARC64"
-
 default_submodel sparc64-ultra
 
 <submodels>

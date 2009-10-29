@@ -1,5 +1,3 @@
-realname "OpenSSL Engine"
-
 define ENGINE_OPENSSL
 
 load_on request

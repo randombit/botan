@@ -1,5 +1,3 @@
-realname "Threshold Secret Sharing"
-
 <requires>
 hash
 rng

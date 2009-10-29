@@ -1,5 +1,3 @@
-realname "RIPEMD-160"
-
 define RIPEMD_160
 
 <requires>

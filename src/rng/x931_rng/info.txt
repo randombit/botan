@@ -1,5 +1,3 @@
-realname "ANSI X9.31 PRNG"
-
 define X931_RNG
 
 load_on auto

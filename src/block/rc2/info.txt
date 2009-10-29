@@ -1,3 +1,1 @@
-realname "RC2"
-
 define RC2

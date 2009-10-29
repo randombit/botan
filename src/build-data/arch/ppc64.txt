@@ -1,5 +1,3 @@
-realname "PowerPC 64"
-
 endian big
 
 default_submodel power4

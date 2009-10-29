@@ -1,5 +1,3 @@
-realname "Pipe/Filter"
-
 load_on auto
 
 define FILTERS

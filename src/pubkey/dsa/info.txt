@@ -1,5 +1,3 @@
-realname "DSA"
-
 define DSA
 
 load_on auto

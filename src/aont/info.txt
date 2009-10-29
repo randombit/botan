@@ -1,5 +1,3 @@
-realname "All or Nothing Transforms"
-
 define PACKAGE_TRANSFORM
 
 load_on auto

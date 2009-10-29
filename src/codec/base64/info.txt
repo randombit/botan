@@ -1,5 +1,3 @@
-realname "Base64 Codec"
-
 define BASE64_CODEC
 
 load_on auto

@@ -1,5 +1,3 @@
-realname "QNX"
-
 os_type unix
 
 <supports_shared>

@@ -1,5 +1,3 @@
-realname "Block Ciphers"
-
 define BLOCK_CIPHER
 
 <requires>

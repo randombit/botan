@@ -1,5 +1,3 @@
-realname "Benchmarking"
-
 define RUNTIME_BENCHMARKING
 
 load_on auto

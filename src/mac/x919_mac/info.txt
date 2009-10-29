@@ -1,5 +1,3 @@
-realname "ANSI X9.19 MAC"
-
 define ANSI_X919_MAC
 
 load_on auto

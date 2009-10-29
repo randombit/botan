@@ -1,5 +1,3 @@
-realname "Crypto Box"
-
 load_on auto
 
 define CRYPTO_BOX

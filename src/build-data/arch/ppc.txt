@@ -1,5 +1,3 @@
-realname "PowerPC"
-
 endian big
 unaligned ok
 

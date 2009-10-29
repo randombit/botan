@@ -1,5 +1,3 @@
-realname "PKCSv1 v1.5 EME"
-
 define EME_PKCS1v15
 
 load_on auto

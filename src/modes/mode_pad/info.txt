@@ -1,5 +1,3 @@
-realname "Cipher Mode Padding Method"
-
 define CIPHER_MODE_PADDING
 
 load_on auto

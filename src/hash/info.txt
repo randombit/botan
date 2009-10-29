@@ -1,5 +1,3 @@
-realname "Hash Functions"
-
 load_on auto
 
 <add>

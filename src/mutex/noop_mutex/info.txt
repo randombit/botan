@@ -1,5 +1,3 @@
-realname "No-Op Mutex"
-
 load_on auto
 
 define MUTEX_NOOP

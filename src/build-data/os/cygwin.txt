@@ -1,5 +1,3 @@
-realname "Cygwin"
-
 os_type unix
 
 install_root c:\Botan
