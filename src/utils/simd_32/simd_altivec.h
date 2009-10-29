@@ -9,6 +9,8 @@
 #define BOTAN_SIMD_ALTIVEC_H__
 
 #include <botan/loadstor.h>
+#include <botan/cpuid.h>
+
 #include <altivec.h>
 #undef vector
 
@@ -17,6 +19,7 @@ namespace Botan {
 class SIMD_Altivec
    {
    public:
+      bool enabled() const { return CPUID::has_altivec(); }
 
       SIMD_Altivec(const u32bit B[4])
          {
