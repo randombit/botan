@@ -15,7 +15,7 @@ namespace Botan {
 class BOTAN_DLL SIMD_Engine : public Engine
    {
    public:
-      std::string provider_name() const { return "sse2"; }
+      std::string provider_name() const { return "simd"; }
    private:
       BlockCipher* find_block_cipher(const SCAN_Name&,
                                      Algorithm_Factory&) const;

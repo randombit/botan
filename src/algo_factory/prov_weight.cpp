@@ -22,7 +22,7 @@ u32bit static_provider_weight(const std::string& prov_name)
    if(prov_name == "core") return 5;
    if(prov_name == "ia32") return 6;
    if(prov_name == "amd64") return 7;
-   if(prov_name == "sse2") return 8;
+   if(prov_name == "simd") return 8;
 
    if(prov_name == "openssl") return 2;
    if(prov_name == "gmp") return 1;
