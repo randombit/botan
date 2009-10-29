@@ -65,21 +65,30 @@ class SIMD_Altivec
 
       void store_le(byte out[]) const
          {
-         u32bit* out_32 = reinterpret_cast<u32bit*>(out);
-
-         __vector unsigned char perm = vec_lvsl(0, (int*)0);
+         __vector unsigned char perm = vec_lvsl(0, (u32bit*)0);
 
          perm = vec_xor(perm, vec_splat_u8(3));
 
-         __vector unsigned int swapped = vec_perm(reg, reg, perm);
+         union {
+            __vector unsigned int V;
+            u32bit R[4];
+            } vec;
 
-         vec_st(swapped, 0, out_32);
+         vec.V = vec_perm(reg, reg, perm);
+
+         Botan::store_be(out, vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
          }
 
       void store_be(byte out[]) const
          {
-         u32bit* out_32 = reinterpret_cast<u32bit*>(out);
-         vec_st(reg, 0, out_32);
+         union {
+            __vector unsigned int V;
+            u32bit R[4];
+            } vec;
+
+         vec.V = reg;
+
+         Botan::store_be(out, vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
          }
 
       void rotate_left(u32bit rot)
