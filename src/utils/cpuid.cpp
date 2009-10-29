@@ -17,10 +17,10 @@
   #include <intrin.h>
   #define CALL_CPUID(type, out) do { __cpuid((int*)out, type); } while(0)
 
-#elif defined(BOTAN_BUILD_COMPILER_IS_ICC)
+#elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
 
   #include <ia32intrin.h>
-  #define CALL_CPUID(type, out) do { __cpuid(out, type) } while(0);
+  #define CALL_CPUID(type, out) do { __cpuid(out, type); } while(0);
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_GCC)
 

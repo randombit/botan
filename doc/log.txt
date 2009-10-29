@@ -2,6 +2,9 @@
 * 1.9.2-dev, ????-??-??
  - Add SIMD version of XTEA
  - Support both SSE2 and AltiVec SIMD for Serpent and XTEA
+ - Optimizations for SHA-1 and SHA-2
+ - Add AltiVec runtime detection
+ - Fix x86 CPU identification with Intel C++ and Visual C++
 
 * 1.9.1, 2009-10-23
  - Better support for Python and Perl wrappers
