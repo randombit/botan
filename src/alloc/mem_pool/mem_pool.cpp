@@ -109,7 +109,7 @@ void Pooling_Allocator::Memory_Block::free(void* ptr, u32bit blocks)
 /*
 * Pooling_Allocator Constructor
 */
-Pooling_Allocator::Pooling_Allocator(Mutex* m) : mutex(m)
+Pooling_Allocator::Pooling_Allocator()
    {
    last_used = blocks.begin();
    }
@@ -119,7 +119,6 @@ Pooling_Allocator::Pooling_Allocator(Mutex* m) : mutex(m)
 */
 Pooling_Allocator::~Pooling_Allocator()
    {
-   delete mutex;
    if(blocks.size())
       throw Invalid_State("Pooling_Allocator: Never released memory");
    }
@@ -129,7 +128,7 @@ Pooling_Allocator::~Pooling_Allocator()
 */
 void Pooling_Allocator::destroy()
    {
-   Mutex_Holder lock(mutex);
+   std::lock_guard<std::mutex> lock(mutex);
 
    blocks.clear();
 
@@ -146,7 +145,7 @@ void* Pooling_Allocator::allocate(u32bit n)
    const u32bit BITMAP_SIZE = Memory_Block::bitmap_size();
    const u32bit BLOCK_SIZE = Memory_Block::block_size();
 
-   Mutex_Holder lock(mutex);
+   std::lock_guard<std::mutex> lock(mutex);
 
    if(n <= BITMAP_SIZE * BLOCK_SIZE)
       {
@@ -183,7 +182,7 @@ void Pooling_Allocator::deallocate(void* ptr, u32bit n)
    if(ptr == 0 && n == 0)
       return;
 
-   Mutex_Holder lock(mutex);
+   std::lock_guard<std::mutex> lock(mutex);
 
    if(n > BITMAP_SIZE * BLOCK_SIZE)
       dealloc_block(ptr, n);
