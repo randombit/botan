@@ -66,9 +66,7 @@ void FORK_256::compress_n(const byte input[], u32bit blocks)
       G1 = G2 = G3 = G4 = digest[6];
       H1 = H2 = H3 = H4 = digest[7];
 
-      for(u32bit j = 0; j != 16; ++j)
-         M[j] = load_be<u32bit>(input, j);
-      input += HASH_BLOCK_SIZE;
+      load_be(M.begin(), input, M.size());
 
       step(A1, B1, C1, D1, E1, F1, G1, H1, M[ 0], M[ 1], DELTA[ 0], DELTA[ 1]);
       step(A2, B2, C2, D2, E2, F2, G2, H2, M[14], M[15], DELTA[15], DELTA[14]);
@@ -118,6 +116,8 @@ void FORK_256::compress_n(const byte input[], u32bit blocks)
       digest[5] += (F1 + F2) ^ (F3 + F4);
       digest[6] += (G1 + G2) ^ (G3 + G4);
       digest[7] += (H1 + H2) ^ (H3 + H4);
+
+      input += HASH_BLOCK_SIZE;
       }
    }
 

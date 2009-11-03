@@ -55,9 +55,7 @@ void SHA_384_512_BASE::compress_n(const byte input[], u32bit blocks)
 
    for(u32bit i = 0; i != blocks; ++i)
       {
-      for(u32bit j = 0; j != 16; ++j)
-         W[j] = load_be<u64bit>(input, j);
-      input += HASH_BLOCK_SIZE;
+      load_be(W.begin(), input, 16);
 
       for(u32bit j = 16; j != 80; j += 8)
          {
@@ -160,6 +158,8 @@ void SHA_384_512_BASE::compress_n(const byte input[], u32bit blocks)
       F = (digest[5] += F);
       G = (digest[6] += G);
       H = (digest[7] += H);
+
+      input += HASH_BLOCK_SIZE;
       }
    }
 
