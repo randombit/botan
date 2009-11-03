@@ -13,7 +13,7 @@ use Sys::Hostname;
 
 my $MAJOR_VERSION = 1;
 my $MINOR_VERSION = 8;
-my $PATCH_VERSION = 7;
+my $PATCH_VERSION = 8;
 
 my $VERSION_SUFFIX = '';
 
