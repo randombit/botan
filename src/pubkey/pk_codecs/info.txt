@@ -1,5 +1,3 @@
-realname "PK codecs (PKCS8, X.509)"
-
 load_on auto
 
 <add>

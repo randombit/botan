@@ -1,5 +1,3 @@
-realname "DragonFly"
-
 os_type unix
 
 <target_features>

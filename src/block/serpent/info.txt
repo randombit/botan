@@ -1,10 +1,1 @@
-realname "Serpent"
-
 define SERPENT
-
-load_on auto
-
-<add>
-serpent.cpp
-serpent.h
-</add>

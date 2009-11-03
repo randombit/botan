@@ -8,7 +8,7 @@
 #ifndef BOTAN_XTS_H__
 #define BOTAN_XTS_H__
 
-#include <botan/basefilt.h>
+#include <botan/key_filt.h>
 #include <botan/block_cipher.h>
 
 namespace Botan {
@@ -21,6 +21,9 @@ class BOTAN_DLL XTS_Encryption : public Keyed_Filter
    public:
       void set_key(const SymmetricKey& key);
       void set_iv(const InitializationVector& iv);
+
+      bool valid_keylength(u32bit key_len) const
+         { return cipher->valid_keylength(key_len); }
 
       std::string name() const;
 
@@ -51,6 +54,9 @@ class BOTAN_DLL XTS_Decryption : public Keyed_Filter
    public:
       void set_key(const SymmetricKey& key);
       void set_iv(const InitializationVector& iv);
+
+      bool valid_keylength(u32bit key_len) const
+         { return cipher->valid_keylength(key_len); }
 
       std::string name() const;
 

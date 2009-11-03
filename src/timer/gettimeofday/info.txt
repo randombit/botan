@@ -1,5 +1,3 @@
-realname "Unix Timer"
-
 define TIMER_UNIX
 
 load_on auto
@@ -30,4 +28,3 @@ tru64
 <requires>
 timer
 </requires>
-

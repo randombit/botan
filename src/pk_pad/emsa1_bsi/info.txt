@@ -1,5 +1,3 @@
-realname "EMSA1 (BSI variant)"
-
 define EMSA1_BSI
 
 load_on auto

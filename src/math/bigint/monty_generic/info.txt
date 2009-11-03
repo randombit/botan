@@ -1,5 +1,3 @@
-realname "Montgomery Reduction"
-
 load_on dep
 
 <add>

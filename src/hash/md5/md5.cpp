@@ -64,9 +64,7 @@ void MD5::compress_n(const byte input[], u32bit blocks)
 
    for(u32bit i = 0; i != blocks; ++i)
       {
-      for(u32bit j = 0; j != 16; ++j)
-         M[j] = load_le<u32bit>(input, j);
-      input += HASH_BLOCK_SIZE;
+      load_le(M.begin(), input, M.size());
 
       FF(A,B,C,D,M[ 0], 7,0xD76AA478);   FF(D,A,B,C,M[ 1],12,0xE8C7B756);
       FF(C,D,A,B,M[ 2],17,0x242070DB);   FF(B,C,D,A,M[ 3],22,0xC1BDCEEE);
@@ -108,6 +106,8 @@ void MD5::compress_n(const byte input[], u32bit blocks)
       B = (digest[1] += B);
       C = (digest[2] += C);
       D = (digest[3] += D);
+
+      input += HASH_BLOCK_SIZE;
       }
    }
 
@@ -123,7 +123,7 @@ void MD5::copy_out(byte output[])
 /*
 * Clear memory of sensitive data
 */
-void MD5::clear() throw()
+void MD5::clear()
    {
    MDx_HashFunction::clear();
    M.clear();

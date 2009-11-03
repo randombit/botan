@@ -1,5 +1,3 @@
-realname "IRIX"
-
 os_type unix
 
 <supports_shared>

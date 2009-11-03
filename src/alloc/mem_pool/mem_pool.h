@@ -44,9 +44,9 @@ class BOTAN_DLL Pooling_Allocator : public Allocator
             static u32bit bitmap_size() { return BITMAP_SIZE; }
             static u32bit block_size() { return BLOCK_SIZE; }
 
-            bool contains(void*, u32bit) const throw();
-            byte* alloc(u32bit) throw();
-            void free(void*, u32bit) throw();
+            bool contains(void*, u32bit) const;
+            byte* alloc(u32bit);
+            void free(void*, u32bit);
 
             bool operator<(const Memory_Block& other) const
                {

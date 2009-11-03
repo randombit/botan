@@ -1,4 +1,4 @@
-realname "SGI Pro64"
+macro_name "SGI_PRO64"
 
 binary_name "sgiCC"
 

@@ -1,5 +1,3 @@
-realname "ECB block cipher mode"
-
 define ECB
 
 load_on auto

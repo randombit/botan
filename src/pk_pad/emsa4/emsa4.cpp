@@ -68,7 +68,7 @@ SecureVector<byte> EMSA4::encoding_of(const MemoryRegion<byte>& msg,
 * EMSA4 Decode/Verify Operation
 */
 bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
-                   const MemoryRegion<byte>& raw, u32bit key_bits) throw()
+                   const MemoryRegion<byte>& raw, u32bit key_bits)
    {
    const u32bit HASH_SIZE = hash->OUTPUT_LENGTH;
    const u32bit KEY_BYTES = (key_bits + 7) / 8;

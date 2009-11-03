@@ -1,5 +1,3 @@
-realname "x86 MPI Assembler Core (MSVC)"
-
 mp_bits 32
 
 load_on dep

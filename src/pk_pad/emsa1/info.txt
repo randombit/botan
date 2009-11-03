@@ -1,5 +1,3 @@
-realname "EMSA1"
-
 define EMSA1
 
 load_on auto

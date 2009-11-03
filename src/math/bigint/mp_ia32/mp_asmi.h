@@ -70,20 +70,12 @@ extern "C" {
 */
 inline word word_add(word x, word y, word* carry)
    {
-#if 0
    asm(
       ADD_OR_SUBTRACT(ASM("adcl %[y],%[x]"))
       : [x]"=r"(x), [carry]"=r"(*carry)
       : "0"(x), [y]"rm"(y), "1"(*carry)
       : "cc");
    return x;
-#else
-   word z = x + y;
-   word c1 = (z < x);
-   z += *carry;
-   *carry = c1 | (z < *carry);
-   return z;
-#endif
    }
 
 /*

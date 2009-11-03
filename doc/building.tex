@@ -13,7 +13,7 @@
 \title{\textbf{Botan Build Guide}}
 \author{Jack Lloyd \\
         \texttt{lloyd@randombit.net}}
-\date{2008-11-24}
+\date{2009-10-09}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\module}[1]{\texttt{#1}}
@@ -41,61 +41,58 @@ POSIX (such as VMS, MacOS 9, OS/390, OS/400, ...) are not supported by
 the build system, primarily due to lack of access. Please contact the
 maintainer if you would like to build Botan on such a system.
 
-Botan's build is controlled by configure.pl, which is a Perl
-script. Perl 5.6 or later is required.
+Botan's build is controlled by configure.py, which is a Python
+script. Python 2.4 or later is required.
 
 \section{For the Impatient}
 
 \begin{verbatim}
-$ ./configure.pl [--prefix=/some/directory]
+$ ./configure.py [--prefix=/some/directory]
 $ make
 $ make install
 \end{verbatim}
 
 Or using \verb|nmake|, if you're compiling on Windows with Visual
 C++. On platforms that do not understand the '\#!' convention for
-beginning script files, or that have Perl installed in an unusual
-spot, you might need to prefix the \texttt{configure.pl} command with
-\texttt{perl} or \texttt{/path/to/perl}.
+beginning script files, or that have Python installed in an unusual
+spot, you might need to prefix the \texttt{configure.py} command with
+\texttt{python} or \texttt{/path/to/python}.
 
 \section{Building the Library}
 
-The first step is to run \filename{configure.pl}, which is a Perl
+The first step is to run \filename{configure.py}, which is a Python
 script that creates various directories, config files, and a Makefile
-for building everything. The script requires at least Perl 5.6; any
-later version should also work.
+for building everything. The script requires at least Python 2.4; any
+later version of Python 2.x should also work.
 
 The script will attempt to guess what kind of system you are trying
 to compile for (and will print messages telling you what it guessed).
 You can override this process by passing the options \verb|--cc|,
-\verb|--os|, and \verb|--cpu| -- acceptable values are printed if
-you run \verb|configure.pl| with \verb|--help|.
+\verb|--os|, and \verb|--cpu|.
 
 You can pass basically anything reasonable with \verb|--cpu|: the
 script knows about a large number of different architectures, their
-sub-models, and common aliases for them. The script does not display
-all the possibilities in its help message because there are simply too
-many entries. You should only select the 64-bit version of a CPU (such
-as ``sparc64'' or ``mips64'') if your operating system knows how to
-handle 64-bit object code -- a 32-bit kernel on a 64-bit CPU will
-generally not like 64-bit code.
+sub-models, and common aliases for them. You should only select the
+64-bit version of a CPU (such as ``sparc64'' or ``mips64'') if your
+operating system knows how to handle 64-bit object code -- a 32-bit
+kernel on a 64-bit CPU will generally not like 64-bit code.
 
 By default the script tries to figure out what will work on your
-system, and use that. It will print a display at the end showing
-which algorithms have and have not been abled. For instance on one
-system we might see the line:
+system, and use that. It will print a display at the end showing which
+algorithms have and have not been enabled. For instance on one system
+we might see lines like:
 
 \begin{verbatim}
-   (loading): entropy: [beos_stats] buf_es [cryptoapi_rng]
-                       dev_random egd proc_walk unix_procs [win32_stats]
+ INFO: Skipping mod because CPU incompatible - asm_amd64 mp_amd64 mp_asm64 sha1_amd64
+ INFO: Skipping mod because OS incompatible - cryptoapi_rng win32_stats
+ INFO: Skipping mod because compiler incompatible - mp_ia32_msvc
+ INFO: Skipping mod because loaded on request only - bzip2 gnump openssl qt_mutex zlib
 \end{verbatim}
 
-The names listed in brackets are disabled, the others are
-enabled. Here we see the list of entropy sources which are going to be
-compiled into Botan. Since this particular line comes when Botan was
-configuring for a Linux system, the Win32 and BeOS specific modules
-were disabled, while modules that use Unix APIs and /dev/random are
-built.
+The ones that are 'loaded on request only' have to be explicitly asked
+for, because they rely on third party libraries which your system
+might not have. For instance to enable zlib support, add
+\verb|--with-zlib| to your invocation of \verb|configure.py|.
 
 You can control which algorithms and modules are built using the
 options ``\verb|--enable-modules=MODS|'' and
@@ -103,20 +100,6 @@ options ``\verb|--enable-modules=MODS|'' and
 ``\verb|--enable-modules=blowfish,md5,rsa,zlib --disable-modules=arc4,cmac|''.
 Modules not listed on the command line will simply be loaded if needed
 or if configured to load by default.
-
-Not all OSes or CPUs have specific support in
-\filename{configure.pl}. If the CPU architecture of your system isn't
-supported by \filename{configure.pl}, use 'generic'. This setting
-disables machine-specific optimization flags. Similarly, setting OS to
-'generic' disables things which depend greatly on OS support
-(specifically, shared libraries).
-
-However, it's impossible to guess which options to give to a system
-compiler.  Thus, if you want to compile Botan with a compiler which
-\filename{configure.pl} does not support, you will need to tell it how
-that compiler works. This is done by adding a new file in the
-directory \filename{src/build-data/cc}; the existing files should put you
-in the right direction.
 
 The script tries to guess what kind of makefile to generate, and it
 almost always guesses correctly (basically, Visual C++ uses NMAKE with
@@ -128,14 +111,12 @@ commonly used by Windows compilers. To add a new variant (eg, a build
 script for VMS), you will need to create a new template file in
 \filename{src/build-data/makefile}.
 
-\pagebreak
-
 \subsection{POSIX / Unix}
 
 The basic build procedure on Unix and Unix-like systems is:
 
 \begin{verbatim}
-   $ ./configure.pl [--enable-modules=<list>] [--cc=CC]
+   $ ./configure.py [--enable-modules=<list>] [--cc=CC]
    $ make
    # You may need to set your LD_LIBRARY_PATH or equivalent for ./check to run
    $ make check # optional, but a good idea
@@ -148,9 +129,9 @@ found within your PATH.
 The \verb|make install| target has a default directory in which it
 will install Botan (typically \verb|/usr/local|). You can override
 this by using the \texttt{--prefix} argument to
-\filename{configure.pl}, like so:
+\filename{configure.py}, like so:
 
-\verb|./configure.pl --prefix=/opt <other arguments>|
+\verb|./configure.py --prefix=/opt <other arguments>|
 
 On some systems shared libraries might not be immediately visible to
 the runtime linker. For example, on Linux you may have to edit
@@ -163,10 +144,10 @@ to include the directory that the Botan libraries were installed into.
 
 The situation is not much different here. We'll assume you're using Visual C++
 (for Cygwin, the Unix instructions are probably more relevant). You need to
-have a copy of Perl installed, and have both Perl and Visual C++ in your path.
+have a copy of Python installed, and have both Python and Visual C++ in your path.
 
 \begin{verbatim}
-   > perl configure.pl --cc=msvc (or --cc=gcc for MinGW) [--cpu=CPU]
+   > python configure.py --cc=msvc (or --cc=gcc for MinGW) [--cpu=CPU]
    > nmake
    > nmake check # optional, but recommended
 \end{verbatim}
@@ -244,7 +225,7 @@ environment in a different directory.
 \subsection{Local Configuration}
 
 You may want to do something peculiar with the configuration; to
-support this there is a flag to \filename{configure.pl} called
+support this there is a flag to \filename{configure.py} called
 \texttt{--with-local-config=<file>}. The contents of the file are
 inserted into \filename{build/build.h} which is (indirectly) included
 into every Botan header and source file.
@@ -394,5 +375,71 @@ given that typically Windows software is distributed as binaries, this
 is less of a problem - only the developer needs to worry about it. As
 long as they can remember where they installed Botan, they just have
 to set the appropriate flags in their Makefile/project file.
+
+\pagebreak
+
+\section{Language Wrappers}
+
+\subsection{Building the Python wrappers}
+
+The Python wrappers for Botan use Boost.Python, so you must have Boost
+installed. To build the wrappers, add the flag
+
+\verb|--use-boost-python|
+
+to \verb|configure.py|. This will create a second makefile,
+\verb|Makefile.python|, with instructions for building the Python
+module. After building the library, execute
+
+\begin{verbatim}
+$ make -f Makefile.python
+\end{verbatim}
+
+to build the module. Currently only Unix systems are supported, and
+the Makefile assumes that the version of Python you want to build
+against is the same one you used to run \verb|configure.py|.
+
+To install the module, use the \verb|install| target.
+
+Examples of using the Python module can be seen in \filename{doc/python}
+
+\subsection{Building the Perl XS wrappers}
+
+To build the Perl XS wrappers, change your directory to
+\filename{src/wrap/perl-xs} and run \verb|perl Makefile.PL|, then run
+\verb|make| to build the module and \verb|make test| to run the test
+suite.
+
+\begin{verbatim}
+$ perl Makefile.PL
+Checking if your kit is complete...
+Looks good
+Writing Makefile for Botan
+$ make
+cp Botan.pm blib/lib/Botan.pm
+AutoSplitting blib/lib/Botan.pm (blib/lib/auto/Botan)
+/usr/bin/perl5.8.8 /usr/lib64/perl5/5.8.8/ExtUtils/xsubpp  [...]
+g++ -c   -Wno-write-strings -fexceptions  -g   [...]
+Running Mkbootstrap for Botan ()
+chmod 644 Botan.bs
+rm -f blib/arch/auto/Botan/Botan.so
+g++  -shared Botan.o  -o blib/arch/auto/Botan/Botan.so  \
+           -lbotan -lbz2 -lpthread -lrt -lz     \
+
+chmod 755 blib/arch/auto/Botan/Botan.so
+cp Botan.bs blib/arch/auto/Botan/Botan.bs
+chmod 644 blib/arch/auto/Botan/Botan.bs
+Manifying blib/man3/Botan.3pm
+$ make test
+PERL_DL_NONLAZY=1 /usr/bin/perl5.8.8 [...]
+t/base64......ok
+t/filt........ok
+t/hex.........ok
+t/oid.........ok
+t/pipe........ok
+t/x509cert....ok
+All tests successful.
+Files=6, Tests=83,  0 wallclock secs ( 0.08 cusr +  0.02 csys =  0.10 CPU)
+\end{verbatim}
 
 \end{document}

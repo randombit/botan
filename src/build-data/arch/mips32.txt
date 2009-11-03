@@ -1,5 +1,3 @@
-realname "MIPS"
-
 default_submodel r3000
 
 <aliases>

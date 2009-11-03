@@ -1,5 +1,3 @@
-realname "Assembler Macros (IA-32)"
-
 load_on dep
 
 <add>
@@ -14,3 +12,7 @@ ia32
 gcc
 icc
 </cc>
+
+<requires>
+ia32_eng
+</requires>

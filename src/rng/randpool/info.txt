@@ -1,5 +1,3 @@
-realname "Randpool RNG"
-
 define RANDPOOL
 
 load_on auto

@@ -21,7 +21,7 @@ class BOTAN_DLL ANSI_X931_RNG : public RandomNumberGenerator
    public:
       void randomize(byte[], u32bit);
       bool is_seeded() const;
-      void clear() throw();
+      void clear();
       std::string name() const;
 
       void reseed(u32bit poll_bits);

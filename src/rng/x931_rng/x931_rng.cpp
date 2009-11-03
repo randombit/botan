@@ -108,7 +108,7 @@ bool ANSI_X931_RNG::is_seeded() const
 /**
 * Clear memory of sensitive data
 */
-void ANSI_X931_RNG::clear() throw()
+void ANSI_X931_RNG::clear()
    {
    cipher->clear();
    prng->clear();

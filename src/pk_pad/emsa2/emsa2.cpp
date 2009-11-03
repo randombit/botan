@@ -79,7 +79,7 @@ SecureVector<byte> EMSA2::encoding_of(const MemoryRegion<byte>& msg,
 */
 bool EMSA2::verify(const MemoryRegion<byte>& coded,
                    const MemoryRegion<byte>& raw,
-                   u32bit key_bits) throw()
+                   u32bit key_bits)
    {
    try
       {

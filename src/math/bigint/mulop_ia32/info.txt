@@ -1,5 +1,3 @@
-realname "BigInt Multiply-Add (IA-32)"
-
 mp_bits 32
 
 # Out of date, still implements bigint_mul_add_words

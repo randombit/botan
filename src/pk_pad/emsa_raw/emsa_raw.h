@@ -24,7 +24,7 @@ class BOTAN_DLL EMSA_Raw : public EMSA
       SecureVector<byte> encoding_of(const MemoryRegion<byte>&, u32bit,
                                      RandomNumberGenerator&);
       bool verify(const MemoryRegion<byte>&, const MemoryRegion<byte>&,
-                  u32bit) throw();
+                  u32bit);
 
       SecureVector<byte> message;
    };

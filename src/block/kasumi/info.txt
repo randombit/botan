@@ -1,10 +1,1 @@
-realname "Kasumi"
-
 define KASUMI
-
-load_on auto
-
-<add>
-kasumi.cpp
-kasumi.h
-</add>

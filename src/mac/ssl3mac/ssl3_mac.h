@@ -19,7 +19,7 @@ namespace Botan {
 class BOTAN_DLL SSL3_MAC : public MessageAuthenticationCode
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const;
       MessageAuthenticationCode* clone() const;
 

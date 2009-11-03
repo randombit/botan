@@ -1,5 +1,3 @@
-realname "Random Number Generators"
-
 load_on auto
 
 <add>

@@ -28,7 +28,7 @@ MDx_HashFunction::MDx_HashFunction(u32bit hash_len, u32bit block_len,
 /**
 * Clear memory of sensitive data
 */
-void MDx_HashFunction::clear() throw()
+void MDx_HashFunction::clear()
    {
    buffer.clear();
    count = position = 0;

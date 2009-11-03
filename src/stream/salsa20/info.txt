@@ -1,5 +1,3 @@
-realname "Salsa20"
-
 define SALSA20
 
 load_on auto

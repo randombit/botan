@@ -1,5 +1,3 @@
-realname "Hitachi SH"
-
 default_submodel hitachi-sh1
 
 <submodels>

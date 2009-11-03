@@ -1,5 +1,3 @@
-realname "ARM"
-
 default_submodel arm2
 
 <submodels>

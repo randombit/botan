@@ -7,6 +7,7 @@
 
 #include <botan/libstate.h>
 #include <botan/init.h>
+#include <botan/selftest.h>
 #include <botan/engine.h>
 #include <botan/stl_util.h>
 #include <botan/mutex.h>
@@ -36,8 +37,8 @@
   #include <botan/eng_amd64.h>
 #endif
 
-#if defined(BOTAN_HAS_ENGINE_SSE2_ASSEMBLER)
-  #include <botan/eng_sse2.h>
+#if defined(BOTAN_HAS_ENGINE_SIMD)
+  #include <botan/simd_engine.h>
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_GNU_MP)
@@ -212,7 +213,7 @@ std::string Library_State::deref_alias(const std::string& key) const
 /*
 * Set/Add an option
 */
-void Library_State::set_option(const std::string key,
+void Library_State::set_option(const std::string& key,
                                const std::string& value)
    {
    set("conf", key, value);
@@ -287,8 +288,8 @@ void Library_State::initialize(bool thread_safe)
    engines.push_back(new OpenSSL_Engine);
 #endif
 
-#if defined(BOTAN_HAS_ENGINE_SSE2_ASSEMBLER)
-   engines.push_back(new SSE2_Assembler_Engine);
+#if defined(BOTAN_HAS_ENGINE_SIMD)
+   engines.push_back(new SIMD_Engine);
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_AMD64_ASSEMBLER)
@@ -302,6 +303,9 @@ void Library_State::initialize(bool thread_safe)
    engines.push_back(new Default_Engine);
 
    m_algorithm_factory = new Algorithm_Factory(engines, *mutex_factory);
+
+   if(!passes_self_tests(algorithm_factory()))
+      throw Self_Test_Failure("Startup self tests failed");
    }
 
 /*

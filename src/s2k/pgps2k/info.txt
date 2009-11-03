@@ -1,5 +1,3 @@
-realname "Pgps2k"
-
 define PGPS2K
 
 load_on auto

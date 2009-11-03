@@ -38,7 +38,7 @@ class BOTAN_DLL HashFunction : public BufferedComputation
       /**
       * Reset the internal state of this object.
       */
-      virtual void clear() throw() = 0;
+      virtual void clear() = 0;
 
       HashFunction(u32bit hash_len, u32bit block_len = 0) :
          BufferedComputation(hash_len), HASH_BLOCK_SIZE(block_len) {}

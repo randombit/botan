@@ -1,0 +1,6 @@
+<requires>
+hash
+rng
+filters
+hex
+</requires>

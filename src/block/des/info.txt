@@ -1,13 +1,1 @@
-realname "DES"
-
 define DES
-
-load_on auto
-
-<add>
-des.cpp
-des.h
-des_tab.cpp
-desx.h
-desx.cpp
-</add>

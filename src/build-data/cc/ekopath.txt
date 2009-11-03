@@ -1,4 +1,4 @@
-realname "PathScale EKOPath C++"
+macro_name "PATHSCALE"
 
 binary_name "pathCC"
 

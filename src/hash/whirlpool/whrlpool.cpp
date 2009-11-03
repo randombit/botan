@@ -25,9 +25,7 @@ void Whirlpool::compress_n(const byte in[], u32bit blocks)
 
    for(u32bit i = 0; i != blocks; ++i)
       {
-      for(u32bit j = 0; j != 8; ++j)
-         M[j] = load_be<u64bit>(in, j);
-      in += HASH_BLOCK_SIZE;
+      load_be(M.begin(), in, M.size());
 
       u64bit K0, K1, K2, K3, K4, K5, K6, K7;
       K0 = digest[0]; K1 = digest[1]; K2 = digest[2]; K3 = digest[3];
@@ -121,6 +119,8 @@ void Whirlpool::compress_n(const byte in[], u32bit blocks)
       digest[5] ^= B5 ^ M[5];
       digest[6] ^= B6 ^ M[6];
       digest[7] ^= B7 ^ M[7];
+
+      in += HASH_BLOCK_SIZE;
       }
    }
 
@@ -136,7 +136,7 @@ void Whirlpool::copy_out(byte output[])
 /*
 * Clear memory of sensitive data
 */
-void Whirlpool::clear() throw()
+void Whirlpool::clear()
    {
    MDx_HashFunction::clear();
    M.clear();

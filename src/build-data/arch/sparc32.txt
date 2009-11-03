@@ -1,5 +1,3 @@
-realname "SPARC"
-
 # V7 doesn't have integer multiply, so it will be bitterly slow for some things
 # (especially BigInt). Also, it's fairly rare nowadays, so we default to V8.
 default_submodel sparc32-v8
@@ -31,4 +29,3 @@ sparc-v7 -> sparc32-v7
 sparc-v8 -> sparc32-v8
 sparc-v9 -> sparc32-v9
 </submodel_aliases>
-

@@ -1,4 +1,4 @@
-realname "HP-UX C++"
+macro_name "HP_ACC"
 
 binary_name "aCC"
 

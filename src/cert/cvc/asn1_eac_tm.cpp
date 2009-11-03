@@ -11,53 +11,39 @@
 #include <botan/ber_dec.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
-#include <ctime>
-#include <sstream>
+#include <botan/rounding.h>
+#include <botan/timer.h>
 
 namespace Botan {
 
 namespace {
 
-/*
-* Convert a time_t to a struct tm
-*/
-std::tm get_tm(u64bit timer)
-   {
-   std::time_t time_val = static_cast<std::time_t>(timer);
-
-   std::tm* tm_p = std::gmtime(&time_val);
-   if (tm_p == 0)
-      throw Encoding_Error("EAC_Time: gmtime could not encode " +
-                           to_string(timer));
-   return (*tm_p);
-   }
 SecureVector<byte> enc_two_digit(u32bit in)
    {
    SecureVector<byte> result;
    in %= 100;
    if (in < 10)
-      {
       result.append(0x00);
-      }
    else
       {
-      u32bit y_first_pos = (in - (in%10))/10;
+      u32bit y_first_pos = round_down(in, 10) / 10;
       result.append(static_cast<byte>(y_first_pos));
       }
-   u32bit y_sec_pos = in%10;
+
+   u32bit y_sec_pos = in % 10;
    result.append(static_cast<byte>(y_sec_pos));
    return result;
    }
+
 u32bit dec_two_digit(byte b1, byte b2)
    {
    u32bit upper = (u32bit)b1;
    u32bit lower = (u32bit)b2;
-   if (upper > 9 || lower > 9)
-      {
-      throw Invalid_Argument("u32bit dec_two_digit(byte b1, byte b2): value too large");
-      }
-   return upper*10 + lower;
 
+   if(upper > 9 || lower > 9)
+      throw Invalid_Argument("CVC dec_two_digit value too large");
+
+   return upper*10 + lower;
    }
 }
 
@@ -67,12 +53,11 @@ u32bit dec_two_digit(byte b1, byte b2)
 EAC_Time::EAC_Time(u64bit timer, ASN1_Tag t)
    :tag(t)
    {
-   std::tm time_info = get_tm(timer);
+   std::tm time_info = time_t_to_tm(timer);
 
    year   = time_info.tm_year + 1900;
    month  = time_info.tm_mon + 1;
    day    = time_info.tm_mday;
-
    }
 
 /*
@@ -272,27 +257,15 @@ bool operator<(const EAC_Time& t1, const EAC_Time& t2)
 void EAC_Time::decode_from(BER_Decoder& source)
    {
    BER_Object obj = source.get_next_object();
-   if (obj.type_tag != this->tag)
-      {
-      std::string message("decoding type mismatch for EAC_Time, tag is ");
-      std::stringstream ss;
-      std::string str_is;
-      ss << std::hex << obj.type_tag;
-      ss >> str_is;
-      message.append(str_is);
-      message.append(", while it should be ");
-      std::stringstream ss2;
-      std::string str_should;
-      ss2 << std::hex << this->tag;
-      ss2 >> str_should;
-      message.append(str_should);
-      throw Decoding_Error(message);
 
-      }
-   if (obj.value.size() != 6)
+   if(obj.type_tag != this->tag)
+      throw BER_Decoding_Error("Tag mismatch when decoding");
+
+   if(obj.value.size() != 6)
       {
       throw Decoding_Error("EAC_Time decoding failed");
       }
+
    try
       {
       u32bit tmp_year = dec_two_digit(obj.value[0], obj.value[1]);

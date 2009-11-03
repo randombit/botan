@@ -1,5 +1,3 @@
-realname "Auto-seeded Random Number Generator"
-
 define AUTO_SEEDING_RNG
 
 load_on auto

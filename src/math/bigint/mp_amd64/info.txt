@@ -1,5 +1,3 @@
-realname "MPI Core (x86-64)"
-
 mp_bits 64
 
 load_on dep

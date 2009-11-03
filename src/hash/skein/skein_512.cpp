@@ -34,8 +34,8 @@ void ubi_512(u64bit H[9], u64bit T[], const byte msg[], u64bit msg_len)
       T[0] += to_proc;
 
       u64bit M[8] = { 0 };
-      for(u32bit j = 0; j != to_proc / 8; ++j)
-         M[j] = load_le<u64bit>(msg, j);
+
+      load_le(M, msg, to_proc / 8);
 
       if(to_proc % 8)
          {
@@ -183,7 +183,7 @@ HashFunction* Skein_512::clone() const
    return new Skein_512(output_bits, personalization);
    }
 
-void Skein_512::clear() throw()
+void Skein_512::clear()
    {
    H.clear();
    T.clear();

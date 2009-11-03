@@ -18,17 +18,21 @@ namespace Botan {
 class BOTAN_DLL Salsa20 : public StreamCipher
    {
    public:
-      void clear() throw();
+      void cipher(const byte in[], byte out[], u32bit length);
+
+      void set_iv(const byte iv[], u32bit iv_len);
+
+      bool valid_iv_length(u32bit iv_len) const
+         { return (iv_len == 8); }
+
+      void clear();
       std::string name() const;
       StreamCipher* clone() const { return new Salsa20; }
-
-      void resync(const byte[], u32bit);
 
       Salsa20();
       ~Salsa20() { clear(); }
    private:
-      void cipher(const byte[], byte[], u32bit);
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte key[], u32bit key_len);
 
       SecureBuffer<u32bit, 16> state;
 

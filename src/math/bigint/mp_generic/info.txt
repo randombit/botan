@@ -1,5 +1,3 @@
-realname "MPI Core (C++)"
-
 load_on dep
 
 <add>

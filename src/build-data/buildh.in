@@ -22,6 +22,18 @@
 #define BOTAN_KARAT_SQR_THRESHOLD 32
 #define BOTAN_PRIVATE_KEY_OP_BLINDING_BITS 64
 
+/*
+* Toggles for parallel block cipher mode processing
+*
+* CBC and CFB can only use parallel processing in decryption mode
+*/
+#define BOTAN_PARALLEL_BLOCKS_ECB 8
+#define BOTAN_PARALLEL_BLOCKS_CBC 8
+#define BOTAN_PARALLEL_BLOCKS_CFB 8
+#define BOTAN_PARALLEL_BLOCKS_CTR 8
+#define BOTAN_PARALLEL_BLOCKS_EAX 8
+#define BOTAN_PARALLEL_BLOCKS_XTS 8
+
 /* PK key consistency checking toggles */
 #define BOTAN_PUBLIC_KEY_STRONG_CHECKS_ON_LOAD 1
 #define BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_LOAD 1

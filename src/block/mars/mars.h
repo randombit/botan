@@ -15,13 +15,15 @@ namespace Botan {
 class BOTAN_DLL MARS : public BlockCipher
    {
    public:
-      void clear() throw() { EK.clear(); }
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+
+      void clear() { EK.clear(); }
       std::string name() const { return "MARS"; }
       BlockCipher* clone() const { return new MARS; }
+
       MARS() : BlockCipher(16, 16, 32, 4) {}
    private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
       void key_schedule(const byte[], u32bit);
 
       void encrypt_round(u32bit&, u32bit&, u32bit&, u32bit&, u32bit) const;

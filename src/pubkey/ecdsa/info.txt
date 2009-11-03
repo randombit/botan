@@ -1,5 +1,3 @@
-realname "ECDSA"
-
 define ECDSA
 
 load_on auto

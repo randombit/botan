@@ -1,5 +1,3 @@
-realname "Public Key Base"
-
 define PUBLIC_KEY_CRYPTO
 
 load_on auto
@@ -15,6 +13,8 @@ pubkey.cpp
 pubkey.h
 pubkey_enums.cpp
 pubkey_enums.h
+workfactor.cpp
+workfactor.h
 </add>
 
 <requires>

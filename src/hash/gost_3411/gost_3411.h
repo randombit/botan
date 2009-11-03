@@ -1,6 +1,8 @@
 /**
 * GOST 34.11
 * (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_GOST_3411_H__
@@ -17,7 +19,7 @@ namespace Botan {
 class BOTAN_DLL GOST_34_11 : public HashFunction
    {
    public:
-      void clear() throw();
+      void clear();
       std::string name() const { return "GOST-R-34.11-94" ; }
       HashFunction* clone() const { return new GOST_34_11; }
 

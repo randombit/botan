@@ -1,5 +1,3 @@
-realname "Rabin-Williams"
-
 define RW
 
 load_on auto

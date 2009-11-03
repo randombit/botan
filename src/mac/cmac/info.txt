@@ -1,5 +1,3 @@
-realname "CMAC"
-
 define CMAC
 
 load_on auto

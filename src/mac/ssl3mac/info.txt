@@ -1,5 +1,3 @@
-realname "SSLv3 MAC"
-
 define SSL3_MAC
 
 load_on auto

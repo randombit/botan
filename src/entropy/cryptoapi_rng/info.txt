@@ -1,5 +1,3 @@
-realname "Win32 CryptoAPI Entropy Source"
-
 define ENTROPY_SRC_CAPI
 load_on auto
 modset win32

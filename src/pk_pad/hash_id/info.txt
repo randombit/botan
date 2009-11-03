@@ -1,5 +1,3 @@
-realname "Hash Function Identifiers"
-
 define HASH_ID
 
 load_on auto

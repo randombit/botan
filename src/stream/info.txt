@@ -1,12 +1,9 @@
-realname "Stream Ciphers"
-
 load_on auto
 
 define STREAM_CIPHER
 
 <add>
 stream_cipher.h
-stream_cipher.cpp
 </add>
 
 <requires>

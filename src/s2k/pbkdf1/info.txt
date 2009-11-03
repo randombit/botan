@@ -1,5 +1,3 @@
-realname "Pbkdf1"
-
 define PBKDF1
 
 load_on auto

@@ -1,5 +1,3 @@
-realname "Math Functions"
-
 load_on auto
 
 define BIGINT_MATH

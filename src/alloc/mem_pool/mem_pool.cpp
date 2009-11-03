@@ -8,7 +8,7 @@
 */
 
 #include <botan/mem_pool.h>
-#include <botan/util.h>
+#include <botan/rounding.h>
 #include <botan/mem_ops.h>
 #include <algorithm>
 #include <exception>
@@ -42,7 +42,7 @@ Pooling_Allocator::Memory_Block::Memory_Block(void* buf)
 * See if ptr is contained by this block
 */
 bool Pooling_Allocator::Memory_Block::contains(void* ptr,
-                                               u32bit length) const throw()
+                                               u32bit length) const
    {
    return ((buffer <= ptr) &&
            (buffer_end >= static_cast<byte*>(ptr) + length * BLOCK_SIZE));
@@ -51,7 +51,7 @@ bool Pooling_Allocator::Memory_Block::contains(void* ptr,
 /*
 * Allocate some memory, if possible
 */
-byte* Pooling_Allocator::Memory_Block::alloc(u32bit n) throw()
+byte* Pooling_Allocator::Memory_Block::alloc(u32bit n)
    {
    if(n == 0 || n > BITMAP_SIZE)
       return 0;
@@ -91,7 +91,7 @@ byte* Pooling_Allocator::Memory_Block::alloc(u32bit n) throw()
 /*
 * Mark this memory as free, if we own it
 */
-void Pooling_Allocator::Memory_Block::free(void* ptr, u32bit blocks) throw()
+void Pooling_Allocator::Memory_Block::free(void* ptr, u32bit blocks)
    {
    clear_mem(static_cast<byte*>(ptr), blocks * BLOCK_SIZE);
 

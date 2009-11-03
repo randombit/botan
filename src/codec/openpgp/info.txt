@@ -1,5 +1,3 @@
-realname "OpenPGP Codec"
-
 define OPENPGP_CODEC
 
 load_on auto

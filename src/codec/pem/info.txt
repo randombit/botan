@@ -1,5 +1,3 @@
-realname "PEM Codec"
-
 define PEM_CODEC
 
 load_on auto

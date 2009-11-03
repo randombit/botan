@@ -1,5 +1,3 @@
-realname "Algorithm Factory"
-
 load_on auto
 
 define ALGORITHM_FACTORY

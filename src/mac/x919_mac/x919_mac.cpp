@@ -63,7 +63,7 @@ void ANSI_X919_MAC::key_schedule(const byte key[], u32bit length)
 /*
 * Clear memory of sensitive data
 */
-void ANSI_X919_MAC::clear() throw()
+void ANSI_X919_MAC::clear()
    {
    e->clear();
    d->clear();

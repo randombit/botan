@@ -8,9 +8,8 @@
 #include <botan/cryptobox.h>
 #include <botan/filters.h>
 #include <botan/pipe.h>
-#include <botan/serpent.h>
+#include <botan/lookup.h>
 #include <botan/sha2_64.h>
-#include <botan/ctr.h>
 #include <botan/hmac.h>
 #include <botan/pbkdf2.h>
 #include <botan/pem.h>
@@ -59,7 +58,7 @@ std::string encrypt(const byte input[], u32bit input_len,
    InitializationVector iv(mk.begin() + CIPHER_KEY_LEN + MAC_KEY_LEN,
                            CIPHER_IV_LEN);
 
-   Pipe pipe(new CTR_BE(new Serpent, cipher_key, iv),
+   Pipe pipe(get_cipher("Serpent/CTR-BE", cipher_key, iv, ENCRYPTION),
              new Fork(
                 0,
                 new MAC_Filter(new HMAC(new SHA_512),
@@ -121,7 +120,7 @@ std::string decrypt(const byte input[], u32bit input_len,
                            CIPHER_IV_LEN);
 
    Pipe pipe(new Fork(
-                new CTR_BE(new Serpent, cipher_key, iv),
+                get_cipher("Serpent/CTR-BE", cipher_key, iv, ENCRYPTION),
                 new MAC_Filter(new HMAC(new SHA_512),
                                mac_key, MAC_OUTPUT_LEN)));
 

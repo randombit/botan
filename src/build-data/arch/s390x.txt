@@ -1,6 +1,7 @@
-realname "S/390 64-bit"
-
 default_submodel s390x
+
+endian big
+unaligned ok
 
 <submodels>
 s390x

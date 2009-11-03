@@ -27,7 +27,7 @@ class BOTAN_DLL EMSA
                                              RandomNumberGenerator& rng) = 0;
 
       virtual bool verify(const MemoryRegion<byte>&, const MemoryRegion<byte>&,
-                          u32bit) throw() = 0;
+                          u32bit) = 0;
       virtual ~EMSA() {}
    };
 

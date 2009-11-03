@@ -1,5 +1,3 @@
-realname "Darwin / MacOS X"
-
 os_type unix
 
 so_suffix dylib

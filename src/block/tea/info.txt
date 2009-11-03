@@ -1,10 +1,1 @@
-realname "TEA"
-
 define TEA
-
-load_on auto
-
-<add>
-tea.cpp
-tea.h
-</add>

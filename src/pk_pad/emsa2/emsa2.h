@@ -29,7 +29,7 @@ class BOTAN_DLL EMSA2 : public EMSA
                                      RandomNumberGenerator& rng);
 
       bool verify(const MemoryRegion<byte>&, const MemoryRegion<byte>&,
-                  u32bit) throw();
+                  u32bit);
 
       SecureVector<byte> empty_hash;
       HashFunction* hash;

@@ -1,5 +1,3 @@
-realname "Disk Based Allocation System"
-
 define ALLOC_MMAP
 modset unix
 

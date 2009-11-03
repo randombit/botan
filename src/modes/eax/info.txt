@@ -1,5 +1,3 @@
-realname "EAX block cipher mode"
-
 define EAX
 
 load_on auto

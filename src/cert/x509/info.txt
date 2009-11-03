@@ -1,5 +1,3 @@
-realname "X.509"
-
 define X509
 
 load_on auto

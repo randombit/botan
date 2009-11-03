@@ -1,5 +1,3 @@
-realname "CBC-MAC"
-
 define CBC_MAC
 
 load_on auto

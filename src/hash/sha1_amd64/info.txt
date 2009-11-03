@@ -1,14 +1,6 @@
-realname "SHA-1 (x86-64 assembler)"
-
 define SHA1_AMD64
 
 load_on asm_ok
-
-<add>
-sha1_amd64_imp.S
-sha1_amd64.cpp
-sha1_amd64.h
-</add>
 
 <arch>
 amd64

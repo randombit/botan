@@ -1,10 +1,1 @@
-realname "MD2"
-
 define MD2
-
-load_on auto
-
-<add>
-md2.cpp
-md2.h
-</add>

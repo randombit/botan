@@ -1,11 +1,1 @@
-realname "Square"
-
 define SQUARE
-
-load_on auto
-
-<add>
-sqr_tab.cpp
-square.cpp
-square.h
-</add>

@@ -1,5 +1,3 @@
-realname "Buffered Computation"
-
 load_on auto
 
 <add>

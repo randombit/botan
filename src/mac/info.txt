@@ -1,5 +1,3 @@
-realname "Message Authentication Codes"
-
 load_on auto
 
 <add>

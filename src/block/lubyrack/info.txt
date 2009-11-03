@@ -1,13 +1,4 @@
-realname "Luby-Rackoff"
-
 define LUBY_RACKOFF
-
-load_on auto
-
-<add>
-lubyrack.cpp
-lubyrack.h
-</add>
 
 <requires>
 hash

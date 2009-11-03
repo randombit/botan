@@ -18,13 +18,15 @@ namespace Botan {
 class BOTAN_DLL XTEA : public BlockCipher
    {
    public:
-      void clear() throw() { EK.clear(); }
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+
+      void clear() { EK.clear(); }
       std::string name() const { return "XTEA"; }
       BlockCipher* clone() const { return new XTEA; }
+
       XTEA() : BlockCipher(8, 16) {}
-   private:
-      void enc(const byte[], byte[]) const;
-      void dec(const byte[], byte[]) const;
+   protected:
       void key_schedule(const byte[], u32bit);
       SecureBuffer<u32bit, 64> EK;
    };

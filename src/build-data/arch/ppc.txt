@@ -1,6 +1,5 @@
-realname "PowerPC"
-
 endian big
+unaligned ok
 
 default_submodel ppc604
 

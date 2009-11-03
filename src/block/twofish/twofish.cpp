@@ -14,91 +14,103 @@ namespace Botan {
 /*
 * Twofish Encryption
 */
-void Twofish::enc(const byte in[], byte out[]) const
+void Twofish::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u32bit A = load_le<u32bit>(in, 0) ^ round_key[0];
-   u32bit B = load_le<u32bit>(in, 1) ^ round_key[1];
-   u32bit C = load_le<u32bit>(in, 2) ^ round_key[2];
-   u32bit D = load_le<u32bit>(in, 3) ^ round_key[3];
-
-   for(u32bit j = 0; j != 16; j += 2)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      u32bit X, Y;
+      u32bit A = load_le<u32bit>(in, 0) ^ round_key[0];
+      u32bit B = load_le<u32bit>(in, 1) ^ round_key[1];
+      u32bit C = load_le<u32bit>(in, 2) ^ round_key[2];
+      u32bit D = load_le<u32bit>(in, 3) ^ round_key[3];
 
-      X = SBox0[get_byte(3, A)] ^ SBox1[get_byte(2, A)] ^
-          SBox2[get_byte(1, A)] ^ SBox3[get_byte(0, A)];
-      Y = SBox0[get_byte(0, B)] ^ SBox1[get_byte(3, B)] ^
-          SBox2[get_byte(2, B)] ^ SBox3[get_byte(1, B)];
-      X += Y;
-      Y += X + round_key[2*j + 9];
-      X += round_key[2*j + 8];
+      for(u32bit j = 0; j != 16; j += 2)
+         {
+         u32bit X, Y;
 
-      C = rotate_right(C ^ X, 1);
-      D = rotate_left(D, 1) ^ Y;
+         X = SBox0[get_byte(3, A)] ^ SBox1[get_byte(2, A)] ^
+             SBox2[get_byte(1, A)] ^ SBox3[get_byte(0, A)];
+         Y = SBox0[get_byte(0, B)] ^ SBox1[get_byte(3, B)] ^
+             SBox2[get_byte(2, B)] ^ SBox3[get_byte(1, B)];
+         X += Y;
+         Y += X + round_key[2*j + 9];
+         X += round_key[2*j + 8];
 
-      X = SBox0[get_byte(3, C)] ^ SBox1[get_byte(2, C)] ^
-          SBox2[get_byte(1, C)] ^ SBox3[get_byte(0, C)];
-      Y = SBox0[get_byte(0, D)] ^ SBox1[get_byte(3, D)] ^
-          SBox2[get_byte(2, D)] ^ SBox3[get_byte(1, D)];
-      X += Y;
-      Y += X + round_key[2*j + 11];
-      X += round_key[2*j + 10];
+         C = rotate_right(C ^ X, 1);
+         D = rotate_left(D, 1) ^ Y;
 
-      A = rotate_right(A ^ X, 1);
-      B = rotate_left(B, 1) ^ Y;
+         X = SBox0[get_byte(3, C)] ^ SBox1[get_byte(2, C)] ^
+             SBox2[get_byte(1, C)] ^ SBox3[get_byte(0, C)];
+         Y = SBox0[get_byte(0, D)] ^ SBox1[get_byte(3, D)] ^
+             SBox2[get_byte(2, D)] ^ SBox3[get_byte(1, D)];
+         X += Y;
+         Y += X + round_key[2*j + 11];
+         X += round_key[2*j + 10];
+
+         A = rotate_right(A ^ X, 1);
+         B = rotate_left(B, 1) ^ Y;
+         }
+
+      C ^= round_key[4];
+      D ^= round_key[5];
+      A ^= round_key[6];
+      B ^= round_key[7];
+
+      store_le(out, C, D, A, B);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
-
-   C ^= round_key[4];
-   D ^= round_key[5];
-   A ^= round_key[6];
-   B ^= round_key[7];
-
-   store_le(out, C, D, A, B);
    }
 
 /*
 * Twofish Decryption
 */
-void Twofish::dec(const byte in[], byte out[]) const
+void Twofish::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u32bit A = load_le<u32bit>(in, 0) ^ round_key[4];
-   u32bit B = load_le<u32bit>(in, 1) ^ round_key[5];
-   u32bit C = load_le<u32bit>(in, 2) ^ round_key[6];
-   u32bit D = load_le<u32bit>(in, 3) ^ round_key[7];
-
-   for(u32bit j = 0; j != 16; j += 2)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      u32bit X, Y;
+      u32bit A = load_le<u32bit>(in, 0) ^ round_key[4];
+      u32bit B = load_le<u32bit>(in, 1) ^ round_key[5];
+      u32bit C = load_le<u32bit>(in, 2) ^ round_key[6];
+      u32bit D = load_le<u32bit>(in, 3) ^ round_key[7];
 
-      X = SBox0[get_byte(3, A)] ^ SBox1[get_byte(2, A)] ^
-          SBox2[get_byte(1, A)] ^ SBox3[get_byte(0, A)];
-      Y = SBox0[get_byte(0, B)] ^ SBox1[get_byte(3, B)] ^
-          SBox2[get_byte(2, B)] ^ SBox3[get_byte(1, B)];
-      X += Y;
-      Y += X + round_key[39 - 2*j];
-      X += round_key[38 - 2*j];
+      for(u32bit j = 0; j != 16; j += 2)
+         {
+         u32bit X, Y;
 
-      C = rotate_left(C, 1) ^ X;
-      D = rotate_right(D ^ Y, 1);
+         X = SBox0[get_byte(3, A)] ^ SBox1[get_byte(2, A)] ^
+             SBox2[get_byte(1, A)] ^ SBox3[get_byte(0, A)];
+         Y = SBox0[get_byte(0, B)] ^ SBox1[get_byte(3, B)] ^
+             SBox2[get_byte(2, B)] ^ SBox3[get_byte(1, B)];
+         X += Y;
+         Y += X + round_key[39 - 2*j];
+         X += round_key[38 - 2*j];
 
-      X = SBox0[get_byte(3, C)] ^ SBox1[get_byte(2, C)] ^
-          SBox2[get_byte(1, C)] ^ SBox3[get_byte(0, C)];
-      Y = SBox0[get_byte(0, D)] ^ SBox1[get_byte(3, D)] ^
-          SBox2[get_byte(2, D)] ^ SBox3[get_byte(1, D)];
-      X += Y;
-      Y += X + round_key[37 - 2*j];
-      X += round_key[36 - 2*j];
+         C = rotate_left(C, 1) ^ X;
+         D = rotate_right(D ^ Y, 1);
 
-      A = rotate_left(A, 1) ^ X;
-      B = rotate_right(B ^ Y, 1);
+         X = SBox0[get_byte(3, C)] ^ SBox1[get_byte(2, C)] ^
+             SBox2[get_byte(1, C)] ^ SBox3[get_byte(0, C)];
+         Y = SBox0[get_byte(0, D)] ^ SBox1[get_byte(3, D)] ^
+             SBox2[get_byte(2, D)] ^ SBox3[get_byte(1, D)];
+         X += Y;
+         Y += X + round_key[37 - 2*j];
+         X += round_key[36 - 2*j];
+
+         A = rotate_left(A, 1) ^ X;
+         B = rotate_right(B ^ Y, 1);
+         }
+
+      C ^= round_key[0];
+      D ^= round_key[1];
+      A ^= round_key[2];
+      B ^= round_key[3];
+
+      store_le(out, C, D, A, B);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
-
-   C ^= round_key[0];
-   D ^= round_key[1];
-   A ^= round_key[2];
-   B ^= round_key[3];
-
-   store_le(out, C, D, A, B);
    }
 
 /*
@@ -206,7 +218,7 @@ void Twofish::rs_mul(byte S[4], byte key, u32bit offset)
 /*
 * Clear memory of sensitive data
 */
-void Twofish::clear() throw()
+void Twofish::clear()
    {
    SBox0.clear();
    SBox1.clear();

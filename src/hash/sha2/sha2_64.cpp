@@ -55,13 +55,19 @@ void SHA_384_512_BASE::compress_n(const byte input[], u32bit blocks)
 
    for(u32bit i = 0; i != blocks; ++i)
       {
-      for(u32bit j = 0; j != 16; ++j)
-         W[j] = load_be<u64bit>(input, j);
-      input += HASH_BLOCK_SIZE;
+      load_be(W.begin(), input, 16);
 
-      for(u32bit j = 16; j != 80; ++j)
-         W[j] = sigma(W[j- 2], 19, 61,  6) + W[j- 7] +
-                sigma(W[j-15],  1,  8,  7) + W[j-16];
+      for(u32bit j = 16; j != 80; j += 8)
+         {
+         W[j  ] = sigma(W[j-2], 19, 61, 6) + W[j-7] + sigma(W[j-15], 1, 8, 7) + W[j-16];
+         W[j+1] = sigma(W[j-1], 19, 61, 6) + W[j-6] + sigma(W[j-14], 1, 8, 7) + W[j-15];
+         W[j+2] = sigma(W[j  ], 19, 61, 6) + W[j-5] + sigma(W[j-13], 1, 8, 7) + W[j-14];
+         W[j+3] = sigma(W[j+1], 19, 61, 6) + W[j-4] + sigma(W[j-12], 1, 8, 7) + W[j-13];
+         W[j+4] = sigma(W[j+2], 19, 61, 6) + W[j-3] + sigma(W[j-11], 1, 8, 7) + W[j-12];
+         W[j+5] = sigma(W[j+3], 19, 61, 6) + W[j-2] + sigma(W[j-10], 1, 8, 7) + W[j-11];
+         W[j+6] = sigma(W[j+4], 19, 61, 6) + W[j-1] + sigma(W[j- 9], 1, 8, 7) + W[j-10];
+         W[j+7] = sigma(W[j+5], 19, 61, 6) + W[j  ] + sigma(W[j- 8], 1, 8, 7) + W[j- 9];
+         }
 
       F1(A, B, C, D, E, F, G, H, W[ 0], 0x428A2F98D728AE22);
       F1(H, A, B, C, D, E, F, G, W[ 1], 0x7137449123EF65CD);
@@ -152,6 +158,8 @@ void SHA_384_512_BASE::compress_n(const byte input[], u32bit blocks)
       F = (digest[5] += F);
       G = (digest[6] += G);
       H = (digest[7] += H);
+
+      input += HASH_BLOCK_SIZE;
       }
    }
 
@@ -167,7 +175,7 @@ void SHA_384_512_BASE::copy_out(byte output[])
 /*
 * Clear memory of sensitive data
 */
-void SHA_384_512_BASE::clear() throw()
+void SHA_384_512_BASE::clear()
    {
    MDx_HashFunction::clear();
    W.clear();
@@ -176,7 +184,7 @@ void SHA_384_512_BASE::clear() throw()
 /*
 * Clear memory of sensitive data
 */
-void SHA_384::clear() throw()
+void SHA_384::clear()
    {
    SHA_384_512_BASE::clear();
    digest[0] = 0xCBBB9D5DC1059ED8;
@@ -192,7 +200,7 @@ void SHA_384::clear() throw()
 /*
 * Clear memory of sensitive data
 */
-void SHA_512::clear() throw()
+void SHA_512::clear()
    {
    SHA_384_512_BASE::clear();
    digest[0] = 0x6A09E667F3BCC908;

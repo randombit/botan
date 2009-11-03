@@ -1,5 +1,3 @@
-realname "DL Group"
-
 load_on auto
 
 define DL_GROUP

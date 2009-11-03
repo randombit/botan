@@ -1,5 +1,3 @@
-realname "ECC Domain Parameters"
-
 define ECC_DOMAIN_PARAMATERS
 
 load_on auto

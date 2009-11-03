@@ -1,5 +1,3 @@
-realname "Mutex Wrappers"
-
 define MUTEX_WRAPPERS
 
 load_on auto

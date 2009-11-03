@@ -13,37 +13,49 @@ namespace Botan {
 /*
 * TEA Encryption
 */
-void TEA::enc(const byte in[], byte out[]) const
+void TEA::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
-
-   u32bit S = 0;
-   for(u32bit j = 0; j != 32; ++j)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      S += 0x9E3779B9;
-      L += ((R << 4) + K[0]) ^ (R + S) ^ ((R >> 5) + K[1]);
-      R += ((L << 4) + K[2]) ^ (L + S) ^ ((L >> 5) + K[3]);
-      }
+      u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
 
-   store_be(out, L, R);
+      u32bit S = 0;
+      for(u32bit j = 0; j != 32; ++j)
+         {
+         S += 0x9E3779B9;
+         L += ((R << 4) + K[0]) ^ (R + S) ^ ((R >> 5) + K[1]);
+         R += ((L << 4) + K[2]) ^ (L + S) ^ ((L >> 5) + K[3]);
+         }
+
+      store_be(out, L, R);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*
 * TEA Decryption
 */
-void TEA::dec(const byte in[], byte out[]) const
+void TEA::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
-
-   u32bit S = 0xC6EF3720;
-   for(u32bit j = 0; j != 32; ++j)
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      R -= ((L << 4) + K[2]) ^ (L + S) ^ ((L >> 5) + K[3]);
-      L -= ((R << 4) + K[0]) ^ (R + S) ^ ((R >> 5) + K[1]);
-      S -= 0x9E3779B9;
-      }
+      u32bit L = load_be<u32bit>(in, 0), R = load_be<u32bit>(in, 1);
 
-   store_be(out, L, R);
+      u32bit S = 0xC6EF3720;
+      for(u32bit j = 0; j != 32; ++j)
+         {
+         R -= ((L << 4) + K[2]) ^ (L + S) ^ ((L >> 5) + K[3]);
+         L -= ((R << 4) + K[0]) ^ (R + S) ^ ((R >> 5) + K[1]);
+         S -= 0x9E3779B9;
+         }
+
+      store_be(out, L, R);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      }
    }
 
 /*

@@ -58,7 +58,7 @@ void HMAC::key_schedule(const byte key[], u32bit length)
 /*
 * Clear memory of sensitive data
 */
-void HMAC::clear() throw()
+void HMAC::clear()
    {
    hash->clear();
    i_key.clear();

@@ -1,5 +1,3 @@
-realname "ARC4"
-
 define ARC4
 
 load_on auto

@@ -1,12 +1,4 @@
-realname "Block Ciphers"
-
-load_on auto
-
 define BLOCK_CIPHER
-
-<add>
-block_cipher.h
-</add>
 
 <requires>
 sym_algo

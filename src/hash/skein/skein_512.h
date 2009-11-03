@@ -22,7 +22,7 @@ class BOTAN_DLL Skein_512 : public HashFunction
 
       HashFunction* clone() const;
       std::string name() const;
-      void clear() throw();
+      void clear();
    private:
       void add_data(const byte input[], u32bit length);
       void final_result(byte out[]);

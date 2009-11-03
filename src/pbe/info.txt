@@ -1,5 +1,3 @@
-realname "PBE Base"
-
 load_on dep
 
 define PASSWORD_BASED_ENCRYPTION

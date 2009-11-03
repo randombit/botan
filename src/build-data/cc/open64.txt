@@ -1,4 +1,4 @@
-realname "Open64"
+macro_name "OPEN64"
 
 binary_name "openCC"
 

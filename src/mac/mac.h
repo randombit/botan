@@ -43,7 +43,7 @@ class BOTAN_DLL MessageAuthenticationCode : public BufferedComputation,
       /**
       * Reset the internal state of this object.
       */
-      virtual void clear() throw() = 0;
+      virtual void clear() = 0;
 
       MessageAuthenticationCode(u32bit mac_len,
                                 u32bit key_min,

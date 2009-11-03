@@ -1,10 +1,8 @@
 /*
-* Arithmetic over GF(p)
+* Arithmetic for point groups of elliptic curves over GF(p)
 *
-* (C) 2007 Martin Doering
-*          Christoph Ludwig
-*          Falko Strenzke
-* (C) 2008 Jack Lloyd
+* (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
+*     2008 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */

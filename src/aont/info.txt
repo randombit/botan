@@ -1,0 +1,15 @@
+define PACKAGE_TRANSFORM
+
+load_on auto
+
+<add>
+package.cpp
+package.h
+</add>
+
+<requires>
+block
+ctr
+rng
+filters
+</requires>

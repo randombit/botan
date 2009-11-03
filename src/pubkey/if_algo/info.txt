@@ -1,5 +1,3 @@
-realname "Integer Factorization Algorithms"
-
 define IF_PUBLIC_KEY_FAMILY
 
 load_on dep

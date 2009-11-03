@@ -1,5 +1,3 @@
-realname "BeOS"
-
 os_type beos
 
 install_root /boot/beos

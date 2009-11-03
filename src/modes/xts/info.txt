@@ -1,5 +1,3 @@
-realname "XTS block cipher mode"
-
 define XTS
 
 load_on auto

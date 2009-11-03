@@ -1,5 +1,3 @@
-realname "Utility Functions"
-
 define UTIL_FUNCTIONS
 
 load_on always
@@ -7,27 +5,3 @@ load_on always
 <libs>
 tru64 -> rt
 </libs>
-
-<add>
-bit_ops.h
-bswap.h
-charset.cpp
-charset.h
-exceptn.cpp
-exceptn.h
-loadstor.h
-mem_ops.h
-mlock.cpp
-parsing.cpp
-parsing.h
-rotate.h
-stl_util.h
-types.h
-ui.cpp
-ui.h
-util.cpp
-util.h
-version.cpp
-version.h
-xor_buf.h
-</add>

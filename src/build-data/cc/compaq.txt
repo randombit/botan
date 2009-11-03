@@ -1,4 +1,4 @@
-realname "Compaq C++"
+macro_name "COMPAQ"
 
 binary_name "cxx"
 

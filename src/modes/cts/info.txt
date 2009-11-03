@@ -1,5 +1,3 @@
-realname "CTS block cipher mode"
-
 define CTS
 
 load_on auto

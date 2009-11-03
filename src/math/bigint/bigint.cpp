@@ -9,7 +9,7 @@
 #include <botan/mp_core.h>
 #include <botan/loadstor.h>
 #include <botan/parsing.h>
-#include <botan/util.h>
+#include <botan/rounding.h>
 
 namespace Botan {
 

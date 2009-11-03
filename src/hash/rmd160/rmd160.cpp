@@ -82,9 +82,7 @@ void RIPEMD_160::compress_n(const byte input[], u32bit blocks)
 
    for(u32bit i = 0; i != blocks; ++i)
       {
-      for(u32bit j = 0; j != 16; ++j)
-         M[j] = load_le<u32bit>(input, j);
-      input += HASH_BLOCK_SIZE;
+      load_le(M.begin(), input, M.size());
 
       u32bit A1 = digest[0], A2 = A1, B1 = digest[1], B2 = B1,
              C1 = digest[2], C2 = C1, D1 = digest[3], D2 = D1,
@@ -181,6 +179,8 @@ void RIPEMD_160::compress_n(const byte input[], u32bit blocks)
       digest[3] = digest[4] + A1 + B2;
       digest[4] = digest[0] + B1 + C2;
       digest[0] = C1;
+
+      input += HASH_BLOCK_SIZE;
       }
    }
 
@@ -196,7 +196,7 @@ void RIPEMD_160::copy_out(byte output[])
 /*
 * Clear memory of sensitive data
 */
-void RIPEMD_160::clear() throw()
+void RIPEMD_160::clear()
    {
    MDx_HashFunction::clear();
    M.clear();

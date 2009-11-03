@@ -1,4 +1,4 @@
-realname "SGI MIPSPro C++"
+macro_name "MIPSPRO"
 
 binary_name "CC"
 

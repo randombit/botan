@@ -29,7 +29,7 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
    public:
       void randomize(byte buf[], u32bit len);
       bool is_seeded() const { return seeded; }
-      void clear() throw();
+      void clear();
       std::string name() const;
 
       void reseed(u32bit poll_bits);

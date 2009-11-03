@@ -1,5 +1,3 @@
-realname "IA32 Assembler Engine"
-
 define ENGINE_IA32_ASSEMBLER
 
 load_on dep

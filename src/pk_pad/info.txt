@@ -1,5 +1,3 @@
-realname "Public Key EME/EMSA Padding Modes"
-
 define PK_PADDING
 
 load_on auto

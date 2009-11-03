@@ -10,27 +10,9 @@
 #include <botan/ber_dec.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
-#include <ctime>
+#include <botan/timer.h>
 
 namespace Botan {
-
-namespace {
-
-/*
-* Convert a time_t to a struct tm
-*/
-std::tm get_tm(u64bit timer)
-   {
-   std::time_t time_val = static_cast<std::time_t>(timer);
-
-   std::tm* tm_p = std::gmtime(&time_val);
-   if(tm_p == 0)
-      throw Encoding_Error("X509_Time: gmtime could not encode " +
-                           to_string(timer));
-   return (*tm_p);
-   }
-
-}
 
 /*
 * Create an X509_Time
@@ -45,7 +27,7 @@ X509_Time::X509_Time(const std::string& time_str)
 */
 X509_Time::X509_Time(u64bit timer)
    {
-   std::tm time_info = get_tm(timer);
+   std::tm time_info = time_t_to_tm(timer);
 
    year   = time_info.tm_year + 1900;
    month  = time_info.tm_mon + 1;

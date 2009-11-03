@@ -1,4 +1,34 @@
 
+* 1.9.2, 2009-11-03
+ - Add SIMD version of XTEA
+ - Support both SSE2 and AltiVec SIMD for Serpent and XTEA
+ - Optimizations for SHA-1 and SHA-2
+ - Add AltiVec runtime detection
+ - Fix x86 CPU identification with Intel C++ and Visual C++
+
+* 1.9.1, 2009-10-23
+ - Better support for Python and Perl wrappers
+ - Add an implementation of Blue Midnight Wish (Round 2 tweak version)
+ - Modify Skein-512 to match the tweaked 1.2 specification
+ - Add threshold secret sharing (draft-mcgrew-tss-02)
+ - Add runtime cpu feature detection for x86/x86-64
+ - Add code for general runtime self testing for hashes, MACs, and ciphers
+ - Optimize XTEA; twice as fast as before on Core2 and Opteron
+ - Convert CTR_BE and OFB from filters to stream ciphers
+ - New parsing code for SCAN algorithm names
+ - Enable SSE2 optimizations under Visual C++
+ - Remove all use of C++ exception specifications
+ - Add support for GNU/Hurd and Clang/LLVM
+
+* 1.9.0, 2009-09-09
+ - Add support for parallel invocation of block ciphers where possible
+ - Add SSE2 implementation of Serpent
+ - Add Rivest's package transform (an all or nothing transform)
+ - Minor speedups to the Turing key schedule
+ - Fix processing multiple messages in XTS mode
+ - Add --no-autoload option to configure.py, for minimized builds
+ - The previously used configure.pl script is no longer supported
+
 * 1.8.8, 2009-11-03
  - Alter Skein-512 to match the tweaked 1.2 specification
  - Fix use of inline asm for access to x86 bswap function
