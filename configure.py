@@ -463,6 +463,9 @@ class ArchInfo(object):
             logging.info('Assuming unaligned memory access works on this CPU')
         macros.append('TARGET_UNALIGNED_LOADSTOR_OK %d' % (unaligned_ok))
 
+        if self.basename == 'amd64':
+            macros.append('TARGET_CPU_HAS_SSE2')
+
         return macros
 
 class CompilerInfo(object):
