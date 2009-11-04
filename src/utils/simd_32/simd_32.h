@@ -10,8 +10,6 @@
 
 #include <botan/types.h>
 
-//#define BOTAN_TARGET_CPU_HAS_SSE2
-
 #if defined(BOTAN_TARGET_CPU_HAS_SSE2)
 
   #include <botan/simd_sse.h>

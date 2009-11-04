@@ -117,8 +117,13 @@ class SIMD_SSE2
 
       SIMD_SSE2 operator~() const
          {
-         static const __m128i all_ones = _mm_set1_epi32(0xFFFFFFFF);
-         return _mm_xor_si128(reg, all_ones);
+         return _mm_xor_si128(reg, _mm_set1_epi32(0xFFFFFFFF));
+         }
+
+      // (~reg) & other
+      SIMD_SSE2 andc(const SIMD_SSE2& other)
+         {
+         return _mm_andnot_si128(reg, other.reg);
          }
 
       SIMD_SSE2 bswap() const

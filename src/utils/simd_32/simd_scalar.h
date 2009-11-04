@@ -171,6 +171,15 @@ class SIMD_Scalar
          return SIMD_Scalar(~R0, ~R1, ~R2, ~R3);
          }
 
+      // (~reg) & other
+      SIMD_Scalar andc(const SIMD_Scalar& other)
+         {
+         return SIMD_Scalar(~R0 & other.R0,
+                            ~R1 & other.R1,
+                            ~R2 & other.R2,
+                            ~R3 & other.R3);
+         }
+
       SIMD_Scalar bswap() const
          {
          return SIMD_Scalar(reverse_bytes(R0),
