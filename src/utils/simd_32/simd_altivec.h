@@ -168,6 +168,12 @@ class SIMD_Altivec
          return vec_nor(reg, reg);
          }
 
+      SIMD_Altivec andc(const SIMD_Altivec& other)
+         {
+         // AltiVec does arg1 & ~arg2 rather than SSE's ~arg1 & arg2
+         return vec_andc(other.reg, reg);
+         }
+
       SIMD_Altivec bswap() const
          {
          __vector unsigned char perm = vec_lvsl(0, (u32bit*)0);

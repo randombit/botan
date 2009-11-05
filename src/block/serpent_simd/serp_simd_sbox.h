@@ -76,11 +76,10 @@
       B4 ^= B0;                                   \
       B1 ^= B3;                                   \
       B1 ^= B4;                                   \
-      B4 = ~B4;                                   \
       B0 = B2;                                    \
       B2 = B1;                                    \
       B1 = B3;                                    \
-      B3 = B4;                                    \
+      B3 = ~B4;                                   \
    } while(0);
 
 #define SBoxE4(B0, B1, B2, B3)                    \
@@ -165,7 +164,7 @@
 
 #define SBoxE7(B0, B1, B2, B3)                    \
    do {                                           \
-   B2 = ~B2;                                      \
+      B2 = ~B2;                                   \
       SIMD_32 B4 = B3;                            \
       B3 &= B0;                                   \
       B0 ^= B4;                                   \

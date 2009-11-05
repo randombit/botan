@@ -79,12 +79,8 @@ void GOST_34_11::compress_n(const byte input[], u32bit blocks)
       byte S[32] = { 0 };
 
       u64bit U[4], V[4];
-
-      for(u32bit j = 0; j != 4; ++j)
-         {
-         U[j] = load_be<u64bit>(hash, j);
-         V[j] = load_be<u64bit>(input + 32*i, j);
-         }
+      load_be(U, hash, 4);
+      load_be(V, input + 32*i, 4);
 
       for(u32bit j = 0; j != 4; ++j)
          {

@@ -103,10 +103,16 @@ ALIGN;
 
    subq $320, W
 
+/*
+* Using negative values for SHA-1 constants > 2^31 to work around
+* a bug in binutils not accepting large lea displacements.
+*   -0x70E44324 == 0x8F1BBCDC
+*   -0x359D3E2A == 0xCA62C1D6
+*/
 #define MAGIC1 0x5A827999
 #define MAGIC2 0x6ED9EBA1
-#define MAGIC3 0x8F1BBCDC
-#define MAGIC4 0xCA62C1D6
+#define MAGIC3 -0x70E44324
+#define MAGIC4 -0x359D3E2A
 
 #define T %esi
 #define T2 %eax
