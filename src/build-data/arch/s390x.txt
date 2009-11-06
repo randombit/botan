@@ -1,5 +1,3 @@
-default_submodel s390x
-
 endian big
 unaligned ok
 

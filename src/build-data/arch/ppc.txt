@@ -1,8 +1,6 @@
 endian big
 unaligned ok
 
-default_submodel ppc604
-
 <aliases>
 powerpc
 </aliases>

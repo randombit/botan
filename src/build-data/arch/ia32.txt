@@ -1,5 +1,3 @@
-default_submodel i386
-
 endian little
 unaligned ok
 

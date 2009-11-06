@@ -1,5 +1,3 @@
-default_submodel hppa1.0
-
 <aliases>
 hp-pa
 parisc

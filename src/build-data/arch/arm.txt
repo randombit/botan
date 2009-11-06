@@ -1,5 +1,3 @@
-default_submodel arm2
-
 <submodels>
 arm2
 arm3

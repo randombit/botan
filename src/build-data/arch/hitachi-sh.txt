@@ -1,5 +1,3 @@
-default_submodel hitachi-sh1
-
 <submodels>
 hitachi-sh1
 hitachi-sh2

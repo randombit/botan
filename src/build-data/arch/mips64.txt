@@ -1,5 +1,3 @@
-default_submodel r4400
-
 <submodels>
 r4000
 r4100

@@ -432,8 +432,7 @@ class ArchInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
                       ['aliases', 'submodels', 'submodel_aliases', 'isa_extn'],
-                      { 'default_submodel': None,
-                        'endian': None,
+                      { 'endian': None,
                         'unaligned': 'no'
                         })
 

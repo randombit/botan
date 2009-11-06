@@ -1,7 +1,5 @@
 endian big
 
-default_submodel power4
-
 <aliases>
 powerpc64
 </aliases>

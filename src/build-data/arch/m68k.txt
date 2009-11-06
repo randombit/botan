@@ -1,5 +1,3 @@
-default_submodel 68020
-
 endian big
 
 # Except for Coldfire

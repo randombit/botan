@@ -1,5 +1,3 @@
-default_submodel sparc64-ultra
-
 <submodels>
 sparc64-ultra
 sparc64-ultra2

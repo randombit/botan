@@ -1,5 +1,3 @@
-default_submodel k8
-
 endian little
 unaligned ok
 
