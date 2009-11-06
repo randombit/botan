@@ -58,7 +58,7 @@ intelcput2600 -> prescott
 intelcput2700 -> prescott
 </submodel_aliases>
 
-<simd>
+<isa_extn>
 sse2:pentium4,prescott,pentium-m,atom
 ssse3:atom
-</simd>
+</isa_extn>

@@ -22,6 +22,6 @@ ppc7400
 ppc7450
 </submodels>
 
-<simd>
+<isa_extn>
 altivec:ppc7400,ppc7450
-</simd>
+</isa_extn>

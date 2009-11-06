@@ -22,6 +22,6 @@ strongarm1110 -> strongarm1100
 armv5tel -> xscale
 </submodel_aliases>
 
-<simd>
+<isa_extn>
 neon:cortex-a8,cortex-a9
-</simd>
+</isa_extn>

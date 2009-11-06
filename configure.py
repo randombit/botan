@@ -143,10 +143,10 @@ def process_command_line(args):
                             dest='unaligned_mem', action='store_false',
                             help=SUPPRESS_HELP)
 
-    target_group.add_option('--with-simd',
-                            dest='simd_intrinsics',
+    target_group.add_option('--with-isa-extension', metavar='ISALIST',
+                            dest='with_isa_extns',
                             action='append', default=[],
-                            help='enable use of SIMD intrinsics (sse2, altivec, neon)')
+                            help='enable ISA extensions (sse2, altivec, ...)')
 
     build_group = OptionGroup(parser, 'Build options')
 
@@ -282,7 +282,7 @@ def process_command_line(args):
     options.enabled_modules = parse_multiple_enable(options.enabled_modules)
     options.disabled_modules = parse_multiple_enable(options.disabled_modules)
 
-    options.simd_intrinsics = parse_multiple_enable(options.simd_intrinsics)
+    options.with_isa_extns = parse_multiple_enable(options.with_isa_extns)
 
     return options
 
@@ -431,21 +431,21 @@ class ModuleInfo(object):
 class ArchInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
-                      ['aliases', 'submodels', 'submodel_aliases', 'simd'],
+                      ['aliases', 'submodels', 'submodel_aliases', 'isa_extn'],
                       { 'default_submodel': None,
                         'endian': None,
                         'unaligned': 'no'
                         })
 
-        def convert_simd(input):
-            simd_info = {}
-            for line in self.simd:
-                (simd,cpus) = line.split(':')
+        def convert_isa_list(input):
+            isa_info = {}
+            for line in self.isa_extn:
+                (isa,cpus) = line.split(':')
                 for cpu in cpus.split(','):
-                    simd_info.setdefault(cpu, []).append(simd)
-            return simd_info
+                    isa_info.setdefault(cpu, []).append(isa)
+            return isa_info
 
-        self.simd = convert_simd(self.simd)
+        self.isa_extn = convert_isa_list(self.isa_extn)
 
         self.submodel_aliases = force_to_dict(self.submodel_aliases)
 
@@ -455,10 +455,11 @@ class ArchInfo(object):
             self.unaligned_ok = 0
 
     """
-    Return the types of SIMD supported by this submodel (if any)
+    Return ISA extensions specific to this CPU
     """
-    def simd_in(self, cpu_type):
-        return sorted(self.simd.get(cpu_type, []) + self.simd.get('all', []))
+    def isa_extensions_in(self, cpu_type):
+        return sorted(self.isa_extn.get(cpu_type, []) +
+                      self.isa_extn.get('all', []))
 
     """
     Return a list of all submodels for this arch
@@ -481,10 +482,12 @@ class ArchInfo(object):
             macros.append('TARGET_CPU_IS_%s' % (form_cpu_macro(options.cpu)))
 
         isa_extensions = sorted(set(
-            sum([self.simd_in(options.cpu), options.simd_intrinsics], [])))
+            sum([self.isa_extensions_in(options.cpu),
+                 options.with_isa_extns],
+                [])))
 
         for simd in isa_extensions:
-            macros.append('TARGET_CPU_HAS_HAS_%s' % (simd.upper()))
+            macros.append('TARGET_CPU_HAS_%s' % (simd.upper()))
 
         endian = options.with_endian or self.endian
 
@@ -495,7 +498,7 @@ class ArchInfo(object):
         if unaligned_ok is None:
             unaligned_ok = self.unaligned_ok
             if unaligned_ok:
-                logging.info('Assuming unaligned memory access works on this CPU')
+                logging.info('Assuming unaligned memory access works')
 
         macros.append('TARGET_UNALIGNED_MEMORY_ACCESS_OK %d' % (unaligned_ok))
 
@@ -1092,8 +1095,8 @@ def setup_build(build_config, options, template_vars):
              os.path.join(build_config.build_dir, sink)
 
     if options.boost_python:
-        templates_to_proc[
-            os.path.join(options.makefile_dir, 'python.in')] = 'Makefile.python'
+        template = os.path.join(options.makefile_dir, 'python.in')
+        templates_to_proc[template] = 'Makefile.python'
 
     for (template, sink) in templates_to_proc.items():
         try:
