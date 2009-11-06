@@ -124,7 +124,7 @@ void AES_128_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 /**
 * AES Key Schedule
 */
-void AES_128_Intel::key_schedule(const byte key[], u32bit length)
+void AES_128_Intel::key_schedule(const byte key[], u32bit)
    {
 
 #define AES_128_key_exp_with_rcon(K, RCON) \
