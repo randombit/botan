@@ -37,9 +37,9 @@ class BuildConfigurationInformation(object):
     """
     version_major = 1
     version_minor = 9
-    version_patch = 2
-    version_so_patch = 2
-    version_suffix = ''
+    version_patch = 3
+    version_so_patch = 3
+    version_suffix = '-dev'
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
@@ -450,7 +450,7 @@ class ArchInfo(object):
     Return the types of SIMD supported by this submodel (if any)
     """
     def simd_in(self, cpu_type):
-        return self.simd.get(cpu_type, []) + self.simd.get('all', [])
+        return sorted(self.simd.get(cpu_type, []) + self.simd.get('all', []))
 
     """
     Return a list of all submodels for this arch
@@ -473,6 +473,9 @@ class ArchInfo(object):
             macros.append('TARGET_CPU_IS_%s' % (
                 form_cpu_macro(target_submodel)))
 
+        for simd in self.simd_in(target_submodel):
+            macros.append('TARGET_CPU_HAS_%s' % (simd.upper()))
+
         if with_endian:
             macros.append('TARGET_CPU_IS_%s_ENDIAN' % (with_endian.upper()))
         elif self.endian != None:
@@ -483,10 +486,7 @@ class ArchInfo(object):
 
         if unaligned_ok:
             logging.info('Assuming unaligned memory access works on this CPU')
-        macros.append('TARGET_UNALIGNED_LOADSTOR_OK %d' % (unaligned_ok))
-
-        for simd in self.simd_in(target_submodel):
-            macros.append('TARGET_CPU_HAS_%s' % (simd.upper()))
+        macros.append('TARGET_UNALIGNED_MEMORY_ACCESS_OK %d' % (unaligned_ok))
 
         return macros
 

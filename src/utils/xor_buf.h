@@ -22,7 +22,7 @@ inline void xor_buf(byte out[], const byte in[], u32bit length)
    {
    while(length >= 8)
       {
-#if BOTAN_UNALIGNED_LOADSTOR_OK
+#if BOTAN_UNALIGNED_MEMORY_ACCESS_OK
       *reinterpret_cast<u64bit*>(out) ^= *reinterpret_cast<const u64bit*>(in);
 #else
       out[0] ^= in[0]; out[1] ^= in[1];
@@ -51,7 +51,7 @@ inline void xor_buf(byte out[],
    {
    while(length >= 8)
       {
-#if BOTAN_UNALIGNED_LOADSTOR_OK
+#if BOTAN_UNALIGNED_MEMORY_ACCESS_OK
       *reinterpret_cast<u64bit*>(out) =
          *reinterpret_cast<const u64bit*>(in) ^
          *reinterpret_cast<const u64bit*>(in2);
