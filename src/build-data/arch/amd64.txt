@@ -29,6 +29,6 @@ barcelona -> k10
 
 <isa_extn>
 sse2:all
-ssse3:core2
+ssse3:core2,nehalem,westmere
 aes_ni:westmere
 </isa_extn>

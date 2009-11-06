@@ -12,10 +12,12 @@ gcc
 </cc>
 
 <arch>
+
 # RDTSC: Pentium and up
 i586
 i686
 athlon
+pentium3
 pentium4
 pentium-m
 amd64

@@ -369,6 +369,7 @@ class ModuleInfo(object):
                         'define': None,
                         'modset': None,
                         'uses_tr1': 'false',
+                        'need_isa': None,
                         'note': '',
                         'mp_bits': 0 })
 
@@ -403,8 +404,20 @@ class ModuleInfo(object):
         else:
             self.uses_tr1 = False
 
-    def compatible_cpu(self, arch, cpu):
-        return self.arch == [] or (arch in self.arch or cpu in self.arch)
+    def compatible_cpu(self, archinfo, cpu_name):
+
+        arch_name = archinfo.basename
+
+        if self.arch != []:
+            if arch_name not in self.arch and cpu_name not in self.arch:
+                return False
+
+        if self.need_isa != None:
+            cpu_isa = archinfo.isa_extensions_in(cpu_name)
+            if self.need_isa not in cpu_isa:
+                return False
+
+        return True
 
     def compatible_os(self, os):
         return self.os == [] or os in self.os
@@ -887,7 +900,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 """
 Determine which modules to load based on options, target, etc
 """
-def choose_modules_to_use(options, modules):
+def choose_modules_to_use(modules, archinfo, options):
 
     to_load = []
     maybe_dep = []
@@ -902,7 +915,7 @@ def choose_modules_to_use(options, modules):
         elif modname in options.enabled_modules:
             to_load.append(modname) # trust the user
 
-        elif not module.compatible_cpu(options.arch, options.cpu):
+        elif not module.compatible_cpu(archinfo, options.cpu):
             cannot_use_because(modname, 'CPU incompatible')
         elif not module.compatible_os(options.os):
             cannot_use_because(modname, 'OS incompatible')
@@ -1212,7 +1225,9 @@ def main(argv = None):
         else:
             options.with_tr1 = 'none'
 
-    modules_to_use = choose_modules_to_use(options, modules)
+    modules_to_use = choose_modules_to_use(modules,
+                                           archinfo[options.arch],
+                                           options)
 
     build_config = BuildConfigurationInformation(options, modules_to_use)
     build_config.headers.append(

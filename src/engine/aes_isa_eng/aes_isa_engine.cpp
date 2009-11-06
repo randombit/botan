@@ -27,12 +27,12 @@ AES_ISA_Engine::find_block_cipher(const SCAN_Name& request,
       {
       if(request.algo_name() == "AES-128")
          return new AES_128_Intel;
-#if 0
+      /*
       if(request.algo_name() == "AES-192")
          return new AES_192_Intel;
       if(request.algo_name() == "AES-256")
          return new AES_256_Intel;
-#endif
+      */
       }
 #endif
 
@@ -40,11 +40,11 @@ AES_ISA_Engine::find_block_cipher(const SCAN_Name& request,
    if(CPUID::has_via_aes())
       {
       if(request.algo_name() == "AES-128")
-         return new AES_128_Via;
+         return new AES_128_VIA;
       if(request.algo_name() == "AES-192")
-         return new AES_192_Via;
+         return new AES_192_VIA;
       if(request.algo_name() == "AES-256")
-         return new AES_256_Via;
+         return new AES_256_VIA;
       }
 #endif
 
