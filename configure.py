@@ -78,7 +78,8 @@ class BuildConfigurationInformation(object):
              if file.endswith('.cpp')])
 
         self.python_sources = sorted(
-            [os.path.join(self.python_dir, file) for file in os.listdir(self.python_dir)
+            [os.path.join(self.python_dir, file)
+             for file in os.listdir(self.python_dir)
              if file.endswith('.cpp')])
 
     def doc_files(self):
@@ -141,6 +142,11 @@ def process_command_line(args):
     target_group.add_option('--without-unaligned-mem',
                             dest='unaligned_mem', action='store_false',
                             help=SUPPRESS_HELP)
+
+    target_group.add_option('--with-simd',
+                            dest='simd_intrinsics',
+                            action='append', default=[],
+                            help='enable use of SIMD intrinsics (sse2, altivec, neon)')
 
     build_group = OptionGroup(parser, 'Build options')
 
@@ -270,11 +276,13 @@ def process_command_line(args):
         raise Exception('Bad value to --with-endian "%s"' % (
             options.with_endian))
 
-    def parse_module_opts(modules):
+    def parse_multiple_enable(modules):
         return sorted(set(sum([s.split(',') for s in modules], [])))
 
-    options.enabled_modules = parse_module_opts(options.enabled_modules)
-    options.disabled_modules = parse_module_opts(options.disabled_modules)
+    options.enabled_modules = parse_multiple_enable(options.enabled_modules)
+    options.disabled_modules = parse_multiple_enable(options.disabled_modules)
+
+    options.simd_intrinsics = parse_multiple_enable(options.simd_intrinsics)
 
     return options
 
@@ -463,29 +471,32 @@ class ArchInfo(object):
     """
     Return CPU-specific defines for build.h
     """
-    def defines(self, target_submodel, with_endian, unaligned_ok):
+    def defines(self, options):
         macros = ['TARGET_ARCH_IS_%s' % (self.basename.upper())]
 
         def form_cpu_macro(cpu_name):
             return cpu_name.upper().replace('.', '').replace('-', '_')
 
-        if self.basename != target_submodel:
-            macros.append('TARGET_CPU_IS_%s' % (
-                form_cpu_macro(target_submodel)))
+        if self.basename != options.cpu:
+            macros.append('TARGET_CPU_IS_%s' % (form_cpu_macro(options.cpu)))
 
-        for simd in self.simd_in(target_submodel):
-            macros.append('TARGET_CPU_HAS_%s' % (simd.upper()))
+        isa_extensions = sorted(set(
+            sum([self.simd_in(options.cpu), options.simd_intrinsics], [])))
 
-        if with_endian:
-            macros.append('TARGET_CPU_IS_%s_ENDIAN' % (with_endian.upper()))
-        elif self.endian != None:
-            macros.append('TARGET_CPU_IS_%s_ENDIAN' % (self.endian.upper()))
+        for simd in isa_extensions:
+            macros.append('TARGET_CPU_HAS_HAS_%s' % (simd.upper()))
 
+        endian = options.with_endian or self.endian
+
+        if endian != None:
+            macros.append('TARGET_CPU_IS_%s_ENDIAN' % (endian.upper()))
+
+        unaligned_ok = options.unaligned_mem
         if unaligned_ok is None:
             unaligned_ok = self.unaligned_ok
+            if unaligned_ok:
+                logging.info('Assuming unaligned memory access works on this CPU')
 
-        if unaligned_ok:
-            logging.info('Assuming unaligned memory access works on this CPU')
         macros.append('TARGET_UNALIGNED_MEMORY_ACCESS_OK %d' % (unaligned_ok))
 
         return macros
@@ -819,9 +830,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'target_compiler_defines': make_cpp_macros(
             cc.defines(options.with_tr1)),
 
-        'target_cpu_defines': make_cpp_macros(
-            arch.defines(options.cpu, options.with_endian,
-                         options.unaligned_mem)),
+        'target_cpu_defines': make_cpp_macros(arch.defines(options)),
 
         'include_files': makefile_list(build_config.headers),
 
