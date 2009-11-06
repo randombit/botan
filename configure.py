@@ -404,9 +404,10 @@ class ModuleInfo(object):
         else:
             self.uses_tr1 = False
 
-    def compatible_cpu(self, archinfo, cpu_name):
+    def compatible_cpu(self, archinfo, options):
 
         arch_name = archinfo.basename
+        cpu_name = options.cpu
 
         if self.arch != []:
             if arch_name not in self.arch and cpu_name not in self.arch:
@@ -415,7 +416,7 @@ class ModuleInfo(object):
         if self.need_isa != None:
             cpu_isa = archinfo.isa_extensions_in(cpu_name)
             if self.need_isa not in cpu_isa:
-                return False
+                return self.need_isa in options.with_isa_extns
 
         return True
 
@@ -915,7 +916,7 @@ def choose_modules_to_use(modules, archinfo, options):
         elif modname in options.enabled_modules:
             to_load.append(modname) # trust the user
 
-        elif not module.compatible_cpu(archinfo, options.cpu):
+        elif not module.compatible_cpu(archinfo, options):
             cannot_use_because(modname, 'CPU incompatible')
         elif not module.compatible_os(options.os):
             cannot_use_because(modname, 'OS incompatible')
