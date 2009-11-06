@@ -52,6 +52,9 @@ sparc64-ultra3 -> "-mcpu=v9 -mtune=ultrasparc3"
 em64t          -> "-march=nocona -momit-leaf-frame-pointer"
 cellppu        -> ""
 
+nehalem        -> "-march=core2 -msse4.1 -msse4.2"
+westmere       -> "-march=core2 -maes -msse4.1 -msse4.2"
+
 # Default family options (SUBMODEL is substitued with the real submodel)
 # Anything after the quotes is what should be *removed* from the submodel name
 # before it's put into SUBMODEL.
