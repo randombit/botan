@@ -25,28 +25,26 @@ AES_ISA_Engine::find_block_cipher(const SCAN_Name& request,
 #if defined(BOTAN_HAS_AES_INTEL)
    if(CPUID::has_intel_aes())
       {
-      if(request.algo_name() == "AES")
-         return new AES_Intel;
       if(request.algo_name() == "AES-128")
-         return new AES_Intel_128;
+         return new AES_128_Intel;
+#if 0
       if(request.algo_name() == "AES-192")
-         return new AES_Intel_192;
+         return new AES_192_Intel;
       if(request.algo_name() == "AES-256")
-         return new AES_Intel_256;
+         return new AES_256_Intel;
+#endif
       }
 #endif
 
 #if defined(BOTAN_HAS_AES_VIA)
    if(CPUID::has_via_aes())
       {
-      if(request.algo_name() == "AES")
-         return new AES_Via;
       if(request.algo_name() == "AES-128")
-         return new AES_Via_128;
+         return new AES_128_Via;
       if(request.algo_name() == "AES-192")
-         return new AES_Via_192;
+         return new AES_192_Via;
       if(request.algo_name() == "AES-256")
-         return new AES_Via_256;
+         return new AES_256_Via;
       }
 #endif
 

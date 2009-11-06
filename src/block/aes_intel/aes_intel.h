@@ -12,61 +12,21 @@
 
 namespace Botan {
 
-class BOTAN_DLL AES_Intel : public BlockCipher
+class BOTAN_DLL AES_128_Intel : public BlockCipher
    {
    public:
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
       void clear();
-      std::string name() const { return "AES"; }
-      BlockCipher* clone() const { return new AES_Intel; }
+      std::string name() const { return "AES-128"; }
+      BlockCipher* clone() const { return new AES_128_Intel; }
 
-      AES_Intel() : BlockCipher(16, 16, 32, 8) { ROUNDS = 14; }
-      AES_Intel(u32bit);
+      AES_128_Intel() : BlockCipher(16, 16) { }
    private:
       void key_schedule(const byte[], u32bit);
 
-      u32bit ROUNDS;
-
-      SecureBuffer<u32bit, 56> EK;
-      SecureBuffer<byte, 16> ME;
-
-      SecureBuffer<u32bit, 56> DK;
-      SecureBuffer<byte, 16> MD;
-   };
-
-/**
-* AES-128
-*/
-class BOTAN_DLL AES_Intel_128 : public AES_Intel
-   {
-   public:
-      std::string name() const { return "AES-128"; }
-      BlockCipher* clone() const { return new AES_Intel_128; }
-      AES_Intel_128() : AES_Intel(16) {}
-   };
-
-/**
-* AES-192
-*/
-class BOTAN_DLL AES_Intel_192 : public AES_Intel
-   {
-   public:
-      std::string name() const { return "AES-192"; }
-      BlockCipher* clone() const { return new AES_Intel_192; }
-      AES_Intel_192() : AES_Intel(24) {}
-   };
-
-/**
-* AES-256
-*/
-class BOTAN_DLL AES_Intel_256 : public AES_Intel
-   {
-   public:
-      std::string name() const { return "AES-256"; }
-      BlockCipher* clone() const { return new AES_Intel_256; }
-      AES_Intel_256() : AES_Intel(32) {}
+      SecureBuffer<u32bit, 44> EK, DK;
    };
 
 }
