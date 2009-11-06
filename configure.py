@@ -423,11 +423,21 @@ class ModuleInfo(object):
 class ArchInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
-                      ['aliases', 'submodels', 'submodel_aliases'],
+                      ['aliases', 'submodels', 'submodel_aliases', 'simd'],
                       { 'default_submodel': None,
                         'endian': None,
                         'unaligned': 'no'
                         })
+
+        def convert_simd(input):
+            simd_info = {}
+            for line in self.simd:
+                (simd,cpus) = line.split(':')
+                for cpu in cpus.split(','):
+                    simd_info.setdefault(cpu, []).append(simd)
+            return simd_info
+
+        self.simd = convert_simd(self.simd)
 
         self.submodel_aliases = force_to_dict(self.submodel_aliases)
 
@@ -436,11 +446,23 @@ class ArchInfo(object):
         else:
             self.unaligned_ok = 0
 
+    """
+    Return the types of SIMD supported by this submodel (if any)
+    """
+    def simd_in(self, cpu_type):
+        return self.simd.get(cpu_type, []) + self.simd.get('all', [])
+
+    """
+    Return a list of all submodels for this arch
+    """
     def all_submodels(self):
         return sorted(zip(self.submodels, self.submodels) +
                           self.submodel_aliases.items(),
                       key = lambda k: len(k[0]), reverse = True)
 
+    """
+    Return CPU-specific defines for build.h
+    """
     def defines(self, target_submodel, with_endian, unaligned_ok):
         macros = ['TARGET_ARCH_IS_%s' % (self.basename.upper())]
 
@@ -463,8 +485,8 @@ class ArchInfo(object):
             logging.info('Assuming unaligned memory access works on this CPU')
         macros.append('TARGET_UNALIGNED_LOADSTOR_OK %d' % (unaligned_ok))
 
-        if self.basename == 'amd64':
-            macros.append('TARGET_CPU_HAS_SSE2')
+        for simd in self.simd_in(target_submodel):
+            macros.append('TARGET_CPU_HAS_%s' % (simd.upper()))
 
         return macros
 
@@ -514,7 +536,9 @@ class CompilerInfo(object):
 
         del self.mach_opt
 
-
+    """
+    Return the machine specific ABI flags
+    """
     def mach_abi_link_flags(self, osname, arch, submodel):
 
         abi_link = set()
@@ -526,6 +550,9 @@ class CompilerInfo(object):
             return ''
         return ' ' + ' '.join(abi_link)
 
+    """
+    Return the flags for MACH_OPT
+    """
     def mach_opts(self, arch, submodel):
 
         def submodel_fixup(tup):
@@ -541,6 +568,9 @@ class CompilerInfo(object):
 
         return ''
 
+    """
+    Return the flags for LIB_OPT
+    """
     def library_opt_flags(self, debug_build):
         flags = self.lib_opt_flags
         if debug_build and self.debug_flags != '':
@@ -549,11 +579,17 @@ class CompilerInfo(object):
             flags += ' ' + self.no_debug_flags
         return flags
 
+    """
+    Return the command needed to link a shared object
+    """
     def so_link_command_for(self, osname):
         if osname in self.so_link_flags:
             return self.so_link_flags[osname]
         return self.so_link_flags['default']
 
+    """
+    Return defines for build.h
+    """
     def defines(self, with_tr1):
 
         def tr1_macro():
@@ -1123,9 +1159,10 @@ def main(argv = None):
         logging.info('Guessing target processor is a %s/%s' % (
             options.arch, options.cpu))
     else:
+        cpu_from_user = options.cpu
         (options.arch, options.cpu) = canon_processor(archinfo, options.cpu)
-        logging.debug('Canonicalizized --cpu to %s/%s' % (
-            options.arch, options.cpu))
+        logging.info('Canonicalizized --cpu=%s to %s/%s' % (
+            cpu_from_user, options.arch, options.cpu))
 
     logging.info('Target is %s-%s-%s-%s' % (
         options.compiler, options.os, options.arch, options.cpu))

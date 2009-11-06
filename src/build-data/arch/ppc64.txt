@@ -16,9 +16,15 @@ ppc970
 power3
 power4
 power5
+power6
+power7
 cellppu
 </submodels>
 
 <submodel_aliases>
 cellbroadbandengine -> cellppu
 </submodel_aliases>
+
+<simd>
+altivec:cellppu,ppc970,power6,power7
+</simd>

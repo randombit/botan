@@ -21,3 +21,7 @@ ppc750
 ppc7400
 ppc7450
 </submodels>
+
+<simd>
+altivec:ppc7400,ppc7450
+</simd>

@@ -22,6 +22,7 @@ pentium-m
 prescott
 k6
 athlon
+atom
 </submodels>
 
 <submodel_aliases>
@@ -56,3 +57,8 @@ intelcput2500 -> prescott
 intelcput2600 -> prescott
 intelcput2700 -> prescott
 </submodel_aliases>
+
+<simd>
+sse2:pentium4,prescott,pentium-m,atom
+ssse3:atom
+</simd>

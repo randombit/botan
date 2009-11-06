@@ -23,3 +23,8 @@ amdopteron -> opteron
 athlon64 -> opteron
 k8 -> opteron
 </submodel_aliases>
+
+<simd>
+sse2:all
+ssse3:core2
+</simd>
