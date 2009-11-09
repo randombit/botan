@@ -34,7 +34,7 @@ X509_Certificate make_ca_cert(RandomNumberGenerator& rng,
    opts.end = later;
    opts.CA_key();
 
-   return X509::create_self_signed_cert(opts, priv_key, rng);
+   return X509::create_self_signed_cert(opts, priv_key, "SHA-256", rng);
    }
 
 PKCS10_Request make_server_cert_req(const Private_Key& key,
@@ -47,7 +47,7 @@ PKCS10_Request make_server_cert_req(const Private_Key& key,
 
    opts.add_ex_constraint("PKIX.ServerAuth");
 
-   return X509::create_cert_req(opts, key, rng);
+   return X509::create_cert_req(opts, key, "SHA-1", rng);
    }
 
 void save_pair(const std::string& name,
@@ -92,7 +92,7 @@ int main()
 
    save_pair("ca", ca_password, ca_cert, ca_key, rng);
 
-   X509_CA ca(ca_cert, ca_key);
+   X509_CA ca(ca_cert, ca_key, "SHA-256");
 
    RSA_PrivateKey httpd_key(rng, 1536);
    X509_Certificate httpd_cert = ca.sign_request(

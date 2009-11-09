@@ -9,9 +9,10 @@
 #include <botan/x509stor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/look_pk.h>
 #include <botan/bigint.h>
 #include <botan/parsing.h>
+#include <botan/lookup.h>
+#include <botan/look_pk.h>
 #include <botan/oids.h>
 #include <botan/timer.h>
 #include <algorithm>
@@ -20,22 +21,33 @@
 #include <memory>
 #include <set>
 
+#include <stdio.h>
+
 namespace Botan {
 
 /*
 * Load the certificate and private key
 */
 X509_CA::X509_CA(const X509_Certificate& c,
-                 const Private_Key& key) : cert(c)
+                 const Private_Key& key,
+                 const std::string& hash_fn) : cert(c)
    {
-   const Private_Key* key_pointer = &key;
-   if(!dynamic_cast<const PK_Signing_Key*>(key_pointer))
+   // Use pointer dynamic_cast to avoid exception if cast fails
+   if(!dynamic_cast<const PK_Signing_Key*>(&key))
       throw Invalid_Argument("X509_CA: " + key.algo_name() + " cannot sign");
 
    if(!cert.is_CA_cert())
       throw Invalid_Argument("X509_CA: This certificate is not for a CA");
 
-   signer = choose_sig_format(key, ca_sig_algo);
+   signer = choose_sig_format(key, hash_fn, ca_sig_algo);
+   }
+
+/*
+* X509_CA Destructor
+*/
+X509_CA::~X509_CA()
+   {
+   delete signer;
    }
 
 /*
@@ -70,7 +82,8 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
    extensions.add(
       new Cert_Extension::Subject_Alternative_Name(req.subject_alt_name()));
 
-   return make_cert(signer, rng, ca_sig_algo, req.raw_public_key(),
+   return make_cert(signer, rng, ca_sig_algo,
+                    req.raw_public_key(),
                     not_before, not_after,
                     cert.subject_dn(), req.subject_dn(),
                     extensions);
@@ -231,17 +244,10 @@ X509_Certificate X509_CA::ca_certificate() const
    }
 
 /*
-* X509_CA Destructor
-*/
-X509_CA::~X509_CA()
-   {
-   delete signer;
-   }
-
-/*
 * Choose a signing format for the key
 */
 PK_Signer* choose_sig_format(const Private_Key& key,
+                             const std::string& hash_fn,
                              AlgorithmIdentifier& sig_algo)
    {
    std::string padding;
@@ -249,23 +255,35 @@ PK_Signer* choose_sig_format(const Private_Key& key,
 
    const std::string algo_name = key.algo_name();
 
+   const HashFunction* proto_hash = retrieve_hash(hash_fn);
+   if(!proto_hash)
+      throw Algorithm_Not_Found(hash_fn);
+
+   if(key.max_input_bits() < proto_hash->OUTPUT_LENGTH*8)
+      {
+      printf("%d %d\n", key.max_input_bits(), proto_hash->OUTPUT_LENGTH*8);
+      throw Invalid_Argument("Key is too small for chosen hash function");
+      }
+
    if(algo_name == "RSA")
       {
-      padding = "EMSA3(SHA-160)";
+      padding = "EMSA3";
       format = IEEE_1363;
       }
    else if(algo_name == "DSA")
       {
-      padding = "EMSA1(SHA-160)";
+      padding = "EMSA1";
       format = DER_SEQUENCE;
       }
    else if(algo_name == "ECDSA")
       {
-      padding = "EMSA1_BSI(SHA-160)";
+      padding = "EMSA1_BSI";
       format = IEEE_1363;
       }
    else
       throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);
+
+   padding = padding + '(' + proto_hash->name() + ')';
 
    sig_algo.oid = OIDS::lookup(algo_name + "/" + padding);
 

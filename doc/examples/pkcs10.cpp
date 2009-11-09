@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
 
       opts.xmpp = "someid@xmpp.org";
 
-      PKCS10_Request req = X509::create_cert_req(opts, priv_key, rng);
+      PKCS10_Request req = X509::create_cert_req(opts, priv_key, "SHA-1", rng);
 
       std::ofstream req_file("req.pem");
       req_file << req.PEM_encode();

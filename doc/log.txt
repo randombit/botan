@@ -1,5 +1,6 @@
 
 * 1.9.3-dev, ????-??-??
+ - Allow use of any hash function in X.509 certificate creation
  - Set macros for available SIMD instructions in build.h
 
 * 1.9.2, 2009-11-03
