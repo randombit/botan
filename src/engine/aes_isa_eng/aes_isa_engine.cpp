@@ -23,7 +23,7 @@ AES_ISA_Engine::find_block_cipher(const SCAN_Name& request,
                                   Algorithm_Factory&) const
    {
 #if defined(BOTAN_HAS_AES_INTEL)
-   if(CPUID::has_intel_aes())
+   if(CPUID::has_aes_intel())
       {
       if(request.algo_name() == "AES-128")
          return new AES_128_Intel;
@@ -37,7 +37,7 @@ AES_ISA_Engine::find_block_cipher(const SCAN_Name& request,
 #endif
 
 #if defined(BOTAN_HAS_AES_VIA)
-   if(CPUID::has_via_aes())
+   if(CPUID::has_aes_via())
       {
       if(request.algo_name() == "AES-128")
          return new AES_128_VIA;
