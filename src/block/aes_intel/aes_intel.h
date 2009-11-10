@@ -49,7 +49,7 @@ class BOTAN_DLL AES_192_Intel : public BlockCipher
    private:
       void key_schedule(const byte[], u32bit);
 
-      SecureBuffer<u32bit, 56> EK, DK;
+      SecureBuffer<u32bit, 52> EK, DK;
    };
 
 /**
