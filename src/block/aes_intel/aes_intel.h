@@ -1,6 +1,6 @@
 /**
-* AES using Intel's AES instructions
-* (C) 1999-2009 Jack Lloyd
+* AES using Intel's AES-NI instructions
+* (C) 2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */

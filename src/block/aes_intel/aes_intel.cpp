@@ -1,6 +1,6 @@
 /**
-* AES
-* (C) 1999-2009 Jack Lloyd
+* AES using Intel's AES-NI instructions
+* (C) 2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -24,7 +24,7 @@ __m128i aes_128_key_expansion(__m128i key, __m128i key_with_rcon)
 }
 
 /**
-* AES Encryption
+* AES-128 Encryption
 */
 void AES_128_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
@@ -70,7 +70,7 @@ void AES_128_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    }
 
 /**
-* AES Decryption
+* AES-128 Decryption
 */
 void AES_128_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
@@ -116,7 +116,7 @@ void AES_128_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    }
 
 /**
-* AES Key Schedule
+* AES-128 Key Schedule
 */
 void AES_128_Intel::key_schedule(const byte key[], u32bit length)
    {
