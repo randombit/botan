@@ -30,9 +30,9 @@ AES_ISA_Engine::find_block_cipher(const SCAN_Name& request,
       /*
       if(request.algo_name() == "AES-192")
          return new AES_192_Intel;
+      */
       if(request.algo_name() == "AES-256")
          return new AES_256_Intel;
-      */
       }
 #endif
 
