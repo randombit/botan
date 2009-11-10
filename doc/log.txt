@@ -1,8 +1,8 @@
 
 * 1.9.3-dev, ????-??-??
+ - Add new AES implementation using Intel's AES instruction intrinsics
  - Allow use of any hash function in X.509 certificate creation
  - Set macros for available SIMD instructions in build.h
- - Add AES-128 and AES-256 using Intel AES instruction intrinsics
 
 * 1.9.2, 2009-11-03
  - Add SIMD version of XTEA

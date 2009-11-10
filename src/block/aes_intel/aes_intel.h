@@ -12,6 +12,9 @@
 
 namespace Botan {
 
+/**
+* AES-128 using AES-NI
+*/
 class BOTAN_DLL AES_128_Intel : public BlockCipher
    {
    public:
@@ -29,6 +32,29 @@ class BOTAN_DLL AES_128_Intel : public BlockCipher
       SecureBuffer<u32bit, 44> EK, DK;
    };
 
+/**
+* AES-192 using AES-NI
+*/
+class BOTAN_DLL AES_192_Intel : public BlockCipher
+   {
+   public:
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+
+      void clear();
+      std::string name() const { return "AES-192"; }
+      BlockCipher* clone() const { return new AES_192_Intel; }
+
+      AES_192_Intel() : BlockCipher(16, 24) { }
+   private:
+      void key_schedule(const byte[], u32bit);
+
+      SecureBuffer<u32bit, 56> EK, DK;
+   };
+
+/**
+* AES-256 using AES-NI
+*/
 class BOTAN_DLL AES_256_Intel : public BlockCipher
    {
    public:
