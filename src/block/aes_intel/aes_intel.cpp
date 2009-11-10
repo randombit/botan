@@ -34,6 +34,42 @@ __m128i aes_256_key_expansion(__m128i key, __m128i key2)
 
 }
 
+#define AES_ENC_4_ROUNDS(K)                     \
+   do                                           \
+      {                                         \
+      B0 = _mm_aesenc_si128(B0, K);             \
+      B1 = _mm_aesenc_si128(B1, K);             \
+      B2 = _mm_aesenc_si128(B2, K);             \
+      B3 = _mm_aesenc_si128(B3, K);             \
+      } while(0)
+
+#define AES_ENC_4_LAST_ROUNDS(K)                \
+   do                                           \
+      {                                         \
+      B0 = _mm_aesenclast_si128(B0, K);         \
+      B1 = _mm_aesenclast_si128(B1, K);         \
+      B2 = _mm_aesenclast_si128(B2, K);         \
+      B3 = _mm_aesenclast_si128(B3, K);         \
+      } while(0)
+
+#define AES_DEC_4_ROUNDS(K)                     \
+   do                                           \
+      {                                         \
+      B0 = _mm_aesdec_si128(B0, K);             \
+      B1 = _mm_aesdec_si128(B1, K);             \
+      B2 = _mm_aesdec_si128(B2, K);             \
+      B3 = _mm_aesdec_si128(B3, K);             \
+      } while(0)
+
+#define AES_DEC_4_LAST_ROUNDS(K)                \
+   do                                           \
+      {                                         \
+      B0 = _mm_aesdeclast_si128(B0, K);         \
+      B1 = _mm_aesdeclast_si128(B1, K);         \
+      B2 = _mm_aesdeclast_si128(B2, K);         \
+      B3 = _mm_aesdeclast_si128(B3, K);         \
+      } while(0)
+
 /**
 * AES-128 Encryption
 */
@@ -56,6 +92,39 @@ void AES_128_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    __m128i K9  = _mm_loadu_si128(key_mm + 9);
    __m128i K10 = _mm_loadu_si128(key_mm + 10);
 
+   while(blocks >= 4)
+      {
+      __m128i B0 = _mm_loadu_si128(in_mm + 0);
+      __m128i B1 = _mm_loadu_si128(in_mm + 1);
+      __m128i B2 = _mm_loadu_si128(in_mm + 2);
+      __m128i B3 = _mm_loadu_si128(in_mm + 3);
+
+      B0 = _mm_xor_si128(B0, K0);
+      B1 = _mm_xor_si128(B1, K0);
+      B2 = _mm_xor_si128(B2, K0);
+      B3 = _mm_xor_si128(B3, K0);
+
+      AES_ENC_4_ROUNDS(K1);
+      AES_ENC_4_ROUNDS(K2);
+      AES_ENC_4_ROUNDS(K3);
+      AES_ENC_4_ROUNDS(K4);
+      AES_ENC_4_ROUNDS(K5);
+      AES_ENC_4_ROUNDS(K6);
+      AES_ENC_4_ROUNDS(K7);
+      AES_ENC_4_ROUNDS(K8);
+      AES_ENC_4_ROUNDS(K9);
+      AES_ENC_4_LAST_ROUNDS(K10);
+
+      _mm_storeu_si128(out_mm + 0, B0);
+      _mm_storeu_si128(out_mm + 1, B1);
+      _mm_storeu_si128(out_mm + 2, B2);
+      _mm_storeu_si128(out_mm + 3, B3);
+
+      blocks -= 4;
+      in_mm += 4;
+      out_mm += 4;
+      }
+
    for(u32bit i = 0; i != blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
@@ -74,9 +143,6 @@ void AES_128_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       B = _mm_aesenclast_si128(B, K10);
 
       _mm_storeu_si128(out_mm + i, B);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
       }
    }
 
@@ -102,6 +168,39 @@ void AES_128_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    __m128i K9  = _mm_loadu_si128(key_mm + 9);
    __m128i K10 = _mm_loadu_si128(key_mm + 10);
 
+   while(blocks >= 4)
+      {
+      __m128i B0 = _mm_loadu_si128(in_mm + 0);
+      __m128i B1 = _mm_loadu_si128(in_mm + 1);
+      __m128i B2 = _mm_loadu_si128(in_mm + 2);
+      __m128i B3 = _mm_loadu_si128(in_mm + 3);
+
+      B0 = _mm_xor_si128(B0, K0);
+      B1 = _mm_xor_si128(B1, K0);
+      B2 = _mm_xor_si128(B2, K0);
+      B3 = _mm_xor_si128(B3, K0);
+
+      AES_DEC_4_ROUNDS(K1);
+      AES_DEC_4_ROUNDS(K2);
+      AES_DEC_4_ROUNDS(K3);
+      AES_DEC_4_ROUNDS(K4);
+      AES_DEC_4_ROUNDS(K5);
+      AES_DEC_4_ROUNDS(K6);
+      AES_DEC_4_ROUNDS(K7);
+      AES_DEC_4_ROUNDS(K8);
+      AES_DEC_4_ROUNDS(K9);
+      AES_DEC_4_LAST_ROUNDS(K10);
+
+      _mm_storeu_si128(out_mm + 0, B0);
+      _mm_storeu_si128(out_mm + 1, B1);
+      _mm_storeu_si128(out_mm + 2, B2);
+      _mm_storeu_si128(out_mm + 3, B3);
+
+      blocks -= 4;
+      in_mm += 4;
+      out_mm += 4;
+      }
+
    for(u32bit i = 0; i != blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
@@ -120,9 +219,6 @@ void AES_128_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       B = _mm_aesdeclast_si128(B, K10);
 
       _mm_storeu_si128(out_mm + i, B);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
       }
    }
 
@@ -212,6 +308,43 @@ void AES_256_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    __m128i K13 = _mm_loadu_si128(key_mm + 13);
    __m128i K14 = _mm_loadu_si128(key_mm + 14);
 
+   while(blocks >= 4)
+      {
+      __m128i B0 = _mm_loadu_si128(in_mm + 0);
+      __m128i B1 = _mm_loadu_si128(in_mm + 1);
+      __m128i B2 = _mm_loadu_si128(in_mm + 2);
+      __m128i B3 = _mm_loadu_si128(in_mm + 3);
+
+      B0 = _mm_xor_si128(B0, K0);
+      B1 = _mm_xor_si128(B1, K0);
+      B2 = _mm_xor_si128(B2, K0);
+      B3 = _mm_xor_si128(B3, K0);
+
+      AES_ENC_4_ROUNDS(K1);
+      AES_ENC_4_ROUNDS(K2);
+      AES_ENC_4_ROUNDS(K3);
+      AES_ENC_4_ROUNDS(K4);
+      AES_ENC_4_ROUNDS(K5);
+      AES_ENC_4_ROUNDS(K6);
+      AES_ENC_4_ROUNDS(K7);
+      AES_ENC_4_ROUNDS(K8);
+      AES_ENC_4_ROUNDS(K9);
+      AES_ENC_4_ROUNDS(K10);
+      AES_ENC_4_ROUNDS(K11);
+      AES_ENC_4_ROUNDS(K12);
+      AES_ENC_4_ROUNDS(K13);
+      AES_ENC_4_LAST_ROUNDS(K14);
+
+      _mm_storeu_si128(out_mm + 0, B0);
+      _mm_storeu_si128(out_mm + 1, B1);
+      _mm_storeu_si128(out_mm + 2, B2);
+      _mm_storeu_si128(out_mm + 3, B3);
+
+      blocks -= 4;
+      in_mm += 4;
+      out_mm += 4;
+      }
+
    for(u32bit i = 0; i != blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
@@ -234,9 +367,6 @@ void AES_256_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       B = _mm_aesenclast_si128(B, K14);
 
       _mm_storeu_si128(out_mm + i, B);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
       }
    }
 
@@ -266,6 +396,43 @@ void AES_256_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    __m128i K13 = _mm_loadu_si128(key_mm + 13);
    __m128i K14 = _mm_loadu_si128(key_mm + 14);
 
+   while(blocks >= 4)
+      {
+      __m128i B0 = _mm_loadu_si128(in_mm + 0);
+      __m128i B1 = _mm_loadu_si128(in_mm + 1);
+      __m128i B2 = _mm_loadu_si128(in_mm + 2);
+      __m128i B3 = _mm_loadu_si128(in_mm + 3);
+
+      B0 = _mm_xor_si128(B0, K0);
+      B1 = _mm_xor_si128(B1, K0);
+      B2 = _mm_xor_si128(B2, K0);
+      B3 = _mm_xor_si128(B3, K0);
+
+      AES_DEC_4_ROUNDS(K1);
+      AES_DEC_4_ROUNDS(K2);
+      AES_DEC_4_ROUNDS(K3);
+      AES_DEC_4_ROUNDS(K4);
+      AES_DEC_4_ROUNDS(K5);
+      AES_DEC_4_ROUNDS(K6);
+      AES_DEC_4_ROUNDS(K7);
+      AES_DEC_4_ROUNDS(K8);
+      AES_DEC_4_ROUNDS(K9);
+      AES_DEC_4_ROUNDS(K10);
+      AES_DEC_4_ROUNDS(K11);
+      AES_DEC_4_ROUNDS(K12);
+      AES_DEC_4_ROUNDS(K13);
+      AES_DEC_4_LAST_ROUNDS(K14);
+
+      _mm_storeu_si128(out_mm + 0, B0);
+      _mm_storeu_si128(out_mm + 1, B1);
+      _mm_storeu_si128(out_mm + 2, B2);
+      _mm_storeu_si128(out_mm + 3, B3);
+
+      blocks -= 4;
+      in_mm += 4;
+      out_mm += 4;
+      }
+
    for(u32bit i = 0; i != blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
@@ -288,9 +455,6 @@ void AES_256_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       B = _mm_aesdeclast_si128(B, K14);
 
       _mm_storeu_si128(out_mm + i, B);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
       }
    }
 
