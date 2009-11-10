@@ -38,9 +38,9 @@ inline void F1(u32bit A, u32bit B, u32bit C, u32bit& D,
                u32bit E, u32bit F, u32bit G, u32bit& H,
                u32bit msg, u32bit magic)
    {
-   magic += rho(E, 6, 11, 25) + ((E & F) ^ (~E & G)) + msg;
-   D += magic + H;
-   H += magic + rho(A, 2, 13, 22) + ((A & B) ^ (A & C) ^ (B & C));
+   H += magic + rho(E, 6, 11, 25) + ((E & F) ^ (~E & G)) + msg;
+   D += H;
+   H += rho(A, 2, 13, 22) + ((A & B) | ((A | B) & C));
    }
 
 }
