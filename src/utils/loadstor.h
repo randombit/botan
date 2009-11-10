@@ -13,6 +13,7 @@
 #include <botan/bswap.h>
 #include <botan/rotate.h>
 #include <botan/prefetch.h>
+#include <cstring>
 
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
 
@@ -203,6 +204,9 @@ inline void load_le(T out[],
                     const byte in[],
                     u32bit count)
    {
+#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+   std::memcpy(out, in, sizeof(T)*count);
+#else
    const u32bit blocks = count - (count % 4);
    const u32bit left = count - blocks;
 
@@ -219,6 +223,7 @@ inline void load_le(T out[],
 
    for(u32bit i = 0; i != left; ++i)
       out[i] = load_le<T>(in, i);
+#endif
    }
 
 template<typename T>
@@ -258,6 +263,9 @@ inline void load_be(T out[],
                     const byte in[],
                     u32bit count)
    {
+#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+   std::memcpy(out, in, sizeof(T)*count);
+#else
    const u32bit blocks = count - (count % 4);
    const u32bit left = count - blocks;
 
@@ -274,6 +282,7 @@ inline void load_be(T out[],
 
    for(u32bit i = 0; i != left; ++i)
       out[i] = load_be<T>(in, i);
+#endif
    }
 
 /*
