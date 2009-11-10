@@ -1,5 +1,5 @@
 /**
-* AES using Intel's AES-NI instructions
+* AES-128 using Intel's AES-NI instructions
 * (C) 2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
@@ -118,13 +118,14 @@ void AES_128_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 /**
 * AES-128 Key Schedule
 */
-void AES_128_Intel::key_schedule(const byte key[], u32bit length)
+void AES_128_Intel::key_schedule(const byte key[], u32bit)
    {
+   const __m128i* key_mm = (const __m128i*)key;
 
    #define AES_128_key_exp(K, RCON) \
       aes_128_key_expansion(K, _mm_aeskeygenassist_si128(K, RCON))
 
-   __m128i K0  = _mm_loadu_si128((const __m128i*)key);
+   __m128i K0  = _mm_loadu_si128(key_mm);
    __m128i K1  = AES_128_key_exp(K0, 0x01);
    __m128i K2  = AES_128_key_exp(K1, 0x02);
    __m128i K3  = AES_128_key_exp(K2, 0x04);

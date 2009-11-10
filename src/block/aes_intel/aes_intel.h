@@ -29,6 +29,23 @@ class BOTAN_DLL AES_128_Intel : public BlockCipher
       SecureBuffer<u32bit, 44> EK, DK;
    };
 
+class BOTAN_DLL AES_256_Intel : public BlockCipher
+   {
+   public:
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+
+      void clear();
+      std::string name() const { return "AES-256"; }
+      BlockCipher* clone() const { return new AES_256_Intel; }
+
+      AES_256_Intel() : BlockCipher(16, 32) { }
+   private:
+      void key_schedule(const byte[], u32bit);
+
+      SecureBuffer<u32bit, 60> EK, DK;
+   };
+
 }
 
 #endif
