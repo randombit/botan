@@ -1,12 +1,7 @@
 /*
 * Modulus and related data for a specific implementation of GF(p)
 *
-* (C) 2008 Martin Döring
-*          <doering@cdc.informatik.tu-darmstadt.de>
-*          Christoph Ludwig
-*          <ludwig@fh-worms.de>
-*          Falko Strenzke
-*          <strenzke@flexsecure.de>
+* (C) 2008 Martin Doering, Christoph Ludwig, Falko Strenzke
 *
 * Distributed under the terms of the Botan license
 */

@@ -1,5 +1,5 @@
 /*
-* Montgomery Reduction Source File
+* Montgomery Reduction in x86-64 assembler
 * (C) 2008 Jack Lloyd
 *
 * Distributed under the terms of the Botan license

@@ -1,13 +1,10 @@
-/******
- * Elliptic curves over GF(p) (header file)
- *
- * (C) 2007 Martin Doering
- *          doering@cdc.informatik.tu-darmstadt.de
- *          Christoph Ludwig
- *          ludwig@fh-worms.de
- *          Falko Strenzke
- *          strenzke@flexsecure.de
- ******/
+/*
+* Elliptic curves over GF(p)
+*
+* (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_GFP_CURVE_H__
 #define BOTAN_GFP_CURVE_H__
@@ -20,8 +17,6 @@ namespace Botan {
 
 /**
 * This class represents an elliptic curve over GF(p)
-*
-* Distributed under the terms of the Botan license
 */
 class BOTAN_DLL CurveGFp
    {
@@ -112,11 +107,12 @@ class BOTAN_DLL CurveGFp
       }*/
 
       /**
-      * Retrieve a shared pointer to the curves GFpModulus object for efficient storage
-      * and computation of montgomery multiplication related data members and functions.
-      * Warning: do not use this function unless you know in detail how the sharing of values
-      * in the various EC related objects works.
-      * Do NOT spread pointers to a GFpModulus over different threads!
+      * Retrieve a shared pointer to the curves GFpModulus object for
+      * efficient storage and computation of montgomery multiplication
+      * related data members and functions.  Warning: do not use this
+      * function unless you know in detail how the sharing of values
+      * in the various EC related objects works.  Do NOT spread
+      * pointers to a GFpModulus over different threads!
       * @result a shared pointer to a GFpModulus object
       */
       inline std::tr1::shared_ptr<GFpModulus> const get_ptr_mod() const

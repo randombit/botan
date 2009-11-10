@@ -1,7 +1,6 @@
 /*
 * EAC1_1 objects
 * (C) 2008 Falko Strenzke
-*          strenzke@flexsecure.de
 *
 * Distributed under the terms of the Botan license
 */

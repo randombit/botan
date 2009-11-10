@@ -23,9 +23,10 @@ has provided financial assistance to the project.
 Barry Kavanagh of AEP Systems Ltd kindly provided an AEP2000 crypto card and
 drivers, enabling the creation of Botan's AEP engine module.
 
-In addition, the following people have unknowingly contributed help:
+In addition, the following people have unknowingly contributed help
+via public domain code which has been repurposed into the library:
 
-  Dean Gaudet <dean@arctic.org> wrote the SSE2 implementation of SHA-1
+  Dean Gaudet wrote the SSE2 implementation of SHA-1
 
   The implementation of DES is based off a public domain implementation by Phil
   Karn from 1994 (he, in turn, credits Richard Outerbridge and Jim Gillogly).
@@ -42,7 +43,7 @@ In addition, the following people have unknowingly contributed help:
   Some of the hash functions (MD5, SHA-1, etc) use an optimized implementation
   of one of the boolean functions, which was discovered by Colin Plumb.
 
-  The design of Randpool takes some of it's design principles from those
+  The design of Randpool takes some of its design principles from those
   suggested by Eric A. Young in his SSLeay documentation, Peter Gutmann's paper
   "Software Generation of Practically Strong Random Numbers", and the paper
   "Cryptanalytic Attacks on Pseudorandom Number Generators", by Kelsey,

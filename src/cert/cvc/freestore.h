@@ -1,7 +1,8 @@
-/**
+/*
 * (C) 2007 Christoph Ludwig
-*          ludwig@fh-worms.de
-**/
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_FREESTORE_H__
 #define BOTAN_FREESTORE_H__
@@ -23,8 +24,6 @@ namespace Botan {
 * enables convenient automatic conversions between plain and smart
 * pointer types. It internally stores a SharedPointer which can be
 * accessed.
-*
-* Distributed under the terms of the Botan license
 */
 template<typename T>
 class BOTAN_DLL SharedPtrConverter

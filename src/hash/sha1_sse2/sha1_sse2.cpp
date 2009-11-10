@@ -4,8 +4,8 @@
 *
 * Distributed under the terms of the Botan license
 *
-* Based on public domain code by Dean Gaudet <dean@arctic.org>
-*   Source - http://arctic.org/~dean/crypto/sha1.html
+* Based on public domain code by Dean Gaudet
+*    (http://arctic.org/~dean/crypto/sha1.html)
 */
 
 #include <botan/sha1_sse2.h>

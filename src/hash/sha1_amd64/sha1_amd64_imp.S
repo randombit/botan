@@ -1,5 +1,5 @@
 /*
-* SHA-160 Source File
+* SHA-1 in x86-64 assembler
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license

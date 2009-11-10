@@ -1,12 +1,7 @@
 /*
 * Arithmetic for prime fields GF(p)
 *
-* (C) 2007 Martin Doering
-*          doering@cdc.informatik.tu-darmstadt.de
-*          Christoph Ludwig
-*          ludwig@fh-worms.de
-*          Falko Strenzke
-*          strenzke@flexsecure.de
+* (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
 *
 * Distributed under the terms of the Botan license
 */
