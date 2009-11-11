@@ -4,12 +4,14 @@ unaligned ok
 <aliases>
 x86-64
 x86_64 # for RPM
+em64t
+x64
 </aliases>
 
 <submodels>
 k8
 k10
-em64t
+nocona
 core2
 nehalem
 westmere
