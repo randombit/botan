@@ -26,12 +26,6 @@ class BOTAN_DLL MARS : public BlockCipher
    private:
       void key_schedule(const byte[], u32bit);
 
-      void encrypt_round(u32bit&, u32bit&, u32bit&, u32bit&, u32bit) const;
-      void decrypt_round(u32bit&, u32bit&, u32bit&, u32bit&, u32bit) const;
-      static void forward_mix(u32bit&, u32bit&, u32bit&, u32bit&);
-      static void reverse_mix(u32bit&, u32bit&, u32bit&, u32bit&);
-
-      static const u32bit SBOX[512];
       SecureBuffer<u32bit, 40> EK;
    };
 
