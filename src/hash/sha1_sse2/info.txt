@@ -1,19 +1,8 @@
 define SHA1_SSE2
 
+need_isa sse2
+
 <requires>
 sha1
 simd_engine
 </requires>
-
-<arch>
-pentium-m
-pentium4
-prescott
-amd64
-</arch>
-
-<cc>
-gcc
-icc
-msvc
-</cc>

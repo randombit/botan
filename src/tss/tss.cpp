@@ -1,6 +1,6 @@
 /*
 * RTSS (threshold secret sharing)
-* (C) 2009 Jack Lloyd <lloyd@randombit.net>
+* (C) 2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */

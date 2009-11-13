@@ -129,6 +129,8 @@ void do_x509_tests(RandomNumberGenerator& rng)
    {
    std::cout << "Testing X.509 CA/CRL/cert/cert request: " << std::flush;
 
+   std::string hash_fn = "SHA-256";
+
    /* Create the CA's key and self-signed cert */
    std::cout << '.' << std::flush;
    RSA_PrivateKey ca_key(rng, 1024);
@@ -136,6 +138,7 @@ void do_x509_tests(RandomNumberGenerator& rng)
    std::cout << '.' << std::flush;
    X509_Certificate ca_cert = X509::create_self_signed_cert(ca_opts(),
                                                             ca_key,
+                                                            hash_fn,
                                                             rng);
    std::cout << '.' << std::flush;
 
@@ -146,12 +149,14 @@ void do_x509_tests(RandomNumberGenerator& rng)
    std::cout << '.' << std::flush;
    PKCS10_Request user1_req = X509::create_cert_req(req_opts1(),
                                                     user1_key,
+                                                    "SHA-1",
                                                     rng);
 
    /* Create user #2's key and cert request */
    std::cout << '.' << std::flush;
 #if defined(BOTAN_HAS_ECDSA)
-   ECDSA_PrivateKey user2_key(rng, get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
+   EC_Domain_Params ecc_domain = get_EC_Dom_Pars_by_oid("1.2.840.10045.3.1.7");
+   ECDSA_PrivateKey user2_key(rng, ecc_domain);
 #else
    RSA_PrivateKey user2_key(rng, 1024);
 #endif
@@ -159,11 +164,12 @@ void do_x509_tests(RandomNumberGenerator& rng)
    std::cout << '.' << std::flush;
    PKCS10_Request user2_req = X509::create_cert_req(req_opts2(),
                                                     user2_key,
+                                                    hash_fn,
                                                     rng);
 
    /* Create the CA object */
    std::cout << '.' << std::flush;
-   X509_CA ca(ca_cert, ca_key);
+   X509_CA ca(ca_cert, ca_key, hash_fn);
    std::cout << '.' << std::flush;
 
    /* Sign the requests to create the certs */

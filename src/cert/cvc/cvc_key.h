@@ -2,7 +2,6 @@
 * EAC CVC Public Key
 * (C) 2008 FlexSecure Gmbh
 *          Falko Strenzke
-*          strenzke@flexsecure.de
 *
 * Distributed under the terms of the Botan license
 */

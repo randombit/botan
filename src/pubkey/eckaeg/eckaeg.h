@@ -68,9 +68,10 @@ class BOTAN_DLL ECKAEG_PublicKey : public virtual EC_PublicKey
 
    protected:
       void X509_load_hook();
-      virtual void set_all_values(const ECKAEG_PublicKey& other);
 
       ECKAEG_Core m_eckaeg_core;
+   private:
+      void set_all_values(const ECKAEG_PublicKey& other);
    };
 
 /**
@@ -128,8 +129,8 @@ class BOTAN_DLL ECKAEG_PrivateKey : public ECKAEG_PublicKey,
       */
       virtual void affirm_init() const;
 
-   protected:
-      virtual void set_all_values(const ECKAEG_PrivateKey& other);
+   private:
+      void set_all_values(const ECKAEG_PrivateKey& other);
    };
 
 }

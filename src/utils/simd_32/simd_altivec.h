@@ -13,6 +13,7 @@
 
 #include <altivec.h>
 #undef vector
+#undef bool
 
 namespace Botan {
 

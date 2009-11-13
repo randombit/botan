@@ -18,7 +18,7 @@ void Square::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    for(u32bit i = 0; i != blocks; ++i)
       {
-      u32bit T0, T1, T2, T3, B0, B1, B2, B3;
+      u32bit B0, B1, B2, B3;
 
       B0 = TE0[in[ 0] ^ ME[ 0]] ^ TE1[in[ 4] ^ ME[ 4]] ^
            TE2[in[ 8] ^ ME[ 8]] ^ TE3[in[12] ^ ME[12]] ^ EK[0];
@@ -31,6 +31,7 @@ void Square::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 
       for(u32bit j = 1; j != 7; j += 2)
          {
+         u32bit T0, T1, T2, T3;
          T0 = TE0[get_byte(0, B0)] ^ TE1[get_byte(0, B1)] ^
               TE2[get_byte(0, B2)] ^ TE3[get_byte(0, B3)] ^ EK[4*j+0];
          T1 = TE0[get_byte(1, B0)] ^ TE1[get_byte(1, B1)] ^
@@ -79,7 +80,7 @@ void Square::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    for(u32bit i = 0; i != blocks; ++i)
       {
-      u32bit T0, T1, T2, T3, B0, B1, B2, B3;
+      u32bit B0, B1, B2, B3;
 
       B0 = TD0[in[ 0] ^ MD[ 0]] ^ TD1[in[ 4] ^ MD[ 4]] ^
            TD2[in[ 8] ^ MD[ 8]] ^ TD3[in[12] ^ MD[12]] ^ DK[0];
@@ -92,6 +93,7 @@ void Square::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 
       for(u32bit j = 1; j != 7; j += 2)
          {
+         u32bit T0, T1, T2, T3;
          T0 = TD0[get_byte(0, B0)] ^ TD1[get_byte(0, B1)] ^
               TD2[get_byte(0, B2)] ^ TD3[get_byte(0, B3)] ^ DK[4*j+0];
          T1 = TD0[get_byte(1, B0)] ^ TD1[get_byte(1, B1)] ^
@@ -139,25 +141,31 @@ void Square::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 void Square::key_schedule(const byte key[], u32bit)
    {
    SecureBuffer<u32bit, 36> XEK, XDK;
-   for(u32bit j = 0; j != 4; ++j)
-      XEK[j] = load_be<u32bit>(key, j);
-   for(u32bit j = 0; j != 8; ++j)
+
+   for(u32bit i = 0; i != 4; ++i)
+      XEK[i] = load_be<u32bit>(key, i);
+
+   for(u32bit i = 0; i != 8; ++i)
       {
-      XEK[4*j+4] = XEK[4*j  ] ^ rotate_left(XEK[4*j+3], 8) ^ (0x01000000 << j);
-      XEK[4*j+5] = XEK[4*j+1] ^ XEK[4*j+4];
-      XEK[4*j+6] = XEK[4*j+2] ^ XEK[4*j+5];
-      XEK[4*j+7] = XEK[4*j+3] ^ XEK[4*j+6];
-      XDK.copy(28 - 4*j, XEK + 4*(j+1), 4);
-      transform(XEK + 4*j);
+      XEK[4*i+4] = XEK[4*i  ] ^ rotate_left(XEK[4*i+3], 8) ^ (0x01000000 << i);
+      XEK[4*i+5] = XEK[4*i+1] ^ XEK[4*i+4];
+      XEK[4*i+6] = XEK[4*i+2] ^ XEK[4*i+5];
+      XEK[4*i+7] = XEK[4*i+3] ^ XEK[4*i+6];
+
+      XDK.copy(28 - 4*i, XEK + 4*(i+1), 4);
+
+      transform(XEK + 4*i);
       }
-   for(u32bit j = 0; j != 4; ++j)
-      for(u32bit k = 0; k != 4; ++k)
+
+   for(u32bit i = 0; i != 4; ++i)
+      for(u32bit j = 0; j != 4; ++j)
          {
-         ME[4*j+k   ] = get_byte(k, XEK[j   ]);
-         ME[4*j+k+16] = get_byte(k, XEK[j+32]);
-         MD[4*j+k   ] = get_byte(k, XDK[j   ]);
-         MD[4*j+k+16] = get_byte(k, XEK[j   ]);
+         ME[4*i+j   ] = get_byte(j, XEK[i   ]);
+         ME[4*i+j+16] = get_byte(j, XEK[i+32]);
+         MD[4*i+j   ] = get_byte(j, XDK[i   ]);
+         MD[4*i+j+16] = get_byte(j, XEK[i   ]);
          }
+
    EK.copy(XEK + 4, 28);
    DK.copy(XDK + 4, 28);
    }
@@ -168,28 +176,28 @@ void Square::key_schedule(const byte key[], u32bit)
 void Square::transform(u32bit round_key[4])
    {
    static const byte G[4][4] = {
-      { 0x02, 0x01, 0x01, 0x03 },
-      { 0x03, 0x02, 0x01, 0x01 },
-      { 0x01, 0x03, 0x02, 0x01 },
-      { 0x01, 0x01, 0x03, 0x02 } };
+      { 2, 1, 1, 3 },
+      { 3, 2, 1, 1 },
+      { 1, 3, 2, 1 },
+      { 1, 1, 3, 2 } };
 
-   for(u32bit j = 0; j != 4; ++j)
+   for(u32bit i = 0; i != 4; ++i)
       {
-      SecureBuffer<byte, 4> A, B;
+      byte A[4] = { 0 }, B[4] = { 0 };
 
-      store_be(round_key[j], A);
+      store_be(round_key[i], A);
 
-      for(u32bit k = 0; k != 4; ++k)
-         for(u32bit l = 0; l != 4; ++l)
+      for(u32bit j = 0; j != 4; ++j)
+         for(u32bit k = 0; k != 4; ++k)
             {
-            const byte a = A[l];
-            const byte b = G[l][k];
+            const byte a = A[k];
+            const byte b = G[k][j];
 
             if(a && b)
-               B[k] ^= ALog[(Log[a] + Log[b]) % 255];
+               B[j] ^= ALog[(Log[a] + Log[b]) % 255];
             }
 
-      round_key[j] = load_be<u32bit>(B.begin(), 0);
+      round_key[i] = load_be<u32bit>(B, 0);
       }
    }
 

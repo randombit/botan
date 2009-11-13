@@ -1,7 +1,3 @@
-# V7 doesn't have integer multiply, so it will be bitterly slow for some things
-# (especially BigInt). Also, it's fairly rare nowadays, so we default to V8.
-default_submodel sparc32-v8
-
 endian big
 
 <aliases>

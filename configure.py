@@ -37,9 +37,9 @@ class BuildConfigurationInformation(object):
     """
     version_major = 1
     version_minor = 9
-    version_patch = 2
-    version_so_patch = 2
-    version_suffix = ''
+    version_patch = 3
+    version_so_patch = 3
+    version_suffix = '-dev'
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
@@ -78,7 +78,8 @@ class BuildConfigurationInformation(object):
              if file.endswith('.cpp')])
 
         self.python_sources = sorted(
-            [os.path.join(self.python_dir, file) for file in os.listdir(self.python_dir)
+            [os.path.join(self.python_dir, file)
+             for file in os.listdir(self.python_dir)
              if file.endswith('.cpp')])
 
     def doc_files(self):
@@ -141,6 +142,11 @@ def process_command_line(args):
     target_group.add_option('--without-unaligned-mem',
                             dest='unaligned_mem', action='store_false',
                             help=SUPPRESS_HELP)
+
+    target_group.add_option('--with-isa-extension', metavar='ISALIST',
+                            dest='with_isa_extns',
+                            action='append', default=[],
+                            help='enable ISA extensions (sse2, altivec, ...)')
 
     build_group = OptionGroup(parser, 'Build options')
 
@@ -270,11 +276,13 @@ def process_command_line(args):
         raise Exception('Bad value to --with-endian "%s"' % (
             options.with_endian))
 
-    def parse_module_opts(modules):
+    def parse_multiple_enable(modules):
         return sorted(set(sum([s.split(',') for s in modules], [])))
 
-    options.enabled_modules = parse_module_opts(options.enabled_modules)
-    options.disabled_modules = parse_module_opts(options.disabled_modules)
+    options.enabled_modules = parse_multiple_enable(options.enabled_modules)
+    options.disabled_modules = parse_multiple_enable(options.disabled_modules)
+
+    options.with_isa_extns = parse_multiple_enable(options.with_isa_extns)
 
     return options
 
@@ -361,6 +369,7 @@ class ModuleInfo(object):
                         'define': None,
                         'modset': None,
                         'uses_tr1': 'false',
+                        'need_isa': None,
                         'note': '',
                         'mp_bits': 0 })
 
@@ -395,8 +404,21 @@ class ModuleInfo(object):
         else:
             self.uses_tr1 = False
 
-    def compatible_cpu(self, arch, cpu):
-        return self.arch == [] or (arch in self.arch or cpu in self.arch)
+    def compatible_cpu(self, archinfo, options):
+
+        arch_name = archinfo.basename
+        cpu_name = options.cpu
+
+        if self.arch != []:
+            if arch_name not in self.arch and cpu_name not in self.arch:
+                return False
+
+        if self.need_isa != None:
+            cpu_isa = archinfo.isa_extensions_in(cpu_name)
+            if self.need_isa not in cpu_isa:
+                return self.need_isa in options.with_isa_extns
+
+        return True
 
     def compatible_os(self, os):
         return self.os == [] or os in self.os
@@ -423,11 +445,20 @@ class ModuleInfo(object):
 class ArchInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
-                      ['aliases', 'submodels', 'submodel_aliases'],
-                      { 'default_submodel': None,
-                        'endian': None,
+                      ['aliases', 'submodels', 'submodel_aliases', 'isa_extn'],
+                      { 'endian': None,
                         'unaligned': 'no'
                         })
+
+        def convert_isa_list(input):
+            isa_info = {}
+            for line in self.isa_extn:
+                (isa,cpus) = line.split(':')
+                for cpu in cpus.split(','):
+                    isa_info.setdefault(cpu, []).append(isa)
+            return isa_info
+
+        self.isa_extn = convert_isa_list(self.isa_extn)
 
         self.submodel_aliases = force_to_dict(self.submodel_aliases)
 
@@ -436,35 +467,53 @@ class ArchInfo(object):
         else:
             self.unaligned_ok = 0
 
+    """
+    Return ISA extensions specific to this CPU
+    """
+    def isa_extensions_in(self, cpu_type):
+        return sorted(self.isa_extn.get(cpu_type, []) +
+                      self.isa_extn.get('all', []))
+
+    """
+    Return a list of all submodels for this arch
+    """
     def all_submodels(self):
         return sorted(zip(self.submodels, self.submodels) +
                           self.submodel_aliases.items(),
                       key = lambda k: len(k[0]), reverse = True)
 
-    def defines(self, target_submodel, with_endian, unaligned_ok):
+    """
+    Return CPU-specific defines for build.h
+    """
+    def defines(self, options):
         macros = ['TARGET_ARCH_IS_%s' % (self.basename.upper())]
 
         def form_cpu_macro(cpu_name):
             return cpu_name.upper().replace('.', '').replace('-', '_')
 
-        if self.basename != target_submodel:
-            macros.append('TARGET_CPU_IS_%s' % (
-                form_cpu_macro(target_submodel)))
+        if self.basename != options.cpu:
+            macros.append('TARGET_CPU_IS_%s' % (form_cpu_macro(options.cpu)))
 
-        if with_endian:
-            macros.append('TARGET_CPU_IS_%s_ENDIAN' % (with_endian.upper()))
-        elif self.endian != None:
-            macros.append('TARGET_CPU_IS_%s_ENDIAN' % (self.endian.upper()))
+        isa_extensions = sorted(set(
+            sum([self.isa_extensions_in(options.cpu),
+                 options.with_isa_extns],
+                [])))
 
+        for simd in isa_extensions:
+            macros.append('TARGET_CPU_HAS_%s' % (simd.upper()))
+
+        endian = options.with_endian or self.endian
+
+        if endian != None:
+            macros.append('TARGET_CPU_IS_%s_ENDIAN' % (endian.upper()))
+
+        unaligned_ok = options.unaligned_mem
         if unaligned_ok is None:
             unaligned_ok = self.unaligned_ok
+            if unaligned_ok:
+                logging.info('Assuming unaligned memory access works')
 
-        if unaligned_ok:
-            logging.info('Assuming unaligned memory access works on this CPU')
-        macros.append('TARGET_UNALIGNED_LOADSTOR_OK %d' % (unaligned_ok))
-
-        if self.basename == 'amd64':
-            macros.append('TARGET_CPU_HAS_SSE2')
+        macros.append('TARGET_UNALIGNED_MEMORY_ACCESS_OK %d' % (unaligned_ok))
 
         return macros
 
@@ -514,7 +563,9 @@ class CompilerInfo(object):
 
         del self.mach_opt
 
-
+    """
+    Return the machine specific ABI flags
+    """
     def mach_abi_link_flags(self, osname, arch, submodel):
 
         abi_link = set()
@@ -526,6 +577,9 @@ class CompilerInfo(object):
             return ''
         return ' ' + ' '.join(abi_link)
 
+    """
+    Return the flags for MACH_OPT
+    """
     def mach_opts(self, arch, submodel):
 
         def submodel_fixup(tup):
@@ -541,6 +595,9 @@ class CompilerInfo(object):
 
         return ''
 
+    """
+    Return the flags for LIB_OPT
+    """
     def library_opt_flags(self, debug_build):
         flags = self.lib_opt_flags
         if debug_build and self.debug_flags != '':
@@ -549,11 +606,17 @@ class CompilerInfo(object):
             flags += ' ' + self.no_debug_flags
         return flags
 
+    """
+    Return the command needed to link a shared object
+    """
     def so_link_command_for(self, osname):
         if osname in self.so_link_flags:
             return self.so_link_flags[osname]
         return self.so_link_flags['default']
 
+    """
+    Return defines for build.h
+    """
     def defines(self, with_tr1):
 
         def tr1_macro():
@@ -783,9 +846,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'target_compiler_defines': make_cpp_macros(
             cc.defines(options.with_tr1)),
 
-        'target_cpu_defines': make_cpp_macros(
-            arch.defines(options.cpu, options.with_endian,
-                         options.unaligned_mem)),
+        'target_cpu_defines': make_cpp_macros(arch.defines(options)),
 
         'include_files': makefile_list(build_config.headers),
 
@@ -840,7 +901,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 """
 Determine which modules to load based on options, target, etc
 """
-def choose_modules_to_use(options, modules):
+def choose_modules_to_use(modules, archinfo, options):
 
     to_load = []
     maybe_dep = []
@@ -855,7 +916,7 @@ def choose_modules_to_use(options, modules):
         elif modname in options.enabled_modules:
             to_load.append(modname) # trust the user
 
-        elif not module.compatible_cpu(options.arch, options.cpu):
+        elif not module.compatible_cpu(archinfo, options):
             cannot_use_because(modname, 'CPU incompatible')
         elif not module.compatible_os(options.os):
             cannot_use_because(modname, 'OS incompatible')
@@ -1047,8 +1108,8 @@ def setup_build(build_config, options, template_vars):
              os.path.join(build_config.build_dir, sink)
 
     if options.boost_python:
-        templates_to_proc[
-            os.path.join(options.makefile_dir, 'python.in')] = 'Makefile.python'
+        template = os.path.join(options.makefile_dir, 'python.in')
+        templates_to_proc[template] = 'Makefile.python'
 
     for (template, sink) in templates_to_proc.items():
         try:
@@ -1123,9 +1184,10 @@ def main(argv = None):
         logging.info('Guessing target processor is a %s/%s' % (
             options.arch, options.cpu))
     else:
+        cpu_from_user = options.cpu
         (options.arch, options.cpu) = canon_processor(archinfo, options.cpu)
-        logging.debug('Canonicalizized --cpu to %s/%s' % (
-            options.arch, options.cpu))
+        logging.info('Canonicalizized --cpu=%s to %s/%s' % (
+            cpu_from_user, options.arch, options.cpu))
 
     logging.info('Target is %s-%s-%s-%s' % (
         options.compiler, options.os, options.arch, options.cpu))
@@ -1164,7 +1226,9 @@ def main(argv = None):
         else:
             options.with_tr1 = 'none'
 
-    modules_to_use = choose_modules_to_use(options, modules)
+    modules_to_use = choose_modules_to_use(modules,
+                                           archinfo[options.arch],
+                                           options)
 
     build_config = BuildConfigurationInformation(options, modules_to_use)
     build_config.headers.append(

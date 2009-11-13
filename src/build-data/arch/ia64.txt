@@ -1,13 +1,14 @@
-# This is safe: only affects tuning, not ISA
-default_submodel itanium2
-
 <aliases>
-merced
 itanium
+itanic
 </aliases>
 
 <submodels>
-itanium1
-itanium2
+merced
 mckinley
+montvale
 </submodels>
+
+<submodel_aliases>
+itanium2 -> mckinley
+</submodel_aliases>

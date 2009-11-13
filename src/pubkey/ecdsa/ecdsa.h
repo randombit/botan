@@ -85,7 +85,7 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey,
 
    protected:
       void X509_load_hook();
-      virtual void set_all_values(const ECDSA_PublicKey& other);
+      void set_all_values(const ECDSA_PublicKey& other);
 
       ECDSA_Core m_ecdsa_core;
    };
@@ -134,9 +134,8 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       */
       virtual void affirm_init() const;
 
-   protected:
-      virtual void set_all_values(const ECDSA_PrivateKey& other);
    private:
+      void set_all_values(const ECDSA_PrivateKey& other);
       void PKCS8_load_hook(bool = false);
    };
 

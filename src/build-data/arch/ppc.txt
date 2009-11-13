@@ -1,8 +1,6 @@
 endian big
 unaligned ok
 
-default_submodel ppc604
-
 <aliases>
 powerpc
 </aliases>
@@ -21,3 +19,7 @@ ppc750
 ppc7400
 ppc7450
 </submodels>
+
+<isa_extn>
+altivec:ppc7400,ppc7450
+</isa_extn>

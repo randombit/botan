@@ -14,8 +14,8 @@ lang_flags "-D_REENTRANT -ansi -Wno-long-long -std=c++0x"
 warning_flags "-W -Wall"
 #warning_flags "-Wextra -Wall -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wno-unused-parameter"
 
-lib_opt_flags "-O2"
-check_opt_flags "-O"
+lib_opt_flags "-O3"
+check_opt_flags "-O2"
 shared_flags "-fPIC"
 debug_flags "-g"
 no_debug_flags "-finline-functions"
@@ -42,15 +42,14 @@ beos    -> "ld -shared -h $(SONAME)"
 <mach_opt>
 # Specializations first (they don't need to be, just clearer)
 i386           -> "-mtune=i686 -momit-leaf-frame-pointer"
-r10000         -> "-mips4"
-alpha-ev67     -> "-mcpu=ev6" # FIXME: GCC 3.1 and on has -march=ev67
+ppc601         -> "-mpowerpc -mcpu=601"
+
+# Until GCC gets -march support for these models
+nehalem        -> "-march=core2 -msse4.1 -msse4.2"
+westmere       -> "-march=core2 -maes -msse4.1 -msse4.2"
+cellppu        -> ""
 alpha-ev68     -> "-mcpu=ev6"
 alpha-ev7      -> "-mcpu=ev6"
-ppc601         -> "-mpowerpc -mcpu=601"
-sparc64-ultra3 -> "-mcpu=v9 -mtune=ultrasparc3"
-
-em64t          -> "-march=nocona -momit-leaf-frame-pointer"
-cellppu        -> ""
 
 # Default family options (SUBMODEL is substitued with the real submodel)
 # Anything after the quotes is what should be *removed* from the submodel name
@@ -64,7 +63,7 @@ hppa      -> "-march=SUBMODEL" hppa
 m68k      -> "-mSUBMODEL"
 hitachi-sh -> "-mSUBMODEL" hitachi-sh
 sparc32   -> "-mcpu=SUBMODEL -Wa,-xarch=v8plus" sparc32-
-sparc64   -> "-mcpu=v9 -mtune=ultrasparc"
+sparc64   -> "-mcpu=v9 -mtune=SUBMODEL"
 mips32    -> "-mips1 -mcpu=SUBMODEL" mips32-
 mips64    -> "-mips3 -mcpu=SUBMODEL" mips64-
 ppc       -> "-mcpu=SUBMODEL" ppc

@@ -1,12 +1,7 @@
 /*
 * Arithmetic for prime fields GF(p)
 *
-* (C) 2007 Martin Doering
-*          doering@cdc.informatik.tu-darmstadt.de
-*          Christoph Ludwig
-*          ludwig@fh-worms.de
-*          Falko Strenzke
-*          strenzke@flexsecure.de
+* (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
 *
 * Distributed under the terms of the Botan license
 */
@@ -24,7 +19,9 @@ namespace Botan {
 
 namespace {
 
-void inner_montg_mult_sos(word result[], const word* a_bar, const word* b_bar, const word* n, const word* n_dash, u32bit s)
+void inner_montg_mult_sos(word result[],
+                          const word* a_bar, const word* b_bar,
+                          const word* n, const word* n_dash, u32bit s)
    {
    SecureVector<word> t;
    t.grow_to(2*s+1);
@@ -130,10 +127,8 @@ void montg_mult(BigInt& result, BigInt& a_bar, BigInt& b_bar, const BigInt& m, c
    }
 
 /**
-*calculates R=b^n (here b=2) with R>m (and R beeing as small as possible) for an odd modulus m.
-* no check for oddity is performed!
-*
-* Distributed under the terms of the Botan license
+* Calculates R=b^n (here b=2) with R>m (and R beeing as small as
+* possible) for an odd modulus m. No check for parity is performed!
 */
 BigInt montgm_calc_r_oddmod(const BigInt& prime)
    {

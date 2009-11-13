@@ -50,7 +50,8 @@ class BOTAN_DLL X509_CA
       * as the offset from the current time
       * @return the new CRL
       */
-      X509_CRL new_crl(RandomNumberGenerator& rng, u32bit = 0) const;
+      X509_CRL new_crl(RandomNumberGenerator& rng,
+                       u32bit next_update = 0) const;
 
       /**
       * Create a new CRL by with additional entries.
@@ -65,27 +66,45 @@ class BOTAN_DLL X509_CA
                           RandomNumberGenerator& rng,
                           u32bit next_update = 0) const;
 
-      static X509_Certificate make_cert(PK_Signer*,
-                                        RandomNumberGenerator&,
-                                        const AlgorithmIdentifier&,
-                                        const MemoryRegion<byte>&,
-                                        const X509_Time&, const X509_Time&,
-                                        const X509_DN&, const X509_DN&,
-                                        const Extensions&);
+      /**
+      * Interface for creating new certificates
+      * @param signer a signing object
+      * @param rng a random number generator
+      * @param sig_algo the signature algorithm identifier
+      * @param not_before the start time of the certificate
+      * @param not_after the end time of the certificate
+      * @param issuer_dn the DN of the issuer
+      * @param subject_dn the DN of the subject
+      * @param extensions an optional list of certificate extensions
+      * @returns newly minted certificate
+      */
+      static X509_Certificate make_cert(PK_Signer* signer,
+                                        RandomNumberGenerator& rng,
+                                        const AlgorithmIdentifier& sig_algo,
+                                        const MemoryRegion<byte>& pub_key,
+                                        const X509_Time& not_before,
+                                        const X509_Time& not_after,
+                                        const X509_DN& issuer_dn,
+                                        const X509_DN& subject_dn,
+                                        const Extensions& extensions);
 
       /**
       * Create a new CA object.
       * @param ca_certificate the certificate of the CA
       * @param key the private key of the CA
       */
-      X509_CA(const X509_Certificate& ca_certificate, const Private_Key& key);
+      X509_CA(const X509_Certificate& ca_certificate,
+              const Private_Key& key,
+              const std::string& hash_fn);
+
       ~X509_CA();
    private:
       X509_CA(const X509_CA&) {}
       X509_CA& operator=(const X509_CA&) { return (*this); }
 
-      X509_CRL make_crl(const std::vector<CRL_Entry>&,
-                        u32bit, u32bit, RandomNumberGenerator&) const;
+      X509_CRL make_crl(const std::vector<CRL_Entry>& entries,
+                        u32bit crl_number, u32bit next_update,
+                        RandomNumberGenerator& rng) const;
 
       AlgorithmIdentifier ca_sig_algo;
       X509_Certificate cert;
@@ -96,12 +115,13 @@ class BOTAN_DLL X509_CA
 * Choose the default signature format for a certain public key signature
 * scheme.
 * @param key will be the key to choose a padding scheme for
+* @param hash_fn is the desired hash function
 * @param alg_id will be set to the chosen scheme
 * @return A PK_Signer object for generating signatures
 */
 BOTAN_DLL PK_Signer* choose_sig_format(const Private_Key& key,
+                                       const std::string& hash_fn,
                                        AlgorithmIdentifier& alg_id);
-
 
 }
 

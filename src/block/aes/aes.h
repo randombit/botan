@@ -31,11 +31,6 @@ class BOTAN_DLL AES : public BlockCipher
       void key_schedule(const byte[], u32bit);
       static u32bit S(u32bit);
 
-      static const byte SE[256];
-      static const byte SD[256];
-      static const u32bit TE[1024];
-      static const u32bit TD[1024];
-
       u32bit ROUNDS;
 
       SecureBuffer<u32bit, 56> EK;

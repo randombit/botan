@@ -27,6 +27,10 @@
   #include <botan/eng_amd64.h>
 #endif
 
+#if defined(BOTAN_HAS_ENGINE_AES_ISA)
+  #include <botan/aes_isa_engine.h>
+#endif
+
 #if defined(BOTAN_HAS_ENGINE_SIMD)
   #include <botan/simd_engine.h>
 #endif
@@ -248,6 +252,10 @@ void Library_State::initialize()
 
 #if defined(BOTAN_HAS_ENGINE_OPENSSL)
       new OpenSSL_Engine,
+#endif
+
+#if defined(BOTAN_HAS_ENGINE_AES_ISA)
+   new AES_ISA_Engine,
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_SIMD)

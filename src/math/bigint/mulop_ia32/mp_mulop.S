@@ -1,5 +1,5 @@
 /*
-* Multiply/Add Algorithm Source File
+* Multiply/Add Algorithm in IA-32 assembler
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license

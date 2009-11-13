@@ -1,5 +1,3 @@
-default_submodel arm2
-
 <submodels>
 arm2
 arm3
@@ -11,6 +9,8 @@ strongarm
 strongarm110
 strongarm1100
 xscale
+cortex-a8
+cortex-a9
 </submodels>
 
 <submodel_aliases>
@@ -19,3 +19,7 @@ sa1100 -> strongarm1100
 strongarm1110 -> strongarm1100
 armv5tel -> xscale
 </submodel_aliases>
+
+<isa_extn>
+neon:cortex-a8,cortex-a9
+</isa_extn>

@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
          PKCS8::load_key(arg_ca_key, rng, arg_passphrase)
          );
 
-      X509_CA ca(ca_cert, *privkey);
+      X509_CA ca(ca_cert, *privkey, "SHA-256");
 
       // got a request
       PKCS10_Request req(arg_req_file);

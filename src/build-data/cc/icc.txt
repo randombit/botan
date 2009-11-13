@@ -24,10 +24,14 @@ dll_export_flags ""
 makefile_style unix
 
 <mach_opt>
-pentium3 -> "-march=pentium3"
-pentium4 -> "-march=pentium4"
+pentium3  -> "-march=pentium3"
+pentium4  -> "-march=pentium4"
 pentium-m -> "-march=pentium3"
-core2    -> "-march=core2"
+core2     -> "-march=core2"
+
+# ICC 11.1 doesn't have native Nehalem or Westmere support
+nehalem   -> "-march=core2"
+westmere  -> "-march=core2"
 </mach_opt>
 
 <so_link_flags>

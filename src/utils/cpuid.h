@@ -60,11 +60,20 @@ class CPUID
          { return ((x86_processor_flags() >> CPUID_SSE42_BIT) & 1); }
 
       /**
-      * Check if the processor supports Intel AES instructions
+      * Check if the processor supports Intel's AES instructions
       */
-      static bool has_intel_aes()
+      static bool has_aes_intel()
          { return ((x86_processor_flags() >> CPUID_INTEL_AES_BIT) & 1); }
 
+      /**
+      * Check if the processor supports VIA's AES instructions
+      * (not implemented)
+      */
+      static bool has_aes_via() { return false; }
+
+      /**
+      * Check if the processor supports AltiVec/VMX
+      */
       static bool has_altivec();
    private:
       static u64bit x86_processor_flags();

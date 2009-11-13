@@ -10,6 +10,68 @@
 
 namespace Botan {
 
+namespace {
+
+/*
+* Skipjack Stepping Rule 'A'
+*/
+void step_A(u16bit& W1, u16bit& W4, u32bit round, const byte FTAB[])
+   {
+   byte G1 = get_byte(0, W1), G2 = get_byte(1, W1), G3;
+
+   G3 = FTAB[((4*round-4)%10)*256 + G2] ^ G1;
+   G1 = FTAB[((4*round-3)%10)*256 + G3] ^ G2;
+   G2 = FTAB[((4*round-2)%10)*256 + G1] ^ G3;
+   G3 = FTAB[((4*round-1)%10)*256 + G2] ^ G1;
+
+   W1 =  make_u16bit(G2, G3);
+   W4 ^= W1 ^ round;
+   }
+
+/*
+* Skipjack Stepping Rule 'B'
+*/
+void step_B(u16bit& W1, u16bit& W2, u32bit round, const byte FTAB[])
+   {
+   W2 ^= W1 ^ round;
+   byte G1 = get_byte(0, W1), G2 = get_byte(1, W1), G3;
+   G3 = FTAB[((4*round-4)%10)*256 + G2] ^ G1;
+   G1 = FTAB[((4*round-3)%10)*256 + G3] ^ G2;
+   G2 = FTAB[((4*round-2)%10)*256 + G1] ^ G3;
+   G3 = FTAB[((4*round-1)%10)*256 + G2] ^ G1;
+   W1 =  make_u16bit(G2, G3);
+   }
+
+/*
+* Skipjack Invserse Stepping Rule 'A'
+*/
+void step_Ai(u16bit& W1, u16bit& W2, u32bit round, const byte FTAB[])
+   {
+   W1 ^= W2 ^ round;
+   byte G1 = get_byte(1, W2), G2 = get_byte(0, W2), G3;
+   G3 = FTAB[((4 * round - 1) % 10)*256 + G2] ^ G1;
+   G1 = FTAB[((4 * round - 2) % 10)*256 + G3] ^ G2;
+   G2 = FTAB[((4 * round - 3) % 10)*256 + G1] ^ G3;
+   G3 = FTAB[((4 * round - 4) % 10)*256 + G2] ^ G1;
+   W2 = make_u16bit(G3, G2);
+   }
+
+/*
+* Skipjack Invserse Stepping Rule 'B'
+*/
+void step_Bi(u16bit& W2, u16bit& W3, u32bit round, const byte FTAB[])
+   {
+   byte G1 = get_byte(1, W2), G2 = get_byte(0, W2), G3;
+   G3 = FTAB[((4 * round - 1) % 10)*256 + G2] ^ G1;
+   G1 = FTAB[((4 * round - 2) % 10)*256 + G3] ^ G2;
+   G2 = FTAB[((4 * round - 3) % 10)*256 + G1] ^ G3;
+   G3 = FTAB[((4 * round - 4) % 10)*256 + G2] ^ G1;
+   W2 = make_u16bit(G3, G2);
+   W3 ^= W2 ^ round;
+   }
+
+}
+
 /*
 * Skipjack Encryption
 */
@@ -22,17 +84,25 @@ void Skipjack::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       u16bit W3 = load_le<u16bit>(in, 1);
       u16bit W4 = load_le<u16bit>(in, 0);
 
-      step_A(W1,W4, 1); step_A(W4,W3, 2); step_A(W3,W2, 3); step_A(W2,W1, 4);
-      step_A(W1,W4, 5); step_A(W4,W3, 6); step_A(W3,W2, 7); step_A(W2,W1, 8);
+      step_A(W1, W4,  1, FTAB); step_A(W4, W3,  2, FTAB);
+      step_A(W3, W2,  3, FTAB); step_A(W2, W1,  4, FTAB);
+      step_A(W1, W4,  5, FTAB); step_A(W4, W3,  6, FTAB);
+      step_A(W3, W2,  7, FTAB); step_A(W2, W1,  8, FTAB);
 
-      step_B(W1,W2, 9); step_B(W4,W1,10); step_B(W3,W4,11); step_B(W2,W3,12);
-      step_B(W1,W2,13); step_B(W4,W1,14); step_B(W3,W4,15); step_B(W2,W3,16);
+      step_B(W1, W2,  9, FTAB); step_B(W4, W1, 10, FTAB);
+      step_B(W3, W4, 11, FTAB); step_B(W2, W3, 12, FTAB);
+      step_B(W1, W2, 13, FTAB); step_B(W4, W1, 14, FTAB);
+      step_B(W3, W4, 15, FTAB); step_B(W2, W3, 16, FTAB);
 
-      step_A(W1,W4,17); step_A(W4,W3,18); step_A(W3,W2,19); step_A(W2,W1,20);
-      step_A(W1,W4,21); step_A(W4,W3,22); step_A(W3,W2,23); step_A(W2,W1,24);
+      step_A(W1, W4, 17, FTAB); step_A(W4, W3, 18, FTAB);
+      step_A(W3, W2, 19, FTAB); step_A(W2, W1, 20, FTAB);
+      step_A(W1, W4, 21, FTAB); step_A(W4, W3, 22, FTAB);
+      step_A(W3, W2, 23, FTAB); step_A(W2, W1, 24, FTAB);
 
-      step_B(W1,W2,25); step_B(W4,W1,26); step_B(W3,W4,27); step_B(W2,W3,28);
-      step_B(W1,W2,29); step_B(W4,W1,30); step_B(W3,W4,31); step_B(W2,W3,32);
+      step_B(W1, W2, 25, FTAB); step_B(W4, W1, 26, FTAB);
+      step_B(W3, W4, 27, FTAB); step_B(W2, W3, 28, FTAB);
+      step_B(W1, W2, 29, FTAB); step_B(W4, W1, 30, FTAB);
+      step_B(W3, W4, 31, FTAB); step_B(W2, W3, 32, FTAB);
 
       store_le(out, W4, W3, W2, W1);
 
@@ -53,79 +123,31 @@ void Skipjack::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       u16bit W3 = load_le<u16bit>(in, 1);
       u16bit W4 = load_le<u16bit>(in, 0);
 
-      step_Bi(W2,W3,32); step_Bi(W3,W4,31); step_Bi(W4,W1,30); step_Bi(W1,W2,29);
-      step_Bi(W2,W3,28); step_Bi(W3,W4,27); step_Bi(W4,W1,26); step_Bi(W1,W2,25);
+      step_Bi(W2, W3, 32, FTAB); step_Bi(W3, W4, 31, FTAB);
+      step_Bi(W4, W1, 30, FTAB); step_Bi(W1, W2, 29, FTAB);
+      step_Bi(W2, W3, 28, FTAB); step_Bi(W3, W4, 27, FTAB);
+      step_Bi(W4, W1, 26, FTAB); step_Bi(W1, W2, 25, FTAB);
 
-      step_Ai(W1,W2,24); step_Ai(W2,W3,23); step_Ai(W3,W4,22); step_Ai(W4,W1,21);
-      step_Ai(W1,W2,20); step_Ai(W2,W3,19); step_Ai(W3,W4,18); step_Ai(W4,W1,17);
+      step_Ai(W1, W2, 24, FTAB); step_Ai(W2, W3, 23, FTAB);
+      step_Ai(W3, W4, 22, FTAB); step_Ai(W4, W1, 21, FTAB);
+      step_Ai(W1, W2, 20, FTAB); step_Ai(W2, W3, 19, FTAB);
+      step_Ai(W3, W4, 18, FTAB); step_Ai(W4, W1, 17, FTAB);
 
-      step_Bi(W2,W3,16); step_Bi(W3,W4,15); step_Bi(W4,W1,14); step_Bi(W1,W2,13);
-      step_Bi(W2,W3,12); step_Bi(W3,W4,11); step_Bi(W4,W1,10); step_Bi(W1,W2, 9);
+      step_Bi(W2, W3, 16, FTAB); step_Bi(W3, W4, 15, FTAB);
+      step_Bi(W4, W1, 14, FTAB); step_Bi(W1, W2, 13, FTAB);
+      step_Bi(W2, W3, 12, FTAB); step_Bi(W3, W4, 11, FTAB);
+      step_Bi(W4, W1, 10, FTAB); step_Bi(W1, W2,  9, FTAB);
 
-      step_Ai(W1,W2, 8); step_Ai(W2,W3, 7); step_Ai(W3,W4, 6); step_Ai(W4,W1, 5);
-      step_Ai(W1,W2, 4); step_Ai(W2,W3, 3); step_Ai(W3,W4, 2); step_Ai(W4,W1, 1);
+      step_Ai(W1, W2,  8, FTAB); step_Ai(W2, W3,  7, FTAB);
+      step_Ai(W3, W4,  6, FTAB); step_Ai(W4, W1,  5, FTAB);
+      step_Ai(W1, W2,  4, FTAB); step_Ai(W2, W3,  3, FTAB);
+      step_Ai(W3, W4,  2, FTAB); step_Ai(W4, W1,  1, FTAB);
 
       store_le(out, W4, W3, W2, W1);
 
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;
       }
-   }
-
-/*
-* Skipjack Stepping Rule 'A'
-*/
-void Skipjack::step_A(u16bit& W1, u16bit& W4, u32bit round) const
-   {
-   byte G1 = get_byte(0, W1), G2 = get_byte(1, W1), G3;
-   G3 = FTABLE[(4 * round - 4) % 10][G2] ^ G1;
-   G1 = FTABLE[(4 * round - 3) % 10][G3] ^ G2;
-   G2 = FTABLE[(4 * round - 2) % 10][G1] ^ G3;
-   G3 = FTABLE[(4 * round - 1) % 10][G2] ^ G1;
-   W1 =  make_u16bit(G2, G3);
-   W4 ^= W1 ^ round;
-   }
-
-/*
-* Skipjack Stepping Rule 'B'
-*/
-void Skipjack::step_B(u16bit& W1, u16bit& W2, u32bit round) const
-   {
-   W2 ^= W1 ^ round;
-   byte G1 = get_byte(0, W1), G2 = get_byte(1, W1), G3;
-   G3 = FTABLE[(4 * round - 4) % 10][G2] ^ G1;
-   G1 = FTABLE[(4 * round - 3) % 10][G3] ^ G2;
-   G2 = FTABLE[(4 * round - 2) % 10][G1] ^ G3;
-   G3 = FTABLE[(4 * round - 1) % 10][G2] ^ G1;
-   W1 =  make_u16bit(G2, G3);
-   }
-
-/*
-* Skipjack Invserse Stepping Rule 'A'
-*/
-void Skipjack::step_Ai(u16bit& W1, u16bit& W2, u32bit round) const
-   {
-   W1 ^= W2 ^ round;
-   byte G1 = get_byte(1, W2), G2 = get_byte(0, W2), G3;
-   G3 = FTABLE[(4 * round - 1) % 10][G2] ^ G1;
-   G1 = FTABLE[(4 * round - 2) % 10][G3] ^ G2;
-   G2 = FTABLE[(4 * round - 3) % 10][G1] ^ G3;
-   G3 = FTABLE[(4 * round - 4) % 10][G2] ^ G1;
-   W2 = make_u16bit(G3, G2);
-   }
-
-/*
-* Skipjack Invserse Stepping Rule 'B'
-*/
-void Skipjack::step_Bi(u16bit& W2, u16bit& W3, u32bit round) const
-   {
-   byte G1 = get_byte(1, W2), G2 = get_byte(0, W2), G3;
-   G3 = FTABLE[(4 * round - 1) % 10][G2] ^ G1;
-   G1 = FTABLE[(4 * round - 2) % 10][G3] ^ G2;
-   G2 = FTABLE[(4 * round - 3) % 10][G1] ^ G3;
-   G3 = FTABLE[(4 * round - 4) % 10][G2] ^ G1;
-   W2 = make_u16bit(G3, G2);
-   W3 ^= W2 ^ round;
    }
 
 /*
@@ -157,9 +179,9 @@ void Skipjack::key_schedule(const byte key[], u32bit)
       0x5E, 0x6C, 0xA9, 0x13, 0x57, 0x25, 0xB5, 0xE3, 0xBD, 0xA8, 0x3A, 0x01,
       0x05, 0x59, 0x2A, 0x46 };
 
-   for(u32bit j = 0; j != 10; ++j)
-      for(u32bit k = 0; k != 256; ++k)
-         FTABLE[j][k] = F[k ^ key[9-j]];
+   for(u32bit i = 0; i != 10; ++i)
+      for(u32bit j = 0; j != 256; ++j)
+         FTAB[256*i+j] = F[j ^ key[9-i]];
    }
 
 /*
@@ -167,8 +189,7 @@ void Skipjack::key_schedule(const byte key[], u32bit)
 */
 void Skipjack::clear()
    {
-   for(u32bit j = 0; j != 10; ++j)
-      FTABLE[j].clear();
+   FTAB.clear();
    }
 
 }

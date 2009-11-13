@@ -64,7 +64,8 @@ int main(int argc, char* argv[])
       if(do_CA)
          opts.CA_key();
 
-      X509_Certificate cert = X509::create_self_signed_cert(opts, key, rng);
+      X509_Certificate cert =
+         X509::create_self_signed_cert(opts, key, "SHA-256", rng);
 
       std::ofstream cert_file("cert.pem");
       cert_file << cert.PEM_encode();

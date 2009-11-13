@@ -1,5 +1,5 @@
 /*
-* MD4 Source File
+* MD4 in IA-32 assembler
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
