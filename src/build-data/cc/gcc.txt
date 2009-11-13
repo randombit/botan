@@ -1,6 +1,6 @@
 macro_name "GCC"
 
-binary_name "g++-4.4.1"
+binary_name "g++-4.5-20091112"
 
 compiler_has_tr1 yes
 
