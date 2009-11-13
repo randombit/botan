@@ -156,8 +156,8 @@ BigInt fpe_decrypt(const BigInt& n, const BigInt& X0,
       BigInt W = X % a;
       BigInt R = X / a;
 
-      BigInt L = (W - F(r-i, R)) % a;
-      X = b*L + R;
+      BigInt L = (W - F(r-i-1, R)) % a;
+      X = b * L + R;
       }
 
    return X;
