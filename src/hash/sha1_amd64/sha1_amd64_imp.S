@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/asm_macr.h>
+#include <botan/asm_macr_amd64.h>
 
 START_LISTING(sha1_amd64.S)
 
