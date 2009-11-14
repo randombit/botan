@@ -67,7 +67,7 @@ void factor(BigInt n, BigInt& a, BigInt& b)
 * of rounds to use for FPE is 2+log_a(b). If a >= b then log_a(b) <= 1
 * so 3 rounds is safe. The FPE factorization routine should always
 * return a >= b, so just confirm that and return 3.
-* /
+*/
 u32bit rounds(const BigInt& a, const BigInt& b)
    {
    if(a < b)
