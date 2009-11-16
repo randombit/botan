@@ -464,12 +464,12 @@ bool X509_Store::is_revoked(const X509_Certificate& cert) const
 * Retrieve all the certificates in the store
 */
 std::vector<X509_Certificate>
-X509_Store::get_certs(const Search_Func& search) const
+X509_Store::get_certs(std::function<bool (const X509_Certificate&)> pred) const
    {
    std::vector<X509_Certificate> found_certs;
    for(u32bit j = 0; j != certs.size(); ++j)
       {
-      if(search.match(certs[j].cert))
+      if(pred(certs[j].cert))
          found_certs.push_back(certs[j].cert);
       }
    return found_certs;
