@@ -300,19 +300,11 @@ bool operator!=(const X509_Certificate& cert1, const X509_Certificate& cert2)
 */
 X509_DN create_dn(const Data_Store& info)
    {
-   class DN_Matcher : public Data_Store::Matcher
+   auto names = info.search_for(
+      [](const std::string& key, const std::string&)
       {
-      public:
-         bool operator()(const std::string& key, const std::string&) const
-            {
-            if(key.find("X520.") != std::string::npos)
-               return true;
-            return false;
-            }
-      };
-
-   std::multimap<std::string, std::string> names =
-      info.search_with(DN_Matcher());
+         return (key.find("X520.") != std::string::npos);
+      });
 
    X509_DN dn;
 
@@ -327,27 +319,14 @@ X509_DN create_dn(const Data_Store& info)
 */
 AlternativeName create_alt_name(const Data_Store& info)
    {
-   class AltName_Matcher : public Data_Store::Matcher
+   auto names = info.search_for(
+      [](const std::string& key, const std::string&)
       {
-      public:
-         bool operator()(const std::string& key, const std::string&) const
-            {
-            for(u32bit j = 0; j != matches.size(); ++j)
-               if(key.compare(matches[j]) == 0)
-                  return true;
-            return false;
-            }
-
-         AltName_Matcher(const std::string& match_any_of)
-            {
-            matches = split_on(match_any_of, '/');
-            }
-      private:
-         std::vector<std::string> matches;
-      };
-
-   std::multimap<std::string, std::string> names =
-      info.search_with(AltName_Matcher("RFC822/DNS/URI/IP"));
+         return (key == "RFC822" ||
+                 key == "DNS" ||
+                 key == "URI" ||
+                 key == "IP");
+      });
 
    AlternativeName alt_name;
 
