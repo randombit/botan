@@ -99,7 +99,8 @@ Algorithm_Factory::Algorithm_Factory(const std::vector<Engine*>& engines_in)
 */
 Algorithm_Factory::~Algorithm_Factory()
    {
-   std::for_each(engines.begin(), engines.end(), del_fun<Engine>());
+   for(auto i = engines.begin(); i != engines.end(); ++i)
+      delete *i;
 
    delete block_cipher_cache;
    delete stream_cipher_cache;

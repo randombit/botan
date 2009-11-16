@@ -170,8 +170,7 @@ void Library_State::set(const std::string& section, const std::string& key,
 
    std::string full_key = section + "/" + key;
 
-   std::map<std::string, std::string>::const_iterator i =
-      config.find(full_key);
+   auto i = config.find(full_key);
 
    if(overwrite || i == config.end() || i->second == "")
       config[full_key] = value;

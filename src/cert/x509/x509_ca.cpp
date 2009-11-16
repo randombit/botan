@@ -15,9 +15,6 @@
 #include <botan/look_pk.h>
 #include <botan/oids.h>
 #include <botan/time.h>
-#include <algorithm>
-#include <typeinfo>
-#include <iterator>
 #include <memory>
 #include <set>
 
@@ -175,8 +172,7 @@ X509_CRL X509_CA::update_crl(const X509_CRL& crl,
 
    for(u32bit j = 0; j != already_revoked.size(); ++j)
       {
-      std::set<SecureVector<byte> >::const_iterator i;
-      i = removed_from_crl.find(already_revoked[j].serial_number());
+      auto i = removed_from_crl.find(already_revoked[j].serial_number());
 
       if(i == removed_from_crl.end())
          all_revoked.push_back(already_revoked[j]);

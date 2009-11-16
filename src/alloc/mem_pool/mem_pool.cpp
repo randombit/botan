@@ -190,8 +190,8 @@ void Pooling_Allocator::deallocate(void* ptr, u32bit n)
       {
       const u32bit block_no = round_up(n, BLOCK_SIZE) / BLOCK_SIZE;
 
-      std::vector<Memory_Block>::iterator i =
-         std::lower_bound(blocks.begin(), blocks.end(), Memory_Block(ptr));
+      auto i = std::lower_bound(blocks.begin(), blocks.end(),
+                                Memory_Block(ptr));
 
       if(i == blocks.end() || !i->contains(ptr, block_no))
          throw Invalid_State("Pointer released to the wrong allocator");
@@ -208,7 +208,7 @@ byte* Pooling_Allocator::allocate_blocks(u32bit n)
    if(blocks.empty())
       return 0;
 
-   std::vector<Memory_Block>::iterator i = last_used;
+   auto i = last_used;
 
    do
       {

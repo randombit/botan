@@ -27,12 +27,8 @@ std::vector<std::string> lookup_oids(const std::vector<std::string>& in)
    {
    std::vector<std::string> out;
 
-   std::vector<std::string>::const_iterator i = in.begin();
-   while(i != in.end())
-      {
+   for(auto i = in.begin(); i != in.end(); ++i)
       out.push_back(OIDS::lookup(OID(*i)));
-      ++i;
-      }
    return out;
    }
 
@@ -320,9 +316,8 @@ X509_DN create_dn(const Data_Store& info)
 
    X509_DN dn;
 
-   std::multimap<std::string, std::string>::iterator j;
-   for(j = names.begin(); j != names.end(); ++j)
-      dn.add_attribute(j->first, j->second);
+   for(auto i = names.begin(); i != names.end(); ++i)
+      dn.add_attribute(i->first, i->second);
 
    return dn;
    }
@@ -356,9 +351,8 @@ AlternativeName create_alt_name(const Data_Store& info)
 
    AlternativeName alt_name;
 
-   std::multimap<std::string, std::string>::iterator j;
-   for(j = names.begin(); j != names.end(); ++j)
-      alt_name.add_attribute(j->first, j->second);
+   for(auto i = names.begin(); i != names.end(); ++i)
+      alt_name.add_attribute(i->first, i->second);
 
    return alt_name;
    }
