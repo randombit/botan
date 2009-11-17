@@ -106,13 +106,10 @@ class MemoryRegion
       * @param in the buffer to copy the contents from.
       * @return a reference to *this
       */
-      MemoryRegion<T>& operator=(const MemoryRegion<T>& in)
-         { if(this != &in) set(in); return (*this); }
+      MemoryRegion<T>& operator=(const MemoryRegion<T>& other)
+         { if(this != &other) set(other); return (*this); }
 
       /**
-      * The use of this function is discouraged because of the risk of memory
-      * errors. Use MemoryRegion<T>::set()
-      * instead.
       * Copy the contents of an array of objects of type T into this buffer.
       * The former contents of *this are discarded.
       * The length of *this must be at least n, otherwise memory errors occur.
@@ -123,9 +120,6 @@ class MemoryRegion
          { copy(0, in, n); }
 
       /**
-      * The use of this function is discouraged because of the risk of memory
-      * errors. Use MemoryRegion<T>::set()
-      * instead.
       * Copy the contents of an array of objects of type T into this buffer.
       * The former contents of *this are discarded.
       * The length of *this must be at least n, otherwise memory errors occur.
