@@ -144,10 +144,10 @@ CMAC::CMAC(BlockCipher* e_in) :
    else
       throw Invalid_Argument("CMAC cannot use the cipher " + e->name());
 
-   state.create(OUTPUT_LENGTH);
-   buffer.create(OUTPUT_LENGTH);
-   B.create(OUTPUT_LENGTH);
-   P.create(OUTPUT_LENGTH);
+   state.resize(OUTPUT_LENGTH);
+   buffer.resize(OUTPUT_LENGTH);
+   B.resize(OUTPUT_LENGTH);
+   P.resize(OUTPUT_LENGTH);
    position = 0;
    }
 

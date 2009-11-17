@@ -21,8 +21,8 @@ const u32bit HEX_CODEC_BUFFER_SIZE = 256;
 Hex_Encoder::Hex_Encoder(bool breaks, u32bit length, Case c) :
    casing(c), line_length(breaks ? length : 0)
    {
-   in.create(HEX_CODEC_BUFFER_SIZE);
-   out.create(2*in.size());
+   in.resize(HEX_CODEC_BUFFER_SIZE);
+   out.resize(2*in.size());
    counter = position = 0;
    }
 
@@ -31,8 +31,8 @@ Hex_Encoder::Hex_Encoder(bool breaks, u32bit length, Case c) :
 */
 Hex_Encoder::Hex_Encoder(Case c) : casing(c), line_length(0)
    {
-   in.create(HEX_CODEC_BUFFER_SIZE);
-   out.create(2*in.size());
+   in.resize(HEX_CODEC_BUFFER_SIZE);
+   out.resize(2*in.size());
    counter = position = 0;
    }
 
@@ -116,8 +116,8 @@ void Hex_Encoder::end_msg()
 */
 Hex_Decoder::Hex_Decoder(Decoder_Checking c) : checking(c)
    {
-   in.create(HEX_CODEC_BUFFER_SIZE);
-   out.create(in.size() / 2);
+   in.resize(HEX_CODEC_BUFFER_SIZE);
+   out.resize(in.size() / 2);
    position = 0;
    }
 

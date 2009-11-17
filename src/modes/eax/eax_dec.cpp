@@ -19,7 +19,7 @@ EAX_Decryption::EAX_Decryption(BlockCipher* ciph,
                                u32bit tag_size) :
    EAX_Base(ciph, tag_size)
    {
-   queue.create(2*TAG_SIZE + DEFAULT_BUFFERSIZE);
+   queue.resize(2*TAG_SIZE + DEFAULT_BUFFERSIZE);
    queue_start = queue_end = 0;
    }
 
@@ -34,7 +34,7 @@ EAX_Decryption::EAX_Decryption(BlockCipher* ciph,
    {
    set_key(key);
    set_iv(iv);
-   queue.create(2*TAG_SIZE + DEFAULT_BUFFERSIZE);
+   queue.resize(2*TAG_SIZE + DEFAULT_BUFFERSIZE);
    queue_start = queue_end = 0;
    }
 

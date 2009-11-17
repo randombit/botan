@@ -86,7 +86,7 @@ Public_Key* load_key(DataSource& source)
          .end_cons();
          }
 
-      if(key_bits.is_empty())
+      if(key_bits.empty())
          throw Decoding_Error("X.509 public key decoding failed");
 
       const std::string alg_name = OIDS::lookup(alg_id.oid);

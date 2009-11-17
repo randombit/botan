@@ -100,10 +100,10 @@ void PBE_PKCS5v20::new_params(RandomNumberGenerator& rng)
    iterations = 2048;
    key_length = block_cipher->MAXIMUM_KEYLENGTH;
 
-   salt.create(8);
+   salt.resize(8);
    rng.randomize(salt, salt.size());
 
-   iv.create(block_cipher->BLOCK_SIZE);
+   iv.resize(block_cipher->BLOCK_SIZE);
    rng.randomize(iv, iv.size());
    }
 

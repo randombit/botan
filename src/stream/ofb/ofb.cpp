@@ -21,7 +21,7 @@ OFB::OFB(BlockCipher* ciph) :
    permutation(ciph)
    {
    position = 0;
-   buffer.create(permutation->BLOCK_SIZE);
+   buffer.resize(permutation->BLOCK_SIZE);
    }
 
 /*

@@ -20,8 +20,8 @@ BlockCipherMode::BlockCipherMode(BlockCipher* cipher_ptr,
    IV_METHOD(iv_meth), mode_name(cipher_mode_name)
    {
    cipher = cipher_ptr;
-   buffer.create(BUFFER_SIZE);
-   state.create(iv_size);
+   buffer.resize(BUFFER_SIZE);
+   state.resize(iv_size);
    position = 0;
    }
 

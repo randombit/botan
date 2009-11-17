@@ -205,7 +205,7 @@ BER_Object BER_Decoder::get_next_object()
       return next;
 
    u32bit length = decode_length(source);
-   next.value.create(length);
+   next.value.resize(length);
    if(source->read(next.value, length) != length)
       throw BER_Decoding_Error("Value truncated");
 
@@ -392,7 +392,7 @@ BER_Decoder& BER_Decoder::decode(BigInt& out,
    BER_Object obj = get_next_object();
    obj.assert_is_a(type_tag, class_tag);
 
-   if(obj.value.is_empty())
+   if(obj.value.empty())
       out = 0;
    else
       {

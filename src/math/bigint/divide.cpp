@@ -62,7 +62,7 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
 
       const u32bit n = r.sig_words() - 1, t = y_words - 1;
 
-      q.get_reg().create(n - t + 1);
+      q.get_reg().resize(n - t + 1);
       if(n <= t)
          {
          while(r > y) { r -= y; ++q; }

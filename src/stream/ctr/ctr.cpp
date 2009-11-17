@@ -22,8 +22,8 @@ CTR_BE::CTR_BE(BlockCipher* ciph) :
    {
    position = 0;
 
-   counter.create(permutation->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_CTR);
-   buffer.create(permutation->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_CTR);
+   counter.resize(permutation->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_CTR);
+   buffer.resize(permutation->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_CTR);
    }
 
 /*

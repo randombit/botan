@@ -30,7 +30,7 @@ class ECB_Encryption_ErrorCheck : public Filter
          cipher = get_block_cipher(cipher_name);
          input_hash = get_hash(HASH);
          decrypt_hash = get_hash(HASH);
-         buffer.create(BLOCKSIZE);
+         buffer.resize(BLOCKSIZE);
          cipher->set_key(key);
          position = 0;
          }

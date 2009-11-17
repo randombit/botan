@@ -48,7 +48,7 @@ void S2K::change_salt(const MemoryRegion<byte>& new_salt)
 void S2K::new_random_salt(RandomNumberGenerator& rng,
                           u32bit length)
    {
-   salt.create(length);
+   salt.resize(length);
    rng.randomize(salt, length);
    }
 

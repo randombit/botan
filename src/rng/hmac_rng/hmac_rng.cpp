@@ -172,7 +172,7 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
    extractor(extractor_mac), prf(prf_mac)
    {
    // First PRF inputs are all zero, as specified in section 2
-   K.create(prf->OUTPUT_LENGTH);
+   K.resize(prf->OUTPUT_LENGTH);
    counter = 0;
    seeded = false;
 

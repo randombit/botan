@@ -83,8 +83,8 @@ SSL3_MAC::SSL3_MAC(HashFunction* hash_in) :
    u32bit INNER_HASH_LENGTH =
       (hash->name() == "SHA-160") ? 60 : hash->HASH_BLOCK_SIZE;
 
-   i_key.create(INNER_HASH_LENGTH);
-   o_key.create(INNER_HASH_LENGTH);
+   i_key.resize(INNER_HASH_LENGTH);
+   o_key.resize(INNER_HASH_LENGTH);
    }
 
 }

@@ -24,8 +24,8 @@ ECB_Encryption::ECB_Encryption(BlockCipher* ciph,
    cipher = ciph;
    padder = pad;
 
-   plaintext.create(cipher->BLOCK_SIZE);
-   ciphertext.create(cipher->BLOCK_SIZE * PARALLEL_BLOCKS);
+   plaintext.resize(cipher->BLOCK_SIZE);
+   ciphertext.resize(cipher->BLOCK_SIZE * PARALLEL_BLOCKS);
 
    position = 0;
    }
@@ -40,8 +40,8 @@ ECB_Encryption::ECB_Encryption(BlockCipher* ciph,
    cipher = ciph;
    padder = pad;
 
-   plaintext.create(cipher->BLOCK_SIZE);
-   ciphertext.create(cipher->BLOCK_SIZE * PARALLEL_BLOCKS);
+   plaintext.resize(cipher->BLOCK_SIZE);
+   ciphertext.resize(cipher->BLOCK_SIZE * PARALLEL_BLOCKS);
 
    position = 0;
 
@@ -124,8 +124,8 @@ ECB_Decryption::ECB_Decryption(BlockCipher* ciph,
    cipher = ciph;
    padder = pad;
 
-   ciphertext.create(cipher->BLOCK_SIZE);
-   plaintext.create(cipher->BLOCK_SIZE * PARALLEL_BLOCKS);
+   ciphertext.resize(cipher->BLOCK_SIZE);
+   plaintext.resize(cipher->BLOCK_SIZE * PARALLEL_BLOCKS);
 
    position = 0;
    }
@@ -140,8 +140,8 @@ ECB_Decryption::ECB_Decryption(BlockCipher* ciph,
    cipher = ciph;
    padder = pad;
 
-   ciphertext.create(cipher->BLOCK_SIZE);
-   plaintext.create(cipher->BLOCK_SIZE * PARALLEL_BLOCKS);
+   ciphertext.resize(cipher->BLOCK_SIZE);
+   plaintext.resize(cipher->BLOCK_SIZE * PARALLEL_BLOCKS);
 
    position = 0;
 

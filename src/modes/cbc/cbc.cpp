@@ -90,7 +90,7 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
    {
    if(!padder->valid_blocksize(BLOCK_SIZE))
       throw Invalid_Block_Size(name(), padder->name());
-   temp.create(BLOCK_SIZE);
+   temp.resize(BLOCK_SIZE);
    }
 
 /*
@@ -105,7 +105,7 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
    {
    if(!padder->valid_blocksize(BLOCK_SIZE))
       throw Invalid_Block_Size(name(), padder->name());
-   temp.create(BLOCK_SIZE);
+   temp.resize(BLOCK_SIZE);
    set_key(key);
    set_iv(iv);
    }

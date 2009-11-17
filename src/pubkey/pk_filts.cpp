@@ -72,7 +72,7 @@ void PK_Verifier_Filter::write(const byte input[], u32bit length)
 */
 void PK_Verifier_Filter::end_msg()
    {
-   if(signature.is_empty())
+   if(signature.empty())
       throw Exception("PK_Verifier_Filter: No signature to check against");
    bool is_valid = verifier->check_signature(signature, signature.size());
    send((is_valid ? 1 : 0));

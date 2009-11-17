@@ -29,7 +29,7 @@ class Entropy_Accumulator
       @return cached I/O buffer for repeated polls
       */
       MemoryRegion<byte>& get_io_buffer(u32bit size)
-         { io_buffer.create(size); return io_buffer; }
+         { io_buffer.resize(size); return io_buffer; }
 
       u32bit bits_collected() const
          { return static_cast<u32bit>(collected_bits); }

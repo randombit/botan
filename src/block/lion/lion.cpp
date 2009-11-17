@@ -119,8 +119,8 @@ Lion::Lion(HashFunction* hash_in, StreamCipher* sc_in, u32bit block_len) :
    if(!cipher->valid_keylength(LEFT_SIZE))
       throw Exception(name() + ": This stream/hash combination is invalid");
 
-   key1.create(LEFT_SIZE);
-   key2.create(LEFT_SIZE);
+   key1.resize(LEFT_SIZE);
+   key2.resize(LEFT_SIZE);
    }
 
 }

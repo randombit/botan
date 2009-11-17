@@ -222,7 +222,7 @@ u32bit Turing::fixedS(u32bit W)
 */
 void Turing::key_schedule(const byte key[], u32bit length)
    {
-   K.create(length / 4);
+   K.resize(length / 4);
    for(u32bit j = 0; j != length; ++j)
       K[j/4] = (K[j/4] << 8) + key[j];
 

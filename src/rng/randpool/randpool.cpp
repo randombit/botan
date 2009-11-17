@@ -192,9 +192,9 @@ Randpool::Randpool(BlockCipher* cipher_in,
                            cipher->name() + "/" + mac->name());
       }
 
-   buffer.create(BLOCK_SIZE);
-   pool.create(POOL_BLOCKS * BLOCK_SIZE);
-   counter.create(12);
+   buffer.resize(BLOCK_SIZE);
+   pool.resize(POOL_BLOCKS * BLOCK_SIZE);
+   counter.resize(12);
    seeded = false;
    }
 

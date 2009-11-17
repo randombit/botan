@@ -20,7 +20,7 @@ namespace Botan {
 OctetString::OctetString(RandomNumberGenerator& rng,
                          u32bit length)
    {
-   bits.create(length);
+   bits.resize(length);
    rng.randomize(bits, length);
    }
 
@@ -36,7 +36,7 @@ void OctetString::change(const std::string& hex_string)
 
    if(hex.size() % 2 != 0)
       throw Invalid_Argument("OctetString: hex string must encode full bytes");
-   bits.create(hex.size() / 2);
+   bits.resize(hex.size() / 2);
    for(u32bit j = 0; j != bits.size(); ++j)
       bits[j] = Hex_Decoder::decode(hex.begin() + 2*j);
    }
@@ -46,7 +46,7 @@ void OctetString::change(const std::string& hex_string)
 */
 void OctetString::change(const byte in[], u32bit n)
    {
-   bits.create(n);
+   bits.resize(n);
    bits.copy(in, n);
    }
 

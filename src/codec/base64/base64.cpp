@@ -18,8 +18,8 @@ namespace Botan {
 Base64_Encoder::Base64_Encoder(bool breaks, u32bit length, bool t_n) :
    line_length(breaks ? length : 0), trailing_newline(t_n)
    {
-   in.create(48);
-   out.create(4);
+   in.resize(48);
+   out.resize(4);
 
    counter = position = 0;
    }
@@ -132,8 +132,8 @@ void Base64_Encoder::end_msg()
 */
 Base64_Decoder::Base64_Decoder(Decoder_Checking c) : checking(c)
    {
-   in.create(48);
-   out.create(3);
+   in.resize(48);
+   out.resize(3);
    position = 0;
    }
 

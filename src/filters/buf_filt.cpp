@@ -18,8 +18,8 @@ Buffering_Filter::Buffering_Filter(u32bit b, u32bit i) : INITIAL_BLOCK_SIZE(i),
                                                          BLOCK_SIZE(b)
    {
    initial_block_pos = block_pos = 0;
-   initial.create(INITIAL_BLOCK_SIZE);
-   block.create(BLOCK_SIZE);
+   initial.resize(INITIAL_BLOCK_SIZE);
+   block.resize(BLOCK_SIZE);
    }
 
 /*
