@@ -16,15 +16,17 @@ namespace {
 /*
 * Perform an N-way PHT
 */
-inline void PHT(MemoryRegion<u32bit>& buf)
+inline void PHT(u32bit buf[], u32bit buf_size)
    {
    u32bit sum = 0;
-   for(u32bit j = 0; j < buf.size() - 1; ++j)
-      sum += buf[j];
-   buf[buf.size()-1] += sum;
-   sum = buf[buf.size()-1];
-   for(u32bit j = 0; j < buf.size() - 1; ++j)
-      buf[j] += sum;
+   for(u32bit i = 0; i < buf_size - 1; ++i)
+      sum += buf[i];
+
+   buf[buf_size-1] += sum;
+
+   sum = buf[buf_size-1];
+   for(u32bit i = 0; i < buf_size - 1; ++i)
+      buf[i] += sum;
    }
 
 }
@@ -229,7 +231,7 @@ void Turing::key_schedule(const byte key[], u32bit length)
    for(u32bit j = 0; j != K.size(); ++j)
       K[j] = fixedS(K[j]);
 
-   PHT(K);
+   PHT(K, K.size());
 
    for(u32bit i = 0; i != 256; ++i)
       {
@@ -269,25 +271,25 @@ void Turing::set_iv(const byte iv[], u32bit length)
       throw Invalid_IV_Length(name(), length);
 
    SecureVector<u32bit> IV(length / 4);
-   for(u32bit j = 0; j != length; ++j)
-      IV[j/4] = (IV[j/4] << 8) + iv[j];
+   for(u32bit i = 0; i != length; ++i)
+      IV[i/4] = (IV[i/4] << 8) + iv[i];
 
-   for(u32bit j = 0; j != IV.size(); ++j)
-      R[j] = IV[j] = fixedS(IV[j]);
+   for(u32bit i = 0; i != IV.size(); ++i)
+      R[i] = IV[i] = fixedS(IV[i]);
 
-   for(u32bit j = 0; j != K.size(); ++j)
-      R[j+IV.size()] = K[j];
+   for(u32bit i = 0; i != K.size(); ++i)
+      R[i+IV.size()] = K[i];
 
    R[K.size() + IV.size()] = (0x010203 << 8) | (K.size() << 4) | IV.size();
 
-   for(u32bit j = K.size() + IV.size() + 1; j != 17; ++j)
+   for(u32bit i = K.size() + IV.size() + 1; i != 17; ++i)
       {
-      const u32bit W = R[j-K.size()-IV.size()-1] + R[j-1];
-      R[j] = S0[get_byte(0, W)] ^ S1[get_byte(1, W)] ^
+      const u32bit W = R[i-K.size()-IV.size()-1] + R[i-1];
+      R[i] = S0[get_byte(0, W)] ^ S1[get_byte(1, W)] ^
              S2[get_byte(2, W)] ^ S3[get_byte(3, W)];
       }
 
-   PHT(R);
+   PHT(R, 17);
 
    generate();
    }
