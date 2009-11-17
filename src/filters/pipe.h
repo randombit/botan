@@ -244,10 +244,11 @@ class BOTAN_DLL Pipe : public DataSource
       */
       Pipe(std::initializer_list<Filter*> filters);
 
+      Pipe(const Pipe&) = delete;
+      Pipe& operator=(const Pipe&) = delete;
+
       ~Pipe();
    private:
-      Pipe(const Pipe&) : DataSource() {}
-      Pipe& operator=(const Pipe&) { return (*this); }
       void init();
       void destruct(Filter*);
       void find_endpoints(Filter*);

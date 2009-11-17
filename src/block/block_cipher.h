@@ -14,21 +14,6 @@ namespace Botan {
 
 /**
 * This class represents a block cipher object.
-*
-* It would be very useful to extend this interface to support the
-* encryption of multiple blocks at a time. This could help
-* performance, wrt cache effects in the software implementations, and
-* could be a big deal when supporting block ciphers implemented as
-* hardware devices. It could be used by implementations of ECB, and
-* more importantly counter mode (which most designs are moving to, due
-* to the parallelism possible in counter mode which is not the case
-* with feedback-based modes like CBC).
-*
-* Probable future API here:
-* virtual void encrypt_n(const byte in[], byte out[],
-*                        u32bit blocks) const = 0;
-* virtual void decrypt_n(const byte in[], byte out[],
-*                        u32bit blocks) const = 0;
 */
 class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
    {

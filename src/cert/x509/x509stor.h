@@ -94,14 +94,14 @@ class BOTAN_DLL X509_Store
 
       static X509_Code check_sig(const X509_Object&, Public_Key*);
 
+      X509_Store& operator=(const X509_Store&) = delete;
+
       X509_Store(u32bit time_slack = 24*60*60,
                  u32bit cache_results = 30*60);
 
       X509_Store(const X509_Store&);
       ~X509_Store();
    private:
-      X509_Store& operator=(const X509_Store&) { return (*this); }
-
       class BOTAN_DLL Cert_Info
          {
          public:

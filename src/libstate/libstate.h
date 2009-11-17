@@ -28,6 +28,9 @@ class BOTAN_DLL Library_State
       Library_State();
       ~Library_State();
 
+      Library_State(const Library_State&) = delete;
+      Library_State& operator=(const Library_State&) = delete;
+
       void initialize();
 
       Algorithm_Factory& algorithm_factory();
@@ -95,9 +98,6 @@ class BOTAN_DLL Library_State
       std::string deref_alias(const std::string&);
    private:
       void load_default_config();
-
-      Library_State(const Library_State&) {}
-      Library_State& operator=(const Library_State&) { return (*this); }
 
       std::mutex config_lock;
       std::map<std::string, std::string> config;
