@@ -11,6 +11,7 @@
 #include <botan/data_src.h>
 #include <botan/filter.h>
 #include <botan/exceptn.h>
+#include <initializer_list>
 #include <iosfwd>
 
 namespace Botan {
@@ -238,11 +239,11 @@ class BOTAN_DLL Pipe : public DataSource
       Pipe(Filter* = 0, Filter* = 0, Filter* = 0, Filter* = 0);
 
       /**
-      * Construct a Pipe from range of filters passed as an array
+      * Construct a Pipe from a list of filters
       * @param filters the set of filters to use
-      * @param count the number of elements in filters
       */
-      Pipe(Filter* filters[], u32bit count);
+      Pipe(std::initializer_list<Filter*> filters);
+
       ~Pipe();
    private:
       Pipe(const Pipe&) : DataSource() {}
