@@ -1,14 +1,13 @@
 /*
-* IF (RSA/RW) Operation
-* (C) 1999-2007 Jack Lloyd
+* Integer Factorization Scheme (RSA/RW) Operation
+* (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/if_op.h>
 #include <botan/numthry.h>
-#include <future>
-#include <thread>
+#include <botan/async.h>
 
 namespace Botan {
 
@@ -44,22 +43,10 @@ BigInt Default_IF_Op::private_op(const BigInt& i) const
    * A simple std::bind(powermod_d1_p, i) would work instead of a
    * lambda but GCC 4.5's std::result_of doesn't use decltype and gets
    * confused
-   *
-   * Todo: use std::async() once it is in GCC
-   *    auto future_j1 = std::async(std::bind(powermod_d1_p, i));
-   *    BigInt j2 = powermod_d2_q(i);
-   *    BigInt j1 = future.get();
    */
-   std::packaged_task<BigInt ()> task_j1([&]() { return powermod_d1_p(i); });
-   auto future_j1 = task_j1.get_future();
-
-   std::thread thr_j1(std::move(task_j1));
-
+   auto future_j1 = std_async([&]() { return powermod_d1_p(i); });
    BigInt j2 = powermod_d2_q(i);
-
    BigInt j1 = future_j1.get();
-
-   thr_j1.join();
 
    j1 = reducer.reduce(sub_mul(j1, j2, c));
    return mul_add(j1, q, j2);

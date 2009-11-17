@@ -1,13 +1,12 @@
 /*
 * DSA Operations
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/dsa_op.h>
-#include <thread>
-#include <future>
+#include <botan/async.h>
 
 namespace Botan {
 
@@ -43,20 +42,11 @@ bool Default_DSA_Op::verify(const byte msg[], u32bit msg_len,
 
    s = inverse_mod(s, q);
 
-   // Todo: use async()
-
-   std::packaged_task<BigInt ()> task_s_i(
+   auto future_s_i = std_async(
       [&]() { return powermod_g_p(mod_q.multiply(s, i)); });
 
-   auto future_s_i = task_s_i.get_future();
-
-   std::thread thr_s_i(std::move(task_s_i));
-
    BigInt s_r = powermod_y_p(mod_q.multiply(s, r));
-
    BigInt s_i = future_s_i.get();
-
-   thr_s_i.join();
 
    s = mod_p.multiply(s_i, s_r);
 
@@ -72,20 +62,13 @@ SecureVector<byte> Default_DSA_Op::sign(const byte in[], u32bit length,
    if(x == 0)
       throw Internal_Error("Default_DSA_Op::sign: No private key");
 
+   auto future_r = std_async([&]() { return mod_q.reduce(powermod_g_p(k)); });
+
    const BigInt& q = group.get_q();
    BigInt i(in, length);
 
-   std::packaged_task<BigInt ()> task_r(
-      [&]() { return mod_q.reduce(powermod_g_p(k)); });
-
-   auto future_r = task_r.get_future();
-
-   std::thread thr_r(std::move(task_r));
-
    BigInt s = inverse_mod(k, q);
-
    BigInt r = future_r.get();
-   thr_r.join();
 
    s = mod_q.multiply(s, mul_add(x, r, i));
 
