@@ -1,22 +1,23 @@
-/*************************************************
-* GTK+ User Interface Source File                *
-*************************************************/
+/*
+* GTK+ User Interface Source File
+*/
 
 #include "gtk_ui.h"
+#include <cstring>
 
-/*************************************************
+/*
 * GTK+ Callback                                  *
-*************************************************/
+*/
 void GTK_UI::callback(GtkWidget* entry, gpointer passphrase_ptr)
    {
    const gchar *entry_text = gtk_entry_get_text(GTK_ENTRY(entry));
    char* passphrase = (char*)passphrase_ptr;
-   strcpy(passphrase, entry_text);
+   std::strcpy(passphrase, entry_text);
    }
 
-/*************************************************
-* Get a passphrase from the user                 *
-*************************************************/
+/*
+* Get a passphrase from the user
+*/
 std::string GTK_UI::get_passphrase(const std::string& what,
                                    const std::string& source,
                                    UI_Result& result) const
@@ -26,9 +27,9 @@ std::string GTK_UI::get_passphrase(const std::string& what,
    return get_passphrase(msg, result);
    }
 
-/*************************************************
-* Get a passphrase from the user                 *
-*************************************************/
+/*
+* Get a passphrase from the user
+*/
 std::string GTK_UI::get_passphrase(const std::string& label_text,
                                    UI_Result& result) const
    {

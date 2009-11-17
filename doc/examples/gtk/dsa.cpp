@@ -34,16 +34,20 @@
 #include <botan/libstate.h>
 #include <botan/look_pk.h>
 #include <botan/filters.h>
+#include <botan/pk_filts.h>
 #include <botan/dsa.h>
+
 // we don't have a 'using namespace' here, so it's easy to grep for code that
 // is actually dealing with the library (rather than messing around with GTK).
 
 #include <gtk/gtk.h>
 #include "gtk_ui.h"
 
-/*************************************************
-* Pop up an message box                          *
-*************************************************/
+static Botan::RandomNumberGenerator* rng = 0;
+
+/*
+* Pop up an message box
+*/
 static void show_dialog(const std::string& about_message,
                         const std::string& dialog_name)
    {
@@ -67,9 +71,9 @@ static void show_dialog(const std::string& about_message,
    gtk_widget_show_all(dialog);
    }
 
-/*************************************************
-* Pop up an About box                            *
-*************************************************/
+/*
+* Pop up an About box
+*/
 static void show_about()
    {
    const std::string about_message =
@@ -83,9 +87,9 @@ static void show_about()
    show_dialog(about_message, "About");
    }
 
-/*************************************************
-* Pop up a help box                              *
-*************************************************/
+/*
+* Pop up a help box
+*/
 static void show_help()
    {
    const std::string help_message =
@@ -108,9 +112,9 @@ static void show_help()
    show_dialog(help_message, "Help");
    }
 
-/*************************************************
-* Get and return a filename from the user        *
-*************************************************/
+/*
+* Get and return a filename from the user
+*/
 static std::string get_filename(const std::string& title)
    {
    GtkWidget* dialog = gtk_file_selection_new(title.c_str());
@@ -135,26 +139,26 @@ static std::string get_filename(const std::string& title)
    return fsname;
    }
 
-/*************************************************
-* Global state                                   *
-*************************************************/
+/*
+* Global state
+*/
 static Botan::DSA_PrivateKey* key = 0; // our key
 static GtkTextBuffer* buffer = 0; // the text buffer
 static std::string buffer_source;
   // what file (if any) the buffer's data came from
 static GtkWidget* sig_view = 0; // the signature
 
-/*************************************************
-* Zap the currently set signature (if any)       *
-*************************************************/
+/*
+* Zap the currently set signature (if any)
+*/
 static void zap_sig()
    {
    gtk_editable_delete_text(GTK_EDITABLE(sig_view), 0, -1);
    }
 
-/*************************************************
-* Save the current key                           *
-*************************************************/
+/*
+* Save the current key
+*/
 static void do_save_key(const std::string& title)
    {
    if(key == 0)
@@ -173,7 +177,7 @@ static void do_save_key(const std::string& title)
       std::string passphrase = ui.get_passphrase(msg, result);
 
       if(result == Botan::User_Interface::OK)
-         out_priv << Botan::PKCS8::PEM_encode(*key, passphrase);
+         out_priv << Botan::PKCS8::PEM_encode(*key, *rng, passphrase);
       else
          out_priv << Botan::PKCS8::PEM_encode(*key);
 
@@ -182,9 +186,9 @@ static void do_save_key(const std::string& title)
       }
    }
 
-/*************************************************
-* Generate a signature for the text buffer       *
-*************************************************/
+/*
+* Generate a signature for the text buffer
+*/
 static void sign_buffer()
    {
    /* No key? Ignore request. */
@@ -193,7 +197,7 @@ static void sign_buffer()
 
    /* same format as the text-mode dsa_sign example */
    Botan::Pipe pipe(new Botan::PK_Signer_Filter(
-                       Botan::get_pk_signer(*key, "EMSA1(SHA-1)")
+                       Botan::get_pk_signer(*key, "EMSA1(SHA-1)"), *rng
                        ),
                     new Botan::Base64_Encoder
       );
@@ -219,9 +223,10 @@ static void sign_buffer()
    g_free(bits);
    }
 
-/*************************************************
-* GTK+ pulse callback                            *
-*************************************************/
+#if 0
+/*
+* GTK+ pulse callback
+*/
 class GTK_Pulse : public Botan::Library_State::UI
    {
    public:
@@ -238,10 +243,11 @@ void GTK_Pulse::pulse(Botan::Pulse_Type)
    while(gtk_events_pending())
       gtk_main_iteration();
    }
+#endif
 
-/*************************************************
+/*
 * Actual do the pulse (as a GTK+ timeout func)   *
-*************************************************/
+*/
 static gboolean gtk_pulse_timeout(void* pbar)
    {
    GtkWidget* progress_bar = (GtkWidget*)pbar;
@@ -249,9 +255,9 @@ static gboolean gtk_pulse_timeout(void* pbar)
    return TRUE; /* keep calling us */
    }
 
-/*************************************************
-* Generate a new key                             *
-*************************************************/
+/*
+* Generate a new key
+*/
 static void gen_key()
    {
    /* This gives a nice smooth progress bar, though we do use up quite a bit of
@@ -293,18 +299,18 @@ static void gen_key()
       the progress bar. That's because the amount of time between pulses
       from the library is rather irregular, so the progress bar looks jerky.
    */
-   Botan::global_state().set_ui(new GTK_Pulse);
+   //Botan::global_state().set_ui(new GTK_Pulse);
 
    /* Not generally recommended, since it's slow and there's not much point.
       However, *because* it's slow, we'll want to put up a progress bar or
       something, and part of this whole thing is to show how to do that and get
       the pulse functions to do the right thing.
    */
-   Botan::DL_Group group(1024, Botan::DL_Group::DSA_Kosherizer);
-   key = new Botan::DSA_PrivateKey(group);
+   Botan::DL_Group group(*rng, Botan::DL_Group::DSA_Kosherizer, 1024);
+   key = new Botan::DSA_PrivateKey(*rng, group);
 
    gtk_timeout_remove(timer_id);
-   Botan::global_state().set_ui(0); // unset the pulse function
+   //Botan::global_state().set_ui(0); // unset the pulse function
 
    gtk_widget_destroy(dialog);
 
@@ -314,9 +320,9 @@ static void gen_key()
    zap_sig();
    }
 
-/*************************************************
-* Load up a key                                  *
-*************************************************/
+/*
+* Load up a key
+*/
 static void get_key()
    {
    std::string fsname = get_filename("Select a DSA Key");
@@ -336,7 +342,9 @@ static void get_key()
             (gtk_ui.* is public domain).
          */
          GTK_UI ui;
-         Botan::PKCS8_PrivateKey* p8_key = Botan::PKCS8::load_key(fsname, ui);
+         Botan::PKCS8_PrivateKey* p8_key =
+            Botan::PKCS8::load_key(fsname, *rng, ui);
+
          key = dynamic_cast<Botan::DSA_PrivateKey*>(p8_key);
          if(!key)
             show_dialog("The key in " + fsname + " is not a DSA key",
@@ -358,9 +366,9 @@ static void really_sign_buffer()
    sign_buffer();
    }
 
-/*************************************************
-* Clear the text buffer                          *
-*************************************************/
+/*
+* Clear the text buffer
+*/
 static void new_buffer()
    {
    /*
@@ -372,9 +380,9 @@ static void new_buffer()
    buffer_source = "";
    }
 
-/*************************************************
-* Put the contents of a file into the buffer     *
-*************************************************/
+/*
+* Put the contents of a file into the buffer
+*/
 static void open_buffer()
    {
    std::string filename = get_filename("Select File");
@@ -400,9 +408,9 @@ static void open_buffer()
       }
    }
 
-/*************************************************
-* Save the signature to a file                   *
-*************************************************/
+/*
+* Save the signature to a file
+*/
 static void save_sig()
    {
    std::string sig_file = buffer_source;
@@ -421,17 +429,17 @@ static void save_sig()
    out << sig << std::endl;
    }
 
-/*************************************************
-* Save the current key                           *
-*************************************************/
+/*
+* Save the current key
+*/
 static void save_key()
    {
    do_save_key("Save Current Key");
    }
 
-/*************************************************
-* Common case of Save/Save As                    *
-*************************************************/
+/*
+* Common case of Save/Save As
+*/
 static void do_save(const std::string& filename)
    {
    std::ofstream out(filename.c_str());
@@ -444,9 +452,9 @@ static void do_save(const std::string& filename)
    buffer_source = filename;
    }
 
-/*************************************************
-* Save the buffer                                *
-*************************************************/
+/*
+* Save the buffer
+*/
 static void save_buffer_as()
    {
    std::string filename = get_filename("Select Output File");
@@ -454,9 +462,9 @@ static void save_buffer_as()
       do_save(filename);
    }
 
-/*************************************************
-* Save the buffer                                *
-*************************************************/
+/*
+* Save the buffer
+*/
 static void save_buffer()
    {
    if(buffer_source != "")
@@ -465,9 +473,9 @@ static void save_buffer()
       save_buffer_as();
    }
 
-/*************************************************
-* Make a menubar for the app                     *
-*************************************************/
+/*
+* Make a menubar for the app
+*/
 static GtkWidget* make_menubar(GtkWidget *window)
    {
    static GtkItemFactoryEntry menu_items[] = {
@@ -510,6 +518,8 @@ int main(int argc, char *argv[])
 
    try {
       Botan::LibraryInitializer init;
+
+      rng = new Botan::AutoSeeded_RNG;
 
       /* Create a new top-level window */
       GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
