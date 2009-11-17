@@ -10,7 +10,7 @@
 #include <botan/pubkey.h>
 #include <botan/look_pk.h>
 #include <botan/oids.h>
-#include <botan/timer.h>
+#include <botan/time.h>
 #include <algorithm>
 #include <memory>
 
@@ -380,8 +380,8 @@ X509_Code X509_Store::check_sig(const Cert_Info& cert_info,
 */
 X509_Code X509_Store::check_sig(const X509_Object& object, Public_Key* key)
    {
-   std::auto_ptr<Public_Key> pub_key(key);
-   std::auto_ptr<PK_Verifier> verifier;
+   std::unique_ptr<Public_Key> pub_key(key);
+   std::unique_ptr<PK_Verifier> verifier;
 
    try {
       std::vector<std::string> sig_info =
@@ -464,12 +464,12 @@ bool X509_Store::is_revoked(const X509_Certificate& cert) const
 * Retrieve all the certificates in the store
 */
 std::vector<X509_Certificate>
-X509_Store::get_certs(const Search_Func& search) const
+X509_Store::get_certs(std::function<bool (const X509_Certificate&)> pred) const
    {
    std::vector<X509_Certificate> found_certs;
    for(u32bit j = 0; j != certs.size(); ++j)
       {
-      if(search.match(certs[j].cert))
+      if(pred(certs[j].cert))
          found_certs.push_back(certs[j].cert);
       }
    return found_certs;
@@ -603,8 +603,7 @@ X509_Code X509_Store::add_crl(const X509_CRL& crl)
       revoked_info.serial = revoked_certs[j].serial_number();
       revoked_info.auth_key_id = crl.authority_key_id();
 
-      std::vector<CRL_Data>::iterator p =
-         std::find(revoked.begin(), revoked.end(), revoked_info);
+      auto p = std::find(revoked.begin(), revoked.end(), revoked_info);
 
       if(revoked_certs[j].reason_code() == REMOVE_FROM_CRL)
          {

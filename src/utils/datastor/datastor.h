@@ -9,6 +9,7 @@
 #define BOTAN_DATA_STORE_H__
 
 #include <botan/secmem.h>
+#include <functional>
 #include <utility>
 #include <string>
 #include <vector>
@@ -22,22 +23,10 @@ namespace Botan {
 class BOTAN_DLL Data_Store
    {
    public:
-      class BOTAN_DLL Matcher
-         {
-         public:
-            virtual bool operator()(const std::string&,
-                                    const std::string&) const = 0;
-
-            virtual std::pair<std::string, std::string>
-               transform(const std::string&, const std::string&) const;
-
-            virtual ~Matcher() {}
-         };
-
       bool operator==(const Data_Store&) const;
 
-      std::multimap<std::string, std::string>
-         search_with(const Matcher&) const;
+      std::multimap<std::string, std::string> search_for(
+         std::function<bool (std::string, std::string)> predicate) const;
 
       std::vector<std::string> get(const std::string&) const;
 

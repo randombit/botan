@@ -8,7 +8,7 @@
 #ifndef BOTAN_ALGORITHM_FACTORY_H__
 #define BOTAN_ALGORITHM_FACTORY_H__
 
-#include <botan/mutex.h>
+#include <botan/types.h>
 #include <string>
 #include <vector>
 
@@ -37,8 +37,7 @@ class BOTAN_DLL Algorithm_Factory
       * @param engines_in the list of engines to use
       * @param mf a mutex factory
       */
-      Algorithm_Factory(const std::vector<Engine*>& engines_in,
-                        Mutex_Factory& mf);
+      Algorithm_Factory(const std::vector<Engine*>& engines_in);
 
       /**
       * Destructor

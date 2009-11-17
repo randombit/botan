@@ -11,6 +11,7 @@
 #include <botan/x509cert.h>
 #include <botan/x509_crl.h>
 #include <botan/certstor.h>
+#include <functional>
 
 namespace Botan {
 
@@ -48,13 +49,6 @@ enum X509_Code {
 class BOTAN_DLL X509_Store
    {
    public:
-      class BOTAN_DLL Search_Func
-         {
-         public:
-            virtual bool match(const X509_Certificate&) const = 0;
-            virtual ~Search_Func() {}
-         };
-
       enum Cert_Usage {
          ANY              = 0x00,
          TLS_SERVER       = 0x01,
@@ -67,7 +61,13 @@ class BOTAN_DLL X509_Store
 
       X509_Code validate_cert(const X509_Certificate&, Cert_Usage = ANY);
 
-      std::vector<X509_Certificate> get_certs(const Search_Func&) const;
+      /**
+      * @param match the matching function
+      * @return list of certs for which match returns true
+      */
+      std::vector<X509_Certificate>
+         get_certs(std::function<bool (const X509_Certificate&)> match) const;
+
       std::vector<X509_Certificate> get_cert_chain(const X509_Certificate&);
       std::string PEM_encode() const;
 
