@@ -6,6 +6,8 @@
 */
 
 #include <botan/dsa_op.h>
+#include <thread>
+#include <future>
 
 namespace Botan {
 
@@ -40,8 +42,23 @@ bool Default_DSA_Op::verify(const byte msg[], u32bit msg_len,
       return false;
 
    s = inverse_mod(s, q);
-   s = mod_p.multiply(powermod_g_p(mod_q.multiply(s, i)),
-                      powermod_y_p(mod_q.multiply(s, r)));
+
+   // Todo: use async()
+
+   std::packaged_task<BigInt ()> task_s_i(
+      [&]() { return powermod_g_p(mod_q.multiply(s, i)); });
+
+   auto future_s_i = task_s_i.get_future();
+
+   std::thread thr_s_i(std::move(task_s_i));
+
+   BigInt s_r = powermod_y_p(mod_q.multiply(s, r));
+
+   BigInt s_i = future_s_i.get();
+
+   thr_s_i.join();
+
+   s = mod_p.multiply(s_i, s_r);
 
    return (mod_q.reduce(s) == r);
    }
