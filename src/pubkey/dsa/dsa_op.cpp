@@ -75,8 +75,19 @@ SecureVector<byte> Default_DSA_Op::sign(const byte in[], u32bit length,
    const BigInt& q = group.get_q();
    BigInt i(in, length);
 
-   BigInt r = mod_q.reduce(powermod_g_p(k));
-   BigInt s = mod_q.multiply(inverse_mod(k, q), mul_add(x, r, i));
+   std::packaged_task<BigInt ()> task_r(
+      [&]() { return mod_q.reduce(powermod_g_p(k)); });
+
+   auto future_r = task_r.get_future();
+
+   std::thread thr_r(std::move(task_r));
+
+   BigInt s = inverse_mod(k, q);
+
+   BigInt r = future_r.get();
+   thr_r.join();
+
+   s = mod_q.multiply(s, mul_add(x, r, i));
 
    if(r.is_zero() || s.is_zero())
       throw Internal_Error("Default_DSA_Op::sign: r or s was zero");
