@@ -64,7 +64,7 @@ void ANSI_X931_RNG::rekey()
       cipher->set_key(key, key.size());
 
       if(V.size() != cipher->BLOCK_SIZE)
-         V.create(cipher->BLOCK_SIZE);
+         V.resize(cipher->BLOCK_SIZE);
       prng->randomize(V, V.size());
 
       update_buffer();
@@ -102,7 +102,7 @@ void ANSI_X931_RNG::add_entropy(const byte input[], u32bit length)
 */
 bool ANSI_X931_RNG::is_seeded() const
    {
-   return V.has_items();
+   return (V.size() > 0);
    }
 
 /**
@@ -138,7 +138,7 @@ ANSI_X931_RNG::ANSI_X931_RNG(BlockCipher* cipher_in,
    cipher = cipher_in;
    prng = prng_in;
 
-   R.create(cipher->BLOCK_SIZE);
+   R.resize(cipher->BLOCK_SIZE);
    position = 0;
    }
 

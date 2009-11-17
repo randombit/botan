@@ -94,7 +94,7 @@ void PBE_PKCS5v15::set_key(const std::string& passphrase)
 void PBE_PKCS5v15::new_params(RandomNumberGenerator& rng)
    {
    iterations = 2048;
-   salt.create(8);
+   salt.resize(8);
    rng.randomize(salt, salt.size());
    }
 

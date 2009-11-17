@@ -32,13 +32,7 @@ class MemoryRegion
       * Find out whether this buffer is empty.
       * @return true if the buffer is empty, false otherwise
       */
-      bool is_empty() const { return (used == 0); }
-
-      /**
-      * Find out whether this buffer is non-empty
-      * @return true if the buffer is non-empty, false otherwise
-      */
-      bool has_items() const { return (used != 0); }
+      bool empty() const { return (used == 0); }
 
       /**
       * Get a pointer to the first element in the buffer.
@@ -97,8 +91,8 @@ class MemoryRegion
       * @return false if the content of both buffers is byte-wise equal, true
       * otherwise.
       */
-      bool operator!=(const MemoryRegion<T>& in) const
-         { return (!(*this == in)); }
+      bool operator!=(const MemoryRegion<T>& other) const
+         { return (!(*this == other)); }
 
       /**
       * Copy the contents of another buffer into this buffer.
@@ -106,13 +100,10 @@ class MemoryRegion
       * @param in the buffer to copy the contents from.
       * @return a reference to *this
       */
-      MemoryRegion<T>& operator=(const MemoryRegion<T>& in)
-         { if(this != &in) set(in); return (*this); }
+      MemoryRegion<T>& operator=(const MemoryRegion<T>& other)
+         { if(this != &other) set(other); return (*this); }
 
       /**
-      * The use of this function is discouraged because of the risk of memory
-      * errors. Use MemoryRegion<T>::set()
-      * instead.
       * Copy the contents of an array of objects of type T into this buffer.
       * The former contents of *this are discarded.
       * The length of *this must be at least n, otherwise memory errors occur.
@@ -123,9 +114,6 @@ class MemoryRegion
          { copy(0, in, n); }
 
       /**
-      * The use of this function is discouraged because of the risk of memory
-      * errors. Use MemoryRegion<T>::set()
-      * instead.
       * Copy the contents of an array of objects of type T into this buffer.
       * The former contents of *this are discarded.
       * The length of *this must be at least n, otherwise memory errors occur.
@@ -143,7 +131,7 @@ class MemoryRegion
       * @param in the array of objects of type T to copy the contents from
       * @param n the size of array in
       */
-      void set(const T in[], u32bit n)    { create(n); copy(in, n); }
+      void set(const T in[], u32bit n)    { resize(n); copy(in, n); }
 
       /**
       * Set the contents of this according to the argument. The size of
@@ -170,7 +158,8 @@ class MemoryRegion
       * Append data to the end of this buffer.
       * @param data the buffer containing the data to append
       */
-      void append(const MemoryRegion<T>& x) { append(x.begin(), x.size()); }
+      void append(const MemoryRegion<T>& other)
+         { append(other.begin(), other.size()); }
 
       /**
       * Zeroise the bytes of this buffer. The length remains unchanged.
@@ -180,14 +169,14 @@ class MemoryRegion
       /**
       * Reset this buffer to an empty buffer with size zero.
       */
-      void destroy() { create(0); }
+      void destroy() { resize(0); }
 
       /**
       * Reset this buffer to a buffer of specified length. The content will be
       * initialized to zero bytes.
       * @param n the new length of the buffer
       */
-      void create(u32bit n);
+      void resize(u32bit n);
 
       /**
       * Preallocate memory, so that this buffer can grow up to size n without
@@ -213,7 +202,7 @@ class MemoryRegion
          }
 
       void init(bool locking, u32bit length = 0)
-         { alloc = Allocator::get(locking); create(length); }
+         { alloc = Allocator::get(locking); resize(length); }
    private:
       T* allocate(u32bit n)
          {
@@ -233,7 +222,7 @@ class MemoryRegion
 * Create a new buffer
 */
 template<typename T>
-void MemoryRegion<T>::create(u32bit n)
+void MemoryRegion<T>::resize(u32bit n)
    {
    if(n <= allocated) { clear(); used = n; return; }
    deallocate(buf, allocated);
@@ -267,15 +256,15 @@ void MemoryRegion<T>::grow_to(u32bit n)
 * Compare this buffer with another one
 */
 template<typename T>
-bool MemoryRegion<T>::operator<(const MemoryRegion<T>& in) const
+bool MemoryRegion<T>::operator<(const MemoryRegion<T>& other) const
    {
-   if(size() < in.size()) return true;
-   if(size() > in.size()) return false;
+   if(size() < other.size()) return true;
+   if(size() > other.size()) return false;
 
    for(u32bit j = 0; j != size(); j++)
       {
-      if(buf[j] < in[j]) return true;
-      if(buf[j] > in[j]) return false;
+      if(buf[j] < other[j]) return true;
+      if(buf[j] > other[j]) return false;
       }
 
    return false;
@@ -312,7 +301,6 @@ class MemoryVector : public MemoryRegion<T>
       /**
       * Create a buffer of the specified length.
       * @param n the length of the buffer to create.
-
       */
       MemoryVector(u32bit n = 0) { MemoryRegion<T>::init(false, n); }
 
@@ -364,7 +352,6 @@ class SecureVector : public MemoryRegion<T>
       /**
       * Create a buffer of the specified length.
       * @param n the length of the buffer to create.
-
       */
       SecureVector(u32bit n = 0) { MemoryRegion<T>::init(true, n); }
 

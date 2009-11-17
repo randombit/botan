@@ -41,13 +41,13 @@ class BOTAN_DLL CTS_Decryption : public BlockCipherMode
    public:
       CTS_Decryption(BlockCipher* ciph) :
          BlockCipherMode(ciph, "CTS", ciph->BLOCK_SIZE, 0, 2)
-         { temp.create(BLOCK_SIZE); }
+         { temp.resize(BLOCK_SIZE); }
 
       CTS_Decryption(BlockCipher* ciph,
                      const SymmetricKey& key,
                      const InitializationVector& iv) :
          BlockCipherMode(ciph, "CTS", ciph->BLOCK_SIZE, 0, 2)
-         { set_key(key); set_iv(iv); temp.create(BLOCK_SIZE); }
+         { set_key(key); set_iv(iv); temp.resize(BLOCK_SIZE); }
    private:
       void write(const byte[], u32bit);
       void end_msg();

@@ -255,7 +255,7 @@ void X509_DN::encode_into(DER_Encoder& der) const
 
    der.start_cons(SEQUENCE);
 
-   if(dn_bits.has_items())
+   if(!dn_bits.empty())
       der.raw_bytes(dn_bits);
    else
       {

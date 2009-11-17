@@ -109,7 +109,7 @@ RC5::RC5(u32bit r) : BlockCipher(8, 1, 32), ROUNDS(r)
    {
    if(ROUNDS < 8 || ROUNDS > 32 || (ROUNDS % 4 != 0))
       throw Invalid_Argument(name() + ": Invalid number of rounds");
-   S.create(2*ROUNDS + 2);
+   S.resize(2*ROUNDS + 2);
    }
 
 }

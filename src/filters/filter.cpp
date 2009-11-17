@@ -31,14 +31,15 @@ void Filter::send(const byte input[], u32bit length)
    for(u32bit j = 0; j != total_ports(); ++j)
       if(next[j])
          {
-         if(write_queue.has_items())
+         if(write_queue.size())
             next[j]->write(write_queue, write_queue.size());
          next[j]->write(input, length);
          nothing_attached = false;
          }
+
    if(nothing_attached)
       write_queue.append(input, length);
-   else if(write_queue.has_items())
+   else
       write_queue.destroy();
    }
 

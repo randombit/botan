@@ -81,7 +81,7 @@ void benchmark_enc_dec(PK_Encryptor& enc, PK_Decryptor& dec,
       {
       if(enc_timer.seconds() < seconds || ciphertext.size() == 0)
          {
-         plaintext.create(enc.maximum_input_size());
+         plaintext.resize(enc.maximum_input_size());
 
          // Ensure for Raw, etc, it stays large
          if((i % 100) == 0)
@@ -122,7 +122,7 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
          {
          if((i % 100) == 0)
             {
-            message.create(48);
+            message.resize(48);
             rng.randomize(message.begin(), message.size());
             }
 
@@ -142,7 +142,7 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
 
          if((i % 100) == 0)
             {
-            sig_random.create(signature.size());
+            sig_random.resize(signature.size());
             rng.randomize(sig_random, sig_random.size());
 
             verify_timer.start();

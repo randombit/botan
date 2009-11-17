@@ -66,7 +66,7 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
             throw PKCS8_Exception("Unknown PEM label " + label);
          }
 
-      if(key_data.is_empty())
+      if(key_data.empty())
          throw PKCS8_Exception("No key data found");
       }
    catch(Decoding_Error)
@@ -126,7 +126,7 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
          }
       }
 
-   if(key.is_empty())
+   if(key.empty())
       throw Decoding_Error("PKCS #8 private key decoding failed");
    return key;
    }

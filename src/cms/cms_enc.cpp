@@ -17,7 +17,7 @@ namespace Botan {
 */
 void CMS_Encoder::set_data(const byte buf[], u32bit length)
    {
-   if(data.has_items())
+   if(!data.empty())
       throw Invalid_State("Cannot call CMS_Encoder::set_data here");
 
    data.set(buf, length);

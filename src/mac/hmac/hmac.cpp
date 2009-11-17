@@ -92,8 +92,8 @@ HMAC::HMAC(HashFunction* hash_in) :
    if(hash->HASH_BLOCK_SIZE == 0)
       throw Invalid_Argument("HMAC cannot be used with " + hash->name());
 
-   i_key.create(hash->HASH_BLOCK_SIZE);
-   o_key.create(hash->HASH_BLOCK_SIZE);
+   i_key.resize(hash->HASH_BLOCK_SIZE);
+   o_key.resize(hash->HASH_BLOCK_SIZE);
    }
 
 }

@@ -45,8 +45,8 @@ EAX_Base::EAX_Base(BlockCipher* ciph,
    if(tag_size % 8 != 0 || TAG_SIZE == 0 || TAG_SIZE > mac->OUTPUT_LENGTH)
       throw Invalid_Argument(name() + ": Bad tag size " + to_string(tag_size));
 
-   state.create(BLOCK_SIZE);
-   buffer.create(BLOCK_SIZE);
+   state.resize(BLOCK_SIZE);
+   buffer.resize(BLOCK_SIZE);
    position = 0;
    }
 

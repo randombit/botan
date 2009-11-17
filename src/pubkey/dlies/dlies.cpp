@@ -36,7 +36,7 @@ SecureVector<byte> DLIES_Encryptor::enc(const byte in[], u32bit length,
    {
    if(length > maximum_input_size())
       throw Invalid_Argument("DLIES: Plaintext too large");
-   if(other_key.is_empty())
+   if(other_key.empty())
       throw Invalid_State("DLIES: The other key was never set");
 
    MemoryVector<byte> v = key.public_value();
