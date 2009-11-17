@@ -1,3 +1,5 @@
+define THRESHOLD_SECRET_SHARING
+
 <requires>
 hash
 rng

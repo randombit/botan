@@ -1,12 +1,6 @@
 define ALLOC_MMAP
-modset unix
 
 load_on auto
-
-<add>
-mmap_mem.cpp
-mmap_mem.h
-</add>
 
 <os>
 linux

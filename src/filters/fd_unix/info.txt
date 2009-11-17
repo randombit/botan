@@ -1,12 +1,6 @@
 define PIPE_UNIXFD_IO
-modset unix,beos
 
 load_on auto
-
-<add>
-fd_unix.h
-fd_unix.cpp
-</add>
 
 <os>
 aix

@@ -1,12 +1,6 @@
 define ENTROPY_SRC_EGD
 
 load_on auto
-modset unix
-
-<add>
-es_egd.h
-es_egd.cpp
-</add>
 
 <libs>
 solaris -> socket

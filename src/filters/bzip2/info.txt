@@ -1,15 +1,6 @@
-# This module was written by Peter J. Jones
-
-
 define COMPRESSOR_BZIP2
-modset compression
 
 load_on request
-
-<add>
-bzip2.h
-bzip2.cpp
-</add>
 
 <libs>
 all -> bz2

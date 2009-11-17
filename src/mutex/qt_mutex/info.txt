@@ -1,13 +1,6 @@
 define MUTEX_QT
 
-note "You'll probably have to add -I/-L flags to the Makefile to find Qt"
-
 load_on request
-
-<add>
-mux_qt.cpp
-mux_qt.h
-</add>
 
 # I think we want to always use qt-mt, not qt -- not much point in supporting
 # mutexes in a single threaded application, after all.

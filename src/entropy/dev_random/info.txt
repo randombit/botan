@@ -1,12 +1,6 @@
 define ENTROPY_SRC_DEVICE
 
 load_on auto
-modset unix
-
-<add>
-es_dev.h
-es_dev.cpp
-</add>
 
 <os>
 aix

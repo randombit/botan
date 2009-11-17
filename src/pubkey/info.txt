@@ -2,21 +2,6 @@ define PUBLIC_KEY_CRYPTO
 
 load_on auto
 
-<add>
-pk_algs.cpp
-pk_algs.h
-pk_filts.cpp
-pk_filts.h
-pk_keys.cpp
-pk_keys.h
-pubkey.cpp
-pubkey.h
-pubkey_enums.cpp
-pubkey_enums.h
-workfactor.cpp
-workfactor.h
-</add>
-
 <requires>
 alloc
 asn1

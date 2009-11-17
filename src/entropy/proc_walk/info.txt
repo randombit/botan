@@ -1,12 +1,6 @@
 define ENTROPY_SRC_FTW
 
 load_on auto
-modset unix
-
-<add>
-es_ftw.h
-es_ftw.cpp
-</add>
 
 <os>
 aix

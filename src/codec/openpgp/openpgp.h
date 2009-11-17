@@ -1,12 +1,12 @@
 /*
-* OpenPGP
+* OpenPGP Codec
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_OPENPGP_H__
-#define BOTAN_OPENPGP_H__
+#ifndef BOTAN_OPENPGP_CODEC_H__
+#define BOTAN_OPENPGP_CODEC_H__
 
 #include <botan/data_src.h>
 #include <string>

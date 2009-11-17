@@ -1,15 +1,6 @@
 define ENTROPY_SRC_UNIX
-modset unix,beos
 
 load_on auto
-
-<add>
-es_unix.cpp
-unix_src.cpp
-unix_cmd.cpp
-es_unix.h
-unix_cmd.h
-</add>
 
 <os>
 aix

@@ -367,10 +367,8 @@ class ModuleInfo(object):
                       ['add', 'requires', 'os', 'arch', 'cc', 'libs'],
                       { 'load_on': 'auto',
                         'define': None,
-                        'modset': None,
                         'uses_tr1': 'false',
                         'need_isa': None,
-                        'note': '',
                         'mp_bits': 0 })
 
         if self.add == []:
