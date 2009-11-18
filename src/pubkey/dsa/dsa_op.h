@@ -21,11 +21,14 @@ namespace Botan {
 class BOTAN_DLL DSA_Operation
    {
    public:
-      virtual bool verify(const byte[], u32bit,
-                          const byte[], u32bit) const = 0;
-      virtual SecureVector<byte> sign(const byte[], u32bit,
-                                      const BigInt&) const = 0;
+      virtual bool verify(const byte msg[], u32bit msg_len,
+                          const byte sig[], u32bit sig_len) const = 0;
+
+      virtual SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+                                      const BigInt& k) const = 0;
+
       virtual DSA_Operation* clone() const = 0;
+
       virtual ~DSA_Operation() {}
    };
 
@@ -35,8 +38,11 @@ class BOTAN_DLL DSA_Operation
 class BOTAN_DLL Default_DSA_Op : public DSA_Operation
    {
    public:
-      bool verify(const byte[], u32bit, const byte[], u32bit) const;
-      SecureVector<byte> sign(const byte[], u32bit, const BigInt&) const;
+      bool verify(const byte msg[], u32bit msg_len,
+                  const byte sig[], u32bit sig_len) const;
+
+      SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+                              const BigInt& k) const;
 
       DSA_Operation* clone() const { return new Default_DSA_Op(*this); }
 
