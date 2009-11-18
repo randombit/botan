@@ -37,10 +37,10 @@ ECDSA_PrivateKey::ECDSA_PrivateKey(RandomNumberGenerator& rng,
 ECDSA_PrivateKey::ECDSA_PrivateKey(const EC_Domain_Params& domain,
                                    const BigInt& x)
    {
-   mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(domain));
+   mp_dom_pars = std::unique_ptr<EC_Domain_Params>(new EC_Domain_Params(domain));
 
    m_private_value = x;
-   mp_public_point = std::auto_ptr<PointGFp>(new PointGFp (mp_dom_pars->get_base_point()));
+   mp_public_point = std::unique_ptr<PointGFp>(new PointGFp (mp_dom_pars->get_base_point()));
    mp_public_point->mult_this_secure(m_private_value,
                                      mp_dom_pars->get_order(),
                                      mp_dom_pars->get_order()-1);
