@@ -10,7 +10,6 @@
 #define BOTAN_ECDSA_CORE_H__
 
 #include <botan/ecdsa_op.h>
-#include <botan/blinding.h>
 #include <botan/ec_dompar.h>
 
 namespace Botan {
@@ -25,7 +24,7 @@ class BOTAN_DLL ECDSA_Core
                   const byte message[], u32bit mess_len) const;
 
       SecureVector<byte> sign(const byte message[], u32bit mess_len,
-                              RandomNumberGenerator& rng) const;
+                              const BigInt& k) const;
 
       ECDSA_Core& operator=(const ECDSA_Core&);
 

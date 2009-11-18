@@ -7,10 +7,7 @@
 */
 
 #include <botan/ecdsa_core.h>
-#include <botan/numthry.h>
 #include <botan/pk_engine.h>
-#include <botan/parsing.h>
-#include <algorithm>
 
 namespace Botan {
 
@@ -26,10 +23,10 @@ bool ECDSA_Core::verify(const byte signature[], u32bit sig_len,
 
 SecureVector<byte> ECDSA_Core::sign(const byte message[],
                                     u32bit mess_len,
-                                    RandomNumberGenerator& rng) const
+                                    const BigInt& k) const
    {
    //assert(op.get());
-   return op->sign(message, mess_len, rng);
+   return op->sign(message, mess_len, k);
    }
 
 ECDSA_Core& ECDSA_Core::operator=(const ECDSA_Core& core)

@@ -37,6 +37,11 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey,
       */
       u32bit max_input_bits() const;
 
+      u32bit message_parts() const { return 2; }
+
+      u32bit message_part_size() const
+         { return mp_dom_pars->get_order().bytes(); }
+
       /**
       * Verify a message with this key.
       * @param message the byte array containing the message
@@ -112,6 +117,13 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       */
       ECDSA_PrivateKey(RandomNumberGenerator& rng,
                        const EC_Domain_Params& domain);
+
+      /**
+      * Load a private key
+      * @param domain parameters
+      * @param x the private key
+      */
+      ECDSA_PrivateKey(const EC_Domain_Params& domain, const BigInt& x);
 
       ECDSA_PrivateKey(const ECDSA_PrivateKey& other);
       ECDSA_PrivateKey const& operator=(const ECDSA_PrivateKey& rhs);

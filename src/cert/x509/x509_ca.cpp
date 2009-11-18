@@ -21,8 +21,6 @@
 #include <memory>
 #include <set>
 
-#include <stdio.h>
-
 namespace Botan {
 
 /*
@@ -251,7 +249,6 @@ PK_Signer* choose_sig_format(const Private_Key& key,
                              AlgorithmIdentifier& sig_algo)
    {
    std::string padding;
-   Signature_Format format;
 
    const std::string algo_name = key.algo_name();
 
@@ -260,28 +257,19 @@ PK_Signer* choose_sig_format(const Private_Key& key,
       throw Algorithm_Not_Found(hash_fn);
 
    if(key.max_input_bits() < proto_hash->OUTPUT_LENGTH*8)
-      {
-      printf("%d %d\n", key.max_input_bits(), proto_hash->OUTPUT_LENGTH*8);
       throw Invalid_Argument("Key is too small for chosen hash function");
-      }
 
    if(algo_name == "RSA")
-      {
       padding = "EMSA3";
-      format = IEEE_1363;
-      }
    else if(algo_name == "DSA")
-      {
       padding = "EMSA1";
-      format = DER_SEQUENCE;
-      }
    else if(algo_name == "ECDSA")
-      {
       padding = "EMSA1_BSI";
-      format = IEEE_1363;
-      }
    else
       throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);
+
+   Signature_Format format =
+      (key.message_parts() > 1) ? DER_SEQUENCE : IEEE_1363;
 
    padding = padding + '(' + proto_hash->name() + ')';
 

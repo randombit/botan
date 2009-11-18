@@ -1,7 +1,7 @@
 /*
 * ECDSA Operation
 * (C) 2007 FlexSecure GmbH
-*     2008 Jack Lloyd
+*     2008-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -9,121 +9,82 @@
 #include <botan/ecdsa_op.h>
 #include <botan/numthry.h>
 
+#include <stdio.h>
+#include <iostream>
+
 namespace Botan {
 
-bool Default_ECDSA_Op::verify(const byte signature[], u32bit sig_len,
-                              const byte message[], u32bit mess_len) const
+Default_ECDSA_Op::Default_ECDSA_Op(const EC_Domain_Params& domain,
+                                   const BigInt& priv,
+                                   const PointGFp& pub) :
+   dom_pars(domain), pub_key(pub), priv_key(priv)
    {
-   if(sig_len % 2 != 0)
-      throw Invalid_Argument("Erroneous length of signature");
+   }
 
-   //NOTE: it is not checked whether the public point is set
-   if(m_dom_pars.get_curve().get_p() == 0)
+bool Default_ECDSA_Op::verify(const byte msg[], u32bit msg_len,
+                              const byte sig[], u32bit sig_len) const
+   {
+   const BigInt& n = dom_pars.get_order();
+
+   if(sig_len != n.bytes()*2)
+      return false;
+
+   // NOTE: it is not checked whether the public point is set
+   if(dom_pars.get_curve().get_p() == 0)
       throw Internal_Error("domain parameters not set");
 
-   BigInt e(message, mess_len);
+   BigInt e(msg, msg_len);
 
-   u32bit rs_len = sig_len/2;
-   SecureVector<byte> sv_r;
-   SecureVector<byte> sv_s;
-   sv_r.set(signature, rs_len);
-   sv_s.set(signature+rs_len, rs_len);
-   BigInt r = BigInt::decode ( sv_r, sv_r.size());
-   BigInt s = BigInt::decode (sv_s, sv_s.size());
+   BigInt r(sig, sig_len / 2);
+   BigInt s(sig + sig_len / 2, sig_len / 2);
 
-   if(r < 0 || r >= m_dom_pars.get_order())
-      throw Invalid_Argument("r in ECDSA signature has an illegal value");
+   if(r < 0 || r >= n || s < 0 || s >= n)
+      return false;
 
-   if(s < 0 || s >= m_dom_pars.get_order())
-      throw Invalid_Argument("s in ECDSA signature has an illegal value");
+   BigInt w = inverse_mod(s, n);
 
-   BigInt w = inverse_mod(s, m_dom_pars.get_order());
-
-   PointGFp R = w*(e*m_dom_pars.get_base_point() + r*m_pub_key);
+   PointGFp R = w * (e * dom_pars.get_base_point() + r*pub_key);
    if(R.is_zero())
       return false;
 
    BigInt x = R.get_affine_x().get_value();
-   bool result = (x % m_dom_pars.get_order() == r);
-   return result;
+
+   return (x % n == r);
    }
 
-SecureVector<byte> Default_ECDSA_Op::sign(const byte message[],
-                                          u32bit mess_len,
-                                          RandomNumberGenerator& rng) const
+SecureVector<byte> Default_ECDSA_Op::sign(const byte msg[], u32bit msg_len,
+                                          const BigInt& k) const
    {
-   if(m_priv_key == 0)
+   if(priv_key == 0)
       throw Internal_Error("Default_ECDSA_Op::sign(): no private key");
 
-   if(m_dom_pars.get_curve().get_p() == 0)
+   const BigInt& n = dom_pars.get_order();
+
+   if(n == 0)
       throw Internal_Error("Default_ECDSA_Op::sign(): domain parameters not set");
 
-   BigInt e(message, mess_len);
+   BigInt e(msg, msg_len);
 
-   // generate k
-   BigInt k;
-   BigInt r(0);
-   const BigInt n(m_dom_pars.get_order());
-   while(r == 0)
-      {
-      k = BigInt::random_integer(rng, 1, n);
+   PointGFp k_times_P(dom_pars.get_base_point());
+   k_times_P.mult_this_secure(k, n, n-1);
+   k_times_P.check_invariants();
+   BigInt r = k_times_P.get_affine_x().get_value() % n;
 
-      PointGFp k_times_P(m_dom_pars.get_base_point());
-      k_times_P.mult_this_secure(k, n, n-1);
-      k_times_P.check_invariants();
-      r =  k_times_P.get_affine_x().get_value() % n;
-      }
+   if(r == 0)
+      throw Internal_Error("Default_ECDSA_Op::sign: r was zero");
+
    BigInt k_inv = inverse_mod(k, n);
 
-   // use randomization against attacks on s:
-   // a = k_inv * (r*(d + x) + e) mod n
-   // b = k_inv * r * x mod n
-   // s = a - b mod n
-   // where x is a random integer
-
-#if defined(CMS_RAND)
-   BigInt x = BigInt::random_integer(0, n);
-   BigInt s = m_priv_key + x; // obscure the secret from the beginning
-   // all following operations thus are randomized
-   s *= r;
-   s += e;
-   s *= k_inv;
-   s %= n;
-
-   BigInt b = x; // again, start with the random number
-   b *= r;
-   b *= k_inv;
-   b %= n;
-   s -= b; // s = a - b
-   if(s <= 0) // s %= n
-      {
-      s += n;
-      }
-#else // CMS_RAND
-   // no countermeasure here
    BigInt s(r);
-   s *= m_priv_key;
+   s *= priv_key;
    s += e;
    s *= k_inv;
    s %= n;
 
-#endif // CMS_RAND
-
-   SecureVector<byte> sv_r = BigInt::encode_1363 ( r, m_dom_pars.get_order().bytes() );
-   SecureVector<byte> sv_s = BigInt::encode_1363 ( s, m_dom_pars.get_order().bytes() );
-
-   SecureVector<byte> result(sv_r);
-   result.append(sv_s);
-   return result;
-   }
-
-Default_ECDSA_Op::Default_ECDSA_Op(const EC_Domain_Params& dom_pars, const BigInt& priv_key, const PointGFp& pub_key)
-   : m_dom_pars(dom_pars),
-     m_pub_key(pub_key),
-     m_priv_key(priv_key)
-   {
-
+   SecureVector<byte> output(2*n.bytes());
+   r.binary_encode(output + (output.size() / 2 - r.bytes()));
+   s.binary_encode(output + (output.size() - s.bytes()));
+   return output;
    }
 
 }
-

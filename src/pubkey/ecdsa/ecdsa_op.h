@@ -10,7 +10,6 @@
 #define BOTAN_ECDSA_OPERATIONS_H__
 
 #include <botan/ec_dompar.h>
-#include <botan/rng.h>
 
 namespace Botan {
 
@@ -20,18 +19,16 @@ namespace Botan {
 class BOTAN_DLL ECDSA_Operation
    {
    public:
-      virtual bool verify(const byte sig[], u32bit sig_len,
-                          const byte msg[], u32bit msg_len) const = 0;
+      virtual bool verify(const byte msg[], u32bit msg_len,
+                          const byte sig[], u32bit sig_len) const = 0;
 
-      virtual SecureVector<byte> sign(const byte message[],
-                                      u32bit mess_len,
-                                      RandomNumberGenerator&) const = 0;
+      virtual SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+                                      const BigInt& k) const = 0;
 
       virtual ECDSA_Operation* clone() const = 0;
 
       virtual ~ECDSA_Operation() {}
    };
-
 
 /*
 * Default ECDSA operation
@@ -39,11 +36,11 @@ class BOTAN_DLL ECDSA_Operation
 class BOTAN_DLL Default_ECDSA_Op : public ECDSA_Operation
    {
    public:
-      bool verify(const byte signature[], u32bit sig_len,
-                  const byte message[], u32bit mess_len) const;
+      bool verify(const byte sig[], u32bit sig_len,
+                  const byte msg[], u32bit msg_len) const;
 
-      SecureVector<byte> sign(const byte message[], u32bit mess_len,
-                              RandomNumberGenerator& rng) const;
+      SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+                              const BigInt& k) const;
 
       ECDSA_Operation* clone() const
          {
@@ -54,9 +51,9 @@ class BOTAN_DLL Default_ECDSA_Op : public ECDSA_Operation
                        const BigInt& priv_key,
                        const PointGFp& pub_key);
    private:
-      EC_Domain_Params m_dom_pars;
-      PointGFp m_pub_key;
-      BigInt m_priv_key;
+      EC_Domain_Params dom_pars;
+      PointGFp pub_key;
+      BigInt priv_key;
    };
 
 }

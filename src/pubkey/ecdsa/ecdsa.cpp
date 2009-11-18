@@ -34,6 +34,29 @@ ECDSA_PrivateKey::ECDSA_PrivateKey(RandomNumberGenerator& rng,
    m_ecdsa_core = ECDSA_Core(*mp_dom_pars, m_private_value, *mp_public_point);
    }
 
+ECDSA_PrivateKey::ECDSA_PrivateKey(const EC_Domain_Params& domain,
+                                   const BigInt& x)
+   {
+   mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(domain));
+
+   m_private_value = x;
+   mp_public_point = std::auto_ptr<PointGFp>(new PointGFp (mp_dom_pars->get_base_point()));
+   mp_public_point->mult_this_secure(m_private_value,
+                                     mp_dom_pars->get_order(),
+                                     mp_dom_pars->get_order()-1);
+
+   try
+      {
+      mp_public_point->check_invariants();
+      }
+   catch(Illegal_Point& e)
+      {
+      throw Invalid_State("ECDSA key generation failed");
+      }
+
+   m_ecdsa_core = ECDSA_Core(*mp_dom_pars, m_private_value, *mp_public_point);
+   }
+
 /*
 * ECDSA_PublicKey
 */
@@ -100,31 +123,12 @@ const ECDSA_PublicKey& ECDSA_PublicKey::operator=(const ECDSA_PublicKey& rhs)
    return *this;
    }
 
-bool ECDSA_PublicKey::verify(const byte message[],
-                             u32bit mess_len,
-                             const byte signature[],
-                             u32bit sig_len) const
+bool ECDSA_PublicKey::verify(const byte msg[], u32bit msg_len,
+                             const byte sig[], u32bit sig_len) const
    {
    affirm_init();
 
-   BigInt r, s;
-
-   BER_Decoder(signature, sig_len)
-      .start_cons(SEQUENCE)
-      .decode(r)
-      .decode(s)
-      .end_cons()
-      .verify_end();
-
-   u32bit enc_len = std::max(r.bytes(), s.bytes());
-
-   SecureVector<byte> sv_plain_sig;
-
-   sv_plain_sig.append(BigInt::encode_1363(r, enc_len));
-   sv_plain_sig.append(BigInt::encode_1363(s, enc_len));
-
-   return m_ecdsa_core.verify(sv_plain_sig, sv_plain_sig.size(),
-                              message, mess_len);
+   return m_ecdsa_core.verify(msg, msg_len, sig, sig_len);
    }
 
 ECDSA_PublicKey::ECDSA_PublicKey(const EC_Domain_Params& dom_par,
@@ -192,38 +196,26 @@ ECDSA_PrivateKey::ECDSA_PrivateKey(ECDSA_PrivateKey const& other)
    set_all_values(other);
    }
 
-
 const ECDSA_PrivateKey& ECDSA_PrivateKey::operator=(const ECDSA_PrivateKey& rhs)
    {
    set_all_values(rhs);
    return *this;
    }
 
-SecureVector<byte> ECDSA_PrivateKey::sign(const byte message[],
-                                          u32bit mess_len,
+SecureVector<byte> ECDSA_PrivateKey::sign(const byte msg[],
+                                          u32bit msg_len,
                                           RandomNumberGenerator& rng) const
    {
    affirm_init();
 
-   SecureVector<byte> sv_sig = m_ecdsa_core.sign(message, mess_len, rng);
+   const BigInt& n = mp_dom_pars->get_order();
 
-   if(sv_sig.size() % 2 != 0)
-      throw Invalid_Argument("Erroneous length of signature");
+   BigInt k;
+   do
+      k.randomize(rng, n.bits()-1);
+   while(k >= n);
 
-   u32bit rs_len = sv_sig.size() / 2;
-   SecureVector<byte> sv_r, sv_s;
-   sv_r.set(sv_sig.begin(), rs_len);
-   sv_s.set(&sv_sig[rs_len], rs_len);
-
-   BigInt r = BigInt::decode(sv_r, sv_r.size());
-   BigInt s = BigInt::decode(sv_s, sv_s.size());
-
-   return DER_Encoder()
-      .start_cons(SEQUENCE)
-      .encode(r)
-      .encode(s)
-      .end_cons()
-      .get_contents();
+   return m_ecdsa_core.sign(msg, msg_len, k);
    }
 
 }
