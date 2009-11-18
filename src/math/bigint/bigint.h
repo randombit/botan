@@ -486,7 +486,7 @@ BigInt BOTAN_DLL operator/(const BigInt& x, const BigInt& d);
 BigInt BOTAN_DLL operator%(const BigInt& x, const BigInt& m);
 word   BOTAN_DLL operator%(const BigInt& x, word m);
 BigInt BOTAN_DLL operator<<(const BigInt& x, u32bit n);
-BigInt BOTAN_DLL operator>>(const BigInt&, x u32bit n);
+BigInt BOTAN_DLL operator>>(const BigInt& x, u32bit n);
 
 /*
 * Comparison Operators
