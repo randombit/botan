@@ -19,14 +19,14 @@ u32bit to_u32bit(const std::string& number)
    {
    u32bit n = 0;
 
-   for(std::string::const_iterator j = number.begin(); j != number.end(); ++j)
+   for(auto i = number.begin(); i != number.end(); ++i)
       {
       const u32bit OVERFLOW_MARK = 0xFFFFFFFF / 10;
 
-      if(*j == ' ')
+      if(*i == ' ')
          continue;
 
-      byte digit = Charset::char2digit(*j);
+      byte digit = Charset::char2digit(*i);
 
       if((n > OVERFLOW_MARK) || (n == OVERFLOW_MARK && digit > 5))
          throw Decoding_Error("to_u32bit: Integer overflow");
@@ -106,15 +106,15 @@ std::vector<std::string> parse_algorithm_name(const std::string& namex)
    elems.push_back(name.substr(0, name.find('(')));
    name = name.substr(name.find('('));
 
-   for(std::string::const_iterator j = name.begin(); j != name.end(); ++j)
+   for(auto i = name.begin(); i != name.end(); ++i)
       {
-      char c = *j;
+      char c = *i;
 
       if(c == '(')
          ++level;
       if(c == ')')
          {
-         if(level == 1 && j == name.end() - 1)
+         if(level == 1 && i == name.end() - 1)
             {
             if(elems.size() == 1)
                elems.push_back(substring.substr(1));
@@ -123,7 +123,7 @@ std::vector<std::string> parse_algorithm_name(const std::string& namex)
             return elems;
             }
 
-         if(level == 0 || (level == 1 && j != name.end() - 1))
+         if(level == 0 || (level == 1 && i != name.end() - 1))
             throw Invalid_Algorithm_Name(namex);
          --level;
          }
@@ -155,16 +155,16 @@ std::vector<std::string> split_on(const std::string& str, char delim)
    if(str == "") return elems;
 
    std::string substr;
-   for(std::string::const_iterator j = str.begin(); j != str.end(); ++j)
+   for(auto i = str.begin(); i != str.end(); ++i)
       {
-      if(*j == delim)
+      if(*i == delim)
          {
          if(substr != "")
             elems.push_back(substr);
          substr.clear();
          }
       else
-         substr += *j;
+         substr += *i;
       }
 
    if(substr == "")
@@ -182,9 +182,9 @@ std::vector<u32bit> parse_asn1_oid(const std::string& oid)
    std::string substring;
    std::vector<u32bit> oid_elems;
 
-   for(std::string::const_iterator j = oid.begin(); j != oid.end(); ++j)
+   for(auto i = oid.begin(); i != oid.end(); ++i)
       {
-      char c = *j;
+      char c = *i;
 
       if(c == '.')
          {
@@ -212,8 +212,8 @@ std::vector<u32bit> parse_asn1_oid(const std::string& oid)
 */
 bool x500_name_cmp(const std::string& name1, const std::string& name2)
    {
-   std::string::const_iterator p1 = name1.begin();
-   std::string::const_iterator p2 = name2.begin();
+   auto p1 = name1.begin();
+   auto p2 = name2.begin();
 
    while((p1 != name1.end()) && Charset::is_space(*p1)) ++p1;
    while((p2 != name2.end()) && Charset::is_space(*p2)) ++p2;
@@ -258,9 +258,9 @@ u32bit string_to_ipv4(const std::string& str)
 
    u32bit ip = 0;
 
-   for(size_t j = 0; j != parts.size(); j++)
+   for(auto part = parts.begin(); part != parts.end(); ++part)
       {
-      u32bit octet = to_u32bit(parts[j]);
+      u32bit octet = to_u32bit(*part);
 
       if(octet > 255)
          throw Decoding_Error("Invalid IP string " + str);
@@ -278,11 +278,11 @@ std::string ipv4_to_string(u32bit ip)
    {
    std::string str;
 
-   for(size_t j = 0; j != sizeof(ip); j++)
+   for(size_t i = 0; i != sizeof(ip); i++)
       {
-      if(j)
+      if(i)
          str += ".";
-      str += to_string(get_byte(j, ip));
+      str += to_string(get_byte(i, ip));
       }
 
    return str;

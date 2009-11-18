@@ -14,10 +14,7 @@
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
 #include <botan/oids.h>
-#include <botan/timer.h>
-#include <algorithm>
-#include <typeinfo>
-#include <iterator>
+#include <botan/time.h>
 #include <memory>
 #include <set>
 
@@ -61,7 +58,7 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
       constraints = Key_Constraints(KEY_CERT_SIGN | CRL_SIGN);
    else
       {
-      std::auto_ptr<Public_Key> key(req.subject_public_key());
+      std::unique_ptr<Public_Key> key(req.subject_public_key());
       constraints = X509::find_constraints(*key, req.constraints());
       }
 
@@ -173,8 +170,7 @@ X509_CRL X509_CA::update_crl(const X509_CRL& crl,
 
    for(u32bit j = 0; j != already_revoked.size(); ++j)
       {
-      std::set<SecureVector<byte> >::const_iterator i;
-      i = removed_from_crl.find(already_revoked[j].serial_number());
+      auto i = removed_from_crl.find(already_revoked[j].serial_number());
 
       if(i == removed_from_crl.end())
          all_revoked.push_back(already_revoked[j]);
@@ -275,7 +271,7 @@ PK_Signer* choose_sig_format(const Private_Key& key,
 
    sig_algo.oid = OIDS::lookup(algo_name + "/" + padding);
 
-   std::auto_ptr<X509_Encoder> encoding(key.x509_encoder());
+   std::unique_ptr<X509_Encoder> encoding(key.x509_encoder());
    if(!encoding.get())
       throw Encoding_Error("Key " + algo_name + " does not support "
                            "X.509 encoding");

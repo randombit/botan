@@ -24,7 +24,7 @@ namespace X509 {
 */
 void encode(const Public_Key& key, Pipe& pipe, X509_Encoding encoding)
    {
-   std::auto_ptr<X509_Encoder> encoder(key.x509_encoder());
+   std::unique_ptr<X509_Encoder> encoder(key.x509_encoder());
    if(!encoder.get())
       throw Encoding_Error("X509::encode: Key does not support encoding");
 
@@ -94,12 +94,12 @@ Public_Key* load_key(DataSource& source)
          throw Decoding_Error("Unknown algorithm OID: " +
                               alg_id.oid.as_string());
 
-      std::auto_ptr<Public_Key> key_obj(get_public_key(alg_name));
+      std::unique_ptr<Public_Key> key_obj(get_public_key(alg_name));
       if(!key_obj.get())
          throw Decoding_Error("Unknown PK algorithm/OID: " + alg_name + ", " +
                               alg_id.oid.as_string());
 
-      std::auto_ptr<X509_Decoder> decoder(key_obj->x509_decoder());
+      std::unique_ptr<X509_Decoder> decoder(key_obj->x509_decoder());
 
       if(!decoder.get())
          throw Decoding_Error("Key does not support X.509 decoding");

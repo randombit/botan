@@ -10,20 +10,10 @@
 #include <botan/selftest.h>
 #include <botan/engine.h>
 #include <botan/stl_util.h>
-#include <botan/mutex.h>
-#include <botan/mux_noop.h>
 #include <botan/charset.h>
 #include <botan/defalloc.h>
 #include <botan/def_eng.h>
 #include <algorithm>
-
-#if defined(BOTAN_HAS_MUTEX_PTHREAD)
-  #include <botan/mux_pthr.h>
-#elif defined(BOTAN_HAS_MUTEX_WIN32)
-  #include <botan/mux_win32.h>
-#elif defined(BOTAN_HAS_MUTEX_QT)
-  #include <botan/mux_qt.h>
-#endif
 
 #if defined(BOTAN_HAS_ALLOC_MMAP)
   #include <botan/mmap_mem.h>
@@ -91,25 +81,17 @@ void set_global_state(Library_State* new_state)
 */
 Library_State* swap_global_state(Library_State* new_state)
    {
-   Library_State* old_state = global_lib_state;
+   auto old_state = global_lib_state;
    global_lib_state = new_state;
    return old_state;
    }
 
 /*
-* Get a new mutex object
-*/
-Mutex* Library_State::get_mutex() const
-   {
-   return mutex_factory->make();
-   }
-
-/*
 * Get an allocator by its name
 */
-Allocator* Library_State::get_allocator(const std::string& type) const
+Allocator* Library_State::get_allocator(const std::string& type)
    {
-   Mutex_Holder lock(allocator_lock);
+   std::lock_guard<std::mutex> lock(allocator_lock);
 
    if(type != "")
       return search_map<std::string, Allocator*>(alloc_factory, type, 0);
@@ -133,7 +115,7 @@ Allocator* Library_State::get_allocator(const std::string& type) const
 */
 void Library_State::add_allocator(Allocator* allocator)
    {
-   Mutex_Holder lock(allocator_lock);
+   std::lock_guard<std::mutex> lock(allocator_lock);
 
    allocator->init();
 
@@ -146,10 +128,10 @@ void Library_State::add_allocator(Allocator* allocator)
 */
 void Library_State::set_default_allocator(const std::string& type)
    {
-   Mutex_Holder lock(allocator_lock);
-
    if(type == "")
       return;
+
+   std::lock_guard<std::mutex> lock(allocator_lock);
 
    this->set("conf", "base/default_allocator", type);
    cached_default_allocator = 0;
@@ -159,9 +141,9 @@ void Library_State::set_default_allocator(const std::string& type)
 * Get a configuration value
 */
 std::string Library_State::get(const std::string& section,
-                               const std::string& key) const
+                               const std::string& key)
    {
-   Mutex_Holder lock(config_lock);
+   std::lock_guard<std::mutex> lock(config_lock);
 
    return search_map<std::string, std::string>(config,
                                                section + "/" + key, "");
@@ -171,9 +153,9 @@ std::string Library_State::get(const std::string& section,
 * See if a particular option has been set
 */
 bool Library_State::is_set(const std::string& section,
-                           const std::string& key) const
+                           const std::string& key)
    {
-   Mutex_Holder lock(config_lock);
+   std::lock_guard<std::mutex> lock(config_lock);
 
    return search_map(config, section + "/" + key, false, true);
    }
@@ -184,12 +166,11 @@ bool Library_State::is_set(const std::string& section,
 void Library_State::set(const std::string& section, const std::string& key,
                         const std::string& value, bool overwrite)
    {
-   Mutex_Holder lock(config_lock);
+   std::lock_guard<std::mutex> lock(config_lock);
 
    std::string full_key = section + "/" + key;
 
-   std::map<std::string, std::string>::const_iterator i =
-      config.find(full_key);
+   auto i = config.find(full_key);
 
    if(overwrite || i == config.end() || i->second == "")
       config[full_key] = value;
@@ -206,7 +187,7 @@ void Library_State::add_alias(const std::string& key, const std::string& value)
 /*
 * Dereference an alias to a fixed name
 */
-std::string Library_State::deref_alias(const std::string& key) const
+std::string Library_State::deref_alias(const std::string& key)
    {
    std::string result = key;
    while(is_set("alias", result))
@@ -226,7 +207,7 @@ void Library_State::set_option(const std::string& key,
 /*
 * Get an option value
 */
-std::string Library_State::option(const std::string& key) const
+std::string Library_State::option(const std::string& key)
    {
    return get("conf", key);
    }
@@ -244,73 +225,54 @@ Algorithm_Factory& Library_State::algorithm_factory()
 /*
 * Load a set of modules
 */
-void Library_State::initialize(bool thread_safe)
+void Library_State::initialize()
    {
-   if(mutex_factory)
+   if(m_algorithm_factory)
       throw Invalid_State("Library_State has already been initialized");
-
-   if(!thread_safe)
-      {
-      mutex_factory = new Noop_Mutex_Factory;
-      }
-   else
-      {
-#if defined(BOTAN_HAS_MUTEX_PTHREAD)
-      mutex_factory = new Pthread_Mutex_Factory;
-#elif defined(BOTAN_HAS_MUTEX_WIN32)
-      mutex_factory = new Win32_Mutex_Factory;
-#elif defined(BOTAN_HAS_MUTEX_QT)
-      mutex_factory Qt_Mutex_Factory;
-#else
-      throw Invalid_State("Could not find a thread-safe mutex object to use");
-#endif
-      }
-
-   allocator_lock = mutex_factory->make();
-   config_lock = mutex_factory->make();
 
    cached_default_allocator = 0;
 
    add_allocator(new Malloc_Allocator);
-   add_allocator(new Locking_Allocator(mutex_factory->make()));
+   add_allocator(new Locking_Allocator);
 
 #if defined(BOTAN_HAS_ALLOC_MMAP)
-   add_allocator(new MemoryMapping_Allocator(mutex_factory->make()));
+   add_allocator(new MemoryMapping_Allocator);
 #endif
 
    set_default_allocator("locking");
 
    load_default_config();
 
-   std::vector<Engine*> engines;
+   std::vector<Engine*> engines = {
 
 #if defined(BOTAN_HAS_ENGINE_GNU_MP)
-   engines.push_back(new GMP_Engine);
+      new GMP_Engine,
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_OPENSSL)
-   engines.push_back(new OpenSSL_Engine);
+      new OpenSSL_Engine,
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_AES_ISA)
-   engines.push_back(new AES_ISA_Engine);
+   new AES_ISA_Engine,
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_SIMD)
-   engines.push_back(new SIMD_Engine);
+      new SIMD_Engine,
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_AMD64_ASSEMBLER)
-   engines.push_back(new AMD64_Assembler_Engine);
+      new AMD64_Assembler_Engine,
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_IA32_ASSEMBLER)
-   engines.push_back(new IA32_Assembler_Engine);
+      new IA32_Assembler_Engine,
 #endif
 
-   engines.push_back(new Default_Engine);
+      new Default_Engine
+   };
 
-   m_algorithm_factory = new Algorithm_Factory(engines, *mutex_factory);
+   m_algorithm_factory = new Algorithm_Factory(engines);
 
    if(!passes_self_tests(algorithm_factory()))
       throw Self_Test_Failure("Startup self tests failed");
@@ -321,8 +283,6 @@ void Library_State::initialize(bool thread_safe)
 */
 Library_State::Library_State()
    {
-   mutex_factory = 0;
-   allocator_lock = config_lock = 0;
    cached_default_allocator = 0;
    m_algorithm_factory = 0;
    }
@@ -333,6 +293,7 @@ Library_State::Library_State()
 Library_State::~Library_State()
    {
    delete m_algorithm_factory;
+   m_algorithm_factory = 0;
 
    cached_default_allocator = 0;
 
@@ -341,10 +302,6 @@ Library_State::~Library_State()
       allocators[j]->destroy();
       delete allocators[j];
       }
-
-   delete allocator_lock;
-   delete mutex_factory;
-   delete config_lock;
    }
 
 }

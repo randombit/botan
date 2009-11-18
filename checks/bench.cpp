@@ -10,6 +10,10 @@
 #include <botan/parsing.h>
 #include <botan/symkey.h>
 
+#include <chrono>
+
+typedef std::chrono::high_resolution_clock benchmark_clock;
+
 #include "common.h"
 #include "bench.h"
 
@@ -152,13 +156,12 @@ bool bench_algo(const std::string& algo,
                 Botan::RandomNumberGenerator& rng,
                 double seconds)
    {
-   Botan::Default_Benchmark_Timer timer;
    Botan::Algorithm_Factory& af = Botan::global_state().algorithm_factory();
 
    u32bit milliseconds = static_cast<u32bit>(seconds * 1000);
 
    std::map<std::string, double> speeds =
-      algorithm_benchmark(algo, milliseconds, timer, rng, af);
+      algorithm_benchmark(algo, milliseconds, rng, af);
 
    if(speeds.empty()) // maybe a cipher mode, then?
       {
@@ -198,16 +201,22 @@ bool bench_algo(const std::string& algo,
          Botan::Pipe pipe(filt, new Botan::BitBucket);
          pipe.start_msg();
 
-         const u64bit start = timer.clock();
-         u64bit nanoseconds_used = 0;
+         std::chrono::nanoseconds max_time(nanoseconds_max);
+         std::chrono::nanoseconds time_used(0);
+
+         auto start = benchmark_clock::now();
+
          u64bit reps = 0;
 
-         while(nanoseconds_used < nanoseconds_max)
+         while(time_used < max_time)
             {
             pipe.write(&buf[0], buf.size());
             ++reps;
-            nanoseconds_used = timer.clock() - start;
+            time_used = benchmark_clock::now() - start;
             }
+
+         u64bit nanoseconds_used =
+            std::chrono::duration_cast<std::chrono::nanoseconds>(time_used).count();
 
          double mbytes_per_second =
             (953.67 * (buf.size() * reps)) / nanoseconds_used;
