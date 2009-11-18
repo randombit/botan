@@ -44,7 +44,7 @@ std::string OID::as_string() const
    std::string oid_str;
    for(u32bit j = 0; j != id.size(); ++j)
       {
-      oid_str += to_string(id[j]);
+      oid_str += std::to_string(id[j]);
       if(j != id.size() - 1)
          oid_str += '.';
       }

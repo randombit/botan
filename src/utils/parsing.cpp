@@ -13,53 +13,6 @@
 namespace Botan {
 
 /*
-* Convert a string into an integer
-*/
-u32bit to_u32bit(const std::string& number)
-   {
-   u32bit n = 0;
-
-   for(auto i = number.begin(); i != number.end(); ++i)
-      {
-      const u32bit OVERFLOW_MARK = 0xFFFFFFFF / 10;
-
-      if(*i == ' ')
-         continue;
-
-      byte digit = Charset::char2digit(*i);
-
-      if((n > OVERFLOW_MARK) || (n == OVERFLOW_MARK && digit > 5))
-         throw Decoding_Error("to_u32bit: Integer overflow");
-      n *= 10;
-      n += digit;
-      }
-   return n;
-   }
-
-/*
-* Convert an integer into a string
-*/
-std::string to_string(u64bit n, u32bit min_len)
-   {
-   std::string lenstr;
-   if(n)
-      {
-      while(n > 0)
-         {
-         lenstr = Charset::digit2char(n % 10) + lenstr;
-         n /= 10;
-         }
-      }
-   else
-      lenstr = "0";
-
-   while(lenstr.size() < min_len)
-      lenstr = "0" + lenstr;
-
-   return lenstr;
-   }
-
-/*
 * Convert a string into a time duration
 */
 u32bit timespec_to_u32bit(const std::string& timespec)
@@ -282,7 +235,7 @@ std::string ipv4_to_string(u32bit ip)
       {
       if(i)
          str += ".";
-      str += to_string(get_byte(i, ip));
+      str += std::to_string(get_byte(i, ip));
       }
 
    return str;
