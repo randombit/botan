@@ -77,40 +77,17 @@ BigInt Fixed_Window_Exponentiator::execute() const
    {
    const u32bit exp_nibbles = (exp.bits() + window_bits - 1) / window_bits;
 
-   if(exp_nibbles == 0)
-      return 1;
-
-   BigInt x1 = 1;
-
-   for(u32bit j = 0; j != exp_nibbles / 2; ++j)
+   BigInt x = 1;
+   for(u32bit j = exp_nibbles; j > 0; --j)
       {
       for(u32bit k = 0; k != window_bits; ++k)
-         x1 = reducer.square(x1);
+         x = reducer.square(x);
 
-      u32bit nibble = exp.get_substring(window_bits*(exp_nibbles-1-j),
-                                        window_bits);
-
+      u32bit nibble = exp.get_substring(window_bits*(j-1), window_bits);
       if(nibble)
-         x1 = reducer.multiply(x1, g[nibble-1]);
+         x = reducer.multiply(x, g[nibble-1]);
       }
-
-   for(u32bit k = 0; k != window_bits; ++k)
-      x1 = reducer.square(x1);
-   BigInt x2 = 1;
-
-   for(u32bit j = exp_nibbles / 2; j != exp_nibbles; ++j)
-      {
-      for(u32bit k = 0; k != window_bits; ++k)
-         x2 = reducer.square(x2);
-
-      u32bit nibble = exp.get_substring(window_bits*(exp_nibbles-1-j),
-                                        window_bits);
-
-      if(nibble)
-         x2 = reducer.multiply(x2, g[nibble-1]);
-      }
-
-   return reducer.multiply(x1, x2);
+   return x;
    }
 
 /*
