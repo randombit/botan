@@ -535,7 +535,6 @@ class CompilerInfo(object):
                         'lang_flags': '',
                         'warning_flags': '',
                         'dll_import_flags': '',
-                        'dll_export_flags': '',
                         'ar_command': None,
                         'makefile_style': '',
                         'compiler_has_tr1': False,
@@ -831,7 +830,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'lang_flags': cc.lang_flags + options.extra_flags,
         'warn_flags': cc.warning_flags,
         'shared_flags': cc.shared_flags,
-        'dll_export_flags': cc.dll_export_flags,
+        'dll_import_flags': cc.dll_import_flags,
 
         'so_link': cc.so_link_command_for(osinfo.basename),
 

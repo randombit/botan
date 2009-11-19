@@ -15,9 +15,6 @@ debug_flags -g
 no_debug_flags ""
 lang_flags "-std ansi -D__USE_STD_IOSTREAM"
 
-dll_import_flags ""
-dll_export_flags ""
-
 makefile_style unix
 
 <so_link_flags>

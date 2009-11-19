@@ -18,5 +18,5 @@ SolidCompression=yes
 OutputDir=.
 
 [Files]
-Source: "..\libbotan.lib"; DestDir: "{app}"
+Source: "..\libbotan.dll"; DestDir: "{app}"
 Source: "include\botan\*"; DestDir: "{app}\include\botan"

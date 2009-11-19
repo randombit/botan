@@ -18,9 +18,6 @@ lang_flags "-ansi -LANG:ansi-for-init-scope=ON"
 # headers <g>
 #warning_flags "-fullwarn"
 
-dll_import_flags ""
-dll_export_flags ""
-
 makefile_style unix
 
 <so_link_flags>

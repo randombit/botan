@@ -20,9 +20,6 @@ shared_flags "-fPIC"
 debug_flags -g
 no_debug_flags "-finline-functions"
 
-dll_import_flags ""
-dll_export_flags ""
-
 makefile_style unix
 
 <so_link_flags>

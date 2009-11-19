@@ -16,9 +16,6 @@ lang_flags "-D__KAI_STRICT"
 debug_flags -g
 no_debug_flags ""
 
-dll_import_flags ""
-dll_export_flags ""
-
 makefile_style unix
 
 <so_link_flags>
