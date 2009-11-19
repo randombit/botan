@@ -105,8 +105,7 @@ BigInt::BigInt(RandomNumberGenerator& rng, u32bit bits)
 */
 BigInt::BigInt(BigInt&& other)
    {
-   reg.swap(other.reg);
-   signedness = other.signedness;
+   std::swap(*this, other);
    }
 
 /**
@@ -115,10 +114,7 @@ BigInt::BigInt(BigInt&& other)
 BigInt& BigInt::operator=(BigInt&& other)
    {
    if(this != &other)
-      {
-      reg.swap(other.reg);
-      signedness = other.signedness;
-      }
+      std::swap(*this, other);
 
    return (*this);
    }
