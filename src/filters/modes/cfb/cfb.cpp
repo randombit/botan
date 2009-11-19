@@ -22,7 +22,7 @@ void check_feedback(u32bit BLOCK_SIZE, u32bit FEEDBACK_SIZE, u32bit bits,
    {
    if(FEEDBACK_SIZE == 0 || FEEDBACK_SIZE > BLOCK_SIZE || bits % 8 != 0)
       throw Invalid_Argument(name + ": Invalid feedback size " +
-                             to_string(bits));
+                             std::to_string(bits));
    }
 
 }

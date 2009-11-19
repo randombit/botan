@@ -4,7 +4,3 @@ load_on auto
 mem_pool.cpp
 mem_pool.h
 </add>
-
-<requires>
-mutex
-</requires>

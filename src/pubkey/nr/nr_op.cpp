@@ -1,11 +1,12 @@
 /*
 * NR Operations
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/nr_op.h>
+#include <botan/async.h>
 
 namespace Botan {
 
@@ -37,7 +38,10 @@ SecureVector<byte> Default_NR_Op::verify(const byte in[], u32bit length) const
    if(c.is_zero() || c >= q || d >= q)
       throw Invalid_Argument("Default_NR_Op::verify: Invalid signature");
 
-   BigInt i = mod_p.multiply(powermod_g_p(d), powermod_y_p(c));
+   auto future_y_c = std_async([&]() { return powermod_y_p(c); });
+   BigInt g_d = powermod_g_p(d);
+
+   BigInt i = mod_p.multiply(g_d, future_y_c.get());
    return BigInt::encode(mod_q.reduce(c - i));
    }
 

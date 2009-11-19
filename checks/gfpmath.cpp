@@ -484,13 +484,13 @@ bool test_gfp_shared_vals()
    GFpElement a(p, BigInt("234090"));
    GFpElement shcpy_a(1,0);
    shcpy_a.share_assign(a);
-   std::tr1::shared_ptr<GFpModulus> ptr1 = a.get_ptr_mod();
-   std::tr1::shared_ptr<GFpModulus> ptr2 = shcpy_a.get_ptr_mod();
+   std::shared_ptr<GFpModulus> ptr1 = a.get_ptr_mod();
+   std::shared_ptr<GFpModulus> ptr2 = shcpy_a.get_ptr_mod();
    CHECK_MESSAGE(ptr1.get() == ptr2.get(), "shared pointers for moduli aren´t equal");
 
    GFpElement b(1,0);
    b = a; // create a non shared copy
-   std::tr1::shared_ptr<GFpModulus> ptr_b_p = b.get_ptr_mod();
+   std::shared_ptr<GFpModulus> ptr_b_p = b.get_ptr_mod();
    CHECK_MESSAGE(ptr1.get() != ptr_b_p.get(), "non shared pointers for moduli are equal");
 
    a.turn_on_sp_red_mul();
@@ -513,15 +513,15 @@ bool test_gfp_shared_vals()
       }
 
    swap(a,shcpy_a);
-   std::tr1::shared_ptr<GFpModulus> ptr3 = a.get_ptr_mod();
-   std::tr1::shared_ptr<GFpModulus> ptr4 = shcpy_a.get_ptr_mod();
+   std::shared_ptr<GFpModulus> ptr3 = a.get_ptr_mod();
+   std::shared_ptr<GFpModulus> ptr4 = shcpy_a.get_ptr_mod();
    CHECK_MESSAGE(ptr3.get() == ptr4.get(), "shared pointers for moduli aren´t equal after swap");
    CHECK(ptr1.get() == ptr4.get());
    CHECK(ptr2.get() == ptr3.get());
 
    swap(a,b);
-   std::tr1::shared_ptr<GFpModulus> ptr_a = a.get_ptr_mod();
-   std::tr1::shared_ptr<GFpModulus> ptr_b = shcpy_a.get_ptr_mod();
+   std::shared_ptr<GFpModulus> ptr_a = a.get_ptr_mod();
+   std::shared_ptr<GFpModulus> ptr_b = shcpy_a.get_ptr_mod();
    CHECK(ptr_a.get() == ptr_b_p.get());
    CHECK(ptr_b.get() == ptr3.get());
    return pass;
