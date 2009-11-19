@@ -3,6 +3,11 @@
 [Setup]
 AppName=Botan
 AppVerName=Botan %{version}
+
+AppPublisher=Jack Lloyd
+AppPublisherURL=http://botan.randombit.net/
+AppVersion=%{version}
+
 DefaultDirName={pf}\botan
 DefaultGroupName=botan
 
@@ -10,8 +15,8 @@ AppCopyright=Copyright (C) 1999-2009 Jack Lloyd and others
 
 SolidCompression=yes
 
-; Todo - add [Types] and select 'user' / 'developer' installs
+OutputDir=.
 
 [Files]
-Source: "libbotan.lib"; DestDir: "{app}
-Source: "build\lib\botan\*"  DestDir: "{app}\botan"
+Source: "..\libbotan.lib"; DestDir: "{app}"
+Source: "lib\botan\*"; DestDir: "{app}\botan"
