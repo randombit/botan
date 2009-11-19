@@ -312,7 +312,7 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
         to_obj.basename = basename.replace('.txt', '')
 
     lexer = shlex.shlex(open(infofile), infofile, posix=True)
-    lexer.wordchars += '|:.<>/,-!' # handle various funky chars in info.txt
+    lexer.wordchars += '|:.<>/,-!+' # handle various funky chars in info.txt
 
     for group in allowed_groups:
         to_obj.__dict__[group] = []
