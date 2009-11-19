@@ -1,0 +1,17 @@
+; A script for packaging botan with InnoSetup
+
+[Setup]
+AppName=Botan
+AppVerName=Botan %{version}
+DefaultDirName={pf}\botan
+DefaultGroupName=botan
+
+AppCopyright=Copyright (C) 1999-2009 Jack Lloyd and others
+
+SolidCompression=yes
+
+; Todo - add [Types] and select 'user' / 'developer' installs
+
+[Files]
+Source: "libbotan.lib"; DestDir: "{app}
+Source: "build\lib\botan\*"  DestDir: "{app}\botan"
