@@ -40,7 +40,7 @@ BigInt::BigInt(Sign s, u32bit size)
    }
 
 /*
-* Construct a BigInt from a "raw" BigInt
+* Copy constructor
 */
 BigInt::BigInt(const BigInt& b)
    {
@@ -98,6 +98,29 @@ BigInt::BigInt(RandomNumberGenerator& rng, u32bit bits)
    {
    set_sign(Positive);
    randomize(rng, bits);
+   }
+
+/**
+* Move constructor
+*/
+BigInt::BigInt(BigInt&& other)
+   {
+   reg.swap(other.reg);
+   signedness = other.signedness;
+   }
+
+/**
+* Move assignment
+*/
+BigInt& BigInt::operator=(BigInt&& other)
+   {
+   if(this != &other)
+      {
+      reg.swap(other.reg);
+      signedness = other.signedness;
+      }
+
+   return (*this);
    }
 
 /*
