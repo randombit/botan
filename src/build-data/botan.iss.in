@@ -19,4 +19,4 @@ OutputDir=.
 
 [Files]
 Source: "..\libbotan.lib"; DestDir: "{app}"
-Source: "lib\botan\*"; DestDir: "{app}\botan"
+Source: "include\botan\*"; DestDir: "{app}\include\botan"
