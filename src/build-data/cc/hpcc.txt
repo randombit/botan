@@ -1,16 +1,16 @@
-macro_name "HP_ACC"
+macro_name HP_ACC
 
-binary_name "aCC"
+binary_name aCC
 
 compile_option "-c "
 output_to_option "-o "
-add_include_dir_option "-I"
-add_lib_dir_option "-L"
-add_lib_option "-l"
+add_include_dir_option -I
+add_lib_dir_option -L
+add_lib_option -l
 
 lib_opt_flags "+O2"
 check_opt_flags "+O2"
-debug_flags "-g"
+debug_flags -g
 no_debug_flags ""
 lang_flags "-AA -ext +eh -z"
 warning_flags "" # +w

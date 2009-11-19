@@ -1,17 +1,17 @@
-macro_name "COMPAQ"
+macro_name COMPAQ
 
-binary_name "cxx"
+binary_name cxx
 
 compile_option "-c "
 output_to_option "-o "
-add_include_dir_option "-I"
-add_lib_dir_option "-L"
-add_lib_option "-l"
+add_include_dir_option -I
+add_lib_dir_option -L
+add_lib_option -l
 
 # -O3 and up seem to be unhappy with Botan
 lib_opt_flags "-O2"
 check_opt_flags "-O2"
-debug_flags "-g"
+debug_flags -g
 no_debug_flags ""
 lang_flags "-std ansi -D__USE_STD_IOSTREAM"
 

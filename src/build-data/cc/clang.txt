@@ -1,14 +1,14 @@
 # Largely copied from the gcc config
 
-macro_name "CLANG"
+macro_name CLANG
 
 binary_name clang
 
 compile_option "-c "
 output_to_option "-o "
-add_include_dir_option "-I"
-add_lib_dir_option "-L"
-add_lib_option "-l"
+add_include_dir_option -I
+add_lib_dir_option -L
+add_lib_option -l
 
 lang_flags "-D_REENTRANT -ansi -Wno-long-long"
 warning_flags "-W -Wall"
@@ -18,7 +18,7 @@ makefile_style unix
 lib_opt_flags "-O2"
 check_opt_flags "-O2"
 shared_flags "-fPIC"
-debug_flags "-g"
+debug_flags -g
 no_debug_flags "-finline-functions"
 
 <so_link_flags>

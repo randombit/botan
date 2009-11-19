@@ -1,12 +1,12 @@
-macro_name "SGI_PRO64"
+macro_name SGI_PRO64
 
-binary_name "sgiCC"
+binary_name sgiCC
 
 compile_option "-c "
 output_to_option "-o "
-add_include_dir_option "-I"
-add_lib_dir_option "-L"
-add_lib_option "-l"
+add_include_dir_option -I
+add_lib_dir_option -L
+add_lib_option -l
 
 lib_opt_flags "-O3 -OPT:alias=TYPED"
 check_opt_flags "-O3 -OPT:alias=TYPED"

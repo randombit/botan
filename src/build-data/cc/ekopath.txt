@@ -1,12 +1,12 @@
-macro_name "PATHSCALE"
+macro_name PATHSCALE
 
-binary_name "pathCC"
+binary_name pathCC
 
 compile_option "-c "
 output_to_option "-o "
-add_include_dir_option "-I"
-add_lib_dir_option "-L"
-add_lib_option "-l"
+add_include_dir_option -I
+add_lib_dir_option -L
+add_lib_option -l
 
 lib_opt_flags "-O3 -OPT:Ofast:alias=disjoint"
 check_opt_flags "-O2"
@@ -16,7 +16,7 @@ warning_flags "-W -Wall"
 ar_command "pathCC -ar -o"
 
 shared_flags "-fPIC"
-debug_flags "-g"
+debug_flags -g
 
 dll_import_flags ""
 dll_export_flags ""
