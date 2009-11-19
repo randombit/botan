@@ -8,7 +8,8 @@ add_include_dir_option "/I"
 add_lib_dir_option -L
 add_lib_option ""
 
-lib_opt_flags "/O2 /DBOTAN_DLL=__declspec(dllexport)"
+lib_opt_flags "/O2"
+shared_flags "/DBOTAN_DLL=__declspec(dllexport)"
 check_opt_flags "/O2"
 debug_flags "/Zi"
 no_debug_flags ""
@@ -22,5 +23,5 @@ ar_command "lib"
 makefile_style nmake
 
 <so_link_flags>
-default -> "link /DLL"
+default -> "$(CXX) /LD"
 </so_link_flags>

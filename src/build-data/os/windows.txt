@@ -15,7 +15,7 @@ win32_virtual_lock
 </target_features>
 
 <supports_shared>
-msvc
+all
 </supports_shared>
 
 <aliases>

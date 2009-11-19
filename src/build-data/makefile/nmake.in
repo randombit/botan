@@ -7,6 +7,8 @@ CHECK_OPT     = %{check_opt}
 MACH_OPT      = %{mach_opt}
 LANG_FLAGS    = %{lang_flags}
 WARN_FLAGS    = %{warn_flags}
+SO_OBJ_FLAGS  = %{shared_flags}
+SO_LINK_CMD   = %{so_link}
 LINK_TO       = %{link_to}
 
 ##################################################
@@ -49,13 +51,13 @@ LIBOBJS       = %{lib_objs}
 
 CHECKOBJS     = %{check_objs}
 
-LIB_FLAGS     = $(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
+LIB_FLAGS     = $(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS) $(SO_OBJ_FLAGS)
 CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
 
-LIBRARIES     = $(STATIC_LIB)
+LIBRARIES     = $(DLL)
 
 LIBNAME       = libbotan
-STATIC_LIB    = $(LIBNAME).%{static_suffix}
+DLL           = $(LIBNAME).%{so_suffix}
 
 all: $(LIBRARIES)
 
@@ -70,20 +72,16 @@ all: $(LIBRARIES)
 # Link Commands                                  #
 ##################################################
 
-# Link for Borland?
-#ilink32 -L$(BCB)\lib -w -c -x -Gn -ap -Tpe c0x32.obj \
-#    $(CHECKOBJS),check.exe,,$(LINK_TO) $(STATIC_LIB)
-
 $(CHECK): $(LIBRARIES) $(CHECKOBJS)
-	link /OUT:$@.exe $(CHECKOBJS) $(STATIC_LIB) $(LINK_TO)
+	link /OUT:$@.exe $(CHECKOBJS) $(DLL) $(LINK_TO)
 
-$(STATIC_LIB): $(LIBOBJS)
-	$(AR) /OUT:$@ /NAME:BOTAN-$(VERSION) $(LIBOBJS)
+$(DLL): $(LIBOBJS)
+	$(CXX) $(SO_LINK_CMD) /OUT:$@ /NAME:BOTAN-$(VERSION) $(LIBOBJS)
 
 ##################################################
 # Misc Targets                                   #
 ##################################################
-static: $(STATIC_LIB)
+dll: $(DLL)
 
 ##################################################
 # Fake Targets                                   #
