@@ -6,7 +6,7 @@ MACH_OPT      = %{mach_opt}
 LANG_FLAGS    = %{lang_flags}
 WARN_FLAGS    = %{warn_flags}
 SO_OBJ_FLAGS  = %{shared_flags}
-SO_LINK_CMD   = %{so_link}
+LIB_LINK_CMD  = %{so_link}
 LINK_TO       = %{link_to}
 
 ### Version Numbers
@@ -45,11 +45,12 @@ CHECKOBJS     = %{check_objs}
 LIB_FLAGS     = $(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS) $(SO_OBJ_FLAGS)
 CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
 
-LIBRARIES     = $(DLL)
-
 LIBNAME       = botan
-DLL           = $(LIBNAME).%{so_suffix}
-STATIC_LIB    = $(LIBNAME).%{static_suffix}
+
+LIBRARIES     = $(LIB)
+
+# This will either be a static lib or the DLL linking lib
+LIB           = $(LIBNAME).%{static_suffix}
 
 all: $(LIBRARIES)
 
@@ -62,8 +63,8 @@ all: $(LIBRARIES)
 $(CHECK): $(LIBRARIES) $(CHECKOBJS)
 	$(CXX) /Fe$@ $(CHECKOBJS) $(STATIC_LIB) $(LINK_TO)
 
-$(DLL): $(LIBOBJS)
-	$(SO_LINK_CMD) /Febotan $(LIBOBJS) $(LINK_TO)
+$(LIB): $(LIBOBJS)
+	$(LIB_LINK_CMD) /Febotan $(LIBOBJS) $(LINK_TO)
 
 ### Fake Targets
 clean:

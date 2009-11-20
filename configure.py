@@ -564,10 +564,15 @@ class CompilerInfo(object):
     """
     Return the machine specific ABI flags
     """
-    def mach_abi_link_flags(self, osname, arch, submodel):
+    def mach_abi_link_flags(self, osname, arch, submodel, debug_p):
+
+        def all():
+            if debug_p:
+                return 'all-debug'
+            return 'all'
 
         abi_link = set()
-        for what in ['all', osname, arch, submodel]:
+        for what in [all(), osname, arch, submodel]:
             if self.mach_abi_linking.get(what) != None:
                 abi_link.add(self.mach_abi_linking.get(what))
 
@@ -792,6 +797,11 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             return os.path.join(options.with_build_dir, path)
         return path
 
+    def only_if_shared(option):
+        if options.build_shared_lib:
+            return option
+        return ''
+
     return {
         'version_major': build_config.version_major,
         'version_minor': build_config.version_minor,
@@ -822,17 +832,17 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'mp_bits': choose_mp_bits(),
 
-        'cc': cc.binary_name + cc.mach_abi_link_flags(options.os,
-                                                      options.arch,
-                                                      options.cpu),
+        'cc': cc.binary_name + cc.mach_abi_link_flags(
+            options.os, options.arch, options.cpu, options.debug_build),
 
         'lib_opt': cc.library_opt_flags(options.debug_build),
         'mach_opt': cc.mach_opts(options.arch, options.cpu),
         'check_opt': cc.check_opt_flags,
         'lang_flags': cc.lang_flags + options.extra_flags,
         'warn_flags': cc.warning_flags,
-        'shared_flags': cc.shared_flags,
-        'dll_import_flags': cc.dll_import_flags,
+
+        'shared_flags': only_if_shared(cc.shared_flags),
+        'dll_import_flags': only_if_shared(cc.dll_import_flags),
 
         'so_link': cc.so_link_command_for(osinfo.basename),
 
