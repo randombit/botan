@@ -4,7 +4,7 @@ obj_suffix obj
 so_suffix dll
 static_suffix lib
 
-install_root c:\Botan
+install_root c:\\Botan
 doc_dir docs
 
 install_cmd_data "copy"
