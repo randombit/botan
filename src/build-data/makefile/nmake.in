@@ -1,6 +1,4 @@
-##################################################
-# Compiler Options                               #
-##################################################
+### Compiler Options
 CXX           = %{cc}
 LIB_OPT       = %{lib_opt}
 CHECK_OPT     = %{check_opt}
@@ -11,23 +9,17 @@ SO_OBJ_FLAGS  = %{shared_flags}
 SO_LINK_CMD   = %{so_link}
 LINK_TO       = %{link_to}
 
-##################################################
-# Version Numbers                                #
-##################################################
+### Version Numbers
 VERSION       = %{version}
 
-##################################################
-# Installation Settings                          #
-##################################################
+### Installation Settings
 DESTDIR       = %{prefix}
 
 LIBDIR        = $(DESTDIR)\%{libdir}
 HEADERDIR     = $(DESTDIR)\%{includedir}\botan
 DOCDIR        = $(DESTDIR)\%{docdir}\Botan-$(VERSION)
 
-##################################################
-# Aliases for Common Programs                    #
-##################################################
+### Aliases for Common Programs
 AR            = %{ar_command}
 CD            = @cd
 ECHO          = @echo
@@ -38,9 +30,7 @@ MKDIR_INSTALL = @md
 RM            = @del /Q
 RMDIR         = @rmdir
 
-##################################################
-# File Lists                                     #
-##################################################
+### File Lists
 CHECK         = check
 
 DOCS          = %{doc_files}
@@ -61,31 +51,19 @@ DLL           = $(LIBNAME).%{so_suffix}
 
 all: $(LIBRARIES)
 
-##################################################
-# Build Commands                                 #
-##################################################
+### Build Commands
 %{lib_build_cmds}
 
 %{check_build_cmds}
 
-##################################################
-# Link Commands                                  #
-##################################################
-
+### Link Commands
 $(CHECK): $(LIBRARIES) $(CHECKOBJS)
 	link /OUT:$@.exe $(CHECKOBJS) $(DLL) $(LINK_TO)
 
 $(DLL): $(LIBOBJS)
-	$(CXX) $(SO_LINK_CMD) /OUT:$@ /NAME:BOTAN-$(VERSION) $(LIBOBJS)
+	$(SO_LINK_CMD) /Febotan $(LIBOBJS) $(LINK_TO)
 
-##################################################
-# Misc Targets                                   #
-##################################################
-dll: $(DLL)
-
-##################################################
-# Fake Targets                                   #
-##################################################
+### Fake Targets
 clean:
 	$(RM) %{build_dir}\lib\* %{build_dir}\checks\*
 	$(RM) $(LIBRARIES) $(CHECK)
@@ -98,8 +76,6 @@ distclean: clean
 	$(RMDIR) %{build_dir}
 	$(RM) Makefile
 
-##################################################
-# Install Commands                               #
-##################################################
+### Install Commands
 install: $(LIBRARIES)
 	$(ECHO) "Install command not implemented"
