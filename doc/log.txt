@@ -1,10 +1,12 @@
 
-* 1.9.3-dev, ????-??-??
+* 1.9.3, 2009-11-19
  - Add new AES implementation using Intel's AES instruction intrinsics
  - Add an implementation of format preserving encryption
  - Allow use of any hash function in X.509 certificate creation
  - Optimizations for MARS, Skipjack, and AES
  - Set macros for available SIMD instructions in build.h
+ - Add support for using InnoSetup to package Windows builds
+ - By default build a DLL on Windows
 
 * 1.9.2, 2009-11-03
  - Add SIMD version of XTEA

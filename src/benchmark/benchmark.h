@@ -25,10 +25,10 @@ namespace Botan {
 * @return results a map from provider to speed in mebibytes per second
 */
 std::map<std::string, double>
-algorithm_benchmark(const std::string& name,
-                    u32bit milliseconds,
-                    RandomNumberGenerator& rng,
-                    Algorithm_Factory& af);
+BOTAN_DLL algorithm_benchmark(const std::string& name,
+                              u32bit milliseconds,
+                              RandomNumberGenerator& rng,
+                              Algorithm_Factory& af);
 
 }
 

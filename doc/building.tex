@@ -172,8 +172,6 @@ compiler to look for both include files and library files in
 place where they will be in the default compiler search paths (consult
 your documentation and/or local expert for details).
 
-\pagebreak
-
 \subsection{Configuration Parameters}
 
 There are some configuration parameters which you may want to tweak
@@ -230,22 +228,17 @@ support this there is a flag to \filename{configure.py} called
 inserted into \filename{build/build.h} which is (indirectly) included
 into every Botan header and source file.
 
-\pagebreak
-
 \section{Modules}
 
 There are a fairly large number of modules included with Botan. Some
 of these are extremely useful, while others are only necessary in very
-unusual circumstances. The modules included with this release are:
+unusual circumstances. Most are loaded (or not) automatically as
+necessary, but some require external libraries are thus must be
+enabled at build time; these include:
 
 \newcommand{\mod}[2]{\textbf{#1}: #2}
 
 \begin{list}{$\cdot$}
-  \item \mod{alloc\_mmap}{Allocates memory using memory mappings of temporary
-         files. This means that if the OS swaps all or part of the application,
-         the sensitive data will be swapped to where we can later clean it,
-         rather than somewhere in the swap partition.}
-
   \item \mod{bzip2}{Enables an application to perform bzip2 compression
          and decompression using the library. Available on any system that has
          bzip2.}
@@ -254,69 +247,13 @@ unusual circumstances. The modules included with this release are:
          decompression using the library. Available on any system that has
          zlib.}
 
-  %\item \mod{eng\_aep}{An engine that uses any available AEP accelerator card
-  %       to speed up PK operations. You have to have the AEP drivers installed
-  %       for this to link correctly, but you don't have to have a card
-  %       installed - it will automatically be enabled if a card is detected at
-  %       run time.}
-
   \item \mod{gnump}{An engine that uses GNU MP to speed up PK operations.
          GNU MP 4.1 or later is required.}
 
   \item \mod{openssl}{An engine that uses OpenSSL to speed up public key
                       operations and some ciphers/hashes. OpenSSL 0.9.7 or
                       later is required.}
-
-  \item \mod{beos\_stats}{An entropy source that uses BeOS-specific
-    APIs to gather (hopefully unpredictable) data from the system.}
-
-  \item \mod{cryptoapi\_rng}{An entropy source that uses the Win32
-    CryptoAPI function \texttt{CryptGenRandom} to gather
-    entropy. Supported on NT4, Win95 OSR2, and all later Windows
-    systems.}
-
-  \item \mod{egd}{An entropy source that accesses EGD (the entropy
-         gathering daemon). Common on Unix systems that don't have
-         \texttt{/dev/random}.}
-
-  \item \mod{proc\_walk}{Gather entropy by reading files from a particular file
-          tree. Usually used with \texttt{/proc}; most other file trees don't
-          have sufficient variability over time to be useful.}
-
-  \item \mod{unix\_procs}{Gather entropy by running various Unix programs, like
-          \texttt{arp} and \texttt{vmstat}, and reading their output in the
-          hopes that at least some of it will be unpredictable to an attacker.}
-
-  \item \mod{win32\_stats}{Gather entropy by walking through various pieces of
-          information about processes running on the system. Does not run on
-          NT4, but should run on all other Win32 systems.}
-
-  \item \mod{fd\_unix}{Let the users of \texttt{Pipe} perform I/O with Unix
-         file descriptors in addition to \texttt{iostream} objects.}
-
-  \item \mod{pthread}{Add support for using \texttt{pthread} mutexes to
-         lock internal data structures. Important if you are using threads
-         with the library.}
-
-  \item \mod{qt\_mutex}{Add support for using Qt mutexes to lock internal data
-         structures.}
-
-  \item \mod{cpu\_counter}{Use the contents of the CPU cycle counter when
-         generating random bits to further randomize the results. Works on x86
-         (Pentium and up), Alpha, and SPARCv9.}
-
-  \item \mod{posix\_rt}{Use the POSIX realtime clock as a high-resolution
-         timer.}
-
-  \item \mod{gettimeofday}{Use the traditional Unix
-    \texttt{gettimeofday} as a high resolution timer.}
-
-  \item \mod{win32\_query\_perf\_ctr}{Use Win32's
-    \texttt{QueryPerformanceCounter} as a high resolution timer.}
-
 \end{list}
-
-\pagebreak
 
 \section{Building Applications}
 
@@ -375,8 +312,6 @@ given that typically Windows software is distributed as binaries, this
 is less of a problem - only the developer needs to worry about it. As
 long as they can remember where they installed Botan, they just have
 to set the appropriate flags in their Makefile/project file.
-
-\pagebreak
 
 \section{Language Wrappers}
 

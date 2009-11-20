@@ -14,9 +14,6 @@ lang_flags ""
 debug_flags -g
 no_debug_flags ""
 
-dll_import_flags ""
-dll_export_flags ""
-
 makefile_style unix
 
 <mach_opt>

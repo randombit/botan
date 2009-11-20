@@ -19,7 +19,7 @@ namespace Botan {
 A class encapsulating a SCAN name (similar to JCE conventions)
 http://www.users.zetnet.co.uk/hopwood/crypto/scan/
 */
-class SCAN_Name
+class BOTAN_DLL SCAN_Name
    {
    public:
       /**

@@ -1,31 +1,25 @@
-##################################################
-# Compiler Options                               #
-##################################################
+### Compiler Options
 CXX           = %{cc}
 LIB_OPT       = %{lib_opt}
 CHECK_OPT     = %{check_opt}
 MACH_OPT      = %{mach_opt}
 LANG_FLAGS    = %{lang_flags}
 WARN_FLAGS    = %{warn_flags}
+SO_OBJ_FLAGS  = %{shared_flags}
+SO_LINK_CMD   = %{so_link}
 LINK_TO       = %{link_to}
 
-##################################################
-# Version Numbers                                #
-##################################################
+### Version Numbers
 VERSION       = %{version}
 
-##################################################
-# Installation Settings                          #
-##################################################
+### Installation Settings
 DESTDIR       = %{prefix}
 
 LIBDIR        = $(DESTDIR)\%{libdir}
 HEADERDIR     = $(DESTDIR)\%{includedir}\botan
 DOCDIR        = $(DESTDIR)\%{docdir}\Botan-$(VERSION)
 
-##################################################
-# Aliases for Common Programs                    #
-##################################################
+### Aliases for Common Programs
 AR            = %{ar_command}
 CD            = @cd
 ECHO          = @echo
@@ -34,11 +28,10 @@ INSTALL_CMD   = %{install_cmd_exec}
 MKDIR         = @md
 MKDIR_INSTALL = @md
 RM            = @del /Q
+RM_R          = $(RM) /S
 RMDIR         = @rmdir
 
-##################################################
-# File Lists                                     #
-##################################################
+### File Lists
 CHECK         = check
 
 DOCS          = %{doc_files}
@@ -49,59 +42,41 @@ LIBOBJS       = %{lib_objs}
 
 CHECKOBJS     = %{check_objs}
 
-LIB_FLAGS     = $(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
+LIB_FLAGS     = $(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS) $(SO_OBJ_FLAGS)
 CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
 
-LIBRARIES     = $(STATIC_LIB)
+LIBRARIES     = $(DLL)
 
-LIBNAME       = libbotan
+LIBNAME       = botan
+DLL           = $(LIBNAME).%{so_suffix}
 STATIC_LIB    = $(LIBNAME).%{static_suffix}
 
 all: $(LIBRARIES)
 
-##################################################
-# Build Commands                                 #
-##################################################
+### Build Commands
 %{lib_build_cmds}
 
 %{check_build_cmds}
 
-##################################################
-# Link Commands                                  #
-##################################################
-
-# Link for Borland?
-#ilink32 -L$(BCB)\lib -w -c -x -Gn -ap -Tpe c0x32.obj \
-#    $(CHECKOBJS),check.exe,,$(LINK_TO) $(STATIC_LIB)
-
+### Link Commands
 $(CHECK): $(LIBRARIES) $(CHECKOBJS)
-	link /OUT:$@.exe $(CHECKOBJS) $(STATIC_LIB) $(LINK_TO)
+	$(CXX) /Fe$@ $(CHECKOBJS) $(STATIC_LIB) $(LINK_TO)
 
-$(STATIC_LIB): $(LIBOBJS)
-	$(AR) /OUT:$@ /NAME:BOTAN-$(VERSION) $(LIBOBJS)
+$(DLL): $(LIBOBJS)
+	$(SO_LINK_CMD) /Febotan $(LIBOBJS) $(LINK_TO)
 
-##################################################
-# Misc Targets                                   #
-##################################################
-static: $(STATIC_LIB)
-
-##################################################
-# Fake Targets                                   #
-##################################################
+### Fake Targets
 clean:
 	$(RM) %{build_dir}\lib\* %{build_dir}\checks\*
 	$(RM) $(LIBRARIES) $(CHECK)
 
 distclean: clean
-	$(RM) %{build_dir}\build.h
-	$(RM) %{build_dir}\include\botan\*
+	$(RM_R) %{build_dir}
 	$(RMDIR) %{build_dir}\include\botan %{build_dir}\include
 	$(RMDIR) %{build_dir}\lib %{build_dir}\checks
 	$(RMDIR) %{build_dir}
-	$(RM) Makefile
+	$(RM) Makefile $(LIBNAME).* $(CHECK).*
 
-##################################################
-# Install Commands                               #
-##################################################
+### Install Commands
 install: $(LIBRARIES)
 	$(ECHO) "Install command not implemented"

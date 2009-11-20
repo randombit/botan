@@ -16,9 +16,6 @@ lang_flags "-AA -ext +eh -z"
 warning_flags "" # +w
 shared_flags "+Z"
 
-dll_import_flags ""
-dll_export_flags ""
-
 makefile_style unix
 
 <mach_abi_linking>
