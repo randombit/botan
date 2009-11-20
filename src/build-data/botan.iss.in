@@ -5,18 +5,18 @@ AppName=Botan
 AppVerName=Botan %{version}
 
 AppPublisher=Jack Lloyd
+AppCopyright=Copyright (C) 1999-2009 Jack Lloyd and others
 AppPublisherURL=http://botan.randombit.net/
 AppVersion=%{version}
 
 DefaultDirName={pf}\botan
 DefaultGroupName=botan
 
-AppCopyright=Copyright (C) 1999-2009 Jack Lloyd and others
-
 SolidCompression=yes
 
 OutputDir=.
 
 [Files]
-Source: "..\libbotan.dll"; DestDir: "{app}"
+Source: "..\botan.dll"; DestDir: "{app}"
+Source: "..\botan.lib"; DestDir: "{app}"
 Source: "include\botan\*"; DestDir: "{app}\include\botan"

@@ -28,6 +28,7 @@ INSTALL_CMD   = %{install_cmd_exec}
 MKDIR         = @md
 MKDIR_INSTALL = @md
 RM            = @del /Q
+RM_R          = $(RM) /S
 RMDIR         = @rmdir
 
 ### File Lists
@@ -46,8 +47,9 @@ CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
 
 LIBRARIES     = $(DLL)
 
-LIBNAME       = libbotan
+LIBNAME       = botan
 DLL           = $(LIBNAME).%{so_suffix}
+STATIC_LIB    = $(LIBNAME).%{static_suffix}
 
 all: $(LIBRARIES)
 
@@ -58,7 +60,7 @@ all: $(LIBRARIES)
 
 ### Link Commands
 $(CHECK): $(LIBRARIES) $(CHECKOBJS)
-	link /OUT:$@.exe $(CHECKOBJS) $(DLL) $(LINK_TO)
+	$(CXX) /Fe$@ $(CHECKOBJS) $(STATIC_LIB) $(LINK_TO)
 
 $(DLL): $(LIBOBJS)
 	$(SO_LINK_CMD) /Febotan $(LIBOBJS) $(LINK_TO)
@@ -69,12 +71,11 @@ clean:
 	$(RM) $(LIBRARIES) $(CHECK)
 
 distclean: clean
-	$(RM) %{build_dir}\build.h
-	$(RM) %{build_dir}\include\botan\*
+	$(RM_R) %{build_dir}
 	$(RMDIR) %{build_dir}\include\botan %{build_dir}\include
 	$(RMDIR) %{build_dir}\lib %{build_dir}\checks
 	$(RMDIR) %{build_dir}
-	$(RM) Makefile
+	$(RM) Makefile $(LIBNAME).* $(CHECK).*
 
 ### Install Commands
 install: $(LIBRARIES)
