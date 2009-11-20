@@ -23,3 +23,7 @@ Source: "..\botan.dll.manifest"; DestDir: "{app}"
 Source: "..\botan.exp"; DestDir: "{app}"
 Source: "..\botan.lib"; DestDir: "{app}"
 Source: "include\botan\*"; DestDir: "{app}\include\botan"
+
+Source "..\readme.txt"; DestDir: "{app}\doc"
+Source "..\doc\license.txt"; DestDir: "{app}\doc"
+Source "..\doc\log.txt"; DestDir: "{app}\doc"
