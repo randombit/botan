@@ -1102,7 +1102,7 @@ def setup_build(build_config, options, template_vars):
                              ('botan-config.in', 'botan-config'),
                              ('botan.pc.in', build_config.pkg_config_file()),
                              ('botan.doxy.in', 'botan.doxy'),
-                             ('botan.iss.in', 'botan.iss')]:
+                             ('innosetup.in', 'botan.iss')]:
         templates_to_proc[os.path.join(options.build_data, template)] = \
              os.path.join(build_config.build_dir, sink)
 

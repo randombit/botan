@@ -15,6 +15,7 @@ DefaultGroupName=botan
 SolidCompression=yes
 
 OutputDir=.
+OutputBaseFilename=botan-%{version}
 
 [Files]
 Source: "..\botan.dll"; DestDir: "{app}"
