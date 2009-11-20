@@ -610,7 +610,9 @@ class CompilerInfo(object):
     def so_link_command_for(self, osname):
         if osname in self.so_link_flags:
             return self.so_link_flags[osname]
-        return self.so_link_flags['default']
+        if 'default' in self.so_link_flags:
+            return self.so_link_flags['default']
+        return ''
 
     """
     Return defines for build.h
