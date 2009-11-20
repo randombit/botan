@@ -19,5 +19,7 @@ OutputBaseFilename=botan-%{version}
 
 [Files]
 Source: "..\botan.dll"; DestDir: "{app}"
+Source: "..\botan.dll.manifest"; DestDir: "{app}"
+Source: "..\botan.exp"; DestDir: "{app}"
 Source: "..\botan.lib"; DestDir: "{app}"
 Source: "include\botan\*"; DestDir: "{app}\include\botan"
