@@ -49,10 +49,13 @@ procedure ConvertLineEndings();
      LF : String;
      CRLF : String;
 begin
-   LF := #10;
-   CR := #13;
-   CRLF := CR + LF;
-   LoadStringFromFile(ExpandConstant(CurrentFileName), FileContents);
-   StringChangeEx(FileContents, LF, CRLF, False);
-   SaveStringToFile(ExpandConstant(CurrentFileName), FileContents, False);
+   if ExtractFileName(CurrentFileName) <> 'build.h' then
+   begin
+      LF := #10;
+      CR := #13;
+      CRLF := CR + LF;
+      LoadStringFromFile(ExpandConstant(CurrentFileName), FileContents);
+      StringChangeEx(FileContents, LF, CRLF, False);
+      SaveStringToFile(ExpandConstant(CurrentFileName), FileContents, False);
+   end;
 end;
