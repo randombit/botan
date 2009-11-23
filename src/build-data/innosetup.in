@@ -17,13 +17,26 @@ SolidCompression=yes
 OutputDir=.
 OutputBaseFilename=botan-%{version}
 
-[Files]
-Source: "..\botan.dll"; DestDir: "{app}"
-Source: "..\botan.dll.manifest"; DestDir: "{app}"
-Source: "..\botan.exp"; DestDir: "{app}"
-Source: "..\botan.lib"; DestDir: "{app}"
-Source: "include\botan\*"; DestDir: "{app}\include\botan"
+[Types]
+Name: "user"; Description: "User"
+Name: "devel"; Description: "Developer"
 
-Source "..\readme.txt"; DestDir: "{app}\doc"
-Source "..\doc\license.txt"; DestDir: "{app}\doc"
-Source "..\doc\log.txt"; DestDir: "{app}\doc"
+[Components]
+name: "dll"; Description: "Runtime DLLs"; Types: user devel; Flags: fixed
+name: "implib"; Description: "Import Library"; Types: devel
+name: "includes"; Description: "Include Files"; Types: devel
+name: "docs"; Descrption: "Developer Documentation"; Types: devel
+
+[Files]
+# License file is always included
+Source: "..\botan.dll"; DestDir: "{app}"; Components: dll
+Source: "..\botan.dll.manifest"; DestDir: "{app}"; Components: dll
+Source "..\doc\license.txt"; DestDir: "{app}"; Components: dll
+
+Source: "..\botan.exp"; DestDir: "{app}"; Components: implib
+Source: "..\botan.lib"; DestDir: "{app}"; Components: implib
+
+Source: "include\botan\*"; DestDir: "{app}\include\botan"; Components: includes
+
+Source "..\readme.txt"; DestDir: "{app}\doc"; Components: docs
+Source "..\doc\log.txt"; DestDir: "{app}\doc"; Components: docs
