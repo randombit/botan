@@ -31,12 +31,28 @@ name: "docs"; Description: "Developer Documentation"; Types: devel
 ; License file is always included
 Source: "..\botan.dll"; DestDir: "{app}"; Components: dll
 Source: "..\botan.dll.manifest"; DestDir: "{app}"; Components: dll
-Source: "..\doc\license.txt"; DestDir: "{app}"; Components: dll
+Source: "..\doc\license.txt"; DestDir: "{app}"; Components: dll; AfterInstall: ConvertLineEndings
 
 Source: "..\botan.exp"; DestDir: "{app}"; Components: implib
 Source: "..\botan.lib"; DestDir: "{app}"; Components: implib
 
-Source: "include\botan\*"; DestDir: "{app}\include\botan"; Components: includes
+Source: "include\botan\*"; DestDir: "{app}\include\botan"; Components: includes; AfterInstall: ConvertLineEndings
 
-Source: "..\readme.txt"; DestDir: "{app}\doc"; Components: docs
-Source: "..\doc\log.txt"; DestDir: "{app}\doc"; Components: docs
+Source: "..\readme.txt"; DestDir: "{app}\doc"; Components: docs; AfterInstall: ConvertLineEndings
+Source: "..\doc\log.txt"; DestDir: "{app}\doc"; Components: docs; AfterInstall: ConvertLineEndings
+
+[Code]
+procedure ConvertLineEndings();
+  var
+     FileContents : String;
+     CR : String;
+     LF : String;
+     CRLF : String;
+begin
+   LF := #10;
+   CR := #13;
+   CRLF := CR + LF;
+   LoadStringFromFile(ExpandConstant(CurrentFileName), FileContents);
+   StringChangeEx(FileContents, LF, CRLF, False);
+   SaveStringToFile(ExpandConstant(CurrentFileName), FileContents, False);
+end;
