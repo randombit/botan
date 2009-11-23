@@ -47,10 +47,10 @@ CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
 
 LIBNAME       = botan
 
-LIBRARIES     = $(LIB)
+LIBRARIES     = $(BOTAN_LIB)
 
-# This will either be a static lib or the DLL linking lib
-LIB           = $(LIBNAME).%{static_suffix}
+# This will be either a static lib or the DLL import lib
+BOTAN_LIB     = $(LIBNAME).%{static_suffix}
 
 all: $(LIBRARIES)
 
@@ -61,10 +61,10 @@ all: $(LIBRARIES)
 
 ### Link Commands
 $(CHECK): $(LIBRARIES) $(CHECKOBJS)
-	$(CXX) /Fe$@ $(CHECKOBJS) $(STATIC_LIB) $(LINK_TO)
+	$(CXX) /Fe$@ $(CHECKOBJS) $(BOTAN_LIB) $(LINK_TO)
 
-$(LIB): $(LIBOBJS)
-	$(LIB_LINK_CMD) /Febotan $(LIBOBJS) $(LINK_TO)
+$(BOTAN_LIB): $(LIBOBJS)
+	$(LIB_LINK_CMD) /Fe$(LIBNAME) $(LIBOBJS) $(LINK_TO)
 
 ### Fake Targets
 clean:
