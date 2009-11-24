@@ -39,19 +39,18 @@ Source: "..\doc\license.txt"; DestDir: "{app}"; Components: dll; AfterInstall: C
 Source: "..\botan.dll"; DestDir: "{app}"; Components: dll
 Source: "..\botan.dll.manifest"; DestDir: "{app}"; Components: dll
 
-Source: "..\botan.exp"; DestDir: "{app}"; Components: implib
-Source: "..\botan.lib"; DestDir: "{app}"; Components: implib
-
 Source: "include\botan\*"; DestDir: "{app}\include\botan"; Components: includes; AfterInstall: ConvertLineEndings
 
 Source: "..\readme.txt"; DestDir: "{app}\doc"; Components: docs; AfterInstall: ConvertLineEndings
 Source: "..\doc\log.txt"; DestDir: "{app}\doc"; Components: docs; AfterInstall: ConvertLineEndings
 
+Source: "..\doc\examples\*.cpp"; DestDir: "{app}\doc\examples"; Components: docs; AfterInstall: ConvertLineEndings
+
+Source: "..\botan.exp"; DestDir: "{app}"; Components: implib
+Source: "..\botan.lib"; DestDir: "{app}"; Components: implib
+
 Source: "..\doc\api.pdf"; DestDir: "{app}\doc"; Components: docs; Flags: skipifsourcedoesntexist
 Source: "..\doc\tutorial.pdf"; DestDir: "{app}\doc"; Components: docs; Flags: skipifsourcedoesntexist
-
-Source "..\doc\examples"; DestDir: "{app}\doc\examples"; Components: docs
-
 
 [Code]
 const
