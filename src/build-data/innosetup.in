@@ -5,9 +5,14 @@ AppName=Botan
 AppVerName=Botan %{version}
 
 AppPublisher=Jack Lloyd
-AppCopyright=Copyright (C) 1999-2009 Jack Lloyd and others
 AppPublisherURL=http://botan.randombit.net/
 AppVersion=%{version}
+
+VersionInfoCopyright=Copyright (C) 1999-2009 Jack Lloyd and others
+VersionInfoVersion=%{version}.0
+
+; Require at least Windows 98 or 2000
+MinVersion=4.1,5.0
 
 DefaultDirName={pf}\botan
 DefaultGroupName=botan
@@ -20,18 +25,19 @@ OutputBaseFilename=botan-%{version}
 [Types]
 Name: "user"; Description: "User"
 Name: "devel"; Description: "Developer"
+Name: "custom"; Description: "Custom"; Flags: iscustom
 
 [Components]
-name: "dll"; Description: "Runtime DLLs"; Types: user devel; Flags: fixed
+name: "dll"; Description: "Runtime DLLs"; Types: user devel custom; Flags: fixed
 name: "implib"; Description: "Import Library"; Types: devel
 name: "includes"; Description: "Include Files"; Types: devel
 name: "docs"; Description: "Developer Documentation"; Types: devel
 
 [Files]
-; License file is always included
+; DLL and license file is always included
+Source: "..\doc\license.txt"; DestDir: "{app}"; Components: dll; AfterInstall: ConvertLineEndings
 Source: "..\botan.dll"; DestDir: "{app}"; Components: dll
 Source: "..\botan.dll.manifest"; DestDir: "{app}"; Components: dll
-Source: "..\doc\license.txt"; DestDir: "{app}"; Components: dll; AfterInstall: ConvertLineEndings
 
 Source: "..\botan.exp"; DestDir: "{app}"; Components: implib
 Source: "..\botan.lib"; DestDir: "{app}"; Components: implib
@@ -41,21 +47,29 @@ Source: "include\botan\*"; DestDir: "{app}\include\botan"; Components: includes;
 Source: "..\readme.txt"; DestDir: "{app}\doc"; Components: docs; AfterInstall: ConvertLineEndings
 Source: "..\doc\log.txt"; DestDir: "{app}\doc"; Components: docs; AfterInstall: ConvertLineEndings
 
+Source: "..\doc\api.pdf"; DestDir: "{app}\doc"; Components: docs; Flags: skipifsourcedoesntexist
+Source: "..\doc\tutorial.pdf"; DestDir: "{app}\doc"; Components: docs; Flags: skipifsourcedoesntexist
+
+Source "..\doc\examples"; DestDir: "{app}\doc\examples"; Components: docs
+
+
 [Code]
+const
+   LF = #10;
+   CR = #13;
+   CRLF = CR + LF;
+
 procedure ConvertLineEndings();
   var
+     FilePath : String;
      FileContents : String;
-     CR : String;
-     LF : String;
-     CRLF : String;
 begin
+   FilePath := ExpandConstant(CurrentFileName)
+
    if ExtractFileName(CurrentFileName) <> 'build.h' then
    begin
-      LF := #10;
-      CR := #13;
-      CRLF := CR + LF;
-      LoadStringFromFile(ExpandConstant(CurrentFileName), FileContents);
+      LoadStringFromFile(FilePath, FileContents);
       StringChangeEx(FileContents, LF, CRLF, False);
-      SaveStringToFile(ExpandConstant(CurrentFileName), FileContents, False);
+      SaveStringToFile(FilePath, FileContents, False);
    end;
 end;
