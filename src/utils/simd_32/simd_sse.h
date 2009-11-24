@@ -17,7 +17,7 @@ namespace Botan {
 class SIMD_SSE2
    {
    public:
-      bool enabled() const { return CPUID::has_sse2(); }
+      static bool enabled() { return CPUID::has_sse2(); }
 
       SIMD_SSE2(const u32bit B[4])
          {
