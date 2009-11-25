@@ -37,9 +37,9 @@ class BuildConfigurationInformation(object):
     """
     version_major = 1
     version_minor = 8
-    version_patch = 8
-    version_so_patch = 2
-    version_suffix = ''
+    version_patch = 9
+    version_so_patch = 9
+    version_suffix = '-dev'
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
@@ -972,12 +972,22 @@ def setup_build(build_config, options, template_vars):
         makefile_template: template_vars['makefile_path']
         }
 
-    for (template, sink) in [('buildh.in', 'build.h'),
-                             ('botan-config.in', 'botan-config'),
-                             ('botan.pc.in', build_config.pkg_config_file()),
-                             ('botan.doxy.in', 'botan.doxy')]:
-        templates_to_proc[os.path.join(options.build_data, template)] = \
-             os.path.join(build_config.build_dir, sink)
+    def templates_to_use():
+        yield (options.build_data, 'buildh.in', 'build.h')
+        yield (options.build_data, 'botan.doxy.in', 'botan.doxy')
+
+        if options.os != 'windows':
+            yield (options.build_data, 'botan.pc.in', build_config.pkg_config_file())
+            yield (options.build_data, 'botan-config.in', 'botan-config')
+
+        if options.os == 'windows':
+            yield (options.build_data, 'innosetup.in', 'botan.iss')
+
+    for (template_dir, template, sink) in templates_to_use():
+        source = os.path.join(template_dir, template)
+        if template_dir == options.build_data:
+            sink = os.path.join(build_config.build_dir, sink)
+        templates_to_proc[source] = sink
 
     for (template, sink) in templates_to_proc.items():
         try:

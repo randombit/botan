@@ -13,11 +13,11 @@ use Sys::Hostname;
 
 my $MAJOR_VERSION = 1;
 my $MINOR_VERSION = 8;
-my $PATCH_VERSION = 8;
+my $PATCH_VERSION = 9;
 
-my $VERSION_SUFFIX = '';
+my $VERSION_SUFFIX = '-dev';
 
-my $SO_PATCH_VERSION = 2;
+my $SO_PATCH_VERSION = 9;
 
 my $VERSION_STRING = "$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION$VERSION_SUFFIX";
 my $SO_VERSION_STRING = "$MAJOR_VERSION.$MINOR_VERSION.$SO_PATCH_VERSION$VERSION_SUFFIX";
@@ -192,6 +192,10 @@ sub main {
     process_template(File::Spec->catfile($$config{'config-dir'}, 'buildh.in'),
                      File::Spec->catfile($$config{'build_dir'}, 'build.h'),
                      $config);
+
+    process_template(File::Spec->catfile($$config{'config-dir'}, 'innosetup.in'),
+                     File::Spec->catfile($$config{'build_dir'}, 'botan.iss'),
+                     $config) if($os eq 'windows');
 
     process_template(File::Spec->catfile(
                          $$config{'config-dir'}, 'botan.doxy.in'),
