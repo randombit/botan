@@ -434,6 +434,17 @@ class ModuleInfo(object):
             deps.append(self.parent_module)
         return deps
 
+    """
+    Ensure that all dependencies of this module actually exist, warning
+    about any that do not
+    """
+    def dependencies_exist(self, modules):
+        all_deps = map(lambda s: s.split('|'), self.dependencies())
+
+        for missing in filter(lambda s: s not in modules, sum(all_deps, [])):
+            logging.warn("Module '%s', dep of '%s', does not exist" % (
+                missing, self.basename))
+
     def __cmp__(self, other):
         if self.basename < other.basename:
             return -1
@@ -912,6 +923,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 Determine which modules to load based on options, target, etc
 """
 def choose_modules_to_use(modules, archinfo, options):
+
+    for mod in modules.values():
+        mod.dependencies_exist(modules)
 
     to_load = []
     maybe_dep = []
