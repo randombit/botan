@@ -6,6 +6,7 @@
 */
 
 #include <botan/simd_engine.h>
+#include <botan/simd_32.h>
 #include <botan/cpuid.h>
 
 #if defined(BOTAN_HAS_SERPENT_SIMD)
@@ -26,6 +27,9 @@ BlockCipher*
 SIMD_Engine::find_block_cipher(const SCAN_Name& request,
                                Algorithm_Factory&) const
    {
+   if(!SIMD_32::enabled())
+      return 0;
+
 #if defined(BOTAN_HAS_SERPENT_SIMD)
    if(request.algo_name() == "Serpent")
       return new Serpent_SIMD;

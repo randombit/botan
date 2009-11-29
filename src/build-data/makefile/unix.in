@@ -1,6 +1,4 @@
-##################################################
-# Compiler Options                               #
-##################################################
+# Compiler Options
 CXX           = %{cc}
 LIB_OPT       = %{lib_opt}
 CHECK_OPT     = %{check_opt}
@@ -9,14 +7,10 @@ LANG_FLAGS    = %{lang_flags}
 WARN_FLAGS    = %{warn_flags}
 LINK_TO       = %{link_to}
 
-##################################################
-# Version Numbers                                #
-##################################################
+# Version Numbers
 VERSION       = %{version}
 
-##################################################
-# Installation Settings                          #
-##################################################
+# Installation Settings
 DESTDIR       = %{prefix}
 
 BINDIR        = $(DESTDIR)/bin
@@ -28,9 +22,7 @@ PKGCONF_DIR   = $(LIBDIR)/pkgconfig
 CONFIG_SCRIPT = %{botan_config}
 PKGCONFIG     = %{botan_pkgconfig}
 
-##################################################
-# Aliases for Common Programs                    #
-##################################################
+# Aliases for Common Programs
 AR               = %{ar_command}
 CD               = @cd
 ECHO             = @echo
@@ -43,9 +35,7 @@ RANLIB           = %{ranlib_command}
 RM               = @rm -f
 RM_R             = @rm -rf
 
-##################################################
-# File Lists                                     #
-##################################################
+# File Lists
 CHECK         = %{check_prefix}check
 
 DOCS          = %{doc_files}
@@ -66,16 +56,12 @@ STATIC_LIB    = $(LIBNAME).a
 
 all: $(LIBRARIES)
 
-##################################################
-# Build Commands                                 #
-##################################################
+# Build Commands
 %{lib_build_cmds}
 
 %{check_build_cmds}
 
-##################################################
-# Link Commands                                  #
-##################################################
+# Link Commands
 $(CHECK): $(LIBRARIES) $(CHECKOBJS)
 	$(CXX) $(CHECKOBJS) -L. libbotan.a $(LINK_TO) -o $(CHECK)
 
@@ -84,9 +70,7 @@ $(STATIC_LIB): $(LIBOBJS)
 	$(AR) $(STATIC_LIB) $(LIBOBJS)
 	$(RANLIB) $(STATIC_LIB)
 
-##################################################
-# Fake Targets                                   #
-##################################################
+# Fake Targets
 .PHONY = doxygen clean distclean install static
 
 static: $(STATIC_LIB)

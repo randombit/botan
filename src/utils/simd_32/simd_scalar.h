@@ -16,7 +16,7 @@ namespace Botan {
 class SIMD_Scalar
    {
    public:
-      bool enabled() const { return true; }
+      static bool enabled() { return true; }
 
       SIMD_Scalar(const u32bit B[4])
          {

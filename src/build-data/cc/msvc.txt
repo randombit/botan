@@ -1,6 +1,6 @@
 macro_name MSVC
 
-binary_name cl.exe
+binary_name cl
 
 compile_option "/nologo /c "
 output_to_option "/Fo"
@@ -8,17 +8,16 @@ add_include_dir_option "/I"
 add_lib_dir_option -L
 add_lib_option ""
 
-lib_opt_flags "/O2"
-shared_flags "/DBOTAN_DLL=__declspec(dllexport)"
-check_opt_flags "/O2"
-debug_flags "/Zi"
-no_debug_flags ""
-lang_flags "/EHsc /GR /D_CONSOLE"
+no_debug_flags "/O2"
+debug_flags "/Od /Zi /DDEBUG"
+check_opt_flags "/O2 /D_CONSOLE"
+lang_flags "/EHsc /GR"
 warning_flags ""
 
+shared_flags "/DBOTAN_DLL=__declspec(dllexport)"
 dll_import_flags "__declspec(dllimport)"
 
-ar_command "lib"
+ar_command lib
 
 makefile_style nmake
 
@@ -27,5 +26,6 @@ default -> "$(CXX) /LD"
 </so_link_flags>
 
 <mach_abi_linking>
-all -> "/MD"
+all       -> "/MD"
+all-debug -> "/MDd"
 </mach_abi_linking>

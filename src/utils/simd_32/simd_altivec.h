@@ -20,7 +20,7 @@ namespace Botan {
 class SIMD_Altivec
    {
    public:
-      bool enabled() const { return CPUID::has_altivec(); }
+      static bool enabled() { return CPUID::has_altivec(); }
 
       SIMD_Altivec(const u32bit B[4])
          {
