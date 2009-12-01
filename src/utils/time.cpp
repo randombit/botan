@@ -43,25 +43,26 @@ u64bit combine_timers(u32bit seconds, u32bit parts, u32bit parts_hz)
    return res;
    }
 
-}
-
-/*
-* Convert a time_t to a struct tm
-*/
-calendar_point calendar_value(
-   const std::chrono::system_clock::time_point& time_point)
+std::tm do_gmtime(time_t time_val)
    {
-   time_t time_val = std::chrono::system_clock::to_time_t(time_point);
-
    // Race condition: std::gmtime is not assured thread safe,
    // and C++ does not include gmtime_r. Use a mutex here?
 
    std::tm* tm_p = std::gmtime(&time_val);
    if (tm_p == 0)
-      throw Encoding_Error("time_t_to_tm could not convert");
+      throw Encoding_Error("calendar_value could not convert with gmtime");
+   return *tm_p;
+   }
 
-   std::tm tm = *tm_p;
-   // Race is over here
+}
+
+/*
+* Convert a time_point to a calendar_point
+*/
+calendar_point calendar_value(
+   const std::chrono::system_clock::time_point& time_point)
+   {
+   std::tm tm = do_gmtime(std::chrono::system_clock::to_time_t(time_point));
 
    return calendar_point(tm.tm_year + 1900,
                          tm.tm_mon + 1,

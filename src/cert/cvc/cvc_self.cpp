@@ -14,7 +14,7 @@
 #include <botan/look_pk.h>
 #include <botan/cvc_req.h>
 #include <botan/cvc_ado.h>
-#include <botan/time.h>
+#include <chrono>
 #include <sstream>
 
 namespace Botan {

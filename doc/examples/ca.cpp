@@ -15,11 +15,11 @@
 
 #include <botan/botan.h>
 #include <botan/x509_ca.h>
-#include <botan/time.h>
 using namespace Botan;
 
 #include <iostream>
 #include <memory>
+#include <chrono>
 
 int main(int argc, char* argv[])
    {

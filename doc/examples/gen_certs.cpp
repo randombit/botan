@@ -7,7 +7,7 @@
 #include <botan/rsa.h>
 #include <botan/x509self.h>
 #include <botan/x509_ca.h>
-#include <botan/time.h>
+#include <chrono>
 
 using namespace Botan;
 

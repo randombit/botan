@@ -8,7 +8,7 @@
 #include <botan/x509self.h>
 #include <botan/oids.h>
 #include <botan/parsing.h>
-#include <botan/time.h>
+#include <chrono>
 
 namespace Botan {
 

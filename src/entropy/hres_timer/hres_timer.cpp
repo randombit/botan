@@ -7,7 +7,6 @@
 
 #include <botan/hres_timer.h>
 #include <botan/cpuid.h>
-#include <botan/time.h>
 
 #if defined(BOTAN_TARGET_OS_IS_WINDOWS)
   #include <windows.h>
