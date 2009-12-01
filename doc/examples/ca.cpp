@@ -56,8 +56,13 @@ int main(int argc, char* argv[])
       // (this example should be extended to show how)
 
       // now sign the request
-      X509_Time start_time(system_time());
-      X509_Time end_time(system_time() + 365 * 60 * 60 * 24);
+      auto now = std::chrono::system_clock::now();
+
+      X509_Time start_time(now);
+
+      typedef std::chrono::duration<int, std::ratio<31556926>> years;
+
+      X509_Time end_time(now + years(1));
 
       X509_Certificate new_cert = ca.sign_request(req, rng,
                                                   start_time, end_time);
