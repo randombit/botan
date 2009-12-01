@@ -23,13 +23,13 @@ namespace {
 */
 s32bit validity_check(const X509_Time& start, const X509_Time& end,
                       const std::chrono::system_clock::time_point& now,
-                      u32bit slack)
+                      std::chrono::seconds slack)
    {
    const s32bit NOT_YET_VALID = -1, VALID_TIME = 0, EXPIRED = 1;
 
-   if(start.cmp(now + std::chrono::seconds(slack)) > 0)
+   if(start.cmp(now + slack) > 0)
       return NOT_YET_VALID;
-   if(end.cmp(now - std::chrono::seconds(slack)) < 0)
+   if(end.cmp(now - slack) < 0)
       return EXPIRED;
    return VALID_TIME;
    }
@@ -170,7 +170,8 @@ bool X509_Store::CRL_Data::operator<(const X509_Store::CRL_Data& other) const
 /*
 * X509_Store Constructor
 */
-X509_Store::X509_Store(u32bit slack, u32bit cache_timeout)
+X509_Store::X509_Store(std::chrono::seconds slack,
+                       std::chrono::seconds cache_timeout)
    {
    revoked_info_valid = true;
 
@@ -680,7 +681,7 @@ bool X509_Store::Cert_Info::is_trusted() const
 /*
 * Check if this certificate has been verified
 */
-bool X509_Store::Cert_Info::is_verified(u32bit timeout) const
+bool X509_Store::Cert_Info::is_verified(std::chrono::seconds timeout) const
    {
    if(!checked)
       return false;
@@ -689,7 +690,7 @@ bool X509_Store::Cert_Info::is_verified(u32bit timeout) const
 
    auto now = std::chrono::system_clock::now();
 
-   if(now > last_checked + std::chrono::seconds(timeout))
+   if(now > last_checked + timeout)
       checked = false;
 
    return checked;
