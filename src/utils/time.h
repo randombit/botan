@@ -9,16 +9,28 @@
 #define BOTAN_TIME_H__
 
 #include <botan/types.h>
-#include <ctime>
+#include <chrono>
 
 namespace Botan {
 
 /*
-* Time Access/Conversion Functions
+* Time Conversion Functions
 */
-BOTAN_DLL u64bit system_time();
+struct BOTAN_DLL calendar_point
+   {
+   u32bit year;
+   byte month;
+   byte day;
+   byte hour;
+   byte minutes;
+   byte seconds;
 
-BOTAN_DLL std::tm time_t_to_tm(u64bit);
+   calendar_point(u32bit y, byte mon, byte d, byte h, byte min, byte sec) :
+      year(y), month(mon), day(d), hour(h), minutes(min), seconds(sec) {}
+   };
+
+BOTAN_DLL calendar_point calendar_value(
+   const std::chrono::system_clock::time_point& time_point);
 
 /**
 @return nanoseconds resolution timestamp, unknown epoch

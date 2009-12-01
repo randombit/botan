@@ -50,24 +50,24 @@ u32bit dec_two_digit(byte b1, byte b2)
 /*
 * Create an EAC_Time
 */
-EAC_Time::EAC_Time(u64bit timer, ASN1_Tag t)
-   :tag(t)
+EAC_Time::EAC_Time(const std::chrono::system_clock::time_point& time,
+                   ASN1_Tag t) : tag(t)
    {
-   std::tm time_info = time_t_to_tm(timer);
+   calendar_point cal = calendar_value(time);
 
-   year   = time_info.tm_year + 1900;
-   month  = time_info.tm_mon + 1;
-   day    = time_info.tm_mday;
+   year   = cal.year;
+   month  = cal.month;
+   day    = cal.day;
    }
 
 /*
 * Create an EAC_Time
 */
-EAC_Time::EAC_Time(const std::string& t_spec, ASN1_Tag t)
-   :tag(t)
+EAC_Time::EAC_Time(const std::string& t_spec, ASN1_Tag t) : tag(t)
    {
    set_to(t_spec);
    }
+
 /*
 * Create an EAC_Time
 */
@@ -280,19 +280,6 @@ void EAC_Time::decode_from(BER_Decoder& source)
 
    }
 
-u32bit EAC_Time::get_year() const
-   {
-   return year;
-   }
-u32bit EAC_Time::get_month() const
-   {
-   return month;
-   }
-u32bit EAC_Time::get_day() const
-   {
-   return day;
-   }
-
 /*
 * make the value an octet string for encoding
 */
@@ -304,29 +291,5 @@ SecureVector<byte> EAC_Time::encoded_eac_time() const
    result.append(enc_two_digit(day));
    return result;
    }
-
-ASN1_Ced::ASN1_Ced(std::string const& str)
-   : EAC_Time(str, ASN1_Tag(37))
-   {}
-
-ASN1_Ced::ASN1_Ced(u64bit val)
-   : EAC_Time(val, ASN1_Tag(37))
-   {}
-
-ASN1_Ced::ASN1_Ced(EAC_Time const& other)
-   : EAC_Time(other.get_year(), other.get_month(), other.get_day(), ASN1_Tag(37))
-   {}
-
-ASN1_Cex::ASN1_Cex(std::string const& str)
-   : EAC_Time(str, ASN1_Tag(36))
-   {}
-
-ASN1_Cex::ASN1_Cex(u64bit val)
-   : EAC_Time(val, ASN1_Tag(36))
-   {}
-
-ASN1_Cex::ASN1_Cex(EAC_Time const& other)
-   : EAC_Time(other.get_year(), other.get_month(), other.get_day(), ASN1_Tag(36))
-   {}
 
 }

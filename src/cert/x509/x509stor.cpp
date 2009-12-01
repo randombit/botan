@@ -22,13 +22,14 @@ namespace {
 * Do a validity check
 */
 s32bit validity_check(const X509_Time& start, const X509_Time& end,
-                      u64bit current_time, u32bit slack)
+                      const std::chrono::system_clock::time_point& now,
+                      u32bit slack)
    {
    const s32bit NOT_YET_VALID = -1, VALID_TIME = 0, EXPIRED = 1;
 
-   if(start.cmp(current_time + slack) > 0)
+   if(start.cmp(now + std::chrono::seconds(slack)) > 0)
       return NOT_YET_VALID;
-   if(end.cmp(current_time - slack) < 0)
+   if(end.cmp(now - std::chrono::seconds(slack)) < 0)
       return EXPIRED;
    return VALID_TIME;
    }
@@ -212,10 +213,11 @@ X509_Code X509_Store::validate_cert(const X509_Certificate& cert,
    if(chaining_result != VERIFIED)
       return chaining_result;
 
-   const u64bit current_time = system_time();
+   auto current_time = std::chrono::system_clock::now();
 
    s32bit time_check = validity_check(cert.start_time(), cert.end_time(),
                                       current_time, time_slack);
+
    if(time_check < 0)      return CERT_NOT_YET_VALID;
    else if(time_check > 0) return CERT_HAS_EXPIRED;
 
@@ -563,8 +565,10 @@ void X509_Store::add_trusted_certs(DataSource& source)
 */
 X509_Code X509_Store::add_crl(const X509_CRL& crl)
    {
+   auto current_time = std::chrono::system_clock::now();
+
    s32bit time_check = validity_check(crl.this_update(), crl.next_update(),
-                                      system_time(), time_slack);
+                                      current_time, time_slack);
 
    if(time_check < 0)      return CRL_NOT_YET_VALID;
    else if(time_check > 0) return CRL_HAS_EXPIRED;
@@ -641,8 +645,8 @@ X509_Store::Cert_Info::Cert_Info(const X509_Certificate& c,
                                  bool t) : cert(c), trusted(t)
    {
    checked = false;
+   last_checked = std::chrono::system_clock::time_point::min();
    result = UNKNOWN_X509_ERROR;
-   last_checked = 0;
    }
 
 /*
@@ -660,9 +664,9 @@ X509_Code X509_Store::Cert_Info::verify_result() const
 */
 void X509_Store::Cert_Info::set_result(X509_Code code) const
    {
-   result = code;
-   last_checked = system_time();
    checked = true;
+   last_checked = std::chrono::system_clock::now();
+   result = code;
    }
 
 /*
@@ -683,9 +687,9 @@ bool X509_Store::Cert_Info::is_verified(u32bit timeout) const
    if(result != VERIFIED && result != CERT_NOT_YET_VALID)
       return true;
 
-   const u64bit current_time = system_time();
+   auto now = std::chrono::system_clock::now();
 
-   if(current_time > last_checked + timeout)
+   if(now > last_checked + std::chrono::seconds(timeout))
       checked = false;
 
    return checked;

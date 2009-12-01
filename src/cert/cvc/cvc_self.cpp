@@ -181,9 +181,8 @@ EAC1_1_CVC create_cvca(Private_Key const& key,
       }
    EAC1_1_CVC_Options opts;
    opts.car = car;
-   const u64bit current_time = system_time();
 
-   opts.ced = ASN1_Ced(current_time);
+   opts.ced = ASN1_Ced(std::chrono::system_clock::now());
    opts.cex = ASN1_Cex(opts.ced);
    opts.cex.add_months(cvca_validity_months);
    opts.holder_auth_templ = (CVCA | (iris * IRIS) | (fingerpr * FINGERPRINT));
@@ -198,12 +197,12 @@ EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
                      EAC1_1_CVC const& signee,
                      RandomNumberGenerator& rng)
    {
-   ECDSA_PrivateKey const* priv_key = dynamic_cast<ECDSA_PrivateKey const*>(&key);
+   const ECDSA_PrivateKey* priv_key = dynamic_cast<ECDSA_PrivateKey const*>(&key);
+
    if (priv_key == 0)
-      {
-      throw Invalid_Argument("CVC_EAC::create_self_signed_cert(): unsupported key type");
-      }
-   ASN1_Ced ced(system_time());
+      throw Invalid_Argument("link_cvca(): unsupported key type");
+
+   ASN1_Ced ced(std::chrono::system_clock::now());
    ASN1_Cex cex(signee.get_cex());
    if (*static_cast<EAC_Time*>(&ced) > *static_cast<EAC_Time*>(&cex))
       {
@@ -278,8 +277,9 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
 #endif
 
    AlgorithmIdentifier sig_algo(signer_cert.signature_algorithm());
-   const u64bit current_time = system_time();
-   ASN1_Ced ced(current_time);
+
+   ASN1_Ced ced(std::chrono::system_clock::now());
+
    u32bit chat_val;
    u32bit chat_low = signer_cert.get_chat_value() & 0x3; // take the chat rights from signer
    ASN1_Cex cex(ced);

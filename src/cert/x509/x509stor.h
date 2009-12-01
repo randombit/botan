@@ -116,7 +116,7 @@ class BOTAN_DLL X509_Store
          private:
             mutable bool checked;
             mutable X509_Code result;
-            mutable u64bit last_checked;
+            mutable std::chrono::system_clock::time_point last_checked;
          };
 
       u32bit find_cert(const X509_DN&, const MemoryRegion<byte>&) const;

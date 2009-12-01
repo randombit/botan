@@ -350,8 +350,7 @@ void test_eac_time(RandomNumberGenerator&)
    {
    std::cout << "." << std::flush;
 
-   const u64bit current_time = system_time();
-   EAC_Time time(current_time);
+   EAC_Time time(std::chrono::system_clock::now());
    //     std::cout << "time as std::string = " << time.as_string() << std::endl;
    EAC_Time sooner("", ASN1_Tag(99));
    //X509_Time sooner("", ASN1_Tag(99));
