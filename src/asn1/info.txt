@@ -26,5 +26,4 @@ alloc
 bigint
 filters
 oid_lookup
-timer
 </requires>

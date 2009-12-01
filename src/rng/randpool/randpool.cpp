@@ -50,14 +50,9 @@ void Randpool::randomize(byte out[], u32bit length)
 */
 void Randpool::update_buffer()
    {
-   const u64bit timestamp =
-      std::chrono::duration_cast<std::chrono::nanoseconds>(
-         std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-
    for(u32bit i = 0; i != counter.size(); ++i)
       if(++counter[i])
          break;
-   store_be(timestamp, counter + 4);
 
    mac->update(static_cast<byte>(GEN_OUTPUT));
    mac->update(counter, counter.size());

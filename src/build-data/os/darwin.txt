@@ -8,6 +8,10 @@ ar_needs_ranlib yes
 
 doc_dir doc
 
+<target_features>
+gettimeofday
+</target_features>
+
 <supports_shared>
 all
 </supports_shared>

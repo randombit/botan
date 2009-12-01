@@ -1,25 +1,43 @@
 /*
-* Hardware Timer
-* (C) 1999-2007 Jack Lloyd
+* High Resolution Timestamp Entropy Source
+* (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/tm_hard.h>
+#include <botan/hres_timer.h>
+#include <botan/cpuid.h>
+#include <botan/time.h>
+
+#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+  #include <windows.h>
+#endif
 
 namespace Botan {
 
 /*
 * Get the timestamp
 */
-u64bit Hardware_Timer::clock() const
+void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
    {
+   // If Windows, grab the Performance Counter (usually TSC or PIT)
+#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+   LARGE_INTEGER tv;
+   ::QueryPerformanceCounter(&tv);
+   accum.add(tv.QuadPart, 0);
+#endif
+
+#if defined(BOTAN_USE_GCC_INLINE_ASM)
+
    u64bit rtc = 0;
 
 #if defined(BOTAN_TARGET_ARCH_IS_IA32) || defined(BOTAN_TARGET_ARCH_IS_AMD64)
-   u32bit rtc_low = 0, rtc_high = 0;
-   asm volatile("rdtsc" : "=d" (rtc_high), "=a" (rtc_low));
-   rtc = (static_cast<u64bit>(rtc_high) << 32) | rtc_low;
+   if(CPUID::has_rdtsc()) // not availble on all x86 CPUs
+      {
+      u32bit rtc_low = 0, rtc_high = 0;
+      asm volatile("rdtsc" : "=d" (rtc_high), "=a" (rtc_low));
+      rtc = (static_cast<u64bit>(rtc_high) << 32) | rtc_low;
+      }
 
 #elif defined(BOTAN_TARGET_ARCH_IS_PPC) || defined(BOTAN_TARGET_ARCH_IS_PPC64)
    u32bit rtc_low = 0, rtc_high = 0;
@@ -41,11 +59,12 @@ u64bit Hardware_Timer::clock() const
 #elif defined(BOTAN_TARGET_ARCH_IS_HPPA)
    asm volatile("mfctl 16,%0" : "=r" (rtc)); // 64-bit only?
 
-#else
-   #error "Unsure how to access hardware timer on this system"
 #endif
 
-   return rtc;
+   // Don't count the timestamp as contributing entropy
+   accum.add(rtc, 0);
+
+#endif
    }
 
 }

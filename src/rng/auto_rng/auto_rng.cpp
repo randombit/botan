@@ -7,7 +7,6 @@
 
 #include <botan/auto_rng.h>
 #include <botan/parsing.h>
-#include <botan/timer.h>
 #include <botan/hmac.h>
 #include <botan/sha2_32.h>
 #include <botan/sha2_64.h>
@@ -28,20 +27,8 @@
   #include <botan/aes.h>
 #endif
 
-#if defined(BOTAN_HAS_TIMER_HARDWARE)
-  #include <botan/tm_hard.h>
-#endif
-
-#if defined(BOTAN_HAS_TIMER_POSIX)
-  #include <botan/tm_posix.h>
-#endif
-
-#if defined(BOTAN_HAS_TIMER_UNIX)
-  #include <botan/tm_unix.h>
-#endif
-
-#if defined(BOTAN_HAS_TIMER_WIN32)
-  #include <botan/tm_win32.h>
+#if defined(BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER)
+  #include <botan/hres_timer.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEVICE)
@@ -81,16 +68,8 @@ namespace {
 */
 void add_entropy_sources(RandomNumberGenerator* rng)
    {
-
-   // Add a high resolution timer, if available
-#if defined(BOTAN_HAS_TIMER_HARDWARE)
-   rng->add_entropy_source(new Hardware_Timer);
-#elif defined(BOTAN_HAS_TIMER_POSIX)
-   rng->add_entropy_source(new POSIX_Timer);
-#elif defined(BOTAN_HAS_TIMER_UNIX)
-   rng->add_entropy_source(new Unix_Timer);
-#elif defined(BOTAN_HAS_TIMER_WIN32)
-   rng->add_entropy_source(new Win32_Timer);
+#if defined(BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER)
+   rng->add_entropy_source(new High_Resolution_Timestamp);
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEVICE)

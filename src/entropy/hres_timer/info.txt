@@ -1,14 +1,10 @@
-define TIMER_HARDWARE
+define ENTROPY_SRC_HIGH_RESOLUTION_TIMER
 
 load_on asm_ok
 
-<add>
-tm_hard.cpp
-tm_hard.h
-</add>
-
 <cc>
 gcc
+icc
 </cc>
 
 <arch>
@@ -30,7 +26,3 @@ ia64    # ar.itc
 s390x
 hppa
 </arch>
-
-<requires>
-timer
-</requires>
