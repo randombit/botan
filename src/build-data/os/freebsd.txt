@@ -2,6 +2,7 @@ os_type unix
 
 <target_features>
 posix_mlock
+gettimeofday
 </target_features>
 
 <supports_shared>

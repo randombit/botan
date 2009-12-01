@@ -8,7 +8,6 @@
 #include <botan/randpool.h>
 #include <botan/loadstor.h>
 #include <botan/xor_buf.h>
-#include <botan/timer.h>
 #include <botan/stl_util.h>
 #include <algorithm>
 
@@ -51,12 +50,9 @@ void Randpool::randomize(byte out[], u32bit length)
 */
 void Randpool::update_buffer()
    {
-   const u64bit timestamp = system_time();
-
    for(u32bit i = 0; i != counter.size(); ++i)
       if(++counter[i])
          break;
-   store_be(timestamp, counter + 4);
 
    mac->update(static_cast<byte>(GEN_OUTPUT));
    mac->update(counter, counter.size());

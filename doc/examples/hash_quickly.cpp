@@ -23,12 +23,10 @@ void set_fastest_implementation(const std::string& algo,
                                 Botan::RandomNumberGenerator& rng,
                                 double ms = 30)
    {
-   Botan::Default_Benchmark_Timer timer;
-
    Botan::Algorithm_Factory& af = Botan::global_state().algorithm_factory();
 
    std::map<std::string, double> results =
-      Botan::algorithm_benchmark(algo, ms, timer, rng, af);
+      Botan::algorithm_benchmark(algo, ms, rng, af);
 
    std::string fastest_provider = "";
    double best_res = 0;

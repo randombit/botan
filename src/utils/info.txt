@@ -3,5 +3,5 @@ define UTIL_FUNCTIONS
 load_on always
 
 <libs>
-tru64 -> rt
+linux,tru64 -> rt
 </libs>

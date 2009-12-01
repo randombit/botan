@@ -9,6 +9,7 @@
 #include <botan/engine.h>
 #include <botan/parsing.h>
 #include <botan/symkey.h>
+#include <botan/time.h>
 
 #include "common.h"
 #include "bench.h"
@@ -152,13 +153,12 @@ bool bench_algo(const std::string& algo,
                 Botan::RandomNumberGenerator& rng,
                 double seconds)
    {
-   Botan::Default_Benchmark_Timer timer;
    Botan::Algorithm_Factory& af = Botan::global_state().algorithm_factory();
 
    u32bit milliseconds = static_cast<u32bit>(seconds * 1000);
 
    std::map<std::string, double> speeds =
-      algorithm_benchmark(algo, milliseconds, timer, rng, af);
+      algorithm_benchmark(algo, milliseconds, rng, af);
 
    if(speeds.empty()) // maybe a cipher mode, then?
       {
@@ -198,7 +198,7 @@ bool bench_algo(const std::string& algo,
          Botan::Pipe pipe(filt, new Botan::BitBucket);
          pipe.start_msg();
 
-         const u64bit start = timer.clock();
+         const u64bit start = Botan::get_nanoseconds_clock();
          u64bit nanoseconds_used = 0;
          u64bit reps = 0;
 
@@ -206,7 +206,7 @@ bool bench_algo(const std::string& algo,
             {
             pipe.write(&buf[0], buf.size());
             ++reps;
-            nanoseconds_used = timer.clock() - start;
+            nanoseconds_used = Botan::get_nanoseconds_clock() - start;
             }
 
          double mbytes_per_second =

@@ -14,7 +14,7 @@
 #include <botan/lookup.h>
 #include <botan/look_pk.h>
 #include <botan/oids.h>
-#include <botan/timer.h>
+#include <botan/time.h>
 #include <algorithm>
 #include <typeinfo>
 #include <iterator>

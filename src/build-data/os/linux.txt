@@ -1,6 +1,8 @@
 os_type unix
 
 <target_features>
+clock_gettime
+gettimeofday
 posix_mlock
 </target_features>
 

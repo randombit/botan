@@ -64,11 +64,10 @@ void benchmark_algo(const std::string& algo,
                     RandomNumberGenerator& rng)
    {
    u32bit milliseconds = 3000;
-   Default_Benchmark_Timer timer;
    Algorithm_Factory& af = global_state().algorithm_factory();
 
    std::map<std::string, double> speeds =
-      algorithm_benchmark(algo, milliseconds, timer, rng, af);
+      algorithm_benchmark(algo, milliseconds, rng, af);
 
    std::cout << algo << ":";
 
