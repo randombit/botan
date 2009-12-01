@@ -316,7 +316,7 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
 
     for group in allowed_groups:
         to_obj.__dict__[group] = []
-    for (key,val) in name_val_pairs.iteritems():
+    for (key,val) in name_val_pairs.items():
         to_obj.__dict__[key] = val
 
     def lexed_tokens(): # Convert to an interator
@@ -381,7 +381,15 @@ class ModuleInfo(object):
                                 and not filename.startswith('.')]
 
         # Coerce to more useful types
-        self.libs = force_to_dict(self.libs)
+        def convert_lib_list(l):
+            result = {}
+            for (targetlist, vallist) in zip(l[::3], l[2::3]):
+                vals = vallist.split(',')
+                for target in targetlist.split(','):
+                    result[target] = result.setdefault(target, []) + vals
+            return result
+
+        self.libs = convert_lib_list(self.libs)
 
         def add_dir_name(filename):
             if filename.count(':') == 0:
@@ -676,7 +684,7 @@ class OsInfo(object):
     def defines(self):
         return ['TARGET_OS_IS_%s' % (self.basename.upper())] + \
                ['TARGET_OS_HAS_' + feat.upper()
-                for feat in self.target_features]
+                for feat in sorted(self.target_features)]
 
 def fixup_proc_name(proc):
     proc = proc.lower().replace(' ', '')
@@ -750,15 +758,15 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     def link_to():
         libs = set()
         for module in modules:
-            for (osname,link_to) in module.libs.iteritems():
+            for (osname,link_to) in module.libs.items():
                 if osname == 'all' or osname == osinfo.basename:
-                    libs.add(link_to)
+                    libs |= set(link_to)
                 else:
                     match = re.match('^all!(.*)', osname)
                     if match is not None:
                         exceptions = match.group(1).split(',')
                         if osinfo.basename not in exceptions:
-                            libs.add(link_to)
+                            libs |= set(link_to)
         return sorted(libs)
 
     def objectfile_list(sources, obj_dir):
@@ -934,7 +942,7 @@ def choose_modules_to_use(modules, archinfo, options):
     def cannot_use_because(mod, reason):
         not_using_because.setdefault(reason, []).append(mod)
 
-    for (modname, module) in modules.iteritems():
+    for (modname, module) in modules.items():
         if modname in options.disabled_modules:
             cannot_use_because(modname, 'disabled by user')
         elif modname in options.enabled_modules:
