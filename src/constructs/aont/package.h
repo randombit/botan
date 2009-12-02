@@ -6,6 +6,9 @@
 * Distributed under the terms of the Botan license
 */
 
+#ifndef BOTAN_AONT_PACKAGE_TRANSFORM_H__
+#define BOTAN_AONT_PACKAGE_TRANSFORM_H__
+
 #include <botan/block_cipher.h>
 #include <botan/rng.h>
 
@@ -43,3 +46,5 @@ void unpackage(BlockCipher* cipher,
 }
 
 }
+
+#endif
