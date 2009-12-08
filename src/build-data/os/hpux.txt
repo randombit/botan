@@ -2,6 +2,10 @@ os_type unix
 
 so_suffix sl
 
+<target_features>
+gettimeofday
+</target_features>
+
 <supports_shared>
 all
 </supports_shared>

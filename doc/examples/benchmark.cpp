@@ -17,7 +17,6 @@ int main(int argc, char* argv[])
    Botan::LibraryInitializer init;
 
    Botan::AutoSeeded_RNG rng;
-   Botan::Default_Benchmark_Timer timer;
 
    Botan::Algorithm_Factory& af = Botan::global_state().algorithm_factory();
 
@@ -28,7 +27,7 @@ int main(int argc, char* argv[])
       std::string algo = argv[i];
 
       std::map<std::string, double> results =
-         Botan::algorithm_benchmark(algo, ms, timer, rng, af);
+         Botan::algorithm_benchmark(algo, ms, rng, af);
 
       std::cout << algo << ":\n";
       for(std::map<std::string, double>::iterator r = results.begin();

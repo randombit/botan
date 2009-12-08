@@ -5,7 +5,7 @@
 
 #include <botan/botan.h>
 #include <botan/rsa.h>
-#include <botan/util.h>
+#include <botan/timer.h>
 #include <botan/x509self.h>
 #include <botan/x509_ca.h>
 

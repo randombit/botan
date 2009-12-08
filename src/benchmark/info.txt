@@ -15,5 +15,4 @@ hash
 mac
 rng
 stream
-timer
 </requires>
