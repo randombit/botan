@@ -23,10 +23,10 @@ BOTAN_DLL std::vector<u32bit> parse_asn1_oid(const std::string&);
 BOTAN_DLL bool x500_name_cmp(const std::string&, const std::string&);
 
 /*
-* String/Integer Conversions
+* Convert a string into an integer
 */
-BOTAN_DLL std::string to_string(u64bit, u32bit = 0);
-BOTAN_DLL u32bit to_u32bit(const std::string&);
+inline u32bit to_u32bit(const std::string& number)
+   { return stoul(number); }
 
 BOTAN_DLL u32bit timespec_to_u32bit(const std::string& timespec);
 

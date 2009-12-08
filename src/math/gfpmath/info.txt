@@ -1,8 +1,6 @@
-uses_tr1 yes
+define BIGINT_GFP
 
 load_on auto
-
-define BIGINT_GFP
 
 <add>
 curve_gfp.cpp

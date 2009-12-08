@@ -2,8 +2,6 @@ macro_name INTEL
 
 binary_name icpc
 
-compiler_has_tr1 yes
-
 compile_option "-c "
 output_to_option "-o "
 add_include_dir_option -I

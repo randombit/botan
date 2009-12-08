@@ -89,7 +89,7 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
          if(is_encrypted)
             {
             DataSource_Memory params(pbe_alg_id.parameters);
-            std::auto_ptr<PBE> pbe(get_pbe(pbe_alg_id.oid, params));
+            std::unique_ptr<PBE> pbe(get_pbe(pbe_alg_id.oid, params));
 
             User_Interface::UI_Result result = User_Interface::OK;
             const std::string passphrase =
@@ -138,7 +138,7 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
 */
 void encode(const Private_Key& key, Pipe& pipe, X509_Encoding encoding)
    {
-   std::auto_ptr<PKCS8_Encoder> encoder(key.pkcs8_encoder());
+   std::unique_ptr<PKCS8_Encoder> encoder(key.pkcs8_encoder());
    if(!encoder.get())
       throw Encoding_Error("PKCS8::encode: Key does not support encoding");
 
@@ -175,7 +175,7 @@ void encrypt_key(const Private_Key& key,
    encode(key, raw_key, RAW_BER);
    raw_key.end_msg();
 
-   std::auto_ptr<PBE> pbe(get_pbe(((pbe_algo != "") ? pbe_algo : DEFAULT_PBE)));
+   std::unique_ptr<PBE> pbe(get_pbe(((pbe_algo != "") ? pbe_algo : DEFAULT_PBE)));
 
    pbe->new_params(rng);
    pbe->set_key(pass);
@@ -244,13 +244,13 @@ Private_Key* load_key(DataSource& source,
       throw PKCS8_Exception("Unknown algorithm OID: " +
                             alg_id.oid.as_string());
 
-   std::auto_ptr<Private_Key> key(get_private_key(alg_name));
+   std::unique_ptr<Private_Key> key(get_private_key(alg_name));
 
    if(!key.get())
       throw PKCS8_Exception("Unknown PK algorithm/OID: " + alg_name + ", " +
                            alg_id.oid.as_string());
 
-   std::auto_ptr<PKCS8_Decoder> decoder(key->pkcs8_decoder(rng));
+   std::unique_ptr<PKCS8_Decoder> decoder(key->pkcs8_decoder(rng));
 
    if(!decoder.get())
       throw Decoding_Error("Key does not support PKCS #8 decoding");

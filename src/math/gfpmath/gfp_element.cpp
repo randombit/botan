@@ -173,13 +173,13 @@ GFpElement::GFpElement(const BigInt& p, const BigInt& value, bool use_montgm)
      m_is_trf(false)
    {
    assert(mp_mod.get() == 0);
-   mp_mod = std::tr1::shared_ptr<GFpModulus>(new GFpModulus(p));
+   mp_mod = std::shared_ptr<GFpModulus>(new GFpModulus(p));
    assert(mp_mod->m_p_dash == 0);
    if(m_use_montgm)
       ensure_montgm_precomp();
    }
 
-GFpElement::GFpElement(std::tr1::shared_ptr<GFpModulus> const mod, const BigInt& value, bool use_montgm)
+GFpElement::GFpElement(std::shared_ptr<GFpModulus> const mod, const BigInt& value, bool use_montgm)
    : mp_mod(),
      m_value(value % mod->m_p),
      m_use_montgm(use_montgm),
@@ -246,7 +246,7 @@ void GFpElement::ensure_montgm_precomp() const
 
    }
 
-void GFpElement::set_shrd_mod(std::tr1::shared_ptr<GFpModulus> const p_mod)
+void GFpElement::set_shrd_mod(std::shared_ptr<GFpModulus> const p_mod)
    {
    mp_mod = p_mod;
    }

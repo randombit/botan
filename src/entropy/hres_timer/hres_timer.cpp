@@ -7,9 +7,8 @@
 
 #include <botan/hres_timer.h>
 #include <botan/cpuid.h>
-#include <botan/time.h>
 
-#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+#if defined(BOTAN_TARGET_OS_HAS_QUERY_PERF_COUNTER)
   #include <windows.h>
 #endif
 
@@ -20,8 +19,7 @@ namespace Botan {
 */
 void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
    {
-   // If Windows, grab the Performance Counter (usually TSC or PIT)
-#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+#if defined(BOTAN_TARGET_OS_HAS_QUERY_PERF_COUNTER)
    LARGE_INTEGER tv;
    ::QueryPerformanceCounter(&tv);
    accum.add(tv.QuadPart, 0);
