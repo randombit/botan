@@ -1,5 +1,5 @@
 /*
-* GOST_3410
+* GOST 34.10-2001
 * (C) 2007 Falko Strenzke, FlexSecure GmbH
 *          Manuel Hartl, FlexSecure GmbH
 * (C) 2008-2009 Jack Lloyd
@@ -87,6 +87,19 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey,
       */
       virtual void affirm_init() const;
 
+      /**
+      * Get an x509_encoder that can be used to encode this key.
+      * @result an x509_encoder for this key
+      */
+      X509_Encoder* x509_encoder() const;
+
+      /**
+      * Get an x509_decoder that can be used to decode a stored key into
+      * this key.
+      * @result an x509_decoder for this key
+      */
+      X509_Decoder* x509_decoder();
+
    protected:
       void X509_load_hook();
       void set_all_values(const GOST_3410_PublicKey& other);
@@ -96,8 +109,8 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey,
 * This class represents GOST_3410 Private Keys
 */
 class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
-                                   public EC_PrivateKey,
-                                   public PK_Signing_Key
+                                       public EC_PrivateKey,
+                                       public PK_Signing_Key
    {
    public:
       /**
@@ -111,7 +124,7 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
       * @param the domain parameters to used for this key
       */
       GOST_3410_PrivateKey(RandomNumberGenerator& rng,
-                       const EC_Domain_Params& domain);
+                           const EC_Domain_Params& domain);
 
       /**
       * Load a private key

@@ -1,5 +1,5 @@
 /*
-* GOST 34.10 implemenation
+* GOST 34.10-2001 implemenation
 * (C) 2007 Falko Strenzke, FlexSecure GmbH
 *          Manuel Hartl, FlexSecure GmbH
 * (C) 2008-2009 Jack Lloyd
@@ -53,6 +53,93 @@ GOST_3410_PrivateKey::GOST_3410_PrivateKey(const EC_Domain_Params& domain,
       {
       throw Invalid_State("GOST_3410 key generation failed");
       }
+   }
+
+X509_Encoder* GOST_3410_PublicKey::x509_encoder() const
+   {
+   class GOST_3410_Key_Encoder : public X509_Encoder
+      {
+      public:
+         AlgorithmIdentifier alg_id() const
+            {
+            key->affirm_init();
+
+            SecureVector<byte> params =
+               encode_der_ec_dompar(key->domain_parameters(), key->m_param_enc);
+
+            return AlgorithmIdentifier(key->get_oid(), params);
+            }
+
+         MemoryVector<byte> key_bits() const
+            {
+            key->affirm_init();
+
+            // Trust CryptoPro to come up with something obnoxious
+            const BigInt x = key->mp_public_point->get_affine_x().get_value();
+            const BigInt y = key->mp_public_point->get_affine_y().get_value();
+
+            SecureVector<byte> bits(2*std::max(x.bytes(), y.bytes()));
+
+            y.binary_encode(bits + (bits.size() / 2 - y.bytes()));
+            x.binary_encode(bits + (bits.size() - y.bytes()));
+
+            return DER_Encoder().encode(bits, OCTET_STRING).get_contents();
+            }
+
+         GOST_3410_Key_Encoder(const GOST_3410_PublicKey* k): key(k) {}
+      private:
+         const GOST_3410_PublicKey* key;
+      };
+
+   return new GOST_3410_Key_Encoder(this);
+   }
+
+X509_Decoder* GOST_3410_PublicKey::x509_decoder()
+   {
+   class GOST_3410_Key_Decoder : public X509_Decoder
+      {
+      public:
+         void alg_id(const AlgorithmIdentifier& alg_id)
+            {
+            // Also includes hash and cipher OIDs... brilliant design guys
+            OID ecc_param_id;
+
+            BER_Decoder ber(alg_id.parameters);
+            ber.start_cons(SEQUENCE).decode(ecc_param_id);
+
+            EC_Domain_Params ecc_params = get_EC_Dom_Pars_by_oid(ecc_param_id.as_string());
+
+            key->mp_dom_pars.reset(new EC_Domain_Params(ecc_params));
+            }
+
+         void key_bits(const MemoryRegion<byte>& bits)
+            {
+
+            SecureVector<byte> key_bits;
+            BER_Decoder ber(bits);
+            ber.decode(key_bits, OCTET_STRING);
+
+            const u32bit part_size = key_bits.size() / 2;
+
+            BigInt y(key_bits, part_size);
+            BigInt x(key_bits + part_size, part_size);
+
+            const BigInt p = key->domain_parameters().get_curve().get_p();
+
+            key->mp_public_point.reset(
+               new PointGFp(key->domain_parameters().get_curve(),
+                            GFpElement(x, p),
+                            GFpElement(y, p)));
+
+            key->X509_load_hook();
+            }
+
+         GOST_3410_Key_Decoder(GOST_3410_PublicKey* k): key(k) {}
+      private:
+         GOST_3410_PublicKey* key;
+      };
+
+   return new GOST_3410_Key_Decoder(this);
    }
 
 /*
