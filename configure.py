@@ -30,6 +30,9 @@ import time
 from optparse import (OptionParser, OptionGroup,
                       IndentedHelpFormatter, SUPPRESS_HELP)
 
+def flatten(l):
+    return sum(l, [])
+
 class BuildConfigurationInformation(object):
 
     """
@@ -64,7 +67,7 @@ class BuildConfigurationInformation(object):
         self.include_dir = os.path.join(self.build_dir, 'include')
         self.full_include_dir = os.path.join(self.include_dir, 'botan')
 
-        all_files = sum([mod.add for mod in modules], [])
+        all_files = flatten([mod.add for mod in modules])
 
         self.headers = sorted(
             [file for file in all_files if file.endswith('.h')])
@@ -146,7 +149,7 @@ def process_command_line(args):
     target_group.add_option('--with-isa-extension', metavar='ISALIST',
                             dest='with_isa_extns',
                             action='append', default=[],
-                            help='enable ISA extensions (sse2, altivec, ...)')
+                            help='enable ISA extensions (sse2, altivec)')
 
     build_group = OptionGroup(parser, 'Build options')
 
@@ -173,6 +176,10 @@ def process_command_line(args):
     build_group.add_option('--use-boost-python', dest='boost_python',
                            default=False, action='store_true',
                            help='enable Boost.Python wrapper')
+
+    build_group.add_option('--gen-amalgamation', dest='gen_amalgamation',
+                           default=False, action='store_true',
+                           help=SUPPRESS_HELP)
 
     build_group.add_option('--with-tr1-implementation', metavar='WHICH',
                            dest='with_tr1', default=None,
@@ -277,7 +284,7 @@ def process_command_line(args):
             options.with_endian))
 
     def parse_multiple_enable(modules):
-        return sorted(set(sum([s.split(',') for s in modules], [])))
+        return sorted(set(flatten([s.split(',') for s in modules])))
 
     options.enabled_modules = parse_multiple_enable(options.enabled_modules)
     options.disabled_modules = parse_multiple_enable(options.disabled_modules)
@@ -449,7 +456,7 @@ class ModuleInfo(object):
     def dependencies_exist(self, modules):
         all_deps = map(lambda s: s.split('|'), self.dependencies())
 
-        for missing in filter(lambda s: s not in modules, sum(all_deps, [])):
+        for missing in filter(lambda s: s not in modules, flatten(all_deps)):
             logging.warn("Module '%s', dep of '%s', does not exist" % (
                 missing, self.basename))
 
@@ -513,9 +520,8 @@ class ArchInfo(object):
             macros.append('TARGET_CPU_IS_%s' % (form_cpu_macro(options.cpu)))
 
         isa_extensions = sorted(set(
-            sum([self.isa_extensions_in(options.cpu),
-                 options.with_isa_extns],
-                [])))
+            flatten([self.isa_extensions_in(options.cpu),
+                     options.with_isa_extns])))
 
         for simd in isa_extensions:
             macros.append('TARGET_CPU_HAS_%s' % (simd.upper()))
@@ -1166,6 +1172,99 @@ def setup_build(build_config, options, template_vars):
         portable_symlink(header_file, build_config.full_include_dir)
 
 """
+Generate Amalgamation
+"""
+def generate_amalgamation(build_config, options, modules):
+    def ending_with_suffix(suffix):
+        def predicate(val):
+            return val.endswith(suffix)
+        return predicate
+
+    def strip_header_goop(contents):
+        header_guard = re.compile('^#define BOTAN_.*_H__$')
+
+        while len(contents) > 0:
+            if header_guard.match(contents[0]):
+                contents = contents[1:]
+                break
+
+            contents = contents[1:]
+
+        while contents[0] == '\n':
+            contents = contents[1:]
+
+        while contents[-1] == '\n':
+            contents = contents[0:-1]
+        if contents[-1] == '#endif\n':
+            contents = contents[0:-1]
+
+        return contents
+
+    header_bits = {}
+
+    for header in sorted(filter(ending_with_suffix('.h'),
+                                flatten([m.add for m in modules]))):
+        contents = open(header).readlines()
+        header_bits[os.path.basename(header)] = contents
+
+    header_bits['build.h'] = open('build/build.h').readlines()
+
+    for (name, contents) in header_bits.items():
+        header_bits[name] = strip_header_goop(contents)
+
+
+    included_already = set()
+    all_std_includes = set()
+
+    botan_include = re.compile('^#include <botan/(.*)>$')
+    std_include = re.compile('#include <([^/]+)>$')
+
+    def header_contents(name):
+        if name not in included_already:
+            included_already.add(name)
+
+            contents = header_bits[name]
+
+            for line in contents:
+                match = botan_include.search(line)
+                if match:
+                    for c in header_contents(match.group(1)):
+                        yield c
+                else:
+                    match = std_include.search(line)
+
+                    if match:
+                        all_std_includes.add(match.group(1))
+                    else:
+                        yield line
+        return
+
+    botan_all_h = open('botan_all.h', 'w')
+
+
+    final_contents = ''
+    for name in header_bits:
+        final_contents += ''.join(list(header_contents(name)))
+
+    botan_all_h.write("""/*
+* Botan Amalgamation
+* (C) 1999-2009 Jack Lloyd and others
+*
+* Distributed under the terms of the Botan license
+*/
+
+#ifndef BOTAN_AMALGAMATION_H__
+#define BOTAN_AMALGAMATION_H__
+
+""")
+
+    for std_header in all_std_includes:
+        botan_all_h.write('#include <%s>\n' % (std_header))
+    botan_all_h.write('\n')
+
+    botan_all_h.write(final_contents)
+
+"""
 Main driver
 """
 def main(argv = None):
@@ -1283,6 +1382,9 @@ def main(argv = None):
 
     # Performs the I/O
     setup_build(build_config, options, template_vars)
+
+    if options.gen_amalgamation:
+        generate_amalgamation(build_config, options, modules_to_use)
 
     logging.info('Botan %s build setup is complete' % (
         build_config.version_string))
