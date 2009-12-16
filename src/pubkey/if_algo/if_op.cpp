@@ -7,7 +7,7 @@
 
 #include <botan/if_op.h>
 #include <botan/numthry.h>
-#include <botan/async.h>
+#include <botan/internal/async.h>
 
 namespace Botan {
 

@@ -6,7 +6,7 @@
 */
 
 #include <botan/nr_op.h>
-#include <botan/async.h>
+#include <botan/internal/async.h>
 
 namespace Botan {
 

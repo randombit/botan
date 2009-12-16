@@ -6,18 +6,8 @@
 */
 
 #include <botan/hmac_rng.h>
-<<<<<<< variant A
 #include <botan/internal/loadstor.h>
 #include <botan/internal/xor_buf.h>
-#include <botan/internal/stl_util.h>
->>>>>>> variant B
-#include <botan/loadstor.h>
-#include <botan/xor_buf.h>
-####### Ancestor
-#include <botan/loadstor.h>
-#include <botan/xor_buf.h>
-#include <botan/stl_util.h>
-======= end
 #include <algorithm>
 
 namespace Botan {

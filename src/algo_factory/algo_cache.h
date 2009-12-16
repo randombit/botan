@@ -9,7 +9,7 @@
 #define BOTAN_ALGORITHM_CACHE_TEMPLATE_H__
 
 #include <botan/types.h>
-#include <botan/stl_util.h>
+#include <botan/internal/stl_util.h>
 #include <mutex>
 #include <string>
 #include <vector>

@@ -7,15 +7,7 @@ gfp_modulus.h
 point_gfp.h
 </header:public>
 
-<<<<<<< variant A
 <source>
->>>>>>> variant B
-<add>
-####### Ancestor
-define BIGINT_GFP
-
-<add>
-======= end
 curve_gfp.cpp
 gfp_element.cpp
 point_gfp.cpp

@@ -9,9 +9,9 @@
 #include <botan/init.h>
 #include <botan/selftest.h>
 #include <botan/engine.h>
-#include <botan/stl_util.h>
+#include <botan/internal/stl_util.h>
 #include <botan/charset.h>
-#include <botan/defalloc.h>
+#include <botan/internal/defalloc.h>
 #include <botan/def_eng.h>
 #include <algorithm>
 
