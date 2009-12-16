@@ -1,5 +1,6 @@
 ^Makefile.*$
 ^botan-config$
+^botan_all\.(cpp|h)$
 ^botan.pc$
 ^build$
 callgrind.out.*
