@@ -17,7 +17,7 @@ namespace Botan {
 /*
 * Container of output buffers for Pipe
 */
-class BOTAN_DLL Output_Buffers
+class Output_Buffers
    {
    public:
       u32bit read(byte[], u32bit, Pipe::message_id);

@@ -6,7 +6,7 @@
 */
 
 #include <botan/numthry.h>
-#include <botan/bit_ops.h>
+#include <botan/internal/bit_ops.h>
 #include <algorithm>
 
 namespace Botan {

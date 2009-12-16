@@ -9,7 +9,7 @@
 #define BOTAN_ENTROPY_SRC_UNIX_H__
 
 #include <botan/entropy_src.h>
-#include <botan/unix_cmd.h>
+#include <botan/internal/unix_cmd.h>
 #include <vector>
 
 namespace Botan {
@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * Unix Entropy Source
 */
-class BOTAN_DLL Unix_EntropySource : public EntropySource
+class Unix_EntropySource : public EntropySource
    {
    public:
       std::string name() const { return "Unix Entropy Source"; }

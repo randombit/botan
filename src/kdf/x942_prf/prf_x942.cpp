@@ -9,7 +9,7 @@
 #include <botan/der_enc.h>
 #include <botan/oids.h>
 #include <botan/sha160.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <algorithm>
 #include <memory>
 

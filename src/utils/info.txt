@@ -2,6 +2,41 @@ define UTIL_FUNCTIONS
 
 load_on always
 
+<source>
+charset.cpp
+cpuid.cpp
+exceptn.cpp
+mlock.cpp
+parsing.cpp
+time.cpp
+ui.cpp
+version.cpp
+</source>
+
+<header:internal>
+bit_ops.h
+bswap.h
+loadstor.h
+mlock.h
+prefetch.h
+rotate.h
+rounding.h
+stl_util.h
+xor_buf.h
+</header:internal>
+
+<header:public>
+charset.h
+cpuid.h
+exceptn.h
+mem_ops.h
+parsing.h
+time.h
+types.h
+ui.h
+version.h
+</header:public>
+
 <libs>
 linux,tru64 -> rt
 </libs>

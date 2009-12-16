@@ -1,8 +1,1 @@
 define CIPHER_MODE_PADDING
-
-load_on auto
-
-<add>
-mode_pad.cpp
-mode_pad.h
-</add>

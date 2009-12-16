@@ -18,7 +18,7 @@
 
 namespace Botan {
 
-struct Illegal_Point : public Exception
+struct BOTAN_DLL Illegal_Point : public Exception
    {
    Illegal_Point(const std::string& err = "") : Exception(err) {}
    };
@@ -260,36 +260,39 @@ class BOTAN_DLL PointGFp
    };
 
 // relational operators
-bool operator==(const PointGFp& lhs, const PointGFp& rhs);
+bool BOTAN_DLL operator==(const PointGFp& lhs, const PointGFp& rhs);
 inline bool operator!=(const PointGFp& lhs, const PointGFp& rhs )
    {
    return !operator==(lhs, rhs);
    }
 
 // arithmetic operators
-PointGFp operator+(const PointGFp& lhs, const PointGFp& rhs);
-PointGFp operator-(const PointGFp& lhs, const PointGFp& rhs);
-PointGFp operator-(const PointGFp& lhs);
+PointGFp BOTAN_DLL operator+(const PointGFp& lhs, const PointGFp& rhs);
+PointGFp BOTAN_DLL operator-(const PointGFp& lhs, const PointGFp& rhs);
+PointGFp BOTAN_DLL operator-(const PointGFp& lhs);
 
-PointGFp operator*(const BigInt& scalar, const PointGFp& point);
-PointGFp operator*(const PointGFp& point, const BigInt& scalar);
-PointGFp mult_point_secure(const PointGFp& point,
-                           const BigInt& scalar,
-                           const BigInt& point_order,
-                           const BigInt& max_secret);
+PointGFp BOTAN_DLL operator*(const BigInt& scalar, const PointGFp& point);
+PointGFp BOTAN_DLL operator*(const PointGFp& point, const BigInt& scalar);
+PointGFp BOTAN_DLL mult_point_secure(const PointGFp& point,
+                                     const BigInt& scalar,
+                                     const BigInt& point_order,
+                                     const BigInt& max_secret);
 
-PointGFp const mult2(const PointGFp& point);
+PointGFp BOTAN_DLL mult2(const PointGFp& point);
 
-PointGFp const create_random_point(RandomNumberGenerator& rng,
-                                   const CurveGFp& curve);
+PointGFp BOTAN_DLL create_random_point(RandomNumberGenerator& rng,
+                                       const CurveGFp& curve);
 
 // encoding and decoding
-SecureVector<byte> EC2OSP(const PointGFp& point, byte format);
-PointGFp OS2ECP(MemoryRegion<byte> const& os, const CurveGFp& curve);
+SecureVector<byte> BOTAN_DLL EC2OSP(const PointGFp& point, byte format);
+PointGFp BOTAN_DLL OS2ECP(MemoryRegion<byte> const& os, const CurveGFp& curve);
 
-SecureVector<byte> encode_uncompressed(const PointGFp& point); // maybe make private
-SecureVector<byte> encode_hybrid(const PointGFp& point); // maybe make private
-SecureVector<byte> encode_compressed(const PointGFp& point); // maybe make private
+/* Should these be private? */
+SecureVector<byte>
+BOTAN_DLL encode_uncompressed(const PointGFp& point);
+
+SecureVector<byte> BOTAN_DLL encode_hybrid(const PointGFp& point);
+SecureVector<byte> BOTAN_DLL encode_compressed(const PointGFp& point);
 
 // swaps the states of point1 and point2, does not throw!
 // cf. Meyers, Item 25

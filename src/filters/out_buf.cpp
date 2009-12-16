@@ -5,8 +5,8 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/out_buf.h>
-#include <botan/secqueue.h>
+#include <botan/internal/out_buf.h>
+#include <botan/internal/secqueue.h>
 
 namespace Botan {
 

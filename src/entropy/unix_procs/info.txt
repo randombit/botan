@@ -1,6 +1,15 @@
 define ENTROPY_SRC_UNIX
 
-load_on auto
+<source>
+es_unix.cpp
+unix_cmd.cpp
+unix_src.cpp
+</source>
+
+<header:internal>
+es_unix.h
+unix_cmd.h
+</header:internal>
 
 <os>
 aix

@@ -1,12 +1,5 @@
 define EMSA3
 
-load_on auto
-
-<add>
-emsa3.h
-emsa3.cpp
-</add>
-
 <requires>
 hash
 hash_id

@@ -6,7 +6,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/mux_qt.h>
+#include <botan/internal/mux_qt.h>
 #include <qmutex.h>
 
 #if !defined(QT_THREAD_SUPPORT)

@@ -1,12 +1,1 @@
 define ARC4
-
-load_on auto
-
-<requires>
-stream
-</requires>
-
-<add>
-arc4.cpp
-arc4.h
-</add>

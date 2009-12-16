@@ -6,7 +6,7 @@
 */
 
 #include <botan/lion.h>
-#include <botan/xor_buf.h>
+#include <botan/internal/xor_buf.h>
 #include <botan/parsing.h>
 
 namespace Botan {

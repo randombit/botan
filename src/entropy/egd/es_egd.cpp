@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/es_egd.h>
+#include <botan/internal/es_egd.h>
 #include <botan/parsing.h>
 #include <botan/exceptn.h>
 #include <cstring>

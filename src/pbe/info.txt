@@ -1,11 +1,4 @@
-load_on dep
-
 define PASSWORD_BASED_ENCRYPTION
-
-<add>
-get_pbe.cpp
-get_pbe.h
-</add>
 
 <requires>
 filters

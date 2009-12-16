@@ -1,16 +1,25 @@
 define BIGINT_GFP
 
-load_on auto
-
-<add>
-curve_gfp.cpp
+<header:public>
 curve_gfp.h
-gfp_element.cpp
 gfp_element.h
 gfp_modulus.h
-point_gfp.cpp
 point_gfp.h
-</add>
+</header:public>
+
+<<<<<<< variant A
+<source>
+>>>>>>> variant B
+<add>
+####### Ancestor
+define BIGINT_GFP
+
+<add>
+======= end
+curve_gfp.cpp
+gfp_element.cpp
+point_gfp.cpp
+</source>
 
 <requires>
 bigint

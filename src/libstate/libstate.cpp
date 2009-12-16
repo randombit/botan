@@ -16,7 +16,7 @@
 #include <algorithm>
 
 #if defined(BOTAN_HAS_ALLOC_MMAP)
-  #include <botan/mmap_mem.h>
+  #include <botan/internal/mmap_mem.h>
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_IA32_ASSEMBLER)

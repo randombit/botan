@@ -16,8 +16,8 @@ namespace {
 /*
 * Try to choose a good window size
 */
-u32bit choose_window_bits(u32bit exp_bits, u32bit,
-                          Power_Mod::Usage_Hints hints)
+u32bit fw_powm_window_bits(u32bit exp_bits, u32bit,
+                           Power_Mod::Usage_Hints hints)
    {
    static const u32bit wsize[][2] = {
       { 2048, 7 }, { 1024, 6 }, { 256, 5 }, { 128, 4 }, { 64, 3 }, { 0, 0 }
@@ -62,7 +62,7 @@ void Fixed_Window_Exponentiator::set_exponent(const BigInt& e)
 */
 void Fixed_Window_Exponentiator::set_base(const BigInt& base)
    {
-   window_bits = choose_window_bits(exp.bits(), base.bits(), hints);
+   window_bits = fw_powm_window_bits(exp.bits(), base.bits(), hints);
 
    g.resize((1 << window_bits) - 1);
    g[0] = base;

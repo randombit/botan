@@ -28,35 +28,35 @@
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER)
-  #include <botan/hres_timer.h>
+  #include <botan/internal/hres_timer.h>
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_DEVICE)
-  #include <botan/es_dev.h>
+#if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
+  #include <botan/internal/dev_random.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_EGD)
-  #include <botan/es_egd.h>
+  #include <botan/internal/es_egd.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_UNIX)
-  #include <botan/es_unix.h>
+  #include <botan/internal/es_unix.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_BEOS)
-  #include <botan/es_beos.h>
+  #include <botan/internal/es_beos.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_CAPI)
-  #include <botan/es_capi.h>
+  #include <botan/internal/es_capi.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
-  #include <botan/es_win32.h>
+  #include <botan/internal/es_win32.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_FTW)
-  #include <botan/es_ftw.h>
+  #include <botan/internal/es_ftw.h>
 #endif
 
 namespace Botan {
@@ -72,7 +72,7 @@ void add_entropy_sources(RandomNumberGenerator* rng)
    rng->add_entropy_source(new High_Resolution_Timestamp);
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_DEVICE)
+#if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
    rng->add_entropy_source(
       new Device_EntropySource(
          split_on("/dev/urandom:/dev/random:/dev/srandom", ':')

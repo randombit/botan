@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/es_ftw.h>
+#include <botan/internal/es_ftw.h>
 #include <botan/secmem.h>
 #include <cstring>
 #include <deque>

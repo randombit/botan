@@ -1,11 +1,4 @@
-load_on auto
-
 define CRYPTO_BOX
-
-<add>
-cryptobox.h
-cryptobox.cpp
-</add>
 
 <requires>
 filters

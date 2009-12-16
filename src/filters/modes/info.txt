@@ -1,12 +1,5 @@
 define CIPHER_MODEBASE
 
-load_on auto
-
-<add>
-modebase.cpp
-modebase.h
-</add>
-
 <requires>
 block
 filters

@@ -10,7 +10,6 @@ void do_ec_tests(RandomNumberGenerator&) { return; }
 
 #include <botan/bigint.h>
 #include <botan/numthry.h>
-#include <botan/mp_types.h>
 #include <botan/curve_gfp.h>
 #include <botan/point_gfp.h>
 #include <botan/gfp_element.h>

@@ -18,14 +18,14 @@ namespace Botan {
 * @param length the length of the memory block in bytes
 * @returns true if successful, false otherwise
 */
-BOTAN_DLL bool lock_mem(void* addr, u32bit length);
+bool lock_mem(void* addr, u32bit length);
 
 /**
 * Unlock memory locked with lock_mem()
 * @param addr the start of the memory block
 * @param length the length of the memory block in bytes
 */
-BOTAN_DLL void unlock_mem(void* addr, u32bit length);
+void unlock_mem(void* addr, u32bit length);
 
 }
 

@@ -19,7 +19,7 @@ namespace Botan {
 /*
 * Pooling Allocator
 */
-class BOTAN_DLL Pooling_Allocator : public Allocator
+class Pooling_Allocator : public Allocator
    {
    public:
       void* allocate(u32bit);
@@ -36,7 +36,7 @@ class BOTAN_DLL Pooling_Allocator : public Allocator
       virtual void* alloc_block(u32bit) = 0;
       virtual void dealloc_block(void*, u32bit) = 0;
 
-      class BOTAN_DLL Memory_Block
+      class Memory_Block
          {
          public:
             Memory_Block(void*);

@@ -1,15 +1,7 @@
 define TLS_V10_PRF
 
-load_on auto
-
-<add>
-prf_tls.h
-prf_tls.cpp
-</add>
-
 <requires>
 hmac
-mac
 md5
 sha1
 </requires>

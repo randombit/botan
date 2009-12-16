@@ -1,12 +1,5 @@
 define EMSA1
 
-load_on auto
-
-<add>
-emsa1.h
-emsa1.cpp
-</add>
-
 <requires>
 hash
 </requires>

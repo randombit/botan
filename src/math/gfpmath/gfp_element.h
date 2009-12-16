@@ -218,14 +218,6 @@ class BOTAN_DLL GFpElement
 
       //friend declarations for non-member functions
 
-      /**
-      * write a GFpElement to an output stream.
-      * @param output the output stream to write to
-      * @param elem the object to write
-      * @result the output stream
-      */
-      friend std::ostream& operator<<(std::ostream& output, const GFpElement& elem);
-
       friend class Point_Coords_GFp;
 
       /**
@@ -252,31 +244,37 @@ class BOTAN_DLL GFpElement
    };
 
 // relational operators
-bool operator==(const GFpElement& lhs, const GFpElement& rhs);
+bool BOTAN_DLL operator==(const GFpElement& lhs, const GFpElement& rhs);
 inline bool operator!=(const GFpElement& lhs, const GFpElement& rhs )
    {
    return !operator==(lhs, rhs);
    }
 
 // arithmetic operators
-GFpElement operator+(const GFpElement& lhs, const GFpElement& rhs);
-GFpElement operator-(const GFpElement& lhs, const GFpElement& rhs);
-GFpElement operator-(const GFpElement& lhs);
+GFpElement BOTAN_DLL operator+(const GFpElement& lhs, const GFpElement& rhs);
+GFpElement BOTAN_DLL operator-(const GFpElement& lhs, const GFpElement& rhs);
+GFpElement BOTAN_DLL operator-(const GFpElement& lhs);
 
-GFpElement operator*(const GFpElement& lhs, const GFpElement& rhs);
-GFpElement operator/(const GFpElement& lhs, const GFpElement& rhs);
-GFpElement operator* (const GFpElement& lhs, u32bit rhs);
-GFpElement operator* (u32bit rhs, const GFpElement& lhs);
+GFpElement BOTAN_DLL operator*(const GFpElement& lhs, const GFpElement& rhs);
+GFpElement BOTAN_DLL operator/(const GFpElement& lhs, const GFpElement& rhs);
+GFpElement BOTAN_DLL operator* (const GFpElement& lhs, u32bit rhs);
+GFpElement BOTAN_DLL operator* (u32bit rhs, const GFpElement& lhs);
 
-// io operators
-std::ostream& operator<<(std::ostream& output, const GFpElement& elem);
+
+/**
+* write a GFpElement to an output stream.
+* @param output the output stream to write to
+* @param elem the object to write
+* @result the output stream
+*/
+BOTAN_DLL std::ostream& operator<<(std::ostream& output, const GFpElement& elem);
 
 // return (*this)^(-1)
-GFpElement inverse(const GFpElement& elem);
+GFpElement BOTAN_DLL inverse(const GFpElement& elem);
 
 // encoding and decoding
-SecureVector<byte> FE2OSP(const GFpElement& elem);
-GFpElement OS2FEP(MemoryRegion<byte> const& os, BigInt p);
+SecureVector<byte> BOTAN_DLL FE2OSP(const GFpElement& elem);
+GFpElement BOTAN_DLL OS2FEP(MemoryRegion<byte> const& os, BigInt p);
 
 inline void swap(GFpElement& x, GFpElement& y)
    {

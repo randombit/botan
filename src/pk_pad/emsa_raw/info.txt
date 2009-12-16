@@ -1,8 +1,1 @@
 define EMSA_RAW
-
-load_on auto
-
-<add>
-emsa_raw.h
-emsa_raw.cpp
-</add>

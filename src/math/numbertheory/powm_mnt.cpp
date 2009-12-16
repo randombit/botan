@@ -7,7 +7,7 @@
 
 #include <botan/def_powm.h>
 #include <botan/numthry.h>
-#include <botan/mp_core.h>
+#include <botan/internal/mp_core.h>
 
 namespace Botan {
 
@@ -16,8 +16,8 @@ namespace {
 /*
 * Try to choose a good window size
 */
-u32bit choose_window_bits(u32bit exp_bits, u32bit,
-                          Power_Mod::Usage_Hints hints)
+u32bit montgomery_powm_window_bits(u32bit exp_bits, u32bit,
+                                   Power_Mod::Usage_Hints hints)
    {
    static const u32bit wsize[][2] = {
       { 2048, 4 }, { 1024, 3 }, { 256, 2 }, { 128, 1 }, { 0, 0 }
@@ -76,7 +76,7 @@ void Montgomery_Exponentiator::set_exponent(const BigInt& exp)
 */
 void Montgomery_Exponentiator::set_base(const BigInt& base)
    {
-   window_bits = choose_window_bits(exp.bits(), base.bits(), hints);
+   window_bits = montgomery_powm_window_bits(exp.bits(), base.bits(), hints);
 
    g.resize((1 << window_bits) - 1);
 

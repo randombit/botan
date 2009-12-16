@@ -7,8 +7,8 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/mem_pool.h>
-#include <botan/rounding.h>
+#include <botan/internal/mem_pool.h>
+#include <botan/internal/rounding.h>
 #include <botan/mem_ops.h>
 #include <algorithm>
 #include <exception>

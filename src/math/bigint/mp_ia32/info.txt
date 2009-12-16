@@ -1,11 +1,11 @@
+load_on dep
+
 mp_bits 32
 
-load_on asm_ok
-
-<add>
+<header:internal>
 mp_asm.h
 mp_asmi.h
-</add>
+</header:internal>
 
 <arch>
 ia32

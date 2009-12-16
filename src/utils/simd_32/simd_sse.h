@@ -8,8 +8,9 @@
 #ifndef BOTAN_SIMD_SSE_H__
 #define BOTAN_SIMD_SSE_H__
 
-#include <botan/cpuid.h>
+#if defined(BOTAN_TARGET_CPU_HAS_SSE2)
 
+#include <botan/cpuid.h>
 #include <emmintrin.h>
 
 namespace Botan {
@@ -157,5 +158,7 @@ class SIMD_SSE2
    };
 
 }
+
+#endif
 
 #endif

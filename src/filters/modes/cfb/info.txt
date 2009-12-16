@@ -1,12 +1,1 @@
 define CFB
-
-load_on auto
-
-<add>
-cfb.cpp
-cfb.h
-</add>
-
-<requires>
-modes
-</requires>

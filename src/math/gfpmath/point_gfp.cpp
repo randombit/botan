@@ -839,7 +839,7 @@ void PointGFp::swap(PointGFp& other)
    std::swap<bool>(mAZpow4_set, other.mAZpow4_set);
    }
 
-PointGFp const mult2(const PointGFp& point)
+PointGFp mult2(const PointGFp& point)
    {
    return (PointGFp(point)).mult2_in_place();
    }
@@ -1114,8 +1114,8 @@ GFpElement PointGFp::decompress(bool yMod2, const GFpElement& x,
    return GFpElement(curve.get_p(),z);
    }
 
-PointGFp const create_random_point(RandomNumberGenerator& rng,
-                                   const CurveGFp& curve)
+PointGFp create_random_point(RandomNumberGenerator& rng,
+                             const CurveGFp& curve)
    {
 
    // create a random point

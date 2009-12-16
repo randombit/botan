@@ -1,12 +1,1 @@
 define CTS
-
-load_on auto
-
-<add>
-cts.cpp
-cts.h
-</add>
-
-<requires>
-block
-</requires>

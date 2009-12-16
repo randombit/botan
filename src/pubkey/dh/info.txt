@@ -1,14 +1,15 @@
 define DIFFIE_HELLMAN
 
-load_on auto
-
-<add>
-dh.cpp
-dh.h
-dh_core.cpp
+<header:public>
 dh_core.h
 dh_op.h
-</add>
+dh.h
+</header:public>
+
+<source>
+dh.cpp
+dh_core.cpp
+</source>
 
 <requires>
 dl_algo

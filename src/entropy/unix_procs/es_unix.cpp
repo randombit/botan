@@ -5,8 +5,8 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/es_unix.h>
-#include <botan/unix_cmd.h>
+#include <botan/internal/es_unix.h>
+#include <botan/internal/unix_cmd.h>
 #include <botan/parsing.h>
 #include <algorithm>
 #include <sys/time.h>

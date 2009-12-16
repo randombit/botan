@@ -5,17 +5,24 @@
 #include <fstream>
 #include <botan/x509_key.h>
 #include <botan/filters.h>
-#include <botan/loadstor.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
 
 using namespace Botan;
 
+inline u32bit make_u32bit(byte i0, byte i1, byte i2, byte i3)
+   {
+   return ((static_cast<u32bit>(i0) << 24) |
+           (static_cast<u32bit>(i1) << 16) |
+           (static_cast<u32bit>(i2) <<  8) |
+           (static_cast<u32bit>(i3)));
+   }
+
 u32bit read_u32bit(Pipe& pipe)
    {
-   byte out[4] = { 0 };
-   pipe.read(out, 4);
-   u32bit len = load_be<u32bit>(out, 0);
+   byte sz[4] = { 0 };
+   pipe.read(sz, 4);
+   u32bit len = make_u32bit(sz[0], sz[1], sz[2], sz[3]);
    if(len > 10000)
       throw Decoding_Error("Huge size in read_u32bit, something went wrong");
    return len;

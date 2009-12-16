@@ -11,7 +11,7 @@
 #include <botan/ber_dec.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
-#include <botan/rounding.h>
+#include <botan/internal/rounding.h>
 #include <botan/time.h>
 
 namespace Botan {

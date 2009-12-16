@@ -1,12 +1,5 @@
 define PEM_CODEC
 
-load_on auto
-
-<add>
-pem.cpp
-pem.h
-</add>
-
 <requires>
 base64
 filters

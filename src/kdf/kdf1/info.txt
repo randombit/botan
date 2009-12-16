@@ -1,12 +1,5 @@
 define KDF1
 
-load_on auto
-
-<add>
-kdf1.h
-kdf1.cpp
-</add>
-
 <requires>
 hash
 </requires>

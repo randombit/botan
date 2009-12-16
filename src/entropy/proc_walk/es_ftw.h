@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * File Tree Walking Entropy Source
 */
-class BOTAN_DLL FTW_EntropySource : public EntropySource
+class FTW_EntropySource : public EntropySource
    {
    public:
       std::string name() const { return "Proc Walker"; }

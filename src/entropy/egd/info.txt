@@ -1,6 +1,12 @@
 define ENTROPY_SRC_EGD
 
-load_on auto
+<source>
+es_egd.cpp
+</source>
+
+<header:internal>
+es_egd.h
+</header:internal>
 
 <libs>
 solaris -> socket

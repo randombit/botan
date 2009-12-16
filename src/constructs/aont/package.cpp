@@ -9,8 +9,8 @@
 #include <botan/package.h>
 #include <botan/filters.h>
 #include <botan/ctr.h>
-#include <botan/loadstor.h>
-#include <botan/xor_buf.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 

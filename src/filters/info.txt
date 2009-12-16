@@ -1,6 +1,35 @@
 define FILTERS
 
-load_on auto
+<source>
+algo_filt.cpp
+basefilt.cpp
+buf_filt.cpp
+data_snk.cpp
+data_src.cpp
+filter.cpp
+out_buf.cpp
+pipe.cpp
+pipe_io.cpp
+pipe_rw.cpp
+secqueue.cpp
+</source>
+
+<header:public>
+basefilt.h
+buf_filt.h
+data_snk.h
+data_src.h
+filter.h
+filters.h
+key_filt.h
+pbe.h
+pipe.h
+</header:public>
+
+<header:internal>
+out_buf.h
+secqueue.h
+</header:internal>
 
 <requires>
 alloc

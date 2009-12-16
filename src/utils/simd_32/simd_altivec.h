@@ -8,7 +8,9 @@
 #ifndef BOTAN_SIMD_ALTIVEC_H__
 #define BOTAN_SIMD_ALTIVEC_H__
 
-#include <botan/loadstor.h>
+#if defined(BOTAN_TARGET_CPU_HAS_ALTIVEC)
+
+#include <botan/internal/loadstor.h>
 #include <botan/cpuid.h>
 
 #include <altivec.h>
@@ -205,5 +207,7 @@ class SIMD_Altivec
    };
 
 }
+
+#endif
 
 #endif

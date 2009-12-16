@@ -1,1 +1,9 @@
 define ENTROPY_SRC_HIGH_RESOLUTION_TIMER
+
+<source>
+hres_timer.cpp
+</source>
+
+<header:internal>
+hres_timer.h
+</header:internal>

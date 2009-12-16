@@ -1,5 +1,9 @@
 load_on dep
 
+<header:internal>
+asm_macr_amd64.h
+</header:internal>
+
 <arch>
 amd64
 </arch>

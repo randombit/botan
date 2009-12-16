@@ -1,6 +1,12 @@
 define ENTROPY_SRC_FTW
 
-load_on auto
+<source>
+es_ftw.cpp
+</source>
+
+<header:internal>
+es_ftw.h
+</header:internal>
 
 <os>
 aix

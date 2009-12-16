@@ -6,8 +6,8 @@
 */
 
 #include <botan/bigint.h>
-#include <botan/mp_core.h>
-#include <botan/bit_ops.h>
+#include <botan/internal/mp_core.h>
+#include <botan/internal/bit_ops.h>
 #include <algorithm>
 
 namespace Botan {

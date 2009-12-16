@@ -1,5 +1,5 @@
 load_on dep
 
-<add>
+<source>
 mp_monty.cpp
-</add>
+</source>

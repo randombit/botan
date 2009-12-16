@@ -1,7 +1,5 @@
 define MUTEX_WRAPPERS
 
-load_on auto
-
-<add>
+<header:internal>
 mutex.h
-</add>
+</header:internal>

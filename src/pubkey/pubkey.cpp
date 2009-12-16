@@ -10,7 +10,7 @@
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/parsing.h>
-#include <botan/bit_ops.h>
+#include <botan/internal/bit_ops.h>
 #include <memory>
 
 namespace Botan {

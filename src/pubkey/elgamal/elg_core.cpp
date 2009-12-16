@@ -13,12 +13,6 @@
 
 namespace Botan {
 
-namespace {
-
-const u32bit BLINDING_BITS = BOTAN_PRIVATE_KEY_OP_BLINDING_BITS;
-
-}
-
 /*
 * ELG_Core Constructor
 */
@@ -34,6 +28,8 @@ ELG_Core::ELG_Core(const DL_Group& group, const BigInt& y)
 ELG_Core::ELG_Core(RandomNumberGenerator& rng,
                    const DL_Group& group, const BigInt& y, const BigInt& x)
    {
+   const u32bit BLINDING_BITS = BOTAN_PRIVATE_KEY_OP_BLINDING_BITS;
+
    op = Engine_Core::elg_op(group, y, x);
 
    const BigInt& p = group.get_p();

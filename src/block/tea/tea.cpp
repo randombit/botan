@@ -6,7 +6,7 @@
 */
 
 #include <botan/tea.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 
 namespace Botan {
 

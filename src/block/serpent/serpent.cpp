@@ -6,8 +6,8 @@
 */
 
 #include <botan/serpent.h>
-#include <botan/loadstor.h>
-#include <botan/rotate.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/rotate.h>
 
 namespace Botan {
 
@@ -343,6 +343,10 @@ void Serpent::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       out += BLOCK_SIZE;
       }
    }
+
+#undef key_xor
+#undef transform
+#undef i_transform
 
 /*
 * Serpent Key Schedule

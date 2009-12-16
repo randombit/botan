@@ -1,11 +1,12 @@
 define MUTEX_PTHREAD
 
-load_on auto
-
-<add>
+<source>
 mux_pthr.cpp
+</source>
+
+<header:internal>
 mux_pthr.h
-</add>
+</header:internal>
 
 <libs>
 all!qnx,freebsd,dragonfly,openbsd,netbsd -> pthread

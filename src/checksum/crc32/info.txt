@@ -1,12 +1,5 @@
 define CRC32
 
-load_on auto
-
-<add>
-crc32.cpp
-crc32.h
-</add>
-
 <requires>
 hash
 </requires>

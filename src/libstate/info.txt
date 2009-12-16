@@ -2,23 +2,26 @@ load_on always
 
 define LIBSTATE_MODULE
 
-<add>
+<header:public>
 botan.h
+libstate.h
+init.h
+look_pk.h
+lookup.h
+pk_engine.h
+scan_name.h
+</header:public>
+
+<source>
 get_enc.cpp
 init.cpp
-init.h
 libstate.cpp
-libstate.h
 look_pk.cpp
-look_pk.h
 lookup.cpp
-lookup.h
 pk_engine.cpp
-pk_engine.h
 policy.cpp
 scan_name.cpp
-scan_name.h
-</add>
+</source>
 
 <requires>
 algo_factory

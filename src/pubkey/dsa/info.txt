@@ -1,15 +1,16 @@
 define DSA
 
-load_on auto
-
-<add>
-dsa.cpp
+<header:public>
 dsa.h
-dsa_core.cpp
 dsa_core.h
-dsa_op.cpp
 dsa_op.h
-</add>
+</header:public>
+
+<source>
+dsa.cpp
+dsa_core.cpp
+dsa_op.cpp
+</source>
 
 <requires>
 dl_algo

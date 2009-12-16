@@ -6,8 +6,8 @@
 */
 
 #include <botan/xtea_simd.h>
-#include <botan/loadstor.h>
-#include <botan/simd_32.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/simd_32.h>
 
 namespace Botan {
 

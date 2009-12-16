@@ -13,18 +13,14 @@
 
 namespace Botan {
 
-namespace {
-
-const u32bit BLINDING_BITS = BOTAN_PRIVATE_KEY_OP_BLINDING_BITS;
-
-}
-
 /*
 * DH_Core Constructor
 */
 DH_Core::DH_Core(RandomNumberGenerator& rng,
                  const DL_Group& group, const BigInt& x)
    {
+   const u32bit BLINDING_BITS = BOTAN_PRIVATE_KEY_OP_BLINDING_BITS;
+
    op = Engine_Core::dh_op(group, x);
 
    const BigInt& p = group.get_p();

@@ -7,7 +7,7 @@
 
 #include <botan/cfb.h>
 #include <botan/parsing.h>
-#include <botan/xor_buf.h>
+#include <botan/internal/xor_buf.h>
 #include <algorithm>
 
 namespace Botan {

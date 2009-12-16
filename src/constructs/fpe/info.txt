@@ -1,13 +1,7 @@
 define FORMAT_PRESERVING_ENCRYPTION
 
-load_on auto
-
-<add>
-fpe.cpp
-fpe.h
-</add>
-
 <requires>
-cbc_mac
+hmac
+sha2
 bigint
 </requires>

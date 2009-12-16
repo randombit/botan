@@ -1,12 +1,5 @@
 define PBKDF1
 
-load_on auto
-
-<add>
-pbkdf1.cpp
-pbkdf1.h
-</add>
-
 <requires>
 hash
 </requires>

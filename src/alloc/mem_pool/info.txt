@@ -1,6 +1,8 @@
-load_on auto
 
-<add>
+<source>
 mem_pool.cpp
+</source>
+
+<header:internal>
 mem_pool.h
-</add>
+</header:internal>

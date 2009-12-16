@@ -9,7 +9,7 @@
 #include <botan/x509_ext.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/stl_util.h>
+#include <botan/internal/stl_util.h>
 #include <botan/parsing.h>
 #include <botan/bigint.h>
 #include <botan/oids.h>

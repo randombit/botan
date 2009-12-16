@@ -1,9 +1,11 @@
-load_on auto
 
-<add>
+<source>
 defalloc.cpp
+</source>
+
+<header:internal>
 defalloc.h
-</add>
+</header:internal>
 
 <requires>
 libstate

@@ -1,6 +1,12 @@
-define ENTROPY_SRC_DEVICE
+define ENTROPY_SRC_DEV_RANDOM
 
-load_on auto
+<source>
+dev_random.cpp
+</source>
+
+<header:internal>
+dev_random.h
+</header:internal>
 
 <os>
 aix

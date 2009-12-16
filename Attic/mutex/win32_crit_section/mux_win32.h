@@ -9,14 +9,14 @@
 #ifndef BOTAN_MUTEX_WIN32_H__
 #define BOTAN_MUTEX_WIN32_H__
 
-#include <botan/mutex.h>
+#include <botan/internal/mutex.h>
 
 namespace Botan {
 
 /*
 * Win32 Mutex Factory
 */
-class BOTAN_DLL Win32_Mutex_Factory : public Mutex_Factory
+class Win32_Mutex_Factory : public Mutex_Factory
    {
    public:
       Mutex* make();

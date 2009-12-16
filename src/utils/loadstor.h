@@ -10,9 +10,9 @@
 #define BOTAN_LOAD_STORE_H__
 
 #include <botan/types.h>
-#include <botan/bswap.h>
-#include <botan/rotate.h>
-#include <botan/prefetch.h>
+#include <botan/internal/bswap.h>
+#include <botan/internal/rotate.h>
+#include <botan/internal/prefetch.h>
 #include <cstring>
 
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK

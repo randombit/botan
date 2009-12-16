@@ -1,8 +1,9 @@
-load_on auto
-
 define MUTEX_NOOP
 
-<add>
+<source>
 mux_noop.cpp
+</source>
+
+<header:internal>
 mux_noop.h
-</add>
+</header:internal>

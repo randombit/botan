@@ -40,7 +40,7 @@ class BOTAN_DLL BigInt
      /**
      * DivideByZero Exception
      */
-     struct DivideByZero : public Exception
+     struct BOTAN_DLL DivideByZero : public Exception
         { DivideByZero() : Exception("BigInt divide by zero") {} };
 
      /**

@@ -2,12 +2,18 @@ load_on auto
 
 define ALGORITHM_FACTORY
 
-<add>
-algo_factory.cpp
+<header:public>
 algo_factory.h
+</header:public>
+
+<header:internal>
 algo_cache.h
+</header:internal>
+
+<source>
+algo_factory.cpp
 prov_weight.cpp
-</add>
+</source>
 
 <requires>
 block

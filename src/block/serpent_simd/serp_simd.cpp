@@ -6,9 +6,9 @@
 */
 
 #include <botan/serp_simd.h>
-#include <botan/serp_simd_sbox.h>
-#include <botan/simd_32.h>
-#include <botan/loadstor.h>
+#include <botan/internal/serp_simd_sbox.h>
+#include <botan/internal/simd_32.h>
+#include <botan/internal/loadstor.h>
 
 namespace Botan {
 
@@ -170,6 +170,10 @@ void serpent_decrypt_4(const byte in[64],
    }
 
 }
+
+#undef key_xor
+#undef transform
+#undef i_transform
 
 /*
 * Serpent Encryption

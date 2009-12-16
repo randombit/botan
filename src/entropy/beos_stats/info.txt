@@ -1,6 +1,12 @@
 define ENTROPY_SRC_BEOS
 
-load_on auto
+<source>
+es_beos.cpp
+</source>
+
+<header:internal>
+es_beos.h
+</header:internal>
 
 <os>
 beos

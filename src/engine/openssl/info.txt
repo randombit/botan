@@ -6,12 +6,18 @@ load_on request
 all -> crypto
 </libs>
 
-<add>
+<header:public>
+eng_ossl.h
+</header:public>
+
+<header:internal>
+bn_wrap.h
+</header:internal>
+
+<source>
 arc4_openssl.cpp
 bn_powm.cpp
 bn_wrap.cpp
-bn_wrap.h
-eng_ossl.h
 ossl_bc.cpp
 ossl_dh.cpp
 ossl_dsa.cpp
@@ -19,7 +25,7 @@ ossl_elg.cpp
 ossl_if.cpp
 ossl_md.cpp
 ossl_nr.cpp
-</add>
+</source>
 
 <requires>
 bigint

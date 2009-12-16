@@ -8,14 +8,14 @@
 #ifndef BOTAN_NOOP_MUTEX_FACTORY_H__
 #define BOTAN_NOOP_MUTEX_FACTORY_H__
 
-#include <botan/mutex.h>
+#include <botan/internal/mutex.h>
 
 namespace Botan {
 
 /*
 * No-Op Mutex Factory
 */
-class BOTAN_DLL Noop_Mutex_Factory : public Mutex_Factory
+class Noop_Mutex_Factory : public Mutex_Factory
    {
    public:
       Mutex* make();

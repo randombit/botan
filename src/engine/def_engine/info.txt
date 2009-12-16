@@ -1,9 +1,10 @@
 define DEFAULT_ENGINE
 
-load_on auto
-
-<add>
+<header:public>
 def_eng.h
+</header:public>
+
+<source>
 def_mode.cpp
 def_pk_ops.cpp
 def_powm.cpp
@@ -11,7 +12,7 @@ lookup_block.cpp
 lookup_hash.cpp
 lookup_mac.cpp
 lookup_stream.cpp
-</add>
+</source>
 
 <requires>
 algo_factory

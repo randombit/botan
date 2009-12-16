@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/asm_macr_ia32.h>
+#include <botan/internal/asm_macr_ia32.h>
 
 START_LISTING(sha1_ia32.S)
 

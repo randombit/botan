@@ -6,7 +6,7 @@
 */
 
 #include <botan/prf_tls.h>
-#include <botan/xor_buf.h>
+#include <botan/internal/xor_buf.h>
 #include <botan/hmac.h>
 #include <botan/md5.h>
 #include <botan/sha160.h>

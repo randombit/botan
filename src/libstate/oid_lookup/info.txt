@@ -1,11 +1,4 @@
-load_on dep
-
 define OID_LOOKUP
-
-<add>
-oids.cpp
-oids.h
-</add>
 
 <requires>
 asn1

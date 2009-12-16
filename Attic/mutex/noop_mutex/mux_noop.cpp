@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/mux_noop.h>
+#include <botan/internal/mux_noop.h>
 
 namespace Botan {
 

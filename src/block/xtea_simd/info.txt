@@ -1,12 +1,5 @@
 define XTEA_SIMD
 
-load_on auto
-
-<add>
-xtea_simd.cpp
-xtea_simd.h
-</add>
-
 <requires>
 xtea
 simd_32
