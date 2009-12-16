@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-class BOTAN_DLL AES_ISA_Engine : public Engine
+class AES_ISA_Engine : public Engine
    {
    public:
       std::string provider_name() const { return "aes_isa"; }

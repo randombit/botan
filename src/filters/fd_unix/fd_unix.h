@@ -15,8 +15,8 @@ namespace Botan {
 /*
 * Unix I/O Operators for Pipe
 */
-int operator<<(int, Pipe&);
-int operator>>(int, Pipe&);
+int BOTAN_DLL operator<<(int, Pipe&);
+int BOTAN_DLL operator>>(int, Pipe&);
 
 }
 

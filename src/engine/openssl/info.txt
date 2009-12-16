@@ -6,11 +6,8 @@ load_on request
 all -> crypto
 </libs>
 
-<header:public>
-eng_ossl.h
-</header:public>
-
 <header:internal>
+openssl_engine.h
 bn_wrap.h
 </header:internal>
 

@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-class BOTAN_DLL SIMD_Engine : public Engine
+class SIMD_Engine : public Engine
    {
    public:
       std::string provider_name() const { return "simd"; }

@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/eng_amd64.h>
+#include <botan/internal/amd64_engine.h>
 
 #if defined(BOTAN_HAS_SHA1_AMD64)
   #include <botan/sha1_amd64.h>

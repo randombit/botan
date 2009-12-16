@@ -89,7 +89,7 @@ bool maybe_BER(DataSource&);
 /*
 * General BER Decoding Error Exception
 */
-struct BER_Decoding_Error : public Decoding_Error
+struct BOTAN_DLL BER_Decoding_Error : public Decoding_Error
    {
    BER_Decoding_Error(const std::string&);
    };
@@ -97,7 +97,7 @@ struct BER_Decoding_Error : public Decoding_Error
 /*
 * Exception For Incorrect BER Taggings
 */
-struct BER_Bad_Tag : public BER_Decoding_Error
+struct BOTAN_DLL BER_Bad_Tag : public BER_Decoding_Error
    {
    BER_Bad_Tag(const std::string&, ASN1_Tag);
    BER_Bad_Tag(const std::string&, ASN1_Tag, ASN1_Tag);

@@ -6,11 +6,8 @@ load_on request
 all -> gmp
 </libs>
 
-<header:public>
-eng_gmp.h
-</header:public>
-
 <header:internal>
+gnump_engine.h
 gmp_wrap.h
 </header:internal>
 

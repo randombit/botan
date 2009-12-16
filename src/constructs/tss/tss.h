@@ -15,7 +15,7 @@
 
 namespace Botan {
 
-class RTSS_Share
+class BOTAN_DLL RTSS_Share
    {
    public:
       /**

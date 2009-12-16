@@ -5,8 +5,8 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/def_eng.h>
-#include <botan/def_powm.h>
+#include <botan/internal/default_engine.h>
+#include <botan/internal/def_powm.h>
 
 namespace Botan {
 

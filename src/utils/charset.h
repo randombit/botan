@@ -28,14 +28,16 @@ namespace Charset {
 /*
 * Character Set Handling
 */
-std::string transcode(const std::string&, Character_Set, Character_Set);
+std::string BOTAN_DLL transcode(const std::string& str,
+                                Character_Set to,
+                                Character_Set from);
 
-bool is_digit(char);
-bool is_space(char);
-bool caseless_cmp(char, char);
+bool BOTAN_DLL is_digit(char c);
+bool BOTAN_DLL is_space(char c);
+bool BOTAN_DLL caseless_cmp(char x, char y);
 
-byte char2digit(char);
-char digit2char(byte);
+byte BOTAN_DLL char2digit(char c);
+char BOTAN_DLL digit2char(byte b);
 
 }
 

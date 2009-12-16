@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/pk_algs.h>
+#include <botan/internal/pk_algs.h>
 
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>

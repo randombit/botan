@@ -1,24 +1,27 @@
 /*
-* GMP Engine
+* OpenSSL Engine
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_ENGINE_GMP_H__
-#define BOTAN_ENGINE_GMP_H__
+#ifndef BOTAN_ENGINE_OPENSSL_H__
+#define BOTAN_ENGINE_OPENSSL_H__
 
 #include <botan/engine.h>
 
 namespace Botan {
 
 /*
-* GMP Engine
+* OpenSSL Engine
 */
-class BOTAN_DLL GMP_Engine : public Engine
+class OpenSSL_Engine : public Engine
    {
    public:
-      std::string provider_name() const { return "gmp"; }
+      /**
+      * Return the provider name ("openssl")
+      */
+      std::string provider_name() const { return "openssl"; }
 
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
       IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,
@@ -46,10 +49,14 @@ class BOTAN_DLL GMP_Engine : public Engine
 
       Modular_Exponentiator* mod_exp(const BigInt&,
                                      Power_Mod::Usage_Hints) const;
-
-      GMP_Engine();
    private:
-      static void set_memory_hooks();
+      BlockCipher* find_block_cipher(const SCAN_Name&,
+                                     Algorithm_Factory&) const;
+
+      StreamCipher* find_stream_cipher(const SCAN_Name&,
+                                       Algorithm_Factory&) const;
+
+      HashFunction* find_hash(const SCAN_Name&, Algorithm_Factory&) const;
    };
 
 }

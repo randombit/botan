@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-class BOTAN_DLL AMD64_Assembler_Engine : public Engine
+class AMD64_Assembler_Engine : public Engine
    {
    public:
       std::string provider_name() const { return "amd64"; }

@@ -41,7 +41,7 @@ BigInt BOTAN_DLL power_mod(const BigInt&, const BigInt&, const BigInt&);
 * Compute the square root of x modulo a prime
 * using the Shanks-Tonnelli algorithm
 */
-BigInt ressol(const BigInt& x, const BigInt& p);
+BigInt BOTAN_DLL ressol(const BigInt& x, const BigInt& p);
 
 /*
 * Utility Functions

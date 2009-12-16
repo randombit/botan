@@ -7,12 +7,13 @@
 
 #include <botan/libstate.h>
 #include <botan/charset.h>
-#include <botan/def_eng.h>
 #include <botan/engine.h>
 #include <botan/init.h>
-#include <botan/internal/mutex.h>
 #include <botan/selftest.h>
+
 #include <botan/internal/defalloc.h>
+#include <botan/internal/default_engine.h>
+#include <botan/internal/mutex.h>
 #include <botan/internal/mux_noop.h>
 #include <botan/internal/stl_util.h>
 #include <algorithm>
@@ -30,27 +31,27 @@
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_IA32_ASSEMBLER)
-  #include <botan/eng_ia32.h>
+  #include <botan/internal/ia32_engine.h>
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_AMD64_ASSEMBLER)
-  #include <botan/eng_amd64.h>
+  #include <botan/internal/amd64_engine.h>
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_AES_ISA)
-  #include <botan/aes_isa_engine.h>
+  #include <botan/internal/aes_isa_engine.h>
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_SIMD)
-  #include <botan/simd_engine.h>
+  #include <botan/internal/simd_engine.h>
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_GNU_MP)
-  #include <botan/eng_gmp.h>
+  #include <botan/internal/gnump_engine.h>
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_OPENSSL)
-  #include <botan/eng_ossl.h>
+  #include <botan/internal/openssl_engine.h>
 #endif
 
 namespace Botan {

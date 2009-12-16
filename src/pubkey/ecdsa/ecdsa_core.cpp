@@ -7,7 +7,7 @@
 */
 
 #include <botan/ecdsa_core.h>
-#include <botan/pk_engine.h>
+#include <botan/internal/pk_engine.h>
 
 namespace Botan {
 

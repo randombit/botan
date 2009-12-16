@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/pk_engine.h>
+#include <botan/internal/pk_engine.h>
 #include <botan/libstate.h>
 #include <botan/engine.h>
 

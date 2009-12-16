@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/eng_ossl.h>
+#include <botan/internal/openssl_engine.h>
 #include <openssl/evp.h>
 
 namespace Botan {

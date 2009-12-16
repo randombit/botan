@@ -12,15 +12,13 @@
 
 namespace Botan {
 
-class GOST_28147_89_Params;
-
 /**
 * The GOST 28147-89 block cipher uses a set of 4 bit Sboxes, however
 * the standard does not actually define these Sboxes; they are
 * considered a local configuration issue. Several different sets are
 * used.
 */
-class GOST_28147_89_Params
+class BOTAN_DLL GOST_28147_89_Params
    {
    public:
       byte sbox_entry(u32bit row, u32bit col) const;

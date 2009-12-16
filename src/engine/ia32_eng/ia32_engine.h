@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-class BOTAN_DLL IA32_Assembler_Engine : public Engine
+class IA32_Assembler_Engine : public Engine
    {
    public:
       std::string provider_name() const { return "ia32"; }

@@ -8,7 +8,7 @@
 
 #include <botan/gfp_element.h>
 #include <botan/numthry.h>
-#include <botan/def_powm.h>
+#include <botan/internal/def_powm.h>
 #include <botan/internal/mp_asm.h>
 #include <botan/internal/mp_asmi.h>
 #include <ostream>

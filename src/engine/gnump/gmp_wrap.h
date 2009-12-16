@@ -16,7 +16,7 @@ namespace Botan {
 /*
 * Lightweight GMP mpz_t Wrapper
 */
-class BOTAN_DLL GMP_MPZ
+class GMP_MPZ
    {
    public:
       mpz_t value;

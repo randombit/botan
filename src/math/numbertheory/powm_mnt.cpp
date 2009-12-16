@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/def_powm.h>
+#include <botan/internal/def_powm.h>
 #include <botan/numthry.h>
 #include <botan/internal/mp_core.h>
 

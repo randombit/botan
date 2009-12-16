@@ -11,7 +11,6 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/pubkey_enums.h>
-#include <botan/freestore.h>
 #include <botan/pipe.h>
 #include <vector>
 

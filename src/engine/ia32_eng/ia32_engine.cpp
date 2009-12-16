@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/eng_ia32.h>
+#include <botan/internal/ia32_engine.h>
 
 #if defined(BOTAN_HAS_SERPENT_IA32)
   #include <botan/serp_ia32.h>

@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/eng_gmp.h>
+#include <botan/internal/gnump_engine.h>
 #include <cstring>
 #include <gmp.h>
 

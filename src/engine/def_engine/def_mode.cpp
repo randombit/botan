@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/def_eng.h>
+#include <botan/internal/default_engine.h>
 #include <botan/parsing.h>
 #include <botan/filters.h>
 #include <botan/algo_factory.h>

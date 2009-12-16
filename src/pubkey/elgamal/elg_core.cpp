@@ -7,7 +7,7 @@
 
 #include <botan/elg_core.h>
 #include <botan/numthry.h>
-#include <botan/pk_engine.h>
+#include <botan/internal/pk_engine.h>
 #include <botan/parsing.h>
 #include <algorithm>
 

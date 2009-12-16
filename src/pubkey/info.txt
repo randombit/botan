@@ -1,5 +1,24 @@
 define PUBLIC_KEY_CRYPTO
 
+<source>
+pk_algs.cpp
+pk_keys.cpp
+pubkey.cpp
+pubkey_enums.cpp
+workfactor.cpp
+</source>
+
+<header:public>
+pk_keys.h
+pubkey.h
+pubkey_enums.h
+</header:public>
+
+<header:internal>
+pk_algs.h
+workfactor.h
+</header:internal>
+
 <requires>
 alloc
 asn1

@@ -17,7 +17,7 @@ namespace Botan {
 /*
 * Fixed Window Exponentiator
 */
-class BOTAN_DLL Fixed_Window_Exponentiator : public Modular_Exponentiator
+class Fixed_Window_Exponentiator : public Modular_Exponentiator
    {
    public:
       void set_exponent(const BigInt&);
@@ -39,7 +39,7 @@ class BOTAN_DLL Fixed_Window_Exponentiator : public Modular_Exponentiator
 /*
 * Montgomery Exponentiator
 */
-class BOTAN_DLL Montgomery_Exponentiator : public Modular_Exponentiator
+class Montgomery_Exponentiator : public Modular_Exponentiator
    {
    public:
       void set_exponent(const BigInt&);

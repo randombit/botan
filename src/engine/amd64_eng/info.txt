@@ -1,3 +1,11 @@
 define ENGINE_AMD64_ASSEMBLER
 
 load_on dep
+
+<header:internal>
+amd64_engine.h
+</header:internal>
+
+<source>
+amd64_engine.cpp
+</source>

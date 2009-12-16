@@ -18,6 +18,7 @@
 #include <botan/oids.h>
 #include <botan/look_pk.h>
 #include <botan/ecdsa_sig.h>
+#include <botan/freestore.h>
 #include <string>
 
 namespace Botan {

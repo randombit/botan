@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/workfactor.h>
+#include <botan/internal/workfactor.h>
 #include <algorithm>
 #include <cmath>
 

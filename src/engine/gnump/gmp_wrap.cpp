@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/gmp_wrap.h>
+#include <botan/internal/gmp_wrap.h>
 
 #define GNU_MP_VERSION_CODE_FOR(a,b,c) ((a << 16) | (b << 8) | (c))
 

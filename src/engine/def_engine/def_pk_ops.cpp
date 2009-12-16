@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/def_eng.h>
+#include <botan/internal/default_engine.h>
 
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
   #include <botan/if_op.h>

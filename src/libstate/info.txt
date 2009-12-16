@@ -8,9 +8,12 @@ libstate.h
 init.h
 look_pk.h
 lookup.h
-pk_engine.h
 scan_name.h
 </header:public>
+
+<header:internal>
+pk_engine.h
+</header:internal>
 
 <source>
 get_enc.cpp

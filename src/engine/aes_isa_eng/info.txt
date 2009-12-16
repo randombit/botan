@@ -1,3 +1,11 @@
 define ENGINE_AES_ISA
 
 load_on dep
+
+<source>
+aes_isa_engine.cpp
+</source>
+
+<header:internal>
+aes_isa_engine.h
+</header:internal>

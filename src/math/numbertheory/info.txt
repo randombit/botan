@@ -4,11 +4,14 @@ define BIGINT_MATH
 
 <header:public>
 blinding.h
-def_powm.h
 numthry.h
 pow_mod.h
 reducer.h
 </header:public>
+
+<header:internal>
+def_powm.h
+</header:internal>
 
 <source>
 blinding.cpp

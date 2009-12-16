@@ -28,7 +28,7 @@ class BOTAN_DLL Pipe : public DataSource
    public:
       typedef u32bit message_id;
 
-      class Invalid_Message_Number : public Invalid_Argument
+      class BOTAN_DLL Invalid_Message_Number : public Invalid_Argument
          {
          public:
             Invalid_Message_Number(const std::string&, message_id);

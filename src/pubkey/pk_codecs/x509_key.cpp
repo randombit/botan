@@ -10,9 +10,9 @@
 #include <botan/asn1_obj.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/pk_algs.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
+#include <botan/internal/pk_algs.h>
 #include <memory>
 
 namespace Botan {

@@ -1,8 +1,8 @@
 define DEFAULT_ENGINE
 
-<header:public>
-def_eng.h
-</header:public>
+<header:internal>
+default_engine.h
+</header:internal>
 
 <source>
 def_mode.cpp

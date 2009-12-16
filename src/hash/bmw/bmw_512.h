@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-class BMW_512 : public MDx_HashFunction
+class BOTAN_DLL BMW_512 : public MDx_HashFunction
    {
    public:
       void clear();

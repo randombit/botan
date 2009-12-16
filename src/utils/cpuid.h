@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-class CPUID
+class BOTAN_DLL CPUID
    {
    public:
       enum CPUID_bits {

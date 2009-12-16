@@ -5,8 +5,8 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/eng_ossl.h>
-#include <botan/bn_wrap.h>
+#include <botan/internal/openssl_engine.h>
+#include <botan/internal/bn_wrap.h>
 #include <openssl/opensslv.h>
 
 #if OPENSSL_VERSION_NUMBER < 0x0090700F

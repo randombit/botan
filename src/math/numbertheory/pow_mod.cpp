@@ -6,7 +6,7 @@
 */
 
 #include <botan/pow_mod.h>
-#include <botan/pk_engine.h>
+#include <botan/internal/pk_engine.h>
 
 namespace Botan {
 

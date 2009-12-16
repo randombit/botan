@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * Class used to accumulate the poll results of EntropySources
 */
-class Entropy_Accumulator
+class BOTAN_DLL Entropy_Accumulator
    {
    public:
       Entropy_Accumulator(u32bit goal) :
@@ -63,7 +63,7 @@ class Entropy_Accumulator
       double collected_bits;
    };
 
-class Entropy_Accumulator_BufferedComputation : public Entropy_Accumulator
+class BOTAN_DLL Entropy_Accumulator_BufferedComputation : public Entropy_Accumulator
    {
    public:
       Entropy_Accumulator_BufferedComputation(BufferedComputation& sink,

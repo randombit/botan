@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/bn_wrap.h>
+#include <botan/internal/bn_wrap.h>
 
 namespace Botan {
 

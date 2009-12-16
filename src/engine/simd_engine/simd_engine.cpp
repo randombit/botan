@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/simd_engine.h>
+#include <botan/internal/simd_engine.h>
 #include <botan/internal/simd_32.h>
 #include <botan/cpuid.h>
 

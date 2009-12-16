@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * BitBucket is a filter which simply discards all inputs
 */
-struct BitBucket : public Filter
+struct BOTAN_DLL BitBucket : public Filter
    {
    void write(const byte[], u32bit) {}
    };
