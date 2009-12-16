@@ -1,12 +1,13 @@
 /*
-* IF (RSA/RW) Operation
-* (C) 1999-2007 Jack Lloyd
+* Integer Factorization Scheme (RSA/RW) Operation
+* (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/if_op.h>
 #include <botan/numthry.h>
+#include <botan/internal/async.h>
 
 namespace Botan {
 
@@ -38,8 +39,15 @@ BigInt Default_IF_Op::private_op(const BigInt& i) const
    if(q == 0)
       throw Internal_Error("Default_IF_Op::private_op: No private key");
 
-   BigInt j1 = powermod_d1_p(i);
+   /*
+   * A simple std::bind(powermod_d1_p, i) would work instead of a
+   * lambda but GCC 4.5's std::result_of doesn't use decltype and gets
+   * confused
+   */
+   auto future_j1 = std_async([&]() { return powermod_d1_p(i); });
    BigInt j2 = powermod_d2_q(i);
+   BigInt j1 = future_j1.get();
+
    j1 = reducer.reduce(sub_mul(j1, j2, c));
    return mul_add(j1, q, j2);
    }

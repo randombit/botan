@@ -25,7 +25,6 @@ class MessageAuthenticationCode;
 template<typename T> class Algorithm_Cache;
 
 class Engine;
-class Mutex_Factory;
 
 /**
 * Algorithm Factory
@@ -38,8 +37,7 @@ class BOTAN_DLL Algorithm_Factory
       * @param engines_in the list of engines to use
       * @param mf a mutex factory
       */
-      Algorithm_Factory(const std::vector<Engine*>& engines_in,
-                        Mutex_Factory& mf);
+      Algorithm_Factory(const std::vector<Engine*>& engines_in);
 
       /**
       * Destructor

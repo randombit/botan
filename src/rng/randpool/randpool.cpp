@@ -8,8 +8,8 @@
 #include <botan/randpool.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/xor_buf.h>
-#include <botan/internal/stl_util.h>
 #include <algorithm>
+#include <chrono>
 
 namespace Botan {
 
@@ -202,8 +202,8 @@ Randpool::~Randpool()
    delete cipher;
    delete mac;
 
-   std::for_each(entropy_sources.begin(), entropy_sources.end(),
-                 del_fun<EntropySource>());
+   for(auto i = entropy_sources.begin(); i != entropy_sources.end(); ++i)
+      delete *i;
    }
 
 }

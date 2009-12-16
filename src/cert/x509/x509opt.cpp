@@ -8,7 +8,7 @@
 #include <botan/x509self.h>
 #include <botan/oids.h>
 #include <botan/parsing.h>
-#include <botan/time.h>
+#include <chrono>
 
 namespace Botan {
 
@@ -78,16 +78,16 @@ void X509_Cert_Options::sanity_check() const
 * Initialize the certificate options
 */
 X509_Cert_Options::X509_Cert_Options(const std::string& initial_opts,
-                                     u32bit expiration_time_in_seconds)
+                                     u32bit expiration_time)
    {
    is_CA = false;
    path_limit = 0;
    constraints = NO_CONSTRAINTS;
 
-   const u32bit now = system_time();
+   auto now = std::chrono::system_clock::now();
 
    start = X509_Time(now);
-   end = X509_Time(now + expiration_time_in_seconds);
+   end = X509_Time(now + std::chrono::seconds(expiration_time));
 
    if(initial_opts == "")
       return;

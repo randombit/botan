@@ -9,51 +9,43 @@
 #define BOTAN_X509_CERT_STORE_SEARCH_H__
 
 #include <botan/x509stor.h>
+#include <botan/bigint.h>
 
 namespace Botan {
+
+namespace X509_Store_Search {
 
 /*
 * Search based on the contents of a DN entry
 */
-class BOTAN_DLL DN_Check : public X509_Store::Search_Func
-   {
-   public:
-      typedef bool (*compare_fn)(const std::string&, const std::string&);
-      enum Search_Type { SUBSTRING_MATCHING, IGNORE_CASE };
+enum DN_Search_Type { SUBSTRING_MATCHING, IGNORE_CASE };
 
-      bool match(const X509_Certificate& cert) const;
+std::function<bool (const X509_Certificate&)>
+by_dn(const std::string& dn_entry,
+          const std::string& to_find,
+          DN_Search_Type method);
 
-      DN_Check(const std::string&, const std::string&, compare_fn);
-      DN_Check(const std::string&, const std::string&, Search_Type);
-   private:
-      std::string dn_entry, looking_for;
-      compare_fn compare;
-   };
+std::function<bool (const X509_Certificate&)>
+by_dn(const std::string& dn_entry,
+          const std::string& to_find,
+          std::function<bool (std::string, std::string)> method);
 
-/*
-* Search for a certificate by issuer/serial
+/**
+* Search for certs by issuer + serial number
 */
-class BOTAN_DLL IandS_Match : public X509_Store::Search_Func
-   {
-   public:
-      bool match(const X509_Certificate& cert) const;
-      IandS_Match(const X509_DN&, const MemoryRegion<byte>&);
-   private:
-      X509_DN issuer;
-      MemoryVector<byte> serial;
-   };
+std::function<bool (const X509_Certificate&)>
+by_issuer_and_serial(const X509_DN& issuer, const MemoryRegion<byte>& serial);
 
-/*
-* Search for a certificate by subject keyid
+std::function<bool (const X509_Certificate&)>
+by_issuer_and_serial(const X509_DN& issuer, const BigInt& serial);
+
+/**
+* Search for certs by subject key identifier
 */
-class BOTAN_DLL SKID_Match : public X509_Store::Search_Func
-   {
-   public:
-      bool match(const X509_Certificate& cert) const;
-      SKID_Match(const MemoryRegion<byte>& s) : skid(s) {}
-   private:
-      MemoryVector<byte> skid;
-   };
+std::function<bool (const X509_Certificate&)>
+by_skid(const MemoryRegion<byte>& subject_key_id);
+
+}
 
 }
 

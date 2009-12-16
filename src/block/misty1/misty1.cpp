@@ -255,7 +255,7 @@ MISTY1::MISTY1(u32bit rounds) : BlockCipher(8, 16)
    {
    if(rounds != 8)
       throw Invalid_Argument("MISTY1: Invalid number of rounds: "
-                             + to_string(rounds));
+                             + std::to_string(rounds));
    }
 
 }

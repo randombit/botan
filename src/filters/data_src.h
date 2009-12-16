@@ -78,9 +78,8 @@ class BOTAN_DLL DataSource
 
       DataSource() {}
       virtual ~DataSource() {}
-   private:
-      DataSource& operator=(const DataSource&) { return (*this); }
-      DataSource(const DataSource&);
+      DataSource& operator=(const DataSource&) = delete;
+      DataSource(const DataSource&) = delete;
    };
 
 /**
