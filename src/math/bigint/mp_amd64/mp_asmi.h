@@ -9,7 +9,7 @@
 #ifndef BOTAN_MP_ASM_INTERNAL_H__
 #define BOTAN_MP_ASM_INTERNAL_H__
 
-#include <botan/mp_asm.h>
+#include <botan/internal/mp_asm.h>
 
 namespace Botan {
 

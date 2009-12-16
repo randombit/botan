@@ -1,12 +1,5 @@
 define ANSI_X919_MAC
 
-load_on auto
-
-<add>
-x919_mac.cpp
-x919_mac.h
-</add>
-
 <requires>
 block
 </requires>

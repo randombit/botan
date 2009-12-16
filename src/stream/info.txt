@@ -1,10 +1,4 @@
-load_on auto
-
 define STREAM_CIPHER
-
-<add>
-stream_cipher.h
-</add>
 
 <requires>
 sym_algo

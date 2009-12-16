@@ -2,11 +2,6 @@ define EME1
 
 load_on auto
 
-<add>
-eme1.h
-eme1.cpp
-</add>
-
 <requires>
 hash
 kdf

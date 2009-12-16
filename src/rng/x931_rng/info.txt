@@ -1,12 +1,5 @@
 define X931_RNG
 
-load_on auto
-
-<add>
-x931_rng.cpp
-x931_rng.h
-</add>
-
 <requires>
 block
 </requires>

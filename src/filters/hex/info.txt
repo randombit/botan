@@ -1,13 +1,5 @@
 define HEX_CODEC
 
-load_on auto
-
-<add>
-hex.cpp
-hex_char.cpp
-hex.h
-</add>
-
 <requires>
 filters
 </requires>

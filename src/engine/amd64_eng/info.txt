@@ -1,8 +1,3 @@
 define ENGINE_AMD64_ASSEMBLER
 
 load_on dep
-
-<add>
-eng_amd64.cpp
-eng_amd64.h
-</add>

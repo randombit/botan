@@ -6,9 +6,9 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/mp_core.h>
-#include <botan/mp_asm.h>
-#include <botan/mp_asmi.h>
+#include <botan/internal/mp_core.h>
+#include <botan/internal/mp_asm.h>
+#include <botan/internal/mp_asmi.h>
 
 namespace Botan {
 

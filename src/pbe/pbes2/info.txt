@@ -1,12 +1,5 @@
 define PBE_PKCS_V20
 
-load_on auto
-
-<add>
-pbes2.cpp
-pbes2.h
-</add>
-
 <requires>
 algo_factory
 asn1

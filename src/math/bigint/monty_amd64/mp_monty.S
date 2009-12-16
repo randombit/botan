@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/asm_macr_amd64.h>
+#include <botan/internal/asm_macr_amd64.h>
 
 START_LISTING(mp_monty.S)
 

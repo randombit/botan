@@ -6,8 +6,15 @@ load_on request
 all -> gmp
 </libs>
 
-<add>
+<header:public>
 eng_gmp.h
+</header:public>
+
+<header:internal>
+gmp_wrap.h
+</header:internal>
+
+<source>
 gmp_dh.cpp
 gmp_dsa.cpp
 gmp_elg.cpp
@@ -16,8 +23,7 @@ gmp_mem.cpp
 gmp_nr.cpp
 gmp_powm.cpp
 gmp_wrap.cpp
-gmp_wrap.h
-</add>
+</source>
 
 <requires>
 bigint

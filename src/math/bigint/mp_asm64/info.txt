@@ -2,10 +2,10 @@ mp_bits 64
 
 load_on dep
 
-<add>
+<header:internal>
 mp_asm.h
 mp_generic:mp_asmi.h
-</add>
+</header:internal>
 
 <arch>
 #amd64

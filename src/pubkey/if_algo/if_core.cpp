@@ -13,12 +13,6 @@
 
 namespace Botan {
 
-namespace {
-
-const u32bit BLINDING_BITS = BOTAN_PRIVATE_KEY_OP_BLINDING_BITS;
-
-}
-
 /*
 * IF_Core Constructor
 */
@@ -36,6 +30,8 @@ IF_Core::IF_Core(RandomNumberGenerator& rng,
                  const BigInt& p, const BigInt& q,
                  const BigInt& d1, const BigInt& d2, const BigInt& c)
    {
+   const u32bit BLINDING_BITS = BOTAN_PRIVATE_KEY_OP_BLINDING_BITS;
+
    op = Engine_Core::if_op(e, n, d, p, q, d1, d2, c);
 
    if(BLINDING_BITS)

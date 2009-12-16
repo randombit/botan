@@ -1,13 +1,5 @@
 define ECB
 
-load_on auto
-
-<add>
-ecb.cpp
-ecb.h
-</add>
-
 <requires>
-block
 mode_pad
 </requires>

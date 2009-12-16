@@ -344,6 +344,10 @@ void Serpent::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       }
    }
 
+#undef key_xor
+#undef transform
+#undef i_transform
+
 /*
 * Serpent Key Schedule
 */

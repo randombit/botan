@@ -2,12 +2,6 @@ define PK_PADDING
 
 load_on auto
 
-<add>
-emsa.h
-eme.cpp
-eme.h
-</add>
-
 <requires>
 alloc
 rng

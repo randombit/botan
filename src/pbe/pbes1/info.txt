@@ -1,12 +1,5 @@
 define PBE_PKCS_V15
 
-load_on auto
-
-<add>
-pbes1.cpp
-pbes1.h
-</add>
-
 <requires>
 asn1
 block

@@ -9,9 +9,8 @@
 #include <botan/gfp_element.h>
 #include <botan/numthry.h>
 #include <botan/def_powm.h>
-#include <botan/mp_types.h>
-#include <botan/mp_asm.h>
-#include <botan/mp_asmi.h>
+#include <botan/internal/mp_asm.h>
+#include <botan/internal/mp_asmi.h>
 #include <ostream>
 #include <assert.h>
 

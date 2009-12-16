@@ -1,6 +1,4 @@
-load_on auto
-
-<add>
+<header:public>
 allocate.h
 secmem.h
-</add>
+</header:public>

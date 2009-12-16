@@ -4,9 +4,9 @@ mp_bits 32
 
 load_on request
 
-<add>
+<source>
 mp_mulop.S
-</add>
+</source>
 
 <arch>
 ia32

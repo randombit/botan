@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-namespace {
+namespace HAS_160_F {
 
 /*
 * HAS-160 F1 Function
@@ -60,6 +60,8 @@ inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E,
 */
 void HAS_160::compress_n(const byte input[], u32bit blocks)
    {
+   using namespace HAS_160_F;
+
    u32bit A = digest[0], B = digest[1], C = digest[2],
           D = digest[3], E = digest[4];
 

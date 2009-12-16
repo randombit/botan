@@ -1,12 +1,5 @@
 define CBC_MAC
 
-load_on auto
-
-<add>
-cbc_mac.cpp
-cbc_mac.h
-</add>
-
 <requires>
 block
 </requires>

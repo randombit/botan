@@ -1,13 +1,1 @@
 define TURING
-
-load_on auto
-
-<requires>
-stream
-</requires>
-
-<add>
-tur_tab.cpp
-turing.cpp
-turing.h
-</add>

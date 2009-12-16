@@ -2,25 +2,28 @@ load_on auto
 
 define BIGINT_MATH
 
-<add>
-blinding.cpp
+<header:public>
 blinding.h
 def_powm.h
+numthry.h
+pow_mod.h
+reducer.h
+</header:public>
+
+<source>
+blinding.cpp
 dsa_gen.cpp
 jacobi.cpp
 make_prm.cpp
 mp_numth.cpp
 numthry.cpp
-numthry.h
 pow_mod.cpp
-pow_mod.h
 powm_fw.cpp
 powm_mnt.cpp
 primes.cpp
 reducer.cpp
-reducer.h
 ressol.cpp
-</add>
+</source>
 
 <requires>
 algo_factory

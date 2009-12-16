@@ -1,6 +1,6 @@
 load_on dep
 
-<add>
+<header:internal>
 mp_asm.h
 mp_asmi.h
-</add>
+</header:internal>

@@ -1,10 +1,3 @@
-load_on auto
-
-<add>
-mac.h
-mac.cpp
-</add>
-
 <requires>
 buf_comp
 sym_algo

@@ -7,7 +7,7 @@
 
 #include <botan/reducer.h>
 #include <botan/numthry.h>
-#include <botan/mp_core.h>
+#include <botan/internal/mp_core.h>
 
 namespace Botan {
 

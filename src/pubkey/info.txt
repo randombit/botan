@@ -1,7 +1,5 @@
 define PUBLIC_KEY_CRYPTO
 
-load_on auto
-
 <requires>
 alloc
 asn1

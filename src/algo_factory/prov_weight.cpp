@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/algo_cache.h>
+#include <botan/internal/algo_cache.h>
 
 namespace Botan {
 

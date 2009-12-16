@@ -1,5 +1,9 @@
 load_on dep
 
+<header:internal>
+asm_macr_ia32.h
+</header:internal>
+
 <arch>
 ia32
 </arch>

@@ -1,16 +1,5 @@
 define ECDSA
 
-load_on auto
-
-<add>
-ecdsa.cpp
-ecdsa.h
-ecdsa_core.cpp
-ecdsa_core.h
-ecdsa_op.cpp
-ecdsa_op.h
-</add>
-
 <requires>
 alloc
 asn1

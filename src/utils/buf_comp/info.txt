@@ -1,9 +1,3 @@
-load_on auto
-
-<add>
-buf_comp.h
-</add>
-
 <requires>
 alloc
 </requires>

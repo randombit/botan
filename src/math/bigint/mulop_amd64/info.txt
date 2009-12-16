@@ -2,9 +2,9 @@ mp_bits 64
 
 load_on never
 
-<add>
+<source>
 mp_mulop_amd64.S
-</add>
+</source>
 
 <arch>
 amd64

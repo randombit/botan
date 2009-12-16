@@ -1,12 +1,5 @@
 define RSA
 
-load_on auto
-
-<add>
-rsa.cpp
-rsa.h
-</add>
-
 <requires>
 if_algo
 keypair

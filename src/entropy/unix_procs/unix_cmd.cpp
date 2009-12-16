@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/unix_cmd.h>
+#include <botan/internal/unix_cmd.h>
 #include <botan/parsing.h>
 #include <botan/exceptn.h>
 

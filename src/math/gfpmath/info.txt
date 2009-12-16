@@ -1,18 +1,19 @@
-uses_tr1 yes
-
-load_on auto
-
 define BIGINT_GFP
 
-<add>
-curve_gfp.cpp
+uses_tr1 yes
+
+<header:public>
 curve_gfp.h
-gfp_element.cpp
 gfp_element.h
 gfp_modulus.h
-point_gfp.cpp
 point_gfp.h
-</add>
+</header:public>
+
+<source>
+curve_gfp.cpp
+gfp_element.cpp
+point_gfp.cpp
+</source>
 
 <requires>
 bigint

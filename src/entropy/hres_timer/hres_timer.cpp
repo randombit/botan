@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/hres_timer.h>
+#include <botan/internal/hres_timer.h>
 #include <botan/cpuid.h>
 #include <botan/time.h>
 

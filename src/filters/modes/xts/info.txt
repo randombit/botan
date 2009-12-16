@@ -1,13 +1,1 @@
 define XTS
-
-load_on auto
-
-<add>
-xts.cpp
-xts.h
-</add>
-
-<requires>
-block
-filters
-</requires>

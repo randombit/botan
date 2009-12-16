@@ -6,7 +6,7 @@
 */
 
 #include <botan/simd_engine.h>
-#include <botan/simd_32.h>
+#include <botan/internal/simd_32.h>
 #include <botan/cpuid.h>
 
 #if defined(BOTAN_HAS_SERPENT_SIMD)

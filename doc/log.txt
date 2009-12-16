@@ -1,5 +1,6 @@
 
 * 1.9.4-dev, ????-??-??
+ - New option --gen-amalgamation for creating a SQLite-style amalgamation
  - Greatly improve the Win32 installer
  - Several fixes for Visual C++ debug builds
 

@@ -13,6 +13,7 @@
 #include <botan/eac_asn_obj.h>
 #include <botan/pubkey_enums.h>
 #include <botan/pubkey.h>
+#include <botan/ecdsa.h>
 #include <botan/ecdsa_sig.h>
 #include <string>
 #include <assert.h>

@@ -1,12 +1,5 @@
 define SELFTESTS
 
-load_on auto
-
-<add>
-selftest.cpp
-selftest.h
-</add>
-
 <requires>
 algo_factory
 filters

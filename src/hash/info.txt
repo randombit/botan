@@ -1,9 +1,3 @@
-load_on auto
-
-<add>
-hash.h
-</add>
-
 <requires>
 buf_comp
 </requires>

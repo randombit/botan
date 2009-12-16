@@ -6,7 +6,7 @@
 */
 
 #include <botan/numthry.h>
-#include <botan/mp_core.h>
+#include <botan/internal/mp_core.h>
 #include <botan/rounding.h>
 #include <algorithm>
 

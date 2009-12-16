@@ -14,7 +14,6 @@
 
 #include <botan/botan.h>
 #include <botan/libstate.h>
-#include <botan/mp_types.h>
 
 using namespace Botan;
 
@@ -82,7 +81,6 @@ void test_types()
    passed = passed && test<Botan::u32bit>("u32bit", 32, false);
    passed = passed && test<Botan::u64bit>("u64bit", 64, false);
    passed = passed && test<Botan::s32bit>("s32bit", 31,  true);
-   passed = passed && test<Botan::word>("word", 0, false);
 
    if(!passed)
       std::cout << "Typedefs in include/types.h may be incorrect!\n";

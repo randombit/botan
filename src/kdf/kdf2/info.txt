@@ -1,12 +1,5 @@
 define KDF2
 
-load_on auto
-
-<add>
-kdf2.cpp
-kdf2.h
-</add>
-
 <requires>
 hash
 </requires>

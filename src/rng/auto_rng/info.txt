@@ -1,12 +1,5 @@
 define AUTO_SEEDING_RNG
 
-load_on auto
-
-<add>
-auto_rng.h
-auto_rng.cpp
-</add>
-
 <requires>
 hmac
 sha2

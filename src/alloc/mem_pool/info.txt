@@ -1,10 +1,3 @@
-load_on auto
-
-<add>
-mem_pool.cpp
-mem_pool.h
-</add>
-
 <requires>
 mutex
 </requires>

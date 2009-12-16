@@ -1,12 +1,5 @@
 define MGF1
 
-load_on dep
-
-<add>
-mgf1.h
-mgf1.cpp
-</add>
-
 <requires>
 hash
 </requires>

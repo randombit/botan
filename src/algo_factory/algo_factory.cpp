@@ -6,7 +6,7 @@
 */
 
 #include <botan/algo_factory.h>
-#include <botan/algo_cache.h>
+#include <botan/internal/algo_cache.h>
 #include <botan/stl_util.h>
 #include <botan/engine.h>
 #include <botan/exceptn.h>

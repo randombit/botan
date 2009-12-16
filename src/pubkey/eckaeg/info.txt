@@ -1,16 +1,5 @@
 define ECKAEG
 
-load_on auto
-
-<add>
-eckaeg.cpp
-eckaeg.h
-eckaeg_core.cpp
-eckaeg_core.h
-eckaeg_op.cpp
-eckaeg_op.h
-</add>
-
 <requires>
 alloc
 asn1

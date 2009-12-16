@@ -1,12 +1,5 @@
 define ADLER32
 
-load_on auto
-
-<add>
-adler32.cpp
-adler32.h
-</add>
-
 <requires>
 hash
 </requires>

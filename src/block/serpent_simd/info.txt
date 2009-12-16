@@ -5,3 +5,15 @@ serpent
 simd_32
 simd_engine
 </requires>
+
+<source>
+serp_simd.cpp
+</source>
+
+<header:public>
+serp_simd.h
+</header:public>
+
+<header:internal>
+serp_simd_sbox.h
+</header:internal>

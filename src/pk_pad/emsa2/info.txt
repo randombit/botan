@@ -1,12 +1,5 @@
 define EMSA2
 
-load_on auto
-
-<add>
-emsa2.h
-emsa2.cpp
-</add>
-
 <requires>
 hash
 hash_id

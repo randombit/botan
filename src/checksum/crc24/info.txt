@@ -1,12 +1,5 @@
 define CRC24
 
-load_on auto
-
-<add>
-crc24.cpp
-crc24.h
-</add>
-
 <requires>
 hash
 </requires>

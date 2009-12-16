@@ -4,29 +4,32 @@ uses_tr1 yes
 
 load_on auto
 
-<add>
-asn1_eac_str.cpp
-asn1_eac_tm.cpp
-ecdsa_sig.cpp
-ecdsa_sig.h
-cvc_ado.cpp
+<header:public>
 cvc_ado.h
-cvc_ca.cpp
 cvc_ca.h
-cvc_cert.cpp
 cvc_cert.h
 cvc_gen_cert.h
 cvc_key.h
-cvc_req.cpp
 cvc_req.h
-cvc_self.cpp
 cvc_self.h
 eac_asn_obj.h
 eac_obj.h
-signed_obj.cpp
-signed_obj.h
+ecdsa_sig.h
 freestore.h
-</add>
+signed_obj.h
+</header:public>
+
+<source>
+asn1_eac_str.cpp
+asn1_eac_tm.cpp
+ecdsa_sig.cpp
+cvc_ado.cpp
+cvc_ca.cpp
+cvc_cert.cpp
+cvc_req.cpp
+cvc_self.cpp
+signed_obj.cpp
+</source>
 
 <requires>
 asn1

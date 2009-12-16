@@ -65,14 +65,12 @@ class BuildConfigurationInformation(object):
         self.pyobject_dir = os.path.join(self.build_dir, 'python')
 
         self.include_dir = os.path.join(self.build_dir, 'include')
-        self.full_include_dir = os.path.join(self.include_dir, 'botan')
+        self.botan_include_dir = os.path.join(self.include_dir, 'botan')
+        self.internal_include_dir = os.path.join(self.botan_include_dir, 'internal')
 
-        all_files = flatten([mod.add for mod in modules])
-
-        self.headers = sorted(
-            [file for file in all_files if file.endswith('.h')])
-
-        self.sources = sorted(set(all_files) - set(self.headers))
+        self.sources = sorted(flatten([mod.sources() for mod in modules]))
+        self.public_headers = sorted(flatten([m.public_headers() for m in modules]))
+        self.internal_headers = sorted(flatten([m.internal_headers() for m in modules]))
 
         checks_dir = os.path.join(options.base_dir, 'checks')
 
@@ -104,7 +102,8 @@ class BuildConfigurationInformation(object):
     def build_dirs(self):
         dirs = [self.checkobj_dir,
                 self.libobj_dir,
-                self.full_include_dir]
+                self.botan_include_dir,
+                self.internal_include_dir]
         if self.use_boost_python:
             dirs.append(self.pyobject_dir)
         return dirs
@@ -179,7 +178,7 @@ def process_command_line(args):
 
     build_group.add_option('--gen-amalgamation', dest='gen_amalgamation',
                            default=False, action='store_true',
-                           help=SUPPRESS_HELP)
+                           help='generate amalgamation files')
 
     build_group.add_option('--with-tr1-implementation', metavar='WHICH',
                            dest='with_tr1', default=None,
@@ -298,6 +297,10 @@ Generic lexer function for info.txt and src/build-data files
 """
 def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
 
+    # Format as a nameable Python variable
+    def py_var(group):
+        return group.replace(':', '_')
+
     class LexerError(Exception):
         def __init__(self, msg, line):
             self.msg = msg
@@ -322,7 +325,7 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
     lexer.wordchars += '|:.<>/,-!+' # handle various funky chars in info.txt
 
     for group in allowed_groups:
-        to_obj.__dict__[group] = []
+        to_obj.__dict__[py_var(group)] = []
     for (key,val) in name_val_pairs.items():
         to_obj.__dict__[key] = val
 
@@ -347,7 +350,7 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
 
             token = lexer.get_token()
             while token != end_marker:
-                to_obj.__dict__[group].append(token)
+                to_obj.__dict__[py_var(group)].append(token)
                 token = lexer.get_token()
                 if token is None:
                     raise LexerError('Group "%s" not terminated' % (group),
@@ -371,21 +374,29 @@ class ModuleInfo(object):
     def __init__(self, infofile):
 
         lex_me_harder(infofile, self,
-                      ['add', 'requires', 'os', 'arch', 'cc', 'libs'],
+                      ['source', 'header:internal', 'header:public',
+                       'requires', 'os', 'arch', 'cc', 'libs'],
                       { 'load_on': 'auto',
                         'define': None,
                         'uses_tr1': 'false',
                         'need_isa': None,
                         'mp_bits': 0 })
 
-        if self.add == []:
+        if self.source == [] and \
+            self.header_internal == [] and \
+            self.header_public == []:
+
             for (dirpath, dirnames, filenames) in os.walk(self.lives_in):
                 if dirpath == self.lives_in:
-                    self.add = [filename for filename in filenames
-                                if (filename.endswith('.cpp') or
-                                filename.endswith('.h') or
-                                filename.endswith('.S'))
-                                and not filename.startswith('.')]
+                    for filename in filenames:
+                        if filename.startswith('.'):
+                            continue
+
+                        if filename.endswith('.cpp') or \
+                           filename.endswith('.S'):
+                            self.source.append(filename)
+                        elif filename.endswith('.h'):
+                            self.header_public.append(filename)
 
         # Coerce to more useful types
         def convert_lib_list(l):
@@ -409,7 +420,12 @@ class ModuleInfo(object):
             return os.path.join(os.path.split(self.lives_in)[0],
                                 *filename.split(':'))
 
-        self.add = map(add_dir_name, self.add)
+        self.source = map(add_dir_name, self.source)
+        self.header_internal = map(add_dir_name, self.header_internal)
+        self.header_public = map(add_dir_name, self.header_public)
+
+        if len([f for f in self.source if f.endswith('h')]) > 0:
+            print self.lives_in
 
         self.mp_bits = int(self.mp_bits)
 
@@ -417,6 +433,15 @@ class ModuleInfo(object):
             self.uses_tr1 = True
         else:
             self.uses_tr1 = False
+
+    def sources(self):
+        return self.source
+
+    def public_headers(self):
+        return self.header_public
+
+    def internal_headers(self):
+        return self.header_internal
 
     def compatible_cpu(self, archinfo, options):
 
@@ -883,7 +908,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'target_cpu_defines': make_cpp_macros(arch.defines(options)),
 
-        'include_files': makefile_list(build_config.headers),
+        'include_files': makefile_list(build_config.public_headers),
 
         'lib_objs': makefile_list(
             objectfile_list(build_config.sources,
@@ -1165,16 +1190,22 @@ def setup_build(build_config, options, template_vars):
         finally:
             f.close()
 
-    logging.debug('Linking %d header files in %s' % (
-        len(build_config.headers), build_config.full_include_dir))
+    logging.debug('Linking %d public header files in %s' % (
+        len(build_config.public_headers), build_config.botan_include_dir))
 
-    for header_file in build_config.headers:
-        portable_symlink(header_file, build_config.full_include_dir)
+    for header_file in build_config.public_headers:
+        portable_symlink(header_file, build_config.botan_include_dir)
+
+    logging.debug('Linking %d internal header files in %s' % (
+        len(build_config.internal_headers), build_config.internal_include_dir))
+
+    for header_file in build_config.internal_headers:
+        portable_symlink(header_file, build_config.internal_include_dir)
 
 """
 Generate Amalgamation
 """
-def generate_amalgamation(build_config, options, modules):
+def generate_amalgamation(build_config):
     def ending_with_suffix(suffix):
         def predicate(val):
             return val.endswith(suffix)
@@ -1200,69 +1231,94 @@ def generate_amalgamation(build_config, options, modules):
 
         return contents
 
-    header_bits = {}
+    botan_include = re.compile('#include <botan/(.*)>$')
+    std_include = re.compile('#include <([^/\.]+)>$')
 
-    for header in sorted(filter(ending_with_suffix('.h'),
-                                flatten([m.add for m in modules]))):
-        contents = open(header).readlines()
-        header_bits[os.path.basename(header)] = contents
+    class Amalgamation_Generator:
+        def __init__(self, input_list):
 
-    header_bits['build.h'] = open('build/build.h').readlines()
+            self.included_already = set()
+            self.all_std_includes = set()
 
-    for (name, contents) in header_bits.items():
-        header_bits[name] = strip_header_goop(contents)
+            self.file_contents = {}
+            for f in sorted(input_list):
+                contents = strip_header_goop(open(f).readlines())
+                self.file_contents[os.path.basename(f)] = contents
 
+            self.contents = ''
+            for name in self.file_contents:
+                self.contents += ''.join(list(self.header_contents(name)))
 
-    included_already = set()
-    all_std_includes = set()
+            self.header_includes = ''
+            for std_header in self.all_std_includes:
+                self.header_includes += '#include <%s>\n' % (std_header)
+            self.header_includes += '\n'
 
-    botan_include = re.compile('^#include <botan/(.*)>$')
-    std_include = re.compile('#include <([^/]+)>$')
+        def header_contents(self, name):
+            if name in self.included_already:
+                return
 
-    def header_contents(name):
-        if name not in included_already:
-            included_already.add(name)
+            self.included_already.add(name)
 
-            contents = header_bits[name]
+            if name not in self.file_contents:
+                return
 
-            for line in contents:
+            for line in self.file_contents[name]:
                 match = botan_include.search(line)
                 if match:
-                    for c in header_contents(match.group(1)):
+                    for c in self.header_contents(match.group(1)):
                         yield c
                 else:
                     match = std_include.search(line)
 
                     if match:
-                        all_std_includes.add(match.group(1))
+                        self.all_std_includes.add(match.group(1))
                     else:
                         yield line
-        return
 
     botan_all_h = open('botan_all.h', 'w')
 
+    pub_header_amalag = Amalgamation_Generator(build_config.public_headers)
 
-    final_contents = ''
-    for name in header_bits:
-        final_contents += ''.join(list(header_contents(name)))
-
-    botan_all_h.write("""/*
-* Botan Amalgamation
+    amalg_header = """/*
+* Botan %s Amalgamation
 * (C) 1999-2009 Jack Lloyd and others
 *
 * Distributed under the terms of the Botan license
 */
+""" % (build_config.version_string)
 
+    botan_all_h.write(amalg_header)
+
+    botan_all_h.write("""
 #ifndef BOTAN_AMALGAMATION_H__
 #define BOTAN_AMALGAMATION_H__
 
 """)
 
-    for std_header in all_std_includes:
-        botan_all_h.write('#include <%s>\n' % (std_header))
-    botan_all_h.write('\n')
+    botan_all_h.write(pub_header_amalag.header_includes)
+    botan_all_h.write(pub_header_amalag.contents)
+    botan_all_h.write("\n#endif\n")
 
-    botan_all_h.write(final_contents)
+    internal_header_amalag = Amalgamation_Generator(build_config.internal_headers)
+
+    botan_all_cpp = open('botan_all.cpp', 'w')
+
+    botan_all_cpp.write(amalg_header)
+
+    botan_all_cpp.write('#include "botan_all.h"\n')
+
+    botan_all_cpp.write(internal_header_amalag.header_includes)
+    botan_all_cpp.write(internal_header_amalag.contents)
+
+    for src in build_config.sources:
+        contents = open(src).readlines()
+        for line in contents:
+            if botan_include.search(line):
+                continue
+            else:
+                botan_all_cpp.write(line)
+
 
 """
 Main driver
@@ -1371,7 +1427,7 @@ def main(argv = None):
                                            options)
 
     build_config = BuildConfigurationInformation(options, modules_to_use)
-    build_config.headers.append(
+    build_config.public_headers.append(
         os.path.join(build_config.build_dir, 'build.h'))
 
     template_vars = create_template_vars(build_config, options,
@@ -1384,7 +1440,7 @@ def main(argv = None):
     setup_build(build_config, options, template_vars)
 
     if options.gen_amalgamation:
-        generate_amalgamation(build_config, options, modules_to_use)
+        generate_amalgamation(build_config)
 
     logging.info('Botan %s build setup is complete' % (
         build_config.version_string))

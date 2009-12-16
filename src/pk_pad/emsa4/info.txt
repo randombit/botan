@@ -1,12 +1,5 @@
 define EMSA4
 
-load_on auto
-
-<add>
-emsa4.h
-emsa4.cpp
-</add>
-
 <requires>
 hash
 kdf

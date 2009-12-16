@@ -1,12 +1,5 @@
 define KEYPAIR_TESTING
 
-load_on auto
-
-<add>
-keypair.cpp
-keypair.h
-</add>
-
 <requires>
 libstate
 </requires>

@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-namespace {
+namespace RIPEMD_128_F {
 
 /*
 * RIPEMD-128 F1 Function
@@ -60,6 +60,8 @@ inline void F4(u32bit& A, u32bit B, u32bit C, u32bit D,
 */
 void RIPEMD_128::compress_n(const byte input[], u32bit blocks)
    {
+   using namespace RIPEMD_128_F;
+
    const u32bit MAGIC2 = 0x5A827999, MAGIC3 = 0x6ED9EBA1,
                 MAGIC4 = 0x8F1BBCDC, MAGIC5 = 0x50A28BE6,
                 MAGIC6 = 0x5C4DD124, MAGIC7 = 0x6D703EF3;

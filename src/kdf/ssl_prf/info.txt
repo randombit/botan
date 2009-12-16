@@ -1,12 +1,5 @@
 define SSL_V3_PRF
 
-load_on auto
-
-<add>
-prf_ssl3.h
-prf_ssl3.cpp
-</add>
-
 <requires>
 md5
 sha1

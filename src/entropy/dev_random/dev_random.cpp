@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/es_dev.h>
+#include <botan/internal/dev_random.h>
 
 #include <sys/types.h>
 #include <sys/select.h>
