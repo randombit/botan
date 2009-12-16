@@ -6,7 +6,7 @@
 */
 
 #include <botan/misty1.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/parsing.h>
 
 namespace Botan {

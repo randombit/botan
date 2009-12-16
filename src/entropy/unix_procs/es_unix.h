@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * Unix Entropy Source
 */
-class BOTAN_DLL Unix_EntropySource : public EntropySource
+class Unix_EntropySource : public EntropySource
    {
    public:
       std::string name() const { return "Unix Entropy Source"; }

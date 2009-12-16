@@ -1,32 +1,32 @@
 #include <botan/botan.h>
 #include <stdio.h>
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_DEVICE)
-  #include <botan/es_dev.h>
+#if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
+  #include <botan/internal/dev_random.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_EGD)
-  #include <botan/es_egd.h>
+  #include <botan/internal/es_egd.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_UNIX)
-  #include <botan/es_unix.h>
+  #include <botan/internal/es_unix.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_BEOS)
-  #include <botan/es_beos.h>
+  #include <botan/internal/es_beos.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_CAPI)
-  #include <botan/es_capi.h>
+  #include <botan/internal/es_capi.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
-  #include <botan/es_win32.h>
+  #include <botan/internal/es_win32.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_FTW)
-  #include <botan/es_ftw.h>
+  #include <botan/internal/es_ftw.h>
 #endif
 
 
@@ -76,7 +76,7 @@ int main()
    {
    Botan::LibraryInitializer init;
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_DEVICE)
+#if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
    test_entropy_source(
       new Device_EntropySource(
          split_on("/dev/random:/dev/srandom:/dev/urandom", ':')

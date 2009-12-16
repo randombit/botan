@@ -8,7 +8,7 @@
 #ifndef BOTAN_ALGORITHM_FACTORY_H__
 #define BOTAN_ALGORITHM_FACTORY_H__
 
-#include <botan/mutex.h>
+#include <botan/types.h>
 #include <string>
 #include <vector>
 
@@ -25,6 +25,7 @@ class MessageAuthenticationCode;
 template<typename T> class Algorithm_Cache;
 
 class Engine;
+class Mutex_Factory;
 
 /**
 * Algorithm Factory

@@ -92,7 +92,8 @@ class BOTAN_DLL EC_Domain_Params
       std::string m_oid;
    };
 
-bool operator==(EC_Domain_Params const& lhs, EC_Domain_Params const& rhs);
+bool BOTAN_DLL operator==(EC_Domain_Params const& lhs,
+                          EC_Domain_Params const& rhs);
 
 inline bool operator!=(const EC_Domain_Params& lhs,
                        const EC_Domain_Params& rhs)
@@ -102,10 +103,12 @@ inline bool operator!=(const EC_Domain_Params& lhs,
 
 enum EC_dompar_enc { ENC_EXPLICIT = 0, ENC_IMPLICITCA = 1, ENC_OID = 2 };
 
-SecureVector<byte> encode_der_ec_dompar(EC_Domain_Params const& dom_pars,
-                                        EC_dompar_enc enc_type);
+SecureVector<byte>
+BOTAN_DLL encode_der_ec_dompar(EC_Domain_Params const& dom_pars,
+                               EC_dompar_enc enc_type);
 
-EC_Domain_Params decode_ber_ec_dompar(SecureVector<byte> const& encoded);
+EC_Domain_Params
+BOTAN_DLL decode_ber_ec_dompar(SecureVector<byte> const& encoded);
 
 /**
 * Factory function, the only way to obtain EC domain parameters with
@@ -115,7 +118,7 @@ EC_Domain_Params decode_ber_ec_dompar(SecureVector<byte> const& encoded);
 * @param oid the oid of the demanded EC domain parameters
 * @result the EC domain parameters associated with the OID
 */
-EC_Domain_Params get_EC_Dom_Pars_by_oid(std::string oid);
+EC_Domain_Params BOTAN_DLL get_EC_Dom_Pars_by_oid(std::string oid);
 
 }
 

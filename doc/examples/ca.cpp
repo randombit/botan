@@ -15,7 +15,7 @@
 
 #include <botan/botan.h>
 #include <botan/x509_ca.h>
-#include <botan/timer.h>
+#include <botan/time.h>
 using namespace Botan;
 
 #include <iostream>

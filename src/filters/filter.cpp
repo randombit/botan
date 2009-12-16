@@ -6,7 +6,7 @@
 */
 
 #include <botan/filter.h>
-#include <botan/secqueue.h>
+#include <botan/internal/secqueue.h>
 #include <botan/exceptn.h>
 
 namespace Botan {

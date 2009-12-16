@@ -6,8 +6,8 @@
 */
 
 #include <botan/turing.h>
-#include <botan/loadstor.h>
-#include <botan/xor_buf.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 

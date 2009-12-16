@@ -8,7 +8,7 @@
 #include <botan/selftest.h>
 #include <botan/filters.h>
 #include <botan/def_eng.h>
-#include <botan/stl_util.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

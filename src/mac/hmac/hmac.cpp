@@ -7,7 +7,7 @@
 */
 
 #include <botan/hmac.h>
-#include <botan/xor_buf.h>
+#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 

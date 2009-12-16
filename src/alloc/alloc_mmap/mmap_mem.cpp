@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/mmap_mem.h>
+#include <botan/internal/mmap_mem.h>
 #include <cstring>
 
 #include <sys/types.h>
@@ -26,7 +26,7 @@ namespace {
 /*
 * MemoryMapping_Allocator Exception
 */
-class MemoryMapping_Failed : public Exception
+class BOTAN_DLL MemoryMapping_Failed : public Exception
    {
    public:
       MemoryMapping_Failed(const std::string& msg) :

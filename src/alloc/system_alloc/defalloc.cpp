@@ -5,9 +5,9 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/defalloc.h>
+#include <botan/internal/defalloc.h>
+#include <botan/internal/mlock.h>
 #include <botan/libstate.h>
-#include <botan/mlock.h>
 #include <cstdlib>
 #include <cstring>
 

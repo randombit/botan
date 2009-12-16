@@ -10,7 +10,7 @@
 
 #if defined(BOTAN_TARGET_CPU_HAS_ALTIVEC)
 
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/cpuid.h>
 
 #include <altivec.h>

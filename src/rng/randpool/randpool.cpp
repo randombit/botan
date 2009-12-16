@@ -6,9 +6,9 @@
 */
 
 #include <botan/randpool.h>
-#include <botan/loadstor.h>
-#include <botan/xor_buf.h>
-#include <botan/stl_util.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/xor_buf.h>
+#include <botan/internal/stl_util.h>
 #include <algorithm>
 
 namespace Botan {

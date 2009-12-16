@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/mux_pthr.h>
+#include <botan/internal/mux_pthr.h>
 #include <botan/exceptn.h>
 
 #ifndef _POSIX_C_SOURCE

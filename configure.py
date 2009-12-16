@@ -1255,6 +1255,8 @@ def generate_amalgamation(build_config):
             self.header_includes += '\n'
 
         def header_contents(self, name):
+            name = name.replace('internal/', '')
+
             if name in self.included_already:
                 return
 
@@ -1300,7 +1302,9 @@ def generate_amalgamation(build_config):
     botan_all_h.write(pub_header_amalag.contents)
     botan_all_h.write("\n#endif\n")
 
-    internal_header_amalag = Amalgamation_Generator(build_config.internal_headers)
+    internal_header_amalag = Amalgamation_Generator(
+        filter(lambda s: s.find('asm_macr_') == -1,
+               build_config.internal_headers))
 
     botan_all_cpp = open('botan_all.cpp', 'w')
 
@@ -1311,7 +1315,11 @@ def generate_amalgamation(build_config):
     botan_all_cpp.write(internal_header_amalag.header_includes)
     botan_all_cpp.write(internal_header_amalag.contents)
 
+
     for src in build_config.sources:
+        if src.endswith('.S'):
+            continue
+
         contents = open(src).readlines()
         for line in contents:
             if botan_include.search(line):

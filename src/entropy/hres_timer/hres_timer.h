@@ -15,7 +15,7 @@ namespace Botan {
 /*
 * High Resolution Timestamp Source
 */
-class BOTAN_DLL High_Resolution_Timestamp : public EntropySource
+class High_Resolution_Timestamp : public EntropySource
    {
    public:
       std::string name() const { return "High Resolution Timestamp"; }

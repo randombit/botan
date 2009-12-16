@@ -8,14 +8,14 @@
 #ifndef BOTAN_MMAP_ALLOCATOR_H__
 #define BOTAN_MMAP_ALLOCATOR_H__
 
-#include <botan/mem_pool.h>
+#include <botan/internal/mem_pool.h>
 
 namespace Botan {
 
 /*
 * Memory Mapping Allocator
 */
-class BOTAN_DLL MemoryMapping_Allocator : public Pooling_Allocator
+class MemoryMapping_Allocator : public Pooling_Allocator
    {
    public:
       MemoryMapping_Allocator(Mutex* m) : Pooling_Allocator(m) {}

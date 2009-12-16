@@ -7,7 +7,7 @@
 
 #include <botan/emsa4.h>
 #include <botan/mgf1.h>
-#include <botan/bit_ops.h>
+#include <botan/internal/bit_ops.h>
 
 namespace Botan {
 

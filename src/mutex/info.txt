@@ -1,1 +1,5 @@
 define MUTEX_WRAPPERS
+
+<header:internal>
+mutex.h
+</header:internal>

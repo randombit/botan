@@ -10,7 +10,7 @@
 #define BOTAN_BYTE_SWAP_H__
 
 #include <botan/types.h>
-#include <botan/rotate.h>
+#include <botan/internal/rotate.h>
 
 namespace Botan {
 

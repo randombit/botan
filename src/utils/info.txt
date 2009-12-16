@@ -13,23 +13,25 @@ ui.cpp
 version.cpp
 </source>
 
-<header:public>
+<header:internal>
 bit_ops.h
 bswap.h
-charset.h
-cpuid.h
 loadstor.h
 mlock.h
-parsing.h
 prefetch.h
 rotate.h
 rounding.h
 stl_util.h
-time.h
 xor_buf.h
+</header:internal>
 
+<header:public>
+charset.h
+cpuid.h
 exceptn.h
 mem_ops.h
+parsing.h
+time.h
 types.h
 ui.h
 version.h

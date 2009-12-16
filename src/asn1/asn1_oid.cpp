@@ -8,7 +8,7 @@
 #include <botan/asn1_oid.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/bit_ops.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/parsing.h>
 
 namespace Botan {

@@ -6,9 +6,9 @@
 */
 
 #include <botan/safer_sk.h>
-#include <botan/rotate.h>
+#include <botan/internal/rotate.h>
 #include <botan/parsing.h>
-#include <botan/rotate.h>
+#include <botan/internal/rotate.h>
 
 namespace Botan {
 

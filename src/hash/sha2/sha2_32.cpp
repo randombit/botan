@@ -7,8 +7,8 @@
 */
 
 #include <botan/sha2_32.h>
-#include <botan/loadstor.h>
-#include <botan/rotate.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/rotate.h>
 
 namespace Botan {
 

@@ -16,9 +16,11 @@ warning_flags "-W -Wall"
 
 lib_opt_flags "-O3"
 check_opt_flags "-O2"
-shared_flags "-fPIC"
+shared_flags "-fPIC -fvisibility=hidden"
 debug_flags -g
 no_debug_flags "-finline-functions"
+
+dll_import_flags '__attribute__((visibility("default")))'
 
 makefile_style unix
 

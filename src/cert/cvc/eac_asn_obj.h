@@ -226,14 +226,14 @@ class BOTAN_DLL ASN1_Chr : public ASN1_EAC_String
 /*
 * Comparison Operations
 */
-bool operator==(const EAC_Time&, const EAC_Time&);
-bool operator!=(const EAC_Time&, const EAC_Time&);
-bool operator<=(const EAC_Time&, const EAC_Time&);
-bool operator>=(const EAC_Time&, const EAC_Time&);
-bool operator>(const EAC_Time&, const EAC_Time&);
-bool operator<(const EAC_Time&, const EAC_Time&);
+bool BOTAN_DLL operator==(const EAC_Time&, const EAC_Time&);
+bool BOTAN_DLL operator!=(const EAC_Time&, const EAC_Time&);
+bool BOTAN_DLL operator<=(const EAC_Time&, const EAC_Time&);
+bool BOTAN_DLL operator>=(const EAC_Time&, const EAC_Time&);
+bool BOTAN_DLL operator>(const EAC_Time&, const EAC_Time&);
+bool BOTAN_DLL operator<(const EAC_Time&, const EAC_Time&);
 
-bool operator==(const ASN1_EAC_String&, const ASN1_EAC_String&);
+bool BOTAN_DLL operator==(const ASN1_EAC_String&, const ASN1_EAC_String&);
 inline bool operator!=(const ASN1_EAC_String& lhs, const ASN1_EAC_String& rhs)
    {
    return !(lhs == rhs);

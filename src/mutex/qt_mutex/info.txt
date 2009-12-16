@@ -2,6 +2,14 @@ define MUTEX_QT
 
 load_on request
 
+<source>
+mux_qt.cpp
+</source>
+
+<header:internal>
+mux_qt.h
+</header:internal>
+
 # I think we want to always use qt-mt, not qt -- not much point in supporting
 # mutexes in a single threaded application, after all.
 <libs>

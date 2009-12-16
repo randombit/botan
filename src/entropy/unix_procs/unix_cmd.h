@@ -31,7 +31,7 @@ struct Unix_Program
 /**
 * Command Output DataSource
 */
-class BOTAN_DLL DataSource_Command : public DataSource
+class DataSource_Command : public DataSource
    {
    public:
       u32bit read(byte[], u32bit);

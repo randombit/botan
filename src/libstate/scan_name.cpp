@@ -1,6 +1,6 @@
 /**
 * SCAN Name Abstraction
-* (C) 2008 Jack Lloyd
+* (C) 2008-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -8,6 +8,7 @@
 #include <botan/scan_name.h>
 #include <botan/parsing.h>
 #include <botan/libstate.h>
+#include <botan/exceptn.h>
 #include <stdexcept>
 
 namespace Botan {

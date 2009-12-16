@@ -1,6 +1,12 @@
 define ALLOC_MMAP
 
-load_on auto
+<source>
+mmap_mem.cpp
+</source>
+
+<header:internal>
+mmap_mem.h
+</header:internal>
 
 <os>
 linux

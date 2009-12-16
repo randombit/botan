@@ -48,9 +48,9 @@ namespace CVC_EAC {
 * @result the self signed certificate
 */
 
-EAC1_1_CVC create_self_signed_cert(Private_Key const& key,
-                                   EAC1_1_CVC_Options const& opts,
-                                   RandomNumberGenerator& rng);
+EAC1_1_CVC BOTAN_DLL create_self_signed_cert(Private_Key const& key,
+                                             EAC1_1_CVC_Options const& opts,
+                                             RandomNumberGenerator& rng);
 /**
 * Create a CVC request. The key encoding will be according to the provided private key.
 * @param priv_key the private key associated with the requesting entity
@@ -61,10 +61,10 @@ EAC1_1_CVC create_self_signed_cert(Private_Key const& key,
 * @param rng the rng to use
 * @result the new request
 */
-EAC1_1_Req create_cvc_req(Private_Key const& priv_key,
-                          ASN1_Chr const& chr,
-                          std::string const& hash_alg,
-                          RandomNumberGenerator& rng);
+EAC1_1_Req BOTAN_DLL create_cvc_req(Private_Key const& priv_key,
+                                    ASN1_Chr const& chr,
+                                    std::string const& hash_alg,
+                                    RandomNumberGenerator& rng);
 
 /**
 * Create an ADO from a request object.
@@ -74,15 +74,16 @@ EAC1_1_Req create_cvc_req(Private_Key const& priv_key,
 * CHR of the entity associated with the provided private key
 * @param rng the rng to use
 */
-EAC1_1_ADO create_ado_req(Private_Key const& priv_key,
-                          EAC1_1_Req const& req,
-                          ASN1_Car const& car,
-                          RandomNumberGenerator& rng);
+EAC1_1_ADO BOTAN_DLL create_ado_req(Private_Key const& priv_key,
+                                    EAC1_1_Req const& req,
+                                    ASN1_Car const& car,
+                                    RandomNumberGenerator& rng);
 }
 /**
-* This namespace represents EAC 1.1 CVC convenience functions following the specific german
-* requirements.
+* This namespace represents EAC 1.1 CVC convenience functions
+* following the specific german requirements.
 */
+
 namespace DE_EAC {
 
 /**
@@ -99,13 +100,13 @@ namespace DE_EAC {
 * @param rng the rng to use
 * @result the CVCA certificate created
 */
-EAC1_1_CVC create_cvca(Private_Key const& priv_key,
-                       std::string const& hash,
-                       ASN1_Car const& car,
-                       bool iris,
-                       bool fingerpr,
-                       u32bit cvca_validity_months,
-                       RandomNumberGenerator& rng);
+EAC1_1_CVC BOTAN_DLL create_cvca(Private_Key const& priv_key,
+                                 std::string const& hash,
+                                 ASN1_Car const& car,
+                                 bool iris,
+                                 bool fingerpr,
+                                 u32bit cvca_validity_months,
+                                 RandomNumberGenerator& rng);
 
 /**
 * Create a link certificate between two CVCA certificates. The key
@@ -117,10 +118,10 @@ EAC1_1_CVC create_cvca(Private_Key const& priv_key,
 * the holder of the link certificate
 * @param rng a random number generator
 */
-EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
-                     Private_Key const& priv_key,
-                     EAC1_1_CVC const& to_be_signed,
-                     RandomNumberGenerator& rng);
+EAC1_1_CVC BOTAN_DLL link_cvca(EAC1_1_CVC const& signer,
+                               Private_Key const& priv_key,
+                               EAC1_1_CVC const& to_be_signed,
+                               RandomNumberGenerator& rng);
 
 /**
 * Create a CVC request. The key encoding will be implicitCA.
@@ -132,10 +133,10 @@ EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
 * @param rng a random number generator
 * @result the new request
 */
-EAC1_1_Req create_cvc_req(Private_Key const& priv_key,
-                          ASN1_Chr const& chr,
-                          std::string const& hash_alg,
-                          RandomNumberGenerator& rng);
+EAC1_1_Req BOTAN_DLL create_cvc_req(Private_Key const& priv_key,
+                                    ASN1_Chr const& chr,
+                                    std::string const& hash_alg,
+                                    RandomNumberGenerator& rng);
 
 /**
 * Sign a CVC request.
@@ -151,15 +152,15 @@ EAC1_1_Req create_cvc_req(Private_Key const& priv_key,
 * @result the new certificate
 *
 **/
-EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
-                        Private_Key const& priv_key,
-                        EAC1_1_Req const& req,
-                        u32bit seqnr,
-                        u32bit seqnr_len,
-                        bool domestic,
-                        u32bit dvca_validity_months,
-                        u32bit ca_is_validity_months,
-                        RandomNumberGenerator& rng);
+EAC1_1_CVC BOTAN_DLL sign_request(EAC1_1_CVC const& signer_cert,
+                                  Private_Key const& priv_key,
+                                  EAC1_1_Req const& req,
+                                  u32bit seqnr,
+                                  u32bit seqnr_len,
+                                  bool domestic,
+                                  u32bit dvca_validity_months,
+                                  u32bit ca_is_validity_months,
+                                  RandomNumberGenerator& rng);
 }
 
 }

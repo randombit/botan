@@ -11,7 +11,7 @@
 #include <botan/ber_dec.h>
 #include <botan/oids.h>
 #include <botan/libstate.h>
-#include <botan/bit_ops.h>
+#include <botan/internal/bit_ops.h>
 #include <algorithm>
 #include <memory>
 

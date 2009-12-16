@@ -15,7 +15,7 @@ namespace Botan {
 /*
 * Mutex Base Class
 */
-class BOTAN_DLL Mutex
+class Mutex
    {
    public:
       virtual void lock() = 0;
@@ -26,7 +26,7 @@ class BOTAN_DLL Mutex
 /*
 * Mutex Factory
 */
-class BOTAN_DLL Mutex_Factory
+class Mutex_Factory
    {
    public:
       virtual Mutex* make() = 0;
@@ -36,7 +36,7 @@ class BOTAN_DLL Mutex_Factory
 /*
 * Mutex Holding Class
 */
-class BOTAN_DLL Mutex_Holder
+class Mutex_Holder
    {
    public:
       Mutex_Holder(Mutex* m) : mux(m)

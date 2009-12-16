@@ -8,14 +8,14 @@
 #ifndef BOTAN_MUTEX_PTHREAD_H__
 #define BOTAN_MUTEX_PTHREAD_H__
 
-#include <botan/mutex.h>
+#include <botan/internal/mutex.h>
 
 namespace Botan {
 
 /*
 * Pthread Mutex Factory
 */
-class BOTAN_DLL Pthread_Mutex_Factory : public Mutex_Factory
+class Pthread_Mutex_Factory : public Mutex_Factory
    {
    public:
       Mutex* make();

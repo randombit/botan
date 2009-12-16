@@ -8,8 +8,8 @@
 #ifndef BOTAN_ALGORITHM_CACHE_TEMPLATE_H__
 #define BOTAN_ALGORITHM_CACHE_TEMPLATE_H__
 
-#include <botan/mutex.h>
-#include <botan/stl_util.h>
+#include <botan/internal/mutex.h>
+#include <botan/internal/stl_util.h>
 #include <string>
 #include <vector>
 #include <map>

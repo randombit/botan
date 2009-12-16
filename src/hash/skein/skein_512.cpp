@@ -6,7 +6,7 @@
 */
 
 #include <botan/skein_512.h>
-#include <botan/loadstor.h>
+#include <botan/internal/loadstor.h>
 #include <botan/parsing.h>
 #include <botan/exceptn.h>
 #include <algorithm>

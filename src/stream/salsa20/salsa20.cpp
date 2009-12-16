@@ -6,8 +6,8 @@
 */
 
 #include <botan/salsa20.h>
-#include <botan/xor_buf.h>
-#include <botan/loadstor.h>
+#include <botan/internal/xor_buf.h>
+#include <botan/internal/loadstor.h>
 
 namespace Botan {
 

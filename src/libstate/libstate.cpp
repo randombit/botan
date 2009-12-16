@@ -6,27 +6,27 @@
 */
 
 #include <botan/libstate.h>
-#include <botan/init.h>
-#include <botan/selftest.h>
-#include <botan/engine.h>
-#include <botan/stl_util.h>
-#include <botan/mutex.h>
-#include <botan/mux_noop.h>
 #include <botan/charset.h>
-#include <botan/defalloc.h>
 #include <botan/def_eng.h>
+#include <botan/engine.h>
+#include <botan/init.h>
+#include <botan/internal/mutex.h>
+#include <botan/selftest.h>
+#include <botan/internal/defalloc.h>
+#include <botan/internal/mux_noop.h>
+#include <botan/internal/stl_util.h>
 #include <algorithm>
 
 #if defined(BOTAN_HAS_MUTEX_PTHREAD)
-  #include <botan/mux_pthr.h>
+  #include <botan/internal/mux_pthr.h>
 #elif defined(BOTAN_HAS_MUTEX_WIN32)
-  #include <botan/mux_win32.h>
+  #include <botan/internal/mux_win32.h>
 #elif defined(BOTAN_HAS_MUTEX_QT)
-  #include <botan/mux_qt.h>
+  #include <botan/internal/mux_qt.h>
 #endif
 
 #if defined(BOTAN_HAS_ALLOC_MMAP)
-  #include <botan/mmap_mem.h>
+  #include <botan/internal/mmap_mem.h>
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_IA32_ASSEMBLER)

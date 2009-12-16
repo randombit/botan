@@ -6,7 +6,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/mux_win32.h>
+#include <botan/internal/mux_win32.h>
 #include <windows.h>
 
 namespace Botan {

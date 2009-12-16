@@ -19,16 +19,23 @@ class Row_Encryptor
       Row_Encryptor(const std::string& passphrase,
                     RandomNumberGenerator& rng);
 
+      Row_Encryptor(const std::string& passphrase,
+                    const MemoryRegion<byte>& salt);
+
       std::string encrypt(const std::string& input,
                           const MemoryRegion<byte>& salt);
 
       std::string decrypt(const std::string& input,
                           const MemoryRegion<byte>& salt);
 
+      SecureVector<byte> get_s2k_salt() const { return s2k_salt; }
    private:
+      void init(const std::string& passphrase);
+
       Row_Encryptor(const Row_Encryptor&) {}
       Row_Encryptor& operator=(const Row_Encryptor&) { return (*this); }
 
+      SecureVector<byte> s2k_salt;
       Pipe enc_pipe, dec_pipe;
       EAX_Encryption* eax_enc; // owned by enc_pipe
       EAX_Decryption* eax_dec; // owned by dec_pipe;
@@ -37,11 +44,24 @@ class Row_Encryptor
 Row_Encryptor::Row_Encryptor(const std::string& passphrase,
                              RandomNumberGenerator& rng)
    {
+   s2k_salt.resize(10); // 80 bits
+   rng.randomize(&s2k_salt[0], s2k_salt.size());
+   init(passphrase);
+   }
+
+Row_Encryptor::Row_Encryptor(const std::string& passphrase,
+                             const MemoryRegion<byte>& salt)
+   {
+   s2k_salt = salt;
+   init(passphrase);
+   }
+
+void Row_Encryptor::init(const std::string& passphrase)
+   {
    std::auto_ptr<S2K> s2k(get_s2k("PBKDF2(SHA-160)"));
 
    s2k->set_iterations(10000);
-
-   s2k->new_random_salt(rng, 10); // 10 bytes == 80 bits
+   s2k->change_salt(&s2k_salt[0], s2k_salt.size());
 
    SecureVector<byte> key = s2k->derive_key(32, passphrase).bits_of();
 
@@ -67,11 +87,7 @@ std::string Row_Encryptor::encrypt(const std::string& input,
                                    const MemoryRegion<byte>& salt)
    {
    eax_enc->set_iv(salt);
-
-   enc_pipe.start_msg();
-   enc_pipe.write(input);
-   enc_pipe.end_msg();
-
+   enc_pipe.process_msg(input);
    return enc_pipe.read_all_as_string(Pipe::LAST_MESSAGE);
    }
 
@@ -79,11 +95,7 @@ std::string Row_Encryptor::decrypt(const std::string& input,
                                    const MemoryRegion<byte>& salt)
    {
    eax_dec->set_iv(salt);
-
-   dec_pipe.start_msg();
-   dec_pipe.write(input);
-   dec_pipe.end_msg();
-
+   dec_pipe.process_msg(input);
    return dec_pipe.read_all_as_string(Pipe::LAST_MESSAGE);
    }
 
@@ -91,28 +103,25 @@ std::string Row_Encryptor::decrypt(const std::string& input,
   Test code follows:
 */
 
-#include <botan/loadstor.h>
-
 int main()
    {
    Botan::LibraryInitializer init;
 
    AutoSeeded_RNG rng;
 
+   const std::string secret_passphrase = "secret passphrase";
+
    Row_Encryptor encryptor("secret passphrase", rng);
 
    std::vector<std::string> original_inputs;
 
-   for(u32bit i = 0; i != 15000; ++i)
+   for(u32bit i = 0; i != 50000; ++i)
       {
       std::ostringstream out;
 
-      // This will actually generate variable length inputs (when
-      // there are leading 0s, which are skipped), which is good
-      // since it assures performance is OK across a mix of lengths
-      // TODO: Maybe randomize the length slightly?
+      u32bit output_bytes = rng.next_byte();
 
-      for(u32bit j = 0; j != 32; ++j)
+      for(u32bit j = 0; j != output_bytes; ++j)
          out << std::hex << (int)rng.next_byte();
 
       original_inputs.push_back(out.str());
@@ -124,7 +133,9 @@ int main()
    for(u32bit i = 0; i != original_inputs.size(); ++i)
       {
       std::string input = original_inputs[i];
-      store_le(i, salt);
+
+      for(u32bit j = 0; j != 4; ++j)
+         salt[j] = (i >> 8) & 0xFF;
 
       encrypted_values.push_back(encryptor.encrypt(input, salt));
       }
@@ -132,7 +143,10 @@ int main()
    for(u32bit i = 0; i != encrypted_values.size(); ++i)
       {
       std::string ciphertext = encrypted_values[i];
-      store_le(i, salt); // NOTE: same salt value as previous loop (index value)
+
+      // NOTE: same salt value as previous loop (index value)
+      for(u32bit j = 0; j != 4; ++j)
+         salt[j] = (i >> 8) & 0xFF;
 
       std::string output = encryptor.decrypt(ciphertext, salt);
 
@@ -140,4 +154,13 @@ int main()
          std::cout << "BOOM " << i << "\n";
       }
 
+   Row_Encryptor test_s2k_salt_copy(secret_passphrase,
+                                    encryptor.get_s2k_salt());
+
+   salt.clear(); // all-0
+   std::string test = test_s2k_salt_copy.decrypt(encrypted_values[0], salt);
+   if(test != original_inputs[0])
+      std::cout << "S2K salt copy failed to decrypt properly\n";
+
+   return 0;
    }

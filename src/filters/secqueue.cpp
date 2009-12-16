@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/secqueue.h>
+#include <botan/internal/secqueue.h>
 #include <algorithm>
 
 namespace Botan {

@@ -1,3 +1,12 @@
+
+<source>
+mem_pool.cpp
+</source>
+
+<header:internal>
+mem_pool.h
+</header:internal>
+
 <requires>
 mutex
 </requires>
