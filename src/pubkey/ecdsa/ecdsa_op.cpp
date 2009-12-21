@@ -9,9 +9,6 @@
 #include <botan/ecdsa_op.h>
 #include <botan/numthry.h>
 
-#include <stdio.h>
-#include <iostream>
-
 namespace Botan {
 
 Default_ECDSA_Op::Default_ECDSA_Op(const EC_Domain_Params& domain,

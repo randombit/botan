@@ -14,8 +14,6 @@
 #include <botan/time.h>
 #include <memory>
 
-#include <iostream>
-
 namespace Botan {
 
 namespace {
