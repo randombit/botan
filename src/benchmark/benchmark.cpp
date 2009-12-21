@@ -14,6 +14,8 @@
 #include <botan/time.h>
 #include <memory>
 
+#include <iostream>
+
 namespace Botan {
 
 namespace {
@@ -26,15 +28,15 @@ std::pair<u64bit, u64bit> bench_buf_comp(BufferedComputation* buf_comp,
                                          const byte buf[], u32bit buf_len)
    {
    u64bit reps = 0;
-
-   const u64bit start = get_nanoseconds_clock();
    u64bit nanoseconds_used = 0;
 
    while(nanoseconds_used < nanoseconds_max)
       {
+      const u64bit start = get_nanoseconds_clock();
       buf_comp->update(buf, buf_len);
+      nanoseconds_used += get_nanoseconds_clock() - start;
+
       ++reps;
-      nanoseconds_used = get_nanoseconds_clock() - start;
       }
 
    return std::make_pair(reps * buf_len, nanoseconds_used);
@@ -51,18 +53,17 @@ bench_block_cipher(BlockCipher* block_cipher,
    const u32bit in_blocks = buf_len / block_cipher->BLOCK_SIZE;
 
    u64bit reps = 0;
-
-   const u64bit start = get_nanoseconds_clock();
    u64bit nanoseconds_used = 0;
 
    block_cipher->set_key(buf, block_cipher->MAXIMUM_KEYLENGTH);
 
    while(nanoseconds_used < nanoseconds_max)
       {
+      const u64bit start = get_nanoseconds_clock();
       block_cipher->encrypt_n(buf, buf, in_blocks);
+      nanoseconds_used += get_nanoseconds_clock() - start;
 
       ++reps;
-      nanoseconds_used = get_nanoseconds_clock() - start;
       }
 
    return std::make_pair(reps * in_blocks * block_cipher->BLOCK_SIZE,
@@ -78,17 +79,17 @@ bench_stream_cipher(StreamCipher* stream_cipher,
                     byte buf[], u32bit buf_len)
    {
    u64bit reps = 0;
-
-   const u64bit start = get_nanoseconds_clock();
    u64bit nanoseconds_used = 0;
 
    stream_cipher->set_key(buf, stream_cipher->MAXIMUM_KEYLENGTH);
 
    while(nanoseconds_used < nanoseconds_max)
       {
+      const u64bit start = get_nanoseconds_clock();
       stream_cipher->cipher1(buf, buf_len);
+      nanoseconds_used += get_nanoseconds_clock() - start;
+
       ++reps;
-      nanoseconds_used = get_nanoseconds_clock() - start;
       }
 
    return std::make_pair(reps * buf_len, nanoseconds_used);

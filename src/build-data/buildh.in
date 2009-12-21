@@ -44,7 +44,7 @@
   #define BOTAN_USE_GCC_INLINE_ASM 1
 #endif
 
-#ifndef BOTAN_USE_GCC_INLINE_ASM
+#if !defined(BOTAN_USE_GCC_INLINE_ASM)
   #define BOTAN_USE_GCC_INLINE_ASM 0
 #endif
 

@@ -6,7 +6,7 @@
 */
 
 #include <botan/hmac_rng.h>
-#include <botan/internal/loadstor.h>
+#include <botan/loadstor.h>
 #include <botan/internal/xor_buf.h>
 #include <botan/internal/stl_util.h>
 #include <algorithm>

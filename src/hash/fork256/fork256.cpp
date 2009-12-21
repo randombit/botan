@@ -6,8 +6,8 @@
 */
 
 #include <botan/fork256.h>
-#include <botan/internal/loadstor.h>
-#include <botan/internal/rotate.h>
+#include <botan/loadstor.h>
+#include <botan/rotate.h>
 
 namespace Botan {
 

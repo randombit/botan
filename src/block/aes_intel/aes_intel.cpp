@@ -6,7 +6,7 @@
 */
 
 #include <botan/aes_intel.h>
-#include <botan/internal/loadstor.h>
+#include <botan/loadstor.h>
 #include <wmmintrin.h>
 
 namespace Botan {

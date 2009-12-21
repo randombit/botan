@@ -9,7 +9,7 @@
 */
 
 #include <botan/sha1_sse2.h>
-#include <botan/internal/rotate.h>
+#include <botan/rotate.h>
 #include <emmintrin.h>
 
 namespace Botan {

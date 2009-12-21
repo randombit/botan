@@ -6,7 +6,7 @@
 */
 
 #include <botan/skipjack.h>
-#include <botan/internal/loadstor.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 

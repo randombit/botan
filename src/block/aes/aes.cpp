@@ -6,7 +6,8 @@
 */
 
 #include <botan/aes.h>
-#include <botan/internal/loadstor.h>
+#include <botan/loadstor.h>
+#include <botan/rotate.h>
 
 namespace Botan {
 

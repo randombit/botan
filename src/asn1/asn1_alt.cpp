@@ -13,7 +13,7 @@
 #include <botan/internal/stl_util.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
-#include <botan/internal/loadstor.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 

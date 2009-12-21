@@ -15,22 +15,22 @@ version.cpp
 
 <header:internal>
 bit_ops.h
-bswap.h
-loadstor.h
 mlock.h
 prefetch.h
-rotate.h
 rounding.h
 stl_util.h
 xor_buf.h
 </header:internal>
 
 <header:public>
+bswap.h
 charset.h
 cpuid.h
 exceptn.h
+loadstor.h
 mem_ops.h
 parsing.h
+rotate.h
 time.h
 types.h
 ui.h

@@ -7,7 +7,7 @@
 
 #include <botan/mdx_hash.h>
 #include <botan/exceptn.h>
-#include <botan/internal/loadstor.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 

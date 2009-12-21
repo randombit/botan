@@ -8,7 +8,7 @@
 #include <botan/serp_simd.h>
 #include <botan/internal/serp_simd_sbox.h>
 #include <botan/internal/simd_32.h>
-#include <botan/internal/loadstor.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 
