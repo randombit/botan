@@ -5,9 +5,9 @@
 
 #include <botan/botan.h>
 #include <botan/rsa.h>
-#include <botan/time.h>
 #include <botan/x509self.h>
 #include <botan/x509_ca.h>
+#include <chrono>
 
 using namespace Botan;
 
@@ -71,14 +71,14 @@ void save_pair(const std::string& name,
    key_out.close();
    }
 
+typedef std::chrono::duration<int, std::ratio<31556926>> years;
+
 int main()
    {
-   const u32bit seconds_in_a_year = 31556926;
-
-   const u32bit current_time = system_time();
+   auto current_time = std::chrono::system_clock::now();
 
    X509_Time now = X509_Time(current_time);
-   X509_Time later = X509_Time(current_time + 4*seconds_in_a_year);
+   X509_Time later = X509_Time(current_time + years(4));
 
    LibraryInitializer init;
 
