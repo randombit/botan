@@ -53,6 +53,11 @@
 
 %{target_cpu_defines}
 
+#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN) || \
+    defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+  #define BOTAN_TARGET_CPU_HAS_KNOWN_ENDIANNESS
+#endif
+
 %{target_compiler_defines}
 
 /* Module definitions */
