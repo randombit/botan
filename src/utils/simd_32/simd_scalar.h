@@ -8,8 +8,8 @@
 #ifndef BOTAN_SIMD_SCALAR_H__
 #define BOTAN_SIMD_SCALAR_H__
 
-#include <botan/internal/loadstor.h>
-#include <botan/internal/bswap.h>
+#include <botan/loadstor.h>
+#include <botan/bswap.h>
 
 namespace Botan {
 
