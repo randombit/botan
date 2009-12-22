@@ -9,14 +9,16 @@
 #include <botan/charset.h>
 #include <botan/engine.h>
 #include <botan/init.h>
-#include <botan/selftest.h>
-
 #include <botan/internal/defalloc.h>
 #include <botan/internal/default_engine.h>
 #include <botan/internal/mutex.h>
 #include <botan/internal/mux_noop.h>
 #include <botan/internal/stl_util.h>
 #include <algorithm>
+
+#if defined(BOTAN_HAS_SELFTESTS)
+  #include <botan/selftest.h>
+#endif
 
 #if defined(BOTAN_HAS_MUTEX_PTHREAD)
   #include <botan/internal/mux_pthr.h>
@@ -313,8 +315,10 @@ void Library_State::initialize(bool thread_safe)
 
    m_algorithm_factory = new Algorithm_Factory(engines, *mutex_factory);
 
+#if defined(BOTAN_HAS_SELFTESTS)
    if(!passes_self_tests(algorithm_factory()))
       throw Self_Test_Failure("Startup self tests failed");
+#endif
    }
 
 /*
