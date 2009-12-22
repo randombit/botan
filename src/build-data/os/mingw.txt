@@ -19,3 +19,8 @@ install_cmd_exec "install -m 755"
 msys
 mingw32
 </aliases>
+
+<target_features>
+win32_virtual_lock
+win32_get_systemtime
+</target_features>
