@@ -9,21 +9,25 @@
 #include <botan/exceptn.h>
 #include <ctime>
 
+#if defined(BOTAN_TARGET_OS_HAS_WIN32_GET_SYSTEMTIME)
+  #include <windows.h>
+#endif
+
 #if defined(BOTAN_TARGET_OS_HAS_GETTIMEOFDAY)
   #include <sys/time.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
 
-#ifndef _POSIX_C_SOURCE
-  #define _POSIX_C_SOURCE 199309
-#endif
+  #ifndef _POSIX_C_SOURCE
+    #define _POSIX_C_SOURCE 199309
+  #endif
 
-#include <time.h>
+  #include <time.h>
 
-#ifndef CLOCK_REALTIME
-  #define CLOCK_REALTIME 0
-#endif
+  #ifndef CLOCK_REALTIME
+    #define CLOCK_REALTIME 0
+  #endif
 
 #endif
 
@@ -77,6 +81,16 @@ u64bit get_nanoseconds_clock()
    struct ::timeval tv;
    ::gettimeofday(&tv, 0);
    return combine_timers(tv.tv_sec, tv.tv_usec, 1000000);
+
+#elif defined(BOTAN_TARGET_OS_HAS_WIN32_GET_SYSTEMTIME)
+
+   // Returns time since January 1, 1601 in 100-ns increments
+   struct FILETIME tv;
+   ::GetSystemTimeAsFileTime(&tv);
+   u64bit tstamp = (static_cast<u64bit>(tv.dwHighDateTime) << 32) |
+                   tv.dwLowDateTime;
+
+   return (tstamp * 100); // Scale to 1 nanosecond units
 
 #else
    return combine_timers(std::time(0), std::clock(), CLOCKS_PER_SEC);
