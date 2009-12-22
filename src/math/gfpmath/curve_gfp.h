@@ -52,7 +52,7 @@ class BOTAN_DLL CurveGFp
       * @param mod a shared pointer to a GFpModulus object suitable for
       * *this.
       */
-      void set_shrd_mod(const std::tr1::shared_ptr<GFpModulus> mod);
+      void set_shrd_mod(const std::shared_ptr<GFpModulus> mod);
 
       // getters
 
@@ -94,14 +94,14 @@ class BOTAN_DLL CurveGFp
       * function.
       * @result the GFpElement 1, transformed to its m-residue
       */
-      std::tr1::shared_ptr<GFpElement const> const get_mres_one() const;
+      std::shared_ptr<GFpElement const> const get_mres_one() const;
 
       /**
       * Get prime modulus of the field of the curve
       * @result prime modulus of the field of the curve
       */
       BigInt const get_p() const;
-      /*inline std::tr1::shared_ptr<BigInt> const get_ptr_p() const
+      /*inline std::shared_ptr<BigInt> const get_ptr_p() const
       {
       return mp_p;
       }*/
@@ -115,7 +115,7 @@ class BOTAN_DLL CurveGFp
       * pointers to a GFpModulus over different threads!
       * @result a shared pointer to a GFpModulus object
       */
-      inline std::tr1::shared_ptr<GFpModulus> const get_ptr_mod() const
+      inline std::shared_ptr<GFpModulus> const get_ptr_mod() const
          {
          return mp_mod;
          }
@@ -127,12 +127,12 @@ class BOTAN_DLL CurveGFp
       void swap(CurveGFp& other);
 
    private:
-      std::tr1::shared_ptr<GFpModulus> mp_mod;
+      std::shared_ptr<GFpModulus> mp_mod;
       GFpElement mA;
       GFpElement mB;
-      mutable std::tr1::shared_ptr<GFpElement> mp_mres_a;
-      mutable std::tr1::shared_ptr<GFpElement> mp_mres_b;
-      mutable std::tr1::shared_ptr<GFpElement> mp_mres_one;
+      mutable std::shared_ptr<GFpElement> mp_mres_a;
+      mutable std::shared_ptr<GFpElement> mp_mres_b;
+      mutable std::shared_ptr<GFpElement> mp_mres_one;
    };
 
 // relational operators

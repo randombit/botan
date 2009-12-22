@@ -8,14 +8,7 @@
 #define BOTAN_FREESTORE_H__
 
 #include <botan/build.h>
-
-#if defined(BOTAN_USE_STD_TR1)
-  #include <tr1/memory>
-#elif defined(BOTAN_USE_BOOST_TR1)
-  #include <boost/tr1/memory.hpp>
-#else
-  #error "Please choose a TR1 implementation in build.h"
-#endif
+#include <memory>
 
 namespace Botan {
 
@@ -29,7 +22,7 @@ template<typename T>
 class BOTAN_DLL SharedPtrConverter
    {
    public:
-      typedef std::tr1::shared_ptr<T> SharedPtr;
+      typedef std::shared_ptr<T> SharedPtr;
 
       /**
       * Construct a null pointer equivalent object.

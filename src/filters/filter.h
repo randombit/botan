@@ -19,6 +19,8 @@ namespace Botan {
 class BOTAN_DLL Filter
    {
    public:
+      friend class Pipe;
+      friend class Fanout_Filter;
 
       /**
       * Write a portion of a message to this filter.
@@ -56,6 +58,9 @@ class BOTAN_DLL Filter
       */
       void finish_msg();
 
+      Filter(const Filter&) = delete;
+      Filter& operator=(const Filter&) = delete;
+
       virtual ~Filter() {}
    protected:
       void send(const byte[], u32bit);
@@ -63,12 +68,6 @@ class BOTAN_DLL Filter
       void send(const MemoryRegion<byte>& in) { send(in.begin(), in.size()); }
       Filter();
    private:
-      Filter(const Filter&) {}
-      Filter& operator=(const Filter&) { return (*this); }
-
-      friend class Pipe;
-      friend class Fanout_Filter;
-
       u32bit total_ports() const;
       u32bit current_port() const { return port_num; }
       void set_port(u32bit);

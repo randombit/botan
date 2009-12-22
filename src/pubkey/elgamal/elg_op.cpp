@@ -1,11 +1,12 @@
 /*
 * ElGamal Operations
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/elg_op.h>
+#include <botan/internal/async.h>
 
 namespace Botan {
 
@@ -33,8 +34,9 @@ SecureVector<byte> Default_ELG_Op::encrypt(const byte in[], u32bit length,
    if(m >= p)
       throw Invalid_Argument("Default_ELG_Op::encrypt: Input is too large");
 
-   BigInt a = powermod_g_p(k);
+   auto future_a = std_async([&]() { return powermod_g_p(k); });
    BigInt b = mod_p.multiply(m, powermod_y_p(k));
+   BigInt a = future_a.get();
 
    SecureVector<byte> output(2*p.bytes());
    a.binary_encode(output + (p.bytes() - a.bytes()));

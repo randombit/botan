@@ -35,7 +35,7 @@ class BOTAN_DLL EAC1_1_Req : public EAC1_1_gen_CVC<EAC1_1_Req>
       * Construct a CVC request from a data source.
       * @param source the data source
       */
-      EAC1_1_Req(std::tr1::shared_ptr<DataSource> source);
+      EAC1_1_Req(std::shared_ptr<DataSource> source);
 
       /**
       * Construct a CVC request from a DER encoded CVC reqeust file.

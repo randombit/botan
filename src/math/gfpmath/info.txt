@@ -1,7 +1,5 @@
 define BIGINT_GFP
 
-uses_tr1 yes
-
 <header:public>
 curve_gfp.h
 gfp_element.h

@@ -1,5 +1,5 @@
 #include "timer.h"
-#include <botan/time.h>
+#include <chrono>
 #include <iomanip>
 
 Timer::Timer(const std::string& n, u32bit e_mul) :
@@ -32,7 +32,8 @@ void Timer::stop()
 
 u64bit Timer::get_clock()
    {
-   return Botan::get_nanoseconds_clock();
+   auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+   return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
    }
 
 std::ostream& operator<<(std::ostream& out, Timer& timer)
