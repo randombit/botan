@@ -121,6 +121,13 @@ class BuildConfigurationInformation(object):
 Handle command line options
 """
 def process_command_line(args):
+
+    # This is just an implementation of Optik's append_const action,
+    # but that is not available in Python 2.4's optparse, so use a
+    # callback instead
+    def optparse_append_const(option, opt, value, parser, dest, arg):
+        parser.values.__dict__[dest].append(arg)
+
     parser = OptionParser(
         formatter = IndentedHelpFormatter(max_help_position = 50),
         version = BuildConfigurationInformation.version_string)
@@ -148,7 +155,17 @@ def process_command_line(args):
     target_group.add_option('--with-isa-extension', metavar='ISALIST',
                             dest='with_isa_extns',
                             action='append', default=[],
-                            help='enable ISA extensions (sse2, altivec)')
+                            help='enable ISA extensions')
+
+    for isa_extn in ['sse2', 'ssse3', 'altivec', 'aes_ni']:
+        target_group.add_option('--with-%s' % (isa_extn),
+                                action='callback',
+                                help=SUPPRESS_HELP,
+                                callback=optparse_append_const,
+                                callback_kwargs = {
+                                    'dest': 'with_isa_extns',
+                                    'arg': isa_extn }
+                                )
 
     build_group = OptionGroup(parser, 'Build options')
 
@@ -212,25 +229,18 @@ def process_command_line(args):
 
     for mod in ['openssl', 'gnump', 'bzip2', 'zlib']:
 
-        # This is just an implementation of Optik's append_const action,
-        # but that is not available in Python 2.4's optparse, so use a
-        # callback instead
-
-        def optparse_callback(option, opt, value, parser, dest, mod):
-            parser.values.__dict__[dest].append(mod)
-
         mods_group.add_option('--with-%s' % (mod),
                               action='callback',
-                              callback=optparse_callback,
+                              callback=optparse_append_const,
                               callback_kwargs = {
-                                  'dest': 'enabled_modules', 'mod': mod }
+                                  'dest': 'enabled_modules', 'arg': mod }
                               )
 
         mods_group.add_option('--without-%s' % (mod), help=SUPPRESS_HELP,
                               action='callback',
-                              callback=optparse_callback,
+                              callback=optparse_append_const,
                               callback_kwargs = {
-                                  'dest': 'disabled_modules', 'mod': mod }
+                                  'dest': 'disabled_modules', 'arg': mod }
                               )
 
     install_group = OptionGroup(parser, 'Installation options')
