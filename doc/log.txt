@@ -1,11 +1,12 @@
 
 * 1.9.4-dev, ????-??-??
+ - Add SSE2 implementation of IDEA
+ - Add support for Win32 high resolution system timers
+ - Remove Timer class entirely
  - New option --gen-amalgamation for creating a SQLite-style amalgamation
  - Many headers are now explicitly internal-use-only and are not installed
  - Greatly improve the Win32 installer
  - Several fixes for Visual C++ debug builds
- - Add support for Win32 high resolution timers
- - Remove Timer class entirely
 
 * 1.9.3, 2009-11-19
  - Add new AES implementation using Intel's AES instruction intrinsics

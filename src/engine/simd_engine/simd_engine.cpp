@@ -17,6 +17,10 @@
   #include <botan/xtea_simd.h>
 #endif
 
+#if defined(BOTAN_HAS_IDEA_SSE2)
+  #include <botan/idea_sse2.h>
+#endif
+
 #if defined(BOTAN_HAS_SHA1_SSE2)
   #include <botan/sha1_sse2.h>
 #endif
@@ -27,16 +31,18 @@ BlockCipher*
 SIMD_Engine::find_block_cipher(const SCAN_Name& request,
                                Algorithm_Factory&) const
    {
-   if(!SIMD_32::enabled())
-      return 0;
+#if defined(BOTAN_HAS_IDEA_SSE2)
+   if(request.algo_name() == "IDEA" && CPUID::has_sse2())
+      return new IDEA_SSE2;
+#endif
 
 #if defined(BOTAN_HAS_SERPENT_SIMD)
-   if(request.algo_name() == "Serpent")
+   if(request.algo_name() == "Serpent" && SIMD_32::enabled())
       return new Serpent_SIMD;
 #endif
 
 #if defined(BOTAN_HAS_XTEA_SIMD)
-   if(request.algo_name() == "XTEA")
+   if(request.algo_name() == "XTEA" && SIMD_32::enabled())
       return new XTEA_SIMD;
 #endif
 
