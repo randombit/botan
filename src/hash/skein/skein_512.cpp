@@ -27,11 +27,11 @@ enum type_code {
    SKEIN_OUTPUT = 63
 };
 
-void ubi_512(u64bit H[9], u64bit T[], const byte msg[], u64bit msg_len)
+void ubi_512(u64bit H[9], u64bit T[], const byte msg[], u32bit msg_len)
    {
    do
       {
-      const u64bit to_proc = std::min<u64bit>(msg_len, 64);
+      const u32bit to_proc = std::min<u32bit>(msg_len, 64);
       T[0] += to_proc;
 
       u64bit M[8] = { 0 };
