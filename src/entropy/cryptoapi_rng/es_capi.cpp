@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/es_capi.h>
+#include <botan/internal/es_capi.h>
 #include <botan/parsing.h>
 #include <windows.h>
 #include <wincrypt.h>

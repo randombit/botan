@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/es_beos.h>
+#include <botan/internal/es_beos.h>
 
 #include <kernel/OS.h>
 #include <kernel/image.h>
