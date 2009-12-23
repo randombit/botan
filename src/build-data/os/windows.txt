@@ -13,6 +13,7 @@ install_cmd_exec "copy"
 <target_features>
 win32_virtual_lock
 win32_get_systemtime
+gmtime_s
 </target_features>
 
 <supports_shared>

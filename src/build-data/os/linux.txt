@@ -4,6 +4,7 @@ os_type unix
 clock_gettime
 gettimeofday
 posix_mlock
+gmtime_r
 </target_features>
 
 # Is this correct?

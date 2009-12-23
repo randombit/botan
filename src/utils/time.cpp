@@ -64,10 +64,20 @@ std::tm time_t_to_tm(u64bit timer)
    {
    std::time_t time_val = static_cast<std::time_t>(timer);
 
+   std::tm tm;
+
+#if defined(BOTAN_TARGET_OS_HAS_GMTIME_S)
+   gmtime_s(&tm, &time_val); // Windows
+#elif defined(BOTAN_TARGET_OS_HAS_GMTIME_R)
+   gmtime_r(&time_val, &tm); // Unix/SUSv2
+#else
    std::tm* tm_p = std::gmtime(&time_val);
    if (tm_p == 0)
       throw Encoding_Error("time_t_to_tm could not convert");
-   return (*tm_p);
+   tm = *tm_p;
+#endif
+
+   return tm;
    }
 
 u64bit get_nanoseconds_clock()
@@ -85,7 +95,7 @@ u64bit get_nanoseconds_clock()
 #elif defined(BOTAN_TARGET_OS_HAS_WIN32_GET_SYSTEMTIME)
 
    // Returns time since January 1, 1601 in 100-ns increments
-   struct FILETIME tv;
+   ::FILETIME tv;
    ::GetSystemTimeAsFileTime(&tv);
    u64bit tstamp = (static_cast<u64bit>(tv.dwHighDateTime) << 32) |
                    tv.dwLowDateTime;
