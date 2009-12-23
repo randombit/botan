@@ -84,7 +84,7 @@ X509_Cert_Options::X509_Cert_Options(const std::string& initial_opts,
    path_limit = 0;
    constraints = NO_CONSTRAINTS;
 
-   const u32bit now = system_time();
+   const u64bit now = system_time();
 
    start = X509_Time(now);
    end = X509_Time(now + expiration_time_in_seconds);
