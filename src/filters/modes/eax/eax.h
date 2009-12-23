@@ -10,6 +10,7 @@
 
 #include <botan/key_filt.h>
 #include <botan/block_cipher.h>
+#include <botan/stream_cipher.h>
 #include <botan/mac.h>
 
 namespace Botan {
@@ -27,17 +28,19 @@ class BOTAN_DLL EAX_Base : public Keyed_Filter
 
       bool valid_keylength(u32bit) const;
 
-      ~EAX_Base() { delete cipher; delete mac; }
+      ~EAX_Base() { delete ctr; delete cmac; }
    protected:
       EAX_Base(BlockCipher*, u32bit);
       void start_msg();
-      void increment_counter();
 
-      const u32bit TAG_SIZE, BLOCK_SIZE;
-      BlockCipher* cipher;
-      MessageAuthenticationCode* mac;
-      SecureVector<byte> nonce_mac, header_mac, state, buffer;
-      u32bit position;
+      const u32bit BLOCK_SIZE, TAG_SIZE;
+      std::string cipher_name;
+
+      StreamCipher* ctr;
+      MessageAuthenticationCode* cmac;
+
+      SecureVector<byte> nonce_mac, header_mac;
+      SecureVector<byte> ctr_buf;
    };
 
 /*
@@ -76,6 +79,7 @@ class BOTAN_DLL EAX_Decryption : public EAX_Base
       void write(const byte[], u32bit);
       void do_write(const byte[], u32bit);
       void end_msg();
+
       SecureVector<byte> queue;
       u32bit queue_start, queue_end;
    };

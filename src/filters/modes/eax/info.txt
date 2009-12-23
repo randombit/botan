@@ -2,4 +2,5 @@ define EAX
 
 <requires>
 cmac
+ctr
 </requires>
