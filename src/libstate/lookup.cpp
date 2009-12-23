@@ -80,7 +80,7 @@ bool have_hash(const std::string& algo_spec)
 const MessageAuthenticationCode* retrieve_mac(const std::string& algo_spec)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
-   return (af.prototype_mac(algo_spec) != 0);
+   return af.prototype_mac(algo_spec);
    }
 
 /**
@@ -89,7 +89,7 @@ const MessageAuthenticationCode* retrieve_mac(const std::string& algo_spec)
 MessageAuthenticationCode* get_mac(const std::string& algo_spec)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
-   return (af.make_mac(algo_spec) != 0);
+   return af.make_mac(algo_spec);
    }
 
 /**
