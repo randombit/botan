@@ -186,7 +186,7 @@ std::vector<OID> PKCS10_Request::ex_constraints() const
 */
 bool PKCS10_Request::is_CA() const
    {
-   return info.get1_u32bit("X509v3.BasicConstraints.is_ca");
+   return (info.get1_u32bit("X509v3.BasicConstraints.is_ca") > 0);
    }
 
 /*

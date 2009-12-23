@@ -45,7 +45,7 @@ class BOTAN_DLL RTSS_Share
       byte share_id() const;
 
       u32bit size() const { return contents.size(); }
-      bool initialized() const { return contents.size(); }
+      bool initialized() const { return (contents.size() > 0); }
    private:
       SecureVector<byte> contents;
    };
