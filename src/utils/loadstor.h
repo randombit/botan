@@ -202,24 +202,22 @@ inline void load_le(T out[],
                     const byte in[],
                     u32bit count)
    {
-#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+#if defined(BOTAN_TARGET_CPU_HAS_KNOWN_ENDIANNESS)
    std::memcpy(out, in, sizeof(T)*count);
-#else
+
+#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
    const u32bit blocks = count - (count % 4);
    const u32bit left = count - blocks;
 
    for(u32bit i = 0; i != blocks; i += 4)
-      {
-      out[0] = load_le<T>(in, 0);
-      out[1] = load_le<T>(in, 1);
-      out[2] = load_le<T>(in, 2);
-      out[3] = load_le<T>(in, 3);
-
-      out += 4;
-      in  += 4*sizeof(T);
-      }
+      bswap_4(out + i);
 
    for(u32bit i = 0; i != left; ++i)
+      out[blocks+i] = reverse_bytes(out[blocks+i]);
+#endif
+
+#else
+   for(u32bit i = 0; i != count; ++i)
       out[i] = load_le<T>(in, i);
 #endif
    }
@@ -261,24 +259,22 @@ inline void load_be(T out[],
                     const byte in[],
                     u32bit count)
    {
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+#if defined(BOTAN_TARGET_CPU_HAS_KNOWN_ENDIANNESS)
    std::memcpy(out, in, sizeof(T)*count);
-#else
+
+#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
    const u32bit blocks = count - (count % 4);
    const u32bit left = count - blocks;
 
    for(u32bit i = 0; i != blocks; i += 4)
-      {
-      out[0] = load_be<T>(in, 0);
-      out[1] = load_be<T>(in, 1);
-      out[2] = load_be<T>(in, 2);
-      out[3] = load_be<T>(in, 3);
-
-      out += 4;
-      in  += 4*sizeof(T);
-      }
+      bswap_4(out + i);
 
    for(u32bit i = 0; i != left; ++i)
+      out[blocks+i] = reverse_bytes(out[blocks+i]);
+#endif
+
+#else
+   for(u32bit i = 0; i != count; ++i)
       out[i] = load_be<T>(in, i);
 #endif
    }
