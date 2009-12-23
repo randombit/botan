@@ -144,7 +144,7 @@ void report_results(const std::string& algo,
       std::cout << " [" << i->second << "] "
                 << std::fixed << std::setprecision(2) << i->first;
       }
-   std::cout << "\n";
+   std::cout << std::endl;
    }
 
 }
