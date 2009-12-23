@@ -471,8 +471,10 @@ class Policy_Information : public ASN1_Object
 */
 MemoryVector<byte> Certificate_Policies::encode_inner() const
    {
+   // FIXME
+#if 1
    throw Exception("Certificate_Policies::encode_inner: Bugged");
-
+#else
    std::vector<Policy_Information> policies;
 
    return DER_Encoder()
@@ -480,6 +482,7 @@ MemoryVector<byte> Certificate_Policies::encode_inner() const
          .encode_list(policies)
       .end_cons()
    .get_contents();
+#endif
    }
 
 /*
