@@ -12,6 +12,14 @@
 #include <botan/types.h>
 #include <botan/rotate.h>
 
+#if defined(BOTAN_TARGET_CPU_HAS_SSE2)
+  #include <emmintrin.h>
+#endif
+
+#if defined(BOTAN_TARGET_CPU_HAS_SSSE3)
+  #include <tmmintrin.h>
+#endif
+
 namespace Botan {
 
 /*
@@ -65,6 +73,48 @@ inline u64bit reverse_bytes(u64bit input)
    return (static_cast<u64bit>(lo) << 32) | hi;
 #endif
    }
+
+template<typename T>
+inline void bswap_4(T x[4])
+   {
+   x[0] = reverse_bytes(x[0]);
+   x[1] = reverse_bytes(x[1]);
+   x[2] = reverse_bytes(x[2]);
+   x[3] = reverse_bytes(x[3]);
+   }
+
+#if defined(BOTAN_TARGET_CPU_HAS_SSSE3)
+
+template<>
+inline void bswap_4(u32bit x[4])
+   {
+   const __m128i bswap_mask = _mm_set_epi8(
+      12, 13, 14, 15,
+       8,  9, 10, 11,
+       4,  5,  6,  7,
+       0,  1,  2,  3);
+
+   __m128i T = _mm_loadu_si128((const __m128i*)x);
+   T = _mm_shuffle_epi8(T, bswap_mask);
+   _mm_storeu_si128((__m128i*)x, T);
+   }
+
+#elif defined(BOTAN_TARGET_CPU_HAS_SSE2)
+
+template<>
+inline void bswap_4(u32bit x[4])
+   {
+   __m128i T = _mm_loadu_si128((const __m128i*)x);
+
+   T = _mm_shufflehi_epi16(T, _MM_SHUFFLE(2, 3, 0, 1));
+   T = _mm_shufflelo_epi16(T, _MM_SHUFFLE(2, 3, 0, 1));
+
+   T =  _mm_or_si128(_mm_srli_epi16(T, 8), _mm_slli_epi16(T, 8));
+
+   _mm_storeu_si128((__m128i*)x, T);
+   }
+
+#endif
 
 }
 
