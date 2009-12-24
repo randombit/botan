@@ -9,7 +9,7 @@
 #define BOTAN_TIME_H__
 
 #include <botan/types.h>
-#include <ctime>
+#include <chrono>
 
 namespace Botan {
 
@@ -27,11 +27,14 @@ struct BOTAN_DLL calendar_point
    };
 
 /*
-* Time Access/Conversion Functions
+* Time Conversion Functions
 */
-BOTAN_DLL u64bit system_time();
-
-BOTAN_DLL calendar_point calendar_value(u64bit a_time_t);
+/*
+* @param time_point a time point from the system clock
+* @returns calendar_point object representing this time point
+*/
+BOTAN_DLL calendar_point calendar_value(
+   const std::chrono::system_clock::time_point& time_point);
 
 /**
 @return nanoseconds resolution timestamp, unknown epoch

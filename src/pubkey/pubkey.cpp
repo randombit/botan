@@ -216,7 +216,7 @@ SecureVector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
       }
    else
       throw Encoding_Error("PK_Signer: Unknown signature format " +
-                           to_string(sig_format));
+                           std::to_string(sig_format));
    }
 
 /*
@@ -328,7 +328,7 @@ bool PK_Verifier::check_signature(const byte sig[], u32bit length)
          }
       else
          throw Decoding_Error("PK_Verifier: Unknown signature format " +
-                              to_string(sig_format));
+                              std::to_string(sig_format));
       }
    catch(Invalid_Argument) { return false; }
    catch(Decoding_Error) { return false; }
