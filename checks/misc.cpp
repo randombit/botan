@@ -43,7 +43,7 @@ SecureVector<byte> decode_hex(const std::string& in)
       pipe.process_msg(in);
       result = pipe.read_all();
    }
-   catch(std::exception& e)
+   catch(std::exception)
       {
       result.destroy();
       }

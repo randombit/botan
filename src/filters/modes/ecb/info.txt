@@ -1,5 +1,6 @@
 define ECB
 
 <requires>
+block
 mode_pad
 </requires>

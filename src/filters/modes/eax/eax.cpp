@@ -7,8 +7,9 @@
 
 #include <botan/eax.h>
 #include <botan/cmac.h>
-#include <botan/internal/xor_buf.h>
+#include <botan/ctr.h>
 #include <botan/parsing.h>
+#include <botan/internal/xor_buf.h>
 #include <algorithm>
 
 namespace Botan {
@@ -34,20 +35,17 @@ SecureVector<byte> eax_prf(byte tag, u32bit BLOCK_SIZE,
 /*
 * EAX_Base Constructor
 */
-EAX_Base::EAX_Base(BlockCipher* ciph,
-                   u32bit tag_size) :
-   TAG_SIZE(tag_size ? tag_size / 8 : ciph->BLOCK_SIZE),
-   BLOCK_SIZE(ciph->BLOCK_SIZE)
+EAX_Base::EAX_Base(BlockCipher* cipher, u32bit tag_size) :
+   BLOCK_SIZE(cipher->BLOCK_SIZE),
+   TAG_SIZE(tag_size ? tag_size / 8 : BLOCK_SIZE),
+   cipher_name(cipher->name()),
+   ctr_buf(DEFAULT_BUFFERSIZE)
    {
-   cipher = ciph;
-   mac = new CMAC(cipher->clone());
+   cmac = new CMAC(cipher->clone());
+   ctr = new CTR_BE(cipher); // takes ownership
 
-   if(tag_size % 8 != 0 || TAG_SIZE == 0 || TAG_SIZE > mac->OUTPUT_LENGTH)
+   if(tag_size % 8 != 0 || TAG_SIZE == 0 || TAG_SIZE > cmac->OUTPUT_LENGTH)
       throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(tag_size));
-
-   state.resize(BLOCK_SIZE);
-   buffer.resize(BLOCK_SIZE);
-   position = 0;
    }
 
 /*
@@ -55,9 +53,7 @@ EAX_Base::EAX_Base(BlockCipher* ciph,
 */
 bool EAX_Base::valid_keylength(u32bit n) const
    {
-   if(!cipher->valid_keylength(n))
-      return false;
-   if(!mac->valid_keylength(n))
+   if(!ctr->valid_keylength(n))
       return false;
    return true;
    }
@@ -67,9 +63,14 @@ bool EAX_Base::valid_keylength(u32bit n) const
 */
 void EAX_Base::set_key(const SymmetricKey& key)
    {
-   cipher->set_key(key);
-   mac->set_key(key);
-   header_mac = eax_prf(1, BLOCK_SIZE, mac, 0, 0);
+   /*
+   * These could share the key schedule, which is one nice part of EAX,
+   * but it's much easier to ignore that here...
+   */
+   ctr->set_key(key);
+   cmac->set_key(key);
+
+   header_mac = eax_prf(1, BLOCK_SIZE, cmac, 0, 0);
    }
 
 /*
@@ -78,8 +79,8 @@ void EAX_Base::set_key(const SymmetricKey& key)
 void EAX_Base::start_msg()
    {
    for(u32bit j = 0; j != BLOCK_SIZE - 1; ++j)
-      mac->update(0);
-   mac->update(2);
+      cmac->update(0);
+   cmac->update(2);
    }
 
 /*
@@ -87,9 +88,8 @@ void EAX_Base::start_msg()
 */
 void EAX_Base::set_iv(const InitializationVector& iv)
    {
-   nonce_mac = eax_prf(0, BLOCK_SIZE, mac, iv.begin(), iv.length());
-   state = nonce_mac;
-   cipher->encrypt(state, buffer);
+   nonce_mac = eax_prf(0, BLOCK_SIZE, cmac, iv.begin(), iv.length());
+   ctr->set_iv(&nonce_mac[0], nonce_mac.size());
    }
 
 /*
@@ -97,7 +97,7 @@ void EAX_Base::set_iv(const InitializationVector& iv)
 */
 void EAX_Base::set_header(const byte header[], u32bit length)
    {
-   header_mac = eax_prf(1, BLOCK_SIZE, mac, header, length);
+   header_mac = eax_prf(1, BLOCK_SIZE, cmac, header, length);
    }
 
 /*
@@ -105,19 +105,7 @@ void EAX_Base::set_header(const byte header[], u32bit length)
 */
 std::string EAX_Base::name() const
    {
-   return (cipher->name() + "/EAX");
-   }
-
-/*
-* Increment the counter and update the buffer
-*/
-void EAX_Base::increment_counter()
-   {
-   for(s32bit j = BLOCK_SIZE - 1; j >= 0; --j)
-      if(++state[j])
-         break;
-   cipher->encrypt(state, buffer);
-   position = 0;
+   return (cipher_name + "/EAX");
    }
 
 /*
@@ -125,32 +113,17 @@ void EAX_Base::increment_counter()
 */
 void EAX_Encryption::write(const byte input[], u32bit length)
    {
-   u32bit copied = std::min(BLOCK_SIZE - position, length);
-   xor_buf(buffer + position, input, copied);
-   send(buffer + position, copied);
-   mac->update(buffer + position, copied);
-   input += copied;
-   length -= copied;
-   position += copied;
-
-   if(position == BLOCK_SIZE)
-      increment_counter();
-
-   while(length >= BLOCK_SIZE)
+   while(length)
       {
-      xor_buf(buffer, input, BLOCK_SIZE);
-      send(buffer, BLOCK_SIZE);
-      mac->update(buffer, BLOCK_SIZE);
+      u32bit copied = std::min(length, ctr_buf.size());
 
-      input += BLOCK_SIZE;
-      length -= BLOCK_SIZE;
-      increment_counter();
+      ctr->cipher(input, ctr_buf, copied);
+      cmac->update(ctr_buf, copied);
+
+      send(ctr_buf, copied);
+      input += copied;
+      length -= copied;
       }
-
-   xor_buf(buffer + position, input, length);
-   send(buffer + position, length);
-   mac->update(buffer + position, length);
-   position += length;
    }
 
 /*
@@ -158,15 +131,11 @@ void EAX_Encryption::write(const byte input[], u32bit length)
 */
 void EAX_Encryption::end_msg()
    {
-   SecureVector<byte> data_mac = mac->final();
+   SecureVector<byte> data_mac = cmac->final();
    xor_buf(data_mac, nonce_mac, data_mac.size());
    xor_buf(data_mac, header_mac, data_mac.size());
 
    send(data_mac, TAG_SIZE);
-
-   state.clear();
-   buffer.clear();
-   position = 0;
    }
 
 }

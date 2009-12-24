@@ -121,6 +121,13 @@ class BuildConfigurationInformation(object):
 Handle command line options
 """
 def process_command_line(args):
+
+    # This is just an implementation of Optik's append_const action,
+    # but that is not available in Python 2.4's optparse, so use a
+    # callback instead
+    def optparse_append_const(option, opt, value, parser, dest, arg):
+        parser.values.__dict__[dest].append(arg)
+
     parser = OptionParser(
         formatter = IndentedHelpFormatter(max_help_position = 50),
         version = BuildConfigurationInformation.version_string)
@@ -145,10 +152,34 @@ def process_command_line(args):
                             dest='unaligned_mem', action='store_false',
                             help=SUPPRESS_HELP)
 
-    target_group.add_option('--with-isa-extension', metavar='ISALIST',
-                            dest='with_isa_extns',
+    target_group.add_option('--enable-isa', metavar='ISALIST',
+                            dest='enable_isa_extns',
                             action='append', default=[],
-                            help='enable ISA extensions (sse2, altivec)')
+                            help='enable ISA extensions')
+
+    target_group.add_option('--disable-isa', metavar='ISALIST',
+                            dest='disable_isa_extns',
+                            action='append', default=[],
+                            help=SUPPRESS_HELP)
+
+    for isa_extn in ['sse2', 'ssse3', 'altivec', 'aes_ni']:
+        target_group.add_option('--enable-%s' % (isa_extn),
+                                action='callback',
+                                help=SUPPRESS_HELP,
+                                callback=optparse_append_const,
+                                callback_kwargs = {
+                                    'dest': 'enable_isa_extns',
+                                    'arg': isa_extn }
+                                )
+
+        target_group.add_option('--disable-%s' % (isa_extn),
+                                action='callback',
+                                help=SUPPRESS_HELP,
+                                callback=optparse_append_const,
+                                callback_kwargs = {
+                                    'dest': 'disable_isa_extns',
+                                    'arg': isa_extn }
+                                )
 
     build_group = OptionGroup(parser, 'Build options')
 
@@ -208,25 +239,18 @@ def process_command_line(args):
 
     for mod in ['openssl', 'gnump', 'bzip2', 'zlib']:
 
-        # This is just an implementation of Optik's append_const action,
-        # but that is not available in Python 2.4's optparse, so use a
-        # callback instead
-
-        def optparse_callback(option, opt, value, parser, dest, mod):
-            parser.values.__dict__[dest].append(mod)
-
         mods_group.add_option('--with-%s' % (mod),
                               action='callback',
-                              callback=optparse_callback,
+                              callback=optparse_append_const,
                               callback_kwargs = {
-                                  'dest': 'enabled_modules', 'mod': mod }
+                                  'dest': 'enabled_modules', 'arg': mod }
                               )
 
         mods_group.add_option('--without-%s' % (mod), help=SUPPRESS_HELP,
                               action='callback',
-                              callback=optparse_callback,
+                              callback=optparse_append_const,
                               callback_kwargs = {
-                                  'dest': 'disabled_modules', 'mod': mod }
+                                  'dest': 'disabled_modules', 'arg': mod }
                               )
 
     install_group = OptionGroup(parser, 'Installation options')
@@ -284,7 +308,8 @@ def process_command_line(args):
     options.enabled_modules = parse_multiple_enable(options.enabled_modules)
     options.disabled_modules = parse_multiple_enable(options.disabled_modules)
 
-    options.with_isa_extns = parse_multiple_enable(options.with_isa_extns)
+    options.enable_isa_extns = parse_multiple_enable(options.enable_isa_extns)
+    options.disable_isa_extns = parse_multiple_enable(options.disable_isa_extns)
 
     return options
 
@@ -443,9 +468,14 @@ class ModuleInfo(object):
                 return False
 
         if self.need_isa != None:
-            cpu_isa = archinfo.isa_extensions_in(cpu_name)
-            if self.need_isa not in cpu_isa:
-                return self.need_isa in options.with_isa_extns
+            if self.need_isa in options.disable_isa_extns:
+                return False # explicitly disabled
+
+            if self.need_isa in options.enable_isa_extns:
+                return True # explicitly enabled
+
+            # Default to whatever the CPU is supposed to support
+            return self.need_isa in archinfo.isa_extensions_in(cpu_name)
 
         return True
 
@@ -532,12 +562,16 @@ class ArchInfo(object):
         if self.basename != options.cpu:
             macros.append('TARGET_CPU_IS_%s' % (form_cpu_macro(options.cpu)))
 
-        isa_extensions = sorted(set(
-            flatten([self.isa_extensions_in(options.cpu),
-                     options.with_isa_extns])))
+        enabled_isas = set(flatten(
+            [self.isa_extensions_in(options.cpu),
+             options.enable_isa_extns]))
 
-        for simd in isa_extensions:
-            macros.append('TARGET_CPU_HAS_%s' % (simd.upper()))
+        disabled_isas = set(options.disable_isa_extns)
+
+        isa_extensions = sorted(enabled_isas - disabled_isas)
+
+        for isa in isa_extensions:
+            macros.append('TARGET_CPU_HAS_%s' % (isa.upper()))
 
         endian = options.with_endian or self.endian
 

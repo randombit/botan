@@ -76,8 +76,6 @@ u32bit miller_rabin_test_iterations(u32bit bits, bool verify)
 */
 u32bit low_zero_bits(const BigInt& n)
    {
-   if(n.is_negative() || n.is_zero()) return 0;
-
    u32bit low_zero = 0;
 
    if(n.is_positive() && n.is_nonzero())

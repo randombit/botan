@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
          opts.is_set("benchmark") ||
          opts.is_set("bench-type"))
          {
-         double seconds = 2;
+         double seconds = 5;
 
          if(opts.is_set("seconds"))
             {

@@ -52,7 +52,6 @@ void EAX_Decryption::write(const byte input[], u32bit length)
       length -= copied;
       queue_end += copied;
 
-      SecureVector<byte> block_buf(cipher->BLOCK_SIZE);
       while((queue_end - queue_start) > TAG_SIZE)
          {
          u32bit removed = (queue_end - queue_start) - TAG_SIZE;
@@ -77,31 +76,20 @@ void EAX_Decryption::write(const byte input[], u32bit length)
 */
 void EAX_Decryption::do_write(const byte input[], u32bit length)
    {
-   mac->update(input, length);
-
-   u32bit copied = std::min(BLOCK_SIZE - position, length);
-   xor_buf(buffer + position, input, copied);
-   send(buffer + position, copied);
-   input += copied;
-   length -= copied;
-   position += copied;
-
-   if(position == BLOCK_SIZE)
-      increment_counter();
-
-   while(length >= BLOCK_SIZE)
+   while(length)
       {
-      xor_buf(buffer, input, BLOCK_SIZE);
-      send(buffer, BLOCK_SIZE);
+      u32bit copied = std::min(length, ctr_buf.size());
 
-      input += BLOCK_SIZE;
-      length -= BLOCK_SIZE;
-      increment_counter();
+      /*
+      Process same block with cmac and ctr at the same time to
+      help cache locality.
+      */
+      cmac->update(input, copied);
+      ctr->cipher(input, ctr_buf, copied);
+      send(ctr_buf, copied);
+      input += copied;
+      length -= copied;
       }
-
-   xor_buf(buffer + position, input, length);
-   send(buffer + position, length);
-   position += length;
    }
 
 /*
@@ -112,15 +100,12 @@ void EAX_Decryption::end_msg()
    if((queue_end - queue_start) != TAG_SIZE)
       throw Integrity_Failure(name() + ": Message authentication failure");
 
-   SecureVector<byte> data_mac = mac->final();
+   SecureVector<byte> data_mac = cmac->final();
 
    for(u32bit j = 0; j != TAG_SIZE; ++j)
       if(queue[queue_start+j] != (data_mac[j] ^ nonce_mac[j] ^ header_mac[j]))
          throw Integrity_Failure(name() + ": Message authentication failure");
 
-   state.clear();
-   buffer.clear();
-   position = 0;
    queue_start = queue_end = 0;
    }
 

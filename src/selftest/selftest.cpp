@@ -19,12 +19,14 @@ namespace {
 */
 bool test_filter_kat(Filter* filter,
                      const std::string& input,
-                     const std::string& output)
+                     const std::string& expected_output)
    {
    Pipe pipe(new Hex_Decoder, filter, new Hex_Encoder);
    pipe.process_msg(input);
 
-   return (output == pipe.read_all_as_string());
+   std::string output = pipe.read_all_as_string();
+
+   return (output == expected_output);
    }
 
 }

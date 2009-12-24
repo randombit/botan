@@ -1,5 +1,7 @@
 define EAX
 
 <requires>
+block
 cmac
+ctr
 </requires>

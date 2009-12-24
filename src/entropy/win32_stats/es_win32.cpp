@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/es_win32.h>
+#include <botan/internal/es_win32.h>
 #include <windows.h>
 #include <tlhelp32.h>
 

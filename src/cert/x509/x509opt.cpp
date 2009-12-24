@@ -78,7 +78,7 @@ void X509_Cert_Options::sanity_check() const
 * Initialize the certificate options
 */
 X509_Cert_Options::X509_Cert_Options(const std::string& initial_opts,
-                                     u32bit expiration_time)
+                                     u32bit expiration_time_in_seconds)
    {
    is_CA = false;
    path_limit = 0;

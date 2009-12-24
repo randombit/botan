@@ -8,7 +8,8 @@
 #ifndef BOTAN_CBC_H__
 #define BOTAN_CBC_H__
 
-#include <botan/modebase.h>
+#include <botan/block_cipher.h>
+#include <botan/key_filt.h>
 #include <botan/mode_pad.h>
 
 namespace Botan {
@@ -16,38 +17,69 @@ namespace Botan {
 /*
 * CBC Encryption
 */
-class BOTAN_DLL CBC_Encryption : public BlockCipherMode
+class BOTAN_DLL CBC_Encryption : public Keyed_Filter
    {
    public:
-      CBC_Encryption(BlockCipher*, BlockCipherModePaddingMethod*);
-      CBC_Encryption(BlockCipher*, BlockCipherModePaddingMethod*,
-                     const SymmetricKey&, const InitializationVector&);
+      std::string name() const;
+
+      void set_iv(const InitializationVector&);
+
+      void set_key(const SymmetricKey& key) { cipher->set_key(key); }
+
+      bool valid_keylength(u32bit key_len) const
+         { return cipher->valid_keylength(key_len); }
+
+      CBC_Encryption(BlockCipher* cipher,
+                     BlockCipherModePaddingMethod* padding);
+
+      CBC_Encryption(BlockCipher* cipher,
+                     BlockCipherModePaddingMethod* padding,
+                     const SymmetricKey& key,
+                     const InitializationVector& iv);
 
       ~CBC_Encryption() { delete padder; }
    private:
-      std::string name() const;
       void write(const byte[], u32bit);
       void end_msg();
+
+      BlockCipher* cipher;
       const BlockCipherModePaddingMethod* padder;
+      SecureVector<byte> buffer, state;
+      u32bit position;
    };
 
 /*
 * CBC Decryption
 */
-class BOTAN_DLL CBC_Decryption : public BlockCipherMode
+class BOTAN_DLL CBC_Decryption : public Keyed_Filter
    {
    public:
-      CBC_Decryption(BlockCipher*, BlockCipherModePaddingMethod*);
-      CBC_Decryption(BlockCipher*, BlockCipherModePaddingMethod*,
-                     const SymmetricKey&, const InitializationVector&);
+      std::string name() const;
+
+      void set_iv(const InitializationVector&);
+
+      void set_key(const SymmetricKey& key) { cipher->set_key(key); }
+
+      bool valid_keylength(u32bit key_len) const
+         { return cipher->valid_keylength(key_len); }
+
+      CBC_Decryption(BlockCipher* cipher,
+                     BlockCipherModePaddingMethod* padding);
+
+      CBC_Decryption(BlockCipher* cipher,
+                     BlockCipherModePaddingMethod* padding,
+                     const SymmetricKey& key,
+                     const InitializationVector& iv);
 
       ~CBC_Decryption() { delete padder; }
    private:
-      std::string name() const;
       void write(const byte[], u32bit);
       void end_msg();
+
+      BlockCipher* cipher;
       const BlockCipherModePaddingMethod* padder;
-      SecureVector<byte> temp;
+      SecureVector<byte> buffer, state, temp;
+      u32bit position;
    };
 
 }

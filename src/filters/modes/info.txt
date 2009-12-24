@@ -1,6 +1,0 @@
-define CIPHER_MODEBASE
-
-<requires>
-block
-filters
-</requires>

@@ -25,7 +25,7 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
    accum.add(tv.QuadPart, 0);
 #endif
 
-#if defined(BOTAN_USE_GCC_INLINE_ASM)
+#if BOTAN_USE_GCC_INLINE_ASM
 
    u64bit rtc = 0;
 
