@@ -1,1 +1,5 @@
 define CTS
+
+<requires>
+block
+</requires>
