@@ -38,6 +38,7 @@ void set_default_oids(Library_State& config)
    add_oid(config, "1.3.6.1.4.1.25258.1.1", "RW");
    add_oid(config, "1.3.6.1.4.1.25258.1.2", "NR");
    add_oid(config, "1.2.840.10045.2.1", "ECDSA"); // X9.62
+   add_oid(config, "1.2.643.2.2.19", "GOST-34.10"); // RFC 4491
 
    /* Ciphers */
    add_oid(config, "1.3.14.3.2.7", "DES/CBC");
@@ -93,6 +94,8 @@ void set_default_oids(Library_State& config)
    add_oid(config, "1.2.840.10045.4.3.2", "ECDSA/EMSA1(SHA-256)");
    add_oid(config, "1.2.840.10045.4.3.3", "ECDSA/EMSA1(SHA-384)");
    add_oid(config, "1.2.840.10045.4.3.4", "ECDSA/EMSA1(SHA-512)");
+
+   add_oid(config, "1.2.643.2.2.3", "GOST-34.10/EMSA1(GOST-R-34.11-94)");
 
    add_oid(config, "1.3.6.1.4.1.25258.2.1.1.1", "RW/EMSA2(RIPEMD-160)");
    add_oid(config, "1.3.6.1.4.1.25258.2.1.1.2", "RW/EMSA2(SHA-160)");

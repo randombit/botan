@@ -1,0 +1,14 @@
+define GOST_34_10_2001
+
+load_on auto
+
+<requires>
+alloc
+asn1
+ec_dompar
+ecc_key
+gfpmath
+libstate
+numbertheory
+rng
+</requires>

@@ -409,6 +409,18 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
+   if(oid == "1.2.643.2.2.35.1" || oid == "1.2.643.2.2.36.0") // GostR3410-2001-CryptoPro-A-ParamSet
+      {
+      std::vector<std::string> dom_par;
+      dom_par.push_back("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD97");
+      dom_par.push_back("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD94");
+      dom_par.push_back("166");
+      dom_par.push_back("0400000000000000000000000000000000000000000000000000000000000000018D91E471E0989CDA27DF505A453F2B7635294F2DDF23E3B122ACC99C9E9F1E14");
+      dom_par.push_back("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF6C611070995AD10045841B09B761B893");
+      dom_par.push_back("1");
+      return dom_par;
+      }
+
    throw Invalid_Argument("No such ECC curve " + oid);
    }
 

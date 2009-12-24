@@ -159,7 +159,7 @@ bool operator==(const CurveGFp& lhs, const CurveGFp& rhs)
 
 std::ostream& operator<<(std::ostream& output, const CurveGFp& elem)
    {
-   return output << "y^2f = x^3 + (" << elem.get_a() << ")x + (" << elem.get_b() << ")";
+   return output << "y^2 = x^3 + (" << elem.get_a() << ")x + (" << elem.get_b() << ")";
    }
 
 }
