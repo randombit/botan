@@ -117,18 +117,25 @@ int main(int argc, char* argv[])
    std::string acct_name = argv[2];
    std::string passwd = argv[3];
 
-   std::cout << cc_number << ' ' << luhn_check(cc_number) << '\n';
+   std::cout << "Input was: " << cc_number << ' '
+             << luhn_check(cc_number) << '\n';
 
+   /**
+   * In practice something like PBKDF2 with a salt and high iteration
+   * count would be a good idea.
+   */
    SymmetricKey key = sha1(passwd);
 
    u64bit enc_cc = encrypt_cc_number(cc_number, key, acct_name);
 
-   std::cout << enc_cc << ' ' << luhn_check(enc_cc) << '\n';
+   std::cout << "Encrypted: " << enc_cc
+             << ' ' << luhn_check(enc_cc) << '\n';
 
    u64bit dec_cc = decrypt_cc_number(enc_cc, key, acct_name);
 
-   std::cout << dec_cc << ' ' << luhn_check(dec_cc) << '\n';
+   std::cout << "Decrypted: " << dec_cc
+             << ' ' << luhn_check(dec_cc) << '\n';
 
    if(dec_cc != cc_number)
-      std::cout << "Something went wrong :(\n";
+      std::cout << "Something went wrong :( Bad CC checksum?\n";
    }
