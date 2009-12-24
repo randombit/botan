@@ -120,8 +120,7 @@ u32bit OneAndZeros_Padding::unpad(const byte block[], u32bit size) const
 */
 bool OneAndZeros_Padding::valid_blocksize(u32bit size) const
    {
-   if(size) return true;
-   else     return false;
+   return (size > 0);
    }
 
 }

@@ -8,38 +8,67 @@
 #ifndef BOTAN_CFB_H__
 #define BOTAN_CFB_H__
 
-#include <botan/modebase.h>
+#include <botan/block_cipher.h>
+#include <botan/key_filt.h>
 
 namespace Botan {
 
 /*
 * CFB Encryption
 */
-class BOTAN_DLL CFB_Encryption : public BlockCipherMode
+class BOTAN_DLL CFB_Encryption : public Keyed_Filter
    {
    public:
-      CFB_Encryption(BlockCipher*, u32bit = 0);
-      CFB_Encryption(BlockCipher*, const SymmetricKey&,
-                     const InitializationVector&, u32bit = 0);
+      std::string name() const { return cipher->name() + "/CFB"; }
+
+      void set_iv(const InitializationVector&);
+
+      void set_key(const SymmetricKey& key) { cipher->set_key(key); }
+
+      bool valid_keylength(u32bit key_len) const
+         { return cipher->valid_keylength(key_len); }
+
+      CFB_Encryption(BlockCipher* cipher, u32bit feedback = 0);
+
+      CFB_Encryption(BlockCipher* cipher,
+                     const SymmetricKey& key,
+                     const InitializationVector& iv,
+                     u32bit feedback = 0);
    private:
       void write(const byte[], u32bit);
-      void feedback();
-      const u32bit FEEDBACK_SIZE;
+
+      BlockCipher* cipher;
+      SecureVector<byte> buffer, state;
+      u32bit position, feedback;
    };
 
 /*
 * CFB Decryption
 */
-class BOTAN_DLL CFB_Decryption : public BlockCipherMode
+class BOTAN_DLL CFB_Decryption : public Keyed_Filter
    {
    public:
-      CFB_Decryption(BlockCipher*, u32bit = 0);
-      CFB_Decryption(BlockCipher*, const SymmetricKey&,
-                     const InitializationVector&, u32bit = 0);
+      std::string name() const { return cipher->name() + "/CFB"; }
+
+      void set_iv(const InitializationVector&);
+
+      void set_key(const SymmetricKey& key) { cipher->set_key(key); }
+
+      bool valid_keylength(u32bit key_len) const
+         { return cipher->valid_keylength(key_len); }
+
+      CFB_Decryption(BlockCipher* cipher, u32bit feedback = 0);
+
+      CFB_Decryption(BlockCipher* cipher,
+                     const SymmetricKey& key,
+                     const InitializationVector& iv,
+                     u32bit feedback = 0);
    private:
       void write(const byte[], u32bit);
-      void feedback();
-      const u32bit FEEDBACK_SIZE;
+
+      BlockCipher* cipher;
+      SecureVector<byte> buffer, state;
+      u32bit position, feedback;
    };
 
 }
