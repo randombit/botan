@@ -11,8 +11,7 @@
 #include <botan/basefilt.h>
 #include <botan/block_cipher.h>
 #include <botan/mode_pad.h>
-
-#include <botan/modebase.h>
+#include <botan/key_filt.h>
 
 namespace Botan {
 
