@@ -13,6 +13,9 @@
 
 namespace Botan {
 
+/**
+* Struct representing a particular date and time
+*/
 struct BOTAN_DLL calendar_point
    {
    u32bit year;
@@ -27,9 +30,6 @@ struct BOTAN_DLL calendar_point
    };
 
 /*
-* Time Conversion Functions
-*/
-/*
 * @param time_point a time point from the system clock
 * @returns calendar_point object representing this time point
 */
@@ -37,7 +37,7 @@ BOTAN_DLL calendar_point calendar_value(
    const std::chrono::system_clock::time_point& time_point);
 
 /**
-@return nanoseconds resolution timestamp, unknown epoch
+* @return nanoseconds resolution timestamp, unknown epoch
 */
 BOTAN_DLL u64bit get_nanoseconds_clock();
 
