@@ -47,6 +47,24 @@ u64bit combine_timers(u32bit seconds, u32bit parts, u32bit parts_hz)
    return res;
    }
 
+std::tm do_gmtime(time_t time_val)
+   {
+   std::tm tm;
+
+#if defined(BOTAN_TARGET_OS_HAS_GMTIME_S)
+   gmtime_s(&tm, &time_val); // Windows
+#elif defined(BOTAN_TARGET_OS_HAS_GMTIME_R)
+   gmtime_r(&time_val, &tm); // Unix/SUSv2
+#else
+   std::tm* tm_p = std::gmtime(&time_val);
+   if (tm_p == 0)
+      throw Encoding_Error("time_t_to_tm could not convert");
+   tm = *tm_p;
+#endif
+
+   return tm;
+   }
+
 }
 
 /**
@@ -64,20 +82,7 @@ std::tm time_t_to_tm(u64bit timer)
    {
    std::time_t time_val = static_cast<std::time_t>(timer);
 
-   std::tm tm;
-
-#if defined(BOTAN_TARGET_OS_HAS_GMTIME_S)
-   gmtime_s(&tm, &time_val); // Windows
-#elif defined(BOTAN_TARGET_OS_HAS_GMTIME_R)
-   gmtime_r(&time_val, &tm); // Unix/SUSv2
-#else
-   std::tm* tm_p = std::gmtime(&time_val);
-   if (tm_p == 0)
-      throw Encoding_Error("time_t_to_tm could not convert");
-   tm = *tm_p;
-#endif
-
-   return tm;
+   return do_gmtime(time_val);
    }
 
 u64bit get_nanoseconds_clock()
