@@ -13,12 +13,25 @@
 
 namespace Botan {
 
+struct BOTAN_DLL calendar_point
+   {
+   u32bit year;
+   byte month;
+   byte day;
+   byte hour;
+   byte minutes;
+   byte seconds;
+
+   calendar_point(u32bit y, byte mon, byte d, byte h, byte min, byte sec) :
+      year(y), month(mon), day(d), hour(h), minutes(min), seconds(sec) {}
+   };
+
 /*
 * Time Access/Conversion Functions
 */
 BOTAN_DLL u64bit system_time();
 
-BOTAN_DLL std::tm time_t_to_tm(u64bit);
+BOTAN_DLL calendar_point calendar_value(u64bit a_time_t);
 
 /**
 @return nanoseconds resolution timestamp, unknown epoch

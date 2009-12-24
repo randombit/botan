@@ -76,13 +76,18 @@ u64bit system_time()
    }
 
 /*
-* Convert a time_t to a struct tm
+* Convert a time_point to a calendar_point
 */
-std::tm time_t_to_tm(u64bit timer)
+calendar_point calendar_value(u64bit a_time_t)
    {
-   std::time_t time_val = static_cast<std::time_t>(timer);
+   std::tm tm = do_gmtime(static_cast<std::time_t>(a_time_t));
 
-   return do_gmtime(time_val);
+   return calendar_point(tm.tm_year + 1900,
+                         tm.tm_mon + 1,
+                         tm.tm_mday,
+                         tm.tm_hour,
+                         tm.tm_min,
+                         tm.tm_sec);
    }
 
 u64bit get_nanoseconds_clock()

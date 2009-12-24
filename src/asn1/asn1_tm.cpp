@@ -27,14 +27,14 @@ X509_Time::X509_Time(const std::string& time_str)
 */
 X509_Time::X509_Time(u64bit timer)
    {
-   std::tm time_info = time_t_to_tm(timer);
+   calendar_point cal = calendar_value(timer);
 
-   year   = time_info.tm_year + 1900;
-   month  = time_info.tm_mon + 1;
-   day    = time_info.tm_mday;
-   hour   = time_info.tm_hour;
-   minute = time_info.tm_min;
-   second = time_info.tm_sec;
+   year   = cal.year;
+   month  = cal.month;
+   day    = cal.day;
+   hour   = cal.hour;
+   minute = cal.minutes;
+   second = cal.seconds;
 
    if(year >= 2050)
       tag = GENERALIZED_TIME;

@@ -50,14 +50,13 @@ u32bit dec_two_digit(byte b1, byte b2)
 /*
 * Create an EAC_Time
 */
-EAC_Time::EAC_Time(u64bit timer, ASN1_Tag t)
-   :tag(t)
+EAC_Time::EAC_Time(u64bit timer, ASN1_Tag t) : tag(t)
    {
-   std::tm time_info = time_t_to_tm(timer);
+   calendar_point cal = calendar_value(timer);
 
-   year   = time_info.tm_year + 1900;
-   month  = time_info.tm_mon + 1;
-   day    = time_info.tm_mday;
+   year   = cal.year;
+   month  = cal.month;
+   day    = cal.day;
    }
 
 /*
