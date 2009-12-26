@@ -104,7 +104,10 @@ SCAN_Name::SCAN_Name(const std::string& algo_spec)
    if(accum.second != "")
       name.push_back(deref_aliases(accum));
 
-   if(level != 0 || name.size() == 0)
+   if(level != 0)
+      throw Decoding_Error(decoding_error + "Missing close paren");
+
+   if(name.size() == 0)
       throw Decoding_Error(decoding_error + "Empty name");
 
    alg_name = name[0].second;
