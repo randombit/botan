@@ -316,8 +316,7 @@ void Library_State::initialize(bool thread_safe)
    m_algorithm_factory = new Algorithm_Factory(engines, *mutex_factory);
 
 #if defined(BOTAN_HAS_SELFTESTS)
-   if(!passes_self_tests(algorithm_factory()))
-      throw Self_Test_Failure("Startup self tests failed");
+   confirm_startup_self_tests(algorithm_factory());
 #endif
    }
 

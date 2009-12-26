@@ -18,6 +18,8 @@ namespace Botan {
 /*
 * Self Tests
 */
+BOTAN_DLL void confirm_startup_self_tests(Algorithm_Factory& af);
+
 BOTAN_DLL bool passes_self_tests(Algorithm_Factory& af);
 
 BOTAN_DLL std::map<std::string, bool>
