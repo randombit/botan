@@ -168,7 +168,7 @@ void encrypt_key(const Private_Key& key,
                  const std::string& pass, const std::string& pbe_algo,
                  X509_Encoding encoding)
    {
-   const std::string DEFAULT_PBE = "PBE-PKCS5v20(SHA-1,TripleDES/CBC)";
+   const std::string DEFAULT_PBE = "PBE-PKCS5v20(SHA-1,AES-128/CBC)";
 
    Pipe raw_key;
    raw_key.start_msg();
