@@ -3,6 +3,7 @@
  - Add SSE2 implementation of IDEA
  - Add support for Win32 high resolution system timers
  - Remove Timer class entirely
+ - Switch default PKCS #8 encryption algorithm from 3DES to AES-256
  - New option --gen-amalgamation for creating a SQLite-style amalgamation
  - Many headers are now explicitly internal-use-only and are not installed
  - Greatly improve the Win32 installer
