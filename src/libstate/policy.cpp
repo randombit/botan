@@ -47,6 +47,7 @@ void set_default_oids(Library_State& config)
    add_oid(config, "2.16.840.1.101.3.4.1.2", "AES-128/CBC");
    add_oid(config, "2.16.840.1.101.3.4.1.22", "AES-192/CBC");
    add_oid(config, "2.16.840.1.101.3.4.1.42", "AES-256/CBC");
+   add_oid(config, "1.2.410.200004.1.4", "SEED/CBC"); // RFC 4010
 
    /* Hash Functions */
    add_oid(config, "1.2.840.113549.2.5", "MD5");
@@ -57,6 +58,13 @@ void set_default_oids(Library_State& config)
    add_oid(config, "2.16.840.1.101.3.4.2.1", "SHA-256");
    add_oid(config, "2.16.840.1.101.3.4.2.2", "SHA-384");
    add_oid(config, "2.16.840.1.101.3.4.2.3", "SHA-512");
+
+   /* MACs */
+   add_oid(config, "1.2.840.113549.2.7", "HMAC(SHA-1)");
+   add_oid(config, "1.2.840.113549.2.8", "HMAC(SHA-224)");
+   add_oid(config, "1.2.840.113549.2.9", "HMAC(SHA-256)");
+   add_oid(config, "1.2.840.113549.2.10", "HMAC(SHA-384)");
+   add_oid(config, "1.2.840.113549.2.11", "HMAC(SHA-512)");
 
    /* Key Wrap */
    add_oid(config, "1.2.840.113549.1.9.16.3.6", "KeyWrap.TripleDES");
