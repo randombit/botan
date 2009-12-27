@@ -12,8 +12,6 @@
 
 #include <stdio.h>
 
-using namespace std::tr1::placeholders;
-
 namespace Botan {
 
 namespace {
@@ -40,10 +38,9 @@ void poly_double(byte tweak[], u32bit size)
 * XTS_Encryption constructor
 */
 XTS_Encryption::XTS_Encryption(BlockCipher* ciph) :
-   cipher(ciph),
-   buf_op(std::tr1::bind(&XTS_Encryption::buffered_block, this, _1, _2),
-          std::tr1::bind(&XTS_Encryption::buffered_final, this, _1, _2),
-          2 * cipher->BLOCK_SIZE, cipher->BLOCK_SIZE + 1)
+   Buffered_Filter(BOTAN_PARALLEL_BLOCKS_XTS * ciph->BLOCK_SIZE,
+                   ciph->BLOCK_SIZE + 1),
+   cipher(ciph)
    {
    if(cipher->BLOCK_SIZE != 8 && cipher->BLOCK_SIZE != 16)
       throw std::invalid_argument("Bad cipher for XTS: " + cipher->name());
@@ -58,10 +55,9 @@ XTS_Encryption::XTS_Encryption(BlockCipher* ciph) :
 XTS_Encryption::XTS_Encryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   cipher(ciph),
-   buf_op(std::tr1::bind(&XTS_Encryption::buffered_block, this, _1, _2),
-          std::tr1::bind(&XTS_Encryption::buffered_final, this, _1, _2),
-          2 * cipher->BLOCK_SIZE, cipher->BLOCK_SIZE + 1)
+   Buffered_Filter(BOTAN_PARALLEL_BLOCKS_XTS * ciph->BLOCK_SIZE,
+                   ciph->BLOCK_SIZE + 1),
+   cipher(ciph)
    {
    if(cipher->BLOCK_SIZE != 8 && cipher->BLOCK_SIZE != 16)
        throw std::invalid_argument("Bad cipher for XTS: " + cipher->name());
@@ -120,14 +116,14 @@ void XTS_Encryption::set_key(const SymmetricKey& key)
 */
 void XTS_Encryption::write(const byte input[], u32bit length)
    {
-   buf_op.write(input, length);
+   Buffered_Filter::write(input, length);
    }
 /*
 * Finish encrypting in XTS mode
 */
 void XTS_Encryption::end_msg()
    {
-   buf_op.final();
+   Buffered_Filter::end_msg();
    }
 
 void XTS_Encryption::buffered_block(const byte input[], u32bit length)
@@ -200,16 +196,14 @@ void XTS_Encryption::buffered_final(const byte input[], u32bit length)
       send(temp, temp.size());
       }
 
-   buf_op.reset();
+   buffer_reset();
    }
 
 /*
 * XTS_Decryption constructor
 */
 XTS_Decryption::XTS_Decryption(BlockCipher* ciph) :
-   buf_op(std::tr1::bind(&XTS_Decryption::buffered_block, this, _1, _2),
-          std::tr1::bind(&XTS_Decryption::buffered_final, this, _1, _2),
-          2 * ciph->BLOCK_SIZE, 1)
+   Buffered_Filter(BOTAN_PARALLEL_BLOCKS_XTS * ciph->BLOCK_SIZE, 1)
    {
    cipher = ciph;
    cipher2 = ciph->clone();
@@ -222,9 +216,7 @@ XTS_Decryption::XTS_Decryption(BlockCipher* ciph) :
 XTS_Decryption::XTS_Decryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   buf_op(std::tr1::bind(&XTS_Decryption::buffered_block, this, _1, _2),
-          std::tr1::bind(&XTS_Decryption::buffered_final, this, _1, _2),
-          2 * ciph->BLOCK_SIZE, 1)
+   Buffered_Filter(BOTAN_PARALLEL_BLOCKS_XTS * ciph->BLOCK_SIZE, 1)
    {
    cipher = ciph;
    cipher2 = ciph->clone();
@@ -281,7 +273,7 @@ void XTS_Decryption::set_key(const SymmetricKey& key)
 */
 void XTS_Decryption::write(const byte input[], u32bit length)
    {
-   buf_op.write(input, length);
+   Buffered_Filter::write(input, length);
    }
 
 /*
@@ -289,7 +281,7 @@ void XTS_Decryption::write(const byte input[], u32bit length)
 */
 void XTS_Decryption::end_msg()
    {
-   buf_op.final();
+   Buffered_Filter::end_msg();
    }
 
 void XTS_Decryption::buffered_block(const byte input[], u32bit input_length)
@@ -360,7 +352,7 @@ void XTS_Decryption::buffered_final(const byte input[], u32bit input_length)
       send(temp, input_length);
       }
 
-   buf_op.reset();
+   buffer_reset();
    }
 
 }

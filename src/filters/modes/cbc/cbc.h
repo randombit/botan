@@ -11,14 +11,15 @@
 #include <botan/block_cipher.h>
 #include <botan/key_filt.h>
 #include <botan/mode_pad.h>
-#include <botan/buf_op.h>
+#include <botan/buf_filt.h>
 
 namespace Botan {
 
 /*
 * CBC Encryption
 */
-class BOTAN_DLL CBC_Encryption : public Keyed_Filter
+class BOTAN_DLL CBC_Encryption : public Keyed_Filter,
+                                 private Buffered_Filter
    {
    public:
       std::string name() const;
@@ -48,14 +49,14 @@ class BOTAN_DLL CBC_Encryption : public Keyed_Filter
 
       BlockCipher* cipher;
       const BlockCipherModePaddingMethod* padder;
-      Buffered_Operation buf_op;
       SecureVector<byte> state;
    };
 
 /*
 * CBC Decryption
 */
-class BOTAN_DLL CBC_Decryption : public Keyed_Filter
+class BOTAN_DLL CBC_Decryption : public Keyed_Filter,
+                                 private Buffered_Filter
    {
    public:
       std::string name() const;
@@ -85,7 +86,6 @@ class BOTAN_DLL CBC_Decryption : public Keyed_Filter
 
       BlockCipher* cipher;
       const BlockCipherModePaddingMethod* padder;
-      Buffered_Operation buf_op;
       SecureVector<byte> state, temp;
    };
 

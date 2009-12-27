@@ -10,14 +10,15 @@
 
 #include <botan/block_cipher.h>
 #include <botan/key_filt.h>
-#include <botan/buf_op.h>
+#include <botan/buf_filt.h>
 
 namespace Botan {
 
 /*
 * XTS Encryption
 */
-class BOTAN_DLL XTS_Encryption : public Keyed_Filter
+class BOTAN_DLL XTS_Encryption : public Keyed_Filter,
+                                 private Buffered_Filter
    {
    public:
       void set_key(const SymmetricKey& key);
@@ -45,14 +46,13 @@ class BOTAN_DLL XTS_Encryption : public Keyed_Filter
       BlockCipher* cipher;
       BlockCipher* cipher2;
       SecureVector<byte> tweak;
-
-      Buffered_Operation buf_op;
    };
 
 /*
 * XTS Decryption
 */
-class BOTAN_DLL XTS_Decryption : public Keyed_Filter
+class BOTAN_DLL XTS_Decryption : public Keyed_Filter,
+                                 private Buffered_Filter
    {
    public:
       void set_key(const SymmetricKey& key);
@@ -78,8 +78,6 @@ class BOTAN_DLL XTS_Decryption : public Keyed_Filter
       BlockCipher* cipher;
       BlockCipher* cipher2;
       SecureVector<byte> tweak;
-
-      Buffered_Operation buf_op;
    };
 
 }

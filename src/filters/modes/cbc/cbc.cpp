@@ -9,7 +9,7 @@
 #include <botan/internal/xor_buf.h>
 #include <algorithm>
 
-using namespace std::tr1::placeholders;
+#include <stdio.h>
 
 namespace Botan {
 
@@ -18,10 +18,8 @@ namespace Botan {
 */
 CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad) :
-   cipher(ciph), padder(pad),
-   buf_op(std::tr1::bind(&CBC_Encryption::buffered_block, this, _1, _2),
-          std::tr1::bind(&CBC_Encryption::buffered_final, this, _1, _2),
-          2 * cipher->BLOCK_SIZE)
+   Buffered_Filter(ciph->BLOCK_SIZE, 0),
+   cipher(ciph), padder(pad)
    {
    if(!padder->valid_blocksize(cipher->BLOCK_SIZE))
       throw Invalid_Block_Size(name(), padder->name());
@@ -36,10 +34,8 @@ CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   cipher(ciph), padder(pad),
-   buf_op(std::tr1::bind(&CBC_Encryption::buffered_block, this, _1, _2),
-          std::tr1::bind(&CBC_Encryption::buffered_final, this, _1, _2),
-          2 * cipher->BLOCK_SIZE)
+   Buffered_Filter(ciph->BLOCK_SIZE, 0),
+   cipher(ciph), padder(pad)
    {
    if(!padder->valid_blocksize(cipher->BLOCK_SIZE))
       throw Invalid_Block_Size(name(), padder->name());
@@ -59,7 +55,7 @@ void CBC_Encryption::set_iv(const InitializationVector& iv)
       throw Invalid_IV_Length(name(), iv.length());
 
    state = iv.bits_of();
-   buf_op.reset();
+   buffer_reset();
    }
 
 /*
@@ -90,20 +86,21 @@ void CBC_Encryption::buffered_final(const byte input[], u32bit length)
 
 void CBC_Encryption::write(const byte input[], u32bit input_length)
    {
-   buf_op.write(input, input_length);
+   Buffered_Filter::write(input, input_length);
    }
 
 void CBC_Encryption::end_msg()
    {
-   u32bit last_block = buf_op.current_position() % cipher->BLOCK_SIZE;
+   u32bit last_block = current_position() % cipher->BLOCK_SIZE;
 
    SecureVector<byte> padding(cipher->BLOCK_SIZE);
    padder->pad(padding, padding.size(), last_block);
 
    u32bit pad_bytes = padder->pad_bytes(cipher->BLOCK_SIZE, last_block);
 
-   buf_op.write(padding, pad_bytes);
-   buf_op.final();
+   if(pad_bytes)
+      Buffered_Filter::write(padding, pad_bytes);
+   Buffered_Filter::end_msg();
    }
 
 /*
@@ -119,11 +116,9 @@ std::string CBC_Encryption::name() const
 */
 CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad) :
-   cipher(ciph), padder(pad),
-   buf_op(std::tr1::bind(&CBC_Decryption::buffered_block, this, _1, _2),
-          std::tr1::bind(&CBC_Decryption::buffered_final, this, _1, _2),
-          BOTAN_PARALLEL_BLOCKS_CBC * cipher->BLOCK_SIZE,
-          cipher->BLOCK_SIZE)
+   Buffered_Filter(BOTAN_PARALLEL_BLOCKS_CBC * ciph->BLOCK_SIZE,
+                   ciph->BLOCK_SIZE),
+   cipher(ciph), padder(pad)
    {
    if(!padder->valid_blocksize(cipher->BLOCK_SIZE))
       throw Invalid_Block_Size(name(), padder->name());
@@ -139,11 +134,9 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   cipher(ciph), padder(pad),
-   buf_op(std::tr1::bind(&CBC_Decryption::buffered_block, this, _1, _2),
-          std::tr1::bind(&CBC_Decryption::buffered_final, this, _1, _2),
-          BOTAN_PARALLEL_BLOCKS_CBC * cipher->BLOCK_SIZE,
-          cipher->BLOCK_SIZE)
+   Buffered_Filter(BOTAN_PARALLEL_BLOCKS_CBC * ciph->BLOCK_SIZE,
+                   ciph->BLOCK_SIZE),
+   cipher(ciph), padder(pad)
    {
    if(!padder->valid_blocksize(cipher->BLOCK_SIZE))
       throw Invalid_Block_Size(name(), padder->name());
@@ -164,7 +157,7 @@ void CBC_Decryption::set_iv(const InitializationVector& iv)
       throw Invalid_IV_Length(name(), iv.length());
 
    state = iv.bits_of();
-   buf_op.reset();
+   buffer_reset();
    }
 
 /*
@@ -223,7 +216,7 @@ void CBC_Decryption::buffered_final(const byte input[], u32bit length)
 */
 void CBC_Decryption::write(const byte input[], u32bit length)
    {
-   buf_op.write(input, length);
+   Buffered_Filter::write(input, length);
    }
 
 /*
@@ -231,7 +224,7 @@ void CBC_Decryption::write(const byte input[], u32bit length)
 */
 void CBC_Decryption::end_msg()
    {
-   buf_op.final();
+   Buffered_Filter::end_msg();
    }
 
 /*
