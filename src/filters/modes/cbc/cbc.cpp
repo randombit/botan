@@ -122,7 +122,8 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
    cipher(ciph), padder(pad),
    buf_op(std::tr1::bind(&CBC_Decryption::cbc_decrypt, this, _1, _2),
           std::tr1::bind(&CBC_Decryption::cbc_final, this, _1, _2),
-          2 * cipher->BLOCK_SIZE, cipher->BLOCK_SIZE)
+          BOTAN_PARALLEL_BLOCKS_CBC * cipher->BLOCK_SIZE,
+          cipher->BLOCK_SIZE)
    {
    if(!padder->valid_blocksize(cipher->BLOCK_SIZE))
       throw Invalid_Block_Size(name(), padder->name());
@@ -141,7 +142,8 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
    cipher(ciph), padder(pad),
    buf_op(std::tr1::bind(&CBC_Decryption::cbc_decrypt, this, _1, _2),
           std::tr1::bind(&CBC_Decryption::cbc_final, this, _1, _2),
-          2 * cipher->BLOCK_SIZE, cipher->BLOCK_SIZE)
+          BOTAN_PARALLEL_BLOCKS_CBC * cipher->BLOCK_SIZE,
+          cipher->BLOCK_SIZE)
    {
    if(!padder->valid_blocksize(cipher->BLOCK_SIZE))
       throw Invalid_Block_Size(name(), padder->name());
