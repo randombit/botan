@@ -41,8 +41,8 @@ void poly_double(byte tweak[], u32bit size)
 */
 XTS_Encryption::XTS_Encryption(BlockCipher* ciph) :
    cipher(ciph),
-   buf_op(std::tr1::bind(&XTS_Encryption::xts_encrypt, this, _1, _2),
-          std::tr1::bind(&XTS_Encryption::xts_final, this, _1, _2),
+   buf_op(std::tr1::bind(&XTS_Encryption::buffered_proc_block, this, _1, _2),
+          std::tr1::bind(&XTS_Encryption::buffered_final, this, _1, _2),
           2 * cipher->BLOCK_SIZE, cipher->BLOCK_SIZE + 1)
    {
    if(cipher->BLOCK_SIZE != 8 && cipher->BLOCK_SIZE != 16)
@@ -59,8 +59,8 @@ XTS_Encryption::XTS_Encryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
    cipher(ciph),
-   buf_op(std::tr1::bind(&XTS_Encryption::xts_encrypt, this, _1, _2),
-          std::tr1::bind(&XTS_Encryption::xts_final, this, _1, _2),
+   buf_op(std::tr1::bind(&XTS_Encryption::buffered_proc_block, this, _1, _2),
+          std::tr1::bind(&XTS_Encryption::buffered_final, this, _1, _2),
           2 * cipher->BLOCK_SIZE, cipher->BLOCK_SIZE + 1)
    {
    if(cipher->BLOCK_SIZE != 8 && cipher->BLOCK_SIZE != 16)
@@ -130,7 +130,7 @@ void XTS_Encryption::end_msg()
    buf_op.final();
    }
 
-void XTS_Encryption::xts_encrypt(const byte input[], u32bit length)
+void XTS_Encryption::buffered_proc_block(const byte input[], u32bit length)
    {
    const u32bit blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;
    u32bit blocks = length / cipher->BLOCK_SIZE;
@@ -171,14 +171,14 @@ void XTS_Encryption::xts_encrypt(const byte input[], u32bit length)
 /*
 * Finish encrypting in XTS mode
 */
-void XTS_Encryption::xts_final(const byte input[], u32bit length)
+void XTS_Encryption::buffered_final(const byte input[], u32bit length)
    {
    if(length <= cipher->BLOCK_SIZE)
       throw Exception("XTS_Encryption: insufficient data to encrypt");
 
    if(length % cipher->BLOCK_SIZE == 0)
       {
-      xts_encrypt(input, length);
+      buffered_proc_block(input, length);
       }
    else
       { // steal ciphertext

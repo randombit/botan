@@ -40,8 +40,8 @@ class BOTAN_DLL CBC_Encryption : public Keyed_Filter
 
       ~CBC_Encryption() { delete padder; }
    private:
-      void cbc_encrypt(const byte input[], u32bit input_length);
-      void cbc_final(const byte input[], u32bit input_length);
+      void buffered_proc_block(const byte input[], u32bit input_length);
+      void buffered_final(const byte input[], u32bit input_length);
 
       void write(const byte input[], u32bit input_length);
       void end_msg();
@@ -77,8 +77,8 @@ class BOTAN_DLL CBC_Decryption : public Keyed_Filter
 
       ~CBC_Decryption() { delete padder; }
    private:
-      void cbc_decrypt(const byte input[], u32bit input_length);
-      void cbc_final(const byte input[], u32bit input_length);
+      void buffered_proc_block(const byte input[], u32bit input_length);
+      void buffered_final(const byte input[], u32bit input_length);
 
       void write(const byte[], u32bit);
       void end_msg();
