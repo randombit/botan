@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <stdexcept>
 
+using namespace std::tr1::placeholders;
+
 namespace Botan {
 
 namespace {
@@ -35,15 +37,17 @@ void poly_double(byte tweak[], u32bit size)
 /*
 * XTS_Encryption constructor
 */
-XTS_Encryption::XTS_Encryption(BlockCipher* ciph) : cipher(ciph)
+XTS_Encryption::XTS_Encryption(BlockCipher* ciph) :
+   cipher(ciph),
+   buf_op(std::tr1::bind(&XTS_Encryption::xts_encrypt, this, _1, _2),
+          std::tr1::bind(&XTS_Encryption::xts_final, this, _1, _2),
+          2 * cipher->BLOCK_SIZE, 1)
    {
    if(cipher->BLOCK_SIZE != 16)
       throw std::invalid_argument("Bad cipher for XTS: " + cipher->name());
 
    cipher2 = cipher->clone();
-   tweak.resize(cipher->BLOCK_SIZE);
-   buffer.resize(2 * cipher->BLOCK_SIZE);
-   position = 0;
+   tweak.resize(BOTAN_PARALLEL_BLOCKS_XTS * cipher->BLOCK_SIZE);
    }
 
 /*
@@ -51,15 +55,17 @@ XTS_Encryption::XTS_Encryption(BlockCipher* ciph) : cipher(ciph)
 */
 XTS_Encryption::XTS_Encryption(BlockCipher* ciph,
                                const SymmetricKey& key,
-                               const InitializationVector& iv) : cipher(ciph)
+                               const InitializationVector& iv) :
+   cipher(ciph),
+   buf_op(std::tr1::bind(&XTS_Encryption::xts_encrypt, this, _1, _2),
+          std::tr1::bind(&XTS_Encryption::xts_final, this, _1, _2),
+          2 * cipher->BLOCK_SIZE, cipher->BLOCK_SIZE + 1)
    {
    if(cipher->BLOCK_SIZE != 16)
       throw std::invalid_argument("Bad cipher for XTS: " + cipher->name());
 
    cipher2 = cipher->clone();
-   tweak.resize(cipher->BLOCK_SIZE);
-   buffer.resize(2 * cipher->BLOCK_SIZE);
-   position = 0;
+   tweak.resize(BOTAN_PARALLEL_BLOCKS_XTS * cipher->BLOCK_SIZE);
 
    set_key(key);
    set_iv(iv);
@@ -78,7 +84,7 @@ std::string XTS_Encryption::name() const
 */
 void XTS_Encryption::set_iv(const InitializationVector& iv)
    {
-   if(iv.length() != tweak.size())
+   if(iv.length() != cipher->BLOCK_SIZE)
       throw Invalid_IV_Length(name(), iv.length());
 
    tweak = iv.bits_of();
@@ -96,98 +102,74 @@ void XTS_Encryption::set_key(const SymmetricKey& key)
    cipher2->set_key(key.begin() + key_half, key_half);
    }
 
-void XTS_Encryption::encrypt(const byte block[])
-   {
-   /*
-   * We can always use the first 16 bytes of buffer as temp space,
-   * since either the input block is buffer (in which case this is
-   * just buffer ^= tweak) or it not, in which case we already read
-   * and used the data there and are processing new input. Kind of
-   * subtle/nasty, but saves allocating a distinct temp buf.
-   */
-
-   xor_buf(buffer, block, tweak, cipher->BLOCK_SIZE);
-   cipher->encrypt(buffer);
-   xor_buf(buffer, tweak, cipher->BLOCK_SIZE);
-
-   poly_double(tweak, cipher->BLOCK_SIZE);
-
-   send(buffer, cipher->BLOCK_SIZE);
-   }
-
 /*
 * Encrypt in XTS mode
 */
 void XTS_Encryption::write(const byte input[], u32bit length)
    {
-   const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
-
-   u32bit copied = std::min(buffer.size() - position, length);
-   buffer.copy(position, input, copied);
-   length -= copied;
-   input += copied;
-   position += copied;
-
-   if(length == 0) return;
-
-   encrypt(buffer);
-   if(length > BLOCK_SIZE)
-      {
-      encrypt(buffer + BLOCK_SIZE);
-      while(length > buffer.size())
-         {
-         encrypt(input);
-         length -= BLOCK_SIZE;
-         input += BLOCK_SIZE;
-         }
-      position = 0;
-      }
-   else
-      {
-      copy_mem(buffer.begin(), buffer + BLOCK_SIZE, BLOCK_SIZE);
-      position = BLOCK_SIZE;
-      }
-   buffer.copy(position, input, length);
-   position += length;
+   buf_op.write(input, length);
    }
-
 /*
 * Finish encrypting in XTS mode
 */
 void XTS_Encryption::end_msg()
    {
-   const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
+   buf_op.final();
+   }
 
-   if(position < BLOCK_SIZE)
-      throw Exception("XTS_Encryption: insufficient data to encrypt");
-   else if(position == BLOCK_SIZE)
+void XTS_Encryption::xts_encrypt(const byte input[], u32bit length)
+   {
+   u32bit blocks = length / cipher->BLOCK_SIZE;
+
+   SecureVector<byte> temp(cipher->BLOCK_SIZE);
+
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      encrypt(buffer);
-      }
-   else if(position == 2*BLOCK_SIZE)
-      {
-      encrypt(buffer);
-      encrypt(buffer + BLOCK_SIZE);
-      }
-   else
-      { // steal ciphertext
-      xor_buf(buffer, tweak, cipher->BLOCK_SIZE);
-      cipher->encrypt(buffer);
-      xor_buf(buffer, tweak, cipher->BLOCK_SIZE);
+      xor_buf(temp, input + i * cipher->BLOCK_SIZE, tweak,
+              cipher->BLOCK_SIZE);
+
+      cipher->encrypt(temp);
+      xor_buf(temp, tweak, cipher->BLOCK_SIZE);
 
       poly_double(tweak, cipher->BLOCK_SIZE);
 
-      for(u32bit i = 0; i != position - cipher->BLOCK_SIZE; ++i)
-         std::swap(buffer[i], buffer[i + cipher->BLOCK_SIZE]);
+      send(temp, cipher->BLOCK_SIZE);
+      }
+   }
 
-      xor_buf(buffer, tweak, cipher->BLOCK_SIZE);
-      cipher->encrypt(buffer);
-      xor_buf(buffer, tweak, cipher->BLOCK_SIZE);
+/*
+* Finish encrypting in XTS mode
+*/
+void XTS_Encryption::xts_final(const byte input[], u32bit length)
+   {
+   if(length < cipher->BLOCK_SIZE)
+      throw Exception("XTS_Encryption: insufficient data to encrypt");
 
-      send(buffer, position);
+   if(length % cipher->BLOCK_SIZE == 0)
+      {
+      xts_encrypt(input, length);
+      }
+   else
+      { // steal ciphertext
+      SecureVector<byte> temp(input, length);
+
+      xor_buf(temp, tweak, cipher->BLOCK_SIZE);
+      cipher->encrypt(temp);
+      xor_buf(temp, tweak, cipher->BLOCK_SIZE);
+
+      poly_double(tweak, cipher->BLOCK_SIZE);
+
+      for(u32bit i = 0; i != length - cipher->BLOCK_SIZE; ++i)
+         std::swap(temp[i], temp[i + cipher->BLOCK_SIZE]);
+
+      xor_buf(temp, tweak, cipher->BLOCK_SIZE);
+      cipher->encrypt(temp);
+      xor_buf(temp, tweak, cipher->BLOCK_SIZE);
+
+      send(temp, temp.size());
       }
 
-   position = 0;
+   buf_op.reset();
    }
 
 /*

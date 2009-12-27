@@ -8,8 +8,9 @@
 #ifndef BOTAN_XTS_H__
 #define BOTAN_XTS_H__
 
-#include <botan/key_filt.h>
 #include <botan/block_cipher.h>
+#include <botan/key_filt.h>
+#include <botan/buf_op.h>
 
 namespace Botan {
 
@@ -37,13 +38,15 @@ class BOTAN_DLL XTS_Encryption : public Keyed_Filter
    private:
       void write(const byte[], u32bit);
       void end_msg();
-      void encrypt(const byte block[]);
+
+      void xts_encrypt(const byte input[], u32bit input_length);
+      void xts_final(const byte input[], u32bit input_length);
 
       BlockCipher* cipher;
       BlockCipher* cipher2;
       SecureVector<byte> tweak;
-      SecureVector<byte> buffer;
-      u32bit position;
+
+      Buffered_Operation buf_op;
    };
 
 /*
