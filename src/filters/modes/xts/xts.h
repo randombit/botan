@@ -71,13 +71,15 @@ class BOTAN_DLL XTS_Decryption : public Keyed_Filter
    private:
       void write(const byte[], u32bit);
       void end_msg();
-      void decrypt(const byte[]);
+
+      void buffered_proc_block(const byte input[], u32bit input_length);
+      void buffered_final(const byte input[], u32bit input_length);
 
       BlockCipher* cipher;
       BlockCipher* cipher2;
       SecureVector<byte> tweak;
-      SecureVector<byte> buffer;
-      u32bit position;
+
+      Buffered_Operation buf_op;
    };
 
 }
