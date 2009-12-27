@@ -9,12 +9,6 @@
 
 namespace Botan {
 
-namespace {
-
-const u32bit PARALLEL_BLOCKS = BOTAN_PARALLEL_BLOCKS_ECB;
-
-}
-
 /*
 * ECB_Encryption Constructor
 */
@@ -25,7 +19,7 @@ ECB_Encryption::ECB_Encryption(BlockCipher* ciph,
    padder = pad;
 
    plaintext.resize(cipher->BLOCK_SIZE);
-   ciphertext.resize(cipher->BLOCK_SIZE * PARALLEL_BLOCKS);
+   ciphertext.resize(cipher->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB);
 
    position = 0;
    }
@@ -41,7 +35,7 @@ ECB_Encryption::ECB_Encryption(BlockCipher* ciph,
    padder = pad;
 
    plaintext.resize(cipher->BLOCK_SIZE);
-   ciphertext.resize(cipher->BLOCK_SIZE * PARALLEL_BLOCKS);
+   ciphertext.resize(cipher->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB);
 
    position = 0;
 
@@ -125,7 +119,7 @@ ECB_Decryption::ECB_Decryption(BlockCipher* ciph,
    padder = pad;
 
    ciphertext.resize(cipher->BLOCK_SIZE);
-   plaintext.resize(cipher->BLOCK_SIZE * PARALLEL_BLOCKS);
+   plaintext.resize(cipher->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB);
 
    position = 0;
    }
@@ -141,7 +135,7 @@ ECB_Decryption::ECB_Decryption(BlockCipher* ciph,
    padder = pad;
 
    ciphertext.resize(cipher->BLOCK_SIZE);
-   plaintext.resize(cipher->BLOCK_SIZE * PARALLEL_BLOCKS);
+   plaintext.resize(cipher->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB);
 
    position = 0;
 
