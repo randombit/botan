@@ -19,7 +19,7 @@ namespace Botan {
 CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad) :
    cipher(ciph), padder(pad),
-   buf_op(std::tr1::bind(&CBC_Encryption::buffered_proc_block, this, _1, _2),
+   buf_op(std::tr1::bind(&CBC_Encryption::buffered_block, this, _1, _2),
           std::tr1::bind(&CBC_Encryption::buffered_final, this, _1, _2),
           2 * cipher->BLOCK_SIZE)
    {
@@ -37,7 +37,7 @@ CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
    cipher(ciph), padder(pad),
-   buf_op(std::tr1::bind(&CBC_Encryption::buffered_proc_block, this, _1, _2),
+   buf_op(std::tr1::bind(&CBC_Encryption::buffered_block, this, _1, _2),
           std::tr1::bind(&CBC_Encryption::buffered_final, this, _1, _2),
           2 * cipher->BLOCK_SIZE)
    {
@@ -65,7 +65,7 @@ void CBC_Encryption::set_iv(const InitializationVector& iv)
 /*
 * Encrypt in CBC mode
 */
-void CBC_Encryption::buffered_proc_block(const byte input[], u32bit length)
+void CBC_Encryption::buffered_block(const byte input[], u32bit length)
    {
    u32bit blocks = length / state.size();
 
@@ -83,7 +83,7 @@ void CBC_Encryption::buffered_proc_block(const byte input[], u32bit length)
 void CBC_Encryption::buffered_final(const byte input[], u32bit length)
    {
    if(length % cipher->BLOCK_SIZE == 0)
-      buffered_proc_block(input, length);
+      buffered_block(input, length);
    else if(length != 0)
       throw Exception(name() + ": Did not pad to full blocksize");
    }
@@ -120,7 +120,7 @@ std::string CBC_Encryption::name() const
 CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad) :
    cipher(ciph), padder(pad),
-   buf_op(std::tr1::bind(&CBC_Decryption::buffered_proc_block, this, _1, _2),
+   buf_op(std::tr1::bind(&CBC_Decryption::buffered_block, this, _1, _2),
           std::tr1::bind(&CBC_Decryption::buffered_final, this, _1, _2),
           BOTAN_PARALLEL_BLOCKS_CBC * cipher->BLOCK_SIZE,
           cipher->BLOCK_SIZE)
@@ -140,7 +140,7 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
    cipher(ciph), padder(pad),
-   buf_op(std::tr1::bind(&CBC_Decryption::buffered_proc_block, this, _1, _2),
+   buf_op(std::tr1::bind(&CBC_Decryption::buffered_block, this, _1, _2),
           std::tr1::bind(&CBC_Decryption::buffered_final, this, _1, _2),
           BOTAN_PARALLEL_BLOCKS_CBC * cipher->BLOCK_SIZE,
           cipher->BLOCK_SIZE)
@@ -170,7 +170,7 @@ void CBC_Decryption::set_iv(const InitializationVector& iv)
 /*
 * Decrypt in CBC mode
 */
-void CBC_Decryption::buffered_proc_block(const byte input[], u32bit length)
+void CBC_Decryption::buffered_block(const byte input[], u32bit length)
    {
    const u32bit blocks_in_temp = temp.size() / cipher->BLOCK_SIZE;
    u32bit blocks = length / cipher->BLOCK_SIZE;
@@ -207,7 +207,7 @@ void CBC_Decryption::buffered_final(const byte input[], u32bit length)
 
    size_t extra_blocks = (length - 1) / cipher->BLOCK_SIZE;
 
-   buffered_proc_block(input, extra_blocks * cipher->BLOCK_SIZE);
+   buffered_block(input, extra_blocks * cipher->BLOCK_SIZE);
 
    input += extra_blocks * cipher->BLOCK_SIZE;
 

@@ -41,7 +41,7 @@ void poly_double(byte tweak[], u32bit size)
 */
 XTS_Encryption::XTS_Encryption(BlockCipher* ciph) :
    cipher(ciph),
-   buf_op(std::tr1::bind(&XTS_Encryption::buffered_proc_block, this, _1, _2),
+   buf_op(std::tr1::bind(&XTS_Encryption::buffered_block, this, _1, _2),
           std::tr1::bind(&XTS_Encryption::buffered_final, this, _1, _2),
           2 * cipher->BLOCK_SIZE, cipher->BLOCK_SIZE + 1)
    {
@@ -59,7 +59,7 @@ XTS_Encryption::XTS_Encryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
    cipher(ciph),
-   buf_op(std::tr1::bind(&XTS_Encryption::buffered_proc_block, this, _1, _2),
+   buf_op(std::tr1::bind(&XTS_Encryption::buffered_block, this, _1, _2),
           std::tr1::bind(&XTS_Encryption::buffered_final, this, _1, _2),
           2 * cipher->BLOCK_SIZE, cipher->BLOCK_SIZE + 1)
    {
@@ -130,7 +130,7 @@ void XTS_Encryption::end_msg()
    buf_op.final();
    }
 
-void XTS_Encryption::buffered_proc_block(const byte input[], u32bit length)
+void XTS_Encryption::buffered_block(const byte input[], u32bit length)
    {
    const u32bit blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;
    u32bit blocks = length / cipher->BLOCK_SIZE;
@@ -178,7 +178,7 @@ void XTS_Encryption::buffered_final(const byte input[], u32bit length)
 
    if(length % cipher->BLOCK_SIZE == 0)
       {
-      buffered_proc_block(input, length);
+      buffered_block(input, length);
       }
    else
       { // steal ciphertext
@@ -207,7 +207,7 @@ void XTS_Encryption::buffered_final(const byte input[], u32bit length)
 * XTS_Decryption constructor
 */
 XTS_Decryption::XTS_Decryption(BlockCipher* ciph) :
-   buf_op(std::tr1::bind(&XTS_Decryption::buffered_proc_block, this, _1, _2),
+   buf_op(std::tr1::bind(&XTS_Decryption::buffered_block, this, _1, _2),
           std::tr1::bind(&XTS_Decryption::buffered_final, this, _1, _2),
           2 * ciph->BLOCK_SIZE, 1)
    {
@@ -222,7 +222,7 @@ XTS_Decryption::XTS_Decryption(BlockCipher* ciph) :
 XTS_Decryption::XTS_Decryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   buf_op(std::tr1::bind(&XTS_Decryption::buffered_proc_block, this, _1, _2),
+   buf_op(std::tr1::bind(&XTS_Decryption::buffered_block, this, _1, _2),
           std::tr1::bind(&XTS_Decryption::buffered_final, this, _1, _2),
           2 * ciph->BLOCK_SIZE, 1)
    {
@@ -292,7 +292,7 @@ void XTS_Decryption::end_msg()
    buf_op.final();
    }
 
-void XTS_Decryption::buffered_proc_block(const byte input[], u32bit input_length)
+void XTS_Decryption::buffered_block(const byte input[], u32bit input_length)
    {
    const u32bit blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;
    u32bit blocks = input_length / cipher->BLOCK_SIZE;
@@ -337,7 +337,7 @@ void XTS_Decryption::buffered_final(const byte input[], u32bit input_length)
 
    if(input_length % cipher->BLOCK_SIZE == 0)
       {
-      buffered_proc_block(input, input_length);
+      buffered_block(input, input_length);
       }
    else
       {

@@ -39,7 +39,7 @@ class BOTAN_DLL XTS_Encryption : public Keyed_Filter
       void write(const byte[], u32bit);
       void end_msg();
 
-      void buffered_proc_block(const byte input[], u32bit input_length);
+      void buffered_block(const byte input[], u32bit input_length);
       void buffered_final(const byte input[], u32bit input_length);
 
       BlockCipher* cipher;
@@ -72,7 +72,7 @@ class BOTAN_DLL XTS_Decryption : public Keyed_Filter
       void write(const byte[], u32bit);
       void end_msg();
 
-      void buffered_proc_block(const byte input[], u32bit input_length);
+      void buffered_block(const byte input[], u32bit input_length);
       void buffered_final(const byte input[], u32bit input_length);
 
       BlockCipher* cipher;
