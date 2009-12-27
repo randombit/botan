@@ -9,6 +9,8 @@
 #include <botan/internal/xor_buf.h>
 #include <algorithm>
 
+using namespace std::tr1::placeholders;
+
 namespace Botan {
 
 /*
@@ -16,14 +18,15 @@ namespace Botan {
 */
 CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad) :
-   cipher(ciph), padder(pad)
+   cipher(ciph), padder(pad),
+   buf_op(std::tr1::bind(&CBC_Encryption::cbc_encrypt, this, _1, _2),
+          std::tr1::bind(&CBC_Encryption::cbc_final, this, _1, _2),
+          2 * cipher->BLOCK_SIZE)
    {
    if(!padder->valid_blocksize(cipher->BLOCK_SIZE))
       throw Invalid_Block_Size(name(), padder->name());
 
-   buffer.resize(cipher->BLOCK_SIZE);
    state.resize(cipher->BLOCK_SIZE);
-   position = 0;
    }
 
 /*
@@ -33,14 +36,15 @@ CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   cipher(ciph), padder(pad)
+   cipher(ciph), padder(pad),
+   buf_op(std::tr1::bind(&CBC_Encryption::cbc_encrypt, this, _1, _2),
+          std::tr1::bind(&CBC_Encryption::cbc_final, this, _1, _2),
+          2 * cipher->BLOCK_SIZE)
    {
    if(!padder->valid_blocksize(cipher->BLOCK_SIZE))
       throw Invalid_Block_Size(name(), padder->name());
 
-   buffer.resize(cipher->BLOCK_SIZE);
    state.resize(cipher->BLOCK_SIZE);
-   position = 0;
 
    set_key(key);
    set_iv(iv);
@@ -55,41 +59,51 @@ void CBC_Encryption::set_iv(const InitializationVector& iv)
       throw Invalid_IV_Length(name(), iv.length());
 
    state = iv.bits_of();
-   buffer.clear();
-   position = 0;
+   buf_op.reset();
    }
 
 /*
 * Encrypt in CBC mode
 */
-void CBC_Encryption::write(const byte input[], u32bit length)
+void CBC_Encryption::cbc_encrypt(const byte input[], u32bit length)
    {
-   while(length)
+   u32bit blocks = length / state.size();
+
+   for(u32bit i = 0; i != blocks; ++i)
       {
-      u32bit xored = std::min(cipher->BLOCK_SIZE - position, length);
-      xor_buf(state + position, input, xored);
-      input += xored;
-      length -= xored;
-      position += xored;
-      if(position == cipher->BLOCK_SIZE)
-         {
-         cipher->encrypt(state);
-         send(state, cipher->BLOCK_SIZE);
-         position = 0;
-         }
+      xor_buf(state, input + i * cipher->BLOCK_SIZE, state.size());
+      cipher->encrypt(state);
+      send(state, state.size());
       }
    }
 
 /*
 * Finish encrypting in CBC mode
 */
+void CBC_Encryption::cbc_final(const byte input[], u32bit length)
+   {
+   if(length % cipher->BLOCK_SIZE == 0)
+      cbc_encrypt(input, length);
+   else if(length != 0)
+      throw Exception(name() + ": Did not pad to full blocksize");
+   }
+
+void CBC_Encryption::write(const byte input[], u32bit input_length)
+   {
+   buf_op.write(input, input_length);
+   }
+
 void CBC_Encryption::end_msg()
    {
+   u32bit last_block = buf_op.current_position() % cipher->BLOCK_SIZE;
+
    SecureVector<byte> padding(cipher->BLOCK_SIZE);
-   padder->pad(padding, padding.size(), position);
-   write(padding, padder->pad_bytes(cipher->BLOCK_SIZE, position));
-   if(position != 0)
-      throw Exception(name() + ": Did not pad to full blocksize");
+   padder->pad(padding, padding.size(), last_block);
+
+   u32bit pad_bytes = padder->pad_bytes(cipher->BLOCK_SIZE, last_block);
+
+   buf_op.write(padding, pad_bytes);
+   buf_op.final();
    }
 
 /*
@@ -105,15 +119,16 @@ std::string CBC_Encryption::name() const
 */
 CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad) :
-   cipher(ciph), padder(pad)
+   cipher(ciph), padder(pad),
+   buf_op(std::tr1::bind(&CBC_Decryption::cbc_decrypt, this, _1, _2),
+          std::tr1::bind(&CBC_Decryption::cbc_final, this, _1, _2),
+          2 * cipher->BLOCK_SIZE, cipher->BLOCK_SIZE)
    {
    if(!padder->valid_blocksize(cipher->BLOCK_SIZE))
       throw Invalid_Block_Size(name(), padder->name());
 
-   buffer.resize(cipher->BLOCK_SIZE);
    state.resize(cipher->BLOCK_SIZE);
-   temp.resize(cipher->BLOCK_SIZE);
-   position = 0;
+   temp.resize(BOTAN_PARALLEL_BLOCKS_CBC * cipher->BLOCK_SIZE);
    }
 
 /*
@@ -123,15 +138,16 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   cipher(ciph), padder(pad)
+   cipher(ciph), padder(pad),
+   buf_op(std::tr1::bind(&CBC_Decryption::cbc_decrypt, this, _1, _2),
+          std::tr1::bind(&CBC_Decryption::cbc_final, this, _1, _2),
+          2 * cipher->BLOCK_SIZE, cipher->BLOCK_SIZE)
    {
    if(!padder->valid_blocksize(cipher->BLOCK_SIZE))
       throw Invalid_Block_Size(name(), padder->name());
 
-   buffer.resize(cipher->BLOCK_SIZE);
    state.resize(cipher->BLOCK_SIZE);
-   temp.resize(cipher->BLOCK_SIZE);
-   position = 0;
+   temp.resize(BOTAN_PARALLEL_BLOCKS_CBC * cipher->BLOCK_SIZE);
 
    set_key(key);
    set_iv(iv);
@@ -146,8 +162,58 @@ void CBC_Decryption::set_iv(const InitializationVector& iv)
       throw Invalid_IV_Length(name(), iv.length());
 
    state = iv.bits_of();
-   buffer.clear();
-   position = 0;
+   buf_op.reset();
+   }
+
+/*
+* Decrypt in CBC mode
+*/
+void CBC_Decryption::cbc_decrypt(const byte input[], u32bit length)
+   {
+   const u32bit blocks_in_temp = temp.size() / cipher->BLOCK_SIZE;
+   u32bit blocks = length / cipher->BLOCK_SIZE;
+
+   while(blocks)
+      {
+      u32bit to_proc = std::min<u32bit>(blocks, blocks_in_temp);
+
+      cipher->decrypt_n(input, &temp[0], to_proc);
+
+      xor_buf(temp, state, cipher->BLOCK_SIZE);
+
+      for(u32bit i = 1; i < to_proc; ++i)
+         xor_buf(temp + i * cipher->BLOCK_SIZE,
+                 input + (i-1) * cipher->BLOCK_SIZE,
+                 cipher->BLOCK_SIZE);
+
+      state.set(input + (to_proc - 1) * cipher->BLOCK_SIZE, cipher->BLOCK_SIZE);
+
+      send(temp, to_proc * cipher->BLOCK_SIZE);
+
+      input += to_proc * cipher->BLOCK_SIZE;
+      blocks -= to_proc;
+      }
+   }
+
+/*
+* Finish encrypting in CBC mode
+*/
+void CBC_Decryption::cbc_final(const byte input[], u32bit length)
+   {
+   if(length == 0 || length % cipher->BLOCK_SIZE != 0)
+      throw Decoding_Error(name() + ": Ciphertext not multiple of block size");
+
+   size_t extra_blocks = (length - 1) / cipher->BLOCK_SIZE;
+
+   cbc_decrypt(input, extra_blocks * cipher->BLOCK_SIZE);
+
+   input += extra_blocks * cipher->BLOCK_SIZE;
+
+   cipher->decrypt(input, temp);
+   xor_buf(temp, state, cipher->BLOCK_SIZE);
+   send(temp, padder->unpad(temp, cipher->BLOCK_SIZE));
+
+   state.set(input, state.size());
    }
 
 /*
@@ -155,23 +221,7 @@ void CBC_Decryption::set_iv(const InitializationVector& iv)
 */
 void CBC_Decryption::write(const byte input[], u32bit length)
    {
-   while(length)
-      {
-      if(position == cipher->BLOCK_SIZE)
-         {
-         cipher->decrypt(buffer, temp);
-         xor_buf(temp, state, cipher->BLOCK_SIZE);
-         send(temp, cipher->BLOCK_SIZE);
-         state = buffer;
-         position = 0;
-         }
-
-      u32bit added = std::min(cipher->BLOCK_SIZE - position, length);
-      buffer.copy(position, input, added);
-      input += added;
-      length -= added;
-      position += added;
-      }
+   buf_op.write(input, length);
    }
 
 /*
@@ -179,13 +229,7 @@ void CBC_Decryption::write(const byte input[], u32bit length)
 */
 void CBC_Decryption::end_msg()
    {
-   if(position != cipher->BLOCK_SIZE)
-      throw Decoding_Error(name());
-   cipher->decrypt(buffer, temp);
-   xor_buf(temp, state, cipher->BLOCK_SIZE);
-   send(temp, padder->unpad(temp, cipher->BLOCK_SIZE));
-   state = buffer;
-   position = 0;
+   buf_op.final();
    }
 
 /*
