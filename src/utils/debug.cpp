@@ -31,5 +31,3 @@ void print_vec(const std::string& name,
 }
 
 }
-
-#endif
