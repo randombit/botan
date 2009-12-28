@@ -10,8 +10,6 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include <stdio.h>
-
 namespace Botan {
 
 namespace {

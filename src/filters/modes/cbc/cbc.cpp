@@ -9,8 +9,6 @@
 #include <botan/internal/xor_buf.h>
 #include <algorithm>
 
-#include <stdio.h>
-
 namespace Botan {
 
 /*

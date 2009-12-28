@@ -10,8 +10,6 @@
 #include <botan/internal/rounding.h>
 #include <stdexcept>
 
-#include <assert.h>
-
 namespace Botan {
 
 namespace {
@@ -83,8 +81,6 @@ void Buffered_Filter::write(const byte input[], u32bit input_size)
          }
       }
 
-   assert(input_size + buffer_pos <= buffer.size());
-
    copy_mem(&buffer[buffer_pos], input, input_size);
    buffer_pos += input_size;
    }
@@ -94,8 +90,6 @@ void Buffered_Filter::write(const byte input[], u32bit input_size)
 */
 void Buffered_Filter::end_msg()
    {
-   assert(buffer_pos >= final_minimum);
-
    if(buffer_pos < final_minimum)
       throw std::runtime_error("Buffered_Operation::final - not enough input");
 
@@ -104,12 +98,7 @@ void Buffered_Filter::end_msg()
    if(spare_blocks)
       {
       u32bit spare_bytes = main_block_mod * spare_blocks;
-
-      assert(spare_bytes <= buffer_pos);
-
       buffered_block(&buffer[0], spare_bytes);
-
-      assert(buffer_pos - spare_bytes >= final_minimum);
       buffered_final(&buffer[spare_bytes], buffer_pos - spare_bytes);
       }
    else
