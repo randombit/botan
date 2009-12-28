@@ -1,6 +1,6 @@
 macro_name GCC
 
-binary_name g++-4.5-20091112
+binary_name g++-4.5-r155312
 
 compile_option "-c "
 output_to_option "-o "
@@ -8,7 +8,7 @@ add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lang_flags "-ansi -Wno-long-long -std=c++0x"
+lang_flags "-ansi -std=c++0x"
 warning_flags "-W -Wall"
 #warning_flags "-Wextra -Wall -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wno-unused-parameter"
 
