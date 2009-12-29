@@ -76,7 +76,7 @@ $(STATIC_LIB): $(LIBOBJS)
 static: $(STATIC_LIB)
 
 doxygen:
-	doxygen %{doc_src_dir}/botan.doxy
+	doxygen %{build_dir}/botan.doxy
 
 clean:
 	$(RM_R) %{build_dir}/lib/* %{build_dir}/checks/*
