@@ -18,6 +18,8 @@
 
 namespace Botan {
 
+class Mutex;
+
 /*
 * Global State Container Base
 */
@@ -29,11 +31,28 @@ class BOTAN_DLL Library_State
 
       void initialize(bool thread_safe);
 
+      /**
+      * @return the global Algorithm_Factory
+      */
       Algorithm_Factory& algorithm_factory();
 
-      Allocator* get_allocator(const std::string& = "") const;
-      void add_allocator(Allocator*);
-      void set_default_allocator(const std::string&);
+      /**
+      * @param name the name of the allocator
+      * @return allocator matching this name, or NULL
+      */
+      Allocator* get_allocator(const std::string& name = "") const;
+
+      /**
+      * Add a new allocator to the list of available ones
+      * @param alloc the allocator to add
+      */
+      void add_allocator(Allocator* alloc);
+
+      /**
+      * Set the default allocator
+      * @param name the name of the allocator to use as the default
+      */
+      void set_default_allocator(const std::string& name);
 
       /**
       * Get a parameter value as std::string.
@@ -52,7 +71,8 @@ class BOTAN_DLL Library_State
       * @result true if the parameters value is set,
       * false otherwise
       */
-      bool is_set(const std::string& section, const std::string& key) const;
+      bool is_set(const std::string& section,
+                  const std::string& key) const;
 
       /**
       * Set a configuration parameter.
@@ -62,8 +82,10 @@ class BOTAN_DLL Library_State
       * will be overwritten even if it is already set, otherwise
       * no existing values will be overwritten.
       */
-      void set(const std::string& section, const std::string& key,
-                 const std::string& value, bool overwrite = true);
+      void set(const std::string& section,
+               const std::string& key,
+               const std::string& value,
+               bool overwrite = true);
 
       /**
       * Get a parameters value out of the "conf" section (
@@ -77,23 +99,28 @@ class BOTAN_DLL Library_State
       * @param key the key of the option to set
       * @param value the value to set
       */
-      void set_option(const std::string& key, const std::string& value);
+      void set_option(const std::string& key,
+                      const std::string& value);
 
       /**
       * Add a parameter value to the "alias" section.
       * @param key the name of the parameter which shall have a new alias
       * @param value the new alias
       */
-      void add_alias(const std::string&, const std::string&);
+      void add_alias(const std::string& key,
+                     const std::string& value);
 
       /**
       * Resolve an alias.
       * @param alias the alias to resolve.
       * @return what the alias stands for
       */
-      std::string deref_alias(const std::string&) const;
+      std::string deref_alias(const std::string& alias) const;
 
-      class Mutex* get_mutex() const;
+      /**
+      * @return a newly created Mutex (free with delete)
+      */
+      Mutex* get_mutex() const;
    private:
       void load_default_config();
 
@@ -103,9 +130,9 @@ class BOTAN_DLL Library_State
       class Mutex_Factory* mutex_factory;
 
       std::map<std::string, std::string> config;
-      class Mutex* config_lock;
+      Mutex* config_lock;
 
-      class Mutex* allocator_lock;
+      Mutex* allocator_lock;
       std::map<std::string, Allocator*> alloc_factory;
       mutable Allocator* cached_default_allocator;
       std::vector<Allocator*> allocators;
