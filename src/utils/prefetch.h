@@ -32,7 +32,7 @@ inline void readwrite(const T* addr, u32bit length)
    const u32bit Ts_per_cache_line = CPUID::cache_line_size() / sizeof(T);
 
    for(u32bit i = 0; i <= length; i += Ts_per_cache_line)
-      __builtin_prefetch(addr + i, 0);
+      __builtin_prefetch(addr + i, 1);
 #endif
    }
 
