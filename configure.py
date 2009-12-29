@@ -527,6 +527,7 @@ class ArchInfo(object):
         lex_me_harder(infofile, self,
                       ['aliases', 'submodels', 'submodel_aliases', 'isa_extn'],
                       { 'endian': None,
+                        'family': None,
                         'unaligned': 'no'
                         })
 
@@ -595,6 +596,9 @@ class ArchInfo(object):
             unaligned_ok = self.unaligned_ok
             if unaligned_ok:
                 logging.info('Assuming unaligned memory access works')
+
+        if self.family is not None:
+            macros.append('TARGET_CPU_IS_%s_FAMILY' % (self.family.upper()))
 
         macros.append('TARGET_UNALIGNED_MEMORY_ACCESS_OK %d' % (unaligned_ok))
 

@@ -1,6 +1,8 @@
 endian little
 unaligned ok
 
+family x86
+
 <aliases>
 x86
 ix86
