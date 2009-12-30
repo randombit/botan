@@ -19,6 +19,8 @@ class BOTAN_DLL Buffered_Filter
       void end_msg();
 
       Buffered_Filter(u32bit block_size, u32bit final_minimum);
+
+      virtual ~Buffered_Filter() {}
    protected:
       virtual std::string name() const = 0;
 
