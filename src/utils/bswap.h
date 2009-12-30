@@ -32,7 +32,7 @@ inline u16bit reverse_bytes(u16bit input)
 
 inline u32bit reverse_bytes(u32bit input)
    {
-#if BOTAN_USE_GCC_INLINE_ASM && defined(BOTAN_TARGET_IS_X86_FAMILY)
+#if BOTAN_USE_GCC_INLINE_ASM && defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
    // GCC-style inline assembly for x86 or x86-64
    asm("bswapl %0" : "=r" (input) : "0" (input));

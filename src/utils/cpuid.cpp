@@ -14,7 +14,7 @@
   #include <sys/sysctl.h>
 #endif
 
-#if defined(BOTAN_TARGET_IS_X86_FAMILY)
+#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
 
@@ -68,7 +68,7 @@ u32bit get_x86_cache_line_size()
       return 32; // default cache line guess
    }
 
-#if defined(BOTAN_TARGET_IS_PPC_FAMILY)
+#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
 
 bool altivec_check_sysctl()
    {
@@ -121,7 +121,7 @@ bool altivec_check_pvr_emul()
    pvr >>= 16;
 
    altivec_capable |= (pvr == PVR_G4_7400);
-   altivec_capable |= ((pvr >> 8) == PVR_G4_74xx_24);
+   altivec_capable |= ((pvr >> 4) == PVR_G4_74xx_24);
    altivec_capable |= (pvr == PVR_G5_970);
    altivec_capable |= (pvr == PVR_G5_970FX);
    altivec_capable |= (pvr == PVR_G5_970MP);
@@ -175,7 +175,7 @@ bool CPUID::has_altivec()
 
    if(first_time)
       {
-#if defined(BOTAN_TARGET_IS_PPC_FAMILY)
+#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
       if(altivec_check_sysctl() || altivec_check_pvr_emul())
          altivec_capable = true;
 #endif
