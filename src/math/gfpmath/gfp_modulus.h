@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-class BOTAN_DLL GFpElement;
+class GFpElement;
 
 /**
 * This class represents a GFpElement modulus including the modulus
