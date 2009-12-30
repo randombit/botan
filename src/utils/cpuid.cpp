@@ -126,6 +126,7 @@ bool altivec_check_pvr_emul()
    altivec_capable |= (pvr == PVR_G5_970FX);
    altivec_capable |= (pvr == PVR_G5_970MP);
    altivec_capable |= (pvr == PVR_G5_970GX);
+   altivec_capable |= (pvr == PVR_POWER6);
    altivec_capable |= (pvr == PVR_CELL_PPU);
 #endif
 
