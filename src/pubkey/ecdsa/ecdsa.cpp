@@ -156,9 +156,9 @@ u32bit ECDSA_PublicKey::max_input_bits() const
    return mp_dom_pars->get_order().bits();
    }
 
-/*************************
+/*
 * ECDSA_PrivateKey
-*************************/
+*/
 void ECDSA_PrivateKey::affirm_init() const // virtual
    {
    EC_PrivateKey::affirm_init();

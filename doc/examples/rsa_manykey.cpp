@@ -1,4 +1,10 @@
 /*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
+/*
 Generate a whole sequence of keys (for benchmarking)
 */
 

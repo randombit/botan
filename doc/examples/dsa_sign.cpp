@@ -1,10 +1,8 @@
 /*
-Decrypt an encrypted DSA private key. Then use that key to sign a message.
-
-Written by Jack Lloyd (lloyd@randombit.net), August 5, 2002
-   Updated to use X.509 and PKCS #8 format keys, October 21, 2002
-
-This file is in the public domain
+* DSA signature generation example
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #include <iostream>

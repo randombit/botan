@@ -1,12 +1,13 @@
 /*
+* (C) 2002 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
+/*
 Generate an RSA key of a specified bitlength, and put it into a pair of key
 files. One is the public key in X.509 format (PEM encoded), the private key is
 in PKCS #8 format (also PEM encoded).
-
-Written by Jack Lloyd (lloyd@randombit.net), June 2-3, 2002
-  Updated to use X.509 and PKCS #8 on October 21, 2002
-
-This file is in the public domain
 */
 
 #include <iostream>

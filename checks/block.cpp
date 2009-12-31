@@ -1,3 +1,9 @@
+/*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
 
 /*
   We don't use the standard issue ECB filter, because we also want to check

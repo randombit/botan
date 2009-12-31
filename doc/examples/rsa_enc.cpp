@@ -1,4 +1,10 @@
 /*
+* (C) 2002 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
+/*
   Grab an RSA public key from the file given as an argument, grab a message
   from another file, and encrypt the message.
 
@@ -18,12 +24,6 @@
         the _plaintext_
      3) Following lines are base64 encoded ciphertext (CAST-128 as described),
         each broken after ~72 characters.
-
-Written by Jack Lloyd (lloyd@randombit.net), June 3, 2002
-   Updated to use KDF2, September 8, 2002
-   Updated to read X.509 keys, October 21, 2002
-
-This file is in the public domain
 */
 
 #include <iostream>

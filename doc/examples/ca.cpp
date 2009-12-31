@@ -1,4 +1,10 @@
 /*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
+/*
   Implement the functionality of a simple CA: read in a CA certificate,
   the associated private key, and a PKCS #10 certificate request. Sign the
   request and print out the new certificate.
@@ -7,10 +13,6 @@
     cacert.pem:    The CA's certificate (perhaps created by self_sig)
     caprivate.pem: The CA's private key
     req.pem:       The user's PKCS #10 certificate request
-
-  Written by Jack Lloyd, May 19, 2003
-
-  This file is in the public domain.
 */
 
 #include <botan/botan.h>

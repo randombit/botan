@@ -1,16 +1,24 @@
 /*
-An Botan example application which emulates a poorly written version of bzip2
-
-Written by Jack Lloyd (lloyd@randombit.net), Jun 9, 2001
-
-This file is in the public domain
+* Bzip2 Compression/Decompression
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
+
 #include <string>
 #include <cstring>
 #include <vector>
 #include <fstream>
 #include <iostream>
 #include <botan/botan.h>
+
+/*
+* If Bzip2 isn't included, we know nothing works at compile time, but
+* we wait to fail at runtime. Otherwise I would get 2-3 mails a month
+* about how this was failing to compile (even with an informative
+* #error message explaining the situation) because bzip2 wasn't
+* included in the build.
+*/
 
 #if defined(BOTAN_HAS_COMPRESSOR_BZIP2)
   #include <botan/bzip2.h>

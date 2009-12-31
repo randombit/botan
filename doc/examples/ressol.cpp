@@ -1,3 +1,9 @@
+/*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
 #include <botan/numthry.h>
 #include <botan/auto_rng.h>
 #include <botan/botan.h>

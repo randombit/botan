@@ -16,9 +16,9 @@
 
 namespace Botan {
 
-/*********************************
+/*
 * ECKAEG_PublicKey
-*********************************/
+*/
 
 void ECKAEG_PublicKey::affirm_init() const // virtual
    {
@@ -72,9 +72,9 @@ ECKAEG_PublicKey::ECKAEG_PublicKey(EC_Domain_Params const& dom_par, PointGFp con
    m_eckaeg_core = ECKAEG_Core(*mp_dom_pars, BigInt(0), *mp_public_point);
    }
 
-/*********************************
+/*
 * ECKAEG_PrivateKey
-*********************************/
+*/
 void ECKAEG_PrivateKey::affirm_init() const // virtual
    {
    EC_PrivateKey::affirm_init();

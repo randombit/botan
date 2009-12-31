@@ -1,4 +1,10 @@
 /*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
+/*
   A simple ASN.1 parser, similiar to 'dumpasn1' or 'openssl asn1parse', though
   without some of the bells and whistles of those. Primarily used for testing
   the BER decoder. The output format is modeled loosely on 'asn1parse -i'
@@ -14,11 +20,7 @@
     - Nov 25: Much improved BIT STRING output
               Can deal with non-constructed taggings
               Can produce UTF-8 output
-
-  This file is in the public domain.
 */
-
-/*******************************************************************/
 
 // Set this if your terminal understands UTF-8; otherwise output is in Latin-1
 #define UTF8_TERMINAL 1
@@ -29,8 +31,6 @@
    much sense at all.
 */
 #define INITIAL_LEVEL 0
-
-/*******************************************************************/
 
 #include <botan/botan.h>
 #include <botan/bigint.h>
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
       printf("Usage: %s <file>\n", argv[0]);
       return 1;
       }
-   
+
    Botan::LibraryInitializer init;
 
    try {

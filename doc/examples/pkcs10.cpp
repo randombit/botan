@@ -1,12 +1,9 @@
 /*
-Generate a 1024 bit RSA key, and then create a PKCS #10 certificate request for
-that key. The private key will be stored as an encrypted PKCS #8 object, and
-stored in another file.
-
-Written by Jack Lloyd (lloyd@randombit.net), April 7, 2003
-
-This file is in the public domain
+* (C) 2003 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
+
 #include <botan/init.h>
 #include <botan/auto_rng.h>
 #include <botan/x509self.h>

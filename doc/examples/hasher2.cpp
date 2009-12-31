@@ -1,15 +1,18 @@
 /*
+* (C) 2001 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
+/*
 Identical to hasher.cpp, but uses Pipe in a different way.
 
-Note this tends to be much less efficient than hasher.cpp, because it does
-three passes over the file. For a small file, it doesn't really matter. But for
-a large file, or for something you can't re-read easily (socket, stdin, ...)
-this is a bad idea.
-
-Written by Jack Lloyd (lloyd@randombit.net), Feb 8 2001
-
-This file is in the public domain
+Note this tends to be much less efficient than hasher.cpp, because it
+does three passes over the file. For a small file, it doesn't really
+matter. But for a large file, or for something you can't re-read
+easily (socket, stdin, ...)  this is a bad idea.
 */
+
 #include <fstream>
 #include <iostream>
 #include <string>

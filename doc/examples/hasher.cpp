@@ -1,12 +1,9 @@
 /*
-A Botan example application which emulates a
-poorly written version of "gpg --print-md"
-
-Written by Jack Lloyd (lloyd@randombit.net), quite a while ago (as of June
-2001)
-
-This file is in the public domain
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
+
 #include <fstream>
 #include <iostream>
 #include <string>

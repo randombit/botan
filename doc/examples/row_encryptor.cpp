@@ -1,3 +1,9 @@
+/*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
 #include <string>
 #include <memory>
 #include <sstream>
@@ -99,8 +105,8 @@ std::string Row_Encryptor::decrypt(const std::string& input,
    return dec_pipe.read_all_as_string(Pipe::LAST_MESSAGE);
    }
 
-/*************************
-  Test code follows:
+/*
+* Test code follows:
 */
 
 int main()

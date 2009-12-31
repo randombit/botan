@@ -1,6 +1,8 @@
-/*************************************************
-* GTK+ User Interface Header File                *
-*************************************************/
+/*
+* (C) 2006 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_EXT_GTK_UI__
 #define BOTAN_EXT_GTK_UI__
@@ -8,9 +10,9 @@
 #include <botan/ui.h>
 #include <gtk/gtk.h>
 
-/*************************************************
-* GTK+ Passphrase Callback Object                *
-*************************************************/
+/*
+* GTK+ Passphrase Callback Object
+*/
 class GTK_UI : public Botan::User_Interface
    {
    public:

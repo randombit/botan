@@ -1,14 +1,17 @@
 /*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
+/*
 Decrypt files encrypted with the 'encrypt' example application.
 
-I'm being lazy and writing the output to stdout rather than stripping off the
-".enc" suffix and writing it there. So all diagnostics go to stderr so there is
-no confusion.
-
-Written by Jack Lloyd (lloyd@randombit.net) on August 5, 2002
-
-This file is in the public domain
+I'm being lazy and writing the output to stdout rather than stripping
+off the ".enc" suffix and writing it there. So all diagnostics go to
+stderr so there is no confusion.
 */
+
 #include <fstream>
 #include <iostream>
 #include <string>

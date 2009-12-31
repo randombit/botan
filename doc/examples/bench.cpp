@@ -1,3 +1,9 @@
+/*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
 #include <botan/benchmark.h>
 #include <botan/init.h>
 #include <botan/auto_rng.h>

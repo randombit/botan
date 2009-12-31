@@ -1,18 +1,17 @@
 /*
-Written by Jack Lloyd (lloyd@randombit.net), on Prickle-Prickle,
-the 10th of Bureaucracy, 3167.
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
-This file is in the public domain
+/*
+This is just like the normal hash application, but uses the Unix I/O
+system calls instead of C++ iostreams. Previously, this version was
+much faster and smaller, but GCC 3.1's libstdc++ seems to have been
+improved enough that the difference is now fairly minimal.
 
-This is just like the normal hash application, but uses the Unix I/O system
-calls instead of C++ iostreams. Previously, this version was much faster and
-smaller, but GCC 3.1's libstdc++ seems to have been improved enough that the
-difference is now fairly minimal.
-
-Nicely enough, doing the change required changing only about 3 lines of code.
-
-Note that this requires you to be on a machine running some sort of Unix. Well,
-I guess any POSIX.1 compliant OS (in theory).
+Nicely enough, doing the change required changing only about 3 lines
+of code.
 */
 
 #include <iostream>

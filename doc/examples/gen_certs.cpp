@@ -1,4 +1,10 @@
 /*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
+/*
 * Generate a root CA plus httpd, dovecot, and postfix certs/keys
 *
 */

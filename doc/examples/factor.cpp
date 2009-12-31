@@ -1,4 +1,10 @@
 /*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
+/*
    Factor integers using a combination of trial division by small primes,
    and Pollard's Rho algorithm
 */

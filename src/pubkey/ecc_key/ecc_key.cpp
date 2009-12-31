@@ -134,9 +134,9 @@ void EC_PublicKey::set_parameter_encoding(EC_dompar_enc type)
    m_param_enc = type;
    }
 
-/********************************
+/*
 * EC_PrivateKey
-********************************/
+*/
 void EC_PrivateKey::affirm_init() const // virtual
    {
    if(m_private_value == 0)

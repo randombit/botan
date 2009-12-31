@@ -241,7 +241,6 @@ class BOTAN_DLL GFpElement
       mutable BigInt m_value; // ordinary residue or m-residue respectively
       mutable BigInt workspace;
 
-      // *****************************************
       // data members for montgomery multiplication
       mutable bool m_use_montgm;
       //mutable BigInt m_mres;

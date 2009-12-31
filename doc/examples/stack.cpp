@@ -1,11 +1,13 @@
 /*
-An Botan example application showing how to use the pop and prepend functions
-of Pipe. Based on the md5 example. It's output should always be identical to
-such.
+* (C) 2002 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
-Written by Jack Lloyd (lloyd@randombit.net), Feb 3, 2002
-
-This file is in the public domain
+/*
+An Botan example application showing how to use the pop and prepend
+functions of Pipe. Based on the md5 example. It's output should always
+be identical to such.
 */
 
 #include <iostream>

@@ -21,9 +21,9 @@ namespace Botan {
 
 namespace {
 
-/*******************************
+/*
 * cvc CHAT values
-*******************************/
+*/
 enum CHAT_values{
       CVCA = 0xC0,
       DVCA_domestic = 0x80,

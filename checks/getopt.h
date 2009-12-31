@@ -1,3 +1,8 @@
+/*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_CHECK_GETOPT_H__
 #define BOTAN_CHECK_GETOPT_H__

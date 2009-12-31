@@ -1,14 +1,17 @@
 /*
-Generate a 1024 bit RSA key, and then create a self-signed X.509v3 certificate
-with that key. If the do_CA variable is set to true, then it will be marked for
-CA use, otherwise it will get extensions appropriate for use with a client
-certificate. The private key is stored as an encrypted PKCS #8 object in
-another file.
-
-Written by Jack Lloyd (lloyd@randombit.net), April 7, 2003
-
-This file is in the public domain
+* (C) 2003 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
+
+/*
+Generate a 1024 bit RSA key, and then create a self-signed X.509v3
+certificate with that key. If the do_CA variable is set to true, then
+it will be marked for CA use, otherwise it will get extensions
+appropriate for use with a client certificate. The private key is
+stored as an encrypted PKCS #8 object in another file.
+*/
+
 #include <botan/botan.h>
 #include <botan/x509self.h>
 #include <botan/rsa.h>

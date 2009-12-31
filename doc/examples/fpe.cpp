@@ -1,4 +1,10 @@
 /*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
+/*
 * Encrypt credit cards numbers with valid checksums into other credit
 * card numbers with valid checksums using format preserving encryption.
 */

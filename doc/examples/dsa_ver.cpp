@@ -1,14 +1,16 @@
 /*
-Grab an DSA public key from the file given as an argument, grab a signature
-from another file, and verify the message (which, suprise, is also in a file).
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
-The signature format isn't particularly standard, but it's not bad. It's simply
-the IEEE 1363 signature format, encoded into base64 with a trailing newline
+/*
+Grab an DSA public key from the file given as an argument, grab a
+signature from another file, and verify the message (which, suprise,
+is also in a file).
 
-Written by Jack Lloyd (lloyd@randombit.net), August 5, 2002
-   Updated to use X.509 format keys, October 21, 2002
-
-This file is in the public domain
+The signature format isn't particularly standard: take the IEEE 1363
+signature format, encoded into base64 with a trailing newline.
 */
 
 #include <iostream>

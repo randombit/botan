@@ -1,4 +1,10 @@
 /*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
+/*
 Encrypt a file using a block cipher in CBC mode. Compresses the plaintext
 with Zlib, MACs with HMAC(SHA-1). Stores the block cipher used in the file,
 so you don't have to specify it when decrypting.
@@ -10,13 +16,8 @@ was compressed. Bonus points for supporting multiple compression schemes.
 
 Another flaw is that is stores the entire ciphertext in memory, so if the file
 you're encrypting is 1 Gb... you better have a lot of RAM.
-
-Based on the base64 example, of all things
-
-Written by Jack Lloyd (lloyd@randombit.net) on August 5, 2002
-
-This file is in the public domain
 */
+
 #include <fstream>
 #include <iostream>
 #include <string>

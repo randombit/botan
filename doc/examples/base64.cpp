@@ -1,12 +1,10 @@
 /*
-An Botan example application which emulates a poorly written version of
-"uuencode -m"
-
-Written by Jack Lloyd (lloyd@randombit.net), in maybe an hour scattered
-over 2000/2001
-
-This file is in the public domain
+* Encode/decode base64 strings
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
+
 #include <fstream>
 #include <iostream>
 #include <string>

@@ -1,3 +1,9 @@
+/*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
 #include <botan/pkcs8.h>
 #include <botan/mem_ops.h>
 #include <botan/look_pk.h>
