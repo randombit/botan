@@ -5,7 +5,8 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/aes_isa_engine.h>
+#include <botan/internal/aes_isa_engine.h>
+
 #include <botan/cpuid.h>
 
 #if defined(BOTAN_HAS_AES_INTEL)
