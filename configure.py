@@ -334,8 +334,6 @@ def process_command_line(args):
             if not enabled_or_disabled_isa(isa):
                 options.disable_isa_extns.append(isa)
 
-    print options.disable_isa_extns
-
     return options
 
 """
