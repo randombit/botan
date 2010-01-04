@@ -315,6 +315,27 @@ def process_command_line(args):
     options.enable_isa_extns = parse_multiple_enable(options.enable_isa_extns)
     options.disable_isa_extns = parse_multiple_enable(options.disable_isa_extns)
 
+    def enabled_or_disabled_isa(isa):
+        if isa in options.enable_isa_extns:
+            return True
+        if isa in options.disable_isa_extns:
+            return True
+        return False
+
+    isa_dependencies = {
+        'ssse3': 'sse2',
+        'aes_ni': 'sse2'
+        }
+
+    if 'sse2' in options.disable_isa_extns:
+        sse2_deps = ['ssse3', 'aes_ni']
+
+        for isa in sse2_deps:
+            if not enabled_or_disabled_isa(isa):
+                options.disable_isa_extns.append(isa)
+
+    print options.disable_isa_extns
+
     return options
 
 """
