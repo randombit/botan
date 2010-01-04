@@ -27,11 +27,11 @@
 *
 * CBC and CFB can only use parallel processing in decryption mode
 */
-#define BOTAN_PARALLEL_BLOCKS_ECB 8
-#define BOTAN_PARALLEL_BLOCKS_CBC 8
-#define BOTAN_PARALLEL_BLOCKS_CFB 8
+#define BOTAN_PARALLEL_BLOCKS_ECB 16
+#define BOTAN_PARALLEL_BLOCKS_CBC 16
+#define BOTAN_PARALLEL_BLOCKS_CFB 16
 #define BOTAN_PARALLEL_BLOCKS_CTR 16
-#define BOTAN_PARALLEL_BLOCKS_XTS 8
+#define BOTAN_PARALLEL_BLOCKS_XTS 16
 
 /* PK key consistency checking toggles */
 #define BOTAN_PUBLIC_KEY_STRONG_CHECKS_ON_LOAD 1
