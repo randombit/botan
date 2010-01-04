@@ -12,16 +12,6 @@
 
 namespace Botan {
 
-/*
-* Constructor for Invalid_Message_Number
-*/
-Pipe::Invalid_Message_Number::Invalid_Message_Number(const std::string& where,
-                                                     message_id msg)
-   {
-   set_msg("Pipe::" + where + ": Invalid message number " +
-           to_string(msg));
-   }
-
 namespace {
 
 /*
