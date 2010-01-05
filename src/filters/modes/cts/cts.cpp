@@ -101,7 +101,8 @@ void CTS_Encryption::write(const byte input[], u32bit length)
 void CTS_Encryption::end_msg()
    {
    if(position < cipher->BLOCK_SIZE + 1)
-      throw Exception("CTS_Encryption: insufficient data to encrypt");
+      throw Encoding_Error(name() + ": insufficient data to encrypt");
+
    xor_buf(state, buffer, cipher->BLOCK_SIZE);
    cipher->encrypt(state);
    SecureVector<byte> cn = state;

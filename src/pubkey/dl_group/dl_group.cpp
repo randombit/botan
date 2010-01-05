@@ -193,7 +193,7 @@ const BigInt& DL_Group::get_q() const
    {
    init_check();
    if(q == 0)
-      throw Format_Error("DLP group has no q prime specified");
+      throw Invalid_State("DLP group has no q prime specified");
    return q;
    }
 
@@ -325,7 +325,7 @@ BigInt DL_Group::make_dsa_generator(const BigInt& p, const BigInt& q)
       }
 
    if(g == 1)
-      throw Exception("DL_Group: Couldn't create a suitable generator");
+      throw Internal_Error("DL_Group: Couldn't create a suitable generator");
 
    return g;
    }

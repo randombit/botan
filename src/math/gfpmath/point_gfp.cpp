@@ -921,7 +921,7 @@ SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
       }
    else
       {
-      throw Format_Error("illegal point encoding format specification");
+      throw Invalid_Argument("illegal point encoding format specification");
       }
    return result;
    }
@@ -1078,7 +1078,7 @@ PointGFp OS2ECP(MemoryRegion<byte> const& os, const CurveGFp& curve)
             }
          break;
       default:
-         throw Format_Error("encountered illegal format specification while decoding point");
+         throw Invalid_Argument("encountered illegal format specification while decoding point");
       }
    z = GFpElement(curve.get_p(), BigInt(1));
    //assert((x.is_trf_to_mres() && x.is_use_montgm()) || !x.is_trf_to_mres());

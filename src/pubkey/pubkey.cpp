@@ -73,7 +73,7 @@ PK_Encryptor_MR_with_EME::enc(const byte msg[],
       message.set(msg, length);
 
    if(8*(message.size() - 1) + high_bit(message[0]) > key.max_input_bits())
-      throw Exception("PK_Encryptor_MR_with_EME: Input is too large");
+      throw Invalid_Argument("PK_Encryptor_MR_with_EME: Input is too large");
 
    return key.encrypt(message, message.size(), rng);
    }
@@ -113,11 +113,11 @@ SecureVector<byte> PK_Decryptor_MR_with_EME::dec(const byte msg[],
       }
    catch(Invalid_Argument)
       {
-      throw Exception("PK_Decryptor_MR_with_EME: Input is invalid");
+      throw Decoding_Error("PK_Decryptor_MR_with_EME: Input is invalid");
       }
    catch(Decoding_Error)
       {
-      throw Exception("PK_Decryptor_MR_with_EME: Input is invalid");
+      throw Decoding_Error("PK_Decryptor_MR_with_EME: Input is invalid");
       }
    }
 

@@ -98,13 +98,13 @@ void EAX_Decryption::do_write(const byte input[], u32bit length)
 void EAX_Decryption::end_msg()
    {
    if((queue_end - queue_start) != TAG_SIZE)
-      throw Integrity_Failure(name() + ": Message authentication failure");
+      throw Decoding_Error(name() + ": Message authentication failure");
 
    SecureVector<byte> data_mac = cmac->final();
 
    for(u32bit j = 0; j != TAG_SIZE; ++j)
       if(queue[queue_start+j] != (data_mac[j] ^ nonce_mac[j] ^ header_mac[j]))
-         throw Integrity_Failure(name() + ": Message authentication failure");
+         throw Decoding_Error(name() + ": Message authentication failure");
 
    queue_start = queue_end = 0;
    }

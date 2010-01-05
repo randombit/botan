@@ -473,7 +473,7 @@ MemoryVector<byte> Certificate_Policies::encode_inner() const
    {
    // FIXME
 #if 1
-   throw Exception("Certificate_Policies::encode_inner: Bugged");
+   throw Internal_Error("Certificate_Policies::encode_inner: Bugged");
 #else
    std::vector<Policy_Information> policies;
 

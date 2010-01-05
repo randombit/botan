@@ -116,8 +116,9 @@ Lion::Lion(HashFunction* hash_in, StreamCipher* sc_in, u32bit block_len) :
    {
    if(2*LEFT_SIZE + 1 > BLOCK_SIZE)
       throw Invalid_Argument(name() + ": Chosen block size is too small");
+
    if(!cipher->valid_keylength(LEFT_SIZE))
-      throw Exception(name() + ": This stream/hash combination is invalid");
+      throw Invalid_Argument(name() + ": This stream/hash combo is invalid");
 
    key1.resize(LEFT_SIZE);
    key2.resize(LEFT_SIZE);

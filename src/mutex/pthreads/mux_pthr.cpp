@@ -28,19 +28,19 @@ Mutex* Pthread_Mutex_Factory::make()
          void lock()
             {
             if(pthread_mutex_lock(&mutex) != 0)
-               throw Exception("Pthread_Mutex::lock: Error occured");
+               throw Invalid_State("Pthread_Mutex::lock: Error occured");
             }
 
          void unlock()
             {
             if(pthread_mutex_unlock(&mutex) != 0)
-               throw Exception("Pthread_Mutex::unlock: Error occured");
+               throw Invalid_State("Pthread_Mutex::unlock: Error occured");
             }
 
          Pthread_Mutex()
             {
             if(pthread_mutex_init(&mutex, 0) != 0)
-               throw Exception("Pthread_Mutex: initialization failed");
+               throw Invalid_State("Pthread_Mutex: initialization failed");
             }
 
          ~Pthread_Mutex()

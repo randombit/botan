@@ -168,7 +168,7 @@ void XTS_Encryption::buffered_block(const byte input[], u32bit length)
 void XTS_Encryption::buffered_final(const byte input[], u32bit length)
    {
    if(length <= cipher->BLOCK_SIZE)
-      throw Exception("XTS_Encryption: insufficient data to encrypt");
+      throw Encoding_Error("XTS_Encryption: insufficient data to encrypt");
 
    if(length % cipher->BLOCK_SIZE == 0)
       {
@@ -323,7 +323,7 @@ void XTS_Decryption::buffered_block(const byte input[], u32bit input_length)
 void XTS_Decryption::buffered_final(const byte input[], u32bit input_length)
    {
    if(input_length <= cipher->BLOCK_SIZE)
-      throw Exception("XTS_Decryption: insufficient data to decrypt");
+      throw Decoding_Error("XTS_Decryption: insufficient data to decrypt");
 
    if(input_length % cipher->BLOCK_SIZE == 0)
       {

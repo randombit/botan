@@ -89,7 +89,7 @@ void ECB_Encryption_ErrorCheck::end_msg()
       }
 
    if(position)
-      throw Exception("ECB: input was not in full blocks");
+      throw Encoding_Error("ECB: input was not in full blocks");
    }
 
 Filter* lookup_block(const std::string& algname, const std::string& key)

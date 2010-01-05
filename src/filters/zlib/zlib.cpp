@@ -95,7 +95,7 @@ void Zlib_Compression::start_msg()
    clear();
    zlib = new Zlib_Stream;
    if(deflateInit(&(zlib->stream), level) != Z_OK)
-      throw Exception("Zlib_Compression: Memory allocation error");
+      throw Memory_Exhaustion();
    }
 
 /*
@@ -187,7 +187,7 @@ void Zlib_Decompression::start_msg()
    clear();
    zlib = new Zlib_Stream;
    if(inflateInit(&(zlib->stream)) != Z_OK)
-      throw Exception("Zlib_Decompression: Memory allocation error");
+      throw Memory_Exhaustion();
    }
 
 /*
@@ -215,11 +215,12 @@ void Zlib_Decompression::write(const byte input_arr[], u32bit length)
          clear();
          if(rc == Z_DATA_ERROR)
             throw Decoding_Error("Zlib_Decompression: Data integrity error");
-         if(rc == Z_NEED_DICT)
+         else if(rc == Z_NEED_DICT)
             throw Decoding_Error("Zlib_Decompression: Need preset dictionary");
-         if(rc == Z_MEM_ERROR)
-            throw Exception("Zlib_Decompression: Memory allocation error");
-         throw Exception("Zlib_Decompression: Unknown decompress error");
+         else if(rc == Z_MEM_ERROR)
+            throw Memory_Exhaustion();
+         else
+            throw std::runtime_error("Zlib decompression: Unknown error");
          }
 
       send(buffer.begin(), buffer.size() - zlib->stream.avail_out);
@@ -258,7 +259,7 @@ void Zlib_Decompression::end_msg()
       if(rc != Z_OK && rc != Z_STREAM_END)
          {
          clear();
-         throw Exception("Zlib_Decompression: Error finalizing decompression");
+         throw Decoding_Error("Zlib_Decompression: Error finalizing");
          }
 
       send(buffer.begin(), buffer.size() - zlib->stream.avail_out);

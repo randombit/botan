@@ -168,7 +168,7 @@ void CMS_Encoder::encrypt_kari(RandomNumberGenerator&,
                                X509_PublicKey*,
                                const std::string&)
    {
-   throw Exception("FIXME: unimplemented");
+   throw Internal_Error("FIXME: unimplemented");
 
 #if 0
    SymmetricKey cek = setup_key(rng, cipher);
@@ -198,7 +198,7 @@ void CMS_Encoder::encrypt(RandomNumberGenerator& rng,
                           const SymmetricKey& kek,
                           const std::string& user_cipher)
    {
-   throw Exception("FIXME: untested");
+   throw Internal_Error("FIXME: untested");
 
    const std::string cipher = choose_algo(user_cipher, "TripleDES");
    SymmetricKey cek = setup_key(rng, cipher);
@@ -232,7 +232,7 @@ void CMS_Encoder::encrypt(RandomNumberGenerator&,
                           const std::string& user_cipher)
    {
    const std::string cipher = choose_algo(user_cipher, "TripleDES");
-   throw Exception("FIXME: unimplemented");
+   throw Internal_Error("FIXME: unimplemented");
    /*
    SymmetricKey cek = setup_key(key);
 
@@ -375,7 +375,7 @@ void CMS_Encoder::authenticate(const X509_Certificate&,
                                const std::string& mac_algo)
    {
    const std::string mac = choose_algo(mac_algo, "HMAC(SHA-1)");
-   throw Exception("FIXME: unimplemented");
+   throw Internal_Error("FIXME: unimplemented");
    }
 
 /*
@@ -385,7 +385,7 @@ void CMS_Encoder::authenticate(const SymmetricKey&,
                                const std::string& mac_algo)
    {
    const std::string mac = choose_algo(mac_algo, "HMAC(SHA-1)");
-   throw Exception("FIXME: unimplemented");
+   throw Internal_Error("FIXME: unimplemented");
    }
 
 /*
@@ -395,7 +395,7 @@ void CMS_Encoder::authenticate(const std::string&,
                                const std::string& mac_algo)
    {
    const std::string mac = choose_algo(mac_algo, "HMAC(SHA-1)");
-   throw Exception("FIXME: unimplemented");
+   throw Internal_Error("FIXME: unimplemented");
    }
 
 }

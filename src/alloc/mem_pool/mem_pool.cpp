@@ -15,19 +15,6 @@
 
 namespace Botan {
 
-namespace {
-
-/*
-* Memory Allocation Exception
-*/
-struct Memory_Exhaustion : public std::bad_alloc
-   {
-   const char* what() const throw()
-      { return "Ran out of memory, allocation failed"; }
-   };
-
-}
-
 /*
 * Memory_Block Constructor
 */

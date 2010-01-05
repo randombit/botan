@@ -103,7 +103,7 @@ void ECB_Encryption::buffered_final(const byte input[], u32bit input_length)
    if(input_length % cipher->BLOCK_SIZE == 0)
       buffered_block(input, input_length);
    else if(input_length != 0)
-      throw Exception(name() + ": Did not pad to full blocksize");
+      throw Encoding_Error(name() + ": Did not pad to full blocksize");
    }
 
 /*
