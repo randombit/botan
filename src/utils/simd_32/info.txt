@@ -1,7 +1,5 @@
 define SIMD_32
 
-load_on always
-
 <header:internal>
 simd_32.h
 simd_sse.h
