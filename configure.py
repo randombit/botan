@@ -132,6 +132,11 @@ def process_command_line(args):
         formatter = IndentedHelpFormatter(max_help_position = 50),
         version = BuildConfigurationInformation.version_string)
 
+    parser.add_option('--verbose', action='store_true', default=False,
+                      help='Show debug messages')
+    parser.add_option('--quiet', action='store_true', default=False,
+                      help='Show only warnings and errors')
+
     target_group = OptionGroup(parser, 'Target options')
 
     target_group.add_option('--cc', dest='compiler',
@@ -609,6 +614,7 @@ class ArchInfo(object):
 
         if endian != None:
             macros.append('TARGET_CPU_IS_%s_ENDIAN' % (endian.upper()))
+            logging.info('Assuming CPU is %s endian' % (endian))
 
         unaligned_ok = options.unaligned_mem
         if unaligned_ok is None:
@@ -1037,18 +1043,18 @@ def choose_modules_to_use(modules, archinfo, options):
             to_load.append(modname) # trust the user
 
         elif not module.compatible_cpu(archinfo, options):
-            cannot_use_because(modname, 'CPU incompatible')
+            cannot_use_because(modname, 'incompatible CPU')
         elif not module.compatible_os(options.os):
-            cannot_use_because(modname, 'OS incompatible')
+            cannot_use_because(modname, 'incompatible OS')
         elif not module.compatible_compiler(options.compiler,
                                             options.with_tr1):
-            cannot_use_because(modname, 'compiler incompatible')
+            cannot_use_because(modname, 'incompatible compiler')
 
         else:
             if module.load_on == 'never':
                 cannot_use_because(modname, 'disabled as buggy')
             elif module.load_on == 'request':
-                cannot_use_because(modname, 'loaded on request only')
+                cannot_use_because(modname, 'by request only')
             elif module.load_on == 'dep':
                 maybe_dep.append(modname)
 
@@ -1108,7 +1114,7 @@ def choose_modules_to_use(modules, archinfo, options):
         disabled_mods = sorted(set([mod for mod in not_using_because[reason]]))
 
         if disabled_mods != []:
-            logging.info('Skipping mod because %s - %s' % (
+            logging.info('Skipping, %s - %s' % (
                 reason, ' '.join(disabled_mods)))
 
     logging.debug('Loading modules %s', ' '.join(sorted(to_load)))
@@ -1392,17 +1398,24 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv
 
+    options = process_command_line(argv[1:])
+
+    def log_level():
+        if options.verbose:
+            return logging.DEBUG
+        if options.quiet:
+            return logging.WARNING
+        return logging.INFO
+
     logging.basicConfig(stream = sys.stdout,
                         format = '%(levelname) 7s: %(message)s',
-                        level = logging.INFO)
+                        level = log_level())
 
     logging.debug('%s invoked with options "%s"' % (
         argv[0], ' '.join(argv[1:])))
 
     logging.debug('Platform: OS="%s" machine="%s" proc="%s"' % (
         platform.system(), platform.machine(), platform.processor()))
-
-    options = process_command_line(argv[1:])
 
     if options.os == "java":
         raise Exception("Jython detected: need --os and --cpu to set target")
