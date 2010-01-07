@@ -1,6 +1,6 @@
 /*
 * Exceptions
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -16,32 +16,8 @@
 
 namespace Botan {
 
-/*
-* Exception Base Class
-*/
-class BOTAN_DLL Exception : public std::exception
-   {
-   public:
-      Exception(const std::string& m = "Unknown error") :
-         msg("Botan: " + m)
-         {}
-
-      const char* what() const throw() { return msg.c_str(); }
-
-      virtual ~Exception() throw() {}
-   private:
-      std::string msg;
-   };
-
-/*
-* Invalid_Argument Exception
-*/
-struct BOTAN_DLL Invalid_Argument : public Exception
-   {
-   Invalid_Argument(const std::string& err = "") :
-      Exception(err)
-      {}
-   };
+typedef std::runtime_error Exception;
+typedef std::invalid_argument Invalid_Argument;
 
 /*
 * Invalid_State Exception
@@ -49,16 +25,6 @@ struct BOTAN_DLL Invalid_Argument : public Exception
 struct BOTAN_DLL Invalid_State : public Exception
    {
    Invalid_State(const std::string& err) :
-      Exception(err)
-      {}
-   };
-
-/*
-* Format_Error Exception
-*/
-struct BOTAN_DLL Format_Error : public Exception
-   {
-   Format_Error(const std::string& err = "") :
       Exception(err)
       {}
    };
@@ -150,29 +116,29 @@ struct BOTAN_DLL Algorithm_Not_Found : public Lookup_Error
 /*
 * Invalid_Algorithm_Name Exception
 */
-struct BOTAN_DLL Invalid_Algorithm_Name : public Format_Error
+struct BOTAN_DLL Invalid_Algorithm_Name : public Invalid_Argument
    {
    Invalid_Algorithm_Name(const std::string& name):
-      Format_Error("Invalid algorithm name: " + name)
+      Invalid_Argument("Invalid algorithm name: " + name)
       {}
    };
 
 /*
 * Encoding_Error Exception
 */
-struct BOTAN_DLL Encoding_Error : public Format_Error
+struct BOTAN_DLL Encoding_Error : public Invalid_Argument
    {
    Encoding_Error(const std::string& name) :
-      Format_Error("Encoding error: " + name) {}
+      Invalid_Argument("Encoding error: " + name) {}
    };
 
 /*
 * Decoding_Error Exception
 */
-struct BOTAN_DLL Decoding_Error : public Format_Error
+struct BOTAN_DLL Decoding_Error : public Invalid_Argument
    {
    Decoding_Error(const std::string& name) :
-      Format_Error("Decoding error: " + name) {}
+      Invalid_Argument("Decoding error: " + name) {}
    };
 
 /*
@@ -195,30 +161,6 @@ struct BOTAN_DLL Stream_IO_Error : public Exception
    };
 
 /*
-* Configuration Error Exception
-*/
-struct BOTAN_DLL Config_Error : public Format_Error
-   {
-   Config_Error(const std::string& err) :
-      Format_Error("Config error: " + err)
-      {}
-
-   Config_Error(const std::string& err, u32bit line) :
-      Format_Error("Config error at line " + to_string(line) + ": " + err)
-      {}
-   };
-
-/*
-* Integrity Failure Exception
-*/
-struct BOTAN_DLL Integrity_Failure : public Internal_Error
-   {
-   Integrity_Failure(const std::string& err) :
-      Internal_Error("Integrity failure: " + err)
-      {}
-   };
-
-/*
 * Self Test Failure Exception
 */
 struct BOTAN_DLL Self_Test_Failure : public Internal_Error
@@ -226,6 +168,15 @@ struct BOTAN_DLL Self_Test_Failure : public Internal_Error
    Self_Test_Failure(const std::string& err) :
       Internal_Error("Self test failed: " + err)
       {}
+   };
+
+/*
+* Memory Allocation Exception
+*/
+struct BOTAN_DLL Memory_Exhaustion : public std::bad_alloc
+   {
+   const char* what() const throw()
+      { return "Ran out of memory, allocation failed"; }
    };
 
 }

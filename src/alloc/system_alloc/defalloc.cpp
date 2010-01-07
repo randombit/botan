@@ -94,7 +94,7 @@ Allocator* Allocator::get(bool locking)
    if(alloc)
       return alloc;
 
-   throw Exception("Couldn't find an allocator to use in get_allocator");
+   throw Internal_Error("Couldn't find an allocator to use in get_allocator");
    }
 
 }

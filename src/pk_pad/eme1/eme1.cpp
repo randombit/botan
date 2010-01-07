@@ -21,7 +21,7 @@ SecureVector<byte> EME1::pad(const byte in[], u32bit in_length,
    key_length /= 8;
 
    if(in_length > key_length - 2*HASH_LENGTH - 1)
-      throw Exception("EME1: Input is too large");
+      throw Invalid_Argument("EME1: Input is too large");
 
    SecureVector<byte> out(key_length);
 

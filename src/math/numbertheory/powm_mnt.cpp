@@ -156,10 +156,9 @@ BigInt Montgomery_Exponentiator::execute() const
 Montgomery_Exponentiator::Montgomery_Exponentiator(const BigInt& mod,
    Power_Mod::Usage_Hints hints)
    {
-   if(!mod.is_positive())
-      throw Exception("Montgomery_Exponentiator: modulus must be positive");
-   if(mod.is_even())
-      throw Exception("Montgomery_Exponentiator: modulus must be odd");
+   // Montgomery reduction only works for positive odd moduli
+   if(!mod.is_positive() || mod.is_even())
+      throw Invalid_Argument("Montgomery_Exponentiator: invalid modulus");
 
    window_bits = 0;
    this->hints = hints;

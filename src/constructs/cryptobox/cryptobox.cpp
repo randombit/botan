@@ -135,7 +135,7 @@ std::string decrypt(const byte input[], u32bit input_len,
 
    if(!same_mem(computed_mac, ciphertext + VERSION_CODE_LEN + PBKDF_SALT_LEN,
                 MAC_OUTPUT_LEN))
-      throw Integrity_Failure("CryptoBox integrity failure");
+      throw Decoding_Error("CryptoBox integrity failure");
 
    return pipe.read_all_as_string(0);
    }

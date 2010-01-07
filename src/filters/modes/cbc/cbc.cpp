@@ -79,7 +79,7 @@ void CBC_Encryption::buffered_final(const byte input[], u32bit length)
    if(length % cipher->BLOCK_SIZE == 0)
       buffered_block(input, length);
    else if(length != 0)
-      throw Exception(name() + ": Did not pad to full blocksize");
+      throw Encoding_Error(name() + ": Did not pad to full blocksize");
    }
 
 void CBC_Encryption::write(const byte input[], u32bit input_length)
