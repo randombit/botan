@@ -1253,17 +1253,18 @@ def setup_build(build_config, options, template_vars):
         finally:
             f.close()
 
-    logging.debug('Linking %d public header files in %s' % (
-        len(build_config.public_headers), build_config.botan_include_dir))
+    def link_headers(header_list, type, dir):
+        logging.debug('Linking %d %s header files in %s' % (
+            len(header_list), type, dir))
 
-    for header_file in build_config.public_headers:
-        portable_symlink(header_file, build_config.botan_include_dir)
+        for header_file in header_list:
+            portable_symlink(header_file, dir)
 
-    logging.debug('Linking %d internal header files in %s' % (
-        len(build_config.internal_headers), build_config.internal_include_dir))
+    link_headers(build_config.public_headers, 'public',
+                 build_config.botan_include_dir)
 
-    for header_file in build_config.internal_headers:
-        portable_symlink(header_file, build_config.internal_include_dir)
+    link_headers(build_config.internal_headers, 'internal',
+                 build_config.internal_include_dir)
 
 """
 Generate Amalgamation
