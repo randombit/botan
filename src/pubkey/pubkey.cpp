@@ -115,10 +115,6 @@ SecureVector<byte> PK_Decryptor_MR_with_EME::dec(const byte msg[],
       {
       throw Decoding_Error("PK_Decryptor_MR_with_EME: Input is invalid");
       }
-   catch(Decoding_Error)
-      {
-      throw Decoding_Error("PK_Decryptor_MR_with_EME: Input is invalid");
-      }
    }
 
 /*
@@ -331,7 +327,6 @@ bool PK_Verifier::check_signature(const byte sig[], u32bit length)
                               to_string(sig_format));
       }
    catch(Invalid_Argument) { return false; }
-   catch(Decoding_Error) { return false; }
    }
 
 /*
