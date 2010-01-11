@@ -1105,7 +1105,7 @@ def choose_modules_to_use(modules, archinfo, options):
                         to_load.remove(modname)
                     if modname in maybe_dep:
                         maybe_dep.remove(modname)
-                    cannot_use_because(modname, 'of dependency failure')
+                    cannot_use_because(modname, 'dependency failure')
 
     for not_a_dep in maybe_dep:
         cannot_use_because(not_a_dep, 'loaded only if needed by dependency')
