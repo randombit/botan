@@ -35,8 +35,6 @@ const std::string algos[] = {
    "GOST",
    "IDEA",
    "KASUMI",
-   "Lion(SHA-256,Turing,8192)",
-   "Luby-Rackoff(SHA-512)",
    "MARS",
    "MISTY1",
    "Noekeon",
@@ -53,6 +51,11 @@ const std::string algos[] = {
    "TripleDES",
    "Twofish",
    "XTEA",
+
+   /* Cipher constructions */
+   "Cascade(Serpent,AES-128)",
+   "Lion(SHA-256,Salsa20,8192)",
+   "Luby-Rackoff(SHA-512)",
 
    /* Cipher modes */
    "TripleDES/CBC/PKCS7",

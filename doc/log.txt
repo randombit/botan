@@ -3,6 +3,7 @@
  - Add SSE2 implementation of IDEA
  - Perform XTS encryption and decryption in parallel where possible
  - Perform CBC decryption in parallel where possible
+ - Add a block cipher cascade construction
  - Add support for Win32 high resolution system timers
  - Remove Timer class entirely
  - Switch default PKCS #8 encryption algorithm from 3DES to AES-256
