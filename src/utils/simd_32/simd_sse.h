@@ -101,6 +101,11 @@ class SIMD_SSE2
          reg = _mm_or_si128(reg, other.reg);
          }
 
+      SIMD_SSE2 operator&(const SIMD_SSE2& other)
+         {
+         return _mm_and_si128(reg, other.reg);
+         }
+
       void operator&=(const SIMD_SSE2& other)
          {
          reg = _mm_and_si128(reg, other.reg);
