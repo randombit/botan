@@ -473,9 +473,6 @@ class ModuleInfo(object):
         self.header_internal = map(add_dir_name, self.header_internal)
         self.header_public = map(add_dir_name, self.header_public)
 
-        if len([f for f in self.source if f.endswith('h')]) > 0:
-            print self.lives_in
-
         self.mp_bits = int(self.mp_bits)
 
         if self.uses_tr1 == 'yes':
