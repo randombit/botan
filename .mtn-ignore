@@ -13,6 +13,7 @@ callgrind.out.*
 ^doc/doxygen$
 ^doc/[a-z]+\.(pdf|log|toc)$
 ^doc/examples/.*\.pem$
+^doc/examples/[a-z0-9_]+$
 ^src/wrap/perl-xs/Botan.(bs|c)$
 ^src/wrap/perl-xs/Makefile(\.old)?$
 ^src/wrap/perl-xs/.*blib$
