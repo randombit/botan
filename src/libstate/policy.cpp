@@ -48,6 +48,7 @@ void set_default_oids(Library_State& config)
    add_oid(config, "2.16.840.1.101.3.4.1.22", "AES-192/CBC");
    add_oid(config, "2.16.840.1.101.3.4.1.42", "AES-256/CBC");
    add_oid(config, "1.2.410.200004.1.4", "SEED/CBC"); // RFC 4010
+   add_oid(config, "1.3.6.1.4.1.25258.3.1", "Serpent/CBC");
 
    /* Hash Functions */
    add_oid(config, "1.2.840.113549.2.5", "MD5");
