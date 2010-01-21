@@ -103,7 +103,7 @@ CFB_Decryption::CFB_Decryption(BlockCipher* ciph, u32bit fback_bits)
 
    if(feedback == 0 || fback_bits % 8 != 0 || feedback > cipher->BLOCK_SIZE)
       throw Invalid_Argument("CFB_Decryption: Invalid feedback size " +
-                             to_string(fback_bits));
+                             std::to_string(fback_bits));
    }
 
 /*
@@ -123,7 +123,7 @@ CFB_Decryption::CFB_Decryption(BlockCipher* ciph,
 
    if(feedback == 0 || fback_bits % 8 != 0 || feedback > cipher->BLOCK_SIZE)
       throw Invalid_Argument("CFB_Decryption: Invalid feedback size " +
-                             to_string(fback_bits));
+                             std::to_string(fback_bits));
 
    set_key(key);
    set_iv(iv);

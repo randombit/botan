@@ -1018,8 +1018,7 @@ def choose_modules_to_use(modules, archinfo, options):
             cannot_use_because(modname, 'incompatible CPU')
         elif not module.compatible_os(options.os):
             cannot_use_because(modname, 'incompatible OS')
-        elif not module.compatible_compiler(options.compiler,
-                                            options.with_tr1):
+        elif not module.compatible_compiler(options.compiler):
             cannot_use_because(modname, 'incompatible compiler')
 
         else:

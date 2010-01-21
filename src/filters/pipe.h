@@ -33,7 +33,7 @@ class BOTAN_DLL Pipe : public DataSource
          {
          Invalid_Message_Number(const std::string& where, message_id msg) :
             Invalid_Argument("Pipe::" + where + ": Invalid message number " +
-                             to_string(msg))
+                             std::to_string(msg))
             {}
          };
 
