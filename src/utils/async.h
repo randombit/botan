@@ -18,11 +18,11 @@ namespace Botan {
 * Will be removed once GCC supports it natively
 */
 template<typename F>
-auto std_async(F f) -> std::unique_future<decltype(f())>
+auto std_async(F f) -> std::future<decltype(f())>
    {
    typedef decltype(f()) result_type;
    std::packaged_task<result_type ()> task(std::move(f));
-   std::unique_future<result_type> future = task.get_future();
+   std::future<result_type> future = task.get_future();
    std::thread thread(std::move(task));
    thread.detach();
    return future;
