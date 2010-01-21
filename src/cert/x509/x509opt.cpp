@@ -8,7 +8,7 @@
 #include <botan/x509self.h>
 #include <botan/oids.h>
 #include <botan/parsing.h>
-#include <botan/time.h>
+#include <chrono>
 
 namespace Botan {
 
@@ -84,10 +84,10 @@ X509_Cert_Options::X509_Cert_Options(const std::string& initial_opts,
    path_limit = 0;
    constraints = NO_CONSTRAINTS;
 
-   const u64bit now = system_time();
+   auto now = std::chrono::system_clock::now();
 
    start = X509_Time(now);
-   end = X509_Time(now + expiration_time_in_seconds);
+   end = X509_Time(now + std::chrono::seconds(expiration_time));
 
    if(initial_opts == "")
       return;

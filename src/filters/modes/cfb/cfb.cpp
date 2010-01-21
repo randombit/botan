@@ -26,7 +26,7 @@ CFB_Encryption::CFB_Encryption(BlockCipher* ciph, u32bit fback_bits)
 
    if(feedback == 0 || fback_bits % 8 != 0 || feedback > cipher->BLOCK_SIZE)
       throw Invalid_Argument("CFB_Encryption: Invalid feedback size " +
-                             to_string(fback_bits));
+                             std::to_string(fback_bits));
    }
 
 /*
@@ -46,7 +46,7 @@ CFB_Encryption::CFB_Encryption(BlockCipher* ciph,
 
    if(feedback == 0 || fback_bits % 8 != 0 || feedback > cipher->BLOCK_SIZE)
       throw Invalid_Argument("CFB_Encryption: Invalid feedback size " +
-                             to_string(fback_bits));
+                             std::to_string(fback_bits));
 
    set_key(key);
    set_iv(iv);

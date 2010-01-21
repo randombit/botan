@@ -1,6 +1,6 @@
 /**
 * Runtime benchmarking
-* (C) 2008 Jack Lloyd
+* (C) 2008-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -11,12 +11,14 @@
 #include <botan/stream_cipher.h>
 #include <botan/hash.h>
 #include <botan/mac.h>
-#include <botan/time.h>
 #include <memory>
-
+#include <vector>
+#include <chrono>
 namespace Botan {
 
 namespace {
+
+typedef std::chrono::high_resolution_clock benchmark_clock;
 
 /**
 * Benchmark BufferedComputation (hash or MAC)
@@ -26,18 +28,23 @@ std::pair<u64bit, u64bit> bench_buf_comp(BufferedComputation* buf_comp,
                                          const byte buf[], u32bit buf_len)
    {
    u64bit reps = 0;
-   u64bit nanoseconds_used = 0;
 
-   while(nanoseconds_used < nanoseconds_max)
+   std::chrono::nanoseconds max_time(nanoseconds_max);
+   std::chrono::nanoseconds time_used(0);
+
+   while(time_used < max_time)
       {
-      const u64bit start = get_nanoseconds_clock();
+      auto start = benchmark_clock::now();
       buf_comp->update(buf, buf_len);
-      nanoseconds_used += get_nanoseconds_clock() - start;
+      time_used += benchmark_clock::now() - start;
 
       ++reps;
       }
 
-   return std::make_pair(reps * buf_len, nanoseconds_used);
+   u64bit ns_taken =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(time_used).count();
+
+   return std::make_pair(reps * buf_len, ns_taken);
    }
 
 /**
@@ -51,21 +58,26 @@ bench_block_cipher(BlockCipher* block_cipher,
    const u32bit in_blocks = buf_len / block_cipher->BLOCK_SIZE;
 
    u64bit reps = 0;
-   u64bit nanoseconds_used = 0;
+
+   std::chrono::nanoseconds max_time(nanoseconds_max);
+   std::chrono::nanoseconds time_used(0);
 
    block_cipher->set_key(buf, block_cipher->MAXIMUM_KEYLENGTH);
 
-   while(nanoseconds_used < nanoseconds_max)
+   while(time_used < max_time)
       {
-      const u64bit start = get_nanoseconds_clock();
+      auto start = benchmark_clock::now();
       block_cipher->encrypt_n(buf, buf, in_blocks);
-      nanoseconds_used += get_nanoseconds_clock() - start;
+      time_used += benchmark_clock::now() - start;
 
       ++reps;
       }
 
+   u64bit ns_taken =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(time_used).count();
+
    return std::make_pair(reps * in_blocks * block_cipher->BLOCK_SIZE,
-                         nanoseconds_used);
+                         ns_taken);
    }
 
 /**
@@ -77,20 +89,25 @@ bench_stream_cipher(StreamCipher* stream_cipher,
                     byte buf[], u32bit buf_len)
    {
    u64bit reps = 0;
-   u64bit nanoseconds_used = 0;
 
    stream_cipher->set_key(buf, stream_cipher->MAXIMUM_KEYLENGTH);
 
-   while(nanoseconds_used < nanoseconds_max)
+   std::chrono::nanoseconds max_time(nanoseconds_max);
+   std::chrono::nanoseconds time_used(0);
+
+   while(time_used < max_time)
       {
-      const u64bit start = get_nanoseconds_clock();
+      auto start = benchmark_clock::now();
       stream_cipher->cipher1(buf, buf_len);
-      nanoseconds_used += get_nanoseconds_clock() - start;
+      time_used += benchmark_clock::now() - start;
 
       ++reps;
       }
 
-   return std::make_pair(reps * buf_len, nanoseconds_used);
+   u64bit ns_taken =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(time_used).count();
+
+   return std::make_pair(reps * buf_len, ns_taken);
    }
 
 /**

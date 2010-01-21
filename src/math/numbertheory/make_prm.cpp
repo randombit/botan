@@ -20,7 +20,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
    {
    if(bits <= 1)
       throw Invalid_Argument("random_prime: Can't make a prime of " +
-                             to_string(bits) + " bits");
+                             std::to_string(bits) + " bits");
    else if(bits == 2)
       return ((rng.next_byte() % 2) ? 2 : 3);
    else if(bits == 3)
@@ -85,7 +85,7 @@ BigInt random_safe_prime(RandomNumberGenerator& rng, u32bit bits)
    {
    if(bits <= 64)
       throw Invalid_Argument("random_safe_prime: Can't make a prime of " +
-                             to_string(bits) + " bits");
+                             std::to_string(bits) + " bits");
 
    BigInt p;
    do

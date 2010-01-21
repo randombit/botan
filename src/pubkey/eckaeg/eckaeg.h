@@ -90,7 +90,7 @@ class BOTAN_DLL ECKAEG_PrivateKey : public ECKAEG_PublicKey,
       ECKAEG_PrivateKey(RandomNumberGenerator& rng,
                         const EC_Domain_Params& dom_pars)
          {
-         mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_pars));
+         mp_dom_pars = std::unique_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_pars));
          generate_private_key(rng);
          mp_public_point->check_invariants();
          m_eckaeg_core = ECKAEG_Core(*mp_dom_pars, m_private_value, *mp_public_point);
