@@ -18,6 +18,9 @@ namespace Botan {
 class GMP_Engine : public Engine
    {
    public:
+      GMP_Engine();
+      ~GMP_Engine();
+
       std::string provider_name() const { return "gmp"; }
 
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
@@ -46,10 +49,6 @@ class GMP_Engine : public Engine
 
       Modular_Exponentiator* mod_exp(const BigInt&,
                                      Power_Mod::Usage_Hints) const;
-
-      GMP_Engine();
-   private:
-      static void set_memory_hooks();
    };
 
 }
