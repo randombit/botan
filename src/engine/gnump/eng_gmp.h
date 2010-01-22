@@ -48,8 +48,7 @@ class BOTAN_DLL GMP_Engine : public Engine
                                      Power_Mod::Usage_Hints) const;
 
       GMP_Engine();
-   private:
-      static void set_memory_hooks();
+      ~GMP_Engine();
    };
 
 }

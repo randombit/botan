@@ -17,6 +17,7 @@ namespace {
 * Allocator used by GNU MP
 */
 Allocator* gmp_alloc = 0;
+u32bit gmp_alloc_refcnt = 0;
 
 /*
 * Allocation Function for GNU MP
@@ -48,23 +49,28 @@ void gmp_free(void* ptr, size_t n)
 }
 
 /*
-* Set the GNU MP memory functions
+* GMP_Engine Constructor
 */
-void GMP_Engine::set_memory_hooks()
+GMP_Engine::GMP_Engine()
    {
    if(gmp_alloc == 0)
       {
       gmp_alloc = Allocator::get(true);
       mp_set_memory_functions(gmp_malloc, gmp_realloc, gmp_free);
       }
+
+   ++gmp_alloc_refcnt;
    }
 
-/*
-* GMP_Engine Constructor
-*/
-GMP_Engine::GMP_Engine()
+GMP_Engine::~GMP_Engine()
    {
-   set_memory_hooks();
+   --gmp_alloc_refcnt;
+
+   if(gmp_alloc_refcnt == 0)
+      {
+      mp_set_memory_functions(NULL, NULL, NULL);
+      gmp_alloc = 0;
+      }
    }
 
 }

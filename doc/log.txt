@@ -1,5 +1,6 @@
 
 * 1.8.9, ????-??-??
+ - Fix crash in GMP_Engine if library is shutdown and reinitialized
  - Work around problem with recent binutils in x86-64 SHA-1
  - Add Win32 installer support
 
