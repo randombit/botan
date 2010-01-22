@@ -4,8 +4,10 @@
  - Add SSE2 implementation of IDEA
  - Perform XTS encryption and decryption in parallel where possible
  - Perform CBC decryption in parallel where possible
+ - Add SQLite3 db encryption codec, contributed by Olivier de Gaalon
  - Add a block cipher cascade construction
  - Add support for Win32 high resolution system timers
+ - Fix crash in GMP_Engine if library is shutdown and reinitialized
  - Remove Timer class entirely
  - Switch default PKCS #8 encryption algorithm from 3DES to AES-256
  - New option --gen-amalgamation for creating a SQLite-style amalgamation

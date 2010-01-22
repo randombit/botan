@@ -134,8 +134,8 @@ void SHA_160::compress_n(const byte input[], u32bit blocks)
 */
 void SHA_160::copy_out(byte output[])
    {
-   for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
-      store_be(digest[j/4], output + j);
+   for(u32bit i = 0; i != OUTPUT_LENGTH; i += 4)
+      store_be(digest[i/4], output + i);
    }
 
 /*

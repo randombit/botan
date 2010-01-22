@@ -5,7 +5,6 @@ load_on always
 <source>
 charset.cpp
 cpuid.cpp
-debug.cpp
 mlock.cpp
 parsing.cpp
 time.cpp
