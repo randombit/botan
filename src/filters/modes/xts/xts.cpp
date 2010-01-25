@@ -176,6 +176,18 @@ void XTS_Encryption::buffered_final(const byte input[], u32bit length)
       }
    else
       { // steal ciphertext
+
+      u32bit leftover_blocks =
+         ((length / cipher->BLOCK_SIZE) - 1) * cipher->BLOCK_SIZE;
+
+      buffered_block(input, leftover_blocks);
+
+      input += leftover_blocks;
+      length -= leftover_blocks;
+
+      if(length >= 2*cipher->BLOCK_SIZE)
+         throw std::runtime_error("Die vampire die");
+
       SecureVector<byte> temp(input, length);
 
       xor_buf(temp, tweak, cipher->BLOCK_SIZE);
@@ -201,7 +213,8 @@ void XTS_Encryption::buffered_final(const byte input[], u32bit length)
 * XTS_Decryption constructor
 */
 XTS_Decryption::XTS_Decryption(BlockCipher* ciph) :
-   Buffered_Filter(BOTAN_PARALLEL_BLOCKS_XTS * ciph->BLOCK_SIZE, 1)
+   Buffered_Filter(BOTAN_PARALLEL_BLOCKS_XTS * ciph->BLOCK_SIZE,
+                   ciph->BLOCK_SIZE + 1)
    {
    cipher = ciph;
    cipher2 = ciph->clone();
@@ -214,7 +227,8 @@ XTS_Decryption::XTS_Decryption(BlockCipher* ciph) :
 XTS_Decryption::XTS_Decryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   Buffered_Filter(BOTAN_PARALLEL_BLOCKS_XTS * ciph->BLOCK_SIZE, 1)
+   Buffered_Filter(BOTAN_PARALLEL_BLOCKS_XTS * ciph->BLOCK_SIZE,
+                   ciph->BLOCK_SIZE + 1)
    {
    cipher = ciph;
    cipher2 = ciph->clone();
@@ -320,18 +334,26 @@ void XTS_Decryption::buffered_block(const byte input[], u32bit input_length)
       }
    }
 
-void XTS_Decryption::buffered_final(const byte input[], u32bit input_length)
+void XTS_Decryption::buffered_final(const byte input[], u32bit length)
    {
-   if(input_length <= cipher->BLOCK_SIZE)
+   if(length <= cipher->BLOCK_SIZE)
       throw Decoding_Error("XTS_Decryption: insufficient data to decrypt");
 
-   if(input_length % cipher->BLOCK_SIZE == 0)
+   if(length % cipher->BLOCK_SIZE == 0)
       {
-      buffered_block(input, input_length);
+      buffered_block(input, length);
       }
    else
       {
-      SecureVector<byte> temp(input, input_length);
+      u32bit leftover_blocks =
+         ((length / cipher->BLOCK_SIZE) - 1) * cipher->BLOCK_SIZE;
+
+      buffered_block(input, leftover_blocks);
+
+      input += leftover_blocks;
+      length -= leftover_blocks;
+
+      SecureVector<byte> temp(input, length);
       SecureVector<byte> tweak_copy(&tweak[0], cipher->BLOCK_SIZE);
 
       poly_double(tweak_copy, cipher->BLOCK_SIZE);
@@ -340,14 +362,14 @@ void XTS_Decryption::buffered_final(const byte input[], u32bit input_length)
       cipher->decrypt(temp);
       xor_buf(temp, tweak_copy, cipher->BLOCK_SIZE);
 
-      for(u32bit i = 0; i != input_length - cipher->BLOCK_SIZE; ++i)
+      for(u32bit i = 0; i != length - cipher->BLOCK_SIZE; ++i)
          std::swap(temp[i], temp[i + cipher->BLOCK_SIZE]);
 
       xor_buf(temp, tweak, cipher->BLOCK_SIZE);
       cipher->decrypt(temp);
       xor_buf(temp, tweak, cipher->BLOCK_SIZE);
 
-      send(temp, input_length);
+      send(temp, length);
       }
 
    buffer_reset();
