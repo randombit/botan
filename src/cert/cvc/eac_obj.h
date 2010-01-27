@@ -23,8 +23,6 @@
 
 namespace Botan {
 
-const std::string eac_cvc_emsa("EMSA1_BSI");
-
 /*
 * TR03110 v1.1 EAC CV Certificate
 */
