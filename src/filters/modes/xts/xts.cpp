@@ -185,9 +185,6 @@ void XTS_Encryption::buffered_final(const byte input[], u32bit length)
       input += leftover_blocks;
       length -= leftover_blocks;
 
-      if(length >= 2*cipher->BLOCK_SIZE)
-         throw std::runtime_error("Die vampire die");
-
       SecureVector<byte> temp(input, length);
 
       xor_buf(temp, tweak, cipher->BLOCK_SIZE);
@@ -214,9 +211,12 @@ void XTS_Encryption::buffered_final(const byte input[], u32bit length)
 */
 XTS_Decryption::XTS_Decryption(BlockCipher* ciph) :
    Buffered_Filter(BOTAN_PARALLEL_BLOCKS_XTS * ciph->BLOCK_SIZE,
-                   ciph->BLOCK_SIZE + 1)
+                   ciph->BLOCK_SIZE + 1),
+   cipher(ciph)
    {
-   cipher = ciph;
+   if(cipher->BLOCK_SIZE != 8 && cipher->BLOCK_SIZE != 16)
+       throw std::invalid_argument("Bad cipher for XTS: " + cipher->name());
+
    cipher2 = ciph->clone();
    tweak.resize(BOTAN_PARALLEL_BLOCKS_XTS * cipher->BLOCK_SIZE);
    }
@@ -228,9 +228,12 @@ XTS_Decryption::XTS_Decryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
    Buffered_Filter(BOTAN_PARALLEL_BLOCKS_XTS * ciph->BLOCK_SIZE,
-                   ciph->BLOCK_SIZE + 1)
+                   ciph->BLOCK_SIZE + 1),
+   cipher(ciph)
    {
-   cipher = ciph;
+   if(cipher->BLOCK_SIZE != 8 && cipher->BLOCK_SIZE != 16)
+       throw std::invalid_argument("Bad cipher for XTS: " + cipher->name());
+
    cipher2 = ciph->clone();
    tweak.resize(BOTAN_PARALLEL_BLOCKS_XTS * cipher->BLOCK_SIZE);
 
