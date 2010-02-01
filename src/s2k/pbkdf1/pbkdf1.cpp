@@ -6,6 +6,7 @@
 */
 
 #include <botan/pbkdf1.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
