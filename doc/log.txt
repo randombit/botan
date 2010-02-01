@@ -7,6 +7,7 @@
  - Add SQLite3 db encryption codec, contributed by Olivier de Gaalon
  - Add a block cipher cascade construction
  - Add support for Win32 high resolution system timers
+ - Changed S2K interface: derive_key now takes salt, iteration count
  - Fix crash in GMP_Engine if library is shutdown and reinitialized
  - Remove Timer class entirely
  - Switch default PKCS #8 encryption algorithm from 3DES to AES-256
