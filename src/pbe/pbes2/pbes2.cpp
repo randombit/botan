@@ -87,9 +87,9 @@ void PBE_PKCS5v20::set_key(const std::string& passphrase)
    {
    PKCS5_PBKDF2 pbkdf(new HMAC(hash_function->clone()));
 
-   pbkdf.set_iterations(iterations);
-   pbkdf.change_salt(salt, salt.size());
-   key = pbkdf.derive_key(key_length, passphrase).bits_of();
+   key = pbkdf.derive_key(key_length, passphrase,
+                          &salt[0], salt.size(),
+                          iterations).bits_of();
    }
 
 /**

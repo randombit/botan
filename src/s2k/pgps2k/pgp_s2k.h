@@ -22,12 +22,14 @@ class BOTAN_DLL OpenPGP_S2K : public S2K
       std::string name() const;
       S2K* clone() const;
 
+      OctetString derive_key(u32bit output_len,
+                             const std::string& passphrase,
+                             const byte salt[], u32bit salt_len,
+                             u32bit iterations) const;
+
       OpenPGP_S2K(HashFunction* hash_in) : hash(hash_in) {}
       ~OpenPGP_S2K() { delete hash; }
    private:
-      OctetString derive(u32bit, const std::string&,
-                         const byte[], u32bit, u32bit) const;
-
       HashFunction* hash;
    };
 

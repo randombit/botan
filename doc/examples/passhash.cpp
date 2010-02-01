@@ -55,18 +55,26 @@ int main(int argc, char* argv[])
    return 0;
    }
 
+const u32bit SALT_BYTES = 8; // 64 bits of salt
+const u32bit PBKDF_OUTPUT_LEN = 16; // 128 bits output
+const u32bit KDF_ITERATIONS = 100000;
+
 std::string password_hash(const std::string& pass,
                           RandomNumberGenerator& rng)
    {
    PKCS5_PBKDF2 kdf(new HMAC(new SHA_160));
 
-   kdf.set_iterations(10000);
-   kdf.new_random_salt(rng, 6); // 48 bits
+   SecureVector<byte> salt(SALT_BYTES);
+   rng.randomize(&salt[0], salt.size());
+
+   // Encode the salt plus 96 bits of PBKDF2 output
 
    Pipe pipe(new Base64_Encoder);
    pipe.start_msg();
-   pipe.write(kdf.current_salt());
-   pipe.write(kdf.derive_key(12, pass).bits_of());
+   pipe.write(salt);
+   pipe.write(kdf.derive_key(PBKDF_OUTPUT_LEN, pass,
+                             &salt[0], salt.size(),
+                             KDF_ITERATIONS).bits_of());
    pipe.end_msg();
 
    return pipe.read_all_as_string();
@@ -81,12 +89,15 @@ bool password_hash_ok(const std::string& pass, const std::string& hash)
 
    SecureVector<byte> hash_bin = pipe.read_all();
 
+   if(hash_bin.size() != (PBKDF_OUTPUT_LEN + SALT_BYTES))
+      return false;
+
    PKCS5_PBKDF2 kdf(new HMAC(new SHA_160));
 
-   kdf.set_iterations(10000);
-   kdf.change_salt(hash_bin, 6);
-
-   SecureVector<byte> cmp = kdf.derive_key(12, pass).bits_of();
+   SecureVector<byte> cmp = kdf.derive_key(
+      PBKDF_OUTPUT_LEN, pass,
+      &hash_bin[0], SALT_BYTES,
+      KDF_ITERATIONS).bits_of();
 
    return same_mem(cmp.begin(), hash_bin.begin() + 6, 12);
    }

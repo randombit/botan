@@ -2621,53 +2621,46 @@ degree of applicability.
 
 \subsection{S2K Algorithms}
 
-There are various procedures (usually fairly ad-hoc) for turning a passphrase
-into a (mostly) arbitrary length key for a symmetric cipher. A general
-interface for such algorithms is presented in \filename{s2k.h}. The main
-function is \function{derive\_key}, which takes a passphrase, and the desired
-length of the output key, and returns a key of that length, deterministically
-produced from the passphrase. If an algorithm can't produce a key of that size,
-it will throw an exception (most notably, PKCS \#5's PBKDF1 can only produce
-strings between 1 and $n$ bytes, where $n$ is the output size of the underlying
-hash function).
+There are various procedures (usually fairly ad-hoc) for turning a
+passphrase into a (mostly) arbitrary length key for a symmetric
+cipher. A general interface for such algorithms is presented in
+\filename{s2k.h}. The main function is \function{derive\_key}, which
+takes a passphrase, a salt, an iteration count, and the desired length
+of the output key, and returns a key of that length, deterministically
+produced from the passphrase and salt. If an algorithm can't produce a
+key of that size, it will throw an exception (most notably, PKCS \#5's
+PBKDF1 can only produce strings between 1 and $n$ bytes, where $n$ is
+the output size of the underlying hash function).
 
-Most such algorithms allow the use of a ``salt'', which provides some extra
-randomness and helps against dictionary attacks on the passphrase. Simply call
-\function{change\_salt} (there are variations of it for most of the ways you
-might wish to specify a salt, check the header for details) with a block of
-random data. You can also have the class generate a new salt for you with
-\function{new\_random\_salt}; the salt that was generated can be retrieved with
-\function{current\_salt}.
-
-Additionally some algorithms allow you to set some sort of iteration
-count, which will make the algorithm take longer to compute the final
-key (reducing the speed of brute-force attacks of various kinds). This
-can be changed with the \function{set\_iterations} function. Most
-standards recommend an iteration count of at least 1000. Currently
-defined S2K algorithms are ``PBKDF1(digest)'', ``PBKDF2(digest)'', and
-``OpenPGP-S2K(digest)''; you can retrieve any of these using the
-\function{get\_s2k}, found in \filename{lookup.h}. As of this writing,
-``PBKDF2(SHA-256)'' with 10000 iterations and an 8 byte salt is
-recommend for new applications.
+The purpose of the iteration count is to make the algorithm take
+longer to compute the final key (reducing the speed of brute-force
+attacks of various kinds). Most standards recommend an iteration count
+of at least 10000. Currently defined S2K algorithms are
+``PBKDF1(digest)'', ``PBKDF2(digest)'', and ``OpenPGP-S2K(digest)'';
+you can retrieve any of these using the \function{get\_s2k}, found in
+\filename{lookup.h}. As of this writing, ``PBKDF2(SHA-256)'' with
+10000 iterations and a 16 byte salt is recommend for new applications.
 
 \subsubsection{OpenPGP S2K}
 
-There are some oddities about OpenPGP's S2K algorithms that are documented
-here. For one thing, it uses the iteration count in a strange manner; instead
-of specifying how many times to iterate the hash, it tells how many
-\emph{bytes} should be hashed in total (including the salt). So the exact
-iteration count will depend on the size of the salt (which is fixed at 8 bytes
-by the OpenPGP standard, though the implementation will allow any salt size)
-and the size of the passphrase.
+There are some oddities about OpenPGP's S2K algorithms that are
+documented here. For one thing, it uses the iteration count in a
+strange manner; instead of specifying how many times to iterate the
+hash, it tells how many \emph{bytes} should be hashed in total
+(including the salt). So the exact iteration count will depend on the
+size of the salt (which is fixed at 8 bytes by the OpenPGP standard,
+though the implementation will allow any salt size) and the size of
+the passphrase.
 
-To get what OpenPGP calls ``Simple S2K'', set iterations to 0 (the default for
-OpenPGP S2K), and do not specify a salt. To get ``Salted S2K'', again leave the
-iteration count at 0, but give an 8-byte salt. ``Salted and Iterated S2K''
-requires an 8-byte salt and some iteration count (this should be significantly
-larger than the size of the longest passphrase that might reasonably be used;
-somewhere from 1024 to 65536 would probably be about right). Using both a
-reasonably sized salt and a large iteration count is highly recommended to
-prevent password guessing attempts.
+To get what OpenPGP calls ``Simple S2K'', set iterations to 0, and do
+not specify a salt. To get ``Salted S2K'', again leave the iteration
+count at 0, but give an 8-byte salt. ``Salted and Iterated S2K''
+requires an 8-byte salt and some iteration count (this should be
+significantly larger than the size of the longest passphrase that
+might reasonably be used; somewhere from 1024 to 65536 would probably
+be about right). Using both a reasonably sized salt and a large
+iteration count is highly recommended to prevent password guessing
+attempts.
 
 \subsection{Checksums}
 

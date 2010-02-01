@@ -80,9 +80,9 @@ void PBE_PKCS5v15::set_key(const std::string& passphrase)
    {
    PKCS5_PBKDF1 pbkdf(hash_function->clone());
 
-   pbkdf.set_iterations(iterations);
-   pbkdf.change_salt(salt, salt.size());
-   SymmetricKey key_and_iv = pbkdf.derive_key(16, passphrase);
+   SymmetricKey key_and_iv = pbkdf.derive_key(16, passphrase,
+                                              &salt[0], salt.size(),
+                                              iterations);
 
    key.set(key_and_iv.begin(), 8);
    iv.set(key_and_iv.begin() + 8, 8);

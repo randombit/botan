@@ -22,6 +22,11 @@ class BOTAN_DLL PKCS5_PBKDF1 : public S2K
       std::string name() const;
       S2K* clone() const;
 
+      OctetString derive_key(u32bit output_len,
+                             const std::string& passphrase,
+                             const byte salt[], u32bit salt_len,
+                             u32bit iterations) const;
+
       /**
       * Create a PKCS #5 instance using the specified hash function.
       * @param hash a pointer to a hash function object to use
@@ -33,9 +38,6 @@ class BOTAN_DLL PKCS5_PBKDF1 : public S2K
 
       ~PKCS5_PBKDF1() { delete hash; }
    private:
-      OctetString derive(u32bit, const std::string&,
-                          const byte[], u32bit, u32bit) const;
-
       HashFunction* hash;
    };
 

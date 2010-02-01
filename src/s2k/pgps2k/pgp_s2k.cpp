@@ -14,9 +14,10 @@ namespace Botan {
 /*
 * Derive a key using the OpenPGP S2K algorithm
 */
-OctetString OpenPGP_S2K::derive(u32bit key_len, const std::string& passphrase,
-                                const byte salt_buf[], u32bit salt_size,
-                                u32bit iterations) const
+OctetString OpenPGP_S2K::derive_key(u32bit key_len,
+                                    const std::string& passphrase,
+                                    const byte salt_buf[], u32bit salt_size,
+                                    u32bit iterations) const
    {
    SecureVector<byte> key(key_len), hash_buf;
 
