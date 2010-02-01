@@ -5,17 +5,11 @@
 */
 
 #include <botan/botan.h>
-#include <botan/pbkdf2.h>
-#include <botan/hmac.h>
-#include <botan/sha160.h>
+#include <botan/passhash.h>
 #include <iostream>
 #include <memory>
 
-using namespace Botan;
-
-std::string password_hash(const std::string& pass,
-                          RandomNumberGenerator& rng);
-bool password_hash_ok(const std::string& pass, const std::string& hash);
+#include <stdio.h>
 
 int main(int argc, char* argv[])
    {
@@ -33,14 +27,16 @@ int main(int argc, char* argv[])
 
       if(argc == 2)
          {
-         AutoSeeded_RNG rng;
+         Botan::AutoSeeded_RNG rng;
+
+         Botan::u32bit work_factor = 10;
 
          std::cout << "H('" << argv[1] << "') = "
-                   << password_hash(argv[1], rng) << '\n';
+                   << Botan::password_hash(argv[1], rng, work_factor) << '\n';
          }
       else
          {
-         bool ok = password_hash_ok(argv[1], argv[2]);
+         bool ok = Botan::password_hash_ok(argv[1], argv[2]);
          if(ok)
             std::cout << "Password and hash match\n";
          else
@@ -53,51 +49,4 @@ int main(int argc, char* argv[])
       return 1;
       }
    return 0;
-   }
-
-const u32bit SALT_BYTES = 8; // 64 bits of salt
-const u32bit PBKDF_OUTPUT_LEN = 16; // 128 bits output
-const u32bit KDF_ITERATIONS = 100000;
-
-std::string password_hash(const std::string& pass,
-                          RandomNumberGenerator& rng)
-   {
-   PKCS5_PBKDF2 kdf(new HMAC(new SHA_160));
-
-   SecureVector<byte> salt(SALT_BYTES);
-   rng.randomize(&salt[0], salt.size());
-
-   // Encode the salt plus 96 bits of PBKDF2 output
-
-   Pipe pipe(new Base64_Encoder);
-   pipe.start_msg();
-   pipe.write(salt);
-   pipe.write(kdf.derive_key(PBKDF_OUTPUT_LEN, pass,
-                             &salt[0], salt.size(),
-                             KDF_ITERATIONS).bits_of());
-   pipe.end_msg();
-
-   return pipe.read_all_as_string();
-   }
-
-bool password_hash_ok(const std::string& pass, const std::string& hash)
-   {
-   Pipe pipe(new Base64_Decoder);
-   pipe.start_msg();
-   pipe.write(hash);
-   pipe.end_msg();
-
-   SecureVector<byte> hash_bin = pipe.read_all();
-
-   if(hash_bin.size() != (PBKDF_OUTPUT_LEN + SALT_BYTES))
-      return false;
-
-   PKCS5_PBKDF2 kdf(new HMAC(new SHA_160));
-
-   SecureVector<byte> cmp = kdf.derive_key(
-      PBKDF_OUTPUT_LEN, pass,
-      &hash_bin[0], SALT_BYTES,
-      KDF_ITERATIONS).bits_of();
-
-   return same_mem(cmp.begin(), hash_bin.begin() + 6, 12);
    }

@@ -1,0 +1,10 @@
+define PASSHASH
+
+<requires>
+pbkdf2
+sha2
+hmac
+rng
+base64
+</requires>
+
