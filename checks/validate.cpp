@@ -18,6 +18,11 @@
 #include <botan/exceptn.h>
 #include <botan/selftest.h>
 #include <botan/libstate.h>
+
+#if defined(BOTAN_HAS_PASSHASH)
+  #include <botan/passhash.h>
+#endif
+
 using namespace Botan;
 
 #include "validate.h"
@@ -60,6 +65,26 @@ bool failed_test(const std::string&, std::vector<std::string>, bool, bool,
 std::vector<std::string> parse(const std::string&);
 void strip(std::string&);
 Botan::SecureVector<byte> decode_hex(const std::string&);
+
+bool test_passhash(RandomNumberGenerator& rng)
+   {
+#if defined(BOTAN_HAS_PASSHASH)
+
+   const std::string input = "secret";
+   const std::string fixed_hash = "$9$AArBRAG0kcKp3XPDUgd32ONhutn9HMQKix7H";
+
+   if(!password_hash_ok(input, fixed_hash))
+      return false;
+
+   std::string gen_hash = password_hash(input, rng, 5);
+
+   if(!password_hash_ok(input, gen_hash))
+      return false;
+
+#endif
+
+   return true;
+   }
 
 u32bit do_validation_tests(const std::string& filename,
                            RandomNumberGenerator& rng,
@@ -179,6 +204,13 @@ u32bit do_validation_tests(const std::string& filename,
          }
 
       }
+
+   if(should_pass && !test_passhash(rng))
+      {
+      std::cout << "Passhash tests failed" << std::endl;
+      errors++;
+      }
+
    if(should_pass)
       std::cout << std::endl;
    return errors;

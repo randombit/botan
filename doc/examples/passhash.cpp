@@ -29,10 +29,8 @@ int main(int argc, char* argv[])
          {
          Botan::AutoSeeded_RNG rng;
 
-         Botan::u32bit work_factor = 10;
-
          std::cout << "H('" << argv[1] << "') = "
-                   << Botan::password_hash(argv[1], rng, work_factor) << '\n';
+                   << Botan::password_hash(argv[1], rng) << '\n';
          }
       else
          {
