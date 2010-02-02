@@ -6,7 +6,7 @@
 */
 
 #include <botan/randpool.h>
-#include <botan/loadstor.h>
+#include <botan/get_byte.h>
 #include <botan/internal/xor_buf.h>
 #include <botan/internal/stl_util.h>
 #include <algorithm>

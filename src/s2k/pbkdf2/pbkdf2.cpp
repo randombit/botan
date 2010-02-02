@@ -6,7 +6,7 @@
 */
 
 #include <botan/pbkdf2.h>
-#include <botan/loadstor.h>
+#include <botan/get_byte.h>
 #include <botan/internal/xor_buf.h>
 
 namespace Botan {

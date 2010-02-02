@@ -35,6 +35,7 @@ time.h
 types.h
 ui.h
 version.h
+get_byte.h
 </header:public>
 
 <libs>

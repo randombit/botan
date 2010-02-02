@@ -6,7 +6,7 @@
 */
 
 #include <botan/kdf2.h>
-#include <botan/loadstor.h>
+#include <botan/get_byte.h>
 
 namespace Botan {
 

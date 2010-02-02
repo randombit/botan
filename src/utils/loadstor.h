@@ -11,6 +11,7 @@
 
 #include <botan/types.h>
 #include <botan/bswap.h>
+#include <botan/get_byte.h>
 #include <cstring>
 
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
@@ -36,16 +37,6 @@
 #endif
 
 namespace Botan {
-
-/*
-* Byte Extraction Function
-*/
-template<typename T> inline byte get_byte(u32bit byte_num, T input)
-   {
-   return static_cast<byte>(
-      input >> ((sizeof(T)-1-(byte_num&(sizeof(T)-1))) << 3)
-      );
-   }
 
 /*
 * Byte to Word Conversions

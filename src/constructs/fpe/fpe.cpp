@@ -12,7 +12,7 @@
 #include <botan/numthry.h>
 #include <botan/hmac.h>
 #include <botan/sha2_32.h>
-#include <botan/loadstor.h>
+#include <botan/get_byte.h>
 #include <stdexcept>
 
 namespace Botan {

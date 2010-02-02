@@ -8,9 +8,9 @@
 #include <botan/der_enc.h>
 #include <botan/asn1_int.h>
 #include <botan/bigint.h>
-#include <botan/loadstor.h>
-#include <botan/internal/bit_ops.h>
+#include <botan/get_byte.h>
 #include <botan/parsing.h>
+#include <botan/internal/bit_ops.h>
 #include <algorithm>
 
 namespace Botan {
