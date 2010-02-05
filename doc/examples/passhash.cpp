@@ -5,7 +5,7 @@
 */
 
 #include <botan/botan.h>
-#include <botan/passhash.h>
+#include <botan/passhash9.h>
 #include <iostream>
 #include <memory>
 
@@ -30,11 +30,11 @@ int main(int argc, char* argv[])
          Botan::AutoSeeded_RNG rng;
 
          std::cout << "H('" << argv[1] << "') = "
-                   << Botan::password_hash(argv[1], rng) << '\n';
+                   << Botan::generate_passhash9(argv[1], rng) << '\n';
          }
       else
          {
-         bool ok = Botan::password_hash_ok(argv[1], argv[2]);
+         bool ok = Botan::check_passhash9(argv[1], argv[2]);
          if(ok)
             std::cout << "Password and hash match\n";
          else

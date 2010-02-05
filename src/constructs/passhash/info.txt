@@ -1,4 +1,4 @@
-define PASSHASH
+define PASSHASH9
 
 <requires>
 libstate

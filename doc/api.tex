@@ -12,7 +12,7 @@
 
 \title{\textbf{Botan API Reference}}
 \author{}
-\date{2009/2/19}
+\date{2010/02/05}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\manpage}[2]{\texttt{#1}(#2)}
@@ -2661,6 +2661,84 @@ might reasonably be used; somewhere from 1024 to 65536 would probably
 be about right). Using both a reasonably sized salt and a large
 iteration count is highly recommended to prevent password guessing
 attempts.
+
+\subsection{Password Hashing}
+
+Storing passwords for user authentication purposes in plaintext is the
+simplest but least secure method; when an attacker compromises the
+database in which the passwords are stored, they immediately gain
+access to all of them. Often passwords are reused among multiple
+services or machines, meaning once a password to a single service is
+known an attacker has a substantial head start on attacking other
+machines.
+
+The general approach is to store, instead of the password, the output
+of a one way function of the password. Upon receiving an
+authentication request, the authenticator can recompute the one way
+function and compare the value just computed with the one that was
+stored. If they match, then the authentication request succeeds. But
+when an attacker gains access to the database, they only have the
+output of the one way function, not the original password.
+
+Common hash functions such as SHA-256 are one way, but used alone they
+have problems for this purpose. What an attacker can do, upon gaining
+access to such a stored password database, is hash common dictionary
+words and other possible passwords, storing them in a list. Then he
+can search through his list; if a stored hash and an entry in his list
+match, then he has found the password. Even worse, this can happen
+\emph{offline}: an attacker can begin hashing common passwords days,
+months, or years before ever gaining access to the database. In
+addition, if two users choose the same password, the one way function
+output will be the same for both of them, which will be visible upon
+inspection of the database.
+
+There are two solutions to these problems: salting and
+iteration. Salting refers to including, along with the password, a
+randomly chosen value which perturbs the one way function. Salting can
+reduce the effectivness of offline dictionary generation (because for
+each potential password, an attacker would have to compute the one way
+function output for all possible salts - with a large enough salt,
+this can make the problem quite difficult). It also prevents the same
+password from producing the same output, as long as the salts do not
+collide. With a large salt (say 80 to 128 bits) this will be quite
+unlikely. Iteration refers to the general technique of forcing
+multiple one way function evaluations when computing the output, to
+slow down the operation. For instance if hashing a single password
+requires running SHA-256 100,000 times instead of just once, that will
+slow down user authentication by a factor of 100,000, but user
+authentication happens quite rarely, and usually there are more
+expensive operations that need to occur anyway (network and database
+I/O, etc). On the other hand, an attacker who is attempting to break a
+database full of stolen password hashes will be seriously
+inconvenienced by a factor of 100,000 slowdown; they will be able to
+only test at a rate of .0001\% of what they would without iterations
+(or, equivalently, will require 100,000 times as many zombie botnet
+hosts).
+
+There are many different ways of doing this password hashing
+operation, with common ones including Unix's crypt (which is based on
+DES) and OpenBSD's bcrypt (based on Blowfish). Other variants using
+MD5 or SHA-256 are also in use on various systems.
+
+Botan provides a technique called passhash9, in
+\filename{passhash9.h}, which is based on PBKDF2. Two functions are
+provided in this header, \function{generate\_passhash9} and
+\function{check\_passhash9}.  The generate function takes the password
+to hash, a \type{RandomNumberGenerator}, and a work factor, which
+tells how many iterations to compute. The default work factor is 10
+(which means 100,000 iterations), but any non-zero value is accepted.
+The check function takes a password and a passhash9 output and checks
+if the password is the same as the one that was used to generate the
+passhash9 output, returning a boolean true (same) or false (not same).
+An example can be found in \filename{doc/examples/passhash.cpp}.
+
+Passhash9 currently uses HMAC(SHA-1) for the underlying PBKDF2
+psuedo-random function, but can be extended to use different
+algorithms in the future if necessary. For instance using a PRF based
+on Blowfish (a block cipher that requires 4 KiB of RAM for efficient
+execution) could be used to make hardware-based password cracking more
+expensive (this was one motivation for Blowfish's use in the bcrypt
+hashing scheme, in fact).
 
 \subsection{Checksums}
 
