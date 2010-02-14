@@ -24,11 +24,11 @@ filters.h
 key_filt.h
 pbe.h
 pipe.h
+secqueue.h
 </header:public>
 
 <header:internal>
 out_buf.h
-secqueue.h
 </header:internal>
 
 <requires>
