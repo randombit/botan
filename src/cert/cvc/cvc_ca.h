@@ -36,7 +36,7 @@ class BOTAN_DLL EAC1_1_CVC_CA
       * @param ced the CED to appear in the certificate
       * @param ced the CEX to appear in the certificate
       */
-      static EAC1_1_CVC make_cert(std::auto_ptr<PK_Signer> signer,
+      static EAC1_1_CVC make_cert(PK_Signer& signer,
                                   MemoryRegion<byte> const& public_key,
                                   ASN1_Car const& car,
                                   ASN1_Chr const& chr,

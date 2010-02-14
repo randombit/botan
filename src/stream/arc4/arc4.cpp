@@ -81,7 +81,7 @@ std::string ARC4::name() const
    {
    if(SKIP == 0)   return "ARC4";
    if(SKIP == 256) return "MARK-4";
-   else            return "RC4_skip(" + to_string(SKIP) + ")";
+   else            return "RC4_skip(" + std::to_string(SKIP) + ")";
    }
 
 /*

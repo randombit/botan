@@ -38,8 +38,6 @@ hash
 kdf
 mac
 mode_pad
-mutex
-noop_mutex
 pk_pad
 pubkey
 rng

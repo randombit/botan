@@ -6,7 +6,3 @@ mem_pool.cpp
 <header:internal>
 mem_pool.h
 </header:internal>
-
-<requires>
-mutex
-</requires>
