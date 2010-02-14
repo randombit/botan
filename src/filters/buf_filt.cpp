@@ -96,6 +96,8 @@ void Buffered_Filter::end_msg()
       {
       buffered_final(&buffer[0], buffer_pos);
       }
+
+   buffer_pos = 0;
    }
 
 }
