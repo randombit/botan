@@ -6,9 +6,7 @@
 */
 
 #include <botan/tls_messages.h>
-#include <botan/tls_exceptn.h>
 #include <botan/loadstor.h>
-#include <botan/exceptn.h>
 
 namespace Botan {
 

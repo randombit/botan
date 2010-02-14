@@ -1,32 +1,38 @@
-/*
-* SSL Exceptions
-* (C) 2004-2010 Jack Lloyd
+/**
+* Exceptions Header File
+* (C) 2004-2006 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_SSL_EXCEPTION_H__
-#define BOTAN_SSL_EXCEPTION_H__
+#ifndef BOTAN_TLS_EXCEPTION_H__
+#define BOTAN_TLS_EXCEPTION_H__
 
-#include <botan/tls_magic.h>
 #include <botan/exceptn.h>
+#include <botan/tls_magic.h>
 
 namespace Botan {
 
-struct BOTAN_DLL TLS_Exception : public Exception
+/**
+* Exception Base Class
+*/
+class BOTAN_DLL TLS_Exception : public Exception
    {
    public:
-      Alert_Type type() const { return alert_type; }
+      Alert_Type type() const throw() { return alert_type; }
 
-      TLS_Exception(Alert_Type type, const std::string& msg) :
-         Exception("SSL/TLS error: " + msg), alert_type(type)
-         {}
+      TLS_Exception(Alert_Type type,
+                    const std::string& err_msg = "Unknown error") :
+         Exception(err_msg), alert_type(type) {}
 
    private:
       Alert_Type alert_type;
    };
 
-struct BOTAN_DLL Unexpected_Message : public TLS_Exception
+/**
+* Unexpected_Message Exception
+*/
+struct Unexpected_Message : public TLS_Exception
    {
    Unexpected_Message(const std::string& err) :
       TLS_Exception(UNEXPECTED_MESSAGE, err) {}

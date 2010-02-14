@@ -37,7 +37,7 @@ int main()
       X509_Certificate cert =
          X509::create_self_signed_cert(options, key, "SHA-1", *rng);
 
-      Unix_Server_Socket listener(4433);
+      Unix_Server_Socket listener(4434);
 
       printf("Now listening...\n");
 

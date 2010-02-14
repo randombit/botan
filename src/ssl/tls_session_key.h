@@ -9,7 +9,7 @@
 #define BOTAN_SESSION_KEYS_H__
 
 #include <botan/tls_suites.h>
-#include <botan/tls_magic.h>
+#include <botan/tls_exceptn.h>
 #include <botan/symkey.h>
 
 namespace Botan {

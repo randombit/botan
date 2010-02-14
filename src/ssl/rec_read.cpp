@@ -6,9 +6,9 @@
 */
 
 #include <botan/tls_record.h>
-#include <botan/tls_exceptn.h>
-#include <botan/loadstor.h>
 #include <botan/lookup.h>
+#include <botan/loadstor.h>
+#include <botan/internal/debug.h>
 
 namespace Botan {
 
@@ -191,7 +191,7 @@ SecureVector<byte> Record_Reader::get_record(byte& msg_type)
    mac.write(plaintext, plain_length);
    mac.end_msg();
 
-   seq_no++;
+   ++seq_no;
 
    SecureVector<byte> computed_mac = mac.read_all(Pipe::LAST_MESSAGE);
 

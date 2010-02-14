@@ -6,7 +6,6 @@
 */
 
 #include <botan/tls_record.h>
-#include <botan/tls_exceptn.h>
 #include <botan/handshake_hash.h>
 #include <botan/lookup.h>
 #include <botan/loadstor.h>

@@ -7,8 +7,9 @@
 
 #include <botan/tls_suites.h>
 #include <botan/tls_exceptn.h>
-#include <botan/tls_magic.h>
 #include <botan/parsing.h>
+#include <vector>
+#include <string>
 
 namespace Botan {
 

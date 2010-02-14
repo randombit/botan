@@ -8,7 +8,7 @@
 #ifndef BOTAN_ALERT_H__
 #define BOTAN_ALERT_H__
 
-#include <botan/exceptn.h>
+#include <botan/tls_exceptn.h>
 
 namespace Botan {
 

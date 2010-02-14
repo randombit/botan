@@ -7,7 +7,7 @@
 
 #include <botan/tls_server.h>
 #include <botan/tls_alerts.h>
-#include <botan/tls_exceptn.h>
+#include <botan/tls_state.h>
 #include <botan/loadstor.h>
 #include <botan/rsa.h>
 #include <botan/dh.h>
@@ -23,7 +23,7 @@ Version_Code choose_version(Version_Code client, Version_Code minimum)
    {
    if(client < minimum)
       throw TLS_Exception(PROTOCOL_VERSION,
-                          "Client's protocol is unacceptable by policy");
+                          "Client version is unacceptable by policy");
 
    if(client == SSL_V3 || client == TLS_V10)
       return client;
@@ -458,8 +458,7 @@ void TLS_Server::do_handshake()
       state_machine();
 
       if(!active && !state)
-         throw TLS_Exception(HANDSHAKE_FAILURE,
-                             "TLS_Server: Handshake failed");
+         throw TLS_Exception(HANDSHAKE_FAILURE, "TLS_Server: Handshake failed");
       }
    }
 

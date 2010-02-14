@@ -8,9 +8,9 @@
 #ifndef BOTAN_POLICY_H__
 #define BOTAN_POLICY_H__
 
+#include <botan/tls_magic.h>
 #include <botan/x509cert.h>
 #include <botan/dl_group.h>
-#include <botan/tls_magic.h>
 #include <vector>
 
 namespace Botan {

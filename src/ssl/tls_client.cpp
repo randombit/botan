@@ -8,13 +8,10 @@
 #include <botan/tls_client.h>
 #include <botan/tls_alerts.h>
 #include <botan/tls_state.h>
-#include <botan/tls_exceptn.h>
-
 #include <botan/loadstor.h>
-
 #include <botan/rsa.h>
-#include <botan/dh.h>
 #include <botan/dsa.h>
+#include <botan/dh.h>
 
 namespace Botan {
 
@@ -383,17 +380,17 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
             )
          )
          throw TLS_Exception(HANDSHAKE_FAILURE,
-                             "Server reply w/ bad ciphersuite");
+                             "TLS_Client: Server replied with bad ciphersuite");
 
       state->version = state->server_hello->version();
 
       if(state->version > state->client_hello->version())
          throw TLS_Exception(HANDSHAKE_FAILURE,
-                            "Server replied with bad version");
+                             "TLS_Client: Server replied with bad version");
 
       if(state->version < policy->min_version())
          throw TLS_Exception(PROTOCOL_VERSION,
-                             "Server is too old for specified policy");
+                             "TLS_Client: Server is too old for specified policy");
 
       writer.set_version(state->version);
       reader.set_version(state->version);
@@ -412,11 +409,11 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       peer_certs = state->server_certs->cert_chain();
       if(peer_certs.size() == 0)
          throw TLS_Exception(HANDSHAKE_FAILURE,
-                             "No certificates sent by server");
+                             "TLS_Client: No certificates sent by server");
 
       if(!policy->check_cert(peer_certs, peer_id))
          throw TLS_Exception(BAD_CERTIFICATE,
-                             "Server certificate is not valid");
+                             "TLS_Client: Server certificate is not valid");
 
       state->kex_pub = peer_certs[0].subject_public_key();
 
@@ -470,7 +467,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
                                        state->client_hello->random(),
                                        state->server_hello->random()))
             throw TLS_Exception(DECRYPT_ERROR,
-                                "Bad signature on server key exchange");
+                            "Bad signature on server key exchange");
          }
       }
    else if(type == CERTIFICATE_REQUEST)
@@ -541,7 +538,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       if(!state->server_finished->verify(state->keys.master_secret(),
                                          state->version, state->hash, SERVER))
          throw TLS_Exception(DECRYPT_ERROR,
-                             "Finished message didn't verify");
+                                 "Finished message didn't verify");
 
       delete state;
       state = 0;
@@ -565,7 +562,7 @@ void TLS_Client::do_handshake()
       if(active && !state)
          break;
       if(!active && !state)
-         throw TLS_Exception(HANDSHAKE_FAILURE, "Handshake failed");
+         throw TLS_Exception(HANDSHAKE_FAILURE, "TLS_Client: Handshake failed");
 
       state_machine();
       }

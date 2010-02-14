@@ -7,9 +7,9 @@
 
 #include <botan/tls_messages.h>
 #include <botan/look_pk.h>
-#include <botan/loadstor.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
+#include <botan/loadstor.h>
 #include <memory>
 
 namespace Botan {

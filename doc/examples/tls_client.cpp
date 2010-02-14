@@ -21,27 +21,23 @@ int main()
       {
       LibraryInitializer init;
 
-      Unix_Socket sock("randombit.net", 443);
+      Unix_Socket sock("www.randombit.net", 443);
 
       std::auto_ptr<Botan::RandomNumberGenerator> rng(
          Botan::RandomNumberGenerator::make_rng());
 
       TLS_Client tls(*rng, sock);
 
-      printf("Connection open\n");
+      std::string http_command = "GET /bitbashing\r\n";
+      tls.write((const byte*)http_command.c_str(), http_command.length());
 
       while(true)
          {
          if(tls.is_closed())
             break;
 
-         std::string str;
-         std::getline(std::cin, str);
-         str += "\n";
-         tls.write((const byte*)str.c_str(), str.length());
-
-         byte buf[4096] = { 0 };
-         tls.read(buf, sizeof(buf));
+         byte buf[16+1] = { 0 };
+         u32bit got = tls.read(buf, sizeof(buf)-1);
          printf("%s", buf);
          fflush(0);
          }

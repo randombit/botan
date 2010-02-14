@@ -9,8 +9,8 @@
 #define BOTAN_TLS_MESSAGES_H__
 
 #include <botan/tls_record.h>
-#include <botan/tls_policy.h>
 #include <botan/handshake_hash.h>
+#include <botan/tls_policy.h>
 #include <botan/bigint.h>
 #include <botan/pkcs8.h>
 #include <botan/x509cert.h>
