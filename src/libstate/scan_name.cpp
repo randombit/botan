@@ -63,7 +63,7 @@ deref_aliases(const std::pair<u32bit, std::string>& in)
 
 }
 
-SCAN_Name::SCAN_Name(const std::string& algo_spec)
+SCAN_Name::SCAN_Name(std::string algo_spec)
    {
    orig_algo_spec = algo_spec;
 
@@ -72,6 +72,8 @@ SCAN_Name::SCAN_Name(const std::string& algo_spec)
    std::pair<u32bit, std::string> accum = std::make_pair(level, "");
 
    std::string decoding_error = "Bad SCAN name '" + algo_spec + "': ";
+
+   algo_spec = global_state().deref_alias(algo_spec);
 
    for(u32bit i = 0; i != algo_spec.size(); ++i)
       {
