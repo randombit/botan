@@ -68,6 +68,8 @@ class BOTAN_DLL XTS_Decryption : public Keyed_Filter,
       XTS_Decryption(BlockCipher* ciph,
                      const SymmetricKey& key,
                      const InitializationVector& iv);
+
+      ~XTS_Decryption() { delete cipher; delete cipher2; }
    private:
       void write(const byte[], u32bit);
       void end_msg();

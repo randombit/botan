@@ -39,7 +39,7 @@ class BOTAN_DLL CBC_Encryption : public Keyed_Filter,
                      const SymmetricKey& key,
                      const InitializationVector& iv);
 
-      ~CBC_Encryption() { delete padder; }
+      ~CBC_Encryption() { delete cipher; delete padder; }
    private:
       void buffered_block(const byte input[], u32bit input_length);
       void buffered_final(const byte input[], u32bit input_length);
@@ -76,7 +76,7 @@ class BOTAN_DLL CBC_Decryption : public Keyed_Filter,
                      const SymmetricKey& key,
                      const InitializationVector& iv);
 
-      ~CBC_Decryption() { delete padder; }
+      ~CBC_Decryption() { delete cipher; delete padder; }
    private:
       void buffered_block(const byte input[], u32bit input_length);
       void buffered_final(const byte input[], u32bit input_length);
