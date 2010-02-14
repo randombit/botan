@@ -9,26 +9,23 @@
 #define BOTAN_DEBUG_H__
 
 #include <botan/secmem.h>
-#include <iostream>
+#include <cstdio>
 
 namespace Botan {
 
 namespace Debug {
 
-template<typename T>
-void print_vec(const std::string& name,
-               const T array[], size_t array_len)
+inline void print_vec(const std::string& name,
+                      const byte array[], size_t array_len)
    {
-   std::cout << name << " = ";
-
+   std::printf("%s = ", name.c_str());
    for(size_t i = 0; i != array_len; ++i)
-      std::cout << std::hex << array[i];
-   std::cout << std::endl;
+      std::printf("%02X", array[i]);
+   std::printf("\n");
    }
 
-template<typename T>
-void print_vec(const std::string& name,
-               const MemoryRegion<T>& vec)
+inline void print_vec(const std::string& name,
+                      const MemoryRegion<byte>& vec)
    {
    print_vec(name, &vec[0], vec.size());
    }
