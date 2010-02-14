@@ -19,8 +19,8 @@
 #include <botan/selftest.h>
 #include <botan/libstate.h>
 
-#if defined(BOTAN_HAS_PASSHASH)
-  #include <botan/passhash.h>
+#if defined(BOTAN_HAS_PASSHASH9)
+  #include <botan/passhash9.h>
 #endif
 
 using namespace Botan;
@@ -68,17 +68,17 @@ Botan::SecureVector<byte> decode_hex(const std::string&);
 
 bool test_passhash(RandomNumberGenerator& rng)
    {
-#if defined(BOTAN_HAS_PASSHASH)
+#if defined(BOTAN_HAS_PASSHASH9)
 
    const std::string input = "secret";
    const std::string fixed_hash = "$9$AArBRAG0kcKp3XPDUgd32ONhutn9HMQKix7H";
 
-   if(!password_hash_ok(input, fixed_hash))
+   if(!check_passhash9(input, fixed_hash))
       return false;
 
-   std::string gen_hash = password_hash(input, rng, 5);
+   std::string gen_hash = generate_passhash9(input, rng, 5);
 
-   if(!password_hash_ok(input, gen_hash))
+   if(!check_passhash9(input, gen_hash))
       return false;
 
 #endif
