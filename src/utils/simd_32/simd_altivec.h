@@ -145,6 +145,11 @@ class SIMD_Altivec
          reg = vec_or(reg, other.reg);
          }
 
+      SIMD_Altivec operator&(const SIMD_Altivec& other)
+         {
+         return vec_and(reg, other.reg);
+         }
+
       void operator&=(const SIMD_Altivec& other)
          {
          reg = vec_and(reg, other.reg);

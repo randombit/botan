@@ -12,14 +12,6 @@
 
 namespace Botan {
 
-namespace {
-
-const size_t BUFFER_MULTIPLE = 2;
-
-//static_assert(BUFFER_MULTIPLE >= 2, "BUFFER_MULTIPLE must be >= 2");
-
-}
-
 /*
 * Buffered_Filter Constructor
 */
@@ -32,7 +24,7 @@ Buffered_Filter::Buffered_Filter(u32bit b, u32bit f) :
    if(final_minimum > main_block_mod)
       throw std::invalid_argument("final_minimum > main_block_mod");
 
-   buffer.resize(BUFFER_MULTIPLE * main_block_mod);
+   buffer.resize(2 * main_block_mod);
    buffer_pos = 0;
    }
 
@@ -54,23 +46,22 @@ void Buffered_Filter::write(const byte input[], u32bit input_size)
       input += to_copy;
       input_size -= to_copy;
 
-      if(input_size >= final_minimum)
-         {
-         u32bit to_proc_blocks = buffer_pos / main_block_mod;
-         u32bit to_proc_bytes = to_proc_blocks * main_block_mod;
+      u32bit total_to_consume =
+         round_down(std::min(buffer_pos,
+                             buffer_pos + input_size - final_minimum),
+                    main_block_mod);
 
-         buffered_block(&buffer[0], to_proc_bytes);
+      buffered_block(&buffer[0], total_to_consume);
 
-         buffer_pos -= to_proc_bytes;
+      buffer_pos -= total_to_consume;
 
-         copy_mem(&buffer[0], &buffer[to_proc_bytes], buffer_pos);
-         }
+      copy_mem(&buffer[0], &buffer[total_to_consume], buffer_pos);
       }
 
    if(input_size >= final_minimum)
       {
-      u32bit full_blocks = (input_size - final_minimum) / buffer.size();
-      u32bit to_copy = full_blocks * buffer.size();
+      u32bit full_blocks = (input_size - final_minimum) / main_block_mod;
+      u32bit to_copy = full_blocks * main_block_mod;
 
       if(to_copy)
          {

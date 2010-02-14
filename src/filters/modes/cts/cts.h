@@ -33,6 +33,8 @@ class BOTAN_DLL CTS_Encryption : public Keyed_Filter
       CTS_Encryption(BlockCipher* cipher,
                      const SymmetricKey& key,
                      const InitializationVector& iv);
+
+      ~CTS_Encryption() { delete cipher; }
    private:
       void write(const byte[], u32bit);
       void end_msg();
@@ -63,6 +65,8 @@ class BOTAN_DLL CTS_Decryption : public Keyed_Filter
       CTS_Decryption(BlockCipher* cipher,
                      const SymmetricKey& key,
                      const InitializationVector& iv);
+
+      ~CTS_Decryption() { delete cipher; }
    private:
       void write(const byte[], u32bit);
       void end_msg();

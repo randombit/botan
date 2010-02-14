@@ -6,16 +6,17 @@
 */
 
 #include <botan/pbkdf1.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
 /*
 * Return a PKCS#5 PBKDF1 derived key
 */
-OctetString PKCS5_PBKDF1::derive(u32bit key_len,
-                                 const std::string& passphrase,
-                                 const byte salt[], u32bit salt_size,
-                                 u32bit iterations) const
+OctetString PKCS5_PBKDF1::derive_key(u32bit key_len,
+                                     const std::string& passphrase,
+                                     const byte salt[], u32bit salt_size,
+                                     u32bit iterations) const
    {
    if(iterations == 0)
       throw Invalid_Argument("PKCS5_PBKDF1: Invalid iteration count");

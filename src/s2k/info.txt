@@ -1,4 +1,3 @@
 <requires>
-rng
 sym_algo
 </requires>

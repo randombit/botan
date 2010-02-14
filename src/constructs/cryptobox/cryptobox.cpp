@@ -13,7 +13,7 @@
 #include <botan/hmac.h>
 #include <botan/pbkdf2.h>
 #include <botan/pem.h>
-#include <botan/loadstor.h>
+#include <botan/get_byte.h>
 #include <botan/mem_ops.h>
 
 namespace Botan {
@@ -48,10 +48,10 @@ std::string encrypt(const byte input[], u32bit input_len,
    rng.randomize(pbkdf_salt.begin(), pbkdf_salt.size());
 
    PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
-   pbkdf.change_salt(pbkdf_salt.begin(), pbkdf_salt.size());
-   pbkdf.set_iterations(PBKDF_ITERATIONS);
 
-   OctetString mk = pbkdf.derive_key(PBKDF_OUTPUT_LEN, passphrase);
+   OctetString mk = pbkdf.derive_key(PBKDF_OUTPUT_LEN, passphrase,
+                                     &pbkdf_salt[0], pbkdf_salt.size(),
+                                     PBKDF_ITERATIONS);
 
    SymmetricKey cipher_key(mk.begin(), CIPHER_KEY_LEN);
    SymmetricKey mac_key(mk.begin() + CIPHER_KEY_LEN, MAC_KEY_LEN);
@@ -109,10 +109,10 @@ std::string decrypt(const byte input[], u32bit input_len,
    SecureVector<byte> pbkdf_salt(ciphertext + VERSION_CODE_LEN, PBKDF_SALT_LEN);
 
    PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
-   pbkdf.change_salt(pbkdf_salt.begin(), pbkdf_salt.size());
-   pbkdf.set_iterations(PBKDF_ITERATIONS);
 
-   OctetString mk = pbkdf.derive_key(PBKDF_OUTPUT_LEN, passphrase);
+   OctetString mk = pbkdf.derive_key(PBKDF_OUTPUT_LEN, passphrase,
+                                     &pbkdf_salt[0], pbkdf_salt.size(),
+                                     PBKDF_ITERATIONS);
 
    SymmetricKey cipher_key(mk.begin(), CIPHER_KEY_LEN);
    SymmetricKey mac_key(mk.begin() + CIPHER_KEY_LEN, MAC_KEY_LEN);

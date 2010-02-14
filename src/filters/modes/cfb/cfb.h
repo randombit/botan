@@ -34,6 +34,8 @@ class BOTAN_DLL CFB_Encryption : public Keyed_Filter
                      const SymmetricKey& key,
                      const InitializationVector& iv,
                      u32bit feedback = 0);
+
+      ~CFB_Encryption() { delete cipher; }
    private:
       void write(const byte[], u32bit);
 
@@ -63,6 +65,8 @@ class BOTAN_DLL CFB_Decryption : public Keyed_Filter
                      const SymmetricKey& key,
                      const InitializationVector& iv,
                      u32bit feedback = 0);
+
+      ~CFB_Decryption() { delete cipher; }
    private:
       void write(const byte[], u32bit);
 

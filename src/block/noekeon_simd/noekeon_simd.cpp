@@ -1,0 +1,161 @@
+/*
+* Noekeon in SIMD
+* (C) 2010 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
+#include <botan/noekeon_simd.h>
+#include <botan/internal/simd_32.h>
+
+namespace Botan {
+
+/*
+* Noekeon's Theta Operation
+*/
+#define NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3)  \
+   do {                                                 \
+      SIMD_32 T = A0 ^ A2;                              \
+      T ^= rotate_left(T, 8) ^ rotate_right(T, 8);      \
+      A1 ^= T;                                          \
+      A3 ^= T;                                          \
+                                                        \
+      A0 ^= K0;                                         \
+      A1 ^= K1;                                         \
+      A2 ^= K2;                                         \
+      A3 ^= K3;                                         \
+                                                        \
+      T = A1 ^ A3;                                      \
+      T ^= rotate_left(T, 8) ^ rotate_right(T, 8);      \
+      A0 ^= T;                                          \
+      A2 ^= T;                                          \
+      } while(0)
+
+/*
+* Noekeon's Gamma S-Box Layer
+*/
+#define NOK_SIMD_GAMMA(A0, A1, A2, A3)                                  \
+   do                                                                   \
+      {                                                                 \
+      A1 ^= A3.andc(~A2);                                               \
+      A0 ^= A2 & A1;                                                    \
+                                                                        \
+      SIMD_32 T = A3;                                                   \
+      A3 = A0;                                                          \
+      A0 = T;                                                           \
+                                                                        \
+      A2 ^= A0 ^ A1 ^ A3;                                               \
+                                                                        \
+      A1 ^= A3.andc(~A2);                                               \
+      A0 ^= A2 & A1;                                                    \
+      } while(0)
+
+/*
+* Noekeon Encryption
+*/
+void Noekeon_SIMD::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+   {
+   SIMD_32 K0 = SIMD_32(EK[0]);
+   SIMD_32 K1 = SIMD_32(EK[1]);
+   SIMD_32 K2 = SIMD_32(EK[2]);
+   SIMD_32 K3 = SIMD_32(EK[3]);
+
+   while(blocks >= 4)
+      {
+      SIMD_32 A0 = SIMD_32::load_be(in     );
+      SIMD_32 A1 = SIMD_32::load_be(in + 16);
+      SIMD_32 A2 = SIMD_32::load_be(in + 32);
+      SIMD_32 A3 = SIMD_32::load_be(in + 48);
+
+      SIMD_32::transpose(A0, A1, A2, A3);
+
+      for(u32bit i = 0; i != 16; ++i)
+         {
+         A0 ^= SIMD_32(RC[i]);
+
+         NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3);
+
+         A1.rotate_left(1);
+         A2.rotate_left(5);
+         A3.rotate_left(2);
+
+         NOK_SIMD_GAMMA(A0, A1, A2, A3);
+
+         A1.rotate_right(1);
+         A2.rotate_right(5);
+         A3.rotate_right(2);
+         }
+
+      A0 ^= SIMD_32(RC[16]);
+      NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3);
+
+      SIMD_32::transpose(A0, A1, A2, A3);
+
+      A0.store_be(out);
+      A1.store_be(out + 16);
+      A2.store_be(out + 32);
+      A3.store_be(out + 48);
+
+      in += 64;
+      out += 64;
+      blocks -= 4;
+      }
+
+   Noekeon::encrypt_n(in, out, blocks);
+   }
+
+/*
+* Noekeon Encryption
+*/
+void Noekeon_SIMD::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+   {
+   SIMD_32 K0 = SIMD_32(DK[0]);
+   SIMD_32 K1 = SIMD_32(DK[1]);
+   SIMD_32 K2 = SIMD_32(DK[2]);
+   SIMD_32 K3 = SIMD_32(DK[3]);
+
+   while(blocks >= 4)
+      {
+      SIMD_32 A0 = SIMD_32::load_be(in     );
+      SIMD_32 A1 = SIMD_32::load_be(in + 16);
+      SIMD_32 A2 = SIMD_32::load_be(in + 32);
+      SIMD_32 A3 = SIMD_32::load_be(in + 48);
+
+      SIMD_32::transpose(A0, A1, A2, A3);
+
+      for(u32bit i = 0; i != 16; ++i)
+         {
+         NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3);
+
+         A0 ^= SIMD_32(RC[16-i]);
+
+         A1.rotate_left(1);
+         A2.rotate_left(5);
+         A3.rotate_left(2);
+
+         NOK_SIMD_GAMMA(A0, A1, A2, A3);
+
+         A1.rotate_right(1);
+         A2.rotate_right(5);
+         A3.rotate_right(2);
+         }
+
+      NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3);
+      A0 ^= SIMD_32(RC[0]);
+
+      SIMD_32::transpose(A0, A1, A2, A3);
+
+      A0.store_be(out);
+      A1.store_be(out + 16);
+      A2.store_be(out + 32);
+      A3.store_be(out + 48);
+
+      in += 64;
+      out += 64;
+      blocks -= 4;
+      }
+
+   Noekeon::decrypt_n(in, out, blocks);
+   }
+
+}
