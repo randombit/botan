@@ -1,12 +1,12 @@
 /**
-* Alert Message Header File
+* Alert Message 
 * (C) 2004-2006 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_ALERT_H__
-#define BOTAN_ALERT_H__
+#ifndef BOTAN_TLS_ALERT_H__
+#define BOTAN_TLS_ALERT_H__
 
 #include <botan/tls_exceptn.h>
 

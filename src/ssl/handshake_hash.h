@@ -1,12 +1,12 @@
 /**
-* TLS Handshake Hash Source File
+* TLS Handshake Hash
 * (C) 2004-2006 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_HANDSHAKE_HASH__
-#define BOTAN_HANDSHAKE_HASH__
+#ifndef BOTAN_TLS_HANDSHAKE_HASH__
+#define BOTAN_TLS_HANDSHAKE_HASH__
 
 #include <botan/secmem.h>
 

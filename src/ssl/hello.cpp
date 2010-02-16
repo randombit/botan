@@ -63,7 +63,7 @@ void Hello_Request::deserialize(const MemoryRegion<byte>& buf)
 * Create a new Client Hello message
 */
 Client_Hello::Client_Hello(RandomNumberGenerator& rng,
-                           Record_Writer& writer, const Policy* policy,
+                           Record_Writer& writer, const TLS_Policy* policy,
                            HandshakeHash& hash)
    {
    c_random.resize(32);
@@ -166,7 +166,7 @@ bool Client_Hello::offered_suite(u16bit ciphersuite) const
 * Create a new Server Hello message
 */
 Server_Hello::Server_Hello(RandomNumberGenerator& rng,
-                           Record_Writer& writer, const Policy* policy,
+                           Record_Writer& writer, const TLS_Policy* policy,
                            const std::vector<X509_Certificate>& certs,
                            const Client_Hello& c_hello, Version_Code ver,
                            HandshakeHash& hash)

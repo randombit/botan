@@ -1,12 +1,12 @@
 /**
-* TLS Record Handling Header File
+* TLS Record Handling 
 * (C) 2004-2006 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_RECORDS_H__
-#define BOTAN_RECORDS_H__
+#ifndef BOTAN_TLS_RECORDS_H__
+#define BOTAN_TLS_RECORDS_H__
 
 #include <botan/tls_session_key.h>
 #include <botan/socket.h>

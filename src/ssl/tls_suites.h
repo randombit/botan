@@ -1,12 +1,12 @@
 /**
-* Cipher Suites Header File
+* Cipher Suites 
 * (C) 2004-2006 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_CIPHERSUITES_H__
-#define BOTAN_CIPHERSUITES_H__
+#ifndef BOTAN_TLS_CIPHERSUITES_H__
+#define BOTAN_TLS_CIPHERSUITES_H__
 
 #include <botan/types.h>
 #include <string>

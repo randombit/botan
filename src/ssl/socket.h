@@ -1,12 +1,12 @@
 /**
-* Socket Interface Header File
+* Socket Interface 
 * (C) 2004-2006 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_SOCKET_H__
-#define BOTAN_SOCKET_H__
+#ifndef BOTAN_TLS_SOCKET_H__
+#define BOTAN_TLS_SOCKET_H__
 
 #include <botan/types.h>
 #include <string>

@@ -1,5 +1,5 @@
 /**
-* TLS Handshake Hash Source File
+* TLS Handshake Hash 
 * (C) 2004-2006 Jack Lloyd
 *
 * Released under the terms of the Botan license

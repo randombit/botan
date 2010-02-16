@@ -1,12 +1,12 @@
 /**
-* TLS Connection Header File
+* TLS Connection 
 * (C) 2004-2006 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_CONNECTION_H__
-#define BOTAN_CONNECTION_H__
+#ifndef BOTAN_TLS_CONNECTION_H__
+#define BOTAN_TLS_CONNECTION_H__
 
 #include <botan/x509cert.h>
 #include <vector>

@@ -1,12 +1,12 @@
 /**
-* TLS Session Key Header File
+* TLS Session Key 
 * (C) 2004-2006 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_SESSION_KEYS_H__
-#define BOTAN_SESSION_KEYS_H__
+#ifndef BOTAN_TLS_SESSION_KEYS_H__
+#define BOTAN_TLS_SESSION_KEYS_H__
 
 #include <botan/tls_suites.h>
 #include <botan/tls_exceptn.h>

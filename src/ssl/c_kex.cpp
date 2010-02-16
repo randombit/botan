@@ -1,5 +1,5 @@
 /**
-* Client Key Exchange Message Source File
+* Client Key Exchange Message 
 * (C) 2004-2008 Jack Lloyd
 *
 * Released under the terms of the Botan license

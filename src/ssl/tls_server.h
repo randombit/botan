@@ -1,12 +1,12 @@
 /**
-* TLS Server Header File
+* TLS Server 
 * (C) 2004-2006 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_SERVER_H__
-#define BOTAN_SERVER_H__
+#ifndef BOTAN_TLS_SERVER_H__
+#define BOTAN_TLS_SERVER_H__
 
 #include <botan/tls_connection.h>
 #include <botan/tls_state.h>
@@ -35,7 +35,7 @@ class BOTAN_DLL TLS_Server
       TLS_Server(RandomNumberGenerator& rng,
                  Socket&,
                  const X509_Certificate&, const PKCS8_PrivateKey&,
-                 const Policy* = 0);
+                 const TLS_Policy* = 0);
 
       ~TLS_Server();
    private:
@@ -51,7 +51,7 @@ class BOTAN_DLL TLS_Server
 
       Record_Writer writer;
       Record_Reader reader;
-      const Policy* policy;
+      const TLS_Policy* policy;
 
       // FIXME: rename to match TLS_Client
       std::vector<X509_Certificate> cert_chain, peer_certs;

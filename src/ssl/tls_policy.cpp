@@ -1,5 +1,5 @@
 /**
-* Policies Source File
+* Policies 
 * (C) 2004-2006 Jack Lloyd
 *
 * Released under the terms of the Botan license
@@ -13,7 +13,7 @@ namespace Botan {
 /**
 * Return allowed ciphersuites
 */
-std::vector<u16bit> Policy::ciphersuites() const
+std::vector<u16bit> TLS_Policy::ciphersuites() const
    {
    return suite_list(allow_static_rsa(), allow_edh_rsa(), allow_edh_dsa());
    }
@@ -21,8 +21,9 @@ std::vector<u16bit> Policy::ciphersuites() const
 /**
 * Return allowed ciphersuites
 */
-std::vector<u16bit> Policy::suite_list(bool use_rsa, bool use_edh_rsa,
-                                       bool use_edh_dsa) const
+std::vector<u16bit> TLS_Policy::suite_list(bool use_rsa,
+                                           bool use_edh_rsa,
+                                           bool use_edh_dsa) const
    {
    std::vector<u16bit> suites;
 
@@ -51,7 +52,7 @@ std::vector<u16bit> Policy::suite_list(bool use_rsa, bool use_edh_rsa,
 
    if(suites.size() == 0)
       throw TLS_Exception(INTERNAL_ERROR,
-                          "Policy error: All ciphersuites disabled");
+                          "TLS_Policy error: All ciphersuites disabled");
 
    return suites;
    }
@@ -59,7 +60,7 @@ std::vector<u16bit> Policy::suite_list(bool use_rsa, bool use_edh_rsa,
 /**
 * Return allowed compression algorithms
 */
-std::vector<byte> Policy::compression() const
+std::vector<byte> TLS_Policy::compression() const
    {
    std::vector<byte> algs;
    algs.push_back(NO_COMPRESSION);
@@ -69,8 +70,9 @@ std::vector<byte> Policy::compression() const
 /**
 * Choose which ciphersuite to use
 */
-u16bit Policy::choose_suite(const std::vector<u16bit>& c_suites,
-                            bool have_rsa, bool have_dsa) const
+u16bit TLS_Policy::choose_suite(const std::vector<u16bit>& c_suites,
+                                bool have_rsa,
+                                bool have_dsa) const
    {
    bool use_static_rsa = allow_static_rsa() && have_rsa;
    bool use_edh_rsa = allow_edh_rsa() && have_rsa;
@@ -90,7 +92,7 @@ u16bit Policy::choose_suite(const std::vector<u16bit>& c_suites,
 /**
 * Choose which compression algorithm to use
 */
-byte Policy::choose_compression(const std::vector<byte>& c_comp) const
+byte TLS_Policy::choose_compression(const std::vector<byte>& c_comp) const
    {
    std::vector<byte> s_comp = compression();
 
@@ -103,74 +105,18 @@ byte Policy::choose_compression(const std::vector<byte>& c_comp) const
    }
 
 /**
-* Return the minimum acceptable SSL/TLS version
-*/
-Version_Code Policy::min_version() const
-   {
-   return SSL_V3;
-   }
-
-/**
-* Return the preferable SSL/TLS version
-*/
-Version_Code Policy::pref_version() const
-   {
-   return TLS_V10;
-   }
-
-/**
-* Check if static RSA keying is allowed
-*/
-bool Policy::allow_static_rsa() const
-   {
-   return true;
-   }
-
-/**
-* Check if RSA with empheral DH is allowed
-*/
-bool Policy::allow_edh_rsa() const
-   {
-   return true;
-   }
-
-/**
-* Check if DSA with empheral DH is allowed
-*/
-bool Policy::allow_edh_dsa() const
-   {
-   return true;
-   }
-
-/**
-* Check if client authentication is required
-*/
-bool Policy::require_client_auth() const
-   {
-   return false;
-   }
-
-/**
 * Return the group to use for empheral DH
 */
-DL_Group Policy::dh_group() const
+DL_Group TLS_Policy::dh_group() const
    {
    return DL_Group("IETF-1024");
    }
 
 /**
-* Return the size to use for an empheral RSA key
-*/
-u32bit Policy::rsa_export_keysize() const
-   {
-   return 512;
-   }
-
-/**
 * Default certificate check
 */
-bool Policy::check_cert(const std::vector<X509_Certificate>&,
-                        const std::string&) const
+bool TLS_Policy::check_cert(const std::vector<X509_Certificate>&,
+                            const std::string&) const
    {
    return true;
    }

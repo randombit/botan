@@ -1,12 +1,12 @@
 /**
-* TLS Client Header File
+* TLS Client 
 * (C) 2004-2006 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_CLIENT_H__
-#define BOTAN_CLIENT_H__
+#ifndef BOTAN_TLS_CLIENT_H__
+#define BOTAN_TLS_CLIENT_H__
 
 #include <botan/tls_connection.h>
 #include <botan/tls_state.h>
@@ -32,12 +32,12 @@ class BOTAN_DLL TLS_Client : public TLS_Connection
       bool is_closed() const;
 
       TLS_Client(RandomNumberGenerator& rng,
-                 Socket&, const Policy* = 0);
+                 Socket&, const TLS_Policy* = 0);
 
       // FIXME: support multiple cert/key pairs
       TLS_Client(RandomNumberGenerator& rng,
                  Socket&, const X509_Certificate&, const PKCS8_PrivateKey&,
-                 const Policy* = 0);
+                 const TLS_Policy* = 0);
 
       ~TLS_Client();
    private:
@@ -54,7 +54,7 @@ class BOTAN_DLL TLS_Client : public TLS_Connection
 
       Record_Writer writer;
       Record_Reader reader;
-      const Policy* policy;
+      const TLS_Policy* policy;
 
       std::vector<X509_Certificate> certs, peer_certs;
       std::vector<PKCS8_PrivateKey*> keys;

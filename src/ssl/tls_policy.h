@@ -1,12 +1,12 @@
 /**
-* Policies Header File
+* Policies 
 * (C) 2004-2006 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_POLICY_H__
-#define BOTAN_POLICY_H__
+#ifndef BOTAN_TLS_POLICY_H__
+#define BOTAN_TLS_POLICY_H__
 
 #include <botan/tls_magic.h>
 #include <botan/x509cert.h>
@@ -16,35 +16,40 @@
 namespace Botan {
 
 /**
-* Policy Base Class
+* TLS_Policy Base Class
+* Inherit and overload as desired to suite local policy concerns
 */
-class BOTAN_DLL Policy
+class BOTAN_DLL TLS_Policy
    {
    public:
       std::vector<u16bit> ciphersuites() const;
       virtual std::vector<byte> compression() const;
 
-      virtual u16bit choose_suite(const std::vector<u16bit>&,
-                                  bool, bool) const;
-      virtual byte choose_compression(const std::vector<byte>&) const;
+      virtual u16bit choose_suite(const std::vector<u16bit>& client_suites,
+                                  bool rsa_ok,
+                                  bool dsa_ok) const;
 
-      virtual bool allow_static_rsa() const;
-      virtual bool allow_edh_rsa() const;
-      virtual bool allow_edh_dsa() const;
-      virtual bool require_client_auth() const;
+      virtual byte choose_compression(const std::vector<byte>& client) const;
+
+      virtual bool allow_static_rsa() const { return true; }
+      virtual bool allow_edh_rsa() const { return true; }
+      virtual bool allow_edh_dsa() const { return true; }
+      virtual bool require_client_auth() const { return false; }
 
       virtual DL_Group dh_group() const;
-      virtual u32bit rsa_export_keysize() const;
+      virtual u32bit rsa_export_keysize() const { return 512; }
 
-      virtual Version_Code min_version() const;
-      virtual Version_Code pref_version() const;
+      virtual Version_Code min_version() const { return SSL_V3; }
+      virtual Version_Code pref_version() const { return TLS_V10; }
 
       virtual bool check_cert(const std::vector<X509_Certificate>&,
                               const std::string&) const;
 
-      virtual ~Policy() {}
+      virtual ~TLS_Policy() {}
    private:
-      virtual std::vector<u16bit> suite_list(bool, bool, bool) const;
+      virtual std::vector<u16bit> suite_list(bool use_rsa,
+                                             bool use_edh_rsa,
+                                             bool use_edh_dsa) const;
    };
 
 }

@@ -1,12 +1,12 @@
 /**
-* TLS Handshaking Header File
+* TLS Handshaking 
 * (C) 2004-2006 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_HANDSHAKE_H__
-#define BOTAN_HANDSHAKE_H__
+#ifndef BOTAN_TLS_HANDSHAKE_H__
+#define BOTAN_TLS_HANDSHAKE_H__
 
 #include <botan/tls_messages.h>
 #include <botan/secqueue.h>

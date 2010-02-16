@@ -52,7 +52,7 @@ class BOTAN_DLL Client_Hello : public HandshakeMessage
       bool offered_suite(u16bit) const;
 
       Client_Hello(RandomNumberGenerator& rng,
-                   Record_Writer&, const Policy*, HandshakeHash&);
+                   Record_Writer&, const TLS_Policy*, HandshakeHash&);
 
       Client_Hello(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
@@ -215,7 +215,7 @@ class BOTAN_DLL Server_Hello : public HandshakeMessage
       SecureVector<byte> random() const { return s_random; }
 
       Server_Hello(RandomNumberGenerator& rng,
-                   Record_Writer&, const Policy*,
+                   Record_Writer&, const TLS_Policy*,
                    const std::vector<X509_Certificate>&,
                    const Client_Hello&, Version_Code, HandshakeHash&);
 

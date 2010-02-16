@@ -1,12 +1,12 @@
 /**
-* SSL/TLS Protocol Constants Header File
+* SSL/TLS Protocol Constants 
 * (C) 2004-2006 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_PROTOCOL_MAGIC_H__
-#define BOTAN_PROTOCOL_MAGIC_H__
+#ifndef BOTAN_TLS_PROTOCOL_MAGIC_H__
+#define BOTAN_TLS_PROTOCOL_MAGIC_H__
 
 namespace Botan {
 

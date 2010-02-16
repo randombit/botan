@@ -1,5 +1,5 @@
 /**
-* TLS Client Source File
+* TLS Client 
 * (C) 2004-2006 Jack Lloyd
 *
 * Released under the terms of the Botan license
@@ -82,8 +82,8 @@ void client_check_state(Handshake_Type new_msg, Handshake_State* state)
 * TLS Client Constructor
 */
 TLS_Client::TLS_Client(RandomNumberGenerator& r,
-                       Socket& sock, const Policy* pol) :
-   rng(r), writer(sock), reader(sock), policy(pol ? pol : new Policy)
+                       Socket& sock, const TLS_Policy* pol) :
+   rng(r), writer(sock), reader(sock), policy(pol ? pol : new TLS_Policy)
    {
    peer_id = sock.peer_id();
 
@@ -95,8 +95,8 @@ TLS_Client::TLS_Client(RandomNumberGenerator& r,
 */
 TLS_Client::TLS_Client(RandomNumberGenerator& r,
                        Socket& sock, const X509_Certificate& cert,
-                       const PKCS8_PrivateKey& key, const Policy* pol) :
-   rng(r), writer(sock), reader(sock), policy(pol ? pol : new Policy)
+                       const PKCS8_PrivateKey& key, const TLS_Policy* pol) :
+   rng(r), writer(sock), reader(sock), policy(pol ? pol : new TLS_Policy)
    {
    peer_id = sock.peer_id();
 
