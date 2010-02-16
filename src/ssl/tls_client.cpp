@@ -95,7 +95,7 @@ TLS_Client::TLS_Client(RandomNumberGenerator& r,
 */
 TLS_Client::TLS_Client(RandomNumberGenerator& r,
                        Socket& sock, const X509_Certificate& cert,
-                       const PKCS8_PrivateKey& key, const TLS_Policy* pol) :
+                       const Private_Key& key, const TLS_Policy* pol) :
    rng(r), writer(sock), reader(sock), policy(pol ? pol : new TLS_Policy)
    {
    peer_id = sock.peer_id();
@@ -502,7 +502,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       if(state->do_client_auth)
          {
-         PKCS8_PrivateKey* key_matching_cert = 0; // FIXME
+         Private_Key* key_matching_cert = 0; // FIXME
          state->client_verify = new Certificate_Verify(rng,
                                                        writer, state->hash,
                                                        key_matching_cert);

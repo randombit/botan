@@ -1,6 +1,6 @@
 /**
-* TLS Server 
-* (C) 2004-2008 Jack Lloyd
+* TLS Server
+* (C) 2004-2010 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -87,7 +87,7 @@ void server_check_state(Handshake_Type new_msg, Handshake_State* state)
 */
 TLS_Server::TLS_Server(RandomNumberGenerator& r,
                        Socket& sock, const X509_Certificate& cert,
-                       const PKCS8_PrivateKey& key, const TLS_Policy* pol) :
+                       const Private_Key& key, const TLS_Policy* pol) :
    rng(r), writer(sock), reader(sock), policy(pol ? pol : new TLS_Policy)
    {
    peer_id = sock.peer_id();

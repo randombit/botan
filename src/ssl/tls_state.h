@@ -32,8 +32,8 @@ class BOTAN_DLL Handshake_State
       Finished* client_finished;
       Finished* server_finished;
 
-      X509_PublicKey* kex_pub;
-      PKCS8_PrivateKey* kex_priv;
+      Public_Key* kex_pub;
+      Private_Key* kex_priv;
 
       CipherSuite suite;
       SessionKeys keys;

@@ -174,7 +174,7 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
    bool have_rsa = false, have_dsa = false;
    for(u32bit j = 0; j != certs.size(); j++)
       {
-      X509_PublicKey* key = certs[j].subject_public_key();
+      Public_Key* key = certs[j].subject_public_key();
       if(key->algo_name() == "RSA") have_rsa = true;
       if(key->algo_name() == "DSA") have_dsa = true;
       }

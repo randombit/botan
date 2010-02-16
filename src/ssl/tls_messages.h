@@ -1,6 +1,6 @@
 /**
 * TLS Messages
-* (C) 2004-2006 Jack Lloyd
+* (C) 2004-2010 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -74,16 +74,21 @@ class BOTAN_DLL Client_Key_Exchange : public HandshakeMessage
       Handshake_Type type() const { return CLIENT_KEX; }
 
       SecureVector<byte> pre_master_secret() const;
-      SecureVector<byte> pre_master_secret(RandomNumberGenerator&,
-                                           const PKCS8_PrivateKey*,
-                                           Version_Code);
 
-      Client_Key_Exchange(RandomNumberGenerator&,
-                          Record_Writer&, HandshakeHash&,
-                          const X509_PublicKey*, Version_Code, Version_Code);
+      SecureVector<byte> pre_master_secret(RandomNumberGenerator& rng,
+                                           const Private_Key* key,
+                                           Version_Code version);
 
-      Client_Key_Exchange(const MemoryRegion<byte>&, const CipherSuite&,
-                          Version_Code);
+      Client_Key_Exchange(RandomNumberGenerator& rng,
+                          Record_Writer& output,
+                          HandshakeHash& hash,
+                          const Public_Key* my_key,
+                          Version_Code using_version,
+                          Version_Code pref_version);
+
+      Client_Key_Exchange(const MemoryRegion<byte>& buf,
+                          const CipherSuite& suite,
+                          Version_Code using_version);
    private:
       SecureVector<byte> serialize() const;
       void deserialize(const MemoryRegion<byte>&);
@@ -149,7 +154,7 @@ class BOTAN_DLL Certificate_Verify : public HandshakeMessage
 
       Certificate_Verify(RandomNumberGenerator& rng,
                          Record_Writer&, HandshakeHash&,
-                         const PKCS8_PrivateKey*);
+                         const Private_Key*);
 
       Certificate_Verify(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
@@ -237,14 +242,14 @@ class BOTAN_DLL Server_Key_Exchange : public HandshakeMessage
    {
    public:
       Handshake_Type type() const { return SERVER_KEX; }
-      X509_PublicKey* key() const;
+      Public_Key* key() const;
 
       bool verify(const X509_Certificate&, const MemoryRegion<byte>&,
                   const MemoryRegion<byte>&) const;
 
       Server_Key_Exchange(RandomNumberGenerator& rng,
-                          Record_Writer&, const X509_PublicKey*,
-                          const PKCS8_PrivateKey*, const MemoryRegion<byte>&,
+                          Record_Writer&, const Public_Key*,
+                          const Private_Key*, const MemoryRegion<byte>&,
                           const MemoryRegion<byte>&, HandshakeHash&);
 
       Server_Key_Exchange(const MemoryRegion<byte>& buf) { deserialize(buf); }

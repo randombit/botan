@@ -21,7 +21,7 @@ namespace Botan {
 Client_Key_Exchange::Client_Key_Exchange(RandomNumberGenerator& rng,
                                          Record_Writer& writer,
                                          HandshakeHash& hash,
-                                         const X509_PublicKey* pub_key,
+                                         const Public_Key* pub_key,
                                          Version_Code using_version,
                                          Version_Code pref_version)
    {
@@ -117,7 +117,7 @@ void Client_Key_Exchange::deserialize(const MemoryRegion<byte>& buf)
 */
 SecureVector<byte>
 Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
-                                       const PKCS8_PrivateKey* priv_key,
+                                       const Private_Key* priv_key,
                                        Version_Code version)
    {
    const DH_PrivateKey* dh_priv = dynamic_cast<const DH_PrivateKey*>(priv_key);

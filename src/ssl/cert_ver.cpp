@@ -20,7 +20,7 @@ namespace Botan {
 Certificate_Verify::Certificate_Verify(RandomNumberGenerator& rng,
                                        Record_Writer& writer,
                                        HandshakeHash& hash,
-                                       const PKCS8_PrivateKey* priv_key)
+                                       const Private_Key* priv_key)
    {
    const PK_Signing_Key* sign_key =
       dynamic_cast<const PK_Signing_Key*>(priv_key);
@@ -88,7 +88,7 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
    {
    // FIXME: duplicate of Server_Key_Exchange::verify
 
-   std::auto_ptr<X509_PublicKey> key(cert.subject_public_key());
+   std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
    DSA_PublicKey* dsa_pub = dynamic_cast<DSA_PublicKey*>(key.get());
    RSA_PublicKey* rsa_pub = dynamic_cast<RSA_PublicKey*>(key.get());

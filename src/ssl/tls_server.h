@@ -1,6 +1,6 @@
 /**
-* TLS Server 
-* (C) 2004-2006 Jack Lloyd
+* TLS Server
+* (C) 2004-2010 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -18,12 +18,11 @@ namespace Botan {
 * TLS Server
 */
 
-// FIXME: much of this can probably be moved up to TLS_Connection
-class BOTAN_DLL TLS_Server
+class BOTAN_DLL TLS_Server : public TLS_Connection
    {
    public:
-      u32bit read(byte[], u32bit);
-      void write(const byte[], u32bit);
+      u32bit read(byte buf[], u32bit buf_len);
+      void write(const byte buf[], u32bit buf_len);
 
       std::vector<X509_Certificate> peer_cert_chain() const;
 
@@ -33,9 +32,10 @@ class BOTAN_DLL TLS_Server
       // FIXME: support cert chains (!)
       // FIXME: support anonymous servers
       TLS_Server(RandomNumberGenerator& rng,
-                 Socket&,
-                 const X509_Certificate&, const PKCS8_PrivateKey&,
-                 const TLS_Policy* = 0);
+                 Socket& peer,
+                 const X509_Certificate& cert,
+                 const Private_Key& cert_key,
+                 const TLS_Policy* policy = 0);
 
       ~TLS_Server();
    private:
@@ -55,7 +55,7 @@ class BOTAN_DLL TLS_Server
 
       // FIXME: rename to match TLS_Client
       std::vector<X509_Certificate> cert_chain, peer_certs;
-      PKCS8_PrivateKey* private_key;
+      Private_Key* private_key;
 
       Handshake_State* state;
       SecureVector<byte> session_id;

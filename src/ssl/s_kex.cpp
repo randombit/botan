@@ -1,6 +1,6 @@
 /**
-* Server Key Exchange Message 
-* (C) 2004-2006 Jack Lloyd
+* Server Key Exchange Message
+* (C) 2004-2010 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -20,8 +20,8 @@ namespace Botan {
 */
 Server_Key_Exchange::Server_Key_Exchange(RandomNumberGenerator& rng,
                                          Record_Writer& writer,
-                                         const X509_PublicKey* kex_key,
-                                         const PKCS8_PrivateKey* priv_key,
+                                         const Public_Key* kex_key,
+                                         const Private_Key* priv_key,
                                          const MemoryRegion<byte>& c_random,
                                          const MemoryRegion<byte>& s_random,
                                          HandshakeHash& hash)
@@ -150,7 +150,7 @@ void Server_Key_Exchange::deserialize(const MemoryRegion<byte>& buf)
 /**
 * Return the public key
 */
-X509_PublicKey* Server_Key_Exchange::key() const
+Public_Key* Server_Key_Exchange::key() const
    {
    if(params.size() == 2)
       return new RSA_PublicKey(params[0], params[1]);
@@ -167,7 +167,7 @@ bool Server_Key_Exchange::verify(const X509_Certificate& cert,
                                  const MemoryRegion<byte>& c_random,
                                  const MemoryRegion<byte>& s_random) const
    {
-   std::auto_ptr<X509_PublicKey> key(cert.subject_public_key());
+   std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
    DSA_PublicKey* dsa_pub = dynamic_cast<DSA_PublicKey*>(key.get());
    RSA_PublicKey* rsa_pub = dynamic_cast<RSA_PublicKey*>(key.get());
