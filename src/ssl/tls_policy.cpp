@@ -109,7 +109,7 @@ byte TLS_Policy::choose_compression(const std::vector<byte>& c_comp) const
 */
 DL_Group TLS_Policy::dh_group() const
    {
-   return DL_Group("IETF-1024");
+   return DL_Group("modp/ietf/1024");
    }
 
 /**
