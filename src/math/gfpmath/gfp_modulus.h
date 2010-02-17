@@ -22,8 +22,6 @@ class GFpElement;
 class BOTAN_DLL GFpModulus
    {
    public:
-      friend class GFpElement;
-
       /**
       * Construct a GF(P)-Modulus from a BigInt
       */
@@ -108,6 +106,15 @@ class BOTAN_DLL GFpModulus
          return m_p_dash;
          }
       // default cp-ctor, op= are fine
+
+      void reset_values(const BigInt& new_p_dash,
+                        const BigInt& new_r,
+                        const BigInt& new_r_inv)
+         {
+         m_p_dash = new_p_dash;
+         m_r = new_r;
+         m_r_inv = new_r_inv;
+         }
 
    private:
       BigInt m_p; // the modulus itself

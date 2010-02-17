@@ -223,10 +223,6 @@ class BOTAN_DLL GFpElement
       */
       static bool align_operands_res(const GFpElement& lhs, const GFpElement& rhs);
 
-      //friend declarations for non-member functions
-
-      friend class Point_Coords_GFp;
-
       /**
       * swaps the states of *this and other, does not throw!
       * @param other The value to swap with
