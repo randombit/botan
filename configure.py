@@ -1498,6 +1498,16 @@ def main(argv = None):
         else:
             options.with_tr1 = 'none'
 
+    if options.gen_amalgamation:
+        if options.asm_ok:
+            logging.info('Disabling assembly code, cannot use in amalgamation')
+            options.asm_ok = False
+
+        for mod in ['sha1_sse2', 'serpent_simd']:
+            if mod not in options.disabled_modules:
+                logging.info('Disabling %s, cannot use in amalgamation' % (mod))
+                options.disabled_modules.append(mod)
+
     modules_to_use = choose_modules_to_use(modules,
                                            archinfo[options.arch],
                                            options)
