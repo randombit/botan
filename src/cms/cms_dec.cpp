@@ -17,7 +17,7 @@ namespace Botan {
 * CMS_Decoder Constructor
 */
 CMS_Decoder::CMS_Decoder(DataSource& in, const X509_Store& x509store,
-                         User_Interface& ui_ref, PKCS8_PrivateKey* key) :
+                         User_Interface& ui_ref, Private_Key* key) :
    ui(ui_ref), store(x509store)
    {
    status = GOOD;
@@ -57,7 +57,7 @@ void CMS_Decoder::initial_read(DataSource&)
 /*
 * Add another private key to use
 */
-void CMS_Decoder::add_key(PKCS8_PrivateKey* key)
+void CMS_Decoder::add_key(Private_Key* key)
    {
    if(!key)
       return;

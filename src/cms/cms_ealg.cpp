@@ -97,7 +97,7 @@ void CMS_Encoder::encrypt(RandomNumberGenerator& rng,
    {
    const std::string cipher = choose_algo(user_cipher, "TripleDES");
 
-   std::auto_ptr<X509_PublicKey> key(to.subject_public_key());
+   std::auto_ptr<Public_Key> key(to.subject_public_key());
    const std::string algo = key->algo_name();
 
    Key_Constraints constraints = to.constraints();
@@ -165,7 +165,7 @@ void CMS_Encoder::encrypt_ktri(RandomNumberGenerator& rng,
 */
 void CMS_Encoder::encrypt_kari(RandomNumberGenerator&,
                                const X509_Certificate&,
-                               X509_PublicKey*,
+                               Public_Key*,
                                const std::string&)
    {
    throw Internal_Error("FIXME: unimplemented");
@@ -287,7 +287,7 @@ SecureVector<byte> CMS_Encoder::do_encrypt(RandomNumberGenerator& rng,
 * Sign a message
 */
 void CMS_Encoder::sign(const X509_Certificate& cert,
-                       const PKCS8_PrivateKey& key,
+                       const Private_Key& key,
                        RandomNumberGenerator& rng,
                        const std::vector<X509_Certificate>& chain,
                        const std::string& hash,

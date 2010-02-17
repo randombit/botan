@@ -36,7 +36,7 @@ class BOTAN_DLL CMS_Encoder
       void authenticate(const SymmetricKey&, const std::string& = "");
 
       void sign(const X509_Certificate& cert,
-                const PKCS8_PrivateKey& key,
+                const Private_Key& key,
                 RandomNumberGenerator& rng,
                 const std::vector<X509_Certificate>& cert_chain,
                 const std::string& hash,
@@ -62,7 +62,7 @@ class BOTAN_DLL CMS_Encoder
                         const X509_Certificate&, PK_Encrypting_Key*,
                         const std::string&);
       void encrypt_kari(RandomNumberGenerator&,
-                        const X509_Certificate&, X509_PublicKey*,
+                        const X509_Certificate&, Public_Key*,
                         const std::string&);
 
       SecureVector<byte> do_encrypt(RandomNumberGenerator& rng,
