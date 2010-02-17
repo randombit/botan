@@ -19,8 +19,14 @@ using namespace Botan;
 #include <iostream>
 #include <memory>
 
-int main()
+int main(int argc, char* argv[])
    {
+
+   int port = 4433;
+
+   if(argc == 2)
+      port = to_u32bit(argv[1]);
+
    try
       {
       LibraryInitializer init;
@@ -37,9 +43,9 @@ int main()
       X509_Certificate cert =
          X509::create_self_signed_cert(options, key, "SHA-1", *rng);
 
-      Unix_Server_Socket listener(4434);
+      Unix_Server_Socket listener(port);
 
-      printf("Now listening...\n");
+      printf("Now listening on port %d...\n", port);
 
       while(true)
          {
@@ -50,8 +56,12 @@ int main()
 
             TLS_Server tls(*rng, *sock, cert, key);
 
+            printf("Writing some text\n");
+
             char msg[] = "Foo\nBar\nBaz\nQuux\n";
             tls.write((const byte*)msg, strlen(msg));
+
+            printf("Now trying a read...\n");
 
             char buf[10] = { 0 };
             u32bit got = tls.read((byte*)buf, 9);
