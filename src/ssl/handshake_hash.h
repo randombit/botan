@@ -5,8 +5,8 @@
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_TLS_HANDSHAKE_HASH__
-#define BOTAN_TLS_HANDSHAKE_HASH__
+#ifndef BOTAN_TLS_HANDSHAKE_HASH_H__
+#define BOTAN_TLS_HANDSHAKE_HASH_H__
 
 #include <botan/secmem.h>
 
