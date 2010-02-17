@@ -83,6 +83,8 @@ enum Alert_Type {
    USER_CANCELED           = 90,
    NO_RENEGOTIATION        = 100,
 
+   UNKNOWN_PSK_IDENTITY    = 115,
+
    NO_ALERT_TYPE           = 0xFFFF
 };
 
