@@ -9,6 +9,7 @@
  - Add support for password hashing for authentication (passhash9.h)
  - Add support for Win32 high resolution system timers
  - Changed S2K interface: derive_key now takes salt, iteration count
+ - Remove dependency on TR1 for ECC code
  - Fix crash in GMP_Engine if library is shutdown and reinitialized
  - Fix an invalid memory read in MD4
  - Remove Timer class entirely
