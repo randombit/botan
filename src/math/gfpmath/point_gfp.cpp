@@ -222,64 +222,9 @@ PointGFp& PointGFp::mult_this_secure(const BigInt& scalar,
       return *this;
       }
    if(m == BigInt(1))
-      {
       return *this;
-      }
-   //
-#ifdef CM_AADA
-#ifndef CM_RAND_EXP
-   int max_secr_bits = max_secr.bits();
-#endif
-#endif
 
-   int mul_bits = m.bits(); // this is used for a determined number of loop runs in
-   // the mult_loop where leading zero´s are padded if necessary.
-   // Here we assign the value that will be used when no countermeasures are specified
-#ifdef CM_RAND_EXP
-   u32bit rand_r_bit_len = 20; // Coron(99) proposes 20 bit for r
-
-#ifdef CM_AADA
-
-   BigInt r_max(1);
-
-#endif // CM_AADA
-
-   // use randomized exponent
-#ifdef TA_COLL_T
-   static BigInt r_randexp;
-   if(new_rand)
-      {
-      r_randexp = random_integer(rand_r_bit_len);
-      }
-   //assert(!r_randexp.is_zero());
-#else
-   BigInt r_randexp(random_integer(rand_r_bit_len));
-#endif
-
-   m += r_randexp * point_order;
-   // determine mul_bits...
-#ifdef CM_AADA
-   // AADA with rand. Exp.
-   //assert(rand_r_bit_len > 0);
-   r_max <<= rand_r_bit_len;
-   r_max -= 1;
-   //assert(r_max.bits() == rand_r_bit_len);
-   mul_bits = (max_secr + point_order * r_max).bits();
-#else
-   // rand. Exp. without AADA
-   mul_bits = m.bits();
-#endif // CM_AADA
-
-
-#endif // CM_RAND_EXP
-
-   // determine mul_bits...
-#if(CM_AADA == 1 && CM_RAND_EXP != 1)
-
-   mul_bits = max_secr_bits;
-#endif // CM_AADA without CM_RAND_EXP
-
-   //assert(mul_bits != 0);
+   int mul_bits = m.bits();
 
    for(int i = mul_bits - 1; i >= 0; i--)
       {
