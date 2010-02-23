@@ -17,13 +17,7 @@ PointGFp::PointGFp(const CurveGFp& curve) :
    mC(curve),
    mX(curve.get_p(), 0),
    mY(curve.get_p(), 1),
-   mZ(curve.get_p(), 0),
-   mZpow2(curve.get_p(),0),
-   mZpow3(curve.get_p(),0),
-   mAZpow4(curve.get_p(),0),
-   mZpow2_set(false),
-   mZpow3_set(false),
-   mAZpow4_set(false)
+   mZ(curve.get_p(), 0)
    {
    }
 
@@ -33,13 +27,7 @@ PointGFp::PointGFp(const CurveGFp& curve, const GFpElement& x,
    mC(curve),
    mX(x),
    mY(y),
-   mZ(z),
-   mZpow2(curve.get_p(),0),
-   mZpow3(curve.get_p(),0),
-   mAZpow4(curve.get_p(),0),
-   mZpow2_set(false),
-   mZpow3_set(false),
-   mAZpow4_set(false)
+   mZ(z)
    {
    }
 
@@ -49,26 +37,8 @@ PointGFp::PointGFp(const CurveGFp& curve,
    mC(curve),
    mX(x),
    mY(y),
-   mZ(curve.get_p(),1),
-   mZpow2(curve.get_p(),0),
-   mZpow3(curve.get_p(),0),
-   mAZpow4(curve.get_p(),0),
-   mZpow2_set(false),
-   mZpow3_set(false),
-   mAZpow4_set(false)
+   mZ(curve.get_p(),1)
    {
-   }
-
-const PointGFp& PointGFp::assign_within_same_curve(PointGFp const& other)
-   {
-   mX = other.get_jac_proj_x();
-   mY = other.get_jac_proj_y();
-   mZ = other.get_jac_proj_z();
-   mZpow2_set = false;
-   mZpow3_set = false;
-   mAZpow4_set = false;
-   // the rest stays!
-   return *this;
    }
 
 // arithmetic operators
@@ -89,19 +59,10 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
 
    if(rhs.mZ != mC.get_mres_one())
       {
-      if((!rhs.mZpow2_set) || (!rhs.mZpow3_set))
-         {
-         rhs.mZpow2 = rhs.mZ;
-         rhs.mZpow2 *= rhs.mZ;
-         rhs.mZpow3 = rhs.mZpow2;
-         rhs.mZpow3 *= rhs.mZ;
+      GFpElement rhs_z2 = rhs.mZ * rhs.mZ;
 
-         rhs.mZpow2_set = true;
-         rhs.mZpow3_set = true;
-         }
-
-      U1 *= rhs.mZpow2;
-      S1 *= rhs.mZpow3;
+      U1 *= rhs_z2;
+      S1 *= rhs_z2 * rhs.mZ;
       }
 
    GFpElement U2 = rhs.mX;
@@ -109,18 +70,10 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
 
    if(mZ != mC.get_mres_one())
       {
-      if((!mZpow2_set) || (!mZpow3_set))
-         {
-         // precomputation can´t be used, because *this changes anyway
-         mZpow2 = mZ;
-         mZpow2 *= mZ;
+      GFpElement lhs_z2 = mZ * mZ;
 
-         mZpow3 = mZpow2;
-         mZpow3 *= mZ;
-         }
-
-      U2 *= mZpow2;
-      S2 *= mZpow3;
+      U2 *= lhs_z2;
+      S2 *= lhs_z2 * mZ;
       }
 
    GFpElement H(U2 - U1);
@@ -164,10 +117,6 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
       }
    else
       z = mZ * H;
-
-   mZpow2_set = false;
-   mZpow3_set = false;
-   mAZpow4_set = false;
 
    mX = x;
    mY = y;
@@ -291,9 +240,8 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
 PointGFp& PointGFp::negate()
    {
    if(!is_zero())
-      {
       mY.negate();
-      }
+
    return *this;
    }
 
@@ -316,32 +264,17 @@ PointGFp& PointGFp::mult2_in_place()
 
    S = x + x;
 
-   if(!mAZpow4_set)
+   GFpElement a_z4 = mC.get_mres_a();
+   if(mZ != mC.get_mres_one())
       {
-      if(mZ == mC.get_mres_one())
-         {
-         mAZpow4 = mC.get_mres_a();
-         mAZpow4_set = true;
-         }
-      else
-         {
-         if(!mZpow2_set)
-            {
-            mZpow2 = mZ;
-            mZpow2 *= mZ;
-
-            mZpow2_set = true;
-            }
-
-         x = mZpow2 * mZpow2;
-
-         mAZpow4 = mC.get_mres_a() * x;
-         }
+      GFpElement z2 = mZ * mZ;
+      a_z4 *= z2;
+      a_z4 *= z2;
       }
 
    GFpElement y(mX * mX);
 
-   GFpElement M(y + y + y + mAZpow4);
+   GFpElement M(y + y + y + a_z4);
 
    x = M * M - (S+S);
 
@@ -366,9 +299,6 @@ PointGFp& PointGFp::mult2_in_place()
    mY = y;
    mZ = z;
 
-   mZpow2_set = false;
-   mZpow3_set = false;
-   mAZpow4_set = false;
    return *this;
    }
 
@@ -386,12 +316,7 @@ void PointGFp::turn_on_sp_red_mul() const
    mX.get_mres();
    mY.get_mres();
    mZ.get_mres();
-
-   mZpow2.turn_on_sp_red_mul();
-   mZpow3.turn_on_sp_red_mul();
-   mAZpow4.turn_on_sp_red_mul();
    }
-// getters
 
 /**
 * returns a point equivalent to *this but were
@@ -437,9 +362,7 @@ GFpElement PointGFp::get_affine_x() const
    if(is_zero())
       throw Illegal_Transformation("cannot convert to affine");
 
-   mZpow2 = mZ * mZ;
-   mZpow2_set = true;
-   GFpElement z2 = mZpow2;
+   GFpElement z2 = mZ * mZ;
    return mX * z2.inverse_in_place();
    }
 
@@ -448,9 +371,7 @@ GFpElement PointGFp::get_affine_y() const
    if(is_zero())
       throw Illegal_Transformation("cannot convert to affine");
 
-   mZpow3 = mZ * mZ * mZ;
-   mZpow3_set = true;
-   GFpElement z3 = mZpow3;
+   GFpElement z3 = mZ * mZ * mZ;
    return mY * z3.inverse_in_place();
    }
 
@@ -502,14 +423,11 @@ void PointGFp::check_invariants() const
 
       }
 
-   mZpow2 = mZ * mZ;
-   mZpow2_set = true;
-   mZpow3 = mZpow2 * mZ;
-   mZpow3_set = true;
-   mAZpow4 = mZpow3 * mZ * mC.get_a();
-   mAZpow4_set = true;
-   const GFpElement aXZ4 = mAZpow4 * mX;
-   const GFpElement bZ6 = mC.get_b() * mZpow3 * mZpow3;
+   GFpElement Zpow2 = mZ * mZ;
+   GFpElement Zpow3 = Zpow2 * mZ;
+   GFpElement AZpow4 = Zpow3 * mZ * mC.get_a();
+   const GFpElement aXZ4 = AZpow4 * mX;
+   const GFpElement bZ6 = mC.get_b() * Zpow3 * Zpow3;
 
    if(y2 != (x3 + aXZ4 + bZ6))
       throw Illegal_Point();
@@ -522,12 +440,6 @@ void PointGFp::swap(PointGFp& other)
    mX.swap(other.mX);
    mY.swap(other.mY);
    mZ.swap(other.mZ);
-   mZpow2.swap(other.mZpow2);
-   mZpow3.swap(other.mZpow3);
-   mAZpow4.swap(other.mAZpow4);
-   std::swap<bool>(mZpow2_set, other.mZpow2_set);
-   std::swap<bool>(mZpow3_set, other.mZpow3_set);
-   std::swap<bool>(mAZpow4_set, other.mAZpow4_set);
    }
 
 PointGFp mult2(const PointGFp& point)

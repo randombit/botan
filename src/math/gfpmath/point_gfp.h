@@ -73,12 +73,6 @@ class BOTAN_DLL PointGFp
       //PointGFp& operator=(const PointGFp& other) = default;
 
       /**
-      * assign another point which is on the same curve as *this
-      * @param other The point to use as source for the assignment
-      */
-      const PointGFp& assign_within_same_curve(const PointGFp& other);
-
-      /**
       * += Operator
       * @param rhs the PointGFp to add to the local value
       * @result resulting PointGFp
@@ -215,12 +209,6 @@ class BOTAN_DLL PointGFp
       mutable GFpElement mX;  // NOTE: these values must be mutable (affine<->proj)
       mutable GFpElement mY;
       mutable GFpElement mZ;
-      mutable GFpElement mZpow2;  // mZ^2
-      mutable GFpElement mZpow3;   // mZ^3
-      mutable GFpElement mAZpow4;  // mA*mZ^4
-      mutable bool mZpow2_set;
-      mutable bool mZpow3_set;
-      mutable bool mAZpow4_set;
    };
 
 // relational operators
