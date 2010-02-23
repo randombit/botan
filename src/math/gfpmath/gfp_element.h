@@ -38,7 +38,7 @@ class BOTAN_DLL GFpElement
       * @param value the element value
       * @param use_montgm whether this object will use Montgomery multiplication
       */
-      GFpElement(const BigInt& p, const BigInt& value, bool use_montgm = false);
+      GFpElement(const BigInt& p, const BigInt& value, bool use_montgm = true);
 
       // GFpElement(const GFpElement& other) = default;
 
@@ -47,12 +47,12 @@ class BOTAN_DLL GFpElement
       /**
       * Switch Montgomery multiplcation optimizations ON
       */
-      void turn_on_sp_red_mul() const;
+      void turn_on_sp_red_mul();
 
       /**
       * Switch Montgomery multiplcation optimizations OFF
       */
-      void turn_off_sp_red_mul() const;
+      void turn_off_sp_red_mul();
 
       /**
       * += Operator
@@ -164,15 +164,15 @@ class BOTAN_DLL GFpElement
       */
       void swap(GFpElement& other);
    private:
-      void ensure_montgm_precomp() const;
+      void ensure_montgm_precomp();
       void trf_to_mres() const;
       void trf_to_ordres() const;
 
-      mutable GFpModulus modulus;
+      GFpModulus modulus;
       mutable BigInt m_value; // ordinary residue or m-residue respectively
 
       // data members for montgomery multiplication
-      mutable bool m_use_montgm;
+      bool m_use_montgm;
       mutable bool m_is_trf; // if m_value is montgomery
    };
 

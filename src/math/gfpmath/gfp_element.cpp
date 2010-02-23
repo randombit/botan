@@ -165,20 +165,20 @@ BigInt montg_trf_to_ordres(const BigInt& m_res, const BigInt& m, const BigInt& r
 
 }
 
-GFpElement::GFpElement(const BigInt& p, const BigInt& value, bool use_montgm)
-   : modulus(p), m_value(value %p), m_use_montgm(use_montgm), m_is_trf(false)
+GFpElement::GFpElement(const BigInt& p, const BigInt& value, bool use_montgomery)
+   : modulus(p), m_value(value %p), m_use_montgm(use_montgomery), m_is_trf(false)
    {
    if(m_use_montgm)
       ensure_montgm_precomp();
    }
 
-void GFpElement::turn_on_sp_red_mul() const
+void GFpElement::turn_on_sp_red_mul()
    {
    ensure_montgm_precomp();
    m_use_montgm = true;
    }
 
-void GFpElement::turn_off_sp_red_mul() const
+void GFpElement::turn_off_sp_red_mul()
    {
    if(m_is_trf)
       {
@@ -189,7 +189,7 @@ void GFpElement::turn_off_sp_red_mul() const
    m_use_montgm = false;
    }
 
-void GFpElement::ensure_montgm_precomp() const
+void GFpElement::ensure_montgm_precomp()
    {
    if((!modulus.get_r().is_zero()) && (!modulus.get_r_inv().is_zero()) && (!modulus.get_p_dash().is_zero()))
       {
