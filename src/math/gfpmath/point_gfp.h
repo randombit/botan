@@ -211,8 +211,6 @@ class BOTAN_DLL PointGFp
       static GFpElement decompress(bool yMod2, GFpElement const& x, const CurveGFp& curve);
 
    private:
-      void mult_loop(int l, const BigInt& m, PointGFp& H, const PointGFp& P);
-
       CurveGFp mC;
       mutable GFpElement mX;  // NOTE: these values must be mutable (affine<->proj)
       mutable GFpElement mY;

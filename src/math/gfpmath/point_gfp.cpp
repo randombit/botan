@@ -281,16 +281,18 @@ PointGFp& PointGFp::mult_this_secure(const BigInt& scalar,
 
    //assert(mul_bits != 0);
 
-   mult_loop(mul_bits-1, m, H, P);
+   for(int i = mul_bits - 1; i >= 0; i--)
+      {
+      H.mult2_in_place();
+
+      if(m.get_bit(i))
+         H += P;
+      }
 
    if(!H.is_zero()) // cannot convert if H == O
-      {
       *this = H.get_z_to_one();
-      }
    else
-      {
       *this = H;
-      }
 
    mX.turn_off_sp_red_mul();
    mY.turn_off_sp_red_mul();
@@ -309,55 +311,36 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
    PointGFp P(*this);
    P.turn_on_sp_red_mul();
    BigInt m(scalar);
+
    if(m < BigInt(0))
       {
       m = -m;
       P.negate();
       }
+
    if(P.is_zero() || (m == BigInt(0)))
       {
       *this = H;
       return *this;
       }
-   if(m == BigInt(1))
-      {
-      //*this == P already
+
+   if(m == BigInt(1)) //*this == P already
       return *this;
-      }
 
    const int l = m.bits() - 1;
-   for(int i=l; i >=0; i--)
+   for(int i = l; i >= 0; --i)
       {
-
       H.mult2_in_place();
       if(m.get_bit(i))
-         {
          H += P;
-         }
       }
 
    if(!H.is_zero()) // cannot convert if H == O
-      {
       *this = H.get_z_to_one();
-      }else
-      {
+   else
       *this = H;
-      }
+
    return *this;
-   }
-
-void PointGFp::mult_loop(int l,
-                         const BigInt& m,
-                         PointGFp& H,
-                         const PointGFp& P)
-   {
-   for(int i=l; i >=0; i--)
-      {
-      H.mult2_in_place();
-
-      if(m.get_bit(i))
-         H += P;
-      }
    }
 
 PointGFp& PointGFp::negate()
