@@ -70,17 +70,25 @@ bool test_passhash(RandomNumberGenerator& rng)
    {
 #if defined(BOTAN_HAS_PASSHASH9)
 
+   std::cout << "Testing Password Hashing: " << std::flush;
+
    const std::string input = "secret";
    const std::string fixed_hash =
       "$9$AAAKhiHXTIUhNhbegwBXJvk03XXJdzFMy+i3GFMIBYKtthTTmXZA";
 
+   std::cout << "." << std::flush;
+
    if(!check_passhash9(input, fixed_hash))
       return false;
+
+   std::cout << "." << std::flush;
 
    std::string gen_hash = generate_passhash9(input, rng, 5);
 
    if(!check_passhash9(input, gen_hash))
       return false;
+
+   std::cout << "." << std::endl;;
 
 #endif
 
@@ -206,14 +214,15 @@ u32bit do_validation_tests(const std::string& filename,
 
       }
 
+   if(should_pass)
+      std::cout << std::endl;
+
    if(should_pass && !test_passhash(rng))
       {
       std::cout << "Passhash9 tests failed" << std::endl;
       errors++;
       }
 
-   if(should_pass)
-      std::cout << std::endl;
    return errors;
    }
 
