@@ -22,22 +22,26 @@ class GFpElement;
 class BOTAN_DLL GFpModulus
    {
    public:
+
       /**
       * Construct a GF(P)-Modulus from a BigInt
       */
-      GFpModulus(BigInt p)
+      GFpModulus(const BigInt& p)
          : m_p(p),
            m_p_dash(),
            m_r(),
            m_r_inv()
          {}
 
+      // GFpModulus(const GFpModulus& other) = default;
+      // GFpModulus& operator=(const GFpModulus& other) = default;
+
       /**
       * Tells whether the precomputations necessary for the use of the
       * montgomery multiplication have yet been established.
       * @result true if the precomputated value are already available.
       */
-      inline bool has_precomputations() const
+      bool has_precomputations() const
          {
          return(!m_p_dash.is_zero() && !m_r.is_zero() && !m_r_inv.is_zero());
          }
@@ -46,12 +50,12 @@ class BOTAN_DLL GFpModulus
       * Swaps this with another GFpModulus, does not throw.
       * @param other the GFpModulus to swap *this with.
       */
-      inline void swap(GFpModulus& other)
+      void swap(GFpModulus& other)
          {
-         m_p.swap(other.m_p);
-         m_p_dash.swap(other.m_p_dash);
-         m_r.swap(other.m_r);
-         m_r_inv.swap(other.m_r_inv);
+         std::swap(m_p, other.m_p);
+         std::swap(m_p_dash, other.m_p_dash);
+         std::swap(m_r, other.m_r);
+         std::swap(m_r_inv, other.m_r_inv);
          }
 
       /**
@@ -59,7 +63,7 @@ class BOTAN_DLL GFpModulus
       * @param mod the modulus to compare this with
       * @result true if the modulus of *this and the argument are equal.
       */
-      inline bool p_equal_to(const BigInt& mod) const
+      bool p_equal_to(const BigInt& mod) const
          {
          return (m_p == mod);
          }
@@ -68,7 +72,7 @@ class BOTAN_DLL GFpModulus
       * Return the modulus of this GFpModulus.
       * @result the modulus of *this.
       */
-      inline const BigInt& get_p() const
+      const BigInt& get_p() const
          {
          return m_p;
          }
@@ -79,7 +83,7 @@ class BOTAN_DLL GFpModulus
       * performed!
       * @result r
       */
-      inline const BigInt& get_r() const
+      const BigInt& get_r() const
          {
          return m_r;
          }
@@ -90,7 +94,7 @@ class BOTAN_DLL GFpModulus
       * performed!
       * @result r^{-1}
       */
-      inline const BigInt& get_r_inv() const
+      const BigInt& get_r_inv() const
          {
          return m_r_inv;
          }
@@ -101,11 +105,10 @@ class BOTAN_DLL GFpModulus
       * performed!
       * @result p'
       */
-      inline const BigInt& get_p_dash() const
+      const BigInt& get_p_dash() const
          {
          return m_p_dash;
          }
-      // default cp-ctor, op= are fine
 
       void reset_values(const BigInt& new_p_dash,
                         const BigInt& new_r,
@@ -118,9 +121,9 @@ class BOTAN_DLL GFpModulus
 
    private:
       BigInt m_p; // the modulus itself
-      mutable BigInt m_p_dash;
-      mutable BigInt m_r;
-      mutable BigInt m_r_inv;
+      BigInt m_p_dash;
+      BigInt m_r;
+      BigInt m_r_inv;
    };
 
 }

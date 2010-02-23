@@ -166,37 +166,10 @@ BigInt montg_trf_to_ordres(const BigInt& m_res, const BigInt& m, const BigInt& r
 }
 
 GFpElement::GFpElement(const BigInt& p, const BigInt& value, bool use_montgm)
-   : mp_mod(),
-     m_value(value %p),
-     m_use_montgm(use_montgm),
-     m_is_trf(false)
+   : modulus(p), m_value(value %p), m_use_montgm(use_montgm), m_is_trf(false)
    {
-   assert(mp_mod.get() == 0);
-   mp_mod = std::tr1::shared_ptr<GFpModulus>(new GFpModulus(p));
-   assert(mp_mod->get_p_dash() == 0);
    if(m_use_montgm)
       ensure_montgm_precomp();
-   }
-
-GFpElement::GFpElement(std::tr1::shared_ptr<GFpModulus> const mod, const BigInt& value, bool use_montgm)
-   : mp_mod(),
-     m_value(value % mod->get_p()),
-     m_use_montgm(use_montgm),
-     m_is_trf(false)
-   {
-   assert(mp_mod.get() == 0);
-   mp_mod = mod;
-   }
-
-GFpElement::GFpElement(const GFpElement& other)
-   : m_value(other.m_value),
-     m_use_montgm(other.m_use_montgm),
-     m_is_trf(other.m_is_trf)
-
-   {
-   //creates an independent copy
-   assert((other.m_is_trf && other.m_use_montgm) || !other.m_is_trf);
-   mp_mod.reset(new GFpModulus(*other.mp_mod)); // copy-ctor of GFpModulus
    }
 
 void GFpElement::turn_on_sp_red_mul() const
@@ -218,26 +191,21 @@ void GFpElement::turn_off_sp_red_mul() const
 
 void GFpElement::ensure_montgm_precomp() const
    {
-   if((!mp_mod->get_r().is_zero()) && (!mp_mod->get_r_inv().is_zero()) && (!mp_mod->get_p_dash().is_zero()))
+   if((!modulus.get_r().is_zero()) && (!modulus.get_r_inv().is_zero()) && (!modulus.get_p_dash().is_zero()))
       {
       // values are already set, nothing more to do
       }
    else
       {
-      BigInt tmp_r(montgm_calc_r_oddmod(mp_mod->get_p()));
+      BigInt tmp_r(montgm_calc_r_oddmod(modulus.get_p()));
 
-      BigInt tmp_r_inv(inverse_mod(tmp_r, mp_mod->get_p()));
+      BigInt tmp_r_inv(inverse_mod(tmp_r, modulus.get_p()));
 
-      BigInt tmp_p_dash(montgm_calc_m_dash(tmp_r, mp_mod->get_p(), tmp_r_inv));
+      BigInt tmp_p_dash(montgm_calc_m_dash(tmp_r, modulus.get_p(), tmp_r_inv));
 
-      mp_mod->reset_values(tmp_p_dash, tmp_r, tmp_r_inv);
+      modulus.reset_values(tmp_p_dash, tmp_r, tmp_r_inv);
       }
 
-   }
-
-void GFpElement::set_shrd_mod(std::tr1::shared_ptr<GFpModulus> const p_mod)
-   {
-   mp_mod = p_mod;
    }
 
 void GFpElement::trf_to_mres() const
@@ -247,27 +215,27 @@ void GFpElement::trf_to_mres() const
       throw Illegal_Transformation("GFpElement is not allowed to be transformed to m-residue");
       }
    assert(m_is_trf == false);
-   assert(!mp_mod->get_r_inv().is_zero());
-   assert(!mp_mod->get_p_dash().is_zero());
-   m_value = montg_trf_to_mres(m_value, mp_mod->get_r(), mp_mod->get_p());
+   assert(!modulus.get_r_inv().is_zero());
+   assert(!modulus.get_p_dash().is_zero());
+   m_value = montg_trf_to_mres(m_value, modulus.get_r(), modulus.get_p());
    m_is_trf = true;
    }
 
 void GFpElement::trf_to_ordres() const
    {
    assert(m_is_trf == true);
-   m_value = montg_trf_to_ordres(m_value, mp_mod->get_p(), mp_mod->get_r_inv());
+   m_value = montg_trf_to_ordres(m_value, modulus.get_p(), modulus.get_r_inv());
    m_is_trf = false;
    }
 
 bool GFpElement::align_operands_res(const GFpElement& lhs, const GFpElement& rhs) //static
    {
-   assert(lhs.mp_mod->get_p() == rhs.mp_mod->get_p());
+   assert(lhs.modulus.get_p() == rhs.modulus.get_p());
    if(lhs.m_use_montgm && rhs.m_use_montgm)
       {
-      assert(rhs.mp_mod->get_p_dash() == lhs.mp_mod->get_p_dash());
-      assert(rhs.mp_mod->get_r() == lhs.mp_mod->get_r());
-      assert(rhs.mp_mod->get_r_inv() == lhs.mp_mod->get_r_inv());
+      assert(rhs.modulus.get_p_dash() == lhs.modulus.get_p_dash());
+      assert(rhs.modulus.get_r() == lhs.modulus.get_r());
+      assert(rhs.modulus.get_r_inv() == lhs.modulus.get_r_inv());
       if(!lhs.m_is_trf && !rhs.m_is_trf)
          {
          return false;
@@ -317,7 +285,7 @@ bool GFpElement::is_trf_to_mres() const
 
 const BigInt& GFpElement::get_p() const
    {
-   return (mp_mod->get_p());
+   return (modulus.get_p());
    }
 
 const BigInt& GFpElement::get_value() const
@@ -347,105 +315,17 @@ const BigInt& GFpElement::get_mres() const
    return m_value;
    }
 
-const GFpElement& GFpElement::operator=(const GFpElement& other)
-   {
-   m_value.grow_reg(other.m_value.size()); // grow first for exception safety
-
-   //m_value = other.m_value;
-
-   //              m_use_montgm = other.m_use_montgm;
-   //              m_is_trf = other.m_is_trf;
-   // we want to keep the member pointers, which might be part of a "sharing group"
-   // but we may not simply overwrite the BigInt values with those of the argument!!
-   // if ours already contains precomputations, it would be hazardous to
-   // set them back to zero.
-   // thus we first check for equality of the moduli,
-   // then whether either of the two objects already contains
-   // precomputed values.
-
-   // we also deal with the case were the pointers themsevles are equal:
-   if(mp_mod.get() == other.mp_mod.get())
-      {
-      // everything ok, we are in the same sharing group anyway, nothing to do
-      m_value = other.m_value; // cannot throw
-      m_use_montgm = other.m_use_montgm;
-      m_is_trf = other.m_is_trf;
-      return *this;
-      }
-   if(mp_mod->get_p() != other.mp_mod->get_p())
-      {
-      // the moduli are different, this is a special case
-      // which will not occur in usual applications,
-      // so we don´t hesitate to simply create new objects
-      // (we do want to create an independent copy)
-      mp_mod.reset(new GFpModulus(*other.mp_mod)); // this could throw,
-      // and because of this
-      // we haven't modified
-      // anything so far
-      m_value = other.m_value; // can't throw
-      m_use_montgm = other.m_use_montgm;
-      m_is_trf = other.m_is_trf;
-      return *this;
-      }
-   // exception safety note: from now on we are on the safe
-   // side with respect to the modulus,
-   // so we can assign the value now:
-   m_value = other.m_value;
-   m_use_montgm = other.m_use_montgm;
-   m_is_trf = other.m_is_trf;
-   // the moduli are equal, but we deal with different sharing groups.
-   // we will NOT fuse the sharing goups
-   // and we will NOT reset already precomputed values
-   if(mp_mod->has_precomputations())
-      {
-      // our own sharing group already has precomputed values,
-      // so nothing to do.
-      return *this;
-      }
-   else
-      {
-      // let´s see whether the argument has something for us...
-      if(other.mp_mod->has_precomputations())
-         {
-         // fetch them for our sharing group
-         // exc. safety note: grow first
-
-         mp_mod->reset_values(other.mp_mod->get_p_dash(),
-                              other.mp_mod->get_r(),
-                              other.mp_mod->get_r_inv());
-
-         return *this;
-         }
-      }
-   // our precomputations aren´t set, the arguments neither,
-   // so we let them alone
-   return *this;
-   }
-
-void GFpElement::share_assign(const GFpElement& other)
-   {
-   assert((other.m_is_trf && other.m_use_montgm) || !other.m_is_trf);
-
-   // use grow_to to make it exc safe
-   m_value.grow_reg(other.m_value.size());
-   m_value = other.m_value;
-
-   m_use_montgm = other.m_use_montgm;
-   m_is_trf = other.m_is_trf;
-   mp_mod = other.mp_mod; // cannot throw
-   }
-
 GFpElement& GFpElement::operator+=(const GFpElement& rhs)
    {
    GFpElement::align_operands_res(*this, rhs);
 
-   workspace = m_value;
+   BigInt workspace = m_value;
    workspace += rhs.m_value;
-   if(workspace >= mp_mod->get_p())
-      workspace -= mp_mod->get_p();
+   if(workspace >= modulus.get_p())
+      workspace -= modulus.get_p();
 
    m_value = workspace;
-   assert(m_value < mp_mod->get_p());
+   assert(m_value < modulus.get_p());
    assert(m_value >= 0);
 
    return *this;
@@ -455,39 +335,39 @@ GFpElement& GFpElement::operator-=(const GFpElement& rhs)
    {
    GFpElement::align_operands_res(*this, rhs);
 
-   workspace = m_value;
+   BigInt workspace = m_value;
 
    workspace -= rhs.m_value;
 
    if(workspace.is_negative())
-      workspace += mp_mod->get_p();
+      workspace += modulus.get_p();
 
    m_value = workspace;
-   assert(m_value < mp_mod->get_p());
+   assert(m_value < modulus.get_p());
    assert(m_value >= 0);
    return *this;
    }
 
 GFpElement& GFpElement::operator*= (u32bit rhs)
    {
-   workspace = m_value;
+   BigInt workspace = m_value;
    workspace *= rhs;
-   workspace %= mp_mod->get_p();
+   workspace %= modulus.get_p();
    m_value = workspace;
    return *this;
    }
 
 GFpElement& GFpElement::operator*=(const GFpElement& rhs)
    {
-   assert(rhs.mp_mod->get_p() == mp_mod->get_p());
+   assert(rhs.modulus.get_p() == modulus.get_p());
    // here, we do not use align_operands_res() for one simple reason:
    // we want to enforce the transformation to an m-residue, otherwise it would
   // never happen
    if(m_use_montgm && rhs.m_use_montgm)
       {
-      assert(rhs.mp_mod->get_p() == mp_mod->get_p()); // is montgm. mult is on, then precomps must be there
-      assert(rhs.mp_mod->get_p_dash() == mp_mod->get_p_dash());
-      assert(rhs.mp_mod->get_r() == mp_mod->get_r());
+      assert(rhs.modulus.get_p() == modulus.get_p()); // is montgm. mult is on, then precomps must be there
+      assert(rhs.modulus.get_p_dash() == modulus.get_p_dash());
+      assert(rhs.modulus.get_r() == modulus.get_r());
       if(!m_is_trf)
          {
          trf_to_mres();
@@ -496,8 +376,8 @@ GFpElement& GFpElement::operator*=(const GFpElement& rhs)
          {
          rhs.trf_to_mres();
          }
-      workspace = m_value;
-      montg_mult(m_value, workspace, rhs.m_value, mp_mod->get_p(), mp_mod->get_p_dash(), mp_mod->get_r());
+      BigInt workspace = m_value;
+      montg_mult(m_value, workspace, rhs.m_value, modulus.get_p(), modulus.get_p_dash(), modulus.get_r());
       }
    else // ordinary multiplication
       {
@@ -512,9 +392,9 @@ GFpElement& GFpElement::operator*=(const GFpElement& rhs)
          rhs.trf_to_ordres();
          }
 
-      workspace = m_value;
+      BigInt workspace = m_value;
       workspace *= rhs.m_value;
-      workspace %= mp_mod->get_p();
+      workspace %= modulus.get_p();
       m_value = workspace;
       }
    return *this;
@@ -524,18 +404,17 @@ GFpElement& GFpElement::operator/=(const GFpElement& rhs)
    {
    bool use_mres = GFpElement::align_operands_res(*this, rhs);
    assert((this->m_is_trf && rhs.m_is_trf) || !(this->m_is_trf && rhs.m_is_trf));
-   // (internal note: see C86)
+
    if(use_mres)
       {
       assert(m_use_montgm && rhs.m_use_montgm);
       GFpElement rhs_ordres(rhs);
       rhs_ordres.trf_to_ordres();
       rhs_ordres.inverse_in_place();
-      workspace = m_value;
-      workspace *=  rhs_ordres.get_value();
-      workspace %= mp_mod->get_p();
+      BigInt workspace = m_value;
+      workspace *= rhs_ordres.get_value();
+      workspace %= modulus.get_p();
       m_value = workspace;
-
       }
    else
       {
@@ -554,30 +433,31 @@ bool GFpElement::is_zero()
 
 GFpElement& GFpElement::inverse_in_place()
    {
-   m_value = inverse_mod(m_value, mp_mod->get_p());
+   m_value = inverse_mod(m_value, modulus.get_p());
+
    if(m_is_trf)
       {
       assert(m_use_montgm);
 
-      m_value *= mp_mod->get_r();
-      m_value *= mp_mod->get_r();
-      m_value %= mp_mod->get_p();
+      m_value *= modulus.get_r();
+      m_value *= modulus.get_r();
+      m_value %= modulus.get_p();
       }
-   assert(m_value <= mp_mod->get_p());
+   assert(m_value <= modulus.get_p());
    return *this;
    }
 
 GFpElement& GFpElement::negate()
    {
-   m_value = mp_mod->get_p() - m_value;
-   assert(m_value <= mp_mod->get_p());
+   m_value = modulus.get_p() - m_value;
+   assert(m_value <= modulus.get_p());
    return *this;
    }
 
 void GFpElement::swap(GFpElement& other)
    {
-   m_value.swap(other.m_value);
-   mp_mod.swap(other.mp_mod);
+   std::swap(m_value, other.m_value);
+   std::swap(modulus, other.modulus);
    std::swap<bool>(m_use_montgm,other.m_use_montgm);
    std::swap<bool>(m_is_trf,other.m_is_trf);
    }
@@ -589,15 +469,9 @@ std::ostream& operator<<(std::ostream& output, const GFpElement& elem)
 
 bool operator==(const GFpElement& lhs, const GFpElement& rhs)
    {
-   // for effeciency reasons we firstly check whether
-   //the modulus pointers are different in the first place:
-   if(lhs.get_ptr_mod() != rhs.get_ptr_mod())
-      {
-      if(lhs.get_p() != rhs.get_p())
-         {
-         return false;
-         }
-      }
+   if(lhs.get_p() != rhs.get_p())
+      return false;
+
    // so the modulus is equal, now check the values
    bool use_mres = GFpElement::align_operands_res(lhs, rhs);
 
