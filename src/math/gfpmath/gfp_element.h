@@ -11,7 +11,6 @@
 #define BOTAN_GFP_ELEMENT_H__
 
 #include <botan/bigint.h>
-#include <botan/gfp_modulus.h>
 #include <iosfwd>
 
 namespace Botan {
@@ -168,7 +167,11 @@ class BOTAN_DLL GFpElement
       void trf_to_mres() const;
       void trf_to_ordres() const;
 
-      GFpModulus modulus;
+      BigInt mod_p; // modulus
+      BigInt mod_p_dash;
+      BigInt mod_r;
+      BigInt mod_r_inv;
+
       mutable BigInt m_value; // ordinary residue or m-residue respectively
 
       // data members for montgomery multiplication

@@ -108,7 +108,9 @@ void inner_montg_mult_sos(word result[],
       }
    }
 
-void montg_mult(BigInt& result, BigInt& a_bar, BigInt& b_bar, const BigInt& m, const BigInt& m_dash, const BigInt)
+void montg_mult(BigInt& result, BigInt& a_bar,
+                BigInt& b_bar, const BigInt& m,
+                const BigInt& m_dash)
    {
    if(m.is_zero() || m_dash.is_zero())
       throw Invalid_Argument("montg_mult(): neither modulus nor m_dash may be zero (and one of them was)");
@@ -165,8 +167,11 @@ BigInt montg_trf_to_ordres(const BigInt& m_res, const BigInt& m, const BigInt& r
 
 }
 
-GFpElement::GFpElement(const BigInt& p, const BigInt& value, bool use_montgomery)
-   : modulus(p), m_value(value %p), m_use_montgm(use_montgomery), m_is_trf(false)
+GFpElement::GFpElement(const BigInt& p, const BigInt& value, bool use_montgomery) :
+   mod_p(p),
+   m_value(value %p),
+   m_use_montgm(use_montgomery),
+   m_is_trf(false)
    {
    if(m_use_montgm)
       ensure_montgm_precomp();
@@ -191,21 +196,12 @@ void GFpElement::turn_off_sp_red_mul()
 
 void GFpElement::ensure_montgm_precomp()
    {
-   if((!modulus.get_r().is_zero()) && (!modulus.get_r_inv().is_zero()) && (!modulus.get_p_dash().is_zero()))
+   if(mod_r == 0 || mod_r_inv == 0 || mod_p_dash == 0)
       {
-      // values are already set, nothing more to do
+      mod_r = montgm_calc_r_oddmod(mod_p);
+      mod_r_inv = inverse_mod(mod_r, mod_p);
+      mod_p_dash = montgm_calc_m_dash(mod_r, mod_p, mod_r_inv);
       }
-   else
-      {
-      BigInt tmp_r(montgm_calc_r_oddmod(modulus.get_p()));
-
-      BigInt tmp_r_inv(inverse_mod(tmp_r, modulus.get_p()));
-
-      BigInt tmp_p_dash(montgm_calc_m_dash(tmp_r, modulus.get_p(), tmp_r_inv));
-
-      modulus.reset_values(tmp_p_dash, tmp_r, tmp_r_inv);
-      }
-
    }
 
 void GFpElement::trf_to_mres() const
@@ -215,27 +211,27 @@ void GFpElement::trf_to_mres() const
       throw Illegal_Transformation("GFpElement is not allowed to be transformed to m-residue");
       }
    assert(m_is_trf == false);
-   assert(!modulus.get_r_inv().is_zero());
-   assert(!modulus.get_p_dash().is_zero());
-   m_value = montg_trf_to_mres(m_value, modulus.get_r(), modulus.get_p());
+   assert(!mod_r_inv.is_zero());
+   assert(!mod_p_dash.is_zero());
+   m_value = montg_trf_to_mres(m_value, mod_r, mod_p);
    m_is_trf = true;
    }
 
 void GFpElement::trf_to_ordres() const
    {
    assert(m_is_trf == true);
-   m_value = montg_trf_to_ordres(m_value, modulus.get_p(), modulus.get_r_inv());
+   m_value = montg_trf_to_ordres(m_value, mod_p, mod_r_inv);
    m_is_trf = false;
    }
 
 bool GFpElement::align_operands_res(const GFpElement& lhs, const GFpElement& rhs) //static
    {
-   assert(lhs.modulus.get_p() == rhs.modulus.get_p());
+   assert(lhs.mod_p == rhs.mod_p);
    if(lhs.m_use_montgm && rhs.m_use_montgm)
       {
-      assert(rhs.modulus.get_p_dash() == lhs.modulus.get_p_dash());
-      assert(rhs.modulus.get_r() == lhs.modulus.get_r());
-      assert(rhs.modulus.get_r_inv() == lhs.modulus.get_r_inv());
+      assert(rhs.mod_p_dash == lhs.mod_p_dash);
+      assert(rhs.mod_r == lhs.mod_r);
+      assert(rhs.mod_r_inv == lhs.mod_r_inv);
       if(!lhs.m_is_trf && !rhs.m_is_trf)
          {
          return false;
@@ -285,7 +281,7 @@ bool GFpElement::is_trf_to_mres() const
 
 const BigInt& GFpElement::get_p() const
    {
-   return (modulus.get_p());
+   return (mod_p);
    }
 
 const BigInt& GFpElement::get_value() const
@@ -321,11 +317,11 @@ GFpElement& GFpElement::operator+=(const GFpElement& rhs)
 
    BigInt workspace = m_value;
    workspace += rhs.m_value;
-   if(workspace >= modulus.get_p())
-      workspace -= modulus.get_p();
+   if(workspace >= mod_p)
+      workspace -= mod_p;
 
    m_value = workspace;
-   assert(m_value < modulus.get_p());
+   assert(m_value < mod_p);
    assert(m_value >= 0);
 
    return *this;
@@ -340,10 +336,10 @@ GFpElement& GFpElement::operator-=(const GFpElement& rhs)
    workspace -= rhs.m_value;
 
    if(workspace.is_negative())
-      workspace += modulus.get_p();
+      workspace += mod_p;
 
    m_value = workspace;
-   assert(m_value < modulus.get_p());
+   assert(m_value < mod_p);
    assert(m_value >= 0);
    return *this;
    }
@@ -352,22 +348,22 @@ GFpElement& GFpElement::operator*= (u32bit rhs)
    {
    BigInt workspace = m_value;
    workspace *= rhs;
-   workspace %= modulus.get_p();
+   workspace %= mod_p;
    m_value = workspace;
    return *this;
    }
 
 GFpElement& GFpElement::operator*=(const GFpElement& rhs)
    {
-   assert(rhs.modulus.get_p() == modulus.get_p());
+   assert(rhs.mod_p == mod_p);
    // here, we do not use align_operands_res() for one simple reason:
    // we want to enforce the transformation to an m-residue, otherwise it would
   // never happen
    if(m_use_montgm && rhs.m_use_montgm)
       {
-      assert(rhs.modulus.get_p() == modulus.get_p()); // is montgm. mult is on, then precomps must be there
-      assert(rhs.modulus.get_p_dash() == modulus.get_p_dash());
-      assert(rhs.modulus.get_r() == modulus.get_r());
+      assert(rhs.mod_p == mod_p); // is montgm. mult is on, then precomps must be there
+      assert(rhs.mod_p_dash == mod_p_dash);
+      assert(rhs.mod_r == mod_r);
       if(!m_is_trf)
          {
          trf_to_mres();
@@ -377,7 +373,8 @@ GFpElement& GFpElement::operator*=(const GFpElement& rhs)
          rhs.trf_to_mres();
          }
       BigInt workspace = m_value;
-      montg_mult(m_value, workspace, rhs.m_value, modulus.get_p(), modulus.get_p_dash(), modulus.get_r());
+      montg_mult(m_value, workspace,
+                 rhs.m_value, mod_p, mod_p_dash);
       }
    else // ordinary multiplication
       {
@@ -394,7 +391,7 @@ GFpElement& GFpElement::operator*=(const GFpElement& rhs)
 
       BigInt workspace = m_value;
       workspace *= rhs.m_value;
-      workspace %= modulus.get_p();
+      workspace %= mod_p;
       m_value = workspace;
       }
    return *this;
@@ -413,7 +410,7 @@ GFpElement& GFpElement::operator/=(const GFpElement& rhs)
       rhs_ordres.inverse_in_place();
       BigInt workspace = m_value;
       workspace *= rhs_ordres.get_value();
-      workspace %= modulus.get_p();
+      workspace %= mod_p;
       m_value = workspace;
       }
    else
@@ -433,31 +430,35 @@ bool GFpElement::is_zero()
 
 GFpElement& GFpElement::inverse_in_place()
    {
-   m_value = inverse_mod(m_value, modulus.get_p());
+   m_value = inverse_mod(m_value, mod_p);
 
    if(m_is_trf)
       {
       assert(m_use_montgm);
 
-      m_value *= modulus.get_r();
-      m_value *= modulus.get_r();
-      m_value %= modulus.get_p();
+      m_value *= mod_r;
+      m_value *= mod_r;
+      m_value %= mod_p;
       }
-   assert(m_value <= modulus.get_p());
+   assert(m_value <= mod_p);
    return *this;
    }
 
 GFpElement& GFpElement::negate()
    {
-   m_value = modulus.get_p() - m_value;
-   assert(m_value <= modulus.get_p());
+   m_value = mod_p - m_value;
+   assert(m_value <= mod_p);
    return *this;
    }
 
 void GFpElement::swap(GFpElement& other)
    {
    std::swap(m_value, other.m_value);
-   std::swap(modulus, other.modulus);
+   std::swap(mod_p, other.mod_p);
+   std::swap(mod_p_dash, other.mod_p_dash);
+   std::swap(mod_r, other.mod_r);
+   std::swap(mod_r_inv, other.mod_r_inv);
+
    std::swap<bool>(m_use_montgm,other.m_use_montgm);
    std::swap<bool>(m_is_trf,other.m_is_trf);
    }

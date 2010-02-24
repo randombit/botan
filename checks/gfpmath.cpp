@@ -15,7 +15,6 @@
 #include <botan/bigint.h>
 #include <botan/numthry.h>
 #include <botan/gfp_element.h>
-#include <botan/gfp_modulus.h>
 #include <botan/curve_gfp.h>
 #include <botan/ec_dompar.h>
 
