@@ -16,7 +16,6 @@
 #include <botan/ecdsa.h>
 #include <botan/ecdsa_sig.h>
 #include <string>
-#include <assert.h>
 
 namespace Botan {
 
@@ -109,7 +108,7 @@ template<typename Derived> MemoryVector<byte> EAC1_1_gen_CVC<Derived>::make_sign
    RandomNumberGenerator& rng) // static
    {
    SecureVector<byte> concat_sig = EAC1_1_obj<Derived>::make_signature(signer.get(), tbs_bits, rng);
-   assert(concat_sig.size() % 2 == 0);
+
    return DER_Encoder()
       .start_cons(ASN1_Tag(33), APPLICATION)
       .raw_bytes(tbs_bits)

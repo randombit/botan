@@ -10,19 +10,17 @@
 #include <botan/ber_dec.h>
 #include <botan/pem.h>
 #include <botan/parsing.h>
-#include <assert.h>
 #include <botan/cvc_key.h>
 #include <botan/oids.h>
 #include <botan/look_pk.h>
 #include <botan/cvc_req.h>
-#include <botan/freestore.h>
 
 namespace Botan {
 
 bool EAC1_1_Req::operator==(EAC1_1_Req const& rhs) const
    {
-   return (this->tbs_data() == rhs.tbs_data()
-           && this->get_concat_sig() == rhs.get_concat_sig());
+   return (this->tbs_data() == rhs.tbs_data() &&
+           this->get_concat_sig() == rhs.get_concat_sig());
    }
 
 void EAC1_1_Req::force_decode()
@@ -36,10 +34,9 @@ void EAC1_1_Req::force_decode()
       .end_cons()
       .decode(m_chr)
       .verify_end();
+
    if(cpi != 0)
-      {
-      throw Decoding_Error("EAC1_1 request´s cpi was not 0");
-      }
+      throw Decoding_Error("EAC1_1 requests cpi was not 0");
 
    // FIXME: No EAC support in ECDSA
 #if 0

@@ -8,7 +8,6 @@
 
 #include <botan/cvc_ado.h>
 #include <fstream>
-#include <assert.h>
 
 namespace Botan {
 
@@ -53,14 +52,13 @@ MemoryVector<byte> EAC1_1_ADO::make_signed(
    {
    SecureVector<byte> concat_sig =
       EAC1_1_obj<EAC1_1_ADO>::make_signature(signer.get(), tbs_bits, rng);
-   assert(concat_sig.size() % 2 == 0);
-   MemoryVector<byte> result = DER_Encoder()
+
+   return DER_Encoder()
       .start_cons(ASN1_Tag(7), APPLICATION)
       .raw_bytes(tbs_bits)
       .encode(concat_sig, OCTET_STRING, ASN1_Tag(55), APPLICATION)
       .end_cons()
       .get_contents();
-   return result;
    }
 
 ASN1_Car EAC1_1_ADO::get_car() const
@@ -75,6 +73,7 @@ void EAC1_1_ADO::decode_info(DataSource& source,
    SecureVector<byte> concat_sig;
    SecureVector<byte> cert_inner_bits;
    ASN1_Car car;
+
    BER_Decoder(source)
       .start_cons(ASN1_Tag(7))
       .start_cons(ASN1_Tag(33))
@@ -89,28 +88,30 @@ void EAC1_1_ADO::decode_info(DataSource& source,
       .raw_bytes(cert_inner_bits)
       .end_cons()
       .get_contents();
+
    SecureVector<byte> enc_car = DER_Encoder()
       .encode(car)
       .get_contents();
+
    res_tbs_bits = enc_cert;
    res_tbs_bits.append(enc_car);
    res_sig = decode_concatenation(concat_sig);
-
-
    }
+
 void EAC1_1_ADO::encode(Pipe& out, X509_Encoding encoding) const
    {
-   SecureVector<byte> concat_sig(EAC1_1_obj<EAC1_1_ADO>::m_sig.get_concatenation());
-   SecureVector<byte> der = DER_Encoder()
-      .start_cons(ASN1_Tag(7), APPLICATION)
-      .raw_bytes(tbs_bits)
-      .encode(concat_sig, OCTET_STRING, ASN1_Tag(55), APPLICATION)
-      .end_cons()
-      .get_contents();
    if(encoding == PEM)
       throw Invalid_Argument("EAC1_1_ADO::encode() cannot PEM encode an EAC object");
-   else
-      out.write(der);
+
+   SecureVector<byte> concat_sig(
+      EAC1_1_obj<EAC1_1_ADO>::m_sig.get_concatenation());
+
+   out.write(DER_Encoder()
+             .start_cons(ASN1_Tag(7), APPLICATION)
+                 .raw_bytes(tbs_bits)
+                 .encode(concat_sig, OCTET_STRING, ASN1_Tag(55), APPLICATION)
+             .end_cons()
+             .get_contents());
    }
 
 SecureVector<byte> EAC1_1_ADO::tbs_data() const
@@ -120,8 +121,6 @@ SecureVector<byte> EAC1_1_ADO::tbs_data() const
 
 bool EAC1_1_ADO::operator==(EAC1_1_ADO const& rhs) const
    {
-   assert(((this->m_req == rhs.m_req) && (this->tbs_data() == rhs.tbs_data())) ||
-          ((this->m_req != rhs.m_req) && (this->tbs_data() != rhs.tbs_data())));
    return (this->get_concat_sig() == rhs.get_concat_sig()
            && this->tbs_data() == rhs.tbs_data()
            && this->get_car() ==  rhs.get_car());

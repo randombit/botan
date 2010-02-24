@@ -16,6 +16,7 @@
 #include <botan/cvc_ado.h>
 #include <botan/time.h>
 #include <sstream>
+#include <assert.h>
 
 namespace Botan {
 
@@ -42,6 +43,7 @@ std::string padding_and_hash_from_oid(OID const& oid)
    padding_and_hash.erase(0, padding_and_hash.find("/",0) + 1);
    return padding_and_hash;
    }
+
 std::string fixed_len_seqnr(u32bit seqnr, u32bit len)
    {
    std::stringstream ss;
@@ -208,7 +210,7 @@ EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
       }
    if (signer.signature_algorithm() != signee.signature_algorithm())
       {
-      throw Invalid_Argument("link_cvca(): signature algorithms of signer and signee don´t match");
+      throw Invalid_Argument("link_cvca(): signature algorithms of signer and signee don't match");
       }
    AlgorithmIdentifier sig_algo = signer.signature_algorithm();
    std::string padding_and_hash = padding_and_hash_from_oid(sig_algo.oid);
