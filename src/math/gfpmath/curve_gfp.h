@@ -79,7 +79,7 @@ class BOTAN_DLL CurveGFp
       * Get prime modulus of the field of the curve
       * @result prime modulus of the field of the curve
       */
-      const BigInt& get_p() const { return modulus.get_p(); }
+      const BigInt& get_p() const { return modulus; }
 
       /**
       * swaps the states of *this and other, does not throw
@@ -88,7 +88,7 @@ class BOTAN_DLL CurveGFp
       void swap(CurveGFp& other);
 
    private:
-      GFpModulus modulus;
+      BigInt modulus;
       GFpElement mA;
       GFpElement mB;
       GFpElement mres_a, mres_b, mres_one;
