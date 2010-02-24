@@ -14,8 +14,6 @@
 #include <botan/secmem.h>
 #include <botan/point_gfp.h>
 
-#include <iostream>
-
 namespace Botan {
 
 GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng,
@@ -343,9 +341,6 @@ GOST_3410_PrivateKey::sign(const byte msg[],
       throw Internal_Error("GOST_3410::sign: r was zero");
 
    BigInt s = (r*m_private_value + k*e) % n;
-
-   std::cout << "r = " << r << '\n';
-   std::cout << "s = " << s << '\n';
 
    SecureVector<byte> output(2*n.bytes());
    r.binary_encode(output + (output.size() / 2 - r.bytes()));
