@@ -223,7 +223,7 @@ PointGFp& PointGFp::mult2_in_place()
 * Z has value one, i.e. x and y correspond to
 * their values in affine coordinates
 */
-PointGFp PointGFp::get_z_to_one() const
+PointGFp PointGFp::get_z_to_one()
    {
    return PointGFp(*this).set_z_to_one();
    }
@@ -234,7 +234,7 @@ PointGFp PointGFp::get_z_to_one() const
 * their values in affine coordinates.
 * returns *this.
 */
-const PointGFp& PointGFp::set_z_to_one() const
+const PointGFp& PointGFp::set_z_to_one()
    {
    if(!(mZ.get_value() == BigInt(1)) && !(mZ.get_value() == BigInt(0)))
       {

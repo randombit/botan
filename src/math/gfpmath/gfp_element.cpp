@@ -77,7 +77,7 @@ GFpElement& GFpElement::operator/=(const GFpElement& rhs)
    return *this;
    }
 
-bool GFpElement::is_zero()
+bool GFpElement::is_zero() const
    {
    return (m_value.is_zero());
    // this is correct because x_bar = x * r = x = 0 for x = 0
