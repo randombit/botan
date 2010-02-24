@@ -1032,26 +1032,6 @@ void test_point_swap(RandomNumberGenerator& rng)
 * This test verifies that the side channel attack resistant multiplication function
 * yields the same result as the normal (insecure) multiplication via operator*=
 */
-void test_mult_sec()
-   {
-   std::cout << "." << std::flush;
-
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
-   PointGFp a(dom_pars.get_base_point());
-   BigInt scal("123413545342234");
-   PointGFp b = a * scal;
-   PointGFp c(a);
-   c.mult_this_secure(scal, dom_pars.get_order(), dom_pars.get_order()-1);
-   PointGFp d(a);
-   d.mult_this_secure(scal, BigInt(0), dom_pars.get_order()-1);
-   CHECK(b == c);
-   CHECK(c == d);
-   }
-
-/**
-* This test verifies that the side channel attack resistant multiplication function
-* yields the same result as the normal (insecure) multiplication via operator*=
-*/
 void test_mult_sec_mass(RandomNumberGenerator& rng)
    {
 
@@ -1064,11 +1044,9 @@ void test_mult_sec_mass(RandomNumberGenerator& rng)
       BigInt scal(BigInt(rng, 40));
       PointGFp b = a * scal;
       PointGFp c(a);
-      c.mult_this_secure(scal, dom_pars.get_order()*dom_pars.get_cofactor(), dom_pars.get_order()-1);
-      //PointGFp d(a);
-      //d.mult_this_secure(scal, BigInt(0), dom_pars.get_order()-1);
+
+      c *= scal;
       CHECK(b == c);
-      //CHECK(c == d);
       }
    }
 
@@ -1192,7 +1170,6 @@ void do_ec_tests(RandomNumberGenerator& rng)
    test_gfp_curve_precomp_mres();
    //test_point_worksp();
    test_point_swap(rng);
-   test_mult_sec();
    test_mult_sec_mass(rng);
    test_curve_cp_ctor();
    test_ec_key_cp_and_assignment(rng);

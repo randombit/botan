@@ -563,55 +563,6 @@ bool test_bi_bit_access()
    return pass;
    }
 
-#if 0
-bool test_sec_mod_mul()
-   {
-   //cout << "starting test_sec_mod_mul" << endl;
-
-   bool pass = true;
-
-   //mod_mul_secure(BigInt const& a, BigInt const& b, BigInt const& m)
-
-   BigInt m("5334243285367");
-   BigInt a("3333333333333");
-   BigInt b("4444444444444");
-   for(int i = 0; i<10; i++)
-      {
-      std::cout << '.' << std::flush;
-      BigInt c1 = a * b;
-      c1 %= m;
-      BigInt c2 = mod_mul_secure(a, b, m);
-      CHECK_MESSAGE(c1 == c2, "should be " << c1 << ", was " << c2);
-      }
-   //cout << "ending test_sec_mod_mul" << endl;
-   return pass;
-   }
-#endif
-
-#if 0
-bool test_sec_bi_mul()
-   {
-   //mod_mul_secure(BigInt const& a, BigInt const& b, BigInt const& m)
-
-   bool pass = true;
-
-   BigInt m("5334243285367");
-   BigInt a("3333333333333");
-   BigInt b("4444444444444");
-   for(int i = 0; i<10; i++)
-      {
-      std::cout << '.' << std::flush;
-      BigInt c1 = a * b;
-      //c1 %= m;
-      BigInt c2(a);
-      c2.mult_this_secure(b, m);
-      CHECK_MESSAGE(c1 == c2, "should be " << c1 << ", was " << c2);
-      }
-
-   return pass;
-   }
-#endif
-
 }
 
 u32bit do_gfpmath_tests(Botan::RandomNumberGenerator& rng)

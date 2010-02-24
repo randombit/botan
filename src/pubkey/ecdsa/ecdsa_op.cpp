@@ -62,8 +62,7 @@ SecureVector<byte> Default_ECDSA_Op::sign(const byte msg[], u32bit msg_len,
 
    BigInt e(msg, msg_len);
 
-   PointGFp k_times_P(dom_pars.get_base_point());
-   k_times_P.mult_this_secure(k, n, n-1);
+   PointGFp k_times_P = dom_pars.get_base_point() * k;
    k_times_P.check_invariants();
    BigInt r = k_times_P.get_affine_x().get_value() % n;
 

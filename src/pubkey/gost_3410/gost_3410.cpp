@@ -39,9 +39,8 @@ GOST_3410_PrivateKey::GOST_3410_PrivateKey(const EC_Domain_Params& domain,
 
    m_private_value = x;
    mp_public_point = std::auto_ptr<PointGFp>(new PointGFp (mp_dom_pars->get_base_point()));
-   mp_public_point->mult_this_secure(m_private_value,
-                                     mp_dom_pars->get_order(),
-                                     mp_dom_pars->get_order()-1);
+
+   *mp_public_point *= m_private_value;
 
    try
       {
@@ -332,9 +331,9 @@ GOST_3410_PrivateKey::sign(const byte msg[],
    if(e == 0)
       e = 1;
 
-   PointGFp k_times_P(mp_dom_pars->get_base_point());
-   k_times_P.mult_this_secure(k, n, n-1);
+   PointGFp k_times_P = mp_dom_pars->get_base_point() * k;
    k_times_P.check_invariants();
+
    BigInt r = k_times_P.get_affine_x().get_value() % n;
 
    if(r == 0)

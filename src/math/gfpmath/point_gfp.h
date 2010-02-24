@@ -96,22 +96,6 @@ class BOTAN_DLL PointGFp
       PointGFp& operator*=(const BigInt& scalar);
 
       /**
-      * the equivalent to operator*= with countermeasures against
-      * sidechannel attacks, using the randomized exponent
-      * and add-and-double-always
-      * countermeasures (suitable for ECDSA and ECKAEG)
-      * @param scalar the scalar to multiply the point with
-      * @param point_order a multiple of the order of the point
-      *(= n * k in the general case; k is the cofactor)
-      * @param max_secr the maximal size of the scalar
-      * (will usually be  n-1 )
-      * @result resulting PointGFp
-      */
-      PointGFp& mult_this_secure(const BigInt& scalar,
-                                 const BigInt& point_order,
-                                 const BigInt& max_secr);
-
-      /**
       * Negate internal value(*this *= -1 )
       * @return *this
       */
@@ -225,10 +209,6 @@ PointGFp BOTAN_DLL operator-(const PointGFp& lhs);
 
 PointGFp BOTAN_DLL operator*(const BigInt& scalar, const PointGFp& point);
 PointGFp BOTAN_DLL operator*(const PointGFp& point, const BigInt& scalar);
-PointGFp BOTAN_DLL mult_point_secure(const PointGFp& point,
-                                     const BigInt& scalar,
-                                     const BigInt& point_order,
-                                     const BigInt& max_secret);
 
 PointGFp BOTAN_DLL mult2(const PointGFp& point);
 

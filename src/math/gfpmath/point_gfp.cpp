@@ -140,60 +140,6 @@ PointGFp& PointGFp::operator-=(const PointGFp& rhs)
    return *this;
    }
 
-PointGFp& PointGFp::mult_this_secure(const BigInt& scalar,
-                                     const BigInt& /*point_order*/,
-                                     const BigInt& /*max_secr*/)
-   {
-   // NOTE: FS: so far this is code duplication of op*=.
-   // we have to see how we deal with this.
-   // fact is that we will probably modify this function
-   // while evaluating the countermeasures
-   // whereas we probably will not start modifying the
-   // function operator*=.
-   // however, in the end both should be merged.
-
-   // use montgomery mult. in this operation
-   this->turn_on_sp_red_mul();
-
-   PointGFp H(mC);
-
-   PointGFp P(*this);
-   BigInt m(scalar);
-
-   if(m < BigInt(0))
-      {
-      m = -m;
-      P.negate();
-      }
-   if(P.is_zero() || (m == BigInt(0)))
-      {
-      *this = H;
-      return *this;
-      }
-   if(m == BigInt(1))
-      return *this;
-
-   int mul_bits = m.bits();
-
-   for(int i = mul_bits - 1; i >= 0; i--)
-      {
-      H.mult2_in_place();
-
-      if(m.get_bit(i))
-         H += P;
-      }
-
-   if(!H.is_zero()) // cannot convert if H == O
-      *this = H.get_z_to_one();
-   else
-      *this = H;
-
-   mX.turn_off_sp_red_mul();
-   mY.turn_off_sp_red_mul();
-   mZ.turn_off_sp_red_mul();
-   return *this;
-   }
-
 PointGFp& PointGFp::operator*=(const BigInt& scalar)
    {
    // use montgomery mult. in this operation
@@ -495,14 +441,6 @@ PointGFp operator*(const PointGFp& point, const BigInt& scalar)
    {
    PointGFp result(point);
    return result *= scalar;
-   }
-
-PointGFp mult_point_secure(const PointGFp& point, const BigInt& scalar,
-                           const BigInt& point_order, const BigInt& max_secret)
-   {
-   PointGFp result(point);
-   result.mult_this_secure(scalar, point_order, max_secret);
-   return result;
    }
 
 // encoding and decoding

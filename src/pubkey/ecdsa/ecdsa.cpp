@@ -41,9 +41,8 @@ ECDSA_PrivateKey::ECDSA_PrivateKey(const EC_Domain_Params& domain,
 
    m_private_value = x;
    mp_public_point = std::auto_ptr<PointGFp>(new PointGFp (mp_dom_pars->get_base_point()));
-   mp_public_point->mult_this_secure(m_private_value,
-                                     mp_dom_pars->get_order(),
-                                     mp_dom_pars->get_order()-1);
+
+   *mp_public_point *= m_private_value;
 
    try
       {
