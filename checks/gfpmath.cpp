@@ -41,11 +41,6 @@ bool test_turn_on_sp_red_mul()
    GFpElement a2(23,15);
    GFpElement b2(23,18);
 
-   a2.turn_on_sp_red_mul();
-   a2.turn_on_sp_red_mul();
-   b2.turn_on_sp_red_mul();
-   b2.turn_on_sp_red_mul();
-
    GFpElement c2 = a2*b2;
 
    if(c1 != c2)
@@ -119,14 +114,10 @@ bool test_deep_montgm()
    //std::string s_value_b = "3";
    BigInt bi_value_b(s_value_b);
 
-   GFpElement gfp_a_trf(bi_prime, bi_value_a, true);
-   GFpElement gfp_a_ntrf(bi_prime, bi_value_a, false);
-   GFpElement gfp_b_trf(bi_prime, bi_value_b, true);
-   GFpElement gfp_b_ntrf(bi_prime, bi_value_b, false);
-
-   //CHECK(!gfp_b_trf.is_trf_to_mres());
-   gfp_b_trf.get_mres();
-   gfp_a_trf.get_mres();
+   GFpElement gfp_a_trf(bi_prime, bi_value_a);
+   GFpElement gfp_a_ntrf(bi_prime, bi_value_a);
+   GFpElement gfp_b_trf(bi_prime, bi_value_b);
+   GFpElement gfp_b_ntrf(bi_prime, bi_value_b);
 
    GFpElement c_trf(gfp_a_trf * gfp_b_trf);
    GFpElement c_ntrf(gfp_a_ntrf * gfp_b_ntrf);
@@ -151,21 +142,13 @@ bool test_gfp_div_small_numbers()
    std::string s_value_b = "3";
    BigInt bi_value_b(s_value_b);
 
-   GFpElement gfp_a(bi_prime, bi_value_a, true);
-   GFpElement gfp_b(bi_prime, bi_value_b, true);
-   GFpElement gfp_c(bi_prime, bi_value_b, false);
-
-   CHECK(!gfp_a.is_trf_to_mres());
-   //convert to montgomery
-   gfp_b.get_mres();
-   CHECK(gfp_b.is_trf_to_mres());
-   CHECK(!gfp_c.is_trf_to_mres());
+   GFpElement gfp_a(bi_prime, bi_value_a);
+   GFpElement gfp_b(bi_prime, bi_value_b);
+   GFpElement gfp_c(bi_prime, bi_value_b);
 
    GFpElement res_div_m = gfp_a / gfp_b;
-   CHECK(res_div_m.is_trf_to_mres());
 
    GFpElement res_div_n = gfp_a / gfp_c;
-   CHECK(!res_div_n.is_trf_to_mres());
 
    CHECK_MESSAGE(res_div_n.get_value() == res_div_m.get_value(), "transformed result is not equal to untransformed result");
    CHECK_MESSAGE(gfp_a.get_value() == s_value_a, "GFpElement has changed while division operation");
@@ -202,12 +185,9 @@ bool test_gfp_basics()
    std::string s_value_a = "3333333333333";
    BigInt bi_value_a(s_value_a);
 
-   GFpElement gfp_a(bi_prime, bi_value_a, true);
+   GFpElement gfp_a(bi_prime, bi_value_a);
    CHECK(gfp_a.get_p() == s_prime);
    CHECK(gfp_a.get_value() == s_value_a);
-   CHECK(!gfp_a.is_trf_to_mres());
-   gfp_a.get_mres();
-   CHECK(gfp_a.is_trf_to_mres());
    return pass;
    }
 
@@ -222,8 +202,8 @@ bool test_gfp_addSubNegate()
    std::string s_value_a = "3333333333333";
    BigInt bi_value_a(s_value_a);
 
-   GFpElement gfp_a(bi_prime, bi_value_a, true);
-   GFpElement gfp_b(bi_prime, bi_value_a, true);
+   GFpElement gfp_a(bi_prime, bi_value_a);
+   GFpElement gfp_b(bi_prime, bi_value_a);
 
    gfp_b.negate();
    GFpElement zero = gfp_a + gfp_b;
@@ -246,21 +226,13 @@ bool test_gfp_mult()
    std::string s_value_b = "4444444444444";
    BigInt bi_value_b(s_value_b);
 
-   GFpElement gfp_a(bi_prime, bi_value_a, true);
-   GFpElement gfp_b(bi_prime, bi_value_b, true);
-   GFpElement gfp_c(bi_prime, bi_value_b, false);
-
-   CHECK(!gfp_a.is_trf_to_mres());
-   //convert to montgomery
-   gfp_b.get_mres();
-   CHECK(gfp_b.is_trf_to_mres());
-   CHECK(!gfp_c.is_trf_to_mres());
+   GFpElement gfp_a(bi_prime, bi_value_a);
+   GFpElement gfp_b(bi_prime, bi_value_b);
+   GFpElement gfp_c(bi_prime, bi_value_b);
 
    GFpElement res_mult_m = gfp_a * gfp_b;
-   CHECK(res_mult_m.is_trf_to_mres());
 
    GFpElement res_mult_n = gfp_a * gfp_c;
-   CHECK(!res_mult_n.is_trf_to_mres());
 
    if(res_mult_n != res_mult_m)
       std::cout << gfp_a << " * " << gfp_b << " =? "
@@ -281,21 +253,13 @@ bool test_gfp_div()
    std::string s_value_b = "4444444444444";
    BigInt bi_value_b(s_value_b);
 
-   GFpElement gfp_a(bi_prime, bi_value_a, true);
-   GFpElement gfp_b(bi_prime, bi_value_b, true);
-   GFpElement gfp_c(bi_prime, bi_value_b, false);
-
-   CHECK(!gfp_a.is_trf_to_mres());
-   //convert to montgomery
-   gfp_b.get_mres();
-   CHECK(gfp_b.is_trf_to_mres());
-   CHECK(!gfp_c.is_trf_to_mres());
+   GFpElement gfp_a(bi_prime, bi_value_a);
+   GFpElement gfp_b(bi_prime, bi_value_b);
+   GFpElement gfp_c(bi_prime, bi_value_b);
 
    GFpElement res_div_m = gfp_a / gfp_b;
-   CHECK(res_div_m.is_trf_to_mres());
 
    GFpElement res_div_n = gfp_a / gfp_c;
-   CHECK(!res_div_n.is_trf_to_mres());
 
    CHECK_MESSAGE(res_div_n.get_value() == res_div_m.get_value(), "transformed result is not equal to untransformed result");
    CHECK_MESSAGE(gfp_a.get_value() == s_value_a, "GFpElement has changed while division operation");
@@ -322,24 +286,13 @@ bool test_gfp_add()
    std::string s_value_b = "4444444444444";
    BigInt bi_value_b(s_value_b);
 
-   GFpElement gfp_a(bi_prime, bi_value_a, true);
-   GFpElement gfp_b(bi_prime, bi_value_b, true);
-   GFpElement gfp_c(bi_prime, bi_value_b, true);
-
-   CHECK(!gfp_a.is_trf_to_mres());
-   //convert to montgomery
-   gfp_b.get_mres();
-   CHECK(gfp_b.is_trf_to_mres());
-   CHECK(!gfp_c.is_trf_to_mres());
+   GFpElement gfp_a(bi_prime, bi_value_a);
+   GFpElement gfp_b(bi_prime, bi_value_b);
+   GFpElement gfp_c(bi_prime, bi_value_b);
 
    GFpElement res_add_m = gfp_a + gfp_b;
-   CHECK(res_add_m.is_trf_to_mres());
 
    GFpElement res_add_n = gfp_a + gfp_c;
-   //  commented out by patrick, behavior is clear:
-   //	rhs might be transformed, lhs never
-   //  for now, this behavior is only intern, doesn't matter for programm function
-   //  CHECK_MESSAGE(res_add_n.is_trf_to_mres(), "!! Falko: NO FAIL, wrong test, please repair"); // clear: rhs might be transformed, lhs never
 
    CHECK(res_add_n.get_value() == res_add_m.get_value());
    return pass;
@@ -358,29 +311,13 @@ bool test_gfp_sub()
    std::string s_value_b = "4444444444444";
    BigInt bi_value_b(s_value_b);
 
-   GFpElement gfp_a(bi_prime, bi_value_a, true);
-   GFpElement gfp_b(bi_prime, bi_value_b, true);
-   GFpElement gfp_c(bi_prime, bi_value_b, true);
-
-   CHECK(!gfp_a.is_trf_to_mres());
-   //convert to montgomery
-   gfp_b.get_mres();
-   CHECK(gfp_b.is_trf_to_mres());
-   CHECK(!gfp_c.is_trf_to_mres());
+   GFpElement gfp_a(bi_prime, bi_value_a);
+   GFpElement gfp_b(bi_prime, bi_value_b);
+   GFpElement gfp_c(bi_prime, bi_value_b);
 
    GFpElement res_sub_m = gfp_b - gfp_a;
-   CHECK(res_sub_m.is_trf_to_mres());
-   CHECK(gfp_a.is_trf_to_mres()); // added by Falko
 
    GFpElement res_sub_n = gfp_c - gfp_a;
-
-   //  commented out by psona, behavior is clear:
-   //	rhs might be transformed, lhs never
-   //  for now, this behavior is only intern, doesn't matter for programm function
-   //	CHECK_MESSAGE(!res_sub_n.is_trf_to_mres(), "!! Falko: NO FAIL, wrong test, please repair"); // falsche
-   // Erwartung: a wurde durch die operation oben auch
-   // ins m-residue transformiert, daher passiert das hier auch mit
-   // c, und das Ergebnis ist es auch
 
    CHECK(res_sub_n.get_value() == res_sub_m.get_value());
    return pass;
@@ -399,28 +336,9 @@ bool test_more_gfp_div()
    std::string s_value_b = "4444444444444";
    BigInt bi_value_b(s_value_b);
 
-   GFpElement gfp_a(bi_prime, bi_value_a, true);
-   GFpElement gfp_b_trf(bi_prime, bi_value_b, true);
-   GFpElement gfp_b_ntrf(bi_prime, bi_value_b, false);
-
-   CHECK(!gfp_b_trf.is_trf_to_mres());
-   gfp_b_trf.get_mres();
-   CHECK(gfp_b_trf.is_trf_to_mres());
-
-   CHECK(!gfp_a.is_trf_to_mres());
-
-   bool exc_ntrf = false;
-   try
-      {
-      gfp_b_ntrf.get_mres();
-      }
-   catch(Botan::Illegal_Transformation e)
-      {
-      exc_ntrf = true;
-      }
-   CHECK(exc_ntrf);
-
-   CHECK(!gfp_b_ntrf.is_trf_to_mres());
+   GFpElement gfp_a(bi_prime, bi_value_a);
+   GFpElement gfp_b_trf(bi_prime, bi_value_b);
+   GFpElement gfp_b_ntrf(bi_prime, bi_value_b);
 
    CHECK_MESSAGE(gfp_b_trf == gfp_b_ntrf, "b is not equal to itself (trf)");
 
@@ -502,8 +420,6 @@ bool test_inv_in_place()
 
    BigInt mod(173);
    GFpElement a1(mod, 288);
-   a1.turn_on_sp_red_mul();
-   a1.get_mres(); // enforce the conversion
 
    GFpElement a1_inv(a1);
    a1_inv.inverse_in_place();
@@ -529,8 +445,6 @@ bool test_op_eq()
 
    BigInt mod(173);
    GFpElement a1(mod, 299);
-   a1.turn_on_sp_red_mul();
-   a1.get_mres(); // enforce the conversion
    GFpElement a2(mod, 288);
    CHECK_MESSAGE(a1 != a2, "error with GFpElement comparison");
    return pass;

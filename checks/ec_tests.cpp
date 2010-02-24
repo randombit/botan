@@ -35,17 +35,6 @@ using namespace Botan;
 
 namespace {
 
-void test_point_turn_on_sp_red_mul_simple()
-   {
-   std::cout << "." << std::flush;
-
-   // setting up expected values
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.5"));
-   PointGFp p(dom_pars.get_base_point());
-   p.turn_on_sp_red_mul();
-   CHECK(p.get_affine_x().get_value() != BigInt(0));
-   }
-
 void test_point_turn_on_sp_red_mul()
    {
    std::cout << "." << std::flush;
@@ -79,8 +68,6 @@ void test_point_turn_on_sp_red_mul()
 
    PointGFp p_G2(p_G);
 
-   p_G2.turn_on_sp_red_mul();
-
    PointGFp r2 = d * p_G2;
    CHECK_MESSAGE(r1 == r2, "error with point mul after extra turn on sp red mul");
    CHECK(r1.get_affine_x().get_value() != BigInt("0"));
@@ -89,16 +76,12 @@ void test_point_turn_on_sp_red_mul()
    PointGFp p_r2 = r2;
 
    p_r1.mult2_in_place(); // wird für Fehler nicht gebraucht
-   p_r2.turn_on_sp_red_mul();    // 1. t_o() macht nur p_r2 kaputt
-   p_r2.turn_on_sp_red_mul();  // 2. t_o() macht auch p_r1 kaputt!!!
    p_r2.mult2_in_place(); // wird für Fehler nicht gebraucht
    CHECK_MESSAGE(p_r1.get_affine_x() == p_r2.get_affine_x(), "error with mult2 after extra turn on sp red mul");
    CHECK(p_r1.get_affine_x().get_value() != BigInt("0"));
    CHECK(p_r2.get_affine_x().get_value() != BigInt("0"));
    r1.mult2_in_place();
 
-   r2.turn_on_sp_red_mul();
-   r2.turn_on_sp_red_mul();
    r2.mult2_in_place();
 
    CHECK_MESSAGE(r1 == r2, "error with mult2 after extra turn on sp red mul");
@@ -110,14 +93,10 @@ void test_point_turn_on_sp_red_mul()
 
    CHECK_MESSAGE(r1 == r2, "error with op+= after extra turn on sp red mul");
 
-   p_G2.turn_on_sp_red_mul();
-
    r1 += p_G;
    r2 += p_G2;
 
    CHECK_MESSAGE(r1 == r2, "error with op+= after extra turn on sp red mul for both operands");
-   p_G2.turn_on_sp_red_mul();
-   r1.turn_on_sp_red_mul();
    r1 += p_G;
    r2 += p_G2;
 
@@ -196,7 +175,6 @@ void test_point_transformation ()
    PointGFp q = p;
 
    //turn on montg.
-   p.turn_on_sp_red_mul();
    CHECK_MESSAGE( p.get_jac_proj_x().get_value() == q.get_jac_proj_x().get_value(), "projective_x changed while turning on montg.!");
    CHECK_MESSAGE( p.get_jac_proj_y().get_value() == q.get_jac_proj_y().get_value(), "projective_y changed while turning on montg.!");
    CHECK_MESSAGE( p.get_jac_proj_z().get_value() == q.get_jac_proj_z().get_value(), "projective_z changed while turning on montg.!");
@@ -956,16 +934,12 @@ void test_gfp_curve_precomp_mres()
    BigInt p = curve1.get_p();
    GFpElement x(p, BigInt("2304042084023"));
    GFpElement a1_or = curve1.get_a();
-   CHECK(!a1_or.is_trf_to_mres());
 
-   GFpElement b1_mr = curve1.get_mres_b();
-   CHECK(b1_mr.is_trf_to_mres());
+   GFpElement b1_mr = curve1.get_b();
 
-   GFpElement a2_mr = curve2.get_mres_a();
-   CHECK(a2_mr.is_trf_to_mres());
+   GFpElement a2_mr = curve2.get_a();
 
    GFpElement b2_or = curve2.get_b();
-   CHECK(!b2_or.is_trf_to_mres());
 
    GFpElement prodA = a1_or*b1_mr;
    GFpElement prodB = a2_mr*b2_or;
@@ -1142,7 +1116,6 @@ void do_ec_tests(RandomNumberGenerator& rng)
    {
    std::cout << "Testing ECC: " << std::flush;
 
-   test_point_turn_on_sp_red_mul_simple();
    test_point_turn_on_sp_red_mul();
    test_coordinates();
    test_point_transformation ();

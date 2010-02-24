@@ -34,8 +34,6 @@ class BOTAN_DLL CurveGFp
       // CurveGFp(const CurveGFp& other) = default;
       // CurveGFp& operator=(const CurveGFp& other) = default;
 
-      // getters
-
       /**
       * Get coefficient a
       * @result coefficient a
@@ -47,33 +45,6 @@ class BOTAN_DLL CurveGFp
       * @result coefficient b
       */
       const GFpElement& get_b() const { return mB; }
-
-      /**
-      * Get the GFpElement coefficient a  transformed
-      * to its m-residue. This can be used for efficency reasons: the curve
-      * stores the transformed version after the first invocation of this
-      * function.
-      * @result the coefficient a, transformed to its m-residue
-      */
-      const GFpElement& get_mres_a() const { return mres_a; }
-
-      /**
-      * Get the GFpElement coefficient b transformed
-      * to its m-residue. This can be used for efficency reasons: the curve
-      * stores the transformed version after the first invocation of this
-      * function.
-      * @result the coefficient b, transformed to its m-residue
-      */
-      const GFpElement& get_mres_b() const { return mres_b; }
-
-      /**
-      * Get the GFpElement 1  transformed
-      * to its m-residue. This can be used for efficency reasons: the curve
-      * stores the transformed version after the first invocation of this
-      * function.
-      * @result the GFpElement 1, transformed to its m-residue
-      */
-      const GFpElement& get_mres_one() { return mres_one; }
 
       /**
       * Get prime modulus of the field of the curve
@@ -91,7 +62,6 @@ class BOTAN_DLL CurveGFp
       BigInt modulus;
       GFpElement mA;
       GFpElement mB;
-      GFpElement mres_a, mres_b, mres_one;
    };
 
 // relational operators

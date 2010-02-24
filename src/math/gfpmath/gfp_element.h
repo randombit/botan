@@ -35,23 +35,11 @@ class BOTAN_DLL GFpElement
       * multiplications will be use when applying operators *, *=
       * @param p the prime number of the field
       * @param value the element value
-      * @param use_montgm whether this object will use Montgomery multiplication
       */
-      GFpElement(const BigInt& p, const BigInt& value, bool use_montgm = true);
+      GFpElement(const BigInt& p, const BigInt& value);
 
       // GFpElement(const GFpElement& other) = default;
-
       // const GFpElement& operator=(const GFpElement& other) = default;
-
-      /**
-      * Switch Montgomery multiplcation optimizations ON
-      */
-      void turn_on_sp_red_mul();
-
-      /**
-      * Switch Montgomery multiplcation optimizations OFF
-      */
-      void turn_off_sp_red_mul();
 
       /**
       * += Operator
@@ -111,51 +99,13 @@ class BOTAN_DLL GFpElement
       * return prime number of GF(p)
       * @result a prime number
       */
-      const BigInt& get_p() const;
+      const BigInt& get_p() const { return mod_p; }
 
       /**
       * Return the represented value in GF(p)
       * @result The value in GF(p)
       */
-      const BigInt& get_value() const;
-
-      /**
-      * Tells whether this GFpElement is currently transformed to an m-residue,
-      * i.e. in the form x_bar = x * r mod m.
-      * @result true if it is currently transformed to its m-residue.
-      */
-      bool is_trf_to_mres() const;
-
-      /**
-      * Transforms this to x_bar = x * r mod m
-      * @result return the value x_bar.
-      */
-      const BigInt& get_mres() const;
-
-      /**
-      * Check, if montgomery multiplication is used.
-      * @result true, if montgomery multiplication is used, false otherwise
-      */
-      bool is_use_montgm() const
-         {
-         return m_use_montgm;
-         }
-
-      /**
-      * Transforms the arguments in such way that either both
-      * are in m-residue representation (returns true) or both are
-      * in ordinary residue representation (returns false).
-      * m-residue is prefered in case of ambiguity.
-      * does not toggle m_use_montgm of the arguments.
-      * Don't be confused about the constness of the arguments:
-      * the transformation between normal residue and m-residue is
-      * considered as leaving the object const.
-      * @param lhs the first operand to be aligned
-      * @param rhs the second operand to be aligned
-      * @result true if both are transformed to their m-residue,
-      * false it both are transformed to their normal residue.
-      */
-      static bool align_operands_res(const GFpElement& lhs, const GFpElement& rhs);
+      const BigInt& get_value() const { return m_value; }
 
       /**
       * swaps the states of *this and other, does not throw!
@@ -163,20 +113,8 @@ class BOTAN_DLL GFpElement
       */
       void swap(GFpElement& other);
    private:
-      void ensure_montgm_precomp();
-      void trf_to_mres() const;
-      void trf_to_ordres() const;
-
       BigInt mod_p; // modulus
-      BigInt mod_p_dash;
-      BigInt mod_r;
-      BigInt mod_r_inv;
-
-      mutable BigInt m_value; // ordinary residue or m-residue respectively
-
-      // data members for montgomery multiplication
-      bool m_use_montgm;
-      mutable bool m_is_trf; // if m_value is montgomery
+      BigInt m_value;
    };
 
 // relational operators

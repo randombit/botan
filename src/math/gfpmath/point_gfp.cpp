@@ -57,24 +57,16 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
    GFpElement U1 = mX;
    GFpElement S1 = mY;
 
-   if(rhs.mZ != mC.get_mres_one())
-      {
-      GFpElement rhs_z2 = rhs.mZ * rhs.mZ;
-
-      U1 *= rhs_z2;
-      S1 *= rhs_z2 * rhs.mZ;
-      }
+   GFpElement rhs_z2 = rhs.mZ * rhs.mZ;
+   U1 *= rhs_z2;
+   S1 *= rhs_z2 * rhs.mZ;
 
    GFpElement U2 = rhs.mX;
    GFpElement S2 = rhs.mY;
 
-   if(mZ != mC.get_mres_one())
-      {
-      GFpElement lhs_z2 = mZ * mZ;
-
-      U2 *= lhs_z2;
-      S2 *= lhs_z2 * mZ;
-      }
+   GFpElement lhs_z2 = mZ * mZ;
+   U2 *= lhs_z2;
+   S2 *= lhs_z2 * mZ;
 
    GFpElement H(U2 - U1);
    GFpElement r(S2 - S1);
@@ -103,20 +95,7 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
 
    GFpElement y(r * (U2-x) - z);
 
-   if(mZ == mC.get_mres_one())
-      {
-      if(rhs.mZ != mC.get_mres_one())
-         z = rhs.mZ * H;
-      else
-         z = H;
-      }
-   else if(rhs.mZ != mC.get_mres_one())
-      {
-      U1 = mZ * rhs.mZ;
-      z = U1 * H;
-      }
-   else
-      z = mZ * H;
+   z = (mZ * rhs.mZ) * H;
 
    mX = x;
    mY = y;
@@ -144,12 +123,8 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
    {
    // use montgomery mult. in this operation
 
-   this->turn_on_sp_red_mul();
-
    PointGFp H(this->mC); // create as zero
-   H.turn_on_sp_red_mul();
    PointGFp P(*this);
-   P.turn_on_sp_red_mul();
    BigInt m(scalar);
 
    if(m < BigInt(0))
@@ -210,13 +185,11 @@ PointGFp& PointGFp::mult2_in_place()
 
    S = x + x;
 
-   GFpElement a_z4 = mC.get_mres_a();
-   if(mZ != mC.get_mres_one())
-      {
-      GFpElement z2 = mZ * mZ;
-      a_z4 *= z2;
-      a_z4 *= z2;
-      }
+   GFpElement a_z4 = mC.get_a();
+
+   GFpElement z2 = mZ * mZ;
+   a_z4 *= z2;
+   a_z4 *= z2;
 
    GFpElement y(mX * mX);
 
@@ -234,10 +207,7 @@ PointGFp& PointGFp::mult2_in_place()
 
    y = M * (S - x) - U;
 
-   if(mZ != mC.get_mres_one())
-      z = mY * mZ;
-   else
-      z = mY;
+   z = mY * mZ;
 
    z = z + z;
 
@@ -246,22 +216,6 @@ PointGFp& PointGFp::mult2_in_place()
    mZ = z;
 
    return *this;
-   }
-
-void PointGFp::turn_on_sp_red_mul() const
-   {
-   mX.turn_on_sp_red_mul();
-   mY.turn_on_sp_red_mul();
-   mZ.turn_on_sp_red_mul();
-
-   // also pretransform, otherwise
-   // we might have bad results with respect to
-   // performance because
-   // additions/subtractions in mult2_in_place()
-   // and op+= spread untransformed GFpElements
-   mX.get_mres();
-   mY.get_mres();
-   mZ.get_mres();
    }
 
 /**

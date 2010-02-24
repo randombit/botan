@@ -114,14 +114,6 @@ class BOTAN_DLL PointGFp
       const PointGFp& set_z_to_one() const;
 
       /**
-      * Turn on the special reduction multiplication (i.e. the
-      * Montgomery multiplication in the current implementation) for
-      * the coordinates. This enables fast execution of mult2_in_place()
-      * and operator+=().
-      */
-      void turn_on_sp_red_mul() const;
-
-      /**
       * Return a point
       * where the coordinates are transformed
       * so that z equals one,
