@@ -51,7 +51,7 @@ MemoryVector<byte> EAC1_1_ADO::make_signed(
    RandomNumberGenerator& rng)
    {
    SecureVector<byte> concat_sig =
-      EAC1_1_obj<EAC1_1_ADO>::make_signature(signer.get(), tbs_bits, rng);
+      EAC1_1_obj<EAC1_1_ADO>::make_signature(signer, tbs_bits, rng);
 
    return DER_Encoder()
       .start_cons(ASN1_Tag(7), APPLICATION)

@@ -13,7 +13,7 @@
 namespace Botan {
 
 // construct the point at infinity or a random point
-nPointGFp::PointGFp(const CurveGFp& curve) :
+PointGFp::PointGFp(const CurveGFp& curve) :
    mC(curve),
    mX(curve.get_p(), 0),
    mY(curve.get_p(), 1),
