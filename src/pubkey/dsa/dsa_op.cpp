@@ -6,7 +6,7 @@
 */
 
 #include <botan/dsa_op.h>
-#include <botan/internal/async.h>
+#include <future>
 
 namespace Botan {
 
@@ -42,7 +42,7 @@ bool Default_DSA_Op::verify(const byte msg[], u32bit msg_len,
 
    s = inverse_mod(s, q);
 
-   auto future_s_i = std_async(
+   auto future_s_i = std::async(std::launch::async,
       [&]() { return powermod_g_p(mod_q.multiply(s, i)); });
 
    BigInt s_r = powermod_y_p(mod_q.multiply(s, r));
@@ -62,7 +62,8 @@ SecureVector<byte> Default_DSA_Op::sign(const byte in[], u32bit length,
    if(x == 0)
       throw Internal_Error("Default_DSA_Op::sign: No private key");
 
-   auto future_r = std_async([&]() { return mod_q.reduce(powermod_g_p(k)); });
+   auto future_r = std::async(std::launch::async,
+                              [&]() { return mod_q.reduce(powermod_g_p(k)); });
 
    const BigInt& q = group.get_q();
    BigInt i(in, length);

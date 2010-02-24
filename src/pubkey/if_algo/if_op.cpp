@@ -7,7 +7,7 @@
 
 #include <botan/if_op.h>
 #include <botan/numthry.h>
-#include <botan/internal/async.h>
+#include <future>
 
 namespace Botan {
 
@@ -39,12 +39,7 @@ BigInt Default_IF_Op::private_op(const BigInt& i) const
    if(q == 0)
       throw Internal_Error("Default_IF_Op::private_op: No private key");
 
-   /*
-   * A simple std::bind(powermod_d1_p, i) would work instead of a
-   * lambda but GCC 4.5's std::result_of doesn't use decltype and gets
-   * confused
-   */
-   auto future_j1 = std_async([&]() { return powermod_d1_p(i); });
+   auto future_j1 = std::async(std::launch::async, powermod_d1_p, i);
    BigInt j2 = powermod_d2_q(i);
    BigInt j1 = future_j1.get();
 

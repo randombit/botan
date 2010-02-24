@@ -6,7 +6,7 @@
 */
 
 #include <botan/elg_op.h>
-#include <botan/internal/async.h>
+#include <future>
 
 namespace Botan {
 
@@ -34,7 +34,7 @@ SecureVector<byte> Default_ELG_Op::encrypt(const byte in[], u32bit length,
    if(m >= p)
       throw Invalid_Argument("Default_ELG_Op::encrypt: Input is too large");
 
-   auto future_a = std_async([&]() { return powermod_g_p(k); });
+   auto future_a = std::async(std::launch::async, powermod_g_p, k);
    BigInt b = mod_p.multiply(m, powermod_y_p(k));
    BigInt a = future_a.get();
 

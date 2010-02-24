@@ -13,7 +13,6 @@ version.cpp
 </source>
 
 <header:internal>
-async.h
 bit_ops.h
 debug.h
 mlock.h

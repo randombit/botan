@@ -6,7 +6,7 @@
 */
 
 #include <botan/nr_op.h>
-#include <botan/internal/async.h>
+#include <future>
 
 namespace Botan {
 
@@ -38,7 +38,7 @@ SecureVector<byte> Default_NR_Op::verify(const byte in[], u32bit length) const
    if(c.is_zero() || c >= q || d >= q)
       throw Invalid_Argument("Default_NR_Op::verify: Invalid signature");
 
-   auto future_y_c = std_async([&]() { return powermod_y_p(c); });
+   auto future_y_c = std::async(std::launch::async, powermod_y_p, c);
    BigInt g_d = powermod_g_p(d);
 
    BigInt i = mod_p.multiply(g_d, future_y_c.get());
