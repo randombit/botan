@@ -2,7 +2,7 @@
 * Arithmetic for point groups of elliptic curves over GF(p)
 *
 * (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
-*     2008 Jack Lloyd
+*     2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -11,9 +11,6 @@
 #define BOTAN_POINT_GFP_H__
 
 #include <botan/curve_gfp.h>
-#include <botan/gfp_element.h>
-#include <botan/bigint.h>
-#include <botan/exceptn.h>
 #include <vector>
 
 namespace Botan {
@@ -24,7 +21,7 @@ struct BOTAN_DLL Illegal_Point : public Exception
    };
 
 /**
-* This class represents one point on a curve of GF(p).
+* This class represents one point on a curve of GF(p)
 */
 class BOTAN_DLL PointGFp
    {
@@ -48,7 +45,7 @@ class BOTAN_DLL PointGFp
       * Construct the point O
       * @param curve The base curve
       */
-      explicit PointGFp(const CurveGFp& curve);
+      PointGFp(const CurveGFp& curve);
 
       /**
       * Construct a point given its affine coordinates
@@ -56,8 +53,9 @@ class BOTAN_DLL PointGFp
       * @param x affine x coordinate
       * @param y affine y coordinate
       */
-      explicit PointGFp(const CurveGFp& curve, GFpElement const& x,
-                          GFpElement const& y);
+      PointGFp(const CurveGFp& curve,
+               const GFpElement& x,
+               const GFpElement& y);
 
       /**
       * Construct a point given its jacobian projective coordinates
@@ -66,28 +64,13 @@ class BOTAN_DLL PointGFp
       * @param y jacobian projective y coordinate
       * @param z jacobian projective y coordinate
       */
-      explicit PointGFp(const CurveGFp& curve, GFpElement const& x,
-                          GFpElement const& y, GFpElement const& z);
+      PointGFp(const CurveGFp& curve,
+               const GFpElement& x,
+               const GFpElement& y,
+               const GFpElement& z);
 
-      /**
-      * copy constructor
-      * @param other the value to clone
-      */
-      PointGFp(const PointGFp& other);
-
-      /**
-      * assignment operator
-      * @param other The point to use as source for the assignment
-      */
-      const PointGFp& operator=(const PointGFp& other);
-
-      /**
-      * assign another point which is on the same curve as *this
-      * @param other The point to use as source for the assignment
-      */
-      const PointGFp& assign_within_same_curve(const PointGFp& other);
-
-
+      //PointGFp(const PointGFp& other) = default;
+      //PointGFp& operator=(const PointGFp& other) = default;
 
       /**
       * += Operator
@@ -126,8 +109,7 @@ class BOTAN_DLL PointGFp
       */
       PointGFp& mult_this_secure(const BigInt& scalar,
                                  const BigInt& point_order,
-                                 const BigInt& max_secr
-        );
+                                 const BigInt& max_secr);
 
       /**
       * Negate internal value(*this *= -1 )
@@ -162,43 +144,43 @@ class BOTAN_DLL PointGFp
       * thus x and y have just the affine values.
       * @result *this
       */
-      PointGFp const get_z_to_one() const;
+      PointGFp get_z_to_one() const;
 
       /**
       * Return base curve of this point
       * @result the curve over GF(p) of this point
       */
-      CurveGFp const get_curve() const;
+      const CurveGFp& get_curve() const { return mC; }
 
       /**
       * get affine x coordinate
       * @result affine x coordinate
       */
-      GFpElement const get_affine_x() const;
+      GFpElement get_affine_x() const;
 
       /**
       * get affine y coordinate
       * @result affine y coordinate
       */
-      GFpElement const get_affine_y() const;
+      GFpElement get_affine_y() const;
 
       /**
       * get the jacobian projective x coordinate
       * @result jacobian projective x coordinate
       */
-      GFpElement const get_jac_proj_x() const;
+      GFpElement get_jac_proj_x() const;
 
       /**
       * get the jacobian projective y coordinate
       * @result jacobian projective y coordinate
       */
-      GFpElement const get_jac_proj_y() const;
+      GFpElement get_jac_proj_y() const;
 
       /**
       * get the jacobian projective z coordinate
       * @result jacobian projective z coordinate
       */
-      GFpElement const get_jac_proj_z() const;
+      GFpElement get_jac_proj_z() const;
 
       /**
       * Is this the point at infinity?
@@ -214,49 +196,19 @@ class BOTAN_DLL PointGFp
       */
       void check_invariants() const;
 
-
       /**
-      *  swaps the states of *this and other, does not throw!
+      * swaps the states of *this and other, does not throw!
       * @param other the object to swap values with
       */
       void swap(PointGFp& other);
 
-      /**
-      * Sets the shared pointer to the GFpModulus that will be
-      * held in *this, specifically the various members of *this.
-      * Warning: do not use this function unless you know in detail about
-      * the implications of using
-      * the shared GFpModulus objects!
-      * Do NOT spread a shared pointer to GFpModulus over different
-      * threads!
-      * @param mod a shared pointer to a GFpModulus that will
-      * be held in the members *this
-      */
-      void set_shrd_mod(std::shared_ptr<GFpModulus> p_mod);
-
       static GFpElement decompress(bool yMod2, GFpElement const& x, const CurveGFp& curve);
 
    private:
-      static const u32bit GFPEL_WKSP_SIZE = 9;
-      void ensure_worksp() const;
-
-      inline std::shared_ptr<PointGFp> mult_loop(int l, const BigInt& m,
-                                                      std::shared_ptr<PointGFp> H,
-                                                      std::shared_ptr<PointGFp> tmp,
-                                                      const PointGFp& P);
-
       CurveGFp mC;
       mutable GFpElement mX;  // NOTE: these values must be mutable (affine<->proj)
       mutable GFpElement mY;
       mutable GFpElement mZ;
-      mutable GFpElement mZpow2;  // mZ^2
-      mutable GFpElement mZpow3;   // mZ^3
-      mutable GFpElement mAZpow4;  // mA*mZ^4
-      mutable bool mZpow2_set;
-      mutable bool mZpow3_set;
-      mutable bool mAZpow4_set;
-      mutable std::shared_ptr<std::vector<GFpElement> > mp_worksp_gfp_el;
-
    };
 
 // relational operators

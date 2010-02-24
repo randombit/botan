@@ -13,295 +13,114 @@
 namespace Botan {
 
 // construct the point at infinity or a random point
-PointGFp::PointGFp(const CurveGFp& curve)
-   :	mC(curve),
-        mX(curve.get_p(), 0),
-        mY(curve.get_p(), 1),
-        mZ(curve.get_p(), 0),
-        mZpow2(curve.get_p(),0),
-        mZpow3(curve.get_p(),0),
-        mAZpow4(curve.get_p(),0),
-        mZpow2_set(false),
-        mZpow3_set(false),
-        mAZpow4_set(false)
+nPointGFp::PointGFp(const CurveGFp& curve) :
+   mC(curve),
+   mX(curve.get_p(), 0),
+   mY(curve.get_p(), 1),
+   mZ(curve.get_p(), 0)
    {
-   // first set the point wide pointer
-
-   set_shrd_mod(mC.get_ptr_mod());
-
    }
 
 // construct a point given its jacobian projective coordinates
 PointGFp::PointGFp(const CurveGFp& curve, const GFpElement& x,
-                   const GFpElement& y, const GFpElement& z)
-   :	mC(curve),
-        mX(x),
-        mY(y),
-        mZ(z),
-        mZpow2(curve.get_p(),0),
-        mZpow3(curve.get_p(),0),
-        mAZpow4(curve.get_p(),0),
-        mZpow2_set(false),
-        mZpow3_set(false),
-        mAZpow4_set(false)
+                   const GFpElement& y, const GFpElement& z) :
+   mC(curve),
+   mX(x),
+   mY(y),
+   mZ(z)
    {
-   set_shrd_mod(mC.get_ptr_mod());
-   }
-PointGFp::PointGFp ( const CurveGFp& curve, const GFpElement& x,
-                     const GFpElement& y )
-   :mC(curve),
-    mX(x),
-    mY(y),
-    mZ(curve.get_p(),1),
-    mZpow2(curve.get_p(),0),
-    mZpow3(curve.get_p(),0),
-    mAZpow4(curve.get_p(),0),
-    mZpow2_set(false),
-    mZpow3_set(false),
-    mAZpow4_set(false)
-   {
-   set_shrd_mod(mC.get_ptr_mod());
    }
 
-// copy constructor
-PointGFp::PointGFp(const PointGFp& other)
-   :	mC(other.mC),
-        mX(other.mX),
-        mY(other.mY),
-        mZ(other.mZ),
-        mZpow2(other.mZpow2),
-        mZpow3(other.mZpow3),
-        mAZpow4(other.mAZpow4),
-        mZpow2_set(other.mZpow2_set),
-        mZpow3_set(other.mZpow3_set),
-        mAZpow4_set(other.mAZpow4_set)
+PointGFp::PointGFp(const CurveGFp& curve,
+                   const GFpElement& x,
+                   const GFpElement& y) :
+   mC(curve),
+   mX(x),
+   mY(y),
+   mZ(curve.get_p(),1)
    {
-   set_shrd_mod(mC.get_ptr_mod());
-   }
-
-// assignment operator
-const PointGFp& PointGFp::operator=(PointGFp const& other)
-   {
-   mC = other.get_curve();
-   mX = other.get_jac_proj_x();
-   mY = other.get_jac_proj_y();
-   mZ = other.get_jac_proj_z();
-   mZpow2 = GFpElement(other.mZpow2);
-   mZpow3 = GFpElement(other.mZpow3);
-   mAZpow4 = GFpElement(other.mAZpow4);
-   mZpow2_set = other.mZpow2_set;
-   mZpow3_set = other.mZpow3_set;
-   mAZpow4_set = other.mAZpow4_set;
-   set_shrd_mod(mC.get_ptr_mod());
-   return *this;
-   }
-
-const PointGFp& PointGFp::assign_within_same_curve(PointGFp const& other)
-   {
-   mX = other.get_jac_proj_x();
-   mY = other.get_jac_proj_y();
-   mZ = other.get_jac_proj_z();
-   mZpow2_set = false;
-   mZpow3_set = false;
-   mAZpow4_set = false;
-   // the rest stays!
-   return *this;
-   }
-
-void PointGFp::set_shrd_mod(std::shared_ptr<GFpModulus> p_mod)
-   {
-   mX.set_shrd_mod(p_mod);
-   mY.set_shrd_mod(p_mod);
-   mZ.set_shrd_mod(p_mod);
-   mZpow2.set_shrd_mod(p_mod);
-   mZpow3.set_shrd_mod(p_mod);
-   mAZpow4.set_shrd_mod(p_mod);
-   }
-
-void PointGFp::ensure_worksp() const
-   {
-   if (mp_worksp_gfp_el.get() != 0)
-      {
-      if ((*mp_worksp_gfp_el).size() == GFPEL_WKSP_SIZE)
-         {
-         return;
-         }
-      else
-         {
-         throw Invalid_State("encountered incorrect size for PointGFp´s GFpElement workspace");
-         }
-      }
-
-   mp_worksp_gfp_el = std::shared_ptr<std::vector<GFpElement> >(new std::vector<GFpElement>);
-   mp_worksp_gfp_el->reserve(9);
-   for (u32bit i=0; i<GFPEL_WKSP_SIZE; i++)
-      {
-      mp_worksp_gfp_el->push_back(GFpElement(1,0));
-
-      }
    }
 
 // arithmetic operators
 PointGFp& PointGFp::operator+=(const PointGFp& rhs)
    {
-   if (is_zero())
+   if(is_zero())
       {
       *this = rhs;
       return *this;
       }
-   if (rhs.is_zero())
+   if(rhs.is_zero())
       {
       return *this;
       }
-   ensure_worksp();
 
-   if (rhs.mZ == *(mC.get_mres_one()))
+   GFpElement U1 = mX;
+   GFpElement S1 = mY;
+
+   if(rhs.mZ != mC.get_mres_one())
       {
-      //U1 = mX;
-      (*mp_worksp_gfp_el)[0].share_assign(mX);
+      GFpElement rhs_z2 = rhs.mZ * rhs.mZ;
 
-      //S1 = mY;
-      (*mp_worksp_gfp_el)[2].share_assign(mY);
+      U1 *= rhs_z2;
+      S1 *= rhs_z2 * rhs.mZ;
       }
-   else
+
+   GFpElement U2 = rhs.mX;
+   GFpElement S2 = rhs.mY;
+
+   if(mZ != mC.get_mres_one())
       {
-      if ((!rhs.mZpow2_set) || (!rhs.mZpow3_set))
-         {
-         rhs.mZpow2 = rhs.mZ;
-         rhs.mZpow2 *= rhs.mZ;
-         rhs.mZpow3 = rhs.mZpow2;
-         rhs.mZpow3 *= rhs.mZ;
+      GFpElement lhs_z2 = mZ * mZ;
 
-         rhs.mZpow2_set = true;
-         rhs.mZpow3_set = true;
-         }
-      //U1 = mX * rhs.mZpow2;
-      (*mp_worksp_gfp_el)[0].share_assign(mX);
-      (*mp_worksp_gfp_el)[0] *= rhs.mZpow2;
-
-      //S1 = mY * rhs.mZpow3;
-      (*mp_worksp_gfp_el)[2].share_assign(mY);
-      (*mp_worksp_gfp_el)[2] *= rhs.mZpow3;
-
+      U2 *= lhs_z2;
+      S2 *= lhs_z2 * mZ;
       }
-   if (mZ == *(mC.get_mres_one()))
+
+   GFpElement H(U2 - U1);
+   GFpElement r(S2 - S1);
+
+   if(H.is_zero())
       {
-      //U2 = rhs.mX;
-      (*mp_worksp_gfp_el)[1].share_assign(rhs.mX);
-
-      //S2 = rhs.mY;
-      (*mp_worksp_gfp_el)[3].share_assign(rhs.mY);
-      }
-   else
-      {
-      if ((!mZpow2_set) || (!mZpow3_set))
-         {
-         // precomputation can´t be used, because *this changes anyway
-         mZpow2 = mZ;
-         mZpow2 *= mZ;
-
-         mZpow3 = mZpow2;
-         mZpow3 *= mZ;
-         }
-      //U2 = rhs.mX * mZpow2;
-      (*mp_worksp_gfp_el)[1].share_assign(rhs.mX);
-      (*mp_worksp_gfp_el)[1] *= mZpow2;
-
-      //S2 = rhs.mY * mZpow3;
-      (*mp_worksp_gfp_el)[3].share_assign(rhs.mY);
-      (*mp_worksp_gfp_el)[3] *= mZpow3;
-
-      }
-   //GFpElement H(U2 - U1);
-
-   (*mp_worksp_gfp_el)[4].share_assign((*mp_worksp_gfp_el)[1]);
-   (*mp_worksp_gfp_el)[4] -= (*mp_worksp_gfp_el)[0];
-
-   //GFpElement r(S2 - S1);
-   (*mp_worksp_gfp_el)[5].share_assign((*mp_worksp_gfp_el)[3]);
-   (*mp_worksp_gfp_el)[5] -= (*mp_worksp_gfp_el)[2];
-
-   //if(H.is_zero())
-   if ((*mp_worksp_gfp_el)[4].is_zero())
-
-      {
-      if ((*mp_worksp_gfp_el)[5].is_zero())
-
+      if(r.is_zero())
          {
          mult2_in_place();
          return *this;
          }
+
       *this = PointGFp(mC); // setting myself to zero
       return *this;
       }
 
-   //U2 = H * H;
-   (*mp_worksp_gfp_el)[1].share_assign((*mp_worksp_gfp_el)[4]);
-   (*mp_worksp_gfp_el)[1] *= (*mp_worksp_gfp_el)[4];
+   U2 = H * H;
 
-   //S2 = U2 * H;
-   (*mp_worksp_gfp_el)[3].share_assign((*mp_worksp_gfp_el)[1]);
-   (*mp_worksp_gfp_el)[3] *= (*mp_worksp_gfp_el)[4];
+   S2 = U2 * H;
 
-   //U2 *= U1;
-   (*mp_worksp_gfp_el)[1] *= (*mp_worksp_gfp_el)[0];
+   U2 *= U1;
 
-   //GFpElement x(r*r - S2 - (U2+U2));
-   (*mp_worksp_gfp_el)[6].share_assign((*mp_worksp_gfp_el)[5]);
-   (*mp_worksp_gfp_el)[6] *= (*mp_worksp_gfp_el)[5];
-   (*mp_worksp_gfp_el)[6] -= (*mp_worksp_gfp_el)[3];
-   (*mp_worksp_gfp_el)[6] -= (*mp_worksp_gfp_el)[1];
-   (*mp_worksp_gfp_el)[6] -= (*mp_worksp_gfp_el)[1];
+   GFpElement x(r*r - S2 - (U2+U2));
 
-   //GFpElement z(S1 * S2);
-   (*mp_worksp_gfp_el)[8].share_assign((*mp_worksp_gfp_el)[2]);
-   (*mp_worksp_gfp_el)[8] *= (*mp_worksp_gfp_el)[3];
+   GFpElement z(S1 * S2);
 
-   //GFpElement y(r * (U2-x) - z);
-   (*mp_worksp_gfp_el)[7].share_assign((*mp_worksp_gfp_el)[1]);
-   (*mp_worksp_gfp_el)[7] -= (*mp_worksp_gfp_el)[6];
-   (*mp_worksp_gfp_el)[7] *= (*mp_worksp_gfp_el)[5];
-   (*mp_worksp_gfp_el)[7] -= (*mp_worksp_gfp_el)[8];
+   GFpElement y(r * (U2-x) - z);
 
-   if (mZ == *(mC.get_mres_one()))
+   if(mZ == mC.get_mres_one())
       {
-      if (rhs.mZ != *(mC.get_mres_one()))
-         {
-         //z = rhs.mZ * H;
-         (*mp_worksp_gfp_el)[8].share_assign(rhs.mZ);
-         (*mp_worksp_gfp_el)[8] *= (*mp_worksp_gfp_el)[4];
-         }
+      if(rhs.mZ != mC.get_mres_one())
+         z = rhs.mZ * H;
       else
-         {
-         //z = H;
-         (*mp_worksp_gfp_el)[8].share_assign((*mp_worksp_gfp_el)[4]);
-         }
+         z = H;
       }
-   else if (rhs.mZ != *(mC.get_mres_one()))
+   else if(rhs.mZ != mC.get_mres_one())
       {
-      //U1 = mZ * rhs.mZ;
-      (*mp_worksp_gfp_el)[0].share_assign(mZ);
-      (*mp_worksp_gfp_el)[0] *= rhs.mZ;
-
-      //z = U1 * H;
-      (*mp_worksp_gfp_el)[8].share_assign((*mp_worksp_gfp_el)[0]);
-      (*mp_worksp_gfp_el)[8] *= (*mp_worksp_gfp_el)[4];
-
+      U1 = mZ * rhs.mZ;
+      z = U1 * H;
       }
    else
-      {
-      //z = mZ * H;
-      (*mp_worksp_gfp_el)[8].share_assign(mZ);
-      (*mp_worksp_gfp_el)[8] *= (*mp_worksp_gfp_el)[4];
+      z = mZ * H;
 
-      }
-   mZpow2_set = false;
-   mZpow3_set = false;
-   mAZpow4_set = false;
-
-   mX = (*mp_worksp_gfp_el)[6];
-   mY = (*mp_worksp_gfp_el)[7];
-   mZ = (*mp_worksp_gfp_el)[8];
+   mX = x;
+   mY = y;
+   mZ = z;
 
    return *this;
 
@@ -310,7 +129,7 @@ PointGFp& PointGFp::operator-=(const PointGFp& rhs)
    {
    PointGFp minus_rhs = PointGFp(rhs).negate();
 
-   if (is_zero())
+   if(is_zero())
       {
       *this = minus_rhs;
       }
@@ -336,92 +155,39 @@ PointGFp& PointGFp::mult_this_secure(const BigInt& scalar,
    // use montgomery mult. in this operation
    this->turn_on_sp_red_mul();
 
-   std::shared_ptr<PointGFp> H(new PointGFp(this->mC));
-   std::shared_ptr<PointGFp> tmp; // used for AADA
+   PointGFp H(mC);
 
    PointGFp P(*this);
    BigInt m(scalar);
 
-   if (m < BigInt(0))
+   if(m < BigInt(0))
       {
       m = -m;
       P.negate();
       }
-   if (P.is_zero() || (m == BigInt(0)))
+   if(P.is_zero() || (m == BigInt(0)))
       {
-      *this = *H;
+      *this = H;
       return *this;
       }
-   if (m == BigInt(1))
-      {
+   if(m == BigInt(1))
       return *this;
-      }
-   //
-#ifdef CM_AADA
-#ifndef CM_RAND_EXP
-   int max_secr_bits = max_secr.bits();
-#endif
-#endif
 
-   int mul_bits = m.bits(); // this is used for a determined number of loop runs in
-   // the mult_loop where leading zero´s are padded if necessary.
-   // Here we assign the value that will be used when no countermeasures are specified
-#ifdef CM_RAND_EXP
-   u32bit rand_r_bit_len = 20; // Coron(99) proposes 20 bit for r
+   int mul_bits = m.bits();
 
-#ifdef CM_AADA
-
-   BigInt r_max(1);
-
-#endif // CM_AADA
-
-   // use randomized exponent
-#ifdef TA_COLL_T
-   static BigInt r_randexp;
-   if (new_rand)
+   for(int i = mul_bits - 1; i >= 0; i--)
       {
-      r_randexp = random_integer(rand_r_bit_len);
+      H.mult2_in_place();
+
+      if(m.get_bit(i))
+         H += P;
       }
-   //assert(!r_randexp.is_zero());
-#else
-   BigInt r_randexp(random_integer(rand_r_bit_len));
-#endif
 
-   m += r_randexp * point_order;
-   // determine mul_bits...
-#ifdef CM_AADA
-   // AADA with rand. Exp.
-   //assert(rand_r_bit_len > 0);
-   r_max <<= rand_r_bit_len;
-   r_max -= 1;
-   //assert(r_max.bits() == rand_r_bit_len);
-   mul_bits = (max_secr + point_order * r_max).bits();
-#else
-   // rand. Exp. without AADA
-   mul_bits = m.bits();
-#endif // CM_AADA
+   if(!H.is_zero()) // cannot convert if H == O
+      *this = H.get_z_to_one();
+   else
+      *this = H;
 
-
-#endif // CM_RAND_EXP
-
-   // determine mul_bits...
-#if (CM_AADA == 1 && CM_RAND_EXP != 1)
-
-   mul_bits = max_secr_bits;
-#endif // CM_AADA without CM_RAND_EXP
-
-   //assert(mul_bits != 0);
-
-
-   H = mult_loop(mul_bits-1, m, H, tmp, P);
-
-   if (!H->is_zero()) // cannot convert if H == O
-      {
-      *this = H->get_z_to_one();
-      }else
-      {
-      *this = *H;
-      }
    mX.turn_off_sp_red_mul();
    mY.turn_off_sp_red_mul();
    mZ.turn_off_sp_red_mul();
@@ -439,226 +205,100 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
    PointGFp P(*this);
    P.turn_on_sp_red_mul();
    BigInt m(scalar);
-   if (m < BigInt(0))
+
+   if(m < BigInt(0))
       {
       m = -m;
       P.negate();
       }
-   if (P.is_zero() || (m == BigInt(0)))
+
+   if(P.is_zero() || (m == BigInt(0)))
       {
       *this = H;
       return *this;
       }
-   if (m == BigInt(1))
-      {
-      //*this == P already
+
+   if(m == BigInt(1)) //*this == P already
       return *this;
-      }
 
    const int l = m.bits() - 1;
-   for (int i=l; i >=0; i--)
+   for(int i = l; i >= 0; --i)
       {
-
       H.mult2_in_place();
-      if (m.get_bit(i))
-         {
+      if(m.get_bit(i))
          H += P;
-         }
       }
 
-   if (!H.is_zero()) // cannot convert if H == O
-      {
+   if(!H.is_zero()) // cannot convert if H == O
       *this = H.get_z_to_one();
-      }else
-      {
+   else
       *this = H;
-      }
+
    return *this;
-   }
-
-inline std::shared_ptr<PointGFp> PointGFp::mult_loop(int l,
-                                                          const BigInt& m,
-                                                          std::shared_ptr<PointGFp> H,
-                                                          std::shared_ptr<PointGFp> tmp,
-                                                          const PointGFp& P)
-   {
-   //assert(l >= (int)m.bits()- 1);
-   tmp = H;
-   std::shared_ptr<PointGFp> to_add(new PointGFp(P)); // we just need some point
-   // so that we can use op=
-   // inside the loop
-   for (int i=l; i >=0; i--)
-      {
-      H->mult2_in_place();
-
-#ifndef CM_AADA
-
-      if (m.get_bit(i))
-         {
-         *H += P;
-         }
-#else // (CM_AADA is in)
-
-      if (H.get() == to_add.get())
-         {
-         to_add = tmp; // otherwise all pointers might point to the same object
-         // and we always need two objects to be able to switch around
-         }
-      to_add->assign_within_same_curve(*H);
-      tmp = H;
-      *tmp += P; // tmp already points to H
-
-      if (m.get_bit(i))
-         {
-         H = tmp; // NOTE: assign the pointer, not the value!
-         // (so that the operation is fast and thus as difficult
-         // to detect as possible)
-         }
-      else
-         {
-         H = to_add; // NOTE: this is necessary, because the assignment
-         // "*tmp = ..." already changed what H pointed to
-
-
-         }
-#endif // CM_AADA
-
-      }
-   return H;
    }
 
 PointGFp& PointGFp::negate()
    {
-   if (!is_zero())
-      {
+   if(!is_zero())
       mY.negate();
-      }
+
    return *this;
    }
 
 // *this *= 2
 PointGFp& PointGFp::mult2_in_place()
    {
-   if (is_zero())
-      {
+   if(is_zero())
       return *this;
-      }
-   if (mY.is_zero())
+   else if(mY.is_zero())
       {
-
       *this = PointGFp(mC); // setting myself to zero
       return *this;
       }
-   ensure_worksp();
 
-   (*mp_worksp_gfp_el)[0].share_assign(mY);
-   (*mp_worksp_gfp_el)[0] *= mY;
+   GFpElement Y_squared = mY*mY;
 
-   //GFpElement S(mX * z);
-   (*mp_worksp_gfp_el)[1].share_assign(mX);
-   (*mp_worksp_gfp_el)[1] *= (*mp_worksp_gfp_el)[0];
+   GFpElement S = mX * Y_squared;
 
-   //GFpElement x(S + S);
-   (*mp_worksp_gfp_el)[2].share_assign((*mp_worksp_gfp_el)[1]);
-   (*mp_worksp_gfp_el)[2] += (*mp_worksp_gfp_el)[1];
+   GFpElement x = S + S;
 
-   //S = x + x;
-   (*mp_worksp_gfp_el)[1].share_assign((*mp_worksp_gfp_el)[2]);
-   (*mp_worksp_gfp_el)[1] += (*mp_worksp_gfp_el)[2];
+   S = x + x;
 
-   if (!mAZpow4_set)
+   GFpElement a_z4 = mC.get_mres_a();
+   if(mZ != mC.get_mres_one())
       {
-      if (mZ == *(mC.get_mres_one()))
-         {
-         mAZpow4 = mC.get_mres_a();
-         mAZpow4_set = true;
-         }
-      else
-         {
-         if (!mZpow2_set)
-            {
-            mZpow2 = mZ;
-            mZpow2 *= mZ;
-
-            mZpow2_set = true;
-            }
-         //x = mZpow2 * mZpow2;
-         (*mp_worksp_gfp_el)[2].share_assign(mZpow2);
-         (*mp_worksp_gfp_el)[2] *= mZpow2;
-
-         //mAZpow4 = mC.get_mres_a() * x;
-         mAZpow4 = mC.get_mres_a();
-         mAZpow4 *= (*mp_worksp_gfp_el)[2];
-
-         }
-
+      GFpElement z2 = mZ * mZ;
+      a_z4 *= z2;
+      a_z4 *= z2;
       }
 
-   //GFpElement y(mX * mX);
-   (*mp_worksp_gfp_el)[3].share_assign(mX);
-   (*mp_worksp_gfp_el)[3] *= mX;
+   GFpElement y(mX * mX);
 
-   //GFpElement M(y + y + y + mAZpow4);
-   (*mp_worksp_gfp_el)[4].share_assign((*mp_worksp_gfp_el)[3]);
-   (*mp_worksp_gfp_el)[4] += (*mp_worksp_gfp_el)[3];
-   (*mp_worksp_gfp_el)[4] += (*mp_worksp_gfp_el)[3];
-   (*mp_worksp_gfp_el)[4] += mAZpow4;
+   GFpElement M(y + y + y + a_z4);
 
-   //x = M * M - (S+S);
-   (*mp_worksp_gfp_el)[2].share_assign((*mp_worksp_gfp_el)[4]);
-   (*mp_worksp_gfp_el)[2] *= (*mp_worksp_gfp_el)[4];
-   (*mp_worksp_gfp_el)[2] -= (*mp_worksp_gfp_el)[1];
-   (*mp_worksp_gfp_el)[2] -= (*mp_worksp_gfp_el)[1];
+   x = M * M - (S+S);
 
-   //y = z * z;
-   (*mp_worksp_gfp_el)[3].share_assign((*mp_worksp_gfp_el)[0]);
-   (*mp_worksp_gfp_el)[3] *= (*mp_worksp_gfp_el)[0];
+   y = Y_squared * Y_squared;
 
-   //GFpElement U(y + y);
-   (*mp_worksp_gfp_el)[5].share_assign((*mp_worksp_gfp_el)[3]);
-   (*mp_worksp_gfp_el)[5] += (*mp_worksp_gfp_el)[3];
+   GFpElement U(y + y);
 
-   //z = U + U;
-   (*mp_worksp_gfp_el)[0].share_assign((*mp_worksp_gfp_el)[5]);
-   (*mp_worksp_gfp_el)[0] += (*mp_worksp_gfp_el)[5];
+   GFpElement z = U + U;
 
-   //U = z + z;
-   (*mp_worksp_gfp_el)[5].share_assign((*mp_worksp_gfp_el)[0]);
-   (*mp_worksp_gfp_el)[5] += (*mp_worksp_gfp_el)[0];
+   U = z + z;
 
-   //y = M * (S - x) - U;
-   (*mp_worksp_gfp_el)[3].share_assign((*mp_worksp_gfp_el)[1]);
-   (*mp_worksp_gfp_el)[3] -= (*mp_worksp_gfp_el)[2];
-   (*mp_worksp_gfp_el)[3] *= (*mp_worksp_gfp_el)[4];
-   (*mp_worksp_gfp_el)[3] -= (*mp_worksp_gfp_el)[5];
+   y = M * (S - x) - U;
 
-   if (mZ != *(mC.get_mres_one()))
-      {
-      //z = mY * mZ;
-      (*mp_worksp_gfp_el)[0].share_assign(mY);
-      (*mp_worksp_gfp_el)[0] *= mZ;
-
-      }
+   if(mZ != mC.get_mres_one())
+      z = mY * mZ;
    else
-      {
-      //z = mY;
-      (*mp_worksp_gfp_el)[0].share_assign(mY);
+      z = mY;
 
-      }
-   //z = z + z;
-   (*mp_worksp_gfp_el)[6].share_assign((*mp_worksp_gfp_el)[0]);
-   (*mp_worksp_gfp_el)[0] += (*mp_worksp_gfp_el)[6];
+   z = z + z;
 
-   //mX = x;
-   //mY = y;
-   //mZ = z;
-   mX = (*mp_worksp_gfp_el)[2];
-   mY = (*mp_worksp_gfp_el)[3];
-   mZ = (*mp_worksp_gfp_el)[0];
+   mX = x;
+   mY = y;
+   mZ = z;
 
-   mZpow2_set = false;
-   mZpow3_set = false;
-   mAZpow4_set = false;
    return *this;
    }
 
@@ -676,19 +316,14 @@ void PointGFp::turn_on_sp_red_mul() const
    mX.get_mres();
    mY.get_mres();
    mZ.get_mres();
-
-   mZpow2.turn_on_sp_red_mul();
-   mZpow3.turn_on_sp_red_mul();
-   mAZpow4.turn_on_sp_red_mul();
    }
-// getters
 
 /**
 * returns a point equivalent to *this but were
 * Z has value one, i.e. x and y correspond to
 * their values in affine coordinates
 */
-PointGFp const PointGFp::get_z_to_one() const
+PointGFp PointGFp::get_z_to_one() const
    {
    return PointGFp(*this).set_z_to_one();
    }
@@ -701,7 +336,7 @@ PointGFp const PointGFp::get_z_to_one() const
 */
 const PointGFp& PointGFp::set_z_to_one() const
    {
-   if (!(mZ.get_value() == BigInt(1)) && !(mZ.get_value() == BigInt(0)))
+   if(!(mZ.get_value() == BigInt(1)) && !(mZ.get_value() == BigInt(0)))
       {
       GFpElement z = inverse(mZ);
       GFpElement z2 = z * z;
@@ -714,7 +349,7 @@ const PointGFp& PointGFp::set_z_to_one() const
       }
    else
       {
-      if (mZ.get_value() == BigInt(0))
+      if(mZ.get_value() == BigInt(0))
          {
          throw Illegal_Transformation("cannot convert Z to one");
          }
@@ -722,58 +357,35 @@ const PointGFp& PointGFp::set_z_to_one() const
    return *this; // mZ = 1 already
    }
 
-const CurveGFp PointGFp::get_curve() const
+GFpElement PointGFp::get_affine_x() const
    {
-   return mC;
-   }
-
-GFpElement const PointGFp::get_affine_x() const
-   {
-
-   if (is_zero())
-      {
+   if(is_zero())
       throw Illegal_Transformation("cannot convert to affine");
 
-      }
-   /*if(!mZpow2_set)
-   {*/
-   mZpow2 = mZ * mZ;
-   mZpow2_set = true;
-   //}
-   //assert(mZpow2 == mZ*mZ);
-   GFpElement z2 = mZpow2;
+   GFpElement z2 = mZ * mZ;
    return mX * z2.inverse_in_place();
    }
 
-GFpElement const PointGFp::get_affine_y() const
+GFpElement PointGFp::get_affine_y() const
    {
-
-   if (is_zero())
-      {
+   if(is_zero())
       throw Illegal_Transformation("cannot convert to affine");
 
-      }
-   /*if(!mZpow3_set )
-   {*/
-   mZpow3 = mZ * mZ * mZ;
-   mZpow3_set = true;
-   //}
-   //assert(mZpow3 == mZ * mZ *mZ);
-   GFpElement z3 = mZpow3;
+   GFpElement z3 = mZ * mZ * mZ;
    return mY * z3.inverse_in_place();
    }
 
-GFpElement const PointGFp::get_jac_proj_x() const
+GFpElement PointGFp::get_jac_proj_x() const
    {
    return GFpElement(mX);
    }
 
-GFpElement const PointGFp::get_jac_proj_y() const
+GFpElement PointGFp::get_jac_proj_y() const
    {
    return GFpElement(mY);
    }
 
-GFpElement const PointGFp::get_jac_proj_z() const
+GFpElement PointGFp::get_jac_proj_z() const
    {
    return GFpElement(mZ);
    }
@@ -794,14 +406,14 @@ bool PointGFp::is_zero() const
 
 void PointGFp::check_invariants() const
    {
-   if (is_zero())
+   if(is_zero())
       {
       return;
       }
    const GFpElement y2 = mY * mY;
    const GFpElement x3 = mX * mX * mX;
 
-   if (mZ.get_value() == BigInt(1))
+   if(mZ.get_value() == BigInt(1))
       {
       GFpElement ax = mC.get_a() * mX;
       if(y2 != (x3 + ax + mC.get_b()))
@@ -811,16 +423,13 @@ void PointGFp::check_invariants() const
 
       }
 
-   mZpow2 = mZ * mZ;
-   mZpow2_set = true;
-   mZpow3 = mZpow2 * mZ;
-   mZpow3_set = true;
-   mAZpow4 = mZpow3 * mZ * mC.get_a();
-   mAZpow4_set = true;
-   const GFpElement aXZ4 = mAZpow4 * mX;
-   const GFpElement bZ6 = mC.get_b() * mZpow3 * mZpow3;
+   GFpElement Zpow2 = mZ * mZ;
+   GFpElement Zpow3 = Zpow2 * mZ;
+   GFpElement AZpow4 = Zpow3 * mZ * mC.get_a();
+   const GFpElement aXZ4 = AZpow4 * mX;
+   const GFpElement bZ6 = mC.get_b() * Zpow3 * Zpow3;
 
-   if (y2 != (x3 + aXZ4 + bZ6))
+   if(y2 != (x3 + aXZ4 + bZ6))
       throw Illegal_Point();
    }
 
@@ -831,12 +440,6 @@ void PointGFp::swap(PointGFp& other)
    mX.swap(other.mX);
    mY.swap(other.mY);
    mZ.swap(other.mZ);
-   mZpow2.swap(other.mZpow2);
-   mZpow3.swap(other.mZpow3);
-   mAZpow4.swap(other.mAZpow4);
-   std::swap<bool>(mZpow2_set, other.mZpow2_set);
-   std::swap<bool>(mZpow3_set, other.mZpow3_set);
-   std::swap<bool>(mAZpow4_set, other.mAZpow4_set);
    }
 
 PointGFp mult2(const PointGFp& point)
@@ -846,11 +449,11 @@ PointGFp mult2(const PointGFp& point)
 
 bool operator==(const PointGFp& lhs, PointGFp const& rhs)
    {
-   if (lhs.is_zero() && rhs.is_zero())
+   if(lhs.is_zero() && rhs.is_zero())
       {
       return true;
       }
-   if ((lhs.is_zero() && !rhs.is_zero()) || (!lhs.is_zero() && rhs.is_zero()))
+   if((lhs.is_zero() && !rhs.is_zero()) || (!lhs.is_zero() && rhs.is_zero()))
       {
       return false;
       }
@@ -906,16 +509,16 @@ PointGFp mult_point_secure(const PointGFp& point, const BigInt& scalar,
 SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
    {
    SecureVector<byte> result;
-   if (format == PointGFp::UNCOMPRESSED)
+   if(format == PointGFp::UNCOMPRESSED)
       {
       result = encode_uncompressed(point);
       }
-   else if (format == PointGFp::COMPRESSED)
+   else if(format == PointGFp::COMPRESSED)
       {
       result = encode_compressed(point);
 
       }
-   else if (format == PointGFp::HYBRID)
+   else if(format == PointGFp::HYBRID)
       {
       result = encode_hybrid(point);
       }
@@ -929,7 +532,7 @@ SecureVector<byte> encode_compressed(const PointGFp& point)
    {
 
 
-   if (point.is_zero())
+   if(point.is_zero())
       {
       SecureVector<byte> result (1);
       result[0] = 0;
@@ -938,7 +541,7 @@ SecureVector<byte> encode_compressed(const PointGFp& point)
       }
    u32bit l = point.get_curve().get_p().bits();
    int dummy = l & 7;
-   if (dummy != 0)
+   if(dummy != 0)
       {
       l += 8 - dummy;
       }
@@ -949,7 +552,7 @@ SecureVector<byte> encode_compressed(const PointGFp& point)
    SecureVector<byte> bX = BigInt::encode_1363(x, l);
    result.copy(1, bX.begin(), bX.size());
    BigInt y = point.get_affine_y().get_value();
-   if (y.get_bit(0))
+   if(y.get_bit(0))
       {
       result[0] |= 1;
       }
@@ -959,7 +562,7 @@ SecureVector<byte> encode_compressed(const PointGFp& point)
 
 SecureVector<byte> encode_uncompressed(const PointGFp& point)
    {
-   if (point.is_zero())
+   if(point.is_zero())
       {
       SecureVector<byte> result (1);
       result[0] = 0;
@@ -967,7 +570,7 @@ SecureVector<byte> encode_uncompressed(const PointGFp& point)
       }
    u32bit l = point.get_curve().get_p().bits();
    int dummy = l & 7;
-   if (dummy != 0)
+   if(dummy != 0)
       {
       l += 8 - dummy;
       }
@@ -986,7 +589,7 @@ SecureVector<byte> encode_uncompressed(const PointGFp& point)
 
 SecureVector<byte> encode_hybrid(const PointGFp& point)
    {
-   if (point.is_zero())
+   if(point.is_zero())
       {
       SecureVector<byte> result (1);
       result[0] = 0;
@@ -994,7 +597,7 @@ SecureVector<byte> encode_hybrid(const PointGFp& point)
       }
    u32bit l = point.get_curve().get_p().bits();
    int dummy = l & 7;
-   if (dummy != 0)
+   if(dummy != 0)
       {
       l += 8 - dummy;
       }
@@ -1007,7 +610,7 @@ SecureVector<byte> encode_hybrid(const PointGFp& point)
    SecureVector<byte> bY = BigInt::encode_1363(y, l);
    result.copy(1, bX.begin(), bX.size());
    result.copy(l+1, bY.begin(), bY.size());
-   if (y.get_bit(0))
+   if(y.get_bit(0))
       {
       result[0] |= 1;
       }
@@ -1016,7 +619,7 @@ SecureVector<byte> encode_hybrid(const PointGFp& point)
 
 PointGFp OS2ECP(MemoryRegion<byte> const& os, const CurveGFp& curve)
    {
-   if (os.size() == 1 && os[0] == 0)
+   if(os.size() == 1 && os[0] == 0)
       {
       return PointGFp(curve); // return zero
       }
@@ -1038,10 +641,6 @@ PointGFp OS2ECP(MemoryRegion<byte> const& os, const CurveGFp& curve)
          bX = SecureVector<byte>(os.size() - 1);
          bX.copy(os.begin()+1, os.size()-1);
 
-         /* Problem wäre, wenn decode() das erste bit als Vorzeichen interpretiert.
-         *---------------------
-         * AW(FS): decode() interpretiert das erste Bit nicht als Vorzeichen
-         */
          bi_dec_x = BigInt::decode(bX, bX.size());
          x = GFpElement(curve.get_p(), bi_dec_x);
          bool yMod2;
@@ -1072,7 +671,7 @@ PointGFp OS2ECP(MemoryRegion<byte> const& os, const CurveGFp& curve)
          bX.copy(os.begin() + 1, l);
          bY.copy(os.begin()+1+l, l);
          yMod2 = (pc & 0x01) == 1;
-         if (!(PointGFp::decompress(yMod2, x, curve) == y))
+         if(!(PointGFp::decompress(yMod2, x, curve) == y))
             {
             throw Illegal_Point("error during decoding hybrid format");
             }
@@ -1107,7 +706,7 @@ GFpElement PointGFp::decompress(bool yMod2, const GFpElement& x,
       throw Illegal_Point("error during decompression");
 
    bool zMod2 = z.get_bit(0);
-   if ((zMod2 && ! yMod2) || (!zMod2 && yMod2))
+   if((zMod2 && ! yMod2) || (!zMod2 && yMod2))
       {
       z = curve.get_p() - z;
       }

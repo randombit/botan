@@ -18,9 +18,9 @@ namespace Botan {
 class BOTAN_DLL S2K
    {
    public:
+
       /**
-      * Create a copy of this object.
-      * @return an auto_ptr to a copy of this object
+      * @return a new instance of this same algorithm
       */
       virtual S2K* clone() const = 0;
 

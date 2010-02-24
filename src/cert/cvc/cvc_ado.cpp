@@ -8,11 +8,10 @@
 
 #include <botan/cvc_ado.h>
 #include <fstream>
-#include <assert.h>
 
 namespace Botan {
 
-EAC1_1_ADO::EAC1_1_ADO(std::shared_ptr<DataSource> in)
+EAC1_1_ADO::EAC1_1_ADO(DataSource& in)
    {
    init(in);
    do_decode();
@@ -20,7 +19,7 @@ EAC1_1_ADO::EAC1_1_ADO(std::shared_ptr<DataSource> in)
 
 EAC1_1_ADO::EAC1_1_ADO(const std::string& in)
    {
-   std::shared_ptr<DataSource> stream(new DataSource_Stream(in, true));
+   DataSource_Stream stream(in, true);
    init(stream);
    do_decode();
    }
@@ -41,7 +40,7 @@ void EAC1_1_ADO::force_decode()
       .end_cons()
       .get_contents();
 
-   std::shared_ptr<DataSource> req_source(new DataSource_Memory(req_bits));
+   DataSource_Memory req_source(req_bits);
    m_req = EAC1_1_Req(req_source);
    sig_algo = m_req.sig_algo;
    }
@@ -52,15 +51,14 @@ MemoryVector<byte> EAC1_1_ADO::make_signed(
    RandomNumberGenerator& rng)
    {
    SecureVector<byte> concat_sig =
-      EAC1_1_obj<EAC1_1_ADO>::make_signature(signer, tbs_bits, rng);
-   assert(concat_sig.size() % 2 == 0);
-   MemoryVector<byte> result = DER_Encoder()
+      EAC1_1_obj<EAC1_1_ADO>::make_signature(signer.get(), tbs_bits, rng);
+
+   return DER_Encoder()
       .start_cons(ASN1_Tag(7), APPLICATION)
       .raw_bytes(tbs_bits)
       .encode(concat_sig, OCTET_STRING, ASN1_Tag(55), APPLICATION)
       .end_cons()
       .get_contents();
-   return result;
    }
 
 ASN1_Car EAC1_1_ADO::get_car() const
@@ -68,14 +66,15 @@ ASN1_Car EAC1_1_ADO::get_car() const
    return m_car;
    }
 
-void EAC1_1_ADO::decode_info(SharedPtrConverter<DataSource> source,
+void EAC1_1_ADO::decode_info(DataSource& source,
                              SecureVector<byte> & res_tbs_bits,
                              ECDSA_Signature & res_sig)
    {
    SecureVector<byte> concat_sig;
    SecureVector<byte> cert_inner_bits;
    ASN1_Car car;
-   BER_Decoder(*source.get_ptr().get())
+
+   BER_Decoder(source)
       .start_cons(ASN1_Tag(7))
       .start_cons(ASN1_Tag(33))
       .raw_bytes(cert_inner_bits)
@@ -89,28 +88,30 @@ void EAC1_1_ADO::decode_info(SharedPtrConverter<DataSource> source,
       .raw_bytes(cert_inner_bits)
       .end_cons()
       .get_contents();
+
    SecureVector<byte> enc_car = DER_Encoder()
       .encode(car)
       .get_contents();
+
    res_tbs_bits = enc_cert;
    res_tbs_bits.append(enc_car);
    res_sig = decode_concatenation(concat_sig);
-
-
    }
+
 void EAC1_1_ADO::encode(Pipe& out, X509_Encoding encoding) const
    {
-   SecureVector<byte> concat_sig(EAC1_1_obj<EAC1_1_ADO>::m_sig.get_concatenation());
-   SecureVector<byte> der = DER_Encoder()
-      .start_cons(ASN1_Tag(7), APPLICATION)
-      .raw_bytes(tbs_bits)
-      .encode(concat_sig, OCTET_STRING, ASN1_Tag(55), APPLICATION)
-      .end_cons()
-      .get_contents();
    if(encoding == PEM)
       throw Invalid_Argument("EAC1_1_ADO::encode() cannot PEM encode an EAC object");
-   else
-      out.write(der);
+
+   SecureVector<byte> concat_sig(
+      EAC1_1_obj<EAC1_1_ADO>::m_sig.get_concatenation());
+
+   out.write(DER_Encoder()
+             .start_cons(ASN1_Tag(7), APPLICATION)
+                 .raw_bytes(tbs_bits)
+                 .encode(concat_sig, OCTET_STRING, ASN1_Tag(55), APPLICATION)
+             .end_cons()
+             .get_contents());
    }
 
 SecureVector<byte> EAC1_1_ADO::tbs_data() const
@@ -120,8 +121,6 @@ SecureVector<byte> EAC1_1_ADO::tbs_data() const
 
 bool EAC1_1_ADO::operator==(EAC1_1_ADO const& rhs) const
    {
-   assert(((this->m_req == rhs.m_req) && (this->tbs_data() == rhs.tbs_data())) ||
-          ((this->m_req != rhs.m_req) && (this->tbs_data() != rhs.tbs_data())));
    return (this->get_concat_sig() == rhs.get_concat_sig()
            && this->tbs_data() == rhs.tbs_data()
            && this->get_car() ==  rhs.get_car());

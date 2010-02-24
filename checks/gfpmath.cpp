@@ -471,181 +471,23 @@ bool test_gfp_mult_u32bit()
    return pass;
    }
 
-/**
-* This tests verifies the functionality of sharing pointers for modulus dependent values
-*/
-bool test_gfp_shared_vals()
-   {
-   std::cout << '.' << std::flush;
-
-   bool pass = true;
-
-   BigInt p("5334243285367");
-   GFpElement a(p, BigInt("234090"));
-   GFpElement shcpy_a(1,0);
-   shcpy_a.share_assign(a);
-   std::shared_ptr<GFpModulus> ptr1 = a.get_ptr_mod();
-   std::shared_ptr<GFpModulus> ptr2 = shcpy_a.get_ptr_mod();
-   CHECK_MESSAGE(ptr1.get() == ptr2.get(), "shared pointers for moduli aren´t equal");
-
-   GFpElement b(1,0);
-   b = a; // create a non shared copy
-   std::shared_ptr<GFpModulus> ptr_b_p = b.get_ptr_mod();
-   CHECK_MESSAGE(ptr1.get() != ptr_b_p.get(), "non shared pointers for moduli are equal");
-
-   a.turn_on_sp_red_mul();
-   GFpElement c1 = a * shcpy_a;
-   GFpElement c2 = a * a;
-   GFpElement c3 = shcpy_a * shcpy_a;
-   GFpElement c4 = shcpy_a * a;
-   shcpy_a.turn_on_sp_red_mul();
-   GFpElement c5 = shcpy_a * shcpy_a;
-
-   if(c1 != c2 || c2 != c3 || c3 != c4 || c4 != c5)
-      {
-      std::cout << "test_gfp_shared_vals failed"
-                << " a=" << a
-                << " shcpy_a=" << shcpy_a
-                << " c1=" << c1 << " c2=" << c2
-                << " c3=" << c3 << " c4=" << c4
-                << " c5=" << c5 << "\n";
-      pass = false;
-      }
-
-   swap(a,shcpy_a);
-   std::shared_ptr<GFpModulus> ptr3 = a.get_ptr_mod();
-   std::shared_ptr<GFpModulus> ptr4 = shcpy_a.get_ptr_mod();
-   CHECK_MESSAGE(ptr3.get() == ptr4.get(), "shared pointers for moduli aren´t equal after swap");
-   CHECK(ptr1.get() == ptr4.get());
-   CHECK(ptr2.get() == ptr3.get());
-
-   swap(a,b);
-   std::shared_ptr<GFpModulus> ptr_a = a.get_ptr_mod();
-   std::shared_ptr<GFpModulus> ptr_b = shcpy_a.get_ptr_mod();
-   CHECK(ptr_a.get() == ptr_b_p.get());
-   CHECK(ptr_b.get() == ptr3.get());
-   return pass;
-   }
-
-/**
-* The following test checks the behaviour of GFpElements assignment operator, which
-* has quite complex behaviour with respect to sharing groups and precomputed values
-* (with respect to montgomery mult.)
-*/
-bool test_gfpel_ass_op()
-   {
-   std::cout << '.' << std::flush;
-
-   bool pass = true;
-
-
-   // test different moduli
-   GFpElement a(23,4);
-   GFpElement b(11,6);
-
-   GFpElement b2(11,6);
-
-   a = b;
-   CHECK(a==b2);
-   CHECK(a.get_value() == b2.get_value());
-   CHECK(a.get_p() == b2.get_p());
-   CHECK(a.get_ptr_mod().get() != b.get_ptr_mod().get()); // sharing groups
-   // may not be fused!
-
-   // also test some share_assign()...
-   a.share_assign(b);
-   CHECK(a==b2);
-   CHECK(a.get_value() == b2.get_value());
-   CHECK(a.get_p() == b2.get_p());
-   CHECK(a.get_ptr_mod().get() == b.get_ptr_mod().get()); // sharing groups
-   // shall be fused!
-   //---------------------------
-
-   // test assignment within sharing group
-   // with montg.mult.
-   GFpElement c(5,2);
-   GFpElement d(5,2);
-   d.share_assign(c);
-   CHECK(d.get_ptr_mod().get() == c.get_ptr_mod().get());
-   CHECK(d.get_ptr_mod()->get_p() == c.get_ptr_mod()->get_p());
-   CHECK(c.get_ptr_mod()->get_r().is_zero());
-   c.turn_on_sp_red_mul();
-   CHECK(d.get_ptr_mod().get() == c.get_ptr_mod().get());
-   CHECK(d.get_ptr_mod()->get_p() == c.get_ptr_mod()->get_p());
-   CHECK(!c.get_ptr_mod()->get_p().is_zero());
-   GFpElement f(11,5);
-   d = f;
-   CHECK(f.get_ptr_mod().get() != c.get_ptr_mod().get());
-
-   GFpElement e = c*c;
-   GFpElement g = d*d;
-   GFpElement h = f*f;
-   CHECK(h == g);
-
-   GFpElement c2(5,2);
-   GFpElement d2(5,2);
-   d2.share_assign(c2);
-   GFpElement f2(11,5);
-   d2 = f2;
-   c2.turn_on_sp_red_mul();
-   CHECK(d2.get_ptr_mod().get() != c2.get_ptr_mod().get()); // the sharing group was left
-   CHECK(d2.get_ptr_mod()->get_r() == f2.get_ptr_mod()->get_r());
-   CHECK(c2.get_p() == 5); // c2´s shared values weren´t modified because
-   // the sharing group with d2 was separated by
-   // the assignment "d2 = f2"
-
-   d2.turn_on_sp_red_mul();
-   CHECK(d2.get_ptr_mod()->get_p() != c2.get_ptr_mod()->get_p());
-   GFpElement e2 = c2*c2;
-   GFpElement g2 = d2*d2;
-   GFpElement h2 = f2*f2;
-   CHECK(h2 == g2);
-
-   GFpElement c3(5,2);
-   GFpElement d3(5,2);
-   d3.share_assign(c3);
-   GFpElement f3(11,2);
-   d3 = f3;
-   GFpElement e3 = c3*c3;
-   GFpElement g3 = d3*d3;
-
-   CHECK(e == e2);
-   CHECK(g == g2);
-
-   CHECK(e == e3);
-   CHECK(g == g2);
-   return pass;
-   }
-
 bool test_gfp_swap()
    {
    std::cout << '.' << std::flush;
 
    bool pass = true;
 
-
    BigInt p("173");
    GFpElement a(p, BigInt("2342"));
    GFpElement b(p, BigInt("423420"));
-
-   GFpModulus* a_mod = a.get_ptr_mod().get();
-   GFpModulus* b_mod = b.get_ptr_mod().get();
-
-   //GFpModulus* a_d = a.get_ptr_mod()->get_p_dash();
-   //GFpModulus* b_d = b.get_ptr_mod()->get_p_dash();
 
    swap(a,b);
    CHECK_MESSAGE(b.get_value() == 2342%173, "actual value of b was: " << b.get_value() );
    CHECK_MESSAGE(a.get_value() == 423420%173, "actual value of a was: " << a.get_value() );
 
-   CHECK(a_mod == b.get_ptr_mod().get());
-   CHECK(b_mod == a.get_ptr_mod().get());
-   //CHECK(a_d == b.get_ptr_mod()->get_p_dash());
-   //CHECK(b_d == a.get_ptr_p_dash()->get_p_dash());
-
    GFpElement c(p, BigInt("2342329"));
    GFpElement d(1,1);
-   d.share_assign(c);
+   d = c;
    d += d;
    c.swap(d);
    CHECK(d.get_value() == 2342329%173);
@@ -792,8 +634,6 @@ u32bit do_gfpmath_tests(Botan::RandomNumberGenerator& rng)
    failed += !test_gfp_sub();
    failed += !test_more_gfp_div();
    failed += !test_gfp_mult_u32bit();
-   failed += !test_gfp_shared_vals();
-   failed += !test_gfpel_ass_op();
    failed += !test_gfp_swap();
    failed += !test_inv_in_place();
    failed += !test_op_eq();

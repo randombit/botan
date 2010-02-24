@@ -38,7 +38,7 @@ class BOTAN_DLL EAC1_1_ADO : public EAC1_1_obj<EAC1_1_ADO>
       * Construct a CVC ADO request from a data source
       * @param source the data source
       */
-      EAC1_1_ADO(std::shared_ptr<DataSource> source);
+      EAC1_1_ADO(DataSource& source);
 
       /**
       * Create a signed CVC ADO request from to be signed (TBS) data
@@ -83,7 +83,7 @@ class BOTAN_DLL EAC1_1_ADO : public EAC1_1_obj<EAC1_1_ADO>
       EAC1_1_Req m_req;
 
       void force_decode();
-      static void decode_info(SharedPtrConverter<DataSource> source,
+      static void decode_info(DataSource& source,
                               SecureVector<byte> & res_tbs_bits,
                               ECDSA_Signature & res_sig);
    };

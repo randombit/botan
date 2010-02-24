@@ -59,7 +59,7 @@ class BOTAN_DLL EAC1_1_CVC : public EAC1_1_gen_CVC<EAC1_1_CVC>//Signed_Object
        * Construct a CVC from a data source
        * @param source the data source
        */
-       EAC1_1_CVC(std::shared_ptr<DataSource>& source);
+       EAC1_1_CVC(DataSource& source);
 
        /**
        * Construct a CVC from a file

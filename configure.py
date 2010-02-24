@@ -464,9 +464,9 @@ class ModuleInfo(object):
             return os.path.join(os.path.split(self.lives_in)[0],
                                 *filename.split(':'))
 
-        self.source = map(add_dir_name, self.source)
-        self.header_internal = map(add_dir_name, self.header_internal)
-        self.header_public = map(add_dir_name, self.header_public)
+        self.source = [add_dir_name(s) for s in self.source]
+        self.header_internal = [add_dir_name(s) for s in self.header_internal]
+        self.header_public = [add_dir_name(s) for s in self.header_public]
 
         self.mp_bits = int(self.mp_bits)
 
@@ -518,9 +518,9 @@ class ModuleInfo(object):
     about any that do not
     """
     def dependencies_exist(self, modules):
-        all_deps = map(lambda s: s.split('|'), self.dependencies())
+        all_deps = [s.split('|') for s in self.dependencies()]
 
-        for missing in filter(lambda s: s not in modules, flatten(all_deps)):
+        for missing in [s for s in flatten(all_deps) if s not in modules]:
             logging.warn("Module '%s', dep of '%s', does not exist" % (
                 missing, self.basename))
 
@@ -1055,8 +1055,7 @@ def choose_modules_to_use(modules, archinfo, options):
     while dependency_failure:
         dependency_failure = False
         for modname in to_load:
-            for deplist in map(lambda s: s.split('|'),
-                               modules[modname].dependencies()):
+            for deplist in [s.split('|') for s in modules[modname].dependencies()]:
 
                 dep_met = False
                 for mod in deplist:
@@ -1338,8 +1337,8 @@ def generate_amalgamation(build_config):
     botan_all_h.write("\n#endif\n")
 
     internal_header_amalag = Amalgamation_Generator(
-        filter(lambda s: s.find('asm_macr_') == -1,
-               build_config.internal_headers))
+        [s for s in build_config.internal_headers
+         if s.find('asm_macr_') == -1])
 
     botan_all_cpp = open('botan_all.cpp', 'w')
 
@@ -1465,6 +1464,16 @@ def main(argv = None):
         if options.dumb_gcc is True:
             logging.info('Setting -fpermissive to work around gcc bug')
             options.extra_flags = ' -fpermissive'
+
+    if options.gen_amalgamation:
+        if options.asm_ok:
+            logging.info('Disabling assembly code, cannot use in amalgamation')
+            options.asm_ok = False
+
+        for mod in ['sha1_sse2', 'serpent_simd']:
+            if mod not in options.disabled_modules:
+                logging.info('Disabling %s, cannot use in amalgamation' % (mod))
+                options.disabled_modules.append(mod)
 
     modules_to_use = choose_modules_to_use(modules,
                                            archinfo[options.arch],

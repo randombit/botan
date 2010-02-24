@@ -2,6 +2,7 @@
 * Arithmetic for prime fields GF(p)
 *
 * (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
+*     2009-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -12,7 +13,6 @@
 #include <botan/bigint.h>
 #include <botan/gfp_modulus.h>
 #include <iosfwd>
-#include <memory>
 
 namespace Botan {
 
@@ -38,57 +38,21 @@ class BOTAN_DLL GFpElement
       * @param value the element value
       * @param use_montgm whether this object will use Montgomery multiplication
       */
-      explicit GFpElement (const BigInt& p, const BigInt& value, bool use_montgm = false);
+      GFpElement(const BigInt& p, const BigInt& value, bool use_montgm = true);
 
+      // GFpElement(const GFpElement& other) = default;
 
-      /** construct an element of GF(p) with the given value (defaults
-      * to 0).  use_montg defaults to false and determines wether
-      * montgomery multiplications will be use when applying operators
-      * '*' , '*='.  Use this constructor for efficient use of
-      * Montgomery multiplication in a context with a fixed a modulus.
-      * Warning: do not use this function unless you know in detail
-      * about the implications of using the shared GFpModulus objects!
-      * @param mod shared pointer to the GFpModulus to be shared
-      * @param value the element value
-      * @param use_montgm whether this object will use Montgomery multiplication
-      */
-      explicit GFpElement(std::shared_ptr<GFpModulus> const mod,
-                          const BigInt& value, bool use_mongm = false);
-
-      /**
-      * Copy constructor
-      * @param other The element to clone
-      */
-      GFpElement(const GFpElement& other);
-
-      /**
-      * Assignment operator.
-      * makes *this a totally independent object
-      * (gives *this independent modulus specific values).
-
-      * @param other The element to assign to our object
-      */
-      const GFpElement& operator=(const GFpElement& other);
-
-      /**
-      * Works like the assignment operator, but lets
-      * *this share the modulus dependend value with other.
-      * Warning: do not use this function unless you know in detail about
-      * the implications of using
-      * the shared GFpModulus objects!
-      * @param other The element to assign to our object
-      */
-      void share_assign(const GFpElement& other);
+      // const GFpElement& operator=(const GFpElement& other) = default;
 
       /**
       * Switch Montgomery multiplcation optimizations ON
       */
-      void turn_on_sp_red_mul() const;
+      void turn_on_sp_red_mul();
 
       /**
       * Switch Montgomery multiplcation optimizations OFF
       */
-      void turn_off_sp_red_mul() const;
+      void turn_off_sp_red_mul();
 
       /**
       * += Operator
@@ -122,7 +86,7 @@ class BOTAN_DLL GFpElement
       * @param rhs the value to multiply with the local value
       * @result *this
       */
-      GFpElement& operator*= (u32bit rhs);
+      GFpElement& operator*=(u32bit rhs);
 
       /**
       * Negate internal value(*this *= -1 )
@@ -157,31 +121,9 @@ class BOTAN_DLL GFpElement
       const BigInt& get_value() const;
 
       /**
-      * Returns the shared pointer to the GFpModulus of *this.
-      * Warning: do not use this function unless you know in detail about
-      * the implications of using
-      * the shared GFpModulus objects!
-      * @result the shared pointer to the GFpModulus of *this
-      */
-      inline std::shared_ptr<GFpModulus> const get_ptr_mod() const
-         {
-         return mp_mod;
-         }
-
-
-      /**
-      * Sets the shared pointer to the GFpModulus of *this.
-      * Warning: do not use this function unless you know in detail about
-      * the implications of using
-      * the shared GFpModulus objects!
-      * @param mod a shared pointer to a GFpModulus that will be held in *this
-      */
-      void set_shrd_mod(std::shared_ptr<GFpModulus> const mod);
-
-      /**
-      * Tells whether this GFpElement is currently transformed to it´ m-residue,
+      * Tells whether this GFpElement is currently transformed to an m-residue,
       * i.e. in the form x_bar = x * r mod m.
-      * @result true if it is currently transformed to it´s m-residue.
+      * @result true if it is currently transformed to its m-residue.
       */
       bool is_trf_to_mres() const;
 
@@ -206,7 +148,7 @@ class BOTAN_DLL GFpElement
       * in ordinary residue representation (returns false).
       * m-residue is prefered in case of ambiguity.
       * does not toggle m_use_montgm of the arguments.
-      * Don´t be confused about the constness of the arguments:
+      * Don't be confused about the constness of the arguments:
       * the transformation between normal residue and m-residue is
       * considered as leaving the object const.
       * @param lhs the first operand to be aligned
@@ -216,30 +158,22 @@ class BOTAN_DLL GFpElement
       */
       static bool align_operands_res(const GFpElement& lhs, const GFpElement& rhs);
 
-      //friend declarations for non-member functions
-
-      friend class Point_Coords_GFp;
-
       /**
       * swaps the states of *this and other, does not throw!
       * @param other The value to swap with
       */
       void swap(GFpElement& other);
    private:
-      void ensure_montgm_precomp() const;
+      void ensure_montgm_precomp();
       void trf_to_mres() const;
       void trf_to_ordres() const;
 
-      std::shared_ptr<GFpModulus> mp_mod;
+      GFpModulus modulus;
       mutable BigInt m_value; // ordinary residue or m-residue respectively
-      mutable BigInt workspace;
 
       // data members for montgomery multiplication
-      mutable bool m_use_montgm;
-      //mutable BigInt m_mres;
-      // this bool tells use whether the m_mres carries
-      // the actual value (in this case mValue doesn´t)
-      mutable bool m_is_trf;
+      bool m_use_montgm;
+      mutable bool m_is_trf; // if m_value is montgomery
    };
 
 // relational operators
@@ -256,8 +190,8 @@ GFpElement BOTAN_DLL operator-(const GFpElement& lhs);
 
 GFpElement BOTAN_DLL operator*(const GFpElement& lhs, const GFpElement& rhs);
 GFpElement BOTAN_DLL operator/(const GFpElement& lhs, const GFpElement& rhs);
-GFpElement BOTAN_DLL operator* (const GFpElement& lhs, u32bit rhs);
-GFpElement BOTAN_DLL operator* (u32bit rhs, const GFpElement& lhs);
+GFpElement BOTAN_DLL operator*(const GFpElement& lhs, u32bit rhs);
+GFpElement BOTAN_DLL operator*(u32bit rhs, const GFpElement& lhs);
 
 
 /**

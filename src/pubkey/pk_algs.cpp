@@ -23,6 +23,10 @@
   #include <botan/ecdsa.h>
 #endif
 
+#if defined(BOTAN_HAS_GOST_34_10_2001)
+  #include <botan/gost_3410.h>
+#endif
+
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL)
   #include <botan/nr.h>
 #endif
@@ -70,6 +74,10 @@ Public_Key* get_public_key(const std::string& alg_name)
    if(alg_name == "ECDSA") return new ECDSA_PublicKey;
 #endif
 
+#if defined(BOTAN_HAS_GOST_34_10_2001)
+   if(alg_name == "GOST-34.10") return new GOST_3410_PublicKey;
+#endif
+
    return 0;
    }
 
@@ -104,6 +112,10 @@ Private_Key* get_private_key(const std::string& alg_name)
 
 #if defined(BOTAN_HAS_ECDSA)
    if(alg_name == "ECDSA") return new ECDSA_PrivateKey;
+#endif
+
+#if defined(BOTAN_HAS_GOST_34_10_2001)
+   if(alg_name == "GOST-34.10") return new GOST_3410_PrivateKey;
 #endif
 
    return 0;

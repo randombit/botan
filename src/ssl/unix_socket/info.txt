@@ -1,0 +1,21 @@
+define UNIX_SOCKET
+
+<source>
+unx_sock.cpp
+</source>
+
+<header:public>
+unx_sock.h
+</header:public>
+
+<requires>
+ssl
+</requires>
+
+<os>
+linux
+freebsd
+netbsd
+openbsd
+solaris
+</os>

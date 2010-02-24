@@ -37,8 +37,7 @@ EAC1_1_CVC EAC1_1_CVC_CA::make_cert(PK_Signer& signer,
                               EAC1_1_CVC::build_cert_body(tbs),
                               rng);
 
-   std::shared_ptr<DataSource> source(new DataSource_Memory(signed_cert));
-
+   DataSource_Memory source(signed_cert);
    return EAC1_1_CVC(source);
    }
 
