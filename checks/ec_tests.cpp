@@ -1,3 +1,9 @@
+/*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
 
 #include <botan/build.h>
 #include "validate.h"
@@ -79,16 +85,16 @@ void test_point_turn_on_sp_red_mul()
    CHECK_MESSAGE(r1 == r2, "error with point mul after extra turn on sp red mul");
    CHECK(r1.get_affine_x().get_value() != BigInt("0"));
 
-   std::tr1::shared_ptr<PointGFp> p_r1(new PointGFp(r1));
-   std::tr1::shared_ptr<PointGFp> p_r2(new PointGFp(r2));
+   PointGFp p_r1 = r1;
+   PointGFp p_r2 = r2;
 
-   p_r1->mult2_in_place(); // wird für Fehler nicht gebraucht
-   p_r2->turn_on_sp_red_mul();    // 1. t_o() macht nur p_r2 kaputt
-   p_r2->turn_on_sp_red_mul();  // 2. t_o() macht auch p_r1 kaputt!!!
-   p_r2->mult2_in_place(); // wird für Fehler nicht gebraucht
-   CHECK_MESSAGE(p_r1->get_affine_x() == p_r2->get_affine_x(), "error with mult2 after extra turn on sp red mul");
-   CHECK(p_r1->get_affine_x().get_value() != BigInt("0"));
-   CHECK(p_r2->get_affine_x().get_value() != BigInt("0"));
+   p_r1.mult2_in_place(); // wird für Fehler nicht gebraucht
+   p_r2.turn_on_sp_red_mul();    // 1. t_o() macht nur p_r2 kaputt
+   p_r2.turn_on_sp_red_mul();  // 2. t_o() macht auch p_r1 kaputt!!!
+   p_r2.mult2_in_place(); // wird für Fehler nicht gebraucht
+   CHECK_MESSAGE(p_r1.get_affine_x() == p_r2.get_affine_x(), "error with mult2 after extra turn on sp red mul");
+   CHECK(p_r1.get_affine_x().get_value() != BigInt("0"));
+   CHECK(p_r2.get_affine_x().get_value() != BigInt("0"));
    r1.mult2_in_place();
 
    r2.turn_on_sp_red_mul();
@@ -1066,28 +1072,6 @@ void test_mult_sec_mass(RandomNumberGenerator& rng)
       }
    }
 
-/**
-* The following test verifies that PointGFps copy-ctor and assignment operator
-* produce non-sharing Objects
-*/
-void test_point_ctors_ass_unshared()
-   {
-   std::cout << "." << std::flush;
-
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
-   PointGFp p = dom_pars.get_base_point();
-   PointGFp ind_cpy(p);
-
-   // doesn´t work this way, because getters of point return an independent copy!
-   CHECK(p.get_jac_proj_x().get_ptr_mod().get() != ind_cpy.get_jac_proj_x().get_ptr_mod().get());
-   //CHECK(p.get_x().get_ptr_r().get() != ind_cpy.get_x().get_ptr_r().get());
-
-   PointGFp ind_ass(p);
-   ind_ass = p;
-   CHECK(p.get_jac_proj_x().get_ptr_mod().get() != ind_ass.get_jac_proj_x().get_ptr_mod().get());
-   //CHECK(p.get_x().get_ptr_r().get() != ind_ass.get_x().get_ptr_r().get());
-   }
-
 void test_curve_cp_ctor()
    {
    std::cout << "." << std::flush;
@@ -1210,7 +1194,6 @@ void do_ec_tests(RandomNumberGenerator& rng)
    test_point_swap(rng);
    test_mult_sec();
    test_mult_sec_mass(rng);
-   test_point_ctors_ass_unshared();
    test_curve_cp_ctor();
    test_ec_key_cp_and_assignment(rng);
    test_ec_key_cast(rng);

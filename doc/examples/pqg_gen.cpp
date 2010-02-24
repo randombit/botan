@@ -1,3 +1,9 @@
+/*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -25,7 +31,7 @@ int main()
 
       std::ifstream in("PQGGen.rsp");
       if(!in)
-         throw Exception("Can't open response file");
+         throw std::runtime_error("Can't open response file");
 
       std::map<std::string, std::string> inputs;
 
@@ -40,7 +46,7 @@ int main()
          std::vector<std::string> name_and_val = split_on(line, '=');
 
          if(name_and_val.size() != 2)
-            throw Decoding_Error("Unexpected input: " + line);
+            throw std::runtime_error("Unexpected input: " + line);
 
          name_and_val[0].erase(name_and_val[0].size()-1);
          name_and_val[1].erase(0, 1);

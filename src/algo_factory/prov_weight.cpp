@@ -19,15 +19,17 @@ u32bit static_provider_weight(const std::string& prov_name)
    * them, set the provider explicitly for the algorithms you want
    */
 
-   if(prov_name == "core") return 5;
-   if(prov_name == "ia32") return 6;
-   if(prov_name == "amd64") return 7;
+   if(prov_name == "aes_isa") return 9;
    if(prov_name == "simd") return 8;
+   if(prov_name == "amd64") return 7;
+   if(prov_name == "ia32") return 6;
+
+   if(prov_name == "core") return 5;
 
    if(prov_name == "openssl") return 2;
    if(prov_name == "gmp") return 1;
 
-   return 0; // other
+   return 0; // other/unknown
    }
 
 }

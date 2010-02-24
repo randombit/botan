@@ -1,0 +1,9 @@
+define PASSHASH9
+
+<requires>
+libstate
+pbkdf2
+rng
+base64
+</requires>
+

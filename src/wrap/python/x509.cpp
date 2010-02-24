@@ -1,7 +1,9 @@
-/*************************************************
-* Boost.Python module definition                 *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Boost.Python module definition
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/oids.h>
 #include <botan/pipe.h>

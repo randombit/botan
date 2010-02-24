@@ -1,12 +1,10 @@
 /*
-  Read an X.509 certificate, and print various things about it
-
-  Written by Jack Lloyd, March 23 2003
-    - October 31, 2003: Prints the public key
-    - November 1, 2003: Removed the -d flag; it can tell automatically now
-
-  This file is in the public domain
+* Read an X.509 certificate, and print various things about it
+* (C) 2003 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
+
 #include <botan/botan.h>
 #include <botan/x509cert.h>
 #include <botan/oids.h>

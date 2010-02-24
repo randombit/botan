@@ -195,7 +195,7 @@ void CMS_Decoder::decode_layer()
       else if(type == OIDS::lookup("CMS.SignedData"))
          {
 #if 1
-         throw Exception("FIXME: not implemented");
+         throw Internal_Error("FIXME: not implemented");
 #else
          u32bit version;
 
@@ -258,11 +258,11 @@ void CMS_Decoder::decode_layer()
          }
       else if(type == OIDS::lookup("CMS.EnvelopedData"))
          {
-         throw Exception("FIXME: not implemented");
+         throw Internal_Error("FIXME: not implemented");
          }
       else if(type == OIDS::lookup("CMS.AuthenticatedData"))
          {
-         throw Exception("FIXME: not implemented");
+         throw Internal_Error("FIXME: not implemented");
          }
       else
          throw Decoding_Error("CMS: Unknown content ID " + type.as_string());

@@ -6,7 +6,6 @@
 */
 
 #include <botan/md4_ia32.h>
-#include <botan/loadstor.h>
 
 namespace Botan {
 

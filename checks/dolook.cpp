@@ -1,3 +1,9 @@
+/*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
 #include <vector>
 #include <string>
 
@@ -54,9 +60,9 @@ class S2K_Filter : public Filter
          { passphrase += std::string(reinterpret_cast<const char*>(in), len); }
       void end_msg()
          {
-         s2k->change_salt(salt, salt.size());
-         s2k->set_iterations(iterations);
-         SymmetricKey x = s2k->derive_key(outlen, passphrase);
+         SymmetricKey x = s2k->derive_key(outlen, passphrase,
+                                          &salt[0], salt.size(),
+                                          iterations);
          send(x.bits_of());
          }
       S2K_Filter(S2K* algo, const SymmetricKey& s, u32bit o, u32bit i)

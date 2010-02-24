@@ -1,0 +1,41 @@
+/*
+* Block Cipher Cascade
+* (C) 2010 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
+#ifndef BOTAN_CASCADE_H__
+#define BOTAN_CASCADE_H__
+
+#include <botan/block_cipher.h>
+
+namespace Botan {
+
+/*
+* Block Cipher Cascade
+*/
+class BOTAN_DLL Cascade_Cipher : public BlockCipher
+   {
+   public:
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+
+      void clear();
+      std::string name() const;
+      BlockCipher* clone() const;
+
+      Cascade_Cipher(BlockCipher* cipher1, BlockCipher* cipher2);
+
+      ~Cascade_Cipher();
+   private:
+      void key_schedule(const byte[], u32bit);
+
+      BlockCipher* cipher1;
+      BlockCipher* cipher2;
+   };
+
+
+}
+
+#endif

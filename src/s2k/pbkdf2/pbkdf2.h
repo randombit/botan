@@ -22,6 +22,11 @@ class BOTAN_DLL PKCS5_PBKDF2 : public S2K
       std::string name() const;
       S2K* clone() const;
 
+      OctetString derive_key(u32bit output_len,
+                             const std::string& passphrase,
+                             const byte salt[], u32bit salt_len,
+                             u32bit iterations) const;
+
       /**
       * Create a PKCS #5 instance using the specified message auth code
       * @param mac the MAC to use
@@ -29,9 +34,6 @@ class BOTAN_DLL PKCS5_PBKDF2 : public S2K
       PKCS5_PBKDF2(MessageAuthenticationCode* mac);
       ~PKCS5_PBKDF2();
    private:
-      OctetString derive(u32bit, const std::string&,
-                          const byte[], u32bit, u32bit) const;
-
       MessageAuthenticationCode* mac;
    };
 

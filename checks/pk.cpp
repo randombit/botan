@@ -1,3 +1,9 @@
+/*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -166,7 +172,7 @@ u32bit validate_rsa_enc_pkcs8(const std::string& algo,
                               RandomNumberGenerator& rng)
    {
    if(str.size() != 4 && str.size() != 5)
-      throw Exception("Invalid input from pk_valid.dat");
+      throw std::runtime_error("Invalid input from pk_valid.dat");
 
 
 #if defined(BOTAN_HAS_RSA)
@@ -204,7 +210,7 @@ u32bit validate_rsa_enc(const std::string& algo,
                         RandomNumberGenerator& rng)
    {
    if(str.size() != 6)
-      throw Exception("Invalid input from pk_valid.dat");
+      throw std::runtime_error("Invalid input from pk_valid.dat");
 
 
 #if defined(BOTAN_HAS_RSA)
@@ -232,7 +238,7 @@ u32bit validate_elg_enc(const std::string& algo,
                         RandomNumberGenerator& rng)
    {
    if(str.size() != 6 && str.size() != 7)
-      throw Exception("Invalid input from pk_valid.dat");
+      throw std::runtime_error("Invalid input from pk_valid.dat");
 
 
 #if defined(BOTAN_HAS_ELGAMAL)
@@ -264,7 +270,7 @@ u32bit validate_rsa_sig(const std::string& algo,
                         RandomNumberGenerator& rng)
    {
    if(str.size() != 6)
-      throw Exception("Invalid input from pk_valid.dat");
+      throw std::runtime_error("Invalid input from pk_valid.dat");
 
 
 #if defined(BOTAN_HAS_RSA)
@@ -290,7 +296,7 @@ u32bit validate_rsa_ver(const std::string& algo,
                         const std::vector<std::string>& str)
    {
    if(str.size() != 5) /* is actually 4, parse() adds an extra empty one */
-      throw Exception("Invalid input from pk_valid.dat");
+      throw std::runtime_error("Invalid input from pk_valid.dat");
 
 #if defined(BOTAN_HAS_RSA)
    RSA_PublicKey key(to_bigint(str[1]), to_bigint(str[0]));
@@ -314,7 +320,7 @@ u32bit validate_rsa_ver_x509(const std::string& algo,
                              const std::vector<std::string>& str)
    {
    if(str.size() != 5) /* is actually 3, parse() adds extra empty ones */
-      throw Exception("Invalid input from pk_valid.dat");
+      throw std::runtime_error("Invalid input from pk_valid.dat");
 
 #if defined(BOTAN_HAS_RSA)
    DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
@@ -346,7 +352,7 @@ u32bit validate_rw_ver(const std::string& algo,
                        const std::vector<std::string>& str)
    {
    if(str.size() != 5)
-      throw Exception("Invalid input from pk_valid.dat");
+      throw std::runtime_error("Invalid input from pk_valid.dat");
 
 
 
@@ -373,7 +379,7 @@ u32bit validate_rw_sig(const std::string& algo,
                        RandomNumberGenerator& rng)
    {
    if(str.size() != 6)
-      throw Exception("Invalid input from pk_valid.dat");
+      throw std::runtime_error("Invalid input from pk_valid.dat");
 
 
 #if defined(BOTAN_HAS_RW)
@@ -399,7 +405,7 @@ u32bit validate_dsa_sig(const std::string& algo,
                         RandomNumberGenerator& rng)
    {
    if(str.size() != 4 && str.size() != 5)
-      throw Exception("Invalid input from pk_valid.dat");
+      throw std::runtime_error("Invalid input from pk_valid.dat");
 
    std::string pass;
    if(str.size() == 5) pass = str[4];
@@ -436,7 +442,7 @@ u32bit validate_dsa_ver(const std::string& algo,
                         const std::vector<std::string>& str)
    {
    if(str.size() != 5) /* is actually 3, parse() adds extra empty ones */
-      throw Exception("Invalid input from pk_valid.dat");
+      throw std::runtime_error("Invalid input from pk_valid.dat");
 
    DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
                                str[0].length());
@@ -470,7 +476,7 @@ u32bit validate_nr_sig(const std::string& algo,
                        RandomNumberGenerator& rng)
    {
    if(str.size() != 8)
-      throw Exception("Invalid input from pk_valid.dat");
+      throw std::runtime_error("Invalid input from pk_valid.dat");
 
 
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL)
@@ -497,7 +503,7 @@ u32bit validate_dh(const std::string& algo,
                    RandomNumberGenerator& rng)
    {
    if(str.size() != 5 && str.size() != 6)
-      throw Exception("Invalid input from pk_valid.dat");
+      throw std::runtime_error("Invalid input from pk_valid.dat");
 
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
@@ -528,7 +534,7 @@ u32bit validate_dlies(const std::string& algo,
                       RandomNumberGenerator& rng)
    {
    if(str.size() != 6)
-      throw Exception("Invalid input from pk_valid.dat");
+      throw std::runtime_error("Invalid input from pk_valid.dat");
 
 #if defined(BOTAN_HAS_DLIES)
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]));
@@ -541,7 +547,7 @@ u32bit validate_dlies(const std::string& algo,
    std::vector<std::string> options = split_on(opt_str, '/');
 
    if(options.size() != 3)
-      throw Exception("DLIES needs three options: " + opt_str);
+      throw std::runtime_error("DLIES needs three options: " + opt_str);
 
    MessageAuthenticationCode* mac = get_mac(options[1]);
    u32bit mac_key_len = to_u32bit(options[2]);

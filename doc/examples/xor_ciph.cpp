@@ -1,11 +1,11 @@
 /*
-  An implementation of the highly secure (not) XOR cipher. AKA, how to write
-  and use your own cipher object. DO NOT make up your own ciphers. Please.
+* (C) 2004,2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
-  Written by Jack Lloyd (lloyd@randombit.net) on Feb 17, 2004
-    Update November 21 2008 for new algorithm factory in 1.8
-
-  This file is in the public domain
+/*
+  Adding a simple XOR cipher to the internal tables
 */
 
 #include <botan/stream_cipher.h>

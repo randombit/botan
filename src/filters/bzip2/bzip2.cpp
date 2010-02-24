@@ -96,7 +96,7 @@ void Bzip_Compression::start_msg()
    clear();
    bz = new Bzip_Stream;
    if(BZ2_bzCompressInit(&(bz->stream), level, 0, 0) != BZ_OK)
-      throw Exception("Bzip_Compression: Memory allocation error");
+      throw Memory_Exhaustion();
    }
 
 /*
@@ -196,13 +196,15 @@ void Bzip_Decompression::write(const byte input_arr[], u32bit length)
       if(rc != BZ_OK && rc != BZ_STREAM_END)
          {
          clear();
+
          if(rc == BZ_DATA_ERROR)
             throw Decoding_Error("Bzip_Decompression: Data integrity error");
-         if(rc == BZ_DATA_ERROR_MAGIC)
+         else if(rc == BZ_DATA_ERROR_MAGIC)
             throw Decoding_Error("Bzip_Decompression: Invalid input");
-         if(rc == BZ_MEM_ERROR)
-            throw Exception("Bzip_Decompression: Memory allocation error");
-         throw Exception("Bzip_Decompression: Unknown decompress error");
+         else if(rc == BZ_MEM_ERROR)
+            throw Memory_Exhaustion();
+         else
+            throw std::runtime_error("Bzip2 decompression: Unknown error");
          }
 
       send(buffer, buffer.size() - bz->stream.avail_out);
@@ -228,7 +230,7 @@ void Bzip_Decompression::start_msg()
    bz = new Bzip_Stream;
 
    if(BZ2_bzDecompressInit(&(bz->stream), 0, small_mem) != BZ_OK)
-      throw Exception("Bzip_Decompression: Memory allocation error");
+      throw Memory_Exhaustion();
 
    no_writes = true;
    }
@@ -252,7 +254,7 @@ void Bzip_Decompression::end_msg()
       if(rc != BZ_OK && rc != BZ_STREAM_END)
          {
          clear();
-         throw Exception("Bzip_Decompression: Error finalizing decompression");
+         throw Decoding_Error("Bzip_Decompression: Error finalizing");
          }
 
       send(buffer, buffer.size() - bz->stream.avail_out);

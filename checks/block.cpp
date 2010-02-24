@@ -1,3 +1,9 @@
+/*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
 
 /*
   We don't use the standard issue ECB filter, because we also want to check
@@ -83,7 +89,7 @@ void ECB_Encryption_ErrorCheck::end_msg()
       }
 
    if(position)
-      throw Exception("ECB: input was not in full blocks");
+      throw Encoding_Error("ECB: input was not in full blocks");
    }
 
 Filter* lookup_block(const std::string& algname, const std::string& key)

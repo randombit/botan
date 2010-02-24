@@ -46,61 +46,110 @@ class BOTAN_DLL Algorithm_Factory
       */
       ~Algorithm_Factory();
 
-      /*
-      * Provider management
+      /**
+      * @param algo_spec the algorithm we are querying
+      * @returns list of providers of this algorithm
       */
       std::vector<std::string> providers_of(const std::string& algo_spec);
 
+      /**
+      * @param algo_spec the algorithm we are setting a provider for
+      * @param provider the provider we would like to use
+      */
       void set_preferred_provider(const std::string& algo_spec,
                                   const std::string& provider);
 
-      /*
-      * Block cipher operations
+      /**
+      * @param algo_spec the algorithm we want
+      * @param provider the provider we would like to use
+      * @returns pointer to const prototype object, readiny for clone(), or NULL
       */
       const BlockCipher*
          prototype_block_cipher(const std::string& algo_spec,
                                 const std::string& provider = "");
 
+      /**
+      * @param algo_spec the algorithm we want
+      * @param provider the provider we would like to use
+      * @returns pointer to freshly created instance of the request algorithm
+      */
       BlockCipher* make_block_cipher(const std::string& algo_spec,
                                      const std::string& provider = "");
 
-      void add_block_cipher(BlockCipher* hash, const std::string& provider);
+      /**
+      * @param algo the algorithm to add
+      * @param provider the provider of this algorithm
+      */
+      void add_block_cipher(BlockCipher* algo, const std::string& provider);
 
-      /*
-      * Stream cipher operations
+      /**
+      * @param algo_spec the algorithm we want
+      * @param provider the provider we would like to use
+      * @returns pointer to const prototype object, readiny for clone(), or NULL
       */
       const StreamCipher*
          prototype_stream_cipher(const std::string& algo_spec,
                                  const std::string& provider = "");
 
+      /**
+      * @param algo_spec the algorithm we want
+      * @param provider the provider we would like to use
+      * @returns pointer to freshly created instance of the request algorithm
+      */
       StreamCipher* make_stream_cipher(const std::string& algo_spec,
                                        const std::string& provider = "");
 
-      void add_stream_cipher(StreamCipher* hash, const std::string& provider);
+      /**
+      * @param algo the algorithm to add
+      * @param provider the provider of this algorithm
+      */
+      void add_stream_cipher(StreamCipher* algo, const std::string& provider);
 
-      /*
-      * Hash function operations
+      /**
+      * @param algo_spec the algorithm we want
+      * @param provider the provider we would like to use
+      * @returns pointer to const prototype object, readiny for clone(), or NULL
       */
       const HashFunction*
          prototype_hash_function(const std::string& algo_spec,
                                  const std::string& provider = "");
 
+      /**
+      * @param algo_spec the algorithm we want
+      * @param provider the provider we would like to use
+      * @returns pointer to freshly created instance of the request algorithm
+      */
       HashFunction* make_hash_function(const std::string& algo_spec,
                                        const std::string& provider = "");
 
-      void add_hash_function(HashFunction* hash, const std::string& provider);
+      /**
+      * @param algo the algorithm to add
+      * @param provider the provider of this algorithm
+      */
+      void add_hash_function(HashFunction* algo, const std::string& provider);
 
-      /*
-      * MAC operations
+      /**
+      * @param algo_spec the algorithm we want
+      * @param provider the provider we would like to use
+      * @returns pointer to const prototype object, readiny for clone(), or NULL
       */
       const MessageAuthenticationCode*
          prototype_mac(const std::string& algo_spec,
                        const std::string& provider = "");
 
+      /**
+      * @param algo_spec the algorithm we want
+      * @param provider the provider we would like to use
+      * @returns pointer to freshly created instance of the request algorithm
+      */
       MessageAuthenticationCode* make_mac(const std::string& algo_spec,
                                           const std::string& provider = "");
 
-      void add_mac(MessageAuthenticationCode* mac,
+      /**
+      * @param algo the algorithm to add
+      * @param provider the provider of this algorithm
+      */
+      void add_mac(MessageAuthenticationCode* algo,
                    const std::string& provider);
 
       /*

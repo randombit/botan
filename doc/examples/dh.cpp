@@ -1,10 +1,9 @@
 /*
-  A simple DH example
-
-  Written by Jack Lloyd (lloyd@randombit.net), on December 24, 2003
-
-  This file is in the public domain
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
+
 #include <botan/botan.h>
 #include <botan/dh.h>
 #include <botan/rng.h>

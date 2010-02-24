@@ -1,3 +1,9 @@
+/*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
 #include <iostream>
 #include <botan/cpuid.h>
 
@@ -22,7 +28,6 @@ int main()
    print_if_feature("SSE4.2", CPUID::has_sse42());
 
    print_if_feature("AES-NI", CPUID::has_aes_intel());
-   print_if_feature("AES-VIA", CPUID::has_aes_via());
 
    print_if_feature("AltiVec", CPUID::has_altivec());
    }

@@ -1,4 +1,10 @@
 /*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
+/*
 Encrypt a file using a block cipher in CBC mode. Compresses the plaintext
 with Zlib, MACs with HMAC(SHA-1). Stores the block cipher used in the file,
 so you don't have to specify it when decrypting.
@@ -10,13 +16,8 @@ was compressed. Bonus points for supporting multiple compression schemes.
 
 Another flaw is that is stores the entire ciphertext in memory, so if the file
 you're encrypting is 1 Gb... you better have a lot of RAM.
-
-Based on the base64 example, of all things
-
-Written by Jack Lloyd (lloyd@randombit.net) on August 5, 2002
-
-This file is in the public domain
 */
+
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -124,17 +125,26 @@ int main(int argc, char* argv[])
       AutoSeeded_RNG rng;
 
       std::auto_ptr<S2K> s2k(get_s2k("PBKDF2(SHA-1)"));
-      s2k->set_iterations(8192);
-      s2k->new_random_salt(rng, 8);
 
-      SymmetricKey bc_key = s2k->derive_key(key_len, "BLK" + passphrase);
-      InitializationVector iv = s2k->derive_key(iv_len, "IVL" + passphrase);
-      SymmetricKey mac_key = s2k->derive_key(16, "MAC" + passphrase);
+      SecureVector<byte> salt(8);
+      rng.randomize(&salt[0], salt.size());
+
+      const u32bit PBKDF2_ITERATIONS = 8192;
+
+      SymmetricKey bc_key = s2k->derive_key(key_len, "BLK" + passphrase,
+                                            &salt[0], salt.size(),
+                                            PBKDF2_ITERATIONS);
+      InitializationVector iv = s2k->derive_key(iv_len, "IVL" + passphrase,
+                                                &salt[0], salt.size(),
+                                                PBKDF2_ITERATIONS);
+      SymmetricKey mac_key = s2k->derive_key(16, "MAC" + passphrase,
+                                             &salt[0], salt.size(),
+                                             PBKDF2_ITERATIONS);
 
       // Just to be all fancy we even write a (simple) header.
       out << "-------- ENCRYPTED FILE --------" << std::endl;
       out << algo << std::endl;
-      out << b64_encode(s2k->current_salt()) << std::endl;
+      out << b64_encode(salt) << std::endl;
 
       Pipe pipe(new Fork(
                    new Chain(new MAC_Filter("HMAC(SHA-1)", mac_key),

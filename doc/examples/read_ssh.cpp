@@ -1,4 +1,10 @@
 /*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
+/*
 * Example of reading SSH2 format public keys (see RFC 4716)
 */
 

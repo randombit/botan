@@ -1,13 +1,7 @@
 /*
-Prints the message digest of files, using an arbitrary hash function
-chosen by the user. This is less flexible that I might like, for example:
-   ./hash sha1 some_file [or md5 or sha-1 or ripemd160 or ...]
-will not work, cause the name lookup is case-sensitive. Oh well...
-
-Written by Jack Lloyd (lloyd@randombit.net), on August 4, 2002
-  - December 16, 2003: "Fixed" to accept "sha1" or "md5" as a hash name
-
-This file is in the public domain
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #include <iostream>

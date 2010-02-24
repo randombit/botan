@@ -11,13 +11,15 @@
 #include <botan/block_cipher.h>
 #include <botan/key_filt.h>
 #include <botan/mode_pad.h>
+#include <botan/buf_filt.h>
 
 namespace Botan {
 
 /*
 * CBC Encryption
 */
-class BOTAN_DLL CBC_Encryption : public Keyed_Filter
+class BOTAN_DLL CBC_Encryption : public Keyed_Filter,
+                                 private Buffered_Filter
    {
    public:
       std::string name() const;
@@ -37,21 +39,24 @@ class BOTAN_DLL CBC_Encryption : public Keyed_Filter
                      const SymmetricKey& key,
                      const InitializationVector& iv);
 
-      ~CBC_Encryption() { delete padder; }
+      ~CBC_Encryption() { delete cipher; delete padder; }
    private:
-      void write(const byte[], u32bit);
+      void buffered_block(const byte input[], u32bit input_length);
+      void buffered_final(const byte input[], u32bit input_length);
+
+      void write(const byte input[], u32bit input_length);
       void end_msg();
 
       BlockCipher* cipher;
       const BlockCipherModePaddingMethod* padder;
-      SecureVector<byte> buffer, state;
-      u32bit position;
+      SecureVector<byte> state;
    };
 
 /*
 * CBC Decryption
 */
-class BOTAN_DLL CBC_Decryption : public Keyed_Filter
+class BOTAN_DLL CBC_Decryption : public Keyed_Filter,
+                                 private Buffered_Filter
    {
    public:
       std::string name() const;
@@ -71,15 +76,17 @@ class BOTAN_DLL CBC_Decryption : public Keyed_Filter
                      const SymmetricKey& key,
                      const InitializationVector& iv);
 
-      ~CBC_Decryption() { delete padder; }
+      ~CBC_Decryption() { delete cipher; delete padder; }
    private:
+      void buffered_block(const byte input[], u32bit input_length);
+      void buffered_final(const byte input[], u32bit input_length);
+
       void write(const byte[], u32bit);
       void end_msg();
 
       BlockCipher* cipher;
       const BlockCipherModePaddingMethod* padder;
-      SecureVector<byte> buffer, state, temp;
-      u32bit position;
+      SecureVector<byte> state, temp;
    };
 
 }

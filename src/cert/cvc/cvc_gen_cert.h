@@ -16,7 +16,6 @@
 #include <botan/ecdsa.h>
 #include <botan/ecdsa_sig.h>
 #include <string>
-#include <assert.h>
 
 namespace Botan {
 
@@ -87,7 +86,7 @@ class BOTAN_DLL EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation
       ASN1_Chr m_chr;
       bool self_signed;
 
-      static void decode_info(SharedPtrConverter<DataSource> source,
+      static void decode_info(DataSource& source,
                               SecureVector<byte> & res_tbs_bits,
                               ECDSA_Signature & res_sig);
 
@@ -109,7 +108,7 @@ template<typename Derived> MemoryVector<byte> EAC1_1_gen_CVC<Derived>::make_sign
    RandomNumberGenerator& rng) // static
    {
    SecureVector<byte> concat_sig = EAC1_1_obj<Derived>::make_signature(signer.get(), tbs_bits, rng);
-   assert(concat_sig.size() % 2 == 0);
+
    return DER_Encoder()
       .start_cons(ASN1_Tag(33), APPLICATION)
       .raw_bytes(tbs_bits)
@@ -156,12 +155,12 @@ template<typename Derived> void EAC1_1_gen_CVC<Derived>::encode(Pipe& out, X509_
 
 template<typename Derived>
 void EAC1_1_gen_CVC<Derived>::decode_info(
-   SharedPtrConverter<DataSource> source,
+   DataSource& source,
    SecureVector<byte> & res_tbs_bits,
    ECDSA_Signature & res_sig)
    {
    SecureVector<byte> concat_sig;
-   BER_Decoder(*source.get_shared().get())
+   BER_Decoder(source)
       .start_cons(ASN1_Tag(33))
       .start_cons(ASN1_Tag(78))
       .raw_bytes(res_tbs_bits)

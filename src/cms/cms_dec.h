@@ -37,10 +37,10 @@ class BOTAN_DLL CMS_Decoder
 
       void next_layer() { decode_layer(); }
 
-      void add_key(PKCS8_PrivateKey*);
+      void add_key(Private_Key*);
 
       CMS_Decoder(DataSource&, const X509_Store&, User_Interface&,
-                  PKCS8_PrivateKey* = 0);
+                  Private_Key* = 0);
    private:
       std::string get_passphrase(const std::string&);
       void read_econtent(BER_Decoder&);
@@ -52,7 +52,7 @@ class BOTAN_DLL CMS_Decoder
 
       X509_Store store;
       std::vector<std::string> passphrases;
-      std::vector<PKCS8_PrivateKey*> keys;
+      std::vector<Private_Key*> keys;
 
       OID type, next_type;
       SecureVector<byte> data;

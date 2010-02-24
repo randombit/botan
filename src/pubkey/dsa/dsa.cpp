@@ -97,6 +97,8 @@ SecureVector<byte> DSA_PrivateKey::sign(const byte in[], u32bit length,
    {
    const BigInt& q = group_q();
 
+   rng.add_entropy(in, length);
+
    BigInt k;
    do
       k.randomize(rng, q.bits());

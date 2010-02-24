@@ -1,3 +1,6 @@
+
+family sparc
+
 <submodels>
 ultrasparc
 ultrasparc3

@@ -17,7 +17,7 @@ DESTDIR       = %{prefix}
 
 LIBDIR        = $(DESTDIR)\%{libdir}
 HEADERDIR     = $(DESTDIR)\%{includedir}\botan
-DOCDIR        = $(DESTDIR)\%{docdir}\Botan-$(VERSION)
+DOCDIR        = $(DESTDIR)\%{docdir}\botan-$(VERSION)
 
 ### Aliases for Common Programs
 AR            = %{ar_command}

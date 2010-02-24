@@ -19,7 +19,7 @@ DESTDIR       = %{prefix}
 BINDIR        = $(DESTDIR)/bin
 LIBDIR        = $(DESTDIR)/%{libdir}
 HEADERDIR     = $(DESTDIR)/%{includedir}/botan
-DOCDIR        = $(DESTDIR)/%{docdir}/Botan-$(VERSION)
+DOCDIR        = $(DESTDIR)/%{docdir}/botan-$(VERSION)
 PKGCONF_DIR   = $(LIBDIR)/pkgconfig
 
 CONFIG_SCRIPT = %{botan_config}
@@ -90,7 +90,7 @@ static: $(STATIC_LIB)
 shared: $(SHARED_LIB)
 
 doxygen:
-	doxygen %{doc_src_dir}/botan.doxy
+	doxygen %{build_dir}/botan.doxy
 
 clean:
 	$(RM_R) %{build_dir}/lib/* %{build_dir}/checks/*

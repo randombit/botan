@@ -1,5 +1,7 @@
 endian big
 
+family sparc
+
 <aliases>
 sparc
 </aliases>

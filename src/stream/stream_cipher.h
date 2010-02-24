@@ -42,8 +42,8 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       virtual void set_iv(const byte[], u32bit iv_len)
          {
          if(iv_len)
-            throw Exception("The stream cipher " + name() +
-                            " does not support resyncronization");
+            throw Invalid_Argument("The stream cipher " + name() +
+                                   " does not support resyncronization");
          }
 
       /**

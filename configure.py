@@ -132,6 +132,11 @@ def process_command_line(args):
         formatter = IndentedHelpFormatter(max_help_position = 50),
         version = BuildConfigurationInformation.version_string)
 
+    parser.add_option('--verbose', action='store_true', default=False,
+                      help='Show debug messages')
+    parser.add_option('--quiet', action='store_true', default=False,
+                      help='Show only warnings and errors')
+
     target_group = OptionGroup(parser, 'Target options')
 
     target_group.add_option('--cc', dest='compiler',
@@ -315,6 +320,25 @@ def process_command_line(args):
     options.enable_isa_extns = parse_multiple_enable(options.enable_isa_extns)
     options.disable_isa_extns = parse_multiple_enable(options.disable_isa_extns)
 
+    def enabled_or_disabled_isa(isa):
+        if isa in options.enable_isa_extns:
+            return True
+        if isa in options.disable_isa_extns:
+            return True
+        return False
+
+    isa_dependencies = {
+        'ssse3': 'sse2',
+        'aes_ni': 'sse2'
+        }
+
+    if 'sse2' in options.disable_isa_extns:
+        sse2_deps = ['ssse3', 'aes_ni']
+
+        for isa in sse2_deps:
+            if not enabled_or_disabled_isa(isa):
+                options.disable_isa_extns.append(isa)
+
     return options
 
 """
@@ -445,12 +469,9 @@ class ModuleInfo(object):
             return os.path.join(os.path.split(self.lives_in)[0],
                                 *filename.split(':'))
 
-        self.source = map(add_dir_name, self.source)
-        self.header_internal = map(add_dir_name, self.header_internal)
-        self.header_public = map(add_dir_name, self.header_public)
-
-        if len([f for f in self.source if f.endswith('h')]) > 0:
-            print self.lives_in
+        self.source = [add_dir_name(s) for s in self.source]
+        self.header_internal = [add_dir_name(s) for s in self.header_internal]
+        self.header_public = [add_dir_name(s) for s in self.header_public]
 
         self.mp_bits = int(self.mp_bits)
 
@@ -509,9 +530,9 @@ class ModuleInfo(object):
     about any that do not
     """
     def dependencies_exist(self, modules):
-        all_deps = map(lambda s: s.split('|'), self.dependencies())
+        all_deps = [s.split('|') for s in self.dependencies()]
 
-        for missing in filter(lambda s: s not in modules, flatten(all_deps)):
+        for missing in [s for s in flatten(all_deps) if s not in modules]:
             logging.warn("Module '%s', dep of '%s', does not exist" % (
                 missing, self.basename))
 
@@ -527,6 +548,7 @@ class ArchInfo(object):
         lex_me_harder(infofile, self,
                       ['aliases', 'submodels', 'submodel_aliases', 'isa_extn'],
                       { 'endian': None,
+                        'family': None,
                         'unaligned': 'no'
                         })
 
@@ -589,12 +611,16 @@ class ArchInfo(object):
 
         if endian != None:
             macros.append('TARGET_CPU_IS_%s_ENDIAN' % (endian.upper()))
+            logging.info('Assuming CPU is %s endian' % (endian))
 
         unaligned_ok = options.unaligned_mem
         if unaligned_ok is None:
             unaligned_ok = self.unaligned_ok
             if unaligned_ok:
                 logging.info('Assuming unaligned memory access works')
+
+        if self.family is not None:
+            macros.append('TARGET_CPU_IS_%s_FAMILY' % (self.family.upper()))
 
         macros.append('TARGET_UNALIGNED_MEMORY_ACCESS_OK %d' % (unaligned_ok))
 
@@ -1014,18 +1040,18 @@ def choose_modules_to_use(modules, archinfo, options):
             to_load.append(modname) # trust the user
 
         elif not module.compatible_cpu(archinfo, options):
-            cannot_use_because(modname, 'CPU incompatible')
+            cannot_use_because(modname, 'incompatible CPU')
         elif not module.compatible_os(options.os):
-            cannot_use_because(modname, 'OS incompatible')
+            cannot_use_because(modname, 'incompatible OS')
         elif not module.compatible_compiler(options.compiler,
                                             options.with_tr1):
-            cannot_use_because(modname, 'compiler incompatible')
+            cannot_use_because(modname, 'incompatible compiler')
 
         else:
             if module.load_on == 'never':
                 cannot_use_because(modname, 'disabled as buggy')
             elif module.load_on == 'request':
-                cannot_use_because(modname, 'loaded on request only')
+                cannot_use_because(modname, 'by request only')
             elif module.load_on == 'dep':
                 maybe_dep.append(modname)
 
@@ -1055,8 +1081,7 @@ def choose_modules_to_use(modules, archinfo, options):
     while dependency_failure:
         dependency_failure = False
         for modname in to_load:
-            for deplist in map(lambda s: s.split('|'),
-                               modules[modname].dependencies()):
+            for deplist in [s.split('|') for s in modules[modname].dependencies()]:
 
                 dep_met = False
                 for mod in deplist:
@@ -1076,7 +1101,7 @@ def choose_modules_to_use(modules, archinfo, options):
                         to_load.remove(modname)
                     if modname in maybe_dep:
                         maybe_dep.remove(modname)
-                    cannot_use_because(modname, 'of dependency failure')
+                    cannot_use_because(modname, 'dependency failure')
 
     for not_a_dep in maybe_dep:
         cannot_use_because(not_a_dep, 'loaded only if needed by dependency')
@@ -1085,7 +1110,7 @@ def choose_modules_to_use(modules, archinfo, options):
         disabled_mods = sorted(set([mod for mod in not_using_because[reason]]))
 
         if disabled_mods != []:
-            logging.info('Skipping mod because %s - %s' % (
+            logging.info('Skipping, %s - %s' % (
                 reason, ' '.join(disabled_mods)))
 
     logging.debug('Loading modules %s', ' '.join(sorted(to_load)))
@@ -1224,17 +1249,18 @@ def setup_build(build_config, options, template_vars):
         finally:
             f.close()
 
-    logging.debug('Linking %d public header files in %s' % (
-        len(build_config.public_headers), build_config.botan_include_dir))
+    def link_headers(header_list, type, dir):
+        logging.debug('Linking %d %s header files in %s' % (
+            len(header_list), type, dir))
 
-    for header_file in build_config.public_headers:
-        portable_symlink(header_file, build_config.botan_include_dir)
+        for header_file in header_list:
+            portable_symlink(header_file, dir)
 
-    logging.debug('Linking %d internal header files in %s' % (
-        len(build_config.internal_headers), build_config.internal_include_dir))
+    link_headers(build_config.public_headers, 'public',
+                 build_config.botan_include_dir)
 
-    for header_file in build_config.internal_headers:
-        portable_symlink(header_file, build_config.internal_include_dir)
+    link_headers(build_config.internal_headers, 'internal',
+                 build_config.internal_include_dir)
 
 """
 Generate Amalgamation
@@ -1337,8 +1363,8 @@ def generate_amalgamation(build_config):
     botan_all_h.write("\n#endif\n")
 
     internal_header_amalag = Amalgamation_Generator(
-        filter(lambda s: s.find('asm_macr_') == -1,
-               build_config.internal_headers))
+        [s for s in build_config.internal_headers
+         if s.find('asm_macr_') == -1])
 
     botan_all_cpp = open('botan_all.cpp', 'w')
 
@@ -1369,17 +1395,24 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv
 
+    options = process_command_line(argv[1:])
+
+    def log_level():
+        if options.verbose:
+            return logging.DEBUG
+        if options.quiet:
+            return logging.WARNING
+        return logging.INFO
+
     logging.basicConfig(stream = sys.stdout,
                         format = '%(levelname) 7s: %(message)s',
-                        level = logging.INFO)
+                        level = log_level())
 
     logging.debug('%s invoked with options "%s"' % (
         argv[0], ' '.join(argv[1:])))
 
     logging.debug('Platform: OS="%s" machine="%s" proc="%s"' % (
         platform.system(), platform.machine(), platform.processor()))
-
-    options = process_command_line(argv[1:])
 
     if options.os == "java":
         raise Exception("Jython detected: need --os and --cpu to set target")
@@ -1463,6 +1496,16 @@ def main(argv = None):
             options.with_tr1 = 'system'
         else:
             options.with_tr1 = 'none'
+
+    if options.gen_amalgamation:
+        if options.asm_ok:
+            logging.info('Disabling assembly code, cannot use in amalgamation')
+            options.asm_ok = False
+
+        for mod in ['sha1_sse2', 'serpent_simd']:
+            if mod not in options.disabled_modules:
+                logging.info('Disabling %s, cannot use in amalgamation' % (mod))
+                options.disabled_modules.append(mod)
 
     modules_to_use = choose_modules_to_use(modules,
                                            archinfo[options.arch],

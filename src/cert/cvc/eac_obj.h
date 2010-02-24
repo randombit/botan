@@ -18,12 +18,9 @@
 #include <botan/oids.h>
 #include <botan/look_pk.h>
 #include <botan/ecdsa_sig.h>
-#include <botan/freestore.h>
 #include <string>
 
 namespace Botan {
-
-const std::string eac_cvc_emsa("EMSA1_BSI");
 
 /*
 * TR03110 v1.1 EAC CV Certificate
@@ -52,7 +49,7 @@ class BOTAN_DLL EAC1_1_obj : public EAC_Signed_Object
       virtual bool check_signature(Public_Key& pub_key) const;
 
    protected:
-      void init(SharedPtrConverter<DataSource> in);
+      void init(DataSource& in);
 
       static SecureVector<byte> make_signature(PK_Signer* signer,
                                                const MemoryRegion<byte>& tbs_bits,
@@ -80,11 +77,12 @@ EAC1_1_obj<Derived>::make_signature(PK_Signer* signer,
    return concat_sig;
    }
 
-template<typename Derived> void EAC1_1_obj<Derived>::init(SharedPtrConverter<DataSource> in)
+template<typename Derived>
+void EAC1_1_obj<Derived>::init(DataSource& in)
    {
    try
       {
-      Derived::decode_info(in.get_shared(), tbs_bits, m_sig);
+      Derived::decode_info(in, tbs_bits, m_sig);
       }
    catch(Decoding_Error)
       {

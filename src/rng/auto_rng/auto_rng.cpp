@@ -6,10 +6,8 @@
 */
 
 #include <botan/auto_rng.h>
+#include <botan/libstate.h>
 #include <botan/parsing.h>
-#include <botan/hmac.h>
-#include <botan/sha2_32.h>
-#include <botan/sha2_64.h>
 
 #if defined(BOTAN_HAS_RANDPOOL)
   #include <botan/randpool.h>
@@ -21,10 +19,6 @@
 
 #if defined(BOTAN_HAS_X931_RNG)
   #include <botan/x931_rng.h>
-#endif
-
-#if defined(BOTAN_HAS_AES)
-  #include <botan/aes.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER)
@@ -115,10 +109,18 @@ AutoSeeded_RNG::AutoSeeded_RNG(u32bit poll_bits)
    {
    rng = 0;
 
+   Algorithm_Factory& af = global_state().algorithm_factory();
+
 #if defined(BOTAN_HAS_HMAC_RNG)
-   rng = new HMAC_RNG(new HMAC(new SHA_512), new HMAC(new SHA_256));
+
+   rng = new HMAC_RNG(af.make_mac("HMAC(SHA-512)"),
+                      af.make_mac("HMAC(SHA-256)"));
+
 #elif defined(BOTAN_HAS_RANDPOOL) && defined(BOTAN_HAS_AES)
-   rng = new Randpool(new AES_256, new HMAC(new SHA_256));
+
+   rng = new Randpool(af.make_block_cipher("AES-256"),
+                      af.make_mac("HMAC(SHA-256)"));
+
 #endif
 
    if(!rng)
@@ -126,7 +128,9 @@ AutoSeeded_RNG::AutoSeeded_RNG(u32bit poll_bits)
 
    /* If X9.31 is available, use it to wrap the other RNG as a failsafe */
 #if defined(BOTAN_HAS_X931_RNG) && defined(BOTAN_HAS_AES)
-   rng = new ANSI_X931_RNG(new AES_256, rng);
+
+   rng = new ANSI_X931_RNG(af.make_block_cipher("AES-256"), rng);
+
 #endif
 
    add_entropy_sources(rng);

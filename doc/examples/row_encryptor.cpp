@@ -1,3 +1,9 @@
+/*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
 #include <string>
 #include <memory>
 #include <sstream>
@@ -60,10 +66,9 @@ void Row_Encryptor::init(const std::string& passphrase)
    {
    std::auto_ptr<S2K> s2k(get_s2k("PBKDF2(SHA-160)"));
 
-   s2k->set_iterations(10000);
-   s2k->change_salt(&s2k_salt[0], s2k_salt.size());
-
-   SecureVector<byte> key = s2k->derive_key(32, passphrase).bits_of();
+   SecureVector<byte> key = s2k->derive_key(32, passphrase,
+                                            &s2k_salt[0], s2k_salt.size(),
+                                            10000).bits_of();
 
    /*
     Save pointers to the EAX objects so we can change the IV as needed
@@ -99,8 +104,8 @@ std::string Row_Encryptor::decrypt(const std::string& input,
    return dec_pipe.read_all_as_string(Pipe::LAST_MESSAGE);
    }
 
-/*************************
-  Test code follows:
+/*
+* Test code follows:
 */
 
 int main()

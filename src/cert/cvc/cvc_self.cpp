@@ -16,14 +16,15 @@
 #include <botan/cvc_ado.h>
 #include <botan/time.h>
 #include <sstream>
+#include <assert.h>
 
 namespace Botan {
 
 namespace {
 
-/*******************************
+/*
 * cvc CHAT values
-*******************************/
+*/
 enum CHAT_values{
       CVCA = 0xC0,
       DVCA_domestic = 0x80,
@@ -42,6 +43,7 @@ std::string padding_and_hash_from_oid(OID const& oid)
    padding_and_hash.erase(0, padding_and_hash.find("/",0) + 1);
    return padding_and_hash;
    }
+
 std::string fixed_len_seqnr(u32bit seqnr, u32bit len)
    {
    std::stringstream ss;
@@ -80,7 +82,7 @@ EAC1_1_CVC create_self_signed_cert(Private_Key const& key,
    ASN1_Chr chr(opt.car.value());
 
    AlgorithmIdentifier sig_algo;
-   std::string padding_and_hash(eac_cvc_emsa + "(" + opt.hash_alg + ")");
+   std::string padding_and_hash("EMSA1_BSI(" + opt.hash_alg + ")");
    sig_algo.oid = OIDS::lookup(priv_key->algo_name() + "/" + padding_and_hash);
    sig_algo = AlgorithmIdentifier(sig_algo.oid, AlgorithmIdentifier::USE_NULL_PARAM);
 
@@ -109,7 +111,7 @@ EAC1_1_Req create_cvc_req(Private_Key const& key,
       throw Invalid_Argument("CVC_EAC::create_self_signed_cert(): unsupported key type");
       }
    AlgorithmIdentifier sig_algo;
-   std::string padding_and_hash(eac_cvc_emsa + "(" + hash_alg + ")");
+   std::string padding_and_hash("EMSA1_BSI(" + hash_alg + ")");
    sig_algo.oid = OIDS::lookup(priv_key->algo_name() + "/" + padding_and_hash);
    sig_algo = AlgorithmIdentifier(sig_algo.oid, AlgorithmIdentifier::USE_NULL_PARAM);
 
@@ -131,7 +133,8 @@ EAC1_1_Req create_cvc_req(Private_Key const& key,
       .get_contents();
 
    MemoryVector<byte> signed_cert = EAC1_1_gen_CVC<EAC1_1_Req>::make_signed(signer, EAC1_1_gen_CVC<EAC1_1_Req>::build_cert_body(tbs), rng);
-   std::tr1::shared_ptr<DataSource> source(new DataSource_Memory(signed_cert));
+
+   DataSource_Memory source(signed_cert);
    return EAC1_1_Req(source);
    }
 
@@ -151,7 +154,8 @@ EAC1_1_ADO create_ado_req(Private_Key const& key,
    SecureVector<byte> tbs_bits = req.BER_encode();
    tbs_bits.append(DER_Encoder().encode(car).get_contents());
    MemoryVector<byte> signed_cert = EAC1_1_ADO::make_signed(signer, tbs_bits, rng);
-   std::tr1::shared_ptr<DataSource> source(new DataSource_Memory(signed_cert));
+
+   DataSource_Memory source(signed_cert);
    return EAC1_1_ADO(source);
    }
 
@@ -206,7 +210,7 @@ EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
       }
    if (signer.signature_algorithm() != signee.signature_algorithm())
       {
-      throw Invalid_Argument("link_cvca(): signature algorithms of signer and signee don´t match");
+      throw Invalid_Argument("link_cvca(): signature algorithms of signer and signee don't match");
       }
    AlgorithmIdentifier sig_algo = signer.signature_algorithm();
    std::string padding_and_hash = padding_and_hash_from_oid(sig_algo.oid);

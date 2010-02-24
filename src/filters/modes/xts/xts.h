@@ -8,15 +8,17 @@
 #ifndef BOTAN_XTS_H__
 #define BOTAN_XTS_H__
 
-#include <botan/key_filt.h>
 #include <botan/block_cipher.h>
+#include <botan/key_filt.h>
+#include <botan/buf_filt.h>
 
 namespace Botan {
 
 /*
 * XTS Encryption
 */
-class BOTAN_DLL XTS_Encryption : public Keyed_Filter
+class BOTAN_DLL XTS_Encryption : public Keyed_Filter,
+                                 private Buffered_Filter
    {
    public:
       void set_key(const SymmetricKey& key);
@@ -37,19 +39,20 @@ class BOTAN_DLL XTS_Encryption : public Keyed_Filter
    private:
       void write(const byte[], u32bit);
       void end_msg();
-      void encrypt(const byte block[]);
+
+      void buffered_block(const byte input[], u32bit input_length);
+      void buffered_final(const byte input[], u32bit input_length);
 
       BlockCipher* cipher;
       BlockCipher* cipher2;
       SecureVector<byte> tweak;
-      SecureVector<byte> buffer;
-      u32bit position;
    };
 
 /*
 * XTS Decryption
 */
-class BOTAN_DLL XTS_Decryption : public Keyed_Filter
+class BOTAN_DLL XTS_Decryption : public Keyed_Filter,
+                                 private Buffered_Filter
    {
    public:
       void set_key(const SymmetricKey& key);
@@ -65,16 +68,18 @@ class BOTAN_DLL XTS_Decryption : public Keyed_Filter
       XTS_Decryption(BlockCipher* ciph,
                      const SymmetricKey& key,
                      const InitializationVector& iv);
+
+      ~XTS_Decryption() { delete cipher; delete cipher2; }
    private:
       void write(const byte[], u32bit);
       void end_msg();
-      void decrypt(const byte[]);
+
+      void buffered_block(const byte input[], u32bit input_length);
+      void buffered_final(const byte input[], u32bit input_length);
 
       BlockCipher* cipher;
       BlockCipher* cipher2;
       SecureVector<byte> tweak;
-      SecureVector<byte> buffer;
-      u32bit position;
    };
 
 }

@@ -1,3 +1,8 @@
+/*
+* (C) 2009 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #ifndef BOTAN_BOOST_PYTHON_COMMON_H__
 #define BOTAN_BOOST_PYTHON_COMMON_H__

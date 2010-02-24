@@ -13,6 +13,10 @@
   #include <botan/serp_simd.h>
 #endif
 
+#if defined(BOTAN_HAS_NOEKEON_SIMD)
+  #include <botan/noekeon_simd.h>
+#endif
+
 #if defined(BOTAN_HAS_XTEA_SIMD)
   #include <botan/xtea_simd.h>
 #endif
@@ -34,6 +38,11 @@ SIMD_Engine::find_block_cipher(const SCAN_Name& request,
 #if defined(BOTAN_HAS_IDEA_SSE2)
    if(request.algo_name() == "IDEA" && CPUID::has_sse2())
       return new IDEA_SSE2;
+#endif
+
+#if defined(BOTAN_HAS_NOEKEON_SIMD)
+   if(request.algo_name() == "Noekeon" && SIMD_32::enabled())
+      return new Noekeon_SIMD;
 #endif
 
 #if defined(BOTAN_HAS_SERPENT_SIMD)

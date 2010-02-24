@@ -7,20 +7,10 @@
 
 #include <botan/pipe.h>
 #include <botan/internal/out_buf.h>
-#include <botan/internal/secqueue.h>
+#include <botan/secqueue.h>
 #include <botan/parsing.h>
 
 namespace Botan {
-
-/*
-* Constructor for Invalid_Message_Number
-*/
-Pipe::Invalid_Message_Number::Invalid_Message_Number(const std::string& where,
-                                                     message_id msg)
-   {
-   set_msg("Pipe::" + where + ": Invalid message number " +
-           to_string(msg));
-   }
 
 namespace {
 

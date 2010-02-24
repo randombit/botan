@@ -21,7 +21,7 @@ class BOTAN_DLL CPUID
          CPUID_SSSE3_BIT = 41,
          CPUID_SSE41_BIT = 51,
          CPUID_SSE42_BIT = 52,
-         CPUID_INTEL_AES_BIT = 57,
+         CPUID_INTEL_AES_BIT = 57
       };
 
       /**
@@ -64,12 +64,6 @@ class BOTAN_DLL CPUID
       */
       static bool has_aes_intel()
          { return ((x86_processor_flags() >> CPUID_INTEL_AES_BIT) & 1); }
-
-      /**
-      * Check if the processor supports VIA's AES instructions
-      * (not implemented)
-      */
-      static bool has_aes_via() { return false; }
 
       /**
       * Check if the processor supports AltiVec/VMX

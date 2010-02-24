@@ -70,8 +70,7 @@ const T* factory_prototype(const std::string& algo_spec,
       {
       if(provider == "" || engines[i]->provider_name() == provider)
          {
-         T* impl = engine_get_algo<T>(engines[i], scan_name, af);
-         if(impl)
+         if(T* impl = engine_get_algo<T>(engines[i], scan_name, af))
             cache->add(impl, algo_spec, engines[i]->provider_name());
          }
       }

@@ -6,7 +6,6 @@
 */
 
 #include <botan/idea_sse2.h>
-#include <botan/loadstor.h>
 #include <emmintrin.h>
 
 namespace Botan {

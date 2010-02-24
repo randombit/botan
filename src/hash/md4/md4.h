@@ -27,7 +27,7 @@ class BOTAN_DLL MD4 : public MDx_HashFunction
       void hash_old(const byte[]);
       void copy_out(byte[]);
 
-      SecureBuffer<u32bit, 48> M;
+      SecureBuffer<u32bit, 16> M;
       SecureBuffer<u32bit, 4> digest;
    };
 

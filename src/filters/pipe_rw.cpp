@@ -7,7 +7,7 @@
 
 #include <botan/pipe.h>
 #include <botan/internal/out_buf.h>
-#include <botan/internal/secqueue.h>
+#include <botan/secqueue.h>
 
 namespace Botan {
 
@@ -34,7 +34,7 @@ Pipe::message_id Pipe::get_message_no(const std::string& func_name,
 void Pipe::write(const byte input[], u32bit length)
    {
    if(!inside_msg)
-      throw Exception("Cannot write to a Pipe while it is not processing");
+      throw Invalid_State("Cannot write to a Pipe while it is not processing");
    pipe->write(input, length);
    }
 

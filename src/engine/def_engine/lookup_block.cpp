@@ -22,6 +22,10 @@
   #include <botan/cast256.h>
 #endif
 
+#if defined(BOTAN_HAS_CASCADE)
+  #include <botan/cascade.h>
+#endif
+
 #if defined(BOTAN_HAS_DES)
   #include <botan/des.h>
   #include <botan/desx.h>
@@ -237,6 +241,17 @@ Default_Engine::find_block_cipher(const SCAN_Name& request,
 
       if(hash)
          return new LubyRackoff(hash->clone());
+      }
+#endif
+
+#if defined(BOTAN_HAS_CASCADE)
+   if(request.algo_name() == "Cascade" && request.arg_count() == 2)
+      {
+      const BlockCipher* c1 = af.prototype_block_cipher(request.arg(0));
+      const BlockCipher* c2 = af.prototype_block_cipher(request.arg(1));
+
+      if(c1 && c2)
+         return new Cascade_Cipher(c1->clone(), c2->clone());
       }
 #endif
 

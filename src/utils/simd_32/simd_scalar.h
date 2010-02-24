@@ -142,6 +142,14 @@ class SIMD_Scalar
          R3 |= other.R3;
          }
 
+      SIMD_Scalar operator&(const SIMD_Scalar& other)
+         {
+         return SIMD_Scalar(R0 & other.R0,
+                            R1 & other.R1,
+                            R2 & other.R2,
+                            R3 & other.R3);
+         }
+
       void operator&=(const SIMD_Scalar& other)
          {
          R0 &= other.R0;

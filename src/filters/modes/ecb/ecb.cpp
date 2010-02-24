@@ -1,6 +1,6 @@
 /*
 * ECB Mode
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -9,25 +9,17 @@
 
 namespace Botan {
 
-namespace {
-
-const u32bit PARALLEL_BLOCKS = BOTAN_PARALLEL_BLOCKS_ECB;
-
-}
-
 /*
 * ECB_Encryption Constructor
 */
 ECB_Encryption::ECB_Encryption(BlockCipher* ciph,
-                               BlockCipherModePaddingMethod* pad)
+                               BlockCipherModePaddingMethod* pad) :
+   Buffered_Filter(ciph->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB, 0)
    {
    cipher = ciph;
    padder = pad;
 
-   plaintext.resize(cipher->BLOCK_SIZE);
-   ciphertext.resize(cipher->BLOCK_SIZE * PARALLEL_BLOCKS);
-
-   position = 0;
+   temp.resize(cipher->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB);
    }
 
 /*
@@ -35,15 +27,13 @@ ECB_Encryption::ECB_Encryption(BlockCipher* ciph,
 */
 ECB_Encryption::ECB_Encryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad,
-                               const SymmetricKey& key)
+                               const SymmetricKey& key) :
+   Buffered_Filter(ciph->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB, 0)
    {
    cipher = ciph;
    padder = pad;
 
-   plaintext.resize(cipher->BLOCK_SIZE);
-   ciphertext.resize(cipher->BLOCK_SIZE * PARALLEL_BLOCKS);
-
-   position = 0;
+   temp.resize(cipher->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB);
 
    cipher->set_key(key);
    }
@@ -70,35 +60,7 @@ std::string ECB_Encryption::name() const
 */
 void ECB_Encryption::write(const byte input[], u32bit length)
    {
-   const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
-
-   if(position)
-      {
-      plaintext.copy(position, input, length);
-
-      if(position + length >= BLOCK_SIZE)
-         {
-         cipher->encrypt(plaintext, ciphertext);
-         send(ciphertext, BLOCK_SIZE);
-         input += (BLOCK_SIZE - position);
-         length -= (BLOCK_SIZE - position);
-         position = 0;
-         }
-      }
-
-   while(length >= BLOCK_SIZE)
-      {
-      const u32bit to_proc =
-         std::min<u32bit>(length, ciphertext.size()) / BLOCK_SIZE;
-
-      cipher->encrypt_n(input, ciphertext, to_proc);
-      send(ciphertext, to_proc * BLOCK_SIZE);
-      input += to_proc * BLOCK_SIZE;
-      length -= to_proc * BLOCK_SIZE;
-      }
-
-   plaintext.copy(position, input, length);
-   position += length;
+   Buffered_Filter::write(input, length);
    }
 
 /*
@@ -106,12 +68,41 @@ void ECB_Encryption::write(const byte input[], u32bit length)
 */
 void ECB_Encryption::end_msg()
    {
-   const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
+   u32bit last_block = current_position() % cipher->BLOCK_SIZE;
 
-   SecureVector<byte> padding(BLOCK_SIZE);
-   padder->pad(padding, padding.size(), position);
-   write(padding, padder->pad_bytes(BLOCK_SIZE, position));
-   if(position != 0)
+   SecureVector<byte> padding(cipher->BLOCK_SIZE);
+   padder->pad(padding, padding.size(), last_block);
+
+   u32bit pad_bytes = padder->pad_bytes(cipher->BLOCK_SIZE, last_block);
+
+   if(pad_bytes)
+      Buffered_Filter::write(padding, pad_bytes);
+   Buffered_Filter::end_msg();
+   }
+
+void ECB_Encryption::buffered_block(const byte input[], u32bit input_length)
+   {
+   const u32bit blocks_in_temp = temp.size() / cipher->BLOCK_SIZE;
+   u32bit blocks = input_length / cipher->BLOCK_SIZE;
+
+   while(blocks)
+      {
+      u32bit to_proc = std::min<u32bit>(blocks, blocks_in_temp);
+
+      cipher->encrypt_n(input, &temp[0], to_proc);
+
+      send(temp, to_proc * cipher->BLOCK_SIZE);
+
+      input += to_proc * cipher->BLOCK_SIZE;
+      blocks -= to_proc;
+      }
+   }
+
+void ECB_Encryption::buffered_final(const byte input[], u32bit input_length)
+   {
+   if(input_length % cipher->BLOCK_SIZE == 0)
+      buffered_block(input, input_length);
+   else if(input_length != 0)
       throw Encoding_Error(name() + ": Did not pad to full blocksize");
    }
 
@@ -119,15 +110,13 @@ void ECB_Encryption::end_msg()
 * ECB_Decryption Constructor
 */
 ECB_Decryption::ECB_Decryption(BlockCipher* ciph,
-                               BlockCipherModePaddingMethod* pad)
+                               BlockCipherModePaddingMethod* pad) :
+   Buffered_Filter(ciph->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB, 1)
    {
    cipher = ciph;
    padder = pad;
 
-   ciphertext.resize(cipher->BLOCK_SIZE);
-   plaintext.resize(cipher->BLOCK_SIZE * PARALLEL_BLOCKS);
-
-   position = 0;
+   temp.resize(cipher->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB);
    }
 
 /*
@@ -135,15 +124,13 @@ ECB_Decryption::ECB_Decryption(BlockCipher* ciph,
 */
 ECB_Decryption::ECB_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad,
-                               const SymmetricKey& key)
+                               const SymmetricKey& key) :
+   Buffered_Filter(ciph->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB, 1)
    {
    cipher = ciph;
    padder = pad;
 
-   ciphertext.resize(cipher->BLOCK_SIZE);
-   plaintext.resize(cipher->BLOCK_SIZE * PARALLEL_BLOCKS);
-
-   position = 0;
+   temp.resize(cipher->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB);
 
    cipher->set_key(key);
    }
@@ -170,40 +157,7 @@ std::string ECB_Decryption::name() const
 */
 void ECB_Decryption::write(const byte input[], u32bit length)
    {
-   const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
-
-   if(position)
-      {
-      ciphertext.copy(position, input, length);
-
-      if(position + length > BLOCK_SIZE)
-         {
-         cipher->decrypt(ciphertext, plaintext);
-         send(plaintext, BLOCK_SIZE);
-         input += (BLOCK_SIZE - position);
-         length -= (BLOCK_SIZE - position);
-         position = 0;
-         }
-      }
-
-   while(length > BLOCK_SIZE)
-      {
-      /* Always leave at least 1 byte left over, to ensure that (as long
-         as the input message actually is a multiple of the block size)
-         we will have the full final block left over in end_msg so as
-         to remove the padding
-      */
-      const u32bit to_proc =
-         std::min<u32bit>(length - 1, plaintext.size()) / BLOCK_SIZE;
-
-      cipher->decrypt_n(input, plaintext, to_proc);
-      send(plaintext, to_proc * BLOCK_SIZE);
-      input += to_proc * BLOCK_SIZE;
-      length -= to_proc * BLOCK_SIZE;
-      }
-
-   ciphertext.copy(position, input, length);
-   position += length;
+   Buffered_Filter::write(input, length);
    }
 
 /*
@@ -211,12 +165,46 @@ void ECB_Decryption::write(const byte input[], u32bit length)
 */
 void ECB_Decryption::end_msg()
    {
-   if(position != cipher->BLOCK_SIZE)
-      throw Decoding_Error(name());
+   Buffered_Filter::end_msg();
+   }
 
-   cipher->decrypt(ciphertext);
-   send(ciphertext, padder->unpad(ciphertext, cipher->BLOCK_SIZE));
-   position = 0;
+/*
+* Decrypt in ECB mode
+*/
+void ECB_Decryption::buffered_block(const byte input[], u32bit length)
+   {
+   const u32bit blocks_in_temp = temp.size() / cipher->BLOCK_SIZE;
+   u32bit blocks = length / cipher->BLOCK_SIZE;
+
+   while(blocks)
+      {
+      u32bit to_proc = std::min<u32bit>(blocks, blocks_in_temp);
+
+      cipher->decrypt_n(input, &temp[0], to_proc);
+
+      send(temp, to_proc * cipher->BLOCK_SIZE);
+
+      input += to_proc * cipher->BLOCK_SIZE;
+      blocks -= to_proc;
+      }
+   }
+
+/*
+* Finish encrypting in ECB mode
+*/
+void ECB_Decryption::buffered_final(const byte input[], u32bit length)
+   {
+   if(length == 0 || length % cipher->BLOCK_SIZE != 0)
+      throw Decoding_Error(name() + ": Ciphertext not multiple of block size");
+
+   size_t extra_blocks = (length - 1) / cipher->BLOCK_SIZE;
+
+   buffered_block(input, extra_blocks * cipher->BLOCK_SIZE);
+
+   input += extra_blocks * cipher->BLOCK_SIZE;
+
+   cipher->decrypt(input, temp);
+   send(temp, padder->unpad(temp, cipher->BLOCK_SIZE));
    }
 
 }

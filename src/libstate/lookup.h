@@ -8,17 +8,14 @@
 #ifndef BOTAN_LOOKUP_H__
 #define BOTAN_LOOKUP_H__
 
-#include <botan/block_cipher.h>
-#include <botan/stream_cipher.h>
-#include <botan/hash.h>
-#include <botan/mac.h>
-#include <botan/s2k.h>
-
+#include <botan/libstate.h>
+#include <botan/engine.h>
 #include <botan/filters.h>
 #include <botan/mode_pad.h>
 #include <botan/kdf.h>
 #include <botan/eme.h>
 #include <botan/emsa.h>
+#include <botan/s2k.h>
 
 namespace Botan {
 
@@ -28,59 +25,90 @@ namespace Botan {
 // NOTE: these functions return internally stored objects, library
 // retains ownership
 
-BOTAN_DLL const BlockCipher*
-retrieve_block_cipher(const std::string&);
+inline const BlockCipher*
+retrieve_block_cipher(const std::string& algo_spec)
+   {
+   Algorithm_Factory& af = global_state().algorithm_factory();
+   return af.prototype_block_cipher(algo_spec);
+   }
 
-BOTAN_DLL const StreamCipher*
-retrieve_stream_cipher(const std::string&);
+inline const StreamCipher*
+retrieve_stream_cipher(const std::string& algo_spec)
+   {
+   Algorithm_Factory& af = global_state().algorithm_factory();
+   return af.prototype_stream_cipher(algo_spec);
+   }
 
-BOTAN_DLL const HashFunction*
-retrieve_hash(const std::string&);
+inline const HashFunction*
+retrieve_hash(const std::string& algo_spec)
+   {
+   Algorithm_Factory& af = global_state().algorithm_factory();
+   return af.prototype_hash_function(algo_spec);
+   }
 
-BOTAN_DLL const MessageAuthenticationCode*
-retrieve_mac(const std::string&);
+inline const MessageAuthenticationCode*
+retrieve_mac(const std::string& algo_spec)
+   {
+   Algorithm_Factory& af = global_state().algorithm_factory();
+   return af.prototype_mac(algo_spec);
+   }
 
 /*
 * Get an algorithm object
+*  NOTE: these functions create and return new objects, letting the
+* caller assume ownership of them
 */
-// NOTE: these functions create and return new objects, letting the
-// caller assume ownership of them
 
 /**
 * Block cipher factory method.
 * @param algo_spec the name of the desired block cipher
 * @return a pointer to the block cipher object
 */
-BOTAN_DLL BlockCipher* get_block_cipher(const std::string& name);
-
+inline BlockCipher* get_block_cipher(const std::string& algo_spec)
+   {
+   Algorithm_Factory& af = global_state().algorithm_factory();
+   return af.make_block_cipher(algo_spec);
+   }
 
 /**
 * Stream cipher factory method.
 * @param algo_spec the name of the desired stream cipher
 * @return a pointer to the stream cipher object
 */
-BOTAN_DLL StreamCipher* get_stream_cipher(const std::string& name);
+inline StreamCipher* get_stream_cipher(const std::string& algo_spec)
+   {
+   Algorithm_Factory& af = global_state().algorithm_factory();
+   return af.make_stream_cipher(algo_spec);
+   }
 
 /**
 * Hash function factory method.
 * @param algo_spec the name of the desired hash function
 * @return a pointer to the hash function object
 */
-BOTAN_DLL HashFunction* get_hash(const std::string& name);
+inline HashFunction* get_hash(const std::string& algo_spec)
+   {
+   Algorithm_Factory& af = global_state().algorithm_factory();
+   return af.make_hash_function(algo_spec);
+   }
 
 /**
 * MAC factory method.
 * @param algo_spec the name of the desired MAC
 * @return a pointer to the MAC object
 */
-BOTAN_DLL MessageAuthenticationCode* get_mac(const std::string& name);
+inline MessageAuthenticationCode* get_mac(const std::string& algo_spec)
+   {
+   Algorithm_Factory& af = global_state().algorithm_factory();
+   return af.make_mac(algo_spec);
+   }
 
 /**
 * String to key algorithm factory method.
 * @param name the name of the desired string to key (S2K) algorithm
 * @return a pointer to the string to key algorithm object
 */
-BOTAN_DLL S2K* get_s2k(const std::string& name);
+BOTAN_DLL S2K* get_s2k(const std::string& algo_spec);
 
 /*
 * Get an EMSA/EME/KDF/MGF function
@@ -93,7 +121,7 @@ BOTAN_DLL S2K* get_s2k(const std::string& name);
 * @param name the name of the EME to create
 * @return a pointer to the desired EME object
 */
-BOTAN_DLL EME*  get_eme(const std::string& name);
+BOTAN_DLL EME*  get_eme(const std::string& algo_spec);
 
 /**
 * Factory method for EMSA (message-encoding methods for signatures
@@ -101,14 +129,14 @@ BOTAN_DLL EME*  get_eme(const std::string& name);
 * @param name the name of the EME to create
 * @return a pointer to the desired EME object
 */
-BOTAN_DLL EMSA* get_emsa(const std::string& name);
+BOTAN_DLL EMSA* get_emsa(const std::string& algo_spec);
 
 /**
 * Factory method for KDF (key derivation function)
 * @param name the name of the KDF to create
 * @return a pointer to the desired KDF object
 */
-BOTAN_DLL KDF*  get_kdf(const std::string& name);
+BOTAN_DLL KDF*  get_kdf(const std::string& algo_spec);
 
 /*
 * Get a cipher object
@@ -120,8 +148,8 @@ BOTAN_DLL KDF*  get_kdf(const std::string& name);
 * @param key the key to be used for encryption/decryption performed by
 * the filter
 * @param iv the initialization vector to be used
-* @param direction determines whether the filter will be an encrypting or decrypting
-* filter
+* @param direction determines whether the filter will be an encrypting
+* or decrypting filter
 * @return a pointer to the encryption or decryption filter
 */
 BOTAN_DLL Keyed_Filter* get_cipher(const std::string& name,
@@ -133,8 +161,8 @@ BOTAN_DLL Keyed_Filter* get_cipher(const std::string& name,
 * @param algo_spec the name of the desired cipher
 * @param key the key to be used for encryption/decryption performed by
 * the filter
-* @param direction determines whether the filter will be an encrypting or decrypting
-* filter
+* @param direction determines whether the filter will be an encrypting
+* or decrypting filter
 * @return a pointer to the encryption or decryption filter
 */
 BOTAN_DLL Keyed_Filter* get_cipher(const std::string& name,
@@ -156,35 +184,51 @@ BOTAN_DLL Keyed_Filter* get_cipher(const std::string& name, Cipher_Dir dir);
 * @param name the name of the algorithm to check for
 * @return true if the algorithm exists, false otherwise
 */
-BOTAN_DLL bool have_algorithm(const std::string& name);
+BOTAN_DLL bool have_algorithm(const std::string& algo_spec);
 
 /**
 * Check if a block cipher algorithm exists.
 * @param name the name of the algorithm to check for
 * @return true if the algorithm exists, false otherwise
 */
-BOTAN_DLL bool have_block_cipher(const std::string& name);
+inline bool have_block_cipher(const std::string& algo_spec)
+   {
+   Algorithm_Factory& af = global_state().algorithm_factory();
+   return (af.prototype_block_cipher(algo_spec) != 0);
+   }
 
 /**
 * Check if a stream cipher algorithm exists.
 * @param name the name of the algorithm to check for
 * @return true if the algorithm exists, false otherwise
 */
-BOTAN_DLL bool have_stream_cipher(const std::string& name);
+inline bool have_stream_cipher(const std::string& algo_spec)
+   {
+   Algorithm_Factory& af = global_state().algorithm_factory();
+   return (af.prototype_stream_cipher(algo_spec) != 0);
+   }
 
 /**
 * Check if a hash algorithm exists.
 * @param algo_spec the name of the algorithm to check for
 * @return true if the algorithm exists, false otherwise
 */
-BOTAN_DLL bool have_hash(const std::string& name);
+inline bool have_hash(const std::string& algo_spec)
+   {
+   Algorithm_Factory& af = global_state().algorithm_factory();
+   return (af.prototype_hash_function(algo_spec) != 0);
+   }
 
 /**
 * Check if a MAC algorithm exists.
 * @param algo_spec the name of the algorithm to check for
 * @return true if the algorithm exists, false otherwise
 */
-BOTAN_DLL bool have_mac(const std::string& name);
+inline bool have_mac(const std::string& algo_spec)
+   {
+   Algorithm_Factory& af = global_state().algorithm_factory();
+   return (af.prototype_mac(algo_spec) != 0);
+   }
 
 /*
 * Query information about an algorithm
@@ -195,14 +239,14 @@ BOTAN_DLL bool have_mac(const std::string& name);
 * @param name the name of the algorithm
 * @return the block size of the specified algorithm
 */
-BOTAN_DLL u32bit block_size_of(const std::string& name);
+BOTAN_DLL u32bit block_size_of(const std::string& algo_spec);
 
 /**
 * Find out the output length of a certain symmetric algorithm.
 * @param name the name of the algorithm
 * @return the output length of the specified algorithm
 */
-BOTAN_DLL u32bit output_length_of(const std::string& name);
+BOTAN_DLL u32bit output_length_of(const std::string& algo_spec);
 
 /**
 * Find out the whether a certain key length is allowd for a given
@@ -211,28 +255,29 @@ BOTAN_DLL u32bit output_length_of(const std::string& name);
 * @param name the name of the algorithm
 * @return true if the key length is valid for that algorithm, false otherwise
 */
-BOTAN_DLL bool valid_keylength_for(u32bit keylen, const std::string& name);
+BOTAN_DLL bool valid_keylength_for(u32bit keylen,
+                                   const std::string& algo_spec);
 
 /**
 * Find out the minimum key size of a certain symmetric algorithm.
 * @param name the name of the algorithm
 * @return the minimum key length of the specified algorithm
 */
-BOTAN_DLL u32bit min_keylength_of(const std::string& name);
+BOTAN_DLL u32bit min_keylength_of(const std::string& algo_spec);
 
 /**
 * Find out the maximum key size of a certain symmetric algorithm.
 * @param name the name of the algorithm
 * @return the maximum key length of the specified algorithm
 */
-BOTAN_DLL u32bit max_keylength_of(const std::string& name);
+BOTAN_DLL u32bit max_keylength_of(const std::string& algo_spec);
 
 /**
 * Find out the size any valid key is a multiple of for a certain algorithm.
 * @param name the name of the algorithm
 * @return the size any valid key is a multiple of
 */
-BOTAN_DLL u32bit keylength_multiple_of(const std::string& name);
+BOTAN_DLL u32bit keylength_multiple_of(const std::string& algo_spec);
 
 }
 

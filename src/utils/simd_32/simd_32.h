@@ -27,4 +27,20 @@
 
 #endif
 
+namespace Botan {
+
+inline SIMD_32 rotate_left(SIMD_32 x, u32bit rot)
+   {
+   x.rotate_left(rot);
+   return x;
+   }
+
+inline SIMD_32 rotate_right(SIMD_32 x, u32bit rot)
+   {
+   x.rotate_right(rot);
+   return x;
+   }
+
+}
+
 #endif

@@ -127,7 +127,7 @@ SecureVector<byte> DLIES_Decryptor::dec(const byte msg[], u32bit length) const
       mac->update(0);
    SecureVector<byte> T2 = mac->final();
    if(T != T2)
-      throw Integrity_Failure("DLIES: message authentication failed");
+      throw Decoding_Error("DLIES: message authentication failed");
 
    xor_buf(C, K.begin() + mac_keylen, C.size());
 

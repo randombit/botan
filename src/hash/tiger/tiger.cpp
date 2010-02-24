@@ -12,6 +12,23 @@
 
 namespace Botan {
 
+namespace {
+
+/*
+* Tiger Mixing Function
+*/
+inline void mix(u64bit X[8])
+   {
+   X[0] -= X[7] ^ 0xA5A5A5A5A5A5A5A5; X[1] ^= X[0];
+   X[2] += X[1]; X[3] -= X[2] ^ ((~X[1]) << 19); X[4] ^= X[3];
+   X[5] += X[4]; X[6] -= X[5] ^ ((~X[4]) >> 23); X[7] ^= X[6];
+   X[0] += X[7]; X[1] -= X[0] ^ ((~X[7]) << 19); X[2] ^= X[1];
+   X[3] += X[2]; X[4] -= X[3] ^ ((~X[2]) >> 23); X[5] ^= X[4];
+   X[6] += X[5]; X[7] -= X[6] ^ 0x0123456789ABCDEF;
+   }
+
+}
+
 /*
 * Tiger Compression Function
 */
@@ -111,19 +128,6 @@ void Tiger::pass(u64bit& A, u64bit& B, u64bit& C, u64bit X[8], byte mul)
    C += SBOX1[get_byte(0, A)] ^ SBOX2[get_byte(2, A)] ^
         SBOX3[get_byte(4, A)] ^ SBOX4[get_byte(6, A)];
    C *= mul;
-   }
-
-/*
-* Tiger Mixing Function
-*/
-void Tiger::mix(u64bit X[8])
-   {
-   X[0] -= X[7] ^ 0xA5A5A5A5A5A5A5A5; X[1] ^= X[0];
-   X[2] += X[1]; X[3] -= X[2] ^ ((~X[1]) << 19); X[4] ^= X[3];
-   X[5] += X[4]; X[6] -= X[5] ^ ((~X[4]) >> 23); X[7] ^= X[6];
-   X[0] += X[7]; X[1] -= X[0] ^ ((~X[7]) << 19); X[2] ^= X[1];
-   X[3] += X[2]; X[4] -= X[3] ^ ((~X[2]) >> 23); X[5] ^= X[4];
-   X[6] += X[5]; X[7] -= X[6] ^ 0x0123456789ABCDEF;
    }
 
 /*

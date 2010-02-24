@@ -23,9 +23,9 @@ class BOTAN_DLL SCAN_Name
    {
    public:
       /**
-      @param algo_spec A SCAN name
+      @param algo_spec A SCAN-format name
       */
-      SCAN_Name(const std::string& algo_spec);
+      SCAN_Name(std::string algo_spec);
 
       /**
       @return the original input string

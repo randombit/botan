@@ -1,5 +1,7 @@
 endian big
 
+family ppc
+
 <aliases>
 powerpc64
 </aliases>

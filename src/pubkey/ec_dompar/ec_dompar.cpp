@@ -564,18 +564,16 @@ EC_Domain_Params decode_ber_ec_dompar(SecureVector<byte> const& encoded)
    {
    BER_Decoder dec(encoded);
    BER_Object obj = dec.get_next_object();
-   ASN1_Tag tag = obj.type_tag;
-   std::auto_ptr<EC_Domain_Params> p_result;
 
-   if(tag == OBJECT_ID)
+   if(obj.type_tag == OBJECT_ID)
       {
       OID dom_par_oid;
       BER_Decoder(encoded).decode(dom_par_oid);
       return EC_Domain_Params(get_ec_dompar(dom_par_oid.as_string()));
       }
-   else if(tag == SEQUENCE)
+   else if(obj.type_tag == SEQUENCE)
       return EC_Domain_Params(decode_ber_ec_dompar_explicit(encoded));
-   else if(tag == NULL_TAG)
+   else if(obj.type_tag == NULL_TAG)
       throw Decoding_Error("cannot decode ECDSA parameters that are ImplicitCA");
 
    throw Decoding_Error("encountered unexpected when trying to decode domain parameters");

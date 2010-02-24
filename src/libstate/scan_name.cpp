@@ -63,13 +63,17 @@ deref_aliases(const std::pair<u32bit, std::string>& in)
 
 }
 
-SCAN_Name::SCAN_Name(const std::string& algo_spec)
+SCAN_Name::SCAN_Name(std::string algo_spec)
    {
    orig_algo_spec = algo_spec;
 
    std::vector<std::pair<u32bit, std::string> > name;
    u32bit level = 0;
    std::pair<u32bit, std::string> accum = std::make_pair(level, "");
+
+   std::string decoding_error = "Bad SCAN name '" + algo_spec + "': ";
+
+   algo_spec = global_state().deref_alias(algo_spec);
 
    for(u32bit i = 0; i != algo_spec.size(); ++i)
       {
@@ -82,7 +86,7 @@ SCAN_Name::SCAN_Name(const std::string& algo_spec)
          else if(c == ')')
             {
             if(level == 0)
-               throw Decoding_Error("Bad SCAN name " + algo_spec);
+               throw Decoding_Error(decoding_error + "Mismatched parens");
             --level;
             }
 
@@ -102,8 +106,11 @@ SCAN_Name::SCAN_Name(const std::string& algo_spec)
    if(accum.second != "")
       name.push_back(deref_aliases(accum));
 
-   if(level != 0 || name.size() == 0)
-      throw Decoding_Error("Bad SCAN name " + algo_spec);
+   if(level != 0)
+      throw Decoding_Error(decoding_error + "Missing close paren");
+
+   if(name.size() == 0)
+      throw Decoding_Error(decoding_error + "Empty name");
 
    alg_name = name[0].second;
 
@@ -146,7 +153,7 @@ std::string SCAN_Name::algo_name_and_args() const
 std::string SCAN_Name::arg(u32bit i) const
    {
    if(i >= arg_count())
-      throw std::range_error("SCAN_Name::argument");
+      throw std::range_error("SCAN_Name::argument - i out of range");
    return args[i];
    }
 

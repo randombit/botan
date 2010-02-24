@@ -7,10 +7,14 @@
 
 #include <botan/cpuid.h>
 #include <botan/types.h>
-#include <botan/loadstor.h>
+#include <botan/get_byte.h>
 #include <botan/mem_ops.h>
 
-#if defined(BOTAN_TARGET_ARCH_IS_IA32) || defined(BOTAN_TARGET_ARCH_IS_AMD64)
+#if defined(BOTAN_TARGET_OS_IS_DARWIN)
+  #include <sys/sysctl.h>
+#endif
+
+#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
 
@@ -64,6 +68,73 @@ u32bit get_x86_cache_line_size()
       return 32; // default cache line guess
    }
 
+#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+
+bool altivec_check_sysctl()
+   {
+#if defined(BOTAN_TARGET_OS_IS_DARWIN)
+
+   // From Apple's docs
+   int sels[2] = { CTL_HW, HW_VECTORUNIT };
+   int vector_type = 0;
+   size_t length = sizeof(vector_type);
+   int error = sysctl(sels, 2, &vector_type, &length, NULL, 0);
+
+   if(error == 0 && vector_type > 0)
+      return true;
+#endif
+
+   return false;
+   }
+
+bool altivec_check_pvr_emul()
+   {
+   bool altivec_capable = false;
+
+#if defined(BOTAN_TARGET_OS_IS_LINUX) || defined(BOTAN_TARGET_OS_IS_NETBSD)
+
+   /*
+   On PowerPC, MSR 287 is PVR, the Processor Version Number
+   Normally it is only accessible to ring 0, but Linux and NetBSD
+   (others, too, maybe?) will trap and emulate it for us.
+
+   PVR identifiers for various AltiVec enabled CPUs. Taken from
+   PearPC and Linux sources, mostly.
+   */
+
+   const u16bit PVR_G4_7400  = 0x000C;
+   const u16bit PVR_G5_970   = 0x0039;
+   const u16bit PVR_G5_970FX = 0x003C;
+   const u16bit PVR_G5_970MP = 0x0044;
+   const u16bit PVR_G5_970GX = 0x0045;
+   const u16bit PVR_POWER6   = 0x003E;
+   const u16bit PVR_CELL_PPU = 0x0070;
+
+   // Motorola produced G4s with PVR 0x800[0123C] (at least)
+   const u16bit PVR_G4_74xx_24  = 0x800;
+
+   u32bit pvr = 0;
+
+   asm volatile("mfspr %0, 287" : "=r" (pvr));
+
+   // Top 16 bit suffice to identify model
+   pvr >>= 16;
+
+   altivec_capable |= (pvr == PVR_G4_7400);
+   altivec_capable |= ((pvr >> 4) == PVR_G4_74xx_24);
+   altivec_capable |= (pvr == PVR_G5_970);
+   altivec_capable |= (pvr == PVR_G5_970FX);
+   altivec_capable |= (pvr == PVR_G5_970MP);
+   altivec_capable |= (pvr == PVR_G5_970GX);
+   altivec_capable |= (pvr == PVR_POWER6);
+   altivec_capable |= (pvr == PVR_CELL_PPU);
+#endif
+
+   return altivec_capable;
+   }
+
+#endif
+
 }
 
 /*
@@ -105,58 +176,9 @@ bool CPUID::has_altivec()
 
    if(first_time)
       {
-#if defined(BOTAN_TARGET_ARCH_IS_PPC) || defined(BOTAN_TARGET_ARCH_IS_PPC64)
-
-      /*
-      PVR identifiers for various AltiVec enabled CPUs. Taken from
-      PearPC and Linux sources, mostly.
-      */
-      const u16bit PVR_G4_7400  = 0x000C;
-      const u16bit PVR_G5_970   = 0x0039;
-      const u16bit PVR_G5_970FX = 0x003C;
-      const u16bit PVR_G5_970MP = 0x0044;
-      const u16bit PVR_G5_970GX = 0x0045;
-      const u16bit PVR_POWER6   = 0x003E;
-      const u16bit PVR_CELL_PPU = 0x0070;
-
-      // Motorola produced G4s with PVR 0x800[0123C] (at least)
-      const u16bit PVR_G4_74xx_24  = 0x800;
-
-      /*
-      On PowerPC, MSR 287 is PVR, the Processor Version Number
-
-      Normally it is only accessible to ring 0, but Linux and NetBSD
-      (at least) will trap and emulate it for us. This is roughly 20x
-      saner than every other approach I've seen for AltiVec detection
-      (all of which are entirely OS specific, to boot).
-
-      Apparently OS X doesn't support this, but then again OS X
-      doesn't really support PPC anymore, so I'm not worrying about it.
-
-      For OSes that aren't (known to) support the emulation, skip the
-      call, leaving pvr as 0 which will cause all subsequent model
-      number checks to fail (and we'll assume no AltiVec)
-      */
-
-#if defined(BOTAN_TARGET_OS_IS_LINUX) || defined(BOTAN_TARGET_OS_IS_NETBSD)
-  #define BOTAN_TARGET_OS_SUPPORTS_MFSPR_EMUL
-#endif
-
-      u32bit pvr = 0;
-
-#if defined(BOTAN_TARGET_OS_SUPPORTS_MFSPR_EMUL)
-      asm volatile("mfspr %0, 287" : "=r" (pvr));
-#endif
-      // Top 16 bit suffice to identify model
-      pvr >>= 16;
-
-      altivec_capable |= (pvr == PVR_G4_7400);
-      altivec_capable |= ((pvr >> 8) == PVR_G4_74xx_24);
-      altivec_capable |= (pvr == PVR_G5_970);
-      altivec_capable |= (pvr == PVR_G5_970FX);
-      altivec_capable |= (pvr == PVR_G5_970MP);
-      altivec_capable |= (pvr == PVR_G5_970GX);
-      altivec_capable |= (pvr == PVR_CELL_PPU);
+#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+      if(altivec_check_sysctl() || altivec_check_pvr_emul())
+         altivec_capable = true;
 #endif
 
       first_time = false;

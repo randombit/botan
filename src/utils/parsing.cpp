@@ -8,7 +8,7 @@
 #include <botan/parsing.h>
 #include <botan/exceptn.h>
 #include <botan/charset.h>
-#include <botan/loadstor.h>
+#include <botan/get_byte.h>
 
 namespace Botan {
 
@@ -168,7 +168,7 @@ std::vector<std::string> split_on(const std::string& str, char delim)
       }
 
    if(substr == "")
-      throw Format_Error("Unable to split string: " + str);
+      throw Invalid_Argument("Unable to split string: " + str);
    elems.push_back(substr);
 
    return elems;

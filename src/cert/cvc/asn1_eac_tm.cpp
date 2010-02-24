@@ -182,9 +182,9 @@ bool EAC_Time::passes_sanity_check() const
    return true;
    }
 
-/******************************************
+/*
 * modification functions
-******************************************/
+*/
 
 void EAC_Time::add_years(u32bit years)
    {

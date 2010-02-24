@@ -1,7 +1,9 @@
-/*************************************************
-* Boost.Python module definition                 *
-* (C) 1999-2007 Jack Lloyd                       *
-*************************************************/
+/*
+* Boost.Python module definition
+* (C) 1999-2007 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <boost/python.hpp>
 using namespace boost::python;

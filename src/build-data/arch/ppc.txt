@@ -1,6 +1,8 @@
 endian big
 unaligned ok
 
+family ppc
+
 <aliases>
 powerpc
 </aliases>
