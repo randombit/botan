@@ -87,7 +87,7 @@ class BOTAN_DLL EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation
       ASN1_Chr m_chr;
       bool self_signed;
 
-      static void decode_info(SharedPtrConverter<DataSource> source,
+      static void decode_info(DataSource& source,
                               SecureVector<byte> & res_tbs_bits,
                               ECDSA_Signature & res_sig);
 
@@ -156,12 +156,12 @@ template<typename Derived> void EAC1_1_gen_CVC<Derived>::encode(Pipe& out, X509_
 
 template<typename Derived>
 void EAC1_1_gen_CVC<Derived>::decode_info(
-   SharedPtrConverter<DataSource> source,
+   DataSource& source,
    SecureVector<byte> & res_tbs_bits,
    ECDSA_Signature & res_sig)
    {
    SecureVector<byte> concat_sig;
-   BER_Decoder(*source.get_shared().get())
+   BER_Decoder(source)
       .start_cons(ASN1_Tag(33))
       .start_cons(ASN1_Tag(78))
       .raw_bytes(res_tbs_bits)

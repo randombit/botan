@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-EAC1_1_ADO::EAC1_1_ADO(std::tr1::shared_ptr<DataSource> in)
+EAC1_1_ADO::EAC1_1_ADO(DataSource& in)
    {
    init(in);
    do_decode();
@@ -20,7 +20,7 @@ EAC1_1_ADO::EAC1_1_ADO(std::tr1::shared_ptr<DataSource> in)
 
 EAC1_1_ADO::EAC1_1_ADO(const std::string& in)
    {
-   std::tr1::shared_ptr<DataSource> stream(new DataSource_Stream(in, true));
+   DataSource_Stream stream(in, true);
    init(stream);
    do_decode();
    }
@@ -41,7 +41,7 @@ void EAC1_1_ADO::force_decode()
       .end_cons()
       .get_contents();
 
-   std::tr1::shared_ptr<DataSource> req_source(new DataSource_Memory(req_bits));
+   DataSource_Memory req_source(req_bits);
    m_req = EAC1_1_Req(req_source);
    sig_algo = m_req.sig_algo;
    }
@@ -68,14 +68,14 @@ ASN1_Car EAC1_1_ADO::get_car() const
    return m_car;
    }
 
-void EAC1_1_ADO::decode_info(SharedPtrConverter<DataSource> source,
+void EAC1_1_ADO::decode_info(DataSource& source,
                              SecureVector<byte> & res_tbs_bits,
                              ECDSA_Signature & res_sig)
    {
    SecureVector<byte> concat_sig;
    SecureVector<byte> cert_inner_bits;
    ASN1_Car car;
-   BER_Decoder(*source.get_ptr().get())
+   BER_Decoder(source)
       .start_cons(ASN1_Tag(7))
       .start_cons(ASN1_Tag(33))
       .raw_bytes(cert_inner_bits)

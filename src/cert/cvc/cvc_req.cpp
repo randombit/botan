@@ -50,7 +50,7 @@ void EAC1_1_Req::force_decode()
 #endif
    }
 
-EAC1_1_Req::EAC1_1_Req(std::tr1::shared_ptr<DataSource> in)
+EAC1_1_Req::EAC1_1_Req(DataSource& in)
    {
    init(in);
    self_signed = true;
@@ -59,7 +59,7 @@ EAC1_1_Req::EAC1_1_Req(std::tr1::shared_ptr<DataSource> in)
 
 EAC1_1_Req::EAC1_1_Req(const std::string& in)
    {
-   std::tr1::shared_ptr<DataSource> stream(new DataSource_Stream(in, true));
+   DataSource_Stream stream(in, true);
    init(stream);
    self_signed = true;
    do_decode();

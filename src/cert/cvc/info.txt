@@ -1,7 +1,5 @@
 define CARD_VERIFIABLE_CERTIFICATES
 
-uses_tr1 yes
-
 load_on auto
 
 <header:public>
@@ -15,7 +13,6 @@ cvc_self.h
 eac_asn_obj.h
 eac_obj.h
 ecdsa_sig.h
-freestore.h
 signed_obj.h
 </header:public>
 

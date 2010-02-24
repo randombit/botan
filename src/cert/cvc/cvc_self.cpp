@@ -131,7 +131,8 @@ EAC1_1_Req create_cvc_req(Private_Key const& key,
       .get_contents();
 
    MemoryVector<byte> signed_cert = EAC1_1_gen_CVC<EAC1_1_Req>::make_signed(signer, EAC1_1_gen_CVC<EAC1_1_Req>::build_cert_body(tbs), rng);
-   std::tr1::shared_ptr<DataSource> source(new DataSource_Memory(signed_cert));
+
+   DataSource_Memory source(signed_cert);
    return EAC1_1_Req(source);
    }
 
@@ -151,7 +152,8 @@ EAC1_1_ADO create_ado_req(Private_Key const& key,
    SecureVector<byte> tbs_bits = req.BER_encode();
    tbs_bits.append(DER_Encoder().encode(car).get_contents());
    MemoryVector<byte> signed_cert = EAC1_1_ADO::make_signed(signer, tbs_bits, rng);
-   std::tr1::shared_ptr<DataSource> source(new DataSource_Memory(signed_cert));
+
+   DataSource_Memory source(signed_cert);
    return EAC1_1_ADO(source);
    }
 

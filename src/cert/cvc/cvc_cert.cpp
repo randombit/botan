@@ -78,7 +78,7 @@ void EAC1_1_CVC::force_decode()
 /*
 * CVC Certificate Constructor
 */
-EAC1_1_CVC::EAC1_1_CVC(std::tr1::shared_ptr<DataSource>& in)
+EAC1_1_CVC::EAC1_1_CVC(DataSource& in)
    {
    init(in);
    self_signed = false;
@@ -87,7 +87,7 @@ EAC1_1_CVC::EAC1_1_CVC(std::tr1::shared_ptr<DataSource>& in)
 
 EAC1_1_CVC::EAC1_1_CVC(const std::string& in)
    {
-   std::tr1::shared_ptr<DataSource> stream(new DataSource_Stream(in, true));
+   DataSource_Stream stream(in, true);
    init(stream);
    self_signed = false;
    do_decode();
