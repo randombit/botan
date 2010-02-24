@@ -275,21 +275,6 @@ GFpElement PointGFp::get_affine_y() const
    return mY * z3.inverse_in_place();
    }
 
-GFpElement PointGFp::get_jac_proj_x() const
-   {
-   return GFpElement(mX);
-   }
-
-GFpElement PointGFp::get_jac_proj_y() const
-   {
-   return GFpElement(mY);
-   }
-
-GFpElement PointGFp::get_jac_proj_z() const
-   {
-   return GFpElement(mZ);
-   }
-
 // Is this the point at infinity?
 bool PointGFp::is_zero() const
    {
@@ -317,10 +302,7 @@ void PointGFp::check_invariants() const
       {
       GFpElement ax = mC.get_a() * mX;
       if(y2 != (x3 + ax + mC.get_b()))
-         {
          throw Illegal_Point();
-         }
-
       }
 
    GFpElement Zpow2 = mZ * mZ;
@@ -342,29 +324,12 @@ void PointGFp::swap(PointGFp& other)
    mZ.swap(other.mZ);
    }
 
-PointGFp mult2(const PointGFp& point)
+bool PointGFp::operator==(const PointGFp& other) const
    {
-   return (PointGFp(point)).mult2_in_place();
-   }
-
-bool operator==(const PointGFp& lhs, PointGFp const& rhs)
-   {
-   if(lhs.is_zero() && rhs.is_zero())
-      {
-      return true;
-      }
-   if((lhs.is_zero() && !rhs.is_zero()) || (!lhs.is_zero() && rhs.is_zero()))
-      {
+   if(get_curve() != other.get_curve())
       return false;
-      }
-   // neither operand is zero, so we can call get_z_to_one()
-   //assert(!lhs.is_zero());
-   //assert(!rhs.is_zero());
-   PointGFp aff_lhs = lhs.get_z_to_one();
-   PointGFp aff_rhs = rhs.get_z_to_one();
-   return (aff_lhs.get_curve() == aff_rhs.get_curve() &&
-           aff_lhs.get_jac_proj_x() == aff_rhs.get_jac_proj_x() &&
-           aff_lhs.get_jac_proj_y() == aff_rhs.get_jac_proj_y());
+
+   return (mX == other.mX && mY == other.mY && mZ == other.mZ);
    }
 
 // arithmetic operators

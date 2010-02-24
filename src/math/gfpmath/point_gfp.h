@@ -144,19 +144,19 @@ class BOTAN_DLL PointGFp
       * get the jacobian projective x coordinate
       * @result jacobian projective x coordinate
       */
-      GFpElement get_jac_proj_x() const;
+      const GFpElement& get_jac_proj_x() const { return mX; }
 
       /**
       * get the jacobian projective y coordinate
       * @result jacobian projective y coordinate
       */
-      GFpElement get_jac_proj_y() const;
+      const GFpElement& get_jac_proj_y() const { return mY; }
 
       /**
       * get the jacobian projective z coordinate
       * @result jacobian projective z coordinate
       */
-      GFpElement get_jac_proj_z() const;
+      const GFpElement& get_jac_proj_z() const { return mZ; }
 
       /**
       * Is this the point at infinity?
@@ -180,6 +180,10 @@ class BOTAN_DLL PointGFp
 
       static GFpElement decompress(bool yMod2, GFpElement const& x, const CurveGFp& curve);
 
+      /**
+      * Equality operator
+      */
+      bool operator==(const PointGFp& other) const;
    private:
       CurveGFp mC;
       mutable GFpElement mX;  // NOTE: these values must be mutable (affine<->proj)
@@ -188,10 +192,9 @@ class BOTAN_DLL PointGFp
    };
 
 // relational operators
-bool BOTAN_DLL operator==(const PointGFp& lhs, const PointGFp& rhs);
 inline bool operator!=(const PointGFp& lhs, const PointGFp& rhs )
    {
-   return !operator==(lhs, rhs);
+   return !(rhs == lhs);
    }
 
 // arithmetic operators
@@ -201,8 +204,6 @@ PointGFp BOTAN_DLL operator-(const PointGFp& lhs);
 
 PointGFp BOTAN_DLL operator*(const BigInt& scalar, const PointGFp& point);
 PointGFp BOTAN_DLL operator*(const PointGFp& point, const BigInt& scalar);
-
-PointGFp BOTAN_DLL mult2(const PointGFp& point);
 
 PointGFp BOTAN_DLL create_random_point(RandomNumberGenerator& rng,
                                        const CurveGFp& curve);
