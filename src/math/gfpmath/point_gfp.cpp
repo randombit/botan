@@ -641,10 +641,6 @@ PointGFp OS2ECP(MemoryRegion<byte> const& os, const CurveGFp& curve)
          bX = SecureVector<byte>(os.size() - 1);
          bX.copy(os.begin()+1, os.size()-1);
 
-         /* Problem wäre, wenn decode() das erste bit als Vorzeichen interpretiert.
-         *---------------------
-         * AW(FS): decode() interpretiert das erste Bit nicht als Vorzeichen
-         */
          bi_dec_x = BigInt::decode(bX, bX.size());
          x = GFpElement(curve.get_p(), bi_dec_x);
          bool yMod2;

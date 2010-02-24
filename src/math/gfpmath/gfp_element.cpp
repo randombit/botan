@@ -303,7 +303,7 @@ const BigInt& GFpElement::get_mres() const
    if(!m_use_montgm)
       {
       // does the following exception really make sense?
-      // wouldn´t it be better to simply turn on montg.mult. when
+      // wouldn't it be better to simply turn on montg.mult. when
       // this explicit request is made?
       throw Illegal_Transformation("GFpElement is not allowed to be transformed to m-residue");
       }

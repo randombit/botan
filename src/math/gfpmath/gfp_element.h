@@ -121,9 +121,9 @@ class BOTAN_DLL GFpElement
       const BigInt& get_value() const;
 
       /**
-      * Tells whether this GFpElement is currently transformed to it´ m-residue,
+      * Tells whether this GFpElement is currently transformed to an m-residue,
       * i.e. in the form x_bar = x * r mod m.
-      * @result true if it is currently transformed to it´s m-residue.
+      * @result true if it is currently transformed to its m-residue.
       */
       bool is_trf_to_mres() const;
 
@@ -148,7 +148,7 @@ class BOTAN_DLL GFpElement
       * in ordinary residue representation (returns false).
       * m-residue is prefered in case of ambiguity.
       * does not toggle m_use_montgm of the arguments.
-      * Don´t be confused about the constness of the arguments:
+      * Don't be confused about the constness of the arguments:
       * the transformation between normal residue and m-residue is
       * considered as leaving the object const.
       * @param lhs the first operand to be aligned
