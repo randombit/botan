@@ -51,30 +51,18 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
       return *this;
       }
 
-   GFpElement point_x(curve.get_p(), coord_x);
-   GFpElement point_y(curve.get_p(), coord_y);
-   GFpElement point_z(curve.get_p(), coord_z);
+   Modular_Reducer mod_p(curve.get_p());
 
-   GFpElement rhs_point_x(curve.get_p(), rhs.coord_x);
-   GFpElement rhs_point_y(curve.get_p(), rhs.coord_y);
-   GFpElement rhs_point_z(curve.get_p(), rhs.coord_z);
+   BigInt rhs_z2 = mod_p.square(rhs.coord_z);
+   BigInt U1 = mod_p.multiply(coord_x, rhs_z2);
+   BigInt S1 = mod_p.multiply(coord_y, mod_p.multiply(rhs.coord_z, rhs_z2));
 
-   GFpElement U1 = point_x;
-   GFpElement S1 = point_y;
+   BigInt lhs_z2 = mod_p.square(coord_z);
+   BigInt U2 = mod_p.multiply(rhs.coord_x, lhs_z2);
+   BigInt S2 = mod_p.multiply(rhs.coord_y, mod_p.multiply(coord_z, lhs_z2));
 
-   GFpElement rhs_z2 = rhs_point_z * rhs_point_z;
-   U1 *= rhs_z2;
-   S1 *= rhs_z2 * rhs_point_z;
-
-   GFpElement U2 = rhs_point_x;
-   GFpElement S2 = rhs_point_y;
-
-   GFpElement lhs_z2 = point_z * point_z;
-   U2 *= lhs_z2;
-   S2 *= lhs_z2 * point_z;
-
-   GFpElement H(U2 - U1);
-   GFpElement r(S2 - S1);
+   BigInt H = mod_p.reduce(U2 - U1);
+   BigInt r = mod_p.reduce(S2 - S1);
 
    if(H.is_zero())
       {
@@ -88,23 +76,19 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
       return *this;
       }
 
-   U2 = H * H;
+   U2 = mod_p.square(H);
 
-   S2 = U2 * H;
+   S2 = mod_p.multiply(U2, H);
 
-   U2 *= U1;
+   U2 = mod_p.multiply(U1, U2);
 
-   GFpElement x(r*r - S2 - (U2+U2));
+   BigInt x = mod_p.reduce(mod_p.square(r) - S2 - mod_p.multiply(2, U2));
+   BigInt y = mod_p.reduce(mod_p.multiply(r, (U2-x)) - mod_p.multiply(S1, S2));
+   BigInt z = mod_p.multiply(mod_p.multiply(coord_z, rhs.coord_z), H);
 
-   GFpElement z(S1 * S2);
-
-   GFpElement y(r * (U2-x) - z);
-
-   z = (point_z * rhs_point_z) * H;
-
-   coord_x = x.get_value();
-   coord_y = y.get_value();
-   coord_z = z.get_value();
+   coord_x = x;
+   coord_y = y;
+   coord_z = z;
 
    return *this;
    }
