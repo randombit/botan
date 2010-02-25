@@ -125,8 +125,7 @@ X509_Decoder* GOST_3410_PublicKey::x509_decoder()
 
             key->mp_public_point.reset(
                new PointGFp(key->domain_parameters().get_curve(),
-                            GFpElement(x, p),
-                            GFpElement(y, p)));
+                            x, y));
 
             key->X509_load_hook();
             }

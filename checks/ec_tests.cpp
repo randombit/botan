@@ -131,7 +131,8 @@ void test_coordinates()
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
    PointGFp p0 = p_G;
    PointGFp p1 = p_G.mult2_in_place();
-   PointGFp point_exp(secp160r1, GFpElement(bi_p_secp, exp_affine_x), GFpElement(bi_p_secp, exp_affine_y));
+   PointGFp point_exp(secp160r1, exp_affine_x, exp_affine_y);
+
    try
       {
       point_exp.check_invariants();
@@ -529,9 +530,7 @@ void test_mult_point()
 
    p1 *= p0.get_jac_proj_x().get_value();
 
-   PointGFp expected(secp160r1,
-                     GFpElement(bi_p_secp, BigInt(exp_mult_x)),
-                     GFpElement(bi_p_secp, BigInt(exp_mult_y)));
+   PointGFp expected(secp160r1, exp_mult_x, exp_mult_y);
 
    CHECK(p1 == expected);
    }

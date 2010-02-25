@@ -44,9 +44,7 @@ class BOTAN_DLL PointGFp
       * @param x affine x coordinate
       * @param y affine y coordinate
       */
-      PointGFp(const CurveGFp& curve,
-               const GFpElement& x,
-               const GFpElement& y);
+      PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y);
 
       /**
       * Construct a point given its jacobian projective coordinates
@@ -87,13 +85,13 @@ class BOTAN_DLL PointGFp
       PointGFp& operator*=(const BigInt& scalar);
 
       /**
-      * Negate internal value(*this *= -1 )
+      * Negate this point
       * @return *this
       */
       PointGFp& negate();
 
       /**
-      * Multiply the point by two(*this *= 2 )
+      * Multiply the point by two
       * @return *this
       */
       PointGFp& mult2_in_place();
@@ -169,8 +167,6 @@ class BOTAN_DLL PointGFp
       */
       void swap(PointGFp& other);
 
-      static GFpElement decompress(bool yMod2, GFpElement const& x, const CurveGFp& curve);
-
       /**
       * Equality operator
       */
@@ -183,7 +179,7 @@ class BOTAN_DLL PointGFp
    };
 
 // relational operators
-inline bool operator!=(const PointGFp& lhs, const PointGFp& rhs )
+inline bool operator!=(const PointGFp& lhs, const PointGFp& rhs)
    {
    return !(rhs == lhs);
    }
@@ -204,16 +200,14 @@ SecureVector<byte> BOTAN_DLL EC2OSP(const PointGFp& point, byte format);
 PointGFp BOTAN_DLL OS2ECP(MemoryRegion<byte> const& os, const CurveGFp& curve);
 
 /* Should these be private? */
-SecureVector<byte>
-BOTAN_DLL encode_uncompressed(const PointGFp& point);
-
+SecureVector<byte> BOTAN_DLL encode_uncompressed(const PointGFp& point);
 SecureVector<byte> BOTAN_DLL encode_hybrid(const PointGFp& point);
 SecureVector<byte> BOTAN_DLL encode_compressed(const PointGFp& point);
 
 // swaps the states of point1 and point2, does not throw!
 // cf. Meyers, Item 25
 inline
-void swap(PointGFp& point1, PointGFp& point2 )
+void swap(PointGFp& point1, PointGFp& point2)
    {
    point1.swap(point2);
    }

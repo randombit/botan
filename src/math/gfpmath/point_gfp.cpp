@@ -2,7 +2,7 @@
 * Arithmetic for point groups of elliptic curves over GF(p)
 *
 * (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
-*     2008 Jack Lloyd
+*     2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -11,6 +11,32 @@
 #include <botan/numthry.h>
 
 namespace Botan {
+
+namespace {
+
+BigInt decompress_point(bool yMod2,
+                        const BigInt& x,
+                        const CurveGFp& curve)
+   {
+   BigInt xpow3 = x * x * x;
+
+   BigInt g = curve.get_a().get_value() * x;
+   g += xpow3;
+   g += curve.get_b().get_value();
+   g = g % curve.get_p();
+
+   BigInt z = ressol(g, curve.get_p());
+
+   if(z < 0)
+      throw Illegal_Point("error during decompression");
+
+   if(z.get_bit(0) != yMod2)
+      z = curve.get_p() - z;
+
+   return z;
+   }
+
+}
 
 // construct the point at infinity or a random point
 PointGFp::PointGFp(const CurveGFp& curve) :
@@ -32,11 +58,11 @@ PointGFp::PointGFp(const CurveGFp& curve, const GFpElement& x,
    }
 
 PointGFp::PointGFp(const CurveGFp& curve,
-                   const GFpElement& x,
-                   const GFpElement& y) :
+                   const BigInt& x,
+                   const BigInt& y) :
    mC(curve),
-   mX(x),
-   mY(y),
+   mX(curve.get_p(),x),
+   mY(curve.get_p(),y),
    mZ(curve.get_p(),1)
    {
    }
@@ -277,22 +303,20 @@ GFpElement PointGFp::get_affine_y() const
 bool PointGFp::is_zero() const
    {
    return(mX.is_zero() && mZ.is_zero());
-   //NOTE: the calls to GFpElement::is_zero() instead of getting the value and
-   // and comparing it are import because they do not provoke backtransformations
-   // to the ordinary residue.
    }
-
-// Is the point still on the curve??
-// (If everything is correct, the point is always on its curve; then the
-// function will return silently. If Oskar managed to corrupt this object's state,
-// then it will throw an exception.)
 
 void PointGFp::check_invariants() const
    {
+   /*
+   Is the point still on the curve?? (If everything is correct, the
+   point is always on its curve; then the function will return
+   silently. If Oskar managed to corrupt this object's state, then it
+   will throw an exception.)
+   */
+
    if(is_zero())
-      {
       return;
-      }
+
    const GFpElement y2 = mY * mY;
    const GFpElement x3 = mX * mX * mX;
 
@@ -363,37 +387,25 @@ PointGFp operator*(const PointGFp& point, const BigInt& scalar)
 // encoding and decoding
 SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
    {
-   SecureVector<byte> result;
    if(format == PointGFp::UNCOMPRESSED)
-      {
-      result = encode_uncompressed(point);
-      }
+      return result = encode_uncompressed(point);
    else if(format == PointGFp::COMPRESSED)
-      {
-      result = encode_compressed(point);
-
-      }
+      return encode_compressed(point);
    else if(format == PointGFp::HYBRID)
-      {
-      result = encode_hybrid(point);
-      }
+      return encode_hybrid(point);
    else
-      {
       throw Invalid_Argument("illegal point encoding format specification");
-      }
-   return result;
    }
+
 SecureVector<byte> encode_compressed(const PointGFp& point)
    {
-
-
    if(point.is_zero())
       {
       SecureVector<byte> result (1);
       result[0] = 0;
       return result;
-
       }
+
    u32bit l = point.get_curve().get_p().bits();
    int dummy = l & 7;
    if(dummy != 0)
@@ -413,7 +425,6 @@ SecureVector<byte> encode_compressed(const PointGFp& point)
       }
    return result;
    }
-
 
 SecureVector<byte> encode_uncompressed(const PointGFp& point)
    {
@@ -472,130 +483,69 @@ SecureVector<byte> encode_hybrid(const PointGFp& point)
    return result;
    }
 
-PointGFp OS2ECP(MemoryRegion<byte> const& os, const CurveGFp& curve)
+PointGFp OS2ECP(const MemoryRegion<byte>& os, const CurveGFp& curve)
    {
    if(os.size() == 1 && os[0] == 0)
-      {
       return PointGFp(curve); // return zero
-      }
-   SecureVector<byte> bX;
-   SecureVector<byte> bY;
-
-   GFpElement x(1,0);
-   GFpElement y(1,0);
-   GFpElement z(1,0);
 
    const byte pc = os[0];
-   BigInt bi_dec_x;
-   BigInt bi_dec_y;
-   switch (pc)
+
+   BigInt x, y;
+
+   if(pc == 2 || pc == 3)
       {
-      case 2:
-      case 3:
-         //compressed form
-         bX = SecureVector<byte>(os.size() - 1);
-         bX.copy(os.begin()+1, os.size()-1);
+      //compressed form
+      x = BigInt::decode(&os[1], os.size() - 1);
 
-         bi_dec_x = BigInt::decode(bX, bX.size());
-         x = GFpElement(curve.get_p(), bi_dec_x);
-         bool yMod2;
-         yMod2 = (pc & 1) == 1;
-         y = PointGFp::decompress(yMod2, x, curve);
-         break;
-      case 4:
-         // uncompressed form
-         int l;
-         l = (os.size() -1)/2;
-         bX = SecureVector<byte>(l);
-         bY = SecureVector<byte>(l);
-         bX.copy(os.begin()+1, l);
-         bY.copy(os.begin()+1+l, l);
-         bi_dec_x = BigInt::decode(bX.begin(), bX.size());
-
-         bi_dec_y = BigInt::decode(bY.begin(),bY.size());
-         x = GFpElement(curve.get_p(), bi_dec_x);
-         y = GFpElement(curve.get_p(), bi_dec_y);
-         break;
-
-      case 6:
-      case 7:
-         //hybrid form
-         l = (os.size() - 1)/2;
-         bX = SecureVector<byte>(l);
-         bY = SecureVector<byte>(l);
-         bX.copy(os.begin() + 1, l);
-         bY.copy(os.begin()+1+l, l);
-         yMod2 = (pc & 0x01) == 1;
-         if(!(PointGFp::decompress(yMod2, x, curve) == y))
-            {
-            throw Illegal_Point("error during decoding hybrid format");
-            }
-         break;
-      default:
-         throw Invalid_Argument("encountered illegal format specification while decoding point");
+      bool yMod2 = ((pc & 0x01) == 1);
+      y = decompress_point(yMod2, x, curve);
       }
+   else if(pc == 4)
+      {
+      // uncompressed form
+      u32bit l = (os.size() - 1) / 2;
+
+      x = BigInt::decode(&os[1], l);
+      y = BigInt::decode(&os[l+1], l);
+      }
+   else if(pc == 6 || pc == 7)
+      {
+      // hybrid form
+      u32bit l = (os.size() - 1) / 2;
+
+      x = BigInt::decode(&os[1], l);
+      y = BigInt::decode(&os[l+1], l);
+
+      bool yMod2 = ((pc & 0x01) == 1);
+
+      if(decompress_point(yMod2, x, curve) != y)
+         throw Illegal_Point("OS2ECP: Decoding error in hybrid format");
+      }
+   else
+      throw Invalid_Argument("OS2ECP: Unknown format type");
 
    PointGFp result(curve, x, y);
    result.check_invariants();
-   //assert((result.get_jac_proj_x().is_trf_to_mres() && result.get_jac_proj_x().is_use_montgm()) || !result.get_jac_proj_x().is_trf_to_mres());
-   //assert((result.get_jac_proj_y().is_trf_to_mres() && result.get_jac_proj_y().is_use_montgm()) || !result.get_jac_proj_y().is_trf_to_mres());
-   //assert((result.get_jac_proj_z().is_trf_to_mres() && result.get_jac_proj_z().is_use_montgm()) || !result.get_jac_proj_z().is_trf_to_mres());
    return result;
-   }
-
-GFpElement PointGFp::decompress(bool yMod2, const GFpElement& x,
-                                const CurveGFp& curve)
-   {
-   BigInt xVal = x.get_value();
-   BigInt xpow3 = xVal * xVal * xVal;
-   BigInt g = curve.get_a().get_value() * xVal;
-   g += xpow3;
-   g += curve.get_b().get_value();
-   g = g%curve.get_p();
-   BigInt z = ressol(g, curve.get_p());
-
-   if(z < 0)
-      throw Illegal_Point("error during decompression");
-
-   bool zMod2 = z.get_bit(0);
-   if((zMod2 && ! yMod2) || (!zMod2 && yMod2))
-      {
-      z = curve.get_p() - z;
-      }
-   return GFpElement(curve.get_p(),z);
    }
 
 PointGFp create_random_point(RandomNumberGenerator& rng,
                              const CurveGFp& curve)
    {
+   const BigInt& p = curve.get_p();
 
-   // create a random point
-   GFpElement mX(1,1);
-   GFpElement mY(1,1);
-   GFpElement mZ(1,1);
-   GFpElement minusOne(curve.get_p(), BigInt(BigInt::Negative,1));
-   mY = minusOne;
-   GFpElement y2(1,1);
-   GFpElement x(1,1);
-
-   while (mY == minusOne)
+   while(true)
       {
-      BigInt value(rng, curve.get_p().bits());
-      mX = GFpElement(curve.get_p(),value);
-      y2 = curve.get_a() * mX;
-      x = mX * mX;
-      x *= mX;
-      y2 += (x + curve.get_b());
+      BigInt r(rng, p.bits());
 
-      value = ressol(y2.get_value(), curve.get_p());
+      GFpElement x = GFpElement(p, r);
+      GFpElement x3 = x * x * x;
 
-      if(value < 0)
-         mY = minusOne;
-      else
-         mY = GFpElement(curve.get_p(), value);
+      GFpElement y = (curve.get_a() * x) + (x3 * curve.get_b());
+
+      if(ressol(y.get_value(), p) > 0)
+         return PointGFp(curve, x.get_value(), y.get_value());
       }
-
-   return PointGFp(curve, mX, mY);
    }
 
 } // namespace Botan
