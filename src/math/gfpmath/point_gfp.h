@@ -184,9 +184,6 @@ PointGFp BOTAN_DLL operator-(const PointGFp& lhs);
 PointGFp BOTAN_DLL operator*(const BigInt& scalar, const PointGFp& point);
 PointGFp BOTAN_DLL operator*(const PointGFp& point, const BigInt& scalar);
 
-PointGFp BOTAN_DLL create_random_point(RandomNumberGenerator& rng,
-                                       const CurveGFp& curve);
-
 // encoding and decoding
 SecureVector<byte> BOTAN_DLL EC2OSP(const PointGFp& point, byte format);
 PointGFp BOTAN_DLL OS2ECP(const MemoryRegion<byte>& os, const CurveGFp& curve);
