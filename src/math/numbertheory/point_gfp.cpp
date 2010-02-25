@@ -196,15 +196,11 @@ void PointGFp::mult2_in_place()
 
    BigInt x = mod_p.reduce(mod_p.square(M) - mod_p.multiply(2, S));
 
-   BigInt y = mod_p.square(y_2);
+   BigInt U = mod_p.multiply(8, mod_p.square(y_2));
 
-   BigInt z = mod_p.multiply(2, mod_p.reduce(y + y));
+   BigInt y = mod_p.reduce(mod_p.multiply(M, S - x) - U);
 
-   BigInt U = mod_p.reduce(z + z);
-
-   y = mod_p.reduce(mod_p.multiply(M, S - x) - U);
-
-   z = mod_p.multiply(2, mod_p.multiply(coord_y, coord_z));
+   BigInt z = mod_p.multiply(2, mod_p.multiply(coord_y, coord_z));
 
    coord_x = x;
    coord_y = y;
