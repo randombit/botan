@@ -26,7 +26,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       /**
       * @return the preferred parallelism of this cipher
       */
-      virtual u32bit parallelism() const { return 1; }
+      virtual u32bit parallelism() const { return 4; }
 
       /**
       * Encrypt a block.

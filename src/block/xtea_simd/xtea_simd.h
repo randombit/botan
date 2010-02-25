@@ -18,6 +18,8 @@ namespace Botan {
 class BOTAN_DLL XTEA_SIMD : public XTEA
    {
    public:
+      u32bit parallelism() const { return 16; }
+
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
       BlockCipher* clone() const { return new XTEA_SIMD; }
