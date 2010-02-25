@@ -345,12 +345,10 @@ void PointGFp::swap(PointGFp& other)
 
 bool PointGFp::operator==(const PointGFp& other) const
    {
-   if(get_curve() != other.get_curve())
-      return false;
-
    return (coord_x == other.coord_x &&
            coord_y == other.coord_y &&
-           coord_z == other.coord_z);
+           coord_z == other.coord_z &&
+           get_curve() == other.get_curve());
    }
 
 // arithmetic operators
