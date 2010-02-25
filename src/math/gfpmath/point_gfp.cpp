@@ -157,19 +157,14 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
       */
       if(H.coord_z != 1)
          {
-         GFpElement point_x(curve.get_p(), H.coord_x);
-         GFpElement point_y(curve.get_p(), H.coord_y);
-         GFpElement point_z(curve.get_p(), H.coord_z);
+         Modular_Reducer mod_p(curve.get_p());
 
-         // Converts to affine coordinates
-         GFpElement z = inverse(point_z);
-         GFpElement z2 = z * z;
-         z *= z2;
-         GFpElement x = point_x * z2;
-         GFpElement y = point_y * z;
+         BigInt z_inv = inverse_mod(H.coord_z, curve.get_p());
 
-         H.coord_x = x.get_value();
-         H.coord_y = y.get_value();
+         BigInt z_inv_2 = mod_p.square(z_inv);
+
+         H.coord_x = mod_p.multiply(H.coord_x, z_inv_2);
+         H.coord_y = mod_p.multiply(H.coord_y, mod_p.multiply(z_inv, z_inv_2));
          H.coord_z = 1;
          }
       }
