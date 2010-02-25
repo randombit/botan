@@ -128,43 +128,40 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
    mZ = z;
 
    return *this;
-
    }
+
 PointGFp& PointGFp::operator-=(const PointGFp& rhs)
    {
    PointGFp minus_rhs = PointGFp(rhs).negate();
 
    if(is_zero())
-      {
       *this = minus_rhs;
-      }
    else
-      {
       *this += minus_rhs;
-      }
+
    return *this;
    }
 
 PointGFp& PointGFp::operator*=(const BigInt& scalar)
    {
-   // use montgomery mult. in this operation
-
    PointGFp H(this->mC); // create as zero
    PointGFp P(*this);
    BigInt m(scalar);
 
    if(m < BigInt(0))
       {
-      m = -m;
+      m.flip_sign();
       P.negate();
       }
 
+   // Move upwards
    if(P.is_zero() || (m == BigInt(0)))
       {
       *this = H;
       return *this;
       }
 
+   // FIXME: *this != P if m was -1 !
    if(m == BigInt(1)) //*this == P already
       return *this;
 
