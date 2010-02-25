@@ -10,7 +10,7 @@
 #ifndef BOTAN_GFP_CURVE_H__
 #define BOTAN_GFP_CURVE_H__
 
-#include <botan/bigint.h>
+#include <botan/numthry.h>
 
 namespace Botan {
 
@@ -28,7 +28,7 @@ class BOTAN_DLL CurveGFp
       * @param b second coefficient
       */
       CurveGFp(const BigInt& p, const BigInt& a, const BigInt& b) :
-         p(p), a(a), b(b) {}
+         p(p), a(a), b(b), reducer_p(p) {}
 
       // CurveGFp(const CurveGFp& other) = default;
       // CurveGFp& operator=(const CurveGFp& other) = default;
@@ -51,6 +51,8 @@ class BOTAN_DLL CurveGFp
       */
       const BigInt& get_p() const { return p; }
 
+      const Modular_Reducer& mod_p() const { return reducer_p; }
+
       /**
       * swaps the states of *this and other, does not throw
       * @param other The curve to swap values with
@@ -69,6 +71,7 @@ class BOTAN_DLL CurveGFp
 
    private:
       BigInt p, a, b;
+      Modular_Reducer reducer_p;
    };
 
 inline bool operator!=(const CurveGFp& lhs, const CurveGFp& rhs)

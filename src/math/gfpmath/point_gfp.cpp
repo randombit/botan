@@ -50,7 +50,7 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
       return *this;
       }
 
-   Modular_Reducer mod_p(curve.get_p());
+   const Modular_Reducer& mod_p = curve.mod_p();
 
    BigInt rhs_z2 = mod_p.square(rhs.coord_z);
    BigInt U1 = mod_p.multiply(coord_x, rhs_z2);
@@ -148,7 +148,7 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
       */
       if(H.coord_z != 1)
          {
-         Modular_Reducer mod_p(curve.get_p());
+         const Modular_Reducer& mod_p = curve.mod_p();
 
          BigInt z_inv = inverse_mod(H.coord_z, curve.get_p());
 
@@ -183,7 +183,7 @@ void PointGFp::mult2_in_place()
       return;
       }
 
-   Modular_Reducer mod_p(curve.get_p());
+   const Modular_Reducer& mod_p = curve.mod_p();
 
    BigInt y_2 = mod_p.square(coord_y);
 
@@ -216,7 +216,7 @@ BigInt PointGFp::get_affine_x() const
    if(is_zero())
       throw Illegal_Transformation("cannot convert to affine");
 
-   Modular_Reducer mod_p(curve.get_p());
+   const Modular_Reducer& mod_p = curve.mod_p();
 
    BigInt z2 = mod_p.square(coord_z);
    return mod_p.multiply(coord_x, inverse_mod(z2, curve.get_p()));
@@ -227,7 +227,7 @@ BigInt PointGFp::get_affine_y() const
    if(is_zero())
       throw Illegal_Transformation("cannot convert to affine");
 
-   Modular_Reducer mod_p(curve.get_p());
+   const Modular_Reducer& mod_p = curve.mod_p();
 
    BigInt z3 = mod_p.multiply(coord_z, mod_p.square(coord_z));
    return mod_p.multiply(coord_y, inverse_mod(z3, curve.get_p()));
@@ -251,7 +251,7 @@ void PointGFp::check_invariants() const
    if(is_zero())
       return;
 
-   Modular_Reducer mod_p(curve.get_p());
+   const Modular_Reducer& mod_p = curve.mod_p();
 
    BigInt y2 = mod_p.square(coord_y);
    BigInt x3 = mod_p.multiply(coord_x, mod_p.square(coord_x));
