@@ -18,7 +18,6 @@ void do_ec_tests(RandomNumberGenerator&) { return; }
 #include <botan/numthry.h>
 #include <botan/curve_gfp.h>
 #include <botan/point_gfp.h>
-#include <botan/gfp_element.h>
 #include <botan/ecdsa.h>
 
 using namespace Botan;
@@ -40,23 +39,22 @@ PointGFp create_random_point(RandomNumberGenerator& rng,
    {
    const BigInt& p = curve.get_p();
 
+   const Modular_Reducer& mod_p = curve.mod_p();
+
    while(true)
       {
-      BigInt r(rng, p.bits());
+      BigInt x(rng, p.bits());
 
-      GFpElement x = GFpElement(p, r);
-      GFpElement x3 = x * x * x;
+      BigInt x3 = mod_p.multiply(x, mod_p.square(x));
 
-      GFpElement ax(curve.get_p(), curve.get_a());
-      ax *= x;
+      BigInt ax = mod_p.multiply(curve.get_a(), x);
 
-      GFpElement bx3(curve.get_p(), curve.get_b());
-      bx3 *= x3;
+      BigInt bx3 = mod_p.multiply(curve.get_b(), x3);
 
-      GFpElement y = ax + bx3;
+      BigInt y = mod_p.reduce(ax + bx3);
 
-      if(ressol(y.get_value(), p) > 0)
-         return PointGFp(curve, x.get_value(), y.get_value());
+      if(ressol(y, p) > 0)
+         return PointGFp(curve, x, y);
       }
    }
 
