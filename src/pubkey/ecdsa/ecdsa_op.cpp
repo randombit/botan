@@ -1,7 +1,7 @@
 /*
 * ECDSA Operation
 * (C) 2007 FlexSecure GmbH
-*     2008-2009 Jack Lloyd
+*     2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -44,7 +44,7 @@ bool Default_ECDSA_Op::verify(const byte msg[], u32bit msg_len,
    if(R.is_zero())
       return false;
 
-   BigInt x = R.get_affine_x().get_value();
+   BigInt x = R.get_affine_x();
 
    return (x % n == r);
    }
@@ -64,7 +64,7 @@ SecureVector<byte> Default_ECDSA_Op::sign(const byte msg[], u32bit msg_len,
 
    PointGFp k_times_P = dom_pars.get_base_point() * k;
    k_times_P.check_invariants();
-   BigInt r = k_times_P.get_affine_x().get_value() % n;
+   BigInt r = k_times_P.get_affine_x() % n;
 
    if(r == 0)
       throw Internal_Error("Default_ECDSA_Op::sign: r was zero");

@@ -93,7 +93,7 @@ class BOTAN_DLL GFpElement
       * a backtransformation to the ordinary-residue)
       * @result true, if the value is zero, false otherwise.
       */
-      bool is_zero();
+      bool is_zero() const;
 
       /**
       * return prime number of GF(p)

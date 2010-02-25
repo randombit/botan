@@ -65,7 +65,7 @@ class BOTAN_DLL CurveGFp
    };
 
 // relational operators
-bool operator==(const CurveGFp& lhs, const CurveGFp& rhs);
+BOTAN_DLL bool operator==(const CurveGFp& lhs, const CurveGFp& rhs);
 
 inline bool operator!=(const CurveGFp& lhs, const CurveGFp& rhs)
    {
@@ -73,7 +73,7 @@ inline bool operator!=(const CurveGFp& lhs, const CurveGFp& rhs)
    }
 
 // io operators
-std::ostream& operator<<(std::ostream& output, const CurveGFp& elem);
+BOTAN_DLL std::ostream& operator<<(std::ostream& output, const CurveGFp& elem);
 
 // swaps the states of curve1 and curve2, does not throw!
 // cf. Meyers, Item 25

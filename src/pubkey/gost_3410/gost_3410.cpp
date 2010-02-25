@@ -2,7 +2,7 @@
 * GOST 34.10-2001 implemenation
 * (C) 2007 Falko Strenzke, FlexSecure GmbH
 *          Manuel Hartl, FlexSecure GmbH
-* (C) 2008-2009 Jack Lloyd
+* (C) 2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -72,8 +72,8 @@ X509_Encoder* GOST_3410_PublicKey::x509_encoder() const
             key->affirm_init();
 
             // Trust CryptoPro to come up with something obnoxious
-            const BigInt x = key->mp_public_point->get_affine_x().get_value();
-            const BigInt y = key->mp_public_point->get_affine_y().get_value();
+            const BigInt x = key->mp_public_point->get_affine_x();
+            const BigInt y = key->mp_public_point->get_affine_y();
 
             SecureVector<byte> bits(2*std::max(x.bytes(), y.bytes()));
 
@@ -125,8 +125,7 @@ X509_Decoder* GOST_3410_PublicKey::x509_decoder()
 
             key->mp_public_point.reset(
                new PointGFp(key->domain_parameters().get_curve(),
-                            GFpElement(x, p),
-                            GFpElement(y, p)));
+                            x, y));
 
             key->X509_load_hook();
             }
@@ -235,7 +234,7 @@ bool GOST_3410_PublicKey::verify(const byte msg[], u32bit msg_len,
 
    PointGFp R = (z1 * mp_dom_pars->get_base_point() + z2 * *mp_public_point);
 
-   return (R.get_affine_x().get_value() == r);
+   return (R.get_affine_x() == r);
    }
 
 GOST_3410_PublicKey::GOST_3410_PublicKey(const EC_Domain_Params& dom_par,
@@ -334,7 +333,7 @@ GOST_3410_PrivateKey::sign(const byte msg[],
    PointGFp k_times_P = mp_dom_pars->get_base_point() * k;
    k_times_P.check_invariants();
 
-   BigInt r = k_times_P.get_affine_x().get_value() % n;
+   BigInt r = k_times_P.get_affine_x() % n;
 
    if(r == 0)
       throw Internal_Error("GOST_3410::sign: r was zero");

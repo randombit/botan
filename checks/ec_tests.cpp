@@ -64,30 +64,29 @@ void test_point_turn_on_sp_red_mul()
    BigInt d("459183204582304");
 
    PointGFp r1 = d * p_G;
-   CHECK(r1.get_affine_x().get_value() != BigInt("0"));
+   CHECK(r1.get_affine_x() != BigInt("0"));
 
    PointGFp p_G2(p_G);
 
    PointGFp r2 = d * p_G2;
    CHECK_MESSAGE(r1 == r2, "error with point mul after extra turn on sp red mul");
-   CHECK(r1.get_affine_x().get_value() != BigInt("0"));
+   CHECK(r1.get_affine_x() != BigInt("0"));
 
    PointGFp p_r1 = r1;
    PointGFp p_r2 = r2;
 
-   p_r1.mult2_in_place(); // wird für Fehler nicht gebraucht
-   p_r2.mult2_in_place(); // wird für Fehler nicht gebraucht
+   p_r1.mult2_in_place();
+   p_r2.mult2_in_place();
    CHECK_MESSAGE(p_r1.get_affine_x() == p_r2.get_affine_x(), "error with mult2 after extra turn on sp red mul");
-   CHECK(p_r1.get_affine_x().get_value() != BigInt("0"));
-   CHECK(p_r2.get_affine_x().get_value() != BigInt("0"));
+   CHECK(p_r1.get_affine_x() != BigInt("0"));
+   CHECK(p_r2.get_affine_x() != BigInt("0"));
    r1.mult2_in_place();
 
    r2.mult2_in_place();
 
    CHECK_MESSAGE(r1 == r2, "error with mult2 after extra turn on sp red mul");
    CHECK_MESSAGE(r1.get_affine_x() == r2.get_affine_x(), "error with mult2 after extra turn on sp red mul");
-   CHECK(r1.get_affine_x().get_value() != BigInt("0"));
-   //std::cout << "r1 x = " << r1.get_affine_x() << endl;
+   CHECK(r1.get_affine_x() != BigInt("0"));
    r1 += p_G;
    r2 += p_G2;
 
@@ -131,7 +130,8 @@ void test_coordinates()
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
    PointGFp p0 = p_G;
    PointGFp p1 = p_G.mult2_in_place();
-   PointGFp point_exp(secp160r1, GFpElement(bi_p_secp, exp_affine_x), GFpElement(bi_p_secp, exp_affine_y));
+   PointGFp point_exp(secp160r1, exp_affine_x, exp_affine_y);
+
    try
       {
       point_exp.check_invariants();
@@ -142,11 +142,11 @@ void test_coordinates()
       }
 
    // testarea
-   CHECK( p1.get_jac_proj_x().get_value() == exp_x);
-   CHECK( p1.get_jac_proj_y().get_value() == exp_y);
-   CHECK( p1.get_jac_proj_z().get_value() == exp_z);
-   CHECK_MESSAGE( p1.get_affine_x().get_value() == exp_affine_x, " p1_x = " << p1.get_affine_x().get_value() << "\n" << "exp_x = " << exp_affine_x << "\n");
-   CHECK_MESSAGE( p1.get_affine_y().get_value() == exp_affine_y, " p1_y = " << p1.get_affine_y().get_value() << "\n" << "exp_y = " << exp_affine_y << "\n");
+   CHECK( p1.get_jac_proj_x() == exp_x);
+   CHECK( p1.get_jac_proj_y() == exp_y);
+   CHECK( p1.get_jac_proj_z() == exp_z);
+   CHECK_MESSAGE( p1.get_affine_x() == exp_affine_x, " p1_x = " << p1.get_affine_x() << "\n" << "exp_x = " << exp_affine_x << "\n");
+   CHECK_MESSAGE( p1.get_affine_y() == exp_affine_y, " p1_y = " << p1.get_affine_y() << "\n" << "exp_y = " << exp_affine_y << "\n");
    }
 
 
@@ -175,11 +175,11 @@ void test_point_transformation ()
    PointGFp q = p;
 
    //turn on montg.
-   CHECK_MESSAGE( p.get_jac_proj_x().get_value() == q.get_jac_proj_x().get_value(), "projective_x changed while turning on montg.!");
-   CHECK_MESSAGE( p.get_jac_proj_y().get_value() == q.get_jac_proj_y().get_value(), "projective_y changed while turning on montg.!");
-   CHECK_MESSAGE( p.get_jac_proj_z().get_value() == q.get_jac_proj_z().get_value(), "projective_z changed while turning on montg.!");
-   CHECK_MESSAGE( p.get_affine_x().get_value() == q.get_affine_x().get_value(), "affine_x changed while turning on montg.!");
-   CHECK_MESSAGE( p.get_affine_y().get_value() == q.get_affine_y().get_value(), "affine_y changed while turning on montg.!");
+   CHECK_MESSAGE( p.get_jac_proj_x() == q.get_jac_proj_x(), "projective_x changed while turning on montg.!");
+   CHECK_MESSAGE( p.get_jac_proj_y() == q.get_jac_proj_y(), "projective_y changed while turning on montg.!");
+   CHECK_MESSAGE( p.get_jac_proj_z() == q.get_jac_proj_z(), "projective_z changed while turning on montg.!");
+   CHECK_MESSAGE( p.get_affine_x() == q.get_affine_x(), "affine_x changed while turning on montg.!");
+   CHECK_MESSAGE( p.get_affine_y() == q.get_affine_y(), "affine_y changed while turning on montg.!");
    }
 
 void test_point_mult ()
@@ -213,77 +213,10 @@ void test_point_mult ()
    SecureVector<byte> sv_d_U = decode_hex(str_d_U);
    BigInt d_U = BigInt::decode(sv_d_U.begin(), sv_d_U.size());
    PointGFp Q_U = d_U * p_G;
-   CHECK( Q_U.get_jac_proj_x().get_value() == exp_Qx);
-   CHECK( Q_U.get_jac_proj_y().get_value() == exp_Qy);
-   CHECK( Q_U.get_jac_proj_z().get_value() == exp_Qz);
+   CHECK( Q_U.get_jac_proj_x() == exp_Qx);
+   CHECK( Q_U.get_jac_proj_y() == exp_Qy);
+   CHECK( Q_U.get_jac_proj_z() == exp_Qz);
    }
-
-#if 0
-void test_montgm_calc_R ()
-   {
-   // this tests isnt´t correct anymore. the determination of R has changed
-   // to be 0 mod word_range.
-
-   // setting up (expected) values
-   BigInt prime_modulus(101);
-   u64bit n = prime_modulus.bits();
-   BigInt exp_R(128);
-   // function under test
-   BigInt calc_R = montgm_calc_r_oddmod(prime_modulus);
-   CHECK_MESSAGE(exp_R == calc_R, "exp_R = " << exp_R << ", calc_R = " << calc_R << ", n = " << n << "\n");
-
-   }
-#endif
-
-#if 0
-void test_naive_montg_mult ()
-   {
-   std::cout << "." << std::flush;
-
-   BigInt a_bar(1);
-   BigInt b_bar(2);
-   BigInt m(11);
-   BigInt m_dash(13);
-   BigInt r(5);
-   //BigInt test_res = montg_mult(a_bar, b_bar, m, m_dash, r);
-   //cout << "test_res = " << test_res << "\n";
-   GFpElement a_norm_mult(11, 3);
-   GFpElement b_norm_mult(11, 5);
-   GFpElement c_norm_mult = a_norm_mult * b_norm_mult;
-   //cout << "c_norm_mult = " << c_norm_mult << "\n";
-   GFpElement a_mm(11, 3, true);
-   GFpElement b_mm(11, 5, true);
-   GFpElement c_mm = a_mm * b_mm;
-   //cout << "c_mm = " << c_mm << "\n";
-   CHECK_MESSAGE(c_norm_mult == c_mm, "c_norm_mult = " << c_norm_mult << "\n" << "c_mm = " << c_mm << "\n");
-   }
-#endif
-
-#if 0
-
-void test_trf_mres ()
-   {
-   // this tests isnt´t correct anymore. the determination of R has changed
-   // to be 0 mod word_range.
-
-   //
-   BigInt modulus(11);
-   BigInt r = montgm_calc_r_oddmod(modulus);
-   //cout << "r = " << r << "\n";
-   BigInt r_inv = inverse_mod(r, modulus);
-   //cout << "r_inv = " << r_inv << "\n";
-   // see C43:
-   BigInt exp_m_dash(13);
-   BigInt calc_m_dash = montgm_calc_m_dash(r, modulus, r_inv);
-   CHECK_MESSAGE(exp_m_dash == calc_m_dash, "exp_m_dash = " << exp_m_dash << "\n" << "calc_m_dash = " << calc_m_dash << "\n");
-   BigInt ord_res(7);
-   BigInt exp_m_res(2); // see C43
-   BigInt calc_m_res = montg_trf_to_mres(ord_res, r, modulus);
-   CHECK_MESSAGE(calc_m_res == exp_m_res, "calc_m_res = " << calc_m_res << "\nexp_m_res = " << exp_m_res);
-   BigInt calc_ord_res_back = montg_trf_to_ordres(calc_m_res,modulus, r_inv);
-   CHECK_MESSAGE(ord_res == calc_ord_res_back, "ord_res = " << ord_res << "\ncalc_ord_res_back = " << calc_ord_res_back << "\n");
-   }
-#endif
 
 void test_point_negative()
    {
@@ -312,15 +245,15 @@ void test_point_negative()
 
    PointGFp p1 = p_G.mult2_in_place();
 
-   CHECK( p1.get_jac_proj_x().get_value() == exp_p1_x);
-   CHECK( p1.get_jac_proj_y().get_value() == exp_p1_y);
+   CHECK( p1.get_jac_proj_x() == exp_p1_x);
+   CHECK( p1.get_jac_proj_y() == exp_p1_y);
    //cout << "p1.y_proj = " << p1.get_jac_proj_y() << "\n";
    PointGFp p1_neg = p1.negate();
    //cout << "p1_neg.y_proj = " << p1_neg.get_jac_proj_y() << "\n";
    //p1.negate();
-   BigInt calc_y_value = p1_neg.get_jac_proj_y().get_value();
-   BigInt calc_z_value = p1_neg.get_jac_proj_z().get_value();
-   CHECK( p1_neg.get_jac_proj_x().get_value() == exp_p1_neg_x);
+   BigInt calc_y_value = p1_neg.get_jac_proj_y();
+   BigInt calc_z_value = p1_neg.get_jac_proj_z();
+   CHECK( p1_neg.get_jac_proj_x() == exp_p1_neg_x);
    CHECK_MESSAGE(  calc_y_value == exp_p1_neg_y, "calc_y_value = " << calc_y_value << "\nexp_p1_neg_v = " << exp_p1_neg_y);
    //CHECK_MESSAGE(  calc_z_value == exp_p1_neg_y, "calc_y_value = " << calc_y_value << "\nexp_p1_neg_v = " << exp_p1_neg_y);
    }
@@ -341,18 +274,9 @@ void test_zeropoint()
    BigInt bi_p1_yval ("1270827321510686389126940426305655825361326281787");
    BigInt bi_p1_zval ("407040228325808215747982915914693784055965283940");
 
-   GFpElement elem_p1_x(bi_p_secp, bi_p1_xval);
-   GFpElement elem_p1_y(bi_p_secp, bi_p1_yval);
-   GFpElement elem_p1_z(bi_p_secp, bi_p1_zval);
-
-
-   PointGFp p1(secp160r1,elem_p1_x, elem_p1_y, elem_p1_z);
-
+   PointGFp p1(secp160r1, bi_p1_xval, bi_p1_yval, bi_p1_zval);
    p1.check_invariants();
    p1 -= p1;
-   //	cout << "p1 x " << p1.get_jac_proj_x().get_value() << "\n";
-   //	cout << "p1 y " << p1.get_jac_proj_y().get_value() << "\n";
-   //	cout << "p1 z " << p1.get_jac_proj_z().get_value() << "\n";
 
    CHECK_MESSAGE(  p1.is_zero(), "p - q with q = p is not zero!");
    }
@@ -401,11 +325,7 @@ void test_calc_with_zeropoint()
    BigInt bi_p1_yval ("1270827321510686389126940426305655825361326281787");
    BigInt bi_p1_zval ("407040228325808215747982915914693784055965283940");
 
-   GFpElement elem_p1_x(bi_p_secp, bi_p1_xval);
-   GFpElement elem_p1_y(bi_p_secp, bi_p1_yval);
-   GFpElement elem_p1_z(bi_p_secp, bi_p1_zval);
-
-   PointGFp p(curve,elem_p1_x, elem_p1_y, elem_p1_z);
+   PointGFp p(curve, bi_p1_xval, bi_p1_yval, bi_p1_zval);
 
    p.check_invariants();
    CHECK_MESSAGE(  !p.is_zero(), "created is zeropoint, shouldn't be!");
@@ -450,16 +370,10 @@ void test_add_point()
    PointGFp p0 = p_G;
    PointGFp p1 = p_G.mult2_in_place();
 
-   PointGFp expected ( secp160r1, GFpElement(bi_p_secp, BigInt(exp_add_x)),
-                       GFpElement(bi_p_secp, BigInt(exp_add_y)), GFpElement(bi_p_secp, BigInt(exp_add_z)));
+   PointGFp expected(secp160r1, exp_add_x, exp_add_y, exp_add_z);
 
    p1 += p0;
    CHECK(p1 == expected);
-#if 0
-   CHECK( p1.get_jac_proj_x().get_value() == exp_add_x);
-   CHECK( p1.get_jac_proj_y().get_value() == exp_add_y);
-   CHECK( p1.get_jac_proj_z().get_value() == exp_add_z);
-#endif
    }
 
 void test_sub_point()
@@ -490,15 +404,9 @@ void test_sub_point()
    PointGFp p1 = p_G.mult2_in_place();
 
    p1 -= p0;
-   PointGFp expected ( secp160r1, GFpElement(bi_p_secp, BigInt(exp_sub_x)),
-                       GFpElement(bi_p_secp, BigInt(exp_sub_y)), GFpElement(bi_p_secp, BigInt(exp_sub_z)));
-   CHECK(p1 == expected);
 
-#if 0
-   CHECK( p1.get_jac_proj_x().get_value() == exp_sub_x);
-   CHECK( p1.get_jac_proj_y().get_value() == exp_sub_y);
-   CHECK( p1.get_jac_proj_z().get_value() == exp_sub_z);
-#endif
+   PointGFp expected(secp160r1, exp_sub_x, exp_sub_y, exp_sub_z);
+   CHECK(p1 == expected);
    }
 
 void test_mult_point()
@@ -508,7 +416,6 @@ void test_mult_point()
    //Setting up expected values
    BigInt exp_mult_x(std::string("967697346845926834906555988570157345422864716250"));
    BigInt exp_mult_y(std::string("512319768365374654866290830075237814703869061656"));
-   BigInt exp_mult_z(std::string("1"));
 
    // precalculation
    std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
@@ -528,17 +435,11 @@ void test_mult_point()
    PointGFp p0 = p_G;
    PointGFp p1 = p_G.mult2_in_place();
 
-   p1 *= p0.get_jac_proj_x().get_value();
+   p1 *= p0.get_jac_proj_x();
 
-   PointGFp expected ( secp160r1, GFpElement(bi_p_secp, BigInt(exp_mult_x)),
-                       GFpElement(bi_p_secp, BigInt(exp_mult_y)), GFpElement(bi_p_secp, BigInt(exp_mult_z)));
+   PointGFp expected(secp160r1, exp_mult_x, exp_mult_y);
+
    CHECK(p1 == expected);
-
-#if 0
-   CHECK( p1.get_jac_proj_x().get_value() == exp_mult_x);
-   CHECK( p1.get_jac_proj_y().get_value() == exp_mult_y);
-   CHECK( p1.get_jac_proj_z().get_value() == exp_mult_z);
-#endif
    }
 
 void test_basic_operations()
@@ -586,52 +487,34 @@ void test_basic_operations()
    PointGFp p1 = p_G.mult2_in_place();
 
    // check that all points have correct values
-   CHECK( p1.get_jac_proj_x().get_value() == exp_p1_x);
-   CHECK( p1.get_jac_proj_y().get_value() == exp_p1_y);
-   CHECK( p1.get_jac_proj_z().get_value() == exp_p1_z);
+   CHECK( p1.get_jac_proj_x() == exp_p1_x);
+   CHECK( p1.get_jac_proj_y() == exp_p1_y);
+   CHECK( p1.get_jac_proj_z() == exp_p1_z);
 
-   PointGFp expected ( secp160r1, GFpElement(bi_p_secp, exp_p0_x),
-                       GFpElement(bi_p_secp, exp_p0_y), GFpElement(bi_p_secp, exp_p0_z));
+   PointGFp expected(secp160r1, exp_p0_x, exp_p0_y, exp_p0_z);
    CHECK(p0 == expected);
-#if 0
-   CHECK( p0.get_jac_proj_x().get_value() == exp_p0_x);
-   CHECK( p0.get_jac_proj_y().get_value() == exp_p0_y);
-   CHECK( p0.get_jac_proj_z().get_value() == exp_p0_z);
-#endif
 
    PointGFp simplePlus= p1 + p0;
-   PointGFp exp_simplePlus ( secp160r1, GFpElement(bi_p_secp, exp_plus_x),
-                             GFpElement(bi_p_secp, exp_plus_y), GFpElement(bi_p_secp, exp_plus_z));
+   PointGFp exp_simplePlus(secp160r1, exp_plus_x, exp_plus_y, exp_plus_z);
    CHECK(simplePlus == exp_simplePlus);
-#if 0
-   CHECK( simplePlus.get_jac_proj_x().get_value() == exp_plus_x);
-   CHECK( simplePlus.get_jac_proj_y().get_value() == exp_plus_y);
-   CHECK( simplePlus.get_jac_proj_z().get_value() == exp_plus_z);
-#endif
 
    PointGFp simpleMinus= p1 - p0;
-   PointGFp exp_simpleMinus ( secp160r1, GFpElement(bi_p_secp, exp_minus_x),
-                              GFpElement(bi_p_secp, exp_minus_y), GFpElement(bi_p_secp, exp_minus_z));
+   PointGFp exp_simpleMinus(secp160r1, exp_minus_x, exp_minus_y, exp_minus_z);
    CHECK(simpleMinus == exp_simpleMinus);
-#if 0
-   CHECK( simpleMinus.get_jac_proj_x().get_value() == exp_minus_x);
-   CHECK( simpleMinus.get_jac_proj_y().get_value() == exp_minus_y);
-   CHECK( simpleMinus.get_jac_proj_z().get_value() == exp_minus_z);
-#endif
 
    PointGFp simpleMult= p1 * 123456789;
-   CHECK( simpleMult.get_jac_proj_x().get_value() == exp_mult_x);
-   CHECK( simpleMult.get_jac_proj_y().get_value() == exp_mult_y);
-   CHECK( simpleMult.get_jac_proj_z().get_value() == exp_mult_z);
+   CHECK( simpleMult.get_jac_proj_x() == exp_mult_x);
+   CHECK( simpleMult.get_jac_proj_y() == exp_mult_y);
+   CHECK( simpleMult.get_jac_proj_z() == exp_mult_z);
 
    // check that all initial points hasn't changed
-   CHECK( p1.get_jac_proj_x().get_value() == exp_p1_x);
-   CHECK( p1.get_jac_proj_y().get_value() == exp_p1_y);
-   CHECK( p1.get_jac_proj_z().get_value() == exp_p1_z);
+   CHECK( p1.get_jac_proj_x() == exp_p1_x);
+   CHECK( p1.get_jac_proj_y() == exp_p1_y);
+   CHECK( p1.get_jac_proj_z() == exp_p1_z);
 
-   CHECK( p0.get_jac_proj_x().get_value() == exp_p0_x);
-   CHECK( p0.get_jac_proj_y().get_value() == exp_p0_y);
-   CHECK( p0.get_jac_proj_z().get_value() == exp_p0_z);
+   CHECK( p0.get_jac_proj_x() == exp_p0_x);
+   CHECK( p0.get_jac_proj_y() == exp_p0_y);
+   CHECK( p0.get_jac_proj_z() == exp_p0_z);
    }
 
 void test_enc_dec_compressed_160()
@@ -790,11 +673,6 @@ void test_enc_dec_uncompressed_521_prime_too_large()
       }
 
    CHECK_MESSAGE(exc, "attempt of creation of point on curve with too high prime did not throw an exception");
-#if 0
-   cout << "mX == " << p_G.get_jac_proj_x() << endl;
-   std::cout << "mY == " << p_G.get_jac_proj_y() << endl;
-   std::cout << "mZ == " << p_G.get_jac_proj_x() << endl;
-#endif
    //SecureVector<byte> sv_result = EC2OSP(p_G, PointGFp::UNCOMPRESSED);
    //string result = hex_encode(sv_result.begin(), sv_result.size());
    //string exp_result = hex_encode(sv_G_secp_uncomp.begin(), sv_G_secp_uncomp.size());
@@ -856,8 +734,6 @@ void test_more_zeropoint()
    std::cout << "." << std::flush;
    // by Falko
 
-
-
    std::string G = "024a96b5688ef573284664698968c38bb913cbfc82";
    SecureVector<byte> sv_G_secp_comp = decode_hex ( G );
    BigInt bi_p("0xffffffffffffffffffffffffffffffff7fffffff");
@@ -869,34 +745,25 @@ void test_more_zeropoint()
    BigInt bi_p1_yval ("1270827321510686389126940426305655825361326281787");
    BigInt bi_p1_zval ("407040228325808215747982915914693784055965283940");
 
-   GFpElement elem_p1_x(bi_p, bi_p1_xval);
-   GFpElement elem_p1_y(bi_p, bi_p1_yval);
-   GFpElement elem_p1_z(bi_p, bi_p1_zval);
-
-   PointGFp p1(curve,elem_p1_x, elem_p1_y, elem_p1_z);
+   PointGFp p1(curve, bi_p1_xval, bi_p1_yval, bi_p1_zval);
 
    p1.check_invariants();
    PointGFp minus_p1 = -p1;
    minus_p1.check_invariants();
    PointGFp shouldBeZero = p1 + minus_p1;
    shouldBeZero.check_invariants();
-   GFpElement x1 = p1.get_affine_x();
-   GFpElement y1 = p1.get_affine_y();
 
-   GFpElement shouldBeY2 = -y1;
+   BigInt y1 = p1.get_affine_y();
+   y1 = curve.get_p() - y1;
 
-   CHECK_MESSAGE(minus_p1.get_affine_x() == x1, "problem with minus_p1 : x");
-   CHECK_MESSAGE(minus_p1.get_affine_y() == shouldBeY2, "problem with minus_p1 : y");
+   CHECK_MESSAGE(p1.get_affine_x() == minus_p1.get_affine_x(),
+                 "problem with minus_p1 : x");
+   CHECK_MESSAGE(minus_p1.get_affine_y() == y1,
+                 "problem with minus_p1 : y");
 
    PointGFp zero(curve);
    zero.check_invariants();
    CHECK_MESSAGE(p1 + zero == p1, "addition of zero modified point");
-
-#if 0
-   std::cout << "sbz x " << shouldBeZero.get_jac_proj_x().get_value() << "\n";
-   std::cout << "sbz y " << shouldBeZero.get_jac_proj_y().get_value() << "\n";
-   std::cout << "sbz z " << shouldBeZero.get_jac_proj_z().get_value() << "\n";
-#endif
 
    CHECK_MESSAGE(  shouldBeZero.is_zero(), "p - q with q = p is not zero!");
    }
@@ -904,9 +771,6 @@ void test_more_zeropoint()
 void test_mult_by_order()
    {
    std::cout << "." << std::flush;
-   //    std::cout << "starting test_mult_by_order..." << endl;
-
-
 
    // generate point
    //EC_Domain_Params dom_pars = global_config().get_ec_dompar("1.3.132.0.8");
@@ -914,11 +778,7 @@ void test_mult_by_order()
    EC_Domain_Params dom_pars = get_EC_Dom_Pars_by_oid("1.3.132.0.8");
    PointGFp p = dom_pars.get_base_point();
    PointGFp shouldBeZero = p * dom_pars.get_order();
-#if 0
-   cout << "sbz x " << shouldBeZero.get_jac_proj_x().get_value() << "\n";
-   std::cout << "sbz y " << shouldBeZero.get_jac_proj_y().get_value() << "\n";
-   std::cout << "sbz z " << shouldBeZero.get_jac_proj_z().get_value() << "\n";
-#endif
+
    CHECK_MESSAGE(shouldBeZero.is_zero(), "G * order != O");
    }
 
@@ -1058,7 +918,6 @@ void test_ec_key_cp_and_assignment(RandomNumberGenerator& rng)
 
    // sign with the original key
    SecureVector<byte> signature = my_priv_key.sign(sv_message.begin(), sv_message.size(), rng);
-   //cout << "signature = " << hex_encode(signature.begin(), signature.size()) << "\n";
    bool ver_success = my_priv_key.verify(sv_message.begin(), sv_message.size(), signature.begin(), signature.size());
    CHECK_MESSAGE(ver_success, "generated signature could not be verified positively");
 
@@ -1105,7 +964,7 @@ void test_ec_key_cast(RandomNumberGenerator& rng)
 
    // sign with the original key
    SecureVector<byte> signature = my_priv_key.sign(sv_message.begin(), sv_message.size(), rng);
-   //cout << "signature = " << hex_encode(signature.begin(), signature.size()) << "\n";
+
    bool ver_success = ec_cast_back->verify(sv_message.begin(), sv_message.size(), signature.begin(), signature.size());
    CHECK_MESSAGE(ver_success, "generated signature could not be verified positively");
    }

@@ -17,7 +17,8 @@ namespace Botan {
 
 struct BOTAN_DLL Illegal_Point : public Exception
    {
-   Illegal_Point(const std::string& err = "") : Exception(err) {}
+   Illegal_Point(const std::string& err = "Malformed ECP point detected") :
+      Exception(err) {}
    };
 
 /**
@@ -26,20 +27,11 @@ struct BOTAN_DLL Illegal_Point : public Exception
 class BOTAN_DLL PointGFp
    {
    public:
-      /**
-      * uncompressed encoding byte value
-      */
-      static const int UNCOMPRESSED = 0;
-
-      /**
-      * compressed encoding byte value
-      */
-      static const int COMPRESSED = 1;
-
-      /**
-      * hybrid encoding byte value
-      */
-      static const int HYBRID = 2;
+      enum Compression_Type {
+         UNCOMPRESSED = 0,
+         COMPRESSED   = 1,
+         HYBRID       = 2
+      };
 
       /**
       * Construct the point O
@@ -53,21 +45,19 @@ class BOTAN_DLL PointGFp
       * @param x affine x coordinate
       * @param y affine y coordinate
       */
-      PointGFp(const CurveGFp& curve,
-               const GFpElement& x,
-               const GFpElement& y);
+      PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y);
 
       /**
       * Construct a point given its jacobian projective coordinates
       * @param curve the base curve
       * @param x jacobian projective x coordinate
       * @param y jacobian projective y coordinate
-      * @param z jacobian projective y coordinate
+      * @param z jacobian projective z coordinate
       */
       PointGFp(const CurveGFp& curve,
-               const GFpElement& x,
-               const GFpElement& y,
-               const GFpElement& z);
+               const BigInt& x,
+               const BigInt& y,
+               const BigInt& z);
 
       //PointGFp(const PointGFp& other) = default;
       //PointGFp& operator=(const PointGFp& other) = default;
@@ -96,13 +86,13 @@ class BOTAN_DLL PointGFp
       PointGFp& operator*=(const BigInt& scalar);
 
       /**
-      * Negate internal value(*this *= -1 )
+      * Negate this point
       * @return *this
       */
       PointGFp& negate();
 
       /**
-      * Multiply the point by two(*this *= 2 )
+      * Multiply the point by two
       * @return *this
       */
       PointGFp& mult2_in_place();
@@ -111,7 +101,7 @@ class BOTAN_DLL PointGFp
       * Set z coordinate to one.
       * @return *this
       */
-      const PointGFp& set_z_to_one() const;
+      const PointGFp& set_z_to_one();
 
       /**
       * Return a point
@@ -120,7 +110,7 @@ class BOTAN_DLL PointGFp
       * thus x and y have just the affine values.
       * @result *this
       */
-      PointGFp get_z_to_one() const;
+      PointGFp get_z_to_one();
 
       /**
       * Return base curve of this point
@@ -132,31 +122,31 @@ class BOTAN_DLL PointGFp
       * get affine x coordinate
       * @result affine x coordinate
       */
-      GFpElement get_affine_x() const;
+      BigInt get_affine_x() const;
 
       /**
       * get affine y coordinate
       * @result affine y coordinate
       */
-      GFpElement get_affine_y() const;
+      BigInt get_affine_y() const;
 
       /**
       * get the jacobian projective x coordinate
       * @result jacobian projective x coordinate
       */
-      GFpElement get_jac_proj_x() const;
+      const BigInt& get_jac_proj_x() const { return mX.get_value(); }
 
       /**
       * get the jacobian projective y coordinate
       * @result jacobian projective y coordinate
       */
-      GFpElement get_jac_proj_y() const;
+      const BigInt& get_jac_proj_y() const { return mY.get_value(); }
 
       /**
       * get the jacobian projective z coordinate
       * @result jacobian projective z coordinate
       */
-      GFpElement get_jac_proj_z() const;
+      const BigInt& get_jac_proj_z() const { return mZ.get_value(); }
 
       /**
       * Is this the point at infinity?
@@ -178,20 +168,21 @@ class BOTAN_DLL PointGFp
       */
       void swap(PointGFp& other);
 
-      static GFpElement decompress(bool yMod2, GFpElement const& x, const CurveGFp& curve);
-
+      /**
+      * Equality operator
+      */
+      bool operator==(const PointGFp& other) const;
    private:
       CurveGFp mC;
-      mutable GFpElement mX;  // NOTE: these values must be mutable (affine<->proj)
-      mutable GFpElement mY;
-      mutable GFpElement mZ;
+      GFpElement mX;
+      GFpElement mY;
+      GFpElement mZ;
    };
 
 // relational operators
-bool BOTAN_DLL operator==(const PointGFp& lhs, const PointGFp& rhs);
-inline bool operator!=(const PointGFp& lhs, const PointGFp& rhs )
+inline bool operator!=(const PointGFp& lhs, const PointGFp& rhs)
    {
-   return !operator==(lhs, rhs);
+   return !(rhs == lhs);
    }
 
 // arithmetic operators
@@ -202,8 +193,6 @@ PointGFp BOTAN_DLL operator-(const PointGFp& lhs);
 PointGFp BOTAN_DLL operator*(const BigInt& scalar, const PointGFp& point);
 PointGFp BOTAN_DLL operator*(const PointGFp& point, const BigInt& scalar);
 
-PointGFp BOTAN_DLL mult2(const PointGFp& point);
-
 PointGFp BOTAN_DLL create_random_point(RandomNumberGenerator& rng,
                                        const CurveGFp& curve);
 
@@ -212,16 +201,14 @@ SecureVector<byte> BOTAN_DLL EC2OSP(const PointGFp& point, byte format);
 PointGFp BOTAN_DLL OS2ECP(MemoryRegion<byte> const& os, const CurveGFp& curve);
 
 /* Should these be private? */
-SecureVector<byte>
-BOTAN_DLL encode_uncompressed(const PointGFp& point);
-
+SecureVector<byte> BOTAN_DLL encode_uncompressed(const PointGFp& point);
 SecureVector<byte> BOTAN_DLL encode_hybrid(const PointGFp& point);
 SecureVector<byte> BOTAN_DLL encode_compressed(const PointGFp& point);
 
 // swaps the states of point1 and point2, does not throw!
 // cf. Meyers, Item 25
 inline
-void swap(PointGFp& point1, PointGFp& point2 )
+void swap(PointGFp& point1, PointGFp& point2)
    {
    point1.swap(point2);
    }
