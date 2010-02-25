@@ -803,35 +803,6 @@ void test_mult_by_order()
    CHECK_MESSAGE(shouldBeZero.is_zero(), "G * order != O");
    }
 
-#if 0
-void test_point_worksp()
-   {
-
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
-   std::tr1::shared_ptr<std::vector<GFpElement> > worksp1;
-   assert(worksp1.get() == 0);
-      {
-      PointGFp p = dom_pars.get_base_point();
-      worksp1 = p.get_worksp_gfp();
-      }
-      PointGFp p2 = dom_pars.get_base_point();
-      p2.set_worksp_gfp(worksp1);
-      PointGFp p3 = p2*6;
-      PointGFp p4 = dom_pars.get_base_point();
-      p4 *= 6;
-      CHECK_MESSAGE(p4 == p3,"points are not equal" );
-      p2 *= 10;
-      for(int i=0; i<3; i++)
-         {
-
-         PointGFp p5 = dom_pars.get_base_point();
-         p5.set_worksp_gfp(worksp1);
-         p5 *= 10;
-         CHECK(p5 == p2);
-         }
-   }
-#endif
-
 void test_point_swap(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
@@ -968,9 +939,6 @@ void do_ec_tests(RandomNumberGenerator& rng)
    test_coordinates();
    test_point_transformation ();
    test_point_mult ();
-   //test_montgm_calc_R ();
-   //test_naive_montg_mult ();
-   //test_trf_mres ();
    test_point_negative();
    test_zeropoint();
    test_zeropoint_enc_dec();
@@ -988,7 +956,6 @@ void do_ec_tests(RandomNumberGenerator& rng)
    test_cdc_curve_33();
    test_more_zeropoint();
    test_mult_by_order();
-   //test_point_worksp();
    test_point_swap(rng);
    test_mult_sec_mass(rng);
    test_curve_cp_ctor();
