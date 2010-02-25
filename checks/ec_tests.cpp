@@ -35,6 +35,31 @@ using namespace Botan;
 
 namespace {
 
+PointGFp create_random_point(RandomNumberGenerator& rng,
+                             const CurveGFp& curve)
+   {
+   const BigInt& p = curve.get_p();
+
+   while(true)
+      {
+      BigInt r(rng, p.bits());
+
+      GFpElement x = GFpElement(p, r);
+      GFpElement x3 = x * x * x;
+
+      GFpElement ax(curve.get_p(), curve.get_a());
+      ax *= x;
+
+      GFpElement bx3(curve.get_p(), curve.get_b());
+      bx3 *= x3;
+
+      GFpElement y = ax + bx3;
+
+      if(ressol(y.get_value(), p) > 0)
+         return PointGFp(curve, x.get_value(), y.get_value());
+      }
+   }
+
 void test_point_turn_on_sp_red_mul()
    {
    std::cout << "." << std::flush;
