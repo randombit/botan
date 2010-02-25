@@ -61,22 +61,21 @@ PointGFp::PointGFp(const CurveGFp& curve,
                    const BigInt& x,
                    const BigInt& y) :
    mC(curve),
-   mX(curve.get_p(),x),
-   mY(curve.get_p(),y),
-   mZ(curve.get_p(),1)
+   mX(curve.get_p(), x),
+   mY(curve.get_p(), y),
+   mZ(curve.get_p(), 1)
    {
    }
 
 // arithmetic operators
 PointGFp& PointGFp::operator+=(const PointGFp& rhs)
    {
+   if(rhs.is_zero())
+      return *this;
+
    if(is_zero())
       {
       *this = rhs;
-      return *this;
-      }
-   if(rhs.is_zero())
-      {
       return *this;
       }
 

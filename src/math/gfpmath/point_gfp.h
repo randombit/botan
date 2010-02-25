@@ -133,19 +133,19 @@ class BOTAN_DLL PointGFp
       * get the jacobian projective x coordinate
       * @result jacobian projective x coordinate
       */
-      const GFpElement& get_jac_proj_x() const { return mX; }
+      const BigInt& get_jac_proj_x() const { return mX.get_value(); }
 
       /**
       * get the jacobian projective y coordinate
       * @result jacobian projective y coordinate
       */
-      const GFpElement& get_jac_proj_y() const { return mY; }
+      const BigInt& get_jac_proj_y() const { return mY.get_value(); }
 
       /**
       * get the jacobian projective z coordinate
       * @result jacobian projective z coordinate
       */
-      const GFpElement& get_jac_proj_z() const { return mZ; }
+      const BigInt& get_jac_proj_z() const { return mZ.get_value(); }
 
       /**
       * Is this the point at infinity?
