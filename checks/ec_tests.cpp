@@ -803,39 +803,6 @@ void test_mult_by_order()
    CHECK_MESSAGE(shouldBeZero.is_zero(), "G * order != O");
    }
 
-void test_gfp_curve_precomp_mres()
-   {
-   std::cout << "." << std::flush;
-
-
-   //EC_Domain_Params parA("1.2.840.10045.3.1.1");
-   EC_Domain_Params parA(get_EC_Dom_Pars_by_oid("1.2.840.10045.3.1.1"));
-   CurveGFp curve1 = parA.get_curve();
-   CurveGFp curve2 = parA.get_curve();
-   BigInt p = curve1.get_p();
-   GFpElement x(p, BigInt("2304042084023"));
-   GFpElement a1_or(curve1.get_p(), curve1.get_a());
-
-   GFpElement b1_mr(curve1.get_p(), curve1.get_b());
-
-   GFpElement a2_mr(curve2.get_p(), curve2.get_a());
-
-   GFpElement b2_or(curve2.get_p(), curve2.get_b());
-
-   GFpElement prodA = a1_or*b1_mr;
-   GFpElement prodB = a2_mr*b2_or;
-   CHECK(prodA == prodB);
-
-   CHECK(a1_or * x == a2_mr * x);
-   CHECK(x* a1_or == a1_or * x);
-   CHECK(x* a1_or == x * a2_mr);
-   CHECK(x* a1_or == a2_mr * x);
-
-   CHECK(a1_or + a2_mr == a2_mr + a1_or);
-   CHECK(a1_or + b1_mr == a2_mr + b1_mr);
-   CHECK(a1_or + x == a2_mr + x);
-   }
-
 #if 0
 void test_point_worksp()
    {
@@ -1021,7 +988,6 @@ void do_ec_tests(RandomNumberGenerator& rng)
    test_cdc_curve_33();
    test_more_zeropoint();
    test_mult_by_order();
-   test_gfp_curve_precomp_mres();
    //test_point_worksp();
    test_point_swap(rng);
    test_mult_sec_mass(rng);
