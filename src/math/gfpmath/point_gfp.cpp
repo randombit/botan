@@ -39,37 +39,6 @@ BigInt decompress_point(bool yMod2,
 
 }
 
-// construct the point at infinity or a random point
-PointGFp::PointGFp(const CurveGFp& curve) :
-   curve(curve),
-   coord_x(0),
-   coord_y(1),
-   coord_z(0)
-   {
-   }
-
-// construct a point given its jacobian projective coordinates
-PointGFp::PointGFp(const CurveGFp& curve,
-                   const BigInt& x,
-                   const BigInt& y,
-                   const BigInt& z) :
-   curve(curve),
-   coord_x(x),
-   coord_y(y),
-   coord_z(z)
-   {
-   }
-
-PointGFp::PointGFp(const CurveGFp& curve,
-                   const BigInt& x,
-                   const BigInt& y) :
-   curve(curve),
-   coord_x(x),
-   coord_y(y),
-   coord_z(1)
-   {
-   }
-
 // arithmetic operators
 PointGFp& PointGFp::operator+=(const PointGFp& rhs)
    {
@@ -504,4 +473,4 @@ PointGFp create_random_point(RandomNumberGenerator& rng,
       }
    }
 
-} // namespace Botan
+}

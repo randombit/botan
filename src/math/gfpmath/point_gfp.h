@@ -44,7 +44,8 @@ class BOTAN_DLL PointGFp
       * Construct the point O
       * @param curve The base curve
       */
-      PointGFp(const CurveGFp& curve);
+      PointGFp(const CurveGFp& curve) :
+         curve(curve), coord_x(0), coord_y(1), coord_z(0) {}
 
       /**
       * Construct a point given its affine coordinates
@@ -52,7 +53,9 @@ class BOTAN_DLL PointGFp
       * @param x affine x coordinate
       * @param y affine y coordinate
       */
-      PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y);
+      PointGFp(const CurveGFp& curve,
+               const BigInt& x, const BigInt& y) :
+         curve(curve), coord_x(x), coord_y(y), coord_z(1) {}
 
       /**
       * Construct a point given its jacobian projective coordinates
@@ -62,9 +65,8 @@ class BOTAN_DLL PointGFp
       * @param z jacobian projective z coordinate
       */
       PointGFp(const CurveGFp& curve,
-               const BigInt& x,
-               const BigInt& y,
-               const BigInt& z);
+               const BigInt& x, const BigInt& y, const BigInt& z) :
+         curve(curve), coord_x(x), coord_y(y), coord_z(z) {}
 
       //PointGFp(const PointGFp& other) = default;
       //PointGFp& operator=(const PointGFp& other) = default;
@@ -190,23 +192,14 @@ PointGFp BOTAN_DLL create_random_point(RandomNumberGenerator& rng,
 SecureVector<byte> BOTAN_DLL EC2OSP(const PointGFp& point, byte format);
 PointGFp BOTAN_DLL OS2ECP(const MemoryRegion<byte>& os, const CurveGFp& curve);
 
-// swaps the states of point1 and point2, does not throw!
-// cf. Meyers, Item 25
-inline
-void swap(PointGFp& point1, PointGFp& point2)
-   {
-   point1.swap(point2);
-   }
-
-} // namespace Botan
+}
 
 namespace std {
 
-// swaps the states of point1 and point2, does not throw!
-// cf. Meyers, Item 25
-template<> inline void
-swap<Botan::PointGFp>(Botan::PointGFp& x, Botan::PointGFp& y) { x.swap(y); }
+template<>
+inline void swap<Botan::PointGFp>(Botan::PointGFp& x, Botan::PointGFp& y)
+   { x.swap(y); }
 
-} // namespace std
+}
 
 #endif
