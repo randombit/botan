@@ -2,8 +2,7 @@ define ECC_DOMAIN_PARAMATERS
 
 <requires>
 asn1
-bigint
 filters
-gfpmath
+numbertheory
 hex
 </requires>

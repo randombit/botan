@@ -4,7 +4,9 @@ define BIGINT_MATH
 
 <header:public>
 blinding.h
+curve_gfp.h
 numthry.h
+point_gfp.h
 pow_mod.h
 reducer.h
 </header:public>
@@ -20,6 +22,7 @@ jacobi.cpp
 make_prm.cpp
 mp_numth.cpp
 numthry.cpp
+point_gfp.cpp
 pow_mod.cpp
 powm_fw.cpp
 powm_mnt.cpp

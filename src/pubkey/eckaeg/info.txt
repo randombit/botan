@@ -5,7 +5,6 @@ alloc
 asn1
 ec_dompar
 ecc_key
-gfpmath
 libstate
 numbertheory
 </requires>

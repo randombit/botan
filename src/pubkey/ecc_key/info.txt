@@ -5,7 +5,6 @@ alloc
 asn1
 bigint
 ec_dompar
-gfpmath
 numbertheory
 pk_codecs
 </requires>
