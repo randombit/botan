@@ -22,6 +22,11 @@
 
 using namespace Botan;
 
+std::ostream& operator<<(std::ostream& output, const GFpElement& elem)
+   {
+   return output << '(' << elem.get_value() << ',' << elem.get_p() << ')';
+   }
+
 #define CHECK_MESSAGE(expr, print) if(!(expr)) { std::cout << print << "\n"; pass = false; }
 #define CHECK(expr) if(!(expr)) { std::cout << #expr << "\n"; pass = false; }
 

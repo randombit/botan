@@ -11,7 +11,6 @@
 #define BOTAN_GFP_ELEMENT_H__
 
 #include <botan/bigint.h>
-#include <iosfwd>
 
 namespace Botan {
 
@@ -29,7 +28,8 @@ class BOTAN_DLL GFpElement
       * @param p the prime number of the field
       * @param value the element value
       */
-      GFpElement(const BigInt& p, const BigInt& value);
+      GFpElement(const BigInt& p, const BigInt& value) :
+         mod_p(p), m_value(value % p) {}
 
       // GFpElement(const GFpElement& other) = default;
       // const GFpElement& operator=(const GFpElement& other) = default;
@@ -86,7 +86,7 @@ class BOTAN_DLL GFpElement
       * a backtransformation to the ordinary-residue)
       * @result true, if the value is zero, false otherwise.
       */
-      bool is_zero() const;
+      bool is_zero() const { return m_value.is_zero(); }
 
       /**
       * return prime number of GF(p)
@@ -126,15 +126,6 @@ GFpElement BOTAN_DLL operator*(const GFpElement& lhs, const GFpElement& rhs);
 GFpElement BOTAN_DLL operator/(const GFpElement& lhs, const GFpElement& rhs);
 GFpElement BOTAN_DLL operator*(const GFpElement& lhs, u32bit rhs);
 GFpElement BOTAN_DLL operator*(u32bit rhs, const GFpElement& lhs);
-
-
-/**
-* write a GFpElement to an output stream.
-* @param output the output stream to write to
-* @param elem the object to write
-* @result the output stream
-*/
-BOTAN_DLL std::ostream& operator<<(std::ostream& output, const GFpElement& elem);
 
 // return (*this)^(-1)
 GFpElement BOTAN_DLL inverse(const GFpElement& elem);
