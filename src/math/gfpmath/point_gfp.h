@@ -165,21 +165,6 @@ class BOTAN_DLL PointGFp
       */
       bool operator==(const PointGFp& other) const;
    private:
-      /**
-      * Set z coordinate to one.
-      * @return *this
-      */
-      const PointGFp& set_z_to_one();
-
-      /**
-      * Return a point
-      * where the coordinates are transformed
-      * so that z equals one,
-      * thus x and y have just the affine values.
-      * @result *this
-      */
-      PointGFp get_z_to_one();
-
       CurveGFp curve;
       BigInt coord_x, coord_y, coord_z;
    };
