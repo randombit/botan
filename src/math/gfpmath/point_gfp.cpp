@@ -217,14 +217,10 @@ BigInt PointGFp::get_affine_x() const
    if(is_zero())
       throw Illegal_Transformation("cannot convert to affine");
 
-   GFpElement point_x(curve.get_p(), coord_x);
-   GFpElement point_z(curve.get_p(), coord_z);
+   Modular_Reducer mod_p(curve.get_p());
 
-   GFpElement z2 = point_z * point_z;
-   z2.inverse_in_place();
-   z2 *= point_x;
-
-   return z2.get_value();
+   BigInt z2 = mod_p.square(coord_z);
+   return mod_p.multiply(coord_x, inverse_mod(z2, curve.get_p()));
    }
 
 BigInt PointGFp::get_affine_y() const
@@ -232,14 +228,10 @@ BigInt PointGFp::get_affine_y() const
    if(is_zero())
       throw Illegal_Transformation("cannot convert to affine");
 
-   GFpElement point_y(curve.get_p(), coord_y);
-   GFpElement point_z(curve.get_p(), coord_z);
+   Modular_Reducer mod_p(curve.get_p());
 
-   GFpElement z3 = point_z * point_z * point_z;
-   z3.inverse_in_place();
-   z3 *= point_y;
-
-   return z3.get_value();
+   BigInt z3 = mod_p.multiply(coord_z, mod_p.square(coord_z));
+   return mod_p.multiply(coord_y, inverse_mod(z3, curve.get_p()));
    }
 
 // Is this the point at infinity?
