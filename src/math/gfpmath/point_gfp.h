@@ -11,7 +11,6 @@
 #define BOTAN_POINT_GFP_H__
 
 #include <botan/curve_gfp.h>
-#include <botan/gfp_element.h>
 #include <vector>
 
 namespace Botan {
@@ -174,10 +173,6 @@ class BOTAN_DLL PointGFp
       */
       bool operator==(const PointGFp& other) const;
    private:
-      GFpElement point_x() const { return GFpElement(curve.get_p(), coord_x); }
-      GFpElement point_y() const { return GFpElement(curve.get_p(), coord_y); }
-      GFpElement point_z() const { return GFpElement(curve.get_p(), coord_z); }
-
       CurveGFp curve;
       BigInt coord_x, coord_y, coord_z;
    };
