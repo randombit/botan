@@ -11,6 +11,7 @@
 #define BOTAN_POINT_GFP_H__
 
 #include <botan/curve_gfp.h>
+#include <botan/gfp_element.h>
 #include <vector>
 
 namespace Botan {

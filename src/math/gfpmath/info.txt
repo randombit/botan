@@ -7,7 +7,6 @@ point_gfp.h
 </header:public>
 
 <source>
-curve_gfp.cpp
 gfp_element.cpp
 point_gfp.cpp
 </source>

@@ -429,18 +429,19 @@ EC_Domain_Params get_ec_dompar(const std::string& oid)
    std::vector<std::string> dom_par = get_standard_domain_parameter(oid);
 
    BigInt p(dom_par[0]); // give as 0x...
-   GFpElement a(p, BigInt(dom_par[1]));
-   GFpElement b(p, BigInt(dom_par[2]));
+   BigInt a(dom_par[1]);
+   BigInt b(dom_par[2]);
+   BigInt order(dom_par[4]);
+   BigInt cofactor(dom_par[5]);
 
    Pipe pipe(new Hex_Decoder);
    pipe.process_msg(dom_par[3]);
    SecureVector<byte> sv_g = pipe.read_all();
 
-   CurveGFp curve(a, b, p);
-   PointGFp G = OS2ECP ( sv_g, curve );
+   CurveGFp curve(p, a, b);
+
+   PointGFp G = OS2ECP(sv_g, curve);
    G.check_invariants();
-   BigInt order(dom_par[4]);
-   BigInt cofactor(dom_par[5]);
    EC_Domain_Params result(curve, G, order, cofactor);
    return result;
    }
@@ -465,32 +466,32 @@ EC_Domain_Params::EC_Domain_Params(const CurveGFp& curve, const PointGFp& base_p
 
 namespace {
 
-SecureVector<byte> encode_der_ec_dompar_explicit(EC_Domain_Params const& dom_pars)
+SecureVector<byte> encode_der_ec_dompar_explicit(const EC_Domain_Params& dom_pars)
    {
    u32bit ecpVers1 = 1;
    OID curve_type_oid("1.2.840.10045.1.1");
 
-   DER_Encoder der;
+   const u32bit p_bytes = dom_pars.get_curve().get_p().bytes();
 
-   der.start_cons(SEQUENCE)
+   return DER_Encoder()
+      .start_cons(SEQUENCE)
          .encode(ecpVers1)
          .start_cons(SEQUENCE)
             .encode(curve_type_oid)
             .encode(dom_pars.get_curve().get_p())
          .end_cons()
          .start_cons(SEQUENCE)
-            .encode(FE2OSP ( dom_pars.get_curve().get_a() ), OCTET_STRING)
-            .encode(FE2OSP ( dom_pars.get_curve().get_b() ), OCTET_STRING)
+            .encode(BigInt::encode_1363(dom_pars.get_curve().get_a(), p_bytes), OCTET_STRING)
+            .encode(BigInt::encode_1363(dom_pars.get_curve().get_b(), p_bytes), OCTET_STRING)
          .end_cons()
          .encode(EC2OSP ( dom_pars.get_base_point(), PointGFp::UNCOMPRESSED), OCTET_STRING)
          .encode(dom_pars.get_order())
          .encode(dom_pars.get_cofactor())
-      .end_cons();
-
-   return der.get_contents();
+      .end_cons()
+      .get_contents();
    }
 
-EC_Domain_Params decode_ber_ec_dompar_explicit(SecureVector<byte> const& encoded)
+EC_Domain_Params decode_ber_ec_dompar_explicit(const SecureVector<byte>& encoded)
    {
    BigInt ecpVers1(1);
    OID curve_type_oid;
@@ -500,35 +501,37 @@ EC_Domain_Params decode_ber_ec_dompar_explicit(SecureVector<byte> const& encoded
    SecureVector<byte> sv_base_point;
    BigInt order;
    BigInt cofactor;
-   BER_Decoder dec(encoded);
-   dec
+
+   BER_Decoder(encoded)
       .start_cons(SEQUENCE)
-      .decode(ecpVers1)
-      .start_cons(SEQUENCE)
-      .decode(curve_type_oid)
-      .decode(p)
+        .decode(ecpVers1)
+        .start_cons(SEQUENCE)
+          .decode(curve_type_oid)
+          .decode(p)
+        .end_cons()
+        .start_cons(SEQUENCE)
+          .decode(sv_a, OCTET_STRING)
+          .decode(sv_b, OCTET_STRING)
+        .end_cons()
+        .decode(sv_base_point, OCTET_STRING)
+        .decode(order)
+        .decode(cofactor)
       .end_cons()
-      .start_cons(SEQUENCE)
-      .decode(sv_a, OCTET_STRING)
-      .decode(sv_b, OCTET_STRING)
-      .end_cons()
-      .decode(sv_base_point, OCTET_STRING)
-      .decode(order)
-      .decode(cofactor)
-      .verify_end()
-      .end_cons();
+      .verify_end();
+
    if(ecpVers1 != 1)
-      {
       throw Decoding_Error("wrong ecpVers");
-      }
+
    // Set the domain parameters
    if(curve_type_oid.as_string() != "1.2.840.10045.1.1") // NOTE: hardcoded: prime field type
       {
       throw Decoding_Error("wrong curve type oid where prime field was expected");
       }
-   GFpElement a(p,BigInt::decode(sv_a, sv_a.size()));
-   GFpElement b(p,BigInt::decode(sv_b, sv_b.size()));
-   CurveGFp curve(a,b,p);
+
+   CurveGFp curve(p,
+                  BigInt::decode(sv_a, sv_a.size()),
+                  BigInt::decode(sv_b, sv_b.size()));
+
    PointGFp G = OS2ECP ( sv_base_point, curve );
    G.check_invariants();
    return EC_Domain_Params(curve, G, order, cofactor);
@@ -536,7 +539,7 @@ EC_Domain_Params decode_ber_ec_dompar_explicit(SecureVector<byte> const& encoded
 
 } // end anonymous namespace
 
-SecureVector<byte> encode_der_ec_dompar(EC_Domain_Params const& dom_pars, EC_dompar_enc enc_type)
+SecureVector<byte> encode_der_ec_dompar(const EC_Domain_Params& dom_pars, EC_dompar_enc enc_type)
      {
      SecureVector<byte> result;
 
@@ -560,7 +563,7 @@ SecureVector<byte> encode_der_ec_dompar(EC_Domain_Params const& dom_pars, EC_dom
      return result;
      }
 
-EC_Domain_Params decode_ber_ec_dompar(SecureVector<byte> const& encoded)
+EC_Domain_Params decode_ber_ec_dompar(const SecureVector<byte>& encoded)
    {
    BER_Decoder dec(encoded);
    BER_Object obj = dec.get_next_object();
@@ -579,7 +582,7 @@ EC_Domain_Params decode_ber_ec_dompar(SecureVector<byte> const& encoded)
    throw Decoding_Error("encountered unexpected when trying to decode domain parameters");
    }
 
-bool operator==(EC_Domain_Params const& lhs, EC_Domain_Params const& rhs)
+bool operator==(const EC_Domain_Params& lhs, const EC_Domain_Params& rhs)
    {
    return ((lhs.get_curve() == rhs.get_curve()) &&
            (lhs.get_base_point() == rhs.get_base_point()) &&

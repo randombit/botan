@@ -20,9 +20,9 @@ BigInt decompress_point(bool yMod2,
    {
    BigInt xpow3 = x * x * x;
 
-   BigInt g = curve.get_a().get_value() * x;
+   BigInt g = curve.get_a() * x;
    g += xpow3;
-   g += curve.get_b().get_value();
+   g += curve.get_b();
    g = g % curve.get_p();
 
    BigInt z = ressol(g, curve.get_p());
@@ -209,7 +209,7 @@ PointGFp& PointGFp::mult2_in_place()
 
    S = x + x;
 
-   GFpElement a_z4 = curve.get_a();
+   GFpElement a_z4(curve.get_p(), curve.get_a());
 
    GFpElement z2 = point_z() * point_z();
    a_z4 *= z2;
@@ -327,16 +327,20 @@ void PointGFp::check_invariants() const
 
    if(coord_z == BigInt(1))
       {
-      GFpElement ax = curve.get_a() * point_x();
-      if(y2 != (x3 + ax + curve.get_b()))
+      GFpElement ax(curve.get_p(), curve.get_a());
+      ax *= point_x();
+
+      GFpElement b(curve.get_p(), curve.get_b());
+
+      if(y2 != (x3 + ax + b))
          throw Illegal_Point();
       }
 
    GFpElement Zpow2 = point_z() * point_z();
    GFpElement Zpow3 = Zpow2 * point_z();
-   GFpElement AZpow4 = Zpow3 * point_z() * curve.get_a();
+   GFpElement AZpow4 = Zpow3 * point_z() * GFpElement(curve.get_p(), curve.get_a());
    const GFpElement aXZ4 = AZpow4 * point_x();
-   const GFpElement bZ6 = curve.get_b() * Zpow3 * Zpow3;
+   const GFpElement bZ6 = GFpElement(curve.get_p(), curve.get_b()) * Zpow3 * Zpow3;
 
    if(y2 != (x3 + aXZ4 + bZ6))
       throw Illegal_Point();
@@ -501,7 +505,13 @@ PointGFp create_random_point(RandomNumberGenerator& rng,
       GFpElement x = GFpElement(p, r);
       GFpElement x3 = x * x * x;
 
-      GFpElement y = (curve.get_a() * x) + (x3 * curve.get_b());
+      GFpElement ax(curve.get_p(), curve.get_a());
+      ax *= x;
+
+      GFpElement bx3(curve.get_p(), curve.get_b());
+      bx3 *= x3;
+
+      GFpElement y = ax + bx3;
 
       if(ressol(y.get_value(), p) > 0)
          return PointGFp(curve, x.get_value(), y.get_value());

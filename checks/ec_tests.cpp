@@ -58,7 +58,7 @@ void test_point_turn_on_sp_red_mul()
    BigInt bi_p_secp = BigInt::decode(sv_p_secp.begin(), sv_p_secp.size());
    BigInt bi_a_secp = BigInt::decode(sv_a_secp.begin(), sv_a_secp.size());
    BigInt bi_b_secp = BigInt::decode(sv_b_secp.begin(), sv_b_secp.size());
-   CurveGFp secp160r1(GFpElement(bi_p_secp,bi_a_secp), GFpElement(bi_p_secp, bi_b_secp), bi_p_secp);
+   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP(sv_G_secp_comp, secp160r1);
 
    BigInt d("459183204582304");
@@ -126,7 +126,7 @@ void test_coordinates()
    BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
-   CurveGFp secp160r1 ( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
+   CurveGFp secp160r1 (bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
    PointGFp p0 = p_G;
    PointGFp p1 = p_G.mult2_in_place();
@@ -205,7 +205,7 @@ void test_point_mult ()
    BigInt bi_p_secp = BigInt::decode(sv_p_secp.begin(), sv_p_secp.size());
    BigInt bi_a_secp = BigInt::decode(sv_a_secp.begin(), sv_a_secp.size());
    BigInt bi_b_secp = BigInt::decode(sv_b_secp.begin(), sv_b_secp.size());
-   CurveGFp secp160r1(GFpElement(bi_p_secp,bi_a_secp), GFpElement(bi_p_secp, bi_b_secp), bi_p_secp);
+   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP(sv_G_secp_comp, secp160r1);
 
    SecureVector<byte> sv_G_dec = EC2OSP(p_G,0x01);
@@ -240,7 +240,7 @@ void test_point_negative()
    BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
-   CurveGFp secp160r1 ( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
+   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
 
    PointGFp p1 = p_G.mult2_in_place();
@@ -268,7 +268,7 @@ void test_zeropoint()
    BigInt bi_p_secp("0xffffffffffffffffffffffffffffffff7fffffff");
    BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
    BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
-   CurveGFp secp160r1 ( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
+   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
 
    BigInt bi_p1_xval ("1340569834321789103897171369812910390864714275730");
    BigInt bi_p1_yval ("1270827321510686389126940426305655825361326281787");
@@ -289,7 +289,7 @@ void test_zeropoint_enc_dec()
    BigInt bi_p_secp("0xffffffffffffffffffffffffffffffff7fffffff");
    BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
    BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
-   CurveGFp curve ( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
+   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
 
    PointGFp p(curve);
    CHECK_MESSAGE(  p.is_zero(), "by constructor created zeropoint is no zeropoint!");
@@ -319,7 +319,7 @@ void test_calc_with_zeropoint()
    BigInt bi_p_secp("0xffffffffffffffffffffffffffffffff7fffffff");
    BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
    BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
-   CurveGFp curve ( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
+   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
 
    BigInt bi_p1_xval ("1340569834321789103897171369812910390864714275730");
    BigInt bi_p1_yval ("1270827321510686389126940426305655825361326281787");
@@ -364,7 +364,7 @@ void test_add_point()
    BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
-   CurveGFp secp160r1 ( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
+   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
 
    PointGFp p0 = p_G;
@@ -397,7 +397,7 @@ void test_sub_point()
    BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
-   CurveGFp secp160r1 ( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
+   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
 
    PointGFp p0 = p_G;
@@ -429,7 +429,7 @@ void test_mult_point()
    BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
-   CurveGFp secp160r1 ( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
+   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
 
    PointGFp p0 = p_G;
@@ -480,7 +480,8 @@ void test_basic_operations()
    BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
-   CurveGFp secp160r1 ( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
+   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
+
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
 
    PointGFp p0 = p_G;
@@ -538,7 +539,7 @@ void test_enc_dec_compressed_160()
    BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
 
-   CurveGFp secp160r1 ( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
+   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
 
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
    SecureVector<byte> sv_result = EC2OSP(p_G, PointGFp::COMPRESSED);
@@ -567,7 +568,7 @@ void test_enc_dec_compressed_256()
    BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
 
-   CurveGFp secp160r1 ( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
+   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
 
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
    SecureVector<byte> sv_result = EC2OSP(p_G, PointGFp::COMPRESSED);
@@ -598,7 +599,7 @@ void test_enc_dec_uncompressed_112()
    BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
 
-   CurveGFp secp160r1 ( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
+   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
 
    PointGFp p_G = OS2ECP ( sv_G_secp_uncomp, secp160r1 );
    SecureVector<byte> sv_result = EC2OSP(p_G, PointGFp::UNCOMPRESSED);
@@ -627,7 +628,7 @@ void test_enc_dec_uncompressed_521()
    BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
 
-   CurveGFp secp160r1 ( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
+   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
 
    PointGFp p_G = OS2ECP ( sv_G_secp_uncomp, secp160r1 );
 
@@ -659,7 +660,7 @@ void test_enc_dec_uncompressed_521_prime_too_large()
    BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
 
-   CurveGFp secp521r1 ( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
+   CurveGFp secp521r1 (bi_p_secp, bi_a_secp, bi_b_secp);
    std::auto_ptr<PointGFp> p_G;
    bool exc = false;
    try
@@ -715,7 +716,7 @@ void test_cdc_curve_33()
    BigInt bi_a_secp("0xa377dede6b523333d36c78e9b0eaa3bf48ce93041f6d4fc34014d08f6833807498deedd4290101c5866e8dfb589485d13357b9e78c2d7fbe9fe");
    BigInt bi_b_secp("0xa9acf8c8ba617777e248509bcb4717d4db346202bf9e352cd5633731dd92a51b72a4dc3b3d17c823fcc8fbda4da08f25dea89046087342595a7");
 
-   CurveGFp curve( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
+   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP ( sv_G_uncomp, curve);
    bool exc = false;
    try
@@ -739,7 +740,7 @@ void test_more_zeropoint()
    BigInt bi_p("0xffffffffffffffffffffffffffffffff7fffffff");
    BigInt bi_a("0xffffffffffffffffffffffffffffffff7ffffffc");
    BigInt bi_b("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
-   CurveGFp curve( GFpElement ( bi_p,bi_a ), GFpElement ( bi_p, bi_b ), bi_p );
+   CurveGFp curve(bi_p, bi_a, bi_b);
 
    BigInt bi_p1_xval ("1340569834321789103897171369812910390864714275730");
    BigInt bi_p1_yval ("1270827321510686389126940426305655825361326281787");
@@ -793,13 +794,13 @@ void test_gfp_curve_precomp_mres()
    CurveGFp curve2 = parA.get_curve();
    BigInt p = curve1.get_p();
    GFpElement x(p, BigInt("2304042084023"));
-   GFpElement a1_or = curve1.get_a();
+   GFpElement a1_or(curve1.get_p(), curve1.get_a());
 
-   GFpElement b1_mr = curve1.get_b();
+   GFpElement b1_mr(curve1.get_p(), curve1.get_b());
 
-   GFpElement a2_mr = curve2.get_a();
+   GFpElement a2_mr(curve2.get_p(), curve2.get_a());
 
-   GFpElement b2_or = curve2.get_b();
+   GFpElement b2_or(curve2.get_p(), curve2.get_b());
 
    GFpElement prodA = a1_or*b1_mr;
    GFpElement prodB = a2_mr*b2_or;
@@ -906,7 +907,8 @@ void test_ec_key_cp_and_assignment(RandomNumberGenerator& rng)
    BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
    BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
    BigInt order = BigInt("0x0100000000000000000001f4c8f927aed3ca752257");
-   CurveGFp curve(GFpElement(bi_p_secp,bi_a_secp), GFpElement(bi_p_secp, bi_b_secp), bi_p_secp);
+   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
+
    BigInt cofactor = BigInt(1);
    PointGFp p_G = OS2ECP ( sv_g_secp, curve );
 
@@ -948,7 +950,7 @@ void test_ec_key_cast(RandomNumberGenerator& rng)
    BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
    BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
    BigInt order = BigInt("0x0100000000000000000001f4c8f927aed3ca752257");
-   CurveGFp curve(GFpElement(bi_p_secp,bi_a_secp), GFpElement(bi_p_secp, bi_b_secp), bi_p_secp);
+   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
    BigInt cofactor = BigInt(1);
    PointGFp p_G = OS2ECP ( sv_g_secp, curve );
 

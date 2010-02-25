@@ -195,7 +195,7 @@ void test_sign_then_ver(RandomNumberGenerator& rng)
    BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
    BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
    BigInt order = BigInt("0x0100000000000000000001f4c8f927aed3ca752257");
-   CurveGFp curve(GFpElement(bi_p_secp,bi_a_secp), GFpElement(bi_p_secp, bi_b_secp), bi_p_secp);
+   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
    BigInt cofactor = BigInt(1);
    PointGFp p_G = OS2ECP ( sv_g_secp, curve );
 
@@ -332,7 +332,7 @@ void test_create_and_verify(RandomNumberGenerator& rng)
    BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
    BigInt bi_order_g = BigInt::decode ( sv_order_g.begin(), sv_order_g.size() );
-   CurveGFp curve ( GFpElement ( bi_p_secp,bi_a_secp ), GFpElement ( bi_p_secp, bi_b_secp ), bi_p_secp );
+   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, curve );
 
    EC_Domain_Params dom_params(curve, p_G, bi_order_g, BigInt(1));

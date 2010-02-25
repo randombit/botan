@@ -10,8 +10,7 @@
 #ifndef BOTAN_GFP_CURVE_H__
 #define BOTAN_GFP_CURVE_H__
 
-#include <botan/gfp_element.h>
-#include <iosfwd>
+#include <botan/bigint.h>
 
 namespace Botan {
 
@@ -24,12 +23,12 @@ class BOTAN_DLL CurveGFp
 
       /**
       * Construct the elliptic curve E: y^2 = x^3 + ax + b over GF(p)
+      * @param p prime number of the field
       * @param a first coefficient
       * @param b second coefficient
-      * @param p prime number of the field
       */
-      CurveGFp(const GFpElement& a, const GFpElement& b,
-               const BigInt& p);
+      CurveGFp(const BigInt& p, const BigInt& a, const BigInt& b) :
+         p(p), a(a), b(b) {}
 
       // CurveGFp(const CurveGFp& other) = default;
       // CurveGFp& operator=(const CurveGFp& other) = default;
@@ -38,58 +37,49 @@ class BOTAN_DLL CurveGFp
       * Get coefficient a
       * @result coefficient a
       */
-      const GFpElement& get_a() const { return mA; }
+      const BigInt& get_a() const { return a; }
 
       /**
       * Get coefficient b
       * @result coefficient b
       */
-      const GFpElement& get_b() const { return mB; }
+      const BigInt& get_b() const { return b; }
 
       /**
       * Get prime modulus of the field of the curve
       * @result prime modulus of the field of the curve
       */
-      const BigInt& get_p() const { return modulus; }
+      const BigInt& get_p() const { return p; }
 
       /**
       * swaps the states of *this and other, does not throw
       * @param other The curve to swap values with
       */
-      void swap(CurveGFp& other);
+      void swap(CurveGFp& other)
+         {
+         std::swap(a, other.a);
+         std::swap(b, other.b);
+         std::swap(p, other.p);
+         }
+
+      bool operator==(const CurveGFp& other) const
+         {
+         return (p == other.p && a == other.a && b == other.b);
+         }
 
    private:
-      BigInt modulus;
-      GFpElement mA;
-      GFpElement mB;
+      BigInt p, a, b;
    };
-
-// relational operators
-BOTAN_DLL bool operator==(const CurveGFp& lhs, const CurveGFp& rhs);
 
 inline bool operator!=(const CurveGFp& lhs, const CurveGFp& rhs)
    {
    return !(lhs == rhs);
    }
 
-// io operators
-BOTAN_DLL std::ostream& operator<<(std::ostream& output, const CurveGFp& elem);
-
-// swaps the states of curve1 and curve2, does not throw!
-// cf. Meyers, Item 25
-inline
-void swap(CurveGFp& curve1, CurveGFp& curve2)
-   {
-   curve1.swap(curve2);
-   }
-
-} // namespace Botan
-
+}
 
 namespace std {
 
-// swaps the states of curve1 and curve2, does not throw!
-// cf. Meyers, Item 25
 template<> inline
 void swap<Botan::CurveGFp>(Botan::CurveGFp& curve1,
                            Botan::CurveGFp& curve2)

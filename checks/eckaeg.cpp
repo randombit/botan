@@ -58,7 +58,7 @@ void test_eckaeg_normal_derivation(RandomNumberGenerator& rng)
    BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
    BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
    BigInt order = BigInt("0x0100000000000000000001f4c8f927aed3ca752257");
-   CurveGFp curve(GFpElement(bi_p_secp,bi_a_secp), GFpElement(bi_p_secp, bi_b_secp), bi_p_secp);
+   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
 
    BigInt cofactor = BigInt(1);
    PointGFp p_G = OS2ECP ( sv_g_secp, curve );
@@ -166,7 +166,7 @@ void test_eckaeg_cp_ctor_as_op(RandomNumberGenerator& rng)
    BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
    BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
    BigInt order = BigInt("0x0100000000000000000001f4c8f927aed3ca752257");
-   CurveGFp curve(GFpElement(bi_p_secp,bi_a_secp), GFpElement(bi_p_secp, bi_b_secp), bi_p_secp);
+   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
    BigInt cofactor = BigInt(1);
    PointGFp p_G = OS2ECP ( sv_g_secp, curve );
    Botan::EC_Domain_Params dom_pars = Botan::EC_Domain_Params(curve, p_G, order, cofactor);
@@ -225,7 +225,7 @@ void test_non_init_eckaeg_keys(RandomNumberGenerator& rng)
    BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
    BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
    BigInt order = BigInt("0x0100000000000000000001f4c8f927aed3ca752257");
-   CurveGFp curve(GFpElement(bi_p_secp,bi_a_secp), GFpElement(bi_p_secp, bi_b_secp), bi_p_secp);
+   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
    BigInt cofactor = BigInt(1);
    PointGFp p_G = OS2ECP ( sv_g_secp, curve );
    Botan::EC_Domain_Params dom_pars = Botan::EC_Domain_Params(curve, p_G, order, cofactor);
