@@ -121,13 +121,13 @@ class BOTAN_DLL PointGFp
       * get affine x coordinate
       * @result affine x coordinate
       */
-      GFpElement get_affine_x() const;
+      BigInt get_affine_x() const;
 
       /**
       * get affine y coordinate
       * @result affine y coordinate
       */
-      GFpElement get_affine_y() const;
+      BigInt get_affine_y() const;
 
       /**
       * get the jacobian projective x coordinate

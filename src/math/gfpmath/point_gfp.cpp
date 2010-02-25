@@ -278,22 +278,28 @@ const PointGFp& PointGFp::set_z_to_one()
    return *this;
    }
 
-GFpElement PointGFp::get_affine_x() const
+BigInt PointGFp::get_affine_x() const
    {
    if(is_zero())
       throw Illegal_Transformation("cannot convert to affine");
 
    GFpElement z2 = mZ * mZ;
-   return mX * z2.inverse_in_place();
+   z2.inverse_in_place();
+   z2 *= mX;
+
+   return z2.get_value();
    }
 
-GFpElement PointGFp::get_affine_y() const
+BigInt PointGFp::get_affine_y() const
    {
    if(is_zero())
       throw Illegal_Transformation("cannot convert to affine");
 
    GFpElement z3 = mZ * mZ * mZ;
-   return mY * z3.inverse_in_place();
+   z3.inverse_in_place();
+   z3 *= mY;
+
+   return z3.get_value();
    }
 
 // Is this the point at infinity?
@@ -385,7 +391,7 @@ PointGFp operator*(const PointGFp& point, const BigInt& scalar)
 SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
    {
    if(format == PointGFp::UNCOMPRESSED)
-      return result = encode_uncompressed(point);
+      return encode_uncompressed(point);
    else if(format == PointGFp::COMPRESSED)
       return encode_compressed(point);
    else if(format == PointGFp::HYBRID)
@@ -412,10 +418,10 @@ SecureVector<byte> encode_compressed(const PointGFp& point)
    l /= 8;
    SecureVector<byte> result (l+1);
    result[0] = 2;
-   BigInt x = point.get_affine_x().get_value();
+   BigInt x = point.get_affine_x();
    SecureVector<byte> bX = BigInt::encode_1363(x, l);
    result.copy(1, bX.begin(), bX.size());
-   BigInt y = point.get_affine_y().get_value();
+   BigInt y = point.get_affine_y();
    if(y.get_bit(0))
       {
       result[0] |= 1;
@@ -440,8 +446,8 @@ SecureVector<byte> encode_uncompressed(const PointGFp& point)
    l /= 8;
    SecureVector<byte> result (2*l+1);
    result[0] = 4;
-   BigInt x = point.get_affine_x().get_value();
-   BigInt y = point.get_affine_y().get_value();
+   BigInt x = point.get_affine_x();
+   BigInt y = point.get_affine_y();
    SecureVector<byte> bX = BigInt::encode_1363(x, l);
    SecureVector<byte> bY = BigInt::encode_1363(y, l);
    result.copy(1, bX.begin(), l);
@@ -467,8 +473,8 @@ SecureVector<byte> encode_hybrid(const PointGFp& point)
    l /= 8;
    SecureVector<byte> result (2*l+1);
    result[0] = 6;
-   BigInt x = point.get_affine_x().get_value();
-   BigInt y = point.get_affine_y().get_value();
+   BigInt x = point.get_affine_x();
+   BigInt y = point.get_affine_y();
    SecureVector<byte> bX = BigInt::encode_1363(x, l);
    SecureVector<byte> bY = BigInt::encode_1363(y, l);
    result.copy(1, bX.begin(), bX.size());

@@ -1,7 +1,7 @@
 /*
 * ECKAEG Operation
 * (C) 2007 FlexSecure GmbH
-*     2008 Jack Lloyd
+*     2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -22,16 +22,18 @@ Default_ECKAEG_Op::Default_ECKAEG_Op(const EC_Domain_Params& dom_pars,
 
 SecureVector<byte> Default_ECKAEG_Op::agree(const PointGFp& i) const
    {
-   BigInt cofactor(m_dom_pars.get_cofactor());
+   BigInt cofactor = m_dom_pars.get_cofactor();
    BigInt n = m_dom_pars.get_order();
-   BigInt l(inverse_mod(cofactor,n)); // l=h^-1 mod n
-   PointGFp Q(cofactor*i); // q = h*Pb
-   PointGFp S(Q);
 
+   BigInt l = inverse_mod(cofactor, n);
+
+   PointGFp S = cofactor * i;
    S *= (m_priv_key * l) % n;
 
    S.check_invariants();
-   return FE2OSP(S.get_affine_x()); // fe2os(xs)
+
+   return BigInt::encode_1363(S.get_affine_x(),
+                              S.get_curve().get_p().bytes());
    }
 
 }

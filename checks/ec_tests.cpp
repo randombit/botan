@@ -64,29 +64,29 @@ void test_point_turn_on_sp_red_mul()
    BigInt d("459183204582304");
 
    PointGFp r1 = d * p_G;
-   CHECK(r1.get_affine_x().get_value() != BigInt("0"));
+   CHECK(r1.get_affine_x() != BigInt("0"));
 
    PointGFp p_G2(p_G);
 
    PointGFp r2 = d * p_G2;
    CHECK_MESSAGE(r1 == r2, "error with point mul after extra turn on sp red mul");
-   CHECK(r1.get_affine_x().get_value() != BigInt("0"));
+   CHECK(r1.get_affine_x() != BigInt("0"));
 
    PointGFp p_r1 = r1;
    PointGFp p_r2 = r2;
 
-   p_r1.mult2_in_place(); // wird für Fehler nicht gebraucht
-   p_r2.mult2_in_place(); // wird für Fehler nicht gebraucht
+   p_r1.mult2_in_place();
+   p_r2.mult2_in_place();
    CHECK_MESSAGE(p_r1.get_affine_x() == p_r2.get_affine_x(), "error with mult2 after extra turn on sp red mul");
-   CHECK(p_r1.get_affine_x().get_value() != BigInt("0"));
-   CHECK(p_r2.get_affine_x().get_value() != BigInt("0"));
+   CHECK(p_r1.get_affine_x() != BigInt("0"));
+   CHECK(p_r2.get_affine_x() != BigInt("0"));
    r1.mult2_in_place();
 
    r2.mult2_in_place();
 
    CHECK_MESSAGE(r1 == r2, "error with mult2 after extra turn on sp red mul");
    CHECK_MESSAGE(r1.get_affine_x() == r2.get_affine_x(), "error with mult2 after extra turn on sp red mul");
-   CHECK(r1.get_affine_x().get_value() != BigInt("0"));
+   CHECK(r1.get_affine_x() != BigInt("0"));
    //std::cout << "r1 x = " << r1.get_affine_x() << endl;
    r1 += p_G;
    r2 += p_G2;
@@ -146,8 +146,8 @@ void test_coordinates()
    CHECK( p1.get_jac_proj_x().get_value() == exp_x);
    CHECK( p1.get_jac_proj_y().get_value() == exp_y);
    CHECK( p1.get_jac_proj_z().get_value() == exp_z);
-   CHECK_MESSAGE( p1.get_affine_x().get_value() == exp_affine_x, " p1_x = " << p1.get_affine_x().get_value() << "\n" << "exp_x = " << exp_affine_x << "\n");
-   CHECK_MESSAGE( p1.get_affine_y().get_value() == exp_affine_y, " p1_y = " << p1.get_affine_y().get_value() << "\n" << "exp_y = " << exp_affine_y << "\n");
+   CHECK_MESSAGE( p1.get_affine_x() == exp_affine_x, " p1_x = " << p1.get_affine_x() << "\n" << "exp_x = " << exp_affine_x << "\n");
+   CHECK_MESSAGE( p1.get_affine_y() == exp_affine_y, " p1_y = " << p1.get_affine_y() << "\n" << "exp_y = " << exp_affine_y << "\n");
    }
 
 
@@ -179,8 +179,8 @@ void test_point_transformation ()
    CHECK_MESSAGE( p.get_jac_proj_x().get_value() == q.get_jac_proj_x().get_value(), "projective_x changed while turning on montg.!");
    CHECK_MESSAGE( p.get_jac_proj_y().get_value() == q.get_jac_proj_y().get_value(), "projective_y changed while turning on montg.!");
    CHECK_MESSAGE( p.get_jac_proj_z().get_value() == q.get_jac_proj_z().get_value(), "projective_z changed while turning on montg.!");
-   CHECK_MESSAGE( p.get_affine_x().get_value() == q.get_affine_x().get_value(), "affine_x changed while turning on montg.!");
-   CHECK_MESSAGE( p.get_affine_y().get_value() == q.get_affine_y().get_value(), "affine_y changed while turning on montg.!");
+   CHECK_MESSAGE( p.get_affine_x() == q.get_affine_x(), "affine_x changed while turning on montg.!");
+   CHECK_MESSAGE( p.get_affine_y() == q.get_affine_y(), "affine_y changed while turning on montg.!");
    }
 
 void test_point_mult ()
@@ -220,23 +220,6 @@ void test_point_mult ()
    }
 
 #if 0
-void test_montgm_calc_R ()
-   {
-   // this tests isnt´t correct anymore. the determination of R has changed
-   // to be 0 mod word_range.
-
-   // setting up (expected) values
-   BigInt prime_modulus(101);
-   u64bit n = prime_modulus.bits();
-   BigInt exp_R(128);
-   // function under test
-   BigInt calc_R = montgm_calc_r_oddmod(prime_modulus);
-   CHECK_MESSAGE(exp_R == calc_R, "exp_R = " << exp_R << ", calc_R = " << calc_R << ", n = " << n << "\n");
-
-   }
-#endif
-
-#if 0
 void test_naive_montg_mult ()
    {
    std::cout << "." << std::flush;
@@ -257,32 +240,6 @@ void test_naive_montg_mult ()
    GFpElement c_mm = a_mm * b_mm;
    //cout << "c_mm = " << c_mm << "\n";
    CHECK_MESSAGE(c_norm_mult == c_mm, "c_norm_mult = " << c_norm_mult << "\n" << "c_mm = " << c_mm << "\n");
-   }
-#endif
-
-#if 0
-
-void test_trf_mres ()
-   {
-   // this tests isnt´t correct anymore. the determination of R has changed
-   // to be 0 mod word_range.
-
-   //
-   BigInt modulus(11);
-   BigInt r = montgm_calc_r_oddmod(modulus);
-   //cout << "r = " << r << "\n";
-   BigInt r_inv = inverse_mod(r, modulus);
-   //cout << "r_inv = " << r_inv << "\n";
-   // see C43:
-   BigInt exp_m_dash(13);
-   BigInt calc_m_dash = montgm_calc_m_dash(r, modulus, r_inv);
-   CHECK_MESSAGE(exp_m_dash == calc_m_dash, "exp_m_dash = " << exp_m_dash << "\n" << "calc_m_dash = " << calc_m_dash << "\n");
-   BigInt ord_res(7);
-   BigInt exp_m_res(2); // see C43
-   BigInt calc_m_res = montg_trf_to_mres(ord_res, r, modulus);
-   CHECK_MESSAGE(calc_m_res == exp_m_res, "calc_m_res = " << calc_m_res << "\nexp_m_res = " << exp_m_res);
-   BigInt calc_ord_res_back = montg_trf_to_ordres(calc_m_res,modulus, r_inv);
-   CHECK_MESSAGE(ord_res == calc_ord_res_back, "ord_res = " << ord_res << "\ncalc_ord_res_back = " << calc_ord_res_back << "\n");
    }
 #endif
 
@@ -835,8 +792,6 @@ void test_more_zeropoint()
    std::cout << "." << std::flush;
    // by Falko
 
-
-
    std::string G = "024a96b5688ef573284664698968c38bb913cbfc82";
    SecureVector<byte> sv_G_secp_comp = decode_hex ( G );
    BigInt bi_p("0xffffffffffffffffffffffffffffffff7fffffff");
@@ -859,13 +814,14 @@ void test_more_zeropoint()
    minus_p1.check_invariants();
    PointGFp shouldBeZero = p1 + minus_p1;
    shouldBeZero.check_invariants();
-   GFpElement x1 = p1.get_affine_x();
-   GFpElement y1 = p1.get_affine_y();
 
-   GFpElement shouldBeY2 = -y1;
+   BigInt y1 = p1.get_affine_y();
+   y1 = curve.get_p() - y1;
 
-   CHECK_MESSAGE(minus_p1.get_affine_x() == x1, "problem with minus_p1 : x");
-   CHECK_MESSAGE(minus_p1.get_affine_y() == shouldBeY2, "problem with minus_p1 : y");
+   CHECK_MESSAGE(p1.get_affine_x() == minus_p1.get_affine_x(),
+                 "problem with minus_p1 : x");
+   CHECK_MESSAGE(minus_p1.get_affine_y() == y1,
+                 "problem with minus_p1 : y");
 
    PointGFp zero(curve);
    zero.check_invariants();
