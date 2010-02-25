@@ -116,7 +116,7 @@ class BOTAN_DLL PointGFp
       * Return base curve of this point
       * @result the curve over GF(p) of this point
       */
-      const CurveGFp& get_curve() const { return mC; }
+      const CurveGFp& get_curve() const { return curve; }
 
       /**
       * get affine x coordinate
@@ -134,19 +134,19 @@ class BOTAN_DLL PointGFp
       * get the jacobian projective x coordinate
       * @result jacobian projective x coordinate
       */
-      const BigInt& get_jac_proj_x() const { return mX.get_value(); }
+      const BigInt& get_jac_proj_x() const { return point_x.get_value(); }
 
       /**
       * get the jacobian projective y coordinate
       * @result jacobian projective y coordinate
       */
-      const BigInt& get_jac_proj_y() const { return mY.get_value(); }
+      const BigInt& get_jac_proj_y() const { return point_y.get_value(); }
 
       /**
       * get the jacobian projective z coordinate
       * @result jacobian projective z coordinate
       */
-      const BigInt& get_jac_proj_z() const { return mZ.get_value(); }
+      const BigInt& get_jac_proj_z() const { return point_z.get_value(); }
 
       /**
       * Is this the point at infinity?
@@ -173,10 +173,8 @@ class BOTAN_DLL PointGFp
       */
       bool operator==(const PointGFp& other) const;
    private:
-      CurveGFp mC;
-      GFpElement mX;
-      GFpElement mY;
-      GFpElement mZ;
+      CurveGFp curve;
+      GFpElement point_x, point_y, point_z;
    };
 
 // relational operators

@@ -40,10 +40,10 @@ BigInt decompress_point(bool yMod2,
 
 // construct the point at infinity or a random point
 PointGFp::PointGFp(const CurveGFp& curve) :
-   mC(curve),
-   mX(curve.get_p(), 0),
-   mY(curve.get_p(), 1),
-   mZ(curve.get_p(), 0)
+   curve(curve),
+   point_x(curve.get_p(), 0),
+   point_y(curve.get_p(), 1),
+   point_z(curve.get_p(), 0)
    {
    }
 
@@ -52,20 +52,20 @@ PointGFp::PointGFp(const CurveGFp& curve,
                    const BigInt& x,
                    const BigInt& y,
                    const BigInt& z) :
-   mC(curve),
-   mX(curve.get_p(), x),
-   mY(curve.get_p(), y),
-   mZ(curve.get_p(), z)
+   curve(curve),
+   point_x(curve.get_p(), x),
+   point_y(curve.get_p(), y),
+   point_z(curve.get_p(), z)
    {
    }
 
 PointGFp::PointGFp(const CurveGFp& curve,
                    const BigInt& x,
                    const BigInt& y) :
-   mC(curve),
-   mX(curve.get_p(), x),
-   mY(curve.get_p(), y),
-   mZ(curve.get_p(), 1)
+   curve(curve),
+   point_x(curve.get_p(), x),
+   point_y(curve.get_p(), y),
+   point_z(curve.get_p(), 1)
    {
    }
 
@@ -81,19 +81,19 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
       return *this;
       }
 
-   GFpElement U1 = mX;
-   GFpElement S1 = mY;
+   GFpElement U1 = point_x;
+   GFpElement S1 = point_y;
 
-   GFpElement rhs_z2 = rhs.mZ * rhs.mZ;
+   GFpElement rhs_z2 = rhs.point_z * rhs.point_z;
    U1 *= rhs_z2;
-   S1 *= rhs_z2 * rhs.mZ;
+   S1 *= rhs_z2 * rhs.point_z;
 
-   GFpElement U2 = rhs.mX;
-   GFpElement S2 = rhs.mY;
+   GFpElement U2 = rhs.point_x;
+   GFpElement S2 = rhs.point_y;
 
-   GFpElement lhs_z2 = mZ * mZ;
+   GFpElement lhs_z2 = point_z * point_z;
    U2 *= lhs_z2;
-   S2 *= lhs_z2 * mZ;
+   S2 *= lhs_z2 * point_z;
 
    GFpElement H(U2 - U1);
    GFpElement r(S2 - S1);
@@ -106,7 +106,7 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
          return *this;
          }
 
-      *this = PointGFp(mC); // setting myself to zero
+      *this = PointGFp(curve); // setting myself to zero
       return *this;
       }
 
@@ -122,11 +122,11 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
 
    GFpElement y(r * (U2-x) - z);
 
-   z = (mZ * rhs.mZ) * H;
+   z = (point_z * rhs.point_z) * H;
 
-   mX = x;
-   mY = y;
-   mZ = z;
+   point_x = x;
+   point_y = y;
+   point_z = z;
 
    return *this;
    }
@@ -145,7 +145,7 @@ PointGFp& PointGFp::operator-=(const PointGFp& rhs)
 
 PointGFp& PointGFp::operator*=(const BigInt& scalar)
    {
-   PointGFp H(this->mC); // create as zero
+   PointGFp H(this->curve); // create as zero
    PointGFp P(*this);
    BigInt m(scalar);
 
@@ -185,7 +185,7 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
 PointGFp& PointGFp::negate()
    {
    if(!is_zero())
-      mY.negate();
+      point_y.negate();
 
    return *this;
    }
@@ -195,27 +195,27 @@ PointGFp& PointGFp::mult2_in_place()
    {
    if(is_zero())
       return *this;
-   else if(mY.is_zero())
+   else if(point_y.is_zero())
       {
-      *this = PointGFp(mC); // setting myself to zero
+      *this = PointGFp(curve); // setting myself to zero
       return *this;
       }
 
-   GFpElement Y_squared = mY*mY;
+   GFpElement Y_squared = point_y*point_y;
 
-   GFpElement S = mX * Y_squared;
+   GFpElement S = point_x * Y_squared;
 
    GFpElement x = S + S;
 
    S = x + x;
 
-   GFpElement a_z4 = mC.get_a();
+   GFpElement a_z4 = curve.get_a();
 
-   GFpElement z2 = mZ * mZ;
+   GFpElement z2 = point_z * point_z;
    a_z4 *= z2;
    a_z4 *= z2;
 
-   GFpElement y(mX * mX);
+   GFpElement y(point_x * point_x);
 
    GFpElement M(y + y + y + a_z4);
 
@@ -231,13 +231,13 @@ PointGFp& PointGFp::mult2_in_place()
 
    y = M * (S - x) - U;
 
-   z = mY * mZ;
+   z = point_y * point_z;
 
    z = z + z;
 
-   mX = x;
-   mY = y;
-   mZ = z;
+   point_x = x;
+   point_y = y;
+   point_z = z;
 
    return *this;
    }
@@ -260,20 +260,20 @@ PointGFp PointGFp::get_z_to_one()
 */
 const PointGFp& PointGFp::set_z_to_one()
    {
-   if(mZ.is_zero())
+   if(point_z.is_zero())
       throw Illegal_Transformation("cannot convert Z to one");
 
-   if(mZ.get_value() != 1)
+   if(point_z.get_value() != 1)
       {
       // Converts to affine coordinates
-      GFpElement z = inverse(mZ);
+      GFpElement z = inverse(point_z);
       GFpElement z2 = z * z;
       z *= z2;
-      GFpElement x = mX * z2;
-      GFpElement y = mY * z;
-      mZ = GFpElement(mC.get_p(), BigInt(1));
-      mX = x;
-      mY = y;
+      GFpElement x = point_x * z2;
+      GFpElement y = point_y * z;
+      point_z = GFpElement(curve.get_p(), BigInt(1));
+      point_x = x;
+      point_y = y;
       }
 
    return *this;
@@ -284,9 +284,9 @@ BigInt PointGFp::get_affine_x() const
    if(is_zero())
       throw Illegal_Transformation("cannot convert to affine");
 
-   GFpElement z2 = mZ * mZ;
+   GFpElement z2 = point_z * point_z;
    z2.inverse_in_place();
-   z2 *= mX;
+   z2 *= point_x;
 
    return z2.get_value();
    }
@@ -296,9 +296,9 @@ BigInt PointGFp::get_affine_y() const
    if(is_zero())
       throw Illegal_Transformation("cannot convert to affine");
 
-   GFpElement z3 = mZ * mZ * mZ;
+   GFpElement z3 = point_z * point_z * point_z;
    z3.inverse_in_place();
-   z3 *= mY;
+   z3 *= point_y;
 
    return z3.get_value();
    }
@@ -306,7 +306,7 @@ BigInt PointGFp::get_affine_y() const
 // Is this the point at infinity?
 bool PointGFp::is_zero() const
    {
-   return(mX.is_zero() && mZ.is_zero());
+   return(point_x.is_zero() && point_z.is_zero());
    }
 
 void PointGFp::check_invariants() const
@@ -321,21 +321,21 @@ void PointGFp::check_invariants() const
    if(is_zero())
       return;
 
-   const GFpElement y2 = mY * mY;
-   const GFpElement x3 = mX * mX * mX;
+   const GFpElement y2 = point_y * point_y;
+   const GFpElement x3 = point_x * point_x * point_x;
 
-   if(mZ.get_value() == BigInt(1))
+   if(point_z.get_value() == BigInt(1))
       {
-      GFpElement ax = mC.get_a() * mX;
-      if(y2 != (x3 + ax + mC.get_b()))
+      GFpElement ax = curve.get_a() * point_x;
+      if(y2 != (x3 + ax + curve.get_b()))
          throw Illegal_Point();
       }
 
-   GFpElement Zpow2 = mZ * mZ;
-   GFpElement Zpow3 = Zpow2 * mZ;
-   GFpElement AZpow4 = Zpow3 * mZ * mC.get_a();
-   const GFpElement aXZ4 = AZpow4 * mX;
-   const GFpElement bZ6 = mC.get_b() * Zpow3 * Zpow3;
+   GFpElement Zpow2 = point_z * point_z;
+   GFpElement Zpow3 = Zpow2 * point_z;
+   GFpElement AZpow4 = Zpow3 * point_z * curve.get_a();
+   const GFpElement aXZ4 = AZpow4 * point_x;
+   const GFpElement bZ6 = curve.get_b() * Zpow3 * Zpow3;
 
    if(y2 != (x3 + aXZ4 + bZ6))
       throw Illegal_Point();
@@ -344,10 +344,10 @@ void PointGFp::check_invariants() const
 // swaps the states of *this and other, does not throw!
 void PointGFp::swap(PointGFp& other)
    {
-   mC.swap(other.mC);
-   mX.swap(other.mX);
-   mY.swap(other.mY);
-   mZ.swap(other.mZ);
+   curve.swap(other.curve);
+   point_x.swap(other.point_x);
+   point_y.swap(other.point_y);
+   point_z.swap(other.point_z);
    }
 
 bool PointGFp::operator==(const PointGFp& other) const
@@ -355,7 +355,9 @@ bool PointGFp::operator==(const PointGFp& other) const
    if(get_curve() != other.get_curve())
       return false;
 
-   return (mX == other.mX && mY == other.mY && mZ == other.mZ);
+   return (point_x == other.point_x &&
+           point_y == other.point_y &&
+           point_z == other.point_z);
    }
 
 // arithmetic operators
