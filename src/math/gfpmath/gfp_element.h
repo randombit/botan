@@ -15,13 +15,6 @@
 
 namespace Botan {
 
-struct BOTAN_DLL Illegal_Transformation : public Exception
-   {
-   Illegal_Transformation(const std::string& err =
-                          "Requested transformation is not possible") :
-      Exception(err) {}
-   };
-
 /**
  * This class represents one element in GF(p). Enables the convenient,
  * transparent use of the montgomery multiplication.
