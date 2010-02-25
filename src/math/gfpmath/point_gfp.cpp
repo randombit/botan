@@ -8,7 +8,6 @@
 */
 
 #include <botan/point_gfp.h>
-#include <botan/gfp_element.h>
 #include <botan/numthry.h>
 
 namespace Botan {
@@ -252,32 +251,28 @@ void PointGFp::check_invariants() const
    if(is_zero())
       return;
 
-   GFpElement point_x(curve.get_p(), coord_x);
-   GFpElement point_y(curve.get_p(), coord_y);
-   GFpElement point_z(curve.get_p(), coord_z);
+   Modular_Reducer mod_p(curve.get_p());
 
-   const GFpElement y2 = point_y * point_y;
-   const GFpElement x3 = point_x * point_x * point_x;
+   BigInt y2 = mod_p.square(coord_y);
+   BigInt x3 = mod_p.multiply(coord_x, mod_p.square(coord_x));
 
-   if(coord_z == BigInt(1))
+   BigInt ax = mod_p.multiply(coord_x, curve.get_a());
+
+   if(coord_z == 1)
       {
-      GFpElement ax(curve.get_p(), curve.get_a());
-      ax *= point_x;
-
-      GFpElement b(curve.get_p(), curve.get_b());
-
-      if(y2 != (x3 + ax + b))
-         throw Illegal_Point();
+      if(mod_p.reduce(x3 + ax + curve.get_b()) != y2)
+         throw Illegal_Point("Invalid ECP point: y^2 != x^3 + a*x + b");
       }
 
-   GFpElement Zpow2 = point_z * point_z;
-   GFpElement Zpow3 = Zpow2 * point_z;
-   GFpElement AZpow4 = Zpow3 * point_z * GFpElement(curve.get_p(), curve.get_a());
-   const GFpElement aXZ4 = AZpow4 * point_x;
-   const GFpElement bZ6 = GFpElement(curve.get_p(), curve.get_b()) * Zpow3 * Zpow3;
+   BigInt z2 = mod_p.square(coord_z);
+   BigInt z3 = mod_p.multiply(coord_z, z2);
 
-   if(y2 != (x3 + aXZ4 + bZ6))
-      throw Illegal_Point();
+   BigInt ax_z4 = mod_p.multiply(mod_p.multiply(z3, coord_z), ax);
+
+   BigInt b_z6 = mod_p.multiply(curve.get_b(), mod_p.square(z3));
+
+   if(y2 != mod_p.reduce(x3 + ax_z4 + b_z6))
+      throw Illegal_Point("Invalid ECP point: y^2 != x^3 + a*x*z^4 + b*z^6");
    }
 
 // swaps the states of *this and other, does not throw!
