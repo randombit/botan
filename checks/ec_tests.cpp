@@ -508,7 +508,6 @@ void test_mult_point()
    //Setting up expected values
    BigInt exp_mult_x(std::string("967697346845926834906555988570157345422864716250"));
    BigInt exp_mult_y(std::string("512319768365374654866290830075237814703869061656"));
-   BigInt exp_mult_z(std::string("1"));
 
    // precalculation
    std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
@@ -530,15 +529,11 @@ void test_mult_point()
 
    p1 *= p0.get_jac_proj_x().get_value();
 
-   PointGFp expected ( secp160r1, GFpElement(bi_p_secp, BigInt(exp_mult_x)),
-                       GFpElement(bi_p_secp, BigInt(exp_mult_y)), GFpElement(bi_p_secp, BigInt(exp_mult_z)));
-   CHECK(p1 == expected);
+   PointGFp expected(secp160r1,
+                     GFpElement(bi_p_secp, BigInt(exp_mult_x)),
+                     GFpElement(bi_p_secp, BigInt(exp_mult_y)));
 
-#if 0
-   CHECK( p1.get_jac_proj_x().get_value() == exp_mult_x);
-   CHECK( p1.get_jac_proj_y().get_value() == exp_mult_y);
-   CHECK( p1.get_jac_proj_z().get_value() == exp_mult_z);
-#endif
+   CHECK(p1 == expected);
    }
 
 void test_basic_operations()
@@ -593,31 +588,16 @@ void test_basic_operations()
    PointGFp expected ( secp160r1, GFpElement(bi_p_secp, exp_p0_x),
                        GFpElement(bi_p_secp, exp_p0_y), GFpElement(bi_p_secp, exp_p0_z));
    CHECK(p0 == expected);
-#if 0
-   CHECK( p0.get_jac_proj_x().get_value() == exp_p0_x);
-   CHECK( p0.get_jac_proj_y().get_value() == exp_p0_y);
-   CHECK( p0.get_jac_proj_z().get_value() == exp_p0_z);
-#endif
 
    PointGFp simplePlus= p1 + p0;
    PointGFp exp_simplePlus ( secp160r1, GFpElement(bi_p_secp, exp_plus_x),
                              GFpElement(bi_p_secp, exp_plus_y), GFpElement(bi_p_secp, exp_plus_z));
    CHECK(simplePlus == exp_simplePlus);
-#if 0
-   CHECK( simplePlus.get_jac_proj_x().get_value() == exp_plus_x);
-   CHECK( simplePlus.get_jac_proj_y().get_value() == exp_plus_y);
-   CHECK( simplePlus.get_jac_proj_z().get_value() == exp_plus_z);
-#endif
 
    PointGFp simpleMinus= p1 - p0;
    PointGFp exp_simpleMinus ( secp160r1, GFpElement(bi_p_secp, exp_minus_x),
                               GFpElement(bi_p_secp, exp_minus_y), GFpElement(bi_p_secp, exp_minus_z));
    CHECK(simpleMinus == exp_simpleMinus);
-#if 0
-   CHECK( simpleMinus.get_jac_proj_x().get_value() == exp_minus_x);
-   CHECK( simpleMinus.get_jac_proj_y().get_value() == exp_minus_y);
-   CHECK( simpleMinus.get_jac_proj_z().get_value() == exp_minus_z);
-#endif
 
    PointGFp simpleMult= p1 * 123456789;
    CHECK( simpleMult.get_jac_proj_x().get_value() == exp_mult_x);
