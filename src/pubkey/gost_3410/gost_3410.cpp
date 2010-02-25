@@ -19,7 +19,7 @@ namespace Botan {
 GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng,
                                            const EC_Domain_Params& dom_pars)
    {
-   mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_pars));
+   mp_dom_pars = std::unique_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_pars));
    generate_private_key(rng);
 
    try
@@ -35,10 +35,10 @@ GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng,
 GOST_3410_PrivateKey::GOST_3410_PrivateKey(const EC_Domain_Params& domain,
                                            const BigInt& x)
    {
-   mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(domain));
+   mp_dom_pars = std::unique_ptr<EC_Domain_Params>(new EC_Domain_Params(domain));
 
    m_private_value = x;
-   mp_public_point = std::auto_ptr<PointGFp>(new PointGFp (mp_dom_pars->get_base_point()));
+   mp_public_point = std::unique_ptr<PointGFp>(new PointGFp (mp_dom_pars->get_base_point()));
 
    *mp_public_point *= m_private_value;
 
@@ -171,9 +171,8 @@ void GOST_3410_PublicKey::set_domain_parameters(const EC_Domain_Params& dom_pars
       throw Invalid_State("EC_PublicKey::set_domain_parameters(): point does not lie on provided curve");
       }
 
-   std::auto_ptr<EC_Domain_Params> p_tmp_pars(new EC_Domain_Params(dom_pars));
    mp_public_point.reset(new PointGFp(tmp_pp));
-   mp_dom_pars = p_tmp_pars;
+   mp_dom_pars.reset(new EC_Domain_Params(dom_pars));
    }
 
 void GOST_3410_PublicKey::set_all_values(const GOST_3410_PublicKey& other)
@@ -240,8 +239,8 @@ bool GOST_3410_PublicKey::verify(const byte msg[], u32bit msg_len,
 GOST_3410_PublicKey::GOST_3410_PublicKey(const EC_Domain_Params& dom_par,
                                  const PointGFp& public_point)
    {
-   mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_par));
-   mp_public_point = std::auto_ptr<PointGFp>(new PointGFp(public_point));
+   mp_dom_pars = std::unique_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_par));
+   mp_public_point = std::unique_ptr<PointGFp>(new PointGFp(public_point));
    m_param_enc = ENC_EXPLICIT;
    }
 

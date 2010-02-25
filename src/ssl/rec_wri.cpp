@@ -250,7 +250,7 @@ void Record_Writer::send_record(byte type, byte major, byte minor,
 */
 void Record_Writer::alert(Alert_Level level, Alert_Type type)
    {
-   byte alert[2] = { level, type };
+   byte alert[2] = { (byte)level, (byte)type };
    send(ALERT, alert, sizeof(alert));
    flush();
    }

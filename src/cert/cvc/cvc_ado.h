@@ -46,7 +46,7 @@ class BOTAN_DLL EAC1_1_ADO : public EAC1_1_obj<EAC1_1_ADO>
       * @param tbs_bits the TBS data to sign
       */
       static MemoryVector<byte> make_signed(
-         std::auto_ptr<PK_Signer> signer,
+         PK_Signer& signer,
          const MemoryRegion<byte>& tbs_bits,
          RandomNumberGenerator& rng);
 

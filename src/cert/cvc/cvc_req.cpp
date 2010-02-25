@@ -41,7 +41,7 @@ void EAC1_1_Req::force_decode()
    // FIXME: No EAC support in ECDSA
 #if 0
    ECDSA_PublicKey tmp_pk;
-   std::auto_ptr<EAC1_1_CVC_Decoder> dec = tmp_pk.cvc_eac1_1_decoder();
+   std::unique_ptr<EAC1_1_CVC_Decoder> dec = tmp_pk.cvc_eac1_1_decoder();
    sig_algo = dec->public_key(enc_pk);
    m_pk = tmp_pk;
 #endif

@@ -1,5 +1,4 @@
 define CARD_VERIFIABLE_CERTIFICATES
-
 load_on auto
 
 <header:public>

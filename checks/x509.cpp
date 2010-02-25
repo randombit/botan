@@ -40,7 +40,7 @@ namespace {
 
 u64bit key_id(const Public_Key* key)
    {
-   std::auto_ptr<X509_Encoder> encoder(key->x509_encoder());
+   std::unique_ptr<X509_Encoder> encoder(key->x509_encoder());
    if(!encoder.get())
       throw Internal_Error("Public_Key:key_id: No encoder found");
 

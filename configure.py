@@ -216,10 +216,6 @@ def process_command_line(args):
                            default=False, action='store_true',
                            help='generate amalgamation files')
 
-    build_group.add_option('--with-tr1-implementation', metavar='WHICH',
-                           dest='with_tr1', default=None,
-                           help='enable TR1 (options: none, system, boost)')
-
     build_group.add_option('--with-build-dir',
                            metavar='DIR', default='',
                            help='setup the build in DIR')
@@ -427,7 +423,6 @@ class ModuleInfo(object):
                        'requires', 'os', 'arch', 'cc', 'libs'],
                       { 'load_on': 'auto',
                         'define': None,
-                        'uses_tr1': 'false',
                         'need_isa': None,
                         'mp_bits': 0 })
 
@@ -475,11 +470,6 @@ class ModuleInfo(object):
 
         self.mp_bits = int(self.mp_bits)
 
-        if self.uses_tr1 == 'yes':
-            self.uses_tr1 = True
-        else:
-            self.uses_tr1 = False
-
     def sources(self):
         return self.source
 
@@ -513,9 +503,7 @@ class ModuleInfo(object):
     def compatible_os(self, os):
         return self.os == [] or os in self.os
 
-    def compatible_compiler(self, cc, with_tr1):
-        if self.uses_tr1 and with_tr1 not in ['boost', 'system']:
-            return False
+    def compatible_compiler(self, cc):
         return self.cc == [] or cc in self.cc
 
     def dependencies(self):
@@ -646,8 +634,7 @@ class CompilerInfo(object):
                         'warning_flags': '',
                         'dll_import_flags': '',
                         'ar_command': None,
-                        'makefile_style': '',
-                        'compiler_has_tr1': False,
+                        'makefile_style': ''
                         })
 
         self.so_link_flags = force_to_dict(self.so_link_flags)
@@ -732,19 +719,8 @@ class CompilerInfo(object):
     """
     Return defines for build.h
     """
-    def defines(self, with_tr1):
-
-        def tr1_macro():
-            if with_tr1:
-                if with_tr1 == 'boost':
-                    return ['USE_BOOST_TR1']
-                elif with_tr1 == 'system':
-                    return ['USE_STD_TR1']
-            elif self.compiler_has_tr1:
-                return ['USE_STD_TR1']
-            return []
-
-        return ['BUILD_COMPILER_IS_' + self.macro_name] + tr1_macro()
+    def defines(self):
+        return ['BUILD_COMPILER_IS_' + self.macro_name]
 
 class OsInfo(object):
     def __init__(self, infofile):
@@ -963,8 +939,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'target_os_defines': make_cpp_macros(osinfo.defines()),
 
-        'target_compiler_defines': make_cpp_macros(
-            cc.defines(options.with_tr1)),
+        'target_compiler_defines': make_cpp_macros(cc.defines()),
 
         'target_cpu_defines': make_cpp_macros(arch.defines(options)),
 
@@ -1043,8 +1018,7 @@ def choose_modules_to_use(modules, archinfo, options):
             cannot_use_because(modname, 'incompatible CPU')
         elif not module.compatible_os(options.os):
             cannot_use_because(modname, 'incompatible OS')
-        elif not module.compatible_compiler(options.compiler,
-                                            options.with_tr1):
+        elif not module.compatible_compiler(options.compiler):
             cannot_use_because(modname, 'incompatible compiler')
 
         else:
@@ -1490,12 +1464,6 @@ def main(argv = None):
         if options.dumb_gcc is True:
             logging.info('Setting -fpermissive to work around gcc bug')
             options.extra_flags = ' -fpermissive'
-
-    if options.with_tr1 == None:
-        if ccinfo[options.compiler].compiler_has_tr1:
-            options.with_tr1 = 'system'
-        else:
-            options.with_tr1 = 'none'
 
     if options.gen_amalgamation:
         if options.asm_ok:

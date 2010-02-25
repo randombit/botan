@@ -51,7 +51,7 @@ class BOTAN_DLL EAC1_1_obj : public EAC_Signed_Object
    protected:
       void init(DataSource& in);
 
-      static SecureVector<byte> make_signature(PK_Signer* signer,
+      static SecureVector<byte> make_signature(PK_Signer& signer,
                                                const MemoryRegion<byte>& tbs_bits,
                                                RandomNumberGenerator& rng);
 
@@ -65,12 +65,12 @@ template<typename Derived> SecureVector<byte> EAC1_1_obj<Derived>::get_concat_si
    }
 
 template<typename Derived> SecureVector<byte>
-EAC1_1_obj<Derived>::make_signature(PK_Signer* signer,
+EAC1_1_obj<Derived>::make_signature(PK_Signer& signer,
                                     const MemoryRegion<byte>& tbs_bits,
                                     RandomNumberGenerator& rng)
    {
    // this is the signature as a der sequence
-   SecureVector<byte> seq_sig = signer->sign_message(tbs_bits, rng);
+   SecureVector<byte> seq_sig = signer.sign_message(tbs_bits, rng);
 
    ECDSA_Signature sig(decode_seq(seq_sig));
    SecureVector<byte> concat_sig(sig.get_concatenation());
@@ -110,12 +110,12 @@ bool EAC1_1_obj<Derived>::check_signature(Public_Key& pub_key) const
       if(!dynamic_cast<PK_Verifying_wo_MR_Key*>(&pub_key))
          return false;
 
-      std::auto_ptr<ECDSA_Signature_Encoder> enc(new ECDSA_Signature_Encoder(&m_sig));
+      std::unique_ptr<ECDSA_Signature_Encoder> enc(new ECDSA_Signature_Encoder(&m_sig));
       SecureVector<byte> seq_sig = enc->signature_bits();
       SecureVector<byte> to_sign = tbs_data();
 
       PK_Verifying_wo_MR_Key& sig_key = dynamic_cast<PK_Verifying_wo_MR_Key&>(pub_key);
-      std::auto_ptr<PK_Verifier> verifier(get_pk_verifier(sig_key, padding, format));
+      std::unique_ptr<PK_Verifier> verifier(get_pk_verifier(sig_key, padding, format));
       return verifier->verify_message(to_sign, seq_sig);
       }
    catch(...)

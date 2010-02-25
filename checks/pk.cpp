@@ -184,7 +184,7 @@ u32bit validate_rsa_enc_pkcs8(const std::string& algo,
    DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
                                str[0].length());
 
-   std::auto_ptr<Private_Key> privkey(PKCS8::load_key(keysource, rng, pass));
+   std::unique_ptr<Private_Key> privkey(PKCS8::load_key(keysource, rng, pass));
 
    RSA_PrivateKey* rsapriv = dynamic_cast<RSA_PrivateKey*>(privkey.get());
    if(!rsapriv)
@@ -303,7 +303,7 @@ u32bit validate_rsa_ver(const std::string& algo,
 
    std::string emsa = algo.substr(6, std::string::npos);
 
-   std::auto_ptr<PK_Verifier> v(get_pk_verifier(key, emsa));
+   std::unique_ptr<PK_Verifier> v(get_pk_verifier(key, emsa));
 
    SecureVector<byte> msg = decode_hex(str[2]);
    SecureVector<byte> sig = decode_hex(str[3]);
@@ -326,7 +326,7 @@ u32bit validate_rsa_ver_x509(const std::string& algo,
    DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
                                str[0].length());
 
-   std::auto_ptr<Public_Key> key(X509::load_key(keysource));
+   std::unique_ptr<Public_Key> key(X509::load_key(keysource));
 
    RSA_PublicKey* rsakey = dynamic_cast<RSA_PublicKey*>(key.get());
 
@@ -335,7 +335,7 @@ u32bit validate_rsa_ver_x509(const std::string& algo,
 
    std::string emsa = algo.substr(11, std::string::npos);
 
-   std::auto_ptr<PK_Verifier> v(get_pk_verifier(*rsakey, emsa));
+   std::unique_ptr<PK_Verifier> v(get_pk_verifier(*rsakey, emsa));
 
    SecureVector<byte> msg = decode_hex(str[1]);
    SecureVector<byte> sig = decode_hex(str[2]);
@@ -361,7 +361,7 @@ u32bit validate_rw_ver(const std::string& algo,
 
    std::string emsa = algo.substr(5, std::string::npos);
 
-   std::auto_ptr<PK_Verifier> v(get_pk_verifier(key, emsa));
+   std::unique_ptr<PK_Verifier> v(get_pk_verifier(key, emsa));
 
    SecureVector<byte> msg = decode_hex(str[2]);
    SecureVector<byte> sig = decode_hex(str[3]);
@@ -417,7 +417,7 @@ u32bit validate_dsa_sig(const std::string& algo,
    DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
                                str[0].length());
 
-   std::auto_ptr<Private_Key> privkey(PKCS8::load_key(keysource, rng, pass));
+   std::unique_ptr<Private_Key> privkey(PKCS8::load_key(keysource, rng, pass));
 
    DSA_PrivateKey* dsapriv = dynamic_cast<DSA_PrivateKey*>(privkey.get());
    if(!dsapriv)
@@ -449,7 +449,7 @@ u32bit validate_dsa_ver(const std::string& algo,
 
 
 #if defined(BOTAN_HAS_DSA)
-   std::auto_ptr<Public_Key> key(X509::load_key(keysource));
+   std::unique_ptr<Public_Key> key(X509::load_key(keysource));
 
    DSA_PublicKey* dsakey = dynamic_cast<DSA_PublicKey*>(key.get());
 
@@ -458,7 +458,7 @@ u32bit validate_dsa_ver(const std::string& algo,
 
    std::string emsa = algo.substr(7, std::string::npos);
 
-   std::auto_ptr<PK_Verifier> v(get_pk_verifier(*dsakey, emsa));
+   std::unique_ptr<PK_Verifier> v(get_pk_verifier(*dsakey, emsa));
 
    SecureVector<byte> msg = decode_hex(str[1]);
    SecureVector<byte> sig = decode_hex(str[2]);

@@ -168,7 +168,7 @@ bool X509_Object::check_signature(Public_Key& pub_key) const
       Signature_Format format =
          (pub_key.message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
 
-      std::auto_ptr<PK_Verifier> verifier;
+      std::unique_ptr<PK_Verifier> verifier;
 
       if(dynamic_cast<PK_Verifying_with_MR_Key*>(&pub_key))
          {

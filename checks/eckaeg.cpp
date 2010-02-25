@@ -102,7 +102,7 @@ void test_eckaeg_some_dp(RandomNumberGenerator& rng)
       Botan::EC_Domain_Params dom_pars(Botan::get_EC_Dom_Pars_by_oid(oids[i]));
       Botan::ECKAEG_PrivateKey private_a(rng, dom_pars);
       Botan::ECKAEG_PublicKey public_a = private_a;
-      /*auto_ptr<Botan::X509_Encoder> x509_key_enc = public_a.x509_encoder();
+      /*unique_ptr<Botan::X509_Encoder> x509_key_enc = public_a.x509_encoder();
       Botan::MemoryVector<Botan::byte> enc_key_a = Botan::DER_Encoder()
       .start_cons(Botan::SEQUENCE)
       .encode(x509_key_enc->alg_id())

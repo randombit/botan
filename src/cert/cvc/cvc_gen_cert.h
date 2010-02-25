@@ -33,7 +33,7 @@ class BOTAN_DLL EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation
       * Get this certificates public key.
       * @result this certificates public key
       */
-      std::auto_ptr<Public_Key> subject_public_key() const;
+      std::unique_ptr<Public_Key> subject_public_key() const;
 
       /**
       * Find out whether this object is self signed.
@@ -75,7 +75,7 @@ class BOTAN_DLL EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation
       * @result the DER encoded signed generalized CVC object
       */
       static MemoryVector<byte> make_signed(
-         std::auto_ptr<PK_Signer> signer,
+         PK_Signer& signer,
          const MemoryRegion<byte>& tbs_bits,
          RandomNumberGenerator& rng);
       virtual ~EAC1_1_gen_CVC<Derived>()
@@ -103,11 +103,11 @@ template<typename Derived> bool EAC1_1_gen_CVC<Derived>::is_self_signed() const
    }
 
 template<typename Derived> MemoryVector<byte> EAC1_1_gen_CVC<Derived>::make_signed(
-   std::auto_ptr<PK_Signer> signer,
+   PK_Signer& signer,
    const MemoryRegion<byte>& tbs_bits,
    RandomNumberGenerator& rng) // static
    {
-   SecureVector<byte> concat_sig = EAC1_1_obj<Derived>::make_signature(signer.get(), tbs_bits, rng);
+   SecureVector<byte> concat_sig = EAC1_1_obj<Derived>::make_signature(signer, tbs_bits, rng);
 
    return DER_Encoder()
       .start_cons(ASN1_Tag(33), APPLICATION)
@@ -117,9 +117,9 @@ template<typename Derived> MemoryVector<byte> EAC1_1_gen_CVC<Derived>::make_sign
       .get_contents();
    }
 
-template<typename Derived> std::auto_ptr<Public_Key> EAC1_1_gen_CVC<Derived>::subject_public_key() const
+template<typename Derived> std::unique_ptr<Public_Key> EAC1_1_gen_CVC<Derived>::subject_public_key() const
    {
-   return std::auto_ptr<Public_Key>(new ECDSA_PublicKey(m_pk));
+   return std::unique_ptr<Public_Key>(new ECDSA_PublicKey(m_pk));
    }
 
 template<typename Derived> SecureVector<byte> EAC1_1_gen_CVC<Derived>::build_cert_body(MemoryRegion<byte> const& tbs)

@@ -102,8 +102,8 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
 
       SecureVector<byte> m_enc_public_point; // stores the public point
 
-      std::auto_ptr<EC_Domain_Params> mp_dom_pars;
-      std::auto_ptr<PointGFp> mp_public_point;
+      std::unique_ptr<EC_Domain_Params> mp_dom_pars;
+      std::unique_ptr<PointGFp> mp_public_point;
       EC_dompar_enc m_param_enc;
    };
 
