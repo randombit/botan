@@ -17,7 +17,8 @@ namespace Botan {
 
 struct BOTAN_DLL Illegal_Point : public Exception
    {
-   Illegal_Point(const std::string& err = "") : Exception(err) {}
+   Illegal_Point(const std::string& err = "Malformed ECP point detected") :
+      Exception(err) {}
    };
 
 /**
@@ -51,12 +52,12 @@ class BOTAN_DLL PointGFp
       * @param curve the base curve
       * @param x jacobian projective x coordinate
       * @param y jacobian projective y coordinate
-      * @param z jacobian projective y coordinate
+      * @param z jacobian projective z coordinate
       */
       PointGFp(const CurveGFp& curve,
-               const GFpElement& x,
-               const GFpElement& y,
-               const GFpElement& z);
+               const BigInt& x,
+               const BigInt& y,
+               const BigInt& z);
 
       //PointGFp(const PointGFp& other) = default;
       //PointGFp& operator=(const PointGFp& other) = default;

@@ -274,18 +274,9 @@ void test_zeropoint()
    BigInt bi_p1_yval ("1270827321510686389126940426305655825361326281787");
    BigInt bi_p1_zval ("407040228325808215747982915914693784055965283940");
 
-   GFpElement elem_p1_x(bi_p_secp, bi_p1_xval);
-   GFpElement elem_p1_y(bi_p_secp, bi_p1_yval);
-   GFpElement elem_p1_z(bi_p_secp, bi_p1_zval);
-
-
-   PointGFp p1(secp160r1,elem_p1_x, elem_p1_y, elem_p1_z);
-
+   PointGFp p1(secp160r1, bi_p1_xval, bi_p1_yval, bi_p1_zval);
    p1.check_invariants();
    p1 -= p1;
-   //	cout << "p1 x " << p1.get_jac_proj_x() << "\n";
-   //	cout << "p1 y " << p1.get_jac_proj_y() << "\n";
-   //	cout << "p1 z " << p1.get_jac_proj_z() << "\n";
 
    CHECK_MESSAGE(  p1.is_zero(), "p - q with q = p is not zero!");
    }
@@ -334,11 +325,7 @@ void test_calc_with_zeropoint()
    BigInt bi_p1_yval ("1270827321510686389126940426305655825361326281787");
    BigInt bi_p1_zval ("407040228325808215747982915914693784055965283940");
 
-   GFpElement elem_p1_x(bi_p_secp, bi_p1_xval);
-   GFpElement elem_p1_y(bi_p_secp, bi_p1_yval);
-   GFpElement elem_p1_z(bi_p_secp, bi_p1_zval);
-
-   PointGFp p(curve,elem_p1_x, elem_p1_y, elem_p1_z);
+   PointGFp p(curve, bi_p1_xval, bi_p1_yval, bi_p1_zval);
 
    p.check_invariants();
    CHECK_MESSAGE(  !p.is_zero(), "created is zeropoint, shouldn't be!");
@@ -383,8 +370,7 @@ void test_add_point()
    PointGFp p0 = p_G;
    PointGFp p1 = p_G.mult2_in_place();
 
-   PointGFp expected ( secp160r1, GFpElement(bi_p_secp, BigInt(exp_add_x)),
-                       GFpElement(bi_p_secp, BigInt(exp_add_y)), GFpElement(bi_p_secp, BigInt(exp_add_z)));
+   PointGFp expected(secp160r1, exp_add_x, exp_add_y, exp_add_z);
 
    p1 += p0;
    CHECK(p1 == expected);
@@ -418,8 +404,8 @@ void test_sub_point()
    PointGFp p1 = p_G.mult2_in_place();
 
    p1 -= p0;
-   PointGFp expected ( secp160r1, GFpElement(bi_p_secp, BigInt(exp_sub_x)),
-                       GFpElement(bi_p_secp, BigInt(exp_sub_y)), GFpElement(bi_p_secp, BigInt(exp_sub_z)));
+
+   PointGFp expected(secp160r1, exp_sub_x, exp_sub_y, exp_sub_z);
    CHECK(p1 == expected);
    }
 
@@ -505,18 +491,15 @@ void test_basic_operations()
    CHECK( p1.get_jac_proj_y() == exp_p1_y);
    CHECK( p1.get_jac_proj_z() == exp_p1_z);
 
-   PointGFp expected ( secp160r1, GFpElement(bi_p_secp, exp_p0_x),
-                       GFpElement(bi_p_secp, exp_p0_y), GFpElement(bi_p_secp, exp_p0_z));
+   PointGFp expected(secp160r1, exp_p0_x, exp_p0_y, exp_p0_z);
    CHECK(p0 == expected);
 
    PointGFp simplePlus= p1 + p0;
-   PointGFp exp_simplePlus ( secp160r1, GFpElement(bi_p_secp, exp_plus_x),
-                             GFpElement(bi_p_secp, exp_plus_y), GFpElement(bi_p_secp, exp_plus_z));
+   PointGFp exp_simplePlus(secp160r1, exp_plus_x, exp_plus_y, exp_plus_z);
    CHECK(simplePlus == exp_simplePlus);
 
    PointGFp simpleMinus= p1 - p0;
-   PointGFp exp_simpleMinus ( secp160r1, GFpElement(bi_p_secp, exp_minus_x),
-                              GFpElement(bi_p_secp, exp_minus_y), GFpElement(bi_p_secp, exp_minus_z));
+   PointGFp exp_simpleMinus(secp160r1, exp_minus_x, exp_minus_y, exp_minus_z);
    CHECK(simpleMinus == exp_simpleMinus);
 
    PointGFp simpleMult= p1 * 123456789;
@@ -762,11 +745,7 @@ void test_more_zeropoint()
    BigInt bi_p1_yval ("1270827321510686389126940426305655825361326281787");
    BigInt bi_p1_zval ("407040228325808215747982915914693784055965283940");
 
-   GFpElement elem_p1_x(bi_p, bi_p1_xval);
-   GFpElement elem_p1_y(bi_p, bi_p1_yval);
-   GFpElement elem_p1_z(bi_p, bi_p1_zval);
-
-   PointGFp p1(curve,elem_p1_x, elem_p1_y, elem_p1_z);
+   PointGFp p1(curve, bi_p1_xval, bi_p1_yval, bi_p1_zval);
 
    p1.check_invariants();
    PointGFp minus_p1 = -p1;

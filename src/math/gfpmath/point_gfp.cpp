@@ -48,12 +48,14 @@ PointGFp::PointGFp(const CurveGFp& curve) :
    }
 
 // construct a point given its jacobian projective coordinates
-PointGFp::PointGFp(const CurveGFp& curve, const GFpElement& x,
-                   const GFpElement& y, const GFpElement& z) :
+PointGFp::PointGFp(const CurveGFp& curve,
+                   const BigInt& x,
+                   const BigInt& y,
+                   const BigInt& z) :
    mC(curve),
-   mX(x),
-   mY(y),
-   mZ(z)
+   mX(curve.get_p(), x),
+   mY(curve.get_p(), y),
+   mZ(curve.get_p(), z)
    {
    }
 
