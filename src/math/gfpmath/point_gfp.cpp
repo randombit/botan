@@ -236,8 +236,12 @@ PointGFp PointGFp::get_z_to_one()
 */
 const PointGFp& PointGFp::set_z_to_one()
    {
-   if(!(mZ.get_value() == BigInt(1)) && !(mZ.get_value() == BigInt(0)))
+   if(mZ.is_zero())
+      throw Illegal_Transformation("cannot convert Z to one");
+
+   if(mZ.get_value() != 1)
       {
+      // Converts to affine coordinates
       GFpElement z = inverse(mZ);
       GFpElement z2 = z * z;
       z *= z2;
@@ -247,14 +251,8 @@ const PointGFp& PointGFp::set_z_to_one()
       mX = x;
       mY = y;
       }
-   else
-      {
-      if(mZ.get_value() == BigInt(0))
-         {
-         throw Illegal_Transformation("cannot convert Z to one");
-         }
-      }
-   return *this; // mZ = 1 already
+
+   return *this;
    }
 
 GFpElement PointGFp::get_affine_x() const
@@ -536,11 +534,8 @@ PointGFp OS2ECP(MemoryRegion<byte> const& os, const CurveGFp& curve)
       default:
          throw Invalid_Argument("encountered illegal format specification while decoding point");
       }
-   z = GFpElement(curve.get_p(), BigInt(1));
-   //assert((x.is_trf_to_mres() && x.is_use_montgm()) || !x.is_trf_to_mres());
-   //assert((y.is_trf_to_mres() && y.is_use_montgm()) || !y.is_trf_to_mres());
-   //assert((z.is_trf_to_mres() && z.is_use_montgm()) || !z.is_trf_to_mres());
-   PointGFp result(curve, x, y, z);
+
+   PointGFp result(curve, x, y);
    result.check_invariants();
    //assert((result.get_jac_proj_x().is_trf_to_mres() && result.get_jac_proj_x().is_use_montgm()) || !result.get_jac_proj_x().is_trf_to_mres());
    //assert((result.get_jac_proj_y().is_trf_to_mres() && result.get_jac_proj_y().is_use_montgm()) || !result.get_jac_proj_y().is_trf_to_mres());
@@ -599,9 +594,8 @@ PointGFp create_random_point(RandomNumberGenerator& rng,
       else
          mY = GFpElement(curve.get_p(), value);
       }
-   mZ = GFpElement(curve.get_p(), BigInt(1));
 
-   return PointGFp(curve, mX, mY, mZ);
+   return PointGFp(curve, mX, mY);
    }
 
 } // namespace Botan
