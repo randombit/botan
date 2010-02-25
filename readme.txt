@@ -3,10 +3,9 @@ Botan 1.9.4-dev, ????-??-??
 Botan is a C++ class library for performing a wide variety of
 cryptographic operations.
 
-Botan is released under the BSD license. See license.txt for the
-specifics. More information about the authors and contributors can be
-found in credits.txt and thanks.txt. All of these files are included
-in the doc/ directory of the source distribution.
+Botan is released under the FreeBSD license (see doc/license.txt for
+the specifics). More information about the authors and contributors
+can be found in doc/credits.txt and doc/thanks.txt.
 
 You can file bugs at http://bugs.randombit.net/ or by sending a report
 to the botan-devel mailing list:
@@ -19,14 +18,6 @@ api.pdf - the API reference manual
 tutorial.pdf - a set of simple examples and tutorials
 
 A set of example programs can be found in the doc/examples directory.
-
-Some higher level cryptographic protocols are implemented using
-Botan in:
-
-- NetSieben SSH Library (SSHv2)
-    http://www.netsieben.com/products/ssh/
-- Ajisai (SSLv3/TLSv1)
-    http://www.randombit.net/code/ajisai/
 
 Check http://botan.randombit.net/ for announcements and new
 releases. If you'll be developing code using this library, consider
