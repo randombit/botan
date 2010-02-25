@@ -154,32 +154,29 @@ PointGFp& PointGFp::operator-=(const PointGFp& rhs)
 
 PointGFp& PointGFp::operator*=(const BigInt& scalar)
    {
+   if(scalar == 0)
+      {
+      *this = PointGFp(curve);
+      return *this;
+      }
+   else if(scalar == 1)
+      return *this;
+   else if(scalar == -1)
+      {
+      this->negate();
+      return *this;
+      }
+
    PointGFp H(this->curve); // create as zero
    PointGFp P(*this);
-   BigInt m(scalar);
 
-   if(m < BigInt(0))
-      {
-      m.flip_sign();
+   if(scalar.is_negative())
       P.negate();
-      }
 
-   // Move upwards
-   if(P.is_zero() || (m == BigInt(0)))
-      {
-      *this = H;
-      return *this;
-      }
-
-   // FIXME: *this != P if m was -1 !
-   if(m == BigInt(1)) //*this == P already
-      return *this;
-
-   const int l = m.bits() - 1;
-   for(int i = l; i >= 0; --i)
+   for(int i = scalar.bits() - 1; i >= 0; --i)
       {
       H.mult2_in_place();
-      if(m.get_bit(i))
+      if(scalar.get_bit(i))
          H += P;
       }
 
@@ -210,47 +207,32 @@ PointGFp& PointGFp::mult2_in_place()
       return *this;
       }
 
-   GFpElement point_x(curve.get_p(), coord_x);
-   GFpElement point_y(curve.get_p(), coord_y);
-   GFpElement point_z(curve.get_p(), coord_z);
+   Modular_Reducer mod_p(curve.get_p());
 
-   GFpElement Y_squared = point_y*point_y;
+   BigInt y_2 = mod_p.square(coord_y);
 
-   GFpElement S = point_x * Y_squared;
+   BigInt S = mod_p.multiply(4, mod_p.multiply(coord_x, y_2));
 
-   GFpElement x = S + S;
+   BigInt a_z4 = mod_p.multiply(curve.get_a(),
+                                mod_p.square(mod_p.square(coord_z)));
 
-   S = x + x;
+   BigInt M = mod_p.reduce(a_z4 + 3 * mod_p.square(coord_x));
 
-   GFpElement a_z4(curve.get_p(), curve.get_a());
+   BigInt x = mod_p.reduce(mod_p.square(M) - mod_p.multiply(2, S));
 
-   GFpElement z2 = point_z * point_z;
-   a_z4 *= z2;
-   a_z4 *= z2;
+   BigInt y = mod_p.square(y_2);
 
-   GFpElement y(point_x * point_x);
+   BigInt z = mod_p.multiply(2, mod_p.reduce(y + y));
 
-   GFpElement M(y + y + y + a_z4);
+   BigInt U = mod_p.reduce(z + z);
 
-   x = M * M - (S+S);
+   y = mod_p.reduce(mod_p.multiply(M, S - x) - U);
 
-   y = Y_squared * Y_squared;
+   z = mod_p.multiply(2, mod_p.multiply(coord_y, coord_z));
 
-   GFpElement U(y + y);
-
-   GFpElement z = U + U;
-
-   U = z + z;
-
-   y = M * (S - x) - U;
-
-   z = point_y * point_z;
-
-   z = z + z;
-
-   coord_x = x.get_value();
-   coord_y = y.get_value();
-   coord_z = z.get_value();
+   coord_x = x;
+   coord_y = y;
+   coord_z = z;
 
    return *this;
    }
