@@ -1,17 +1,74 @@
 /*
 * Number Theory Functions
-* (C) 1999-2009 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/numthry.h>
+#include <botan/reducer.h>
 #include <botan/internal/bit_ops.h>
 #include <algorithm>
 
 namespace Botan {
 
 namespace {
+
+/*
+* Miller-Rabin Primality Tester
+*/
+class MillerRabin_Test
+   {
+   public:
+      bool passes_test(const BigInt& nonce);
+      MillerRabin_Test(const BigInt& num);
+   private:
+      BigInt n, r, n_minus_1;
+      u32bit s;
+      Fixed_Exponent_Power_Mod pow_mod;
+      Modular_Reducer reducer;
+   };
+
+/*
+* Miller-Rabin Test
+*/
+bool MillerRabin_Test::passes_test(const BigInt& a)
+   {
+   if(a < 2 || a >= n_minus_1)
+      throw Invalid_Argument("Bad size for nonce in Miller-Rabin test");
+
+   BigInt y = pow_mod(a);
+   if(y == 1 || y == n_minus_1)
+      return true;
+
+   for(u32bit i = 1; i != s; ++i)
+      {
+      y = reducer.square(y);
+
+      if(y == 1)
+         return false;
+      if(y == n_minus_1)
+         return true;
+      }
+   return false;
+   }
+
+/*
+* Miller-Rabin Constructor
+*/
+MillerRabin_Test::MillerRabin_Test(const BigInt& num)
+   {
+   if(num.is_even() || num < 3)
+      throw Invalid_Argument("MillerRabin_Test: Invalid number for testing");
+
+   n = num;
+   n_minus_1 = n - 1;
+   s = low_zero_bits(n_minus_1);
+   r = n_minus_1 >> s;
+
+   pow_mod = Fixed_Exponent_Power_Mod(r, n);
+   reducer = Modular_Reducer(n);
+   }
 
 /*
 * Miller-Rabin Iterations
@@ -298,47 +355,6 @@ bool passes_mr_tests(RandomNumberGenerator& rng,
          return false;
       }
    return true;
-   }
-
-/*
-* Miller-Rabin Test
-*/
-bool MillerRabin_Test::passes_test(const BigInt& a)
-   {
-   if(a < 2 || a >= n_minus_1)
-      throw Invalid_Argument("Bad size for nonce in Miller-Rabin test");
-
-   BigInt y = pow_mod(a);
-   if(y == 1 || y == n_minus_1)
-      return true;
-
-   for(u32bit i = 1; i != s; ++i)
-      {
-      y = reducer.square(y);
-
-      if(y == 1)
-         return false;
-      if(y == n_minus_1)
-         return true;
-      }
-   return false;
-   }
-
-/*
-* Miller-Rabin Constructor
-*/
-MillerRabin_Test::MillerRabin_Test(const BigInt& num)
-   {
-   if(num.is_even() || num < 3)
-      throw Invalid_Argument("MillerRabin_Test: Invalid number for testing");
-
-   n = num;
-   n_minus_1 = n - 1;
-   s = low_zero_bits(n_minus_1);
-   r = n_minus_1 >> s;
-
-   pow_mod = Fixed_Exponent_Power_Mod(r, n);
-   reducer = Modular_Reducer(n);
    }
 
 }

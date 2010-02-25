@@ -11,6 +11,7 @@
 #define BOTAN_GFP_CURVE_H__
 
 #include <botan/numthry.h>
+#include <botan/reducer.h>
 
 namespace Botan {
 

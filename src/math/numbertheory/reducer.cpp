@@ -1,12 +1,11 @@
 /*
 * Modular Reducer
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/reducer.h>
-#include <botan/numthry.h>
 #include <botan/internal/mp_core.h>
 
 namespace Botan {
@@ -76,22 +75,6 @@ BigInt Modular_Reducer::reduce(const BigInt& x) const
       t1 = modulus - t1;
 
    return t1;
-   }
-
-/*
-* Multiply, followed by a reduction
-*/
-BigInt Modular_Reducer::multiply(const BigInt& x, const BigInt& y) const
-   {
-   return reduce(x * y);
-   }
-
-/*
-* Square, followed by a reduction
-*/
-BigInt Modular_Reducer::square(const BigInt& x) const
-   {
-   return reduce(Botan::square(x));
    }
 
 }

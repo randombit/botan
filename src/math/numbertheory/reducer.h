@@ -1,14 +1,14 @@
 /*
 * Modular Reducer
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_MODARITH_H__
-#define BOTAN_MODARITH_H__
+#ifndef BOTAN_MODULAR_REDUCER_H__
+#define BOTAN_MODULAR_REDUCER_H__
 
-#include <botan/bigint.h>
+#include <botan/numthry.h>
 
 namespace Botan {
 
@@ -18,9 +18,25 @@ namespace Botan {
 class BOTAN_DLL Modular_Reducer
    {
    public:
-      BigInt multiply(const BigInt& x, const BigInt& y) const;
-      BigInt square(const BigInt& x) const;
       BigInt reduce(const BigInt& x) const;
+
+      /**
+      * Multiply mod p
+      */
+      BigInt multiply(const BigInt& x, const BigInt& y) const
+         { return reduce(x * y); }
+
+      /**
+      * Square mod p
+      */
+      BigInt square(const BigInt& x) const
+         { return reduce(Botan::square(x)); }
+
+      /**
+      * Cube mod p
+      */
+      BigInt cube(const BigInt& x) const
+         { return multiply(x, this->square(x)); }
 
       bool initialized() const { return (mod_words != 0); }
 

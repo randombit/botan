@@ -229,7 +229,7 @@ BigInt PointGFp::get_affine_y() const
 
    const Modular_Reducer& mod_p = curve.mod_p();
 
-   BigInt z3 = mod_p.multiply(coord_z, mod_p.square(coord_z));
+   BigInt z3 = mod_p.cube(coord_z);
    return mod_p.multiply(coord_y, inverse_mod(z3, curve.get_p()));
    }
 
@@ -254,7 +254,7 @@ void PointGFp::check_invariants() const
    const Modular_Reducer& mod_p = curve.mod_p();
 
    BigInt y2 = mod_p.square(coord_y);
-   BigInt x3 = mod_p.multiply(coord_x, mod_p.square(coord_x));
+   BigInt x3 = mod_p.cube(coord_x);
 
    BigInt ax = mod_p.multiply(coord_x, curve.get_a());
 

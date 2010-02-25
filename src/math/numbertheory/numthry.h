@@ -9,7 +9,6 @@
 #define BOTAN_NUMBER_THEORY_H__
 
 #include <botan/bigint.h>
-#include <botan/reducer.h>
 #include <botan/pow_mod.h>
 #include <botan/rng.h>
 
@@ -99,21 +98,6 @@ const u32bit PRIME_PRODUCTS_TABLE_SIZE = 256;
 
 extern const u16bit BOTAN_DLL PRIMES[];
 extern const u64bit PRIME_PRODUCTS[];
-
-/*
-* Miller-Rabin Primality Tester
-*/
-class BOTAN_DLL MillerRabin_Test
-   {
-   public:
-      bool passes_test(const BigInt&);
-      MillerRabin_Test(const BigInt&);
-   private:
-      BigInt n, r, n_minus_1;
-      u32bit s;
-      Fixed_Exponent_Power_Mod pow_mod;
-      Modular_Reducer reducer;
-   };
 
 }
 
