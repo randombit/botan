@@ -24,7 +24,6 @@
 
 #include <botan/point_gfp.h>
 #include <botan/curve_gfp.h>
-#include <botan/gfp_element.h>
 
 using namespace Botan;
 
