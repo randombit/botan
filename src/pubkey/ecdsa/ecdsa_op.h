@@ -10,6 +10,7 @@
 #define BOTAN_ECDSA_OPERATIONS_H__
 
 #include <botan/ec_dompar.h>
+#include <botan/reducer.h>
 
 namespace Botan {
 
@@ -52,6 +53,8 @@ class BOTAN_DLL Default_ECDSA_Op : public ECDSA_Operation
                        const PointGFp& pub_key);
    private:
       EC_Domain_Params dom_pars;
+      Modular_Reducer mod_n;
+
       PointGFp pub_key;
       BigInt priv_key;
    };

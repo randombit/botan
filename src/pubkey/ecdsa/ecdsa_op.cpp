@@ -14,7 +14,8 @@ namespace Botan {
 Default_ECDSA_Op::Default_ECDSA_Op(const EC_Domain_Params& domain,
                                    const BigInt& priv,
                                    const PointGFp& pub) :
-   dom_pars(domain), pub_key(pub), priv_key(priv)
+   dom_pars(domain), mod_n(dom_pars.get_order()),
+   pub_key(pub), priv_key(priv)
    {
    }
 
@@ -25,10 +26,6 @@ bool Default_ECDSA_Op::verify(const byte msg[], u32bit msg_len,
 
    if(sig_len != n.bytes()*2)
       return false;
-
-   // NOTE: it is not checked whether the public point is set
-   if(dom_pars.get_curve().get_p() == 0)
-      throw Internal_Error("domain parameters not set");
 
    BigInt e(msg, msg_len);
 
@@ -44,9 +41,7 @@ bool Default_ECDSA_Op::verify(const byte msg[], u32bit msg_len,
    if(R.is_zero())
       return false;
 
-   BigInt x = R.get_affine_x();
-
-   return (x % n == r);
+   return (mod_n.reduce(R.get_affine_x()) == r);
    }
 
 SecureVector<byte> Default_ECDSA_Op::sign(const byte msg[], u32bit msg_len,
@@ -57,25 +52,18 @@ SecureVector<byte> Default_ECDSA_Op::sign(const byte msg[], u32bit msg_len,
 
    const BigInt& n = dom_pars.get_order();
 
-   if(n == 0)
-      throw Internal_Error("Default_ECDSA_Op::sign(): domain parameters not set");
-
    BigInt e(msg, msg_len);
 
    PointGFp k_times_P = dom_pars.get_base_point() * k;
-   k_times_P.check_invariants();
-   BigInt r = k_times_P.get_affine_x() % n;
+   BigInt r = mod_n.reduce(k_times_P.get_affine_x());
 
    if(r == 0)
       throw Internal_Error("Default_ECDSA_Op::sign: r was zero");
 
    BigInt k_inv = inverse_mod(k, n);
 
-   BigInt s(r);
-   s *= priv_key;
-   s += e;
-   s *= k_inv;
-   s %= n;
+   BigInt s = mod_n.reduce(mod_n.multiply(r, priv_key) + e);
+   s = mod_n.multiply(s, k_inv);
 
    SecureVector<byte> output(2*n.bytes());
    r.binary_encode(output + (output.size() / 2 - r.bytes()));
