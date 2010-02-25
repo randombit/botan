@@ -26,20 +26,11 @@ struct BOTAN_DLL Illegal_Point : public Exception
 class BOTAN_DLL PointGFp
    {
    public:
-      /**
-      * uncompressed encoding byte value
-      */
-      static const int UNCOMPRESSED = 0;
-
-      /**
-      * compressed encoding byte value
-      */
-      static const int COMPRESSED = 1;
-
-      /**
-      * hybrid encoding byte value
-      */
-      static const int HYBRID = 2;
+      enum Compression_Type {
+         UNCOMPRESSED = 0,
+         COMPRESSED   = 1,
+         HYBRID       = 2
+      };
 
       /**
       * Construct the point O
