@@ -123,16 +123,24 @@ PointGFp& PointGFp::operator-=(const PointGFp& rhs)
 
 PointGFp& PointGFp::operator*=(const BigInt& scalar)
    {
-   if(scalar == 0)
+   if(scalar.abs() <= 2) // special cases for small values
       {
-      *this = PointGFp(curve);
-      return *this;
-      }
-   else if(scalar == 1)
-      return *this;
-   else if(scalar == -1)
-      {
-      this->negate();
+      u32bit value = scalar.abs().to_u32bit();
+
+      if(value == 0)
+         *this = PointGFp(curve); // set to zero point
+      else if(value == 1)
+         {
+         if(scalar.is_negative())
+            this->negate();
+         }
+      else if(value == 2)
+         {
+         this->mult2_in_place();
+         if(scalar.is_negative())
+            this->negate();
+         }
+
       return *this;
       }
 
@@ -182,14 +190,14 @@ PointGFp& PointGFp::negate()
    }
 
 // *this *= 2
-PointGFp& PointGFp::mult2_in_place()
+void PointGFp::mult2_in_place()
    {
    if(is_zero())
-      return *this;
+      return;
    else if(coord_y.is_zero())
       {
       *this = PointGFp(curve); // setting myself to zero
-      return *this;
+      return;
       }
 
    Modular_Reducer mod_p(curve.get_p());
@@ -218,8 +226,6 @@ PointGFp& PointGFp::mult2_in_place()
    coord_x = x;
    coord_y = y;
    coord_z = z;
-
-   return *this;
    }
 
 BigInt PointGFp::get_affine_x() const

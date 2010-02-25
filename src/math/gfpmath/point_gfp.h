@@ -101,12 +101,6 @@ class BOTAN_DLL PointGFp
       PointGFp& negate();
 
       /**
-      * Multiply the point by two
-      * @return *this
-      */
-      PointGFp& mult2_in_place();
-
-      /**
       * Return base curve of this point
       * @result the curve over GF(p) of this point
       */
@@ -167,6 +161,11 @@ class BOTAN_DLL PointGFp
       */
       bool operator==(const PointGFp& other) const;
    private:
+      /**
+      * Multiply the point by two
+      */
+      void mult2_in_place();
+
       CurveGFp curve;
       BigInt coord_x, coord_y, coord_z;
    };
