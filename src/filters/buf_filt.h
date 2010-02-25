@@ -27,6 +27,8 @@ class BOTAN_DLL Buffered_Filter
       virtual void buffered_block(const byte input[], u32bit length) = 0;
       virtual void buffered_final(const byte input[], u32bit length) = 0;
 
+      u32bit buffered_block_size() const { return main_block_mod; }
+
       u32bit current_position() const { return buffer_pos; }
       void buffer_reset() { buffer_pos = 0; }
    private:

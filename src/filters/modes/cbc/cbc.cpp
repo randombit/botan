@@ -114,7 +114,7 @@ std::string CBC_Encryption::name() const
 */
 CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad) :
-   Buffered_Filter(BOTAN_PARALLEL_BLOCKS_CBC * ciph->BLOCK_SIZE,
+   Buffered_Filter(ciph->parallelism() * ciph->BLOCK_SIZE,
                    ciph->BLOCK_SIZE),
    cipher(ciph), padder(pad)
    {
@@ -122,7 +122,7 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
       throw Invalid_Block_Size(name(), padder->name());
 
    state.resize(cipher->BLOCK_SIZE);
-   temp.resize(BOTAN_PARALLEL_BLOCKS_CBC * cipher->BLOCK_SIZE);
+   temp.resize(buffered_block_size());
    }
 
 /*
@@ -132,7 +132,7 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   Buffered_Filter(BOTAN_PARALLEL_BLOCKS_CBC * ciph->BLOCK_SIZE,
+   Buffered_Filter(ciph->parallelism() * ciph->BLOCK_SIZE,
                    ciph->BLOCK_SIZE),
    cipher(ciph), padder(pad)
    {
@@ -140,7 +140,7 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
       throw Invalid_Block_Size(name(), padder->name());
 
    state.resize(cipher->BLOCK_SIZE);
-   temp.resize(BOTAN_PARALLEL_BLOCKS_CBC * cipher->BLOCK_SIZE);
+   temp.resize(buffered_block_size());
 
    set_key(key);
    set_iv(iv);

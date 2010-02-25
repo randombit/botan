@@ -30,13 +30,21 @@ void poly_double(byte tweak[], u32bit size)
       tweak[0] ^= polynomial;
    }
 
+/* XTS needs to process at least 2 blocks in parallel
+   because block_size+1 bytes are needed at the end
+*/
+u32bit xts_parallelism(BlockCipher* cipher)
+   {
+   return std::max<u32bit>(cipher->parallelism(), 2);
+   }
+
 }
 
 /*
 * XTS_Encryption constructor
 */
 XTS_Encryption::XTS_Encryption(BlockCipher* ciph) :
-   Buffered_Filter(BOTAN_PARALLEL_BLOCKS_XTS * ciph->BLOCK_SIZE,
+   Buffered_Filter(xts_parallelism(ciph) * ciph->BLOCK_SIZE,
                    ciph->BLOCK_SIZE + 1),
    cipher(ciph)
    {
@@ -44,7 +52,7 @@ XTS_Encryption::XTS_Encryption(BlockCipher* ciph) :
       throw std::invalid_argument("Bad cipher for XTS: " + cipher->name());
 
    cipher2 = cipher->clone();
-   tweak.resize(BOTAN_PARALLEL_BLOCKS_XTS * cipher->BLOCK_SIZE);
+   tweak.resize(buffered_block_size());
    }
 
 /*
@@ -53,7 +61,7 @@ XTS_Encryption::XTS_Encryption(BlockCipher* ciph) :
 XTS_Encryption::XTS_Encryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   Buffered_Filter(BOTAN_PARALLEL_BLOCKS_XTS * ciph->BLOCK_SIZE,
+   Buffered_Filter(xts_parallelism(ciph) * ciph->BLOCK_SIZE,
                    ciph->BLOCK_SIZE + 1),
    cipher(ciph)
    {
@@ -61,7 +69,7 @@ XTS_Encryption::XTS_Encryption(BlockCipher* ciph,
        throw std::invalid_argument("Bad cipher for XTS: " + cipher->name());
 
    cipher2 = cipher->clone();
-   tweak.resize(BOTAN_PARALLEL_BLOCKS_XTS * cipher->BLOCK_SIZE);
+   tweak.resize(buffered_block_size());
 
    set_key(key);
    set_iv(iv);
@@ -210,7 +218,7 @@ void XTS_Encryption::buffered_final(const byte input[], u32bit length)
 * XTS_Decryption constructor
 */
 XTS_Decryption::XTS_Decryption(BlockCipher* ciph) :
-   Buffered_Filter(BOTAN_PARALLEL_BLOCKS_XTS * ciph->BLOCK_SIZE,
+   Buffered_Filter(xts_parallelism(ciph) * ciph->BLOCK_SIZE,
                    ciph->BLOCK_SIZE + 1),
    cipher(ciph)
    {
@@ -218,7 +226,7 @@ XTS_Decryption::XTS_Decryption(BlockCipher* ciph) :
        throw std::invalid_argument("Bad cipher for XTS: " + cipher->name());
 
    cipher2 = ciph->clone();
-   tweak.resize(BOTAN_PARALLEL_BLOCKS_XTS * cipher->BLOCK_SIZE);
+   tweak.resize(buffered_block_size());
    }
 
 /*
@@ -227,7 +235,7 @@ XTS_Decryption::XTS_Decryption(BlockCipher* ciph) :
 XTS_Decryption::XTS_Decryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   Buffered_Filter(BOTAN_PARALLEL_BLOCKS_XTS * ciph->BLOCK_SIZE,
+   Buffered_Filter(xts_parallelism(ciph) * ciph->BLOCK_SIZE,
                    ciph->BLOCK_SIZE + 1),
    cipher(ciph)
    {
@@ -235,7 +243,7 @@ XTS_Decryption::XTS_Decryption(BlockCipher* ciph,
        throw std::invalid_argument("Bad cipher for XTS: " + cipher->name());
 
    cipher2 = ciph->clone();
-   tweak.resize(BOTAN_PARALLEL_BLOCKS_XTS * cipher->BLOCK_SIZE);
+   tweak.resize(buffered_block_size());
 
    set_key(key);
    set_iv(iv);

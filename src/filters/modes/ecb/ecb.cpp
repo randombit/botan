@@ -14,12 +14,12 @@ namespace Botan {
 */
 ECB_Encryption::ECB_Encryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad) :
-   Buffered_Filter(ciph->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB, 0)
+   Buffered_Filter(ciph->BLOCK_SIZE * ciph->parallelism(), 0)
    {
    cipher = ciph;
    padder = pad;
 
-   temp.resize(cipher->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB);
+   temp.resize(buffered_block_size());
    }
 
 /*
@@ -28,12 +28,12 @@ ECB_Encryption::ECB_Encryption(BlockCipher* ciph,
 ECB_Encryption::ECB_Encryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key) :
-   Buffered_Filter(ciph->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB, 0)
+   Buffered_Filter(ciph->BLOCK_SIZE * ciph->parallelism(), 0)
    {
    cipher = ciph;
    padder = pad;
 
-   temp.resize(cipher->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB);
+   temp.resize(buffered_block_size());
 
    cipher->set_key(key);
    }
@@ -111,12 +111,12 @@ void ECB_Encryption::buffered_final(const byte input[], u32bit input_length)
 */
 ECB_Decryption::ECB_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad) :
-   Buffered_Filter(ciph->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB, 1)
+   Buffered_Filter(ciph->BLOCK_SIZE * ciph->parallelism(), 1)
    {
    cipher = ciph;
    padder = pad;
 
-   temp.resize(cipher->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB);
+   temp.resize(buffered_block_size());
    }
 
 /*
@@ -125,12 +125,12 @@ ECB_Decryption::ECB_Decryption(BlockCipher* ciph,
 ECB_Decryption::ECB_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key) :
-   Buffered_Filter(ciph->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB, 1)
+   Buffered_Filter(ciph->BLOCK_SIZE * ciph->parallelism(), 1)
    {
    cipher = ciph;
    padder = pad;
 
-   temp.resize(cipher->BLOCK_SIZE * BOTAN_PARALLEL_BLOCKS_ECB);
+   temp.resize(buffered_block_size());
 
    cipher->set_key(key);
    }
