@@ -10,10 +10,8 @@
 #ifndef BOTAN_ECC_PUBLIC_KEY_BASE_H__
 #define BOTAN_ECC_PUBLIC_KEY_BASE_H__
 
-#include <botan/bigint.h>
-#include <botan/curve_gfp.h>
-#include <botan/pk_keys.h>
 #include <botan/ec_dompar.h>
+#include <botan/pk_keys.h>
 #include <botan/x509_key.h>
 #include <botan/pkcs8.h>
 #include <memory>
