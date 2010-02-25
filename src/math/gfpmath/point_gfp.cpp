@@ -391,100 +391,55 @@ PointGFp operator*(const PointGFp& point, const BigInt& scalar)
 // encoding and decoding
 SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
    {
+   if(point.is_zero())
+      return SecureVector<byte>(1); // single 0 byte
+
+   const u32bit p_bits = point.get_curve().get_p().bits();
+
+   u32bit p_bytes = point.get_curve().get_p().bytes();
+
+   BigInt x = point.get_affine_x();
+   BigInt y = point.get_affine_y();
+
+   SecureVector<byte> bX = BigInt::encode_1363(x, p_bytes);
+   SecureVector<byte> bY = BigInt::encode_1363(y, p_bytes);
+
    if(format == PointGFp::UNCOMPRESSED)
-      return encode_uncompressed(point);
+      {
+      SecureVector<byte> result(2*p_bytes+1);
+      result[0] = 4;
+
+      result.copy(1, bX.begin(), p_bytes);
+      result.copy(p_bytes+1, bY.begin(), p_bytes);
+      return result;
+      }
    else if(format == PointGFp::COMPRESSED)
-      return encode_compressed(point);
+      {
+      SecureVector<byte> result(p_bytes+1);
+      result[0] = 2;
+
+      result.copy(1, bX.begin(), bX.size());
+
+      if(y.get_bit(0))
+         result[0] |= 1;
+
+      return result;
+      }
    else if(format == PointGFp::HYBRID)
-      return encode_hybrid(point);
+      {
+      SecureVector<byte> result(2*p_bytes+1);
+      result[0] = 6;
+
+      result.copy(1, bX.begin(), bX.size());
+      result.copy(p_bytes+1, bY.begin(), bY.size());
+
+      if(y.get_bit(0))
+         result[0] |= 1;
+
+      return result;
+      }
    else
       throw Invalid_Argument("illegal point encoding format specification");
-   }
-
-SecureVector<byte> encode_compressed(const PointGFp& point)
-   {
-   if(point.is_zero())
-      {
-      SecureVector<byte> result (1);
-      result[0] = 0;
-      return result;
-      }
-
-   u32bit l = point.get_curve().get_p().bits();
-   int dummy = l & 7;
-   if(dummy != 0)
-      {
-      l += 8 - dummy;
-      }
-   l /= 8;
-   SecureVector<byte> result (l+1);
-   result[0] = 2;
-   BigInt x = point.get_affine_x();
-   SecureVector<byte> bX = BigInt::encode_1363(x, l);
-   result.copy(1, bX.begin(), bX.size());
-   BigInt y = point.get_affine_y();
-   if(y.get_bit(0))
-      {
-      result[0] |= 1;
-      }
-   return result;
-   }
-
-SecureVector<byte> encode_uncompressed(const PointGFp& point)
-   {
-   if(point.is_zero())
-      {
-      SecureVector<byte> result (1);
-      result[0] = 0;
-      return result;
-      }
-   u32bit l = point.get_curve().get_p().bits();
-   int dummy = l & 7;
-   if(dummy != 0)
-      {
-      l += 8 - dummy;
-      }
-   l /= 8;
-   SecureVector<byte> result (2*l+1);
-   result[0] = 4;
-   BigInt x = point.get_affine_x();
-   BigInt y = point.get_affine_y();
-   SecureVector<byte> bX = BigInt::encode_1363(x, l);
-   SecureVector<byte> bY = BigInt::encode_1363(y, l);
-   result.copy(1, bX.begin(), l);
-   result.copy(l+1, bY.begin(), l);
-   return result;
-
-   }
-
-SecureVector<byte> encode_hybrid(const PointGFp& point)
-   {
-   if(point.is_zero())
-      {
-      SecureVector<byte> result (1);
-      result[0] = 0;
-      return result;
-      }
-   u32bit l = point.get_curve().get_p().bits();
-   int dummy = l & 7;
-   if(dummy != 0)
-      {
-      l += 8 - dummy;
-      }
-   l /= 8;
-   SecureVector<byte> result (2*l+1);
-   result[0] = 6;
-   BigInt x = point.get_affine_x();
-   BigInt y = point.get_affine_y();
-   SecureVector<byte> bX = BigInt::encode_1363(x, l);
-   SecureVector<byte> bY = BigInt::encode_1363(y, l);
-   result.copy(1, bX.begin(), bX.size());
-   result.copy(l+1, bY.begin(), bY.size());
-   if(y.get_bit(0))
-      {
-      result[0] |= 1;
-      }
-   return result;
    }
 
 PointGFp OS2ECP(const MemoryRegion<byte>& os, const CurveGFp& curve)

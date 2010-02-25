@@ -198,12 +198,7 @@ PointGFp BOTAN_DLL create_random_point(RandomNumberGenerator& rng,
 
 // encoding and decoding
 SecureVector<byte> BOTAN_DLL EC2OSP(const PointGFp& point, byte format);
-PointGFp BOTAN_DLL OS2ECP(MemoryRegion<byte> const& os, const CurveGFp& curve);
-
-/* Should these be private? */
-SecureVector<byte> BOTAN_DLL encode_uncompressed(const PointGFp& point);
-SecureVector<byte> BOTAN_DLL encode_hybrid(const PointGFp& point);
-SecureVector<byte> BOTAN_DLL encode_compressed(const PointGFp& point);
+PointGFp BOTAN_DLL OS2ECP(const MemoryRegion<byte>& os, const CurveGFp& curve);
 
 // swaps the states of point1 and point2, does not throw!
 // cf. Meyers, Item 25
