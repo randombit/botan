@@ -17,9 +17,6 @@ u32bit do_validation_tests(const std::string&,
 u32bit do_bigint_tests(const std::string&,
                        RandomNumberGenerator& rng);
 
-u32bit do_gfpmath_tests(RandomNumberGenerator& rng);
-
-
 u32bit do_pk_validation_tests(const std::string&,
                               RandomNumberGenerator&);
 

@@ -2,7 +2,6 @@ define BIGINT_GFP
 
 <header:public>
 curve_gfp.h
-gfp_element.h
 point_gfp.h
 </header:public>
 
