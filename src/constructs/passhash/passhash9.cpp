@@ -29,8 +29,16 @@ MessageAuthenticationCode* get_pbkdf_prf(byte alg_id)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
 
-   if(alg_id == 0)
-      return af.make_mac("HMAC(SHA-1)");
+   try
+      {
+      if(alg_id == 0)
+         return af.make_mac("HMAC(SHA-1)");
+
+      }
+   catch(Algorithm_Not_Found)
+      {
+      return 0;
+      }
 
    return 0;
    }
