@@ -61,10 +61,8 @@ X509_Encoder* GOST_3410_PublicKey::x509_encoder() const
             {
             key->affirm_init();
 
-            SecureVector<byte> params =
-               encode_der_ec_dompar(key->domain_parameters(), key->m_param_enc);
-
-            return AlgorithmIdentifier(key->get_oid(), params);
+            return AlgorithmIdentifier(key->get_oid(),
+                                       key->domain_parameters().DER_encode(key->m_param_enc));
             }
 
          MemoryVector<byte> key_bits() const
@@ -242,7 +240,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const EC_Domain_Params& dom_par,
    {
    mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_par));
    mp_public_point = std::auto_ptr<PointGFp>(new PointGFp(public_point));
-   m_param_enc = ENC_EXPLICIT;
+   m_param_enc = EC_DOMPAR_ENC_EXPLICIT;
    }
 
 void GOST_3410_PublicKey::X509_load_hook()

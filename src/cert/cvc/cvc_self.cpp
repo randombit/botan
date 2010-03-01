@@ -217,7 +217,7 @@ EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
    std::auto_ptr<Botan::PK_Signer> pk_signer(get_pk_signer(*priv_key, padding_and_hash));
    std::auto_ptr<Public_Key> pk = signee.subject_public_key();
    ECDSA_PublicKey*  subj_pk = dynamic_cast<ECDSA_PublicKey*>(pk.get());
-   subj_pk->set_parameter_encoding(ENC_EXPLICIT);
+   subj_pk->set_parameter_encoding(EC_DOMPAR_ENC_EXPLICIT);
 
 #if 0 // FIXME
    std::auto_ptr<EAC1_1_CVC_Encoder> enc(subj_pk->cvc_eac1_1_encoder());
@@ -263,7 +263,7 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
    // (we use those from the signer because they must fit)
    subj_pk->set_domain_parameters(priv_key->domain_parameters());
 
-   subj_pk->set_parameter_encoding(ENC_IMPLICITCA);
+   subj_pk->set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
 
 #if 0 // FIXME
    std::auto_ptr<EAC1_1_CVC_Encoder> enc(subj_pk->cvc_eac1_1_encoder());
@@ -322,7 +322,7 @@ EAC1_1_Req create_cvc_req(Private_Key const& prkey,
       throw Invalid_Argument("CVC_EAC::create_self_signed_cert(): unsupported key type");
       }
    ECDSA_PrivateKey key(*priv_key);
-   key.set_parameter_encoding(ENC_IMPLICITCA);
+   key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    return Botan::CVC_EAC::create_cvc_req(key, chr, hash_alg, rng);
    }
 

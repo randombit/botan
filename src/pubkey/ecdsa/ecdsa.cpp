@@ -135,7 +135,7 @@ ECDSA_PublicKey::ECDSA_PublicKey(const EC_Domain_Params& dom_par,
    {
    mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_par));
    mp_public_point = std::auto_ptr<PointGFp>(new PointGFp(public_point));
-   m_param_enc = ENC_EXPLICIT;
+   m_param_enc = EC_DOMPAR_ENC_EXPLICIT;
    m_ecdsa_core = ECDSA_Core(*mp_dom_pars, BigInt(0), *mp_public_point);
    }
 

@@ -71,10 +71,8 @@ X509_Encoder* EC_PublicKey::x509_encoder() const
             {
             key->affirm_init();
 
-            SecureVector<byte> params =
-               encode_der_ec_dompar(key->domain_parameters(), key->m_param_enc);
-
-            return AlgorithmIdentifier(key->get_oid(), params);
+            return AlgorithmIdentifier(key->get_oid(),
+                                       key->domain_parameters().DER_encode(key->m_param_enc));
             }
 
          MemoryVector<byte> key_bits() const
@@ -98,7 +96,7 @@ X509_Decoder* EC_PublicKey::x509_decoder()
       public:
          void alg_id(const AlgorithmIdentifier& alg_id)
             {
-            key->mp_dom_pars.reset(new EC_Domain_Params(decode_ber_ec_dompar(alg_id.parameters)));
+            key->mp_dom_pars.reset(new EC_Domain_Params(alg_id.parameters));
             }
 
          void key_bits(const MemoryRegion<byte>& bits)
@@ -119,19 +117,21 @@ X509_Decoder* EC_PublicKey::x509_decoder()
    return new EC_Key_Decoder(this);
    }
 
-void EC_PublicKey::set_parameter_encoding(EC_dompar_enc type)
+void EC_PublicKey::set_parameter_encoding(EC_Domain_Params_Encoding form)
    {
-   if((type != ENC_EXPLICIT) && (type != ENC_IMPLICITCA) && (type != ENC_OID))
-      throw Invalid_Argument("Invalid encoding type for EC-key object specified");
+   if(form != EC_DOMPAR_ENC_EXPLICIT &&
+      form != EC_DOMPAR_ENC_IMPLICITCA &&
+      form != EC_DOMPAR_ENC_OID)
+      throw Invalid_Argument("Invalid encoding form for EC-key object specified");
 
    affirm_init();
 
-   if((type == ENC_OID) && (mp_dom_pars->get_oid() == ""))
-      throw Invalid_Argument("Invalid encoding type ENC_OID specified for "
+   if((form == EC_DOMPAR_ENC_OID) && (mp_dom_pars->get_oid() == ""))
+      throw Invalid_Argument("Invalid encoding form OID specified for "
                              "EC-key object whose corresponding domain "
                              "parameters are without oid");
 
-   m_param_enc = type;
+   m_param_enc = form;
    }
 
 /*
@@ -182,10 +182,8 @@ PKCS8_Encoder* EC_PrivateKey::pkcs8_encoder() const
             {
             key->affirm_init();
 
-            SecureVector<byte> params =
-               encode_der_ec_dompar(key->domain_parameters(), ENC_EXPLICIT);
-
-            return AlgorithmIdentifier(key->get_oid(), params);
+            return AlgorithmIdentifier(key->get_oid(),
+                                       key->domain_parameters().DER_encode(EC_DOMPAR_ENC_EXPLICIT));
             }
 
          MemoryVector<byte> key_bits() const
@@ -220,7 +218,7 @@ PKCS8_Decoder* EC_PrivateKey::pkcs8_decoder(RandomNumberGenerator&)
       public:
          void alg_id(const AlgorithmIdentifier& alg_id)
             {
-            key->mp_dom_pars.reset(new EC_Domain_Params(decode_ber_ec_dompar(alg_id.parameters)));
+            key->mp_dom_pars.reset(new EC_Domain_Params(alg_id.parameters));
             }
 
          void key_bits(const MemoryRegion<byte>& bits)

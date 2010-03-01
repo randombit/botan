@@ -58,7 +58,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * Set the domain parameter encoding to be used when encoding this key.
       * @param enc the encoding to use
       */
-      void set_parameter_encoding(EC_dompar_enc enc);
+      void set_parameter_encoding(EC_Domain_Params_Encoding enc);
 
       /**
       * Get the domain parameter encoding to be used when encoding this key.
@@ -71,7 +71,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
 
       //ctors
       EC_PublicKey()
-         : m_param_enc(ENC_EXPLICIT)
+         : m_param_enc(EC_DOMPAR_ENC_EXPLICIT)
          {
          //assert(mp_dom_pars.get() == 0);
          //assert(mp_public_point.get() == 0);
@@ -104,7 +104,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
 
       std::auto_ptr<EC_Domain_Params> mp_dom_pars;
       std::auto_ptr<PointGFp> mp_public_point;
-      EC_dompar_enc m_param_enc;
+      EC_Domain_Params_Encoding m_param_enc;
    };
 
 /**

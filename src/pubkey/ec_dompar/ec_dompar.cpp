@@ -451,144 +451,101 @@ EC_Domain_Params get_ec_dompar(const std::string& oid)
 EC_Domain_Params get_EC_Dom_Pars_by_oid(std::string oid)
    {
    EC_Domain_Params result = get_ec_dompar(oid);
-   result.m_oid = oid;
+   result.oid = oid;
    return result;
    }
 
-EC_Domain_Params::EC_Domain_Params(const CurveGFp& curve, const PointGFp& base_point,
-                                   const BigInt& order, const BigInt& cofactor)
-   : m_curve(curve),
-     m_base_point(base_point),
-     m_order(order),
-     m_cofactor(cofactor),
-     m_oid("")
-   { }
-
-namespace {
-
-SecureVector<byte> encode_der_ec_dompar_explicit(const EC_Domain_Params& dom_pars)
+EC_Domain_Params::EC_Domain_Params(const MemoryRegion<byte>& ber_data)
    {
-   u32bit ecpVers1 = 1;
-   OID curve_type_oid("1.2.840.10045.1.1");
+   BER_Decoder ber(ber_data);
+   BER_Object obj = ber.get_next_object();
 
-   const u32bit p_bytes = dom_pars.get_curve().get_p().bytes();
-
-   return DER_Encoder()
-      .start_cons(SEQUENCE)
-         .encode(ecpVers1)
-         .start_cons(SEQUENCE)
-            .encode(curve_type_oid)
-            .encode(dom_pars.get_curve().get_p())
-         .end_cons()
-         .start_cons(SEQUENCE)
-            .encode(BigInt::encode_1363(dom_pars.get_curve().get_a(), p_bytes), OCTET_STRING)
-            .encode(BigInt::encode_1363(dom_pars.get_curve().get_b(), p_bytes), OCTET_STRING)
-         .end_cons()
-         .encode(EC2OSP ( dom_pars.get_base_point(), PointGFp::UNCOMPRESSED), OCTET_STRING)
-         .encode(dom_pars.get_order())
-         .encode(dom_pars.get_cofactor())
-      .end_cons()
-      .get_contents();
-   }
-
-EC_Domain_Params decode_ber_ec_dompar_explicit(const SecureVector<byte>& encoded)
-   {
-   BigInt ecpVers1(1);
-   OID curve_type_oid;
-   SecureVector<byte> sv_a;
-   SecureVector<byte> sv_b;
-   BigInt p;
-   SecureVector<byte> sv_base_point;
-   BigInt order;
-   BigInt cofactor;
-
-   BER_Decoder(encoded)
-      .start_cons(SEQUENCE)
-        .decode(ecpVers1)
-        .start_cons(SEQUENCE)
-          .decode(curve_type_oid)
-          .decode(p)
-        .end_cons()
-        .start_cons(SEQUENCE)
-          .decode(sv_a, OCTET_STRING)
-          .decode(sv_b, OCTET_STRING)
-        .end_cons()
-        .decode(sv_base_point, OCTET_STRING)
-        .decode(order)
-        .decode(cofactor)
-      .end_cons()
-      .verify_end();
-
-   if(ecpVers1 != 1)
-      throw Decoding_Error("wrong ecpVers");
-
-   // Set the domain parameters
-   if(curve_type_oid.as_string() != "1.2.840.10045.1.1") // NOTE: hardcoded: prime field type
-      {
-      throw Decoding_Error("wrong curve type oid where prime field was expected");
-      }
-
-   CurveGFp curve(p,
-                  BigInt::decode(sv_a, sv_a.size()),
-                  BigInt::decode(sv_b, sv_b.size()));
-
-   PointGFp G = OS2ECP ( sv_base_point, curve );
-   G.check_invariants();
-   return EC_Domain_Params(curve, G, order, cofactor);
-   }
-
-} // end anonymous namespace
-
-SecureVector<byte> encode_der_ec_dompar(const EC_Domain_Params& dom_pars, EC_dompar_enc enc_type)
-     {
-     SecureVector<byte> result;
-
-     if(enc_type == ENC_EXPLICIT)
-        {
-        result = encode_der_ec_dompar_explicit(dom_pars);
-        }
-     else if(enc_type == ENC_OID)
-        {
-        OID dom_par_oid(dom_pars.get_oid());
-        result = DER_Encoder().encode(dom_par_oid).get_contents();
-        }
-     else if(enc_type == ENC_IMPLICITCA)
-        {
-        result = DER_Encoder().encode_null().get_contents();
-        }
-     else
-        {
-        throw Internal_Error("encountered illegal value for ec parameter encoding type");
-        }
-     return result;
-     }
-
-EC_Domain_Params decode_ber_ec_dompar(const SecureVector<byte>& encoded)
-   {
-   BER_Decoder dec(encoded);
-   BER_Object obj = dec.get_next_object();
-
-   if(obj.type_tag == OBJECT_ID)
+   if(obj.type_tag == NULL_TAG)
+      throw Decoding_Error("Cannot handle ImplicitCA ECDSA parameters");
+   else if(obj.type_tag == OBJECT_ID)
       {
       OID dom_par_oid;
-      BER_Decoder(encoded).decode(dom_par_oid);
-      return EC_Domain_Params(get_ec_dompar(dom_par_oid.as_string()));
+      BER_Decoder(ber_data).decode(dom_par_oid);
+      *this = get_ec_dompar(dom_par_oid.as_string());
       }
    else if(obj.type_tag == SEQUENCE)
-      return EC_Domain_Params(decode_ber_ec_dompar_explicit(encoded));
-   else if(obj.type_tag == NULL_TAG)
-      throw Decoding_Error("cannot decode ECDSA parameters that are ImplicitCA");
+      {
+      BigInt ecpVers1(1);
+      OID curve_type;
+      SecureVector<byte> sv_a;
+      SecureVector<byte> sv_b;
+      BigInt p;
+      SecureVector<byte> sv_base_point;
 
-   throw Decoding_Error("encountered unexpected when trying to decode domain parameters");
+      BER_Decoder(ber_data)
+         .start_cons(SEQUENCE)
+           .decode(ecpVers1)
+           .start_cons(SEQUENCE)
+             .decode(curve_type)
+             .decode(p)
+           .end_cons()
+           .start_cons(SEQUENCE)
+             .decode(sv_a, OCTET_STRING)
+             .decode(sv_b, OCTET_STRING)
+           .end_cons()
+           .decode(sv_base_point, OCTET_STRING)
+           .decode(order)
+           .decode(cofactor)
+         .end_cons()
+         .verify_end();
+
+      if(ecpVers1 != 1)
+         throw Decoding_Error("EC_Domain_Params: Unknown version code");
+
+      // Only prime curves supported
+      if(curve_type.as_string() != "1.2.840.10045.1.1")
+         throw Decoding_Error("Unexpected curve type " + curve_type.as_string());
+
+      curve = CurveGFp(p,
+                       BigInt::decode(sv_a, sv_a.size()),
+                       BigInt::decode(sv_b, sv_b.size()));
+
+      base_point = OS2ECP(sv_base_point, curve);
+      base_point.check_invariants();
+      }
+   else
+      throw Decoding_Error("Unexpected tag while decoding ECC domain params");
    }
 
-bool operator==(const EC_Domain_Params& lhs, const EC_Domain_Params& rhs)
-   {
-   return ((lhs.get_curve() == rhs.get_curve()) &&
-           (lhs.get_base_point() == rhs.get_base_point()) &&
-           (lhs.get_order() == rhs.get_order()) &&
-           (lhs.get_cofactor() == rhs.get_cofactor()));
-   }
+SecureVector<byte>
+EC_Domain_Params::DER_encode(EC_Domain_Params_Encoding form) const
+     {
+     if(form == EC_DOMPAR_ENC_EXPLICIT)
+        {
+        u32bit ecpVers1 = 1;
+        OID curve_type("1.2.840.10045.1.1");
+
+        const u32bit p_bytes = curve.get_p().bytes();
+
+        return DER_Encoder()
+           .start_cons(SEQUENCE)
+              .encode(ecpVers1)
+              .start_cons(SEQUENCE)
+                 .encode(curve_type)
+                 .encode(curve.get_p())
+              .end_cons()
+              .start_cons(SEQUENCE)
+                 .encode(BigInt::encode_1363(curve.get_a(), p_bytes), OCTET_STRING)
+                 .encode(BigInt::encode_1363(curve.get_b(), p_bytes), OCTET_STRING)
+              .end_cons()
+              .encode(EC2OSP(base_point, PointGFp::UNCOMPRESSED), OCTET_STRING)
+              .encode(order)
+              .encode(cofactor)
+           .end_cons()
+           .get_contents();
+        }
+     else if(form == EC_DOMPAR_ENC_OID)
+        return DER_Encoder().encode(get_oid()).get_contents();
+     else if(form == EC_DOMPAR_ENC_IMPLICITCA)
+        return DER_Encoder().encode_null().get_contents();
+
+     throw Internal_Error("EC_Domain_Params::encode_DER: Unknown encoding");
+     }
 
 }
 

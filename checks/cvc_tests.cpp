@@ -93,7 +93,7 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
    // creating a non sense selfsigned cert w/o dom pars
    EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.11"));
    ECDSA_PrivateKey key(rng, dom_pars);
-   key.set_parameter_encoding(ENC_IMPLICITCA);
+   key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    EAC1_1_CVC cert = CVC_EAC::create_self_signed_cert(key, opts, rng);
 
    SecureVector<byte> der(cert.BER_encode());
@@ -169,7 +169,7 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
    // let´s see if encoding is truely implicitca, because this is what the key should have
    // been set to when decoding (see above)(because it has no domain params):
    //cout << "encoding = " << p_ecdsa_pk->get_parameter_encoding() << std::endl;
-   CHECK(p_ecdsa_pk->get_parameter_encoding() == ENC_IMPLICITCA);
+   CHECK(p_ecdsa_pk->get_parameter_encoding() == EC_DOMPAR_ENC_IMPLICITCA);
    bool exc = false;
    try
       {
@@ -203,7 +203,7 @@ void test_enc_gen_req(RandomNumberGenerator& rng)
    // creating a non sense selfsigned cert w/o dom pars
    EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
    ECDSA_PrivateKey key(rng, dom_pars);
-   key.set_parameter_encoding(ENC_IMPLICITCA);
+   key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    EAC1_1_Req req = CVC_EAC::create_cvc_req(key, opts.chr, opts.hash_alg, rng);
    SecureVector<byte> der(req.BER_encode());
    std::ofstream req_file(TEST_DATA_DIR "/my_cv_req.ber", std::ios::binary);
@@ -259,7 +259,7 @@ void test_cvc_ado_creation(RandomNumberGenerator& rng)
    EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.11"));
    //cout << "mod = " << hex << dom_pars.get_curve().get_p() << std::endl;
    ECDSA_PrivateKey req_key(rng, dom_pars);
-   req_key.set_parameter_encoding(ENC_IMPLICITCA);
+   req_key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    //EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts);
    EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts.chr, opts.hash_alg, rng);
    SecureVector<byte> der(req.BER_encode());
@@ -302,7 +302,7 @@ void test_cvc_ado_comparison(RandomNumberGenerator& rng)
    // creating a non sense selfsigned cert w/o dom pars
    EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.11"));
    ECDSA_PrivateKey req_key(rng, dom_pars);
-   req_key.set_parameter_encoding(ENC_IMPLICITCA);
+   req_key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    //EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts);
    EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts.chr, opts.hash_alg, rng);
 
@@ -321,7 +321,7 @@ void test_cvc_ado_comparison(RandomNumberGenerator& rng)
    opts2.chr = ASN1_Chr("my_opt_chr");
    opts2.hash_alg = "SHA-160"; // this is the only difference
    ECDSA_PrivateKey req_key2(rng, dom_pars);
-   req_key.set_parameter_encoding(ENC_IMPLICITCA);
+   req_key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    //EAC1_1_Req req2 = CVC_EAC::create_cvc_req(req_key2, opts2, rng);
    EAC1_1_Req req2 = CVC_EAC::create_cvc_req(req_key2, opts2.chr, opts2.hash_alg, rng);
    ECDSA_PrivateKey ado_key2(rng, dom_pars);
