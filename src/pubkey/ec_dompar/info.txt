@@ -5,4 +5,5 @@ asn1
 filters
 numbertheory
 hex
+pem
 </requires>

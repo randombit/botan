@@ -70,6 +70,12 @@ class BOTAN_DLL EC_Domain_Params
       SecureVector<byte> DER_encode(EC_Domain_Params_Encoding form) const;
 
       /**
+      * Return the PEM encoding (always in explicit form)
+      * @return string containing PEM data
+      */
+      std::string PEM_encode() const;
+
+      /**
       * Return domain parameter curve
       * @result domain parameter curve
       */

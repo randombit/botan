@@ -10,8 +10,9 @@
 #include <botan/ec_dompar.h>
 #include <botan/pubkey_enums.h>
 #include <botan/parsing.h>
-#include <botan/hex.h>
 #include <botan/pipe.h>
+#include <botan/hex.h>
+#include <botan/pem.h>
 
 namespace Botan {
 
@@ -506,38 +507,44 @@ EC_Domain_Params::EC_Domain_Params(const MemoryRegion<byte>& ber_data)
 
 SecureVector<byte>
 EC_Domain_Params::DER_encode(EC_Domain_Params_Encoding form) const
-     {
-     if(form == EC_DOMPAR_ENC_EXPLICIT)
-        {
-        u32bit ecpVers1 = 1;
-        OID curve_type("1.2.840.10045.1.1");
+   {
+   if(form == EC_DOMPAR_ENC_EXPLICIT)
+      {
+      u32bit ecpVers1 = 1;
+      OID curve_type("1.2.840.10045.1.1");
 
-        const u32bit p_bytes = curve.get_p().bytes();
+      const u32bit p_bytes = curve.get_p().bytes();
 
-        return DER_Encoder()
-           .start_cons(SEQUENCE)
-              .encode(ecpVers1)
-              .start_cons(SEQUENCE)
-                 .encode(curve_type)
-                 .encode(curve.get_p())
-              .end_cons()
-              .start_cons(SEQUENCE)
-                 .encode(BigInt::encode_1363(curve.get_a(), p_bytes), OCTET_STRING)
-                 .encode(BigInt::encode_1363(curve.get_b(), p_bytes), OCTET_STRING)
-              .end_cons()
-              .encode(EC2OSP(base_point, PointGFp::UNCOMPRESSED), OCTET_STRING)
-              .encode(order)
-              .encode(cofactor)
-           .end_cons()
-           .get_contents();
-        }
-     else if(form == EC_DOMPAR_ENC_OID)
-        return DER_Encoder().encode(get_oid()).get_contents();
-     else if(form == EC_DOMPAR_ENC_IMPLICITCA)
-        return DER_Encoder().encode_null().get_contents();
+      return DER_Encoder()
+         .start_cons(SEQUENCE)
+            .encode(ecpVers1)
+            .start_cons(SEQUENCE)
+               .encode(curve_type)
+               .encode(curve.get_p())
+            .end_cons()
+            .start_cons(SEQUENCE)
+               .encode(BigInt::encode_1363(curve.get_a(), p_bytes), OCTET_STRING)
+               .encode(BigInt::encode_1363(curve.get_b(), p_bytes), OCTET_STRING)
+            .end_cons()
+            .encode(EC2OSP(base_point, PointGFp::UNCOMPRESSED), OCTET_STRING)
+            .encode(order)
+            .encode(cofactor)
+         .end_cons()
+         .get_contents();
+      }
+   else if(form == EC_DOMPAR_ENC_OID)
+      return DER_Encoder().encode(get_oid()).get_contents();
+   else if(form == EC_DOMPAR_ENC_IMPLICITCA)
+      return DER_Encoder().encode_null().get_contents();
 
-     throw Internal_Error("EC_Domain_Params::encode_DER: Unknown encoding");
-     }
+   throw Internal_Error("EC_Domain_Params::encode_DER: Unknown encoding");
+   }
+
+std::string EC_Domain_Params::PEM_encode() const
+   {
+   SecureVector<byte> der = DER_encode(EC_DOMPAR_ENC_EXPLICIT);
+   return PEM_Code::encode(der, "ECC DOMAIN PARAMETERS");
+   }
 
 }
 
