@@ -33,12 +33,8 @@ MessageAuthenticationCode* get_pbkdf_prf(byte alg_id)
       {
       if(alg_id == 0)
          return af.make_mac("HMAC(SHA-1)");
-
       }
-   catch(Algorithm_Not_Found)
-      {
-      return 0;
-      }
+   catch(Algorithm_Not_Found) {}
 
    return 0;
    }
