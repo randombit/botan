@@ -41,6 +41,11 @@ class BOTAN_DLL PointGFp
       };
 
       /**
+      * Construct an uninitialized PointGFp
+      */
+      PointGFp() {}
+
+      /**
       * Construct the point O
       * @param curve The base curve
       */
