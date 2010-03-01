@@ -63,6 +63,12 @@ class BOTAN_DLL EC_Domain_Params
       EC_Domain_Params(const OID& oid);
 
       /**
+      * Create an EC domain from PEM encoding (as from PEM_encode)
+      * @param pem data
+      */
+      EC_Domain_Params(const std::string& pem);
+
+      /**
       * Create the DER encoding of this domain
       * @param form of encoding to use
       * @returns bytes encododed as DER

@@ -429,9 +429,9 @@ std::vector<std::string> get_standard_domain_parameter(const OID& oid)
 
 }
 
-EC_Domain_Params::EC_Domain_Params(const OID& oid)
+EC_Domain_Params::EC_Domain_Params(const OID& domain_oid)
    {
-   std::vector<std::string> dom_par = get_standard_domain_parameter(oid);
+   std::vector<std::string> dom_par = get_standard_domain_parameter(domain_oid);
 
    BigInt p(dom_par[0]); // give as 0x...
    BigInt a(dom_par[1]);
@@ -446,6 +446,15 @@ EC_Domain_Params::EC_Domain_Params(const OID& oid)
 
    curve = CurveGFp(p, a, b);
    base_point = OS2ECP(sv_g, curve);
+   oid = domain_oid.as_string();
+   }
+
+EC_Domain_Params::EC_Domain_Params(const std::string& pem)
+   {
+   DataSource_Memory input(pem);
+
+   *this = EC_Domain_Params(
+      PEM_Code::decode_check_label(input, "ECC DOMAIN PARAMETERS"));
    }
 
 EC_Domain_Params::EC_Domain_Params(const MemoryRegion<byte>& ber_data)
@@ -547,4 +556,3 @@ std::string EC_Domain_Params::PEM_encode() const
    }
 
 }
-
