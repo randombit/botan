@@ -102,9 +102,7 @@ X509_Decoder* GOST_3410_PublicKey::x509_decoder()
             BER_Decoder ber(alg_id.parameters);
             ber.start_cons(SEQUENCE).decode(ecc_param_id);
 
-            EC_Domain_Params ecc_params = get_EC_Dom_Pars_by_oid(ecc_param_id.as_string());
-
-            key->mp_dom_pars.reset(new EC_Domain_Params(ecc_params));
+            key->mp_dom_pars.reset(new EC_Domain_Params(ecc_param_id));
             }
 
          void key_bits(const MemoryRegion<byte>& bits)

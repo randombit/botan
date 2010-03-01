@@ -296,7 +296,8 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
 
    for(size_t j = 0; domains[j]; j++)
       {
-      EC_Domain_Params params = get_EC_Dom_Pars_by_oid(domains[j]);
+      OID oid(domains[j]);
+      EC_Domain_Params params(oid);
 
       u32bit pbits = params.get_curve().get_p().bits();
 
@@ -353,7 +354,8 @@ void benchmark_eckaeg(RandomNumberGenerator& rng,
 
    for(size_t j = 0; domains[j]; j++)
       {
-      EC_Domain_Params params = get_EC_Dom_Pars_by_oid(domains[j]);
+      OID oid(domains[j]);
+      EC_Domain_Params params(oid);
 
       u32bit pbits = params.get_curve().get_p().bits();
 

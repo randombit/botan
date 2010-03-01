@@ -17,13 +17,15 @@ namespace Botan {
 
 namespace {
 
-std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
+std::vector<std::string> get_standard_domain_parameter(const OID& oid)
    {
+   std::string oid_str = oid.as_string();
+
    // using a linear search here is pretty nasty... revisit
 
    /* SEC2 */
 
-   if(oid == "1.3.132.0.6")
+   if(oid_str == "1.3.132.0.6")
       {
       /* secp112r1; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -37,7 +39,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.132.0.7")
+   if(oid_str == "1.3.132.0.7")
       {
       /* secp112r2; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -51,7 +53,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.132.0.28")
+   if(oid_str == "1.3.132.0.28")
       {
       /* secp128r1; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -65,7 +67,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.132.0.29")
+   if(oid_str == "1.3.132.0.29")
       {
       /* secp128r2; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -79,7 +81,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.132.0.9")
+   if(oid_str == "1.3.132.0.9")
       {
       /* secp160k1; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -93,7 +95,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.132.0.30")
+   if(oid_str == "1.3.132.0.30")
       {
       /* secp160r2; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -107,7 +109,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.132.0.31")
+   if(oid_str == "1.3.132.0.31")
       {
       /* secp192k1; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -121,7 +123,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.132.0.32")
+   if(oid_str == "1.3.132.0.32")
       {
       /* secp224k1; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -135,7 +137,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.132.0.33")
+   if(oid_str == "1.3.132.0.33")
       {
       /* secp224r1; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -149,7 +151,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.132.0.10")
+   if(oid_str == "1.3.132.0.10")
       {
       /* secp256k1; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -163,7 +165,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.132.0.34")
+   if(oid_str == "1.3.132.0.34")
       {
       /* secp384r1; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -177,7 +179,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.132.0.35")
+   if(oid_str == "1.3.132.0.35")
       {
       /* secp521r1; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -193,7 +195,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
 
    /* NIS */
 
-   if(oid == "1.3.6.1.4.1.8301.3.1.2.9.0.38")
+   if(oid_str == "1.3.6.1.4.1.8301.3.1.2.9.0.38")
       {
       /* NIST curve P-521; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -209,7 +211,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
 
    /* BrainPool */
 
-   if(oid == "1.3.36.3.3.2.8.1.1.1")
+   if(oid_str == "1.3.36.3.3.2.8.1.1.1")
       {
       /* brainpoolP160r1; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -223,7 +225,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.36.3.3.2.8.1.1.3")
+   if(oid_str == "1.3.36.3.3.2.8.1.1.3")
       {
       /* brainpoolP192r1; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -237,7 +239,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.36.3.3.2.8.1.1.5")
+   if(oid_str == "1.3.36.3.3.2.8.1.1.5")
       {
       /* brainpoolP224r1; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -251,7 +253,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.36.3.3.2.8.1.1.7")
+   if(oid_str == "1.3.36.3.3.2.8.1.1.7")
       {
       /* brainpoolP256r1; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -265,7 +267,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.36.3.3.2.8.1.1.9")
+   if(oid_str == "1.3.36.3.3.2.8.1.1.9")
       {
       /* brainpoolP320r1; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -279,7 +281,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.36.3.3.2.8.1.1.11")
+   if(oid_str == "1.3.36.3.3.2.8.1.1.11")
       {
       /* brainpoolP384r1; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -293,7 +295,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.36.3.3.2.8.1.1.13")
+   if(oid_str == "1.3.36.3.3.2.8.1.1.13")
       {
       /* brainpoolP512r1; source: Flexiprovider */
       std::vector<std::string> dom_par;
@@ -307,7 +309,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.3.132.0.8")
+   if(oid_str == "1.3.132.0.8")
       {
       std::vector<std::string> dom_par;
       dom_par.push_back("0xffffffffffffffffffffffffffffffff7fffffff"); //p
@@ -319,7 +321,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.2.840.10045.3.1.1") // prime192v1 Flexiprovider
+   if(oid_str == "1.2.840.10045.3.1.1") // prime192v1 Flexiprovider
       {
       std::vector<std::string> dom_par;
       dom_par.push_back("0xfffffffffffffffffffffffffffffffeffffffffffffffff"); //p
@@ -332,7 +334,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       }
 
    /* prime192v2; source: Flexiprovider */
-   if(oid == "1.2.840.10045.3.1.2")
+   if(oid_str == "1.2.840.10045.3.1.2")
       {
       std::vector<std::string> dom_par;
       dom_par.push_back("0xfffffffffffffffffffffffffffffffeffffffffffffffff"); //p
@@ -345,7 +347,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       }
 
    /* prime192v3; source: Flexiprovider */
-   if(oid == "1.2.840.10045.3.1.3")
+   if(oid_str == "1.2.840.10045.3.1.3")
       {
       std::vector<std::string> dom_par;
       dom_par.push_back("0xfffffffffffffffffffffffffffffffeffffffffffffffff"); //p
@@ -358,7 +360,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       }
 
    /* prime239v1; source: Flexiprovider */
-   if(oid == "1.2.840.10045.3.1.4")
+   if(oid_str == "1.2.840.10045.3.1.4")
       {
       std::vector<std::string> dom_par;
       dom_par.push_back("0x7fffffffffffffffffffffff7fffffffffff8000000000007fffffffffff"); //p
@@ -371,7 +373,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       }
 
    /* prime239v2; source: Flexiprovider */
-   if(oid == "1.2.840.10045.3.1.5")
+   if(oid_str == "1.2.840.10045.3.1.5")
       {
       std::vector<std::string> dom_par;
       dom_par.push_back("0x7fffffffffffffffffffffff7fffffffffff8000000000007fffffffffff"); //p
@@ -384,7 +386,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       }
 
    /* prime239v3; source: Flexiprovider */
-   if(oid == "1.2.840.10045.3.1.6")
+   if(oid_str == "1.2.840.10045.3.1.6")
       {
       std::vector<std::string> dom_par;
       dom_par.push_back("0x7fffffffffffffffffffffff7fffffffffff8000000000007fffffffffff"); //p
@@ -397,7 +399,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       }
 
    /* prime256v1; source:    Flexiprovider */
-   if(oid == "1.2.840.10045.3.1.7")
+   if(oid_str == "1.2.840.10045.3.1.7")
       {
       std::vector<std::string> dom_par;
       dom_par.push_back("0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff"); //p
@@ -409,7 +411,7 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   if(oid == "1.2.643.2.2.35.1" || oid == "1.2.643.2.2.36.0") // GostR3410-2001-CryptoPro-A-ParamSet
+   if(oid_str == "1.2.643.2.2.35.1" || oid_str == "1.2.643.2.2.36.0") // GostR3410-2001-CryptoPro-A-ParamSet
       {
       std::vector<std::string> dom_par;
       dom_par.push_back("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD97");
@@ -421,38 +423,28 @@ std::vector<std::string> get_standard_domain_parameter(const std::string& oid)
       return dom_par;
       }
 
-   throw Invalid_Argument("No such ECC curve " + oid);
+   throw Invalid_Argument("No such ECC curve " + oid_str);
    }
 
-EC_Domain_Params get_ec_dompar(const std::string& oid)
+}
+
+EC_Domain_Params::EC_Domain_Params(const OID& oid)
    {
    std::vector<std::string> dom_par = get_standard_domain_parameter(oid);
 
    BigInt p(dom_par[0]); // give as 0x...
    BigInt a(dom_par[1]);
    BigInt b(dom_par[2]);
-   BigInt order(dom_par[4]);
-   BigInt cofactor(dom_par[5]);
 
    Pipe pipe(new Hex_Decoder);
    pipe.process_msg(dom_par[3]);
    SecureVector<byte> sv_g = pipe.read_all();
 
-   CurveGFp curve(p, a, b);
+   order = BigInt(dom_par[4]);
+   cofactor = BigInt(dom_par[5]);
 
-   PointGFp G = OS2ECP(sv_g, curve);
-   G.check_invariants();
-   EC_Domain_Params result(curve, G, order, cofactor);
-   return result;
-   }
-
-}
-
-EC_Domain_Params get_EC_Dom_Pars_by_oid(std::string oid)
-   {
-   EC_Domain_Params result = get_ec_dompar(oid);
-   result.oid = oid;
-   return result;
+   curve = CurveGFp(p, a, b);
+   base_point = OS2ECP(sv_g, curve);
    }
 
 EC_Domain_Params::EC_Domain_Params(const MemoryRegion<byte>& ber_data)
@@ -466,7 +458,7 @@ EC_Domain_Params::EC_Domain_Params(const MemoryRegion<byte>& ber_data)
       {
       OID dom_par_oid;
       BER_Decoder(ber_data).decode(dom_par_oid);
-      *this = get_ec_dompar(dom_par_oid.as_string());
+      *this = EC_Domain_Params(dom_par_oid);
       }
    else if(obj.type_tag == SEQUENCE)
       {

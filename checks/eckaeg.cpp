@@ -99,7 +99,9 @@ void test_eckaeg_some_dp(RandomNumberGenerator& rng)
    for(Botan::u32bit i = 0; i< oids.size(); i++)
       {
       std::cout << "." << std::flush;
-      Botan::EC_Domain_Params dom_pars(Botan::get_EC_Dom_Pars_by_oid(oids[i]));
+
+      Botan::OID oid(oids[i]);
+      Botan::EC_Domain_Params dom_pars(oid);
       Botan::ECKAEG_PrivateKey private_a(rng, dom_pars);
       Botan::ECKAEG_PublicKey public_a = private_a;
       /*auto_ptr<Botan::X509_Encoder> x509_key_enc = public_a.x509_encoder();
@@ -135,7 +137,8 @@ void test_eckaeg_der_derivation(RandomNumberGenerator& rng)
 
    for(Botan::u32bit i = 0; i< oids.size(); i++)
       {
-      Botan::EC_Domain_Params dom_pars(Botan::get_EC_Dom_Pars_by_oid(oids[i]));
+      Botan::OID oid(oids[i]);
+      Botan::EC_Domain_Params dom_pars(oid);
 
       Botan::ECKAEG_PrivateKey private_a(rng, dom_pars);
       Botan::ECKAEG_PublicKey public_a = private_a;

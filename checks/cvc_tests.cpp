@@ -91,7 +91,7 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
    opts.hash_alg = "SHA-256";
 
    // creating a non sense selfsigned cert w/o dom pars
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.11"));
+   EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.11"));
    ECDSA_PrivateKey key(rng, dom_pars);
    key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    EAC1_1_CVC cert = CVC_EAC::create_self_signed_cert(key, opts, rng);
@@ -201,7 +201,7 @@ void test_enc_gen_req(RandomNumberGenerator& rng)
    opts.hash_alg = "SHA-160";
 
    // creating a non sense selfsigned cert w/o dom pars
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
+   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
    ECDSA_PrivateKey key(rng, dom_pars);
    key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    EAC1_1_Req req = CVC_EAC::create_cvc_req(key, opts.chr, opts.hash_alg, rng);
@@ -226,7 +226,7 @@ void test_cvc_req_ext(RandomNumberGenerator&)
    std::cout << "." << std::flush;
 
    EAC1_1_Req req_in(TEST_DATA_DIR "/DE1_flen_chars_cvcRequest_ECDSA.der");
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.5")); // "german curve"
+   EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    //req_in.set_domain_parameters(dom_pars);
    std::auto_ptr<Public_Key> p_pk = req_in.subject_public_key();
    ECDSA_PublicKey* p_ecdsa_pk = dynamic_cast<ECDSA_PublicKey*>(p_pk.get());
@@ -241,7 +241,7 @@ void test_cvc_ado_ext(RandomNumberGenerator&)
    std::cout << "." << std::flush;
 
    EAC1_1_ADO req_in(TEST_DATA_DIR "/ado.cvcreq");
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.5")); // "german curve"
+   EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    //cout << "car = " << req_in.get_car().value() << std::endl;
    //req_in.set_domain_parameters(dom_pars);
    }
@@ -256,7 +256,7 @@ void test_cvc_ado_creation(RandomNumberGenerator& rng)
    opts.hash_alg = "SHA-256";
 
    // creating a non sense selfsigned cert w/o dom pars
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.11"));
+   EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.11"));
    //cout << "mod = " << hex << dom_pars.get_curve().get_p() << std::endl;
    ECDSA_PrivateKey req_key(rng, dom_pars);
    req_key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
@@ -300,7 +300,7 @@ void test_cvc_ado_comparison(RandomNumberGenerator& rng)
    opts.hash_alg = "SHA-224";
 
    // creating a non sense selfsigned cert w/o dom pars
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.11"));
+   EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.11"));
    ECDSA_PrivateKey req_key(rng, dom_pars);
    req_key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    //EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts);
@@ -421,14 +421,14 @@ void test_copy_and_assignment(RandomNumberGenerator&)
    CHECK(cert_in == cert_ass);
 
    EAC1_1_ADO ado_in(TEST_DATA_DIR "/ado.cvcreq");
-   //EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.5")); // "german curve"
+   //EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    EAC1_1_ADO ado_cp(ado_in);
    EAC1_1_ADO ado_ass = ado_in;
    CHECK(ado_in == ado_cp);
    CHECK(ado_in == ado_ass);
 
    EAC1_1_Req req_in(TEST_DATA_DIR "/DE1_flen_chars_cvcRequest_ECDSA.der");
-   //EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.5")); // "german curve"
+   //EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    EAC1_1_Req req_cp(req_in);
    EAC1_1_Req req_ass = req_in;
    CHECK(req_in == req_cp);
@@ -489,7 +489,7 @@ void test_cvc_chain(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.5")); // "german curve"
+   EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    ECDSA_PrivateKey cvca_privk(rng, dom_pars);
    std::string hash("SHA-224");
    ASN1_Car car("DECVCA00001");

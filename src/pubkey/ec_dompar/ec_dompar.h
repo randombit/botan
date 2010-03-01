@@ -31,6 +31,7 @@ enum EC_Domain_Params_Encoding {
 class BOTAN_DLL EC_Domain_Params
    {
    public:
+
       /**
       * Construct Domain paramers from specified parameters
       * @param curve elliptic curve
@@ -54,6 +55,12 @@ class BOTAN_DLL EC_Domain_Params
       * @param ber_encoding the bytes of the BER encoding
       */
       EC_Domain_Params(const MemoryRegion<byte>& ber_encoding);
+
+      /**
+      * Create an EC domain by OID (or throw if unknown)
+      * @param oid the OID of the EC domain to create
+      */
+      EC_Domain_Params(const OID& oid);
 
       /**
       * Create the DER encoding of this domain
@@ -114,16 +121,6 @@ inline bool operator!=(const EC_Domain_Params& lhs,
    {
    return !(lhs == rhs);
    }
-
-/**
-* Factory function, the only way to obtain EC domain parameters with
-* an OID.  The demanded OID has to be registered in the InSiTo
-* configuration. Consult the file ec_dompar.cpp for the default
-* configuration.
-* @param oid the oid of the demanded EC domain parameters
-* @result the EC domain parameters associated with the OID
-*/
-EC_Domain_Params BOTAN_DLL get_EC_Dom_Pars_by_oid(std::string oid);
 
 }
 
