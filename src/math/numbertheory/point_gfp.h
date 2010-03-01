@@ -162,9 +162,9 @@ class BOTAN_DLL PointGFp
       bool operator==(const PointGFp& other) const;
    private:
       /**
-      * Multiply the point by two
+      * Point doubling
       */
-      void mult2_in_place();
+      void mult2();
 
       CurveGFp curve;
       BigInt coord_x, coord_y, coord_z;

@@ -67,7 +67,7 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
       {
       if(r.is_zero())
          {
-         mult2_in_place();
+         mult2();
          return *this;
          }
 
@@ -119,7 +119,7 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
          }
       else if(value == 2)
          {
-         this->mult2_in_place();
+         this->mult2();
          if(scalar.is_negative())
             this->negate();
          }
@@ -135,7 +135,7 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
 
    for(int i = scalar.bits() - 1; i >= 0; --i)
       {
-      H.mult2_in_place();
+      H.mult2();
       if(scalar.get_bit(i))
          H += P;
       }
@@ -173,7 +173,7 @@ PointGFp& PointGFp::negate()
    }
 
 // *this *= 2
-void PointGFp::mult2_in_place()
+void PointGFp::mult2()
    {
    if(is_zero())
       return;
