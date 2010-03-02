@@ -6,7 +6,6 @@
 */
 
 #include <botan/cvc_cert.h>
-#include <botan/cvc_key.h>
 #include <botan/ecdsa.h>
 
 namespace Botan {
@@ -58,21 +57,11 @@ void EAC1_1_CVC::force_decode()
    if(cpi != 0)
       throw Decoding_Error("EAC1_1 certificate's cpi was not 0");
 
-   // FIXME: PK algos have no notion of EAC encoder/decoder currently
-#if 0
-   ECDSA_PublicKey tmp_pk;
-   std::auto_ptr<EAC1_1_CVC_Decoder> dec = tmp_pk.cvc_eac1_1_decoder();
-   sig_algo = dec->public_key(enc_pk);
+   m_pk = decode_eac1_1_key(enc_pk, sig_algo);
 
-
-   m_pk = tmp_pk;
    m_chat_val = enc_chat_val[0];
-   self_signed = false;
-   if(m_car.iso_8859() == m_chr.iso_8859())
-      {
-      self_signed= true;
-      }
-#endif
+
+   self_signed = (m_car.iso_8859() == m_chr.iso_8859());
    }
 
 /*
@@ -97,6 +86,12 @@ bool EAC1_1_CVC::operator==(EAC1_1_CVC const& rhs) const
    {
    return (tbs_data() == rhs.tbs_data()
            && get_concat_sig() == rhs.get_concat_sig());
+   }
+
+ECDSA_PublicKey decode_eac1_1_key(const MemoryRegion<byte>& enc_key,
+                                  AlgorithmIdentifier& sig_algo)
+   {
+   throw Internal_Error("decode_eac1_1_key: Unimplemented");
    }
 
 EAC1_1_CVC make_cvc_cert(PK_Signer& signer,

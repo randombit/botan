@@ -106,15 +106,12 @@ EAC1_1_CVC create_self_signed_cert(Private_Key const& key,
                                    EAC1_1_CVC_Options const& opt,
                                    RandomNumberGenerator& rng)
    {
-   // NOTE: we ignore
-   // the value
-   // of opt.chr
-   ECDSA_PrivateKey const* priv_key = dynamic_cast<ECDSA_PrivateKey const*>(&key);
+   // NOTE: we ignore the value of opt.chr
 
-   if (priv_key == 0)
-      {
+   const ECDSA_PrivateKey* priv_key = dynamic_cast<const ECDSA_PrivateKey*>(&key);
+
+   if(priv_key == 0)
       throw Invalid_Argument("CVC_EAC::create_self_signed_cert(): unsupported key type");
-      }
 
    ASN1_Chr chr(opt.car.value());
 

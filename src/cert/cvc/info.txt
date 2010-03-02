@@ -6,7 +6,6 @@ load_on auto
 cvc_ado.h
 cvc_cert.h
 cvc_gen_cert.h
-cvc_key.h
 cvc_req.h
 cvc_self.h
 eac_asn_obj.h

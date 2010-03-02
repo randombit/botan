@@ -1,6 +1,7 @@
 /*
 * EAC1_1 CVC Request
 * (C) 2008 Falko Strenzke
+*     2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -18,7 +19,6 @@ namespace Botan {
 class BOTAN_DLL EAC1_1_Req : public EAC1_1_gen_CVC<EAC1_1_Req>
    {
    public:
-      friend class EAC1_1_Req_CA;
       friend class EAC1_1_ADO;
       friend class EAC1_1_obj<EAC1_1_Req>;
 

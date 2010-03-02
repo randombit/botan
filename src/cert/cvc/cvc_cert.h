@@ -94,13 +94,19 @@ inline bool operator!=(EAC1_1_CVC const& lhs, EAC1_1_CVC const& rhs)
 * @param ced the CEX to appear in the certificate
 */
 EAC1_1_CVC BOTAN_DLL make_cvc_cert(PK_Signer& signer,
-                                   MemoryRegion<byte> const& public_key,
+                                   const MemoryRegion<byte>& public_key,
                                    ASN1_Car const& car,
                                    ASN1_Chr const& chr,
                                    byte holder_auth_templ,
                                    ASN1_Ced ced,
                                    ASN1_Cex cex,
                                    RandomNumberGenerator& rng);
+
+/**
+* Decode an EAC encoding ECDSA key
+*/
+ECDSA_PublicKey BOTAN_DLL decode_eac1_1_key(const MemoryRegion<byte>& enc_key,
+                                            AlgorithmIdentifier& sig_algo);
 
 }
 
