@@ -6,17 +6,15 @@ PYTHON_SITE_PACKAGE_DIR = /usr/lib/python%{python_version}/site-packages/
 
 PYTHON_FLAGS = -Isrc/wrap/python -Os -fPIC -ftemplate-depth-255 -Wall -Wno-unused $(PYTHON_INC)
 
-PYTHON_OBJS   = %{python_objs}
+BOTAN_PYTHON_MODDIR = %{python_obj_dir}
 
-BOTAN_PYTHON_MODDIR = build/botan-python
+PYTHON_OBJS   = %{python_objs}
 
 all: $(BOTAN_PYTHON_MODDIR)/_botan.so
 
 %{python_build_cmds}
 
 $(BOTAN_PYTHON_MODDIR)/_botan.so: $(PYTHON_OBJS)
-	rm -rf $(BOTAN_PYTHON_MODDIR)
-	mkdir $(BOTAN_PYTHON_MODDIR)
 	cp src/wrap/python/*.py $(BOTAN_PYTHON_MODDIR)
 	$(CXX) -shared -o $@ $(PYTHON_OBJS) -L. -L$(PYTHON_ROOT) -lbotan -lboost_python -Wl,-rpath-link,. -Wl,-soname,$@
 
@@ -25,5 +23,5 @@ clean:
 
 install:
 	mkdir -p $(PYTHON_SITE_PACKAGE_DIR)/botan
-	cp $(BOTAN_PYTHON_MODDIR)/* $(PYTHON_SITE_PACKAGE_DIR)/botan
+	cp $(BOTAN_PYTHON_MODDIR)/_botan.so $(BOTAN_PYTHON_MODDIR)/*.py $(PYTHON_SITE_PACKAGE_DIR)/botan
 	chmod -R u=rwX,go=rX $(PYTHON_SITE_PACKAGE_DIR)/botan

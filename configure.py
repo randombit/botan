@@ -986,6 +986,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             build_commands(build_config.check_sources,
                            build_config.checkobj_dir, 'CHECK')),
 
+        'python_obj_dir': build_config.pyobject_dir,
+
         'python_objs': makefile_list(
             objectfile_list(build_config.python_sources,
                             build_config.pyobject_dir)),
