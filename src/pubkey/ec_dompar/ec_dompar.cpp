@@ -25,14 +25,18 @@ EC_Domain_Params::EC_Domain_Params(const OID& domain_oid)
       throw Lookup_Error("No ECC domain data for " + domain_oid.as_string());
 
    *this = EC_Domain_Params(pem);
+   oid = domain_oid.as_string();
    }
 
 EC_Domain_Params::EC_Domain_Params(const std::string& pem)
    {
-   DataSource_Memory input(pem);
+   if(pem != "")
+      {
+      DataSource_Memory input(pem);
 
-   *this = EC_Domain_Params(
-      PEM_Code::decode_check_label(input, "ECC DOMAIN PARAMETERS"));
+      *this = EC_Domain_Params(
+         PEM_Code::decode_check_label(input, "ECC DOMAIN PARAMETERS"));
+      }
    }
 
 EC_Domain_Params::EC_Domain_Params(const MemoryRegion<byte>& ber_data)
@@ -110,8 +114,10 @@ EC_Domain_Params::DER_encode(EC_Domain_Params_Encoding form) const
                .encode(curve.get_p())
             .end_cons()
             .start_cons(SEQUENCE)
-               .encode(BigInt::encode_1363(curve.get_a(), p_bytes), OCTET_STRING)
-               .encode(BigInt::encode_1363(curve.get_b(), p_bytes), OCTET_STRING)
+               .encode(BigInt::encode_1363(curve.get_a(), p_bytes),
+                       OCTET_STRING)
+               .encode(BigInt::encode_1363(curve.get_b(), p_bytes),
+                       OCTET_STRING)
             .end_cons()
             .encode(EC2OSP(base_point, PointGFp::UNCOMPRESSED), OCTET_STRING)
             .encode(order)
