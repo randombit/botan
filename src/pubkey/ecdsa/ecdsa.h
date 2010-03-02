@@ -2,7 +2,7 @@
 * ECDSA
 * (C) 2007 Falko Strenzke, FlexSecure GmbH
 *          Manuel Hartl, FlexSecure GmbH
-* (C) 2008 Jack Lloyd
+* (C) 2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -32,15 +32,14 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey,
       /**
       * Get the maximum number of bits allowed to be fed to this key.
       * This is the bitlength of the order of the base point.
-
       * @result the maximum number of input bits
       */
-      u32bit max_input_bits() const;
+      u32bit max_input_bits() const { return domain().get_order().bits(); }
 
       u32bit message_parts() const { return 2; }
 
       u32bit message_part_size() const
-         { return mp_dom_pars->get_order().bytes(); }
+         { return domain().get_order().bytes(); }
 
       /**
       * Verify a message with this key.
@@ -66,21 +65,10 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey,
       ECDSA_PublicKey(const EC_Domain_Params& dom_par,
                       const PointGFp& public_point); // sets core
 
-      ECDSA_PublicKey const& operator=(const ECDSA_PublicKey& rhs);
-
-      ECDSA_PublicKey(const ECDSA_PublicKey& other);
-
-      /**
-      * Ensure that the public point and domain parameters of this key are set.
-      * @throw Invalid_State if either of the two data members is not set
-      */
-      virtual void affirm_init() const;
-
    protected:
       void X509_load_hook();
-      void set_all_values(const ECDSA_PublicKey& other);
 
-      ECDSA_Core m_ecdsa_core;
+      ECDSA_Core ecdsa_core;
    };
 
 /**
@@ -91,8 +79,6 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
                                    public PK_Signing_Key
    {
    public:
-      //ctors
-
       /**
       * Default constructor. Use this one if you want to later fill
       * this object with data from an encoded key.
@@ -113,9 +99,6 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       */
       ECDSA_PrivateKey(const EC_Domain_Params& domain, const BigInt& x);
 
-      ECDSA_PrivateKey(const ECDSA_PrivateKey& other);
-      ECDSA_PrivateKey const& operator=(const ECDSA_PrivateKey& rhs);
-
       /**
       * Sign a message with this key.
       * @param message the byte array representing the message to be signed
@@ -126,16 +109,7 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       SecureVector<byte> sign(const byte message[], u32bit mess_len,
                               RandomNumberGenerator& rng) const;
 
-      /**
-      * Make sure that the public key parts of this object are set
-      * (calls EC_PublicKey::affirm_init()) as well as the private key
-      * value.
-      * @throw Invalid_State if the above conditions are not satisfied
-      */
-      virtual void affirm_init() const;
-
    private:
-      void set_all_values(const ECDSA_PrivateKey& other);
       void PKCS8_load_hook(bool = false);
    };
 

@@ -1,6 +1,6 @@
 /*
 * ECKAEG Core
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 * (C) 2007 FlexSecure GmbH
 *
 * Distributed under the terms of the Botan license
@@ -52,7 +52,8 @@ ECKAEG_Core& ECKAEG_Core::operator=(const ECKAEG_Core& core)
 */
 SecureVector<byte> ECKAEG_Core::agree(const PointGFp& otherKey) const
    {
-   //assert(op.get());
+   if(op == 0)
+      throw Invalid_State("ECKAEG_Core: uninitialized");
    return op->agree(otherKey);
    }
 

@@ -169,11 +169,11 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
    // let´s see if encoding is truely implicitca, because this is what the key should have
    // been set to when decoding (see above)(because it has no domain params):
    //cout << "encoding = " << p_ecdsa_pk->get_parameter_encoding() << std::endl;
-   CHECK(p_ecdsa_pk->get_parameter_encoding() == EC_DOMPAR_ENC_IMPLICITCA);
+   CHECK(p_ecdsa_pk->domain_format() == EC_DOMPAR_ENC_IMPLICITCA);
    bool exc = false;
    try
       {
-      std::cout << "order = " << p_ecdsa_pk->domain_parameters().get_order() << std::endl;
+      std::cout << "order = " << p_ecdsa_pk->domain().get_order() << std::endl;
       }
    catch (Invalid_State)
       {
@@ -185,7 +185,7 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
    std::auto_ptr<Public_Key> p_pk2 = cert_in.subject_public_key();
    ECDSA_PublicKey* p_ecdsa_pk2 = dynamic_cast<ECDSA_PublicKey*>(p_pk2.get());
    //p_ecdsa_pk2->set_domain_parameters(dom_pars);
-   CHECK(p_ecdsa_pk2->domain_parameters().get_order() == dom_pars.get_order());
+   CHECK(p_ecdsa_pk2->domain().get_order() == dom_pars.get_order());
    bool ver_ec = cert_in.check_signature(*p_pk2);
    CHECK_MESSAGE(ver_ec, "could not positively verify correct selfsigned cvc certificate");
    }
@@ -216,7 +216,7 @@ void test_enc_gen_req(RandomNumberGenerator& rng)
    std::auto_ptr<Public_Key> p_pk = req_in.subject_public_key();
    ECDSA_PublicKey* p_ecdsa_pk = dynamic_cast<ECDSA_PublicKey*>(p_pk.get());
    //p_ecdsa_pk->set_domain_parameters(dom_pars);
-   CHECK(p_ecdsa_pk->domain_parameters().get_order() == dom_pars.get_order());
+   CHECK(p_ecdsa_pk->domain().get_order() == dom_pars.get_order());
    bool ver_ec = req_in.check_signature(*p_pk);
    CHECK_MESSAGE(ver_ec, "could not positively verify correct selfsigned (created by myself) cvc request");
    }
@@ -231,7 +231,7 @@ void test_cvc_req_ext(RandomNumberGenerator&)
    std::auto_ptr<Public_Key> p_pk = req_in.subject_public_key();
    ECDSA_PublicKey* p_ecdsa_pk = dynamic_cast<ECDSA_PublicKey*>(p_pk.get());
    //p_ecdsa_pk->set_domain_parameters(dom_pars);
-   CHECK(p_ecdsa_pk->domain_parameters().get_order() == dom_pars.get_order());
+   CHECK(p_ecdsa_pk->domain().get_order() == dom_pars.get_order());
    bool ver_ec = req_in.check_signature(*p_pk);
    CHECK_MESSAGE(ver_ec, "could not positively verify correct selfsigned (external testdata) cvc request");
    }
@@ -401,7 +401,7 @@ void test_ver_cvca(RandomNumberGenerator&)
 
    try
       {
-      p_ecdsa_pk2->domain_parameters().get_order();
+      p_ecdsa_pk2->domain().get_order();
       }
    catch (Invalid_State)
       {

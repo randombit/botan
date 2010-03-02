@@ -19,32 +19,21 @@ namespace Botan {
 GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng,
                                            const EC_Domain_Params& dom_pars)
    {
-   mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_pars));
+   domain_params = dom_pars;
    generate_private_key(rng);
-
-   try
-      {
-      mp_public_point->check_invariants();
-      }
-   catch(Illegal_Point& e)
-      {
-      throw Invalid_State("GOST_3410 key generation failed");
-      }
    }
 
-GOST_3410_PrivateKey::GOST_3410_PrivateKey(const EC_Domain_Params& domain,
+GOST_3410_PrivateKey::GOST_3410_PrivateKey(const EC_Domain_Params& dom_pars,
                                            const BigInt& x)
    {
-   mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(domain));
+   domain_params = dom_pars;
 
-   m_private_value = x;
-   mp_public_point = std::auto_ptr<PointGFp>(new PointGFp (mp_dom_pars->get_base_point()));
-
-   *mp_public_point *= m_private_value;
+   private_key = x;
+   public_key = domain().get_base_point() * private_key;
 
    try
       {
-      mp_public_point->check_invariants();
+      public_key.check_invariants();
       }
    catch(Illegal_Point)
       {
@@ -59,19 +48,15 @@ X509_Encoder* GOST_3410_PublicKey::x509_encoder() const
       public:
          AlgorithmIdentifier alg_id() const
             {
-            key->affirm_init();
-
             return AlgorithmIdentifier(key->get_oid(),
-                                       key->domain_parameters().DER_encode(key->m_param_enc));
+                                       key->domain().DER_encode(key->domain_format()));
             }
 
          MemoryVector<byte> key_bits() const
             {
-            key->affirm_init();
-
             // Trust CryptoPro to come up with something obnoxious
-            const BigInt x = key->mp_public_point->get_affine_x();
-            const BigInt y = key->mp_public_point->get_affine_y();
+            const BigInt x = key->public_point().get_affine_x();
+            const BigInt y = key->public_point().get_affine_y();
 
             SecureVector<byte> bits(2*std::max(x.bytes(), y.bytes()));
 
@@ -102,7 +87,7 @@ X509_Decoder* GOST_3410_PublicKey::x509_decoder()
             BER_Decoder ber(alg_id.parameters);
             ber.start_cons(SEQUENCE).decode(ecc_param_id);
 
-            key->mp_dom_pars.reset(new EC_Domain_Params(ecc_param_id));
+            key->domain_params = EC_Domain_Params(ecc_param_id);
             }
 
          void key_bits(const MemoryRegion<byte>& bits)
@@ -117,11 +102,9 @@ X509_Decoder* GOST_3410_PublicKey::x509_decoder()
             BigInt y(key_bits, part_size);
             BigInt x(key_bits + part_size, part_size);
 
-            const BigInt p = key->domain_parameters().get_curve().get_p();
+            const BigInt p = key->domain().get_curve().get_p();
 
-            key->mp_public_point.reset(
-               new PointGFp(key->domain_parameters().get_curve(),
-                            x, y));
+            key->public_key = PointGFp(key->domain().get_curve(), x, y);
 
             key->X509_load_hook();
             }
@@ -134,51 +117,16 @@ X509_Decoder* GOST_3410_PublicKey::x509_decoder()
    return new GOST_3410_Key_Decoder(this);
    }
 
-/*
-* GOST_3410_PublicKey
-*/
-void GOST_3410_PublicKey::affirm_init() const // virtual
-   {
-   EC_PublicKey::affirm_init();
-   }
-
-void GOST_3410_PublicKey::set_all_values(const GOST_3410_PublicKey& other)
-   {
-   m_param_enc = other.m_param_enc;
-
-   if(other.mp_dom_pars.get())
-      mp_dom_pars.reset(new EC_Domain_Params(other.domain_parameters()));
-
-   if(other.mp_public_point.get())
-      mp_public_point.reset(new PointGFp(other.public_point()));
-   }
-
-GOST_3410_PublicKey::GOST_3410_PublicKey(const GOST_3410_PublicKey& other)
-   : Public_Key(),
-     EC_PublicKey(),
-     PK_Verifying_wo_MR_Key()
-   {
-   set_all_values(other);
-   }
-
-const GOST_3410_PublicKey& GOST_3410_PublicKey::operator=(const GOST_3410_PublicKey& rhs)
-   {
-   set_all_values(rhs);
-   return *this;
-   }
-
 bool GOST_3410_PublicKey::verify(const byte msg[], u32bit msg_len,
                                  const byte sig[], u32bit sig_len) const
    {
-   affirm_init();
-
-   const BigInt& n = mp_dom_pars->get_order();
+   const BigInt& n = domain().get_order();
 
    if(sig_len != n.bytes()*2)
       return false;
 
    // NOTE: it is not checked whether the public point is set
-   if(mp_dom_pars->get_curve().get_p() == 0)
+   if(domain().get_curve().get_p() == 0)
       throw Internal_Error("domain parameters not set");
 
    BigInt e(msg, msg_len);
@@ -198,75 +146,17 @@ bool GOST_3410_PublicKey::verify(const byte msg[], u32bit msg_len,
    BigInt z1 = (s*v) % n;
    BigInt z2 = (-r*v) % n;
 
-   PointGFp R = (z1 * mp_dom_pars->get_base_point() + z2 * *mp_public_point);
+   PointGFp R = (z1 * domain().get_base_point() + z2 * public_point());
 
    return (R.get_affine_x() == r);
    }
 
 GOST_3410_PublicKey::GOST_3410_PublicKey(const EC_Domain_Params& dom_par,
-                                 const PointGFp& public_point)
+                                         const PointGFp& pub_point)
    {
-   mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_par));
-   mp_public_point = std::auto_ptr<PointGFp>(new PointGFp(public_point));
-   m_param_enc = EC_DOMPAR_ENC_EXPLICIT;
-   }
-
-void GOST_3410_PublicKey::X509_load_hook()
-   {
-   EC_PublicKey::X509_load_hook();
-   EC_PublicKey::affirm_init();
-   }
-
-u32bit GOST_3410_PublicKey::max_input_bits() const
-   {
-   if(!mp_dom_pars.get())
-      {
-      throw Invalid_State("GOST_3410_PublicKey::max_input_bits(): domain parameters not set");
-      }
-   return mp_dom_pars->get_order().bits();
-   }
-
-/*************************
-* GOST_3410_PrivateKey
-*************************/
-void GOST_3410_PrivateKey::affirm_init() const // virtual
-   {
-   EC_PrivateKey::affirm_init();
-   }
-
-void GOST_3410_PrivateKey::PKCS8_load_hook(bool generated)
-   {
-   EC_PrivateKey::PKCS8_load_hook(generated);
-   EC_PrivateKey::affirm_init();
-   }
-
-void GOST_3410_PrivateKey::set_all_values(const GOST_3410_PrivateKey& other)
-   {
-   m_private_value = other.m_private_value;
-   m_param_enc = other.m_param_enc;
-
-   if(other.mp_dom_pars.get())
-      mp_dom_pars.reset(new EC_Domain_Params(other.domain_parameters()));
-
-   if(other.mp_public_point.get())
-      mp_public_point.reset(new PointGFp(other.public_point()));
-   }
-
-GOST_3410_PrivateKey::GOST_3410_PrivateKey(GOST_3410_PrivateKey const& other)
-   : Public_Key(),
-     EC_PublicKey(),
-     Private_Key(),
-     GOST_3410_PublicKey(),
-     EC_PrivateKey(),
-     PK_Signing_Key()
-   {
-   set_all_values(other);
-   }
-
-const GOST_3410_PrivateKey& GOST_3410_PrivateKey::operator=(const GOST_3410_PrivateKey& rhs)
-   {
-   set_all_values(rhs);
-   return *this;
+   domain_params = dom_par;
+   public_key = pub_point;
+   domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
    }
 
 SecureVector<byte>
@@ -274,16 +164,14 @@ GOST_3410_PrivateKey::sign(const byte msg[],
                            u32bit msg_len,
                            RandomNumberGenerator& rng) const
    {
-   affirm_init();
-
-   const BigInt& n = mp_dom_pars->get_order();
+   const BigInt& n = domain().get_order();
 
    BigInt k;
    do
       k.randomize(rng, n.bits()-1);
    while(k >= n);
 
-   if(m_private_value == 0)
+   if(private_value() == 0)
       throw Internal_Error("GOST_3410::sign(): no private key");
 
    if(n == 0)
@@ -295,7 +183,7 @@ GOST_3410_PrivateKey::sign(const byte msg[],
    if(e == 0)
       e = 1;
 
-   PointGFp k_times_P = mp_dom_pars->get_base_point() * k;
+   PointGFp k_times_P = domain().get_base_point() * k;
    k_times_P.check_invariants();
 
    BigInt r = k_times_P.get_affine_x() % n;
@@ -303,7 +191,7 @@ GOST_3410_PrivateKey::sign(const byte msg[],
    if(r == 0)
       throw Internal_Error("GOST_3410::sign: r was zero");
 
-   BigInt s = (r*m_private_value + k*e) % n;
+   BigInt s = (r*private_value() + k*e) % n;
 
    SecureVector<byte> output(2*n.bytes());
    r.binary_encode(output + (output.size() / 2 - r.bytes()));

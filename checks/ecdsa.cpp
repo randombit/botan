@@ -491,8 +491,7 @@ void test_non_init_ecdsa_keys(RandomNumberGenerator& rng)
    std::cout << "." << std::flush;
 
    std::auto_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(TEST_DATA_DIR "/wo_dompar_private.pkcs8.pem", rng));
-   //ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<ECDSA_PrivateKey*>(loaded_key.get());
-   //CHECK_MESSAGE(loaded_ec_key, "the loaded key could not be converted into an ECDSA_PrivateKey");
+
    std::string str_message = ("12345678901234567890abcdef12");
    ECDSA_PrivateKey empty_priv;
    ECDSA_PublicKey empty_pub;

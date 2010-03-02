@@ -2,7 +2,7 @@
 * ECDSA
 * (C) 2007 Falko Strenzke, FlexSecure GmbH
 *          Manuel Hartl, FlexSecure GmbH
-* (C) 2008 Jack Lloyd
+* (C) 2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -33,18 +33,12 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
    public:
 
       /**
-      * Tells whether this key knows his own domain parameters.
-      * @result true if the domain parameters are set, false otherwise
-      */
-      bool domain_parameters_set();
-
-      /**
       * Get the public point of this key.
       * @throw Invalid_State is thrown if the
       * domain parameters of this point are not set
       * @result the public point of this key
       */
-      const PointGFp& public_point() const;
+      const PointGFp& public_point() const { return public_key; }
 
       /**
       * Get the domain parameters of this key.
@@ -52,7 +46,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * domain parameters of this point are not set
       * @result the domain parameters of this key
       */
-      const EC_Domain_Params& domain_parameters() const;
+      const EC_Domain_Params& domain() const { return domain_params; }
 
       /**
       * Set the domain parameter encoding to be used when encoding this key.
@@ -64,18 +58,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * Get the domain parameter encoding to be used when encoding this key.
       * @result the encoding to use
       */
-      inline int get_parameter_encoding() const
-         {
-         return m_param_enc;
-         }
-
-      //ctors
-      EC_PublicKey()
-         : m_param_enc(EC_DOMPAR_ENC_EXPLICIT)
-         {
-         //assert(mp_dom_pars.get() == 0);
-         //assert(mp_public_point.get() == 0);
-         }
+      EC_Domain_Params_Encoding domain_format() const { return domain_encoding; }
 
       /**
       * Get an x509_encoder that can be used to encode this key.
@@ -90,19 +73,14 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       */
       X509_Decoder* x509_decoder();
 
-      /**
-      * Make sure that the public point and domain parameters of this key are set.
-      * @throw Invalid_State if either of the two data members is not set
-      */
-      virtual void affirm_init() const;
-
+      EC_PublicKey() : domain_encoding(EC_DOMPAR_ENC_EXPLICIT) {}
       virtual ~EC_PublicKey() {}
    protected:
       virtual void X509_load_hook();
 
-      std::auto_ptr<EC_Domain_Params> mp_dom_pars;
-      std::auto_ptr<PointGFp> mp_public_point;
-      EC_Domain_Params_Encoding m_param_enc;
+      EC_Domain_Params domain_params;
+      PointGFp public_key;
+      EC_Domain_Params_Encoding domain_encoding;
    };
 
 /**
@@ -131,19 +109,13 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey, public virtual Priv
       */
       const BigInt& private_value() const;
 
-      /**
-      * Make sure that the public key parts of this object are set
-      * (calls EC_PublicKey::affirm_init()) as well as the private key
-      * value.
-      * @throw Invalid_State if the above conditions are not satisfied
-      */
-      virtual void affirm_init() const;
-
       virtual ~EC_PrivateKey() {}
    protected:
       virtual void PKCS8_load_hook(bool = false);
+
       void generate_private_key(RandomNumberGenerator&);
-      BigInt m_private_value;
+
+      BigInt private_key;
    };
 
 }

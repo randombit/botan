@@ -102,6 +102,8 @@ class BOTAN_DLL EC_Domain_Params
       */
       const BigInt& get_cofactor() const { return cofactor; }
 
+      bool initialized() const { return !base_point.is_zero(); }
+
       /**
       * Return the OID of these domain parameters
       * @result the OID

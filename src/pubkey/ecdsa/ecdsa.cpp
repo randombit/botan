@@ -2,185 +2,91 @@
 * ECDSA implemenation
 * (C) 2007 Manuel Hartl, FlexSecure GmbH
 *     2007 Falko Strenzke, FlexSecure GmbH
-*     2008 Jack Lloyd
+*     2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/ecdsa.h>
-#include <botan/numthry.h>
-#include <botan/der_enc.h>
-#include <botan/ber_dec.h>
-#include <botan/secmem.h>
-#include <botan/point_gfp.h>
+
+#include <assert.h>
 
 namespace Botan {
 
 ECDSA_PrivateKey::ECDSA_PrivateKey(RandomNumberGenerator& rng,
                                    const EC_Domain_Params& dom_pars)
    {
-   mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_pars));
+   domain_params = dom_pars;
    generate_private_key(rng);
 
-   try
-      {
-      mp_public_point->check_invariants();
-      }
-   catch(Illegal_Point& e)
-      {
-      throw Invalid_State("ECDSA key generation failed");
-      }
-
-   m_ecdsa_core = ECDSA_Core(*mp_dom_pars, m_private_value, *mp_public_point);
+   ecdsa_core = ECDSA_Core(domain(), private_value(), public_point());
    }
 
-ECDSA_PrivateKey::ECDSA_PrivateKey(const EC_Domain_Params& domain,
+ECDSA_PrivateKey::ECDSA_PrivateKey(const EC_Domain_Params& dom_pars,
                                    const BigInt& x)
    {
-   mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(domain));
+   domain_params = dom_pars;
 
-   m_private_value = x;
-   mp_public_point = std::auto_ptr<PointGFp>(new PointGFp (mp_dom_pars->get_base_point()));
-
-   *mp_public_point *= m_private_value;
+   private_key = x;
+   public_key = domain().get_base_point() * x;
 
    try
       {
-      mp_public_point->check_invariants();
+      public_key.check_invariants();
       }
    catch(Illegal_Point& e)
       {
       throw Invalid_State("ECDSA key generation failed");
       }
 
-   m_ecdsa_core = ECDSA_Core(*mp_dom_pars, m_private_value, *mp_public_point);
-   }
-
-/*
-* ECDSA_PublicKey
-*/
-void ECDSA_PublicKey::affirm_init() const // virtual
-   {
-   EC_PublicKey::affirm_init();
-   }
-
-void ECDSA_PublicKey::set_all_values(const ECDSA_PublicKey& other)
-   {
-   m_param_enc = other.m_param_enc;
-   m_ecdsa_core = other.m_ecdsa_core;
-   if(other.mp_dom_pars.get())
-      mp_dom_pars.reset(new EC_Domain_Params(other.domain_parameters()));
-
-   if(other.mp_public_point.get())
-      mp_public_point.reset(new PointGFp(other.public_point()));
-   }
-
-ECDSA_PublicKey::ECDSA_PublicKey(const ECDSA_PublicKey& other)
-   : Public_Key(),
-     EC_PublicKey(),
-     PK_Verifying_wo_MR_Key()
-   {
-   set_all_values(other);
-   }
-
-const ECDSA_PublicKey& ECDSA_PublicKey::operator=(const ECDSA_PublicKey& rhs)
-   {
-   set_all_values(rhs);
-   return *this;
+   ecdsa_core = ECDSA_Core(domain(), private_value(), public_point());
    }
 
 bool ECDSA_PublicKey::verify(const byte msg[], u32bit msg_len,
                              const byte sig[], u32bit sig_len) const
    {
-   affirm_init();
-
-   return m_ecdsa_core.verify(msg, msg_len, sig, sig_len);
+   return ecdsa_core.verify(msg, msg_len, sig, sig_len);
    }
 
 ECDSA_PublicKey::ECDSA_PublicKey(const EC_Domain_Params& dom_par,
-                                 const PointGFp& public_point)
+                                 const PointGFp& pub_point)
    {
-   mp_dom_pars = std::auto_ptr<EC_Domain_Params>(new EC_Domain_Params(dom_par));
-   mp_public_point = std::auto_ptr<PointGFp>(new PointGFp(public_point));
-   m_param_enc = EC_DOMPAR_ENC_EXPLICIT;
-   m_ecdsa_core = ECDSA_Core(*mp_dom_pars, BigInt(0), *mp_public_point);
+   domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
+   domain_params = dom_par;
+   public_key = pub_point;
+
+   ecdsa_core = ECDSA_Core(domain(), 0, public_point());
    }
 
 void ECDSA_PublicKey::X509_load_hook()
    {
    EC_PublicKey::X509_load_hook();
-   EC_PublicKey::affirm_init();
-   m_ecdsa_core = ECDSA_Core ( *mp_dom_pars, BigInt ( 0 ), *mp_public_point );
-   }
-
-u32bit ECDSA_PublicKey::max_input_bits() const
-   {
-   if(!mp_dom_pars.get())
-      {
-      throw Invalid_State("ECDSA_PublicKey::max_input_bits(): domain parameters not set");
-      }
-   return mp_dom_pars->get_order().bits();
-   }
-
-/*
-* ECDSA_PrivateKey
-*/
-void ECDSA_PrivateKey::affirm_init() const // virtual
-   {
-   EC_PrivateKey::affirm_init();
+   ecdsa_core = ECDSA_Core(domain(), 0, public_point());
    }
 
 void ECDSA_PrivateKey::PKCS8_load_hook(bool generated)
    {
    EC_PrivateKey::PKCS8_load_hook(generated);
-   EC_PrivateKey::affirm_init();
-   m_ecdsa_core = ECDSA_Core(*mp_dom_pars, m_private_value, *mp_public_point);
-   }
-
-void ECDSA_PrivateKey::set_all_values(const ECDSA_PrivateKey& other)
-   {
-   m_private_value = other.m_private_value;
-   m_param_enc = other.m_param_enc;
-   m_ecdsa_core = other.m_ecdsa_core;
-
-   if(other.mp_dom_pars.get())
-      mp_dom_pars.reset(new EC_Domain_Params(other.domain_parameters()));
-
-   if(other.mp_public_point.get())
-      mp_public_point.reset(new PointGFp(other.public_point()));
-   }
-
-ECDSA_PrivateKey::ECDSA_PrivateKey(ECDSA_PrivateKey const& other)
-   : Public_Key(),
-     EC_PublicKey(),
-     Private_Key(),
-     ECDSA_PublicKey(),
-     EC_PrivateKey(),
-     PK_Signing_Key()
-   {
-   set_all_values(other);
-   }
-
-const ECDSA_PrivateKey& ECDSA_PrivateKey::operator=(const ECDSA_PrivateKey& rhs)
-   {
-   set_all_values(rhs);
-   return *this;
+   ecdsa_core = ECDSA_Core(domain(), private_value(), public_point());
    }
 
 SecureVector<byte> ECDSA_PrivateKey::sign(const byte msg[],
                                           u32bit msg_len,
                                           RandomNumberGenerator& rng) const
    {
-   affirm_init();
+   const BigInt& n = domain().get_order();
 
-   const BigInt& n = mp_dom_pars->get_order();
+   if(n == 0)
+      throw Invalid_State("ECDSA_PrivateKey: Not initialized");
+
+   assert(n.bits() >= 1);
 
    BigInt k;
    do
       k.randomize(rng, n.bits()-1);
    while(k >= n);
 
-   return m_ecdsa_core.sign(msg, msg_len, k);
+   return ecdsa_core.sign(msg, msg_len, k);
    }
 
 }

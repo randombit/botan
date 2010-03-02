@@ -1,6 +1,6 @@
 /*
 * ECDSA Core
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 * (C) 2007 FlexSecure GmbH
 *
 * Distributed under the terms of the Botan license
@@ -17,7 +17,9 @@ namespace Botan {
 bool ECDSA_Core::verify(const byte signature[], u32bit sig_len,
                         const byte message[], u32bit mess_len) const
    {
-   //assert(op.get());
+   if(op == 0)
+      throw Invalid_State("ECDSA_Core: uninitialized");
+
    return op->verify(signature, sig_len, message, mess_len);
    }
 
@@ -25,7 +27,9 @@ SecureVector<byte> ECDSA_Core::sign(const byte message[],
                                     u32bit mess_len,
                                     const BigInt& k) const
    {
-   //assert(op.get());
+   if(op == 0)
+      throw Invalid_State("ECDSA_Core: uninitialized");
+
    return op->sign(message, mess_len, k);
    }
 
@@ -44,7 +48,9 @@ ECDSA_Core::ECDSA_Core(const ECDSA_Core& core)
       op = core.op->clone();
    }
 
-ECDSA_Core::ECDSA_Core(EC_Domain_Params const& dom_pars, const BigInt& priv_key, PointGFp const& pub_key)
+ECDSA_Core::ECDSA_Core(const EC_Domain_Params& dom_pars,
+                       const BigInt& priv_key,
+                       const PointGFp& pub_key)
    {
    op = Engine_Core::ecdsa_op(dom_pars, priv_key, pub_key);
    }

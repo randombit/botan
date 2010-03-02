@@ -2,7 +2,7 @@
 * ECC Key implemenation
 * (C) 2007 Manuel Hartl, FlexSecure GmbH
 *          Falko Strenzke, FlexSecure GmbH
-*     2008 Jack Lloyd
+*     2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -17,48 +17,15 @@
 
 namespace Botan {
 
-/*
-* EC_PublicKey
-*/
-void EC_PublicKey::affirm_init() const // virtual
-   {
-   if((mp_dom_pars.get() == 0) || (mp_public_point.get() == 0))
-      throw Invalid_State("cannot use uninitialized EC_Key");
-   }
-
-const EC_Domain_Params& EC_PublicKey::domain_parameters() const
-   {
-   if(!mp_dom_pars.get())
-      throw Invalid_State("EC_PublicKey::domain_parameters(): "
-                          "ec domain parameters are not yet set");
-
-   return *mp_dom_pars;
-   }
-
-const PointGFp& EC_PublicKey::public_point() const
-   {
-   if(!mp_public_point.get())
-      throw Invalid_State("EC_PublicKey::public_point(): public point not set");
-
-   return *mp_public_point;
-   }
-
-bool EC_PublicKey::domain_parameters_set()
-   {
-   return mp_dom_pars.get();
-   }
-
 void EC_PublicKey::X509_load_hook()
    {
    try
       {
-      // the base point is checked to be on curve already when decoding it
-      affirm_init();
-      mp_public_point->check_invariants();
+      public_point().check_invariants();
       }
    catch(Illegal_Point)
       {
-      throw Decoding_Error("decoded public point was found not to lie on curve");
+      throw Decoding_Error("Invalid public point; not on curve");
       }
    }
 
@@ -69,16 +36,13 @@ X509_Encoder* EC_PublicKey::x509_encoder() const
       public:
          AlgorithmIdentifier alg_id() const
             {
-            key->affirm_init();
-
             return AlgorithmIdentifier(key->get_oid(),
-                                       key->domain_parameters().DER_encode(key->m_param_enc));
+                                       key->domain().DER_encode(key->domain_format()));
             }
 
          MemoryVector<byte> key_bits() const
             {
-            key->affirm_init();
-            return EC2OSP(*(key->mp_public_point), PointGFp::COMPRESSED);
+            return EC2OSP(key->public_point(), PointGFp::COMPRESSED);
             }
 
          EC_Key_Encoder(const EC_PublicKey* k): key(k) {}
@@ -96,15 +60,13 @@ X509_Decoder* EC_PublicKey::x509_decoder()
       public:
          void alg_id(const AlgorithmIdentifier& alg_id)
             {
-            key->mp_dom_pars.reset(new EC_Domain_Params(alg_id.parameters));
+            key->domain_params = EC_Domain_Params(alg_id.parameters);
             }
 
          void key_bits(const MemoryRegion<byte>& bits)
             {
-            key->mp_public_point.reset(
-               new PointGFp(
-                  OS2ECP(bits, key->domain_parameters().get_curve())
-                  ));
+            key->public_key = PointGFp(
+               OS2ECP(bits, key->domain().get_curve()));
 
             key->X509_load_hook();
             }
@@ -124,33 +86,20 @@ void EC_PublicKey::set_parameter_encoding(EC_Domain_Params_Encoding form)
       form != EC_DOMPAR_ENC_OID)
       throw Invalid_Argument("Invalid encoding form for EC-key object specified");
 
-   affirm_init();
-
-   if((form == EC_DOMPAR_ENC_OID) && (mp_dom_pars->get_oid() == ""))
+   if((form == EC_DOMPAR_ENC_OID) && (domain_params.get_oid() == ""))
       throw Invalid_Argument("Invalid encoding form OID specified for "
                              "EC-key object whose corresponding domain "
                              "parameters are without oid");
 
-   m_param_enc = form;
-   }
-
-/*
-* EC_PrivateKey
-*/
-void EC_PrivateKey::affirm_init() const // virtual
-   {
-   if(m_private_value == 0)
-      throw Invalid_State("cannot use EC_PrivateKey when private key is uninitialized");
-
-   EC_PublicKey::affirm_init();
+   domain_encoding = form;
    }
 
 const BigInt& EC_PrivateKey::private_value() const
    {
-   if(m_private_value == 0)
+   if(private_key == 0)
       throw Invalid_State("cannot use EC_PrivateKey when private key is uninitialized");
 
-   return m_private_value;
+   return private_key;
    }
 
 /**
@@ -158,16 +107,20 @@ const BigInt& EC_PrivateKey::private_value() const
 **/
 void EC_PrivateKey::generate_private_key(RandomNumberGenerator& rng)
    {
-   if(mp_dom_pars.get() == 0)
+   if(!domain().initialized())
+      throw Invalid_State("Cannot generate new EC key, domain unset");
+
+   private_key = BigInt::random_integer(rng, 1, domain().get_order());
+   public_key = domain().get_base_point() * private_key;
+
+   try
       {
-      throw Invalid_State("cannot generate private key when domain parameters are not set");
+      public_key.check_invariants();
       }
-
-   m_private_value = BigInt::random_integer(rng, 1, mp_dom_pars->get_order());
-
-   mp_public_point = std::auto_ptr<PointGFp>( new PointGFp (mp_dom_pars->get_base_point()));
-
-   *mp_public_point *= m_private_value;
+   catch(Illegal_Point& e)
+      {
+      throw Invalid_State(algo_name() + " key generation failed");
+      }
    }
 
 /**
@@ -180,22 +133,17 @@ PKCS8_Encoder* EC_PrivateKey::pkcs8_encoder() const
       public:
          AlgorithmIdentifier alg_id() const
             {
-            key->affirm_init();
-
             return AlgorithmIdentifier(key->get_oid(),
-                                       key->domain_parameters().DER_encode(EC_DOMPAR_ENC_EXPLICIT));
+                                       key->domain().DER_encode(EC_DOMPAR_ENC_EXPLICIT));
             }
 
          MemoryVector<byte> key_bits() const
             {
-            key->affirm_init();
-            SecureVector<byte> octstr_secret =
-               BigInt::encode_1363(key->m_private_value, key->m_private_value.bytes());
-
             return DER_Encoder()
                .start_cons(SEQUENCE)
                .encode(BigInt(1))
-               .encode(octstr_secret, OCTET_STRING)
+               .encode(BigInt::encode_1363(key->private_key, key->private_key.bytes()),
+                       OCTET_STRING)
                .end_cons()
                .get_contents();
             }
@@ -218,7 +166,7 @@ PKCS8_Decoder* EC_PrivateKey::pkcs8_decoder(RandomNumberGenerator&)
       public:
          void alg_id(const AlgorithmIdentifier& alg_id)
             {
-            key->mp_dom_pars.reset(new EC_Domain_Params(alg_id.parameters));
+            key->domain_params = EC_Domain_Params(alg_id.parameters);
             }
 
          void key_bits(const MemoryRegion<byte>& bits)
@@ -233,7 +181,7 @@ PKCS8_Decoder* EC_PrivateKey::pkcs8_decoder(RandomNumberGenerator&)
                .verify_end()
                .end_cons();
 
-            key->m_private_value = BigInt::decode(octstr_secret, octstr_secret.size());
+            key->private_key = BigInt::decode(octstr_secret, octstr_secret.size());
 
             if(version != 1)
                throw Decoding_Error("Wrong PKCS #1 key format version for EC key");
@@ -251,12 +199,7 @@ PKCS8_Decoder* EC_PrivateKey::pkcs8_decoder(RandomNumberGenerator&)
 
 void EC_PrivateKey::PKCS8_load_hook(bool)
    {
-   // we cannot use affirm_init() here because mp_public_point might still be null
-   if(mp_dom_pars.get() == 0)
-      throw Invalid_State("attempt to set public point for an uninitialized key");
-
-   mp_public_point.reset(new PointGFp(m_private_value * mp_dom_pars->get_base_point()));
-   mp_public_point->check_invariants();
+   public_key = domain().get_base_point() * private_key;
    }
 
 }
