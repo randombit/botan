@@ -26,6 +26,9 @@ print plaintext == key
 
 signature = rsa_priv.sign(key, 'EMSA4(SHA-256)', rng)
 
-key = key.replace('a', 'b')
+print rsa_pub.verify(key, signature,  'EMSA4(SHA-256)')
+
+# Corrupt the signature, make sure it doesn't verify
+signature = signature.replace(signature[0], '0')
 
 print rsa_pub.verify(key, signature,  'EMSA4(SHA-256)')
