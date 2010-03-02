@@ -22,12 +22,6 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
    public:
 
       /**
-      * Get this keys algorithm name.
-      * @result this keys algorithm name
-      */
-      std::string algo_name() const { return "ECDH"; }
-
-      /**
       * Default constructor. Use this one if you want to later fill
       * this object with data from an encoded key.
       */
@@ -39,7 +33,14 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
       * @param public_point the public point defining this key
       */
       ECDH_PublicKey(const EC_Domain_Params& dom_par,
-                     const PointGFp& public_point);
+                     const PointGFp& public_point) :
+         EC_PublicKey(dom_par, public_point) {}
+
+      /**
+      * Get this keys algorithm name.
+      * @result this keys algorithm name
+      */
+      std::string algo_name() const { return "ECDH"; }
 
       /**
       * Get the maximum number of bits allowed to be fed to this key.
@@ -60,17 +61,18 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
    public:
 
       /**
-      * Generate a new private key
-      * @param the domain parameters to used for this key
-      */
-      ECDH_PrivateKey(RandomNumberGenerator& rng,
-                      const EC_Domain_Params& dom_pars);
-
-      /**
       * Default constructor. Use this one if you want to later fill
       * this object with data from an encoded key.
       */
       ECDH_PrivateKey() {}
+
+      /**
+      * Generate a new private key
+      * @param the domain parameters to used for this key
+      */
+      ECDH_PrivateKey(RandomNumberGenerator& rng,
+                      const EC_Domain_Params& domain) :
+         EC_PrivateKey(rng, domain) {}
 
       MemoryVector<byte> public_value() const
          { return EC2OSP(public_point(), PointGFp::UNCOMPRESSED); }

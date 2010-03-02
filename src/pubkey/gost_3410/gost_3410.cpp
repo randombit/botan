@@ -16,31 +16,6 @@
 
 namespace Botan {
 
-GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng,
-                                           const EC_Domain_Params& dom_pars)
-   {
-   domain_params = dom_pars;
-   generate_private_key(rng);
-   }
-
-GOST_3410_PrivateKey::GOST_3410_PrivateKey(const EC_Domain_Params& dom_pars,
-                                           const BigInt& x)
-   {
-   domain_params = dom_pars;
-
-   private_key = x;
-   public_key = domain().get_base_point() * private_key;
-
-   try
-      {
-      public_key.check_invariants();
-      }
-   catch(Illegal_Point)
-      {
-      throw Invalid_State("GOST_3410 key generation failed");
-      }
-   }
-
 X509_Encoder* GOST_3410_PublicKey::x509_encoder() const
    {
    class GOST_3410_Key_Encoder : public X509_Encoder

@@ -11,39 +11,6 @@
 
 namespace Botan {
 
-ECDSA_PublicKey::ECDSA_PublicKey(const EC_Domain_Params& dom_par,
-                                 const PointGFp& pub_point)
-   {
-   domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
-   domain_params = dom_par;
-   public_key = pub_point;
-   }
-
-ECDSA_PrivateKey::ECDSA_PrivateKey(RandomNumberGenerator& rng,
-                                   const EC_Domain_Params& dom_pars)
-   {
-   domain_params = dom_pars;
-   generate_private_key(rng);
-   }
-
-ECDSA_PrivateKey::ECDSA_PrivateKey(const EC_Domain_Params& dom_pars,
-                                   const BigInt& x)
-   {
-   domain_params = dom_pars;
-
-   private_key = x;
-   public_key = domain().get_base_point() * x;
-
-   try
-      {
-      public_key.check_invariants();
-      }
-   catch(Illegal_Point& e)
-      {
-      throw Invalid_State("ECDSA key generation failed");
-      }
-   }
-
 bool ECDSA_PublicKey::verify(const byte msg[], u32bit msg_len,
                              const byte sig[], u32bit sig_len) const
    {

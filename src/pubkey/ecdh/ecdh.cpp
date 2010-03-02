@@ -11,23 +11,6 @@
 
 namespace Botan {
 
-ECDH_PublicKey::ECDH_PublicKey(const EC_Domain_Params& dom_par,
-                               const PointGFp& pub_point)
-   {
-   domain_params = dom_par;
-   public_key = pub_point;
-
-   if(domain().get_curve() != public_point().get_curve())
-      throw Invalid_Argument("ECDH_PublicKey: curve mismatch in constructor");
-   }
-
-ECDH_PrivateKey::ECDH_PrivateKey(RandomNumberGenerator& rng,
-                                 const EC_Domain_Params& dom_pars)
-   {
-   domain_params = dom_pars;
-   generate_private_key(rng);
-   }
-
 /**
 * Derive a key
 */

@@ -62,7 +62,9 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey,
       * @param public_point the public point defining this key
       */
       ECDSA_PublicKey(const EC_Domain_Params& dom_par,
-                      const PointGFp& public_point); // sets core
+                      const PointGFp& public_point) :
+         EC_PublicKey(dom_par, public_point) {}
+
    };
 
 /**
@@ -84,14 +86,16 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       * @param the domain parameters to used for this key
       */
       ECDSA_PrivateKey(RandomNumberGenerator& rng,
-                       const EC_Domain_Params& domain);
+                       const EC_Domain_Params& domain) :
+         EC_PrivateKey(rng, domain) {}
 
       /**
       * Load a private key
       * @param domain parameters
       * @param x the private key
       */
-      ECDSA_PrivateKey(const EC_Domain_Params& domain, const BigInt& x);
+      ECDSA_PrivateKey(const EC_Domain_Params& domain, const BigInt& x) :
+         EC_PrivateKey(domain, x) {}
 
       /**
       * Sign a message with this key.

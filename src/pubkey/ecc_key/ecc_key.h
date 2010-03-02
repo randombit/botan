@@ -58,7 +58,8 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * Get the domain parameter encoding to be used when encoding this key.
       * @result the encoding to use
       */
-      EC_Domain_Params_Encoding domain_format() const { return domain_encoding; }
+      EC_Domain_Params_Encoding domain_format() const
+         { return domain_encoding; }
 
       /**
       * Get an x509_encoder that can be used to encode this key.
@@ -74,6 +75,10 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       X509_Decoder* x509_decoder();
 
       EC_PublicKey() : domain_encoding(EC_DOMPAR_ENC_EXPLICIT) {}
+
+      EC_PublicKey(const EC_Domain_Params& dom_par,
+                   const PointGFp& pub_point);
+
       virtual ~EC_PublicKey() {}
    protected:
       virtual void X509_load_hook();
@@ -86,9 +91,19 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
 /**
 * This abstract class represents general EC Private Keys
 */
-class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey, public virtual Private_Key
+class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
+                                public virtual Private_Key
    {
    public:
+      EC_PrivateKey() {}
+
+      EC_PrivateKey(const EC_Domain_Params& domain,
+                    const BigInt& private_key);
+
+      EC_PrivateKey(RandomNumberGenerator& rng,
+                    const EC_Domain_Params& domain);
+
+      virtual ~EC_PrivateKey() {}
 
       /**
       * Get an PKCS#8 encoder that can be used to encoded this key.
@@ -108,12 +123,8 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey, public virtual Priv
       * @result the private key value of this key object
       */
       const BigInt& private_value() const;
-
-      virtual ~EC_PrivateKey() {}
    protected:
       virtual void PKCS8_load_hook(bool = false);
-
-      void generate_private_key(RandomNumberGenerator&);
 
       BigInt private_key;
    };

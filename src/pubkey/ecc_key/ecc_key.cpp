@@ -17,6 +17,24 @@
 
 namespace Botan {
 
+EC_PublicKey::EC_PublicKey(const EC_Domain_Params& dom_par,
+                           const PointGFp& pub_point) :
+   domain_params(dom_par), public_key(pub_point),
+   domain_encoding(EC_DOMPAR_ENC_EXPLICIT)
+   {
+   if(domain().get_curve() != public_point().get_curve())
+      throw Invalid_Argument("EC_PublicKey: curve mismatch in constructor");
+
+   try
+      {
+      public_key.check_invariants();
+      }
+   catch(Illegal_Point)
+      {
+      throw Invalid_State("Public key failed invariant check");
+      }
+   }
+
 void EC_PublicKey::X509_load_hook()
    {
    try
@@ -97,7 +115,7 @@ void EC_PublicKey::set_parameter_encoding(EC_Domain_Params_Encoding form)
 const BigInt& EC_PrivateKey::private_value() const
    {
    if(private_key == 0)
-      throw Invalid_State("cannot use EC_PrivateKey when private key is uninitialized");
+      throw Invalid_State("EC_PrivateKey::private_value - uninitialized");
 
    return private_key;
    }
@@ -105,10 +123,20 @@ const BigInt& EC_PrivateKey::private_value() const
 /**
 * EC_PrivateKey generator
 **/
-void EC_PrivateKey::generate_private_key(RandomNumberGenerator& rng)
+EC_PrivateKey::EC_PrivateKey(const EC_Domain_Params& dom_par,
+                             const BigInt& priv_key) :
+   EC_PublicKey(dom_par, dom_par.get_base_point() * private_key),
+   private_key(priv_key)
    {
-   if(!domain().initialized())
-      throw Invalid_State("Cannot generate new EC key, domain unset");
+   }
+
+/**
+* EC_PrivateKey generator
+**/
+EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
+                             const EC_Domain_Params& dom_par)
+   {
+   domain_params = dom_par;
 
    private_key = BigInt::random_integer(rng, 1, domain().get_order());
    public_key = domain().get_base_point() * private_key;
@@ -119,7 +147,7 @@ void EC_PrivateKey::generate_private_key(RandomNumberGenerator& rng)
       }
    catch(Illegal_Point& e)
       {
-      throw Invalid_State(algo_name() + " key generation failed");
+      throw Internal_Error("ECC private key generation failed");
       }
    }
 
