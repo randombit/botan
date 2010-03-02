@@ -8,7 +8,7 @@ def main(args = None):
         args = sys.argv
 
     if len(args) != 3:
-        raise Exception("Bad usage")
+        raise Exception("Usage: <password> <input>");
 
     password = args[1]
     input = ''.join(open(args[2]).readlines())
@@ -24,10 +24,12 @@ def main(args = None):
     try:
         plaintext = botan.cryptobox_decrypt(ciphertext, password + 'FAIL')
     except Exception, e:
-        print "Oops -- ", e
+        print "Good news: bad password caused exception: "
+        print e
 
     plaintext = botan.cryptobox_decrypt(ciphertext, password)
 
+    print "Original input was: "
     print plaintext
 
 if __name__ == '__main__':
