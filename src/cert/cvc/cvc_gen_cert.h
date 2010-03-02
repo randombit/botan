@@ -106,8 +106,7 @@ MemoryVector<byte> EAC1_1_gen_CVC<Derived>::make_signed(
    const MemoryRegion<byte>& tbs_bits,
    RandomNumberGenerator& rng) // static
    {
-   SecureVector<byte> concat_sig =
-      EAC1_1_obj<Derived>::make_signature(signer, tbs_bits, rng);
+   SecureVector<byte> concat_sig = signer.sign_message(tbs_bits, rng);
 
    return DER_Encoder()
       .start_cons(ASN1_Tag(33), APPLICATION)

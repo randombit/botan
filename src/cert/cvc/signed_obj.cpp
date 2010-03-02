@@ -1,5 +1,5 @@
 /*
-* X.509 SIGNED Object
+* EAC SIGNED Object
 * (C) 1999-2007 Jack Lloyd
 *     2007 FlexSecure GmbH
 *
@@ -53,14 +53,12 @@ void EAC_Signed_Object::do_decode()
    catch(Decoding_Error& e)
       {
       const std::string what = e.what();
-      throw Decoding_Error(PEM_label_pref + " decoding failed (" +
-                           what.substr(23, std::string::npos) + ")");
+      throw Decoding_Error(PEM_label_pref + " decoding failed (" + what + ")");
       }
    catch(Invalid_Argument& e)
       {
       const std::string what = e.what();
-      throw Decoding_Error(PEM_label_pref + " decoding failed (" +
-                           what.substr(7, std::string::npos) + ")");
+      throw Decoding_Error(PEM_label_pref + " decoding failed (" + what + ")");
       }
    }
 
