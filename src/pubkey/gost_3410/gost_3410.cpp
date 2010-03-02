@@ -24,7 +24,7 @@ X509_Encoder* GOST_3410_PublicKey::x509_encoder() const
          AlgorithmIdentifier alg_id() const
             {
             return AlgorithmIdentifier(key->get_oid(),
-                                       key->domain().DER_encode(key->domain_format()));
+                                       key->DER_domain());
             }
 
          MemoryVector<byte> key_bits() const
@@ -67,7 +67,6 @@ X509_Decoder* GOST_3410_PublicKey::x509_decoder()
 
          void key_bits(const MemoryRegion<byte>& bits)
             {
-
             SecureVector<byte> key_bits;
             BER_Decoder ber(bits);
             ber.decode(key_bits, OCTET_STRING);
@@ -97,12 +96,11 @@ bool GOST_3410_PublicKey::verify(const byte msg[], u32bit msg_len,
    {
    const BigInt& n = domain().get_order();
 
+   if(n == 0)
+      throw Invalid_State("domain parameters not set");
+
    if(sig_len != n.bytes()*2)
       return false;
-
-   // NOTE: it is not checked whether the public point is set
-   if(domain().get_curve().get_p() == 0)
-      throw Internal_Error("domain parameters not set");
 
    BigInt e(msg, msg_len);
 
@@ -126,31 +124,23 @@ bool GOST_3410_PublicKey::verify(const byte msg[], u32bit msg_len,
    return (R.get_affine_x() == r);
    }
 
-GOST_3410_PublicKey::GOST_3410_PublicKey(const EC_Domain_Params& dom_par,
-                                         const PointGFp& pub_point)
-   {
-   domain_params = dom_par;
-   public_key = pub_point;
-   domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
-   }
-
 SecureVector<byte>
 GOST_3410_PrivateKey::sign(const byte msg[],
                            u32bit msg_len,
                            RandomNumberGenerator& rng) const
    {
+   if(private_value() == 0)
+      throw Invalid_State("GOST_3410::sign(): no private key");
+
    const BigInt& n = domain().get_order();
+
+   if(n == 0)
+      throw Invalid_State("GOST_3410::sign(): domain parameters not set");
 
    BigInt k;
    do
       k.randomize(rng, n.bits()-1);
    while(k >= n);
-
-   if(private_value() == 0)
-      throw Internal_Error("GOST_3410::sign(): no private key");
-
-   if(n == 0)
-      throw Internal_Error("GOST_3410::sign(): domain parameters not set");
 
    BigInt e(msg, msg_len);
 
@@ -164,7 +154,7 @@ GOST_3410_PrivateKey::sign(const byte msg[],
    BigInt r = k_times_P.get_affine_x() % n;
 
    if(r == 0)
-      throw Internal_Error("GOST_3410::sign: r was zero");
+      throw Invalid_State("GOST_3410::sign: r was zero");
 
    BigInt s = (r*private_value() + k*e) % n;
 

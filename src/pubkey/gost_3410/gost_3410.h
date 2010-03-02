@@ -63,7 +63,8 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey,
       * @param public_point the public point defining this key
       */
       GOST_3410_PublicKey(const EC_Domain_Params& dom_par,
-                          const PointGFp& public_point);
+                          const PointGFp& public_point) :
+         EC_PublicKey(dom_par, public_point) {}
 
       /**
       * Get an x509_encoder that can be used to encode this key.

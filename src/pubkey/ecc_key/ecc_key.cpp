@@ -55,7 +55,7 @@ X509_Encoder* EC_PublicKey::x509_encoder() const
          AlgorithmIdentifier alg_id() const
             {
             return AlgorithmIdentifier(key->get_oid(),
-                                       key->domain().DER_encode(key->domain_format()));
+                                       key->DER_domain());
             }
 
          MemoryVector<byte> key_bits() const

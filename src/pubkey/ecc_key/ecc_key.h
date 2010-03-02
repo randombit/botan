@@ -55,6 +55,13 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       void set_parameter_encoding(EC_Domain_Params_Encoding enc);
 
       /**
+      * Return the DER encoding of this keys domain in whatever format
+      * is preset for this particular key
+      */
+      MemoryVector<byte> DER_domain() const
+         { return domain().DER_encode(domain_format()); }
+
+      /**
       * Get the domain parameter encoding to be used when encoding this key.
       * @result the encoding to use
       */
