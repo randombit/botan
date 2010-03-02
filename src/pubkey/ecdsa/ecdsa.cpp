@@ -64,43 +64,10 @@ void ECDSA_PublicKey::affirm_init() const // virtual
    EC_PublicKey::affirm_init();
    }
 
-void ECDSA_PublicKey::set_domain_parameters(const EC_Domain_Params& dom_pars)
-   {
-   if(mp_dom_pars.get())
-      {
-      // they are already set, we must ensure that they are equal to the arg
-      if(dom_pars != *mp_dom_pars.get())
-         throw Invalid_Argument("EC_PublicKey::set_domain_parameters - cannot reset to a new value");
-
-      return;
-      }
-
-   if(m_enc_public_point.size() == 0)
-      throw Invalid_State("EC_PublicKey::set_domain_parameters(): encoded public point isn't set");
-
-   // now try to decode the public key ...
-   PointGFp tmp_pp(OS2ECP(m_enc_public_point, dom_pars.get_curve()));
-   try
-      {
-      tmp_pp.check_invariants();
-      }
-   catch(Illegal_Point e)
-      {
-      throw Invalid_State("EC_PublicKey::set_domain_parameters(): point does not lie on provided curve");
-      }
-
-   std::auto_ptr<EC_Domain_Params> p_tmp_pars(new EC_Domain_Params(dom_pars));
-   ECDSA_Core tmp_ecdsa_core(*p_tmp_pars, BigInt(0), tmp_pp);
-   mp_public_point.reset(new PointGFp(tmp_pp));
-   m_ecdsa_core = tmp_ecdsa_core;
-   mp_dom_pars = p_tmp_pars;
-   }
-
 void ECDSA_PublicKey::set_all_values(const ECDSA_PublicKey& other)
    {
    m_param_enc = other.m_param_enc;
    m_ecdsa_core = other.m_ecdsa_core;
-   m_enc_public_point = other.m_enc_public_point;
    if(other.mp_dom_pars.get())
       mp_dom_pars.reset(new EC_Domain_Params(other.domain_parameters()));
 
@@ -175,7 +142,6 @@ void ECDSA_PrivateKey::set_all_values(const ECDSA_PrivateKey& other)
    m_private_value = other.m_private_value;
    m_param_enc = other.m_param_enc;
    m_ecdsa_core = other.m_ecdsa_core;
-   m_enc_public_point = other.m_enc_public_point;
 
    if(other.mp_dom_pars.get())
       mp_dom_pars.reset(new EC_Domain_Params(other.domain_parameters()));

@@ -71,18 +71,6 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey,
       ECDSA_PublicKey(const ECDSA_PublicKey& other);
 
       /**
-      * Set the domain parameters of this key. This function has to be
-      * used when a key encoded without domain parameters was decoded into
-      * this key. Otherwise it will not be able to verify a signature.
-      * @param dom_pars the domain_parameters associated with this key
-      * @throw Invalid_Argument if the point was found not to be satisfying the
-      * curve equation of the provided domain parameters
-      * or if this key already has domain parameters set
-      * and these are differing from those given as the parameter
-      */
-      void set_domain_parameters(const EC_Domain_Params& dom_pars);
-
-      /**
       * Ensure that the public point and domain parameters of this key are set.
       * @throw Invalid_State if either of the two data members is not set
       */

@@ -29,7 +29,7 @@ void ECKAEG_PublicKey::set_all_values(ECKAEG_PublicKey const& other)
    {
    m_param_enc = other.m_param_enc;
    m_eckaeg_core = other.m_eckaeg_core;
-   m_enc_public_point = other.m_enc_public_point;
+
    if(other.mp_dom_pars.get())
       {
       mp_dom_pars.reset(new EC_Domain_Params(*(other.mp_dom_pars)));
@@ -92,7 +92,7 @@ void ECKAEG_PrivateKey::set_all_values(ECKAEG_PrivateKey const& other)
    m_private_value = other.m_private_value;
    m_param_enc = other.m_param_enc;
    m_eckaeg_core = other.m_eckaeg_core;
-   m_enc_public_point = other.m_enc_public_point;
+
    if(other.mp_dom_pars.get())
       {
       mp_dom_pars.reset(new EC_Domain_Params(*(other.mp_dom_pars)));

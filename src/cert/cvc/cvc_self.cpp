@@ -261,7 +261,7 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
 
    // for the case that the domain parameters are not set...
    // (we use those from the signer because they must fit)
-   subj_pk->set_domain_parameters(priv_key->domain_parameters());
+   //subj_pk->set_domain_parameters(priv_key->domain_parameters());
 
    subj_pk->set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
 

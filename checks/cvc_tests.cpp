@@ -184,7 +184,7 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
    //cert_in.set_domain_parameters(dom_pars);
    std::auto_ptr<Public_Key> p_pk2 = cert_in.subject_public_key();
    ECDSA_PublicKey* p_ecdsa_pk2 = dynamic_cast<ECDSA_PublicKey*>(p_pk2.get());
-   p_ecdsa_pk2->set_domain_parameters(dom_pars);
+   //p_ecdsa_pk2->set_domain_parameters(dom_pars);
    CHECK(p_ecdsa_pk2->domain_parameters().get_order() == dom_pars.get_order());
    bool ver_ec = cert_in.check_signature(*p_pk2);
    CHECK_MESSAGE(ver_ec, "could not positively verify correct selfsigned cvc certificate");
@@ -215,7 +215,7 @@ void test_enc_gen_req(RandomNumberGenerator& rng)
    //req_in.set_domain_parameters(dom_pars);
    std::auto_ptr<Public_Key> p_pk = req_in.subject_public_key();
    ECDSA_PublicKey* p_ecdsa_pk = dynamic_cast<ECDSA_PublicKey*>(p_pk.get());
-   p_ecdsa_pk->set_domain_parameters(dom_pars);
+   //p_ecdsa_pk->set_domain_parameters(dom_pars);
    CHECK(p_ecdsa_pk->domain_parameters().get_order() == dom_pars.get_order());
    bool ver_ec = req_in.check_signature(*p_pk);
    CHECK_MESSAGE(ver_ec, "could not positively verify correct selfsigned (created by myself) cvc request");
@@ -230,7 +230,7 @@ void test_cvc_req_ext(RandomNumberGenerator&)
    //req_in.set_domain_parameters(dom_pars);
    std::auto_ptr<Public_Key> p_pk = req_in.subject_public_key();
    ECDSA_PublicKey* p_ecdsa_pk = dynamic_cast<ECDSA_PublicKey*>(p_pk.get());
-   p_ecdsa_pk->set_domain_parameters(dom_pars);
+   //p_ecdsa_pk->set_domain_parameters(dom_pars);
    CHECK(p_ecdsa_pk->domain_parameters().get_order() == dom_pars.get_order());
    bool ver_ec = req_in.check_signature(*p_pk);
    CHECK_MESSAGE(ver_ec, "could not positively verify correct selfsigned (external testdata) cvc request");
@@ -545,7 +545,7 @@ void test_cvc_chain(RandomNumberGenerator& rng)
    std::auto_ptr<Public_Key> ap_pk = dvca_cert1.subject_public_key();
    ECDSA_PublicKey* cert_pk = dynamic_cast<ECDSA_PublicKey*>(ap_pk.get());
 
-   cert_pk->set_domain_parameters(dom_pars);
+   //cert_pk->set_domain_parameters(dom_pars);
    //std::cout << "dvca_cert.public_point.size() = " << ec::EC2OSP(cert_pk->get_public_point(), ec::PointGFp::COMPRESSED).size() << std::endl;
    EAC1_1_CVC dvca_cert1_reread(TEST_DATA_DIR "/cvc_chain_cvca.cer");
    CHECK(dvca_ado2.check_signature(*cert_pk));
