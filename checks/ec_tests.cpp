@@ -156,12 +156,12 @@ void test_coordinates()
    PointGFp point_exp(secp160r1, exp_affine_x, exp_affine_y);
    point_exp.check_invariants();
 
-   if(p1.get_jac_proj_x() != exp_x)
-      std::cout << p1.get_jac_proj_x() << " != " << exp_x << "\n";
-   if(p1.get_jac_proj_y() != exp_y)
-      std::cout << p1.get_jac_proj_y() << " != " << exp_y << "\n";
-   if(p1.get_jac_proj_z() != exp_z)
-      std::cout << p1.get_jac_proj_z() << " != " << exp_z << "\n";
+   if(p1.get_x() != exp_x)
+      std::cout << p1.get_x() << " != " << exp_x << "\n";
+   if(p1.get_y() != exp_y)
+      std::cout << p1.get_y() << " != " << exp_y << "\n";
+   if(p1.get_z() != exp_z)
+      std::cout << p1.get_z() << " != " << exp_z << "\n";
 
    CHECK_MESSAGE( p1.get_affine_x() == exp_affine_x, " p1_x = " << p1.get_affine_x() << "\n" << "exp_x = " << exp_affine_x << "\n");
    CHECK_MESSAGE( p1.get_affine_y() == exp_affine_y, " p1_y = " << p1.get_affine_y() << "\n" << "exp_y = " << exp_affine_y << "\n");
@@ -193,9 +193,9 @@ void test_point_transformation ()
    PointGFp q = p;
 
    //turn on montg.
-   CHECK_MESSAGE( p.get_jac_proj_x() == q.get_jac_proj_x(), "projective_x changed while turning on montg.!");
-   CHECK_MESSAGE( p.get_jac_proj_y() == q.get_jac_proj_y(), "projective_y changed while turning on montg.!");
-   CHECK_MESSAGE( p.get_jac_proj_z() == q.get_jac_proj_z(), "projective_z changed while turning on montg.!");
+   CHECK_MESSAGE( p.get_x() == q.get_x(), "projective_x changed while turning on montg.!");
+   CHECK_MESSAGE( p.get_y() == q.get_y(), "projective_y changed while turning on montg.!");
+   CHECK_MESSAGE( p.get_z() == q.get_z(), "projective_z changed while turning on montg.!");
    CHECK_MESSAGE( p.get_affine_x() == q.get_affine_x(), "affine_x changed while turning on montg.!");
    CHECK_MESSAGE( p.get_affine_y() == q.get_affine_y(), "affine_y changed while turning on montg.!");
    }
@@ -231,9 +231,9 @@ void test_point_mult ()
    SecureVector<byte> sv_d_U = decode_hex(str_d_U);
    BigInt d_U = BigInt::decode(sv_d_U.begin(), sv_d_U.size());
    PointGFp Q_U = d_U * p_G;
-   CHECK( Q_U.get_jac_proj_x() == exp_Qx);
-   CHECK( Q_U.get_jac_proj_y() == exp_Qy);
-   CHECK( Q_U.get_jac_proj_z() == exp_Qz);
+   CHECK( Q_U.get_x() == exp_Qx);
+   CHECK( Q_U.get_y() == exp_Qy);
+   CHECK( Q_U.get_z() == exp_Qz);
    }
 
 void test_point_negative()
@@ -263,15 +263,15 @@ void test_point_negative()
 
    PointGFp p1 = p_G *= 2;
 
-   CHECK( p1.get_jac_proj_x() == exp_p1_x);
-   CHECK( p1.get_jac_proj_y() == exp_p1_y);
-   //cout << "p1.y_proj = " << p1.get_jac_proj_y() << "\n";
+   CHECK( p1.get_x() == exp_p1_x);
+   CHECK( p1.get_y() == exp_p1_y);
+   //cout << "p1.y_proj = " << p1.get_y() << "\n";
    PointGFp p1_neg = p1.negate();
-   //cout << "p1_neg.y_proj = " << p1_neg.get_jac_proj_y() << "\n";
+   //cout << "p1_neg.y_proj = " << p1_neg.get_y() << "\n";
    //p1.negate();
-   BigInt calc_y_value = p1_neg.get_jac_proj_y();
-   BigInt calc_z_value = p1_neg.get_jac_proj_z();
-   CHECK( p1_neg.get_jac_proj_x() == exp_p1_neg_x);
+   BigInt calc_y_value = p1_neg.get_y();
+   BigInt calc_z_value = p1_neg.get_z();
+   CHECK( p1_neg.get_x() == exp_p1_neg_x);
    CHECK_MESSAGE(  calc_y_value == exp_p1_neg_y, "calc_y_value = " << calc_y_value << "\nexp_p1_neg_v = " << exp_p1_neg_y);
    //CHECK_MESSAGE(  calc_z_value == exp_p1_neg_y, "calc_y_value = " << calc_y_value << "\nexp_p1_neg_v = " << exp_p1_neg_y);
    }
@@ -453,7 +453,7 @@ void test_mult_point()
    PointGFp p0 = p_G;
    PointGFp p1 = p_G *= 2;
 
-   p1 *= p0.get_jac_proj_x();
+   p1 *= p0.get_x();
 
    PointGFp expected(secp160r1, exp_mult_x, exp_mult_y);
 
@@ -506,9 +506,9 @@ void test_basic_operations()
    PointGFp p1 = p_G *= 2;
 
    // check that all points have correct values
-   CHECK( p1.get_jac_proj_x() == exp_p1_x);
-   CHECK( p1.get_jac_proj_y() == exp_p1_y);
-   CHECK( p1.get_jac_proj_z() == exp_p1_z);
+   CHECK( p1.get_x() == exp_p1_x);
+   CHECK( p1.get_y() == exp_p1_y);
+   CHECK( p1.get_z() == exp_p1_z);
 
    PointGFp expected(secp160r1, exp_p0_x, exp_p0_y, exp_p0_z);
    CHECK(p0 == expected);
@@ -522,18 +522,18 @@ void test_basic_operations()
    CHECK(simpleMinus == exp_simpleMinus);
 
    PointGFp simpleMult= p1 * 123456789;
-   CHECK( simpleMult.get_jac_proj_x() == exp_mult_x);
-   CHECK( simpleMult.get_jac_proj_y() == exp_mult_y);
-   CHECK( simpleMult.get_jac_proj_z() == exp_mult_z);
+   CHECK( simpleMult.get_x() == exp_mult_x);
+   CHECK( simpleMult.get_y() == exp_mult_y);
+   CHECK( simpleMult.get_z() == exp_mult_z);
 
    // check that all initial points hasn't changed
-   CHECK( p1.get_jac_proj_x() == exp_p1_x);
-   CHECK( p1.get_jac_proj_y() == exp_p1_y);
-   CHECK( p1.get_jac_proj_z() == exp_p1_z);
+   CHECK( p1.get_x() == exp_p1_x);
+   CHECK( p1.get_y() == exp_p1_y);
+   CHECK( p1.get_z() == exp_p1_z);
 
-   CHECK( p0.get_jac_proj_x() == exp_p0_x);
-   CHECK( p0.get_jac_proj_y() == exp_p0_y);
-   CHECK( p0.get_jac_proj_z() == exp_p0_z);
+   CHECK( p0.get_x() == exp_p0_x);
+   CHECK( p0.get_y() == exp_p0_y);
+   CHECK( p0.get_z() == exp_p0_z);
    }
 
 void test_enc_dec_compressed_160()
