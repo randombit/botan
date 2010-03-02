@@ -1,5 +1,5 @@
 /*
-* ECDSA
+* ECDSA Signature
 * (C) 2007 Falko Strenzke, FlexSecure GmbH
 * (C) 2008-2010 Jack Lloyd
 *
@@ -21,9 +21,10 @@ class BOTAN_DLL ECDSA_Signature
       friend class ECDSA_Signature_Decoder;
 
       ECDSA_Signature() {}
-      ECDSA_Signature(const BigInt& r, const BigInt& s);
-      ECDSA_Signature(const ECDSA_Signature& other);
-      ECDSA_Signature& operator=(const ECDSA_Signature& other);
+      ECDSA_Signature(const BigInt& r, const BigInt& s) :
+         m_r(r), m_s(s) {}
+
+      ECDSA_Signature(const MemoryRegion<byte>& ber);
 
       const BigInt& get_r() const { return m_r; }
       const BigInt& get_s() const { return m_s; }
@@ -31,62 +32,25 @@ class BOTAN_DLL ECDSA_Signature
       /**
       * return the r||s
       */
-      SecureVector<byte> get_concatenation() const;
+      MemoryVector<byte> get_concatenation() const;
+
+      MemoryVector<byte> DER_encode() const;
+
+      bool operator==(const ECDSA_Signature& other) const
+         {
+         return (get_r() == other.get_r() && get_s() == other.get_s());
+         }
+
    private:
       BigInt m_r;
       BigInt m_s;
    };
 
-/* Equality of ECDSA_Signature */
-bool operator==(const ECDSA_Signature& lhs, const ECDSA_Signature& rhs);
 inline bool operator!=(const ECDSA_Signature& lhs, const ECDSA_Signature& rhs)
    {
    return !(lhs == rhs);
    }
 
-class BOTAN_DLL ECDSA_Signature_Decoder
-   {
-   public:
-      void signature_bits(const MemoryRegion<byte>& bits)
-         {
-         BER_Decoder(bits)
-            .start_cons(SEQUENCE)
-            .decode(m_signature->m_r)
-            .decode(m_signature->m_s)
-            .verify_end()
-            .end_cons();
-         }
-
-      ECDSA_Signature_Decoder(ECDSA_Signature* signature) :
-         m_signature(signature)
-         {}
-
-   private:
-      ECDSA_Signature* m_signature;
-   };
-
-class BOTAN_DLL ECDSA_Signature_Encoder
-   {
-   public:
-      MemoryVector<byte> signature_bits() const
-         {
-         return DER_Encoder()
-            .start_cons(SEQUENCE)
-            .encode(m_signature->get_r())
-            .encode(m_signature->get_s())
-            .end_cons()
-            .get_contents();
-         }
-
-      ECDSA_Signature_Encoder(const ECDSA_Signature* signature) :
-         m_signature(signature)
-         {}
-
-   private:
-      const ECDSA_Signature* m_signature;
-   };
-
-ECDSA_Signature decode_seq(const MemoryRegion<byte>& seq);
 ECDSA_Signature decode_concatenation(const MemoryRegion<byte>& concatenation);
 
 }

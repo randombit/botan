@@ -66,11 +66,8 @@ EAC1_1_obj<Derived>::make_signature(PK_Signer& signer,
                                     RandomNumberGenerator& rng)
    {
    // this is the signature as a der sequence
-   SecureVector<byte> seq_sig = signer.sign_message(tbs_bits, rng);
-
-   ECDSA_Signature sig(decode_seq(seq_sig));
-   SecureVector<byte> concat_sig(sig.get_concatenation());
-   return concat_sig;
+   ECDSA_Signature sig(signer.sign_message(tbs_bits, rng));
+   return sig.get_concatenation();
    }
 
 template<typename Derived>
@@ -106,8 +103,7 @@ bool EAC1_1_obj<Derived>::check_signature(Public_Key& pub_key) const
       if(!dynamic_cast<PK_Verifying_wo_MR_Key*>(&pub_key))
          return false;
 
-      std::auto_ptr<ECDSA_Signature_Encoder> enc(new ECDSA_Signature_Encoder(&m_sig));
-      SecureVector<byte> seq_sig = enc->signature_bits();
+      SecureVector<byte> seq_sig = m_sig.DER_encode();
       SecureVector<byte> to_sign = tbs_data();
 
       PK_Verifying_wo_MR_Key& sig_key = dynamic_cast<PK_Verifying_wo_MR_Key&>(pub_key);

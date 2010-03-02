@@ -1,31 +1,36 @@
+/*
+* ECDSA Signature
+* (C) 2007 Falko Strenzke, FlexSecure GmbH
+* (C) 2008-2010 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/ecdsa_sig.h>
-#include <memory>
 
 namespace Botan {
 
-ECDSA_Signature::ECDSA_Signature(const BigInt& r, const BigInt& s)
-   : m_r(r),
-     m_s(s)
-   {}
-
-ECDSA_Signature::ECDSA_Signature(const ECDSA_Signature& other)
-   : m_r(other.m_r), m_s(other.m_s)
-   {}
-
-ECDSA_Signature& ECDSA_Signature::operator=(const ECDSA_Signature& other)
+ECDSA_Signature::ECDSA_Signature(const MemoryRegion<byte>& ber)
    {
-   m_r = other.m_r;
-   m_s = other.m_s;
-   return *this;
+   BER_Decoder(ber)
+      .start_cons(SEQUENCE)
+         .decode(m_r)
+         .decode(m_s)
+      .end_cons()
+      .verify_end();
    }
 
-bool operator==(const ECDSA_Signature& lhs, const ECDSA_Signature& rhs)
+MemoryVector<byte> ECDSA_Signature::DER_encode() const
    {
-   return (lhs.get_r() == rhs.get_r() && lhs.get_s() == rhs.get_s());
+   return DER_Encoder()
+      .start_cons(SEQUENCE)
+        .encode(get_r())
+        .encode(get_s())
+      .end_cons()
+      .get_contents();
    }
 
-SecureVector<byte> ECDSA_Signature::get_concatenation() const
+MemoryVector<byte> ECDSA_Signature::get_concatenation() const
    {
    u32bit enc_len = m_r > m_s ? m_r.bytes() : m_s.bytes(); // use the larger
 
@@ -35,15 +40,6 @@ SecureVector<byte> ECDSA_Signature::get_concatenation() const
    SecureVector<byte> result(sv_r);
    result.append(sv_s);
    return result;
-   }
-
-ECDSA_Signature decode_seq(const MemoryRegion<byte>& seq)
-   {
-   ECDSA_Signature sig;
-
-   std::auto_ptr<ECDSA_Signature_Decoder> dec(new ECDSA_Signature_Decoder(&sig));
-   dec->signature_bits(seq);
-   return sig;
    }
 
 ECDSA_Signature decode_concatenation(const MemoryRegion<byte>& concat)
