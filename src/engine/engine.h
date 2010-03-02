@@ -39,11 +39,6 @@
   #include <botan/elg_op.h>
 #endif
 
-#if defined(BOTAN_HAS_ECDSA)
-  #include <botan/ecdsa_op.h>
-  #include <botan/ec_dompar.h>
-#endif
-
 #if defined(BOTAN_HAS_ECKAEG)
   #include <botan/eckaeg_op.h>
   #include <botan/ec_dompar.h>
@@ -117,13 +112,6 @@ class BOTAN_DLL Engine
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
       virtual DH_Operation* dh_op(const DL_Group&, const BigInt&) const
-         { return 0; }
-#endif
-
-#if defined(BOTAN_HAS_ECDSA)
-      virtual ECDSA_Operation* ecdsa_op(const EC_Domain_Params&,
-                                        const BigInt&,
-                                        const PointGFp&) const
          { return 0; }
 #endif
 

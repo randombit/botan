@@ -110,27 +110,6 @@ DH_Operation* dh_op(const DL_Group& group, const BigInt& x)
    }
 #endif
 
-#if defined(BOTAN_HAS_ECDSA)
-/*
-* Acquire an ECDSA op
-*/
-ECDSA_Operation* ecdsa_op(const EC_Domain_Params& dom_pars,
-                          const BigInt& priv_key,
-                          const PointGFp& pub_key)
-   {
-   Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
-
-   while(const Engine* engine = i.next())
-      {
-      ECDSA_Operation* op = engine->ecdsa_op(dom_pars, priv_key, pub_key);
-      if(op)
-         return op;
-      }
-
-   throw Lookup_Error("Engine_Core::ecdsa_op: Unable to find a working engine");
-   }
-#endif
-
 #if defined(BOTAN_HAS_ECKAEG)
 /*
 * Acquire a ECKAEG op

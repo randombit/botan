@@ -9,17 +9,21 @@
 
 #include <botan/ecdsa.h>
 
-#include <assert.h>
-
 namespace Botan {
+
+ECDSA_PublicKey::ECDSA_PublicKey(const EC_Domain_Params& dom_par,
+                                 const PointGFp& pub_point)
+   {
+   domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
+   domain_params = dom_par;
+   public_key = pub_point;
+   }
 
 ECDSA_PrivateKey::ECDSA_PrivateKey(RandomNumberGenerator& rng,
                                    const EC_Domain_Params& dom_pars)
    {
    domain_params = dom_pars;
    generate_private_key(rng);
-
-   ecdsa_core = ECDSA_Core(domain(), private_value(), public_point());
    }
 
 ECDSA_PrivateKey::ECDSA_PrivateKey(const EC_Domain_Params& dom_pars,
@@ -38,36 +42,34 @@ ECDSA_PrivateKey::ECDSA_PrivateKey(const EC_Domain_Params& dom_pars,
       {
       throw Invalid_State("ECDSA key generation failed");
       }
-
-   ecdsa_core = ECDSA_Core(domain(), private_value(), public_point());
    }
 
 bool ECDSA_PublicKey::verify(const byte msg[], u32bit msg_len,
                              const byte sig[], u32bit sig_len) const
    {
-   return ecdsa_core.verify(msg, msg_len, sig, sig_len);
-   }
+   const BigInt& n = domain().get_order();
 
-ECDSA_PublicKey::ECDSA_PublicKey(const EC_Domain_Params& dom_par,
-                                 const PointGFp& pub_point)
-   {
-   domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
-   domain_params = dom_par;
-   public_key = pub_point;
+   if(n == 0)
+      throw Invalid_State("ECDSA_PublicKey::verify: Not initialized");
 
-   ecdsa_core = ECDSA_Core(domain(), 0, public_point());
-   }
+   if(sig_len != n.bytes()*2)
+      return false;
 
-void ECDSA_PublicKey::X509_load_hook()
-   {
-   EC_PublicKey::X509_load_hook();
-   ecdsa_core = ECDSA_Core(domain(), 0, public_point());
-   }
+   BigInt e(msg, msg_len);
 
-void ECDSA_PrivateKey::PKCS8_load_hook(bool generated)
-   {
-   EC_PrivateKey::PKCS8_load_hook(generated);
-   ecdsa_core = ECDSA_Core(domain(), private_value(), public_point());
+   BigInt r(sig, sig_len / 2);
+   BigInt s(sig + sig_len / 2, sig_len / 2);
+
+   if(r < 0 || r >= n || s < 0 || s >= n)
+      return false;
+
+   BigInt w = inverse_mod(s, n);
+
+   PointGFp R = w * (e * domain().get_base_point() + r*public_point());
+   if(R.is_zero())
+      return false;
+
+   return (R.get_affine_x() % n == r);
    }
 
 SecureVector<byte> ECDSA_PrivateKey::sign(const byte msg[],
@@ -76,17 +78,30 @@ SecureVector<byte> ECDSA_PrivateKey::sign(const byte msg[],
    {
    const BigInt& n = domain().get_order();
 
-   if(n == 0)
-      throw Invalid_State("ECDSA_PrivateKey: Not initialized");
-
-   assert(n.bits() >= 1);
+   if(n == 0 || private_value() == 0)
+      throw Invalid_State("ECDSA_PrivateKey::sign: Not initialized");
 
    BigInt k;
    do
       k.randomize(rng, n.bits()-1);
    while(k >= n);
 
-   return ecdsa_core.sign(msg, msg_len, k);
+   BigInt e(msg, msg_len);
+
+   PointGFp k_times_P = domain().get_base_point() * k;
+   BigInt r = k_times_P.get_affine_x() % n;
+
+   if(r == 0)
+      throw Internal_Error("Default_ECDSA_Op::sign: r was zero");
+
+   BigInt k_inv = inverse_mod(k, n);
+
+   BigInt s = (((r * private_value()) + e) * k_inv) % n;
+
+   SecureVector<byte> output(2*n.bytes());
+   r.binary_encode(output + (output.size() / 2 - r.bytes()));
+   s.binary_encode(output + (output.size() - s.bytes()));
+   return output;
    }
 
 }

@@ -27,10 +27,6 @@
   #include <botan/dh_op.h>
 #endif
 
-#if defined(BOTAN_HAS_ECDSA)
-  #include <botan/ecdsa_op.h>
-#endif
-
 #if defined(BOTAN_HAS_ECKAEG)
   #include <botan/eckaeg_op.h>
 #endif
@@ -91,18 +87,6 @@ DH_Operation* Default_Engine::dh_op(const DL_Group& group,
                                     const BigInt& x) const
    {
    return new Default_DH_Op(group, x);
-   }
-#endif
-
-#if defined(BOTAN_HAS_ECDSA)
-/*
-* Acquire a ECDSA op
-*/
-ECDSA_Operation* Default_Engine::ecdsa_op(const EC_Domain_Params& dom_pars,
-                                          const BigInt& priv_key,
-                                          const PointGFp& pub_key) const
-   {
-   return new Default_ECDSA_Op(dom_pars, priv_key, pub_key);
    }
 #endif
 

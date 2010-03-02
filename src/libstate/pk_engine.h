@@ -31,11 +31,6 @@
   #include <botan/elg_op.h>
 #endif
 
-#if defined(BOTAN_HAS_ECDSA)
-  #include <botan/ecdsa_op.h>
-  #include <botan/ec_dompar.h>
-#endif
-
 #if defined(BOTAN_HAS_ECKAEG)
   #include <botan/eckaeg_op.h>
   #include <botan/ec_dompar.h>
@@ -74,12 +69,6 @@ ELG_Operation* elg_op(const DL_Group&, const BigInt&, const BigInt&);
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
 DH_Operation* dh_op(const DL_Group&, const BigInt&);
-#endif
-
-#if defined(BOTAN_HAS_ECDSA)
-ECDSA_Operation* ecdsa_op(const EC_Domain_Params& dom_pars,
-                          const BigInt& priv_key,
-                          const PointGFp& pub_key);
 #endif
 
 #if defined(BOTAN_HAS_ECKAEG)

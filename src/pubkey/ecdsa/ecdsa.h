@@ -11,7 +11,6 @@
 #define BOTAN_ECDSA_KEY_H__
 
 #include <botan/ecc_key.h>
-#include <botan/ecdsa_core.h>
 
 namespace Botan {
 
@@ -64,11 +63,6 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey,
       */
       ECDSA_PublicKey(const EC_Domain_Params& dom_par,
                       const PointGFp& public_point); // sets core
-
-   protected:
-      void X509_load_hook();
-
-      ECDSA_Core ecdsa_core;
    };
 
 /**
@@ -108,9 +102,6 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
 
       SecureVector<byte> sign(const byte message[], u32bit mess_len,
                               RandomNumberGenerator& rng) const;
-
-   private:
-      void PKCS8_load_hook(bool = false);
    };
 
 }
