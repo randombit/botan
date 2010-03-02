@@ -12,10 +12,7 @@
 
 #include <botan/point_gfp.h>
 #include <botan/curve_gfp.h>
-#include <botan/der_enc.h>
-#include <botan/ber_dec.h>
-#include <botan/alg_id.h>
-#include <botan/pubkey_enums.h>
+#include <botan/asn1_oid.h>
 
 namespace Botan {
 
