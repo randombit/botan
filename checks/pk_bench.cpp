@@ -45,8 +45,8 @@
   #include <botan/ecdsa.h>
 #endif
 
-#if defined(BOTAN_HAS_ECKAEG)
-  #include <botan/eckaeg.h>
+#if defined(BOTAN_HAS_ECDH)
+  #include <botan/ecdh.h>
 #endif
 
 using namespace Botan;
@@ -338,7 +338,7 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
 
 #endif
 
-#if defined(BOTAN_HAS_ECKAEG)
+#if defined(BOTAN_HAS_ECDH)
 
 void benchmark_eckaeg(RandomNumberGenerator& rng,
                       double seconds,
@@ -365,15 +365,15 @@ void benchmark_eckaeg(RandomNumberGenerator& rng,
       while(kex_timer.seconds() < seconds)
          {
          keygen_timer.start();
-         ECKAEG_PrivateKey eckaeg1(rng, params);
+         ECDH_PrivateKey eckaeg1(rng, params);
          keygen_timer.stop();
 
          keygen_timer.start();
-         ECKAEG_PrivateKey eckaeg2(rng, params);
+         ECDH_PrivateKey eckaeg2(rng, params);
          keygen_timer.stop();
 
-         ECKAEG_PublicKey pub1(eckaeg1);
-         ECKAEG_PublicKey pub2(eckaeg2);
+         ECDH_PublicKey pub1(eckaeg1);
+         ECDH_PublicKey pub2(eckaeg2);
 
          SecureVector<byte> secret1, secret2;
 
@@ -391,11 +391,11 @@ void benchmark_eckaeg(RandomNumberGenerator& rng,
             kex_timer.stop();
 
             if(secret1 != secret2)
-               std::cerr << "ECKAEG secrets did not match, bug in the library!?!\n";
+               std::cerr << "ECDH secrets did not match, bug in the library!?!\n";
             }
          }
 
-      const std::string nm = "ECKAEG-" + to_string(pbits);
+      const std::string nm = "ECDH-" + to_string(pbits);
       report.report(nm, keygen_timer);
       report.report(nm, kex_timer);
       }
@@ -672,8 +672,8 @@ void bench_pk(RandomNumberGenerator& rng,
       benchmark_ecdsa(rng, seconds, report);
 #endif
 
-#if defined(BOTAN_HAS_ECKAEG)
-   if(algo == "All" || algo == "ECKAEG")
+#if defined(BOTAN_HAS_ECDH)
+   if(algo == "All" || algo == "ECDH")
       benchmark_eckaeg(rng, seconds, report);
 #endif
 

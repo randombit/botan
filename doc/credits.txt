@@ -29,7 +29,7 @@ D: Windows porting
 N: Manuel Hartl
 E: hartl@flexsecure.de
 W: http://www.flexsecure.de/
-D: ECDSA, ECKAEG
+D: ECDSA, ECDH
 
 N: Yves Jerschow
 E: yves.jerschow@uni-duesseldorf.de

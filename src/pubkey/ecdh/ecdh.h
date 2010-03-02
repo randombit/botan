@@ -1,5 +1,5 @@
 /*
-* ECKAEG
+* ECDH
 * (C) 2007 Falko Strenzke, FlexSecure GmbH
 *          Manuel Hartl, FlexSecure GmbH
 * (C) 2008-2010 Jack Lloyd
@@ -7,17 +7,17 @@
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_ECKAEG_KEY_H__
-#define BOTAN_ECKAEG_KEY_H__
+#ifndef BOTAN_ECDH_KEY_H__
+#define BOTAN_ECDH_KEY_H__
 
 #include <botan/ecc_key.h>
 
 namespace Botan {
 
 /**
-* This class represents ECKAEG Public Keys.
+* This class represents ECDH Public Keys.
 */
-class BOTAN_DLL ECKAEG_PublicKey : public virtual EC_PublicKey
+class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
    {
    public:
 
@@ -25,21 +25,21 @@ class BOTAN_DLL ECKAEG_PublicKey : public virtual EC_PublicKey
       * Get this keys algorithm name.
       * @result this keys algorithm name
       */
-      std::string algo_name() const { return "ECKAEG"; }
+      std::string algo_name() const { return "ECDH"; }
 
       /**
       * Default constructor. Use this one if you want to later fill
       * this object with data from an encoded key.
       */
-      ECKAEG_PublicKey() {}
+      ECDH_PublicKey() {}
 
       /**
       * Construct a public key from a given public point.
       * @param dom_par the domain parameters associated with this key
       * @param public_point the public point defining this key
       */
-      ECKAEG_PublicKey(const EC_Domain_Params& dom_par,
-                       const PointGFp& public_point);
+      ECDH_PublicKey(const EC_Domain_Params& dom_par,
+                     const PointGFp& public_point);
 
       /**
       * Get the maximum number of bits allowed to be fed to this key.
@@ -51,11 +51,11 @@ class BOTAN_DLL ECKAEG_PublicKey : public virtual EC_PublicKey
    };
 
 /**
-* This class represents ECKAEG Private Keys.
+* This class represents ECDH Private Keys.
 */
-class BOTAN_DLL ECKAEG_PrivateKey : public ECKAEG_PublicKey,
-                                    public EC_PrivateKey,
-                                    public PK_Key_Agreement_Key
+class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
+                                  public EC_PrivateKey,
+                                  public PK_Key_Agreement_Key
    {
    public:
 
@@ -63,14 +63,14 @@ class BOTAN_DLL ECKAEG_PrivateKey : public ECKAEG_PublicKey,
       * Generate a new private key
       * @param the domain parameters to used for this key
       */
-      ECKAEG_PrivateKey(RandomNumberGenerator& rng,
-                        const EC_Domain_Params& dom_pars);
+      ECDH_PrivateKey(RandomNumberGenerator& rng,
+                      const EC_Domain_Params& dom_pars);
 
       /**
-      * Default constructor. Use this one if you want to later fill this object with data
-      * from an encoded key.
+      * Default constructor. Use this one if you want to later fill
+      * this object with data from an encoded key.
       */
-      ECKAEG_PrivateKey() {}
+      ECDH_PrivateKey() {}
 
       MemoryVector<byte> public_value() const
          { return EC2OSP(public_point(), PointGFp::UNCOMPRESSED); }
@@ -86,7 +86,7 @@ class BOTAN_DLL ECKAEG_PrivateKey : public ECKAEG_PublicKey,
       * Derive a shared key with the other parties public key.
       * @param other the other partys public key
       */
-      SecureVector<byte> derive_key(const ECKAEG_PublicKey& other) const;
+      SecureVector<byte> derive_key(const ECDH_PublicKey& other) const;
 
       /**
       * Derive a shared key with the other parties public key.
