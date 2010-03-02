@@ -219,7 +219,12 @@ inline PointGFp operator*(const PointGFp& point, const BigInt& scalar)
 
 // encoding and decoding
 SecureVector<byte> BOTAN_DLL EC2OSP(const PointGFp& point, byte format);
-PointGFp BOTAN_DLL OS2ECP(const MemoryRegion<byte>& os, const CurveGFp& curve);
+
+PointGFp BOTAN_DLL OS2ECP(const byte data[], u32bit data_len,
+                          const CurveGFp& curve);
+
+inline PointGFp OS2ECP(const MemoryRegion<byte>& data, const CurveGFp& curve)
+   { return OS2ECP(&data[0], data.size(), curve); }
 
 }
 

@@ -326,38 +326,39 @@ SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
       throw Invalid_Argument("illegal point encoding format specification");
    }
 
-PointGFp OS2ECP(const MemoryRegion<byte>& os, const CurveGFp& curve)
+PointGFp OS2ECP(const byte data[], u32bit data_len,
+                const CurveGFp& curve)
    {
-   if(os.size() == 1 && os[0] == 0)
+   if(data_len <= 1)
       return PointGFp(curve); // return zero
 
-   const byte pc = os[0];
+   const byte pc = data[0];
 
    BigInt x, y;
 
    if(pc == 2 || pc == 3)
       {
       //compressed form
-      x = BigInt::decode(&os[1], os.size() - 1);
+      x = BigInt::decode(&data[1], data_len - 1);
 
       bool yMod2 = ((pc & 0x01) == 1);
       y = decompress_point(yMod2, x, curve);
       }
    else if(pc == 4)
       {
-      // uncompressed form
-      u32bit l = (os.size() - 1) / 2;
+      const u32bit l = (data_len - 1) / 2;
 
-      x = BigInt::decode(&os[1], l);
-      y = BigInt::decode(&os[l+1], l);
+      // uncompressed form
+      x = BigInt::decode(&data[1], l);
+      y = BigInt::decode(&data[l+1], l);
       }
    else if(pc == 6 || pc == 7)
       {
-      // hybrid form
-      u32bit l = (os.size() - 1) / 2;
+      const u32bit l = (data_len - 1) / 2;
 
-      x = BigInt::decode(&os[1], l);
-      y = BigInt::decode(&os[l+1], l);
+      // hybrid form
+      x = BigInt::decode(&data[1], l);
+      y = BigInt::decode(&data[l+1], l);
 
       bool yMod2 = ((pc & 0x01) == 1);
 

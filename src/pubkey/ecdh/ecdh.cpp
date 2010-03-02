@@ -17,9 +17,7 @@ namespace Botan {
 SecureVector<byte> ECDH_PrivateKey::derive_key(const byte key[],
                                                u32bit key_len) const
    {
-   MemoryVector<byte> key_x(key, key_len); // FIXME: nasty/slow
-   PointGFp point = OS2ECP(key_x, public_point().get_curve());
-
+   PointGFp point = OS2ECP(key, key_len, public_point().get_curve());
    return derive_key(point);
    }
 
