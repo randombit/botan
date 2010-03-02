@@ -49,6 +49,10 @@
   #include <botan/ecdh.h>
 #endif
 
+#if defined(BOTAN_HAS_GOST_34_10_2001)
+  #include <botan/gost_3410.h>
+#endif
+
 using namespace Botan;
 
 #include "common.h"
@@ -338,11 +342,70 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
 
 #endif
 
+#if defined(BOTAN_HAS_GOST_34_10_2001)
+
+void benchmark_gost_3410(RandomNumberGenerator& rng,
+                         double seconds,
+                         Benchmark_Report& report)
+   {
+   const char* domains[] = { "1.3.132.0.6", // secp112r1
+                             "1.3.132.0.28", // secp128r1
+                             "1.3.132.0.30", // secp160r2
+                             "1.3.132.0.33", // secp224r1
+                             "1.2.643.2.2.35.1", // gost 256p
+                             "1.3.132.0.34", // secp384r1
+                             "1.3.132.0.35", // secp512r1
+                             NULL };
+
+   for(size_t j = 0; domains[j]; j++)
+      {
+      OID oid(domains[j]);
+      EC_Domain_Params params(oid);
+
+      u32bit pbits = params.get_curve().get_p().bits();
+
+      u32bit hashbits = pbits;
+
+      if(hashbits < 160)
+         hashbits = 160;
+      if(hashbits == 521)
+         hashbits = 512;
+
+      const std::string padding = "EMSA1(SHA-" + to_string(hashbits) + ")";
+
+      Timer keygen_timer("keygen");
+      Timer verify_timer(padding + " verify");
+      Timer sig_timer(padding + " signature");
+
+      while(verify_timer.seconds() < seconds ||
+            sig_timer.seconds() < seconds)
+         {
+         keygen_timer.start();
+         GOST_3410_PrivateKey key(rng, params);
+         keygen_timer.stop();
+
+         std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));
+         std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
+
+         benchmark_sig_ver(*ver, *sig, verify_timer,
+                           sig_timer, rng, 1000, seconds);
+         }
+
+      const std::string nm = "GOST-34.10-" + to_string(pbits);
+
+      report.report(nm, keygen_timer);
+      report.report(nm, verify_timer);
+      report.report(nm, sig_timer);
+      }
+   }
+
+#endif
+
 #if defined(BOTAN_HAS_ECDH)
 
-void benchmark_eckaeg(RandomNumberGenerator& rng,
-                      double seconds,
-                      Benchmark_Report& report)
+void benchmark_ecdh(RandomNumberGenerator& rng,
+                    double seconds,
+                    Benchmark_Report& report)
    {
    const char* domains[] = { "1.3.132.0.6", // secp112r1
                              "1.3.132.0.28", // secp128r1
@@ -365,15 +428,15 @@ void benchmark_eckaeg(RandomNumberGenerator& rng,
       while(kex_timer.seconds() < seconds)
          {
          keygen_timer.start();
-         ECDH_PrivateKey eckaeg1(rng, params);
+         ECDH_PrivateKey ecdh1(rng, params);
          keygen_timer.stop();
 
          keygen_timer.start();
-         ECDH_PrivateKey eckaeg2(rng, params);
+         ECDH_PrivateKey ecdh2(rng, params);
          keygen_timer.stop();
 
-         ECDH_PublicKey pub1(eckaeg1);
-         ECDH_PublicKey pub2(eckaeg2);
+         ECDH_PublicKey pub1(ecdh1);
+         ECDH_PublicKey pub2(ecdh2);
 
          SecureVector<byte> secret1, secret2;
 
@@ -383,11 +446,11 @@ void benchmark_eckaeg(RandomNumberGenerator& rng,
                break;
 
             kex_timer.start();
-            secret1 = eckaeg1.derive_key(pub2);
+            secret1 = ecdh1.derive_key(pub2);
             kex_timer.stop();
 
             kex_timer.start();
-            secret2 = eckaeg2.derive_key(pub1);
+            secret2 = ecdh2.derive_key(pub1);
             kex_timer.stop();
 
             if(secret1 != secret2)
@@ -674,7 +737,12 @@ void bench_pk(RandomNumberGenerator& rng,
 
 #if defined(BOTAN_HAS_ECDH)
    if(algo == "All" || algo == "ECDH")
-      benchmark_eckaeg(rng, seconds, report);
+      benchmark_ecdh(rng, seconds, report);
+#endif
+
+#if defined(BOTAN_HAS_GOST_34_10_2001)
+   if(algo == "All" || algo == "GOST-34.10")
+      benchmark_gost_3410(rng, seconds, report);
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)

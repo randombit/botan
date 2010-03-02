@@ -23,7 +23,7 @@ u32bit do_pk_validation_tests(const std::string&,
 void do_ec_tests(RandomNumberGenerator& rng);
 
 u32bit do_ecdsa_tests(RandomNumberGenerator& rng);
-u32bit do_eckaeg_tests(RandomNumberGenerator& rng);
+u32bit do_ecdh_tests(RandomNumberGenerator& rng);
 u32bit do_cvc_tests(RandomNumberGenerator& rng);
 
 void do_x509_tests(RandomNumberGenerator&);

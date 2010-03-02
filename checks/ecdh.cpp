@@ -30,7 +30,7 @@ using namespace Botan;
 
 namespace {
 
-void test_eckaeg_normal_derivation(RandomNumberGenerator& rng)
+void test_ecdh_normal_derivation(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
@@ -87,7 +87,7 @@ void test_eckaeg_normal_derivation(RandomNumberGenerator& rng)
       }
    }
 
-void test_eckaeg_some_dp(RandomNumberGenerator& rng)
+void test_ecdh_some_dp(RandomNumberGenerator& rng)
    {
    std::vector<std::string> oids;
    oids.push_back("1.2.840.10045.3.1.7");
@@ -126,7 +126,7 @@ void test_eckaeg_some_dp(RandomNumberGenerator& rng)
 
    }
 
-void test_eckaeg_der_derivation(RandomNumberGenerator& rng)
+void test_ecdh_der_derivation(RandomNumberGenerator& rng)
    {
    std::vector<std::string> oids;
    oids.push_back("1.2.840.10045.3.1.7");
@@ -156,7 +156,7 @@ void test_eckaeg_der_derivation(RandomNumberGenerator& rng)
 /**
 * The following test tests the copy ctors and and copy-assignment operators
 */
-void test_eckaeg_cp_ctor_as_op(RandomNumberGenerator& rng)
+void test_ecdh_cp_ctor_as_op(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
@@ -214,7 +214,7 @@ void test_eckaeg_cp_ctor_as_op(RandomNumberGenerator& rng)
 * The following test tests whether ECDH keys exhibit correct behaviour when it is
 * attempted to use them in an uninitialized state
 */
-void test_non_init_eckaeg_keys(RandomNumberGenerator& rng)
+void test_non_init_ecdh_keys(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
@@ -266,15 +266,15 @@ void test_non_init_eckaeg_keys(RandomNumberGenerator& rng)
 
 }
 
-u32bit do_eckaeg_tests(Botan::RandomNumberGenerator& rng)
+u32bit do_ecdh_tests(Botan::RandomNumberGenerator& rng)
    {
    std::cout << "Testing ECDH (InSiTo unit tests): ";
 
-   test_eckaeg_normal_derivation(rng);
-   test_eckaeg_some_dp(rng);
-   test_eckaeg_der_derivation(rng);
-   test_eckaeg_cp_ctor_as_op(rng);
-   test_non_init_eckaeg_keys(rng);
+   test_ecdh_normal_derivation(rng);
+   test_ecdh_some_dp(rng);
+   test_ecdh_der_derivation(rng);
+   test_ecdh_cp_ctor_as_op(rng);
+   test_non_init_ecdh_keys(rng);
 
    std::cout << std::endl;
 
@@ -282,5 +282,5 @@ u32bit do_eckaeg_tests(Botan::RandomNumberGenerator& rng)
    }
 
 #else
-u32bit do_eckaeg_tests(Botan::RandomNumberGenerator&) { return 0; }
+u32bit do_ecdh_tests(Botan::RandomNumberGenerator&) { return 0; }
 #endif
