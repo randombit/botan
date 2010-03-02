@@ -166,10 +166,25 @@ std::string python_pbkdf2(const std::string& passphrase,
    {
    PKCS5_PBKDF2 pbkdf2(new HMAC(get_hash(hash_fn)));
 
-   pbkdf2.set_iterations(iterations);
-   pbkdf2.change_salt(reinterpret_cast<const byte*>(salt.data()), salt.size());
+   return make_string(
+      pbkdf2.derive_key(output_size,
+                        passphrase,
+                        reinterpret_cast<const byte*>(salt.data()),
+                        salt.size(),
+                        iterations).bits_of());
+   }
 
-   return make_string(pbkdf2.derive_key(output_size, passphrase).bits_of());
+std::string python_kdf2(const std::string& param,
+                        const std::string& masterkey,
+                        u32bit outputlength)
+   {
+   std::auto_ptr<KDF> kdf(get_kdf("KDF2(SHA-1)"));
+
+   return make_string(
+      kdf->derive_key(outputlength,
+                      reinterpret_cast<const byte*>(masterkey.data()),
+                      masterkey.length(),
+                      param));
    }
 
 BOOST_PYTHON_MODULE(_botan)
@@ -209,6 +224,7 @@ BOOST_PYTHON_MODULE(_botan)
    python::def("cryptobox_encrypt", cryptobox_encrypt);
    python::def("cryptobox_decrypt", cryptobox_decrypt);
    python::def("pbkdf2", python_pbkdf2);
+   python::def("derive_key", python_kdf2);
 
    export_filters();
    export_rsa();
