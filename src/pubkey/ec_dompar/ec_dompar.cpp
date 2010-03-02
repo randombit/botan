@@ -35,7 +35,7 @@ EC_Domain_Params::EC_Domain_Params(const std::string& pem)
       DataSource_Memory input(pem);
 
       *this = EC_Domain_Params(
-         PEM_Code::decode_check_label(input, "ECC DOMAIN PARAMETERS"));
+         PEM_Code::decode_check_label(input, "EC PARAMETERS"));
       }
    }
 
@@ -136,7 +136,7 @@ EC_Domain_Params::DER_encode(EC_Domain_Params_Encoding form) const
 std::string EC_Domain_Params::PEM_encode() const
    {
    SecureVector<byte> der = DER_encode(EC_DOMPAR_ENC_EXPLICIT);
-   return PEM_Code::encode(der, "ECC DOMAIN PARAMETERS");
+   return PEM_Code::encode(der, "EC PARAMETERS");
    }
 
 }
