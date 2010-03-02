@@ -9,13 +9,6 @@
 #ifndef BOTAN_CVC_EAC_H__
 #define BOTAN_CVC_EAC_H__
 
-#include <botan/x509_key.h>
-#include <botan/pubkey_enums.h>
-#include <botan/signed_obj.h>
-#include <botan/pubkey.h>
-#include <botan/ecdsa.h>
-#include <botan/ecdsa_sig.h>
-#include <botan/eac_obj.h>
 #include <botan/cvc_gen_cert.h>
 #include <string>
 
@@ -70,7 +63,6 @@ class BOTAN_DLL EAC1_1_CVC : public EAC1_1_gen_CVC<EAC1_1_CVC>//Signed_Object
        virtual ~EAC1_1_CVC() {}
     private:
        void force_decode();
-       friend class EAC1_1_CVC_CA;
        EAC1_1_CVC() {}
 
        ASN1_Car m_car;
@@ -87,6 +79,28 @@ inline bool operator!=(EAC1_1_CVC const& lhs, EAC1_1_CVC const& rhs)
    {
    return !(lhs == rhs);
    }
+
+/**
+* Create an arbitrary EAC 1.1 CVC.
+* The desired key encoding must be set within the key (if applicable).
+* @param signer the signer used to sign the certificate
+* @param public_key the DER encoded public key to appear in
+* the certificate
+* @param car the CAR of the certificate
+* @param chr the CHR of the certificate
+* @param holder_auth_templ the holder authorization value byte to
+* appear in the CHAT of the certificate
+* @param ced the CED to appear in the certificate
+* @param ced the CEX to appear in the certificate
+*/
+EAC1_1_CVC BOTAN_DLL make_cvc_cert(PK_Signer& signer,
+                                   MemoryRegion<byte> const& public_key,
+                                   ASN1_Car const& car,
+                                   ASN1_Chr const& chr,
+                                   byte holder_auth_templ,
+                                   ASN1_Ced ced,
+                                   ASN1_Cex cex,
+                                   RandomNumberGenerator& rng);
 
 }
 

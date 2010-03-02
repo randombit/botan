@@ -8,16 +8,11 @@
 #ifndef BOTAN_EAC_OBJ_H__
 #define BOTAN_EAC_OBJ_H__
 
-#include <botan/pubkey.h>
-#include <botan/x509_key.h>
-#include <botan/signed_obj.h>
-#include <botan/pubkey_enums.h>
-#include <botan/pubkey.h>
-#include <botan/parsing.h>
-#include <botan/pem.h>
-#include <botan/oids.h>
-#include <botan/look_pk.h>
 #include <botan/ecdsa_sig.h>
+#include <botan/signed_obj.h>
+#include <botan/look_pk.h>
+#include <botan/oids.h>
+#include <memory>
 #include <string>
 
 namespace Botan {

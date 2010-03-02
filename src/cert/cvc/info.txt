@@ -4,7 +4,6 @@ load_on auto
 
 <header:public>
 cvc_ado.h
-cvc_ca.h
 cvc_cert.h
 cvc_gen_cert.h
 cvc_key.h
@@ -21,7 +20,6 @@ asn1_eac_str.cpp
 asn1_eac_tm.cpp
 ecdsa_sig.cpp
 cvc_ado.cpp
-cvc_ca.cpp
 cvc_cert.cpp
 cvc_req.cpp
 cvc_self.cpp

@@ -13,7 +13,7 @@ ECDSA_Signature::ECDSA_Signature(const ECDSA_Signature& other)
    : m_r(other.m_r), m_s(other.m_s)
    {}
 
-ECDSA_Signature const& ECDSA_Signature::operator=(const ECDSA_Signature& other)
+ECDSA_Signature& ECDSA_Signature::operator=(const ECDSA_Signature& other)
    {
    m_r = other.m_r;
    m_s = other.m_s;
@@ -25,7 +25,7 @@ bool operator==(const ECDSA_Signature& lhs, const ECDSA_Signature& rhs)
    return (lhs.get_r() == rhs.get_r() && lhs.get_s() == rhs.get_s());
    }
 
-SecureVector<byte> const ECDSA_Signature::get_concatenation() const
+SecureVector<byte> ECDSA_Signature::get_concatenation() const
    {
    u32bit enc_len = m_r > m_s ? m_r.bytes() : m_s.bytes(); // use the larger
 
@@ -37,7 +37,7 @@ SecureVector<byte> const ECDSA_Signature::get_concatenation() const
    return result;
    }
 
-ECDSA_Signature const decode_seq(MemoryRegion<byte> const& seq)
+ECDSA_Signature decode_seq(const MemoryRegion<byte>& seq)
    {
    ECDSA_Signature sig;
 
@@ -46,7 +46,7 @@ ECDSA_Signature const decode_seq(MemoryRegion<byte> const& seq)
    return sig;
    }
 
-ECDSA_Signature const decode_concatenation(MemoryRegion<byte> const& concat)
+ECDSA_Signature decode_concatenation(const MemoryRegion<byte>& concat)
    {
    if(concat.size() % 2 != 0)
       throw Invalid_Argument("Erroneous length of signature");

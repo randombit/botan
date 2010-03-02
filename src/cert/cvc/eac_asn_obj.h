@@ -1,7 +1,7 @@
 /*
 * EAC ASN.1 Objects
 * (C) 2007-2008 FlexSecure GmbH
-*     2008 Jack Lloyd
+*     2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -10,8 +10,6 @@
 #define BOTAN_EAC_ASN1_OBJ_H__
 
 #include <botan/asn1_obj.h>
-#include <vector>
-#include <map>
 
 namespace Botan {
 

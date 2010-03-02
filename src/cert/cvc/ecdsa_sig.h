@@ -1,7 +1,7 @@
 /*
 * ECDSA
 * (C) 2007 Falko Strenzke, FlexSecure GmbH
-* (C) 2008 Jack Lloyd
+* (C) 2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -22,8 +22,8 @@ class BOTAN_DLL ECDSA_Signature
 
       ECDSA_Signature() {}
       ECDSA_Signature(const BigInt& r, const BigInt& s);
-      ECDSA_Signature(ECDSA_Signature const& other);
-      ECDSA_Signature const& operator=(ECDSA_Signature const& other);
+      ECDSA_Signature(const ECDSA_Signature& other);
+      ECDSA_Signature& operator=(const ECDSA_Signature& other);
 
       const BigInt& get_r() const { return m_r; }
       const BigInt& get_s() const { return m_s; }
@@ -31,7 +31,7 @@ class BOTAN_DLL ECDSA_Signature
       /**
       * return the r||s
       */
-      SecureVector<byte> const get_concatenation() const;
+      SecureVector<byte> get_concatenation() const;
    private:
       BigInt m_r;
       BigInt m_s;
@@ -56,8 +56,11 @@ class BOTAN_DLL ECDSA_Signature_Decoder
             .verify_end()
             .end_cons();
          }
-      ECDSA_Signature_Decoder(ECDSA_Signature* signature) : m_signature(signature)
+
+      ECDSA_Signature_Decoder(ECDSA_Signature* signature) :
+         m_signature(signature)
          {}
+
    private:
       ECDSA_Signature* m_signature;
    };
@@ -74,14 +77,17 @@ class BOTAN_DLL ECDSA_Signature_Encoder
             .end_cons()
             .get_contents();
          }
-      ECDSA_Signature_Encoder(const ECDSA_Signature* signature) : m_signature(signature)
+
+      ECDSA_Signature_Encoder(const ECDSA_Signature* signature) :
+         m_signature(signature)
          {}
+
    private:
       const ECDSA_Signature* m_signature;
    };
 
-ECDSA_Signature const decode_seq(MemoryRegion<byte> const& seq);
-ECDSA_Signature const decode_concatenation(MemoryRegion<byte> const& concatenation);
+ECDSA_Signature decode_seq(const MemoryRegion<byte>& seq);
+ECDSA_Signature decode_concatenation(const MemoryRegion<byte>& concatenation);
 
 }
 

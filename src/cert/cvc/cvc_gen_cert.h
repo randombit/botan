@@ -1,7 +1,7 @@
 /*
 * EAC1_1 general CVC
 * (C) 2008 Falko Strenzke
-*     2008 Jack Lloyd
+*     2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -9,13 +9,10 @@
 #ifndef BOTAN_EAC_CVC_GEN_CERT_H__
 #define BOTAN_EAC_CVC_GEN_CERT_H__
 
-#include <botan/x509_key.h>
+#include <botan/eac_obj.h>
 #include <botan/eac_asn_obj.h>
-#include <botan/pubkey_enums.h>
-#include <botan/pubkey.h>
 #include <botan/ecdsa.h>
-#include <botan/ecdsa_sig.h>
-#include <string>
+#include <memory>
 
 namespace Botan {
 
