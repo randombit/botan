@@ -103,7 +103,12 @@ class BOTAN_DLL PointGFp
       * Negate this point
       * @return *this
       */
-      PointGFp& negate();
+      PointGFp& negate()
+         {
+         if(!is_zero())
+            coord_y = curve.get_p() - coord_y;
+         return *this;
+         }
 
       /**
       * Return base curve of this point
@@ -145,7 +150,8 @@ class BOTAN_DLL PointGFp
       * Is this the point at infinity?
       * @result true, if this point is at infinity, false otherwise.
       */
-      bool is_zero() const;
+      bool is_zero() const
+         { return (coord_x.is_zero() && coord_z.is_zero()); }
 
       /**
       *  Checks whether the point is to be found on the underlying curve.
@@ -182,12 +188,34 @@ inline bool operator!=(const PointGFp& lhs, const PointGFp& rhs)
    }
 
 // arithmetic operators
-PointGFp BOTAN_DLL operator+(const PointGFp& lhs, const PointGFp& rhs);
-PointGFp BOTAN_DLL operator-(const PointGFp& lhs, const PointGFp& rhs);
-PointGFp BOTAN_DLL operator-(const PointGFp& lhs);
+inline PointGFp operator-(const PointGFp& lhs)
+   {
+   return PointGFp(lhs).negate();
+   }
 
-PointGFp BOTAN_DLL operator*(const BigInt& scalar, const PointGFp& point);
-PointGFp BOTAN_DLL operator*(const PointGFp& point, const BigInt& scalar);
+inline PointGFp operator+(const PointGFp& lhs, const PointGFp& rhs)
+   {
+   PointGFp tmp(lhs);
+   return tmp += rhs;
+   }
+
+inline PointGFp operator-(const PointGFp& lhs, const PointGFp& rhs)
+   {
+   PointGFp tmp(lhs);
+   return tmp -= rhs;
+   }
+
+inline PointGFp operator*(const BigInt& scalar, const PointGFp& point)
+   {
+   PointGFp result(point);
+   return result *= scalar;
+   }
+
+inline PointGFp operator*(const PointGFp& point, const BigInt& scalar)
+   {
+   PointGFp result(point);
+   return result *= scalar;
+   }
 
 // encoding and decoding
 SecureVector<byte> BOTAN_DLL EC2OSP(const PointGFp& point, byte format);

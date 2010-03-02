@@ -164,14 +164,6 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
    return *this;
    }
 
-PointGFp& PointGFp::negate()
-   {
-   if(!is_zero())
-      coord_y = curve.get_p() - coord_y;
-
-   return *this;
-   }
-
 // *this *= 2
 void PointGFp::mult2()
    {
@@ -229,12 +221,6 @@ BigInt PointGFp::get_affine_y() const
    return mod_p.multiply(coord_y, inverse_mod(z3, curve.get_p()));
    }
 
-// Is this the point at infinity?
-bool PointGFp::is_zero() const
-   {
-   return(coord_x.is_zero() && coord_z.is_zero());
-   }
-
 void PointGFp::check_invariants() const
    {
    /*
@@ -286,36 +272,6 @@ bool PointGFp::operator==(const PointGFp& other) const
            coord_y == other.coord_y &&
            coord_z == other.coord_z &&
            get_curve() == other.get_curve());
-   }
-
-// arithmetic operators
-PointGFp operator+(const PointGFp& lhs, PointGFp const& rhs)
-   {
-   PointGFp tmp(lhs);
-   return tmp += rhs;
-   }
-
-PointGFp operator-(const PointGFp& lhs, PointGFp const& rhs)
-   {
-   PointGFp tmp(lhs);
-   return tmp -= rhs;
-   }
-
-PointGFp operator-(const PointGFp& lhs)
-   {
-   return PointGFp(lhs).negate();
-   }
-
-PointGFp operator*(const BigInt& scalar, const PointGFp& point)
-   {
-   PointGFp result(point);
-   return result *= scalar;
-   }
-
-PointGFp operator*(const PointGFp& point, const BigInt& scalar)
-   {
-   PointGFp result(point);
-   return result *= scalar;
    }
 
 // encoding and decoding
