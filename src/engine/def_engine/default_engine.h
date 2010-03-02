@@ -44,18 +44,6 @@ class Default_Engine : public Engine
       DH_Operation* dh_op(const DL_Group&, const BigInt&) const;
 #endif
 
-#if defined(BOTAN_HAS_ECDSA)
-      virtual ECDSA_Operation* ecdsa_op(const EC_Domain_Params&,
-                                        const BigInt&,
-                                        const PointGFp&) const;
-#endif
-
-#if defined(BOTAN_HAS_ECKAEG)
-      virtual ECKAEG_Operation* eckaeg_op(const EC_Domain_Params&,
-                                          const BigInt&,
-                                          const PointGFp&) const;
-#endif
-
       Modular_Exponentiator* mod_exp(const BigInt&,
                                      Power_Mod::Usage_Hints) const;
 

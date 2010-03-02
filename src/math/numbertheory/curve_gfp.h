@@ -23,6 +23,11 @@ class BOTAN_DLL CurveGFp
    public:
 
       /**
+      * Create an uninitialized CurveGFp
+      */
+      CurveGFp() {}
+
+      /**
       * Construct the elliptic curve E: y^2 = x^3 + ax + b over GF(p)
       * @param p prime number of the field
       * @param a first coefficient

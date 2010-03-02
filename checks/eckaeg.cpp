@@ -1,29 +1,27 @@
-/******************************************************
-* ECKAEG tests                                        *
-*                                                     *
-* (C) 2007 Manuel Hartl                               *
-*          hartl@flexsecure.de                        *
-*     2008 Jack Lloyd                                 *
-******************************************************/
+/*
+* ECDH tests
+*
+* (C) 2007 Manuel Hartl (hartl@flexsecure.de)
+*     2008 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
 
 #include <botan/build.h>
 
 #include "validate.h"
 #include "common.h"
 
-#if defined(BOTAN_HAS_ECKAEG)
+#if defined(BOTAN_HAS_ECDH)
 
 #include <iostream>
 #include <fstream>
 
 #include <botan/symkey.h>
 #include <botan/dh.h>
-#include <botan/eckaeg.h>
+#include <botan/ecdh.h>
 #include <botan/x509self.h>
 #include <botan/der_enc.h>
-
-#include <botan/point_gfp.h>
-#include <botan/curve_gfp.h>
 
 using namespace Botan;
 
@@ -64,17 +62,17 @@ void test_eckaeg_normal_derivation(RandomNumberGenerator& rng)
    Botan::EC_Domain_Params dom_pars = Botan::EC_Domain_Params(curve, p_G, order, cofactor);
 
    /**
-   * begin ECKAEG
+   * begin ECDH
    */
    // alices key (a key constructed by domain parameters IS an ephimeral key!)
-   Botan::ECKAEG_PrivateKey private_a(rng, dom_pars);
-   Botan::ECKAEG_PublicKey public_a = private_a; // Bob gets this
+   Botan::ECDH_PrivateKey private_a(rng, dom_pars);
+   Botan::ECDH_PublicKey public_a = private_a; // Bob gets this
 
    // Bob creates a key with a matching group
-   Botan::ECKAEG_PrivateKey private_b(rng, dom_pars); //public_a.getCurve()
+   Botan::ECDH_PrivateKey private_b(rng, dom_pars); //public_a.getCurve()
 
    // Bob sends the key back to Alice
-   Botan::ECKAEG_PublicKey public_b = private_b; // Alice gets this
+   Botan::ECDH_PublicKey public_b = private_b; // Alice gets this
 
    // Both of them create a key using their private key and the other's
    // public key
@@ -99,9 +97,11 @@ void test_eckaeg_some_dp(RandomNumberGenerator& rng)
    for(Botan::u32bit i = 0; i< oids.size(); i++)
       {
       std::cout << "." << std::flush;
-      Botan::EC_Domain_Params dom_pars(Botan::get_EC_Dom_Pars_by_oid(oids[i]));
-      Botan::ECKAEG_PrivateKey private_a(rng, dom_pars);
-      Botan::ECKAEG_PublicKey public_a = private_a;
+
+      Botan::OID oid(oids[i]);
+      Botan::EC_Domain_Params dom_pars(oid);
+      Botan::ECDH_PrivateKey private_a(rng, dom_pars);
+      Botan::ECDH_PublicKey public_a = private_a;
       /*unique_ptr<Botan::X509_Encoder> x509_key_enc = public_a.x509_encoder();
       Botan::MemoryVector<Botan::byte> enc_key_a = Botan::DER_Encoder()
       .start_cons(Botan::SEQUENCE)
@@ -110,8 +110,8 @@ void test_eckaeg_some_dp(RandomNumberGenerator& rng)
       .end_cons()
       .get_contents();*/
 
-      Botan::ECKAEG_PrivateKey private_b(rng, dom_pars);
-      Botan::ECKAEG_PublicKey public_b = private_b;
+      Botan::ECDH_PrivateKey private_b(rng, dom_pars);
+      Botan::ECDH_PublicKey public_b = private_b;
       // to test the equivalence, we
       // use the direct derivation method here
 
@@ -135,13 +135,14 @@ void test_eckaeg_der_derivation(RandomNumberGenerator& rng)
 
    for(Botan::u32bit i = 0; i< oids.size(); i++)
       {
-      Botan::EC_Domain_Params dom_pars(Botan::get_EC_Dom_Pars_by_oid(oids[i]));
+      Botan::OID oid(oids[i]);
+      Botan::EC_Domain_Params dom_pars(oid);
 
-      Botan::ECKAEG_PrivateKey private_a(rng, dom_pars);
-      Botan::ECKAEG_PublicKey public_a = private_a;
+      Botan::ECDH_PrivateKey private_a(rng, dom_pars);
+      Botan::ECDH_PublicKey public_a = private_a;
 
-      Botan::ECKAEG_PrivateKey private_b(rng, dom_pars);
-      Botan::ECKAEG_PublicKey public_b = private_b;
+      Botan::ECDH_PrivateKey private_b(rng, dom_pars);
+      Botan::ECDH_PublicKey public_b = private_b;
 
       Botan::MemoryVector<Botan::byte> key_der_a = private_a.public_value();
       Botan::MemoryVector<Botan::byte> key_der_b = private_b.public_value();
@@ -171,26 +172,26 @@ void test_eckaeg_cp_ctor_as_op(RandomNumberGenerator& rng)
    Botan::EC_Domain_Params dom_pars = Botan::EC_Domain_Params(curve, p_G, order, cofactor);
 
    /**
-   * begin ECKAEG
+   * begin ECDH
    */
    // alices key (a key constructed by domain parameters IS an ephimeral key!)
-   Botan::ECKAEG_PrivateKey private_a(rng, dom_pars);
-   Botan::ECKAEG_PrivateKey private_a2(private_a);
-   Botan::ECKAEG_PrivateKey private_a3;
+   Botan::ECDH_PrivateKey private_a(rng, dom_pars);
+   Botan::ECDH_PrivateKey private_a2(private_a);
+   Botan::ECDH_PrivateKey private_a3;
    private_a3 = private_a2;
 
    Botan::DH_PrivateKey dh_pr_empty;
    Botan::DH_PublicKey dh_pub_empty;
 
-   Botan::ECKAEG_PublicKey public_a = private_a; // Bob gets this
-   Botan::ECKAEG_PublicKey public_a2(public_a);
-   Botan::ECKAEG_PublicKey public_a3;
+   Botan::ECDH_PublicKey public_a = private_a; // Bob gets this
+   Botan::ECDH_PublicKey public_a2(public_a);
+   Botan::ECDH_PublicKey public_a3;
    public_a3 = public_a;
    // Bob creates a key with a matching group
-   Botan::ECKAEG_PrivateKey private_b(rng, dom_pars); //public_a.getCurve()
+   Botan::ECDH_PrivateKey private_b(rng, dom_pars); //public_a.getCurve()
 
    // Bob sends the key back to Alice
-   Botan::ECKAEG_PublicKey public_b = private_b; // Alice gets this
+   Botan::ECDH_PublicKey public_b = private_b; // Alice gets this
 
    // Both of them create a key using their private key and the other's
    // public key
@@ -210,7 +211,7 @@ void test_eckaeg_cp_ctor_as_op(RandomNumberGenerator& rng)
    }
 
 /**
-* The following test tests whether ECKAEG keys exhibit correct behaviour when it is
+* The following test tests whether ECDH keys exhibit correct behaviour when it is
 * attempted to use them in an uninitialized state
 */
 void test_non_init_eckaeg_keys(RandomNumberGenerator& rng)
@@ -230,13 +231,13 @@ void test_non_init_eckaeg_keys(RandomNumberGenerator& rng)
    Botan::EC_Domain_Params dom_pars = Botan::EC_Domain_Params(curve, p_G, order, cofactor);
 
    // alices key (a key constructed by domain parameters IS an emphemeral key!)
-   Botan::ECKAEG_PrivateKey private_a(rng, dom_pars);
-   Botan::ECKAEG_PrivateKey private_b(rng, dom_pars);
+   Botan::ECDH_PrivateKey private_a(rng, dom_pars);
+   Botan::ECDH_PrivateKey private_b(rng, dom_pars);
 
-   Botan::ECKAEG_PublicKey public_b;
+   Botan::ECDH_PublicKey public_b;
 
-   Botan::ECKAEG_PrivateKey private_empty;
-   Botan::ECKAEG_PublicKey public_empty;
+   Botan::ECDH_PrivateKey private_empty;
+   Botan::ECDH_PublicKey public_empty;
 
    bool exc1 = false;
    try
@@ -248,7 +249,7 @@ void test_non_init_eckaeg_keys(RandomNumberGenerator& rng)
       exc1 = true;
       }
 
-   CHECK_MESSAGE(exc1, "there was no exception thrown when attempting to use an uninitialized ECKAEG key");
+   CHECK_MESSAGE(exc1, "there was no exception thrown when attempting to use an uninitialized ECDH key");
 
    bool exc2 = false;
    try
@@ -260,14 +261,14 @@ void test_non_init_eckaeg_keys(RandomNumberGenerator& rng)
       exc2 = true;
       }
 
-   CHECK_MESSAGE(exc2, "there was no exception thrown when attempting to use an uninitialized ECKAEG key");
+   CHECK_MESSAGE(exc2, "there was no exception thrown when attempting to use an uninitialized ECDH key");
    }
 
 }
 
 u32bit do_eckaeg_tests(Botan::RandomNumberGenerator& rng)
    {
-   std::cout << "Testing ECKAEG (InSiTo unit tests): ";
+   std::cout << "Testing ECDH (InSiTo unit tests): ";
 
    test_eckaeg_normal_derivation(rng);
    test_eckaeg_some_dp(rng);

@@ -91,9 +91,9 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
    opts.hash_alg = "SHA-256";
 
    // creating a non sense selfsigned cert w/o dom pars
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.11"));
+   EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.11"));
    ECDSA_PrivateKey key(rng, dom_pars);
-   key.set_parameter_encoding(ENC_IMPLICITCA);
+   key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    EAC1_1_CVC cert = CVC_EAC::create_self_signed_cert(key, opts, rng);
 
    SecureVector<byte> der(cert.BER_encode());
@@ -169,11 +169,11 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
    // let´s see if encoding is truely implicitca, because this is what the key should have
    // been set to when decoding (see above)(because it has no domain params):
    //cout << "encoding = " << p_ecdsa_pk->get_parameter_encoding() << std::endl;
-   CHECK(p_ecdsa_pk->get_parameter_encoding() == ENC_IMPLICITCA);
+   CHECK(p_ecdsa_pk->domain_format() == EC_DOMPAR_ENC_IMPLICITCA);
    bool exc = false;
    try
       {
-      std::cout << "order = " << p_ecdsa_pk->domain_parameters().get_order() << std::endl;
+      std::cout << "order = " << p_ecdsa_pk->domain().get_order() << std::endl;
       }
    catch (Invalid_State)
       {
@@ -184,8 +184,8 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
    //cert_in.set_domain_parameters(dom_pars);
    std::unique_ptr<Public_Key> p_pk2 = cert_in.subject_public_key();
    ECDSA_PublicKey* p_ecdsa_pk2 = dynamic_cast<ECDSA_PublicKey*>(p_pk2.get());
-   p_ecdsa_pk2->set_domain_parameters(dom_pars);
-   CHECK(p_ecdsa_pk2->domain_parameters().get_order() == dom_pars.get_order());
+   //p_ecdsa_pk2->set_domain_parameters(dom_pars);
+   CHECK(p_ecdsa_pk2->domain().get_order() == dom_pars.get_order());
    bool ver_ec = cert_in.check_signature(*p_pk2);
    CHECK_MESSAGE(ver_ec, "could not positively verify correct selfsigned cvc certificate");
    }
@@ -201,9 +201,9 @@ void test_enc_gen_req(RandomNumberGenerator& rng)
    opts.hash_alg = "SHA-160";
 
    // creating a non sense selfsigned cert w/o dom pars
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
+   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
    ECDSA_PrivateKey key(rng, dom_pars);
-   key.set_parameter_encoding(ENC_IMPLICITCA);
+   key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    EAC1_1_Req req = CVC_EAC::create_cvc_req(key, opts.chr, opts.hash_alg, rng);
    SecureVector<byte> der(req.BER_encode());
    std::ofstream req_file(TEST_DATA_DIR "/my_cv_req.ber", std::ios::binary);
@@ -215,8 +215,8 @@ void test_enc_gen_req(RandomNumberGenerator& rng)
    //req_in.set_domain_parameters(dom_pars);
    std::unique_ptr<Public_Key> p_pk = req_in.subject_public_key();
    ECDSA_PublicKey* p_ecdsa_pk = dynamic_cast<ECDSA_PublicKey*>(p_pk.get());
-   p_ecdsa_pk->set_domain_parameters(dom_pars);
-   CHECK(p_ecdsa_pk->domain_parameters().get_order() == dom_pars.get_order());
+   //p_ecdsa_pk->set_domain_parameters(dom_pars);
+   CHECK(p_ecdsa_pk->domain().get_order() == dom_pars.get_order());
    bool ver_ec = req_in.check_signature(*p_pk);
    CHECK_MESSAGE(ver_ec, "could not positively verify correct selfsigned (created by myself) cvc request");
    }
@@ -226,12 +226,12 @@ void test_cvc_req_ext(RandomNumberGenerator&)
    std::cout << "." << std::flush;
 
    EAC1_1_Req req_in(TEST_DATA_DIR "/DE1_flen_chars_cvcRequest_ECDSA.der");
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.5")); // "german curve"
+   EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    //req_in.set_domain_parameters(dom_pars);
    std::unique_ptr<Public_Key> p_pk = req_in.subject_public_key();
    ECDSA_PublicKey* p_ecdsa_pk = dynamic_cast<ECDSA_PublicKey*>(p_pk.get());
-   p_ecdsa_pk->set_domain_parameters(dom_pars);
-   CHECK(p_ecdsa_pk->domain_parameters().get_order() == dom_pars.get_order());
+   //p_ecdsa_pk->set_domain_parameters(dom_pars);
+   CHECK(p_ecdsa_pk->domain().get_order() == dom_pars.get_order());
    bool ver_ec = req_in.check_signature(*p_pk);
    CHECK_MESSAGE(ver_ec, "could not positively verify correct selfsigned (external testdata) cvc request");
    }
@@ -241,7 +241,7 @@ void test_cvc_ado_ext(RandomNumberGenerator&)
    std::cout << "." << std::flush;
 
    EAC1_1_ADO req_in(TEST_DATA_DIR "/ado.cvcreq");
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.5")); // "german curve"
+   EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    //cout << "car = " << req_in.get_car().value() << std::endl;
    //req_in.set_domain_parameters(dom_pars);
    }
@@ -256,10 +256,10 @@ void test_cvc_ado_creation(RandomNumberGenerator& rng)
    opts.hash_alg = "SHA-256";
 
    // creating a non sense selfsigned cert w/o dom pars
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.11"));
+   EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.11"));
    //cout << "mod = " << hex << dom_pars.get_curve().get_p() << std::endl;
    ECDSA_PrivateKey req_key(rng, dom_pars);
-   req_key.set_parameter_encoding(ENC_IMPLICITCA);
+   req_key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    //EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts);
    EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts.chr, opts.hash_alg, rng);
    SecureVector<byte> der(req.BER_encode());
@@ -300,9 +300,9 @@ void test_cvc_ado_comparison(RandomNumberGenerator& rng)
    opts.hash_alg = "SHA-224";
 
    // creating a non sense selfsigned cert w/o dom pars
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.11"));
+   EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.11"));
    ECDSA_PrivateKey req_key(rng, dom_pars);
-   req_key.set_parameter_encoding(ENC_IMPLICITCA);
+   req_key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    //EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts);
    EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts.chr, opts.hash_alg, rng);
 
@@ -321,7 +321,7 @@ void test_cvc_ado_comparison(RandomNumberGenerator& rng)
    opts2.chr = ASN1_Chr("my_opt_chr");
    opts2.hash_alg = "SHA-160"; // this is the only difference
    ECDSA_PrivateKey req_key2(rng, dom_pars);
-   req_key.set_parameter_encoding(ENC_IMPLICITCA);
+   req_key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    //EAC1_1_Req req2 = CVC_EAC::create_cvc_req(req_key2, opts2, rng);
    EAC1_1_Req req2 = CVC_EAC::create_cvc_req(req_key2, opts2.chr, opts2.hash_alg, rng);
    ECDSA_PrivateKey ado_key2(rng, dom_pars);
@@ -400,7 +400,7 @@ void test_ver_cvca(RandomNumberGenerator&)
 
    try
       {
-      p_ecdsa_pk2->domain_parameters().get_order();
+      p_ecdsa_pk2->domain().get_order();
       }
    catch (Invalid_State)
       {
@@ -420,14 +420,14 @@ void test_copy_and_assignment(RandomNumberGenerator&)
    CHECK(cert_in == cert_ass);
 
    EAC1_1_ADO ado_in(TEST_DATA_DIR "/ado.cvcreq");
-   //EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.5")); // "german curve"
+   //EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    EAC1_1_ADO ado_cp(ado_in);
    EAC1_1_ADO ado_ass = ado_in;
    CHECK(ado_in == ado_cp);
    CHECK(ado_in == ado_ass);
 
    EAC1_1_Req req_in(TEST_DATA_DIR "/DE1_flen_chars_cvcRequest_ECDSA.der");
-   //EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.5")); // "german curve"
+   //EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    EAC1_1_Req req_cp(req_in);
    EAC1_1_Req req_ass = req_in;
    CHECK(req_in == req_cp);
@@ -488,7 +488,7 @@ void test_cvc_chain(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.36.3.3.2.8.1.1.5")); // "german curve"
+   EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    ECDSA_PrivateKey cvca_privk(rng, dom_pars);
    std::string hash("SHA-224");
    ASN1_Car car("DECVCA00001");
@@ -544,7 +544,7 @@ void test_cvc_chain(RandomNumberGenerator& rng)
    std::unique_ptr<Public_Key> ap_pk = dvca_cert1.subject_public_key();
    ECDSA_PublicKey* cert_pk = dynamic_cast<ECDSA_PublicKey*>(ap_pk.get());
 
-   cert_pk->set_domain_parameters(dom_pars);
+   //cert_pk->set_domain_parameters(dom_pars);
    //std::cout << "dvca_cert.public_point.size() = " << ec::EC2OSP(cert_pk->get_public_point(), ec::PointGFp::COMPRESSED).size() << std::endl;
    EAC1_1_CVC dvca_cert1_reread(TEST_DATA_DIR "/cvc_chain_cvca.cer");
    CHECK(dvca_ado2.check_signature(*cert_pk));

@@ -161,7 +161,7 @@ void do_x509_tests(RandomNumberGenerator& rng)
    /* Create user #2's key and cert request */
    std::cout << '.' << std::flush;
 #if defined(BOTAN_HAS_ECDSA)
-   EC_Domain_Params ecc_domain = get_EC_Dom_Pars_by_oid("1.2.840.10045.3.1.7");
+   EC_Domain_Params ecc_domain(OID("1.2.840.10045.3.1.7"));
    ECDSA_PrivateKey user2_key(rng, ecc_domain);
 #else
    RSA_PrivateKey user2_key(rng, 1024);

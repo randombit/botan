@@ -67,7 +67,7 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
       {
       if(r.is_zero())
          {
-         mult2_in_place();
+         mult2();
          return *this;
          }
 
@@ -119,7 +119,7 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
          }
       else if(value == 2)
          {
-         this->mult2_in_place();
+         this->mult2();
          if(scalar.is_negative())
             this->negate();
          }
@@ -135,7 +135,7 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
 
    for(int i = scalar.bits() - 1; i >= 0; --i)
       {
-      H.mult2_in_place();
+      H.mult2();
       if(scalar.get_bit(i))
          H += P;
       }
@@ -164,16 +164,8 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
    return *this;
    }
 
-PointGFp& PointGFp::negate()
-   {
-   if(!is_zero())
-      coord_y = curve.get_p() - coord_y;
-
-   return *this;
-   }
-
 // *this *= 2
-void PointGFp::mult2_in_place()
+void PointGFp::mult2()
    {
    if(is_zero())
       return;
@@ -196,15 +188,11 @@ void PointGFp::mult2_in_place()
 
    BigInt x = mod_p.reduce(mod_p.square(M) - mod_p.multiply(2, S));
 
-   BigInt y = mod_p.square(y_2);
+   BigInt U = mod_p.multiply(8, mod_p.square(y_2));
 
-   BigInt z = mod_p.multiply(2, mod_p.reduce(y + y));
+   BigInt y = mod_p.reduce(mod_p.multiply(M, S - x) - U);
 
-   BigInt U = mod_p.reduce(z + z);
-
-   y = mod_p.reduce(mod_p.multiply(M, S - x) - U);
-
-   z = mod_p.multiply(2, mod_p.multiply(coord_y, coord_z));
+   BigInt z = mod_p.multiply(2, mod_p.multiply(coord_y, coord_z));
 
    coord_x = x;
    coord_y = y;
@@ -231,12 +219,6 @@ BigInt PointGFp::get_affine_y() const
 
    BigInt z3 = mod_p.cube(coord_z);
    return mod_p.multiply(coord_y, inverse_mod(z3, curve.get_p()));
-   }
-
-// Is this the point at infinity?
-bool PointGFp::is_zero() const
-   {
-   return(coord_x.is_zero() && coord_z.is_zero());
    }
 
 void PointGFp::check_invariants() const
@@ -290,36 +272,6 @@ bool PointGFp::operator==(const PointGFp& other) const
            coord_y == other.coord_y &&
            coord_z == other.coord_z &&
            get_curve() == other.get_curve());
-   }
-
-// arithmetic operators
-PointGFp operator+(const PointGFp& lhs, PointGFp const& rhs)
-   {
-   PointGFp tmp(lhs);
-   return tmp += rhs;
-   }
-
-PointGFp operator-(const PointGFp& lhs, PointGFp const& rhs)
-   {
-   PointGFp tmp(lhs);
-   return tmp -= rhs;
-   }
-
-PointGFp operator-(const PointGFp& lhs)
-   {
-   return PointGFp(lhs).negate();
-   }
-
-PointGFp operator*(const BigInt& scalar, const PointGFp& point)
-   {
-   PointGFp result(point);
-   return result *= scalar;
-   }
-
-PointGFp operator*(const PointGFp& point, const BigInt& scalar)
-   {
-   PointGFp result(point);
-   return result *= scalar;
    }
 
 // encoding and decoding

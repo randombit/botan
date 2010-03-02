@@ -47,7 +47,7 @@ void test_hash_larger_than_n(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
+   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
    // n:
    // 0x0100000000000000000001f4c8f927aed3ca752257 // 21 bytes
    // -> shouldn't work with SHA224 which outputs 23 bytes
@@ -124,7 +124,7 @@ void test_message_larger_than_n(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
+   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
    ECDSA_PrivateKey priv_key(rng, dom_pars);
    std::string str_message = ("12345678901234567890abcdef1212345678901234567890abcdef1212345678901234567890abcdef12");
 
@@ -219,7 +219,7 @@ bool test_ec_sign(RandomNumberGenerator& rng)
 
    try
       {
-      EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
+      EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
       ECDSA_PrivateKey priv_key(rng, dom_pars);
       std::string pem_encoded_key = PKCS8::PEM_encode(priv_key);
 
@@ -283,7 +283,7 @@ void test_create_pkcs8(RandomNumberGenerator& rng)
       std::ofstream rsa_priv_key(TEST_DATA_DIR "/rsa_private.pkcs8.pem");
       rsa_priv_key << PKCS8::PEM_encode(rsa_key);
 
-      EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
+      EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
       ECDSA_PrivateKey key(rng, dom_pars);
 
       // later used by other tests :(
@@ -300,7 +300,7 @@ void test_create_and_verify(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid("1.3.132.0.8"));
+   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
    ECDSA_PrivateKey key(rng, dom_pars);
    std::ofstream priv_key(TEST_DATA_DIR "/dompar_private.pkcs8.pem");
    priv_key << PKCS8::PEM_encode(key);
@@ -389,7 +389,8 @@ void test_curve_registry(RandomNumberGenerator& rng)
 
       try
          {
-         EC_Domain_Params dom_pars(get_EC_Dom_Pars_by_oid(oids[i]));
+         OID oid(oids[i]);
+         EC_Domain_Params dom_pars(oid);
          dom_pars.get_base_point().check_invariants();
          ECDSA_PrivateKey key(rng, dom_pars);
 
@@ -490,8 +491,7 @@ void test_non_init_ecdsa_keys(RandomNumberGenerator& rng)
    std::cout << "." << std::flush;
 
    std::unique_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(TEST_DATA_DIR "/wo_dompar_private.pkcs8.pem", rng));
-   //ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<ECDSA_PrivateKey*>(loaded_key.get());
-   //CHECK_MESSAGE(loaded_ec_key, "the loaded key could not be converted into an ECDSA_PrivateKey");
+
    std::string str_message = ("12345678901234567890abcdef12");
    ECDSA_PrivateKey empty_priv;
    ECDSA_PublicKey empty_pub;

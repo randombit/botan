@@ -12,6 +12,7 @@
  - Add support for Win32 high resolution system timers
  - Changed S2K interface: derive_key now takes salt, iteration count
  - Remove dependency on TR1 for ECC and CVC code
+ - Renamed ECKAEG to its more usual name, ECDH
  - Fix crash in GMP_Engine if library is shutdown and reinitialized
  - Fix an invalid memory read in MD4
  - Remove Timer class entirely

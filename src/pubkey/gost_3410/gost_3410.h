@@ -34,12 +34,12 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey,
 
       * @result the maximum number of input bits
       */
-      u32bit max_input_bits() const;
+      u32bit max_input_bits() const { return domain().get_order().bits(); }
 
       u32bit message_parts() const { return 2; }
 
       u32bit message_part_size() const
-         { return mp_dom_pars->get_order().bytes(); }
+         { return domain().get_order().bytes(); }
 
       /**
       * Verify a message with this key.
@@ -63,29 +63,7 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey,
       * @param public_point the public point defining this key
       */
       GOST_3410_PublicKey(const EC_Domain_Params& dom_par,
-                          const PointGFp& public_point); // sets core
-
-      GOST_3410_PublicKey const& operator=(const GOST_3410_PublicKey& rhs);
-
-      GOST_3410_PublicKey(const GOST_3410_PublicKey& other);
-
-      /**
-      * Set the domain parameters of this key. This function has to be
-      * used when a key encoded without domain parameters was decoded into
-      * this key. Otherwise it will not be able to verify a signature.
-      * @param dom_pars the domain_parameters associated with this key
-      * @throw Invalid_Argument if the point was found not to be satisfying the
-      * curve equation of the provided domain parameters
-      * or if this key already has domain parameters set
-      * and these are differing from those given as the parameter
-      */
-      void set_domain_parameters(const EC_Domain_Params& dom_pars);
-
-      /**
-      * Ensure that the public point and domain parameters of this key are set.
-      * @throw Invalid_State if either of the two data members is not set
-      */
-      virtual void affirm_init() const;
+                          const PointGFp& public_point);
 
       /**
       * Get an x509_encoder that can be used to encode this key.
@@ -99,10 +77,6 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey,
       * @result an x509_decoder for this key
       */
       X509_Decoder* x509_decoder();
-
-   protected:
-      void X509_load_hook();
-      void set_all_values(const GOST_3410_PublicKey& other);
    };
 
 /**
@@ -124,17 +98,16 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
       * @param the domain parameters to used for this key
       */
       GOST_3410_PrivateKey(RandomNumberGenerator& rng,
-                           const EC_Domain_Params& domain);
+                           const EC_Domain_Params& domain) :
+         EC_PrivateKey(rng, domain) {}
 
       /**
       * Load a private key
       * @param domain parameters
       * @param x the private key
       */
-      GOST_3410_PrivateKey(const EC_Domain_Params& domain, const BigInt& x);
-
-      GOST_3410_PrivateKey(const GOST_3410_PrivateKey& other);
-      GOST_3410_PrivateKey const& operator=(const GOST_3410_PrivateKey& rhs);
+      GOST_3410_PrivateKey(const EC_Domain_Params& domain, const BigInt& x) :
+         EC_PrivateKey(domain, x) {}
 
       /**
       * Sign a message with this key.
@@ -142,21 +115,8 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
       * @param mess_len the length of the message byte array
       * @result the signature
       */
-
       SecureVector<byte> sign(const byte message[], u32bit mess_len,
                               RandomNumberGenerator& rng) const;
-
-      /**
-      * Make sure that the public key parts of this object are set
-      * (calls EC_PublicKey::affirm_init()) as well as the private key
-      * value.
-      * @throw Invalid_State if the above conditions are not satisfied
-      */
-      virtual void affirm_init() const;
-
-   private:
-      void set_all_values(const GOST_3410_PrivateKey& other);
-      void PKCS8_load_hook(bool = false);
    };
 
 }

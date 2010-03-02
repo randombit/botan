@@ -2,7 +2,8 @@ define ECC_DOMAIN_PARAMATERS
 
 <requires>
 asn1
-filters
 numbertheory
-hex
+pem
+libstate
+oid_lookup
 </requires>

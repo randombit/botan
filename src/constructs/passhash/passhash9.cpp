@@ -29,16 +29,26 @@ MessageAuthenticationCode* get_pbkdf_prf(byte alg_id)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
 
-   if(alg_id == 0)
-      return af.make_mac("HMAC(SHA-1)");
+   try
+      {
+      if(alg_id == 0)
+         return af.make_mac("HMAC(SHA-1)");
+      }
+   catch(Algorithm_Not_Found) {}
 
    return 0;
    }
 
 std::pair<byte, MessageAuthenticationCode*> choose_pbkdf_prf()
    {
-   byte alg_id = 0;
-   return std::make_pair(alg_id, get_pbkdf_prf(alg_id));
+   for(byte alg_id = 0; alg_id != 255; ++alg_id)
+      {
+      MessageAuthenticationCode* prf = get_pbkdf_prf(alg_id);
+      if(prf)
+         return std::make_pair(alg_id, prf);
+      }
+
+   throw Internal_Error("Passhash9: No PRF available");
    }
 
 }

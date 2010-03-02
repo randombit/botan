@@ -41,6 +41,11 @@ class BOTAN_DLL PointGFp
       };
 
       /**
+      * Construct an uninitialized PointGFp
+      */
+      PointGFp() {}
+
+      /**
       * Construct the point O
       * @param curve The base curve
       */
@@ -98,7 +103,12 @@ class BOTAN_DLL PointGFp
       * Negate this point
       * @return *this
       */
-      PointGFp& negate();
+      PointGFp& negate()
+         {
+         if(!is_zero())
+            coord_y = curve.get_p() - coord_y;
+         return *this;
+         }
 
       /**
       * Return base curve of this point
@@ -122,25 +132,26 @@ class BOTAN_DLL PointGFp
       * get the jacobian projective x coordinate
       * @result jacobian projective x coordinate
       */
-      const BigInt& get_jac_proj_x() const { return coord_x; }
+      const BigInt& get_x() const { return coord_x; }
 
       /**
       * get the jacobian projective y coordinate
       * @result jacobian projective y coordinate
       */
-      const BigInt& get_jac_proj_y() const { return coord_y; }
+      const BigInt& get_y() const { return coord_y; }
 
       /**
       * get the jacobian projective z coordinate
       * @result jacobian projective z coordinate
       */
-      const BigInt& get_jac_proj_z() const { return coord_z; }
+      const BigInt& get_z() const { return coord_z; }
 
       /**
       * Is this the point at infinity?
       * @result true, if this point is at infinity, false otherwise.
       */
-      bool is_zero() const;
+      bool is_zero() const
+         { return (coord_x.is_zero() && coord_z.is_zero()); }
 
       /**
       *  Checks whether the point is to be found on the underlying curve.
@@ -162,9 +173,9 @@ class BOTAN_DLL PointGFp
       bool operator==(const PointGFp& other) const;
    private:
       /**
-      * Multiply the point by two
+      * Point doubling
       */
-      void mult2_in_place();
+      void mult2();
 
       CurveGFp curve;
       BigInt coord_x, coord_y, coord_z;
@@ -177,12 +188,34 @@ inline bool operator!=(const PointGFp& lhs, const PointGFp& rhs)
    }
 
 // arithmetic operators
-PointGFp BOTAN_DLL operator+(const PointGFp& lhs, const PointGFp& rhs);
-PointGFp BOTAN_DLL operator-(const PointGFp& lhs, const PointGFp& rhs);
-PointGFp BOTAN_DLL operator-(const PointGFp& lhs);
+inline PointGFp operator-(const PointGFp& lhs)
+   {
+   return PointGFp(lhs).negate();
+   }
 
-PointGFp BOTAN_DLL operator*(const BigInt& scalar, const PointGFp& point);
-PointGFp BOTAN_DLL operator*(const PointGFp& point, const BigInt& scalar);
+inline PointGFp operator+(const PointGFp& lhs, const PointGFp& rhs)
+   {
+   PointGFp tmp(lhs);
+   return tmp += rhs;
+   }
+
+inline PointGFp operator-(const PointGFp& lhs, const PointGFp& rhs)
+   {
+   PointGFp tmp(lhs);
+   return tmp -= rhs;
+   }
+
+inline PointGFp operator*(const BigInt& scalar, const PointGFp& point)
+   {
+   PointGFp result(point);
+   return result *= scalar;
+   }
+
+inline PointGFp operator*(const PointGFp& point, const BigInt& scalar)
+   {
+   PointGFp result(point);
+   return result *= scalar;
+   }
 
 // encoding and decoding
 SecureVector<byte> BOTAN_DLL EC2OSP(const PointGFp& point, byte format);
