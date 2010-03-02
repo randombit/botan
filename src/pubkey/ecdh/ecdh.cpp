@@ -9,8 +9,6 @@
 
 #include <botan/ecdh.h>
 
-#include <iostream>
-
 namespace Botan {
 
 ECDH_PublicKey::ECDH_PublicKey(const EC_Domain_Params& dom_par,
@@ -62,8 +60,6 @@ SecureVector<byte> ECDH_PrivateKey::derive_key(const PointGFp& point) const
 
    PointGFp S = (cofactor * point) * (private_value() * l);
    S.check_invariants();
-
-   //PointGFp S = point * private_value();
 
    return BigInt::encode_1363(S.get_affine_x(),
                               point.get_curve().get_p().bytes());
