@@ -1,10 +1,9 @@
-/******************************************************
-* CVC EAC1.1 tests                                    *
-*                                                     *
-* (C) 2008 Falko Strenzke                             *
-*          strenzke@flexsecure.de                     *
-*     2008 Jack Lloyd                                 *
-******************************************************/
+/*
+* CVC EAC1.1 tests
+*
+* (C) 2008 Falko Strenzke (strenzke@flexsecure.de)
+*     2008 Jack Lloyd
+*/
 
 #include "validate.h"
 #include <botan/build.h>
@@ -79,7 +78,7 @@ bool helper_files_equal(std::string const& file_path1, std::string const& file_p
 
 void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
    {
-   std::cout << "." << std::flush;
+   std::cout << '.' << std::flush;
 
    EAC1_1_CVC_Options opts;
    //opts.cpi = 0;
@@ -580,6 +579,8 @@ void test_cvc_chain(RandomNumberGenerator& rng)
 
 u32bit do_cvc_tests(Botan::RandomNumberGenerator& rng)
    {
+   std::cout << "Testing CVC: " << std::flush;
+
    test_enc_gen_selfsigned(rng);
    test_enc_gen_req(rng);
    test_cvc_req_ext(rng);
@@ -592,6 +593,7 @@ u32bit do_cvc_tests(Botan::RandomNumberGenerator& rng)
    test_eac_str_illegal_values(rng);
    test_tmp_eac_str_enc(rng);
    test_cvc_chain(rng);
+   std::cout << std::endl;
 
    return 0;
    }
