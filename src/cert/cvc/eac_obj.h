@@ -51,9 +51,10 @@ class BOTAN_DLL EAC1_1_obj : public EAC_Signed_Object
    protected:
       void init(DataSource& in);
 
-      static SecureVector<byte> make_signature(PK_Signer* signer,
-                                               const MemoryRegion<byte>& tbs_bits,
-                                               RandomNumberGenerator& rng);
+      static SecureVector<byte>
+         make_signature(PK_Signer& signer,
+                        const MemoryRegion<byte>& tbs_bits,
+                        RandomNumberGenerator& rng);
 
       virtual ~EAC1_1_obj<Derived>(){}
 
@@ -65,12 +66,12 @@ template<typename Derived> SecureVector<byte> EAC1_1_obj<Derived>::get_concat_si
    }
 
 template<typename Derived> SecureVector<byte>
-EAC1_1_obj<Derived>::make_signature(PK_Signer* signer,
+EAC1_1_obj<Derived>::make_signature(PK_Signer& signer,
                                     const MemoryRegion<byte>& tbs_bits,
                                     RandomNumberGenerator& rng)
    {
    // this is the signature as a der sequence
-   SecureVector<byte> seq_sig = signer->sign_message(tbs_bits, rng);
+   SecureVector<byte> seq_sig = signer.sign_message(tbs_bits, rng);
 
    ECDSA_Signature sig(decode_seq(seq_sig));
    SecureVector<byte> concat_sig(sig.get_concatenation());

@@ -75,9 +75,10 @@ class BOTAN_DLL EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation
       * @result the DER encoded signed generalized CVC object
       */
       static MemoryVector<byte> make_signed(
-         std::auto_ptr<PK_Signer> signer,
+         PK_Signer& signer,
          const MemoryRegion<byte>& tbs_bits,
          RandomNumberGenerator& rng);
+
       virtual ~EAC1_1_gen_CVC<Derived>()
          {}
 
@@ -102,12 +103,14 @@ template<typename Derived> bool EAC1_1_gen_CVC<Derived>::is_self_signed() const
    return self_signed;
    }
 
-template<typename Derived> MemoryVector<byte> EAC1_1_gen_CVC<Derived>::make_signed(
-   std::auto_ptr<PK_Signer> signer,
+template<typename Derived>
+MemoryVector<byte> EAC1_1_gen_CVC<Derived>::make_signed(
+   PK_Signer& signer,
    const MemoryRegion<byte>& tbs_bits,
    RandomNumberGenerator& rng) // static
    {
-   SecureVector<byte> concat_sig = EAC1_1_obj<Derived>::make_signature(signer.get(), tbs_bits, rng);
+   SecureVector<byte> concat_sig =
+      EAC1_1_obj<Derived>::make_signature(signer, tbs_bits, rng);
 
    return DER_Encoder()
       .start_cons(ASN1_Tag(33), APPLICATION)
