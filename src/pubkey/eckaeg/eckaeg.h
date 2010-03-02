@@ -2,7 +2,7 @@
 * ECKAEG
 * (C) 2007 Falko Strenzke, FlexSecure GmbH
 *          Manuel Hartl, FlexSecure GmbH
-* (C) 2008 Jack Lloyd
+* (C) 2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -11,7 +11,6 @@
 #define BOTAN_ECKAEG_KEY_H__
 
 #include <botan/ecc_key.h>
-#include <botan/eckaeg_core.h>
 
 namespace Botan {
 
@@ -49,11 +48,6 @@ class BOTAN_DLL ECKAEG_PublicKey : public virtual EC_PublicKey
       * @result the maximum number of input bits
       */
       u32bit max_input_bits() const { return domain().get_order().bits(); }
-
-   protected:
-      void X509_load_hook();
-
-      ECKAEG_Core m_eckaeg_core;
    };
 
 /**
@@ -78,22 +72,27 @@ class BOTAN_DLL ECKAEG_PrivateKey : public ECKAEG_PublicKey,
       */
       ECKAEG_PrivateKey() {}
 
-      MemoryVector<byte> public_value() const;
-
-      void PKCS8_load_hook(bool = false);
+      MemoryVector<byte> public_value() const
+         { return EC2OSP(public_point(), PointGFp::UNCOMPRESSED); }
 
       /**
-      * Derive a shared key with the other partys public key.
+      * Derive a shared key with the other parties public key.
       * @param key the other partys public key
       * @param key_len the other partys public key
       */
       SecureVector<byte> derive_key(const byte key[], u32bit key_len) const;
 
       /**
-      * Derive a shared key with the other partys public key.
+      * Derive a shared key with the other parties public key.
       * @param other the other partys public key
       */
       SecureVector<byte> derive_key(const ECKAEG_PublicKey& other) const;
+
+      /**
+      * Derive a shared key with the other parties public key.
+      * @param point the public point of the other parties key
+      */
+      SecureVector<byte> derive_key(const PointGFp& point) const;
    };
 
 }

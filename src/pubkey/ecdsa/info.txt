@@ -1,11 +1,9 @@
 define ECDSA
 
 <requires>
-alloc
 asn1
 ec_dompar
 ecc_key
-libstate
 numbertheory
 rng
 </requires>
