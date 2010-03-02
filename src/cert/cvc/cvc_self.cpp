@@ -6,13 +6,8 @@
 */
 
 #include <botan/cvc_self.h>
-#include <botan/cvc_cert.h>
-#include <botan/alg_id.h>
-#include <botan/cvc_key.h>
-#include <botan/oids.h>
-#include <botan/look_pk.h>
-#include <botan/cvc_req.h>
-#include <botan/cvc_ado.h>
+#include <botan/ecc_key.h>
+#include <botan/point_gfp.h>
 #include <botan/time.h>
 #include <sstream>
 
@@ -33,10 +28,46 @@ enum CHAT_values{
       FINGERPRINT = 0x01
 };
 
-MemoryVector<byte> eac_1_1_encoding(const Public_Key* pub_key)
+void encode_eac_bigint(DER_Encoder& der, const BigInt& x, ASN1_Tag tag)
    {
-   throw Invalid_State("eac_1_1_encoding: Not implemented");
-   return MemoryVector<byte>();
+   der.encode(BigInt::encode_1363(x, x.bytes()), OCTET_STRING, tag);
+   }
+
+MemoryVector<byte> eac_1_1_encoding(const EC_PublicKey* key,
+                                    const OID& sig_algo)
+   {
+   if(key->domain_format() == EC_DOMPAR_ENC_OID)
+      throw Encoding_Error("CVC encoder: cannot encode parameters by OID");
+
+   const EC_Domain_Params& domain = key->domain();
+
+   // This is why we can't have nice things
+
+   DER_Encoder enc;
+   enc.start_cons(ASN1_Tag(73), APPLICATION)
+      .encode(sig_algo);
+
+   if(key->domain_format() == EC_DOMPAR_ENC_EXPLICIT)
+      {
+      encode_eac_bigint(enc, domain.get_curve().get_p(), ASN1_Tag(1));
+      encode_eac_bigint(enc, domain.get_curve().get_a(), ASN1_Tag(2));
+      encode_eac_bigint(enc, domain.get_curve().get_b(), ASN1_Tag(3));
+
+      enc.encode(EC2OSP(domain.get_base_point(), PointGFp::UNCOMPRESSED),
+                 OCTET_STRING, ASN1_Tag(4));
+
+      encode_eac_bigint(enc, domain.get_order(), ASN1_Tag(4));
+      }
+
+   enc.encode(EC2OSP(key->public_point(), PointGFp::UNCOMPRESSED),
+              OCTET_STRING, ASN1_Tag(6));
+
+   if(key->domain_format() == EC_DOMPAR_ENC_EXPLICIT)
+      encode_eac_bigint(enc, domain.get_cofactor(), ASN1_Tag(7));
+
+   enc.end_cons();
+
+   return enc.get_contents();
    }
 
 std::string padding_and_hash_from_oid(OID const& oid)
@@ -95,7 +126,7 @@ EAC1_1_CVC create_self_signed_cert(Private_Key const& key,
    std::auto_ptr<Botan::PK_Signer> signer(
       get_pk_signer(*priv_key, padding_and_hash));
 
-   MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key);
+   MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
 
    return make_cvc_cert(*signer,
                         enc_public_key,
@@ -122,7 +153,7 @@ EAC1_1_Req create_cvc_req(Private_Key const& key,
 
    std::auto_ptr<Botan::PK_Signer> signer(get_pk_signer(*priv_key, padding_and_hash));
 
-   MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key);
+   MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
 
    MemoryVector<byte> enc_cpi;
    enc_cpi.append(0x00);
@@ -222,7 +253,7 @@ EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
    ECDSA_PublicKey* subj_pk = dynamic_cast<ECDSA_PublicKey*>(pk.get());
    subj_pk->set_parameter_encoding(EC_DOMPAR_ENC_EXPLICIT);
 
-   MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key);
+   MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
 
    return make_cvc_cert(*pk_signer, enc_public_key,
                         signer.get_car(),
@@ -262,8 +293,6 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
 
    subj_pk->set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
 
-   MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key);
-
    AlgorithmIdentifier sig_algo(signer_cert.signature_algorithm());
    const u64bit current_time = system_time();
    ASN1_Ced ced(current_time);
@@ -275,13 +304,9 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
       // we sign a dvca
       cex.add_months(dvca_validity_months);
       if (domestic)
-         {
          chat_val = DVCA_domestic | chat_low;
-         }
       else
-         {
          chat_val = DVCA_foreign | chat_low;
-         }
       }
    else if ((signer_cert.get_chat_value() & DVCA_domestic) == DVCA_domestic ||
             (signer_cert.get_chat_value() & DVCA_foreign) == DVCA_foreign)
@@ -294,6 +319,9 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
       throw Invalid_Argument("sign_request(): encountered illegal value for CHAT");
       // (IS cannot sign certificates)
       }
+
+   MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
+
    return make_cvc_cert(*pk_signer, enc_public_key,
                         ASN1_Car(signer_cert.get_chr().iso_8859()),
                         chr,
