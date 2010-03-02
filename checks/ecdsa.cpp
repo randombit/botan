@@ -150,7 +150,7 @@ void test_decode_ecdsa_X509()
    std::cout << "." << std::flush;
 
    X509_Certificate cert(TEST_DATA_DIR "/CSCA.CSCA.csca-germany.1.crt");
-   CHECK_MESSAGE(OIDS::lookup(cert.signature_algorithm().oid) == "ECDSA/EMSA1_BSI(SHA-224)", "error reading signature algorithm from x509 ecdsa certificate");
+   CHECK_MESSAGE(OIDS::lookup(cert.signature_algorithm().oid) == "ECDSA/EMSA1(SHA-224)", "error reading signature algorithm from x509 ecdsa certificate");
 
    CHECK_MESSAGE(to_hex(cert.serial_number()) == "01", "error reading serial from x509 ecdsa certificate");
    CHECK_MESSAGE(to_hex(cert.authority_key_id()) == "0096452DE588F966C4CCDF161DD1F3F5341B71E7", "error reading authority key id from x509 ecdsa certificate");
