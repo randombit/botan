@@ -1,6 +1,6 @@
 /**
 * Time Functions
-* (C) 1999-2009 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -93,11 +93,13 @@ calendar_point calendar_value(u64bit a_time_t)
 u64bit get_nanoseconds_clock()
    {
 #if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
+
    struct ::timespec tv;
    ::clock_gettime(CLOCK_REALTIME, &tv);
    return combine_timers(tv.tv_sec, tv.tv_nsec, 1000000000);
 
 #elif defined(BOTAN_TARGET_OS_HAS_GETTIMEOFDAY)
+
    struct ::timeval tv;
    ::gettimeofday(&tv, 0);
    return combine_timers(tv.tv_sec, tv.tv_usec, 1000000);
@@ -113,7 +115,9 @@ u64bit get_nanoseconds_clock()
    return (tstamp * 100); // Scale to 1 nanosecond units
 
 #else
-   return combine_timers(std::time(0), std::clock(), CLOCKS_PER_SEC);
+
+   return combine_timers(static_cast<u32bit>(std::time(0)),
+                         std::clock(), CLOCKS_PER_SEC);
 
 #endif
    }
