@@ -27,22 +27,10 @@ namespace {
 */
 void hsalsa20(u32bit output[8], const u32bit input[16])
    {
-   u32bit x00 = input[0];
-   u32bit x01 = input[1];
-   u32bit x02 = input[2];
-   u32bit x03 = input[3];
-   u32bit x04 = input[4];
-   u32bit x05 = input[5];
-   u32bit x06 = input[6];
-   u32bit x07 = input[7];
-   u32bit x08 = input[8];
-   u32bit x09 = input[9];
-   u32bit x10 = input[10];
-   u32bit x11 = input[11];
-   u32bit x12 = input[12];
-   u32bit x13 = input[13];
-   u32bit x14 = input[14];
-   u32bit x15 = input[15];
+   u32bit x00 = input[ 0], x01 = input[ 1], x02 = input[ 2], x03 = input[ 3],
+          x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
+          x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
+          x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
 
    for(u32bit i = 0; i != 10; ++i)
       {
@@ -72,22 +60,10 @@ void hsalsa20(u32bit output[8], const u32bit input[16])
 */
 void salsa20(byte output[64], const u32bit input[16])
    {
-   u32bit x00 = input[0];
-   u32bit x01 = input[1];
-   u32bit x02 = input[2];
-   u32bit x03 = input[3];
-   u32bit x04 = input[4];
-   u32bit x05 = input[5];
-   u32bit x06 = input[6];
-   u32bit x07 = input[7];
-   u32bit x08 = input[8];
-   u32bit x09 = input[9];
-   u32bit x10 = input[10];
-   u32bit x11 = input[11];
-   u32bit x12 = input[12];
-   u32bit x13 = input[13];
-   u32bit x14 = input[14];
-   u32bit x15 = input[15];
+   u32bit x00 = input[ 0], x01 = input[ 1], x02 = input[ 2], x03 = input[ 3],
+          x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
+          x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
+          x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
 
    for(u32bit i = 0; i != 10; ++i)
       {
@@ -259,14 +235,6 @@ void Salsa20::clear()
    state.clear();
    buffer.clear();
    position = 0;
-   }
-
-/*
-* Salsa20 Constructor
-*/
-Salsa20::Salsa20() : StreamCipher(16, 32, 16)
-   {
-   clear();
    }
 
 }
