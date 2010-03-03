@@ -145,7 +145,7 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
       {
       public_key.check_invariants();
       }
-   catch(Illegal_Point& e)
+   catch(Illegal_Point)
       {
       throw Internal_Error("ECC private key generation failed");
       }
