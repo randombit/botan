@@ -14,6 +14,14 @@ namespace Botan {
 
 namespace {
 
+#define SALSA20_QUARTER_ROUND(x1, x2, x3, x4)    \
+   do {                                          \
+      x2 ^= rotate_left(x1 + x4,  7);            \
+      x3 ^= rotate_left(x2 + x1,  9);            \
+      x4 ^= rotate_left(x3 + x2, 13);            \
+      x1 ^= rotate_left(x4 + x3, 18);            \
+   } while(0)
+
 /*
 * Generate HSalsa20 cipher stream (for XSalsa20 IV setup)
 */
@@ -38,39 +46,15 @@ void hsalsa20(u32bit output[8], const u32bit input[16])
 
    for(u32bit i = 0; i != 10; ++i)
       {
-      x04 ^= rotate_left(x00 + x12,  7);
-      x08 ^= rotate_left(x04 + x00,  9);
-      x12 ^= rotate_left(x08 + x04, 13);
-      x00 ^= rotate_left(x12 + x08, 18);
-      x09 ^= rotate_left(x05 + x01,  7);
-      x13 ^= rotate_left(x09 + x05,  9);
-      x01 ^= rotate_left(x13 + x09, 13);
-      x05 ^= rotate_left(x01 + x13, 18);
-      x14 ^= rotate_left(x10 + x06,  7);
-      x02 ^= rotate_left(x14 + x10,  9);
-      x06 ^= rotate_left(x02 + x14, 13);
-      x10 ^= rotate_left(x06 + x02, 18);
-      x03 ^= rotate_left(x15 + x11,  7);
-      x07 ^= rotate_left(x03 + x15,  9);
-      x11 ^= rotate_left(x07 + x03, 13);
-      x15 ^= rotate_left(x11 + x07, 18);
+      SALSA20_QUARTER_ROUND(x00, x04, x08, x12);
+      SALSA20_QUARTER_ROUND(x05, x09, x13, x01);
+      SALSA20_QUARTER_ROUND(x10, x14, x02, x06);
+      SALSA20_QUARTER_ROUND(x15, x03, x07, x11);
 
-      x01 ^= rotate_left(x00 + x03,  7);
-      x02 ^= rotate_left(x01 + x00,  9);
-      x03 ^= rotate_left(x02 + x01, 13);
-      x00 ^= rotate_left(x03 + x02, 18);
-      x06 ^= rotate_left(x05 + x04,  7);
-      x07 ^= rotate_left(x06 + x05,  9);
-      x04 ^= rotate_left(x07 + x06, 13);
-      x05 ^= rotate_left(x04 + x07, 18);
-      x11 ^= rotate_left(x10 + x09,  7);
-      x08 ^= rotate_left(x11 + x10,  9);
-      x09 ^= rotate_left(x08 + x11, 13);
-      x10 ^= rotate_left(x09 + x08, 18);
-      x12 ^= rotate_left(x15 + x14,  7);
-      x13 ^= rotate_left(x12 + x15,  9);
-      x14 ^= rotate_left(x13 + x12, 13);
-      x15 ^= rotate_left(x14 + x13, 18);
+      SALSA20_QUARTER_ROUND(x00, x01, x02, x03);
+      SALSA20_QUARTER_ROUND(x05, x06, x07, x04);
+      SALSA20_QUARTER_ROUND(x10, x11, x08, x09);
+      SALSA20_QUARTER_ROUND(x15, x12, x13, x14);
       }
 
    output[0] = x00;
@@ -107,39 +91,15 @@ void salsa20(byte output[64], const u32bit input[16])
 
    for(u32bit i = 0; i != 10; ++i)
       {
-      x04 ^= rotate_left(x00 + x12,  7);
-      x08 ^= rotate_left(x04 + x00,  9);
-      x12 ^= rotate_left(x08 + x04, 13);
-      x00 ^= rotate_left(x12 + x08, 18);
-      x09 ^= rotate_left(x05 + x01,  7);
-      x13 ^= rotate_left(x09 + x05,  9);
-      x01 ^= rotate_left(x13 + x09, 13);
-      x05 ^= rotate_left(x01 + x13, 18);
-      x14 ^= rotate_left(x10 + x06,  7);
-      x02 ^= rotate_left(x14 + x10,  9);
-      x06 ^= rotate_left(x02 + x14, 13);
-      x10 ^= rotate_left(x06 + x02, 18);
-      x03 ^= rotate_left(x15 + x11,  7);
-      x07 ^= rotate_left(x03 + x15,  9);
-      x11 ^= rotate_left(x07 + x03, 13);
-      x15 ^= rotate_left(x11 + x07, 18);
+      SALSA20_QUARTER_ROUND(x00, x04, x08, x12);
+      SALSA20_QUARTER_ROUND(x05, x09, x13, x01);
+      SALSA20_QUARTER_ROUND(x10, x14, x02, x06);
+      SALSA20_QUARTER_ROUND(x15, x03, x07, x11);
 
-      x01 ^= rotate_left(x00 + x03,  7);
-      x02 ^= rotate_left(x01 + x00,  9);
-      x03 ^= rotate_left(x02 + x01, 13);
-      x00 ^= rotate_left(x03 + x02, 18);
-      x06 ^= rotate_left(x05 + x04,  7);
-      x07 ^= rotate_left(x06 + x05,  9);
-      x04 ^= rotate_left(x07 + x06, 13);
-      x05 ^= rotate_left(x04 + x07, 18);
-      x11 ^= rotate_left(x10 + x09,  7);
-      x08 ^= rotate_left(x11 + x10,  9);
-      x09 ^= rotate_left(x08 + x11, 13);
-      x10 ^= rotate_left(x09 + x08, 18);
-      x12 ^= rotate_left(x15 + x14,  7);
-      x13 ^= rotate_left(x12 + x15,  9);
-      x14 ^= rotate_left(x13 + x12, 13);
-      x15 ^= rotate_left(x14 + x13, 18);
+      SALSA20_QUARTER_ROUND(x00, x01, x02, x03);
+      SALSA20_QUARTER_ROUND(x05, x06, x07, x04);
+      SALSA20_QUARTER_ROUND(x10, x11, x08, x09);
+      SALSA20_QUARTER_ROUND(x15, x12, x13, x14);
       }
 
    store_le(x00 + input[ 0], output + 4 *  0);
