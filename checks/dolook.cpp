@@ -11,7 +11,6 @@
 #include <botan/filters.h>
 #include <botan/libstate.h>
 #include <botan/hmac.h>
-#include <botan/aes.h>
 #include <botan/sha2_32.h>
 #include <botan/sha2_64.h>
 #include <botan/parsing.h>
@@ -36,9 +35,16 @@
   #include <botan/hmac_rng.h>
 #endif
 
+#if defined(BOTAN_HAS_AES)
+  #include <botan/aes.h>
+#endif
+
+#if defined(BOTAN_HAS_DES)
+  #include <botan/des.h>
+#endif
+
 #if defined(BOTAN_HAS_X931_RNG)
   #include <botan/x931_rng.h>
-  #include <botan/des.h>
 #endif
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
@@ -156,10 +162,15 @@ Filter* lookup_rng(const std::string& algname,
 #endif
 
 #if defined(BOTAN_HAS_X931_RNG)
+
+#if defined(BOTAN_HAS_DES)
    if(algname == "X9.31-RNG(TripleDES)")
       prng = new ANSI_X931_RNG(new TripleDES,
                                new Fixed_Output_RNG(decode_hex(key)));
-   else if(algname == "X9.31-RNG(AES-128)")
+#endif
+
+#if defined(BOTAN_HAS_AES)
+   if(algname == "X9.31-RNG(AES-128)")
       prng = new ANSI_X931_RNG(new AES_128,
                                new Fixed_Output_RNG(decode_hex(key)));
    else if(algname == "X9.31-RNG(AES-192)")
@@ -170,7 +181,9 @@ Filter* lookup_rng(const std::string& algname,
                                new Fixed_Output_RNG(decode_hex(key)));
 #endif
 
-#if defined(BOTAN_HAS_RANDPOOL)
+#endif
+
+#if defined(BOTAN_HAS_RANDPOOL) && defined(BOTAN_HAS_AES)
    if(algname == "Randpool")
       {
       prng = new Randpool(new AES_256, new HMAC(new SHA_256));
