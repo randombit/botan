@@ -741,7 +741,7 @@ void test_cdc_curve_33()
       {
       p_G.check_invariants();
       }
-   catch (std::exception& e)
+   catch (std::exception)
       {
       exc = true;
       }

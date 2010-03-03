@@ -439,7 +439,7 @@ void test_read_pkcs8(RandomNumberGenerator& rng)
 
          std::cout << "Unexpected success: loaded key with unknown OID\n";
          }
-      catch (std::exception& e) { /* OK */ }
+      catch (std::exception) { /* OK */ }
       }
    catch (std::exception& e)
       {
