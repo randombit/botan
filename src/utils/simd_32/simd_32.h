@@ -29,16 +29,16 @@
 
 namespace Botan {
 
-inline SIMD_32 rotate_left(SIMD_32 x, u32bit rot)
+inline SIMD_32 rotate_left(const SIMD_32& x, u32bit rot)
    {
-   x.rotate_left(rot);
-   return x;
+   SIMD32 y = x;
+   y.rotate_left(rot);
+   return y;
    }
 
-inline SIMD_32 rotate_right(SIMD_32 x, u32bit rot)
+inline SIMD_32 rotate_right(const SIMD_32& x, u32bit rot)
    {
-   x.rotate_right(rot);
-   return x;
+   return rotate_left(x, 32 - rot);
    }
 
 }
