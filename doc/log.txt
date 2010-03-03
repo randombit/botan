@@ -16,6 +16,7 @@
  - Renamed ECKAEG to its more usual name, ECDH
  - Fix crash in GMP_Engine if library is shutdown and reinitialized
  - Fix an invalid memory read in MD4
+ - Fix Visual C++ static builds
  - Remove Timer class entirely
  - Switch default PKCS #8 encryption algorithm from 3DES to AES-256
  - New option --gen-amalgamation for creating a SQLite-style amalgamation
