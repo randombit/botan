@@ -17,7 +17,7 @@ namespace Botan {
 * TR03110 v1.1 EAC CV Certificate
 */
 template<typename Derived> // CRTP is used enable the call sequence:
-class BOTAN_DLL EAC1_1_obj : public EAC_Signed_Object
+class EAC1_1_obj : public EAC_Signed_Object
    {
    public:
       /**

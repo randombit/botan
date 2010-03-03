@@ -21,7 +21,7 @@ namespace Botan {
 *  This class represents TR03110 (EAC) v1.1 generalized CV Certificates
 */
 template<typename Derived>
-class BOTAN_DLL EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation from EAC1_1_obj
+class EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation from EAC1_1_obj
    {
       friend class EAC1_1_obj<EAC1_1_gen_CVC>;
 
