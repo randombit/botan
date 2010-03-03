@@ -53,7 +53,8 @@ class BOTAN_DLL EAC_Signed_Object
       * @return true if the signature was created by the private key
       * associated with this public key
       */
-      virtual bool check_signature(class Public_Key&) const = 0;
+      bool check_signature(class Public_Key& key,
+                           const MemoryRegion<byte>& sig) const;
 
       /**
       * Write this object DER encoded into a specified pipe.

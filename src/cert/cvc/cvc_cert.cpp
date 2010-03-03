@@ -1,12 +1,12 @@
 /*
  (C) 2007 FlexSecure GmbH
-     2008 Jack Lloyd
+     2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/cvc_cert.h>
-#include <botan/ecdsa.h>
+#include <botan/oids.h>
 
 namespace Botan {
 

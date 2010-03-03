@@ -10,6 +10,7 @@
 #define BOTAN_CVC_EAC_H__
 
 #include <botan/cvc_gen_cert.h>
+#include <botan/ecdsa.h>
 #include <string>
 
 namespace Botan {

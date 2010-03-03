@@ -1,12 +1,15 @@
 /*
 * EAC SIGNED Object
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *     2007 FlexSecure GmbH
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/signed_obj.h>
+#include <botan/look_pk.h>
+#include <botan/oids.h>
+#include <memory>
 
 namespace Botan {
 
@@ -40,6 +43,38 @@ std::string EAC_Signed_Object::PEM_encode() const
 AlgorithmIdentifier EAC_Signed_Object::signature_algorithm() const
    {
    return sig_algo;
+   }
+
+bool EAC_Signed_Object::check_signature(Public_Key& pub_key,
+                                        const MemoryRegion<byte>& sig) const
+   {
+   try
+      {
+      std::vector<std::string> sig_info =
+         split_on(OIDS::lookup(sig_algo.oid), '/');
+
+      if(sig_info.size() != 2 || sig_info[0] != pub_key.algo_name())
+         {
+         return false;
+         }
+
+      std::string padding = sig_info[1];
+      Signature_Format format =
+         (pub_key.message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
+
+      if(!dynamic_cast<PK_Verifying_wo_MR_Key*>(&pub_key))
+         return false;
+
+      SecureVector<byte> to_sign = tbs_data();
+
+      PK_Verifying_wo_MR_Key& sig_key = dynamic_cast<PK_Verifying_wo_MR_Key&>(pub_key);
+      std::auto_ptr<PK_Verifier> verifier(get_pk_verifier(sig_key, padding, format));
+      return verifier->verify_message(to_sign, sig);
+      }
+   catch(...)
+      {
+      return false;
+      }
    }
 
 /*

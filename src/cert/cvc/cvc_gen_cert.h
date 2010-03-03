@@ -12,6 +12,7 @@
 #include <botan/eac_obj.h>
 #include <botan/eac_asn_obj.h>
 #include <botan/ecdsa.h>
+#include <botan/pubkey.h>
 #include <memory>
 
 namespace Botan {

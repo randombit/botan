@@ -9,6 +9,8 @@
 #include <botan/ecc_key.h>
 #include <botan/point_gfp.h>
 #include <botan/time.h>
+#include <botan/oids.h>
+#include <botan/look_pk.h>
 #include <sstream>
 
 namespace Botan {
@@ -81,26 +83,9 @@ std::string padding_and_hash_from_oid(OID const& oid)
    return padding_and_hash;
    }
 
-std::string fixed_len_seqnr(u32bit seqnr, u32bit len)
-   {
-   std::stringstream ss;
-   std::string result;
-   ss << seqnr;
-   ss >> result;
-   if (result.size() > len)
-      {
-      throw Invalid_Argument("fixed_len_seqnr(): number too high to be encoded in provided length");
-      }
-   while (result.size() < len)
-      {
-      result.insert(0,"0");
-      }
-   return result;
-   }
-
 }
-namespace CVC_EAC
-{
+
+namespace CVC_EAC {
 
 EAC1_1_CVC create_self_signed_cert(Private_Key const& key,
                                    EAC1_1_CVC_Options const& opt,
@@ -276,7 +261,7 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
       throw Invalid_Argument("CVC_EAC::create_self_signed_cert(): unsupported key type");
       }
    std::string chr_str = signee.get_chr().value();
-   chr_str.append(fixed_len_seqnr(seqnr, seqnr_len));
+   chr_str += to_string(seqnr, seqnr_len);
    ASN1_Chr chr(chr_str);
    std::string padding_and_hash = padding_and_hash_from_oid(signee.signature_algorithm().oid);
    std::auto_ptr<Botan::PK_Signer> pk_signer(get_pk_signer(*priv_key, padding_and_hash));
