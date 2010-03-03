@@ -73,7 +73,9 @@ clean:
 
 distclean: clean
 	$(RM_R) %{build_dir}
-	$(RMDIR) %{build_dir}\include\botan %{build_dir}\include
+	$(RMDIR) %{build_dir}\include\botan\internal
+	$(RMDIR) %{build_dir}\include\botan
+	$(RMDIR) %{build_dir}\include
 	$(RMDIR) %{build_dir}\lib %{build_dir}\checks
 	$(RMDIR) %{build_dir}
 	$(RM) Makefile $(LIBNAME).* $(CHECK).*
