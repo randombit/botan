@@ -129,7 +129,7 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
       try {
          pre_master = dh_priv->derive_key(key_material, key_material.size());
       }
-      catch(std::exception& e)
+      catch(...)
          {
          pre_master.resize(dh_priv->public_value().size());
          rng.randomize(pre_master, pre_master.size());
