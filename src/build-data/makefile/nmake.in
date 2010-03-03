@@ -64,7 +64,11 @@ $(CHECK): $(LIBRARIES) $(CHECKOBJS)
 	$(CXX) /Fe$@ $(CHECKOBJS) $(BOTAN_LIB) $(LINK_TO)
 
 $(BOTAN_LIB): $(LIBOBJS)
+!If "$(SO_OBJ_FLAGS)" == ""
+	$(AR) /OUT:$(BOTAN_LIB) $(LIBOBJS)
+!Else
 	$(LIB_LINK_CMD) /Fe$(LIBNAME) $(LIBOBJS) $(LINK_TO)
+!Endif
 
 ### Fake Targets
 clean:
