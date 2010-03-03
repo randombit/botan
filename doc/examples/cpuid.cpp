@@ -9,6 +9,8 @@
 
 using namespace Botan;
 
+namespace {
+
 void print_if_feature(const std::string& feature_name, bool exists)
    {
    if(exists)
@@ -16,6 +18,8 @@ void print_if_feature(const std::string& feature_name, bool exists)
    else
       std::cout << '[' << feature_name << ']' << '\n';
    }
+
+}
 
 int main()
    {

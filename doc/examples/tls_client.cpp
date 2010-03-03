@@ -38,7 +38,7 @@ int main()
 
          byte buf[16+1] = { 0 };
          u32bit got = tls.read(buf, sizeof(buf)-1);
-         printf("%s", buf);
+         printf("Got %d bytes: %s", got, buf);
          fflush(0);
          }
    }

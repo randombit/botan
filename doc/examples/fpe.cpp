@@ -18,6 +18,8 @@ using namespace Botan;
 #include <iostream>
 #include <stdexcept>
 
+namespace {
+
 byte luhn_checksum(u64bit cc_number)
    {
    byte sum = 0;
@@ -108,6 +110,8 @@ u64bit decrypt_cc_number(u64bit enc_cc,
       dec_cc = (dec_cc << 8) | c.byte_at(6-i);
    return cc_derank(dec_cc);
    }
+
+}
 
 int main(int argc, char* argv[])
    {

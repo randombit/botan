@@ -14,6 +14,8 @@ using namespace Botan;
 #include <iterator>
 #include <algorithm>
 
+namespace {
+
 std::string to_hex(const SecureVector<byte>& bin)
    {
    Pipe pipe(new Hex_Encoder);
@@ -45,6 +47,8 @@ void do_issuer(const X509_Certificate& cert, const std::string& what)
    {
    do_print(what, cert.issuer_info(what));
    }
+
+}
 
 int main(int argc, char* argv[])
    {

@@ -17,6 +17,8 @@
 
 using namespace Botan;
 
+namespace {
+
 u32bit read_u32bit(Pipe& pipe)
    {
    byte out[4] = { 0 };
@@ -103,6 +105,8 @@ Public_Key* read_ssh_pubkey(const std::string& file)
 
    return 0;
    }
+
+}
 
 #include <botan/init.h>
 #include <iostream>

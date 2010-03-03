@@ -17,11 +17,14 @@ using namespace Botan;
 #include <iostream>
 #include <memory>
 
-// Pollard's Rho algorithm, as described in the MIT algorithms book
 
-// We use (x^2+x) mod n instead of (x*2-1) mod n as the random function,
-// it _seems_ to lead to faster factorization for the values I tried.
+namespace {
 
+/*
+* Pollard's Rho algorithm, as described in the MIT algorithms book. We
+* use (x^2+x) mod n instead of (x*2-1) mod n as the random function,
+* it _seems_ to lead to faster factorization for the values I tried.
+*/
 BigInt rho(const BigInt& n, RandomNumberGenerator& rng)
    {
    BigInt x = BigInt::random_integer(rng, 0, n-1);
@@ -116,6 +119,8 @@ std::vector<BigInt> factorize(const BigInt& n_in,
       }
    return factors;
    }
+
+}
 
 int main(int argc, char* argv[])
    {

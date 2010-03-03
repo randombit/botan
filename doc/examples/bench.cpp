@@ -13,6 +13,8 @@ using namespace Botan;
 
 #include <iostream>
 
+namespace {
+
 const std::string algos[] = {
    "AES-128",
    "AES-192",
@@ -84,6 +86,8 @@ void benchmark_algo(const std::string& algo,
       }
    std::cout << "\n";
    }
+
+}
 
 int main(int argc, char* argv[])
    {

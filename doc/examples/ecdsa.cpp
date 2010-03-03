@@ -22,7 +22,7 @@ int main()
       {
       AutoSeeded_RNG rng;
 
-      EC_Domain_Params params = get_EC_Dom_Pars_by_oid("1.3.132.0.8");
+      EC_Domain_Params params("1.3.132.0.8");
 
       ECDSA_PrivateKey ecdsa(rng, params);
 

@@ -25,12 +25,16 @@ signature format, encoded into base64 with a trailing newline.
 #include <botan/dsa.h>
 using namespace Botan;
 
+namespace {
+
 SecureVector<byte> b64_decode(const std::string& in)
    {
    Pipe pipe(new Base64_Decoder);
    pipe.process_msg(in);
    return pipe.read_all();
    }
+
+}
 
 int main(int argc, char* argv[])
    {

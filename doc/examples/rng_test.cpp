@@ -11,12 +11,12 @@
 
 #include <iostream>
 #include <fstream>
-#include <boost/algorithm/string.hpp>
+#include <deque>
 #include <stdexcept>
 
 using namespace Botan;
 
-std::vector<std::pair<std::string, std::string> > read_file(const std::string&);
+namespace {
 
 SecureVector<byte> decode_hex(const std::string& in)
    {
@@ -109,18 +109,6 @@ void x931_tests(std::vector<std::pair<std::string, std::string> > vecs,
 
    }
 
-int main()
-   {
-   Botan::LibraryInitializer init;
-
-   x931_tests(read_file("ANSI931_AES128VST.txt.vst"), "AES-128");
-   x931_tests(read_file("ANSI931_AES192VST.txt.vst"), "AES-192");
-   x931_tests(read_file("ANSI931_AES256VST.txt.vst"), "AES-256");
-   x931_tests(read_file("ANSI931_TDES2VST.txt.vst"), "TripleDES");
-   x931_tests(read_file("ANSI931_TDES3VST.txt.vst"), "TripleDES");
-   }
-
-
 std::vector<std::pair<std::string, std::string> >
 read_file(const std::string& fsname)
    {
@@ -136,8 +124,7 @@ read_file(const std::string& fsname)
       if(line == "")
          break;
 
-      std::vector<std::string> l;
-      boost::split(l, line, boost::is_any_of(":"));
+      std::vector<std::string> l = split_on(line, ':');
 
       if(l.size() != 2)
          throw std::runtime_error("Bad line " + line);
@@ -146,4 +133,17 @@ read_file(const std::string& fsname)
       }
 
    return out;
+   }
+
+}
+
+int main()
+   {
+   Botan::LibraryInitializer init;
+
+   x931_tests(read_file("ANSI931_AES128VST.txt.vst"), "AES-128");
+   x931_tests(read_file("ANSI931_AES192VST.txt.vst"), "AES-192");
+   x931_tests(read_file("ANSI931_AES256VST.txt.vst"), "AES-256");
+   x931_tests(read_file("ANSI931_TDES2VST.txt.vst"), "TripleDES");
+   x931_tests(read_file("ANSI931_TDES3VST.txt.vst"), "TripleDES");
    }

@@ -4,16 +4,6 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/botan.h>
-#include <botan/benchmark.h>
-#include <botan/filters.h>
-
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <map>
-#include <cstdlib>
-
 /*
 Try to find the fastest SHA-1 implementation and use it to hash
 files. In most programs this isn't worth the bother and
@@ -24,6 +14,18 @@ Mb or so the overhead paid for itself.
 Of course you could also just do this once and save it as an
 application config, which is probably the smart thing to do.
 */
+
+#include <botan/botan.h>
+#include <botan/benchmark.h>
+#include <botan/filters.h>
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <map>
+#include <cstdlib>
+
+namespace {
 
 void set_fastest_implementation(const std::string& algo,
                                 Botan::RandomNumberGenerator& rng,
@@ -53,6 +55,8 @@ void set_fastest_implementation(const std::string& algo,
 
    af.set_preferred_provider(algo, fastest_provider);
    }
+
+}
 
 int main(int argc, char* argv[])
    {

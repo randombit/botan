@@ -14,7 +14,9 @@
 
 using namespace Botan;
 
-unsigned to_string(const std::string& s)
+namespace {
+
+unsigned from_string(const std::string& s)
    {
    std::istringstream stream(s);
    unsigned n;
@@ -211,7 +213,7 @@ void run_tests(std::istream& in)
 
          if(boost::regex_match(line, what, vec_regex, boost::match_extra))
             {
-            unsigned n = to_string(what[1]);
+            unsigned n = from_string(what[1]);
             std::string ciphertext = what[2];
             std::string tag = what[3];
 
@@ -229,6 +231,8 @@ void run_tests(std::istream& in)
 
 
    }
+
+}
 
 int main()
    {

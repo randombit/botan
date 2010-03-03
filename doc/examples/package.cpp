@@ -4,7 +4,6 @@
 * Distributed under the terms of the Botan license
 */
 
-
 #include <botan/botan.h>
 #include <botan/serpent.h>
 #include <botan/package.h>
@@ -14,6 +13,8 @@
 #include <vector>
 
 using namespace Botan;
+
+namespace {
 
 std::vector<byte> slurp_file(const std::string& filename)
    {
@@ -32,6 +33,8 @@ std::vector<byte> slurp_file(const std::string& filename)
 
    return out;
    }
+
+}
 
 int main(int argc, char* argv[])
    {

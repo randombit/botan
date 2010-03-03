@@ -20,6 +20,8 @@ using namespace Botan;
 #include <iostream>
 #include <fstream>
 
+namespace {
+
 void fill_commoninfo(X509_Cert_Options& opts)
    {
    opts.country = "US";
@@ -76,6 +78,8 @@ void save_pair(const std::string& name,
       key_out << PKCS8::PEM_encode(key);
    key_out.close();
    }
+
+}
 
 int main()
    {
