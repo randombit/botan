@@ -1,6 +1,6 @@
 /*
-* Salsa20
-* (C) 1999-2008 Jack Lloyd
+* Salsa20 / XSalsa20
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -13,7 +13,7 @@
 namespace Botan {
 
 /*
-* Salsa20
+* Salsa20 (and XSalsa20)
 */
 class BOTAN_DLL Salsa20 : public StreamCipher
    {
@@ -23,7 +23,7 @@ class BOTAN_DLL Salsa20 : public StreamCipher
       void set_iv(const byte iv[], u32bit iv_len);
 
       bool valid_iv_length(u32bit iv_len) const
-         { return (iv_len == 8); }
+         { return (iv_len == 8 || iv_len == 24); }
 
       void clear();
       std::string name() const;

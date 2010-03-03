@@ -1,6 +1,6 @@
 /*
-* Salsa20
-* (C) 1999-2008 Jack Lloyd
+* Salsa20 / XSalsa20
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -13,6 +13,75 @@
 namespace Botan {
 
 namespace {
+
+/*
+* Generate HSalsa20 cipher stream (for XSalsa20 IV setup)
+*/
+void hsalsa20(u32bit output[8], const u32bit input[16])
+   {
+   u32bit x00 = input[0];
+   u32bit x01 = input[1];
+   u32bit x02 = input[2];
+   u32bit x03 = input[3];
+   u32bit x04 = input[4];
+   u32bit x05 = input[5];
+   u32bit x06 = input[6];
+   u32bit x07 = input[7];
+   u32bit x08 = input[8];
+   u32bit x09 = input[9];
+   u32bit x10 = input[10];
+   u32bit x11 = input[11];
+   u32bit x12 = input[12];
+   u32bit x13 = input[13];
+   u32bit x14 = input[14];
+   u32bit x15 = input[15];
+
+   for(u32bit i = 0; i != 10; ++i)
+      {
+      x04 ^= rotate_left(x00 + x12,  7);
+      x08 ^= rotate_left(x04 + x00,  9);
+      x12 ^= rotate_left(x08 + x04, 13);
+      x00 ^= rotate_left(x12 + x08, 18);
+      x09 ^= rotate_left(x05 + x01,  7);
+      x13 ^= rotate_left(x09 + x05,  9);
+      x01 ^= rotate_left(x13 + x09, 13);
+      x05 ^= rotate_left(x01 + x13, 18);
+      x14 ^= rotate_left(x10 + x06,  7);
+      x02 ^= rotate_left(x14 + x10,  9);
+      x06 ^= rotate_left(x02 + x14, 13);
+      x10 ^= rotate_left(x06 + x02, 18);
+      x03 ^= rotate_left(x15 + x11,  7);
+      x07 ^= rotate_left(x03 + x15,  9);
+      x11 ^= rotate_left(x07 + x03, 13);
+      x15 ^= rotate_left(x11 + x07, 18);
+
+      x01 ^= rotate_left(x00 + x03,  7);
+      x02 ^= rotate_left(x01 + x00,  9);
+      x03 ^= rotate_left(x02 + x01, 13);
+      x00 ^= rotate_left(x03 + x02, 18);
+      x06 ^= rotate_left(x05 + x04,  7);
+      x07 ^= rotate_left(x06 + x05,  9);
+      x04 ^= rotate_left(x07 + x06, 13);
+      x05 ^= rotate_left(x04 + x07, 18);
+      x11 ^= rotate_left(x10 + x09,  7);
+      x08 ^= rotate_left(x11 + x10,  9);
+      x09 ^= rotate_left(x08 + x11, 13);
+      x10 ^= rotate_left(x09 + x08, 18);
+      x12 ^= rotate_left(x15 + x14,  7);
+      x13 ^= rotate_left(x12 + x15,  9);
+      x14 ^= rotate_left(x13 + x12, 13);
+      x15 ^= rotate_left(x14 + x13, 18);
+      }
+
+   output[0] = x00;
+   output[1] = x05;
+   output[2] = x10;
+   output[3] = x15;
+   output[4] = x06;
+   output[5] = x07;
+   output[6] = x08;
+   output[7] = x09;
+   }
 
 /*
 * Generate Salsa20 cipher stream
@@ -100,11 +169,11 @@ void Salsa20::cipher(const byte in[], byte out[], u32bit length)
    {
    while(length >= buffer.size() - position)
       {
-      xor_buf(out, in, buffer.begin() + position, buffer.size() - position);
+      xor_buf(out, in, &buffer[position], buffer.size() - position);
       length -= (buffer.size() - position);
       in += (buffer.size() - position);
       out += (buffer.size() - position);
-      salsa20(buffer.begin(), state);
+      salsa20(&buffer[0], state);
 
       ++state[8];
       if(!state[8]) // if overflow in state[8]
@@ -113,7 +182,7 @@ void Salsa20::cipher(const byte in[], byte out[], u32bit length)
       position = 0;
       }
 
-   xor_buf(out, in, buffer.begin() + position, length);
+   xor_buf(out, in, &buffer[position], length);
 
    position += length;
    }
@@ -174,12 +243,39 @@ void Salsa20::set_iv(const byte iv[], u32bit length)
    if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
 
-   state[6] = load_le<u32bit>(iv, 0);
-   state[7] = load_le<u32bit>(iv, 1);
+   if(length == 8)
+      {
+      // Salsa20
+      state[6] = load_le<u32bit>(iv, 0);
+      state[7] = load_le<u32bit>(iv, 1);
+      }
+   else
+      {
+      // XSalsa20
+      state[6] = load_le<u32bit>(iv, 0);
+      state[7] = load_le<u32bit>(iv, 1);
+      state[8] = load_le<u32bit>(iv, 2);
+      state[9] = load_le<u32bit>(iv, 3);
+
+      SecureVector<u32bit> hsalsa(8);
+      hsalsa20(hsalsa, state);
+
+      state[ 1] = hsalsa[0];
+      state[ 2] = hsalsa[1];
+      state[ 3] = hsalsa[2];
+      state[ 4] = hsalsa[3];
+      state[ 6] = load_le<u32bit>(iv, 4);
+      state[ 7] = load_le<u32bit>(iv, 5);
+      state[11] = hsalsa[4];
+      state[12] = hsalsa[5];
+      state[13] = hsalsa[6];
+      state[14] = hsalsa[7];
+      }
+
    state[8] = 0;
    state[9] = 0;
 
-   salsa20(buffer.begin(), state);
+   salsa20(&buffer[0], state);
    ++state[8];
    if(!state[8]) // if overflow in state[8]
       ++state[9]; // carry to state[9]

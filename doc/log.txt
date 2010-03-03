@@ -4,6 +4,7 @@
  - Add GOST 34.10-2001 public key signature scheme
  - Add SIMD implementation of Noekeon
  - Add SSE2 implementation of IDEA
+ - Extend Salsa20 to support longer IVs (XSalsa20)
  - Perform XTS encryption and decryption in parallel where possible
  - Perform CBC decryption in parallel where possible
  - Add SQLite3 db encryption codec, contributed by Olivier de Gaalon
