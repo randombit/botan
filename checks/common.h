@@ -25,8 +25,7 @@ std::string hex_encode(const byte in[], u32bit len);
 Botan::SecureVector<byte> decode_hex(const std::string&);
 
 Botan::Filter* lookup(const std::string& algname,
-                      const std::vector<std::string>& params,
-                      const std::string& section);
+                      const std::vector<std::string>& params);
 
 Botan::Filter* lookup_block(const std::string&, const std::string&);
 Botan::Filter* lookup_cipher(const std::string&, const std::string&,

@@ -54,18 +54,6 @@ u32bit random_word(Botan::RandomNumberGenerator& rng,
 #endif
    }
 
-}
-
-Botan::Filter* lookup(const std::string&, const std::vector<std::string>&);
-
-bool failed_test(const std::string&, std::vector<std::string>, bool, bool,
-                 std::string&,
-                 Botan::RandomNumberGenerator& rng);
-
-std::vector<std::string> parse(const std::string&);
-void strip(std::string&);
-Botan::SecureVector<byte> decode_hex(const std::string&);
-
 bool test_passhash(RandomNumberGenerator& rng)
    {
 #if defined(BOTAN_HAS_PASSHASH9)
@@ -94,6 +82,16 @@ bool test_passhash(RandomNumberGenerator& rng)
 
    return true;
    }
+
+}
+
+bool failed_test(const std::string&, std::vector<std::string>, bool, bool,
+                 std::string&,
+                 Botan::RandomNumberGenerator& rng);
+
+std::vector<std::string> parse(const std::string&);
+void strip(std::string&);
+Botan::SecureVector<byte> decode_hex(const std::string&);
 
 u32bit do_validation_tests(const std::string& filename,
                            RandomNumberGenerator& rng,
