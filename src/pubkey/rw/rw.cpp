@@ -57,12 +57,20 @@ RW_PrivateKey::RW_PrivateKey(RandomNumberGenerator& rng,
    e = exp;
    p = random_prime(rng, (bits + 1) / 2, e / 2, 3, 4);
    q = random_prime(rng, bits - p.bits(), e / 2, ((p % 8 == 3) ? 7 : 3), 8);
-   d = inverse_mod(e, lcm(p - 1, q - 1) >> 1);
 
-   PKCS8_load_hook(rng, true);
+   n = p * q;
 
    if(n.bits() != bits)
       throw Self_Test_Failure(algo_name() + " private key generation failed");
+
+   d = inverse_mod(e, lcm(p - 1, q - 1) >> 1);
+   d1 = d % (p - 1);
+   d2 = d % (q - 1);
+   c = inverse_mod(q, p);
+
+   core = IF_Core(rng, e, n, d, p, q, d1, d2, c);
+
+   gen_check(rng);
    }
 
 /*

@@ -68,7 +68,8 @@ class BOTAN_DLL IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
                            const BigInt& exp, const BigInt& d_exp,
                            const BigInt& mod);
 
-      IF_Scheme_PrivateKey(const AlgorithmIdentifier& alg_id,
+      IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
+                           const AlgorithmIdentifier& alg_id,
                            const MemoryRegion<byte>& key_bits);
 
       bool check_key(RandomNumberGenerator& rng, bool) const;
@@ -96,7 +97,6 @@ class BOTAN_DLL IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
    protected:
       IF_Scheme_PrivateKey() {}
 
-      void PKCS8_load_hook(RandomNumberGenerator&, bool = false);
       BigInt d, p, q, d1, d2, c;
    };
 

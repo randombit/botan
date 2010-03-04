@@ -69,10 +69,7 @@ class BOTAN_DLL RSA_PrivateKey : public RSA_PublicKey,
       RSA_PrivateKey(const AlgorithmIdentifier& alg_id,
                      const MemoryRegion<byte>& key_bits,
                      RandomNumberGenerator& rng) :
-         IF_Scheme_PrivateKey(alg_id, key_bits)
-         {
-         PKCS8_load_hook(rng);
-         }
+         IF_Scheme_PrivateKey(rng, alg_id, key_bits) {}
 
       /**
       * Construct a private key from the specified parameters.

@@ -56,7 +56,8 @@ MemoryVector<byte> IF_Scheme_PrivateKey::pkcs8_private_key() const
    .get_contents();
    }
 
-IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(const AlgorithmIdentifier&,
+IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
+                                           const AlgorithmIdentifier&,
                                            const MemoryRegion<byte>& key_bits)
    {
    u32bit version;
@@ -76,6 +77,10 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(const AlgorithmIdentifier&,
 
    if(version != 0)
       throw Decoding_Error("Unknown PKCS #1 key format version");
+
+   core = IF_Core(rng, e, n, d, p, q, d1, d2, c);
+
+   load_check(rng);
    }
 
 IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
@@ -108,25 +113,6 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
    core = IF_Core(rng, e, n, d, p, q, d1, d2, c);
 
    load_check(rng);
-   }
-
-/*
-* Algorithm Specific PKCS #8 Initialization Code
-*/
-void IF_Scheme_PrivateKey::PKCS8_load_hook(RandomNumberGenerator& rng,
-                                           bool generated)
-   {
-   if(n == 0)  n = p * q;
-   if(d1 == 0) d1 = d % (p - 1);
-   if(d2 == 0) d2 = d % (q - 1);
-   if(c == 0)  c = inverse_mod(q, p);
-
-   core = IF_Core(rng, e, n, d, p, q, d1, d2, c);
-
-   if(generated)
-      gen_check(rng);
-   else
-      load_check(rng);
    }
 
 /*
