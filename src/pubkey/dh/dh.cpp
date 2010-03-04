@@ -58,26 +58,33 @@ DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng,
       {
       const BigInt& p = group_p();
       x.randomize(rng, 2 * dl_work_factor(p.bits()));
-      PKCS8_load_hook(rng, true);
       }
-   else
-      PKCS8_load_hook(rng, false);
-   }
 
-/*
-* Algorithm Specific PKCS #8 Initialization Code
-*/
-void DH_PrivateKey::PKCS8_load_hook(RandomNumberGenerator& rng,
-                                    bool generated)
-   {
    if(y == 0)
       y = power_mod(group_g(), x, group_p());
+
    core = DH_Core(rng, group, x);
 
-   if(generated)
+   if(x == 0)
       gen_check(rng);
    else
       load_check(rng);
+   }
+
+/*
+* Load a DH private key
+*/
+DH_PrivateKey::DH_PrivateKey(const AlgorithmIdentifier& alg_id,
+                             const MemoryRegion<byte>& key_bits,
+                             RandomNumberGenerator& rng) :
+   DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
+   {
+   if(y == 0)
+      y = power_mod(group_g(), x, group_p());
+
+   core = DH_Core(rng, group, x);
+
+   load_check(rng);
    }
 
 /*

@@ -57,13 +57,15 @@ class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
 
       MemoryVector<byte> public_value() const;
 
+      /**
+      * Load a DH private key
+      * @param alg_id the algorithm id
+      * @param key_bits the subject public key
+      * @rng a random number generator
+      */
       DH_PrivateKey(const AlgorithmIdentifier& alg_id,
                     const MemoryRegion<byte>& key_bits,
-                    RandomNumberGenerator& rng) :
-         DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
-         {
-         PKCS8_load_hook(rng);
-         }
+                    RandomNumberGenerator& rng);
 
       /**
       * Construct a private key with predetermined value.
@@ -74,7 +76,6 @@ class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
       DH_PrivateKey(RandomNumberGenerator& rng, const DL_Group& grp,
                     const BigInt& x = 0);
    private:
-      void PKCS8_load_hook(RandomNumberGenerator& rng, bool = false);
       DH_Core core;
    };
 
