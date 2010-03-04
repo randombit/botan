@@ -21,11 +21,10 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
    {
    public:
 
-      /**
-      * Default constructor. Use this one if you want to later fill
-      * this object with data from an encoded key.
-      */
-      ECDH_PublicKey() {}
+
+      ECDH_PublicKey(const AlgorithmIdentifier& alg_id,
+                     const MemoryRegion<byte>& key_bits) :
+         EC_PublicKey(alg_id, key_bits) {}
 
       /**
       * Construct a public key from a given public point.
@@ -49,6 +48,8 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
       * @result the maximum number of input bits
       */
       u32bit max_input_bits() const { return domain().get_order().bits(); }
+   protected:
+      ECDH_PublicKey() {}
    };
 
 /**

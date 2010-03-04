@@ -29,8 +29,13 @@ class BOTAN_DLL DSA_PublicKey : public PK_Verifying_wo_MR_Key,
       bool verify(const byte[], u32bit, const byte[], u32bit) const;
       u32bit max_input_bits() const;
 
+      DSA_PublicKey(const AlgorithmIdentifier& alg_id,
+                    const MemoryRegion<byte>& key_bits) :
+         DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
+         { X509_load_hook(); }
+
+      DSA_PublicKey(const DL_Group& group, const BigInt& y);
       DSA_PublicKey() {}
-      DSA_PublicKey(const DL_Group&, const BigInt&);
    protected:
       DSA_Core core;
    private:

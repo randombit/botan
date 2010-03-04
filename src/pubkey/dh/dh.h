@@ -26,11 +26,10 @@ class BOTAN_DLL DH_PublicKey : public virtual DL_Scheme_PublicKey
 
       DL_Group::Format group_format() const { return DL_Group::ANSI_X9_42; }
 
-      /**
-      * Construct an uninitialized key. Use this constructor if you wish
-      * to decode an encoded key into the new instance.
-      */
-      DH_PublicKey() {}
+      DH_PublicKey(const AlgorithmIdentifier& alg_id,
+                   const MemoryRegion<byte>& key_bits) :
+         DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
+         { X509_load_hook(); }
 
       /**
       * Construct a public key with the specified parameters.
@@ -38,6 +37,8 @@ class BOTAN_DLL DH_PublicKey : public virtual DL_Scheme_PublicKey
       * @param y the public value y
       */
       DH_PublicKey(const DL_Group& grp, const BigInt& y);
+   protected:
+      DH_PublicKey() {}
    private:
       void X509_load_hook();
    };

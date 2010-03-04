@@ -84,6 +84,9 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       EC_PublicKey(const EC_Domain_Params& dom_par,
                    const PointGFp& pub_point);
 
+      EC_PublicKey(const AlgorithmIdentifier& alg_id,
+                   const MemoryRegion<byte>& key_bits);
+
       virtual ~EC_PublicKey() {}
    protected:
       virtual void X509_load_hook();

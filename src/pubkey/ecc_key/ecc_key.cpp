@@ -57,6 +57,23 @@ void EC_PublicKey::X509_load_hook()
       }
    }
 
+EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
+                           const MemoryRegion<byte>& key_bits)
+   {
+   domain_params = EC_Domain_Params(alg_id.parameters);
+
+   public_key = PointGFp(OS2ECP(key_bits, domain().get_curve()));
+
+   try
+      {
+      public_point().check_invariants();
+      }
+   catch(Illegal_Point)
+      {
+      throw Decoding_Error("Invalid public point; not on curve");
+      }
+   }
+
 X509_Decoder* EC_PublicKey::x509_decoder()
    {
    class EC_Key_Decoder : public X509_Decoder

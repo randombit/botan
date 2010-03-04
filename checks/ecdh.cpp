@@ -181,8 +181,7 @@ void test_ecdh_cp_ctor_as_op(RandomNumberGenerator& rng)
 
    Botan::ECDH_PublicKey public_a = private_a; // Bob gets this
    Botan::ECDH_PublicKey public_a2(public_a);
-   Botan::ECDH_PublicKey public_a3;
-   public_a3 = public_a;
+   Botan::ECDH_PublicKey public_a3 = public_a;
    // Bob creates a key with a matching group
    Botan::ECDH_PrivateKey private_b(rng, dom_pars); //public_a.getCurve()
 
@@ -206,60 +205,6 @@ void test_ecdh_cp_ctor_as_op(RandomNumberGenerator& rng)
    CHECK_MESSAGE(alice_key_2 == bob_key_3, "different keys - " << "Alice's key was: " << alice_key.as_string() << ", Bob's key was: " << bob_key.as_string());
    }
 
-/**
-* The following test tests whether ECDH keys exhibit correct behaviour when it is
-* attempted to use them in an uninitialized state
-*/
-void test_non_init_ecdh_keys(RandomNumberGenerator& rng)
-   {
-   std::cout << "." << std::flush;
-
-   // set up dom pars
-   std::string g_secp("024a96b5688ef573284664698968c38bb913cbfc82");
-   Botan::SecureVector<Botan::byte> sv_g_secp = decode_hex(g_secp);
-   BigInt bi_p_secp("0xffffffffffffffffffffffffffffffff7fffffff");
-   BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
-   BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
-   BigInt order = BigInt("0x0100000000000000000001f4c8f927aed3ca752257");
-   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
-   BigInt cofactor = BigInt(1);
-   PointGFp p_G = OS2ECP ( sv_g_secp, curve );
-   Botan::EC_Domain_Params dom_pars = Botan::EC_Domain_Params(curve, p_G, order, cofactor);
-
-   // alices key (a key constructed by domain parameters IS an emphemeral key!)
-   Botan::ECDH_PrivateKey private_a(rng, dom_pars);
-   Botan::ECDH_PrivateKey private_b(rng, dom_pars);
-
-   Botan::ECDH_PublicKey public_b;
-
-   Botan::ECDH_PrivateKey private_empty;
-   Botan::ECDH_PublicKey public_empty;
-
-   bool exc1 = false;
-   try
-      {
-      Botan::SymmetricKey void_key = private_empty.derive_key(public_b);
-      }
-   catch (Botan::Exception e)
-      {
-      exc1 = true;
-      }
-
-   CHECK_MESSAGE(exc1, "there was no exception thrown when attempting to use an uninitialized ECDH key");
-
-   bool exc2 = false;
-   try
-      {
-      Botan::SymmetricKey void_key = private_a.derive_key(public_empty);
-      }
-   catch (Botan::Exception e)
-      {
-      exc2 = true;
-      }
-
-   CHECK_MESSAGE(exc2, "there was no exception thrown when attempting to use an uninitialized ECDH key");
-   }
-
 }
 
 u32bit do_ecdh_tests(Botan::RandomNumberGenerator& rng)
@@ -270,7 +215,6 @@ u32bit do_ecdh_tests(Botan::RandomNumberGenerator& rng)
    test_ecdh_some_dp(rng);
    test_ecdh_der_derivation(rng);
    test_ecdh_cp_ctor_as_op(rng);
-   test_non_init_ecdh_keys(rng);
 
    std::cout << std::endl;
 

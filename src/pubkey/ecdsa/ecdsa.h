@@ -23,6 +23,19 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey,
    public:
 
       /**
+      * Construct a public key from a given public point.
+      * @param dom_par the domain parameters associated with this key
+      * @param public_point the public point defining this key
+      */
+      ECDSA_PublicKey(const EC_Domain_Params& dom_par,
+                      const PointGFp& public_point) :
+         EC_PublicKey(dom_par, public_point) {}
+
+      ECDSA_PublicKey(const AlgorithmIdentifier& alg_id,
+                      const MemoryRegion<byte>& key_bits) :
+         EC_PublicKey(alg_id, key_bits) {}
+
+      /**
       * Get this keys algorithm name.
       * @result this keys algorithm name ("ECDSA")
       */
@@ -50,21 +63,8 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey,
       bool verify(const byte message[], u32bit mess_len,
                   const byte signature[], u32bit sig_len) const;
 
-      /**
-      * Default constructor. Use this one if you want to later fill
-      * this object with data from an encoded key.
-      */
+   protected:
       ECDSA_PublicKey() {}
-
-      /**
-      * Construct a public key from a given public point.
-      * @param dom_par the domain parameters associated with this key
-      * @param public_point the public point defining this key
-      */
-      ECDSA_PublicKey(const EC_Domain_Params& dom_par,
-                      const PointGFp& public_point) :
-         EC_PublicKey(dom_par, public_point) {}
-
    };
 
 /**

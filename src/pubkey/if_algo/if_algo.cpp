@@ -28,6 +28,17 @@ MemoryVector<byte> IF_Scheme_PublicKey::x509_subject_public_key() const
       .get_contents();
    }
 
+IF_Scheme_PublicKey::IF_Scheme_PublicKey(const AlgorithmIdentifier&,
+                                         const MemoryRegion<byte>& key_bits)
+   {
+   BER_Decoder(key_bits)
+      .start_cons(SEQUENCE)
+        .decode(n)
+        .decode(e)
+      .verify_end()
+      .end_cons();
+   }
+
 /*
 * Return the X.509 public key decoder
 */
@@ -41,7 +52,7 @@ X509_Decoder* IF_Scheme_PublicKey::x509_decoder()
          void key_bits(const MemoryRegion<byte>& bits)
             {
             BER_Decoder(bits)
-               .start_cons(SEQUENCE)
+              .start_cons(SEQUENCE)
                .decode(key->n)
                .decode(key->e)
                .verify_end()

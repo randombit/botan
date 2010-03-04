@@ -23,6 +23,22 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey,
    public:
 
       /**
+      * Construct a public key from a given public point.
+      * @param dom_par the domain parameters associated with this key
+      * @param public_point the public point defining this key
+      */
+      GOST_3410_PublicKey(const EC_Domain_Params& dom_par,
+                          const PointGFp& public_point) :
+         EC_PublicKey(dom_par, public_point) {}
+
+      /**
+      * Construct from X.509 algorithm id and subject public key bits
+      */
+      GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
+                          const MemoryRegion<byte>& key_bits) :
+         EC_PublicKey(alg_id, key_bits) {}
+
+      /**
       * Get this keys algorithm name.
       * @result this keys algorithm name
       */
@@ -54,26 +70,14 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey,
                   const byte signature[], u32bit sig_len) const;
 
       /**
-      * Default constructor. Use this one if you want to later fill
-      * this object with data from an encoded key.
-      */
-      GOST_3410_PublicKey() {}
-
-      /**
-      * Construct a public key from a given public point.
-      * @param dom_par the domain parameters associated with this key
-      * @param public_point the public point defining this key
-      */
-      GOST_3410_PublicKey(const EC_Domain_Params& dom_par,
-                          const PointGFp& public_point) :
-         EC_PublicKey(dom_par, public_point) {}
-
-      /**
       * Get an x509_decoder that can be used to decode a stored key into
       * this key.
       * @result an x509_decoder for this key
       */
       X509_Decoder* x509_decoder();
+
+   protected:
+      GOST_3410_PublicKey() {}
    };
 
 /**

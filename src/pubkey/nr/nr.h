@@ -29,9 +29,14 @@ class BOTAN_DLL NR_PublicKey : public PK_Verifying_with_MR_Key,
       u32bit message_parts() const { return 2; }
       u32bit message_part_size() const;
 
-      NR_PublicKey() {}
+      NR_PublicKey(const AlgorithmIdentifier& alg_id,
+                   const MemoryRegion<byte>& key_bits) :
+         DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
+         { X509_load_hook(); }
+
       NR_PublicKey(const DL_Group&, const BigInt&);
    protected:
+      NR_PublicKey() {}
       NR_Core core;
    private:
       void X509_load_hook();

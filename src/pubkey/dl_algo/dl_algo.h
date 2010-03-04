@@ -68,7 +68,13 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
       * values in this instance.
       */
       X509_Decoder* x509_decoder();
+
+      DL_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
+                          const MemoryRegion<byte>& key_bits,
+                          DL_Group::Format group_format);
+
    protected:
+      DL_Scheme_PublicKey() {}
       BigInt y;
       DL_Group group;
    private:

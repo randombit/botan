@@ -27,9 +27,14 @@ class BOTAN_DLL ElGamal_PublicKey : public PK_Encrypting_Key,
                                  RandomNumberGenerator& rng) const;
       u32bit max_input_bits() const;
 
-      ElGamal_PublicKey() {}
+      ElGamal_PublicKey(const AlgorithmIdentifier& alg_id,
+                        const MemoryRegion<byte>& key_bits) :
+         DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
+         { X509_load_hook(); }
+
       ElGamal_PublicKey(const DL_Group&, const BigInt&);
    protected:
+      ElGamal_PublicKey() {}
       ELG_Core core;
    private:
       void X509_load_hook();

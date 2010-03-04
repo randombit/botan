@@ -470,8 +470,7 @@ void test_cp_and_as_ctors(RandomNumberGenerator& rng)
 
    ECDSA_PublicKey pk_1 = cp_priv_key; // pub-key, as-op
    ECDSA_PublicKey pk_2(pk_1); // pub-key, cp-ctor
-   ECDSA_PublicKey pk_3;
-   pk_3 = pk_2; // pub-key, as-op
+   ECDSA_PublicKey pk_3 = pk_2;
 
    bool ver_success_1 = pk_1.verify(sv_message.begin(), sv_message.size(), signature_1.begin(), signature_1.size());
 
@@ -480,43 +479,6 @@ void test_cp_and_as_ctors(RandomNumberGenerator& rng)
    bool ver_success_3 = pk_3.verify(sv_message.begin(), sv_message.size(), signature_3.begin(), signature_3.size());
 
    CHECK_MESSAGE((ver_success_1 && ver_success_2 && ver_success_3), "different results for copied keys");
-   }
-
-/**
-* The following test tests whether ECDSA keys exhibit correct behaviour when it is
-* attempted to use them in an uninitialized state
-*/
-void test_non_init_ecdsa_keys(RandomNumberGenerator& rng)
-   {
-   std::cout << "." << std::flush;
-
-   std::auto_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(TEST_DATA_DIR "/wo_dompar_private.pkcs8.pem", rng));
-
-   std::string str_message = ("12345678901234567890abcdef12");
-   ECDSA_PrivateKey empty_priv;
-   ECDSA_PublicKey empty_pub;
-   SecureVector<byte> sv_message = decode_hex(str_message);
-   bool exc1 = false;
-   try
-      {
-      SecureVector<byte> signature_1 = empty_priv.sign(sv_message.begin(), sv_message.size(), rng);
-      }
-   catch (std::exception e)
-      {
-      exc1 = true;
-      }
-   CHECK_MESSAGE(exc1, "there was no exception thrown when attempting to use an uninitialized ECDSA key");
-
-   bool exc2 = false;
-   try
-      {
-      empty_pub.verify(sv_message.begin(), sv_message.size(), sv_message.begin(), sv_message.size());
-      }
-   catch (std::exception e)
-      {
-      exc2 = true;
-      }
-   CHECK_MESSAGE(exc2, "there was no exception thrown when attempting to use an uninitialized ECDSA key");
    }
 
 }
@@ -537,7 +499,6 @@ u32bit do_ecdsa_tests(Botan::RandomNumberGenerator& rng)
    test_curve_registry(rng);
    test_read_pkcs8(rng);
    test_cp_and_as_ctors(rng);
-   test_non_init_ecdsa_keys(rng);
 
    std::cout << std::endl;
 
