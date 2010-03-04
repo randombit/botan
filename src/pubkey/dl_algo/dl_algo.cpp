@@ -18,30 +18,9 @@ AlgorithmIdentifier DL_Scheme_PublicKey::algorithm_identifier() const
                               group.DER_encode(group_format()));
    }
 
-/*
-* Return the X.509 public key encoder
-*/
-X509_Encoder* DL_Scheme_PublicKey::x509_encoder() const
+MemoryVector<byte> DL_Scheme_PublicKey::x509_subject_public_key() const
    {
-   class DL_Scheme_Encoder : public X509_Encoder
-      {
-      public:
-         AlgorithmIdentifier alg_id() const
-            {
-            return key->algorithm_identifier();
-            }
-
-         MemoryVector<byte> key_bits() const
-            {
-            return DER_Encoder().encode(key->y).get_contents();
-            }
-
-         DL_Scheme_Encoder(const DL_Scheme_PublicKey* k) : key(k) {}
-      private:
-         const DL_Scheme_PublicKey* key;
-      };
-
-   return new DL_Scheme_Encoder(this);
+   return DER_Encoder().encode(y).get_contents();
    }
 
 /*

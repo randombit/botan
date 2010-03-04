@@ -40,6 +40,11 @@ AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const
    return AlgorithmIdentifier(get_oid(), DER_domain());
    }
 
+MemoryVector<byte> EC_PublicKey::x509_subject_public_key() const
+   {
+   return EC2OSP(public_point(), PointGFp::COMPRESSED);
+   }
+
 void EC_PublicKey::X509_load_hook()
    {
    try
@@ -50,29 +55,6 @@ void EC_PublicKey::X509_load_hook()
       {
       throw Decoding_Error("Invalid public point; not on curve");
       }
-   }
-
-X509_Encoder* EC_PublicKey::x509_encoder() const
-   {
-   class EC_Key_Encoder : public X509_Encoder
-      {
-      public:
-         AlgorithmIdentifier alg_id() const
-            {
-            return key->algorithm_identifier();
-            }
-
-         MemoryVector<byte> key_bits() const
-            {
-            return EC2OSP(key->public_point(), PointGFp::COMPRESSED);
-            }
-
-         EC_Key_Encoder(const EC_PublicKey* k): key(k) {}
-      private:
-         const EC_PublicKey* key;
-      };
-
-   return new EC_Key_Encoder(this);
    }
 
 X509_Decoder* EC_PublicKey::x509_decoder()

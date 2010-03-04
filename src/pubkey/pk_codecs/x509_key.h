@@ -16,17 +16,6 @@
 namespace Botan {
 
 /**
-* This class represents abstract X.509 public key encoders.
-*/
-class BOTAN_DLL X509_Encoder
-   {
-   public:
-      virtual AlgorithmIdentifier alg_id() const = 0;
-      virtual MemoryVector<byte> key_bits() const = 0;
-      virtual ~X509_Encoder() {}
-   };
-
-/**
 * This class represents abstract X.509 public key decoders.
 */
 class BOTAN_DLL X509_Decoder

@@ -18,35 +18,14 @@ AlgorithmIdentifier IF_Scheme_PublicKey::algorithm_identifier() const
                               AlgorithmIdentifier::USE_NULL_PARAM);
    }
 
-/*
-* Return the X.509 public key encoder
-*/
-X509_Encoder* IF_Scheme_PublicKey::x509_encoder() const
+MemoryVector<byte> IF_Scheme_PublicKey::x509_subject_public_key() const
    {
-   class IF_Scheme_Encoder : public X509_Encoder
-      {
-      public:
-         AlgorithmIdentifier alg_id() const
-            {
-            return key->algorithm_identifier();
-            }
-
-         MemoryVector<byte> key_bits() const
-            {
-            return DER_Encoder()
-               .start_cons(SEQUENCE)
-                  .encode(key->n)
-                  .encode(key->e)
-               .end_cons()
-            .get_contents();
-            }
-
-         IF_Scheme_Encoder(const IF_Scheme_PublicKey* k) : key(k) {}
-      private:
-         const IF_Scheme_PublicKey* key;
-      };
-
-   return new IF_Scheme_Encoder(this);
+   return DER_Encoder()
+      .start_cons(SEQUENCE)
+         .encode(n)
+         .encode(e)
+      .end_cons()
+      .get_contents();
    }
 
 /*

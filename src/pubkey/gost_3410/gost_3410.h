@@ -28,6 +28,8 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey,
       */
       std::string algo_name() const { return "GOST-34.10"; }
 
+      MemoryVector<byte> x509_subject_public_key() const;
+
       /**
       * Get the maximum number of bits allowed to be fed to this key.
       * This is the bitlength of the order of the base point.
@@ -65,12 +67,6 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey,
       GOST_3410_PublicKey(const EC_Domain_Params& dom_par,
                           const PointGFp& public_point) :
          EC_PublicKey(dom_par, public_point) {}
-
-      /**
-      * Get an x509_encoder that can be used to encode this key.
-      * @result an x509_encoder for this key
-      */
-      X509_Encoder* x509_encoder() const;
 
       /**
       * Get an x509_decoder that can be used to decode a stored key into

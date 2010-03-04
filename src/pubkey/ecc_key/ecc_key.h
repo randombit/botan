@@ -42,6 +42,8 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
 
       AlgorithmIdentifier algorithm_identifier() const;
 
+      MemoryVector<byte> x509_subject_public_key() const;
+
       /**
       * Get the domain parameters of this key.
       * @throw Invalid_State is thrown if the
@@ -69,12 +71,6 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       */
       EC_Domain_Params_Encoding domain_format() const
          { return domain_encoding; }
-
-      /**
-      * Get an x509_encoder that can be used to encode this key.
-      * @result an x509_encoder for this key
-      */
-      X509_Encoder* x509_encoder() const;
 
       /**
       * Get an x509_decoder that can be used to decode a stored key into

@@ -67,10 +67,9 @@ class BOTAN_DLL Public_Key
       virtual AlgorithmIdentifier algorithm_identifier() const = 0;
 
       /**
-      * Get an X509 encoder that can be used to encode this key in X509 format.
-      * @return an X509 encoder for this key
+      * @return X.509 subject key encoding for this key object
       */
-      virtual class X509_Encoder* x509_encoder() const = 0;
+      virtual MemoryVector<byte> x509_subject_public_key() const = 0;
 
       /**
       * Get an X509 decoder that can be used to set the values of this

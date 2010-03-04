@@ -16,37 +16,18 @@
 
 namespace Botan {
 
-X509_Encoder* GOST_3410_PublicKey::x509_encoder() const
+MemoryVector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
    {
-   class GOST_3410_Key_Encoder : public X509_Encoder
-      {
-      public:
-         AlgorithmIdentifier alg_id() const
-            {
-            return AlgorithmIdentifier(key->get_oid(),
-                                       key->DER_domain());
-            }
+   // Trust CryptoPro to come up with something obnoxious
+   const BigInt& x = public_point().get_affine_x();
+   const BigInt& y = public_point().get_affine_y();
 
-         MemoryVector<byte> key_bits() const
-            {
-            // Trust CryptoPro to come up with something obnoxious
-            const BigInt x = key->public_point().get_affine_x();
-            const BigInt y = key->public_point().get_affine_y();
+   MemoryVector<byte> bits(2*std::max(x.bytes(), y.bytes()));
 
-            SecureVector<byte> bits(2*std::max(x.bytes(), y.bytes()));
+   y.binary_encode(bits + (bits.size() / 2 - y.bytes()));
+   x.binary_encode(bits + (bits.size() - y.bytes()));
 
-            y.binary_encode(bits + (bits.size() / 2 - y.bytes()));
-            x.binary_encode(bits + (bits.size() - y.bytes()));
-
-            return DER_Encoder().encode(bits, OCTET_STRING).get_contents();
-            }
-
-         GOST_3410_Key_Encoder(const GOST_3410_PublicKey* k): key(k) {}
-      private:
-         const GOST_3410_PublicKey* key;
-      };
-
-   return new GOST_3410_Key_Encoder(this);
+   return DER_Encoder().encode(bits, OCTET_STRING).get_contents();
    }
 
 X509_Decoder* GOST_3410_PublicKey::x509_decoder()
