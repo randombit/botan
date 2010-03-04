@@ -1,6 +1,6 @@
 /**
-* Client Key Exchange Message 
-* (C) 2004-2008 Jack Lloyd
+* Client Key Exchange Message
+* (C) 2004-2010 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -25,18 +25,19 @@ Client_Key_Exchange::Client_Key_Exchange(RandomNumberGenerator& rng,
                                          Version_Code using_version,
                                          Version_Code pref_version)
    {
-   const DH_PublicKey* dh_pub = dynamic_cast<const DH_PublicKey*>(pub_key);
-   const RSA_PublicKey* rsa_pub = dynamic_cast<const RSA_PublicKey*>(pub_key);
-
    include_length = true;
 
-   if(dh_pub)
+   if(const DH_PublicKey* dh_pub = dynamic_cast<const DH_PublicKey*>(pub_key))
       {
       DH_PrivateKey priv_key(rng, dh_pub->get_domain());
-      pre_master = priv_key.derive_key(dh_pub->get_y());
+
+      std::auto_ptr<PK_Key_Agreement> ka(get_pk_kas(priv_key, "Raw"));
+
+      pre_master = ka->derive_key(0, dh_pub->public_value()).bits_of();
+
       key_material = priv_key.public_value();
       }
-   else if(rsa_pub)
+   else if(const RSA_PublicKey* rsa_pub = dynamic_cast<const RSA_PublicKey*>(pub_key))
       {
       pre_master.resize(48);
       rng.randomize(pre_master, 48);
@@ -120,14 +121,13 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
                                        const Private_Key* priv_key,
                                        Version_Code version)
    {
-   const DH_PrivateKey* dh_priv = dynamic_cast<const DH_PrivateKey*>(priv_key);
-   const RSA_PrivateKey* rsa_priv =
-      dynamic_cast<const RSA_PrivateKey*>(priv_key);
 
-   if(dh_priv)
+   if(const DH_PrivateKey* dh_priv = dynamic_cast<const DH_PrivateKey*>(priv_key))
       {
       try {
-         pre_master = dh_priv->derive_key(key_material, key_material.size());
+         std::auto_ptr<PK_Key_Agreement> ka(get_pk_kas(*dh_priv, "Raw"));
+
+         pre_master = ka->derive_key(0, key_material).bits_of();
       }
       catch(...)
          {
@@ -137,7 +137,7 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
 
       return pre_master;
       }
-   else if(rsa_priv)
+   else if(const RSA_PrivateKey* rsa_priv = dynamic_cast<const RSA_PrivateKey*>(priv_key))
       {
       std::auto_ptr<PK_Decryptor> decryptor(get_pk_decryptor(*rsa_priv,
                                                              "PKCS1v15"));
