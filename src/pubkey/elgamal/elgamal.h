@@ -23,21 +23,20 @@ class BOTAN_DLL ElGamal_PublicKey : public PK_Encrypting_Key,
       std::string algo_name() const { return "ElGamal"; }
       DL_Group::Format group_format() const { return DL_Group::ANSI_X9_42; }
 
-      SecureVector<byte> encrypt(const byte[], u32bit,
+      u32bit max_input_bits() const { return (group_p().bits() - 1); }
+
+      SecureVector<byte> encrypt(const byte msg[], u32bit msg_len,
                                  RandomNumberGenerator& rng) const;
-      u32bit max_input_bits() const;
 
       ElGamal_PublicKey(const AlgorithmIdentifier& alg_id,
                         const MemoryRegion<byte>& key_bits) :
          DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
-         { X509_load_hook(); }
+         { core = ELG_Core(group, y); }
 
-      ElGamal_PublicKey(const DL_Group&, const BigInt&);
+      ElGamal_PublicKey(const DL_Group& group, const BigInt& y);
    protected:
       ElGamal_PublicKey() {}
       ELG_Core core;
-   private:
-      void X509_load_hook();
    };
 
 /*
@@ -48,22 +47,17 @@ class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
                                      public virtual DL_Scheme_PrivateKey
    {
    public:
-      SecureVector<byte> decrypt(const byte[], u32bit) const;
+      SecureVector<byte> decrypt(const byte msg[], u32bit msg_len) const;
 
       bool check_key(RandomNumberGenerator& rng, bool) const;
 
       ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
                          const MemoryRegion<byte>& key_bits,
-                         RandomNumberGenerator& rng) :
-         DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
-         {
-         PKCS8_load_hook(rng);
-         }
+                         RandomNumberGenerator& rng);
 
-      ElGamal_PrivateKey(RandomNumberGenerator&, const DL_Group&,
-                         const BigInt& = 0);
-   private:
-      void PKCS8_load_hook(RandomNumberGenerator&, bool = false);
+      ElGamal_PrivateKey(RandomNumberGenerator& rng,
+                         const DL_Group& group,
+                         const BigInt& priv_key = 0);
    };
 
 }

@@ -20,14 +20,6 @@ ElGamal_PublicKey::ElGamal_PublicKey(const DL_Group& grp, const BigInt& y1)
    {
    group = grp;
    y = y1;
-   X509_load_hook();
-   }
-
-/*
-* Algorithm Specific X.509 Initialization Code
-*/
-void ElGamal_PublicKey::X509_load_hook()
-   {
    core = ELG_Core(group, y);
    }
 
@@ -43,14 +35,6 @@ ElGamal_PublicKey::encrypt(const byte in[], u32bit length,
    }
 
 /*
-* Return the maximum input size in bits
-*/
-u32bit ElGamal_PublicKey::max_input_bits() const
-   {
-   return (group_p().bits() - 1);
-   }
-
-/*
 * ElGamal_PrivateKey Constructor
 */
 ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng,
@@ -61,28 +45,26 @@ ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng,
    x = x_arg;
 
    if(x == 0)
-      {
       x.randomize(rng, 2 * dl_work_factor(group_p().bits()));
-      PKCS8_load_hook(rng, true);
-      }
-   else
-      PKCS8_load_hook(rng, false);
-   }
 
-/*
-* Algorithm Specific PKCS #8 Initialization Code
-*/
-void ElGamal_PrivateKey::PKCS8_load_hook(RandomNumberGenerator& rng,
-                                         bool generated)
-   {
-   if(y == 0)
-      y = power_mod(group_g(), x, group_p());
+   y = power_mod(group_g(), x, group_p());
+
    core = ELG_Core(rng, group, y, x);
 
-   if(generated)
+   if(x_arg == 0)
       gen_check(rng);
    else
       load_check(rng);
+   }
+
+ElGamal_PrivateKey::ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
+                                       const MemoryRegion<byte>& key_bits,
+                                       RandomNumberGenerator& rng) :
+   DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
+   {
+   y = power_mod(group_g(), x, group_p());
+   core = ELG_Core(rng, group, y, x);
+   load_check(rng);
    }
 
 /*
