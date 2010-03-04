@@ -51,6 +51,11 @@ X509_Decoder* DL_Scheme_PublicKey::x509_decoder()
    return new DL_Scheme_Decoder(this);
    }
 
+MemoryVector<byte> DL_Scheme_PrivateKey::pkcs8_private_key() const
+   {
+   return DER_Encoder().encode(x).get_contents();
+   }
+
 /*
 * Return the PKCS #8 private key encoder
 */
@@ -66,7 +71,7 @@ PKCS8_Encoder* DL_Scheme_PrivateKey::pkcs8_encoder() const
 
          MemoryVector<byte> key_bits() const
             {
-            return DER_Encoder().encode(key->x).get_contents();
+            return key->pkcs8_private_key();
             }
 
          DL_Scheme_Encoder(const DL_Scheme_PrivateKey* k) : key(k) {}

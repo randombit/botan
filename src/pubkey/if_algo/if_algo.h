@@ -76,6 +76,8 @@ class BOTAN_DLL IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
       */
       const BigInt& get_d() const { return d; }
 
+      MemoryVector<byte> pkcs8_private_key() const;
+
       PKCS8_Encoder* pkcs8_encoder() const;
       PKCS8_Decoder* pkcs8_decoder(RandomNumberGenerator&);
    protected:

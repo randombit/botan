@@ -96,6 +96,8 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
       */
       PKCS8_Encoder* pkcs8_encoder() const;
 
+      MemoryVector<byte> pkcs8_private_key() const;
+
       /**
       * Get an PKCS#8 decoder for this key.
       * @param rng the rng to use

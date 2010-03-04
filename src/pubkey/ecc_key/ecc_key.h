@@ -110,6 +110,8 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
 
       virtual ~EC_PrivateKey() {}
 
+      MemoryVector<byte> pkcs8_private_key() const;
+
       /**
       * Get an PKCS#8 encoder that can be used to encoded this key.
       * @result an PKCS#8 encoder for this key

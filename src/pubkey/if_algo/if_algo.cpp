@@ -58,6 +58,23 @@ X509_Decoder* IF_Scheme_PublicKey::x509_decoder()
    return new IF_Scheme_Decoder(this);
    }
 
+MemoryVector<byte> IF_Scheme_PrivateKey::pkcs8_private_key() const
+   {
+   return DER_Encoder()
+      .start_cons(SEQUENCE)
+         .encode(static_cast<u32bit>(0))
+         .encode(n)
+         .encode(e)
+         .encode(d)
+         .encode(p)
+         .encode(q)
+         .encode(d1)
+         .encode(d2)
+         .encode(c)
+      .end_cons()
+   .get_contents();
+   }
+
 /*
 * Return the PKCS #8 public key encoder
 */
@@ -73,19 +90,7 @@ PKCS8_Encoder* IF_Scheme_PrivateKey::pkcs8_encoder() const
 
          MemoryVector<byte> key_bits() const
             {
-            return DER_Encoder()
-               .start_cons(SEQUENCE)
-                  .encode(static_cast<u32bit>(0))
-                  .encode(key->n)
-                  .encode(key->e)
-                  .encode(key->d)
-                  .encode(key->p)
-                  .encode(key->q)
-                  .encode(key->d1)
-                  .encode(key->d2)
-                  .encode(key->c)
-               .end_cons()
-            .get_contents();
+            return key->pkcs8_private_key();
             }
 
          IF_Scheme_Encoder(const IF_Scheme_PrivateKey* k) : key(k) {}

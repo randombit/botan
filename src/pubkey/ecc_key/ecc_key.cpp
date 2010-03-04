@@ -137,6 +137,17 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
       }
    }
 
+MemoryVector<byte> EC_PrivateKey::pkcs8_private_key() const
+   {
+   return DER_Encoder()
+      .start_cons(SEQUENCE)
+         .encode(BigInt(1))
+         .encode(BigInt::encode_1363(private_key, private_key.bytes()),
+                 OCTET_STRING)
+      .end_cons()
+      .get_contents();
+   }
+
 /**
 * Return the PKCS #8 public key encoder
 **/
@@ -152,13 +163,7 @@ PKCS8_Encoder* EC_PrivateKey::pkcs8_encoder() const
 
          MemoryVector<byte> key_bits() const
             {
-            return DER_Encoder()
-               .start_cons(SEQUENCE)
-               .encode(BigInt(1))
-               .encode(BigInt::encode_1363(key->private_key, key->private_key.bytes()),
-                       OCTET_STRING)
-               .end_cons()
-               .get_contents();
+            return key->pkcs8_private_key();
             }
 
          EC_Key_Encoder(const EC_PrivateKey* k): key(k) {}

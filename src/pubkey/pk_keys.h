@@ -90,6 +90,11 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
    {
    public:
       /**
+      * @return PKCS #8 private key encoding for this key object
+      */
+      virtual MemoryVector<byte> pkcs8_private_key() const = 0;
+
+      /**
       * Get a PKCS#8 encoder that can be used to encode this key in
       * PKCS#8 format.
       * @return an PKCS#8 encoder for this key
