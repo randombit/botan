@@ -19,14 +19,6 @@ DSA_PublicKey::DSA_PublicKey(const DL_Group& grp, const BigInt& y1)
    {
    group = grp;
    y = y1;
-   X509_load_hook();
-   }
-
-/*
-* Algorithm Specific X.509 Initialization Code
-*/
-void DSA_PublicKey::X509_load_hook()
-   {
    core = DSA_Core(group, y);
    }
 
@@ -66,27 +58,27 @@ DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng,
    x = x_arg;
 
    if(x == 0)
-      {
       x = BigInt::random_integer(rng, 2, group_q() - 1);
-      PKCS8_load_hook(rng, true);
-      }
+
+   y = power_mod(group_g(), x, group_p());
+
+   core = DSA_Core(group, y, x);
+
+   if(x_arg == 0)
+      gen_check(rng);
    else
-      PKCS8_load_hook(rng, false);
+      load_check(rng);
    }
 
-/*
-* Algorithm Specific PKCS #8 Initialization Code
-*/
-void DSA_PrivateKey::PKCS8_load_hook(RandomNumberGenerator& rng,
-                                     bool generated)
+DSA_PrivateKey::DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
+                               const MemoryRegion<byte>& key_bits,
+                               RandomNumberGenerator& rng) :
+   DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
    {
    y = power_mod(group_g(), x, group_p());
    core = DSA_Core(group, y, x);
 
-   if(generated)
-      gen_check(rng);
-   else
-      load_check(rng);
+   load_check(rng);
    }
 
 /*
