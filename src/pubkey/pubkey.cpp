@@ -362,21 +362,6 @@ PK_Key_Agreement::PK_Key_Agreement(const PK_Key_Agreement_Key& k,
    {
    }
 
-/*
-* Perform Key Agreement Operation
-*/
-SymmetricKey PK_Key_Agreement::derive_key(u32bit key_len,
-                                          const byte in[], u32bit in_len,
-                                          const std::string& params) const
-   {
-   return derive_key(key_len, in, in_len,
-                     reinterpret_cast<const byte*>(params.data()),
-                     params.length());
-   }
-
-/*
-* Perform Key Agreement Operation
-*/
 SymmetricKey PK_Key_Agreement::derive_key(u32bit key_len, const byte in[],
                                           u32bit in_len, const byte params[],
                                           u32bit params_len) const

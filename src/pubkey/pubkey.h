@@ -263,17 +263,43 @@ class BOTAN_DLL PK_Verifier
 class BOTAN_DLL PK_Key_Agreement
    {
    public:
-      SymmetricKey derive_key(u32bit, const byte[], u32bit,
-                              const std::string& = "") const;
-      SymmetricKey derive_key(u32bit, const byte[], u32bit,
-                              const byte[], u32bit) const;
+
+      /*
+      * Perform Key Agreement Operation
+      * @param key_len the desired key output size
+      * @param in the other parties key
+      * @param in_len the length of in in bytes
+      * @param params extra derivation params
+      * @param params_len the length of params in bytes
+      */
+      SymmetricKey derive_key(u32bit key_len,
+                              const byte in[],
+                              u32bit in_len,
+                              const byte params[],
+                              u32bit params_len) const;
+
+      /*
+      * Perform Key Agreement Operation
+      * @param key_len the desired key output size
+      * @param in the other parties key
+      * @param in_len the length of in in bytes
+      * @param params extra derivation params
+      */
+      SymmetricKey derive_key(u32bit key_len,
+                              const byte in[], u32bit in_len,
+                              const std::string& params = "") const
+         {
+         return derive_key(key_len, in, in_len,
+                           reinterpret_cast<const byte*>(params.data()),
+                           params.length());
+         }
 
       /**
       * Construct a PK Key Agreement.
       * @param key the key to use
-      * @param kdf the KDF to use
+      * @param kdf the KDF to use (or NULL for no KDF)
       */
-      PK_Key_Agreement(const PK_Key_Agreement_Key& key, KDF* kdf);
+      PK_Key_Agreement(const PK_Key_Agreement_Key& key, KDF* kdf = 0);
 
       ~PK_Key_Agreement() { delete kdf; }
    private:
