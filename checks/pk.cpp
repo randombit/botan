@@ -82,31 +82,49 @@ void dump_data(const SecureVector<byte>& out,
    std::cout << "Exp: " << pipe.read_all_as_string(1) << std::endl;
    }
 
-void validate_save_and_load(const Public_Key* public_key,
+void validate_save_and_load(const Private_Key* priv_key,
                             RandomNumberGenerator& rng)
    {
-   std::string name = public_key->algo_name();
+   std::string name = priv_key->algo_name();
 
-   std::string pem = X509::PEM_encode(*public_key);
+   std::string pub_pem = X509::PEM_encode(*priv_key);
 
    try
       {
-      DataSource_Memory input(pem);
-      std::auto_ptr<Public_Key> restored(X509::load_key(input));
+      DataSource_Memory input_pub(pub_pem);
+      std::auto_ptr<Public_Key> restored_pub(X509::load_key(input_pub));
 
-      if(restored.get() == 0)
-         std::cout << "Could not recover " << name << " key\n";
-      else if(restored->check_key(rng, true) == false)
-         std::cout << "Restored key failed self tests " << name << "\n";
+      if(restored_pub.get() == 0)
+         std::cout << "Could not recover " << name << " public key\n";
+      else if(restored_pub->check_key(rng, true) == false)
+         std::cout << "Restored pubkey failed self tests " << name << "\n";
       }
    catch(std::exception& e)
       {
       std::cout << "Exception during load of " << name
                 << " key: " << e.what() << "\n";
-      std::cout << "PEM was:\n" << pem << "\n";
+      std::cout << "PEM for pubkey was:\n" << pub_pem << "\n";
       }
 
-   // Check equivalence somehow?
+   std::string priv_pem = PKCS8::PEM_encode(*priv_key);
+
+   try
+      {
+      DataSource_Memory input_priv(priv_pem);
+      std::auto_ptr<Private_Key> restored_priv(
+         PKCS8::load_key(input_priv, rng));
+
+      if(restored_priv.get() == 0)
+         std::cout << "Could not recover " << name << " privlic key\n";
+      else if(restored_priv->check_key(rng, true) == false)
+         std::cout << "Restored privkey failed self tests " << name << "\n";
+      }
+   catch(std::exception& e)
+      {
+      std::cout << "Exception during load of " << name
+                << " key: " << e.what() << "\n";
+      std::cout << "PEM for privkey was:\n" << priv_pem << "\n";
+      }
    }
 
 void validate_decryption(PK_Decryptor* d, const std::string& algo,
