@@ -18,7 +18,6 @@
 #include <fstream>
 
 #include <botan/symkey.h>
-#include <botan/dh.h>
 #include <botan/ecdh.h>
 #include <botan/x509self.h>
 #include <botan/der_enc.h>
@@ -179,9 +178,6 @@ void test_ecdh_cp_ctor_as_op(RandomNumberGenerator& rng)
    Botan::ECDH_PrivateKey private_a2(private_a);
    Botan::ECDH_PrivateKey private_a3;
    private_a3 = private_a2;
-
-   Botan::DH_PrivateKey dh_pr_empty;
-   Botan::DH_PublicKey dh_pub_empty;
 
    Botan::ECDH_PublicKey public_a = private_a; // Bob gets this
    Botan::ECDH_PublicKey public_a2(public_a);
