@@ -82,8 +82,6 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
    protected:
       EC_PublicKey() : domain_encoding(EC_DOMPAR_ENC_EXPLICIT) {}
 
-      virtual void X509_load_hook();
-
       EC_Domain_Params domain_params;
       PointGFp public_key;
       EC_Domain_Params_Encoding domain_encoding;
@@ -116,8 +114,6 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
       const BigInt& private_value() const;
    protected:
       EC_PrivateKey() {}
-
-      virtual void PKCS8_load_hook(bool = false);
 
       BigInt private_key;
    };

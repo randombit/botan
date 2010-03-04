@@ -50,7 +50,14 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
 
    public_key = PointGFp(domain().get_curve(), x, y);
 
-   X509_load_hook();
+   try
+      {
+      public_key.check_invariants();
+      }
+   catch(Illegal_Point)
+      {
+      throw Internal_Error("Loaded ECC private key failed self test");
+      }
    }
 
 bool GOST_3410_PublicKey::verify(const byte msg[], u32bit msg_len,

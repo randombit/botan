@@ -45,18 +45,6 @@ MemoryVector<byte> EC_PublicKey::x509_subject_public_key() const
    return EC2OSP(public_point(), PointGFp::COMPRESSED);
    }
 
-void EC_PublicKey::X509_load_hook()
-   {
-   try
-      {
-      public_point().check_invariants();
-      }
-   catch(Illegal_Point)
-      {
-      throw Decoding_Error("Invalid public point; not on curve");
-      }
-   }
-
 EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
                            const MemoryRegion<byte>& key_bits)
    {
@@ -160,11 +148,15 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
    private_key = BigInt::decode(octstr_secret, octstr_secret.size());
 
    public_key = domain().get_base_point() * private_key;
-   }
 
-void EC_PrivateKey::PKCS8_load_hook(bool)
-   {
-   public_key = domain().get_base_point() * private_key;
+   try
+      {
+      public_key.check_invariants();
+      }
+   catch(Illegal_Point)
+      {
+      throw Internal_Error("Loaded ECC private key failed self test");
+      }
    }
 
 }
