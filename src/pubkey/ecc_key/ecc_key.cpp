@@ -162,48 +162,6 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
    public_key = domain().get_base_point() * private_key;
    }
 
-/**
-* Return the PKCS #8 public key decoder
-*/
-PKCS8_Decoder* EC_PrivateKey::pkcs8_decoder(RandomNumberGenerator&)
-   {
-   class EC_Key_Decoder : public PKCS8_Decoder
-      {
-      public:
-         void alg_id(const AlgorithmIdentifier& alg_id)
-            {
-            key->domain_params = EC_Domain_Params(alg_id.parameters);
-            }
-
-         void key_bits(const MemoryRegion<byte>& bits)
-            {
-            u32bit version;
-            SecureVector<byte> octstr_secret;
-
-            BER_Decoder(bits)
-               .start_cons(SEQUENCE)
-               .decode(version)
-               .decode(octstr_secret, OCTET_STRING)
-               .verify_end()
-               .end_cons();
-
-            if(version != 1)
-               throw Decoding_Error("Wrong key format version for EC key");
-
-            key->private_key = BigInt::decode(octstr_secret,
-                                              octstr_secret.size());
-
-            key->PKCS8_load_hook();
-            }
-
-         EC_Key_Decoder(EC_PrivateKey* k): key(k) {}
-      private:
-         EC_PrivateKey* key;
-      };
-
-   return new EC_Key_Decoder(this);
-   }
-
 void EC_PrivateKey::PKCS8_load_hook(bool)
    {
    public_key = domain().get_base_point() * private_key;

@@ -49,36 +49,6 @@ DL_Scheme_PrivateKey::DL_Scheme_PrivateKey(const AlgorithmIdentifier& alg_id,
    }
 
 /*
-* Return the PKCS #8 private key decoder
-*/
-PKCS8_Decoder* DL_Scheme_PrivateKey::pkcs8_decoder(RandomNumberGenerator& rng)
-   {
-   class DL_Scheme_Decoder : public PKCS8_Decoder
-      {
-      public:
-         void alg_id(const AlgorithmIdentifier& alg_id)
-            {
-            DataSource_Memory source(alg_id.parameters);
-            key->group.BER_decode(source, key->group_format());
-            }
-
-         void key_bits(const MemoryRegion<byte>& bits)
-            {
-            BER_Decoder(bits).decode(key->x);
-            key->PKCS8_load_hook(rng);
-            }
-
-         DL_Scheme_Decoder(DL_Scheme_PrivateKey* k, RandomNumberGenerator& r) :
-            key(k), rng(r) {}
-      private:
-         DL_Scheme_PrivateKey* key;
-         RandomNumberGenerator& rng;
-      };
-
-   return new DL_Scheme_Decoder(this, rng);
-   }
-
-/*
 * Check Public DL Parameters
 */
 bool DL_Scheme_PublicKey::check_key(RandomNumberGenerator& rng,

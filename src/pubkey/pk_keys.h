@@ -87,13 +87,6 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
       */
       virtual MemoryVector<byte> pkcs8_private_key() const = 0;
 
-      /**
-      * Get an PKCS#8 decoder that can be used to set the values of this key
-      * based on an PKCS#8 encoded key object.
-      * @return an PKCS#8 decoder for this key
-      */
-      virtual class PKCS8_Decoder* pkcs8_decoder(RandomNumberGenerator&)
-         { return 0; }
    protected:
       void load_check(RandomNumberGenerator&) const;
       void gen_check(RandomNumberGenerator&) const;

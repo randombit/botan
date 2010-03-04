@@ -79,49 +79,6 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(const AlgorithmIdentifier&,
    }
 
 /*
-* Return the PKCS #8 public key decoder
-*/
-PKCS8_Decoder* IF_Scheme_PrivateKey::pkcs8_decoder(RandomNumberGenerator& rng)
-   {
-   class IF_Scheme_Decoder : public PKCS8_Decoder
-      {
-      public:
-         void alg_id(const AlgorithmIdentifier&) {}
-
-         void key_bits(const MemoryRegion<byte>& bits)
-            {
-            u32bit version;
-
-            BER_Decoder(bits)
-               .start_cons(SEQUENCE)
-                  .decode(version)
-                  .decode(key->n)
-                  .decode(key->e)
-                  .decode(key->d)
-                  .decode(key->p)
-                  .decode(key->q)
-                  .decode(key->d1)
-                  .decode(key->d2)
-                  .decode(key->c)
-               .end_cons();
-
-            if(version != 0)
-               throw Decoding_Error("Unknown PKCS #1 key format version");
-
-            key->PKCS8_load_hook(rng);
-            }
-
-         IF_Scheme_Decoder(IF_Scheme_PrivateKey* k, RandomNumberGenerator& r) :
-            key(k), rng(r) {}
-      private:
-         IF_Scheme_PrivateKey* key;
-         RandomNumberGenerator& rng;
-      };
-
-   return new IF_Scheme_Decoder(this, rng);
-   }
-
-/*
 * Algorithm Specific X.509 Initialization Code
 */
 void IF_Scheme_PublicKey::X509_load_hook()

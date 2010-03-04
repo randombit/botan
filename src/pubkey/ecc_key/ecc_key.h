@@ -110,13 +110,6 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
       MemoryVector<byte> pkcs8_private_key() const;
 
       /**
-      * Get an PKCS#8 decoder that can be used to decoded a stored key into
-      * this key.
-      * @result an PKCS#8 decoder for this key
-      */
-      PKCS8_Decoder* pkcs8_decoder(RandomNumberGenerator&);
-
-      /**
       * Get the private key value of this key object.
       * @result the private key value of this key object
       */

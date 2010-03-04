@@ -95,13 +95,6 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
                            const MemoryRegion<byte>& key_bits,
                            DL_Group::Format group_format);
 
-      /**
-      * Get an PKCS#8 decoder for this key.
-      * @param rng the rng to use
-      * @return an decoder usable to decode a DL key and store the
-      * values in this instance.
-      */
-      PKCS8_Decoder* pkcs8_decoder(RandomNumberGenerator& rng);
    protected:
       DL_Scheme_PrivateKey() {}
       BigInt x;
