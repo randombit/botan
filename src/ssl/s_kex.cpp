@@ -43,38 +43,25 @@ Server_Key_Exchange::Server_Key_Exchange(RandomNumberGenerator& rng,
    else
       throw Invalid_Argument("Bad key for TLS key exchange: not DH or RSA");
 
-   // FIXME: dup of stuff in cert_ver.cpp
-   // FIXME: it's OK for the server to be anonymous....
-   const PK_Signing_Key* sign_key =
-      dynamic_cast<const PK_Signing_Key*>(priv_key);
+   std::auto_ptr<PK_Signer> signer;
 
-   if(!sign_key)
-      throw Invalid_Argument("Server Kex: Private key not for signing");
-
-   PK_Signer* signer = 0;
-   try {
-      if(dynamic_cast<const RSA_PrivateKey*>(sign_key))
-         signer = get_pk_signer(*sign_key, "EMSA3(TLS.Digest.0)");
-      else if(dynamic_cast<const DSA_PrivateKey*>(sign_key))
-         {
-         signer = get_pk_signer(*sign_key, "EMSA1(SHA-1)");
-         signer->set_output_format(DER_SEQUENCE);
-         }
-      else
-         throw Invalid_Argument("Bad key for TLS signature: not RSA or DSA");
-
-      signer->update(c_random);
-      signer->update(s_random);
-      signer->update(serialize_params());
-      signature = signer->signature(rng);
-
-      delete signer;
-   }
-   catch(...)
+   if(const RSA_PrivateKey* rsa = dynamic_cast<const RSA_PrivateKey*>(priv_key))
       {
-      delete signer;
-      throw;
+      signer.reset(get_pk_signer(*rsa, "EMSA3(TLS.Digest.0)"));
       }
+   else if(const DSA_PrivateKey* dsa =
+           dynamic_cast<const DSA_PrivateKey*>(priv_key))
+      {
+      signer.reset(get_pk_signer(*dsa, "EMSA1(SHA-1)"));
+      signer->set_output_format(DER_SEQUENCE);
+      }
+   else
+      throw Invalid_Argument("Bad key for TLS signature: not RSA or DSA");
+
+   signer->update(c_random);
+   signer->update(s_random);
+   signer->update(serialize_params());
+   signature = signer->signature(rng);
 
    send(writer, hash);
    }

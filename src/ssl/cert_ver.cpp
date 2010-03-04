@@ -22,32 +22,22 @@ Certificate_Verify::Certificate_Verify(RandomNumberGenerator& rng,
                                        HandshakeHash& hash,
                                        const Private_Key* priv_key)
    {
-   const PK_Signing_Key* sign_key =
-      dynamic_cast<const PK_Signing_Key*>(priv_key);
+   std::auto_ptr<PK_Signer> signer;
 
-   if(sign_key)
+   if(const RSA_PrivateKey* rsa = dynamic_cast<const RSA_PrivateKey*>(priv_key))
       {
-      PK_Signer* signer = 0;
-      try
-         {
-         if(dynamic_cast<const RSA_PrivateKey*>(sign_key))
-            signer = get_pk_signer(*sign_key, "EMSA3(TLS.Digest.0)");
-         else if(dynamic_cast<const DSA_PrivateKey*>(sign_key))
-            signer = get_pk_signer(*sign_key, "EMSA1(SHA-1)");
-         else
-            throw Invalid_Argument("Unknown PK algo for TLS signature");
-
-         signature = signer->sign_message(hash.final(), rng);
-         delete signer;
-         }
-      catch(...)
-         {
-         delete signer;
-         throw;
-         }
-
-      send(writer, hash);
+      signer.reset(get_pk_signer(*rsa, "EMSA3(TLS.Digest.0)"));
       }
+   else if(const DSA_PrivateKey* dsa =
+           dynamic_cast<const DSA_PrivateKey*>(priv_key))
+      {
+      signer.reset(get_pk_signer(*dsa, "EMSA1(SHA-1)"));
+      }
+   else
+      throw Invalid_Argument("Unknown PK algo for TLS signature");
+
+   signature = signer->sign_message(hash.final(), rng);
+   send(writer, hash);
    }
 
 /**

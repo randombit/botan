@@ -295,7 +295,6 @@ void CMS_Encoder::sign(const X509_Certificate& cert,
    {
    std::string padding = pad_algo + "(" + hash + ")";
 
-   // FIXME: Add new get_format() func to PK_Signing_Key, PK_Verifying_*_Key
    Signature_Format format = IEEE_1363;
 
    const PK_Signing_Key& sig_key = dynamic_cast<const PK_Signing_Key&>(key);
