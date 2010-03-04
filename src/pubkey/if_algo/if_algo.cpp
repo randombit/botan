@@ -56,6 +56,28 @@ MemoryVector<byte> IF_Scheme_PrivateKey::pkcs8_private_key() const
    .get_contents();
    }
 
+IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(const AlgorithmIdentifier&,
+                                           const MemoryRegion<byte>& key_bits)
+   {
+   u32bit version;
+
+   BER_Decoder(key_bits)
+      .start_cons(SEQUENCE)
+         .decode(version)
+         .decode(n)
+         .decode(e)
+         .decode(d)
+         .decode(p)
+         .decode(q)
+         .decode(d1)
+         .decode(d2)
+         .decode(c)
+      .end_cons();
+
+   if(version != 0)
+      throw Decoding_Error("Unknown PKCS #1 key format version");
+   }
+
 /*
 * Return the PKCS #8 public key decoder
 */

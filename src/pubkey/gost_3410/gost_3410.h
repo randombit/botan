@@ -80,11 +80,10 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
                                        public PK_Signing_Key
    {
    public:
-      /**
-      * Default constructor. Use this one if you want to later fill
-      * this object with data from an encoded key.
-      */
-      GOST_3410_PrivateKey() {}
+
+      GOST_3410_PrivateKey(const AlgorithmIdentifier& alg_id,
+                           const MemoryRegion<byte>& key_bits) :
+         EC_PrivateKey(alg_id, key_bits) {}
 
       /**
       * Generate a new private key

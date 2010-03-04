@@ -61,11 +61,9 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
    {
    public:
 
-      /**
-      * Default constructor. Use this one if you want to later fill
-      * this object with data from an encoded key.
-      */
-      ECDH_PrivateKey() {}
+      ECDH_PrivateKey(const AlgorithmIdentifier& alg_id,
+                      const MemoryRegion<byte>& key_bits) :
+         EC_PrivateKey(alg_id, key_bits) {}
 
       /**
       * Generate a new private key

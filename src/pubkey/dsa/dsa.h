@@ -35,8 +35,8 @@ class BOTAN_DLL DSA_PublicKey : public PK_Verifying_wo_MR_Key,
          { X509_load_hook(); }
 
       DSA_PublicKey(const DL_Group& group, const BigInt& y);
-      DSA_PublicKey() {}
    protected:
+      DSA_PublicKey() {}
       DSA_Core core;
    private:
       void X509_load_hook();
@@ -50,14 +50,23 @@ class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
                                  public virtual DL_Scheme_PrivateKey
    {
    public:
-      SecureVector<byte> sign(const byte[], u32bit,
+      SecureVector<byte> sign(const byte hash[], u32bit hash_len,
                               RandomNumberGenerator& rng) const;
 
-      bool check_key(RandomNumberGenerator& rng, bool) const;
+      bool check_key(RandomNumberGenerator& rng, bool strong) const;
 
-      DSA_PrivateKey() {}
-      DSA_PrivateKey(RandomNumberGenerator&, const DL_Group&,
-                     const BigInt& = 0);
+      DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
+                     const MemoryRegion<byte>& key_bits,
+                     RandomNumberGenerator& rng) :
+         DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
+         {
+         PKCS8_load_hook(rng);
+         }
+
+      DSA_PrivateKey(RandomNumberGenerator& rng,
+                     const DL_Group& group,
+                     const BigInt& private_key = 0);
+
    private:
       void PKCS8_load_hook(RandomNumberGenerator& rng, bool = false);
    };

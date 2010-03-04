@@ -21,6 +21,9 @@ namespace Botan {
 class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
    {
    public:
+      IF_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
+                          const MemoryRegion<byte>& key_bits);
+
       bool check_key(RandomNumberGenerator& rng, bool) const;
 
       AlgorithmIdentifier algorithm_identifier() const;
@@ -41,8 +44,6 @@ class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
 
       u32bit max_input_bits() const { return (n.bits() - 1); }
 
-      IF_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
-                          const MemoryRegion<byte>& key_bits);
    protected:
       IF_Scheme_PublicKey() {}
 
@@ -59,6 +60,9 @@ class BOTAN_DLL IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
                                        public virtual Private_Key
    {
    public:
+      IF_Scheme_PrivateKey(const AlgorithmIdentifier& alg_id,
+                           const MemoryRegion<byte>& key_bits);
+
       bool check_key(RandomNumberGenerator& rng, bool) const;
 
       /**
@@ -83,6 +87,8 @@ class BOTAN_DLL IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
 
       PKCS8_Decoder* pkcs8_decoder(RandomNumberGenerator&);
    protected:
+      IF_Scheme_PrivateKey() {}
+
       virtual void PKCS8_load_hook(RandomNumberGenerator&, bool = false);
       BigInt d, p, q, d1, d2, c;
    };

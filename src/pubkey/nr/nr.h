@@ -55,7 +55,13 @@ class BOTAN_DLL NR_PrivateKey : public NR_PublicKey,
 
       bool check_key(RandomNumberGenerator& rng, bool) const;
 
-      NR_PrivateKey() {}
+      NR_PrivateKey(const AlgorithmIdentifier& alg_id,
+                    const MemoryRegion<byte>& key_bits,
+                    RandomNumberGenerator& rng) :
+         DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
+         {
+         PKCS8_load_hook(rng);
+         }
 
       NR_PrivateKey(RandomNumberGenerator&, const DL_Group&,
                     const BigInt& = 0);

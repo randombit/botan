@@ -32,8 +32,6 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
    {
    public:
 
-      EC_PublicKey() : domain_encoding(EC_DOMPAR_ENC_EXPLICIT) {}
-
       EC_PublicKey(const EC_Domain_Params& dom_par,
                    const PointGFp& pub_point);
 
@@ -82,6 +80,8 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       EC_Domain_Params_Encoding domain_format() const
          { return domain_encoding; }
    protected:
+      EC_PublicKey() : domain_encoding(EC_DOMPAR_ENC_EXPLICIT) {}
+
       virtual void X509_load_hook();
 
       EC_Domain_Params domain_params;
@@ -96,13 +96,14 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
                                 public virtual Private_Key
    {
    public:
-      EC_PrivateKey() {}
-
       EC_PrivateKey(const EC_Domain_Params& domain,
                     const BigInt& private_key);
 
       EC_PrivateKey(RandomNumberGenerator& rng,
                     const EC_Domain_Params& domain);
+
+      EC_PrivateKey(const AlgorithmIdentifier& alg_id,
+                    const MemoryRegion<byte>& key_bits);
 
       virtual ~EC_PrivateKey() {}
 
@@ -121,6 +122,8 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
       */
       const BigInt& private_value() const;
    protected:
+      EC_PrivateKey() {}
+
       virtual void PKCS8_load_hook(bool = false);
 
       BigInt private_key;

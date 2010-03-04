@@ -52,7 +52,14 @@ class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
 
       bool check_key(RandomNumberGenerator& rng, bool) const;
 
-      ElGamal_PrivateKey() {}
+      ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
+                         const MemoryRegion<byte>& key_bits,
+                         RandomNumberGenerator& rng) :
+         DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
+         {
+         PKCS8_load_hook(rng);
+         }
+
       ElGamal_PrivateKey(RandomNumberGenerator&, const DL_Group&,
                          const BigInt& = 0);
    private:

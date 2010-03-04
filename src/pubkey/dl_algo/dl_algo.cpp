@@ -38,6 +38,16 @@ MemoryVector<byte> DL_Scheme_PrivateKey::pkcs8_private_key() const
    return DER_Encoder().encode(x).get_contents();
    }
 
+DL_Scheme_PrivateKey::DL_Scheme_PrivateKey(const AlgorithmIdentifier& alg_id,
+                                           const MemoryRegion<byte>& key_bits,
+                                           DL_Group::Format format)
+   {
+   DataSource_Memory source(alg_id.parameters);
+   group.BER_decode(source, format);
+
+   BER_Decoder(key_bits).decode(x);
+   }
+
 /*
 * Return the PKCS #8 private key decoder
 */

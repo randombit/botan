@@ -176,8 +176,7 @@ void test_ecdh_cp_ctor_as_op(RandomNumberGenerator& rng)
    // alices key (a key constructed by domain parameters IS an ephimeral key!)
    Botan::ECDH_PrivateKey private_a(rng, dom_pars);
    Botan::ECDH_PrivateKey private_a2(private_a);
-   Botan::ECDH_PrivateKey private_a3;
-   private_a3 = private_a2;
+   Botan::ECDH_PrivateKey private_a3 = private_a2;
 
    Botan::ECDH_PublicKey public_a = private_a; // Bob gets this
    Botan::ECDH_PublicKey public_a2(public_a);

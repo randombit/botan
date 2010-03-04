@@ -479,7 +479,7 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
                              "dsa/botan/3072",
                              NULL };
 
-   const std::string algo_name = PRIV_KEY_TYPE().algo_name();
+   std::string algo_name;
 
    for(size_t j = 0; domains[j]; j++)
       {
@@ -499,6 +499,7 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
 
          keygen_timer.start();
          PRIV_KEY_TYPE key(rng, group);
+         algo_name = key.algo_name();
          keygen_timer.stop();
 
          std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));

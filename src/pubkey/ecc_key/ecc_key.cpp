@@ -139,6 +139,29 @@ MemoryVector<byte> EC_PrivateKey::pkcs8_private_key() const
       .get_contents();
    }
 
+EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
+                             const MemoryRegion<byte>& key_bits)
+   {
+   domain_params = EC_Domain_Params(alg_id.parameters);
+
+   u32bit version;
+   SecureVector<byte> octstr_secret;
+
+   BER_Decoder(key_bits)
+      .start_cons(SEQUENCE)
+         .decode(version)
+         .decode(octstr_secret, OCTET_STRING)
+      .verify_end()
+      .end_cons();
+
+   if(version != 1)
+      throw Decoding_Error("Wrong key format version for EC key");
+
+   private_key = BigInt::decode(octstr_secret, octstr_secret.size());
+
+   public_key = domain().get_base_point() * private_key;
+   }
+
 /**
 * Return the PKCS #8 public key decoder
 */

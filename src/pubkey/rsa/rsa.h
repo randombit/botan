@@ -58,11 +58,13 @@ class BOTAN_DLL RSA_PrivateKey : public RSA_PublicKey,
 
       bool check_key(RandomNumberGenerator& rng, bool) const;
 
-      /**
-      * Default constructor, does not set any internal values. Use this
-      * constructor if you wish to decode a DER or PEM encoded key.
-      */
-      RSA_PrivateKey() {}
+      RSA_PrivateKey(const AlgorithmIdentifier& alg_id,
+                     const MemoryRegion<byte>& key_bits,
+                     RandomNumberGenerator& rng) :
+         IF_Scheme_PrivateKey(alg_id, key_bits)
+         {
+         PKCS8_load_hook(rng);
+         }
 
       /**
       * Construct a private key from the specified parameters.

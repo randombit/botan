@@ -91,6 +91,10 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
 
       MemoryVector<byte> pkcs8_private_key() const;
 
+      DL_Scheme_PrivateKey(const AlgorithmIdentifier& alg_id,
+                           const MemoryRegion<byte>& key_bits,
+                           DL_Group::Format group_format);
+
       /**
       * Get an PKCS#8 decoder for this key.
       * @param rng the rng to use
@@ -99,6 +103,7 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
       */
       PKCS8_Decoder* pkcs8_decoder(RandomNumberGenerator& rng);
    protected:
+      DL_Scheme_PrivateKey() {}
       BigInt x;
    private:
       virtual void PKCS8_load_hook(RandomNumberGenerator&, bool = false) {}
