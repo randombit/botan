@@ -4,6 +4,5 @@ define DL_PUBLIC_KEY_FAMILY
 asn1
 dl_group
 numbertheory
-pk_codecs
 rng
 </requires>

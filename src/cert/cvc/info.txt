@@ -33,7 +33,6 @@ filters
 libstate
 oid_lookup
 pem
-pk_codecs
 pubkey
 x509
 </requires>

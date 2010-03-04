@@ -3,15 +3,19 @@ define PUBLIC_KEY_CRYPTO
 <source>
 pk_algs.cpp
 pk_keys.cpp
+pkcs8.cpp
 pubkey.cpp
 pubkey_enums.cpp
 workfactor.cpp
+x509_key.cpp
 </source>
 
 <header:public>
 pk_keys.h
+pkcs8.h
 pubkey.h
 pubkey_enums.h
+x509_key.h
 </header:public>
 
 <header:internal>
@@ -26,6 +30,8 @@ bigint
 filters
 kdf
 oid_lookup
+pbe
+pem
 pk_pad
 rng
 sym_algo

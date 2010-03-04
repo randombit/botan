@@ -1,7 +1,0 @@
-<requires>
-asn1
-filters
-oid_lookup
-pbe
-pem
-</requires>

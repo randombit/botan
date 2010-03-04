@@ -6,5 +6,4 @@ asn1
 bigint
 ec_dompar
 numbertheory
-pk_codecs
 </requires>

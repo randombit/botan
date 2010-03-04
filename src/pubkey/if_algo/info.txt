@@ -19,5 +19,4 @@ asn1
 bigint
 libstate
 numbertheory
-pk_codecs
 </requires>
