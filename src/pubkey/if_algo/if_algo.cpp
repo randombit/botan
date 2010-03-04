@@ -94,7 +94,7 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
    q = prime2;
    e = exp;
    d = d_exp;
-   n = mod;
+   n = mod.is_nonzero() ? mod : p * q;
 
    if(d == 0)
       {
@@ -105,10 +105,9 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
       d = inverse_mod(e, inv_for_d);
       }
 
-   if(n == 0)  n = p * q;
-   if(d1 == 0) d1 = d % (p - 1);
-   if(d2 == 0) d2 = d % (q - 1);
-   if(c == 0)  c = inverse_mod(q, p);
+   d1 = d % (p - 1);
+   d2 = d % (q - 1);
+   c = inverse_mod(q, p);
 
    core = IF_Core(rng, e, n, d, p, q, d1, d2, c);
 
