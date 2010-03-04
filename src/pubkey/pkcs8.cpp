@@ -144,7 +144,7 @@ void encode(const Private_Key& key, Pipe& pipe, X509_Encoding encoding)
       DER_Encoder()
          .start_cons(SEQUENCE)
             .encode(PKCS8_VERSION)
-            .encode(key.algorithm_identifier())
+            .encode(key.pkcs8_algorithm_identifier())
             .encode(key.pkcs8_private_key(), OCTET_STRING)
          .end_cons()
       .get_contents();

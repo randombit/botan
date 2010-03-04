@@ -103,6 +103,9 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
       GOST_3410_PrivateKey(const EC_Domain_Params& domain, const BigInt& x) :
          EC_PrivateKey(domain, x) {}
 
+      AlgorithmIdentifier pkcs8_algorithm_identifier() const
+         { return EC_PublicKey::algorithm_identifier(); }
+
       /**
       * Sign a message with this key.
       * @param message the byte array representing the message to be signed
