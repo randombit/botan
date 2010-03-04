@@ -107,8 +107,9 @@ class BOTAN_DLL ECDH_KA_Operation : public PK_Ops::KA_Operation
 
       SecureVector<byte> agree(const byte w[], u32bit w_len) const;
    private:
-      CurveGFp curve;
-      BigInt l_times_priv, cofactor;
+      const CurveGFp& curve;
+      const BigInt& cofactor;
+      BigInt l_times_priv;
    };
 
 }

@@ -11,12 +11,10 @@
 
 namespace Botan {
 
-ECDH_KA_Operation::ECDH_KA_Operation(const ECDH_PrivateKey& key)
+ECDH_KA_Operation::ECDH_KA_Operation(const ECDH_PrivateKey& key) :
+   curve(key.domain().get_curve()),
+   cofactor(key.domain().get_cofactor())
    {
-   cofactor = key.domain().get_cofactor();
-
-   curve = key.domain().get_curve();
-
    l_times_priv = inverse_mod(cofactor, key.domain().get_order()) *
                   key.private_value();
    }
