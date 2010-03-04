@@ -706,7 +706,7 @@ void do_pk_keygen_tests(RandomNumberGenerator& rng)
    EC_KEY(GOST_3410_PrivateKey, "secp224r1");
    EC_KEY(GOST_3410_PrivateKey, "secp256r1");
    EC_KEY(GOST_3410_PrivateKey, "secp384r1");
-   //EC_KEY(GOST_3410_PrivateKey, "secp521r1");
+   EC_KEY(GOST_3410_PrivateKey, "secp521r1");
 #endif
 
    std::cout << std::endl;
