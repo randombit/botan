@@ -12,6 +12,12 @@
 
 namespace Botan {
 
+AlgorithmIdentifier DL_Scheme_PublicKey::algorithm_identifier() const
+   {
+   return AlgorithmIdentifier(get_oid(),
+                              group.DER_encode(group_format()));
+   }
+
 /*
 * Return the X.509 public key encoder
 */
@@ -22,10 +28,7 @@ X509_Encoder* DL_Scheme_PublicKey::x509_encoder() const
       public:
          AlgorithmIdentifier alg_id() const
             {
-            MemoryVector<byte> group =
-               key->group.DER_encode(key->group_format());
-
-            return AlgorithmIdentifier(key->get_oid(), group);
+            return key->algorithm_identifier();
             }
 
          MemoryVector<byte> key_bits() const
@@ -79,10 +82,7 @@ PKCS8_Encoder* DL_Scheme_PrivateKey::pkcs8_encoder() const
       public:
          AlgorithmIdentifier alg_id() const
             {
-            MemoryVector<byte> group =
-               key->group.DER_encode(key->group_format());
-
-            return AlgorithmIdentifier(key->get_oid(), group);
+            return key->algorithm_identifier();
             }
 
          MemoryVector<byte> key_bits() const

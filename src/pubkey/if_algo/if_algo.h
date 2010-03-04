@@ -23,6 +23,8 @@ class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
    public:
       bool check_key(RandomNumberGenerator& rng, bool) const;
 
+      AlgorithmIdentifier algorithm_identifier() const;
+
       /**
       * Get n = p * q.
       * @return n

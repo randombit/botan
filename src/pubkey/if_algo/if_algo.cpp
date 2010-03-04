@@ -12,6 +12,12 @@
 
 namespace Botan {
 
+AlgorithmIdentifier IF_Scheme_PublicKey::algorithm_identifier() const
+   {
+   return AlgorithmIdentifier(get_oid(),
+                              AlgorithmIdentifier::USE_NULL_PARAM);
+   }
+
 /*
 * Return the X.509 public key encoder
 */
@@ -22,8 +28,7 @@ X509_Encoder* IF_Scheme_PublicKey::x509_encoder() const
       public:
          AlgorithmIdentifier alg_id() const
             {
-            return AlgorithmIdentifier(key->get_oid(),
-                                       AlgorithmIdentifier::USE_NULL_PARAM);
+            return key->algorithm_identifier();
             }
 
          MemoryVector<byte> key_bits() const
@@ -84,8 +89,7 @@ PKCS8_Encoder* IF_Scheme_PrivateKey::pkcs8_encoder() const
       public:
          AlgorithmIdentifier alg_id() const
             {
-            return AlgorithmIdentifier(key->get_oid(),
-                                       AlgorithmIdentifier::USE_NULL_PARAM);
+            return key->algorithm_identifier();
             }
 
          MemoryVector<byte> key_bits() const

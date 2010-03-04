@@ -274,13 +274,7 @@ PK_Signer* choose_sig_format(const Private_Key& key,
    padding = padding + '(' + proto_hash->name() + ')';
 
    sig_algo.oid = OIDS::lookup(algo_name + "/" + padding);
-
-   std::auto_ptr<X509_Encoder> encoding(key.x509_encoder());
-   if(!encoding.get())
-      throw Encoding_Error("Key " + algo_name + " does not support "
-                           "X.509 encoding");
-
-   sig_algo.parameters = encoding->alg_id().parameters;
+   sig_algo.parameters = key.algorithm_identifier().parameters;
 
    const PK_Signing_Key& sig_key = dynamic_cast<const PK_Signing_Key&>(key);
 

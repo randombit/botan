@@ -40,6 +40,8 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       */
       const PointGFp& public_point() const { return public_key; }
 
+      AlgorithmIdentifier algorithm_identifier() const;
+
       /**
       * Get the domain parameters of this key.
       * @throw Invalid_State is thrown if the

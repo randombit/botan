@@ -35,6 +35,11 @@ EC_PublicKey::EC_PublicKey(const EC_Domain_Params& dom_par,
       }
    }
 
+AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const
+   {
+   return AlgorithmIdentifier(get_oid(), DER_domain());
+   }
+
 void EC_PublicKey::X509_load_hook()
    {
    try
@@ -54,8 +59,7 @@ X509_Encoder* EC_PublicKey::x509_encoder() const
       public:
          AlgorithmIdentifier alg_id() const
             {
-            return AlgorithmIdentifier(key->get_oid(),
-                                       key->DER_domain());
+            return key->algorithm_identifier();
             }
 
          MemoryVector<byte> key_bits() const
@@ -161,8 +165,7 @@ PKCS8_Encoder* EC_PrivateKey::pkcs8_encoder() const
       public:
          AlgorithmIdentifier alg_id() const
             {
-            return AlgorithmIdentifier(key->get_oid(),
-                                       key->domain().DER_encode(EC_DOMPAR_ENC_EXPLICIT));
+            return key->algorithm_identifier();
             }
 
          MemoryVector<byte> key_bits() const

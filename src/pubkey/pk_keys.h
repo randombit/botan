@@ -10,6 +10,7 @@
 
 #include <botan/secmem.h>
 #include <botan/asn1_oid.h>
+#include <botan/alg_id.h>
 #include <botan/rng.h>
 
 namespace Botan {
@@ -59,6 +60,11 @@ class BOTAN_DLL Public_Key
       * @return the maximum message in bits
       */
       virtual u32bit max_input_bits() const = 0;
+
+      /**
+      * @return X.509 AlgorithmIdentifier for this key
+      */
+      virtual AlgorithmIdentifier algorithm_identifier() const = 0;
 
       /**
       * Get an X509 encoder that can be used to encode this key in X509 format.

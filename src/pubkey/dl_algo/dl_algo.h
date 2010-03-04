@@ -23,6 +23,8 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
    public:
       bool check_key(RandomNumberGenerator& rng, bool) const;
 
+      AlgorithmIdentifier algorithm_identifier() const;
+
       /**
       * Get the DL domain parameters of this key.
       * @return the DL domain parameters of this key
