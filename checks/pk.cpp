@@ -12,6 +12,7 @@
 #include <memory>
 
 #include <botan/botan.h>
+#include <botan/oids.h>
 
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
@@ -37,6 +38,18 @@
   #include <botan/elgamal.h>
 #endif
 
+#if defined(BOTAN_HAS_ECDSA)
+  #include <botan/ecdsa.h>
+#endif
+
+#if defined(BOTAN_HAS_ECDH)
+  #include <botan/ecdh.h>
+#endif
+
+#if defined(BOTAN_HAS_GOST_34_10_2001)
+  #include <botan/gost_3410.h>
+#endif
+
 #if defined(BOTAN_HAS_DLIES)
   #include <botan/dlies.h>
   #include <botan/kdf.h>
@@ -58,12 +71,6 @@ BigInt to_bigint(const std::string& h)
                          h.length(), BigInt::Hexadecimal);
    }
 
-}
-
-#define DEBUG 0
-
-namespace {
-
 void dump_data(const SecureVector<byte>& out,
                const SecureVector<byte>& expected)
    {
@@ -73,6 +80,33 @@ void dump_data(const SecureVector<byte>& out,
    pipe.process_msg(expected);
    std::cout << "Got: " << pipe.read_all_as_string(0) << std::endl;
    std::cout << "Exp: " << pipe.read_all_as_string(1) << std::endl;
+   }
+
+void validate_save_and_load(const Public_Key* public_key,
+                            RandomNumberGenerator& rng)
+   {
+   std::string name = public_key->algo_name();
+
+   std::string pem = X509::PEM_encode(*public_key);
+
+   try
+      {
+      DataSource_Memory input(pem);
+      std::auto_ptr<Public_Key> restored(X509::load_key(input));
+
+      if(restored.get() == 0)
+         std::cout << "Could not recover " << name << " key\n";
+      else if(restored->check_key(rng, true) == false)
+         std::cout << "Restored key failed self tests " << name << "\n";
+      }
+   catch(std::exception& e)
+      {
+      std::cout << "Exception during load of " << name
+                << " key: " << e.what() << "\n";
+      std::cout << "PEM was:\n" << pem << "\n";
+      }
+
+   // Check equivalence somehow?
    }
 
 void validate_decryption(PK_Decryptor* d, const std::string& algo,
@@ -211,7 +245,6 @@ u32bit validate_rsa_enc(const std::string& algo,
    {
    if(str.size() != 6)
       throw std::runtime_error("Invalid input from pk_valid.dat");
-
 
 #if defined(BOTAN_HAS_RSA)
    RSA_PrivateKey privkey(rng,
@@ -577,24 +610,19 @@ void do_pk_keygen_tests(RandomNumberGenerator& rng)
    {
    std::cout << "Testing PK key generation: " << std::flush;
 
-#define DL_SIG_KEY(TYPE, GROUP)             \
-   {                                        \
-   TYPE key(rng, DL_Group(GROUP));          \
-   key.check_key(rng, true);                \
-   std::cout << '.' << std::flush;          \
-   }
-
-#define DL_ENC_KEY(TYPE, GROUP)             \
-   {                                        \
-   TYPE key(rng, DL_Group(GROUP));          \
-   key.check_key(rng, true);                \
-   std::cout << '.' << std::flush;          \
-   }
-
 #define DL_KEY(TYPE, GROUP)                 \
    {                                        \
    TYPE key(rng, DL_Group(GROUP));          \
    key.check_key(rng, true);                \
+   validate_save_and_load(&key, rng);       \
+   std::cout << '.' << std::flush;          \
+   }
+
+#define EC_KEY(TYPE, GROUP)                 \
+   {                                        \
+   TYPE key(rng, EC_Domain_Params(OIDS::lookup(GROUP)));        \
+   key.check_key(rng, true);                \
+   validate_save_and_load(&key, rng);       \
    std::cout << '.' << std::flush;          \
    }
 
@@ -602,6 +630,7 @@ void do_pk_keygen_tests(RandomNumberGenerator& rng)
       {
       RSA_PrivateKey rsa1024(rng, 1024);
       rsa1024.check_key(rng, true);
+      validate_save_and_load(&rsa1024, rng);
       std::cout << '.' << std::flush;
       }
 #endif
@@ -610,14 +639,15 @@ void do_pk_keygen_tests(RandomNumberGenerator& rng)
       {
       RW_PrivateKey rw1024(rng, 1024);
       rw1024.check_key(rng, true);
+      validate_save_and_load(&rw1024, rng);
       std::cout << '.' << std::flush;
       }
 #endif
 
 #if defined(BOTAN_HAS_DSA)
-   DL_SIG_KEY(DSA_PrivateKey, "dsa/jce/512");
-   DL_SIG_KEY(DSA_PrivateKey, "dsa/jce/768");
-   DL_SIG_KEY(DSA_PrivateKey, "dsa/jce/1024");
+   DL_KEY(DSA_PrivateKey, "dsa/jce/512");
+   DL_KEY(DSA_PrivateKey, "dsa/jce/768");
+   DL_KEY(DSA_PrivateKey, "dsa/jce/1024");
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
@@ -627,15 +657,38 @@ void do_pk_keygen_tests(RandomNumberGenerator& rng)
 #endif
 
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-   DL_SIG_KEY(NR_PrivateKey, "dsa/jce/512");
-   DL_SIG_KEY(NR_PrivateKey, "dsa/jce/768");
-   DL_SIG_KEY(NR_PrivateKey, "dsa/jce/1024");
+   DL_KEY(NR_PrivateKey, "dsa/jce/512");
+   DL_KEY(NR_PrivateKey, "dsa/jce/768");
+   DL_KEY(NR_PrivateKey, "dsa/jce/1024");
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
-   DL_ENC_KEY(ElGamal_PrivateKey, "modp/ietf/768");
-   DL_ENC_KEY(ElGamal_PrivateKey, "modp/ietf/1024");
-   DL_ENC_KEY(ElGamal_PrivateKey, "dsa/jce/1024");
+   DL_KEY(ElGamal_PrivateKey, "modp/ietf/768");
+   DL_KEY(ElGamal_PrivateKey, "modp/ietf/1024");
+   DL_KEY(ElGamal_PrivateKey, "dsa/jce/1024");
+#endif
+
+#if defined(BOTAN_HAS_ECDSA)
+   EC_KEY(ECDSA_PrivateKey, "secp112r1");
+   EC_KEY(ECDSA_PrivateKey, "secp128r1");
+   EC_KEY(ECDSA_PrivateKey, "secp160r1");
+   EC_KEY(ECDSA_PrivateKey, "secp192r1");
+   EC_KEY(ECDSA_PrivateKey, "secp224r1");
+   EC_KEY(ECDSA_PrivateKey, "secp256r1");
+   EC_KEY(ECDSA_PrivateKey, "secp384r1");
+   EC_KEY(ECDSA_PrivateKey, "secp521r1");
+#endif
+
+#if defined(BOTAN_HAS_GOST_34_10_2001)
+   EC_KEY(GOST_3410_PrivateKey, "gost_256A");
+   EC_KEY(GOST_3410_PrivateKey, "secp112r1");
+   EC_KEY(GOST_3410_PrivateKey, "secp128r1");
+   EC_KEY(GOST_3410_PrivateKey, "secp160r1");
+   EC_KEY(GOST_3410_PrivateKey, "secp192r1");
+   EC_KEY(GOST_3410_PrivateKey, "secp224r1");
+   EC_KEY(GOST_3410_PrivateKey, "secp256r1");
+   EC_KEY(GOST_3410_PrivateKey, "secp384r1");
+   //EC_KEY(GOST_3410_PrivateKey, "secp521r1");
 #endif
 
    std::cout << std::endl;
@@ -703,7 +756,7 @@ u32bit do_pk_validation_tests(const std::string& filename,
 
       std::vector<std::string> substr = parse(line);
 
-#if DEBUG
+#if 0
       std::cout << "Testing: " << print_algorithm << std::endl;
 #endif
 
