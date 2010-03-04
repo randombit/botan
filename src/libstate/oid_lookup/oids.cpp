@@ -49,7 +49,7 @@ OID lookup(const std::string& name)
       {
       return OID(name);
       }
-   catch(Exception)
+   catch(...)
       {
       throw Lookup_Error("No object identifier found for " + name);
       }
