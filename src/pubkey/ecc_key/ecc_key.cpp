@@ -149,32 +149,6 @@ MemoryVector<byte> EC_PrivateKey::pkcs8_private_key() const
    }
 
 /**
-* Return the PKCS #8 public key encoder
-**/
-PKCS8_Encoder* EC_PrivateKey::pkcs8_encoder() const
-   {
-   class EC_Key_Encoder : public PKCS8_Encoder
-      {
-      public:
-         AlgorithmIdentifier alg_id() const
-            {
-            return key->algorithm_identifier();
-            }
-
-         MemoryVector<byte> key_bits() const
-            {
-            return key->pkcs8_private_key();
-            }
-
-         EC_Key_Encoder(const EC_PrivateKey* k): key(k) {}
-      private:
-         const EC_PrivateKey* key;
-      };
-
-   return new EC_Key_Encoder(this);
-   }
-
-/**
 * Return the PKCS #8 public key decoder
 */
 PKCS8_Decoder* EC_PrivateKey::pkcs8_decoder(RandomNumberGenerator&)
@@ -199,10 +173,11 @@ PKCS8_Decoder* EC_PrivateKey::pkcs8_decoder(RandomNumberGenerator&)
                .verify_end()
                .end_cons();
 
-            key->private_key = BigInt::decode(octstr_secret, octstr_secret.size());
-
             if(version != 1)
-               throw Decoding_Error("Wrong PKCS #1 key format version for EC key");
+               throw Decoding_Error("Wrong key format version for EC key");
+
+            key->private_key = BigInt::decode(octstr_secret,
+                                              octstr_secret.size());
 
             key->PKCS8_load_hook();
             }

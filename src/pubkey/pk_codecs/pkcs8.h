@@ -13,28 +13,6 @@
 
 namespace Botan {
 
-/**
-* PKCS #8 Private Key Encoder.
-*/
-class BOTAN_DLL PKCS8_Encoder
-   {
-   public:
-     /**
-     * Get the algorithm identifier associated with the scheme
-     * this encoders key is part of.
-     * @return the algorithm identifier
-     */
-      virtual AlgorithmIdentifier alg_id() const = 0;
-
-      /**
-      * Get the DER encoded key.
-      * @return the DER encoded key
-      */
-      // FIXME: Why not SecureVector?
-      virtual MemoryVector<byte> key_bits() const = 0;
-      virtual ~PKCS8_Encoder() {}
-   };
-
 /*
 * PKCS #8 Private Key Decoder
 */

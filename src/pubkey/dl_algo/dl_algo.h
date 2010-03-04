@@ -90,12 +90,6 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
       */
       const BigInt& get_x() const { return x; }
 
-      /**
-      * Get an PKCS#8 encoder for this key.
-      * @return an encoder usable to encode this key.
-      */
-      PKCS8_Encoder* pkcs8_encoder() const;
-
       MemoryVector<byte> pkcs8_private_key() const;
 
       /**

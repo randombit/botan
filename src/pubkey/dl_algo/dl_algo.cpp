@@ -57,32 +57,6 @@ MemoryVector<byte> DL_Scheme_PrivateKey::pkcs8_private_key() const
    }
 
 /*
-* Return the PKCS #8 private key encoder
-*/
-PKCS8_Encoder* DL_Scheme_PrivateKey::pkcs8_encoder() const
-   {
-   class DL_Scheme_Encoder : public PKCS8_Encoder
-      {
-      public:
-         AlgorithmIdentifier alg_id() const
-            {
-            return key->algorithm_identifier();
-            }
-
-         MemoryVector<byte> key_bits() const
-            {
-            return key->pkcs8_private_key();
-            }
-
-         DL_Scheme_Encoder(const DL_Scheme_PrivateKey* k) : key(k) {}
-      private:
-         const DL_Scheme_PrivateKey* key;
-      };
-
-   return new DL_Scheme_Encoder(this);
-   }
-
-/*
 * Return the PKCS #8 private key decoder
 */
 PKCS8_Decoder* DL_Scheme_PrivateKey::pkcs8_decoder(RandomNumberGenerator& rng)
