@@ -64,7 +64,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
       }
    catch(Illegal_Point)
       {
-      throw Internal_Error("Loaded ECC private key failed self test");
+      throw Internal_Error("Loaded ECC public key failed self test");
       }
    }
 
