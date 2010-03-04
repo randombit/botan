@@ -35,8 +35,7 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey,
       * Construct from X.509 algorithm id and subject public key bits
       */
       GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
-                          const MemoryRegion<byte>& key_bits) :
-         EC_PublicKey(alg_id, key_bits) {}
+                          const MemoryRegion<byte>& key_bits);
 
       /**
       * Get this keys algorithm name.
@@ -68,13 +67,6 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey,
       */
       bool verify(const byte message[], u32bit mess_len,
                   const byte signature[], u32bit sig_len) const;
-
-      /**
-      * Get an x509_decoder that can be used to decode a stored key into
-      * this key.
-      * @result an x509_decoder for this key
-      */
-      X509_Decoder* x509_decoder();
 
    protected:
       GOST_3410_PublicKey() {}

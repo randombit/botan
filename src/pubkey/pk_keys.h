@@ -71,13 +71,6 @@ class BOTAN_DLL Public_Key
       */
       virtual MemoryVector<byte> x509_subject_public_key() const = 0;
 
-      /**
-      * Get an X509 decoder that can be used to set the values of this
-      * key based on an X509 encoded key object.
-      * @return an X509 decoder for this key
-      */
-      virtual class X509_Decoder* x509_decoder() = 0;
-
       virtual ~Public_Key() {}
    protected:
       virtual void load_check(RandomNumberGenerator&) const;

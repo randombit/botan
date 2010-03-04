@@ -33,34 +33,6 @@ DL_Scheme_PublicKey::DL_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
    BER_Decoder(key_bits).decode(y);
    }
 
-/*
-* Return the X.509 public key decoder
-*/
-X509_Decoder* DL_Scheme_PublicKey::x509_decoder()
-   {
-   class DL_Scheme_Decoder : public X509_Decoder
-      {
-      public:
-         void alg_id(const AlgorithmIdentifier& alg_id)
-            {
-            DataSource_Memory source(alg_id.parameters);
-            key->group.BER_decode(source, key->group_format());
-            }
-
-         void key_bits(const MemoryRegion<byte>& bits)
-            {
-            BER_Decoder(bits).decode(key->y);
-            key->X509_load_hook();
-            }
-
-         DL_Scheme_Decoder(DL_Scheme_PublicKey* k) : key(k) {}
-      private:
-         DL_Scheme_PublicKey* key;
-      };
-
-   return new DL_Scheme_Decoder(this);
-   }
-
 MemoryVector<byte> DL_Scheme_PrivateKey::pkcs8_private_key() const
    {
    return DER_Encoder().encode(x).get_contents();

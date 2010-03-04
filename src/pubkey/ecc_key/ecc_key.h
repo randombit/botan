@@ -32,6 +32,16 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
    {
    public:
 
+      EC_PublicKey() : domain_encoding(EC_DOMPAR_ENC_EXPLICIT) {}
+
+      EC_PublicKey(const EC_Domain_Params& dom_par,
+                   const PointGFp& pub_point);
+
+      EC_PublicKey(const AlgorithmIdentifier& alg_id,
+                   const MemoryRegion<byte>& key_bits);
+
+      virtual ~EC_PublicKey() {}
+
       /**
       * Get the public point of this key.
       * @throw Invalid_State is thrown if the
@@ -71,23 +81,6 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       */
       EC_Domain_Params_Encoding domain_format() const
          { return domain_encoding; }
-
-      /**
-      * Get an x509_decoder that can be used to decode a stored key into
-      * this key.
-      * @result an x509_decoder for this key
-      */
-      X509_Decoder* x509_decoder();
-
-      EC_PublicKey() : domain_encoding(EC_DOMPAR_ENC_EXPLICIT) {}
-
-      EC_PublicKey(const EC_Domain_Params& dom_par,
-                   const PointGFp& pub_point);
-
-      EC_PublicKey(const AlgorithmIdentifier& alg_id,
-                   const MemoryRegion<byte>& key_bits);
-
-      virtual ~EC_PublicKey() {}
    protected:
       virtual void X509_load_hook();
 

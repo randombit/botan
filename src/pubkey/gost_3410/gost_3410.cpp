@@ -30,46 +30,27 @@ MemoryVector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
    return DER_Encoder().encode(bits, OCTET_STRING).get_contents();
    }
 
-X509_Decoder* GOST_3410_PublicKey::x509_decoder()
+GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
+                                         const MemoryRegion<byte>& key_bits)
    {
-   class GOST_3410_Key_Decoder : public X509_Decoder
-      {
-      public:
-         void alg_id(const AlgorithmIdentifier& alg_id)
-            {
-            // Also includes hash and cipher OIDs... brilliant design guys
-            OID ecc_param_id;
+   OID ecc_param_id;
 
-            BER_Decoder ber(alg_id.parameters);
-            ber.start_cons(SEQUENCE).decode(ecc_param_id);
+   // Also includes hash and cipher OIDs... brilliant design guys
+   BER_Decoder(alg_id.parameters).start_cons(SEQUENCE).decode(ecc_param_id);
 
-            key->domain_params = EC_Domain_Params(ecc_param_id);
-            }
+   domain_params = EC_Domain_Params(ecc_param_id);
 
-         void key_bits(const MemoryRegion<byte>& bits)
-            {
-            SecureVector<byte> key_bits;
-            BER_Decoder ber(bits);
-            ber.decode(key_bits, OCTET_STRING);
+   SecureVector<byte> bits;
+   BER_Decoder(key_bits).decode(bits, OCTET_STRING);
 
-            const u32bit part_size = key_bits.size() / 2;
+   const u32bit part_size = bits.size() / 2;
 
-            BigInt y(key_bits, part_size);
-            BigInt x(key_bits + part_size, part_size);
+   BigInt y(bits, part_size);
+   BigInt x(bits + part_size, part_size);
 
-            const BigInt p = key->domain().get_curve().get_p();
+   public_key = PointGFp(domain().get_curve(), x, y);
 
-            key->public_key = PointGFp(key->domain().get_curve(), x, y);
-
-            key->X509_load_hook();
-            }
-
-         GOST_3410_Key_Decoder(GOST_3410_PublicKey* k): key(k) {}
-      private:
-         GOST_3410_PublicKey* key;
-      };
-
-   return new GOST_3410_Key_Decoder(this);
+   X509_load_hook();
    }
 
 bool GOST_3410_PublicKey::verify(const byte msg[], u32bit msg_len,

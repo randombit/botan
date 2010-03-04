@@ -62,13 +62,6 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
       */
       virtual DL_Group::Format group_format() const = 0;
 
-      /**
-      * Get an X509 decoder for this key.
-      * @return an decoder usable to decode a DL key and store the
-      * values in this instance.
-      */
-      X509_Decoder* x509_decoder();
-
       DL_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
                           const MemoryRegion<byte>& key_bits,
                           DL_Group::Format group_format);

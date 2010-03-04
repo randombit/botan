@@ -74,32 +74,6 @@ EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
       }
    }
 
-X509_Decoder* EC_PublicKey::x509_decoder()
-   {
-   class EC_Key_Decoder : public X509_Decoder
-      {
-      public:
-         void alg_id(const AlgorithmIdentifier& alg_id)
-            {
-            key->domain_params = EC_Domain_Params(alg_id.parameters);
-            }
-
-         void key_bits(const MemoryRegion<byte>& bits)
-            {
-            key->public_key = PointGFp(
-               OS2ECP(bits, key->domain().get_curve()));
-
-            key->X509_load_hook();
-            }
-
-         EC_Key_Decoder(EC_PublicKey* k): key(k) {}
-      private:
-         EC_PublicKey* key;
-      };
-
-   return new EC_Key_Decoder(this);
-   }
-
 void EC_PublicKey::set_parameter_encoding(EC_Domain_Params_Encoding form)
    {
    if(form != EC_DOMPAR_ENC_EXPLICIT &&

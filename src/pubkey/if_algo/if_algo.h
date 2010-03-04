@@ -41,8 +41,6 @@ class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
 
       u32bit max_input_bits() const { return (n.bits() - 1); }
 
-      X509_Decoder* x509_decoder();
-
       IF_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
                           const MemoryRegion<byte>& key_bits);
    protected:
