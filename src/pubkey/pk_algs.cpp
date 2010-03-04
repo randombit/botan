@@ -8,8 +8,6 @@
 #include <botan/internal/pk_algs.h>
 #include <botan/oids.h>
 
-#include <stdio.h>
-
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
 #endif
@@ -76,8 +74,8 @@ BOTAN_DLL Public_Key* make_public_key(const AlgorithmIdentifier& alg_id,
       return new NR_PublicKey(alg_id, key_bits);
 #endif
 
-#if defined(BOTAN_HAS_ELG)
-   if(alg_name == "ELG")
+#if defined(BOTAN_HAS_ELGAMAL)
+   if(alg_name == "ElGamal")
       return new ElGamal_PublicKey(alg_id, key_bits);
 #endif
 
@@ -127,8 +125,8 @@ BOTAN_DLL Private_Key* make_private_key(const AlgorithmIdentifier& alg_id,
       return new NR_PrivateKey(alg_id, key_bits, rng);
 #endif
 
-#if defined(BOTAN_HAS_ELG)
-   if(alg_name == "ELG")
+#if defined(BOTAN_HAS_ELGAMAL)
+   if(alg_name == "ElGamal")
       return new ElGamal_PrivateKey(alg_id, key_bits, rng);
 #endif
 
