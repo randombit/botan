@@ -30,7 +30,12 @@ class BOTAN_DLL RW_PublicKey : public PK_Verifying_with_MR_Key,
          core = IF_Core(e, n);
          }
 
-      RW_PublicKey(const BigInt& mod, const BigInt& exponent);
+      RW_PublicKey(const BigInt& mod, const BigInt& exponent) :
+         IF_Scheme_PublicKey(mod, exponent)
+         {
+         core = IF_Core(e, n);
+         }
+
    protected:
       RW_PublicKey() {}
       BigInt public_op(const BigInt&) const;
@@ -58,8 +63,10 @@ class BOTAN_DLL RW_PrivateKey : public RW_PublicKey,
          }
 
       RW_PrivateKey(RandomNumberGenerator& rng,
-                    const BigInt&, const BigInt&, const BigInt&,
-                    const BigInt& = 0, const BigInt& = 0);
+                    const BigInt& p, const BigInt& q,
+                    const BigInt& e, const BigInt& d = 0,
+                    const BigInt& n = 0) :
+         IF_Scheme_PrivateKey(rng, p, q, e, d, n) {}
 
       RW_PrivateKey(RandomNumberGenerator& rng, u32bit bits, u32bit = 2);
    };

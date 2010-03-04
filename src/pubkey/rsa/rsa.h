@@ -39,7 +39,12 @@ class BOTAN_DLL RSA_PublicKey : public PK_Encrypting_Key,
       * @arg n the modulus
       * @arg e the exponent
       */
-      RSA_PublicKey(const BigInt& n, const BigInt& e);
+      RSA_PublicKey(const BigInt& n, const BigInt& e) :
+         IF_Scheme_PublicKey(n, e)
+         {
+         core = IF_Core(e, n);
+         }
+
    protected:
       RSA_PublicKey() {}
       BigInt public_op(const BigInt&) const;
@@ -71,19 +76,21 @@ class BOTAN_DLL RSA_PrivateKey : public RSA_PublicKey,
 
       /**
       * Construct a private key from the specified parameters.
-      * @param rng the random number generator to use
-      * @param prime1 the first prime
-      * @param prime2 the second prime
-      * @param exp the exponent
-      * @param d_exp if specified, this has to be d with
+      * @param rng a random number generator
+      * @param p the first prime
+      * @param q the second prime
+      * @param e the exponent
+      * @param d if specified, this has to be d with
       * exp * d = 1 mod (p - 1, q - 1). Leave it as 0 if you wish to
       * the constructor to calculate it.
       * @param n if specified, this must be n = p * q. Leave it as 0
       * if you wish to the constructor to calculate it.
       */
       RSA_PrivateKey(RandomNumberGenerator& rng,
-                     const BigInt& p, const BigInt& q, const BigInt& e,
-                     const BigInt& d = 0, const BigInt& n = 0);
+                     const BigInt& p, const BigInt& q,
+                     const BigInt& e, const BigInt& d = 0,
+                     const BigInt& n = 0) :
+         IF_Scheme_PrivateKey(rng, p, q, e, d, n) {}
 
       /**
       * Create a new private key with the specified bit length

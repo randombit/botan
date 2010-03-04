@@ -15,16 +15,6 @@
 namespace Botan {
 
 /*
-* RW_PublicKey Constructor
-*/
-RW_PublicKey::RW_PublicKey(const BigInt& mod, const BigInt& exp)
-   {
-   n = mod;
-   e = exp;
-   core = IF_Core(e, n);
-   }
-
-/*
 * Rabin-Williams Public Operation
 */
 BigInt RW_PublicKey::public_op(const BigInt& i) const
@@ -73,26 +63,6 @@ RW_PrivateKey::RW_PrivateKey(RandomNumberGenerator& rng,
 
    if(n.bits() != bits)
       throw Self_Test_Failure(algo_name() + " private key generation failed");
-   }
-
-/*
-* RW_PrivateKey Constructor
-*/
-RW_PrivateKey::RW_PrivateKey(RandomNumberGenerator& rng,
-                             const BigInt& prime1, const BigInt& prime2,
-                             const BigInt& exp, const BigInt& d_exp,
-                             const BigInt& mod)
-   {
-   p = prime1;
-   q = prime2;
-   e = exp;
-   d = d_exp;
-   n = mod;
-
-   if(d == 0)
-      d = inverse_mod(e, lcm(p - 1, q - 1) >> 1);
-
-   PKCS8_load_hook(rng);
    }
 
 /*

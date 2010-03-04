@@ -14,16 +14,6 @@
 namespace Botan {
 
 /*
-* RSA_PublicKey Constructor
-*/
-RSA_PublicKey::RSA_PublicKey(const BigInt& mod, const BigInt& exp)
-   {
-   n = mod;
-   e = exp;
-   core = IF_Core(e, n);
-   }
-
-/*
 * RSA Public Operation
 */
 BigInt RSA_PublicKey::public_op(const BigInt& i) const
@@ -73,26 +63,6 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
 
    if(n.bits() != bits)
       throw Self_Test_Failure(algo_name() + " private key generation failed");
-   }
-
-/*
-* RSA_PrivateKey Constructor
-*/
-RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
-                               const BigInt& prime1, const BigInt& prime2,
-                               const BigInt& exp, const BigInt& d_exp,
-                               const BigInt& mod)
-   {
-   p = prime1;
-   q = prime2;
-   e = exp;
-   d = d_exp;
-   n = mod;
-
-   if(d == 0)
-      d = inverse_mod(e, lcm(p - 1, q - 1));
-
-   PKCS8_load_hook(rng);
    }
 
 /*

@@ -78,6 +78,38 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(const AlgorithmIdentifier&,
       throw Decoding_Error("Unknown PKCS #1 key format version");
    }
 
+IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
+                                           const BigInt& prime1,
+                                           const BigInt& prime2,
+                                           const BigInt& exp,
+                                           const BigInt& d_exp,
+                                           const BigInt& mod)
+   {
+   p = prime1;
+   q = prime2;
+   e = exp;
+   d = d_exp;
+   n = mod;
+
+   if(d == 0)
+      {
+      BigInt inv_for_d = lcm(p - 1, q - 1);
+      if(e.is_even())
+         inv_for_d >>= 1;
+
+      d = inverse_mod(e, inv_for_d);
+      }
+
+   if(n == 0)  n = p * q;
+   if(d1 == 0) d1 = d % (p - 1);
+   if(d2 == 0) d2 = d % (q - 1);
+   if(c == 0)  c = inverse_mod(q, p);
+
+   core = IF_Core(rng, e, n, d, p, q, d1, d2, c);
+
+   load_check(rng);
+   }
+
 /*
 * Algorithm Specific PKCS #8 Initialization Code
 */
