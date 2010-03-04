@@ -548,10 +548,10 @@ void benchmark_dh(RandomNumberGenerator& rng,
          DH_PrivateKey dh2(rng, group);
          keygen_timer.stop();
 
-         DH_PublicKey pub1(dh1);
-         DH_PublicKey pub2(dh2);
+         std::auto_ptr<PK_Key_Agreement> ka1(get_pk_kas(dh1, "KDF2(SHA-1)"));
+         std::auto_ptr<PK_Key_Agreement> ka2(get_pk_kas(dh2, "KDF2(SHA-1)"));
 
-         SecureVector<byte> secret1, secret2;
+         SymmetricKey secret1, secret2;
 
          for(u32bit i = 0; i != 1000; ++i)
             {
@@ -559,11 +559,11 @@ void benchmark_dh(RandomNumberGenerator& rng,
                break;
 
             kex_timer.start();
-            secret1 = dh1.derive_key(pub2);
+            secret1 = ka1->derive_key(32, dh2.public_value());
             kex_timer.stop();
 
             kex_timer.start();
-            secret2 = dh2.derive_key(pub1);
+            secret2 = ka2->derive_key(32, dh1.public_value());
             kex_timer.stop();
 
             if(secret1 != secret2)
