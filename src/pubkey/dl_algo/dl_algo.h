@@ -70,8 +70,6 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
       DL_Scheme_PublicKey() {}
       BigInt y;
       DL_Group group;
-   private:
-      virtual void X509_load_hook() {}
    };
 
 /**
@@ -98,8 +96,6 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
    protected:
       DL_Scheme_PrivateKey() {}
       BigInt x;
-   private:
-      virtual void PKCS8_load_hook(RandomNumberGenerator&, bool = false) {}
    };
 
 }

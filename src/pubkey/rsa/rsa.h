@@ -29,7 +29,10 @@ class BOTAN_DLL RSA_PublicKey : public PK_Encrypting_Key,
 
       RSA_PublicKey(const AlgorithmIdentifier& alg_id,
                     const MemoryRegion<byte>& key_bits) :
-         IF_Scheme_PublicKey(alg_id, key_bits) { X509_load_hook(); }
+         IF_Scheme_PublicKey(alg_id, key_bits)
+         {
+         core = IF_Core(e, n);
+         }
 
       /**
       * Create a RSA_PublicKey

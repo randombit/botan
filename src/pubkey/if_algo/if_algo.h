@@ -47,7 +47,6 @@ class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
    protected:
       IF_Scheme_PublicKey() {}
 
-      virtual void X509_load_hook();
       BigInt n, e;
       IF_Core core;
    };

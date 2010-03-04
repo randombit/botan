@@ -21,7 +21,7 @@ RW_PublicKey::RW_PublicKey(const BigInt& mod, const BigInt& exp)
    {
    n = mod;
    e = exp;
-   X509_load_hook();
+   core = IF_Core(e, n);
    }
 
 /*

@@ -25,7 +25,10 @@ class BOTAN_DLL RW_PublicKey : public PK_Verifying_with_MR_Key,
 
       RW_PublicKey(const AlgorithmIdentifier& alg_id,
                    const MemoryRegion<byte>& key_bits) :
-         IF_Scheme_PublicKey(alg_id, key_bits) { X509_load_hook(); }
+         IF_Scheme_PublicKey(alg_id, key_bits)
+         {
+         core = IF_Core(e, n);
+         }
 
       RW_PublicKey(const BigInt& mod, const BigInt& exponent);
    protected:

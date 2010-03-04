@@ -79,14 +79,6 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(const AlgorithmIdentifier&,
    }
 
 /*
-* Algorithm Specific X.509 Initialization Code
-*/
-void IF_Scheme_PublicKey::X509_load_hook()
-   {
-   core = IF_Core(e, n);
-   }
-
-/*
 * Algorithm Specific PKCS #8 Initialization Code
 */
 void IF_Scheme_PrivateKey::PKCS8_load_hook(RandomNumberGenerator& rng,
