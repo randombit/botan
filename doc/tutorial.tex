@@ -510,9 +510,7 @@ near future. In these examples, we punt on the problem, and hard-code using
 EMSA1 with SHA-256.
 
 \begin{verbatim}
-  PK_Signing_Key* key = dynamic_cast<PK_Signing_Key*>(privkey);
-  if(!key)
-     error();
+  Public_Key* key = /* loaded or generated somehow */
   PK_Signer* signer = get_pk_signer(*key, "EMSA1(SHA-256)");
 
   byte msg[] = { /* ... */ };
