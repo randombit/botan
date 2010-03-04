@@ -24,8 +24,8 @@ class BOTAN_DLL DSA_PublicKey : public PK_Verifying_wo_MR_Key,
 
       DL_Group::Format group_format() const { return DL_Group::ANSI_X9_57; }
       u32bit message_parts() const { return 2; }
-      u32bit message_part_size() const { group_q.bytes(); }
-      u32bit max_input_bits() const { return group_q.bits(); }
+      u32bit message_part_size() const { return group_q().bytes(); }
+      u32bit max_input_bits() const { return group_q().bits(); }
 
       bool verify(const byte msg[], u32bit msg_len,
                   const byte sig[], u32bit sig_len) const;
