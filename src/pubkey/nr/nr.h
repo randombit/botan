@@ -22,24 +22,21 @@ class BOTAN_DLL NR_PublicKey : public PK_Verifying_with_MR_Key,
    public:
       std::string algo_name() const { return "NR"; }
 
-      SecureVector<byte> verify(const byte[], u32bit) const;
-      u32bit max_input_bits() const;
+      SecureVector<byte> verify(const byte sig[], u32bit sig_len) const;
+
+      u32bit max_input_bits() const { return (group_q().bits() - 1); }
 
       DL_Group::Format group_format() const { return DL_Group::ANSI_X9_57; }
       u32bit message_parts() const { return 2; }
-      u32bit message_part_size() const;
+      u32bit message_part_size() const { return group_q().bytes(); }
 
       NR_PublicKey(const AlgorithmIdentifier& alg_id,
-                   const MemoryRegion<byte>& key_bits) :
-         DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
-         { X509_load_hook(); }
+                   const MemoryRegion<byte>& key_bits);
 
-      NR_PublicKey(const DL_Group&, const BigInt&);
+      NR_PublicKey(const DL_Group& group, const BigInt& pub_key);
    protected:
       NR_PublicKey() {}
       NR_Core core;
-   private:
-      void X509_load_hook();
    };
 
 /*
@@ -50,23 +47,18 @@ class BOTAN_DLL NR_PrivateKey : public NR_PublicKey,
                                 public virtual DL_Scheme_PrivateKey
    {
    public:
-      SecureVector<byte> sign(const byte[], u32bit,
+      SecureVector<byte> sign(const byte msg[], u32bit msg_len,
                               RandomNumberGenerator& rng) const;
 
-      bool check_key(RandomNumberGenerator& rng, bool) const;
+      bool check_key(RandomNumberGenerator& rng, bool strong) const;
 
       NR_PrivateKey(const AlgorithmIdentifier& alg_id,
                     const MemoryRegion<byte>& key_bits,
-                    RandomNumberGenerator& rng) :
-         DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
-         {
-         PKCS8_load_hook(rng);
-         }
+                    RandomNumberGenerator& rng);
 
-      NR_PrivateKey(RandomNumberGenerator&, const DL_Group&,
-                    const BigInt& = 0);
-   private:
-      void PKCS8_load_hook(RandomNumberGenerator&, bool = false);
+      NR_PrivateKey(RandomNumberGenerator& rng,
+                    const DL_Group& group,
+                    const BigInt& x = 0);
    };
 
 }

@@ -12,6 +12,13 @@
 
 namespace Botan {
 
+NR_PublicKey::NR_PublicKey(const AlgorithmIdentifier& alg_id,
+                           const MemoryRegion<byte>& key_bits) :
+   DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
+   {
+   core = NR_Core(group, y);
+   }
+
 /*
 * NR_PublicKey Constructor
 */
@@ -19,14 +26,7 @@ NR_PublicKey::NR_PublicKey(const DL_Group& grp, const BigInt& y1)
    {
    group = grp;
    y = y1;
-   X509_load_hook();
-   }
 
-/*
-* Algorithm Specific X.509 Initialization Code
-*/
-void NR_PublicKey::X509_load_hook()
-   {
    core = NR_Core(group, y);
    }
 
@@ -36,22 +36,6 @@ void NR_PublicKey::X509_load_hook()
 SecureVector<byte> NR_PublicKey::verify(const byte sig[], u32bit sig_len) const
    {
    return core.verify(sig, sig_len);
-   }
-
-/*
-* Return the maximum input size in bits
-*/
-u32bit NR_PublicKey::max_input_bits() const
-   {
-   return (group_q().bits() - 1);
-   }
-
-/*
-* Return the size of each portion of the sig
-*/
-u32bit NR_PublicKey::message_part_size() const
-   {
-   return group_q().bytes();
    }
 
 /*
@@ -65,28 +49,28 @@ NR_PrivateKey::NR_PrivateKey(RandomNumberGenerator& rng,
    x = x_arg;
 
    if(x == 0)
-      {
       x = BigInt::random_integer(rng, 2, group_q() - 1);
-      PKCS8_load_hook(rng, true);
-      }
-   else
-      PKCS8_load_hook(rng, false);
-   }
 
-/*
-* Algorithm Specific PKCS #8 Initialization Code
-*/
-void NR_PrivateKey::PKCS8_load_hook(RandomNumberGenerator& rng,
-                                    bool generated)
-   {
-   if(y == 0)
-      y = power_mod(group_g(), x, group_p());
+   y = power_mod(group_g(), x, group_p());
+
    core = NR_Core(group, y, x);
 
-   if(generated)
+   if(x_arg == 0)
       gen_check(rng);
    else
       load_check(rng);
+   }
+
+NR_PrivateKey::NR_PrivateKey(const AlgorithmIdentifier& alg_id,
+                             const MemoryRegion<byte>& key_bits,
+                             RandomNumberGenerator& rng) :
+   DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
+   {
+   y = power_mod(group_g(), x, group_p());
+
+   core = NR_Core(group, y, x);
+
+   load_check(rng);
    }
 
 /*
