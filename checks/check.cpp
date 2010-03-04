@@ -186,15 +186,9 @@ int run_test_suite(RandomNumberGenerator& rng)
       errors += do_pk_validation_tests(PK_VALIDATION_FILE, rng);
       //errors += do_cvc_tests(rng);
       }
-   catch(Botan::Exception& e)
-      {
-      std::cout << "Exception caught: " << e.what() << std::endl;
-      return 1;
-      }
    catch(std::exception& e)
       {
-      std::cout << "Standard library exception caught: "
-                << e.what() << std::endl;
+      std::cout << "Exception: " << e.what() << std::endl;
       return 1;
       }
    catch(...)
