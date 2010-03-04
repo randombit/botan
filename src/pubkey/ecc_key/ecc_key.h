@@ -38,8 +38,6 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       EC_PublicKey(const AlgorithmIdentifier& alg_id,
                    const MemoryRegion<byte>& key_bits);
 
-      virtual ~EC_PublicKey() {}
-
       /**
       * Get the public point of this key.
       * @throw Invalid_State is thrown if the
@@ -102,8 +100,6 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
 
       EC_PrivateKey(const AlgorithmIdentifier& alg_id,
                     const MemoryRegion<byte>& key_bits);
-
-      virtual ~EC_PrivateKey() {}
 
       MemoryVector<byte> pkcs8_private_key() const;
 
