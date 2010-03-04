@@ -22,7 +22,7 @@ MemoryVector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
    MemoryVector<byte> bits(2*std::max(x.bytes(), y.bytes()));
 
    y.binary_encode(bits + (bits.size() / 2 - y.bytes()));
-   x.binary_encode(bits + (bits.size() - y.bytes()));
+   x.binary_encode(bits + (bits.size() - x.bytes()));
 
    return DER_Encoder().encode(bits, OCTET_STRING).get_contents();
    }
