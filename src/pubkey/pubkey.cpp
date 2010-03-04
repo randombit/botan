@@ -1,6 +1,6 @@
 /*
 * Public Key Base
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -10,6 +10,8 @@
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/parsing.h>
+#include <botan/libstate.h>
+#include <botan/engine.h>
 #include <botan/internal/bit_ops.h>
 #include <memory>
 
@@ -356,21 +358,34 @@ bool PK_Verifier_wo_MR::validate_signature(const MemoryRegion<byte>& msg,
 /*
 * PK_Key_Agreement Constructor
 */
-PK_Key_Agreement::PK_Key_Agreement(const PK_Key_Agreement_Key& k,
+PK_Key_Agreement::PK_Key_Agreement(const PK_Key_Agreement_Key& key,
                                    KDF* kdf_obj) :
-   key(k), kdf(kdf_obj)
+   kdf(kdf_obj)
    {
+   Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
+
+   while(const Engine* engine = i.next())
+      {
+      op = engine->get_key_agreement_op(key);
+      if(op)
+         break;
+      }
+
+   if(op == 0)
+      throw Lookup_Error("PK_Key_Agreement: No working engine for " +
+                         key.algo_name());
    }
 
 SymmetricKey PK_Key_Agreement::derive_key(u32bit key_len, const byte in[],
                                           u32bit in_len, const byte params[],
                                           u32bit params_len) const
    {
-   OctetString z = key.derive_key(in, in_len);
+   SecureVector<byte> z = op->agree(in, in_len);
+
    if(!kdf)
       return z;
 
-   return kdf->derive_key(key_len, z.bits_of(), params, params_len);
+   return kdf->derive_key(key_len, z, params, params_len);
    }
 
 }

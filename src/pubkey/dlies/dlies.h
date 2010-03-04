@@ -33,9 +33,9 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
                              RandomNumberGenerator&) const;
       u32bit maximum_input_size() const;
 
-      const PK_Key_Agreement_Key& key;
-      SecureVector<byte> other_key;
+      SecureVector<byte> other_key, my_key;
 
+      PK_Key_Agreement* ka;
       KDF* kdf;
       MessageAuthenticationCode* mac;
       u32bit mac_keylen;
@@ -57,8 +57,9 @@ class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor
    private:
       SecureVector<byte> dec(const byte[], u32bit) const;
 
-      const PK_Key_Agreement_Key& key;
+      SecureVector<byte> my_key;
 
+      PK_Key_Agreement* ka;
       KDF* kdf;
       MessageAuthenticationCode* mac;
       u32bit mac_keylen;

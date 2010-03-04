@@ -11,6 +11,27 @@
 
 namespace Botan {
 
+ECDH_KA_Operation::ECDH_KA_Operation(const ECDH_PrivateKey& key)
+   {
+   cofactor = key.domain().get_cofactor();
+
+   curve = key.domain().get_curve();
+
+   l_times_priv = inverse_mod(cofactor, key.domain().get_order()) *
+                  key.private_value();
+   }
+
+SecureVector<byte> ECDH_KA_Operation::agree(const byte w[], u32bit w_len) const
+   {
+   PointGFp point = OS2ECP(w, w_len, curve);
+
+   PointGFp S = (cofactor * point) * l_times_priv;
+   S.check_invariants();
+
+   return BigInt::encode_1363(S.get_affine_x(),
+                              curve.get_p().bytes());
+   }
+
 /**
 * Derive a key
 */

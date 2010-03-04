@@ -19,10 +19,6 @@
   #include <botan/dsa_op.h>
 #endif
 
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-  #include <botan/dh_op.h>
-#endif
-
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL)
   #include <botan/nr_op.h>
 #endif
@@ -60,10 +56,6 @@ NR_Operation* nr_op(const DL_Group&, const BigInt&, const BigInt&);
 
 #if defined(BOTAN_HAS_ELGAMAL)
 ELG_Operation* elg_op(const DL_Group&, const BigInt&, const BigInt&);
-#endif
-
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-DH_Operation* dh_op(const DL_Group&, const BigInt&);
 #endif
 
 }

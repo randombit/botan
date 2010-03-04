@@ -24,10 +24,30 @@
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-  #include <botan/dh_op.h>
+  #include <botan/dh.h>
+#endif
+
+#if defined(BOTAN_HAS_ECDH)
+  #include <botan/ecdh.h>
 #endif
 
 namespace Botan {
+
+PK_Ops::KA_Operation*
+Default_Engine::get_key_agreement_op(const Private_Key& key) const
+   {
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+   if(const DH_PrivateKey* dh = dynamic_cast<const DH_PrivateKey*>(&key))
+      return new DH_KA_Operation(*dh);
+#endif
+
+#if defined(BOTAN_HAS_ECDH)
+   if(const ECDH_PrivateKey* ecdh = dynamic_cast<const ECDH_PrivateKey*>(&key))
+      return new ECDH_KA_Operation(*ecdh);
+#endif
+
+   return 0;
+   }
 
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
 /*
@@ -72,17 +92,6 @@ ELG_Operation* Default_Engine::elg_op(const DL_Group& group, const BigInt& y,
                                       const BigInt& x) const
    {
    return new Default_ELG_Op(group, y, x);
-   }
-#endif
-
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-/*
-* Acquire a DH op
-*/
-DH_Operation* Default_Engine::dh_op(const DL_Group& group,
-                                    const BigInt& x) const
-   {
-   return new Default_DH_Op(group, x);
    }
 #endif
 

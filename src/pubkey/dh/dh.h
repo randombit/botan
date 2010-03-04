@@ -9,7 +9,8 @@
 #define BOTAN_DIFFIE_HELLMAN_H__
 
 #include <botan/dl_algo.h>
-#include <botan/dh_core.h>
+#include <botan/pow_mod.h>
+#include <botan/pk_ops.h>
 
 namespace Botan {
 
@@ -22,7 +23,7 @@ class BOTAN_DLL DH_PublicKey : public virtual DL_Scheme_PublicKey
       std::string algo_name() const { return "DH"; }
 
       MemoryVector<byte> public_value() const;
-      u32bit max_input_bits() const;
+      u32bit max_input_bits() const { return group_p().bits(); }
 
       DL_Group::Format group_format() const { return DL_Group::ANSI_X9_42; }
 
@@ -48,10 +49,6 @@ class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
                                 public virtual DL_Scheme_PrivateKey
    {
    public:
-      SecureVector<byte> derive_key(const byte other[], u32bit length) const;
-      SecureVector<byte> derive_key(const DH_PublicKey& other) const;
-      SecureVector<byte> derive_key(const BigInt& other) const;
-
       MemoryVector<byte> public_value() const;
 
       /**
@@ -72,8 +69,30 @@ class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
       */
       DH_PrivateKey(RandomNumberGenerator& rng, const DL_Group& grp,
                     const BigInt& x = 0);
+   };
+
+/**
+* DH operation
+*/
+class BOTAN_DLL DH_KA_Operation : public PK_Ops::KA_Operation
+   {
+   public:
+
+      DH_KA_Operation(const DH_PrivateKey& key) :
+         powermod_x_p(key.get_x(), key.get_domain().get_p()),
+         p_bytes(key.get_domain().get_p().bytes())
+         {}
+
+      SecureVector<byte> agree(const byte w[], u32bit w_len) const
+         {
+         return BigInt::encode_1363(
+            powermod_x_p(BigInt::decode(w, w_len)),
+            p_bytes);
+         }
+
    private:
-      DH_Core core;
+      Fixed_Exponent_Power_Mod powermod_x_p;
+      u32bit p_bytes;
    };
 
 }

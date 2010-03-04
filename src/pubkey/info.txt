@@ -12,6 +12,7 @@ x509_key.cpp
 
 <header:public>
 pk_keys.h
+pk_ops.h
 pkcs8.h
 pubkey.h
 pubkey_enums.h

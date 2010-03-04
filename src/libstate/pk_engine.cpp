@@ -91,25 +91,6 @@ ELG_Operation* elg_op(const DL_Group& group, const BigInt& y, const BigInt& x)
    }
 #endif
 
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-/*
-* Acquire a DH op
-*/
-DH_Operation* dh_op(const DL_Group& group, const BigInt& x)
-   {
-   Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
-
-   while(const Engine* engine = i.next())
-      {
-      DH_Operation* op = engine->dh_op(group, x);
-      if(op)
-         return op;
-      }
-
-   throw Lookup_Error("Engine_Core::dh_op: Unable to find a working engine");
-   }
-#endif
-
 /*
 * Acquire a modular exponentiator
 */

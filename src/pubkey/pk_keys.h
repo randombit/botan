@@ -158,8 +158,8 @@ class BOTAN_DLL PK_Verifying_wo_MR_Key : public virtual Public_Key
 class BOTAN_DLL PK_Key_Agreement_Key : public virtual Private_Key
    {
    public:
-      virtual SecureVector<byte> derive_key(const byte[], u32bit) const = 0;
       virtual MemoryVector<byte> public_value() const = 0;
+
       virtual ~PK_Key_Agreement_Key() {}
    };
 

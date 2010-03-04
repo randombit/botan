@@ -1,14 +1,11 @@
 define DIFFIE_HELLMAN
 
 <header:public>
-dh_core.h
-dh_op.h
 dh.h
 </header:public>
 
 <source>
 dh.cpp
-dh_core.cpp
 </source>
 
 <requires>

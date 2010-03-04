@@ -15,6 +15,8 @@
 #include <botan/hash.h>
 #include <botan/mac.h>
 #include <botan/pow_mod.h>
+#include <botan/pk_keys.h>
+#include <botan/pk_ops.h>
 
 #include <utility>
 #include <map>
@@ -25,10 +27,6 @@
 
 #if defined(BOTAN_HAS_DSA)
   #include <botan/dsa_op.h>
-#endif
-
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-  #include <botan/dh_op.h>
 #endif
 
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL)
@@ -80,6 +78,12 @@ class BOTAN_DLL Engine
                                        Algorithm_Factory&)
          { return 0; }
 
+      virtual PK_Ops::KA_Operation*
+         get_key_agreement_op(const Private_Key&) const
+         {
+         return 0;
+         }
+
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
       virtual IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,
                                   const BigInt&, const BigInt&, const BigInt&,
@@ -102,11 +106,6 @@ class BOTAN_DLL Engine
 #if defined(BOTAN_HAS_ELGAMAL)
       virtual ELG_Operation* elg_op(const DL_Group&, const BigInt&,
                                     const BigInt&) const
-         { return 0; }
-#endif
-
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-      virtual DH_Operation* dh_op(const DL_Group&, const BigInt&) const
          { return 0; }
 #endif
    };

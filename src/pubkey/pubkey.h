@@ -1,6 +1,6 @@
 /*
 * Public Key Interface
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -9,6 +9,7 @@
 #define BOTAN_PUBKEY_H__
 
 #include <botan/pk_keys.h>
+#include <botan/pk_ops.h>
 #include <botan/symkey.h>
 #include <botan/rng.h>
 #include <botan/eme.h>
@@ -284,12 +285,44 @@ class BOTAN_DLL PK_Key_Agreement
       * @param in the other parties key
       * @param in_len the length of in in bytes
       * @param params extra derivation params
+      * @param params_len the length of params in bytes
+      */
+      SymmetricKey derive_key(u32bit key_len,
+                              const MemoryRegion<byte>& in,
+                              const byte params[],
+                              u32bit params_len) const
+         {
+         return derive_key(key_len, &in[0], in.size(),
+                           params, params_len);
+         }
+
+      /*
+      * Perform Key Agreement Operation
+      * @param key_len the desired key output size
+      * @param in the other parties key
+      * @param in_len the length of in in bytes
+      * @param params extra derivation params
       */
       SymmetricKey derive_key(u32bit key_len,
                               const byte in[], u32bit in_len,
                               const std::string& params = "") const
          {
          return derive_key(key_len, in, in_len,
+                           reinterpret_cast<const byte*>(params.data()),
+                           params.length());
+         }
+
+      /*
+      * Perform Key Agreement Operation
+      * @param key_len the desired key output size
+      * @param in the other parties key
+      * @param params extra derivation params
+      */
+      SymmetricKey derive_key(u32bit key_len,
+                              const MemoryRegion<byte>& in,
+                              const std::string& params = "") const
+         {
+         return derive_key(key_len, &in[0], in.size(),
                            reinterpret_cast<const byte*>(params.data()),
                            params.length());
          }
@@ -301,12 +334,12 @@ class BOTAN_DLL PK_Key_Agreement
       */
       PK_Key_Agreement(const PK_Key_Agreement_Key& key, KDF* kdf = 0);
 
-      ~PK_Key_Agreement() { delete kdf; }
+      ~PK_Key_Agreement() { delete op; delete kdf; }
    private:
       PK_Key_Agreement(const PK_Key_Agreement_Key&);
       PK_Key_Agreement& operator=(const PK_Key_Agreement&);
 
-      const PK_Key_Agreement_Key& key;
+      PK_Ops::KA_Operation* op;
       KDF* kdf;
    };
 

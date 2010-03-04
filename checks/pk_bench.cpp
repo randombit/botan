@@ -435,10 +435,10 @@ void benchmark_ecdh(RandomNumberGenerator& rng,
          ECDH_PrivateKey ecdh2(rng, params);
          keygen_timer.stop();
 
-         ECDH_PublicKey pub1(ecdh1);
-         ECDH_PublicKey pub2(ecdh2);
+         std::auto_ptr<PK_Key_Agreement> ka1(get_pk_kas(ecdh1, "KDF2(SHA-1)"));
+         std::auto_ptr<PK_Key_Agreement> ka2(get_pk_kas(ecdh2, "KDF2(SHA-1)"));
 
-         SecureVector<byte> secret1, secret2;
+         SymmetricKey secret1, secret2;
 
          for(u32bit i = 0; i != 1000; ++i)
             {
@@ -446,15 +446,15 @@ void benchmark_ecdh(RandomNumberGenerator& rng,
                break;
 
             kex_timer.start();
-            secret1 = ecdh1.derive_key(pub2);
+            secret1 = ka1->derive_key(32, ecdh2.public_value());
             kex_timer.stop();
 
             kex_timer.start();
-            secret2 = ecdh2.derive_key(pub1);
+            secret2 = ka2->derive_key(32, ecdh1.public_value());
             kex_timer.stop();
 
             if(secret1 != secret2)
-               std::cerr << "ECDH secrets did not match, bug in the library!?!\n";
+               std::cerr << "ECDH secrets did not match\n";
             }
          }
 
@@ -567,7 +567,7 @@ void benchmark_dh(RandomNumberGenerator& rng,
             kex_timer.stop();
 
             if(secret1 != secret2)
-               std::cerr << "DH secrets did not match, bug in the library!?!\n";
+               std::cerr << "DH secrets did not match\n";
             }
          }
 

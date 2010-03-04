@@ -10,5 +10,6 @@ hash
 libstate
 mac
 numbertheory
+pubkey
 stream
 </requires>

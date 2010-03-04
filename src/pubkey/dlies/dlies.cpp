@@ -14,16 +14,21 @@ namespace Botan {
 /*
 * DLIES_Encryptor Constructor
 */
-DLIES_Encryptor::DLIES_Encryptor(const PK_Key_Agreement_Key& k,
+DLIES_Encryptor::DLIES_Encryptor(const PK_Key_Agreement_Key& key,
                                  KDF* kdf_obj,
                                  MessageAuthenticationCode* mac_obj,
                                  u32bit mac_kl) :
-   key(k), kdf(kdf_obj), mac(mac_obj), mac_keylen(mac_kl)
+   ka(get_pk_kas(key, "Raw")),
+   kdf(kdf_obj),
+   mac(mac_obj),
+   mac_keylen(mac_kl)
    {
+   my_key = key.public_value();
    }
 
 DLIES_Encryptor::~DLIES_Encryptor()
    {
+   delete ka;
    delete kdf;
    delete mac;
    }
@@ -39,19 +44,18 @@ SecureVector<byte> DLIES_Encryptor::enc(const byte in[], u32bit length,
    if(other_key.empty())
       throw Invalid_State("DLIES: The other key was never set");
 
-   MemoryVector<byte> v = key.public_value();
+   SecureVector<byte> out(my_key.size() + length + mac->OUTPUT_LENGTH);
+   out.copy(my_key, my_key.size());
+   out.copy(my_key.size(), in, length);
 
-   SecureVector<byte> out(v.size() + length + mac->OUTPUT_LENGTH);
-   out.copy(v, v.size());
-   out.copy(v.size(), in, length);
-
-   SecureVector<byte> vz(v, key.derive_key(other_key, other_key.size()));
+   SecureVector<byte> vz(my_key, ka->derive_key(0, other_key).bits_of());
 
    const u32bit K_LENGTH = length + mac_keylen;
    OctetString K = kdf->derive_key(K_LENGTH, vz, vz.size());
+
    if(K.length() != K_LENGTH)
       throw Encoding_Error("DLIES: KDF did not provide sufficient output");
-   byte* C = out + v.size();
+   byte* C = out + my_key.size();
 
    xor_buf(C, K.begin() + mac_keylen, length);
    mac->set_key(K.begin(), mac_keylen);
@@ -84,16 +88,21 @@ u32bit DLIES_Encryptor::maximum_input_size() const
 /*
 * DLIES_Decryptor Constructor
 */
-DLIES_Decryptor::DLIES_Decryptor(const PK_Key_Agreement_Key& k,
+DLIES_Decryptor::DLIES_Decryptor(const PK_Key_Agreement_Key& key,
                                  KDF* kdf_obj,
                                  MessageAuthenticationCode* mac_obj,
                                  u32bit mac_kl) :
-   key(k), kdf(kdf_obj), mac(mac_obj), mac_keylen(mac_kl)
+   ka(get_pk_kas(key, "Raw")),
+   kdf(kdf_obj),
+   mac(mac_obj),
+   mac_keylen(mac_kl)
    {
+   my_key = key.public_value();
    }
 
 DLIES_Decryptor::~DLIES_Decryptor()
    {
+   delete ka;
    delete kdf;
    delete mac;
    }
@@ -103,18 +112,16 @@ DLIES_Decryptor::~DLIES_Decryptor()
 */
 SecureVector<byte> DLIES_Decryptor::dec(const byte msg[], u32bit length) const
    {
-   const u32bit public_len = key.public_value().size();
-
-   if(length < public_len + mac->OUTPUT_LENGTH)
+   if(length < my_key.size() + mac->OUTPUT_LENGTH)
       throw Decoding_Error("DLIES decryption: ciphertext is too short");
 
-   const u32bit CIPHER_LEN = length - public_len - mac->OUTPUT_LENGTH;
+   const u32bit CIPHER_LEN = length - my_key.size() - mac->OUTPUT_LENGTH;
 
-   SecureVector<byte> v(msg, public_len);
-   SecureVector<byte> C(msg + public_len, CIPHER_LEN);
-   SecureVector<byte> T(msg + public_len + CIPHER_LEN, mac->OUTPUT_LENGTH);
+   SecureVector<byte> v(msg, my_key.size());
+   SecureVector<byte> C(msg + my_key.size(), CIPHER_LEN);
+   SecureVector<byte> T(msg + my_key.size() + CIPHER_LEN, mac->OUTPUT_LENGTH);
 
-   SecureVector<byte> vz(v, key.derive_key(v, v.size()));
+   SecureVector<byte> vz(v, ka->derive_key(0, v).bits_of());
 
    const u32bit K_LENGTH = C.size() + mac_keylen;
    OctetString K = kdf->derive_key(K_LENGTH, vz, vz.size());

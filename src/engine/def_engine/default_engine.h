@@ -20,6 +20,8 @@ class Default_Engine : public Engine
    public:
       std::string provider_name() const { return "core"; }
 
+      PK_Ops::KA_Operation* get_key_agreement_op(const Private_Key&) const;
+
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
       IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,
                           const BigInt&, const BigInt&, const BigInt&,
@@ -38,10 +40,6 @@ class Default_Engine : public Engine
 #if defined(BOTAN_HAS_ELGAMAL)
       ELG_Operation* elg_op(const DL_Group&, const BigInt&,
                             const BigInt&) const;
-#endif
-
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-      DH_Operation* dh_op(const DL_Group&, const BigInt&) const;
 #endif
 
       Modular_Exponentiator* mod_exp(const BigInt&,

@@ -11,6 +11,7 @@
 #define BOTAN_ECDH_KEY_H__
 
 #include <botan/ecc_key.h>
+#include <botan/pk_ops.h>
 
 namespace Botan {
 
@@ -75,7 +76,7 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
 
       MemoryVector<byte> public_value() const
          { return EC2OSP(public_point(), PointGFp::UNCOMPRESSED); }
-
+   private:
       /**
       * Derive a shared key with the other parties public key.
       * @param key the other partys public key
@@ -94,6 +95,20 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
       * @param point the public point of the other parties key
       */
       SecureVector<byte> derive_key(const PointGFp& point) const;
+   };
+
+/**
+* ECDH operation
+*/
+class BOTAN_DLL ECDH_KA_Operation : public PK_Ops::KA_Operation
+   {
+   public:
+      ECDH_KA_Operation(const ECDH_PrivateKey& key);
+
+      SecureVector<byte> agree(const byte w[], u32bit w_len) const;
+   private:
+      CurveGFp curve;
+      BigInt l_times_priv, cofactor;
    };
 
 }

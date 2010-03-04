@@ -17,7 +17,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <botan/symkey.h>
+#include <botan/look_pk.h>
 #include <botan/ecdh.h>
 #include <botan/x509self.h>
 #include <botan/der_enc.h>
@@ -33,50 +33,17 @@ void test_ecdh_normal_derivation(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   /*
-   std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
-   std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
-   std::string b_secp = "1c97befc54bd7a8b65acf89f81d4d4adc565fa45";
-   std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   ::Botan::SecureVector<byte> sv_p_secp = decode_hex(p_secp);
-   ::Botan::SecureVector<byte> sv_a_secp = decode_hex(a_secp);
-   ::Botan::SecureVector<byte> sv_b_secp = decode_hex(b_secp);
-   ::Botan::SecureVector<byte> sv_G_secp_comp = decode_hex(G_secp_comp);
-   BigInt bi_p_secp = BigInt::decode(sv_p_secp.begin(), sv_p_secp.size());
-   BigInt bi_a_secp = BigInt::decode(sv_a_secp.begin(), sv_a_secp.size());
-   BigInt bi_b_secp = BigInt::decode(sv_b_secp.begin(), sv_b_secp.size());
-   CurveGFp secp160r1(GFpElement(bi_p_secp,bi_a_secp), GFpElement(bi_p_secp, bi_b_secp), bi_p_secp);
-   */
+   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
 
-   std::string g_secp("024a96b5688ef573284664698968c38bb913cbfc82");
-   Botan::SecureVector<Botan::byte> sv_g_secp = decode_hex(g_secp);
-   BigInt bi_p_secp("0xffffffffffffffffffffffffffffffff7fffffff");
-   BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
-   BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
-   BigInt order = BigInt("0x0100000000000000000001f4c8f927aed3ca752257");
-   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
+   ECDH_PrivateKey private_a(rng, dom_pars);
 
-   BigInt cofactor = BigInt(1);
-   PointGFp p_G = OS2ECP ( sv_g_secp, curve );
-   Botan::EC_Domain_Params dom_pars = Botan::EC_Domain_Params(curve, p_G, order, cofactor);
+   ECDH_PrivateKey private_b(rng, dom_pars); //public_a.getCurve()
 
-   /**
-   * begin ECDH
-   */
-   // alices key (a key constructed by domain parameters IS an ephimeral key!)
-   Botan::ECDH_PrivateKey private_a(rng, dom_pars);
-   Botan::ECDH_PublicKey public_a = private_a; // Bob gets this
+   std::auto_ptr<PK_Key_Agreement> ka(get_pk_kas(private_a, "KDF2(SHA-1)"));
+   std::auto_ptr<PK_Key_Agreement> kb(get_pk_kas(private_b, "KDF2(SHA-1)"));
 
-   // Bob creates a key with a matching group
-   Botan::ECDH_PrivateKey private_b(rng, dom_pars); //public_a.getCurve()
-
-   // Bob sends the key back to Alice
-   Botan::ECDH_PublicKey public_b = private_b; // Alice gets this
-
-   // Both of them create a key using their private key and the other's
-   // public key
-   Botan::SymmetricKey alice_key = private_a.derive_key(public_b);
-   Botan::SymmetricKey bob_key = private_b.derive_key(public_a);
+   SymmetricKey alice_key = ka->derive_key(32, private_b.public_value());
+   SymmetricKey bob_key = kb->derive_key(32, private_a.public_value());
 
    if(alice_key != bob_key)
       {
@@ -93,34 +60,23 @@ void test_ecdh_some_dp(RandomNumberGenerator& rng)
    oids.push_back("1.3.132.0.8");
    oids.push_back("1.2.840.10045.3.1.1");
 
-   for(Botan::u32bit i = 0; i< oids.size(); i++)
+   for(u32bit i = 0; i< oids.size(); i++)
       {
       std::cout << "." << std::flush;
 
-      Botan::OID oid(oids[i]);
-      Botan::EC_Domain_Params dom_pars(oid);
-      Botan::ECDH_PrivateKey private_a(rng, dom_pars);
-      Botan::ECDH_PublicKey public_a = private_a;
-      /*auto_ptr<Botan::X509_Encoder> x509_key_enc = public_a.x509_encoder();
-      Botan::MemoryVector<Botan::byte> enc_key_a = Botan::DER_Encoder()
-      .start_cons(Botan::SEQUENCE)
-      .encode(x509_key_enc->alg_id())
-      .encode(x509_key_enc->key_bits(), Botan::BIT_STRING)
-      .end_cons()
-      .get_contents();*/
+      OID oid(oids[i]);
+      EC_Domain_Params dom_pars(oid);
 
-      Botan::ECDH_PrivateKey private_b(rng, dom_pars);
-      Botan::ECDH_PublicKey public_b = private_b;
-      // to test the equivalence, we
-      // use the direct derivation method here
+      ECDH_PrivateKey private_a(rng, dom_pars);
+      ECDH_PrivateKey private_b(rng, dom_pars);
 
-      Botan::SymmetricKey alice_key = private_a.derive_key(public_b);
+      std::auto_ptr<PK_Key_Agreement> ka(get_pk_kas(private_a, "KDF2(SHA-1)"));
+      std::auto_ptr<PK_Key_Agreement> kb(get_pk_kas(private_b, "KDF2(SHA-1)"));
 
-      //cout << "encoded key = " << hex_encode(enc_key_a.begin(), enc_key_a.size()) << endl;
+      SymmetricKey alice_key = ka->derive_key(32, private_b.public_value());
+      SymmetricKey bob_key = kb->derive_key(32, private_a.public_value());
 
-      Botan::SymmetricKey bob_key = private_b.derive_key(public_a);
       CHECK_MESSAGE(alice_key == bob_key, "different keys - " << "Alice's key was: " << alice_key.as_string() << ", Bob's key was: " << bob_key.as_string());
-      //cout << "key: " << alice_key.as_string() << endl;
       }
 
    }
@@ -132,88 +88,37 @@ void test_ecdh_der_derivation(RandomNumberGenerator& rng)
    oids.push_back("1.3.132.0.8");
    oids.push_back("1.2.840.10045.3.1.1");
 
-   for(Botan::u32bit i = 0; i< oids.size(); i++)
+   for(u32bit i = 0; i< oids.size(); i++)
       {
-      Botan::OID oid(oids[i]);
-      Botan::EC_Domain_Params dom_pars(oid);
+      OID oid(oids[i]);
+      EC_Domain_Params dom_pars(oid);
 
-      Botan::ECDH_PrivateKey private_a(rng, dom_pars);
-      Botan::ECDH_PublicKey public_a = private_a;
+      ECDH_PrivateKey private_a(rng, dom_pars);
+      ECDH_PrivateKey private_b(rng, dom_pars);
 
-      Botan::ECDH_PrivateKey private_b(rng, dom_pars);
-      Botan::ECDH_PublicKey public_b = private_b;
+      MemoryVector<byte> key_a = private_a.public_value();
+      MemoryVector<byte> key_b = private_b.public_value();
 
-      Botan::MemoryVector<Botan::byte> key_der_a = private_a.public_value();
-      Botan::MemoryVector<Botan::byte> key_der_b = private_b.public_value();
-      Botan::SymmetricKey alice_key = private_a.derive_key(key_der_b.begin(), key_der_b.size());
-      Botan::SymmetricKey bob_key = private_b.derive_key(key_der_a.begin(), key_der_a.size());
+      std::auto_ptr<PK_Key_Agreement> ka(get_pk_kas(private_a, "KDF2(SHA-1)"));
+      std::auto_ptr<PK_Key_Agreement> kb(get_pk_kas(private_b, "KDF2(SHA-1)"));
+
+      SymmetricKey alice_key = ka->derive_key(32, key_b);
+      SymmetricKey bob_key = kb->derive_key(32, key_a);
+
       CHECK_MESSAGE(alice_key == bob_key, "different keys - " << "Alice's key was: " << alice_key.as_string() << ", Bob's key was: " << bob_key.as_string());
       //cout << "key: " << alice_key.as_string() << endl;
       }
    }
 
-/**
-* The following test tests the copy ctors and and copy-assignment operators
-*/
-void test_ecdh_cp_ctor_as_op(RandomNumberGenerator& rng)
-   {
-   std::cout << "." << std::flush;
-
-   std::string g_secp("024a96b5688ef573284664698968c38bb913cbfc82");
-   Botan::SecureVector<Botan::byte> sv_g_secp = decode_hex(g_secp);
-   BigInt bi_p_secp("0xffffffffffffffffffffffffffffffff7fffffff");
-   BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
-   BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
-   BigInt order = BigInt("0x0100000000000000000001f4c8f927aed3ca752257");
-   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
-   BigInt cofactor = BigInt(1);
-   PointGFp p_G = OS2ECP ( sv_g_secp, curve );
-   Botan::EC_Domain_Params dom_pars = Botan::EC_Domain_Params(curve, p_G, order, cofactor);
-
-   /**
-   * begin ECDH
-   */
-   // alices key (a key constructed by domain parameters IS an ephimeral key!)
-   Botan::ECDH_PrivateKey private_a(rng, dom_pars);
-   Botan::ECDH_PrivateKey private_a2(private_a);
-   Botan::ECDH_PrivateKey private_a3 = private_a2;
-
-   Botan::ECDH_PublicKey public_a = private_a; // Bob gets this
-   Botan::ECDH_PublicKey public_a2(public_a);
-   Botan::ECDH_PublicKey public_a3 = public_a;
-   // Bob creates a key with a matching group
-   Botan::ECDH_PrivateKey private_b(rng, dom_pars); //public_a.getCurve()
-
-   // Bob sends the key back to Alice
-   Botan::ECDH_PublicKey public_b = private_b; // Alice gets this
-
-   // Both of them create a key using their private key and the other's
-   // public key
-   Botan::SymmetricKey alice_key = private_a.derive_key(public_b);
-   Botan::SymmetricKey alice_key_2 = private_a2.derive_key(public_b);
-   Botan::SymmetricKey alice_key_3 = private_a3.derive_key(public_b);
-
-   Botan::SymmetricKey bob_key = private_b.derive_key(public_a);
-   Botan::SymmetricKey bob_key_2 = private_b.derive_key(public_a2);
-   Botan::SymmetricKey bob_key_3 = private_b.derive_key(public_a3);
-
-   CHECK_MESSAGE(alice_key == bob_key, "different keys - " << "Alice's key was: " << alice_key.as_string() << ", Bob's key was: " << bob_key.as_string());
-   CHECK_MESSAGE(alice_key_2 == bob_key_2, "different keys - " << "Alice's key was: " << alice_key.as_string() << ", Bob's key was: " << bob_key.as_string());
-   CHECK_MESSAGE(alice_key_3 == bob_key_3, "different keys - " << "Alice's key was: " << alice_key.as_string() << ", Bob's key was: " << bob_key.as_string());
-   CHECK_MESSAGE(alice_key == bob_key_2, "different keys - " << "Alice's key was: " << alice_key.as_string() << ", Bob's key was: " << bob_key.as_string());
-   CHECK_MESSAGE(alice_key_2 == bob_key_3, "different keys - " << "Alice's key was: " << alice_key.as_string() << ", Bob's key was: " << bob_key.as_string());
-   }
-
 }
 
-u32bit do_ecdh_tests(Botan::RandomNumberGenerator& rng)
+u32bit do_ecdh_tests(RandomNumberGenerator& rng)
    {
    std::cout << "Testing ECDH (InSiTo unit tests): ";
 
    test_ecdh_normal_derivation(rng);
    test_ecdh_some_dp(rng);
    test_ecdh_der_derivation(rng);
-   test_ecdh_cp_ctor_as_op(rng);
 
    std::cout << std::endl;
 
@@ -221,5 +126,5 @@ u32bit do_ecdh_tests(Botan::RandomNumberGenerator& rng)
    }
 
 #else
-u32bit do_ecdh_tests(Botan::RandomNumberGenerator&) { return 0; }
+u32bit do_ecdh_tests(RandomNumberGenerator&) { return 0; }
 #endif
