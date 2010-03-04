@@ -88,10 +88,11 @@ bool EAC1_1_CVC::operator==(EAC1_1_CVC const& rhs) const
            && get_concat_sig() == rhs.get_concat_sig());
    }
 
-ECDSA_PublicKey decode_eac1_1_key(const MemoryRegion<byte>& enc_key,
-                                  AlgorithmIdentifier& sig_algo)
+ECDSA_PublicKey* decode_eac1_1_key(const MemoryRegion<byte>&,
+                                   AlgorithmIdentifier&)
    {
    throw Internal_Error("decode_eac1_1_key: Unimplemented");
+   return 0;
    }
 
 EAC1_1_CVC make_cvc_cert(PK_Signer& signer,

@@ -78,10 +78,10 @@ class EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation from EAC1
          RandomNumberGenerator& rng);
 
       virtual ~EAC1_1_gen_CVC<Derived>()
-         {}
+         { delete m_pk; }
 
    protected:
-      ECDSA_PublicKey m_pk; // public key
+      ECDSA_PublicKey* m_pk;
       ASN1_Chr m_chr;
       bool self_signed;
 
@@ -117,9 +117,10 @@ MemoryVector<byte> EAC1_1_gen_CVC<Derived>::make_signed(
       .get_contents();
    }
 
-template<typename Derived> std::auto_ptr<Public_Key> EAC1_1_gen_CVC<Derived>::subject_public_key() const
+template<typename Derived>
+std::auto_ptr<Public_Key> EAC1_1_gen_CVC<Derived>::subject_public_key() const
    {
-   return std::auto_ptr<Public_Key>(new ECDSA_PublicKey(m_pk));
+   return std::auto_ptr<Public_Key>(new ECDSA_PublicKey(*m_pk));
    }
 
 template<typename Derived> SecureVector<byte> EAC1_1_gen_CVC<Derived>::build_cert_body(MemoryRegion<byte> const& tbs)

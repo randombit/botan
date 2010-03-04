@@ -106,8 +106,8 @@ EAC1_1_CVC BOTAN_DLL make_cvc_cert(PK_Signer& signer,
 /**
 * Decode an EAC encoding ECDSA key
 */
-ECDSA_PublicKey BOTAN_DLL decode_eac1_1_key(const MemoryRegion<byte>& enc_key,
-                                            AlgorithmIdentifier& sig_algo);
+BOTAN_DLL ECDSA_PublicKey* decode_eac1_1_key(const MemoryRegion<byte>& enc_key,
+                                             AlgorithmIdentifier& sig_algo);
 
 }
 
