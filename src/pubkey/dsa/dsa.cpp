@@ -1,6 +1,6 @@
 /*
 * DSA
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -29,22 +29,6 @@ bool DSA_PublicKey::verify(const byte msg[], u32bit msg_len,
                            const byte sig[], u32bit sig_len) const
    {
    return core.verify(msg, msg_len, sig, sig_len);
-   }
-
-/*
-* Return the maximum input size in bits
-*/
-u32bit DSA_PublicKey::max_input_bits() const
-   {
-   return group_q().bits();
-   }
-
-/*
-* Return the size of each portion of the sig
-*/
-u32bit DSA_PublicKey::message_part_size() const
-   {
-   return group_q().bytes();
    }
 
 /*
