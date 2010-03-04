@@ -8,11 +8,8 @@
 */
 
 #include <botan/gost_3410.h>
-#include <botan/numthry.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/secmem.h>
-#include <botan/point_gfp.h>
 
 namespace Botan {
 
@@ -28,6 +25,17 @@ MemoryVector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
    x.binary_encode(bits + (bits.size() - y.bytes()));
 
    return DER_Encoder().encode(bits, OCTET_STRING).get_contents();
+   }
+
+AlgorithmIdentifier GOST_3410_PublicKey::algorithm_identifier() const
+   {
+   MemoryVector<byte> params =
+      DER_Encoder().start_cons(SEQUENCE)
+         .encode(OID(domain().get_oid()))
+         .end_cons()
+      .get_contents();
+
+   return AlgorithmIdentifier(get_oid(), params);
    }
 
 GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,

@@ -43,6 +43,8 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey,
       */
       std::string algo_name() const { return "GOST-34.10"; }
 
+      AlgorithmIdentifier algorithm_identifier() const;
+
       MemoryVector<byte> x509_subject_public_key() const;
 
       /**
