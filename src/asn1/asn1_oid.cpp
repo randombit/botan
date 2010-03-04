@@ -20,7 +20,15 @@ OID::OID(const std::string& oid_str)
    {
    if(oid_str != "")
       {
-      id = parse_asn1_oid(oid_str);
+      try
+         {
+         id = parse_asn1_oid(oid_str);
+         }
+      catch(...)
+         {
+         throw Invalid_OID(oid_str);
+         }
+
       if(id.size() < 2 || id[0] > 2)
          throw Invalid_OID(oid_str);
       if((id[0] == 0 || id[0] == 1) && id[1] > 39)
