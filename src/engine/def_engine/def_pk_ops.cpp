@@ -49,9 +49,9 @@ namespace Botan {
 PK_Ops::Encryption*
 Default_Engine::get_encryption_op(const Public_Key& key) const
    {
-#if 0 && defined(BOTAN_HAS_RSA)
+#if defined(BOTAN_HAS_RSA)
    if(const RSA_PublicKey* s = dynamic_cast<const RSA_PublicKey*>(&key))
-      return new RSA_Encryption_Operation(*s);
+      return new RSA_Public_Operation(*s);
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
@@ -65,9 +65,9 @@ Default_Engine::get_encryption_op(const Public_Key& key) const
 PK_Ops::Decryption*
 Default_Engine::get_decryption_op(const Private_Key& key) const
    {
-#if 0 && defined(BOTAN_HAS_RSA)
+#if defined(BOTAN_HAS_RSA)
    if(const RSA_PrivateKey* s = dynamic_cast<const RSA_PrivateKey*>(&key))
-      return new RSA_Decryption_Operation(*s);
+      return new RSA_Private_Operation(*s);
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
@@ -99,7 +99,7 @@ Default_Engine::get_signature_op(const Private_Key& key) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PrivateKey* s = dynamic_cast<const RSA_PrivateKey*>(&key))
-      return new RSA_Signature_Operation(*s);
+      return new RSA_Private_Operation(*s);
 #endif
 
 #if defined(BOTAN_HAS_RW)
@@ -136,7 +136,7 @@ Default_Engine::get_verify_op(const Public_Key& key) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PublicKey* s = dynamic_cast<const RSA_PublicKey*>(&key))
-      return new RSA_Verification_Operation(*s);
+      return new RSA_Public_Operation(*s);
 #endif
 
 #if defined(BOTAN_HAS_RW)

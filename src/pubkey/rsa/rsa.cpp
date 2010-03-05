@@ -120,29 +120,46 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    return true;
    }
 
-RSA_Signature_Operation::RSA_Signature_Operation(const RSA_PrivateKey& rsa) :
+RSA_Private_Operation::RSA_Private_Operation(const RSA_PrivateKey& rsa) :
+   n(rsa.get_n()),
    q(rsa.get_q()),
    c(rsa.get_c()),
    powermod_d1_p(rsa.get_d1(), rsa.get_p()),
    powermod_d2_q(rsa.get_d2(), rsa.get_q()),
-   mod_p(rsa.get_p()),
-   n_bits(rsa.get_n().bits())
+   mod_p(rsa.get_p())
    {
    }
 
-SecureVector<byte>
-RSA_Signature_Operation::sign(const byte msg[], u32bit msg_len,
-                              RandomNumberGenerator&) const
+BigInt RSA_Private_Operation::private_op(const BigInt& m) const
    {
-   const u32bit n_bytes = (n_bits + 7) / 8;
+   if(m >= n)
+      throw Invalid_Argument("RSA private op - input is too large");
 
-   BigInt i(msg, msg_len);
-   BigInt j1 = powermod_d1_p(i);
-   BigInt j2 = powermod_d2_q(i);
+   BigInt j1 = powermod_d1_p(m);
+   BigInt j2 = powermod_d2_q(m);
 
    j1 = mod_p.reduce(sub_mul(j1, j2, c));
 
-   return BigInt::encode_1363(mul_add(j1, q, j2), n_bytes);
+   return mul_add(j1, q, j2);
+   }
+
+SecureVector<byte>
+RSA_Private_Operation::sign(const byte msg[], u32bit msg_len,
+                            RandomNumberGenerator&) const
+   {
+   BigInt m(msg, msg_len);
+   BigInt x = private_op(m);
+   return BigInt::encode_1363(x, n.bytes());
+   }
+
+/*
+* RSA Decryption Operation
+*/
+SecureVector<byte>
+RSA_Private_Operation::decrypt(const byte msg[], u32bit msg_len) const
+   {
+   BigInt m(msg, msg_len);
+   return BigInt::encode(private_op(m));
    }
 
 }
