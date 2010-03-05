@@ -16,12 +16,8 @@ arc4_openssl.cpp
 bn_powm.cpp
 bn_wrap.cpp
 ossl_bc.cpp
-ossl_dh.cpp
-ossl_dsa.cpp
-ossl_elg.cpp
-ossl_if.cpp
 ossl_md.cpp
-ossl_nr.cpp
+openssl_pk.cpp
 </source>
 
 <requires>
