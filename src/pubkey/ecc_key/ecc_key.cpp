@@ -35,20 +35,11 @@ EC_PublicKey::EC_PublicKey(const EC_Domain_Params& dom_par,
       }
    }
 
-AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const
-   {
-   return AlgorithmIdentifier(get_oid(), DER_domain());
-   }
-
-MemoryVector<byte> EC_PublicKey::x509_subject_public_key() const
-   {
-   return EC2OSP(public_point(), PointGFp::COMPRESSED);
-   }
-
 EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
                            const MemoryRegion<byte>& key_bits)
    {
    domain_params = EC_Domain_Params(alg_id.parameters);
+   domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
    public_key = PointGFp(OS2ECP(key_bits, domain().get_curve()));
 
@@ -60,6 +51,16 @@ EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
       {
       throw Decoding_Error("Invalid public point; not on curve");
       }
+   }
+
+AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const
+   {
+   return AlgorithmIdentifier(get_oid(), DER_domain());
+   }
+
+MemoryVector<byte> EC_PublicKey::x509_subject_public_key() const
+   {
+   return EC2OSP(public_point(), PointGFp::COMPRESSED);
    }
 
 void EC_PublicKey::set_parameter_encoding(EC_Domain_Params_Encoding form)
@@ -92,6 +93,8 @@ EC_PrivateKey::EC_PrivateKey(const EC_Domain_Params& dom_par,
                              const BigInt& priv_key)
    {
    domain_params = dom_par;
+   domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
+
    public_key = domain().get_base_point() * priv_key;
    private_key = priv_key;
    }
@@ -103,6 +106,7 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
                              const EC_Domain_Params& dom_par)
    {
    domain_params = dom_par;
+   domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
    private_key = BigInt::random_integer(rng, 1, domain().get_order());
    public_key = domain().get_base_point() * private_key;
@@ -132,6 +136,7 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
                              const MemoryRegion<byte>& key_bits)
    {
    domain_params = EC_Domain_Params(alg_id.parameters);
+   domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
    u32bit version;
    SecureVector<byte> octstr_secret;
