@@ -9,37 +9,7 @@
 
 #include <botan/ecdsa.h>
 
-#include <iostream>
-
 namespace Botan {
-
-bool ECDSA_PublicKey::verify(const byte msg[], u32bit msg_len,
-                             const byte sig[], u32bit sig_len) const
-   {
-   const BigInt& n = domain().get_order();
-
-   if(n == 0)
-      throw Invalid_State("ECDSA_PublicKey::verify: Not initialized");
-
-   if(sig_len != n.bytes()*2)
-      return false;
-
-   BigInt e(msg, msg_len);
-
-   BigInt r(sig, sig_len / 2);
-   BigInt s(sig + sig_len / 2, sig_len / 2);
-
-   if(r < 0 || r >= n || s < 0 || s >= n)
-      return false;
-
-   BigInt w = inverse_mod(s, n);
-
-   PointGFp R = w * (e * domain().get_base_point() + r*public_point());
-   if(R.is_zero())
-      return false;
-
-   return (R.get_affine_x() % n == r);
-   }
 
 ECDSA_Signature_Operation::ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa) :
    base_point(ecdsa.domain().get_base_point()),
