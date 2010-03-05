@@ -12,14 +12,10 @@ gmp_wrap.h
 </header:internal>
 
 <source>
-gmp_dh.cpp
-gmp_dsa.cpp
-gmp_elg.cpp
-gmp_if.cpp
 gmp_mem.cpp
-gmp_nr.cpp
 gmp_powm.cpp
 gmp_wrap.cpp
+gnump_pk.cpp
 </source>
 
 <requires>
