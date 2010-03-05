@@ -9,6 +9,9 @@
 #define BOTAN_DSA_H__
 
 #include <botan/dl_algo.h>
+#include <botan/pk_ops.h>
+#include <botan/reducer.h>
+#include <botan/pow_mod.h>
 #include <botan/dsa_core.h>
 
 namespace Botan {
@@ -51,11 +54,6 @@ class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
                                  public virtual DL_Scheme_PrivateKey
    {
    public:
-      SecureVector<byte> sign(const byte hash[], u32bit hash_len,
-                              RandomNumberGenerator& rng) const;
-
-      bool check_key(RandomNumberGenerator& rng, bool strong) const;
-
       DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
                      const MemoryRegion<byte>& key_bits,
                      RandomNumberGenerator& rng);
@@ -63,6 +61,29 @@ class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
       DSA_PrivateKey(RandomNumberGenerator& rng,
                      const DL_Group& group,
                      const BigInt& private_key = 0);
+
+      bool check_key(RandomNumberGenerator& rng, bool strong) const;
+
+      SecureVector<byte> sign(const byte hash[], u32bit hash_len,
+                              RandomNumberGenerator& rng) const;
+   };
+
+class BOTAN_DLL DSA_Signature_Operation : public PK_Ops::Signature_Operation
+   {
+   public:
+      DSA_Signature_Operation(const DSA_PrivateKey& dsa);
+
+      u32bit message_parts() const { return 2; }
+      u32bit message_part_size() const { return q.bytes(); }
+      u32bit max_input_bits() const { return q.bits(); }
+
+      SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+                              RandomNumberGenerator& rng);
+   private:
+      const BigInt& q;
+      const BigInt& x;
+      Fixed_Base_Power_Mod powermod_g_p;
+      Modular_Reducer mod_q;
    };
 
 }

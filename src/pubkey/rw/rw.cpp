@@ -123,4 +123,37 @@ bool RW_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    return true;
    }
 
+RW_Signature_Operation::RW_Signature_Operation(const RW_PrivateKey& rw) :
+   q(rw.get_q()),
+   c(rw.get_c()),
+   n(rw.get_n()),
+   powermod_d1_p(rw.get_d1(), rw.get_p()),
+   powermod_d2_q(rw.get_d2(), rw.get_q()),
+   mod_p(rw.get_p())
+   {
+   }
+
+SecureVector<byte> RW_Signature_Operation::sign(const byte msg[],
+                                                u32bit msg_len,
+                                                RandomNumberGenerator&)
+   {
+   BigInt i(msg, msg_len);
+
+   if(i >= n || i % 16 != 12)
+      throw Invalid_Argument("Rabin-Williams: invalid input");
+
+   if(jacobi(i, n) != 1)
+      i >>= 1;
+
+   BigInt j1 = powermod_d1_p(i);
+   BigInt j2 = powermod_d2_q(i);
+   j1 = mod_p.reduce(sub_mul(j1, j2, c));
+
+   BigInt r = mul_add(j1, q, j2);
+
+   r = std::min(r, n - r);
+
+   return BigInt::encode_1363(r, n.bytes());
+   }
+
 }

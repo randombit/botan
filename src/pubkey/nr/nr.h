@@ -9,6 +9,7 @@
 #define BOTAN_NYBERG_RUEPPEL_H__
 
 #include <botan/dl_algo.h>
+#include <botan/pk_ops.h>
 #include <botan/nr_core.h>
 
 namespace Botan {
@@ -24,11 +25,11 @@ class BOTAN_DLL NR_PublicKey : public PK_Verifying_with_MR_Key,
 
       SecureVector<byte> verify(const byte sig[], u32bit sig_len) const;
 
-      u32bit max_input_bits() const { return (group_q().bits() - 1); }
-
       DL_Group::Format group_format() const { return DL_Group::ANSI_X9_57; }
+
       u32bit message_parts() const { return 2; }
       u32bit message_part_size() const { return group_q().bytes(); }
+      u32bit max_input_bits() const { return (group_q().bits() - 1); }
 
       NR_PublicKey(const AlgorithmIdentifier& alg_id,
                    const MemoryRegion<byte>& key_bits);
@@ -59,6 +60,24 @@ class BOTAN_DLL NR_PrivateKey : public NR_PublicKey,
       NR_PrivateKey(RandomNumberGenerator& rng,
                     const DL_Group& group,
                     const BigInt& x = 0);
+   };
+
+class BOTAN_DLL NR_Signature_Operation : public PK_Ops::Signature_Operation
+   {
+   public:
+      NR_Signature_Operation(const NR_PrivateKey& nr);
+
+      u32bit message_parts() const { return 2; }
+      u32bit message_part_size() const { return q.bytes(); }
+      u32bit max_input_bits() const { return (q.bits() - 1); }
+
+      SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+                              RandomNumberGenerator& rng);
+   private:
+      const BigInt& q;
+      const BigInt& x;
+      Fixed_Base_Power_Mod powermod_g_p;
+      Modular_Reducer mod_q;
    };
 
 }

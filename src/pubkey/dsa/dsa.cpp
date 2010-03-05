@@ -109,4 +109,37 @@ bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    return true;
    }
 
+DSA_Signature_Operation::DSA_Signature_Operation(const DSA_PrivateKey& dsa) :
+   q(dsa.group_q()),
+   x(dsa.get_x()),
+   powermod_g_p(dsa.group_g(), dsa.group_p()),
+   mod_q(dsa.group_q())
+   {
+   }
+
+SecureVector<byte> DSA_Signature_Operation::sign(const byte msg[],
+                                                 u32bit msg_len,
+                                                 RandomNumberGenerator& rng)
+   {
+   rng.add_entropy(msg, msg_len);
+
+   BigInt k;
+   do
+      k.randomize(rng, q.bits());
+   while(k >= q);
+
+   BigInt i(msg, msg_len);
+
+   BigInt r = mod_q.reduce(powermod_g_p(k));
+   BigInt s = mod_q.multiply(inverse_mod(k, q), mul_add(x, r, i));
+
+   if(r.is_zero() || s.is_zero())
+      throw Internal_Error("DSA signature gen failure: r or s was zero");
+
+   SecureVector<byte> output(2*q.bytes());
+   r.binary_encode(output + (output.size() / 2 - r.bytes()));
+   s.binary_encode(output + (output.size() - s.bytes()));
+   return output;
+   }
+
 }

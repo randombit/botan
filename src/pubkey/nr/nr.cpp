@@ -1,6 +1,6 @@
 /*
 * Nyberg-Rueppel
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -113,6 +113,41 @@ bool NR_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
       }
 
    return true;
+   }
+
+NR_Signature_Operation::NR_Signature_Operation(const NR_PrivateKey& nr) :
+   q(nr.group_q()),
+   x(nr.get_x()),
+   powermod_g_p(nr.group_g(), nr.group_p()),
+   mod_q(nr.group_q())
+   {
+   }
+
+SecureVector<byte> NR_Signature_Operation::sign(const byte msg[],
+                                                u32bit msg_len,
+                                                RandomNumberGenerator& rng)
+   {
+   rng.add_entropy(msg, msg_len);
+
+   BigInt k;
+   do
+      k.randomize(rng, q.bits());
+   while(k >= q);
+
+   BigInt f(msg, msg_len);
+
+   if(f >= q)
+      throw Invalid_Argument("NR_Signature_Operation: Input is out of range");
+
+   BigInt c = mod_q.reduce(powermod_g_p(k) + f);
+   if(c.is_zero())
+      throw Internal_Error("Default_NR_Op::sign: c was zero");
+   BigInt d = mod_q.reduce(k - x * c);
+
+   SecureVector<byte> output(2*q.bytes());
+   c.binary_encode(output + (output.size() / 2 - c.bytes()));
+   d.binary_encode(output + (output.size() - d.bytes()));
+   return output;
    }
 
 }

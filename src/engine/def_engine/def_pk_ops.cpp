@@ -1,6 +1,6 @@
 /*
 * PK Operations
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -21,6 +21,34 @@
 
 #if defined(BOTAN_HAS_ELGAMAL)
   #include <botan/elg_op.h>
+#endif
+
+#if defined(BOTAN_HAS_RSA)
+  #include <botan/rsa.h>
+#endif
+
+#if defined(BOTAN_HAS_RW)
+  #include <botan/rw.h>
+#endif
+
+#if defined(BOTAN_HAS_DSA)
+  #include <botan/dsa.h>
+#endif
+
+#if defined(BOTAN_HAS_ECDSA)
+  #include <botan/ecdsa.h>
+#endif
+
+#if defined(BOTAN_HAS_ELGAMAL)
+  #include <botan/elgamal.h>
+#endif
+
+#if defined(BOTAN_HAS_GOST_3410_2001)
+  #include <botan/gost_3410.h>
+#endif
+
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
+  #include <botan/nr.h>
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
@@ -44,6 +72,43 @@ Default_Engine::get_key_agreement_op(const Private_Key& key) const
 #if defined(BOTAN_HAS_ECDH)
    if(const ECDH_PrivateKey* ecdh = dynamic_cast<const ECDH_PrivateKey*>(&key))
       return new ECDH_KA_Operation(*ecdh);
+#endif
+
+   return 0;
+   }
+
+PK_Ops::Signature_Operation*
+Default_Engine::get_signature_op(const Private_Key& key) const
+   {
+#if defined(BOTAN_HAS_RSA)
+   if(const RSA_PrivateKey* s = dynamic_cast<const RSA_PrivateKey*>(&key))
+      return new RSA_Signature_Operation(*s);
+#endif
+
+#if defined(BOTAN_HAS_RW)
+   if(const RW_PrivateKey* s = dynamic_cast<const RW_PrivateKey*>(&key))
+      return new RW_Signature_Operation(*s);
+#endif
+
+#if defined(BOTAN_HAS_DSA)
+   if(const DSA_PrivateKey* s = dynamic_cast<const DSA_PrivateKey*>(&key))
+      return new DSA_Signature_Operation(*s);
+#endif
+
+#if defined(BOTAN_HAS_ECDSA)
+   if(const ECDSA_PrivateKey* s = dynamic_cast<const ECDSA_PrivateKey*>(&key))
+      return new ECDSA_Signature_Operation(*s);
+#endif
+
+#if defined(BOTAN_HAS_GOST_3410_2001)
+   if(const GOST_3410_PrivateKey* s =
+         dynamic_cast<const GOST_3410_PrivateKey*>(&key))
+      return new GOST_3410_Signature_Operation(*s);
+#endif
+
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
+   if(const NR_PrivateKey* s = dynamic_cast<const NR_PrivateKey*>(&key))
+      return new NR_Signature_Operation(*s);
 #endif
 
    return 0;

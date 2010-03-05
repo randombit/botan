@@ -11,6 +11,7 @@
 #include <botan/if_core.h>
 #include <botan/x509_key.h>
 #include <botan/pkcs8.h>
+#include <botan/pk_ops.h>
 
 namespace Botan {
 
@@ -91,6 +92,10 @@ class BOTAN_DLL IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
       * @return d
       */
       const BigInt& get_d() const { return d; }
+
+      const BigInt& get_c() const { return c; }
+      const BigInt& get_d1() const { return d1; }
+      const BigInt& get_d2() const { return d2; }
 
       MemoryVector<byte> pkcs8_private_key() const;
 

@@ -138,4 +138,29 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    return true;
    }
 
+RSA_Signature_Operation::RSA_Signature_Operation(const RSA_PrivateKey& rsa) :
+   q(rsa.get_q()),
+   c(rsa.get_c()),
+   powermod_d1_p(rsa.get_d1(), rsa.get_p()),
+   powermod_d2_q(rsa.get_d2(), rsa.get_q()),
+   mod_p(rsa.get_p()),
+   n_bits(rsa.get_n().bits())
+   {
+   }
+
+SecureVector<byte> RSA_Signature_Operation::sign(const byte msg[],
+                                                 u32bit msg_len,
+                                                 RandomNumberGenerator& rng)
+   {
+   const u32bit n_bytes = (n_bits + 7) / 8;
+
+   BigInt i(msg, msg_len);
+   BigInt j1 = powermod_d1_p(i);
+   BigInt j2 = powermod_d2_q(i);
+
+   j1 = mod_p.reduce(sub_mul(j1, j2, c));
+
+   return BigInt::encode_1363(mul_add(j1, q, j2), n_bytes);
+   }
+
 }

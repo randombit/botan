@@ -20,7 +20,11 @@ class Default_Engine : public Engine
    public:
       std::string provider_name() const { return "core"; }
 
-      PK_Ops::KA_Operation* get_key_agreement_op(const Private_Key&) const;
+      PK_Ops::KA_Operation*
+         get_key_agreement_op(const Private_Key& key) const;
+
+      PK_Ops::Signature_Operation*
+         get_signature_op(const Private_Key& key) const;
 
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
       IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,

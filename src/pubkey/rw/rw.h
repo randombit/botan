@@ -49,11 +49,6 @@ class BOTAN_DLL RW_PrivateKey : public RW_PublicKey,
                                 public IF_Scheme_PrivateKey
    {
    public:
-      SecureVector<byte> sign(const byte[], u32bit,
-                              RandomNumberGenerator& rng) const;
-
-      bool check_key(RandomNumberGenerator& rng, bool) const;
-
       RW_PrivateKey(const AlgorithmIdentifier& alg_id,
                     const MemoryRegion<byte>& key_bits,
                     RandomNumberGenerator& rng) :
@@ -66,6 +61,30 @@ class BOTAN_DLL RW_PrivateKey : public RW_PublicKey,
          IF_Scheme_PrivateKey(rng, p, q, e, d, n) {}
 
       RW_PrivateKey(RandomNumberGenerator& rng, u32bit bits, u32bit = 2);
+
+      bool check_key(RandomNumberGenerator& rng, bool) const;
+
+      SecureVector<byte> sign(const byte[], u32bit,
+                              RandomNumberGenerator& rng) const;
+   };
+
+class BOTAN_DLL RW_Signature_Operation : public PK_Ops::Signature_Operation
+   {
+   public:
+      RW_Signature_Operation(const RW_PrivateKey& rw);
+
+      u32bit max_input_bits() const { return (n.bits() - 1); }
+
+      SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+                              RandomNumberGenerator& rng);
+   private:
+      const BigInt& q;
+      const BigInt& c;
+      const BigInt& n;
+
+      Fixed_Exponent_Power_Mod powermod_d1_p, powermod_d2_q;
+      Modular_Reducer mod_p;
+      u32bit n_bits;
    };
 
 }

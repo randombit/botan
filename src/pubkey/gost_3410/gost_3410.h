@@ -2,7 +2,7 @@
 * GOST 34.10-2001
 * (C) 2007 Falko Strenzke, FlexSecure GmbH
 *          Manuel Hartl, FlexSecure GmbH
-* (C) 2008-2009 Jack Lloyd
+* (C) 2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -11,6 +11,7 @@
 #define BOTAN_GOST_3410_KEY_H__
 
 #include <botan/ecc_key.h>
+#include <botan/pk_ops.h>
 
 namespace Botan {
 
@@ -114,6 +115,20 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
       */
       SecureVector<byte> sign(const byte message[], u32bit mess_len,
                               RandomNumberGenerator& rng) const;
+   };
+
+class BOTAN_DLL GOST_3410_Signature_Operation : public PK_Ops::Signature_Operation
+   {
+   public:
+      GOST_3410_Signature_Operation(const GOST_3410_PrivateKey& gost_3410);
+
+      SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+                              RandomNumberGenerator& rng);
+
+   private:
+      const PointGFp& base_point;
+      const BigInt& order;
+      const BigInt& x;
    };
 
 }

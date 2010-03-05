@@ -11,6 +11,7 @@
 #define BOTAN_ECDSA_KEY_H__
 
 #include <botan/ecc_key.h>
+#include <botan/pk_ops.h>
 
 namespace Botan {
 
@@ -105,6 +106,24 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
 
       SecureVector<byte> sign(const byte message[], u32bit mess_len,
                               RandomNumberGenerator& rng) const;
+   };
+
+class BOTAN_DLL ECDSA_Signature_Operation : public PK_Ops::Signature_Operation
+   {
+   public:
+      ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa);
+
+      SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+                              RandomNumberGenerator& rng);
+
+      u32bit message_parts() const { return 2; }
+      u32bit message_part_size() const { return order.bytes(); }
+      u32bit max_input_bits() const { return order.bits(); }
+
+   private:
+      const PointGFp& base_point;
+      const BigInt& order;
+      const BigInt& x;
    };
 
 }

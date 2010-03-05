@@ -122,21 +122,23 @@ SecureVector<byte> PK_Decryptor_MR_with_EME::dec(const byte msg[],
 /*
 * PK_Signer Constructor
 */
-PK_Signer::PK_Signer(const PK_Signing_Key& k, EMSA* emsa_obj) :
-   key(k), emsa(emsa_obj)
+PK_Signer::PK_Signer(const Private_Key& key, EMSA* emsa_obj) :
+   emsa(emsa_obj)
    {
-   sig_format = IEEE_1363;
-   }
+   Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
 
-/*
-* Set the signature format
-*/
-void PK_Signer::set_output_format(Signature_Format format)
-   {
-   if(key.message_parts() == 1 && format != IEEE_1363)
-      throw Invalid_State("PK_Signer: Cannot set the output format for " +
-                          key.algo_name() + " keys");
-   sig_format = format;
+   while(const Engine* engine = i.next())
+      {
+      op = engine->get_signature_op(key);
+      if(op)
+         break;
+      }
+
+   if(op == 0)
+      throw Lookup_Error("PK_Signer: No working engine for " +
+                         key.algo_name());
+
+   sig_format = IEEE_1363;
    }
 
 /*
@@ -150,15 +152,6 @@ SecureVector<byte> PK_Signer::sign_message(const byte msg[], u32bit length,
    }
 
 /*
-* Sign a message
-*/
-SecureVector<byte> PK_Signer::sign_message(const MemoryRegion<byte>& msg,
-                                           RandomNumberGenerator& rng)
-   {
-   return sign_message(msg, msg.size(), rng);
-   }
-
-/*
 * Add more to the message to be signed
 */
 void PK_Signer::update(const byte in[], u32bit length)
@@ -167,42 +160,26 @@ void PK_Signer::update(const byte in[], u32bit length)
    }
 
 /*
-* Add more to the message to be signed
-*/
-void PK_Signer::update(byte in)
-   {
-   update(&in, 1);
-   }
-
-/*
-* Add more to the message to be signed
-*/
-void PK_Signer::update(const MemoryRegion<byte>& in)
-   {
-   update(in, in.size());
-   }
-
-/*
 * Create a signature
 */
 SecureVector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
    {
    SecureVector<byte> encoded = emsa->encoding_of(emsa->raw_data(),
-                                                  key.max_input_bits(),
+                                                  op->max_input_bits(),
                                                   rng);
 
-   SecureVector<byte> plain_sig = key.sign(encoded, encoded.size(), rng);
+   SecureVector<byte> plain_sig = op->sign(encoded, encoded.size(), rng);
 
-   if(key.message_parts() == 1 || sig_format == IEEE_1363)
+   if(op->message_parts() == 1 || sig_format == IEEE_1363)
       return plain_sig;
 
    if(sig_format == DER_SEQUENCE)
       {
-      if(plain_sig.size() % key.message_parts())
+      if(plain_sig.size() % op->message_parts())
          throw Encoding_Error("PK_Signer: strange signature size found");
-      const u32bit SIZE_OF_PART = plain_sig.size() / key.message_parts();
+      const u32bit SIZE_OF_PART = plain_sig.size() / op->message_parts();
 
-      std::vector<BigInt> sig_parts(key.message_parts());
+      std::vector<BigInt> sig_parts(op->message_parts());
       for(u32bit j = 0; j != sig_parts.size(); ++j)
          sig_parts[j].binary_decode(plain_sig + SIZE_OF_PART*j, SIZE_OF_PART);
 

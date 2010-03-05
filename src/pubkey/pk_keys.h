@@ -125,10 +125,6 @@ class BOTAN_DLL PK_Decrypting_Key : public virtual Private_Key
 */
 class BOTAN_DLL PK_Signing_Key : public virtual Private_Key
    {
-   public:
-      virtual SecureVector<byte> sign(const byte[], u32bit,
-                                      RandomNumberGenerator& rng) const = 0;
-      virtual ~PK_Signing_Key() {}
    };
 
 /**

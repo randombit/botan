@@ -71,4 +71,40 @@ SecureVector<byte> ECDSA_PrivateKey::sign(const byte msg[],
    return output;
    }
 
+ECDSA_Signature_Operation::ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa) :
+   base_point(ecdsa.domain().get_base_point()),
+   order(ecdsa.domain().get_order()),
+   x(ecdsa.private_value())
+   {
+   }
+
+SecureVector<byte> ECDSA_Signature_Operation::sign(const byte msg[],
+                                                   u32bit msg_len,
+                                                   RandomNumberGenerator& rng)
+   {
+   rng.add_entropy(msg, msg_len);
+
+   BigInt k;
+   do
+      k.randomize(rng, order.bits()-1);
+   while(k >= order);
+
+   BigInt e(msg, msg_len);
+
+   PointGFp k_times_P = base_point * k;
+   BigInt r = k_times_P.get_affine_x() % order;
+
+   if(r == 0)
+      throw Internal_Error("ECDSA_Signature_Operation: r was zero");
+
+   BigInt k_inv = inverse_mod(k, order);
+
+   BigInt s = (((r * x) + e) * k_inv) % order;
+
+   SecureVector<byte> output(2*order.bytes());
+   r.binary_encode(output + (output.size() / 2 - r.bytes()));
+   s.binary_encode(output + (output.size() - s.bytes()));
+   return output;
+   }
+
 }

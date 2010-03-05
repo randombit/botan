@@ -112,13 +112,14 @@ class BOTAN_DLL PK_Signer
       * @return the signature
       */
       SecureVector<byte> sign_message(const MemoryRegion<byte>& in,
-                                      RandomNumberGenerator& rng);
+                                      RandomNumberGenerator& rng)
+         { return sign_message(&in[0], in.size(), rng); }
 
       /**
       * Add a message part (single byte).
       * @param the byte to add
       */
-      void update(byte in);
+      void update(byte in) { update(&in, 1); }
 
       /**
       * Add a message part.
@@ -131,7 +132,7 @@ class BOTAN_DLL PK_Signer
       * Add a message part.
       * @param in the message part to add
       */
-      void update(const MemoryRegion<byte>& in);
+      void update(const MemoryRegion<byte>& in) { update(&in[0], in.size()); }
 
       /**
       * Get the signature of the so far processed message (provided by the
@@ -145,7 +146,7 @@ class BOTAN_DLL PK_Signer
       * Set the output format of the signature.
       * @param format the signature format to use
       */
-      void set_output_format(Signature_Format format);
+      void set_output_format(Signature_Format format) { sig_format = format; }
 
       /**
       * Construct a PK Signer.
@@ -153,16 +154,16 @@ class BOTAN_DLL PK_Signer
       * @param emsa the EMSA to use
       * An example would be "EMSA1(SHA-224)".
       */
-      PK_Signer(const PK_Signing_Key& key, EMSA* emsa);
+      PK_Signer(const Private_Key& key, EMSA* emsa);
 
-      ~PK_Signer() { delete emsa; }
+      ~PK_Signer() { delete op; delete emsa; }
    private:
       PK_Signer(const PK_Signer&);
       PK_Signer& operator=(const PK_Signer&);
 
-      const PK_Signing_Key& key;
-      Signature_Format sig_format;
+      PK_Ops::Signature_Operation* op;
       EMSA* emsa;
+      Signature_Format sig_format;
    };
 
 /**

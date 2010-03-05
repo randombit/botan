@@ -141,4 +141,45 @@ GOST_3410_PrivateKey::sign(const byte msg[],
    return output;
    }
 
+GOST_3410_Signature_Operation::GOST_3410_Signature_Operation(
+   const GOST_3410_PrivateKey& gost_3410) :
+
+   base_point(gost_3410.domain().get_base_point()),
+   order(gost_3410.domain().get_order()),
+   x(gost_3410.private_value())
+   {
+   }
+
+SecureVector<byte> GOST_3410_Signature_Operation::sign(const byte msg[],
+                                                 u32bit msg_len,
+                                                 RandomNumberGenerator& rng)
+   {
+   BigInt k;
+   do
+      k.randomize(rng, order.bits()-1);
+   while(k >= order);
+
+   BigInt e(msg, msg_len);
+
+   e %= order;
+   if(e == 0)
+      e = 1;
+
+   PointGFp k_times_P = base_point * k;
+   k_times_P.check_invariants();
+
+   BigInt r = k_times_P.get_affine_x() % order;
+
+   BigInt s = (r*x + k*e) % order;
+
+   if(r == 0 || s == 0)
+      throw Invalid_State("GOST 34.10: r == 0 || s == 0");
+
+   SecureVector<byte> output(2*order.bytes());
+   r.binary_encode(output + (output.size() / 2 - r.bytes()));
+   s.binary_encode(output + (output.size() - s.bytes()));
+   return output;
+   }
+
+
 }
