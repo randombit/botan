@@ -25,8 +25,6 @@ class BOTAN_DLL RSA_PublicKey : public PK_Encrypting_Key,
       SecureVector<byte> encrypt(const byte[], u32bit,
                                  RandomNumberGenerator& rng) const;
 
-      SecureVector<byte> verify(const byte[], u32bit) const;
-
       RSA_PublicKey(const AlgorithmIdentifier& alg_id,
                     const MemoryRegion<byte>& key_bits) :
          IF_Scheme_PublicKey(alg_id, key_bits)

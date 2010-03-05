@@ -34,15 +34,6 @@ SecureVector<byte> RSA_PublicKey::encrypt(const byte in[], u32bit len,
    }
 
 /*
-* RSA Verification Function
-*/
-SecureVector<byte> RSA_PublicKey::verify(const byte in[], u32bit len) const
-   {
-   BigInt i(in, len);
-   return BigInt::encode(public_op(i));
-   }
-
-/*
 * Create a RSA private key
 */
 RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,

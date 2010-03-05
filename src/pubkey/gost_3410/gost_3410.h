@@ -61,16 +61,6 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey,
       u32bit message_part_size() const
          { return domain().get_order().bytes(); }
 
-      /**
-      * Verify a message with this key.
-      * @param message the byte array containing the message
-      * @param mess_len the number of bytes in the message byte array
-      * @param signature the byte array containing the signature
-      * @param sig_len the number of bytes in the signature byte array
-      */
-      bool verify(const byte message[], u32bit mess_len,
-                  const byte signature[], u32bit sig_len) const;
-
    protected:
       GOST_3410_PublicKey() {}
    };

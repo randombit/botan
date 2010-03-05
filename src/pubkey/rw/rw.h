@@ -21,8 +21,6 @@ class BOTAN_DLL RW_PublicKey : public PK_Verifying_with_MR_Key,
    public:
       std::string algo_name() const { return "RW"; }
 
-      SecureVector<byte> verify(const byte[], u32bit) const;
-
       RW_PublicKey(const AlgorithmIdentifier& alg_id,
                    const MemoryRegion<byte>& key_bits) :
          IF_Scheme_PublicKey(alg_id, key_bits)
@@ -38,7 +36,6 @@ class BOTAN_DLL RW_PublicKey : public PK_Verifying_with_MR_Key,
 
    protected:
       RW_PublicKey() {}
-      BigInt public_op(const BigInt&) const;
    };
 
 /*
@@ -63,9 +60,6 @@ class BOTAN_DLL RW_PrivateKey : public RW_PublicKey,
       RW_PrivateKey(RandomNumberGenerator& rng, u32bit bits, u32bit = 2);
 
       bool check_key(RandomNumberGenerator& rng, bool) const;
-
-      SecureVector<byte> sign(const byte[], u32bit,
-                              RandomNumberGenerator& rng) const;
    };
 
 class BOTAN_DLL RW_Signature_Operation : public PK_Ops::Signature

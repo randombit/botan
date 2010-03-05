@@ -68,39 +68,6 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
       }
    }
 
-bool GOST_3410_PublicKey::verify(const byte msg[], u32bit msg_len,
-                                 const byte sig[], u32bit sig_len) const
-   {
-   const BigInt& n = domain().get_order();
-
-   if(n == 0)
-      throw Invalid_State("domain parameters not set");
-
-   if(sig_len != n.bytes()*2)
-      return false;
-
-   BigInt e(msg, msg_len);
-
-   BigInt r(sig, sig_len / 2);
-   BigInt s(sig + sig_len / 2, sig_len / 2);
-
-   if(r < 0 || r >= n || s < 0 || s >= n)
-      return false;
-
-   e %= n;
-   if(e == 0)
-      e = 1;
-
-   BigInt v = inverse_mod(e, n);
-
-   BigInt z1 = (s*v) % n;
-   BigInt z2 = (-r*v) % n;
-
-   PointGFp R = (z1 * domain().get_base_point() + z2 * public_point());
-
-   return (R.get_affine_x() == r);
-   }
-
 GOST_3410_Signature_Operation::GOST_3410_Signature_Operation(
    const GOST_3410_PrivateKey& gost_3410) :
 

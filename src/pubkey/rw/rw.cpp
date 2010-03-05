@@ -15,34 +15,6 @@
 namespace Botan {
 
 /*
-* Rabin-Williams Public Operation
-*/
-BigInt RW_PublicKey::public_op(const BigInt& i) const
-   {
-   if((i > (n >> 1)) || i.is_negative())
-      throw Invalid_Argument(algo_name() + "::public_op: i > n / 2 || i < 0");
-
-   BigInt r = core.public_op(i);
-   if(r % 16 == 12) return r;
-   if(r % 8 == 6)   return 2*r;
-
-   r = n - r;
-   if(r % 16 == 12) return r;
-   if(r % 8 == 6)   return 2*r;
-
-   throw Invalid_Argument(algo_name() + "::public_op: Invalid input");
-   }
-
-/*
-* Rabin-Williams Verification Function
-*/
-SecureVector<byte> RW_PublicKey::verify(const byte in[], u32bit len) const
-   {
-   BigInt i(in, len);
-   return BigInt::encode(public_op(i));
-   }
-
-/*
 * Create a Rabin-Williams private key
 */
 RW_PrivateKey::RW_PrivateKey(RandomNumberGenerator& rng,
@@ -71,27 +43,6 @@ RW_PrivateKey::RW_PrivateKey(RandomNumberGenerator& rng,
    core = IF_Core(rng, e, n, d, p, q, d1, d2, c);
 
    gen_check(rng);
-   }
-
-/*
-* Rabin-Williams Signature Operation
-*/
-SecureVector<byte> RW_PrivateKey::sign(const byte in[], u32bit len,
-                                       RandomNumberGenerator&) const
-   {
-   BigInt i(in, len);
-   if(i >= n || i % 16 != 12)
-      throw Invalid_Argument(algo_name() + "::sign: Invalid input");
-
-   BigInt r;
-   if(jacobi(i, n) == 1) r = core.private_op(i);
-   else                  r = core.private_op(i >> 1);
-
-   r = std::min(r, n - r);
-   if(i != public_op(r))
-      throw Self_Test_Failure(algo_name() + " private operation check failed");
-
-   return BigInt::encode_1363(r, n.bytes());
    }
 
 /*
