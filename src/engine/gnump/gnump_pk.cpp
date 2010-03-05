@@ -9,6 +9,12 @@
 #include <botan/internal/gmp_wrap.h>
 #include <gmp.h>
 
+/* GnuMP 5.0 and later have a side-channel resistent powm */
+#if defined(HAVE_MPZ_POWM_SEC)
+   #undef mpz_powm
+   #define mpz_powm mpz_powm_sec
+#endif
+
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
 #endif
