@@ -18,6 +18,8 @@ namespace Botan {
 class BOTAN_DLL Modular_Reducer
    {
    public:
+      const BigInt& get_modulus() const { return modulus; }
+
       BigInt reduce(const BigInt& x) const;
 
       /**
