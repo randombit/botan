@@ -114,7 +114,6 @@ class BOTAN_DLL RSA_Private_Operation : public PK_Ops::Signature,
       const BigInt& c;
       Fixed_Exponent_Power_Mod powermod_d1_p, powermod_d2_q;
       Modular_Reducer mod_p;
-      u32bit n_bits;
    };
 
 class BOTAN_DLL RSA_Public_Operation : public PK_Ops::Verification,
