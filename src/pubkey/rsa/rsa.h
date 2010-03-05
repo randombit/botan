@@ -115,6 +115,27 @@ class BOTAN_DLL RSA_Signature_Operation : public PK_Ops::Signature_Operation
       u32bit n_bits;
    };
 
+class BOTAN_DLL RSA_Verification_Operation : public PK_Ops::Verification
+   {
+   public:
+      RSA_Verification_Operation(const RSA_PublicKey& rsa) :
+         powermod_e_n(rsa.get_e(), rsa.get_n()),
+         n_bits(rsa.get_n().bits())
+         {}
+
+      u32bit max_input_bits() const { return (n_bits - 1); }
+      bool with_recovery() const { return true; }
+
+      SecureVector<byte> verify_mr(const byte msg[], u32bit msg_len)
+         {
+         return BigInt::encode(powermod_e_n(BigInt(msg, msg_len)));
+         }
+
+   private:
+      Fixed_Exponent_Power_Mod powermod_e_n;
+      u32bit n_bits;
+   };
+
 }
 
 #endif

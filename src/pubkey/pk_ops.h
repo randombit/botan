@@ -49,7 +49,7 @@ class Signature_Operation
       virtual ~Signature_Operation() {}
    };
 
-class Verification_Operation
+class BOTAN_DLL Verification
    {
    public:
       /**
@@ -59,19 +59,50 @@ class Verification_Operation
       virtual u32bit max_input_bits() const = 0;
 
       /**
-      * @return boolean specifying if this key type supports recovery
+      * Find out the number of message parts supported by this scheme.
+      * @return the number of message parts
+      */
+      virtual u32bit message_parts() const { return 1; }
+
+      /**
+      * Find out the message part size supported by this scheme/key.
+      * @return the size of the message parts
+      */
+      virtual u32bit message_part_size() const { return 0; }
+
+      /**
+      * @return boolean specifying if this key type supports message
+      * recovery and thus if you need to call verify() or verify_mr()
       */
       virtual bool with_recovery() const = 0;
 
       /*
-      * Perform a signature operation
+      * Perform a signature check operation
       * @param msg the message
       * @param msg_len the length of msg in bytes
-      * @returns recovered message if with_recovery() otherwise {0} or {1}
+      * @param sig the signature
+      * @param sig_len the length of sig in bytes
+      * @returns if signature is a valid one for message
       */
-      virtual SecureVector<byte> verify(const byte msg[], u32bit msg_len);
+      virtual bool verify(const byte msg[], u32bit msg_len,
+                          const byte sig[], u32bit sig_len)
+         {
+         throw Invalid_State("Message recovery required");
+         }
 
-      virtual ~Verification_Operation() {}
+      /*
+      * Perform a signature operation (with message recovery)
+      * Only call this if with_recovery() returns true
+      * @param msg the message
+      * @param msg_len the length of msg in bytes
+      * @returns recovered message
+      */
+      virtual SecureVector<byte> verify_mr(const byte msg[], u32bit msg_len)
+         {
+         throw Invalid_State("Message recovery not supported");
+         }
+
+      virtual ~Verification() {}
    };
 
 /*

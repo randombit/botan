@@ -191,14 +191,17 @@ class BOTAN_DLL PK_Verifier
       * @return true if the signature is valid
       */
       bool verify_message(const MemoryRegion<byte>& msg,
-                          const MemoryRegion<byte>& sig);
+                          const MemoryRegion<byte>& sig)
+         {
+         return verify_message(msg, msg.size(), sig, sig.size());
+         }
 
       /**
       * Add a message part (single byte) of the message corresponding to the
       * signature to be verified.
-      * @param msg_part the byte to add
+      * @param in the byte to add
       */
-      void update(byte msg_part);
+      void update(byte in) { update(&in, 1); }
 
       /**
       * Add a message part of the message corresponding to the
@@ -211,9 +214,10 @@ class BOTAN_DLL PK_Verifier
       /**
       * Add a message part of the message corresponding to the
       * signature to be verified.
-      * @param msg_part the new message part
+      * @param in the new message part
       */
-      void update(const MemoryRegion<byte>& msg_part);
+      void update(const MemoryRegion<byte>& in)
+         { update(&in[0], in.size()); }
 
       /**
       * Check the signature of the buffered message, i.e. the one build
@@ -230,7 +234,10 @@ class BOTAN_DLL PK_Verifier
       * @param sig the signature to be verified
       * @return true if the signature is valid, false otherwise
       */
-      bool check_signature(const MemoryRegion<byte>& sig);
+      bool check_signature(const MemoryRegion<byte>& sig)
+         {
+         return check_signature(&sig[0], sig.size());
+         }
 
       /**
       * Set the format of the signatures fed to this verifier.
@@ -240,23 +247,23 @@ class BOTAN_DLL PK_Verifier
 
       /**
       * Construct a PK Verifier.
+      * @param pub_key the public key to verify against
       * @param emsa the EMSA to use
       * An example would be new EMSA1(new SHA_224)
       */
-      PK_Verifier(EMSA* emsa);
+      PK_Verifier(const Public_Key& pub_key, EMSA* emsa);
 
-      virtual ~PK_Verifier();
-   protected:
-      virtual bool validate_signature(const MemoryRegion<byte>&,
-                                      const byte[], u32bit) = 0;
-      virtual u32bit key_message_parts() const = 0;
-      virtual u32bit key_message_part_size() const = 0;
-
-      Signature_Format sig_format;
-      EMSA* emsa;
+      ~PK_Verifier() { delete op; delete emsa; }
    private:
       PK_Verifier(const PK_Verifier&);
       PK_Verifier& operator=(const PK_Verifier&);
+
+      bool validate_signature(const MemoryRegion<byte>& msg,
+                              const byte sig[], u32bit sig_len);
+
+      PK_Ops::Verification* op;
+      EMSA* emsa;
+      Signature_Format sig_format;
    };
 
 /*
@@ -395,56 +402,6 @@ class BOTAN_DLL PK_Decryptor_MR_with_EME : public PK_Decryptor
 
       const PK_Decrypting_Key& key;
       const EME* encoder;
-   };
-
-/**
-* Public Key Verifier with Message Recovery.
-*/
-class BOTAN_DLL PK_Verifier_with_MR : public PK_Verifier
-   {
-   public:
-      /**
-      * Construct an instance.
-      * @param key the key to use inside the verifier
-      * @param emsa_name the name of the EMSA to use
-      */
-      PK_Verifier_with_MR(const PK_Verifying_with_MR_Key& k,
-                          EMSA* emsa_obj) : PK_Verifier(emsa_obj), key(k) {}
-
-   private:
-      PK_Verifier_with_MR(const PK_Verifying_with_MR_Key&);
-      PK_Verifier_with_MR& operator=(const PK_Verifier_with_MR&);
-
-      bool validate_signature(const MemoryRegion<byte>&, const byte[], u32bit);
-      u32bit key_message_parts() const { return key.message_parts(); }
-      u32bit key_message_part_size() const { return key.message_part_size(); }
-
-      const PK_Verifying_with_MR_Key& key;
-   };
-
-/**
-* Public Key Verifier without Message Recovery
-*/
-class BOTAN_DLL PK_Verifier_wo_MR : public PK_Verifier
-   {
-   public:
-      /**
-      * Construct an instance.
-      * @param key the key to use inside the verifier
-      * @param emsa_name the name of the EMSA to use
-      */
-      PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key& k,
-                        EMSA* emsa_obj) : PK_Verifier(emsa_obj), key(k) {}
-
-   private:
-      PK_Verifier_wo_MR(const PK_Verifying_wo_MR_Key&);
-      PK_Verifier_wo_MR& operator=(const PK_Verifier_wo_MR&);
-
-      bool validate_signature(const MemoryRegion<byte>&, const byte[], u32bit);
-      u32bit key_message_parts() const { return key.message_parts(); }
-      u32bit key_message_part_size() const { return key.message_part_size(); }
-
-      const PK_Verifying_wo_MR_Key& key;
    };
 
 }

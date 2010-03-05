@@ -110,9 +110,10 @@ GOST_3410_Signature_Operation::GOST_3410_Signature_Operation(
    {
    }
 
-SecureVector<byte> GOST_3410_Signature_Operation::sign(const byte msg[],
-                                                 u32bit msg_len,
-                                                 RandomNumberGenerator& rng)
+SecureVector<byte>
+GOST_3410_Signature_Operation::sign(const byte msg[],
+                                    u32bit msg_len,
+                                    RandomNumberGenerator& rng)
    {
    BigInt k;
    do
@@ -141,5 +142,40 @@ SecureVector<byte> GOST_3410_Signature_Operation::sign(const byte msg[],
    return output;
    }
 
+
+GOST_3410_Verification_Operation::GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost) :
+   base_point(gost.domain().get_base_point()),
+   public_point(gost.public_point()),
+   order(gost.domain().get_order())
+   {
+   }
+
+bool GOST_3410_Verification_Operation::verify(const byte msg[], u32bit msg_len,
+                                              const byte sig[], u32bit sig_len)
+   {
+   if(sig_len != order.bytes()*2)
+      return false;
+
+   BigInt e(msg, msg_len);
+
+   BigInt r(sig, sig_len / 2);
+   BigInt s(sig + sig_len / 2, sig_len / 2);
+
+   if(r < 0 || r >= order || s < 0 || s >= order)
+      return false;
+
+   e %= order;
+   if(e == 0)
+      e = 1;
+
+   BigInt v = inverse_mod(e, order);
+
+   BigInt z1 = (s*v) % order;
+   BigInt z2 = (-r*v) % order;
+
+   PointGFp R = (z1 * base_point + z2 * public_point);
+
+   return (R.get_affine_x() == r);
+   }
 
 }

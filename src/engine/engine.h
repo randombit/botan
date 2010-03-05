@@ -90,6 +90,11 @@ class BOTAN_DLL Engine
          return 0;
          }
 
+      virtual PK_Ops::Verification* get_verify_op(const Public_Key&) const
+         {
+         return 0;
+         }
+
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
       virtual IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,
                                   const BigInt&, const BigInt&, const BigInt&,

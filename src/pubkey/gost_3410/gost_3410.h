@@ -113,6 +113,10 @@ class BOTAN_DLL GOST_3410_Signature_Operation : public PK_Ops::Signature_Operati
    public:
       GOST_3410_Signature_Operation(const GOST_3410_PrivateKey& gost_3410);
 
+      u32bit message_parts() const { return 2; }
+      u32bit message_part_size() const { return order.bytes(); }
+      u32bit max_input_bits() const { return order.bits(); }
+
       SecureVector<byte> sign(const byte msg[], u32bit msg_len,
                               RandomNumberGenerator& rng);
 
@@ -120,6 +124,25 @@ class BOTAN_DLL GOST_3410_Signature_Operation : public PK_Ops::Signature_Operati
       const PointGFp& base_point;
       const BigInt& order;
       const BigInt& x;
+   };
+
+class BOTAN_DLL GOST_3410_Verification_Operation : public PK_Ops::Verification
+   {
+   public:
+      GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost);
+
+      u32bit message_parts() const { return 2; }
+      u32bit message_part_size() const { return order.bytes(); }
+      u32bit max_input_bits() const { return order.bits(); }
+
+      bool with_recovery() const { return false; }
+
+      bool verify(const byte msg[], u32bit msg_len,
+                  const byte sig[], u32bit sig_len);
+   private:
+      const PointGFp& base_point;
+      const PointGFp& public_point;
+      const BigInt& order;
    };
 
 }

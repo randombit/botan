@@ -26,6 +26,8 @@ class Default_Engine : public Engine
       PK_Ops::Signature_Operation*
          get_signature_op(const Private_Key& key) const;
 
+      PK_Ops::Verification* get_verify_op(const Public_Key& key) const;
+
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
       IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,
                           const BigInt&, const BigInt&, const BigInt&,

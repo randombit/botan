@@ -124,4 +124,35 @@ SecureVector<byte> DSA_Signature_Operation::sign(const byte msg[],
    return output;
    }
 
+DSA_Verification_Operation::DSA_Verification_Operation(const DSA_PublicKey& dsa) :
+   q(dsa.group_q()), y(dsa.get_y())
+   {
+   powermod_g_p = Fixed_Base_Power_Mod(dsa.group_g(), dsa.group_p());
+   powermod_y_p = Fixed_Base_Power_Mod(y, dsa.group_p());
+   mod_p = Modular_Reducer(dsa.group_p());
+   mod_q = Modular_Reducer(dsa.group_q());
+   }
+
+bool DSA_Verification_Operation::verify(const byte msg[], u32bit msg_len,
+                                        const byte sig[], u32bit sig_len)
+   {
+   const BigInt& q = mod_q.get_modulus();
+
+   if(sig_len != 2*q.bytes() || msg_len > q.bytes())
+      return false;
+
+   BigInt r(sig, q.bytes());
+   BigInt s(sig + q.bytes(), q.bytes());
+   BigInt i(msg, msg_len);
+
+   if(r <= 0 || r >= q || s <= 0 || s >= q)
+      return false;
+
+   s = inverse_mod(s, q);
+   s = mod_p.multiply(powermod_g_p(mod_q.multiply(s, i)),
+                      powermod_y_p(mod_q.multiply(s, r)));
+
+   return (mod_q.reduce(s) == r);
+   }
+
 }

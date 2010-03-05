@@ -84,7 +84,23 @@ class BOTAN_DLL RW_Signature_Operation : public PK_Ops::Signature_Operation
 
       Fixed_Exponent_Power_Mod powermod_d1_p, powermod_d2_q;
       Modular_Reducer mod_p;
-      u32bit n_bits;
+   };
+
+class BOTAN_DLL RW_Verification_Operation : public PK_Ops::Verification
+   {
+   public:
+      RW_Verification_Operation(const RW_PublicKey& rw) :
+         n(rw.get_n()), powermod_e_n(rw.get_e(), rw.get_n())
+         {}
+
+      u32bit max_input_bits() const { return (n.bits() - 1); }
+      bool with_recovery() const { return true; }
+
+      SecureVector<byte> verify_mr(const byte msg[], u32bit msg_len);
+
+   private:
+      const BigInt& n;
+      Fixed_Exponent_Power_Mod powermod_e_n;
    };
 
 }

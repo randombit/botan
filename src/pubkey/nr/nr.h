@@ -77,6 +77,26 @@ class BOTAN_DLL NR_Signature_Operation : public PK_Ops::Signature_Operation
       Modular_Reducer mod_q;
    };
 
+class BOTAN_DLL NR_Verification_Operation : public PK_Ops::Verification
+   {
+   public:
+      NR_Verification_Operation(const NR_PublicKey& nr);
+
+      u32bit message_parts() const { return 2; }
+      u32bit message_part_size() const { return q.bytes(); }
+      u32bit max_input_bits() const { return (q.bits() - 1); }
+
+      bool with_recovery() const { return true; }
+
+      SecureVector<byte> verify_mr(const byte msg[], u32bit msg_len);
+   private:
+      const BigInt& q;
+      const BigInt& y;
+
+      Fixed_Base_Power_Mod powermod_g_p, powermod_y_p;
+      Modular_Reducer mod_p, mod_q;
+   };
+
 }
 
 #endif

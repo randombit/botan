@@ -78,4 +78,34 @@ SecureVector<byte> ECDSA_Signature_Operation::sign(const byte msg[],
    return output;
    }
 
+ECDSA_Verification_Operation::ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa) :
+   base_point(ecdsa.domain().get_base_point()),
+   public_point(ecdsa.public_point()),
+   order(ecdsa.domain().get_order())
+   {
+   }
+
+bool ECDSA_Verification_Operation::verify(const byte msg[], u32bit msg_len,
+                                          const byte sig[], u32bit sig_len)
+   {
+   if(sig_len != order.bytes()*2)
+      return false;
+
+   BigInt e(msg, msg_len);
+
+   BigInt r(sig, sig_len / 2);
+   BigInt s(sig + sig_len / 2, sig_len / 2);
+
+   if(r < 0 || r >= order || s < 0 || s >= order)
+      return false;
+
+   BigInt w = inverse_mod(s, order);
+
+   PointGFp R = w * (e * base_point + r * public_point);
+   if(R.is_zero())
+      return false;
+
+   return (R.get_affine_x() % order == r);
+   }
+
 }

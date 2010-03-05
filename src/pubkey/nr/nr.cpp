@@ -134,4 +134,31 @@ SecureVector<byte> NR_Signature_Operation::sign(const byte msg[],
    return output;
    }
 
+NR_Verification_Operation::NR_Verification_Operation(const NR_PublicKey& nr) :
+   q(nr.group_q()), y(nr.get_y())
+   {
+   powermod_g_p = Fixed_Base_Power_Mod(nr.group_g(), nr.group_p());
+   powermod_y_p = Fixed_Base_Power_Mod(y, nr.group_p());
+   mod_p = Modular_Reducer(nr.group_p());
+   mod_q = Modular_Reducer(nr.group_q());
+   }
+
+SecureVector<byte>
+NR_Verification_Operation::verify_mr(const byte msg[], u32bit msg_len)
+   {
+   const BigInt& q = mod_q.get_modulus();
+
+   if(msg_len != 2*q.bytes())
+      return false;
+
+   BigInt c(msg, q.bytes());
+   BigInt d(msg + q.bytes(), q.bytes());
+
+   if(c.is_zero() || c >= q || d >= q)
+      throw Invalid_Argument("NR verification: Invalid signature");
+
+   BigInt i = mod_p.multiply(powermod_g_p(d), powermod_y_p(c));
+   return BigInt::encode(mod_q.reduce(c - i));
+   }
+
 }

@@ -197,18 +197,23 @@ SecureVector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
 /*
 * PK_Verifier Constructor
 */
-PK_Verifier::PK_Verifier(EMSA* emsa_obj)
+PK_Verifier::PK_Verifier(const Public_Key& key, EMSA* emsa_obj)
    {
+   Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
+
+   while(const Engine* engine = i.next())
+      {
+      op = engine->get_verify_op(key);
+      if(op)
+         break;
+      }
+
+   if(op == 0)
+      throw Lookup_Error("PK_Verifier: No working engine for " +
+                         key.algo_name());
+
    emsa = emsa_obj;
    sig_format = IEEE_1363;
-   }
-
-/*
-* PK_Verifier Destructor
-*/
-PK_Verifier::~PK_Verifier()
-   {
-   delete emsa;
    }
 
 /*
@@ -216,18 +221,9 @@ PK_Verifier::~PK_Verifier()
 */
 void PK_Verifier::set_input_format(Signature_Format format)
    {
-   if(key_message_parts() == 1 && format != IEEE_1363)
+   if(op->message_parts() == 1 && format != IEEE_1363)
       throw Invalid_State("PK_Verifier: This algorithm always uses IEEE 1363");
    sig_format = format;
-   }
-
-/*
-* Verify a message
-*/
-bool PK_Verifier::verify_message(const MemoryRegion<byte>& msg,
-                                 const MemoryRegion<byte>& sig)
-   {
-   return verify_message(msg, msg.size(), sig, sig.size());
    }
 
 /*
@@ -246,30 +242,6 @@ bool PK_Verifier::verify_message(const byte msg[], u32bit msg_length,
 void PK_Verifier::update(const byte in[], u32bit length)
    {
    emsa->update(in, length);
-   }
-
-/*
-* Append to the message
-*/
-void PK_Verifier::update(byte in)
-   {
-   update(&in, 1);
-   }
-
-/*
-* Append to the message
-*/
-void PK_Verifier::update(const MemoryRegion<byte>& in)
-   {
-   update(in, in.size());
-   }
-
-/*
-* Check a signature
-*/
-bool PK_Verifier::check_signature(const MemoryRegion<byte>& sig)
-   {
-   return check_signature(sig, sig.size());
    }
 
 /*
@@ -292,10 +264,11 @@ bool PK_Verifier::check_signature(const byte sig[], u32bit length)
             BigInt sig_part;
             ber_sig.decode(sig_part);
             real_sig.append(BigInt::encode_1363(sig_part,
-                                                key_message_part_size()));
+                                                op->message_part_size()));
             ++count;
             }
-         if(count != key_message_parts())
+
+         if(count != op->message_parts())
             throw Decoding_Error("PK_Verifier: signature size invalid");
 
          return validate_signature(emsa->raw_data(),
@@ -311,25 +284,23 @@ bool PK_Verifier::check_signature(const byte sig[], u32bit length)
 /*
 * Verify a signature
 */
-bool PK_Verifier_with_MR::validate_signature(const MemoryRegion<byte>& msg,
-                                             const byte sig[], u32bit sig_len)
+bool PK_Verifier::validate_signature(const MemoryRegion<byte>& msg,
+                                     const byte sig[], u32bit sig_len)
    {
-   SecureVector<byte> output_of_key = key.verify(sig, sig_len);
-   return emsa->verify(output_of_key, msg, key.max_input_bits());
-   }
+   if(op->with_recovery())
+      {
+      SecureVector<byte> output_of_key = op->verify_mr(sig, sig_len);
+      return emsa->verify(output_of_key, msg, op->max_input_bits());
+      }
+   else
+      {
+      Null_RNG rng;
 
-/*
-* Verify a signature
-*/
-bool PK_Verifier_wo_MR::validate_signature(const MemoryRegion<byte>& msg,
-                                           const byte sig[], u32bit sig_len)
-   {
-   Null_RNG rng;
+      SecureVector<byte> encoded =
+         emsa->encoding_of(msg, op->max_input_bits(), rng);
 
-   SecureVector<byte> encoded =
-      emsa->encoding_of(msg, key.max_input_bits(), rng);
-
-   return key.verify(encoded, encoded.size(), sig, sig_len);
+      return op->verify(encoded, encoded.size(), sig, sig_len);
+      }
    }
 
 /*

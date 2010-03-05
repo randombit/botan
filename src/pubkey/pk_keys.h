@@ -132,9 +132,6 @@ class BOTAN_DLL PK_Signing_Key : public virtual Private_Key
 */
 class BOTAN_DLL PK_Verifying_with_MR_Key : public virtual Public_Key
    {
-   public:
-      virtual SecureVector<byte> verify(const byte[], u32bit) const = 0;
-      virtual ~PK_Verifying_with_MR_Key() {}
    };
 
 /**
@@ -142,10 +139,6 @@ class BOTAN_DLL PK_Verifying_with_MR_Key : public virtual Public_Key
 */
 class BOTAN_DLL PK_Verifying_wo_MR_Key : public virtual Public_Key
    {
-   public:
-      virtual bool verify(const byte[], u32bit,
-                          const byte[], u32bit) const = 0;
-      virtual ~PK_Verifying_wo_MR_Key() {}
    };
 
 /**

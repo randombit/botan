@@ -64,7 +64,7 @@ inline PK_Verifier* get_pk_verifier(const PK_Verifying_with_MR_Key& key,
                                     const std::string& emsa,
                                     Signature_Format sig_format = IEEE_1363)
    {
-   PK_Verifier* verifier = new PK_Verifier_with_MR(key, get_emsa(emsa));
+   PK_Verifier* verifier = new PK_Verifier(key, get_emsa(emsa));
    verifier->set_input_format(sig_format);
    return verifier;
    }
@@ -80,7 +80,7 @@ inline PK_Verifier* get_pk_verifier(const PK_Verifying_wo_MR_Key& key,
                                     const std::string& emsa,
                                     Signature_Format sig_format = IEEE_1363)
    {
-   PK_Verifier* verifier = new PK_Verifier_wo_MR(key, get_emsa(emsa));
+   PK_Verifier* verifier = new PK_Verifier(key, get_emsa(emsa));
    verifier->set_input_format(sig_format);
    return verifier;
    }

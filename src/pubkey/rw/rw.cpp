@@ -156,4 +156,27 @@ SecureVector<byte> RW_Signature_Operation::sign(const byte msg[],
    return BigInt::encode_1363(r, n.bytes());
    }
 
+SecureVector<byte>
+RW_Verification_Operation::verify_mr(const byte msg[], u32bit msg_len)
+   {
+   BigInt m(msg, msg_len);
+
+   if((m > (n >> 1)) || m.is_negative())
+      throw Invalid_Argument("RW signature verification: m > n / 2 || m < 0");
+
+   BigInt r = powermod_e_n(m);
+   if(r % 16 == 12)
+      return BigInt::encode(r);
+   if(r % 8 == 6)
+      return BigInt::encode(2*r);
+
+   r = n - r;
+   if(r % 16 == 12)
+      return BigInt::encode(r);
+   if(r % 8 == 6)
+      return BigInt::encode(2*r);
+
+   throw Invalid_Argument("RW signature verification: Invalid signature");
+   }
+
 }
