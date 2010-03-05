@@ -19,7 +19,6 @@ pk_engine.h
 get_enc.cpp
 init.cpp
 libstate.cpp
-look_pk.cpp
 lookup.cpp
 pk_engine.cpp
 policy.cpp
