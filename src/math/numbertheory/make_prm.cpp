@@ -38,6 +38,9 @@ BigInt random_prime(RandomNumberGenerator& rng,
    while(true)
       {
       BigInt p(rng, bits);
+
+      // Force lowest and two top bits on
+      p.set_bit(bits - 1);
       p.set_bit(bits - 2);
       p.set_bit(0);
 
