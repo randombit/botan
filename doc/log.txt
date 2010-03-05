@@ -1,6 +1,6 @@
 
 * 1.9.4-dev, ????-??-??
- - Add the Ajisai SSL/TLS implementation
+ - Add the Ajisai SSLv3/TLSv1.0 implementation
  - Add GOST 34.10-2001 public key signature scheme
  - Add SIMD implementation of Noekeon
  - Add SSE2 implementation of IDEA
