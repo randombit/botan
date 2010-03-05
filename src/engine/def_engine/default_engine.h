@@ -32,12 +32,6 @@ class Default_Engine : public Engine
 
       PK_Ops::Decryption* get_decryption_op(const Private_Key& key) const;
 
-#if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
-      IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,
-                          const BigInt&, const BigInt&, const BigInt&,
-                          const BigInt&, const BigInt&) const;
-#endif
-
       Modular_Exponentiator* mod_exp(const BigInt& n,
                                      Power_Mod::Usage_Hints) const;
 

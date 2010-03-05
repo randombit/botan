@@ -9,6 +9,7 @@
 #define BOTAN_RSA_H__
 
 #include <botan/if_algo.h>
+#include <botan/reducer.h>
 
 namespace Botan {
 
@@ -28,9 +29,7 @@ class BOTAN_DLL RSA_PublicKey : public PK_Encrypting_Key,
       RSA_PublicKey(const AlgorithmIdentifier& alg_id,
                     const MemoryRegion<byte>& key_bits) :
          IF_Scheme_PublicKey(alg_id, key_bits)
-         {
-         core = IF_Core(e, n);
-         }
+         {}
 
       /**
       * Create a RSA_PublicKey
@@ -39,9 +38,7 @@ class BOTAN_DLL RSA_PublicKey : public PK_Encrypting_Key,
       */
       RSA_PublicKey(const BigInt& n, const BigInt& e) :
          IF_Scheme_PublicKey(n, e)
-         {
-         core = IF_Core(e, n);
-         }
+         {}
 
    protected:
       RSA_PublicKey() {}

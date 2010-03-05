@@ -8,7 +8,7 @@
 #ifndef BOTAN_IF_ALGO_H__
 #define BOTAN_IF_ALGO_H__
 
-#include <botan/if_core.h>
+#include <botan/bigint.h>
 #include <botan/x509_key.h>
 #include <botan/pkcs8.h>
 #include <botan/pk_ops.h>
@@ -52,7 +52,6 @@ class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
       IF_Scheme_PublicKey() {}
 
       BigInt n, e;
-      IF_Core core;
    };
 
 /**

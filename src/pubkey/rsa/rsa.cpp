@@ -14,26 +14,6 @@
 namespace Botan {
 
 /*
-* RSA Public Operation
-*/
-BigInt RSA_PublicKey::public_op(const BigInt& i) const
-   {
-   if(i >= n)
-      throw Invalid_Argument(algo_name() + "::public_op: input is too large");
-   return core.public_op(i);
-   }
-
-/*
-* RSA Encryption Function
-*/
-SecureVector<byte> RSA_PublicKey::encrypt(const byte in[], u32bit len,
-                                          RandomNumberGenerator&) const
-   {
-   BigInt i(in, len);
-   return BigInt::encode_1363(public_op(i), n.bytes());
-   }
-
-/*
 * Create a RSA private key
 */
 RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
@@ -58,32 +38,7 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
    d2 = d % (q - 1);
    c = inverse_mod(q, p);
 
-   core = IF_Core(rng, e, n, d, p, q, d1, d2, c);
-
    gen_check(rng);
-   }
-
-/*
-* RSA Private Operation
-*/
-BigInt RSA_PrivateKey::private_op(const byte in[], u32bit length) const
-   {
-   BigInt i(in, length);
-   if(i >= n)
-      throw Invalid_Argument(algo_name() + "::private_op: input is too large");
-
-   BigInt r = core.private_op(i);
-   if(i != public_op(r))
-      throw Self_Test_Failure(algo_name() + " private operation check failed");
-   return r;
-   }
-
-/*
-* RSA Decryption Operation
-*/
-SecureVector<byte> RSA_PrivateKey::decrypt(const byte in[], u32bit len) const
-   {
-   return BigInt::encode(private_op(in, len));
    }
 
 /*

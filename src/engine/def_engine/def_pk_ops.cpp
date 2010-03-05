@@ -8,7 +8,6 @@
 #include <botan/internal/default_engine.h>
 
 #if defined(BOTAN_HAS_RSA)
-  #include <botan/if_op.h>
   #include <botan/rsa.h>
 #endif
 
@@ -167,18 +166,5 @@ Default_Engine::get_verify_op(const Public_Key& key) const
 
    return 0;
    }
-
-#if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
-/*
-* Acquire an IF op
-*/
-IF_Operation* Default_Engine::if_op(const BigInt& e, const BigInt& n,
-                                    const BigInt& d, const BigInt& p,
-                                    const BigInt& q, const BigInt& d1,
-                                    const BigInt& d2, const BigInt& c) const
-   {
-   return new Default_IF_Op(e, n, d, p, q, d1, d2, c);
-   }
-#endif
 
 }

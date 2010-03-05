@@ -78,8 +78,6 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
    if(version != 0)
       throw Decoding_Error("Unknown PKCS #1 key format version");
 
-   core = IF_Core(rng, e, n, d, p, q, d1, d2, c);
-
    load_check(rng);
    }
 
@@ -108,8 +106,6 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
    d1 = d % (p - 1);
    d2 = d % (q - 1);
    c = inverse_mod(q, p);
-
-   core = IF_Core(rng, e, n, d, p, q, d1, d2, c);
 
    load_check(rng);
    }

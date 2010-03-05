@@ -40,8 +40,6 @@ RW_PrivateKey::RW_PrivateKey(RandomNumberGenerator& rng,
    d2 = d % (q - 1);
    c = inverse_mod(q, p);
 
-   core = IF_Core(rng, e, n, d, p, q, d1, d2, c);
-
    gen_check(rng);
    }
 

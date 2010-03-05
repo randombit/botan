@@ -2,18 +2,6 @@ define IF_PUBLIC_KEY_FAMILY
 
 load_on dep
 
-<header:public>
-if_algo.h
-if_core.h
-if_op.h
-</header:public>
-
-<source>
-if_algo.cpp
-if_core.cpp
-if_op.cpp
-</source>
-
 <requires>
 asn1
 bigint

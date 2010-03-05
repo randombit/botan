@@ -9,6 +9,7 @@
 #define BOTAN_RW_H__
 
 #include <botan/if_algo.h>
+#include <botan/reducer.h>
 
 namespace Botan {
 
@@ -24,15 +25,11 @@ class BOTAN_DLL RW_PublicKey : public PK_Verifying_with_MR_Key,
       RW_PublicKey(const AlgorithmIdentifier& alg_id,
                    const MemoryRegion<byte>& key_bits) :
          IF_Scheme_PublicKey(alg_id, key_bits)
-         {
-         core = IF_Core(e, n);
-         }
+         {}
 
       RW_PublicKey(const BigInt& mod, const BigInt& exponent) :
          IF_Scheme_PublicKey(mod, exponent)
-         {
-         core = IF_Core(e, n);
-         }
+         {}
 
    protected:
       RW_PublicKey() {}
