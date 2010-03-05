@@ -20,18 +20,6 @@ ElGamal_PublicKey::ElGamal_PublicKey(const DL_Group& grp, const BigInt& y1)
    {
    group = grp;
    y = y1;
-   core = ELG_Core(group, y);
-   }
-
-/*
-* ElGamal Encryption Function
-*/
-SecureVector<byte>
-ElGamal_PublicKey::encrypt(const byte in[], u32bit length,
-                           RandomNumberGenerator& rng) const
-   {
-   BigInt k(rng, 2 * dl_work_factor(group_p().bits()));
-   return core.encrypt(in, length, k);
    }
 
 /*
@@ -49,8 +37,6 @@ ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng,
 
    y = power_mod(group_g(), x, group_p());
 
-   core = ELG_Core(rng, group, y, x);
-
    if(x_arg == 0)
       gen_check(rng);
    else
@@ -63,17 +49,7 @@ ElGamal_PrivateKey::ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
    {
    y = power_mod(group_g(), x, group_p());
-   core = ELG_Core(rng, group, y, x);
    load_check(rng);
-   }
-
-/*
-* ElGamal Decryption Function
-*/
-SecureVector<byte> ElGamal_PrivateKey::decrypt(const byte in[],
-                                               u32bit length) const
-   {
-   return core.decrypt(in, length);
    }
 
 /*
@@ -101,6 +77,64 @@ bool ElGamal_PrivateKey::check_key(RandomNumberGenerator& rng,
       }
 
    return true;
+   }
+
+ElGamal_Encryption_Operation::ElGamal_Encryption_Operation(const ElGamal_PublicKey& key)
+   {
+   const BigInt& p = key.group_p();
+
+   powermod_g_p = Fixed_Base_Power_Mod(key.group_g(), p);
+   powermod_y_p = Fixed_Base_Power_Mod(key.get_y(), p);
+   mod_p = Modular_Reducer(p);
+   }
+
+SecureVector<byte>
+ElGamal_Encryption_Operation::encrypt(const byte msg[], u32bit msg_len,
+                                      RandomNumberGenerator& rng) const
+   {
+   const BigInt& p = mod_p.get_modulus();
+
+   BigInt m(msg, msg_len);
+
+   if(m >= p)
+      throw Invalid_Argument("ElGamal encryption: Input is too large");
+
+   BigInt k(rng, 2 * dl_work_factor(p.bits()));
+
+   BigInt a = powermod_g_p(k);
+   BigInt b = mod_p.multiply(m, powermod_y_p(k));
+
+   SecureVector<byte> output(2*p.bytes());
+   a.binary_encode(output + (p.bytes() - a.bytes()));
+   b.binary_encode(output + output.size() / 2 + (p.bytes() - b.bytes()));
+   return output;
+   }
+
+ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key)
+   {
+   const BigInt& p = key.group_p();
+
+   powermod_x_p = Fixed_Exponent_Power_Mod(key.get_x(), p);
+   mod_p = Modular_Reducer(p);
+   }
+
+SecureVector<byte>
+ElGamal_Decryption_Operation::decrypt(const byte msg[], u32bit msg_len) const
+   {
+   const BigInt& p = mod_p.get_modulus();
+
+   const u32bit p_bytes = p.bytes();
+
+   if(msg_len != 2 * p_bytes)
+      throw Invalid_Argument("ElGamal decryption: Invalid message");
+
+   BigInt a(msg, p_bytes);
+   BigInt b(msg + p_bytes, p_bytes);
+
+   if(a >= p || b >= p)
+      throw Invalid_Argument("ElGamal decryption: Invalid message");
+
+   return BigInt::encode(mod_p.multiply(b, inverse_mod(powermod_x_p(a), p)));
    }
 
 }

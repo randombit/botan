@@ -13,7 +13,6 @@
 #endif
 
 #if defined(BOTAN_HAS_RW)
-  #include <botan/if_op.h>
   #include <botan/rw.h>
 #endif
 
@@ -27,7 +26,6 @@
 
 #if defined(BOTAN_HAS_ELGAMAL)
   #include <botan/elgamal.h>
-  #include <botan/elg_op.h>
 #endif
 
 #if defined(BOTAN_HAS_GOST_3410_2001)
@@ -47,6 +45,38 @@
 #endif
 
 namespace Botan {
+
+PK_Ops::Encryption*
+Default_Engine::get_encryption_op(const Public_Key& key) const
+   {
+#if 0 && defined(BOTAN_HAS_RSA)
+   if(const RSA_PublicKey* s = dynamic_cast<const RSA_PublicKey*>(&key))
+      return new RSA_Encryption_Operation(*s);
+#endif
+
+#if defined(BOTAN_HAS_ELGAMAL)
+   if(const ElGamal_PublicKey* s = dynamic_cast<const ElGamal_PublicKey*>(&key))
+      return new ElGamal_Encryption_Operation(*s);
+#endif
+
+   return 0;
+   }
+
+PK_Ops::Decryption*
+Default_Engine::get_decryption_op(const Private_Key& key) const
+   {
+#if 0 && defined(BOTAN_HAS_RSA)
+   if(const RSA_PrivateKey* s = dynamic_cast<const RSA_PrivateKey*>(&key))
+      return new RSA_Decryption_Operation(*s);
+#endif
+
+#if defined(BOTAN_HAS_ELGAMAL)
+   if(const ElGamal_PrivateKey* s = dynamic_cast<const ElGamal_PrivateKey*>(&key))
+      return new ElGamal_Decryption_Operation(*s);
+#endif
+
+   return 0;
+   }
 
 PK_Ops::Key_Agreement*
 Default_Engine::get_key_agreement_op(const Private_Key& key) const
@@ -148,17 +178,6 @@ IF_Operation* Default_Engine::if_op(const BigInt& e, const BigInt& n,
                                     const BigInt& d2, const BigInt& c) const
    {
    return new Default_IF_Op(e, n, d, p, q, d1, d2, c);
-   }
-#endif
-
-#if defined(BOTAN_HAS_ELGAMAL)
-/*
-* Acquire an ElGamal op
-*/
-ELG_Operation* Default_Engine::elg_op(const DL_Group& group, const BigInt& y,
-                                      const BigInt& x) const
-   {
-   return new Default_ELG_Op(group, y, x);
    }
 #endif
 

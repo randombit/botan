@@ -38,7 +38,10 @@ class BOTAN_DLL PK_Encryptor
       * @return the encrypted message
       */
       SecureVector<byte> encrypt(const byte in[], u32bit length,
-                                 RandomNumberGenerator& rng) const;
+                                 RandomNumberGenerator& rng) const
+         {
+         return enc(in, length, rng);
+         }
 
       /**
       * Encrypt a message.
@@ -47,7 +50,10 @@ class BOTAN_DLL PK_Encryptor
       * @return the encrypted message
       */
       SecureVector<byte> encrypt(const MemoryRegion<byte>& in,
-                                 RandomNumberGenerator& rng) const;
+                                 RandomNumberGenerator& rng) const
+         {
+         return enc(&in[0], in.size(), rng);
+         }
 
       /**
       * Return the maximum allowed message size in bytes.
@@ -73,14 +79,20 @@ class BOTAN_DLL PK_Decryptor
       * @param length the length of the above byte array
       * @return the decrypted message
       */
-      SecureVector<byte> decrypt(const byte in[], u32bit length) const;
+      SecureVector<byte> decrypt(const byte in[], u32bit length) const
+         {
+         return dec(in, length);
+         }
 
       /**
       * Decrypt a ciphertext.
       * @param in the ciphertext
       * @return the decrypted message
       */
-      SecureVector<byte> decrypt(const MemoryRegion<byte>& in) const;
+      SecureVector<byte> decrypt(const MemoryRegion<byte>& in) const
+         {
+         return dec(&in[0], in.size());
+         }
 
       virtual ~PK_Decryptor() {}
    private:
@@ -364,10 +376,9 @@ class BOTAN_DLL PK_Encryptor_MR_with_EME : public PK_Encryptor
       * @param key the key to use inside the decryptor
       * @param eme the EME to use
       */
-      PK_Encryptor_MR_with_EME(const PK_Encrypting_Key& key,
-                               EME* eme);
+      PK_Encryptor_MR_with_EME(const Public_Key& key, EME* eme = 0);
 
-      ~PK_Encryptor_MR_with_EME() { delete encoder; }
+      ~PK_Encryptor_MR_with_EME() { delete op; delete encoder; }
    private:
       PK_Encryptor_MR_with_EME(const PK_Encryptor_MR_with_EME&);
       PK_Encryptor_MR_with_EME& operator=(const PK_Encryptor_MR_with_EME&);
@@ -375,7 +386,7 @@ class BOTAN_DLL PK_Encryptor_MR_with_EME : public PK_Encryptor
       SecureVector<byte> enc(const byte[], u32bit,
                              RandomNumberGenerator& rng) const;
 
-      const PK_Encrypting_Key& key;
+      const PK_Ops::Encryption* op;
       const EME* encoder;
    };
 
@@ -390,17 +401,16 @@ class BOTAN_DLL PK_Decryptor_MR_with_EME : public PK_Decryptor
       * @param key the key to use inside the encryptor
       * @param eme the EME to use
       */
-      PK_Decryptor_MR_with_EME(const PK_Decrypting_Key& key,
-                               EME* eme);
+      PK_Decryptor_MR_with_EME(const Private_Key& key, EME* eme = 0);
 
-      ~PK_Decryptor_MR_with_EME() { delete encoder; }
+      ~PK_Decryptor_MR_with_EME() { delete op; delete encoder; }
    private:
       PK_Decryptor_MR_with_EME(const PK_Decryptor_MR_with_EME&);
       PK_Decryptor_MR_with_EME& operator=(const PK_Decryptor_MR_with_EME&);
 
       SecureVector<byte> dec(const byte[], u32bit) const;
 
-      const PK_Decrypting_Key& key;
+      const PK_Ops::Decryption* op;
       const EME* encoder;
    };
 

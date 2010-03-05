@@ -18,46 +18,24 @@
 namespace Botan {
 
 /*
-* Encrypt a message
-*/
-SecureVector<byte> PK_Encryptor::encrypt(const byte in[], u32bit len,
-                                         RandomNumberGenerator& rng) const
-   {
-   return enc(in, len, rng);
-   }
-
-/*
-* Encrypt a message
-*/
-SecureVector<byte> PK_Encryptor::encrypt(const MemoryRegion<byte>& in,
-                                         RandomNumberGenerator& rng) const
-   {
-   return enc(in.begin(), in.size(), rng);
-   }
-
-/*
-* Decrypt a message
-*/
-SecureVector<byte> PK_Decryptor::decrypt(const byte in[], u32bit len) const
-   {
-   return dec(in, len);
-   }
-
-/*
-* Decrypt a message
-*/
-SecureVector<byte> PK_Decryptor::decrypt(const MemoryRegion<byte>& in) const
-   {
-   return dec(in.begin(), in.size());
-   }
-
-/*
 * PK_Encryptor_MR_with_EME Constructor
 */
-PK_Encryptor_MR_with_EME::PK_Encryptor_MR_with_EME(const PK_Encrypting_Key& k,
+PK_Encryptor_MR_with_EME::PK_Encryptor_MR_with_EME(const Public_Key& key,
                                                    EME* eme_obj) :
-   key(k), encoder(eme_obj)
+   encoder(eme_obj)
    {
+   Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
+
+   while(const Engine* engine = i.next())
+      {
+      op = engine->get_encryption_op(key);
+      if(op)
+         break;
+      }
+
+   if(op == 0)
+      throw Lookup_Error("PK_Encryptor_MR_with_EME: No working engine for " +
+                         key.algo_name());
    }
 
 /*
@@ -70,14 +48,14 @@ PK_Encryptor_MR_with_EME::enc(const byte msg[],
    {
    SecureVector<byte> message;
    if(encoder)
-      message = encoder->encode(msg, length, key.max_input_bits(), rng);
+      message = encoder->encode(msg, length, op->max_input_bits(), rng);
    else
       message.set(msg, length);
 
-   if(8*(message.size() - 1) + high_bit(message[0]) > key.max_input_bits())
+   if(8*(message.size() - 1) + high_bit(message[0]) > op->max_input_bits())
       throw Invalid_Argument("PK_Encryptor_MR_with_EME: Input is too large");
 
-   return key.encrypt(message, message.size(), rng);
+   return op->encrypt(message, message.size(), rng);
    }
 
 /*
@@ -86,18 +64,30 @@ PK_Encryptor_MR_with_EME::enc(const byte msg[],
 u32bit PK_Encryptor_MR_with_EME::maximum_input_size() const
    {
    if(!encoder)
-      return (key.max_input_bits() / 8);
+      return (op->max_input_bits() / 8);
    else
-      return encoder->maximum_input_size(key.max_input_bits());
+      return encoder->maximum_input_size(op->max_input_bits());
    }
 
 /*
 * PK_Decryptor_MR_with_EME Constructor
 */
-PK_Decryptor_MR_with_EME::PK_Decryptor_MR_with_EME(const PK_Decrypting_Key& k,
+PK_Decryptor_MR_with_EME::PK_Decryptor_MR_with_EME(const Private_Key& key,
                                                    EME* eme_obj) :
-   key(k), encoder(eme_obj)
+   encoder(eme_obj)
    {
+   Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
+
+   while(const Engine* engine = i.next())
+      {
+      op = engine->get_decryption_op(key);
+      if(op)
+         break;
+      }
+
+   if(op == 0)
+      throw Lookup_Error("PK_Decryptor_MR_with_EME: No working engine for " +
+                         key.algo_name());
    }
 
 /*
@@ -107,9 +97,9 @@ SecureVector<byte> PK_Decryptor_MR_with_EME::dec(const byte msg[],
                                                  u32bit length) const
    {
    try {
-      SecureVector<byte> decrypted = key.decrypt(msg, length);
+      SecureVector<byte> decrypted = op->decrypt(msg, length);
       if(encoder)
-         return encoder->decode(decrypted, key.max_input_bits());
+         return encoder->decode(decrypted, op->max_input_bits());
       else
          return decrypted;
       }

@@ -18,10 +18,23 @@ namespace PK_Ops {
 class BOTAN_DLL Encryption
    {
    public:
+      virtual u32bit max_input_bits() const = 0;
+
       virtual SecureVector<byte> encrypt(const byte msg[], u32bit msg_len,
                                          RandomNumberGenerator& rng) const = 0;
 
       virtual ~Encryption() {}
+   };
+
+class BOTAN_DLL Decryption
+   {
+   public:
+      virtual u32bit max_input_bits() const = 0;
+
+      virtual SecureVector<byte> decrypt(const byte msg[],
+                                         u32bit msg_len) const = 0;
+
+      virtual ~Decryption() {}
    };
 
 class BOTAN_DLL Signature

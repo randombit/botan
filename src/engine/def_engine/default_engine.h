@@ -28,18 +28,17 @@ class Default_Engine : public Engine
 
       PK_Ops::Verification* get_verify_op(const Public_Key& key) const;
 
+      PK_Ops::Encryption* get_encryption_op(const Public_Key& key) const;
+
+      PK_Ops::Decryption* get_decryption_op(const Private_Key& key) const;
+
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
       IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,
                           const BigInt&, const BigInt&, const BigInt&,
                           const BigInt&, const BigInt&) const;
 #endif
 
-#if defined(BOTAN_HAS_ELGAMAL)
-      ELG_Operation* elg_op(const DL_Group&, const BigInt&,
-                            const BigInt&) const;
-#endif
-
-      Modular_Exponentiator* mod_exp(const BigInt&,
+      Modular_Exponentiator* mod_exp(const BigInt& n,
                                      Power_Mod::Usage_Hints) const;
 
       virtual bool can_add_algorithms() { return true; }

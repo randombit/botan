@@ -25,10 +25,6 @@
   #include <botan/if_op.h>
 #endif
 
-#if defined(BOTAN_HAS_ELGAMAL)
-  #include <botan/elg_op.h>
-#endif
-
 namespace Botan {
 
 class Algorithm_Factory;
@@ -76,8 +72,7 @@ class BOTAN_DLL Engine
          return 0;
          }
 
-      virtual PK_Ops::Signature*
-         get_signature_op(const Private_Key&) const
+      virtual PK_Ops::Signature* get_signature_op(const Private_Key&) const
          {
          return 0;
          }
@@ -87,16 +82,20 @@ class BOTAN_DLL Engine
          return 0;
          }
 
+      virtual PK_Ops::Encryption* get_encryption_op(const Public_Key&) const
+         {
+         return 0;
+         }
+
+      virtual PK_Ops::Decryption* get_decryption_op(const Private_Key&) const
+         {
+         return 0;
+         }
+
 #if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
       virtual IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,
                                   const BigInt&, const BigInt&, const BigInt&,
                                   const BigInt&, const BigInt&) const
-         { return 0; }
-#endif
-
-#if defined(BOTAN_HAS_ELGAMAL)
-      virtual ELG_Operation* elg_op(const DL_Group&, const BigInt&,
-                                    const BigInt&) const
          { return 0; }
 #endif
    };

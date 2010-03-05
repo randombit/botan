@@ -9,7 +9,9 @@
 #define BOTAN_ELGAMAL_H__
 
 #include <botan/dl_algo.h>
-#include <botan/elg_core.h>
+#include <botan/numthry.h>
+#include <botan/reducer.h>
+#include <botan/pk_ops.h>
 
 namespace Botan {
 
@@ -25,18 +27,14 @@ class BOTAN_DLL ElGamal_PublicKey : public PK_Encrypting_Key,
 
       u32bit max_input_bits() const { return (group_p().bits() - 1); }
 
-      SecureVector<byte> encrypt(const byte msg[], u32bit msg_len,
-                                 RandomNumberGenerator& rng) const;
-
       ElGamal_PublicKey(const AlgorithmIdentifier& alg_id,
                         const MemoryRegion<byte>& key_bits) :
          DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
-         { core = ELG_Core(group, y); }
+         {}
 
       ElGamal_PublicKey(const DL_Group& group, const BigInt& y);
    protected:
       ElGamal_PublicKey() {}
-      ELG_Core core;
    };
 
 /*
@@ -47,8 +45,6 @@ class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
                                      public virtual DL_Scheme_PrivateKey
    {
    public:
-      SecureVector<byte> decrypt(const byte msg[], u32bit msg_len) const;
-
       bool check_key(RandomNumberGenerator& rng, bool) const;
 
       ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
@@ -58,6 +54,34 @@ class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
       ElGamal_PrivateKey(RandomNumberGenerator& rng,
                          const DL_Group& group,
                          const BigInt& priv_key = 0);
+   };
+
+class BOTAN_DLL ElGamal_Encryption_Operation : public PK_Ops::Encryption
+   {
+   public:
+      u32bit max_input_bits() const { return mod_p.get_modulus().bits() - 1; }
+
+      ElGamal_Encryption_Operation(const ElGamal_PublicKey& key);
+
+      SecureVector<byte> encrypt(const byte msg[], u32bit msg_len,
+                                 RandomNumberGenerator& rng) const;
+
+   private:
+      Fixed_Base_Power_Mod powermod_g_p, powermod_y_p;
+      Modular_Reducer mod_p;
+   };
+
+class BOTAN_DLL ElGamal_Decryption_Operation : public PK_Ops::Decryption
+   {
+   public:
+      u32bit max_input_bits() const { return mod_p.get_modulus().bits() - 1; }
+
+      ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key);
+
+      SecureVector<byte> decrypt(const byte msg[], u32bit msg_len) const;
+   private:
+      Fixed_Exponent_Power_Mod powermod_x_p;
+      Modular_Reducer mod_p;
    };
 
 }
