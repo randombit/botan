@@ -57,7 +57,7 @@ class BOTAN_DLL NR_PrivateKey : public NR_PublicKey,
                     const BigInt& x = 0);
    };
 
-class BOTAN_DLL NR_Signature_Operation : public PK_Ops::Signature_Operation
+class BOTAN_DLL NR_Signature_Operation : public PK_Ops::Signature
    {
    public:
       NR_Signature_Operation(const NR_PrivateKey& nr);

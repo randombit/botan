@@ -48,7 +48,7 @@
 
 namespace Botan {
 
-PK_Ops::KA_Operation*
+PK_Ops::Key_Agreement*
 Default_Engine::get_key_agreement_op(const Private_Key& key) const
    {
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
@@ -64,7 +64,7 @@ Default_Engine::get_key_agreement_op(const Private_Key& key) const
    return 0;
    }
 
-PK_Ops::Signature_Operation*
+PK_Ops::Signature*
 Default_Engine::get_signature_op(const Private_Key& key) const
    {
 #if defined(BOTAN_HAS_RSA)

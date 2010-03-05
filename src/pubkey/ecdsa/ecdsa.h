@@ -98,7 +98,7 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
          EC_PrivateKey(domain, x) {}
    };
 
-class BOTAN_DLL ECDSA_Signature_Operation : public PK_Ops::Signature_Operation
+class BOTAN_DLL ECDSA_Signature_Operation : public PK_Ops::Signature
    {
    public:
       ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa);

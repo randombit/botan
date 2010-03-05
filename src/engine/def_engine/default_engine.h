@@ -20,10 +20,10 @@ class Default_Engine : public Engine
    public:
       std::string provider_name() const { return "core"; }
 
-      PK_Ops::KA_Operation*
+      PK_Ops::Key_Agreement*
          get_key_agreement_op(const Private_Key& key) const;
 
-      PK_Ops::Signature_Operation*
+      PK_Ops::Signature*
          get_signature_op(const Private_Key& key) const;
 
       PK_Ops::Verification* get_verify_op(const Public_Key& key) const;

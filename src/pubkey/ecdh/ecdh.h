@@ -100,7 +100,7 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
 /**
 * ECDH operation
 */
-class BOTAN_DLL ECDH_KA_Operation : public PK_Ops::KA_Operation
+class BOTAN_DLL ECDH_KA_Operation : public PK_Ops::Key_Agreement
    {
    public:
       ECDH_KA_Operation(const ECDH_PrivateKey& key);

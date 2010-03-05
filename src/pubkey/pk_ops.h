@@ -15,7 +15,7 @@ namespace Botan {
 
 namespace PK_Ops {
 
-class Signature_Operation
+class Signature
    {
    public:
       /**
@@ -46,7 +46,7 @@ class Signature_Operation
                                       u32bit msg_len,
                                       RandomNumberGenerator& rng) = 0;
 
-      virtual ~Signature_Operation() {}
+      virtual ~Signature() {}
    };
 
 class BOTAN_DLL Verification
@@ -108,7 +108,7 @@ class BOTAN_DLL Verification
 /*
 * A generic Key Agreement Operation (eg DH or ECDH)
 */
-class BOTAN_DLL KA_Operation
+class BOTAN_DLL Key_Agreement
    {
    public:
       /*
@@ -119,7 +119,7 @@ class BOTAN_DLL KA_Operation
       */
       virtual SecureVector<byte> agree(const byte w[], u32bit w_len) const = 0;
 
-      virtual ~KA_Operation() {}
+      virtual ~Key_Agreement() {}
    };
 
 }

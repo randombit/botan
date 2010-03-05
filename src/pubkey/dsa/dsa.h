@@ -59,7 +59,7 @@ class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
       bool check_key(RandomNumberGenerator& rng, bool strong) const;
    };
 
-class BOTAN_DLL DSA_Signature_Operation : public PK_Ops::Signature_Operation
+class BOTAN_DLL DSA_Signature_Operation : public PK_Ops::Signature
    {
    public:
       DSA_Signature_Operation(const DSA_PrivateKey& dsa);

@@ -161,7 +161,7 @@ class BOTAN_DLL PK_Signer
       PK_Signer(const PK_Signer&);
       PK_Signer& operator=(const PK_Signer&);
 
-      PK_Ops::Signature_Operation* op;
+      PK_Ops::Signature* op;
       EMSA* emsa;
       Signature_Format sig_format;
    };
@@ -347,7 +347,7 @@ class BOTAN_DLL PK_Key_Agreement
       PK_Key_Agreement(const PK_Key_Agreement_Key&);
       PK_Key_Agreement& operator=(const PK_Key_Agreement&);
 
-      PK_Ops::KA_Operation* op;
+      PK_Ops::Key_Agreement* op;
       KDF* kdf;
    };
 

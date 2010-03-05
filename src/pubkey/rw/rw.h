@@ -68,7 +68,7 @@ class BOTAN_DLL RW_PrivateKey : public RW_PublicKey,
                               RandomNumberGenerator& rng) const;
    };
 
-class BOTAN_DLL RW_Signature_Operation : public PK_Ops::Signature_Operation
+class BOTAN_DLL RW_Signature_Operation : public PK_Ops::Signature
    {
    public:
       RW_Signature_Operation(const RW_PrivateKey& rw);

@@ -108,7 +108,7 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
          { return EC_PublicKey::algorithm_identifier(); }
    };
 
-class BOTAN_DLL GOST_3410_Signature_Operation : public PK_Ops::Signature_Operation
+class BOTAN_DLL GOST_3410_Signature_Operation : public PK_Ops::Signature
    {
    public:
       GOST_3410_Signature_Operation(const GOST_3410_PrivateKey& gost_3410);

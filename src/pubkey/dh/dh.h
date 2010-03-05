@@ -74,7 +74,7 @@ class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
 /**
 * DH operation
 */
-class BOTAN_DLL DH_KA_Operation : public PK_Ops::KA_Operation
+class BOTAN_DLL DH_KA_Operation : public PK_Ops::Key_Agreement
    {
    public:
 

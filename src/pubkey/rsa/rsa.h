@@ -98,7 +98,7 @@ class BOTAN_DLL RSA_PrivateKey : public RSA_PublicKey,
       BigInt private_op(const byte[], u32bit) const;
    };
 
-class BOTAN_DLL RSA_Signature_Operation : public PK_Ops::Signature_Operation
+class BOTAN_DLL RSA_Signature_Operation : public PK_Ops::Signature
    {
    public:
       RSA_Signature_Operation(const RSA_PrivateKey& rsa);

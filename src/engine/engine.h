@@ -70,13 +70,13 @@ class BOTAN_DLL Engine
                                        Algorithm_Factory&)
          { return 0; }
 
-      virtual PK_Ops::KA_Operation*
+      virtual PK_Ops::Key_Agreement*
          get_key_agreement_op(const Private_Key&) const
          {
          return 0;
          }
 
-      virtual PK_Ops::Signature_Operation*
+      virtual PK_Ops::Signature*
          get_signature_op(const Private_Key&) const
          {
          return 0;
