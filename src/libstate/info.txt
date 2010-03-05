@@ -11,16 +11,11 @@ lookup.h
 scan_name.h
 </header:public>
 
-<header:internal>
-pk_engine.h
-</header:internal>
-
 <source>
 get_enc.cpp
 init.cpp
 libstate.cpp
 lookup.cpp
-pk_engine.cpp
 policy.cpp
 scan_name.cpp
 </source>

@@ -6,7 +6,8 @@
 */
 
 #include <botan/pow_mod.h>
-#include <botan/internal/pk_engine.h>
+#include <botan/libstate.h>
+#include <botan/engine.h>
 
 namespace Botan {
 
@@ -55,7 +56,23 @@ Power_Mod::~Power_Mod()
 void Power_Mod::set_modulus(const BigInt& n, Usage_Hints hints) const
    {
    delete core;
-   core = ((n == 0) ? 0 : Engine_Core::mod_exp(n, hints));
+   core = 0;
+
+   if(n != 0)
+      {
+      Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
+
+      while(const Engine* engine = i.next())
+         {
+         core = engine->mod_exp(n, hints);
+
+         if(core)
+            break;
+         }
+
+      if(!core)
+         throw Lookup_Error("Power_Mod: Unable to find a working engine");
+      }
    }
 
 /*
