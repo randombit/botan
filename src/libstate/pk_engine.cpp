@@ -34,44 +34,6 @@ IF_Operation* if_op(const BigInt& e, const BigInt& n, const BigInt& d,
    }
 #endif
 
-#if defined(BOTAN_HAS_DSA)
-/*
-* Acquire a DSA op
-*/
-DSA_Operation* dsa_op(const DL_Group& group, const BigInt& y, const BigInt& x)
-   {
-   Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
-
-   while(const Engine* engine = i.next())
-      {
-      DSA_Operation* op = engine->dsa_op(group, y, x);
-      if(op)
-         return op;
-      }
-
-   throw Lookup_Error("Engine_Core::dsa_op: Unable to find a working engine");
-   }
-#endif
-
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-/*
-* Acquire a NR op
-*/
-NR_Operation* nr_op(const DL_Group& group, const BigInt& y, const BigInt& x)
-   {
-   Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
-
-   while(const Engine* engine = i.next())
-      {
-      NR_Operation* op = engine->nr_op(group, y, x);
-      if(op)
-         return op;
-      }
-
-   throw Lookup_Error("Engine_Core::nr_op: Unable to find a working engine");
-   }
-#endif
-
 #if defined(BOTAN_HAS_ELGAMAL)
 /*
 * Acquire an ElGamal op

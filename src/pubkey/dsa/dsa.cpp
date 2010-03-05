@@ -19,16 +19,6 @@ DSA_PublicKey::DSA_PublicKey(const DL_Group& grp, const BigInt& y1)
    {
    group = grp;
    y = y1;
-   core = DSA_Core(group, y);
-   }
-
-/*
-* DSA Verification Function
-*/
-bool DSA_PublicKey::verify(const byte msg[], u32bit msg_len,
-                           const byte sig[], u32bit sig_len) const
-   {
-   return core.verify(msg, msg_len, sig, sig_len);
    }
 
 /*
@@ -46,8 +36,6 @@ DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng,
 
    y = power_mod(group_g(), x, group_p());
 
-   core = DSA_Core(group, y, x);
-
    if(x_arg == 0)
       gen_check(rng);
    else
@@ -60,7 +48,6 @@ DSA_PrivateKey::DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
    {
    y = power_mod(group_g(), x, group_p());
-   core = DSA_Core(group, y, x);
 
    load_check(rng);
    }

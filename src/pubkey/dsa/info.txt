@@ -1,17 +1,5 @@
 define DSA
 
-<header:public>
-dsa.h
-dsa_core.h
-dsa_op.h
-</header:public>
-
-<source>
-dsa.cpp
-dsa_core.cpp
-dsa_op.cpp
-</source>
-
 <requires>
 dl_algo
 dl_group

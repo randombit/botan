@@ -7,27 +7,13 @@
 
 #include <botan/internal/default_engine.h>
 
-#if defined(BOTAN_HAS_IF_PUBLIC_KEY_FAMILY)
-  #include <botan/if_op.h>
-#endif
-
-#if defined(BOTAN_HAS_DSA)
-  #include <botan/dsa_op.h>
-#endif
-
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-  #include <botan/nr_op.h>
-#endif
-
-#if defined(BOTAN_HAS_ELGAMAL)
-  #include <botan/elg_op.h>
-#endif
-
 #if defined(BOTAN_HAS_RSA)
+  #include <botan/if_op.h>
   #include <botan/rsa.h>
 #endif
 
 #if defined(BOTAN_HAS_RW)
+  #include <botan/if_op.h>
   #include <botan/rw.h>
 #endif
 
@@ -41,6 +27,7 @@
 
 #if defined(BOTAN_HAS_ELGAMAL)
   #include <botan/elgamal.h>
+  #include <botan/elg_op.h>
 #endif
 
 #if defined(BOTAN_HAS_GOST_3410_2001)
@@ -161,28 +148,6 @@ IF_Operation* Default_Engine::if_op(const BigInt& e, const BigInt& n,
                                     const BigInt& d2, const BigInt& c) const
    {
    return new Default_IF_Op(e, n, d, p, q, d1, d2, c);
-   }
-#endif
-
-#if defined(BOTAN_HAS_DSA)
-/*
-* Acquire a DSA op
-*/
-DSA_Operation* Default_Engine::dsa_op(const DL_Group& group, const BigInt& y,
-                                      const BigInt& x) const
-   {
-   return new Default_DSA_Op(group, y, x);
-   }
-#endif
-
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-/*
-* Acquire a NR op
-*/
-NR_Operation* Default_Engine::nr_op(const DL_Group& group, const BigInt& y,
-                                    const BigInt& x) const
-   {
-   return new Default_NR_Op(group, y, x);
    }
 #endif
 

@@ -10,7 +10,8 @@
 
 #include <botan/dl_algo.h>
 #include <botan/pk_ops.h>
-#include <botan/nr_core.h>
+#include <botan/numthry.h>
+#include <botan/reducer.h>
 
 namespace Botan {
 
@@ -22,8 +23,6 @@ class BOTAN_DLL NR_PublicKey : public PK_Verifying_with_MR_Key,
    {
    public:
       std::string algo_name() const { return "NR"; }
-
-      SecureVector<byte> verify(const byte sig[], u32bit sig_len) const;
 
       DL_Group::Format group_format() const { return DL_Group::ANSI_X9_57; }
 
@@ -37,7 +36,6 @@ class BOTAN_DLL NR_PublicKey : public PK_Verifying_with_MR_Key,
       NR_PublicKey(const DL_Group& group, const BigInt& pub_key);
    protected:
       NR_PublicKey() {}
-      NR_Core core;
    };
 
 /*

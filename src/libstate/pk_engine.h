@@ -15,14 +15,6 @@
   #include <botan/if_op.h>
 #endif
 
-#if defined(BOTAN_HAS_DSA)
-  #include <botan/dsa_op.h>
-#endif
-
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-  #include <botan/nr_op.h>
-#endif
-
 #if defined(BOTAN_HAS_ELGAMAL)
   #include <botan/elg_op.h>
 #endif
@@ -44,14 +36,6 @@ Modular_Exponentiator* mod_exp(const BigInt&, Power_Mod::Usage_Hints);
 IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,
                     const BigInt&, const BigInt&, const BigInt&,
                     const BigInt&, const BigInt&);
-#endif
-
-#if defined(BOTAN_HAS_DSA)
-DSA_Operation* dsa_op(const DL_Group&, const BigInt&, const BigInt&);
-#endif
-
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-NR_Operation* nr_op(const DL_Group&, const BigInt&, const BigInt&);
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)

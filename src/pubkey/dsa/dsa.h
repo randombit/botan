@@ -12,7 +12,6 @@
 #include <botan/pk_ops.h>
 #include <botan/reducer.h>
 #include <botan/pow_mod.h>
-#include <botan/dsa_core.h>
 
 namespace Botan {
 
@@ -30,20 +29,15 @@ class BOTAN_DLL DSA_PublicKey : public PK_Verifying_wo_MR_Key,
       u32bit message_part_size() const { return group_q().bytes(); }
       u32bit max_input_bits() const { return group_q().bits(); }
 
-      bool verify(const byte msg[], u32bit msg_len,
-                  const byte sig[], u32bit sig_len) const;
-
       DSA_PublicKey(const AlgorithmIdentifier& alg_id,
                     const MemoryRegion<byte>& key_bits) :
          DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
          {
-         core = DSA_Core(group, y);
          }
 
       DSA_PublicKey(const DL_Group& group, const BigInt& y);
    protected:
       DSA_PublicKey() {}
-      DSA_Core core;
    };
 
 /*

@@ -25,14 +25,6 @@
   #include <botan/if_op.h>
 #endif
 
-#if defined(BOTAN_HAS_DSA)
-  #include <botan/dsa_op.h>
-#endif
-
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-  #include <botan/nr_op.h>
-#endif
-
 #if defined(BOTAN_HAS_ELGAMAL)
   #include <botan/elg_op.h>
 #endif
@@ -99,18 +91,6 @@ class BOTAN_DLL Engine
       virtual IF_Operation* if_op(const BigInt&, const BigInt&, const BigInt&,
                                   const BigInt&, const BigInt&, const BigInt&,
                                   const BigInt&, const BigInt&) const
-         { return 0; }
-#endif
-
-#if defined(BOTAN_HAS_DSA)
-      virtual DSA_Operation* dsa_op(const DL_Group&, const BigInt&,
-                                    const BigInt&) const
-         { return 0; }
-#endif
-
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-      virtual NR_Operation* nr_op(const DL_Group&, const BigInt&,
-                                  const BigInt&) const
          { return 0; }
 #endif
 

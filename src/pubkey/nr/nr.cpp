@@ -16,7 +16,6 @@ NR_PublicKey::NR_PublicKey(const AlgorithmIdentifier& alg_id,
                            const MemoryRegion<byte>& key_bits) :
    DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
    {
-   core = NR_Core(group, y);
    }
 
 /*
@@ -26,16 +25,6 @@ NR_PublicKey::NR_PublicKey(const DL_Group& grp, const BigInt& y1)
    {
    group = grp;
    y = y1;
-
-   core = NR_Core(group, y);
-   }
-
-/*
-* Nyberg-Rueppel Verification Function
-*/
-SecureVector<byte> NR_PublicKey::verify(const byte sig[], u32bit sig_len) const
-   {
-   return core.verify(sig, sig_len);
    }
 
 /*
@@ -53,8 +42,6 @@ NR_PrivateKey::NR_PrivateKey(RandomNumberGenerator& rng,
 
    y = power_mod(group_g(), x, group_p());
 
-   core = NR_Core(group, y, x);
-
    if(x_arg == 0)
       gen_check(rng);
    else
@@ -67,8 +54,6 @@ NR_PrivateKey::NR_PrivateKey(const AlgorithmIdentifier& alg_id,
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
    {
    y = power_mod(group_g(), x, group_p());
-
-   core = NR_Core(group, y, x);
 
    load_check(rng);
    }

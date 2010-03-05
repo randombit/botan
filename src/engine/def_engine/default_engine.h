@@ -34,15 +34,6 @@ class Default_Engine : public Engine
                           const BigInt&, const BigInt&) const;
 #endif
 
-#if defined(BOTAN_HAS_DSA)
-      DSA_Operation* dsa_op(const DL_Group&, const BigInt&,
-                            const BigInt&) const;
-#endif
-
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-      NR_Operation* nr_op(const DL_Group&, const BigInt&, const BigInt&) const;
-#endif
-
 #if defined(BOTAN_HAS_ELGAMAL)
       ELG_Operation* elg_op(const DL_Group&, const BigInt&,
                             const BigInt&) const;
