@@ -202,7 +202,7 @@ void PointGFp::mult2()
 BigInt PointGFp::get_affine_x() const
    {
    if(is_zero())
-      throw Illegal_Transformation("cannot convert to affine");
+      throw Illegal_Transformation("Cannot convert zero point to affine");
 
    const Modular_Reducer& mod_p = curve.mod_p();
 
@@ -213,7 +213,7 @@ BigInt PointGFp::get_affine_x() const
 BigInt PointGFp::get_affine_y() const
    {
    if(is_zero())
-      throw Illegal_Transformation("cannot convert to affine");
+      throw Illegal_Transformation("Cannot convert zero point to affine");
 
    const Modular_Reducer& mod_p = curve.mod_p();
 
