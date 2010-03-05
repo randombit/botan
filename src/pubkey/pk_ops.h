@@ -15,7 +15,16 @@ namespace Botan {
 
 namespace PK_Ops {
 
-class Signature
+class BOTAN_DLL Encryption
+   {
+   public:
+      virtual SecureVector<byte> encrypt(const byte msg[], u32bit msg_len,
+                                         RandomNumberGenerator& rng) const = 0;
+
+      virtual ~Encryption() {}
+   };
+
+class BOTAN_DLL Signature
    {
    public:
       /**
@@ -42,9 +51,9 @@ class Signature
       * @param msg_len the length of msg in bytes
       * @param rng a random number generator
       */
-      virtual SecureVector<byte> sign(const byte msg[],
-                                      u32bit msg_len,
-                                      RandomNumberGenerator& rng) = 0;
+      virtual SecureVector<byte>
+         sign(const byte msg[], u32bit msg_len,
+              RandomNumberGenerator& rng) const = 0;
 
       virtual ~Signature() {}
    };
@@ -85,7 +94,7 @@ class BOTAN_DLL Verification
       * @returns if signature is a valid one for message
       */
       virtual bool verify(const byte msg[], u32bit msg_len,
-                          const byte sig[], u32bit sig_len)
+                          const byte sig[], u32bit sig_len) const
          {
          throw Invalid_State("Message recovery required");
          }
@@ -97,7 +106,8 @@ class BOTAN_DLL Verification
       * @param msg_len the length of msg in bytes
       * @returns recovered message
       */
-      virtual SecureVector<byte> verify_mr(const byte msg[], u32bit msg_len)
+      virtual SecureVector<byte> verify_mr(const byte msg[],
+                                           u32bit msg_len) const
          {
          throw Invalid_State("Message recovery not supported");
          }

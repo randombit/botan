@@ -92,9 +92,9 @@ NR_Signature_Operation::NR_Signature_Operation(const NR_PrivateKey& nr) :
    {
    }
 
-SecureVector<byte> NR_Signature_Operation::sign(const byte msg[],
-                                                u32bit msg_len,
-                                                RandomNumberGenerator& rng)
+SecureVector<byte>
+NR_Signature_Operation::sign(const byte msg[], u32bit msg_len,
+                             RandomNumberGenerator& rng) const
    {
    rng.add_entropy(msg, msg_len);
 
@@ -129,7 +129,7 @@ NR_Verification_Operation::NR_Verification_Operation(const NR_PublicKey& nr) :
    }
 
 SecureVector<byte>
-NR_Verification_Operation::verify_mr(const byte msg[], u32bit msg_len)
+NR_Verification_Operation::verify_mr(const byte msg[], u32bit msg_len) const
    {
    const BigInt& q = mod_q.get_modulus();
 

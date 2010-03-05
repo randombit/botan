@@ -94,7 +94,7 @@ class BOTAN_DLL ECDSA_Signature_Operation : public PK_Ops::Signature
       ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa);
 
       SecureVector<byte> sign(const byte msg[], u32bit msg_len,
-                              RandomNumberGenerator& rng);
+                              RandomNumberGenerator& rng) const;
 
       u32bit message_parts() const { return 2; }
       u32bit message_part_size() const { return order.bytes(); }
@@ -118,7 +118,7 @@ class BOTAN_DLL ECDSA_Verification_Operation : public PK_Ops::Verification
       bool with_recovery() const { return false; }
 
       bool verify(const byte msg[], u32bit msg_len,
-                  const byte sig[], u32bit sig_len);
+                  const byte sig[], u32bit sig_len) const;
    private:
       const PointGFp& base_point;
       const PointGFp& public_point;

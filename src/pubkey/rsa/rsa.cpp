@@ -130,9 +130,9 @@ RSA_Signature_Operation::RSA_Signature_Operation(const RSA_PrivateKey& rsa) :
    {
    }
 
-SecureVector<byte> RSA_Signature_Operation::sign(const byte msg[],
-                                                 u32bit msg_len,
-                                                 RandomNumberGenerator&)
+SecureVector<byte>
+RSA_Signature_Operation::sign(const byte msg[], u32bit msg_len,
+                              RandomNumberGenerator&) const
    {
    const u32bit n_bytes = (n_bits + 7) / 8;
 

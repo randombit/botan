@@ -104,7 +104,7 @@ class BOTAN_DLL RSA_Signature_Operation : public PK_Ops::Signature
       u32bit max_input_bits() const { return (n_bits - 1); }
 
       SecureVector<byte> sign(const byte msg[], u32bit msg_len,
-                              RandomNumberGenerator& rng);
+                              RandomNumberGenerator& rng) const;
    private:
       const BigInt& q;
       const BigInt& c;
@@ -124,7 +124,7 @@ class BOTAN_DLL RSA_Verification_Operation : public PK_Ops::Verification
       u32bit max_input_bits() const { return (n_bits - 1); }
       bool with_recovery() const { return true; }
 
-      SecureVector<byte> verify_mr(const byte msg[], u32bit msg_len)
+      SecureVector<byte> verify_mr(const byte msg[], u32bit msg_len) const
          {
          return BigInt::encode(powermod_e_n(BigInt(msg, msg_len)));
          }

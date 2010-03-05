@@ -69,7 +69,7 @@ class BOTAN_DLL DSA_Signature_Operation : public PK_Ops::Signature
       u32bit max_input_bits() const { return q.bits(); }
 
       SecureVector<byte> sign(const byte msg[], u32bit msg_len,
-                              RandomNumberGenerator& rng);
+                              RandomNumberGenerator& rng) const;
    private:
       const BigInt& q;
       const BigInt& x;
@@ -89,7 +89,7 @@ class BOTAN_DLL DSA_Verification_Operation : public PK_Ops::Verification
       bool with_recovery() const { return false; }
 
       bool verify(const byte msg[], u32bit msg_len,
-                  const byte sig[], u32bit sig_len);
+                  const byte sig[], u32bit sig_len) const;
    private:
       const BigInt& q;
       const BigInt& y;

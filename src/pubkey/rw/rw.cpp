@@ -84,9 +84,9 @@ RW_Signature_Operation::RW_Signature_Operation(const RW_PrivateKey& rw) :
    {
    }
 
-SecureVector<byte> RW_Signature_Operation::sign(const byte msg[],
-                                                u32bit msg_len,
-                                                RandomNumberGenerator&)
+SecureVector<byte>
+RW_Signature_Operation::sign(const byte msg[], u32bit msg_len,
+                             RandomNumberGenerator&) const
    {
    BigInt i(msg, msg_len);
 
@@ -108,7 +108,7 @@ SecureVector<byte> RW_Signature_Operation::sign(const byte msg[],
    }
 
 SecureVector<byte>
-RW_Verification_Operation::verify_mr(const byte msg[], u32bit msg_len)
+RW_Verification_Operation::verify_mr(const byte msg[], u32bit msg_len) const
    {
    BigInt m(msg, msg_len);
 
