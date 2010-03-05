@@ -9,6 +9,8 @@
 
 #include <botan/ecdsa.h>
 
+#include <iostream>
+
 namespace Botan {
 
 bool ECDSA_PublicKey::verify(const byte msg[], u32bit msg_len,
@@ -39,38 +41,6 @@ bool ECDSA_PublicKey::verify(const byte msg[], u32bit msg_len,
    return (R.get_affine_x() % n == r);
    }
 
-SecureVector<byte> ECDSA_PrivateKey::sign(const byte msg[],
-                                          u32bit msg_len,
-                                          RandomNumberGenerator& rng) const
-   {
-   const BigInt& n = domain().get_order();
-
-   if(n == 0 || private_value() == 0)
-      throw Invalid_State("ECDSA_PrivateKey::sign: Not initialized");
-
-   BigInt k;
-   do
-      k.randomize(rng, n.bits()-1);
-   while(k >= n);
-
-   BigInt e(msg, msg_len);
-
-   PointGFp k_times_P = domain().get_base_point() * k;
-   BigInt r = k_times_P.get_affine_x() % n;
-
-   if(r == 0)
-      throw Internal_Error("Default_ECDSA_Op::sign: r was zero");
-
-   BigInt k_inv = inverse_mod(k, n);
-
-   BigInt s = (((r * private_value()) + e) * k_inv) % n;
-
-   SecureVector<byte> output(2*n.bytes());
-   r.binary_encode(output + (output.size() / 2 - r.bytes()));
-   s.binary_encode(output + (output.size() - s.bytes()));
-   return output;
-   }
-
 ECDSA_Signature_Operation::ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa) :
    base_point(ecdsa.domain().get_base_point()),
    order(ecdsa.domain().get_order()),
@@ -85,9 +55,10 @@ SecureVector<byte> ECDSA_Signature_Operation::sign(const byte msg[],
    rng.add_entropy(msg, msg_len);
 
    BigInt k;
-   do
-      k.randomize(rng, order.bits()-1);
-   while(k >= order);
+   k.randomize(rng, order.bits());
+
+   while(k >= order)
+      k.randomize(rng, order.bits() - 1);
 
    BigInt e(msg, msg_len);
 

@@ -59,9 +59,6 @@ class BOTAN_DLL RSA_PrivateKey : public RSA_PublicKey,
                                  public IF_Scheme_PrivateKey
    {
    public:
-      SecureVector<byte> sign(const byte[], u32bit,
-                              RandomNumberGenerator&) const;
-
       SecureVector<byte> decrypt(const byte[], u32bit) const;
 
       bool check_key(RandomNumberGenerator& rng, bool) const;

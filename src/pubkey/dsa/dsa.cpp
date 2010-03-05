@@ -66,24 +66,6 @@ DSA_PrivateKey::DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
    }
 
 /*
-* DSA Signature Operation
-*/
-SecureVector<byte> DSA_PrivateKey::sign(const byte in[], u32bit length,
-                                        RandomNumberGenerator& rng) const
-   {
-   const BigInt& q = group_q();
-
-   rng.add_entropy(in, length);
-
-   BigInt k;
-   do
-      k.randomize(rng, q.bits());
-   while(k >= q);
-
-   return core.sign(in, length, k);
-   }
-
-/*
 * Check Private DSA Parameters
 */
 bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const

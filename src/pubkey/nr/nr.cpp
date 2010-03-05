@@ -74,22 +74,6 @@ NR_PrivateKey::NR_PrivateKey(const AlgorithmIdentifier& alg_id,
    }
 
 /*
-* Nyberg-Rueppel Signature Operation
-*/
-SecureVector<byte> NR_PrivateKey::sign(const byte in[], u32bit length,
-                                       RandomNumberGenerator& rng) const
-   {
-   const BigInt& q = group_q();
-
-   BigInt k;
-   do
-      k.randomize(rng, q.bits());
-   while(k >= q);
-
-   return core.sign(in, length, k);
-   }
-
-/*
 * Check Private Nyberg-Rueppel Parameters
 */
 bool NR_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
@@ -141,7 +125,7 @@ SecureVector<byte> NR_Signature_Operation::sign(const byte msg[],
 
    BigInt c = mod_q.reduce(powermod_g_p(k) + f);
    if(c.is_zero())
-      throw Internal_Error("Default_NR_Op::sign: c was zero");
+      throw Internal_Error("NR_Signature_Operation: c was zero");
    BigInt d = mod_q.reduce(k - x * c);
 
    SecureVector<byte> output(2*q.bytes());

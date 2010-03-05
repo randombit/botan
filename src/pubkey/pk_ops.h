@@ -49,6 +49,31 @@ class Signature_Operation
       virtual ~Signature_Operation() {}
    };
 
+class Verification_Operation
+   {
+   public:
+      /**
+      * Get the maximum message size in bits supported by this public key.
+      * @return the maximum message in bits
+      */
+      virtual u32bit max_input_bits() const = 0;
+
+      /**
+      * @return boolean specifying if this key type supports recovery
+      */
+      virtual bool with_recovery() const = 0;
+
+      /*
+      * Perform a signature operation
+      * @param msg the message
+      * @param msg_len the length of msg in bytes
+      * @returns recovered message if with_recovery() otherwise {0} or {1}
+      */
+      virtual SecureVector<byte> verify(const byte msg[], u32bit msg_len);
+
+      virtual ~Verification_Operation() {}
+   };
+
 /*
 * A generic Key Agreement Operation (eg DH or ECDH)
 */

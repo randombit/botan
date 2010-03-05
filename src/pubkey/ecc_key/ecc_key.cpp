@@ -87,17 +87,18 @@ const BigInt& EC_PrivateKey::private_value() const
 
 /**
 * EC_PrivateKey generator
-**/
+*/
 EC_PrivateKey::EC_PrivateKey(const EC_Domain_Params& dom_par,
-                             const BigInt& priv_key) :
-   EC_PublicKey(dom_par, dom_par.get_base_point() * private_key),
-   private_key(priv_key)
+                             const BigInt& priv_key)
    {
+   domain_params = dom_par;
+   public_key = domain().get_base_point() * priv_key;
+   private_key = priv_key;
    }
 
 /**
 * EC_PrivateKey generator
-**/
+*/
 EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
                              const EC_Domain_Params& dom_par)
    {

@@ -106,15 +106,6 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
 
       AlgorithmIdentifier pkcs8_algorithm_identifier() const
          { return EC_PublicKey::algorithm_identifier(); }
-
-      /**
-      * Sign a message with this key.
-      * @param message the byte array representing the message to be signed
-      * @param mess_len the length of the message byte array
-      * @result the signature
-      */
-      SecureVector<byte> sign(const byte message[], u32bit mess_len,
-                              RandomNumberGenerator& rng) const;
    };
 
 class BOTAN_DLL GOST_3410_Signature_Operation : public PK_Ops::Signature_Operation

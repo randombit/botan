@@ -96,16 +96,6 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       */
       ECDSA_PrivateKey(const EC_Domain_Params& domain, const BigInt& x) :
          EC_PrivateKey(domain, x) {}
-
-      /**
-      * Sign a message with this key.
-      * @param message the byte array representing the message to be signed
-      * @param mess_len the length of the message byte array
-      * @result the signature
-      */
-
-      SecureVector<byte> sign(const byte message[], u32bit mess_len,
-                              RandomNumberGenerator& rng) const;
    };
 
 class BOTAN_DLL ECDSA_Signature_Operation : public PK_Ops::Signature_Operation

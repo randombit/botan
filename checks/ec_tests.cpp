@@ -847,84 +847,6 @@ void test_curve_cp_ctor()
    CurveGFp curve(dom_pars.get_curve());
    }
 
-/**
-* The following test checks assignment operator and copy ctor for ec keys
-*/
-void test_ec_key_cp_and_assignment(RandomNumberGenerator& rng)
-   {
-   std::cout << "." << std::flush;
-
-
-   std::string g_secp("024a96b5688ef573284664698968c38bb913cbfc82");
-   SecureVector<byte> sv_g_secp = decode_hex ( g_secp);
-   BigInt bi_p_secp("0xffffffffffffffffffffffffffffffff7fffffff");
-   BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
-   BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
-   BigInt order = BigInt("0x0100000000000000000001f4c8f927aed3ca752257");
-   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
-
-   BigInt cofactor = BigInt(1);
-   PointGFp p_G = OS2ECP ( sv_g_secp, curve );
-
-   EC_Domain_Params dom_pars = EC_Domain_Params(curve, p_G, order, cofactor);
-   ECDSA_PrivateKey my_priv_key(rng, dom_pars);
-
-   std::string str_message = ("12345678901234567890abcdef12");
-   SecureVector<byte> sv_message = decode_hex(str_message);
-
-   // sign with the original key
-   SecureVector<byte> signature = my_priv_key.sign(sv_message.begin(), sv_message.size(), rng);
-   bool ver_success = my_priv_key.verify(sv_message.begin(), sv_message.size(), signature.begin(), signature.size());
-   CHECK_MESSAGE(ver_success, "generated signature could not be verified positively");
-
-   // make a copy and sign
-   ECDSA_PrivateKey cp_key(my_priv_key);
-   SecureVector<byte> cp_sig = cp_key.sign(sv_message.begin(), sv_message.size(), rng);
-
-   // now cross verify...
-   CHECK(my_priv_key.verify(sv_message.begin(), sv_message.size(), cp_sig.begin(), cp_sig.size()));
-   CHECK(cp_key.verify(sv_message.begin(), sv_message.size(), signature.begin(), signature.size()));
-
-   // make an copy assignment and verify
-   ECDSA_PrivateKey ass_key = my_priv_key;
-   SecureVector<byte> ass_sig = ass_key.sign(sv_message.begin(), sv_message.size(), rng);
-
-   // now cross verify...
-   CHECK(my_priv_key.verify(sv_message.begin(), sv_message.size(), ass_sig.begin(), ass_sig.size()));
-   CHECK(ass_key.verify(sv_message.begin(), sv_message.size(), signature.begin(), signature.size()));
-   }
-
-void test_ec_key_cast(RandomNumberGenerator& rng)
-   {
-   std::cout << "." << std::flush;
-
-   std::string g_secp("024a96b5688ef573284664698968c38bb913cbfc82");
-   SecureVector<byte> sv_g_secp = decode_hex ( g_secp);
-   BigInt bi_p_secp("0xffffffffffffffffffffffffffffffff7fffffff");
-   BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
-   BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
-   BigInt order = BigInt("0x0100000000000000000001f4c8f927aed3ca752257");
-   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
-   BigInt cofactor = BigInt(1);
-   PointGFp p_G = OS2ECP ( sv_g_secp, curve );
-
-   EC_Domain_Params dom_pars = EC_Domain_Params(curve, p_G, order, cofactor);
-   ECDSA_PrivateKey my_priv_key(rng, dom_pars);
-   ECDSA_PublicKey my_ecdsa_pub_key = my_priv_key;
-
-   Public_Key* my_pubkey = static_cast<Public_Key*>(&my_ecdsa_pub_key);
-   ECDSA_PublicKey* ec_cast_back = dynamic_cast<ECDSA_PublicKey*>(my_pubkey);
-
-   std::string str_message = ("12345678901234567890abcdef12");
-   SecureVector<byte> sv_message = decode_hex(str_message);
-
-   // sign with the original key
-   SecureVector<byte> signature = my_priv_key.sign(sv_message.begin(), sv_message.size(), rng);
-
-   bool ver_success = ec_cast_back->verify(sv_message.begin(), sv_message.size(), signature.begin(), signature.size());
-   CHECK_MESSAGE(ver_success, "generated signature could not be verified positively");
-   }
-
 }
 
 void do_ec_tests(RandomNumberGenerator& rng)
@@ -955,8 +877,6 @@ void do_ec_tests(RandomNumberGenerator& rng)
    test_point_swap(rng);
    test_mult_sec_mass(rng);
    test_curve_cp_ctor();
-   test_ec_key_cp_and_assignment(rng);
-   test_ec_key_cast(rng);
 
    std::cout << std::endl;
    }

@@ -101,46 +101,6 @@ bool GOST_3410_PublicKey::verify(const byte msg[], u32bit msg_len,
    return (R.get_affine_x() == r);
    }
 
-SecureVector<byte>
-GOST_3410_PrivateKey::sign(const byte msg[],
-                           u32bit msg_len,
-                           RandomNumberGenerator& rng) const
-   {
-   if(private_value() == 0)
-      throw Invalid_State("GOST_3410::sign(): no private key");
-
-   const BigInt& n = domain().get_order();
-
-   if(n == 0)
-      throw Invalid_State("GOST_3410::sign(): domain parameters not set");
-
-   BigInt k;
-   do
-      k.randomize(rng, n.bits()-1);
-   while(k >= n);
-
-   BigInt e(msg, msg_len);
-
-   e %= n;
-   if(e == 0)
-      e = 1;
-
-   PointGFp k_times_P = domain().get_base_point() * k;
-   k_times_P.check_invariants();
-
-   BigInt r = k_times_P.get_affine_x() % n;
-
-   if(r == 0)
-      throw Invalid_State("GOST_3410::sign: r was zero");
-
-   BigInt s = (r*private_value() + k*e) % n;
-
-   SecureVector<byte> output(2*n.bytes());
-   r.binary_encode(output + (output.size() / 2 - r.bytes()));
-   s.binary_encode(output + (output.size() - s.bytes()));
-   return output;
-   }
-
 GOST_3410_Signature_Operation::GOST_3410_Signature_Operation(
    const GOST_3410_PrivateKey& gost_3410) :
 

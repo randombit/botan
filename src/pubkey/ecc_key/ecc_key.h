@@ -31,7 +31,6 @@ namespace Botan {
 class BOTAN_DLL EC_PublicKey : public virtual Public_Key
    {
    public:
-
       EC_PublicKey(const EC_Domain_Params& dom_par,
                    const PointGFp& pub_point);
 

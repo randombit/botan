@@ -96,15 +96,6 @@ SecureVector<byte> RSA_PrivateKey::decrypt(const byte in[], u32bit len) const
    }
 
 /*
-* RSA Signature Operation
-*/
-SecureVector<byte> RSA_PrivateKey::sign(const byte in[], u32bit len,
-                                        RandomNumberGenerator&) const
-   {
-   return BigInt::encode_1363(private_op(in, len), n.bytes());
-   }
-
-/*
 * Check Private RSA Parameters
 */
 bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
@@ -150,7 +141,7 @@ RSA_Signature_Operation::RSA_Signature_Operation(const RSA_PrivateKey& rsa) :
 
 SecureVector<byte> RSA_Signature_Operation::sign(const byte msg[],
                                                  u32bit msg_len,
-                                                 RandomNumberGenerator& rng)
+                                                 RandomNumberGenerator&)
    {
    const u32bit n_bytes = (n_bits + 7) / 8;
 

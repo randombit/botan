@@ -1,6 +1,6 @@
 /*
 * Nyberg-Rueppel
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -48,9 +48,6 @@ class BOTAN_DLL NR_PrivateKey : public NR_PublicKey,
                                 public virtual DL_Scheme_PrivateKey
    {
    public:
-      SecureVector<byte> sign(const byte msg[], u32bit msg_len,
-                              RandomNumberGenerator& rng) const;
-
       bool check_key(RandomNumberGenerator& rng, bool strong) const;
 
       NR_PrivateKey(const AlgorithmIdentifier& alg_id,

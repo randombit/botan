@@ -116,35 +116,6 @@ void test_hash_larger_than_n(RandomNumberGenerator& rng)
       std::cout << "Corrupt ECDSA signature verified, should not have\n";
    }
 
-/**
-* Tests whether the the signing routine will work correctly in case the integer e
-* that is constructed from the message is larger than n, the order of the base point
-*/
-void test_message_larger_than_n(RandomNumberGenerator& rng)
-   {
-   std::cout << "." << std::flush;
-
-   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
-   ECDSA_PrivateKey priv_key(rng, dom_pars);
-   std::string str_message = ("12345678901234567890abcdef1212345678901234567890abcdef1212345678901234567890abcdef12");
-
-   SecureVector<byte> sv_message = decode_hex(str_message);
-   bool thrn = false;
-   SecureVector<byte> signature;
-   try
-      {
-      signature = priv_key.sign(sv_message.begin(), sv_message.size(), rng);
-      }
-   catch (Invalid_Argument e)
-      {
-      thrn = true;
-      }
-   //cout << "signature = " << hex_encode(signature.begin(), signature.size()) << "\n";
-   bool ver_success = priv_key.verify(sv_message.begin(), sv_message.size(), signature.begin(), signature.size());
-   CHECK_MESSAGE(ver_success, "generated signature could not be verified positively");
-   //CHECK_MESSAGE(thrn, "no exception was thrown although message to sign was too long");
-   }
-
 void test_decode_ecdsa_X509()
    {
    std::cout << "." << std::flush;
@@ -187,30 +158,28 @@ void test_decode_ver_link_SHA1()
 
 void test_sign_then_ver(RandomNumberGenerator& rng)
    {
-   std::cout << "." << std::flush;
+   std::cout << '.' << std::flush;
 
-   std::string g_secp("024a96b5688ef573284664698968c38bb913cbfc82");
-   SecureVector<byte> sv_g_secp = decode_hex(g_secp);
-   BigInt bi_p_secp("0xffffffffffffffffffffffffffffffff7fffffff");
-   BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
-   BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
-   BigInt order = BigInt("0x0100000000000000000001f4c8f927aed3ca752257");
-   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
-   BigInt cofactor = BigInt(1);
-   PointGFp p_G = OS2ECP ( sv_g_secp, curve );
+   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
+   ECDSA_PrivateKey ecdsa(rng, dom_pars);
 
-   EC_Domain_Params dom_pars = EC_Domain_Params(curve, p_G, order, cofactor);
-   ECDSA_PrivateKey my_priv_key(rng, dom_pars);
+   std::auto_ptr<PK_Signer> signer(get_pk_signer(ecdsa, "EMSA1(SHA-1)"));
 
-   std::string str_message = ("12345678901234567890abcdef12");
-   SecureVector<byte> sv_message = decode_hex(str_message);
-   SecureVector<byte> signature = my_priv_key.sign(sv_message.begin(), sv_message.size(), rng);
-   //cout << "signature = " << hex_encode(signature.begin(), signature.size()) << "\n";
-   bool ver_success = my_priv_key.verify(sv_message.begin(), sv_message.size(), signature.begin(), signature.size());
-   CHECK_MESSAGE(ver_success, "generated signature could not be verified positively");
-   signature[signature.size()-1] += 0x01;
-   bool ver_must_fail = my_priv_key.verify(sv_message.begin(), sv_message.size(), signature.begin(), signature.size());
-   CHECK_MESSAGE(!ver_must_fail, "corrupted signature could be verified positively");
+   SecureVector<byte> msg = decode_hex("12345678901234567890abcdef12");
+   SecureVector<byte> sig = signer->sign_message(msg, rng);
+
+   std::auto_ptr<PK_Verifier> verifier(get_pk_verifier(ecdsa, "EMSA1(SHA-1)"));
+
+   bool ok = verifier->verify_message(msg, sig);
+
+   if(!ok)
+      std::cout << "ERROR: Could not verify ECDSA signature\n";
+
+   sig[0]++;
+   ok = verifier->verify_message(msg, sig);
+
+   if(ok)
+      std::cout << "ERROR: Bogus ECDSA signature verified anyway\n";
    }
 
 bool test_ec_sign(RandomNumberGenerator& rng)
@@ -392,13 +361,16 @@ void test_curve_registry(RandomNumberGenerator& rng)
          OID oid(oids[i]);
          EC_Domain_Params dom_pars(oid);
          dom_pars.get_base_point().check_invariants();
-         ECDSA_PrivateKey key(rng, dom_pars);
+         ECDSA_PrivateKey ecdsa(rng, dom_pars);
 
-         std::string str_message = ("12345678901234567890abcdef12");
-         SecureVector<byte> sv_message = decode_hex(str_message);
-         SecureVector<byte> signature = key.sign(sv_message.begin(), sv_message.size(), rng);
-         bool ver_success = key.verify(sv_message.begin(), sv_message.size(), signature.begin(), signature.size());
-         CHECK_MESSAGE(ver_success, "generated signature could not be verified positively");
+         std::auto_ptr<PK_Signer> signer(get_pk_signer(ecdsa, "EMSA1(SHA-1)"));
+         std::auto_ptr<PK_Verifier> verifier(get_pk_verifier(ecdsa, "EMSA1(SHA-1)"));
+
+         SecureVector<byte> msg = decode_hex("12345678901234567890abcdef12");
+         SecureVector<byte> sig = signer->sign_message(msg, rng);
+
+         if(!verifier->verify_message(msg, sig))
+            std::cout << "Failed testing ECDSA sig for curve " << oids[i] << "\n";
          }
       catch(Invalid_Argument& e)
          {
@@ -414,28 +386,37 @@ void test_read_pkcs8(RandomNumberGenerator& rng)
    try
       {
       std::auto_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(TEST_DATA_DIR "/wo_dompar_private.pkcs8.pem", rng));
-      ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<ECDSA_PrivateKey*>(loaded_key.get());
-      CHECK_MESSAGE(loaded_ec_key, "the loaded key could not be converted into an ECDSA_PrivateKey");
+      ECDSA_PrivateKey* ecdsa = dynamic_cast<ECDSA_PrivateKey*>(loaded_key.get());
+      CHECK_MESSAGE(ecdsa, "the loaded key could not be converted into an ECDSA_PrivateKey");
 
-      std::string str_message = ("12345678901234567890abcdef12");
-      SecureVector<byte> sv_message = decode_hex(str_message);
-      SecureVector<byte> signature = loaded_ec_key->sign(sv_message.begin(), sv_message.size(), rng);
-      //cout << "signature = " << hex_encode(signature.begin(), signature.size()) << "\n";
-      bool ver_success = loaded_ec_key->verify(sv_message.begin(), sv_message.size(), signature.begin(), signature.size());
-      CHECK_MESSAGE(ver_success, "generated signature could not be verified positively");
+      std::auto_ptr<PK_Signer> signer(get_pk_signer(*ecdsa, "EMSA1(SHA-1)"));
+
+      SecureVector<byte> msg = decode_hex("12345678901234567890abcdef12");
+      SecureVector<byte> sig = signer->sign_message(msg, rng);
+
+      std::auto_ptr<PK_Verifier> verifier(get_pk_verifier(*ecdsa, "EMSA1(SHA-1)"));
+
+      bool ok = verifier->verify_message(msg, sig);
+
+      CHECK_MESSAGE(ok, "generated sig could not be verified positively");
 
       std::auto_ptr<PKCS8_PrivateKey> loaded_key_nodp(PKCS8::load_key(TEST_DATA_DIR "/nodompar_private.pkcs8.pem", rng));
       // anew in each test with unregistered domain-parameters
-      ECDSA_PrivateKey* loaded_ec_key_nodp = dynamic_cast<ECDSA_PrivateKey*>(loaded_key_nodp.get());
-      CHECK_MESSAGE(loaded_ec_key_nodp, "the loaded key could not be converted into an ECDSA_PrivateKey");
+      ECDSA_PrivateKey* ecdsa_nodp = dynamic_cast<ECDSA_PrivateKey*>(loaded_key_nodp.get());
+      CHECK_MESSAGE(ecdsa_nodp, "the loaded key could not be converted into an ECDSA_PrivateKey");
 
-      SecureVector<byte> signature_nodp = loaded_ec_key_nodp->sign(sv_message.begin(), sv_message.size(), rng);
-      //cout << "signature = " << hex_encode(signature.begin(), signature.size()) << "\n";
-      bool ver_success_nodp = loaded_ec_key_nodp->verify(sv_message.begin(), sv_message.size(), signature_nodp.begin(), signature_nodp.size());
-      CHECK_MESSAGE(ver_success_nodp, "generated signature could not be verified positively (no_dom)");
+      signer.reset(get_pk_signer(*ecdsa_nodp, "EMSA1(SHA-1)"));
+      verifier.reset(get_pk_verifier(*ecdsa_nodp, "EMSA1(SHA-1)"));
+
+      SecureVector<byte> signature_nodp = signer->sign_message(msg, rng);
+
+      ok = verifier->verify_message(msg, signature_nodp);
+      CHECK_MESSAGE(ok, "generated signature could not be verified positively (no_dom)");
+
       try
          {
-         std::auto_ptr<PKCS8_PrivateKey> loaded_key_withdp(PKCS8::load_key(TEST_DATA_DIR "/withdompar_private.pkcs8.pem", rng));
+         std::auto_ptr<PKCS8_PrivateKey> loaded_key_withdp(
+            PKCS8::load_key(TEST_DATA_DIR "/withdompar_private.pkcs8.pem", rng));
 
          std::cout << "Unexpected success: loaded key with unknown OID\n";
          }
@@ -447,48 +428,12 @@ void test_read_pkcs8(RandomNumberGenerator& rng)
       }
    }
 
-/**
-* The following test tests the copy ctors and and copy-assignment operators
-*/
-void test_cp_and_as_ctors(RandomNumberGenerator& rng)
-   {
-   std::cout << "." << std::flush;
-
-   std::auto_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(TEST_DATA_DIR "/wo_dompar_private.pkcs8.pem", rng));
-   ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<ECDSA_PrivateKey*>(loaded_key.get());
-   CHECK_MESSAGE(loaded_ec_key, "the loaded key could not be converted into an ECDSA_PrivateKey");
-   std::string str_message = ("12345678901234567890abcdef12");
-   SecureVector<byte> sv_message = decode_hex(str_message);
-   SecureVector<byte> signature_1 = loaded_ec_key->sign(sv_message.begin(), sv_message.size(), rng);
-   //cout << "signature = " << hex_encode(signature.begin(), signature.size()) << "\n";
-
-   ECDSA_PrivateKey cp_priv_key(*loaded_ec_key); // priv-key, cp-ctor
-   SecureVector<byte> signature_2 = cp_priv_key.sign(sv_message.begin(), sv_message.size(), rng);
-
-   ECDSA_PrivateKey as_priv_key = *loaded_ec_key;  //priv-key, as-op
-   SecureVector<byte> signature_3 = as_priv_key.sign(sv_message.begin(), sv_message.size(), rng);
-
-   ECDSA_PublicKey pk_1 = cp_priv_key; // pub-key, as-op
-   ECDSA_PublicKey pk_2(pk_1); // pub-key, cp-ctor
-   ECDSA_PublicKey pk_3 = pk_2;
-
-   bool ver_success_1 = pk_1.verify(sv_message.begin(), sv_message.size(), signature_1.begin(), signature_1.size());
-
-   bool ver_success_2 = pk_2.verify(sv_message.begin(), sv_message.size(), signature_2.begin(), signature_2.size());
-
-   bool ver_success_3 = pk_3.verify(sv_message.begin(), sv_message.size(), signature_3.begin(), signature_3.size());
-
-   CHECK_MESSAGE((ver_success_1 && ver_success_2 && ver_success_3), "different results for copied keys");
-   }
-
 }
 
 u32bit do_ecdsa_tests(Botan::RandomNumberGenerator& rng)
    {
    std::cout << "Testing ECDSA (InSiTo unit tests): ";
 
-   test_hash_larger_than_n(rng);
-   //test_message_larger_than_n();
    test_decode_ecdsa_X509();
    test_decode_ver_link_SHA256();
    test_decode_ver_link_SHA1();
@@ -498,7 +443,6 @@ u32bit do_ecdsa_tests(Botan::RandomNumberGenerator& rng)
    test_create_and_verify(rng);
    test_curve_registry(rng);
    test_read_pkcs8(rng);
-   test_cp_and_as_ctors(rng);
 
    std::cout << std::endl;
 
