@@ -41,7 +41,6 @@ class BOTAN_DLL RSA_PublicKey : public virtual IF_Scheme_PublicKey
 
    protected:
       RSA_PublicKey() {}
-      BigInt public_op(const BigInt&) const;
    };
 
 /**
@@ -86,8 +85,6 @@ class BOTAN_DLL RSA_PrivateKey : public RSA_PublicKey,
       */
       RSA_PrivateKey(RandomNumberGenerator& rng,
                      u32bit bits, u32bit exp = 65537);
-   private:
-      BigInt private_op(const byte[], u32bit) const;
    };
 
 class BOTAN_DLL RSA_Private_Operation : public PK_Ops::Signature,
