@@ -75,4 +75,20 @@ MemoryVector<byte> DH_PrivateKey::public_value() const
    return DH_PublicKey::public_value();
    }
 
+DH_KA_Operation::DH_KA_Operation(const DH_PrivateKey& dh) :
+   p(dh.group_p()), powermod_x_p(dh.get_x(), p)
+   {
+   BigInt k = Blinder::choose_nonce(dh.get_x(), p);
+   blinder = Blinder(k, power_mod(inverse_mod(k, p), dh.get_x(), p), p);
+   }
+
+SecureVector<byte> DH_KA_Operation::agree(const byte w[], u32bit w_len) const
+   {
+   BigInt input = BigInt::decode(w, w_len);
+
+   BigInt r = blinder.unblind(powermod_x_p(blinder.blind(input)));
+
+   return BigInt::encode_1363(r, p.bytes());
+   }
+
 }

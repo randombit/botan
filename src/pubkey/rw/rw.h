@@ -10,6 +10,7 @@
 
 #include <botan/if_algo.h>
 #include <botan/reducer.h>
+#include <botan/blinding.h>
 
 namespace Botan {
 
@@ -73,6 +74,7 @@ class BOTAN_DLL RW_Signature_Operation : public PK_Ops::Signature
 
       Fixed_Exponent_Power_Mod powermod_d1_p, powermod_d2_q;
       Modular_Reducer mod_p;
+      Blinder blinder;
    };
 
 class BOTAN_DLL RW_Verification_Operation : public PK_Ops::Verification

@@ -81,6 +81,8 @@ RW_Signature_Operation::RW_Signature_Operation(const RW_PrivateKey& rw) :
    powermod_d2_q(rw.get_d2(), rw.get_q()),
    mod_p(rw.get_p())
    {
+   BigInt k = Blinder::choose_nonce(rw.get_d(), n);
+   blinder = Blinder(power_mod(k, rw.get_e(), n), inverse_mod(k, n), n);
    }
 
 SecureVector<byte>
@@ -95,11 +97,13 @@ RW_Signature_Operation::sign(const byte msg[], u32bit msg_len,
    if(jacobi(i, n) != 1)
       i >>= 1;
 
+   i = blinder.blind(i);
+
    BigInt j1 = powermod_d1_p(i);
    BigInt j2 = powermod_d2_q(i);
    j1 = mod_p.reduce(sub_mul(j1, j2, c));
 
-   BigInt r = mul_add(j1, q, j2);
+   BigInt r = blinder.unblind(mul_add(j1, q, j2));
 
    r = std::min(r, n - r);
 

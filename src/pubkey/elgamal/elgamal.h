@@ -11,6 +11,7 @@
 #include <botan/dl_algo.h>
 #include <botan/numthry.h>
 #include <botan/reducer.h>
+#include <botan/blinding.h>
 #include <botan/pk_ops.h>
 
 namespace Botan {
@@ -80,6 +81,7 @@ class BOTAN_DLL ElGamal_Decryption_Operation : public PK_Ops::Decryption
    private:
       Fixed_Exponent_Power_Mod powermod_x_p;
       Modular_Reducer mod_p;
+      Blinder blinder;
    };
 
 }

@@ -1,6 +1,7 @@
 define PUBLIC_KEY_CRYPTO
 
 <source>
+blinding.cpp
 pk_algs.cpp
 pk_keys.cpp
 pkcs8.cpp
@@ -11,6 +12,7 @@ x509_key.cpp
 </source>
 
 <header:public>
+blinding.h
 pk_keys.h
 pk_ops.h
 pkcs8.h

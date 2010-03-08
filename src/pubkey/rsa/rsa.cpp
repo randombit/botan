@@ -79,6 +79,8 @@ RSA_Private_Operation::RSA_Private_Operation(const RSA_PrivateKey& rsa) :
    powermod_d2_q(rsa.get_d2(), rsa.get_q()),
    mod_p(rsa.get_p())
    {
+   BigInt k = Blinder::choose_nonce(rsa.get_d(), n);
+   blinder = Blinder(power_mod(k, rsa.get_e(), n), inverse_mod(k, n), n);
    }
 
 BigInt RSA_Private_Operation::private_op(const BigInt& m) const
@@ -99,7 +101,7 @@ RSA_Private_Operation::sign(const byte msg[], u32bit msg_len,
                             RandomNumberGenerator&) const
    {
    BigInt m(msg, msg_len);
-   BigInt x = private_op(m);
+   BigInt x = blinder.unblind(private_op(blinder.blind(m)));
    return BigInt::encode_1363(x, n.bytes());
    }
 
@@ -110,7 +112,8 @@ SecureVector<byte>
 RSA_Private_Operation::decrypt(const byte msg[], u32bit msg_len) const
    {
    BigInt m(msg, msg_len);
-   return BigInt::encode(private_op(m));
+   BigInt x = blinder.unblind(private_op(blinder.blind(m)));
+   return BigInt::encode(x);
    }
 
 }

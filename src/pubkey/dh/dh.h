@@ -10,6 +10,7 @@
 
 #include <botan/dl_algo.h>
 #include <botan/pow_mod.h>
+#include <botan/blinding.h>
 #include <botan/pk_ops.h>
 
 namespace Botan {
@@ -77,22 +78,14 @@ class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
 class BOTAN_DLL DH_KA_Operation : public PK_Ops::Key_Agreement
    {
    public:
+      DH_KA_Operation(const DH_PrivateKey& key);
 
-      DH_KA_Operation(const DH_PrivateKey& key) :
-         powermod_x_p(key.get_x(), key.get_domain().get_p()),
-         p_bytes(key.get_domain().get_p().bytes())
-         {}
-
-      SecureVector<byte> agree(const byte w[], u32bit w_len) const
-         {
-         return BigInt::encode_1363(
-            powermod_x_p(BigInt::decode(w, w_len)),
-            p_bytes);
-         }
-
+      SecureVector<byte> agree(const byte w[], u32bit w_len) const;
    private:
+      const BigInt& p;
+
       Fixed_Exponent_Power_Mod powermod_x_p;
-      u32bit p_bytes;
+      Blinder blinder;
    };
 
 }

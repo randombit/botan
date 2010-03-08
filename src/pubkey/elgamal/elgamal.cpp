@@ -117,6 +117,9 @@ ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_Private
 
    powermod_x_p = Fixed_Exponent_Power_Mod(key.get_x(), p);
    mod_p = Modular_Reducer(p);
+
+   BigInt k = Blinder::choose_nonce(key.get_x(), p);
+   blinder = Blinder(k, power_mod(k, key.get_x(), p), p);
    }
 
 SecureVector<byte>
@@ -135,7 +138,11 @@ ElGamal_Decryption_Operation::decrypt(const byte msg[], u32bit msg_len) const
    if(a >= p || b >= p)
       throw Invalid_Argument("ElGamal decryption: Invalid message");
 
-   return BigInt::encode(mod_p.multiply(b, inverse_mod(powermod_x_p(a), p)));
+   a = blinder.blind(a);
+
+   BigInt r = mod_p.multiply(b, inverse_mod(powermod_x_p(a), p));
+
+   return BigInt::encode(blinder.unblind(r));
    }
 
 }

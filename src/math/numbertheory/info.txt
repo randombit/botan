@@ -3,7 +3,6 @@ load_on auto
 define BIGINT_MATH
 
 <header:public>
-blinding.h
 curve_gfp.h
 numthry.h
 point_gfp.h
@@ -16,7 +15,6 @@ def_powm.h
 </header:internal>
 
 <source>
-blinding.cpp
 dsa_gen.cpp
 jacobi.cpp
 make_prm.cpp
