@@ -12,8 +12,8 @@
 #include <memory>
 
 #include <botan/botan.h>
-#include <botan/look_pk.h>
 #include <botan/dsa.h>
+#include <botan/pubkey.h>
 using namespace Botan;
 
 bool check(std::map<std::string, std::string>);
@@ -90,7 +90,7 @@ bool check(std::map<std::string, std::string> inputs)
    pipe.write(inputs["S"] );
    pipe.end_msg();
 
-   std::auto_ptr<PK_Verifier> verify(get_pk_verifier(key, "EMSA1(SHA-1)"));
+   PK_Verifier verifier(key, "EMSA1(SHA-1)");
 
-   return verify->verify_message(pipe.read_all(0), pipe.read_all(1));
+   return verifier.verify_message(pipe.read_all(0), pipe.read_all(1));
    }

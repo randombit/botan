@@ -7,7 +7,6 @@
 #include <botan/botan.h>
 #include <botan/ecdsa.h>
 #include <botan/pubkey.h>
-#include <botan/look_pk.h>
 
 #include <memory>
 #include <iostream>
@@ -35,22 +34,21 @@ int main()
       std::cout << PKCS8::PEM_encode(ecdsa);
       */
 
-      std::auto_ptr<PK_Signer> signer(get_pk_signer(ecdsa, "EMSA1(SHA-256)"));
+      PK_Signer signer(ecdsa, "EMSA1(SHA-256)");
 
       const char* message = "Hello World";
 
-      signer->update((const byte*)message, strlen(message));
+      signer.update((const byte*)message, strlen(message));
 
-      SecureVector<byte> sig = signer->signature(rng);
+      SecureVector<byte> sig = signer.signature(rng);
 
       std::cout << sig.size() << "\n";
 
-      std::auto_ptr<PK_Verifier> verifier(
-         get_pk_verifier(ecdsa_pub, "EMSA1(SHA-256)"));
+      PK_Verifier verifier(ecdsa_pub, "EMSA1(SHA-256)");
 
-      verifier->update((const byte*)message, strlen(message));
+      verifier.update((const byte*)message, strlen(message));
 
-      bool ok = verifier->check_signature(sig);
+      bool ok = verifier.check_signature(sig);
       if(ok)
          std::cout << "Signature valid\n";
       else

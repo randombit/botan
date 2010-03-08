@@ -7,7 +7,7 @@
 
 #include <botan/x509_obj.h>
 #include <botan/x509_key.h>
-#include <botan/look_pk.h>
+#include <botan/pubkey.h>
 #include <botan/oids.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
@@ -168,10 +168,9 @@ bool X509_Object::check_signature(Public_Key& pub_key) const
       Signature_Format format =
          (pub_key.message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
 
-      std::auto_ptr<PK_Verifier> verifier(
-         get_pk_verifier(pub_key, padding, format));
+      PK_Verifier verifier(pub_key, padding, format);
 
-      return verifier->verify_message(tbs_data(), signature());
+      return verifier.verify_message(tbs_data(), signature());
       }
    catch(...)
       {

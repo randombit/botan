@@ -11,7 +11,7 @@
 #if defined(BOTAN_HAS_ECDSA)
 
 #include <botan/botan.h>
-#include <botan/look_pk.h>
+#include <botan/pubkey.h>
 #include <botan/ecdsa.h>
 #include <botan/rsa.h>
 #include <botan/x509cert.h>
@@ -70,12 +70,12 @@ void test_hash_larger_than_n(RandomNumberGenerator& rng)
          {
          format = "EMSA1_BSI(SHA-1)";
          }
-      std::auto_ptr<PK_Signer> pk_signer(get_pk_signer(priv_key, format));
+      PK_Signer pk_signer(priv_key, format);
       SecureVector<byte> signature;
       bool sig_exc = false;
       try
          {
-         signature = pk_signer->sign_message(message, rng);
+         signature = pk_signer.sign_message(message, rng);
          }
       catch(Encoding_Error e)
          {
@@ -90,11 +90,10 @@ void test_hash_larger_than_n(RandomNumberGenerator& rng)
          CHECK(!sig_exc);
          }
 
-
       if(i==0) // makes no sense to check for sha224
          {
-         std::auto_ptr<PK_Verifier> pk_verifier(get_pk_verifier(priv_key, format));
-         bool ver = pk_verifier->verify_message(message, signature);
+         PK_Verifier pk_verifier(priv_key, format);
+         bool ver = pk_verifier.verify_message(message, signature);
          CHECK(ver);
          }
 
@@ -103,16 +102,16 @@ void test_hash_larger_than_n(RandomNumberGenerator& rng)
    // now check that verification alone fails
 
    // sign it with the normal EMSA1
-   std::auto_ptr<PK_Signer> pk_signer(get_pk_signer(priv_key, "EMSA1(SHA-224)"));
-   SecureVector<byte> signature = pk_signer->sign_message(message, rng);
+   PK_Signer pk_signer(priv_key, "EMSA1(SHA-224)");
+   SecureVector<byte> signature = pk_signer.sign_message(message, rng);
 
-   std::auto_ptr<PK_Verifier> pk_verifier(get_pk_verifier(priv_key, "EMSA1_BSI(SHA-224)"));
+   PK_Verifier pk_verifier(priv_key, "EMSA1_BSI(SHA-224)");
 
    // verify against EMSA1_BSI
    // we make sure it doesn't fail because of the invalid signature,
    // but because of the Encoding_Error
 
-   if(pk_verifier->verify_message(message, signature))
+   if(pk_verifier.verify_message(message, signature))
       std::cout << "Corrupt ECDSA signature verified, should not have\n";
    }
 
@@ -163,20 +162,20 @@ void test_sign_then_ver(RandomNumberGenerator& rng)
    EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
    ECDSA_PrivateKey ecdsa(rng, dom_pars);
 
-   std::auto_ptr<PK_Signer> signer(get_pk_signer(ecdsa, "EMSA1(SHA-1)"));
+   PK_Signer signer(ecdsa, "EMSA1(SHA-1)");
 
    SecureVector<byte> msg = decode_hex("12345678901234567890abcdef12");
-   SecureVector<byte> sig = signer->sign_message(msg, rng);
+   SecureVector<byte> sig = signer.sign_message(msg, rng);
 
-   std::auto_ptr<PK_Verifier> verifier(get_pk_verifier(ecdsa, "EMSA1(SHA-1)"));
+   PK_Verifier verifier(ecdsa, "EMSA1(SHA-1)");
 
-   bool ok = verifier->verify_message(msg, sig);
+   bool ok = verifier.verify_message(msg, sig);
 
    if(!ok)
       std::cout << "ERROR: Could not verify ECDSA signature\n";
 
    sig[0]++;
-   ok = verifier->verify_message(msg, sig);
+   ok = verifier.verify_message(msg, sig);
 
    if(ok)
       std::cout << "ERROR: Bogus ECDSA signature verified anyway\n";
@@ -192,16 +191,16 @@ bool test_ec_sign(RandomNumberGenerator& rng)
       ECDSA_PrivateKey priv_key(rng, dom_pars);
       std::string pem_encoded_key = PKCS8::PEM_encode(priv_key);
 
-      std::auto_ptr<PK_Signer> signer(get_pk_signer(priv_key, "EMSA1(SHA-224)"));
-      std::auto_ptr<PK_Verifier> verifier(get_pk_verifier(priv_key, "EMSA1(SHA-224)"));
+      PK_Signer signer(priv_key, "EMSA1(SHA-224)");
+      PK_Verifier verifier(priv_key, "EMSA1(SHA-224)");
 
       for(u32bit i = 0; i != 256; ++i)
-         signer->update((byte)i);
-      SecureVector<byte> sig = signer->signature(rng);
+         signer.update((byte)i);
+      SecureVector<byte> sig = signer.signature(rng);
 
       for(u32bit i = 0; i != 256; ++i)
-         verifier->update((byte)i);
-      if(!verifier->check_signature(sig))
+         verifier.update((byte)i);
+      if(!verifier.check_signature(sig))
          {
          std::cout << "ECDSA self-test failed!";
          return false;
@@ -209,9 +208,9 @@ bool test_ec_sign(RandomNumberGenerator& rng)
 
       // now check valid signature, different input
       for(u32bit i = 1; i != 256; ++i) //starting from 1
-         verifier->update((byte)i);
+         verifier.update((byte)i);
 
-      if(verifier->check_signature(sig))
+      if(verifier.check_signature(sig))
          {
          std::cout << "ECDSA with bad input passed validation";
          return false;
@@ -221,9 +220,9 @@ bool test_ec_sign(RandomNumberGenerator& rng)
 
       sig[sig.size()/2]++;
       for(u32bit i = 0; i != 256; ++i)
-         verifier->update((byte)i);
+         verifier.update((byte)i);
 
-      if(verifier->check_signature(sig))
+      if(verifier.check_signature(sig))
          {
          std::cout << "ECDSA with bad signature passed validation";
          return false;
@@ -363,13 +362,13 @@ void test_curve_registry(RandomNumberGenerator& rng)
          dom_pars.get_base_point().check_invariants();
          ECDSA_PrivateKey ecdsa(rng, dom_pars);
 
-         std::auto_ptr<PK_Signer> signer(get_pk_signer(ecdsa, "EMSA1(SHA-1)"));
-         std::auto_ptr<PK_Verifier> verifier(get_pk_verifier(ecdsa, "EMSA1(SHA-1)"));
+         PK_Signer signer(ecdsa, "EMSA1(SHA-1)");
+         PK_Verifier verifier(ecdsa, "EMSA1(SHA-1)");
 
          SecureVector<byte> msg = decode_hex("12345678901234567890abcdef12");
-         SecureVector<byte> sig = signer->sign_message(msg, rng);
+         SecureVector<byte> sig = signer.sign_message(msg, rng);
 
-         if(!verifier->verify_message(msg, sig))
+         if(!verifier.verify_message(msg, sig))
             std::cout << "Failed testing ECDSA sig for curve " << oids[i] << "\n";
          }
       catch(Invalid_Argument& e)
@@ -383,35 +382,43 @@ void test_curve_registry(RandomNumberGenerator& rng)
 void test_read_pkcs8(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
+
+   SecureVector<byte> msg = decode_hex("12345678901234567890abcdef12");
+
    try
       {
       std::auto_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(TEST_DATA_DIR "/wo_dompar_private.pkcs8.pem", rng));
       ECDSA_PrivateKey* ecdsa = dynamic_cast<ECDSA_PrivateKey*>(loaded_key.get());
       CHECK_MESSAGE(ecdsa, "the loaded key could not be converted into an ECDSA_PrivateKey");
 
-      std::auto_ptr<PK_Signer> signer(get_pk_signer(*ecdsa, "EMSA1(SHA-1)"));
+      PK_Signer signer(*ecdsa, "EMSA1(SHA-1)");
 
-      SecureVector<byte> msg = decode_hex("12345678901234567890abcdef12");
-      SecureVector<byte> sig = signer->sign_message(msg, rng);
+      SecureVector<byte> sig = signer.sign_message(msg, rng);
 
-      std::auto_ptr<PK_Verifier> verifier(get_pk_verifier(*ecdsa, "EMSA1(SHA-1)"));
+      PK_Verifier verifier(*ecdsa, "EMSA1(SHA-1)");
 
-      bool ok = verifier->verify_message(msg, sig);
+      CHECK_MESSAGE(verifier.verify_message(msg, sig),
+                    "generated sig could not be verified positively");
+      }
+   catch (std::exception& e)
+      {
+      std::cout << "Exception in test_read_pkcs8 - " << e.what() << "\n";
+      }
 
-      CHECK_MESSAGE(ok, "generated sig could not be verified positively");
-
+   try
+      {
       std::auto_ptr<PKCS8_PrivateKey> loaded_key_nodp(PKCS8::load_key(TEST_DATA_DIR "/nodompar_private.pkcs8.pem", rng));
       // anew in each test with unregistered domain-parameters
       ECDSA_PrivateKey* ecdsa_nodp = dynamic_cast<ECDSA_PrivateKey*>(loaded_key_nodp.get());
       CHECK_MESSAGE(ecdsa_nodp, "the loaded key could not be converted into an ECDSA_PrivateKey");
 
-      signer.reset(get_pk_signer(*ecdsa_nodp, "EMSA1(SHA-1)"));
-      verifier.reset(get_pk_verifier(*ecdsa_nodp, "EMSA1(SHA-1)"));
+      PK_Signer signer(*ecdsa_nodp, "EMSA1(SHA-1)");
+      PK_Verifier verifier(*ecdsa_nodp, "EMSA1(SHA-1)");
 
-      SecureVector<byte> signature_nodp = signer->sign_message(msg, rng);
+      SecureVector<byte> signature_nodp = signer.sign_message(msg, rng);
 
-      ok = verifier->verify_message(msg, signature_nodp);
-      CHECK_MESSAGE(ok, "generated signature could not be verified positively (no_dom)");
+      CHECK_MESSAGE(verifier.verify_message(msg, signature_nodp),
+                    "generated signature could not be verified positively (no_dom)");
 
       try
          {

@@ -6,7 +6,6 @@
 
 #include <botan/pkcs8.h>
 #include <botan/mem_ops.h>
-#include <botan/look_pk.h>
 #include <botan/libstate.h>
 #include <botan/parsing.h>
 
@@ -215,13 +214,16 @@ void benchmark_rsa(RandomNumberGenerator& rng,
          while(verify_timer.seconds() < seconds ||
                sig_timer.seconds() < seconds)
             {
-            std::auto_ptr<PK_Encryptor> enc(get_pk_encryptor(key, enc_padding));
-            std::auto_ptr<PK_Decryptor> dec(get_pk_decryptor(key, enc_padding));
-            benchmark_enc_dec(*enc, *dec, enc_timer, dec_timer, rng, 10000, seconds);
+            PK_Encryptor_MR_with_EME enc(key, enc_padding);
+            PK_Decryptor_MR_with_EME dec(key, enc_padding);
 
-            std::auto_ptr<PK_Signer> sig(get_pk_signer(key, sig_padding));
-            std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, sig_padding));
-            benchmark_sig_ver(*ver, *sig, verify_timer,
+            benchmark_enc_dec(enc, dec, enc_timer, dec_timer,
+                              rng, 10000, seconds);
+
+            PK_Signer sig(key, sig_padding);
+            PK_Verifier ver(key, sig_padding);
+
+            benchmark_sig_ver(ver, sig, verify_timer,
                               sig_timer, rng, 10000, seconds);
             }
 
@@ -270,10 +272,11 @@ void benchmark_rw(RandomNumberGenerator& rng,
          RW_PrivateKey key(rng, keylen);
          keygen_timer.stop();
 
-         std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));
-         std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
+         PK_Signer sig(key, padding);
+         PK_Verifier ver(key, padding);
 
-         benchmark_sig_ver(*ver, *sig, verify_timer, sig_timer, rng, 10000, seconds);
+         benchmark_sig_ver(ver, sig, verify_timer, sig_timer,
+                           rng, 10000, seconds);
          }
 
       const std::string nm = "RW-" + to_string(keylen);
@@ -325,10 +328,10 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
          ECDSA_PrivateKey key(rng, params);
          keygen_timer.stop();
 
-         std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));
-         std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
+         PK_Signer sig(key, padding);
+         PK_Verifier ver(key, padding);
 
-         benchmark_sig_ver(*ver, *sig, verify_timer,
+         benchmark_sig_ver(ver, sig, verify_timer,
                            sig_timer, rng, 1000, seconds);
          }
 
@@ -384,10 +387,10 @@ void benchmark_gost_3410(RandomNumberGenerator& rng,
          GOST_3410_PrivateKey key(rng, params);
          keygen_timer.stop();
 
-         std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));
-         std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
+         PK_Signer sig(key, padding);
+         PK_Verifier ver(key, padding);
 
-         benchmark_sig_ver(*ver, *sig, verify_timer,
+         benchmark_sig_ver(ver, sig, verify_timer,
                            sig_timer, rng, 1000, seconds);
          }
 
@@ -435,8 +438,8 @@ void benchmark_ecdh(RandomNumberGenerator& rng,
          ECDH_PrivateKey ecdh2(rng, params);
          keygen_timer.stop();
 
-         std::auto_ptr<PK_Key_Agreement> ka1(get_pk_kas(ecdh1, "KDF2(SHA-1)"));
-         std::auto_ptr<PK_Key_Agreement> ka2(get_pk_kas(ecdh2, "KDF2(SHA-1)"));
+         PK_Key_Agreement ka1(ecdh1, "KDF2(SHA-1)");
+         PK_Key_Agreement ka2(ecdh2, "KDF2(SHA-1)");
 
          SymmetricKey secret1, secret2;
 
@@ -446,11 +449,11 @@ void benchmark_ecdh(RandomNumberGenerator& rng,
                break;
 
             kex_timer.start();
-            secret1 = ka1->derive_key(32, ecdh2.public_value());
+            secret1 = ka1.derive_key(32, ecdh2.public_value());
             kex_timer.stop();
 
             kex_timer.start();
-            secret2 = ka2->derive_key(32, ecdh1.public_value());
+            secret2 = ka2.derive_key(32, ecdh1.public_value());
             kex_timer.stop();
 
             if(secret1 != secret2)
@@ -502,10 +505,10 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
          algo_name = key.algo_name();
          keygen_timer.stop();
 
-         std::auto_ptr<PK_Signer> sig(get_pk_signer(key, padding));
-         std::auto_ptr<PK_Verifier> ver(get_pk_verifier(key, padding));
+         PK_Signer sig(key, padding);
+         PK_Verifier ver(key, padding);
 
-         benchmark_sig_ver(*ver, *sig, verify_timer,
+         benchmark_sig_ver(ver, sig, verify_timer,
                            sig_timer, rng, 1000, seconds);
          }
 
@@ -548,8 +551,8 @@ void benchmark_dh(RandomNumberGenerator& rng,
          DH_PrivateKey dh2(rng, group);
          keygen_timer.stop();
 
-         std::auto_ptr<PK_Key_Agreement> ka1(get_pk_kas(dh1, "KDF2(SHA-1)"));
-         std::auto_ptr<PK_Key_Agreement> ka2(get_pk_kas(dh2, "KDF2(SHA-1)"));
+         PK_Key_Agreement ka1(dh1, "KDF2(SHA-1)");
+         PK_Key_Agreement ka2(dh2, "KDF2(SHA-1)");
 
          SymmetricKey secret1, secret2;
 
@@ -559,11 +562,11 @@ void benchmark_dh(RandomNumberGenerator& rng,
                break;
 
             kex_timer.start();
-            secret1 = ka1->derive_key(32, dh2.public_value());
+            secret1 = ka1.derive_key(32, dh2.public_value());
             kex_timer.stop();
 
             kex_timer.start();
-            secret2 = ka2->derive_key(32, dh1.public_value());
+            secret2 = ka2.derive_key(32, dh1.public_value());
             kex_timer.stop();
 
             if(secret1 != secret2)
@@ -672,10 +675,11 @@ void benchmark_elg(RandomNumberGenerator& rng,
          ElGamal_PrivateKey key(rng, group);
          keygen_timer.stop();
 
-         std::auto_ptr<PK_Decryptor> dec(get_pk_decryptor(key, padding));
-         std::auto_ptr<PK_Encryptor> enc(get_pk_encryptor(key, padding));
+         PK_Decryptor_MR_with_EME dec(key, padding);
+         PK_Encryptor_MR_with_EME enc(key, padding);
 
-         benchmark_enc_dec(*enc, *dec, enc_timer, dec_timer, rng, 1000, seconds);
+         benchmark_enc_dec(enc, dec, enc_timer, dec_timer,
+                           rng, 1000, seconds);
          }
 
       const std::string nm = algo_name + "-" + to_string(pbits);

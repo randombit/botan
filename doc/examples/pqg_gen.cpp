@@ -13,7 +13,6 @@
 
 #include <botan/botan.h>
 #include <botan/auto_rng.h>
-#include <botan/look_pk.h>
 #include <botan/dsa.h>
 #include <botan/numthry.h>
 #include <botan/dl_group.h>

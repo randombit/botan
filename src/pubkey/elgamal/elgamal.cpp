@@ -8,7 +8,6 @@
 #include <botan/elgamal.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
-#include <botan/look_pk.h>
 #include <botan/internal/workfactor.h>
 
 namespace Botan {
@@ -66,10 +65,12 @@ bool ElGamal_PrivateKey::check_key(RandomNumberGenerator& rng,
 
    try
       {
+      PK_Encryptor_MR_with_EME this_encryptor(*this, "EME1(SHA-1)");
+      PK_Decryptor_MR_with_EME this_decryptor(*this, "EME1(SHA-1)");
+
       KeyPair::check_key(rng,
-                         get_pk_encryptor(*this, "EME1(SHA-1)"),
-                         get_pk_decryptor(*this, "EME1(SHA-1)")
-         );
+                         this_encryptor,
+                         this_decryptor);
       }
    catch(Self_Test_Failure)
       {

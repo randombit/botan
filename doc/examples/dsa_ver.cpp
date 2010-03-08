@@ -21,7 +21,7 @@ signature format, encoded into base64 with a trailing newline.
 #include <memory>
 
 #include <botan/botan.h>
-#include <botan/look_pk.h>
+#include <botan/pubkey.h>
 #include <botan/dsa.h>
 using namespace Botan;
 
@@ -75,14 +75,14 @@ int main(int argc, char* argv[])
 
       SecureVector<byte> sig = b64_decode(sigstr);
 
-      std::auto_ptr<PK_Verifier> ver(get_pk_verifier(*dsakey, "EMSA1(SHA-1)"));
+      PK_Verifier ver(*dsakey, "EMSA1(SHA-1)");
 
       DataSource_Stream in(message);
       byte buf[4096] = { 0 };
       while(u32bit got = in.read(buf, sizeof(buf)))
-         ver->update(buf, got);
+         ver.update(buf, got);
 
-      bool ok = ver->check_signature(sig);
+      bool ok = ver.check_signature(sig);
 
       if(ok)
          std::cout << "Signature verified\n";

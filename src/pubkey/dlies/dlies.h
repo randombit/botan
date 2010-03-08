@@ -35,7 +35,7 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
 
       SecureVector<byte> other_key, my_key;
 
-      PK_Key_Agreement* ka;
+      PK_Key_Agreement ka;
       KDF* kdf;
       MessageAuthenticationCode* mac;
       u32bit mac_keylen;
@@ -59,7 +59,7 @@ class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor
 
       SecureVector<byte> my_key;
 
-      PK_Key_Agreement* ka;
+      PK_Key_Agreement ka;
       KDF* kdf;
       MessageAuthenticationCode* mac;
       u32bit mac_keylen;

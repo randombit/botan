@@ -17,7 +17,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <botan/look_pk.h>
+#include <botan/pubkey.h>
 #include <botan/ecdh.h>
 #include <botan/x509self.h>
 #include <botan/der_enc.h>
@@ -39,11 +39,11 @@ void test_ecdh_normal_derivation(RandomNumberGenerator& rng)
 
    ECDH_PrivateKey private_b(rng, dom_pars); //public_a.getCurve()
 
-   std::auto_ptr<PK_Key_Agreement> ka(get_pk_kas(private_a, "KDF2(SHA-1)"));
-   std::auto_ptr<PK_Key_Agreement> kb(get_pk_kas(private_b, "KDF2(SHA-1)"));
+   PK_Key_Agreement ka(private_a, "KDF2(SHA-1)");
+   PK_Key_Agreement kb(private_b, "KDF2(SHA-1)");
 
-   SymmetricKey alice_key = ka->derive_key(32, private_b.public_value());
-   SymmetricKey bob_key = kb->derive_key(32, private_a.public_value());
+   SymmetricKey alice_key = ka.derive_key(32, private_b.public_value());
+   SymmetricKey bob_key = kb.derive_key(32, private_a.public_value());
 
    if(alice_key != bob_key)
       {
@@ -70,11 +70,11 @@ void test_ecdh_some_dp(RandomNumberGenerator& rng)
       ECDH_PrivateKey private_a(rng, dom_pars);
       ECDH_PrivateKey private_b(rng, dom_pars);
 
-      std::auto_ptr<PK_Key_Agreement> ka(get_pk_kas(private_a, "KDF2(SHA-1)"));
-      std::auto_ptr<PK_Key_Agreement> kb(get_pk_kas(private_b, "KDF2(SHA-1)"));
+      PK_Key_Agreement ka(private_a, "KDF2(SHA-1)");
+      PK_Key_Agreement kb(private_b, "KDF2(SHA-1)");
 
-      SymmetricKey alice_key = ka->derive_key(32, private_b.public_value());
-      SymmetricKey bob_key = kb->derive_key(32, private_a.public_value());
+      SymmetricKey alice_key = ka.derive_key(32, private_b.public_value());
+      SymmetricKey bob_key = kb.derive_key(32, private_a.public_value());
 
       CHECK_MESSAGE(alice_key == bob_key, "different keys - " << "Alice's key was: " << alice_key.as_string() << ", Bob's key was: " << bob_key.as_string());
       }
@@ -99,11 +99,11 @@ void test_ecdh_der_derivation(RandomNumberGenerator& rng)
       MemoryVector<byte> key_a = private_a.public_value();
       MemoryVector<byte> key_b = private_b.public_value();
 
-      std::auto_ptr<PK_Key_Agreement> ka(get_pk_kas(private_a, "KDF2(SHA-1)"));
-      std::auto_ptr<PK_Key_Agreement> kb(get_pk_kas(private_b, "KDF2(SHA-1)"));
+      PK_Key_Agreement ka(private_a, "KDF2(SHA-1)");
+      PK_Key_Agreement kb(private_b, "KDF2(SHA-1)");
 
-      SymmetricKey alice_key = ka->derive_key(32, key_b);
-      SymmetricKey bob_key = kb->derive_key(32, key_a);
+      SymmetricKey alice_key = ka.derive_key(32, key_b);
+      SymmetricKey bob_key = kb.derive_key(32, key_a);
 
       CHECK_MESSAGE(alice_key == bob_key, "different keys - " << "Alice's key was: " << alice_key.as_string() << ", Bob's key was: " << bob_key.as_string());
       //cout << "key: " << alice_key.as_string() << endl;

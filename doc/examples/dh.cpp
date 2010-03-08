@@ -35,8 +35,8 @@ int main()
       // Bob sends his public key to Alice
       MemoryVector<byte> public_b = private_b.public_value();
 
-      PK_Key_Agreement ka1(private_a, get_kdf("KDF2(SHA-1)"));
-      PK_Key_Agreement ka2(private_b, get_kdf("KDF2(SHA-1)"));
+      PK_Key_Agreement ka1(private_a, "KDF2(SHA-1)");
+      PK_Key_Agreement ka2(private_b, "KDF2(SHA-1)");
 
       /*
       * Preferably, include some salt or parameter that binds this key

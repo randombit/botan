@@ -12,7 +12,7 @@
 #include <memory>
 
 #include <botan/botan.h>
-#include <botan/look_pk.h>
+#include <botan/pubkey.h>
 #include <botan/dsa.h>
 using namespace Botan;
 
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
          return 1;
          }
 
-      PK_Signer signer(*dsakey, get_emsa("EMSA1(SHA-1)"));
+      PK_Signer signer(*dsakey, "EMSA1(SHA-1)");
 
       DataSource_Stream in(message);
       byte buf[4096] = { 0 };

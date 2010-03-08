@@ -8,7 +8,6 @@
 #include <botan/dsa.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
-#include <botan/look_pk.h>
 
 namespace Botan {
 
@@ -65,10 +64,9 @@ bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
 
    try
       {
-      KeyPair::check_key(rng,
-                         get_pk_signer(*this, "EMSA1(SHA-1)"),
-                         get_pk_verifier(*this, "EMSA1(SHA-1)")
-         );
+      PK_Signer this_signer(*this, "EMSA1(SHA-1)");
+      PK_Verifier this_verifier(*this, "EMSA1(SHA-1)");
+      KeyPair::check_key(rng, this_signer, this_verifier);
       }
    catch(Self_Test_Failure)
       {

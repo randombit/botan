@@ -32,7 +32,7 @@
 #include <memory>
 
 #include <botan/botan.h>
-#include <botan/look_pk.h>
+#include <botan/pubkey.h>
 #include <botan/rsa.h>
 using namespace Botan;
 
@@ -77,8 +77,7 @@ int main(int argc, char* argv[])
 
       AutoSeeded_RNG rng;
 
-      std::auto_ptr<PK_Encryptor> encryptor(get_pk_encryptor(*rsakey,
-                                                             "EME1(SHA-1)"));
+      PK_Encryptor_MR_with_EME encryptor(*rsakey, "EME1(SHA-1)");
 
       /* Generate the master key (the other keys are derived from this)
 
@@ -92,14 +91,14 @@ int main(int argc, char* argv[])
          a problem.
       */
       SymmetricKey masterkey(rng,
-                             std::min(32U, encryptor->maximum_input_size()));
+                             std::min(32U, encryptor.maximum_input_size()));
 
       SymmetricKey cast_key = derive_key("CAST", masterkey, 16);
       SymmetricKey mac_key  = derive_key("MAC",  masterkey, 16);
       SymmetricKey iv       = derive_key("IV",   masterkey, 8);
 
       SecureVector<byte> encrypted_key =
-         encryptor->encrypt(masterkey.bits_of(), rng);
+         encryptor.encrypt(masterkey.bits_of(), rng);
 
       ciphertext << b64_encode(encrypted_key) << std::endl;
 

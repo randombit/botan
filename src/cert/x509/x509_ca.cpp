@@ -7,12 +7,12 @@
 
 #include <botan/x509_ca.h>
 #include <botan/x509stor.h>
+#include <botan/pubkey.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/parsing.h>
 #include <botan/lookup.h>
-#include <botan/look_pk.h>
 #include <botan/oids.h>
 #include <botan/time.h>
 #include <algorithm>
@@ -272,7 +272,7 @@ PK_Signer* choose_sig_format(const Private_Key& key,
    sig_algo.oid = OIDS::lookup(algo_name + "/" + padding);
    sig_algo.parameters = key.algorithm_identifier().parameters;
 
-   return get_pk_signer(key, padding, format);
+   return new PK_Signer(key, padding, format);
    }
 
 }

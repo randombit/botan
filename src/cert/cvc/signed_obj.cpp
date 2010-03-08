@@ -7,7 +7,7 @@
 */
 
 #include <botan/signed_obj.h>
-#include <botan/look_pk.h>
+#include <botan/pubkey.h>
 #include <botan/oids.h>
 #include <memory>
 
@@ -64,8 +64,8 @@ bool EAC_Signed_Object::check_signature(Public_Key& pub_key,
 
       SecureVector<byte> to_sign = tbs_data();
 
-      std::auto_ptr<PK_Verifier> verifier(get_pk_verifier(pub_key, padding, format));
-      return verifier->verify_message(to_sign, sig);
+      PK_Verifier verifier(pub_key, padding, format);
+      return verifier.verify_message(to_sign, sig);
       }
    catch(...)
       {

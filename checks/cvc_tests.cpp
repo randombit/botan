@@ -23,7 +23,6 @@
 #include <botan/x509cert.h>
 #include <botan/x509self.h>
 #include <botan/oids.h>
-#include <botan/look_pk.h>
 #include <botan/cvc_self.h>
 #include <botan/cvc_cert.h>
 #include <botan/cvc_ado.h>

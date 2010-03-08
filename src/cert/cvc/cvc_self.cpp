@@ -10,7 +10,6 @@
 #include <botan/point_gfp.h>
 #include <botan/time.h>
 #include <botan/oids.h>
-#include <botan/look_pk.h>
 #include <sstream>
 
 namespace Botan {
@@ -105,12 +104,11 @@ EAC1_1_CVC create_self_signed_cert(Private_Key const& key,
    sig_algo.oid = OIDS::lookup(priv_key->algo_name() + "/" + padding_and_hash);
    sig_algo = AlgorithmIdentifier(sig_algo.oid, AlgorithmIdentifier::USE_NULL_PARAM);
 
-   std::auto_ptr<Botan::PK_Signer> signer(
-      get_pk_signer(*priv_key, padding_and_hash));
+   PK_Signer signer(*priv_key, padding_and_hash);
 
    MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
 
-   return make_cvc_cert(*signer,
+   return make_cvc_cert(signer,
                         enc_public_key,
                         opt.car, chr,
                         opt.holder_auth_templ,
@@ -133,7 +131,7 @@ EAC1_1_Req create_cvc_req(Private_Key const& key,
    sig_algo.oid = OIDS::lookup(priv_key->algo_name() + "/" + padding_and_hash);
    sig_algo = AlgorithmIdentifier(sig_algo.oid, AlgorithmIdentifier::USE_NULL_PARAM);
 
-   std::auto_ptr<Botan::PK_Signer> signer(get_pk_signer(*priv_key, padding_and_hash));
+   PK_Signer signer(*priv_key, padding_and_hash);
 
    MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
 
@@ -146,7 +144,7 @@ EAC1_1_Req create_cvc_req(Private_Key const& key,
       .get_contents();
 
    MemoryVector<byte> signed_cert =
-      EAC1_1_gen_CVC<EAC1_1_Req>::make_signed(*signer,
+      EAC1_1_gen_CVC<EAC1_1_Req>::make_signed(signer,
                                               EAC1_1_gen_CVC<EAC1_1_Req>::build_cert_body(tbs),
                                               rng);
 
@@ -166,10 +164,10 @@ EAC1_1_ADO create_ado_req(Private_Key const& key,
       throw Invalid_Argument("CVC_EAC::create_self_signed_cert(): unsupported key type");
       }
    std::string padding_and_hash = padding_and_hash_from_oid(req.signature_algorithm().oid);
-   std::auto_ptr<Botan::PK_Signer> signer(get_pk_signer(*priv_key, padding_and_hash));
+   PK_Signer signer(*priv_key, padding_and_hash);
    SecureVector<byte> tbs_bits = req.BER_encode();
    tbs_bits.append(DER_Encoder().encode(car).get_contents());
-   MemoryVector<byte> signed_cert = EAC1_1_ADO::make_signed(*signer, tbs_bits, rng);
+   MemoryVector<byte> signed_cert = EAC1_1_ADO::make_signed(signer, tbs_bits, rng);
 
    DataSource_Memory source(signed_cert);
    return EAC1_1_ADO(source);
@@ -199,7 +197,7 @@ EAC1_1_CVC create_cvca(Private_Key const& key,
    opts.cex.add_months(cvca_validity_months);
    opts.holder_auth_templ = (CVCA | (iris * IRIS) | (fingerpr * FINGERPRINT));
    opts.hash_alg = hash;
-   return Botan::CVC_EAC::create_self_signed_cert(*priv_key, opts, rng);
+   return CVC_EAC::create_self_signed_cert(*priv_key, opts, rng);
    }
 
 
@@ -230,14 +228,14 @@ EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
       }
    AlgorithmIdentifier sig_algo = signer.signature_algorithm();
    std::string padding_and_hash = padding_and_hash_from_oid(sig_algo.oid);
-   std::auto_ptr<Botan::PK_Signer> pk_signer(get_pk_signer(*priv_key, padding_and_hash));
+   PK_Signer pk_signer(*priv_key, padding_and_hash);
    std::auto_ptr<Public_Key> pk = signee.subject_public_key();
    ECDSA_PublicKey* subj_pk = dynamic_cast<ECDSA_PublicKey*>(pk.get());
    subj_pk->set_parameter_encoding(EC_DOMPAR_ENC_EXPLICIT);
 
    MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
 
-   return make_cvc_cert(*pk_signer, enc_public_key,
+   return make_cvc_cert(pk_signer, enc_public_key,
                         signer.get_car(),
                         signee.get_chr(),
                         signer.get_chat_value(),
@@ -264,7 +262,7 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
    chr_str += to_string(seqnr, seqnr_len);
    ASN1_Chr chr(chr_str);
    std::string padding_and_hash = padding_and_hash_from_oid(signee.signature_algorithm().oid);
-   std::auto_ptr<Botan::PK_Signer> pk_signer(get_pk_signer(*priv_key, padding_and_hash));
+   PK_Signer pk_signer(*priv_key, padding_and_hash);
    std::auto_ptr<Public_Key> pk = signee.subject_public_key();
    ECDSA_PublicKey*  subj_pk = dynamic_cast<ECDSA_PublicKey*>(pk.get());
    std::auto_ptr<Public_Key> signer_pk = signer_cert.subject_public_key();
@@ -304,7 +302,7 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
 
    MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
 
-   return make_cvc_cert(*pk_signer, enc_public_key,
+   return make_cvc_cert(pk_signer, enc_public_key,
                         ASN1_Car(signer_cert.get_chr().iso_8859()),
                         chr,
                         chat_val,
@@ -325,7 +323,7 @@ EAC1_1_Req create_cvc_req(Private_Key const& prkey,
       }
    ECDSA_PrivateKey key(*priv_key);
    key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
-   return Botan::CVC_EAC::create_cvc_req(key, chr, hash_alg, rng);
+   return CVC_EAC::create_cvc_req(key, chr, hash_alg, rng);
    }
 
 } // namespace DE_EAC

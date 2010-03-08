@@ -1,12 +1,12 @@
 /**
-* Certificate Verify Message 
-* (C) 2004-2006 Jack Lloyd
+* Certificate Verify Message
+* (C) 2004-2010 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
 #include <botan/tls_messages.h>
-#include <botan/look_pk.h>
+#include <botan/pubkey.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
 #include <botan/loadstor.h>
@@ -22,21 +22,23 @@ Certificate_Verify::Certificate_Verify(RandomNumberGenerator& rng,
                                        HandshakeHash& hash,
                                        const Private_Key* priv_key)
    {
-   std::auto_ptr<PK_Signer> signer;
+   std::string padding = "";
+   Signature_Format format = IEEE_1363;
 
-   if(const RSA_PrivateKey* rsa = dynamic_cast<const RSA_PrivateKey*>(priv_key))
+   if(priv_key->algo_name() == "RSA")
+      padding = "EMSA3(TLS.Digest.0)";
+   else if(priv_key->algo_name() == "DSA")
       {
-      signer.reset(get_pk_signer(*rsa, "EMSA3(TLS.Digest.0)"));
-      }
-   else if(const DSA_PrivateKey* dsa =
-           dynamic_cast<const DSA_PrivateKey*>(priv_key))
-      {
-      signer.reset(get_pk_signer(*dsa, "EMSA1(SHA-1)"));
+      padding == "EMSA1(SHA-1)";
+      format = DER_SEQUENCE;
       }
    else
-      throw Invalid_Argument("Unknown PK algo for TLS signature");
+      throw Invalid_Argument(priv_key->algo_name() +
+                             " is invalid/unknown for TLS signatures");
 
-   signature = signer->sign_message(hash.final(), rng);
+   PK_Signer signer(*priv_key, padding, format);
+
+   signature = signer.sign_message(hash.final(), rng);
    send(writer, hash);
    }
 
@@ -80,20 +82,22 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
 
    std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
-   DSA_PublicKey* dsa_pub = dynamic_cast<DSA_PublicKey*>(key.get());
-   RSA_PublicKey* rsa_pub = dynamic_cast<RSA_PublicKey*>(key.get());
+   std::string padding = "";
+   Signature_Format format = IEEE_1363;
 
-   std::auto_ptr<PK_Verifier> verifier;
-
-   if(dsa_pub)
-      verifier.reset(get_pk_verifier(*dsa_pub, "EMSA1(SHA-1)", DER_SEQUENCE));
-   else if(rsa_pub)
-      verifier.reset(get_pk_verifier(*rsa_pub, "EMSA3(TLS.Digest.0)"));
+   if(key->algo_name() == "RSA")
+      padding = "EMSA3(TLS.Digest.0)";
+   else if(key->algo_name() == "DSA")
+      {
+      padding == "EMSA1(SHA-1)";
+      format = DER_SEQUENCE;
+      }
    else
-      throw Invalid_Argument("Client did not provide a RSA/DSA cert");
+      throw Invalid_Argument(key->algo_name() +
+                             " is invalid/unknown for TLS signatures");
 
-   // FIXME: WRONG
-   return verifier->verify_message(hash.final(), signature);
+   PK_Verifier verifier(*key, padding, format);
+   return verifier.verify_message(hash.final(), signature);
    }
 
 }

@@ -8,7 +8,6 @@
 #include <botan/x509stor.h>
 #include <botan/parsing.h>
 #include <botan/pubkey.h>
-#include <botan/look_pk.h>
 #include <botan/oids.h>
 #include <botan/time.h>
 #include <algorithm>
@@ -394,11 +393,10 @@ X509_Code X509_Store::check_sig(const X509_Object& object, Public_Key* key)
       if(key->message_parts() >= 2) format = DER_SEQUENCE;
       else                          format = IEEE_1363;
 
-      std::auto_ptr<PK_Verifier> verifier(
-         get_pk_verifier(*pub_key.get(), padding, format));
+      PK_Verifier verifier(*pub_key.get(), padding, format);
 
-      bool valid = verifier->verify_message(object.tbs_data(),
-                                            object.signature());
+      bool valid = verifier.verify_message(object.tbs_data(),
+                                           object.signature());
 
       if(valid)
          return VERIFIED;

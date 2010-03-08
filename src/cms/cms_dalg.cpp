@@ -10,7 +10,6 @@
 #include <botan/ber_dec.h>
 #include <botan/oids.h>
 #include <botan/hash.h>
-#include <botan/look_pk.h>
 #include <botan/bigint.h>
 #include <botan/libstate.h>
 #include <memory>

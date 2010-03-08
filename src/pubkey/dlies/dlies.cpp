@@ -6,7 +6,6 @@
 */
 
 #include <botan/dlies.h>
-#include <botan/look_pk.h>
 #include <botan/internal/xor_buf.h>
 
 namespace Botan {
@@ -18,7 +17,7 @@ DLIES_Encryptor::DLIES_Encryptor(const PK_Key_Agreement_Key& key,
                                  KDF* kdf_obj,
                                  MessageAuthenticationCode* mac_obj,
                                  u32bit mac_kl) :
-   ka(get_pk_kas(key, "Raw")),
+   ka(key, "Raw"),
    kdf(kdf_obj),
    mac(mac_obj),
    mac_keylen(mac_kl)
@@ -28,7 +27,6 @@ DLIES_Encryptor::DLIES_Encryptor(const PK_Key_Agreement_Key& key,
 
 DLIES_Encryptor::~DLIES_Encryptor()
    {
-   delete ka;
    delete kdf;
    delete mac;
    }
@@ -48,7 +46,7 @@ SecureVector<byte> DLIES_Encryptor::enc(const byte in[], u32bit length,
    out.copy(my_key, my_key.size());
    out.copy(my_key.size(), in, length);
 
-   SecureVector<byte> vz(my_key, ka->derive_key(0, other_key).bits_of());
+   SecureVector<byte> vz(my_key, ka.derive_key(0, other_key).bits_of());
 
    const u32bit K_LENGTH = length + mac_keylen;
    OctetString K = kdf->derive_key(K_LENGTH, vz, vz.size());
@@ -92,7 +90,7 @@ DLIES_Decryptor::DLIES_Decryptor(const PK_Key_Agreement_Key& key,
                                  KDF* kdf_obj,
                                  MessageAuthenticationCode* mac_obj,
                                  u32bit mac_kl) :
-   ka(get_pk_kas(key, "Raw")),
+   ka(key, "Raw"),
    kdf(kdf_obj),
    mac(mac_obj),
    mac_keylen(mac_kl)
@@ -102,7 +100,6 @@ DLIES_Decryptor::DLIES_Decryptor(const PK_Key_Agreement_Key& key,
 
 DLIES_Decryptor::~DLIES_Decryptor()
    {
-   delete ka;
    delete kdf;
    delete mac;
    }
@@ -121,7 +118,7 @@ SecureVector<byte> DLIES_Decryptor::dec(const byte msg[], u32bit length) const
    SecureVector<byte> C(msg + my_key.size(), CIPHER_LEN);
    SecureVector<byte> T(msg + my_key.size() + CIPHER_LEN, mac->OUTPUT_LENGTH);
 
-   SecureVector<byte> vz(v, ka->derive_key(0, v).bits_of());
+   SecureVector<byte> vz(v, ka.derive_key(0, v).bits_of());
 
    const u32bit K_LENGTH = C.size() + mac_keylen;
    OctetString K = kdf->derive_key(K_LENGTH, vz, vz.size());

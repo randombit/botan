@@ -6,10 +6,10 @@
 */
 
 #include <botan/tls_messages.h>
+#include <botan/pubkey.h>
 #include <botan/dh.h>
 #include <botan/rsa.h>
 #include <botan/rng.h>
-#include <botan/look_pk.h>
 #include <botan/loadstor.h>
 #include <memory>
 
@@ -31,9 +31,9 @@ Client_Key_Exchange::Client_Key_Exchange(RandomNumberGenerator& rng,
       {
       DH_PrivateKey priv_key(rng, dh_pub->get_domain());
 
-      std::auto_ptr<PK_Key_Agreement> ka(get_pk_kas(priv_key, "Raw"));
+      PK_Key_Agreement ka(priv_key, "Raw");
 
-      pre_master = ka->derive_key(0, dh_pub->public_value()).bits_of();
+      pre_master = ka.derive_key(0, dh_pub->public_value()).bits_of();
 
       key_material = priv_key.public_value();
       }
@@ -44,10 +44,9 @@ Client_Key_Exchange::Client_Key_Exchange(RandomNumberGenerator& rng,
       pre_master[0] = (pref_version >> 8) & 0xFF;
       pre_master[1] = (pref_version     ) & 0xFF;
 
-      std::auto_ptr<PK_Encryptor> encryptor(get_pk_encryptor(*rsa_pub,
-                                                             "PKCS1v15"));
+      PK_Encryptor_MR_with_EME encryptor(*rsa_pub, "PKCS1v15");
 
-      key_material = encryptor->encrypt(pre_master, rng);
+      key_material = encryptor.encrypt(pre_master, rng);
 
       if(using_version == SSL_V3)
          include_length = false;
@@ -125,9 +124,9 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
    if(const DH_PrivateKey* dh_priv = dynamic_cast<const DH_PrivateKey*>(priv_key))
       {
       try {
-         std::auto_ptr<PK_Key_Agreement> ka(get_pk_kas(*dh_priv, "Raw"));
+         PK_Key_Agreement ka(*dh_priv, "Raw");
 
-         pre_master = ka->derive_key(0, key_material).bits_of();
+         pre_master = ka.derive_key(0, key_material).bits_of();
       }
       catch(...)
          {
@@ -139,17 +138,16 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
       }
    else if(const RSA_PrivateKey* rsa_priv = dynamic_cast<const RSA_PrivateKey*>(priv_key))
       {
-      std::auto_ptr<PK_Decryptor> decryptor(get_pk_decryptor(*rsa_priv,
-                                                             "PKCS1v15"));
+      PK_Decryptor_MR_with_EME decryptor(*rsa_priv, "PKCS1v15");
 
       try {
-         pre_master = decryptor->decrypt(key_material);
+         pre_master = decryptor.decrypt(key_material);
 
          if(pre_master.size() != 48 ||
             make_u16bit(pre_master[0], pre_master[1]) != version)
             throw Decoding_Error("Client_Key_Exchange: Secret corrupted");
       }
-      catch(std::exception)
+      catch(...)
          {
          pre_master.resize(48);
          rng.randomize(pre_master, pre_master.size());

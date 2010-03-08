@@ -6,15 +6,15 @@
 */
 
 #include <botan/cms_enc.h>
-#include <botan/der_enc.h>
-#include <botan/x509find.h>
 #include <botan/bigint.h>
-#include <botan/oids.h>
 #include <botan/cbc.h>
+#include <botan/der_enc.h>
 #include <botan/hash.h>
-#include <botan/look_pk.h>
 #include <botan/libstate.h>
+#include <botan/oids.h>
 #include <botan/pipe.h>
+#include <botan/pubkey.h>
+#include <botan/x509find.h>
 #include <memory>
 
 namespace Botan {
@@ -130,7 +130,8 @@ void CMS_Encoder::encrypt_ktri(RandomNumberGenerator& rng,
    {
    const std::string padding = "EME-PKCS1-v1_5";
    const std::string pk_algo = pub_key->algo_name();
-   std::auto_ptr<PK_Encryptor> enc(get_pk_encryptor(*pub_key, padding));
+
+   PK_Encryptor_MR_with_EME encryptor(*pub_key, padding);
 
    SymmetricKey cek = setup_key(rng, cipher);
 
@@ -146,7 +147,7 @@ void CMS_Encoder::encrypt_ktri(RandomNumberGenerator& rng,
             .encode((u32bit)0);
             encode_si(encoder, to)
             .encode(alg_id)
-            .encode(enc->encrypt(cek.bits_of(), rng), OCTET_STRING)
+            .encode(encryptor.encrypt(cek.bits_of(), rng), OCTET_STRING)
          .end_cons()
       .end_cons()
       .raw_bytes(do_encrypt(rng, cek, cipher))
@@ -292,14 +293,14 @@ void CMS_Encoder::sign(const X509_Certificate& cert,
 
    Signature_Format format = IEEE_1363;
 
-   std::auto_ptr<PK_Signer> signer(get_pk_signer(key, padding, format));
+   PK_Signer signer(key, padding, format);
 
    AlgorithmIdentifier sig_algo(OIDS::lookup(key.algo_name() + "/" + padding),
                                 AlgorithmIdentifier::USE_NULL_PARAM);
 
    SecureVector<byte> signed_attr = encode_attr(data, type, hash);
-   signer->update(signed_attr);
-   SecureVector<byte> signature = signer->signature(rng);
+   signer.update(signed_attr);
+   SecureVector<byte> signature = signer.signature(rng);
    signed_attr[0] = 0xA0;
 
    const u32bit SI_VERSION = cert.subject_key_id().size() ? 3 : 1;

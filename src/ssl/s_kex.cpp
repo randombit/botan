@@ -6,10 +6,10 @@
 */
 
 #include <botan/tls_messages.h>
+#include <botan/pubkey.h>
 #include <botan/dh.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
-#include <botan/look_pk.h>
 #include <botan/loadstor.h>
 #include <memory>
 
@@ -43,25 +43,27 @@ Server_Key_Exchange::Server_Key_Exchange(RandomNumberGenerator& rng,
    else
       throw Invalid_Argument("Bad key for TLS key exchange: not DH or RSA");
 
-   std::auto_ptr<PK_Signer> signer;
 
-   if(const RSA_PrivateKey* rsa = dynamic_cast<const RSA_PrivateKey*>(priv_key))
+   std::string padding = "";
+   Signature_Format format = IEEE_1363;
+
+   if(priv_key->algo_name() == "RSA")
+      padding = "EMSA3(TLS.Digest.0)";
+   else if(priv_key->algo_name() == "DSA")
       {
-      signer.reset(get_pk_signer(*rsa, "EMSA3(TLS.Digest.0)"));
-      }
-   else if(const DSA_PrivateKey* dsa =
-           dynamic_cast<const DSA_PrivateKey*>(priv_key))
-      {
-      signer.reset(get_pk_signer(*dsa, "EMSA1(SHA-1)"));
-      signer->set_output_format(DER_SEQUENCE);
+      padding == "EMSA1(SHA-1)";
+      format = DER_SEQUENCE;
       }
    else
-      throw Invalid_Argument("Bad key for TLS signature: not RSA or DSA");
+      throw Invalid_Argument(priv_key->algo_name() +
+                             " is invalid/unknown for TLS signatures");
 
-   signer->update(c_random);
-   signer->update(s_random);
-   signer->update(serialize_params());
-   signature = signer->signature(rng);
+   PK_Signer signer(*priv_key, padding, format);
+
+   signer.update(c_random);
+   signer.update(s_random);
+   signer.update(serialize_params());
+   signature = signer.signature(rng);
 
    send(writer, hash);
    }
@@ -154,29 +156,31 @@ bool Server_Key_Exchange::verify(const X509_Certificate& cert,
                                  const MemoryRegion<byte>& c_random,
                                  const MemoryRegion<byte>& s_random) const
    {
+
    std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
-   DSA_PublicKey* dsa_pub = dynamic_cast<DSA_PublicKey*>(key.get());
-   RSA_PublicKey* rsa_pub = dynamic_cast<RSA_PublicKey*>(key.get());
+   std::string padding = "";
+   Signature_Format format = IEEE_1363;
 
-   std::auto_ptr<PK_Verifier> verifier;
-
-   if(dsa_pub)
+   if(key->algo_name() == "RSA")
+      padding = "EMSA3(TLS.Digest.0)";
+   else if(key->algo_name() == "DSA")
       {
-      verifier.reset(get_pk_verifier(*dsa_pub, "EMSA1(SHA-1)", DER_SEQUENCE));
-      verifier->set_input_format(DER_SEQUENCE);
+      padding == "EMSA1(SHA-1)";
+      format = DER_SEQUENCE;
       }
-   else if(rsa_pub)
-      verifier.reset(get_pk_verifier(*rsa_pub, "EMSA3(TLS.Digest.0)"));
    else
-      throw Invalid_Argument("Server did not provide a RSA/DSA cert");
+      throw Invalid_Argument(key->algo_name() +
+                             " is invalid/unknown for TLS signatures");
+
+   PK_Verifier verifier(*key, padding, format);
 
    SecureVector<byte> params_got = serialize_params();
-   verifier->update(c_random);
-   verifier->update(s_random);
-   verifier->update(params_got);
+   verifier.update(c_random);
+   verifier.update(s_random);
+   verifier.update(params_got);
 
-   return verifier->check_signature(signature, signature.size());
+   return verifier.check_signature(signature, signature.size());
    }
 
 }

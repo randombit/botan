@@ -56,7 +56,6 @@
 #endif
 
 #include <botan/filters.h>
-#include <botan/look_pk.h>
 #include <botan/numthry.h>
 using namespace Botan;
 
@@ -127,22 +126,21 @@ void validate_save_and_load(const Private_Key* priv_key,
       }
    }
 
-void validate_decryption(PK_Decryptor* d, const std::string& algo,
+void validate_decryption(PK_Decryptor& d, const std::string& algo,
                          const SecureVector<byte> ctext,
                          const SecureVector<byte> ptext,
                          bool& failure)
    {
-   SecureVector<byte> decrypted = d->decrypt(ctext);
+   SecureVector<byte> decrypted = d.decrypt(ctext);
    if(decrypted != ptext)
       {
       std::cout << "FAILED (decrypt): " << algo << std::endl;
       dump_data(decrypted, ptext);
       failure = true;
       }
-   delete d;
    }
 
-void validate_encryption(PK_Encryptor* e, PK_Decryptor* d,
+void validate_encryption(PK_Encryptor& e, PK_Decryptor& d,
                          const std::string& algo, const std::string& input,
                          const std::string& random, const std::string& exp,
                          bool& failure)
@@ -151,7 +149,7 @@ void validate_encryption(PK_Encryptor* e, PK_Decryptor* d,
    SecureVector<byte> expected = decode_hex(exp);
    Fixed_Output_RNG rng(decode_hex(random));
 
-   SecureVector<byte> out = e->encrypt(message, rng);
+   SecureVector<byte> out = e.encrypt(message, rng);
    if(out != expected)
       {
       std::cout << "FAILED (encrypt): " << algo << std::endl;
@@ -160,10 +158,9 @@ void validate_encryption(PK_Encryptor* e, PK_Decryptor* d,
       }
 
    validate_decryption(d, algo, out, message, failure);
-   delete e;
    }
 
-void validate_signature(PK_Verifier* v, PK_Signer* s, const std::string& algo,
+void validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
                         const std::string& input, const std::string& random,
                         const std::string& exp, bool& failure)
    {
@@ -172,7 +169,7 @@ void validate_signature(PK_Verifier* v, PK_Signer* s, const std::string& algo,
    SecureVector<byte> expected = decode_hex(exp);
 
    Fixed_Output_RNG rng(decode_hex(random));
-   SecureVector<byte> sig = s->sign_message(message, message.size(), rng);
+   SecureVector<byte> sig = s.sign_message(message, message.size(), rng);
 
    if(sig != expected)
       {
@@ -181,7 +178,7 @@ void validate_signature(PK_Verifier* v, PK_Signer* s, const std::string& algo,
       failure = true;
       }
 
-   if(!v->verify_message(message, message.size(), sig, sig.size()))
+   if(!v.verify_message(message, message.size(), sig, sig.size()))
       {
       std::cout << "FAILED (verify): " << algo << std::endl;
       failure = true;
@@ -190,24 +187,21 @@ void validate_signature(PK_Verifier* v, PK_Signer* s, const std::string& algo,
    /* This isn't a very thorough testing method, but it will hopefully
       catch any really horrible errors */
    sig[0]++;
-   if(v->verify_message(message, message.size(), sig, sig.size()))
+   if(v.verify_message(message, message.size(), sig, sig.size()))
       {
       std::cout << "FAILED (accepted bad sig): " << algo << std::endl;
       failure = true;
       }
-
-   delete v;
-   delete s;
    }
 
-void validate_kas(PK_Key_Agreement* kas, const std::string& algo,
+void validate_kas(PK_Key_Agreement& kas, const std::string& algo,
                   const SecureVector<byte>& pubkey, const std::string& output,
                   u32bit keylen, bool& failure)
    {
    SecureVector<byte> expected = decode_hex(output);
 
-   SecureVector<byte> got = kas->derive_key(keylen,
-                                            pubkey, pubkey.size()).bits_of();
+   SecureVector<byte> got = kas.derive_key(keylen,
+                                           pubkey, pubkey.size()).bits_of();
 
    if(got != expected)
       {
@@ -215,8 +209,6 @@ void validate_kas(PK_Key_Agreement* kas, const std::string& algo,
       dump_data(got, expected);
       failure = true;
       }
-
-   delete kas;
    }
 
 u32bit validate_rsa_enc_pkcs8(const std::string& algo,
@@ -246,8 +238,8 @@ u32bit validate_rsa_enc_pkcs8(const std::string& algo,
 
    std::string eme = algo.substr(12, std::string::npos);
 
-   PK_Encryptor* e = get_pk_encryptor(*rsapub, eme);
-   PK_Decryptor* d = get_pk_decryptor(*rsapriv, eme);
+   PK_Encryptor_MR_with_EME e(*rsapub, eme);
+   PK_Decryptor_MR_with_EME d(*rsapriv, eme);
 
    bool failure = false;
    validate_encryption(e, d, algo, str[1], str[2], str[3], failure);
@@ -273,8 +265,8 @@ u32bit validate_rsa_enc(const std::string& algo,
 
    std::string eme = algo.substr(6, std::string::npos);
 
-   PK_Encryptor* e = get_pk_encryptor(pubkey, eme);
-   PK_Decryptor* d = get_pk_decryptor(privkey, eme);
+   PK_Encryptor_MR_with_EME e(pubkey, eme);
+   PK_Decryptor_MR_with_EME d(privkey, eme);
 
    bool failure = false;
    validate_encryption(e, d, algo, str[3], str[4], str[5], failure);
@@ -299,12 +291,12 @@ u32bit validate_elg_enc(const std::string& algo,
 
    std::string eme = algo.substr(8, std::string::npos);
 
-   PK_Decryptor* d = get_pk_decryptor(privkey, eme);
+   PK_Decryptor_MR_with_EME d(privkey, eme);
 
    bool failure = false;
    if(str.size() == 7)
       {
-      PK_Encryptor* e = get_pk_encryptor(pubkey, eme);
+      PK_Encryptor_MR_with_EME e(pubkey, eme);
       validate_encryption(e, d, algo, str[4], str[5], str[6], failure);
       }
    else
@@ -333,8 +325,8 @@ u32bit validate_rsa_sig(const std::string& algo,
 
    std::string emsa = algo.substr(7, std::string::npos);
 
-   PK_Verifier* v = get_pk_verifier(pubkey, emsa);
-   PK_Signer* s = get_pk_signer(privkey, emsa);
+   PK_Verifier v(pubkey, emsa);
+   PK_Signer s(privkey, emsa);
    bool failure = false;
    validate_signature(v, s, algo, str[3], str[4], str[5], failure);
    return (failure ? 1 : 0);
@@ -354,13 +346,13 @@ u32bit validate_rsa_ver(const std::string& algo,
 
    std::string emsa = algo.substr(6, std::string::npos);
 
-   std::auto_ptr<PK_Verifier> v(get_pk_verifier(key, emsa));
+   PK_Verifier v(key, emsa);
 
    SecureVector<byte> msg = decode_hex(str[2]);
    SecureVector<byte> sig = decode_hex(str[3]);
 
    bool passed = true;
-   passed = v->verify_message(msg, msg.size(), sig, sig.size());
+   passed = v.verify_message(msg, msg.size(), sig, sig.size());
    return (passed ? 0 : 1);
 #endif
 
@@ -386,12 +378,12 @@ u32bit validate_rsa_ver_x509(const std::string& algo,
 
    std::string emsa = algo.substr(11, std::string::npos);
 
-   std::auto_ptr<PK_Verifier> v(get_pk_verifier(*rsakey, emsa));
+   PK_Verifier v(*rsakey, emsa);
 
    SecureVector<byte> msg = decode_hex(str[1]);
    SecureVector<byte> sig = decode_hex(str[2]);
 
-   bool passed = v->verify_message(msg, msg.size(), sig, sig.size());
+   bool passed = v.verify_message(msg, msg.size(), sig, sig.size());
    return (passed ? 0 : 1);
 
 #endif
@@ -412,13 +404,13 @@ u32bit validate_rw_ver(const std::string& algo,
 
    std::string emsa = algo.substr(5, std::string::npos);
 
-   std::auto_ptr<PK_Verifier> v(get_pk_verifier(key, emsa));
+   PK_Verifier v(key, emsa);
 
    SecureVector<byte> msg = decode_hex(str[2]);
    SecureVector<byte> sig = decode_hex(str[3]);
 
    bool passed = true;
-   passed = v->verify_message(msg, msg.size(), sig, sig.size());
+   passed = v.verify_message(msg, msg.size(), sig, sig.size());
    return (passed ? 0 : 1);
 #endif
 
@@ -440,8 +432,8 @@ u32bit validate_rw_sig(const std::string& algo,
 
    std::string emsa = algo.substr(3, std::string::npos);
 
-   PK_Verifier* v = get_pk_verifier(pubkey, emsa);
-   PK_Signer* s = get_pk_signer(privkey, emsa);
+   PK_Verifier v(pubkey, emsa);
+   PK_Signer s(privkey, emsa);
 
    bool failure = false;
    validate_signature(v, s, algo, str[3], str[4], str[5], failure);
@@ -478,8 +470,8 @@ u32bit validate_dsa_sig(const std::string& algo,
 
    std::string emsa = algo.substr(4, std::string::npos);
 
-   PK_Verifier* v = get_pk_verifier(*dsapub, emsa);
-   PK_Signer* s = get_pk_signer(*dsapriv, emsa);
+   PK_Verifier v(*dsapub, emsa);
+   PK_Signer s(*dsapriv, emsa);
 
    bool failure = false;
    validate_signature(v, s, algo, str[1], str[2], str[3], failure);
@@ -503,8 +495,8 @@ u32bit validate_ecdsa_sig(const std::string& algo,
 
    std::string emsa = algo.substr(6, std::string::npos);
 
-   PK_Verifier* v = get_pk_verifier(ecdsa, emsa);
-   PK_Signer* s = get_pk_signer(ecdsa, emsa);
+   PK_Verifier v(ecdsa, emsa);
+   PK_Signer s(ecdsa, emsa);
 
    bool failure = false;
    validate_signature(v, s, algo, str[2], str[3], str[4], failure);
@@ -534,13 +526,13 @@ u32bit validate_dsa_ver(const std::string& algo,
 
    std::string emsa = algo.substr(7, std::string::npos);
 
-   std::auto_ptr<PK_Verifier> v(get_pk_verifier(*dsakey, emsa));
+   PK_Verifier v(*dsakey, emsa);
 
    SecureVector<byte> msg = decode_hex(str[1]);
    SecureVector<byte> sig = decode_hex(str[2]);
 
-   v->set_input_format(DER_SEQUENCE);
-   bool passed = v->verify_message(msg, msg.size(), sig, sig.size());
+   v.set_input_format(DER_SEQUENCE);
+   bool passed = v.verify_message(msg, msg.size(), sig, sig.size());
    return (passed ? 0 : 1);
 #endif
 
@@ -563,8 +555,8 @@ u32bit validate_nr_sig(const std::string& algo,
 
    std::string emsa = algo.substr(3, std::string::npos);
 
-   PK_Verifier* v = get_pk_verifier(pubkey, emsa);
-   PK_Signer* s = get_pk_signer(privkey, emsa);
+   PK_Verifier v(pubkey, emsa);
+   PK_Signer s(privkey, emsa);
 
    bool failure = false;
    validate_signature(v, s, algo, str[5], str[6], str[7], failure);
@@ -594,7 +586,7 @@ u32bit validate_dh(const std::string& algo,
    if(str.size() == 6)
       keylen = to_u32bit(str[5]);
 
-   PK_Key_Agreement* kas = get_pk_kas(mykey, kdf);
+   PK_Key_Agreement kas(mykey, kdf);
 
    bool failure = false;
    validate_kas(kas, algo, otherkey.public_value(),
@@ -628,17 +620,15 @@ u32bit validate_dlies(const std::string& algo,
    MessageAuthenticationCode* mac = get_mac(options[1]);
    u32bit mac_key_len = to_u32bit(options[2]);
 
-   PK_Decryptor* d =
-      new DLIES_Decryptor(to,
-                          get_kdf(options[0]),
-                          mac->clone(), mac_key_len);
+   DLIES_Encryptor e(from,
+                     get_kdf(options[0]),
+                     mac, mac_key_len);
 
-   DLIES_Encryptor* e =
-      new DLIES_Encryptor(from,
-                          get_kdf(options[0]),
-                          mac, mac_key_len);
+   DLIES_Decryptor d(to,
+                     get_kdf(options[0]),
+                     mac->clone(), mac_key_len);
 
-   e->set_other_key(to.public_value());
+   e.set_other_key(to.public_value());
 
    std::string empty = "";
    bool failure = false;

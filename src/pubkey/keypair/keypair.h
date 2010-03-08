@@ -24,8 +24,8 @@ namespace KeyPair {
 * @throw Self_Test_Failure if the arguments are not related to each other
 */
 BOTAN_DLL void check_key(RandomNumberGenerator& rng,
-                         PK_Encryptor* enc,
-                         PK_Decryptor* dec);
+                         PK_Encryptor& enc,
+                         PK_Decryptor& dec);
 
 /**
 * Tests whether the specified signer and verifier are related to each other,
@@ -37,8 +37,8 @@ BOTAN_DLL void check_key(RandomNumberGenerator& rng,
 * @throw Self_Test_Failure if the arguments are not related to each other
 */
 BOTAN_DLL void check_key(RandomNumberGenerator& rng,
-                         PK_Signer* sig,
-                         PK_Verifier* ver);
+                         PK_Signer& sig,
+                         PK_Verifier& ver);
 
 }
 
