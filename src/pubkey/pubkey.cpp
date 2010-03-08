@@ -12,6 +12,7 @@
 #include <botan/parsing.h>
 #include <botan/libstate.h>
 #include <botan/engine.h>
+#include <botan/lookup.h>
 #include <botan/internal/bit_ops.h>
 #include <memory>
 
@@ -21,8 +22,7 @@ namespace Botan {
 * PK_Encryptor_MR_with_EME Constructor
 */
 PK_Encryptor_MR_with_EME::PK_Encryptor_MR_with_EME(const Public_Key& key,
-                                                   EME* eme_obj) :
-   encoder(eme_obj)
+                                                   const std::string& eme_name)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
 
@@ -36,6 +36,8 @@ PK_Encryptor_MR_with_EME::PK_Encryptor_MR_with_EME(const Public_Key& key,
    if(op == 0)
       throw Lookup_Error("PK_Encryptor_MR_with_EME: No working engine for " +
                          key.algo_name());
+
+   eme = get_eme(eme_name);
    }
 
 /*
@@ -47,8 +49,8 @@ PK_Encryptor_MR_with_EME::enc(const byte msg[],
                               RandomNumberGenerator& rng) const
    {
    SecureVector<byte> message;
-   if(encoder)
-      message = encoder->encode(msg, length, op->max_input_bits(), rng);
+   if(eme)
+      message = eme->encode(msg, length, op->max_input_bits(), rng);
    else
       message.set(msg, length);
 
@@ -63,18 +65,17 @@ PK_Encryptor_MR_with_EME::enc(const byte msg[],
 */
 u32bit PK_Encryptor_MR_with_EME::maximum_input_size() const
    {
-   if(!encoder)
+   if(!eme)
       return (op->max_input_bits() / 8);
    else
-      return encoder->maximum_input_size(op->max_input_bits());
+      return eme->maximum_input_size(op->max_input_bits());
    }
 
 /*
 * PK_Decryptor_MR_with_EME Constructor
 */
 PK_Decryptor_MR_with_EME::PK_Decryptor_MR_with_EME(const Private_Key& key,
-                                                   EME* eme_obj) :
-   encoder(eme_obj)
+                                                   const std::string& eme_name)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
 
@@ -88,6 +89,8 @@ PK_Decryptor_MR_with_EME::PK_Decryptor_MR_with_EME(const Private_Key& key,
    if(op == 0)
       throw Lookup_Error("PK_Decryptor_MR_with_EME: No working engine for " +
                          key.algo_name());
+
+   eme = get_eme(eme_name);
    }
 
 /*
@@ -98,8 +101,8 @@ SecureVector<byte> PK_Decryptor_MR_with_EME::dec(const byte msg[],
    {
    try {
       SecureVector<byte> decrypted = op->decrypt(msg, length);
-      if(encoder)
-         return encoder->decode(decrypted, op->max_input_bits());
+      if(eme)
+         return eme->decode(decrypted, op->max_input_bits());
       else
          return decrypted;
       }
@@ -112,8 +115,9 @@ SecureVector<byte> PK_Decryptor_MR_with_EME::dec(const byte msg[],
 /*
 * PK_Signer Constructor
 */
-PK_Signer::PK_Signer(const Private_Key& key, EMSA* emsa_obj) :
-   emsa(emsa_obj)
+PK_Signer::PK_Signer(const Private_Key& key,
+                     const std::string& emsa_name,
+                     Signature_Format format)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
 
@@ -128,7 +132,8 @@ PK_Signer::PK_Signer(const Private_Key& key, EMSA* emsa_obj) :
       throw Lookup_Error("PK_Signer: No working engine for " +
                          key.algo_name());
 
-   sig_format = IEEE_1363;
+   emsa = get_emsa(emsa_name);
+   sig_format = format;
    }
 
 /*
@@ -187,7 +192,9 @@ SecureVector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
 /*
 * PK_Verifier Constructor
 */
-PK_Verifier::PK_Verifier(const Public_Key& key, EMSA* emsa_obj)
+PK_Verifier::PK_Verifier(const Public_Key& key,
+                         const std::string& emsa_name,
+                         Signature_Format format)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
 
@@ -202,8 +209,8 @@ PK_Verifier::PK_Verifier(const Public_Key& key, EMSA* emsa_obj)
       throw Lookup_Error("PK_Verifier: No working engine for " +
                          key.algo_name());
 
-   emsa = emsa_obj;
-   sig_format = IEEE_1363;
+   emsa = get_emsa(emsa_name);
+   sig_format = format;
    }
 
 /*
@@ -297,8 +304,7 @@ bool PK_Verifier::validate_signature(const MemoryRegion<byte>& msg,
 * PK_Key_Agreement Constructor
 */
 PK_Key_Agreement::PK_Key_Agreement(const PK_Key_Agreement_Key& key,
-                                   KDF* kdf_obj) :
-   kdf(kdf_obj)
+                                   const std::string& kdf_name)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
 
@@ -312,6 +318,8 @@ PK_Key_Agreement::PK_Key_Agreement(const PK_Key_Agreement_Key& key,
    if(op == 0)
       throw Lookup_Error("PK_Key_Agreement: No working engine for " +
                          key.algo_name());
+
+   kdf = get_kdf(kdf_name);
    }
 
 SymmetricKey PK_Key_Agreement::derive_key(u32bit key_len, const byte in[],

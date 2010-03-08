@@ -165,8 +165,11 @@ class BOTAN_DLL PK_Signer
       * @param key the key to use inside this signer
       * @param emsa the EMSA to use
       * An example would be "EMSA1(SHA-224)".
+      * @param format the signature format to use
       */
-      PK_Signer(const Private_Key& key, EMSA* emsa);
+      PK_Signer(const Private_Key& key,
+                const std::string& emsa,
+                Signature_Format format = IEEE_1363);
 
       ~PK_Signer() { delete op; delete emsa; }
    private:
@@ -260,10 +263,12 @@ class BOTAN_DLL PK_Verifier
       /**
       * Construct a PK Verifier.
       * @param pub_key the public key to verify against
-      * @param emsa the EMSA to use
-      * An example would be new EMSA1(new SHA_224)
+      * @param emsa the EMSA to use (eg "EMSA3(SHA-1)")
+      * @param format the signature format to use
       */
-      PK_Verifier(const Public_Key& pub_key, EMSA* emsa);
+      PK_Verifier(const Public_Key& pub_key,
+                  const std::string& emsa,
+                  Signature_Format format = IEEE_1363);
 
       ~PK_Verifier() { delete op; delete emsa; }
    private:
@@ -350,9 +355,10 @@ class BOTAN_DLL PK_Key_Agreement
       /**
       * Construct a PK Key Agreement.
       * @param key the key to use
-      * @param kdf the KDF to use (or NULL for no KDF)
+      * @param kdf name of the KDF to use (or 'Raw' for no KDF)
       */
-      PK_Key_Agreement(const PK_Key_Agreement_Key& key, KDF* kdf = 0);
+      PK_Key_Agreement(const PK_Key_Agreement_Key& key,
+                       const std::string& kdf);
 
       ~PK_Key_Agreement() { delete op; delete kdf; }
    private:
@@ -376,9 +382,10 @@ class BOTAN_DLL PK_Encryptor_MR_with_EME : public PK_Encryptor
       * @param key the key to use inside the decryptor
       * @param eme the EME to use
       */
-      PK_Encryptor_MR_with_EME(const Public_Key& key, EME* eme = 0);
+      PK_Encryptor_MR_with_EME(const Public_Key& key,
+                               const std::string& eme);
 
-      ~PK_Encryptor_MR_with_EME() { delete op; delete encoder; }
+      ~PK_Encryptor_MR_with_EME() { delete op; delete eme; }
    private:
       PK_Encryptor_MR_with_EME(const PK_Encryptor_MR_with_EME&);
       PK_Encryptor_MR_with_EME& operator=(const PK_Encryptor_MR_with_EME&);
@@ -387,7 +394,7 @@ class BOTAN_DLL PK_Encryptor_MR_with_EME : public PK_Encryptor
                              RandomNumberGenerator& rng) const;
 
       const PK_Ops::Encryption* op;
-      const EME* encoder;
+      const EME* eme;
    };
 
 /**
@@ -401,9 +408,10 @@ class BOTAN_DLL PK_Decryptor_MR_with_EME : public PK_Decryptor
       * @param key the key to use inside the encryptor
       * @param eme the EME to use
       */
-      PK_Decryptor_MR_with_EME(const Private_Key& key, EME* eme = 0);
+      PK_Decryptor_MR_with_EME(const Private_Key& key,
+                               const std::string& eme);
 
-      ~PK_Decryptor_MR_with_EME() { delete op; delete encoder; }
+      ~PK_Decryptor_MR_with_EME() { delete op; delete eme; }
    private:
       PK_Decryptor_MR_with_EME(const PK_Decryptor_MR_with_EME&);
       PK_Decryptor_MR_with_EME& operator=(const PK_Decryptor_MR_with_EME&);
@@ -411,7 +419,7 @@ class BOTAN_DLL PK_Decryptor_MR_with_EME : public PK_Decryptor
       SecureVector<byte> dec(const byte[], u32bit) const;
 
       const PK_Ops::Decryption* op;
-      const EME* encoder;
+      const EME* eme;
    };
 
 }

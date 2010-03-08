@@ -22,7 +22,7 @@ namespace Botan {
 inline PK_Encryptor* get_pk_encryptor(const Public_Key& key,
                                       const std::string& eme)
    {
-   return new PK_Encryptor_MR_with_EME(key, get_eme(eme));
+   return new PK_Encryptor_MR_with_EME(key, eme);
    }
 
 /**
@@ -34,7 +34,7 @@ inline PK_Encryptor* get_pk_encryptor(const Public_Key& key,
 inline PK_Decryptor* get_pk_decryptor(const Private_Key& key,
                                       const std::string& eme)
    {
-   return new PK_Decryptor_MR_with_EME(key, get_eme(eme));
+   return new PK_Decryptor_MR_with_EME(key, eme);
    }
 
 /**
@@ -48,9 +48,7 @@ inline PK_Signer* get_pk_signer(const Private_Key& key,
                                 const std::string& emsa,
                                 Signature_Format sig_format = IEEE_1363)
    {
-   PK_Signer* signer = new PK_Signer(key, get_emsa(emsa));
-   signer->set_output_format(sig_format);
-   return signer;
+   return new PK_Signer(key, emsa, sig_format);
    }
 
 /**
@@ -64,9 +62,7 @@ inline PK_Verifier* get_pk_verifier(const Public_Key& key,
                                     const std::string& emsa,
                                     Signature_Format sig_format = IEEE_1363)
    {
-   PK_Verifier* verifier = new PK_Verifier(key, get_emsa(emsa));
-   verifier->set_input_format(sig_format);
-   return verifier;
+   return new PK_Verifier(key, emsa, sig_format);
    }
 
 /**
@@ -78,7 +74,7 @@ inline PK_Verifier* get_pk_verifier(const Public_Key& key,
 inline PK_Key_Agreement* get_pk_kas(const PK_Key_Agreement_Key& key,
                                        const std::string& kdf)
    {
-   return new PK_Key_Agreement(key, get_kdf(kdf));
+   return new PK_Key_Agreement(key, kdf);
    }
 
 }
