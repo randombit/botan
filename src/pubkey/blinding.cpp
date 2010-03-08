@@ -36,14 +36,14 @@ BigInt Blinder::choose_nonce(const BigInt& x, const BigInt& mod)
 
    u64bit ns_clock = get_nanoseconds_clock();
    for(size_t i = 0; i != sizeof(ns_clock); ++i)
-      hash->update(get_byte(0, ns_clock));
+      hash->update(get_byte(i, ns_clock));
 
    hash->update(BigInt::encode(x));
    hash->update(BigInt::encode(mod));
 
    u64bit timestamp = system_time();
    for(size_t i = 0; i != sizeof(timestamp); ++i)
-      hash->update(get_byte(0, timestamp));
+      hash->update(get_byte(i, timestamp));
 
    SecureVector<byte> r = hash->final();
 
