@@ -16,9 +16,7 @@ namespace Botan {
 /**
 * RSA Public Key
 */
-class BOTAN_DLL RSA_PublicKey : public PK_Encrypting_Key,
-                                public PK_Verifying_with_MR_Key,
-                                public virtual IF_Scheme_PublicKey
+class BOTAN_DLL RSA_PublicKey : public virtual IF_Scheme_PublicKey
    {
    public:
       std::string algo_name() const { return "RSA"; }
@@ -49,8 +47,6 @@ class BOTAN_DLL RSA_PublicKey : public PK_Encrypting_Key,
 * RSA Private Key class.
 */
 class BOTAN_DLL RSA_PrivateKey : public RSA_PublicKey,
-                                 public PK_Decrypting_Key,
-                                 public PK_Signing_Key,
                                  public IF_Scheme_PrivateKey
    {
    public:

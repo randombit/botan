@@ -106,8 +106,8 @@ class BOTAN_DLL Verification
       * @param sig_len the length of sig in bytes
       * @returns if signature is a valid one for message
       */
-      virtual bool verify(const byte msg[], u32bit msg_len,
-                          const byte sig[], u32bit sig_len) const
+      virtual bool verify(const byte[], u32bit,
+                          const byte[], u32bit) const
          {
          throw Invalid_State("Message recovery required");
          }
@@ -119,8 +119,8 @@ class BOTAN_DLL Verification
       * @param msg_len the length of msg in bytes
       * @returns recovered message
       */
-      virtual SecureVector<byte> verify_mr(const byte msg[],
-                                           u32bit msg_len) const
+      virtual SecureVector<byte> verify_mr(const byte[],
+                                           u32bit) const
          {
          throw Invalid_State("Message recovery not supported");
          }

@@ -16,8 +16,7 @@ namespace Botan {
 /*
 * Rabin-Williams Public Key
 */
-class BOTAN_DLL RW_PublicKey : public PK_Verifying_with_MR_Key,
-                               public virtual IF_Scheme_PublicKey
+class BOTAN_DLL RW_PublicKey : public virtual IF_Scheme_PublicKey
    {
    public:
       std::string algo_name() const { return "RW"; }
@@ -39,7 +38,6 @@ class BOTAN_DLL RW_PublicKey : public PK_Verifying_with_MR_Key,
 * Rabin-Williams Private Key
 */
 class BOTAN_DLL RW_PrivateKey : public RW_PublicKey,
-                                public PK_Signing_Key,
                                 public IF_Scheme_PrivateKey
    {
    public:

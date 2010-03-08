@@ -168,22 +168,8 @@ bool X509_Object::check_signature(Public_Key& pub_key) const
       Signature_Format format =
          (pub_key.message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
 
-      std::auto_ptr<PK_Verifier> verifier;
-
-      if(dynamic_cast<PK_Verifying_with_MR_Key*>(&pub_key))
-         {
-         PK_Verifying_with_MR_Key& sig_key =
-            dynamic_cast<PK_Verifying_with_MR_Key&>(pub_key);
-         verifier.reset(get_pk_verifier(sig_key, padding, format));
-         }
-      else if(dynamic_cast<PK_Verifying_wo_MR_Key*>(&pub_key))
-         {
-         PK_Verifying_wo_MR_Key& sig_key =
-            dynamic_cast<PK_Verifying_wo_MR_Key&>(pub_key);
-         verifier.reset(get_pk_verifier(sig_key, padding, format));
-         }
-      else
-         return false;
+      std::auto_ptr<PK_Verifier> verifier(
+         get_pk_verifier(pub_key, padding, format));
 
       return verifier->verify_message(tbs_data(), signature());
       }

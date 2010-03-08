@@ -129,17 +129,18 @@ Public_Key* copy_key(const Public_Key& key)
 Key_Constraints find_constraints(const Public_Key& pub_key,
                                  Key_Constraints limits)
    {
-   const Public_Key* key = &pub_key;
+   const std::string name = pub_key.algo_name();
+
    u32bit constraints = 0;
 
-   if(dynamic_cast<const PK_Encrypting_Key*>(key))
-      constraints |= KEY_ENCIPHERMENT | DATA_ENCIPHERMENT;
-
-   if(dynamic_cast<const PK_Key_Agreement_Key*>(key))
+   if(name == "DH" || name == "ECDH")
       constraints |= KEY_AGREEMENT;
 
-   if(dynamic_cast<const PK_Verifying_wo_MR_Key*>(key) ||
-      dynamic_cast<const PK_Verifying_with_MR_Key*>(key))
+   if(name == "RSA" || name == "ElGamal")
+      constraints |= KEY_ENCIPHERMENT | DATA_ENCIPHERMENT;
+
+   if(name == "RSA" || name == "RW" || name == "NR" ||
+      name == "DSA" || name == "ECDSA")
       constraints |= DIGITAL_SIGNATURE | NON_REPUDIATION;
 
    if(limits)

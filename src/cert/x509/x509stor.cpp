@@ -381,7 +381,6 @@ X509_Code X509_Store::check_sig(const Cert_Info& cert_info,
 X509_Code X509_Store::check_sig(const X509_Object& object, Public_Key* key)
    {
    std::auto_ptr<Public_Key> pub_key(key);
-   std::auto_ptr<PK_Verifier> verifier;
 
    try {
       std::vector<std::string> sig_info =
@@ -395,20 +394,8 @@ X509_Code X509_Store::check_sig(const X509_Object& object, Public_Key* key)
       if(key->message_parts() >= 2) format = DER_SEQUENCE;
       else                          format = IEEE_1363;
 
-      if(dynamic_cast<PK_Verifying_with_MR_Key*>(pub_key.get()))
-         {
-         PK_Verifying_with_MR_Key* sig_key =
-            dynamic_cast<PK_Verifying_with_MR_Key*>(pub_key.get());
-         verifier.reset(get_pk_verifier(*sig_key, padding, format));
-         }
-      else if(dynamic_cast<PK_Verifying_wo_MR_Key*>(pub_key.get()))
-         {
-         PK_Verifying_wo_MR_Key* sig_key =
-            dynamic_cast<PK_Verifying_wo_MR_Key*>(pub_key.get());
-         verifier.reset(get_pk_verifier(*sig_key, padding, format));
-         }
-      else
-         return CA_CERT_CANNOT_SIGN;
+      std::auto_ptr<PK_Verifier> verifier(
+         get_pk_verifier(*pub_key.get(), padding, format));
 
       bool valid = verifier->verify_message(object.tbs_data(),
                                             object.signature());
@@ -418,6 +405,7 @@ X509_Code X509_Store::check_sig(const X509_Object& object, Public_Key* key)
       else
          return SIGNATURE_ERROR;
       }
+   catch(Lookup_Error)   { return CA_CERT_CANNOT_SIGN; }
    catch(Decoding_Error) { return CERT_FORMAT_ERROR; }
    catch(Exception)      {}
 

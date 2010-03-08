@@ -18,8 +18,7 @@ namespace Botan {
 /**
 * This class represents GOST_3410 Public Keys.
 */
-class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey,
-                                      public PK_Verifying_wo_MR_Key
+class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
    {
    public:
 
@@ -69,8 +68,7 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey,
 * This class represents GOST_3410 Private Keys
 */
 class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
-                                       public EC_PrivateKey,
-                                       public PK_Signing_Key
+                                       public EC_PrivateKey
    {
    public:
 

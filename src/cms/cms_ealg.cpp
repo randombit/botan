@@ -107,12 +107,7 @@ void CMS_Encoder::encrypt(RandomNumberGenerator& rng,
       if(constraints != NO_CONSTRAINTS && !(constraints & KEY_ENCIPHERMENT))
          throw Invalid_Argument("CMS: Constraints not set for encryption");
 
-      PK_Encrypting_Key* enc_key = dynamic_cast<PK_Encrypting_Key*>(key.get());
-      if(enc_key == 0)
-         throw Internal_Error("CMS_Encoder::encrypt: " + algo +
-                              " can't encrypt");
-
-      encrypt_ktri(rng, to, enc_key, cipher);
+      encrypt_ktri(rng, to, key.get(), cipher);
       }
    else if(algo == "DH")
       {
@@ -130,7 +125,7 @@ void CMS_Encoder::encrypt(RandomNumberGenerator& rng,
 */
 void CMS_Encoder::encrypt_ktri(RandomNumberGenerator& rng,
                                const X509_Certificate& to,
-                               PK_Encrypting_Key* pub_key,
+                               Public_Key* pub_key,
                                const std::string& cipher)
    {
    const std::string padding = "EME-PKCS1-v1_5";
@@ -297,8 +292,7 @@ void CMS_Encoder::sign(const X509_Certificate& cert,
 
    Signature_Format format = IEEE_1363;
 
-   const PK_Signing_Key& sig_key = dynamic_cast<const PK_Signing_Key&>(key);
-   std::auto_ptr<PK_Signer> signer(get_pk_signer(sig_key, padding, format));
+   std::auto_ptr<PK_Signer> signer(get_pk_signer(key, padding, format));
 
    AlgorithmIdentifier sig_algo(OIDS::lookup(key.algo_name() + "/" + padding),
                                 AlgorithmIdentifier::USE_NULL_PARAM);

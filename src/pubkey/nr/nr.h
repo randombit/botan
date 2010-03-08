@@ -18,8 +18,7 @@ namespace Botan {
 /*
 * Nyberg-Rueppel Public Key
 */
-class BOTAN_DLL NR_PublicKey : public PK_Verifying_with_MR_Key,
-                               public virtual DL_Scheme_PublicKey
+class BOTAN_DLL NR_PublicKey : public virtual DL_Scheme_PublicKey
    {
    public:
       std::string algo_name() const { return "NR"; }
@@ -42,7 +41,6 @@ class BOTAN_DLL NR_PublicKey : public PK_Verifying_with_MR_Key,
 * Nyberg-Rueppel Private Key
 */
 class BOTAN_DLL NR_PrivateKey : public NR_PublicKey,
-                                public PK_Signing_Key,
                                 public virtual DL_Scheme_PrivateKey
    {
    public:

@@ -18,8 +18,7 @@ namespace Botan {
 /*
 * DSA Public Key
 */
-class BOTAN_DLL DSA_PublicKey : public PK_Verifying_wo_MR_Key,
-                                public virtual DL_Scheme_PublicKey
+class BOTAN_DLL DSA_PublicKey : public virtual DL_Scheme_PublicKey
    {
    public:
       std::string algo_name() const { return "DSA"; }
@@ -44,7 +43,6 @@ class BOTAN_DLL DSA_PublicKey : public PK_Verifying_wo_MR_Key,
 * DSA Private Key
 */
 class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
-                                 public PK_Signing_Key,
                                  public virtual DL_Scheme_PrivateKey
    {
    public:

@@ -30,10 +30,6 @@ X509_CA::X509_CA(const X509_Certificate& c,
                  const Private_Key& key,
                  const std::string& hash_fn) : cert(c)
    {
-   // Use pointer dynamic_cast to avoid exception if cast fails
-   if(!dynamic_cast<const PK_Signing_Key*>(&key))
-      throw Invalid_Argument("X509_CA: " + key.algo_name() + " cannot sign");
-
    if(!cert.is_CA_cert())
       throw Invalid_Argument("X509_CA: This certificate is not for a CA");
 
@@ -276,9 +272,7 @@ PK_Signer* choose_sig_format(const Private_Key& key,
    sig_algo.oid = OIDS::lookup(algo_name + "/" + padding);
    sig_algo.parameters = key.algorithm_identifier().parameters;
 
-   const PK_Signing_Key& sig_key = dynamic_cast<const PK_Signing_Key&>(key);
-
-   return get_pk_signer(sig_key, padding, format);
+   return get_pk_signer(key, padding, format);
    }
 
 }

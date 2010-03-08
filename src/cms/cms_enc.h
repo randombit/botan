@@ -59,7 +59,7 @@ class BOTAN_DLL CMS_Encoder
       void add_layer(const std::string&, DER_Encoder&);
 
       void encrypt_ktri(RandomNumberGenerator&,
-                        const X509_Certificate&, PK_Encrypting_Key*,
+                        const X509_Certificate&, Public_Key*,
                         const std::string&);
       void encrypt_kari(RandomNumberGenerator&,
                         const X509_Certificate&, Public_Key*,

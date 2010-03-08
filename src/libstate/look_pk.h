@@ -19,7 +19,7 @@ namespace Botan {
 * @param eme determines the algorithm and encoding
 * @return the public key encryptor object
 */
-inline PK_Encryptor* get_pk_encryptor(const PK_Encrypting_Key& key,
+inline PK_Encryptor* get_pk_encryptor(const Public_Key& key,
                                       const std::string& eme)
    {
    return new PK_Encryptor_MR_with_EME(key, get_eme(eme));
@@ -31,7 +31,7 @@ inline PK_Encryptor* get_pk_encryptor(const PK_Encrypting_Key& key,
 * @param eme determines the algorithm and encoding
 * @return the public key decryptor object
 */
-inline PK_Decryptor* get_pk_decryptor(const PK_Decrypting_Key& key,
+inline PK_Decryptor* get_pk_decryptor(const Private_Key& key,
                                       const std::string& eme)
    {
    return new PK_Decryptor_MR_with_EME(key, get_eme(eme));
@@ -44,7 +44,7 @@ inline PK_Decryptor* get_pk_decryptor(const PK_Decrypting_Key& key,
 * @param sig_format the signature format to be used
 * @return the public key signer object
 */
-inline PK_Signer* get_pk_signer(const PK_Signing_Key& key,
+inline PK_Signer* get_pk_signer(const Private_Key& key,
                                 const std::string& emsa,
                                 Signature_Format sig_format = IEEE_1363)
    {
@@ -60,23 +60,7 @@ inline PK_Signer* get_pk_signer(const PK_Signing_Key& key,
 * @param sig_format the signature format to be used
 * @return the public key verifier object
 */
-inline PK_Verifier* get_pk_verifier(const PK_Verifying_with_MR_Key& key,
-                                    const std::string& emsa,
-                                    Signature_Format sig_format = IEEE_1363)
-   {
-   PK_Verifier* verifier = new PK_Verifier(key, get_emsa(emsa));
-   verifier->set_input_format(sig_format);
-   return verifier;
-   }
-
-/**
-* Public key verifier factory method.
-* @param key the key that will work inside the verifier
-* @param emsa determines the algorithm, encoding and hash algorithm
-* @param sig_format the signature format to be used
-* @return the public key verifier object
-*/
-inline PK_Verifier* get_pk_verifier(const PK_Verifying_wo_MR_Key& key,
+inline PK_Verifier* get_pk_verifier(const Public_Key& key,
                                     const std::string& emsa,
                                     Signature_Format sig_format = IEEE_1363)
    {

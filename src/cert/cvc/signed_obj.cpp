@@ -62,13 +62,9 @@ bool EAC_Signed_Object::check_signature(Public_Key& pub_key,
       Signature_Format format =
          (pub_key.message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
 
-      if(!dynamic_cast<PK_Verifying_wo_MR_Key*>(&pub_key))
-         return false;
-
       SecureVector<byte> to_sign = tbs_data();
 
-      PK_Verifying_wo_MR_Key& sig_key = dynamic_cast<PK_Verifying_wo_MR_Key&>(pub_key);
-      std::auto_ptr<PK_Verifier> verifier(get_pk_verifier(sig_key, padding, format));
+      std::auto_ptr<PK_Verifier> verifier(get_pk_verifier(pub_key, padding, format));
       return verifier->verify_message(to_sign, sig);
       }
    catch(...)

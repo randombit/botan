@@ -28,8 +28,10 @@ workfactor.h
 alloc
 asn1
 bigint
+engine
 filters
 kdf
+libstate
 oid_lookup
 pbe
 pem

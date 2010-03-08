@@ -100,41 +100,6 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
    };
 
 /**
-* PK Encrypting Key.
-*/
-class BOTAN_DLL PK_Encrypting_Key : public virtual Public_Key
-   {
-   };
-
-/**
-* PK Decrypting Key
-*/
-class BOTAN_DLL PK_Decrypting_Key : public virtual Private_Key
-   {
-   };
-
-/**
-* PK Signing Key
-*/
-class BOTAN_DLL PK_Signing_Key : public virtual Private_Key
-   {
-   };
-
-/**
-* PK Verifying Key, Message Recovery Version
-*/
-class BOTAN_DLL PK_Verifying_with_MR_Key : public virtual Public_Key
-   {
-   };
-
-/**
-* PK Verifying Key, No Message Recovery Version
-*/
-class BOTAN_DLL PK_Verifying_wo_MR_Key : public virtual Public_Key
-   {
-   };
-
-/**
 * PK Secret Value Derivation Key
 */
 class BOTAN_DLL PK_Key_Agreement_Key : public virtual Private_Key
