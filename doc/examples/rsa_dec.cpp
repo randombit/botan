@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 
       SecureVector<byte> enc_masterkey = b64_decode(enc_masterkey_str);
 
-      PK_Decryptor_MR_with_EME decryptor(*rsakey, "EME1(SHA-1)");
+      PK_Decryptor_EME decryptor(*rsakey, "EME1(SHA-1)");
 
       SecureVector<byte> masterkey = decryptor.decrypt(enc_masterkey);
 

@@ -44,7 +44,7 @@ Client_Key_Exchange::Client_Key_Exchange(RandomNumberGenerator& rng,
       pre_master[0] = (pref_version >> 8) & 0xFF;
       pre_master[1] = (pref_version     ) & 0xFF;
 
-      PK_Encryptor_MR_with_EME encryptor(*rsa_pub, "PKCS1v15");
+      PK_Encryptor_EME encryptor(*rsa_pub, "PKCS1v15");
 
       key_material = encryptor.encrypt(pre_master, rng);
 
@@ -138,7 +138,7 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
       }
    else if(const RSA_PrivateKey* rsa_priv = dynamic_cast<const RSA_PrivateKey*>(priv_key))
       {
-      PK_Decryptor_MR_with_EME decryptor(*rsa_priv, "PKCS1v15");
+      PK_Decryptor_EME decryptor(*rsa_priv, "PKCS1v15");
 
       try {
          pre_master = decryptor.decrypt(key_material);

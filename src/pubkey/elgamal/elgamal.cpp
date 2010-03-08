@@ -65,8 +65,8 @@ bool ElGamal_PrivateKey::check_key(RandomNumberGenerator& rng,
 
    try
       {
-      PK_Encryptor_MR_with_EME this_encryptor(*this, "EME1(SHA-1)");
-      PK_Decryptor_MR_with_EME this_decryptor(*this, "EME1(SHA-1)");
+      PK_Encryptor_EME this_encryptor(*this, "EME1(SHA-1)");
+      PK_Decryptor_EME this_decryptor(*this, "EME1(SHA-1)");
 
       KeyPair::check_key(rng,
                          this_encryptor,

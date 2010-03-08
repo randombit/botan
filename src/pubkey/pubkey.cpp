@@ -19,10 +19,10 @@
 namespace Botan {
 
 /*
-* PK_Encryptor_MR_with_EME Constructor
+* PK_Encryptor_EME Constructor
 */
-PK_Encryptor_MR_with_EME::PK_Encryptor_MR_with_EME(const Public_Key& key,
-                                                   const std::string& eme_name)
+PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
+                                   const std::string& eme_name)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
 
@@ -34,7 +34,7 @@ PK_Encryptor_MR_with_EME::PK_Encryptor_MR_with_EME(const Public_Key& key,
       }
 
    if(op == 0)
-      throw Lookup_Error("PK_Encryptor_MR_with_EME: No working engine for " +
+      throw Lookup_Error("PK_Encryptor_EME: No working engine for " +
                          key.algo_name());
 
    eme = get_eme(eme_name);
@@ -44,9 +44,9 @@ PK_Encryptor_MR_with_EME::PK_Encryptor_MR_with_EME(const Public_Key& key,
 * Encrypt a message
 */
 SecureVector<byte>
-PK_Encryptor_MR_with_EME::enc(const byte msg[],
-                              u32bit length,
-                              RandomNumberGenerator& rng) const
+PK_Encryptor_EME::enc(const byte msg[],
+                      u32bit length,
+                      RandomNumberGenerator& rng) const
    {
    SecureVector<byte> message;
    if(eme)
@@ -55,7 +55,7 @@ PK_Encryptor_MR_with_EME::enc(const byte msg[],
       message.set(msg, length);
 
    if(8*(message.size() - 1) + high_bit(message[0]) > op->max_input_bits())
-      throw Invalid_Argument("PK_Encryptor_MR_with_EME: Input is too large");
+      throw Invalid_Argument("PK_Encryptor_EME: Input is too large");
 
    return op->encrypt(message, message.size(), rng);
    }
@@ -63,7 +63,7 @@ PK_Encryptor_MR_with_EME::enc(const byte msg[],
 /*
 * Return the max size, in bytes, of a message
 */
-u32bit PK_Encryptor_MR_with_EME::maximum_input_size() const
+u32bit PK_Encryptor_EME::maximum_input_size() const
    {
    if(!eme)
       return (op->max_input_bits() / 8);
@@ -72,10 +72,10 @@ u32bit PK_Encryptor_MR_with_EME::maximum_input_size() const
    }
 
 /*
-* PK_Decryptor_MR_with_EME Constructor
+* PK_Decryptor_EME Constructor
 */
-PK_Decryptor_MR_with_EME::PK_Decryptor_MR_with_EME(const Private_Key& key,
-                                                   const std::string& eme_name)
+PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
+                                   const std::string& eme_name)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
 
@@ -87,7 +87,7 @@ PK_Decryptor_MR_with_EME::PK_Decryptor_MR_with_EME(const Private_Key& key,
       }
 
    if(op == 0)
-      throw Lookup_Error("PK_Decryptor_MR_with_EME: No working engine for " +
+      throw Lookup_Error("PK_Decryptor_EME: No working engine for " +
                          key.algo_name());
 
    eme = get_eme(eme_name);
@@ -96,8 +96,8 @@ PK_Decryptor_MR_with_EME::PK_Decryptor_MR_with_EME(const Private_Key& key,
 /*
 * Decrypt a message
 */
-SecureVector<byte> PK_Decryptor_MR_with_EME::dec(const byte msg[],
-                                                 u32bit length) const
+SecureVector<byte> PK_Decryptor_EME::dec(const byte msg[],
+                                         u32bit length) const
    {
    try {
       SecureVector<byte> decrypted = op->decrypt(msg, length);
@@ -108,7 +108,7 @@ SecureVector<byte> PK_Decryptor_MR_with_EME::dec(const byte msg[],
       }
    catch(Invalid_Argument)
       {
-      throw Decoding_Error("PK_Decryptor_MR_with_EME: Input is invalid");
+      throw Decoding_Error("PK_Decryptor_EME: Input is invalid");
       }
    }
 

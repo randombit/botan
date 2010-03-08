@@ -131,7 +131,7 @@ void CMS_Encoder::encrypt_ktri(RandomNumberGenerator& rng,
    const std::string padding = "EME-PKCS1-v1_5";
    const std::string pk_algo = pub_key->algo_name();
 
-   PK_Encryptor_MR_with_EME encryptor(*pub_key, padding);
+   PK_Encryptor_EME encryptor(*pub_key, padding);
 
    SymmetricKey cek = setup_key(rng, cipher);
 

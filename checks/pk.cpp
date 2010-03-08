@@ -238,8 +238,8 @@ u32bit validate_rsa_enc_pkcs8(const std::string& algo,
 
    std::string eme = algo.substr(12, std::string::npos);
 
-   PK_Encryptor_MR_with_EME e(*rsapub, eme);
-   PK_Decryptor_MR_with_EME d(*rsapriv, eme);
+   PK_Encryptor_EME e(*rsapub, eme);
+   PK_Decryptor_EME d(*rsapriv, eme);
 
    bool failure = false;
    validate_encryption(e, d, algo, str[1], str[2], str[3], failure);
@@ -265,8 +265,8 @@ u32bit validate_rsa_enc(const std::string& algo,
 
    std::string eme = algo.substr(6, std::string::npos);
 
-   PK_Encryptor_MR_with_EME e(pubkey, eme);
-   PK_Decryptor_MR_with_EME d(privkey, eme);
+   PK_Encryptor_EME e(pubkey, eme);
+   PK_Decryptor_EME d(privkey, eme);
 
    bool failure = false;
    validate_encryption(e, d, algo, str[3], str[4], str[5], failure);
@@ -291,12 +291,12 @@ u32bit validate_elg_enc(const std::string& algo,
 
    std::string eme = algo.substr(8, std::string::npos);
 
-   PK_Decryptor_MR_with_EME d(privkey, eme);
+   PK_Decryptor_EME d(privkey, eme);
 
    bool failure = false;
    if(str.size() == 7)
       {
-      PK_Encryptor_MR_with_EME e(pubkey, eme);
+      PK_Encryptor_EME e(pubkey, eme);
       validate_encryption(e, d, algo, str[4], str[5], str[6], failure);
       }
    else

@@ -214,8 +214,8 @@ void benchmark_rsa(RandomNumberGenerator& rng,
          while(verify_timer.seconds() < seconds ||
                sig_timer.seconds() < seconds)
             {
-            PK_Encryptor_MR_with_EME enc(key, enc_padding);
-            PK_Decryptor_MR_with_EME dec(key, enc_padding);
+            PK_Encryptor_EME enc(key, enc_padding);
+            PK_Decryptor_EME dec(key, enc_padding);
 
             benchmark_enc_dec(enc, dec, enc_timer, dec_timer,
                               rng, 10000, seconds);
@@ -675,8 +675,8 @@ void benchmark_elg(RandomNumberGenerator& rng,
          ElGamal_PrivateKey key(rng, group);
          keygen_timer.stop();
 
-         PK_Decryptor_MR_with_EME dec(key, padding);
-         PK_Encryptor_MR_with_EME enc(key, padding);
+         PK_Decryptor_EME dec(key, padding);
+         PK_Encryptor_EME enc(key, padding);
 
          benchmark_enc_dec(enc, dec, enc_timer, dec_timer,
                            rng, 1000, seconds);

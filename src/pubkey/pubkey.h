@@ -61,8 +61,12 @@ class BOTAN_DLL PK_Encryptor
       */
       virtual u32bit maximum_input_size() const = 0;
 
+      PK_Encryptor() {}
       virtual ~PK_Encryptor() {}
    private:
+      PK_Encryptor(const PK_Encryptor&) {}
+      PK_Encryptor& operator=(const PK_Encryptor&) { return *this; }
+
       virtual SecureVector<byte> enc(const byte[], u32bit,
                                      RandomNumberGenerator&) const = 0;
    };
@@ -94,8 +98,12 @@ class BOTAN_DLL PK_Decryptor
          return dec(&in[0], in.size());
          }
 
+      PK_Decryptor() {}
       virtual ~PK_Decryptor() {}
    private:
+      PK_Decryptor(const PK_Decryptor&) {}
+      PK_Decryptor& operator=(const PK_Decryptor&) { return *this; }
+
       virtual SecureVector<byte> dec(const byte[], u32bit) const = 0;
    };
 
@@ -173,8 +181,8 @@ class BOTAN_DLL PK_Signer
 
       ~PK_Signer() { delete op; delete emsa; }
    private:
-      PK_Signer(const PK_Signer&);
-      PK_Signer& operator=(const PK_Signer&);
+      PK_Signer(const PK_Signer&) {}
+      PK_Signer& operator=(const PK_Signer&) { return *this; }
 
       PK_Ops::Signature* op;
       EMSA* emsa;
@@ -272,8 +280,8 @@ class BOTAN_DLL PK_Verifier
 
       ~PK_Verifier() { delete op; delete emsa; }
    private:
-      PK_Verifier(const PK_Verifier&);
-      PK_Verifier& operator=(const PK_Verifier&);
+      PK_Verifier(const PK_Verifier&) {}
+      PK_Verifier& operator=(const PK_Verifier&) { return *this; }
 
       bool validate_signature(const MemoryRegion<byte>& msg,
                               const byte sig[], u32bit sig_len);
@@ -362,8 +370,8 @@ class BOTAN_DLL PK_Key_Agreement
 
       ~PK_Key_Agreement() { delete op; delete kdf; }
    private:
-      PK_Key_Agreement(const PK_Key_Agreement_Key&);
-      PK_Key_Agreement& operator=(const PK_Key_Agreement&);
+      PK_Key_Agreement(const PK_Key_Agreement_Key&) {}
+      PK_Key_Agreement& operator=(const PK_Key_Agreement&) { return *this; }
 
       PK_Ops::Key_Agreement* op;
       KDF* kdf;
@@ -372,7 +380,7 @@ class BOTAN_DLL PK_Key_Agreement
 /**
 * Encryption with an MR algorithm and an EME.
 */
-class BOTAN_DLL PK_Encryptor_MR_with_EME : public PK_Encryptor
+class BOTAN_DLL PK_Encryptor_EME : public PK_Encryptor
    {
    public:
       u32bit maximum_input_size() const;
@@ -382,14 +390,11 @@ class BOTAN_DLL PK_Encryptor_MR_with_EME : public PK_Encryptor
       * @param key the key to use inside the decryptor
       * @param eme the EME to use
       */
-      PK_Encryptor_MR_with_EME(const Public_Key& key,
-                               const std::string& eme);
+      PK_Encryptor_EME(const Public_Key& key,
+                       const std::string& eme);
 
-      ~PK_Encryptor_MR_with_EME() { delete op; delete eme; }
+      ~PK_Encryptor_EME() { delete op; delete eme; }
    private:
-      PK_Encryptor_MR_with_EME(const PK_Encryptor_MR_with_EME&);
-      PK_Encryptor_MR_with_EME& operator=(const PK_Encryptor_MR_with_EME&);
-
       SecureVector<byte> enc(const byte[], u32bit,
                              RandomNumberGenerator& rng) const;
 
@@ -400,7 +405,7 @@ class BOTAN_DLL PK_Encryptor_MR_with_EME : public PK_Encryptor
 /**
 * Decryption with an MR algorithm and an EME.
 */
-class BOTAN_DLL PK_Decryptor_MR_with_EME : public PK_Decryptor
+class BOTAN_DLL PK_Decryptor_EME : public PK_Decryptor
    {
    public:
      /**
@@ -408,14 +413,11 @@ class BOTAN_DLL PK_Decryptor_MR_with_EME : public PK_Decryptor
       * @param key the key to use inside the encryptor
       * @param eme the EME to use
       */
-      PK_Decryptor_MR_with_EME(const Private_Key& key,
-                               const std::string& eme);
+      PK_Decryptor_EME(const Private_Key& key,
+                       const std::string& eme);
 
-      ~PK_Decryptor_MR_with_EME() { delete op; delete eme; }
+      ~PK_Decryptor_EME() { delete op; delete eme; }
    private:
-      PK_Decryptor_MR_with_EME(const PK_Decryptor_MR_with_EME&);
-      PK_Decryptor_MR_with_EME& operator=(const PK_Decryptor_MR_with_EME&);
-
       SecureVector<byte> dec(const byte[], u32bit) const;
 
       const PK_Ops::Decryption* op;

@@ -22,7 +22,7 @@ namespace Botan {
 inline PK_Encryptor* get_pk_encryptor(const Public_Key& key,
                                       const std::string& eme)
    {
-   return new PK_Encryptor_MR_with_EME(key, eme);
+   return new PK_Encryptor_EME(key, eme);
    }
 
 /**
@@ -34,7 +34,7 @@ inline PK_Encryptor* get_pk_encryptor(const Public_Key& key,
 inline PK_Decryptor* get_pk_decryptor(const Private_Key& key,
                                       const std::string& eme)
    {
-   return new PK_Decryptor_MR_with_EME(key, eme);
+   return new PK_Decryptor_EME(key, eme);
    }
 
 /**

@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
 
       AutoSeeded_RNG rng;
 
-      PK_Encryptor_MR_with_EME encryptor(*rsakey, "EME1(SHA-1)");
+      PK_Encryptor_EME encryptor(*rsakey, "EME1(SHA-1)");
 
       /* Generate the master key (the other keys are derived from this)
 
