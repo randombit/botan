@@ -31,6 +31,7 @@ class BOTAN_DLL Modular_Exponentiator
 class BOTAN_DLL Power_Mod
    {
    public:
+
       enum Usage_Hints {
          NO_HINTS        = 0x0000,
 
@@ -43,6 +44,12 @@ class BOTAN_DLL Power_Mod
          EXP_IS_SMALL    = 0x0200,
          EXP_IS_LARGE    = 0x0400
       };
+
+      /*
+      * Try to choose a good window size
+      */
+      static u32bit window_bits(u32bit exp_bits, u32bit base_bits,
+                                Power_Mod::Usage_Hints hints);
 
       void set_modulus(const BigInt&, Usage_Hints = NO_HINTS) const;
       void set_base(const BigInt&) const;
