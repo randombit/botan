@@ -1,6 +1,6 @@
 /*
 * RSA
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -75,12 +75,13 @@ RSA_Private_Operation::RSA_Private_Operation(const RSA_PrivateKey& rsa) :
    n(rsa.get_n()),
    q(rsa.get_q()),
    c(rsa.get_c()),
+   powermod_e_n(rsa.get_e(), rsa.get_n()),
    powermod_d1_p(rsa.get_d1(), rsa.get_p()),
    powermod_d2_q(rsa.get_d2(), rsa.get_q()),
    mod_p(rsa.get_p())
    {
    BigInt k = Blinder::choose_nonce(rsa.get_d(), n);
-   blinder = Blinder(power_mod(k, rsa.get_e(), n), inverse_mod(k, n), n);
+   blinder = Blinder(powermod_e_n(k), inverse_mod(k, n), n);
    }
 
 BigInt RSA_Private_Operation::private_op(const BigInt& m) const
@@ -113,6 +114,10 @@ RSA_Private_Operation::decrypt(const byte msg[], u32bit msg_len) const
    {
    BigInt m(msg, msg_len);
    BigInt x = blinder.unblind(private_op(blinder.blind(m)));
+
+   if(m != powermod_e_n(x))
+      throw Internal_Error("RSA private op failed consistency check");
+
    return BigInt::encode(x);
    }
 

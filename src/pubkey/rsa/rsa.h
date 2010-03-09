@@ -106,7 +106,7 @@ class BOTAN_DLL RSA_Private_Operation : public PK_Ops::Signature,
       const BigInt& n;
       const BigInt& q;
       const BigInt& c;
-      Fixed_Exponent_Power_Mod powermod_d1_p, powermod_d2_q;
+      Fixed_Exponent_Power_Mod powermod_e_n, powermod_d1_p, powermod_d2_q;
       Modular_Reducer mod_p;
       Blinder blinder;
    };
