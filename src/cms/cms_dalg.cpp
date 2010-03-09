@@ -29,7 +29,7 @@ SecureVector<byte> hash_of(const SecureVector<byte>& content,
 
    Algorithm_Factory& af = global_state().algorithm_factory();
 
-   std::auto_ptr<HashFunction> hash_fn(af.make_hash_function(hash_name));
+   std::unique_ptr<HashFunction> hash_fn(af.make_hash_function(hash_name));
    return hash_fn->process(content);
    }
 

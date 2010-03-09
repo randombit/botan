@@ -168,7 +168,8 @@ EAC1_1_ADO create_ado_req(Private_Key const& key,
    PK_Signer signer(*priv_key, padding_and_hash);
    SecureVector<byte> tbs_bits = req.BER_encode();
    tbs_bits.append(DER_Encoder().encode(car).get_contents());
-   MemoryVector<byte> signed_cert = EAC1_1_ADO::make_signed(*signer.get(), tbs_bits, rng);
+   MemoryVector<byte> signed_cert = EAC1_1_ADO::make_signed(signer,
+                                                            tbs_bits, rng);
 
    DataSource_Memory source(signed_cert);
    return EAC1_1_ADO(source);
@@ -229,7 +230,7 @@ EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
    AlgorithmIdentifier sig_algo = signer.signature_algorithm();
    std::string padding_and_hash = padding_and_hash_from_oid(sig_algo.oid);
    PK_Signer pk_signer(*priv_key, padding_and_hash);
-   std::auto_ptr<Public_Key> pk = signee.subject_public_key();
+   std::unique_ptr<Public_Key> pk = signee.subject_public_key();
    ECDSA_PublicKey* subj_pk = dynamic_cast<ECDSA_PublicKey*>(pk.get());
    subj_pk->set_parameter_encoding(EC_DOMPAR_ENC_EXPLICIT);
 
@@ -259,11 +260,17 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
       throw Invalid_Argument("CVC_EAC::create_self_signed_cert(): unsupported key type");
       }
    std::string chr_str = signee.get_chr().value();
-   chr_str += to_string(seqnr, seqnr_len);
+
+   std::string seqnr_string = std::to_string(seqnr);
+
+   while(seqnr_string.size() < seqnr_len)
+      seqnr_string = '0' + seqnr_string;
+
+   chr_str += seqnr_string;
    ASN1_Chr chr(chr_str);
    std::string padding_and_hash = padding_and_hash_from_oid(signee.signature_algorithm().oid);
    PK_Signer pk_signer(*priv_key, padding_and_hash);
-   std::auto_ptr<Public_Key> pk = signee.subject_public_key();
+   std::unique_ptr<Public_Key> pk = signee.subject_public_key();
    ECDSA_PublicKey*  subj_pk = dynamic_cast<ECDSA_PublicKey*>(pk.get());
    std::unique_ptr<Public_Key> signer_pk = signer_cert.subject_public_key();
 

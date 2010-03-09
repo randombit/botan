@@ -374,7 +374,7 @@ void benchmark_gost_3410(RandomNumberGenerator& rng,
       if(hashbits == 521)
          hashbits = 512;
 
-      const std::string padding = "EMSA1(SHA-" + to_string(hashbits) + ")";
+      const std::string padding = "EMSA1(SHA-" + std::to_string(hashbits) + ")";
 
       Timer keygen_timer("keygen");
       Timer verify_timer(padding + " verify");
@@ -394,7 +394,7 @@ void benchmark_gost_3410(RandomNumberGenerator& rng,
                            sig_timer, rng, 1000, seconds);
          }
 
-      const std::string nm = "GOST-34.10-" + to_string(pbits);
+      const std::string nm = "GOST-34.10-" + std::to_string(pbits);
 
       report.report(nm, keygen_timer);
       report.report(nm, verify_timer);

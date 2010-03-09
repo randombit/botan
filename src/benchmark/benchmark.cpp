@@ -162,7 +162,7 @@ algorithm_benchmark(const std::string& name,
       if(const BlockCipher* proto =
             af.prototype_block_cipher(name, provider))
          {
-         std::auto_ptr<BlockCipher> block_cipher(proto->clone());
+         std::unique_ptr<BlockCipher> block_cipher(proto->clone());
          results = bench_block_cipher(block_cipher.get(),
                                       ns_per_provider,
                                       &buf[0], buf.size());
@@ -170,7 +170,7 @@ algorithm_benchmark(const std::string& name,
       else if(const StreamCipher* proto =
                  af.prototype_stream_cipher(name, provider))
          {
-         std::auto_ptr<StreamCipher> stream_cipher(proto->clone());
+         std::unique_ptr<StreamCipher> stream_cipher(proto->clone());
          results = bench_stream_cipher(stream_cipher.get(),
                                        ns_per_provider,
                                        &buf[0], buf.size());
@@ -178,14 +178,14 @@ algorithm_benchmark(const std::string& name,
       else if(const HashFunction* proto =
                  af.prototype_hash_function(name, provider))
          {
-         std::auto_ptr<HashFunction> hash(proto->clone());
+         std::unique_ptr<HashFunction> hash(proto->clone());
          results = bench_hash(hash.get(), ns_per_provider,
                               &buf[0], buf.size());
          }
       else if(const MessageAuthenticationCode* proto =
                  af.prototype_mac(name, provider))
          {
-         std::auto_ptr<MessageAuthenticationCode> mac(proto->clone());
+         std::unique_ptr<MessageAuthenticationCode> mac(proto->clone());
          results = bench_mac(mac.get(), ns_per_provider,
                              &buf[0], buf.size());
          }
