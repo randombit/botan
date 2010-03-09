@@ -482,8 +482,7 @@ u32bit validate_dsa_sig(const std::string& algo,
    }
 
 u32bit validate_ecdsa_sig(const std::string& algo,
-                          const std::vector<std::string>& str,
-                          RandomNumberGenerator& rng)
+                          const std::vector<std::string>& str)
    {
    if(str.size() != 5)
       throw std::runtime_error("Invalid input from pk_valid.dat");
@@ -812,7 +811,7 @@ u32bit do_pk_validation_tests(const std::string& filename,
             new_errors = validate_dsa_ver(algorithm, substr);
 
          else if(algorithm.find("ECDSA/") == 0)
-            new_errors = validate_ecdsa_sig(algorithm, substr, rng);
+            new_errors = validate_ecdsa_sig(algorithm, substr);
 
          else if(algorithm.find("RSAES_PKCS8/") == 0)
             new_errors = validate_rsa_enc_pkcs8(algorithm, substr, rng);
