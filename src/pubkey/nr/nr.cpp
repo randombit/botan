@@ -8,6 +8,7 @@
 #include <botan/nr.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
+#include <future>
 
 namespace Botan {
 
@@ -143,7 +144,10 @@ NR_Verification_Operation::verify_mr(const byte msg[], u32bit msg_len)
    if(c.is_zero() || c >= q || d >= q)
       throw Invalid_Argument("NR verification: Invalid signature");
 
-   BigInt i = mod_p.multiply(powermod_g_p(d), powermod_y_p(c));
+   auto future_y_c = std::async(std::launch::async, powermod_y_p, c);
+   BigInt g_d = powermod_g_p(d);
+
+   BigInt i = mod_p.multiply(g_d, future_y_c.get());
    return BigInt::encode(mod_q.reduce(c - i));
    }
 
