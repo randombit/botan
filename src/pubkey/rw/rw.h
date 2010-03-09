@@ -66,11 +66,12 @@ class BOTAN_DLL RW_Signature_Operation : public PK_Ops::Signature
       u32bit max_input_bits() const { return (n.bits() - 1); }
 
       SecureVector<byte> sign(const byte msg[], u32bit msg_len,
-                              RandomNumberGenerator& rng) const;
+                              RandomNumberGenerator& rng);
    private:
+      const BigInt& n;
+      const BigInt& e;
       const BigInt& q;
       const BigInt& c;
-      const BigInt& n;
 
       Fixed_Exponent_Power_Mod powermod_d1_p, powermod_d2_q;
       Modular_Reducer mod_p;
@@ -87,7 +88,7 @@ class BOTAN_DLL RW_Verification_Operation : public PK_Ops::Verification
       u32bit max_input_bits() const { return (n.bits() - 1); }
       bool with_recovery() const { return true; }
 
-      SecureVector<byte> verify_mr(const byte msg[], u32bit msg_len) const;
+      SecureVector<byte> verify_mr(const byte msg[], u32bit msg_len);
 
    private:
       const BigInt& n;

@@ -80,7 +80,7 @@ class BOTAN_DLL DH_KA_Operation : public PK_Ops::Key_Agreement
    public:
       DH_KA_Operation(const DH_PrivateKey& key);
 
-      SecureVector<byte> agree(const byte w[], u32bit w_len) const;
+      SecureVector<byte> agree(const byte w[], u32bit w_len);
    private:
       const BigInt& p;
 

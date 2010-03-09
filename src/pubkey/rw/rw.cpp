@@ -74,21 +74,26 @@ bool RW_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    }
 
 RW_Signature_Operation::RW_Signature_Operation(const RW_PrivateKey& rw) :
+   n(rw.get_n()),
+   e(rw.get_e()),
    q(rw.get_q()),
    c(rw.get_c()),
-   n(rw.get_n()),
    powermod_d1_p(rw.get_d1(), rw.get_p()),
    powermod_d2_q(rw.get_d2(), rw.get_q()),
    mod_p(rw.get_p())
    {
-   BigInt k = Blinder::choose_nonce(rw.get_d(), n);
-   blinder = Blinder(power_mod(k, rw.get_e(), n), inverse_mod(k, n), n);
    }
 
 SecureVector<byte>
 RW_Signature_Operation::sign(const byte msg[], u32bit msg_len,
-                             RandomNumberGenerator&) const
+                             RandomNumberGenerator& rng)
    {
+   if(!blinder.initialized())
+      {
+      BigInt k(rng, n.bits() / 2);
+      blinder = Blinder(power_mod(k, e, n), inverse_mod(k, n), n);
+      }
+
    BigInt i(msg, msg_len);
 
    if(i >= n || i % 16 != 12)
@@ -111,7 +116,7 @@ RW_Signature_Operation::sign(const byte msg[], u32bit msg_len,
    }
 
 SecureVector<byte>
-RW_Verification_Operation::verify_mr(const byte msg[], u32bit msg_len) const
+RW_Verification_Operation::verify_mr(const byte msg[], u32bit msg_len)
    {
    BigInt m(msg, msg_len);
 

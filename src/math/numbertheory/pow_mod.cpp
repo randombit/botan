@@ -114,7 +114,7 @@ BigInt Power_Mod::execute() const
 /*
 * Try to choose a good window size
 */
-u32bit Power_Mod::window_bits(u32bit exp_bits, u32bit base_bits,
+u32bit Power_Mod::window_bits(u32bit exp_bits, u32bit,
                               Power_Mod::Usage_Hints hints)
    {
    static const u32bit wsize[][2] = {

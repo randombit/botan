@@ -402,7 +402,7 @@ class BOTAN_DLL PK_Encryptor_EME : public PK_Encryptor
       SecureVector<byte> enc(const byte[], u32bit,
                              RandomNumberGenerator& rng) const;
 
-      const PK_Ops::Encryption* op;
+      PK_Ops::Encryption* op;
       const EME* eme;
    };
 
@@ -424,7 +424,7 @@ class BOTAN_DLL PK_Decryptor_EME : public PK_Decryptor
    private:
       SecureVector<byte> dec(const byte[], u32bit) const;
 
-      const PK_Ops::Decryption* op;
+      PK_Ops::Decryption* op;
       const EME* eme;
    };
 

@@ -50,7 +50,7 @@ class GMP_DH_KA_Operation : public PK_Ops::Key_Agreement
       GMP_DH_KA_Operation(const DH_PrivateKey& dh) :
          x(dh.get_x()), p(dh.group_p()) {}
 
-      SecureVector<byte> agree(const byte w[], u32bit w_len) const
+      SecureVector<byte> agree(const byte w[], u32bit w_len)
          {
          GMP_MPZ z(w, w_len);
          mpz_powm(z.value, z.value, x.value, p.value);
@@ -79,7 +79,7 @@ class GMP_DSA_Signature_Operation : public PK_Ops::Signature
       u32bit max_input_bits() const { return q_bits; }
 
       SecureVector<byte> sign(const byte msg[], u32bit msg_len,
-                              RandomNumberGenerator& rng) const;
+                              RandomNumberGenerator& rng);
    private:
       const GMP_MPZ x, p, q, g;
       u32bit q_bits;
@@ -87,7 +87,7 @@ class GMP_DSA_Signature_Operation : public PK_Ops::Signature
 
 SecureVector<byte>
 GMP_DSA_Signature_Operation::sign(const byte msg[], u32bit msg_len,
-                                  RandomNumberGenerator& rng) const
+                                  RandomNumberGenerator& rng)
    {
    const u32bit q_bytes = (q_bits + 7) / 8;
 
@@ -139,14 +139,14 @@ class GMP_DSA_Verification_Operation : public PK_Ops::Verification
       bool with_recovery() const { return false; }
 
       bool verify(const byte msg[], u32bit msg_len,
-                  const byte sig[], u32bit sig_len) const;
+                  const byte sig[], u32bit sig_len);
    private:
       const GMP_MPZ y, p, q, g;
       u32bit q_bits;
    };
 
 bool GMP_DSA_Verification_Operation::verify(const byte msg[], u32bit msg_len,
-                                            const byte sig[], u32bit sig_len) const
+                                            const byte sig[], u32bit sig_len)
    {
    const u32bit q_bytes = q.bytes();
 
@@ -205,14 +205,14 @@ class GMP_RSA_Private_Operation : public PK_Ops::Signature,
       u32bit max_input_bits() const { return (n_bits - 1); }
 
       SecureVector<byte> sign(const byte msg[], u32bit msg_len,
-                              RandomNumberGenerator& rng) const
+                              RandomNumberGenerator&)
          {
          BigInt m(msg, msg_len);
          BigInt x = private_op(m);
          return BigInt::encode_1363(x, (n_bits + 7) / 8);
          }
 
-      SecureVector<byte> decrypt(const byte msg[], u32bit msg_len) const
+      SecureVector<byte> decrypt(const byte msg[], u32bit msg_len)
          {
          BigInt m(msg, msg_len);
          return BigInt::encode(private_op(m));
@@ -251,13 +251,13 @@ class GMP_RSA_Public_Operation : public PK_Ops::Verification,
       bool with_recovery() const { return true; }
 
       SecureVector<byte> encrypt(const byte msg[], u32bit msg_len,
-                                 RandomNumberGenerator&) const
+                                 RandomNumberGenerator&)
          {
          BigInt m(msg, msg_len);
          return BigInt::encode_1363(public_op(m), n.bytes());
          }
 
-      SecureVector<byte> verify_mr(const byte msg[], u32bit msg_len) const
+      SecureVector<byte> verify_mr(const byte msg[], u32bit msg_len)
          {
          BigInt m(msg, msg_len);
          return BigInt::encode(public_op(m));

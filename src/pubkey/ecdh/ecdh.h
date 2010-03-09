@@ -76,25 +76,6 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
 
       MemoryVector<byte> public_value() const
          { return EC2OSP(public_point(), PointGFp::UNCOMPRESSED); }
-   private:
-      /**
-      * Derive a shared key with the other parties public key.
-      * @param key the other partys public key
-      * @param key_len the other partys public key
-      */
-      SecureVector<byte> derive_key(const byte key[], u32bit key_len) const;
-
-      /**
-      * Derive a shared key with the other parties public key.
-      * @param other the other partys public key
-      */
-      SecureVector<byte> derive_key(const ECDH_PublicKey& other) const;
-
-      /**
-      * Derive a shared key with the other parties public key.
-      * @param point the public point of the other parties key
-      */
-      SecureVector<byte> derive_key(const PointGFp& point) const;
    };
 
 /**
@@ -105,7 +86,7 @@ class BOTAN_DLL ECDH_KA_Operation : public PK_Ops::Key_Agreement
    public:
       ECDH_KA_Operation(const ECDH_PrivateKey& key);
 
-      SecureVector<byte> agree(const byte w[], u32bit w_len) const;
+      SecureVector<byte> agree(const byte w[], u32bit w_len);
    private:
       const CurveGFp& curve;
       const BigInt& cofactor;

@@ -22,6 +22,8 @@ class BOTAN_DLL Blinder
       BigInt blind(const BigInt& x) const;
       BigInt unblind(const BigInt& x) const;
 
+      bool initialized() const { return reducer.initialized(); }
+
       /**
       * Choose a nonce to use for blinding
       * @param x a secret seed value

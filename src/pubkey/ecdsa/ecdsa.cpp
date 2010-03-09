@@ -20,7 +20,7 @@ ECDSA_Signature_Operation::ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecd
 
 SecureVector<byte>
 ECDSA_Signature_Operation::sign(const byte msg[], u32bit msg_len,
-                                RandomNumberGenerator& rng) const
+                                RandomNumberGenerator& rng)
    {
    rng.add_entropy(msg, msg_len);
 
@@ -56,7 +56,7 @@ ECDSA_Verification_Operation::ECDSA_Verification_Operation(const ECDSA_PublicKey
    }
 
 bool ECDSA_Verification_Operation::verify(const byte msg[], u32bit msg_len,
-                                          const byte sig[], u32bit sig_len) const
+                                          const byte sig[], u32bit sig_len)
    {
    if(sig_len != order.bytes()*2)
       return false;

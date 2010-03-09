@@ -63,7 +63,7 @@ class BOTAN_DLL ElGamal_Encryption_Operation : public PK_Ops::Encryption
       ElGamal_Encryption_Operation(const ElGamal_PublicKey& key);
 
       SecureVector<byte> encrypt(const byte msg[], u32bit msg_len,
-                                 RandomNumberGenerator& rng) const;
+                                 RandomNumberGenerator& rng);
 
    private:
       Fixed_Base_Power_Mod powermod_g_p, powermod_y_p;
@@ -77,7 +77,7 @@ class BOTAN_DLL ElGamal_Decryption_Operation : public PK_Ops::Decryption
 
       ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key);
 
-      SecureVector<byte> decrypt(const byte msg[], u32bit msg_len) const;
+      SecureVector<byte> decrypt(const byte msg[], u32bit msg_len);
    private:
       Fixed_Exponent_Power_Mod powermod_x_p;
       Modular_Reducer mod_p;

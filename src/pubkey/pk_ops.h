@@ -21,7 +21,7 @@ class BOTAN_DLL Encryption
       virtual u32bit max_input_bits() const = 0;
 
       virtual SecureVector<byte> encrypt(const byte msg[], u32bit msg_len,
-                                         RandomNumberGenerator& rng) const = 0;
+                                         RandomNumberGenerator& rng) = 0;
 
       virtual ~Encryption() {}
    };
@@ -32,7 +32,7 @@ class BOTAN_DLL Decryption
       virtual u32bit max_input_bits() const = 0;
 
       virtual SecureVector<byte> decrypt(const byte msg[],
-                                         u32bit msg_len) const = 0;
+                                         u32bit msg_len) = 0;
 
       virtual ~Decryption() {}
    };
@@ -64,9 +64,8 @@ class BOTAN_DLL Signature
       * @param msg_len the length of msg in bytes
       * @param rng a random number generator
       */
-      virtual SecureVector<byte>
-         sign(const byte msg[], u32bit msg_len,
-              RandomNumberGenerator& rng) const = 0;
+      virtual SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+                                      RandomNumberGenerator& rng) = 0;
 
       virtual ~Signature() {}
    };
@@ -107,7 +106,7 @@ class BOTAN_DLL Verification
       * @returns if signature is a valid one for message
       */
       virtual bool verify(const byte[], u32bit,
-                          const byte[], u32bit) const
+                          const byte[], u32bit)
          {
          throw Invalid_State("Message recovery required");
          }
@@ -120,7 +119,7 @@ class BOTAN_DLL Verification
       * @returns recovered message
       */
       virtual SecureVector<byte> verify_mr(const byte[],
-                                           u32bit) const
+                                           u32bit)
          {
          throw Invalid_State("Message recovery not supported");
          }
@@ -140,7 +139,7 @@ class BOTAN_DLL Key_Agreement
       * @param w_len the length of w in bytes
       * @returns the agreed key
       */
-      virtual SecureVector<byte> agree(const byte w[], u32bit w_len) const = 0;
+      virtual SecureVector<byte> agree(const byte w[], u32bit w_len) = 0;
 
       virtual ~Key_Agreement() {}
    };

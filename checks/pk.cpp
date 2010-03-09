@@ -161,14 +161,14 @@ void validate_encryption(PK_Encryptor& e, PK_Decryptor& d,
    }
 
 void validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
-                        const std::string& input, const std::string& random,
+                        const std::string& input,
+                        RandomNumberGenerator& rng,
                         const std::string& exp, bool& failure)
    {
    SecureVector<byte> message = decode_hex(input);
 
    SecureVector<byte> expected = decode_hex(exp);
 
-   Fixed_Output_RNG rng(decode_hex(random));
    SecureVector<byte> sig = s.sign_message(message, message.size(), rng);
 
    if(sig != expected)
@@ -192,6 +192,16 @@ void validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
       std::cout << "FAILED (accepted bad sig): " << algo << std::endl;
       failure = true;
       }
+   }
+
+void validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
+                        const std::string& input,
+                        const std::string& random,
+                        const std::string& exp, bool& failure)
+   {
+   Fixed_Output_RNG rng(decode_hex(random));
+
+   validate_signature(v, s, algo, input, rng, exp, failure);
    }
 
 void validate_kas(PK_Key_Agreement& kas, const std::string& algo,
@@ -397,8 +407,6 @@ u32bit validate_rw_ver(const std::string& algo,
    if(str.size() != 5)
       throw std::runtime_error("Invalid input from pk_valid.dat");
 
-
-
 #if defined(BOTAN_HAS_RW)
    RW_PublicKey key(to_bigint(str[1]), to_bigint(str[0]));
 
@@ -421,9 +429,8 @@ u32bit validate_rw_sig(const std::string& algo,
                        const std::vector<std::string>& str,
                        RandomNumberGenerator& rng)
    {
-   if(str.size() != 6)
+   if(str.size() != 5)
       throw std::runtime_error("Invalid input from pk_valid.dat");
-
 
 #if defined(BOTAN_HAS_RW)
    RW_PrivateKey privkey(rng, to_bigint(str[1]), to_bigint(str[2]),
@@ -436,7 +443,7 @@ u32bit validate_rw_sig(const std::string& algo,
    PK_Signer s(privkey, emsa);
 
    bool failure = false;
-   validate_signature(v, s, algo, str[3], str[4], str[5], failure);
+   validate_signature(v, s, algo, str[3], rng, str[4], failure);
    return (failure ? 1 : 0);
 #endif
 

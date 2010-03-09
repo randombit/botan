@@ -91,7 +91,7 @@ ElGamal_Encryption_Operation::ElGamal_Encryption_Operation(const ElGamal_PublicK
 
 SecureVector<byte>
 ElGamal_Encryption_Operation::encrypt(const byte msg[], u32bit msg_len,
-                                      RandomNumberGenerator& rng) const
+                                      RandomNumberGenerator& rng)
    {
    const BigInt& p = mod_p.get_modulus();
 
@@ -118,12 +118,12 @@ ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_Private
    powermod_x_p = Fixed_Exponent_Power_Mod(key.get_x(), p);
    mod_p = Modular_Reducer(p);
 
-   BigInt k = Blinder::choose_nonce(key.get_x(), p);
+   BigInt k = Blinder::choose_nonce(powermod_x_p(2), p);
    blinder = Blinder(k, powermod_x_p(k), p);
    }
 
 SecureVector<byte>
-ElGamal_Decryption_Operation::decrypt(const byte msg[], u32bit msg_len) const
+ElGamal_Decryption_Operation::decrypt(const byte msg[], u32bit msg_len)
    {
    const BigInt& p = mod_p.get_modulus();
 
