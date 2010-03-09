@@ -119,7 +119,7 @@ ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_Private
    mod_p = Modular_Reducer(p);
 
    BigInt k = Blinder::choose_nonce(key.get_x(), p);
-   blinder = Blinder(k, power_mod(k, key.get_x(), p), p);
+   blinder = Blinder(k, powermod_x_p(k), p);
    }
 
 SecureVector<byte>
