@@ -179,12 +179,16 @@ class BOTAN_DLL PK_Signer
                 const std::string& emsa,
                 Signature_Format format = IEEE_1363);
 
-      ~PK_Signer() { delete op; delete emsa; }
+      ~PK_Signer() { delete op; delete verify_op; delete emsa; }
    private:
+      bool self_test_signature(const MemoryRegion<byte>& msg,
+                               const MemoryRegion<byte>& sig) const;
+
       PK_Signer(const PK_Signer&) {}
       PK_Signer& operator=(const PK_Signer&) { return *this; }
 
       PK_Ops::Signature* op;
+      PK_Ops::Verification* verify_op;
       EMSA* emsa;
       Signature_Format sig_format;
    };

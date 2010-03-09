@@ -33,7 +33,7 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
          break;
       }
 
-   if(op == 0)
+   if(!op)
       throw Lookup_Error("PK_Encryptor_EME: No working engine for " +
                          key.algo_name());
 
@@ -86,7 +86,7 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
          break;
       }
 
-   if(op == 0)
+   if(!op)
       throw Lookup_Error("PK_Decryptor_EME: No working engine for " +
                          key.algo_name());
 
@@ -121,14 +121,22 @@ PK_Signer::PK_Signer(const Private_Key& key,
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
 
+   op = 0;
+   verify_op = 0;
+
    while(const Engine* engine = i.next())
       {
-      op = engine->get_signature_op(key);
-      if(op)
+      if(!op)
+         op = engine->get_signature_op(key);
+
+      if(!verify_op)
+         verify_op = engine->get_verify_op(key);
+
+      if(op && verify_op)
          break;
       }
 
-   if(op == 0)
+   if(!op || !verify_op)
       throw Lookup_Error("PK_Signer: No working engine for " +
                          key.algo_name());
 
@@ -155,6 +163,35 @@ void PK_Signer::update(const byte in[], u32bit length)
    }
 
 /*
+* Check the signature we just created, to help prevent fault attacks
+*/
+bool PK_Signer::self_test_signature(const MemoryRegion<byte>& msg,
+                                    const MemoryRegion<byte>& sig) const
+   {
+   if(verify_op->with_recovery())
+      {
+      SecureVector<byte> recovered =
+         verify_op->verify_mr(&sig[0], sig.size());
+
+      if(msg.size() > recovered.size())
+         {
+         u32bit extra_0s = msg.size() - recovered.size();
+
+         for(size_t i = 0; i != extra_0s; ++i)
+            if(msg[i] != 0)
+               return false;
+
+         return same_mem(&msg[extra_0s], &recovered[0], recovered.size());
+         }
+
+      return (recovered == msg);
+      }
+   else
+      return verify_op->verify(&msg[0], msg.size(),
+                               &sig[0], sig.size());
+   }
+
+/*
 * Create a signature
 */
 SecureVector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
@@ -164,6 +201,9 @@ SecureVector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
                                                   rng);
 
    SecureVector<byte> plain_sig = op->sign(encoded, encoded.size(), rng);
+
+   if(!self_test_signature(encoded, plain_sig))
+      throw Internal_Error("PK_Signer consistency check failed");
 
    if(op->message_parts() == 1 || sig_format == IEEE_1363)
       return plain_sig;
@@ -205,7 +245,7 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
          break;
       }
 
-   if(op == 0)
+   if(!op)
       throw Lookup_Error("PK_Verifier: No working engine for " +
                          key.algo_name());
 
@@ -315,7 +355,7 @@ PK_Key_Agreement::PK_Key_Agreement(const PK_Key_Agreement_Key& key,
          break;
       }
 
-   if(op == 0)
+   if(!op)
       throw Lookup_Error("PK_Key_Agreement: No working engine for " +
                          key.algo_name());
 
