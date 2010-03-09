@@ -1,5 +1,5 @@
 
-* 1.9.4-dev, ????-??-??
+* 1.9.4, 2010-03-09
  - Add the Ajisai SSLv3/TLSv1.0 implementation
  - Add GOST 34.10-2001 public key signature scheme
  - Add SIMD implementation of Noekeon
