@@ -1,8 +1,6 @@
 macro_name GCC
 
-binary_name g++
-
-compiler_has_tr1 yes
+binary_name g++-4.5
 
 compile_option "-c "
 output_to_option "-o "
@@ -10,7 +8,7 @@ add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lang_flags "-D_REENTRANT -ansi -Wno-long-long"
+lang_flags "-ansi -std=c++0x"
 warning_flags "-W -Wall"
 #warning_flags "-Werror -Wextra -Wall -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wno-unused-parameter"
 
@@ -71,6 +69,8 @@ ppc64     -> "-mcpu=SUBMODEL" ppc
 
 # Note that the 'linking' bit means "use this for both compiling *and* linking"
 <mach_abi_linking>
+all     -> "-pthread"
+
 amd64   -> "-m64"
 mips64  -> "-mabi=64"
 s390    -> "-m31"
@@ -79,10 +79,6 @@ sparc32 -> "-m32 -mno-app-regs"
 sparc64 -> "-m64 -mno-app-regs"
 ppc64   -> "-m64"
 
-# This should probably be used on most/all targets, but the docs are incomplete
-openbsd -> "-pthread"
-freebsd -> "-pthread"
-dragonfly -> "-pthread"
-netbsd  -> "-pthread -D_NETBSD_SOURCE"
+netbsd  -> "-D_NETBSD_SOURCE"
 qnx     -> "-fexceptions -D_QNX_SOURCE"
 </mach_abi_linking>

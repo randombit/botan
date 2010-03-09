@@ -51,7 +51,7 @@ CipherSuite::CipherSuite(u16bit suite_code)
 
    if(suite_string == "")
       throw Invalid_Argument("Unknown ciphersuite: " +
-                             to_string(suite_code));
+                             std::to_string(suite_code));
 
    std::vector<std::string> suite_info = split_on(suite_string, '/');
 

@@ -20,7 +20,7 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
    {
    if(bits < 512)
       throw Invalid_Argument(algo_name() + ": Can't make a key that is only " +
-                             to_string(bits) + " bits long");
+                             std::to_string(bits) + " bits long");
    if(exp < 3 || exp % 2 == 0)
       throw Invalid_Argument(algo_name() + ": Invalid encryption exponent");
 
