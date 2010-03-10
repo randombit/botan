@@ -34,7 +34,7 @@ class BOTAN_DLL Library_State
       /**
       * @return the global Algorithm_Factory
       */
-      Algorithm_Factory& algorithm_factory();
+      Algorithm_Factory& algorithm_factory() const;
 
       /**
       * @param name the name of the allocator
@@ -133,6 +133,7 @@ class BOTAN_DLL Library_State
       Mutex* config_lock;
 
       Mutex* allocator_lock;
+      std::string default_allocator_name;
       std::map<std::string, Allocator*> alloc_factory;
       mutable Allocator* cached_default_allocator;
       std::vector<Allocator*> allocators;
@@ -140,12 +141,24 @@ class BOTAN_DLL Library_State
       Algorithm_Factory* m_algorithm_factory;
    };
 
-/*
-* Global State
+/**
+* Access the global library state
+* @return reference to the global library state
 */
 BOTAN_DLL Library_State& global_state();
-BOTAN_DLL void set_global_state(Library_State*);
-BOTAN_DLL Library_State* swap_global_state(Library_State*);
+
+/**
+* Set the global state object
+* @param state the new global state to use
+*/
+BOTAN_DLL void set_global_state(Library_State* state);
+
+/**
+* Swap the current state for another
+* @param new_state the new state object to use
+* @return the previous state (or NULL if none)
+*/
+BOTAN_DLL Library_State* swap_global_state(Library_State* new_state);
 
 }
 

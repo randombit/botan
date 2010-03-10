@@ -1,6 +1,6 @@
 /*
 * Default Policy
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -284,8 +284,6 @@ void set_default_aliases(Library_State& config)
 */
 void set_default_config(Library_State& config)
    {
-   config.set_option("base/default_allocator", "malloc");
-
    config.set_option("x509/exts/basic_constraints", "critical");
    config.set_option("x509/exts/subject_key_id", "yes");
    config.set_option("x509/exts/authority_key_id", "yes");

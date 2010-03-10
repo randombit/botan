@@ -1,6 +1,6 @@
 /*
 * Library Internal/Global State
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -119,13 +119,9 @@ Allocator* Library_State::get_allocator(const std::string& type) const
 
    if(!cached_default_allocator)
       {
-      std::string chosen = this->option("base/default_allocator");
-
-      if(chosen == "")
-         chosen = "malloc";
-
       cached_default_allocator =
-         search_map<std::string, Allocator*>(alloc_factory, chosen, 0);
+         search_map<std::string, Allocator*>(alloc_factory,
+                                             default_allocator_name, 0);
       }
 
    return cached_default_allocator;
@@ -154,7 +150,7 @@ void Library_State::set_default_allocator(const std::string& type)
    if(type == "")
       return;
 
-   this->set("conf", "base/default_allocator", type);
+   default_allocator_name = type;
    cached_default_allocator = 0;
    }
 
@@ -237,7 +233,7 @@ std::string Library_State::option(const std::string& key) const
 /**
 Return a reference to the Algorithm_Factory
 */
-Algorithm_Factory& Library_State::algorithm_factory()
+Algorithm_Factory& Library_State::algorithm_factory() const
    {
    if(!m_algorithm_factory)
       throw Invalid_State("Uninitialized in Library_State::algorithm_factory");
@@ -273,6 +269,7 @@ void Library_State::initialize(bool thread_safe)
    config_lock = mutex_factory->make();
 
    cached_default_allocator = 0;
+   default_allocator_name = "locking";
 
    add_allocator(new Malloc_Allocator);
    add_allocator(new Locking_Allocator(mutex_factory->make()));
@@ -280,8 +277,6 @@ void Library_State::initialize(bool thread_safe)
 #if defined(BOTAN_HAS_ALLOC_MMAP)
    add_allocator(new MemoryMapping_Allocator(mutex_factory->make()));
 #endif
-
-   set_default_allocator("locking");
 
    load_default_config();
 
