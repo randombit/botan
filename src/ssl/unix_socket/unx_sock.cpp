@@ -1,6 +1,6 @@
 /**
 * Unix Socket
-* (C) 2004-2006 Jack Lloyd
+* (C) 2004-2010 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <errno.h>
