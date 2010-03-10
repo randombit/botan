@@ -1,13 +1,13 @@
 /*
-* (C) 2009 Jack Lloyd
+* (C) 2009-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/pkcs8.h>
 #include <botan/mem_ops.h>
-#include <botan/libstate.h>
 #include <botan/parsing.h>
+#include <map>
 
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
@@ -720,8 +720,6 @@ void bench_pk(RandomNumberGenerator& rng,
      ad-hoc format (the RW algorithm has no assigned OID that I know of, so
      there is no way to encode a RW key into a PKCS #8 structure).
    */
-
-   global_state().set_option("pk/test/private_gen", "basic");
 
    Benchmark_Report report;
 
