@@ -280,21 +280,6 @@ void set_default_aliases(Library_State& config)
    }
 
 /*
-* Set the default configuration toggles
-*/
-void set_default_config(Library_State& config)
-   {
-   config.set_option("x509/exts/basic_constraints", "critical");
-   config.set_option("x509/exts/subject_key_id", "yes");
-   config.set_option("x509/exts/authority_key_id", "yes");
-   config.set_option("x509/exts/subject_alternative_name", "yes");
-   config.set_option("x509/exts/issuer_alternative_name", "no");
-   config.set_option("x509/exts/key_usage", "critical");
-   config.set_option("x509/exts/extended_key_usage", "yes");
-   config.set_option("x509/exts/crl_number", "yes");
-   }
-
-/*
 * Set the built-in discrete log groups
 */
 void set_default_dl_groups(Library_State& config)
@@ -810,7 +795,6 @@ void set_default_dl_groups(Library_State& config)
 */
 void Library_State::load_default_config()
    {
-   set_default_config(*this);
    set_default_aliases(*this);
    set_default_oids(*this);
    set_default_dl_groups(*this);

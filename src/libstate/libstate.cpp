@@ -213,23 +213,6 @@ std::string Library_State::deref_alias(const std::string& key) const
    return result;
    }
 
-/*
-* Set/Add an option
-*/
-void Library_State::set_option(const std::string& key,
-                               const std::string& value)
-   {
-   set("conf", key, value);
-   }
-
-/*
-* Get an option value
-*/
-std::string Library_State::option(const std::string& key) const
-   {
-   return get("conf", key);
-   }
-
 /**
 Return a reference to the Algorithm_Factory
 */
