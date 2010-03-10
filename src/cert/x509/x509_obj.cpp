@@ -61,9 +61,9 @@ void X509_Object::init(DataSource& in, const std::string& labels)
          decode_info(ber);
          }
       }
-   catch(Decoding_Error)
+   catch(Decoding_Error& e)
       {
-      throw Decoding_Error(PEM_label_pref + " decoding failed");
+      throw Decoding_Error(PEM_label_pref + " decoding failed: " + e.what());
       }
    }
 
