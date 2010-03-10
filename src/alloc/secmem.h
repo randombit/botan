@@ -210,7 +210,7 @@ class MemoryRegion
          }
 
       void deallocate(T* p, u32bit n)
-         { alloc->deallocate(p, sizeof(T)*n); }
+         { if(alloc && p && n) alloc->deallocate(p, sizeof(T)*n); }
 
       T* buf;
       u32bit used;
