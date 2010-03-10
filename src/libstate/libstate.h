@@ -36,7 +36,7 @@ class BOTAN_DLL Library_State
       /**
       * @return the global Algorithm_Factory
       */
-      Algorithm_Factory& algorithm_factory();
+      Algorithm_Factory& algorithm_factory() const;
 
       /**
       * @param name the name of the allocator
@@ -90,21 +90,6 @@ class BOTAN_DLL Library_State
                bool overwrite = true);
 
       /**
-      * Get a parameters value out of the "conf" section (
-      * referred to as option).
-      * @param key the desired keys name
-      */
-      std::string option(const std::string& key);
-
-      /**
-      * Set an option.
-      * @param key the key of the option to set
-      * @param value the value to set
-      */
-      void set_option(const std::string& key,
-                      const std::string& value);
-
-      /**
       * Add a parameter value to the "alias" section.
       * @param key the name of the parameter which shall have a new alias
       * @param value the new alias
@@ -125,6 +110,7 @@ class BOTAN_DLL Library_State
       std::map<std::string, std::string> config;
 
       std::mutex allocator_lock;
+      std::string default_allocator_name;
       std::map<std::string, Allocator*> alloc_factory;
       mutable Allocator* cached_default_allocator;
       std::vector<Allocator*> allocators;
@@ -132,12 +118,24 @@ class BOTAN_DLL Library_State
       Algorithm_Factory* m_algorithm_factory;
    };
 
-/*
-* Global State
+/**
+* Access the global library state
+* @return reference to the global library state
 */
 BOTAN_DLL Library_State& global_state();
-BOTAN_DLL void set_global_state(Library_State*);
-BOTAN_DLL Library_State* swap_global_state(Library_State*);
+
+/**
+* Set the global state object
+* @param state the new global state to use
+*/
+BOTAN_DLL void set_global_state(Library_State* state);
+
+/**
+* Swap the current state for another
+* @param new_state the new state object to use
+* @return the previous state (or NULL if none)
+*/
+BOTAN_DLL Library_State* swap_global_state(Library_State* new_state);
 
 }
 

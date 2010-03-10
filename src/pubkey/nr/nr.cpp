@@ -100,20 +100,23 @@ NR_Signature_Operation::sign(const byte msg[], u32bit msg_len,
    {
    rng.add_entropy(msg, msg_len);
 
-   BigInt k;
-   do
-      k.randomize(rng, q.bits());
-   while(k >= q);
-
    BigInt f(msg, msg_len);
 
    if(f >= q)
       throw Invalid_Argument("NR_Signature_Operation: Input is out of range");
 
-   BigInt c = mod_q.reduce(powermod_g_p(k) + f);
-   if(c.is_zero())
-      throw Internal_Error("NR_Signature_Operation: c was zero");
-   BigInt d = mod_q.reduce(k - x * c);
+   BigInt c, d;
+
+   while(c == 0)
+      {
+      BigInt k;
+      do
+         k.randomize(rng, q.bits());
+      while(k >= q);
+
+      c = mod_q.reduce(powermod_g_p(k) + f);
+      d = mod_q.reduce(k - x * c);
+      }
 
    SecureVector<byte> output(2*q.bytes());
    c.binary_encode(output + (output.size() / 2 - c.bytes()));

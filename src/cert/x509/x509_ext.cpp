@@ -1,6 +1,6 @@
 /*
 * X.509 Certificate Extensions
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -10,7 +10,6 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/oids.h>
-#include <botan/libstate.h>
 #include <botan/internal/bit_ops.h>
 #include <algorithm>
 #include <memory>
@@ -52,12 +51,14 @@ Extensions::Extensions(const Extensions& extensions) : ASN1_Object()
 */
 Extensions& Extensions::operator=(const Extensions& other)
    {
-   for(u32bit j = 0; j != extensions.size(); ++j)
-      delete extensions[j];
+   for(u32bit i = 0; i != extensions.size(); ++i)
+      delete extensions[i].first;
    extensions.clear();
 
-   for(u32bit j = 0; j != other.extensions.size(); ++j)
-      extensions.push_back(other.extensions[j]->copy());
+   for(u32bit i = 0; i != other.extensions.size(); ++i)
+      extensions.push_back(
+         std::make_pair(other.extensions[i].first->copy(),
+                        other.extensions[i].second));
 
    return (*this);
    }
@@ -70,30 +71,22 @@ OID Certificate_Extension::oid_of() const
    return OIDS::lookup(oid_name());
    }
 
+void Extensions::add(Certificate_Extension* extn, bool critical)
+   {
+   extensions.push_back(std::make_pair(extn, critical));
+   }
+
 /*
 * Encode an Extensions list
 */
 void Extensions::encode_into(DER_Encoder& to_object) const
    {
-   for(u32bit j = 0; j != extensions.size(); ++j)
+   for(u32bit i = 0; i != extensions.size(); ++i)
       {
-      const Certificate_Extension* ext = extensions[j];
+      const Certificate_Extension* ext = extensions[i].first;
+      const bool is_critical = extensions[i].second;
 
-      std::string setting;
-
-      if(ext->config_id() != "")
-         setting = global_state().option("x509/exts/" + ext->config_id());
-
-      if(setting == "")
-         setting = "yes";
-
-      if(setting != "yes" && setting != "no" && setting != "critical")
-         throw Invalid_Argument("X509_CA:: Invalid value for option "
-                                "x509/exts/" + ext->config_id() + " of " +
-                                setting);
-
-      bool is_critical = (setting == "critical");
-      bool should_encode = ext->should_encode() && (setting != "no");
+      const bool should_encode = ext->should_encode();
 
       if(should_encode)
          {
@@ -111,8 +104,8 @@ void Extensions::encode_into(DER_Encoder& to_object) const
 */
 void Extensions::decode_from(BER_Decoder& from_source)
    {
-   for(u32bit j = 0; j != extensions.size(); ++j)
-      delete extensions[j];
+   for(u32bit i = 0; i != extensions.size(); ++i)
+      delete extensions[i].first;
    extensions.clear();
 
    BER_Decoder sequence = from_source.start_cons(SEQUENCE);
@@ -142,7 +135,7 @@ void Extensions::decode_from(BER_Decoder& from_source)
 
       ext->decode_inner(value);
 
-      extensions.push_back(ext);
+      extensions.push_back(std::make_pair(ext, critical));
       }
    sequence.verify_end();
    }
@@ -153,8 +146,8 @@ void Extensions::decode_from(BER_Decoder& from_source)
 void Extensions::contents_to(Data_Store& subject_info,
                              Data_Store& issuer_info) const
    {
-   for(u32bit j = 0; j != extensions.size(); ++j)
-      extensions[j]->contents_to(subject_info, issuer_info);
+   for(u32bit i = 0; i != extensions.size(); ++i)
+      extensions[i].first->contents_to(subject_info, issuer_info);
    }
 
 /*
@@ -162,8 +155,8 @@ void Extensions::contents_to(Data_Store& subject_info,
 */
 Extensions::~Extensions()
    {
-   for(u32bit j = 0; j != extensions.size(); ++j)
-      delete extensions[j];
+   for(u32bit i = 0; i != extensions.size(); ++i)
+      delete extensions[i].first;
    }
 
 namespace Cert_Extension {
@@ -262,8 +255,8 @@ void Key_Usage::decode_inner(const MemoryRegion<byte>& in)
    obj.value[obj.value.size()-1] &= (0xFF << obj.value[0]);
 
    u16bit usage = 0;
-   for(u32bit j = 1; j != obj.value.size(); ++j)
-      usage = (obj.value[j] << 8) | usage;
+   for(u32bit i = 1; i != obj.value.size(); ++i)
+      usage = (obj.value[i] << 8) | usage;
 
    constraints = Key_Constraints(usage);
    }
@@ -434,8 +427,8 @@ void Extended_Key_Usage::decode_inner(const MemoryRegion<byte>& in)
 */
 void Extended_Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
    {
-   for(u32bit j = 0; j != oids.size(); ++j)
-      subject.add("X509v3.ExtendedKeyUsage", oids[j].as_string());
+   for(u32bit i = 0; i != oids.size(); ++i)
+      subject.add("X509v3.ExtendedKeyUsage", oids[i].as_string());
    }
 
 namespace {
@@ -503,8 +496,8 @@ void Certificate_Policies::decode_inner(const MemoryRegion<byte>& in)
 */
 void Certificate_Policies::contents_to(Data_Store& info, Data_Store&) const
    {
-   for(u32bit j = 0; j != oids.size(); ++j)
-      info.add("X509v3.ExtendedKeyUsage", oids[j].as_string());
+   for(u32bit i = 0; i != oids.size(); ++i)
+      info.add("X509v3.ExtendedKeyUsage", oids[i].as_string());
    }
 
 /*

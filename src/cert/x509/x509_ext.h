@@ -49,8 +49,7 @@ class BOTAN_DLL Extensions : public ASN1_Object
 
       void contents_to(Data_Store&, Data_Store&) const;
 
-      void add(Certificate_Extension* extn)
-         { extensions.push_back(extn); }
+      void add(Certificate_Extension* extn, bool critical = false);
 
       Extensions& operator=(const Extensions&);
 
@@ -60,7 +59,7 @@ class BOTAN_DLL Extensions : public ASN1_Object
    private:
       static Certificate_Extension* get_extension(const OID&);
 
-      std::vector<Certificate_Extension*> extensions;
+      std::vector<std::pair<Certificate_Extension*, bool> > extensions;
       bool should_throw;
    };
 

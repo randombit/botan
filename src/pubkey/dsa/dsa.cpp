@@ -91,22 +91,23 @@ DSA_Signature_Operation::sign(const byte msg[], u32bit msg_len,
    {
    rng.add_entropy(msg, msg_len);
 
-   BigInt k;
-   do
-      k.randomize(rng, q.bits());
-   while(k >= q);
-
-   auto future_r = std::async(std::launch::async,
-                              [&]() { return mod_q.reduce(powermod_g_p(k)); });
-
    BigInt i(msg, msg_len);
+   BigInt r = 0, s = 0;
 
-   BigInt s = inverse_mod(k, q);
-   BigInt r = future_r.get();
-   s = mod_q.multiply(s, mul_add(x, r, i));
+   while(r == 0 || s == 0)
+      {
+      BigInt k;
+      do
+         k.randomize(rng, q.bits());
+      while(k >= q);
 
-   if(r.is_zero() || s.is_zero())
-      throw Internal_Error("DSA signature gen failure: r or s was zero");
+      auto future_r = std::async(std::launch::async,
+                            [&]() { return mod_q.reduce(powermod_g_p(k)); });
+
+      s = inverse_mod(k, q);
+      r = future_r.get();
+      s = mod_q.multiply(s, mul_add(x, r, i));
+      }
 
    SecureVector<byte> output(2*q.bytes());
    r.binary_encode(output + (output.size() / 2 - r.bytes()));

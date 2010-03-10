@@ -79,14 +79,19 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
 
    Extensions extensions;
 
-   extensions.add(new Cert_Extension::Subject_Key_ID(pub_key));
-   extensions.add(new Cert_Extension::Key_Usage(constraints));
    extensions.add(
-      new Cert_Extension::Extended_Key_Usage(opts.ex_constraints));
+      new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit),
+      true);
+
+   extensions.add(new Cert_Extension::Key_Usage(constraints), true);
+
+   extensions.add(new Cert_Extension::Subject_Key_ID(pub_key));
+
    extensions.add(
       new Cert_Extension::Subject_Alternative_Name(subject_alt));
+
    extensions.add(
-      new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit));
+      new Cert_Extension::Extended_Key_Usage(opts.ex_constraints));
 
    return X509_CA::make_cert(signer.get(), rng, sig_algo, pub_key,
                              opts.start, opts.end,

@@ -22,9 +22,6 @@ class BOTAN_DLL RSA_PublicKey : public virtual IF_Scheme_PublicKey
    public:
       std::string algo_name() const { return "RSA"; }
 
-      SecureVector<byte> encrypt(const byte[], u32bit,
-                                 RandomNumberGenerator& rng) const;
-
       RSA_PublicKey(const AlgorithmIdentifier& alg_id,
                     const MemoryRegion<byte>& key_bits) :
          IF_Scheme_PublicKey(alg_id, key_bits)
@@ -50,8 +47,6 @@ class BOTAN_DLL RSA_PrivateKey : public RSA_PublicKey,
                                  public IF_Scheme_PrivateKey
    {
    public:
-      SecureVector<byte> decrypt(const byte[], u32bit) const;
-
       bool check_key(RandomNumberGenerator& rng, bool) const;
 
       RSA_PrivateKey(const AlgorithmIdentifier& alg_id,

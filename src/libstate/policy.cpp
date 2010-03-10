@@ -1,6 +1,6 @@
 /*
 * Default Policy
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -277,23 +277,6 @@ void set_default_aliases(Library_State& config)
    config.add_alias("MARK-4",   "ARC4(256)");
    config.add_alias("OMAC",     "CMAC");
    config.add_alias("GOST",     "GOST-28147-89");
-   }
-
-/*
-* Set the default configuration toggles
-*/
-void set_default_config(Library_State& config)
-   {
-   config.set_option("base/default_allocator", "malloc");
-
-   config.set_option("x509/exts/basic_constraints", "critical");
-   config.set_option("x509/exts/subject_key_id", "yes");
-   config.set_option("x509/exts/authority_key_id", "yes");
-   config.set_option("x509/exts/subject_alternative_name", "yes");
-   config.set_option("x509/exts/issuer_alternative_name", "no");
-   config.set_option("x509/exts/key_usage", "critical");
-   config.set_option("x509/exts/extended_key_usage", "yes");
-   config.set_option("x509/exts/crl_number", "yes");
    }
 
 /*
@@ -812,7 +795,6 @@ void set_default_dl_groups(Library_State& config)
 */
 void Library_State::load_default_config()
    {
-   set_default_config(*this);
    set_default_aliases(*this);
    set_default_oids(*this);
    set_default_dl_groups(*this);

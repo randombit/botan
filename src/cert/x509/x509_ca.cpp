@@ -59,18 +59,20 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
 
    Extensions extensions;
 
+   extensions.add(
+      new Cert_Extension::Basic_Constraints(req.is_CA(), req.path_limit()),
+      true);
+
+   extensions.add(new Cert_Extension::Key_Usage(constraints), true);
+
    extensions.add(new Cert_Extension::Authority_Key_ID(cert.subject_key_id()));
    extensions.add(new Cert_Extension::Subject_Key_ID(req.raw_public_key()));
 
    extensions.add(
-      new Cert_Extension::Basic_Constraints(req.is_CA(), req.path_limit()));
+      new Cert_Extension::Subject_Alternative_Name(req.subject_alt_name()));
 
-   extensions.add(new Cert_Extension::Key_Usage(constraints));
    extensions.add(
       new Cert_Extension::Extended_Key_Usage(req.ex_constraints()));
-
-   extensions.add(
-      new Cert_Extension::Subject_Alternative_Name(req.subject_alt_name()));
 
    return make_cert(signer, rng, ca_sig_algo,
                     req.raw_public_key(),

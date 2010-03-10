@@ -101,7 +101,7 @@ BigInt RSA_Private_Operation::private_op(const BigInt& m) const
 
 SecureVector<byte>
 RSA_Private_Operation::sign(const byte msg[], u32bit msg_len,
-                            RandomNumberGenerator& rng)
+                            RandomNumberGenerator&)
    {
    /* We don't check signatures against powermod_e_n here because
       PK_Signer checks verification consistency for all signature
