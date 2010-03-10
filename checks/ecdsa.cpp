@@ -387,7 +387,7 @@ void test_read_pkcs8(RandomNumberGenerator& rng)
 
    try
       {
-      std::auto_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(TEST_DATA_DIR "/wo_dompar_private.pkcs8.pem", rng));
+      std::unique_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(TEST_DATA_DIR "/wo_dompar_private.pkcs8.pem", rng));
       ECDSA_PrivateKey* ecdsa = dynamic_cast<ECDSA_PrivateKey*>(loaded_key.get());
       CHECK_MESSAGE(ecdsa, "the loaded key could not be converted into an ECDSA_PrivateKey");
 
@@ -407,7 +407,7 @@ void test_read_pkcs8(RandomNumberGenerator& rng)
 
    try
       {
-      std::auto_ptr<PKCS8_PrivateKey> loaded_key_nodp(PKCS8::load_key(TEST_DATA_DIR "/nodompar_private.pkcs8.pem", rng));
+      std::unique_ptr<PKCS8_PrivateKey> loaded_key_nodp(PKCS8::load_key(TEST_DATA_DIR "/nodompar_private.pkcs8.pem", rng));
       // anew in each test with unregistered domain-parameters
       ECDSA_PrivateKey* ecdsa_nodp = dynamic_cast<ECDSA_PrivateKey*>(loaded_key_nodp.get());
       CHECK_MESSAGE(ecdsa_nodp, "the loaded key could not be converted into an ECDSA_PrivateKey");
@@ -422,7 +422,7 @@ void test_read_pkcs8(RandomNumberGenerator& rng)
 
       try
          {
-         std::auto_ptr<PKCS8_PrivateKey> loaded_key_withdp(
+         std::unique_ptr<PKCS8_PrivateKey> loaded_key_withdp(
             PKCS8::load_key(TEST_DATA_DIR "/withdompar_private.pkcs8.pem", rng));
 
          std::cout << "Unexpected success: loaded key with unknown OID\n";
