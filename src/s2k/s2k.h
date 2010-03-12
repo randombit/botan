@@ -51,9 +51,9 @@ class BOTAN_DLL S2K
 
       S2K() {}
       virtual ~S2K() {}
-   private:
-      S2K(const S2K&) {}
-      S2K& operator=(const S2K&) { return (*this); }
+
+      S2K(const S2K&) = delete;
+      S2K& operator=(const S2K&) = delete;
    };
 
 }
