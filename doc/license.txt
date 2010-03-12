@@ -3,6 +3,7 @@ Botan (http://botan.randombit.net/) is distributed under these terms:
 Copyright (C) 1999-2010 Jack Lloyd
               2001 Peter J Jones
               2004-2007 Justin Karneges
+              2004 Vaclav Ovsik
               2005 Matthew Gregan
               2005-2006 Matt Johnston
               2006 Luca Piccarreta

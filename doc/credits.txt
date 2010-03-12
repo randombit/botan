@@ -20,6 +20,9 @@ N: Martin Doering
 E: doering@cdc.informatik.tu-darmstadt.de
 D: GF(p) arithmetic
 
+N: Olivier de Gaalon
+D: SQLite encryption codec (src/wrap/sqlite)
+
 N: Matthew Gregan
 D: Binary file I/O support, allocator fixes
 
@@ -64,7 +67,7 @@ D: GP(p) arithmetic
 
 N: Vaclav Ovsik
 E: vaclav.ovsik@i.cz
-D: Perl XS module
+D: Perl XS module (src/wrap/perl-xs)
 
 N: Luca Piccarreta
 E: luca.piccarreta@gmail.com
