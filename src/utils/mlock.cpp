@@ -16,6 +16,15 @@
 
 namespace Botan {
 
+bool has_mlock()
+   {
+   byte buf[4096];
+   if(!lock_mem(&buf, sizeof(buf)))
+      return false;
+   unlock_mem(&buf, sizeof(buf));
+   return true;
+   }
+
 /*
 * Lock an area of memory into RAM
 */

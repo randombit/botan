@@ -13,6 +13,11 @@
 namespace Botan {
 
 /**
+* Check if we can at least potentially lock memory
+*/
+bool has_mlock();
+
+/**
 * Lock memory into RAM if possible
 * @param addr the start of the memory block
 * @param length the length of the memory block in bytes

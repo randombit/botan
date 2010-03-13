@@ -10,6 +10,7 @@
 #include <botan/internal/defalloc.h>
 #include <botan/internal/default_engine.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/mlock.h>
 #include <algorithm>
 
 #if defined(BOTAN_HAS_SELFTESTS)
@@ -211,7 +212,7 @@ void Library_State::initialize()
       throw Invalid_State("Library_State has already been initialized");
 
    cached_default_allocator = 0;
-   default_allocator_name = "locking";
+   default_allocator_name = has_mlock() ? "locking" : "malloc";
 
    add_allocator(new Malloc_Allocator);
    add_allocator(new Locking_Allocator);
