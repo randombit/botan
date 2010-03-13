@@ -149,7 +149,7 @@ class BOTAN_DLL PointGFp
       /**
       * Point doubling
       */
-      void mult2();
+      void mult2(MemoryRegion<word>& workspace);
 
       CurveGFp curve;
       BigInt coord_x, coord_y, coord_z;

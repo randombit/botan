@@ -107,7 +107,7 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
       {
       if(r.is_zero())
          {
-         mult2();
+         mult2(ws);
          return *this;
          }
 
@@ -154,6 +154,8 @@ PointGFp& PointGFp::operator-=(const PointGFp& rhs)
 
 PointGFp& PointGFp::operator*=(const BigInt& scalar)
    {
+   SecureVector<word> ws(2 * curve.get_p().sig_words() + 1);
+
    if(scalar.abs() <= 2) // special cases for small values
       {
       u32bit value = scalar.abs().to_u32bit();
@@ -167,7 +169,7 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
          }
       else if(value == 2)
          {
-         this->mult2();
+         this->mult2(ws);
          if(scalar.is_negative())
             this->negate();
          }
@@ -190,8 +192,8 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
       {
       u32bit twobits = scalar.get_substring(scalar_bits - i - 2, 2);
 
-      H.mult2();
-      H.mult2();
+      H.mult2(ws);
+      H.mult2(ws);
 
       if(twobits == 3)
          H += P3;
@@ -203,7 +205,7 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
 
    if(scalar_bits % 2)
       {
-      H.mult2();
+      H.mult2(ws);
       if(scalar.get_bit(0))
          H += P;
       }
@@ -213,7 +215,7 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
    }
 
 // *this *= 2
-void PointGFp::mult2()
+void PointGFp::mult2(MemoryRegion<word>& ws)
    {
    if(is_zero())
       return;
@@ -224,8 +226,6 @@ void PointGFp::mult2()
       }
 
    const Modular_Reducer& mod_p = curve.mod_p();
-
-   SecureVector<word> ws(2 * curve.get_p().sig_words() + 1);
 
    BigInt y_2 = monty_mult(coord_y, coord_y, ws);
 
@@ -243,7 +243,6 @@ void PointGFp::mult2()
    BigInt U = mod_p.reduce(monty_mult(y_2, y_2, ws) << 3);
 
    BigInt y = monty_mult(M, S - x, ws) - U;
-
    if(y.is_negative())
       y += curve.get_p();
 
