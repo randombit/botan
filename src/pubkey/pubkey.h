@@ -24,6 +24,14 @@ namespace Botan {
 enum Signature_Format { IEEE_1363, DER_SEQUENCE };
 
 /**
+* Enum marking if protection against fault attacks should be used
+*/
+enum Fault_Protection {
+   ENABLE_FAULT_PROTECTION,
+   DISABLE_FAULT_PROTECTION
+};
+
+/**
 * Public Key Encryptor
 */
 class BOTAN_DLL PK_Encryptor
@@ -174,10 +182,12 @@ class BOTAN_DLL PK_Signer
       * @param emsa the EMSA to use
       * An example would be "EMSA1(SHA-224)".
       * @param format the signature format to use
+      * @param prot says if fault protection should be enabled
       */
       PK_Signer(const Private_Key& key,
                 const std::string& emsa,
-                Signature_Format format = IEEE_1363);
+                Signature_Format format = IEEE_1363,
+                Fault_Protection prot = ENABLE_FAULT_PROTECTION);
 
       ~PK_Signer() { delete op; delete verify_op; delete emsa; }
    private:

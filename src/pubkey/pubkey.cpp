@@ -117,7 +117,8 @@ SecureVector<byte> PK_Decryptor_EME::dec(const byte msg[],
 */
 PK_Signer::PK_Signer(const Private_Key& key,
                      const std::string& emsa_name,
-                     Signature_Format format)
+                     Signature_Format format,
+                     Fault_Protection prot)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
 
@@ -129,14 +130,14 @@ PK_Signer::PK_Signer(const Private_Key& key,
       if(!op)
          op = engine->get_signature_op(key);
 
-      if(!verify_op)
+      if(!verify_op && prot == ENABLE_FAULT_PROTECTION)
          verify_op = engine->get_verify_op(key);
 
-      if(op && verify_op)
+      if(op && (verify_op || prot == DISABLE_FAULT_PROTECTION))
          break;
       }
 
-   if(!op || !verify_op)
+   if(!op || (!verify_op && prot == ENABLE_FAULT_PROTECTION))
       throw Lookup_Error("PK_Signer: No working engine for " +
                          key.algo_name());
 
@@ -202,7 +203,7 @@ SecureVector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
 
    SecureVector<byte> plain_sig = op->sign(encoded, encoded.size(), rng);
 
-   if(!self_test_signature(encoded, plain_sig))
+   if(verify_op && !self_test_signature(encoded, plain_sig))
       throw Internal_Error("PK_Signer consistency check failed");
 
    if(op->message_parts() == 1 || sig_format == IEEE_1363)
