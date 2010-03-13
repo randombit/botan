@@ -1,5 +1,10 @@
 
 * 1.9.5-dev, ????-??-??
+ - ECC optimizations
+ - Allow fault protection to be toggled off
+ - Remove all runtime options
+ - Fix crash in MemoryRegion if Allocator::get failed
+ - Fix small compilation problem on FreeBSD
 
 * 1.9.4, 2010-03-09
  - Add the Ajisai SSLv3/TLSv1.0 implementation
