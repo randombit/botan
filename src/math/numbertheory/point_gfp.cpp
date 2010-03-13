@@ -201,7 +201,7 @@ void PointGFp::mult2()
    BigInt z4 = monty_mult(coord_z, coord_z);
    z4 = monty_mult(z4, z4);
 
-   BigInt a_z4 = monty_mult(mod_p.multiply(curve.get_r(), curve.get_a()), z4);
+   BigInt a_z4 = monty_mult(curve.get_a_r(), z4);
 
    BigInt M = mod_p.reduce(a_z4 + 3 * monty_mult(coord_x, coord_x));
 

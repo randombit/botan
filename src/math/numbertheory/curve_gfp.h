@@ -42,6 +42,8 @@ class BOTAN_DLL CurveGFp
          r_inv = inverse_mod(r, p);
 
          p_dash = (((r * r_inv) - 1) / p).word_at(0);
+
+         a_r = reducer_p.multiply(a, r);
          }
 
       // CurveGFp(const CurveGFp& other) = default;
@@ -76,6 +78,11 @@ class BOTAN_DLL CurveGFp
       const BigInt& get_r_inv() const { return r_inv; }
 
       /**
+      * @return a * r mod p
+      */
+      const BigInt& get_a_r() const { return a_r; }
+
+      /**
       * @return Montgomery parameter p-dash
       */
       word get_p_dash() const { return p_dash; }
@@ -108,7 +115,7 @@ class BOTAN_DLL CurveGFp
       BigInt p, a, b;
 
       // Montgomery parameters
-      BigInt r, r_inv;
+      BigInt r, r_inv, a_r;
       word p_dash;
 
       Modular_Reducer reducer_p;
