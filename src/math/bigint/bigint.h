@@ -458,11 +458,11 @@ class BOTAN_DLL BigInt
      BigInt(RandomNumberGenerator& rng, u32bit bits);
 
      /**
-     * Create BigInt from unsigned 32 bit integer value and an
-     * also specify the sign of the value
+     * Create BigInt of specified size, all zeros
+     * @param sign the sign
      * @param n integer value
      */
-     BigInt(Sign, u32bit n);
+     BigInt(Sign sign, u32bit n);
 
      /**
      * Create a number of the specified type and size
