@@ -11,6 +11,7 @@
 #include <botan/numthry.h>
 #include <botan/mp_asm.h>
 #include <botan/mp_asmi.h>
+#include <botan/mp_core.h>
 
 namespace Botan {
 
@@ -25,6 +26,7 @@ void inner_montg_mult_sos(word result[],
    t.grow_to(2*s+1);
 
    // t = a_bar * b_bar
+   //bigint_simple_mul(t, a_bar, s, b_bar, s);
    for (u32bit i=0; i<s; i++)
       {
       word C = 0;
@@ -42,6 +44,7 @@ void inner_montg_mult_sos(word result[],
       }
 
    // ???
+#if 1
    for (u32bit i=0; i<s; i++)
       {
       // word word_madd2(word a, word b, word c, word* carry)
@@ -105,36 +108,34 @@ void inner_montg_mult_sos(word result[],
          result[i] = u[i];
          }
       }
-   }
+#else
 
-void compute_montgomery_params(const BigInt& prime,
-                               BigInt& r,
-                               BigInt& r_inv,
-                               BigInt& p_dash)
-   {
-   if(!prime.is_odd())
-      throw Internal_Error("PointGFp: Only operates with odd primes");
+   bigint_monty_redc(&t[0], t.size(),
+                     n, s,
+                     n_dash[0]);
 
-   r = 1;
-   r <<= prime.sig_words() * BOTAN_MP_WORD_BITS;
-
-   r_inv = inverse_mod(r, prime);
-
-   p_dash = ((r * r_inv) - 1) / prime;
+   copy_mem(&result[0], &t[0], s);
+#endif
    }
 
 }
 
 PointGFp::PointGFp(const CurveGFp& curve) :
-   curve(curve), coord_x(0), coord_y(1), coord_z(0)
+   curve(curve),
+   coord_x(0),
+   coord_y(curve.get_r()),
+   coord_z(0)
    {
-   compute_montgomery_params(curve.get_p(), r, r_inv, p_dash);
    }
 
 PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
-   curve(curve), coord_x(x), coord_y(y), coord_z(1)
+   curve(curve)
    {
-   compute_montgomery_params(curve.get_p(), r, r_inv, p_dash);
+   const Modular_Reducer& mod_p = curve.mod_p();
+
+   coord_x = mod_p.multiply(curve.get_r(), x);
+   coord_y = mod_p.multiply(curve.get_r(), y);
+   coord_z = curve.get_r();
    }
 
 BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b)
@@ -147,22 +148,32 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b)
    const BigInt& p = curve.get_p();
    const u32bit s = p.sig_words();
 
+   const BigInt& p_dash = curve.get_p_dash();
+
    result.grow_to(s);
 
-   if(a.size() >= s && b.size() >= s)
+   if(a > 0 && b > 0 && a < p && b < p && a.size() >= s && b.size() >= s)
       {
       inner_montg_mult_sos(result.get_reg(), a.data(), b.data(),
                            p.data(), p_dash.data(), s);
       }
    else
       {
+      const Modular_Reducer& mod_p = curve.mod_p();
+
       BigInt a2 = a;
       BigInt b2 = b;
       a2.grow_to(s);
       b2.grow_to(s);
+
+      a2 = mod_p.reduce(a2);
+      b2 = mod_p.reduce(b2);
+
       inner_montg_mult_sos(result.get_reg(), a2.data(), b2.data(),
                            p.data(), p_dash.data(), s);
       }
+
+   return result;
    }
 
 // arithmetic operators
@@ -179,15 +190,16 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
 
    const Modular_Reducer& mod_p = curve.mod_p();
 
-   BigInt rhs_z2 = mod_p.square(rhs.coord_z);
-   BigInt U1 = mod_p.multiply(coord_x, rhs_z2);
-   BigInt S1 = mod_p.multiply(coord_y, mod_p.multiply(rhs.coord_z, rhs_z2));
+   BigInt rhs_z2 = monty_mult(rhs.coord_z, rhs.coord_z);
+   BigInt U1 = monty_mult(coord_x, rhs_z2);
+   BigInt S1 = monty_mult(coord_y, monty_mult(rhs.coord_z, rhs_z2));
 
-   BigInt lhs_z2 = mod_p.square(coord_z);
-   BigInt U2 = mod_p.multiply(rhs.coord_x, lhs_z2);
-   BigInt S2 = mod_p.multiply(rhs.coord_y, mod_p.multiply(coord_z, lhs_z2));
+   BigInt lhs_z2 = monty_mult(coord_z, coord_z);
+   BigInt U2 = monty_mult(rhs.coord_x, lhs_z2);
+   BigInt S2 = monty_mult(rhs.coord_y, monty_mult(coord_z, lhs_z2));
 
    BigInt H = mod_p.reduce(U2 - U1);
+
    BigInt r = mod_p.reduce(S2 - S1);
 
    if(H.is_zero())
@@ -202,15 +214,18 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
       return *this;
       }
 
-   U2 = mod_p.square(H);
+   U2 = monty_mult(H, H);
 
-   S2 = mod_p.multiply(U2, H);
+   S2 = monty_mult(U2, H);
 
-   U2 = mod_p.multiply(U1, U2);
+   U2 = monty_mult(U1, U2);
 
-   BigInt x = mod_p.reduce(mod_p.square(r) - S2 - mod_p.multiply(2, U2));
-   BigInt y = mod_p.reduce(mod_p.multiply(r, (U2-x)) - mod_p.multiply(S1, S2));
-   BigInt z = mod_p.multiply(mod_p.multiply(coord_z, rhs.coord_z), H);
+   BigInt x = mod_p.reduce(monty_mult(r, r) - S2 - U2*2);
+
+   U2 = mod_p.reduce(U2 - x);
+
+   BigInt y = monty_mult(r, U2) - monty_mult(S1, S2);
+   BigInt z = monty_mult(monty_mult(coord_z, rhs.coord_z), H);
 
    coord_x = x;
    coord_y = y;
@@ -267,26 +282,6 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
          H += P;
       }
 
-   if(!H.is_zero()) // cannot convert if H == O
-      {
-      /**
-      * Convert H to an equivalent point with z == 1, thus x and y
-      * correspond to their affine coordinates
-      */
-      if(H.coord_z != 1)
-         {
-         const Modular_Reducer& mod_p = curve.mod_p();
-
-         BigInt z_inv = inverse_mod(H.coord_z, curve.get_p());
-
-         BigInt z_inv_2 = mod_p.square(z_inv);
-
-         H.coord_x = mod_p.multiply(H.coord_x, z_inv_2);
-         H.coord_y = mod_p.multiply(H.coord_y, mod_p.multiply(z_inv, z_inv_2));
-         H.coord_z = 1;
-         }
-      }
-
    *this = H;
    return *this;
    }
@@ -304,22 +299,24 @@ void PointGFp::mult2()
 
    const Modular_Reducer& mod_p = curve.mod_p();
 
-   BigInt y_2 = mod_p.square(coord_y);
+   BigInt y_2 = monty_mult(coord_y, coord_y);
 
-   BigInt S = mod_p.multiply(4, mod_p.multiply(coord_x, y_2));
+   BigInt S = mod_p.reduce(4 * monty_mult(coord_x, y_2));
 
-   BigInt a_z4 = mod_p.multiply(curve.get_a(),
-                                mod_p.square(mod_p.square(coord_z)));
+   BigInt z4 = monty_mult(coord_z, coord_z);
+   z4 = monty_mult(z4, z4);
 
-   BigInt M = mod_p.reduce(a_z4 + 3 * mod_p.square(coord_x));
+   BigInt a_z4 = monty_mult(mod_p.multiply(curve.get_r(), curve.get_a()), z4);
 
-   BigInt x = mod_p.reduce(mod_p.square(M) - mod_p.multiply(2, S));
+   BigInt M = mod_p.reduce(a_z4 + 3 * monty_mult(coord_x, coord_x));
 
-   BigInt U = mod_p.multiply(8, mod_p.square(y_2));
+   BigInt x = monty_mult(M, M) - 2*S;
 
-   BigInt y = mod_p.reduce(mod_p.multiply(M, S - x) - U);
+   BigInt U = 8 * monty_mult(y_2, y_2);
 
-   BigInt z = mod_p.multiply(2, mod_p.multiply(coord_y, coord_z));
+   BigInt y = monty_mult(M, S - x) - U;
+
+   BigInt z = 2 * monty_mult(coord_y, coord_z);
 
    coord_x = x;
    coord_y = y;
@@ -333,8 +330,11 @@ BigInt PointGFp::get_affine_x() const
 
    const Modular_Reducer& mod_p = curve.mod_p();
 
-   BigInt z2 = mod_p.square(coord_z);
-   return mod_p.multiply(coord_x, inverse_mod(z2, curve.get_p()));
+   BigInt x = mod_p.multiply(curve.get_r_inv(), coord_x);
+   BigInt z = mod_p.multiply(curve.get_r_inv(), coord_z);
+
+   BigInt z2 = mod_p.square(z);
+   return mod_p.multiply(x, inverse_mod(z2, curve.get_p()));
    }
 
 BigInt PointGFp::get_affine_y() const
@@ -344,8 +344,11 @@ BigInt PointGFp::get_affine_y() const
 
    const Modular_Reducer& mod_p = curve.mod_p();
 
-   BigInt z3 = mod_p.cube(coord_z);
-   return mod_p.multiply(coord_y, inverse_mod(z3, curve.get_p()));
+   BigInt y = mod_p.multiply(curve.get_r_inv(), coord_y);
+   BigInt z = mod_p.multiply(curve.get_r_inv(), coord_z);
+
+   BigInt z3 = mod_p.cube(z);
+   return mod_p.multiply(y, inverse_mod(z3, curve.get_p()));
    }
 
 void PointGFp::check_invariants() const
@@ -362,21 +365,25 @@ void PointGFp::check_invariants() const
 
    const Modular_Reducer& mod_p = curve.mod_p();
 
-   BigInt y2 = mod_p.square(coord_y);
-   BigInt x3 = mod_p.cube(coord_x);
+   BigInt x = mod_p.multiply(curve.get_r_inv(), coord_x);
+   BigInt y = mod_p.multiply(curve.get_r_inv(), coord_y);
+   BigInt z = mod_p.multiply(curve.get_r_inv(), coord_z);
 
-   BigInt ax = mod_p.multiply(coord_x, curve.get_a());
+   BigInt y2 = mod_p.square(y);
+   BigInt x3 = mod_p.cube(x);
 
-   if(coord_z == 1)
+   BigInt ax = mod_p.multiply(x, curve.get_a());
+
+   if(z == 1)
       {
       if(mod_p.reduce(x3 + ax + curve.get_b()) != y2)
          throw Illegal_Point("Invalid ECP point: y^2 != x^3 + a*x + b");
       }
 
-   BigInt z2 = mod_p.square(coord_z);
-   BigInt z3 = mod_p.multiply(coord_z, z2);
+   BigInt z2 = mod_p.square(z);
+   BigInt z3 = mod_p.multiply(z, z2);
 
-   BigInt ax_z4 = mod_p.multiply(mod_p.multiply(z3, coord_z), ax);
+   BigInt ax_z4 = mod_p.multiply(mod_p.multiply(z3, z), ax);
 
    BigInt b_z6 = mod_p.multiply(curve.get_b(), mod_p.square(z3));
 

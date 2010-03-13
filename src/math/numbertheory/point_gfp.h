@@ -152,9 +152,6 @@ class BOTAN_DLL PointGFp
 
       CurveGFp curve;
       BigInt coord_x, coord_y, coord_z;
-
-      // Values for Montgomery operations
-      BigInt r, r_inv, p_dash;
    };
 
 // relational operators
