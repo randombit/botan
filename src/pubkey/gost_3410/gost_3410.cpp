@@ -11,9 +11,6 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 
-#include <iostream>
-#include <stdio.h>
-
 namespace Botan {
 
 MemoryVector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
