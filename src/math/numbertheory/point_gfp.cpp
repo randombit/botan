@@ -15,28 +15,6 @@
 
 namespace Botan {
 
-namespace {
-
-void inner_montg_mult_sos(word result[],
-                          const word a_bar[], const word b_bar[],
-                          const word p[],
-                          word p_dash,
-                          u32bit s)
-   {
-   SecureVector<word> t;
-   t.grow_to(2*s+1);
-
-   bigint_simple_mul(t, a_bar, s, b_bar, s);
-
-   bigint_monty_redc(&t[0], t.size(),
-                     p, s,
-                     p_dash);
-
-   copy_mem(&result[0], &t[s], s);
-   }
-
-}
-
 PointGFp::PointGFp(const CurveGFp& curve) :
    curve(curve),
    coord_x(0),
@@ -63,14 +41,18 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b)
       return result;
 
    const BigInt& p = curve.get_p();
-   const u32bit s = p.sig_words();
+   const u32bit p_size = p.sig_words();
 
-   result.grow_to(s);
+   const word p_dash = curve.get_p_dash();
 
-   if(a > 0 && b > 0 && a < p && b < p && a.size() >= s && b.size() >= s)
+   result.grow_to(p_size);
+
+   SecureVector<word> t;
+   t.grow_to(2*p_size+1);
+
+   if(a > 0 && b > 0 && a < p && b < p && a.size() >= p_size && b.size() >= p_size)
       {
-      inner_montg_mult_sos(result.get_reg(), a.data(), b.data(),
-                           p.data(), curve.get_p_dash(), s);
+      bigint_simple_mul(t, a.data(), a.sig_words(), b.data(), b.sig_words());
       }
    else
       {
@@ -78,15 +60,17 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b)
 
       BigInt a2 = a;
       BigInt b2 = b;
-      a2.grow_to(s);
-      b2.grow_to(s);
+      a2.grow_to(p_size);
+      b2.grow_to(p_size);
 
       a2 = mod_p.reduce(a2);
       b2 = mod_p.reduce(b2);
 
-      inner_montg_mult_sos(result.get_reg(), a2.data(), b2.data(),
-                           p.data(), curve.get_p_dash(), s);
+      bigint_simple_mul(t, a2.data(), a2.sig_words(), b2.data(), b2.sig_words());
       }
+
+   bigint_monty_redc(&t[0], t.size(), p.data(), p_size, p_dash);
+   copy_mem(&result[0], &t[p_size], p_size);
 
    return result;
    }
