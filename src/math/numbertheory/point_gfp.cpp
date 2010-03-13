@@ -9,8 +9,6 @@
 
 #include <botan/point_gfp.h>
 #include <botan/numthry.h>
-#include <botan/mp_asm.h>
-#include <botan/mp_asmi.h>
 #include <botan/mp_core.h>
 
 namespace Botan {
@@ -30,7 +28,7 @@ PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
 
    coord_x = mod_p.multiply(curve.get_r(), x);
    coord_y = mod_p.multiply(curve.get_r(), y);
-   coord_z = curve.get_r();
+   coord_z = mod_p.reduce(curve.get_r());
    }
 
 BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b,
@@ -40,29 +38,15 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b,
       return 0;
 
    const BigInt& p = curve.get_p();
-   const u32bit p_size = p.sig_words();
+   const u32bit p_size = (workspace.size() - 1) / 2;
 
    const word p_dash = curve.get_p_dash();
 
    workspace.clear();
 
-   if(a > 0 && b > 0 && a < p && b < p)
-      {
-      bigint_simple_mul(workspace,
-                        a.data(), a.sig_words(),
-                        b.data(), b.sig_words());
-      }
-   else
-      {
-      const Modular_Reducer& mod_p = curve.mod_p();
-
-      BigInt a2 = mod_p.reduce(a);
-      BigInt b2 = mod_p.reduce(b);
-
-      bigint_simple_mul(workspace,
-                        a2.data(), a2.sig_words(),
-                        b2.data(), b2.sig_words());
-      }
+   bigint_simple_mul(workspace,
+                     a.data(), a.sig_words(),
+                     b.data(), b.sig_words());
 
    bigint_monty_redc(workspace, workspace.size(),
                      p.data(), p_size, p_dash);
@@ -245,7 +229,11 @@ void PointGFp::mult2(MemoryRegion<word>& ws)
 
    BigInt U = mod_p.reduce(monty_mult(y_2, y_2, ws) << 3);
 
-   BigInt y = monty_mult(M, S - x, ws) - U;
+   S -= x;
+   while(S.is_negative())
+      S += curve.get_p();
+
+   BigInt y = monty_mult(M, S, ws) - U;
    if(y.is_negative())
       y += curve.get_p();
 
