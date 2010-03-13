@@ -296,7 +296,9 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
    const char* domains[] = { "1.3.132.0.6", // secp112r1
                              "1.3.132.0.28", // secp128r1
                              "1.3.132.0.30", // secp160r2
+                             "1.2.840.10045.3.1.1", // secp192r1
                              "1.3.132.0.33", // secp224r1
+                             "1.2.840.10045.3.1.7", // secp256r1
                              "1.3.132.0.34", // secp384r1
                              "1.3.132.0.35", // secp512r1
                              NULL };
@@ -310,7 +312,7 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
 
       u32bit hashbits = pbits;
 
-      if(hashbits < 160)
+      if(hashbits <= 192)
          hashbits = 160;
       if(hashbits == 521)
          hashbits = 512;
