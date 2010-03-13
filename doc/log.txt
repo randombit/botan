@@ -1,7 +1,7 @@
 
 * 1.9.5-dev, ????-??-??
- - ECC optimizations
- - Allow fault protection to be toggled off
+ - Numerous ECC optimizations
+ - Allow PK_Signer's fault protection checks to be toggled off
  - Remove all runtime options
  - Fix crash in MemoryRegion if Allocator::get failed
  - Fix small compilation problem on FreeBSD
