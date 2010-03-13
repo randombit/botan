@@ -35,22 +35,21 @@ PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
 
 BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b)
    {
-   BigInt result = 0;
-
    if(a.is_zero() || b.is_zero())
-      return result;
+      return 0;
 
    const BigInt& p = curve.get_p();
    const u32bit p_size = p.sig_words();
 
    const word p_dash = curve.get_p_dash();
 
-   result.grow_to(p_size);
+   BigInt result;
+   result.grow_to(2*p_size+1);
 
    SecureVector<word> t;
    t.grow_to(2*p_size+1);
 
-   if(a > 0 && b > 0 && a < p && b < p && a.size() >= p_size && b.size() >= p_size)
+   if(a > 0 && b > 0 && a < p && b < p)
       {
       bigint_simple_mul(t, a.data(), a.sig_words(), b.data(), b.sig_words());
       }
@@ -58,18 +57,17 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b)
       {
       const Modular_Reducer& mod_p = curve.mod_p();
 
-      BigInt a2 = a;
-      BigInt b2 = b;
+      BigInt a2 = mod_p.reduce(a);
+      BigInt b2 = mod_p.reduce(b);
+
       a2.grow_to(p_size);
       b2.grow_to(p_size);
-
-      a2 = mod_p.reduce(a2);
-      b2 = mod_p.reduce(b2);
 
       bigint_simple_mul(t, a2.data(), a2.sig_words(), b2.data(), b2.sig_words());
       }
 
    bigint_monty_redc(&t[0], t.size(), p.data(), p_size, p_dash);
+
    copy_mem(&result[0], &t[p_size], p_size);
 
    return result;
