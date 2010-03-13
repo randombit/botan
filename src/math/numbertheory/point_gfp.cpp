@@ -74,22 +74,19 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b,
    return result;
    }
 
-
-// arithmetic operators
-PointGFp& PointGFp::operator+=(const PointGFp& rhs)
+void PointGFp::add(const PointGFp& rhs, MemoryRegion<word>& ws)
    {
-   if(rhs.is_zero())
-      return *this;
-
    if(is_zero())
       {
-      *this = rhs;
-      return *this;
+      coord_x = rhs.coord_x;
+      coord_y = rhs.coord_y;
+      coord_z = rhs.coord_z;
+      return;
       }
+   else if(rhs.is_zero())
+      return;
 
    const Modular_Reducer& mod_p = curve.mod_p();
-
-   SecureVector<word> ws(2 * curve.get_p().sig_words() + 1);
 
    BigInt rhs_z2 = monty_mult(rhs.coord_z, rhs.coord_z, ws);
    BigInt U1 = monty_mult(coord_x, rhs_z2, ws);
@@ -108,11 +105,11 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
       if(r.is_zero())
          {
          mult2(ws);
-         return *this;
+         return;
          }
 
       *this = PointGFp(curve); // setting myself to zero
-      return *this;
+      return;
       }
 
    U2 = monty_mult(H, H, ws);
@@ -136,7 +133,13 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
    coord_x = x;
    coord_y = y;
    coord_z = z;
+   }
 
+// arithmetic operators
+PointGFp& PointGFp::operator+=(const PointGFp& rhs)
+   {
+   SecureVector<word> ws(2 * curve.get_p().sig_words() + 1);
+   add(rhs, ws);
    return *this;
    }
 
@@ -190,24 +193,24 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
 
    for(u32bit i = 0; i < scalar_bits - 1; i += 2)
       {
-      u32bit twobits = scalar.get_substring(scalar_bits - i - 2, 2);
+      u32bit nibble = scalar.get_substring(scalar_bits - i - 2, 2);
 
       H.mult2(ws);
       H.mult2(ws);
 
-      if(twobits == 3)
-         H += P3;
-      else if(twobits == 2)
-         H += P2;
-      else if(twobits == 1)
-         H += P;
+      if(nibble == 3)
+         H.add(P3, ws);
+      else if(nibble == 2)
+         H.add(P2, ws);
+      else if(nibble == 1)
+         H.add(P, ws);
       }
 
    if(scalar_bits % 2)
       {
       H.mult2(ws);
       if(scalar.get_bit(0))
-         H += P;
+         H.add(P, ws);
       }
 
    *this = H;

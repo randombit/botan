@@ -147,6 +147,11 @@ class BOTAN_DLL PointGFp
                         MemoryRegion<word>& workspace);
 
       /**
+      * Point addition
+      */
+      void add(const PointGFp& other, MemoryRegion<word>& workspace);
+
+      /**
       * Point doubling
       */
       void mult2(MemoryRegion<word>& workspace);
