@@ -141,12 +141,20 @@ class BOTAN_DLL PointGFp
       bool operator==(const PointGFp& other) const;
    private:
       /**
+      * Montgomery multiplication/reduction
+      */
+      BigInt monty_mult(const BigInt& x, const BigInt& y);
+
+      /**
       * Point doubling
       */
       void mult2();
 
       CurveGFp curve;
       BigInt coord_x, coord_y, coord_z;
+
+      // Values for Montgomery operations
+      BigInt r, r_inv, p_dash;
    };
 
 // relational operators

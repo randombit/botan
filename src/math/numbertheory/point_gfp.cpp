@@ -9,31 +9,118 @@
 
 #include <botan/point_gfp.h>
 #include <botan/numthry.h>
+#include <botan/mp_asm.h>
+#include <botan/mp_asmi.h>
 
 namespace Botan {
 
 namespace {
 
-BigInt decompress_point(bool yMod2,
-                        const BigInt& x,
-                        const CurveGFp& curve)
+void inner_montg_mult_sos(word result[],
+                          const word a_bar[], const word b_bar[],
+                          const word n[],
+                          const word n_dash[], u32bit s)
    {
-   BigInt xpow3 = x * x * x;
+   SecureVector<word> t;
+   t.grow_to(2*s+1);
 
-   BigInt g = curve.get_a() * x;
-   g += xpow3;
-   g += curve.get_b();
-   g = g % curve.get_p();
+   // t = a_bar * b_bar
+   for (u32bit i=0; i<s; i++)
+      {
+      word C = 0;
+      word S = 0;
+      for (u32bit j=0; j<s; j++)
+         {
+         // we use:
+         // word word_madd3(word a, word b, word c, word d, word* carry)
+         // returns a * b + c + d and resets the carry (not using it as input)
 
-   BigInt z = ressol(g, curve.get_p());
+         S = word_madd3(a_bar[j], b_bar[i], t[i+j], &C);
+         t[i+j] = S;
+         }
+      t[i+s] = C;
+      }
 
-   if(z < 0)
-      throw Illegal_Point("error during decompression");
+   // ???
+   for (u32bit i=0; i<s; i++)
+      {
+      // word word_madd2(word a, word b, word c, word* carry)
+      // returns a * b + c, resets the carry
 
-   if(z.get_bit(0) != yMod2)
-      z = curve.get_p() - z;
+      word C = 0;
+      word zero = 0;
+      word m = word_madd2(t[i], n_dash[0], &zero);
 
-   return z;
+      for (u32bit j=0; j<s; j++)
+         {
+         word S = word_madd3(m, n[j], t[i+j], &C);
+         t[i+j] = S;
+         }
+
+      //// mp_mulop.cpp:
+      ////word bigint_mul_add_words(word z[], const word x[], u32bit x_size, word y)
+      u32bit cnt = 0;
+      while (C > 0)
+         {
+         // we need not worry here about C > 1, because the other operand is zero
+
+         word tmp = t[i+s+cnt] + C;
+         C = (tmp < t[i+s+cnt]);
+         t[i+s+cnt] = tmp;
+         cnt++;
+         }
+      }
+
+   // u = t
+   SecureVector<word> u;
+   u.grow_to(s+1);
+   for (u32bit j=0; j<s+1; j++)
+      {
+      u[j] = t[j+s];
+      }
+
+   // t = u - n
+   word B = 0;
+   word D = 0;
+   for (u32bit i=0; i<s; i++)
+      {
+      D = word_sub(u[i], n[i], &B);
+      t[i] = D;
+      }
+   D = word_sub(u[s], 0, &B);
+   t[s] = D;
+
+   // if t >= 0 (B == 0 -> no borrow), return t
+   if(B == 0)
+      {
+      for (u32bit i=0; i<s; i++)
+         {
+         result[i] = t[i];
+         }
+      }
+   else // else return u
+      {
+      for (u32bit i=0; i<s; i++)
+         {
+         result[i] = u[i];
+         }
+      }
+   }
+
+void compute_montgomery_params(const BigInt& prime,
+                               BigInt& r,
+                               BigInt& r_inv,
+                               BigInt& p_dash)
+   {
+   if(!prime.is_odd())
+      throw Internal_Error("PointGFp: Only operates with odd primes");
+
+   r = 1;
+   r <<= prime.sig_words() * BOTAN_MP_WORD_BITS;
+
+   r_inv = inverse_mod(r, prime);
+
+   p_dash = ((r * r_inv) - 1) / prime;
    }
 
 }
@@ -41,11 +128,41 @@ BigInt decompress_point(bool yMod2,
 PointGFp::PointGFp(const CurveGFp& curve) :
    curve(curve), coord_x(0), coord_y(1), coord_z(0)
    {
+   compute_montgomery_params(curve.get_p(), r, r_inv, p_dash);
    }
 
 PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
    curve(curve), coord_x(x), coord_y(y), coord_z(1)
    {
+   compute_montgomery_params(curve.get_p(), r, r_inv, p_dash);
+   }
+
+BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b)
+   {
+   BigInt result = 0;
+
+   if(a.is_zero() || b.is_zero())
+      return result;
+
+   const BigInt& p = curve.get_p();
+   const u32bit s = p.sig_words();
+
+   result.grow_to(s);
+
+   if(a.size() >= s && b.size() >= s)
+      {
+      inner_montg_mult_sos(result.get_reg(), a.data(), b.data(),
+                           p.data(), p_dash.data(), s);
+      }
+   else
+      {
+      BigInt a2 = a;
+      BigInt b2 = b;
+      a2.grow_to(s);
+      b2.grow_to(s);
+      inner_montg_mult_sos(result.get_reg(), a2.data(), b2.data(),
+                           p.data(), p_dash.data(), s);
+      }
    }
 
 // arithmetic operators
@@ -340,6 +457,32 @@ SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
    else
       throw Invalid_Argument("illegal point encoding format specification");
    }
+
+namespace {
+
+BigInt decompress_point(bool yMod2,
+                        const BigInt& x,
+                        const CurveGFp& curve)
+   {
+   BigInt xpow3 = x * x * x;
+
+   BigInt g = curve.get_a() * x;
+   g += xpow3;
+   g += curve.get_b();
+   g = g % curve.get_p();
+
+   BigInt z = ressol(g, curve.get_p());
+
+   if(z < 0)
+      throw Illegal_Point("error during decompression");
+
+   if(z.get_bit(0) != yMod2)
+      z = curve.get_p() - z;
+
+   return z;
+   }
+
+}
 
 PointGFp OS2ECP(const byte data[], u32bit data_len,
                 const CurveGFp& curve)
