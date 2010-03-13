@@ -9,8 +9,6 @@
 #include <botan/numthry.h>
 #include <botan/keypair.h>
 
-#include <stdio.h>
-
 namespace Botan {
 
 /*
