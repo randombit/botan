@@ -46,21 +46,18 @@ class BOTAN_DLL PointGFp
       PointGFp() {}
 
       /**
-      * Construct the point O
+      * Construct the zero point
       * @param curve The base curve
       */
-      PointGFp(const CurveGFp& curve) :
-         curve(curve), coord_x(0), coord_y(1), coord_z(0) {}
+      PointGFp(const CurveGFp& curve);
 
       /**
-      * Construct a point given its affine coordinates
+      * Construct a point from its affine coordinates
       * @param curve the base curve
       * @param x affine x coordinate
       * @param y affine y coordinate
       */
-      PointGFp(const CurveGFp& curve,
-               const BigInt& x, const BigInt& y) :
-         curve(curve), coord_x(x), coord_y(y), coord_z(1) {}
+      PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y);
 
       //PointGFp(const PointGFp& other) = default;
       //PointGFp& operator=(const PointGFp& other) = default;

@@ -38,6 +38,16 @@ BigInt decompress_point(bool yMod2,
 
 }
 
+PointGFp::PointGFp(const CurveGFp& curve) :
+   curve(curve), coord_x(0), coord_y(1), coord_z(0)
+   {
+   }
+
+PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
+   curve(curve), coord_x(x), coord_y(y), coord_z(1)
+   {
+   }
+
 // arithmetic operators
 PointGFp& PointGFp::operator+=(const PointGFp& rhs)
    {
