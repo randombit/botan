@@ -143,7 +143,8 @@ class BOTAN_DLL PointGFp
       /**
       * Montgomery multiplication/reduction
       */
-      BigInt monty_mult(const BigInt& x, const BigInt& y);
+      BigInt monty_mult(const BigInt& x, const BigInt& y,
+                        MemoryRegion<word>& workspace);
 
       /**
       * Point doubling

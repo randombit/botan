@@ -33,7 +33,8 @@ PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
    coord_z = curve.get_r();
    }
 
-BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b)
+BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b,
+                            MemoryRegion<word>& workspace)
    {
    if(a.is_zero() || b.is_zero())
       return 0;
@@ -43,12 +44,13 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b)
 
    const word p_dash = curve.get_p_dash();
 
-   SecureVector<word> t;
-   t.grow_to(2*p_size+1);
+   workspace.clear();
 
    if(a > 0 && b > 0 && a < p && b < p)
       {
-      bigint_simple_mul(t, a.data(), a.sig_words(), b.data(), b.sig_words());
+      bigint_simple_mul(workspace,
+                        a.data(), a.sig_words(),
+                        b.data(), b.sig_words());
       }
    else
       {
@@ -57,16 +59,21 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b)
       BigInt a2 = mod_p.reduce(a);
       BigInt b2 = mod_p.reduce(b);
 
-      bigint_simple_mul(t, a2.data(), a2.sig_words(), b2.data(), b2.sig_words());
+      bigint_simple_mul(workspace,
+                        a2.data(), a2.sig_words(),
+                        b2.data(), b2.sig_words());
       }
 
+   bigint_monty_redc(workspace, workspace.size(),
+                     p.data(), p_size, p_dash);
+
    BigInt result;
-   std::swap(result.get_reg(), t);
-   bigint_monty_redc(result.get_reg(), result.size(), p.data(), p_size, p_dash);
-   result >>= p_size*BOTAN_MP_WORD_BITS;
+   result.grow_to(p_size);
+   copy_mem(result.get_reg().begin(), &workspace[p_size], p_size);
 
    return result;
    }
+
 
 // arithmetic operators
 PointGFp& PointGFp::operator+=(const PointGFp& rhs)
@@ -82,13 +89,15 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
 
    const Modular_Reducer& mod_p = curve.mod_p();
 
-   BigInt rhs_z2 = monty_mult(rhs.coord_z, rhs.coord_z);
-   BigInt U1 = monty_mult(coord_x, rhs_z2);
-   BigInt S1 = monty_mult(coord_y, monty_mult(rhs.coord_z, rhs_z2));
+   SecureVector<word> ws(2 * curve.get_p().sig_words() + 1);
 
-   BigInt lhs_z2 = monty_mult(coord_z, coord_z);
-   BigInt U2 = monty_mult(rhs.coord_x, lhs_z2);
-   BigInt S2 = monty_mult(rhs.coord_y, monty_mult(coord_z, lhs_z2));
+   BigInt rhs_z2 = monty_mult(rhs.coord_z, rhs.coord_z, ws);
+   BigInt U1 = monty_mult(coord_x, rhs_z2, ws);
+   BigInt S1 = monty_mult(coord_y, monty_mult(rhs.coord_z, rhs_z2, ws), ws);
+
+   BigInt lhs_z2 = monty_mult(coord_z, coord_z, ws);
+   BigInt U2 = monty_mult(rhs.coord_x, lhs_z2, ws);
+   BigInt S2 = monty_mult(rhs.coord_y, monty_mult(coord_z, lhs_z2, ws), ws);
 
    BigInt H = mod_p.reduce(U2 - U1);
 
@@ -106,23 +115,23 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
       return *this;
       }
 
-   U2 = monty_mult(H, H);
+   U2 = monty_mult(H, H, ws);
 
-   S2 = monty_mult(U2, H);
+   S2 = monty_mult(U2, H, ws);
 
-   U2 = monty_mult(U1, U2);
+   U2 = monty_mult(U1, U2, ws);
 
-   BigInt x = mod_p.reduce(monty_mult(r, r) - S2 - U2*2);
+   BigInt x = mod_p.reduce(monty_mult(r, r, ws) - S2 - U2*2);
 
    U2 -= x;
    if(U2.is_negative())
       U2 += curve.get_p();
 
-   BigInt y = monty_mult(r, U2) - monty_mult(S1, S2);
+   BigInt y = monty_mult(r, U2, ws) - monty_mult(S1, S2, ws);
    if(y.is_negative())
       y += curve.get_p();
 
-   BigInt z = monty_mult(monty_mult(coord_z, rhs.coord_z), H);
+   BigInt z = monty_mult(monty_mult(coord_z, rhs.coord_z, ws), H, ws);
 
    coord_x = x;
    coord_y = y;
@@ -216,27 +225,29 @@ void PointGFp::mult2()
 
    const Modular_Reducer& mod_p = curve.mod_p();
 
-   BigInt y_2 = monty_mult(coord_y, coord_y);
+   SecureVector<word> ws(2 * curve.get_p().sig_words() + 1);
 
-   BigInt S = mod_p.reduce(4 * monty_mult(coord_x, y_2));
+   BigInt y_2 = monty_mult(coord_y, coord_y, ws);
 
-   BigInt z4 = monty_mult(coord_z, coord_z);
-   z4 = monty_mult(z4, z4);
+   BigInt S = mod_p.reduce(4 * monty_mult(coord_x, y_2, ws));
 
-   BigInt a_z4 = monty_mult(curve.get_a_r(), z4);
+   BigInt z4 = monty_mult(coord_z, coord_z, ws);
+   z4 = monty_mult(z4, z4, ws);
 
-   BigInt M = mod_p.reduce(a_z4 + 3 * monty_mult(coord_x, coord_x));
+   BigInt a_z4 = monty_mult(curve.get_a_r(), z4, ws);
 
-   BigInt x = mod_p.reduce(monty_mult(M, M) - 2*S);
+   BigInt M = mod_p.reduce(a_z4 + 3 * monty_mult(coord_x, coord_x, ws));
 
-   BigInt U = mod_p.reduce(monty_mult(y_2, y_2) << 3);
+   BigInt x = mod_p.reduce(monty_mult(M, M, ws) - 2*S);
 
-   BigInt y = monty_mult(M, S - x) - U;
+   BigInt U = mod_p.reduce(monty_mult(y_2, y_2, ws) << 3);
+
+   BigInt y = monty_mult(M, S - x, ws) - U;
 
    if(y.is_negative())
       y += curve.get_p();
 
-   BigInt z = 2 * monty_mult(coord_y, coord_z);
+   BigInt z = 2 * monty_mult(coord_y, coord_z, ws);
    if(z >= curve.get_p())
       z -= curve.get_p();
 
