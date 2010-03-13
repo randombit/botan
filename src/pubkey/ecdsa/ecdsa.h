@@ -11,6 +11,7 @@
 #define BOTAN_ECDSA_KEY_H__
 
 #include <botan/ecc_key.h>
+#include <botan/reducer.h>
 #include <botan/pk_ops.h>
 
 namespace Botan {
@@ -102,6 +103,7 @@ class BOTAN_DLL ECDSA_Signature_Operation : public PK_Ops::Signature
       const PointGFp& base_point;
       const BigInt& order;
       const BigInt& x;
+      Modular_Reducer mod_order;
    };
 
 class BOTAN_DLL ECDSA_Verification_Operation : public PK_Ops::Verification

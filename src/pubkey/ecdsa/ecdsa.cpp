@@ -14,7 +14,8 @@ namespace Botan {
 ECDSA_Signature_Operation::ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa) :
    base_point(ecdsa.domain().get_base_point()),
    order(ecdsa.domain().get_order()),
-   x(ecdsa.private_value())
+   x(ecdsa.private_value()),
+   mod_order(order)
    {
    }
 
@@ -30,17 +31,15 @@ ECDSA_Signature_Operation::sign(const byte msg[], u32bit msg_len,
    while(k >= order)
       k.randomize(rng, order.bits() - 1);
 
-   BigInt e(msg, msg_len);
+   BigInt m(msg, msg_len);
 
    PointGFp k_times_P = base_point * k;
-   BigInt r = k_times_P.get_affine_x() % order;
+   BigInt r = mod_order.reduce(k_times_P.get_affine_x());
 
    if(r == 0)
       throw Internal_Error("ECDSA_Signature_Operation: r was zero");
 
-   BigInt k_inv = inverse_mod(k, order);
-
-   BigInt s = (((r * x) + e) * k_inv) % order;
+   BigInt s = mod_order.multiply(inverse_mod(k, order), mul_add(x, r, m));
 
    SecureVector<byte> output(2*order.bytes());
    r.binary_encode(output + (output.size() / 2 - r.bytes()));
@@ -72,6 +71,7 @@ bool ECDSA_Verification_Operation::verify(const byte msg[], u32bit msg_len,
    BigInt w = inverse_mod(s, order);
 
    PointGFp R = w * (e * base_point + r * public_point);
+
    if(R.is_zero())
       return false;
 
