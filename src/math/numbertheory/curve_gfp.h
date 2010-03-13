@@ -34,28 +34,51 @@ class BOTAN_DLL CurveGFp
       * @param b second coefficient
       */
       CurveGFp(const BigInt& p, const BigInt& a, const BigInt& b) :
-         p(p), a(a), b(b), reducer_p(p) {}
+         p(p), a(a), b(b), reducer_p(p)
+         {
+         r = 1;
+         r <<= p.sig_words() * BOTAN_MP_WORD_BITS;
+
+         r_inv = inverse_mod(r, p);
+
+         p_dash = ((r * r_inv) - 1) / p;
+         }
 
       // CurveGFp(const CurveGFp& other) = default;
       // CurveGFp& operator=(const CurveGFp& other) = default;
 
       /**
       * Get coefficient a
-      * @result coefficient a
+      * @return coefficient a
       */
       const BigInt& get_a() const { return a; }
 
       /**
       * Get coefficient b
-      * @result coefficient b
+      * @return coefficient b
       */
       const BigInt& get_b() const { return b; }
 
       /**
       * Get prime modulus of the field of the curve
-      * @result prime modulus of the field of the curve
+      * @return prime modulus of the field of the curve
       */
       const BigInt& get_p() const { return p; }
+
+      /**
+      * @return Montgomery parameter r
+      */
+      const BigInt& get_r() const { return r; }
+
+      /**
+      * @return Montgomery parameter r^-1
+      */
+      const BigInt& get_r_inv() const { return r_inv; }
+
+      /**
+      * @return Montgomery parameter p-dash
+      */
+      const BigInt& get_p_dash() const { return p_dash; }
 
       const Modular_Reducer& mod_p() const { return reducer_p; }
 
@@ -68,6 +91,11 @@ class BOTAN_DLL CurveGFp
          std::swap(a, other.a);
          std::swap(b, other.b);
          std::swap(p, other.p);
+         std::swap(reducer_p, other.reducer_p);
+
+         std::swap(r, other.r);
+         std::swap(r_inv, other.r_inv);
+         std::swap(p_dash, other.p_dash);
          }
 
       bool operator==(const CurveGFp& other) const
@@ -76,7 +104,12 @@ class BOTAN_DLL CurveGFp
          }
 
    private:
+      // Curve parameters
       BigInt p, a, b;
+
+      // Montgomery parameters
+      BigInt r, r_inv, p_dash;
+
       Modular_Reducer reducer_p;
    };
 
