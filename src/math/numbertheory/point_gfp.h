@@ -140,8 +140,22 @@ class BOTAN_DLL PointGFp
       */
       bool operator==(const PointGFp& other) const;
    private:
+
+      class Workspace
+         {
+         public:
+            Workspace(u32bit p_words) :
+               ws_monty(2*p_words+1), ws_bn(12) {}
+
+            SecureVector<word> ws_monty;
+            std::vector<BigInt> ws_bn;
+         };
+
       /**
       * Montgomery multiplication/reduction
+      * @param x first multiplicand
+      * @param y second multiplicand
+      * @param workspace temp space
       */
       BigInt monty_mult(const BigInt& x, const BigInt& y,
                         MemoryRegion<word>& workspace);
@@ -149,12 +163,13 @@ class BOTAN_DLL PointGFp
       /**
       * Point addition
       */
-      void add(const PointGFp& other, MemoryRegion<word>& workspace);
+      void add(const PointGFp& other, Workspace& workspace);
 
       /**
       * Point doubling
+      * @param workspace temp space
       */
-      void mult2(MemoryRegion<word>& workspace);
+      void mult2(Workspace& workspace);
 
       CurveGFp curve;
       BigInt coord_x, coord_y, coord_z;
