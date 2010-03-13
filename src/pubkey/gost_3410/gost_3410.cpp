@@ -79,7 +79,7 @@ GOST_3410_Signature_Operation::GOST_3410_Signature_Operation(
 
 SecureVector<byte>
 GOST_3410_Signature_Operation::sign(const byte msg[], u32bit msg_len,
-                                    RandomNumberGenerator& rng) const
+                                    RandomNumberGenerator& rng)
    {
    BigInt k;
    do
@@ -117,7 +117,7 @@ GOST_3410_Verification_Operation::GOST_3410_Verification_Operation(const GOST_34
    }
 
 bool GOST_3410_Verification_Operation::verify(const byte msg[], u32bit msg_len,
-                                              const byte sig[], u32bit sig_len) const
+                                              const byte sig[], u32bit sig_len)
    {
    if(sig_len != order.bytes()*2)
       return false;

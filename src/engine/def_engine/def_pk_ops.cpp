@@ -27,7 +27,7 @@
   #include <botan/elgamal.h>
 #endif
 
-#if defined(BOTAN_HAS_GOST_3410_2001)
+#if defined(BOTAN_HAS_GOST_34_10_2001)
   #include <botan/gost_3410.h>
 #endif
 
@@ -116,7 +116,7 @@ Default_Engine::get_signature_op(const Private_Key& key) const
       return new ECDSA_Signature_Operation(*s);
 #endif
 
-#if defined(BOTAN_HAS_GOST_3410_2001)
+#if defined(BOTAN_HAS_GOST_34_10_2001)
    if(const GOST_3410_PrivateKey* s =
          dynamic_cast<const GOST_3410_PrivateKey*>(&key))
       return new GOST_3410_Signature_Operation(*s);
@@ -153,7 +153,7 @@ Default_Engine::get_verify_op(const Public_Key& key) const
       return new ECDSA_Verification_Operation(*s);
 #endif
 
-#if defined(BOTAN_HAS_GOST_3410_2001)
+#if defined(BOTAN_HAS_GOST_34_10_2001)
    if(const GOST_3410_PublicKey* s =
          dynamic_cast<const GOST_3410_PublicKey*>(&key))
       return new GOST_3410_Verification_Operation(*s);
