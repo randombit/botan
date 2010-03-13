@@ -8,8 +8,9 @@
 #ifndef BOTAN_ALGORITHM_CACHE_TEMPLATE_H__
 #define BOTAN_ALGORITHM_CACHE_TEMPLATE_H__
 
-#include <botan/internal/mutex.h>
+#include <botan/types.h>
 #include <botan/internal/stl_util.h>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <map>
@@ -50,17 +51,12 @@ class Algorithm_Cache
       */
       std::vector<std::string> providers_of(const std::string& algo_name);
 
-      Algorithm_Cache(Mutex* m) : mutex(m) {}
       ~Algorithm_Cache();
    private:
-      typedef typename std::map<std::string, std::map<std::string, T*> >::iterator
-         algorithms_iterator;
+      typename std::map<std::string, std::map<std::string, T*> >::const_iterator
+         find_algorithm(const std::string& algo_spec);
 
-      typedef typename std::map<std::string, T*>::iterator provider_iterator;
-
-      algorithms_iterator find_algorithm(const std::string& algo_spec);
-
-      Mutex* mutex;
+      std::mutex mutex;
       std::map<std::string, std::string> aliases;
       std::map<std::string, std::string> pref_providers;
       std::map<std::string, std::map<std::string, T*> > algorithms;
@@ -71,16 +67,15 @@ class Algorithm_Cache
 * Assumes object lock is held
 */
 template<typename T>
-typename Algorithm_Cache<T>::algorithms_iterator
+typename std::map<std::string, std::map<std::string, T*> >::const_iterator
 Algorithm_Cache<T>::find_algorithm(const std::string& algo_spec)
    {
-   algorithms_iterator algo = algorithms.find(algo_spec);
+   auto algo = algorithms.find(algo_spec);
 
    // Not found? Check if a known alias
    if(algo == algorithms.end())
       {
-      std::map<std::string, std::string>::const_iterator alias =
-         aliases.find(algo_spec);
+      auto alias = aliases.find(algo_spec);
 
       if(alias != aliases.end())
          algo = algorithms.find(alias->second);
@@ -96,16 +91,16 @@ template<typename T>
 const T* Algorithm_Cache<T>::get(const std::string& algo_spec,
                                  const std::string& requested_provider)
    {
-   Mutex_Holder lock(mutex);
+   std::lock_guard<std::mutex> lock(mutex);
 
-   algorithms_iterator algo = find_algorithm(algo_spec);
+   auto algo = find_algorithm(algo_spec);
    if(algo == algorithms.end()) // algo not found at all (no providers)
       return 0;
 
    // If a provider is requested specifically, return it or fail entirely
    if(requested_provider != "")
       {
-      provider_iterator prov = algo->second.find(requested_provider);
+      auto prov = algo->second.find(requested_provider);
       if(prov != algo->second.end())
          return prov->second;
       return 0;
@@ -117,7 +112,7 @@ const T* Algorithm_Cache<T>::get(const std::string& algo_spec,
 
    const std::string pref_provider = search_map(pref_providers, algo_spec);
 
-   for(provider_iterator i = algo->second.begin(); i != algo->second.end(); ++i)
+   for(auto i = algo->second.begin(); i != algo->second.end(); ++i)
       {
       const std::string prov_name = i->first;
       const u32bit prov_weight = static_provider_weight(prov_name);
@@ -148,7 +143,7 @@ void Algorithm_Cache<T>::add(T* algo,
    if(!algo)
       return;
 
-   Mutex_Holder lock(mutex);
+   std::lock_guard<std::mutex> lock(mutex);
 
    delete algorithms[algo->name()][provider];
    algorithms[algo->name()][provider] = algo;
@@ -166,15 +161,14 @@ void Algorithm_Cache<T>::add(T* algo,
 template<typename T> std::vector<std::string>
 Algorithm_Cache<T>::providers_of(const std::string& algo_name)
    {
-   Mutex_Holder lock(mutex);
+   std::lock_guard<std::mutex> lock(mutex);
 
    std::vector<std::string> providers;
 
-   algorithms_iterator algo = find_algorithm(algo_name);
-
+   auto algo = find_algorithm(algo_name);
    if(algo != algorithms.end())
       {
-      provider_iterator provider = algo->second.begin();
+      auto provider = algo->second.begin();
 
       while(provider != algo->second.end())
          {
@@ -193,7 +187,7 @@ template<typename T>
 void Algorithm_Cache<T>::set_preferred_provider(const std::string& algo_spec,
                                                 const std::string& provider)
    {
-   Mutex_Holder lock(mutex);
+   std::lock_guard<std::mutex> lock(mutex);
 
    pref_providers[algo_spec] = provider;
    }
@@ -204,11 +198,11 @@ void Algorithm_Cache<T>::set_preferred_provider(const std::string& algo_spec,
 template<typename T>
 Algorithm_Cache<T>::~Algorithm_Cache()
    {
-   algorithms_iterator algo = algorithms.begin();
+   auto algo = algorithms.begin();
 
    while(algo != algorithms.end())
       {
-      provider_iterator provider = algo->second.begin();
+      auto provider = algo->second.begin();
 
       while(provider != algo->second.end())
          {
@@ -218,8 +212,6 @@ Algorithm_Cache<T>::~Algorithm_Cache()
 
       ++algo;
       }
-
-   delete mutex;
    }
 
 }

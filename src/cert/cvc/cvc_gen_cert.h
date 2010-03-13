@@ -31,7 +31,7 @@ class EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation from EAC1
       * Get this certificates public key.
       * @result this certificates public key
       */
-      std::auto_ptr<Public_Key> subject_public_key() const;
+      std::unique_ptr<Public_Key> subject_public_key() const;
 
       /**
       * Find out whether this object is self signed.
@@ -118,9 +118,9 @@ MemoryVector<byte> EAC1_1_gen_CVC<Derived>::make_signed(
    }
 
 template<typename Derived>
-std::auto_ptr<Public_Key> EAC1_1_gen_CVC<Derived>::subject_public_key() const
+std::unique_ptr<Public_Key> EAC1_1_gen_CVC<Derived>::subject_public_key() const
    {
-   return std::auto_ptr<Public_Key>(new ECDSA_PublicKey(*m_pk));
+   return std::unique_ptr<Public_Key>(new ECDSA_PublicKey(*m_pk));
    }
 
 template<typename Derived> SecureVector<byte> EAC1_1_gen_CVC<Derived>::build_cert_body(MemoryRegion<byte> const& tbs)

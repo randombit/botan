@@ -32,7 +32,7 @@ BigInt Blinder::choose_nonce(const BigInt& x, const BigInt& mod)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
 
-   std::auto_ptr<HashFunction> hash(af.make_hash_function("SHA-512"));
+   std::unique_ptr<HashFunction> hash(af.make_hash_function("SHA-512"));
 
    u64bit ns_clock = get_nanoseconds_clock();
    for(size_t i = 0; i != sizeof(ns_clock); ++i)
@@ -41,7 +41,9 @@ BigInt Blinder::choose_nonce(const BigInt& x, const BigInt& mod)
    hash->update(BigInt::encode(x));
    hash->update(BigInt::encode(mod));
 
-   u64bit timestamp = system_time();
+   auto timestamp = std::chrono::system_clock::to_time_t(
+      std::chrono::system_clock::now());
+
    for(size_t i = 0; i != sizeof(timestamp); ++i)
       hash->update(get_byte(i, timestamp));
 

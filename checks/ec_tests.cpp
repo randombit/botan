@@ -613,11 +613,11 @@ void test_enc_dec_uncompressed_521_prime_too_large()
    BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
 
    CurveGFp secp521r1 (bi_p_secp, bi_a_secp, bi_b_secp);
-   std::auto_ptr<PointGFp> p_G;
+   std::unique_ptr<PointGFp> p_G;
    bool exc = false;
    try
       {
-      p_G = std::auto_ptr<PointGFp>(new PointGFp(OS2ECP ( sv_G_secp_uncomp, secp521r1)));
+      p_G = std::unique_ptr<PointGFp>(new PointGFp(OS2ECP ( sv_G_secp_uncomp, secp521r1)));
       p_G->check_invariants();
       }
    catch (std::exception e)

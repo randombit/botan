@@ -11,6 +11,7 @@
 #include <botan/x509cert.h>
 #include <botan/x509_crl.h>
 #include <botan/certstor.h>
+#include <functional>
 
 namespace Botan {
 
@@ -48,13 +49,6 @@ enum X509_Code {
 class BOTAN_DLL X509_Store
    {
    public:
-      class BOTAN_DLL Search_Func
-         {
-         public:
-            virtual bool match(const X509_Certificate&) const = 0;
-            virtual ~Search_Func() {}
-         };
-
       enum Cert_Usage {
          ANY              = 0x00,
          TLS_SERVER       = 0x01,
@@ -67,7 +61,13 @@ class BOTAN_DLL X509_Store
 
       X509_Code validate_cert(const X509_Certificate&, Cert_Usage = ANY);
 
-      std::vector<X509_Certificate> get_certs(const Search_Func&) const;
+      /**
+      * @param match the matching function
+      * @return list of certs for which match returns true
+      */
+      std::vector<X509_Certificate>
+         get_certs(std::function<bool (const X509_Certificate&)> match) const;
+
       std::vector<X509_Certificate> get_cert_chain(const X509_Certificate&);
       std::string PEM_encode() const;
 
@@ -94,18 +94,22 @@ class BOTAN_DLL X509_Store
 
       static X509_Code check_sig(const X509_Object&, Public_Key*);
 
-      X509_Store(u32bit time_slack = 24*60*60,
-                 u32bit cache_results = 30*60);
+      X509_Store& operator=(const X509_Store&) = delete;
+
+      /**
+      * @param slack the slack in checking validity times against current clock
+      * @param cache how long to cache validation results before rechecking
+      */
+      X509_Store(std::chrono::seconds slack = std::chrono::seconds(24*60*60),
+                 std::chrono::seconds cache = std::chrono::seconds(30*60));
 
       X509_Store(const X509_Store&);
       ~X509_Store();
    private:
-      X509_Store& operator=(const X509_Store&) { return (*this); }
-
       class BOTAN_DLL Cert_Info
          {
          public:
-            bool is_verified(u32bit timeout) const;
+            bool is_verified(std::chrono::seconds cache_timeout) const;
             bool is_trusted() const;
             X509_Code verify_result() const;
             void set_result(X509_Code) const;
@@ -116,7 +120,7 @@ class BOTAN_DLL X509_Store
          private:
             mutable bool checked;
             mutable X509_Code result;
-            mutable u64bit last_checked;
+            mutable std::chrono::system_clock::time_point last_checked;
          };
 
       u32bit find_cert(const X509_DN&, const MemoryRegion<byte>&) const;
@@ -131,10 +135,12 @@ class BOTAN_DLL X509_Store
       bool is_revoked(const X509_Certificate&) const;
 
       static const u32bit NO_CERT_FOUND = 0xFFFFFFFF;
+
       std::vector<Cert_Info> certs;
       std::vector<CRL_Data> revoked;
       std::vector<Certificate_Store*> stores;
-      u32bit time_slack, validation_cache_timeout;
+
+      std::chrono::seconds time_slack, validation_cache_timeout;
       mutable bool revoked_info_valid;
    };
 

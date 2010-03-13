@@ -161,8 +161,8 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
       }
    CHECK(ill_date_exc2);
    //cout << "readable = '" << cert_in.get_ced().readable_string() << "'\n";
-   std::auto_ptr<Public_Key> p_pk = cert_in.subject_public_key();
-   //auto_ptr<ECDSA_PublicKey> ecdsa_pk = dynamic_cast<auto_ptr<ECDSA_PublicKey> >(p_pk);
+   std::unique_ptr<Public_Key> p_pk = cert_in.subject_public_key();
+   //unique_ptr<ECDSA_PublicKey> ecdsa_pk = dynamic_cast<auto_ptr<ECDSA_PublicKey> >(p_pk);
    ECDSA_PublicKey* p_ecdsa_pk = dynamic_cast<ECDSA_PublicKey*>(p_pk.get());
    // let´s see if encoding is truely implicitca, because this is what the key should have
    // been set to when decoding (see above)(because it has no domain params):
@@ -180,7 +180,7 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
    CHECK(exc);
    // set them and try again
    //cert_in.set_domain_parameters(dom_pars);
-   std::auto_ptr<Public_Key> p_pk2 = cert_in.subject_public_key();
+   std::unique_ptr<Public_Key> p_pk2 = cert_in.subject_public_key();
    ECDSA_PublicKey* p_ecdsa_pk2 = dynamic_cast<ECDSA_PublicKey*>(p_pk2.get());
    //p_ecdsa_pk2->set_domain_parameters(dom_pars);
    CHECK(p_ecdsa_pk2->domain().get_order() == dom_pars.get_order());
@@ -211,7 +211,7 @@ void test_enc_gen_req(RandomNumberGenerator& rng)
    // read and check signature...
    EAC1_1_Req req_in(TEST_DATA_DIR "/my_cv_req.ber");
    //req_in.set_domain_parameters(dom_pars);
-   std::auto_ptr<Public_Key> p_pk = req_in.subject_public_key();
+   std::unique_ptr<Public_Key> p_pk = req_in.subject_public_key();
    ECDSA_PublicKey* p_ecdsa_pk = dynamic_cast<ECDSA_PublicKey*>(p_pk.get());
    //p_ecdsa_pk->set_domain_parameters(dom_pars);
    CHECK(p_ecdsa_pk->domain().get_order() == dom_pars.get_order());
@@ -226,7 +226,7 @@ void test_cvc_req_ext(RandomNumberGenerator&)
    EAC1_1_Req req_in(TEST_DATA_DIR "/DE1_flen_chars_cvcRequest_ECDSA.der");
    EC_Domain_Params dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    //req_in.set_domain_parameters(dom_pars);
-   std::auto_ptr<Public_Key> p_pk = req_in.subject_public_key();
+   std::unique_ptr<Public_Key> p_pk = req_in.subject_public_key();
    ECDSA_PublicKey* p_ecdsa_pk = dynamic_cast<ECDSA_PublicKey*>(p_pk.get());
    //p_ecdsa_pk->set_domain_parameters(dom_pars);
    CHECK(p_ecdsa_pk->domain().get_order() == dom_pars.get_order());
@@ -348,8 +348,7 @@ void test_eac_time(RandomNumberGenerator&)
    {
    std::cout << "." << std::flush;
 
-   const u64bit current_time = system_time();
-   EAC_Time time(current_time);
+   EAC_Time time(std::chrono::system_clock::now());
    //     std::cout << "time as std::string = " << time.as_string() << std::endl;
    EAC_Time sooner("", ASN1_Tag(99));
    //X509_Time sooner("", ASN1_Tag(99));
@@ -388,11 +387,11 @@ void test_ver_cvca(RandomNumberGenerator&)
 
    EAC1_1_CVC req_in(TEST_DATA_DIR "/cvca01.cv.crt");
 
-   //auto_ptr<ECDSA_PublicKey> ecdsa_pk = dynamic_cast<auto_ptr<ECDSA_PublicKey> >(p_pk);
+   //unique_ptr<ECDSA_PublicKey> ecdsa_pk = dynamic_cast<auto_ptr<ECDSA_PublicKey> >(p_pk);
    //ECDSA_PublicKey* p_ecdsa_pk = dynamic_cast<ECDSA_PublicKey*>(p_pk.get());
    bool exc = false;
 
-   std::auto_ptr<Public_Key> p_pk2 = req_in.subject_public_key();
+   std::unique_ptr<Public_Key> p_pk2 = req_in.subject_public_key();
    ECDSA_PublicKey* p_ecdsa_pk2 = dynamic_cast<ECDSA_PublicKey*>(p_pk2.get());
    bool ver_ec = req_in.check_signature(*p_pk2);
    CHECK_MESSAGE(ver_ec, "could not positively verify correct selfsigned cvca certificate");
@@ -510,7 +509,7 @@ void test_cvc_chain(RandomNumberGenerator& rng)
    CHECK(link12.check_signature(cvca_privk));
    EAC1_1_CVC link12_reloaded(TEST_DATA_DIR "/cvc_chain_link12.cer");
    EAC1_1_CVC cvca1_reloaded(TEST_DATA_DIR "/cvc_chain_cvca.cer");
-   std::auto_ptr<Public_Key> cvca1_rel_pk = cvca1_reloaded.subject_public_key();
+   std::unique_ptr<Public_Key> cvca1_rel_pk = cvca1_reloaded.subject_public_key();
    CHECK(link12_reloaded.check_signature(*cvca1_rel_pk));
 
    // create first round dvca-req
@@ -540,7 +539,7 @@ void test_cvc_chain(RandomNumberGenerator& rng)
 
    // verify the ado and sign the request too
 
-   std::auto_ptr<Public_Key> ap_pk = dvca_cert1.subject_public_key();
+   std::unique_ptr<Public_Key> ap_pk = dvca_cert1.subject_public_key();
    ECDSA_PublicKey* cert_pk = dynamic_cast<ECDSA_PublicKey*>(ap_pk.get());
 
    //cert_pk->set_domain_parameters(dom_pars);

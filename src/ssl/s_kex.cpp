@@ -157,7 +157,7 @@ bool Server_Key_Exchange::verify(const X509_Certificate& cert,
                                  const MemoryRegion<byte>& s_random) const
    {
 
-   std::auto_ptr<Public_Key> key(cert.subject_public_key());
+   std::unique_ptr<Public_Key> key(cert.subject_public_key());
 
    std::string padding = "";
    Signature_Format format = IEEE_1363;
