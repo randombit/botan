@@ -328,7 +328,7 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
          ECDSA_PrivateKey key(rng, params);
          keygen_timer.stop();
 
-         PK_Signer sig(key, padding);
+         PK_Signer sig(key, padding, IEEE_1363, DISABLE_FAULT_PROTECTION);
          PK_Verifier ver(key, padding);
 
          benchmark_sig_ver(ver, sig, verify_timer,
