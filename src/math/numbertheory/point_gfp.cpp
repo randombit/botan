@@ -57,9 +57,6 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b)
       BigInt a2 = mod_p.reduce(a);
       BigInt b2 = mod_p.reduce(b);
 
-      a2.grow_to(p_size);
-      b2.grow_to(p_size);
-
       bigint_simple_mul(t, a2.data(), a2.sig_words(), b2.data(), b2.sig_words());
       }
 
@@ -117,9 +114,14 @@ PointGFp& PointGFp::operator+=(const PointGFp& rhs)
 
    BigInt x = mod_p.reduce(monty_mult(r, r) - S2 - U2*2);
 
-   U2 = mod_p.reduce(U2 - x);
+   U2 -= x;
+   if(U2.is_negative())
+      U2 += curve.get_p();
 
    BigInt y = monty_mult(r, U2) - monty_mult(S1, S2);
+   if(y.is_negative())
+      y += curve.get_p();
+
    BigInt z = monty_mult(monty_mult(coord_z, rhs.coord_z), H);
 
    coord_x = x;
@@ -225,13 +227,18 @@ void PointGFp::mult2()
 
    BigInt M = mod_p.reduce(a_z4 + 3 * monty_mult(coord_x, coord_x));
 
-   BigInt x = monty_mult(M, M) - 2*S;
+   BigInt x = mod_p.reduce(monty_mult(M, M) - 2*S);
 
-   BigInt U = 8 * monty_mult(y_2, y_2);
+   BigInt U = mod_p.reduce(monty_mult(y_2, y_2) << 3);
 
    BigInt y = monty_mult(M, S - x) - U;
 
+   if(y.is_negative())
+      y += curve.get_p();
+
    BigInt z = 2 * monty_mult(coord_y, coord_z);
+   if(z >= curve.get_p())
+      z -= curve.get_p();
 
    coord_x = x;
    coord_y = y;
