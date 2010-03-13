@@ -268,10 +268,15 @@ void PointGFp::swap(PointGFp& other)
 
 bool PointGFp::operator==(const PointGFp& other) const
    {
-   return (coord_x == other.coord_x &&
-           coord_y == other.coord_y &&
-           coord_z == other.coord_z &&
-           get_curve() == other.get_curve());
+   if(get_curve() != other.get_curve())
+      return false;
+
+   // If this is zero, only equal if other is also zero
+   if(is_zero())
+      return other.is_zero();
+
+   return (get_affine_x() == other.get_affine_x() &&
+           get_affine_y() == other.get_affine_y());
    }
 
 // encoding and decoding

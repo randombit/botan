@@ -6,19 +6,12 @@
 
 
 #include <botan/build.h>
-#include "validate.h"
-
-#if !defined(BOTAN_HAS_ECDSA)
-
-void do_ec_tests(RandomNumberGenerator&) { return; }
-
-#else
-
 #include <botan/bigint.h>
 #include <botan/numthry.h>
 #include <botan/curve_gfp.h>
 #include <botan/point_gfp.h>
 #include <botan/ecdsa.h>
+#include <botan/oids.h>
 
 using namespace Botan;
 
@@ -26,7 +19,7 @@ using namespace Botan;
 #include <assert.h>
 
 #include "getopt.h"
-
+#include "validate.h"
 #include "common.h"
 
 #define CHECK_MESSAGE(expr, print) try { if(!(expr)) std::cout << print << "\n"; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
@@ -63,8 +56,6 @@ void test_point_turn_on_sp_red_mul()
    std::cout << "." << std::flush;
 
    // setting up expected values
-   std::string test_str("test");
-   BigInt test_bi(3);
    BigInt exp_Qx(std::string("466448783855397898016055842232266600516272889280"));
    BigInt exp_Qy(std::string("1110706324081757720403272427311003102474457754220"));
    BigInt exp_Qz(1);
@@ -129,10 +120,6 @@ void test_coordinates()
    {
    std::cout << "." << std::flush;
 
-   //Setting up expected values
-   BigInt exp_x(std::string("1340569834321789103897171369812910390864714275730"));
-   BigInt exp_y(std::string("1270827321510686389126940426305655825361326281787"));
-   BigInt exp_z(std::string("407040228325808215747982915914693784055965283940"));
    BigInt exp_affine_x(std::string("16984103820118642236896513183038186009872590470"));
    BigInt exp_affine_y(std::string("1373093393927139016463695321221277758035357890939"));
 
@@ -156,13 +143,6 @@ void test_coordinates()
    PointGFp point_exp(secp160r1, exp_affine_x, exp_affine_y);
    point_exp.check_invariants();
 
-   if(p1.get_x() != exp_x)
-      std::cout << p1.get_x() << " != " << exp_x << "\n";
-   if(p1.get_y() != exp_y)
-      std::cout << p1.get_y() << " != " << exp_y << "\n";
-   if(p1.get_z() != exp_z)
-      std::cout << p1.get_z() << " != " << exp_z << "\n";
-
    CHECK_MESSAGE( p1.get_affine_x() == exp_affine_x, " p1_x = " << p1.get_affine_x() << "\n" << "exp_x = " << exp_affine_x << "\n");
    CHECK_MESSAGE( p1.get_affine_y() == exp_affine_y, " p1_y = " << p1.get_affine_y() << "\n" << "exp_y = " << exp_affine_y << "\n");
    }
@@ -184,7 +164,6 @@ void test_point_transformation ()
    {
    std::cout << "." << std::flush;
 
-
    // get a vailid point
    EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
    PointGFp p = dom_pars.get_base_point();
@@ -192,59 +171,32 @@ void test_point_transformation ()
    // get a copy
    PointGFp q = p;
 
-   //turn on montg.
-   CHECK_MESSAGE( p.get_x() == q.get_x(), "projective_x changed while turning on montg.!");
-   CHECK_MESSAGE( p.get_y() == q.get_y(), "projective_y changed while turning on montg.!");
-   CHECK_MESSAGE( p.get_z() == q.get_z(), "projective_z changed while turning on montg.!");
-   CHECK_MESSAGE( p.get_affine_x() == q.get_affine_x(), "affine_x changed while turning on montg.!");
-   CHECK_MESSAGE( p.get_affine_y() == q.get_affine_y(), "affine_y changed while turning on montg.!");
+   CHECK_MESSAGE( p.get_affine_x() == q.get_affine_x(), "affine_x changed during copy");
+   CHECK_MESSAGE( p.get_affine_y() == q.get_affine_y(), "affine_y changed during copy");
    }
 
 void test_point_mult ()
    {
    std::cout << "." << std::flush;
 
-   // setting up expected values
-   std::string test_str("test");
-   BigInt test_bi(3);
-   BigInt exp_Qx(std::string("466448783855397898016055842232266600516272889280"));
-   BigInt exp_Qy(std::string("1110706324081757720403272427311003102474457754220"));
-   BigInt exp_Qz(1);
+   EC_Domain_Params secp160r1(OIDS::lookup("secp160r1"));
 
-   // performing calculation to test
-   std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
-   std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
-   std::string b_secp = "1c97befc54bd7a8b65acf89f81d4d4adc565fa45";
+   const CurveGFp& curve = secp160r1.get_curve();
+
    std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   SecureVector<byte> sv_p_secp = decode_hex(p_secp);
-   SecureVector<byte> sv_a_secp = decode_hex(a_secp);
-   SecureVector<byte> sv_b_secp = decode_hex(b_secp);
    SecureVector<byte> sv_G_secp_comp = decode_hex(G_secp_comp);
-   BigInt bi_p_secp = BigInt::decode(sv_p_secp.begin(), sv_p_secp.size());
-   BigInt bi_a_secp = BigInt::decode(sv_a_secp.begin(), sv_a_secp.size());
-   BigInt bi_b_secp = BigInt::decode(sv_b_secp.begin(), sv_b_secp.size());
-   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
-   PointGFp p_G = OS2ECP(sv_G_secp_comp, secp160r1);
+   PointGFp p_G = OS2ECP(sv_G_secp_comp, curve);
 
-   SecureVector<byte> sv_G_dec = EC2OSP(p_G,0x01);
-   std::string str_d_U = "aa374ffc3ce144e6b073307972cb6d57b2a4e982";
-   SecureVector<byte> sv_d_U = decode_hex(str_d_U);
-   BigInt d_U = BigInt::decode(sv_d_U.begin(), sv_d_U.size());
+   BigInt d_U("0xaa374ffc3ce144e6b073307972cb6d57b2a4e982");
    PointGFp Q_U = d_U * p_G;
-   CHECK( Q_U.get_x() == exp_Qx);
-   CHECK( Q_U.get_y() == exp_Qy);
-   CHECK( Q_U.get_z() == exp_Qz);
+
+   CHECK(Q_U.get_affine_x() == BigInt("466448783855397898016055842232266600516272889280"));
+   CHECK(Q_U.get_affine_y() == BigInt("1110706324081757720403272427311003102474457754220"));
    }
 
 void test_point_negative()
    {
    std::cout << "." << std::flush;
-
-   //Setting up expected values
-   BigInt exp_p1_x(std::string("1340569834321789103897171369812910390864714275730"));
-   BigInt exp_p1_y(std::string("1270827321510686389126940426305655825361326281787"));
-   BigInt exp_p1_neg_x(std::string("1340569834321789103897171369812910390864714275730"));
-   BigInt exp_p1_neg_y(std::string("190674315820216529076744406410627194292458777540"));
 
    // performing calculation to test
    std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
@@ -263,17 +215,13 @@ void test_point_negative()
 
    PointGFp p1 = p_G *= 2;
 
-   CHECK( p1.get_x() == exp_p1_x);
-   CHECK( p1.get_y() == exp_p1_y);
-   //cout << "p1.y_proj = " << p1.get_y() << "\n";
+   CHECK(p1.get_affine_x() == BigInt("16984103820118642236896513183038186009872590470"));
+   CHECK(p1.get_affine_y() == BigInt("1373093393927139016463695321221277758035357890939"));
+
    PointGFp p1_neg = p1.negate();
-   //cout << "p1_neg.y_proj = " << p1_neg.get_y() << "\n";
-   //p1.negate();
-   BigInt calc_y_value = p1_neg.get_y();
-   BigInt calc_z_value = p1_neg.get_z();
-   CHECK( p1_neg.get_x() == exp_p1_neg_x);
-   CHECK_MESSAGE(  calc_y_value == exp_p1_neg_y, "calc_y_value = " << calc_y_value << "\nexp_p1_neg_v = " << exp_p1_neg_y);
-   //CHECK_MESSAGE(  calc_z_value == exp_p1_neg_y, "calc_y_value = " << calc_y_value << "\nexp_p1_neg_v = " << exp_p1_neg_y);
+
+   CHECK(p1_neg.get_affine_x() == BigInt("16984103820118642236896513183038186009872590470"));
+   CHECK(p1_neg.get_affine_y() == BigInt("88408243403763901739989511495005261618427168388"));
    }
 
 void test_zeropoint()
@@ -288,11 +236,10 @@ void test_zeropoint()
    BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
    CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
 
-   BigInt bi_p1_xval ("1340569834321789103897171369812910390864714275730");
-   BigInt bi_p1_yval ("1270827321510686389126940426305655825361326281787");
-   BigInt bi_p1_zval ("407040228325808215747982915914693784055965283940");
+   PointGFp p1(secp160r1,
+               BigInt("16984103820118642236896513183038186009872590470"),
+               BigInt("1373093393927139016463695321221277758035357890939"));
 
-   PointGFp p1(secp160r1, bi_p1_xval, bi_p1_yval, bi_p1_zval);
    p1.check_invariants();
    p1 -= p1;
 
@@ -330,8 +277,6 @@ void test_calc_with_zeropoint()
    {
    std::cout << "." << std::flush;
 
-
-
    std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
    SecureVector<byte> sv_G_secp_comp = decode_hex ( G_secp_comp );
    BigInt bi_p_secp("0xffffffffffffffffffffffffffffffff7fffffff");
@@ -339,11 +284,9 @@ void test_calc_with_zeropoint()
    BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
    CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
 
-   BigInt bi_p1_xval ("1340569834321789103897171369812910390864714275730");
-   BigInt bi_p1_yval ("1270827321510686389126940426305655825361326281787");
-   BigInt bi_p1_zval ("407040228325808215747982915914693784055965283940");
-
-   PointGFp p(curve, bi_p1_xval, bi_p1_yval, bi_p1_zval);
+   PointGFp p(curve,
+              BigInt("16984103820118642236896513183038186009872590470"),
+              BigInt("1373093393927139016463695321221277758035357890939"));
 
    p.check_invariants();
    CHECK_MESSAGE(  !p.is_zero(), "created is zeropoint, shouldn't be!");
@@ -365,11 +308,6 @@ void test_add_point()
    {
    std::cout << "." << std::flush;
 
-   //Setting up expected values
-   BigInt exp_add_x(std::string("1435263815649099438763411093143066583800699119469"));
-   BigInt exp_add_y(std::string("1300090790154238148372364036549849084558669436512"));
-   BigInt exp_add_z(std::string("562006223742588575209908669014372619804457947208"));
-
    // precalculation
    std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
    std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
@@ -388,9 +326,12 @@ void test_add_point()
    PointGFp p0 = p_G;
    PointGFp p1 = p_G *= 2;
 
-   PointGFp expected(secp160r1, exp_add_x, exp_add_y, exp_add_z);
-
    p1 += p0;
+
+   PointGFp expected(secp160r1,
+                     BigInt("704859595002530890444080436569091156047721708633"),
+                     BigInt("1147993098458695153857594941635310323215433166682"));
+
    CHECK(p1 == expected);
    }
 
@@ -423,7 +364,10 @@ void test_sub_point()
 
    p1 -= p0;
 
-   PointGFp expected(secp160r1, exp_sub_x, exp_sub_y, exp_sub_z);
+   PointGFp expected(secp160r1,
+                     BigInt("425826231723888350446541592701409065913635568770"),
+                     BigInt("203520114162904107873991457957346892027982641970"));
+
    CHECK(p1 == expected);
    }
 
@@ -453,7 +397,7 @@ void test_mult_point()
    PointGFp p0 = p_G;
    PointGFp p1 = p_G *= 2;
 
-   p1 *= p0.get_x();
+   p1 *= p0.get_affine_x();
 
    PointGFp expected(secp160r1, exp_mult_x, exp_mult_y);
 
@@ -463,28 +407,6 @@ void test_mult_point()
 void test_basic_operations()
    {
    std::cout << "." << std::flush;
-
-
-   // set up expected values
-   BigInt exp_p1_x(std::string("1340569834321789103897171369812910390864714275730"));
-   BigInt exp_p1_y(std::string("1270827321510686389126940426305655825361326281787"));
-   BigInt exp_p1_z(std::string("407040228325808215747982915914693784055965283940"));
-
-   BigInt exp_p0_x(std::string("425826231723888350446541592701409065913635568770"));
-   BigInt exp_p0_y(std::string("203520114162904107873991457957346892027982641970"));
-   BigInt exp_p0_z(std::string("1"));
-
-   BigInt exp_plus_x(std::string("1435263815649099438763411093143066583800699119469"));
-   BigInt exp_plus_y(std::string("1300090790154238148372364036549849084558669436512"));
-   BigInt exp_plus_z(std::string("562006223742588575209908669014372619804457947208"));
-
-   BigInt exp_minus_x(std::string("112913490230515010376958384252467223283065196552"));
-   BigInt exp_minus_y(std::string("143464803917389475471159193867377888720776527730"));
-   BigInt exp_minus_z(std::string("562006223742588575209908669014372619804457947208"));
-
-   BigInt exp_mult_x(std::string("43638877777452195295055270548491599621118743290"));
-   BigInt exp_mult_y(std::string("56841378500012376527163928510402662349220202981"));
-   BigInt exp_mult_z(std::string("1"));
 
    // precalculation
    std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
@@ -503,37 +425,42 @@ void test_basic_operations()
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
 
    PointGFp p0 = p_G;
-   PointGFp p1 = p_G *= 2;
 
-   // check that all points have correct values
-   CHECK( p1.get_x() == exp_p1_x);
-   CHECK( p1.get_y() == exp_p1_y);
-   CHECK( p1.get_z() == exp_p1_z);
+   PointGFp expected(secp160r1,
+                     BigInt("425826231723888350446541592701409065913635568770"),
+                     BigInt("203520114162904107873991457957346892027982641970"));
 
-   PointGFp expected(secp160r1, exp_p0_x, exp_p0_y, exp_p0_z);
    CHECK(p0 == expected);
 
+   PointGFp p1 = p_G *= 2;
+
+   CHECK(p1.get_affine_x() == BigInt("16984103820118642236896513183038186009872590470"));
+   CHECK(p1.get_affine_y() == BigInt("1373093393927139016463695321221277758035357890939"));
+
    PointGFp simplePlus= p1 + p0;
-   PointGFp exp_simplePlus(secp160r1, exp_plus_x, exp_plus_y, exp_plus_z);
+   PointGFp exp_simplePlus(secp160r1,
+                           BigInt("704859595002530890444080436569091156047721708633"),
+                           BigInt("1147993098458695153857594941635310323215433166682"));
    CHECK(simplePlus == exp_simplePlus);
 
    PointGFp simpleMinus= p1 - p0;
-   PointGFp exp_simpleMinus(secp160r1, exp_minus_x, exp_minus_y, exp_minus_z);
+   PointGFp exp_simpleMinus(secp160r1,
+                            BigInt("425826231723888350446541592701409065913635568770"),
+                            BigInt("203520114162904107873991457957346892027982641970"));
+
    CHECK(simpleMinus == exp_simpleMinus);
 
    PointGFp simpleMult= p1 * 123456789;
-   CHECK( simpleMult.get_x() == exp_mult_x);
-   CHECK( simpleMult.get_y() == exp_mult_y);
-   CHECK( simpleMult.get_z() == exp_mult_z);
+
+   CHECK(simpleMult.get_affine_x() == BigInt("43638877777452195295055270548491599621118743290"));
+   CHECK(simpleMult.get_affine_y() == BigInt("56841378500012376527163928510402662349220202981"));
 
    // check that all initial points hasn't changed
-   CHECK( p1.get_x() == exp_p1_x);
-   CHECK( p1.get_y() == exp_p1_y);
-   CHECK( p1.get_z() == exp_p1_z);
+   CHECK(p1.get_affine_x() == BigInt("16984103820118642236896513183038186009872590470"));
+   CHECK(p1.get_affine_y() == BigInt("1373093393927139016463695321221277758035357890939"));
 
-   CHECK( p0.get_x() == exp_p0_x);
-   CHECK( p0.get_y() == exp_p0_y);
-   CHECK( p0.get_z() == exp_p0_z);
+   CHECK(p0.get_affine_x() == BigInt("425826231723888350446541592701409065913635568770"));
+   CHECK(p0.get_affine_y() == BigInt("203520114162904107873991457957346892027982641970"));
    }
 
 void test_enc_dec_compressed_160()
@@ -760,11 +687,9 @@ void test_more_zeropoint()
    BigInt bi_b("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
    CurveGFp curve(bi_p, bi_a, bi_b);
 
-   BigInt bi_p1_xval ("1340569834321789103897171369812910390864714275730");
-   BigInt bi_p1_yval ("1270827321510686389126940426305655825361326281787");
-   BigInt bi_p1_zval ("407040228325808215747982915914693784055965283940");
-
-   PointGFp p1(curve, bi_p1_xval, bi_p1_yval, bi_p1_zval);
+   PointGFp p1(curve,
+               BigInt("16984103820118642236896513183038186009872590470"),
+               BigInt("1373093393927139016463695321221277758035357890939"));
 
    p1.check_invariants();
    PointGFp minus_p1 = -p1;
@@ -880,6 +805,4 @@ void do_ec_tests(RandomNumberGenerator& rng)
 
    std::cout << std::endl;
    }
-
-#endif
 

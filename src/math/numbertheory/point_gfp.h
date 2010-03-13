@@ -62,17 +62,6 @@ class BOTAN_DLL PointGFp
                const BigInt& x, const BigInt& y) :
          curve(curve), coord_x(x), coord_y(y), coord_z(1) {}
 
-      /**
-      * Construct a point given its jacobian projective coordinates
-      * @param curve the base curve
-      * @param x jacobian projective x coordinate
-      * @param y jacobian projective y coordinate
-      * @param z jacobian projective z coordinate
-      */
-      PointGFp(const CurveGFp& curve,
-               const BigInt& x, const BigInt& y, const BigInt& z) :
-         curve(curve), coord_x(x), coord_y(y), coord_z(z) {}
-
       //PointGFp(const PointGFp& other) = default;
       //PointGFp& operator=(const PointGFp& other) = default;
 
@@ -127,24 +116,6 @@ class BOTAN_DLL PointGFp
       * @result affine y coordinate
       */
       BigInt get_affine_y() const;
-
-      /**
-      * get the jacobian projective x coordinate
-      * @result jacobian projective x coordinate
-      */
-      const BigInt& get_x() const { return coord_x; }
-
-      /**
-      * get the jacobian projective y coordinate
-      * @result jacobian projective y coordinate
-      */
-      const BigInt& get_y() const { return coord_y; }
-
-      /**
-      * get the jacobian projective z coordinate
-      * @result jacobian projective z coordinate
-      */
-      const BigInt& get_z() const { return coord_z; }
 
       /**
       * Is this the point at infinity?
