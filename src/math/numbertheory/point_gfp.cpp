@@ -43,9 +43,6 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b)
 
    const word p_dash = curve.get_p_dash();
 
-   BigInt result;
-   result.grow_to(2*p_size+1);
-
    SecureVector<word> t;
    t.grow_to(2*p_size+1);
 
@@ -66,9 +63,10 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b)
       bigint_simple_mul(t, a2.data(), a2.sig_words(), b2.data(), b2.sig_words());
       }
 
-   bigint_monty_redc(&t[0], t.size(), p.data(), p_size, p_dash);
-
-   copy_mem(&result[0], &t[p_size], p_size);
+   BigInt result;
+   std::swap(result.get_reg(), t);
+   bigint_monty_redc(result.get_reg(), result.size(), p.data(), p_size, p_dash);
+   result >>= p_size*BOTAN_MP_WORD_BITS;
 
    return result;
    }
