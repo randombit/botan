@@ -13,8 +13,6 @@
 #include <botan/mp_asmi.h>
 #include <botan/mp_core.h>
 
-#include <stdio.h>
-
 namespace Botan {
 
 PointGFp::PointGFp(const CurveGFp& curve) :
