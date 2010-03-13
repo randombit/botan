@@ -86,12 +86,12 @@ void bigint_comba_sqr16(word[64], const word[32]);
 /*
 * High Level Multiplication/Squaring Interfaces
 */
-void bigint_mul(word[], u32bit, word[],
-                const word[], u32bit, u32bit,
-                const word[], u32bit, u32bit);
+void bigint_mul(word z[], u32bit z_size, word workspace[],
+                const word x[], u32bit x_size, u32bit x_sw,
+                const word y[], u32bit y_size, u32bit y_sw);
 
-void bigint_sqr(word[], u32bit, word[],
-                const word[], u32bit, u32bit);
+void bigint_sqr(word z[], u32bit z_size, word workspace[],
+                const word x[], u32bit x_size, u32bit x_sw);
 
 }
 
