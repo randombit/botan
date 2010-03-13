@@ -19,103 +19,20 @@ namespace {
 
 void inner_montg_mult_sos(word result[],
                           const word a_bar[], const word b_bar[],
-                          const word n[],
-                          const word n_dash[], u32bit s)
+                          const word p[],
+                          word p_dash,
+                          u32bit s)
    {
    SecureVector<word> t;
    t.grow_to(2*s+1);
 
-   // t = a_bar * b_bar
-   //bigint_simple_mul(t, a_bar, s, b_bar, s);
-   for (u32bit i=0; i<s; i++)
-      {
-      word C = 0;
-      word S = 0;
-      for (u32bit j=0; j<s; j++)
-         {
-         // we use:
-         // word word_madd3(word a, word b, word c, word d, word* carry)
-         // returns a * b + c + d and resets the carry (not using it as input)
-
-         S = word_madd3(a_bar[j], b_bar[i], t[i+j], &C);
-         t[i+j] = S;
-         }
-      t[i+s] = C;
-      }
-
-   // ???
-#if 1
-   for (u32bit i=0; i<s; i++)
-      {
-      // word word_madd2(word a, word b, word c, word* carry)
-      // returns a * b + c, resets the carry
-
-      word C = 0;
-      word zero = 0;
-      word m = word_madd2(t[i], n_dash[0], &zero);
-
-      for (u32bit j=0; j<s; j++)
-         {
-         word S = word_madd3(m, n[j], t[i+j], &C);
-         t[i+j] = S;
-         }
-
-      //// mp_mulop.cpp:
-      ////word bigint_mul_add_words(word z[], const word x[], u32bit x_size, word y)
-      u32bit cnt = 0;
-      while (C > 0)
-         {
-         // we need not worry here about C > 1, because the other operand is zero
-
-         word tmp = t[i+s+cnt] + C;
-         C = (tmp < t[i+s+cnt]);
-         t[i+s+cnt] = tmp;
-         cnt++;
-         }
-      }
-
-   // u = t
-   SecureVector<word> u;
-   u.grow_to(s+1);
-   for (u32bit j=0; j<s+1; j++)
-      {
-      u[j] = t[j+s];
-      }
-
-   // t = u - n
-   word B = 0;
-   word D = 0;
-   for (u32bit i=0; i<s; i++)
-      {
-      D = word_sub(u[i], n[i], &B);
-      t[i] = D;
-      }
-   D = word_sub(u[s], 0, &B);
-   t[s] = D;
-
-   // if t >= 0 (B == 0 -> no borrow), return t
-   if(B == 0)
-      {
-      for (u32bit i=0; i<s; i++)
-         {
-         result[i] = t[i];
-         }
-      }
-   else // else return u
-      {
-      for (u32bit i=0; i<s; i++)
-         {
-         result[i] = u[i];
-         }
-      }
-#else
+   bigint_simple_mul(t, a_bar, s, b_bar, s);
 
    bigint_monty_redc(&t[0], t.size(),
-                     n, s,
-                     n_dash[0]);
+                     p, s,
+                     p_dash);
 
-   copy_mem(&result[0], &t[0], s);
-#endif
+   copy_mem(&result[0], &t[s], s);
    }
 
 }
@@ -148,14 +65,12 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b)
    const BigInt& p = curve.get_p();
    const u32bit s = p.sig_words();
 
-   const BigInt& p_dash = curve.get_p_dash();
-
    result.grow_to(s);
 
    if(a > 0 && b > 0 && a < p && b < p && a.size() >= s && b.size() >= s)
       {
       inner_montg_mult_sos(result.get_reg(), a.data(), b.data(),
-                           p.data(), p_dash.data(), s);
+                           p.data(), curve.get_p_dash(), s);
       }
    else
       {
@@ -170,7 +85,7 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b)
       b2 = mod_p.reduce(b2);
 
       inner_montg_mult_sos(result.get_reg(), a2.data(), b2.data(),
-                           p.data(), p_dash.data(), s);
+                           p.data(), curve.get_p_dash(), s);
       }
 
    return result;
