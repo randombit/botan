@@ -293,9 +293,7 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
                      double seconds,
                      Benchmark_Report& report)
    {
-   const char* domains[] = { "1.3.132.0.6", // secp112r1
-                             "1.3.132.0.28", // secp128r1
-                             "1.3.132.0.30", // secp160r2
+   const char* domains[] = { "1.3.132.0.30", // secp160r2
                              "1.2.840.10045.3.1.1", // secp192r1
                              "1.3.132.0.33", // secp224r1
                              "1.2.840.10045.3.1.7", // secp256r1
