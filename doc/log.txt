@@ -1,6 +1,7 @@
 
 * 1.9.5-dev, ????-??-??
  - Numerous ECC optimizations
+ - Fix GOST 34.10-2001 X.509 key loading
  - Allow PK_Signer's fault protection checks to be toggled off
  - Avoid using pool-based locking allocator if we can't mlock
  - Remove all runtime options
