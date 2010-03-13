@@ -7,6 +7,7 @@
 #include <botan/pkcs8.h>
 #include <botan/mem_ops.h>
 #include <botan/parsing.h>
+#include <botan/oids.h>
 #include <map>
 
 #if defined(BOTAN_HAS_RSA)
@@ -65,6 +66,16 @@ using namespace Botan;
 #include <set>
 
 namespace {
+
+const char* ec_domains[] = {
+   "secp160r2",
+   "secp192r1",
+   "secp224r1",
+   "secp256r1",
+   "secp384r1",
+   "secp521r1",
+   0
+};
 
 class Benchmark_Report
    {
@@ -293,18 +304,9 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
                      double seconds,
                      Benchmark_Report& report)
    {
-   const char* domains[] = { "1.3.132.0.30", // secp160r2
-                             "1.2.840.10045.3.1.1", // secp192r1
-                             "1.3.132.0.33", // secp224r1
-                             "1.2.840.10045.3.1.7", // secp256r1
-                             "1.3.132.0.34", // secp384r1
-                             "1.3.132.0.35", // secp512r1
-                             NULL };
-
-   for(size_t j = 0; domains[j]; j++)
+   for(size_t j = 0; ec_domains[j]; j++)
       {
-      OID oid(domains[j]);
-      EC_Domain_Params params(oid);
+      EC_Domain_Params params(OIDS::lookup(ec_domains[j]));
 
       u32bit pbits = params.get_curve().get_p().bits();
 
@@ -351,19 +353,9 @@ void benchmark_gost_3410(RandomNumberGenerator& rng,
                          double seconds,
                          Benchmark_Report& report)
    {
-   const char* domains[] = { "1.3.132.0.6", // secp112r1
-                             "1.3.132.0.28", // secp128r1
-                             "1.3.132.0.30", // secp160r2
-                             "1.3.132.0.33", // secp224r1
-                             "1.2.643.2.2.35.1", // gost 256p
-                             "1.3.132.0.34", // secp384r1
-                             "1.3.132.0.35", // secp512r1
-                             NULL };
-
-   for(size_t j = 0; domains[j]; j++)
+   for(size_t j = 0; ec_domains[j]; j++)
       {
-      OID oid(domains[j]);
-      EC_Domain_Params params(oid);
+      EC_Domain_Params params(OIDS::lookup(ec_domains[j]));
 
       u32bit pbits = params.get_curve().get_p().bits();
 
@@ -410,18 +402,9 @@ void benchmark_ecdh(RandomNumberGenerator& rng,
                     double seconds,
                     Benchmark_Report& report)
    {
-   const char* domains[] = { "1.3.132.0.6", // secp112r1
-                             "1.3.132.0.28", // secp128r1
-                             "1.3.132.0.30", // secp160r2
-                             "1.3.132.0.33", // secp224r1
-                             "1.3.132.0.34", // secp384r1
-                             "1.3.132.0.35", // secp512r1
-                             NULL };
-
-   for(size_t j = 0; domains[j]; j++)
+   for(size_t j = 0; ec_domains[j]; j++)
       {
-      OID oid(domains[j]);
-      EC_Domain_Params params(oid);
+      EC_Domain_Params params(OIDS::lookup(ec_domains[j]));
 
       u32bit pbits = params.get_curve().get_p().bits();
 
