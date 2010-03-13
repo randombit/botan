@@ -27,6 +27,12 @@ using namespace Botan;
 
 namespace {
 
+std::ostream& operator<<(std::ostream& out, const PointGFp& point)
+   {
+   out << "(" << point.get_affine_x() << " " << point.get_affine_y() << ")";
+   return out;
+   }
+
 PointGFp create_random_point(RandomNumberGenerator& rng,
                              const CurveGFp& curve)
    {
@@ -78,13 +84,13 @@ void test_point_turn_on_sp_red_mul()
    BigInt d("459183204582304");
 
    PointGFp r1 = d * p_G;
-   CHECK(r1.get_affine_x() != BigInt("0"));
+   CHECK(r1.get_affine_x() != 0);
 
    PointGFp p_G2(p_G);
 
    PointGFp r2 = d * p_G2;
    CHECK_MESSAGE(r1 == r2, "error with point mul after extra turn on sp red mul");
-   CHECK(r1.get_affine_x() != BigInt("0"));
+   CHECK(r1.get_affine_x() != 0);
 
    PointGFp p_r1 = r1;
    PointGFp p_r2 = r2;
@@ -92,15 +98,15 @@ void test_point_turn_on_sp_red_mul()
    p_r1 *= 2;
    p_r2 *= 2;
    CHECK_MESSAGE(p_r1.get_affine_x() == p_r2.get_affine_x(), "error with mult2 after extra turn on sp red mul");
-   CHECK(p_r1.get_affine_x() != BigInt("0"));
-   CHECK(p_r2.get_affine_x() != BigInt("0"));
+   CHECK(p_r1.get_affine_x() != 0);
+   CHECK(p_r2.get_affine_x() != 0);
    r1 *= 2;
 
    r2 *= 2;
 
    CHECK_MESSAGE(r1 == r2, "error with mult2 after extra turn on sp red mul");
    CHECK_MESSAGE(r1.get_affine_x() == r2.get_affine_x(), "error with mult2 after extra turn on sp red mul");
-   CHECK(r1.get_affine_x() != BigInt("0"));
+   CHECK(r1.get_affine_x() != 0);
    r1 += p_G;
    r2 += p_G2;
 
@@ -441,7 +447,8 @@ void test_basic_operations()
    PointGFp exp_simplePlus(secp160r1,
                            BigInt("704859595002530890444080436569091156047721708633"),
                            BigInt("1147993098458695153857594941635310323215433166682"));
-   CHECK(simplePlus == exp_simplePlus);
+   if(simplePlus != exp_simplePlus)
+      std::cout << simplePlus << " != " << exp_simplePlus << "\n";
 
    PointGFp simpleMinus= p1 - p0;
    PointGFp exp_simpleMinus(secp160r1,
