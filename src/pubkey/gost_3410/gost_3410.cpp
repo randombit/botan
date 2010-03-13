@@ -11,6 +11,9 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 
+#include <iostream>
+#include <stdio.h>
+
 namespace Botan {
 
 MemoryVector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
@@ -19,10 +22,19 @@ MemoryVector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
    const BigInt& x = public_point().get_affine_x();
    const BigInt& y = public_point().get_affine_y();
 
-   MemoryVector<byte> bits(2*std::max(x.bytes(), y.bytes()));
+   u32bit part_size = std::max(x.bytes(), y.bytes());
 
-   y.binary_encode(bits + (bits.size() / 2 - y.bytes()));
-   x.binary_encode(bits + (bits.size() - x.bytes()));
+   MemoryVector<byte> bits(2*part_size);
+
+   x.binary_encode(bits + (part_size - x.bytes()));
+   y.binary_encode(bits + (2*part_size - y.bytes()));
+
+   // Keys are stored in little endian format (WTF)
+   for(u32bit i = 0; i != part_size / 2; ++i)
+      {
+      std::swap(bits[i], bits[part_size-1-i]);
+      std::swap(bits[part_size+i], bits[2*part_size-1-i]);
+      }
 
    return DER_Encoder().encode(bits, OCTET_STRING).get_contents();
    }
@@ -53,8 +65,15 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
 
    const u32bit part_size = bits.size() / 2;
 
-   BigInt y(bits, part_size);
-   BigInt x(bits + part_size, part_size);
+   // Keys are stored in little endian format (WTF)
+   for(u32bit i = 0; i != part_size / 2; ++i)
+      {
+      std::swap(bits[i], bits[part_size-1-i]);
+      std::swap(bits[part_size+i], bits[2*part_size-1-i]);
+      }
+
+   BigInt x(bits, part_size);
+   BigInt y(bits + part_size, part_size);
 
    public_key = PointGFp(domain().get_curve(), x, y);
 
@@ -64,7 +83,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
       }
    catch(Illegal_Point)
       {
-      throw Internal_Error("Loaded ECC public key failed self test");
+      throw Internal_Error("Loaded GOST 34.10 public key failed self test");
       }
    }
 
