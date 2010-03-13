@@ -13,6 +13,8 @@
 #include <botan/mp_asmi.h>
 #include <botan/mp_core.h>
 
+#include <stdio.h>
+
 namespace Botan {
 
 PointGFp::PointGFp(const CurveGFp& curve) :
@@ -170,10 +172,30 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
    if(scalar.is_negative())
       P.negate();
 
-   for(int i = scalar.bits() - 1; i >= 0; --i)
+   u32bit scalar_bits = scalar.bits();
+
+   PointGFp P2 = P * 2;
+   PointGFp P3 = P2 + P;
+
+   for(u32bit i = 0; i < scalar_bits - 1; i += 2)
+      {
+      u32bit twobits = scalar.get_substring(scalar_bits - i - 2, 2);
+
+      H.mult2();
+      H.mult2();
+
+      if(twobits == 3)
+         H += P3;
+      else if(twobits == 2)
+         H += P2;
+      else if(twobits == 1)
+         H += P;
+      }
+
+   if(scalar_bits % 2)
       {
       H.mult2();
-      if(scalar.get_bit(i))
+      if(scalar.get_bit(0))
          H += P;
       }
 
