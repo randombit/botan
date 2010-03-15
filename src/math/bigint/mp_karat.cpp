@@ -273,8 +273,12 @@ void bigint_mul(word z[], u32bit z_size, word workspace[],
       {
       bigint_comba_mul16(z, x, y);
       }
-   else if(x_sw < BOTAN_KARAT_MUL_THRESHOLD || y_sw < BOTAN_KARAT_MUL_THRESHOLD)
+   else if(x_sw < BOTAN_KARAT_MUL_THRESHOLD ||
+           y_sw < BOTAN_KARAT_MUL_THRESHOLD ||
+           !workspace)
+      {
       bigint_simple_mul(z, x, x_sw, y, y_sw);
+      }
    else
       {
       const u32bit N = karatsuba_size(z_size, x_size, x_sw, y_size, y_sw);
@@ -315,7 +319,7 @@ void bigint_sqr(word z[], u32bit z_size, word workspace[],
       {
       bigint_comba_sqr16(z, x);
       }
-   else if(x_size < BOTAN_KARAT_SQR_THRESHOLD)
+   else if(x_size < BOTAN_KARAT_SQR_THRESHOLD || !workspace)
       {
       bigint_simple_sqr(z, x, x_sw);
       }
