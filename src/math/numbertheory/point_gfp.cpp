@@ -215,18 +215,26 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
       return *this;
       }
 
-   PointGFp H(this->curve); // create as zero
-   PointGFp P(*this);
-
-   if(scalar.is_negative())
-      P.negate();
-
    const u32bit scalar_bits = scalar.bits();
 
-   PointGFp P2 = P * 2;
-   PointGFp P3 = P2 + P;
+   const u32bit window_size = 4;
 
-   u32bit window_size = 2;
+   std::vector<PointGFp> Ps((1 << window_size) - 1);
+   Ps[0] = *this;
+   if(scalar.is_negative())
+      Ps[0].negate();
+
+   for(u32bit i = 1; i != Ps.size(); ++i)
+      {
+      Ps[i] = Ps[i-1];
+
+      if(i % 1 == 1)
+         Ps[i].mult2(ws);
+      else
+         Ps[i].add(Ps[0], ws);
+      }
+
+   PointGFp H(this->curve); // create as zero
    u32bit bits_left = scalar_bits;
 
    while(bits_left >= window_size)
@@ -236,12 +244,8 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
       for(u32bit i = 0; i != window_size; ++i)
          H.mult2(ws);
 
-      if(nibble == 3)
-         H.add(P3, ws);
-      else if(nibble == 2)
-         H.add(P2, ws);
-      else if(nibble == 1)
-         H.add(P, ws);
+      if(nibble)
+         H.add(Ps[nibble-1], ws);
 
       bits_left -= window_size;
       }
@@ -250,10 +254,13 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
       {
       H.mult2(ws);
       if(scalar.get_bit(bits_left-1))
-         H.add(P, ws);
+         H.add(Ps[0], ws);
 
       --bits_left;
       }
+
+   if(scalar.is_negative())
+      H.negate();
 
    *this = H;
    return *this;
