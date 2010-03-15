@@ -124,11 +124,13 @@ void PointGFp::add(const PointGFp& rhs,
    monty_mult(U2, rhs.coord_x, lhs_z2, ws);
    monty_mult(S2, rhs.coord_y, monty_mult(coord_z, lhs_z2, ws), ws);
 
-   H = U2 - U1;
+   H = U2;
+   H -= U1;
    if(H.is_negative())
       H += p;
 
-   r = S2 - S1;
+   r = S2;
+   r -= S1;
    if(r.is_negative())
       r += p;
 
@@ -151,7 +153,8 @@ void PointGFp::add(const PointGFp& rhs,
    monty_mult(U2, U1, U2, ws);
 
    monty_sqr(x, r, ws);
-   x -= S2 + (U2 << 1);
+   x -= S2;
+   x -= (U2 << 1);
    while(x.is_negative())
       x += p;
 
@@ -159,7 +162,8 @@ void PointGFp::add(const PointGFp& rhs,
    if(U2.is_negative())
       U2 += p;
 
-   y = monty_mult(r, U2, ws) - monty_mult(S1, S2, ws);
+   monty_mult(y, r, U2, ws);
+   y -= monty_mult(S1, S2, ws);
    if(y.is_negative())
       y += p;
 
@@ -302,15 +306,17 @@ void PointGFp::mult2(Workspace& workspace)
    monty_sqr(z4, monty_sqr(coord_z, ws), ws);
    monty_mult(a_z4, curve.get_a_r(), z4, ws);
 
-   M = 3 * monty_sqr(coord_x, ws) + a_z4;
+   M = 3 * monty_sqr(coord_x, ws);
+   M += a_z4;
    while(M >= p)
       M -= p;
 
-   x = monty_sqr(M, ws) - (S << 1);
+   monty_sqr(x, M, ws);
+   x -= (S << 1);
    while(x.is_negative())
       x += p;
 
-   U = monty_sqr(y_2, ws);
+   monty_sqr(U, y_2, ws);
    U <<= 3;
    while(U >= p)
       U -= p;
@@ -319,7 +325,8 @@ void PointGFp::mult2(Workspace& workspace)
    while(S.is_negative())
       S += p;
 
-   y = monty_mult(M, S, ws) - U;
+   monty_mult(y, M, S, ws);
+   y -= U;
    if(y.is_negative())
       y += p;
 
