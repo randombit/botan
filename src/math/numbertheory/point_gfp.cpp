@@ -221,17 +221,20 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
    if(scalar.is_negative())
       P.negate();
 
-   u32bit scalar_bits = scalar.bits();
+   const u32bit scalar_bits = scalar.bits();
 
    PointGFp P2 = P * 2;
    PointGFp P3 = P2 + P;
 
-   for(u32bit i = 0; i < scalar_bits - 1; i += 2)
-      {
-      u32bit nibble = scalar.get_substring(scalar_bits - i - 2, 2);
+   u32bit window_size = 2;
+   u32bit bits_left = scalar_bits;
 
-      H.mult2(ws);
-      H.mult2(ws);
+   while(bits_left >= window_size)
+      {
+      u32bit nibble = scalar.get_substring(bits_left - window_size, window_size);
+
+      for(u32bit i = 0; i != window_size; ++i)
+         H.mult2(ws);
 
       if(nibble == 3)
          H.add(P3, ws);
@@ -239,13 +242,17 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
          H.add(P2, ws);
       else if(nibble == 1)
          H.add(P, ws);
+
+      bits_left -= window_size;
       }
 
-   if(scalar_bits % 2)
+   while(bits_left)
       {
       H.mult2(ws);
-      if(scalar.get_bit(0))
+      if(scalar.get_bit(bits_left-1))
          H.add(P, ws);
+
+      --bits_left;
       }
 
    *this = H;
