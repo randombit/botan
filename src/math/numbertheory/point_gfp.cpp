@@ -38,15 +38,15 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b,
       return 0;
 
    const BigInt& p = curve.get_p();
-   const u32bit p_size = (workspace.size() - 1) / 2;
+   const u32bit p_size = p.sig_words();
 
    const word p_dash = curve.get_p_dash();
 
    workspace.clear();
 
-   bigint_simple_mul(workspace,
-                     a.data(), a.sig_words(),
-                     b.data(), b.sig_words());
+   bigint_mul(workspace, workspace.size(), 0,
+              a.data(), a.size(), a.sig_words(),
+              b.data(), b.size(), b.sig_words());
 
    bigint_monty_redc(workspace, workspace.size(),
                      p.data(), p_size, p_dash);
@@ -61,19 +61,18 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b,
 BigInt PointGFp::monty_sqr(const BigInt& x,
                            MemoryRegion<word>& workspace)
    {
-   //return monty_mult(x, x, workspace);
-
    if(x.is_zero())
       return 0;
 
    const BigInt& p = curve.get_p();
-   const u32bit p_size = (workspace.size() - 1) / 2;
+   const u32bit p_size = p.sig_words();
 
    const word p_dash = curve.get_p_dash();
 
    workspace.clear();
 
-   bigint_simple_sqr(workspace, x.data(), x.sig_words());
+   bigint_sqr(workspace, workspace.size(), 0,
+              x.data(), x.size(), x.sig_words());
 
    bigint_monty_redc(workspace, workspace.size(),
                      p.data(), p_size, p_dash);

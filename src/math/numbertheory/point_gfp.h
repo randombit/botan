@@ -145,7 +145,7 @@ class BOTAN_DLL PointGFp
          {
          public:
             Workspace(u32bit p_words) :
-               ws_monty(2*p_words+1), ws_bn(12) {}
+               ws_monty(2*(p_words+2)), ws_bn(12) {}
 
             SecureVector<word> ws_monty;
             std::vector<BigInt> ws_bn;
