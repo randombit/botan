@@ -44,6 +44,8 @@ class BOTAN_DLL CurveGFp
          p_dash = (((r * r_inv) - 1) / p).word_at(0);
 
          a_r = reducer_p.multiply(a, r);
+
+         p_words = p.sig_words();
          }
 
       // CurveGFp(const CurveGFp& other) = default;
@@ -87,6 +89,11 @@ class BOTAN_DLL CurveGFp
       */
       word get_p_dash() const { return p_dash; }
 
+      /**
+      * @return p.sig_words()
+      */
+      u32bit get_p_words() const { return p_words; }
+
       const Modular_Reducer& mod_p() const { return reducer_p; }
 
       /**
@@ -113,6 +120,8 @@ class BOTAN_DLL CurveGFp
    private:
       // Curve parameters
       BigInt p, a, b;
+
+      u32bit p_words; // cache of p.sig_words()
 
       // Montgomery parameters
       BigInt r, r_inv, a_r;

@@ -32,14 +32,13 @@ PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
    }
 
 BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b,
-                            MemoryRegion<word>& workspace)
+                            MemoryRegion<word>& workspace) const
    {
    if(a.is_zero() || b.is_zero())
       return 0;
 
    const BigInt& p = curve.get_p();
-   const u32bit p_size = p.sig_words();
-
+   const u32bit p_size = curve.get_p_words();
    const word p_dash = curve.get_p_dash();
 
    workspace.clear();
@@ -59,14 +58,13 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b,
    }
 
 BigInt PointGFp::monty_sqr(const BigInt& x,
-                           MemoryRegion<word>& workspace)
+                           MemoryRegion<word>& workspace) const
    {
    if(x.is_zero())
       return 0;
 
    const BigInt& p = curve.get_p();
-   const u32bit p_size = p.sig_words();
-
+   const u32bit p_size = curve.get_p_words();
    const word p_dash = curve.get_p_dash();
 
    workspace.clear();
@@ -97,10 +95,10 @@ void PointGFp::add(const PointGFp& rhs,
    else if(rhs.is_zero())
       return;
 
+   const BigInt& p = curve.get_p();
+
    MemoryRegion<word>& ws = workspace.ws_monty;
    std::vector<BigInt>& ws_bn = workspace.ws_bn;
-
-   const Modular_Reducer& mod_p = curve.mod_p();
 
    BigInt& rhs_z2 = ws_bn[0];
    BigInt& U1 = ws_bn[1];
@@ -125,9 +123,13 @@ void PointGFp::add(const PointGFp& rhs,
    U2 = monty_mult(rhs.coord_x, lhs_z2, ws);
    S2 = monty_mult(rhs.coord_y, monty_mult(coord_z, lhs_z2, ws), ws);
 
-   H = mod_p.reduce(U2 - U1);
+   H = U2 - U1;
+   if(H.is_negative())
+      H += p;
 
-   r = mod_p.reduce(S2 - S1);
+   r = S2 - S1;
+   if(r.is_negative())
+      r += p;
 
    if(H.is_zero())
       {
@@ -147,15 +149,17 @@ void PointGFp::add(const PointGFp& rhs,
 
    U2 = monty_mult(U1, U2, ws);
 
-   x = mod_p.reduce(monty_sqr(r, ws) - S2 - U2*2);
+   x = monty_sqr(r, ws) - S2 - U2*2;
+   while(x.is_negative())
+      x += p;
 
    U2 -= x;
    if(U2.is_negative())
-      U2 += curve.get_p();
+      U2 += p;
 
    y = monty_mult(r, U2, ws) - monty_mult(S1, S2, ws);
    if(y.is_negative())
-      y += curve.get_p();
+      y += p;
 
    z = monty_mult(monty_mult(coord_z, rhs.coord_z, ws), H, ws);
 
@@ -167,7 +171,7 @@ void PointGFp::add(const PointGFp& rhs,
 // arithmetic operators
 PointGFp& PointGFp::operator+=(const PointGFp& rhs)
    {
-   Workspace ws(curve.get_p().sig_words());
+   Workspace ws(curve.get_p_words());
    add(rhs, ws);
    return *this;
    }
@@ -186,7 +190,7 @@ PointGFp& PointGFp::operator-=(const PointGFp& rhs)
 
 PointGFp& PointGFp::operator*=(const BigInt& scalar)
    {
-   Workspace ws(curve.get_p().sig_words());
+   Workspace ws(curve.get_p_words());
 
    if(scalar.abs() <= 2) // special cases for small values
       {
@@ -257,10 +261,10 @@ void PointGFp::mult2(Workspace& workspace)
       return;
       }
 
+   const BigInt& p = curve.get_p();
+
    MemoryRegion<word>& ws = workspace.ws_monty;
    std::vector<BigInt>& ws_bn = workspace.ws_bn;
-
-   const Modular_Reducer& mod_p = curve.mod_p();
 
    BigInt& y_2 = ws_bn[0];
    BigInt& S = ws_bn[1];
@@ -274,29 +278,37 @@ void PointGFp::mult2(Workspace& workspace)
 
    y_2 = monty_sqr(coord_y, ws);
 
-   S = mod_p.reduce(4 * monty_mult(coord_x, y_2, ws));
+   S = 4 * monty_mult(coord_x, y_2, ws);
+   while(S >= p)
+      S -= p;
 
    z4 = monty_sqr(monty_sqr(coord_z, ws), ws);
 
    a_z4 = monty_mult(curve.get_a_r(), z4, ws);
 
-   M = mod_p.reduce(a_z4 + 3 * monty_sqr(coord_x, ws));
+   M = 3 * monty_sqr(coord_x, ws) + a_z4;
+   while(M >= p)
+      M -= p;
 
-   x = mod_p.reduce(monty_sqr(M, ws) - 2*S);
+   x = monty_sqr(M, ws) - 2*S;
+   while(x.is_negative())
+      x += p;
 
-   U = mod_p.reduce(monty_sqr(y_2, ws) << 3);
+   U = 8 * monty_sqr(y_2, ws);
+   while(U >= p)
+      U -= p;
 
    S -= x;
    while(S.is_negative())
-      S += curve.get_p();
+      S += p;
 
    y = monty_mult(M, S, ws) - U;
    if(y.is_negative())
-      y += curve.get_p();
+      y += p;
 
    z = 2 * monty_mult(coord_y, coord_z, ws);
-   if(z >= curve.get_p())
-      z -= curve.get_p();
+   if(z >= p)
+      z -= p;
 
    coord_x = x;
    coord_y = y;
@@ -310,11 +322,21 @@ BigInt PointGFp::get_affine_x() const
 
    const Modular_Reducer& mod_p = curve.mod_p();
 
+#if 1
    BigInt x = mod_p.multiply(curve.get_r_inv(), coord_x);
    BigInt z = mod_p.multiply(curve.get_r_inv(), coord_z);
 
    BigInt z2 = mod_p.square(z);
    return mod_p.multiply(x, inverse_mod(z2, curve.get_p()));
+#else
+
+   SecureVector<word> ws(2 * (curve.get_p_words() + 2));
+
+   BigInt z2 = monty_sqr(coord_z, ws);
+   z2 = inverse_mod(z2, curve.get_p());
+   z2 = mod_p.multiply(z2, curve.get_r());
+   return monty_mult(coord_x, z2, ws);
+#endif
    }
 
 BigInt PointGFp::get_affine_y() const
@@ -324,11 +346,21 @@ BigInt PointGFp::get_affine_y() const
 
    const Modular_Reducer& mod_p = curve.mod_p();
 
+#if 1
    BigInt y = mod_p.multiply(curve.get_r_inv(), coord_y);
    BigInt z = mod_p.multiply(curve.get_r_inv(), coord_z);
 
    BigInt z3 = mod_p.cube(z);
    return mod_p.multiply(y, inverse_mod(z3, curve.get_p()));
+#else
+
+   SecureVector<word> ws(2 * (curve.get_p_words() + 2));
+
+   BigInt z3 = monty_mult(coord_z, monty_sqr(coord_z, ws), ws);
+   z3 = inverse_mod(z3, curve.get_p());
+   z3 = mod_p.multiply(z3, curve.get_r());
+   return monty_mult(coord_y, z3, ws);
+#endif
    }
 
 void PointGFp::check_invariants() const

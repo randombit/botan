@@ -158,7 +158,7 @@ class BOTAN_DLL PointGFp
       * @param workspace temp space
       */
       BigInt monty_mult(const BigInt& x, const BigInt& y,
-                        MemoryRegion<word>& workspace);
+                        MemoryRegion<word>& workspace) const;
 
       /**
       * Montgomery squaring/reduction
@@ -166,7 +166,7 @@ class BOTAN_DLL PointGFp
       * @param workspace temp space
       */
       BigInt monty_sqr(const BigInt& x,
-                       MemoryRegion<word>& workspace);
+                       MemoryRegion<word>& workspace) const;
 
       /**
       * Point addition
