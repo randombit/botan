@@ -31,11 +31,15 @@ PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
    coord_z = mod_p.reduce(curve.get_r());
    }
 
-BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b,
-                            MemoryRegion<word>& workspace) const
+void PointGFp::monty_mult(BigInt& z,
+                          const BigInt& x, const BigInt& y,
+                          MemoryRegion<word>& workspace) const
    {
-   if(a.is_zero() || b.is_zero())
-      return 0;
+   if(x.is_zero() || y.is_zero())
+      {
+      z = 0;
+      return;
+      }
 
    const BigInt& p = curve.get_p();
    const u32bit p_size = curve.get_p_words();
@@ -44,24 +48,24 @@ BigInt PointGFp::monty_mult(const BigInt& a, const BigInt& b,
    workspace.clear();
 
    bigint_mul(workspace, workspace.size(), 0,
-              a.data(), a.size(), a.sig_words(),
-              b.data(), b.size(), b.sig_words());
+              x.data(), x.size(), x.sig_words(),
+              y.data(), y.size(), y.sig_words());
 
    bigint_monty_redc(workspace, workspace.size(),
                      p.data(), p_size, p_dash);
 
-   BigInt result;
-   result.grow_to(p_size);
-   copy_mem(result.get_reg().begin(), &workspace[p_size], p_size);
-
-   return result;
+   z.get_reg().resize(p_size);
+   copy_mem(z.get_reg().begin(), &workspace[p_size], p_size);
    }
 
-BigInt PointGFp::monty_sqr(const BigInt& x,
-                           MemoryRegion<word>& workspace) const
+void PointGFp::monty_sqr(BigInt& z, const BigInt& x,
+                         MemoryRegion<word>& workspace) const
    {
    if(x.is_zero())
-      return 0;
+      {
+      z = 0;
+      return;
+      }
 
    const BigInt& p = curve.get_p();
    const u32bit p_size = curve.get_p_words();
@@ -75,11 +79,8 @@ BigInt PointGFp::monty_sqr(const BigInt& x,
    bigint_monty_redc(workspace, workspace.size(),
                      p.data(), p_size, p_dash);
 
-   BigInt result;
-   result.grow_to(p_size);
-   copy_mem(result.get_reg().begin(), &workspace[p_size], p_size);
-
-   return result;
+   z.get_reg().resize(p_size);
+   copy_mem(z.get_reg().begin(), &workspace[p_size], p_size);
    }
 
 void PointGFp::add(const PointGFp& rhs,
