@@ -12,20 +12,13 @@
   #include <botan/rsa.h>
 #endif
 
-#if defined(BOTAN_HAS_RW)
-  #include <botan/rw.h>
-#endif
-
 #if defined(BOTAN_HAS_DSA)
   #include <botan/dsa.h>
 #endif
 
-#if defined(BOTAN_HAS_ELGAMAL)
-  #include <botan/elgamal.h>
-#endif
-
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-  #include <botan/nr.h>
+#if defined(BOTAN_HAS_ECDSA)
+  #include <botan/ecdsa.h>
+  #include <openssl/ecdsa.h>
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
@@ -183,7 +176,7 @@ bool OSSL_DSA_Verification_Operation::verify(const byte msg[], u32bit msg_len,
 #if defined(BOTAN_HAS_RSA)
 
 class OSSL_RSA_Private_Operation : public PK_Ops::Signature,
-                                  public PK_Ops::Decryption
+                                   public PK_Ops::Decryption
    {
    public:
       OSSL_RSA_Private_Operation(const RSA_PrivateKey& rsa) :

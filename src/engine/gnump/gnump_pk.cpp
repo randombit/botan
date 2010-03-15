@@ -19,20 +19,8 @@
   #include <botan/rsa.h>
 #endif
 
-#if defined(BOTAN_HAS_RW)
-  #include <botan/rw.h>
-#endif
-
 #if defined(BOTAN_HAS_DSA)
   #include <botan/dsa.h>
-#endif
-
-#if defined(BOTAN_HAS_ELGAMAL)
-  #include <botan/elgamal.h>
-#endif
-
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-  #include <botan/nr.h>
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
