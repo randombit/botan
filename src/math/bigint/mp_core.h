@@ -43,38 +43,60 @@ void bigint_sub3(word z[],
 /*
 * Shift Operations
 */
-void bigint_shl1(word[], u32bit, u32bit, u32bit);
-void bigint_shl2(word[], const word[], u32bit, u32bit, u32bit);
-void bigint_shr1(word[], u32bit, u32bit, u32bit);
-void bigint_shr2(word[], const word[], u32bit, u32bit, u32bit);
+void bigint_shl1(word x[], u32bit x_size,
+                 u32bit word_shift, u32bit bit_shift);
+
+void bigint_shr1(word x[], u32bit x_size,
+                 u32bit word_shift, u32bit bit_shift);
+
+void bigint_shl2(word y[], const word x[], u32bit x_size,
+                 u32bit word_shift, u32bit bit_shift);
+
+void bigint_shr2(word y[], const word x[], u32bit x_size,
+                 u32bit word_shift, u32bit bit_shift);
 
 /*
 * Simple O(N^2) Multiplication and Squaring
 */
-void bigint_simple_mul(word z[], const word x[], u32bit x_size,
+void bigint_simple_mul(word z[],
+                       const word x[], u32bit x_size,
                        const word y[], u32bit y_size);
+
 void bigint_simple_sqr(word z[], const word x[], u32bit x_size);
 
 /*
 * Linear Multiply
 */
-void bigint_linmul2(word[], u32bit, word);
-void bigint_linmul3(word[], const word[], u32bit, word);
-void bigint_linmul_add(word[], u32bit, const word[], u32bit, word);
+void bigint_linmul2(word x[], u32bit x_size, word y);
+void bigint_linmul3(word z[], const word x[], u32bit x_size, word y);
 
 /*
 * Montgomery Reduction
 */
-void bigint_monty_redc(word[], u32bit, const word[], u32bit, word);
+void bigint_monty_redc(word z[], u32bit z_size,
+                       const word x[], u32bit x_size, word u);
 
 /*
 * Misc Utility Operations
 */
-u32bit bigint_divcore(word, word, word, word, word, word);
-s32bit bigint_cmp(const word[], u32bit, const word[], u32bit);
-word bigint_divop(word, word, word);
-word bigint_modop(word, word, word);
-void bigint_wordmul(word, word, word*, word*);
+u32bit bigint_divcore(word q, word y1, word y2,
+                      word x1, word x2, word x3);
+
+/**
+* Compare x and y
+*/
+s32bit bigint_cmp(const word x[], u32bit x_size,
+                  const word y[], u32bit y_size);
+
+/**
+* Compute ((n1<<bits) + n0) / d
+*/
+word bigint_divop(word n1, word n0, word d);
+
+/**
+* Compute ((n1<<bits) + n0) % d
+*/
+word bigint_modop(word n1, word n0, word d);
 
 /*
 * Comba Multiplication / Squaring
