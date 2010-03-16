@@ -361,7 +361,7 @@ void benchmark_gost_3410(RandomNumberGenerator& rng,
 
       u32bit hashbits = pbits;
 
-      if(hashbits < 160)
+      if(hashbits <= 192)
          hashbits = 160;
       if(hashbits == 521)
          hashbits = 512;
