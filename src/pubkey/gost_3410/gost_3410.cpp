@@ -84,6 +84,20 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
       }
    }
 
+namespace {
+
+BigInt decode_le(const byte msg[], u32bit msg_len)
+   {
+   SecureVector<byte> msg_le(msg, msg_len);
+
+   for(size_t i = 0; i != msg_le.size() / 2; ++i)
+      std::swap(msg_le[i], msg_le[msg_le.size()-1-i]);
+
+   return BigInt(msg_le, msg_le.size());
+   }
+
+}
+
 GOST_3410_Signature_Operation::GOST_3410_Signature_Operation(
    const GOST_3410_PrivateKey& gost_3410) :
 
@@ -102,7 +116,7 @@ GOST_3410_Signature_Operation::sign(const byte msg[], u32bit msg_len,
       k.randomize(rng, order.bits()-1);
    while(k >= order);
 
-   BigInt e(msg, msg_len);
+   BigInt e = decode_le(msg, msg_len);
 
    e %= order;
    if(e == 0)
@@ -124,7 +138,6 @@ GOST_3410_Signature_Operation::sign(const byte msg[], u32bit msg_len,
    return output;
    }
 
-
 GOST_3410_Verification_Operation::GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost) :
    base_point(gost.domain().get_base_point()),
    public_point(gost.public_point()),
@@ -138,7 +151,7 @@ bool GOST_3410_Verification_Operation::verify(const byte msg[], u32bit msg_len,
    if(sig_len != order.bytes()*2)
       return false;
 
-   BigInt e(msg, msg_len);
+   BigInt e = decode_le(msg, msg_len);
 
    BigInt r(sig, sig_len / 2);
    BigInt s(sig + sig_len / 2, sig_len / 2);

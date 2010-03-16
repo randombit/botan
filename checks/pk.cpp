@@ -512,6 +512,34 @@ u32bit validate_ecdsa_sig(const std::string& algo,
    return 2;
    }
 
+u32bit validate_gost_ver(const std::string& algo,
+                         const std::vector<std::string>& str)
+   {
+   if(str.size() != 5)
+      throw std::runtime_error("Invalid input from pk_valid.dat");
+
+#if defined(BOTAN_HAS_GOST_34_10_2001)
+
+   EC_Domain_Params group(OIDS::lookup(str[0]));
+
+   PointGFp public_point = OS2ECP(decode_hex(str[1]), group.get_curve());
+
+   GOST_3410_PublicKey gost(group, public_point);
+
+   std::string emsa = algo.substr(13, std::string::npos);
+
+   PK_Verifier v(gost, emsa);
+
+   SecureVector<byte> msg = decode_hex(str[2]);
+   SecureVector<byte> sig = decode_hex(str[3]);
+
+   bool passed = v.verify_message(msg, msg.size(), sig, sig.size());
+   return (passed ? 0 : 1);
+#endif
+
+   return 2;
+   }
+
 u32bit validate_dsa_ver(const std::string& algo,
                         const std::vector<std::string>& str)
    {
@@ -819,6 +847,9 @@ u32bit do_pk_validation_tests(const std::string& filename,
 
          else if(algorithm.find("ECDSA/") == 0)
             new_errors = validate_ecdsa_sig(algorithm, substr);
+
+         else if(algorithm.find("GOST_3410_VA/") == 0)
+            new_errors = validate_gost_ver(algorithm, substr);
 
          else if(algorithm.find("RSAES_PKCS8/") == 0)
             new_errors = validate_rsa_enc_pkcs8(algorithm, substr, rng);
