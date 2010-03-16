@@ -1,6 +1,6 @@
 /*
 * Lowest Level MPI Algorithms
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *     2006 Luca Piccarreta
 *
 * Distributed under the terms of the Botan license
@@ -75,7 +75,7 @@ inline word word_sub(word x, word y, word* carry)
 /*
 * Eight Word Block Subtraction, Two Argument
 */
-inline word word8_sub2(word x[4], const word y[4], word carry)
+inline word word8_sub2(word x[8], const word y[8], word carry)
    {
    x[0] = word_sub(x[0], y[0], &carry);
    x[1] = word_sub(x[1], y[1], &carry);
@@ -85,6 +85,22 @@ inline word word8_sub2(word x[4], const word y[4], word carry)
    x[5] = word_sub(x[5], y[5], &carry);
    x[6] = word_sub(x[6], y[6], &carry);
    x[7] = word_sub(x[7], y[7], &carry);
+   return carry;
+   }
+
+/*
+* Eight Word Block Subtraction, Two Argument
+*/
+inline word word8_sub2_rev(word x[8], const word y[8], word carry)
+   {
+   x[0] = word_sub(y[0], x[0], &carry);
+   x[1] = word_sub(y[1], x[1], &carry);
+   x[2] = word_sub(y[2], x[2], &carry);
+   x[3] = word_sub(y[3], x[3], &carry);
+   x[4] = word_sub(y[4], x[4], &carry);
+   x[5] = word_sub(y[5], x[5], &carry);
+   x[6] = word_sub(y[6], x[6], &carry);
+   x[7] = word_sub(y[7], x[7], &carry);
    return carry;
    }
 
@@ -108,7 +124,7 @@ inline word word8_sub3(word z[8], const word x[8],
 /*
 * Eight Word Block Linear Multiplication
 */
-inline word word8_linmul2(word x[4], word y, word carry)
+inline word word8_linmul2(word x[8], word y, word carry)
    {
    x[0] = word_madd2(x[0], y, &carry);
    x[1] = word_madd2(x[1], y, &carry);

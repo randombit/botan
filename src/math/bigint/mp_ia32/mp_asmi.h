@@ -1,6 +1,6 @@
 /*
 * Lowest Level MPI Algorithms
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *     2006 Luca Piccarreta
 *
 * Distributed under the terms of the Botan license
@@ -126,6 +126,19 @@ inline word word8_sub2(word x[8], const word y[8], word carry)
       ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB2_OP, "sbbl"))
       : [carry]"=r"(carry)
       : [x]"r"(x), [y]"r"(y), "0"(carry)
+      : "cc", "memory");
+   return carry;
+   }
+
+/*
+* Eight Word Block Subtraction, Two Argument
+*/
+inline word word8_sub2_rev(word x[8], const word y[8], word carry)
+   {
+   asm(
+      ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "sbbl"))
+      : [carry]"=r"(carry)
+      : [x]"r"(y), [y]"r"(x), [z]"r"(x), "0"(carry)
       : "cc", "memory");
    return carry;
    }

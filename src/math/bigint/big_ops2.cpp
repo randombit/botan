@@ -62,11 +62,7 @@ BigInt& BigInt::operator-=(const BigInt& y)
    if(relative_size < 0)
       {
       if(sign() == y.sign())
-         {
-         SecureVector<word> z(reg_size - 1);
-         bigint_sub3(z, y.data(), reg_size - 1, data(), x_sw);
-         copy_mem(get_reg().begin(), z.begin(), z.size());
-         }
+         bigint_sub2_rev(get_reg(), y.data(), y_sw);
       else
          bigint_add2(get_reg(), reg_size - 1, y.data(), y_sw);
 

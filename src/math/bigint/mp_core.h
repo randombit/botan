@@ -35,7 +35,14 @@ word bigint_add3_nc(word z[],
                     const word x[], u32bit x_size,
                     const word y[], u32bit y_size);
 
-void bigint_sub2(word x[], u32bit x_size, const word y[], u32bit y_size);
+void bigint_sub2(word x[], u32bit x_size,
+                 const word y[], u32bit y_size);
+
+/**
+* x = y - x; assumes y >= x
+*/
+void bigint_sub2_rev(word x[], const word y[], u32bit y_size);
+
 void bigint_sub3(word z[],
                  const word x[], u32bit x_size,
                  const word y[], u32bit y_size);

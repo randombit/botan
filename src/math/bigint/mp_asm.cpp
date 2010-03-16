@@ -9,6 +9,7 @@
 #include <botan/internal/mp_asm.h>
 #include <botan/internal/mp_asmi.h>
 #include <botan/internal/mp_core.h>
+#include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 
 namespace Botan {
@@ -111,6 +112,25 @@ void bigint_sub2(word x[], u32bit x_size, const word y[], u32bit y_size)
       --x[j];
       if(x[j] != MP_WORD_MAX) return;
       }
+   }
+
+/*
+* Two Operand Subtraction x = y - x
+*/
+void bigint_sub2_rev(word x[],  const word y[], u32bit y_size)
+   {
+   word carry = 0;
+
+   const u32bit blocks = y_size - (y_size % 8);
+
+   for(u32bit j = 0; j != blocks; j += 8)
+      carry = word8_sub2_rev(x + j, y + j, carry);
+
+   for(u32bit j = blocks; j != y_size; ++j)
+      x[j] = word_sub(y[j], x[j], &carry);
+
+   if(carry)
+      throw Internal_Error("bigint_sub2_rev: x >= y");
    }
 
 /*
