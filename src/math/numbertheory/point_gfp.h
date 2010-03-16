@@ -245,8 +245,7 @@ inline PointGFp operator*(const BigInt& scalar, const PointGFp& point)
 
 inline PointGFp operator*(const PointGFp& point, const BigInt& scalar)
    {
-   PointGFp result(point);
-   return result *= scalar;
+   return scalar * point;
    }
 
 // encoding and decoding
