@@ -268,27 +268,32 @@ PointGFp& PointGFp::operator-=(const PointGFp& rhs)
 
 PointGFp& PointGFp::operator*=(const BigInt& scalar)
    {
-   Workspace ws(curve.get_p_words());
+   *this = scalar * *this;
+   return *this;
+   }
+
+PointGFp operator*(const BigInt& scalar, const PointGFp& point)
+   {
+   const CurveGFp& curve = point.get_curve();
+
+   if(scalar.is_zero())
+      return PointGFp(curve); // zero point
+
+   PointGFp::Workspace ws(curve.get_p_words());
 
    if(scalar.abs() <= 2) // special cases for small values
       {
       u32bit value = scalar.abs().to_u32bit();
 
-      if(value == 0)
-         *this = PointGFp(curve); // set to zero point
-      else if(value == 1)
-         {
-         if(scalar.is_negative())
-            this->negate();
-         }
-      else if(value == 2)
-         {
-         this->mult2(ws);
-         if(scalar.is_negative())
-            this->negate();
-         }
+      PointGFp result = point;
 
-      return *this;
+      if(value == 2)
+         result.mult2(ws);
+
+      if(scalar.is_negative())
+         result.negate();
+
+      return result;
       }
 
    const u32bit scalar_bits = scalar.bits();
@@ -296,9 +301,7 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
    const u32bit window_size = 4;
 
    std::vector<PointGFp> Ps((1 << window_size) - 1);
-   Ps[0] = *this;
-   if(scalar.is_negative())
-      Ps[0].negate();
+   Ps[0] = point;
 
    for(u32bit i = 1; i != Ps.size(); ++i)
       {
@@ -310,7 +313,7 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
          Ps[i].add(Ps[0], ws);
       }
 
-   PointGFp H(this->curve); // create as zero
+   PointGFp H(curve); // create as zero
    u32bit bits_left = scalar_bits;
 
    while(bits_left >= window_size)
@@ -338,8 +341,7 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
    if(scalar.is_negative())
       H.negate();
 
-   *this = H;
-   return *this;
+   return H;
    }
 
 BigInt PointGFp::get_affine_x() const

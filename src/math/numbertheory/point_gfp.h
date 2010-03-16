@@ -78,12 +78,18 @@ class BOTAN_DLL PointGFp
 
       /**
       * *= Operator
-      * This function turns on the the special reduction multiplication
-      * itself for fast computation, turns it off again when finished.
       * @param scalar the PointGFp to multiply with *this
       * @result resulting PointGFp
       */
       PointGFp& operator*=(const BigInt& scalar);
+
+      /**
+      * Multiplication Operator
+      * @param scalar the scalar value
+      * @param point the point value
+      * @return scalar*point on the curve
+      */
+      friend BOTAN_DLL PointGFp operator*(const BigInt& scalar, const PointGFp& point);
 
       /**
       * Negate this point
@@ -235,12 +241,6 @@ inline PointGFp operator-(const PointGFp& lhs, const PointGFp& rhs)
    {
    PointGFp tmp(lhs);
    return tmp -= rhs;
-   }
-
-inline PointGFp operator*(const BigInt& scalar, const PointGFp& point)
-   {
-   PointGFp result(point);
-   return result *= scalar;
    }
 
 inline PointGFp operator*(const PointGFp& point, const BigInt& scalar)
