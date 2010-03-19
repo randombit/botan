@@ -74,14 +74,8 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
 
    public_key = PointGFp(domain().get_curve(), x, y);
 
-   try
-      {
-      public_key.check_invariants();
-      }
-   catch(Illegal_Point)
-      {
+   if(!public_key.on_the_curve())
       throw Internal_Error("Loaded GOST 34.10 public key failed self test");
-      }
    }
 
 namespace {
@@ -123,7 +117,9 @@ GOST_3410_Signature_Operation::sign(const byte msg[], u32bit msg_len,
       e = 1;
 
    PointGFp k_times_P = base_point * k;
-   k_times_P.check_invariants();
+
+   if(!k_times_P.on_the_curve())
+      throw Internal_Error("GOST 34.10 k*g not on the curve");
 
    BigInt r = k_times_P.get_affine_x() % order;
 

@@ -304,7 +304,8 @@ void test_create_and_verify(RandomNumberGenerator& rng)
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, curve );
 
    EC_Domain_Params dom_params(curve, p_G, bi_order_g, BigInt(1));
-   p_G.check_invariants();
+   if(!p_G.on_the_curve())
+      throw Internal_Error("Point not on the curve");
 
    ECDSA_PrivateKey key_odd_oid(rng, dom_params);
    std::string key_odd_oid_str = PKCS8::PEM_encode(key_odd_oid);
@@ -359,7 +360,6 @@ void test_curve_registry(RandomNumberGenerator& rng)
          {
          OID oid(oids[i]);
          EC_Domain_Params dom_pars(oid);
-         dom_pars.get_base_point().check_invariants();
          ECDSA_PrivateKey ecdsa(rng, dom_pars);
 
          PK_Signer signer(ecdsa, "EMSA1(SHA-1)");

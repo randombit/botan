@@ -147,7 +147,8 @@ void test_coordinates()
    PointGFp p0 = p_G;
    PointGFp p1 = p_G * 2;
    PointGFp point_exp(secp160r1, exp_affine_x, exp_affine_y);
-   point_exp.check_invariants();
+   if(!point_exp.on_the_curve())
+      throw Internal_Error("Point not on the curve");
 
    CHECK_MESSAGE( p1.get_affine_x() == exp_affine_x, " p1_x = " << p1.get_affine_x() << "\n" << "exp_x = " << exp_affine_x << "\n");
    CHECK_MESSAGE( p1.get_affine_y() == exp_affine_y, " p1_y = " << p1.get_affine_y() << "\n" << "exp_y = " << exp_affine_y << "\n");
@@ -246,7 +247,8 @@ void test_zeropoint()
                BigInt("16984103820118642236896513183038186009872590470"),
                BigInt("1373093393927139016463695321221277758035357890939"));
 
-   p1.check_invariants();
+   if(!p1.on_the_curve())
+      throw Internal_Error("Point not on the curve");
    p1 -= p1;
 
    CHECK_MESSAGE(  p1.is_zero(), "p - q with q = p is not zero!");
@@ -294,7 +296,8 @@ void test_calc_with_zeropoint()
               BigInt("16984103820118642236896513183038186009872590470"),
               BigInt("1373093393927139016463695321221277758035357890939"));
 
-   p.check_invariants();
+   if(!p.on_the_curve())
+      throw Internal_Error("Point not on the curve");
    CHECK_MESSAGE(  !p.is_zero(), "created is zeropoint, shouldn't be!");
 
    PointGFp zero(curve);
@@ -618,7 +621,8 @@ void test_enc_dec_uncompressed_521_prime_too_large()
    try
       {
       p_G = std::auto_ptr<PointGFp>(new PointGFp(OS2ECP ( sv_G_secp_uncomp, secp521r1)));
-      p_G->check_invariants();
+      if(!p_G->on_the_curve())
+         throw Internal_Error("Point not on the curve");
       }
    catch (std::exception e)
       {
@@ -626,11 +630,6 @@ void test_enc_dec_uncompressed_521_prime_too_large()
       }
 
    CHECK_MESSAGE(exc, "attempt of creation of point on curve with too high prime did not throw an exception");
-   //SecureVector<byte> sv_result = EC2OSP(p_G, PointGFp::UNCOMPRESSED);
-   //string result = hex_encode(sv_result.begin(), sv_result.size());
-   //string exp_result = hex_encode(sv_G_secp_uncomp.begin(), sv_G_secp_uncomp.size());
-
-   //CHECK_MESSAGE( sv_result == sv_G_secp_uncomp, "\ncalc. result = " << result << "\nexp. result = " << exp_result << "\n");
    }
 
 void test_gfp_store_restore()
@@ -673,7 +672,8 @@ void test_cdc_curve_33()
    bool exc = false;
    try
       {
-      p_G.check_invariants();
+      if(!p_G.on_the_curve())
+         throw Internal_Error("Point not on the curve");
       }
    catch (std::exception)
       {
@@ -698,11 +698,14 @@ void test_more_zeropoint()
                BigInt("16984103820118642236896513183038186009872590470"),
                BigInt("1373093393927139016463695321221277758035357890939"));
 
-   p1.check_invariants();
+   if(!p1.on_the_curve())
+      throw Internal_Error("Point not on the curve");
    PointGFp minus_p1 = -p1;
-   minus_p1.check_invariants();
+   if(!minus_p1.on_the_curve())
+      throw Internal_Error("Point not on the curve");
    PointGFp shouldBeZero = p1 + minus_p1;
-   shouldBeZero.check_invariants();
+   if(!shouldBeZero.on_the_curve())
+      throw Internal_Error("Point not on the curve");
 
    BigInt y1 = p1.get_affine_y();
    y1 = curve.get_p() - y1;
@@ -713,7 +716,8 @@ void test_more_zeropoint()
                  "problem with minus_p1 : y");
 
    PointGFp zero(curve);
-   zero.check_invariants();
+   if(!zero.on_the_curve())
+      throw Internal_Error("Point not on the curve");
    CHECK_MESSAGE(p1 + zero == p1, "addition of zero modified point");
 
    CHECK_MESSAGE(  shouldBeZero.is_zero(), "p - q with q = p is not zero!");

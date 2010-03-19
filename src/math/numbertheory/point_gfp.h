@@ -128,12 +128,11 @@ class BOTAN_DLL PointGFp
          { return (coord_x.is_zero() && coord_z.is_zero()); }
 
       /**
-      *  Checks whether the point is to be found on the underlying curve.
-      *  Throws an Invalid_Point exception in case of detecting that the point
-      *  does not satisfy the curve equation.
-      *  To be used to ensure against fault attacks.
+      * Checks whether the point is to be found on the underlying
+      * curve; used to prevent fault attacks.
+      * @return if the point is on the curve
       */
-      void check_invariants() const;
+      bool on_the_curve() const;
 
       /**
       * swaps the states of *this and other, does not throw!

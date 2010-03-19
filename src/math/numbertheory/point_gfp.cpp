@@ -392,17 +392,17 @@ BigInt PointGFp::get_affine_y() const
 #endif
    }
 
-void PointGFp::check_invariants() const
+bool PointGFp::on_the_curve() const
    {
    /*
    Is the point still on the curve?? (If everything is correct, the
-   point is always on its curve; then the function will return
-   silently. If Oskar managed to corrupt this object's state, then it
-   will throw an exception.)
+   point is always on its curve; then the function will return true.
+   If somehow the state is corrupted, which suggests a fault attack
+   (or internal computational error), then return false.
    */
 
    if(is_zero())
-      return;
+      return true;
 
    const Modular_Reducer& mod_p = curve.mod_p();
 
@@ -418,7 +418,7 @@ void PointGFp::check_invariants() const
    if(z == 1)
       {
       if(mod_p.reduce(x3 + ax + curve.get_b()) != y2)
-         throw Illegal_Point("Invalid ECP point: y^2 != x^3 + a*x + b");
+         return false;
       }
 
    BigInt z2 = mod_p.square(z);
@@ -429,7 +429,9 @@ void PointGFp::check_invariants() const
    BigInt b_z6 = mod_p.multiply(curve.get_b(), mod_p.square(z3));
 
    if(y2 != mod_p.reduce(x3 + ax_z4 + b_z6))
-      throw Illegal_Point("Invalid ECP point: y^2 != x^3 + a*x*z^4 + b*z^6");
+      return false;
+
+   return true;
    }
 
 // swaps the states of *this and other, does not throw!
@@ -575,7 +577,10 @@ PointGFp OS2ECP(const byte data[], u32bit data_len,
       throw Invalid_Argument("OS2ECP: Unknown format type");
 
    PointGFp result(curve, x, y);
-   result.check_invariants();
+
+   if(!result.on_the_curve())
+      throw Illegal_Point("OS2ECP: Decoded point was not on the curve");
+
    return result;
    }
 

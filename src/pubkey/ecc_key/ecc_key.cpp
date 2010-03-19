@@ -25,14 +25,8 @@ EC_PublicKey::EC_PublicKey(const EC_Domain_Params& dom_par,
    if(domain().get_curve() != public_point().get_curve())
       throw Invalid_Argument("EC_PublicKey: curve mismatch in constructor");
 
-   try
-      {
-      public_key.check_invariants();
-      }
-   catch(Illegal_Point)
-      {
-      throw Invalid_State("Public key failed invariant check");
-      }
+   if(!public_point().on_the_curve())
+      throw Invalid_State("Public key was not on the curve");
    }
 
 EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
@@ -41,16 +35,7 @@ EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
    domain_params = EC_Domain_Params(alg_id.parameters);
    domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
-   public_key = PointGFp(OS2ECP(key_bits, domain().get_curve()));
-
-   try
-      {
-      public_point().check_invariants();
-      }
-   catch(Illegal_Point)
-      {
-      throw Decoding_Error("Invalid public point; not on curve");
-      }
+   public_key = OS2ECP(key_bits, domain().get_curve());
    }
 
 AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const
@@ -111,14 +96,8 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
    private_key = BigInt::random_integer(rng, 1, domain().get_order());
    public_key = domain().get_base_point() * private_key;
 
-   try
-      {
-      public_key.check_invariants();
-      }
-   catch(Illegal_Point)
-      {
+   if(!public_key.on_the_curve())
       throw Internal_Error("ECC private key generation failed");
-      }
    }
 
 MemoryVector<byte> EC_PrivateKey::pkcs8_private_key() const
@@ -147,14 +126,8 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
 
    public_key = domain().get_base_point() * private_key;
 
-   try
-      {
-      public_key.check_invariants();
-      }
-   catch(Illegal_Point)
-      {
+   if(!public_key.on_the_curve())
       throw Internal_Error("Loaded ECC private key failed self test");
-      }
    }
 
 }

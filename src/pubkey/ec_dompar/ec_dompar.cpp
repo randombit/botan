@@ -77,7 +77,6 @@ EC_Domain_Params::EC_Domain_Params(const MemoryRegion<byte>& ber_data)
 
       curve = CurveGFp(p, a, b);
       base_point = OS2ECP(sv_base_point, curve);
-      base_point.check_invariants();
       }
    else
       throw Decoding_Error("Unexpected tag while decoding ECC domain params");
