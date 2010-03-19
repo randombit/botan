@@ -169,7 +169,7 @@ RandomNumberGenerator* Library_State::make_global_rng(Algorithm_Factory& af,
    rng = new HMAC_RNG(af.make_mac("HMAC(SHA-512)"),
                       af.make_mac("HMAC(SHA-256)"));
 
-#elif defined(BOTAN_HAS_RANDPOOL) && defined(BOTAN_HAS_AES)
+#elif defined(BOTAN_HAS_RANDPOOL)
 
    rng = new Randpool(af.make_block_cipher("AES-256"),
                       af.make_mac("HMAC(SHA-256)"));
@@ -180,7 +180,7 @@ RandomNumberGenerator* Library_State::make_global_rng(Algorithm_Factory& af,
       throw Internal_Error("No usable RNG found enabled in build");
 
    /* If X9.31 is available, use it to wrap the other RNG as a failsafe */
-#if defined(BOTAN_HAS_X931_RNG) && defined(BOTAN_HAS_AES)
+#if defined(BOTAN_HAS_X931_RNG)
 
    rng = new ANSI_X931_RNG(af.make_block_cipher("AES-256"), rng);
 
