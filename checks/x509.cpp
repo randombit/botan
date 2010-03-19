@@ -119,7 +119,7 @@ u32bit check_against_copy(const Private_Key& orig,
 
    if(orig_id != pub_id || orig_id != priv_id || orig_id != priv_enc_id)
       {
-      std::cout << "Failed copy check\n";
+      std::cout << "Failed copy check for " << orig.algo_name() << "\n";
       return 1;
       }
    return 0;
