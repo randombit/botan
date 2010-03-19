@@ -214,14 +214,28 @@ std::string Library_State::deref_alias(const std::string& key) const
    return result;
    }
 
-/**
-Return a reference to the Algorithm_Factory
+/*
+* Return a reference to the Algorithm_Factory
 */
 Algorithm_Factory& Library_State::algorithm_factory() const
    {
    if(!m_algorithm_factory)
       throw Invalid_State("Uninitialized in Library_State::algorithm_factory");
    return *m_algorithm_factory;
+   }
+
+/*
+* Return a reference to the global PRNG
+*/
+RandomNumberGenerator& Library_State::global_rng()
+   {
+   Mutex_Holder lock(global_rng_lock);
+
+   if(!global_rng_ptr)
+      global_rng_ptr = make_global_rng(algorithm_factory(),
+                                       global_rng_lock);
+
+   return *global_rng_ptr;
    }
 
 /*
@@ -249,17 +263,20 @@ void Library_State::initialize(bool thread_safe)
 #endif
       }
 
-   allocator_lock = mutex_factory->make();
-   config_lock = mutex_factory->make();
+   allocator_lock = get_mutex();
+   config_lock = get_mutex();
+   global_rng_lock = get_mutex();
+
+   global_rng_ptr = 0;
 
    cached_default_allocator = 0;
    default_allocator_name = has_mlock() ? "locking" : "malloc";
 
    add_allocator(new Malloc_Allocator);
-   add_allocator(new Locking_Allocator(mutex_factory->make()));
+   add_allocator(new Locking_Allocator(get_mutex()));
 
 #if defined(BOTAN_HAS_ALLOC_MMAP)
-   add_allocator(new MemoryMapping_Allocator(mutex_factory->make()));
+   add_allocator(new MemoryMapping_Allocator(get_mutex()));
 #endif
 
    load_default_config();

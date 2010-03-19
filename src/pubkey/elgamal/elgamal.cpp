@@ -7,6 +7,7 @@
 
 #include <botan/elgamal.h>
 #include <botan/numthry.h>
+#include <botan/libstate.h>
 #include <botan/keypair.h>
 #include <botan/internal/workfactor.h>
 
@@ -118,7 +119,7 @@ ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_Private
    powermod_x_p = Fixed_Exponent_Power_Mod(key.get_x(), p);
    mod_p = Modular_Reducer(p);
 
-   BigInt k = Blinder::choose_nonce(powermod_x_p(key.get_y()), p);
+   BigInt k(global_state().global_rng(), p.bits() - 1);
    blinder = Blinder(k, powermod_x_p(k), p);
    }
 

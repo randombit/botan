@@ -7,11 +7,6 @@
 
 #include <botan/blinding.h>
 #include <botan/numthry.h>
-#include <botan/libstate.h>
-#include <botan/hash.h>
-#include <botan/time.h>
-#include <botan/loadstor.h>
-#include <memory>
 
 namespace Botan {
 
@@ -26,28 +21,6 @@ Blinder::Blinder(const BigInt& e, const BigInt& d, const BigInt& n)
    reducer = Modular_Reducer(n);
    this->e = e;
    this->d = d;
-   }
-
-BigInt Blinder::choose_nonce(const BigInt& x, const BigInt& mod)
-   {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
-   std::auto_ptr<HashFunction> hash(af.make_hash_function("SHA-512"));
-
-   u64bit ns_clock = get_nanoseconds_clock();
-   for(size_t i = 0; i != sizeof(ns_clock); ++i)
-      hash->update(get_byte(i, ns_clock));
-
-   hash->update(BigInt::encode(x));
-   hash->update(BigInt::encode(mod));
-
-   u64bit timestamp = system_time();
-   for(size_t i = 0; i != sizeof(timestamp); ++i)
-      hash->update(get_byte(i, timestamp));
-
-   SecureVector<byte> r = hash->final();
-
-   return BigInt::decode(r) % mod;
    }
 
 /*

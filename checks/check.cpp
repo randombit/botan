@@ -106,8 +106,6 @@ int main(int argc, char* argv[])
 
       Botan::LibraryInitializer init("thread_safe=no");
 
-      Botan::AutoSeeded_RNG rng;
-
       if(opts.is_set("help") || argc <= 1)
          {
          std::cerr << "Test driver for "
@@ -120,6 +118,8 @@ int main(int argc, char* argv[])
                    << "  --help: Print this message\n";
          return 1;
          }
+
+      Botan::AutoSeeded_RNG rng;
 
       if(opts.is_set("validate") || opts.is_set("test"))
          {

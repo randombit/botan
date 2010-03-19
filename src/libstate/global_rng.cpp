@@ -1,13 +1,12 @@
 /*
-* Auto Seeded RNG
-* (C) 2008 Jack Lloyd
+* Global PRNG
+* (C) 2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/auto_rng.h>
 #include <botan/libstate.h>
-#include <botan/parsing.h>
+#include <botan/mutex.h>
 
 #if defined(BOTAN_HAS_RANDPOOL)
   #include <botan/randpool.h>
@@ -103,13 +102,67 @@ void add_entropy_sources(RandomNumberGenerator* rng)
 #endif
    }
 
+class Serialized_PRNG : public RandomNumberGenerator
+   {
+   public:
+      void randomize(byte out[], u32bit len)
+         {
+         Mutex_Holder lock(mutex);
+         rng->randomize(out, len);
+         }
+
+      bool is_seeded() const
+         {
+         Mutex_Holder lock(mutex);
+         return rng->is_seeded();
+         }
+
+      void clear()
+         {
+         Mutex_Holder lock(mutex);
+         rng->clear();
+         }
+
+      std::string name() const
+         {
+         Mutex_Holder lock(mutex);
+         return rng->name();
+         }
+
+      void reseed(u32bit poll_bits)
+         {
+         Mutex_Holder lock(mutex);
+         rng->reseed(poll_bits);
+         }
+
+      void add_entropy_source(EntropySource* es)
+         {
+         Mutex_Holder lock(mutex);
+         rng->add_entropy_source(es);
+         }
+
+      void add_entropy(const byte in[], u32bit len)
+         {
+         Mutex_Holder lock(mutex);
+         rng->add_entropy(in, len);
+         }
+
+      // We do not own the mutex; Library_State does
+      Serialized_PRNG(RandomNumberGenerator* r, Mutex* m) :
+         mutex(m), rng(r) {}
+
+      ~Serialized_PRNG() { delete rng; }
+   private:
+      Mutex* mutex;
+      RandomNumberGenerator* rng;
+   };
+
 }
 
-AutoSeeded_RNG::AutoSeeded_RNG(u32bit poll_bits)
+RandomNumberGenerator* Library_State::make_global_rng(Algorithm_Factory& af,
+                                                      Mutex* mutex)
    {
-   rng = 0;
-
-   Algorithm_Factory& af = global_state().algorithm_factory();
+   RandomNumberGenerator* rng = 0;
 
 #if defined(BOTAN_HAS_HMAC_RNG)
 
@@ -135,7 +188,9 @@ AutoSeeded_RNG::AutoSeeded_RNG(u32bit poll_bits)
 
    add_entropy_sources(rng);
 
-   rng->reseed(poll_bits);
+   rng->reseed(256);
+
+   return new Serialized_PRNG(rng, mutex);
    }
 
 }

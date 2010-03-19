@@ -1,6 +1,5 @@
 define AUTO_SEEDING_RNG
 
 <requires>
-hmac
-sha2
+libstate
 </requires>

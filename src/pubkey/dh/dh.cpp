@@ -7,6 +7,7 @@
 
 #include <botan/dh.h>
 #include <botan/numthry.h>
+#include <botan/libstate.h>
 #include <botan/internal/workfactor.h>
 
 namespace Botan {
@@ -78,7 +79,7 @@ MemoryVector<byte> DH_PrivateKey::public_value() const
 DH_KA_Operation::DH_KA_Operation(const DH_PrivateKey& dh) :
    p(dh.group_p()), powermod_x_p(dh.get_x(), p)
    {
-   BigInt k = Blinder::choose_nonce(powermod_x_p(dh.get_y()), p);
+   BigInt k(global_state().global_rng(), p.bits() - 1);
    blinder = Blinder(k, powermod_x_p(inverse_mod(k, p)), p);
    }
 

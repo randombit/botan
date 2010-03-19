@@ -8,9 +8,9 @@
 #ifndef BOTAN_LIB_STATE_H__
 #define BOTAN_LIB_STATE_H__
 
-#include <botan/types.h>
 #include <botan/allocate.h>
 #include <botan/algo_factory.h>
+#include <botan/rng.h>
 
 #include <string>
 #include <vector>
@@ -35,6 +35,11 @@ class BOTAN_DLL Library_State
       * @return the global Algorithm_Factory
       */
       Algorithm_Factory& algorithm_factory() const;
+
+      /**
+      * @return the global RandomNumberGenerator
+      */
+      RandomNumberGenerator& global_rng();
 
       /**
       * @param name the name of the allocator
@@ -107,6 +112,9 @@ class BOTAN_DLL Library_State
       */
       Mutex* get_mutex() const;
    private:
+      static RandomNumberGenerator* make_global_rng(Algorithm_Factory& af,
+                                                    Mutex* mutex);
+
       void load_default_config();
 
       Library_State(const Library_State&) {}
@@ -114,8 +122,11 @@ class BOTAN_DLL Library_State
 
       class Mutex_Factory* mutex_factory;
 
-      std::map<std::string, std::string> config;
+      Mutex* global_rng_lock;
+      RandomNumberGenerator* global_rng_ptr;
+
       Mutex* config_lock;
+      std::map<std::string, std::string> config;
 
       Mutex* allocator_lock;
       std::string default_allocator_name;

@@ -14,6 +14,7 @@ scan_name.h
 <source>
 get_enc.cpp
 init.cpp
+global_rng.cpp
 libstate.cpp
 lookup.cpp
 policy.cpp
@@ -29,6 +30,7 @@ def_engine
 engine
 filters
 hash
+hmac
 kdf
 mac
 mode_pad
@@ -38,6 +40,7 @@ pk_pad
 pubkey
 rng
 s2k
+sha2
 stream
 system_alloc
 </requires>

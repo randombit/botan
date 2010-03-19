@@ -24,13 +24,6 @@ class BOTAN_DLL Blinder
 
       bool initialized() const { return reducer.initialized(); }
 
-      /**
-      * Choose a nonce to use for blinding
-      * @param x a secret seed value
-      * @param mod the modulus
-      */
-      static BigInt choose_nonce(const BigInt& x, const BigInt& mod);
-
       Blinder() {}
 
       /**
