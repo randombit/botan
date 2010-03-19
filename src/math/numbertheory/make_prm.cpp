@@ -75,7 +75,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
 
          if(!passes_sieve || gcd(p - 1, coprime) != 1)
             continue;
-         if(passes_mr_tests(rng, p))
+         if(check_prime(p, rng))
             return p;
          }
       }
@@ -93,7 +93,7 @@ BigInt random_safe_prime(RandomNumberGenerator& rng, u32bit bits)
    BigInt p;
    do
       p = (random_prime(rng, bits - 1) << 1) + 1;
-   while(!is_prime(p, rng));
+   while(!check_prime(p, rng));
    return p;
    }
 

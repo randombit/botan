@@ -73,7 +73,7 @@ MillerRabin_Test::MillerRabin_Test(const BigInt& num)
 /*
 * Miller-Rabin Iterations
 */
-u32bit miller_rabin_test_iterations(u32bit bits, bool verify)
+u32bit miller_rabin_test_iterations(u32bit bits, u32bit level)
    {
    struct mapping { u32bit bits; u32bit verify_iter; u32bit check_iter; };
 
@@ -117,13 +117,16 @@ u32bit miller_rabin_test_iterations(u32bit bits, bool verify)
       {
       if(bits <= tests[i].bits)
          {
-         if(verify)
+         if(level >= 2)
             return tests[i].verify_iter;
-         else
+         else if(level == 1)
             return tests[i].check_iter;
+         else if(level == 0)
+            return std::max<u32bit>(tests[i].check_iter / 4, 1);
          }
       }
-   return 2;
+
+   return level > 0 ? 2 : 1; // for large inputs
    }
 
 }
@@ -250,106 +253,49 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod)
    }
 
 /*
-* Do simple tests of primality
+* Test for primaility using Miller-Rabin
 */
-s32bit simple_primality_tests(const BigInt& n)
+bool primality_test(const BigInt& n,
+                    RandomNumberGenerator& rng,
+                    u32bit level)
    {
-   const s32bit NOT_PRIME = -1, UNKNOWN = 0, PRIME = 1;
+   const u32bit PREF_NONCE_BITS = 64;
 
    if(n == 2)
-      return PRIME;
+      return true;
    if(n <= 1 || n.is_even())
-      return NOT_PRIME;
+      return false;
 
+   // Fast path testing for small numbers (<= 65521)
    if(n <= PRIMES[PRIME_TABLE_SIZE-1])
       {
       const word num = n.word_at(0);
+
       for(u32bit i = 0; PRIMES[i]; ++i)
          {
-         if(num == PRIMES[i]) return PRIME;
-         if(num <  PRIMES[i]) return NOT_PRIME;
+         if(num == PRIMES[i])
+            return true;
+         if(num < PRIMES[i])
+            return false;
          }
-      return NOT_PRIME;
+
+      return false;
       }
-
-   u32bit check_first = std::min(n.bits() / 32, PRIME_PRODUCTS_TABLE_SIZE);
-   for(u32bit i = 0; i != check_first; ++i)
-      if(gcd(n, PRIME_PRODUCTS[i]) != 1)
-         return NOT_PRIME;
-
-   return UNKNOWN;
-   }
-
-/*
-* Fast check of primality
-*/
-bool check_prime(const BigInt& n, RandomNumberGenerator& rng)
-   {
-   return run_primality_tests(rng, n, 0);
-   }
-
-/*
-* Test for primality
-*/
-bool is_prime(const BigInt& n, RandomNumberGenerator& rng)
-   {
-   return run_primality_tests(rng, n, 1);
-   }
-
-/*
-* Verify primality
-*/
-bool verify_prime(const BigInt& n, RandomNumberGenerator& rng)
-   {
-   return run_primality_tests(rng, n, 2);
-   }
-
-/*
-* Verify primality
-*/
-bool run_primality_tests(RandomNumberGenerator& rng,
-                         const BigInt& n, u32bit level)
-   {
-   s32bit simple_tests = simple_primality_tests(n);
-   if(simple_tests) return (simple_tests == 1) ? true : false;
-   return passes_mr_tests(rng, n, level);
-   }
-
-/*
-* Test for primaility using Miller-Rabin
-*/
-bool passes_mr_tests(RandomNumberGenerator& rng,
-                     const BigInt& n, u32bit level)
-   {
-   const u32bit PREF_NONCE_BITS = 40;
 
    if(level > 2)
       level = 2;
 
+   const u32bit NONCE_BITS = std::min(n.bits() - 2, PREF_NONCE_BITS);
+
    MillerRabin_Test mr(n);
 
-   if(!mr.passes_test(2))
-      return false;
-
-   if(level == 0)
-      return true;
-
-   const u32bit NONCE_BITS = std::min(n.bits() - 1, PREF_NONCE_BITS);
-
-   const bool verify = (level == 2);
-
-   u32bit tests = miller_rabin_test_iterations(n.bits(), verify);
+   const u32bit tests = miller_rabin_test_iterations(n.bits(), level);
 
    BigInt nonce;
    for(u32bit i = 0; i != tests; ++i)
       {
-      if(!verify && PRIMES[i] < (n-1))
-         nonce = PRIMES[i];
-      else
-         {
-         while(nonce < 2 || nonce >= (n-1))
-            nonce.randomize(rng, NONCE_BITS);
-         }
+      while(nonce < 2 || nonce >= (n-1))
+         nonce.randomize(rng, NONCE_BITS);
 
       if(!mr.passes_test(nonce))
          return false;

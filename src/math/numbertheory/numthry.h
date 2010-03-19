@@ -27,8 +27,8 @@ inline BigInt abs(const BigInt& n) { return n.abs(); }
 
 void BOTAN_DLL divide(const BigInt&, const BigInt&, BigInt&, BigInt&);
 
-BigInt BOTAN_DLL gcd(const BigInt&, const BigInt&);
-BigInt BOTAN_DLL lcm(const BigInt&, const BigInt&);
+BigInt BOTAN_DLL gcd(const BigInt& x, const BigInt& y);
+BigInt BOTAN_DLL lcm(const BigInt& x, const BigInt& y);
 
 BigInt BOTAN_DLL square(const BigInt&);
 BigInt BOTAN_DLL inverse_mod(const BigInt&, const BigInt&);
@@ -50,27 +50,28 @@ u32bit BOTAN_DLL low_zero_bits(const BigInt&);
 /*
 * Primality Testing
 */
-bool BOTAN_DLL check_prime(const BigInt&, RandomNumberGenerator&);
-bool BOTAN_DLL is_prime(const BigInt&, RandomNumberGenerator&);
-bool BOTAN_DLL verify_prime(const BigInt&, RandomNumberGenerator&);
+bool BOTAN_DLL primality_test(const BigInt& n,
+                              RandomNumberGenerator& rng,
+                              u32bit level = 1);
 
-s32bit BOTAN_DLL simple_primality_tests(const BigInt&);
+inline bool quick_check_prime(const BigInt& n, RandomNumberGenerator& rng)
+   { return primality_test(n, rng, 0); }
 
-bool BOTAN_DLL passes_mr_tests(RandomNumberGenerator&,
-                               const BigInt&, u32bit = 1);
+inline bool check_prime(const BigInt& n, RandomNumberGenerator& rng)
+   { return primality_test(n, rng, 1); }
 
-bool BOTAN_DLL run_primality_tests(RandomNumberGenerator&,
-                                   const BigInt&, u32bit = 1);
+inline bool verify_prime(const BigInt& n, RandomNumberGenerator& rng)
+   { return primality_test(n, rng, 2); }
 
 /*
 * Random Number Generation
 */
-BigInt BOTAN_DLL random_prime(RandomNumberGenerator&,
+BigInt BOTAN_DLL random_prime(RandomNumberGenerator& rng,
                               u32bit bits, const BigInt& coprime = 1,
                               u32bit equiv = 1, u32bit equiv_mod = 2);
 
-BigInt BOTAN_DLL random_safe_prime(RandomNumberGenerator&,
-                                   u32bit);
+BigInt BOTAN_DLL random_safe_prime(RandomNumberGenerator& rng,
+                                   u32bit bits);
 
 /*
 * DSA Parameter Generation
@@ -94,10 +95,8 @@ generate_dsa_primes(RandomNumberGenerator& rng,
 * Prime Numbers
 */
 const u32bit PRIME_TABLE_SIZE = 6541;
-const u32bit PRIME_PRODUCTS_TABLE_SIZE = 256;
 
 extern const u16bit BOTAN_DLL PRIMES[];
-extern const u64bit PRIME_PRODUCTS[];
 
 }
 
