@@ -115,7 +115,7 @@ void HMAC_RNG::reseed_with_input(u32bit poll_bits,
    K.clear();
    counter = 0;
 
-   if(input_length || accum.bits_collected() >= poll_bits)
+   if(input_length > 64 || accum.bits_collected() >= 128)
       seeded = true;
    }
 
@@ -133,7 +133,7 @@ void HMAC_RNG::reseed(u32bit poll_bits)
 */
 void HMAC_RNG::add_entropy(const byte input[], u32bit length)
    {
-   reseed_with_input(0, input, length);
+   reseed_with_input(64, input, length);
    }
 
 /**
@@ -171,6 +171,12 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
                    MessageAuthenticationCode* prf_mac) :
    extractor(extractor_mac), prf(prf_mac)
    {
+   if(!prf->valid_keylength(extractor->OUTPUT_LENGTH) ||
+      !extractor->valid_keylength(prf->OUTPUT_LENGTH))
+      throw Invalid_Argument("HMAC_RNG: Bad algo combination " +
+                             extractor->name() + " and " +
+                             prf->name());
+
    // First PRF inputs are all zero, as specified in section 2
    K.resize(prf->OUTPUT_LENGTH);
    counter = 0;
@@ -183,26 +189,25 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
 
    We will want to use the PRF before we set the first key (in
    reseed_with_input), and it is a pain to keep track if it is set or
-   not. Since the first time it doesn't matter anyway, just set it to
-   a constant: randomize() will not produce output unless is_seeded()
-   returns true, and that will only be the case if the estimated
-   entropy counter is high enough. That variable is only set when a
-   reseeding is performed.
+   not. Since the first time it doesn't matter anyway, just set the
+   PRF key to constant zero: randomize() will not produce output
+   unless is_seeded() returns true, and that will only be the case if
+   the estimated entropy counter is high enough. That variable is only
+   set when a reseeding is performed.
    */
-   std::string prf_key = "Botan HMAC_RNG PRF";
-   prf->set_key(reinterpret_cast<const byte*>(prf_key.c_str()),
-                prf_key.length());
+   MemoryVector<byte> prf_key(extractor->OUTPUT_LENGTH);
+   prf->set_key(prf_key);
 
    /*
-   This will be used as the first XTS value when extracting input.
-   XTS values after this one are generated using the PRF.
+   Use PRF("Botan HMAC_RNG XTS") as the intitial XTS key.
+
+   This will be used during the first extraction sequence; XTS values
+   after this one are generated using the PRF.
 
    If I understand the E-t-E paper correctly (specifically Section 4),
    using this fixed extractor key is safe to do.
    */
-   std::string xts = "Botan HMAC_RNG XTS";
-   extractor->set_key(reinterpret_cast<const byte*>(xts.c_str()),
-                      xts.length());
+   extractor->set_key(prf->process("Botan HMAC_RNG XTS"));
    }
 
 /**
