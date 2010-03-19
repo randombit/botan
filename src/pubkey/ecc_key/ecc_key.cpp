@@ -125,7 +125,7 @@ MemoryVector<byte> EC_PrivateKey::pkcs8_private_key() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
-         .encode(BigInt(1))
+         .encode(static_cast<u32bit>(1))
          .encode(BigInt::encode_1363(private_key, private_key.bytes()),
                  OCTET_STRING)
       .end_cons()
@@ -138,20 +138,12 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
    domain_params = EC_Domain_Params(alg_id.parameters);
    domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
-   u32bit version;
-   SecureVector<byte> octstr_secret;
-
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)
-         .decode(version)
-         .decode(octstr_secret, OCTET_STRING)
+         .decode_and_check<u32bit>(1, "Unknown version code for ECC key")
+         .decode_octet_string_bigint(private_key)
       .verify_end()
       .end_cons();
-
-   if(version != 1)
-      throw Decoding_Error("Wrong key format version for EC key");
-
-   private_key = BigInt::decode(octstr_secret, octstr_secret.size());
 
    public_key = domain().get_base_point() * private_key;
 

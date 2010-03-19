@@ -105,18 +105,13 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
             key = decryptor.read_all();
             }
 
-         u32bit version;
-
          BER_Decoder(key)
             .start_cons(SEQUENCE)
-               .decode(version)
+               .decode_and_check<u32bit>(0, "Unknown PKCS #8 version number")
                .decode(pk_alg_id)
                .decode(key, OCTET_STRING)
                .discard_remaining()
             .end_cons();
-
-         if(version != 0)
-            throw Decoding_Error("PKCS #8: Unknown version number");
 
          break;
          }

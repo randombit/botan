@@ -1,6 +1,6 @@
 /*
 * BER Decoder
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -46,11 +46,30 @@ class BOTAN_DLL BER_Decoder
 
       BER_Decoder& decode(class ASN1_Object&);
 
-      template<typename T>
-      BER_Decoder& decode_optional(T&, ASN1_Tag, ASN1_Tag, const T& = T());
+      BER_Decoder& decode_octet_string_bigint(class BigInt&);
 
       template<typename T>
-      BER_Decoder& decode_list(std::vector<T>&, bool = true);
+         BER_Decoder& decode_optional(T& out,
+                                      ASN1_Tag type_tag,
+                                      ASN1_Tag class_tag,
+                                      const T& default_value = T());
+
+      template<typename T>
+         BER_Decoder& decode_list(std::vector<T>& out,
+                                  bool clear_out = true);
+
+      template<typename T>
+         BER_Decoder& decode_and_check(const T& expected,
+                                       const std::string& error_msg)
+         {
+         T actual;
+         decode(actual);
+
+         if(actual != expected)
+            throw Decoding_Error(error_msg);
+
+         return (*this);
+         }
 
       BER_Decoder& decode_optional_string(MemoryRegion<byte>&,
                                           ASN1_Tag, u16bit);

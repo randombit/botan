@@ -60,11 +60,9 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
                                            const AlgorithmIdentifier&,
                                            const MemoryRegion<byte>& key_bits)
    {
-   u32bit version;
-
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)
-         .decode(version)
+         .decode_and_check<u32bit>(0, "Unknown PKCS #1 key format version")
          .decode(n)
          .decode(e)
          .decode(d)
@@ -74,9 +72,6 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
          .decode(d2)
          .decode(c)
       .end_cons();
-
-   if(version != 0)
-      throw Decoding_Error("Unknown PKCS #1 key format version");
 
    load_check(rng);
    }

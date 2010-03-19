@@ -355,6 +355,14 @@ BER_Decoder& BER_Decoder::decode(BigInt& out)
    return decode(out, INTEGER, UNIVERSAL);
    }
 
+BER_Decoder& BER_Decoder::decode_octet_string_bigint(BigInt& out)
+   {
+   SecureVector<byte> out_vec;
+   decode(out_vec, OCTET_STRING);
+   out = BigInt::decode(&out_vec[0], out_vec.size());
+   return (*this);
+   }
+
 /*
 * Decode a BER encoded BOOLEAN
 */

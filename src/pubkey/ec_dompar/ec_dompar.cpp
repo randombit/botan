@@ -54,23 +54,20 @@ EC_Domain_Params::EC_Domain_Params(const MemoryRegion<byte>& ber_data)
       }
    else if(obj.type_tag == SEQUENCE)
       {
-      BigInt ecpVers1(1);
-      OID curve_type;
-      SecureVector<byte> sv_a;
-      SecureVector<byte> sv_b;
-      BigInt p;
+      BigInt p, a, b;
       SecureVector<byte> sv_base_point;
 
       BER_Decoder(ber_data)
          .start_cons(SEQUENCE)
-           .decode(ecpVers1)
+           .decode_and_check<u32bit>(1, "Unknown ECC param version code")
            .start_cons(SEQUENCE)
-             .decode(curve_type)
+            .decode_and_check(OID("1.2.840.10045.1.1"),
+                              "Only prime ECC fields supported")
              .decode(p)
            .end_cons()
            .start_cons(SEQUENCE)
-             .decode(sv_a, OCTET_STRING)
-             .decode(sv_b, OCTET_STRING)
+             .decode_octet_string_bigint(a)
+             .decode_octet_string_bigint(b)
            .end_cons()
            .decode(sv_base_point, OCTET_STRING)
            .decode(order)
@@ -78,17 +75,7 @@ EC_Domain_Params::EC_Domain_Params(const MemoryRegion<byte>& ber_data)
          .end_cons()
          .verify_end();
 
-      if(ecpVers1 != 1)
-         throw Decoding_Error("EC_Domain_Params: Unknown version code");
-
-      // Only prime curves supported
-      if(curve_type.as_string() != "1.2.840.10045.1.1")
-         throw Decoding_Error("Unexpected curve type " + curve_type.as_string());
-
-      curve = CurveGFp(p,
-                       BigInt::decode(sv_a, sv_a.size()),
-                       BigInt::decode(sv_b, sv_b.size()));
-
+      curve = CurveGFp(p, a, b);
       base_point = OS2ECP(sv_base_point, curve);
       base_point.check_invariants();
       }
