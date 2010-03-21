@@ -189,7 +189,7 @@ void benchmark_rsa(RandomNumberGenerator& rng,
                    Benchmark_Report& report)
    {
 
-   size_t keylens[] = { 512, 1024, 2048, 4096, 6144, 8192, 0 };
+   size_t keylens[] = { 1024, 2048, 4096, 6144, 0 };
 
    for(size_t i = 0; keylens[i]; ++i)
       {
@@ -264,7 +264,7 @@ void benchmark_rw(RandomNumberGenerator& rng,
                   Benchmark_Report& report)
    {
 
-   const u32bit keylens[] = { 512, 1024, 2048, 4096, 6144, 8192, 0 };
+   const u32bit keylens[] = { 1024, 2048, 4096, 6144, 0 };
 
    for(size_t j = 0; keylens[j]; j++)
       {
@@ -458,9 +458,7 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
                       Benchmark_Report& report)
    {
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL) || defined(BOTAN_HAS_DSA)
-   const char* domains[] = { "dsa/jce/512",
-                             "dsa/jce/768",
-                             "dsa/jce/1024",
+   const char* domains[] = { "dsa/jce/1024",
                              "dsa/botan/2048",
                              "dsa/botan/3072",
                              NULL };
@@ -508,8 +506,7 @@ void benchmark_dh(RandomNumberGenerator& rng,
                   double seconds,
                   Benchmark_Report& report)
    {
-   const char* domains[] = { "modp/ietf/768",
-                             "modp/ietf/1024",
+   const char* domains[] = { "modp/ietf/1024",
                              "modp/ietf/2048",
                              "modp/ietf/3072",
                              "modp/ietf/4096",
