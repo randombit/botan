@@ -39,6 +39,16 @@ IF_Scheme_PublicKey::IF_Scheme_PublicKey(const AlgorithmIdentifier&,
       .end_cons();
    }
 
+/*
+* Check IF Scheme Public Parameters
+*/
+bool IF_Scheme_PublicKey::check_key(RandomNumberGenerator&, bool) const
+   {
+   if(n < 35 || n.is_even() || e < 2)
+      return false;
+   return true;
+   }
+
 MemoryVector<byte> IF_Scheme_PrivateKey::pkcs8_private_key() const
    {
    return DER_Encoder()
@@ -103,16 +113,6 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
    c = inverse_mod(q, p);
 
    load_check(rng);
-   }
-
-/*
-* Check IF Scheme Public Parameters
-*/
-bool IF_Scheme_PublicKey::check_key(RandomNumberGenerator&, bool) const
-   {
-   if(n < 35 || n.is_even() || e < 2)
-      return false;
-   return true;
    }
 
 /*
