@@ -11,7 +11,6 @@
 #include <botan/dl_group.h>
 #include <botan/x509_key.h>
 #include <botan/pkcs8.h>
-#include <botan/rng.h>
 
 namespace Botan {
 

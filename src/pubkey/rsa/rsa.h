@@ -9,6 +9,7 @@
 #define BOTAN_RSA_H__
 
 #include <botan/if_algo.h>
+#include <botan/pk_ops.h>
 #include <botan/reducer.h>
 #include <botan/blinding.h>
 

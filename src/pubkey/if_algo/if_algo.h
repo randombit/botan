@@ -11,7 +11,6 @@
 #include <botan/bigint.h>
 #include <botan/x509_key.h>
 #include <botan/pkcs8.h>
-#include <botan/pk_ops.h>
 
 namespace Botan {
 
@@ -35,13 +34,11 @@ class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
       MemoryVector<byte> x509_subject_public_key() const;
 
       /**
-      * Get n = p * q.
-      * @return n
+      * @return the public modulus
       */
       const BigInt& get_n() const { return n; }
 
       /**
-      * Get the public exponent used by the key.
       * @return the public exponent
       */
       const BigInt& get_e() const { return e; }
