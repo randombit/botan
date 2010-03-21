@@ -1,4 +1,4 @@
-n/*
+/*
 * Blinding for public key operations
 * (C) 1999-2010 Jack Lloyd
 *

@@ -107,60 +107,60 @@ class Serialized_PRNG : public RandomNumberGenerator
    public:
       void randomize(byte out[], u32bit len)
          {
-         Mutex_Holder lock(mutex);
+         std::lock_guard<std::mutex> lock(mutex);
          rng->randomize(out, len);
          }
 
       bool is_seeded() const
          {
-         Mutex_Holder lock(mutex);
+         std::lock_guard<std::mutex> lock(mutex);
          return rng->is_seeded();
          }
 
       void clear()
          {
-         Mutex_Holder lock(mutex);
+         std::lock_guard<std::mutex> lock(mutex);
          rng->clear();
          }
 
       std::string name() const
          {
-         Mutex_Holder lock(mutex);
+         std::lock_guard<std::mutex> lock(mutex);
          return rng->name();
          }
 
       void reseed(u32bit poll_bits)
          {
-         Mutex_Holder lock(mutex);
+         std::lock_guard<std::mutex> lock(mutex);
          rng->reseed(poll_bits);
          }
 
       void add_entropy_source(EntropySource* es)
          {
-         Mutex_Holder lock(mutex);
+         std::lock_guard<std::mutex> lock(mutex);
          rng->add_entropy_source(es);
          }
 
       void add_entropy(const byte in[], u32bit len)
          {
-         Mutex_Holder lock(mutex);
+         std::lock_guard<std::mutex> lock(mutex);
          rng->add_entropy(in, len);
          }
 
       // We do not own the mutex; Library_State does
-      Serialized_PRNG(RandomNumberGenerator* r, Mutex* m) :
+      Serialized_PRNG(RandomNumberGenerator* r, std::mutex& m) :
          mutex(m), rng(r) {}
 
       ~Serialized_PRNG() { delete rng; }
    private:
-      Mutex* mutex;
+      std::mutex& mutex;
       RandomNumberGenerator* rng;
    };
 
 }
 
 RandomNumberGenerator* Library_State::make_global_rng(Algorithm_Factory& af,
-                                                      Mutex* mutex)
+                                                      std::mutex& mutex)
    {
    RandomNumberGenerator* rng = 0;
 

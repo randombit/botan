@@ -110,7 +110,7 @@ class BOTAN_DLL Library_State
       std::string deref_alias(const std::string&);
    private:
       static RandomNumberGenerator* make_global_rng(Algorithm_Factory& af,
-                                                    Mutex* mutex);
+                                                    std::mutex& mutex);
 
       void load_default_config();
 
