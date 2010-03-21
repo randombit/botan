@@ -64,21 +64,7 @@ bool ElGamal_PrivateKey::check_key(RandomNumberGenerator& rng,
    if(!strong)
       return true;
 
-   try
-      {
-      PK_Encryptor_EME this_encryptor(*this, "EME1(SHA-1)");
-      PK_Decryptor_EME this_decryptor(*this, "EME1(SHA-1)");
-
-      KeyPair::check_key(rng,
-                         this_encryptor,
-                         this_decryptor);
-      }
-   catch(Self_Test_Failure)
-      {
-      return false;
-      }
-
-   return true;
+   return KeyPair::encryption_consistency_check(rng, *this, "EME1(SHA-1)");
    }
 
 ElGamal_Encryption_Operation::ElGamal_Encryption_Operation(const ElGamal_PublicKey& key)

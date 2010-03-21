@@ -55,21 +55,7 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    if((e * d) % lcm(p - 1, q - 1) != 1)
       return false;
 
-   try
-      {
-      PK_Signer this_signer(*this, "EMSA4(SHA-1)");
-      PK_Verifier this_verifier(*this, "EMSA4(SHA-1)");
-
-      KeyPair::check_key(rng,
-                         this_signer,
-                         this_verifier);
-      }
-   catch(Self_Test_Failure)
-      {
-      return false;
-      }
-
-   return true;
+   return KeyPair::signature_consistency_check(rng, *this, "EMSA4(SHA-1)");
    }
 
 RSA_Private_Operation::RSA_Private_Operation(const RSA_PrivateKey& rsa) :

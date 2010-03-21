@@ -56,21 +56,7 @@ bool RW_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    if((e * d) % (lcm(p - 1, q - 1) / 2) != 1)
       return false;
 
-   try
-      {
-      PK_Signer this_signer(*this, "EMSA2(SHA-1)");
-      PK_Verifier this_verifier(*this, "EMSA2(SHA-1)");
-
-      KeyPair::check_key(rng,
-                         this_signer,
-                         this_verifier);
-      }
-   catch(Self_Test_Failure)
-      {
-      return false;
-      }
-
-   return true;
+   return KeyPair::signature_consistency_check(rng, *this, "EMSA2(SHA-1)");
    }
 
 RW_Signature_Operation::RW_Signature_Operation(const RW_PrivateKey& rw) :

@@ -62,18 +62,7 @@ bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    if(!strong)
       return true;
 
-   try
-      {
-      PK_Signer this_signer(*this, "EMSA1(SHA-1)");
-      PK_Verifier this_verifier(*this, "EMSA1(SHA-1)");
-      KeyPair::check_key(rng, this_signer, this_verifier);
-      }
-   catch(Self_Test_Failure)
-      {
-      return false;
-      }
-
-   return true;
+   return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-1)");
    }
 
 DSA_Signature_Operation::DSA_Signature_Operation(const DSA_PrivateKey& dsa) :

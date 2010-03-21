@@ -8,8 +8,21 @@
 */
 
 #include <botan/ecdsa.h>
+#include <botan/keypair.h>
 
 namespace Botan {
+
+bool ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng,
+                                 bool strong) const
+   {
+   if(!public_point().on_the_curve())
+      return false;
+
+   if(!strong)
+      return true;
+
+   return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-1)");
+   }
 
 ECDSA_Signature_Operation::ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa) :
    base_point(ecdsa.domain().get_base_point()),

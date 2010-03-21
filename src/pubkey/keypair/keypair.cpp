@@ -6,6 +6,7 @@
 */
 
 #include <botan/keypair.h>
+#include <botan/pubkey.h>
 
 namespace Botan {
 
@@ -14,32 +15,42 @@ namespace KeyPair {
 /*
 * Check an encryption key pair for consistency
 */
-void check_key(RandomNumberGenerator& rng,
-               PK_Encryptor& encryptor,
-               PK_Decryptor& decryptor)
+bool encryption_consistency_check(RandomNumberGenerator& rng,
+                                  const Private_Key& key,
+                                  const std::string& padding)
    {
+   PK_Encryptor_EME encryptor(key, padding);
+   PK_Decryptor_EME decryptor(key, padding);
+
+   /*
+   Weird corner case, if the key is too small to encrypt anything at
+   all. This can happen with very small RSA keys with PSS
+   */
    if(encryptor.maximum_input_size() == 0)
-      return;
+      return true;
 
-   SecureVector<byte> message(encryptor.maximum_input_size() - 1);
-   rng.randomize(message, message.size());
+   SecureVector<byte> plaintext(encryptor.maximum_input_size() - 1);
+   rng.randomize(plaintext, plaintext.size());
 
-   SecureVector<byte> ciphertext = encryptor.encrypt(message, rng);
-   if(ciphertext == message)
-      throw Self_Test_Failure("Encryption key pair consistency failure");
+   SecureVector<byte> ciphertext = encryptor.encrypt(plaintext, rng);
+   if(ciphertext == plaintext)
+      return false;
 
-   SecureVector<byte> message2 = decryptor.decrypt(ciphertext);
-   if(message != message2)
-      throw Self_Test_Failure("Encryption key pair consistency failure");
+   SecureVector<byte> decrypted = decryptor.decrypt(ciphertext);
+
+   return (plaintext == decrypted);
    }
 
 /*
 * Check a signature key pair for consistency
 */
-void check_key(RandomNumberGenerator& rng,
-               PK_Signer& signer,
-               PK_Verifier& verifier)
+bool signature_consistency_check(RandomNumberGenerator& rng,
+                                 const Private_Key& key,
+                                 const std::string& padding)
    {
+   PK_Signer signer(key, padding);
+   PK_Verifier verifier(key, padding);
+
    SecureVector<byte> message(16);
    rng.randomize(message, message.size());
 
@@ -51,15 +62,19 @@ void check_key(RandomNumberGenerator& rng,
       }
    catch(Encoding_Error)
       {
-      return;
+      return false;
       }
 
    if(!verifier.verify_message(message, signature))
-      throw Self_Test_Failure("Signature key pair consistency failure");
+      return false;
 
+   // Now try to check a corrupt signature, ensure it does not succeed
    ++message[0];
+
    if(verifier.verify_message(message, signature))
-      throw Self_Test_Failure("Signature key pair consistency failure");
+      return false;
+
+   return true;
    }
 
 }

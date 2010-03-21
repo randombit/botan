@@ -85,6 +85,8 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       */
       ECDSA_PrivateKey(const EC_Domain_Params& domain, const BigInt& x) :
          EC_PrivateKey(domain, x) {}
+
+      bool check_key(RandomNumberGenerator& rng, bool) const;
    };
 
 class BOTAN_DLL ECDSA_Signature_Operation : public PK_Ops::Signature
