@@ -425,10 +425,14 @@ class BOTAN_DLL BigInt
      BigInt(u64bit n);
 
      /**
-     * Copy-Constructor: clone given BigInt
-     * @param bigint the BigInt to clone
+     * Copy constructor
      */
-     BigInt(const BigInt& bigint);
+     BigInt(const BigInt& other);
+
+     /**
+     * Assignment operator
+     */
+     BigInt& operator=(const BigInt&) = default;
 
      /**
      * Create BigInt from a string.
@@ -471,6 +475,15 @@ class BOTAN_DLL BigInt
      */
      BigInt(NumberType type, u32bit n);
 
+     /**
+     * Move constructor
+     */
+     BigInt(BigInt&& other);
+
+     /**
+     * Move assignment
+     */
+     BigInt& operator=(BigInt&& other);
    private:
       SecureVector<word> reg;
       Sign signedness;

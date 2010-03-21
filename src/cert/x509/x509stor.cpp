@@ -9,8 +9,8 @@
 #include <botan/parsing.h>
 #include <botan/pubkey.h>
 #include <botan/oids.h>
-#include <botan/time.h>
 #include <algorithm>
+#include <chrono>
 #include <memory>
 
 namespace Botan {
@@ -21,13 +21,14 @@ namespace {
 * Do a validity check
 */
 s32bit validity_check(const X509_Time& start, const X509_Time& end,
-                      u64bit current_time, u32bit slack)
+                      const std::chrono::system_clock::time_point& now,
+                      std::chrono::seconds slack)
    {
    const s32bit NOT_YET_VALID = -1, VALID_TIME = 0, EXPIRED = 1;
 
-   if(start.cmp(current_time + slack) > 0)
+   if(start.cmp(now + slack) > 0)
       return NOT_YET_VALID;
-   if(end.cmp(current_time - slack) < 0)
+   if(end.cmp(now - slack) < 0)
       return EXPIRED;
    return VALID_TIME;
    }
@@ -168,7 +169,8 @@ bool X509_Store::CRL_Data::operator<(const X509_Store::CRL_Data& other) const
 /*
 * X509_Store Constructor
 */
-X509_Store::X509_Store(u32bit slack, u32bit cache_timeout)
+X509_Store::X509_Store(std::chrono::seconds slack,
+                       std::chrono::seconds cache_timeout)
    {
    revoked_info_valid = true;
 
@@ -211,10 +213,11 @@ X509_Code X509_Store::validate_cert(const X509_Certificate& cert,
    if(chaining_result != VERIFIED)
       return chaining_result;
 
-   const u64bit current_time = system_time();
+   auto current_time = std::chrono::system_clock::now();
 
    s32bit time_check = validity_check(cert.start_time(), cert.end_time(),
                                       current_time, time_slack);
+
    if(time_check < 0)      return CERT_NOT_YET_VALID;
    else if(time_check > 0) return CERT_HAS_EXPIRED;
 
@@ -379,7 +382,7 @@ X509_Code X509_Store::check_sig(const Cert_Info& cert_info,
 */
 X509_Code X509_Store::check_sig(const X509_Object& object, Public_Key* key)
    {
-   std::auto_ptr<Public_Key> pub_key(key);
+   std::unique_ptr<Public_Key> pub_key(key);
 
    try {
       std::vector<std::string> sig_info =
@@ -450,12 +453,12 @@ bool X509_Store::is_revoked(const X509_Certificate& cert) const
 * Retrieve all the certificates in the store
 */
 std::vector<X509_Certificate>
-X509_Store::get_certs(const Search_Func& search) const
+X509_Store::get_certs(std::function<bool (const X509_Certificate&)> pred) const
    {
    std::vector<X509_Certificate> found_certs;
    for(u32bit j = 0; j != certs.size(); ++j)
       {
-      if(search.match(certs[j].cert))
+      if(pred(certs[j].cert))
          found_certs.push_back(certs[j].cert);
       }
    return found_certs;
@@ -549,8 +552,10 @@ void X509_Store::add_trusted_certs(DataSource& source)
 */
 X509_Code X509_Store::add_crl(const X509_CRL& crl)
    {
+   auto current_time = std::chrono::system_clock::now();
+
    s32bit time_check = validity_check(crl.this_update(), crl.next_update(),
-                                      system_time(), time_slack);
+                                      current_time, time_slack);
 
    if(time_check < 0)      return CRL_NOT_YET_VALID;
    else if(time_check > 0) return CRL_HAS_EXPIRED;
@@ -589,8 +594,7 @@ X509_Code X509_Store::add_crl(const X509_CRL& crl)
       revoked_info.serial = revoked_certs[j].serial_number();
       revoked_info.auth_key_id = crl.authority_key_id();
 
-      std::vector<CRL_Data>::iterator p =
-         std::find(revoked.begin(), revoked.end(), revoked_info);
+      auto p = std::find(revoked.begin(), revoked.end(), revoked_info);
 
       if(revoked_certs[j].reason_code() == REMOVE_FROM_CRL)
          {
@@ -628,8 +632,8 @@ X509_Store::Cert_Info::Cert_Info(const X509_Certificate& c,
                                  bool t) : cert(c), trusted(t)
    {
    checked = false;
+   last_checked = std::chrono::system_clock::time_point::min();
    result = UNKNOWN_X509_ERROR;
-   last_checked = 0;
    }
 
 /*
@@ -647,9 +651,9 @@ X509_Code X509_Store::Cert_Info::verify_result() const
 */
 void X509_Store::Cert_Info::set_result(X509_Code code) const
    {
-   result = code;
-   last_checked = system_time();
    checked = true;
+   last_checked = std::chrono::system_clock::now();
+   result = code;
    }
 
 /*
@@ -663,16 +667,16 @@ bool X509_Store::Cert_Info::is_trusted() const
 /*
 * Check if this certificate has been verified
 */
-bool X509_Store::Cert_Info::is_verified(u32bit timeout) const
+bool X509_Store::Cert_Info::is_verified(std::chrono::seconds timeout) const
    {
    if(!checked)
       return false;
    if(result != VERIFIED && result != CERT_NOT_YET_VALID)
       return true;
 
-   const u64bit current_time = system_time();
+   auto now = std::chrono::system_clock::now();
 
-   if(current_time > last_checked + timeout)
+   if(now > last_checked + timeout)
       checked = false;
 
    return checked;

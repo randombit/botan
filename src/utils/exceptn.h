@@ -56,7 +56,7 @@ struct BOTAN_DLL Invalid_Key_Length : public Invalid_Argument
    {
    Invalid_Key_Length(const std::string& name, u32bit length) :
       Invalid_Argument(name + " cannot accept a key of length " +
-                       to_string(length))
+                       std::to_string(length))
       {}
    };
 
@@ -78,7 +78,7 @@ struct BOTAN_DLL Invalid_Block_Size : public Invalid_Argument
 struct BOTAN_DLL Invalid_IV_Length : public Invalid_Argument
    {
    Invalid_IV_Length(const std::string& mode, u32bit bad_len) :
-      Invalid_Argument("IV length " + to_string(bad_len) +
+      Invalid_Argument("IV length " + std::to_string(bad_len) +
                        " is invalid for " + mode)
       {}
    };

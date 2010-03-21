@@ -68,7 +68,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    AlternativeName subject_alt;
 
    MemoryVector<byte> pub_key = shared_setup(opts, key);
-   std::auto_ptr<PK_Signer> signer(choose_sig_format(key, hash_fn, sig_algo));
+   std::unique_ptr<PK_Signer> signer(choose_sig_format(key, hash_fn, sig_algo));
    load_info(opts, subject_dn, subject_alt);
 
    Key_Constraints constraints;
@@ -112,7 +112,7 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
    AlternativeName subject_alt;
 
    MemoryVector<byte> pub_key = shared_setup(opts, key);
-   std::auto_ptr<PK_Signer> signer(choose_sig_format(key, hash_fn, sig_algo));
+   std::unique_ptr<PK_Signer> signer(choose_sig_format(key, hash_fn, sig_algo));
    load_info(opts, subject_dn, subject_alt);
 
    const u32bit PKCS10_VERSION = 0;
