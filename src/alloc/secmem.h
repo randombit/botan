@@ -335,9 +335,7 @@ class MemoryVector : public MemoryRegion<T>
 * This class represents variable length buffers using the operating
 * systems capability to lock memory, i.e. keeping it from being
 * swapped out to disk. In this way, a security hole allowing attackers
-* to find swapped out secret keys is closed. Please refer to
-* Botan::InitializerOptions::secure_memory() for restrictions and
-* further details.
+* to find swapped out secret keys is closed.
 */
 template<typename T>
 class SecureVector : public MemoryRegion<T>
@@ -388,9 +386,7 @@ class SecureVector : public MemoryRegion<T>
 * This class represents fixed length buffers using the operating
 * systems capability to lock memory, i.e. keeping it from being
 * swapped out to disk. In this way, a security hole allowing attackers
-* to find swapped out secret keys is closed. Please refer to
-* Botan::InitializerOptions::secure_memory() for restrictions and
-* further details.
+* to find swapped out secret keys is closed.
 */
 template<typename T, u32bit L>
 class SecureBuffer : public MemoryRegion<T>
