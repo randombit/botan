@@ -179,11 +179,13 @@ class MemoryRegion
       void resize(u32bit n);
 
       /**
-      * Preallocate memory, so that this buffer can grow up to size n without
-      * having to perform any actual memory allocations. (This is
-      * the same principle as for std::vector::reserve().)
+      * Change the size to n elements. If n is >= size(), preexisting
+      * elements remain unchanged, with later elements
+      * zero-initialized.  If n < size(), then the last (size() - N)
+      * elements are removed.
+      * @param n the new size
       */
-      void grow_to(u32bit N);
+      void grow_to(u32bit n);
 
       /**
       * Swap this buffer with another object.
