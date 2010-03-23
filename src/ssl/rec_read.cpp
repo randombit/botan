@@ -1,6 +1,6 @@
 /**
-* TLS Record Reading 
-* (C) 2004-2006 Jack Lloyd
+* TLS Record Reading
+* (C) 2004-2010 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -11,14 +11,6 @@
 #include <botan/internal/debug.h>
 
 namespace Botan {
-
-/**
-* Record_Reader Constructor
-*/
-Record_Reader::Record_Reader(Socket& sock) : socket(sock)
-   {
-   reset();
-   }
 
 /**
 * Reset the state
@@ -112,37 +104,57 @@ void Record_Reader::set_keys(const CipherSuite& suite, const SessionKeys& keys,
       throw Invalid_Argument("Record_Reader: Unknown hash " + mac_algo);
    }
 
+void Record_Reader::add_input(const byte input[], u32bit input_size)
+   {
+   input_queue.write(input, input_size);
+   }
+
 /**
 * Retrieve the next record
 */
-SecureVector<byte> Record_Reader::get_record(byte& msg_type)
+u32bit Record_Reader::get_record(byte& msg_type,
+                                 MemoryRegion<byte>& output)
    {
    byte header[5] = { 0 };
 
-   u32bit got = socket.read(header, sizeof(header));
+   const u32bit have_in_queue = input_queue.size();
 
-   if(got == 0)
-      {
-      msg_type = CONNECTION_CLOSED;
-      return SecureVector<byte>();
-      }
-   else if(got != sizeof(header))
-      throw Decoding_Error("Record_Reader: Record truncated");
+   if(have_in_queue < sizeof(header))
+      return (sizeof(header) - have_in_queue);
 
-   msg_type = header[0];
+   /*
+   * We peek first to make sure we have the full record
+   */
+   input_queue.peek(header, sizeof(header));
 
-   const u16bit version = make_u16bit(header[1], header[2]);
+   const u16bit version    = make_u16bit(header[1], header[2]);
+   const u16bit record_len = make_u16bit(header[3], header[4]);
 
    if(major && (header[1] != major || header[2] != minor))
       throw TLS_Exception(PROTOCOL_VERSION,
                           "Record_Reader: Got unexpected version");
 
-   SecureVector<byte> buffer(make_u16bit(header[3], header[4]));
-   if(socket.read(buffer, buffer.size()) != buffer.size())
-      throw Decoding_Error("Record_Reader: Record truncated");
+   // If insufficient data, return without doing anything
+   if(have_in_queue < (sizeof(header) + record_len))
+      return (sizeof(header) + record_len - have_in_queue);
 
+   SecureVector<byte> buffer(record_len);
+
+   input_queue.read(header, sizeof(header)); // pull off the header
+   input_queue.read(buffer, buffer.size());
+
+   /*
+   * We are handshaking, no crypto to do so return as-is
+   * TODO: Check msg_type to confirm a handshake?
+   */
    if(mac_size == 0)
-      return buffer;
+      {
+      msg_type = header[0];
+      output = buffer;
+      return 0; // got a full record
+      }
+
+   // Otherwise, decrypt, check MAC, return plaintext
 
    cipher.process_msg(buffer);
    SecureVector<byte> plaintext = cipher.read_all(Pipe::LAST_MESSAGE);
@@ -180,7 +192,7 @@ SecureVector<byte> Record_Reader::get_record(byte& msg_type)
    mac.start_msg();
    for(u32bit j = 0; j != 8; j++)
       mac.write(get_byte(j, seq_no));
-   mac.write(msg_type);
+   mac.write(header[0]); // msg_type
 
    if(version != SSL_V3)
       for(u32bit j = 0; j != 2; j++)
@@ -198,7 +210,9 @@ SecureVector<byte> Record_Reader::get_record(byte& msg_type)
    if(recieved_mac != computed_mac)
       throw TLS_Exception(BAD_RECORD_MAC, "Record_Reader: MAC failure");
 
-   return SecureVector<byte>(plaintext, mac_offset);
+   msg_type = header[0];
+   output.set(plaintext, mac_offset);
+   return 0;
    }
 
 }

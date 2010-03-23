@@ -49,6 +49,8 @@ class BOTAN_DLL TLS_Server : public TLS_Connection
 
       RandomNumberGenerator& rng;
 
+      Socket& peer;
+
       Record_Writer writer;
       Record_Reader reader;
       const TLS_Policy* policy;

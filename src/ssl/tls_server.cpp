@@ -88,7 +88,8 @@ void server_check_state(Handshake_Type new_msg, Handshake_State* state)
 TLS_Server::TLS_Server(RandomNumberGenerator& r,
                        Socket& sock, const X509_Certificate& cert,
                        const Private_Key& key, const TLS_Policy* pol) :
-   rng(r), writer(sock), reader(sock), policy(pol ? pol : new TLS_Policy)
+   rng(r), peer(sock),
+   writer(sock), policy(pol ? pol : new TLS_Policy)
    {
    peer_id = sock.peer_id();
 
@@ -207,8 +208,26 @@ void TLS_Server::close(Alert_Level level, Alert_Type alert_code)
 */
 void TLS_Server::state_machine()
    {
-   byte rec_type;
-   SecureVector<byte> record = reader.get_record(rec_type);
+   byte rec_type = CONNECTION_CLOSED;
+   SecureVector<byte> record(1024);
+
+   u32bit bytes_needed = reader.get_record(rec_type, record);
+
+   while(bytes_needed)
+      {
+      u32bit to_get = std::min<u32bit>(record.size(), bytes_needed);
+      u32bit got = peer.read(&record[0], to_get);
+
+      if(got == 0)
+         {
+         rec_type = CONNECTION_CLOSED;
+         break;
+         }
+
+      reader.add_input(&record[0], got);
+
+      bytes_needed = reader.get_record(rec_type, record);
+      }
 
    if(rec_type == CONNECTION_CLOSED)
       {

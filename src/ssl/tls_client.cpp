@@ -1,6 +1,6 @@
 /**
-* TLS Client 
-* (C) 2004-2006 Jack Lloyd
+* TLS Client
+* (C) 2004-2010 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -83,7 +83,7 @@ void client_check_state(Handshake_Type new_msg, Handshake_State* state)
 */
 TLS_Client::TLS_Client(RandomNumberGenerator& r,
                        Socket& sock, const TLS_Policy* pol) :
-   rng(r), writer(sock), reader(sock), policy(pol ? pol : new TLS_Policy)
+   rng(r), peer(sock), writer(sock), policy(pol ? pol : new TLS_Policy)
    {
    peer_id = sock.peer_id();
 
@@ -96,7 +96,7 @@ TLS_Client::TLS_Client(RandomNumberGenerator& r,
 TLS_Client::TLS_Client(RandomNumberGenerator& r,
                        Socket& sock, const X509_Certificate& cert,
                        const Private_Key& key, const TLS_Policy* pol) :
-   rng(r), writer(sock), reader(sock), policy(pol ? pol : new TLS_Policy)
+   rng(r), peer(sock), writer(sock), policy(pol ? pol : new TLS_Policy)
    {
    peer_id = sock.peer_id();
 
@@ -133,10 +133,12 @@ void TLS_Client::initialize()
    }
    catch(TLS_Exception& e)
       {
+      printf("Handshake exception %s\n", e.what());
       error_type = e.type();
       }
    catch(std::exception& e)
       {
+      printf("Handshake exception %s\n", e.what());
       error_type = HANDSHAKE_FAILURE;
       }
 
@@ -243,11 +245,32 @@ void TLS_Client::close(Alert_Level level, Alert_Type alert_code)
 */
 void TLS_Client::state_machine()
    {
-   byte rec_type;
-   SecureVector<byte> record = reader.get_record(rec_type);
+   byte rec_type = CONNECTION_CLOSED;
+   SecureVector<byte> record(1024);
+
+   u32bit bytes_needed = reader.get_record(rec_type, record);
+
+   while(bytes_needed)
+      {
+      u32bit to_get = std::min<u32bit>(record.size(), bytes_needed);
+      u32bit got = peer.read(&record[0], to_get);
+
+      if(got == 0)
+         {
+         rec_type = CONNECTION_CLOSED;
+         break;
+         }
+
+      reader.add_input(&record[0], got);
+
+      bytes_needed = reader.get_record(rec_type, record);
+      }
+
+   printf("state_machine %d\n", rec_type);
 
    if(rec_type == CONNECTION_CLOSED)
       {
+      printf("CLOSED\n");
       active = false;
       reader.reset();
       writer.reset();
@@ -269,6 +292,8 @@ void TLS_Client::state_machine()
          {
          if(alert.type() == CLOSE_NOTIFY)
             writer.alert(WARNING, CLOSE_NOTIFY);
+
+         printf("ALERT\n");
 
          reader.reset();
          writer.reset();
@@ -321,7 +346,10 @@ void TLS_Client::read_handshake(byte rec_type,
          if(state->queue.size() == 0 && rec_buf.size() == 1 && rec_buf[0] == 1)
             type = HANDSHAKE_CCS;
          else
+            {
+            printf("Bad CCS message? %d\n", state->queue.size());
             throw Decoding_Error("Malformed ChangeCipherSpec message");
+            }
          }
       else
          throw Decoding_Error("Unknown message type in handshake processing");
@@ -342,6 +370,8 @@ void TLS_Client::read_handshake(byte rec_type,
 void TLS_Client::process_handshake_msg(Handshake_Type type,
                                        const MemoryRegion<byte>& contents)
    {
+   printf("process_handshake_msg(%d)\n", type);
+
    if(type == HELLO_REQUEST)
       {
       if(state == 0)
@@ -524,13 +554,18 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       }
    else if(type == HANDSHAKE_CCS)
       {
+      printf("In process_handshake_msg\n");
+
       client_check_state(type, state);
 
+      printf("Setting keys\n");
       reader.set_keys(state->suite, state->keys, CLIENT);
+      printf("Done with keys\n");
       state->got_server_ccs = true;
       }
    else if(type == FINISHED)
       {
+      printf("Checking finished message\n");
       client_check_state(type, state);
 
       state->server_finished = new Finished(contents);
@@ -562,7 +597,7 @@ void TLS_Client::do_handshake()
       if(active && !state)
          break;
       if(!active && !state)
-         throw TLS_Exception(HANDSHAKE_FAILURE, "TLS_Client: Handshake failed");
+         throw TLS_Exception(HANDSHAKE_FAILURE, "TLS_Client: Handshake failed (do_handshake)");
 
       state_machine();
       }

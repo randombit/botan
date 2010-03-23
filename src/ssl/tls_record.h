@@ -1,6 +1,6 @@
 /**
-* TLS Record Handling 
-* (C) 2004-2006 Jack Lloyd
+* TLS Record Handling
+* (C) 2004-2010 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -12,6 +12,7 @@
 #include <botan/socket.h>
 #include <botan/tls_suites.h>
 #include <botan/pipe.h>
+#include <botan/secqueue.h>
 #include <vector>
 
 namespace Botan {
@@ -55,18 +56,32 @@ class BOTAN_DLL Record_Writer
 class BOTAN_DLL Record_Reader
    {
    public:
-      SecureVector<byte> get_record(byte&);
+      void add_input(const byte input[], u32bit input_size);
 
-      void set_keys(const CipherSuite&, const SessionKeys&, Connection_Side);
-      void set_compressor(Filter*);
+      /**
+      * @param msg_type (output variable)
+      * @param buffer (output variable)
+      * @return Number of bytes still needed (minimum), or 0 if success
+      */
+      u32bit get_record(byte& msg_type,
+                        MemoryRegion<byte>& buffer);
 
-      void set_version(Version_Code);
+      SecureVector<byte> get_record(byte& msg_type);
+
+      void set_keys(const CipherSuite& suite,
+                    const SessionKeys& keys,
+                    Connection_Side side);
+
+      void set_compressor(Filter* compressor);
+
+      void set_version(Version_Code version);
 
       void reset();
 
-      Record_Reader(Socket&);
+      Record_Reader() { reset(); }
    private:
-      Socket& socket;
+      SecureQueue input_queue;
+
       Pipe compress, cipher, mac;
       u32bit pad_amount, mac_size;
       u64bit seq_no;
