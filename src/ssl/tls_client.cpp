@@ -133,12 +133,10 @@ void TLS_Client::initialize()
    }
    catch(TLS_Exception& e)
       {
-      printf("Handshake exception %s\n", e.what());
       error_type = e.type();
       }
    catch(std::exception& e)
       {
-      printf("Handshake exception %s\n", e.what());
       error_type = HANDSHAKE_FAILURE;
       }
 
@@ -266,11 +264,8 @@ void TLS_Client::state_machine()
       bytes_needed = reader.get_record(rec_type, record);
       }
 
-   printf("state_machine %d\n", rec_type);
-
    if(rec_type == CONNECTION_CLOSED)
       {
-      printf("CLOSED\n");
       active = false;
       reader.reset();
       writer.reset();
@@ -292,8 +287,6 @@ void TLS_Client::state_machine()
          {
          if(alert.type() == CLOSE_NOTIFY)
             writer.alert(WARNING, CLOSE_NOTIFY);
-
-         printf("ALERT\n");
 
          reader.reset();
          writer.reset();
@@ -346,10 +339,7 @@ void TLS_Client::read_handshake(byte rec_type,
          if(state->queue.size() == 0 && rec_buf.size() == 1 && rec_buf[0] == 1)
             type = HANDSHAKE_CCS;
          else
-            {
-            printf("Bad CCS message? %d\n", state->queue.size());
             throw Decoding_Error("Malformed ChangeCipherSpec message");
-            }
          }
       else
          throw Decoding_Error("Unknown message type in handshake processing");
@@ -370,8 +360,6 @@ void TLS_Client::read_handshake(byte rec_type,
 void TLS_Client::process_handshake_msg(Handshake_Type type,
                                        const MemoryRegion<byte>& contents)
    {
-   printf("process_handshake_msg(%d)\n", type);
-
    if(type == HELLO_REQUEST)
       {
       if(state == 0)
@@ -554,18 +542,13 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       }
    else if(type == HANDSHAKE_CCS)
       {
-      printf("In process_handshake_msg\n");
-
       client_check_state(type, state);
 
-      printf("Setting keys\n");
       reader.set_keys(state->suite, state->keys, CLIENT);
-      printf("Done with keys\n");
       state->got_server_ccs = true;
       }
    else if(type == FINISHED)
       {
-      printf("Checking finished message\n");
       client_check_state(type, state);
 
       state->server_finished = new Finished(contents);
