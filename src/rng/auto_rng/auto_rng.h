@@ -35,7 +35,6 @@ class BOTAN_DLL AutoSeeded_RNG : public RandomNumberGenerator
          { rng->add_entropy(in, len); }
 
       AutoSeeded_RNG() { rng = &global_state().global_rng(); }
-      ~AutoSeeded_RNG() { delete rng; }
    private:
       RandomNumberGenerator* rng;
    };
