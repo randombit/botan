@@ -26,8 +26,8 @@ class BOTAN_DLL FORK_256 : public MDx_HashFunction
       void compress_n(const byte[], u32bit blocks);
       void copy_out(byte[]);
 
-      SecureBuffer<u32bit, 8> digest;
-      SecureBuffer<u32bit, 16> M;
+      SecureVector<u32bit, 8> digest;
+      SecureVector<u32bit, 16> M;
    };
 
 }

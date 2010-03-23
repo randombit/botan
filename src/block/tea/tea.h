@@ -28,7 +28,7 @@ class BOTAN_DLL TEA : public BlockCipher
       TEA() : BlockCipher(8, 16) {}
    private:
       void key_schedule(const byte[], u32bit);
-      SecureBuffer<u32bit, 4> K;
+      SecureVector<u32bit, 4> K;
    };
 
 }

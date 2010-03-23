@@ -36,7 +36,7 @@ class BOTAN_DLL CAST_128 : public BlockCipher
       static const u32bit S7[256];
       static const u32bit S8[256];
 
-      SecureBuffer<u32bit, 16> MK, RK;
+      SecureVector<u32bit, 16> MK, RK;
    };
 
 extern const u32bit CAST_SBOX1[256];

@@ -52,13 +52,13 @@ class BOTAN_DLL GOST_28147_89 : public BlockCipher
 
       GOST_28147_89(const GOST_28147_89_Params& params);
    private:
-      GOST_28147_89(const SecureBuffer<u32bit, 1024>& other_SBOX) :
+      GOST_28147_89(const SecureVector<u32bit, 1024>& other_SBOX) :
          BlockCipher(8, 32), SBOX(other_SBOX) {}
 
       void key_schedule(const byte[], u32bit);
 
-      SecureBuffer<u32bit, 1024> SBOX;
-      SecureBuffer<u32bit, 8> EK;
+      SecureVector<u32bit, 1024> SBOX;
+      SecureVector<u32bit, 8> EK;
    };
 
 }

@@ -34,8 +34,8 @@ class BOTAN_DLL ARC4 : public StreamCipher
 
       const u32bit SKIP;
 
-      SecureBuffer<byte, DEFAULT_BUFFERSIZE> buffer;
-      SecureBuffer<u32bit, 256> state;
+      SecureVector<byte, DEFAULT_BUFFERSIZE> buffer;
+      SecureVector<u32bit, 256> state;
       u32bit X, Y, position;
    };
 

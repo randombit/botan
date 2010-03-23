@@ -140,7 +140,7 @@ void Square::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void Square::key_schedule(const byte key[], u32bit)
    {
-   SecureBuffer<u32bit, 36> XEK, XDK;
+   SecureVector<u32bit, 36> XEK, XDK;
 
    for(u32bit i = 0; i != 4; ++i)
       XEK[i] = load_be<u32bit>(key, i);

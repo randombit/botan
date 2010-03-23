@@ -28,7 +28,7 @@ class BOTAN_DLL Serpent : public BlockCipher
    protected:
       void key_schedule(const byte[], u32bit);
 
-      SecureBuffer<u32bit, 132> round_key;
+      SecureVector<u32bit, 132> round_key;
    };
 
 }

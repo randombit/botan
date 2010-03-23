@@ -31,7 +31,7 @@ class BOTAN_DLL RC2 : public BlockCipher
    private:
       void key_schedule(const byte[], u32bit);
 
-      SecureBuffer<u16bit, 64> K;
+      SecureVector<u16bit, 64> K;
    };
 
 }

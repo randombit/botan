@@ -234,7 +234,7 @@ void Skein_512::final_result(byte out[])
 
    u32bit out_bytes = output_bits / 8;
 
-   SecureBuffer<u64bit, 9> H_out;
+   SecureVector<u64bit, 9> H_out;
 
    while(out_bytes)
       {

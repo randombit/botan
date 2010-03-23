@@ -119,7 +119,7 @@ void RC6::key_schedule(const byte key[], u32bit length)
    for(u32bit j = 1; j != S.size(); ++j)
       S[j] = S[j-1] + 0x9E3779B9;
 
-   SecureBuffer<u32bit, 8> K;
+   SecureVector<u32bit, 8> K;
    for(s32bit j = length-1; j >= 0; --j)
       K[j/4] = (K[j/4] << 8) + key[j];
    for(u32bit j = 0, A = 0, B = 0; j != MIX_ROUNDS; ++j)

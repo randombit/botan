@@ -33,8 +33,8 @@ class BOTAN_DLL Blowfish : public BlockCipher
       static const u32bit P_INIT[18];
       static const u32bit S_INIT[1024];
 
-      SecureBuffer<u32bit, 1024> S;
-      SecureBuffer<u32bit, 18> P;
+      SecureVector<u32bit, 1024> S;
+      SecureVector<u32bit, 18> P;
    };
 
 }

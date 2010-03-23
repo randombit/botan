@@ -49,7 +49,7 @@ void Serpent_IA32::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void Serpent_IA32::key_schedule(const byte key[], u32bit length)
    {
-   SecureBuffer<u32bit, 140> W;
+   SecureVector<u32bit, 140> W;
    for(u32bit j = 0; j != length / 4; ++j)
       W[j] = load_le<u32bit>(key, j);
    W[length / 4] |= u32bit(1) << ((length%4)*8);
