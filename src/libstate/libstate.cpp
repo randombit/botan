@@ -267,9 +267,6 @@ void Library_State::initialize(bool thread_safe)
    config_lock = get_mutex();
    global_rng_lock = get_mutex();
 
-   global_rng_ptr = 0;
-
-   cached_default_allocator = 0;
    default_allocator_name = has_mlock() ? "locking" : "malloc";
 
    add_allocator(new Malloc_Allocator);
@@ -325,6 +322,9 @@ Library_State::Library_State()
    allocator_lock = config_lock = 0;
    cached_default_allocator = 0;
    m_algorithm_factory = 0;
+
+   global_rng_lock = 0;
+   global_rng_ptr = 0;
    }
 
 /*
@@ -333,6 +333,7 @@ Library_State::Library_State()
 Library_State::~Library_State()
    {
    delete m_algorithm_factory;
+   delete global_rng_ptr;
 
    cached_default_allocator = 0;
 
@@ -342,6 +343,7 @@ Library_State::~Library_State()
       delete allocators[j];
       }
 
+   delete global_rng_lock;
    delete allocator_lock;
    delete mutex_factory;
    delete config_lock;
