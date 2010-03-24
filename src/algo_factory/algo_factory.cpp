@@ -83,11 +83,8 @@ const T* factory_prototype(const std::string& algo_spec,
 /**
 * Setup caches
 */
-Algorithm_Factory::Algorithm_Factory(const std::vector<Engine*>& engines_in,
-                                     Mutex_Factory& mf)
+Algorithm_Factory::Algorithm_Factory(Mutex_Factory& mf)
    {
-   engines = engines_in;
-
    block_cipher_cache = new Algorithm_Cache<BlockCipher>(mf.make());
    stream_cipher_cache = new Algorithm_Cache<StreamCipher>(mf.make());
    hash_cache = new Algorithm_Cache<HashFunction>(mf.make());
@@ -105,6 +102,11 @@ Algorithm_Factory::~Algorithm_Factory()
    delete stream_cipher_cache;
    delete hash_cache;
    delete mac_cache;
+   }
+
+void Algorithm_Factory::add_engine(Engine* engine)
+   {
+   engines.push_back(engine);
    }
 
 /**
