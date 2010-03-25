@@ -1,6 +1,6 @@
 /**
-* TLS Record Writing 
-* (C) 2004-2006 Jack Lloyd
+* TLS Record Writing
+* (C) 2004-2010 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -26,11 +26,9 @@ Record_Writer::Record_Writer(Socket& sock) :
 */
 void Record_Writer::reset()
    {
-   compress.reset();
    cipher.reset();
    mac.reset();
    buffer.clear();
-   do_compress = false;
    major = minor = buf_type = 0;
    pad_amount = mac_size = buf_pos = 0;
    seq_no = 0;
@@ -46,15 +44,6 @@ void Record_Writer::set_version(Version_Code version)
 
    major = (version >> 8) & 0xFF;
    minor = (version & 0xFF);
-   }
-
-/**
-* Set the compression algorithm
-*/
-void Record_Writer::set_compressor(Filter* compressor)
-   {
-   throw TLS_Exception(INTERNAL_ERROR, "Compression not implemented (FIXME)");
-   compress.append(compressor);
    }
 
 /**
@@ -203,6 +192,8 @@ void Record_Writer::send_record(byte type, const byte buf[], u32bit length)
       mac.write(buf, length);
       mac.end_msg();
 
+      // TODO: This could all use a single buffer
+
       SecureVector<byte> buf_mac = mac.read_all(Pipe::LAST_MESSAGE);
 
       cipher.start_msg();
@@ -240,7 +231,6 @@ void Record_Writer::send_record(byte type, byte major, byte minor,
    for(u32bit j = 0; j != 2; j++)
       header[j+3] = get_byte<u16bit>(j, length);
 
-   // FIXME: tradoff of TCP/syscall overhead vs copy overhead
    socket.write(header, 5);
    socket.write(out, length);
    }
