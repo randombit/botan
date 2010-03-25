@@ -22,9 +22,6 @@ class BOTAN_DLL Socket
       virtual size_t read(byte[], size_t) = 0;
       virtual void write(const byte[], size_t) = 0;
 
-      size_t read(byte& x) { return read(&x, 1); }
-      void write(byte x) { write(&x, 1); }
-
       virtual std::string peer_id() const = 0;
 
       virtual void close() = 0;
