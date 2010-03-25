@@ -64,12 +64,12 @@ Unix_Socket::Unix_Socket(int fd, const std::string& peer_id)
 /**
 * Read from a Unix socket
 */
-u32bit Unix_Socket::read(byte buf[], u32bit length)
+size_t Unix_Socket::read(byte buf[], size_t length)
    {
    if(sockfd == -1)
       throw Stream_IO_Error("Unix_Socket::read: Socket not connected");
 
-   u32bit got = 0;
+   size_t got = 0;
 
    while(length)
       {
@@ -95,12 +95,12 @@ u32bit Unix_Socket::read(byte buf[], u32bit length)
 /**
 * Write to a Unix socket
 */
-void Unix_Socket::write(const byte buf[], u32bit length)
+void Unix_Socket::write(const byte buf[], size_t length)
    {
    if(sockfd == -1)
       throw Stream_IO_Error("Unix_Socket::write: Socket not connected");
 
-   u32bit offset = 0;
+   size_t offset = 0;
    while(length)
       {
       ssize_t sent = ::send(sockfd, buf + offset, length, MSG_NOSIGNAL);

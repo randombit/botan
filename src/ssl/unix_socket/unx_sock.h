@@ -28,8 +28,8 @@ namespace Botan {
 class BOTAN_DLL Unix_Socket : public Socket
    {
    public:
-      u32bit read(byte[], u32bit);
-      void write(const byte[], u32bit);
+      size_t read(byte[], size_t);
+      void write(const byte[], size_t);
 
       std::string peer_id() const;
 

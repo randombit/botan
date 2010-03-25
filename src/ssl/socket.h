@@ -19,10 +19,10 @@ namespace Botan {
 class BOTAN_DLL Socket
    {
    public:
-      virtual u32bit read(byte[], u32bit) = 0;
-      virtual void write(const byte[], u32bit) = 0;
+      virtual size_t read(byte[], size_t) = 0;
+      virtual void write(const byte[], size_t) = 0;
 
-      u32bit read(byte& x) { return read(&x, 1); }
+      size_t read(byte& x) { return read(&x, 1); }
       void write(byte x) { write(&x, 1); }
 
       virtual std::string peer_id() const = 0;
