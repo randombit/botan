@@ -17,10 +17,8 @@ namespace Botan {
 */
 void Record_Reader::reset()
    {
-   compress.reset();
    cipher.reset();
    mac.reset();
-   do_compress = false;
    mac_size = pad_amount = 0;
    major = minor = 0;
    seq_no = 0;
@@ -36,15 +34,6 @@ void Record_Reader::set_version(Version_Code version)
 
    major = (version >> 8) & 0xFF;
    minor = (version & 0xFF);
-   }
-
-/**
-* Set the compression algorithm
-*/
-void Record_Reader::set_compressor(Filter* compressor)
-   {
-   compress.append(compressor);
-   do_compress = true;
    }
 
 /**

@@ -30,24 +30,23 @@ class BOTAN_DLL Record_Writer
       void alert(Alert_Level, Alert_Type);
 
       void set_keys(const CipherSuite&, const SessionKeys&, Connection_Side);
-      void set_compressor(Filter*);
 
       void set_version(Version_Code);
 
       void reset();
 
-      Record_Writer(Socket&);
+      Record_Writer(Socket& socket);
+
    private:
       void send_record(byte, const byte[], u32bit);
       void send_record(byte, byte, byte, const byte[], u32bit);
 
       Socket& socket;
-      Pipe compress, cipher, mac;
+      Pipe cipher, mac;
       SecureVector<byte> buffer;
       u32bit pad_amount, mac_size, buf_pos;
       u64bit seq_no;
       byte major, minor, buf_type;
-      bool do_compress;
    };
 
 /**
@@ -72,8 +71,6 @@ class BOTAN_DLL Record_Reader
                     const SessionKeys& keys,
                     Connection_Side side);
 
-      void set_compressor(Filter* compressor);
-
       void set_version(Version_Code version);
 
       void reset();
@@ -82,11 +79,10 @@ class BOTAN_DLL Record_Reader
    private:
       SecureQueue input_queue;
 
-      Pipe compress, cipher, mac;
+      Pipe cipher, mac;
       u32bit pad_amount, mac_size;
       u64bit seq_no;
       byte major, minor;
-      bool do_compress;
    };
 
 }
