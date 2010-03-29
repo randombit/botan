@@ -1,5 +1,5 @@
 
-* 1.9.5-dev, ????-??-??
+* 1.9.5, 2010-03-29
  - Numerous ECC optimizations
  - Fix GOST 34.10-2001 X.509 key loading
  - Allow PK_Signer's fault protection checks to be toggled off
