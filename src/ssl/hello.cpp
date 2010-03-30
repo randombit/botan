@@ -128,53 +128,47 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
 
    comp_algos = reader.get_range_vector<byte>(1, 1, 255);
 
-#if 0
-   if(offset != buf.size()) // extensions?
+   if(reader.has_remaining())
       {
-      if(buf.size() - offset < 2)
-         throw Decoding_Error("Client_Hello: Packet corrupted");
+      reader.discard_next(2); // the extension size; we just read to end
 
-      const u16bit extens_size = make_u16bit(buf[offset], buf[offset+1]);
-      offset += 2;
-
-      /*
-      RFC 3546 says if Extensions are present in the Client Hello,
-      then there is no other data following, and we MUST fail in this
-      case.
-      */
-      if(buf.size() - offset != extens_size)
-         throw Decoding_Error("Client_Hello: Packet corrupted");
-
-      while(offset < buf.size())
+      while(reader.has_remaining())
          {
-         if(buf.size() - offset < 4)
-            throw Decoding_Error("Client_Hello: Packet corrupted");
+         const u16bit extension_code = reader.get_u16bit();
+         const u16bit extension_size = reader.get_u16bit();
 
-         u16bit extn_code = make_u16bit(buf[offset  ], buf[offset+1]);
-         u16bit extn_size = make_u16bit(buf[offset+2], buf[offset+3]);
-
-         offset += 4;
-
-         if(buf.size() - offset < extn_size)
-            throw Decoding_Error("Client_Hello: Packet corrupted");
-
-         if(extn_code == 0) // server name indication
+         if(extension_code == TLSEXT_SERVER_NAME_INDICATION)
             {
-            if(extn_size < 2)
-               throw Decoding_Error("Client_Hello: Packet corrupted");
+            u16bit name_bytes = reader.get_u16bit();
 
-            u16bit name_count = make_u16bit(buf[offset], buf[offset+1]);
-
-            for(u32bit i = 0; i != name_count; ++i)
+            while(name_bytes)
                {
+               byte name_type = reader.get_byte();
+               name_bytes--;
 
+               if(name_type == 0) // DNS
+                  {
+                  std::vector<byte> name =
+                     reader.get_range_vector<byte>(2, 1, 65535);
+
+                  requested_hostname.assign((const char*)&name[0],
+                                            name.size());
+
+                  name_bytes -= (2 + name.size());
+                  }
+               else
+                  {
+                  reader.discard_next(name_bytes);
+                  name_bytes = 0;
+                  }
                }
             }
          else
-            offset += extn_size; // skip it
+            {
+            reader.discard_next(extension_size);
+            }
          }
       }
-#endif
    }
 
 /**
