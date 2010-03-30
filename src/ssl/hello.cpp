@@ -130,7 +130,10 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
 
    if(reader.has_remaining())
       {
-      reader.discard_next(2); // the extension size; we just read to end
+      const u16bit all_extn_size = reader.get_u16bit();
+
+      if(reader.remaining_bytes() != all_extn_size)
+         throw Decoding_Error("Client_Hello: Bad extension size");
 
       while(reader.has_remaining())
          {
