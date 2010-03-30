@@ -25,9 +25,9 @@ Version_Code choose_version(Version_Code client, Version_Code minimum)
       throw TLS_Exception(PROTOCOL_VERSION,
                           "Client version is unacceptable by policy");
 
-   if(client == SSL_V3 || client == TLS_V10)
+   if(client == SSL_V3 || client == TLS_V10 || client == TLS_V11)
       return client;
-   return TLS_V10;
+   return TLS_V11;
    }
 
 // FIXME: checks are wrong for session reuse (add a flag for that)
@@ -113,7 +113,8 @@ TLS_Server::TLS_Server(RandomNumberGenerator& r,
          }
 
       writer.alert(FATAL, HANDSHAKE_FAILURE);
-      throw Stream_IO_Error("TLS_Server: Handshake failed");
+      throw Stream_IO_Error(std::string("TLS_Server: Handshake failed: ") +
+                            e.what());
       }
    }
 
@@ -269,7 +270,11 @@ void TLS_Server::read_handshake(byte rec_type,
                                 const MemoryRegion<byte>& rec_buf)
    {
    if(rec_type == HANDSHAKE)
+      {
+      if(!state)
+         state = new Handshake_State;
       state->queue.write(rec_buf, rec_buf.size());
+      }
 
    while(true)
       {
@@ -320,14 +325,6 @@ void TLS_Server::read_handshake(byte rec_type,
 void TLS_Server::process_handshake_msg(Handshake_Type type,
                                        const MemoryRegion<byte>& contents)
    {
-   if(type == CLIENT_HELLO)
-      {
-      if(state == 0)
-         state = new Handshake_State();
-      else
-         return;
-      }
-
    if(state == 0)
       throw Unexpected_Message("Unexpected handshake message");
 
