@@ -6,6 +6,7 @@
 */
 
 #include <botan/tls_messages.h>
+#include <botan/internal/tls_reader.h>
 #include <botan/pubkey.h>
 #include <botan/dh.h>
 #include <botan/rsa.h>
@@ -99,14 +100,8 @@ void Client_Key_Exchange::deserialize(const MemoryRegion<byte>& buf)
    {
    if(include_length)
       {
-      if(buf.size() < 2)
-         throw Decoding_Error("Client_Key_Exchange: Packet corrupted");
-
-      u32bit size = make_u16bit(buf[0], buf[1]);
-      if(size + 2 != buf.size())
-         throw Decoding_Error("Client_Key_Exchange: Packet corrupted");
-
-      key_material.set(buf + 2, size);
+      TLS_Data_Reader reader(buf);
+      key_material = reader.get_range<byte>(2, 0, 65535);
       }
    else
       key_material = buf;
