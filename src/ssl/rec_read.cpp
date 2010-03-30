@@ -19,7 +19,8 @@ void Record_Reader::reset()
    {
    cipher.reset();
    mac.reset();
-   mac_size = pad_amount = 0;
+   mac_size = 0;
+   block_size = 0;
    major = minor = 0;
    seq_no = 0;
    }
@@ -70,12 +71,12 @@ void Record_Reader::set_keys(const CipherSuite& suite, const SessionKeys& keys,
                        cipher_algo + "/CBC/NoPadding",
                        cipher_key, iv, DECRYPTION)
          );
-      pad_amount = block_size_of(cipher_algo);
+      block_size = block_size_of(cipher_algo);
       }
    else if(have_stream_cipher(cipher_algo))
       {
       cipher.append(get_cipher(cipher_algo, cipher_key, DECRYPTION));
-      pad_amount = 0;
+      block_size = 0;
       }
    else
       throw Invalid_Argument("Record_Reader: Unknown cipher " + cipher_algo);
@@ -149,14 +150,15 @@ u32bit Record_Reader::get_record(byte& msg_type,
    SecureVector<byte> plaintext = cipher.read_all(Pipe::LAST_MESSAGE);
 
    u32bit pad_size = 0;
-   if(pad_amount)
+
+   if(block_size)
       {
       byte pad_value = plaintext[plaintext.size()-1];
       pad_size = pad_value + 1;
 
       if(version == SSL_V3)
          {
-         if(pad_value > pad_amount)
+         if(pad_value > block_size)
             throw TLS_Exception(BAD_RECORD_MAC,
                                 "Record_Reader: Bad padding");
          }

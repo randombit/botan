@@ -28,9 +28,14 @@ void Record_Writer::reset()
    {
    cipher.reset();
    mac.reset();
+
    buffer.clear();
+   buf_pos = 0;
+
    major = minor = buf_type = 0;
-   pad_amount = mac_size = buf_pos = 0;
+   block_size = 0;
+   mac_size = 0;
+
    seq_no = 0;
    }
 
@@ -80,12 +85,12 @@ void Record_Writer::set_keys(const CipherSuite& suite, const SessionKeys& keys,
                        cipher_algo + "/CBC/NoPadding",
                        cipher_key, iv, ENCRYPTION)
          );
-      pad_amount = block_size_of(cipher_algo);
+      block_size = block_size_of(cipher_algo);
       }
    else if(have_stream_cipher(cipher_algo))
       {
       cipher.append(get_cipher(cipher_algo, cipher_key, ENCRYPTION));
-      pad_amount = 0;
+      block_size = 0;
       }
    else
       throw Invalid_Argument("Record_Writer: Unknown cipher " + cipher_algo);
@@ -199,10 +204,11 @@ void Record_Writer::send_record(byte type, const byte buf[], u32bit length)
       cipher.start_msg();
       cipher.write(buf, length);
       cipher.write(buf_mac);
-      if(pad_amount)
+
+      if(block_size)
          {
          u32bit pad_val =
-            (pad_amount - (1 + length + buf_mac.size())) % pad_amount;
+            (block_size - (1 + length + buf_mac.size())) % block_size;
 
          for(u32bit j = 0; j != pad_val + 1; j++)
             cipher.write(pad_val);
