@@ -19,6 +19,22 @@ class TLS_Data_Reader
       TLS_Data_Reader(const MemoryRegion<byte>& buf_in) :
          buf(buf_in), offset(0) {}
 
+      u32bit remaining_bytes() const
+         {
+         return buf.size() - offset;
+         }
+
+      bool has_remaining() const
+         {
+         return (remaining_bytes() > 0);
+         }
+
+      void discard_next(u32bit bytes)
+         {
+         assert_at_least(bytes);
+         offset += bytes;
+         }
+
       u16bit get_u16bit()
          {
          assert_at_least(2);
@@ -109,7 +125,7 @@ class TLS_Data_Reader
          return num_elems;
          }
 
-      void assert_at_least(u32bit n)
+      void assert_at_least(u32bit n) const
          {
          if(buf.size() - offset < n)
             throw Decoding_Error("TLS_Data_Reader: Corrupt packet");
