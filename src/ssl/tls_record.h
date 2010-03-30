@@ -44,7 +44,10 @@ class BOTAN_DLL Record_Writer
       Socket& socket;
       Pipe cipher, mac;
       SecureVector<byte> buffer;
-      u32bit block_size, mac_size, buf_pos;
+      u32bit buf_pos;
+
+      u32bit block_size, mac_size, iv_size;
+
       u64bit seq_no;
       byte major, minor, buf_type;
    };
@@ -80,7 +83,7 @@ class BOTAN_DLL Record_Reader
       SecureQueue input_queue;
 
       Pipe cipher, mac;
-      u32bit block_size, mac_size;
+      u32bit block_size, mac_size, iv_size;
       u64bit seq_no;
       byte major, minor;
    };

@@ -1,5 +1,6 @@
 
 * 1.9.6-dev, ????-??-??
+ - Add support for TLS v1.1
 
 * 1.9.5, 2010-03-29
  - Numerous ECC optimizations

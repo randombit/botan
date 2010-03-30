@@ -9,6 +9,7 @@
 #include <botan/handshake_hash.h>
 #include <botan/lookup.h>
 #include <botan/loadstor.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -35,6 +36,7 @@ void Record_Writer::reset()
    major = minor = buf_type = 0;
    block_size = 0;
    mac_size = 0;
+   iv_size = 0;
 
    seq_no = 0;
    }
@@ -44,7 +46,7 @@ void Record_Writer::reset()
 */
 void Record_Writer::set_version(Version_Code version)
    {
-   if(version != SSL_V3 && version != TLS_V10)
+   if(version != SSL_V3 && version != TLS_V10 && version != TLS_V11)
       throw Invalid_Argument("Record_Writer: Invalid protocol version");
 
    major = (version >> 8) & 0xFF;
@@ -86,11 +88,17 @@ void Record_Writer::set_keys(const CipherSuite& suite, const SessionKeys& keys,
                        cipher_key, iv, ENCRYPTION)
          );
       block_size = block_size_of(cipher_algo);
+
+      if(major == 3 && minor >= 2)
+         iv_size = block_size;
+      else
+         iv_size = 0;
       }
    else if(have_stream_cipher(cipher_algo))
       {
       cipher.append(get_cipher(cipher_algo, cipher_key, ENCRYPTION));
       block_size = 0;
+      iv_size = 0;
       }
    else
       throw Invalid_Argument("Record_Writer: Unknown cipher " + cipher_algo);
@@ -202,6 +210,18 @@ void Record_Writer::send_record(byte type, const byte buf[], u32bit length)
       SecureVector<byte> buf_mac = mac.read_all(Pipe::LAST_MESSAGE);
 
       cipher.start_msg();
+
+      if(iv_size)
+         {
+         RandomNumberGenerator& rng = global_state().global_rng();
+
+         SecureVector<byte> random_iv(iv_size);
+
+         rng.randomize(&random_iv[0], random_iv.size());
+
+         cipher.write(random_iv);
+         }
+
       cipher.write(buf, length);
       cipher.write(buf_mac);
 

@@ -219,9 +219,13 @@ void Server_Hello::deserialize(const MemoryRegion<byte>& buf)
       throw Decoding_Error("Server_Hello: Packet corrupted");
 
    s_version = static_cast<Version_Code>(make_u16bit(buf[0], buf[1]));
-   if(s_version != SSL_V3 && s_version != TLS_V10)
+   if(s_version != SSL_V3 &&
+      s_version != TLS_V10 &&
+      s_version != TLS_V11)
+      {
       throw TLS_Exception(PROTOCOL_VERSION,
                           "Server_Hello: Unsupported server version");
+      }
 
    s_random.set(buf + 2, 32);
 

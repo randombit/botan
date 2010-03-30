@@ -21,6 +21,7 @@ void Record_Reader::reset()
    mac.reset();
    mac_size = 0;
    block_size = 0;
+   iv_size = 0;
    major = minor = 0;
    seq_no = 0;
    }
@@ -30,7 +31,7 @@ void Record_Reader::reset()
 */
 void Record_Reader::set_version(Version_Code version)
    {
-   if(version != SSL_V3 && version != TLS_V10)
+   if(version != SSL_V3 && version != TLS_V10 && version != TLS_V11)
       throw Invalid_Argument("Record_Reader: Invalid protocol version");
 
    major = (version >> 8) & 0xFF;
@@ -72,11 +73,17 @@ void Record_Reader::set_keys(const CipherSuite& suite, const SessionKeys& keys,
                        cipher_key, iv, DECRYPTION)
          );
       block_size = block_size_of(cipher_algo);
+
+      if(major == 3 && minor >= 2)
+         iv_size = block_size;
+      else
+         iv_size = 0;
       }
    else if(have_stream_cipher(cipher_algo))
       {
       cipher.append(get_cipher(cipher_algo, cipher_key, DECRYPTION));
       block_size = 0;
+      iv_size = 0;
       }
    else
       throw Invalid_Argument("Record_Reader: Unknown cipher " + cipher_algo);
@@ -171,14 +178,14 @@ u32bit Record_Reader::get_record(byte& msg_type,
          }
       }
 
-   if(plaintext.size() < mac_size + pad_size)
+   if(plaintext.size() < mac_size + pad_size + iv_size)
       throw Decoding_Error("Record_Reader: Record truncated");
 
    const u32bit mac_offset = plaintext.size() - (mac_size + pad_size);
    SecureVector<byte> recieved_mac(plaintext.begin() + mac_offset,
                                    mac_size);
 
-   const u16bit plain_length = plaintext.size() - (mac_size + pad_size);
+   const u16bit plain_length = plaintext.size() - (mac_size + pad_size + iv_size);
 
    mac.start_msg();
    for(u32bit j = 0; j != 8; j++)
@@ -191,7 +198,7 @@ u32bit Record_Reader::get_record(byte& msg_type,
 
    for(u32bit j = 0; j != 2; j++)
       mac.write(get_byte(j, plain_length));
-   mac.write(plaintext, plain_length);
+   mac.write(&plaintext[iv_size], plain_length);
    mac.end_msg();
 
    ++seq_no;
@@ -202,7 +209,7 @@ u32bit Record_Reader::get_record(byte& msg_type,
       throw TLS_Exception(BAD_RECORD_MAC, "Record_Reader: MAC failure");
 
    msg_type = header[0];
-   output.set(plaintext, mac_offset);
+   output.set(&plaintext[iv_size], plain_length);
    return 0;
    }
 
