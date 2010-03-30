@@ -118,12 +118,6 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
       throw Decoding_Error("Client_Hello: Packet corrupted");
 
    c_version = static_cast<Version_Code>(make_u16bit(buf[0], buf[1]));
-
-   if(c_version != SSL_V3 && c_version != TLS_V10 && c_version != TLS_V11)
-      {
-      throw TLS_Exception(PROTOCOL_VERSION, "Client_Hello: Bad version code");
-      }
-
    c_random.set(buf + 2, 32);
 
    u32bit session_id_len = buf[34];
