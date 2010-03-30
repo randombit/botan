@@ -40,9 +40,9 @@ class BuildConfigurationInformation(object):
     """
     version_major = 1
     version_minor = 9
-    version_patch = 5
-    version_so_patch = 5
-    version_suffix = ''
+    version_patch = 6
+    version_so_patch = 6
+    version_suffix = '-dev'
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
