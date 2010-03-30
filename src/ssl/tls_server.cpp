@@ -343,6 +343,8 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
       state->client_hello = new Client_Hello(contents);
 
+      client_requested_hostname = state->client_hello->hostname();
+
       state->version = choose_version(state->client_hello->version(),
                                       policy->min_version());
 
