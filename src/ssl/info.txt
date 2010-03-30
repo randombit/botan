@@ -10,7 +10,6 @@ tls_exceptn.h
 tls_magic.h
 tls_messages.h
 tls_policy.h
-tls_queue.h
 tls_record.h
 tls_server.h
 tls_session_key.h
