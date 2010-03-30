@@ -115,6 +115,17 @@ enum Compression_Algo {
    NO_COMPRESSION      = 0x00
 };
 
+enum TLS_Handshake_Extension_Type {
+   TLSEXT_SERVER_NAME_INDICATION = 0,
+   TLSEXT_MAX_FRAGMENT_LENGTH    = 1,
+   TLSEXT_CLIENT_CERT_URL        = 2,
+   TLSEXT_TRUSTED_CA_KEYS        = 3,
+   TLSEXT_TRUNCATED_HMAC         = 4,
+
+   TLSEXT_CERTIFICATE_TYPES      = 9,
+   TLSEXT_SESSION_TICKET         = 35,
+};
+
 }
 
 #endif
