@@ -1,7 +1,9 @@
 
 * 1.9.6-dev, ????-??-??
- - Add support for TLS v1.1
- - Add support for TLS server name indicator extension
+ - TLS: Add support for TLS v1.1
+ - TLS: Support server name indicator extension
+ - TLS: Fix server handshake
+ - TLS: Fix server using DSA certificates
 
 * 1.9.5, 2010-03-29
  - Numerous ECC optimizations
@@ -9,6 +11,9 @@
  - Allow PK_Signer's fault protection checks to be toggled off
  - Avoid using pool-based locking allocator if we can't mlock
  - Remove all runtime options
+ - New BER_Decoder::{decode_and_check, decode_octet_string_bigint}
+ - Remove SecureBuffer in favor of SecureVector length parameter
+ - HMAC_RNG: Perform a poll along with user-supplied entropy
  - Fix crash in MemoryRegion if Allocator::get failed
  - Fix small compilation problem on FreeBSD
 
