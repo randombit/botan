@@ -506,12 +506,6 @@ class ModuleInfo(object):
     def compatible_compiler(self, cc):
         return self.cc == [] or cc in self.cc
 
-    def tr1_ok(self, with_tr1):
-        if self.uses_tr1:
-            return with_tr1 in ['boost', 'system']
-        else:
-            return True
-
     def dependencies(self):
         # utils is an implicit dep (contains types, etc)
         deps = self.requires + ['utils']
@@ -1028,8 +1022,6 @@ def choose_modules_to_use(modules, archinfo, options):
             cannot_use_because(modname, 'incompatible OS')
         elif not module.compatible_compiler(options.compiler):
             cannot_use_because(modname, 'incompatible compiler')
-        elif not module.tr1_ok(options.with_tr1):
-            cannot_use_because(modname, 'missing TR1')
 
         else:
             if module.load_on == 'never':
