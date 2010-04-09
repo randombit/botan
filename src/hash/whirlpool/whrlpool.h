@@ -34,7 +34,7 @@ class BOTAN_DLL Whirlpool : public MDx_HashFunction
       static const u64bit C5[256];
       static const u64bit C6[256];
       static const u64bit C7[256];
-      SecureBuffer<u64bit, 8> M, digest;
+      SecureVector<u64bit, 8> M, digest;
    };
 
 }

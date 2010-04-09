@@ -33,8 +33,8 @@ class BOTAN_DLL Tiger : public MDx_HashFunction
       static const u64bit SBOX3[256];
       static const u64bit SBOX4[256];
 
-      SecureBuffer<u64bit, 8> X;
-      SecureBuffer<u64bit, 3> digest;
+      SecureVector<u64bit, 8> X;
+      SecureVector<u64bit, 3> digest;
       const u32bit PASS;
    };
 

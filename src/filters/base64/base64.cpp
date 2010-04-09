@@ -107,7 +107,7 @@ void Base64_Encoder::end_msg()
 
    if(left_over)
       {
-      SecureBuffer<byte, 3> remainder(in + start_of_last_block, left_over);
+      SecureVector<byte, 3> remainder(in + start_of_last_block, left_over);
 
       encode(remainder, out);
 
@@ -217,7 +217,7 @@ void Base64_Decoder::end_msg()
 
       if(left_over)
          {
-         SecureBuffer<byte, 4> remainder(in + start_of_last_block, left_over);
+         SecureVector<byte, 4> remainder(in + start_of_last_block, left_over);
          decode(remainder, out);
          send(out, ((left_over == 1) ? (1) : (left_over - 1)));
          }

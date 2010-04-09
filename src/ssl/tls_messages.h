@@ -49,6 +49,8 @@ class BOTAN_DLL Client_Hello : public HandshakeMessage
 
       SecureVector<byte> random() const { return c_random; }
 
+      std::string hostname() const { return requested_hostname; }
+
       bool offered_suite(u16bit) const;
 
       Client_Hello(RandomNumberGenerator& rng,
@@ -63,6 +65,7 @@ class BOTAN_DLL Client_Hello : public HandshakeMessage
       SecureVector<byte> sess_id, c_random;
       std::vector<u16bit> suites;
       std::vector<byte> comp_algos;
+      std::string requested_hostname;
    };
 
 /**

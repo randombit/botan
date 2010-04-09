@@ -118,7 +118,7 @@ void Twofish::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void Twofish::key_schedule(const byte key[], u32bit length)
    {
-   SecureBuffer<byte, 16> S;
+   SecureVector<byte, 16> S;
 
    for(u32bit j = 0; j != length; ++j)
       rs_mul(S + 4*(j/8), key[j], j);

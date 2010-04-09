@@ -594,7 +594,7 @@ void AES::key_schedule(const byte key[], u32bit length)
 
    ROUNDS = (length / 4) + 6;
 
-   SecureBuffer<u32bit, 64> XEK, XDK;
+   SecureVector<u32bit, 64> XEK, XDK;
 
    const u32bit X = length / 4;
    for(u32bit j = 0; j != X; ++j)

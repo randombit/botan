@@ -138,7 +138,7 @@ void CAST_256::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void CAST_256::key_schedule(const byte key[], u32bit length)
    {
-   SecureBuffer<u32bit, 8> TMP;
+   SecureVector<u32bit, 8> TMP;
    for(u32bit j = 0; j != length; ++j)
       TMP[j/4] = (TMP[j/4] << 8) + key[j];
 

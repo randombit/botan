@@ -72,7 +72,7 @@ SecureVector<byte> Finished::compute_verify(const MemoryRegion<byte>& secret,
 
       return hash.final_ssl3(secret);
       }
-   else if(version == TLS_V10)
+   else if(version == TLS_V10 || version == TLS_V11)
       {
       const byte TLS_CLIENT_LABEL[] = {
          0x63, 0x6C, 0x69, 0x65, 0x6E, 0x74, 0x20, 0x66, 0x69, 0x6E, 0x69,

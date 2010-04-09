@@ -34,15 +34,19 @@ class BOTAN_DLL Algorithm_Factory
    public:
       /**
       * Constructor
-      * @param engines_in the list of engines to use
       * @param mf a mutex factory
       */
-      Algorithm_Factory(const std::vector<Engine*>& engines_in);
+      Algorithm_Factory();
 
       /**
       * Destructor
       */
       ~Algorithm_Factory();
+
+      /**
+      * @param engine to add (Algorithm_Factory takes ownership)
+      */
+      void add_engine(class Engine* engine);
 
       /**
       * @param algo_spec the algorithm we are querying

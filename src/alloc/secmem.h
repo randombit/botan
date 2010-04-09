@@ -179,11 +179,13 @@ class MemoryRegion
       void resize(u32bit n);
 
       /**
-      * Preallocate memory, so that this buffer can grow up to size n without
-      * having to perform any actual memory allocations. (This is
-      * the same principle as for std::vector::reserve().)
+      * Change the size to n elements. If n is >= size(), preexisting
+      * elements remain unchanged, with later elements
+      * zero-initialized.  If n < size(), then the last (size() - N)
+      * elements are removed.
+      * @param n the new size
       */
-      void grow_to(u32bit N);
+      void grow_to(u32bit n);
 
       /**
       * Swap this buffer with another object.
@@ -333,11 +335,9 @@ class MemoryVector : public MemoryRegion<T>
 * This class represents variable length buffers using the operating
 * systems capability to lock memory, i.e. keeping it from being
 * swapped out to disk. In this way, a security hole allowing attackers
-* to find swapped out secret keys is closed. Please refer to
-* Botan::InitializerOptions::secure_memory() for restrictions and
-* further details.
+* to find swapped out secret keys is closed.
 */
-template<typename T>
+template<typename T, u32bit INITIAL_LEN = 0>
 class SecureVector : public MemoryRegion<T>
    {
    public:
@@ -353,7 +353,8 @@ class SecureVector : public MemoryRegion<T>
       * Create a buffer of the specified length.
       * @param n the length of the buffer to create.
       */
-      SecureVector(u32bit n = 0) { MemoryRegion<T>::init(true, n); }
+      SecureVector(u32bit n = INITIAL_LEN)
+         { MemoryRegion<T>::init(true, n); }
 
       /**
       * Create a buffer with the specified contents.
@@ -380,44 +381,6 @@ class SecureVector : public MemoryRegion<T>
       */
       SecureVector(const MemoryRegion<T>& in1, const MemoryRegion<T>& in2)
          { MemoryRegion<T>::init(true); set(in1); append(in2); }
-   };
-
-/**
-* This class represents fixed length buffers using the operating
-* systems capability to lock memory, i.e. keeping it from being
-* swapped out to disk. In this way, a security hole allowing attackers
-* to find swapped out secret keys is closed. Please refer to
-* Botan::InitializerOptions::secure_memory() for restrictions and
-* further details.
-*/
-template<typename T, u32bit L>
-class SecureBuffer : public MemoryRegion<T>
-   {
-   public:
-      /**
-      * Copy the contents of another buffer into this buffer.
-      * @param in the buffer to copy the contents from
-      * @return a reference to *this
-      */
-      SecureBuffer<T,L>& operator=(const SecureBuffer<T,L>& in)
-         { if(this != &in) set(in); return (*this); }
-
-      /**
-      * Create a buffer of the length L.
-      */
-      SecureBuffer() { MemoryRegion<T>::init(true, L); }
-
-      /**
-      * Create a buffer of size L with the specified contents.
-      * @param in the array containing the data to be initially copied
-      * into the newly created buffer
-      * @param n the size of the array in
-      */
-      SecureBuffer(const T in[], u32bit n)
-         { MemoryRegion<T>::init(true, L); copy(in, n); }
-   private:
-      SecureBuffer<T, L>& operator=(const MemoryRegion<T>& in)
-         { if(this != &in) set(in); return (*this); }
    };
 
 }

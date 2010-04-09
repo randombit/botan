@@ -23,12 +23,12 @@ class BOTAN_DLL SHA_384_512_BASE : public MDx_HashFunction
       SHA_384_512_BASE(u32bit out) :
          MDx_HashFunction(out, 128, true, true, 16) {}
 
-      SecureBuffer<u64bit, 8> digest;
+      SecureVector<u64bit, 8> digest;
    private:
       void compress_n(const byte[], u32bit blocks);
       void copy_out(byte[]);
 
-      SecureBuffer<u64bit, 80> W;
+      SecureVector<u64bit, 80> W;
    };
 
 /*

@@ -1,12 +1,12 @@
 /**
 * TLS Hello Messages
-* (C) 2004-2006 Jack Lloyd
+* (C) 2004-2010 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
 #include <botan/tls_messages.h>
-#include <botan/loadstor.h>
+#include <botan/internal/tls_reader.h>
 
 namespace Botan {
 
@@ -93,15 +93,15 @@ SecureVector<byte> Client_Hello::serialize() const
 
    buf.append(get_byte(0, suites_size));
    buf.append(get_byte(1, suites_size));
-   for(u32bit j = 0; j != suites.size(); j++)
+   for(u32bit i = 0; i != suites.size(); i++)
       {
-      buf.append(get_byte(0, suites[j]));
-      buf.append(get_byte(1, suites[j]));
+      buf.append(get_byte(0, suites[i]));
+      buf.append(get_byte(1, suites[i]));
       }
 
    buf.append(static_cast<byte>(comp_algos.size()));
-   for(u32bit j = 0; j != comp_algos.size(); j++)
-      buf.append(comp_algos[j]);
+   for(u32bit i = 0; i != comp_algos.size(); i++)
+      buf.append(comp_algos[i]);
 
    return buf;
    }
@@ -117,38 +117,61 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
    if(buf.size() < 41)
       throw Decoding_Error("Client_Hello: Packet corrupted");
 
-   c_version = static_cast<Version_Code>(make_u16bit(buf[0], buf[1]));
-   if(c_version != SSL_V3 && c_version != TLS_V10)
-      throw TLS_Exception(PROTOCOL_VERSION, "Client_Hello: Bad version code");
+   TLS_Data_Reader reader(buf);
 
-   c_random.set(buf + 2, 32);
+   c_version = static_cast<Version_Code>(reader.get_u16bit());
+   c_random = reader.get_fixed<byte>(32);
 
-   u32bit session_id_len = buf[34];
-   if(session_id_len > 32 || session_id_len + 41 > buf.size())
-      throw Decoding_Error("Client_Hello: Packet corrupted");
-   sess_id.copy(buf + 35, session_id_len);
+   sess_id = reader.get_range<byte>(1, 0, 32);
 
-   u32bit offset = 2+32+1+session_id_len;
+   suites = reader.get_range_vector<u16bit>(2, 1, 32767);
 
-   u16bit suites_size = make_u16bit(buf[offset], buf[offset+1]);
-   offset += 2;
-   if(suites_size % 2 == 1 || offset + suites_size + 2 > buf.size())
-      throw Decoding_Error("Client_Hello: Packet corrupted");
+   comp_algos = reader.get_range_vector<byte>(1, 1, 255);
 
-   for(u32bit j = 0; j != suites_size; j += 2)
+   if(reader.has_remaining())
       {
-      u16bit suite = make_u16bit(buf[offset+j], buf[offset+j+1]);
-      suites.push_back(suite);
+      const u16bit all_extn_size = reader.get_u16bit();
+
+      if(reader.remaining_bytes() != all_extn_size)
+         throw Decoding_Error("Client_Hello: Bad extension size");
+
+      while(reader.has_remaining())
+         {
+         const u16bit extension_code = reader.get_u16bit();
+         const u16bit extension_size = reader.get_u16bit();
+
+         if(extension_code == TLSEXT_SERVER_NAME_INDICATION)
+            {
+            u16bit name_bytes = reader.get_u16bit();
+
+            while(name_bytes)
+               {
+               byte name_type = reader.get_byte();
+               name_bytes--;
+
+               if(name_type == 0) // DNS
+                  {
+                  std::vector<byte> name =
+                     reader.get_range_vector<byte>(2, 1, 65535);
+
+                  requested_hostname.assign((const char*)&name[0],
+                                            name.size());
+
+                  name_bytes -= (2 + name.size());
+                  }
+               else
+                  {
+                  reader.discard_next(name_bytes);
+                  name_bytes = 0;
+                  }
+               }
+            }
+         else
+            {
+            reader.discard_next(extension_size);
+            }
+         }
       }
-   offset += suites_size;
-
-   byte comp_algo_size = buf[offset];
-   offset += 1;
-   if(offset + comp_algo_size > buf.size())
-      throw Decoding_Error("Client_Hello: Packet corrupted");
-
-   for(u32bit j = 0; j != comp_algo_size; j++)
-      comp_algos.push_back(buf[offset+j]);
    }
 
 /**
@@ -156,8 +179,8 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
 */
 bool Client_Hello::offered_suite(u16bit ciphersuite) const
    {
-   for(u32bit j = 0; j != suites.size(); j++)
-      if(suites[j] == ciphersuite)
+   for(u32bit i = 0; i != suites.size(); i++)
+      if(suites[i] == ciphersuite)
          return true;
    return false;
    }
@@ -172,11 +195,15 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
                            HandshakeHash& hash)
    {
    bool have_rsa = false, have_dsa = false;
-   for(u32bit j = 0; j != certs.size(); j++)
+
+   for(u32bit i = 0; i != certs.size(); i++)
       {
-      Public_Key* key = certs[j].subject_public_key();
-      if(key->algo_name() == "RSA") have_rsa = true;
-      if(key->algo_name() == "DSA") have_dsa = true;
+      Public_Key* key = certs[i].subject_public_key();
+      if(key->algo_name() == "RSA")
+         have_rsa = true;
+
+      if(key->algo_name() == "DSA")
+         have_dsa = true;
       }
 
    suite = policy->choose_suite(c_hello.ciphersuites(), have_rsa, have_dsa);
@@ -218,23 +245,24 @@ void Server_Hello::deserialize(const MemoryRegion<byte>& buf)
    if(buf.size() < 38)
       throw Decoding_Error("Server_Hello: Packet corrupted");
 
-   s_version = static_cast<Version_Code>(make_u16bit(buf[0], buf[1]));
-   if(s_version != SSL_V3 && s_version != TLS_V10)
+   TLS_Data_Reader reader(buf);
+
+   s_version = static_cast<Version_Code>(reader.get_u16bit());
+
+   if(s_version != SSL_V3 && s_version != TLS_V10 && s_version != TLS_V11)
+      {
       throw TLS_Exception(PROTOCOL_VERSION,
                           "Server_Hello: Unsupported server version");
+      }
 
-   s_random.set(buf + 2, 32);
+   s_random = reader.get_fixed<byte>(32);
 
-   u32bit session_id_len = buf[2+32];
-   if(session_id_len > 32 || session_id_len + 38 != buf.size())
-      throw Decoding_Error("Server_Hello: Packet corrupted");
-   sess_id.copy(buf + 2 + 32 + 1, session_id_len);
+   sess_id = reader.get_range<byte>(1, 0, 32);
 
-   suite = make_u16bit(buf[2+32+1+session_id_len],
-                       buf[2+32+1+session_id_len+1]);
-   comp_algo = buf[2+32+1+session_id_len+2];
+   suite = reader.get_u16bit();
+
+   comp_algo = reader.get_byte();
    }
-
 
 /**
 * Create a new Server Hello Done message

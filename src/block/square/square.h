@@ -45,8 +45,8 @@ class BOTAN_DLL Square : public BlockCipher
       static const u32bit TD2[256];
       static const u32bit TD3[256];
 
-      SecureBuffer<u32bit, 28> EK, DK;
-      SecureBuffer<byte, 32> ME, MD;
+      SecureVector<u32bit, 28> EK, DK;
+      SecureVector<byte, 32> ME, MD;
    };
 
 }

@@ -33,11 +33,11 @@ class BOTAN_DLL AES : public BlockCipher
 
       u32bit ROUNDS;
 
-      SecureBuffer<u32bit, 56> EK;
-      SecureBuffer<byte, 16> ME;
+      SecureVector<u32bit, 56> EK;
+      SecureVector<byte, 16> ME;
 
-      SecureBuffer<u32bit, 56> DK;
-      SecureBuffer<byte, 16> MD;
+      SecureVector<u32bit, 56> DK;
+      SecureVector<byte, 16> MD;
    };
 
 /**

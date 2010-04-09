@@ -34,8 +34,8 @@ class BOTAN_DLL Salsa20 : public StreamCipher
    private:
       void key_schedule(const byte key[], u32bit key_len);
 
-      SecureBuffer<u32bit, 16> state;
-      SecureBuffer<byte, 64> buffer;
+      SecureVector<u32bit, 16> state;
+      SecureVector<byte, 64> buffer;
       u32bit position;
    };
 

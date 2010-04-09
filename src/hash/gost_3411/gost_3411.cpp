@@ -223,11 +223,11 @@ void GOST_34_11::final_result(byte out[])
       compress_n(buffer, 1);
       }
 
-   SecureBuffer<byte, 32> length_buf;
+   SecureVector<byte, 32> length_buf;
    const u64bit bit_count = count * 8;
    store_le(bit_count, length_buf);
 
-   SecureBuffer<byte, 32> sum_buf(sum);
+   SecureVector<byte, 32> sum_buf(sum);
 
    compress_n(length_buf, 1);
    compress_n(sum_buf, 1);

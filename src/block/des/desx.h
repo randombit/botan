@@ -28,7 +28,7 @@ class BOTAN_DLL DESX : public BlockCipher
       DESX() : BlockCipher(8, 24) {}
    private:
       void key_schedule(const byte[], u32bit);
-      SecureBuffer<byte, 8> K1, K2;
+      SecureVector<byte, 8> K1, K2;
       DES des;
    };
 

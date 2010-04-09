@@ -40,7 +40,7 @@ class BOTAN_DLL TLS_Policy
       virtual u32bit rsa_export_keysize() const { return 512; }
 
       virtual Version_Code min_version() const { return SSL_V3; }
-      virtual Version_Code pref_version() const { return TLS_V10; }
+      virtual Version_Code pref_version() const { return TLS_V11; }
 
       virtual bool check_cert(const std::vector<X509_Certificate>&,
                               const std::string&) const;

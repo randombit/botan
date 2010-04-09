@@ -131,7 +131,7 @@ SessionKeys::SessionKeys(const CipherSuite& suite, Version_Code version,
                          const MemoryRegion<byte>& c_random,
                          const MemoryRegion<byte>& s_random)
    {
-   if(version != SSL_V3 && version != TLS_V10)
+   if(version != SSL_V3 && version != TLS_V10 && version != TLS_V11)
       throw Invalid_Argument("SessionKeys: Unknown version code");
 
    const u32bit mac_keylen = output_length_of(suite.mac_algo());

@@ -29,7 +29,7 @@ class BOTAN_DLL DES : public BlockCipher
    private:
       void key_schedule(const byte[], u32bit);
 
-      SecureBuffer<u32bit, 32> round_key;
+      SecureVector<u32bit, 32> round_key;
    };
 
 /*
@@ -49,7 +49,7 @@ class BOTAN_DLL TripleDES : public BlockCipher
    private:
       void key_schedule(const byte[], u32bit);
 
-      SecureBuffer<u32bit, 96> round_key;
+      SecureVector<u32bit, 96> round_key;
    };
 
 /*

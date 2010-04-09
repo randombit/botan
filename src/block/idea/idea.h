@@ -28,7 +28,7 @@ class BOTAN_DLL IDEA : public BlockCipher
       IDEA() : BlockCipher(8, 16) {}
    protected:
       void key_schedule(const byte[], u32bit);
-      SecureBuffer<u16bit, 52> EK, DK;
+      SecureVector<u16bit, 52> EK, DK;
    };
 
 }

@@ -6,6 +6,7 @@
 */
 
 #include <botan/tls_messages.h>
+#include <botan/internal/tls_reader.h>
 #include <botan/pubkey.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
@@ -62,14 +63,8 @@ SecureVector<byte> Certificate_Verify::serialize() const
 */
 void Certificate_Verify::deserialize(const MemoryRegion<byte>& buf)
    {
-   if(buf.size() < 2)
-      throw Decoding_Error("Certificate_Verify: Corrupted packet");
-
-   u32bit sig_len = make_u16bit(buf[0], buf[1]);
-   if(buf.size() != 2 + sig_len)
-      throw Decoding_Error("Certificate_Verify: Corrupted packet");
-
-   signature.set(buf + 2, sig_len);
+   TLS_Data_Reader reader(buf);
+   signature = reader.get_range<byte>(2, 0, 65535);
    }
 
 /**

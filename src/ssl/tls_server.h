@@ -26,6 +26,9 @@ class BOTAN_DLL TLS_Server : public TLS_Connection
 
       std::vector<X509_Certificate> peer_cert_chain() const;
 
+      std::string requested_hostname() const
+         { return client_requested_hostname; }
+
       void close();
       bool is_closed() const;
 
@@ -49,6 +52,8 @@ class BOTAN_DLL TLS_Server : public TLS_Connection
 
       RandomNumberGenerator& rng;
 
+      Socket& peer;
+
       Record_Writer writer;
       Record_Reader reader;
       const TLS_Policy* policy;
@@ -61,6 +66,7 @@ class BOTAN_DLL TLS_Server : public TLS_Connection
       SecureVector<byte> session_id;
       SecureQueue read_buf;
       std::string peer_id;
+      std::string client_requested_hostname;
       bool active;
    };
 

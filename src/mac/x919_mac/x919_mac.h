@@ -32,7 +32,7 @@ class BOTAN_DLL ANSI_X919_MAC : public MessageAuthenticationCode
 
       BlockCipher* e;
       BlockCipher* d;
-      SecureBuffer<byte, 8> state;
+      SecureVector<byte, 8> state;
       u32bit position;
    };
 

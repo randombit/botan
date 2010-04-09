@@ -41,8 +41,8 @@ class BOTAN_DLL Twofish : public BlockCipher
       static const byte EXP_TO_POLY[255];
       static const byte POLY_TO_EXP[255];
 
-      SecureBuffer<u32bit, 256> SBox0, SBox1, SBox2, SBox3;
-      SecureBuffer<u32bit, 40> round_key;
+      SecureVector<u32bit, 256> SBox0, SBox1, SBox2, SBox3;
+      SecureVector<u32bit, 40> round_key;
    };
 
 }

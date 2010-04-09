@@ -44,7 +44,7 @@ class SecureQueueNode
    private:
       friend class SecureQueue;
       SecureQueueNode* next;
-      SecureBuffer<byte, DEFAULT_BUFFERSIZE> buffer;
+      SecureVector<byte, DEFAULT_BUFFERSIZE> buffer;
       u32bit start, end;
    };
 

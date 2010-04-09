@@ -37,7 +37,7 @@ class BOTAN_DLL SEED : public BlockCipher
             static const u32bit S0[256], S1[256], S2[256], S3[256];
          };
 
-      SecureBuffer<u32bit, 32> K;
+      SecureVector<u32bit, 32> K;
    };
 
 }

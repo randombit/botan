@@ -51,7 +51,7 @@ Server_Key_Exchange::Server_Key_Exchange(RandomNumberGenerator& rng,
       padding = "EMSA3(TLS.Digest.0)";
    else if(priv_key->algo_name() == "DSA")
       {
-      padding == "EMSA1(SHA-1)";
+      padding = "EMSA1(SHA-1)";
       format = DER_SEQUENCE;
       }
    else

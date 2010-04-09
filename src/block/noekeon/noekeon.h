@@ -31,7 +31,7 @@ class BOTAN_DLL Noekeon : public BlockCipher
 
       static const byte RC[17];
 
-      SecureBuffer<u32bit, 4> EK, DK;
+      SecureVector<u32bit, 4> EK, DK;
    };
 
 }

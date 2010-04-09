@@ -1,15 +1,13 @@
 /*
+* Adding an application specific engine
 * (C) 2004,2008 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-/*
-  Adding a simple XOR cipher to the internal tables
-*/
-
 #include <botan/stream_cipher.h>
-#include <botan/init.h>
+#include <botan/engine.h>
+
 using namespace Botan;
 
 class XOR_Cipher : public StreamCipher
@@ -25,43 +23,49 @@ class XOR_Cipher : public StreamCipher
 
       XOR_Cipher() : StreamCipher(1, 32) { mask_pos = 0; }
    private:
-      void cipher(const byte[], byte[], u32bit);
-      void key_schedule(const byte[], u32bit);
+      void cipher(const byte in[], byte out[], u32bit length)
+         {
+         for(u32bit j = 0; j != length; j++)
+            {
+            out[j] = in[j] ^ mask[mask_pos];
+            mask_pos = (mask_pos + 1) % mask.size();
+            }
+         }
+
+      void key_schedule(const byte key[], u32bit length)
+         {
+         mask.set(key, length);
+         }
 
       SecureVector<byte> mask;
       u32bit mask_pos;
    };
 
-void XOR_Cipher::cipher(const byte in[], byte out[], u32bit length)
+class Application_Engine : public Engine
    {
-   for(u32bit j = 0; j != length; j++)
-      {
-      out[j] = in[j] ^ mask[mask_pos];
-      mask_pos = (mask_pos + 1) % mask.size();
-      }
-   }
+   public:
+      std::string provider_name() const { return "application"; }
 
-void XOR_Cipher::key_schedule(const byte key[], u32bit length)
-   {
-   mask.set(key, length);
-   }
+      StreamCipher* find_stream_cipher(const SCAN_Name& request,
+                                       Algorithm_Factory&) const
+         {
+         if(request.algo_name() == "XOR")
+            return new XOR_Cipher;
+         return 0;
+         }
+   };
 
-#include <fstream>
+#include <botan/botan.h>
 #include <iostream>
 #include <string>
-#include <vector>
-#include <cstring>
-
-#include <botan/lookup.h>
-#include <botan/filters.h>
-#include <botan/libstate.h>
 
 int main()
    {
 
    Botan::LibraryInitializer init;
 
-   global_state().algorithm_factory().add_stream_cipher(new XOR_Cipher, "app");
+   global_state().algorithm_factory().add_engine(
+      new Application_Engine);
 
    // a hex key value
    SymmetricKey key("010203040506070809101112AAFF");

@@ -237,36 +237,33 @@ void Library_State::initialize()
 
    load_default_config();
 
-   std::vector<Engine*> engines = {
+   m_algorithm_factory = new Algorithm_Factory(*mutex_factory);
 
 #if defined(BOTAN_HAS_ENGINE_GNU_MP)
-      new GMP_Engine,
+   algorithm_factory().add_engine(new GMP_Engine);
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_OPENSSL)
-      new OpenSSL_Engine,
+   algorithm_factory().add_engine(new OpenSSL_Engine);
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_AES_ISA)
-   new AES_ISA_Engine,
+   algorithm_factory().add_engine(new AES_ISA_Engine);
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_SIMD)
-      new SIMD_Engine,
+   algorithm_factory().add_engine(new SIMD_Engine);
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_AMD64_ASSEMBLER)
-      new AMD64_Assembler_Engine,
+   algorithm_factory().add_engine(new AMD64_Assembler_Engine);
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_IA32_ASSEMBLER)
-      new IA32_Assembler_Engine,
+   algorithm_factory().add_engine(new IA32_Assembler_Engine);
 #endif
 
-      new Default_Engine
-   };
-
-   m_algorithm_factory = new Algorithm_Factory(engines);
+   algorithm_factory().add_engine(new Default_Engine);
 
 #if defined(BOTAN_HAS_SELFTESTS)
    confirm_startup_self_tests(algorithm_factory());
@@ -280,6 +277,8 @@ Library_State::Library_State()
    {
    cached_default_allocator = 0;
    m_algorithm_factory = 0;
+
+   global_rng_ptr = 0;
    }
 
 /*
@@ -289,6 +288,10 @@ Library_State::~Library_State()
    {
    delete m_algorithm_factory;
    m_algorithm_factory = 0;
+
+   delete global_rng_ptr;
+   global_rng_ptr = 0;
+
 
    cached_default_allocator = 0;
 

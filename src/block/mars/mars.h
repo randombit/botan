@@ -26,7 +26,7 @@ class BOTAN_DLL MARS : public BlockCipher
    private:
       void key_schedule(const byte[], u32bit);
 
-      SecureBuffer<u32bit, 40> EK;
+      SecureVector<u32bit, 40> EK;
    };
 
 }

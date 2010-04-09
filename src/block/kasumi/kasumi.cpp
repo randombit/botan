@@ -204,7 +204,7 @@ void KASUMI::key_schedule(const byte key[], u32bit)
    static const u16bit RC[] = { 0x0123, 0x4567, 0x89AB, 0xCDEF,
                                 0xFEDC, 0xBA98, 0x7654, 0x3210 };
 
-   SecureBuffer<u16bit, 16> K;
+   SecureVector<u16bit, 16> K;
    for(u32bit j = 0; j != 8; ++j)
       {
       K[j] = load_be<u16bit>(key, j);

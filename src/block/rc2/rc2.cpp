@@ -124,7 +124,7 @@ void RC2::key_schedule(const byte key[], u32bit length)
       0xC5, 0xF3, 0xDB, 0x47, 0xE5, 0xA5, 0x9C, 0x77, 0x0A, 0xA6, 0x20, 0x68,
       0xFE, 0x7F, 0xC1, 0xAD };
 
-   SecureBuffer<byte, 128> L;
+   SecureVector<byte, 128> L;
    L.copy(key, length);
 
    for(u32bit j = length; j != 128; ++j)
