@@ -163,18 +163,24 @@ u32bit Record_Reader::get_record(byte& msg_type,
       byte pad_value = plaintext[plaintext.size()-1];
       pad_size = pad_value + 1;
 
+      /*
+      * Check the padding; if it is wrong, then say we have 0 bytes of
+      * padding, which should ensure that the MAC check below does not
+      * suceed. This hides a timing channel.
+      *
+      * This particular countermeasure is recommended in the TLS 1.2
+      * spec (RFC 5246) in section 6.2.3.2
+      */
       if(version == SSL_V3)
          {
          if(pad_value > block_size)
-            throw TLS_Exception(BAD_RECORD_MAC,
-                                "Record_Reader: Bad padding");
+            pad_size = 0;
          }
       else
          {
          for(u32bit j = 0; j != pad_size; j++)
             if(plaintext[plaintext.size()-j-1] != pad_value)
-               throw TLS_Exception(BAD_RECORD_MAC,
-                                   "Record_Reader: Bad padding");
+               pad_size = 0;
          }
       }
 
