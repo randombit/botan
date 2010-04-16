@@ -1,4 +1,6 @@
 
+* 1.9.7-dev, ????-??-??
+
 * 1.9.6, 2010-04-09
  - TLS: Add support for TLS v1.1
  - TLS: Support server name indicator extension
