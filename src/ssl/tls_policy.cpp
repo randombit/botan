@@ -32,6 +32,7 @@ std::vector<u16bit> TLS_Policy::suite_list(bool use_rsa,
       suites.push_back(TLS_DHE_DSS_WITH_AES_256_CBC_SHA);
       suites.push_back(TLS_DHE_DSS_WITH_AES_128_CBC_SHA);
       suites.push_back(TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA);
+      suites.push_back(TLS_DHE_DSS_WITH_SEED_CBC_SHA);
       }
 
    if(use_edh_rsa)
@@ -39,6 +40,7 @@ std::vector<u16bit> TLS_Policy::suite_list(bool use_rsa,
       suites.push_back(TLS_DHE_RSA_WITH_AES_256_CBC_SHA);
       suites.push_back(TLS_DHE_RSA_WITH_AES_128_CBC_SHA);
       suites.push_back(TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA);
+      suites.push_back(TLS_DHE_RSA_WITH_SEED_CBC_SHA);
       }
 
    if(use_rsa)
@@ -46,6 +48,7 @@ std::vector<u16bit> TLS_Policy::suite_list(bool use_rsa,
       suites.push_back(TLS_RSA_WITH_AES_256_CBC_SHA);
       suites.push_back(TLS_RSA_WITH_AES_128_CBC_SHA);
       suites.push_back(TLS_RSA_WITH_3DES_EDE_CBC_SHA);
+      suites.push_back(TLS_RSA_WITH_SEED_CBC_SHA);
       suites.push_back(TLS_RSA_WITH_RC4_128_SHA);
       suites.push_back(TLS_RSA_WITH_RC4_128_MD5);
       }

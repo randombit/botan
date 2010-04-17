@@ -1,6 +1,7 @@
 
 * 1.9.7-dev, ????-??-??
  - TLS: Support reading SSLv2 client hellos
+ - TLS: Add support for SEED ciphersuites (RFC 4162)
  - Add Comb4P hash combiner function
 
 * 1.9.6, 2010-04-09
