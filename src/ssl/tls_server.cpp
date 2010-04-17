@@ -358,7 +358,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
       state->suite = CipherSuite(state->server_hello->ciphersuite());
 
-      if(state->suite.sig_type() != CipherSuite::NO_SIG)
+      if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
          {
          // FIXME: should choose certs based on sig type
          state->server_certs = new Certificate(writer, cert_chain,
@@ -366,14 +366,14 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          }
 
       state->kex_priv = PKCS8::copy_key(*private_key, rng);
-      if(state->suite.kex_type() != CipherSuite::NO_KEX)
+      if(state->suite.kex_type() != TLS_ALGO_KEYEXCH_NOKEX)
          {
-         if(state->suite.kex_type() == CipherSuite::RSA_KEX)
+         if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_RSA)
             {
             state->kex_priv = new RSA_PrivateKey(rng,
                                                  policy->rsa_export_keysize());
             }
-         else if(state->suite.kex_type() == CipherSuite::DH_KEX)
+         else if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_DH)
             {
             state->kex_priv = new DH_PrivateKey(rng, policy->dh_group());
             }
