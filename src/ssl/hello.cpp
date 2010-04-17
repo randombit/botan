@@ -106,6 +106,40 @@ SecureVector<byte> Client_Hello::serialize() const
    return buf;
    }
 
+void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
+   {
+   if(buf.size() < 12 || buf[0] != 1)
+      throw Decoding_Error("Client_Hello: SSLv2 hello corrupted");
+
+   const u32bit cipher_spec_len = make_u16bit(buf[3], buf[4]);
+   const u32bit sess_id_len = make_u16bit(buf[5], buf[6]);
+   const u32bit challenge_len = make_u16bit(buf[7], buf[8]);
+
+   const u32bit expected_size =
+      (9 + sess_id_len + cipher_spec_len + challenge_len);
+
+   if(buf.size() != expected_size)
+      throw Decoding_Error("Client_Hello: SSLv2 hello corrupted");
+
+   if(sess_id_len != 0 || cipher_spec_len % 3 != 0 ||
+      (challenge_len < 16 || challenge_len > 32))
+      {
+      throw Decoding_Error("Client_Hello: SSLv2 hello corrupted");
+      }
+
+   for(u32bit i = 9; i != 9 + cipher_spec_len; i += 3)
+      {
+      if(buf[i] != 0) // a SSLv2 cipherspec; ignore it
+         continue;
+
+      suites.push_back(make_u16bit(buf[i+1], buf[i+2]));
+      }
+
+   c_version = static_cast<Version_Code>(make_u16bit(buf[1], buf[2]));
+
+   c_random.set(&buf[9+cipher_spec_len+sess_id_len], challenge_len);
+   }
+
 /**
 * Deserialize a Client Hello message
 */

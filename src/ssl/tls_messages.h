@@ -56,10 +56,19 @@ class BOTAN_DLL Client_Hello : public HandshakeMessage
       Client_Hello(RandomNumberGenerator& rng,
                    Record_Writer&, const TLS_Policy*, HandshakeHash&);
 
-      Client_Hello(const MemoryRegion<byte>& buf) { deserialize(buf); }
+      Client_Hello(const MemoryRegion<byte>& buf,
+                   Handshake_Type type)
+         {
+         if(type == CLIENT_HELLO)
+            deserialize(buf);
+         else
+            deserialize_sslv2(buf);
+         }
+
    private:
       SecureVector<byte> serialize() const;
       void deserialize(const MemoryRegion<byte>&);
+      void deserialize_sslv2(const MemoryRegion<byte>&);
 
       Version_Code c_version;
       SecureVector<byte> sess_id, c_random;

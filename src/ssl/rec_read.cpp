@@ -124,6 +124,35 @@ u32bit Record_Reader::get_record(byte& msg_type,
    */
    input_queue.peek(header, sizeof(header));
 
+   // SSLv2-format client hello?
+   if(header[0] & 0x80 && header[2] == 1 && header[3] == 3)
+      {
+      u32bit record_len = make_u16bit(header[0], header[1]) & 0x7FFF;
+
+      if(have_in_queue < record_len + 2)
+         return (record_len + 2 - have_in_queue);
+
+      msg_type = HANDSHAKE;
+      output.resize(record_len + 4);
+
+      input_queue.read(&output[2], record_len + 2);
+      output[0] = CLIENT_HELLO_SSLV2;
+      output[1] = 0;
+      output[2] = header[0] & 0x7F;
+      output[3] = header[1];
+
+      return 0;
+      }
+
+   if(header[0] != CHANGE_CIPHER_SPEC &&
+      header[0] != ALERT &&
+      header[0] != HANDSHAKE &&
+      header[0] != APPLICATION_DATA)
+      {
+      throw TLS_Exception(UNEXPECTED_MESSAGE,
+                          "Record_Reader: Unknown record type");
+      }
+
    const u16bit version    = make_u16bit(header[1], header[2]);
    const u16bit record_len = make_u16bit(header[3], header[4]);
 
