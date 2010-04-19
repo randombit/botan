@@ -20,6 +20,8 @@ namespace Botan {
 class BOTAN_DLL CipherSuite
    {
    public:
+      static TLS_Ciphersuite_Algos lookup_ciphersuite(u16bit suite);
+
       std::string cipher_algo() const { return cipher; }
       std::string mac_algo() const { return mac; }
 

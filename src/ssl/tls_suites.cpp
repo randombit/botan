@@ -10,12 +10,10 @@
 
 namespace Botan {
 
-namespace {
-
 /**
 * Convert an SSL/TLS ciphersuite to algorithm fields
 */
-TLS_Ciphersuite_Algos lookup_ciphersuite(u16bit suite)
+TLS_Ciphersuite_Algos TLS_Suites::lookup_ciphersuite(u16bit suite)
    {
    if(suite == TLS_RSA_WITH_RC4_128_MD5)
       return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_RSA |
@@ -211,6 +209,8 @@ TLS_Ciphersuite_Algos lookup_ciphersuite(u16bit suite)
 
    return TLS_Ciphersuite_Algos(0);
    }
+
+namespace {
 
 std::pair<std::string, u32bit> cipher_code_to_name(TLS_Ciphersuite_Algos algo)
    {
