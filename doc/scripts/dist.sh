@@ -6,8 +6,10 @@
 SELECTOR=h:net.randombit.botan
 KEY_ID=EFBADFBC
 MTN_DB=/storage/mtn/botan.mtn
-WEB_DIR=$HOME/projects/www/files/botan/v1.9/
 DIST_DIR=~/Botan-dist
+
+DIST_FILES_DIR=$HOME/projects/www/files/botan/v1.9/
+WEB_DOCS_DIR=$HOME/projects/www/htdocs/botan/htdocs/
 
 # You shouldn't have to change anything after this
 mkdir -p $DIST_DIR
@@ -39,7 +41,7 @@ do
   rm -f $doc.aux $doc.log $doc.dvi $doc.toc
 done
 
-cp log.txt ../..
+botan_log_to_html log.txt > ../../log.html
 
 cd .. # topdir
 cd .. # now in DIST_DIR
@@ -60,5 +62,7 @@ read -a PASSWORD -p "Enter PGP password (or ^C to skip signatures): "
 echo $PASSWORD | gpg --batch --armor -b --passphrase-fd 0 -u $KEY_ID Botan-$VERSION.tgz
 echo $PASSWORD | gpg --batch --armor -b --passphrase-fd 0 -u $KEY_ID Botan-$VERSION.tbz
 
-mv Botan-$VERSION.tgz* $WEB_DIR
-mv Botan-$VERSION.tbz* $WEB_DIR
+mv Botan-$VERSION.tgz* Botan-$VERSION.tbz* $DIST_FILES_DIR
+mv log.html $WEB_DOCS_DIR
+
+echo "Now edit download.html, and add a release notice to pyblosxom"
