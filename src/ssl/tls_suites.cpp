@@ -137,6 +137,30 @@ TLS_Ciphersuite_Algos lookup_ciphersuite(u16bit suite)
                                    TLS_ALGO_MAC_SHA256 |
                                    TLS_ALGO_CIPHER_AES256_CBC);
 
+   if(suite == TLS_ECDHE_ECDSA_WITH_RC4_128_SHA)
+      return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_ECDSA |
+                                   TLS_ALGO_KEYEXCH_ECDH |
+                                   TLS_ALGO_MAC_SHA1 |
+                                   TLS_ALGO_CIPHER_RC4_128);
+
+   if(suite == TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA)
+      return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_ECDSA |
+                                   TLS_ALGO_KEYEXCH_ECDH |
+                                   TLS_ALGO_MAC_SHA1 |
+                                   TLS_ALGO_CIPHER_3DES_CBC);
+
+   if(suite == TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA)
+      return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_ECDSA |
+                                   TLS_ALGO_KEYEXCH_ECDH |
+                                   TLS_ALGO_MAC_SHA1 |
+                                   TLS_ALGO_CIPHER_AES128_CBC);
+
+   if(suite == TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA)
+      return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_ECDSA |
+                                   TLS_ALGO_KEYEXCH_ECDH |
+                                   TLS_ALGO_MAC_SHA1 |
+                                   TLS_ALGO_CIPHER_AES256_CBC);
+
    if(suite == TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256)
       return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_ECDSA |
                                    TLS_ALGO_KEYEXCH_ECDH |
@@ -147,6 +171,30 @@ TLS_Ciphersuite_Algos lookup_ciphersuite(u16bit suite)
       return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_ECDSA |
                                    TLS_ALGO_KEYEXCH_ECDH |
                                    TLS_ALGO_MAC_SHA384 |
+                                   TLS_ALGO_CIPHER_AES256_CBC);
+
+   if(suite == TLS_ECDHE_RSA_WITH_RC4_128_SHA)
+      return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_RSA |
+                                   TLS_ALGO_KEYEXCH_ECDH |
+                                   TLS_ALGO_MAC_SHA1 |
+                                   TLS_ALGO_CIPHER_RC4_128);
+
+   if(suite == TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA)
+      return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_RSA |
+                                   TLS_ALGO_KEYEXCH_ECDH |
+                                   TLS_ALGO_MAC_SHA1 |
+                                   TLS_ALGO_CIPHER_3DES_CBC);
+
+   if(suite == TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA)
+      return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_RSA |
+                                   TLS_ALGO_KEYEXCH_ECDH |
+                                   TLS_ALGO_MAC_SHA1 |
+                                   TLS_ALGO_CIPHER_AES128_CBC);
+
+   if(suite == TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA)
+      return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_RSA |
+                                   TLS_ALGO_KEYEXCH_ECDH |
+                                   TLS_ALGO_MAC_SHA1 |
                                    TLS_ALGO_CIPHER_AES256_CBC);
 
    if(suite == TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256)
