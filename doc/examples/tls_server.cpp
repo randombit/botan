@@ -4,7 +4,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/init.h>
+#include <botan/botan.h>
 #include <botan/tls_server.h>
 #include <botan/unx_sock.h>
 
@@ -31,30 +31,34 @@ int main(int argc, char* argv[])
       {
       LibraryInitializer init;
 
-      std::auto_ptr<RandomNumberGenerator> rng(
-         RandomNumberGenerator::make_rng());
+      AutoSeeded_RNG rng;
 
-      RSA_PrivateKey key(*rng, 512);
-      //DSA_PrivateKey key(get_dl_group("DSA-1024"));
+      //RSA_PrivateKey key(rng, 1024);
+      DSA_PrivateKey key(rng, DL_Group("dsa/jce/1024"));
 
       X509_Cert_Options options(
-         "www.randombit.net/US/Syn Ack Labs/Mathematical Munitions Dept");
+         "localhost/US/Syn Ack Labs/Mathematical Munitions Dept");
 
       X509_Certificate cert =
-         X509::create_self_signed_cert(options, key, "SHA-1", *rng);
+         X509::create_self_signed_cert(options, key, "SHA-1", rng);
 
       Unix_Server_Socket listener(port);
-
-      printf("Now listening on port %d...\n", port);
 
       while(true)
          {
          try {
+            printf("Listening for new connection on port %d\n", port);
+
             Socket* sock = listener.accept();
 
             printf("Got new connection\n");
 
-            TLS_Server tls(*rng, *sock, cert, key);
+            TLS_Server tls(rng, *sock, cert, key);
+
+            std::string hostname = tls.requested_hostname();
+
+            if(hostname != "")
+               printf("Client requested host '%s'\n", hostname.c_str());
 
             printf("Writing some text\n");
 
@@ -63,8 +67,8 @@ int main(int argc, char* argv[])
 
             printf("Now trying a read...\n");
 
-            char buf[10] = { 0 };
-            u32bit got = tls.read((byte*)buf, 9);
+            char buf[1024] = { 0 };
+            u32bit got = tls.read((byte*)buf, sizeof(buf)-1);
             printf("%d: '%s'\n", got, buf);
 
             tls.close();
