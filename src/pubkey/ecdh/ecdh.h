@@ -38,7 +38,7 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
 
       /**
       * Get this keys algorithm name.
-      * @result this keys algorithm name
+      * @return this keys algorithm name
       */
       std::string algo_name() const { return "ECDH"; }
 
@@ -46,9 +46,16 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
       * Get the maximum number of bits allowed to be fed to this key.
       * This is the bitlength of the order of the base point.
 
-      * @result the maximum number of input bits
+      * @return the maximum number of input bits
       */
       u32bit max_input_bits() const { return domain().get_order().bits(); }
+
+      /**
+      * @return the public point value
+      */
+      MemoryVector<byte> public_value() const
+         { return EC2OSP(public_point(), PointGFp::UNCOMPRESSED); }
+
    protected:
       ECDH_PublicKey() {}
    };
@@ -75,7 +82,7 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
          EC_PrivateKey(rng, domain) {}
 
       MemoryVector<byte> public_value() const
-         { return EC2OSP(public_point(), PointGFp::UNCOMPRESSED); }
+         { return ECDH_PublicKey::public_value(); }
    };
 
 /**
