@@ -241,6 +241,11 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
       }
 
    suite = policy->choose_suite(c_hello.ciphersuites(), have_rsa, have_dsa);
+
+   if(suite == 0)
+      throw TLS_Exception(PROTOCOL_VERSION,
+                          "Can't agree on a ciphersuite with client");
+
    comp_algo = policy->choose_compression(c_hello.compression_algos());
 
    s_version = ver;
