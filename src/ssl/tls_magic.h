@@ -179,6 +179,9 @@ enum TLS_Handshake_Extension_Type {
    TLSEXT_TRUSTED_CA_KEYS        = 3,
    TLSEXT_TRUNCATED_HMAC         = 4,
 
+   TLSEXT_USABLE_ELLIPTIC_CURVES = 10,
+   TLSEXT_EC_POINT_FORMATS       = 11,
+
    TLSEXT_CERTIFICATE_TYPES      = 9,
    TLSEXT_SESSION_TICKET         = 35,
 };
