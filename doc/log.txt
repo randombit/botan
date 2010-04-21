@@ -3,6 +3,7 @@
  - TLS: Support reading SSLv2 client hellos
  - TLS: Add support for SEED ciphersuites (RFC 4162)
  - Add Comb4P hash combiner function
+ - Fix checking of EMSA_Raw signatures with leading 0 bytes
 
 * 1.9.6, 2010-04-09
  - TLS: Add support for TLS v1.1
