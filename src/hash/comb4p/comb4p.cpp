@@ -52,12 +52,10 @@ Comb4P::Comb4P(HashFunction* h1, HashFunction* h2) :
                 comb4p_block_size(h1, h2)),
    hash1(h1), hash2(h2)
    {
-#if 0
    if(hash1->OUTPUT_LENGTH != hash2->OUTPUT_LENGTH)
       throw std::invalid_argument("Comb4P: Incompatible hashes " +
                                   hash1->name() + " and " +
                                   hash2->name());
-#endif
 
    clear();
    }
