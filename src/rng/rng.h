@@ -74,6 +74,9 @@ class BOTAN_DLL RandomNumberGenerator
       */
       virtual void add_entropy(const byte in[], u32bit length) = 0;
 
+      void add_entropy_vec(const MemoryRegion<byte>& vec)
+         { add_entropy(&vec[0], vec.size()); }
+
       RandomNumberGenerator() {}
       virtual ~RandomNumberGenerator() {}
    private:
