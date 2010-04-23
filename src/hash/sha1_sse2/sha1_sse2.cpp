@@ -159,7 +159,7 @@ void SHA_160_SSE2::compress_n(const byte input_bytes[], u32bit blocks)
    u32bit A = digest[0], B = digest[1], C = digest[2],
           D = digest[3], E = digest[4];
 
-   const __m128i* input = (const __m128i *)input_bytes;
+   const __m128i* input = reinterpret_cast<const __m128i*>(input_bytes);
 
    for(u32bit i = 0; i != blocks; ++i)
       {

@@ -83,14 +83,14 @@ inline void bswap_4(T x[4])
 template<>
 inline void bswap_4(u32bit x[4])
    {
-   __m128i T = _mm_loadu_si128((const __m128i*)x);
+   __m128i T = _mm_loadu_si128(reinterpret_cast<const __m128i*>(x));
 
    T = _mm_shufflehi_epi16(T, _MM_SHUFFLE(2, 3, 0, 1));
    T = _mm_shufflelo_epi16(T, _MM_SHUFFLE(2, 3, 0, 1));
 
    T =  _mm_or_si128(_mm_srli_epi16(T, 8), _mm_slli_epi16(T, 8));
 
-   _mm_storeu_si128((__m128i*)x, T);
+   _mm_storeu_si128(reinterpret_cast<__m128i*>(x), T);
    }
 
 #endif

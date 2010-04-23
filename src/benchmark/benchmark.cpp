@@ -131,7 +131,7 @@ algorithm_benchmark(const std::string& name,
       return all_results;
 
    const u64bit ns_per_provider =
-      ((u64bit)milliseconds * 1000 * 1000) / providers.size();
+      (static_cast<u64bit>(milliseconds) * 1000 * 1000) / providers.size();
 
    std::vector<byte> buf(16 * 1024);
    rng.randomize(&buf[0], buf.size());
