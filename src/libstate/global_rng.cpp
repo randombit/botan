@@ -6,7 +6,7 @@
 */
 
 #include <botan/libstate.h>
-#include <botan/mutex.h>
+#include <botan/internal/mutex.h>
 
 #if defined(BOTAN_HAS_RANDPOOL)
   #include <botan/randpool.h>
