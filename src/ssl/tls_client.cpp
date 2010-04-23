@@ -405,6 +405,8 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       state->version = state->server_hello->version();
 
+      rng.add_entropy_vec(state->server_hello->random());
+
       if(state->version > state->client_hello->version())
          throw TLS_Exception(HANDSHAKE_FAILURE,
                              "TLS_Client: Server replied with bad version");

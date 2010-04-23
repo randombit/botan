@@ -348,6 +348,8 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
       state->client_hello = new Client_Hello(contents, type);
 
+      rng.add_entropy_vec(state->client_hello->random());
+
       client_requested_hostname = state->client_hello->hostname();
 
       state->version = choose_version(state->client_hello->version(),
