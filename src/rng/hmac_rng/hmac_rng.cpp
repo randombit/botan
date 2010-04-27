@@ -55,12 +55,11 @@ void HMAC_RNG::randomize(byte out[], u32bit length)
    }
 
 /**
-* Reseed the internal state, also accepting user input to include
+* Poll for entropy and reset the internal keys
 */
-void HMAC_RNG::reseed_with_input(u32bit poll_bits,
-                                 const byte input[], u32bit input_length)
+void HMAC_RNG::reseed(u32bit poll_bits)
    {
-   /**
+   /*
    Using the terminology of E-t-E, XTR is the MAC function (normally
    HMAC) seeded with XTS (below) and we form SKM, the key material, by
    fast polling each source, and then slow polling as many as we think
@@ -82,20 +81,16 @@ void HMAC_RNG::reseed_with_input(u32bit poll_bits,
          }
       }
 
-   // And now add the user-provided input, if any
-   if(input_length)
-      accum.add(input, input_length, 1);
-
    /*
-   It is necessary to feed forward poll data. Otherwise, a good poll
-   (collecting a large amount of conditional entropy) followed by a
-   bad one (collecting little) would be unsafe. Do this by generating
-   new PRF outputs using the previous key and feeding them into the
-   extractor function.
-
-   Cycle the RNG once (CTXinfo="rng"), then generate a new PRF output
-   using the CTXinfo "reseed". Provide these values as input to the
-   extractor function.
+   * It is necessary to feed forward poll data. Otherwise, a good poll
+   * (collecting a large amount of conditional entropy) followed by a
+   * bad one (collecting little) would be unsafe. Do this by
+   * generating new PRF outputs using the previous key and feeding
+   * them into the extractor function.
+   *
+   * Cycle the RNG once (CTXinfo="rng"), then generate a new PRF
+   * output using the CTXinfo "reseed". Provide these values as input
+   * to the extractor function.
    */
    hmac_prf(prf, K, counter, "rng");
    extractor->update(K); // K is the CTXinfo=rng PRF output
@@ -114,26 +109,27 @@ void HMAC_RNG::reseed_with_input(u32bit poll_bits,
    // Reset state
    K.clear();
    counter = 0;
+   user_input_len = 0;
 
-   if(input_length > 64 || accum.bits_collected() >= 128)
+   if(accum.bits_collected() >= 128)
       seeded = true;
    }
 
 /**
-* Reseed the internal state
-*/
-void HMAC_RNG::reseed(u32bit poll_bits)
-   {
-   reseed_with_input(poll_bits, 0, 0);
-   }
-
-/**
-* Add user-supplied entropy by reseeding and including this
-* input among the poll data
+* Add user-supplied entropy to the extractor input
 */
 void HMAC_RNG::add_entropy(const byte input[], u32bit length)
    {
-   reseed_with_input(64, input, length);
+   extractor->update(input, length);
+   user_input_len += length;
+
+   /*
+   * After we've accumulated >= 1024 bytes of user input, reseed.
+   * This input will automatically have been included if reseed was
+   * called already, as it's just included in the extractor input.
+   */
+   if(user_input_len >= 1024)
+      reseed(128);
    }
 
 /**
@@ -144,7 +140,7 @@ void HMAC_RNG::add_entropy_source(EntropySource* src)
    entropy_sources.push_back(src);
    }
 
-/*
+/**
 * Clear memory of sensitive data
 */
 void HMAC_RNG::clear()
@@ -153,6 +149,7 @@ void HMAC_RNG::clear()
    prf->clear();
    K.clear();
    counter = 0;
+   user_input_len = 0;
    seeded = false;
    }
 
@@ -179,7 +176,9 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
 
    // First PRF inputs are all zero, as specified in section 2
    K.resize(prf->OUTPUT_LENGTH);
+
    counter = 0;
+   user_input_len = 0;
    seeded = false;
 
    /*
@@ -188,7 +187,7 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
    RNG, but obviously that is meaningless to do on the first poll.
 
    We will want to use the PRF before we set the first key (in
-   reseed_with_input), and it is a pain to keep track if it is set or
+   reseed), and it is a pain to keep track if it is set or
    not. Since the first time it doesn't matter anyway, just set the
    PRF key to constant zero: randomize() will not produce output
    unless is_seeded() returns true, and that will only be the case if
