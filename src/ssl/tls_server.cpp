@@ -325,6 +325,8 @@ void TLS_Server::read_handshake(byte rec_type,
 void TLS_Server::process_handshake_msg(Handshake_Type type,
                                        const MemoryRegion<byte>& contents)
    {
+   rng.add_entropy(&contents[0], contents.size());
+
    if(state == 0)
       throw Unexpected_Message("Unexpected handshake message");
 
@@ -347,8 +349,6 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       server_check_state(type, state);
 
       state->client_hello = new Client_Hello(contents, type);
-
-      rng.add_entropy_vec(state->client_hello->random());
 
       client_requested_hostname = state->client_hello->hostname();
 

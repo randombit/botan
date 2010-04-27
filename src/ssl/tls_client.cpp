@@ -363,6 +363,8 @@ void TLS_Client::read_handshake(byte rec_type,
 void TLS_Client::process_handshake_msg(Handshake_Type type,
                                        const MemoryRegion<byte>& contents)
    {
+   rng.add_entropy(&contents[0], contents.size());
+
    if(type == HELLO_REQUEST)
       {
       if(state == 0)
@@ -404,8 +406,6 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
                              "TLS_Client: Server replied with bad ciphersuite");
 
       state->version = state->server_hello->version();
-
-      rng.add_entropy_vec(state->server_hello->random());
 
       if(state->version > state->client_hello->version())
          throw TLS_Exception(HANDSHAKE_FAILURE,
