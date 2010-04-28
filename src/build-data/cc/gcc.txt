@@ -1,6 +1,6 @@
 macro_name GCC
 
-binary_name g++-4.5
+binary_name g++-4.5.0
 
 compile_option "-c "
 output_to_option "-o "
