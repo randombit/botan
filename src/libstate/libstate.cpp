@@ -237,7 +237,7 @@ void Library_State::initialize()
 
    load_default_config();
 
-   m_algorithm_factory = new Algorithm_Factory(*mutex_factory);
+   m_algorithm_factory = new Algorithm_Factory();
 
 #if defined(BOTAN_HAS_ENGINE_GNU_MP)
    algorithm_factory().add_engine(new GMP_Engine);
