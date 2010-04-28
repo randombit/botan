@@ -123,6 +123,7 @@ TLS_Client::~TLS_Client()
 */
 void TLS_Client::initialize()
    {
+   std::string error_str;
    Alert_Type error_type = NO_ALERT_TYPE;
 
    try {
@@ -133,10 +134,12 @@ void TLS_Client::initialize()
    }
    catch(TLS_Exception& e)
       {
+      error_str = e.what();
       error_type = e.type();
       }
    catch(std::exception& e)
       {
+      error_str = e.what();
       error_type = HANDSHAKE_FAILURE;
       }
 
@@ -157,7 +160,7 @@ void TLS_Client::initialize()
          state = 0;
          }
 
-      throw Stream_IO_Error("TLS_Client: Handshake failed");
+      throw Stream_IO_Error("TLS_Client: Handshake failed: " + error_str);
       }
    }
 
@@ -360,6 +363,8 @@ void TLS_Client::read_handshake(byte rec_type,
 void TLS_Client::process_handshake_msg(Handshake_Type type,
                                        const MemoryRegion<byte>& contents)
    {
+   rng.add_entropy(&contents[0], contents.size());
+
    if(type == HELLO_REQUEST)
       {
       if(state == 0)
@@ -419,7 +424,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       {
       client_check_state(type, state);
 
-      if(state->suite.sig_type() == CipherSuite::NO_SIG)
+      if(state->suite.sig_type() == TLS_ALGO_SIGNER_ANON)
          throw Unexpected_Message("Recived certificate from anonymous server");
 
       state->server_certs = new Certificate(contents);
@@ -445,8 +450,8 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
          throw TLS_Exception(UNSUPPORTED_CERTIFICATE,
                              "Unknown key type recieved in server kex");
 
-      if((is_dsa && state->suite.sig_type() != CipherSuite::DSA_SIG) ||
-         (is_rsa && state->suite.sig_type() != CipherSuite::RSA_SIG))
+      if((is_dsa && state->suite.sig_type() != TLS_ALGO_SIGNER_DSA) ||
+         (is_rsa && state->suite.sig_type() != TLS_ALGO_SIGNER_RSA))
          throw TLS_Exception(ILLEGAL_PARAMETER,
                              "Certificate key type did not match ciphersuite");
       }
@@ -454,7 +459,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       {
       client_check_state(type, state);
 
-      if(state->suite.kex_type() == CipherSuite::NO_KEX)
+      if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_NOKEX)
          throw Unexpected_Message("Unexpected key exchange from server");
 
       state->server_kex = new Server_Key_Exchange(contents);
@@ -474,12 +479,12 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
          throw TLS_Exception(HANDSHAKE_FAILURE,
                              "Unknown key type recieved in server kex");
 
-      if((is_dh && state->suite.kex_type() != CipherSuite::DH_KEX) ||
-         (is_rsa && state->suite.kex_type() != CipherSuite::RSA_KEX))
+      if((is_dh && state->suite.kex_type() != TLS_ALGO_KEYEXCH_DH) ||
+         (is_rsa && state->suite.kex_type() != TLS_ALGO_KEYEXCH_RSA))
          throw TLS_Exception(ILLEGAL_PARAMETER,
                              "Certificate key type did not match ciphersuite");
 
-      if(state->suite.sig_type() != CipherSuite::NO_SIG)
+      if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
          {
          if(!state->server_kex->verify(peer_certs[0],
                                        state->client_hello->random(),

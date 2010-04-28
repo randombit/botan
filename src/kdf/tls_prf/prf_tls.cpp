@@ -1,6 +1,6 @@
 /*
-* TLS PRF
-* (C) 2004-2006 Jack Lloyd
+* TLS v1.0 and v1.2 PRFs
+* (C) 2004-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -18,19 +18,19 @@ namespace {
 /*
 * TLS PRF P_hash function
 */
-SecureVector<byte> P_hash(MessageAuthenticationCode* mac,
-                          u32bit len,
-                          const byte secret[], u32bit secret_len,
-                          const byte seed[], u32bit seed_len)
+void P_hash(byte output[], u32bit output_len,
+            MessageAuthenticationCode* mac,
+            const byte secret[], u32bit secret_len,
+            const byte seed[], u32bit seed_len)
    {
-   SecureVector<byte> out;
-
    mac->set_key(secret, secret_len);
 
    SecureVector<byte> A(seed, seed_len);
-   while(len)
+
+   while(output_len)
       {
-      const u32bit this_block_len = std::min(mac->OUTPUT_LENGTH, len);
+      const u32bit this_block_len =
+         std::min(mac->OUTPUT_LENGTH, output_len);
 
       A = mac->process(A);
 
@@ -38,10 +38,10 @@ SecureVector<byte> P_hash(MessageAuthenticationCode* mac,
       mac->update(seed, seed_len);
       SecureVector<byte> block = mac->final();
 
-      out.append(block, this_block_len);
-      len -= this_block_len;
+      xor_buf(output, &block[0], this_block_len);
+      output_len -= this_block_len;
+      output += this_block_len;
       }
-   return out;
    }
 
 }
@@ -68,18 +68,41 @@ SecureVector<byte> TLS_PRF::derive(u32bit key_len,
                                    const byte secret[], u32bit secret_len,
                                    const byte seed[], u32bit seed_len) const
    {
+   SecureVector<byte> output(key_len);
+
    u32bit S1_len = (secret_len + 1) / 2,
           S2_len = (secret_len + 1) / 2;
    const byte* S1 = secret;
    const byte* S2 = secret + (secret_len - S2_len);
 
-   SecureVector<byte> key1, key2;
-   key1 = P_hash(hmac_md5,  key_len, S1, S1_len, seed, seed_len);
-   key2 = P_hash(hmac_sha1, key_len, S2, S2_len, seed, seed_len);
+   P_hash(output, key_len, hmac_md5,  S1, S1_len, seed, seed_len);
+   P_hash(output, key_len, hmac_sha1, S2, S2_len, seed, seed_len);
 
-   xor_buf(key1.begin(), key2.begin(), key2.size());
+   return output;
+   }
 
-   return key1;
+/*
+* TLS v1.2 PRF Constructor and Destructor
+*/
+TLS_12_PRF::TLS_12_PRF(HashFunction* hash)
+   {
+   hmac = new HMAC(hash);
+   }
+
+TLS_12_PRF::~TLS_12_PRF()
+   {
+   delete hmac;
+   }
+
+SecureVector<byte> TLS_12_PRF::derive(u32bit key_len,
+                                      const byte secret[], u32bit secret_len,
+                                      const byte seed[], u32bit seed_len) const
+   {
+   SecureVector<byte> output(key_len);
+
+   P_hash(output, key_len, hmac, secret, secret_len, seed, seed_len);
+
+   return output;
    }
 
 }

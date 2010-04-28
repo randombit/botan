@@ -41,9 +41,6 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
 
       ~HMAC_RNG();
    private:
-      void reseed_with_input(u32bit poll_bits,
-                             const byte input[], u32bit length);
-
       MessageAuthenticationCode* extractor;
       MessageAuthenticationCode* prf;
 
@@ -51,7 +48,7 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
       bool seeded;
 
       SecureVector<byte> K, io_buffer;
-      u32bit counter, source_index;
+      u32bit counter, user_input_len;
    };
 
 }

@@ -37,8 +37,8 @@ SecureVector<byte> enc_two_digit(u32bit in)
 
 u32bit dec_two_digit(byte b1, byte b2)
    {
-   u32bit upper = (u32bit)b1;
-   u32bit lower = (u32bit)b2;
+   u32bit upper = b1;
+   u32bit lower = b2;
 
    if(upper > 9 || lower > 9)
       throw Invalid_Argument("CVC dec_two_digit value too large");

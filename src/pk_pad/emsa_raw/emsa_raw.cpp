@@ -44,7 +44,25 @@ bool EMSA_Raw::verify(const MemoryRegion<byte>& coded,
                       const MemoryRegion<byte>& raw,
                       u32bit)
    {
-   return (coded == raw);
+   if(coded.size() == raw.size())
+      return (coded == raw);
+
+   if(coded.size() > raw.size())
+      return false;
+
+   // handle zero padding differences
+   const u32bit leading_zeros_expected = raw.size() - coded.size();
+
+   bool same_modulo_leading_zeros = true;
+
+   for(u32bit i = 0; i != leading_zeros_expected; ++i)
+      if(raw[i])
+         same_modulo_leading_zeros = false;
+
+   if(!same_mem(&coded[0], &raw[leading_zeros_expected], coded.size()))
+      same_modulo_leading_zeros = false;
+
+   return same_modulo_leading_zeros;
    }
 
 }

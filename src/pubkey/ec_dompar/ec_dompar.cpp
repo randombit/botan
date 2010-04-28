@@ -30,12 +30,21 @@ EC_Domain_Params::EC_Domain_Params(const OID& domain_oid)
 
 EC_Domain_Params::EC_Domain_Params(const std::string& pem)
    {
-   if(pem != "")
+   if(pem == "")
+      return; // no initialization / uninitialized
+
+   try
       {
       DataSource_Memory input(pem);
 
-      *this = EC_Domain_Params(
-         PEM_Code::decode_check_label(input, "EC PARAMETERS"));
+      SecureVector<byte> ber =
+         PEM_Code::decode_check_label(input, "EC PARAMETERS");
+
+      *this = EC_Domain_Params(ber);
+      }
+   catch(Decoding_Error) // hmm, not PEM?
+      {
+      *this = EC_Domain_Params(OID(pem));
       }
    }
 

@@ -83,6 +83,10 @@
   #include <botan/par_hash.h>
 #endif
 
+#if defined(BOTAN_HAS_COMB4P)
+  #include <botan/comb4p.h>
+#endif
+
 namespace Botan {
 
 /*
@@ -183,6 +187,17 @@ Default_Engine::find_hash(const SCAN_Name& request,
 #if defined(BOTAN_HAS_WHIRLPOOL)
    if(request.algo_name() == "Whirlpool")
       return new Whirlpool;
+#endif
+
+#if defined(BOTAN_HAS_COMB4P)
+   if(request.algo_name() == "Comb4P" && request.arg_count() == 2)
+      {
+      const HashFunction* h1 = af.prototype_hash_function(request.arg(0));
+      const HashFunction* h2 = af.prototype_hash_function(request.arg(1));
+
+      if(h1 && h2)
+         return new Comb4P(h1->clone(), h2->clone());
+      }
 #endif
 
 #if defined(BOTAN_HAS_PARALLEL_HASH)

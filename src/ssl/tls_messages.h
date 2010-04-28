@@ -43,11 +43,11 @@ class BOTAN_DLL Client_Hello : public HandshakeMessage
    public:
       Handshake_Type type() const { return CLIENT_HELLO; }
       Version_Code version() const { return c_version; }
-      SecureVector<byte> session_id() const { return sess_id; }
+      const SecureVector<byte>& session_id() const { return sess_id; }
       std::vector<u16bit> ciphersuites() const { return suites; }
       std::vector<byte> compression_algos() const { return comp_algos; }
 
-      SecureVector<byte> random() const { return c_random; }
+      const SecureVector<byte>& random() const { return c_random; }
 
       std::string hostname() const { return requested_hostname; }
 
@@ -56,10 +56,19 @@ class BOTAN_DLL Client_Hello : public HandshakeMessage
       Client_Hello(RandomNumberGenerator& rng,
                    Record_Writer&, const TLS_Policy*, HandshakeHash&);
 
-      Client_Hello(const MemoryRegion<byte>& buf) { deserialize(buf); }
+      Client_Hello(const MemoryRegion<byte>& buf,
+                   Handshake_Type type)
+         {
+         if(type == CLIENT_HELLO)
+            deserialize(buf);
+         else
+            deserialize_sslv2(buf);
+         }
+
    private:
       SecureVector<byte> serialize() const;
       void deserialize(const MemoryRegion<byte>&);
+      void deserialize_sslv2(const MemoryRegion<byte>&);
 
       Version_Code c_version;
       SecureVector<byte> sess_id, c_random;
@@ -216,11 +225,11 @@ class BOTAN_DLL Server_Hello : public HandshakeMessage
    public:
       Handshake_Type type() const { return SERVER_HELLO; }
       Version_Code version() { return s_version; }
-      SecureVector<byte> session_id() const { return sess_id; }
+      const SecureVector<byte>& session_id() const { return sess_id; }
       u16bit ciphersuite() const { return suite; }
       byte compression_algo() const { return comp_algo; }
 
-      SecureVector<byte> random() const { return s_random; }
+      const SecureVector<byte>& random() const { return s_random; }
 
       Server_Hello(RandomNumberGenerator& rng,
                    Record_Writer&, const TLS_Policy*,

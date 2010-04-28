@@ -31,6 +31,8 @@ int main()
       std::string http_command = "GET /bitbashing\r\n";
       tls.write((const byte*)http_command.c_str(), http_command.length());
 
+      u32bit total_got = 0;
+
       while(true)
          {
          if(tls.is_closed())
@@ -38,9 +40,13 @@ int main()
 
          byte buf[16+1] = { 0 };
          u32bit got = tls.read(buf, sizeof(buf)-1);
-         printf("Got %d bytes: %s", got, buf);
+         printf("%s", buf);
          fflush(0);
+
+         total_got += got;
          }
+
+      printf("Retrieved %d bytes total\n", total_got);
    }
    catch(std::exception& e)
       {

@@ -1,6 +1,6 @@
 /**
-* Policies 
-* (C) 2004-2006 Jack Lloyd
+* Policies for TLS
+* (C) 2004-2010 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -29,25 +29,28 @@ std::vector<u16bit> TLS_Policy::suite_list(bool use_rsa,
 
    if(use_edh_dsa)
       {
-      suites.push_back(DHE_DSS_AES256_SHA);
-      suites.push_back(DHE_DSS_AES128_SHA);
-      suites.push_back(DHE_DSS_3DES_SHA);
+      suites.push_back(TLS_DHE_DSS_WITH_AES_256_CBC_SHA);
+      suites.push_back(TLS_DHE_DSS_WITH_AES_128_CBC_SHA);
+      suites.push_back(TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA);
+      suites.push_back(TLS_DHE_DSS_WITH_SEED_CBC_SHA);
       }
 
    if(use_edh_rsa)
       {
-      suites.push_back(DHE_RSA_AES256_SHA);
-      suites.push_back(DHE_RSA_AES128_SHA);
-      suites.push_back(DHE_RSA_3DES_SHA);
+      suites.push_back(TLS_DHE_RSA_WITH_AES_256_CBC_SHA);
+      suites.push_back(TLS_DHE_RSA_WITH_AES_128_CBC_SHA);
+      suites.push_back(TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA);
+      suites.push_back(TLS_DHE_RSA_WITH_SEED_CBC_SHA);
       }
 
    if(use_rsa)
       {
-      suites.push_back(RSA_AES256_SHA);
-      suites.push_back(RSA_AES128_SHA);
-      suites.push_back(RSA_3DES_SHA);
-      suites.push_back(RSA_RC4_SHA);
-      suites.push_back(RSA_RC4_MD5);
+      suites.push_back(TLS_RSA_WITH_AES_256_CBC_SHA);
+      suites.push_back(TLS_RSA_WITH_AES_128_CBC_SHA);
+      suites.push_back(TLS_RSA_WITH_3DES_EDE_CBC_SHA);
+      suites.push_back(TLS_RSA_WITH_SEED_CBC_SHA);
+      suites.push_back(TLS_RSA_WITH_RC4_128_SHA);
+      suites.push_back(TLS_RSA_WITH_RC4_128_MD5);
       }
 
    if(suites.size() == 0)
