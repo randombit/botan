@@ -1,5 +1,6 @@
 
 * 1.9.8-dev, ????-??-??
+ - Use constant time multiplication in IDEA
 
 * 1.9.7, 2010-04-27
  - TLS: Support reading SSLv2 client hellos

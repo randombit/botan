@@ -1,6 +1,6 @@
 /*
 * IDEA
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -17,15 +17,18 @@ namespace {
 */
 inline u16bit mul(u16bit x, u16bit y)
    {
-   if(x && y)
-      {
-      u32bit T = static_cast<u32bit>(x) * y;
-      x = static_cast<u16bit>(T >> 16);
-      y = static_cast<u16bit>(T & 0xFFFF);
-      return static_cast<u16bit>(y - x + ((y < x) ? 1 : 0));
-      }
-   else
-      return static_cast<u16bit>(1 - x - y);
+   const u32bit P = static_cast<u32bit>(x) * y;
+
+   // P ? 0xFFFF : 0
+   const u16bit P_mask = !P - 1;
+
+   const u32bit P_hi = P >> 16;
+   const u32bit P_lo = P & 0xFFFF;
+
+   const u16bit r_1 = (P_lo - P_hi) + (P_lo < P_hi);
+   const u16bit r_2 = 1 - x - y;
+
+   return (r_1 & P_mask) | (r_2 & ~P_mask);
    }
 
 /*
