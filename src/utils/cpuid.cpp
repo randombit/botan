@@ -26,8 +26,10 @@
   #include <ia32intrin.h>
   #define CALL_CPUID(type, out) do { __cpuid(out, type); } while(0);
 
-#elif defined(BOTAN_BUILD_COMPILER_IS_GCC)
+#elif defined(BOTAN_BUILD_COMPILER_IS_GCC) && \
+      ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
 
+  // Only available starting in GCC 4.3
   #include <cpuid.h>
   #define CALL_CPUID(type, out) \
     do { __get_cpuid(type, out, out+1, out+2, out+3); } while(0);
