@@ -179,10 +179,17 @@ bool bench_algo(const std::string& algo,
 
       std::string cipher = algo_parts[0];
 
-      u32bit cipher_keylen =
-         af.prototype_block_cipher(cipher)->MAXIMUM_KEYLENGTH;
-      u32bit cipher_ivlen =
-         af.prototype_block_cipher(cipher)->BLOCK_SIZE;
+      const Botan::BlockCipher* proto_cipher =
+         af.prototype_block_cipher(cipher);
+
+      if(!proto_cipher)
+         {
+         std::cout << "Unknown algorithm " << cipher << "\n";
+         return false;
+         }
+
+      u32bit cipher_keylen = proto_cipher->MAXIMUM_KEYLENGTH;
+      u32bit cipher_ivlen = proto_cipher->BLOCK_SIZE;
 
       if(algo_parts[1] == "XTS")
          cipher_keylen *= 2; // hack!
