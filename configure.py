@@ -1394,6 +1394,25 @@ def generate_amalgamation(build_config):
             else:
                 botan_all_cpp.write(line)
 
+"""
+Finding a program by name
+code from http://stackoverflow.com/questions/377017/#377028
+"""
+def which(program):
+    def have_exe(fpath):
+        return os.path.exists(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if have_exe(program):
+            return program
+    else:
+        for path in os.environ['PATH'].split(os.pathsep):
+            exe_file = os.path.join(path, program)
+            if have_exe(exe_file):
+                return exe_file
+
+    return None
 
 """
 Main driver
@@ -1434,7 +1453,12 @@ def main(argv = None):
 
     if options.compiler is None:
         if options.os == 'windows':
-            options.compiler = 'msvc'
+            if which('cl.exe') is not None:
+                options.compiler = 'msvc'
+            elif which('g++.exe') is not None:
+                options.compiler = 'gcc'
+            else:
+                options.compiler = 'msvc'
         else:
             options.compiler = 'gcc'
         logging.info('Guessing to use compiler %s' % (options.compiler))
