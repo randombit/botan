@@ -6,10 +6,6 @@ so_suffix sl
 gettimeofday
 </target_features>
 
-<supports_shared>
-all
-</supports_shared>
-
 <aliases>
 hp-ux
 </aliases>

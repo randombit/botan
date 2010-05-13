@@ -12,10 +12,6 @@ doc_dir doc
 gettimeofday
 </target_features>
 
-<supports_shared>
-all
-</supports_shared>
-
 <aliases>
 macosx
 </aliases>

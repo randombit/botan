@@ -4,11 +4,6 @@ os_type unix
 posix_mlock
 </target_features>
 
-# Is this correct?
-<supports_shared>
-all
-</supports_shared>
-
 <aliases>
 gnu
 </aliases>

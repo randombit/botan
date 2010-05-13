@@ -753,7 +753,7 @@ class CompilerInfo(object):
 class OsInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
-                      ['aliases', 'target_features', 'supports_shared'],
+                      ['aliases', 'target_features'],
                       { 'os_type': None,
                         'obj_suffix': 'o',
                         'so_suffix': 'so',
@@ -764,11 +764,17 @@ class OsInfo(object):
                         'header_dir': 'include',
                         'lib_dir': 'lib',
                         'doc_dir': 'share/doc',
+                        'build_shared': 'yes',
                         'install_cmd_data': 'install -m 644',
                         'install_cmd_exec': 'install -m 755'
                         })
 
         self.ar_needs_ranlib = bool(self.ar_needs_ranlib)
+
+        if self.build_shared == 'yes':
+            self.build_shared = True
+        else:
+            self.build_shared = False
 
     def ranlib_command(self):
         if self.ar_needs_ranlib:
@@ -1517,6 +1523,11 @@ def main(argv = None):
     modules_to_use = choose_modules_to_use(modules,
                                            archinfo[options.arch],
                                            options)
+
+    if not osinfo[options.os].build_shared:
+        if options.build_shared_lib:
+            logging.info('Disabling shared lib on %s' % (options.os))
+            options.build_shared_lib = False
 
     build_config = BuildConfigurationInformation(options, modules_to_use)
     build_config.public_headers.append(

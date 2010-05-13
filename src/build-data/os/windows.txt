@@ -16,10 +16,6 @@ win32_get_systemtime
 gmtime_s
 </target_features>
 
-<supports_shared>
-all
-</supports_shared>
-
 <aliases>
 win32
 MSWin32

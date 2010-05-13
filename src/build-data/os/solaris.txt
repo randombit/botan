@@ -5,10 +5,6 @@ posix_mlock
 gettimeofday
 </target_features>
 
-<supports_shared>
-all
-</supports_shared>
-
 <aliases>
 sunos
 </aliases>
