@@ -1,15 +1,13 @@
 os_type unix
 
+# Cygwin supports shared libs fine, but there are problems with making a Botan
+# shared library when libraries it depends on are static-only (such as libz).
+# So until I can figure out a work-around, it's disabled.
+build_shared no
+
 install_root c:\Botan
 doc_dir docs
 
 <target_features>
 gettimeofday
 </target_features>
-
-# Cygwin supports shared libs fine, but there are problems with making a Botan
-# shared library when libraries it depends on are static-only (such as libz).
-# So until I can figure out a work-around, it's disabled.
-<supports_shared>
-#all
-</supports_shared>

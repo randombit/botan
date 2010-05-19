@@ -5,7 +5,3 @@ clock_gettime
 gettimeofday
 posix_mlock
 </target_features>
-
-<supports_shared>
-all
-</supports_shared>

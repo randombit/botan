@@ -1,12 +1,13 @@
 /*
-* EME1
-* (C) 1999-2007 Jack Lloyd
+* EME1 (aka OAEP)
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/eme1.h>
 #include <botan/mgf1.h>
+#include <botan/mem_ops.h>
 #include <memory>
 
 namespace Botan {
@@ -50,11 +51,17 @@ SecureVector<byte> EME1::unpad(const byte in[], u32bit in_length,
    find the secret key, as described in "A Chosen Ciphertext Attack on
    RSA Optimal Asymmetric Encryption Padding (OAEP) as Standardized in
    PKCS #1 v2.0", James Manger, Crypto 2001
+
+   Also have to be careful about timing attacks! Pointed out by Falko
+   Strenzke.
    */
 
    key_length /= 8;
+
+   // Invalid input: truncate to zero length input, causing later
+   // checks to fail
    if(in_length > key_length)
-      throw Decoding_Error("Invalid EME1 encoding");
+      in_length = 0;
 
    SecureVector<byte> tmp(key_length);
    tmp.copy(key_length - in_length, in, in_length);
@@ -62,20 +69,29 @@ SecureVector<byte> EME1::unpad(const byte in[], u32bit in_length,
    mgf->mask(tmp + HASH_LENGTH, tmp.size() - HASH_LENGTH, tmp, HASH_LENGTH);
    mgf->mask(tmp, HASH_LENGTH, tmp + HASH_LENGTH, tmp.size() - HASH_LENGTH);
 
-   for(u32bit j = 0; j != Phash.size(); ++j)
-      if(tmp[j+HASH_LENGTH] != Phash[j])
-         throw Decoding_Error("Invalid EME1 encoding");
+   const bool phash_ok = same_mem(&tmp[HASH_LENGTH], &Phash[0], Phash.size());
 
-   for(u32bit j = HASH_LENGTH + Phash.size(); j != tmp.size(); ++j)
+   bool delim_ok = true;
+   u32bit delim_idx = 0;
+
+   // Is this vulnerable to timing attacks?
+   for(u32bit i = HASH_LENGTH + Phash.size(); i != tmp.size(); ++i)
       {
-      if(tmp[j] && tmp[j] != 0x01)
-         throw Decoding_Error("Invalid EME1 encoding");
-      if(tmp[j] && tmp[j] == 0x01)
+      if(tmp[i] && !delim_idx)
          {
-         SecureVector<byte> retval(tmp + j + 1, tmp.size() - j - 1);
-         return retval;
+         if(tmp[i] == 0x01)
+            delim_idx = i;
+         else
+            delim_ok = false;
          }
       }
+
+   if(delim_idx && delim_ok && phash_ok)
+      {
+      return SecureVector<byte>(tmp + delim_idx + 1,
+                                tmp.size() - delim_idx - 1);
+      }
+
    throw Decoding_Error("Invalid EME1 encoding");
    }
 

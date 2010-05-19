@@ -9,10 +9,6 @@ doc_dir documentation
 gettimeofday
 </target_features>
 
-<supports_shared>
-all
-</supports_shared>
-
 <aliases>
 haiku
 </aliases>

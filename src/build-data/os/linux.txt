@@ -6,8 +6,3 @@ gettimeofday
 posix_mlock
 gmtime_r
 </target_features>
-
-# Is this correct?
-<supports_shared>
-all
-</supports_shared>

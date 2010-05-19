@@ -4,10 +4,6 @@ os_type unix
 gettimeofday
 </target_features>
 
-<supports_shared>
-all
-</supports_shared>
-
 <aliases>
 osf1
 </aliases>
