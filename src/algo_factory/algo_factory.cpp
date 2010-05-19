@@ -83,12 +83,12 @@ const T* factory_prototype(const std::string& algo_spec,
 /**
 * Setup caches
 */
-Algorithm_Factory::Algorithm_Factory(Mutex_Factory& mf)
+Algorithm_Factory::Algorithm_Factory()
    {
-   block_cipher_cache = new Algorithm_Cache<BlockCipher>(mf.make());
-   stream_cipher_cache = new Algorithm_Cache<StreamCipher>(mf.make());
-   hash_cache = new Algorithm_Cache<HashFunction>(mf.make());
-   mac_cache = new Algorithm_Cache<MessageAuthenticationCode>(mf.make());
+   block_cipher_cache = new Algorithm_Cache<BlockCipher>();
+   stream_cipher_cache = new Algorithm_Cache<StreamCipher>();
+   hash_cache = new Algorithm_Cache<HashFunction>();
+   mac_cache = new Algorithm_Cache<MessageAuthenticationCode>();
    }
 
 /**
@@ -96,7 +96,8 @@ Algorithm_Factory::Algorithm_Factory(Mutex_Factory& mf)
 */
 Algorithm_Factory::~Algorithm_Factory()
    {
-   std::for_each(engines.begin(), engines.end(), del_fun<Engine>());
+   for(auto i = engines.begin(); i != engines.end(); ++i)
+      delete *i;
 
    delete block_cipher_cache;
    delete stream_cipher_cache;

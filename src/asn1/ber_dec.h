@@ -74,14 +74,14 @@ class BOTAN_DLL BER_Decoder
       BER_Decoder& decode_optional_string(MemoryRegion<byte>&,
                                           ASN1_Tag, u16bit);
 
+      BER_Decoder& operator=(const BER_Decoder&) = delete;
+
       BER_Decoder(DataSource&);
       BER_Decoder(const byte[], u32bit);
       BER_Decoder(const MemoryRegion<byte>&);
       BER_Decoder(const BER_Decoder&);
       ~BER_Decoder();
    private:
-      BER_Decoder& operator=(const BER_Decoder&) { return (*this); }
-
       BER_Decoder* parent;
       DataSource* source;
       BER_Object pushed;

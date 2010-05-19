@@ -10,6 +10,7 @@
 #include <botan/parsing.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
+#include <future>
 
 namespace Botan {
 
@@ -21,7 +22,7 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
    {
    if(bits < 512)
       throw Invalid_Argument(algo_name() + ": Can't make a key that is only " +
-                             to_string(bits) + " bits long");
+                             std::to_string(bits) + " bits long");
    if(exp < 3 || exp % 2 == 0)
       throw Invalid_Argument(algo_name() + ": Invalid encryption exponent");
 
@@ -76,8 +77,9 @@ BigInt RSA_Private_Operation::private_op(const BigInt& m) const
    if(m >= n)
       throw Invalid_Argument("RSA private op - input is too large");
 
-   BigInt j1 = powermod_d1_p(m);
+   auto future_j1 = std::async(std::launch::async, powermod_d1_p, m);
    BigInt j2 = powermod_d2_q(m);
+   BigInt j1 = future_j1.get();
 
    j1 = mod_p.reduce(sub_mul(j1, j2, c));
 

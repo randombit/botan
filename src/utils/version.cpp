@@ -21,9 +21,9 @@ namespace Botan {
 */
 std::string version_string()
    {
-   return to_string(version_major()) + "." +
-          to_string(version_minor()) + "." +
-          to_string(version_patch());
+   return std::to_string(version_major()) + "." +
+          std::to_string(version_minor()) + "." +
+          std::to_string(version_patch());
    }
 
 /*

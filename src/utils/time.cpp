@@ -47,7 +47,7 @@ u64bit combine_timers(u32bit seconds, u32bit parts, u32bit parts_hz)
    return res;
    }
 
-std::tm do_gmtime(time_t time_val)
+std::tm do_gmtime(std::time_t time_val)
    {
    std::tm tm;
 
@@ -67,20 +67,13 @@ std::tm do_gmtime(time_t time_val)
 
 }
 
-/**
-* Get the system clock
-*/
-u64bit system_time()
-   {
-   return static_cast<u64bit>(std::time(0));
-   }
-
 /*
 * Convert a time_point to a calendar_point
 */
-calendar_point calendar_value(u64bit a_time_t)
+calendar_point calendar_value(
+   const std::chrono::system_clock::time_point& time_point)
    {
-   std::tm tm = do_gmtime(static_cast<std::time_t>(a_time_t));
+   std::tm tm = do_gmtime(std::chrono::system_clock::to_time_t(time_point));
 
    return calendar_point(tm.tm_year + 1900,
                          tm.tm_mon + 1,

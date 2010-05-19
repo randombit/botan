@@ -12,13 +12,12 @@
 #include <botan/algo_factory.h>
 #include <botan/rng.h>
 
+#include <mutex>
 #include <string>
 #include <vector>
 #include <map>
 
 namespace Botan {
-
-class Mutex;
 
 /*
 * Global State Container Base
@@ -29,7 +28,10 @@ class BOTAN_DLL Library_State
       Library_State();
       ~Library_State();
 
-      void initialize(bool thread_safe);
+      Library_State(const Library_State&) = delete;
+      Library_State& operator=(const Library_State&) = delete;
+
+      void initialize();
 
       /**
       * @return the global Algorithm_Factory
@@ -45,7 +47,7 @@ class BOTAN_DLL Library_State
       * @param name the name of the allocator
       * @return allocator matching this name, or NULL
       */
-      Allocator* get_allocator(const std::string& name = "") const;
+      Allocator* get_allocator(const std::string& name = "");
 
       /**
       * Add a new allocator to the list of available ones
@@ -66,7 +68,7 @@ class BOTAN_DLL Library_State
       * @result the value of the parameter
       */
       std::string get(const std::string& section,
-                      const std::string& key) const;
+                      const std::string& key);
 
       /**
       * Check whether a certain parameter is set
@@ -77,7 +79,7 @@ class BOTAN_DLL Library_State
       * false otherwise
       */
       bool is_set(const std::string& section,
-                  const std::string& key) const;
+                  const std::string& key);
 
       /**
       * Set a configuration parameter.
@@ -105,30 +107,20 @@ class BOTAN_DLL Library_State
       * @param alias the alias to resolve.
       * @return what the alias stands for
       */
-      std::string deref_alias(const std::string& alias) const;
-
-      /**
-      * @return a newly created Mutex (free with delete)
-      */
-      Mutex* get_mutex() const;
+      std::string deref_alias(const std::string&);
    private:
       static RandomNumberGenerator* make_global_rng(Algorithm_Factory& af,
-                                                    Mutex* mutex);
+                                                    std::mutex& mutex);
 
       void load_default_config();
 
-      Library_State(const Library_State&) {}
-      Library_State& operator=(const Library_State&) { return (*this); }
-
-      class Mutex_Factory* mutex_factory;
-
-      Mutex* global_rng_lock;
+      std::mutex global_rng_lock;
       RandomNumberGenerator* global_rng_ptr;
 
-      Mutex* config_lock;
+      std::mutex config_lock;
       std::map<std::string, std::string> config;
 
-      Mutex* allocator_lock;
+      std::mutex allocator_lock;
       std::string default_allocator_name;
       std::map<std::string, Allocator*> alloc_factory;
       mutable Allocator* cached_default_allocator;

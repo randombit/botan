@@ -89,7 +89,7 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
          if(is_encrypted)
             {
             DataSource_Memory params(pbe_alg_id.parameters);
-            std::auto_ptr<PBE> pbe(get_pbe(pbe_alg_id.oid, params));
+            std::unique_ptr<PBE> pbe(get_pbe(pbe_alg_id.oid, params));
 
             User_Interface::UI_Result result = User_Interface::OK;
             const std::string passphrase =
@@ -166,7 +166,7 @@ void encrypt_key(const Private_Key& key,
    encode(key, raw_key, RAW_BER);
    raw_key.end_msg();
 
-   std::auto_ptr<PBE> pbe(get_pbe(((pbe_algo != "") ? pbe_algo : DEFAULT_PBE)));
+   std::unique_ptr<PBE> pbe(get_pbe(((pbe_algo != "") ? pbe_algo : DEFAULT_PBE)));
 
    pbe->new_params(rng);
    pbe->set_key(pass);
