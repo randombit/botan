@@ -1511,18 +1511,19 @@ def main(argv = None):
 
         if not is_64bit_arch(options.arch) and not options.dumb_gcc:
             try:
-
                 matching_version = '(4\.[01234]\.)|(3\.[34]\.)|(2\.95\.[0-4])'
 
-                gcc_version = ''.join(
-                    subprocess.Popen(['g++', '-v'],
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE).communicate())
+                gcc_version = ''.join(subprocess.Popen(
+                    ['g++', '-dumpversion'],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE).communicate()).strip()
+
+                logging.info('Detected GCC version %s' % (gcc_version))
 
                 if re.search(matching_version, gcc_version):
                     options.dumb_gcc = True
-            except OSError, e:
-                logging.info('Could not execute GCC for version check')
+            except OSError:
+                logging.warning('Could not execute GCC for version check')
 
         if options.dumb_gcc is True:
             logging.info('Setting -fpermissive to work around gcc bug')
