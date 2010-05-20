@@ -1576,7 +1576,7 @@ if __name__ == '__main__':
     try:
         main()
     except Exception, e:
-        print >>sys.stderr, e
+        logging.error(str(e))
         #import traceback
         #traceback.print_exc(file=sys.stderr)
         sys.exit(1)
