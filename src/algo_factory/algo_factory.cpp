@@ -1,6 +1,6 @@
 /*
 * Algorithm Factory
-* (C) 2008 Jack Lloyd
+* (C) 2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -26,22 +26,26 @@ namespace {
 * Template functions for the factory prototype/search algorithm
 */
 template<typename T>
-T* engine_get_algo(Engine* engine, const SCAN_Name& request,
-                   Algorithm_Factory& af)
+T* engine_get_algo(Engine*,
+                   const SCAN_Name&,
+                   Algorithm_Factory&)
    { return 0; }
 
 template<>
-BlockCipher* engine_get_algo(Engine* engine, const SCAN_Name& request,
+BlockCipher* engine_get_algo(Engine* engine,
+                             const SCAN_Name& request,
                              Algorithm_Factory& af)
    { return engine->find_block_cipher(request, af); }
 
 template<>
-StreamCipher* engine_get_algo(Engine* engine, const SCAN_Name& request,
+StreamCipher* engine_get_algo(Engine* engine,
+                              const SCAN_Name& request,
                               Algorithm_Factory& af)
    { return engine->find_stream_cipher(request, af); }
 
 template<>
-HashFunction* engine_get_algo(Engine* engine, const SCAN_Name& request,
+HashFunction* engine_get_algo(Engine* engine,
+                              const SCAN_Name& request,
                               Algorithm_Factory& af)
    { return engine->find_hash(request, af); }
 
