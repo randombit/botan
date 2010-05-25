@@ -105,7 +105,6 @@ const std::string algos[] = {
 
    /* Hashes */
    "BMW-512",
-   "FORK-256",
    "GOST-34.11",
    "HAS-160",
    "MD2",

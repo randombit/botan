@@ -26,10 +26,6 @@
   #include <botan/bmw_512.h>
 #endif
 
-#if defined(BOTAN_HAS_FORK_256)
-  #include <botan/fork256.h>
-#endif
-
 #if defined(BOTAN_HAS_GOST_34_11)
   #include <botan/gost_3411.h>
 #endif
@@ -114,11 +110,6 @@ Default_Engine::find_hash(const SCAN_Name& request,
 #if defined(BOTAN_HAS_BMW_512)
    if(request.algo_name() == "BMW-512")
       return new BMW_512;
-#endif
-
-#if defined(BOTAN_HAS_FORK_256)
-   if(request.algo_name() == "FORK-256")
-      return new FORK_256;
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_11)

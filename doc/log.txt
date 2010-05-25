@@ -2,6 +2,7 @@
 * 1.9.8-dev, ????-??-??
  - Use constant time multiplication in IDEA
  - Avoid possible timing attack against OAEP decoding
+ - Removed FORK-256; rarely used and it has been broken
  - Skip building shared libraries on MinGW/Cygwin
  - Fix compilation on GCC versions before 4.3 (missing cpuid.h)
  - Fix complilation under the Clang compiler
