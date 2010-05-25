@@ -1369,6 +1369,25 @@ def generate_amalgamation(build_config):
             else:
                 botan_all_cpp.write(line)
 
+"""
+Finding a program by name
+code from http://stackoverflow.com/questions/377017/#377028
+"""
+def which(program):
+    def have_exe(fpath):
+        return os.path.exists(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if have_exe(program):
+            return program
+    else:
+        for path in os.environ['PATH'].split(os.pathsep):
+            exe_file = os.path.join(path, program)
+            if have_exe(exe_file):
+                return exe_file
+
+    return None
 
 """
 Main driver
@@ -1409,7 +1428,12 @@ def main(argv = None):
 
     if options.compiler is None:
         if options.os == 'windows':
-            options.compiler = 'msvc'
+            if which('cl.exe') is not None:
+                options.compiler = 'msvc'
+            elif which('g++.exe') is not None:
+                options.compiler = 'gcc'
+            else:
+                options.compiler = 'msvc'
         else:
             options.compiler = 'gcc'
         logging.info('Guessing to use compiler %s' % (options.compiler))
@@ -1456,18 +1480,19 @@ def main(argv = None):
 
         if not is_64bit_arch(options.arch) and not options.dumb_gcc:
             try:
-
                 matching_version = '(4\.[01234]\.)|(3\.[34]\.)|(2\.95\.[0-4])'
 
-                gcc_version = ''.join(
-                    subprocess.Popen(['g++', '-v'],
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE).communicate())
+                gcc_version = ''.join(subprocess.Popen(
+                    ['g++', '-dumpversion'],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE).communicate()).strip()
+
+                logging.info('Detected GCC version %s' % (gcc_version))
 
                 if re.search(matching_version, gcc_version):
                     options.dumb_gcc = True
-            except OSError, e:
-                logging.info('Could not execute GCC for version check')
+            except OSError:
+                logging.warning('Could not execute GCC for version check')
 
         if options.dumb_gcc is True:
             logging.info('Setting -fpermissive to work around gcc bug')
@@ -1515,7 +1540,7 @@ if __name__ == '__main__':
     try:
         main()
     except Exception, e:
-        print >>sys.stderr, e
+        logging.error(str(e))
         #import traceback
         #traceback.print_exc(file=sys.stderr)
         sys.exit(1)

@@ -292,6 +292,10 @@ template<typename T>
 class MemoryVector : public MemoryRegion<T>
    {
    public:
+      using MemoryRegion<T>::set;
+      using MemoryRegion<T>::init;
+      using MemoryRegion<T>::append;
+
       /**
       * Copy the contents of another buffer into this buffer.
       * @param in the buffer to copy the contents from
@@ -304,7 +308,7 @@ class MemoryVector : public MemoryRegion<T>
       * Create a buffer of the specified length.
       * @param n the length of the buffer to create.
       */
-      MemoryVector(u32bit n = 0) { MemoryRegion<T>::init(false, n); }
+      MemoryVector(u32bit n = 0) { init(false, n); }
 
       /**
       * Create a buffer with the specified contents.
@@ -313,13 +317,13 @@ class MemoryVector : public MemoryRegion<T>
       * @param n the size of the arry in
       */
       MemoryVector(const T in[], u32bit n)
-         { MemoryRegion<T>::init(false); set(in, n); }
+         { init(false); set(in, n); }
 
       /**
       * Copy constructor.
       */
       MemoryVector(const MemoryRegion<T>& in)
-         { MemoryRegion<T>::init(false); set(in); }
+         { init(false); set(in); }
 
       /**
       * Create a buffer whose content is the concatenation of two other
@@ -328,7 +332,7 @@ class MemoryVector : public MemoryRegion<T>
       * @param in2 the contents to be appended to in1
       */
       MemoryVector(const MemoryRegion<T>& in1, const MemoryRegion<T>& in2)
-         { MemoryRegion<T>::init(false); set(in1); append(in2); }
+         { init(false); set(in1); append(in2); }
    };
 
 /**
@@ -341,6 +345,10 @@ template<typename T, u32bit INITIAL_LEN = 0>
 class SecureVector : public MemoryRegion<T>
    {
    public:
+      using MemoryRegion<T>::set;
+      using MemoryRegion<T>::init;
+      using MemoryRegion<T>::append;
+
       /**
       * Copy the contents of another buffer into this buffer.
       * @param in the buffer to copy the contents from
@@ -354,7 +362,7 @@ class SecureVector : public MemoryRegion<T>
       * @param n the length of the buffer to create.
       */
       SecureVector(u32bit n = INITIAL_LEN)
-         { MemoryRegion<T>::init(true, n); }
+         { init(true, n); }
 
       /**
       * Create a buffer with the specified contents.
@@ -363,7 +371,7 @@ class SecureVector : public MemoryRegion<T>
       * @param n the size of the array in
       */
       SecureVector(const T in[], u32bit n)
-         { MemoryRegion<T>::init(true); set(in, n); }
+         { init(true); set(in, n); }
 
       /**
       * Create a buffer with contents specified contents.
@@ -371,7 +379,7 @@ class SecureVector : public MemoryRegion<T>
       * copied into the newly created buffer.
       */
       SecureVector(const MemoryRegion<T>& in)
-         { MemoryRegion<T>::init(true); set(in); }
+         { init(true); set(in); }
 
       /**
       * Create a buffer whose content is the concatenation of two other
@@ -380,7 +388,7 @@ class SecureVector : public MemoryRegion<T>
       * @param in2 the contents to be appended to in1
       */
       SecureVector(const MemoryRegion<T>& in1, const MemoryRegion<T>& in2)
-         { MemoryRegion<T>::init(true); set(in1); append(in2); }
+         { init(true); set(in1); append(in2); }
    };
 
 }

@@ -41,6 +41,11 @@ Unix_Socket::Unix_Socket(const std::string& host, u16bit port) : peer(host)
    ::memset(&socket_info, 0, sizeof(socket_info));
    socket_info.sin_family = AF_INET;
    socket_info.sin_port = htons(port);
+
+   ::memcpy(&socket_info.sin_addr,
+            host_addr->h_addr,
+            host_addr->h_length);
+
    socket_info.sin_addr = *(struct in_addr*)host_addr->h_addr; // FIXME
 
    if(::connect(fd, (sockaddr*)&socket_info, sizeof(struct sockaddr)) != 0)
