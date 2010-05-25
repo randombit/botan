@@ -18,7 +18,7 @@ namespace Botan {
 class BOTAN_DLL AES_128_Intel : public BlockCipher
    {
    public:
-      u32bit parallelism() const { return 8; }
+      u32bit parallelism() const { return 4; }
 
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
@@ -40,7 +40,7 @@ class BOTAN_DLL AES_128_Intel : public BlockCipher
 class BOTAN_DLL AES_192_Intel : public BlockCipher
    {
    public:
-      u32bit parallelism() const { return 8; }
+      u32bit parallelism() const { return 4; }
 
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
@@ -62,7 +62,7 @@ class BOTAN_DLL AES_192_Intel : public BlockCipher
 class BOTAN_DLL AES_256_Intel : public BlockCipher
    {
    public:
-      u32bit parallelism() const { return 8; }
+      u32bit parallelism() const { return 4; }
 
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;

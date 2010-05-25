@@ -15,6 +15,7 @@
 /* Chunk sizes */
 #define BOTAN_DEFAULT_BUFFER_SIZE 4096
 #define BOTAN_MEM_POOL_CHUNK_SIZE 64*1024
+#define BOTAN_BLOCK_CIPHER_PAR_MULT 4
 
 /* BigInt toggles */
 #define BOTAN_MP_WORD_BITS %{mp_bits}

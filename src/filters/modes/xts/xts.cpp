@@ -35,7 +35,8 @@ void poly_double(byte tweak[], u32bit size)
 */
 u32bit xts_parallelism(BlockCipher* cipher)
    {
-   return std::max<u32bit>(cipher->parallelism(), 2);
+   return std::max<u32bit>(cipher->parallel_bytes(),
+                           2 * cipher->BLOCK_SIZE);
    }
 
 }
@@ -44,8 +45,7 @@ u32bit xts_parallelism(BlockCipher* cipher)
 * XTS_Encryption constructor
 */
 XTS_Encryption::XTS_Encryption(BlockCipher* ciph) :
-   Buffered_Filter(xts_parallelism(ciph) * ciph->BLOCK_SIZE,
-                   ciph->BLOCK_SIZE + 1),
+   Buffered_Filter(xts_parallelism(ciph), ciph->BLOCK_SIZE + 1),
    cipher(ciph)
    {
    if(cipher->BLOCK_SIZE != 8 && cipher->BLOCK_SIZE != 16)
@@ -61,8 +61,7 @@ XTS_Encryption::XTS_Encryption(BlockCipher* ciph) :
 XTS_Encryption::XTS_Encryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   Buffered_Filter(xts_parallelism(ciph) * ciph->BLOCK_SIZE,
-                   ciph->BLOCK_SIZE + 1),
+   Buffered_Filter(xts_parallelism(ciph), ciph->BLOCK_SIZE + 1),
    cipher(ciph)
    {
    if(cipher->BLOCK_SIZE != 8 && cipher->BLOCK_SIZE != 16)
@@ -218,8 +217,7 @@ void XTS_Encryption::buffered_final(const byte input[], u32bit length)
 * XTS_Decryption constructor
 */
 XTS_Decryption::XTS_Decryption(BlockCipher* ciph) :
-   Buffered_Filter(xts_parallelism(ciph) * ciph->BLOCK_SIZE,
-                   ciph->BLOCK_SIZE + 1),
+   Buffered_Filter(xts_parallelism(ciph), ciph->BLOCK_SIZE + 1),
    cipher(ciph)
    {
    if(cipher->BLOCK_SIZE != 8 && cipher->BLOCK_SIZE != 16)
@@ -235,8 +233,7 @@ XTS_Decryption::XTS_Decryption(BlockCipher* ciph) :
 XTS_Decryption::XTS_Decryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   Buffered_Filter(xts_parallelism(ciph) * ciph->BLOCK_SIZE,
-                   ciph->BLOCK_SIZE + 1),
+   Buffered_Filter(xts_parallelism(ciph), ciph->BLOCK_SIZE + 1),
    cipher(ciph)
    {
    if(cipher->BLOCK_SIZE != 8 && cipher->BLOCK_SIZE != 16)

@@ -18,7 +18,7 @@ namespace Botan {
 class BOTAN_DLL IDEA_SSE2 : public IDEA
    {
    public:
-      u32bit parallelism() const { return 16; }
+      u32bit parallelism() const { return 8; }
 
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;

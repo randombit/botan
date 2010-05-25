@@ -114,8 +114,7 @@ std::string CBC_Encryption::name() const
 */
 CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad) :
-   Buffered_Filter(ciph->parallelism() * ciph->BLOCK_SIZE,
-                   ciph->BLOCK_SIZE),
+   Buffered_Filter(ciph->parallel_bytes(), ciph->BLOCK_SIZE),
    cipher(ciph), padder(pad)
    {
    if(!padder->valid_blocksize(cipher->BLOCK_SIZE))
@@ -132,8 +131,7 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   Buffered_Filter(ciph->parallelism() * ciph->BLOCK_SIZE,
-                   ciph->BLOCK_SIZE),
+   Buffered_Filter(ciph->parallel_bytes(), ciph->BLOCK_SIZE),
    cipher(ciph), padder(pad)
    {
    if(!padder->valid_blocksize(cipher->BLOCK_SIZE))
