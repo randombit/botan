@@ -592,10 +592,11 @@ class ArchInfo(object):
     Return CPU-specific defines for build.h
     """
     def defines(self, options):
-        macros = ['TARGET_ARCH_IS_%s' % (self.basename.upper())]
-
         def form_cpu_macro(cpu_name):
             return cpu_name.upper().replace('.', '').replace('-', '_')
+
+        macros = ['TARGET_ARCH_IS_%s' %
+                  (form_cpu_macro(self.basename.upper()))]
 
         if self.basename != options.cpu:
             macros.append('TARGET_CPU_IS_%s' % (form_cpu_macro(options.cpu)))
