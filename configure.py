@@ -160,17 +160,17 @@ def process_command_line(args):
     target_group.add_option('--enable-isa', metavar='ISALIST',
                             dest='enable_isa_extns',
                             action='append', default=[],
-                            help='enable ISA extensions')
+                            help=SUPPRESS_HELP)
 
     target_group.add_option('--disable-isa', metavar='ISALIST',
                             dest='disable_isa_extns',
                             action='append', default=[],
                             help=SUPPRESS_HELP)
 
-    for isa_extn in ['sse2', 'ssse3', 'altivec', 'aes_ni']:
+    for isa_extn in ['sse2', 'ssse3', 'altivec', 'aes-ni']:
         target_group.add_option('--enable-%s' % (isa_extn),
                                 action='callback',
-                                help=SUPPRESS_HELP,
+                                help='Enable use of %s' % (isa_extn),
                                 callback=optparse_append_const,
                                 callback_kwargs = {
                                     'dest': 'enable_isa_extns',
@@ -329,11 +329,11 @@ def process_command_line(args):
 
     isa_dependencies = {
         'ssse3': 'sse2',
-        'aes_ni': 'sse2'
+        'aes-ni': 'sse2'
         }
 
     if 'sse2' in options.disable_isa_extns:
-        sse2_deps = ['ssse3', 'aes_ni']
+        sse2_deps = ['ssse3', 'aes-ni']
 
         for isa in sse2_deps:
             if not enabled_or_disabled_isa(isa):
@@ -592,14 +592,14 @@ class ArchInfo(object):
     Return CPU-specific defines for build.h
     """
     def defines(self, options):
-        def form_cpu_macro(cpu_name):
+        def form_macro(cpu_name):
             return cpu_name.upper().replace('.', '').replace('-', '_')
 
         macros = ['TARGET_ARCH_IS_%s' %
-                  (form_cpu_macro(self.basename.upper()))]
+                  (form_macro(self.basename.upper()))]
 
         if self.basename != options.cpu:
-            macros.append('TARGET_CPU_IS_%s' % (form_cpu_macro(options.cpu)))
+            macros.append('TARGET_CPU_IS_%s' % (form_macro(options.cpu)))
 
         enabled_isas = set(flatten(
             [self.isa_extensions_in(options.cpu),
@@ -610,7 +610,7 @@ class ArchInfo(object):
         isa_extensions = sorted(enabled_isas - disabled_isas)
 
         for isa in isa_extensions:
-            macros.append('TARGET_CPU_HAS_%s' % (isa.upper()))
+            macros.append('TARGET_CPU_HAS_%s' % form_macro(isa))
 
         endian = options.with_endian or self.endian
 
