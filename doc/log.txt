@@ -1,5 +1,6 @@
 
 * 1.8.9, ????-??-??
+ - Fix bug that prevented creation of DSA groups under 1024 bits
  - Fix crash in GMP_Engine if library is shutdown and reinitialized
  - Work around problem with recent binutils in x86-64 SHA-1
  - Add Win32 installer support

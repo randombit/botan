@@ -72,7 +72,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
          }
       else
          {
-         qbits = qbits ? qbits : ((pbits == 1024) ? 160 : 256);
+         qbits = qbits ? qbits : ((pbits <= 1024) ? 160 : 256);
          generate_dsa_primes(rng,
                              global_state().algorithm_factory(),
                              p, q, pbits, qbits);
