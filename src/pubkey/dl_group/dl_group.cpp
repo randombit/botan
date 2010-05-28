@@ -55,28 +55,29 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
       q = (p - 1) / 2;
       g = 2;
       }
-   else if(type == Prime_Subgroup || type == DSA_Kosherizer)
+   else if(type == Prime_Subgroup)
       {
-      if(type == Prime_Subgroup)
-         {
-         if(!qbits)
-            qbits = 2 * dl_work_factor(pbits);
+      if(!qbits)
+         qbits = 2 * dl_work_factor(pbits);
 
-         q = random_prime(rng, qbits);
-         BigInt X;
-         while(p.bits() != pbits || !check_prime(p, rng))
-            {
-            X.randomize(rng, pbits);
-            p = X - (X % (2*q) - 1);
-            }
-         }
-      else
+      q = random_prime(rng, qbits);
+      BigInt X;
+      while(p.bits() != pbits || !check_prime(p, rng))
          {
-         qbits = qbits ? qbits : ((pbits == 1024) ? 160 : 256);
-         generate_dsa_primes(rng,
-                             global_state().algorithm_factory(),
-                             p, q, pbits, qbits);
+         X.randomize(rng, pbits);
+         p = X - (X % (2*q) - 1);
          }
+
+      g = make_dsa_generator(p, q);
+      }
+   else if(type == DSA_Kosherizer)
+      {
+      qbits = qbits ? qbits : ((pbits <= 1024) ? 160 : 256);
+
+      generate_dsa_primes(rng,
+                          global_state().algorithm_factory(),
+                          p, q,
+                          pbits, qbits);
 
       g = make_dsa_generator(p, q);
       }
