@@ -1,13 +1,12 @@
 /*
-* (C) 2009 Jack Lloyd
+* (C) 2009-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
+*
+* Factor integers using a combination of trial division by small
+* primes, and Pollard's Rho algorithm
 */
 
-/*
-   Factor integers using a combination of trial division by small primes,
-   and Pollard's Rho algorithm
-*/
 #include <botan/botan.h>
 #include <botan/reducer.h>
 #include <botan/numthry.h>
@@ -15,8 +14,7 @@ using namespace Botan;
 
 #include <algorithm>
 #include <iostream>
-#include <memory>
-
+#include <iterator>
 
 namespace {
 
@@ -142,8 +140,9 @@ int main(int argc, char* argv[])
       std::sort(factors.begin(), factors.end());
 
       std::cout << n << ": ";
-      for(u32bit j = 0; j != factors.size(); j++)
-         std::cout << factors[j] << " ";
+      std::copy(factors.begin(),
+                factors.end(),
+                std::ostream_iterator<BigInt>(std::cout, " "));
       std::cout << "\n";
       }
    catch(std::exception& e)
