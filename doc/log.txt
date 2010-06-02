@@ -4,6 +4,7 @@
  - Avoid possible timing attack against OAEP decoding
  - Removed FORK-256; rarely used and it has been broken
  - Skip building shared libraries on MinGW/Cygwin
+ - Fix creation of 512 and 768 bit DL groups using the DSA kosherizer
  - Fix compilation on GCC versions before 4.3 (missing cpuid.h)
  - Fix complilation under the Clang compiler
 
