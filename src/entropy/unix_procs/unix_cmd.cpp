@@ -37,6 +37,7 @@ void do_exec(const std::vector<std::string>& arg_list,
       {
       const std::string full_path = paths[j] + "/" + arg_list[0];
       const char* fsname = full_path.c_str();
+
       ::execl(fsname, fsname, arg1, arg2, arg3, arg4, NULL);
       }
    }
@@ -50,7 +51,9 @@ struct pipe_wrapper
    {
    int fd;
    pid_t pid;
-   pipe_wrapper() { fd = -1; pid = 0; }
+
+   pipe_wrapper(int f, pid_t p) : fd(f), pid(p) {}
+   ~pipe_wrapper() { ::close(fd); }
    };
 
 /**
@@ -152,9 +155,7 @@ void DataSource_Command::create_pipe(const std::vector<std::string>& paths)
       }
    else if(pid > 0)
       {
-      pipe = new pipe_wrapper;
-      pipe->fd = pipe_fd[0];
-      pipe->pid = pid;
+      pipe = new pipe_wrapper(pipe_fd[0], pid);
       ::close(pipe_fd[1]);
       }
    else
@@ -200,7 +201,6 @@ void DataSource_Command::shutdown_pipe()
             }
          }
 
-      ::close(pipe->fd);
       delete pipe;
       pipe = 0;
       }
