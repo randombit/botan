@@ -10,45 +10,45 @@
 
 namespace Botan {
 
-namespace PKCS_IDS {
+namespace {
 
-const byte MD2_ID[] = {
+const byte MD2_PKCS_ID[] = {
 0x30, 0x20, 0x30, 0x0C, 0x06, 0x08, 0x2A, 0x86, 0x48, 0x86,
 0xF7, 0x0D, 0x02, 0x02, 0x05, 0x00, 0x04, 0x10 };
 
-const byte MD5_ID[] = {
+const byte MD5_PKCS_ID[] = {
 0x30, 0x20, 0x30, 0x0C, 0x06, 0x08, 0x2A, 0x86, 0x48, 0x86,
 0xF7, 0x0D, 0x02, 0x05, 0x05, 0x00, 0x04, 0x10 };
 
-const byte RIPEMD_128_ID[] = {
+const byte RIPEMD_128_PKCS_ID[] = {
 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2B, 0x24, 0x03, 0x02,
 0x02, 0x05, 0x00, 0x04, 0x14 };
 
-const byte RIPEMD_160_ID[] = {
+const byte RIPEMD_160_PKCS_ID[] = {
 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2B, 0x24, 0x03, 0x02,
 0x01, 0x05, 0x00, 0x04, 0x14 };
 
-const byte SHA_160_ID[] = {
+const byte SHA_160_PKCS_ID[] = {
 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2B, 0x0E, 0x03, 0x02,
 0x1A, 0x05, 0x00, 0x04, 0x14 };
 
-const byte SHA_224_ID[] = {
+const byte SHA_224_PKCS_ID[] = {
 0x30, 0x2D, 0x30, 0x0D, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01,
 0x65, 0x03, 0x04, 0x02, 0x04, 0x05, 0x00, 0x04, 0x1C };
 
-const byte SHA_256_ID[] = {
+const byte SHA_256_PKCS_ID[] = {
 0x30, 0x31, 0x30, 0x0D, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01,
 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20 };
 
-const byte SHA_384_ID[] = {
+const byte SHA_384_PKCS_ID[] = {
 0x30, 0x41, 0x30, 0x0D, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01,
 0x65, 0x03, 0x04, 0x02, 0x02, 0x05, 0x00, 0x04, 0x30 };
 
-const byte SHA_512_ID[] = {
+const byte SHA_512_PKCS_ID[] = {
 0x30, 0x51, 0x30, 0x0D, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01,
 0x65, 0x03, 0x04, 0x02, 0x03, 0x05, 0x00, 0x04, 0x40 };
 
-const byte TIGER_ID[] = {
+const byte TIGER_PKCS_ID[] = {
 0x30, 0x29, 0x30, 0x0D, 0x06, 0x09, 0x2B, 0x06, 0x01, 0x04,
 0x01, 0xDA, 0x47, 0x0C, 0x02, 0x05, 0x00, 0x04, 0x18 };
 
@@ -63,29 +63,30 @@ MemoryVector<byte> pkcs_hash_id(const std::string& name)
    {
    MemoryVector<byte> out;
 
+   // Special case for SSL/TLS RSA signatures
    if(name == "Parallel(MD5,SHA-160)")
       return out;
 
    if(name == "MD2")
-      out.set(PKCS_IDS::MD2_ID, sizeof(PKCS_IDS::MD2_ID));
+      out.set(MD2_PKCS_ID, sizeof(MD2_PKCS_ID));
    else if(name == "MD5")
-      out.set(PKCS_IDS::MD5_ID, sizeof(PKCS_IDS::MD5_ID));
+      out.set(MD5_PKCS_ID, sizeof(MD5_PKCS_ID));
    else if(name == "RIPEMD-128")
-      out.set(PKCS_IDS::RIPEMD_128_ID, sizeof(PKCS_IDS::RIPEMD_128_ID));
+      out.set(RIPEMD_128_PKCS_ID, sizeof(RIPEMD_128_PKCS_ID));
    else if(name == "RIPEMD-160")
-      out.set(PKCS_IDS::RIPEMD_160_ID, sizeof(PKCS_IDS::RIPEMD_160_ID));
+      out.set(RIPEMD_160_PKCS_ID, sizeof(RIPEMD_160_PKCS_ID));
    else if(name == "SHA-160")
-      out.set(PKCS_IDS::SHA_160_ID, sizeof(PKCS_IDS::SHA_160_ID));
+      out.set(SHA_160_PKCS_ID, sizeof(SHA_160_PKCS_ID));
    else if(name == "SHA-224")
-      out.set(PKCS_IDS::SHA_224_ID, sizeof(PKCS_IDS::SHA_224_ID));
+      out.set(SHA_224_PKCS_ID, sizeof(SHA_224_PKCS_ID));
    else if(name == "SHA-256")
-      out.set(PKCS_IDS::SHA_256_ID, sizeof(PKCS_IDS::SHA_256_ID));
+      out.set(SHA_256_PKCS_ID, sizeof(SHA_256_PKCS_ID));
    else if(name == "SHA-384")
-      out.set(PKCS_IDS::SHA_384_ID, sizeof(PKCS_IDS::SHA_384_ID));
+      out.set(SHA_384_PKCS_ID, sizeof(SHA_384_PKCS_ID));
    else if(name == "SHA-512")
-      out.set(PKCS_IDS::SHA_512_ID, sizeof(PKCS_IDS::SHA_512_ID));
+      out.set(SHA_512_PKCS_ID, sizeof(SHA_512_PKCS_ID));
    else if(name == "Tiger(24,3)")
-      out.set(PKCS_IDS::TIGER_ID, sizeof(PKCS_IDS::TIGER_ID));
+      out.set(TIGER_PKCS_ID, sizeof(TIGER_PKCS_ID));
 
    if(out.size())
       return out;
