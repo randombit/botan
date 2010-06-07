@@ -29,12 +29,13 @@ class BOTAN_DLL Filter
 
       /**
       * Start a new message. Must be closed by end_msg() before another
-      * message can be startet.
+      * message can be started.
       */
       virtual void start_msg() {}
 
       /**
-      * Tell the Filter that the current message shall be ended.
+      * Notify that the current message is finished; flush buffers and
+      * do end-of-message processing (if any).
       */
       virtual void end_msg() {}
 
@@ -43,6 +44,16 @@ class BOTAN_DLL Filter
       * @return true if this filter is attachable, false otherwise
       */
       virtual bool attachable() { return true; }
+
+      virtual ~Filter() {}
+   protected:
+      void send(const byte[], u32bit);
+      void send(byte input) { send(&input, 1); }
+      void send(const MemoryRegion<byte>& in) { send(in.begin(), in.size()); }
+      Filter();
+   private:
+      Filter(const Filter&) {}
+      Filter& operator=(const Filter&) { return (*this); }
 
       /**
       * Start a new message in *this and all following filters. Only for
@@ -55,16 +66,6 @@ class BOTAN_DLL Filter
       * internal use, not intended for use in client applications.
       */
       void finish_msg();
-
-      virtual ~Filter() {}
-   protected:
-      void send(const byte[], u32bit);
-      void send(byte input) { send(&input, 1); }
-      void send(const MemoryRegion<byte>& in) { send(in.begin(), in.size()); }
-      Filter();
-   private:
-      Filter(const Filter&) {}
-      Filter& operator=(const Filter&) { return (*this); }
 
       friend class Pipe;
       friend class Fanout_Filter;
