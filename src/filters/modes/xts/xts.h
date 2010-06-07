@@ -14,8 +14,8 @@
 
 namespace Botan {
 
-/*
-* XTS Encryption
+/**
+* IEEE P1619 XTS Encryption
 */
 class BOTAN_DLL XTS_Encryption : public Keyed_Filter,
                                  private Buffered_Filter
@@ -48,8 +48,8 @@ class BOTAN_DLL XTS_Encryption : public Keyed_Filter,
       SecureVector<byte> tweak;
    };
 
-/*
-* XTS Decryption
+/**
+* IEEE P1619 XTS Encryption
 */
 class BOTAN_DLL XTS_Decryption : public Keyed_Filter,
                                  private Buffered_Filter
