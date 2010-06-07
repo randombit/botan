@@ -1,4 +1,4 @@
-/**
+/*
 * Algorithm Factory
 * (C) 2008 Jack Lloyd
 *

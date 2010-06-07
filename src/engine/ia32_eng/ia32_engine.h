@@ -1,4 +1,4 @@
-/**
+/*
 * IA-32 Assembly Implementation Engines
 * (C) 1999-2008 Jack Lloyd
 *

@@ -1,4 +1,4 @@
-/**
+/*
 * SCAN Name Abstraction
 * (C) 2008 Jack Lloyd
 *

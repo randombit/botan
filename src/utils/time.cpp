@@ -1,4 +1,4 @@
-/**
+/*
 * Time Functions
 * (C) 1999-2010 Jack Lloyd
 *

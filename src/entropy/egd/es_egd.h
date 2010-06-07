@@ -1,4 +1,4 @@
-/**
+/*
 * EGD EntropySource
 * (C) 1999-2007 Jack Lloyd
 *

@@ -1,4 +1,4 @@
-/**
+/*
 * TLS Record Reading
 * (C) 2004-2010 Jack Lloyd
 *

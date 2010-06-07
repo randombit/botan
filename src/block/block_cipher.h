@@ -1,4 +1,4 @@
-/**
+/*
 * Block Cipher Base Class
 * (C) 1999-2009 Jack Lloyd
 *

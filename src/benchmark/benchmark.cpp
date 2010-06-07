@@ -1,4 +1,4 @@
-/**
+/*
 * Runtime benchmarking
 * (C) 2008 Jack Lloyd
 *

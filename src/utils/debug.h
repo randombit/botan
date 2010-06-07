@@ -1,4 +1,4 @@
-/**
+/*
 * Internal-use debugging functions for Botan
 * (C) 2009 Jack Lloyd
 *

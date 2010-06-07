@@ -1,4 +1,4 @@
-/**
+/*
 * PKCS #5 PBES2
 * (C) 1999-2008 Jack Lloyd
 *

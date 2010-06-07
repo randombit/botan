@@ -1,4 +1,4 @@
-/**
+/*
 * AES using Intel's AES-NI instructions
 * (C) 2009 Jack Lloyd
 *

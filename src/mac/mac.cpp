@@ -1,4 +1,4 @@
-/**
+/*
 * Message Authentication Code base class
 * (C) 1999-2008 Jack Lloyd
 *

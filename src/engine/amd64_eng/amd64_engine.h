@@ -1,4 +1,4 @@
-/**
+/*
 * x86-64 Assembly Implementation Engines
 * (C) 1999-2008 Jack Lloyd
 *

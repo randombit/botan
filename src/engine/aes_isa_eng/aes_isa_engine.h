@@ -1,4 +1,4 @@
-/**
+/*
 * Engine for AES instructions
 * (C) 2009 Jack Lloyd
 *

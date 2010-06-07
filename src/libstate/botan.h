@@ -1,4 +1,4 @@
-/**
+/*
 * A vague catch all include file for Botan
 * (C) 1999-2007 Jack Lloyd
 *

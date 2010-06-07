@@ -1,4 +1,4 @@
-/**
+/*
 * Scalar emulation of SIMD 32-bit operations
 * (C) 2009 Jack Lloyd
 *
