@@ -89,7 +89,7 @@ void Record_Writer::set_keys(const CipherSuite& suite, const SessionKeys& keys,
          );
       block_size = block_size_of(cipher_algo);
 
-      if(major == 3 && minor >= 2)
+      if(major > 3 || (major == 3 && minor >= 2))
          iv_size = block_size;
       else
          iv_size = 0;
