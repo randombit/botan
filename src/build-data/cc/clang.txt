@@ -1,0 +1,42 @@
+# Largely copied from the gcc config
+
+binary_name clang
+
+compile_option "-c "
+output_to_option "-o "
+add_include_dir_option -I
+add_lib_dir_option -L
+add_lib_option -l
+
+lang_flags "-D_REENTRANT -ansi -Wno-long-long"
+warning_flags "-W -Wall"
+
+makefile_style unix
+
+lib_opt_flags "-O2"
+check_opt_flags "-O2"
+shared_flags "-fPIC"
+debug_flags -g
+no_debug_flags "-finline-functions"
+
+<so_link_flags>
+# The default works for GNU ld and several other Unix linkers
+default -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
+</so_link_flags>
+
+<mach_abi_linking>
+amd64   -> "-m64"
+mips64  -> "-mabi=64"
+s390    -> "-m31"
+s390x   -> "-m64"
+sparc32 -> "-m32 -mno-app-regs"
+sparc64 -> "-m64 -mno-app-regs"
+ppc64   -> "-m64"
+
+# This should probably be used on most/all targets, but the docs are incomplete
+openbsd -> "-pthread"
+freebsd -> "-pthread"
+dragonfly -> "-pthread"
+netbsd  -> "-pthread -D_NETBSD_SOURCE"
+qnx     -> "-fexceptions -D_QNX_SOURCE"
+</mach_abi_linking>

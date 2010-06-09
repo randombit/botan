@@ -1,9 +1,12 @@
 
 * 1.8.9, ????-??-??
+ - Avoid possible timing attack against OAEP decoding
+ - Fix problem in semcem.h preventing build under Clang or GCC 3.4
  - Fix bug that prevented creation of DSA groups under 1024 bits
  - Fix crash in GMP_Engine if library is shutdown and reinitialized
  - Work around problem with recent binutils in x86-64 SHA-1
  - Add Win32 installer support
+ - Add support for the Clang compiler
 
 * 1.8.8, 2009-11-03
  - Alter Skein-512 to match the tweaked 1.2 specification
