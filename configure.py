@@ -670,6 +670,11 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             return os.path.join(options.with_build_dir, path)
         return path
 
+    def only_if_shared(option):
+        if options.build_shared_lib:
+            return option
+        return ''
+
     return {
         'version_major': build_config.version_major,
         'version_minor': build_config.version_minor,
@@ -709,8 +714,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'check_opt': cc.check_opt_flags,
         'lang_flags': cc.lang_flags + options.extra_flags,
         'warn_flags': cc.warning_flags,
-        'shared_flags': cc.shared_flags,
-        'dll_import_flags': cc.dll_import_flags,
+        'shared_flags': only_if_shared(cc.shared_flags),
+        'dll_import_flags': only_if_shared(cc.dll_import_flags),
 
         'so_link': cc.so_link_command_for(osinfo.basename),
 
