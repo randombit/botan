@@ -96,10 +96,12 @@ static: $(STATIC_LIB)
 ##################################################
 clean:
 	$(RM) %{build_dir}\lib\* %{build_dir}\checks\*
-	$(RM) $(LIBRARIES) $(CHECK)
+	$(RM) $(LIBRARIES) $(CHECK).exe
 
 distclean: clean
 	$(RM) %{build_dir}\build.h
+	$(RM) %{build_dir}\botan.doxy
+	$(RM) %{build_dir}\botan.iss
 	$(RM) %{build_dir}\include\botan\*
 	$(RMDIR) %{build_dir}\include\botan %{build_dir}\include
 	$(RMDIR) %{build_dir}\lib %{build_dir}\checks
