@@ -77,7 +77,7 @@ all: $(LIBRARIES)
 #    $(CHECKOBJS),check.exe,,$(LINK_TO) $(STATIC_LIB)
 
 $(CHECK): $(LIBRARIES) $(CHECKOBJS)
-	link /OUT:$@.exe $(CHECKOBJS) $(STATIC_LIB) $(LINK_TO)
+	$(CXX) /Fe:$@ $(CHECKOBJS) $(STATIC_LIB) $(LINK_TO)
 
 $(STATIC_LIB): $(LIBOBJS)
 !If "$(SO_OBJ_FLAGS)" == ""

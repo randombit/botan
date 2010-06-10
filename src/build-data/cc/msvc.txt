@@ -25,3 +25,7 @@ makefile_style nmake
 <so_link_flags>
 default -> "$(CXX) /LD"
 </so_link_flags>
+
+<mach_abi_linking>
+all -> "/MD"
+</mach_abi_linking>
