@@ -7,6 +7,8 @@ CHECK_OPT     = %{check_opt}
 MACH_OPT      = %{mach_opt}
 LANG_FLAGS    = %{lang_flags}
 WARN_FLAGS    = %{warn_flags}
+SO_OBJ_FLAGS  = %{shared_flags}
+LIB_LINK_CMD  = %{so_link}
 LINK_TO       = %{link_to}
 
 ##################################################
@@ -49,7 +51,7 @@ LIBOBJS       = %{lib_objs}
 
 CHECKOBJS     = %{check_objs}
 
-LIB_FLAGS     = $(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
+LIB_FLAGS     = $(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS) $(SO_OBJ_FLAGS)
 CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
 
 LIBRARIES     = $(STATIC_LIB)
@@ -78,7 +80,11 @@ $(CHECK): $(LIBRARIES) $(CHECKOBJS)
 	link /OUT:$@.exe $(CHECKOBJS) $(STATIC_LIB) $(LINK_TO)
 
 $(STATIC_LIB): $(LIBOBJS)
-	$(AR) /OUT:$@ /NAME:BOTAN-$(VERSION) $(LIBOBJS)
+!If "$(SO_OBJ_FLAGS)" == ""
+        $(AR) /OUT:$(BOTAN_LIB) $(LIBOBJS)
+!Else
+        $(LIB_LINK_CMD) /Fe$(LIBNAME) $(LIBOBJS) $(LINK_TO)
+!Endif
 
 ##################################################
 # Misc Targets                                   #
