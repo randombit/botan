@@ -555,7 +555,7 @@ def canon_processor(archinfo, proc):
     raise Exception('Unknown or unidentifiable processor "%s"' % (proc))
 
 def guess_processor(archinfo):
-    base_proc = platform.machine()
+    base_proc = platform.machine().lower()
 
     if base_proc == '':
         raise Exception('Could not determine target CPU; set with --cpu')
@@ -710,7 +710,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'lang_flags': cc.lang_flags + options.extra_flags,
         'warn_flags': cc.warning_flags,
         'shared_flags': cc.shared_flags,
-        'dll_export_flags': cc.dll_export_flags,
+        'dll_import_flags': cc.dll_import_flags,
 
         'so_link': cc.so_link_command_for(osinfo.basename),
 

@@ -15,8 +15,8 @@ no_debug_flags ""
 lang_flags "/EHsc /GR /D_CONSOLE"
 warning_flags ""
 
+shared_flags "/DBOTAN_DLL=__declspec(dllexport)"
 dll_import_flags "__declspec(dllimport)"
-dll_export_flags "__declspec(dllexport)"
 
 ar_command "lib"
 
