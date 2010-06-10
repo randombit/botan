@@ -56,7 +56,7 @@ CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
 
 LIBRARIES     = $(STATIC_LIB)
 
-LIBNAME       = libbotan
+LIBNAME       = botan
 STATIC_LIB    = $(LIBNAME).%{static_suffix}
 
 all: $(LIBRARIES)
