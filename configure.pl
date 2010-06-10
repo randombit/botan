@@ -98,6 +98,12 @@ sub main {
 
     get_options($config);
 
+    unless($$config{'ack_deprecation'}) {
+        croak('configure.pl is no longer supported, exiting. Use option ' .
+              '--i-know-this-is-broken to force build');
+        exit 1;
+    }
+
     my $default_value_is = sub {
         my ($var, $val) = @_;
         $$config{$var} = $val if not defined($$config{$var});
@@ -629,6 +635,7 @@ sub get_options {
 
     $$config{'verbose'} = 1;
     $$config{'asm_ok'} = 1;
+    $$config{'ack_deprecation'} = 0;
     $$config{'tr1'} = undef; # not enabled by default
     $$config{'modules'} = {};
 
@@ -745,6 +752,8 @@ sub get_options {
 
         'quiet' => sub { $$config{'verbose'} = 0; },
         'trace' => sub { $TRACING = 1; },
+
+        'i-know-this-is-broken' => sub { $$config{'ack_deprecation'} = 1 },
 
         'enable-asm' => sub { $$config{'asm_ok'} = 1; },
         'disable-asm' => sub { $$config{'asm_ok'} = 0; },

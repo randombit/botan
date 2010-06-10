@@ -1,5 +1,6 @@
 
 * 1.8.9, ????-??-??
+ - The Perl build script is no longer supported and refuses to run by default
  - Avoid possible timing attack against OAEP decoding
  - Fix problem in semcem.h preventing build under Clang or GCC 3.4
  - Fix bug that prevented creation of DSA groups under 1024 bits
