@@ -13,7 +13,7 @@
 \title{\textbf{Botan Build Guide}}
 \author{Jack Lloyd \\
         \texttt{lloyd@randombit.net}}
-\date{2008-11-24}
+\date{2010-06-10}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\module}[1]{\texttt{#1}}
@@ -41,82 +41,56 @@ POSIX (such as VMS, MacOS 9, OS/390, OS/400, ...) are not supported by
 the build system, primarily due to lack of access. Please contact the
 maintainer if you would like to build Botan on such a system.
 
-Botan's build is controlled by configure.pl, which is a Perl
-script. Perl 5.6 or later is required.
+Botan's build is controlled by configure.py, which is a Python
+script. Python 2.4 or later is required (but if you want to use the
+incompatible Python 3, you must first run the \texttt{2to3} script on
+it).
 
 \section{For the Impatient}
 
 \begin{verbatim}
-$ ./configure.pl [--prefix=/some/directory]
+$ ./configure.py [--prefix=/some/directory]
 $ make
 $ make install
 \end{verbatim}
 
 Or using \verb|nmake|, if you're compiling on Windows with Visual
 C++. On platforms that do not understand the '\#!' convention for
-beginning script files, or that have Perl installed in an unusual
-spot, you might need to prefix the \texttt{configure.pl} command with
-\texttt{perl} or \texttt{/path/to/perl}.
+beginning script files, or that have Python installed in an unusual
+spot, you might need to prefix the \texttt{configure.py} command with
+\texttt{python} or even \texttt{/full/path/to/python}.
 
 \section{Building the Library}
 
-The first step is to run \filename{configure.pl}, which is a Perl
+The first step is to run \filename{configure.py}, which is a Python
 script that creates various directories, config files, and a Makefile
-for building everything. The script requires at least Perl 5.6; any
-later version should also work.
+for building everything. The script requires at least Python 2.4; any
+later version of Python 2.x should also work. If you want to use
+Python 3.1, first run the program \texttt{2to3} (included in Python)
+on the script; this will convert the script to the Python 3.x dialect.
 
 The script will attempt to guess what kind of system you are trying
 to compile for (and will print messages telling you what it guessed).
 You can override this process by passing the options \verb|--cc|,
-\verb|--os|, and \verb|--cpu| -- acceptable values are printed if
-you run \verb|configure.pl| with \verb|--help|.
+\verb|--os|, and \verb|--cpu|.
 
 You can pass basically anything reasonable with \verb|--cpu|: the
 script knows about a large number of different architectures, their
-sub-models, and common aliases for them. The script does not display
-all the possibilities in its help message because there are simply too
-many entries. You should only select the 64-bit version of a CPU (such
-as ``sparc64'' or ``mips64'') if your operating system knows how to
-handle 64-bit object code -- a 32-bit kernel on a 64-bit CPU will
-generally not like 64-bit code.
-
-By default the script tries to figure out what will work on your
-system, and use that. It will print a display at the end showing
-which algorithms have and have not been abled. For instance on one
-system we might see the line:
-
-\begin{verbatim}
-   (loading): entropy: [beos_stats] buf_es [cryptoapi_rng]
-                       dev_random egd proc_walk unix_procs [win32_stats]
-\end{verbatim}
-
-The names listed in brackets are disabled, the others are
-enabled. Here we see the list of entropy sources which are going to be
-compiled into Botan. Since this particular line comes when Botan was
-configuring for a Linux system, the Win32 and BeOS specific modules
-were disabled, while modules that use Unix APIs and /dev/random are
-built.
+sub-models, and common aliases for them. You should only select the
+64-bit version of a CPU (such as ``sparc64'' or ``mips64'') if your
+operating system knows how to handle 64-bit object code -- a 32-bit
+kernel running on a 64-bit CPU will generally not like 64-bit code.
 
 You can control which algorithms and modules are built using the
-options ``\verb|--enable-modules=MODS|'' and
-``\verb|--disable-modules=MODS|'', for instance \\
-``\verb|--enable-modules=blowfish,md5,rsa,zlib --disable-modules=arc4,cmac|''.
-Modules not listed on the command line will simply be loaded if needed
-or if configured to load by default.
-
-Not all OSes or CPUs have specific support in
-\filename{configure.pl}. If the CPU architecture of your system isn't
-supported by \filename{configure.pl}, use 'generic'. This setting
-disables machine-specific optimization flags. Similarly, setting OS to
-'generic' disables things which depend greatly on OS support
-(specifically, shared libraries).
-
-However, it's impossible to guess which options to give to a system
-compiler.  Thus, if you want to compile Botan with a compiler which
-\filename{configure.pl} does not support, you will need to tell it how
-that compiler works. This is done by adding a new file in the
-directory \filename{src/build-data/cc}; the existing files should put you
-in the right direction.
+options \verb|--enable-modules=MODS| and
+\verb|--disable-modules=MODS|, for instance
+\verb|--enable-modules=blowfish,md5,rsa,zlib| and
+\\ \verb|--disable-modules=arc4,cmac|. Modules not listed on the
+command line will simply be loaded if needed or if configured to load
+by default. If you use \verb|--no-autoload|, only the most core module
+will be included; you can then explicitly enable things that you want
+to use with enable-modules. This is useful for creating a minimal
+build targetted to a specific application.
 
 The script tries to guess what kind of makefile to generate, and it
 almost always guesses correctly (basically, Visual C++ uses NMAKE with
@@ -135,22 +109,23 @@ script for VMS), you will need to create a new template file in
 The basic build procedure on Unix and Unix-like systems is:
 
 \begin{verbatim}
-   $ ./configure.pl [--enable-modules=<list>] [--cc=CC]
+   $ ./configure.py [--enable-modules=<list>] [--cc=CC]
    $ make
    # You may need to set your LD_LIBRARY_PATH or equivalent for ./check to run
    $ make check # optional, but a good idea
    $ make install
 \end{verbatim}
 
-This will probably default to using GCC, depending on what can be
-found within your PATH.
+On Unix systems the script will default to using GCC; use
+\texttt{--cc} if you want something else. For instance use
+\texttt{--cc=icc} for Intel C++ and \texttt{--cc=clang} for Clang.
 
 The \verb|make install| target has a default directory in which it
 will install Botan (typically \verb|/usr/local|). You can override
 this by using the \texttt{--prefix} argument to
-\filename{configure.pl}, like so:
+\filename{configure.py}, like so:
 
-\verb|./configure.pl --prefix=/opt <other arguments>|
+\verb|./configure.py --prefix=/opt <other arguments>|
 
 On some systems shared libraries might not be immediately visible to
 the runtime linker. For example, on Linux you may have to edit
@@ -161,12 +136,17 @@ to include the directory that the Botan libraries were installed into.
 
 \subsection{MS Windows}
 
-The situation is not much different here. We'll assume you're using Visual C++
-(for Cygwin, the Unix instructions are probably more relevant). You need to
-have a copy of Perl installed, and have both Perl and Visual C++ in your path.
+If you don't want to deal with building botan on Windows, check the
+website; commonly prebuild binaries with installers are available,
+especially for stable versions.
+
+The situation is not much different on Windows. We'll assume you're
+using Visual C++ (for Cygwin, the Unix instructions are probably more
+relevant). You need to have a copy of Python installed, and have both
+Python and Visual C++ in your path.
 
 \begin{verbatim}
-   > perl configure.pl --cc=msvc (or --cc=gcc for MinGW) [--cpu=CPU]
+   > perl configure.py --cc=msvc (or --cc=gcc for MinGW) [--cpu=CPU]
    > nmake
    > nmake check # optional, but recommended
 \end{verbatim}
@@ -175,21 +155,18 @@ For Win95 pre OSR2, the \verb|cryptoapi_rng| module will not work,
 because CryptoAPI didn't exist. And all versions of NT4 lack the
 ToolHelp32 interface, which is how \verb|win32_stats| does its slow
 polls, so a version of the library built with that module will not
-load under NT4. Later systems (98/ME/2000/XP) support both methods, so
-this shouldn't be much of an issue.
+load under NT4. Later systems support both methods, so this shouldn't
+be much of an issue anymore.
 
-Unfortunately, there currently isn't an install script usable on
-Windows. Basically all you have to do is copy the newly created
-\filename{libbotan.lib} to someplace where you can find it later (say,
-\verb|C:\botan\|). Then copy the entire \verb|build\include\botan|
-directory, which was constructed when you built the library, into the
-same directory.
+By default the install target will be 'C:\textbackslash botan'; you
+can modify this with the \texttt{--prefix} option.
 
 When building your applications, all you have to do is tell the
 compiler to look for both include files and library files in
-\verb|C:\botan|, and it will find both. Or you can move them to a
-place where they will be in the default compiler search paths (consult
-your documentation and/or local expert for details).
+\verb|C:\botan| (or whereever you installed botan), and it will find
+both. Or you can move them to a place where they will be in the
+default compiler search paths (consult your documentation and/or local
+expert for details).
 
 \pagebreak
 
@@ -244,7 +221,7 @@ environment in a different directory.
 \subsection{Local Configuration}
 
 You may want to do something peculiar with the configuration; to
-support this there is a flag to \filename{configure.pl} called
+support this there is a flag to \filename{configure.py} called
 \texttt{--with-local-config=<file>}. The contents of the file are
 inserted into \filename{build/build.h} which is (indirectly) included
 into every Botan header and source file.
