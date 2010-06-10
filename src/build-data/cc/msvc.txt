@@ -23,5 +23,5 @@ ar_command "lib"
 makefile_style nmake
 
 <so_link_flags>
-default -> "link /DLL"
+default -> "$(CXX) /LD"
 </so_link_flags>
