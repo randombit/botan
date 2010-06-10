@@ -13,7 +13,7 @@
 \title{\textbf{Botan Build Guide}}
 \author{Jack Lloyd \\
         \texttt{lloyd@randombit.net}}
-\date{2009-10-09}
+\date{2010-06-10}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\module}[1]{\texttt{#1}}
@@ -42,13 +42,16 @@ the build system, primarily due to lack of access. Please contact the
 maintainer if you would like to build Botan on such a system.
 
 Botan's build is controlled by configure.py, which is a Python
-script. Python 2.4 or later is required.
+script. Python 2.4 or later is required (but if you want to use the
+incompatible Python 3, you must first run the \texttt{2to3} script on
+it).
 
 \section{For the Impatient}
 
 \begin{verbatim}
 $ ./configure.py [--prefix=/some/directory]
 $ make
+$ make check
 $ make install
 \end{verbatim}
 
@@ -63,7 +66,10 @@ spot, you might need to prefix the \texttt{configure.py} command with
 The first step is to run \filename{configure.py}, which is a Python
 script that creates various directories, config files, and a Makefile
 for building everything. The script requires at least Python 2.4; any
-later version of Python 2.x should also work.
+later version of Python 2.x should also work. If you want to use
+Python 3.1, first run the program \texttt{2to3} (included in the
+Python distribution) on the script; this will convert the script to
+the Python 3.x dialect.
 
 The script will attempt to guess what kind of system you are trying
 to compile for (and will print messages telling you what it guessed).
@@ -95,11 +101,15 @@ might not have. For instance to enable zlib support, add
 \verb|--with-zlib| to your invocation of \verb|configure.py|.
 
 You can control which algorithms and modules are built using the
-options ``\verb|--enable-modules=MODS|'' and
-``\verb|--disable-modules=MODS|'', for instance \\
-``\verb|--enable-modules=blowfish,md5,rsa,zlib --disable-modules=arc4,cmac|''.
-Modules not listed on the command line will simply be loaded if needed
-or if configured to load by default.
+options \verb|--enable-modules=MODS| and
+\verb|--disable-modules=MODS|, for instance
+\verb|--enable-modules=blowfish,md5,rsa,zlib| and
+\verb|--disable-modules=arc4,cmac|.  Modules not listed on the command
+line will simply be loaded if needed or if configured to load by
+default. If you use \verb|--no-autoload|, only the most core modules
+will be included; you can then explicitly enable things that you want
+to use with enable-modules. This is useful for creating a minimal
+build targetted to a specific application.
 
 The script tries to guess what kind of makefile to generate, and it
 almost always guesses correctly (basically, Visual C++ uses NMAKE with
@@ -123,8 +133,9 @@ The basic build procedure on Unix and Unix-like systems is:
    $ make install
 \end{verbatim}
 
-This will probably default to using GCC, depending on what can be
-found within your PATH.
+On Unix systems the script will default to using GCC; use
+\texttt{--cc} if you want something else. For instance use
+\texttt{--cc=icc} for Intel C++ and \texttt{--cc=clang} for Clang.
 
 The \verb|make install| target has a default directory in which it
 will install Botan (typically \verb|/usr/local|). You can override
@@ -142,29 +153,31 @@ to include the directory that the Botan libraries were installed into.
 
 \subsection{MS Windows}
 
-The situation is not much different here. We'll assume you're using Visual C++
-(for Cygwin, the Unix instructions are probably more relevant). You need to
-have a copy of Python installed, and have both Python and Visual C++ in your path.
+If you don't want to deal with building botan on Windows, check the
+website; commonly prebuild Windows binaries with installers are
+available, especially for stable versions.
+
+The situation is not much different here. We'll assume you're using
+Visual C++ (for Cygwin, the Unix instructions are probably more
+relevant). You need to have a copy of Python installed, and have both
+Python and Visual C++ in your path.
 
 \begin{verbatim}
    > python configure.py --cc=msvc (or --cc=gcc for MinGW) [--cpu=CPU]
    > nmake
    > nmake check # optional, but recommended
+   > nmake install
 \end{verbatim}
 
 For Win95 pre OSR2, the \verb|cryptoapi_rng| module will not work,
 because CryptoAPI didn't exist. And all versions of NT4 lack the
 ToolHelp32 interface, which is how \verb|win32_stats| does its slow
 polls, so a version of the library built with that module will not
-load under NT4. Later systems (98/ME/2000/XP) support both methods, so
-this shouldn't be much of an issue.
+load under NT4. Later versions of Windows support both methods, so
+this shouldn't be much of an issue anymore.
 
-Unfortunately, there currently isn't an install script usable on
-Windows. Basically all you have to do is copy the newly created
-\filename{libbotan.lib} to someplace where you can find it later (say,
-\verb|C:\botan\|). Then copy the entire \verb|build\include\botan|
-directory, which was constructed when you built the library, into the
-same directory.
+By default the install target will be 'C:\textbackslash botan'; you
+can modify this with the \texttt{--prefix} option.
 
 When building your applications, all you have to do is tell the
 compiler to look for both include files and library files in
@@ -297,11 +310,11 @@ namespaced by the major and minor versions. So it can be used,
 for instance, as
 
 \begin{verbatim}
-$ pkg-config botan-1.8 --modversion
-1.8.0
-$ pkg-config botan-1.8 --cflags
+$ pkg-config botan-1.9 --modversion
+1.9.8
+$ pkg-config botan-1.9 --cflags
 -I/usr/local/include
-$ pkg-config botan-1.8 --libs
+$ pkg-config botan-1.9 --libs
 -L/usr/local/lib -lbotan -lm -lbz2 -lpthread -lrt
 \end{verbatim}
 
