@@ -29,10 +29,12 @@ opteron -> k8
 amdopteron -> k8
 athlon64 -> k8
 barcelona -> k10
+
+corei5cpum520 -> westmere
 </submodel_aliases>
 
 <isa_extn>
 sse2:all
 ssse3:core2,nehalem,westmere
-aes_ni:westmere
+aes-ni:westmere
 </isa_extn>
