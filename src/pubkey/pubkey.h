@@ -337,6 +337,12 @@ class BOTAN_DLL PK_Decryptor_MR_with_EME : public PK_Decryptor
       const EME* encoder;
    };
 
+/*
+* Typedefs for easier transition between 1.8 and 1.9/1.10
+*/
+typedef PK_Encryptor_MR_with_EME PK_Encryptor_EME;
+typedef PK_Decryptor_MR_with_EME PK_Decryptor_EME;
+
 /**
 * Public Key Verifier with Message Recovery.
 */
