@@ -9,6 +9,7 @@
 #define BOTAN_MP_ASM_H__
 
 #include <botan/mp_types.h>
+#include <intrin.h>
 
 #if (BOTAN_MP_WORD_BITS != 64)
    #error The mp_amd64_msvc module requires that BOTAN_MP_WORD_BITS == 64
