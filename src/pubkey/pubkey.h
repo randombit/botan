@@ -438,6 +438,12 @@ class BOTAN_DLL PK_Decryptor_EME : public PK_Decryptor
       const EME* eme;
    };
 
+/*
+* Typedefs for compatability with 1.8
+*/
+typedef PK_Encryptor_EME PK_Encryptor_MR_with_EME;
+typedef PK_Decryptor_EME PK_Decryptor_MR_with_EME;
+
 }
 
 #endif
