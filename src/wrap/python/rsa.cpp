@@ -40,7 +40,7 @@ class Py_RSA_PrivateKey
          {
          Pipe out;
          out.start_msg();
-         X509::encode(*rsa_key, out, RAW_BER);
+         PKCS8::encode(*rsa_key, out, RAW_BER);
          out.end_msg();
          return out.read_all_as_string();
          }
