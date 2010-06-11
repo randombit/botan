@@ -1,0 +1,16 @@
+load_on dep
+
+mp_bits 64
+
+<header:internal>
+mp_asm.h
+</header:internal>
+
+<arch>
+amd64
+ia64
+</arch>
+
+<cc>
+msvc
+</cc>
