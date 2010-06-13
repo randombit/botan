@@ -208,9 +208,14 @@ def process_command_line(args):
     build_group.add_option('--disable-debug', dest='debug_build',
                            action='store_false', help=SUPPRESS_HELP)
 
-    build_group.add_option('--use-boost-python', dest='boost_python',
+    build_group.add_option('--with-boost-python', dest='boost_python',
                            default=False, action='store_true',
                            help='enable Boost.Python wrapper')
+
+    build_group.add_option('--without-boost-python',
+                           dest='boost_python',
+                           action='store_false',
+                           help=SUPPRESS_HELP)
 
     build_group.add_option('--gen-amalgamation', dest='gen_amalgamation',
                            default=False, action='store_true',
