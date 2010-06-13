@@ -46,7 +46,7 @@ int EGD_EntropySource::EGD_Socket::open_socket(const std::string& path)
       if(sizeof(addr.sun_path) < path.length() + 1)
          throw std::invalid_argument("EGD socket path is too long");
 
-      std::strcpy(addr.sun_path, path.c_str());
+      std::strncpy(addr.sun_path, path.c_str(), sizeof(addr.sun_path));
 
       int len = sizeof(addr.sun_family) + std::strlen(addr.sun_path) + 1;
 
