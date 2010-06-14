@@ -10,9 +10,9 @@
 \setlength{\oddsidemargin}{0in}
 \setlength{\evensidemargin}{0in}
 
-\title{\textbf{Botan API Reference}}
+\title{\textbf{Botan Reference Manual}}
 \author{}
-\date{2010/02/05}
+\date{2010/06/14}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\manpage}[2]{\texttt{#1}(#2)}
@@ -39,6 +39,7 @@
 \parskip=5pt
 
 \pagebreak
+
 \section{Introduction}
 
 Botan is a C++ library that attempts to provide the most common
@@ -74,65 +75,6 @@ applications that use the algorithms in question. They can simply ask
 Botan if the algorithm exists, and if Botan says yes, ask the library
 to give them such an object for that algorithm.
 
-\subsection{Why Botan?}
-
-Botan may be the perfect choice for your application. Or it might be a
-terribly bad idea. This section will make clear what Botan is
-and is not.
-
-First, let's cover the major strengths:
-
-\begin{list}{$\cdot$}
-  \item Support is (usually) quickly available on the project mailing lists.
-        Commercial support licenses are available for those that desire them.
-
-  \item
-  \item Is written in a (fairly) clean object-oriented style, and the usual
-        API works in terms of reasonably high-level abstractions.
-
-  \item Supports a huge variety of algorithms, including most of the major
-        public key algorithms and standards (such as IEEE 1363, PKCS, and
-        X.509v3).
-
-  \item Supports a name-based lookup scheme, so you can get a hold of any
-        algorithm on the fly.
-
-  \item You can easily extend much of the system at application compile time or
-        at run time.
-
-  \item Works well with a wide variety of compilers, operating systems, and
-        CPUs, and more all the time.
-
-  \item Is the only open source crypto library (that I know of) that has
-        support for memory allocation techniques that prevent an attacker from
-        reading swap in an attempt to gain access to keys or other secrets. In
-        fact several different such methods are supported, depending on the
-        system (two methods for Unix, another for Windows).
-
-  \item Has (optional) support for Zlib and Bzip2 compression/decompression
-        integrated completely into the system -- it only takes a line or two of
-        code to add compression to your application.
-\end{list}
-
-\noindent
-And the major downsides and deficiencies are:
-
-\begin{list}{$\cdot$}
-  \item It's written in C++. If your application isn't, Botan is probably
-        going to be more pain than it's worth.
-  \item
-
-  \item Botan doesn't directly support higher-level protocols and
-        formats like SSL or OpenPGP. SSH support is available from a
-        third-party, and there is an alpha-level SSL/TLS library
-        currently available.
-
-  \item Doesn't currently support any very high level 'envelope' style
-        processing - support for this will probably be added once support for
-        CMS is available, so code using the high level interface will produce
-        data readable by many other libraries.
-\end{list}
-
 \pagebreak
 \section{Getting Started}
 
@@ -140,11 +82,11 @@ And the major downsides and deficiencies are:
 
 With a very small number of exceptions, declarations in the library
 are contained within the namespace \namespace{Botan}. Botan declares
-several typedef'ed types to help buffer it against changes in machine
-architecture.  These types are used extensively in the interface,
-thus it would be often be convenient to use them without the
-\namespace{Botan} prefix. You can do so by \keyword{using} the
-namespace \namespace{Botan::types} (this way you can use the type
+several \keyword{typedef}'ed types to help buffer it against changes
+in machine architecture.  These types are used extensively in the
+interface, thus it would be often be convenient to use them without
+the \namespace{Botan} prefix. You can do so by \keyword{using} the
+namespace \namespace{Botan\_types} (this way you can use the type
 names without the namespace prefix, but the remainder of the library
 stays out of the global namespace). The included types are \type{byte}
 and \type{u32bit}, which are unsigned integer types.
@@ -179,11 +121,12 @@ at the start of your \texttt{main}.
 
 The constructor takes an optional string that specifies arguments.
 Currently the only possible argument is ``thread\_safe'', which must
-have an Boolean argument (for instance ``thread\_safe=false'' or
+have an boolean argument (for instance ``thread\_safe=false'' or
 ``thread\_safe=true''). If ``thread\_safe'' is specified as true the
 library will attempt to register a mutex type to properly guard access
 to shared resources. However these locks do not protect individual
-Botan objects: explicit locking must be used in this case.
+Botan objects: explicit locking must be used if you wish to share a
+single object between threads.
 
 If you do not create a \type{LibraryInitializer} object, pretty much
 any Botan operation will fail, because it will be unable to do basic
@@ -221,11 +164,12 @@ objects inside functions or classes (since in most C++ runtimes, these
 objects will be destroyed after main has returned). This is inelegant,
 but seems to not cause many problems in practice.
 
-Botan's memory object classes (\type{MemoryVector},
-\type{SecureVector}, \type{SecureBuffer}) are extremely primitive, and
-do not (currently) meet the requirements for an STL container
-object. After Botan starts adopting C++0x features, they will be
-replaced by typedefs of \type{std::vector} with a custom allocator.
+Botan's memory object classes (\type{MemoryRegion},
+\type{MemoryVector}, \type{SecureVector}) are extremely primitive, and
+meant only for secure storage of potentially sensitive data like
+keys. They do not meet the requirements for an STL container object
+and you should not try to use them with STL algorithms. For a
+general-purpose container, use \type{std::vector}.
 
 Use a \function{try}/\function{catch} block inside your
 \function{main} function, and catch any \type{std::exception} throws
@@ -239,15 +183,14 @@ wondering what went wrong.
 \subsection{Information Flow: Pipes and Filters}
 
 Many common uses of cryptography involve processing one or more
-streams of data (be it from sockets, files, or a hardware device).
-Botan provides services that make setting up data flows through
-various operations, such as compression, encryption, and base64
-encoding. Each of these operations is implemented in what are called
-\emph{filters} in Botan. A set of filters are created and placed into
-a \emph{pipe}, and information ``flows'' through the pipe until it
-reaches the end, where the output is collected for retrieval. If
-you're familiar with the Unix shell environment, this design will
-sound quite familiar.
+streams of data. Botan provides services that make setting up data
+flows through various operations, such as compression, encryption, and
+base64 encoding. Each of these operations is implemented in what are
+called \emph{filters} in Botan. A set of filters are created and
+placed into a \emph{pipe}, and information ``flows'' through the pipe
+until it reaches the end, where the output is collected for
+retrieval. If you're familiar with the Unix shell environment, this
+design will sound quite familiar.
 
 Here is an example that uses a pipe to base64 encode some strings:
 
@@ -971,21 +914,27 @@ The library has interfaces for encryption, signatures, etc that do not require
 knowing the exact algorithm in use (for example RSA and Rabin-Williams
 signatures are handled by the exact same code path).
 
-One place where we \emph{do} need to know exactly what kind of algorithm is in
-use is when we are creating a key (\emph{But}: read the section ``Importing and
-Exporting PK Keys'', later in this manual).
+One place where we \emph{do} need to know exactly what kind of
+algorithm is in use is when we are creating a key (\emph{But}: read
+the section ``Importing and Exporting PK Keys'', later in this
+manual).
 
-There are (currently) two kinds of public key algorithms in Botan: ones based
-on integer factorization (RSA and Rabin-Williams), and ones based on the
-discrete logarithm problem (DSA, Diffie-Hellman, Nyberg-Rueppel, and
-ElGamal). Since discrete logarithm parameters (primes and generators) can be
-shared among many keys, there is the notion of these being a combined type
-(called \type{DL\_Group}).
+There are currently three kinds of public key algorithms in Botan:
+ones based on integer factorization (RSA and Rabin-Williams), ones
+based on the discrete logarithm problem in the integers modulo a prime
+(DSA, Diffie-Hellman, Nyberg-Rueppel, and ElGamal), and ones based on
+the discrete logarithm problem in an elliptic curve (ECDSA, ECDH, GOST
+34.10). The systems based on discrete logarithms (in either regular
+integers or elliptic curves) use a group (a mathematical term), which
+can be shared among many keys. An elliptic curve group is represented
+by the class \type{EC\_Domain\_Params}, while a modulo-prime group is
+represented by a \type{DL\_Group}.
 
 There are two ways to create a DL private key (such as
-\type{DSA\_PrivateKey}). One is to pass in just a \type{DL\_Group} object -- a
-new key will automatically be generated. The other involves passing in a group
-to use, along with both the public and private values (private value first).
+\type{DSA\_PrivateKey}). One is to pass in just a \type{DL\_Group}
+object -- a new key will automatically be generated. The other
+involves passing in a group to use, along with both the public and
+private values (private value first).
 
 Since in integer factorization algorithms, the modulus used isn't shared by
 other keys, we don't use this notion. You can create a new key by passing in a
@@ -1045,43 +994,34 @@ use. Examples of such strings are ``EME1(SHA-256)'' for OAEP
 encryption and ``EMSA4(SHA-256)'' for PSS signatures (where the
 message is hashed using SHA-256).
 
-Here are some basic examples (using an RSA key) to give you a feel for the
-possibilities. These examples assume \type{rsakey} is an
-\type{RSA\_PrivateKey}, since otherwise we would not be able to create a
-decryption or signature object with it (you can create encryption or signature
-verification objects with public keys, naturally). Remember to delete these
-objects when you're done with them.
+Here are some basic examples (using an RSA key) to give you a feel for
+the possibilities. These examples assume \type{rsakey} is an
+\type{RSA\_PrivateKey}, since otherwise we would not be able to create
+a decryption or signature object with it (you can create encryption or
+signature verification objects with public keys, naturally).
 
 \begin{verbatim}
    // PKCS #1 v2.0 / IEEE 1363 compatible encryption
-   PK_Encryptor* rsa_enc1 = get_pk_encryptor(rsakey, "EME1(RIPEMD-160)");
+   PK_Encryptor_EME rsa_enc_pkcs1_v2(rsakey, "EME1(SHA-1)");
    // PKCS #1 v1.5 compatible encryption
-   PK_Encryptor* rsa_enc2 = get_pk_encryptor(rsakey, "PKCS1v15");
+   PK_Encryptor_EME rsa_enc_pkcs1_v15(rsakey, "PKCS1v15")
 
-   // Raw encryption: no padding, input is directly encrypted by the key
-   // Don't use this unless you know what you're doing
-   PK_Encryptor* rsa_enc3 = get_pk_encryptor(rsakey, "Raw");
-
-   // This object can decrypt things encrypted by rsa_enc1
-   PK_Decryptor* rsa_dec1 = get_pk_decryptor(rsakey, "EME1(RIPEMD-160)");
+   // This object can decrypt things encrypted by rsa_
+   PK_Decryptor_EME rsa_dec_pkcs1_v2(rsakey, "EME1(SHA-1)");
 
    // PKCS #1 v1.5 compatible signatures
-   PK_Signer* rsa_sig = get_pk_signer(rsakey, "EMSA3(MD5)");
-   PK_Verifier* rsa_verify = get_pk_verifier(rsakey, "EMSA3(MD5)");
+   PK_Signer rsa_sign_pkcs1_v15(rsakey, "EMSA3(MD5)");
+   PK_Verifier rsa_verify_pkcs1_v15(rsakey, "EMSA3(MD5)");
 
    // PKCS #1 v2.1 compatible signatures
-   PK_Signer* rsa_sig2 = get_pk_signer(rsakey, "EMSA4(SHA-1)");
-   PK_Verifier* rsa_verify2 = get_pk_verifier(rsakey, "EMSA4(SHA-1)");
-
-   // Hash input with SHA-1, but don't pad the input in any way; usually
-   // used with DSA/NR, not RSA
-   PK_Signer* rsa_sig = get_pk_signer(rsakey, "EMSA1(SHA-1)");
+   PK_Signer rsa_sign_pkcs1_v2(rsakey, "EMSA4(SHA-1)");
+   PK_Verifier rsa_verify_pkcs1_v2(rsakey, "EMSA4(SHA-1)");
 \end{verbatim}
 
 \subsection{Encryption}
 
-The \type{PK\_Encryptor} and \type{PK\_Decryptor} classes are the interface for
-encryption and decryption, respectively.
+The \type{PK\_Encryptor} and \type{PK\_Decryptor} classes are the
+interface for encryption and decryption, respectively.
 
 Calling \function{encrypt} with a \type{byte} array, a length
 parameter, and an RNG object will return the input encrypted with
@@ -2527,90 +2467,6 @@ implicit.
 A real advantage of this is that even if ``in.txt'' is large, only as
 much memory is needed for internal I/O buffers will actually be used.
 
-\subsection{Writing Modules}
-
-It's a lot simpler to write modules for Botan that it is to write code
-in the core library, for several reasons. First, a module can rely on
-external libraries and services beyond the base ISO C++ libraries, and
-also machine dependent features. Also, the code can be added at
-configuration time on the user's end with very little effort (\ie the
-code can be distributed separately, and included by the user without
-needing to patch any existing source files).
-
-Each module lives in a subdirectory of the \filename{modules}
-directory, which exists at the top-level of the Botan source tree. The
-``short name'' of the module is the same as the name of this
-directory. The only required file in this directory is
-\filename{info.txt}, which contains directives that specify what a
-particular module does, what systems it runs on, and so on. Comments
-in \filename{info.txt} start with a \verb|#| character and continue
-to end of line.
-
-Recognized directives include:
-
-\newcommand{\directive}[2]{
-   \vskip 4pt
-   \noindent
-   \texttt{#1}: #2
-}
-
-\directive{realname <name>}{Specify that the 'real world' name of this module
-   is \texttt{<name>}.}
-
-\directive{note <note>}{Add a note that will be seen by the end-user at
-configure time if the module is included into the library.}
-
-\directive{require\_version <version>}{Require at configure time that
-the version of Botan in use be at least \texttt{<version>}.}
-
-\directive{define <macro>[,<macro>[,...]]}{Cause the macro
-   \macro{BOTAN\_EXT\_<macro>} (for each instance of \macro{<macro>}
-   in the directive) to be defined in \filename{build.h}. This should
-   only be used if the module creates user-visible changes. There is a
-   set of conventions that should be followed in deciding what to call
-   this macro (where xxx denotes some descriptive and distinguishing
-   characteristic of the thing implemented, such as
-   \macro{ALLOC\_MLOCK} or \macro{MUTEX\_PTHREAD}):
-
-\begin{itemize}
-\item Allocator: \macro{ALLOC\_xxx}
-\item Compressors: \macro{COMPRESSOR\_xxx}
-\item EntropySource: \macro{ENTROPY\_SRC\_xxx}
-\item Engines: \macro{ENGINE\_xxx}
-\item Mutex: \macro{MUTEX\_xxx}
-\item Timer: \macro{TIMER\_xxx}
-\end{itemize}
-}
-
-\directive{<libs> / </libs>}{This specifies any extra libraries to be
-linked in.  It is a mapping from OS to library name, for example
-\texttt{linux -> rt}, which means that on Linux librt should be linked
-in. You can also use ``all'' to force the library to be linked in on
-all systems.}
-
-\directive{<add> / </add>}{Tell the configuration script to add the
-   files named between these two tags into the source tree. All these
-   files must exist in the current module directory.}
-
-\directive{<ignore> / </ignore>}{Tell the configuration script to
-   ignore the files named in the main source tree. This is useful, for
-   example, when replacing a C++ implementation with a pure assembly
-   version.}
-
-\directive{<replace> / </replace>}{Tell the configuration script to
-   ignore the file given in the main source tree, and instead use the
-   one in the module's directory.}
-
-Additionally, the module file can contain blocks, delimited by the
-following pairs:
-
-\texttt{<os> / </os>}, \texttt{<arch> / </arch>}, \texttt{<cc> / </cc>}
-
-\noindent
-For example, putting ``alpha'' and ``ia64'' in a \texttt{<arch>} block will
-make the configuration script only allow the module to be compiled on those
-architectures. Not having a block means any value is acceptable.
-
 \pagebreak
 \section{Miscellaneous}
 
@@ -2964,21 +2820,22 @@ functions can change completely without notice.
 
 \subsection{Recommended Algorithms}
 
-This section is by no means the last word on selecting which algorithms to use.
-However, Botan includes a sometimes bewildering array of possible algorithms,
-and unless you're familiar with the latest developments in the field, it can be
-hard to know what is secure and what is not. The following attributes of the
-algorithms were evaluated when making this list: security, standardization,
-patent status, support by other implementations, and efficiency (in roughly
-that order).
+This section is by no means the last word on selecting which
+algorithms to use.  However, Botan includes a sometimes bewildering
+array of possible algorithms, and unless you're familiar with the
+latest developments in the field, it can be hard to know what is
+secure and what is not. The following attributes of the algorithms
+were evaluated when making this list: security, standardization,
+patent status, support by other implementations, and efficiency (in
+roughly that order).
 
-It is intended as a set of simple guidelines for developers, and nothing more.
-It's entirely possible that there are algorithms in Botan that will turn out to
-be more secure than the ones listed, but the algorithms listed here are
-(currently) thought to be safe.
+It is intended as a set of simple guidelines for developers, and
+nothing more.  It's entirely possible that there are algorithms in
+Botan that will turn out to be more secure than the ones listed, but
+the algorithms listed here are (currently) thought to be safe.
 
 \begin{list}{$\cdot$}
-  \item Block ciphers: AES or Serpent in CBC or CTR mode
+  \item Block ciphers: AES or Serpent in CBC, CTR, or XTS mode
 
   \item Hash functions: SHA-256, SHA-512
 
@@ -2986,47 +2843,11 @@ be more secure than the ones listed, but the algorithms listed here are
 
   \item Public Key Encryption: RSA with ``EME1(SHA-256)''
 
-  \item Public Key Signatures: RSA with EMSA4 and any recommended hash, or DSA
-     with ``EMSA1(SHA-256)''
+  \item Public Key Signatures: RSA with EMSA4 and any recommended
+    hash, DSA/ECDSA with ``EMSA1(SHA-256)''
 
-  \item Key Agreement: Diffie-Hellman, with ``KDF2(SHA-256)''
+  \item Key Agreement: Diffie-Hellman or ECDH, with ``KDF2(SHA-256)''
 \end{list}
-
-\subsection{Compliance with Standards}
-
-Botan is/should be at least roughly compatible with many cryptographic
-standards, including the following:
-
-\newcommand{\standard}[2]{
-   \vskip 4pt
-   * #1: \textbf{#2}
-}
-
-\standard{RSA}{PKCS \#1 v2.1, ANSI X9.31}
-
-\standard{DSA}{ANSI X9.30, FIPS 186-2}
-
-\standard{Diffie-Hellman}{ANSI X9.42, PKCS \#3}
-
-\standard{Certificates}{ITU X.509, RFC 3280/3281 (PKIX), PKCS \#9 v2.0,
-PKCS \#10}
-
-\standard{Private Key Formats}{PKCS \#5 v2.0, PKCS \#8}
-
-\standard{DES/DES-EDE}{FIPS 46-3, ANSI X3.92, ANSI X3.106}
-
-\standard{SHA-1}{FIPS 180-2}
-
-\standard{HMAC}{ANSI X9.71, FIPS 198}
-
-\standard{ANSI X9.19 MAC}{ANSI X9.9, ANSI X9.19}
-
-\vskip 8pt
-\noindent
-There is also support for the very general standards of \textbf{IEEE 1363-2000}
-and \textbf{1363a}. Most of the contents of such are included in the standards
-mentioned above, in various forms (usually with extra restrictions that 1363
-does not impose).
 
 \subsection{Algorithms Listing}
 
@@ -3045,10 +2866,10 @@ document, which can be found at
 Many of these algorithms can take options (such as the number of
 rounds in a block cipher, the output size of a hash function,
 etc). These are shown in the following list; all of them default to
-reasonable values (unless otherwise marked). There are
-algorithm-specific limits on most of them. When you see something like
-``HASH'' or ``BLOCK'', that means you should insert the name of some
-algorithm of that type. There are no defaults for those options.
+reasonable values. There are algorithm-specific limits on most of
+them. When you see something like ``HASH'' or ``BLOCK'', that means
+you should insert the name of some algorithm of that type. There are
+no defaults for those options.
 
 A few very obscure algorithms are skipped; if you need one of them,
 you'll know it, and you can look in the appropriate header to see what
@@ -3065,14 +2886,16 @@ match that in SCAN, if it's defined there).
 
 \vskip .05in
 \noindent
-\textbf{Block Ciphers:} ``AES'', ``Blowfish'', ``CAST-128'',
-``CAST-256'', ``DES'', ``DESX'', ``TripleDES'', ``GOST'', ``IDEA'',
-``MARS'', ``MISTY1(ROUNDS)'', ``RC2'', ``RC5(ROUNDS)'', ``RC6'',
-``SAFER-SK(ROUNDS)'', ``SEED'', ``Serpent'', ``Skipjack'', ``Square'',
-``TEA'', ``Twofish'', ``XTEA''
+\textbf{Block Ciphers:} ``AES'' (and ``AES-128'', ``AES-192'', and
+``AES-256''), ``Blowfish'', ``CAST-128'', ``CAST-256'', ``DES'',
+``DESX'', ``TripleDES'', ``GOST-28147-89'', ``IDEA'', ``KASUMI'',
+``MARS'', ``MISTY1(ROUNDS)'', ``Noekeon'', ``RC2'', ``RC5(ROUNDS)'',
+``RC6'', ``SAFER-SK(ROUNDS)'', ``SEED'', ``Serpent'', ``Skipjack'',
+``Square'', ``TEA'', ``Twofish'', ``XTEA''
 
 \noindent
-\textbf{Stream Ciphers:} ``ARC4'', ``MARK4'', ``Turing'', ``WiderWake4+1-BE''
+\textbf{Stream Ciphers:} ``ARC4'', ``MARK4'', ``Salsa20'', ``Turing'',
+``WiderWake4+1-BE''
 
 \noindent
 \textbf{Hash Functions:} ``HAS-160'', ``GOST-34.11'',
@@ -3082,23 +2905,6 @@ match that in SCAN, if it's defined there).
 
 \noindent
 \textbf{MACs:} ``HMAC(HASH)'', ``CMAC(BLOCK)'', ``X9.19-MAC''
-
-\subsection{Compatibility}
-
-Generally, cryptographic algorithms are well standardized, thus
-compatibility between implementations is relatively simple (of course, not all
-algorithms are supported by all implementations). But there are a few
-algorithms that are poorly specified, and these should be avoided if you wish
-your data to be processed in the same way by another implementation (including
-future versions of Botan).
-
-The block cipher GOST has a particularly poor specification: there are no
-standard Sboxes, and the specification does not give test vectors even for
-sample boxes, which leads to issues of endian conventions, etc.
-
-If you wish maximum portability between different implementations of an
-algorithm, it's best to stick to strongly defined and well standardized
-algorithms, TripleDES, AES, HMAC, and SHA-256 all being good examples.
 
 \pagebreak
 \section{Support and Further Information}
@@ -3118,30 +2924,23 @@ with your attorney.
 \subsection{Recommended Reading}
 
 It's a very good idea if you have some knowledge of cryptography prior
-to trying to use this stuff. You really should read one or more of
-these books before seriously using the library (note that the Handbook
-of Applied Cryptography is available for free online):
+to trying to use this stuff. You really should read at least one and
+ideally all of these books before seriously using the library.
 
 \setlength{\parskip}{5pt}
 
 \noindent
+\textit{Cryptography Engineering}, Niels Ferguson, Bruce Schneier, and
+Tadayoshi Kohno; Wiley
+
+\noindent
+\textit{Security Engineering -- A Guide to Building Dependable
+  Distributed Systems}, Ross Anderson; Wiley
+
+\noindent
 \textit{Handbook of Applied Cryptography}, Alfred J. Menezes,
-Paul C. Van Oorschot, and Scott A. Vanstone; CRC Press
-
-\noindent
-\textit{Security Engineering -- A Guide to Building Dependable Distributed
-Systems}, Ross Anderson; Wiley
-
-\noindent
-\textit{Cryptography: Theory and Practice}, Douglas R. Stinson; CRC Press
-
-\noindent
-\textit{Applied Cryptography, 2nd Ed.}, Bruce Schneier; Wiley
-
-\noindent
-Once you've got the basics down, these are good things to at least take a look
-at: IEEE 1363 and 1363a, SCAN, NESSIE, PKCS \#1 v2.1, the security related FIPS
-documents, and the CFRG RFCs.
+Paul C. Van Oorschot, and Scott A. Vanstone; CRC Press (available
+online at \url{http://www.cacr.math.uwaterloo.ca/hac/})
 
 \subsection{Support}
 
@@ -3167,7 +2966,7 @@ Web Site: \url{http://botan.randombit.net}
 
 \subsection{License}
 
-Copyright \copyright  2000-2008, Jack Lloyd
+Copyright \copyright  2000-2010, Jack Lloyd
 
 Licensed under the same terms as the Botan source
 
