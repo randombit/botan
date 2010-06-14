@@ -42,7 +42,7 @@ class BuildConfigurationInformation(object):
     version_minor = 9
     version_patch = 8
     version_so_patch = 8
-    version_suffix = '-dev'
+    version_suffix = ''
 
     version_datestamp = '20100614'
 
