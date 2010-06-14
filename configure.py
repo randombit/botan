@@ -44,6 +44,8 @@ class BuildConfigurationInformation(object):
     version_so_patch = 8
     version_suffix = '-dev'
 
+    version_datestamp = '20100614'
+
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
     soversion_string = '%d.%d.%d%s' % (
@@ -933,6 +935,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'version_minor': build_config.version_minor,
         'version_patch': build_config.version_patch,
         'version':       build_config.version_string,
+
+        'version_datestamp': build_config.version_datestamp,
+
         'so_version': build_config.soversion_string,
 
         'timestamp': build_config.timestamp(),
