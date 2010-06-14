@@ -94,6 +94,8 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
       virtual AlgorithmIdentifier pkcs8_algorithm_identifier() const
          { return algorithm_identifier(); }
 
+      SecureVector<byte> PKCS8_BER_encode() const;
+
    protected:
       void load_check(RandomNumberGenerator&) const;
       void gen_check(RandomNumberGenerator&) const;

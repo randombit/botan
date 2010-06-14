@@ -6,6 +6,7 @@
 */
 
 #include <botan/pk_keys.h>
+#include <botan/der_enc.h>
 #include <botan/oids.h>
 
 namespace Botan {
@@ -22,6 +23,19 @@ OID Public_Key::get_oid() const
       {
       throw Lookup_Error("PK algo " + algo_name() + " has no defined OIDs");
       }
+   }
+
+SecureVector<byte> Private_Key::PKCS8_BER_encode() const
+   {
+   const u32bit PKCS8_VERSION = 0;
+
+   return DER_Encoder()
+         .start_cons(SEQUENCE)
+            .encode(PKCS8_VERSION)
+            .encode(this->pkcs8_algorithm_identifier())
+            .encode(this->pkcs8_private_key(), OCTET_STRING)
+         .end_cons()
+      .get_contents();
    }
 
 /*
