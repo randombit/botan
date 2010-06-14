@@ -221,12 +221,6 @@ perfectly fine.
 buffers throughout Botan. A good rule of thumb would be to use the page size of
 your machine. The default should be fine for most, if not all, purposes.
 
-\macro{BOTAN\_GZIP\_OS\_CODE}: The OS code is included in the Gzip header when
-compressing. The default is 255, which means 'Unknown'. You can look in RFC
-1952 for the full list; the most common are Windows (0) and Unix (3). There is
-also a Macintosh (7), but it probably makes more sense to use the Unix code on
-OS X.
-
 \subsection{Multiple Builds}
 
 It may be useful to run multiple builds with different
@@ -252,20 +246,22 @@ enabled at build time; these include:
 \newcommand{\mod}[2]{\textbf{#1}: #2}
 
 \begin{list}{$\cdot$}
-  \item \mod{bzip2}{Enables an application to perform bzip2 compression
-         and decompression using the library. Available on any system that has
-         bzip2.}
+  \item \mod{bzip2}{Enables an application to perform bzip2
+    compression and decompression using the library. Available on any
+    system that has bzip2. To enable, use option \verb|--with-bzip2|}
 
-  \item \mod{zlib}{Enables an application to perform zlib compression and
-         decompression using the library. Available on any system that has
-         zlib.}
+  \item \mod{zlib}{Enables an application to perform zlib compression
+    and decompression using the library. Available on any system that
+    has zlib. To enable, use option \verb|--with-zlib|}
 
-  \item \mod{gnump}{An engine that uses GNU MP to speed up PK operations.
-         GNU MP 4.1 or later is required.}
+  \item \mod{gnump}{An engine that uses GNU MP to speed up PK
+    operations.  GNU MP 4.1 or later is required.  To enable, use
+    option \verb|--with-gnump|}
 
-  \item \mod{openssl}{An engine that uses OpenSSL to speed up public key
-                      operations and some ciphers/hashes. OpenSSL 0.9.7 or
-                      later is required.}
+  \item \mod{openssl}{An engine that uses OpenSSL to speed up public
+    key operations and some ciphers/hashes. OpenSSL 0.9.7 or later is
+    required.} To enable, use option \verb|--with-openssl|}
+
 \end{list}
 
 \section{Building Applications}
