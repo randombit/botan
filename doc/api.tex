@@ -59,9 +59,7 @@ flat memory address space of at least 32 bits. Generally, given the
 choice between optimizing for 32-bit systems and 64-bit systems, Botan
 is written to prefer 64-bit, simply on the theory that where
 performance is a real concern, modern 64-bit processors are the
-obvious choice. However in most cases this is not an issue, as many
-algorithms are specified in terms of 32-bit operations precisely to
-target commodity processors.
+obvious choice.
 
 Smaller handhelds, set-top boxes, and the bigger smart phones and smart
 cards, are also capable of using Botan. However, Botan uses a fairly
@@ -98,22 +96,21 @@ should be used with the \filename{botan/} prefix in your actual code.
 
 \subsection{Initializing the Library}
 
-There is a set of core services that the library needs access to
-while it is performing requests. To ensure these are set up, you must
-create a \type{LibraryInitializer} object (usually called 'init' in
-Botan example code; 'botan\_library' or 'botan\_init' may make more
-sense in real applications) prior to making any calls to Botan. This
-object's lifetime must exceed that of all other Botan objects your
-application creates; for this reason the best place to create the
+There is a set of core services that the library needs access to while
+it is performing requests. To ensure these are set up, you must create
+a \type{LibraryInitializer} object (usually called 'init' in Botan
+example code; 'botan\_library' or 'botan\_init' may make more sense in
+real applications) prior to making any calls to Botan. This object's
+lifetime must exceed that of all other Botan objects your application
+creates; for this reason the best place to create the
 \type{LibraryInitializer} is at the start of your \function{main}
 function, since this guarantees that it will be created first and
 destroyed last (via standard C++ RAII rules). The initializer does
 things like setting up the memory allocation system and algorithm
 lookup tables, finding out if there is a high resolution timer
 available to use, and similar such matters. With no arguments, the
-library is initialized with various default settings. So most of the
-time (unless you are writing threaded code; see below), all you need
-is:
+library is initialized with various default settings. So (unless you
+are writing threaded code; see below), all you need is:
 
 \texttt{Botan::LibraryInitializer init;}
 
@@ -128,10 +125,10 @@ to shared resources. However these locks do not protect individual
 Botan objects: explicit locking must be used if you wish to share a
 single object between threads.
 
-If you do not create a \type{LibraryInitializer} object, pretty much
-any Botan operation will fail, because it will be unable to do basic
-things like allocate memory or get random bits. Note too, that you
-should be careful to only create one such object.
+If you do not create a \type{LibraryInitializer} object, all library
+operations will fail, because it will be unable to do basic things
+like allocate memory or get random bits. You should never create more
+than one \type{LibraryInitializer}.
 
 It is not strictly necessary to create a \type{LibraryInitializer};
 the actual code performing the initialization and shutdown are in
@@ -160,9 +157,8 @@ objects will be created.
 The same rule applies for making sure the destructors of all your
 Botan objects are called before the \type{LibraryInitializer} is
 destroyed. This implies you can't have static variables that are Botan
-objects inside functions or classes (since in most C++ runtimes, these
-objects will be destroyed after main has returned). This is inelegant,
-but seems to not cause many problems in practice.
+objects inside functions or classes; in many C++ runtimes, these
+objects will be destroyed after main has returned.
 
 Botan's memory object classes (\type{MemoryRegion},
 \type{MemoryVector}, \type{SecureVector}) are extremely primitive, and
@@ -230,15 +226,15 @@ used in the \type{Pipe} between each message, by adding or removing
 \type{Filter}s; functions that let you do this are documented in the
 Pipe API section.
 
-Most operations in Botan have a corresponding filter for use in Pipe.
-Here's code that encrypts a string with AES-128 in CBC mode:
+Botan has about 40 filters that perform different operations on data.
+Here's code that uses one of them to encrypt a string with AES:
 
 \begin{verbatim}
   AutoSeeded_RNG rng,
   SymmetricKey key(rng, 16); // a random 128-bit key
   InitializationVector iv(rng, 16); // a random 128-bit IV
 
-  // Notice the algorithm we want is specified by a string
+  // The algorithm we want is specified by a string
   Pipe pipe(get_cipher(``AES-128/CBC'', key, iv, ENCRYPTION));
 
   pipe.process_msg(``secrets'');
@@ -563,7 +559,7 @@ using the output operator.
 Here is some code that takes one or more filenames in \arg{argv} and
 calculates the result of several hash functions for each file. The complete
 program can be found as \filename{hasher.cpp} in the Botan distribution. For
-brevity, most error checking has been removed.
+brevity, error checking has been removed.
 
 \begin{verbatim}
    string name[3] = { "MD5", "SHA-1", "RIPEMD-160" };
@@ -664,11 +660,12 @@ And remember: if you're resetting both values, reset the key \emph{first}.
 
 \subsubsection{Cipher Filters}
 
-Getting a hold of a \type{Filter} implementing a cipher is very easy. Simply
-make sure you're including the header \filename{lookup.h}, and call
-\function{get\_cipher}. Generally you will pass the return value directly into
-a \type{Pipe}. There are actually a couple different functions, which do pretty
-much the same thing:
+Getting a hold of a \type{Filter} implementing a cipher is very
+easy. Simply make sure you're including the header
+\filename{lookup.h}, and call \function{get\_cipher}. Generally you
+will pass the return value directly into a \type{Pipe}. There are
+actually a couple different functions which do varying levels of
+initialization:
 
 \function{get\_cipher}(\type{std::string} \arg{cipher\_spec},
                        \type{SymmetricKey} \arg{key},
@@ -679,48 +676,48 @@ much the same thing:
                        \type{SymmetricKey} \arg{key},
                        \type{Cipher\_Dir} \arg{dir});
 
-The version that doesn't take an IV is useful for things that don't use them,
-like block ciphers in ECB mode, or most stream ciphers. If you specify a
-\arg{cipher\_spec} that does want a IV, and you use the version that doesn't
-take one, an exception will be thrown. The \arg{dir} argument can be either
-\type{ENCRYPTION} or \type{DECRYPTION}. In a few cases, like most (but not all)
-stream ciphers, these are equivalent, but even then it provides a way of
-showing the ``intent'' of the operation to readers of your code.
+The version that doesn't take an IV is useful for things that don't
+use them, like block ciphers in ECB mode, or most stream ciphers. If
+you specify a \arg{cipher\_spec} that does want a IV, and you use the
+version that doesn't take one, an exception will be thrown. The
+\arg{dir} argument can be either \type{ENCRYPTION} or
+\type{DECRYPTION}.
 
 The \arg{cipher\_spec} is a string that specifies what cipher is to be
 used. The general syntax for \arg{cipher\_spec} is ``STREAM\_CIPHER'',
-``BLOCK\_CIPHER/MODE'', or ``BLOCK\_CIPHER/MODE/PADDING''. In the case of
-stream ciphers, no mode is necessary, so just the name is sufficient. A block
-cipher requires a mode of some sort, which can be ``ECB'', ``CBC'', ``CFB(n)'',
-``OFB'', ``CTR-BE'', or ``EAX(n)''. The argument to CFB mode is how many bits
-of feedback should be used. If you just use ``CFB'' with no argument, it will
-default to using a feedback equal to the block size of the cipher. EAX mode
-also takes an optional bit argument, which tells EAX how large a tag size to
-use~--~generally this is the size of the block size of the cipher, which is the
-default if you don't specify any argument.
+``BLOCK\_CIPHER/MODE'', or ``BLOCK\_CIPHER/MODE/PADDING''. In the case
+of stream ciphers, no mode is necessary, so just the name is
+sufficient. A block cipher requires a mode of some sort, which can be
+``ECB'', ``CBC'', ``CFB(n)'', ``OFB'', ``CTR-BE'', or ``EAX(n)''. The
+argument to CFB mode is how many bits of feedback should be used. If
+you just use ``CFB'' with no argument, it will default to using a
+feedback equal to the block size of the cipher. EAX mode also takes an
+optional bit argument, which tells EAX how large a tag size to
+use~--~generally this is the size of the block size of the cipher,
+which is the default if you don't specify any argument.
 
 In the case of the ECB and CBC modes, a padding method can also be
-specified. If it is not supplied, ECB defaults to not padding, and CBC defaults
-to using PKCS \#5/\#7 compatible padding. The padding methods currently
-available are ``NoPadding'', ``PKCS7'', ``OneAndZeros'', and ``CTS''. CTS
-padding is currently only available for CBC mode, but the others can also be
-used in ECB mode.
+specified. If it is not supplied, ECB defaults to not padding, and CBC
+defaults to using PKCS \#5/\#7 compatible padding. The padding methods
+currently available are ``NoPadding'', ``PKCS7'', ``OneAndZeros'', and
+``CTS''. CTS padding is currently only available for CBC mode, but the
+others can also be used in ECB mode.
 
-Some example \arg{cipher\_spec} arguments are: ``DES/CFB(32)'',
-``TripleDES/OFB'', ``Blowfish/CBC/CTS'', ``SAFER-SK(10)/CBC/OneAndZeros'',
-``AES/EAX'', ``ARC4''
+Some example \arg{cipher\_spec} arguments are: ``AES-128/CBC'',
+``Blowfish/CTR-BE'', ``Serpent/XTS'', and ``AES-256/EAX''.
 
-``CTR-BE'' refers to counter mode where the counter is incremented as if it
-were a big-endian encoded integer. This is compatible with most other
-implementations, but it is possible some will use the incompatible little
-endian convention. This version would be denoted as ``CTR-LE'' if it were
-supported.
+``CTR-BE'' refers to counter mode where the counter is incremented as
+if it were a big-endian encoded integer. This is compatible with most
+other implementations, but it is possible some will use the
+incompatible little endian convention. This version would be denoted
+as ``CTR-LE'' if it were supported.
 
-``EAX'' is a new cipher mode designed by Wagner, Rogaway, and Bellare. It is an
-authenticated cipher mode (that is, no separate authentication is needed), has
-provable security, and is free from patent entanglements. It runs about half as
-fast as most of the other cipher modes (like CBC, OFB, or CTR), which is not
-bad considering you don't need to use an authentication code.
+``EAX'' is a new cipher mode designed by Wagner, Rogaway, and
+Bellare. It is an authenticated cipher mode (that is, no separate
+authentication is needed), has provable security, and is free from
+patent entanglements. It runs about half as fast as most of the other
+cipher modes (like CBC, OFB, or CTR), which is not bad considering you
+don't need to use an authentication code.
 
 \subsubsection{Hashes and MACs}
 
@@ -765,25 +762,27 @@ There are four classes in this category, \type{PK\_Encryptor\_Filter},
 appropriate type (\type{PK\_Encryptor}, \type{PK\_Decryptor}, etc) that is
 deleted by the destructor. These classes are found in \filename{pk\_filts.h}.
 
-Three of these, for encryption, decryption, and signing are pretty much
-identical conceptually. Each of them buffers its input until the end of the
-message is marked with a call to the \function{end\_msg} function. Then they
-encrypt, decrypt, or sign their input and send the output (the ciphertext, the
-plaintext, or the signature) into the next filter.
+Three of these, for encryption, decryption, and signing are much the
+same in terms of dataflow - ach of them buffers its input until the
+end of the message is marked with a call to the \function{end\_msg}
+function. Then they encrypt, decrypt, or sign the entire input as a
+single blob and send the output (the ciphertext, the plaintext, or the
+signature) into the next filter.
 
-Signature verification works a little differently, because it needs to know
-what the signature is in order to check it. You can either pass this in along
-with the constructor, or call the function \function{set\_signature} -- with
-this second method, you need to keep a pointer to the filter around so you can
-send it this command. In either case, after \function{end\_msg} is called, it
-will try to verify the signature (if the signature has not been set by either
-method, an exception will be thrown here). It will then send a single byte onto
-the next filter -- a 1 or a 0, which specifies whether the signature verified
-or not (respectively).
+Signature verification works a little differently, because it needs to
+know what the signature is in order to check it. You can either pass
+this in along with the constructor, or call the function
+\function{set\_signature} -- with this second method, you need to keep
+a pointer to the filter around so you can send it this command. In
+either case, after \function{end\_msg} is called, it will try to
+verify the signature (if the signature has not been set by either
+method, an exception will be thrown here). It will then send a single
+byte onto the next filter -- a 1 or a 0, which specifies whether the
+signature verified or not (respectively).
 
-For more information about PK algorithms (including creating the appropriate
-objects to pass to the constructors), read the section ``Public Key
-Cryptography'' in this manual.
+For more information about PK algorithms (including creating the
+appropriate objects to pass to the constructors), read the section
+``Public Key Cryptography'' in this manual.
 
 \subsubsection{Encoders}
 
@@ -859,25 +858,17 @@ Zlib compression module).
 \noindent
 \type{void} \function{end\_msg()}:
 
-Implementing the \function{end\_msg} function is optional. It is called when it
-has been requested that filters finish up their computations. Note that they
-must \emph{not} deallocate their resources; this should be done by their
-destructor. They should simply finish up with whatever computation they have
-been working on (for example, a compressing filter would flush the compressor
-and \function{send} the final block), and empty any buffers in preparation for
-processing a fresh new set of input. It is essentially the inverse of
-\function{start\_msg}.
+Implementing the \function{end\_msg} function is optional. It is
+called when it has been requested that filters finish up their
+computations. The filter should finish up with whatever computation it
+is working on (for example, a compressing filter would flush the
+compressor and \function{send} the final block), and empty any buffers
+in preparation for processing a fresh new set of input. It is
+essentially the inverse of \function{start\_msg}.
 
-Additionally, if necessary, filters can define a constructor that takes any
-needed arguments, and a destructor to deal with deallocating memory, closing
-files, etc.
-
-There is also a \type{BufferingFilter} class (in \filename{buf\_filt.h}) that
-will take a message and split it up into an initial block that can be of any
-size (including zero), a sequence of fixed sized blocks of any non-zero size,
-and last (possibly zero-sized) final block. This might make a useful base class
-for your filters, depending on what you have in mind.
-
+Additionally, if necessary, filters can define a constructor that
+takes any needed arguments, and a destructor to deal with deallocating
+memory, closing files, etc.
 
 \pagebreak
 \section{Public Key Cryptography}
@@ -1032,16 +1023,14 @@ via a \type{SecureVector<byte>}.
 
 If you attempt an operation with a larger size than the key can
 support (this limit varies based on the algorithm, the key size, and
-the padding method used (if any)), an exception will be
-thrown. Alternately, you can call \function{maximum\_input\_size},
-that will return the maximum size you can safely encrypt. In fact,
-you can often encrypt an object that is one byte longer, but only if
-enough of the high bits of the leading byte are set to zero. Since
-this is pretty dicey, it's best to stick with the advertised maximum.
+the padding method used (if any)), an exception will be thrown. You
+can call \function{maximum\_input\_size} to find out the maximum size
+input (in bytes) that you can safely use with any particular key.
 
-Available public key encryption algorithms in Botan are RSA and ElGamal. The
-encoding methods are EME1, denoted by ``EME1(HASHNAME)'', PKCS \#1 v1.5,
-called ``PKCS1v15'' or ``EME-PKCS1-v1\_5'', and raw encoding (``Raw'').
+Available public key encryption algorithms in Botan are RSA and
+ElGamal. The encoding methods are EME1, denoted by ``EME1(HASHNAME)'',
+PKCS \#1 v1.5, called ``PKCS1v15'' or ``EME-PKCS1-v1\_5'', and raw
+encoding (``Raw'').
 
 For compatibility reasons, PKCS \#1 v1.5 is recommend for use with
 ElGamal (most other implementations of ElGamal do not support any
@@ -1077,42 +1066,46 @@ the message, the second being the (supposed) signature. It returns true if the
 signature is valid and false otherwise.
 
 Available public key signature algorithms in Botan are RSA, DSA,
-Nyberg-Rueppel, and Rabin-Williams. Signature encoding methods include EMSA1,
-EMSA2, EMSA3, EMSA4, and Raw. All of them, except Raw, take a parameter naming
-a message digest function to hash the message with. Raw actually signs the
-input directly; if the message is too big, the signing operation will fail. Raw
-is not useful except in very specialized applications.
+ECDSA, GOST-34.11, Nyberg-Rueppel, and Rabin-Williams. Signature
+encoding methods include EMSA1, EMSA2, EMSA3, EMSA4, and Raw. All of
+them, except Raw, take a parameter naming a message digest function to
+hash the message with. Raw actually signs the input directly; if the
+message is too big, the signing operation will fail. Raw is not useful
+except in very specialized applications.
 
-There are various interactions that make certain encoding schemes and signing
-algorithms more or less useful.
+There are various interactions that make certain encoding schemes and
+signing algorithms more or less useful.
 
-EMSA2 is the usual method for encoding Rabin-William signatures, so for
-compatibility with other implementations you may have to use that. EMSA4 (also
-called PSS), also works with Rabin-Williams. EMSA1 and EMSA3 do \emph{not} work
-with Rabin-Williams.
+EMSA2 is the usual method for encoding Rabin-William signatures, so
+for compatibility with other implementations you may have to use
+that. EMSA4 (also called PSS), also works with Rabin-Williams. EMSA1
+and EMSA3 do \emph{not} work with Rabin-Williams.
 
-RSA can be used with any of the available encoding methods. EMSA4 is by far the
-most secure, but is not (as of now) widely implemented. EMSA3 (also called
-``EMSA-PKCS1-v1\_5'') is commonly used with RSA (for example in SSL). EMSA1
-signs the message digest directly, without any extra padding or encoding. This
-may be useful, but is not as secure as either EMSA3 or EMSA4. EMSA2 may be used
-but is not recommended.
+RSA can be used with any of the available encoding methods. EMSA4 is
+by far the most secure, but is not (as of now) widely
+implemented. EMSA3 (also called ``EMSA-PKCS1-v1\_5'') is commonly used
+with RSA (for example in SSL). EMSA1 signs the message digest
+directly, without any extra padding or encoding. This may be useful,
+but is not as secure as either EMSA3 or EMSA4. EMSA2 may be used but
+is not recommended.
 
-For DSA and Nyberg-Rueppel, you should use EMSA1. None of the other encoding
-methods are particularly useful for these algorithms.
+For DSA, ECDSA, GOST-34.11, and Nyberg-Rueppel, you should use
+EMSA1. None of the other encoding methods are particularly useful for
+these algorithms.
 
 \subsection{Key Agreement}
 
-You can get a hold of a \type{PK\_Key\_Agreement\_Scheme} object by calling
-\function{get\_pk\_kas} with a key that is of a type that supports key
-agreement (such as a Diffie-Hellman key stored in a \type{DH\_PrivateKey}
-object), and the name of a key derivation function. This can be ``Raw'',
-meaning the output of the primitive itself is returned as the key, or
-``KDF1(hash)'' or ``KDF2(hash)'' where ``hash'' is any string you happen to
-like (hopefully you like strings like ``SHA-256'' or ``RIPEMD-160''), or
-``X9.42-PRF(keywrap)'', which uses the PRF specified in ANSI X9.42. It takes
-the name or OID of the key wrap algorithm that will be used to encrypt a
-content encryption key.
+You can get a hold of a \type{PK\_Key\_Agreement\_Scheme} object by
+calling \function{get\_pk\_kas} with a key that is of a type that
+supports key agreement (such as a Diffie-Hellman key stored in a
+\type{DH\_PrivateKey} object), and the name of a key derivation
+function. This can be ``Raw'', meaning the output of the primitive
+itself is returned as the key, or ``KDF1(hash)'' or ``KDF2(hash)''
+where ``hash'' is any string you happen to like (hopefully you like
+strings like ``SHA-256'' or ``RIPEMD-160''), or
+``X9.42-PRF(keywrap)'', which uses the PRF specified in ANSI X9.42. It
+takes the name or OID of the key wrap algorithm that will be used to
+encrypt a content encryption key.
 
 How key agreement generally works is that you trade public values with some
 other party, and then each of you runs a computation with the other's value and
@@ -1435,10 +1428,10 @@ way, using \function{issuer\_info}.
 
 \subsubsection{X.509v3 Extensions}
 
-X.509v3 specifies a large number of possible extensions. Botan supports some,
-but by no means all of them. This section lists which ones are supported, and
-notes areas where there may be problems with the handling. You have to be
-pretty familiar with X.509 in order to understand what this is talking about.
+X.509v3 specifies a large number of possible extensions. Botan
+supports some, but by no means all of them. This section lists which
+ones are supported, and notes areas where there may be problems with
+the handling.
 
 \begin{list}{$\cdot$}
   \item Key Usage and Extended Key Usage: No problems known.
@@ -1515,10 +1508,10 @@ we hit the top of the certificate tree somewhere. It would be a might huge pain
 to have to handle all of that manually in every application, so there is
 something that does it for you: \type{X509\_Store}.
 
-This is a pretty easy thing to use. The basic operations are: put certificates
-and CRLs into it, search for certificates, and attempt to verify
-certificates. That's about it. In the future, there will be support for online
-retrieval of certificates and CRLs (\eg with the HTTP cert-store interface
+The basic operations are: put certificates and CRLs into it, search
+for certificates, and attempt to verify certificates. That's about
+it. In the future, there will be support for online retrieval of
+certificates and CRLs (\eg with the HTTP cert-store interface
 currently under consideration by PKIX).
 
 \subsubsection{Adding Certificates}
@@ -1958,10 +1951,16 @@ This constructor simply copies its input.
 
 \subsection{Symmetrically Keyed Algorithms}
 
-Block ciphers, stream ciphers, and MACs all handle keys in pretty much the same
-way. To make this similarity explicit, all algorithms of those types are
-derived from the \type{SymmetricAlgorithm} base class. This type has three
-functions:
+Block ciphers, stream ciphers, and MACs are all keyed operations; to
+be useful, they have to be set to use a particular key, which is
+simply a randomly chosen string of bits of a specified length.  The
+length required by any particular algorithm may vary, depending on
+both the algorithm specification and the implementation. You can query
+any botan object to find out what key length(s) it supports.
+
+To make this similarity in terms of keying explicit, all algorithms of
+those types are derived from the \type{SymmetricAlgorithm} base
+class. This type has three functions:
 
 \noindent
 \type{void} \function{set\_key}(\type{const byte} \arg{key}[], \type{u32bit}
@@ -2383,11 +2382,12 @@ The Bzip2 module was contributed by Peter J. Jones.
 
 \subsubsection{Zlib}
 
-Zlib compression works pretty much like Bzip2 compression. The only differences
-in this case are that the macro is \macro{BOTAN\_EXT\_COMPRESSOR\_ZLIB}, the
-header you need to include is called \filename{botan/zlib.h} (remember that you
-shouldn't just \verb|#include <zlib.h>|, or you'll get the regular zlib API,
-which is not what you want). The Botan classes for Zlib
+Zlib compression works much like Bzip2 compression. The only
+differences in this case are that the macro is
+\macro{BOTAN\_EXT\_COMPRESSOR\_ZLIB}, the header you need to include
+is called \filename{botan/zlib.h} (remember that you shouldn't just
+\verb|#include <zlib.h>|, or you'll get the regular zlib API, which is
+not what you want). The Botan classes for Zlib
 compression/decompression are called \type{Zlib\_Compression} and
 \type{Zlib\_Decompression}.
 
@@ -2663,22 +2663,18 @@ application \texttt{setuid} \texttt{root}, and then drop privileges
 immediately after creating your \type{LibraryInitializer}. If you end
 up using more than what's been allocated, some of your sensitive data
 might end up being swappable, but that beats running as \texttt{root}
-all the time. BTW, I would note that, at least on Linux, you can use a
-kernel module to give your process extra privileges (such as the
-ability to call \function{mlock}) without being root. For example,
-check out my Capability Override LSM
-(\url{http://www.randombit.net/projects/cap\_over/}), which makes this
-pretty easy to do.
+all the time.
 
-These classes should also be used within your own code for storing sensitive
-data. They are only meant for primitive data types (int, long, etc): if you
-want a container of higher level Botan objects, you can just use a
-\verb|std::vector|, since these objects know how to clear themselves when they
-are destroyed. You cannot, however, have a \verb|std::vector| (or any other
-container) of \type{Pipe}s or \type{Filter}s, because these types have pointers
-to other \type{Filter}s, and implementing copy constructors for these types
-would be both hard and quite expensive (vectors of pointers to such objects is
-fine, though).
+These classes should also be used within your own code for storing
+sensitive data. They are only meant for primitive data types (int,
+long, etc): if you want a container of higher level Botan objects, you
+can just use a \verb|std::vector|, since these objects know how to
+clear themselves when they are destroyed. You cannot, however, have a
+\verb|std::vector| (or any other container) of \type{Pipe}s or
+\type{Filter}s, because these types have pointers to other
+\type{Filter}s, and implementing copy constructors for these types
+would be both hard and quite expensive (vectors of pointers to such
+objects is fine, though).
 
 These types are not described in any great detail: for more information,
 consult the definitive sources~--~the header files \filename{secmem.h} and
@@ -2741,7 +2737,7 @@ the best way to learn is to look at the headers.
 
 Probably the most important are the encoding/decoding functions, which
 transform the normal representation of a \type{BigInt} into some other form,
-such as a decimal string. The most useful of these functions are
+such as a decimal string.
 
 \type{SecureVector<byte>} \function{BigInt::encode}(\type{BigInt},
 \type{Encoding})
