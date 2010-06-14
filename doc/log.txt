@@ -1,5 +1,5 @@
 
-* 1.9.8-dev, ????-??-??
+* 1.9.8, 2010-06-14
  - Add support for wide multiplications on 64-bit Windows
  - Use constant time multiplication in IDEA
  - Avoid possible timing attack against OAEP decoding
