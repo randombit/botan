@@ -20,26 +20,20 @@ namespace Botan {
 namespace X509 {
 
 /*
-* DER or PEM encode a X.509 public key
+* BER encode a X.509 public key
 */
-void encode(const Public_Key& key, Pipe& pipe, X509_Encoding encoding)
+MemoryVector<byte> BER_encode(const Public_Key& key)
    {
    std::auto_ptr<X509_Encoder> encoder(key.x509_encoder());
    if(!encoder.get())
       throw Encoding_Error("X509::encode: Key does not support encoding");
 
-   MemoryVector<byte> der =
-      DER_Encoder()
+   return DER_Encoder()
          .start_cons(SEQUENCE)
             .encode(encoder->alg_id())
             .encode(encoder->key_bits(), BIT_STRING)
          .end_cons()
       .get_contents();
-
-   if(encoding == PEM)
-      pipe.write(PEM_Code::encode(der, "PUBLIC KEY"));
-   else
-      pipe.write(der);
    }
 
 /*
@@ -47,11 +41,19 @@ void encode(const Public_Key& key, Pipe& pipe, X509_Encoding encoding)
 */
 std::string PEM_encode(const Public_Key& key)
    {
-   Pipe pem;
-   pem.start_msg();
-   encode(key, pem, PEM);
-   pem.end_msg();
-   return pem.read_all_as_string();
+   return PEM_Code::encode(X509::BER_encode(key),
+                           "PUBLIC KEY");
+   }
+
+/*
+* DER or PEM encode a X.509 public key
+*/
+void encode(const Public_Key& key, Pipe& pipe, X509_Encoding encoding)
+   {
+   if(encoding == PEM)
+      pipe.write(X509::PEM_encode(key));
+   else
+      pipe.write(X509::BER_encode(key));
    }
 
 /*
@@ -138,11 +140,7 @@ Public_Key* load_key(const MemoryRegion<byte>& mem)
 */
 Public_Key* copy_key(const Public_Key& key)
    {
-   Pipe bits;
-   bits.start_msg();
-   X509::encode(key, bits, RAW_BER);
-   bits.end_msg();
-   DataSource_Memory source(bits.read_all());
+   DataSource_Memory source(BER_encode(key));
    return X509::load_key(source);
    }
 

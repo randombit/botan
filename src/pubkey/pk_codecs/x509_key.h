@@ -47,13 +47,11 @@ namespace X509 {
 */
 
 /**
-* Encode a key into a pipe.
-* @param key the public key to encode
-* @param pipe the pipe to feed the encoded key into
-* @param enc the encoding type to use
+* BER encode a public key
+* @param key the key to encode
+* @return the BER encoded key
 */
-BOTAN_DLL void encode(const Public_Key& key, Pipe& pipe,
-                      X509_Encoding enc = PEM);
+BOTAN_DLL MemoryVector<byte> BER_encode(const Public_Key& key);
 
 /**
 * PEM encode a public key into a string.
@@ -61,6 +59,16 @@ BOTAN_DLL void encode(const Public_Key& key, Pipe& pipe,
 * @return the PEM encoded key
 */
 BOTAN_DLL std::string PEM_encode(const Public_Key& key);
+
+/**
+* Encode a key into a pipe. This function is deprecated;
+* use PEM_encode or BER_encode instead.
+* @param key the public key to encode
+* @param pipe the pipe to feed the encoded key into
+* @param enc the encoding type to use
+*/
+BOTAN_DLL void encode(const Public_Key& key, Pipe& pipe,
+                      X509_Encoding enc = PEM);
 
 /**
 * Create a public key from a data source.
