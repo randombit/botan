@@ -1,5 +1,6 @@
 
 * 1.9.9-dev, ????-??-??
+ - Increase default iteration counts for private key encryption
 
 * 1.9.8, 2010-06-14
  - Add support for wide multiplications on 64-bit Windows
