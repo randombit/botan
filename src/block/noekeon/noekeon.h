@@ -26,9 +26,9 @@ class BOTAN_DLL Noekeon : public BlockCipher
       BlockCipher* clone() const { return new Noekeon; }
 
       Noekeon() : BlockCipher(16, 16) {}
-   protected:
+   private:
       void key_schedule(const byte[], u32bit);
-
+   protected: // for access by SIMD subclass
       static const byte RC[17];
 
       SecureVector<u32bit, 4> EK, DK;
