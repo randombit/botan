@@ -75,7 +75,9 @@ BOTAN_DLL Key_Constraints find_constraints(const Public_Key& pub_key,
                                            Key_Constraints limits);
 
 /**
-* Encode a key into a pipe. This function is deprecated.
+* Encode a key into a pipe.
+* @deprecated Use PEM_encode or BER_encode instead
+*
 * @param key the public key to encode
 * @param pipe the pipe to feed the encoded key into
 * @param encoding the encoding type to use

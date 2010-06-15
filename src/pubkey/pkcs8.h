@@ -71,7 +71,9 @@ BOTAN_DLL std::string PEM_encode(const Private_Key& key,
 
 
 /**
-* Encode a private key into a pipe. This function is deprecated.
+* Encode a private key into a pipe.
+* @deprecated Use PEM_encode or BER_encode instead
+*
 * @param key the private key to encode
 * @param pipe the pipe to feed the encoded key into
 * @param encoding the encoding type to use
@@ -87,8 +89,9 @@ inline void encode(const Private_Key& key,
    }
 
 /**
-* Encode and encrypt a private key into a pipe. This function is
-* deprecated.
+* Encode and encrypt a private key into a pipe.
+* @deprecated Use PEM_encode or BER_encode instead
+*
 * @param key the private key to encode
 * @param pipe the pipe to feed the encoded key into
 * @param pass the password to use for encryption
