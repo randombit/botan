@@ -52,6 +52,27 @@ minimal fuss, but Botan also supports a modules system. This system
 exposes system dependent code to the library through portable
 interfaces, extending the set of services available to users.
 
+\subsection{Recommended Reading}
+
+It's a very good idea if you have some knowledge of cryptography prior
+to trying to use this stuff. You really should read at least one and
+ideally all of these books before seriously using the library.
+
+\setlength{\parskip}{5pt}
+
+\noindent
+\textit{Cryptography Engineering}, Niels Ferguson, Bruce Schneier, and
+Tadayoshi Kohno; Wiley
+
+\noindent
+\textit{Security Engineering -- A Guide to Building Dependable
+  Distributed Systems}, Ross Anderson; Wiley
+
+\noindent
+\textit{Handbook of Applied Cryptography}, Alfred J. Menezes,
+Paul C. Van Oorschot, and Scott A. Vanstone; CRC Press (available
+online at \url{http://www.cacr.math.uwaterloo.ca/hac/})
+
 \subsection{Targets}
 
 Botan's primary targets (system-wise) are 32 and 64-bit CPUs, with a
@@ -2197,31 +2218,33 @@ you do will be wasteful of both CPU cycles and possibly entropy.
 \pagebreak
 \section{User Interfaces}
 
-Botan has recently changed some infrastructure to better accommodate more
-complex user interfaces, in particular ones that are based on event
-loops. Primary among these was the fact that when doing something like loading
-a PKCS \#8 encoded private key, a passphrase might be needed, but then again it
-might not (a PKCS \#8 key doesn't have to be encrypted). Asking for a
-passphrase to decrypt an unencrypted key is rather pointless. Not only that,
-but the way to handle the user typing the wrong passphrase was complicated,
+Botan has recently changed some infrastructure to better accommodate
+more complex user interfaces, in particular ones that are based on
+event loops. Primary among these was the fact that when doing
+something like loading a PKCS \#8 encoded private key, a passphrase
+might be needed, but then again it might not (a PKCS \#8 key doesn't
+have to be encrypted). Asking for a passphrase to decrypt an
+unencrypted key is rather pointless. Not only that, but the way to
+handle the user typing the wrong passphrase was complicated,
 undocumented, and inefficient.
 
-So now Botan has an object called \type{UI}, which provides a simple interface
-for the aspects of user interaction the library has to be concerned
-with. Currently, this means getting a passphrase from the user, and that's it
-(\type{UI} will probably be extended in the future to support other operations
-as they are needed). The base \type{UI} class is very stupid, because the
-library can't directly assume anything about the environment that it's running
-under (for example, if there will be someone sitting at the terminal, if the
-application is even \emph{attached} to a terminal, and so on). But since you
-can subclass \type{UI} to use whatever method happens to be appropriate for
-your application, this isn't a big deal.
+So now Botan has an object called \type{UI}, which provides a simple
+interface for the aspects of user interaction the library has to be
+concerned with. Currently, this means getting a passphrase from the
+user, and that's it (\type{UI} will probably be extended in the future
+to support other operations as they are needed). The base \type{UI}
+class is very stupid, because the library can't directly assume
+anything about the environment that it's running under (for example,
+if there will be someone sitting at the terminal, if the application
+is even \emph{attached} to a terminal, and so on). But since you can
+subclass \type{UI} to use whatever method happens to be appropriate
+for your application, this isn't a big deal.
 
-\noindent
-\type{std::string} \function{get\_passphrase}(
-    \type{const std::string&} \arg{what},
-    \type{const std::string&} \arg{source},
-    \type{UI\_Result\&} \arg{result}) const;
+\begin{verbatim}
+  std::string get_passphrase(const std::string& what,
+                             const std::string& source,
+                             UI_Result& result) const;
+\end{verbatim}
 
 The \arg{what} argument specifies what the passphrase is needed for (for
 example, PKCS \#8 key loading passes \arg{what} as ``PKCS \#8 private
@@ -2824,7 +2847,7 @@ the algorithms listed here are (currently) thought to be safe.
   \item Public Key Encryption: RSA with ``EME1(SHA-256)''
 
   \item Public Key Signatures: RSA with EMSA4 and any recommended
-    hash, DSA/ECDSA with ``EMSA1(SHA-256)''
+    hash, or DSA or ECDSA with ``EMSA1(SHA-256)''
 
   \item Key Agreement: Diffie-Hellman or ECDH, with ``KDF2(SHA-256)''
 \end{list}
@@ -2900,27 +2923,6 @@ You must not assume that, just because an algorithm is not listed here, it is
 not encumbered by patents. If you have any concerns about the patent status of
 any algorithm you are considering using in an application, please discuss it
 with your attorney.
-
-\subsection{Recommended Reading}
-
-It's a very good idea if you have some knowledge of cryptography prior
-to trying to use this stuff. You really should read at least one and
-ideally all of these books before seriously using the library.
-
-\setlength{\parskip}{5pt}
-
-\noindent
-\textit{Cryptography Engineering}, Niels Ferguson, Bruce Schneier, and
-Tadayoshi Kohno; Wiley
-
-\noindent
-\textit{Security Engineering -- A Guide to Building Dependable
-  Distributed Systems}, Ross Anderson; Wiley
-
-\noindent
-\textit{Handbook of Applied Cryptography}, Alfred J. Menezes,
-Paul C. Van Oorschot, and Scott A. Vanstone; CRC Press (available
-online at \url{http://www.cacr.math.uwaterloo.ca/hac/})
 
 \subsection{Support}
 
