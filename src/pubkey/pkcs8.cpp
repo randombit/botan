@@ -257,13 +257,7 @@ Private_Key* load_key(const std::string& fsname,
 Private_Key* copy_key(const Private_Key& key,
                       RandomNumberGenerator& rng)
    {
-   Pipe bits;
-
-   bits.start_msg();
-   PKCS8::encode(key, bits);
-   bits.end_msg();
-
-   DataSource_Memory source(bits.read_all());
+   DataSource_Memory source(PEM_encode(key));
    return PKCS8::load_key(source, rng);
    }
 
