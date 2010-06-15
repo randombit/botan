@@ -79,10 +79,10 @@ BOTAN_DLL Public_Key* load_key(DataSource& source);
 
 /**
 * Create a public key from a string.
-* @param enc the string containing the PEM encoded key
+* @param filename the file containing a public key
 * @return the new public key object
 */
-BOTAN_DLL Public_Key* load_key(const std::string& enc);
+BOTAN_DLL Public_Key* load_key(const std::string& filename);
 
 /**
 * Create a public key from a memory region.
