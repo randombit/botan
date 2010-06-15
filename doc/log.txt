@@ -2,6 +2,7 @@
 * 1.8.9, ????-??-??
  - Use constant time multiplication in IDEA
  - Avoid possible timing attack against OAEP decoding
+ - Add new X509::BER_encode and PKCS8::BER_encode
  - Enable DLL builds under Windows
  - Add Win32 installer support
  - Add support for the Clang compiler
