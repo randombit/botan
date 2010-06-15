@@ -38,11 +38,10 @@ class Py_RSA_PrivateKey
 
       std::string to_ber() const
          {
-         Pipe out;
-         out.start_msg();
-         PKCS8::encode(*rsa_key, out, RAW_BER);
-         out.end_msg();
-         return out.read_all_as_string();
+         SecureVector<byte> bits = PKCS8::BER_encode(*rsa_key);
+
+         return std;:string(reinterpret_cast<const char*>(&bits[0]),
+                            bits.size());
          }
 
       std::string get_N() const { return bigint2str(get_bigint_N()); }
@@ -124,11 +123,10 @@ class Py_RSA_PublicKey
 
       std::string to_ber() const
          {
-         Pipe out;
-         out.start_msg();
-         X509::encode(*rsa_key, out, RAW_BER);
-         out.end_msg();
-         return out.read_all_as_string();
+         SecureVector<byte> bits = X509::BER_encode(*rsa_key);
+
+         return std;:string(reinterpret_cast<const char*>(&bits[0]),
+                            bits.size());
          }
 
       std::string encrypt(const std::string& in,
