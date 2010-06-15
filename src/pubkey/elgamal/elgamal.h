@@ -16,7 +16,7 @@
 
 namespace Botan {
 
-/*
+/**
 * ElGamal Public Key
 */
 class BOTAN_DLL ElGamal_PublicKey : public virtual DL_Scheme_PublicKey
@@ -37,7 +37,7 @@ class BOTAN_DLL ElGamal_PublicKey : public virtual DL_Scheme_PublicKey
       ElGamal_PublicKey() {}
    };
 
-/*
+/**
 * ElGamal Private Key
 */
 class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
@@ -55,6 +55,9 @@ class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
                          const BigInt& priv_key = 0);
    };
 
+/**
+* ElGamal encryption operation
+*/
 class BOTAN_DLL ElGamal_Encryption_Operation : public PK_Ops::Encryption
    {
    public:
@@ -70,6 +73,9 @@ class BOTAN_DLL ElGamal_Encryption_Operation : public PK_Ops::Encryption
       Modular_Reducer mod_p;
    };
 
+/**
+* ElGamal decryption operation
+*/
 class BOTAN_DLL ElGamal_Decryption_Operation : public PK_Ops::Decryption
    {
    public:

@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* SHA-{384,512} Base
+/**
+* Base class for the 64-bit SHA-2 hashes (SHA-384 and SHA-512)
 */
 class BOTAN_DLL SHA_384_512_BASE : public MDx_HashFunction
    {
@@ -31,7 +31,7 @@ class BOTAN_DLL SHA_384_512_BASE : public MDx_HashFunction
       SecureVector<u64bit, 80> W;
    };
 
-/*
+/**
 * SHA-384
 */
 class BOTAN_DLL SHA_384 : public SHA_384_512_BASE
@@ -43,7 +43,7 @@ class BOTAN_DLL SHA_384 : public SHA_384_512_BASE
       SHA_384() : SHA_384_512_BASE(48) { clear(); }
    };
 
-/*
+/**
 * SHA-512
 */
 class BOTAN_DLL SHA_512 : public SHA_384_512_BASE

@@ -16,7 +16,7 @@
 namespace Botan {
 
 /**
-* This class represents GOST_3410 Public Keys.
+* GOST-34.10 Public Key
 */
 class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
    {
@@ -65,7 +65,7 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
    };
 
 /**
-* This class represents GOST_3410 Private Keys
+* GOST-34.10 Private Key
 */
 class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
                                        public EC_PrivateKey
@@ -97,6 +97,9 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
          { return EC_PublicKey::algorithm_identifier(); }
    };
 
+/**
+* GOST-34.10 signature operation
+*/
 class BOTAN_DLL GOST_3410_Signature_Operation : public PK_Ops::Signature
    {
    public:
@@ -115,6 +118,9 @@ class BOTAN_DLL GOST_3410_Signature_Operation : public PK_Ops::Signature
       const BigInt& x;
    };
 
+/**
+* GOST-34.10 verification operation
+*/
 class BOTAN_DLL GOST_3410_Verification_Operation : public PK_Ops::Verification
    {
    public:

@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * RIPEMD-128
 */
 class BOTAN_DLL RIPEMD_128 : public MDx_HashFunction
@@ -22,7 +22,7 @@ class BOTAN_DLL RIPEMD_128 : public MDx_HashFunction
       std::string name() const { return "RIPEMD-128"; }
       HashFunction* clone() const { return new RIPEMD_128; }
       RIPEMD_128() : MDx_HashFunction(16, 64, false, true) { clear(); }
-  private:
+   private:
       void compress_n(const byte[], u32bit blocks);
       void copy_out(byte[]);
 

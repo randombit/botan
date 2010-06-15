@@ -12,6 +12,9 @@
 
 namespace Botan {
 
+/**
+* Engine for x86-32 specific implementations
+*/
 class IA32_Assembler_Engine : public Engine
    {
    public:

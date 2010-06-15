@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Modular Reducer
 */
 class BOTAN_DLL Modular_Reducer
@@ -24,18 +24,25 @@ class BOTAN_DLL Modular_Reducer
 
       /**
       * Multiply mod p
+      * @param x
+      * @param y
+      * @return (x * y) % p
       */
       BigInt multiply(const BigInt& x, const BigInt& y) const
          { return reduce(x * y); }
 
       /**
       * Square mod p
+      * @param x
+      * @return (x * x) % p
       */
       BigInt square(const BigInt& x) const
          { return reduce(Botan::square(x)); }
 
       /**
       * Cube mod p
+      * @param x
+      * @return (x * x * x) % p
       */
       BigInt cube(const BigInt& x) const
          { return multiply(x, this->square(x)); }

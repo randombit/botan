@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* SHA-160
+/**
+* SHA-160 in x86-64 assembly
 */
 class BOTAN_DLL SHA_160_AMD64 : public SHA_160
    {

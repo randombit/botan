@@ -12,6 +12,10 @@
 
 namespace Botan {
 
+/**
+* Filter mixin that breaks input into blocks, useful for
+* cipher modes
+*/
 class BOTAN_DLL Buffered_Filter
    {
    public:

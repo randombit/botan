@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * PK_Encryptor Filter
 */
 class BOTAN_DLL PK_Encryptor_Filter : public Filter
@@ -31,7 +31,7 @@ class BOTAN_DLL PK_Encryptor_Filter : public Filter
       SecureVector<byte> buffer;
    };
 
-/*
+/**
 * PK_Decryptor Filter
 */
 class BOTAN_DLL PK_Decryptor_Filter : public Filter
@@ -46,7 +46,7 @@ class BOTAN_DLL PK_Decryptor_Filter : public Filter
       SecureVector<byte> buffer;
    };
 
-/*
+/**
 * PK_Signer Filter
 */
 class BOTAN_DLL PK_Signer_Filter : public Filter
@@ -65,7 +65,7 @@ class BOTAN_DLL PK_Signer_Filter : public Filter
       RandomNumberGenerator& rng;
    };
 
-/*
+/**
 * PK_Verifier Filter
 */
 class BOTAN_DLL PK_Verifier_Filter : public Filter

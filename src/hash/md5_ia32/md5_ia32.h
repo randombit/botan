@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* MD5
+/**
+* MD5 in x86 assembly
 */
 class BOTAN_DLL MD5_IA32 : public MD5
    {

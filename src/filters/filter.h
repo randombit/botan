@@ -56,7 +56,7 @@ class BOTAN_DLL Filter
       /**
       * @param in some input for the filter
       */
-      void send(byte in) { send(&input, 1); }
+      void send(byte in) { send(&in, 1); }
 
       /**
       * @param in some input for the filter

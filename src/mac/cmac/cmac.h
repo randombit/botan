@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* CMAC
+/**
+* CMAC, also known as OMAC1
 */
 class BOTAN_DLL CMAC : public MessageAuthenticationCode
    {

@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* OpenPGP S2K
+/**
+* OpenPGP's S2K
 */
 class BOTAN_DLL OpenPGP_S2K : public S2K
    {

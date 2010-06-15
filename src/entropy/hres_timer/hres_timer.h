@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* High Resolution Timestamp Source
+/**
+* Entropy source using high resolution timers
 */
 class High_Resolution_Timestamp : public EntropySource
    {

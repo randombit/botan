@@ -63,6 +63,9 @@ class BOTAN_DLL Entropy_Accumulator
       double collected_bits;
    };
 
+/**
+* Entropy accumulator that puts the input into a BufferedComputation
+*/
 class BOTAN_DLL Entropy_Accumulator_BufferedComputation : public Entropy_Accumulator
    {
    public:

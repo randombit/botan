@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * No-Op Mutex Factory
 */
 class Noop_Mutex_Factory : public Mutex_Factory

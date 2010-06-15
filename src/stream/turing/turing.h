@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Turing
 */
 class BOTAN_DLL Turing : public StreamCipher

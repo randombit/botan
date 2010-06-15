@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* Stream Cipher
+/**
+* Base class for all stream ciphers
 */
 class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
    {

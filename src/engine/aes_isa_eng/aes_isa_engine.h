@@ -12,6 +12,10 @@
 
 namespace Botan {
 
+/**
+* Engine for implementations that hook into CPU-specific
+* AES implementations (eg AES-NI, VIA C7, or AMD Geode)
+*/
 class AES_ISA_Engine : public Engine
    {
    public:

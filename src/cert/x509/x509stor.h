@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-/*
+/**
 * X.509 Certificate Validation Result
 */
 enum X509_Code {
@@ -42,12 +42,15 @@ enum X509_Code {
    CA_CERT_NOT_FOR_CRL_ISSUER
 };
 
-/*
+/**
 * X.509 Certificate Store
 */
 class BOTAN_DLL X509_Store
    {
    public:
+      /**
+      * A callback for searching the store
+      */
       class BOTAN_DLL Search_Func
          {
          public:
@@ -71,20 +74,6 @@ class BOTAN_DLL X509_Store
       std::vector<X509_Certificate> get_cert_chain(const X509_Certificate&);
       std::string PEM_encode() const;
 
-      /*
-      * Made CRL_Data public for XLC for Cell 0.9, otherwise cannot
-      * instantiate member variable std::vector<CRL_Data> revoked
-      */
-      class BOTAN_DLL CRL_Data
-         {
-         public:
-            X509_DN issuer;
-            MemoryVector<byte> serial, auth_key_id;
-            bool operator==(const CRL_Data&) const;
-            bool operator!=(const CRL_Data&) const;
-            bool operator<(const CRL_Data&) const;
-         };
-
       X509_Code add_crl(const X509_CRL&);
       void add_cert(const X509_Certificate&, bool = false);
       void add_certs(DataSource&);
@@ -101,6 +90,16 @@ class BOTAN_DLL X509_Store
       ~X509_Store();
    private:
       X509_Store& operator=(const X509_Store&) { return (*this); }
+
+      class BOTAN_DLL CRL_Data
+         {
+         public:
+            X509_DN issuer;
+            MemoryVector<byte> serial, auth_key_id;
+            bool operator==(const CRL_Data&) const;
+            bool operator!=(const CRL_Data&) const;
+            bool operator<(const CRL_Data&) const;
+         };
 
       class BOTAN_DLL Cert_Info
          {

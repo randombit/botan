@@ -12,8 +12,11 @@
 
 namespace Botan {
 
-/*
+/**
 * WiderWake4+1-BE
+*
+* Note: quite old and possibly not safe; use XSalsa20 or a block
+* cipher in counter mode.
 */
 class BOTAN_DLL WiderWake_41_BE : public StreamCipher
    {

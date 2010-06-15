@@ -22,12 +22,15 @@ namespace Botan {
 * collected for retrieval.  If you're familiar with the Unix shell
 * environment, this design will sound quite familiar.
 */
-
 class BOTAN_DLL Pipe : public DataSource
    {
    public:
       typedef u32bit message_id;
 
+      /**
+      * Exception if you use an invalid message as an argument to
+      * read, remaining, etc
+      */
       struct BOTAN_DLL Invalid_Message_Number : public Invalid_Argument
          {
          Invalid_Message_Number(const std::string& where, message_id msg) :

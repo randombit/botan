@@ -91,6 +91,9 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       bool check_key(RandomNumberGenerator& rng, bool) const;
    };
 
+/**
+* ECDSA signature operation
+*/
 class BOTAN_DLL ECDSA_Signature_Operation : public PK_Ops::Signature
    {
    public:
@@ -110,6 +113,9 @@ class BOTAN_DLL ECDSA_Signature_Operation : public PK_Ops::Signature
       Modular_Reducer mod_order;
    };
 
+/**
+* ECDSA verification operation
+*/
 class BOTAN_DLL ECDSA_Verification_Operation : public PK_Ops::Verification
    {
    public:

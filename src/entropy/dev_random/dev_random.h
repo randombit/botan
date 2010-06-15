@@ -14,6 +14,9 @@
 
 namespace Botan {
 
+/**
+* Entropy source reading from kernel devices like /dev/random
+*/
 class Device_EntropySource : public EntropySource
    {
    public:

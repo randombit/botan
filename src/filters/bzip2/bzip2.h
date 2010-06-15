@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Bzip Compression Filter
 */
 class BOTAN_DLL Bzip_Compression : public Filter
@@ -35,7 +35,7 @@ class BOTAN_DLL Bzip_Compression : public Filter
       class Bzip_Stream* bz;
    };
 
-/*
+/**
 * Bzip Decompression Filter
 */
 class BOTAN_DLL Bzip_Decompression : public Filter

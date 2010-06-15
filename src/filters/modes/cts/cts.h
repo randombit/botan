@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* CTS Encryption
+/**
+* CBC encryption with ciphertext stealing
 */
 class BOTAN_DLL CTS_Encryption : public Keyed_Filter
    {
@@ -45,8 +45,8 @@ class BOTAN_DLL CTS_Encryption : public Keyed_Filter
       u32bit position;
    };
 
-/*
-* CTS Decryption
+/**
+* CBC decryption with ciphertext stealing
 */
 class BOTAN_DLL CTS_Decryption : public Keyed_Filter
    {

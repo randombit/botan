@@ -15,6 +15,9 @@ namespace Botan {
 
 namespace PK_Ops {
 
+/**
+* Public key encryption interface
+*/
 class BOTAN_DLL Encryption
    {
    public:
@@ -26,6 +29,9 @@ class BOTAN_DLL Encryption
       virtual ~Encryption() {}
    };
 
+/**
+* Public key decryption interface
+*/
 class BOTAN_DLL Decryption
    {
    public:
@@ -37,6 +43,9 @@ class BOTAN_DLL Decryption
       virtual ~Decryption() {}
    };
 
+/**
+* Public key signature creation interface
+*/
 class BOTAN_DLL Signature
    {
    public:
@@ -70,6 +79,9 @@ class BOTAN_DLL Signature
       virtual ~Signature() {}
    };
 
+/**
+* Public key signature verification interface
+*/
 class BOTAN_DLL Verification
    {
    public:
@@ -127,8 +139,8 @@ class BOTAN_DLL Verification
       virtual ~Verification() {}
    };
 
-/*
-* A generic Key Agreement Operation (eg DH or ECDH)
+/**
+* A generic key agreement Operation (eg DH or ECDH)
 */
 class BOTAN_DLL Key_Agreement
    {

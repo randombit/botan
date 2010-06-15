@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Container of output buffers for Pipe
 */
 class Output_Buffers

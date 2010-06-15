@@ -53,8 +53,6 @@ void zlib_free(void* info_ptr, void* ptr)
    info->alloc->deallocate(ptr, i->second);
    }
 
-}
-
 /*
 * Wrapper Type for Zlib z_stream
 */
@@ -77,6 +75,8 @@ class Zlib_Stream
          std::memset(&stream, 0, sizeof(z_stream));
          }
    };
+
+}
 
 /*
 * Zlib_Compression Constructor

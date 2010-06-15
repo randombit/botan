@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * RIPEMD-160
 */
 class BOTAN_DLL RIPEMD_160 : public MDx_HashFunction

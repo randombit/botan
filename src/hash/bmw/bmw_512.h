@@ -12,6 +12,9 @@
 
 namespace Botan {
 
+/**
+* Blue Midnight Wish 512 (Round 2 tweaked version)
+*/
 class BOTAN_DLL BMW_512 : public MDx_HashFunction
    {
    public:

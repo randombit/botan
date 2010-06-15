@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * OpenSSL Engine
 */
 class OpenSSL_Engine : public Engine

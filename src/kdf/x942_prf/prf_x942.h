@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* X9.42 PRF
+/**
+* PRF from ANSI X9.42
 */
 class BOTAN_DLL X942_PRF : public KDF
    {

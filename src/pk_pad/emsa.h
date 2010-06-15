@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Encoding Method for Signatures, Appendix
 */
 class BOTAN_DLL EMSA

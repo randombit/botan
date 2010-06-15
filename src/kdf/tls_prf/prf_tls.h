@@ -14,8 +14,8 @@
 
 namespace Botan {
 
-/*
-* TLS PRF
+/**
+* PRF used in TLS 1.0/1.1
 */
 class BOTAN_DLL TLS_PRF : public KDF
    {
@@ -31,8 +31,8 @@ class BOTAN_DLL TLS_PRF : public KDF
       MessageAuthenticationCode* hmac_sha1;
    };
 
-/*
-* TLS 1.2 PRF
+/**
+* PRF used in TLS 1.2
 */
 class BOTAN_DLL TLS_12_PRF : public KDF
    {

@@ -42,7 +42,7 @@ class BOTAN_DLL RSA_PublicKey : public virtual IF_Scheme_PublicKey
    };
 
 /**
-* RSA Private Key class.
+* RSA Private Key
 */
 class BOTAN_DLL RSA_PrivateKey : public RSA_PublicKey,
                                  public IF_Scheme_PrivateKey
@@ -83,6 +83,9 @@ class BOTAN_DLL RSA_PrivateKey : public RSA_PublicKey,
                      u32bit bits, u32bit exp = 65537);
    };
 
+/**
+* RSA private (decrypt/sign) operation
+*/
 class BOTAN_DLL RSA_Private_Operation : public PK_Ops::Signature,
                                         public PK_Ops::Decryption
    {
@@ -107,6 +110,9 @@ class BOTAN_DLL RSA_Private_Operation : public PK_Ops::Signature,
       Blinder blinder;
    };
 
+/**
+* RSA public (encrypt/verify) operation
+*/
 class BOTAN_DLL RSA_Public_Operation : public PK_Ops::Verification,
                                        public PK_Ops::Encryption
    {

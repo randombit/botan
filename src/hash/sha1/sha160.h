@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* SHA-160
+/**
+* NIST's SHA-160
 */
 class BOTAN_DLL SHA_160 : public MDx_HashFunction
    {

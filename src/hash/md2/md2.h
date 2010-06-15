@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * MD2
 */
 class BOTAN_DLL MD2 : public HashFunction

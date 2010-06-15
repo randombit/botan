@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * MD4
 */
 class BOTAN_DLL MD4 : public MDx_HashFunction

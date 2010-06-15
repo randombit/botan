@@ -12,6 +12,9 @@
 
 namespace Botan {
 
+/**
+* Engine for implementations that are x86-64 specific
+*/
 class AMD64_Assembler_Engine : public Engine
    {
    public:

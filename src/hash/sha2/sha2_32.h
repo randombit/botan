@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* SHA-{224,256} Base
+/**
+* Base class for the 32-bit SHA-2 hashes (SHA-224 and SHA-256)
 */
 class BOTAN_DLL SHA_224_256_BASE : public MDx_HashFunction
    {
@@ -30,7 +30,7 @@ class BOTAN_DLL SHA_224_256_BASE : public MDx_HashFunction
       void copy_out(byte[]);
    };
 
-/*
+/**
 * SHA-224
 */
 class BOTAN_DLL SHA_224 : public SHA_224_256_BASE
@@ -42,7 +42,7 @@ class BOTAN_DLL SHA_224 : public SHA_224_256_BASE
       SHA_224() : SHA_224_256_BASE(28) { clear(); }
    };
 
-/*
+/**
 * SHA-256
 */
 class BOTAN_DLL SHA_256 : public SHA_224_256_BASE

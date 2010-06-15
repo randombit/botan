@@ -12,8 +12,9 @@
 
 namespace Botan {
 
-/*
-* EMSA-Raw
+/**
+* EMSA-Raw - sign inputs directly
+* Don't use this unless you know what you are doing.
 */
 class BOTAN_DLL EMSA_Raw : public EMSA
    {

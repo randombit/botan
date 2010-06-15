@@ -14,6 +14,9 @@
 
 namespace Botan {
 
+/**
+* Skein-512, a SHA-3 candidate
+*/
 class BOTAN_DLL Skein_512 : public HashFunction
    {
    public:

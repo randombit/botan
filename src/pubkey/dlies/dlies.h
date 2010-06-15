@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-/*
+/**
 * DLIES Encryption
 */
 class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
@@ -41,7 +41,7 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
       u32bit mac_keylen;
    };
 
-/*
+/**
 * DLIES Decryption
 */
 class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor

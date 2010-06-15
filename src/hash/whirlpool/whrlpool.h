@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Whirlpool
 */
 class BOTAN_DLL Whirlpool : public MDx_HashFunction

@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* OFB Mode
+/**
+* Output Feedback Mode
 */
 class BOTAN_DLL OFB : public StreamCipher
    {

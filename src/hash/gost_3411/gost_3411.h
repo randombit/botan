@@ -24,7 +24,7 @@ class BOTAN_DLL GOST_34_11 : public HashFunction
       HashFunction* clone() const { return new GOST_34_11; }
 
       GOST_34_11();
-   protected:
+   private:
       void compress_n(const byte input[], u32bit blocks);
 
       void add_data(const byte[], u32bit);

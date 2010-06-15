@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* ARC4
+/**
+* Alleged RC4
 */
 class BOTAN_DLL ARC4 : public StreamCipher
    {

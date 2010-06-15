@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Octet String
 */
 class BOTAN_DLL OctetString

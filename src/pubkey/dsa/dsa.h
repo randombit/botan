@@ -15,7 +15,7 @@
 
 namespace Botan {
 
-/*
+/**
 * DSA Public Key
 */
 class BOTAN_DLL DSA_PublicKey : public virtual DL_Scheme_PublicKey
@@ -39,7 +39,7 @@ class BOTAN_DLL DSA_PublicKey : public virtual DL_Scheme_PublicKey
       DSA_PublicKey() {}
    };
 
-/*
+/**
 * DSA Private Key
 */
 class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
@@ -57,6 +57,9 @@ class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
       bool check_key(RandomNumberGenerator& rng, bool strong) const;
    };
 
+/**
+* Object that can create a DSA signature
+*/
 class BOTAN_DLL DSA_Signature_Operation : public PK_Ops::Signature
    {
    public:
@@ -75,6 +78,9 @@ class BOTAN_DLL DSA_Signature_Operation : public PK_Ops::Signature
       Modular_Reducer mod_q;
    };
 
+/**
+* Object that can verify a DSA signature
+*/
 class BOTAN_DLL DSA_Verification_Operation : public PK_Ops::Verification
    {
    public:

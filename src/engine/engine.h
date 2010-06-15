@@ -26,7 +26,7 @@ namespace Botan {
 class Algorithm_Factory;
 class Keyed_Filter;
 
-/*
+/**
 * Engine Base Class
 */
 class BOTAN_DLL Engine

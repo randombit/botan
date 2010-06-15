@@ -19,7 +19,7 @@ namespace Botan {
 typedef std::runtime_error Exception;
 typedef std::invalid_argument Invalid_Argument;
 
-/*
+/**
 * Invalid_State Exception
 */
 struct BOTAN_DLL Invalid_State : public Exception
@@ -29,7 +29,7 @@ struct BOTAN_DLL Invalid_State : public Exception
       {}
    };
 
-/*
+/**
 * Lookup_Error Exception
 */
 struct BOTAN_DLL Lookup_Error : public Exception
@@ -39,7 +39,7 @@ struct BOTAN_DLL Lookup_Error : public Exception
       {}
    };
 
-/*
+/**
 * Internal_Error Exception
 */
 struct BOTAN_DLL Internal_Error : public Exception
@@ -49,7 +49,7 @@ struct BOTAN_DLL Internal_Error : public Exception
       {}
    };
 
-/*
+/**
 * Invalid_Key_Length Exception
 */
 struct BOTAN_DLL Invalid_Key_Length : public Invalid_Argument
@@ -60,7 +60,7 @@ struct BOTAN_DLL Invalid_Key_Length : public Invalid_Argument
       {}
    };
 
-/*
+/**
 * Invalid_Block_Size Exception
 */
 struct BOTAN_DLL Invalid_Block_Size : public Invalid_Argument
@@ -72,7 +72,7 @@ struct BOTAN_DLL Invalid_Block_Size : public Invalid_Argument
       {}
    };
 
-/*
+/**
 * Invalid_IV_Length Exception
 */
 struct BOTAN_DLL Invalid_IV_Length : public Invalid_Argument
@@ -83,7 +83,7 @@ struct BOTAN_DLL Invalid_IV_Length : public Invalid_Argument
       {}
    };
 
-/*
+/**
 * PRNG_Unseeded Exception
 */
 struct BOTAN_DLL PRNG_Unseeded : public Invalid_State
@@ -93,7 +93,7 @@ struct BOTAN_DLL PRNG_Unseeded : public Invalid_State
       {}
    };
 
-/*
+/**
 * Policy_Violation Exception
 */
 struct BOTAN_DLL Policy_Violation : public Invalid_State
@@ -103,7 +103,7 @@ struct BOTAN_DLL Policy_Violation : public Invalid_State
       {}
    };
 
-/*
+/**
 * Algorithm_Not_Found Exception
 */
 struct BOTAN_DLL Algorithm_Not_Found : public Lookup_Error
@@ -113,7 +113,7 @@ struct BOTAN_DLL Algorithm_Not_Found : public Lookup_Error
       {}
    };
 
-/*
+/**
 * Invalid_Algorithm_Name Exception
 */
 struct BOTAN_DLL Invalid_Algorithm_Name : public Invalid_Argument
@@ -123,7 +123,7 @@ struct BOTAN_DLL Invalid_Algorithm_Name : public Invalid_Argument
       {}
    };
 
-/*
+/**
 * Encoding_Error Exception
 */
 struct BOTAN_DLL Encoding_Error : public Invalid_Argument
@@ -132,7 +132,7 @@ struct BOTAN_DLL Encoding_Error : public Invalid_Argument
       Invalid_Argument("Encoding error: " + name) {}
    };
 
-/*
+/**
 * Decoding_Error Exception
 */
 struct BOTAN_DLL Decoding_Error : public Invalid_Argument
@@ -141,7 +141,7 @@ struct BOTAN_DLL Decoding_Error : public Invalid_Argument
       Invalid_Argument("Decoding error: " + name) {}
    };
 
-/*
+/**
 * Integrity_Failure Exception
 */
 struct BOTAN_DLL Integrity_Failure : public Exception
@@ -150,7 +150,7 @@ struct BOTAN_DLL Integrity_Failure : public Exception
       Exception("Integrity failure: " + what) {}
    };
 
-/*
+/**
 * Invalid_OID Exception
 */
 struct BOTAN_DLL Invalid_OID : public Decoding_Error
@@ -159,7 +159,7 @@ struct BOTAN_DLL Invalid_OID : public Decoding_Error
       Decoding_Error("Invalid ASN.1 OID: " + oid) {}
    };
 
-/*
+/**
 * Stream_IO_Error Exception
 */
 struct BOTAN_DLL Stream_IO_Error : public Exception
@@ -169,7 +169,7 @@ struct BOTAN_DLL Stream_IO_Error : public Exception
       {}
    };
 
-/*
+/**
 * Self Test Failure Exception
 */
 struct BOTAN_DLL Self_Test_Failure : public Internal_Error
@@ -179,7 +179,7 @@ struct BOTAN_DLL Self_Test_Failure : public Internal_Error
       {}
    };
 
-/*
+/**
 * Memory Allocation Exception
 */
 struct BOTAN_DLL Memory_Exhaustion : public std::bad_alloc

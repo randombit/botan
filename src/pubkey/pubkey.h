@@ -305,8 +305,8 @@ class BOTAN_DLL PK_Verifier
       Signature_Format sig_format;
    };
 
-/*
-* Key Agreement
+/**
+* Key used for key agreement
 */
 class BOTAN_DLL PK_Key_Agreement
    {

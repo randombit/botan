@@ -15,7 +15,7 @@
 
 namespace Botan {
 
-/*
+/**
 * CBC Encryption
 */
 class BOTAN_DLL CBC_Encryption : public Keyed_Filter,
@@ -52,7 +52,7 @@ class BOTAN_DLL CBC_Encryption : public Keyed_Filter,
       SecureVector<byte> state;
    };
 
-/*
+/**
 * CBC Decryption
 */
 class BOTAN_DLL CBC_Decryption : public Keyed_Filter,

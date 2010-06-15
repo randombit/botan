@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * CBC-MAC
 */
 class BOTAN_DLL CBC_MAC : public MessageAuthenticationCode

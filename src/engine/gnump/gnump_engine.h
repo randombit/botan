@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* GMP Engine
+/**
+* Engine using GNU MP
 */
 class GMP_Engine : public Engine
    {

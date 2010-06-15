@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* CTR-BE (Counter, big-endian)
+/**
+* CTR-BE (Counter mode, big-endian)
 */
 class BOTAN_DLL CTR_BE : public StreamCipher
    {

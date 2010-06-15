@@ -12,33 +12,48 @@
 
 namespace Botan {
 
-/*
+/**
 * Mutex Base Class
 */
 class Mutex
    {
    public:
+      /**
+      * Lock the mutex
+      */
       virtual void lock() = 0;
+
+      /**
+      * Unlock the mutex
+      */
       virtual void unlock() = 0;
       virtual ~Mutex() {}
    };
 
-/*
+/**
 * Mutex Factory
 */
 class Mutex_Factory
    {
    public:
+      /**
+      * @return newly allocated mutex
+      */
       virtual Mutex* make() = 0;
+
       virtual ~Mutex_Factory() {}
    };
 
-/*
-* Mutex Holding Class
+/**
+* Mutex Holding Class for RAII
 */
 class Mutex_Holder
    {
    public:
+      /**
+      * Hold onto a mutex until we leave scope
+      * @param m the mutex to lock
+      */
       Mutex_Holder(Mutex* m) : mux(m)
          {
          if(!mux)

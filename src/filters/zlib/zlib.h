@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Zlib Compression Filter
 */
 class BOTAN_DLL Zlib_Compression : public Filter
@@ -34,7 +34,7 @@ class BOTAN_DLL Zlib_Compression : public Filter
       class Zlib_Stream* zlib;
    };
 
-/*
+/**
 * Zlib Decompression Filter
 */
 class BOTAN_DLL Zlib_Decompression : public Filter

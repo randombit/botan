@@ -20,8 +20,8 @@ namespace Botan {
 
 class Mutex;
 
-/*
-* Global State Container Base
+/**
+* Global state container aka the buritto at the center of it all
 */
 class BOTAN_DLL Library_State
    {

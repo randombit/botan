@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* Parallel
+/**
+* Parallel Hashes
 */
 class BOTAN_DLL Parallel : public HashFunction
    {

@@ -14,8 +14,8 @@
 
 namespace Botan {
 
-/*
-* EMSA4
+/**
+* EMSA4 aka PSS-R
 */
 class BOTAN_DLL EMSA4 : public EMSA
    {

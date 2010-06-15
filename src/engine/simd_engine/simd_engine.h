@@ -12,6 +12,9 @@
 
 namespace Botan {
 
+/**
+* Engine for implementations that use some kind of SIMD
+*/
 class SIMD_Engine : public Engine
    {
    public:

@@ -13,6 +13,10 @@
 
 namespace Botan {
 
+/**
+* Fake SIMD, using plain scalar operations
+* Often still faster than iterative on superscalar machines
+*/
 class SIMD_Scalar
    {
    public:

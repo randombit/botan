@@ -82,8 +82,8 @@ class BOTAN_DLL RandomNumberGenerator
          { return (*this); }
    };
 
-/*
-* Null Random Number Generator
+/**
+* Null/stub RNG - fails if you try to use it for anything
 */
 class BOTAN_DLL Null_RNG : public RandomNumberGenerator
    {

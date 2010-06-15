@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Search based on the contents of a DN entry
 */
 class BOTAN_DLL DN_Check : public X509_Store::Search_Func
@@ -30,7 +30,7 @@ class BOTAN_DLL DN_Check : public X509_Store::Search_Func
       compare_fn compare;
    };
 
-/*
+/**
 * Search for a certificate by issuer/serial
 */
 class BOTAN_DLL IandS_Match : public X509_Store::Search_Func
@@ -43,7 +43,7 @@ class BOTAN_DLL IandS_Match : public X509_Store::Search_Func
       MemoryVector<byte> serial;
    };
 
-/*
+/**
 * Search for a certificate by subject keyid
 */
 class BOTAN_DLL SKID_Match : public X509_Store::Search_Func

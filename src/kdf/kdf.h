@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Key Derivation Function
 */
 class BOTAN_DLL KDF
@@ -47,7 +47,7 @@ class BOTAN_DLL KDF
                 const byte salt[], u32bit salt_len) const = 0;
    };
 
-/*
+/**
 * Mask Generation Function
 */
 class BOTAN_DLL MGF

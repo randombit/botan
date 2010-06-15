@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Certificate Store Interface
 */
 class BOTAN_DLL Certificate_Store

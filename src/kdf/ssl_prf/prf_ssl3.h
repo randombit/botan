@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* SSL3 PRF
+/**
+* PRF used in SSLv3
 */
 class BOTAN_DLL SSL3_PRF : public KDF
    {

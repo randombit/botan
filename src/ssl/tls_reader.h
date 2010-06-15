@@ -13,6 +13,9 @@
 
 namespace Botan {
 
+/**
+* Helper class for decoding TLS protocol messages
+*/
 class TLS_Data_Reader
    {
    public:

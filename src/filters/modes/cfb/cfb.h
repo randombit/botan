@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * CFB Encryption
 */
 class BOTAN_DLL CFB_Encryption : public Keyed_Filter
@@ -44,7 +44,7 @@ class BOTAN_DLL CFB_Encryption : public Keyed_Filter
       u32bit position, feedback;
    };
 
-/*
+/**
 * CFB Decryption
 */
 class BOTAN_DLL CFB_Decryption : public Keyed_Filter

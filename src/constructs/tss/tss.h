@@ -15,6 +15,9 @@
 
 namespace Botan {
 
+/**
+* A split secret, using the format from draft-mcgrew-tss-03
+*/
 class BOTAN_DLL RTSS_Share
    {
    public:

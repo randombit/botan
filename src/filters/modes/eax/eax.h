@@ -15,7 +15,7 @@
 
 namespace Botan {
 
-/*
+/**
 * EAX Base Class
 */
 class BOTAN_DLL EAX_Base : public Keyed_Filter
@@ -43,7 +43,7 @@ class BOTAN_DLL EAX_Base : public Keyed_Filter
       SecureVector<byte> ctr_buf;
    };
 
-/*
+/**
 * EAX Encryption
 */
 class BOTAN_DLL EAX_Encryption : public EAX_Base
@@ -64,7 +64,7 @@ class BOTAN_DLL EAX_Encryption : public EAX_Base
       void end_msg();
    };
 
-/*
+/**
 * EAX Decryption
 */
 class BOTAN_DLL EAX_Decryption : public EAX_Base

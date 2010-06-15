@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Default Engine
 */
 class Default_Engine : public Engine

@@ -14,8 +14,8 @@
 
 namespace Botan {
 
-/*
-* EME1
+/**
+* EME1, aka OAEP
 */
 class BOTAN_DLL EME1 : public EME
    {

@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Tiger
 */
 class BOTAN_DLL Tiger : public MDx_HashFunction

@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Pthread Mutex Factory
 */
 class Pthread_Mutex_Factory : public Mutex_Factory

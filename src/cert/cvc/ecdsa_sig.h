@@ -15,6 +15,9 @@
 
 namespace Botan {
 
+/**
+* Class representing an ECDSA signature
+*/
 class BOTAN_DLL ECDSA_Signature
    {
    public:

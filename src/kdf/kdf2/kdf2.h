@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* KDF2
+/**
+* KDF2, from IEEE 1363
 */
 class BOTAN_DLL KDF2 : public KDF
    {

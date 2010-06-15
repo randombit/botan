@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* MD4
+/**
+* MD4 using x86 assembly
 */
 class BOTAN_DLL MD4_IA32 : public MD4
    {

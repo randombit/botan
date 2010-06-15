@@ -15,8 +15,8 @@
 
 namespace Botan {
 
-/*
-* PKCS#5 v1.5 PBE
+/**
+* PKCS #5 v1.5 PBE
 */
 class BOTAN_DLL PBE_PKCS5v15 : public PBE
    {

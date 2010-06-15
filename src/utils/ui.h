@@ -13,8 +13,9 @@
 
 namespace Botan {
 
-/*
+/**
 * User Interface
+* Only really used for callbacks for PKCS #8 decryption
 */
 class BOTAN_DLL User_Interface
    {

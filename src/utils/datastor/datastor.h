@@ -22,6 +22,9 @@ namespace Botan {
 class BOTAN_DLL Data_Store
    {
    public:
+      /**
+      * A search function
+      */
       class BOTAN_DLL Matcher
          {
          public:

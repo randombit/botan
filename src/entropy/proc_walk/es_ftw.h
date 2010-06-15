@@ -25,6 +25,9 @@ class FTW_EntropySource : public EntropySource
       FTW_EntropySource(const std::string& root_dir);
       ~FTW_EntropySource();
 
+      /**
+      * Returns file descriptors. Until it doesn't
+      */
       class File_Descriptor_Source
          {
          public:
@@ -32,7 +35,6 @@ class FTW_EntropySource : public EntropySource
             virtual ~File_Descriptor_Source() {}
          };
    private:
-
       std::string path;
       File_Descriptor_Source* dir;
    };
