@@ -1,6 +1,6 @@
 /*
 * PKCS #8
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -134,9 +134,9 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
 }
 
 /*
-* DER or PEM encode a PKCS #8 private key
+* BER encode a PKCS #8 private key
 */
-void encode(const Private_Key& key, Pipe& pipe, X509_Encoding encoding)
+SecureVector<byte> BER_encode(const Private_Key& key)
    {
    std::auto_ptr<PKCS8_Encoder> encoder(key.pkcs8_encoder());
    if(!encoder.get())
@@ -144,19 +144,33 @@ void encode(const Private_Key& key, Pipe& pipe, X509_Encoding encoding)
 
    const u32bit PKCS8_VERSION = 0;
 
-   SecureVector<byte> contents =
-      DER_Encoder()
+   return DER_Encoder()
          .start_cons(SEQUENCE)
             .encode(PKCS8_VERSION)
             .encode(encoder->alg_id())
             .encode(encoder->key_bits(), OCTET_STRING)
          .end_cons()
       .get_contents();
+   }
 
+/*
+* PEM encode a PKCS #8 private key
+*/
+std::string PEM_encode(const Private_Key& key)
+   {
+   return PEM_Code::encode(PKCS8::BER_encode(key),
+                           "PRIVATE KEY");
+   }
+
+/*
+* DER or PEM encode a PKCS #8 private key
+*/
+void encode(const Private_Key& key, Pipe& pipe, X509_Encoding encoding)
+   {
    if(encoding == PEM)
-      pipe.write(PEM_Code::encode(contents, "PRIVATE KEY"));
+      pipe.write(PKCS8::PEM_encode(key));
    else
-      pipe.write(contents);
+      pipe.write(PKCS8::BER_encode(key));
    }
 
 /*
@@ -197,18 +211,6 @@ void encrypt_key(const Private_Key& key,
       pipe.write(PEM_Code::encode(enc_key, "ENCRYPTED PRIVATE KEY"));
    else
       pipe.write(enc_key);
-   }
-
-/*
-* PEM encode a PKCS #8 private key
-*/
-std::string PEM_encode(const Private_Key& key)
-   {
-   Pipe pem;
-   pem.start_msg();
-   encode(key, pem, PEM);
-   pem.end_msg();
-   return pem.read_all_as_string();
    }
 
 /*

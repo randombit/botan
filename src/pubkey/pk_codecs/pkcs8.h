@@ -1,6 +1,6 @@
 /*
 * PKCS #8
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -73,27 +73,7 @@ namespace PKCS8 {
 * @param pipe the pipe to feed the encoded key into
 * @param enc the encoding type to use
 */
-BOTAN_DLL void encode(const Private_Key& key, Pipe& pipe,
-                      X509_Encoding enc = PEM);
-
-/**
-* Encode and encrypt a private key into a pipe.
-* @param key the private key to encode
-* @param pipe the pipe to feed the encoded key into
-* @param pass the password to use for encryption
-* @param rng the rng to use
-* @param pbe_algo the name of the desired password-based encryption algorithm.
-* Provide an empty string to use the default PBE defined in the configuration
-* under base/default_pbe.
-* @param enc the encoding type to use
-*/
-BOTAN_DLL void encrypt_key(const Private_Key& key,
-                           Pipe& pipe,
-                           RandomNumberGenerator& rng,
-                           const std::string& pass,
-                           const std::string& pbe_algo = "",
-                           X509_Encoding enc = PEM);
-
+BOTAN_DLL SecureVector<byte> BER_encode(const Private_Key& key);
 
 /**
 * Get a string containing a PEM encoded private key.
@@ -116,6 +96,37 @@ BOTAN_DLL std::string PEM_encode(const Private_Key& key,
                                  RandomNumberGenerator& rng,
                                  const std::string& pass,
                                  const std::string& pbe_algo = "");
+
+/**
+* Encode a private key into a pipe. This function is deprecated;
+* use PEM_encode or BER_encode.
+*
+* @param key the private key to encode
+* @param pipe the pipe to feed the encoded key into
+* @param enc the encoding type to use
+*/
+BOTAN_DLL void encode(const Private_Key& key, Pipe& pipe,
+                      X509_Encoding enc = PEM);
+
+/**
+* Encode and encrypt a private key into a pipe. This function is
+* deprecated, use PEM_encode or BER_encode.
+*
+* @param key the private key to encode
+* @param pipe the pipe to feed the encoded key into
+* @param pass the password to use for encryption
+* @param rng the rng to use
+* @param pbe_algo the name of the desired password-based encryption algorithm.
+* Provide an empty string to use the default PBE defined in the configuration
+* under base/default_pbe.
+* @param enc the encoding type to use
+*/
+BOTAN_DLL void encrypt_key(const Private_Key& key,
+                           Pipe& pipe,
+                           RandomNumberGenerator& rng,
+                           const std::string& pass,
+                           const std::string& pbe_algo = "",
+                           X509_Encoding enc = PEM);
 
 /**
 * Load a key from a data source.
