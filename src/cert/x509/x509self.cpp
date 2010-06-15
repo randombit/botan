@@ -18,22 +18,6 @@ namespace Botan {
 namespace {
 
 /*
-* Shared setup for self-signed items
-*/
-MemoryVector<byte> shared_setup(const X509_Cert_Options& opts,
-                                const Private_Key& key)
-   {
-   opts.sanity_check();
-
-   Pipe key_encoder;
-   key_encoder.start_msg();
-   X509::encode(key, key_encoder, RAW_BER);
-   key_encoder.end_msg();
-
-   return key_encoder.read_all();
-   }
-
-/*
 * Load information from the X509_Cert_Options
 */
 void load_info(const X509_Cert_Options& opts, X509_DN& subject_dn,
@@ -67,7 +51,9 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    X509_DN subject_dn;
    AlternativeName subject_alt;
 
-   MemoryVector<byte> pub_key = shared_setup(opts, key);
+   opts.sanity_check();
+
+   MemoryVector<byte> pub_key = X509::BER_encode(key);
    std::auto_ptr<PK_Signer> signer(choose_sig_format(key, hash_fn, sig_algo));
    load_info(opts, subject_dn, subject_alt);
 
@@ -111,7 +97,9 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
    X509_DN subject_dn;
    AlternativeName subject_alt;
 
-   MemoryVector<byte> pub_key = shared_setup(opts, key);
+   opts.sanity_check();
+
+   MemoryVector<byte> pub_key = X509::BER_encode(key);
    std::auto_ptr<PK_Signer> signer(choose_sig_format(key, hash_fn, sig_algo));
    load_info(opts, subject_dn, subject_alt);
 
