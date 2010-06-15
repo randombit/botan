@@ -1,6 +1,6 @@
 /*
 * X.509 Public Key
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -16,18 +16,16 @@
 namespace Botan {
 
 /**
-* This namespace contains functions for handling X509 objects.
+* This namespace contains functions for handling X.509 public keys
 */
 namespace X509 {
 
 /**
-* Encode a key into a pipe.
+* BER encode a key
 * @param key the public key to encode
-* @param pipe the pipe to feed the encoded key into
-* @param enc the encoding type to use
+* @return the BER encoding of this key
 */
-BOTAN_DLL void encode(const Public_Key& key, Pipe& pipe,
-                      X509_Encoding enc = PEM);
+BOTAN_DLL MemoryVector<byte> BER_encode(const Public_Key& key);
 
 /**
 * PEM encode a public key into a string.
@@ -44,11 +42,11 @@ BOTAN_DLL std::string PEM_encode(const Public_Key& key);
 BOTAN_DLL Public_Key* load_key(DataSource& source);
 
 /**
-* Create a public key from a string.
-* @param enc the string containing the PEM encoded key
+* Create a public key from a file
+* @param file pathname to the file to load
 * @return the new public key object
 */
-BOTAN_DLL Public_Key* load_key(const std::string& enc);
+BOTAN_DLL Public_Key* load_key(const std::string& filename);
 
 /**
 * Create a public key from a memory region.
@@ -73,9 +71,24 @@ BOTAN_DLL Public_Key* copy_key(const Public_Key& key);
 * @return the combination of key type specific constraints and
 * additional limits
 */
-
 BOTAN_DLL Key_Constraints find_constraints(const Public_Key& pub_key,
                                            Key_Constraints limits);
+
+/**
+* Encode a key into a pipe. This function is deprecated.
+* @param key the public key to encode
+* @param pipe the pipe to feed the encoded key into
+* @param encoding the encoding type to use
+*/
+inline void encode(const Public_Key& key,
+                      Pipe& pipe,
+                      X509_Encoding encoding = PEM)
+   {
+   if(encoding == PEM)
+      pipe.write(X509::PEM_encode(key));
+   else
+      pipe.write(X509::BER_encode(key));
+   }
 
 }
 
