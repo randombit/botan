@@ -76,25 +76,23 @@ online at \url{http://www.cacr.math.uwaterloo.ca/hac/})
 \subsection{Targets}
 
 Botan's primary targets (system-wise) are 32 and 64-bit CPUs, with a
-flat memory address space of at least 32 bits. Generally, given the
-choice between optimizing for 32-bit systems and 64-bit systems, Botan
-is written to prefer 64-bit, simply on the theory that where
-performance is a real concern, modern 64-bit processors are the
-obvious choice.
+flat memory address space of at least 32 bits. Given the choice
+between optimizing for 32-bit systems and 64-bit systems, Botan is
+written to prefer 64-bit, on the theory that where performance is a
+real concern, modern 64-bit processors are the obvious choice.
 
 Smaller handhelds, set-top boxes, and the bigger smart phones and smart
-cards, are also capable of using Botan. However, Botan uses a fairly
+cards, are also capable of using Botan. However, Botan uses a
 large amount of code space (up to several megabytes, depending upon
 the compiler and options used), which could be prohibitive in some
-systems. Usage of RAM is fairly modest, usually under 64K.
+systems. Usage of RAM is modest, usually under 64K.
 
 Botan's design makes it quite easy to remove unused algorithms in such
 a way that applications do not need to be recompiled to work, even
-applications that use the algorithms in question. They can simply ask
-Botan if the algorithm exists, and if Botan says yes, ask the library
-to give them such an object for that algorithm.
+applications that use the algorithms in question. They can ask Botan
+if the algorithm exists, and if Botan says yes, ask the library to
+give them such an object for that algorithm.
 
-\pagebreak
 \section{Getting Started}
 
 \subsection{Basic Conventions}
@@ -338,7 +336,7 @@ Here's an example using two computational filters:
 
 \subsection{Fork}
 
-It is fairly common that you might receive some data and want to
+It is common that you might receive some data and want to
 perform more than one operation on it (\ie, encrypt it with Serpent
 and calculate the SHA-256 hash of the plaintext at the same
 time). That's where \type{Fork} comes in. \type{Fork} is a filter that
@@ -482,12 +480,11 @@ use; that is, either before calling \function{start\_msg}, or after
 \function{end\_msg} has been called (and no new calls to \function{start\_msg}
 have been made yet).
 
-The function \function{reset}() simply removes all the \type{Filter}s
-that the \type{Pipe} is currently using~--~it is reset to an
-initialize, ``empty'' state.  Any data that is being retained by the
-\type{Pipe} is retained after a \function{reset}(), and
-\function{reset}() does not affect the message numbers (discussed
-later).
+The function \function{reset}() removes all the \type{Filter}s that
+the \type{Pipe} is currently using~--~it is reset to an initialize,
+``empty'' state.  Any data that is being retained by the \type{Pipe}
+is retained after a \function{reset}(), and \function{reset}() does
+not affect the message numbers (discussed later).
 
 Calling \function{prepend} and \function{append} will either prepend
 or append the passed \type{Filter} object to the list of
@@ -619,7 +616,7 @@ are documented elsewhere.
 \subsubsection{Keyed Filters}
 
 A few sections ago, it was mentioned that \type{Pipe} can process multiple
-messages, treating each of them exactly the same. Well, that was a bit of a
+messages, treating each of them the same. Well, that was a bit of a
 lie. There are some algorithms (in particular, block ciphers not in ECB mode,
 and all stream ciphers) that change their state as data is put through them.
 
@@ -682,10 +679,10 @@ And remember: if you're resetting both values, reset the key \emph{first}.
 \subsubsection{Cipher Filters}
 
 Getting a hold of a \type{Filter} implementing a cipher is very
-easy. Simply make sure you're including the header
-\filename{lookup.h}, and call \function{get\_cipher}. Generally you
-will pass the return value directly into a \type{Pipe}. There are a
-couple different functions which do varying levels of initialization:
+easy. Make sure you're including the header \filename{lookup.h}, and
+then call \function{get\_cipher}. You will pass the return value
+directly into a \type{Pipe}. There are a couple different functions
+which do varying levels of initialization:
 
 \function{get\_cipher}(\type{std::string} \arg{cipher\_spec},
                        \type{SymmetricKey} \arg{key},
@@ -767,7 +764,7 @@ Examples of names for \function{Hash\_Filter} are ``SHA-1'' and ``Whirlpool''.
                        \type{u32bit} \arg{outlength}):
 
 The constructor for a \type{MAC\_Filter} takes a key, used in calculating the
-MAC, and a length parameter, which has semantics exactly the same as the one
+MAC, and a length parameter, which has semantics the same as the one
 passed to \type{Hash\_Filter}s constructor.
 
 Examples for \arg{mac} are ``HMAC(SHA-1)'', ``CMAC(AES-128)'', and the
@@ -813,7 +810,7 @@ base64 formats. Not surprisingly, you can use \type{Hex\_Decoder} and
 \type{Base64\_Decoder} to convert it back into its original form.
 
 Both of the encoders can take a few options about how the data should be
-formatted (all of which have defaults). The first is a \type{bool} which simply
+formatted (all of which have defaults). The first is a \type{bool} which
 says if the encoder should insert line breaks. This defaults to
 false. Line breaks don't matter either way to the decoder, but it makes the
 output a bit more appealing to the human eye, and a few transport mechanisms
@@ -821,7 +818,7 @@ output a bit more appealing to the human eye, and a few transport mechanisms
 
 The second encoder option is an integer specifying how long such lines will be
 (obviously this will be ignored if line-breaking isn't being used). The default
-tends to be in the range of 60-80 characters, but is not specified exactly. If
+tends to be in the range of 60-80 characters, but is not specified. If
 you want a specific value, set it. Otherwise the default should be fine.
 
 Lastly, \type{Hex\_Encoder} takes an argument of type \type{Case}, which can be
@@ -830,15 +827,17 @@ specifies what case the characters A-F should be output as. The base64 encoder
 has no such option, because it uses both upper and lower case letters for its
 output.
 
-The decoders both take a single option, which tells it how the object should
-behave in the case of invalid input. The enum (called \type{Decoder\_Checking})
-can take on any of three values: \type{NONE}, \type{IGNORE\_WS}, and
-\type{FULL\_CHECK}. With \type{NONE} (the default, for compatibility with
-previous releases), invalid input (for example, a ``z'' character in supposedly
-hex input) will simply be ignored. With \type{IGNORE\_WS}, whitespace will be
-ignored by the decoder, but receiving other non-valid data will raise an
-exception. Finally, \type{FULL\_CHECK} will raise an exception for \emph{any}
-characters not in the encoded character set, including whitespace.
+The decoders both take a single option, which tells it how the object
+should behave in the case of invalid input. The enum (called
+\type{Decoder\_Checking}) can take on any of three values:
+\type{NONE}, \type{IGNORE\_WS}, and \type{FULL\_CHECK}. With
+\type{NONE} (the default, for compatibility with previous releases),
+invalid input (for example, a ``z'' character in supposedly hex input)
+will be ignored. With \type{IGNORE\_WS}, whitespace will be ignored by
+the decoder, but receiving other non-valid data will raise an
+exception. Finally, \type{FULL\_CHECK} will raise an exception for
+\emph{any} characters not in the encoded character set, including
+whitespace.
 
 You can find the declarations for these types in \filename{hex.h} and
 \filename{base64.h}.
@@ -889,7 +888,6 @@ Additionally, if necessary, filters can define a constructor that
 takes any needed arguments, and a destructor to deal with deallocating
 memory, closing files, etc.
 
-\pagebreak
 \section{Public Key Cryptography}
 
 Let's create a 1024-bit RSA private key, encode the public key as a
@@ -985,7 +983,7 @@ prime. It does not have anything to do with the validity of the key for any
 particular use, nor does it have anything to do with certificates that link a
 key (which, after all, is just some numbers) with a user or other entity. If
 \function{check\_key}'s argument is \type{true}, then it does ``strong''
-checking, which includes fairly expensive operations like primality checking.
+checking, which includes expensive operations like primality checking.
 
 Keys are always checked when they are loaded or generated, so typically there
 is no reason to use this function directly. However, you can disable or reduce
@@ -996,13 +994,13 @@ configuration subsystem for details).
 \subsection{Getting a PK algorithm object}
 
 The key types, like \type{RSA\_PrivateKey}, do not implement any kind
-of padding or encoding (which is generally necessary for security). To
-get an object like this, the easiest thing to do is call the functions
-found in \filename{look\_pk.h}. Generally these take a key, followed
-by a string that specified what hashing and encoding method(s) to
-use. Examples of such strings are ``EME1(SHA-256)'' for OAEP
-encryption and ``EMSA4(SHA-256)'' for PSS signatures (where the
-message is hashed using SHA-256).
+of padding or encoding (which is necessary for security). To get an
+object that knows how to do padding, use the wrapper classes included
+in \filename{pubkey.h}. These take a key, along with a string that
+specifies what hashing and encoding method(s) to use. Examples of such
+strings are ``EME1(SHA-256)'' for OAEP encryption and
+``EMSA4(SHA-256)'' for PSS signatures (where the message is hashed
+using SHA-256).
 
 Here are some basic examples (using an RSA key) to give you a feel for
 the possibilities. These examples assume \type{rsakey} is an
@@ -1126,13 +1124,14 @@ strings like ``SHA-256'' or ``RIPEMD-160''), or
 takes the name or OID of the key wrap algorithm that will be used to
 encrypt a content encryption key.
 
-How key agreement generally works is that you trade public values with some
-other party, and then each of you runs a computation with the other's value and
-your key (this should return the same result to both parties). This computation
-can be called by using \function{derive\_key} with either a byte array/length
-pair, or a \type{SecureVector<byte>} than holds the public value of the other
-party. The last argument to either call is a number that specifies how long a
-key you want.
+How key agreement works is that you trade public values with some
+other party, and then each of you runs a computation with the other's
+value and your key (this should return the same result to both
+parties). This computation can be called by using
+\function{derive\_key} with either a byte array/length pair, or a
+\type{SecureVector<byte>} than holds the public value of the other
+party. The last argument to either call is a number that specifies how
+long a key you want.
 
 Depending on the KDF you're using, you \emph{might not} get back a key
 of the size you requested. In particular ``Raw'' will return a number
@@ -1338,7 +1337,6 @@ assign them an OID by putting a line in a Botan configuration file, calling
 it is possible that a future version will use a format that is different from
 the current one (\ie, a newly standardized format).
 
-\pagebreak
 \section{Certificate Handling}
 
 A certificate is a binding between some identifying information
@@ -1359,7 +1357,7 @@ reading them in, verifying the signatures, and getting the bits of
 data in them (most commonly the public key, and the information about
 the user of that key). An X.509v3 certificate can contain a literally
 infinite number of items related to all kinds of things. Botan doesn't
-support a lot of them, simply because nobody uses them and they're an
+support a lot of them, because nobody uses them and they're an
 impossible mess to work with. This section only documents the most
 commonly used ones of the ones that are supported; for the rest, read
 \filename{x509cert.h} and \filename{asn1\_obj.h} (which has the
@@ -1385,12 +1383,12 @@ assigned. Here is where things get a little nasty. X.509v3 has two
 information about the user: the \emph{subject} field, and in an
 extension called \emph{subjectAlternativeName}. The \emph{subject}
 field is supposed to only included the following information: country,
-organization (possibly), an organizational sub-unit name (possibly),
-and a so-called common name. The common name is usually the name of
-the person, or it could be a title associated with a position of some
-sort in the organization. It may also include fields for
-state/province and locality. What exactly a locality is, nobody knows,
-but it's usually given as a city name.
+organization, an organizational sub-unit name, and a so-called common
+name. The common name is usually the name of the person, or it could
+be a title associated with a position of some sort in the
+organization. It may also include fields for state/province and
+locality. What a locality is, nobody knows, but it's usually given as
+a city name.
 
 Botan doesn't currently support any of the Unicode variants used in
 ASN.1 (UTF-8, UCS-2, and UCS-4), any of which could be used for the
@@ -1413,13 +1411,14 @@ of information that this extension might hold: an email address
 (``person@site1.com''), a DNS name (``somehost.site2.com''), or a URI
 (``http://www.site3.com'').
 
-So, how to get the information? Simply call \function{subject\_info} with the
+So, how to get the information? Call \function{subject\_info} with the
 name of the piece of information you want, and it will return a
-\type{std::string} that is either empty (signifying that the certificate
-doesn't have this information), or has the information requested. There are
-several names for each possible item, but the most easily readable ones are:
-``Name'', ``Country'', ``Organization'', ``Organizational Unit'', ``Locality'',
-``State'', ``RFC822'', ``URI'', and ``DNS''. These values are returned as a
+\type{std::string} that is either empty (signifying that the
+certificate doesn't have this information), or has the information
+requested. There are several names for each possible item, but the
+most easily readable ones are: ``Name'', ``Country'',
+``Organization'', ``Organizational Unit'', ``Locality'', ``State'',
+``RFC822'', ``URI'', and ``DNS''. These values are returned as a
 \type{std::string}.
 
 You can also get information about the issuer of the certificate in the same
@@ -1471,7 +1470,7 @@ CA will release a new CRL, listing all certificates that have been
 revoked. Also included is various pieces of information like what time
 a particular certificate was revoked, and for what reason. In most
 systems, it is wise to support some form of certificate revocation,
-and CRLs handle this fairly easily.
+and CRLs handle this easily.
 
 For most users, processing a CRL is quite easy. All you have to do is call the
 constructor, which will take a filename (or a \type{DataSource\&}). The CRLs
@@ -1585,18 +1584,18 @@ effective than the name, since email addresses are rarely shared.
 
 \subsubsection{Certificate Stores}
 
-An object of type \type{Certificate\_Store} is a generalized interface to an
-external source for certificates (and CRLs). Examples of such a store would be
-one that looked up the certificates in a SQL database, or by contacting a CGI
-script running on a HTTP server. There are currently three mechanisms for
-looking up a certificate, and one for retrieving CRLs. By default, most of
-these mechanisms will simply return an empty \type{std::vector} of
-\type{X509\_Certificate}. This storage mechanism is \emph{only} queried when
-doing certificate validation: it allows you to distribute only the root key
-with an application, and let some online method handle getting all the other
-certificates that are needed to validate an end entity certificate. In
-particular, the search routines will not attempt to access the external
-database.
+An object of type \type{Certificate\_Store} is a generalized interface
+to an external source for certificates (and CRLs). Examples of such a
+store would be one that looked up the certificates in a SQL database,
+or by contacting a CGI script running on a HTTP server. There are
+currently three mechanisms for looking up a certificate, and one for
+retrieving CRLs. By default, most of these mechanisms will return an
+empty \type{std::vector} of \type{X509\_Certificate}. This storage
+mechanism is \emph{only} queried when doing certificate validation: it
+allows you to distribute only the root key with an application, and
+let some online method handle getting all the other certificates that
+are needed to validate an end entity certificate. In particular, the
+search routines will not attempt to access the external database.
 
 The three certificate lookup methods are \function{by\_SKID} (Subject Key
 Identifier), \function{by\_name} (the CommonName DN entry), and
@@ -1608,13 +1607,14 @@ implement \function{by\_name} or \function{by\_email}, but \function{by\_SKID}
 is mandatory to implement, and, currently, is the only version that is used by
 \type{X509\_Store}.
 
-Finally, there is a method for finding CRLs, called \function{get\_crls\_for},
-that takes an \type{X509\_Certificate} object, and returns a
-\type{std::vector} of \type{X509\_CRL}. While generally there will be only one
-CRL, the use of the vector makes it easy to return no CRLs (\eg, if the
-certificate store doesn't support retrieving them), or return multiple ones
-(for example, if the certificate store can't determine precisely which key was
-used to sign the certificate). Implementing the function is optional, and by
+Finally, there is a method for finding CRLs, called
+\function{get\_crls\_for}, that takes an \type{X509\_Certificate}
+object, and returns a \type{std::vector} of \type{X509\_CRL}. While
+normally there will be only one CRL, the use of the vector makes it
+easy to return no CRLs (\eg, if the certificate store doesn't support
+retrieving them), or return multiple ones (for example, if the
+certificate store can't determine precisely which key was used to sign
+the certificate). Implementing the function is optional, and by
 default will return no CRLs. If it is available, it will be used by
 \type{X509\_CRL}.
 
@@ -1635,13 +1635,13 @@ certificate:
 \function{validate\_cert}(\type{const X509\_Certificate\&} \arg{cert},
                           \type{Cert\_Usage} \arg{usage} = \type{ANY})
 
-To sum things up simply, it returns \type{VERIFIED} if the certificate
-can safely be considered valid for the usage(s) described by
-\arg{usage}, and an error code if it is not. Naturally, things are a
-bit more complicated than that. The enum \type{Cert\_Usage} is defined
-inside the \type{X509\_Store} class, it (currently) can take on any of
-the values \type{ANY} (any usage is OK), \type{TLS\_SERVER} (for
-SSL/TLS server authentication), \type{TLS\_CLIENT} (for SSL/TLS client
+This function will return \type{VERIFIED} if the certificate can
+safely be considered valid for the usage(s) described by \arg{usage},
+and an error code if it is not. Naturally, things are a bit more
+complicated than that. The enum \type{Cert\_Usage} is defined inside
+the \type{X509\_Store} class, it (currently) can take on any of the
+values \type{ANY} (any usage is OK), \type{TLS\_SERVER} (for SSL/TLS
+server authentication), \type{TLS\_CLIENT} (for SSL/TLS client
 authentication), \type{CODE\_SIGNING}, \type{EMAIL\_PROTECTION} (email
 encryption, usually this means S/MIME), \type{TIME\_STAMPING} (in
 theory any time stamp application, usually IETF PKIX's Time Stamp
@@ -1666,14 +1666,15 @@ validation algorithm given in RFC 2459, but in practice it does not
 (yet), because we don't support the X.509v3 policy or name constraint
 extensions.
 
-Possible values for \arg{usage} are \type{TLS\_SERVER}, \type{TLS\_CLIENT},
-\type{CODE\_SIGNING}, \type{EMAIL\_PROTECTION}, \type{CRL\_SIGNING}, and
-\type{TIME\_STAMPING}, and \type{ANY}. The default \type{ANY} does not mean
-valid for any use, it means ``is valid for some usage''. This is generally
-fine, and in fact requiring that a random certificate support a particular
-usage will likely result in a lot of failures, unless your application is very
-careful to always issue certificates with the proper extensions, and you never
-use certificates generated by other apps.
+Possible values for \arg{usage} are \type{TLS\_SERVER},
+\type{TLS\_CLIENT}, \type{CODE\_SIGNING}, \type{EMAIL\_PROTECTION},
+\type{CRL\_SIGNING}, and \type{TIME\_STAMPING}, and \type{ANY}. The
+default \type{ANY} does not mean valid for any use, it means ``is
+valid for some usage''. This is usually what you want; requiring that
+a random certificate support a particular usage will likely result in
+a lot of failures, unless your application is very careful to always
+issue certificates with the proper extensions, and you never use
+certificates generated by other apps.
 
 Return values for \function{validate\_cert} (and \function{add\_crl}) include:
 
@@ -1729,12 +1730,13 @@ constructor:
 The private key is the private key corresponding to the public key in the
 CA's certificate.
 
-Generally, requests for new certificates are supplied to a CA in the form on
-PKCS \#10 certificate requests (called a \type{PKCS10\_Request} object in
+Requests for new certificates are supplied to a CA in the form on PKCS
+\#10 certificate requests (called a \type{PKCS10\_Request} object in
 Botan). These are decoded in a similar manner to
-certificates/CRLs/etc. Generally, a request is vetted by humans (who somehow
-verify that the name in the request corresponds to the name of the person who
-requested it), and then signed by a CA key, generating a new certificate.
+certificates/CRLs/etc. A request is vetted by humans (who somehow
+verify that the name in the request corresponds to the name of the
+entity who requested it), and then signed by a CA key, generating a
+new certificate.
 
 \begin{verbatim}
    X509_Certificate sign_request(const PKCS10_Request&) const;
@@ -1786,9 +1788,9 @@ case.
 
 \subsubsection{Self-Signed Certificates}
 
-Generating a new self-signed certificate can often be useful, for example when
-setting up a new root CA, or for use in email applications. In this case,
-the solution is summed up simply as:
+Generating a new self-signed certificate can often be useful, for
+example when setting up a new root CA, or for use in email
+applications. The library provides a utility function for this:
 
 \begin{verbatim}
 namespace X509 {
@@ -1860,17 +1862,19 @@ to use is to create (or request) a CA certificate, which can be done by calling
 the member function \function{CA\_key}. This should only be used when needed.
 
 Other constraints can be set by calling the member functions
-\function{add\_constraints} and \function{add\_ex\_constraints}. The first
-takes a \type{Key\_Constraints} value, and replaces any previously set
-value. If no value is set, then the certificate key is marked as being valid
-for any usage.  You can set it to any of the following (for more than one
-usage, OR them together): \type{DIGITAL\_SIGNATURE}, \type{NON\_REPUDIATION},
-\type{KEY\_ENCIPHERMENT}, \type{DATA\_ENCIPHERMENT}, \type{KEY\_AGREEMENT},
-\type{KEY\_CERT\_SIGN}, \type{CRL\_SIGN}, \type{ENCIPHER\_ONLY},
-\type{DECIPHER\_ONLY}. Many of these have quite special semantics, so you
-should either consult the appropriate standards document (such as RFC 3280), or
-simply not call \function{add\_constraints}, in which case the appropriate
-values will be chosen for you.
+\function{add\_constraints} and \function{add\_ex\_constraints}. The
+first takes a \type{Key\_Constraints} value, and replaces any
+previously set value. If no value is set, then the certificate key is
+marked as being valid for any usage.  You can set it to any of the
+following (for more than one usage, OR them together):
+\type{DIGITAL\_SIGNATURE}, \type{NON\_REPUDIATION},
+\type{KEY\_ENCIPHERMENT}, \type{DATA\_ENCIPHERMENT},
+\type{KEY\_AGREEMENT}, \type{KEY\_CERT\_SIGN}, \type{CRL\_SIGN},
+\type{ENCIPHER\_ONLY}, \type{DECIPHER\_ONLY}. Many of these have quite
+special semantics, so you should either consult the appropriate
+standards document (such as RFC 3280), or just not call
+\function{add\_constraints}, in which case the appropriate values will
+be chosen for you.
 
 The second function, \function{add\_ex\_constraints}, allows you to specify an
 OID that has some meaning with regards to restricting the key to particular
@@ -1884,7 +1888,6 @@ for use with S/MIME), ``PKIX.IPsecUser'', ``PKIX.IPsecTunnel'',
 \function{add\_ex\_constraints} any number of times~--~each new OID will be
 added to the list to include in the certificate.
 
-\pagebreak
 \section{The Low-Level Interface}
 
 Botan has two different interfaces. The one documented in this section is meant
@@ -1912,8 +1915,8 @@ algorithm objects using the functions in \filename{lookup.h}.
 
 Clear out the algorithm's internal state. A block cipher object will
 ``forget'' its key, a hash function will ``forget'' any data put into
-it, etc. The object will look and behave exactly as it did when you
-initially allocated it.
+it, etc. The object will look and behave as it did when you initially
+allocated it.
 
 \noindent
 \function{clone}():
@@ -1930,9 +1933,10 @@ operator.
 
 \subsection{Keys and IVs}
 
-Both symmetric keys and initialization values can simply be considered byte (or
-octet) strings. These are represented by the classes \type{SymmetricKey} and
-\type{InitializationVector}, which are subclasses of \type{OctetString}.
+Both symmetric keys and initialization values can be considered byte
+(or octet) strings. These are represented by the classes
+\type{SymmetricKey} and \type{InitializationVector}, which are
+subclasses of \type{OctetString}.
 
 Since often it's hard to distinguish between a key and IV, many things (such as
 key derivation mechanisms) return \type{OctetString} instead of
@@ -1953,16 +1957,16 @@ and stored. Whitespace is ignored.
 \function{OctetString}(\type{const byte} \arg{input}[], \type{u32bit}
 \arg{length}):
 
-This constructor simply copies its input.
+This constructor copies its input.
 
 \subsection{Symmetrically Keyed Algorithms}
 
 Block ciphers, stream ciphers, and MACs are all keyed operations; to
-be useful, they have to be set to use a particular key, which is
-simply a randomly chosen string of bits of a specified length.  The
-length required by any particular algorithm may vary, depending on
-both the algorithm specification and the implementation. You can query
-any botan object to find out what key length(s) it supports.
+be useful, they have to be set to use a particular key, which is a
+randomly chosen string of bits of a specified length.  The length
+required by any particular algorithm may vary, depending on both the
+algorithm specification and the implementation. You can query any
+botan object to find out what key length(s) it supports.
 
 To make this similarity in terms of keying explicit, all algorithms of
 those types are derived from the \type{SymmetricAlgorithm} base
@@ -1983,9 +1987,9 @@ Most algorithms only accept keys of certain lengths. If you attempt to call
 This function returns true if a key of the given length will be accepted by
 the cipher.
 
-There are also three constant data members of every \type{SymmetricAlgorithm}
-object, which specify exactly what limits there are on keys which that object
-can accept:
+There are also three constant data members of every
+\type{SymmetricAlgorithm} object, which specify what limits there are
+on keys which that object can accept:
 
 MAXIMUM\_KEYLENGTH: The maximum length of a key. Usually, this is at
 most 32 (256 bits), even if the algorithm supports more. In a few rare
@@ -2100,24 +2104,25 @@ Both versions return the final value, rather than placing it an
 array. Calling \function{process} with a single byte value isn't
 available, mostly because it would rarely be useful.
 
-A MAC can be viewed (in most cases) as simply a keyed hash function, so classes
-that are derived from \type{MessageAuthenticationCode} have \function{update}
-and \function{final} classes just like a \type{HashFunction} (and like a
-\type{HashFunction}, after \function{final} is called, it can be used to make a
-new MAC right away; the key is kept around).
+A MAC can be viewed (in most cases) as a keyed hash function, so
+classes that are derived from \type{MessageAuthenticationCode} have
+\function{update} and \function{final} classes just like a
+\type{HashFunction} (and like a \type{HashFunction}, after
+\function{final} is called, it can be used to make a new MAC right
+away; the key is kept around).
 
 A MAC has the \type{SymmetricAlgorithm} interface in addition to the
 \type{BufferedComputation} interface.
 
-\pagebreak
 \section{Random Number Generators}
 
-The random number generators provided in Botan are meant for creating keys,
-IVs, padding, nonces, and anything else that requires 'random' data. It is
-important to remember that the output of these classes will vary, even if they
-are supplied with exactly the same seed (\ie, two \type{Randpool} objects with
-similar initial states will not produce the same output, because the value of
-high resolution timers is added to the state at various points).
+The random number generators provided in Botan are meant for creating
+keys, IVs, padding, nonces, and anything else that requires 'random'
+data. It is important to remember that the output of these classes
+will vary, even if they are supplied with ethe same seed (\ie, two
+\type{Randpool} objects with similar initial states will not produce
+the same output, because the value of high resolution timers is added
+to the state at various points).
 
 To ensure good quality output, a PRNG needs to be seeded with truly random data
 (such as that produced by a hardware RNG). Typically, you will use an
@@ -2185,10 +2190,10 @@ been checked against official X9.31 test vectors.
 Internally, the PRNG holds a pointer to another PRNG (typically
 Randpool). This internal PRNG generates the key and seed used by the
 X9.31 algorithm, as well as the date/time vectors. Each time an X9.31
-PRNG object receives entropy, it simply passes it along to the PRNG it
-is holding, and then pulls out some random bits to generate a new key
-and seed. This PRNG considers itself seeded as soon as the internal
-PRNG is seeded.
+PRNG object receives entropy, it passes it along to the PRNG it is
+holding, and then pulls out some random bits to generate a new key and
+seed. This PRNG considers itself seeded as soon as the internal PRNG
+is seeded.
 
 As of version 1.4.7, the X9.31 PRNG is by default used for all random number
 generation.
@@ -2213,9 +2218,8 @@ Note for writers of \type{EntropySource}s: it isn't necessary to use any kind
 of cryptographic hash on your output. The data produced by an EntropySource is
 only used by an application after it has been hashed by the
 \type{RandomNumberGenerator} that asked for the entropy, thus any hashing
-you do will be wasteful of both CPU cycles and possibly entropy.
+you do will be wasteful of both CPU cycles and entropy.
 
-\pagebreak
 \section{User Interfaces}
 
 Botan has recently changed some infrastructure to better accommodate
@@ -2274,7 +2278,6 @@ application. If you write a \type{UI} object for another windowing system
 in general (ideally under a permissive license such as public domain or
 MIT/BSD), feel free to send in a copy.
 
-\pagebreak
 \section{Botan's Modules}
 
 Botan comes with a variety of modules that can be compiled into the system.
@@ -2284,10 +2287,10 @@ defined.
 
 \subsection{Pipe I/O for Unix File Descriptors}
 
-This is a fairly minor feature, but it comes in handy sometimes. In all
+This is a minor feature, but it comes in handy sometimes. In all
 installations of the library, Botan's \type{Pipe} object overloads the
-\keyword{<<} and \keyword{>>} operators for C++ iostream objects, which is
-usually more than sufficient for doing I/O.
+\keyword{<<} and \keyword{>>} operators for C++ iostream objects,
+which is usually more than sufficient for doing I/O.
 
 However, there are cases where the iostream hierarchy does not map well to
 local 'file types', so there is also the ability to do I/O directly with Unix
@@ -2301,13 +2304,13 @@ check out the \filename{hash\_fd} example, included in the Botan distribution.
 
 \subsection{Entropy Sources}
 
-All of these are used by the \function{Global\_RNG::seed} function if they are
-available. Since this function is called by the \type{LibraryInitializer} class
-when it is created, it is fairly rare that you will need to deal with any of
-these classes directly. Even in the case of a long-running server that needs to
-renew its entropy poll, it is easier to simply call
-\function{Global\_RNG::seed} (see the section entitled ``The Global PRNG'' for
-more details).
+All of these are used by the \function{Global\_RNG::seed} function if
+they are available. Since this function is called by the
+\type{LibraryInitializer} class when it is created, it is rare
+that you will need to deal with any of these classes directly. Even in
+the case of a long-running server that needs to renew its entropy
+poll, it is easier to call \function{Global\_RNG::seed} (see the
+section entitled ``The Global PRNG'' for more details).
 
 \noindent
 \type{EGD\_EntropySource}: Query an EGD socket. If the macro
@@ -2336,14 +2339,14 @@ of bits are read in order to get that 16 bits). It is declared in
 use this as a last resort. I don't really trust it, and neither should you.
 
 \noindent
-\type{Win32\_CAPI\_EntropySource}: This routines gathers entropy from a Win32
-CAPI module. It takes an optional \type{std::string} that will specify what
-type of CAPI provider to use. Generally the CAPI RNG is always the same
-software-based PRNG, but there are a few that may use a hardware RNG. By
-default it will use the first provider listed in the option
-``rng/ms\_capi\_prov\_type'' that is available on the machine (currently the
-providers ``RSA\_FULL'', ``INTEL\_SEC'', ``FORTEZZA'', and ``RNG'' are
-recognized).
+\type{Win32\_CAPI\_EntropySource}: This routines gathers entropy from
+a Win32 CAPI module. It takes an optional \type{std::string} that will
+specify what type of CAPI provider to use. The CAPI RNG is usually a
+default software-based PRNG, but there are a few providers that may
+use a hardware RNG. By default it will use the first provider listed
+in the option ``rng/ms\_capi\_prov\_type'' that is available on the
+machine (currently the providers ``RSA\_FULL'', ``INTEL\_SEC'',
+``FORTEZZA'', and ``RNG'' are recognized).
 
 \noindent
 \type{BeOS\_EntropySource}: Query system statistics using various BeOS-specific
@@ -2430,7 +2433,7 @@ RFC 1950.
 \subsubsection{Data Sources}
 
 A \type{DataSource} is a simple abstraction for a thing that stores bytes. This
-type is used fairly heavily in the areas of the API related to ASN.1
+type is used heavily in the areas of the API related to ASN.1
 encoding/decoding. The following types are \type{DataSource}s: \type{Pipe},
 \type{SecureQueue}, and a couple of special purpose ones:
 \type{DataSource\_Memory} and \type{DataSource\_Stream}.
@@ -2449,13 +2452,13 @@ up a file with that name and read from it.
 
 \subsubsection{Data Sinks}
 
-A \type{DataSink} (in \filename{data\_snk.h}) is a \type{Filter} that takes
-arbitrary amounts of input, and produces no output. Generally, this means it's
-doing something with the data outside the realm of what
-\type{Filter}/\type{Pipe} can handle, for example, writing it to a file (which
-is what the \type{DataSink\_Stream} does). There is no need for
-\type{DataSink}s that write to a \type{std::string} or memory buffer, because
-\type{Pipe} can handle that by itself.
+A \type{DataSink} (in \filename{data\_snk.h}) is a \type{Filter} that
+takes arbitrary amounts of input, and produces no output. This means
+it's doing something with the data outside the realm of what
+\type{Filter}/\type{Pipe} can handle, for example, writing it to a
+file (which is what the \type{DataSink\_Stream} does). There is no
+need for \type{DataSink}s that write to a \type{std::string} or memory
+buffer, because \type{Pipe} can handle that by itself.
 
 Here's a quick example of using a \type{DataSink}, which encrypts
 \filename{in.txt} and sends the output to \filename{out.txt}. There is
@@ -2472,7 +2475,6 @@ implicit.
 A real advantage of this is that even if ``in.txt'' is large, only as
 much memory is needed for internal I/O buffers will be used.
 
-\pagebreak
 \section{Miscellaneous}
 
 This section has documentation for anything that just didn't fit into any of
@@ -2482,7 +2484,7 @@ degree of applicability.
 
 \subsection{S2K Algorithms}
 
-There are various procedures (usually fairly ad-hoc) for turning a
+There are various procedures (usually ad-hoc) for turning a
 passphrase into a (mostly) arbitrary length key for a symmetric
 cipher. A general interface for such algorithms is presented in
 \filename{s2k.h}. The main function is \function{derive\_key}, which
@@ -2801,9 +2803,9 @@ primality test with fixed bases. For higher assurance, use
 \subsubsection{Efficiency Hints}
 
 If you can, always use expressions of the form \verb|a += b| over
-\verb|a = a + b|. The difference can be \emph{very} substantial, because the
-first form prevents at least one needless memory allocation, and possibly as
-many as three.
+\verb|a = a + b|. The difference can be \emph{very} substantial,
+because the first form prevents at least one needless memory
+allocation, and possibly as many as three.
 
 If you're doing repeated modular exponentiations with the same modulus, create
 a \type{BarrettReducer} ahead of time. If the exponent or base is a constant,
@@ -2818,7 +2820,6 @@ that only the library itself calls them, and that the library knows
 what the assumptions are. The interfaces for these functions can
 change completely without notice.
 
-\pagebreak
 \section{Algorithms}
 
 \subsection{Recommended Algorithms}
@@ -2857,13 +2858,13 @@ the algorithms listed here are (currently) thought to be safe.
 Botan includes a very sizable number of cryptographic algorithms. In
 nearly all cases, you never need to know the header file or type name
 to use them. However, you do need to know what string (or strings) are
-used to identify that algorithm. Generally, these names conform to
-those set out by SCAN (Standard Cryptographic Algorithm Naming), which
-is a document that specifies how strings are mapped onto algorithm
-objects, which is useful for a wide variety of crypto APIs (SCAN is
-oriented towards Java, but Botan and several other non-Java libraries
-also make at least some use of it). For full details, read the SCAN
-document, which can be found at
+used to identify that algorithm. These names conform to those set out
+by SCAN (Standard Cryptographic Algorithm Naming), which is a document
+that specifies how strings are mapped onto algorithm objects, which is
+useful for a wide variety of crypto APIs (SCAN is oriented towards
+Java, but Botan and several other non-Java libraries also make at
+least some use of it). For full details, read the SCAN document, which
+can be found at
 \url{http://www.users.zetnet.co.uk/hopwood/crypto/scan/}
 
 Many of these algorithms can take options (such as the number of
@@ -2883,8 +2884,6 @@ match that in SCAN, if it's defined there).
   \item ROUNDS: The number of rounds in a block cipher.
   \item
   \item OUTSZ: The output size of a hash function or MAC
-  \item PASS: The number of passes in a hash function (more passes generally
-               means more security).
 \end{list}
 
 \vskip .05in
@@ -2904,12 +2903,11 @@ match that in SCAN, if it's defined there).
 \textbf{Hash Functions:} ``HAS-160'', ``GOST-34.11'',
 ``MD2'', ``MD4'', ``MD5'', ``RIPEMD-128'', ``RIPEMD-160'',
 ``SHA-160'', ``SHA-256'', ``SHA-384'', ``SHA-512'', ``Skein-512'',
-``Tiger(OUTSZ,PASS)'', ``Whirlpool''
+``Tiger(OUTSZ)'', ``Whirlpool''
 
 \noindent
 \textbf{MACs:} ``HMAC(HASH)'', ``CMAC(BLOCK)'', ``X9.19-MAC''
 
-\pagebreak
 \section{Support and Further Information}
 
 \subsection{Patents}
