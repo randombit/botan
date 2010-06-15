@@ -19,7 +19,7 @@ class BOTAN_DLL Turing : public StreamCipher
    {
    public:
       void cipher(const byte in[], byte out[], u32bit length);
-      void set_iv(const byte[], u32bit);
+      void set_iv(const byte iv[], u32bit iv_length);
 
       bool valid_iv_length(u32bit iv_len) const
          { return (iv_len % 4 == 0 && iv_len <= 16); }

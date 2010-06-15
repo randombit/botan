@@ -16,7 +16,7 @@ namespace Botan {
 * Create a password hash using PBKDF2
 * @param password the password
 * @param rng a random number generator
-* @Param work_factor how much work to do to slow down guessing attacks
+* @param work_factor how much work to do to slow down guessing attacks
 */
 std::string BOTAN_DLL generate_passhash9(const std::string& password,
                                          RandomNumberGenerator& rng,

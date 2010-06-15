@@ -24,10 +24,10 @@ class BOTAN_DLL MessageAuthenticationCode : public BufferedComputation,
       /**
       * Verify a MAC.
       * @param in the MAC to verify as a byte array
-      * @param length the length of the byte array
+      * @param length the length of param in
       * @return true if the MAC is valid, false otherwise
       */
-      virtual bool verify_mac(const byte[], u32bit);
+      virtual bool verify_mac(const byte in[], u32bit length);
 
       /**
       * Get a new object representing the same algorithm as *this

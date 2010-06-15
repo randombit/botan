@@ -97,7 +97,8 @@ namespace DE_EAC {
 * shall be entitled to read the biometrical iris image
 * @param fingerpr indicates whether the entity associated with the certificate
 * shall be entitled to read the biometrical fingerprint image
-* @param rng the rng to use
+* @param cvca_validity_months length of time in months this will be valid
+* @param rng a random number generator
 * @result the CVCA certificate created
 */
 EAC1_1_CVC BOTAN_DLL create_cvca(Private_Key const& priv_key,
@@ -146,8 +147,10 @@ EAC1_1_Req BOTAN_DLL create_cvc_req(Private_Key const& priv_key,
 * @param seqnr the sequence number of the certificate to be created
 * @param seqnr_len the number of digits the sequence number will be
 * encoded in
-* @param domestic indicates whether to sign a domestic or a foreign certificate:
-* set to true for domestic
+* @param domestic indicates whether to sign a domestic or a foreign
+* certificate: set to true for domestic
+* @param dvca_validity_months validity period in months
+* @param ca_is_validity_months validity period in months
 * @param rng a random number generator
 * @result the new certificate
 *

@@ -40,7 +40,7 @@ class BOTAN_DLL Public_Key
       * of the test
       * @return true if the test is passed
       */
-      virtual bool check_key(RandomNumberGenerator&, bool) const
+      virtual bool check_key(RandomNumberGenerator& rng, bool strong) const
          { return true; }
 
       /**

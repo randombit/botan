@@ -97,7 +97,7 @@ class MemoryRegion
       /**
       * Copy the contents of another buffer into this buffer.
       * The former contents of *this are discarded.
-      * @param in the buffer to copy the contents from.
+      * @param other the buffer to copy the contents from.
       * @return a reference to *this
       */
       MemoryRegion<T>& operator=(const MemoryRegion<T>& other)
@@ -156,7 +156,7 @@ class MemoryRegion
 
       /**
       * Append data to the end of this buffer.
-      * @param data the buffer containing the data to append
+      * @param other the buffer containing the data to append
       */
       void append(const MemoryRegion<T>& other)
          { append(other.begin(), other.size()); }

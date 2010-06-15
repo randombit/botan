@@ -39,7 +39,7 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @param iv the initialization vector
       * @param iv_len the length of the IV in bytes
       */
-      virtual void set_iv(const byte[], u32bit iv_len)
+      virtual void set_iv(const byte iv[], u32bit iv_len)
          {
          if(iv_len)
             throw Invalid_Argument("The stream cipher " + name() +

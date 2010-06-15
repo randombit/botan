@@ -72,7 +72,8 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
 
       /**
       * Generate a new private key
-      * @param the domain parameters to used for this key
+      * @param rng a random number generator
+      * @param domain parameters to used for this key
       */
       ECDSA_PrivateKey(RandomNumberGenerator& rng,
                        const EC_Domain_Params& domain) :
@@ -83,7 +84,8 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       * @param domain parameters
       * @param x the private key
       */
-      ECDSA_PrivateKey(const EC_Domain_Params& domain, const BigInt& x) :
+      ECDSA_PrivateKey(const EC_Domain_Params& domain,
+                       const BigInt& x) :
          EC_PrivateKey(domain, x) {}
 
       bool check_key(RandomNumberGenerator& rng, bool) const;

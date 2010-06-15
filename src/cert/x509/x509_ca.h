@@ -71,6 +71,7 @@ class BOTAN_DLL X509_CA
       * @param signer a signing object
       * @param rng a random number generator
       * @param sig_algo the signature algorithm identifier
+      * @param pub_key the serialized public key
       * @param not_before the start time of the certificate
       * @param not_after the end time of the certificate
       * @param issuer_dn the DN of the issuer
@@ -92,6 +93,7 @@ class BOTAN_DLL X509_CA
       * Create a new CA object.
       * @param ca_certificate the certificate of the CA
       * @param key the private key of the CA
+      * @param hash_fn name of a hash function to use for signing
       */
       X509_CA(const X509_Certificate& ca_certificate,
               const Private_Key& key,

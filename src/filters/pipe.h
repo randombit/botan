@@ -107,6 +107,7 @@ class BOTAN_DLL Pipe : public DataSource
       * Read the default message from the pipe. Moves the internal
       * offset so that every call to read will return a new portion of
       * the message.
+      *
       * @param output the byte array to write the read bytes to
       * @param length the length of the byte array output
       * @return the number of bytes actually read into output
@@ -125,9 +126,12 @@ class BOTAN_DLL Pipe : public DataSource
       u32bit read(byte output[], u32bit length, message_id msg);
 
       /**
-      * Read a single byte from the pipe. Moves the internal offset so that
-      * every call to read will return a new portion of the message.
+      * Read a single byte from the pipe. Moves the internal offset so
+      * that every call to read will return a new portion of the
+      * message.
+      *
       * @param output the byte to write the result to
+      * @param msg the message to read from
       * @return the number of bytes actually read into output
       */
       u32bit read(byte& output, message_id msg = DEFAULT_MESSAGE);

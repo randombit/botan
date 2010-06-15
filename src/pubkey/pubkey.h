@@ -145,7 +145,7 @@ class BOTAN_DLL PK_Signer
 
       /**
       * Add a message part (single byte).
-      * @param the byte to add
+      * @param in the byte to add
       */
       void update(byte in) { update(&in, 1); }
 

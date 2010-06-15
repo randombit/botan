@@ -28,7 +28,7 @@ class BOTAN_DLL LibraryInitializer
 
       /**
       * Initialize the library
-      * @param thread_safe if the library should use a thread-safe mutex
+      * @param options a string listing initialization options
       */
       LibraryInitializer(const std::string& options = "")
          { LibraryInitializer::initialize(options); }

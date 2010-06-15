@@ -49,7 +49,8 @@ class BOTAN_DLL CRL_Entry : public ASN1_Object
       * @param cert the certificate to revoke
       * @param reason the reason code to set in the entry
       */
-      CRL_Entry(const X509_Certificate&, CRL_Code = UNSPECIFIED);
+      CRL_Entry(const X509_Certificate& cert,
+                CRL_Code reason = UNSPECIFIED);
 
    private:
       bool throw_on_unknown_critical;

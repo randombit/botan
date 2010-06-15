@@ -29,7 +29,7 @@ class BOTAN_DLL BufferedComputation
       /**
       * Add new input to process.
       * @param in the input to process as a byte array
-      * @param the length of the byte array
+      * @param length of param in in bytes
       */
       void update(const byte in[], u32bit length) { add_data(in, length); }
 

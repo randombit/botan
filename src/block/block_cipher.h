@@ -58,7 +58,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
 
       /**
       * Encrypt a block.
-      * @param in The plaintext block to be encrypted as a byte array.
+      * @param block the plaintext block to be encrypted
       * Must be of length BLOCK_SIZE. Will hold the result when the function
       * has finished.
       */
@@ -66,7 +66,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
 
       /**
       * Decrypt a block.
-      * @param in The ciphertext block to be decrypted as a byte array.
+      * @param block the ciphertext block to be decrypted
       * Must be of length BLOCK_SIZE. Will hold the result when the function
       * has finished.
       */

@@ -68,12 +68,16 @@ class BOTAN_DLL X509_CRL : public X509_Object
       /**
       * Construct a CRL from a data source.
       * @param source the data source providing the DER or PEM encoded CRL.
+      * @param throw_on_unknown_critical should we throw an exception
+      * if an unknown CRL extension marked as critical is encountered.
       */
-      X509_CRL(DataSource&, bool throw_on_unknown_critical = false);
+      X509_CRL(DataSource& source, bool throw_on_unknown_critical = false);
 
       /**
       * Construct a CRL from a file containing the DER or PEM encoded CRL.
       * @param filename the name of the CRL file
+      * @param throw_on_unknown_critical should we throw an exception
+      * if an unknown CRL extension marked as critical is encountered.
       */
       X509_CRL(const std::string& filename,
                bool throw_on_unknown_critical = false);

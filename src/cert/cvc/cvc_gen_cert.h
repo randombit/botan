@@ -70,6 +70,7 @@ class EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation from EAC1
       * Create a signed generalized CVC object.
       * @param signer the signer used to sign this object
       * @param tbs_bits the body the generalized CVC object to be signed
+      * @param rng a random number generator
       * @result the DER encoded signed generalized CVC object
       */
       static MemoryVector<byte> make_signed(

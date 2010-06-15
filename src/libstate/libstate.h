@@ -69,8 +69,7 @@ class BOTAN_DLL Library_State
                       const std::string& key) const;
 
       /**
-      * Check whether a certain parameter is set
-      * or not.
+      * Check whether a certain parameter is set or not.
       * @param section the section of the desired key
       * @param key the desired keys name
       * @result true if the parameters value is set,
@@ -83,6 +82,7 @@ class BOTAN_DLL Library_State
       * Set a configuration parameter.
       * @param section the section of the desired key
       * @param key the desired keys name
+      * @param value the new value
       * @param overwrite if set to true, the parameters value
       * will be overwritten even if it is already set, otherwise
       * no existing values will be overwritten.

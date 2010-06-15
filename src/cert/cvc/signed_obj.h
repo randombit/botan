@@ -50,6 +50,7 @@ class BOTAN_DLL EAC_Signed_Object
       /**
       * Check the signature of this object.
       * @param key the public key associated with this signed object
+      * @param sig the signature we are checking
       * @return true if the signature was created by the private key
       * associated with this public key
       */
@@ -59,9 +60,10 @@ class BOTAN_DLL EAC_Signed_Object
       /**
       * Write this object DER encoded into a specified pipe.
       * @param pipe the pipe to write the encoded object to
-      * @param enc the encoding type to use
+      * @param encoding the encoding type to use
       */
-      virtual void encode(Pipe&, X509_Encoding = PEM) const = 0;
+      virtual void encode(Pipe& pipe,
+                          X509_Encoding encoding = PEM) const = 0;
 
       /**
       * BER encode this object.

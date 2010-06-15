@@ -13,6 +13,9 @@
 
 namespace Botan {
 
+class BigInt;
+class ASN1_Object;
+
 /*
 * General DER Encoding Object
 */
@@ -33,13 +36,13 @@ class BOTAN_DLL DER_Encoder
       DER_Encoder& encode_null();
       DER_Encoder& encode(bool);
       DER_Encoder& encode(u32bit);
-      DER_Encoder& encode(const class BigInt&);
+      DER_Encoder& encode(const BigInt&);
       DER_Encoder& encode(const MemoryRegion<byte>&, ASN1_Tag);
       DER_Encoder& encode(const byte[], u32bit, ASN1_Tag);
 
       DER_Encoder& encode(bool, ASN1_Tag, ASN1_Tag = CONTEXT_SPECIFIC);
       DER_Encoder& encode(u32bit, ASN1_Tag, ASN1_Tag = CONTEXT_SPECIFIC);
-      DER_Encoder& encode(const class BigInt&, ASN1_Tag,
+      DER_Encoder& encode(const BigInt&, ASN1_Tag,
                           ASN1_Tag = CONTEXT_SPECIFIC);
       DER_Encoder& encode(const MemoryRegion<byte>&, ASN1_Tag,
                           ASN1_Tag, ASN1_Tag = CONTEXT_SPECIFIC);
@@ -62,7 +65,7 @@ class BOTAN_DLL DER_Encoder
          return (*this);
          }
 
-      DER_Encoder& encode(const class ASN1_Object&);
+      DER_Encoder& encode(const ASN1_Object&);
       DER_Encoder& encode_if(bool, DER_Encoder&);
 
       DER_Encoder& add_object(ASN1_Tag, ASN1_Tag, const byte[], u32bit);

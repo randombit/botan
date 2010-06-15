@@ -24,7 +24,7 @@ class BOTAN_DLL CBC_Encryption : public Keyed_Filter,
    public:
       std::string name() const;
 
-      void set_iv(const InitializationVector&);
+      void set_iv(const InitializationVector& iv);
 
       void set_key(const SymmetricKey& key) { cipher->set_key(key); }
 
@@ -61,7 +61,7 @@ class BOTAN_DLL CBC_Decryption : public Keyed_Filter,
    public:
       std::string name() const;
 
-      void set_iv(const InitializationVector&);
+      void set_iv(const InitializationVector& iv);
 
       void set_key(const SymmetricKey& key) { cipher->set_key(key); }
 

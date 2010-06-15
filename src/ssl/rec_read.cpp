@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/**
+/*
 * Reset the state
 */
 void Record_Reader::reset()
@@ -26,7 +26,7 @@ void Record_Reader::reset()
    seq_no = 0;
    }
 
-/**
+/*
 * Set the version to use
 */
 void Record_Reader::set_version(Version_Code version)
@@ -38,7 +38,7 @@ void Record_Reader::set_version(Version_Code version)
    minor = (version & 0xFF);
    }
 
-/**
+/*
 * Set the keys for reading
 */
 void Record_Reader::set_keys(const CipherSuite& suite, const SessionKeys& keys,
@@ -106,7 +106,7 @@ void Record_Reader::add_input(const byte input[], u32bit input_size)
    input_queue.write(input, input_size);
    }
 
-/**
+/*
 * Retrieve the next record
 */
 u32bit Record_Reader::get_record(byte& msg_type,

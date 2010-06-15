@@ -78,7 +78,8 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
 
       /**
       * Generate a new private key
-      * @param the domain parameters to used for this key
+      * @param rng a random number generator
+      * @param domain parameters to used for this key
       */
       GOST_3410_PrivateKey(RandomNumberGenerator& rng,
                            const EC_Domain_Params& domain) :

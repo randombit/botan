@@ -21,8 +21,9 @@ class BOTAN_DLL DataSource
    {
    public:
       /**
-      * Read from the source. Moves the internal offset so that
-      * every call to read will return a new portion of the source.
+      * Read from the source. Moves the internal offset so that every
+      * call to read will return a new portion of the source.
+      *
       * @param out the byte array to write the result to
       * @param length the length of the byte array out
       * @return the length in bytes that was actually read and put
@@ -31,11 +32,13 @@ class BOTAN_DLL DataSource
       virtual u32bit read(byte out[], u32bit length) = 0;
 
       /**
-      * Read from the source but do not modify the internal offset. Consecutive
-      * calls to peek() will return portions of the source starting at the same
-      * position.
+      * Read from the source but do not modify the internal
+      * offset. Consecutive calls to peek() will return portions of
+      * the source starting at the same position.
+      *
       * @param out the byte array to write the output to
       * @param length the length of the byte array out
+      * @param peek_offset the offset into the stream to read at
       * @return the length in bytes that was actually read and put
       * into out
       */
@@ -49,13 +52,13 @@ class BOTAN_DLL DataSource
       virtual bool end_of_data() const = 0;
       /**
       * return the id of this data source
-      * @return the std::string representing the id of this data source
+      * @return std::string representing the id of this data source
       */
       virtual std::string id() const { return ""; }
 
       /**
       * Read one byte.
-      * @param the byte to read to
+      * @param out the byte to read to
       * @return the length in bytes that was actually read and put
       * into out
       */
@@ -63,7 +66,7 @@ class BOTAN_DLL DataSource
 
       /**
       * Peek at one byte.
-      * @param the byte to read to
+      * @param out an output byte
       * @return the length in bytes that was actually read and put
       * into out
       */

@@ -52,7 +52,7 @@ class BOTAN_DLL SymmetricAlgorithm
       /**
       * Set the symmetric key of this object.
       * @param key the to be set as a byte array.
-      * @param the length of the byte array.
+      * @param length in bytes of key param
       */
       void set_key(const byte key[], u32bit length)
          {

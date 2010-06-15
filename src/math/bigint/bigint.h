@@ -361,14 +361,21 @@ class BOTAN_DLL BigInt
      */
      void binary_decode(const MemoryRegion<byte>& buf);
 
-     u32bit encoded_size(Base = Binary) const;
+     /**
+     * @param base the base to measure the size for
+     * @return size of this integer in base base
+     */
+     u32bit encoded_size(Base base = Binary) const;
 
      /**
-     @param rng a random number generator
-     @result a random integer between min and max
+     * @param rng a random number generator
+     * @param min the minimum value
+     * @param max the maximum value
+     * @return a random integer between min and max
      */
      static BigInt random_integer(RandomNumberGenerator& rng,
-                                  const BigInt& min, const BigInt& max);
+                                  const BigInt& min,
+                                  const BigInt& max);
 
      /**
      * Encode the integer value from a BigInt to a SecureVector of bytes
