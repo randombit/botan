@@ -87,7 +87,12 @@ class BOTAN_DLL SymmetricAlgorithm
 
       virtual ~SymmetricAlgorithm() {}
    private:
-      virtual void key_schedule(const byte[], u32bit) = 0;
+      /**
+      * Run the key schedule
+      * @param key the key
+      * @param length of key
+      */
+      virtual void key_schedule(const byte key[], u32bit length) = 0;
    };
 
 /**

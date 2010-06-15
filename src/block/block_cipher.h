@@ -19,6 +19,22 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
    {
    public:
       /**
+      * BlockCipher constructor
+      * @param block_size the size of blocks this cipher processes
+      * @param key_min the minimum key size
+      * @param key_max the maximum key size
+      * @param key_mod the modulo restriction on the key size
+      */
+      BlockCipher(u32bit block_size,
+                  u32bit key_min,
+                  u32bit key_max = 0,
+                  u32bit key_mod = 1) :
+         SymmetricAlgorithm(key_min, key_max, key_mod),
+         BLOCK_SIZE(block_size) {}
+
+      virtual ~BlockCipher() {}
+
+      /**
       * The block size of this algorithm.
       */
       const u32bit BLOCK_SIZE;
@@ -99,15 +115,6 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * Zeroize internal state
       */
       virtual void clear() = 0;
-
-      BlockCipher(u32bit block_size,
-                  u32bit key_min,
-                  u32bit key_max = 0,
-                  u32bit key_mod = 1) :
-         SymmetricAlgorithm(key_min, key_max, key_mod),
-         BLOCK_SIZE(block_size) {}
-
-      virtual ~BlockCipher() {}
    };
 
 }

@@ -10,8 +10,8 @@
 
 namespace Botan {
 
-/*
-* SecureQueueNode
+/**
+* A node in a SecureQueue
 */
 class SecureQueueNode
    {

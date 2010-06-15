@@ -32,7 +32,15 @@ class BOTAN_DLL Lion : public BlockCipher
       std::string name() const;
       BlockCipher* clone() const;
 
-      Lion(HashFunction*, StreamCipher*, u32bit);
+      /**
+      * @param hash the hash to use internally
+      * @param cipher the stream cipher to use internally
+      * @param block_size the size of the block to use
+      */
+      Lion(HashFunction* hash,
+           StreamCipher* cipher,
+           u32bit block_size);
+
       ~Lion() { delete hash; delete cipher; }
    private:
       void key_schedule(const byte[], u32bit);

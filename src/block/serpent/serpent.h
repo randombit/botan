@@ -26,7 +26,7 @@ class BOTAN_DLL Serpent : public BlockCipher
       BlockCipher* clone() const { return new Serpent; }
       Serpent() : BlockCipher(16, 16, 32, 8) {}
    protected:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte key[], u32bit length);
 
       SecureVector<u32bit, 132> round_key;
    };
