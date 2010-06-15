@@ -25,6 +25,9 @@ namespace Botan {
 class BOTAN_DLL Pipe : public DataSource
    {
    public:
+      /*
+      * An opaque type that identifies a message in this Pipe
+      */
       typedef u32bit message_id;
 
       /**
@@ -33,13 +36,24 @@ class BOTAN_DLL Pipe : public DataSource
       */
       struct BOTAN_DLL Invalid_Message_Number : public Invalid_Argument
          {
+         /**
+         * @param where the error occured
+         * @param msg the invalid message id that was used
+         */
          Invalid_Message_Number(const std::string& where, message_id msg) :
             Invalid_Argument("Pipe::" + where + ": Invalid message number " +
                              to_string(msg))
             {}
          };
 
+      /**
+      * A meta-id for whatever the last message is
+      */
       static const message_id LAST_MESSAGE;
+
+      /**
+      * A meta-id for the default message (set with set_default_msg)
+      */
       static const message_id DEFAULT_MESSAGE;
 
       /**
@@ -186,6 +200,9 @@ class BOTAN_DLL Pipe : public DataSource
       u32bit peek(byte& output, u32bit offset,
                   message_id msg = DEFAULT_MESSAGE) const;
 
+      /**
+      * @return currently set default message
+      */
       u32bit default_msg() const { return default_read; }
 
       /**

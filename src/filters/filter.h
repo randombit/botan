@@ -84,7 +84,12 @@ class BOTAN_DLL Filter
 
       u32bit total_ports() const;
       u32bit current_port() const { return port_num; }
-      void set_port(u32bit);
+
+      /**
+      * Set the active port
+      * @param new_port the new value
+      */
+      void set_port(u32bit new_port);
 
       u32bit owns() const { return filter_owns; }
 

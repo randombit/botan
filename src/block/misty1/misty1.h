@@ -25,7 +25,11 @@ class BOTAN_DLL MISTY1 : public BlockCipher
       std::string name() const { return "MISTY1"; }
       BlockCipher* clone() const { return new MISTY1; }
 
-      MISTY1(u32bit = 8);
+      /**
+      * @param rounds the number of rounds. Must be 8 with the current
+      * implementation
+      */
+      MISTY1(u32bit rounds = 8);
    private:
       void key_schedule(const byte[], u32bit);
 

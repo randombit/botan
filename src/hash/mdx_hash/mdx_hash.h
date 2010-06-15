@@ -32,8 +32,18 @@ class BOTAN_DLL MDx_HashFunction : public HashFunction
       virtual void compress_n(const byte blocks[], u32bit block_n) = 0;
 
       void clear();
-      virtual void copy_out(byte[]) = 0;
-      virtual void write_count(byte[]);
+
+      /**
+      * Copy the output to the buffer
+      * @param buffer to put the output into
+      */
+      virtual void copy_out(byte buffer[]) = 0;
+
+      /**
+      * Write the count, if used, to this spot
+      * @param out where to write the counter to
+      */
+      virtual void write_count(byte out[]);
    private:
       SecureVector<byte> buffer;
       u64bit count;
