@@ -88,9 +88,23 @@ BOTAN_DLL std::string PEM_encode(const Private_Key& key);
 * @param key the key to encode
 * @param rng the rng to use
 * @param pass the password to use for encryption
-* @param pbe_algo the name of the desired password-based encryption algorithm.
-* Provide an empty string to use the default PBE defined in the configuration
-* under base/default_pbe.
+* @param pbe_algo the name of the desired password-based encryption algorithm,
+                  or use "" for a sane default.
+* @return BER encrypted key
+*/
+BOTAN_DLL SecureVector<byte> BER_encode(const Private_Key& key,
+                                        RandomNumberGenerator& rng,
+                                        const std::string& pass,
+                                        const std::string& pbe_algo = "");
+
+/**
+* Encode and encrypt a PKCS #8 key as a binary structure
+* @param key the key to encode
+* @param rng the rng to use
+* @param pass the password to use for encryption
+* @param pbe_algo the name of the desired password-based encryption algorithm,
+                  or use "" for a sane default.
+* @return PEM encrypted key
 */
 BOTAN_DLL std::string PEM_encode(const Private_Key& key,
                                  RandomNumberGenerator& rng,
