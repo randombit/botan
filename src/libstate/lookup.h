@@ -61,6 +61,8 @@ retrieve_mac(const std::string& algo_spec)
 
 /**
 * Block cipher factory method.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the desired block cipher
 * @return a pointer to the block cipher object
 */
@@ -72,6 +74,8 @@ inline BlockCipher* get_block_cipher(const std::string& algo_spec)
 
 /**
 * Stream cipher factory method.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the desired stream cipher
 * @return a pointer to the stream cipher object
 */
@@ -83,6 +87,8 @@ inline StreamCipher* get_stream_cipher(const std::string& algo_spec)
 
 /**
 * Hash function factory method.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the desired hash function
 * @return a pointer to the hash function object
 */
@@ -94,6 +100,8 @@ inline HashFunction* get_hash(const std::string& algo_spec)
 
 /**
 * MAC factory method.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the desired MAC
 * @return a pointer to the MAC object
 */
@@ -191,6 +199,8 @@ BOTAN_DLL bool have_algorithm(const std::string& algo_spec);
 
 /**
 * Check if a block cipher algorithm exists.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the algorithm to check for
 * @return true if the algorithm exists, false otherwise
 */
@@ -202,6 +212,8 @@ inline bool have_block_cipher(const std::string& algo_spec)
 
 /**
 * Check if a stream cipher algorithm exists.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the algorithm to check for
 * @return true if the algorithm exists, false otherwise
 */
@@ -213,6 +225,8 @@ inline bool have_stream_cipher(const std::string& algo_spec)
 
 /**
 * Check if a hash algorithm exists.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the algorithm to check for
 * @return true if the algorithm exists, false otherwise
 */
@@ -224,6 +238,8 @@ inline bool have_hash(const std::string& algo_spec)
 
 /**
 * Check if a MAC algorithm exists.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the algorithm to check for
 * @return true if the algorithm exists, false otherwise
 */
@@ -239,6 +255,8 @@ inline bool have_mac(const std::string& algo_spec)
 
 /**
 * Find out the block size of a certain symmetric algorithm.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the algorithm
 * @return block size of the specified algorithm
 */
@@ -246,6 +264,8 @@ BOTAN_DLL u32bit block_size_of(const std::string& algo_spec);
 
 /**
 * Find out the output length of a certain symmetric algorithm.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the algorithm
 * @return output length of the specified algorithm
 */
@@ -254,6 +274,8 @@ BOTAN_DLL u32bit output_length_of(const std::string& algo_spec);
 /**
 * Find out the whether a certain key length is allowd for a given
 * symmetric algorithm.
+* @deprecated Call algorithm_factory() directly
+*
 * @param key_len the key length in question
 * @param algo_spec the name of the algorithm
 * @return true if the key length is valid for that algorithm, false otherwise
@@ -263,6 +285,8 @@ BOTAN_DLL bool valid_keylength_for(u32bit key_len,
 
 /**
 * Find out the minimum key size of a certain symmetric algorithm.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the algorithm
 * @return minimum key length of the specified algorithm
 */
@@ -270,6 +294,8 @@ BOTAN_DLL u32bit min_keylength_of(const std::string& algo_spec);
 
 /**
 * Find out the maximum key size of a certain symmetric algorithm.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the algorithm
 * @return maximum key length of the specified algorithm
 */
@@ -277,6 +303,8 @@ BOTAN_DLL u32bit max_keylength_of(const std::string& algo_spec);
 
 /**
 * Find out the size any valid key is a multiple of for a certain algorithm.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the algorithm
 * @return size any valid key is a multiple of
 */
