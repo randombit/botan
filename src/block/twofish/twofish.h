@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* Twofish
+/**
+* Twofish, an AES finalist
 */
 class BOTAN_DLL Twofish : public BlockCipher
    {

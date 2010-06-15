@@ -47,8 +47,20 @@ class BOTAN_DLL Filter
 
       virtual ~Filter() {}
    protected:
-      void send(const byte[], u32bit);
-      void send(byte input) { send(&input, 1); }
+      /**
+      * @param in some input for the filter
+      * @param length the length of in
+      */
+      void send(const byte in[], u32bit length);
+
+      /**
+      * @param in some input for the filter
+      */
+      void send(byte in) { send(&input, 1); }
+
+      /**
+      * @param in some input for the filter
+      */
       void send(const MemoryRegion<byte>& in) { send(in.begin(), in.size()); }
       Filter();
    private:
@@ -76,8 +88,17 @@ class BOTAN_DLL Filter
 
       u32bit owns() const { return filter_owns; }
 
-      void attach(Filter*);
-      void set_next(Filter*[], u32bit);
+      /**
+      * Attach another filter to this one
+      * @param f filter to attach
+      */
+      void attach(Filter* f);
+
+      /**
+      * @param filters the filters to set
+      * @param count number of items in filters
+      */
+      void set_next(Filter* filters[], u32bit count);
       Filter* get_next() const;
 
       SecureVector<byte> write_queue;
@@ -94,10 +115,15 @@ class BOTAN_DLL Filter
 class BOTAN_DLL Fanout_Filter : public Filter
    {
    protected:
+      /**
+      * Increment the number of filters past us that we own
+      */
       void incr_owns() { ++filter_owns; }
 
       void set_port(u32bit n) { Filter::set_port(n); }
+
       void set_next(Filter* f[], u32bit n) { Filter::set_next(f, n); }
+
       void attach(Filter* f) { Filter::attach(f); }
    };
 

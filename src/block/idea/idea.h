@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * IDEA
 */
 class BOTAN_DLL IDEA : public BlockCipher

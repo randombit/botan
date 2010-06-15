@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * DES
 */
 class BOTAN_DLL DES : public BlockCipher
@@ -32,7 +32,7 @@ class BOTAN_DLL DES : public BlockCipher
       SecureVector<u32bit, 32> round_key;
    };
 
-/*
+/**
 * Triple DES
 */
 class BOTAN_DLL TripleDES : public BlockCipher

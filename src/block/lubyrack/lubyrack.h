@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* Luby-Rackoff
+/**
+* Luby-Rackoff block cipher construction
 */
 class BOTAN_DLL LubyRackoff : public BlockCipher
    {

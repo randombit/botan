@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* KASUMI
+/**
+* KASUMI, the block cipher used in 3G telephony
 */
 class BOTAN_DLL KASUMI : public BlockCipher
    {

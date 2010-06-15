@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Square
 */
 class BOTAN_DLL Square : public BlockCipher

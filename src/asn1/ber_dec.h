@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * BER Decoding Object
 */
 class BOTAN_DLL BER_Decoder

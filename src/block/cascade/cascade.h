@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Block Cipher Cascade
 */
 class BOTAN_DLL Cascade_Cipher : public BlockCipher

@@ -50,6 +50,10 @@ class Algorithm_Cache
       */
       std::vector<std::string> providers_of(const std::string& algo_name);
 
+      /**
+      * Constructor
+      * @param m a mutex to serialize internal access
+      */
       Algorithm_Cache(Mutex* m) : mutex(m) {}
       ~Algorithm_Cache();
    private:

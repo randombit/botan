@@ -155,8 +155,9 @@ class BOTAN_DLL Algorithm_Factory
       void add_mac(MessageAuthenticationCode* algo,
                    const std::string& provider);
 
-      /*
-      * Deprecated
+      /**
+      * An iterator for the engines in this factory
+      * @deprecated
       */
       class BOTAN_DLL Engine_Iterator
          {

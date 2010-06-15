@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Noekeon
 */
 class BOTAN_DLL Noekeon : public BlockCipher

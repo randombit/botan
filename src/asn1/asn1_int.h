@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * ASN.1 Type and Class Tags
 */
 enum ASN1_Tag {
@@ -50,7 +50,7 @@ enum ASN1_Tag {
    DIRECTORY_STRING = 0xFF01
 };
 
-/*
+/**
 * Basic ASN.1 Object Interface
 */
 class BOTAN_DLL ASN1_Object
@@ -61,7 +61,7 @@ class BOTAN_DLL ASN1_Object
       virtual ~ASN1_Object() {}
    };
 
-/*
+/**
 * BER Encoded Object
 */
 class BOTAN_DLL BER_Object
@@ -86,7 +86,7 @@ bool maybe_BER(DataSource&);
 
 }
 
-/*
+/**
 * General BER Decoding Error Exception
 */
 struct BOTAN_DLL BER_Decoding_Error : public Decoding_Error
@@ -94,7 +94,7 @@ struct BOTAN_DLL BER_Decoding_Error : public Decoding_Error
    BER_Decoding_Error(const std::string&);
    };
 
-/*
+/**
 * Exception For Incorrect BER Taggings
 */
 struct BOTAN_DLL BER_Bad_Tag : public BER_Decoding_Error

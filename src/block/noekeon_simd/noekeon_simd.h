@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* Noekeon
+/**
+* Noekeon implementation using SIMD operations
 */
 class BOTAN_DLL Noekeon_SIMD : public Noekeon
    {

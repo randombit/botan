@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * TEA
 */
 class BOTAN_DLL TEA : public BlockCipher

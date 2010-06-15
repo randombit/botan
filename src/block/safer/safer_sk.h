@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * SAFER-SK
 */
 class BOTAN_DLL SAFER_SK : public BlockCipher

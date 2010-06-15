@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * IDEA in SSE2
 */
 class BOTAN_DLL IDEA_SSE2 : public IDEA

@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Algorithm Identifier
 */
 class BOTAN_DLL AlgorithmIdentifier : public ASN1_Object

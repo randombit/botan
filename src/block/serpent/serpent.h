@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* Serpent
+/**
+* Serpent, an AES finalist
 */
 class BOTAN_DLL Serpent : public BlockCipher
    {

@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * RC2
 */
 class BOTAN_DLL RC2 : public BlockCipher

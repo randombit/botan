@@ -14,8 +14,13 @@
 
 namespace Botan {
 
-/*
-* Lion
+/**
+* Lion is a block cipher construction designed by Ross Anderson and
+* Eli Biham, described in "Two Practical and Provably Secure Block
+* Ciphers: BEAR and LION". It has a variable block size and is
+* designed to encrypt very large blocks (up to a megabyte)
+
+* http://www.cl.cam.ac.uk/~rja14/Papers/bear-lion.pdf
 */
 class BOTAN_DLL Lion : public BlockCipher
    {

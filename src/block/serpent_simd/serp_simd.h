@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* Serpent
+/**
+* Serpent implementation using SIMD
 */
 class BOTAN_DLL Serpent_SIMD : public Serpent
    {

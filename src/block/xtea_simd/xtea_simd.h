@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* XTEA (SIMD variant)
+/**
+* XTEA implemented using SIMD operations
 */
 class BOTAN_DLL XTEA_SIMD : public XTEA
    {

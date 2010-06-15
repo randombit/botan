@@ -12,8 +12,11 @@
 
 namespace Botan {
 
-/*
-* Memory Mapping Allocator
+/**
+* Allocator that uses memory maps backed by disk. We zeroize the map
+* upon deallocation. If swap occurs, the VM will swap to the shared
+* file backing rather than to a swap device, which means we know where
+* it is and can zap it later.
 */
 class MemoryMapping_Allocator : public Pooling_Allocator
    {
