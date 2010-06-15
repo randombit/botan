@@ -889,7 +889,7 @@ std::string alice_pem = X509::PEM_encode(priv_rsa);
 // send alice_pem to Bob, who does
 
 // Bob
-std::auto_ptr<X509_PublicKey> alice(load_key(alice_pem));
+std::auto_ptr<Public_Key> alice(load_key(alice_pem));
 
 RSA_PublicKey* alice_rsa = dynamic_cast<RSA_PublicKey>(alice);
 if(alice_rsa)
@@ -1158,58 +1158,49 @@ The interfaces for doing either of these are quite similar. Let's look at the
 X.509 stuff first:
 \begin{verbatim}
 namespace X509 {
-   void encode(const X509_PublicKey& key, Pipe& out, X509_Encoding enc = PEM);
-   std::string PEM_encode(const X509_PublicKey& out);
+   MemoryVector<byte> BER_encode(const Public_Key& key);
+   std::string PEM_encode(const Public_Key& out);
 
-   X509_PublicKey* load_key(DataSource& in);
-   X509_PublicKey* load_key(const std::string& file);
-   X509_PublicKey* load_key(const SecureVector<byte>& buffer);
+   Public_Key* load_key(DataSource& in);
+   Public_Key* load_key(const SecureVector<byte>& buffer);
 }
 \end{verbatim}
 
-Basically, \function{X509::encode} will take an \type{X509\_PublicKey}
-(as of now, that's any RSA, DSA, or Diffie-Hellman key) and encodes it
-using \arg{enc}, which can be either \type{PEM} or
-\type{RAW\_BER}. Using \type{PEM} is \emph{highly} recommended for
-many reasons, including compatibility with other software, for
-transmission over 8-bit unclean channels, because it can be identified
-by a human without special tools, and because it sometimes allows more
-sane behavior of tools that process the data. It will place the
-encoding into \arg{out}. Remember that if you have just created the
-\type{Pipe} that you are passing to \function{X509::encode}, you need
-to call \function{start\_msg} first. Particularly with public keys,
-about 99\% of the time you just want to PEM encode the key and then
-write it to a file or something. In this case, it's probably easier to
-use \function{X509::PEM\_encode}. This function will simply return the
-PEM encoding of the key as a \type{std::string}.
+The function \function{X509::BER\_encode} will take any
+\type{Public\_Key} and return a standard binary structure representing
+the key which can be read by many other crypto libraries.
 
-For loading a public key, the preferred method is one of the variants
-of \function{load\_key}. This function will return a newly allocated
-key based on the data from whatever source it is using (assuming, of
+The function \function{X509::PEM\_encode} does the same, but
+additionally formats it into a text format with headers and base64
+encoding. Using PEM is \emph{highly} recommended for many reasons,
+including compatibility with other software, for transmission over
+8-bit unclean channels, because it can be identified by a human
+without special tools, and because it sometimes allows more sane
+behavior of tools that process the data.
+
+For loading a public key, use one of the variants of
+\function{load\_key}. This function will return a newly allocated key
+based on the data from whatever source it is using (assuming, of
 course, the source is in fact storing a representation of a public
 key). The encoding used (PEM or BER) need not be specified; the format
 will be detected automatically. The key is allocated with
 \function{new}, and should be released with \function{delete} when you
-are done with it. The first takes a generic \type{DataSource} that
-you have to allocate~--~the others are simple wrapper functions that
-take either a filename or a memory buffer.
+are done with it. The first takes a generic \type{DataSource} that you
+have to create~--~the others are simple wrapper functions that take
+either a filename or a memory buffer.
 
-So what can you do with the return value of \function{load\_key}? On
-its own, a \type{X509\_PublicKey} isn't particularly useful; you can't
-encrypt messages or verify signatures, or much else. But, using
-\function{dynamic\_cast}, you can figure out what kind of operations
-the key supports. Then, you can cast the key to the appropriate type
-and pass it to a higher-level class. For example:
+Here's an example of loading a public key and then encrypting with it:
 
 \begin{verbatim}
    /* Might be RSA, might be ElGamal, might be ... */
-   X509_PublicKey* key = X509::load_key("pubkey.asc");
-      /* You MUST use dynamic_cast to convert, because of virtual bases */
-   PK_Encrypting_Key* enc_key = dynamic_cast<PK_Encrypting_Key*>(key);
-   if(!enc_key)
-      throw Some_Exception();
-   PK_Encryptor* enc = get_pk_encryptor(*enc_key, "EME1(SHA-256)");
-   SecureVector<byte> cipher = enc->encrypt(some_message, size_of_message);
+   Public_Key* key = X509::load_key("pubkey.asc");
+
+   /* This might throw an exception if the key doesn't actually
+      support any encryption operations
+   */
+   PK_Encryptor_EME encryptor(*key, "EME1(SHA-1)");
+
+   SecureVector<byte> ciphertext = encryptor.encrypt(msg, size_of_msg);
 \end{verbatim}
 
 \subsubsection{Private Keys}
@@ -1220,92 +1211,72 @@ functions:
 
 \begin{verbatim}
 namespace PKCS8 {
-   void encode(const PKCS8_PrivateKey& key, Pipe& to, X509_Encoding enc = PEM);
-
-   std::string PEM_encode(const PKCS8_PrivateKey& key);
+   SecureVector<byte> BER_encode(const Private_Key& key);
+   std::string PEM_encode(const Private_Key& key);
 }
 \end{verbatim}
 
-These functions are basically the same as the X.509 functions described
-previously. The only difference is that they take a \type{PKCS8\_PrivateKey}
-type (which, again, can be either RSA, DSA, or Diffie-Hellman, but this time
-the key must be a private key). In most situations, using these is a bad idea,
-because anyone can come along and grab the private key without having to know
-any passwords or other secrets. Unless you have very particular security
-requirements, always use the versions that encrypt the key based on a
-passphrase. For importing, the same functions can be used for encrypted and
-unencrypted keys.
+These functions are basically the same as the X.509 functions
+described previously. The only difference is that they take a
+\type{Private\_Key} object instead. In most situations, using these is
+a bad idea, because anyone can come along and grab the private key
+without having to know any passwords or other secrets. Unless you have
+very particular security requirements, always use the versions that
+encrypt the key based on a passphrase. For importing, the same
+functions can be used for encrypted and unencrypted keys.
 
-The other way to export a PKCS \#8 key is to first encode it in the same manner
-as done above, then encrypt it (using a passphrase and the techniques of PKCS
-\#5), and store the whole thing into another structure. This method is
-definitely preferred, since otherwise the private key is unprotected. The
-following functions support this technique:
+The other way to export a PKCS \#8 key is to first encode it in the
+same manner as done above, then encrypt it using a passphrase, and
+store the whole thing into another structure. This method is
+definitely preferred, since otherwise the private key is
+unprotected. The algorithms and structures used here are standardized
+by PKCS \#5 and PKCS \#8, and can be read by many other crypto
+libraries.
 
 \begin{verbatim}
 namespace PKCS8 {
-   void encrypt_key(const PKCS8_PrivateKey& key, Pipe& out,
-                    std::string passphrase, std::string pbe = "",
-                    X509_Encoding enc = PEM);
+   SecureVector<byte> BER_encode(const Private_Key& key,
+                                 RandomNumberGenerator& rng,
+                                 const std::string& pass,
+                                 const std::string& pbe_algo = "");
 
-   std::string PEM_encode(const PKCS8_PrivateKey& key, std::string passphrase,
-                          std::string pbe = "");
+   std::string PEM_encode(const Private_Key& key,
+                          RandomNumberGenerator& rng,
+                          const std::string& pass,
+                          const std::string& pbe_algo = "");
 }
 \end{verbatim}
 
-To export an encrypted private key, call \function{PKCS8::encrypt\_key}. The
-\arg{key}, \arg{out}, and \arg{enc} arguments are similar in usage to the ones
-for \function{PKCS8::encode}. As you might notice, there are two new arguments
-for \function{PKCS8::encrypt\_key}, however. The first is a passphrase (which
-you presumably got from a user somehow). This will be used to encrypt the key.
-The second new argument is \arg{pbe}; this specifies a particular password
-based encryption (or PBE) algorithm.
+There are three new arguments needed here to support the encryption
+process in addition to the private key itself. The first is a
+\type{RandomNumberGenerator}, which is needed for various purposes
+internally. The \arg{pass} argument is the passphrase that will be
+used to encrypt the key. Both of these are required. The final
+(optional) argument is \arg{pbe}; this specifies a particular password
+based encryption (or PBE) algorithm. If you don't specify a PBE,
+a compiled in default will be used; this should be fine.
 
-The \function{PEM\_encode} version shown here is similar to the one that
-doesn't take a passphrase. Essentially it encrypts the key (using the default
-PBE algorithm), and then returns a C++ string with the PEM encoding of the key.
-
-If \arg{pbe} is blank, then the default algorithm (controlled by the
-``base/default\_pbe'' option) will be used. As shipped, this default is
-``PBE-PKCS5v20(SHA-1,TripleDES/CBC)'' . This is among the more secure options
-of PKCS \#5, and is widely supported among implementations of PKCS \#5 v2.0. It
-offers 168 bits of security against attacks, which should be more that
-sufficient. If you need compatibility with systems that only support PKCS \#5
-v1.5, pass ``PBE-PKCS5v15(MD5,DES/CBC)'' as \arg{pbe}. However, be warned that
-this PBE algorithm only has 56 bits of security against brute force attacks. As
-of 1.4.5, all three keylengths of AES are also available as options, which can
-be used with by specifying a PBE algorithm of
-``PBE-PKCS5v20(SHA-1,AES-256/CBC)'' (or ``AES-128'' or ``AES-192''). Support
-for AES is slightly non-standard, and some applications or libraries might not
-handle it. It is known that OpenSSL (0.9.7 and later) do handle AES for private
-key encryption.
-
-There may be some strange programs out there that support the v2.0 extensions
-to PBES1 but not PBES2; if you need to inter-operate with a program like that,
-use ``PBE-PKCS5v15(MD5,RC2/CBC)''. For example, OpenSSL supports this format
-(though since it also supports the v2.0 schemes, there is no reason not to just
-use TripleDES or AES). This scheme uses a 64-bit key that, while
-significantly better than a 56-bit key, is a bit too small for comfort.
-
-Last but not least, there are some functions that are basically identical to
-\function{X509::load\_key} that will load, and possibly decrypt, a PKCS \#8
-private key:
+Last but not least, there are some functions that are basically
+identical to \function{X509::load\_key} that will load, and possibly
+decrypt, a PKCS \#8 private key:
 
 \begin{verbatim}
 namespace PKCS8 {
-   PKCS8_PrivateKey* load_key(DataSource& in,
-                              RandomNumberGenerator& rng,
-                              const User_Interface& ui);
-   PKCS8_PrivateKey* load_key(DataSource& in,
-                              RandomNumberGenerator& rng,
-                              std::string passphrase = "");
+   Private_Key* load_key(DataSource& in,
+                         RandomNumberGenerator& rng,
+                         const User_Interface& ui);
 
-   PKCS8_PrivateKey* load_key(const std::string& filename,
-                              RandomNumberGenerator& rng,
-                              const User_Interface& ui);
-   PKCS8_PrivateKey* load_key(const std::string& filename,
-                              RandomNumberGenerator& rng,
-                              const std::string& passphrase = "");
+   Private_Key* load_key(DataSource& in,
+                         RandomNumberGenerator& rng,
+                         std::string passphrase = "");
+
+   Private_Key* load_key(const std::string& filename,
+                         RandomNumberGenerator& rng,
+                         const User_Interface& ui);
+
+   Private_Key* load_key(const std::string& filename,
+                         RandomNumberGenerator& rng,
+                         const std::string& passphrase = "");
 }
 \end{verbatim}
 
@@ -1376,7 +1347,7 @@ definitions of various common ASN.1 constructs used in X.509).
 
 Obviously, you want to be able to get the public key. This is achieved by
 calling the member function \function{subject\_public\_key}, which will return
-a \type{X509\_PublicKey*}. As to what to do with this, read about
+a \type{Public\_Key*}. As to what to do with this, read about
 \function{load\_key} in the section ``Importing and Exporting PK Keys''. In the
 general case, this could be any kind of public key, though 99\% of the time it
 will be an RSA key. However, Diffie-Hellman and DSA keys are also supported, so
@@ -1718,7 +1689,7 @@ or one issued by another CA (see the section on PKCS \#10 requests). Creating
 a CA object is done by the following constructor:
 
 \begin{verbatim}
-   X509_CA(const X509_Certificate& cert, const PKCS8_PrivateKey& key);
+   X509_CA(const X509_Certificate& cert, const Private_Key& key);
 \end{verbatim}
 
 The private key is the private key corresponding to the public key in the
@@ -1789,7 +1760,7 @@ the solution is summed up simply as:
 \begin{verbatim}
 namespace X509 {
    X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
-                                            const PKCS8_PrivateKey& key);
+                                            const Private_Key& key);
 }
 \end{verbatim}
 
@@ -1808,7 +1779,7 @@ certificate requests.
 \begin{verbatim}
 namespace X509 {
    PKCS10_Request create_cert_req(const X509_Cert_Options&,
-                                  const PKCS8_PrivateKey&);
+                                  const Private_Key&);
 }
 \end{verbatim}
 
