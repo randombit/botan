@@ -12,7 +12,7 @@
 
 \title{\textbf{Botan API Reference}}
 \author{}
-\date{2009/2/19}
+\date{2010/06/14}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\manpage}[2]{\texttt{#1}(#2)}
@@ -955,7 +955,7 @@ std::string alice_pem = X509::PEM_encode(priv_rsa);
 // send alice_pem to Bob, who does
 
 // Bob
-std::auto_ptr<X509_PublicKey> alice(load_key(alice_pem));
+std::auto_ptr<Public_Key> alice(load_key(alice_pem));
 
 RSA_PublicKey* alice_rsa = dynamic_cast<RSA_PublicKey>(alice);
 if(alice_rsa)
@@ -1225,16 +1225,16 @@ The interfaces for doing either of these are quite similar. Let's look at the
 X.509 stuff first:
 \begin{verbatim}
 namespace X509 {
-   void encode(const X509_PublicKey& key, Pipe& out, X509_Encoding enc = PEM);
-   std::string PEM_encode(const X509_PublicKey& out);
+   void encode(const Public_Key& key, Pipe& out, X509_Encoding enc = PEM);
+   std::string PEM_encode(const Public_Key& out);
 
-   X509_PublicKey* load_key(DataSource& in);
-   X509_PublicKey* load_key(const std::string& file);
-   X509_PublicKey* load_key(const SecureVector<byte>& buffer);
+   Public_Key* load_key(DataSource& in);
+   Public_Key* load_key(const std::string& file);
+   Public_Key* load_key(const SecureVector<byte>& buffer);
 }
 \end{verbatim}
 
-Basically, \function{X509::encode} will take an \type{X509\_PublicKey}
+Basically, \function{X509::encode} will take an \type{Public\_Key}
 (as of now, that's any RSA, DSA, or Diffie-Hellman key) and encodes it
 using \arg{enc}, which can be either \type{PEM} or
 \type{RAW\_BER}. Using \type{PEM} is \emph{highly} recommended for
@@ -1270,7 +1270,7 @@ and pass it to a higher-level class. For example:
 
 \begin{verbatim}
    /* Might be RSA, might be ElGamal, might be ... */
-   X509_PublicKey* key = X509::load_key("pubkey.asc");
+   Public_Key* key = X509::load_key("pubkey.asc");
       /* You MUST use dynamic_cast to convert, because of virtual bases */
    PK_Encrypting_Key* enc_key = dynamic_cast<PK_Encrypting_Key*>(key);
    if(!enc_key)
@@ -1287,20 +1287,21 @@ functions:
 
 \begin{verbatim}
 namespace PKCS8 {
-   void encode(const PKCS8_PrivateKey& key, Pipe& to, X509_Encoding enc = PEM);
+   void encode(const Private_Key& key, Pipe& to, X509_Encoding enc = PEM);
 
-   std::string PEM_encode(const PKCS8_PrivateKey& key);
+   std::string PEM_encode(const Private_Key& key);
 }
 \end{verbatim}
 
-These functions are basically the same as the X.509 functions described
-previously. The only difference is that they take a \type{PKCS8\_PrivateKey}
-type (which, again, can be either RSA, DSA, or Diffie-Hellman, but this time
-the key must be a private key). In most situations, using these is a bad idea,
-because anyone can come along and grab the private key without having to know
-any passwords or other secrets. Unless you have very particular security
-requirements, always use the versions that encrypt the key based on a
-passphrase. For importing, the same functions can be used for encrypted and
+These functions are basically the same as the X.509 functions
+described previously. The only difference is that they take a
+\type{Private\_Key} type (which, again, can be either RSA, DSA, or
+Diffie-Hellman, but this time the key must be a private key). In most
+situations, using these is a bad idea, because anyone can come along
+and grab the private key without having to know any passwords or other
+secrets. Unless you have very particular security requirements, always
+use the versions that encrypt the key based on a passphrase. For
+importing, the same functions can be used for encrypted and
 unencrypted keys.
 
 The other way to export a PKCS \#8 key is to first encode it in the same manner
@@ -1311,11 +1312,11 @@ following functions support this technique:
 
 \begin{verbatim}
 namespace PKCS8 {
-   void encrypt_key(const PKCS8_PrivateKey& key, Pipe& out,
+   void encrypt_key(const Private_Key& key, Pipe& out,
                     std::string passphrase, std::string pbe = "",
                     X509_Encoding enc = PEM);
 
-   std::string PEM_encode(const PKCS8_PrivateKey& key, std::string passphrase,
+   std::string PEM_encode(const Private_Key& key, std::string passphrase,
                           std::string pbe = "");
 }
 \end{verbatim}
@@ -1360,19 +1361,21 @@ private key:
 
 \begin{verbatim}
 namespace PKCS8 {
-   PKCS8_PrivateKey* load_key(DataSource& in,
-                              RandomNumberGenerator& rng,
-                              const User_Interface& ui);
-   PKCS8_PrivateKey* load_key(DataSource& in,
-                              RandomNumberGenerator& rng,
-                              std::string passphrase = "");
+   Private_Key* load_key(DataSource& in,
+                         RandomNumberGenerator& rng,
+                         const User_Interface& ui);
 
-   PKCS8_PrivateKey* load_key(const std::string& filename,
-                              RandomNumberGenerator& rng,
-                              const User_Interface& ui);
-   PKCS8_PrivateKey* load_key(const std::string& filename,
-                              RandomNumberGenerator& rng,
-                              const std::string& passphrase = "");
+   Private_Key* load_key(DataSource& in,
+                         RandomNumberGenerator& rng,
+                         std::string passphrase = "");
+
+   Private_Key* load_key(const std::string& filename,
+                         RandomNumberGenerator& rng,
+                         const User_Interface& ui);
+
+   Private_Key* load_key(const std::string& filename,
+                         RandomNumberGenerator& rng,
+                         const std::string& passphrase = "");
 }
 \end{verbatim}
 
@@ -1785,7 +1788,7 @@ or one issued by another CA (see the section on PKCS \#10 requests). Creating
 a CA object is done by the following constructor:
 
 \begin{verbatim}
-   X509_CA(const X509_Certificate& cert, const PKCS8_PrivateKey& key);
+   X509_CA(const X509_Certificate& cert, const Private_Key& key);
 \end{verbatim}
 
 The private key is the private key corresponding to the public key in the
@@ -1856,7 +1859,7 @@ the solution is summed up simply as:
 \begin{verbatim}
 namespace X509 {
    X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
-                                            const PKCS8_PrivateKey& key);
+                                            const Private_Key& key);
 }
 \end{verbatim}
 
@@ -1875,7 +1878,7 @@ certificate requests.
 \begin{verbatim}
 namespace X509 {
    PKCS10_Request create_cert_req(const X509_Cert_Options&,
-                                  const PKCS8_PrivateKey&);
+                                  const Private_Key&);
 }
 \end{verbatim}
 
