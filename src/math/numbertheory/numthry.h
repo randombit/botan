@@ -14,8 +14,8 @@
 
 namespace Botan {
 
-/*
-* Fused Arithmetic Operations
+/**
+* Fused Arithmetic Operation
 */
 BigInt BOTAN_DLL mul_add(const BigInt&, const BigInt&, const BigInt&);
 BigInt BOTAN_DLL sub_mul(const BigInt&, const BigInt&, const BigInt&);
@@ -25,27 +25,63 @@ BigInt BOTAN_DLL sub_mul(const BigInt&, const BigInt&, const BigInt&);
 */
 inline BigInt abs(const BigInt& n) { return n.abs(); }
 
-void BOTAN_DLL divide(const BigInt&, const BigInt&, BigInt&, BigInt&);
-
+/**
+* Compute the greatest common divisor
+* @param x a positive integer
+* @param y a positive integer
+* @return gcd(x,y)
+*/
 BigInt BOTAN_DLL gcd(const BigInt& x, const BigInt& y);
+
+/**
+* Least common multiple
+* @param x a positive integer
+* @param y a positive integer
+* @return z, smallest integer such that z % x == 0 and z % y == 0
+*/
 BigInt BOTAN_DLL lcm(const BigInt& x, const BigInt& y);
 
-BigInt BOTAN_DLL square(const BigInt&);
-BigInt BOTAN_DLL inverse_mod(const BigInt&, const BigInt&);
+/**
+* @param x an integer
+* @return (x*x)
+*/
+BigInt BOTAN_DLL square(const BigInt& x);
+
+/**
+* Modular inversion
+* @param x a positive integer
+* @param modulus a positive integer
+* @return y st (x*y) % modulus == 1
+*/
+BigInt BOTAN_DLL inverse_mod(const BigInt& x,
+                             const BigInt& modulus);
+
+/**
+* Jacobi function
+*/
 s32bit BOTAN_DLL jacobi(const BigInt&, const BigInt&);
 
+/**
+* Modular exponentation
+*/
 BigInt BOTAN_DLL power_mod(const BigInt&, const BigInt&, const BigInt&);
 
-/*
-* Compute the square root of x modulo a prime
-* using the Shanks-Tonnelli algorithm
+/**
+* Compute the square root of x modulo a prime using the
+* Shanks-Tonnelli algorithm
+*
+* @param x the input
+* @param p the prime
+* @return y such that (y*y)%p == x, or -1 if no such integer
 */
 BigInt BOTAN_DLL ressol(const BigInt& x, const BigInt& p);
 
-/*
-* Utility Functions
+/**
+* @param x an integer
+* @return count of the zero bits in x, or, equivalently, the largest
+* value of n such that 2^n divides x evently
 */
-u32bit BOTAN_DLL low_zero_bits(const BigInt&);
+u32bit BOTAN_DLL low_zero_bits(const BigInt& x);
 
 /*
 * Primality Testing

@@ -68,28 +68,28 @@ class BOTAN_DLL BigInt
      BigInt& operator/=(const BigInt& y);
 
      /**
-     * %= operator, modulo operator
+     * Modulo operator
      * @param y the modulus to reduce this by
      */
      BigInt& operator%=(const BigInt& y);
 
      /**
-     * %= operator
+     * Modulo operator
      * @param y the modulus (word) to reduce this by
      */
      word    operator%=(word y);
 
      /**
-     * <<= operator
-     * @param y the number of bits to shift this left by
+     * Left shift operator
+     * @param shift the number of bits to shift this left by
      */
-     BigInt& operator<<=(u32bit y);
+     BigInt& operator<<=(u32bit shift);
 
      /**
-     * >>= operator
-     * @param y the number of bits to shift this right by
+     * Right shift operator
+     * @param shift the number of bits to shift this right by
      */
-     BigInt& operator>>=(u32bit y);
+     BigInt& operator>>=(u32bit shift);
 
      /**
      * Increment operator
@@ -102,12 +102,12 @@ class BOTAN_DLL BigInt
      BigInt& operator--() { return (*this -= 1); }
 
      /**
-     * ++ operator (postfix)
+     * Postfix increment operator
      */
      BigInt  operator++(int) { BigInt x = (*this); ++(*this); return x; }
 
      /**
-     * -- operator (postfix)
+     * Postfix decrement operator
      */
      BigInt  operator--(int) { BigInt x = (*this); --(*this); return x; }
 
@@ -233,7 +233,7 @@ class BOTAN_DLL BigInt
 
      /**
      * Return the integer as an unsigned 32bit-integer-value. If the
-     * value is negative OR to big to be stored in 32bits, this
+     * value is negative OR too big to be stored in a u32bit, this
      * function will throw an exception.
      *
      * @result unsigned 32 bit representation of this
@@ -242,13 +242,13 @@ class BOTAN_DLL BigInt
 
      /**
      * Tests if the sign of the integer is negative
-     * @result true, if the integer has a negative sign
+     * @result true, iff the integer has a negative sign
      */
      bool is_negative() const { return (sign() == Negative); }
 
      /**
      * Tests if the sign of the integer is positive
-     * @result true, if the integer has a positive sign
+     * @result true, iff the integer has a positive sign
      */
      bool is_positive() const { return (sign() == Positive); }
 
@@ -259,13 +259,12 @@ class BOTAN_DLL BigInt
      Sign sign() const { return (signedness); }
 
      /**
-     * Return the opposite sign of the represented integer value
      * @result the opposite sign of the represented integer value
      */
      Sign reverse_sign() const;
 
      /**
-     * Flip (mutate) the sign of the integer to its opposite value
+     * Flip the sign of this BigInt
      */
      void flip_sign();
 
@@ -287,7 +286,7 @@ class BOTAN_DLL BigInt
      u32bit size() const { return get_reg().size(); }
 
      /**
-     * Give significant words of the represented integer value
+     * Return how many words we need to hold this value
      * @result significant words of the represented integer value
      */
      u32bit sig_words() const
@@ -301,14 +300,14 @@ class BOTAN_DLL BigInt
         }
 
      /**
-     * Give byte-length of the integer
-     * @result byte-length of the represented integer value
+     * Give byte length of the integer
+     * @result byte length of the represented integer value
      */
      u32bit bytes() const;
 
      /**
-     * Get the bit-length of the integer
-     * @result bit-length of the represented integer value
+     * Get the bit length of the integer
+     * @result bit length of the represented integer value
      */
      u32bit bits() const;
 
@@ -429,10 +428,10 @@ class BOTAN_DLL BigInt
      static SecureVector<byte> encode_1363(const BigInt& n, u32bit bytes);
 
      /**
-     * Swap BigInt-value with given BigInt
-     * @param bigint the BigInt to swap values with
+     * Swap this value with another
+     * @param other BigInt to swap values with
      */
-     void swap(BigInt& bigint);
+     void swap(BigInt& other);
 
      /**
      * Create empty BigInt
@@ -481,14 +480,16 @@ class BOTAN_DLL BigInt
      /**
      * Create BigInt of specified size, all zeros
      * @param sign the sign
-     * @param n integer value
+     * @param n size of the internal register in words
      */
      BigInt(Sign sign, u32bit n);
 
      /**
      * Create a number of the specified type and size
-     * @param type the type of number to create
-     * @param n the size
+     * @param type the type of number to create. For Power2,
+     * will create the integer 2^n
+     * @param n a size/length parameter, interpretation depends upon
+     * the value of type
      */
      BigInt(NumberType type, u32bit n);
 
