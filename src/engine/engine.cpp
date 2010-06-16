@@ -52,7 +52,7 @@ Keyed_Filter* Engine::get_cipher(const std::string&,
    }
 
 PK_Ops::Key_Agreement*
-Engine::get_key_agreement_op(const Private_Key) const
+Engine::get_key_agreement_op(const Private_Key&) const
    {
    return 0;
    }
@@ -80,3 +80,5 @@ Engine::get_decryption_op(const Private_Key&) const
    {
    return 0;
    }
+
+}
