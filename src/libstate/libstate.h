@@ -35,12 +35,12 @@ class BOTAN_DLL Library_State
       void initialize(bool thread_safe);
 
       /**
-      * @return the global Algorithm_Factory
+      * @return global Algorithm_Factory
       */
       Algorithm_Factory& algorithm_factory() const;
 
       /**
-      * @return the global RandomNumberGenerator
+      * @return global RandomNumberGenerator
       */
       RandomNumberGenerator& global_rng();
 
@@ -111,7 +111,7 @@ class BOTAN_DLL Library_State
       std::string deref_alias(const std::string& alias) const;
 
       /**
-      * @return a newly created Mutex (free with delete)
+      * @return newly created Mutex (free with delete)
       */
       Mutex* get_mutex() const;
    private:
@@ -155,7 +155,7 @@ BOTAN_DLL void set_global_state(Library_State* state);
 /**
 * Swap the current state for another
 * @param new_state the new state object to use
-* @return the previous state (or NULL if none)
+* @return previous state (or NULL if none)
 */
 BOTAN_DLL Library_State* swap_global_state(Library_State* new_state);
 

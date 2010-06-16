@@ -34,12 +34,12 @@ class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
       MemoryVector<byte> x509_subject_public_key() const;
 
       /**
-      * @return the public modulus
+      * @return public modulus
       */
       const BigInt& get_n() const { return n; }
 
       /**
-      * @return the public exponent
+      * @return public exponent
       */
       const BigInt& get_e() const { return e; }
 
@@ -73,13 +73,13 @@ class BOTAN_DLL IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
 
       /**
       * Get the first prime p.
-      * @return the prime p
+      * @return prime p
       */
       const BigInt& get_p() const { return p; }
 
       /**
       * Get the second prime q.
-      * @return the prime q
+      * @return prime q
       */
       const BigInt& get_q() const { return q; }
 

@@ -116,7 +116,7 @@ class BOTAN_DLL Pipe : public DataSource
       * Find out how many bytes are ready to read.
       * @param msg the number identifying the message
       * for which the information is desired
-      * @return the number of bytes that can still be read
+      * @return number of bytes that can still be read
       */
       u32bit remaining(message_id msg = DEFAULT_MESSAGE) const;
 
@@ -127,7 +127,7 @@ class BOTAN_DLL Pipe : public DataSource
       *
       * @param output the byte array to write the read bytes to
       * @param length the length of the byte array output
-      * @return the number of bytes actually read into output
+      * @return number of bytes actually read into output
       */
       u32bit read(byte output[], u32bit length);
 
@@ -138,7 +138,7 @@ class BOTAN_DLL Pipe : public DataSource
       * @param output the byte array to write the read bytes to
       * @param length the length of the byte array output
       * @param msg the number identifying the message to read from
-      * @return the number of bytes actually read into output
+      * @return number of bytes actually read into output
       */
       u32bit read(byte output[], u32bit length, message_id msg);
 
@@ -149,21 +149,21 @@ class BOTAN_DLL Pipe : public DataSource
       *
       * @param output the byte to write the result to
       * @param msg the message to read from
-      * @return the number of bytes actually read into output
+      * @return number of bytes actually read into output
       */
       u32bit read(byte& output, message_id msg = DEFAULT_MESSAGE);
 
       /**
       * Read the full contents of the pipe.
       * @param msg the number identifying the message to read from
-      * @return a SecureVector holding the contents of the pipe
+      * @return SecureVector holding the contents of the pipe
       */
       SecureVector<byte> read_all(message_id msg = DEFAULT_MESSAGE);
 
       /**
       * Read the full contents of the pipe.
       * @param msg the number identifying the message to read from
-      * @return a string holding the contents of the pipe
+      * @return string holding the contents of the pipe
       */
       std::string read_all_as_string(message_id = DEFAULT_MESSAGE);
 
@@ -173,7 +173,7 @@ class BOTAN_DLL Pipe : public DataSource
       * @param output the byte array to write the peeked message part to
       * @param length the length of the byte array output
       * @param offset the offset from the current position in message
-      * @return the number of bytes actually peeked and written into output
+      * @return number of bytes actually peeked and written into output
       */
       u32bit peek(byte output[], u32bit length, u32bit offset) const;
 
@@ -184,7 +184,7 @@ class BOTAN_DLL Pipe : public DataSource
       * @param length the length of the byte array output
       * @param offset the offset from the current position in message
       * @param msg the number identifying the message to peek from
-      * @return the number of bytes actually peeked and written into output
+      * @return number of bytes actually peeked and written into output
       */
       u32bit peek(byte output[], u32bit length,
                   u32bit offset, message_id msg) const;
@@ -195,7 +195,7 @@ class BOTAN_DLL Pipe : public DataSource
       * @param output the byte to write the peeked message byte to
       * @param offset the offset from the current position in message
       * @param msg the number identifying the message to peek from
-      * @return the number of bytes actually peeked and written into output
+      * @return number of bytes actually peeked and written into output
       */
       u32bit peek(byte& output, u32bit offset,
                   message_id msg = DEFAULT_MESSAGE) const;
@@ -214,7 +214,7 @@ class BOTAN_DLL Pipe : public DataSource
 
       /**
       * Get the number of messages the are in this pipe.
-      * @return the number of messages the are in this pipe
+      * @return number of messages the are in this pipe
       */
       message_id message_count() const;
 

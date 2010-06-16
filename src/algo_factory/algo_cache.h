@@ -32,7 +32,7 @@ class Algorithm_Cache
       /**
       * @param algo_spec names the requested algorithm
       * @param pref_provider suggests a preferred provider
-      * @return a prototype object, or NULL
+      * @return prototype object, or NULL
       */
       const T* get(const std::string& algo_spec,
                    const std::string& pref_provider);

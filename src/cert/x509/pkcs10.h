@@ -23,38 +23,38 @@ class BOTAN_DLL PKCS10_Request : public X509_Object
    public:
       /**
       * Get the subject public key.
-      * @return the subject public key
+      * @return subject public key
       */
       Public_Key* subject_public_key() const;
 
       /**
       * Get the raw DER encoded public key.
-      * @return the raw DER encoded public key
+      * @return raw DER encoded public key
       */
       MemoryVector<byte> raw_public_key() const;
 
       /**
       * Get the subject DN.
-      * @return the subject DN
+      * @return subject DN
       */
       X509_DN subject_dn() const;
 
       /**
       * Get the subject alternative name.
-      * @return the subject alternative name.
+      * @return subject alternative name.
       */
       AlternativeName subject_alt_name() const;
 
       /**
       * Get the key constraints for the key associated with this
       * PKCS#10 object.
-      * @return the key constraints
+      * @return key constraints
       */
       Key_Constraints constraints() const;
 
       /**
       * Get the extendend key constraints (if any).
-      * @return the extended key constraints
+      * @return extended key constraints
       */
       std::vector<OID> ex_constraints() const;
 
@@ -67,13 +67,13 @@ class BOTAN_DLL PKCS10_Request : public X509_Object
       /**
       * Return the constraint on the path length defined
       * in the BasicConstraints extension.
-      * @return the path limit
+      * @return path limit
       */
       u32bit path_limit() const;
 
       /**
       * Get the challenge password for this request
-      * @return the challenge password for this request
+      * @return challenge password for this request
       */
       std::string challenge_password() const;
 

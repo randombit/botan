@@ -34,7 +34,7 @@ BOTAN_DLL SecureVector<byte> BER_encode(const Private_Key& key);
 /**
 * Get a string containing a PEM encoded private key.
 * @param key the key to encode
-* @return the encoded key
+* @return encoded key
 */
 BOTAN_DLL std::string PEM_encode(const Private_Key& key);
 
@@ -46,7 +46,7 @@ BOTAN_DLL std::string PEM_encode(const Private_Key& key);
 * @param pbe_algo the name of the desired password-based encryption
          algorithm; if empty ("") a reasonable (portable/secure)
          default will be chosen.
-* @return the encrypted key in binary BER form
+* @return encrypted key in binary BER form
 */
 BOTAN_DLL SecureVector<byte> BER_encode(const Private_Key& key,
                                         RandomNumberGenerator& rng,
@@ -62,7 +62,7 @@ BOTAN_DLL SecureVector<byte> BER_encode(const Private_Key& key,
 * @param pbe_algo the name of the desired password-based encryption
          algorithm; if empty ("") a reasonable (portable/secure)
          default will be chosen.
-* @return the encrypted key in PEM form
+* @return encrypted key in PEM form
 */
 BOTAN_DLL std::string PEM_encode(const Private_Key& key,
                                  RandomNumberGenerator& rng,
@@ -119,7 +119,7 @@ inline void encrypt_key(const Private_Key& key,
 * @param source the data source providing the encoded key
 * @param rng the rng to use
 * @param ui the user interface to be used for passphrase dialog
-* @return the loaded private key object
+* @return loaded private key object
 */
 BOTAN_DLL Private_Key* load_key(DataSource& source,
                                 RandomNumberGenerator& rng,
@@ -130,7 +130,7 @@ BOTAN_DLL Private_Key* load_key(DataSource& source,
 * @param rng the rng to use
 * @param pass the passphrase to decrypt the key. Provide an empty
 * string if the key is not encoded.
-* @return the loaded private key object
+* @return loaded private key object
 */
 BOTAN_DLL Private_Key* load_key(DataSource& source,
                                 RandomNumberGenerator& rng,
@@ -141,7 +141,7 @@ BOTAN_DLL Private_Key* load_key(DataSource& source,
 * @param filename the path to the file containing the encoded key
 * @param rng the rng to use
 * @param ui the user interface to be used for passphrase dialog
-* @return the loaded private key object
+* @return loaded private key object
 */
 BOTAN_DLL Private_Key* load_key(const std::string& filename,
                                 RandomNumberGenerator& rng,
@@ -152,7 +152,7 @@ BOTAN_DLL Private_Key* load_key(const std::string& filename,
 * @param rng the rng to use
 * @param pass the passphrase to decrypt the key. Provide an empty
 * string if the key is not encoded.
-* @return the loaded private key object
+* @return loaded private key object
 */
 BOTAN_DLL Private_Key* load_key(const std::string& filename,
                                 RandomNumberGenerator& rng,
@@ -162,7 +162,7 @@ BOTAN_DLL Private_Key* load_key(const std::string& filename,
 * Copy an existing encoded key object.
 * @param key the key to copy
 * @param rng the rng to use
-* @return the new copy of the key
+* @return new copy of the key
 */
 BOTAN_DLL Private_Key* copy_key(const Private_Key& key,
                                 RandomNumberGenerator& rng);

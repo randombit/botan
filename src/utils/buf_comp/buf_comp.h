@@ -67,7 +67,7 @@ class BOTAN_DLL BufferedComputation
       /**
       * Complete the computation and retrieve the
       * final result.
-      * @return a SecureVector holding the result
+      * @return SecureVector holding the result
       */
       SecureVector<byte> final()
          {

@@ -220,7 +220,7 @@ class BOTAN_DLL BigInt
      /**
      * Return the word at a specified position of the internal register
      * @param n position in the register
-     * @return the value at position n
+     * @return value at position n
      */
      word word_at(u32bit n) const
         { return ((n < size()) ? reg[n] : 0); }
@@ -371,7 +371,7 @@ class BOTAN_DLL BigInt
      * @param rng a random number generator
      * @param min the minimum value
      * @param max the maximum value
-     * @return a random integer between min and max
+     * @return random integer between min and max
      */
      static BigInt random_integer(RandomNumberGenerator& rng,
                                   const BigInt& min,

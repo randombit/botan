@@ -24,7 +24,7 @@ class BOTAN_DLL GOST_28147_89_Params
       /**
       * @param row the row
       * @param col the column
-      * @return the sbox entry at this row/column
+      * @return sbox entry at this row/column
       */
       byte sbox_entry(u32bit row, u32bit col) const;
 

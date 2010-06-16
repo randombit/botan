@@ -38,7 +38,7 @@ class BOTAN_DLL SymmetricAlgorithm
 
       /**
       * The name of the algorithm.
-      * @return the name of the algorithm
+      * @return name of the algorithm
       */
       virtual std::string name() const = 0;
 

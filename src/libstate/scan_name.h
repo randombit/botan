@@ -28,22 +28,22 @@ class BOTAN_DLL SCAN_Name
       SCAN_Name(std::string algo_spec);
 
       /**
-      * @return the original input string
+      * @return original input string
       */
       std::string as_string() const { return orig_algo_spec; }
 
       /**
-      * @return the algorithm name
+      * @return algorithm name
       */
       std::string algo_name() const { return alg_name; }
 
       /**
-      * @return the algorithm name plus any arguments
+      * @return algorithm name plus any arguments
       */
       std::string algo_name_and_args() const;
 
       /**
-      * @return the number of arguments
+      * @return number of arguments
       */
       u32bit arg_count() const { return args.size(); }
 
@@ -57,32 +57,32 @@ class BOTAN_DLL SCAN_Name
 
       /**
       * @param i which argument
-      * @return the ith argument
+      * @return ith argument
       */
       std::string arg(u32bit i) const;
 
       /**
       * @param i which argument
       * @param def_value the default value
-      * @return the ith argument or the default value
+      * @return ith argument or the default value
       */
       std::string arg(u32bit i, const std::string& def_value) const;
 
       /**
       * @param i which argument
       * @param def_value the default value
-      * @return the ith argument as a u32bit, or the default value
+      * @return ith argument as a u32bit, or the default value
       */
       u32bit arg_as_u32bit(u32bit i, u32bit def_value) const;
 
       /**
-      * @return the cipher mode (if any)
+      * @return cipher mode (if any)
       */
       std::string cipher_mode() const
          { return (mode_info.size() >= 1) ? mode_info[0] : ""; }
 
       /**
-      * @return the cipher mode padding (if any)
+      * @return cipher mode padding (if any)
       */
       std::string cipher_mode_pad() const
          { return (mode_info.size() >= 2) ? mode_info[1] : ""; }
