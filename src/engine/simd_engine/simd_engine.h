@@ -19,7 +19,7 @@ class SIMD_Engine : public Engine
    {
    public:
       std::string provider_name() const { return "simd"; }
-   private:
+
       BlockCipher* find_block_cipher(const SCAN_Name&,
                                      Algorithm_Factory&) const;
 

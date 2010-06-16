@@ -37,7 +37,7 @@ class OpenSSL_Engine : public Engine
 
       Modular_Exponentiator* mod_exp(const BigInt&,
                                      Power_Mod::Usage_Hints) const;
-   private:
+
       BlockCipher* find_block_cipher(const SCAN_Name&,
                                      Algorithm_Factory&) const;
 

@@ -19,7 +19,7 @@ class AMD64_Assembler_Engine : public Engine
    {
    public:
       std::string provider_name() const { return "amd64"; }
-   private:
+
       HashFunction* find_hash(const SCAN_Name& reqeust,
                               Algorithm_Factory&) const;
    };

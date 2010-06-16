@@ -20,7 +20,7 @@ class AES_ISA_Engine : public Engine
    {
    public:
       std::string provider_name() const { return "aes_isa"; }
-   private:
+
       BlockCipher* find_block_cipher(const SCAN_Name&,
                                      Algorithm_Factory&) const;
    };
