@@ -14,19 +14,16 @@ es_ftw.cpp
 aix
 cygwin
 darwin
-freebsd
 dragonfly
+freebsd
 hpux
 irix
 linux
+netbsd
 openbsd
 qnx
 solaris
 tru64
-
-# Doesn't build on 2.0.2/x86 due to libc/libstdc++ header issues; no
-# big deal since it has /dev/*random
-#netbsd
 </os>
 
 <requires>
