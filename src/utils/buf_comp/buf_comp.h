@@ -113,7 +113,11 @@ class BOTAN_DLL BufferedComputation
          return final();
          }
 
+      /**
+      * @param out_len the output length of this computation
+      */
       BufferedComputation(u32bit out_len) : OUTPUT_LENGTH(out_len) {}
+
       virtual ~BufferedComputation() {}
    private:
       BufferedComputation& operator=(const BufferedComputation&);
