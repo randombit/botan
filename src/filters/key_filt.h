@@ -30,7 +30,7 @@ class BOTAN_DLL Keyed_Filter : public Filter
       * Set the initialization vector of this filter.
       * @param iv the initialization vector to set
       */
-      virtual void set_iv(const InitializationVector& iv) {}
+      virtual void set_iv(const InitializationVector& iv);
 
       /**
       * Check whether a key length is valid for this filter.

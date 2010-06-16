@@ -6,8 +6,15 @@
 */
 
 #include <botan/basefilt.h>
+#include <botan/key_filt.h>
+
+#include <assert.h>
 
 namespace Botan {
+
+void Keyed_Filter::set_iv(const InitializationVector&)
+   {
+   }
 
 /*
 * Chain Constructor
