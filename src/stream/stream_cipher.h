@@ -39,19 +39,13 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @param iv the initialization vector
       * @param iv_len the length of the IV in bytes
       */
-      virtual void set_iv(const byte iv[], u32bit iv_len)
-         {
-         if(iv_len)
-            throw Invalid_Argument("The stream cipher " + name() +
-                                   " does not support resyncronization");
-         }
+      virtual void set_iv(const byte iv[], u32bit iv_len);
 
       /**
       * @param iv_len the length of the IV in bytes
       * @return if the length is valid for this algorithm
       */
-      virtual bool valid_iv_length(u32bit iv_len) const
-         { return (iv_len == 0); }
+      virtual bool valid_iv_length(u32bit iv_len) const;
 
       /**
       * Get a new object representing the same algorithm as *this
