@@ -40,8 +40,8 @@ class BOTAN_DLL Public_Key
       * of the test
       * @return true if the test is passed
       */
-      virtual bool check_key(RandomNumberGenerator& rng, bool strong) const
-         { return true; }
+      virtual bool check_key(RandomNumberGenerator& rng,
+                             bool strong) const = 0;
 
       /**
       * Find out the number of message parts supported by this scheme.
