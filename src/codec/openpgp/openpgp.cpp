@@ -13,14 +13,13 @@
 
 namespace Botan {
 
-namespace OpenPGP {
-
 /*
 * OpenPGP Base64 encoding
 */
-std::string encode(const byte input[], u32bit length,
-                   const std::string& label,
-                   const std::map<std::string, std::string>& headers)
+std::string PGP_encode(
+   const byte input[], u32bit length,
+   const std::string& label,
+   const std::map<std::string, std::string>& headers)
    {
    const std::string PGP_HEADER = "-----BEGIN PGP " + label + "-----\n";
    const std::string PGP_TRAILER = "-----END PGP " + label + "-----\n";
@@ -58,18 +57,19 @@ std::string encode(const byte input[], u32bit length,
 /*
 * OpenPGP Base64 encoding
 */
-std::string encode(const byte input[], u32bit length,
-                   const std::string& type)
+std::string PGP_encode(const byte input[], u32bit length,
+                       const std::string& type)
    {
    std::map<std::string, std::string> empty;
-   return encode(input, length, type, empty);
+   return PGP_encode(input, length, type, empty);
    }
 
 /*
 * OpenPGP Base64 decoding
 */
-SecureVector<byte> decode(DataSource& source, std::string& label,
-                          std::map<std::string, std::string>& headers)
+SecureVector<byte> PGP_decode(DataSource& source,
+                              std::string& label,
+                              std::map<std::string, std::string>& headers)
    {
    const u32bit RANDOM_CHAR_LIMIT = 5;
 
@@ -186,13 +186,11 @@ SecureVector<byte> decode(DataSource& source, std::string& label,
 /*
 * OpenPGP Base64 decoding
 */
-SecureVector<byte> decode(DataSource& source, std::string& label)
+SecureVector<byte> PGP_decode(DataSource& source, std::string& label)
    {
    std::map<std::string, std::string> ignored;
-   return decode(source, label, ignored);
+   return PGP_decode(source, label, ignored);
    }
-
-}
 
 }
 

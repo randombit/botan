@@ -14,8 +14,6 @@
 
 namespace Botan {
 
-namespace AllOrNothingTransform {
-
 /**
 * Rivest's Package Tranform
 * @arg rng the random number generator to use
@@ -25,10 +23,10 @@ namespace AllOrNothingTransform {
 * @arg output the output data buffer (must be at least
 *      input_len + cipher->BLOCK_SIZE bytes long)
 */
-void BOTAN_DLL package(RandomNumberGenerator& rng,
-                       BlockCipher* cipher,
-                       const byte input[], u32bit input_len,
-                       byte output[]);
+void BOTAN_DLL aont_package(RandomNumberGenerator& rng,
+                            BlockCipher* cipher,
+                            const byte input[], u32bit input_len,
+                            byte output[]);
 
 /**
 * Rivest's Package Tranform (Inversion)
@@ -39,11 +37,9 @@ void BOTAN_DLL package(RandomNumberGenerator& rng,
 * @arg output the output data buffer (must be at least
 *      input_len - cipher->BLOCK_SIZE bytes long)
 */
-void BOTAN_DLL unpackage(BlockCipher* cipher,
-                         const byte input[], u32bit input_len,
-                         byte output[]);
-
-}
+void BOTAN_DLL aont_unpackage(BlockCipher* cipher,
+                              const byte input[], u32bit input_len,
+                              byte output[]);
 
 }
 

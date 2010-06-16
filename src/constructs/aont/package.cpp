@@ -14,12 +14,10 @@
 
 namespace Botan {
 
-namespace AllOrNothingTransform {
-
-void package(RandomNumberGenerator& rng,
-             BlockCipher* cipher,
-             const byte input[], u32bit input_len,
-             byte output[])
+void aont_package(RandomNumberGenerator& rng,
+                  BlockCipher* cipher,
+                  const byte input[], u32bit input_len,
+                  byte output[])
    {
    if(!cipher->valid_keylength(cipher->BLOCK_SIZE))
       throw Invalid_Argument("AONT::package: Invalid cipher");
@@ -66,9 +64,9 @@ void package(RandomNumberGenerator& rng,
    xor_buf(final_block, package_key.begin(), cipher->BLOCK_SIZE);
    }
 
-void unpackage(BlockCipher* cipher,
-               const byte input[], u32bit input_len,
-               byte output[])
+void aont_unpackage(BlockCipher* cipher,
+                    const byte input[], u32bit input_len,
+                    byte output[])
    {
    if(!cipher->valid_keylength(cipher->BLOCK_SIZE))
       throw Invalid_Argument("AONT::unpackage: Invalid cipher");
@@ -114,7 +112,5 @@ void unpackage(BlockCipher* cipher,
 
    pipe.read(output, pipe.remaining());
    }
-
-}
 
 }
