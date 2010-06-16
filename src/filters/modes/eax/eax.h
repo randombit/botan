@@ -39,6 +39,11 @@ class BOTAN_DLL EAX_Base : public Keyed_Filter
 
       bool valid_keylength(u32bit key_len) const;
 
+      /**
+      * EAX supports arbitrary IV lengths
+      */
+      bool valid_iv_length(u32bit) const { return true; }
+
       ~EAX_Base() { delete ctr; delete cmac; }
    protected:
       /**

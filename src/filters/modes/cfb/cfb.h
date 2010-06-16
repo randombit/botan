@@ -28,6 +28,9 @@ class BOTAN_DLL CFB_Encryption : public Keyed_Filter
       bool valid_keylength(u32bit key_len) const
          { return cipher->valid_keylength(key_len); }
 
+      bool valid_iv_length(u32bit iv_len) const
+         { return (iv_len == cipher->BLOCK_SIZE); }
+
       CFB_Encryption(BlockCipher* cipher, u32bit feedback = 0);
 
       CFB_Encryption(BlockCipher* cipher,
@@ -58,6 +61,9 @@ class BOTAN_DLL CFB_Decryption : public Keyed_Filter
 
       bool valid_keylength(u32bit key_len) const
          { return cipher->valid_keylength(key_len); }
+
+      bool valid_iv_length(u32bit iv_len) const
+         { return (iv_len == cipher->BLOCK_SIZE); }
 
       CFB_Decryption(BlockCipher* cipher, u32bit feedback = 0);
 

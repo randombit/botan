@@ -87,7 +87,7 @@ std::string XTS_Encryption::name() const
 */
 void XTS_Encryption::set_iv(const InitializationVector& iv)
    {
-   if(iv.length() != cipher->BLOCK_SIZE)
+   if(!valid_iv_length(iv.length()))
       throw Invalid_IV_Length(name(), iv.length());
 
    const u32bit blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;
@@ -259,7 +259,7 @@ std::string XTS_Decryption::name() const
 */
 void XTS_Decryption::set_iv(const InitializationVector& iv)
    {
-   if(iv.length() != cipher->BLOCK_SIZE)
+   if(!valid_iv_length(iv.length()))
       throw Invalid_IV_Length(name(), iv.length());
 
    const u32bit blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;

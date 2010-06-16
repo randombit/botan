@@ -49,7 +49,7 @@ CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
 */
 void CBC_Encryption::set_iv(const InitializationVector& iv)
    {
-   if(iv.length() != state.size())
+   if(!valid_iv_length(iv.length()))
       throw Invalid_IV_Length(name(), iv.length());
 
    state = iv.bits_of();
@@ -149,7 +149,7 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
 */
 void CBC_Decryption::set_iv(const InitializationVector& iv)
    {
-   if(iv.length() != state.size())
+   if(!valid_iv_length(iv.length()))
       throw Invalid_IV_Length(name(), iv.length());
 
    state = iv.bits_of();

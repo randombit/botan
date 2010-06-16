@@ -27,6 +27,9 @@ class BOTAN_DLL XTS_Encryption : public Keyed_Filter,
       bool valid_keylength(u32bit key_len) const
          { return cipher->valid_keylength(key_len); }
 
+      bool valid_iv_length(u32bit iv_len) const
+         { return (iv_len == cipher->BLOCK_SIZE); }
+
       std::string name() const;
 
       XTS_Encryption(BlockCipher* ciph);
@@ -60,6 +63,9 @@ class BOTAN_DLL XTS_Decryption : public Keyed_Filter,
 
       bool valid_keylength(u32bit key_len) const
          { return cipher->valid_keylength(key_len); }
+
+      bool valid_iv_length(u32bit iv_len) const
+         { return (iv_len == cipher->BLOCK_SIZE); }
 
       std::string name() const;
 

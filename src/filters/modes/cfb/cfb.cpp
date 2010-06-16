@@ -54,7 +54,7 @@ CFB_Encryption::CFB_Encryption(BlockCipher* ciph,
 
 void CFB_Encryption::set_iv(const InitializationVector& iv)
    {
-   if(iv.length() != state.size())
+   if(!valid_iv_length(iv.length()))
       throw Invalid_IV_Length(name(), iv.length());
 
    state = iv.bits_of();
@@ -131,7 +131,7 @@ CFB_Decryption::CFB_Decryption(BlockCipher* ciph,
 
 void CFB_Decryption::set_iv(const InitializationVector& iv)
    {
-   if(iv.length() != state.size())
+   if(!valid_iv_length(iv.length()))
       throw Invalid_IV_Length(name(), iv.length());
 
    state = iv.bits_of();

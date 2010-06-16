@@ -44,7 +44,7 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
       */
       void write(const byte input[], u32bit input_len);
 
-      bool valid_iv_length(u32bit iv_len)
+      bool valid_iv_length(u32bit iv_len) const
          { return cipher->valid_iv_length(iv_len); }
 
       /**
