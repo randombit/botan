@@ -68,7 +68,7 @@ class BOTAN_DLL BigInt
      BigInt& operator/=(const BigInt& y);
 
      /**
-     * %= operator, modulo operator.
+     * %= operator, modulo operator
      * @param y the modulus to reduce this by
      */
      BigInt& operator%=(const BigInt& y);
@@ -143,7 +143,7 @@ class BOTAN_DLL BigInt
      void clear() { get_reg().clear(); }
 
      /**
-     * Compare *this to another BigInt
+     * Compare this to another BigInt
      * @param n the BigInt value to compare with
      * @param check_signs include sign in comparison?
      * @result if (this<n) return -1, if (this>n) return 1, if both
@@ -170,7 +170,7 @@ class BOTAN_DLL BigInt
      bool is_nonzero() const { return (!is_zero()); }
 
      /**
-     * Test if the integer is zero.
+     * Test if the integer is zero
      * @result true if the integer is zero, false otherwise
      */
      bool is_zero() const
@@ -235,19 +235,20 @@ class BOTAN_DLL BigInt
      * Return the integer as an unsigned 32bit-integer-value. If the
      * value is negative OR to big to be stored in 32bits, this
      * function will throw an exception.
-     * @result a 32bit-integer
+     *
+     * @result unsigned 32 bit representation of this
      */
      u32bit to_u32bit() const;
 
      /**
-     * Tests if the sign of the integer is negative.
-     * @result true, if the integer has a negative sign,
+     * Tests if the sign of the integer is negative
+     * @result true, if the integer has a negative sign
      */
      bool is_negative() const { return (sign() == Negative); }
 
      /**
-     * Tests if the sign of the integer is positive.
-     * @result true, if the integer has a positive sign,
+     * Tests if the sign of the integer is positive
+     * @result true, if the integer has a positive sign
      */
      bool is_positive() const { return (sign() == Positive); }
 
@@ -306,13 +307,13 @@ class BOTAN_DLL BigInt
      u32bit bytes() const;
 
      /**
-     * Get the bit-length of the integer.
+     * Get the bit-length of the integer
      * @result bit-length of the represented integer value
      */
      u32bit bits() const;
 
      /**
-     * Return a pointer to the big integer word register.
+     * Return a pointer to the big integer word register
      * @result a pointer to the start of the internal register of
      * the integer value
      */
@@ -363,7 +364,7 @@ class BOTAN_DLL BigInt
 
      /**
      * Read integer value from a byte array (MemoryRegion<byte>)
-     * @param buf the BigInt value to compare to this.
+     * @param buf the array to load from
      */
      void binary_decode(const MemoryRegion<byte>& buf);
 
@@ -428,7 +429,7 @@ class BOTAN_DLL BigInt
      static SecureVector<byte> encode_1363(const BigInt& n, u32bit bytes);
 
      /**
-     * Swap BigInt-value with given BigInt.
+     * Swap BigInt-value with given BigInt
      * @param bigint the BigInt to swap values with
      */
      void swap(BigInt& bigint);
@@ -451,13 +452,13 @@ class BOTAN_DLL BigInt
      BigInt(const BigInt& other);
 
      /**
-     * Create BigInt from a string.
-     * If the string starts with 0x the rest of the string will be
-     * interpreted as hexadecimal digits.
-     * If the string starts with 0 and the second character is NOT
-     * an 'x' the string will be interpreted as octal digits.
-     * If the string starts with non-zero digit, it will be
-     * interpreted as a decimal number.
+     * Create BigInt from a string. If the string starts with 0x the
+     * rest of the string will be interpreted as hexadecimal digits.
+     * If the string starts with 0 and the second character is NOT an
+     * 'x' the string will be interpreted as octal digits. If the
+     * string starts with non-zero digit, it will be interpreted as a
+     * decimal number.
+     *
      * @param str the string to parse for an integer value
      */
      BigInt(const std::string& str);
