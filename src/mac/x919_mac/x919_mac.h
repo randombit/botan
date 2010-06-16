@@ -23,7 +23,10 @@ class BOTAN_DLL ANSI_X919_MAC : public MessageAuthenticationCode
       std::string name() const;
       MessageAuthenticationCode* clone() const;
 
-      ANSI_X919_MAC(BlockCipher*);
+      /**
+      * @param cipher the underlying block cipher to use
+      */
+      ANSI_X919_MAC(BlockCipher* cipher);
       ~ANSI_X919_MAC();
    private:
       void add_data(const byte[], u32bit);

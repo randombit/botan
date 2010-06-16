@@ -25,9 +25,14 @@ class BOTAN_DLL PBE_PKCS5v15 : public PBE
       void start_msg();
       void end_msg();
 
+      /**
+      * @param cipher the block cipher to use (DES or RC2)
+      * @param hash the hash function to use
+      * @param direction are we encrypting or decrypting
+      */
       PBE_PKCS5v15(BlockCipher* cipher,
                    HashFunction* hash,
-                   Cipher_Dir);
+                   Cipher_Dir direction);
 
       ~PBE_PKCS5v15();
    private:

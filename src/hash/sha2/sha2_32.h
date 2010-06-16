@@ -20,6 +20,10 @@ class BOTAN_DLL SHA_224_256_BASE : public MDx_HashFunction
    {
    protected:
       void clear();
+
+      /**
+      * @param out output size in bytes
+      */
       SHA_224_256_BASE(u32bit out) :
          MDx_HashFunction(out, 64, true, true) { clear(); }
 

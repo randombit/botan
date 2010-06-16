@@ -33,6 +33,10 @@ class BOTAN_DLL PKCS5_PBKDF1 : public S2K
       */
       PKCS5_PBKDF1(HashFunction* hash_in) : hash(hash_in) {}
 
+      /**
+      * Copy constructor
+      * @param other the object to copy
+      */
       PKCS5_PBKDF1(const PKCS5_PBKDF1& other) :
          S2K(), hash(other.hash->clone()) {}
 

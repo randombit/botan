@@ -29,6 +29,9 @@ class BOTAN_DLL Library_State
       Library_State();
       ~Library_State();
 
+      /**
+      * @param thread_safe should a mutex be used for serialization
+      */
       void initialize(bool thread_safe);
 
       /**

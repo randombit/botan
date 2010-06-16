@@ -45,6 +45,12 @@ class BOTAN_DLL MessageAuthenticationCode : public BufferedComputation,
       */
       virtual void clear() = 0;
 
+      /**
+      * @param mac_len the output length of this MAC
+      * @param key_min the minimum key size
+      * @param key_max the maximum key size
+      * @param key_mod the modulo restriction on the key size
+      */
       MessageAuthenticationCode(u32bit mac_len,
                                 u32bit key_min,
                                 u32bit key_max = 0,

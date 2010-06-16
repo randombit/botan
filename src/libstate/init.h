@@ -22,8 +22,15 @@ namespace Botan {
 class BOTAN_DLL LibraryInitializer
    {
    public:
+      /**
+      * Initialize the library
+      * @param options a string listing initialization options
+      */
       static void initialize(const std::string& options = "");
 
+      /**
+      * Shutdown the library
+      */
       static void deinitialize();
 
       /**

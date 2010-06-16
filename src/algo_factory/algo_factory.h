@@ -162,7 +162,14 @@ class BOTAN_DLL Algorithm_Factory
       class BOTAN_DLL Engine_Iterator
          {
          public:
+            /**
+            * @return next engine in the sequence
+            */
             class Engine* next() { return af.get_engine_n(n++); }
+
+            /**
+            * @param a an algorithm factory
+            */
             Engine_Iterator(const Algorithm_Factory& a) : af(a) { n = 0; }
          private:
             const Algorithm_Factory& af;

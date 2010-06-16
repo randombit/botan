@@ -18,11 +18,19 @@ namespace Botan {
 class BOTAN_DLL Alert
    {
    public:
+      /**
+      * @return if this alert is a fatal one or not
+      */
       bool is_fatal() const { return fatal; }
+
+      /**
+      * @return type of alert
+      */
       Alert_Type type() const { return type_code; }
 
       /**
       * Deserialize an Alert message
+      * @param buf the serialized alert
       */
       Alert(const MemoryRegion<byte>& buf)
          {
