@@ -19,25 +19,63 @@ namespace Botan {
 class BOTAN_DLL KDF
    {
    public:
+      /**
+      * Derive a key
+      * @param key_len the desired output length in bytes
+      * @param secret the secret input
+      * @param salt a diversifier
+      */
       SecureVector<byte> derive_key(u32bit key_len,
                                     const MemoryRegion<byte>& secret,
                                     const std::string& salt = "") const;
 
+      /**
+      * Derive a key
+      * @param key_len the desired output length in bytes
+      * @param secret the secret input
+      * @param salt a diversifier
+      */
       SecureVector<byte> derive_key(u32bit key_len,
                                     const MemoryRegion<byte>& secret,
                                     const MemoryRegion<byte>& salt) const;
 
+      /**
+      * Derive a key
+      * @param key_len the desired output length in bytes
+      * @param secret the secret input
+      * @param salt a diversifier
+      * @param salt_len size of salt in bytes
+      */
       SecureVector<byte> derive_key(u32bit key_len,
                                     const MemoryRegion<byte>& secret,
-                                    const byte salt[], u32bit salt_len) const;
+                                    const byte salt[],
+                                    u32bit salt_len) const;
 
+      /**
+      * Derive a key
+      * @param key_len the desired output length in bytes
+      * @param secret the secret input
+      * @param secret_len size of secret in bytes
+      * @param salt a diversifier
+      */
       SecureVector<byte> derive_key(u32bit key_len,
-                                    const byte secret[], u32bit secret_len,
+                                    const byte secret[],
+                                    u32bit secret_len,
                                     const std::string& salt = "") const;
 
+      /**
+      * Derive a key
+      * @param key_len the desired output length in bytes
+      * @param secret the secret input
+      * @param secret_len size of secret in bytes
+      * @param salt a diversifier
+      * @param salt_len size of salt in bytes
+      */
       SecureVector<byte> derive_key(u32bit key_len,
-                                    const byte secret[], u32bit secret_len,
-                                    const byte salt[], u32bit salt_len) const;
+                                    const byte secret[],
+                                    u32bit secret_len,
+                                    const byte salt[],
+                                    u32bit salt_len) const;
 
       virtual ~KDF() {}
    private:

@@ -73,7 +73,11 @@ class BOTAN_DLL Public_Key
 
       virtual ~Public_Key() {}
    protected:
-      virtual void load_check(RandomNumberGenerator&) const;
+      /**
+      * Self-test after loading a key
+      * @param rng a random number generator
+      */
+      virtual void load_check(RandomNumberGenerator& rng) const;
    };
 
 /**
@@ -95,8 +99,17 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
          { return algorithm_identifier(); }
 
    protected:
-      void load_check(RandomNumberGenerator&) const;
-      void gen_check(RandomNumberGenerator&) const;
+      /**
+      * Self-test after loading a key
+      * @param rng a random number generator
+      */
+      void load_check(RandomNumberGenerator& rng) const;
+
+      /**
+      * Self-test after generating a key
+      * @param rng a random number generator
+      */
+      void gen_check(RandomNumberGenerator& rng) const;
    };
 
 /**
@@ -105,6 +118,9 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
 class BOTAN_DLL PK_Key_Agreement_Key : public virtual Private_Key
    {
    public:
+      /*
+      * @return public component of this key
+      */
       virtual MemoryVector<byte> public_value() const = 0;
 
       virtual ~PK_Key_Agreement_Key() {}
