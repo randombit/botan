@@ -49,8 +49,9 @@ algorithm_kat(const SCAN_Name& algo_name,
 
    const std::string input = search_map(vars, std::string("input"));
    const std::string output = search_map(vars, std::string("output"));
-   const std::string key = search_map(vars, std::string("key"));
-   const std::string iv = search_map(vars, std::string("iv"));
+
+   SymmetricKey key(search_map(vars, std::string("key")));
+   InitializationVector iv(search_map(vars, std::string("iv")));
 
    for(u32bit i = 0; i != providers.size(); ++i)
       {
@@ -96,10 +97,18 @@ algorithm_kat(const SCAN_Name& algo_name,
             }
 
          enc->set_key(key);
-         enc->set_iv(iv);
+
+         if(enc->valid_iv_length(iv.length()))
+            enc->set_iv(iv);
+         else if(!enc->valid_iv_length(0))
+            throw Invalid_IV_Length(algo, iv.length());
 
          dec->set_key(key);
-         dec->set_iv(iv);
+
+         if(dec->valid_iv_length(iv.length()))
+            dec->set_iv(iv);
+         else if(!dec->valid_iv_length(0))
+            throw Invalid_IV_Length(algo, iv.length());
 
          bool enc_ok = test_filter_kat(enc, input, output);
          bool dec_ok = test_filter_kat(dec, output, input);
