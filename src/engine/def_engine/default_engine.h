@@ -40,7 +40,6 @@ class Default_Engine : public Engine
       Keyed_Filter* get_cipher(const std::string&, Cipher_Dir,
                                Algorithm_Factory&);
 
-   private:
       BlockCipher* find_block_cipher(const SCAN_Name&,
                                      Algorithm_Factory&) const;
 
