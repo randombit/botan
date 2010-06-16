@@ -1,5 +1,5 @@
 
-* 1.8.9, ????-??-??
+* 1.8.9, 2010-06-16
  - Use constant time multiplication in IDEA
  - Avoid possible timing attack against OAEP decoding
  - Add new X509::BER_encode and PKCS8::BER_encode
