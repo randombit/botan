@@ -29,6 +29,10 @@ class BOTAN_DLL Noekeon : public BlockCipher
    private:
       void key_schedule(const byte[], u32bit);
    protected: // for access by SIMD subclass
+
+      /**
+      * The Noekeon round constants
+      */
       static const byte RC[17];
 
       SecureVector<u32bit, 4> EK, DK;

@@ -31,7 +31,7 @@ void hmac_prf(MessageAuthenticationCode* prf,
 
 }
 
-/**
+/*
 * Generate a buffer of random bytes
 */
 void HMAC_RNG::randomize(byte out[], u32bit length)
@@ -54,7 +54,7 @@ void HMAC_RNG::randomize(byte out[], u32bit length)
       }
    }
 
-/**
+/*
 * Poll for entropy and reset the internal keys
 */
 void HMAC_RNG::reseed(u32bit poll_bits)
@@ -115,7 +115,7 @@ void HMAC_RNG::reseed(u32bit poll_bits)
       seeded = true;
    }
 
-/**
+/*
 * Add user-supplied entropy to the extractor input
 */
 void HMAC_RNG::add_entropy(const byte input[], u32bit length)
@@ -132,7 +132,7 @@ void HMAC_RNG::add_entropy(const byte input[], u32bit length)
       reseed(128);
    }
 
-/**
+/*
 * Add another entropy source to the list
 */
 void HMAC_RNG::add_entropy_source(EntropySource* src)
@@ -140,7 +140,7 @@ void HMAC_RNG::add_entropy_source(EntropySource* src)
    entropy_sources.push_back(src);
    }
 
-/**
+/*
 * Clear memory of sensitive data
 */
 void HMAC_RNG::clear()
@@ -153,7 +153,7 @@ void HMAC_RNG::clear()
    seeded = false;
    }
 
-/**
+/*
 * Return the name of this type
 */
 std::string HMAC_RNG::name() const
@@ -161,7 +161,7 @@ std::string HMAC_RNG::name() const
    return "HMAC_RNG(" + extractor->name() + "," + prf->name() + ")";
    }
 
-/**
+/*
 * HMAC_RNG Constructor
 */
 HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
@@ -209,7 +209,7 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
    extractor->set_key(prf->process("Botan HMAC_RNG XTS"));
    }
 
-/**
+/*
 * HMAC_RNG Destructor
 */
 HMAC_RNG::~HMAC_RNG()

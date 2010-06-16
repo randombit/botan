@@ -18,7 +18,19 @@ namespace Botan {
 class BOTAN_DLL MDx_HashFunction : public HashFunction
    {
    public:
-      MDx_HashFunction(u32bit, u32bit, bool, bool, u32bit = 8);
+      /**
+      * @param hash_length is the output length of this hash
+      * @param block_length is the number of bytes per block
+      * @param big_byte_endian specifies if the hash uses big-endian bytes
+      * @param big_bit_endian specifies if the hash uses big-endian bits
+      * @param counter_size specifies the size of the counter var in bytes
+      */
+      MDx_HashFunction(u32bit hash_length,
+                       u32bit block_length,
+                       bool big_byte_endian,
+                       bool big_bit_endian,
+                       u32bit counter_size = 8);
+
       virtual ~MDx_HashFunction() {}
    protected:
       void add_data(const byte input[], u32bit length);

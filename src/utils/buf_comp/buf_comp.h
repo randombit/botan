@@ -117,8 +117,19 @@ class BOTAN_DLL BufferedComputation
       virtual ~BufferedComputation() {}
    private:
       BufferedComputation& operator=(const BufferedComputation&);
-      virtual void add_data(const byte[], u32bit) = 0;
-      virtual void final_result(byte[]) = 0;
+
+      /**
+      * Add more data to the computation
+      * @param input is an input buffer
+      * @param length is the length of input in bytes
+      */
+      virtual void add_data(const byte input[], u32bit length) = 0;
+
+      /**
+      * Write the final output to out
+      * @param out is an output buffer of OUTPUT_LENGTH
+      */
+      virtual void final_result(byte out[]) = 0;
    };
 
 }

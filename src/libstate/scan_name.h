@@ -23,64 +23,66 @@ class BOTAN_DLL SCAN_Name
    {
    public:
       /**
-      @param algo_spec A SCAN-format name
+      * @param algo_spec A SCAN-format name
       */
       SCAN_Name(std::string algo_spec);
 
       /**
-      @return the original input string
+      * @return the original input string
       */
       std::string as_string() const { return orig_algo_spec; }
 
       /**
-      @return the algorithm name
+      * @return the algorithm name
       */
       std::string algo_name() const { return alg_name; }
 
       /**
-      @return the algorithm name plus any arguments
+      * @return the algorithm name plus any arguments
       */
       std::string algo_name_and_args() const;
 
       /**
-      @return the number of arguments
+      * @return the number of arguments
       */
       u32bit arg_count() const { return args.size(); }
 
       /**
-      @return if the number of arguments is between lower and upper
+      * @param lower is the lower bound
+      * @param upper is the upper bound
+      * @return if the number of arguments is between lower and upper
       */
       bool arg_count_between(u32bit lower, u32bit upper) const
          { return ((arg_count() >= lower) && (arg_count() <= upper)); }
 
       /**
-      @param i which argument
-      @return the ith argument
+      * @param i which argument
+      * @return the ith argument
       */
       std::string arg(u32bit i) const;
 
       /**
-      @param i which argument
-      @param def_value the default value
-      @return the ith argument or the default value
+      * @param i which argument
+      * @param def_value the default value
+      * @return the ith argument or the default value
       */
       std::string arg(u32bit i, const std::string& def_value) const;
 
       /**
-      @param i which argument
-      @param def_value the default value
-      @return the ith argument as a u32bit, or the default value
+      * @param i which argument
+      * @param def_value the default value
+      * @return the ith argument as a u32bit, or the default value
       */
       u32bit arg_as_u32bit(u32bit i, u32bit def_value) const;
 
       /**
-      @return the cipher mode (if any)
+      * @return the cipher mode (if any)
       */
       std::string cipher_mode() const
          { return (mode_info.size() >= 1) ? mode_info[0] : ""; }
 
       /**
-      @return the cipher mode padding (if any)
+      * @return the cipher mode padding (if any)
       */
       std::string cipher_mode_pad() const
          { return (mode_info.size() >= 2) ? mode_info[1] : ""; }
