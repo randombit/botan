@@ -31,13 +31,13 @@ class BOTAN_DLL X509_CRL : public X509_Object
 
       /**
       * Get the entries of this CRL in the form of a vector.
-      * @return a vector containing the entries of this CRL.
+      * @return vector containing the entries of this CRL.
       */
       std::vector<CRL_Entry> get_revoked() const;
 
       /**
       * Get the issuer DN of this CRL.
-      * @return the CRLs issuer DN
+      * @return CRLs issuer DN
       */
       X509_DN issuer_dn() const;
 
@@ -49,19 +49,19 @@ class BOTAN_DLL X509_CRL : public X509_Object
 
       /**
       * Get the serial number of this CRL.
-      * @return the CRLs serial number
+      * @return CRLs serial number
       */
       u32bit crl_number() const;
 
       /**
       * Get the CRL's thisUpdate value.
-      * @return the CRLs thisUpdate
+      * @return CRLs thisUpdate
       */
       X509_Time this_update() const;
 
       /**
       * Get the CRL's nextUpdate value.
-      * @return the CRLs nextdUpdate
+      * @return CRLs nextdUpdate
       */
       X509_Time next_update() const;
 

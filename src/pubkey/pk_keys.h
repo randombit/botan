@@ -23,13 +23,13 @@ class BOTAN_DLL Public_Key
    public:
       /**
       * Get the name of the underlying public key scheme.
-      * @return the name of the public key scheme
+      * @return name of the public key scheme
       */
       virtual std::string algo_name() const = 0;
 
       /**
       * Get the OID of the underlying public key scheme.
-      * @return the OID of the public key scheme
+      * @return OID of the public key scheme
       */
       virtual OID get_oid() const;
 
@@ -40,24 +40,24 @@ class BOTAN_DLL Public_Key
       * of the test
       * @return true if the test is passed
       */
-      virtual bool check_key(RandomNumberGenerator& rng, bool strong) const
-         { return true; }
+      virtual bool check_key(RandomNumberGenerator& rng,
+                             bool strong) const = 0;
 
       /**
       * Find out the number of message parts supported by this scheme.
-      * @return the number of message parts
+      * @return number of message parts
       */
       virtual u32bit message_parts() const { return 1; }
 
       /**
       * Find out the message part size supported by this scheme/key.
-      * @return the size of the message parts
+      * @return size of the message parts in bits
       */
       virtual u32bit message_part_size() const { return 0; }
 
       /**
       * Get the maximum message size in bits supported by this public key.
-      * @return the maximum message in bits
+      * @return maximum message size in bits
       */
       virtual u32bit max_input_bits() const = 0;
 

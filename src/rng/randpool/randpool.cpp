@@ -15,7 +15,7 @@ namespace Botan {
 
 namespace {
 
-/**
+/*
 * PRF based on a MAC
 */
 enum RANDPOOL_PRF_TAG {
@@ -26,7 +26,7 @@ enum RANDPOOL_PRF_TAG {
 
 }
 
-/**
+/*
 * Generate a buffer of random bytes
 */
 void Randpool::randomize(byte out[], u32bit length)
@@ -45,7 +45,7 @@ void Randpool::randomize(byte out[], u32bit length)
       }
    }
 
-/**
+/*
 * Refill the output buffer
 */
 void Randpool::update_buffer()
@@ -66,7 +66,7 @@ void Randpool::update_buffer()
       mix_pool();
    }
 
-/**
+/*
 * Mix the entropy pool
 */
 void Randpool::mix_pool()
@@ -94,7 +94,7 @@ void Randpool::mix_pool()
    update_buffer();
    }
 
-/**
+/*
 * Reseed the internal state
 */
 void Randpool::reseed(u32bit poll_bits)
@@ -121,7 +121,7 @@ void Randpool::reseed(u32bit poll_bits)
       seeded = true;
    }
 
-/**
+/*
 * Add user-supplied entropy
 */
 void Randpool::add_entropy(const byte input[], u32bit length)
@@ -134,7 +134,7 @@ void Randpool::add_entropy(const byte input[], u32bit length)
       seeded = true;
    }
 
-/**
+/*
 * Add another entropy source to the list
 */
 void Randpool::add_entropy_source(EntropySource* src)
@@ -142,7 +142,7 @@ void Randpool::add_entropy_source(EntropySource* src)
    entropy_sources.push_back(src);
    }
 
-/**
+/*
 * Clear memory of sensitive data
 */
 void Randpool::clear()
@@ -155,7 +155,7 @@ void Randpool::clear()
    seeded = false;
    }
 
-/**
+/*
 * Return the name of this type
 */
 std::string Randpool::name() const
@@ -163,7 +163,7 @@ std::string Randpool::name() const
    return "Randpool(" + cipher->name() + "," + mac->name() + ")";
    }
 
-/**
+/*
 * Randpool Constructor
 */
 Randpool::Randpool(BlockCipher* cipher_in,
@@ -194,7 +194,7 @@ Randpool::Randpool(BlockCipher* cipher_in,
    seeded = false;
    }
 
-/**
+/*
 * Randpool Destructor
 */
 Randpool::~Randpool()

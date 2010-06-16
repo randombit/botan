@@ -174,7 +174,7 @@ namespace X509 {
 * associated with this self-signed certificate
 * @param hash_fn the hash function to use
 * @param rng the rng to use
-* @return the newly created self-signed certificate
+* @return newly created self-signed certificate
 */
 BOTAN_DLL X509_Certificate
 create_self_signed_cert(const X509_Cert_Options& opts,
@@ -188,7 +188,7 @@ create_self_signed_cert(const X509_Cert_Options& opts,
 * @param key the key used to sign this request
 * @param rng the rng to use
 * @param hash_fn the hash function to use
-* @return the newly created PKCS#10 request
+* @return newly created PKCS#10 request
 */
 BOTAN_DLL PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
                                          const Private_Key& key,

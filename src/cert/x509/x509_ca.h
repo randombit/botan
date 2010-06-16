@@ -30,7 +30,7 @@ class BOTAN_DLL X509_CA
       * @param rng the rng to use
       * @param not_before the starting time for the certificate
       * @param not_after the expiration time for the certificate
-      * @return the resulting certificate
+      * @return resulting certificate
       */
       X509_Certificate sign_request(const PKCS10_Request& req,
                                     RandomNumberGenerator& rng,
@@ -39,7 +39,7 @@ class BOTAN_DLL X509_CA
 
       /**
       * Get the certificate of this CA.
-      * @return the CA certificate
+      * @return CA certificate
       */
       X509_Certificate ca_certificate() const;
 
@@ -48,7 +48,7 @@ class BOTAN_DLL X509_CA
       * @param rng the random number generator to use
       * @param next_update the time to set in next update in seconds
       * as the offset from the current time
-      * @return the new CRL
+      * @return new CRL
       */
       X509_CRL new_crl(RandomNumberGenerator& rng,
                        u32bit next_update = 0) const;

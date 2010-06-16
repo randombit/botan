@@ -44,90 +44,96 @@ class BOTAN_DLL BigInt
         { DivideByZero() : Exception("BigInt divide by zero") {} };
 
      /**
-     * += Operator
+     * += operator
      * @param y the BigInt to add to this
      */
      BigInt& operator+=(const BigInt& y);
 
      /**
-     * -= Operator
+     * -= operator
      * @param y the BigInt to subtract from this
      */
      BigInt& operator-=(const BigInt& y);
 
      /**
-     * *= Operator
+     * *= operator
      * @param y the BigInt to multiply with this
      */
      BigInt& operator*=(const BigInt& y);
 
      /**
-     * /= Operator
+     * /= operator
      * @param y the BigInt to divide this by
      */
      BigInt& operator/=(const BigInt& y);
 
      /**
-     * %= Operator, modulo operator.
+     * %= operator, modulo operator.
      * @param y the modulus to reduce this by
      */
      BigInt& operator%=(const BigInt& y);
 
      /**
-     * %= Operator
+     * %= operator
      * @param y the modulus (word) to reduce this by
      */
      word    operator%=(word y);
 
      /**
-     * <<= Operator
-     * @param y the amount of bits to shift this left
+     * <<= operator
+     * @param y the number of bits to shift this left by
      */
      BigInt& operator<<=(u32bit y);
 
      /**
-     * >>= Operator
-     * @param y the amount of bits to shift this right
+     * >>= operator
+     * @param y the number of bits to shift this right by
      */
      BigInt& operator>>=(u32bit y);
 
      /**
-     * ++ Operator
+     * Increment operator
      */
      BigInt& operator++() { return (*this += 1); }
 
      /**
-     * -- Operator
+     * Decrement operator
      */
      BigInt& operator--() { return (*this -= 1); }
 
      /**
-     * ++ Operator (postfix)
+     * ++ operator (postfix)
      */
      BigInt  operator++(int) { BigInt x = (*this); ++(*this); return x; }
 
      /**
-     * -- Operator (postfix)
+     * -- operator (postfix)
      */
      BigInt  operator--(int) { BigInt x = (*this); --(*this); return x; }
 
      /**
-     * Unary - Operator
+     * Unary negation operator
+     * @return negative this
      */
      BigInt operator-() const;
 
      /**
-     * ! Operator
+     * ! operator
+     * @return true iff this is zero, otherwise false
      */
      bool operator !() const { return (!is_nonzero()); }
 
      /**
-     * [] Operator (array access)
+     * [] operator (array access)
+     * @param i a word index
+     * @return the word at index i
      */
      word& operator[](u32bit i) { return reg[i]; }
 
      /**
-     * [] Operator (array access)
+     * [] operator (array access)
+     * @param i a word index
+     * @return the word at index i
      */
      word operator[](u32bit i) const { return reg[i]; }
 
@@ -137,8 +143,8 @@ class BOTAN_DLL BigInt
      void clear() { get_reg().clear(); }
 
      /**
-     * Compare *this to another BigInt.
-     * @param n the BigInt value to compare to this.
+     * Compare *this to another BigInt
+     * @param n the BigInt value to compare with
      * @param check_signs include sign in comparison?
      * @result if (this<n) return -1, if (this>n) return 1, if both
      * values are identical return 0 [like Perl's <=> operator]
@@ -158,7 +164,7 @@ class BOTAN_DLL BigInt
      bool is_odd()  const { return (get_bit(0) == 1); }
 
      /**
-     * Test if the integer is not zero.
+     * Test if the integer is not zero
      * @result true if the integer is non-zero, false otherwise
      */
      bool is_nonzero() const { return (!is_zero()); }
@@ -220,7 +226,7 @@ class BOTAN_DLL BigInt
      /**
      * Return the word at a specified position of the internal register
      * @param n position in the register
-     * @return the value at position n
+     * @return value at position n
      */
      word word_at(u32bit n) const
         { return ((n < size()) ? reg[n] : 0); }
@@ -371,7 +377,7 @@ class BOTAN_DLL BigInt
      * @param rng a random number generator
      * @param min the minimum value
      * @param max the maximum value
-     * @return a random integer between min and max
+     * @return random integer between min and max
      */
      static BigInt random_integer(RandomNumberGenerator& rng,
                                   const BigInt& min,
@@ -396,15 +402,22 @@ class BOTAN_DLL BigInt
 
      /**
      * Create a BigInt from an integer in a byte array
-     * @param buf the BigInt value to compare to this.
+     * @param buf the binary value to load
      * @param length size of buf
      * @param base number-base of the integer in buf
-     * @result BigInt-representing the given integer read from the byte array
+     * @result BigInt representing the integer in the byte array
      */
      static BigInt decode(const byte buf[], u32bit length,
                           Base base = Binary);
 
-     static BigInt decode(const MemoryRegion<byte>&, Base = Binary);
+     /**
+     * Create a BigInt from an integer in a byte array
+     * @param buf the binary value to load
+     * @param base number-base of the integer in buf
+     * @result BigInt representing the integer in the byte array
+     */
+     static BigInt decode(const MemoryRegion<byte>& buf,
+                          Base base = Binary);
 
      /**
      * Encode a BigInt to a byte array according to IEEE 1363
@@ -426,16 +439,16 @@ class BOTAN_DLL BigInt
      BigInt() { signedness = Positive; }
 
      /**
-     * Create BigInt from 64bit-Integer value
-     * @param n 64bit-integer
+     * Create BigInt from 64 bit integer
+     * @param n initial value of this BigInt
      */
      BigInt(u64bit n);
 
      /**
-     * Copy-Constructor: clone given BigInt
-     * @param bigint the BigInt to clone
+     * Copy Constructor
+     * @param other the BigInt to copy
      */
-     BigInt(const BigInt& bigint);
+     BigInt(const BigInt& other);
 
      /**
      * Create BigInt from a string.
@@ -451,9 +464,9 @@ class BOTAN_DLL BigInt
 
      /**
      * Create a BigInt from an integer in a byte array
-     * @param buf the BigInt value to compare to this.
+     * @param buf the byte array holding the value
      * @param length size of buf
-     * @param base number-base of the integer in buf
+     * @param base is the number base of the integer in buf
      */
      BigInt(const byte buf[], u32bit length, Base base = Binary);
 

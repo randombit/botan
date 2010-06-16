@@ -31,7 +31,7 @@ class BOTAN_DLL HashFunction : public BufferedComputation
 
       /**
       * Get the name of this algorithm.
-      * @return the name of this algorithm
+      * @return name of this algorithm
       */
       virtual std::string name() const = 0;
 

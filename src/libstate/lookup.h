@@ -64,7 +64,7 @@ retrieve_mac(const std::string& algo_spec)
 * @deprecated Call algorithm_factory() directly
 *
 * @param algo_spec the name of the desired block cipher
-* @return a pointer to the block cipher object
+* @return pointer to the block cipher object
 */
 inline BlockCipher* get_block_cipher(const std::string& algo_spec)
    {
@@ -77,7 +77,7 @@ inline BlockCipher* get_block_cipher(const std::string& algo_spec)
 * @deprecated Call algorithm_factory() directly
 *
 * @param algo_spec the name of the desired stream cipher
-* @return a pointer to the stream cipher object
+* @return pointer to the stream cipher object
 */
 inline StreamCipher* get_stream_cipher(const std::string& algo_spec)
    {
@@ -90,7 +90,7 @@ inline StreamCipher* get_stream_cipher(const std::string& algo_spec)
 * @deprecated Call algorithm_factory() directly
 *
 * @param algo_spec the name of the desired hash function
-* @return a pointer to the hash function object
+* @return pointer to the hash function object
 */
 inline HashFunction* get_hash(const std::string& algo_spec)
    {
@@ -103,7 +103,7 @@ inline HashFunction* get_hash(const std::string& algo_spec)
 * @deprecated Call algorithm_factory() directly
 *
 * @param algo_spec the name of the desired MAC
-* @return a pointer to the MAC object
+* @return pointer to the MAC object
 */
 inline MessageAuthenticationCode* get_mac(const std::string& algo_spec)
    {
@@ -114,7 +114,7 @@ inline MessageAuthenticationCode* get_mac(const std::string& algo_spec)
 /**
 * String to key algorithm factory method.
 * @param algo_spec the name of the desired string to key (S2K) algorithm
-* @return a pointer to the string to key algorithm object
+* @return pointer to the string to key algorithm object
 */
 BOTAN_DLL S2K* get_s2k(const std::string& algo_spec);
 
@@ -127,7 +127,7 @@ BOTAN_DLL S2K* get_s2k(const std::string& algo_spec);
 /**
 * Factory method for EME (message-encoding methods for encryption) objects
 * @param algo_spec the name of the EME to create
-* @return a pointer to the desired EME object
+* @return pointer to the desired EME object
 */
 BOTAN_DLL EME*  get_eme(const std::string& algo_spec);
 
@@ -135,14 +135,14 @@ BOTAN_DLL EME*  get_eme(const std::string& algo_spec);
 * Factory method for EMSA (message-encoding methods for signatures
 * with appendix) objects
 * @param algo_spec the name of the EME to create
-* @return a pointer to the desired EME object
+* @return pointer to the desired EME object
 */
 BOTAN_DLL EMSA* get_emsa(const std::string& algo_spec);
 
 /**
 * Factory method for KDF (key derivation function)
 * @param algo_spec the name of the KDF to create
-* @return a pointer to the desired KDF object
+* @return pointer to the desired KDF object
 */
 BOTAN_DLL KDF*  get_kdf(const std::string& algo_spec);
 
@@ -158,7 +158,7 @@ BOTAN_DLL KDF*  get_kdf(const std::string& algo_spec);
 * @param iv the initialization vector to be used
 * @param direction determines whether the filter will be an encrypting
 * or decrypting filter
-* @return a pointer to the encryption or decryption filter
+* @return pointer to the encryption or decryption filter
 */
 BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
                                    const SymmetricKey& key,
@@ -172,7 +172,7 @@ BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
 * the filter
 * @param direction determines whether the filter will be an encrypting
 * or decrypting filter
-* @return a pointer to the encryption or decryption filter
+* @return pointer to the encryption or decryption filter
 */
 BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
                                    const SymmetricKey& key,
@@ -185,7 +185,7 @@ BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
 * @param algo_spec the name of the desired cipher
 * @param direction determines whether the filter will be an encrypting or
 * decrypting filter
-* @return a pointer to the encryption or decryption filter
+* @return pointer to the encryption or decryption filter
 */
 BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
                                    Cipher_Dir direction);

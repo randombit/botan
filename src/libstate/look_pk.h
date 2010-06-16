@@ -19,7 +19,7 @@ namespace Botan {
 *
 * @param key the key that will work inside the encryptor
 * @param eme determines the algorithm and encoding
-* @return the public key encryptor object
+* @return public key encryptor object
 */
 inline PK_Encryptor* get_pk_encryptor(const Public_Key& key,
                                       const std::string& eme)
@@ -33,7 +33,7 @@ inline PK_Encryptor* get_pk_encryptor(const Public_Key& key,
 *
 * @param key the key that will work inside the decryptor
 * @param eme determines the algorithm and encoding
-* @return the public key decryptor object
+* @return public key decryptor object
 */
 inline PK_Decryptor* get_pk_decryptor(const Private_Key& key,
                                       const std::string& eme)
@@ -48,7 +48,7 @@ inline PK_Decryptor* get_pk_decryptor(const Private_Key& key,
 * @param key the key that will work inside the signer
 * @param emsa determines the algorithm, encoding and hash algorithm
 * @param sig_format the signature format to be used
-* @return the public key signer object
+* @return public key signer object
 */
 inline PK_Signer* get_pk_signer(const Private_Key& key,
                                 const std::string& emsa,
@@ -64,7 +64,7 @@ inline PK_Signer* get_pk_signer(const Private_Key& key,
 * @param key the key that will work inside the verifier
 * @param emsa determines the algorithm, encoding and hash algorithm
 * @param sig_format the signature format to be used
-* @return the public key verifier object
+* @return public key verifier object
 */
 inline PK_Verifier* get_pk_verifier(const Public_Key& key,
                                     const std::string& emsa,
@@ -79,7 +79,7 @@ inline PK_Verifier* get_pk_verifier(const Public_Key& key,
 *
 * @param key the key that will work inside the key agreement
 * @param kdf the kdf algorithm to use
-* @return the key agreement algorithm
+* @return key agreement algorithm
 */
 inline PK_Key_Agreement* get_pk_kas(const PK_Key_Agreement_Key& key,
                                        const std::string& kdf)

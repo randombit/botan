@@ -4,6 +4,10 @@ define ENGINES
 engine.h
 </header:public>
 
+<source>
+engine.cpp
+</source>
+
 <requires>
 block
 hash

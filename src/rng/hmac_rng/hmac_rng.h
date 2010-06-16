@@ -36,6 +36,10 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
       void add_entropy_source(EntropySource* es);
       void add_entropy(const byte[], u32bit);
 
+      /**
+      * @param extractor a MAC used for extracting the entropy
+      * @param prf a MAC used as a PRF using HKDF construction
+      */
       HMAC_RNG(MessageAuthenticationCode* extractor,
                MessageAuthenticationCode* prf);
 

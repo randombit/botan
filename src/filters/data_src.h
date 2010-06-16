@@ -26,7 +26,7 @@ class BOTAN_DLL DataSource
       *
       * @param out the byte array to write the result to
       * @param length the length of the byte array out
-      * @return the length in bytes that was actually read and put
+      * @return length in bytes that was actually read and put
       * into out
       */
       virtual u32bit read(byte out[], u32bit length) = 0;
@@ -39,7 +39,7 @@ class BOTAN_DLL DataSource
       * @param out the byte array to write the output to
       * @param length the length of the byte array out
       * @param peek_offset the offset into the stream to read at
-      * @return the length in bytes that was actually read and put
+      * @return length in bytes that was actually read and put
       * into out
       */
       virtual u32bit peek(byte out[], u32bit length,
@@ -59,7 +59,7 @@ class BOTAN_DLL DataSource
       /**
       * Read one byte.
       * @param out the byte to read to
-      * @return the length in bytes that was actually read and put
+      * @return length in bytes that was actually read and put
       * into out
       */
       u32bit read_byte(byte& out);
@@ -67,7 +67,7 @@ class BOTAN_DLL DataSource
       /**
       * Peek at one byte.
       * @param out an output byte
-      * @return the length in bytes that was actually read and put
+      * @return length in bytes that was actually read and put
       * into out
       */
       u32bit peek_byte(byte& out) const;
@@ -75,7 +75,7 @@ class BOTAN_DLL DataSource
       /**
       * Discard the next N bytes of the data
       * @param N the number of bytes to discard
-      * @return the number of bytes actually discarded
+      * @return number of bytes actually discarded
       */
       u32bit discard_next(u32bit N);
 

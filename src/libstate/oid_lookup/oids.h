@@ -31,7 +31,7 @@ BOTAN_DLL bool have_oid(const std::string& oid);
 /**
 * Resolve an OID
 * @param oid the OID to look up
-* @return the name associated with this OID
+* @return name associated with this OID
 */
 BOTAN_DLL std::string lookup(const OID& oid);
 
@@ -39,7 +39,7 @@ BOTAN_DLL std::string lookup(const OID& oid);
 * Find the OID to a name. The lookup will be performed in the
 * general OID section of the configuration.
 * @param name the name to resolve
-* @return the OID associated with the specified name
+* @return OID associated with the specified name
 */
 BOTAN_DLL OID lookup(const std::string& name);
 

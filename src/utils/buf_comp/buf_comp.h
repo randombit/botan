@@ -67,7 +67,7 @@ class BOTAN_DLL BufferedComputation
       /**
       * Complete the computation and retrieve the
       * final result.
-      * @return a SecureVector holding the result
+      * @return SecureVector holding the result
       */
       SecureVector<byte> final()
          {
@@ -113,12 +113,27 @@ class BOTAN_DLL BufferedComputation
          return final();
          }
 
+      /**
+      * @param out_len the output length of this computation
+      */
       BufferedComputation(u32bit out_len) : OUTPUT_LENGTH(out_len) {}
+
       virtual ~BufferedComputation() {}
    private:
       BufferedComputation& operator=(const BufferedComputation&);
-      virtual void add_data(const byte[], u32bit) = 0;
-      virtual void final_result(byte[]) = 0;
+
+      /**
+      * Add more data to the computation
+      * @param input is an input buffer
+      * @param length is the length of input in bytes
+      */
+      virtual void add_data(const byte input[], u32bit length) = 0;
+
+      /**
+      * Write the final output to out
+      * @param out is an output buffer of OUTPUT_LENGTH
+      */
+      virtual void final_result(byte out[]) = 0;
    };
 
 }

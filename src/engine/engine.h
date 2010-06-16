@@ -27,7 +27,10 @@ class Algorithm_Factory;
 class Keyed_Filter;
 
 /**
-* Engine Base Class
+* Base class for all engines. All non-pure virtual functions simply
+* return NULL, indicating the algorithm in question is not
+* supported. Subclasses can reimplement whichever function(s)
+* they want to hook in a particular type.
 */
 class BOTAN_DLL Engine
    {
@@ -46,8 +49,7 @@ class BOTAN_DLL Engine
       */
       virtual BlockCipher*
          find_block_cipher(const SCAN_Name& algo_spec,
-                           Algorithm_Factory& af) const
-         { return 0; }
+                           Algorithm_Factory& af) const;
 
       /**
       * @param algo_spec the algorithm name/specification
@@ -56,8 +58,7 @@ class BOTAN_DLL Engine
       */
       virtual StreamCipher*
          find_stream_cipher(const SCAN_Name& algo_spec,
-                            Algorithm_Factory& af) const
-         { return 0; }
+                            Algorithm_Factory& af) const;
 
       /**
       * @param algo_spec the algorithm name/specification
@@ -66,8 +67,7 @@ class BOTAN_DLL Engine
       */
       virtual HashFunction*
          find_hash(const SCAN_Name& algo_spec,
-                   Algorithm_Factory& af) const
-         { return 0; }
+                   Algorithm_Factory& af) const;
 
       /**
       * @param algo_spec the algorithm name/specification
@@ -76,8 +76,7 @@ class BOTAN_DLL Engine
       */
       virtual MessageAuthenticationCode*
          find_mac(const SCAN_Name& algo_spec,
-                  Algorithm_Factory& af) const
-         { return 0; }
+                  Algorithm_Factory& af) const;
 
       /**
       * @param n the modulus
@@ -86,8 +85,7 @@ class BOTAN_DLL Engine
       */
       virtual Modular_Exponentiator*
          mod_exp(const BigInt& n,
-                 Power_Mod::Usage_Hints hints) const
-         { return 0; }
+                 Power_Mod::Usage_Hints hints) const;
 
       /**
       * Return a new cipher object
@@ -98,8 +96,7 @@ class BOTAN_DLL Engine
       */
       virtual Keyed_Filter* get_cipher(const std::string& algo_spec,
                                        Cipher_Dir dir,
-                                       Algorithm_Factory& af)
-         { return 0; }
+                                       Algorithm_Factory& af);
 
       /**
       * Return a new operator object for this key, if possible
@@ -107,10 +104,7 @@ class BOTAN_DLL Engine
       * @return newly allocated operator object, or NULL
       */
       virtual PK_Ops::Key_Agreement*
-         get_key_agreement_op(const Private_Key& key) const
-         {
-         return 0;
-         }
+         get_key_agreement_op(const Private_Key& key) const;
 
       /**
       * Return a new operator object for this key, if possible
@@ -118,10 +112,7 @@ class BOTAN_DLL Engine
       * @return newly allocated operator object, or NULL
       */
       virtual PK_Ops::Signature*
-         get_signature_op(const Private_Key& key) const
-         {
-         return 0;
-         }
+         get_signature_op(const Private_Key& key) const;
 
       /**
       * Return a new operator object for this key, if possible
@@ -129,10 +120,7 @@ class BOTAN_DLL Engine
       * @return newly allocated operator object, or NULL
       */
       virtual PK_Ops::Verification*
-         get_verify_op(const Public_Key& key) const
-         {
-         return 0;
-         }
+         get_verify_op(const Public_Key& key) const;
 
       /**
       * Return a new operator object for this key, if possible
@@ -140,10 +128,7 @@ class BOTAN_DLL Engine
       * @return newly allocated operator object, or NULL
       */
       virtual PK_Ops::Encryption*
-         get_encryption_op(const Public_Key& key) const
-         {
-         return 0;
-         }
+         get_encryption_op(const Public_Key& key) const;
 
       /**
       * Return a new operator object for this key, if possible
@@ -151,10 +136,7 @@ class BOTAN_DLL Engine
       * @return newly allocated operator object, or NULL
       */
       virtual PK_Ops::Decryption*
-         get_decryption_op(const Private_Key& key) const
-         {
-         return 0;
-         }
+         get_decryption_op(const Private_Key& key) const;
    };
 
 }

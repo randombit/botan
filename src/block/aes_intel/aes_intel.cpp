@@ -100,7 +100,7 @@ __m128i aes_256_key_expansion(__m128i key, __m128i key2)
       B3 = _mm_aesdeclast_si128(B3, K);         \
       } while(0)
 
-/**
+/*
 * AES-128 Encryption
 */
 void AES_128_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
@@ -176,7 +176,7 @@ void AES_128_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       }
    }
 
-/**
+/*
 * AES-128 Decryption
 */
 void AES_128_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
@@ -252,7 +252,7 @@ void AES_128_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       }
    }
 
-/**
+/*
 * AES-128 Key Schedule
 */
 void AES_128_Intel::key_schedule(const byte key[], u32bit)
@@ -301,7 +301,7 @@ void AES_128_Intel::key_schedule(const byte key[], u32bit)
    _mm_storeu_si128(DK_mm + 10, K0);
    }
 
-/**
+/*
 * Clear memory of sensitive data
 */
 void AES_128_Intel::clear()
@@ -310,7 +310,7 @@ void AES_128_Intel::clear()
    DK.clear();
    }
 
-/**
+/*
 * AES-192 Encryption
 */
 void AES_192_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
@@ -392,7 +392,7 @@ void AES_192_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       }
    }
 
-/**
+/*
 * AES-192 Decryption
 */
 void AES_192_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
@@ -474,7 +474,7 @@ void AES_192_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       }
    }
 
-/**
+/*
 * AES-192 Key Schedule
 */
 void AES_192_Intel::key_schedule(const byte key[], u32bit)
@@ -517,7 +517,7 @@ void AES_192_Intel::key_schedule(const byte key[], u32bit)
    _mm_storeu_si128(DK_mm + 12, EK_mm[0]);
    }
 
-/**
+/*
 * Clear memory of sensitive data
 */
 void AES_192_Intel::clear()
@@ -526,7 +526,7 @@ void AES_192_Intel::clear()
    DK.clear();
    }
 
-/**
+/*
 * AES-256 Encryption
 */
 void AES_256_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
@@ -614,7 +614,7 @@ void AES_256_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       }
    }
 
-/**
+/*
 * AES-256 Decryption
 */
 void AES_256_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
@@ -702,7 +702,7 @@ void AES_256_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       }
    }
 
-/**
+/*
 * AES-256 Key Schedule
 */
 void AES_256_Intel::key_schedule(const byte key[], u32bit)
@@ -767,7 +767,7 @@ void AES_256_Intel::key_schedule(const byte key[], u32bit)
    _mm_storeu_si128(DK_mm + 14, K0);
    }
 
-/**
+/*
 * Clear memory of sensitive data
 */
 void AES_256_Intel::clear()

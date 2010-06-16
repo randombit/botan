@@ -29,11 +29,19 @@ template<typename T>
 class Algorithm_Cache
    {
    public:
+      /**
+      * @param algo_spec names the requested algorithm
+      * @param pref_provider suggests a preferred provider
+      * @return prototype object, or NULL
+      */
       const T* get(const std::string& algo_spec,
                    const std::string& pref_provider);
 
       /**
       * Add a new algorithm implementation to the cache
+      * @param algo the algorithm prototype object
+      * @param requested_name how this name will be requested
+      * @param provider_name is the name of the provider of this prototype
       */
       void add(T* algo,
                const std::string& requested_name,
@@ -41,12 +49,16 @@ class Algorithm_Cache
 
       /**
       * Set the preferred provider
+      * @param algo_spec names the algorithm
+      * @param provider names the preferred provider
       */
       void set_preferred_provider(const std::string& algo_spec,
                                   const std::string& provider);
 
       /**
       * Return the list of providers of this algorithm
+      * @param algo_name names the algorithm
+      * @return list of providers of this algorithm
       */
       std::vector<std::string> providers_of(const std::string& algo_name);
 
@@ -70,7 +82,7 @@ class Algorithm_Cache
       std::map<std::string, std::map<std::string, T*> > algorithms;
    };
 
-/**
+/*
 * Look for an algorithm implementation in the cache, also checking aliases
 * Assumes object lock is held
 */
@@ -93,7 +105,7 @@ Algorithm_Cache<T>::find_algorithm(const std::string& algo_spec)
    return algo;
    }
 
-/**
+/*
 * Look for an algorithm implementation by a particular provider
 */
 template<typename T>
@@ -141,7 +153,7 @@ const T* Algorithm_Cache<T>::get(const std::string& algo_spec,
    return prototype;
    }
 
-/**
+/*
 * Add an implementation to the cache
 */
 template<typename T>
@@ -164,7 +176,7 @@ void Algorithm_Cache<T>::add(T* algo,
       }
    }
 
-/**
+/*
 * Find the providers of this algo (if any)
 */
 template<typename T> std::vector<std::string>
@@ -190,7 +202,7 @@ Algorithm_Cache<T>::providers_of(const std::string& algo_name)
    return providers;
    }
 
-/**
+/*
 * Set the preferred provider for an algorithm
 */
 template<typename T>
@@ -202,7 +214,7 @@ void Algorithm_Cache<T>::set_preferred_provider(const std::string& algo_spec,
    pref_providers[algo_spec] = provider;
    }
 
-/**
+/*
 * Algorithm_Cache<T> Destructor
 */
 template<typename T>

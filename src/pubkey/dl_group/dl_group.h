@@ -22,19 +22,19 @@ class BOTAN_DLL DL_Group
    public:
       /**
       * Get the prime p.
-      * @return the prime p
+      * @return prime p
       */
       const BigInt& get_p() const;
 
       /**
       * Get the prime q.
-      * @return the prime q
+      * @return prime q
       */
       const BigInt& get_q() const;
 
       /**
       * Get the base g.
-      * @return the base g
+      * @return base g
       */
       const BigInt& get_g() const;
 
@@ -68,14 +68,14 @@ class BOTAN_DLL DL_Group
       /**
       * Encode this group into a string using PEM encoding.
       * @param format the encoding format
-      * @return the string holding the PEM encoded group
+      * @return string holding the PEM encoded group
       */
       std::string PEM_encode(Format format) const;
 
       /**
       * Encode this group into a string using DER encoding.
       * @param format the encoding format
-      * @return the string holding the DER encoded group
+      * @return string holding the DER encoded group
       */
       SecureVector<byte> DER_encode(Format format) const;
 
