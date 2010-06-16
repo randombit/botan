@@ -57,9 +57,16 @@ BigInt BOTAN_DLL inverse_mod(const BigInt& x,
                              const BigInt& modulus);
 
 /**
-* Jacobi function
+* Compute the Jacobi symbol. If n is prime, this is equivalent
+* to the Legendre symbol.
+* @see http://mathworld.wolfram.com/JacobiSymbol.html
+*
+* @param a is a non-negative integer
+* @param n is an odd integer > 1
+* @return (n / m)
 */
-s32bit BOTAN_DLL jacobi(const BigInt&, const BigInt&);
+s32bit BOTAN_DLL jacobi(const BigInt& a,
+                        const BigInt& n);
 
 /**
 * Modular exponentation

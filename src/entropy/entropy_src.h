@@ -99,6 +99,10 @@ class BOTAN_DLL Entropy_Accumulator
 class BOTAN_DLL Entropy_Accumulator_BufferedComputation : public Entropy_Accumulator
    {
    public:
+      /**
+      * @param sink the hash or MAC we are feeding the poll data into
+      * @param goal is how many bits we want to collect in this poll
+      */
       Entropy_Accumulator_BufferedComputation(BufferedComputation& sink,
                                               u32bit goal) :
          Entropy_Accumulator(goal), entropy_sink(sink) {}
