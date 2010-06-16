@@ -20,7 +20,11 @@ class BOTAN_DLL Tiger : public MDx_HashFunction
    public:
       void clear();
       std::string name() const;
-      HashFunction* clone() const { return new Tiger(OUTPUT_LENGTH); }
+
+      HashFunction* clone() const
+         {
+         return new Tiger(OUTPUT_LENGTH, PASS);
+         }
 
       /**
       * @param out_size specifies the output length; can be 16, 20, or 24
