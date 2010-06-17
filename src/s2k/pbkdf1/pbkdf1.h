@@ -29,10 +29,14 @@ class BOTAN_DLL PKCS5_PBKDF1 : public S2K
 
       /**
       * Create a PKCS #5 instance using the specified hash function.
-      * @param hash a pointer to a hash function object to use
+      * @param hash_in pointer to a hash function object to use
       */
       PKCS5_PBKDF1(HashFunction* hash_in) : hash(hash_in) {}
 
+      /**
+      * Copy constructor
+      * @param other the object to copy
+      */
       PKCS5_PBKDF1(const PKCS5_PBKDF1& other) :
          S2K(), hash(other.hash->clone()) {}
 

@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Noekeon
 */
 class BOTAN_DLL Noekeon : public BlockCipher
@@ -26,9 +26,13 @@ class BOTAN_DLL Noekeon : public BlockCipher
       BlockCipher* clone() const { return new Noekeon; }
 
       Noekeon() : BlockCipher(16, 16) {}
-   protected:
+   private:
       void key_schedule(const byte[], u32bit);
+   protected: // for access by SIMD subclass
 
+      /**
+      * The Noekeon round constants
+      */
       static const byte RC[17];
 
       SecureVector<u32bit, 4> EK, DK;

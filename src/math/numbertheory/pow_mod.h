@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Modular Exponentiator Interface
 */
 class BOTAN_DLL Modular_Exponentiator
@@ -25,7 +25,7 @@ class BOTAN_DLL Modular_Exponentiator
       virtual ~Modular_Exponentiator() {}
    };
 
-/*
+/**
 * Modular Exponentiator Proxy
 */
 class BOTAN_DLL Power_Mod
@@ -67,7 +67,7 @@ class BOTAN_DLL Power_Mod
       Usage_Hints hints;
    };
 
-/*
+/**
 * Fixed Exponent Modular Exponentiator Proxy
 */
 class BOTAN_DLL Fixed_Exponent_Power_Mod : public Power_Mod
@@ -81,7 +81,7 @@ class BOTAN_DLL Fixed_Exponent_Power_Mod : public Power_Mod
                                Usage_Hints = NO_HINTS);
    };
 
-/*
+/**
 * Fixed Base Modular Exponentiator Proxy
 */
 class BOTAN_DLL Fixed_Base_Power_Mod : public Power_Mod

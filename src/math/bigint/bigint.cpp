@@ -268,10 +268,12 @@ u32bit BigInt::bytes() const
 */
 u32bit BigInt::bits() const
    {
-   if(sig_words() == 0)
+   const u32bit words = sig_words();
+
+   if(words == 0)
       return 0;
 
-   u32bit full_words = sig_words() - 1, top_bits = MP_WORD_BITS;
+   u32bit full_words = words - 1, top_bits = MP_WORD_BITS;
    word top_word = word_at(full_words), mask = MP_WORD_TOP_BIT;
 
    while(top_bits && ((top_word & mask) == 0))

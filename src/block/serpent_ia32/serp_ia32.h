@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* Serpent
+/**
+* Serpent implementation in x86 assembly
 */
 class BOTAN_DLL Serpent_IA32 : public Serpent
    {

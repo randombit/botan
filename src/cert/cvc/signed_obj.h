@@ -24,7 +24,7 @@ class BOTAN_DLL EAC_Signed_Object
    public:
       /**
       * Get the TBS (to-be-signed) data in this object.
-      * @return the DER encoded TBS data of this object
+      * @return DER encoded TBS data of this object
       */
       virtual SecureVector<byte> tbs_data() const = 0;
 
@@ -32,7 +32,7 @@ class BOTAN_DLL EAC_Signed_Object
       * Get the signature of this object as a concatenation, i.e. if the
       * signature consists of multiple parts (like in the case of ECDSA)
       * these will be concatenated.
-      * @return the signature as a concatenation of its parts
+      * @return signature as a concatenation of its parts
       */
 
       /*
@@ -50,6 +50,7 @@ class BOTAN_DLL EAC_Signed_Object
       /**
       * Check the signature of this object.
       * @param key the public key associated with this signed object
+      * @param sig the signature we are checking
       * @return true if the signature was created by the private key
       * associated with this public key
       */
@@ -59,19 +60,20 @@ class BOTAN_DLL EAC_Signed_Object
       /**
       * Write this object DER encoded into a specified pipe.
       * @param pipe the pipe to write the encoded object to
-      * @param enc the encoding type to use
+      * @param encoding the encoding type to use
       */
-      virtual void encode(Pipe&, X509_Encoding = PEM) const = 0;
+      virtual void encode(Pipe& pipe,
+                          X509_Encoding encoding = PEM) const = 0;
 
       /**
       * BER encode this object.
-      * @return the result containing the BER representation of this object.
+      * @return result containing the BER representation of this object.
       */
       SecureVector<byte> BER_encode() const;
 
       /**
       * PEM encode this object.
-      * @return the result containing the PEM representation of this object.
+      * @return result containing the PEM representation of this object.
       */
       std::string PEM_encode() const;
 

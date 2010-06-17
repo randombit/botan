@@ -10,12 +10,15 @@
 
 namespace Botan {
 
-/*
-* SecureQueueNode
+/**
+* A node in a SecureQueue
 */
 class SecureQueueNode
    {
    public:
+      SecureQueueNode()  { next = 0; start = end = 0; }
+      ~SecureQueueNode() { next = 0; start = end = 0; }
+
       u32bit write(const byte input[], u32bit length)
          {
          u32bit copied = std::min(length, buffer.size() - end);
@@ -23,6 +26,7 @@ class SecureQueueNode
          end += copied;
          return copied;
          }
+
       u32bit read(byte output[], u32bit length)
          {
          u32bit copied = std::min(length, end - start);
@@ -30,6 +34,7 @@ class SecureQueueNode
          start += copied;
          return copied;
          }
+
       u32bit peek(byte output[], u32bit length, u32bit offset = 0)
          {
          const u32bit left = end - start;
@@ -38,9 +43,8 @@ class SecureQueueNode
          copy_mem(output, buffer + start + offset, copied);
          return copied;
          }
+
       u32bit size() const { return (end - start); }
-      SecureQueueNode()  { next = 0; start = end = 0; }
-      ~SecureQueueNode() { next = 0; start = end = 0; }
    private:
       friend class SecureQueue;
       SecureQueueNode* next;

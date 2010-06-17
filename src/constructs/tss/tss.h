@@ -15,16 +15,19 @@
 
 namespace Botan {
 
+/**
+* A split secret, using the format from draft-mcgrew-tss-03
+*/
 class BOTAN_DLL RTSS_Share
    {
    public:
       /**
-      * @arg M the number of shares needed to reconstruct
-      * @arg N the number of shares generated
-      * @arg secret the secret to split
-      * @arg secret_len the length of the secret
-      * @arg identifier the 16 byte share identifier
-      * @arg rng the random number generator to use
+      * @param M the number of shares needed to reconstruct
+      * @param N the number of shares generated
+      * @param secret the secret to split
+      * @param secret_len the length of the secret
+      * @param identifier the 16 byte share identifier
+      * @param rng the random number generator to use
       */
       static std::vector<RTSS_Share>
          split(byte M, byte N,
@@ -33,18 +36,36 @@ class BOTAN_DLL RTSS_Share
                RandomNumberGenerator& rng);
 
       /**
-      * @arg shares the list of shares
+      * @param shares the list of shares
       */
       static SecureVector<byte>
         reconstruct(const std::vector<RTSS_Share>& shares);
 
       RTSS_Share() {}
-      RTSS_Share(const std::string&);
 
+      /**
+      * @param hex_input the share encoded in hexadecimal
+      */
+      RTSS_Share(const std::string& hex_input);
+
+      /**
+      * @return hex representation
+      */
       std::string to_string() const;
+
+      /**
+      * @return share identifier
+      */
       byte share_id() const;
 
+      /**
+      * @return size of this share in bytes
+      */
       u32bit size() const { return contents.size(); }
+
+      /**
+      * @return if this TSS share was initialized or not
+      */
       bool initialized() const { return (contents.size() > 0); }
    private:
       SecureVector<byte> contents;

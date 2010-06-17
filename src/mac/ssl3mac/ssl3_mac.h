@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* SSL3-MAC
+/**
+* A MAC only used in SSLv3. Do not use elsewhere! Use HMAC instead.
 */
 class BOTAN_DLL SSL3_MAC : public MessageAuthenticationCode
    {
@@ -23,7 +23,10 @@ class BOTAN_DLL SSL3_MAC : public MessageAuthenticationCode
       std::string name() const;
       MessageAuthenticationCode* clone() const;
 
-      SSL3_MAC(HashFunction*);
+      /**
+      * @param hash the underlying hash to use
+      */
+      SSL3_MAC(HashFunction* hash);
       ~SSL3_MAC() { delete hash; }
    private:
       void add_data(const byte[], u32bit);

@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* SHA-160
+/**
+* NIST's SHA-160
 */
 class BOTAN_DLL SHA_160 : public MDx_HashFunction
    {
@@ -24,6 +24,12 @@ class BOTAN_DLL SHA_160 : public MDx_HashFunction
       SHA_160();
 
    protected:
+      /**
+      * Set a custom size for the W array. Normally 80, but some
+      * subclasses need slightly more for best performance/internal
+      * constraints
+      * @param W_size how big to make W
+      */
       SHA_160(u32bit W_size);
 
       void compress_n(const byte[], u32bit blocks);

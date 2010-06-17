@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * MD4
 */
 class BOTAN_DLL MD4 : public MDx_HashFunction
@@ -24,7 +24,6 @@ class BOTAN_DLL MD4 : public MDx_HashFunction
       MD4() : MDx_HashFunction(16, 64, false, true) { clear(); }
    protected:
       void compress_n(const byte input[], u32bit blocks);
-      void hash_old(const byte[]);
       void copy_out(byte[]);
 
       SecureVector<u32bit, 16> M;

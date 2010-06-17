@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * TR03110 v1.1 EAC CV Certificate
 */
 template<typename Derived> // CRTP is used enable the call sequence:

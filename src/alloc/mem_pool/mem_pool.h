@@ -16,7 +16,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Pooling Allocator
 */
 class Pooling_Allocator : public Allocator

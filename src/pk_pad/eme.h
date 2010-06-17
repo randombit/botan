@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Encoding Method for Encryption
 */
 class BOTAN_DLL EME

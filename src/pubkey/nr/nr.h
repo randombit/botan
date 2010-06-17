@@ -15,7 +15,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Nyberg-Rueppel Public Key
 */
 class BOTAN_DLL NR_PublicKey : public virtual DL_Scheme_PublicKey
@@ -37,7 +37,7 @@ class BOTAN_DLL NR_PublicKey : public virtual DL_Scheme_PublicKey
       NR_PublicKey() {}
    };
 
-/*
+/**
 * Nyberg-Rueppel Private Key
 */
 class BOTAN_DLL NR_PrivateKey : public NR_PublicKey,
@@ -55,6 +55,9 @@ class BOTAN_DLL NR_PrivateKey : public NR_PublicKey,
                     const BigInt& x = 0);
    };
 
+/**
+* Nyberg-Rueppel signature operation
+*/
 class BOTAN_DLL NR_Signature_Operation : public PK_Ops::Signature
    {
    public:
@@ -73,6 +76,9 @@ class BOTAN_DLL NR_Signature_Operation : public PK_Ops::Signature
       Modular_Reducer mod_q;
    };
 
+/**
+* Nyberg-Rueppel verification operation
+*/
 class BOTAN_DLL NR_Verification_Operation : public PK_Ops::Verification
    {
    public:

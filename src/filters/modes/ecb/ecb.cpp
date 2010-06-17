@@ -14,7 +14,7 @@ namespace Botan {
 */
 ECB_Encryption::ECB_Encryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad) :
-   Buffered_Filter(ciph->BLOCK_SIZE * ciph->parallelism(), 0)
+   Buffered_Filter(ciph->parallel_bytes(), 0)
    {
    cipher = ciph;
    padder = pad;
@@ -28,7 +28,7 @@ ECB_Encryption::ECB_Encryption(BlockCipher* ciph,
 ECB_Encryption::ECB_Encryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key) :
-   Buffered_Filter(ciph->BLOCK_SIZE * ciph->parallelism(), 0)
+   Buffered_Filter(ciph->parallel_bytes(), 0)
    {
    cipher = ciph;
    padder = pad;
@@ -111,7 +111,7 @@ void ECB_Encryption::buffered_final(const byte input[], u32bit input_length)
 */
 ECB_Decryption::ECB_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad) :
-   Buffered_Filter(ciph->BLOCK_SIZE * ciph->parallelism(), 1)
+   Buffered_Filter(ciph->parallel_bytes(), 1)
    {
    cipher = ciph;
    padder = pad;
@@ -125,7 +125,7 @@ ECB_Decryption::ECB_Decryption(BlockCipher* ciph,
 ECB_Decryption::ECB_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key) :
-   Buffered_Filter(ciph->BLOCK_SIZE * ciph->parallelism(), 1)
+   Buffered_Filter(ciph->parallel_bytes(), 1)
    {
    cipher = ciph;
    padder = pad;

@@ -10,9 +10,9 @@
 \setlength{\oddsidemargin}{0in}
 \setlength{\evensidemargin}{0in}
 
-\title{\textbf{Botan API Reference}}
+\title{\textbf{Botan Reference Manual}}
 \author{}
-\date{2010/02/05}
+\date{2010/06/14}
 
 \newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\manpage}[2]{\texttt{#1}(#2)}
@@ -39,6 +39,7 @@
 \parskip=5pt
 
 \pagebreak
+
 \section{Introduction}
 
 Botan is a C++ library that attempts to provide the most common
@@ -51,100 +52,58 @@ minimal fuss, but Botan also supports a modules system. This system
 exposes system dependent code to the library through portable
 interfaces, extending the set of services available to users.
 
+\subsection{Recommended Reading}
+
+It's a very good idea if you have some knowledge of cryptography prior
+to trying to use this stuff. You really should read at least one and
+ideally all of these books before seriously using the library.
+
+\setlength{\parskip}{5pt}
+
+\noindent
+\textit{Cryptography Engineering}, Niels Ferguson, Bruce Schneier, and
+Tadayoshi Kohno; Wiley
+
+\noindent
+\textit{Security Engineering -- A Guide to Building Dependable
+  Distributed Systems}, Ross Anderson; Wiley
+
+\noindent
+\textit{Handbook of Applied Cryptography}, Alfred J. Menezes,
+Paul C. Van Oorschot, and Scott A. Vanstone; CRC Press (available
+online at \url{http://www.cacr.math.uwaterloo.ca/hac/})
+
 \subsection{Targets}
 
 Botan's primary targets (system-wise) are 32 and 64-bit CPUs, with a
-flat memory address space of at least 32 bits. Generally, given the
-choice between optimizing for 32-bit systems and 64-bit systems, Botan
-is written to prefer 64-bit, simply on the theory that where
-performance is a real concern, modern 64-bit processors are the
-obvious choice. However in most cases this is not an issue, as many
-algorithms are specified in terms of 32-bit operations precisely to
-target commodity processors.
+flat memory address space of at least 32 bits. Given the choice
+between optimizing for 32-bit systems and 64-bit systems, Botan is
+written to prefer 64-bit, on the theory that where performance is a
+real concern, modern 64-bit processors are the obvious choice.
 
 Smaller handhelds, set-top boxes, and the bigger smart phones and smart
-cards, are also capable of using Botan. However, Botan uses a fairly
+cards, are also capable of using Botan. However, Botan uses a
 large amount of code space (up to several megabytes, depending upon
 the compiler and options used), which could be prohibitive in some
-systems. Usage of RAM is fairly modest, usually under 64K.
+systems. Usage of RAM is modest, usually under 64K.
 
 Botan's design makes it quite easy to remove unused algorithms in such
 a way that applications do not need to be recompiled to work, even
-applications that use the algorithms in question. They can simply ask
-Botan if the algorithm exists, and if Botan says yes, ask the library
-to give them such an object for that algorithm.
+applications that use the algorithms in question. They can ask Botan
+if the algorithm exists, and if Botan says yes, ask the library to
+give them such an object for that algorithm.
 
-\subsection{Why Botan?}
-
-Botan may be the perfect choice for your application. Or it might be a
-terribly bad idea. This section will make clear what Botan is
-and is not.
-
-First, let's cover the major strengths:
-
-\begin{list}{$\cdot$}
-  \item Support is (usually) quickly available on the project mailing lists.
-        Commercial support licenses are available for those that desire them.
-
-  \item
-  \item Is written in a (fairly) clean object-oriented style, and the usual
-        API works in terms of reasonably high-level abstractions.
-
-  \item Supports a huge variety of algorithms, including most of the major
-        public key algorithms and standards (such as IEEE 1363, PKCS, and
-        X.509v3).
-
-  \item Supports a name-based lookup scheme, so you can get a hold of any
-        algorithm on the fly.
-
-  \item You can easily extend much of the system at application compile time or
-        at run time.
-
-  \item Works well with a wide variety of compilers, operating systems, and
-        CPUs, and more all the time.
-
-  \item Is the only open source crypto library (that I know of) that has
-        support for memory allocation techniques that prevent an attacker from
-        reading swap in an attempt to gain access to keys or other secrets. In
-        fact several different such methods are supported, depending on the
-        system (two methods for Unix, another for Windows).
-
-  \item Has (optional) support for Zlib and Bzip2 compression/decompression
-        integrated completely into the system -- it only takes a line or two of
-        code to add compression to your application.
-\end{list}
-
-\noindent
-And the major downsides and deficiencies are:
-
-\begin{list}{$\cdot$}
-  \item It's written in C++. If your application isn't, Botan is probably
-        going to be more pain than it's worth.
-  \item
-
-  \item Botan doesn't directly support higher-level protocols and
-        formats like SSL or OpenPGP. SSH support is available from a
-        third-party, and there is an alpha-level SSL/TLS library
-        currently available.
-
-  \item Doesn't currently support any very high level 'envelope' style
-        processing - support for this will probably be added once support for
-        CMS is available, so code using the high level interface will produce
-        data readable by many other libraries.
-\end{list}
-
-\pagebreak
 \section{Getting Started}
 
 \subsection{Basic Conventions}
 
 With a very small number of exceptions, declarations in the library
 are contained within the namespace \namespace{Botan}. Botan declares
-several typedef'ed types to help buffer it against changes in machine
-architecture.  These types are used extensively in the interface,
-thus it would be often be convenient to use them without the
-\namespace{Botan} prefix. You can do so by \keyword{using} the
-namespace \namespace{Botan::types} (this way you can use the type
+several \keyword{typedef}'ed types to help buffer it against changes
+in machine architecture.  These types are used extensively in the
+interface, thus it would be often be convenient to use them without
+the \namespace{Botan} prefix. You can do so by \keyword{using} the
+namespace \namespace{Botan\_types} (this way you can use the type
 names without the namespace prefix, but the remainder of the library
 stays out of the global namespace). The included types are \type{byte}
 and \type{u32bit}, which are unsigned integer types.
@@ -156,22 +115,21 @@ should be used with the \filename{botan/} prefix in your actual code.
 
 \subsection{Initializing the Library}
 
-There is a set of core services that the library needs access to
-while it is performing requests. To ensure these are set up, you must
-create a \type{LibraryInitializer} object (usually called 'init' in
-Botan example code; 'botan\_library' or 'botan\_init' may make more
-sense in real applications) prior to making any calls to Botan. This
-object's lifetime must exceed that of all other Botan objects your
-application creates; for this reason the best place to create the
+There is a set of core services that the library needs access to while
+it is performing requests. To ensure these are set up, you must create
+a \type{LibraryInitializer} object (usually called 'init' in Botan
+example code; 'botan\_library' or 'botan\_init' may make more sense in
+real applications) prior to making any calls to Botan. This object's
+lifetime must exceed that of all other Botan objects your application
+creates; for this reason the best place to create the
 \type{LibraryInitializer} is at the start of your \function{main}
 function, since this guarantees that it will be created first and
 destroyed last (via standard C++ RAII rules). The initializer does
 things like setting up the memory allocation system and algorithm
 lookup tables, finding out if there is a high resolution timer
 available to use, and similar such matters. With no arguments, the
-library is initialized with various default settings. So most of the
-time (unless you are writing threaded code; see below), all you need
-is:
+library is initialized with various default settings. So (unless you
+are writing threaded code; see below), all you need is:
 
 \texttt{Botan::LibraryInitializer init;}
 
@@ -179,16 +137,17 @@ at the start of your \texttt{main}.
 
 The constructor takes an optional string that specifies arguments.
 Currently the only possible argument is ``thread\_safe'', which must
-have an Boolean argument (for instance ``thread\_safe=false'' or
+have an boolean argument (for instance ``thread\_safe=false'' or
 ``thread\_safe=true''). If ``thread\_safe'' is specified as true the
 library will attempt to register a mutex type to properly guard access
 to shared resources. However these locks do not protect individual
-Botan objects: explicit locking must be used in this case.
+Botan objects: explicit locking must be used if you wish to share a
+single object between threads.
 
-If you do not create a \type{LibraryInitializer} object, pretty much
-any Botan operation will fail, because it will be unable to do basic
-things like allocate memory or get random bits. Note too, that you
-should be careful to only create one such object.
+If you do not create a \type{LibraryInitializer} object, all library
+operations will fail, because it will be unable to do basic things
+like allocate memory or get random bits. You should never create more
+than one \type{LibraryInitializer}.
 
 It is not strictly necessary to create a \type{LibraryInitializer};
 the actual code performing the initialization and shutdown are in
@@ -217,15 +176,15 @@ objects will be created.
 The same rule applies for making sure the destructors of all your
 Botan objects are called before the \type{LibraryInitializer} is
 destroyed. This implies you can't have static variables that are Botan
-objects inside functions or classes (since in most C++ runtimes, these
-objects will be destroyed after main has returned). This is inelegant,
-but seems to not cause many problems in practice.
+objects inside functions or classes; in many C++ runtimes, these
+objects will be destroyed after main has returned.
 
-Botan's memory object classes (\type{MemoryVector},
-\type{SecureVector}, \type{SecureBuffer}) are extremely primitive, and
-do not (currently) meet the requirements for an STL container
-object. After Botan starts adopting C++0x features, they will be
-replaced by typedefs of \type{std::vector} with a custom allocator.
+Botan's memory object classes (\type{MemoryRegion},
+\type{MemoryVector}, \type{SecureVector}) are extremely primitive, and
+meant only for secure storage of potentially sensitive data like
+keys. They do not meet the requirements for an STL container object
+and you should not try to use them with STL algorithms. For a
+general-purpose container, use \type{std::vector}.
 
 Use a \function{try}/\function{catch} block inside your
 \function{main} function, and catch any \type{std::exception} throws
@@ -239,15 +198,14 @@ wondering what went wrong.
 \subsection{Information Flow: Pipes and Filters}
 
 Many common uses of cryptography involve processing one or more
-streams of data (be it from sockets, files, or a hardware device).
-Botan provides services that make setting up data flows through
-various operations, such as compression, encryption, and base64
-encoding. Each of these operations is implemented in what are called
-\emph{filters} in Botan. A set of filters are created and placed into
-a \emph{pipe}, and information ``flows'' through the pipe until it
-reaches the end, where the output is collected for retrieval. If
-you're familiar with the Unix shell environment, this design will
-sound quite familiar.
+streams of data. Botan provides services that make setting up data
+flows through various operations, such as compression, encryption, and
+base64 encoding. Each of these operations is implemented in what are
+called \emph{filters} in Botan. A set of filters are created and
+placed into a \emph{pipe}, and information ``flows'' through the pipe
+until it reaches the end, where the output is collected for
+retrieval. If you're familiar with the Unix shell environment, this
+design will sound quite familiar.
 
 Here is an example that uses a pipe to base64 encode some strings:
 
@@ -287,15 +245,15 @@ used in the \type{Pipe} between each message, by adding or removing
 \type{Filter}s; functions that let you do this are documented in the
 Pipe API section.
 
-Most operations in Botan have a corresponding filter for use in Pipe.
-Here's code that encrypts a string with AES-128 in CBC mode:
+Botan has about 40 filters that perform different operations on data.
+Here's code that uses one of them to encrypt a string with AES:
 
 \begin{verbatim}
   AutoSeeded_RNG rng,
   SymmetricKey key(rng, 16); // a random 128-bit key
   InitializationVector iv(rng, 16); // a random 128-bit IV
 
-  // Notice the algorithm we want is specified by a string
+  // The algorithm we want is specified by a string
   Pipe pipe(get_cipher(``AES-128/CBC'', key, iv, ENCRYPTION));
 
   pipe.process_msg(``secrets'');
@@ -378,7 +336,7 @@ Here's an example using two computational filters:
 
 \subsection{Fork}
 
-It is fairly common that you might receive some data and want to
+It is common that you might receive some data and want to
 perform more than one operation on it (\ie, encrypt it with Serpent
 and calculate the SHA-256 hash of the plaintext at the same
 time). That's where \type{Fork} comes in. \type{Fork} is a filter that
@@ -522,12 +480,11 @@ use; that is, either before calling \function{start\_msg}, or after
 \function{end\_msg} has been called (and no new calls to \function{start\_msg}
 have been made yet).
 
-The function \function{reset}() simply removes all the \type{Filter}s
-that the \type{Pipe} is currently using~--~it is reset to an
-initialize, ``empty'' state.  Any data that is being retained by the
-\type{Pipe} is retained after a \function{reset}(), and
-\function{reset}() does not affect the message numbers (discussed
-later).
+The function \function{reset}() removes all the \type{Filter}s that
+the \type{Pipe} is currently using~--~it is reset to an initialize,
+``empty'' state.  Any data that is being retained by the \type{Pipe}
+is retained after a \function{reset}(), and \function{reset}() does
+not affect the message numbers (discussed later).
 
 Calling \function{prepend} and \function{append} will either prepend
 or append the passed \type{Filter} object to the list of
@@ -620,7 +577,7 @@ using the output operator.
 Here is some code that takes one or more filenames in \arg{argv} and
 calculates the result of several hash functions for each file. The complete
 program can be found as \filename{hasher.cpp} in the Botan distribution. For
-brevity, most error checking has been removed.
+brevity, error checking has been removed.
 
 \begin{verbatim}
    string name[3] = { "MD5", "SHA-1", "RIPEMD-160" };
@@ -659,7 +616,7 @@ are documented elsewhere.
 \subsubsection{Keyed Filters}
 
 A few sections ago, it was mentioned that \type{Pipe} can process multiple
-messages, treating each of them exactly the same. Well, that was a bit of a
+messages, treating each of them the same. Well, that was a bit of a
 lie. There are some algorithms (in particular, block ciphers not in ECB mode,
 and all stream ciphers) that change their state as data is put through them.
 
@@ -721,11 +678,11 @@ And remember: if you're resetting both values, reset the key \emph{first}.
 
 \subsubsection{Cipher Filters}
 
-Getting a hold of a \type{Filter} implementing a cipher is very easy. Simply
-make sure you're including the header \filename{lookup.h}, and call
-\function{get\_cipher}. Generally you will pass the return value directly into
-a \type{Pipe}. There are actually a couple different functions, which do pretty
-much the same thing:
+Getting a hold of a \type{Filter} implementing a cipher is very
+easy. Make sure you're including the header \filename{lookup.h}, and
+then call \function{get\_cipher}. You will pass the return value
+directly into a \type{Pipe}. There are a couple different functions
+which do varying levels of initialization:
 
 \function{get\_cipher}(\type{std::string} \arg{cipher\_spec},
                        \type{SymmetricKey} \arg{key},
@@ -736,48 +693,48 @@ much the same thing:
                        \type{SymmetricKey} \arg{key},
                        \type{Cipher\_Dir} \arg{dir});
 
-The version that doesn't take an IV is useful for things that don't use them,
-like block ciphers in ECB mode, or most stream ciphers. If you specify a
-\arg{cipher\_spec} that does want a IV, and you use the version that doesn't
-take one, an exception will be thrown. The \arg{dir} argument can be either
-\type{ENCRYPTION} or \type{DECRYPTION}. In a few cases, like most (but not all)
-stream ciphers, these are equivalent, but even then it provides a way of
-showing the ``intent'' of the operation to readers of your code.
+The version that doesn't take an IV is useful for things that don't
+use them, like block ciphers in ECB mode, or most stream ciphers. If
+you specify a \arg{cipher\_spec} that does want a IV, and you use the
+version that doesn't take one, an exception will be thrown. The
+\arg{dir} argument can be either \type{ENCRYPTION} or
+\type{DECRYPTION}.
 
 The \arg{cipher\_spec} is a string that specifies what cipher is to be
 used. The general syntax for \arg{cipher\_spec} is ``STREAM\_CIPHER'',
-``BLOCK\_CIPHER/MODE'', or ``BLOCK\_CIPHER/MODE/PADDING''. In the case of
-stream ciphers, no mode is necessary, so just the name is sufficient. A block
-cipher requires a mode of some sort, which can be ``ECB'', ``CBC'', ``CFB(n)'',
-``OFB'', ``CTR-BE'', or ``EAX(n)''. The argument to CFB mode is how many bits
-of feedback should be used. If you just use ``CFB'' with no argument, it will
-default to using a feedback equal to the block size of the cipher. EAX mode
-also takes an optional bit argument, which tells EAX how large a tag size to
-use~--~generally this is the size of the block size of the cipher, which is the
-default if you don't specify any argument.
+``BLOCK\_CIPHER/MODE'', or ``BLOCK\_CIPHER/MODE/PADDING''. In the case
+of stream ciphers, no mode is necessary, so just the name is
+sufficient. A block cipher requires a mode of some sort, which can be
+``ECB'', ``CBC'', ``CFB(n)'', ``OFB'', ``CTR-BE'', or ``EAX(n)''. The
+argument to CFB mode is how many bits of feedback should be used. If
+you just use ``CFB'' with no argument, it will default to using a
+feedback equal to the block size of the cipher. EAX mode also takes an
+optional bit argument, which tells EAX how large a tag size to
+use~--~generally this is the size of the block size of the cipher,
+which is the default if you don't specify any argument.
 
 In the case of the ECB and CBC modes, a padding method can also be
-specified. If it is not supplied, ECB defaults to not padding, and CBC defaults
-to using PKCS \#5/\#7 compatible padding. The padding methods currently
-available are ``NoPadding'', ``PKCS7'', ``OneAndZeros'', and ``CTS''. CTS
-padding is currently only available for CBC mode, but the others can also be
-used in ECB mode.
+specified. If it is not supplied, ECB defaults to not padding, and CBC
+defaults to using PKCS \#5/\#7 compatible padding. The padding methods
+currently available are ``NoPadding'', ``PKCS7'', ``OneAndZeros'', and
+``CTS''. CTS padding is currently only available for CBC mode, but the
+others can also be used in ECB mode.
 
-Some example \arg{cipher\_spec} arguments are: ``DES/CFB(32)'',
-``TripleDES/OFB'', ``Blowfish/CBC/CTS'', ``SAFER-SK(10)/CBC/OneAndZeros'',
-``AES/EAX'', ``ARC4''
+Some example \arg{cipher\_spec} arguments are: ``AES-128/CBC'',
+``Blowfish/CTR-BE'', ``Serpent/XTS'', and ``AES-256/EAX''.
 
-``CTR-BE'' refers to counter mode where the counter is incremented as if it
-were a big-endian encoded integer. This is compatible with most other
-implementations, but it is possible some will use the incompatible little
-endian convention. This version would be denoted as ``CTR-LE'' if it were
-supported.
+``CTR-BE'' refers to counter mode where the counter is incremented as
+if it were a big-endian encoded integer. This is compatible with most
+other implementations, but it is possible some will use the
+incompatible little endian convention. This version would be denoted
+as ``CTR-LE'' if it were supported.
 
-``EAX'' is a new cipher mode designed by Wagner, Rogaway, and Bellare. It is an
-authenticated cipher mode (that is, no separate authentication is needed), has
-provable security, and is free from patent entanglements. It runs about half as
-fast as most of the other cipher modes (like CBC, OFB, or CTR), which is not
-bad considering you don't need to use an authentication code.
+``EAX'' is a new cipher mode designed by Wagner, Rogaway, and
+Bellare. It is an authenticated cipher mode (that is, no separate
+authentication is needed), has provable security, and is free from
+patent entanglements. It runs about half as fast as most of the other
+cipher modes (like CBC, OFB, or CTR), which is not bad considering you
+don't need to use an authentication code.
 
 \subsubsection{Hashes and MACs}
 
@@ -807,7 +764,7 @@ Examples of names for \function{Hash\_Filter} are ``SHA-1'' and ``Whirlpool''.
                        \type{u32bit} \arg{outlength}):
 
 The constructor for a \type{MAC\_Filter} takes a key, used in calculating the
-MAC, and a length parameter, which has semantics exactly the same as the one
+MAC, and a length parameter, which has semantics the same as the one
 passed to \type{Hash\_Filter}s constructor.
 
 Examples for \arg{mac} are ``HMAC(SHA-1)'', ``CMAC(AES-128)'', and the
@@ -822,25 +779,27 @@ There are four classes in this category, \type{PK\_Encryptor\_Filter},
 appropriate type (\type{PK\_Encryptor}, \type{PK\_Decryptor}, etc) that is
 deleted by the destructor. These classes are found in \filename{pk\_filts.h}.
 
-Three of these, for encryption, decryption, and signing are pretty much
-identical conceptually. Each of them buffers its input until the end of the
-message is marked with a call to the \function{end\_msg} function. Then they
-encrypt, decrypt, or sign their input and send the output (the ciphertext, the
-plaintext, or the signature) into the next filter.
+Three of these, for encryption, decryption, and signing are much the
+same in terms of dataflow - ach of them buffers its input until the
+end of the message is marked with a call to the \function{end\_msg}
+function. Then they encrypt, decrypt, or sign the entire input as a
+single blob and send the output (the ciphertext, the plaintext, or the
+signature) into the next filter.
 
-Signature verification works a little differently, because it needs to know
-what the signature is in order to check it. You can either pass this in along
-with the constructor, or call the function \function{set\_signature} -- with
-this second method, you need to keep a pointer to the filter around so you can
-send it this command. In either case, after \function{end\_msg} is called, it
-will try to verify the signature (if the signature has not been set by either
-method, an exception will be thrown here). It will then send a single byte onto
-the next filter -- a 1 or a 0, which specifies whether the signature verified
-or not (respectively).
+Signature verification works a little differently, because it needs to
+know what the signature is in order to check it. You can either pass
+this in along with the constructor, or call the function
+\function{set\_signature} -- with this second method, you need to keep
+a pointer to the filter around so you can send it this command. In
+either case, after \function{end\_msg} is called, it will try to
+verify the signature (if the signature has not been set by either
+method, an exception will be thrown here). It will then send a single
+byte onto the next filter -- a 1 or a 0, which specifies whether the
+signature verified or not (respectively).
 
-For more information about PK algorithms (including creating the appropriate
-objects to pass to the constructors), read the section ``Public Key
-Cryptography'' in this manual.
+For more information about PK algorithms (including creating the
+appropriate objects to pass to the constructors), read the section
+``Public Key Cryptography'' in this manual.
 
 \subsubsection{Encoders}
 
@@ -851,7 +810,7 @@ base64 formats. Not surprisingly, you can use \type{Hex\_Decoder} and
 \type{Base64\_Decoder} to convert it back into its original form.
 
 Both of the encoders can take a few options about how the data should be
-formatted (all of which have defaults). The first is a \type{bool} which simply
+formatted (all of which have defaults). The first is a \type{bool} which
 says if the encoder should insert line breaks. This defaults to
 false. Line breaks don't matter either way to the decoder, but it makes the
 output a bit more appealing to the human eye, and a few transport mechanisms
@@ -859,7 +818,7 @@ output a bit more appealing to the human eye, and a few transport mechanisms
 
 The second encoder option is an integer specifying how long such lines will be
 (obviously this will be ignored if line-breaking isn't being used). The default
-tends to be in the range of 60-80 characters, but is not specified exactly. If
+tends to be in the range of 60-80 characters, but is not specified. If
 you want a specific value, set it. Otherwise the default should be fine.
 
 Lastly, \type{Hex\_Encoder} takes an argument of type \type{Case}, which can be
@@ -868,15 +827,17 @@ specifies what case the characters A-F should be output as. The base64 encoder
 has no such option, because it uses both upper and lower case letters for its
 output.
 
-The decoders both take a single option, which tells it how the object should
-behave in the case of invalid input. The enum (called \type{Decoder\_Checking})
-can take on any of three values: \type{NONE}, \type{IGNORE\_WS}, and
-\type{FULL\_CHECK}. With \type{NONE} (the default, for compatibility with
-previous releases), invalid input (for example, a ``z'' character in supposedly
-hex input) will simply be ignored. With \type{IGNORE\_WS}, whitespace will be
-ignored by the decoder, but receiving other non-valid data will raise an
-exception. Finally, \type{FULL\_CHECK} will raise an exception for \emph{any}
-characters not in the encoded character set, including whitespace.
+The decoders both take a single option, which tells it how the object
+should behave in the case of invalid input. The enum (called
+\type{Decoder\_Checking}) can take on any of three values:
+\type{NONE}, \type{IGNORE\_WS}, and \type{FULL\_CHECK}. With
+\type{NONE} (the default, for compatibility with previous releases),
+invalid input (for example, a ``z'' character in supposedly hex input)
+will be ignored. With \type{IGNORE\_WS}, whitespace will be ignored by
+the decoder, but receiving other non-valid data will raise an
+exception. Finally, \type{FULL\_CHECK} will raise an exception for
+\emph{any} characters not in the encoded character set, including
+whitespace.
 
 You can find the declarations for these types in \filename{hex.h} and
 \filename{base64.h}.
@@ -885,8 +846,8 @@ You can find the declarations for these types in \filename{hex.h} and
 
 The system of filters and pipes was designed in an attempt to make it
 as simple as possible to write new \type{Filter} objects. There are
-essentially four functions that need to be implemented by an object
-deriving from \type{Filter}:
+four functions that need to be implemented by an object deriving from
+\type{Filter}:
 
 \noindent
 \type{void} \function{write}(\type{byte} \arg{input}[], \type{u32bit}
@@ -916,27 +877,17 @@ Zlib compression module).
 \noindent
 \type{void} \function{end\_msg()}:
 
-Implementing the \function{end\_msg} function is optional. It is called when it
-has been requested that filters finish up their computations. Note that they
-must \emph{not} deallocate their resources; this should be done by their
-destructor. They should simply finish up with whatever computation they have
-been working on (for example, a compressing filter would flush the compressor
-and \function{send} the final block), and empty any buffers in preparation for
-processing a fresh new set of input. It is essentially the inverse of
-\function{start\_msg}.
+Implementing the \function{end\_msg} function is optional. It is
+called when it has been requested that filters finish up their
+computations. The filter should finish up with whatever computation it
+is working on (for example, a compressing filter would flush the
+compressor and \function{send} the final block), and empty any buffers
+in preparation for processing a fresh new set of input.
 
-Additionally, if necessary, filters can define a constructor that takes any
-needed arguments, and a destructor to deal with deallocating memory, closing
-files, etc.
+Additionally, if necessary, filters can define a constructor that
+takes any needed arguments, and a destructor to deal with deallocating
+memory, closing files, etc.
 
-There is also a \type{BufferingFilter} class (in \filename{buf\_filt.h}) that
-will take a message and split it up into an initial block that can be of any
-size (including zero), a sequence of fixed sized blocks of any non-zero size,
-and last (possibly zero-sized) final block. This might make a useful base class
-for your filters, depending on what you have in mind.
-
-
-\pagebreak
 \section{Public Key Cryptography}
 
 Let's create a 1024-bit RSA private key, encode the public key as a
@@ -955,7 +906,7 @@ std::string alice_pem = X509::PEM_encode(priv_rsa);
 // send alice_pem to Bob, who does
 
 // Bob
-std::auto_ptr<X509_PublicKey> alice(load_key(alice_pem));
+std::auto_ptr<Public_Key> alice(load_key(alice_pem));
 
 RSA_PublicKey* alice_rsa = dynamic_cast<RSA_PublicKey>(alice);
 if(alice_rsa)
@@ -971,21 +922,27 @@ The library has interfaces for encryption, signatures, etc that do not require
 knowing the exact algorithm in use (for example RSA and Rabin-Williams
 signatures are handled by the exact same code path).
 
-One place where we \emph{do} need to know exactly what kind of algorithm is in
-use is when we are creating a key (\emph{But}: read the section ``Importing and
-Exporting PK Keys'', later in this manual).
+One place where we \emph{do} need to know exactly what kind of
+algorithm is in use is when we are creating a key (\emph{But}: read
+the section ``Importing and Exporting PK Keys'', later in this
+manual).
 
-There are (currently) two kinds of public key algorithms in Botan: ones based
-on integer factorization (RSA and Rabin-Williams), and ones based on the
-discrete logarithm problem (DSA, Diffie-Hellman, Nyberg-Rueppel, and
-ElGamal). Since discrete logarithm parameters (primes and generators) can be
-shared among many keys, there is the notion of these being a combined type
-(called \type{DL\_Group}).
+There are currently three kinds of public key algorithms in Botan:
+ones based on integer factorization (RSA and Rabin-Williams), ones
+based on the discrete logarithm problem in the integers modulo a prime
+(DSA, Diffie-Hellman, Nyberg-Rueppel, and ElGamal), and ones based on
+the discrete logarithm problem in an elliptic curve (ECDSA, ECDH, GOST
+34.10). The systems based on discrete logarithms (in either regular
+integers or elliptic curves) use a group (a mathematical term), which
+can be shared among many keys. An elliptic curve group is represented
+by the class \type{EC\_Domain\_Params}, while a modulo-prime group is
+represented by a \type{DL\_Group}.
 
 There are two ways to create a DL private key (such as
-\type{DSA\_PrivateKey}). One is to pass in just a \type{DL\_Group} object -- a
-new key will automatically be generated. The other involves passing in a group
-to use, along with both the public and private values (private value first).
+\type{DSA\_PrivateKey}). One is to pass in just a \type{DL\_Group}
+object -- a new key will automatically be generated. The other
+involves passing in a group to use, along with both the public and
+private values (private value first).
 
 Since in integer factorization algorithms, the modulus used isn't shared by
 other keys, we don't use this notion. You can create a new key by passing in a
@@ -1026,7 +983,7 @@ prime. It does not have anything to do with the validity of the key for any
 particular use, nor does it have anything to do with certificates that link a
 key (which, after all, is just some numbers) with a user or other entity. If
 \function{check\_key}'s argument is \type{true}, then it does ``strong''
-checking, which includes fairly expensive operations like primality checking.
+checking, which includes expensive operations like primality checking.
 
 Keys are always checked when they are loaded or generated, so typically there
 is no reason to use this function directly. However, you can disable or reduce
@@ -1037,51 +994,42 @@ configuration subsystem for details).
 \subsection{Getting a PK algorithm object}
 
 The key types, like \type{RSA\_PrivateKey}, do not implement any kind
-of padding or encoding (which is generally necessary for security). To
-get an object like this, the easiest thing to do is call the functions
-found in \filename{look\_pk.h}. Generally these take a key, followed
-by a string that specified what hashing and encoding method(s) to
-use. Examples of such strings are ``EME1(SHA-256)'' for OAEP
-encryption and ``EMSA4(SHA-256)'' for PSS signatures (where the
-message is hashed using SHA-256).
+of padding or encoding (which is necessary for security). To get an
+object that knows how to do padding, use the wrapper classes included
+in \filename{pubkey.h}. These take a key, along with a string that
+specifies what hashing and encoding method(s) to use. Examples of such
+strings are ``EME1(SHA-256)'' for OAEP encryption and
+``EMSA4(SHA-256)'' for PSS signatures (where the message is hashed
+using SHA-256).
 
-Here are some basic examples (using an RSA key) to give you a feel for the
-possibilities. These examples assume \type{rsakey} is an
-\type{RSA\_PrivateKey}, since otherwise we would not be able to create a
-decryption or signature object with it (you can create encryption or signature
-verification objects with public keys, naturally). Remember to delete these
-objects when you're done with them.
+Here are some basic examples (using an RSA key) to give you a feel for
+the possibilities. These examples assume \type{rsakey} is an
+\type{RSA\_PrivateKey}, since otherwise we would not be able to create
+a decryption or signature object with it (you can create encryption or
+signature verification objects with public keys, naturally).
 
 \begin{verbatim}
    // PKCS #1 v2.0 / IEEE 1363 compatible encryption
-   PK_Encryptor* rsa_enc1 = get_pk_encryptor(rsakey, "EME1(RIPEMD-160)");
+   PK_Encryptor_EME rsa_enc_pkcs1_v2(rsakey, "EME1(SHA-1)");
    // PKCS #1 v1.5 compatible encryption
-   PK_Encryptor* rsa_enc2 = get_pk_encryptor(rsakey, "PKCS1v15");
+   PK_Encryptor_EME rsa_enc_pkcs1_v15(rsakey, "PKCS1v15")
 
-   // Raw encryption: no padding, input is directly encrypted by the key
-   // Don't use this unless you know what you're doing
-   PK_Encryptor* rsa_enc3 = get_pk_encryptor(rsakey, "Raw");
-
-   // This object can decrypt things encrypted by rsa_enc1
-   PK_Decryptor* rsa_dec1 = get_pk_decryptor(rsakey, "EME1(RIPEMD-160)");
+   // This object can decrypt things encrypted by rsa_
+   PK_Decryptor_EME rsa_dec_pkcs1_v2(rsakey, "EME1(SHA-1)");
 
    // PKCS #1 v1.5 compatible signatures
-   PK_Signer* rsa_sig = get_pk_signer(rsakey, "EMSA3(MD5)");
-   PK_Verifier* rsa_verify = get_pk_verifier(rsakey, "EMSA3(MD5)");
+   PK_Signer rsa_sign_pkcs1_v15(rsakey, "EMSA3(MD5)");
+   PK_Verifier rsa_verify_pkcs1_v15(rsakey, "EMSA3(MD5)");
 
    // PKCS #1 v2.1 compatible signatures
-   PK_Signer* rsa_sig2 = get_pk_signer(rsakey, "EMSA4(SHA-1)");
-   PK_Verifier* rsa_verify2 = get_pk_verifier(rsakey, "EMSA4(SHA-1)");
-
-   // Hash input with SHA-1, but don't pad the input in any way; usually
-   // used with DSA/NR, not RSA
-   PK_Signer* rsa_sig = get_pk_signer(rsakey, "EMSA1(SHA-1)");
+   PK_Signer rsa_sign_pkcs1_v2(rsakey, "EMSA4(SHA-1)");
+   PK_Verifier rsa_verify_pkcs1_v2(rsakey, "EMSA4(SHA-1)");
 \end{verbatim}
 
 \subsection{Encryption}
 
-The \type{PK\_Encryptor} and \type{PK\_Decryptor} classes are the interface for
-encryption and decryption, respectively.
+The \type{PK\_Encryptor} and \type{PK\_Decryptor} classes are the
+interface for encryption and decryption, respectively.
 
 Calling \function{encrypt} with a \type{byte} array, a length
 parameter, and an RNG object will return the input encrypted with
@@ -1092,16 +1040,14 @@ via a \type{SecureVector<byte>}.
 
 If you attempt an operation with a larger size than the key can
 support (this limit varies based on the algorithm, the key size, and
-the padding method used (if any)), an exception will be
-thrown. Alternately, you can call \function{maximum\_input\_size},
-that will return the maximum size you can safely encrypt. In fact,
-you can often encrypt an object that is one byte longer, but only if
-enough of the high bits of the leading byte are set to zero. Since
-this is pretty dicey, it's best to stick with the advertised maximum.
+the padding method used (if any)), an exception will be thrown. You
+can call \function{maximum\_input\_size} to find out the maximum size
+input (in bytes) that you can safely use with any particular key.
 
-Available public key encryption algorithms in Botan are RSA and ElGamal. The
-encoding methods are EME1, denoted by ``EME1(HASHNAME)'', PKCS \#1 v1.5,
-called ``PKCS1v15'' or ``EME-PKCS1-v1\_5'', and raw encoding (``Raw'').
+Available public key encryption algorithms in Botan are RSA and
+ElGamal. The encoding methods are EME1, denoted by ``EME1(HASHNAME)'',
+PKCS \#1 v1.5, called ``PKCS1v15'' or ``EME-PKCS1-v1\_5'', and raw
+encoding (``Raw'').
 
 For compatibility reasons, PKCS \#1 v1.5 is recommend for use with
 ElGamal (most other implementations of ElGamal do not support any
@@ -1137,58 +1083,64 @@ the message, the second being the (supposed) signature. It returns true if the
 signature is valid and false otherwise.
 
 Available public key signature algorithms in Botan are RSA, DSA,
-Nyberg-Rueppel, and Rabin-Williams. Signature encoding methods include EMSA1,
-EMSA2, EMSA3, EMSA4, and Raw. All of them, except Raw, take a parameter naming
-a message digest function to hash the message with. Raw actually signs the
-input directly; if the message is too big, the signing operation will fail. Raw
-is not useful except in very specialized applications.
+ECDSA, GOST-34.11, Nyberg-Rueppel, and Rabin-Williams. Signature
+encoding methods include EMSA1, EMSA2, EMSA3, EMSA4, and Raw. All of
+them, except Raw, take a parameter naming a message digest function to
+hash the message with. The Raw encoding signs the input directly; if
+the message is too big, the signing operation will fail. Raw is not
+useful except in very specialized applications.
 
-There are various interactions that make certain encoding schemes and signing
-algorithms more or less useful.
+There are various interactions that make certain encoding schemes and
+signing algorithms more or less useful.
 
-EMSA2 is the usual method for encoding Rabin-William signatures, so for
-compatibility with other implementations you may have to use that. EMSA4 (also
-called PSS), also works with Rabin-Williams. EMSA1 and EMSA3 do \emph{not} work
-with Rabin-Williams.
+EMSA2 is the usual method for encoding Rabin-William signatures, so
+for compatibility with other implementations you may have to use
+that. EMSA4 (also called PSS), also works with Rabin-Williams. EMSA1
+and EMSA3 do \emph{not} work with Rabin-Williams.
 
-RSA can be used with any of the available encoding methods. EMSA4 is by far the
-most secure, but is not (as of now) widely implemented. EMSA3 (also called
-``EMSA-PKCS1-v1\_5'') is commonly used with RSA (for example in SSL). EMSA1
-signs the message digest directly, without any extra padding or encoding. This
-may be useful, but is not as secure as either EMSA3 or EMSA4. EMSA2 may be used
-but is not recommended.
+RSA can be used with any of the available encoding methods. EMSA4 is
+by far the most secure, but is not (as of now) widely
+implemented. EMSA3 (also called ``EMSA-PKCS1-v1\_5'') is commonly used
+with RSA (for example in SSL). EMSA1 signs the message digest
+directly, without any extra padding or encoding. This may be useful,
+but is not as secure as either EMSA3 or EMSA4. EMSA2 may be used but
+is not recommended.
 
-For DSA and Nyberg-Rueppel, you should use EMSA1. None of the other encoding
-methods are particularly useful for these algorithms.
+For DSA, ECDSA, GOST-34.11, and Nyberg-Rueppel, you should use
+EMSA1. None of the other encoding methods are particularly useful for
+these algorithms.
 
 \subsection{Key Agreement}
 
-You can get a hold of a \type{PK\_Key\_Agreement\_Scheme} object by calling
-\function{get\_pk\_kas} with a key that is of a type that supports key
-agreement (such as a Diffie-Hellman key stored in a \type{DH\_PrivateKey}
-object), and the name of a key derivation function. This can be ``Raw'',
-meaning the output of the primitive itself is returned as the key, or
-``KDF1(hash)'' or ``KDF2(hash)'' where ``hash'' is any string you happen to
-like (hopefully you like strings like ``SHA-256'' or ``RIPEMD-160''), or
-``X9.42-PRF(keywrap)'', which uses the PRF specified in ANSI X9.42. It takes
-the name or OID of the key wrap algorithm that will be used to encrypt a
-content encryption key.
+You can get a hold of a \type{PK\_Key\_Agreement\_Scheme} object by
+calling \function{get\_pk\_kas} with a key that is of a type that
+supports key agreement (such as a Diffie-Hellman key stored in a
+\type{DH\_PrivateKey} object), and the name of a key derivation
+function. This can be ``Raw'', meaning the output of the primitive
+itself is returned as the key, or ``KDF1(hash)'' or ``KDF2(hash)''
+where ``hash'' is any string you happen to like (hopefully you like
+strings like ``SHA-256'' or ``RIPEMD-160''), or
+``X9.42-PRF(keywrap)'', which uses the PRF specified in ANSI X9.42. It
+takes the name or OID of the key wrap algorithm that will be used to
+encrypt a content encryption key.
 
-How key agreement generally works is that you trade public values with some
-other party, and then each of you runs a computation with the other's value and
-your key (this should return the same result to both parties). This computation
-can be called by using \function{derive\_key} with either a byte array/length
-pair, or a \type{SecureVector<byte>} than holds the public value of the other
-party. The last argument to either call is a number that specifies how long a
-key you want.
+How key agreement works is that you trade public values with some
+other party, and then each of you runs a computation with the other's
+value and your key (this should return the same result to both
+parties). This computation can be called by using
+\function{derive\_key} with either a byte array/length pair, or a
+\type{SecureVector<byte>} than holds the public value of the other
+party. The last argument to either call is a number that specifies how
+long a key you want.
 
-Depending on the key derivation function you're using, you many not
-\emph{actually} get back a key of that size. In particular, ``Raw'' will return
-a number about the size of the Diffie-Hellman modulus, and KDF1 can only return
-a key that is the same size as the output of the hash. KDF2, on the other
-hand, will always give you a key exactly as long as you request, regardless of
-the underlying hash used with it. The key returned is a \type{SymmetricKey},
-ready to pass to a block cipher, MAC, or other symmetric algorithm.
+Depending on the KDF you're using, you \emph{might not} get back a key
+of the size you requested. In particular ``Raw'' will return a number
+about the size of the Diffie-Hellman modulus, and KDF1 can only return
+a key that is the same size as the output of the hash. KDF2, on the
+other hand, will always give you a key exactly as long as you request,
+regardless of the underlying hash used with it. The key returned is a
+\type{SymmetricKey}, ready to pass to a block cipher, MAC, or other
+symmetric algorithm.
 
 The public value that should be used can be obtained by calling
 \function{public\_data}, which exists for any key that is associated with a
@@ -1225,58 +1177,50 @@ The interfaces for doing either of these are quite similar. Let's look at the
 X.509 stuff first:
 \begin{verbatim}
 namespace X509 {
-   void encode(const X509_PublicKey& key, Pipe& out, X509_Encoding enc = PEM);
-   std::string PEM_encode(const X509_PublicKey& out);
+   MemoryVector<byte> BER_encode(const Public_Key& key);
+   std::string PEM_encode(const Public_Key& out);
 
-   X509_PublicKey* load_key(DataSource& in);
-   X509_PublicKey* load_key(const std::string& file);
-   X509_PublicKey* load_key(const SecureVector<byte>& buffer);
+   Public_Key* load_key(DataSource& in);
+   Public_Key* load_key(const SecureVector<byte>& buffer);
 }
 \end{verbatim}
 
-Basically, \function{X509::encode} will take an \type{X509\_PublicKey}
-(as of now, that's any RSA, DSA, or Diffie-Hellman key) and encodes it
-using \arg{enc}, which can be either \type{PEM} or
-\type{RAW\_BER}. Using \type{PEM} is \emph{highly} recommended for
-many reasons, including compatibility with other software, for
-transmission over 8-bit unclean channels, because it can be identified
-by a human without special tools, and because it sometimes allows more
-sane behavior of tools that process the data. It will place the
-encoding into \arg{out}. Remember that if you have just created the
-\type{Pipe} that you are passing to \function{X509::encode}, you need
-to call \function{start\_msg} first. Particularly with public keys,
-about 99\% of the time you just want to PEM encode the key and then
-write it to a file or something. In this case, it's probably easier to
-use \function{X509::PEM\_encode}. This function will simply return the
-PEM encoding of the key as a \type{std::string}.
+The function \function{X509::BER\_encode} will take any
+\type{Public\_Key} and return a standard binary structure representing
+the key which can be read by many other crypto libraries.
 
-For loading a public key, the preferred method is one of the variants
-of \function{load\_key}. This function will return a newly allocated
-key based on the data from whatever source it is using (assuming, of
+The function \function{X509::PEM\_encode} does the same, but
+additionally formats it into a text format with headers and base64
+encoding. Using PEM is \emph{highly} recommended for many reasons,
+including compatibility with other software, for transmission over
+8-bit unclean channels, because it can be identified by a human
+without special tools, and because it sometimes allows more sane
+behavior of tools that process the data.
+
+For loading a public key, use one of the variants of
+\function{load\_key}. This function will return a newly allocated key
+based on the data from whatever source it is using (assuming, of
 course, the source is in fact storing a representation of a public
 key). The encoding used (PEM or BER) need not be specified; the format
 will be detected automatically. The key is allocated with
 \function{new}, and should be released with \function{delete} when you
-are done with it. The first takes a generic \type{DataSource} that
-you have to allocate~--~the others are simple wrapper functions that
-take either a filename or a memory buffer.
+are done with it. The first takes a generic \type{DataSource} that you
+have to create~--~the others are simple wrapper functions that take
+either a filename or a memory buffer.
 
-So what can you do with the return value of \function{load\_key}? On
-its own, a \type{X509\_PublicKey} isn't particularly useful; you can't
-encrypt messages or verify signatures, or much else. But, using
-\function{dynamic\_cast}, you can figure out what kind of operations
-the key supports. Then, you can cast the key to the appropriate type
-and pass it to a higher-level class. For example:
+Here's an example of loading a public key and then encrypting with it:
 
 \begin{verbatim}
    /* Might be RSA, might be ElGamal, might be ... */
-   X509_PublicKey* key = X509::load_key("pubkey.asc");
-      /* You MUST use dynamic_cast to convert, because of virtual bases */
-   PK_Encrypting_Key* enc_key = dynamic_cast<PK_Encrypting_Key*>(key);
-   if(!enc_key)
-      throw Some_Exception();
-   PK_Encryptor* enc = get_pk_encryptor(*enc_key, "EME1(SHA-256)");
-   SecureVector<byte> cipher = enc->encrypt(some_message, size_of_message);
+   Public_Key* key = X509::load_key("pubkey.asc");
+
+   /* This might throw an exception if the key doesn't support any
+      encryption operations
+   */
+
+   PK_Encryptor_EME encryptor(*key, "EME1(SHA-1)");
+
+   SecureVector<byte> ciphertext = encryptor.encrypt(msg, size_of_msg);
 \end{verbatim}
 
 \subsubsection{Private Keys}
@@ -1287,115 +1231,95 @@ functions:
 
 \begin{verbatim}
 namespace PKCS8 {
-   void encode(const PKCS8_PrivateKey& key, Pipe& to, X509_Encoding enc = PEM);
-
-   std::string PEM_encode(const PKCS8_PrivateKey& key);
+   SecureVector<byte> BER_encode(const Private_Key& key);
+   std::string PEM_encode(const Private_Key& key);
 }
 \end{verbatim}
 
-These functions are basically the same as the X.509 functions described
-previously. The only difference is that they take a \type{PKCS8\_PrivateKey}
-type (which, again, can be either RSA, DSA, or Diffie-Hellman, but this time
-the key must be a private key). In most situations, using these is a bad idea,
-because anyone can come along and grab the private key without having to know
-any passwords or other secrets. Unless you have very particular security
-requirements, always use the versions that encrypt the key based on a
-passphrase. For importing, the same functions can be used for encrypted and
-unencrypted keys.
+These functions are similiar to the X.509 functions described
+previously. The only difference is that they take a
+\type{Private\_Key} object instead. In most situations, using these is
+a bad idea, because anyone can come along and grab the private key
+without having to know any passwords or other secrets. Unless you have
+very particular security requirements, always use the versions that
+encrypt the key based on a passphrase. For importing, the same
+functions can be used for encrypted and unencrypted keys.
 
-The other way to export a PKCS \#8 key is to first encode it in the same manner
-as done above, then encrypt it (using a passphrase and the techniques of PKCS
-\#5), and store the whole thing into another structure. This method is
-definitely preferred, since otherwise the private key is unprotected. The
-following functions support this technique:
+The other way to export a PKCS \#8 key is to first encode it in the
+same manner as done above, then encrypt it using a passphrase, and
+store the whole thing into another structure. This method is
+definitely preferred, since otherwise the private key is
+unprotected. The algorithms and structures used here are standardized
+by PKCS \#5 and PKCS \#8, and can be read by many other crypto
+libraries.
 
 \begin{verbatim}
 namespace PKCS8 {
-   void encrypt_key(const PKCS8_PrivateKey& key, Pipe& out,
-                    std::string passphrase, std::string pbe = "",
-                    X509_Encoding enc = PEM);
+   SecureVector<byte> BER_encode(const Private_Key& key,
+                                 RandomNumberGenerator& rng,
+                                 const std::string& pass,
+                                 const std::string& pbe_algo = "");
 
-   std::string PEM_encode(const PKCS8_PrivateKey& key, std::string passphrase,
-                          std::string pbe = "");
+   std::string PEM_encode(const Private_Key& key,
+                          RandomNumberGenerator& rng,
+                          const std::string& pass,
+                          const std::string& pbe_algo = "");
 }
 \end{verbatim}
 
-To export an encrypted private key, call \function{PKCS8::encrypt\_key}. The
-\arg{key}, \arg{out}, and \arg{enc} arguments are similar in usage to the ones
-for \function{PKCS8::encode}. As you might notice, there are two new arguments
-for \function{PKCS8::encrypt\_key}, however. The first is a passphrase (which
-you presumably got from a user somehow). This will be used to encrypt the key.
-The second new argument is \arg{pbe}; this specifies a particular password
-based encryption (or PBE) algorithm.
+There are three new arguments needed here to support the encryption
+process in addition to the private key itself. The first is a
+\type{RandomNumberGenerator}, which is needed for various purposes
+internally. The \arg{pass} argument is the passphrase that will be
+used to encrypt the key. Both of these are required. The final
+(optional) argument is \arg{pbe}; this specifies a particular password
+based encryption (or PBE) algorithm. If you don't specify a PBE,
+a compiled in default will be used; this should be fine.
 
-The \function{PEM\_encode} version shown here is similar to the one that
-doesn't take a passphrase. Essentially it encrypts the key (using the default
-PBE algorithm), and then returns a C++ string with the PEM encoding of the key.
-
-If \arg{pbe} is blank, then the default algorithm (controlled by the
-``base/default\_pbe'' option) will be used. As shipped, this default is
-``PBE-PKCS5v20(SHA-1,TripleDES/CBC)'' . This is among the more secure options
-of PKCS \#5, and is widely supported among implementations of PKCS \#5 v2.0. It
-offers 168 bits of security against attacks, which should be more that
-sufficient. If you need compatibility with systems that only support PKCS \#5
-v1.5, pass ``PBE-PKCS5v15(MD5,DES/CBC)'' as \arg{pbe}. However, be warned that
-this PBE algorithm only has 56 bits of security against brute force attacks. As
-of 1.4.5, all three keylengths of AES are also available as options, which can
-be used with by specifying a PBE algorithm of
-``PBE-PKCS5v20(SHA-1,AES-256/CBC)'' (or ``AES-128'' or ``AES-192''). Support
-for AES is slightly non-standard, and some applications or libraries might not
-handle it. It is known that OpenSSL (0.9.7 and later) do handle AES for private
-key encryption.
-
-There may be some strange programs out there that support the v2.0 extensions
-to PBES1 but not PBES2; if you need to inter-operate with a program like that,
-use ``PBE-PKCS5v15(MD5,RC2/CBC)''. For example, OpenSSL supports this format
-(though since it also supports the v2.0 schemes, there is no reason not to just
-use TripleDES or AES). This scheme uses a 64-bit key that, while
-significantly better than a 56-bit key, is a bit too small for comfort.
-
-Last but not least, there are some functions that are basically identical to
-\function{X509::load\_key} that will load, and possibly decrypt, a PKCS \#8
-private key:
+Last but not least, there are some functions that will load (and
+decrypt, if necessary) a PKCS \#8 private key:
 
 \begin{verbatim}
 namespace PKCS8 {
-   PKCS8_PrivateKey* load_key(DataSource& in,
-                              RandomNumberGenerator& rng,
-                              const User_Interface& ui);
-   PKCS8_PrivateKey* load_key(DataSource& in,
-                              RandomNumberGenerator& rng,
-                              std::string passphrase = "");
+   Private_Key* load_key(DataSource& in,
+                         RandomNumberGenerator& rng,
+                         const User_Interface& ui);
 
-   PKCS8_PrivateKey* load_key(const std::string& filename,
-                              RandomNumberGenerator& rng,
-                              const User_Interface& ui);
-   PKCS8_PrivateKey* load_key(const std::string& filename,
-                              RandomNumberGenerator& rng,
-                              const std::string& passphrase = "");
+   Private_Key* load_key(DataSource& in,
+                         RandomNumberGenerator& rng,
+                         std::string passphrase = "");
+
+   Private_Key* load_key(const std::string& filename,
+                         RandomNumberGenerator& rng,
+                         const User_Interface& ui);
+
+   Private_Key* load_key(const std::string& filename,
+                         RandomNumberGenerator& rng,
+                         const std::string& passphrase = "");
 }
 \end{verbatim}
 
-The versions that take \type{std::string} \arg{passphrase}s are primarily for
-compatibility, but they are useful in limited circumstances. The
-\type{User\_Interface} versions are how \function{load\_key} is actually
-implemented, and provides for much more flexibility. Essentially, if the
-passphrase given to the function is not correct, then an exception is thrown
-and that is that. However, if you pass in an UI object instead, then the UI
-object can keep asking the user for the passphrase until they get it right (or
-until they cancel the action, though the UI interface). A
-\type{User\_Interface} has very little to do with talking to users; it's just a
-way to glue together Botan and whatever user interface you happen to be
-using. You can think of it as a user interface interface. The default
-\type{User\_Interface} is actually very dumb, and effectively acts just like
-the versions taking the \type{std::string}.
+The versions that take \type{std::string} \arg{passphrase}s are
+primarily for compatibility, but they are useful in limited
+circumstances. The \type{User\_Interface} versions are how
+\function{load\_key} is implemented, and provides for much more
+flexibility. If the passphrase passed in is not correct, then an
+exception is thrown and that is that. However, if you pass in an UI
+object, then the UI object can keep asking the user for the passphrase
+until they get it right (or until they cancel the action, though the
+UI interface). A \type{User\_Interface} has very little to do with
+talking to users; it's just a way to glue together Botan and whatever
+user interface you happen to be using. You can think of it as a user
+interface interface. The default \type{User\_Interface} is rather
+dumb, and acts rather like the versions taking the \type{std::string};
+it tries the passphrase passed in first, and then it cancels.
 
 All versions need access to a \type{RandomNumberGenerator} in order to
 perform probabilistic tests on the loaded key material.
 
-After loading a key, you can use \function{dynamic\_cast} to find out what
-operations it supports, and use it appropriately. Remember to \function{delete}
-it once you are done with it.
+After loading a key, you can use \function{dynamic\_cast} to find out
+what operations it supports, and use it appropriately. Remember to
+\function{delete} the object once you are done with it.
 
 \subsubsection{Limitations}
 
@@ -1413,13 +1337,12 @@ assign them an OID by putting a line in a Botan configuration file, calling
 it is possible that a future version will use a format that is different from
 the current one (\ie, a newly standardized format).
 
-\pagebreak
 \section{Certificate Handling}
 
-A certificate is essentially a binding between some identifying information of
-a person or other entity (called a \emph{subject}) and a public key. This
-binding is asserted by a signature on the certificate, which is placed there by
-some authority (the \emph{issuer}) that at least claims that it knows the
+A certificate is a binding between some identifying information
+(called a \emph{subject}) and a public key. This binding is asserted
+by a signature on the certificate, which is placed there by some
+authority (the \emph{issuer}) that at least claims that it knows the
 subject named in the certificate really ``owns'' the private key
 corresponding to the public key in the certificate.
 
@@ -1427,67 +1350,75 @@ The major certificate format in use today is X.509v3, designed by ISO and
 further hacked on by dozens (hundreds?) of other organizations.
 
 When working with certificates, the main class to remember is
-\type{X509\_Certificate}. You can read an object of this type, but you can't
-create one on the fly; a CA object is necessary for actually making a new
-certificate. So for the most part, you only have to worry about reading them
-in, verifying the signatures, and getting the bits of data in them (most
-commonly the public key, and the information about the user of that key). An
-X.509v3 certificate can contain a literally infinite number of items related to
-all kinds of things. Botan doesn't support a lot of them, simply because nobody
-uses them and they're an impossible mess to work with. This section only
-documents the most commonly used ones of the ones that are supported; for the
-rest, read \filename{x509cert.h} and \filename{asn1\_obj.h} (which has the
+\type{X509\_Certificate}. You can read an object of this type, but you
+can't create one on the fly; a CA object is necessary for making a new
+certificate. So for the most part, you only have to worry about
+reading them in, verifying the signatures, and getting the bits of
+data in them (most commonly the public key, and the information about
+the user of that key). An X.509v3 certificate can contain a literally
+infinite number of items related to all kinds of things. Botan doesn't
+support a lot of them, because nobody uses them and they're an
+impossible mess to work with. This section only documents the most
+commonly used ones of the ones that are supported; for the rest, read
+\filename{x509cert.h} and \filename{asn1\_obj.h} (which has the
 definitions of various common ASN.1 constructs used in X.509).
 
 \subsection{So what's in an X.509 certificate?}
 
-Obviously, you want to be able to get the public key. This is achieved by
-calling the member function \function{subject\_public\_key}, which will return
-a \type{X509\_PublicKey*}. As to what to do with this, read about
-\function{load\_key} in the section ``Importing and Exporting PK Keys''. In the
-general case, this could be any kind of public key, though 99\% of the time it
-will be an RSA key. However, Diffie-Hellman and DSA keys are also supported, so
-be careful about how you treat this. It is also a wise idea to examine the
-value returned by \function{constraints}, to see what uses the public key is
-approved for.
+Obviously, you want to be able to get the public key. This is achieved
+by calling the member function \function{subject\_public\_key}, which
+will return a \type{Public\_Key*}. As to what to do with this, read
+about \function{load\_key} in the section ``Importing and Exporting PK
+Keys''. In the general case, this could be any kind of public key,
+though 99\% of the time it will be an RSA key. However, Diffie-Hellman
+and DSA keys are also supported, so be careful about how you treat
+this. It is also a wise idea to examine the value returned by
+\function{constraints}, to see what uses the public key is approved
+for.
 
-The second major piece of information you'll want is the name/email/etc of the
-person to whom this certificate is assigned. Here is where things get a little
-nasty. X.509v3 has two (well, mostly just two $\ldots$) different places where
-you can stick information about the user: the \emph{subject} field, and in an
-extension called \emph{subjectAlternativeName}. The \emph{subject} field is
-supposed to only included the following information: country, organization
-(possibly), an organizational sub-unit name (possibly), and a so-called common
-name. The common name is usually the name of the person, or it could be a title
-associated with a position of some sort in the organization. It may also
-include fields for state/province and locality. What exactly a locality is,
-nobody knows, but it's usually given as a city name.
+The second major piece of information you'll want is the
+name/email/etc of the person to whom this certificate is
+assigned. Here is where things get a little nasty. X.509v3 has two
+(well, mostly just two $\ldots$) different places where you can stick
+information about the user: the \emph{subject} field, and in an
+extension called \emph{subjectAlternativeName}. The \emph{subject}
+field is supposed to only included the following information: country,
+organization, an organizational sub-unit name, and a so-called common
+name. The common name is usually the name of the person, or it could
+be a title associated with a position of some sort in the
+organization. It may also include fields for state/province and
+locality. What a locality is, nobody knows, but it's usually given as
+a city name.
 
-Botan doesn't currently support any of the Unicode variants used in ASN.1
-(UTF-8, UCS-2, and UCS-4), any of which could be used for the fields in the
-DN. This could be problematic, particularly in Asia and other areas where
-non-ASCII characters are needed for most names. The UTF-8 and UCS-2 string
-types \emph{are} accepted (in fact, UTF-8 is used when encoding much of the
-time), but if any of the characters included in the string are not in ISO
-8859-1 (\ie 0 \ldots 255), an exception will get thrown. Currently the
-\type{ASN1\_String} type holds its data as ISO 8859-1 internally (regardless
-of local character set); this would have to be changed to hold UCS-2 or UCS-4
-in order to support Unicode (also, many interfaces in the X.509 code would have
-to accept or return a \type{std::wstring} instead of a \type{std::string}).
+Botan doesn't currently support any of the Unicode variants used in
+ASN.1 (UTF-8, UCS-2, and UCS-4), any of which could be used for the
+fields in the DN. This could be problematic, particularly in Asia and
+other areas where non-ASCII characters are needed for most names. The
+UTF-8 and UCS-2 string types \emph{are} accepted (in fact, UTF-8 is
+used when encoding much of the time), but if any of the characters
+included in the string are not in ISO 8859-1 (\ie 0 \ldots 255), an
+exception will get thrown. Currently the \type{ASN1\_String} type
+holds its data as ISO 8859-1 internally (regardless of local character
+set); this would have to be changed to hold UCS-2 or UCS-4 in order to
+support Unicode (also, many interfaces in the X.509 code would have to
+accept or return a \type{std::wstring} instead of a
+\type{std::string}).
 
-Like the distinguished names, subject alternative names can contain a lot of
-things that Botan will flat out ignore (most of which you would never actually
-want to use). However, there are three very useful pieces of information that
-this extension might hold: an email address (``person@site1.com''), a DNS name
-(``somehost.site2.com''), or a URI (``http://www.site3.com'').
+Like the distinguished names, subject alternative names can contain a
+lot of things that Botan will flat out ignore (most of which you would
+likely never want to use). However, there are three very useful pieces
+of information that this extension might hold: an email address
+(``person@site1.com''), a DNS name (``somehost.site2.com''), or a URI
+(``http://www.site3.com'').
 
-So, how to get the information? Simply call \function{subject\_info} with the
+So, how to get the information? Call \function{subject\_info} with the
 name of the piece of information you want, and it will return a
-\type{std::string} that is either empty (signifying that the certificate
-doesn't have this information), or has the information requested. There are
-several names for each possible item, but the most easily readable ones are:
-``Name'', ``Country'', ``Organization'', ``Organizational Unit'', ``Locality'',
-``State'', ``RFC822'', ``URI'', and ``DNS''. These values are returned as a
+\type{std::string} that is either empty (signifying that the
+certificate doesn't have this information), or has the information
+requested. There are several names for each possible item, but the
+most easily readable ones are: ``Name'', ``Country'',
+``Organization'', ``Organizational Unit'', ``Locality'', ``State'',
+``RFC822'', ``URI'', and ``DNS''. These values are returned as a
 \type{std::string}.
 
 You can also get information about the issuer of the certificate in the same
@@ -1495,10 +1426,10 @@ way, using \function{issuer\_info}.
 
 \subsubsection{X.509v3 Extensions}
 
-X.509v3 specifies a large number of possible extensions. Botan supports some,
-but by no means all of them. This section lists which ones are supported, and
-notes areas where there may be problems with the handling. You have to be
-pretty familiar with X.509 in order to understand what this is talking about.
+X.509v3 specifies a large number of possible extensions. Botan
+supports some, but by no means all of them. This section lists which
+ones are supported, and notes areas where there may be problems with
+the handling.
 
 \begin{list}{$\cdot$}
   \item Key Usage and Extended Key Usage: No problems known.
@@ -1529,16 +1460,17 @@ pretty familiar with X.509 in order to understand what this is talking about.
 
 \subsubsection{Revocation Lists}
 
-It will occasionally happen that a certificate must be revoked before its
-expiration date. Examples of this happening include the private key being
-compromised, or the user to which it has been assigned leaving an
-organization. Certificate revocation lists are an answer to this problem
-(though online certificate validation techniques are starting to become
-somewhat more popular). Essentially, every once in a while the CA will release
-a CRL, listing all certificates that have been revoked. Also included is
-various pieces of information like what time a particular certificate was
-revoked, and for what reason. In most systems, it is wise to support some form
-of certificate revocation, and CRLs handle this fairly easily.
+It will occasionally happen that a certificate must be revoked before
+its expiration date. Examples of this happening include the private
+key being compromised, or the user to which it has been assigned
+leaving an organization. Certificate revocation lists are an answer to
+this problem (though online certificate validation techniques are
+starting to become somewhat more popular). Every once in a while the
+CA will release a new CRL, listing all certificates that have been
+revoked. Also included is various pieces of information like what time
+a particular certificate was revoked, and for what reason. In most
+systems, it is wise to support some form of certificate revocation,
+and CRLs handle this easily.
 
 For most users, processing a CRL is quite easy. All you have to do is call the
 constructor, which will take a filename (or a \type{DataSource\&}). The CRLs
@@ -1575,10 +1507,10 @@ we hit the top of the certificate tree somewhere. It would be a might huge pain
 to have to handle all of that manually in every application, so there is
 something that does it for you: \type{X509\_Store}.
 
-This is a pretty easy thing to use. The basic operations are: put certificates
-and CRLs into it, search for certificates, and attempt to verify
-certificates. That's about it. In the future, there will be support for online
-retrieval of certificates and CRLs (\eg with the HTTP cert-store interface
+The basic operations are: put certificates and CRLs into it, search
+for certificates, and attempt to verify certificates. That's about
+it. In the future, there will be support for online retrieval of
+certificates and CRLs (\eg with the HTTP cert-store interface
 currently under consideration by PKIX).
 
 \subsubsection{Adding Certificates}
@@ -1652,18 +1584,18 @@ effective than the name, since email addresses are rarely shared.
 
 \subsubsection{Certificate Stores}
 
-An object of type \type{Certificate\_Store} is a generalized interface to an
-external source for certificates (and CRLs). Examples of such a store would be
-one that looked up the certificates in a SQL database, or by contacting a CGI
-script running on a HTTP server. There are currently three mechanisms for
-looking up a certificate, and one for retrieving CRLs. By default, most of
-these mechanisms will simply return an empty \type{std::vector} of
-\type{X509\_Certificate}. This storage mechanism is \emph{only} queried when
-doing certificate validation: it allows you to distribute only the root key
-with an application, and let some online method handle getting all the other
-certificates that are needed to validate an end entity certificate. In
-particular, the search routines will not attempt to access the external
-database.
+An object of type \type{Certificate\_Store} is a generalized interface
+to an external source for certificates (and CRLs). Examples of such a
+store would be one that looked up the certificates in a SQL database,
+or by contacting a CGI script running on a HTTP server. There are
+currently three mechanisms for looking up a certificate, and one for
+retrieving CRLs. By default, most of these mechanisms will return an
+empty \type{std::vector} of \type{X509\_Certificate}. This storage
+mechanism is \emph{only} queried when doing certificate validation: it
+allows you to distribute only the root key with an application, and
+let some online method handle getting all the other certificates that
+are needed to validate an end entity certificate. In particular, the
+search routines will not attempt to access the external database.
 
 The three certificate lookup methods are \function{by\_SKID} (Subject Key
 Identifier), \function{by\_name} (the CommonName DN entry), and
@@ -1675,17 +1607,18 @@ implement \function{by\_name} or \function{by\_email}, but \function{by\_SKID}
 is mandatory to implement, and, currently, is the only version that is used by
 \type{X509\_Store}.
 
-Finally, there is a method for finding CRLs, called \function{get\_crls\_for},
-that takes an \type{X509\_Certificate} object, and returns a
-\type{std::vector} of \type{X509\_CRL}. While generally there will be only one
-CRL, the use of the vector makes it easy to return no CRLs (\eg, if the
-certificate store doesn't support retrieving them), or return multiple ones
-(for example, if the certificate store can't determine precisely which key was
-used to sign the certificate). Implementing the function is optional, and by
+Finally, there is a method for finding CRLs, called
+\function{get\_crls\_for}, that takes an \type{X509\_Certificate}
+object, and returns a \type{std::vector} of \type{X509\_CRL}. While
+normally there will be only one CRL, the use of the vector makes it
+easy to return no CRLs (\eg, if the certificate store doesn't support
+retrieving them), or return multiple ones (for example, if the
+certificate store can't determine precisely which key was used to sign
+the certificate). Implementing the function is optional, and by
 default will return no CRLs. If it is available, it will be used by
 \type{X509\_CRL}.
 
-As for actually using such a store, you have to tell \type{X509\_Store} about
+As for using such a store, you have to tell \type{X509\_Store} about
 it, by calling the \type{X509\_Store} member function
 
 \function{add\_new\_certstore}(\type{Certificate\_Store}* \arg{new\_store})
@@ -1702,41 +1635,46 @@ certificate:
 \function{validate\_cert}(\type{const X509\_Certificate\&} \arg{cert},
                           \type{Cert\_Usage} \arg{usage} = \type{ANY})
 
-To sum things up simply, it returns \type{VERIFIED} if the certificate can
-safely be considered valid for the usage(s) described by \arg{usage}, and an
-error code if it is not. Naturally, things are a bit more complicated than
-that. The enum \type{Cert\_Usage} is defined inside the \type{X509\_Store}
-class, it (currently) can take on any of the values \type{ANY} (any usage is
-OK), \type{TLS\_SERVER} (for SSL/TLS server authentication), \type{TLS\_CLIENT}
-(for SSL/TLS client authentication), \type{CODE\_SIGNING},
-\type{EMAIL\_PROTECTION} (email encryption, usually this means S/MIME),
-\type{TIME\_STAMPING} (in theory any time stamp application, usually IETF
-PKIX's Time Stamp Protocol), or \type{CRL\_SIGNING}. Note that Microsoft's code
-signing system, certainly the most widely used, uses a completely different
-(and basically undocumented) method for marking certificates for code signing.
+This function will return \type{VERIFIED} if the certificate can
+safely be considered valid for the usage(s) described by \arg{usage},
+and an error code if it is not. Naturally, things are a bit more
+complicated than that. The enum \type{Cert\_Usage} is defined inside
+the \type{X509\_Store} class, it (currently) can take on any of the
+values \type{ANY} (any usage is OK), \type{TLS\_SERVER} (for SSL/TLS
+server authentication), \type{TLS\_CLIENT} (for SSL/TLS client
+authentication), \type{CODE\_SIGNING}, \type{EMAIL\_PROTECTION} (email
+encryption, usually this means S/MIME), \type{TIME\_STAMPING} (in
+theory any time stamp application, usually IETF PKIX's Time Stamp
+Protocol), or \type{CRL\_SIGNING}. Note that Microsoft's code signing
+system, certainly the most widely used, uses a completely different
+(and mostly undocumented) method for marking certificates for code
+signing.
 
-First, how does it know if a certificate is valid? Basically, a certificate is
-valid if both of the following hold: a) the signature in the certificate can be
-verified using the public key in the issuer's certificate, and b) the issuer's
-certificate is a valid CA certificate. Note that this definition is
-recursive. We get out of this by ``bottoming out'' when we reach a certificate
-that we consider trusted. In general this will either be a commercial root CA,
-or an organization or application specific CA.
+First, how does it know if a certificate is valid? A certificate is
+valid if both of the following hold: a) the signature in the
+certificate can be verified using the public key in the issuer's
+certificate, and b) the issuer's certificate is a valid CA
+certificate. Note that this definition is recursive. We get out of
+this by ``bottoming out'' when we reach a certificate that we consider
+trusted. In general this will either be a commercial root CA, or an
+organization or application specific CA.
 
-There are actually a few other restrictions (validity periods, key usage
-restrictions, etc), but the above summarizes the major points of the validation
-algorithm. In theory, Botan implements the certificate path validation
-algorithm given in RFC 2459, but in practice it does not (yet), because we
-don't support the X.509v3 policy or name constraint extensions.
+There are a few other restrictions (validity periods, key usage
+restrictions, etc), but the above summarizes the major points of the
+validation algorithm. In theory, Botan implements the certificate path
+validation algorithm given in RFC 2459, but in practice it does not
+(yet), because we don't support the X.509v3 policy or name constraint
+extensions.
 
-Possible values for \arg{usage} are \type{TLS\_SERVER}, \type{TLS\_CLIENT},
-\type{CODE\_SIGNING}, \type{EMAIL\_PROTECTION}, \type{CRL\_SIGNING}, and
-\type{TIME\_STAMPING}, and \type{ANY}. The default \type{ANY} does not mean
-valid for any use, it means ``is valid for some usage''. This is generally
-fine, and in fact requiring that a random certificate support a particular
-usage will likely result in a lot of failures, unless your application is very
-careful to always issue certificates with the proper extensions, and you never
-use certificates generated by other apps.
+Possible values for \arg{usage} are \type{TLS\_SERVER},
+\type{TLS\_CLIENT}, \type{CODE\_SIGNING}, \type{EMAIL\_PROTECTION},
+\type{CRL\_SIGNING}, and \type{TIME\_STAMPING}, and \type{ANY}. The
+default \type{ANY} does not mean valid for any use, it means ``is
+valid for some usage''. This is usually what you want; requiring that
+a random certificate support a particular usage will likely result in
+a lot of failures, unless your application is very careful to always
+issue certificates with the proper extensions, and you never use
+certificates generated by other apps.
 
 Return values for \function{validate\_cert} (and \function{add\_crl}) include:
 
@@ -1777,26 +1715,28 @@ Return values for \function{validate\_cert} (and \function{add\_crl}) include:
 
 \subsection{Certificate Authorities}
 
-Setting up a CA for X.509 certificates is actually probably the easiest thing
-to do related to X.509. A CA is represented by the type \type{X509\_CA}, which
-can be found in \filename{x509\_ca.h}. A CA always needs its own certificate,
-which can either be a self-signed certificate (see below on how to create one)
-or one issued by another CA (see the section on PKCS \#10 requests). Creating
-a CA object is done by the following constructor:
+Setting up a CA for X.509 certificates is perhaps the easiest thing to
+do related to X.509. A CA is represented by the type \type{X509\_CA},
+which can be found in \filename{x509\_ca.h}. A CA always needs its own
+certificate, which can either be a self-signed certificate (see below
+on how to create one) or one issued by another CA (see the section on
+PKCS \#10 requests). Creating a CA object is done by the following
+constructor:
 
 \begin{verbatim}
-   X509_CA(const X509_Certificate& cert, const PKCS8_PrivateKey& key);
+   X509_CA(const X509_Certificate& cert, const Private_Key& key);
 \end{verbatim}
 
 The private key is the private key corresponding to the public key in the
 CA's certificate.
 
-Generally, requests for new certificates are supplied to a CA in the form on
-PKCS \#10 certificate requests (called a \type{PKCS10\_Request} object in
+Requests for new certificates are supplied to a CA in the form on PKCS
+\#10 certificate requests (called a \type{PKCS10\_Request} object in
 Botan). These are decoded in a similar manner to
-certificates/CRLs/etc. Generally, a request is vetted by humans (who somehow
-verify that the name in the request corresponds to the name of the person who
-requested it), and then signed by a CA key, generating a new certificate.
+certificates/CRLs/etc. A request is vetted by humans (who somehow
+verify that the name in the request corresponds to the name of the
+entity who requested it), and then signed by a CA key, generating a
+new certificate.
 
 \begin{verbatim}
    X509_Certificate sign_request(const PKCS10_Request&) const;
@@ -1810,16 +1750,15 @@ validate any certificate if the appropriate CRLs are not available (though
 hardly any systems are that strict). In any case, a CA should have a valid CRL
 available at all times.
 
-Of course, you might be wondering what to do if no certificates have been
-revoked. In fact, CRLs can be issued without any actually revoked certificates
-- the list of certs will simply be empty. To generate a new, empty CRL, just
-call \type{X509\_CRL}
-\function{X509\_CA::new\_crl}(\type{u32bit}~\arg{seconds}~=~0)~--~it will
-create a new, empty, CRL. If \arg{seconds} is the default 0, then the normal
-default CRL next update time (the value of the ``x509/crl/next\_update'') will
-be used. If not, then \arg{seconds} specifies how long (in seconds) it will be
-until the CRL's next update time (after this time, most clients will reject the
-CRL as too old).
+Of course, you might be wondering what to do if no certificates have
+been revoked. Never fear; empty CRLs, which revoke nothing at all, can
+be issued. To generate a new, empty CRL, just call \type{X509\_CRL}
+\function{X509\_CA::new\_crl}(\type{u32bit}~\arg{seconds}~=~0)~--~it
+will create a new, empty, CRL. If \arg{seconds} is the default 0, then
+the normal default CRL next update time (the value of the
+``x509/crl/next\_update'') will be used. If not, then \arg{seconds}
+specifies how long (in seconds) it will be until the CRL's next update
+time (after this time, most clients will reject the CRL as too old).
 
 On the other hand, you may have issued a CRL before. In that case, you will
 want to issue a new CRL that contains all previously revoked
@@ -1849,14 +1788,14 @@ case.
 
 \subsubsection{Self-Signed Certificates}
 
-Generating a new self-signed certificate can often be useful, for example when
-setting up a new root CA, or for use in email applications. In this case,
-the solution is summed up simply as:
+Generating a new self-signed certificate can often be useful, for
+example when setting up a new root CA, or for use in email
+applications. The library provides a utility function for this:
 
 \begin{verbatim}
 namespace X509 {
    X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
-                                            const PKCS8_PrivateKey& key);
+                                            const Private_Key& key);
 }
 \end{verbatim}
 
@@ -1875,7 +1814,7 @@ certificate requests.
 \begin{verbatim}
 namespace X509 {
    PKCS10_Request create_cert_req(const X509_Cert_Options&,
-                                  const PKCS8_PrivateKey&);
+                                  const Private_Key&);
 }
 \end{verbatim}
 
@@ -1887,11 +1826,12 @@ minted X.509 certificate. There is an example of using this function in the
 
 \subsubsection{Certificate Options}
 
-So what is this \type{X509\_Cert\_Options} thing we've been passing around?
-Basically, it's a bunch of information that will end up being stored into the
-certificate. This information comes in 3 major flavors: information about the
-subject (CA or end-user), the validity period of the certificate, and
-restrictions on the usage of the certificate.
+What is this \type{X509\_Cert\_Options} thing we've been passing
+around? It's a class representing a bunch of information that will end
+up being stored into the certificate. This information comes in 3
+major flavors: information about the subject (CA or end-user), the
+validity period of the certificate, and restrictions on the usage of
+the certificate.
 
 First and foremost is a number of \type{std::string} members, which contains
 various bits of information about the user: \arg{common\_name},
@@ -1922,17 +1862,19 @@ to use is to create (or request) a CA certificate, which can be done by calling
 the member function \function{CA\_key}. This should only be used when needed.
 
 Other constraints can be set by calling the member functions
-\function{add\_constraints} and \function{add\_ex\_constraints}. The first
-takes a \type{Key\_Constraints} value, and replaces any previously set
-value. If no value is set, then the certificate key is marked as being valid
-for any usage.  You can set it to any of the following (for more than one
-usage, OR them together): \type{DIGITAL\_SIGNATURE}, \type{NON\_REPUDIATION},
-\type{KEY\_ENCIPHERMENT}, \type{DATA\_ENCIPHERMENT}, \type{KEY\_AGREEMENT},
-\type{KEY\_CERT\_SIGN}, \type{CRL\_SIGN}, \type{ENCIPHER\_ONLY},
-\type{DECIPHER\_ONLY}. Many of these have quite special semantics, so you
-should either consult the appropriate standards document (such as RFC 3280), or
-simply not call \function{add\_constraints}, in which case the appropriate
-values will be chosen for you.
+\function{add\_constraints} and \function{add\_ex\_constraints}. The
+first takes a \type{Key\_Constraints} value, and replaces any
+previously set value. If no value is set, then the certificate key is
+marked as being valid for any usage.  You can set it to any of the
+following (for more than one usage, OR them together):
+\type{DIGITAL\_SIGNATURE}, \type{NON\_REPUDIATION},
+\type{KEY\_ENCIPHERMENT}, \type{DATA\_ENCIPHERMENT},
+\type{KEY\_AGREEMENT}, \type{KEY\_CERT\_SIGN}, \type{CRL\_SIGN},
+\type{ENCIPHER\_ONLY}, \type{DECIPHER\_ONLY}. Many of these have quite
+special semantics, so you should either consult the appropriate
+standards document (such as RFC 3280), or just not call
+\function{add\_constraints}, in which case the appropriate values will
+be chosen for you.
 
 The second function, \function{add\_ex\_constraints}, allows you to specify an
 OID that has some meaning with regards to restricting the key to particular
@@ -1946,7 +1888,6 @@ for use with S/MIME), ``PKIX.IPsecUser'', ``PKIX.IPsecTunnel'',
 \function{add\_ex\_constraints} any number of times~--~each new OID will be
 added to the list to include in the certificate.
 
-\pagebreak
 \section{The Low-Level Interface}
 
 Botan has two different interfaces. The one documented in this section is meant
@@ -1972,9 +1913,10 @@ algorithm objects using the functions in \filename{lookup.h}.
 \noindent
 \type{void} \function{clear}():
 
-Clear out the algorithm's internal state. A block cipher object will ``forget''
-its key, a hash function will ``forget'' any data put into it, etc. Basically,
-the object will look exactly as it did when you initially allocated it.
+Clear out the algorithm's internal state. A block cipher object will
+``forget'' its key, a hash function will ``forget'' any data put into
+it, etc. The object will look and behave as it did when you initially
+allocated it.
 
 \noindent
 \function{clone}():
@@ -1991,9 +1933,10 @@ operator.
 
 \subsection{Keys and IVs}
 
-Both symmetric keys and initialization values can simply be considered byte (or
-octet) strings. These are represented by the classes \type{SymmetricKey} and
-\type{InitializationVector}, which are subclasses of \type{OctetString}.
+Both symmetric keys and initialization values can be considered byte
+(or octet) strings. These are represented by the classes
+\type{SymmetricKey} and \type{InitializationVector}, which are
+subclasses of \type{OctetString}.
 
 Since often it's hard to distinguish between a key and IV, many things (such as
 key derivation mechanisms) return \type{OctetString} instead of
@@ -2014,14 +1957,20 @@ and stored. Whitespace is ignored.
 \function{OctetString}(\type{const byte} \arg{input}[], \type{u32bit}
 \arg{length}):
 
-This constructor simply copies its input.
+This constructor copies its input.
 
 \subsection{Symmetrically Keyed Algorithms}
 
-Block ciphers, stream ciphers, and MACs all handle keys in pretty much the same
-way. To make this similarity explicit, all algorithms of those types are
-derived from the \type{SymmetricAlgorithm} base class. This type has three
-functions:
+Block ciphers, stream ciphers, and MACs are all keyed operations; to
+be useful, they have to be set to use a particular key, which is a
+randomly chosen string of bits of a specified length.  The length
+required by any particular algorithm may vary, depending on both the
+algorithm specification and the implementation. You can query any
+botan object to find out what key length(s) it supports.
+
+To make this similarity in terms of keying explicit, all algorithms of
+those types are derived from the \type{SymmetricAlgorithm} base
+class. This type has three functions:
 
 \noindent
 \type{void} \function{set\_key}(\type{const byte} \arg{key}[], \type{u32bit}
@@ -2038,13 +1987,13 @@ Most algorithms only accept keys of certain lengths. If you attempt to call
 This function returns true if a key of the given length will be accepted by
 the cipher.
 
-There are also three constant data members of every \type{SymmetricAlgorithm}
-object, which specify exactly what limits there are on keys which that object
-can accept:
+There are also three constant data members of every
+\type{SymmetricAlgorithm} object, which specify what limits there are
+on keys which that object can accept:
 
-MAXIMUM\_KEYLENGTH: The maximum length of a key. Usually, this is at most 32
-(256 bits), even if the algorithm actually supports more. In a few rare cases
-larger keys will be supported.
+MAXIMUM\_KEYLENGTH: The maximum length of a key. Usually, this is at
+most 32 (256 bits), even if the algorithm supports more. In a few rare
+cases larger keys will be supported.
 
 MINIMUM\_KEYLENGTH: The minimum length of a key. This is at least 1.
 
@@ -2150,29 +2099,30 @@ shown in the second prototype. It will return the hash/mac value in a memory
 buffer, which will have size OUTPUT\_LENGTH.
 
 There is also a pair of functions called \function{process}. They are
-essentially a combination of a single \function{update}, and \function{final}.
-Both versions return the final value, rather than placing it an array. Calling
-\function{process} with a single byte value isn't available, mostly because it
-would rarely be useful.
+a combination of a single \function{update}, and \function{final}.
+Both versions return the final value, rather than placing it an
+array. Calling \function{process} with a single byte value isn't
+available, mostly because it would rarely be useful.
 
-A MAC can be viewed (in most cases) as simply a keyed hash function, so classes
-that are derived from \type{MessageAuthenticationCode} have \function{update}
-and \function{final} classes just like a \type{HashFunction} (and like a
-\type{HashFunction}, after \function{final} is called, it can be used to make a
-new MAC right away; the key is kept around).
+A MAC can be viewed (in most cases) as a keyed hash function, so
+classes that are derived from \type{MessageAuthenticationCode} have
+\function{update} and \function{final} classes just like a
+\type{HashFunction} (and like a \type{HashFunction}, after
+\function{final} is called, it can be used to make a new MAC right
+away; the key is kept around).
 
 A MAC has the \type{SymmetricAlgorithm} interface in addition to the
 \type{BufferedComputation} interface.
 
-\pagebreak
 \section{Random Number Generators}
 
-The random number generators provided in Botan are meant for creating keys,
-IVs, padding, nonces, and anything else that requires 'random' data. It is
-important to remember that the output of these classes will vary, even if they
-are supplied with exactly the same seed (\ie, two \type{Randpool} objects with
-similar initial states will not produce the same output, because the value of
-high resolution timers is added to the state at various points).
+The random number generators provided in Botan are meant for creating
+keys, IVs, padding, nonces, and anything else that requires 'random'
+data. It is important to remember that the output of these classes
+will vary, even if they are supplied with ethe same seed (\ie, two
+\type{Randpool} objects with similar initial states will not produce
+the same output, because the value of high resolution timers is added
+to the state at various points).
 
 To ensure good quality output, a PRNG needs to be seeded with truly random data
 (such as that produced by a hardware RNG). Typically, you will use an
@@ -2240,10 +2190,10 @@ been checked against official X9.31 test vectors.
 Internally, the PRNG holds a pointer to another PRNG (typically
 Randpool). This internal PRNG generates the key and seed used by the
 X9.31 algorithm, as well as the date/time vectors. Each time an X9.31
-PRNG object receives entropy, it simply passes it along to the PRNG it
-is holding, and then pulls out some random bits to generate a new key
-and seed. This PRNG considers itself seeded as soon as the internal
-PRNG is seeded.
+PRNG object receives entropy, it passes it along to the PRNG it is
+holding, and then pulls out some random bits to generate a new key and
+seed. This PRNG considers itself seeded as soon as the internal PRNG
+is seeded.
 
 As of version 1.4.7, the X9.31 PRNG is by default used for all random number
 generation.
@@ -2256,51 +2206,49 @@ you should use an \type{EntropySource} is to pass it to a PRNG that will
 extract entropy from it -- never use the output directly for any kind of key or
 nonce generation!
 
-\type{EntropySource} has a pair of functions for getting entropy from some
-external source, called \function{fast\_poll} and \function{slow\_poll}. These
-pass a buffer of bytes to be written; the functions then return how many bytes
-of entropy were actually gathered. \type{EntropySource}s are usually used to
-seed the global PRNG using the functions found in the \namespace{Global\_RNG}
+\type{EntropySource} has a pair of functions for getting entropy from
+some external source, called \function{fast\_poll} and
+\function{slow\_poll}. These pass a buffer of bytes to be written; the
+functions then return how many bytes of entropy were
+gathered. \type{EntropySource}s are usually used to seed the global
+PRNG using the functions found in the \namespace{Global\_RNG}
 namespace.
 
 Note for writers of \type{EntropySource}s: it isn't necessary to use any kind
 of cryptographic hash on your output. The data produced by an EntropySource is
 only used by an application after it has been hashed by the
 \type{RandomNumberGenerator} that asked for the entropy, thus any hashing
-you do will be wasteful of both CPU cycles and possibly entropy.
+you do will be wasteful of both CPU cycles and entropy.
 
-\pagebreak
 \section{User Interfaces}
 
-Botan has recently changed some infrastructure to better accommodate more
-complex user interfaces, in particular ones that are based on event
-loops. Primary among these was the fact that when doing something like loading
-a PKCS \#8 encoded private key, a passphrase might be needed, but then again it
-might not (a PKCS \#8 key doesn't have to be encrypted). Asking for a
-passphrase to decrypt an unencrypted key is rather pointless. Not only that,
-but the way to handle the user typing the wrong passphrase was complicated,
+Botan has recently changed some infrastructure to better accommodate
+more complex user interfaces, in particular ones that are based on
+event loops. Primary among these was the fact that when doing
+something like loading a PKCS \#8 encoded private key, a passphrase
+might be needed, but then again it might not (a PKCS \#8 key doesn't
+have to be encrypted). Asking for a passphrase to decrypt an
+unencrypted key is rather pointless. Not only that, but the way to
+handle the user typing the wrong passphrase was complicated,
 undocumented, and inefficient.
 
-So now Botan has an object called \type{UI}, which provides a simple interface
-for the aspects of user interaction the library has to be concerned
-with. Currently, this means getting a passphrase from the user, and that's it
-(\type{UI} will probably be extended in the future to support other operations
-as they are needed). The base \type{UI} class is very stupid, because the
-library can't directly assume anything about the environment that it's running
-under (for example, if there will be someone sitting at the terminal, if the
-application is even \emph{attached} to a terminal, and so on). But since you
-can subclass \type{UI} to use whatever method happens to be appropriate for
-your application, this isn't a big deal.
+So now Botan has an object called \type{UI}, which provides a simple
+interface for the aspects of user interaction the library has to be
+concerned with. Currently, this means getting a passphrase from the
+user, and that's it (\type{UI} will probably be extended in the future
+to support other operations as they are needed). The base \type{UI}
+class is very stupid, because the library can't directly assume
+anything about the environment that it's running under (for example,
+if there will be someone sitting at the terminal, if the application
+is even \emph{attached} to a terminal, and so on). But since you can
+subclass \type{UI} to use whatever method happens to be appropriate
+for your application, this isn't a big deal.
 
-There is (currently) a single function that can be overridden by subclasses of
-\type{UI} (the \type{std::string} arguments are actually \type{const
-std::string\&}, but shown as simply \type{std::string} to keep the line from
-wrapping):
-
-\noindent
-\type{std::string} \function{get\_passphrase}(\type{std::string} \arg{what},
-                                              \type{std::string} \arg{source},
-                                     \type{UI\_Result\&} \arg{result}) const;
+\begin{verbatim}
+  std::string get_passphrase(const std::string& what,
+                             const std::string& source,
+                             UI_Result& result) const;
+\end{verbatim}
 
 The \arg{what} argument specifies what the passphrase is needed for (for
 example, PKCS \#8 key loading passes \arg{what} as ``PKCS \#8 private
@@ -2330,7 +2278,6 @@ application. If you write a \type{UI} object for another windowing system
 in general (ideally under a permissive license such as public domain or
 MIT/BSD), feel free to send in a copy.
 
-\pagebreak
 \section{Botan's Modules}
 
 Botan comes with a variety of modules that can be compiled into the system.
@@ -2340,10 +2287,10 @@ defined.
 
 \subsection{Pipe I/O for Unix File Descriptors}
 
-This is a fairly minor feature, but it comes in handy sometimes. In all
+This is a minor feature, but it comes in handy sometimes. In all
 installations of the library, Botan's \type{Pipe} object overloads the
-\keyword{<<} and \keyword{>>} operators for C++ iostream objects, which is
-usually more than sufficient for doing I/O.
+\keyword{<<} and \keyword{>>} operators for C++ iostream objects,
+which is usually more than sufficient for doing I/O.
 
 However, there are cases where the iostream hierarchy does not map well to
 local 'file types', so there is also the ability to do I/O directly with Unix
@@ -2357,13 +2304,13 @@ check out the \filename{hash\_fd} example, included in the Botan distribution.
 
 \subsection{Entropy Sources}
 
-All of these are used by the \function{Global\_RNG::seed} function if they are
-available. Since this function is called by the \type{LibraryInitializer} class
-when it is created, it is fairly rare that you will need to deal with any of
-these classes directly. Even in the case of a long-running server that needs to
-renew its entropy poll, it is easier to simply call
-\function{Global\_RNG::seed} (see the section entitled ``The Global PRNG'' for
-more details).
+All of these are used by the \function{Global\_RNG::seed} function if
+they are available. Since this function is called by the
+\type{LibraryInitializer} class when it is created, it is rare
+that you will need to deal with any of these classes directly. Even in
+the case of a long-running server that needs to renew its entropy
+poll, it is easier to call \function{Global\_RNG::seed} (see the
+section entitled ``The Global PRNG'' for more details).
 
 \noindent
 \type{EGD\_EntropySource}: Query an EGD socket. If the macro
@@ -2392,14 +2339,14 @@ of bits are read in order to get that 16 bits). It is declared in
 use this as a last resort. I don't really trust it, and neither should you.
 
 \noindent
-\type{Win32\_CAPI\_EntropySource}: This routines gathers entropy from a Win32
-CAPI module. It takes an optional \type{std::string} that will specify what
-type of CAPI provider to use. Generally the CAPI RNG is always the same
-software-based PRNG, but there are a few that may use a hardware RNG. By
-default it will use the first provider listed in the option
-``rng/ms\_capi\_prov\_type'' that is available on the machine (currently the
-providers ``RSA\_FULL'', ``INTEL\_SEC'', ``FORTEZZA'', and ``RNG'' are
-recognized).
+\type{Win32\_CAPI\_EntropySource}: This routines gathers entropy from
+a Win32 CAPI module. It takes an optional \type{std::string} that will
+specify what type of CAPI provider to use. The CAPI RNG is usually a
+default software-based PRNG, but there are a few providers that may
+use a hardware RNG. By default it will use the first provider listed
+in the option ``rng/ms\_capi\_prov\_type'' that is available on the
+machine (currently the providers ``RSA\_FULL'', ``INTEL\_SEC'',
+``FORTEZZA'', and ``RNG'' are recognized).
 
 \noindent
 \type{BeOS\_EntropySource}: Query system statistics using various BeOS-specific
@@ -2443,11 +2390,12 @@ The Bzip2 module was contributed by Peter J. Jones.
 
 \subsubsection{Zlib}
 
-Zlib compression works pretty much like Bzip2 compression. The only differences
-in this case are that the macro is \macro{BOTAN\_EXT\_COMPRESSOR\_ZLIB}, the
-header you need to include is called \filename{botan/zlib.h} (remember that you
-shouldn't just \verb|#include <zlib.h>|, or you'll get the regular zlib API,
-which is not what you want). The Botan classes for Zlib
+Zlib compression works much like Bzip2 compression. The only
+differences in this case are that the macro is
+\macro{BOTAN\_EXT\_COMPRESSOR\_ZLIB}, the header you need to include
+is called \filename{botan/zlib.h} (remember that you shouldn't just
+\verb|#include <zlib.h>|, or you'll get the regular zlib API, which is
+not what you want). The Botan classes for Zlib
 compression/decompression are called \type{Zlib\_Compression} and
 \type{Zlib\_Decompression}.
 
@@ -2485,7 +2433,7 @@ RFC 1950.
 \subsubsection{Data Sources}
 
 A \type{DataSource} is a simple abstraction for a thing that stores bytes. This
-type is used fairly heavily in the areas of the API related to ASN.1
+type is used heavily in the areas of the API related to ASN.1
 encoding/decoding. The following types are \type{DataSource}s: \type{Pipe},
 \type{SecureQueue}, and a couple of special purpose ones:
 \type{DataSource\_Memory} and \type{DataSource\_Stream}.
@@ -2504,13 +2452,13 @@ up a file with that name and read from it.
 
 \subsubsection{Data Sinks}
 
-A \type{DataSink} (in \filename{data\_snk.h}) is a \type{Filter} that takes
-arbitrary amounts of input, and produces no output. Generally, this means it's
-doing something with the data outside the realm of what
-\type{Filter}/\type{Pipe} can handle, for example, writing it to a file (which
-is what the \type{DataSink\_Stream} does). There is no need for
-\type{DataSink}s that write to a \type{std::string} or memory buffer, because
-\type{Pipe} can handle that by itself.
+A \type{DataSink} (in \filename{data\_snk.h}) is a \type{Filter} that
+takes arbitrary amounts of input, and produces no output. This means
+it's doing something with the data outside the realm of what
+\type{Filter}/\type{Pipe} can handle, for example, writing it to a
+file (which is what the \type{DataSink\_Stream} does). There is no
+need for \type{DataSink}s that write to a \type{std::string} or memory
+buffer, because \type{Pipe} can handle that by itself.
 
 Here's a quick example of using a \type{DataSink}, which encrypts
 \filename{in.txt} and sends the output to \filename{out.txt}. There is
@@ -2525,93 +2473,8 @@ implicit.
 \end{verbatim}
 
 A real advantage of this is that even if ``in.txt'' is large, only as
-much memory is needed for internal I/O buffers will actually be used.
+much memory is needed for internal I/O buffers will be used.
 
-\subsection{Writing Modules}
-
-It's a lot simpler to write modules for Botan that it is to write code
-in the core library, for several reasons. First, a module can rely on
-external libraries and services beyond the base ISO C++ libraries, and
-also machine dependent features. Also, the code can be added at
-configuration time on the user's end with very little effort (\ie the
-code can be distributed separately, and included by the user without
-needing to patch any existing source files).
-
-Each module lives in a subdirectory of the \filename{modules}
-directory, which exists at the top-level of the Botan source tree. The
-``short name'' of the module is the same as the name of this
-directory. The only required file in this directory is
-\filename{info.txt}, which contains directives that specify what a
-particular module does, what systems it runs on, and so on. Comments
-in \filename{info.txt} start with a \verb|#| character and continue
-to end of line.
-
-Recognized directives include:
-
-\newcommand{\directive}[2]{
-   \vskip 4pt
-   \noindent
-   \texttt{#1}: #2
-}
-
-\directive{realname <name>}{Specify that the 'real world' name of this module
-   is \texttt{<name>}.}
-
-\directive{note <note>}{Add a note that will be seen by the end-user at
-configure time if the module is included into the library.}
-
-\directive{require\_version <version>}{Require at configure time that
-the version of Botan in use be at least \texttt{<version>}.}
-
-\directive{define <macro>[,<macro>[,...]]}{Cause the macro
-   \macro{BOTAN\_EXT\_<macro>} (for each instance of \macro{<macro>}
-   in the directive) to be defined in \filename{build.h}. This should
-   only be used if the module creates user-visible changes. There is a
-   set of conventions that should be followed in deciding what to call
-   this macro (where xxx denotes some descriptive and distinguishing
-   characteristic of the thing implemented, such as
-   \macro{ALLOC\_MLOCK} or \macro{MUTEX\_PTHREAD}):
-
-\begin{itemize}
-\item Allocator: \macro{ALLOC\_xxx}
-\item Compressors: \macro{COMPRESSOR\_xxx}
-\item EntropySource: \macro{ENTROPY\_SRC\_xxx}
-\item Engines: \macro{ENGINE\_xxx}
-\item Mutex: \macro{MUTEX\_xxx}
-\item Timer: \macro{TIMER\_xxx}
-\end{itemize}
-}
-
-\directive{<libs> / </libs>}{This specifies any extra libraries to be
-linked in.  It is a mapping from OS to library name, for example
-\texttt{linux -> rt}, which means that on Linux librt should be linked
-in. You can also use ``all'' to force the library to be linked in on
-all systems.}
-
-\directive{<add> / </add>}{Tell the configuration script to add the
-   files named between these two tags into the source tree. All these
-   files must exist in the current module directory.}
-
-\directive{<ignore> / </ignore>}{Tell the configuration script to
-   ignore the files named in the main source tree. This is useful, for
-   example, when replacing a C++ implementation with a pure assembly
-   version.}
-
-\directive{<replace> / </replace>}{Tell the configuration script to
-   ignore the file given in the main source tree, and instead use the
-   one in the module's directory.}
-
-Additionally, the module file can contain blocks, delimited by the
-following pairs:
-
-\texttt{<os> / </os>}, \texttt{<arch> / </arch>}, \texttt{<cc> / </cc>}
-
-\noindent
-For example, putting ``alpha'' and ``ia64'' in a \texttt{<arch>} block will
-make the configuration script only allow the module to be compiled on those
-architectures. Not having a block means any value is acceptable.
-
-\pagebreak
 \section{Miscellaneous}
 
 This section has documentation for anything that just didn't fit into any of
@@ -2621,7 +2484,7 @@ degree of applicability.
 
 \subsection{S2K Algorithms}
 
-There are various procedures (usually fairly ad-hoc) for turning a
+There are various procedures (usually ad-hoc) for turning a
 passphrase into a (mostly) arbitrary length key for a symmetric
 cipher. A general interface for such algorithms is presented in
 \filename{s2k.h}. The main function is \function{derive\_key}, which
@@ -2807,22 +2670,18 @@ application \texttt{setuid} \texttt{root}, and then drop privileges
 immediately after creating your \type{LibraryInitializer}. If you end
 up using more than what's been allocated, some of your sensitive data
 might end up being swappable, but that beats running as \texttt{root}
-all the time. BTW, I would note that, at least on Linux, you can use a
-kernel module to give your process extra privileges (such as the
-ability to call \function{mlock}) without being root. For example,
-check out my Capability Override LSM
-(\url{http://www.randombit.net/projects/cap\_over/}), which makes this
-pretty easy to do.
+all the time.
 
-These classes should also be used within your own code for storing sensitive
-data. They are only meant for primitive data types (int, long, etc): if you
-want a container of higher level Botan objects, you can just use a
-\verb|std::vector|, since these objects know how to clear themselves when they
-are destroyed. You cannot, however, have a \verb|std::vector| (or any other
-container) of \type{Pipe}s or \type{Filter}s, because these types have pointers
-to other \type{Filter}s, and implementing copy constructors for these types
-would be both hard and quite expensive (vectors of pointers to such objects is
-fine, though).
+These classes should also be used within your own code for storing
+sensitive data. They are only meant for primitive data types (int,
+long, etc): if you want a container of higher level Botan objects, you
+can just use a \verb|std::vector|, since these objects know how to
+clear themselves when they are destroyed. You cannot, however, have a
+\verb|std::vector| (or any other container) of \type{Pipe}s or
+\type{Filter}s, because these types have pointers to other
+\type{Filter}s, and implementing copy constructors for these types
+would be both hard and quite expensive (vectors of pointers to such
+objects is fine, though).
 
 These types are not described in any great detail: for more information,
 consult the definitive sources~--~the header files \filename{secmem.h} and
@@ -2842,15 +2701,17 @@ and \function{size}.
 
 \subsection{Allocators}
 
-The containers described above get their memory from allocators. As a user of
-the library, you can add new allocator methods at run time for containers,
-including the ones used internally by the library, to use. The interface to
-this is in \filename{allocate.h}. Basically how it works is that code needing
-an allocator uses \function{get\_allocator}, which returns a pointer to an
-allocator. This pointer should not be freed: the caller does not own the
-allocator (it is shared among multiple users, and locks itself as needed). It
-is possible to call \function{get\_allocator} with a specific name to request a
-particular type of allocator, otherwise, a default allocator type is returned.
+The containers described above get their memory from allocators. As a
+user of the library, you can add new allocator methods at run time for
+containers, including the ones used internally by the library, to
+use. The interface to this is in \filename{allocate.h}. Code needing
+to allocate or deallocate memory calls \function{get\_allocator},
+which returns a pointer to an allocator object. This pointer should
+not be freed: the caller does not own the allocator (it is shared
+among multiple allocatore users, and uses a mutex to serialize access
+internally if necessary). It is possible to call
+\function{get\_allocator} with a specific name to request a particular
+type of allocator, otherwise, a default allocator type is returned.
 
 At start time, the only allocator known is a \type{Default\_Allocator}, which
 just allocates memory using \function{malloc}, and \function{memset}s it to 0
@@ -2885,7 +2746,7 @@ the best way to learn is to look at the headers.
 
 Probably the most important are the encoding/decoding functions, which
 transform the normal representation of a \type{BigInt} into some other form,
-such as a decimal string. The most useful of these functions are
+such as a decimal string.
 
 \type{SecureVector<byte>} \function{BigInt::encode}(\type{BigInt},
 \type{Encoding})
@@ -2922,7 +2783,7 @@ BigInt. There are several other \type{BigInt} constructors, which I would
 seriously recommend you avoid, as they are only intended for use internally by
 the library, and may arbitrarily change, or be removed, in a future release.
 
-An essentially random sampling of \type{BigInt} related functions:
+An random sampling of \type{BigInt} related functions:
 
 \type{u32bit} \function{BigInt::bytes}(): Return the size of this \type{BigInt}
 in bytes.
@@ -2942,9 +2803,9 @@ primality test with fixed bases. For higher assurance, use
 \subsubsection{Efficiency Hints}
 
 If you can, always use expressions of the form \verb|a += b| over
-\verb|a = a + b|. The difference can be \emph{very} substantial, because the
-first form prevents at least one needless memory allocation, and possibly as
-many as three.
+\verb|a = a + b|. The difference can be \emph{very} substantial,
+because the first form prevents at least one needless memory
+allocation, and possibly as many as three.
 
 If you're doing repeated modular exponentiations with the same modulus, create
 a \type{BarrettReducer} ahead of time. If the exponent or base is a constant,
@@ -2954,31 +2815,31 @@ the normal high-level interfaces, of course.
 Never use the low-level MPI functions (those that begin with
 \texttt{bigint\_}). These are completely internal to the library, and
 may make arbitrarily strange and undocumented assumptions about their
-inputs, and don't check to see if they are actually true, on the
-assumption that only the library itself calls them, and that the
-library knows what the assumptions are. The interfaces for these
-functions can change completely without notice.
+inputs, and don't check to see if they are true, on the assumption
+that only the library itself calls them, and that the library knows
+what the assumptions are. The interfaces for these functions can
+change completely without notice.
 
-\pagebreak
 \section{Algorithms}
 
 \subsection{Recommended Algorithms}
 
-This section is by no means the last word on selecting which algorithms to use.
-However, Botan includes a sometimes bewildering array of possible algorithms,
-and unless you're familiar with the latest developments in the field, it can be
-hard to know what is secure and what is not. The following attributes of the
-algorithms were evaluated when making this list: security, standardization,
-patent status, support by other implementations, and efficiency (in roughly
-that order).
+This section is by no means the last word on selecting which
+algorithms to use.  However, Botan includes a sometimes bewildering
+array of possible algorithms, and unless you're familiar with the
+latest developments in the field, it can be hard to know what is
+secure and what is not. The following attributes of the algorithms
+were evaluated when making this list: security, standardization,
+patent status, support by other implementations, and efficiency (in
+roughly that order).
 
-It is intended as a set of simple guidelines for developers, and nothing more.
-It's entirely possible that there are algorithms in Botan that will turn out to
-be more secure than the ones listed, but the algorithms listed here are
-(currently) thought to be safe.
+It is intended as a set of simple guidelines for developers, and
+nothing more.  It's entirely possible that there are algorithms in
+Botan that will turn out to be more secure than the ones listed, but
+the algorithms listed here are (currently) thought to be safe.
 
 \begin{list}{$\cdot$}
-  \item Block ciphers: AES or Serpent in CBC or CTR mode
+  \item Block ciphers: AES or Serpent in CBC, CTR, or XTS mode
 
   \item Hash functions: SHA-256, SHA-512
 
@@ -2986,69 +2847,33 @@ be more secure than the ones listed, but the algorithms listed here are
 
   \item Public Key Encryption: RSA with ``EME1(SHA-256)''
 
-  \item Public Key Signatures: RSA with EMSA4 and any recommended hash, or DSA
-     with ``EMSA1(SHA-256)''
+  \item Public Key Signatures: RSA with EMSA4 and any recommended
+    hash, or DSA or ECDSA with ``EMSA1(SHA-256)''
 
-  \item Key Agreement: Diffie-Hellman, with ``KDF2(SHA-256)''
+  \item Key Agreement: Diffie-Hellman or ECDH, with ``KDF2(SHA-256)''
 \end{list}
-
-\subsection{Compliance with Standards}
-
-Botan is/should be at least roughly compatible with many cryptographic
-standards, including the following:
-
-\newcommand{\standard}[2]{
-   \vskip 4pt
-   * #1: \textbf{#2}
-}
-
-\standard{RSA}{PKCS \#1 v2.1, ANSI X9.31}
-
-\standard{DSA}{ANSI X9.30, FIPS 186-2}
-
-\standard{Diffie-Hellman}{ANSI X9.42, PKCS \#3}
-
-\standard{Certificates}{ITU X.509, RFC 3280/3281 (PKIX), PKCS \#9 v2.0,
-PKCS \#10}
-
-\standard{Private Key Formats}{PKCS \#5 v2.0, PKCS \#8}
-
-\standard{DES/DES-EDE}{FIPS 46-3, ANSI X3.92, ANSI X3.106}
-
-\standard{SHA-1}{FIPS 180-2}
-
-\standard{HMAC}{ANSI X9.71, FIPS 198}
-
-\standard{ANSI X9.19 MAC}{ANSI X9.9, ANSI X9.19}
-
-\vskip 8pt
-\noindent
-There is also support for the very general standards of \textbf{IEEE 1363-2000}
-and \textbf{1363a}. Most of the contents of such are included in the standards
-mentioned above, in various forms (usually with extra restrictions that 1363
-does not impose).
 
 \subsection{Algorithms Listing}
 
 Botan includes a very sizable number of cryptographic algorithms. In
 nearly all cases, you never need to know the header file or type name
 to use them. However, you do need to know what string (or strings) are
-used to identify that algorithm. Generally, these names conform to
-those set out by SCAN (Standard Cryptographic Algorithm Naming), which
-is a document that specifies how strings are mapped onto algorithm
-objects, which is useful for a wide variety of crypto APIs (SCAN is
-oriented towards Java, but Botan and several other non-Java libraries
-also make at least some use of it). For full details, read the SCAN
-document, which can be found at
+used to identify that algorithm. These names conform to those set out
+by SCAN (Standard Cryptographic Algorithm Naming), which is a document
+that specifies how strings are mapped onto algorithm objects, which is
+useful for a wide variety of crypto APIs (SCAN is oriented towards
+Java, but Botan and several other non-Java libraries also make at
+least some use of it). For full details, read the SCAN document, which
+can be found at
 \url{http://www.users.zetnet.co.uk/hopwood/crypto/scan/}
 
 Many of these algorithms can take options (such as the number of
 rounds in a block cipher, the output size of a hash function,
 etc). These are shown in the following list; all of them default to
-reasonable values (unless otherwise marked). There are
-algorithm-specific limits on most of them. When you see something like
-``HASH'' or ``BLOCK'', that means you should insert the name of some
-algorithm of that type. There are no defaults for those options.
+reasonable values. There are algorithm-specific limits on most of
+them. When you see something like ``HASH'' or ``BLOCK'', that means
+you should insert the name of some algorithm of that type. There are
+no defaults for those options.
 
 A few very obscure algorithms are skipped; if you need one of them,
 you'll know it, and you can look in the appropriate header to see what
@@ -3059,48 +2884,30 @@ match that in SCAN, if it's defined there).
   \item ROUNDS: The number of rounds in a block cipher.
   \item
   \item OUTSZ: The output size of a hash function or MAC
-  \item PASS: The number of passes in a hash function (more passes generally
-               means more security).
 \end{list}
 
 \vskip .05in
 \noindent
-\textbf{Block Ciphers:} ``AES'', ``Blowfish'', ``CAST-128'',
-``CAST-256'', ``DES'', ``DESX'', ``TripleDES'', ``GOST'', ``IDEA'',
-``MARS'', ``MISTY1(ROUNDS)'', ``RC2'', ``RC5(ROUNDS)'', ``RC6'',
-``SAFER-SK(ROUNDS)'', ``SEED'', ``Serpent'', ``Skipjack'', ``Square'',
-``TEA'', ``Twofish'', ``XTEA''
+\textbf{Block Ciphers:} ``AES'' (and ``AES-128'', ``AES-192'', and
+``AES-256''), ``Blowfish'', ``CAST-128'', ``CAST-256'', ``DES'',
+``DESX'', ``TripleDES'', ``GOST-28147-89'', ``IDEA'', ``KASUMI'',
+``MARS'', ``MISTY1(ROUNDS)'', ``Noekeon'', ``RC2'', ``RC5(ROUNDS)'',
+``RC6'', ``SAFER-SK(ROUNDS)'', ``SEED'', ``Serpent'', ``Skipjack'',
+``Square'', ``TEA'', ``Twofish'', ``XTEA''
 
 \noindent
-\textbf{Stream Ciphers:} ``ARC4'', ``MARK4'', ``Turing'', ``WiderWake4+1-BE''
+\textbf{Stream Ciphers:} ``ARC4'', ``MARK4'', ``Salsa20'', ``Turing'',
+``WiderWake4+1-BE''
 
 \noindent
-\textbf{Hash Functions:} ``FORK-256'', ``HAS-160'', ``GOST-34.11'',
+\textbf{Hash Functions:} ``HAS-160'', ``GOST-34.11'',
 ``MD2'', ``MD4'', ``MD5'', ``RIPEMD-128'', ``RIPEMD-160'',
 ``SHA-160'', ``SHA-256'', ``SHA-384'', ``SHA-512'', ``Skein-512'',
-``Tiger(OUTSZ,PASS)'', ``Whirlpool''
+``Tiger(OUTSZ)'', ``Whirlpool''
 
 \noindent
 \textbf{MACs:} ``HMAC(HASH)'', ``CMAC(BLOCK)'', ``X9.19-MAC''
 
-\subsection{Compatibility}
-
-Generally, cryptographic algorithms are well standardized, thus
-compatibility between implementations is relatively simple (of course, not all
-algorithms are supported by all implementations). But there are a few
-algorithms that are poorly specified, and these should be avoided if you wish
-your data to be processed in the same way by another implementation (including
-future versions of Botan).
-
-The block cipher GOST has a particularly poor specification: there are no
-standard Sboxes, and the specification does not give test vectors even for
-sample boxes, which leads to issues of endian conventions, etc.
-
-If you wish maximum portability between different implementations of an
-algorithm, it's best to stick to strongly defined and well standardized
-algorithms, TripleDES, AES, HMAC, and SHA-256 all being good examples.
-
-\pagebreak
 \section{Support and Further Information}
 
 \subsection{Patents}
@@ -3115,42 +2922,14 @@ not encumbered by patents. If you have any concerns about the patent status of
 any algorithm you are considering using in an application, please discuss it
 with your attorney.
 
-\subsection{Recommended Reading}
-
-It's a very good idea if you have some knowledge of cryptography prior
-to trying to use this stuff. You really should read one or more of
-these books before seriously using the library (note that the Handbook
-of Applied Cryptography is available for free online):
-
-\setlength{\parskip}{5pt}
-
-\noindent
-\textit{Handbook of Applied Cryptography}, Alfred J. Menezes,
-Paul C. Van Oorschot, and Scott A. Vanstone; CRC Press
-
-\noindent
-\textit{Security Engineering -- A Guide to Building Dependable Distributed
-Systems}, Ross Anderson; Wiley
-
-\noindent
-\textit{Cryptography: Theory and Practice}, Douglas R. Stinson; CRC Press
-
-\noindent
-\textit{Applied Cryptography, 2nd Ed.}, Bruce Schneier; Wiley
-
-\noindent
-Once you've got the basics down, these are good things to at least take a look
-at: IEEE 1363 and 1363a, SCAN, NESSIE, PKCS \#1 v2.1, the security related FIPS
-documents, and the CFRG RFCs.
-
 \subsection{Support}
 
 Questions or problems you have with Botan can be directed to the
 development mailing list. Joining this list is highly recommended if
 you're going to be using Botan, since often advance notice of upcoming
 changes is sent there. ``Philosophical'' bug reports, announcements of
-programs using Botan, and basically anything else having to do with
-Botan are also welcome.
+programs using Botan, and anything else having to do with Botan are
+also welcome.
 
 The lists can be found at
 \url{http://lists.randombit.net/mailman/listinfo/}.
@@ -3167,7 +2946,7 @@ Web Site: \url{http://botan.randombit.net}
 
 \subsection{License}
 
-Copyright \copyright  2000-2008, Jack Lloyd
+Copyright \copyright  2000-2010, Jack Lloyd
 
 Licensed under the same terms as the Botan source
 

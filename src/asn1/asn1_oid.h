@@ -31,13 +31,13 @@ class BOTAN_DLL OID : public ASN1_Object
 
       /**
       * Get this OID as list (vector) of its components.
-      * @return a vector representing this OID
+      * @return vector representing this OID
       */
       std::vector<u32bit> get_id() const { return id; }
 
       /**
       * Get this OID as a string
-      * @return a string representing this OID
+      * @return string representing this OID
       */
       std::string as_string() const;
 
@@ -55,7 +55,7 @@ class BOTAN_DLL OID : public ASN1_Object
       /**
       * Add a component to this OID.
       * @param new_comp the new component to add to the end of this OID
-      * @return a reference to *this
+      * @return reference to *this
       */
       OID& operator+=(u32bit new_comp);
 

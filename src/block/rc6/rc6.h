@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* RC6
+/**
+* RC6, Ron Rivest's AES candidate
 */
 class BOTAN_DLL RC6 : public BlockCipher
    {

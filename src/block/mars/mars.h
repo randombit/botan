@@ -12,6 +12,9 @@
 
 namespace Botan {
 
+/**
+* MARS, IBM's candidate for AES
+*/
 class BOTAN_DLL MARS : public BlockCipher
    {
    public:

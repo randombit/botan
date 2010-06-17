@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Allocator Interface
 */
 class BOTAN_DLL Allocator

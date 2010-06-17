@@ -12,13 +12,13 @@
 
 namespace Botan {
 
-/*
-* Serpent
+/**
+* Serpent implementation using SIMD
 */
 class BOTAN_DLL Serpent_SIMD : public Serpent
    {
    public:
-      u32bit parallelism() const { return 8; }
+      u32bit parallelism() const { return 4; }
 
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;

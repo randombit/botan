@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* Skipjack
+/**
+* Skipjack, a NSA designed cipher used in Fortezza
 */
 class BOTAN_DLL Skipjack : public BlockCipher
    {

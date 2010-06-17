@@ -14,7 +14,7 @@
 namespace Botan {
 
 /**
-* EMSA3
+* EMSA3 from IEEE 1363
 * aka PKCS #1 v1.5 signature padding
 * aka PKCS #1 block type 1
 */

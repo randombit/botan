@@ -43,7 +43,7 @@ class BOTAN_DLL PK_Encryptor
       * @param in the message as a byte array
       * @param length the length of the above byte array
       * @param rng the random number source to use
-      * @return the encrypted message
+      * @return encrypted message
       */
       SecureVector<byte> encrypt(const byte in[], u32bit length,
                                  RandomNumberGenerator& rng) const
@@ -55,7 +55,7 @@ class BOTAN_DLL PK_Encryptor
       * Encrypt a message.
       * @param in the message
       * @param rng the random number source to use
-      * @return the encrypted message
+      * @return encrypted message
       */
       SecureVector<byte> encrypt(const MemoryRegion<byte>& in,
                                  RandomNumberGenerator& rng) const
@@ -65,7 +65,7 @@ class BOTAN_DLL PK_Encryptor
 
       /**
       * Return the maximum allowed message size in bytes.
-      * @return the maximum message size in bytes
+      * @return maximum message size in bytes
       */
       virtual u32bit maximum_input_size() const = 0;
 
@@ -89,7 +89,7 @@ class BOTAN_DLL PK_Decryptor
       * Decrypt a ciphertext.
       * @param in the ciphertext as a byte array
       * @param length the length of the above byte array
-      * @return the decrypted message
+      * @return decrypted message
       */
       SecureVector<byte> decrypt(const byte in[], u32bit length) const
          {
@@ -99,7 +99,7 @@ class BOTAN_DLL PK_Decryptor
       /**
       * Decrypt a ciphertext.
       * @param in the ciphertext
-      * @return the decrypted message
+      * @return decrypted message
       */
       SecureVector<byte> decrypt(const MemoryRegion<byte>& in) const
          {
@@ -128,7 +128,7 @@ class BOTAN_DLL PK_Signer
       * @param in the message to sign as a byte array
       * @param length the length of the above byte array
       * @param rng the rng to use
-      * @return the signature
+      * @return signature
       */
       SecureVector<byte> sign_message(const byte in[], u32bit length,
                                       RandomNumberGenerator& rng);
@@ -137,7 +137,7 @@ class BOTAN_DLL PK_Signer
       * Sign a message.
       * @param in the message to sign
       * @param rng the rng to use
-      * @return the signature
+      * @return signature
       */
       SecureVector<byte> sign_message(const MemoryRegion<byte>& in,
                                       RandomNumberGenerator& rng)
@@ -145,7 +145,7 @@ class BOTAN_DLL PK_Signer
 
       /**
       * Add a message part (single byte).
-      * @param the byte to add
+      * @param in the byte to add
       */
       void update(byte in) { update(&in, 1); }
 
@@ -166,7 +166,7 @@ class BOTAN_DLL PK_Signer
       * Get the signature of the so far processed message (provided by the
       * calls to update()).
       * @param rng the rng to use
-      * @return the signature of the total message
+      * @return signature of the total message
       */
       SecureVector<byte> signature(RandomNumberGenerator& rng);
 
@@ -305,8 +305,8 @@ class BOTAN_DLL PK_Verifier
       Signature_Format sig_format;
    };
 
-/*
-* Key Agreement
+/**
+* Key used for key agreement
 */
 class BOTAN_DLL PK_Key_Agreement
    {
@@ -437,6 +437,12 @@ class BOTAN_DLL PK_Decryptor_EME : public PK_Decryptor
       PK_Ops::Decryption* op;
       const EME* eme;
    };
+
+/*
+* Typedefs for compatability with 1.8
+*/
+typedef PK_Encryptor_EME PK_Encryptor_MR_with_EME;
+typedef PK_Decryptor_EME PK_Decryptor_MR_with_EME;
 
 }
 

@@ -24,17 +24,9 @@ class FTW_EntropySource : public EntropySource
 
       FTW_EntropySource(const std::string& root_dir);
       ~FTW_EntropySource();
-
-      class File_Descriptor_Source
-         {
-         public:
-            virtual int next_fd() = 0;
-            virtual ~File_Descriptor_Source() {}
-         };
    private:
-
       std::string path;
-      File_Descriptor_Source* dir;
+      class File_Descriptor_Source* dir;
    };
 
 }

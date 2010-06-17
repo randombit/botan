@@ -36,6 +36,14 @@ class Py_RSA_PrivateKey
          return PKCS8::PEM_encode(*rsa_key);
          }
 
+      std::string to_ber() const
+         {
+         SecureVector<byte> bits = PKCS8::BER_encode(*rsa_key);
+
+         return std;:string(reinterpret_cast<const char*>(&bits[0]),
+                            bits.size());
+         }
+
       std::string get_N() const { return bigint2str(get_bigint_N()); }
       std::string get_E() const { return bigint2str(get_bigint_E()); }
 
@@ -113,6 +121,14 @@ class Py_RSA_PublicKey
          return X509::PEM_encode(*rsa_key);
          }
 
+      std::string to_ber() const
+         {
+         SecureVector<byte> bits = X509::BER_encode(*rsa_key);
+
+         return std;:string(reinterpret_cast<const char*>(&bits[0]),
+                            bits.size());
+         }
+
       std::string encrypt(const std::string& in,
                           const std::string& padding,
                           Python_RandomNumberGenerator& rng);
@@ -171,6 +187,7 @@ void export_rsa()
       ("RSA_PublicKey", python::init<std::string>())
       .def(python::init<const Py_RSA_PrivateKey&>())
       .def("to_string", &Py_RSA_PublicKey::to_string)
+      .def("to_ber", &Py_RSA_PublicKey::to_ber)
       .def("encrypt", &Py_RSA_PublicKey::encrypt)
       .def("verify", &Py_RSA_PublicKey::verify)
       .def("get_N", &Py_RSA_PublicKey::get_N)
@@ -180,6 +197,7 @@ void export_rsa()
       ("RSA_PrivateKey", python::init<std::string, Python_RandomNumberGenerator&, std::string>())
        .def(python::init<u32bit, Python_RandomNumberGenerator&>())
        .def("to_string", &Py_RSA_PrivateKey::to_string)
+       .def("to_ber", &Py_RSA_PrivateKey::to_ber)
        .def("decrypt", &Py_RSA_PrivateKey::decrypt)
        .def("sign", &Py_RSA_PrivateKey::sign)
        .def("get_N", &Py_RSA_PrivateKey::get_N)

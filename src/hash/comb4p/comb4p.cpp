@@ -1,4 +1,4 @@
-/**
+/*
 * Comb4P hash combiner
 * (C) 2010 Jack Lloyd
 *

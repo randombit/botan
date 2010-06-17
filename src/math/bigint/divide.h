@@ -12,7 +12,17 @@
 
 namespace Botan {
 
-void BOTAN_DLL divide(const BigInt&, const BigInt&, BigInt&, BigInt&);
+/**
+* BigInt Division
+* @param x an integer
+* @param y a non-zero integer
+* @param q will be set to x / y
+* @param r will be set to x % y
+*/
+void BOTAN_DLL divide(const BigInt& x,
+                      const BigInt& y,
+                      BigInt& q,
+                      BigInt& r);
 
 }
 

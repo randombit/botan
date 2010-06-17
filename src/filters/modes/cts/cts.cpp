@@ -43,7 +43,7 @@ CTS_Encryption::CTS_Encryption(BlockCipher* ciph,
 */
 void CTS_Encryption::set_iv(const InitializationVector& iv)
    {
-   if(iv.length() != state.size())
+   if(!valid_iv_length(iv.length()))
       throw Invalid_IV_Length(name(), iv.length());
 
    state = iv.bits_of();
@@ -145,7 +145,7 @@ CTS_Decryption::CTS_Decryption(BlockCipher* ciph,
 */
 void CTS_Decryption::set_iv(const InitializationVector& iv)
    {
-   if(iv.length() != state.size())
+   if(!valid_iv_length(iv.length()))
       throw Invalid_IV_Length(name(), iv.length());
 
    state = iv.bits_of();

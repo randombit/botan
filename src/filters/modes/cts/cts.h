@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* CTS Encryption
+/**
+* CBC encryption with ciphertext stealing
 */
 class BOTAN_DLL CTS_Encryption : public Keyed_Filter
    {
@@ -27,6 +27,9 @@ class BOTAN_DLL CTS_Encryption : public Keyed_Filter
 
       bool valid_keylength(u32bit key_len) const
          { return cipher->valid_keylength(key_len); }
+
+      bool valid_iv_length(u32bit iv_len) const
+         { return (iv_len == cipher->BLOCK_SIZE); }
 
       CTS_Encryption(BlockCipher* cipher);
 
@@ -45,8 +48,8 @@ class BOTAN_DLL CTS_Encryption : public Keyed_Filter
       u32bit position;
    };
 
-/*
-* CTS Decryption
+/**
+* CBC decryption with ciphertext stealing
 */
 class BOTAN_DLL CTS_Decryption : public Keyed_Filter
    {
@@ -59,6 +62,9 @@ class BOTAN_DLL CTS_Decryption : public Keyed_Filter
 
       bool valid_keylength(u32bit key_len) const
          { return cipher->valid_keylength(key_len); }
+
+      bool valid_iv_length(u32bit iv_len) const
+         { return (iv_len == cipher->BLOCK_SIZE); }
 
       CTS_Decryption(BlockCipher* cipher);
 

@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * SAFER-SK
 */
 class BOTAN_DLL SAFER_SK : public BlockCipher
@@ -25,7 +25,11 @@ class BOTAN_DLL SAFER_SK : public BlockCipher
       std::string name() const;
       BlockCipher* clone() const;
 
-      SAFER_SK(u32bit);
+      /**
+      * @param rounds the number of rounds to use - must be between 1
+      * and 13
+      */
+      SAFER_SK(u32bit rounds);
    private:
       void key_schedule(const byte[], u32bit);
 

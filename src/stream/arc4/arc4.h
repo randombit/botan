@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* ARC4
+/**
+* Alleged RC4
 */
 class BOTAN_DLL ARC4 : public StreamCipher
    {
@@ -26,7 +26,11 @@ class BOTAN_DLL ARC4 : public StreamCipher
 
       StreamCipher* clone() const { return new ARC4(SKIP); }
 
-      ARC4(u32bit = 0);
+      /**
+      * @param skip skip this many initial bytes in the keystream
+      */
+      ARC4(u32bit skip = 0);
+
       ~ARC4() { clear(); }
    private:
       void key_schedule(const byte[], u32bit);

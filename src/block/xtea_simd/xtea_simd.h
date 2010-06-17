@@ -12,13 +12,13 @@
 
 namespace Botan {
 
-/*
-* XTEA (SIMD variant)
+/**
+* XTEA implemented using SIMD operations
 */
 class BOTAN_DLL XTEA_SIMD : public XTEA
    {
    public:
-      u32bit parallelism() const { return 16; }
+      u32bit parallelism() const { return 8; }
 
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;

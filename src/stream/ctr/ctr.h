@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* CTR-BE (Counter, big-endian)
+/**
+* CTR-BE (Counter mode, big-endian)
 */
 class BOTAN_DLL CTR_BE : public StreamCipher
    {
@@ -33,7 +33,10 @@ class BOTAN_DLL CTR_BE : public StreamCipher
 
       void clear();
 
-      CTR_BE(BlockCipher*);
+      /**
+      * @param cipher the underlying block cipher to use
+      */
+      CTR_BE(BlockCipher* cipher);
       ~CTR_BE();
    private:
       void key_schedule(const byte key[], u32bit key_len);

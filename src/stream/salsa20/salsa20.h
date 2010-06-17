@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* Salsa20 (and XSalsa20)
+/**
+* DJB's Salsa20 (and XSalsa20)
 */
 class BOTAN_DLL Salsa20 : public StreamCipher
    {

@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Zlib Compression Filter
 */
 class BOTAN_DLL Zlib_Compression : public Filter
@@ -23,9 +23,17 @@ class BOTAN_DLL Zlib_Compression : public Filter
       void start_msg();
       void end_msg();
 
+      /**
+      * Flush the compressor
+      */
       void flush();
 
-      Zlib_Compression(u32bit = 6);
+      /**
+      @param level how much effort to use on compressing (0 to 9);
+      higher levels are slower but tend to give better compression
+      */
+      Zlib_Compression(u32bit level = 6);
+
       ~Zlib_Compression() { clear(); }
    private:
       void clear();
@@ -34,7 +42,7 @@ class BOTAN_DLL Zlib_Compression : public Filter
       class Zlib_Stream* zlib;
    };
 
-/*
+/**
 * Zlib Decompression Filter
 */
 class BOTAN_DLL Zlib_Decompression : public Filter

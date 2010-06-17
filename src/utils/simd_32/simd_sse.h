@@ -1,4 +1,4 @@
-/**
+/*
 * Lightweight wrappers for SSE2 intrinsics for 32-bit operations
 * (C) 2009 Jack Lloyd
 *

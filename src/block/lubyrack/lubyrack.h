@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* Luby-Rackoff
+/**
+* Luby-Rackoff block cipher construction
 */
 class BOTAN_DLL LubyRackoff : public BlockCipher
    {
@@ -26,6 +26,9 @@ class BOTAN_DLL LubyRackoff : public BlockCipher
       std::string name() const;
       BlockCipher* clone() const;
 
+      /**
+      * @param hash function to use to form the block cipher
+      */
       LubyRackoff(HashFunction* hash);
       ~LubyRackoff() { delete hash; }
    private:

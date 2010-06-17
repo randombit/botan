@@ -61,8 +61,10 @@ retrieve_mac(const std::string& algo_spec)
 
 /**
 * Block cipher factory method.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the desired block cipher
-* @return a pointer to the block cipher object
+* @return pointer to the block cipher object
 */
 inline BlockCipher* get_block_cipher(const std::string& algo_spec)
    {
@@ -72,8 +74,10 @@ inline BlockCipher* get_block_cipher(const std::string& algo_spec)
 
 /**
 * Stream cipher factory method.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the desired stream cipher
-* @return a pointer to the stream cipher object
+* @return pointer to the stream cipher object
 */
 inline StreamCipher* get_stream_cipher(const std::string& algo_spec)
    {
@@ -83,8 +87,10 @@ inline StreamCipher* get_stream_cipher(const std::string& algo_spec)
 
 /**
 * Hash function factory method.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the desired hash function
-* @return a pointer to the hash function object
+* @return pointer to the hash function object
 */
 inline HashFunction* get_hash(const std::string& algo_spec)
    {
@@ -94,8 +100,10 @@ inline HashFunction* get_hash(const std::string& algo_spec)
 
 /**
 * MAC factory method.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the desired MAC
-* @return a pointer to the MAC object
+* @return pointer to the MAC object
 */
 inline MessageAuthenticationCode* get_mac(const std::string& algo_spec)
    {
@@ -105,8 +113,8 @@ inline MessageAuthenticationCode* get_mac(const std::string& algo_spec)
 
 /**
 * String to key algorithm factory method.
-* @param name the name of the desired string to key (S2K) algorithm
-* @return a pointer to the string to key algorithm object
+* @param algo_spec the name of the desired string to key (S2K) algorithm
+* @return pointer to the string to key algorithm object
 */
 BOTAN_DLL S2K* get_s2k(const std::string& algo_spec);
 
@@ -118,23 +126,23 @@ BOTAN_DLL S2K* get_s2k(const std::string& algo_spec);
 
 /**
 * Factory method for EME (message-encoding methods for encryption) objects
-* @param name the name of the EME to create
-* @return a pointer to the desired EME object
+* @param algo_spec the name of the EME to create
+* @return pointer to the desired EME object
 */
 BOTAN_DLL EME*  get_eme(const std::string& algo_spec);
 
 /**
 * Factory method for EMSA (message-encoding methods for signatures
 * with appendix) objects
-* @param name the name of the EME to create
-* @return a pointer to the desired EME object
+* @param algo_spec the name of the EME to create
+* @return pointer to the desired EME object
 */
 BOTAN_DLL EMSA* get_emsa(const std::string& algo_spec);
 
 /**
 * Factory method for KDF (key derivation function)
-* @param name the name of the KDF to create
-* @return a pointer to the desired KDF object
+* @param algo_spec the name of the KDF to create
+* @return pointer to the desired KDF object
 */
 BOTAN_DLL KDF*  get_kdf(const std::string& algo_spec);
 
@@ -150,12 +158,13 @@ BOTAN_DLL KDF*  get_kdf(const std::string& algo_spec);
 * @param iv the initialization vector to be used
 * @param direction determines whether the filter will be an encrypting
 * or decrypting filter
-* @return a pointer to the encryption or decryption filter
+* @return pointer to the encryption or decryption filter
 */
-BOTAN_DLL Keyed_Filter* get_cipher(const std::string& name,
+BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
                                    const SymmetricKey& key,
                                    const InitializationVector& iv,
-                                   Cipher_Dir dir);
+                                   Cipher_Dir direction);
+
 /**
 * Factory method for general symmetric cipher filters.
 * @param algo_spec the name of the desired cipher
@@ -163,32 +172,36 @@ BOTAN_DLL Keyed_Filter* get_cipher(const std::string& name,
 * the filter
 * @param direction determines whether the filter will be an encrypting
 * or decrypting filter
-* @return a pointer to the encryption or decryption filter
+* @return pointer to the encryption or decryption filter
 */
-BOTAN_DLL Keyed_Filter* get_cipher(const std::string& name,
+BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
                                    const SymmetricKey& key,
-                                   Cipher_Dir dir);
+                                   Cipher_Dir direction);
 
-/** Factory method for general symmetric cipher filters. No key will
-* be set in the filter.
+/**
+* Factory method for general symmetric cipher filters. No key will be
+* set in the filter.
+*
 * @param algo_spec the name of the desired cipher
-
 * @param direction determines whether the filter will be an encrypting or
 * decrypting filter
-* @return a pointer to the encryption or decryption filter
+* @return pointer to the encryption or decryption filter
 */
-BOTAN_DLL Keyed_Filter* get_cipher(const std::string& name, Cipher_Dir dir);
+BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
+                                   Cipher_Dir direction);
 
 /**
 * Check if an algorithm exists.
-* @param name the name of the algorithm to check for
+* @param algo_spec the name of the algorithm to check for
 * @return true if the algorithm exists, false otherwise
 */
 BOTAN_DLL bool have_algorithm(const std::string& algo_spec);
 
 /**
 * Check if a block cipher algorithm exists.
-* @param name the name of the algorithm to check for
+* @deprecated Call algorithm_factory() directly
+*
+* @param algo_spec the name of the algorithm to check for
 * @return true if the algorithm exists, false otherwise
 */
 inline bool have_block_cipher(const std::string& algo_spec)
@@ -199,7 +212,9 @@ inline bool have_block_cipher(const std::string& algo_spec)
 
 /**
 * Check if a stream cipher algorithm exists.
-* @param name the name of the algorithm to check for
+* @deprecated Call algorithm_factory() directly
+*
+* @param algo_spec the name of the algorithm to check for
 * @return true if the algorithm exists, false otherwise
 */
 inline bool have_stream_cipher(const std::string& algo_spec)
@@ -210,6 +225,8 @@ inline bool have_stream_cipher(const std::string& algo_spec)
 
 /**
 * Check if a hash algorithm exists.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the algorithm to check for
 * @return true if the algorithm exists, false otherwise
 */
@@ -221,6 +238,8 @@ inline bool have_hash(const std::string& algo_spec)
 
 /**
 * Check if a MAC algorithm exists.
+* @deprecated Call algorithm_factory() directly
+*
 * @param algo_spec the name of the algorithm to check for
 * @return true if the algorithm exists, false otherwise
 */
@@ -236,46 +255,58 @@ inline bool have_mac(const std::string& algo_spec)
 
 /**
 * Find out the block size of a certain symmetric algorithm.
-* @param name the name of the algorithm
-* @return the block size of the specified algorithm
+* @deprecated Call algorithm_factory() directly
+*
+* @param algo_spec the name of the algorithm
+* @return block size of the specified algorithm
 */
 BOTAN_DLL u32bit block_size_of(const std::string& algo_spec);
 
 /**
 * Find out the output length of a certain symmetric algorithm.
-* @param name the name of the algorithm
-* @return the output length of the specified algorithm
+* @deprecated Call algorithm_factory() directly
+*
+* @param algo_spec the name of the algorithm
+* @return output length of the specified algorithm
 */
 BOTAN_DLL u32bit output_length_of(const std::string& algo_spec);
 
 /**
 * Find out the whether a certain key length is allowd for a given
 * symmetric algorithm.
+* @deprecated Call algorithm_factory() directly
+*
 * @param key_len the key length in question
-* @param name the name of the algorithm
+* @param algo_spec the name of the algorithm
 * @return true if the key length is valid for that algorithm, false otherwise
 */
-BOTAN_DLL bool valid_keylength_for(u32bit keylen,
+BOTAN_DLL bool valid_keylength_for(u32bit key_len,
                                    const std::string& algo_spec);
 
 /**
 * Find out the minimum key size of a certain symmetric algorithm.
-* @param name the name of the algorithm
-* @return the minimum key length of the specified algorithm
+* @deprecated Call algorithm_factory() directly
+*
+* @param algo_spec the name of the algorithm
+* @return minimum key length of the specified algorithm
 */
 BOTAN_DLL u32bit min_keylength_of(const std::string& algo_spec);
 
 /**
 * Find out the maximum key size of a certain symmetric algorithm.
-* @param name the name of the algorithm
-* @return the maximum key length of the specified algorithm
+* @deprecated Call algorithm_factory() directly
+*
+* @param algo_spec the name of the algorithm
+* @return maximum key length of the specified algorithm
 */
 BOTAN_DLL u32bit max_keylength_of(const std::string& algo_spec);
 
 /**
 * Find out the size any valid key is a multiple of for a certain algorithm.
-* @param name the name of the algorithm
-* @return the size any valid key is a multiple of
+* @deprecated Call algorithm_factory() directly
+*
+* @param algo_spec the name of the algorithm
+* @return size any valid key is a multiple of
 */
 BOTAN_DLL u32bit keylength_multiple_of(const std::string& algo_spec);
 

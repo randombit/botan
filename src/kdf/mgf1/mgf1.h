@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* MGF1 (Mask Generation Function)
+/**
+* MGF1 from PKCS #1 v2.0
 */
 class BOTAN_DLL MGF1 : public MGF
    {

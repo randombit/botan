@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * CBC-MAC
 */
 class BOTAN_DLL CBC_MAC : public MessageAuthenticationCode
@@ -23,7 +23,10 @@ class BOTAN_DLL CBC_MAC : public MessageAuthenticationCode
       std::string name() const;
       MessageAuthenticationCode* clone() const;
 
-      CBC_MAC(BlockCipher* e);
+      /**
+      * @param cipher the underlying block cipher to use
+      */
+      CBC_MAC(BlockCipher* cipher);
       ~CBC_MAC();
    private:
       void add_data(const byte[], u32bit);

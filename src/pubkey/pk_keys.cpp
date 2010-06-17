@@ -6,6 +6,7 @@
 */
 
 #include <botan/pk_keys.h>
+#include <botan/der_enc.h>
 #include <botan/oids.h>
 
 namespace Botan {

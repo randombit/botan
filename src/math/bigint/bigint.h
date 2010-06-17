@@ -44,90 +44,96 @@ class BOTAN_DLL BigInt
         { DivideByZero() : Exception("BigInt divide by zero") {} };
 
      /**
-     * += Operator
+     * += operator
      * @param y the BigInt to add to this
      */
      BigInt& operator+=(const BigInt& y);
 
      /**
-     * -= Operator
+     * -= operator
      * @param y the BigInt to subtract from this
      */
      BigInt& operator-=(const BigInt& y);
 
      /**
-     * *= Operator
+     * *= operator
      * @param y the BigInt to multiply with this
      */
      BigInt& operator*=(const BigInt& y);
 
      /**
-     * /= Operator
+     * /= operator
      * @param y the BigInt to divide this by
      */
      BigInt& operator/=(const BigInt& y);
 
      /**
-     * %= Operator, modulo operator.
+     * Modulo operator
      * @param y the modulus to reduce this by
      */
      BigInt& operator%=(const BigInt& y);
 
      /**
-     * %= Operator
+     * Modulo operator
      * @param y the modulus (word) to reduce this by
      */
      word    operator%=(word y);
 
      /**
-     * <<= Operator
-     * @param y the amount of bits to shift this left
+     * Left shift operator
+     * @param shift the number of bits to shift this left by
      */
-     BigInt& operator<<=(u32bit y);
+     BigInt& operator<<=(u32bit shift);
 
      /**
-     * >>= Operator
-     * @param y the amount of bits to shift this right
+     * Right shift operator
+     * @param shift the number of bits to shift this right by
      */
-     BigInt& operator>>=(u32bit y);
+     BigInt& operator>>=(u32bit shift);
 
      /**
-     * ++ Operator
+     * Increment operator
      */
      BigInt& operator++() { return (*this += 1); }
 
      /**
-     * -- Operator
+     * Decrement operator
      */
      BigInt& operator--() { return (*this -= 1); }
 
      /**
-     * ++ Operator (postfix)
+     * Postfix increment operator
      */
      BigInt  operator++(int) { BigInt x = (*this); ++(*this); return x; }
 
      /**
-     * -- Operator (postfix)
+     * Postfix decrement operator
      */
      BigInt  operator--(int) { BigInt x = (*this); --(*this); return x; }
 
      /**
-     * Unary - Operator
+     * Unary negation operator
+     * @return negative this
      */
      BigInt operator-() const;
 
      /**
-     * ! Operator
+     * ! operator
+     * @return true iff this is zero, otherwise false
      */
      bool operator !() const { return (!is_nonzero()); }
 
      /**
-     * [] Operator (array access)
+     * [] operator (array access)
+     * @param i a word index
+     * @return the word at index i
      */
      word& operator[](u32bit i) { return reg[i]; }
 
      /**
-     * [] Operator (array access)
+     * [] operator (array access)
+     * @param i a word index
+     * @return the word at index i
      */
      word operator[](u32bit i) const { return reg[i]; }
 
@@ -137,8 +143,8 @@ class BOTAN_DLL BigInt
      void clear() { get_reg().clear(); }
 
      /**
-     * Compare *this to another BigInt.
-     * @param n the BigInt value to compare to this.
+     * Compare this to another BigInt
+     * @param n the BigInt value to compare with
      * @param check_signs include sign in comparison?
      * @result if (this<n) return -1, if (this>n) return 1, if both
      * values are identical return 0 [like Perl's <=> operator]
@@ -158,13 +164,13 @@ class BOTAN_DLL BigInt
      bool is_odd()  const { return (get_bit(0) == 1); }
 
      /**
-     * Test if the integer is not zero.
+     * Test if the integer is not zero
      * @result true if the integer is non-zero, false otherwise
      */
      bool is_nonzero() const { return (!is_zero()); }
 
      /**
-     * Test if the integer is zero.
+     * Test if the integer is zero
      * @result true if the integer is zero, false otherwise
      */
      bool is_zero() const
@@ -220,28 +226,29 @@ class BOTAN_DLL BigInt
      /**
      * Return the word at a specified position of the internal register
      * @param n position in the register
-     * @return the value at position n
+     * @return value at position n
      */
      word word_at(u32bit n) const
         { return ((n < size()) ? reg[n] : 0); }
 
      /**
      * Return the integer as an unsigned 32bit-integer-value. If the
-     * value is negative OR to big to be stored in 32bits, this
+     * value is negative OR too big to be stored in a u32bit, this
      * function will throw an exception.
-     * @result a 32bit-integer
+     *
+     * @result unsigned 32 bit representation of this
      */
      u32bit to_u32bit() const;
 
      /**
-     * Tests if the sign of the integer is negative.
-     * @result true, if the integer has a negative sign,
+     * Tests if the sign of the integer is negative
+     * @result true, iff the integer has a negative sign
      */
      bool is_negative() const { return (sign() == Negative); }
 
      /**
-     * Tests if the sign of the integer is positive.
-     * @result true, if the integer has a positive sign,
+     * Tests if the sign of the integer is positive
+     * @result true, iff the integer has a positive sign
      */
      bool is_positive() const { return (sign() == Positive); }
 
@@ -252,13 +259,12 @@ class BOTAN_DLL BigInt
      Sign sign() const { return (signedness); }
 
      /**
-     * Return the opposite sign of the represented integer value
      * @result the opposite sign of the represented integer value
      */
      Sign reverse_sign() const;
 
      /**
-     * Flip (mutate) the sign of the integer to its opposite value
+     * Flip the sign of this BigInt
      */
      void flip_sign();
 
@@ -280,7 +286,7 @@ class BOTAN_DLL BigInt
      u32bit size() const { return get_reg().size(); }
 
      /**
-     * Give significant words of the represented integer value
+     * Return how many words we need to hold this value
      * @result significant words of the represented integer value
      */
      u32bit sig_words() const
@@ -294,19 +300,19 @@ class BOTAN_DLL BigInt
         }
 
      /**
-     * Give byte-length of the integer
-     * @result byte-length of the represented integer value
+     * Give byte length of the integer
+     * @result byte length of the represented integer value
      */
      u32bit bytes() const;
 
      /**
-     * Get the bit-length of the integer.
-     * @result bit-length of the represented integer value
+     * Get the bit length of the integer
+     * @result bit length of the represented integer value
      */
      u32bit bits() const;
 
      /**
-     * Return a pointer to the big integer word register.
+     * Return a pointer to the big integer word register
      * @result a pointer to the start of the internal register of
      * the integer value
      */
@@ -357,18 +363,25 @@ class BOTAN_DLL BigInt
 
      /**
      * Read integer value from a byte array (MemoryRegion<byte>)
-     * @param buf the BigInt value to compare to this.
+     * @param buf the array to load from
      */
      void binary_decode(const MemoryRegion<byte>& buf);
 
-     u32bit encoded_size(Base = Binary) const;
+     /**
+     * @param base the base to measure the size for
+     * @return size of this integer in base base
+     */
+     u32bit encoded_size(Base base = Binary) const;
 
      /**
-     @param rng a random number generator
-     @result a random integer between min and max
+     * @param rng a random number generator
+     * @param min the minimum value
+     * @param max the maximum value
+     * @return random integer between min and max
      */
      static BigInt random_integer(RandomNumberGenerator& rng,
-                                  const BigInt& min, const BigInt& max);
+                                  const BigInt& min,
+                                  const BigInt& max);
 
      /**
      * Encode the integer value from a BigInt to a SecureVector of bytes
@@ -389,15 +402,22 @@ class BOTAN_DLL BigInt
 
      /**
      * Create a BigInt from an integer in a byte array
-     * @param buf the BigInt value to compare to this.
+     * @param buf the binary value to load
      * @param length size of buf
      * @param base number-base of the integer in buf
-     * @result BigInt-representing the given integer read from the byte array
+     * @result BigInt representing the integer in the byte array
      */
      static BigInt decode(const byte buf[], u32bit length,
                           Base base = Binary);
 
-     static BigInt decode(const MemoryRegion<byte>&, Base = Binary);
+     /**
+     * Create a BigInt from an integer in a byte array
+     * @param buf the binary value to load
+     * @param base number-base of the integer in buf
+     * @result BigInt representing the integer in the byte array
+     */
+     static BigInt decode(const MemoryRegion<byte>& buf,
+                          Base base = Binary);
 
      /**
      * Encode a BigInt to a byte array according to IEEE 1363
@@ -408,10 +428,10 @@ class BOTAN_DLL BigInt
      static SecureVector<byte> encode_1363(const BigInt& n, u32bit bytes);
 
      /**
-     * Swap BigInt-value with given BigInt.
-     * @param bigint the BigInt to swap values with
+     * Swap this value with another
+     * @param other BigInt to swap values with
      */
-     void swap(BigInt& bigint);
+     void swap(BigInt& other);
 
      /**
      * Create empty BigInt
@@ -419,38 +439,34 @@ class BOTAN_DLL BigInt
      BigInt() { signedness = Positive; }
 
      /**
-     * Create BigInt from 64bit-Integer value
-     * @param n 64bit-integer
+     * Create BigInt from 64 bit integer
+     * @param n initial value of this BigInt
      */
      BigInt(u64bit n);
 
      /**
-     * Copy constructor
+     * Copy Constructor
+     * @param other the BigInt to copy
      */
      BigInt(const BigInt& other);
 
      /**
-     * Assignment operator
-     */
-     BigInt& operator=(const BigInt&) = default;
-
-     /**
-     * Create BigInt from a string.
-     * If the string starts with 0x the rest of the string will be
-     * interpreted as hexadecimal digits.
-     * If the string starts with 0 and the second character is NOT
-     * an 'x' the string will be interpreted as octal digits.
-     * If the string starts with non-zero digit, it will be
-     * interpreted as a decimal number.
+     * Create BigInt from a string. If the string starts with 0x the
+     * rest of the string will be interpreted as hexadecimal digits.
+     * If the string starts with 0 and the second character is NOT an
+     * 'x' the string will be interpreted as octal digits. If the
+     * string starts with non-zero digit, it will be interpreted as a
+     * decimal number.
+     *
      * @param str the string to parse for an integer value
      */
      BigInt(const std::string& str);
 
      /**
      * Create a BigInt from an integer in a byte array
-     * @param buf the BigInt value to compare to this.
+     * @param buf the byte array holding the value
      * @param length size of buf
-     * @param base number-base of the integer in buf
+     * @param base is the number base of the integer in buf
      */
      BigInt(const byte buf[], u32bit length, Base base = Binary);
 
@@ -464,14 +480,16 @@ class BOTAN_DLL BigInt
      /**
      * Create BigInt of specified size, all zeros
      * @param sign the sign
-     * @param n integer value
+     * @param n size of the internal register in words
      */
      BigInt(Sign sign, u32bit n);
 
      /**
      * Create a number of the specified type and size
-     * @param type the type of number to create
-     * @param n the size
+     * @param type the type of number to create. For Power2,
+     * will create the integer 2^n
+     * @param n a size/length parameter, interpretation depends upon
+     * the value of type
      */
      BigInt(NumberType type, u32bit n);
 

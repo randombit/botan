@@ -1,4 +1,4 @@
-/**
+/*
 * Base class for message authentiction codes
 * (C) 1999-2007 Jack Lloyd
 *
@@ -24,10 +24,10 @@ class BOTAN_DLL MessageAuthenticationCode : public BufferedComputation,
       /**
       * Verify a MAC.
       * @param in the MAC to verify as a byte array
-      * @param length the length of the byte array
+      * @param length the length of param in
       * @return true if the MAC is valid, false otherwise
       */
-      virtual bool verify_mac(const byte[], u32bit);
+      virtual bool verify_mac(const byte in[], u32bit length);
 
       /**
       * Get a new object representing the same algorithm as *this
@@ -36,7 +36,7 @@ class BOTAN_DLL MessageAuthenticationCode : public BufferedComputation,
 
       /**
       * Get the name of this algorithm.
-      * @return the name of this algorithm
+      * @return name of this algorithm
       */
       virtual std::string name() const = 0;
 
@@ -45,6 +45,12 @@ class BOTAN_DLL MessageAuthenticationCode : public BufferedComputation,
       */
       virtual void clear() = 0;
 
+      /**
+      * @param mac_len the output length of this MAC
+      * @param key_min the minimum key size
+      * @param key_max the maximum key size
+      * @param key_mod the modulo restriction on the key size
+      */
       MessageAuthenticationCode(u32bit mac_len,
                                 u32bit key_min,
                                 u32bit key_max = 0,

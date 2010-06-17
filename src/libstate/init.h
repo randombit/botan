@@ -1,4 +1,4 @@
-/**
+/*
 * Library Initialization
 * (C) 1999-2008 Jack Lloyd
 *
@@ -22,13 +22,20 @@ namespace Botan {
 class BOTAN_DLL LibraryInitializer
    {
    public:
+      /**
+      * Initialize the library
+      * @param options a string listing initialization options
+      */
       static void initialize(const std::string& options = "");
 
+      /**
+      * Shutdown the library
+      */
       static void deinitialize();
 
       /**
       * Initialize the library
-      * @param thread_safe if the library should use a thread-safe mutex
+      * @param options a string listing initialization options
       */
       LibraryInitializer(const std::string& options = "")
          { LibraryInitializer::initialize(options); }

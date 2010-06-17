@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* OpenPGP S2K
+/**
+* OpenPGP's S2K
 */
 class BOTAN_DLL OpenPGP_S2K : public S2K
    {
@@ -27,6 +27,9 @@ class BOTAN_DLL OpenPGP_S2K : public S2K
                              const byte salt[], u32bit salt_len,
                              u32bit iterations) const;
 
+      /**
+      * @param hash_in the hash function to use
+      */
       OpenPGP_S2K(HashFunction* hash_in) : hash(hash_in) {}
       ~OpenPGP_S2K() { delete hash; }
    private:

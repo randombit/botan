@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/mmap_mem.h>
+#include <vector>
 #include <cstring>
 
 #include <sys/types.h>
@@ -44,38 +45,44 @@ void* MemoryMapping_Allocator::alloc_block(u32bit n)
       {
       public:
          int get_fd() const { return fd; }
-         const std::string path() const { return filepath; }
 
          TemporaryFile(const std::string& base)
             {
-            const std::string path = base + "XXXXXX";
+            const std::string mkstemp_template = base + "XXXXXX";
 
-            filepath = new char[path.length() + 1];
-            std::strcpy(filepath, path.c_str());
+            std::vector<char> filepath(mkstemp_template.begin(),
+                                       mkstemp_template.end());
+            filepath.push_back(0); // add terminating NULL
 
             mode_t old_umask = ::umask(077);
-            fd = ::mkstemp(filepath);
+            fd = ::mkstemp(&filepath[0]);
             ::umask(old_umask);
+
+            if(fd == -1)
+               throw MemoryMapping_Failed("Temporary file allocation failed");
+
+            if(::unlink(&filepath[0]) != 0)
+               throw MemoryMapping_Failed("Could not unlink temporary file");
             }
 
          ~TemporaryFile()
             {
-            delete[] filepath;
+            /*
+            * We can safely close here, because post-mmap the file
+            * will continue to exist until the mmap is unmapped from
+            * our address space upon deallocation.
+            */
             if(fd != -1 && ::close(fd) == -1)
                throw MemoryMapping_Failed("Could not close file");
             }
       private:
          int fd;
-         char* filepath;
       };
 
    TemporaryFile file("/tmp/botan_");
 
    if(file.get_fd() == -1)
       throw MemoryMapping_Failed("Could not create file");
-
-   if(::unlink(file.path().c_str()))
-      throw MemoryMapping_Failed("Could not unlink file '" + file.path() + "'");
 
    if(::lseek(file.get_fd(), n-1, SEEK_SET) < 0)
       throw MemoryMapping_Failed("Could not seek file");

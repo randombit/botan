@@ -47,7 +47,10 @@ namespace Botan {
 #elif defined(BOTAN_TARGET_ARCH_IS_MIPS64)
 
 #define BOTAN_WORD_MUL(a,b,z1,z0) do {                            \
-   asm("dmultu %2,%3" : "=h" (z0), "=l" (z1) : "r" (a), "r" (b)); \
+   typedef unsigned int uint128_t __attribute__((mode(TI)));      \
+   uint128_t r = (uint128_t)a * b;                                \
+   z0 = (r >> 64) & 0xFFFFFFFFFFFFFFFF;                           \
+   z1 = (r      ) & 0xFFFFFFFFFFFFFFFF;                           \
 } while(0);
 
 #else

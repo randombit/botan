@@ -12,21 +12,22 @@
 
 namespace Botan {
 
-/*
-* S2K Interface
+/**
+* Base class for S2K (string to key) operations, which convert a
+* password/passphrase into a key
 */
 class BOTAN_DLL S2K
    {
    public:
 
       /**
-      * @return a new instance of this same algorithm
+      * @return new instance of this same algorithm
       */
       virtual S2K* clone() const = 0;
 
       /**
       * Get the algorithm name.
-      * @return the name of this S2K algorithm
+      * @return name of this S2K algorithm
       */
       virtual std::string name() const = 0;
 

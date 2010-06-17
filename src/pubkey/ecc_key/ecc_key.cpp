@@ -24,9 +24,6 @@ EC_PublicKey::EC_PublicKey(const EC_Domain_Params& dom_par,
    {
    if(domain().get_curve() != public_point().get_curve())
       throw Invalid_Argument("EC_PublicKey: curve mismatch in constructor");
-
-   if(!public_point().on_the_curve())
-      throw Invalid_State("Public key was not on the curve");
    }
 
 EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
@@ -36,6 +33,12 @@ EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
    domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
    public_key = OS2ECP(key_bits, domain().get_curve());
+   }
+
+bool EC_PublicKey::check_key(RandomNumberGenerator&,
+                             bool) const
+   {
+   return public_point().on_the_curve();
    }
 
 AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const

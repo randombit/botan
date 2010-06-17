@@ -40,9 +40,11 @@ class BuildConfigurationInformation(object):
     """
     version_major = 1
     version_minor = 9
-    version_patch = 8
-    version_so_patch = 8
+    version_patch = 9
+    version_so_patch = 9
     version_suffix = '-dev'
+
+    version_datestamp = '0'
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
@@ -160,17 +162,17 @@ def process_command_line(args):
     target_group.add_option('--enable-isa', metavar='ISALIST',
                             dest='enable_isa_extns',
                             action='append', default=[],
-                            help='enable ISA extensions')
+                            help=SUPPRESS_HELP)
 
     target_group.add_option('--disable-isa', metavar='ISALIST',
                             dest='disable_isa_extns',
                             action='append', default=[],
                             help=SUPPRESS_HELP)
 
-    for isa_extn in ['sse2', 'ssse3', 'altivec', 'aes_ni']:
+    for isa_extn in ['sse2', 'ssse3', 'altivec', 'aes-ni']:
         target_group.add_option('--enable-%s' % (isa_extn),
                                 action='callback',
-                                help=SUPPRESS_HELP,
+                                help='Enable use of %s' % (isa_extn),
                                 callback=optparse_append_const,
                                 callback_kwargs = {
                                     'dest': 'enable_isa_extns',
@@ -208,9 +210,14 @@ def process_command_line(args):
     build_group.add_option('--disable-debug', dest='debug_build',
                            action='store_false', help=SUPPRESS_HELP)
 
-    build_group.add_option('--use-boost-python', dest='boost_python',
+    build_group.add_option('--with-boost-python', dest='boost_python',
                            default=False, action='store_true',
                            help='enable Boost.Python wrapper')
+
+    build_group.add_option('--without-boost-python',
+                           dest='boost_python',
+                           action='store_false',
+                           help=SUPPRESS_HELP)
 
     build_group.add_option('--gen-amalgamation', dest='gen_amalgamation',
                            default=False, action='store_true',
@@ -325,11 +332,11 @@ def process_command_line(args):
 
     isa_dependencies = {
         'ssse3': 'sse2',
-        'aes_ni': 'sse2'
+        'aes-ni': 'sse2'
         }
 
     if 'sse2' in options.disable_isa_extns:
-        sse2_deps = ['ssse3', 'aes_ni']
+        sse2_deps = ['ssse3', 'aes-ni']
 
         for isa in sse2_deps:
             if not enabled_or_disabled_isa(isa):
@@ -576,13 +583,14 @@ class ArchInfo(object):
     Return CPU-specific defines for build.h
     """
     def defines(self, options):
-        macros = ['TARGET_ARCH_IS_%s' % (self.basename.upper())]
-
-        def form_cpu_macro(cpu_name):
+        def form_macro(cpu_name):
             return cpu_name.upper().replace('.', '').replace('-', '_')
 
+        macros = ['TARGET_ARCH_IS_%s' %
+                  (form_macro(self.basename.upper()))]
+
         if self.basename != options.cpu:
-            macros.append('TARGET_CPU_IS_%s' % (form_cpu_macro(options.cpu)))
+            macros.append('TARGET_CPU_IS_%s' % (form_macro(options.cpu)))
 
         enabled_isas = set(flatten(
             [self.isa_extensions_in(options.cpu),
@@ -593,7 +601,7 @@ class ArchInfo(object):
         isa_extensions = sorted(enabled_isas - disabled_isas)
 
         for isa in isa_extensions:
-            macros.append('TARGET_CPU_HAS_%s' % (isa.upper()))
+            macros.append('TARGET_CPU_HAS_%s' % form_macro(isa))
 
         endian = options.with_endian or self.endian
 
@@ -899,6 +907,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'version_minor': build_config.version_minor,
         'version_patch': build_config.version_patch,
         'version':       build_config.version_string,
+
+        'version_datestamp': build_config.version_datestamp,
+
         'so_version': build_config.soversion_string,
 
         'timestamp': build_config.timestamp(),

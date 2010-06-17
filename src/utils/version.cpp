@@ -26,6 +26,8 @@ std::string version_string()
           std::to_string(version_patch());
    }
 
+u32bit version_datestamp() { return BOTAN_VERSION_DATESTAMP; }
+
 /*
 * Return parts of the version as integers
 */

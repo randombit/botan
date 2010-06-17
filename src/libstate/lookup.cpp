@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-/**
+/*
 * Query if an algorithm exists
 */
 bool have_algorithm(const std::string& name)
@@ -29,7 +29,7 @@ bool have_algorithm(const std::string& name)
    return false;
    }
 
-/**
+/*
 * Query the block size of a cipher or hash
 */
 u32bit block_size_of(const std::string& name)
@@ -45,7 +45,7 @@ u32bit block_size_of(const std::string& name)
    throw Algorithm_Not_Found(name);
    }
 
-/**
+/*
 * Query the OUTPUT_LENGTH of a hash or MAC
 */
 u32bit output_length_of(const std::string& name)
@@ -61,7 +61,7 @@ u32bit output_length_of(const std::string& name)
    throw Algorithm_Not_Found(name);
    }
 
-/**
+/*
 * Check if a keylength is valid for this algo
 */
 bool valid_keylength_for(u32bit key_len, const std::string& name)
@@ -80,7 +80,7 @@ bool valid_keylength_for(u32bit key_len, const std::string& name)
    throw Algorithm_Not_Found(name);
    }
 
-/**
+/*
 * Query the MINIMUM_KEYLENGTH of an algorithm
 */
 u32bit min_keylength_of(const std::string& name)
@@ -99,7 +99,7 @@ u32bit min_keylength_of(const std::string& name)
    throw Algorithm_Not_Found(name);
    }
 
-/**
+/*
 * Query the MAXIMUM_KEYLENGTH of an algorithm
 */
 u32bit max_keylength_of(const std::string& name)
@@ -118,7 +118,7 @@ u32bit max_keylength_of(const std::string& name)
    throw Algorithm_Not_Found(name);
    }
 
-/**
+/*
 * Query the KEYLENGTH_MULTIPLE of an algorithm
 */
 u32bit keylength_multiple_of(const std::string& name)
@@ -137,7 +137,7 @@ u32bit keylength_multiple_of(const std::string& name)
    throw Algorithm_Not_Found(name);
    }
 
-/**
+/*
 * Get a cipher object
 */
 Keyed_Filter* get_cipher(const std::string& algo_spec,
@@ -156,7 +156,7 @@ Keyed_Filter* get_cipher(const std::string& algo_spec,
    throw Algorithm_Not_Found(algo_spec);
    }
 
-/**
+/*
 * Get a cipher object
 */
 Keyed_Filter* get_cipher(const std::string& algo_spec,
@@ -173,7 +173,7 @@ Keyed_Filter* get_cipher(const std::string& algo_spec,
    return cipher;
    }
 
-/**
+/*
 * Get a cipher object
 */
 Keyed_Filter* get_cipher(const std::string& algo_spec,

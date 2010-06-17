@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * DESX
 */
 class BOTAN_DLL DESX : public BlockCipher

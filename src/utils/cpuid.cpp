@@ -1,4 +1,4 @@
-/**
+/*
 * Runtime CPU detection
 * (C) 2009 Jack Lloyd
 *

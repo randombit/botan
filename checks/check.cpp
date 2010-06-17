@@ -109,7 +109,8 @@ int main(int argc, char* argv[])
       if(opts.is_set("help") || argc <= 1)
          {
          std::cerr << "Test driver for "
-                   << Botan::version_string() << "\n"
+                   << Botan::version_string()
+                   << " (released " << Botan::version_datestamp() << ")\n"
                    << "Options:\n"
                    << "  --test || --validate: Run tests (do this at least once)\n"
                    << "  --benchmark: Benchmark everything\n"

@@ -24,7 +24,7 @@ class MemoryRegion
       /**
       * Find out the size of the buffer, i.e. how many objects of type T it
       * contains.
-      * @return the size of the buffer
+      * @return size of the buffer
       */
       u32bit size() const { return used; }
 
@@ -36,37 +36,37 @@ class MemoryRegion
 
       /**
       * Get a pointer to the first element in the buffer.
-      * @return a pointer to the first element in the buffer
+      * @return pointer to the first element in the buffer
       */
       operator T* () { return buf; }
 
       /**
       * Get a constant pointer to the first element in the buffer.
-      * @return a constant pointer to the first element in the buffer
+      * @return constant pointer to the first element in the buffer
       */
       operator const T* () const { return buf; }
 
       /**
       * Get a pointer to the first element in the buffer.
-      * @return a pointer to the first element in the buffer
+      * @return pointer to the first element in the buffer
       */
       T* begin() { return buf; }
 
       /**
       * Get a constant pointer to the first element in the buffer.
-      * @return a constant pointer to the first element in the buffer
+      * @return constant pointer to the first element in the buffer
       */
       const T* begin() const { return buf; }
 
       /**
       * Get a pointer to the last element in the buffer.
-      * @return a pointer to the last element in the buffer
+      * @return pointer to the last element in the buffer
       */
       T* end() { return (buf + size()); }
 
       /**
       * Get a constant pointer to the last element in the buffer.
-      * @return a constant pointer to the last element in the buffer
+      * @return constant pointer to the last element in the buffer
       */
       const T* end() const { return (buf + size()); }
 
@@ -97,8 +97,8 @@ class MemoryRegion
       /**
       * Copy the contents of another buffer into this buffer.
       * The former contents of *this are discarded.
-      * @param in the buffer to copy the contents from.
-      * @return a reference to *this
+      * @param other the buffer to copy the contents from.
+      * @return reference to *this
       */
       MemoryRegion<T>& operator=(const MemoryRegion<T>& other)
          { if(this != &other) set(other); return (*this); }
@@ -156,7 +156,7 @@ class MemoryRegion
 
       /**
       * Append data to the end of this buffer.
-      * @param data the buffer containing the data to append
+      * @param other the buffer containing the data to append
       */
       void append(const MemoryRegion<T>& other)
          { append(other.begin(), other.size()); }
@@ -299,7 +299,7 @@ class MemoryVector : public MemoryRegion<T>
       /**
       * Copy the contents of another buffer into this buffer.
       * @param in the buffer to copy the contents from
-      * @return a reference to *this
+      * @return reference to *this
       */
       MemoryVector<T>& operator=(const MemoryRegion<T>& in)
          { if(this != &in) set(in); return (*this); }
@@ -352,7 +352,7 @@ class SecureVector : public MemoryRegion<T>
       /**
       * Copy the contents of another buffer into this buffer.
       * @param in the buffer to copy the contents from
-      * @return a reference to *this
+      * @return reference to *this
       */
       SecureVector<T>& operator=(const MemoryRegion<T>& in)
          { if(this != &in) set(in); return (*this); }

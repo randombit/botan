@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Fixed Window Exponentiator
 */
 class Fixed_Window_Exponentiator : public Modular_Exponentiator
@@ -36,7 +36,7 @@ class Fixed_Window_Exponentiator : public Modular_Exponentiator
       Power_Mod::Usage_Hints hints;
    };
 
-/*
+/**
 * Montgomery Exponentiator
 */
 class Montgomery_Exponentiator : public Modular_Exponentiator

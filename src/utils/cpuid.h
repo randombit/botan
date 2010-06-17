@@ -1,4 +1,4 @@
-/**
+/*
 * Runtime CPU detection
 * (C) 2009 Jack Lloyd
 *
@@ -12,6 +12,9 @@
 
 namespace Botan {
 
+/**
+* A class handling runtime CPU feature detection
+*/
 class BOTAN_DLL CPUID
    {
    public:

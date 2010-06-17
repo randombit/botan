@@ -1,4 +1,4 @@
-/**
+/*
 * Comb4P hash combiner
 * (C) 2010 Jack Lloyd
 *
@@ -16,9 +16,13 @@ namespace Botan {
 * Combines two hash functions using a Feistel scheme. Described in
 * "On the Security of Hash Function Combiners", Anja Lehmann
 */
-class Comb4P : public HashFunction
+class BOTAN_DLL Comb4P : public HashFunction
    {
    public:
+      /**
+      * @param h1 the first hash
+      * @param h2 the second hash
+      */
       Comb4P(HashFunction* h1, HashFunction* h2);
 
       ~Comb4P() { delete hash1; delete hash2; }

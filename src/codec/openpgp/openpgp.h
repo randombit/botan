@@ -14,20 +14,47 @@
 
 namespace Botan {
 
-namespace OpenPGP {
-
-/*
-* OpenPGP Base64 encoding/decoding
+/**
+* @param input the input data
+* @param length length of input in bytes
+* @param label the human-readable label
+* @param headers a set of key/value pairs included in the header
 */
-BOTAN_DLL std::string encode(const byte[], u32bit, const std::string&,
-                                  const std::map<std::string, std::string>&);
-BOTAN_DLL SecureVector<byte> decode(DataSource&, std::string&,
-                                         std::map<std::string, std::string>&);
+BOTAN_DLL std::string PGP_encode(
+   const byte input[],
+   u32bit length,
+   const std::string& label,
+   const std::map<std::string, std::string>& headers);
 
-BOTAN_DLL std::string encode(const byte[], u32bit, const std::string&);
-BOTAN_DLL SecureVector<byte> decode(DataSource&, std::string&);
+/**
+* @param input the input data
+* @param length length of input in bytes
+* @param label the human-readable label
+*/
+BOTAN_DLL std::string PGP_encode(
+   const byte input[],
+   u32bit length,
+   const std::string& label);
 
-}
+/**
+* @param source the input source
+* @param label is set to the human-readable label
+* @param headers is set to any headers
+* @return decoded output as raw binary
+*/
+BOTAN_DLL SecureVector<byte> PGP_decode(
+   DataSource& source,
+   std::string& label,
+   std::map<std::string, std::string>& headers);
+
+/**
+* @param source the input source
+* @param label is set to the human-readable label
+* @return decoded output as raw binary
+*/
+BOTAN_DLL SecureVector<byte> PGP_decode(
+   DataSource& source,
+   std::string& label);
 
 }
 

@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * RC5
 */
 class BOTAN_DLL RC5 : public BlockCipher
@@ -25,7 +25,11 @@ class BOTAN_DLL RC5 : public BlockCipher
       std::string name() const;
       BlockCipher* clone() const { return new RC5(ROUNDS); }
 
-      RC5(u32bit);
+      /**
+      * @param rounds the number of RC5 rounds to run. Must be between
+      * 8 and 32 and a multiple of 4.
+      */
+      RC5(u32bit rounds);
    private:
       void key_schedule(const byte[], u32bit);
       SecureVector<u32bit> S;

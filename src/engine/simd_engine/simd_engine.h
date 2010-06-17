@@ -1,4 +1,4 @@
-/**
+/*
 * SIMD Assembly Engine
 * (C) 1999-2009 Jack Lloyd
 *
@@ -12,11 +12,14 @@
 
 namespace Botan {
 
+/**
+* Engine for implementations that use some kind of SIMD
+*/
 class SIMD_Engine : public Engine
    {
    public:
       std::string provider_name() const { return "simd"; }
-   private:
+
       BlockCipher* find_block_cipher(const SCAN_Name&,
                                      Algorithm_Factory&) const;
 

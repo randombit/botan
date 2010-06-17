@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Blowfish
 */
 class BOTAN_DLL Blowfish : public BlockCipher

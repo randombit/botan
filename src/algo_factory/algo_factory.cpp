@@ -22,7 +22,7 @@ namespace Botan {
 
 namespace {
 
-/**
+/*
 * Template functions for the factory prototype/search algorithm
 */
 template<typename T>
@@ -84,7 +84,7 @@ const T* factory_prototype(const std::string& algo_spec,
 
 }
 
-/**
+/*
 * Setup caches
 */
 Algorithm_Factory::Algorithm_Factory()
@@ -95,7 +95,7 @@ Algorithm_Factory::Algorithm_Factory()
    mac_cache = new Algorithm_Cache<MessageAuthenticationCode>();
    }
 
-/**
+/*
 * Delete all engines
 */
 Algorithm_Factory::~Algorithm_Factory()
@@ -114,7 +114,7 @@ void Algorithm_Factory::add_engine(Engine* engine)
    engines.push_back(engine);
    }
 
-/**
+/*
 * Set the preferred provider for an algorithm
 */
 void Algorithm_Factory::set_preferred_provider(const std::string& algo_spec,
@@ -130,7 +130,7 @@ void Algorithm_Factory::set_preferred_provider(const std::string& algo_spec,
       mac_cache->set_preferred_provider(algo_spec, provider);
    }
 
-/**
+/*
 * Get an engine out of the list
 */
 Engine* Algorithm_Factory::get_engine_n(u32bit n) const
@@ -140,7 +140,7 @@ Engine* Algorithm_Factory::get_engine_n(u32bit n) const
    return engines[n];
    }
 
-/**
+/*
 * Return the possible providers of a request
 * Note: assumes you don't have different types by the same name
 */
@@ -164,7 +164,7 @@ Algorithm_Factory::providers_of(const std::string& algo_spec)
       return std::vector<std::string>();
    }
 
-/**
+/*
 * Return the prototypical block cipher corresponding to this request
 */
 const BlockCipher*
@@ -175,7 +175,7 @@ Algorithm_Factory::prototype_block_cipher(const std::string& algo_spec,
                                           *this, block_cipher_cache);
    }
 
-/**
+/*
 * Return the prototypical stream cipher corresponding to this request
 */
 const StreamCipher*
@@ -186,7 +186,7 @@ Algorithm_Factory::prototype_stream_cipher(const std::string& algo_spec,
                                           *this, stream_cipher_cache);
    }
 
-/**
+/*
 * Return the prototypical object corresponding to this request (if found)
 */
 const HashFunction*
@@ -197,7 +197,7 @@ Algorithm_Factory::prototype_hash_function(const std::string& algo_spec,
                                           *this, hash_cache);
    }
 
-/**
+/*
 * Return the prototypical object corresponding to this request
 */
 const MessageAuthenticationCode*
@@ -209,7 +209,7 @@ Algorithm_Factory::prototype_mac(const std::string& algo_spec,
                                                        *this, mac_cache);
    }
 
-/**
+/*
 * Return a new block cipher corresponding to this request
 */
 BlockCipher*
@@ -221,7 +221,7 @@ Algorithm_Factory::make_block_cipher(const std::string& algo_spec,
    throw Algorithm_Not_Found(algo_spec);
    }
 
-/**
+/*
 * Return a new stream cipher corresponding to this request
 */
 StreamCipher*
@@ -233,7 +233,7 @@ Algorithm_Factory::make_stream_cipher(const std::string& algo_spec,
    throw Algorithm_Not_Found(algo_spec);
    }
 
-/**
+/*
 * Return a new object corresponding to this request
 */
 HashFunction*
@@ -245,7 +245,7 @@ Algorithm_Factory::make_hash_function(const std::string& algo_spec,
    throw Algorithm_Not_Found(algo_spec);
    }
 
-/**
+/*
 * Return a new object corresponding to this request
 */
 MessageAuthenticationCode*
@@ -257,7 +257,7 @@ Algorithm_Factory::make_mac(const std::string& algo_spec,
    throw Algorithm_Not_Found(algo_spec);
    }
 
-/**
+/*
 * Add a new block cipher
 */
 void Algorithm_Factory::add_block_cipher(BlockCipher* block_cipher,
@@ -266,7 +266,7 @@ void Algorithm_Factory::add_block_cipher(BlockCipher* block_cipher,
    block_cipher_cache->add(block_cipher, block_cipher->name(), provider);
    }
 
-/**
+/*
 * Add a new stream cipher
 */
 void Algorithm_Factory::add_stream_cipher(StreamCipher* stream_cipher,
@@ -275,7 +275,7 @@ void Algorithm_Factory::add_stream_cipher(StreamCipher* stream_cipher,
    stream_cipher_cache->add(stream_cipher, stream_cipher->name(), provider);
    }
 
-/**
+/*
 * Add a new hash
 */
 void Algorithm_Factory::add_hash_function(HashFunction* hash,
@@ -284,7 +284,7 @@ void Algorithm_Factory::add_hash_function(HashFunction* hash,
    hash_cache->add(hash, hash->name(), provider);
    }
 
-/**
+/*
 * Add a new mac
 */
 void Algorithm_Factory::add_mac(MessageAuthenticationCode* mac,

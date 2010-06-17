@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* SHA-160
+/**
+* SHA-160 using SSE2 for the message expansion
 */
 class BOTAN_DLL SHA_160_SSE2 : public SHA_160
    {

@@ -25,6 +25,9 @@ enum EC_Domain_Params_Encoding {
    EC_DOMPAR_ENC_OID = 2
 };
 
+/**
+* Class representing an elliptic curve
+*/
 class BOTAN_DLL EC_Domain_Params
    {
    public:

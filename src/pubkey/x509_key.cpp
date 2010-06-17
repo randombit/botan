@@ -1,6 +1,6 @@
 /*
 * X.509 Public Key
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -18,23 +18,14 @@ namespace Botan {
 
 namespace X509 {
 
-/*
-* DER or PEM encode a X.509 public key
-*/
-void encode(const Public_Key& key, Pipe& pipe, X509_Encoding encoding)
+MemoryVector<byte> BER_encode(const Public_Key& key)
    {
-   MemoryVector<byte> der =
-      DER_Encoder()
+   return DER_Encoder()
          .start_cons(SEQUENCE)
             .encode(key.algorithm_identifier())
             .encode(key.x509_subject_public_key(), BIT_STRING)
          .end_cons()
       .get_contents();
-
-   if(encoding == PEM)
-      pipe.write(PEM_Code::encode(der, "PUBLIC KEY"));
-   else
-      pipe.write(der);
    }
 
 /*
@@ -42,11 +33,8 @@ void encode(const Public_Key& key, Pipe& pipe, X509_Encoding encoding)
 */
 std::string PEM_encode(const Public_Key& key)
    {
-   Pipe pem;
-   pem.start_msg();
-   encode(key, pem, PEM);
-   pem.end_msg();
-   return pem.read_all_as_string();
+   return PEM_Code::encode(X509::BER_encode(key),
+                           "PUBLIC KEY");
    }
 
 /*
@@ -115,11 +103,7 @@ Public_Key* load_key(const MemoryRegion<byte>& mem)
 */
 Public_Key* copy_key(const Public_Key& key)
    {
-   Pipe bits;
-   bits.start_msg();
-   X509::encode(key, bits, RAW_BER);
-   bits.end_msg();
-   DataSource_Memory source(bits.read_all());
+   DataSource_Memory source(PEM_encode(key));
    return X509::load_key(source);
    }
 

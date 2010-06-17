@@ -30,7 +30,7 @@ mp_shift.cpp
 <requires>
 alloc
 hex
-mp_amd64|mp_asm64|mp_ia32|mp_ia32_msvc|mp_generic
+mp_amd64|mp_amd64_msvc|mp_asm64|mp_ia32|mp_ia32_msvc|mp_generic
 monty_generic
 mulop_generic
 rng

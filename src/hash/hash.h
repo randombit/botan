@@ -1,4 +1,4 @@
-/**
+/*
 * Hash Function Base Class
 * (C) 1999-2008 Jack Lloyd
 *
@@ -31,7 +31,7 @@ class BOTAN_DLL HashFunction : public BufferedComputation
 
       /**
       * Get the name of this algorithm.
-      * @return the name of this algorithm
+      * @return name of this algorithm
       */
       virtual std::string name() const = 0;
 
@@ -40,8 +40,13 @@ class BOTAN_DLL HashFunction : public BufferedComputation
       */
       virtual void clear() = 0;
 
+      /**
+      * @param hash_len the output length
+      * @param block_len the internal block size (if applicable)
+      */
       HashFunction(u32bit hash_len, u32bit block_len = 0) :
          BufferedComputation(hash_len), HASH_BLOCK_SIZE(block_len) {}
+
       virtual ~HashFunction() {}
    private:
       HashFunction& operator=(const HashFunction&);

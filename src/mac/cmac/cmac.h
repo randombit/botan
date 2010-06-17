@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* CMAC
+/**
+* CMAC, also known as OMAC1
 */
 class BOTAN_DLL CMAC : public MessageAuthenticationCode
    {
@@ -23,10 +23,18 @@ class BOTAN_DLL CMAC : public MessageAuthenticationCode
       std::string name() const;
       MessageAuthenticationCode* clone() const;
 
+      /**
+      * CMAC's polynomial doubling operation
+      * @param in the input
+      * @param polynomial the byte value of the polynomial
+      */
       static SecureVector<byte> poly_double(const MemoryRegion<byte>& in,
                                             byte polynomial);
 
-      CMAC(BlockCipher* e);
+      /**
+      * @param cipher the underlying block cipher to use
+      */
+      CMAC(BlockCipher* cipher);
       ~CMAC();
    private:
       void add_data(const byte[], u32bit);

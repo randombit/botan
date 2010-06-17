@@ -1,4 +1,4 @@
-/**
+/*
 * PKCS #5 PBES2
 * (C) 1999-2008 Jack Lloyd
 *
@@ -21,7 +21,7 @@
 
 namespace Botan {
 
-/**
+/*
 * Encrypt some bytes using PBES2
 */
 void PBE_PKCS5v20::write(const byte input[], u32bit length)
@@ -35,7 +35,7 @@ void PBE_PKCS5v20::write(const byte input[], u32bit length)
       }
    }
 
-/**
+/*
 * Start encrypting with PBES2
 */
 void PBE_PKCS5v20::start_msg()
@@ -54,7 +54,7 @@ void PBE_PKCS5v20::start_msg()
       pipe.set_default_msg(pipe.default_msg() + 1);
    }
 
-/**
+/*
 * Finish encrypting with PBES2
 */
 void PBE_PKCS5v20::end_msg()
@@ -64,7 +64,7 @@ void PBE_PKCS5v20::end_msg()
    pipe.reset();
    }
 
-/**
+/*
 * Flush the pipe
 */
 void PBE_PKCS5v20::flush_pipe(bool safe_to_skip)
@@ -80,7 +80,7 @@ void PBE_PKCS5v20::flush_pipe(bool safe_to_skip)
       }
    }
 
-/**
+/*
 * Set the passphrase to use
 */
 void PBE_PKCS5v20::set_key(const std::string& passphrase)
@@ -92,22 +92,22 @@ void PBE_PKCS5v20::set_key(const std::string& passphrase)
                           iterations).bits_of();
    }
 
-/**
+/*
 * Create a new set of PBES2 parameters
 */
 void PBE_PKCS5v20::new_params(RandomNumberGenerator& rng)
    {
-   iterations = 2048;
+   iterations = 10000;
    key_length = block_cipher->MAXIMUM_KEYLENGTH;
 
-   salt.resize(8);
+   salt.resize(12);
    rng.randomize(salt, salt.size());
 
    iv.resize(block_cipher->BLOCK_SIZE);
    rng.randomize(iv, iv.size());
    }
 
-/**
+/*
 * Encode PKCS#5 PBES2 parameters
 */
 MemoryVector<byte> PBE_PKCS5v20::encode_params() const
@@ -136,7 +136,7 @@ MemoryVector<byte> PBE_PKCS5v20::encode_params() const
       .get_contents();
    }
 
-/**
+/*
 * Decode PKCS#5 PBES2 parameters
 */
 void PBE_PKCS5v20::decode_params(DataSource& source)
@@ -187,7 +187,7 @@ void PBE_PKCS5v20::decode_params(DataSource& source)
       throw Decoding_Error("PBE-PKCS5 v2.0: Encoded salt is too small");
    }
 
-/**
+/*
 * Return an OID for PBES2
 */
 OID PBE_PKCS5v20::get_oid() const
@@ -195,7 +195,7 @@ OID PBE_PKCS5v20::get_oid() const
    return OIDS::lookup("PBE-PKCS5v20");
    }
 
-/**
+/*
 * Check if this is a known PBES2 cipher
 */
 bool PBE_PKCS5v20::known_cipher(const std::string& algo)
@@ -207,7 +207,7 @@ bool PBE_PKCS5v20::known_cipher(const std::string& algo)
    return false;
    }
 
-/**
+/*
 * PKCS#5 v2.0 PBE Constructor
 */
 PBE_PKCS5v20::PBE_PKCS5v20(BlockCipher* cipher,
@@ -220,7 +220,7 @@ PBE_PKCS5v20::PBE_PKCS5v20(BlockCipher* cipher,
       throw Invalid_Argument("PBE-PKCS5 v2.0: Invalid digest " + digest->name());
    }
 
-/**
+/*
 * PKCS#5 v2.0 PBE Constructor
 */
 PBE_PKCS5v20::PBE_PKCS5v20(DataSource& params) : direction(DECRYPTION)

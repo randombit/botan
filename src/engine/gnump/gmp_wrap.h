@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* Lightweight GMP mpz_t Wrapper
+/**
+* Lightweight GMP mpz_t wrapper. For internal use only.
 */
 class GMP_MPZ
    {

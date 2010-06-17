@@ -1,4 +1,4 @@
-/**
+/*
 * Merkle-Damgard Hash Function
 * (C) 1999-2008 Jack Lloyd
 *
@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-/**
+/*
 * MDx_HashFunction Constructor
 */
 MDx_HashFunction::MDx_HashFunction(u32bit hash_len, u32bit block_len,
@@ -25,7 +25,7 @@ MDx_HashFunction::MDx_HashFunction(u32bit hash_len, u32bit block_len,
    count = position = 0;
    }
 
-/**
+/*
 * Clear memory of sensitive data
 */
 void MDx_HashFunction::clear()
@@ -34,7 +34,7 @@ void MDx_HashFunction::clear()
    count = position = 0;
    }
 
-/**
+/*
 * Update the hash
 */
 void MDx_HashFunction::add_data(const byte input[], u32bit length)
@@ -64,7 +64,7 @@ void MDx_HashFunction::add_data(const byte input[], u32bit length)
    position += remaining;
    }
 
-/**
+/*
 * Finalize a hash
 */
 void MDx_HashFunction::final_result(byte output[])
@@ -86,7 +86,7 @@ void MDx_HashFunction::final_result(byte output[])
    clear();
    }
 
-/**
+/*
 * Write the count bits to the buffer
 */
 void MDx_HashFunction::write_count(byte out[])

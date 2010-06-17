@@ -22,9 +22,23 @@
 
 namespace Botan {
 
+/**
+* Returns file descriptors. Until it doesn't
+*/
+class File_Descriptor_Source
+   {
+   public:
+      /**
+      * @return next file descriptor, or -1 if done
+      */
+      virtual int next_fd() = 0;
+
+      virtual ~File_Descriptor_Source() {}
+   };
+
 namespace {
 
-class Directory_Walker : public FTW_EntropySource::File_Descriptor_Source
+class Directory_Walker : public File_Descriptor_Source
    {
    public:
       Directory_Walker(const std::string& root) { add_directory(root); }

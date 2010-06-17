@@ -28,7 +28,7 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
 
       /**
       * Get the DL domain parameters of this key.
-      * @return the DL domain parameters of this key
+      * @return DL domain parameters of this key
       */
       const DL_Group& get_domain() const { return group; }
 
@@ -39,25 +39,25 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
 
       /**
       * Get the prime p of the underlying DL group.
-      * @return the prime p
+      * @return prime p
       */
       const BigInt& group_p() const { return group.get_p(); }
 
       /**
       * Get the prime q of the underlying DL group.
-      * @return the prime q
+      * @return prime q
       */
       const BigInt& group_q() const { return group.get_q(); }
 
       /**
       * Get the generator g of the underlying DL group.
-      * @return the generator g
+      * @return generator g
       */
       const BigInt& group_g() const { return group.get_g(); }
 
       /**
       * Get the underlying groups encoding format.
-      * @return the encoding format
+      * @return encoding format
       */
       virtual DL_Group::Format group_format() const = 0;
 
@@ -82,7 +82,7 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
 
       /**
       * Get the secret key x.
-      * @return the secret key
+      * @return secret key
       */
       const BigInt& get_x() const { return x; }
 

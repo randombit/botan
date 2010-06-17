@@ -46,12 +46,12 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
       * Get the maximum number of bits allowed to be fed to this key.
       * This is the bitlength of the order of the base point.
 
-      * @return the maximum number of input bits
+      * @return maximum number of input bits
       */
       u32bit max_input_bits() const { return domain().get_order().bits(); }
 
       /**
-      * @return the public point value
+      * @return public point value
       */
       MemoryVector<byte> public_value() const
          { return EC2OSP(public_point(), PointGFp::UNCOMPRESSED); }
@@ -75,7 +75,8 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
 
       /**
       * Generate a new private key
-      * @param the domain parameters to used for this key
+      * @param rng a random number generator
+      * @param domain parameters to used for this key
       */
       ECDH_PrivateKey(RandomNumberGenerator& rng,
                       const EC_Domain_Params& domain) :

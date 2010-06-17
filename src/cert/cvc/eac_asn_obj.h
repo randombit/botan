@@ -26,13 +26,13 @@ class BOTAN_DLL EAC_Time : public ASN1_Object
 
       /**
       * Get a this objects value as a string.
-      * @return the date string
+      * @return date string
       */
       std::string as_string() const;
 
       /**
       * Get a this objects value as a readable formatted string.
-      * @return the date string
+      * @return date string
       */
       std::string readable_string() const;
 
@@ -71,19 +71,19 @@ class BOTAN_DLL EAC_Time : public ASN1_Object
 
       /**
       * Get the year value of this objects.
-      * @return the year value
+      * @return year value
       */
       u32bit get_year() const { return year; }
 
       /**
       * Get the month value of this objects.
-      * @return the month value
+      * @return month value
       */
       u32bit get_month() const { return month; }
 
       /**
       * Get the day value of this objects.
-      * @return the day value
+      * @return day value
       */
       u32bit get_day() const { return day; }
 
@@ -170,13 +170,13 @@ class BOTAN_DLL ASN1_EAC_String: public ASN1_Object
 
       /**
       * Get this objects string value.
-      * @return the string value
+      * @return string value
       */
       std::string value() const;
 
       /**
       * Get this objects string value.
-      * @return the string value in iso8859 encoding
+      * @return string value in iso8859 encoding
       */
       std::string iso_8859() const;
 

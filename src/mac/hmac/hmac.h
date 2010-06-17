@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * HMAC
 */
 class BOTAN_DLL HMAC : public MessageAuthenticationCode
@@ -23,6 +23,9 @@ class BOTAN_DLL HMAC : public MessageAuthenticationCode
       std::string name() const;
       MessageAuthenticationCode* clone() const;
 
+      /**
+      * @param hash the hash to use for HMACing
+      */
       HMAC(HashFunction* hash);
       ~HMAC() { delete hash; }
    private:

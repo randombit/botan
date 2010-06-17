@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * CAST-128
 */
 class BOTAN_DLL CAST_128 : public BlockCipher

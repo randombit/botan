@@ -1,4 +1,4 @@
-/**
+/*
 * Unix Command Execution
 * (C) 1999-2007 Jack Lloyd
 *
@@ -20,6 +20,10 @@ namespace Botan {
 */
 struct Unix_Program
    {
+   /**
+   * @param n is the name and arguments of what we are going run
+   * @param p is the priority level (lower prio numbers get polled first)
+   */
    Unix_Program(const char* n, u32bit p)
       { name_and_args = n; priority = p; working = true; }
 

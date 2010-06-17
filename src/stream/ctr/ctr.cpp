@@ -22,7 +22,7 @@ CTR_BE::CTR_BE(BlockCipher* ciph) :
    {
    position = 0;
 
-   counter.resize(permutation->BLOCK_SIZE * permutation->parallelism());
+   counter.resize(permutation->parallel_bytes());
    buffer.resize(counter.size());
    }
 

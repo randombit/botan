@@ -15,7 +15,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Rabin-Williams Public Key
 */
 class BOTAN_DLL RW_PublicKey : public virtual IF_Scheme_PublicKey
@@ -36,7 +36,7 @@ class BOTAN_DLL RW_PublicKey : public virtual IF_Scheme_PublicKey
       RW_PublicKey() {}
    };
 
-/*
+/**
 * Rabin-Williams Private Key
 */
 class BOTAN_DLL RW_PrivateKey : public RW_PublicKey,
@@ -59,6 +59,9 @@ class BOTAN_DLL RW_PrivateKey : public RW_PublicKey,
       bool check_key(RandomNumberGenerator& rng, bool) const;
    };
 
+/**
+* Rabin-Williams Signature Operation
+*/
 class BOTAN_DLL RW_Signature_Operation : public PK_Ops::Signature
    {
    public:
@@ -79,6 +82,9 @@ class BOTAN_DLL RW_Signature_Operation : public PK_Ops::Signature
       Blinder blinder;
    };
 
+/**
+* Rabin-Williams Verification Operation
+*/
 class BOTAN_DLL RW_Verification_Operation : public PK_Ops::Verification
    {
    public:

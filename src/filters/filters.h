@@ -44,7 +44,7 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
       */
       void write(const byte input[], u32bit input_len);
 
-      bool valid_iv_length(u32bit iv_len)
+      bool valid_iv_length(u32bit iv_len) const
          { return cipher->valid_iv_length(iv_len); }
 
       /**
@@ -160,8 +160,8 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
 
       /**
       * Construct a MAC filter. The MAC key will be left empty.
-      * @param mac the MAC to use
-      * @param len the output length of this filter. Leave the default
+      * @param mac_obj the MAC to use
+      * @param out_len the output length of this filter. Leave the default
       * value 0 if you want to use the full output of the
       * MAC. Otherwise, specify a smaller value here so that the
       * output of the MAC will be cut off.
@@ -174,9 +174,9 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
 
       /**
       * Construct a MAC filter.
-      * @param mac the MAC to use
+      * @param mac_obj the MAC to use
       * @param key the MAC key to use
-      * @param len the output length of this filter. Leave the default
+      * @param out_len the output length of this filter. Leave the default
       * value 0 if you want to use the full output of the
       * MAC. Otherwise, specify a smaller value here so that the
       * output of the MAC will be cut off.

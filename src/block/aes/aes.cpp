@@ -1,4 +1,4 @@
-/**
+/*
 * AES
 * (C) 1999-2009 Jack Lloyd
 *
@@ -409,7 +409,7 @@ const u32bit TD[1024] = {
 
 }
 
-/**
+/*
 * AES Encryption
 */
 void AES::encrypt_n(const byte in[], byte out[], u32bit blocks) const
@@ -503,7 +503,7 @@ void AES::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       }
    }
 
-/**
+/*
 * AES Decryption
 */
 void AES::decrypt_n(const byte in[], byte out[], u32bit blocks) const
@@ -583,7 +583,7 @@ void AES::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       }
    }
 
-/**
+/*
 * AES Key Schedule
 */
 void AES::key_schedule(const byte key[], u32bit length)
@@ -636,7 +636,7 @@ void AES::key_schedule(const byte key[], u32bit length)
    DK.copy(XDK, length + 24);
    }
 
-/**
+/*
 * AES Byte Substitution
 */
 u32bit AES::S(u32bit input)
@@ -645,7 +645,7 @@ u32bit AES::S(u32bit input)
                       SE[get_byte(2, input)], SE[get_byte(3, input)]);
    }
 
-/**
+/*
 * AES Constructor
 */
 AES::AES(u32bit key_size) : BlockCipher(16, key_size)
@@ -655,7 +655,7 @@ AES::AES(u32bit key_size) : BlockCipher(16, key_size)
    ROUNDS = (key_size / 4) + 6;
    }
 
-/**
+/*
 * Clear memory of sensitive data
 */
 void AES::clear()

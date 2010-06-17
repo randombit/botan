@@ -8,11 +8,15 @@ AppPublisher=Jack Lloyd
 AppPublisherURL=http://botan.randombit.net/
 AppVersion=%{version}
 
-VersionInfoCopyright=Copyright (C) 1999-2009 Jack Lloyd and others
+VersionInfoCopyright=Copyright (C) 1999-2010 Jack Lloyd and others
 VersionInfoVersion=%{version_major}.%{version_minor}.%{version_patch}.0
 
 ; Require at least Windows 98 or 2000
 MinVersion=4.1,5.0
+
+; Uncomment for 64 bit builds
+;ArchitecturesAllowed = x64
+;ArchitecturesInstallIn64BitMode = x64
 
 DefaultDirName={pf}\botan
 DefaultGroupName=botan

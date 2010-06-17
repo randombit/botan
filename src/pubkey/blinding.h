@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Blinding Function Object
 */
 class BOTAN_DLL Blinder

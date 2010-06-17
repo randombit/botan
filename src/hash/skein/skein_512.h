@@ -1,4 +1,4 @@
-/**
+/*
 * The Skein-512 hash function
 * (C) 2009 Jack Lloyd
 *
@@ -14,9 +14,17 @@
 
 namespace Botan {
 
+/**
+* Skein-512, a SHA-3 candidate
+*/
 class BOTAN_DLL Skein_512 : public HashFunction
    {
    public:
+      /**
+      * @param output_bits the output size of Skein in bits
+      * @param personalization is a string that will paramaterize the
+      * hash output
+      */
       Skein_512(u32bit output_bits = 512,
                 const std::string& personalization = "");
 

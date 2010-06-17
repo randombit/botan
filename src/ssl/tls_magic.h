@@ -1,4 +1,4 @@
-/**
+/*
 * SSL/TLS Protocol Constants
 * (C) 2004-2010 Jack Lloyd
 *

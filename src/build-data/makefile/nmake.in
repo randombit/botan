@@ -15,10 +15,6 @@ VERSION       = %{version}
 ### Installation Settings
 DESTDIR       = %{prefix}
 
-LIBDIR        = $(DESTDIR)\%{libdir}
-HEADERDIR     = $(DESTDIR)\%{includedir}\botan
-DOCDIR        = $(DESTDIR)\%{docdir}\botan-$(VERSION)
-
 ### Aliases for Common Programs
 AR            = %{ar_command}
 CD            = @cd
@@ -86,4 +82,6 @@ distclean: clean
 
 ### Install Commands
 install: $(LIBRARIES)
-	$(ECHO) "Install command not implemented"
+	-$(MKDIR) $(DESTDIR)\include\botan
+	$(INSTALL_CMD) botan.* $(DESTDIR)
+	$(INSTALL_CMD) build\include\botan\*.h $(DESTDIR)\include\botan

@@ -49,6 +49,9 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
 
       MemoryVector<byte> x509_subject_public_key() const;
 
+      bool check_key(RandomNumberGenerator& rng,
+                     bool strong) const;
+
       /**
       * Get the domain parameters of this key.
       * @throw Invalid_State is thrown if the

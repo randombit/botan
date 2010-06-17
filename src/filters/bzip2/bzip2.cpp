@@ -54,8 +54,6 @@ void bzip_free(void* info_ptr, void* ptr)
    info->alloc->deallocate(ptr, i->second);
    }
 
-}
-
 /*
 * Wrapper Type for Bzip2 Stream
 */
@@ -78,6 +76,8 @@ class Bzip_Stream
          std::memset(&stream, 0, sizeof(bz_stream));
          }
    };
+
+}
 
 /*
 * Bzip_Compression Constructor

@@ -1,4 +1,4 @@
-/**
+/*
 * TLS Messages
 * (C) 2004-2010 Jack Lloyd
 *

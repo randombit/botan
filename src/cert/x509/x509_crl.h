@@ -31,13 +31,13 @@ class BOTAN_DLL X509_CRL : public X509_Object
 
       /**
       * Get the entries of this CRL in the form of a vector.
-      * @return a vector containing the entries of this CRL.
+      * @return vector containing the entries of this CRL.
       */
       std::vector<CRL_Entry> get_revoked() const;
 
       /**
       * Get the issuer DN of this CRL.
-      * @return the CRLs issuer DN
+      * @return CRLs issuer DN
       */
       X509_DN issuer_dn() const;
 
@@ -49,31 +49,35 @@ class BOTAN_DLL X509_CRL : public X509_Object
 
       /**
       * Get the serial number of this CRL.
-      * @return the CRLs serial number
+      * @return CRLs serial number
       */
       u32bit crl_number() const;
 
       /**
       * Get the CRL's thisUpdate value.
-      * @return the CRLs thisUpdate
+      * @return CRLs thisUpdate
       */
       X509_Time this_update() const;
 
       /**
       * Get the CRL's nextUpdate value.
-      * @return the CRLs nextdUpdate
+      * @return CRLs nextdUpdate
       */
       X509_Time next_update() const;
 
       /**
       * Construct a CRL from a data source.
       * @param source the data source providing the DER or PEM encoded CRL.
+      * @param throw_on_unknown_critical should we throw an exception
+      * if an unknown CRL extension marked as critical is encountered.
       */
-      X509_CRL(DataSource&, bool throw_on_unknown_critical = false);
+      X509_CRL(DataSource& source, bool throw_on_unknown_critical = false);
 
       /**
       * Construct a CRL from a file containing the DER or PEM encoded CRL.
       * @param filename the name of the CRL file
+      * @param throw_on_unknown_critical should we throw an exception
+      * if an unknown CRL extension marked as critical is encountered.
       */
       X509_CRL(const std::string& filename,
                bool throw_on_unknown_critical = false);

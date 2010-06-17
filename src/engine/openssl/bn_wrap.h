@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* Lightweight OpenSSL BN Wrapper
+/**
+* Lightweight OpenSSL BN wrapper. For internal use only.
 */
 class OSSL_BN
    {
@@ -36,8 +36,8 @@ class OSSL_BN
       ~OSSL_BN();
    };
 
-/*
-* Lightweight OpenSSL BN_CTX Wrapper
+/**
+* Lightweight OpenSSL BN_CTX wrapper. For internal use only.
 */
 class OSSL_BN_CTX
    {

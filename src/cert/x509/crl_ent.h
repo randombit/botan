@@ -23,19 +23,19 @@ class BOTAN_DLL CRL_Entry : public ASN1_Object
 
       /**
       * Get the serial number of the certificate associated with this entry.
-      * @return the certificate's serial number
+      * @return certificate's serial number
       */
       MemoryVector<byte> serial_number() const { return serial; }
 
       /**
       * Get the revocation date of the certificate associated with this entry
-      * @return the certificate's revocation date
+      * @return certificate's revocation date
       */
       X509_Time expire_time() const { return time; }
 
       /**
       * Get the entries reason code
-      * @return the reason code
+      * @return reason code
       */
       CRL_Code reason_code() const { return reason; }
 
@@ -49,7 +49,8 @@ class BOTAN_DLL CRL_Entry : public ASN1_Object
       * @param cert the certificate to revoke
       * @param reason the reason code to set in the entry
       */
-      CRL_Entry(const X509_Certificate&, CRL_Code = UNSPECIFIED);
+      CRL_Entry(const X509_Certificate& cert,
+                CRL_Code reason = UNSPECIFIED);
 
    private:
       bool throw_on_unknown_critical;

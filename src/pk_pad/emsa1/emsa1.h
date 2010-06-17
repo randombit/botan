@@ -13,8 +13,9 @@
 
 namespace Botan {
 
-/*
-* EMSA1
+/**
+* EMSA1 from IEEE 1363
+* Essentially, sign the hash directly
 */
 class BOTAN_DLL EMSA1 : public EMSA
    {

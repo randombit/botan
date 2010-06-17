@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* CRC24
+/**
+* 24-bit cyclic redundancy check
 */
 class BOTAN_DLL CRC24 : public HashFunction
    {

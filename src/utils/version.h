@@ -19,25 +19,33 @@ namespace Botan {
 
 /**
 * Get the version string identifying the version of Botan.
-* @return the version string
+* @return version string
 */
 BOTAN_DLL std::string version_string();
 
 /**
+* Return the date this version of botan was released, in an
+* integer of the form YYYYMMDD. For instance a version released
+* on May 21, 2013 would return the integer 20130521
+* @return release date
+*/
+BOTAN_DLL u32bit version_datestamp();
+
+/**
 * Get the major version number.
-* @return the major version number
+* @return major version number
 */
 BOTAN_DLL u32bit version_major();
 
 /**
 * Get the minor version number.
-* @return the minor version number
+* @return minor version number
 */
 BOTAN_DLL u32bit version_minor();
 
 /**
 * Get the patch number.
-* @return the patch number
+* @return patch number
 */
 BOTAN_DLL u32bit version_patch();
 

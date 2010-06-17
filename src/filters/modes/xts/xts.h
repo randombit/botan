@@ -14,8 +14,8 @@
 
 namespace Botan {
 
-/*
-* XTS Encryption
+/**
+* IEEE P1619 XTS Encryption
 */
 class BOTAN_DLL XTS_Encryption : public Keyed_Filter,
                                  private Buffered_Filter
@@ -26,6 +26,9 @@ class BOTAN_DLL XTS_Encryption : public Keyed_Filter,
 
       bool valid_keylength(u32bit key_len) const
          { return cipher->valid_keylength(key_len); }
+
+      bool valid_iv_length(u32bit iv_len) const
+         { return (iv_len == cipher->BLOCK_SIZE); }
 
       std::string name() const;
 
@@ -48,8 +51,8 @@ class BOTAN_DLL XTS_Encryption : public Keyed_Filter,
       SecureVector<byte> tweak;
    };
 
-/*
-* XTS Decryption
+/**
+* IEEE P1619 XTS Encryption
 */
 class BOTAN_DLL XTS_Decryption : public Keyed_Filter,
                                  private Buffered_Filter
@@ -60,6 +63,9 @@ class BOTAN_DLL XTS_Decryption : public Keyed_Filter,
 
       bool valid_keylength(u32bit key_len) const
          { return cipher->valid_keylength(key_len); }
+
+      bool valid_iv_length(u32bit iv_len) const
+         { return (iv_len == cipher->BLOCK_SIZE); }
 
       std::string name() const;
 

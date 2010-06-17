@@ -14,6 +14,9 @@
 
 namespace Botan {
 
+/**
+* An automatically seeded PRNG
+*/
 class BOTAN_DLL AutoSeeded_RNG : public RandomNumberGenerator
    {
    public:

@@ -15,20 +15,33 @@
 
 namespace Botan {
 
-/*
-* PKCS#5 v2.0 PBE
+/**
+* PKCS #5 v2.0 PBE
 */
 class BOTAN_DLL PBE_PKCS5v20 : public PBE
    {
    public:
-      static bool known_cipher(const std::string&);
+      /**
+      * @param cipher names a block cipher
+      * @return true iff PKCS #5 knows how to use this cipher
+      */
+      static bool known_cipher(const std::string& cipher);
 
       void write(const byte[], u32bit);
       void start_msg();
       void end_msg();
 
-      PBE_PKCS5v20(DataSource&);
-      PBE_PKCS5v20(BlockCipher*, HashFunction*);
+      /**
+      * Load a PKCS #5 v2.0 encrypted stream
+      * @param input is the input source
+      */
+      PBE_PKCS5v20(DataSource& input);
+
+      /**
+      * @param cipher the block cipher to use
+      * @param hash the hash function to use
+      */
+      PBE_PKCS5v20(BlockCipher* cipher, HashFunction* hash);
 
       ~PBE_PKCS5v20();
    private:

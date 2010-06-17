@@ -23,21 +23,38 @@ namespace Botan {
 * collected for retrieval.  If you're familiar with the Unix shell
 * environment, this design will sound quite familiar.
 */
-
 class BOTAN_DLL Pipe : public DataSource
    {
    public:
+      /*
+      * An opaque type that identifies a message in this Pipe
+      */
       typedef u32bit message_id;
 
+      /**
+      * Exception if you use an invalid message as an argument to
+      * read, remaining, etc
+      */
       struct BOTAN_DLL Invalid_Message_Number : public Invalid_Argument
          {
+         /**
+         * @param where the error occured
+         * @param msg the invalid message id that was used
+         */
          Invalid_Message_Number(const std::string& where, message_id msg) :
             Invalid_Argument("Pipe::" + where + ": Invalid message number " +
                              std::to_string(msg))
             {}
          };
 
+      /**
+      * A meta-id for whatever the last message is
+      */
       static const message_id LAST_MESSAGE;
+
+      /**
+      * A meta-id for the default message (set with set_default_msg)
+      */
       static const message_id DEFAULT_MESSAGE;
 
       /**
@@ -100,7 +117,7 @@ class BOTAN_DLL Pipe : public DataSource
       * Find out how many bytes are ready to read.
       * @param msg the number identifying the message
       * for which the information is desired
-      * @return the number of bytes that can still be read
+      * @return number of bytes that can still be read
       */
       u32bit remaining(message_id msg = DEFAULT_MESSAGE) const;
 
@@ -108,9 +125,10 @@ class BOTAN_DLL Pipe : public DataSource
       * Read the default message from the pipe. Moves the internal
       * offset so that every call to read will return a new portion of
       * the message.
+      *
       * @param output the byte array to write the read bytes to
       * @param length the length of the byte array output
-      * @return the number of bytes actually read into output
+      * @return number of bytes actually read into output
       */
       u32bit read(byte output[], u32bit length);
 
@@ -121,29 +139,32 @@ class BOTAN_DLL Pipe : public DataSource
       * @param output the byte array to write the read bytes to
       * @param length the length of the byte array output
       * @param msg the number identifying the message to read from
-      * @return the number of bytes actually read into output
+      * @return number of bytes actually read into output
       */
       u32bit read(byte output[], u32bit length, message_id msg);
 
       /**
-      * Read a single byte from the pipe. Moves the internal offset so that
-      * every call to read will return a new portion of the message.
+      * Read a single byte from the pipe. Moves the internal offset so
+      * that every call to read will return a new portion of the
+      * message.
+      *
       * @param output the byte to write the result to
-      * @return the number of bytes actually read into output
+      * @param msg the message to read from
+      * @return number of bytes actually read into output
       */
       u32bit read(byte& output, message_id msg = DEFAULT_MESSAGE);
 
       /**
       * Read the full contents of the pipe.
       * @param msg the number identifying the message to read from
-      * @return a SecureVector holding the contents of the pipe
+      * @return SecureVector holding the contents of the pipe
       */
       SecureVector<byte> read_all(message_id msg = DEFAULT_MESSAGE);
 
       /**
       * Read the full contents of the pipe.
       * @param msg the number identifying the message to read from
-      * @return a string holding the contents of the pipe
+      * @return string holding the contents of the pipe
       */
       std::string read_all_as_string(message_id = DEFAULT_MESSAGE);
 
@@ -153,7 +174,7 @@ class BOTAN_DLL Pipe : public DataSource
       * @param output the byte array to write the peeked message part to
       * @param length the length of the byte array output
       * @param offset the offset from the current position in message
-      * @return the number of bytes actually peeked and written into output
+      * @return number of bytes actually peeked and written into output
       */
       u32bit peek(byte output[], u32bit length, u32bit offset) const;
 
@@ -164,7 +185,7 @@ class BOTAN_DLL Pipe : public DataSource
       * @param length the length of the byte array output
       * @param offset the offset from the current position in message
       * @param msg the number identifying the message to peek from
-      * @return the number of bytes actually peeked and written into output
+      * @return number of bytes actually peeked and written into output
       */
       u32bit peek(byte output[], u32bit length,
                   u32bit offset, message_id msg) const;
@@ -175,11 +196,14 @@ class BOTAN_DLL Pipe : public DataSource
       * @param output the byte to write the peeked message byte to
       * @param offset the offset from the current position in message
       * @param msg the number identifying the message to peek from
-      * @return the number of bytes actually peeked and written into output
+      * @return number of bytes actually peeked and written into output
       */
       u32bit peek(byte& output, u32bit offset,
                   message_id msg = DEFAULT_MESSAGE) const;
 
+      /**
+      * @return currently set default message
+      */
       u32bit default_msg() const { return default_read; }
 
       /**
@@ -191,7 +215,7 @@ class BOTAN_DLL Pipe : public DataSource
 
       /**
       * Get the number of messages the are in this pipe.
-      * @return the number of messages the are in this pipe
+      * @return number of messages the are in this pipe
       */
       message_id message_count() const;
 

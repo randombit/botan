@@ -23,6 +23,9 @@ namespace Botan {
 class BOTAN_DLL Data_Store
    {
    public:
+      /**
+      * A search function
+      */
       bool operator==(const Data_Store&) const;
 
       std::multimap<std::string, std::string> search_for(

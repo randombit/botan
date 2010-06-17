@@ -92,7 +92,8 @@ inline bool operator!=(EAC1_1_CVC const& lhs, EAC1_1_CVC const& rhs)
 * @param holder_auth_templ the holder authorization value byte to
 * appear in the CHAT of the certificate
 * @param ced the CED to appear in the certificate
-* @param ced the CEX to appear in the certificate
+* @param cex the CEX to appear in the certificate
+* @param rng a random number generator
 */
 EAC1_1_CVC BOTAN_DLL make_cvc_cert(PK_Signer& signer,
                                    const MemoryRegion<byte>& public_key,

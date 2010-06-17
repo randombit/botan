@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * RC2
 */
 class BOTAN_DLL RC2 : public BlockCipher
@@ -21,7 +21,12 @@ class BOTAN_DLL RC2 : public BlockCipher
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
-      static byte EKB_code(u32bit);
+      /**
+      * Return the code of the effective key bits
+      * @param bits key length
+      * @return EKB code
+      */
+      static byte EKB_code(u32bit bits);
 
       void clear() { K.clear(); }
       std::string name() const { return "RC2"; }

@@ -15,7 +15,7 @@
 
 namespace Botan {
 
-/*
+/**
 * CBC Encryption
 */
 class BOTAN_DLL CBC_Encryption : public Keyed_Filter,
@@ -24,12 +24,15 @@ class BOTAN_DLL CBC_Encryption : public Keyed_Filter,
    public:
       std::string name() const;
 
-      void set_iv(const InitializationVector&);
+      void set_iv(const InitializationVector& iv);
 
       void set_key(const SymmetricKey& key) { cipher->set_key(key); }
 
       bool valid_keylength(u32bit key_len) const
          { return cipher->valid_keylength(key_len); }
+
+      bool valid_iv_length(u32bit iv_len) const
+         { return (iv_len == cipher->BLOCK_SIZE); }
 
       CBC_Encryption(BlockCipher* cipher,
                      BlockCipherModePaddingMethod* padding);
@@ -52,7 +55,7 @@ class BOTAN_DLL CBC_Encryption : public Keyed_Filter,
       SecureVector<byte> state;
    };
 
-/*
+/**
 * CBC Decryption
 */
 class BOTAN_DLL CBC_Decryption : public Keyed_Filter,
@@ -61,12 +64,15 @@ class BOTAN_DLL CBC_Decryption : public Keyed_Filter,
    public:
       std::string name() const;
 
-      void set_iv(const InitializationVector&);
+      void set_iv(const InitializationVector& iv);
 
       void set_key(const SymmetricKey& key) { cipher->set_key(key); }
 
       bool valid_keylength(u32bit key_len) const
          { return cipher->valid_keylength(key_len); }
+
+      bool valid_iv_length(u32bit iv_len) const
+         { return (iv_len == cipher->BLOCK_SIZE); }
 
       CBC_Decryption(BlockCipher* cipher,
                      BlockCipherModePaddingMethod* padding);

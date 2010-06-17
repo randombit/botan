@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-/*
-* SecureQueue
+/**
+* A queue that knows how to zeroize itself
 */
 class BOTAN_DLL SecureQueue : public Fanout_Filter, public DataSource
    {

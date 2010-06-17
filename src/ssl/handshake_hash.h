@@ -1,4 +1,4 @@
-/**
+/*
 * TLS Handshake Hash
 * (C) 2004-2006 Jack Lloyd
 *

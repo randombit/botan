@@ -1,4 +1,4 @@
-/**
+/*
 * Message Authentication Code base class
 * (C) 1999-2008 Jack Lloyd
 *
@@ -9,7 +9,7 @@
 
 namespace Botan {
 
-/**
+/*
 * Default (deterministic) MAC verification operation
 */
 bool MessageAuthenticationCode::verify_mac(const byte mac[], u32bit length)

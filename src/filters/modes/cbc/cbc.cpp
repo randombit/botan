@@ -49,7 +49,7 @@ CBC_Encryption::CBC_Encryption(BlockCipher* ciph,
 */
 void CBC_Encryption::set_iv(const InitializationVector& iv)
    {
-   if(iv.length() != state.size())
+   if(!valid_iv_length(iv.length()))
       throw Invalid_IV_Length(name(), iv.length());
 
    state = iv.bits_of();
@@ -114,8 +114,7 @@ std::string CBC_Encryption::name() const
 */
 CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad) :
-   Buffered_Filter(ciph->parallelism() * ciph->BLOCK_SIZE,
-                   ciph->BLOCK_SIZE),
+   Buffered_Filter(ciph->parallel_bytes(), ciph->BLOCK_SIZE),
    cipher(ciph), padder(pad)
    {
    if(!padder->valid_blocksize(cipher->BLOCK_SIZE))
@@ -132,8 +131,7 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
                                BlockCipherModePaddingMethod* pad,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   Buffered_Filter(ciph->parallelism() * ciph->BLOCK_SIZE,
-                   ciph->BLOCK_SIZE),
+   Buffered_Filter(ciph->parallel_bytes(), ciph->BLOCK_SIZE),
    cipher(ciph), padder(pad)
    {
    if(!padder->valid_blocksize(cipher->BLOCK_SIZE))
@@ -151,7 +149,7 @@ CBC_Decryption::CBC_Decryption(BlockCipher* ciph,
 */
 void CBC_Decryption::set_iv(const InitializationVector& iv)
    {
-   if(iv.length() != state.size())
+   if(!valid_iv_length(iv.length()))
       throw Invalid_IV_Length(name(), iv.length());
 
    state = iv.bits_of();

@@ -31,12 +31,13 @@ class BOTAN_DLL Filter
 
       /**
       * Start a new message. Must be closed by end_msg() before another
-      * message can be startet.
+      * message can be started.
       */
       virtual void start_msg() {}
 
       /**
-      * Tell the Filter that the current message shall be ended.
+      * Notify that the current message is finished; flush buffers and
+      * do end-of-message processing (if any).
       */
       virtual void end_msg() {}
 
@@ -45,6 +46,28 @@ class BOTAN_DLL Filter
       * @return true if this filter is attachable, false otherwise
       */
       virtual bool attachable() { return true; }
+
+      virtual ~Filter() {}
+   protected:
+      /**
+      * @param in some input for the filter
+      * @param length the length of in
+      */
+      void send(const byte in[], u32bit length);
+
+      /**
+      * @param in some input for the filter
+      */
+      void send(byte in) { send(&in, 1); }
+
+      /**
+      * @param in some input for the filter
+      */
+      void send(const MemoryRegion<byte>& in) { send(in.begin(), in.size()); }
+      Filter();
+   private:
+      Filter(const Filter&) {}
+      Filter& operator=(const Filter&) { return (*this); }
 
       /**
       * Start a new message in *this and all following filters. Only for
@@ -61,21 +84,28 @@ class BOTAN_DLL Filter
       Filter(const Filter&) = delete;
       Filter& operator=(const Filter&) = delete;
 
-      virtual ~Filter() {}
-   protected:
-      void send(const byte[], u32bit);
-      void send(byte input) { send(&input, 1); }
-      void send(const MemoryRegion<byte>& in) { send(in.begin(), in.size()); }
-      Filter();
-   private:
       u32bit total_ports() const;
       u32bit current_port() const { return port_num; }
-      void set_port(u32bit);
+
+      /**
+      * Set the active port
+      * @param new_port the new value
+      */
+      void set_port(u32bit new_port);
 
       u32bit owns() const { return filter_owns; }
 
-      void attach(Filter*);
-      void set_next(Filter*[], u32bit);
+      /**
+      * Attach another filter to this one
+      * @param f filter to attach
+      */
+      void attach(Filter* f);
+
+      /**
+      * @param filters the filters to set
+      * @param count number of items in filters
+      */
+      void set_next(Filter* filters[], u32bit count);
       Filter* get_next() const;
 
       SecureVector<byte> write_queue;
@@ -92,10 +122,15 @@ class BOTAN_DLL Filter
 class BOTAN_DLL Fanout_Filter : public Filter
    {
    protected:
+      /**
+      * Increment the number of filters past us that we own
+      */
       void incr_owns() { ++filter_owns; }
 
       void set_port(u32bit n) { Filter::set_port(n); }
+
       void set_next(Filter* f[], u32bit n) { Filter::set_next(f, n); }
+
       void attach(Filter* f) { Filter::attach(f); }
    };
 

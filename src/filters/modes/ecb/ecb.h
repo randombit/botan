@@ -15,7 +15,7 @@
 
 namespace Botan {
 
-/*
+/**
 * ECB Encryption
 */
 class BOTAN_DLL ECB_Encryption : public Keyed_Filter,
@@ -49,7 +49,7 @@ class BOTAN_DLL ECB_Encryption : public Keyed_Filter,
       SecureVector<byte> temp;
    };
 
-/*
+/**
 * ECB Decryption
 */
 class BOTAN_DLL ECB_Decryption : public Keyed_Filter,

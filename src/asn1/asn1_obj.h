@@ -18,7 +18,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Attribute
 */
 class BOTAN_DLL Attribute : public ASN1_Object
@@ -35,7 +35,7 @@ class BOTAN_DLL Attribute : public ASN1_Object
       Attribute(const std::string&, const MemoryRegion<byte>&);
    };
 
-/*
+/**
 * X.509 Time
 */
 class BOTAN_DLL X509_Time : public ASN1_Object
@@ -62,7 +62,7 @@ class BOTAN_DLL X509_Time : public ASN1_Object
       ASN1_Tag tag;
    };
 
-/*
+/**
 * Simple String
 */
 class BOTAN_DLL ASN1_String : public ASN1_Object
@@ -83,7 +83,7 @@ class BOTAN_DLL ASN1_String : public ASN1_Object
       ASN1_Tag tag;
    };
 
-/*
+/**
 * Distinguished Name
 */
 class BOTAN_DLL X509_DN : public ASN1_Object
@@ -113,7 +113,7 @@ class BOTAN_DLL X509_DN : public ASN1_Object
       MemoryVector<byte> dn_bits;
    };
 
-/*
+/**
 * Alternative Name
 */
 class BOTAN_DLL AlternativeName : public ASN1_Object

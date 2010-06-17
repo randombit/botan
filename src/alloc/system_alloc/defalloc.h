@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* Malloc Allocator
+/**
+* Allocator using malloc
 */
 class Malloc_Allocator : public Allocator
    {
@@ -24,8 +24,8 @@ class Malloc_Allocator : public Allocator
       std::string type() const { return "malloc"; }
    };
 
-/*
-* Locking Allocator
+/**
+* Allocator using malloc plus locking
 */
 class Locking_Allocator : public Pooling_Allocator
    {

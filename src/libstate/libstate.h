@@ -34,12 +34,12 @@ class BOTAN_DLL Library_State
       void initialize();
 
       /**
-      * @return the global Algorithm_Factory
+      * @return global Algorithm_Factory
       */
       Algorithm_Factory& algorithm_factory() const;
 
       /**
-      * @return the global RandomNumberGenerator
+      * @return global RandomNumberGenerator
       */
       RandomNumberGenerator& global_rng();
 
@@ -71,8 +71,7 @@ class BOTAN_DLL Library_State
                       const std::string& key);
 
       /**
-      * Check whether a certain parameter is set
-      * or not.
+      * Check whether a certain parameter is set or not.
       * @param section the section of the desired key
       * @param key the desired keys name
       * @result true if the parameters value is set,
@@ -85,6 +84,7 @@ class BOTAN_DLL Library_State
       * Set a configuration parameter.
       * @param section the section of the desired key
       * @param key the desired keys name
+      * @param value the new value
       * @param overwrite if set to true, the parameters value
       * will be overwritten even if it is already set, otherwise
       * no existing values will be overwritten.
@@ -144,7 +144,7 @@ BOTAN_DLL void set_global_state(Library_State* state);
 /**
 * Swap the current state for another
 * @param new_state the new state object to use
-* @return the previous state (or NULL if none)
+* @return previous state (or NULL if none)
 */
 BOTAN_DLL Library_State* swap_global_state(Library_State* new_state);
 

@@ -13,8 +13,9 @@
 
 namespace Botan {
 
-/*
-* EMSA2
+/**
+* EMSA2 from IEEE 1363
+* Useful for Rabin-Williams
 */
 class BOTAN_DLL EMSA2 : public EMSA
    {

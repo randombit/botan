@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Block Cipher Cascade
 */
 class BOTAN_DLL Cascade_Cipher : public BlockCipher
@@ -25,6 +25,11 @@ class BOTAN_DLL Cascade_Cipher : public BlockCipher
       std::string name() const;
       BlockCipher* clone() const;
 
+      /**
+      * Create a cascade of two block ciphers
+      * @param cipher1 the first cipher
+      * @param cipher2 the second cipher
+      */
       Cascade_Cipher(BlockCipher* cipher1, BlockCipher* cipher2);
 
       ~Cascade_Cipher();

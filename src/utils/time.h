@@ -1,4 +1,4 @@
-/**
+/*
 * Time Functions
 * (C) 1999-2009 Jack Lloyd
 *
@@ -25,13 +25,22 @@ struct BOTAN_DLL calendar_point
    byte minutes;
    byte seconds;
 
+   /**
+   * Initialize a calendar_point
+   * @param y the year
+   * @param mon the month
+   * @param d the day
+   * @param h the hour
+   * @param min the minute
+   * @param sec the second
+   */
    calendar_point(u32bit y, byte mon, byte d, byte h, byte min, byte sec) :
       year(y), month(mon), day(d), hour(h), minutes(min), seconds(sec) {}
    };
 
 /*
 * @param time_point a time point from the system clock
-* @returns calendar_point object representing this time point
+* @return calendar_point object representing this time point
 */
 BOTAN_DLL calendar_point calendar_value(
    const std::chrono::system_clock::time_point& time_point);

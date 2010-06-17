@@ -1,4 +1,4 @@
-/**
+/*
 * Default provider weights for Algorithm_Cache
 * (C) 2008 Jack Lloyd
 *

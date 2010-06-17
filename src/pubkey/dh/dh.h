@@ -56,7 +56,7 @@ class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
       * Load a DH private key
       * @param alg_id the algorithm id
       * @param key_bits the subject public key
-      * @rng a random number generator
+      * @param rng a random number generator
       */
       DH_PrivateKey(const AlgorithmIdentifier& alg_id,
                     const MemoryRegion<byte>& key_bits,

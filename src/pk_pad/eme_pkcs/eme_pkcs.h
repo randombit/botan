@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* EME_PKCS1v15
+/**
+* EME from PKCS #1 v1.5
 */
 class BOTAN_DLL EME_PKCS1v15 : public EME
    {

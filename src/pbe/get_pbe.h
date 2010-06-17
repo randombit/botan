@@ -16,17 +16,18 @@ namespace Botan {
 /**
 * Factory function for PBEs.
 * @param algo_spec the name of the PBE algorithm to retrieve
-* @return a pointer to a PBE with randomly created parameters
+* @return pointer to a PBE with randomly created parameters
 */
-BOTAN_DLL PBE* get_pbe(const std::string&);
+BOTAN_DLL PBE* get_pbe(const std::string& algo_spec);
 
 /**
 * Factory function for PBEs.
 * @param pbe_oid the oid of the desired PBE
 * @param params a DataSource providing the DER encoded parameters to use
-* @return a pointer to the PBE with the specified parameters
+* @return pointer to the PBE with the specified parameters
 */
-BOTAN_DLL PBE* get_pbe(const OID&, DataSource&);
+BOTAN_DLL PBE* get_pbe(const OID& pbe_oid,
+                       DataSource& params);
 
 }
 

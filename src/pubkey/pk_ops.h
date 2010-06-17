@@ -15,6 +15,9 @@ namespace Botan {
 
 namespace PK_Ops {
 
+/**
+* Public key encryption interface
+*/
 class BOTAN_DLL Encryption
    {
    public:
@@ -26,6 +29,9 @@ class BOTAN_DLL Encryption
       virtual ~Encryption() {}
    };
 
+/**
+* Public key decryption interface
+*/
 class BOTAN_DLL Decryption
    {
    public:
@@ -37,24 +43,27 @@ class BOTAN_DLL Decryption
       virtual ~Decryption() {}
    };
 
+/**
+* Public key signature creation interface
+*/
 class BOTAN_DLL Signature
    {
    public:
       /**
       * Find out the number of message parts supported by this scheme.
-      * @return the number of message parts
+      * @return number of message parts
       */
       virtual u32bit message_parts() const { return 1; }
 
       /**
       * Find out the message part size supported by this scheme/key.
-      * @return the size of the message parts
+      * @return size of the message parts
       */
       virtual u32bit message_part_size() const { return 0; }
 
       /**
       * Get the maximum message size in bits supported by this public key.
-      * @return the maximum message in bits
+      * @return maximum message in bits
       */
       virtual u32bit max_input_bits() const = 0;
 
@@ -70,24 +79,27 @@ class BOTAN_DLL Signature
       virtual ~Signature() {}
    };
 
+/**
+* Public key signature verification interface
+*/
 class BOTAN_DLL Verification
    {
    public:
       /**
       * Get the maximum message size in bits supported by this public key.
-      * @return the maximum message in bits
+      * @return maximum message in bits
       */
       virtual u32bit max_input_bits() const = 0;
 
       /**
       * Find out the number of message parts supported by this scheme.
-      * @return the number of message parts
+      * @return number of message parts
       */
       virtual u32bit message_parts() const { return 1; }
 
       /**
       * Find out the message part size supported by this scheme/key.
-      * @return the size of the message parts
+      * @return size of the message parts
       */
       virtual u32bit message_part_size() const { return 0; }
 
@@ -127,8 +139,8 @@ class BOTAN_DLL Verification
       virtual ~Verification() {}
    };
 
-/*
-* A generic Key Agreement Operation (eg DH or ECDH)
+/**
+* A generic key agreement Operation (eg DH or ECDH)
 */
 class BOTAN_DLL Key_Agreement
    {

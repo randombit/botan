@@ -33,7 +33,7 @@ class BOTAN_DLL X509_Object
       * @param rng the random number generator to use
       * @param alg_id the algorithm identifier of the signature scheme
       * @param tbs the tbs bits to be signed
-      * @return the signed X509 object
+      * @return signed X509 object
       */
       static MemoryVector<byte> make_signed(class PK_Signer* signer,
                                             RandomNumberGenerator& rng,

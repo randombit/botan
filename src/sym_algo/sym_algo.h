@@ -1,4 +1,4 @@
-/**
+/*
 * Symmetric Algorithm Base Class
 * (C) 1999-2007 Jack Lloyd
 *
@@ -38,7 +38,7 @@ class BOTAN_DLL SymmetricAlgorithm
 
       /**
       * The name of the algorithm.
-      * @return the name of the algorithm
+      * @return name of the algorithm
       */
       virtual std::string name() const = 0;
 
@@ -52,7 +52,7 @@ class BOTAN_DLL SymmetricAlgorithm
       /**
       * Set the symmetric key of this object.
       * @param key the to be set as a byte array.
-      * @param the length of the byte array.
+      * @param length in bytes of key param
       */
       void set_key(const byte key[], u32bit length)
          {
@@ -87,7 +87,12 @@ class BOTAN_DLL SymmetricAlgorithm
 
       virtual ~SymmetricAlgorithm() {}
    private:
-      virtual void key_schedule(const byte[], u32bit) = 0;
+      /**
+      * Run the key schedule
+      * @param key the key
+      * @param length of key
+      */
+      virtual void key_schedule(const byte key[], u32bit length) = 0;
    };
 
 /**

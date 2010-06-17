@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-/**
+/*
 * Generate a buffer of random bytes
 */
 void ANSI_X931_RNG::randomize(byte out[], u32bit length)
@@ -33,7 +33,7 @@ void ANSI_X931_RNG::randomize(byte out[], u32bit length)
       }
    }
 
-/**
+/*
 * Refill the internal state
 */
 void ANSI_X931_RNG::update_buffer()
@@ -52,7 +52,7 @@ void ANSI_X931_RNG::update_buffer()
    position = 0;
    }
 
-/**
+/*
 * Reset V and the cipher key with new values
 */
 void ANSI_X931_RNG::rekey()
@@ -71,7 +71,7 @@ void ANSI_X931_RNG::rekey()
       }
    }
 
-/**
+/*
 * Reseed the internal state
 */
 void ANSI_X931_RNG::reseed(u32bit poll_bits)
@@ -80,7 +80,7 @@ void ANSI_X931_RNG::reseed(u32bit poll_bits)
    rekey();
    }
 
-/**
+/*
 * Add a entropy source to the underlying PRNG
 */
 void ANSI_X931_RNG::add_entropy_source(EntropySource* src)
@@ -88,7 +88,7 @@ void ANSI_X931_RNG::add_entropy_source(EntropySource* src)
    prng->add_entropy_source(src);
    }
 
-/**
+/*
 * Add some entropy to the underlying PRNG
 */
 void ANSI_X931_RNG::add_entropy(const byte input[], u32bit length)
@@ -97,7 +97,7 @@ void ANSI_X931_RNG::add_entropy(const byte input[], u32bit length)
    rekey();
    }
 
-/**
+/*
 * Check if the the PRNG is seeded
 */
 bool ANSI_X931_RNG::is_seeded() const
@@ -105,7 +105,7 @@ bool ANSI_X931_RNG::is_seeded() const
    return (V.size() > 0);
    }
 
-/**
+/*
 * Clear memory of sensitive data
 */
 void ANSI_X931_RNG::clear()
@@ -118,7 +118,7 @@ void ANSI_X931_RNG::clear()
    position = 0;
    }
 
-/**
+/*
 * Return the name of this type
 */
 std::string ANSI_X931_RNG::name() const
@@ -126,7 +126,7 @@ std::string ANSI_X931_RNG::name() const
    return "X9.31(" + cipher->name() + ")";
    }
 
-/**
+/*
 * ANSI X931 RNG Constructor
 */
 ANSI_X931_RNG::ANSI_X931_RNG(BlockCipher* cipher_in,
@@ -142,7 +142,7 @@ ANSI_X931_RNG::ANSI_X931_RNG(BlockCipher* cipher_in,
    position = 0;
    }
 
-/**
+/*
 * ANSI X931 RNG Destructor
 */
 ANSI_X931_RNG::~ANSI_X931_RNG()

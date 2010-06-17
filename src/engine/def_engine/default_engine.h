@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-/*
+/**
 * Default Engine
 */
 class Default_Engine : public Engine
@@ -35,12 +35,9 @@ class Default_Engine : public Engine
       Modular_Exponentiator* mod_exp(const BigInt& n,
                                      Power_Mod::Usage_Hints) const;
 
-      virtual bool can_add_algorithms() { return true; }
-
       Keyed_Filter* get_cipher(const std::string&, Cipher_Dir,
                                Algorithm_Factory&);
 
-   private:
       BlockCipher* find_block_cipher(const SCAN_Name&,
                                      Algorithm_Factory&) const;
 

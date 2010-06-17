@@ -129,42 +129,38 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
 }
 
 /*
-* DER or PEM encode a PKCS #8 private key
+* BER encode a PKCS #8 private key, unencrypted
 */
-void encode(const Private_Key& key, Pipe& pipe, X509_Encoding encoding)
+SecureVector<byte> BER_encode(const Private_Key& key)
    {
    const u32bit PKCS8_VERSION = 0;
 
-   SecureVector<byte> contents =
-      DER_Encoder()
+   return DER_Encoder()
          .start_cons(SEQUENCE)
             .encode(PKCS8_VERSION)
             .encode(key.pkcs8_algorithm_identifier())
             .encode(key.pkcs8_private_key(), OCTET_STRING)
          .end_cons()
       .get_contents();
-
-   if(encoding == PEM)
-      pipe.write(PEM_Code::encode(contents, "PRIVATE KEY"));
-   else
-      pipe.write(contents);
    }
 
 /*
-* Encode and encrypt a PKCS #8 private key
+* PEM encode a PKCS #8 private key, unencrypted
 */
-void encrypt_key(const Private_Key& key,
-                 Pipe& pipe,
-                 RandomNumberGenerator& rng,
-                 const std::string& pass, const std::string& pbe_algo,
-                 X509_Encoding encoding)
+std::string PEM_encode(const Private_Key& key)
+   {
+   return PEM_Code::encode(PKCS8::BER_encode(key), "PRIVATE KEY");
+   }
+
+/*
+* BER encode a PKCS #8 private key, encrypted
+*/
+SecureVector<byte> BER_encode(const Private_Key& key,
+                              RandomNumberGenerator& rng,
+                              const std::string& pass,
+                              const std::string& pbe_algo)
    {
    const std::string DEFAULT_PBE = "PBE-PKCS5v20(SHA-1,AES-128/CBC)";
-
-   Pipe raw_key;
-   raw_key.start_msg();
-   encode(key, raw_key, RAW_BER);
-   raw_key.end_msg();
 
    std::unique_ptr<PBE> pbe(get_pbe(((pbe_algo != "") ? pbe_algo : DEFAULT_PBE)));
 
@@ -174,36 +170,18 @@ void encrypt_key(const Private_Key& key,
    AlgorithmIdentifier pbe_algid(pbe->get_oid(), pbe->encode_params());
 
    Pipe key_encrytor(pbe.release());
-   key_encrytor.process_msg(raw_key);
+   key_encrytor.process_msg(PKCS8::BER_encode(key));
 
-   SecureVector<byte> enc_key =
-      DER_Encoder()
+   return DER_Encoder()
          .start_cons(SEQUENCE)
             .encode(pbe_algid)
             .encode(key_encrytor.read_all(), OCTET_STRING)
          .end_cons()
       .get_contents();
-
-   if(encoding == PEM)
-      pipe.write(PEM_Code::encode(enc_key, "ENCRYPTED PRIVATE KEY"));
-   else
-      pipe.write(enc_key);
    }
 
 /*
-* PEM encode a PKCS #8 private key
-*/
-std::string PEM_encode(const Private_Key& key)
-   {
-   Pipe pem;
-   pem.start_msg();
-   encode(key, pem, PEM);
-   pem.end_msg();
-   return pem.read_all_as_string();
-   }
-
-/*
-* Encrypt and PEM encode a PKCS #8 private key
+* PEM encode a PKCS #8 private key, encrypted
 */
 std::string PEM_encode(const Private_Key& key,
                        RandomNumberGenerator& rng,
@@ -213,11 +191,8 @@ std::string PEM_encode(const Private_Key& key,
    if(pass == "")
       return PEM_encode(key);
 
-   Pipe pem;
-   pem.start_msg();
-   encrypt_key(key, pem, rng, pass, pbe_algo, PEM);
-   pem.end_msg();
-   return pem.read_all_as_string();
+   return PEM_Code::encode(PKCS8::BER_encode(key, rng, pass, pbe_algo),
+                           "ENCRYPTED PRIVATE KEY");
    }
 
 /*
@@ -275,13 +250,7 @@ Private_Key* load_key(const std::string& fsname,
 Private_Key* copy_key(const Private_Key& key,
                       RandomNumberGenerator& rng)
    {
-   Pipe bits;
-
-   bits.start_msg();
-   PKCS8::encode(key, bits);
-   bits.end_msg();
-
-   DataSource_Memory source(bits.read_all());
+   DataSource_Memory source(PEM_encode(key));
    return PKCS8::load_key(source, rng);
    }
 

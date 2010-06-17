@@ -47,7 +47,6 @@ const std::string algos[] = {
    "XTEA",
    "Adler32",
    "CRC32",
-   "FORK-256",
    "GOST-34.11",
    "HAS-160",
    "MD2",

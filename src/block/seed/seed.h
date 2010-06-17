@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-/*
-* SEED
+/**
+* SEED, a Korean block cipher
 */
 class BOTAN_DLL SEED : public BlockCipher
    {

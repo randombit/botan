@@ -11,7 +11,7 @@ add_lib_option ""
 no_debug_flags "/O2"
 debug_flags "/Od /Zi /DDEBUG"
 check_opt_flags "/O2 /D_CONSOLE"
-lang_flags "/EHsc /GR"
+lang_flags "/EHs /GR"
 warning_flags "/W3 /wd4275"
 
 shared_flags "/DBOTAN_DLL=__declspec(dllexport)"
