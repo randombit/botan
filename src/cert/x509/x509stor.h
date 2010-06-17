@@ -92,8 +92,6 @@ class BOTAN_DLL X509_Store
       X509_Store(const X509_Store&);
       ~X509_Store();
    private:
-      X509_Store& operator=(const X509_Store&) { return (*this); }
-
       class BOTAN_DLL CRL_Data
          {
          public:
