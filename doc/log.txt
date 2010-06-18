@@ -95,6 +95,12 @@
  - Add AltiVec runtime detection
  - Fix x86 CPU identification with Intel C++ and Visual C++
 
+* 1.8.8, 2009-11-03
+ - Alter Skein-512 to match the tweaked 1.2 specification
+ - Fix use of inline asm for access to x86 bswap function
+ - Allow building the library without AES enabled
+ - Add 'powerpc64' alias to ppc64 arch for Gentoo ebuild
+
 * 1.9.1, 2009-10-23
  - Better support for Python and Perl wrappers
  - Add an implementation of Blue Midnight Wish (Round 2 tweak version)
@@ -117,12 +123,6 @@
  - Fix processing multiple messages in XTS mode
  - Add --no-autoload option to configure.py, for minimized builds
  - The previously used configure.pl script is no longer supported
-
-* 1.8.8, 2009-11-03
- - Alter Skein-512 to match the tweaked 1.2 specification
- - Fix use of inline asm for access to x86 bswap function
- - Allow building the library without AES enabled
- - Add 'powerpc64' alias to ppc64 arch for Gentoo ebuild
 
 * 1.8.7, 2009-09-09
  - Fix processing multiple messages in XTS mode
@@ -406,10 +406,6 @@
  - Add newly assigned OIDs for SHA-2 and DSA with SHA-224/256
  - Fix a Visual Studio compilation problem in x509stat.cpp
 
-* 1.6.3, 2007-07-23
- - Fix a race condition in the algorithm lookup cache
- - Fix problems building the memory pool on some versions of Visual C++
-
 * 1.7.1, 2007-07-23
  - Fix a race condition in the algorithm object cache
  - HMAC key schedule optimization
@@ -417,6 +413,10 @@
  - New word load/store abstraction allowing further optimization
  - Modify most of the library to avoid use the C-style casts
  - Use higher resolution timers in symmetric benchmarks
+
+* 1.6.3, 2007-07-23
+ - Fix a race condition in the algorithm lookup cache
+ - Fix problems building the memory pool on some versions of Visual C++
 
 * 1.7.0, 2007-05-19
  - DSA parameter generation now follows FIPS 186-3
@@ -549,12 +549,6 @@
  - Fixed the mp_asm64 module, which was entirely broken in 1.5.2
  - Fixed some module build problems on FreeBSD and Tru64
 
-* 1.4.12, 2006-01-15
- - Fixed an off-by-one memory read in MISTY1::key()
- - Fixed a nasty memory leak in Output_Buffers::retire()
- - Changed maximum HMAC keylength to 1024 bits
- - Fixed a build problem in the hardware timer module on 64-bit PowerPC
-
 * 1.5.2, 2006-01-15
  - Fixed an off-by-one memory read in MISTY1::key()
  - Fixed a nasty memory leak in Output_Buffers::retire()
@@ -570,6 +564,12 @@
  - Switched checks/clock.cpp back to using clock() by default
  - Enabled the symmetric algorithm tests, which were accidentally off in 1.5.1
  - Removed the Default_Mutex's unused clone() member function
+
+* 1.4.12, 2006-01-15
+ - Fixed an off-by-one memory read in MISTY1::key()
+ - Fixed a nasty memory leak in Output_Buffers::retire()
+ - Changed maximum HMAC keylength to 1024 bits
+ - Fixed a build problem in the hardware timer module on 64-bit PowerPC
 
 * 1.5.1, 2006-01-08
  - Implemented Montgomery exponentiation
