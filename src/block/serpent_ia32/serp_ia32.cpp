@@ -12,9 +12,32 @@ namespace Botan {
 
 extern "C" {
 
-void botan_serpent_ia32_encrypt(const byte[16], byte[16], const u32bit[132]);
-void botan_serpent_ia32_decrypt(const byte[16], byte[16], const u32bit[132]);
-void botan_serpent_ia32_key_schedule(u32bit[140]);
+/**
+* Entry point for Serpent encryption in x86 asm
+* @param in the input block
+* @param out the output block
+* @param ks the key schedule
+*/
+void botan_serpent_ia32_encrypt(const byte in[16],
+                                byte out[16],
+                                const u32bit ks[132]);
+
+/**
+* Entry point for Serpent decryption in x86 asm
+* @param in the input block
+* @param out the output block
+* @param ks the key schedule
+*/
+void botan_serpent_ia32_decrypt(const byte in[16],
+                                byte out[16],
+                                const u32bit ks[132]);
+
+/**
+* Entry point for Serpent key schedule in x86 asm
+* @param ks holds the initial working key (padded), and is set to the
+            final key schedule
+*/
+void botan_serpent_ia32_key_schedule(u32bit ks[140]);
 
 }
 

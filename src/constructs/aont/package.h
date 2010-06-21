@@ -1,6 +1,5 @@
 /*
 * Rivest's Package Tranform
-*
 * (C) 2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
@@ -16,12 +15,12 @@ namespace Botan {
 
 /**
 * Rivest's Package Tranform
-* @arg rng the random number generator to use
-* @arg cipher the block cipher to use
-* @arg input the input data buffer
-* @arg input_len the length of the input data in bytes
-* @arg output the output data buffer (must be at least
-*      input_len + cipher->BLOCK_SIZE bytes long)
+* @param rng the random number generator to use
+* @param cipher the block cipher to use
+* @param input the input data buffer
+* @param input_len the length of the input data in bytes
+* @param output the output data buffer (must be at least
+*        input_len + cipher->BLOCK_SIZE bytes long)
 */
 void BOTAN_DLL aont_package(RandomNumberGenerator& rng,
                             BlockCipher* cipher,
@@ -30,12 +29,11 @@ void BOTAN_DLL aont_package(RandomNumberGenerator& rng,
 
 /**
 * Rivest's Package Tranform (Inversion)
-* @arg rng the random number generator to use
-* @arg cipher the block cipher to use
-* @arg input the input data buffer
-* @arg input_len the length of the input data in bytes
-* @arg output the output data buffer (must be at least
-*      input_len - cipher->BLOCK_SIZE bytes long)
+* @param cipher the block cipher to use
+* @param input the input data buffer
+* @param input_len the length of the input data in bytes
+* @param output the output data buffer (must be at least
+*        input_len - cipher->BLOCK_SIZE bytes long)
 */
 void BOTAN_DLL aont_unpackage(BlockCipher* cipher,
                               const byte input[], u32bit input_len,
