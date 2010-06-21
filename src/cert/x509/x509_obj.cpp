@@ -88,7 +88,18 @@ void X509_Object::decode_info(DataSource& source)
 */
 void X509_Object::encode(Pipe& out, X509_Encoding encoding) const
    {
-   SecureVector<byte> der = DER_Encoder()
+   if(encoding == PEM)
+      out.write(this->PEM_encode());
+   else
+      out.write(this->BER_encode());
+   }
+
+/*
+* Return a BER encoded X.509 object
+*/
+SecureVector<byte> X509_Object::BER_encode() const
+   {
+   return DER_Encoder()
       .start_cons(SEQUENCE)
          .start_cons(SEQUENCE)
             .raw_bytes(tbs_bits)
@@ -97,23 +108,6 @@ void X509_Object::encode(Pipe& out, X509_Encoding encoding) const
          .encode(sig, BIT_STRING)
       .end_cons()
    .get_contents();
-
-   if(encoding == PEM)
-      out.write(PEM_Code::encode(der, PEM_label_pref));
-   else
-      out.write(der);
-   }
-
-/*
-* Return a BER encoded X.509 object
-*/
-SecureVector<byte> X509_Object::BER_encode() const
-   {
-   Pipe ber;
-   ber.start_msg();
-   encode(ber, RAW_BER);
-   ber.end_msg();
-   return ber.read_all();
    }
 
 /*
@@ -121,11 +115,7 @@ SecureVector<byte> X509_Object::BER_encode() const
 */
 std::string X509_Object::PEM_encode() const
    {
-   Pipe pem;
-   pem.start_msg();
-   encode(pem, PEM);
-   pem.end_msg();
-   return pem.read_all_as_string();
+   return PEM_Code::encode(BER_encode(), PEM_label_pref);
    }
 
 /*
