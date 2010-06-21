@@ -10,6 +10,9 @@
 
 #include <botan/build.h>
 
+/**
+* The primary namespace for the botan library
+*/
 namespace Botan {
 
 typedef unsigned char byte;
