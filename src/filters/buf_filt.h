@@ -26,14 +26,27 @@ class BOTAN_DLL Buffered_Filter
 
       virtual ~Buffered_Filter() {}
    protected:
+      /**
+      * @return name of this filter object
+      */
       virtual std::string name() const = 0;
 
       virtual void buffered_block(const byte input[], u32bit length) = 0;
       virtual void buffered_final(const byte input[], u32bit length) = 0;
 
+      /**
+      * @return block size of inputs
+      */
       u32bit buffered_block_size() const { return main_block_mod; }
 
+      /**
+      * @return current position in the buffer
+      */
       u32bit current_position() const { return buffer_pos; }
+
+      /**
+      * Reset the buffer position
+      */
       void buffer_reset() { buffer_pos = 0; }
    private:
       u32bit main_block_mod, final_minimum;
