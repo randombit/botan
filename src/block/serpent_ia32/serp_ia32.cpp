@@ -25,7 +25,7 @@ void Serpent_IA32::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    for(u32bit i = 0; i != blocks; ++i)
       {
-      botan_serpent_ia32_encrypt(in, out, round_key);
+      botan_serpent_ia32_encrypt(in, out, this->get_round_keys());
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;
       }
@@ -38,7 +38,7 @@ void Serpent_IA32::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    for(u32bit i = 0; i != blocks; ++i)
       {
-      botan_serpent_ia32_decrypt(in, out, round_key);
+      botan_serpent_ia32_decrypt(in, out, this->get_round_keys());
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;
       }
@@ -55,7 +55,7 @@ void Serpent_IA32::key_schedule(const byte key[], u32bit length)
    W[length / 4] |= u32bit(1) << ((length%4)*8);
 
    botan_serpent_ia32_key_schedule(W);
-   round_key.copy(W + 8, 132);
+   this->set_round_keys(W + 8);
    }
 
 }

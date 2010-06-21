@@ -27,6 +27,12 @@ class BOTAN_DLL XTEA : public BlockCipher
 
       XTEA() : BlockCipher(8, 16) {}
    protected:
+      /**
+      * @return const reference to the key schedule
+      */
+      const SecureVector<u32bit, 64>& get_EK() const { return EK; }
+
+   private:
       void key_schedule(const byte[], u32bit);
       SecureVector<u32bit, 64> EK;
    };
