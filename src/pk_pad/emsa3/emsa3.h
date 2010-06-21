@@ -21,7 +21,10 @@ namespace Botan {
 class BOTAN_DLL EMSA3 : public EMSA
    {
    public:
-      EMSA3(HashFunction*);
+      /**
+      * @param hash the hash object to use
+      */
+      EMSA3(HashFunction* hash);
       ~EMSA3();
 
       void update(const byte[], u32bit);

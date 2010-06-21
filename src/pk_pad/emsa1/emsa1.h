@@ -20,6 +20,9 @@ namespace Botan {
 class BOTAN_DLL EMSA1 : public EMSA
    {
    public:
+      /**
+      * @param h the hash object to use
+      */
       EMSA1(HashFunction* h) : hash(h) {}
       ~EMSA1() { delete hash; }
    protected:

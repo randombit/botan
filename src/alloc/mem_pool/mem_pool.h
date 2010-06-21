@@ -27,7 +27,10 @@ class Pooling_Allocator : public Allocator
 
       void destroy();
 
-      Pooling_Allocator(Mutex*);
+      /**
+      * @param mutex used for internal locking
+      */
+      Pooling_Allocator(Mutex* mutex);
       ~Pooling_Allocator();
    private:
       void get_more_core(u32bit);

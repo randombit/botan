@@ -20,8 +20,16 @@ namespace Botan {
 class BOTAN_DLL EMSA4 : public EMSA
    {
    public:
-      EMSA4(HashFunction*);
-      EMSA4(HashFunction*, u32bit);
+      /**
+      * @param hash the hash object to use
+      */
+      EMSA4(HashFunction* hash);
+
+      /**
+      * @param hash the hash object to use
+      * @param salt_size the size of the salt to use in bytes
+      */
+      EMSA4(HashFunction* hash, u32bit salt_size);
 
       ~EMSA4() { delete hash; delete mgf; }
    private:
