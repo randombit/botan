@@ -38,14 +38,25 @@
 
 namespace Botan {
 
-/*
-* Byte to Word Conversions
+/**
+* Make a u16bit from two bytes
+* @param i0 the first byte
+* @param i1 the second byte
+* @return i0 || i1
 */
 inline u16bit make_u16bit(byte i0, byte i1)
    {
    return ((static_cast<u16bit>(i0) << 8) | i1);
    }
 
+/**
+* Make a u32bit from four bytes
+* @param i0 the first byte
+* @param i1 the second byte
+* @param i2 the third byte
+* @param i3 the fourth byte
+* @return i0 || i1 || i2 || i3
+*/
 inline u32bit make_u32bit(byte i0, byte i1, byte i2, byte i3)
    {
    return ((static_cast<u32bit>(i0) << 24) |
@@ -54,6 +65,18 @@ inline u32bit make_u32bit(byte i0, byte i1, byte i2, byte i3)
            (static_cast<u32bit>(i3)));
    }
 
+/**
+* Make a u32bit from eight bytes
+* @param i0 the first byte
+* @param i1 the second byte
+* @param i2 the third byte
+* @param i3 the fourth byte
+* @param i4 the fifth byte
+* @param i5 the sixth byte
+* @param i6 the seventh byte
+* @param i7 the eighth byte
+* @return i0 || i1 || i2 || i3 || i4 || i5 || i6 || i7
+*/
 inline u64bit make_u64bit(byte i0, byte i1, byte i2, byte i3,
                           byte i4, byte i5, byte i6, byte i7)
     {
@@ -67,8 +90,11 @@ inline u64bit make_u64bit(byte i0, byte i1, byte i2, byte i3,
            (static_cast<u64bit>(i7)));
     }
 
-/*
-* Endian-Specific Word Loading Operations
+/**
+* Load a big-endian word
+* @param in a pointer to some bytes
+* @param off an offset into the array
+* @return off'th T of in, as a big-endian value
 */
 template<typename T>
 inline T load_be(const byte in[], u32bit off)
@@ -80,6 +106,12 @@ inline T load_be(const byte in[], u32bit off)
    return out;
    }
 
+/**
+* Load a little-endian word
+* @param in a pointer to some bytes
+* @param off an offset into the array
+* @return off'th T of in, as a litte-endian value
+*/
 template<typename T>
 inline T load_le(const byte in[], u32bit off)
    {
@@ -90,6 +122,12 @@ inline T load_le(const byte in[], u32bit off)
    return out;
    }
 
+/**
+* Load a big-endian u16bit
+* @param in a pointer to some bytes
+* @param off an offset into the array
+* @return off'th u16bit of in, as a big-endian value
+*/
 template<>
 inline u16bit load_be<u16bit>(const byte in[], u32bit off)
    {
@@ -101,6 +139,12 @@ inline u16bit load_be<u16bit>(const byte in[], u32bit off)
 #endif
    }
 
+/**
+* Load a little-endian u16bit
+* @param in a pointer to some bytes
+* @param off an offset into the array
+* @return off'th u16bit of in, as a little-endian value
+*/
 template<>
 inline u16bit load_le<u16bit>(const byte in[], u32bit off)
    {
@@ -112,6 +156,12 @@ inline u16bit load_le<u16bit>(const byte in[], u32bit off)
 #endif
    }
 
+/**
+* Load a big-endian u32bit
+* @param in a pointer to some bytes
+* @param off an offset into the array
+* @return off'th u32bit of in, as a big-endian value
+*/
 template<>
 inline u32bit load_be<u32bit>(const byte in[], u32bit off)
    {
@@ -123,6 +173,12 @@ inline u32bit load_be<u32bit>(const byte in[], u32bit off)
 #endif
    }
 
+/**
+* Load a little-endian u32bit
+* @param in a pointer to some bytes
+* @param off an offset into the array
+* @return off'th u32bit of in, as a little-endian value
+*/
 template<>
 inline u32bit load_le<u32bit>(const byte in[], u32bit off)
    {
@@ -134,6 +190,12 @@ inline u32bit load_le<u32bit>(const byte in[], u32bit off)
 #endif
    }
 
+/**
+* Load a big-endian u64bit
+* @param in a pointer to some bytes
+* @param off an offset into the array
+* @return off'th u64bit of in, as a big-endian value
+*/
 template<>
 inline u64bit load_be<u64bit>(const byte in[], u32bit off)
    {
@@ -146,6 +208,12 @@ inline u64bit load_be<u64bit>(const byte in[], u32bit off)
 #endif
    }
 
+/**
+* Load a little-endian u64bit
+* @param in a pointer to some bytes
+* @param off an offset into the array
+* @return off'th u64bit of in, as a little-endian value
+*/
 template<>
 inline u64bit load_le<u64bit>(const byte in[], u32bit off)
    {
@@ -158,6 +226,12 @@ inline u64bit load_le<u64bit>(const byte in[], u32bit off)
 #endif
    }
 
+/**
+* Load two little-endian words
+* @param in a pointer to some bytes
+* @param x0 where the first word will be written
+* @param x1 where the second word will be written
+*/
 template<typename T>
 inline void load_le(const byte in[], T& x0, T& x1)
    {
@@ -165,6 +239,14 @@ inline void load_le(const byte in[], T& x0, T& x1)
    x1 = load_le<T>(in, 1);
    }
 
+/**
+* Load four little-endian words
+* @param in a pointer to some bytes
+* @param x0 where the first word will be written
+* @param x1 where the second word will be written
+* @param x2 where the third word will be written
+* @param x3 where the fourth word will be written
+*/
 template<typename T>
 inline void load_le(const byte in[],
                     T& x0, T& x1, T& x2, T& x3)
@@ -175,6 +257,18 @@ inline void load_le(const byte in[],
    x3 = load_le<T>(in, 3);
    }
 
+/**
+* Load eight little-endian words
+* @param in a pointer to some bytes
+* @param x0 where the first word will be written
+* @param x1 where the second word will be written
+* @param x2 where the third word will be written
+* @param x3 where the fourth word will be written
+* @param x4 where the fifth word will be written
+* @param x5 where the sixth word will be written
+* @param x6 where the seventh word will be written
+* @param x7 where the eighth word will be written
+*/
 template<typename T>
 inline void load_le(const byte in[],
                     T& x0, T& x1, T& x2, T& x3,
@@ -190,6 +284,12 @@ inline void load_le(const byte in[],
    x7 = load_le<T>(in, 7);
    }
 
+/**
+* Load a variable number of little-endian words
+* @param out the output array of words
+* @param in the input array of bytes
+* @param count how many words are in in
+*/
 template<typename T>
 inline void load_le(T out[],
                     const byte in[],
@@ -215,6 +315,12 @@ inline void load_le(T out[],
 #endif
    }
 
+/**
+* Load two big-endian words
+* @param in a pointer to some bytes
+* @param x0 where the first word will be written
+* @param x1 where the second word will be written
+*/
 template<typename T>
 inline void load_be(const byte in[], T& x0, T& x1)
    {
@@ -222,6 +328,14 @@ inline void load_be(const byte in[], T& x0, T& x1)
    x1 = load_be<T>(in, 1);
    }
 
+/**
+* Load four big-endian words
+* @param in a pointer to some bytes
+* @param x0 where the first word will be written
+* @param x1 where the second word will be written
+* @param x2 where the third word will be written
+* @param x3 where the fourth word will be written
+*/
 template<typename T>
 inline void load_be(const byte in[],
                     T& x0, T& x1, T& x2, T& x3)
@@ -232,6 +346,18 @@ inline void load_be(const byte in[],
    x3 = load_be<T>(in, 3);
    }
 
+/**
+* Load eight big-endian words
+* @param in a pointer to some bytes
+* @param x0 where the first word will be written
+* @param x1 where the second word will be written
+* @param x2 where the third word will be written
+* @param x3 where the fourth word will be written
+* @param x4 where the fifth word will be written
+* @param x5 where the sixth word will be written
+* @param x6 where the seventh word will be written
+* @param x7 where the eighth word will be written
+*/
 template<typename T>
 inline void load_be(const byte in[],
                     T& x0, T& x1, T& x2, T& x3,
@@ -247,6 +373,12 @@ inline void load_be(const byte in[],
    x7 = load_be<T>(in, 7);
    }
 
+/**
+* Load a variable number of big-endian words
+* @param out the output array of words
+* @param in the input array of bytes
+* @param count how many words are in in
+*/
 template<typename T>
 inline void load_be(T out[],
                     const byte in[],
@@ -272,8 +404,10 @@ inline void load_be(T out[],
 #endif
    }
 
-/*
-* Endian-Specific Word Storing Operations
+/**
+* Store a big-endian u16bit
+* @param in the input u16bit
+* @param out the byte array to write to
 */
 inline void store_be(u16bit in, byte out[2])
    {
@@ -285,6 +419,11 @@ inline void store_be(u16bit in, byte out[2])
 #endif
    }
 
+/**
+* Store a little-endian u16bit
+* @param in the input u16bit
+* @param out the byte array to write to
+*/
 inline void store_le(u16bit in, byte out[2])
    {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
@@ -295,6 +434,11 @@ inline void store_le(u16bit in, byte out[2])
 #endif
    }
 
+/**
+* Store a big-endian u32bit
+* @param in the input u32bit
+* @param out the byte array to write to
+*/
 inline void store_be(u32bit in, byte out[4])
    {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
@@ -307,6 +451,11 @@ inline void store_be(u32bit in, byte out[4])
 #endif
    }
 
+/**
+* Store a little-endian u32bit
+* @param in the input u32bit
+* @param out the byte array to write to
+*/
 inline void store_le(u32bit in, byte out[4])
    {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
@@ -319,6 +468,11 @@ inline void store_le(u32bit in, byte out[4])
 #endif
    }
 
+/**
+* Store a big-endian u64bit
+* @param in the input u64bit
+* @param out the byte array to write to
+*/
 inline void store_be(u64bit in, byte out[8])
    {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
@@ -335,6 +489,11 @@ inline void store_be(u64bit in, byte out[8])
 #endif
    }
 
+/**
+* Store a little-endian u64bit
+* @param in the input u64bit
+* @param out the byte array to write to
+*/
 inline void store_le(u64bit in, byte out[8])
    {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
@@ -351,6 +510,12 @@ inline void store_le(u64bit in, byte out[8])
 #endif
    }
 
+/**
+* Store two little-endian words
+* @param out the output byte array
+* @param x0 the first word
+* @param x1 the second word
+*/
 template<typename T>
 inline void store_le(byte out[], T x0, T x1)
    {
@@ -358,6 +523,12 @@ inline void store_le(byte out[], T x0, T x1)
    store_le(x1, out + (1 * sizeof(T)));
    }
 
+/**
+* Store two big-endian words
+* @param out the output byte array
+* @param x0 the first word
+* @param x1 the second word
+*/
 template<typename T>
 inline void store_be(byte out[], T x0, T x1)
    {
@@ -365,6 +536,14 @@ inline void store_be(byte out[], T x0, T x1)
    store_be(x1, out + (1 * sizeof(T)));
    }
 
+/**
+* Store four little-endian words
+* @param out the output byte array
+* @param x0 the first word
+* @param x1 the second word
+* @param x2 the third word
+* @param x3 the fourth word
+*/
 template<typename T>
 inline void store_le(byte out[], T x0, T x1, T x2, T x3)
    {
@@ -374,6 +553,14 @@ inline void store_le(byte out[], T x0, T x1, T x2, T x3)
    store_le(x3, out + (3 * sizeof(T)));
    }
 
+/**
+* Store four big-endian words
+* @param out the output byte array
+* @param x0 the first word
+* @param x1 the second word
+* @param x2 the third word
+* @param x3 the fourth word
+*/
 template<typename T>
 inline void store_be(byte out[], T x0, T x1, T x2, T x3)
    {
@@ -383,6 +570,18 @@ inline void store_be(byte out[], T x0, T x1, T x2, T x3)
    store_be(x3, out + (3 * sizeof(T)));
    }
 
+/**
+* Store eight little-endian words
+* @param out the output byte array
+* @param x0 the first word
+* @param x1 the second word
+* @param x2 the third word
+* @param x3 the fourth word
+* @param x4 the fifth word
+* @param x5 the sixth word
+* @param x6 the seventh word
+* @param x7 the eighth word
+*/
 template<typename T>
 inline void store_le(byte out[], T x0, T x1, T x2, T x3,
                                  T x4, T x5, T x6, T x7)
@@ -397,6 +596,18 @@ inline void store_le(byte out[], T x0, T x1, T x2, T x3,
    store_le(x7, out + (7 * sizeof(T)));
    }
 
+/**
+* Store eight big-endian words
+* @param out the output byte array
+* @param x0 the first word
+* @param x1 the second word
+* @param x2 the third word
+* @param x3 the fourth word
+* @param x4 the fifth word
+* @param x5 the sixth word
+* @param x6 the seventh word
+* @param x7 the eighth word
+*/
 template<typename T>
 inline void store_be(byte out[], T x0, T x1, T x2, T x3,
                                  T x4, T x5, T x6, T x7)
