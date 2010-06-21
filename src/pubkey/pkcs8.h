@@ -22,6 +22,9 @@ struct BOTAN_DLL PKCS8_Exception : public Decoding_Error
       Decoding_Error("PKCS #8: " + error) {}
    };
 
+/**
+* This namespace contains functions for handling PKCS #8 private keys
+*/
 namespace PKCS8 {
 
 /**

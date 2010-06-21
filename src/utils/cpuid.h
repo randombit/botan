@@ -18,15 +18,6 @@ namespace Botan {
 class BOTAN_DLL CPUID
    {
    public:
-      enum CPUID_bits {
-         CPUID_RDTSC_BIT = 4,
-         CPUID_SSE2_BIT = 26,
-         CPUID_SSSE3_BIT = 41,
-         CPUID_SSE41_BIT = 51,
-         CPUID_SSE42_BIT = 52,
-         CPUID_INTEL_AES_BIT = 57
-      };
-
       /**
       * Return a best guess of the cache line size
       */
@@ -73,6 +64,15 @@ class BOTAN_DLL CPUID
       */
       static bool has_altivec();
    private:
+      enum CPUID_bits {
+         CPUID_RDTSC_BIT = 4,
+         CPUID_SSE2_BIT = 26,
+         CPUID_SSSE3_BIT = 41,
+         CPUID_SSE41_BIT = 51,
+         CPUID_SSE42_BIT = 52,
+         CPUID_INTEL_AES_BIT = 57
+      };
+
       static u64bit x86_processor_flags();
    };
 

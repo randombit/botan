@@ -15,13 +15,27 @@
 namespace Botan {
 
 /**
-* Fused Arithmetic Operation
+* Fused multiply-add
+* @param a an integer
+* @param b an integer
+* @param c an integer
+* @return (a*b)+c
 */
 BigInt BOTAN_DLL mul_add(const BigInt&, const BigInt&, const BigInt&);
+
+/**
+* Fused subtract-multiply
+* @param a an integer
+* @param b an integer
+* @param c an integer
+* @return (a-b)*c
+*/
 BigInt BOTAN_DLL sub_mul(const BigInt&, const BigInt&, const BigInt&);
 
-/*
-* Number Theory Functions
+/**
+* Return the absolute value
+* @param n an integer
+* @return absolute value of n
 */
 inline BigInt abs(const BigInt& n) { return n.abs(); }
 
@@ -70,8 +84,14 @@ s32bit BOTAN_DLL jacobi(const BigInt& a,
 
 /**
 * Modular exponentation
+* @param b an integer base
+* @param x a positive exponent
+* @param m a positive modulus
+* @return (b^x) % m
 */
-BigInt BOTAN_DLL power_mod(const BigInt&, const BigInt&, const BigInt&);
+BigInt BOTAN_DLL power_mod(const BigInt& b,
+                           const BigInt& x,
+                           const BigInt& m);
 
 /**
 * Compute the square root of x modulo a prime using the
@@ -90,43 +110,99 @@ BigInt BOTAN_DLL ressol(const BigInt& x, const BigInt& p);
 */
 u32bit BOTAN_DLL low_zero_bits(const BigInt& x);
 
-/*
+/**
 * Primality Testing
+* @param n a positive integer to test for primality
+* @param rng a random number generator
+* @param level how hard to test
+* @return true if all primality tests passed, otherwise false
 */
 bool BOTAN_DLL primality_test(const BigInt& n,
                               RandomNumberGenerator& rng,
                               u32bit level = 1);
 
+/**
+* Quickly check for primality
+* @param n a positive integer to test for primality
+* @param rng a random number generator
+* @return true if all primality tests passed, otherwise false
+*/
 inline bool quick_check_prime(const BigInt& n, RandomNumberGenerator& rng)
    { return primality_test(n, rng, 0); }
 
+/**
+* Check for primality
+* @param n a positive integer to test for primality
+* @param rng a random number generator
+* @return true if all primality tests passed, otherwise false
+*/
 inline bool check_prime(const BigInt& n, RandomNumberGenerator& rng)
    { return primality_test(n, rng, 1); }
 
+/**
+* Verify primality - this function is slow but useful if you want to
+* ensure that a possibly malicious entity did not provide you with
+* something that 'looks like' a prime
+* @param n a positive integer to test for primality
+* @param rng a random number generator
+* @return true if all primality tests passed, otherwise false
+*/
 inline bool verify_prime(const BigInt& n, RandomNumberGenerator& rng)
    { return primality_test(n, rng, 2); }
 
-/*
-* Random Number Generation
+/**
+* Randomly generate a prime
+* @param rng a random number generator
+* @param bits how large the resulting prime should be in bits
+* @param coprime a positive integer the result should be coprime to
+* @param equiv a non-negative number that the result should be
+               equivalent to modulo equiv_mod
+* @param equiv_mod the modulus equiv should be checked against
+* @return random prime with the specified criteria
 */
 BigInt BOTAN_DLL random_prime(RandomNumberGenerator& rng,
                               u32bit bits, const BigInt& coprime = 1,
                               u32bit equiv = 1, u32bit equiv_mod = 2);
 
+/**
+* Return a 'safe' prime, of the form p=2*q+1 with q prime
+* @param rng a random number generator
+* @param bits is how long the resulting prime should be
+* @return prime randomly chosen from safe primes of length bits
+*/
 BigInt BOTAN_DLL random_safe_prime(RandomNumberGenerator& rng,
                                    u32bit bits);
 
-/*
-* DSA Parameter Generation
-*/
 class Algorithm_Factory;
 
+/**
+* Generate DSA parameters using the FIPS 186 kosherizer
+* @param rng a random number generator
+* @param af an algorithm factory
+* @param p_out where the prime p will be stored
+* @param q_out where the prime q will be stored
+* @param pbits how long p will be in bits
+* @param qbits how long q will be in bits
+* @return random seed used to generate this parameter set
+*/
 SecureVector<byte> BOTAN_DLL
 generate_dsa_primes(RandomNumberGenerator& rng,
                     Algorithm_Factory& af,
-                    BigInt& p, BigInt& q,
+                    BigInt& p_out, BigInt& q_out,
                     u32bit pbits, u32bit qbits);
 
+/**
+* Generate DSA parameters using the FIPS 186 kosherizer
+* @param rng a random number generator
+* @param af an algorithm factory
+* @param p_out where the prime p will be stored
+* @param q_out where the prime q will be stored
+* @param pbits how long p will be in bits
+* @param qbits how long q will be in bits
+* @param seed the seed used to generate the parameters
+* @return true if seed generated a valid DSA parameter set, otherwise
+          false. p_out and q_out are only valid if true was returned.
+*/
 bool BOTAN_DLL
 generate_dsa_primes(RandomNumberGenerator& rng,
                     Algorithm_Factory& af,
@@ -134,11 +210,14 @@ generate_dsa_primes(RandomNumberGenerator& rng,
                     u32bit p_bits, u32bit q_bits,
                     const MemoryRegion<byte>& seed);
 
-/*
-* Prime Numbers
+/**
+* The size of the PRIMES[] array
 */
 const u32bit PRIME_TABLE_SIZE = 6541;
 
+/**
+* A const array of all primes less than 65535
+*/
 extern const u16bit BOTAN_DLL PRIMES[];
 
 }
