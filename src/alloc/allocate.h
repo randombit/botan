@@ -19,14 +19,42 @@ namespace Botan {
 class BOTAN_DLL Allocator
    {
    public:
-      static Allocator* get(bool);
+      /**
+      * Acquire a pointer to an allocator
+      * @param locking is true if the allocator should attempt to
+      *                secure the memory (eg for using to store keys)
+      * @return pointer to an allocator; ownership remains with library,
+      *                 so do not delete
+      */
+      static Allocator* get(bool locking);
 
-      virtual void* allocate(u32bit) = 0;
-      virtual void deallocate(void*, u32bit) = 0;
+      /**
+      * Allocate a block of memory
+      * @param n how many bytes to allocate
+      * @return pointer to n bytes of memory
+      */
+      virtual void* allocate(u32bit n) = 0;
 
+      /**
+      * Deallocate memory allocated with allocate()
+      * @param ptr the pointer returned by allocate()
+      * @param n the size of the block pointed to by ptr
+      */
+      virtual void deallocate(void* ptr, u32bit n) = 0;
+
+      /**
+      * @return name of this allocator type
+      */
       virtual std::string type() const = 0;
 
+      /**
+      * Initialize the allocator
+      */
       virtual void init() {}
+
+      /**
+      * Shutdown the allocator
+      */
       virtual void destroy() {}
 
       virtual ~Allocator() {}

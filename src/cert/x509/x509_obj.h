@@ -23,8 +23,21 @@ namespace Botan {
 class BOTAN_DLL X509_Object
    {
    public:
+
+      /**
+      * The underlying data that is to be or was signed
+      * @return data that is or was signed
+      */
       SecureVector<byte> tbs_data() const;
+
+      /**
+      * @return signature on tbs_data()
+      */
       SecureVector<byte> signature() const;
+
+      /**
+      * @return signature algorithm that was used to generate signature
+      */
       AlgorithmIdentifier signature_algorithm() const;
 
       /**
@@ -40,10 +53,29 @@ class BOTAN_DLL X509_Object
                                             const AlgorithmIdentifier& alg_id,
                                             const MemoryRegion<byte>& tbs);
 
-      bool check_signature(class Public_Key&) const;
+      /**
+      * Check the signature on this data
+      * @param key the public key purportedly used to sign this data
+      * @return true if the signature is valid, otherwise false
+      */
+      bool check_signature(class Public_Key& key) const;
 
-      void encode(Pipe&, X509_Encoding = PEM) const;
+      /**
+      * Encode this to a pipe
+      * @deprecated use BER_encode or PEM_encode instead
+      * @param out the pipe to write to
+      * @param encoding the encoding to use
+      */
+      void encode(Pipe& out, X509_Encoding encoding = PEM) const;
+
+      /**
+      * @return BER encoding of this
+      */
       SecureVector<byte> BER_encode() const;
+
+      /**
+      * @return PEM encoding of this
+      */
       std::string PEM_encode() const;
 
       X509_Object(DataSource&, const std::string&);

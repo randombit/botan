@@ -21,7 +21,9 @@ namespace Botan {
 * @param c an integer
 * @return (a*b)+c
 */
-BigInt BOTAN_DLL mul_add(const BigInt&, const BigInt&, const BigInt&);
+BigInt BOTAN_DLL mul_add(const BigInt& a,
+                         const BigInt& b,
+                         const BigInt& c);
 
 /**
 * Fused subtract-multiply
@@ -30,7 +32,9 @@ BigInt BOTAN_DLL mul_add(const BigInt&, const BigInt&, const BigInt&);
 * @param c an integer
 * @return (a-b)*c
 */
-BigInt BOTAN_DLL sub_mul(const BigInt&, const BigInt&, const BigInt&);
+BigInt BOTAN_DLL sub_mul(const BigInt& a,
+                         const BigInt& b,
+                         const BigInt& c);
 
 /**
 * Return the absolute value
@@ -207,7 +211,7 @@ bool BOTAN_DLL
 generate_dsa_primes(RandomNumberGenerator& rng,
                     Algorithm_Factory& af,
                     BigInt& p_out, BigInt& q_out,
-                    u32bit p_bits, u32bit q_bits,
+                    u32bit pbits, u32bit qbits,
                     const MemoryRegion<byte>& seed);
 
 /**
