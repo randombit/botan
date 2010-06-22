@@ -21,7 +21,7 @@ const std::string MAGIC_PREFIX = "$9$";
 const u32bit WORKFACTOR_BYTES = 2;
 const u32bit ALGID_BYTES = 1;
 const u32bit SALT_BYTES = 12; // 96 bits of salt
-const u32bit PBKDF_OUTPUT_LEN = 24; // 192 bits output
+const u32bit PASSHASH9_PBKDF_OUTPUT_LEN = 24; // 192 bits output
 
 const u32bit WORK_FACTOR_SCALE = 10000;
 
@@ -68,7 +68,8 @@ std::string generate_passhash9(const std::string& pass,
    u32bit kdf_iterations = WORK_FACTOR_SCALE * work_factor;
 
    SecureVector<byte> pbkdf2_output =
-      kdf.derive_key(PBKDF_OUTPUT_LEN, pass,
+      kdf.derive_key(PASSHASH9_PBKDF_OUTPUT_LEN,
+                     pass,
                      &salt[0], salt.size(),
                      kdf_iterations).bits_of();
 
@@ -87,7 +88,10 @@ std::string generate_passhash9(const std::string& pass,
 bool check_passhash9(const std::string& pass, const std::string& hash)
    {
    const u32bit BINARY_LENGTH =
-      (ALGID_BYTES + WORKFACTOR_BYTES + PBKDF_OUTPUT_LEN + SALT_BYTES);
+     ALGID_BYTES +
+     WORKFACTOR_BYTES +
+     PASSHASH9_PBKDF_OUTPUT_LEN +
+     SALT_BYTES;
 
    const u32bit BASE64_LENGTH =
       MAGIC_PREFIX.size() + (BINARY_LENGTH * 8) / 6;
@@ -125,13 +129,14 @@ bool check_passhash9(const std::string& pass, const std::string& hash)
    PKCS5_PBKDF2 kdf(pbkdf_prf); // takes ownership of pointer
 
    SecureVector<byte> cmp = kdf.derive_key(
-      PBKDF_OUTPUT_LEN, pass,
+      PASSHASH9_PBKDF_OUTPUT_LEN,
+      pass,
       &bin[ALGID_BYTES + WORKFACTOR_BYTES], SALT_BYTES,
       kdf_iterations).bits_of();
 
    return same_mem(cmp.begin(),
                    bin.begin() + ALGID_BYTES + WORKFACTOR_BYTES + SALT_BYTES,
-                   PBKDF_OUTPUT_LEN);
+                   PASSHASH9_PBKDF_OUTPUT_LEN);
    }
 
 }
