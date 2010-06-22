@@ -44,7 +44,7 @@ class BuildConfigurationInformation(object):
     version_so_patch = 9
     version_suffix = '-dev'
 
-    version_datestamp = '0'
+    version_datestamp = None
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
@@ -55,6 +55,11 @@ class BuildConfigurationInformation(object):
     Constructor
     """
     def __init__(self, options, modules):
+
+        # If not preset, use today
+        if self.version_datestamp is None:
+            self.version_datestamp = time.strftime("%Y%m%d", time.gmtime())
+
         self.build_dir = os.path.join(options.with_build_dir, 'build')
 
         self.checkobj_dir = os.path.join(self.build_dir, 'checks')
