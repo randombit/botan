@@ -67,7 +67,15 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
 
    protected:
       DL_Scheme_PublicKey() {}
+
+      /**
+      * The DL public key
+      */
       BigInt y;
+
+      /**
+      * The DL group
+      */
       DL_Group group;
    };
 
@@ -94,6 +102,10 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
 
    protected:
       DL_Scheme_PrivateKey() {}
+
+      /**
+      * The DL private key
+      */
       BigInt x;
    };
 

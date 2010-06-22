@@ -195,6 +195,11 @@ class MemoryRegion
       ~MemoryRegion() { deallocate(buf, allocated); }
    protected:
       MemoryRegion() { buf = 0; alloc = 0; used = allocated = 0; }
+
+      /**
+      * Copy constructor
+      * @param other the other region to copy
+      */
       MemoryRegion(const MemoryRegion<T>& other)
          {
          buf = 0;
@@ -203,6 +208,10 @@ class MemoryRegion
          set(other.buf, other.used);
          }
 
+      /**
+      * @param locking should we use a locking allocator
+      * @param length the initial length to use
+      */
       void init(bool locking, u32bit length = 0)
          { alloc = Allocator::get(locking); resize(length); }
    private:

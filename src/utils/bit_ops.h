@@ -12,9 +12,10 @@
 
 namespace Botan {
 
-/*
-* Return true iff arg is 2**n for some n > 0
-* T should be an unsigned integer type
+/**
+* Power of 2 test. T should be an unsigned integer type
+* @param arg an integer value
+* @return true iff arg is 2^n for some n > 0
 */
 template<typename T>
 inline bool power_of_2(T arg)
@@ -22,9 +23,11 @@ inline bool power_of_2(T arg)
    return ((arg != 0 && arg != 1) && ((arg & (arg-1)) == 0));
    }
 
-/*
+/**
 * Return the index of the highest set bit
 * T is an unsigned integer type
+* @param n an integer value
+* @return index of the highest set bit in n
 */
 template<typename T>
 inline u32bit high_bit(T n)
@@ -35,8 +38,11 @@ inline u32bit high_bit(T n)
    return 0;
    }
 
-/*
+/**
 * Return the index of the lowest set bit
+* T is an unsigned integer type
+* @param n an integer value
+* @return index of the lowest set bit in n
 */
 template<typename T>
 inline u32bit low_bit(T n)
@@ -47,8 +53,10 @@ inline u32bit low_bit(T n)
    return 0;
    }
 
-/*
+/**
 * Return the number of significant bytes in n
+* @param n an integer value
+* @return number of significant bytes in n
 */
 template<typename T>
 inline u32bit significant_bytes(T n)
@@ -59,8 +67,10 @@ inline u32bit significant_bytes(T n)
    return 0;
    }
 
-/*
-* Return the Hamming weight of n
+/**
+* Compute Hamming weights
+* @param n an integer value
+* @return number of bits in n set to 1
 */
 template<typename T>
 inline u32bit hamming_weight(T n)
@@ -74,8 +84,10 @@ inline u32bit hamming_weight(T n)
    return weight;
    }
 
-/*
+/**
 * Count the trailing zero bits in n
+* @param n an integer value
+* @return maximum x st 2^x divides n
 */
 template<typename T>
 inline u32bit ctz(T n)

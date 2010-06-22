@@ -13,18 +13,47 @@
 
 namespace Botan {
 
-/*
-* Memory Manipulation Functions
+/**
+* Copy memory
+* @param out the destination array
+* @param in the source array
+* @param n the number of elements of in/out
 */
 template<typename T> inline void copy_mem(T* out, const T* in, u32bit n)
-   { std::memmove(out, in, sizeof(T)*n); }
+   {
+   std::memmove(out, in, sizeof(T)*n);
+   }
 
+/**
+* Zeroize memory
+* @param ptr a pointer to an array
+* @param n the number of Ts pointed to by ptr
+*/
 template<typename T> inline void clear_mem(T* ptr, u32bit n)
-   { if(n) std::memset(ptr, 0, sizeof(T)*n); }
+   {
+   if(n) // avoid glibc warning if n == 0
+      std::memset(ptr, 0, sizeof(T)*n);
+   }
 
-template<typename T> inline void set_mem(T* ptr, u32bit n, byte val)
-   { std::memset(ptr, val, sizeof(T)*n); }
+/**
+* Set memory to a fixed value
+* @param ptr a pointer to an array
+* @param n the number of Ts pointed to by ptr
+* @param val the value to set each byte to
+*/
+template<typename T>
+inline void set_mem(T* ptr, u32bit n, byte val)
+   {
+   std::memset(ptr, val, sizeof(T)*n);
+   }
 
+/**
+* Memory comparison, input insensitive
+* @param p1 a pointer to an array
+* @param p2 a pointer to another array
+* @param n the number of Ts in p1 and p2
+* @return true iff p1[i] == p2[i] forall i in [0...n)
+*/
 template<typename T> inline bool same_mem(const T* p1, const T* p2, u32bit n)
    {
    bool is_same = true;

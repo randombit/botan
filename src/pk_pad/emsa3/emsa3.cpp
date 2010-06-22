@@ -12,7 +12,7 @@ namespace Botan {
 
 namespace {
 
-/**
+/*
 * EMSA3 Encode Operation
 */
 SecureVector<byte> emsa3_encoding(const MemoryRegion<byte>& msg,
@@ -37,7 +37,7 @@ SecureVector<byte> emsa3_encoding(const MemoryRegion<byte>& msg,
 
 }
 
-/**
+/*
 * EMSA3 Update Operation
 */
 void EMSA3::update(const byte input[], u32bit length)
@@ -45,7 +45,7 @@ void EMSA3::update(const byte input[], u32bit length)
    hash->update(input, length);
    }
 
-/**
+/*
 * Return the raw (unencoded) data
 */
 SecureVector<byte> EMSA3::raw_data()
@@ -53,7 +53,7 @@ SecureVector<byte> EMSA3::raw_data()
    return hash->final();
    }
 
-/**
+/*
 * EMSA3 Encode Operation
 */
 SecureVector<byte> EMSA3::encoding_of(const MemoryRegion<byte>& msg,
@@ -67,7 +67,7 @@ SecureVector<byte> EMSA3::encoding_of(const MemoryRegion<byte>& msg,
                          hash_id, hash_id.size());
    }
 
-/**
+/*
 * Default signature decoding
 */
 bool EMSA3::verify(const MemoryRegion<byte>& coded,
@@ -88,7 +88,7 @@ bool EMSA3::verify(const MemoryRegion<byte>& coded,
       }
    }
 
-/**
+/*
 * EMSA3 Constructor
 */
 EMSA3::EMSA3(HashFunction* hash_in) : hash(hash_in)
@@ -96,7 +96,7 @@ EMSA3::EMSA3(HashFunction* hash_in) : hash(hash_in)
    hash_id = pkcs_hash_id(hash->name());
    }
 
-/**
+/*
 * EMSA3 Destructor
 */
 EMSA3::~EMSA3()
@@ -104,7 +104,7 @@ EMSA3::~EMSA3()
    delete hash;
    }
 
-/**
+/*
 * EMSA3_Raw Update Operation
 */
 void EMSA3_Raw::update(const byte input[], u32bit length)
@@ -112,7 +112,7 @@ void EMSA3_Raw::update(const byte input[], u32bit length)
    message.append(input, length);
    }
 
-/**
+/*
 * Return the raw (unencoded) data
 */
 SecureVector<byte> EMSA3_Raw::raw_data()
@@ -122,7 +122,7 @@ SecureVector<byte> EMSA3_Raw::raw_data()
    return ret;
    }
 
-/**
+/*
 * EMSA3_Raw Encode Operation
 */
 SecureVector<byte> EMSA3_Raw::encoding_of(const MemoryRegion<byte>& msg,
@@ -132,7 +132,7 @@ SecureVector<byte> EMSA3_Raw::encoding_of(const MemoryRegion<byte>& msg,
    return emsa3_encoding(msg, output_bits, 0, 0);
    }
 
-/**
+/*
 * Default signature decoding
 */
 bool EMSA3_Raw::verify(const MemoryRegion<byte>& coded,

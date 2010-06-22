@@ -24,7 +24,7 @@ class BOTAN_DLL Hex_Encoder : public Filter
       enum Case { Uppercase, Lowercase };
 
       /**
-        Encode a single byte into two hex characters
+      * Encode a single byte into two hex characters
       */
       static void encode(byte in, byte out[2], Case the_case = Uppercase);
 
@@ -63,8 +63,19 @@ class BOTAN_DLL Hex_Encoder : public Filter
 class BOTAN_DLL Hex_Decoder : public Filter
    {
    public:
-      static byte decode(const byte[2]);
-      static bool is_valid(byte);
+      /**
+      * Decode a pair of hex chars to a byte
+      * @param in an array of two hex chars
+      * @return byte formed by decoding in
+      */
+      static byte decode(const byte in[2]);
+
+      /**
+      * Check if this character is a valid hex input
+      * @param c a single character
+      * @return true iff c is a valid hex char
+      */
+      static bool is_valid(byte c);
 
       void write(const byte[], u32bit);
       void end_msg();

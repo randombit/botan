@@ -140,10 +140,15 @@ BOTAN_DLL OctetString operator+(const OctetString& x,
 BOTAN_DLL OctetString operator^(const OctetString& x,
                                 const OctetString& y);
 
-/*
-* Alternate Names
+
+/**
+* Alternate name for octet string showing intent to use as a key
 */
 typedef OctetString SymmetricKey;
+
+/**
+* Alternate name for octet string showing intent to use as an IV
+*/
 typedef OctetString InitializationVector;
 
 }

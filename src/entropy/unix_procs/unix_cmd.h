@@ -27,8 +27,19 @@ struct Unix_Program
    Unix_Program(const char* n, u32bit p)
       { name_and_args = n; priority = p; working = true; }
 
+   /**
+   * The name and arguments for this command
+   */
    std::string name_and_args;
+
+   /**
+   * Priority: we scan from low to high
+   */
    u32bit priority;
+
+   /**
+   * Does this source seem to be working?
+   */
    bool working;
    };
 

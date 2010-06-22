@@ -18,11 +18,24 @@ namespace Botan {
 */
 struct BOTAN_DLL calendar_point
    {
+   /** The year */
    u32bit year;
+
+   /** The month, 1 through 12 for Jan to Dec */
    byte month;
+
+   /** The day of the month, 1 through 31 (or 28 or 30 based on month */
    byte day;
+
+   /** Hour in 24-hour form, 0 to 23 */
    byte hour;
+
+   /** Minutes in the hour, 0 to 60 */
    byte minutes;
+
+   /** Seconds in the minute, 0 to 60, but might be slightly
+       larger to deal with leap seconds on some systems
+   */
    byte seconds;
 
    /**

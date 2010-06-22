@@ -35,7 +35,7 @@ namespace Botan {
 
 namespace {
 
-/**
+/*
 * Combine a two time values into a single one
 */
 u64bit combine_timers(u32bit seconds, u32bit parts, u32bit parts_hz)

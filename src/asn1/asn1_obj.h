@@ -24,8 +24,8 @@ namespace Botan {
 class BOTAN_DLL Attribute : public ASN1_Object
    {
    public:
-      void encode_into(class DER_Encoder&) const;
-      void decode_from(class BER_Decoder&);
+      void encode_into(class DER_Encoder& to) const;
+      void decode_from(class BER_Decoder& from);
 
       OID oid;
       MemoryVector<byte> parameters;

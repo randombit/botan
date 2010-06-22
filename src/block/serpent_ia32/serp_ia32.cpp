@@ -12,9 +12,32 @@ namespace Botan {
 
 extern "C" {
 
-void botan_serpent_ia32_encrypt(const byte[16], byte[16], const u32bit[132]);
-void botan_serpent_ia32_decrypt(const byte[16], byte[16], const u32bit[132]);
-void botan_serpent_ia32_key_schedule(u32bit[140]);
+/**
+* Entry point for Serpent encryption in x86 asm
+* @param in the input block
+* @param out the output block
+* @param ks the key schedule
+*/
+void botan_serpent_ia32_encrypt(const byte in[16],
+                                byte out[16],
+                                const u32bit ks[132]);
+
+/**
+* Entry point for Serpent decryption in x86 asm
+* @param in the input block
+* @param out the output block
+* @param ks the key schedule
+*/
+void botan_serpent_ia32_decrypt(const byte in[16],
+                                byte out[16],
+                                const u32bit ks[132]);
+
+/**
+* Entry point for Serpent key schedule in x86 asm
+* @param ks holds the initial working key (padded), and is set to the
+            final key schedule
+*/
+void botan_serpent_ia32_key_schedule(u32bit ks[140]);
 
 }
 
@@ -25,7 +48,7 @@ void Serpent_IA32::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    for(u32bit i = 0; i != blocks; ++i)
       {
-      botan_serpent_ia32_encrypt(in, out, round_key);
+      botan_serpent_ia32_encrypt(in, out, this->get_round_keys());
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;
       }
@@ -38,7 +61,7 @@ void Serpent_IA32::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    for(u32bit i = 0; i != blocks; ++i)
       {
-      botan_serpent_ia32_decrypt(in, out, round_key);
+      botan_serpent_ia32_decrypt(in, out, this->get_round_keys());
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;
       }
@@ -55,7 +78,7 @@ void Serpent_IA32::key_schedule(const byte key[], u32bit length)
    W[length / 4] |= u32bit(1) << ((length%4)*8);
 
    botan_serpent_ia32_key_schedule(W);
-   round_key.copy(W + 8, 132);
+   this->set_round_keys(W + 8);
    }
 
 }

@@ -56,8 +56,18 @@ enum ASN1_Tag {
 class BOTAN_DLL ASN1_Object
    {
    public:
-      virtual void encode_into(class DER_Encoder&) const = 0;
-      virtual void decode_from(class BER_Decoder&) = 0;
+      /**
+      * Encode whatever this object is into to
+      * @param to the DER_Encoder that will be written to
+      */
+      virtual void encode_into(class DER_Encoder& to) const = 0;
+
+      /**
+      * Decode whatever this object is from from
+      * @param from the BER_Decoder that will be read from
+      */
+      virtual void decode_from(class BER_Decoder& from) = 0;
+
       virtual ~ASN1_Object() {}
    };
 
@@ -80,9 +90,14 @@ class DataSource;
 
 namespace ASN1 {
 
-SecureVector<byte> put_in_sequence(const MemoryRegion<byte>&);
-std::string to_string(const BER_Object&);
-bool maybe_BER(DataSource&);
+SecureVector<byte> put_in_sequence(const MemoryRegion<byte>& val);
+std::string to_string(const BER_Object& obj);
+
+/**
+* Heuristics tests; is this object possibly BER?
+* @param src a data source that will be peeked at but not modified
+*/
+bool maybe_BER(DataSource& src);
 
 }
 

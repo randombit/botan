@@ -143,8 +143,8 @@ def process_command_line(args):
 
     target_group.add_option('--cc', dest='compiler',
                             help='set the desired build compiler')
-    target_group.add_option('--os',  default=platform.system().lower(),
-                            help='set the target operating system [%default]')
+    target_group.add_option('--os',
+                            help='set the target operating system')
     target_group.add_option('--cpu',
                             help='set the target processor type/model')
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
@@ -1437,6 +1437,10 @@ def main(argv = None):
 
     (modules, archinfo, ccinfo, osinfo) = load_info_files(options)
 
+    if options.os is None:
+        options.os = platform.system().lower()
+        logging.info('Guessing taget OS is %s (--os to set)' % (options.os))
+
     if options.compiler is None:
         if options.os == 'windows':
             if which('cl.exe') is not None:
@@ -1447,7 +1451,8 @@ def main(argv = None):
                 options.compiler = 'msvc'
         else:
             options.compiler = 'gcc'
-        logging.info('Guessing to use compiler %s' % (options.compiler))
+        logging.info('Guessing to use compiler %s (--cc to set)' % (
+            options.compiler))
 
     if options.compiler not in ccinfo:
         raise Exception('Unknown compiler "%s"; available options: %s' % (
@@ -1469,7 +1474,7 @@ def main(argv = None):
 
     if options.cpu is None:
         (options.arch, options.cpu) = guess_processor(archinfo)
-        logging.info('Guessing target processor is a %s/%s' % (
+        logging.info('Guessing target processor is a %s/%s (--cpu to set)' % (
             options.arch, options.cpu))
     else:
         cpu_from_user = options.cpu

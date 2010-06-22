@@ -54,10 +54,8 @@ const byte TIGER_PKCS_ID[] = {
 
 }
 
-/**
-* @return HashID as specified by PKCS
-* For details see RFC 3447 section 9.2
-* http://tools.ietf.org/html/rfc3447#section-9.2
+/*
+* HashID as specified by PKCS
 */
 MemoryVector<byte> pkcs_hash_id(const std::string& name)
    {
@@ -94,8 +92,8 @@ MemoryVector<byte> pkcs_hash_id(const std::string& name)
    throw Invalid_Argument("No PKCS #1 identifier for " + name);
    }
 
-/**
-* @return HashID as specified by IEEE 1363/X9.31
+/*
+* HashID as specified by IEEE 1363/X9.31
 */
 byte ieee1363_hash_id(const std::string& name)
    {

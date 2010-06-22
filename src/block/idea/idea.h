@@ -26,10 +26,19 @@ class BOTAN_DLL IDEA : public BlockCipher
       BlockCipher* clone() const { return new IDEA; }
 
       IDEA() : BlockCipher(8, 16) {}
+   protected:
+      /**
+      * @return const reference to encryption subkeys
+      */
+      const SecureVector<u16bit, 52>& get_EK() const { return EK; }
+
+      /**
+      * @return const reference to decryption subkeys
+      */
+      const SecureVector<u16bit, 52>& get_DK() const { return DK; }
+
    private:
       void key_schedule(const byte[], u32bit);
-
-   protected: // for IDEA_SSE2
       SecureVector<u16bit, 52> EK, DK;
    };
 

@@ -19,22 +19,82 @@ namespace Botan {
 class BOTAN_DLL EME
    {
    public:
-      virtual u32bit maximum_input_size(u32bit) const = 0;
+      /**
+      * Return the maximum input size in bytes we can support
+      * @param keybits the size of the key in bits
+      * @return upper bound of input in bytes
+      */
+      virtual u32bit maximum_input_size(u32bit keybits) const = 0;
 
-      SecureVector<byte> encode(const byte[], u32bit, u32bit,
-                                RandomNumberGenerator&) const;
-      SecureVector<byte> encode(const MemoryRegion<byte>&, u32bit,
-                                RandomNumberGenerator&) const;
+      /**
+      * Encode an input
+      * @param in the plaintext
+      * @param in_length length of plaintext in bytes
+      * @param key_length length of the key in bits
+      * @param rng a random number generator
+      * @return encoded plaintext
+      */
+      SecureVector<byte> encode(const byte in[],
+                                u32bit in_length,
+                                u32bit key_length,
+                                RandomNumberGenerator& rng) const;
 
-      SecureVector<byte> decode(const byte[], u32bit, u32bit) const;
-      SecureVector<byte> decode(const MemoryRegion<byte>&, u32bit) const;
+      /**
+      * Encode an input
+      * @param in the plaintext
+      * @param key_length length of the key in bits
+      * @param rng a random number generator
+      * @return encoded plaintext
+      */
+      SecureVector<byte> encode(const MemoryRegion<byte>& in,
+                                u32bit key_length,
+                                RandomNumberGenerator& rng) const;
+
+      /**
+      * Decode an input
+      * @param in the encoded plaintext
+      * @param in_length length of encoded plaintext in bytes
+      * @param key_length length of the key in bits
+      * @return plaintext
+      */
+      SecureVector<byte> decode(const byte in[],
+                                u32bit in_length,
+                                u32bit key_length) const;
+
+      /**
+      * Decode an input
+      * @param in the encoded plaintext
+      * @param key_length length of the key in bits
+      * @return plaintext
+      */
+      SecureVector<byte> decode(const MemoryRegion<byte>& in,
+                                u32bit key_length) const;
 
       virtual ~EME() {}
    private:
-      virtual SecureVector<byte> pad(const byte[], u32bit, u32bit,
-                                     RandomNumberGenerator&) const = 0;
+      /**
+      * Encode an input
+      * @param in the plaintext
+      * @param in_length length of plaintext in bytes
+      * @param key_length length of the key in bits
+      * @param rng a random number generator
+      * @return encoded plaintext
+      */
+      virtual SecureVector<byte> pad(const byte in[],
+                                     u32bit in_length,
+                                     u32bit key_length,
+                                     RandomNumberGenerator& rng) const = 0;
 
-      virtual SecureVector<byte> unpad(const byte[], u32bit, u32bit) const = 0;
+      /**
+      * Decode an input
+      * @param in the encoded plaintext
+      * @param in_length length of encoded plaintext in bytes
+      * @param key_length length of the key in bits
+      * @return plaintext
+      */
+      virtual SecureVector<byte> unpad(const byte in[],
+                                       u32bit in_length,
+                                       u32bit key_length) const = 0;
    };
 
 }

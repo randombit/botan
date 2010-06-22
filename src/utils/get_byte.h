@@ -12,8 +12,11 @@
 
 namespace Botan {
 
-/*
-* Byte Extraction Function
+/**
+* Byte extraction
+* @param byte_num which byte to extract, 0 == highest byte
+* @param input the value to extract from
+* @return byte byte_num of input
 */
 template<typename T> inline byte get_byte(u32bit byte_num, T input)
    {

@@ -21,6 +21,9 @@ implementation comes from InSiTo
 class BOTAN_DLL EMSA1_BSI : public EMSA1
    {
    public:
+      /**
+      * @param hash the hash object to use
+      */
       EMSA1_BSI(HashFunction* hash) : EMSA1(hash) {}
    private:
       SecureVector<byte> encoding_of(const MemoryRegion<byte>&, u32bit,

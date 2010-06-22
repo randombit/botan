@@ -136,7 +136,7 @@ BigInt FPE_Encryptor::operator()(u32bit round_no, const BigInt& R)
 
 }
 
-/**
+/*
 * Generic Z_n FPE encryption, FE1 scheme
 */
 BigInt fpe_encrypt(const BigInt& n, const BigInt& X0,
@@ -164,7 +164,7 @@ BigInt fpe_encrypt(const BigInt& n, const BigInt& X0,
    return X;
    }
 
-/**
+/*
 * Generic Z_n FPE decryption, FD1 scheme
 */
 BigInt fpe_decrypt(const BigInt& n, const BigInt& X0,

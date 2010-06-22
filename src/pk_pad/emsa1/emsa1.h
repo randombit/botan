@@ -20,9 +20,15 @@ namespace Botan {
 class BOTAN_DLL EMSA1 : public EMSA
    {
    public:
+      /**
+      * @param h the hash object to use
+      */
       EMSA1(HashFunction* h) : hash(h) {}
       ~EMSA1() { delete hash; }
    protected:
+      /**
+      * @return const pointer to the underlying hash
+      */
       const HashFunction* hash_ptr() const { return hash; }
    private:
       void update(const byte[], u32bit);

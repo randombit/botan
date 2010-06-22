@@ -19,12 +19,12 @@
 
 namespace Botan {
 
-/*
-* Retrieve an object from the lookup table
+/**
+* Retrieve an object prototype from the global factory
+* @param algo_spec an algorithm name
+* @return constant prototype object (use clone to create usable object),
+          library retains ownership
 */
-// NOTE: these functions return internally stored objects, library
-// retains ownership
-
 inline const BlockCipher*
 retrieve_block_cipher(const std::string& algo_spec)
    {
@@ -32,6 +32,12 @@ retrieve_block_cipher(const std::string& algo_spec)
    return af.prototype_block_cipher(algo_spec);
    }
 
+/**
+* Retrieve an object prototype from the global factory
+* @param algo_spec an algorithm name
+* @return constant prototype object (use clone to create usable object),
+          library retains ownership
+*/
 inline const StreamCipher*
 retrieve_stream_cipher(const std::string& algo_spec)
    {
@@ -39,6 +45,12 @@ retrieve_stream_cipher(const std::string& algo_spec)
    return af.prototype_stream_cipher(algo_spec);
    }
 
+/**
+* Retrieve an object prototype from the global factory
+* @param algo_spec an algorithm name
+* @return constant prototype object (use clone to create usable object),
+          library retains ownership
+*/
 inline const HashFunction*
 retrieve_hash(const std::string& algo_spec)
    {
@@ -46,6 +58,12 @@ retrieve_hash(const std::string& algo_spec)
    return af.prototype_hash_function(algo_spec);
    }
 
+/**
+* Retrieve an object prototype from the global factory
+* @param algo_spec an algorithm name
+* @return constant prototype object (use clone to create usable object),
+          library retains ownership
+*/
 inline const MessageAuthenticationCode*
 retrieve_mac(const std::string& algo_spec)
    {
