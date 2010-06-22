@@ -66,10 +66,9 @@ spot, you might need to prefix the \texttt{configure.py} command with
 The first step is to run \filename{configure.py}, which is a Python
 script that creates various directories, config files, and a Makefile
 for building everything. The script requires at least Python 2.4; any
-later version of Python 2.x should also work. If you want to use
-Python 3.1, first run the program \texttt{2to3} (included in the
-Python distribution) on the script; this will convert the script to
-the Python 3.x dialect.
+later version of Python 2.x should also work. Python 3.1 will also
+work but requires an extra step, see the section ``Using Python 3.1'',
+later in this document.
 
 The script will attempt to guess what kind of system you are trying
 to compile for (and will print messages telling you what it guessed).
@@ -103,13 +102,12 @@ might not have. For instance to enable zlib support, add
 You can control which algorithms and modules are built using the
 options \verb|--enable-modules=MODS| and
 \verb|--disable-modules=MODS|, for instance
-\verb|--enable-modules=blowfish,md5,rsa,zlib| and
-\verb|--disable-modules=arc4,cmac|.  Modules not listed on the command
-line will simply be loaded if needed or if configured to load by
-default. If you use \verb|--no-autoload|, only the most core modules
-will be included; you can then explicitly enable things that you want
-to use with enable-modules. This is useful for creating a minimal
-build targetted to a specific application.
+\verb|--enable-modules=zlib| and \verb|--disable-modules=rc5,idea|.
+Modules not listed on the command line will simply be loaded if needed
+or if configured to load by default. If you use \verb|--no-autoload|,
+only the most core modules will be included; you can then explicitly
+enable things that you want to use with enable-modules. This is useful
+for creating a minimal build targetted to a specific application.
 
 The script tries to guess what kind of makefile to generate, and it
 almost always guesses correctly (basically, Visual C++ uses NMAKE with
@@ -154,13 +152,12 @@ to include the directory that the Botan libraries were installed into.
 \subsection{MS Windows}
 
 If you don't want to deal with building botan on Windows, check the
-website; commonly prebuild Windows binaries with installers are
+website; commonly prebuilt Windows binaries with installers are
 available, especially for stable versions.
 
-The situation is not much different here. We'll assume you're using
-Visual C++ (for Cygwin, the Unix instructions are probably more
-relevant). You need to have a copy of Python installed, and have both
-Python and Visual C++ in your path.
+You need to have a copy of Python installed, and have both Python and
+your chosen compiler in your path. Open a command shell (or the SDK
+shell), and run:
 
 \begin{verbatim}
    > python configure.py --cc=msvc (or --cc=gcc for MinGW) [--cpu=CPU]
@@ -184,6 +181,94 @@ compiler to look for both include files and library files in
 \verb|C:\botan|, and it will find both. Or you can move them to a
 place where they will be in the default compiler search paths (consult
 your documentation and/or local expert for details).
+
+\section{Trickier Things}
+
+\subsection{Modules Relying on Third Party Libraries}
+
+There are a fairly large number of modules included with Botan. Some
+of these are extremely useful, while others are only necessary in very
+unusual circumstances. Most are loaded (or not) automatically as
+necessary, but some require external libraries are thus must be
+enabled at build time; these include:
+
+\newcommand{\mod}[2]{\textbf{#1}: #2}
+
+\begin{list}{$\cdot$}
+  \item \mod{bzip2}{Enables an application to perform bzip2
+    compression and decompression using the library. Available on any
+    system that has bzip2. To enable, use option \texttt{--with-bzip2}}
+
+  \item \mod{zlib}{Enables an application to perform zlib compression
+    and decompression using the library. Available on any system that
+    has zlib. To enable, use option \texttt{--with-zlib}}
+
+  \item \mod{gnump}{An engine that uses GNU MP to speed up PK
+    operations.  GNU MP 4.1 or later is required.  To enable, use
+    option \texttt{--with-gnump}}
+
+  \item \mod{openssl}{An engine that uses OpenSSL to speed up public
+    key operations and some ciphers/hashes. OpenSSL 0.9.7 or later is
+    required. Note that, unlike GNU MP, OpenSSL's versions are not
+    always faster than the versions built into botan. To enable, use
+    option \texttt{--with-openssl}}
+
+\end{list}
+
+\subsection{Amalgamation}
+
+You can also configure Botan to be built using only a single source
+file; this is quite convenient if you plan to embed the library into
+another application. To do so, run \filename{configure.py} with
+whatever arguments you would ordinarily use, along with the option
+\texttt{--gen-amalgamation}. This will create two (rather large)
+files, \filename{botan\_all.h} and \filename{botan\_all.cpp}.
+
+Whenever you would have included a botan header, you can then include
+\filename{botan\_all.h}, and include \filename{botan\_all.cpp} along
+with the rest of the source files in your build. If you want to be
+able to easily switch between amalgamated and non-amalgamated versions
+(for instance to take advantage of prepackaged versions of botan on
+operating systems that support it), you can instead ignore
+\filename{botan\_all.h} and use the headers from
+\filename{build/include} as normal.
+
+\subsection{Multiple Builds}
+
+It may be useful to run multiple builds with different
+configurations. Specify \verb|--build-dir=<dir>| to set up a build
+environment in a different directory.
+
+\subsection{Using Python 3.1}
+
+The versions of Python begininning with 3 are (intentionally)
+incompatible with the (currently more common) 2.x series. If you want
+to use Python 3.1 to set up the build, you'll have to use the
+\texttt{2to3} program (included in the Python distribution) on the
+script; this will convert the script to the Python 3.x dialect:
+
+\begin{verbatim}
+  $ python ./configure.py
+  File "configure.py", line 860
+    except KeyError, e:
+                   ^
+SyntaxError: invalid syntax
+  $ # incompatible python version, let's fix it
+  $ 2to3 -w -f except configure.py
+[...]
+RefactoringTool: Files that were modified:
+RefactoringTool: configure.py
+  $ python ./configure.py
+[...]
+\end{verbatim}
+
+\subsection{Local Configuration}
+
+You may want to do something peculiar with the configuration; to
+support this there is a flag to \filename{configure.py} called
+\texttt{--with-local-config=<file>}. The contents of the file are
+inserted into \filename{build/build.h} which is (indirectly) included
+into every Botan header and source file.
 
 \subsection{Configuration Parameters}
 
@@ -220,49 +305,6 @@ perfectly fine.
 \macro{BOTAN\_DEFAULT\_BUFFER\_SIZE}: This constant is used as the size of
 buffers throughout Botan. A good rule of thumb would be to use the page size of
 your machine. The default should be fine for most, if not all, purposes.
-
-\subsection{Multiple Builds}
-
-It may be useful to run multiple builds with different
-configurations. Specify \verb|--build-dir=<dir>| to set up a build
-environment in a different directory.
-
-\subsection{Local Configuration}
-
-You may want to do something peculiar with the configuration; to
-support this there is a flag to \filename{configure.py} called
-\texttt{--with-local-config=<file>}. The contents of the file are
-inserted into \filename{build/build.h} which is (indirectly) included
-into every Botan header and source file.
-
-\section{Modules}
-
-There are a fairly large number of modules included with Botan. Some
-of these are extremely useful, while others are only necessary in very
-unusual circumstances. Most are loaded (or not) automatically as
-necessary, but some require external libraries are thus must be
-enabled at build time; these include:
-
-\newcommand{\mod}[2]{\textbf{#1}: #2}
-
-\begin{list}{$\cdot$}
-  \item \mod{bzip2}{Enables an application to perform bzip2
-    compression and decompression using the library. Available on any
-    system that has bzip2. To enable, use option \verb|--with-bzip2|}
-
-  \item \mod{zlib}{Enables an application to perform zlib compression
-    and decompression using the library. Available on any system that
-    has zlib. To enable, use option \verb|--with-zlib|}
-
-  \item \mod{gnump}{An engine that uses GNU MP to speed up PK
-    operations.  GNU MP 4.1 or later is required.  To enable, use
-    option \verb|--with-gnump|}
-
-  \item \mod{openssl}{An engine that uses OpenSSL to speed up public
-    key operations and some ciphers/hashes. OpenSSL 0.9.7 or later is
-    required.} To enable, use option \verb|--with-openssl|}
-
-\end{list}
 
 \section{Building Applications}
 
