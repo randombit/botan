@@ -102,7 +102,8 @@ void XTEA_SIMD::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       blocks -= 8;
       }
 
-   XTEA::encrypt_n(in, out, blocks);
+   if(blocks)
+     XTEA::encrypt_n(in, out, blocks);
    }
 
 /*
@@ -118,7 +119,8 @@ void XTEA_SIMD::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       blocks -= 8;
       }
 
-   XTEA::decrypt_n(in, out, blocks);
+   if(blocks)
+     XTEA::decrypt_n(in, out, blocks);
    }
 
 }

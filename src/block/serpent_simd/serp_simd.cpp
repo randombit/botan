@@ -188,7 +188,8 @@ void Serpent_SIMD::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       blocks -= 4;
       }
 
-   Serpent::encrypt_n(in, out, blocks);
+   if(blocks)
+     Serpent::encrypt_n(in, out, blocks);
    }
 
 /*
@@ -204,7 +205,8 @@ void Serpent_SIMD::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       blocks -= 4;
       }
 
-   Serpent::decrypt_n(in, out, blocks);
+   if(blocks)
+     Serpent::decrypt_n(in, out, blocks);
    }
 
 }

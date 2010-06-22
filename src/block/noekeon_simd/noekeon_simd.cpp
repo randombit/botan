@@ -103,7 +103,8 @@ void Noekeon_SIMD::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       blocks -= 4;
       }
 
-   Noekeon::encrypt_n(in, out, blocks);
+   if(blocks)
+     Noekeon::encrypt_n(in, out, blocks);
    }
 
 /*
@@ -159,7 +160,8 @@ void Noekeon_SIMD::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       blocks -= 4;
       }
 
-   Noekeon::decrypt_n(in, out, blocks);
+   if(blocks)
+     Noekeon::decrypt_n(in, out, blocks);
    }
 
 }

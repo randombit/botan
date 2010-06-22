@@ -204,7 +204,8 @@ void IDEA_SSE2::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       blocks -= 8;
       }
 
-   IDEA::encrypt_n(in, out, blocks);
+   if(blocks)
+     IDEA::encrypt_n(in, out, blocks);
    }
 
 /*
@@ -220,7 +221,8 @@ void IDEA_SSE2::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       blocks -= 8;
       }
 
-   IDEA::decrypt_n(in, out, blocks);
+   if(blocks)
+     IDEA::decrypt_n(in, out, blocks);
    }
 
 }
