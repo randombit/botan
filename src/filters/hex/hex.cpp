@@ -13,6 +13,9 @@
 
 namespace Botan {
 
+/**
+* Size used for internal buffer in hex encoder/decoder
+*/
 const u32bit HEX_CODEC_BUFFER_SIZE = 256;
 
 /*

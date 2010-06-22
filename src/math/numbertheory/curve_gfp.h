@@ -52,14 +52,12 @@ class BOTAN_DLL CurveGFp
       // CurveGFp& operator=(const CurveGFp& other) = default;
 
       /**
-      * Get coefficient a
-      * @return coefficient a
+      * @return curve coefficient a
       */
       const BigInt& get_a() const { return a; }
 
       /**
-      * Get coefficient b
-      * @return coefficient b
+      * @return curve coefficient b
       */
       const BigInt& get_b() const { return b; }
 
@@ -94,11 +92,14 @@ class BOTAN_DLL CurveGFp
       */
       u32bit get_p_words() const { return p_words; }
 
+      /**
+      * @return modular reducer for p
+      */
       const Modular_Reducer& mod_p() const { return reducer_p; }
 
       /**
       * swaps the states of *this and other, does not throw
-      * @param other The curve to swap values with
+      * @param other curve to swap values with
       */
       void swap(CurveGFp& other)
          {
@@ -112,6 +113,11 @@ class BOTAN_DLL CurveGFp
          std::swap(p_dash, other.p_dash);
          }
 
+      /**
+      * Equality operator
+      * @param other curve to compare with
+      * @return true iff this is the same curve as other
+      */
       bool operator==(const CurveGFp& other) const
          {
          return (p == other.p && a == other.a && b == other.b);
@@ -130,6 +136,12 @@ class BOTAN_DLL CurveGFp
       Modular_Reducer reducer_p;
    };
 
+/**
+* Equality operator
+* @param lhs a curve
+* @param rhs a curve
+* @return true iff lhs is not the same as rhs
+*/
 inline bool operator!=(const CurveGFp& lhs, const CurveGFp& rhs)
    {
    return !(lhs == rhs);
