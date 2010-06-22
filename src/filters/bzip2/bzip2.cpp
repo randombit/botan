@@ -54,14 +54,22 @@ void bzip_free(void* info_ptr, void* ptr)
    info->alloc->deallocate(ptr, i->second);
    }
 
-/*
+}
+
+/**
 * Wrapper Type for Bzip2 Stream
 */
 class Bzip_Stream
    {
    public:
+      /**
+      * Underlying stream
+      */
       bz_stream stream;
 
+      /**
+      * Constructor
+      */
       Bzip_Stream()
          {
          std::memset(&stream, 0, sizeof(bz_stream));
@@ -69,6 +77,10 @@ class Bzip_Stream
          stream.bzfree = bzip_free;
          stream.opaque = new Bzip_Alloc_Info;
          }
+
+      /**
+      * Destructor
+      */
       ~Bzip_Stream()
          {
          Bzip_Alloc_Info* info = static_cast<Bzip_Alloc_Info*>(stream.opaque);
@@ -76,8 +88,6 @@ class Bzip_Stream
          std::memset(&stream, 0, sizeof(bz_stream));
          }
    };
-
-}
 
 /*
 * Bzip_Compression Constructor

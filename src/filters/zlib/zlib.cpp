@@ -53,14 +53,22 @@ void zlib_free(void* info_ptr, void* ptr)
    info->alloc->deallocate(ptr, i->second);
    }
 
-/*
+}
+
+/**
 * Wrapper Type for Zlib z_stream
 */
 class Zlib_Stream
    {
    public:
+      /**
+      * Underlying stream
+      */
       z_stream stream;
 
+      /**
+      * Constructor
+      */
       Zlib_Stream()
          {
          std::memset(&stream, 0, sizeof(z_stream));
@@ -68,6 +76,10 @@ class Zlib_Stream
          stream.zfree = zlib_free;
          stream.opaque = new Zlib_Alloc_Info;
          }
+
+      /**
+      * Destructor
+      */
       ~Zlib_Stream()
          {
          Zlib_Alloc_Info* info = static_cast<Zlib_Alloc_Info*>(stream.opaque);
@@ -75,8 +87,6 @@ class Zlib_Stream
          std::memset(&stream, 0, sizeof(z_stream));
          }
    };
-
-}
 
 /*
 * Zlib_Compression Constructor
