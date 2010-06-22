@@ -1,4 +1,8 @@
 
+* 1.8.10-dev, ????-??-??
+ - Enable the /proc-walking entropy source on NetBSD
+ - Fix the doxygen makefile target
+
 * 1.8.9, 2010-06-16
  - Use constant time multiplication in IDEA
  - Avoid possible timing attack against OAEP decoding

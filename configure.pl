@@ -205,7 +205,7 @@ sub main {
 
     process_template(File::Spec->catfile(
                          $$config{'config-dir'}, 'botan.doxy.in'),
-                     File::Spec->catfile($$config{'doc_src_dir'}, 'botan.doxy'),
+                     File::Spec->catfile($$config{'build_dir'}, 'botan.doxy'),
                      $config);
 
     $$config{'includes'}{'build.h'} = $$config{'build_dir'};

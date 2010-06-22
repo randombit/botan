@@ -106,7 +106,7 @@ static: $(STATIC_LIB)
 shared: $(SHARED_LIB)
 
 doxygen:
-	doxygen %{doc_src_dir}/botan.doxy
+	doxygen %{build_dir}/botan.doxy
 
 clean:
 	$(RM_R) %{build_dir}/lib/* %{build_dir}/checks/*
@@ -114,7 +114,7 @@ clean:
 
 distclean: clean
 	$(RM_R) %{build_dir}
-	$(RM_R) %{doc_src_dir}/doxygen %{doc_src_dir}/botan.doxy
+	$(RM_R) %{doc_src_dir}/doxygen
 	$(RM) Makefile $(CONFIG_SCRIPT) $(PKGCONFIG)
 
 install: $(LIBRARIES)
