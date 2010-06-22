@@ -192,7 +192,7 @@ class OSSL_RSA_Private_Operation : public PK_Ops::Signature,
       u32bit max_input_bits() const { return (n_bits - 1); }
 
       SecureVector<byte> sign(const byte msg[], u32bit msg_len,
-                              RandomNumberGenerator& rng)
+                              RandomNumberGenerator&)
          {
          BigInt m(msg, msg_len);
          BigInt x = private_op(m);
