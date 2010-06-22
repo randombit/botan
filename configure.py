@@ -593,11 +593,12 @@ class ArchInfo(object):
                       self.isa_extn.get('all', []))
 
     """
-    Return a list of all submodels for this arch
+    Return a list of all submodels for this arch, ordered longest
+    to shortest
     """
     def all_submodels(self):
-        return sorted(zip(self.submodels, self.submodels) +
-                          self.submodel_aliases.items(),
+        return sorted(list(zip(self.submodels, self.submodels)) +
+                      list(self.submodel_aliases.items()),
                       key = lambda k: len(k[0]), reverse = True)
 
     """
