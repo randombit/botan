@@ -8,7 +8,6 @@
 #include <botan/libstate.h>
 #include <botan/charset.h>
 #include <botan/engine.h>
-#include <botan/init.h>
 #include <botan/internal/defalloc.h>
 #include <botan/internal/default_engine.h>
 #include <botan/internal/mutex.h>
@@ -77,7 +76,10 @@ Library_State& global_state()
       on or memory might leak.
    */
    if(!global_lib_state)
-      LibraryInitializer::initialize("thread_safe=true");
+      {
+      global_lib_state = new Library_State;
+      global_lib_state->initialize(true);
+      }
 
    return (*global_lib_state);
    }
