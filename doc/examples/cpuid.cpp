@@ -30,6 +30,7 @@ int main()
    print_if_feature("SSSE3", CPUID::has_ssse3());
    print_if_feature("SSE4.1", CPUID::has_sse41());
    print_if_feature("SSE4.2", CPUID::has_sse42());
+   print_if_feature("AVX", CPUID::has_avx());
 
    print_if_feature("AES-NI", CPUID::has_aes_intel());
 

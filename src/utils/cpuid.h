@@ -54,6 +54,12 @@ class BOTAN_DLL CPUID
          { return ((x86_processor_flags() >> CPUID_SSE42_BIT) & 1); }
 
       /**
+      * Check if the processor supports extended AVX vector instructions
+      */
+      static bool has_avx()
+         { return ((x86_processor_flags() >> CPUID_AVX_BIT) & 1); }
+
+      /**
       * Check if the processor supports Intel's AES instructions
       */
       static bool has_aes_intel()
@@ -70,7 +76,8 @@ class BOTAN_DLL CPUID
          CPUID_SSSE3_BIT = 41,
          CPUID_SSE41_BIT = 51,
          CPUID_SSE42_BIT = 52,
-         CPUID_INTEL_AES_BIT = 57
+         CPUID_INTEL_AES_BIT = 57,
+         CPUID_AVX_BIT = 60
       };
 
       static u64bit x86_processor_flags();
