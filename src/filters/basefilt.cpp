@@ -10,9 +10,10 @@
 
 namespace Botan {
 
-void Keyed_Filter::set_iv(const InitializationVector&)
+void Keyed_Filter::set_iv(const InitializationVector& iv)
    {
-   // assert that the iv is empty?
+   if(iv.length() != 0)
+      throw Invalid_IV_Length(name(), iv.length());
    }
 
 /*
