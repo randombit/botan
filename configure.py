@@ -247,6 +247,10 @@ def process_command_line(args):
                            action='store_true', default=False,
                            help=SUPPRESS_HELP)
 
+    build_group.add_option('--maintainer-mode', dest='maintainer_mode',
+                           action='store_true', default=False,
+                           help=SUPPRESS_HELP)
+
     mods_group = OptionGroup(parser, 'Module selection')
 
     mods_group.add_option('--enable-modules', dest='enabled_modules',
@@ -662,6 +666,7 @@ class CompilerInfo(object):
                         'shared_flags': '',
                         'lang_flags': '',
                         'warning_flags': '',
+                        'maintainer_warning_flags': '',
                         'dll_import_flags': '',
                         'ar_command': None,
                         'makefile_style': '',
@@ -936,6 +941,13 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             return option
         return ''
 
+    def warning_flags(normal_flags,
+                      maintainer_flags,
+                      maintainer_mode):
+        if maintainer_mode and maintainer_flags != '':
+            return maintainer_flags
+        return normal_flags
+
     return {
         'version_major': build_config.version_major,
         'version_minor': build_config.version_minor,
@@ -976,7 +988,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'mach_opt': cc.mach_opts(options.arch, options.cpu),
         'check_opt': cc.check_opt_flags,
         'lang_flags': cc.lang_flags + options.extra_flags,
-        'warn_flags': cc.warning_flags,
+        'warn_flags': warning_flags(cc.warning_flags,
+                                    cc.maintainer_warning_flags,
+                                    options.maintainer_mode),
 
         'shared_flags': only_if_shared(cc.shared_flags),
         'dll_import_flags': only_if_shared(cc.dll_import_flags),
