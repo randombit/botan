@@ -1,5 +1,5 @@
 
-* 1.9.9-dev, ????-??-??
+* 1.9.9, 2010-06-28
  - Add new X509::BER_encode and PKCS8::BER_encode
  - Give all Filter objects a name() function
  - Add Keyed_Filter::valid_iv_length
