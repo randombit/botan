@@ -1,6 +1,6 @@
 /*
 * SHA-{224,256}
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *     2007 FlexSecure GmbH
 *
 * Distributed under the terms of the Botan license
@@ -43,12 +43,12 @@ inline void F1(u32bit A, u32bit B, u32bit C, u32bit& D,
    H += rho(A, 2, 13, 22) + ((A & B) | ((A | B) & C));
    }
 
-}
-
 /*
-* SHA-256 Compression Function
+* SHA-224 / SHA-256 compression function
 */
-void SHA_224_256_BASE::compress_n(const byte input[], u32bit blocks)
+void sha2_32_compress(MemoryRegion<u32bit>& W,
+                      MemoryRegion<u32bit>& digest,
+                      const byte input[], u32bit blocks)
    {
    u32bit A = digest[0], B = digest[1], C = digest[2],
           D = digest[3], E = digest[4], F = digest[5],
@@ -152,14 +152,24 @@ void SHA_224_256_BASE::compress_n(const byte input[], u32bit blocks)
       G = (digest[6] += G);
       H = (digest[7] += H);
 
-      input += HASH_BLOCK_SIZE;
+      input += 64;
       }
+   }
+
+}
+
+/*
+* SHA-224 compression function
+*/
+void SHA_224::compress_n(const byte input[], u32bit blocks)
+   {
+   sha2_32_compress(W, digest, input, blocks);
    }
 
 /*
 * Copy out the digest
 */
-void SHA_224_256_BASE::copy_out(byte output[])
+void SHA_224::copy_out(byte output[])
    {
    for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
       store_be(digest[j/4], output + j);
@@ -168,18 +178,10 @@ void SHA_224_256_BASE::copy_out(byte output[])
 /*
 * Clear memory of sensitive data
 */
-void SHA_224_256_BASE::clear()
+void SHA_224::clear()
    {
    MDx_HashFunction::clear();
    W.clear();
-   }
-
-/*
-* Clear memory of sensitive data
-*/
-void SHA_224::clear()
-   {
-   SHA_224_256_BASE::clear();
    digest[0] = 0xC1059ED8;
    digest[1] = 0x367CD507;
    digest[2] = 0x3070DD17;
@@ -191,11 +193,29 @@ void SHA_224::clear()
    }
 
 /*
+* SHA-256 compression function
+*/
+void SHA_256::compress_n(const byte input[], u32bit blocks)
+   {
+   sha2_32_compress(W, digest, input, blocks);
+   }
+
+/*
+* Copy out the digest
+*/
+void SHA_256::copy_out(byte output[])
+   {
+   for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
+      store_be(digest[j/4], output + j);
+   }
+
+/*
 * Clear memory of sensitive data
 */
 void SHA_256::clear()
    {
-   SHA_224_256_BASE::clear();
+   MDx_HashFunction::clear();
+   W.clear();
    digest[0] = 0x6A09E667;
    digest[1] = 0xBB67AE85;
    digest[2] = 0x3C6EF372;
