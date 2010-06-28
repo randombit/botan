@@ -28,6 +28,8 @@ class BOTAN_DLL Hex_Encoder : public Filter
       */
       static void encode(byte in, byte out[2], Case the_case = Uppercase);
 
+      std::string name() const { return "Hex_Encoder"; }
+
       void write(const byte in[], u32bit length);
       void end_msg();
 
@@ -76,6 +78,8 @@ class BOTAN_DLL Hex_Decoder : public Filter
       * @return true iff c is a valid hex char
       */
       static bool is_valid(byte c);
+
+      std::string name() const { return "Hex_Decoder"; }
 
       void write(const byte[], u32bit);
       void end_msg();

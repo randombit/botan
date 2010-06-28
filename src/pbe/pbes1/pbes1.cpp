@@ -153,6 +153,12 @@ OID PBE_PKCS5v15::get_oid() const
       throw Internal_Error("PBE-PKCS5 v1.5: get_oid() has run out of options");
    }
 
+std::string PBE_PKCS5v15::name() const
+   {
+   return "PBE-PKCS5v15(" + block_cipher->name() + "," +
+                            hash_function->name() + ")";
+   }
+
 /*
 * PKCS#5 v1.5 PBE Constructor
 */

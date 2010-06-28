@@ -62,8 +62,11 @@ using namespace Botan;
 class S2K_Filter : public Filter
    {
    public:
+      std::string name() const { return s2k->name(); }
+
       void write(const byte in[], u32bit len)
          { passphrase += std::string(reinterpret_cast<const char*>(in), len); }
+
       void end_msg()
          {
          SymmetricKey x = s2k->derive_key(outlen, passphrase,
@@ -71,14 +74,15 @@ class S2K_Filter : public Filter
                                           iterations);
          send(x.bits_of());
          }
+
       S2K_Filter(S2K* algo, const SymmetricKey& s, u32bit o, u32bit i)
          {
          s2k = algo;
          outlen = o;
          iterations = i;
          salt = s.bits_of();
-
          }
+
       ~S2K_Filter() { delete s2k; }
    private:
       std::string passphrase;
@@ -91,6 +95,8 @@ class S2K_Filter : public Filter
 class RNG_Filter : public Filter
    {
    public:
+      std::string name() const { return rng->name(); }
+
       void write(const byte[], u32bit);
 
       RNG_Filter(RandomNumberGenerator* r) : rng(r) {}
@@ -102,6 +108,8 @@ class RNG_Filter : public Filter
 class KDF_Filter : public Filter
    {
    public:
+      std::string name() const { return "KDF_Filter"; }
+
       void write(const byte in[], u32bit len)
          { secret.append(in, len); }
       void end_msg()

@@ -207,6 +207,12 @@ bool PBE_PKCS5v20::known_cipher(const std::string& algo)
    return false;
    }
 
+std::string PBE_PKCS5v20::name() const
+   {
+   return "PBE-PKCS5v20(" + block_cipher->name() + "," +
+                            hash_function->name() + ")";
+   }
+
 /*
 * PKCS#5 v2.0 PBE Constructor
 */

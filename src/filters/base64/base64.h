@@ -20,6 +20,8 @@ class BOTAN_DLL Base64_Encoder : public Filter
    public:
       static void encode(const byte in[3], byte out[4]);
 
+      std::string name() const { return "Base64_Encoder"; }
+
       /**
       * Input a part of a message to the encoder.
       * @param input the message to input as a byte array
@@ -60,6 +62,8 @@ class BOTAN_DLL Base64_Decoder : public Filter
       static void decode(const byte input[4], byte output[3]);
 
       static bool is_valid(byte);
+
+      std::string name() const { return "Base64_Decoder"; }
 
       /**
       * Input a part of a message to the decoder.

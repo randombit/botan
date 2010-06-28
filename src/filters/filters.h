@@ -37,6 +37,8 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
    {
    public:
 
+      std::string name() const { return cipher->name(); }
+
       /**
       * Write input data
       * @param input data
@@ -108,6 +110,8 @@ class BOTAN_DLL Hash_Filter : public Filter
       void write(const byte input[], u32bit len) { hash->update(input, len); }
       void end_msg();
 
+      std::string name() const { return hash->name(); }
+
       /**
       * Construct a hash filter.
       * @param hash_fun the hash function to use
@@ -143,6 +147,8 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
    public:
       void write(const byte input[], u32bit len) { mac->update(input, len); }
       void end_msg();
+
+      std::string name() const { return mac->name(); }
 
       /**
       * Set the key of this filter.

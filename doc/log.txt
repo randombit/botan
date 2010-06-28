@@ -1,6 +1,7 @@
 
 * 1.9.9-dev, ????-??-??
  - Add new X509::BER_encode and PKCS8::BER_encode
+ - Give all Filter objects a name() function
  - Add Keyed_Filter::valid_iv_length
  - Increase default iteration counts for private key encryption
  - Fix compilation of mp_asm64 on 64-bit MIPS with GCC 4.4 and later

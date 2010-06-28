@@ -39,6 +39,11 @@ Chain::Chain(Filter* filters[], u32bit count)
          }
    }
 
+std::string Chain::name() const
+   {
+   return "Chain";
+   }
+
 /*
 * Fork Constructor
 */
@@ -54,6 +59,11 @@ Fork::Fork(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
 Fork::Fork(Filter* filters[], u32bit count)
    {
    set_next(filters, count);
+   }
+
+std::string Fork::name() const
+   {
+   return "Fork";
    }
 
 }

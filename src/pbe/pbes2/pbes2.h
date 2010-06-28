@@ -27,6 +27,8 @@ class BOTAN_DLL PBE_PKCS5v20 : public PBE
       */
       static bool known_cipher(const std::string& cipher);
 
+      std::string name() const;
+
       void write(const byte[], u32bit);
       void start_msg();
       void end_msg();

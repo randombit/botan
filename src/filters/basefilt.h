@@ -18,6 +18,8 @@ namespace Botan {
 struct BOTAN_DLL BitBucket : public Filter
    {
    void write(const byte[], u32bit) {}
+
+   std::string name() const { return "BitBucket"; }
    };
 
 /**
@@ -30,6 +32,8 @@ class BOTAN_DLL Chain : public Fanout_Filter
    {
    public:
       void write(const byte input[], u32bit length) { send(input, length); }
+
+      std::string name() const;
 
       /**
       * Construct a chain of up to four filters. The filters are set
@@ -55,6 +59,8 @@ class BOTAN_DLL Fork : public Fanout_Filter
    public:
       void write(const byte input[], u32bit length) { send(input, length); }
       void set_port(u32bit n) { Fanout_Filter::set_port(n); }
+
+      std::string name() const;
 
       /**
       * Construct a Fork filter with up to four forks.

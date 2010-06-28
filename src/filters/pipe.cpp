@@ -22,6 +22,8 @@ class Null_Filter : public Filter
    public:
       void write(const byte input[], u32bit length)
          { send(input, length); }
+
+      std::string name() const { return "Null"; }
    };
 
 }

@@ -19,6 +19,10 @@ namespace Botan {
 class BOTAN_DLL Filter
    {
    public:
+      /**
+      * @return descriptive name for this filter
+      */
+      virtual std::string name() const = 0;
 
       /**
       * Write a portion of a message to this filter.

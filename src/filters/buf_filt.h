@@ -26,11 +26,6 @@ class BOTAN_DLL Buffered_Filter
 
       virtual ~Buffered_Filter() {}
    protected:
-      /**
-      * @return name of this filter object
-      */
-      virtual std::string name() const = 0;
-
       virtual void buffered_block(const byte input[], u32bit length) = 0;
       virtual void buffered_final(const byte input[], u32bit length) = 0;
 

@@ -24,8 +24,13 @@ using namespace Botan;
 class ECB_Encryption_ErrorCheck : public Filter
    {
    public:
+      std::string name() const
+         { return "ECB_ErrCheck(" + cipher->name() + ")"; }
+
       void write(const byte[], u32bit);
+
       void end_msg();
+
       ECB_Encryption_ErrorCheck(const std::string& cipher_name,
                                 const std::string&,
                                 const SymmetricKey& key) :
@@ -40,8 +45,14 @@ class ECB_Encryption_ErrorCheck : public Filter
          cipher->set_key(key);
          position = 0;
          }
+
       ~ECB_Encryption_ErrorCheck()
-         { delete cipher; delete input_hash; delete decrypt_hash; }
+         {
+         delete cipher;
+         delete input_hash;
+         delete decrypt_hash;
+         }
+
    private:
       const u32bit BLOCKSIZE;
       BlockCipher* cipher;

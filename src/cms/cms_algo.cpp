@@ -31,6 +31,8 @@ SecureVector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
    class Flip_Bytes : public Filter
       {
       public:
+         std::string name() const { return "Fip_Bytes"; }
+
          void write(const byte data[], u32bit length)
             {
             buf.append(data, length);

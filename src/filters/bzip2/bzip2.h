@@ -19,6 +19,8 @@ namespace Botan {
 class BOTAN_DLL Bzip_Compression : public Filter
    {
    public:
+      std::string name() const { return "Bzip_Compression"; }
+
       void write(const byte input[], u32bit length);
       void start_msg();
       void end_msg();
@@ -41,6 +43,8 @@ class BOTAN_DLL Bzip_Compression : public Filter
 class BOTAN_DLL Bzip_Decompression : public Filter
    {
    public:
+      std::string name() const { return "Bzip_Decompression"; }
+
       void write(const byte input[], u32bit length);
       void start_msg();
       void end_msg();
