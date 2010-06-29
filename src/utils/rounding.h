@@ -12,20 +12,28 @@
 
 namespace Botan {
 
-/*
-* Round up n to multiple of align_to
+/**
+* Round up
+* @param n an integer
+* @param align_to the alignment boundary
+* @return n rounded up to a multiple of align_to
 */
-inline u32bit round_up(u32bit n, u32bit align_to)
+template<typename T>
+inline T round_up(T n, T align_to)
    {
    if(n % align_to || n == 0)
       n += align_to - (n % align_to);
    return n;
    }
 
-/*
-* Round down n to multiple of align_to
+/**
+* Round down
+* @param n an integer
+* @param align_to the alignment boundary
+* @return n rounded down to a multiple of align_to
 */
-inline u32bit round_down(u32bit n, u32bit align_to)
+template<typename T>
+inline T round_down(T n, T align_to)
    {
    return (n - (n % align_to));
    }

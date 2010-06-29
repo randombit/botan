@@ -19,7 +19,7 @@ BigInt square(const BigInt& x)
    {
    const u32bit x_sw = x.sig_words();
 
-   BigInt z(BigInt::Positive, round_up(2*x_sw, 16));
+   BigInt z(BigInt::Positive, round_up<u32bit>(2*x_sw, 16));
    SecureVector<word> workspace(z.size());
 
    bigint_sqr(z.get_reg(), z.size(), workspace,

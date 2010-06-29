@@ -26,7 +26,7 @@ SecureVector<byte> enc_two_digit(u32bit in)
       result.append(0x00);
    else
       {
-      u32bit y_first_pos = round_down(in, 10) / 10;
+      u32bit y_first_pos = round_down<u32bit>(in, 10) / 10;
       result.append(static_cast<byte>(y_first_pos));
       }
 

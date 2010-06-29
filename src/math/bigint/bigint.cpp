@@ -35,7 +35,7 @@ BigInt::BigInt(u64bit n)
 */
 BigInt::BigInt(Sign s, u32bit size)
    {
-   reg.resize(round_up(size, 8));
+   reg.resize(round_up<u32bit>(size, 8));
    signedness = s;
    }
 
@@ -48,7 +48,7 @@ BigInt::BigInt(const BigInt& b)
 
    if(b_words)
       {
-      reg.resize(round_up(b_words, 8));
+      reg.resize(round_up<u32bit>(b_words, 8));
       reg.copy(b.data(), b_words);
       set_sign(b.sign());
       }
@@ -114,7 +114,7 @@ void BigInt::swap(BigInt& other)
 */
 void BigInt::grow_reg(u32bit n)
    {
-   reg.grow_to(round_up(size() + n, 8));
+   reg.grow_to(round_up<u32bit>(size() + n, 8));
    }
 
 /*
@@ -123,7 +123,7 @@ void BigInt::grow_reg(u32bit n)
 void BigInt::grow_to(u32bit n)
    {
    if(n > size())
-      reg.grow_to(round_up(n, 8));
+      reg.grow_to(round_up<u32bit>(n, 8));
    }
 
 /*
@@ -348,7 +348,7 @@ void BigInt::binary_decode(const byte buf[], u32bit length)
    {
    const u32bit WORD_BYTES = sizeof(word);
 
-   reg.resize(round_up((length / WORD_BYTES) + 1, 8));
+   reg.resize(round_up<u32bit>((length / WORD_BYTES) + 1, 8));
 
    for(u32bit j = 0; j != length / WORD_BYTES; ++j)
       {
