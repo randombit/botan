@@ -12,10 +12,12 @@
 
 namespace Botan {
 
-/*
-* Work Factor Estimates
+/**
+* Estimate work factor
+* @param prime_group_size size of the group in bits
+* @return estimated security level for this group
 */
-BOTAN_DLL u32bit dl_work_factor(u32bit prime_group_size);
+u32bit dl_work_factor(u32bit prime_group_size);
 
 }
 

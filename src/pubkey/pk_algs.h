@@ -12,12 +12,12 @@
 
 namespace Botan {
 
-BOTAN_DLL Public_Key* make_public_key(const AlgorithmIdentifier& alg_id,
-                                      const MemoryRegion<byte>& key_bits);
+Public_Key* make_public_key(const AlgorithmIdentifier& alg_id,
+                            const MemoryRegion<byte>& key_bits);
 
-BOTAN_DLL Private_Key* make_private_key(const AlgorithmIdentifier& alg_id,
-                                        const MemoryRegion<byte>& key_bits,
-                                        RandomNumberGenerator& rng);
+Private_Key* make_private_key(const AlgorithmIdentifier& alg_id,
+                              const MemoryRegion<byte>& key_bits,
+                              RandomNumberGenerator& rng);
 
 }
 
