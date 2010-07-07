@@ -438,7 +438,7 @@ class SecureBuffer : public MemoryRegion<T>
       * @param n the size of the array in
       */
       SecureBuffer(const T in[], u32bit n)
-         { init(true, L); copy(in, n); }
+         { init(true, L); this->copy(in, n); }
    private:
       SecureBuffer<T, L>& operator=(const MemoryRegion<T>& in)
          { if(this != &in) set(in); return (*this); }
