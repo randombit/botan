@@ -380,7 +380,13 @@ class SecureVector : public MemoryRegion<T>
       * @param n the size of the array in
       */
       SecureVector(const T in[], u32bit n)
-         { init(true); set(in, n); }
+         {
+         init(true, INITIAL_LEN);
+         if(INITIAL_LEN)
+            copy(in, n);
+         else
+            set(in, n);
+         }
 
       /**
       * Create a buffer with contents specified contents.
@@ -388,7 +394,13 @@ class SecureVector : public MemoryRegion<T>
       * copied into the newly created buffer.
       */
       SecureVector(const MemoryRegion<T>& in)
-         { init(true); set(in); }
+         {
+         init(true, INITIAL_LEN);
+         if(INITIAL_LEN)
+            copy(in);
+         else
+            set(in);
+         }
 
       /**
       * Create a buffer whose content is the concatenation of two other
