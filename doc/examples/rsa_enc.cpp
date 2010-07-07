@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   std::ifstream message(argv[2]);
+   std::ifstream message(argv[2], std::ios::binary);
    if(!message)
       {
       std::cout << "Couldn't read the message file." << std::endl;
