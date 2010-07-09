@@ -905,15 +905,22 @@ def load_info_files(options):
 
     archinfo = dict([(form_name(info), ArchInfo(info))
                      for info in list_files_in_build_data('arch')])
-    logging.debug('Loaded %d CPU info files' % (len(archinfo)))
 
     osinfo   = dict([(form_name(info), OsInfo(info))
                       for info in list_files_in_build_data('os')])
-    logging.debug('Loaded %d OS info files' % (len(osinfo)))
 
     ccinfo = dict([(form_name(info), CompilerInfo(info))
                     for info in list_files_in_build_data('cc')])
-    logging.debug('Loaded %d compiler info files' % (len(ccinfo)))
+
+    def info_file_load_report(type, num):
+        if num > 0:
+            logging.debug('Loaded %d %s info files' % (num, type))
+        else:
+            logging.warning('Failed to load any %s info files' % (type))
+
+    info_file_load_report('CPU', len(archinfo));
+    info_file_load_report('OS', len(osinfo))
+    info_file_load_report('compiler', len(ccinfo))
 
     if 'defaults' in osinfo:
         del osinfo['defaults'] # FIXME (remove the file)
