@@ -42,9 +42,9 @@ the build system, primarily due to lack of access. Please contact the
 maintainer if you would like to build Botan on such a system.
 
 Botan's build is controlled by configure.py, which is a Python
-script. Python 2.4 or later is required (but if you want to use the
-incompatible Python 3, you must first run the \texttt{2to3} script on
-it).
+script. Python 2.4 or later is required. If you want to use the
+(incompatible) Python 3, you must first run the \texttt{2to3} script
+on it.
 
 \section{For the Impatient}
 
@@ -254,7 +254,7 @@ script; this will convert the script to the Python 3.x dialect:
                    ^
 SyntaxError: invalid syntax
   $ # incompatible python version, let's fix it
-  $ 2to3 -w -f except configure.py
+  $ 2to3 -w configure.py
 [...]
 RefactoringTool: Files that were modified:
 RefactoringTool: configure.py
