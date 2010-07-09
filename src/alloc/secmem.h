@@ -397,7 +397,7 @@ class SecureVector : public MemoryRegion<T>
          {
          init(true, INITIAL_LEN);
          if(INITIAL_LEN)
-            copy(in);
+            copy(in, in.size());
          else
             set(in);
          }
