@@ -1,5 +1,6 @@
 
 * 1.9.10-dev, ????-??-??
+ - Drop support for building with Python 2.4
  - Fix benchmarking of block ciphers in ECB mode
  - Rename S2K to PBKDF
 

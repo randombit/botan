@@ -2,14 +2,16 @@
 
 """
 Configuration program for botan (http://botan.randombit.net/)
-  (C) 2009 Jack Lloyd
+  (C) 2009-2010 Jack Lloyd
   Distributed under the terms of the Botan license
 
 Tested with
-   CPython 2.4, 2.5, 2.6 - OK
+   CPython 2.5, 2.6 - OK
    Jython 2.5 - Target detection does not work (use --os and --cpu)
 
-   CPython 2.3 and earlier are not supported
+   CPython 2.4 and earlier are not supported
+
+   Use the 2to3 script to use with Python 3
 
    Has not been tested with IronPython or PyPy
 """
@@ -129,12 +131,6 @@ Handle command line options
 """
 def process_command_line(args):
 
-    # This is just an implementation of Optik's append_const action,
-    # but that is not available in Python 2.4's optparse, so use a
-    # callback instead
-    def optparse_append_const(option, opt, value, parser, dest, arg):
-        parser.values.__dict__[dest].append(arg)
-
     parser = OptionParser(
         formatter = IndentedHelpFormatter(max_help_position = 50),
         version = BuildConfigurationInformation.version_string)
@@ -164,36 +160,20 @@ def process_command_line(args):
                             dest='unaligned_mem', action='store_false',
                             help=SUPPRESS_HELP)
 
-    target_group.add_option('--enable-isa', metavar='ISALIST',
-                            dest='enable_isa_extns',
-                            action='append', default=[],
-                            help=SUPPRESS_HELP)
-
-    target_group.add_option('--disable-isa', metavar='ISALIST',
-                            dest='disable_isa_extns',
-                            action='append', default=[],
-                            help=SUPPRESS_HELP)
-
     for isa_extn_name in ['SSE2', 'SSSE3', 'AltiVec', 'AES-NI']:
         isa_extn = isa_extn_name.lower()
 
         target_group.add_option('--enable-%s' % (isa_extn),
-                                action='callback',
                                 help='enable use of %s' % (isa_extn_name),
-                                callback=optparse_append_const,
-                                callback_kwargs = {
-                                    'dest': 'enable_isa_extns',
-                                    'arg': isa_extn }
-                                )
+                                action='append_const',
+                                const=isa_extn,
+                                dest='enable_isa_extns')
 
         target_group.add_option('--disable-%s' % (isa_extn),
-                                action='callback',
                                 help=SUPPRESS_HELP,
-                                callback=optparse_append_const,
-                                callback_kwargs = {
-                                    'dest': 'disable_isa_extns',
-                                    'arg': isa_extn }
-                                )
+                                action='append_const',
+                                const=isa_extn,
+                                dest='disable_isa_extns')
 
     build_group = OptionGroup(parser, 'Build options')
 
@@ -256,10 +236,10 @@ def process_command_line(args):
     mods_group = OptionGroup(parser, 'Module selection')
 
     mods_group.add_option('--enable-modules', dest='enabled_modules',
-                          metavar='MODS', action='append', default=[],
+                          metavar='MODS', action='append',
                           help='enable specific modules')
     mods_group.add_option('--disable-modules', dest='disabled_modules',
-                          metavar='MODS', action='append', default=[],
+                          metavar='MODS', action='append',
                           help='disable specific modules')
     mods_group.add_option('--no-autoload', action='store_true', default=False,
                           help='disable automatic loading')
@@ -270,19 +250,15 @@ def process_command_line(args):
 
         mods_group.add_option('--with-%s' % (mod),
                               help='add support for using %s' % (lib),
-                              action='callback',
-                              callback=optparse_append_const,
-                              callback_kwargs = {
-                                  'dest': 'enabled_modules', 'arg': mod }
-                              )
+                              action='append_const',
+                              const=mod,
+                              dest='enabled_modules')
 
         mods_group.add_option('--without-%s' % (mod),
                               help=SUPPRESS_HELP,
-                              action='callback',
-                              callback=optparse_append_const,
-                              callback_kwargs = {
-                                  'dest': 'disabled_modules', 'arg': mod }
-                              )
+                              action='append_const',
+                              const=mod,
+                              dest='disabled_modules')
 
     install_group = OptionGroup(parser, 'Installation options')
 
@@ -334,6 +310,8 @@ def process_command_line(args):
             options.with_endian))
 
     def parse_multiple_enable(modules):
+        if modules is None:
+            return []
         return sorted(set(flatten([s.split(',') for s in modules])))
 
     options.enabled_modules = parse_multiple_enable(options.enabled_modules)
@@ -497,10 +475,7 @@ class ModuleInfo(object):
 
         self.mp_bits = int(self.mp_bits)
 
-        if self.uses_tr1 == 'yes':
-            self.uses_tr1 = True
-        else:
-            self.uses_tr1 = False
+        self.uses_tr1 = (True if self.uses_tr1 == 'yes' else False)
 
     def sources(self):
         return self.source
@@ -521,7 +496,6 @@ class ModuleInfo(object):
                 return False
 
         if self.need_isa != None:
-            logging.debug('Checking if %s in %s' % (self.need_isa, options.disable_isa_extns))
             if self.need_isa in options.disable_isa_extns:
                 return False # explicitly disabled
 
@@ -591,10 +565,7 @@ class ArchInfo(object):
 
         self.submodel_aliases = force_to_dict(self.submodel_aliases)
 
-        if self.unaligned == 'ok':
-            self.unaligned_ok = 1
-        else:
-            self.unaligned_ok = 0
+        self.unaligned_ok = (1 if self.unaligned == 'ok' else 0)
 
     """
     Return ISA extensions specific to this CPU
@@ -677,7 +648,7 @@ class CompilerInfo(object):
                         'dll_import_flags': '',
                         'ar_command': None,
                         'makefile_style': '',
-                        'compiler_has_tr1': False,
+                        'has_tr1': False,
                         })
 
         self.so_link_flags = force_to_dict(self.so_link_flags)
@@ -770,7 +741,7 @@ class CompilerInfo(object):
                     return ['USE_BOOST_TR1']
                 elif with_tr1 == 'system':
                     return ['USE_STD_TR1']
-            elif self.compiler_has_tr1:
+            elif self.has_tr1:
                 return ['USE_STD_TR1']
             return []
 
@@ -797,16 +768,10 @@ class OsInfo(object):
 
         self.ar_needs_ranlib = bool(self.ar_needs_ranlib)
 
-        if self.build_shared == 'yes':
-            self.build_shared = True
-        else:
-            self.build_shared = False
+        self.build_shared = (True if self.build_shared == 'yes' else False)
 
     def ranlib_command(self):
-        if self.ar_needs_ranlib:
-            return 'ranlib'
-        else:
-            return 'true' # no-op
+        return ('ranlib' if self.ar_needs_ranlib else 'true')
 
     def defines(self):
         return ['TARGET_OS_IS_%s' % (self.basename.upper())] + \
@@ -1250,10 +1215,7 @@ def setup_build(build_config, options, template_vars):
         if style == 'nmake':
             return 'nmake.in'
         elif style == 'unix':
-            if options.build_shared_lib:
-                return 'unix_shr.in'
-            else:
-                return 'unix.in'
+            return ('unix_shr.in' if options.build_shared_lib else 'unix.in')
         else:
             raise Exception('Unknown makefile style "%s"' % (style))
 
@@ -1576,10 +1538,7 @@ def main(argv = None):
             options.extra_flags = ' -fpermissive'
 
     if options.with_tr1 == None:
-        if ccinfo[options.compiler].compiler_has_tr1:
-            options.with_tr1 = 'system'
-        else:
-            options.with_tr1 = 'none'
+        options.with_tr1 = ('system' if ccinfo[options.compiler].has_tr1 else 'none')
 
     if options.gen_amalgamation:
         if options.asm_ok:
