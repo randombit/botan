@@ -8,19 +8,26 @@
 #ifndef BOTAN_PBKDF2_H__
 #define BOTAN_PBKDF2_H__
 
-#include <botan/s2k.h>
+#include <botan/pbkdf.h>
 #include <botan/mac.h>
 
 namespace Botan {
 
 /**
-* This class implements the PKCS #5 PBKDF2 functionality.
+* PKCS #5 PBKDF2
 */
-class BOTAN_DLL PKCS5_PBKDF2 : public S2K
+class BOTAN_DLL PKCS5_PBKDF2 : public PBKDF
    {
    public:
-      std::string name() const;
-      S2K* clone() const;
+      std::string name() const
+         {
+         return "PBKDF2(" + mac->name() + ")";
+         }
+
+      PBKDF* clone() const
+         {
+         return new PKCS5_PBKDF2(mac->clone());
+         }
 
       OctetString derive_key(u32bit output_len,
                              const std::string& passphrase,
@@ -31,8 +38,12 @@ class BOTAN_DLL PKCS5_PBKDF2 : public S2K
       * Create a PKCS #5 instance using the specified message auth code
       * @param mac the MAC to use
       */
-      PKCS5_PBKDF2(MessageAuthenticationCode* mac);
-      ~PKCS5_PBKDF2();
+      PKCS5_PBKDF2(MessageAuthenticationCode* m) : mac(m) {}
+
+      /**
+      * Destructor
+      */
+      ~PKCS5_PBKDF2() { delete mac; }
    private:
       MessageAuthenticationCode* mac;
    };

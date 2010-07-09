@@ -55,38 +55,39 @@ using namespace Botan;
 
 #include "common.h"
 
-/* A weird little hack to fit S2K algorithms into the validation suite
-   You probably wouldn't ever want to actually use the S2K algorithms like
-   this, the raw S2K interface is more convenient for actually using them
+/* A weird little hack to fit PBKDF algorithms into the validation
+* suite You probably wouldn't ever want to actually use the PBKDF
+* algorithms like this, the raw PBKDF interface is more convenient
+* for actually using them
 */
-class S2K_Filter : public Filter
+class PBKDF_Filter : public Filter
    {
    public:
-      std::string name() const { return s2k->name(); }
+      std::string name() const { return pbkdf->name(); }
 
       void write(const byte in[], u32bit len)
          { passphrase += std::string(reinterpret_cast<const char*>(in), len); }
 
       void end_msg()
          {
-         SymmetricKey x = s2k->derive_key(outlen, passphrase,
+         SymmetricKey x = pbkdf->derive_key(outlen, passphrase,
                                           &salt[0], salt.size(),
                                           iterations);
          send(x.bits_of());
          }
 
-      S2K_Filter(S2K* algo, const SymmetricKey& s, u32bit o, u32bit i)
+      PBKDF_Filter(PBKDF* algo, const SymmetricKey& s, u32bit o, u32bit i)
          {
-         s2k = algo;
+         pbkdf = algo;
          outlen = o;
          iterations = i;
          salt = s.bits_of();
          }
 
-      ~S2K_Filter() { delete s2k; }
+      ~PBKDF_Filter() { delete pbkdf; }
    private:
       std::string passphrase;
-      S2K* s2k;
+      PBKDF* pbkdf;
       SecureVector<byte> salt;
       u32bit outlen, iterations;
    };
@@ -133,19 +134,19 @@ class KDF_Filter : public Filter
       u32bit outlen;
    };
 
-Filter* lookup_s2k(const std::string& algname,
+Filter* lookup_pbkdf(const std::string& algname,
                    const std::vector<std::string>& params)
    {
-   S2K* s2k = 0;
+   PBKDF* pbkdf = 0;
 
    try {
-      s2k = get_s2k(algname);
+      pbkdf = get_pbkdf(algname);
       }
    catch(...) { }
 
-   if(s2k)
-      return new S2K_Filter(s2k, params[0], to_u32bit(params[1]),
-                            to_u32bit(params[2]));
+   if(pbkdf)
+      return new PBKDF_Filter(pbkdf, params[0], to_u32bit(params[1]),
+                              to_u32bit(params[2]));
    return 0;
    }
 
@@ -298,7 +299,7 @@ Filter* lookup(const std::string& algname,
    filter = lookup_encoder(algname);
    if(filter) return filter;
 
-   filter = lookup_s2k(algname, params);
+   filter = lookup_pbkdf(algname, params);
    if(filter) return filter;
 
    return 0;

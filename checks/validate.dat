@@ -1,8 +1,8 @@
 # Main Botan validation file
 
-# This has test vectors for block ciphers in ECB mode, stream ciphers, hash
-# functions, MACs, KDFs, S2K algorithms, encoders/decoders, and block cipher
-# modes (CBC, CTS, CFB, OFB, CTR, and EAX)
+# This has test vectors for block ciphers in ECB mode, stream ciphers,
+# hash functions, MACs, KDFs, PBKDFs, encoders/decoders, and block
+# cipher modes (CBC, CTS, CFB, OFB, CTR, XTS, and EAX)
 
 # MARKER: Block Ciphers
 
@@ -60553,9 +60553,9 @@ A09661392376F7044D9052A397883246B67F5F1EF63EB5FB::24
 0123456789ABCDEFFEDCBA98765432010123456789ABCDEFFEDCBA9876543201\
 0123456789ABCDEFFEDCBA98765432010123456789ABCDEFFEDCBA9876543201:16
 
-# MARKER: S2K Algorithms
+# MARKER: PBKDF Algorithms
 
-# S2K format: passphrase:output:salt:out_len:iterations
+# PBKDF format: passphrase:output:salt:out_len:iterations
 
 [OpenPGP-S2K(SHA-1)]
 666F6F:0BEEC7B5EA3F0FDBC95D0DD47F3C5BC275DA8A335A8CAA4039FDBC02C01A649C::32:0

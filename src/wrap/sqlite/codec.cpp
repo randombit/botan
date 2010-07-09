@@ -54,12 +54,12 @@ Codec::InitializeCodec(void *db)
 void
 Codec::GenerateWriteKey(const char* userPassword, int passwordLength)
 {
-    S2K* s2k = get_s2k(S2K_STR);
-    s2k->set_iterations(S2K_ITERATIONS);
-    s2k->change_salt((const byte*)SALT_STR.c_str(), SALT_SIZE);
+    PBKDF* pbkdf = get_pbkdf(PBKDF_STR);
+    pbkdf->set_iterations(PBKDF_ITERATIONS);
+    pbkdf->change_salt((const byte*)SALT_STR.c_str(), SALT_SIZE);
 
     SymmetricKey masterKey =
-        s2k->derive_key(KEY_SIZE + IV_DERIVATION_KEY_SIZE, std::string(userPassword, passwordLength));
+        pbkdf->derive_key(KEY_SIZE + IV_DERIVATION_KEY_SIZE, std::string(userPassword, passwordLength));
 
     m_writeKey = SymmetricKey(masterKey.bits_of(), KEY_SIZE);
     m_ivWriteKey = SymmetricKey(masterKey.bits_of() + KEY_SIZE, IV_DERIVATION_KEY_SIZE);

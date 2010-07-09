@@ -50,9 +50,9 @@ using namespace Botan;
 //make sure to add "/NoPadding" for modes that use padding schemes
 const string BLOCK_CIPHER_STR = "Twofish/XTS";
 
-//S2K_STR: Key derivation function used to derive both the encryption
+//PBKDF_STR: Key derivation function used to derive both the encryption
 //and IV derivation keys from the given database passphrase
-const string S2K_STR = "PBKDF2(SHA-160)";
+const string PBKDF_STR = "PBKDF2(SHA-160)";
 
 //SALT_STR: Hard coded salt used to derive the key from the passphrase.
 const string SALT_STR = "&g#nB'9]";
@@ -61,9 +61,9 @@ const string SALT_STR = "&g#nB'9]";
 //encryption
 const string MAC_STR = "CMAC(Twofish)";
 
-//S2K_ITERATIONS: Number of hash iterations used in the key derivation
+//PBKDF_ITERATIONS: Number of hash iterations used in the key derivation
 //process.
-const int S2K_ITERATIONS = 10000;
+const int PBKDF_ITERATIONS = 10000;
 
 //SALT_SIZE: Size of the salt in bytes (as given in SALT_STR)
 const int SALT_SIZE = 64/8; //64 bit, 8 byte salt

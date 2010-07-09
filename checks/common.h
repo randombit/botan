@@ -34,7 +34,8 @@ Botan::Filter* lookup_hash(const std::string&);
 Botan::Filter* lookup_mac(const std::string&, const std::string&);
 Botan::Filter* lookup_rng(const std::string&, const std::string&);
 Botan::Filter* lookup_encoder(const std::string&);
-Botan::Filter* lookup_s2k(const std::string&, const std::vector<std::string>&);
+Botan::Filter* lookup_pbkdf(const std::string&,
+                            const std::vector<std::string>&);
 Botan::Filter* lookup_kdf(const std::string&, const std::string&,
                           const std::string&);
 

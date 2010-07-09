@@ -15,7 +15,7 @@
 #include <botan/kdf.h>
 #include <botan/eme.h>
 #include <botan/emsa.h>
-#include <botan/s2k.h>
+#include <botan/pbkdf.h>
 
 namespace Botan {
 
@@ -130,11 +130,21 @@ inline MessageAuthenticationCode* get_mac(const std::string& algo_spec)
    }
 
 /**
-* String to key algorithm factory method.
-* @param algo_spec the name of the desired string to key (S2K) algorithm
-* @return pointer to the string to key algorithm object
+* Password based key derivation function factory method
+* @param algo_spec the name of the desired PBKDF algorithm
+* @return pointer to newly allocated object of that type
 */
-BOTAN_DLL S2K* get_s2k(const std::string& algo_spec);
+BOTAN_DLL PBKDF* get_pbkdf(const std::string& algo_spec);
+
+/**
+* @deprecated Use get_pbkdf
+* @param algo_spec the name of the desired algorithm
+* @return pointer to newly allocated object of that type
+*/
+inline PBKDF* get_s2k(const std::string& algo_spec)
+   {
+   return get_pbkdf(algo_spec);
+   }
 
 /*
 * Get an EMSA/EME/KDF/MGF function
@@ -145,7 +155,7 @@ BOTAN_DLL S2K* get_s2k(const std::string& algo_spec);
 /**
 * Factory method for EME (message-encoding methods for encryption) objects
 * @param algo_spec the name of the EME to create
-* @return pointer to the desired EME object
+* @return pointer to newly allocated object of that type
 */
 BOTAN_DLL EME*  get_eme(const std::string& algo_spec);
 
@@ -153,14 +163,14 @@ BOTAN_DLL EME*  get_eme(const std::string& algo_spec);
 * Factory method for EMSA (message-encoding methods for signatures
 * with appendix) objects
 * @param algo_spec the name of the EME to create
-* @return pointer to the desired EME object
+* @return pointer to newly allocated object of that type
 */
 BOTAN_DLL EMSA* get_emsa(const std::string& algo_spec);
 
 /**
 * Factory method for KDF (key derivation function)
 * @param algo_spec the name of the KDF to create
-* @return pointer to the desired KDF object
+* @return pointer to newly allocated object of that type
 */
 BOTAN_DLL KDF*  get_kdf(const std::string& algo_spec);
 
@@ -176,7 +186,7 @@ BOTAN_DLL KDF*  get_kdf(const std::string& algo_spec);
 * @param iv the initialization vector to be used
 * @param direction determines whether the filter will be an encrypting
 * or decrypting filter
-* @return pointer to the encryption or decryption filter
+* @return pointer to newly allocated encryption or decryption filter
 */
 BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
                                    const SymmetricKey& key,

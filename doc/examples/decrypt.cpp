@@ -105,23 +105,23 @@ int main(int argc, char* argv[])
       const u32bit key_len = max_keylength_of(algo);
       const u32bit iv_len = block_size_of(algo);
 
-      std::auto_ptr<S2K> s2k(get_s2k("PBKDF2(SHA-1)"));
+      std::auto_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(SHA-1)"));
 
       const u32bit PBKDF2_ITERATIONS = 8192;
 
       SecureVector<byte> salt = b64_decode(salt_str);
 
-      SymmetricKey bc_key = s2k->derive_key(key_len, "BLK" + passphrase,
-                                            &salt[0], salt.size(),
-                                            PBKDF2_ITERATIONS);
+      SymmetricKey bc_key = pbkdf->derive_key(key_len, "BLK" + passphrase,
+                                              &salt[0], salt.size(),
+                                              PBKDF2_ITERATIONS);
 
-      InitializationVector iv = s2k->derive_key(iv_len, "IVL" + passphrase,
-                                                &salt[0], salt.size(),
-                                                PBKDF2_ITERATIONS);
+      InitializationVector iv = pbkdf->derive_key(iv_len, "IVL" + passphrase,
+                                                  &salt[0], salt.size(),
+                                                  PBKDF2_ITERATIONS);
 
-      SymmetricKey mac_key = s2k->derive_key(16, "MAC" + passphrase,
-                                             &salt[0], salt.size(),
-                                             PBKDF2_ITERATIONS);
+      SymmetricKey mac_key = pbkdf->derive_key(16, "MAC" + passphrase,
+                                               &salt[0], salt.size(),
+                                               PBKDF2_ITERATIONS);
 
       Pipe pipe(new Base64_Decoder,
                 get_cipher(algo + "/CBC", bc_key, iv, DECRYPTION),

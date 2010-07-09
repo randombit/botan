@@ -37,20 +37,4 @@ OctetString PKCS5_PBKDF1::derive_key(u32bit key_len,
    return OctetString(key, std::min(key_len, key.size()));
    }
 
-/*
-* Clone this type
-*/
-S2K* PKCS5_PBKDF1::clone() const
-   {
-   return new PKCS5_PBKDF1(hash->clone());
-   }
-
-/*
-* Return the name of this type
-*/
-std::string PKCS5_PBKDF1::name() const
-   {
-   return "PBKDF1(" + hash->name() + ")";
-   }
-
 }

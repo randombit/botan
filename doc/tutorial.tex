@@ -169,23 +169,22 @@ but an attacker, trying out a large list of potential passphrases,
 will be seriously annoyed (and slowed down) by this.
 
 In this iteration of the example, we'll kill these two birds with one
-stone, and derive the key from the passphrase using a S2K (string to
-key) algorithm (these are also often called PBKDF algorithms, for
-Password-Based Key Derivation Function). In this example, we use
+stone, and derive the key from the passphrase using a PBKDF
+(Password-Based Key Derivation Function). In this example, we use
 PBKDF2 with Hash Message Authentication Code (HMAC(SHA-256)), which is
 specified in PKCS \#5. We replace the first four lines of code from
 the first example with:
 
 \begin{verbatim}
-   S2K* s2k = get_s2k("PBKDF2(SHA-256)");
+   PBKDF* pbkdf = get_pbkdf("PBKDF2(SHA-256)");
    // hard-coded iteration count for simplicity; should be sufficient
-   s2k->set_iterations(4096);
+   pbkdf->set_iterations(10000);
    // 8 octets == 64-bit salt; again, good enough
-   s2k->new_random_salt(8);
-   SecureVector<byte> the_salt = s2k->current_salt();
+   pbkdf->new_random_salt(8);
+   SecureVector<byte> the_salt = pbkdf->current_salt();
 
    // 48 octets == 32 for key + 16 for IV
-   SecureVector<byte> key_and_IV = s2k->derive_key(48, passphrase).bits_of();
+   SecureVector<byte> key_and_IV = pbkdf->derive_key(48, passphrase).bits_of();
 
    SymmetricKey key(key_and_IV, 32);
    InitializationVector iv(key_and_IV + 32, 16);
@@ -193,7 +192,7 @@ the first example with:
 
 To complete the example, we have to remember to write out the salt (stored in
 \variable{the\_salt}) at the beginning of the file. The receiving side needs to
-know this value in order to restore it (by calling the \variable{s2k} object's
+know this value in order to restore it (by calling the \variable{pbkdf} object's
 \function{change\_salt} function) so it can derive the same key and IV from the
 passphrase.
 
@@ -211,7 +210,7 @@ same key; that is very much a no-no.
 
 \begin{verbatim}
    // 80 octets == 32 for cipher key + 16 for IV + 32 for hmac key
-   SecureVector<byte> keys_and_IV = s2k->derive_key(80, passphrase);
+   SecureVector<byte> keys_and_IV = pbkdf->derive_key(80, passphrase);
 
    SymmetricKey key(keys_and_IV, 32);
    InitializationVector iv(keys_and_IV + 32, 16);
@@ -258,15 +257,15 @@ key'', etc) makes sure that each of the three derived variables will have
 different values.
 
 \begin{verbatim}
-   S2K* s2k = get_s2k("PBKDF2(SHA-256)");
+   PBKDF* pbkdf = get_pbkdf("PBKDF2(SHA-256)");
    // hard-coded iteration count for simplicity; should be sufficient
-   s2k->set_iterations(4096);
+   pbkdf->set_iterations(10000);
    // 8 octet == 64-bit salt; again, good enough
-   s2k->new_random_salt(8);
+   pbkdf->new_random_salt(8);
    // store the salt so we can write it to a file later
-   SecureVector<byte> the_salt = s2k->current_salt();
+   SecureVector<byte> the_salt = pbkdf->current_salt();
 
-   SymmetricKey master_key = s2k->derive_key(48, passphrase);
+   SymmetricKey master_key = pbkdf->derive_key(48, passphrase);
 
    KDF* kdf = get_kdf("KDF2(SHA-256)");
 
@@ -281,12 +280,12 @@ Here is the final version of the encryption code, with all the changes we've
 made:
 
 \begin{verbatim}
-   S2K* s2k = get_s2k("PBKDF2(SHA-256)");
-   s2k->set_iterations(4096);
-   s2k->new_random_salt(8);
-   SecureVector<byte> the_salt = s2k->current_salt();
+   PBKDF* pbkdf = get_pbkdf("PBKDF2(SHA-256)");
+   pbkdf->set_iterations(10000);
+   pbkdf->new_random_salt(8);
+   SecureVector<byte> the_salt = pbkdf->current_salt();
 
-   SymmetricKey master_key = s2k->derive_key(48, passphrase);
+   SymmetricKey master_key = pbkdf->derive_key(48, passphrase);
 
    KDF* kdf = get_kdf("KDF2(SHA-256)");
 
@@ -356,12 +355,12 @@ In this case, we'll hex-encode the salt and the MAC, and output them both to
 standard output (the salt followed by the MAC).
 
 \begin{verbatim}
-   S2K* s2k = get_s2k("PBKDF2(SHA-256)");
-   s2k->set_iterations(4096);
-   s2k->new_random_salt(8);
-   OctetString the_salt = s2k->current_salt();
+   PBKDF* pbkdf = get_pbkdf("PBKDF2(SHA-256)");
+   pbkdf->set_iterations(10000);
+   pbkdf->new_random_salt(8);
+   OctetString the_salt = pbkdf->current_salt();
 
-   SymmetricKey hmac_key = s2k->derive_key(32, passphrase);
+   SymmetricKey hmac_key = pbkdf->derive_key(32, passphrase);
 
    Pipe pipe(new MAC_Filter("HMAC(SHA-256)", mac_key),
              new Hex_Encoder
@@ -396,7 +395,7 @@ number generator (RNG):
 After reading the challenge, the client generates a response based on
 the challenge and the passphrase. In this case, we will do it by
 repeatedly hashing the challenge, the passphrase, and (if applicable)
-the previous digest. We iterate this construction 4096 times, to make
+the previous digest. We iterate this construction 10000 times, to make
 brute force attacks on the passphrase hard to do. Since we are already
 using 160-bit challenges, a 160-bit response seems warranted, so we'll
 use SHA-1.
@@ -404,7 +403,7 @@ use SHA-1.
 \begin{verbatim}
    HashFunction* hash = get_hash("SHA-1");
    SecureVector<byte> digest;
-   for(u32bit j = 0; j != 4096; j++)
+   for(u32bit j = 0; j != 10000; j++)
       {
       hash->update(digest, digest.size());
       hash->update(passphrase);

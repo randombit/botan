@@ -6,8 +6,6 @@
 */
 
 #include <botan/pgp_s2k.h>
-#include <algorithm>
-#include <memory>
 
 namespace Botan {
 
@@ -54,22 +52,6 @@ OctetString OpenPGP_S2K::derive_key(u32bit key_len,
       }
 
    return key;
-   }
-
-/*
-* Return the name of this type
-*/
-std::string OpenPGP_S2K::name() const
-   {
-   return "OpenPGP-S2K(" + hash->name() + ")";
-   }
-
-/*
-* Return a clone of this object
-*/
-S2K* OpenPGP_S2K::clone() const
-   {
-   return new OpenPGP_S2K(hash->clone());
    }
 
 }

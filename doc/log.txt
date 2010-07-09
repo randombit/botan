@@ -1,6 +1,7 @@
 
 * 1.9.10-dev, ????-??-??
  - Fix benchmarking of block ciphers in ECB mode
+ - Rename S2K to PBKDF
 
 * 1.9.9, 2010-06-28
  - Add new X509::BER_encode and PKCS8::BER_encode

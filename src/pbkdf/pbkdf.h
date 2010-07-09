@@ -1,33 +1,34 @@
 /*
-* S2K
+* PBKDF
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_S2K_H__
-#define BOTAN_S2K_H__
+#ifndef BOTAN_PBKDF_H__
+#define BOTAN_PBKDF_H__
 
 #include <botan/symkey.h>
 
 namespace Botan {
 
 /**
-* Base class for S2K (string to key) operations, which convert a
-* password/passphrase into a key
+* Base class for PBKDF (password based key derivation function)
+* implementations. Converts a password into a key using a salt
+* and iterated hashing to make brute force attacks harder.
 */
-class BOTAN_DLL S2K
+class BOTAN_DLL PBKDF
    {
    public:
 
       /**
       * @return new instance of this same algorithm
       */
-      virtual S2K* clone() const = 0;
+      virtual PBKDF* clone() const = 0;
 
       /**
       * Get the algorithm name.
-      * @return name of this S2K algorithm
+      * @return name of this PBKDF algorithm
       */
       virtual std::string name() const = 0;
 
@@ -37,7 +38,7 @@ class BOTAN_DLL S2K
       virtual void clear() {}
 
       /**
-      * Derive a key from a passphrase with this S2K object. It will use
+      * Derive a key from a passphrase with this PBKDF object. It will use
       * the salt value and number of iterations configured in this object.
       * @param output_len the desired length of the key to produce
       * @param passphrase the password to derive the key from
@@ -50,12 +51,17 @@ class BOTAN_DLL S2K
                                      const byte salt[], u32bit salt_len,
                                      u32bit iterations) const = 0;
 
-      S2K() {}
-      virtual ~S2K() {}
+      PBKDF() {}
+      virtual ~PBKDF() {}
    private:
-      S2K(const S2K&) {}
-      S2K& operator=(const S2K&) { return (*this); }
+      PBKDF(const PBKDF&) {}
+      PBKDF& operator=(const PBKDF&) { return (*this); }
    };
+
+/**
+* For compatability with 1.8
+*/
+typedef PBKDF S2K;
 
 }
 

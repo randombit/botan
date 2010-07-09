@@ -2477,17 +2477,17 @@ much memory is needed for internal I/O buffers will be used.
 
 \section{Miscellaneous}
 
-This section has documentation for anything that just didn't fit into any of
-the major categories. Many of them (Timers, Allocators) will rarely be used in
-actual application code, but others, like the S2K algorithms, have a wide
-degree of applicability.
+This section has documentation for anything that just didn't fit into
+any of the major categories. Many of them (Timers, Allocators) will
+rarely be used in actual application code, but others, like the PBKDF
+algorithms, have a wide degree of applicability.
 
-\subsection{S2K Algorithms}
+\subsection{PBKDF Algorithms}
 
 There are various procedures (usually ad-hoc) for turning a
 passphrase into a (mostly) arbitrary length key for a symmetric
 cipher. A general interface for such algorithms is presented in
-\filename{s2k.h}. The main function is \function{derive\_key}, which
+\filename{pbkdf.h}. The main function is \function{derive\_key}, which
 takes a passphrase, a salt, an iteration count, and the desired length
 of the output key, and returns a key of that length, deterministically
 produced from the passphrase and salt. If an algorithm can't produce a
@@ -2498,9 +2498,9 @@ the output size of the underlying hash function).
 The purpose of the iteration count is to make the algorithm take
 longer to compute the final key (reducing the speed of brute-force
 attacks of various kinds). Most standards recommend an iteration count
-of at least 10000. Currently defined S2K algorithms are
+of at least 10000. Currently defined PBKDF algorithms are
 ``PBKDF1(digest)'', ``PBKDF2(digest)'', and ``OpenPGP-S2K(digest)'';
-you can retrieve any of these using the \function{get\_s2k}, found in
+you can retrieve any of these using the \function{get\_pbkdf}, found in
 \filename{lookup.h}. As of this writing, ``PBKDF2(SHA-256)'' with
 10000 iterations and a 16 byte salt is recommend for new applications.
 

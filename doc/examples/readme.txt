@@ -32,7 +32,7 @@ pkcs10: Generates a PKCS #10 certificate request for a 1024 bit RSA key
 self_sig: Generates a self-signed X.509v3 certificate with a 1024 bit RSA key
 --------
 
-* RSA examples (also uses X.509, PKCS #8, block ciphers, MACs, S2K algorithms)
+* RSA examples (also uses X.509, PKCS #8, block ciphers, MACs, PBKDF algorithms)
 --------
 rsa_kgen: Generate an RSA key, encrypt the private key with a passphrase,
           output the keys to a pair of files

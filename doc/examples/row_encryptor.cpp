@@ -16,8 +16,8 @@
 
 using namespace Botan;
 
-/**
-Encrypt and decrypt small rows
+/*
+* Encrypt and decrypt small rows
 */
 class Row_Encryptor
    {
@@ -34,14 +34,14 @@ class Row_Encryptor
       std::string decrypt(const std::string& input,
                           const MemoryRegion<byte>& salt);
 
-      SecureVector<byte> get_s2k_salt() const { return s2k_salt; }
+      SecureVector<byte> get_pbkdf_salt() const { return pbkdf_salt; }
    private:
       void init(const std::string& passphrase);
 
       Row_Encryptor(const Row_Encryptor&) {}
       Row_Encryptor& operator=(const Row_Encryptor&) { return (*this); }
 
-      SecureVector<byte> s2k_salt;
+      SecureVector<byte> pbkdf_salt;
       Pipe enc_pipe, dec_pipe;
       EAX_Encryption* eax_enc; // owned by enc_pipe
       EAX_Decryption* eax_dec; // owned by dec_pipe;
@@ -50,24 +50,24 @@ class Row_Encryptor
 Row_Encryptor::Row_Encryptor(const std::string& passphrase,
                              RandomNumberGenerator& rng)
    {
-   s2k_salt.resize(10); // 80 bits
-   rng.randomize(&s2k_salt[0], s2k_salt.size());
+   pbkdf_salt.resize(10); // 80 bits
+   rng.randomize(&pbkdf_salt[0], pbkdf_salt.size());
    init(passphrase);
    }
 
 Row_Encryptor::Row_Encryptor(const std::string& passphrase,
                              const MemoryRegion<byte>& salt)
    {
-   s2k_salt = salt;
+   pbkdf_salt = salt;
    init(passphrase);
    }
 
 void Row_Encryptor::init(const std::string& passphrase)
    {
-   std::auto_ptr<S2K> s2k(get_s2k("PBKDF2(SHA-160)"));
+   std::auto_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(SHA-160)"));
 
-   SecureVector<byte> key = s2k->derive_key(32, passphrase,
-                                            &s2k_salt[0], s2k_salt.size(),
+   SecureVector<byte> key = pbkdf->derive_key(32, passphrase,
+                                            &pbkdf_salt[0], pbkdf_salt.size(),
                                             10000).bits_of();
 
    /*
@@ -159,13 +159,13 @@ int main()
          std::cout << "BOOM " << i << "\n";
       }
 
-   Row_Encryptor test_s2k_salt_copy(secret_passphrase,
-                                    encryptor.get_s2k_salt());
+   Row_Encryptor test_pbkdf_salt_copy(secret_passphrase,
+                                      encryptor.get_pbkdf_salt());
 
    salt.clear(); // all-0
-   std::string test = test_s2k_salt_copy.decrypt(encrypted_values[0], salt);
+   std::string test = test_pbkdf_salt_copy.decrypt(encrypted_values[0], salt);
    if(test != original_inputs[0])
-      std::cout << "S2K salt copy failed to decrypt properly\n";
+      std::cout << "PBKDF salt copy failed to decrypt properly\n";
 
    return 0;
    }

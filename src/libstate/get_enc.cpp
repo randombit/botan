@@ -81,9 +81,9 @@
 namespace Botan {
 
 /*
-* Get a S2K algorithm by name
+* Get a PBKDF algorithm by name
 */
-S2K* get_s2k(const std::string& algo_spec)
+PBKDF* get_pbkdf(const std::string& algo_spec)
    {
    SCAN_Name request(algo_spec);
 
