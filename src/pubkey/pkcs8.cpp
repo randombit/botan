@@ -41,8 +41,10 @@ SecureVector<byte> PKCS8_extract(DataSource& source,
 /*
 * PEM decode and/or decrypt a private key
 */
-SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
-                                AlgorithmIdentifier& pk_alg_id)
+SecureVector<byte> PKCS8_decode(
+   DataSource& source,
+   std::function<std::pair<bool,std::string> ()> get_passphrase,
+   AlgorithmIdentifier& pk_alg_id)
    {
    AlgorithmIdentifier pbe_alg_id;
    SecureVector<byte> key_data, key;
@@ -91,14 +93,12 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
             DataSource_Memory params(pbe_alg_id.parameters);
             std::unique_ptr<PBE> pbe(get_pbe(pbe_alg_id.oid, params));
 
-            User_Interface::UI_Result result = User_Interface::OK;
-            const std::string passphrase =
-               ui.get_passphrase("PKCS #8 private key", source.id(), result);
+            std::pair<bool, std::string> pass = get_passphrase();
 
-            if(result == User_Interface::CANCEL_ACTION)
+            if(pass.first == false)
                break;
 
-            pbe->set_key(passphrase);
+            pbe->set_key(pass.second);
             Pipe decryptor(pbe.release());
 
             decryptor.process_msg(key_data, key_data.size());
@@ -200,10 +200,10 @@ std::string PEM_encode(const Private_Key& key,
 */
 Private_Key* load_key(DataSource& source,
                       RandomNumberGenerator& rng,
-                      const User_Interface& ui)
+                      std::function<std::pair<bool, std::string> ()> get_pass)
    {
    AlgorithmIdentifier alg_id;
-   SecureVector<byte> pkcs8_key = PKCS8_decode(source, ui, alg_id);
+   SecureVector<byte> pkcs8_key = PKCS8_decode(source, get_pass, alg_id);
 
    const std::string alg_name = OIDS::lookup(alg_id.oid);
    if(alg_name == "" || alg_name == alg_id.oid.as_string())
@@ -218,11 +218,37 @@ Private_Key* load_key(DataSource& source,
 */
 Private_Key* load_key(const std::string& fsname,
                       RandomNumberGenerator& rng,
-                      const User_Interface& ui)
+                      std::function<std::pair<bool, std::string> ()> get_pass)
    {
    DataSource_Stream source(fsname, true);
-   return PKCS8::load_key(source, rng, ui);
+   return PKCS8::load_key(source, rng, get_pass);
    }
+
+namespace {
+
+class Single_Shot_Passphrase
+   {
+   public:
+      Single_Shot_Passphrase(const std::string& pass) :
+         passphrase(pass), first(true) {}
+
+      std::pair<bool, std::string> operator()()
+         {
+         if(first)
+            {
+            first = false;
+            return std::make_pair(true, passphrase);
+            }
+         else
+            return std::make_pair(false, "");
+         }
+
+   private:
+      std::string passphrase;
+      bool first;
+   };
+
+}
 
 /*
 * Extract a private key and return it
@@ -231,7 +257,7 @@ Private_Key* load_key(DataSource& source,
                       RandomNumberGenerator& rng,
                       const std::string& pass)
    {
-   return PKCS8::load_key(source, rng, User_Interface(pass));
+   return PKCS8::load_key(source, rng, Single_Shot_Passphrase(pass));
    }
 
 /*
@@ -241,7 +267,7 @@ Private_Key* load_key(const std::string& fsname,
                       RandomNumberGenerator& rng,
                       const std::string& pass)
    {
-   return PKCS8::load_key(fsname, rng, User_Interface(pass));
+   return PKCS8::load_key(fsname, rng, Single_Shot_Passphrase(pass));
    }
 
 /*
