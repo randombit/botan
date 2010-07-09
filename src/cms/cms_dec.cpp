@@ -17,8 +17,8 @@ namespace Botan {
 * CMS_Decoder Constructor
 */
 CMS_Decoder::CMS_Decoder(DataSource& in, const X509_Store& x509store,
-                         User_Interface& ui_ref, Private_Key* key) :
-   ui(ui_ref), store(x509store)
+                         Private_Key* key) :
+   store(x509store)
    {
    status = GOOD;
 

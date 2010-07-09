@@ -12,7 +12,6 @@
 #include <botan/x509stor.h>
 #include <botan/pkcs8.h>
 #include <botan/ber_dec.h>
-#include <botan/ui.h>
 
 namespace Botan {
 
@@ -39,7 +38,7 @@ class BOTAN_DLL CMS_Decoder
 
       void add_key(Private_Key*);
 
-      CMS_Decoder(DataSource&, const X509_Store&, User_Interface&,
+      CMS_Decoder(DataSource&, const X509_Store&,
                   Private_Key* = 0);
    private:
       std::string get_passphrase(const std::string&);
@@ -47,8 +46,6 @@ class BOTAN_DLL CMS_Decoder
       void initial_read(DataSource&);
       void decode_layer();
       void decompress(BER_Decoder&);
-
-      User_Interface& ui;
 
       X509_Store store;
       std::vector<std::string> passphrases;
