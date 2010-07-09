@@ -601,8 +601,8 @@ class ArchInfo(object):
     to shortest
     """
     def all_submodels(self):
-        return sorted(list(zip(self.submodels, self.submodels)) +
-                      list(self.submodel_aliases.items()),
+        return sorted([(k,k) for k in self.submodels] +
+                      [k for k in self.submodel_aliases.items()],
                       key = lambda k: len(k[0]), reverse = True)
 
     """
