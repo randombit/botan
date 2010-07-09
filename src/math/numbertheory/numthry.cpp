@@ -77,7 +77,7 @@ u32bit miller_rabin_test_iterations(u32bit bits, u32bit level)
    {
    struct mapping { u32bit bits; u32bit verify_iter; u32bit check_iter; };
 
-   static const mapping tests[] = {
+   const mapping tests[] = {
       {   50, 55, 25 },
       {  100, 38, 22 },
       {  160, 32, 18 },

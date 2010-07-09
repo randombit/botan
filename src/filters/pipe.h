@@ -11,6 +11,7 @@
 #include <botan/data_src.h>
 #include <botan/filter.h>
 #include <botan/exceptn.h>
+#include <initializer_list>
 #include <iosfwd>
 
 namespace Botan {
@@ -42,7 +43,7 @@ class BOTAN_DLL Pipe : public DataSource
          */
          Invalid_Message_Number(const std::string& where, message_id msg) :
             Invalid_Argument("Pipe::" + where + ": Invalid message number " +
-                             to_string(msg))
+                             std::to_string(msg))
             {}
          };
 
@@ -264,15 +265,16 @@ class BOTAN_DLL Pipe : public DataSource
       Pipe(Filter* = 0, Filter* = 0, Filter* = 0, Filter* = 0);
 
       /**
-      * Construct a Pipe from range of filters passed as an array
+      * Construct a Pipe from a list of filters
       * @param filters the set of filters to use
-      * @param count the number of elements in filters
       */
-      Pipe(Filter* filters[], u32bit count);
+      Pipe(std::initializer_list<Filter*> filters);
+
+      Pipe(const Pipe&) = delete;
+      Pipe& operator=(const Pipe&) = delete;
+
       ~Pipe();
    private:
-      Pipe(const Pipe&) : DataSource() {}
-      Pipe& operator=(const Pipe&) { return (*this); }
       void init();
       void destruct(Filter*);
       void find_endpoints(Filter*);

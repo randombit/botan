@@ -45,7 +45,7 @@ EAX_Base::EAX_Base(BlockCipher* cipher, u32bit tag_size) :
    ctr = new CTR_BE(cipher); // takes ownership
 
    if(tag_size % 8 != 0 || TAG_SIZE == 0 || TAG_SIZE > cmac->OUTPUT_LENGTH)
-      throw Invalid_Argument(name() + ": Bad tag size " + to_string(tag_size));
+      throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(tag_size));
    }
 
 /*
