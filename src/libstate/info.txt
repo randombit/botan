@@ -33,8 +33,6 @@ hash
 kdf
 mac
 mode_pad
-mutex
-noop_mutex
 pbkdf
 pk_pad
 pubkey

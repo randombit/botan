@@ -14,7 +14,7 @@ lib_opt_flags "-O2 -ip -unroll"
 check_opt_flags "-O2"
 debug_flags -g
 no_debug_flags "-fomit-frame-pointer"
-lang_flags ""
+lang_flags "-std=c++0x"
 warning_flags "-w1"
 shared_flags "-fPIC"
 

@@ -53,9 +53,9 @@ class BOTAN_DLL PBKDF
 
       PBKDF() {}
       virtual ~PBKDF() {}
-   private:
-      PBKDF(const PBKDF&) {}
-      PBKDF& operator=(const PBKDF&) { return (*this); }
+
+      PBKDF(const PBKDF&) = delete;
+      PBKDF& operator=(const PBKDF&) = delete;
    };
 
 /**
