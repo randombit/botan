@@ -104,6 +104,11 @@ def process_command_line(args):
         formatter = IndentedHelpFormatter(max_help_position = 50),
         version = BuildConfigurationInformation.version_string)
 
+    parser.add_option('--verbose', action='store_true', default=False,
+                      help='Show debug messages')
+    parser.add_option('--quiet', action='store_true', default=False,
+                      help='Show only warnings and errors')
+
     target_group = OptionGroup(parser, 'Target options')
 
     target_group.add_option('--cc', dest='compiler',
@@ -896,12 +901,15 @@ def load_info_files(options):
 
     archinfo = dict([(form_name(info), ArchInfo(info))
                      for info in list_files_in_build_data('arch')])
+    logging.debug('Loaded %d CPU info files' % (len(archinfo)))
 
     osinfo   = dict([(form_name(info), OsInfo(info))
                       for info in list_files_in_build_data('os')])
+    logging.debug('Loaded %d OS info files' % (len(osinfo)))
 
     ccinfo = dict([(form_name(info), CompilerInfo(info))
                     for info in list_files_in_build_data('cc')])
+    logging.debug('Loaded %d compiler info files' % (len(ccinfo)))
 
     if 'defaults' in osinfo:
         del osinfo['defaults'] # FIXME (remove the file)
@@ -1014,17 +1022,24 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv
 
+    options = process_command_line(argv[1:])
+
+    def log_level():
+        if options.verbose:
+            return logging.DEBUG
+        if options.quiet:
+            return logging.WARNING
+        return logging.INFO
+
     logging.basicConfig(stream = sys.stdout,
                         format = '%(levelname) 7s: %(message)s',
-                        level = logging.INFO)
+                        level = log_level())
 
     logging.debug('%s invoked with options "%s"' % (
         argv[0], ' '.join(argv[1:])))
 
     logging.debug('Platform: OS="%s" machine="%s" proc="%s"' % (
         platform.system(), platform.machine(), platform.processor()))
-
-    options = process_command_line(argv[1:])
 
     if options.os == "java":
         raise Exception("Jython detected: need --os and --cpu to set target")
