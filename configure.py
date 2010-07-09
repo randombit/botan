@@ -1194,9 +1194,6 @@ def load_info_files(options):
     ccinfo = dict([(form_name(info), CompilerInfo(info))
                     for info in list_files_in_build_data('cc')])
 
-    if 'defaults' in osinfo:
-        del osinfo['defaults'] # FIXME (remove the file)
-
     return (modules, archinfo, ccinfo, osinfo)
 
 """
