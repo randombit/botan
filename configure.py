@@ -144,14 +144,14 @@ def process_command_line(args):
 
     build_group.add_option('--with-tr1-implementation', metavar='WHICH',
                            dest='with_tr1', default=None,
-                           help='enable TR1 (options: none, system, boost)')
+                           help='enable TR1 (choices: none, system, boost)')
 
     build_group.add_option('--with-build-dir',
                            metavar='DIR', default='',
                            help='setup the build in DIR')
 
     build_group.add_option('--makefile-style', metavar='STYLE', default=None,
-                           help='choose a makefile style (unix, nmake)')
+                           help='choose a makefile style (unix or nmake)')
 
     build_group.add_option('--with-local-config',
                            dest='local_config', metavar='FILE',
@@ -172,23 +172,27 @@ def process_command_line(args):
     mods_group.add_option('--no-autoload', action='store_true', default=False,
                           help='disable automatic loading')
 
-    for mod in ['openssl', 'gnump', 'bzip2', 'zlib']:
+    for lib in ['OpenSSL', 'GNU MP', 'Bzip2', 'Zlib']:
 
         # This is just an implementation of Optik's append_const action,
         # but that is not available in Python 2.4's optparse, so use a
         # callback instead
 
+        mod = lib.lower().replace(' ', '')
+
         def optparse_callback(option, opt, value, parser, dest, mod):
             parser.values.__dict__[dest].append(mod)
 
-        mods_group.add_option('--with-%s' % (mod),
+        mods_group.add_option('--with-%s' % mod,
+                              help='add support for using %s' % (lib),
                               action='callback',
                               callback=optparse_callback,
                               callback_kwargs = {
                                   'dest': 'enabled_modules', 'mod': mod }
                               )
 
-        mods_group.add_option('--without-%s' % (mod), help=SUPPRESS_HELP,
+        mods_group.add_option('--without-%s' % mod,
+                              help=SUPPRESS_HELP,
                               action='callback',
                               callback=optparse_callback,
                               callback_kwargs = {
