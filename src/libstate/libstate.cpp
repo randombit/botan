@@ -66,7 +66,7 @@ Library_State& global_state()
    if(!global_lib_state)
       {
       global_lib_state = new Library_State;
-      global_lib_state->initialize(true);
+      global_lib_state->initialize();
       }
 
    return (*global_lib_state);

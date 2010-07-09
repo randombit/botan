@@ -2,8 +2,6 @@ macro_name GCC
 
 binary_name g++-4.5.0
 
-has_tr1 yes
-
 compile_option "-c "
 output_to_option "-o "
 add_include_dir_option -I
