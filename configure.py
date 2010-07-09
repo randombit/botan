@@ -174,10 +174,12 @@ def process_command_line(args):
                             action='append', default=[],
                             help=SUPPRESS_HELP)
 
-    for isa_extn in ['sse2', 'ssse3', 'altivec', 'aes-ni']:
+    for isa_extn_name in ['SSE2', 'SSSE3', 'AltiVec', 'AES-NI']:
+        isa_extn = isa_extn_name.lower()
+
         target_group.add_option('--enable-%s' % (isa_extn),
                                 action='callback',
-                                help='Enable use of %s' % (isa_extn),
+                                help='enable use of %s' % (isa_extn_name),
                                 callback=optparse_append_const,
                                 callback_kwargs = {
                                     'dest': 'enable_isa_extns',
@@ -230,14 +232,14 @@ def process_command_line(args):
 
     build_group.add_option('--with-tr1-implementation', metavar='WHICH',
                            dest='with_tr1', default=None,
-                           help='enable TR1 (options: none, system, boost)')
+                           help='enable TR1 (choices: none, system, boost)')
 
     build_group.add_option('--with-build-dir',
                            metavar='DIR', default='',
                            help='setup the build in DIR')
 
     build_group.add_option('--makefile-style', metavar='STYLE', default=None,
-                           help='choose a makefile style (unix, nmake)')
+                           help='choose a makefile style (unix or nmake)')
 
     build_group.add_option('--with-local-config',
                            dest='local_config', metavar='FILE',
@@ -262,16 +264,20 @@ def process_command_line(args):
     mods_group.add_option('--no-autoload', action='store_true', default=False,
                           help='disable automatic loading')
 
-    for mod in ['openssl', 'gnump', 'bzip2', 'zlib']:
+    for lib in ['OpenSSL', 'GNU MP', 'Bzip2', 'Zlib']:
+
+        mod = lib.lower().replace(' ', '')
 
         mods_group.add_option('--with-%s' % (mod),
+                              help='add support for using %s' % (lib),
                               action='callback',
                               callback=optparse_append_const,
                               callback_kwargs = {
                                   'dest': 'enabled_modules', 'arg': mod }
                               )
 
-        mods_group.add_option('--without-%s' % (mod), help=SUPPRESS_HELP,
+        mods_group.add_option('--without-%s' % (mod),
+                              help=SUPPRESS_HELP,
                               action='callback',
                               callback=optparse_append_const,
                               callback_kwargs = {
@@ -343,15 +349,15 @@ def process_command_line(args):
             return True
         return False
 
-    isa_dependencies = {
+    isa_deps = {
         'ssse3': 'sse2',
         'aes-ni': 'sse2'
         }
 
     if 'sse2' in options.disable_isa_extns:
-        sse2_deps = ['ssse3', 'aes-ni']
-
-        for isa in sse2_deps:
+        for isa in [k for (k,v) in isa_deps.items() if v == 'sse2']:
+            # If explicitly enabled, allow it even if a dependency
+            # violation; trust the user to know what they want
             if not enabled_or_disabled_isa(isa):
                 options.disable_isa_extns.append(isa)
 
@@ -515,6 +521,7 @@ class ModuleInfo(object):
                 return False
 
         if self.need_isa != None:
+            logging.debug('Checking if %s in %s' % (self.need_isa, options.disable_isa_extns))
             if self.need_isa in options.disable_isa_extns:
                 return False # explicitly disabled
 
@@ -627,7 +634,7 @@ class ArchInfo(object):
         isa_extensions = sorted(enabled_isas - disabled_isas)
 
         for isa in isa_extensions:
-            macros.append('TARGET_CPU_HAS_%s' % form_macro(isa))
+            macros.append('TARGET_CPU_HAS_%s' % (form_macro(isa)))
 
         endian = options.with_endian or self.endian
 
