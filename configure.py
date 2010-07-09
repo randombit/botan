@@ -1188,11 +1188,17 @@ def load_info_files(options):
     archinfo = dict([(form_name(info), ArchInfo(info))
                      for info in list_files_in_build_data('arch')])
 
+    logging.debug('Loaded %d CPU info files' % (len(archinfo)))
+
     osinfo   = dict([(form_name(info), OsInfo(info))
                       for info in list_files_in_build_data('os')])
 
+    logging.debug('Loaded %d OS info files' % (len(osinfo)))
+
     ccinfo = dict([(form_name(info), CompilerInfo(info))
                     for info in list_files_in_build_data('cc')])
+
+    logging.debug('Loaded %d compiler info files' % (len(ccinfo)))
 
     return (modules, archinfo, ccinfo, osinfo)
 
