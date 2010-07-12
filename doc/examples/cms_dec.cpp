@@ -40,9 +40,7 @@ int main(int argc, char* argv[])
 
       DataSource_Stream message(argv[1]);
 
-      User_Interface ui;
-
-      CMS_Decoder decoder(message, store, ui, mykey);
+      CMS_Decoder decoder(message, store, mykey);
 
       while(decoder.layer_type() != CMS_Decoder::DATA)
          {
