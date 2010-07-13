@@ -14,5 +14,5 @@ icc
 </cc>
 
 <requires>
-amd64_eng
+asm_engine
 </requires>

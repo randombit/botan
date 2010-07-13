@@ -1,6 +1,6 @@
 /*
-* IA-32 Assembly Implementation Engines
-* (C) 1999-2008 Jack Lloyd
+* Assembly Implementation Engine
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -15,10 +15,10 @@ namespace Botan {
 /**
 * Engine for x86-32 specific implementations
 */
-class IA32_Assembler_Engine : public Engine
+class Assembler_Engine : public Engine
    {
    public:
-      std::string provider_name() const { return "ia32"; }
+      std::string provider_name() const { return "asm"; }
 
       BlockCipher* find_block_cipher(const SCAN_Name&,
                                      Algorithm_Factory&) const;

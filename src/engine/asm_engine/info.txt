@@ -1,11 +1,11 @@
-define ENGINE_IA32_ASSEMBLER
+define ENGINE_ASSEMBLER
 
 load_on dep
 
 <source>
-ia32_engine.cpp
+asm_engine.cpp
 </source>
 
 <header:internal>
-ia32_engine.h
+asm_engine.h
 </header:internal>

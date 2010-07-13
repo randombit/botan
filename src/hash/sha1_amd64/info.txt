@@ -20,7 +20,7 @@ solaris
 </os>
 
 <requires>
-amd64_eng
+asm_engine
 asm_amd64
 sha1
 </requires>

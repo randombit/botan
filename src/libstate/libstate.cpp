@@ -32,12 +32,8 @@
   #include <botan/internal/mmap_mem.h>
 #endif
 
-#if defined(BOTAN_HAS_ENGINE_IA32_ASSEMBLER)
-  #include <botan/internal/ia32_engine.h>
-#endif
-
-#if defined(BOTAN_HAS_ENGINE_AMD64_ASSEMBLER)
-  #include <botan/internal/amd64_engine.h>
+#if defined(BOTAN_HAS_ENGINE_ASSEMBLER)
+  #include <botan/internal/asm_engine.h>
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_AES_ISA)
@@ -298,12 +294,8 @@ void Library_State::initialize(bool thread_safe)
    algorithm_factory().add_engine(new SIMD_Engine);
 #endif
 
-#if defined(BOTAN_HAS_ENGINE_AMD64_ASSEMBLER)
-   algorithm_factory().add_engine(new AMD64_Assembler_Engine);
-#endif
-
-#if defined(BOTAN_HAS_ENGINE_IA32_ASSEMBLER)
-   algorithm_factory().add_engine(new IA32_Assembler_Engine);
+#if defined(BOTAN_HAS_ENGINE_ASSEMBLER)
+   algorithm_factory().add_engine(new Assembler_Engine);
 #endif
 
    algorithm_factory().add_engine(new Default_Engine);
