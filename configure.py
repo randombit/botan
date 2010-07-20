@@ -197,15 +197,6 @@ def process_command_line(args):
     build_group.add_option('--disable-debug', dest='debug_build',
                            action='store_false', help=SUPPRESS_HELP)
 
-    build_group.add_option('--with-boost-python', dest='boost_python',
-                           default=False, action='store_true',
-                           help='enable Boost.Python wrapper')
-
-    build_group.add_option('--without-boost-python',
-                           dest='boost_python',
-                           action='store_false',
-                           help=SUPPRESS_HELP)
-
     build_group.add_option('--gen-amalgamation', dest='gen_amalgamation',
                            default=False, action='store_true',
                            help='generate amalgamation files')
@@ -232,6 +223,22 @@ def process_command_line(args):
     build_group.add_option('--maintainer-mode', dest='maintainer_mode',
                            action='store_true', default=False,
                            help=SUPPRESS_HELP)
+
+    wrapper_group = OptionGroup(parser, 'Wrapper options')
+
+    wrapper_group.add_option('--with-boost-python', dest='boost_python',
+                             default=False, action='store_true',
+                             help='enable Boost.Python wrapper')
+
+    wrapper_group.add_option('--without-boost-python',
+                             dest='boost_python',
+                             action='store_false',
+                             help=SUPPRESS_HELP)
+
+    wrapper_group.add_option('--use-python-version', dest='python_version',
+                             metavar='N.M',
+                             default='.'.join(map(str, sys.version_info[0:2])),
+                             help='specify version of Python to build against (eg %default)')
 
     mods_group = OptionGroup(parser, 'Module selection')
 
@@ -274,6 +281,7 @@ def process_command_line(args):
     parser.add_option_group(target_group)
     parser.add_option_group(build_group)
     parser.add_option_group(mods_group)
+    parser.add_option_group(wrapper_group)
     parser.add_option_group(install_group)
 
     # These exist only for autoconf compatability (requested by zw for mtn)
@@ -1030,7 +1038,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'mod_list': '\n'.join(sorted([m.basename for m in modules])),
 
-        'python_version': '.'.join(map(str, sys.version_info[0:2]))
+        'python_version': options.python_version
         }
 
 """
