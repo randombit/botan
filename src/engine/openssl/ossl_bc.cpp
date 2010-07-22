@@ -199,6 +199,12 @@ OpenSSL_Engine::find_block_cipher(const SCAN_Name& request,
    HANDLE_EVP_CIPHER_KEYLEN("CAST-128", EVP_cast5_ecb(), 1, 16, 1);
 #endif
 
+#if !defined(OPENSSL_NO_CAMELLIA)
+   HANDLE_EVP_CIPHER("Camellia-128", EVP_camellia_128_ecb());
+   HANDLE_EVP_CIPHER("Camellia-192", EVP_camellia_192_ecb());
+   HANDLE_EVP_CIPHER("Camellia-256", EVP_camellia_256_ecb());
+#endif
+
 #if !defined(OPENSSL_NO_RC2)
    HANDLE_EVP_CIPHER_KEYLEN("RC2", EVP_rc2_ecb(), 1, 32, 1);
 #endif
