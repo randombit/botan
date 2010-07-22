@@ -33,10 +33,12 @@ BlockCipher*
 Assembler_Engine::find_block_cipher(const SCAN_Name& request,
                                     Algorithm_Factory&) const
    {
-#if defined(BOTAN_HAS_SERPENT_IA32)
    if(request.algo_name() == "Serpent")
+      {
+#if defined(BOTAN_HAS_SERPENT_IA32)
       return new Serpent_IA32;
 #endif
+      }
 
    return 0;
    }
