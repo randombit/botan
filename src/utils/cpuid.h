@@ -1,6 +1,6 @@
 /*
 * Runtime CPU detection
-* (C) 2009 Jack Lloyd
+* (C) 2009-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -19,9 +19,14 @@ class BOTAN_DLL CPUID
    {
    public:
       /**
+      * Probe the CPU and see what extensions are supported
+      */
+      static void initialize();
+
+      /**
       * Return a best guess of the cache line size
       */
-      static u32bit cache_line_size();
+      static u32bit cache_line_size() { return cache_line; }
 
       /**
       * Check if the processor supports RDTSC
@@ -68,13 +73,8 @@ class BOTAN_DLL CPUID
       /**
       * Check if the processor supports AltiVec/VMX
       */
-      static bool has_altivec();
+      static bool has_altivec() { return altivec_capable; }
    private:
-      static bool x86_processor_flags_has(u64bit bit)
-         {
-         return ((x86_processor_flags() >> bit) & 1);
-         }
-
       enum CPUID_bits {
          CPUID_RDTSC_BIT = 4,
          CPUID_SSE2_BIT = 26,
@@ -85,7 +85,14 @@ class BOTAN_DLL CPUID
          CPUID_AVX_BIT = 60
       };
 
-      static u64bit x86_processor_flags();
+      static bool x86_processor_flags_has(u64bit bit)
+         {
+         return ((x86_processor_flags >> bit) & 1);
+         }
+
+      static u64bit x86_processor_flags;
+      static u32bit cache_line;
+      static bool altivec_capable;
    };
 
 }

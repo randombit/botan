@@ -14,15 +14,17 @@ namespace {
 void print_if_feature(const std::string& feature_name, bool exists)
    {
    if(exists)
-      std::cout << feature_name << '\n';
+      std::cout << "Y: " << feature_name << "\n";
    else
-      std::cout << '[' << feature_name << ']' << '\n';
+      std::cout << "N: " << feature_name << "\n";
    }
 
 }
 
 int main()
    {
+   CPUID::initialize();
+
    std::cout << "Cache line size = " << CPUID::cache_line_size() << "\n";
 
    print_if_feature("RDTSC", CPUID::has_rdtsc());
