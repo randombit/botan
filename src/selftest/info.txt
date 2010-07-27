@@ -3,5 +3,5 @@ define SELFTESTS
 <requires>
 algo_factory
 filters
-def_engine
+core_engine
 </requires>

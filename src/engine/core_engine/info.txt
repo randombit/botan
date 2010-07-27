@@ -1,11 +1,11 @@
-define DEFAULT_ENGINE
+define CORE_ENGINE
 
 <header:internal>
-default_engine.h
+core_engine.h
 </header:internal>
 
 <source>
-def_mode.cpp
+core_modes.cpp
 def_pk_ops.cpp
 def_powm.cpp
 lookup_block.cpp

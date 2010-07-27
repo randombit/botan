@@ -1,21 +1,21 @@
 /*
-* Default Engine
+* Core Engine
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_DEFAULT_ENGINE_H__
-#define BOTAN_DEFAULT_ENGINE_H__
+#ifndef BOTAN_CORE_ENGINE_H__
+#define BOTAN_CORE_ENGINE_H__
 
 #include <botan/engine.h>
 
 namespace Botan {
 
 /**
-* Default Engine
+* Core Engine
 */
-class Default_Engine : public Engine
+class Core_Engine : public Engine
    {
    public:
       std::string provider_name() const { return "core"; }

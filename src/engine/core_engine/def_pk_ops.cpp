@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/internal/default_engine.h>
+#include <botan/internal/core_engine.h>
 
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
@@ -46,7 +46,7 @@
 namespace Botan {
 
 PK_Ops::Encryption*
-Default_Engine::get_encryption_op(const Public_Key& key) const
+Core_Engine::get_encryption_op(const Public_Key& key) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PublicKey* s = dynamic_cast<const RSA_PublicKey*>(&key))
@@ -62,7 +62,7 @@ Default_Engine::get_encryption_op(const Public_Key& key) const
    }
 
 PK_Ops::Decryption*
-Default_Engine::get_decryption_op(const Private_Key& key) const
+Core_Engine::get_decryption_op(const Private_Key& key) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PrivateKey* s = dynamic_cast<const RSA_PrivateKey*>(&key))
@@ -78,7 +78,7 @@ Default_Engine::get_decryption_op(const Private_Key& key) const
    }
 
 PK_Ops::Key_Agreement*
-Default_Engine::get_key_agreement_op(const Private_Key& key) const
+Core_Engine::get_key_agreement_op(const Private_Key& key) const
    {
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    if(const DH_PrivateKey* dh = dynamic_cast<const DH_PrivateKey*>(&key))
@@ -94,7 +94,7 @@ Default_Engine::get_key_agreement_op(const Private_Key& key) const
    }
 
 PK_Ops::Signature*
-Default_Engine::get_signature_op(const Private_Key& key) const
+Core_Engine::get_signature_op(const Private_Key& key) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PrivateKey* s = dynamic_cast<const RSA_PrivateKey*>(&key))
@@ -131,7 +131,7 @@ Default_Engine::get_signature_op(const Private_Key& key) const
    }
 
 PK_Ops::Verification*
-Default_Engine::get_verify_op(const Public_Key& key) const
+Core_Engine::get_verify_op(const Public_Key& key) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PublicKey* s = dynamic_cast<const RSA_PublicKey*>(&key))

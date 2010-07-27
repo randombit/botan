@@ -26,7 +26,7 @@ algo_factory
 alloc
 bigint
 block
-def_engine
+core_engine
 engine
 filters
 hash

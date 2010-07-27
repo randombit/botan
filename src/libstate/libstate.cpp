@@ -10,7 +10,7 @@
 #include <botan/engine.h>
 #include <botan/cpuid.h>
 #include <botan/internal/defalloc.h>
-#include <botan/internal/default_engine.h>
+#include <botan/internal/core_engine.h>
 #include <botan/internal/mutex.h>
 #include <botan/internal/mux_noop.h>
 #include <botan/internal/stl_util.h>
@@ -301,7 +301,7 @@ void Library_State::initialize(bool thread_safe)
    algorithm_factory().add_engine(new Assembler_Engine);
 #endif
 
-   algorithm_factory().add_engine(new Default_Engine);
+   algorithm_factory().add_engine(new Core_Engine);
 
 #if defined(BOTAN_HAS_SELFTESTS)
    confirm_startup_self_tests(algorithm_factory());

@@ -1,11 +1,11 @@
 /*
-* Default Engine
+* Core Engine
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/internal/default_engine.h>
+#include <botan/internal/core_engine.h>
 #include <botan/parsing.h>
 #include <botan/filters.h>
 #include <botan/algo_factory.h>
@@ -178,7 +178,7 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
 /*
 * Get a cipher object
 */
-Keyed_Filter* Default_Engine::get_cipher(const std::string& algo_spec,
+Keyed_Filter* Core_Engine::get_cipher(const std::string& algo_spec,
                                          Cipher_Dir direction,
                                          Algorithm_Factory& af)
    {

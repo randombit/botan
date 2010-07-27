@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/internal/default_engine.h>
+#include <botan/internal/core_engine.h>
 #include <botan/scan_name.h>
 #include <botan/algo_factory.h>
 
@@ -112,9 +112,8 @@ namespace Botan {
 /*
 * Look for an algorithm with this name
 */
-BlockCipher*
-Default_Engine::find_block_cipher(const SCAN_Name& request,
-                                  Algorithm_Factory& af) const
+BlockCipher* Core_Engine::find_block_cipher(const SCAN_Name& request,
+                                            Algorithm_Factory& af) const
    {
 
 #if defined(BOTAN_HAS_AES)
