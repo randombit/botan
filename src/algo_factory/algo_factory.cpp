@@ -100,12 +100,12 @@ Algorithm_Factory::Algorithm_Factory(Mutex_Factory& mf)
 */
 Algorithm_Factory::~Algorithm_Factory()
    {
-   std::for_each(engines.begin(), engines.end(), del_fun<Engine>());
-
    delete block_cipher_cache;
    delete stream_cipher_cache;
    delete hash_cache;
    delete mac_cache;
+
+   std::for_each(engines.begin(), engines.end(), del_fun<Engine>());
    }
 
 void Algorithm_Factory::add_engine(Engine* engine)
