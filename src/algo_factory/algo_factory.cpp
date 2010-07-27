@@ -110,6 +110,11 @@ Algorithm_Factory::~Algorithm_Factory()
 
 void Algorithm_Factory::add_engine(Engine* engine)
    {
+   block_cipher_cache->clear_cache();
+   stream_cipher_cache->clear_cache();
+   hash_cache->clear_cache();
+   mac_cache->clear_cache();
+
    engines.push_back(engine);
    }
 

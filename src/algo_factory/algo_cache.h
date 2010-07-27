@@ -63,11 +63,16 @@ class Algorithm_Cache
       std::vector<std::string> providers_of(const std::string& algo_name);
 
       /**
+      * Clear the cache
+      */
+      void clear_cache();
+
+      /**
       * Constructor
       * @param m a mutex to serialize internal access
       */
       Algorithm_Cache(Mutex* m) : mutex(m) {}
-      ~Algorithm_Cache();
+      ~Algorithm_Cache() { clear_cache(); delete mutex; }
    private:
       typedef typename std::map<std::string, std::map<std::string, T*> >::iterator
          algorithms_iterator;
@@ -215,10 +220,10 @@ void Algorithm_Cache<T>::set_preferred_provider(const std::string& algo_spec,
    }
 
 /*
-* Algorithm_Cache<T> Destructor
+* Clear out the cache
 */
 template<typename T>
-Algorithm_Cache<T>::~Algorithm_Cache()
+void Algorithm_Cache<T>::clear_cache()
    {
    algorithms_iterator algo = algorithms.begin();
 
@@ -235,7 +240,7 @@ Algorithm_Cache<T>::~Algorithm_Cache()
       ++algo;
       }
 
-   delete mutex;
+   algorithms.clear();
    }
 
 }
