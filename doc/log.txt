@@ -1,5 +1,6 @@
 
 * 1.9.10-dev, ????-??-??
+ - Use GCC byteswap intrinsics where possible
  - Drop support for building with Python 2.4
  - Fix benchmarking of block ciphers in ECB mode
  - Consolidate the two x86 assembly engines
@@ -36,7 +37,7 @@
  - Skip building shared libraries on MinGW/Cygwin
  - Fix creation of 512 and 768 bit DL groups using the DSA kosherizer
  - Fix compilation on GCC versions before 4.3 (missing cpuid.h)
- - Fix complilation under the Clang compiler
+ - Fix compilation under the Clang compiler
 
 * 1.9.7, 2010-04-27
  - TLS: Support reading SSLv2 client hellos
