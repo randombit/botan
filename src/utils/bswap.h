@@ -31,7 +31,7 @@ inline u16bit reverse_bytes(u16bit input)
 */
 inline u32bit reverse_bytes(u32bit input)
    {
-#if BOTAN_GCC_VERSION >= 420
+#if BOTAN_GCC_VERSION >= 430
 
    // GCC intrinsic added in 4.3, works for a number of CPUs
    return __builtin_bswap32(input);
