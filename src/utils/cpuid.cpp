@@ -1,6 +1,6 @@
 /*
 * Runtime CPU detection
-* (C) 2009 Jack Lloyd
+* (C) 2009-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -46,6 +46,10 @@
 #endif
 
 namespace Botan {
+
+u64bit CPUID::x86_processor_flags = 0;
+u32bit CPUID::cache_line = 32;
+bool CPUID::altivec_capable = false;
 
 namespace {
 
@@ -140,54 +144,21 @@ bool altivec_check_pvr_emul()
 
 }
 
-/*
-* Call the x86 CPUID instruction and return the contents of ecx and
-* edx, which contain the feature masks.
-*/
-u64bit CPUID::x86_processor_flags()
+void CPUID::initialize()
    {
-   static u64bit proc_flags = 0;
-
-   if(proc_flags)
-      return proc_flags;
-
    u32bit cpuid[4] = { 0 };
    CALL_CPUID(1, cpuid);
 
-   // Set the FPU bit on to force caching in proc_flags
-   proc_flags = ((u64bit)cpuid[2] << 32) | cpuid[3] | 1;
+   x86_processor_flags = ((u64bit)cpuid[2] << 32) | cpuid[3];
 
-   return proc_flags;
-   }
+   cache_line = get_x86_cache_line_size();
 
-u32bit CPUID::cache_line_size()
-   {
-   static u32bit cl_size = 0;
+   altivec_capable = false;
 
-   if(cl_size)
-      return cl_size;
-
-   cl_size = get_x86_cache_line_size();
-
-   return cl_size;
-   }
-
-bool CPUID::has_altivec()
-   {
-   static bool first_time = true;
-   static bool altivec_capable = false;
-
-   if(first_time)
-      {
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
       if(altivec_check_sysctl() || altivec_check_pvr_emul())
          altivec_capable = true;
 #endif
-
-      first_time = false;
-      }
-
-   return altivec_capable;
    }
 
 }

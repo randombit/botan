@@ -18,37 +18,56 @@
 
 namespace Botan {
 
-/*
-* Byte Swapping Functions
+/**
+* Swap a 16 bit integer
 */
 inline u16bit reverse_bytes(u16bit input)
    {
    return rotate_left(input, 8);
    }
 
+/**
+* Swap a 32 bit integer
+*/
 inline u32bit reverse_bytes(u32bit input)
    {
-#if BOTAN_USE_GCC_INLINE_ASM && defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+#if BOTAN_GCC_VERSION >= 430
+
+   // GCC intrinsic added in 4.3, works for a number of CPUs
+   return __builtin_bswap32(input);
+
+#elif BOTAN_USE_GCC_INLINE_ASM && defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
    // GCC-style inline assembly for x86 or x86-64
    asm("bswapl %0" : "=r" (input) : "0" (input));
    return input;
 
 #elif defined(_MSC_VER) && defined(BOTAN_TARGET_ARCH_IS_IA32)
+
    // Visual C++ inline asm for 32-bit x86, by Yves Jerschow
    __asm mov eax, input;
    __asm bswap eax;
 
 #else
+
    // Generic implementation
    return (rotate_right(input, 8) & 0xFF00FF00) |
           (rotate_left (input, 8) & 0x00FF00FF);
+
 #endif
    }
 
+/**
+* Swap a 64 bit integer
+*/
 inline u64bit reverse_bytes(u64bit input)
    {
-#if BOTAN_USE_GCC_INLINE_ASM && defined(BOTAN_TARGET_ARCH_IS_AMD64)
+#if BOTAN_GCC_VERSION >= 430
+
+   // GCC intrinsic added in 4.3, works for a number of CPUs
+   return __builtin_bswap64(input);
+
+#elif BOTAN_USE_GCC_INLINE_ASM && defined(BOTAN_TARGET_ARCH_IS_AMD64)
    // GCC-style inline assembly for x86-64
    asm("bswapq %0" : "=r" (input) : "0" (input));
    return input;
@@ -69,6 +88,9 @@ inline u64bit reverse_bytes(u64bit input)
 #endif
    }
 
+/**
+* Swap 4 Ts in an array
+*/
 template<typename T>
 inline void bswap_4(T x[4])
    {
@@ -80,6 +102,9 @@ inline void bswap_4(T x[4])
 
 #if defined(BOTAN_TARGET_CPU_HAS_SSE2)
 
+/**
+* Swap 4 u32bits in an array using SSE2 shuffle instructions
+*/
 template<>
 inline void bswap_4(u32bit x[4])
    {

@@ -8,6 +8,7 @@
 #include <botan/libstate.h>
 #include <botan/charset.h>
 #include <botan/engine.h>
+#include <botan/cpuid.h>
 #include <botan/internal/defalloc.h>
 #include <botan/internal/default_engine.h>
 #include <botan/internal/mutex.h>
@@ -241,6 +242,8 @@ RandomNumberGenerator& Library_State::global_rng()
 */
 void Library_State::initialize(bool thread_safe)
    {
+   CPUID::initialize();
+
    if(mutex_factory)
       throw Invalid_State("Library_State has already been initialized");
 
