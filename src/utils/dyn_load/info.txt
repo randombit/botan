@@ -1,0 +1,13 @@
+define DYNAMIC_LOADER
+
+<libs>
+linux -> dl
+</libs>
+
+<source>
+dyn_load.cpp
+</source>
+
+<header:internal>
+dyn_load.h
+</header:internal>

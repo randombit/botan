@@ -1,0 +1,18 @@
+define DYNAMICALLY_LOADED_ENGINE
+
+<header:public>
+dyn_engine.h
+</header:public>
+
+<source>
+dyn_engine.cpp
+</source>
+
+<requires>
+engine
+dyn_load
+</requires>
+
+<libs>
+linux -> dl
+</libs>

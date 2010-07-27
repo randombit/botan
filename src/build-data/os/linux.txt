@@ -5,4 +5,5 @@ clock_gettime
 gettimeofday
 posix_mlock
 gmtime_r
+dlopen
 </target_features>
