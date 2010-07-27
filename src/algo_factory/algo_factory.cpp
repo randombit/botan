@@ -108,13 +108,17 @@ Algorithm_Factory::~Algorithm_Factory()
    std::for_each(engines.begin(), engines.end(), del_fun<Engine>());
    }
 
-void Algorithm_Factory::add_engine(Engine* engine)
+void Algorithm_Factory::clear_caches()
    {
    block_cipher_cache->clear_cache();
    stream_cipher_cache->clear_cache();
    hash_cache->clear_cache();
    mac_cache->clear_cache();
+   }
 
+void Algorithm_Factory::add_engine(Engine* engine)
+   {
+   clear_caches();
    engines.push_back(engine);
    }
 

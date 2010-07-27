@@ -50,6 +50,11 @@ class BOTAN_DLL Algorithm_Factory
       void add_engine(class Engine* engine);
 
       /**
+      * Clear out any cached objects
+      */
+      void clear_caches();
+
+      /**
       * @param algo_spec the algorithm we are querying
       * @returns list of providers of this algorithm
       */
