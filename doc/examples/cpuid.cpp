@@ -13,10 +13,7 @@ namespace {
 
 void print_if_feature(const std::string& feature_name, bool exists)
    {
-   if(exists)
-      std::cout << "Y: " << feature_name << "\n";
-   else
-      std::cout << "N: " << feature_name << "\n";
+   std::cout << (exists ? '+' : '-') << " " << feature_name << "\n";
    }
 
 }
@@ -34,7 +31,9 @@ int main()
    print_if_feature("SSE4.2", CPUID::has_sse42());
    print_if_feature("AVX", CPUID::has_avx());
 
-   print_if_feature("AES-NI", CPUID::has_aes_intel());
+   print_if_feature("MOVBE", CPUID::has_movbe());
+   print_if_feature("PCMUL", CPUID::has_pcmuludq());
+   print_if_feature("AES-NI", CPUID::has_aes_ni());
 
    print_if_feature("AltiVec", CPUID::has_altivec());
    }

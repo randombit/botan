@@ -65,10 +65,22 @@ class BOTAN_DLL CPUID
          { return x86_processor_flags_has(CPUID_AVX_BIT); }
 
       /**
-      * Check if the processor supports Intel's AES instructions
+      * Check if the processor supports AES-NI
       */
-      static bool has_aes_intel()
-         { return x86_processor_flags_has(CPUID_INTEL_AES_BIT); }
+      static bool has_aes_ni()
+         { return x86_processor_flags_has(CPUID_AESNI_BIT); }
+
+      /**
+      * Check if the processor supports PCMULUDQ
+      */
+      static bool has_pcmuludq()
+         { return x86_processor_flags_has(CPUID_PCMUL_BIT); }
+
+      /**
+      * Check if the processor supports MOVBE
+      */
+      static bool has_movbe()
+         { return x86_processor_flags_has(CPUID_MOVBE_BIT); }
 
       /**
       * Check if the processor supports AltiVec/VMX
@@ -78,10 +90,12 @@ class BOTAN_DLL CPUID
       enum CPUID_bits {
          CPUID_RDTSC_BIT = 4,
          CPUID_SSE2_BIT = 26,
+         CPUID_PCMUL_BIT = 33,
          CPUID_SSSE3_BIT = 41,
          CPUID_SSE41_BIT = 51,
          CPUID_SSE42_BIT = 52,
-         CPUID_INTEL_AES_BIT = 57,
+         CPUID_MOVBE_BIT = 54,
+         CPUID_AESNI_BIT = 57,
          CPUID_AVX_BIT = 60
       };
 
