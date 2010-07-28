@@ -12,7 +12,3 @@ dyn_engine.cpp
 engine
 dyn_load
 </requires>
-
-<libs>
-linux -> dl
-</libs>
