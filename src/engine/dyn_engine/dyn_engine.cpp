@@ -15,6 +15,7 @@ namespace {
 extern "C" {
    typedef Engine* (*creator_function)(void);
    typedef void (*destructor_function)(Engine*);
+   typedef u32bit (*module_version)(void);
 }
 
 }
@@ -27,7 +28,17 @@ Dynamically_Loaded_Engine::Dynamically_Loaded_Engine(
 
    try
       {
-      creator_function creator = lib->resolve<creator_function>("create_engine");
+      module_version version =
+         lib->resolve<module_version>("module_version");
+
+      u32bit mod_version = version();
+
+      if(mod_version != 20100728)
+         throw std::runtime_error("Unexpected or incompatible version in " +
+                                  library_path);
+
+      creator_function creator =
+         lib->resolve<creator_function>("create_engine");
 
       engine = creator();
 
