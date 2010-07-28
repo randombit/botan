@@ -21,6 +21,10 @@
 #include <botan/botan.h>
 #include <botan/libstate.h>
 
+#if defined(BOTAN_HAS_DYNAMICALLY_LOADED_ENGINE)
+  #include <botan/dyn_engine.h>
+#endif
+
 using namespace Botan;
 
 #include "getopt.h"
@@ -98,13 +102,26 @@ int main(int argc, char* argv[])
    {
    try
       {
-      OptionParser opts("help|test|validate|"
+      OptionParser opts("help|test|validate|dyn-load=|"
                         "benchmark|bench-type=|bench-algo=|seconds=");
       opts.parse(argv);
 
       test_types(); // do this always
 
       Botan::LibraryInitializer init("thread_safe=no");
+
+      if(opts.is_set("dyn-load"))
+         {
+         const std::string lib = opts.value("dyn-load");
+
+#if defined(BOTAN_HAS_DYNAMICALLY_LOADED_ENGINE)
+         global_state().algorithm_factory().add_engine(
+            new Dynamically_Loaded_Engine(lib));
+#else
+         std::cout << "Can't load " << lib
+                   << "; DLL engines not supported in build\n";
+#endif
+         }
 
       if(opts.is_set("help") || argc <= 1)
          {
