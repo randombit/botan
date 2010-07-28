@@ -1,7 +1,16 @@
 define DYNAMIC_LOADER
 
+<os>
+linux
+freebsd
+openbsd
+netbsd
+solaris
+</os>
+
 <libs>
 linux -> dl
+solaris -> dl
 </libs>
 
 <source>
