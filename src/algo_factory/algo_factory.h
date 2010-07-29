@@ -47,7 +47,7 @@ class BOTAN_DLL Algorithm_Factory
       /**
       * @param engine to add (Algorithm_Factory takes ownership)
       */
-      void add_engine(class Engine* engine);
+      void add_engine(Engine* engine);
 
       /**
       * Clear out any cached objects
@@ -170,7 +170,7 @@ class BOTAN_DLL Algorithm_Factory
             /**
             * @return next engine in the sequence
             */
-            class Engine* next() { return af.get_engine_n(n++); }
+            Engine* next() { return af.get_engine_n(n++); }
 
             /**
             * @param a an algorithm factory
@@ -183,9 +183,9 @@ class BOTAN_DLL Algorithm_Factory
       friend class Engine_Iterator;
 
    private:
-      class Engine* get_engine_n(u32bit) const;
+      Engine* get_engine_n(u32bit) const;
 
-      std::vector<class Engine*> engines;
+      std::vector<Engine*> engines;
 
       Algorithm_Cache<BlockCipher>* block_cipher_cache;
       Algorithm_Cache<StreamCipher>* stream_cipher_cache;
