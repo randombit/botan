@@ -23,7 +23,14 @@ Dynamically_Loaded_Library::Dynamically_Loaded_Library(
    lib = ::dlopen(lib_name.c_str(), RTLD_LAZY);
 
    if(!lib)
-      throw std::runtime_error("Failed to load engine " + lib_name);
+      {
+      const char* dl_err = dlerror();
+      if(!dl_err)
+         dl_err = "Unknown error";
+
+      throw std::runtime_error("Failed to load engine " + lib_name + ": " +
+                               dl_err);
+      }
 #endif
 
    }
