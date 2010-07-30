@@ -183,6 +183,10 @@ class BOTAN_DLL Algorithm_Factory
       friend class Engine_Iterator;
 
    private:
+      Algorithm_Factory(const Algorithm_Factory&) {}
+      Algorithm_Factory& operator=(const Algorithm_Factory&)
+         { return (*this); }
+
       class Engine* get_engine_n(u32bit) const;
 
       std::vector<class Engine*> engines;
