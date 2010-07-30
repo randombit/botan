@@ -120,9 +120,10 @@ bench_mac(MessageAuthenticationCode* mac,
 
 std::map<std::string, double>
 algorithm_benchmark(const std::string& name,
-                    u32bit milliseconds,
+                    Algorithm_Factory& af,
                     RandomNumberGenerator& rng,
-                    Algorithm_Factory& af)
+                    u32bit milliseconds,
+                    u32bit buf_size)
    {
    std::vector<std::string> providers = af.providers_of(name);
    std::map<std::string, double> all_results;
@@ -133,7 +134,7 @@ algorithm_benchmark(const std::string& name,
    const u64bit ns_per_provider =
       (static_cast<u64bit>(milliseconds) * 1000 * 1000) / providers.size();
 
-   std::vector<byte> buf(16 * 1024);
+   std::vector<byte> buf(buf_size * 1024);
    rng.randomize(&buf[0], buf.size());
 
    for(u32bit i = 0; i != providers.size(); ++i)
