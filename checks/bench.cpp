@@ -162,14 +162,15 @@ void report_results(const std::string& algo,
 
 bool bench_algo(const std::string& algo,
                 Botan::RandomNumberGenerator& rng,
-                double seconds)
+                double seconds,
+                u32bit buf_size)
    {
    Botan::Algorithm_Factory& af = Botan::global_state().algorithm_factory();
 
    u32bit milliseconds = static_cast<u32bit>(seconds * 1000);
 
    std::map<std::string, double> speeds =
-      algorithm_benchmark(algo, milliseconds, rng, af);
+      algorithm_benchmark(algo, af, rng, milliseconds, buf_size);
 
    if(speeds.empty()) // maybe a cipher mode, then?
       {
@@ -243,8 +244,8 @@ bool bench_algo(const std::string& algo,
    }
 
 void benchmark(Botan::RandomNumberGenerator& rng,
-               double seconds)
+               double seconds, u32bit buf_size)
    {
    for(u32bit i = 0; algos[i] != ""; ++i)
-      bench_algo(algos[i], rng, seconds);
+      bench_algo(algos[i], rng, seconds, buf_size);
    }

@@ -33,6 +33,8 @@ class BOTAN_DLL DataSink : public Filter
 class BOTAN_DLL DataSink_Stream : public DataSink
    {
    public:
+      std::string name() const { return identifier; }
+
       void write(const byte[], u32bit);
 
       /**

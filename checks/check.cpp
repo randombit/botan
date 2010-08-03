@@ -103,7 +103,8 @@ int main(int argc, char* argv[])
    try
       {
       OptionParser opts("help|test|validate|dyn-load=|"
-                        "benchmark|bench-type=|bench-algo=|seconds=");
+                        "benchmark|bench-type=|bench-algo=|"
+                        "seconds=|buf-size=");
       opts.parse(argv);
 
       test_types(); // do this always
@@ -149,6 +150,8 @@ int main(int argc, char* argv[])
          {
          double seconds = 5;
 
+         u32bit buf_size = 16;
+
          if(opts.is_set("seconds"))
             {
             seconds = std::atof(opts.value("seconds").c_str());
@@ -159,9 +162,19 @@ int main(int argc, char* argv[])
                }
             }
 
+         if(opts.is_set("buf-size"))
+            {
+            buf_size = std::atoi(opts.value("buf-size").c_str());
+            if(buf_size == 0 || buf_size > 8192)
+               {
+               std::cout << "Invalid argument to --buf-size\n";
+               return 2;
+               }
+            }
+
          if(opts.is_set("benchmark"))
             {
-            benchmark(rng, seconds);
+            benchmark(rng, seconds, buf_size);
             }
          else if(opts.is_set("bench-algo"))
             {
@@ -171,7 +184,7 @@ int main(int argc, char* argv[])
             for(u32bit j = 0; j != algs.size(); j++)
                {
                const std::string alg = algs[j];
-               if(!bench_algo(alg, rng, seconds)) // maybe it's a PK algorithm
+               if(!bench_algo(alg, rng, seconds, buf_size))
                   bench_pk(rng, alg, seconds);
                }
             }
