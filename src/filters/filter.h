@@ -68,9 +68,6 @@ class BOTAN_DLL Filter
       void send(const MemoryRegion<byte>& in) { send(in.begin(), in.size()); }
       Filter();
    private:
-      Filter(const Filter&) {}
-      Filter& operator=(const Filter&) { return (*this); }
-
       /**
       * Start a new message in *this and all following filters. Only for
       * internal use, not intended for use in client applications.
@@ -85,6 +82,9 @@ class BOTAN_DLL Filter
 
       friend class Pipe;
       friend class Fanout_Filter;
+
+      Filter(const Filter&) = delete;
+      Filter& operator=(const Filter&) = delete;
 
       u32bit total_ports() const;
       u32bit current_port() const { return port_num; }

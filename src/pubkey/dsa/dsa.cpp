@@ -8,7 +8,7 @@
 #include <botan/dsa.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
-
+#include <future>
 namespace Botan {
 
 /*
@@ -89,8 +89,12 @@ DSA_Signature_Operation::sign(const byte msg[], u32bit msg_len,
          k.randomize(rng, q.bits());
       while(k >= q);
 
-      r = mod_q.reduce(powermod_g_p(k));
-      s = mod_q.multiply(inverse_mod(k, q), mul_add(x, r, i));
+      auto future_r = std::async(std::launch::async,
+                            [&]() { return mod_q.reduce(powermod_g_p(k)); });
+
+      s = inverse_mod(k, q);
+      r = future_r.get();
+      s = mod_q.multiply(s, mul_add(x, r, i));
       }
 
    SecureVector<byte> output(2*q.bytes());
@@ -124,8 +128,14 @@ bool DSA_Verification_Operation::verify(const byte msg[], u32bit msg_len,
       return false;
 
    s = inverse_mod(s, q);
-   s = mod_p.multiply(powermod_g_p(mod_q.multiply(s, i)),
-                      powermod_y_p(mod_q.multiply(s, r)));
+
+   auto future_s_i = std::async(std::launch::async,
+      [&]() { return powermod_g_p(mod_q.multiply(s, i)); });
+
+   BigInt s_r = powermod_y_p(mod_q.multiply(s, r));
+   BigInt s_i = future_s_i.get();
+
+   s = mod_p.multiply(s_i, s_r);
 
    return (mod_q.reduce(s) == r);
    }

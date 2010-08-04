@@ -22,9 +22,9 @@ class BOTAN_DLL DataSink : public Filter
       bool attachable() { return false; }
       DataSink() {}
       virtual ~DataSink() {}
-   private:
-      DataSink& operator=(const DataSink&) { return (*this); }
-      DataSink(const DataSink&);
+
+      DataSink& operator=(const DataSink&) = delete;
+      DataSink(const DataSink&) = delete;
    };
 
 /**

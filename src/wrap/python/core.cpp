@@ -178,7 +178,7 @@ std::string python_kdf2(const std::string& param,
                         const std::string& masterkey,
                         u32bit outputlength)
    {
-   std::auto_ptr<KDF> kdf(get_kdf("KDF2(SHA-1)"));
+   std::unique_ptr<KDF> kdf(get_kdf("KDF2(SHA-1)"));
 
    return make_string(
       kdf->derive_key(outputlength,

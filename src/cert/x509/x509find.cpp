@@ -11,6 +11,8 @@
 
 namespace Botan {
 
+namespace X509_Store_Search {
+
 namespace {
 
 /*
@@ -42,70 +44,65 @@ bool ignore_case(const std::string& searching_for, const std::string& found)
 /*
 * Search based on the contents of a DN entry
 */
-bool DN_Check::match(const X509_Certificate& cert) const
+std::function<bool (const X509_Certificate&)>
+by_dn(const std::string& dn_entry,
+      const std::string& to_find,
+      DN_Search_Type method)
    {
-   std::vector<std::string> info = cert.subject_info(dn_entry);
-
-   for(u32bit j = 0; j != info.size(); ++j)
-      if(compare(info[j], looking_for))
-         return true;
-   return false;
-   }
-
-/*
-* DN_Check Constructor
-*/
-DN_Check::DN_Check(const std::string& dn_entry, const std::string& looking_for,
-                   compare_fn func)
-   {
-   this->dn_entry = dn_entry;
-   this->looking_for = looking_for;
-   compare = func;
-   }
-
-/*
-* DN_Check Constructor
-*/
-DN_Check::DN_Check(const std::string& dn_entry, const std::string& looking_for,
-                   Search_Type method)
-   {
-   this->dn_entry = dn_entry;
-   this->looking_for = looking_for;
-
    if(method == SUBSTRING_MATCHING)
-      compare = &substring_match;
+      return by_dn(dn_entry, to_find, substring_match);
    else if(method == IGNORE_CASE)
-      compare = &ignore_case;
-   else
-      throw Invalid_Argument("Unknown method argument to DN_Check()");
+      return by_dn(dn_entry, to_find, ignore_case);
+
+   throw Invalid_Argument("Unknown method argument to by_dn");
    }
 
-/*
-* Match by issuer and serial number
-*/
-bool IandS_Match::match(const X509_Certificate& cert) const
+std::function<bool (const X509_Certificate&)>
+by_dn(const std::string& dn_entry,
+      const std::string& to_find,
+      std::function<bool (std::string, std::string)> compare)
    {
-   if(cert.serial_number() != serial)
+   return [&](const X509_Certificate& cert)
+      {
+      std::vector<std::string> info = cert.subject_info(dn_entry);
+
+      for(u32bit i = 0; i != info.size(); ++i)
+         if(compare(info[i], to_find))
+            return true;
       return false;
-   return (cert.issuer_dn() == issuer);
+      };
    }
 
-/*
-* IandS_Match Constructor
-*/
-IandS_Match::IandS_Match(const X509_DN& issuer,
-                         const MemoryRegion<byte>& serial)
+std::function<bool (const X509_Certificate&)>
+by_issuer_and_serial(const X509_DN& issuer, const MemoryRegion<byte>& serial)
    {
-   this->issuer = issuer;
-   this->serial = serial;
+   /* Serial number compare is much faster than X.509 DN, and unlikely
+   to collide even across issuers, so do that first to fail fast
+   */
+
+   return [&](const X509_Certificate& cert)
+      {
+      if(cert.serial_number() != serial)
+         return false;
+      return (cert.issuer_dn() == issuer);
+      };
    }
 
-/*
-* Match by subject key identifier
-*/
-bool SKID_Match::match(const X509_Certificate& cert) const
+std::function<bool (const X509_Certificate&)>
+by_issuer_and_serial(const X509_DN& issuer, const BigInt& serial)
    {
-   return (cert.subject_key_id() == skid);
+   return by_issuer_and_serial(issuer, BigInt::encode(serial));
    }
+
+std::function<bool (const X509_Certificate&)>
+by_skid(const MemoryRegion<byte>& subject_key_id)
+   {
+   return [&](const X509_Certificate& cert)
+      {
+      return (cert.subject_key_id() == subject_key_id);
+      };
+   }
+
+}
 
 }

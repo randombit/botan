@@ -99,11 +99,11 @@ class BOTAN_DLL X509_CA
               const Private_Key& key,
               const std::string& hash_fn);
 
+      X509_CA(const X509_CA&) = delete;
+      X509_CA& operator=(const X509_CA&) = delete;
+
       ~X509_CA();
    private:
-      X509_CA(const X509_CA&) {}
-      X509_CA& operator=(const X509_CA&) { return (*this); }
-
       X509_CRL make_crl(const std::vector<CRL_Entry>& entries,
                         u32bit crl_number, u32bit next_update,
                         RandomNumberGenerator& rng) const;
