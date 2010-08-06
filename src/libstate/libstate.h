@@ -8,6 +8,7 @@
 #ifndef BOTAN_LIB_STATE_H__
 #define BOTAN_LIB_STATE_H__
 
+#include <botan/global_state.h>
 #include <botan/allocate.h>
 #include <botan/algo_factory.h>
 #include <botan/rng.h>
@@ -128,25 +129,6 @@ class BOTAN_DLL Library_State
 
       Algorithm_Factory* m_algorithm_factory;
    };
-
-/**
-* Access the global library state
-* @return reference to the global library state
-*/
-BOTAN_DLL Library_State& global_state();
-
-/**
-* Set the global state object
-* @param state the new global state to use
-*/
-BOTAN_DLL void set_global_state(Library_State* state);
-
-/**
-* Swap the current state for another
-* @param new_state the new state object to use
-* @return previous state (or NULL if none)
-*/
-BOTAN_DLL Library_State* swap_global_state(Library_State* new_state);
 
 }
 

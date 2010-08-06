@@ -46,50 +46,6 @@
 namespace Botan {
 
 /*
-* Botan's global state
-*/
-namespace {
-
-Library_State* global_lib_state = 0;
-
-}
-
-/*
-* Access the global state object
-*/
-Library_State& global_state()
-   {
-   /* Lazy initialization. Botan still needs to be deinitialized later
-      on or memory might leak.
-   */
-   if(!global_lib_state)
-      {
-      global_lib_state = new Library_State;
-      global_lib_state->initialize();
-      }
-
-   return (*global_lib_state);
-   }
-
-/*
-* Set a new global state object
-*/
-void set_global_state(Library_State* new_state)
-   {
-   delete swap_global_state(new_state);
-   }
-
-/*
-* Swap two global state objects
-*/
-Library_State* swap_global_state(Library_State* new_state)
-   {
-   auto old_state = global_lib_state;
-   global_lib_state = new_state;
-   return old_state;
-   }
-
-/*
 * Get an allocator by its name
 */
 Allocator* Library_State::get_allocator(const std::string& type)
