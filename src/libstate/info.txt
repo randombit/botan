@@ -4,8 +4,9 @@ define LIBSTATE_MODULE
 
 <header:public>
 botan.h
-libstate.h
+global_state.h
 init.h
+libstate.h
 look_pk.h
 lookup.h
 scan_name.h
@@ -13,8 +14,9 @@ scan_name.h
 
 <source>
 get_enc.cpp
-init.cpp
 global_rng.cpp
+global_state.cpp
+init.cpp
 libstate.cpp
 lookup.cpp
 policy.cpp
