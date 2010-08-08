@@ -62,7 +62,10 @@ bool set_global_state_unless_set(Library_State* new_state)
       return false;
       }
    else
+      {
       delete swap_global_state(new_state);
+      return true;
+      }
    }
 
 /*
