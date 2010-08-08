@@ -354,6 +354,7 @@ template<typename T, u32bit INITIAL_LEN = 0>
 class SecureVector : public MemoryRegion<T>
    {
    public:
+      using MemoryRegion<T>::copy;
       using MemoryRegion<T>::set;
       using MemoryRegion<T>::init;
       using MemoryRegion<T>::append;
