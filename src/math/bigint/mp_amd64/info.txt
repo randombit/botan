@@ -12,6 +12,7 @@ amd64
 </arch>
 
 <cc>
+clang
 gcc
 icc
 </cc>
