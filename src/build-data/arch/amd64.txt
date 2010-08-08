@@ -31,6 +31,7 @@ athlon64 -> k8
 barcelona -> k10
 
 corei5cpum520 -> westmere
+corei7cpu860 -> nehalem
 </submodel_aliases>
 
 <isa_extn>
