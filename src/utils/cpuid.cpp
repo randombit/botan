@@ -151,6 +151,15 @@ void CPUID::initialize()
 
    x86_processor_flags = ((u64bit)cpuid[2] << 32) | cpuid[3];
 
+#if defined(BOTAN_TARGET_ARCH_IS_AMD64)
+   /*
+   * If we don't have access to CPUID, we can still safely assume that
+   * any x86-64 processor has SSE2.
+   */
+   if(x86_processor_flags == 0)
+     x86_processor_flags |= (1 << CPUID_SSE2_BIT);
+#endif
+
    cache_line = get_x86_cache_line_size();
 
    altivec_capable = false;
