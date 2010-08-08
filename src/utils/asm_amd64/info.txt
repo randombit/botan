@@ -14,6 +14,14 @@ gcc
 icc
 </cc>
 
+# ELF systems
+<os>
+linux
+netbsd
+openbsd
+solaris
+</os>
+
 <requires>
 asm_engine
 </requires>

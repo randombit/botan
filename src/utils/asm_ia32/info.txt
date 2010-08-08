@@ -8,7 +8,18 @@ asm_macr_ia32.h
 ia32
 </arch>
 
+# ELF systems
+<os>
+linux
+freebsd
+dragonfly
+netbsd
+openbsd
+solaris
+</os>
+
 <cc>
+clang
 gcc
 icc
 </cc>

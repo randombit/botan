@@ -12,6 +12,7 @@ ia32
 </arch>
 
 <cc>
+clang
 gcc
 icc
 </cc>
