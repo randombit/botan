@@ -1,0 +1,9 @@
+define AES_SSSE3
+
+load_on auto
+
+need_isa ssse3
+
+<requires>
+simd_engine
+</requires>

@@ -1,5 +1,6 @@
 
 * 1.9.10-dev, ????-??-??
+ - Add support for constant time AES-128 using SSSE3
  - Add support for loading new Engines at runtime
  - Use GCC byteswap intrinsics where possible
  - Drop support for building with Python 2.4

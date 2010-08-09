@@ -9,6 +9,10 @@
 #include <botan/internal/simd_32.h>
 #include <botan/cpuid.h>
 
+#if defined(BOTAN_HAS_AES_SSSE3)
+  #include <botan/aes_ssse3.h>
+#endif
+
 #if defined(BOTAN_HAS_SERPENT_SIMD)
   #include <botan/serp_simd.h>
 #endif
@@ -35,6 +39,11 @@ BlockCipher*
 SIMD_Engine::find_block_cipher(const SCAN_Name& request,
                                Algorithm_Factory&) const
    {
+#if defined(BOTAN_HAS_AES_SSSE3)
+   if(request.algo_name() == "AES-128" && CPUID::has_ssse3())
+      return new AES_128_SSSE3;
+#endif
+
 #if defined(BOTAN_HAS_IDEA_SSE2)
    if(request.algo_name() == "IDEA" && CPUID::has_sse2())
       return new IDEA_SSE2;
