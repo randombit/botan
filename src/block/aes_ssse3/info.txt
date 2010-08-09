@@ -7,3 +7,10 @@ need_isa ssse3
 <requires>
 simd_engine
 </requires>
+
+# Intel C++ can't deal with syntax for defining constants :(
+# Visual C++ works in 64-bit mode but not 32-bit
+<cc>
+gcc
+clang
+</cc>
