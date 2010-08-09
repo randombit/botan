@@ -26,6 +26,10 @@ no_debug_flags "-finline-functions"
 default -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
 </so_link_flags>
 
+<mach_opt>
+amd64     -> "-march=SUBMODEL"
+</mach_opt>
+
 <mach_abi_linking>
 amd64   -> "-m64"
 mips64  -> "-mabi=64"
