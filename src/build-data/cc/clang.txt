@@ -1,6 +1,6 @@
 # Largely copied from the gcc config
 
-binary_name clang
+binary_name "clang++"
 
 compile_option "-c "
 output_to_option "-o "
