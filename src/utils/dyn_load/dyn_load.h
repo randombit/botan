@@ -43,7 +43,11 @@ class Dynamically_Loaded_Library
       template<typename T>
       T resolve(const std::string& symbol)
          {
+#if defined(__GNUC__) && __GNUC__ < 4
+         return (T)(resolve_symbol(symbol));
+#else
          return reinterpret_cast<T>(resolve_symbol(symbol));
+#endif
          }
 
    private:
