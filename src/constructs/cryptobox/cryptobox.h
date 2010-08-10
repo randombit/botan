@@ -14,15 +14,20 @@
 namespace Botan {
 
 /**
-* Encrypt a message
+* This namespace holds various high-level crypto functions
+*/
+namespace CryptoBox {
+
+/**
+* Encrypt a message using a passphrase
 * @param input the input data
 * @param input_len the length of input in bytes
 * @param passphrase the passphrase used to encrypt the message
 * @param rng a ref to a random number generator, such as AutoSeeded_RNG
 */
-BOTAN_DLL std::string cryptobox_encrypt(const byte input[], u32bit input_len,
-                                        const std::string& passphrase,
-                                        RandomNumberGenerator& rng);
+BOTAN_DLL std::string encrypt(const byte input[], u32bit input_len,
+                              const std::string& passphrase,
+                              RandomNumberGenerator& rng);
 
 /**
 * Decrypt a message encrypted with CryptoBox::encrypt
@@ -30,8 +35,10 @@ BOTAN_DLL std::string cryptobox_encrypt(const byte input[], u32bit input_len,
 * @param input_len the length of input in bytes
 * @param passphrase the passphrase used to encrypt the message
 */
-BOTAN_DLL std::string cryptobox_decrypt(const byte input[], u32bit input_len,
-                                        const std::string& passphrase);
+BOTAN_DLL std::string decrypt(const byte input[], u32bit input_len,
+                              const std::string& passphrase);
+
+}
 
 }
 

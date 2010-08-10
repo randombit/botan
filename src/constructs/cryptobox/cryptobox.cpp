@@ -18,6 +18,8 @@
 
 namespace Botan {
 
+namespace CryptoBox {
+
 namespace {
 
 /*
@@ -38,9 +40,9 @@ const u32bit PBKDF_OUTPUT_LEN = CIPHER_KEY_LEN + CIPHER_IV_LEN + MAC_KEY_LEN;
 
 }
 
-std::string cryptobox_encrypt(const byte input[], u32bit input_len,
-                              const std::string& passphrase,
-                              RandomNumberGenerator& rng)
+std::string encrypt(const byte input[], u32bit input_len,
+                    const std::string& passphrase,
+                    RandomNumberGenerator& rng)
    {
    SecureVector<byte> pbkdf_salt(PBKDF_SALT_LEN);
    rng.randomize(pbkdf_salt.begin(), pbkdf_salt.size());
@@ -89,8 +91,8 @@ std::string cryptobox_encrypt(const byte input[], u32bit input_len,
                            "BOTAN CRYPTOBOX MESSAGE");
    }
 
-std::string cryptobox_decrypt(const byte input[], u32bit input_len,
-                              const std::string& passphrase)
+std::string decrypt(const byte input[], u32bit input_len,
+                    const std::string& passphrase)
    {
    DataSource_Memory input_src(input, input_len);
    SecureVector<byte> ciphertext =
@@ -137,5 +139,7 @@ std::string cryptobox_decrypt(const byte input[], u32bit input_len,
 
    return pipe.read_all_as_string(0);
    }
+
+}
 
 }
