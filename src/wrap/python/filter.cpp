@@ -17,6 +17,8 @@ class Py_Filter : public Filter
    public:
       virtual void write_str(const std::string&) = 0;
 
+      std::string name() const { return "Py_Filter_FIXME"; }
+
       void write(const byte data[], u32bit length)
          {
          write_str(std::string((const char*)data, length));
