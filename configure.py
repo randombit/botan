@@ -347,6 +347,11 @@ def process_command_line(args):
             if not enabled_or_disabled_isa(isa):
                 options.disable_isa_extns.append(isa)
 
+    for isa in options.enable_isa_extns:
+        for dep in isa_deps.get(isa, '').split(','):
+            if not enabled_or_disabled_isa(dep):
+                options.enable_isa_extns.append(dep)
+
     return options
 
 """
