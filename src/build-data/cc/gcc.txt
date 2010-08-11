@@ -10,7 +10,7 @@ add_include_dir_option "-I"
 add_lib_dir_option "-L"
 add_lib_option "-l"
 
-lang_flags "-D_REENTRANT -ansi -Wno-long-long"
+lang_flags "-D_REENTRANT -Wno-long-long"
 warning_flags "-W -Wall"
 #warning_flags "-Wextra -Wall -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wno-unused-parameter"
 
