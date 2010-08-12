@@ -397,12 +397,80 @@ void AES_128_SSSE3::key_schedule(const byte keyb[], u32bit)
    }
 
 /*
-* Clear memory of sensitive data
+* AES-256 Encryption
 */
-void AES_128_SSSE3::clear()
+void AES_256_SSSE3::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   EK.clear();
-   DK.clear();
+   const __m128i* in_mm = (const __m128i*)in;
+   __m128i* out_mm = (__m128i*)out;
+
+   const __m128i* keys = (const __m128i*)&EK[0];
+
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      __m128i B = _mm_loadu_si128(in_mm + i);
+      _mm_storeu_si128(out_mm + i, aes_ssse3_encrypt(B, keys, 14));
+      }
+   }
+
+/*
+* AES-256 Decryption
+*/
+void AES_256_SSSE3::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+   {
+   const __m128i* in_mm = (const __m128i*)in;
+   __m128i* out_mm = (__m128i*)out;
+
+   const __m128i* keys = (const __m128i*)&DK[0];
+
+   for(u32bit i = 0; i != blocks; ++i)
+      {
+      __m128i B = _mm_loadu_si128(in_mm + i);
+      _mm_storeu_si128(out_mm + i, aes_ssse3_decrypt(B, keys, 14));
+      }
+   }
+
+/*
+* AES-256 Key Schedule
+*/
+void AES_256_SSSE3::key_schedule(const byte keyb[], u32bit)
+   {
+   __m128i rcon = _mm_set_epi32(0x702A9808, 0x4D7C7D81,
+                                0x1F8391B9, 0xAF9DEEB6);
+
+   __m128i* EK_out = (__m128i*)&EK[0];
+   __m128i* DK_out = (__m128i*)&DK[0];
+
+   __m128i key1 = _mm_loadu_si128((const __m128i*)keyb);
+   __m128i key2 = _mm_loadu_si128((const __m128i*)(keyb + 16));
+
+   _mm_storeu_si128(DK_out + 14, _mm_shuffle_epi8(key1, sr[2]));
+
+   key1 = aes_schedule_transform(key1, k_ipt1, k_ipt2);
+   key2 = aes_schedule_transform(key2, k_ipt1, k_ipt2);
+
+   _mm_storeu_si128(EK_out + 0, key1);
+   _mm_storeu_si128(EK_out + 1, aes_schedule_mangle(key2, 3));
+
+   _mm_storeu_si128(DK_out + 13, aes_schedule_mangle_dec(key2, 1));
+
+   for(u32bit i = 2; i != 14; i += 2)
+      {
+      __m128i k_t = key2;
+      key1 = key2 = aes_schedule_round(&rcon, key2, key1);
+
+      _mm_storeu_si128(EK_out + i, aes_schedule_mangle(key2, i % 4));
+      _mm_storeu_si128(DK_out + (14-i), aes_schedule_mangle_dec(key2, (i+2) % 4));
+
+      key2 = aes_schedule_round(NULL, _mm_shuffle_epi32(key2, 0xFF), k_t);
+      _mm_storeu_si128(EK_out + i + 1, aes_schedule_mangle(key2, (i - 1) % 4));
+      _mm_storeu_si128(DK_out + (13-i), aes_schedule_mangle_dec(key2, (i+1) % 4));
+      }
+
+   key2 = aes_schedule_round(&rcon, key2, key1);
+
+   _mm_storeu_si128(EK_out + 14, aes_schedule_mangle_last(key2, 2));
+   _mm_storeu_si128(DK_out + 0, aes_schedule_mangle_last_dec(key2));
    }
 
 }

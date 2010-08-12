@@ -21,7 +21,7 @@ class BOTAN_DLL AES_128_SSSE3 : public BlockCipher
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
-      void clear();
+      void clear() { EK.clear(); DK.clear(); }
       std::string name() const { return "AES-128"; }
       BlockCipher* clone() const { return new AES_128_SSSE3; }
 
@@ -30,6 +30,26 @@ class BOTAN_DLL AES_128_SSSE3 : public BlockCipher
       void key_schedule(const byte[], u32bit);
 
       SecureVector<u32bit, 44> EK, DK;
+   };
+
+/**
+* AES-256 using SSSE3
+*/
+class BOTAN_DLL AES_256_SSSE3 : public BlockCipher
+   {
+   public:
+      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+
+      void clear() { EK.clear(); DK.clear(); }
+      std::string name() const { return "AES-256"; }
+      BlockCipher* clone() const { return new AES_256_SSSE3; }
+
+      AES_256_SSSE3() : BlockCipher(16, 32) {}
+   private:
+      void key_schedule(const byte[], u32bit);
+
+      SecureVector<u32bit, 60> EK, DK;
    };
 
 }
