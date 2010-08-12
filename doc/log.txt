@@ -1,5 +1,5 @@
 
-* 1.9.10-dev, ????-??-??
+* 1.9.10, 2010-08-12
  - Add a constant time AES implementation using SSSE3
  - Add support for loading new Engines at runtime
  - Use GCC byteswap intrinsics where possible
