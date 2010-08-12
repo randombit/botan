@@ -5,6 +5,7 @@
 */
 
 #include <iostream>
+#include <string>
 #include <botan/cpuid.h>
 
 using namespace Botan;
