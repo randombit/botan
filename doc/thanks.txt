@@ -28,6 +28,9 @@ via public domain code which has been repurposed into the library:
 
   Dean Gaudet wrote the SSE2 implementation of SHA-1
 
+  Mike Hamburg wrote x86-64/SSSE3 assembly which was the basis for the
+  constant time AES implementation
+
   The implementation of DES is based off a public domain implementation by Phil
   Karn from 1994 (he, in turn, credits Richard Outerbridge and Jim Gillogly).
 

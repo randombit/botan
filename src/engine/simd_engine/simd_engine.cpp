@@ -42,6 +42,8 @@ SIMD_Engine::find_block_cipher(const SCAN_Name& request,
 #if defined(BOTAN_HAS_AES_SSSE3)
    if(request.algo_name() == "AES-128" && CPUID::has_ssse3())
       return new AES_128_SSSE3;
+   if(request.algo_name() == "AES-192" && CPUID::has_ssse3())
+      return new AES_192_SSSE3;
    if(request.algo_name() == "AES-256" && CPUID::has_ssse3())
       return new AES_256_SSSE3;
 #endif
