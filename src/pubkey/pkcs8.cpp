@@ -160,7 +160,7 @@ SecureVector<byte> BER_encode(const Private_Key& key,
                               const std::string& pass,
                               const std::string& pbe_algo)
    {
-   const std::string DEFAULT_PBE = "PBE-PKCS5v20(SHA-1,AES-128/CBC)";
+   const std::string DEFAULT_PBE = "PBE-PKCS5v20(SHA-1,AES-256/CBC)";
 
    std::auto_ptr<PBE> pbe(get_pbe(((pbe_algo != "") ? pbe_algo : DEFAULT_PBE)));
 

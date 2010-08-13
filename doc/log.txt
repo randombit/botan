@@ -1,4 +1,7 @@
 
+* 1.9.11-dev, ????-??-??
+ - Switch default PKCS #8 encryption algorithm from AES-128 to AES-256
+
 * 1.9.10, 2010-08-12
  - Add a constant time AES implementation using SSSE3
  - Add support for loading new Engines at runtime
@@ -87,7 +90,7 @@
  - Fix an invalid memory read in MD4
  - Fix Visual C++ static builds
  - Remove Timer class entirely
- - Switch default PKCS #8 encryption algorithm from 3DES to AES-256
+ - Switch default PKCS #8 encryption algorithm from 3DES to AES-128
  - New option --gen-amalgamation for creating a SQLite-style amalgamation
  - Many headers are now explicitly internal-use-only and are not installed
  - Greatly improve the Win32 installer
