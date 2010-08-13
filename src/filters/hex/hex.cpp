@@ -144,7 +144,7 @@ void Hex_Decoder::handle_bad_char(byte c)
       return;
 
    throw Decoding_Error("Hex_Decoder: Invalid hex character: " +
-                        to_string(c));
+                        std::to_string(c));
    }
 
 /*

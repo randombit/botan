@@ -121,7 +121,7 @@ void decode(BER_Decoder& decoder, u32bit level)
             if((class_tag & APPLICATION) || (class_tag & CONTEXT_SPECIFIC) ||
                (class_tag & PRIVATE))
                {
-               name = "cons [" + to_string(type_tag) + "]";
+               name = "cons [" + std::to_string(type_tag) + "]";
 
                if(class_tag & APPLICATION)
                   name += " appl";
@@ -148,7 +148,7 @@ void decode(BER_Decoder& decoder, u32bit level)
 
          Pipe pipe(((not_text) ? new Hex_Encoder : 0));
          pipe.process_msg(bits);
-         emit("[" + to_string(type_tag) + "]", level, length,
+         emit("[" + std::to_string(type_tag) + "]", level, length,
               pipe.read_all_as_string());
          }
       else if(type_tag == OBJECT_ID)

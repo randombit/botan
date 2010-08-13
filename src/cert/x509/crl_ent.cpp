@@ -11,7 +11,6 @@
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/oids.h>
-#include <botan/time.h>
 
 namespace Botan {
 
@@ -31,7 +30,7 @@ CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why) :
    throw_on_unknown_critical(false)
    {
    serial = cert.serial_number();
-   time = X509_Time(system_time());
+   time = X509_Time(std::chrono::system_clock::now());
    reason = why;
    }
 
