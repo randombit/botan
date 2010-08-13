@@ -36,9 +36,9 @@ class BOTAN_DLL PKCS5_PBKDF2 : public PBKDF
 
       /**
       * Create a PKCS #5 instance using the specified message auth code
-      * @param mac the MAC to use
+      * @param mac_fn the MAC to use
       */
-      PKCS5_PBKDF2(MessageAuthenticationCode* m) : mac(m) {}
+      PKCS5_PBKDF2(MessageAuthenticationCode* mac_fn) : mac(mac_fn) {}
 
       /**
       * Destructor
