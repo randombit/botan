@@ -97,7 +97,7 @@ void PBE_PKCS5v20::set_key(const std::string& passphrase)
 */
 void PBE_PKCS5v20::new_params(RandomNumberGenerator& rng)
    {
-   iterations = 2048;
+   iterations = 10000;
    key_length = block_cipher->MAXIMUM_KEYLENGTH;
 
    salt.create(8);

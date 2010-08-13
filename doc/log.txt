@@ -1,5 +1,7 @@
 
 * 1.8.10-dev, ????-??-??
+ - Switch default PKCS #8 encryption algorithm from 3DES to AES-256
+ - Increase default hash iterations from 2048 to 10000 in PBES1 and PBES2
  - Enable the /proc-walking entropy source on NetBSD
  - Fix the doxygen makefile target
 
