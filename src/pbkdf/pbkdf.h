@@ -38,11 +38,10 @@ class BOTAN_DLL PBKDF
       virtual void clear() {}
 
       /**
-      * Derive a key from a passphrase with this PBKDF object. It will use
-      * the salt value and number of iterations configured in this object.
+      * Derive a key from a passphrase
       * @param output_len the desired length of the key to produce
       * @param passphrase the password to derive the key from
-      * @param salt the randomly chosen salt
+      * @param salt a randomly chosen salt
       * @param salt_len length of salt in bytes
       * @param iterations the number of iterations to use (use 10K or more)
       */
