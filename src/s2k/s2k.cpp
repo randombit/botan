@@ -18,6 +18,14 @@ OctetString S2K::derive_key(u32bit key_len,
    return derive(key_len, passphrase, salt, salt.size(), iterations());
    }
 
+OctetString S2K::derive_key(u32bit output_len,
+                            const std::string& passphrase,
+                            const byte salt[], u32bit salt_len,
+                            u32bit iterations)
+   {
+   return derive(output_len, passphrase, salt, salt_len, iterations);
+   }
+
 /*
 * Set the number of iterations
 */

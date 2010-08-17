@@ -45,6 +45,20 @@ class BOTAN_DLL S2K
       OctetString derive_key(u32bit key_len,
                              const std::string& passphrase) const;
 
+
+      /**
+      * Derive a key from a passphrase
+      * @param output_len the desired length of the key to produce
+      * @param passphrase the password to derive the key from
+      * @param salt a randomly chosen salt
+      * @param salt_len length of salt in bytes
+      * @param iterations the number of iterations to use (use 10K or more)
+      */
+      OctetString derive_key(u32bit output_len,
+                             const std::string& passphrase,
+                             const byte salt[], u32bit salt_len,
+                             u32bit iterations);
+
       /**
       * Set the number of iterations for the one-way function during
       * key generation.
@@ -96,6 +110,9 @@ class BOTAN_DLL S2K
       SecureVector<byte> salt;
       u32bit iter;
    };
+
+// More conventional name for this algorithm
+typedef S2K PBKDF;
 
 }
 
