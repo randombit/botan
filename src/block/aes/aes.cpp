@@ -8,6 +8,7 @@
 #include <botan/aes.h>
 #include <botan/loadstor.h>
 #include <botan/rotate.h>
+#include <botan/internal/prefetch.h>
 
 namespace Botan {
 
@@ -426,15 +427,33 @@ void AES::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       u32bit T2 = load_be<u32bit>(in, 2) ^ EK[2];
       u32bit T3 = load_be<u32bit>(in, 3) ^ EK[3];
 
-      u32bit B0, B1, B2, B3;
-      B0 = TE0[get_byte(0, T0)] ^ TE1[get_byte(1, T1)] ^
-           TE2[get_byte(2, T2)] ^ TE3[get_byte(3, T3)] ^ EK[4];
-      B1 = TE0[get_byte(0, T1)] ^ TE1[get_byte(1, T2)] ^
-           TE2[get_byte(2, T3)] ^ TE3[get_byte(3, T0)] ^ EK[5];
-      B2 = TE0[get_byte(0, T2)] ^ TE1[get_byte(1, T3)] ^
-           TE2[get_byte(2, T0)] ^ TE3[get_byte(3, T1)] ^ EK[6];
-      B3 = TE0[get_byte(0, T3)] ^ TE1[get_byte(1, T0)] ^
-           TE2[get_byte(2, T1)] ^ TE3[get_byte(3, T2)] ^ EK[7];
+      /* Use only the first 256 entries of the TE table and do the
+      * rotations directly in the code. This reduces the number of
+      * cache lines potentially used in the first round from 64 to 16
+      * (assuming a typical 64 byte cache line), which makes timing
+      * attacks a little harder; the first round is particularly
+      * vulnerable.
+      */
+
+      u32bit B0 = TE[get_byte(0, T0)] ^
+                  rotate_right(TE[get_byte(1, T1)],  8) ^
+                  rotate_right(TE[get_byte(2, T2)], 16) ^
+                  rotate_right(TE[get_byte(3, T3)], 24) ^ EK[4];
+
+      u32bit B1 = TE[get_byte(0, T1)] ^
+                  rotate_right(TE[get_byte(1, T2)],  8) ^
+                  rotate_right(TE[get_byte(2, T3)], 16) ^
+                  rotate_right(TE[get_byte(3, T0)], 24) ^ EK[5];
+
+      u32bit B2 = TE[get_byte(0, T2)] ^
+                  rotate_right(TE[get_byte(1, T3)],  8) ^
+                  rotate_right(TE[get_byte(2, T0)], 16) ^
+                  rotate_right(TE[get_byte(3, T1)], 24) ^ EK[6];
+
+      u32bit B3 = TE[get_byte(0, T3)] ^
+                  rotate_right(TE[get_byte(1, T0)],  8) ^
+                  rotate_right(TE[get_byte(2, T1)], 16) ^
+                  rotate_right(TE[get_byte(3, T2)], 24) ^ EK[7];
 
       for(u32bit j = 2; j != ROUNDS; j += 2)
          {
