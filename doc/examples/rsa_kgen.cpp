@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
       }
 
    u32bit bits = std::atoi(argv[1]);
-   if(bits < 1024 || bits > 4096)
+   if(bits < 1024 || bits > 16384)
       {
       std::cout << "Invalid argument for bitsize" << std::endl;
       return 1;
