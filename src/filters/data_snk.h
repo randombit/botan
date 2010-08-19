@@ -43,7 +43,7 @@ class BOTAN_DLL DataSink_Stream : public DataSink
       * @param name identifier
       */
       DataSink_Stream(std::ostream& stream,
-                      const std::string& name = "");
+                      const std::string& name = "<std::ostream>");
 
       /**
       * Construct a DataSink_Stream from a stream.
@@ -57,9 +57,9 @@ class BOTAN_DLL DataSink_Stream : public DataSink
       ~DataSink_Stream();
    private:
       const std::string identifier;
-      const bool owner;
 
-      std::ostream* sink;
+      std::ostream* sink_p;
+      std::ostream& sink;
    };
 
 }

@@ -130,7 +130,8 @@ class BOTAN_DLL DataSource_Stream : public DataSource
       bool end_of_data() const;
       std::string id() const;
 
-      DataSource_Stream(std::istream&, const std::string& id = "");
+      DataSource_Stream(std::istream&,
+                        const std::string& id = "<std::istream>");
 
       /**
       * Construct a Stream-Based DataSource from file
@@ -142,9 +143,9 @@ class BOTAN_DLL DataSource_Stream : public DataSource
       ~DataSource_Stream();
    private:
       const std::string identifier;
-      const bool owner;
 
-      std::istream* source;
+      std::istream* source_p;
+      std::istream& source;
       u32bit total_read;
    };
 

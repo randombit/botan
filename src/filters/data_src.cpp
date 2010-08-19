@@ -8,7 +8,6 @@
 
 #include <botan/data_src.h>
 #include <botan/exceptn.h>
-
 #include <fstream>
 #include <algorithm>
 
@@ -107,11 +106,11 @@ DataSource_Memory::DataSource_Memory(const std::string& in)
 */
 u32bit DataSource_Stream::read(byte out[], u32bit length)
    {
-   source->read(reinterpret_cast<char*>(out), length);
-   if(source->bad())
+   source.read(reinterpret_cast<char*>(out), length);
+   if(source.bad())
       throw Stream_IO_Error("DataSource_Stream::read: Source failure");
 
-   u32bit got = source->gcount();
+   u32bit got = source.gcount();
    total_read += got;
    return got;
    }
@@ -129,23 +128,23 @@ u32bit DataSource_Stream::peek(byte out[], u32bit length, u32bit offset) const
    if(offset)
       {
       SecureVector<byte> buf(offset);
-      source->read(reinterpret_cast<char*>(buf.begin()), buf.size());
-      if(source->bad())
+      source.read(reinterpret_cast<char*>(buf.begin()), buf.size());
+      if(source.bad())
          throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
-      got = source->gcount();
+      got = source.gcount();
       }
 
    if(got == offset)
       {
-      source->read(reinterpret_cast<char*>(out), length);
-      if(source->bad())
+      source.read(reinterpret_cast<char*>(out), length);
+      if(source.bad())
          throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
-      got = source->gcount();
+      got = source.gcount();
       }
 
-   if(source->eof())
-      source->clear();
-   source->seekg(total_read, std::ios::beg);
+   if(source.eof())
+      source.clear();
+   source.seekg(total_read, std::ios::beg);
 
    return got;
    }
@@ -155,7 +154,7 @@ u32bit DataSource_Stream::peek(byte out[], u32bit length, u32bit offset) const
 */
 bool DataSource_Stream::end_of_data() const
    {
-   return (!source->good());
+   return (!source.good());
    }
 
 /*
@@ -171,15 +170,17 @@ std::string DataSource_Stream::id() const
 */
 DataSource_Stream::DataSource_Stream(const std::string& path,
                                      bool use_binary) :
-   identifier(path), owner(true)
+   identifier(path),
+   source_p(use_binary ?
+            new std::ifstream(path.c_str()) :
+            new std::ifstream(path.c_str(), std::ios::binary)),
+   source(*source_p)
    {
-   if(use_binary)
-      source = new std::ifstream(path.c_str(), std::ios::binary);
-   else
-      source = new std::ifstream(path.c_str());
-
-   if(!source->good())
+   if(!source.good())
+      {
+      delete source_p;
       throw Stream_IO_Error("DataSource: Failure opening file " + path);
+      }
 
    total_read = 0;
    }
@@ -189,9 +190,10 @@ DataSource_Stream::DataSource_Stream(const std::string& path,
 */
 DataSource_Stream::DataSource_Stream(std::istream& in,
                                      const std::string& name) :
-   identifier(name), owner(false)
+   identifier(name),
+   source_p(0),
+   source(in)
    {
-   source = &in;
    total_read = 0;
    }
 
@@ -200,8 +202,7 @@ DataSource_Stream::DataSource_Stream(std::istream& in,
 */
 DataSource_Stream::~DataSource_Stream()
    {
-   if(owner)
-      delete source;
+   delete source_p;
    }
 
 }
