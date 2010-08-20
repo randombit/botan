@@ -8,7 +8,6 @@
 #include <botan/aes.h>
 #include <botan/loadstor.h>
 #include <botan/rotate.h>
-#include <botan/internal/prefetch.h>
 
 namespace Botan {
 
@@ -487,10 +486,14 @@ void AES::encrypt_n(const byte in[], byte out[], u32bit blocks) const
          }
 
       /*
-      Joseph Bonneau and Ilya Mironov's paper
-      <a href = "http://icme2007.org/users/mironov/papers/aes-timing.pdf">
-      Cache-Collision Timing Attacks Against AES</a> describes an attack
-      that can recover AES keys with as few as 2<sup>13</sup> samples.
+      Joseph Bonneau and Ilya Mironov's paper "Cache-Collision Timing
+      Attacks Against AES" describes an attack that can recover AES
+      keys with as few as 2**13 samples.
+
+      http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.88.4753
+
+      They recommend using a byte-wide table, which still allows an attack
+      but increases the samples required from 2**13 to 2**25:
 
       """In addition to OpenSSL v. 0.9.8.(a), which was used in our
       experiments, the AES implementations of Crypto++ 5.2.1 and
@@ -500,6 +503,7 @@ void AES::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       use a smaller byte-wide final table which lessens the effectiveness
       of the attacks."""
       */
+
       out[ 0] = SE[get_byte(0, B0)] ^ ME[0];
       out[ 1] = SE[get_byte(1, B1)] ^ ME[1];
       out[ 2] = SE[get_byte(2, B2)] ^ ME[2];
