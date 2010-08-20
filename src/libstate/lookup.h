@@ -87,7 +87,7 @@ BOTAN_DLL S2K* get_s2k(const std::string& name);
 * @param name the name of the desired PBKDF algorithm
 * @return a pointer to the string to key algorithm object
 */
-BOTAN_DLL PBKDF* get_pbkdf(const std::string& name)
+inline PBKDF* get_pbkdf(const std::string& name)
    {
    return get_s2k(name);
    }
