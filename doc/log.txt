@@ -2,6 +2,7 @@
 * 1.9.11-dev, ????-??-??
  - Switch default PKCS #8 encryption algorithm from AES-128 to AES-256
  - Use smaller tables in the first round of AES
+ - Allow using PBKDF2 with empty passphrases
 
 * 1.9.10, 2010-08-12
  - Add a constant time AES implementation using SSSE3

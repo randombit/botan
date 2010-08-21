@@ -22,11 +22,16 @@ OctetString PKCS5_PBKDF2::derive_key(u32bit key_len,
    if(iterations == 0)
       throw Invalid_Argument("PKCS#5 PBKDF2: Invalid iteration count");
 
-   if(passphrase.length() == 0)
-      throw Invalid_Argument("PKCS#5 PBKDF2: Empty passphrase is invalid");
-
-   mac->set_key(reinterpret_cast<const byte*>(passphrase.data()),
-                passphrase.length());
+   try
+      {
+      mac->set_key(reinterpret_cast<const byte*>(passphrase.data()),
+                   passphrase.length());
+      }
+   catch(Invalid_Key_Length)
+      {
+      throw Exception(name() + " cannot accept passphrases of length " +
+                      to_string(passphrase.length()));
+      }
 
    SecureVector<byte> key(key_len);
 
