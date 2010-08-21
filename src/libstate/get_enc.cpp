@@ -15,7 +15,6 @@
 
 #if defined(BOTAN_HAS_PBKDF2)
   #include <botan/pbkdf2.h>
-  #include <botan/hmac.h>
 #endif
 
 #if defined(BOTAN_HAS_PGPS2K)
@@ -96,7 +95,12 @@ PBKDF* get_pbkdf(const std::string& algo_spec)
 
 #if defined(BOTAN_HAS_PBKDF2)
    if(request.algo_name() == "PBKDF2" && request.arg_count() == 1)
-      return new PKCS5_PBKDF2(new HMAC(af.make_hash_function(request.arg(0))));
+      {
+      if(const MessageAuthenticationCode* mac_proto = af.prototype_mac(request.arg(0)))
+         return new PKCS5_PBKDF2(mac_proto->clone());
+
+      return new PKCS5_PBKDF2(af.make_mac("HMAC(" + request.arg(0) + ")"));
+      }
 #endif
 
 #if defined(BOTAN_HAS_PGPS2K)
