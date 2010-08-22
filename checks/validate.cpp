@@ -71,12 +71,17 @@ bool test_passhash(RandomNumberGenerator& rng)
 
    std::cout << "." << std::flush;
 
-   std::string gen_hash = generate_passhash9(input, rng, 5);
+   for(byte alg_id = 0; alg_id <= 2; ++alg_id)
+      {
+      std::string gen_hash = generate_passhash9(input, alg_id, rng, 1);
 
-   if(!check_passhash9(input, gen_hash))
-      return false;
+      if(!check_passhash9(input, gen_hash))
+         return false;
 
-   std::cout << "." << std::endl;;
+      std::cout << "." << std::flush;
+      }
+
+   std::cout << std::endl;
 
 #endif
 

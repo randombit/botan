@@ -23,6 +23,8 @@ const u32bit ALGID_BYTES = 1;
 const u32bit SALT_BYTES = 12; // 96 bits of salt
 const u32bit PASSHASH9_PBKDF_OUTPUT_LEN = 24; // 192 bits output
 
+const byte PASSHASH9_DEFAULT_ALGO = 0; // HMAC(SHA-1)
+
 const u32bit WORK_FACTOR_SCALE = 10000;
 
 MessageAuthenticationCode* get_pbkdf_prf(byte alg_id)
@@ -33,22 +35,14 @@ MessageAuthenticationCode* get_pbkdf_prf(byte alg_id)
       {
       if(alg_id == 0)
          return af.make_mac("HMAC(SHA-1)");
+      else if(alg_id == 1)
+         return af.make_mac("HMAC(SHA-256)");
+      else if(alg_id == 2)
+         return af.make_mac("CMAC(Blowfish)");
       }
    catch(Algorithm_Not_Found) {}
 
    return 0;
-   }
-
-std::pair<byte, MessageAuthenticationCode*> choose_pbkdf_prf()
-   {
-   for(byte alg_id = 0; alg_id != 255; ++alg_id)
-      {
-      MessageAuthenticationCode* prf = get_pbkdf_prf(alg_id);
-      if(prf)
-         return std::make_pair(alg_id, prf);
-      }
-
-   throw Internal_Error("Passhash9: No PRF available");
    }
 
 }
@@ -57,10 +51,21 @@ std::string generate_passhash9(const std::string& pass,
                                RandomNumberGenerator& rng,
                                u16bit work_factor)
    {
-   std::pair<byte, MessageAuthenticationCode*> prf = choose_pbkdf_prf();
-   byte alg_id = prf.first;
+   return generate_passhash9(pass, PASSHASH9_DEFAULT_ALGO, rng, work_factor);
+   }
 
-   PKCS5_PBKDF2 kdf(prf.second); // takes ownership of pointer
+std::string generate_passhash9(const std::string& pass,
+                               byte alg_id,
+                               RandomNumberGenerator& rng,
+                               u16bit work_factor)
+   {
+   MessageAuthenticationCode* prf = get_pbkdf_prf(alg_id);
+
+   if(!prf)
+      throw Invalid_Argument("Passhash9: Algorithm id " + to_string(alg_id) +
+                             " is not defined");
+
+   PKCS5_PBKDF2 kdf(prf); // takes ownership of pointer
 
    SecureVector<byte> salt(SALT_BYTES);
    rng.randomize(&salt[0], salt.size());

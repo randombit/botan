@@ -3,6 +3,7 @@
  - Switch default PKCS #8 encryption algorithm from AES-128 to AES-256
  - Use smaller tables in the first round of AES
  - Allow using PBKDF2 with empty passphrases
+ - Support use of HMAC(SHA-256) and CMAC(Blowfish) in passhash9
 
 * 1.9.10, 2010-08-12
  - Add a constant time AES implementation using SSSE3
