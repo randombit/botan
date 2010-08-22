@@ -47,6 +47,7 @@ ppc601         -> "-mpowerpc -mcpu=601"
 # Until GCC gets -march support for these models
 nehalem        -> "-march=core2 -msse4.1 -msse4.2"
 westmere       -> "-march=core2 -maes -msse4.1 -msse4.2"
+atom           -> "-march=i686 -msse2 -mssse3"
 cellppu        -> ""
 alpha-ev68     -> "-mcpu=ev6"
 alpha-ev7      -> "-mcpu=ev6"

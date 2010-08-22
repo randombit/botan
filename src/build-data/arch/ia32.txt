@@ -61,4 +61,5 @@ intelcput2700 -> prescott
 <isa_extn>
 sse2:pentium4,prescott,pentium-m,atom
 ssse3:atom
+movbe:atom
 </isa_extn>

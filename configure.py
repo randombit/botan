@@ -160,7 +160,7 @@ def process_command_line(args):
                             dest='unaligned_mem', action='store_false',
                             help=SUPPRESS_HELP)
 
-    for isa_extn_name in ['SSE2', 'SSSE3', 'AltiVec', 'AES-NI']:
+    for isa_extn_name in ['SSE2', 'SSSE3', 'AltiVec', 'AES-NI', 'movbe']:
         isa_extn = isa_extn_name.lower()
 
         target_group.add_option('--enable-%s' % (isa_extn),
@@ -348,9 +348,10 @@ def process_command_line(args):
                 options.disable_isa_extns.append(isa)
 
     for isa in options.enable_isa_extns:
-        for dep in isa_deps.get(isa, '').split(','):
-            if not enabled_or_disabled_isa(dep):
-                options.enable_isa_extns.append(dep)
+        if isa in isa_deps:
+            for dep in isa_deps.get(isa, '').split(','):
+                if not enabled_or_disabled_isa(dep):
+                    options.enable_isa_extns.append(dep)
 
     return options
 
@@ -609,10 +610,8 @@ class ArchInfo(object):
         if self.basename != options.cpu:
             macros.append('TARGET_CPU_IS_%s' % (form_macro(options.cpu)))
 
-        enabled_isas = set(flatten(
-            [self.isa_extensions_in(options.cpu),
-             options.enable_isa_extns]))
-
+        enabled_isas = set(self.isa_extensions_in(options.cpu) +
+                           options.enable_isa_extns)
         disabled_isas = set(options.disable_isa_extns)
 
         isa_extensions = sorted(enabled_isas - disabled_isas)
