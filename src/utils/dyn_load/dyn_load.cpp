@@ -11,9 +11,22 @@
 
 #if defined(BOTAN_TARGET_OS_HAS_DLOPEN)
   #include <dlfcn.h>
+#elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
+  #include <windows.h>
 #endif
 
 namespace Botan {
+
+namespace {
+
+void raise_runtime_loader_exception(const std::string& lib_name,
+                                    const char* msg)
+   {
+   throw std::runtime_error("Failed to load " + lib_name + ": " +
+                            (msg ? msg : "Unknown error"));
+   }
+
+}
 
 Dynamically_Loaded_Library::Dynamically_Loaded_Library(
    const std::string& library) :
@@ -23,22 +36,25 @@ Dynamically_Loaded_Library::Dynamically_Loaded_Library(
    lib = ::dlopen(lib_name.c_str(), RTLD_LAZY);
 
    if(!lib)
-      {
-      const char* dl_err = dlerror();
-      if(!dl_err)
-         dl_err = "Unknown error";
+      raise_runtime_loader_exception(lib_name, dlerror());
 
-      throw std::runtime_error("Failed to load engine " + lib_name + ": " +
-                               dl_err);
-      }
+#elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
+   lib = ::LoadLibrary(lib_name.c_str());
+
+   if(!lib)
+      raise_runtime_loader_exception(lib_name, "LoadLibrary failed");
 #endif
 
+   if(!lib)
+      raise_runtime_loader_exception(lib_name, "Dynamic load not supported");
    }
 
 Dynamically_Loaded_Library::~Dynamically_Loaded_Library()
    {
 #if defined(BOTAN_TARGET_OS_HAS_DLOPEN)
    ::dlclose(lib);
+#elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
+   ::FreeLibrary(lib);
 #endif
    }
 
@@ -48,6 +64,8 @@ void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol)
 
 #if defined(BOTAN_TARGET_OS_HAS_DLOPEN)
    addr = ::dlsym(lib, symbol.c_str());
+#elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
+   addr = ::GetProcAddress(lib, symbol.c_str());
 #endif
 
    if(!addr)

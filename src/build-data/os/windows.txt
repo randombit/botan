@@ -14,6 +14,7 @@ install_cmd_exec "copy"
 win32_virtual_lock
 win32_get_systemtime
 gmtime_s
+loadlibrary
 </target_features>
 
 <aliases>

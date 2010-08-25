@@ -18,6 +18,11 @@ class Dynamically_Loaded_Library
       /**
       * Load a DLL (or fail with an exception)
       * @param lib_name name or path to a library
+      *
+      * If you don't use a full path, the search order will be defined
+      * by whatever the system linker does by default. Always using fully
+      * qualified pathnames can help prevent code injection attacks (eg
+      * via manipulation of LD_LIBRARY_PATH on Linux)
       */
       Dynamically_Loaded_Library(const std::string& lib_name);
 
