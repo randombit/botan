@@ -12,7 +12,7 @@
 #include <intrin.h>
 
 #if (BOTAN_MP_WORD_BITS != 64)
-   #error The mp_amd64_msvc module requires that BOTAN_MP_WORD_BITS == 64
+   #error The mp_msvc64 module requires that BOTAN_MP_WORD_BITS == 64
 #endif
 
 #pragma intrinsic(_umul128)
