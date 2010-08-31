@@ -123,18 +123,18 @@ int main(int argc, char* argv[])
 
       AutoSeeded_RNG rng;
 
-      std::auto_ptr<S2K> s2k(get_s2k("PBKDF2(SHA-1)"));
-      s2k->set_iterations(8192);
-      s2k->new_random_salt(rng, 8);
+      std::auto_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(SHA-1)"));
+      pbkdf->set_iterations(8192);
+      pbkdf->new_random_salt(rng, 8);
 
-      SymmetricKey bc_key = s2k->derive_key(key_len, "BLK" + passphrase);
-      InitializationVector iv = s2k->derive_key(iv_len, "IVL" + passphrase);
-      SymmetricKey mac_key = s2k->derive_key(16, "MAC" + passphrase);
+      SymmetricKey bc_key = pbkdf->derive_key(key_len, "BLK" + passphrase);
+      InitializationVector iv = pbkdf->derive_key(iv_len, "IVL" + passphrase);
+      SymmetricKey mac_key = pbkdf->derive_key(16, "MAC" + passphrase);
 
       // Just to be all fancy we even write a (simple) header.
       out << "-------- ENCRYPTED FILE --------" << std::endl;
       out << algo << std::endl;
-      out << b64_encode(s2k->current_salt()) << std::endl;
+      out << b64_encode(pbkdf->current_salt()) << std::endl;
 
       Pipe pipe(new Fork(
                    new Chain(new MAC_Filter("HMAC(SHA-1)", mac_key),

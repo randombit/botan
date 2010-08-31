@@ -37,13 +37,13 @@ class Row_Encryptor
 Row_Encryptor::Row_Encryptor(const std::string& passphrase,
                              RandomNumberGenerator& rng)
    {
-   std::auto_ptr<S2K> s2k(get_s2k("PBKDF2(SHA-160)"));
+   std::auto_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(SHA-160)"));
 
-   s2k->set_iterations(10000);
+   pbkdf->set_iterations(10000);
 
-   s2k->new_random_salt(rng, 10); // 10 bytes == 80 bits
+   pbkdf->new_random_salt(rng, 10); // 10 bytes == 80 bits
 
-   SecureVector<byte> key = s2k->derive_key(32, passphrase).bits_of();
+   SecureVector<byte> key = pbkdf->derive_key(32, passphrase).bits_of();
 
    /*
     Save pointers to the EAX objects so we can change the IV as needed

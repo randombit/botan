@@ -2578,20 +2578,21 @@ architectures. Not having a block means any value is acceptable.
 
 This section has documentation for anything that just didn't fit into any of
 the major categories. Many of them (Timers, Allocators) will rarely be used in
-actual application code, but others, like the S2K algorithms, have a wide
+actual application code, but others, like the PBKDF algorithms, have a wide
 degree of applicability.
 
-\subsection{S2K Algorithms}
+\subsection{PBKDF Algorithms}
 
-There are various procedures (usually fairly ad-hoc) for turning a passphrase
-into a (mostly) arbitrary length key for a symmetric cipher. A general
-interface for such algorithms is presented in \filename{s2k.h}. The main
-function is \function{derive\_key}, which takes a passphrase, and the desired
-length of the output key, and returns a key of that length, deterministically
-produced from the passphrase. If an algorithm can't produce a key of that size,
-it will throw an exception (most notably, PKCS \#5's PBKDF1 can only produce
-strings between 1 and $n$ bytes, where $n$ is the output size of the underlying
-hash function).
+There are various procedures (usually fairly ad-hoc) for turning a
+passphrase into a (mostly) arbitrary length key for a symmetric
+cipher. A general interface for such algorithms is presented in
+\filename{pbkdf.h}. The main function is \function{derive\_key}, which
+takes a passphrase, and the desired length of the output key, and
+returns a key of that length, deterministically produced from the
+passphrase. If an algorithm can't produce a key of that size, it will
+throw an exception (most notably, PKCS \#5's PBKDF1 can only produce
+strings between 1 and $n$ bytes, where $n$ is the output size of the
+underlying hash function).
 
 Most such algorithms allow the use of a ``salt'', which provides some extra
 randomness and helps against dictionary attacks on the passphrase. Simply call
@@ -2606,9 +2607,9 @@ count, which will make the algorithm take longer to compute the final
 key (reducing the speed of brute-force attacks of various kinds). This
 can be changed with the \function{set\_iterations} function. Most
 standards recommend an iteration count of at least 1000. Currently
-defined S2K algorithms are ``PBKDF1(digest)'', ``PBKDF2(digest)'', and
+defined PBKDF algorithms are ``PBKDF1(digest)'', ``PBKDF2(digest)'', and
 ``OpenPGP-S2K(digest)''; you can retrieve any of these using the
-\function{get\_s2k}, found in \filename{lookup.h}. As of this writing,
+\function{get\_pbkdf}, found in \filename{lookup.h}. As of this writing,
 ``PBKDF2(SHA-256)'' with 10000 iterations and an 8 byte salt is
 recommend for new applications.
 
