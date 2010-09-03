@@ -1,6 +1,6 @@
 /*
 * Hex Encoder/Decoder
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -13,7 +13,8 @@
 namespace Botan {
 
 /**
-* This class represents a hex encoder. It encodes byte arrays to hex strings.
+* Converts arbitrary binary data to hex strings, optionally with
+* newlines inserted
 */
 class BOTAN_DLL Hex_Encoder : public Filter
    {
@@ -22,11 +23,6 @@ class BOTAN_DLL Hex_Encoder : public Filter
       * Whether to use uppercase or lowercase letters for the encoded string.
       */
       enum Case { Uppercase, Lowercase };
-
-      /**
-      * Encode a single byte into two hex characters
-      */
-      static void encode(byte in, byte out[2], Case the_case = Uppercase);
 
       std::string name() const { return "Hex_Encoder"; }
 
@@ -58,7 +54,7 @@ class BOTAN_DLL Hex_Encoder : public Filter
    };
 
 /**
-* This class represents a hex decoder. It converts hex strings to byte arrays.
+* Converts hex strings to bytes
 */
 class BOTAN_DLL Hex_Decoder : public Filter
    {
