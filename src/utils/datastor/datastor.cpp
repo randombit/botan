@@ -53,7 +53,13 @@ Data_Store::search_with(const Matcher& matcher) const
    while(i != contents.end())
       {
       if(matcher(i->first, i->second))
-         out.insert(matcher.transform(i->first, i->second));
+         {
+         std::pair<std::string, std::string> p(
+            matcher.transform(i->first, i->second));
+
+         multimap_insert(out, p.first, p.second);
+         }
+
       ++i;
       }
 
