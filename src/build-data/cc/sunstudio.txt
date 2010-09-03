@@ -1,4 +1,4 @@
-macro_name SUN_WORKSHOP
+macro_name SUN_STUDIO
 
 binary_name CC
 
