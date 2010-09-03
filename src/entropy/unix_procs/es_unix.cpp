@@ -24,10 +24,10 @@ namespace {
 */
 bool Unix_Program_Cmp(const Unix_Program& a, const Unix_Program& b)
    {
-   if(a.priority < b.priority)
-      return true;
+   if(a.priority == b.priority)
+      return (a.name_and_args < b.name_and_args);
 
-   return (a.name_and_args < b.name_and_args);
+   return (a.priority < b.priority);
    }
 
 }
