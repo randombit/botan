@@ -24,8 +24,8 @@
   #include <botan/base64.h>
 #endif
 
-#if defined(BOTAN_HAS_HEX_CODEC)
-  #include <botan/hex.h>
+#if defined(BOTAN_HAS_HEX_FILTER)
+  #include <botan/hex_filt.h>
 #endif
 
 namespace Botan {

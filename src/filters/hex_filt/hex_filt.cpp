@@ -5,6 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
+#include <botan/hex_filt.h>
 #include <botan/hex.h>
 #include <botan/parsing.h>
 #include <botan/charset.h>
@@ -40,24 +41,13 @@ Hex_Encoder::Hex_Encoder(Case c) : casing(c), line_length(0)
    }
 
 /*
-* Hex Encoding Operation
-*/
-void Hex_Encoder::encode(byte in, byte out[2], Hex_Encoder::Case casing)
-   {
-   const byte* BIN_TO_HEX = ((casing == Uppercase) ? BIN_TO_HEX_UPPER :
-                                                     BIN_TO_HEX_LOWER);
-
-   out[0] = BIN_TO_HEX[((in >> 4) & 0x0F)];
-   out[1] = BIN_TO_HEX[((in     ) & 0x0F)];
-   }
-
-/*
 * Encode and send a block
 */
 void Hex_Encoder::encode_and_send(const byte block[], u32bit length)
    {
-   for(u32bit j = 0; j != length; ++j)
-      encode(block[j], out + 2*j, casing);
+   hex_encode(reinterpret_cast<char*>(&out[0]),
+              block, length,
+              casing == Uppercase);
 
    if(line_length == 0)
       send(out, 2*length);
@@ -125,62 +115,35 @@ Hex_Decoder::Hex_Decoder(Decoder_Checking c) : checking(c)
    }
 
 /*
-* Check if a character is a valid hex char
-*/
-bool Hex_Decoder::is_valid(byte in)
-   {
-   return (HEX_TO_BIN[in] != 0x80);
-   }
-
-/*
-* Handle processing an invalid character
-*/
-void Hex_Decoder::handle_bad_char(byte c)
-   {
-   if(checking == NONE)
-      return;
-
-   if((checking == IGNORE_WS) && Charset::is_space(c))
-      return;
-
-   throw Decoding_Error("Hex_Decoder: Invalid hex character: " +
-                        to_string(c));
-   }
-
-/*
-* Hex Decoding Operation
-*/
-byte Hex_Decoder::decode(const byte hex[2])
-   {
-   return ((HEX_TO_BIN[hex[0]] << 4) | HEX_TO_BIN[hex[1]]);
-   }
-
-/*
-* Decode and send a block
-*/
-void Hex_Decoder::decode_and_send(const byte block[], u32bit length)
-   {
-   for(u32bit j = 0; j != length / 2; ++j)
-      out[j] = decode(block + 2*j);
-   send(out, length / 2);
-   }
-
-/*
 * Convert some data from hex format
 */
 void Hex_Decoder::write(const byte input[], u32bit length)
    {
-   for(u32bit j = 0; j != length; ++j)
+   while(length)
       {
-      if(is_valid(input[j]))
-         in[position++] = input[j];
-      else
-         handle_bad_char(input[j]);
-      if(position == in.size())
+      u32bit to_copy = std::min(length, in.size() - position);
+      copy_mem(&in[position], input, to_copy);
+      position += to_copy;
+
+      u32bit consumed = 0;
+      u32bit written = hex_decode(&out[0],
+                                  reinterpret_cast<const char*>(&in[0]),
+                                  position,
+                                  consumed,
+                                  checking != FULL_CHECK);
+
+      send(out, written);
+
+      if(consumed != position)
          {
-         decode_and_send(in, in.size());
-         position = 0;
+         copy_mem(&in[0], &in[consumed], position - consumed);
+         position = position - consumed;
          }
+      else
+         position = 0;
+
+      length -= to_copy;
+      input += to_copy;
       }
    }
 
@@ -189,8 +152,21 @@ void Hex_Decoder::write(const byte input[], u32bit length)
 */
 void Hex_Decoder::end_msg()
    {
-   decode_and_send(in, position);
+   u32bit consumed = 0;
+   u32bit written = hex_decode(&out[0],
+                               reinterpret_cast<const char*>(&in[0]),
+                               position,
+                               consumed,
+                               checking != FULL_CHECK);
+
+   send(out, written);
+
+   const bool not_full_bytes = consumed != position;
+
    position = 0;
+
+   if(not_full_bytes)
+      throw std::invalid_argument("Hex_Decoder: Input not full bytes");
    }
 
 }

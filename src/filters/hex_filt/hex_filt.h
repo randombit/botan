@@ -5,8 +5,8 @@
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_HEX_H__
-#define BOTAN_HEX_H__
+#ifndef BOTAN_HEX_FILTER_H__
+#define BOTAN_HEX_FILTER_H__
 
 #include <botan/filter.h>
 
@@ -50,8 +50,6 @@ class BOTAN_DLL Hex_Encoder : public Filter
                   Case the_case = Uppercase);
    private:
       void encode_and_send(const byte[], u32bit);
-      static const byte BIN_TO_HEX_UPPER[16];
-      static const byte BIN_TO_HEX_LOWER[16];
 
       const Case casing;
       const u32bit line_length;
@@ -65,20 +63,6 @@ class BOTAN_DLL Hex_Encoder : public Filter
 class BOTAN_DLL Hex_Decoder : public Filter
    {
    public:
-      /**
-      * Decode a pair of hex chars to a byte
-      * @param in an array of two hex chars
-      * @return byte formed by decoding in
-      */
-      static byte decode(const byte in[2]);
-
-      /**
-      * Check if this character is a valid hex input
-      * @param c a single character
-      * @return true iff c is a valid hex char
-      */
-      static bool is_valid(byte c);
-
       std::string name() const { return "Hex_Decoder"; }
 
       void write(const byte[], u32bit);
@@ -91,10 +75,6 @@ class BOTAN_DLL Hex_Decoder : public Filter
       */
       Hex_Decoder(Decoder_Checking checking = NONE);
    private:
-      void decode_and_send(const byte[], u32bit);
-      void handle_bad_char(byte);
-      static const byte HEX_TO_BIN[256];
-
       const Decoder_Checking checking;
       SecureVector<byte> in, out;
       u32bit position;

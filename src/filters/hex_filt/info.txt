@@ -1,4 +1,4 @@
-define HEX_CODEC
+define HEX_FILTER
 
 <requires>
 filters
