@@ -29,16 +29,11 @@ OctetString::OctetString(RandomNumberGenerator& rng,
 */
 void OctetString::change(const std::string& hex_string)
    {
-   SecureVector<byte> hex;
-   for(u32bit j = 0; j != hex_string.length(); ++j)
-      if(Hex_Decoder::is_valid(hex_string[j]))
-         hex.append(hex_string[j]);
+   SecureVector<byte> decoded(hex_string.length() / 2);
 
-   if(hex.size() % 2 != 0)
-      throw Invalid_Argument("OctetString: hex string must encode full bytes");
-   bits.resize(hex.size() / 2);
-   for(u32bit j = 0; j != bits.size(); ++j)
-      bits[j] = Hex_Decoder::decode(hex.begin() + 2*j);
+   u32bit written = hex_decode(&decoded[0], hex_string);
+
+   bits.set(&decoded[0], written);
    }
 
 /*
@@ -88,9 +83,7 @@ void OctetString::set_odd_parity()
 */
 std::string OctetString::as_string() const
    {
-   Pipe pipe(new Hex_Encoder);
-   pipe.process_msg(bits);
-   return pipe.read_all_as_string();
+   return hex_encode(&bits[0], bits.size());
    }
 
 /*

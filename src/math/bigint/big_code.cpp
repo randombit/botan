@@ -1,6 +1,6 @@
 /*
 * BigInt Encoding/Decoding
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -23,8 +23,9 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
       {
       SecureVector<byte> binary(n.encoded_size(Binary));
       n.binary_encode(binary);
-      for(u32bit j = 0; j != binary.size(); ++j)
-         Hex_Encoder::encode(binary[j], output + 2*j);
+
+      hex_encode(reinterpret_cast<char*>(output),
+                 &binary[0], binary.size());
       }
    else if(base == Octal)
       {
@@ -103,22 +104,23 @@ BigInt BigInt::decode(const byte buf[], u32bit length, Base base)
       r.binary_decode(buf, length);
    else if(base == Hexadecimal)
       {
-      SecureVector<byte> hex;
-      for(u32bit j = 0; j != length; ++j)
-         if(Hex_Decoder::is_valid(buf[j]))
-            hex.append(buf[j]);
+      SecureVector<byte> binary;
 
-      u32bit offset = (hex.size() % 2);
-      SecureVector<byte> binary(hex.size() / 2 + offset);
-
-      if(offset)
+      if(length % 2)
          {
-         byte temp[2] = { '0', hex[0] };
-         binary[0] = Hex_Decoder::decode(temp);
-         }
+         // Handle lack of leading 0
+         const char buf0_with_leading_0[2] = { '0', buf[0] };
+         binary = hex_decode(buf0_with_leading_0, 2);
 
-      for(u32bit j = offset; j != binary.size(); ++j)
-         binary[j] = Hex_Decoder::decode(hex+2*j-offset);
+         binary.append(hex_decode(reinterpret_cast<const char*>(&buf[1]),
+                                  length - 1,
+                                  false));
+
+         }
+      else
+         binary = hex_decode(reinterpret_cast<const char*>(buf),
+                             length, false);
+
       r.binary_decode(binary, binary.size());
       }
    else if(base == Decimal || base == Octal)

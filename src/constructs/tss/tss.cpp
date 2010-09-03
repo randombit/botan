@@ -106,9 +106,7 @@ HashFunction* get_rtss_hash_by_id(byte id)
 
 RTSS_Share::RTSS_Share(const std::string& hex_input)
    {
-   Pipe pipe(new Hex_Decoder);
-   pipe.process_msg(hex_input);
-   contents = pipe.read_all();
+   contents = hex_decode(hex_input);
    }
 
 byte RTSS_Share::share_id() const
@@ -121,9 +119,7 @@ byte RTSS_Share::share_id() const
 
 std::string RTSS_Share::to_string() const
    {
-   Pipe pipe(new Hex_Encoder);
-   pipe.process_msg(contents);
-   return pipe.read_all_as_string();
+   return hex_encode(&contents[0], contents.size());
    }
 
 std::vector<RTSS_Share>
