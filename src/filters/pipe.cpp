@@ -43,11 +43,12 @@ Pipe::Pipe(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
 /*
 * Pipe Constructor
 */
-Pipe::Pipe(Filter* filter_array[], u32bit count)
+Pipe::Pipe(std::initializer_list<Filter*> args)
    {
    init();
-   for(u32bit j = 0; j != count; ++j)
-      append(filter_array[j]);
+
+   for(auto i = args.begin(); i != args.end(); ++i)
+      append(*i);
    }
 
 /*

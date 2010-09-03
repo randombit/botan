@@ -67,41 +67,29 @@ const std::string algos[] = {
    "",
 };
 
-void benchmark_algo(const std::string& algo,
-                    RandomNumberGenerator& rng)
-   {
-   u32bit milliseconds = 3000;
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
-   std::map<std::string, double> speeds =
-      algorithm_benchmark(algo, milliseconds, rng, af);
-
-   std::cout << algo << ":";
-
-   for(std::map<std::string, double>::const_iterator i = speeds.begin();
-       i != speeds.end(); ++i)
-      {
-      std::cout << " " << i->second << " [" << i->first << "]";
-      }
-   std::cout << "\n";
-   }
-
-}
-
-int main(int argc, char* argv[])
+int main()
    {
    LibraryInitializer init;
 
+   u32bit milliseconds = 1000;
    AutoSeeded_RNG rng;
 
-   if(argc == 1) // no args, benchmark everything
+   Algorithm_Factory& af = global_state().algorithm_factory();
+
+   for(u32bit i = 0; algos[i] != ""; ++i)
       {
-      for(u32bit i = 0; algos[i] != ""; ++i)
-         benchmark_algo(algos[i], rng);
-      }
-   else
-      {
-      for(int i = 1; argv[i]; ++i)
-         benchmark_algo(argv[i], rng);
+      std::string algo = algos[i];
+
+      std::map<std::string, double> speeds =
+         algorithm_benchmark(algos[i], milliseconds, rng, af);
+
+      std::cout << algo << ":";
+
+      for(std::map<std::string, double>::const_iterator i = speeds.begin();
+          i != speeds.end(); ++i)
+         {
+         std::cout << " " << i->second << " [" << i->first << "]";
+         }
+      std::cout << "\n";
       }
    }
