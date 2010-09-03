@@ -14,7 +14,7 @@ def update_requires(dir, deps):
         while lines.pop(start) != '</requires>':
             pass
 
-    while lines[-1] == '':
+    while len(lines) > 0 and lines[-1] == '':
         lines = lines[:-1]
 
     if len(deps) > 0:

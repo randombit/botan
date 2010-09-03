@@ -20,7 +20,7 @@ def find_deps_in(filename):
     for line in open(filename).readlines():
         match = regexp.match(line)
         if match != None:
-            yield match.group(1)
+            yield match.group(1).replace('internal/', '')
 
 def get_dependencies(dirname):
     all_dirdeps = {}
