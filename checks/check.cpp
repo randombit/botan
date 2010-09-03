@@ -46,7 +46,7 @@ bool test(const char* type, int digits, bool is_signed)
    {
    if(std::numeric_limits<T>::is_specialized == false)
       {
-      std::cout << "WARNING: Could not check parameters of " << type
+      std::cout << "Warning: Could not check parameters of " << type
                 << " in std::numeric_limits" << std::endl;
 
       // assume it's OK (full tests will catch it later)
@@ -58,14 +58,14 @@ bool test(const char* type, int digits, bool is_signed)
 
    if(std::numeric_limits<T>::is_integer == false)
       {
-      std::cout << "WARN: std::numeric_limits<> says " << type
+      std::cout << "Warning: std::numeric_limits<> says " << type
                 << " is not an integer" << std::endl;
       passed = false;
       }
 
    if(std::numeric_limits<T>::is_signed != is_signed)
       {
-      std::cout << "ERROR: numeric_limits<" << type << ">::is_signed == "
+      std::cout << "Warning: numeric_limits<" << type << ">::is_signed == "
                 << std::boolalpha << std::numeric_limits<T>::is_signed
                 << std::endl;
       passed = false;
@@ -73,7 +73,7 @@ bool test(const char* type, int digits, bool is_signed)
 
    if(std::numeric_limits<T>::digits != digits && digits != 0)
       {
-      std::cout << "ERROR: numeric_limits<" << type << ">::digits == "
+      std::cout << "Warning: numeric_limits<" << type << ">::digits == "
                 << std::numeric_limits<T>::digits
                 << " expected " << digits << std::endl;
       passed = false;
