@@ -1,4 +1,3 @@
 <requires>
 alloc
-filters
 </requires>

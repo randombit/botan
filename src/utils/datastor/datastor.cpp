@@ -8,8 +8,8 @@
 #include <botan/datastor.h>
 #include <botan/exceptn.h>
 #include <botan/parsing.h>
+#include <botan/hex.h>
 #include <botan/internal/stl_util.h>
-#include <botan/filters.h>
 
 namespace Botan {
 
@@ -98,19 +98,14 @@ Data_Store::get1_memvec(const std::string& key) const
    {
    std::vector<std::string> vals = get(key);
 
+   if(vals.empty())
+      return MemoryVector<byte>();
+
    if(vals.size() > 1)
       throw Invalid_State("Data_Store::get1_memvec: Multiple values for " +
                           key);
 
-   if(vals.empty())
-      return MemoryVector<byte>();
-
-   Pipe pipe(new Hex_Decoder(FULL_CHECK));
-   pipe.start_msg();
-   if(vals.size())
-      pipe.write(vals[0]);
-   pipe.end_msg();
-   return pipe.read_all();
+   return hex_decode(vals[0]);
    }
 
 /*
@@ -151,9 +146,7 @@ void Data_Store::add(const std::string& key, u32bit val)
 */
 void Data_Store::add(const std::string& key, const MemoryRegion<byte>& val)
    {
-   Pipe pipe(new Hex_Encoder);
-   pipe.process_msg(val);
-   add(key, pipe.read_all_as_string());
+   add(key, hex_encode(&val[0], val.size()));
    }
 
 /*
