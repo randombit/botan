@@ -74,10 +74,8 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
    accum.add(::getpid(),  0);
    accum.add(::getppid(), 0);
    accum.add(::getuid(),  0);
-   accum.add(::geteuid(), 0);
-   accum.add(::getegid(), 0);
+   accum.add(::getgid(), 0);
    accum.add(::getpgrp(), 0);
-   accum.add(::getsid(0), 0);
 
    struct ::rusage usage;
    ::getrusage(RUSAGE_SELF, &usage);
