@@ -11,6 +11,7 @@
 #include <botan/secmem.h>
 #include <botan/filter.h>
 #include <botan/rng.h>
+#include <botan/hex.h>
 
 using Botan::byte;
 using Botan::u32bit;
@@ -20,9 +21,6 @@ void strip_comments(std::string& line);
 void strip_newlines(std::string& line);
 void strip(std::string& line);
 std::vector<std::string> parse(const std::string& line);
-
-std::string hex_encode(const byte in[], u32bit len);
-Botan::SecureVector<byte> decode_hex(const std::string&);
 
 Botan::Filter* lookup(const std::string& algname,
                       const std::vector<std::string>& params);
@@ -75,7 +73,7 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
          }
       Fixed_Output_RNG(const std::string& in_str)
          {
-         Botan::SecureVector<byte> in = decode_hex(in_str);
+         Botan::SecureVector<byte> in = Botan::hex_decode(in_str);
          buf.insert(buf.end(), in.begin(), in.begin() + in.size());
          }
 

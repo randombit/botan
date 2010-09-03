@@ -15,6 +15,7 @@
 #include <botan/parsing.h>
 #include <botan/symkey.h>
 #include <botan/time.h>
+#include <botan/hex.h>
 
 #include "common.h"
 #include "bench.h"

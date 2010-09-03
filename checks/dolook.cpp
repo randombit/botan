@@ -175,19 +175,19 @@ Filter* lookup_rng(const std::string& algname,
 #if defined(BOTAN_HAS_DES)
    if(algname == "X9.31-RNG(TripleDES)")
       prng = new ANSI_X931_RNG(new TripleDES,
-                               new Fixed_Output_RNG(decode_hex(key)));
+                               new Fixed_Output_RNG(hex_decode(key)));
 #endif
 
 #if defined(BOTAN_HAS_AES)
    if(algname == "X9.31-RNG(AES-128)")
       prng = new ANSI_X931_RNG(new AES_128,
-                               new Fixed_Output_RNG(decode_hex(key)));
+                               new Fixed_Output_RNG(hex_decode(key)));
    else if(algname == "X9.31-RNG(AES-192)")
       prng = new ANSI_X931_RNG(new AES_192,
-                               new Fixed_Output_RNG(decode_hex(key)));
+                               new Fixed_Output_RNG(hex_decode(key)));
    else if(algname == "X9.31-RNG(AES-256)")
       prng = new ANSI_X931_RNG(new AES_256,
-                               new Fixed_Output_RNG(decode_hex(key)));
+                               new Fixed_Output_RNG(hex_decode(key)));
 #endif
 
 #endif

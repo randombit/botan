@@ -64,10 +64,19 @@ using namespace Botan;
 
 namespace {
 
-BigInt to_bigint(const std::string& h)
+BigInt to_bigint(std::string input)
    {
-   return BigInt::decode(reinterpret_cast<const byte*>(h.data()),
-                         h.length(), BigInt::Hexadecimal);
+   while(input.find(' ') != std::string::npos)
+      input = input.erase(input.find(' '), 1);
+
+   while(input.find('\t') != std::string::npos)
+      input = input.erase(input.find('\t'), 1);
+
+   while(input.find('\n') != std::string::npos)
+      input = input.erase(input.find('\n'), 1);
+
+   return BigInt::decode(reinterpret_cast<const byte*>(input.data()),
+                         input.length(), BigInt::Hexadecimal);
    }
 
 void dump_data(const SecureVector<byte>& out,
@@ -145,9 +154,9 @@ void validate_encryption(PK_Encryptor& e, PK_Decryptor& d,
                          const std::string& random, const std::string& exp,
                          bool& failure)
    {
-   SecureVector<byte> message = decode_hex(input);
-   SecureVector<byte> expected = decode_hex(exp);
-   Fixed_Output_RNG rng(decode_hex(random));
+   SecureVector<byte> message = hex_decode(input);
+   SecureVector<byte> expected = hex_decode(exp);
+   Fixed_Output_RNG rng(hex_decode(random));
 
    SecureVector<byte> out = e.encrypt(message, rng);
    if(out != expected)
@@ -165,9 +174,9 @@ void validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
                         RandomNumberGenerator& rng,
                         const std::string& exp, bool& failure)
    {
-   SecureVector<byte> message = decode_hex(input);
+   SecureVector<byte> message = hex_decode(input);
 
-   SecureVector<byte> expected = decode_hex(exp);
+   SecureVector<byte> expected = hex_decode(exp);
 
    SecureVector<byte> sig = s.sign_message(message, message.size(), rng);
 
@@ -199,7 +208,7 @@ void validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
                         const std::string& random,
                         const std::string& exp, bool& failure)
    {
-   Fixed_Output_RNG rng(decode_hex(random));
+   Fixed_Output_RNG rng(hex_decode(random));
 
    validate_signature(v, s, algo, input, rng, exp, failure);
    }
@@ -208,7 +217,7 @@ void validate_kas(PK_Key_Agreement& kas, const std::string& algo,
                   const SecureVector<byte>& pubkey, const std::string& output,
                   u32bit keylen, bool& failure)
    {
-   SecureVector<byte> expected = decode_hex(output);
+   SecureVector<byte> expected = hex_decode(output);
 
    SecureVector<byte> got = kas.derive_key(keylen,
                                            pubkey, pubkey.size()).bits_of();
@@ -310,8 +319,8 @@ u32bit validate_elg_enc(const std::string& algo,
       validate_encryption(e, d, algo, str[4], str[5], str[6], failure);
       }
    else
-      validate_decryption(d, algo, decode_hex(str[5]),
-                          decode_hex(str[4]), failure);
+      validate_decryption(d, algo, hex_decode(str[5]),
+                          hex_decode(str[4]), failure);
    return (failure ? 1 : 0);
 #endif
 
@@ -358,8 +367,8 @@ u32bit validate_rsa_ver(const std::string& algo,
 
    PK_Verifier v(key, emsa);
 
-   SecureVector<byte> msg = decode_hex(str[2]);
-   SecureVector<byte> sig = decode_hex(str[3]);
+   SecureVector<byte> msg = hex_decode(str[2]);
+   SecureVector<byte> sig = hex_decode(str[3]);
 
    bool passed = true;
    passed = v.verify_message(msg, msg.size(), sig, sig.size());
@@ -390,8 +399,8 @@ u32bit validate_rsa_ver_x509(const std::string& algo,
 
    PK_Verifier v(*rsakey, emsa);
 
-   SecureVector<byte> msg = decode_hex(str[1]);
-   SecureVector<byte> sig = decode_hex(str[2]);
+   SecureVector<byte> msg = hex_decode(str[1]);
+   SecureVector<byte> sig = hex_decode(str[2]);
 
    bool passed = v.verify_message(msg, msg.size(), sig, sig.size());
    return (passed ? 0 : 1);
@@ -414,8 +423,8 @@ u32bit validate_rw_ver(const std::string& algo,
 
    PK_Verifier v(key, emsa);
 
-   SecureVector<byte> msg = decode_hex(str[2]);
-   SecureVector<byte> sig = decode_hex(str[3]);
+   SecureVector<byte> msg = hex_decode(str[2]);
+   SecureVector<byte> sig = hex_decode(str[3]);
 
    bool passed = true;
    passed = v.verify_message(msg, msg.size(), sig, sig.size());
@@ -522,7 +531,7 @@ u32bit validate_gost_ver(const std::string& algo,
 
    EC_Domain_Params group(OIDS::lookup(str[0]));
 
-   PointGFp public_point = OS2ECP(decode_hex(str[1]), group.get_curve());
+   PointGFp public_point = OS2ECP(hex_decode(str[1]), group.get_curve());
 
    GOST_3410_PublicKey gost(group, public_point);
 
@@ -530,8 +539,8 @@ u32bit validate_gost_ver(const std::string& algo,
 
    PK_Verifier v(gost, emsa);
 
-   SecureVector<byte> msg = decode_hex(str[2]);
-   SecureVector<byte> sig = decode_hex(str[3]);
+   SecureVector<byte> msg = hex_decode(str[2]);
+   SecureVector<byte> sig = hex_decode(str[3]);
 
    bool passed = v.verify_message(msg, msg.size(), sig, sig.size());
    return (passed ? 0 : 1);
@@ -562,8 +571,8 @@ u32bit validate_dsa_ver(const std::string& algo,
 
    PK_Verifier v(*dsakey, emsa);
 
-   SecureVector<byte> msg = decode_hex(str[1]);
-   SecureVector<byte> sig = decode_hex(str[2]);
+   SecureVector<byte> msg = hex_decode(str[1]);
+   SecureVector<byte> sig = hex_decode(str[2]);
 
    v.set_input_format(DER_SEQUENCE);
    bool passed = v.verify_message(msg, msg.size(), sig, sig.size());

@@ -8,10 +8,6 @@
 #include <vector>
 #include <string>
 
-#include <botan/pipe.h>
-#include <botan/hex.h>
-using namespace Botan;
-
 #include "common.h"
 
 void strip_comments(std::string& line)
@@ -38,29 +34,6 @@ void strip(std::string& line)
 
    while(line.find('\t') != std::string::npos)
       line = line.erase(line.find('\t'), 1);
-   }
-
-SecureVector<byte> decode_hex(const std::string& in)
-   {
-   SecureVector<byte> result;
-
-   try {
-      Botan::Pipe pipe(new Botan::Hex_Decoder);
-      pipe.process_msg(in);
-      result = pipe.read_all();
-   }
-   catch(std::exception)
-      {
-      result.destroy();
-      }
-   return result;
-   }
-
-std::string hex_encode(const byte in[], u32bit len)
-   {
-   Botan::Pipe pipe(new Botan::Hex_Encoder);
-   pipe.process_msg(in, len);
-   return pipe.read_all_as_string();
    }
 
 std::vector<std::string> parse(const std::string& line)

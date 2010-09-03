@@ -96,7 +96,6 @@ bool failed_test(const std::string&, std::vector<std::string>, bool, bool,
 
 std::vector<std::string> parse(const std::string&);
 void strip(std::string&);
-Botan::SecureVector<byte> decode_hex(const std::string&);
 
 u32bit do_validation_tests(const std::string& filename,
                            RandomNumberGenerator& rng,
@@ -300,7 +299,7 @@ bool failed_test(const std::string& algo,
       pipe.append(test);
       pipe.append(new Botan::Hex_Encoder);
 
-      Botan::SecureVector<byte> data = decode_hex(in);
+      Botan::SecureVector<byte> data = Botan::hex_decode(in);
       const byte* data_ptr = data;
 
       // this can help catch errors with buffering, etc

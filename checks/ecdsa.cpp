@@ -164,7 +164,7 @@ void test_sign_then_ver(RandomNumberGenerator& rng)
 
    PK_Signer signer(ecdsa, "EMSA1(SHA-1)");
 
-   SecureVector<byte> msg = decode_hex("12345678901234567890abcdef12");
+   SecureVector<byte> msg = hex_decode("12345678901234567890abcdef12");
    SecureVector<byte> sig = signer.sign_message(msg, rng);
 
    PK_Verifier verifier(ecdsa, "EMSA1(SHA-1)");
@@ -289,11 +289,11 @@ void test_create_and_verify(RandomNumberGenerator& rng)
    std::string G_secp_comp = "04081523d03d4f12cd02879dea4bf6a4f3a7df26ed888f10c5b2235a1274c386a2f218300dee6ed217841164533bcdc903f07a096f9fbf4ee95bac098a111f296f5830fe5c35b3e344d5df3a2256985f64fbe6d0edcc4c61d18bef681dd399df3d0194c5a4315e012e0245ecea56365baa9e8be1f7";
    std::string order_g = "0e1a16196e6000000000bc7f1618d867b15bb86474418f";
 
-   //	::SecureVector<byte> sv_p_secp = decode_hex ( p_secp );
-   SecureVector<byte> sv_a_secp = decode_hex ( a_secp );
-   SecureVector<byte> sv_b_secp = decode_hex ( b_secp );
-   SecureVector<byte> sv_G_secp_comp = decode_hex ( G_secp_comp );
-   SecureVector<byte> sv_order_g = decode_hex ( order_g );
+   //	::SecureVector<byte> sv_p_secp = hex_decode ( p_secp );
+   SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
+   SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
+   SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
+   SecureVector<byte> sv_order_g = hex_decode ( order_g );
 
    //	BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
    BigInt bi_p_secp("2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809");
@@ -365,7 +365,7 @@ void test_curve_registry(RandomNumberGenerator& rng)
          PK_Signer signer(ecdsa, "EMSA1(SHA-1)");
          PK_Verifier verifier(ecdsa, "EMSA1(SHA-1)");
 
-         SecureVector<byte> msg = decode_hex("12345678901234567890abcdef12");
+         SecureVector<byte> msg = hex_decode("12345678901234567890abcdef12");
          SecureVector<byte> sig = signer.sign_message(msg, rng);
 
          if(!verifier.verify_message(msg, sig))
@@ -383,7 +383,7 @@ void test_read_pkcs8(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   SecureVector<byte> msg = decode_hex("12345678901234567890abcdef12");
+   SecureVector<byte> msg = hex_decode("12345678901234567890abcdef12");
 
    try
       {
