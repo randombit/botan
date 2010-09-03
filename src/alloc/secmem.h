@@ -162,6 +162,16 @@ class MemoryRegion
          { append(other.begin(), other.size()); }
 
       /**
+      * Truncate the buffer to at most n elements
+      * @param n the length of the resulting buffer
+      */
+      void truncate(u32bit n)
+         {
+         if(n < used)
+            used = n;
+         }
+
+      /**
       * Zeroise the bytes of this buffer. The length remains unchanged.
       */
       void clear() { clear_mem(buf, allocated); }
