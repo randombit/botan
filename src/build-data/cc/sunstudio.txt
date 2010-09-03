@@ -18,6 +18,8 @@ shared_flags "-KPIC"
 warning_flags "+w"
 lang_flags "+p -D__EXTENSIONS__"
 
+ar_command "CC -xar -o"
+
 makefile_style unix
 
 <so_link_flags>
