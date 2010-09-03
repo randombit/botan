@@ -9,6 +9,7 @@
 #include <botan/internal/unix_cmd.h>
 #include <botan/parsing.h>
 #include <algorithm>
+
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/resource.h>
@@ -22,7 +23,12 @@ namespace {
 * Sort ordering by priority
 */
 bool Unix_Program_Cmp(const Unix_Program& a, const Unix_Program& b)
-   { return (a.priority < b.priority); }
+   {
+   if(a.priority < b.priority)
+      return true;
+
+   return (a.name_and_args < b.name_and_args);
+   }
 
 }
 
@@ -32,7 +38,8 @@ bool Unix_Program_Cmp(const Unix_Program& a, const Unix_Program& b)
 Unix_EntropySource::Unix_EntropySource(const std::vector<std::string>& path) :
    PATH(path)
    {
-   add_default_sources(sources);
+   std::vector<Unix_Program> default_sources = get_default_sources();
+   add_sources(&default_sources[0], default_sources.size());
    }
 
 /**
