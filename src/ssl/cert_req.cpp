@@ -20,8 +20,8 @@ Certificate_Req::Certificate_Req(Record_Writer& writer,
                                  HandshakeHash& hash,
                                  const std::vector<X509_Certificate>& certs)
    {
-   for(u32bit j = 0; j != certs.size(); j++)
-      names.push_back(certs[j].subject_dn());
+   for(u32bit i = 0; i != certs.size(); i++)
+      names.push_back(certs[i].subject_dn());
 
    // FIXME: should be able to choose what to ask for
    types.push_back(RSA_CERT);
@@ -38,12 +38,12 @@ SecureVector<byte> Certificate_Req::serialize() const
    SecureVector<byte> buf;
 
    buf.append(types.size());
-   for(u32bit j = 0; j != types.size(); j++)
-      buf.append(types[j]);
+   for(u32bit i = 0; i != types.size(); i++)
+      buf.append(types[i]);
 
    DER_Encoder encoder;
-   for(u32bit j = 0; j != names.size(); j++)
-      encoder.encode(names[j]);
+   for(u32bit i = 0; i != names.size(); i++)
+      encoder.encode(names[i]);
 
    SecureVector<byte> der_names = encoder.get_contents();
    u16bit names_size = der_names.size();
@@ -68,8 +68,8 @@ void Certificate_Req::deserialize(const MemoryRegion<byte>& buf)
    if(buf.size() < types_size + 3)
       throw Decoding_Error("Certificate_Req: Bad certificate request");
 
-   for(u32bit j = 0; j != types_size; j++)
-      types.push_back(static_cast<Certificate_Type>(buf[j+1]));
+   for(u32bit i = 0; i != types_size; i++)
+      types.push_back(static_cast<Certificate_Type>(buf[i+1]));
 
    u32bit names_size = make_u16bit(buf[types_size+2], buf[types_size+3]);
 
@@ -104,9 +104,9 @@ SecureVector<byte> Certificate::serialize() const
    {
    SecureVector<byte> buf(3);
 
-   for(u32bit j = 0; j != certs.size(); j++)
+   for(u32bit i = 0; i != certs.size(); i++)
       {
-      SecureVector<byte> raw_cert = certs[j].BER_encode();
+      SecureVector<byte> raw_cert = certs[i].BER_encode();
       u32bit cert_size = raw_cert.size();
       for(u32bit j = 0; j != 3; j++)
          buf.append(get_byte(j+1, cert_size));
@@ -114,8 +114,8 @@ SecureVector<byte> Certificate::serialize() const
       }
 
    u32bit buf_size = buf.size() - 3;
-   for(u32bit j = 0; j != 3; j++)
-      buf[j] = get_byte(j+1, buf_size);
+   for(u32bit i = 0; i != 3; i++)
+      buf[i] = get_byte(i+1, buf_size);
 
    return buf;
    }
